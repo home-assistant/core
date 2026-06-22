@@ -1,12 +1,10 @@
 """Config flow for the Duco integration."""
 
-from __future__ import annotations
-
 import logging
 from typing import Any
 
-from duco import DucoClient
-from duco.exceptions import DucoConnectionError, DucoError
+from duco_connectivity import DucoClient
+from duco_connectivity.exceptions import DucoConnectionError, DucoError
 import voluptuous as vol
 
 from homeassistant.config_entries import ConfigFlow, ConfigFlowResult
@@ -17,6 +15,7 @@ from homeassistant.helpers.service_info.dhcp import DhcpServiceInfo
 from homeassistant.helpers.service_info.zeroconf import ZeroconfServiceInfo
 
 from .const import DOMAIN
+from .validation import UnsupportedBoardError, async_get_supported_board_info
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -45,6 +44,11 @@ class DucoConfigFlow(ConfigFlow, domain=DOMAIN):
 
         try:
             box_name, _ = await self._validate_input(discovery_info.ip)
+        except UnsupportedBoardError:
+            _LOGGER.debug(
+                "Unsupported Duco board discovered via DHCP at %s", discovery_info.ip
+            )
+            return self.async_abort(reason="unsupported_board")
         except DucoConnectionError:
             return self.async_abort(reason="cannot_connect")
         except DucoError:
@@ -63,6 +67,12 @@ class DucoConfigFlow(ConfigFlow, domain=DOMAIN):
         """Handle zeroconf discovery."""
         try:
             box_name, mac = await self._validate_input(discovery_info.host)
+        except UnsupportedBoardError:
+            _LOGGER.debug(
+                "Unsupported Duco board discovered via zeroconf at %s",
+                discovery_info.host,
+            )
+            return self.async_abort(reason="unsupported_board")
         except DucoConnectionError:
             return self.async_abort(reason="cannot_connect")
         except DucoError:
@@ -104,6 +114,8 @@ class DucoConfigFlow(ConfigFlow, domain=DOMAIN):
         if user_input is not None:
             try:
                 box_name, mac = await self._validate_input(user_input[CONF_HOST])
+            except UnsupportedBoardError:
+                errors["base"] = "unsupported_board"
             except DucoConnectionError:
                 errors["base"] = "cannot_connect"
             except DucoError:
@@ -135,6 +147,8 @@ class DucoConfigFlow(ConfigFlow, domain=DOMAIN):
         if user_input is not None:
             try:
                 box_name, mac = await self._validate_input(user_input[CONF_HOST])
+            except UnsupportedBoardError:
+                errors["base"] = "unsupported_board"
             except DucoConnectionError:
                 errors["base"] = "cannot_connect"
             except DucoError:
@@ -164,6 +178,6 @@ class DucoConfigFlow(ConfigFlow, domain=DOMAIN):
             session=async_get_clientsession(self.hass),
             host=host,
         )
-        board_info = await client.async_get_board_info()
+        board_info = await async_get_supported_board_info(client)
         lan_info = await client.async_get_lan_info()
         return board_info.box_name, lan_info.mac

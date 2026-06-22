@@ -1,7 +1,5 @@
 """Holiday Calendar."""
 
-from __future__ import annotations
-
 from datetime import datetime, timedelta
 
 from holidays import PUBLIC, HolidayBase, country_holidays
@@ -152,6 +150,13 @@ class HolidayCalendarEntity(CalendarEntity):
     async def async_added_to_hass(self) -> None:
         """Set up first update."""
         self._update_state_and_setup_listener()
+
+    async def async_will_remove_from_hass(self) -> None:
+        """Cancel listener when removing."""
+        await super().async_will_remove_from_hass()
+        if self.unsub:
+            self.unsub()
+            self.unsub = None
 
     def update_event(self, now: datetime) -> CalendarEvent | None:
         """Return the next upcoming event."""

@@ -43,7 +43,7 @@ async def async_setup_entry(
 
 
 @dataclass(frozen=True, kw_only=True)
-class RingNumberEntityDescription(NumberEntityDescription, Generic[RingDeviceT]):
+class RingNumberEntityDescription(NumberEntityDescription, Generic[RingDeviceT]):  # noqa: UP046
     """Describes Ring number entity."""
 
     value_fn: Callable[[RingDeviceT], StateType]

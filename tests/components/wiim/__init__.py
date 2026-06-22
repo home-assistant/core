@@ -38,5 +38,6 @@ async def fire_transport_update(
     """Trigger the registered AVTransport callback on the mock device."""
     assert mock_device.av_transport_event_callback is not None
     mock_device.event_data = {"TransportState": transport_state.value}
+    mock_device.playing_status = transport_state
     mock_device.av_transport_event_callback(MagicMock(), [])
     await hass.async_block_till_done()

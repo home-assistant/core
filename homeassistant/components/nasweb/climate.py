@@ -1,7 +1,5 @@
 """Platform for NASweb thermostat."""
 
-from __future__ import annotations
-
 import time
 from typing import Any
 
@@ -77,7 +75,7 @@ class Thermostat(ClimateEntity, BaseCoordinatorEntity):
         self._thermostat = nasweb_thermostat
         self._attr_available = False
         self._attr_name = nasweb_thermostat.name
-        self._attr_unique_id = f"{DOMAIN}.{self._thermostat.webio_serial}.thermostat"
+        self._attr_unique_id = f"{DOMAIN}.{self._thermostat.webio_serial}.thermostat"  # pylint: disable=home-assistant-entity-unique-id-redundant-domain
         self._attr_device_info = DeviceInfo(
             identifiers={(DOMAIN, self._thermostat.webio_serial)}
         )
@@ -154,7 +152,8 @@ class Thermostat(ClimateEntity, BaseCoordinatorEntity):
         """Update the entity.
 
         Only used by the generic entity update service.
-        Scheduling updates is not necessary, the coordinator takes care of updates via push notifications.
+        Scheduling updates is not necessary, the coordinator
+        takes care of updates via push notifications.
         """
 
     async def async_set_hvac_mode(self, hvac_mode: HVACMode) -> None:

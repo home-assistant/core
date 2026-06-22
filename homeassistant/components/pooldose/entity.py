@@ -1,7 +1,5 @@
 """Base entity for Seko Pooldose integration."""
 
-from __future__ import annotations
-
 from collections.abc import Callable, Coroutine
 from typing import Any, Literal
 
@@ -34,7 +32,9 @@ def device_info(
         name=info.get("NAME") or None,
         serial_number=unique_id,
         sw_version=(
-            f"{info.get('FW_VERSION')} (SW v{info.get('SW_VERSION')}, API {api_version})"
+            f"{info.get('FW_VERSION')}"
+            f" (SW v{info.get('SW_VERSION')},"
+            f" API {api_version})"
             if info.get("FW_VERSION") and info.get("SW_VERSION") and api_version
             else None
         ),

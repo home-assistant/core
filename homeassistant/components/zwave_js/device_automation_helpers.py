@@ -1,7 +1,5 @@
 """Provides helpers for Z-Wave JS device automations."""
 
-from __future__ import annotations
-
 from zwave_js_server.model.value import ConfigurationValue
 
 from homeassistant.config_entries import ConfigEntryState
@@ -46,7 +44,7 @@ def async_bypass_dynamic_config_validation(hass: HomeAssistant, device_id: str) 
             config_entry
             for config_entry in hass.config_entries.async_entries(DOMAIN)
             if config_entry.entry_id in device.config_entries
-            and config_entry.state == ConfigEntryState.LOADED
+            and config_entry.state is ConfigEntryState.LOADED
         ),
         None,
     )

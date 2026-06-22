@@ -1,7 +1,5 @@
 """Support for the NOAA Tides and Currents API."""
 
-from __future__ import annotations
-
 from datetime import datetime
 import logging
 from typing import TYPE_CHECKING, Any, Literal, TypedDict
@@ -156,7 +154,7 @@ class NOAATidesAndCurrentsSensor(SensorEntity):
 
     def update(self) -> None:
         """Get the latest data from NOAA Tides and Currents API."""
-        begin = datetime.now()
+        begin = datetime.now()  # pylint: disable=home-assistant-enforce-naive-now
         end = begin + DEFAULT_PREDICTION_LENGTH
         try:
             df_predictions = self._station.get_data(

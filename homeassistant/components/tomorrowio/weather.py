@@ -1,7 +1,5 @@
 """Weather component that handles meteorological data for your location."""
 
-from __future__ import annotations
-
 from datetime import datetime
 
 from pytomorrowio.const import DAILY, FORECASTS, HOURLY, NOWCAST, WeatherCode
@@ -70,7 +68,7 @@ async def async_setup_entry(
 ) -> None:
     """Set up a config entry."""
     # Uses legacy hass.data[DOMAIN] pattern
-    # pylint: disable-next=hass-use-runtime-data
+    # pylint: disable-next=home-assistant-use-runtime-data
     coordinator = hass.data[DOMAIN][config_entry.data[CONF_API_KEY]]
     entity_registry = er.async_get(hass)
 

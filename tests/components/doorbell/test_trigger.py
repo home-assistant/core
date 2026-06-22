@@ -178,7 +178,8 @@ async def test_doorbell_trigger_options_validation(
                 },
             ],
         ),
-        # To unavailable - should not trigger, and first state after unavailable is skipped
+        # To unavailable - should not trigger, and first state
+        # after unavailable is skipped
         (
             "doorbell.rang",
             [
@@ -275,7 +276,7 @@ async def test_doorbell_rang_trigger(
     trigger: str,
     states: list[BasicTriggerStateDescription],
 ) -> None:
-    """Test that the doorbell rang trigger fires when a doorbell ring event is received."""
+    """Test that the doorbell rang trigger fires on a doorbell ring event."""
     calls: list[str] = []
     other_entity_ids = set(target_events["included_entities"]) - {entity_id}
 

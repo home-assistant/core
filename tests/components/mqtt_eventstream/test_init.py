@@ -100,7 +100,9 @@ async def test_state_changed_event_sends_message(
 
     # The order of the JSON is indeterminate,
     # so first just check that publish was called
-    mqtt_mock.async_publish.assert_called_with(pub_topic, ANY, 0, False)
+    mqtt_mock.async_publish.assert_called_with(
+        pub_topic, ANY, 0, False, message_expiry_interval=None
+    )
     assert mqtt_mock.async_publish.called
 
     # Get the actual call to publish and make sure it was the one

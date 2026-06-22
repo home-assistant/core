@@ -2,11 +2,16 @@
 
 import asyncio
 from collections.abc import Mapping
-from typing import Any
+from typing import Any, override
 
 from actron_neo_api import ActronAirAPI, ActronAirAuthError
 
-from homeassistant.config_entries import SOURCE_REAUTH, ConfigFlow, ConfigFlowResult
+from homeassistant.config_entries import (
+    SOURCE_REAUTH,
+    SOURCE_RECONFIGURE,
+    ConfigFlow,
+    ConfigFlowResult,
+)
 from homeassistant.const import CONF_API_TOKEN
 from homeassistant.exceptions import HomeAssistantError
 
@@ -25,6 +30,7 @@ class ActronAirConfigFlow(ConfigFlow, domain=DOMAIN):
         self._expires_minutes: str = "30"
         self.login_task: asyncio.Task[None] | None = None
 
+    @override
     async def async_step_user(
         self, user_input: dict[str, Any] | None = None
     ) -> ConfigFlowResult:
@@ -105,6 +111,14 @@ class ActronAirConfigFlow(ConfigFlow, domain=DOMAIN):
                 data_updates={CONF_API_TOKEN: self._api.refresh_token_value},
             )
 
+        # Check if this is a reconfigure flow
+        if self.source == SOURCE_RECONFIGURE:
+            self._abort_if_unique_id_mismatch(reason="wrong_account")
+            return self.async_update_reload_and_abort(
+                self._get_reconfigure_entry(),
+                data_updates={CONF_API_TOKEN: self._api.refresh_token_value},
+            )
+
         self._abort_if_unique_id_configured()
         return self.async_create_entry(
             title=user_data.email,
@@ -137,6 +151,20 @@ class ActronAirConfigFlow(ConfigFlow, domain=DOMAIN):
             return await self.async_step_user()
 
         return self.async_show_form(step_id="reauth_confirm")
+
+    async def async_step_reconfigure(
+        self, user_input: dict[str, Any] | None = None
+    ) -> ConfigFlowResult:
+        """Handle reconfiguration request."""
+        return await self.async_step_reconfigure_confirm()
+
+    async def async_step_reconfigure_confirm(
+        self, user_input: dict[str, Any] | None = None
+    ) -> ConfigFlowResult:
+        """Confirm reconfiguration dialog."""
+        if user_input is not None:
+            return await self.async_step_user()
+        return self.async_show_form(step_id="reconfigure_confirm")
 
     async def async_step_connection_error(
         self, user_input: dict[str, Any] | None = None

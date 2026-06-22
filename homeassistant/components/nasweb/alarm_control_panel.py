@@ -1,7 +1,5 @@
 """Platform for NASweb alarms."""
 
-from __future__ import annotations
-
 import logging
 import time
 
@@ -96,7 +94,7 @@ class ZoneEntity(AlarmControlPanelEntity, BaseCoordinatorEntity):
         self._attr_name = nasweb_zone.name
         self._attr_translation_placeholders = {"index": f"{nasweb_zone.index:2d}"}
         self._attr_unique_id = (
-            f"{DOMAIN}.{self._zone.webio_serial}.zone.{self._zone.index}"
+            f"{DOMAIN}.{self._zone.webio_serial}.zone.{self._zone.index}"  # pylint: disable=home-assistant-entity-unique-id-redundant-domain
         )
         self._attr_device_info = DeviceInfo(
             identifiers={(DOMAIN, self._zone.webio_serial)},
@@ -137,7 +135,8 @@ class ZoneEntity(AlarmControlPanelEntity, BaseCoordinatorEntity):
         """Update the entity.
 
         Only used by the generic entity update service.
-        Scheduling updates is not necessary, the coordinator takes care of updates via push notifications.
+        Scheduling updates is not necessary, the coordinator
+        takes care of updates via push notifications.
         """
 
     @property

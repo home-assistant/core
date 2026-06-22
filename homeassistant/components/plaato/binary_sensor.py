@@ -1,7 +1,5 @@
 """Support for Plaato Airlock sensors."""
 
-from __future__ import annotations
-
 from pyplaato.plaato import PlaatoKeg
 
 from homeassistant.components.binary_sensor import (

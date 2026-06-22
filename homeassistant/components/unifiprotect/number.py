@@ -1,20 +1,11 @@
 """Component providing number entities for UniFi Protect."""
 
-from __future__ import annotations
-
 from collections.abc import Sequence
 from dataclasses import dataclass
 from datetime import timedelta
 import logging
 
-from uiprotect.data import (
-    Camera,
-    Chime,
-    Doorlock,
-    Light,
-    ModelType,
-    ProtectAdoptableDeviceModel,
-)
+from uiprotect.data import Camera, Chime, Light, ModelType, ProtectAdoptableDeviceModel
 
 from homeassistant.components.number import NumberEntity, NumberEntityDescription
 from homeassistant.const import PERCENTAGE, EntityCategory, UnitOfTime
@@ -56,16 +47,16 @@ async def _set_pir_duration(obj: Light, value: float) -> None:
     await obj.set_duration(timedelta(seconds=value))
 
 
-def _get_auto_close(obj: Doorlock) -> int:
-    return int(obj.auto_close_time.total_seconds())
-
-
-async def _set_auto_close(obj: Doorlock, value: float) -> None:
-    await obj.set_auto_close_time(timedelta(seconds=value))
-
-
 def _get_chime_duration(obj: Camera) -> int:
     return int(obj.chime_duration_seconds)
+
+
+async def _set_chime_volume(obj: Chime, value: float) -> None:
+    """Set chime volume per paired camera via the public API."""
+    level = int(value)
+    ring_settings = [setting.to_api_dict(volume=level) for setting in obj.ring_settings]
+    if ring_settings:
+        await obj.set_ring_settings_public(ring_settings)
 
 
 CAMERA_NUMBERS: tuple[ProtectNumberEntityDescription, ...] = (
@@ -86,13 +77,13 @@ CAMERA_NUMBERS: tuple[ProtectNumberEntityDescription, ...] = (
         translation_key="microphone_level",
         entity_category=EntityCategory.CONFIG,
         native_unit_of_measurement=PERCENTAGE,
-        ufp_min=0,
+        ufp_min=1,
         ufp_max=100,
         ufp_step=1,
         ufp_required_field="has_mic",
         ufp_value="mic_volume",
         ufp_enabled="feature_flags.has_mic",
-        ufp_set_method="set_mic_volume",
+        ufp_set_method="set_mic_volume_public",
         ufp_perm=PermRequired.WRITE,
     ),
     ProtectNumberEntityDescription(
@@ -174,7 +165,6 @@ LIGHT_NUMBERS: tuple[ProtectNumberEntityDescription, ...] = (
         ufp_min=0,
         ufp_max=100,
         ufp_step=1,
-        ufp_required_field=None,
         ufp_value="light_device_settings.pir_sensitivity",
         ufp_set_method="set_sensitivity",
         ufp_perm=PermRequired.WRITE,
@@ -187,7 +177,6 @@ LIGHT_NUMBERS: tuple[ProtectNumberEntityDescription, ...] = (
         ufp_min=15,
         ufp_max=900,
         ufp_step=15,
-        ufp_required_field=None,
         ufp_value_fn=_get_pir_duration,
         ufp_set_method_fn=_set_pir_duration,
         ufp_perm=PermRequired.WRITE,
@@ -203,31 +192,14 @@ SENSE_NUMBERS: tuple[ProtectNumberEntityDescription, ...] = (
         ufp_min=0,
         ufp_max=100,
         ufp_step=1,
-        ufp_required_field=None,
         ufp_value="motion_settings.sensitivity",
         ufp_set_method="set_motion_sensitivity",
         ufp_perm=PermRequired.WRITE,
     ),
 )
 
-DOORLOCK_NUMBERS: tuple[ProtectNumberEntityDescription, ...] = (
-    ProtectNumberEntityDescription[Doorlock](
-        key="auto_lock_time",
-        translation_key="auto_lock_timeout",
-        entity_category=EntityCategory.CONFIG,
-        native_unit_of_measurement=UnitOfTime.SECONDS,
-        ufp_min=0,
-        ufp_max=3600,
-        ufp_step=15,
-        ufp_required_field=None,
-        ufp_value_fn=_get_auto_close,
-        ufp_set_method_fn=_set_auto_close,
-        ufp_perm=PermRequired.WRITE,
-    ),
-)
-
 CHIME_NUMBERS: tuple[ProtectNumberEntityDescription, ...] = (
-    ProtectNumberEntityDescription(
+    ProtectNumberEntityDescription[Chime](
         key="volume",
         translation_key="volume",
         entity_category=EntityCategory.CONFIG,
@@ -236,7 +208,7 @@ CHIME_NUMBERS: tuple[ProtectNumberEntityDescription, ...] = (
         ufp_max=100,
         ufp_step=1,
         ufp_value="volume",
-        ufp_set_method="set_volume",
+        ufp_set_method_fn=_set_chime_volume,
         ufp_perm=PermRequired.WRITE,
     ),
 )
@@ -244,7 +216,6 @@ _MODEL_DESCRIPTIONS: dict[ModelType, Sequence[ProtectEntityDescription]] = {
     ModelType.CAMERA: CAMERA_NUMBERS,
     ModelType.LIGHT: LIGHT_NUMBERS,
     ModelType.SENSOR: SENSE_NUMBERS,
-    ModelType.DOORLOCK: DOORLOCK_NUMBERS,
     ModelType.CHIME: CHIME_NUMBERS,
 }
 
@@ -348,7 +319,9 @@ class ProtectNumbers(ProtectDeviceEntity, NumberEntity):
     @callback
     def _async_update_device_from_protect(self, device: ProtectDeviceType) -> None:
         super()._async_update_device_from_protect(device)
-        self._attr_native_value = self.entity_description.get_ufp_value(self.device)
+        self._attr_native_value = self.entity_description.get_value(
+            self.device, self._ufp_public_obj
+        )
 
     @async_ufp_instance_command
     async def async_set_native_value(self, value: float) -> None:

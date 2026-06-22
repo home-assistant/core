@@ -1,7 +1,5 @@
 """Manifest validation."""
 
-from __future__ import annotations
-
 from enum import StrEnum, auto
 import json
 from pathlib import Path

@@ -1,7 +1,5 @@
 """Support for Ridwell buttons."""
 
-from __future__ import annotations
-
 from typing import Any
 
 from aioridwell.errors import RidwellError
@@ -53,7 +51,7 @@ class RidwellSwitch(RidwellEntity, SwitchEntity):
     @property
     def is_on(self) -> bool:
         """Return True if entity is on."""
-        return self.next_pickup_event.state == EventState.SCHEDULED
+        return self.next_pickup_event.state is EventState.SCHEDULED
 
     async def async_turn_off(self, **kwargs: Any) -> None:
         """Turn the switch off."""

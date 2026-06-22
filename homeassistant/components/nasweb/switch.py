@@ -1,7 +1,5 @@
 """Platform for NASweb output."""
 
-from __future__ import annotations
-
 import logging
 import time
 from typing import Any
@@ -98,7 +96,7 @@ class RelaySwitch(SwitchEntity, BaseCoordinatorEntity):
         self._attr_translation_key = OUTPUT_TRANSLATION_KEY
         self._attr_translation_placeholders = {"index": f"{nasweb_output.index:2d}"}
         self._attr_unique_id = (
-            f"{DOMAIN}.{self._output.webio_serial}.relay_switch.{self._output.index}"
+            f"{DOMAIN}.{self._output.webio_serial}.relay_switch.{self._output.index}"  # pylint: disable=home-assistant-entity-unique-id-redundant-domain
         )
         self._attr_device_info = DeviceInfo(
             identifiers={(DOMAIN, self._output.webio_serial)},
@@ -128,7 +126,8 @@ class RelaySwitch(SwitchEntity, BaseCoordinatorEntity):
         """Update the entity.
 
         Only used by the generic entity update service.
-        Scheduling updates is not necessary, the coordinator takes care of updates via push notifications.
+        Scheduling updates is not necessary, the coordinator
+        takes care of updates via push notifications.
         """
 
     async def async_turn_on(self, **kwargs: Any) -> None:

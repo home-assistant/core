@@ -1,7 +1,5 @@
 """Support for MySensors covers."""
 
-from __future__ import annotations
-
 from enum import Enum, unique
 from typing import Any
 
@@ -83,17 +81,17 @@ class MySensorsCover(MySensorsChildEntity, CoverEntity):
     @property
     def is_closed(self) -> bool:
         """Return True if the cover is closed."""
-        return self.get_cover_state() == CoverState.CLOSED
+        return self.get_cover_state() is CoverState.CLOSED
 
     @property
     def is_closing(self) -> bool:
         """Return True if the cover is closing."""
-        return self.get_cover_state() == CoverState.CLOSING
+        return self.get_cover_state() is CoverState.CLOSING
 
     @property
     def is_opening(self) -> bool:
         """Return True if the cover is opening."""
-        return self.get_cover_state() == CoverState.OPENING
+        return self.get_cover_state() is CoverState.OPENING
 
     @property
     def current_cover_position(self) -> int | None:

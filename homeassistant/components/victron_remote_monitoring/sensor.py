@@ -1,7 +1,5 @@
 """Support for the VRM Solar Forecast sensor service."""
 
-from __future__ import annotations
-
 from collections.abc import Callable
 from dataclasses import dataclass
 from datetime import datetime

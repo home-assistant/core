@@ -1,7 +1,5 @@
 """Support for ZHA controls using the select platform."""
 
-from __future__ import annotations
-
 import functools
 import logging
 from typing import Any
@@ -60,7 +58,7 @@ class ZHAEnumSelectEntity(ZHAEntity, SelectEntity):
         """Return the selected entity option to represent the entity state."""
         return self.entity_data.entity.current_option
 
-    @convert_zha_error_to_ha_error
+    @convert_zha_error_to_ha_error()
     async def async_select_option(self, option: str) -> None:
         """Change the selected option."""
         await self.entity_data.entity.async_select_option(option=option)

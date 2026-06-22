@@ -1,7 +1,5 @@
 """Test the UniFi Discovery init."""
 
-from __future__ import annotations
-
 from homeassistant import config_entries
 from homeassistant.components.unifi_discovery.const import DOMAIN
 from homeassistant.core import HomeAssistant

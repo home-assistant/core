@@ -1,6 +1,4 @@
-"""Contains the Coordinator for updating the IP addresses of your Cloudflare DNS records."""
-
-from __future__ import annotations
+"""Coordinator for updating IP addresses of Cloudflare DNS records."""
 
 import asyncio
 from datetime import timedelta

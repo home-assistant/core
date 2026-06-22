@@ -1,7 +1,5 @@
 """Support for Magic Home switches."""
 
-from __future__ import annotations
-
 from typing import Any
 
 from flux_led import DeviceType
@@ -34,7 +32,7 @@ async def async_setup_entry(
     entities: list[FluxSwitch | FluxRemoteAccessSwitch | FluxMusicSwitch] = []
     base_unique_id = entry.unique_id or entry.entry_id
 
-    if coordinator.device.device_type == DeviceType.Switch:
+    if coordinator.device.device_type is DeviceType.Switch:
         entities.append(FluxSwitch(coordinator, base_unique_id, None))
 
     if entry.data.get(CONF_REMOTE_ACCESS_HOST):

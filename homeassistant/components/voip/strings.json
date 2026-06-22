@@ -10,11 +10,6 @@
     }
   },
   "entity": {
-    "binary_sensor": {
-      "call_in_progress": {
-        "name": "Call in progress"
-      }
-    },
     "select": {
       "pipeline": {
         "name": "[%key:component::assist_pipeline::entity::select::pipeline::name%]",
@@ -46,18 +41,6 @@
   "exceptions": {
     "non_tts_announcement": {
       "message": "VoIP does not currently support non-TTS announcements"
-    }
-  },
-  "issues": {
-    "assist_in_progress_deprecated": {
-      "fix_flow": {
-        "step": {
-          "confirm_disable_entity": {
-            "description": "[%key:component::assist_pipeline::issues::assist_in_progress_deprecated::fix_flow::step::confirm_disable_entity::description%]"
-          }
-        }
-      },
-      "title": "[%key:component::assist_pipeline::issues::assist_in_progress_deprecated::title%]"
     }
   },
   "options": {

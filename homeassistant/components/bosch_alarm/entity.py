@@ -1,6 +1,6 @@
 """Support for Bosch Alarm Panel History as a sensor."""
 
-from __future__ import annotations
+from typing import override
 
 from bosch_alarm_mode2 import Panel
 
@@ -31,16 +31,19 @@ class BoschAlarmEntity(Entity):
         )
 
     @property
+    @override
     def available(self) -> bool:
         """Return True if entity is available."""
         return self.panel.connection_status()
 
+    @override
     async def async_added_to_hass(self) -> None:
         """Observe state changes."""
         self.panel.connection_status_observer.attach(self.schedule_update_ha_state)
         if self._observe_faults:
             self.panel.faults_observer.attach(self.schedule_update_ha_state)
 
+    @override
     async def async_will_remove_from_hass(self) -> None:
         """Stop observing state changes."""
         self.panel.connection_status_observer.detach(self.schedule_update_ha_state)
@@ -75,6 +78,7 @@ class BoschAlarmAreaEntity(BoschAlarmEntity):
             via_device=(DOMAIN, unique_id),
         )
 
+    @override
     async def async_added_to_hass(self) -> None:
         """Observe state changes."""
         await super().async_added_to_hass()
@@ -85,6 +89,7 @@ class BoschAlarmAreaEntity(BoschAlarmEntity):
         if self._observe_status:
             self._area.status_observer.attach(self.schedule_update_ha_state)
 
+    @override
     async def async_will_remove_from_hass(self) -> None:
         """Stop observing state changes."""
         await super().async_added_to_hass()
@@ -112,11 +117,13 @@ class BoschAlarmPointEntity(BoschAlarmEntity):
             via_device=(DOMAIN, unique_id),
         )
 
+    @override
     async def async_added_to_hass(self) -> None:
         """Observe state changes."""
         await super().async_added_to_hass()
         self._point.status_observer.attach(self.schedule_update_ha_state)
 
+    @override
     async def async_will_remove_from_hass(self) -> None:
         """Stop observing state changes."""
         await super().async_added_to_hass()
@@ -139,11 +146,13 @@ class BoschAlarmDoorEntity(BoschAlarmEntity):
             via_device=(DOMAIN, unique_id),
         )
 
+    @override
     async def async_added_to_hass(self) -> None:
         """Observe state changes."""
         await super().async_added_to_hass()
         self._door.status_observer.attach(self.schedule_update_ha_state)
 
+    @override
     async def async_will_remove_from_hass(self) -> None:
         """Stop observing state changes."""
         await super().async_added_to_hass()
@@ -166,11 +175,13 @@ class BoschAlarmOutputEntity(BoschAlarmEntity):
             via_device=(DOMAIN, unique_id),
         )
 
+    @override
     async def async_added_to_hass(self) -> None:
         """Observe state changes."""
         await super().async_added_to_hass()
         self._output.status_observer.attach(self.schedule_update_ha_state)
 
+    @override
     async def async_will_remove_from_hass(self) -> None:
         """Stop observing state changes."""
         await super().async_added_to_hass()

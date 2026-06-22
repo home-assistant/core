@@ -1,7 +1,5 @@
 """Switcher integration Light platform."""
 
-from __future__ import annotations
-
 from typing import Any, cast
 
 from aioswitcher.device import DeviceCategory, DeviceState, SwitcherLight
@@ -80,7 +78,7 @@ class SwitcherBaseLightEntity(SwitcherEntity, LightEntity):
             return
 
         data = cast(SwitcherLight, self.coordinator.data)
-        self._attr_is_on = bool(data.light[self._light_id] == DeviceState.ON)
+        self._attr_is_on = bool(data.light[self._light_id] is DeviceState.ON)
 
     async def async_turn_on(self, **kwargs: Any) -> None:
         """Turn the light on."""

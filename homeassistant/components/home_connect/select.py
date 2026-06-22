@@ -27,6 +27,7 @@ from .const import (
     COFFEE_TEMPERATURE_OPTIONS,
     DOMAIN,
     DRYING_TARGET_OPTIONS,
+    FAVORITE_PROGRAMS,
     FLOW_RATE_OPTIONS,
     HOT_WATER_TEMPERATURE_OPTIONS,
     INTENSIVE_LEVEL_OPTIONS,
@@ -88,7 +89,7 @@ class HomeConnectProgramSelectEntityDescription(
 
 @dataclass(frozen=True, kw_only=True)
 class HomeConnectSelectEntityDescription(SelectEntityDescription):
-    """Entity Description class for settings and options that have enumeration values."""
+    """Entity Description class for settings and options with enum values."""
 
     translation_key_values: dict[str, str]
     values_translation_key: dict[str, str]
@@ -133,7 +134,9 @@ SELECT_ENTITY_DESCRIPTIONS = (
         translation_key_values=FUNCTIONAL_LIGHT_COLOR_TEMPERATURE_ENUM,
         values_translation_key={
             value: translation_key
-            for translation_key, value in FUNCTIONAL_LIGHT_COLOR_TEMPERATURE_ENUM.items()
+            for translation_key, value in (
+                FUNCTIONAL_LIGHT_COLOR_TEMPERATURE_ENUM.items()
+            )
         },
     ),
     HomeConnectSelectEntityDescription(
@@ -436,11 +439,7 @@ class HomeConnectProgramSelectEntity(HomeConnectEntity, SelectEntity):
             else None
         )
         if (
-            program_key
-            in (
-                ProgramKey.BSH_COMMON_FAVORITE_001,
-                ProgramKey.BSH_COMMON_FAVORITE_002,
-            )
+            program_key in FAVORITE_PROGRAMS
             and (
                 base_program_event := self.appliance.events.get(
                     EventKey.BSH_COMMON_OPTION_BASE_PROGRAM

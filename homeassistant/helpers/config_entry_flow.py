@@ -1,7 +1,5 @@
 """Helpers for data entry flows for config entries."""
 
-from __future__ import annotations
-
 from collections.abc import Awaitable, Callable
 import logging
 from typing import TYPE_CHECKING, Any, cast

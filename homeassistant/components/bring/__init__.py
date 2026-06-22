@@ -1,7 +1,5 @@
 """The Bring! integration."""
 
-from __future__ import annotations
-
 import logging
 
 from bring_api import Bring

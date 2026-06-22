@@ -1,7 +1,5 @@
 """Demo notification entity."""
 
-from __future__ import annotations
-
 from homeassistant.components.notify import (
     DOMAIN as NOTIFY_DOMAIN,
     NotifyEntity,

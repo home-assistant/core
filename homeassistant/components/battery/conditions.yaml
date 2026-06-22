@@ -3,16 +3,14 @@
     entity:
       - domain: binary_sensor
         device_class: battery
+    primary_entities_only: false
   fields:
     behavior: &condition_behavior
       required: true
       default: any
       selector:
-        select:
-          translation_key: condition_behavior
-          options:
-            - all
-            - any
+        automation_behavior:
+          mode: condition
     for: &condition_for
       required: true
       default: 00:00:00
@@ -42,6 +40,7 @@ is_charging:
     entity:
       - domain: binary_sensor
         device_class: battery_charging
+    primary_entities_only: false
   fields:
     behavior: *condition_behavior
     for: *condition_for
@@ -51,6 +50,7 @@ is_not_charging:
     entity:
       - domain: binary_sensor
         device_class: battery_charging
+    primary_entities_only: false
   fields:
     behavior: *condition_behavior
     for: *condition_for
@@ -60,8 +60,10 @@ is_level:
     entity:
       - domain: sensor
         device_class: battery
+    primary_entities_only: false
   fields:
     behavior: *condition_behavior
+    for: *condition_for
     threshold:
       required: true
       selector:

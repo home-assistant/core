@@ -1,7 +1,5 @@
 """Config flow for the EARN-E P1 Meter integration."""
 
-from __future__ import annotations
-
 import logging
 from typing import Any
 

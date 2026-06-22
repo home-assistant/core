@@ -1,7 +1,5 @@
 """Support for AtlanticHeatRecoveryVentilation."""
 
-from __future__ import annotations
-
 from typing import cast
 
 from pyoverkiz.enums import OverkizCommand, OverkizCommandParam, OverkizState
@@ -69,7 +67,9 @@ class AtlanticHeatRecoveryVentilation(OverkizEntity, ClimateEntity):
     def current_temperature(self) -> float | None:
         """Return the current temperature."""
         if self.temperature_device is not None and (
-            temperature := self.temperature_device.states[OverkizState.CORE_TEMPERATURE]
+            temperature := self.temperature_device.states.get(
+                OverkizState.CORE_TEMPERATURE
+            )
         ):
             return cast(float, temperature.value)
 
@@ -81,7 +81,7 @@ class AtlanticHeatRecoveryVentilation(OverkizEntity, ClimateEntity):
     @property
     def preset_mode(self) -> str | None:
         """Return the current preset mode."""
-        ventilation_configuration = self.executor.select_state(
+        ventilation_configuration = self.device.states.get_value(
             OverkizState.IO_VENTILATION_CONFIGURATION_MODE
         )
 
@@ -92,7 +92,7 @@ class AtlanticHeatRecoveryVentilation(OverkizEntity, ClimateEntity):
             return PRESET_MANUAL
 
         ventilation_mode = cast(
-            dict, self.executor.select_state(OverkizState.IO_VENTILATION_MODE)
+            dict, self.device.states.get_value(OverkizState.IO_VENTILATION_MODE)
         )
         prog = ventilation_mode.get(OverkizCommandParam.PROG)
 
@@ -135,7 +135,7 @@ class AtlanticHeatRecoveryVentilation(OverkizEntity, ClimateEntity):
     def fan_mode(self) -> str | None:
         """Return the fan setting."""
         ventilation_mode = cast(
-            dict, self.executor.select_state(OverkizState.IO_VENTILATION_MODE)
+            dict, self.device.states.get_value(OverkizState.IO_VENTILATION_MODE)
         )
         cooling = ventilation_mode.get(OverkizCommandParam.COOLING)
 
@@ -143,7 +143,7 @@ class AtlanticHeatRecoveryVentilation(OverkizEntity, ClimateEntity):
             return FAN_BYPASS
 
         return OVERKIZ_TO_FAN_MODES[
-            cast(str, self.executor.select_state(OverkizState.IO_AIR_DEMAND_MODE))
+            cast(str, self.device.states.get_value(OverkizState.IO_AIR_DEMAND_MODE))
         ]
 
     async def async_set_fan_mode(self, fan_mode: str) -> None:
@@ -170,7 +170,7 @@ class AtlanticHeatRecoveryVentilation(OverkizEntity, ClimateEntity):
     ) -> None:
         """Execute ventilation mode command with all parameters."""
         ventilation_mode = cast(
-            dict, self.executor.select_state(OverkizState.IO_VENTILATION_MODE)
+            dict, self.device.states.get_value(OverkizState.IO_VENTILATION_MODE)
         )
 
         if cooling:

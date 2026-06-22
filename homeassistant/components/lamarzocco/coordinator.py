@@ -1,7 +1,5 @@
 """Coordinator for La Marzocco API."""
 
-from __future__ import annotations
-
 from abc import abstractmethod
 from asyncio import Task
 from collections.abc import Callable, Coroutine
@@ -145,7 +143,8 @@ class LaMarzoccoConfigUpdateCoordinator(LaMarzoccoUpdateCoordinator):
         # ensure token stays valid; does nothing if token is still valid
         await self.device.ensure_token_valid()
 
-        # Only skip websocket reconnection if it's currently connected and the task is still running
+        # Only skip websocket reconnection if it's currently
+        # connected and the task is still running
         if self.device.websocket.connected and not self.websocket_terminated:
             return
 

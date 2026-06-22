@@ -1,7 +1,5 @@
 """Base class for TRMNL entities."""
 
-from __future__ import annotations
-
 from collections.abc import Callable, Coroutine
 from typing import Any, Concatenate
 

@@ -1,10 +1,8 @@
 """Support for August sensors."""
 
-from __future__ import annotations
-
 from collections.abc import Callable
 from dataclasses import dataclass
-from typing import Any, cast
+from typing import Any, cast, override
 
 from yalexs.activity import ActivityType, LockOperationActivity
 from yalexs.doorbell import Doorbell
@@ -124,6 +122,7 @@ class AugustOperatorSensor(AugustEntity, RestoreSensor):
     _operated_autorelock: bool | None = None
 
     @callback
+    @override
     def _update_from_data(self) -> None:
         """Get the latest state of the sensor and update activity."""
         self._attr_available = True
@@ -138,6 +137,7 @@ class AugustOperatorSensor(AugustEntity, RestoreSensor):
             self._attr_entity_picture = lock_activity.operator_thumbnail_url
 
     @property
+    @override
     def extra_state_attributes(self) -> dict[str, Any]:
         """Return the device specific state attributes."""
         attributes: dict[str, Any] = {}
@@ -168,8 +168,12 @@ class AugustOperatorSensor(AugustEntity, RestoreSensor):
 
         return attributes
 
+    @override
     async def async_added_to_hass(self) -> None:
-        """Restore ATTR_CHANGED_BY on startup since it is likely no longer in the activity log."""
+        """Restore ATTR_CHANGED_BY on startup.
+
+        It is likely no longer in the activity log.
+        """
         await super().async_added_to_hass()
 
         last_state = await self.async_get_last_state()
@@ -207,6 +211,7 @@ class AugustBatterySensor[T: LockDetail | KeypadDetail](
     _attr_native_unit_of_measurement = PERCENTAGE
 
     @callback
+    @override
     def _update_from_data(self) -> None:
         """Get the latest state of the sensor."""
         self._attr_native_value = self.entity_description.value_fn(self._detail)

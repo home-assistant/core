@@ -1,7 +1,5 @@
 """Support for the Rainforest Eagle energy monitor."""
 
-from __future__ import annotations
-
 from homeassistant.components.sensor import (
     SensorDeviceClass,
     SensorEntity,
@@ -77,7 +75,11 @@ class EagleSensor(CoordinatorEntity[EagleDataCoordinator], SensorEntity):
         """Initialize the sensor."""
         super().__init__(coordinator)
         self.entity_description = entity_description
-        self._attr_unique_id = f"{coordinator.cloud_id}-${coordinator.hardware_address}-{entity_description.key}"
+        self._attr_unique_id = (
+            f"{coordinator.cloud_id}"
+            f"-${coordinator.hardware_address}"
+            f"-{entity_description.key}"
+        )
         self._attr_device_info = DeviceInfo(
             identifiers={(DOMAIN, coordinator.cloud_id)},
             manufacturer="Rainforest Automation",

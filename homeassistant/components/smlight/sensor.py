@@ -1,7 +1,5 @@
 """Support for SLZB-06 sensors."""
 
-from __future__ import annotations
-
 from collections.abc import Callable
 from dataclasses import dataclass
 from datetime import datetime, timedelta

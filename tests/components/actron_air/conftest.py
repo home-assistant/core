@@ -122,7 +122,7 @@ def mock_zone() -> MagicMock:
     zone.zone_name = "Test Zone"
     zone.title = "Living Room"
     zone.live_temp_c = 22.0
-    zone.temperature_setpoint_cool_c = 24.0
+    zone.current_setpoint = 24.0
     zone.is_active = True
     zone.hvac_mode = "COOL"
     zone.humidity = 50.0

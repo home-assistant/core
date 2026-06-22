@@ -100,7 +100,8 @@ async def test_fail_updating_image(
 
     previous_state = hass.states.get("image.roborock_s7_maxv_upstairs").state
 
-    # Refreshing the map should fail, but we should still be able to get the existing image.
+    # Refreshing the map should fail, but we should still be able
+    # to get the existing image.
     assert fake_vacuum.v1_properties
     fake_vacuum.v1_properties.home.refresh.side_effect = RoborockException
     fake_vacuum.v1_properties.status.in_cleaning = 1

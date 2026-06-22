@@ -1,47 +1,18 @@
 """Support for Vivotek IP Cameras."""
 
-from __future__ import annotations
-
 import logging
-from typing import TYPE_CHECKING
+from typing import TYPE_CHECKING, Final
 
 from libpyvivotek.vivotek import VivotekCamera
-import voluptuous as vol
 
-from homeassistant.components.camera import (
-    PLATFORM_SCHEMA as CAMERA_PLATFORM_SCHEMA,
-    Camera,
-    CameraEntityFeature,
-)
-from homeassistant.config_entries import SOURCE_IMPORT
-from homeassistant.const import (
-    CONF_AUTHENTICATION,
-    CONF_IP_ADDRESS,
-    CONF_NAME,
-    CONF_PASSWORD,
-    CONF_SSL,
-    CONF_USERNAME,
-    CONF_VERIFY_SSL,
-    HTTP_BASIC_AUTHENTICATION,
-    HTTP_DIGEST_AUTHENTICATION,
-)
-from homeassistant.core import DOMAIN as HOMEASSISTANT_DOMAIN, HomeAssistant
-from homeassistant.data_entry_flow import FlowResultType
-from homeassistant.helpers import config_validation as cv, issue_registry as ir
-from homeassistant.helpers.entity_platform import (
-    AddConfigEntryEntitiesCallback,
-    AddEntitiesCallback,
-)
-from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
+from homeassistant.components.camera import Camera, CameraEntityFeature
+from homeassistant.const import CONF_IP_ADDRESS, CONF_PASSWORD, CONF_USERNAME
+from homeassistant.core import HomeAssistant
+from homeassistant.helpers import config_validation as cv
+from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
 from . import VivotekConfigEntry
-from .const import (
-    CONF_FRAMERATE,
-    CONF_SECURITY_LEVEL,
-    CONF_STREAM_PATH,
-    DOMAIN,
-    INTEGRATION_TITLE,
-)
+from .const import CONF_FRAMERATE, CONF_STREAM_PATH, DOMAIN
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -52,70 +23,7 @@ DEFAULT_FRAMERATE = 2
 DEFAULT_SECURITY_LEVEL = "admin"
 DEFAULT_STREAM_SOURCE = "live.sdp"
 
-PLATFORM_SCHEMA = CAMERA_PLATFORM_SCHEMA.extend(
-    {
-        vol.Required(CONF_IP_ADDRESS): cv.string,
-        vol.Optional(CONF_NAME, default=DEFAULT_NAME): cv.string,
-        vol.Required(CONF_PASSWORD): cv.string,
-        vol.Required(CONF_USERNAME): cv.string,
-        vol.Optional(CONF_AUTHENTICATION, default=HTTP_BASIC_AUTHENTICATION): vol.In(
-            [HTTP_BASIC_AUTHENTICATION, HTTP_DIGEST_AUTHENTICATION]
-        ),
-        vol.Optional(CONF_SSL, default=False): cv.boolean,
-        vol.Optional(CONF_VERIFY_SSL, default=True): cv.boolean,
-        vol.Optional(CONF_FRAMERATE, default=DEFAULT_FRAMERATE): cv.positive_int,
-        vol.Optional(CONF_SECURITY_LEVEL, default=DEFAULT_SECURITY_LEVEL): cv.string,
-        vol.Optional(CONF_STREAM_PATH, default=DEFAULT_STREAM_SOURCE): cv.string,
-    }
-)
-
-
-async def async_setup_platform(
-    hass: HomeAssistant,
-    config: ConfigType,
-    async_add_entities: AddEntitiesCallback,
-    discovery_info: DiscoveryInfoType | None = None,
-) -> None:
-    """Set up the Vivotek camera platform."""
-    result = await hass.config_entries.flow.async_init(
-        DOMAIN,
-        context={"source": SOURCE_IMPORT},
-        data=config,
-    )
-    if (
-        result.get("type") is FlowResultType.ABORT
-        and result.get("reason") != "already_configured"
-    ):
-        ir.async_create_issue(
-            hass,
-            DOMAIN,
-            f"deprecated_yaml_import_issue_{result.get('reason')}",
-            breaks_in_ha_version="2026.6.0",
-            is_fixable=False,
-            issue_domain=DOMAIN,
-            severity=ir.IssueSeverity.WARNING,
-            translation_key=f"deprecated_yaml_import_issue_{result.get('reason')}",
-            translation_placeholders={
-                "domain": DOMAIN,
-                "integration_title": INTEGRATION_TITLE,
-            },
-        )
-        return
-
-    ir.async_create_issue(
-        hass,
-        HOMEASSISTANT_DOMAIN,
-        "deprecated_yaml",
-        breaks_in_ha_version="2026.6.0",
-        is_fixable=False,
-        issue_domain=DOMAIN,
-        severity=ir.IssueSeverity.WARNING,
-        translation_key="deprecated_yaml",
-        translation_placeholders={
-            "domain": DOMAIN,
-            "integration_title": INTEGRATION_TITLE,
-        },
-    )
+PLATFORM_SCHEMA: Final = cv.removed(DOMAIN, raise_if_present=False)
 
 
 async def async_setup_entry(

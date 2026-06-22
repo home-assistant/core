@@ -1,7 +1,5 @@
 """Helpers to deal with Cast devices."""
 
-from __future__ import annotations
-
 import configparser
 from dataclasses import dataclass
 import logging
@@ -22,10 +20,10 @@ import pychromecast.socket_client
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import aiohttp_client
 
-from .const import DOMAIN
-
 if TYPE_CHECKING:
     from homeassistant.components import zeroconf
+
+    from . import CastConfigEntry
 
 
 _LOGGER = logging.getLogger(__name__)
@@ -58,16 +56,16 @@ class ChromecastInfo:
         """Return the UUID."""
         return self.cast_info.uuid
 
-    def fill_out_missing_chromecast_info(self, hass: HomeAssistant) -> ChromecastInfo:
+    def fill_out_missing_chromecast_info(
+        self, hass: HomeAssistant, config_entry: CastConfigEntry
+    ) -> ChromecastInfo:
         """Return a new ChromecastInfo object with missing attributes filled in.
 
         Uses blocking HTTP / HTTPS.
         """
         cast_info = self.cast_info
         if self.cast_info.cast_type is None or self.cast_info.manufacturer is None:
-            # Uses legacy hass.data[DOMAIN] pattern
-            # pylint: disable-next=hass-use-runtime-data
-            unknown_models = hass.data[DOMAIN]["unknown_models"]
+            unknown_models = config_entry.runtime_data.unknown_models
             if self.cast_info.model_name not in unknown_models:
                 # Manufacturer and cast type is not available in mDNS data,
                 # get it over HTTP

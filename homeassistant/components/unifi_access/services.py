@@ -1,7 +1,5 @@
 """Services for UniFi Access."""
 
-from __future__ import annotations
-
 from datetime import timedelta
 
 from unifi_access_api import UnifiAccessError

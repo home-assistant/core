@@ -1,7 +1,5 @@
 """Support for Toon binary sensors."""
 
-from __future__ import annotations
-
 from dataclasses import dataclass
 
 from homeassistant.components.binary_sensor import (
@@ -63,7 +61,7 @@ class ToonBinarySensor(ToonEntity, BinarySensorEntity):
         self._attr_unique_id = (
             # This unique ID is a bit ugly and contains unneeded information.
             # It is here for legacy / backward compatible reasons.
-            f"{DOMAIN}_{coordinator.data.agreement.agreement_id}_binary_sensor_{description.key}"
+            f"{DOMAIN}_{coordinator.data.agreement.agreement_id}_binary_sensor_{description.key}"  # pylint: disable=home-assistant-entity-unique-id-redundant-domain
         )
 
     @property

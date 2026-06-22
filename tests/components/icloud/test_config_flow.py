@@ -102,7 +102,7 @@ def mock_controller_service_authenticated_no_device():
 
 @pytest.fixture(name="service_authenticated_not_trusted")
 def mock_controller_service_authenticated_not_trusted():
-    """Mock a successful service while already authenticated, but the session is not trusted."""
+    """Mock a successful service already authenticated but not trusted."""
     with patch(
         "homeassistant.components.icloud.config_flow.PyiCloudService"
     ) as service_mock:
@@ -399,7 +399,7 @@ async def test_password_update(
 
 
 async def test_password_update_wrong_password(hass: HomeAssistant) -> None:
-    """Test that during password reauthentication wrong password returns correct error."""
+    """Test password reauthentication with wrong password returns error."""
     config_entry = MockConfigEntry(
         domain=DOMAIN, data=MOCK_CONFIG, entry_id="test", unique_id=USERNAME
     )

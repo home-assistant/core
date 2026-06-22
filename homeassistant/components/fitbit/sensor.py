@@ -1,7 +1,5 @@
 """Support for the Fitbit API."""
 
-from __future__ import annotations
-
 from collections.abc import Callable
 from dataclasses import dataclass
 import datetime
@@ -511,14 +509,12 @@ FITBIT_RESOURCE_BATTERY = FitbitSensorEntityDescription(
     icon="mdi:battery",
     scope=FitbitScope.DEVICE,
     entity_category=EntityCategory.DIAGNOSTIC,
-    has_entity_name=True,
 )
 FITBIT_RESOURCE_BATTERY_LEVEL = FitbitSensorEntityDescription(
     key="devices/battery_level",
     translation_key="battery_level",
     scope=FitbitScope.DEVICE,
     entity_category=EntityCategory.DIAGNOSTIC,
-    has_entity_name=True,
     device_class=SensorDeviceClass.BATTERY,
     native_unit_of_measurement=PERCENTAGE,
 )
@@ -656,6 +652,7 @@ class FitbitBatterySensor(CoordinatorEntity[FitbitDeviceCoordinator], SensorEnti
 
     entity_description: FitbitSensorEntityDescription
     _attr_attribution = ATTRIBUTION
+    _attr_has_entity_name = True
 
     def __init__(
         self,
@@ -715,6 +712,7 @@ class FitbitBatteryLevelSensor(
     """Implementation of a Fitbit battery level sensor."""
 
     entity_description: FitbitSensorEntityDescription
+    _attr_has_entity_name = True
     _attr_attribution = ATTRIBUTION
 
     def __init__(

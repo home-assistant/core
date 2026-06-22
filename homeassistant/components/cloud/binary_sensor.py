@@ -1,7 +1,5 @@
 """Support for Home Assistant Cloud binary sensors."""
 
-from __future__ import annotations
-
 import asyncio
 from typing import Any
 
@@ -39,7 +37,7 @@ class CloudRemoteBinary(BinarySensorEntity):
     _attr_name = "Remote UI"
     _attr_device_class = BinarySensorDeviceClass.CONNECTIVITY
     _attr_should_poll = False
-    _attr_unique_id = "cloud-remote-ui-connectivity"
+    _attr_unique_id = "cloud-remote-ui-connectivity"  # pylint: disable=home-assistant-entity-unique-id-redundant-domain
     _attr_entity_category = EntityCategory.DIAGNOSTIC
 
     def __init__(self, cloud: Cloud[CloudClient]) -> None:

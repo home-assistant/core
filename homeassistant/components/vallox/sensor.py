@@ -1,7 +1,5 @@
 """Support for Vallox ventilation unit sensors."""
 
-from __future__ import annotations
-
 from dataclasses import dataclass
 from datetime import datetime, time
 
@@ -80,11 +78,14 @@ class ValloxProfileSensor(ValloxSensorEntity):
         return VALLOX_PROFILE_TO_PRESET_MODE.get(vallox_profile)
 
 
-# There is a quirk with respect to the fan speed reporting. The device keeps on reporting the last
-# valid fan speed from when the device was in regular operation mode, even if it left that state and
-# has been shut off in the meantime.
+# There is a quirk with respect to the fan speed
+# reporting. The device keeps on reporting the last valid
+# fan speed from when the device was in regular operation
+# mode, even if it left that state and has been shut off
+# in the meantime.
 #
-# Therefore, first query the overall state of the device, and report zero percent fan speed in case
+# Therefore, first query the overall state of the device,
+# and report zero percent fan speed in case
 # it is not in regular operation mode.
 class ValloxFanSpeedSensor(ValloxSensorEntity):
     """Child class for fan speed reporting."""

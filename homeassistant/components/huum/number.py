@@ -1,12 +1,10 @@
 """Control for steamer."""
 
-from __future__ import annotations
-
 import logging
 
 from huum.const import SaunaStatus
 
-from homeassistant.components.number import NumberEntity
+from homeassistant.components.number import NumberDeviceClass, NumberEntity
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
@@ -36,7 +34,9 @@ class HuumSteamer(HuumBaseEntity, NumberEntity):
     """Representation of a steamer."""
 
     _attr_translation_key = "humidity"
-    _attr_native_max_value = 10
+    _attr_device_class = NumberDeviceClass.HUMIDITY
+    _attr_native_unit_of_measurement = "%"
+    _attr_native_max_value = 40
     _attr_native_min_value = 0
     _attr_native_step = 1
 
@@ -49,7 +49,7 @@ class HuumSteamer(HuumBaseEntity, NumberEntity):
     @property
     def native_value(self) -> float | None:
         """Return the current value."""
-        return self.coordinator.data.target_humidity
+        return self.coordinator.data.humidity
 
     async def async_set_native_value(self, value: float) -> None:
         """Update the current value."""

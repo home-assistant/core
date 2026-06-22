@@ -1,11 +1,9 @@
 """Support for fetching data from Broadlink devices."""
 
-from __future__ import annotations
-
 from abc import ABC, abstractmethod
 from datetime import datetime, timedelta
 import logging
-from typing import TYPE_CHECKING, Any, Generic, TypeVar
+from typing import TYPE_CHECKING, Any, Generic, TypeVar, override
 
 import broadlink as blk
 from broadlink.exceptions import AuthorizationError, BroadlinkException
@@ -48,7 +46,7 @@ def get_update_manager(device: BroadlinkDevice[_ApiT]) -> BroadlinkUpdateManager
     return update_managers[device.api.type](device)
 
 
-class BroadlinkUpdateManager(ABC, Generic[_ApiT]):
+class BroadlinkUpdateManager(ABC, Generic[_ApiT]):  # noqa: UP046
     """Representation of a Broadlink update manager.
 
     Implement this class to manage fetching data from the device and to
@@ -115,6 +113,7 @@ class BroadlinkA1UpdateManager(BroadlinkUpdateManager[blk.a1]):
 
     SCAN_INTERVAL = timedelta(seconds=10)
 
+    @override
     async def async_fetch_data(self) -> dict[str, Any]:
         """Fetch data from the device."""
         return await self.device.async_request(self.device.api.check_sensors_raw)
@@ -125,6 +124,7 @@ class BroadlinkA2UpdateManager(BroadlinkUpdateManager[blk.a2]):
 
     SCAN_INTERVAL = timedelta(seconds=10)
 
+    @override
     async def async_fetch_data(self) -> dict[str, Any]:
         """Fetch data from the device."""
         return await self.device.async_request(self.device.api.check_sensors_raw)
@@ -133,6 +133,7 @@ class BroadlinkA2UpdateManager(BroadlinkUpdateManager[blk.a2]):
 class BroadlinkMP1UpdateManager(BroadlinkUpdateManager[blk.mp1]):
     """Manages updates for Broadlink MP1 devices."""
 
+    @override
     async def async_fetch_data(self) -> dict[str, Any]:
         """Fetch data from the device."""
         return await self.device.async_request(self.device.api.check_power)
@@ -141,6 +142,7 @@ class BroadlinkMP1UpdateManager(BroadlinkUpdateManager[blk.mp1]):
 class BroadlinkMP1SUpdateManager(BroadlinkUpdateManager[blk.mp1s]):
     """Manages updates for Broadlink MP1 devices."""
 
+    @override
     async def async_fetch_data(self) -> dict[str, Any]:
         """Fetch data from the device."""
         power = await self.device.async_request(self.device.api.check_power)
@@ -151,6 +153,7 @@ class BroadlinkMP1SUpdateManager(BroadlinkUpdateManager[blk.mp1s]):
 class BroadlinkRMUpdateManager(BroadlinkUpdateManager[blk.rm]):
     """Manages updates for Broadlink remotes."""
 
+    @override
     async def async_fetch_data(self) -> dict[str, Any]:
         """Fetch data from the device."""
         device = self.device
@@ -181,6 +184,7 @@ class BroadlinkRMUpdateManager(BroadlinkUpdateManager[blk.rm]):
 class BroadlinkSP1UpdateManager(BroadlinkUpdateManager[blk.sp1]):
     """Manages updates for Broadlink SP1 devices."""
 
+    @override
     async def async_fetch_data(self) -> dict[str, Any] | None:
         """Fetch data from the device."""
         return None
@@ -189,6 +193,7 @@ class BroadlinkSP1UpdateManager(BroadlinkUpdateManager[blk.sp1]):
 class BroadlinkSP2UpdateManager(BroadlinkUpdateManager[blk.sp2]):
     """Manages updates for Broadlink SP2 devices."""
 
+    @override
     async def async_fetch_data(self) -> dict[str, Any]:
         """Fetch data from the device."""
         device = self.device
@@ -205,6 +210,7 @@ class BroadlinkSP2UpdateManager(BroadlinkUpdateManager[blk.sp2]):
 class BroadlinkBG1UpdateManager(BroadlinkUpdateManager[blk.bg1]):
     """Manages updates for Broadlink BG1 devices."""
 
+    @override
     async def async_fetch_data(self) -> dict[str, Any]:
         """Fetch data from the device."""
         return await self.device.async_request(self.device.api.get_state)
@@ -213,6 +219,7 @@ class BroadlinkBG1UpdateManager(BroadlinkUpdateManager[blk.bg1]):
 class BroadlinkSP4UpdateManager(BroadlinkUpdateManager[blk.sp4]):
     """Manages updates for Broadlink SP4 devices."""
 
+    @override
     async def async_fetch_data(self) -> dict[str, Any]:
         """Fetch data from the device."""
         return await self.device.async_request(self.device.api.get_state)
@@ -221,6 +228,7 @@ class BroadlinkSP4UpdateManager(BroadlinkUpdateManager[blk.sp4]):
 class BroadlinkLB1UpdateManager(BroadlinkUpdateManager[blk.lb1]):
     """Manages updates for Broadlink LB1 devices."""
 
+    @override
     async def async_fetch_data(self) -> dict[str, Any]:
         """Fetch data from the device."""
         return await self.device.async_request(self.device.api.get_state)
@@ -229,6 +237,7 @@ class BroadlinkLB1UpdateManager(BroadlinkUpdateManager[blk.lb1]):
 class BroadlinkThermostatUpdateManager(BroadlinkUpdateManager[blk.hysen]):
     """Manages updates for thermostats with Broadlink DNA."""
 
+    @override
     async def async_fetch_data(self) -> dict[str, Any]:
         """Fetch data from the device."""
         return await self.device.async_request(self.device.api.get_full_status)

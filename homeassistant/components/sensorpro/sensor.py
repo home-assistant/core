@@ -1,7 +1,5 @@
 """Support for SensorPro sensors."""
 
-from __future__ import annotations
-
 from sensorpro_ble import (
     SensorDeviceClass as SensorProSensorDeviceClass,
     SensorUpdate,
@@ -115,7 +113,7 @@ async def async_setup_entry(
 ) -> None:
     """Set up the SensorPro BLE sensors."""
     # Uses legacy hass.data[DOMAIN] pattern
-    # pylint: disable-next=hass-use-runtime-data
+    # pylint: disable-next=home-assistant-use-runtime-data
     coordinator: PassiveBluetoothProcessorCoordinator = hass.data[DOMAIN][
         entry.entry_id
     ]
@@ -125,7 +123,9 @@ async def async_setup_entry(
             SensorProBluetoothSensorEntity, async_add_entities
         )
     )
-    entry.async_on_unload(coordinator.async_register_processor(processor))
+    entry.async_on_unload(
+        coordinator.async_register_processor(processor, SensorEntityDescription)
+    )
 
 
 class SensorProBluetoothSensorEntity(

@@ -1,9 +1,7 @@
 """Config flow for Blue Current integration."""
 
-from __future__ import annotations
-
 from collections.abc import Mapping
-from typing import Any
+from typing import Any, override
 
 from bluecurrent_api import Client
 from bluecurrent_api.exceptions import (
@@ -27,6 +25,7 @@ class BlueCurrentConfigFlow(ConfigFlow, domain=DOMAIN):
 
     VERSION = 1
 
+    @override
     async def async_step_user(
         self, user_input: dict[str, Any] | None = None
     ) -> ConfigFlowResult:

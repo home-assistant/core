@@ -36,7 +36,9 @@ IN_HOME_CHIME_IS_PRESENT = {v for k, v in DOORBELL_EXISTING_TYPE.items() if k !=
 
 @dataclass(frozen=True, kw_only=True)
 class RingSwitchEntityDescription(
-    SwitchEntityDescription, RingEntityDescription, Generic[RingDeviceT]
+    SwitchEntityDescription,
+    RingEntityDescription,
+    Generic[RingDeviceT],  # noqa: UP046
 ):
     """Describes a Ring switch entity."""
 

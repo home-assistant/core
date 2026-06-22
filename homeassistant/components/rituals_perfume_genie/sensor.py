@@ -1,7 +1,5 @@
 """Support for Rituals Perfume Genie sensors."""
 
-from __future__ import annotations
-
 from collections.abc import Callable
 from dataclasses import dataclass
 
@@ -42,6 +40,7 @@ ENTITY_DESCRIPTIONS = (
         key="fill",
         translation_key="fill",
         value_fn=lambda diffuser: diffuser.fill,
+        has_fn=lambda diffuser: "fillc" in diffuser.hub_data.get("sensors", {}),
     ),
     RitualsSensorEntityDescription(
         key="perfume",

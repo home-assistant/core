@@ -1,7 +1,5 @@
 """Config flow for UniFi Access integration."""
 
-from __future__ import annotations
-
 from collections.abc import Mapping
 import logging
 from typing import Any
@@ -162,7 +160,11 @@ class UnifiAccessConfigFlow(ConfigFlow, domain=DOMAIN):
                     data=merged_input,
                 )
 
-        name = discovery_info.get("hostname") or discovery_info.get("platform")
+        name = (
+            discovery_info.get("name")
+            or discovery_info.get("hostname")
+            or discovery_info.get("product_name")
+        )
         if not name:
             short_mac = discovery_info["hw_addr"].replace(":", "").upper()[-6:]
             name = f"Access {short_mac}"

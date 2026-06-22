@@ -1,7 +1,5 @@
 """Data Update Coordinator for Firefly III integration."""
 
-from __future__ import annotations
-
 import asyncio
 from dataclasses import dataclass
 from datetime import datetime, timedelta
@@ -93,7 +91,7 @@ class FireflyDataUpdateCoordinator(DataUpdateCoordinator[FireflyCoordinatorData]
 
     async def _async_update_data(self) -> FireflyCoordinatorData:
         """Fetch data from Firefly III API."""
-        now = datetime.now()
+        now = datetime.now()  # pylint: disable=home-assistant-enforce-naive-now
         start_date = now.replace(day=1, hour=0, minute=0, second=0, microsecond=0)
         end_date = now
 

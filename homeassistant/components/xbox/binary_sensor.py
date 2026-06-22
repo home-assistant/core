@@ -1,7 +1,5 @@
 """Xbox friends binary sensors."""
 
-from __future__ import annotations
-
 from collections.abc import Callable
 from dataclasses import dataclass
 from enum import StrEnum
@@ -11,7 +9,6 @@ from pythonxbox.api.provider.people.models import Person
 from pythonxbox.api.provider.titlehub.models import Title
 
 from homeassistant.components.binary_sensor import (
-    DOMAIN as BINARY_SENSOR_DOMAIN,
     BinarySensorEntity,
     BinarySensorEntityDescription,
 )
@@ -19,12 +16,7 @@ from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
 from .coordinator import XboxConfigEntry
-from .entity import (
-    XboxBaseEntity,
-    XboxBaseEntityDescription,
-    check_deprecated_entity,
-    profile_pic,
-)
+from .entity import XboxBaseEntity, XboxBaseEntityDescription, profile_pic
 
 PARALLEL_UPDATES = 0
 
@@ -33,9 +25,7 @@ class XboxBinarySensor(StrEnum):
     """Xbox binary sensor."""
 
     ONLINE = "online"
-    IN_PARTY = "in_party"
     IN_GAME = "in_game"
-    IN_MULTIPLAYER = "in_multiplayer"
     HAS_GAME_PASS = "has_game_pass"
 
 
@@ -84,19 +74,9 @@ SENSOR_DESCRIPTIONS: tuple[XboxBinarySensorEntityDescription, ...] = (
         attributes_fn=profile_attributes,
     ),
     XboxBinarySensorEntityDescription(
-        key=XboxBinarySensor.IN_PARTY,
-        is_on_fn=lambda _: None,
-        deprecated=True,
-    ),
-    XboxBinarySensorEntityDescription(
         key=XboxBinarySensor.IN_GAME,
         translation_key=XboxBinarySensor.IN_GAME,
         is_on_fn=in_game,
-    ),
-    XboxBinarySensorEntityDescription(
-        key=XboxBinarySensor.IN_MULTIPLAYER,
-        is_on_fn=lambda _: None,
-        deprecated=True,
     ),
     XboxBinarySensorEntityDescription(
         key=XboxBinarySensor.HAS_GAME_PASS,
@@ -120,9 +100,6 @@ async def async_setup_entry(
         [
             XboxBinarySensorEntity(coordinator, entry.unique_id, description)
             for description in SENSOR_DESCRIPTIONS
-            if check_deprecated_entity(
-                hass, entry.unique_id, description, BINARY_SENSOR_DOMAIN
-            )
         ]
     )
 
@@ -132,9 +109,6 @@ async def async_setup_entry(
                 XboxBinarySensorEntity(coordinator, subentry.unique_id, description)
                 for description in SENSOR_DESCRIPTIONS
                 if subentry.unique_id
-                and check_deprecated_entity(
-                    hass, subentry.unique_id, description, BINARY_SENSOR_DOMAIN
-                )
                 and subentry.unique_id in coordinator.data.presence
                 and subentry.subentry_type == "friend"
             ],

@@ -20,7 +20,7 @@ from tests.components.bluetooth import inject_bluetooth_service_info
 def patch_async_ble_device_from_address(
     return_value: BluetoothServiceInfoBleak | None = None,
 ):
-    """Patch async_ble_device_from_address to return a mocked BluetoothServiceInfoBleak."""
+    """Patch async_ble_device_from_address to return a mock."""
     return patch(
         "homeassistant.components.bluetooth.async_ble_device_from_address",
         return_value=return_value,

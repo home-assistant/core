@@ -1,7 +1,5 @@
 """Support for Velux switches."""
 
-from __future__ import annotations
-
 from typing import Any
 
 from pyvlx import OnOffSwitch
@@ -22,7 +20,7 @@ async def async_setup_entry(
     async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up switch(es) for Velux platform."""
-    pyvlx = config_entry.runtime_data
+    pyvlx = config_entry.runtime_data.pyvlx
     async_add_entities(
         VeluxOnOffSwitch(node, config_entry.entry_id)
         for node in pyvlx.nodes

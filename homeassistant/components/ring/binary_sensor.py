@@ -1,7 +1,5 @@
 """Component providing HA sensor support for Ring Door Bell/Chimes."""
 
-from __future__ import annotations
-
 from collections.abc import Mapping
 from dataclasses import dataclass
 from datetime import datetime
@@ -36,7 +34,9 @@ PARALLEL_UPDATES = 0
 
 @dataclass(frozen=True, kw_only=True)
 class RingBinarySensorEntityDescription(
-    BinarySensorEntityDescription, RingEntityDescription, Generic[RingDeviceT]
+    BinarySensorEntityDescription,
+    RingEntityDescription,
+    Generic[RingDeviceT],  # noqa: UP046
 ):
     """Describes Ring binary sensor entity."""
 

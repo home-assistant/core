@@ -26,6 +26,22 @@ async def test_setup(
     assert mock_config_entry.state is ConfigEntryState.NOT_LOADED
 
 
+async def test_setup_with_custom_laqi(
+    hass: HomeAssistant,
+    mock_config_entry_with_custom_laqi: MockConfigEntry,
+    mock_api: AsyncMock,
+) -> None:
+    """Test successful setup with custom LAQI and unload."""
+    mock_config_entry_with_custom_laqi.add_to_hass(hass)
+    await hass.config_entries.async_setup(mock_config_entry_with_custom_laqi.entry_id)
+    assert mock_config_entry_with_custom_laqi.state is ConfigEntryState.LOADED
+
+    await hass.config_entries.async_unload(mock_config_entry_with_custom_laqi.entry_id)
+    await hass.async_block_till_done()
+
+    assert mock_config_entry_with_custom_laqi.state is ConfigEntryState.NOT_LOADED
+
+
 async def test_config_not_ready(
     hass: HomeAssistant,
     mock_config_entry: MockConfigEntry,

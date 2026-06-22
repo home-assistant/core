@@ -1,7 +1,5 @@
 """The Tailscale integration."""
 
-from __future__ import annotations
-
 from tailscale import Device as TailscaleDevice
 
 from homeassistant.helpers.device_registry import DeviceEntryType, DeviceInfo

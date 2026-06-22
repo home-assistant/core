@@ -1,7 +1,5 @@
 """Update coordinators for Yardian."""
 
-from __future__ import annotations
-
 import asyncio
 from dataclasses import dataclass
 import datetime

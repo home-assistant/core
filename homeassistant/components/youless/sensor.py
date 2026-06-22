@@ -1,7 +1,5 @@
 """The sensor entity for the Youless integration."""
 
-from __future__ import annotations
-
 from collections.abc import Callable
 from dataclasses import dataclass
 
@@ -337,7 +335,7 @@ class YouLessSensor(YouLessEntity, SensorEntity):
             f"{device}_{description.device_group}",
             description.device_group,
         )
-        self._attr_unique_id = f"{DOMAIN}_{device}_{description.key}"
+        self._attr_unique_id = f"{DOMAIN}_{device}_{description.key}"  # pylint: disable=home-assistant-entity-unique-id-redundant-domain
         self.entity_description = description
 
     @property

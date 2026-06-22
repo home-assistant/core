@@ -8,6 +8,7 @@ from typing import Any
 
 from roborock import B01Props, CleanTypeMapping
 from roborock.data import (
+    CleanPathPreferenceMapping,
     RoborockDockDustCollectionModeCode,
     RoborockEnum,
     WaterLevelMapping,
@@ -66,7 +67,7 @@ class RoborockSelectDescription(SelectEntityDescription):
     """Function to get the current value of the select entity."""
 
     options_lambda: Callable[[PropertiesApi], list[str] | None]
-    """Function to get all options of the select entity or returns None if not supported."""
+    """Get all options or return None if not supported."""
 
     parameter_lambda: Callable[[str, PropertiesApi], list[int]]
     """Function to get the parameters for the api command."""
@@ -86,7 +87,7 @@ class RoborockB01SelectDescription(SelectEntityDescription):
     """Function to get the current value of the select entity."""
 
     options_lambda: Callable[[Q7PropertiesApi], list[str] | None]
-    """Function to get all options of the select entity or returns None if not supported."""
+    """Get all options or return None if not supported."""
 
 
 @dataclass(frozen=True, kw_only=True)
@@ -116,6 +117,16 @@ B01_SELECT_DESCRIPTIONS: list[RoborockB01SelectDescription] = [
         api_fn=lambda api, value: api.set_mode(CleanTypeMapping.from_value(value)),
         value_fn=lambda data: data.mode.value if data.mode else None,
         options_lambda=lambda _: list(CleanTypeMapping.keys()),
+        entity_category=EntityCategory.CONFIG,
+    ),
+    RoborockB01SelectDescription(
+        key="cleaning_route",
+        translation_key="cleaning_route",
+        api_fn=lambda api, value: api.set_clean_path_preference(
+            CleanPathPreferenceMapping.from_value(value)
+        ),
+        value_fn=lambda data: data.clean_path_preference_name,
+        options_lambda=lambda _: list(CleanPathPreferenceMapping.keys()),
         entity_category=EntityCategory.CONFIG,
     ),
 ]
@@ -315,7 +326,7 @@ class RoborockB01SelectEntity(RoborockCoordinatedEntityB01Q7, SelectEntity):
 
 
 class RoborockSelectEntity(RoborockCoordinatedEntityV1, SelectEntity):
-    """A class to let you set options on a Roborock vacuum where the potential options are fixed."""
+    """A class to set options on a Roborock vacuum with fixed options."""
 
     entity_description: RoborockSelectDescription
 

@@ -8,6 +8,8 @@ from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from .coordinator import FlussApiClientError, FlussConfigEntry
 from .entity import FlussEntity
 
+PARALLEL_UPDATES = 1
+
 
 async def async_setup_entry(
     hass: HomeAssistant,
@@ -28,6 +30,11 @@ class FlussButton(FlussEntity, ButtonEntity):
     """Representation of a Fluss button device."""
 
     _attr_name = None
+
+    @property
+    def available(self) -> bool:
+        """Return True only when the device is online."""
+        return super().available and self.device["internetConnected"]
 
     async def async_press(self) -> None:
         """Handle the button press."""

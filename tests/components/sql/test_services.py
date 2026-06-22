@@ -1,7 +1,5 @@
 """Tests for the SQL integration services."""
 
-from __future__ import annotations
-
 from pathlib import Path
 import sqlite3
 from unittest.mock import patch
@@ -40,8 +38,10 @@ async def test_query_service_recorder_db(
         {
             "query": (
                 "SELECT states_meta.entity_id, states.state "
-                "FROM states INNER JOIN states_meta ON states.metadata_id = states_meta.metadata_id "
-                "WHERE states_meta.entity_id LIKE 'sensor.test%' ORDER BY states_meta.entity_id"
+                "FROM states INNER JOIN states_meta ON"
+                " states.metadata_id = states_meta.metadata_id "
+                "WHERE states_meta.entity_id LIKE 'sensor.test%'"
+                " ORDER BY states_meta.entity_id"
             )
         },
         blocking=True,
@@ -128,7 +128,8 @@ async def test_query_service_data_conversion(
         "CREATE TABLE data (id INTEGER, cost DECIMAL(10, 2), event_date DATE, raw BLOB)"
     )
     conn.execute(
-        "INSERT INTO data (id, cost, event_date, raw) VALUES (1, 199.99, '2023-01-15', X'DEADBEEF')"
+        "INSERT INTO data (id, cost, event_date, raw)"
+        " VALUES (1, 199.99, '2023-01-15', X'DEADBEEF')"
     )
     conn.commit()
     conn.close()
@@ -242,13 +243,16 @@ async def test_query_service_performance_issue_validation(
     recorder_mock: Recorder,
     hass: HomeAssistant,
 ) -> None:
-    """Test the service validates queries against the recorder for performance issues."""
+    """Test the service validates queries against the recorder."""
     await async_setup_component(hass, DOMAIN, {})
     await hass.async_block_till_done()
 
     with pytest.raises(
         ServiceValidationError,
-        match="The provided query is not allowed: Query contains entity_id but does not reference states_meta",
+        match=(
+            "The provided query is not allowed: Query contains"
+            " entity_id but does not reference states_meta"
+        ),
     ):
         await hass.services.async_call(
             DOMAIN,

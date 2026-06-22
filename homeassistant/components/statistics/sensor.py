@@ -1,7 +1,5 @@
 """Support for statistics for sensor values."""
 
-from __future__ import annotations
-
 from collections import deque
 from collections.abc import Callable, Mapping
 import contextlib
@@ -527,7 +525,7 @@ ICON = "mdi:calculator"
 
 
 def valid_state_characteristic_configuration(config: dict[str, Any]) -> dict[str, Any]:
-    """Validate that the characteristic selected is valid for the source sensor type, throw if it isn't."""
+    """Validate characteristic is valid for source sensor type."""
     is_binary = split_entity_id(config[CONF_ENTITY_ID])[0] == BINARY_SENSOR_DOMAIN
     characteristic = cast(str, config[CONF_STATE_CHARACTERISTIC])
     if (is_binary and characteristic not in STATS_BINARY_SUPPORT) or (
@@ -558,7 +556,8 @@ def valid_keep_last_sample(config: dict[str, Any]) -> dict[str, Any]:
 
     if config.get(CONF_KEEP_LAST_SAMPLE) is True and config.get(CONF_MAX_AGE) is None:
         raise vol.RequiredFieldInvalid(
-            "The sensor configuration must provide 'max_age' if 'keep_last_sample' is True"
+            "The sensor configuration must provide 'max_age'"
+            " if 'keep_last_sample' is True"
         )
     return config
 
@@ -934,7 +933,8 @@ class StatisticsSensor(SensorEntity):
 
         while self.ages and (now_timestamp - self.ages[0]) > max_age:
             if self.samples_keep_last and len(self.ages) == 1:
-                # Under normal circumstance this will not be executed, as a purge will not
+                # Under normal circumstance this will not be
+                # executed, as a purge will not
                 # be scheduled for the last value if samples_keep_last is enabled.
                 # If this happens to be called outside normal scheduling logic or a
                 # source sensor update, this ensures the last value is preserved.
@@ -1098,7 +1098,8 @@ class StatisticsSensor(SensorEntity):
     def _update_value(self) -> None:
         """Front to call the right statistical characteristics functions.
 
-        One of the _stat_*() functions is represented by self._state_characteristic_fn().
+        One of the _stat_*() functions is represented by
+        self._state_characteristic_fn().
         """
 
         value = self._state_characteristic_fn(self.states, self.ages, self._percentile)

@@ -1,7 +1,5 @@
 """Support for OVO Energy sensors."""
 
-from __future__ import annotations
-
 from collections.abc import Callable
 import dataclasses
 from datetime import datetime, timedelta
@@ -166,7 +164,7 @@ class OVOEnergySensor(OVOEnergyDeviceEntity, SensorEntity):
         """Initialize."""
         super().__init__(coordinator)
         self._attr_unique_id = (
-            f"{DOMAIN}_{coordinator.client.account_id}_{description.key}"
+            f"{DOMAIN}_{coordinator.client.account_id}_{description.key}"  # pylint: disable=home-assistant-entity-unique-id-redundant-domain
         )
         self.entity_description = description
 

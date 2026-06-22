@@ -1,7 +1,5 @@
 """Support for ZhongHong HVAC Controller."""
 
-from __future__ import annotations
-
 import logging
 from typing import Any
 
@@ -159,7 +157,7 @@ class ZhongHongClimate(ClimateEntity):
         self._hub = hub
         self._current_operation = None
         self._current_fan_mode = None
-        self._attr_unique_id = f"zhong_hong_hvac_{addr_out}_{addr_in}"
+        self._attr_unique_id = f"zhong_hong_hvac_{addr_out}_{addr_in}"  # pylint: disable=home-assistant-entity-unique-id-redundant-domain
         self._attr_name = self._attr_unique_id
         self.is_initialized = False
 

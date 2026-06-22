@@ -1,7 +1,6 @@
 """Support for Switchbot bot."""
 
-from __future__ import annotations
-
+import abc
 from collections.abc import Awaitable, Callable
 from dataclasses import dataclass
 import logging
@@ -87,6 +86,13 @@ async def async_setup_entry(
             [
                 SwitchbotGenericSwitch(coordinator, desc)
                 for desc in AIRPURIFIER_TABLE_SWITCHES
+            ]
+        )
+    elif isinstance(coordinator.device, switchbot.SwitchbotStandingFan):
+        async_add_entities(
+            [
+                SwitchbotFanHorizontalOscillationSwitch(coordinator),
+                SwitchbotFanVerticalOscillationSwitch(coordinator),
             ]
         )
     else:
@@ -218,4 +224,80 @@ class SwitchbotMultiChannelSwitch(SwitchbotSwitchedEntity, SwitchEntity):
             "Turn Switchbot device off %s, channel %d", self._address, self._channel
         )
         await self._device.turn_off(self._channel)
+        self.async_write_ha_state()
+
+
+class SwitchbotFanOscillationSwitch(SwitchbotSwitchedEntity, SwitchEntity, abc.ABC):
+    """Base class for fan oscillation switch entities."""
+
+    _attr_device_class = SwitchDeviceClass.SWITCH
+    _device: switchbot.SwitchbotStandingFan
+
+    @property
+    @abc.abstractmethod
+    def is_on(self) -> bool | None:
+        """Return true if oscillation is active."""
+
+    @abc.abstractmethod
+    async def async_turn_on(self, **kwargs: Any) -> None:
+        """Enable oscillation."""
+
+    @abc.abstractmethod
+    async def async_turn_off(self, **kwargs: Any) -> None:
+        """Disable oscillation."""
+
+
+class SwitchbotFanHorizontalOscillationSwitch(SwitchbotFanOscillationSwitch):
+    """Switch entity for fan horizontal (left-right) oscillation."""
+
+    _attr_translation_key = "horizontal_oscillation"
+
+    def __init__(self, coordinator: SwitchbotDataUpdateCoordinator) -> None:
+        """Initialize the horizontal oscillation switch."""
+        super().__init__(coordinator)
+        self._attr_unique_id = f"{coordinator.base_unique_id}-horizontal-oscillation"
+
+    @property
+    def is_on(self) -> bool | None:
+        """Return true if horizontal oscillation is active."""
+        return self._device.get_horizontal_oscillating_state()
+
+    @exception_handler
+    async def async_turn_on(self, **kwargs: Any) -> None:
+        """Enable horizontal oscillation."""
+        await self._device.set_horizontal_oscillation(True)
+        self.async_write_ha_state()
+
+    @exception_handler
+    async def async_turn_off(self, **kwargs: Any) -> None:
+        """Disable horizontal oscillation."""
+        await self._device.set_horizontal_oscillation(False)
+        self.async_write_ha_state()
+
+
+class SwitchbotFanVerticalOscillationSwitch(SwitchbotFanOscillationSwitch):
+    """Switch entity for fan vertical (up-down) oscillation."""
+
+    _attr_translation_key = "vertical_oscillation"
+
+    def __init__(self, coordinator: SwitchbotDataUpdateCoordinator) -> None:
+        """Initialize the vertical oscillation switch."""
+        super().__init__(coordinator)
+        self._attr_unique_id = f"{coordinator.base_unique_id}-vertical-oscillation"
+
+    @property
+    def is_on(self) -> bool | None:
+        """Return true if vertical oscillation is active."""
+        return self._device.get_vertical_oscillating_state()
+
+    @exception_handler
+    async def async_turn_on(self, **kwargs: Any) -> None:
+        """Enable vertical oscillation."""
+        await self._device.set_vertical_oscillation(True)
+        self.async_write_ha_state()
+
+    @exception_handler
+    async def async_turn_off(self, **kwargs: Any) -> None:
+        """Disable vertical oscillation."""
+        await self._device.set_vertical_oscillation(False)
         self.async_write_ha_state()

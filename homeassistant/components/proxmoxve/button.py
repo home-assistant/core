@@ -1,7 +1,5 @@
 """Button platform for Proxmox VE."""
 
-from __future__ import annotations
-
 from abc import abstractmethod
 from collections.abc import Callable
 from dataclasses import dataclass
@@ -27,6 +25,8 @@ from .const import DOMAIN, ProxmoxPermission
 from .coordinator import ProxmoxConfigEntry, ProxmoxCoordinator, ProxmoxNodeData
 from .entity import ProxmoxContainerEntity, ProxmoxNodeEntity, ProxmoxVMEntity
 from .helpers import is_granted
+
+PARALLEL_UPDATES = 1
 
 NO_PERM_VM_LXC_POWER = "no_permission_vm_lxc_power"
 
@@ -304,7 +304,10 @@ async def async_setup_entry(
 
 
 class ProxmoxBaseButton(ButtonEntity):
-    """Common base for Proxmox buttons. Basically to ensure the async_press logic isn't duplicated."""
+    """Common base for Proxmox buttons.
+
+    Ensures the async_press logic isn't duplicated.
+    """
 
     entity_description: ButtonEntityDescription
     coordinator: ProxmoxCoordinator

@@ -1,7 +1,5 @@
 """The nuki component."""
 
-from __future__ import annotations
-
 from pynuki.device import NukiDevice
 
 from homeassistant.helpers.device_registry import DeviceInfo

@@ -1,7 +1,5 @@
 """Test entity functions for Home Assistant templates."""
 
-from __future__ import annotations
-
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import device_registry as dr, entity_registry as er
 
@@ -84,5 +82,6 @@ def test_is_hidden_entity(
 
     assert not render(
         hass,
-        f"{{{{ ['{visible_entity.entity_id}'] | select('is_hidden_entity') | first }}}}",
+        f"{{{{ ['{visible_entity.entity_id}']"
+        f" | select('is_hidden_entity') | first }}}}",
     )

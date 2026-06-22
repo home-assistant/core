@@ -153,5 +153,8 @@ class LaMarzoccoCalendarEntity(LaMarzoccoBaseEntity, CalendarEntity):
             ),
             end=end_date,
             summary=f"Machine {self.coordinator.config_entry.title} on",
-            description="Machine is scheduled to turn on at the start time and off at the end time",
+            description=(
+                "Machine is scheduled to turn on at"
+                " the start time and off at the end time"
+            ),
         )

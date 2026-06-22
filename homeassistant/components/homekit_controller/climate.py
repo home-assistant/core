@@ -1,7 +1,5 @@
 """Support for Homekit climate devices."""
 
-from __future__ import annotations
-
 import logging
 from typing import Any, Final
 
@@ -287,9 +285,9 @@ class HomeKitHeaterCoolerEntity(HomeKitBaseClimateEntity):
         await self.async_put_characteristics(
             {
                 CharacteristicsTypes.ACTIVE: ActivationStateValues.ACTIVE,
-                CharacteristicsTypes.TARGET_HEATER_COOLER_STATE: TARGET_HEATER_COOLER_STATE_HASS_TO_HOMEKIT[
-                    hvac_mode
-                ],
+                CharacteristicsTypes.TARGET_HEATER_COOLER_STATE: (
+                    TARGET_HEATER_COOLER_STATE_HASS_TO_HOMEKIT[hvac_mode]
+                ),
             }
         )
 

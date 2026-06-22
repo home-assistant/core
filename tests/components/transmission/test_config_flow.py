@@ -170,11 +170,9 @@ async def test_flow_errors(
         ("3.0.0 (123798)"),
     ],
 )
+@pytest.mark.usefixtures("mock_setup_entry")
 async def test_flow_version_error(
-    hass: HomeAssistant,
-    mock_transmission_client: AsyncMock,
-    mock_setup_entry: AsyncMock,
-    version: str,
+    hass: HomeAssistant, mock_transmission_client: AsyncMock, version: str
 ) -> None:
     """Test flow version error."""
     mock_transmission_client.return_value.server_version = version

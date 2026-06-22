@@ -1,7 +1,5 @@
 """Config flow for Subaru integration."""
 
-from __future__ import annotations
-
 from datetime import datetime
 import logging
 from typing import TYPE_CHECKING, Any
@@ -110,7 +108,7 @@ class SubaruConfigFlow(ConfigFlow, domain=DOMAIN):
         data: contains values provided by the user.
         """
         websession = aiohttp_client.async_get_clientsession(self.hass)
-        now = datetime.now()
+        now = datetime.now()  # pylint: disable=home-assistant-enforce-naive-now
         if not data.get(CONF_DEVICE_ID):
             data[CONF_DEVICE_ID] = int(now.timestamp())
         date = now.strftime("%Y-%m-%d")
