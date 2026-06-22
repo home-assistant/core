@@ -3,10 +3,16 @@
 from datetime import timedelta
 from unittest.mock import AsyncMock, patch
 
+from pyanglianwater.exceptions import (
+    ConsentRequiredError,
+    ExpiredAccessTokenError,
+    UnknownEndpointError,
+)
 from pyanglianwater.meter import SmartMeter
 import pytest
 from syrupy.assertion import SnapshotAssertion
 
+from homeassistant.components.anglian_water.const import DOMAIN
 from homeassistant.components.anglian_water.coordinator import (
     AnglianWaterUpdateCoordinator,
 )
@@ -16,6 +22,9 @@ from homeassistant.components.recorder.statistics import (
     statistics_during_period,
 )
 from homeassistant.core import HomeAssistant
+from homeassistant.exceptions import ConfigEntryAuthFailed, HomeAssistantError
+from homeassistant.helpers import issue_registry as ir
+from homeassistant.helpers.update_coordinator import UpdateFailed
 from homeassistant.util import dt as dt_util
 
 from .const import ACCOUNT_NUMBER
@@ -252,3 +261,57 @@ async def test_coordinator_period_statistics_without_sum(
         get_last_statistics, hass, 1, statistic_id, True, {"sum"}
     )
     assert stats[statistic_id]
+
+
+@pytest.mark.parametrize(
+    (
+        "raised_exception_type",
+        "expected_exception_type",
+        "expected_error",
+        "retry_after",
+        "has_issue",
+    ),
+    [
+        (ConsentRequiredError, UpdateFailed, "consent_required", 900.0, True),
+        (ExpiredAccessTokenError, ConfigEntryAuthFailed, "auth_expired", None, False),
+        (
+            UnknownEndpointError(status=500, response="Service Unavailabe"),
+            UpdateFailed,
+            "service_unavailable",
+            60.0,
+            False,
+        ),
+    ],
+)
+async def test_coordinator_error_handling(
+    recorder_mock: Recorder,
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    mock_anglian_water_client: AsyncMock,
+    raised_exception_type: Exception,
+    expected_exception_type: type[HomeAssistantError],
+    expected_error: str,
+    retry_after: float | None,
+    has_issue: bool,
+) -> None:
+    """Test the coordinator handles errors correctly."""
+    coordinator = AnglianWaterUpdateCoordinator(
+        hass, mock_anglian_water_client, mock_config_entry
+    )
+    mock_anglian_water_client.update.side_effect = raised_exception_type
+    with pytest.raises(expected_exception_type) as exc_info:
+        await coordinator._async_update_data()
+    assert exc_info.value.translation_domain == DOMAIN
+    assert exc_info.value.translation_key == expected_error
+    if retry_after is not None and isinstance(exc_info.value, UpdateFailed):
+        assert exc_info.value.retry_after == retry_after
+    if has_issue:
+        assert ir.async_get(hass).async_get_issue(DOMAIN, expected_error) is not None
+    else:
+        assert ir.async_get(hass).async_get_issue(DOMAIN, expected_error) is None
+
+    # Ensure the error/issue clears correctly
+    mock_anglian_water_client.update.side_effect = None
+    await coordinator._async_update_data()
+    await async_wait_recording_done(hass)
+    assert ir.async_get(hass).async_get_issue(DOMAIN, expected_error) is None

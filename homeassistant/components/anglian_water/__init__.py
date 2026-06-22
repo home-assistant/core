@@ -17,7 +17,12 @@ from homeassistant.const import (
     Platform,
 )
 from homeassistant.core import HomeAssistant
-from homeassistant.exceptions import ConfigEntryAuthFailed, ConfigEntryError
+from homeassistant.exceptions import (
+    ConfigEntryAuthFailed,
+    ConfigEntryError,
+    ConfigEntryNotReady,
+)
+from homeassistant.helpers import issue_registry as ir
 from homeassistant.helpers.aiohttp_client import async_create_clientsession
 
 from .const import CONF_ACCOUNT_NUMBER, DOMAIN
@@ -41,7 +46,24 @@ async def async_setup_entry(
     )
     try:
         await auth.send_refresh_request()
-    except (ConsentRequiredError, ExpiredAccessTokenError, SelfAssertedError) as err:
+    except ConsentRequiredError as err:
+        ir.async_create_issue(
+            hass,
+            DOMAIN,
+            "consent_required",
+            is_fixable=False,
+            severity=ir.IssueSeverity.ERROR,
+            translation_key="consent_required",
+            translation_placeholders={
+                CONF_ACCOUNT_NUMBER: entry.data[CONF_ACCOUNT_NUMBER],
+            },
+            learn_more_url="https://myaccount.anglianwater.co.uk/",
+        )
+        raise ConfigEntryNotReady(
+            translation_domain=DOMAIN,
+            translation_key="consent_required",
+        ) from err
+    except (ExpiredAccessTokenError, SelfAssertedError) as err:
         raise ConfigEntryAuthFailed from err
 
     _aw = AnglianWater(authenticator=auth)
