@@ -9,6 +9,7 @@ from typing import Any
 import voluptuous as vol
 
 from homeassistant.const import CONF_COMMAND
+from homeassistant.core import callback
 from homeassistant.exceptions import HomeAssistantError
 
 from ..models import AuthFlowContext, AuthFlowResult, Credentials, UserMeta
@@ -56,6 +57,21 @@ class CommandLineAuthProvider(AuthProvider):
         """
         super().__init__(*args, **kwargs)
         self._user_meta: dict[str, dict[str, Any]] = {}
+
+    @property
+    def refresh_user_meta(self) -> bool:
+        """Return whether user metadata should be refreshed at login."""
+        return bool(self.config[CONF_META])
+
+    @callback
+    def should_update_local_only(self, credentials: Credentials) -> bool:
+        """Return whether local_only should be refreshed for credentials.
+
+        This relies on async_validate_login storing metadata in _user_meta for
+        the username before async_get_or_create_user calls this hook.
+        """
+        meta = self._user_meta.get(credentials.data["username"], {})
+        return "local_only" in meta
 
     async def async_login_flow(
         self, context: AuthFlowContext | None
