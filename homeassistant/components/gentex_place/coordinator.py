@@ -1,7 +1,5 @@
 """Coordinator for Place integration — MQTT push for device shadow updates."""
 
-from __future__ import annotations
-
 from collections.abc import Callable
 import logging
 
