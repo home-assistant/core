@@ -3,7 +3,7 @@
 from collections.abc import Callable
 from dataclasses import dataclass
 from datetime import datetime
-from typing import Any
+from typing import Any, override
 
 from ns_api import Trip
 
@@ -205,6 +205,7 @@ class NSSensor(CoordinatorEntity[NSDataUpdateCoordinator], SensorEntity):
         )
 
     @property
+    @override
     def native_value(self) -> StateType | datetime:
         """Return the native value of the sensor."""
         data = (
@@ -218,6 +219,7 @@ class NSSensor(CoordinatorEntity[NSDataUpdateCoordinator], SensorEntity):
         return self.entity_description.value_fn(data)
 
     @property
+    @override
     def extra_state_attributes(self) -> dict[str, Any] | None:
         """Return the state attributes."""
         if self.entity_description.key != "actual_departure":

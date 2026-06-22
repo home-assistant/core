@@ -2,7 +2,7 @@
 
 from collections.abc import Callable, Coroutine, Mapping
 import logging
-from typing import Any, Concatenate
+from typing import Any, Concatenate, override
 
 import switchbot
 from switchbot import Switchbot, SwitchbotDevice, SwitchbotOperationError
@@ -65,6 +65,7 @@ class SwitchbotEntity(
         return self.coordinator.device.parsed_data
 
     @property
+    @override
     def extra_state_attributes(self) -> Mapping[str, Any]:
         """Return the state attributes."""
         return {"last_run_success": self._last_run_success}
@@ -74,16 +75,19 @@ class SwitchbotEntity(
         """Update the entity attributes."""
 
     @callback
+    @override
     def _handle_coordinator_update(self) -> None:
         """Handle data update."""
         self._async_update_attrs()
         self.async_write_ha_state()
 
+    @override
     async def async_added_to_hass(self) -> None:
         """Register callbacks."""
         self.async_on_remove(self._device.subscribe(self._handle_coordinator_update))
         return await super().async_added_to_hass()
 
+    @override
     async def async_update(self) -> None:
         """Update the entity.
 
@@ -119,6 +123,7 @@ class SwitchbotSwitchedEntity(SwitchbotEntity, ToggleEntity):
     _device: Switchbot
 
     @exception_handler
+    @override
     async def async_turn_on(self, **kwargs: Any) -> None:
         """Turn device on."""
         _LOGGER.debug("Turn Switchbot device on %s", self._address)
@@ -129,6 +134,7 @@ class SwitchbotSwitchedEntity(SwitchbotEntity, ToggleEntity):
         self.async_write_ha_state()
 
     @exception_handler
+    @override
     async def async_turn_off(self, **kwargs: Any) -> None:
         """Turn device off."""
         _LOGGER.debug("Turn Switchbot device off %s", self._address)
