@@ -40,6 +40,7 @@ from homeassistant.exceptions import (
     ServiceValidationError,
 )
 from homeassistant.helpers import config_validation as cv, device_registry as dr
+from homeassistant.helpers.typing import ConfigType
 from homeassistant.helpers.event import (
     async_track_state_change_event,
     async_track_time_change,
@@ -99,7 +100,7 @@ if hasattr(Platform, "VALVE"):
     PLATFORMS.append(Platform.VALVE)
 
 
-async def async_setup(hass: HomeAssistant, config: dict) -> bool:
+async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     """Set up the Bosch SHC component.
 
     The trigger_scenario service is registered here so it exists even when a
@@ -680,7 +681,7 @@ async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
 class SwitchDeviceEventListener:
     """Event listener for a Switch device."""
 
-    def __init__(self, hass, entry, device: SHCUniversalSwitch):
+    def __init__(self, hass: HomeAssistant, entry: ConfigEntry, device: SHCUniversalSwitch) -> None:
         """Initialize the Switch device event listener."""
         self.hass = hass
         self.entry = entry

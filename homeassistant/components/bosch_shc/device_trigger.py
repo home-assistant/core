@@ -1,5 +1,7 @@
 """Provides device triggers for Bosch Smart Home Controller integration."""
 
+from typing import Any
+
 from boschshcpy import SHCDevice, SHCSession
 import voluptuous as vol
 
@@ -75,7 +77,9 @@ async def get_device_from_id(hass, device_id) -> tuple[SHCDevice, str]:
     return None, ""
 
 
-async def async_get_triggers(hass: HomeAssistant, device_id: str) -> list[dict]:
+async def async_get_triggers(
+    hass: HomeAssistant, device_id: str
+) -> list[dict[str, Any]]:
     """List device triggers for SHC devices."""
     triggers = []
 

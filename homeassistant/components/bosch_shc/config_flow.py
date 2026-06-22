@@ -1,5 +1,6 @@
 """Config flow for Bosch Smart Home Controller integration."""
 
+from collections.abc import Mapping
 from os import makedirs
 from typing import Any
 
@@ -14,8 +15,8 @@ import voluptuous as vol
 
 from homeassistant import config_entries, core
 from homeassistant.components import zeroconf
+from homeassistant.config_entries import ConfigEntry, ConfigFlowResult, OptionsFlow
 from homeassistant.const import CONF_HOST, CONF_NAME, CONF_PASSWORD, CONF_TOKEN
-from homeassistant.config_entries import ConfigFlowResult
 from homeassistant.data_entry_flow import section
 from homeassistant.helpers.selector import (
     BooleanSelector,
@@ -184,15 +185,19 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
     hostname = None
 
     @staticmethod
-    def async_get_options_flow(config_entry):
+    def async_get_options_flow(config_entry: ConfigEntry) -> OptionsFlow:
         """Return the options flow for this handler."""
         return OptionsFlowHandler()
 
-    async def async_step_reauth(self, user_input=None):
+    async def async_step_reauth(
+        self, user_input: Mapping[str, Any]
+    ) -> ConfigFlowResult:
         """Perform reauth upon an API authentication error."""
         return await self.async_step_reauth_confirm()
 
-    async def async_step_reauth_confirm(self, user_input=None):
+    async def async_step_reauth_confirm(
+        self, user_input: dict[str, Any] | None = None
+    ) -> ConfigFlowResult:
         """Dialog that informs the user that reauth is required."""
         if user_input is None:
             return self.async_show_form(
@@ -203,14 +208,18 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         self.info = await self._get_info(host)
         return await self.async_step_credentials()
 
-    async def async_step_reconfigure(self, user_input=None):
+    async def async_step_reconfigure(
+        self, user_input: dict[str, Any] | None = None
+    ) -> ConfigFlowResult:
         """Show a menu: change host only, or re-pair (regenerate certificate)."""
         return self.async_show_menu(
             step_id="reconfigure",
             menu_options=["reconfigure_host", "repair_credentials"],
         )
 
-    async def async_step_reconfigure_host(self, user_input=None):
+    async def async_step_reconfigure_host(
+        self, user_input: dict[str, Any] | None = None
+    ) -> ConfigFlowResult:
         """Allow the user to change the SHC host/IP without re-pairing."""
         entry = self._get_reconfigure_entry()
         errors = {}
@@ -243,7 +252,9 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
             errors=errors,
         )
 
-    async def async_step_repair_credentials(self, user_input=None):
+    async def async_step_repair_credentials(
+        self, user_input: dict[str, Any] | None = None
+    ) -> ConfigFlowResult:
         """Re-pair: regenerate the client certificate/key for this SHC entry."""
         entry = self._get_reconfigure_entry()
         errors = {}

@@ -1,14 +1,19 @@
 """Platform for alarm control panel integration."""
 
+from typing import Any
+
 from boschshcpy import SHCIntrusionSystem, SHCSession
 
-from homeassistant.components.alarm_control_panel import AlarmControlPanelEntity
-from homeassistant.components.alarm_control_panel.const import (
+from homeassistant.components.alarm_control_panel import (
+    AlarmControlPanelEntity,
     AlarmControlPanelEntityFeature,
     AlarmControlPanelState,
 )
+from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import Platform
+from homeassistant.core import HomeAssistant
 from homeassistant.helpers.device_registry import DeviceInfo
+from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
 from .const import DATA_SESSION, DOMAIN
 from .entity import async_migrate_to_new_unique_id
@@ -16,7 +21,11 @@ from .entity import async_migrate_to_new_unique_id
 PARALLEL_UPDATES = 1
 
 
-async def async_setup_entry(hass, config_entry, async_add_entities):
+async def async_setup_entry(
+    hass: HomeAssistant,
+    config_entry: ConfigEntry,
+    async_add_entities: AddConfigEntryEntitiesCallback,
+) -> None:
     """Set up the alarm control panel platform."""
     devices = []
 
@@ -45,28 +54,28 @@ class IntrusionSystemAlarmControlPanel(AlarmControlPanelEntity):
     _attr_has_entity_name = True
     _attr_name = None  # primary entity — HA uses the device name as the entity name
 
-    def __init__(self, device: SHCIntrusionSystem, entry_id: str):
+    def __init__(self, device: SHCIntrusionSystem, entry_id: str) -> None:
         """Initialize the intrusion detection control."""
         self._device = device
         self._entry_id = entry_id
         self._attr_unique_id = f"{self._device.root_device_id}_{self._device.id}"
 
-    async def async_added_to_hass(self):
+    async def async_added_to_hass(self) -> None:
         """Subscribe to SHC events."""
         await super().async_added_to_hass()
 
-        def on_state_changed():
+        def on_state_changed() -> None:
             self.schedule_update_ha_state()
 
         self._device.subscribe_callback(self.entity_id, on_state_changed)
 
-    async def async_will_remove_from_hass(self):
+    async def async_will_remove_from_hass(self) -> None:
         """Unsubscribe from SHC events."""
         await super().async_will_remove_from_hass()
         self._device.unsubscribe_callback(self.entity_id)
 
     @property
-    def device_id(self):
+    def device_id(self) -> str:
         """Return the ID of the system."""
         return self._device.id
 
@@ -82,17 +91,17 @@ class IntrusionSystemAlarmControlPanel(AlarmControlPanelEntity):
         )
 
     @property
-    def available(self):
+    def available(self) -> bool:
         """Return false if status is unavailable."""
         return self._device.system_availability
 
     @property
-    def should_poll(self):
+    def should_poll(self) -> bool:
         """Report polling mode. System is communicating via long polling."""
         return False
 
     @property
-    def alarm_state(self):
+    def alarm_state(self) -> AlarmControlPanelState | None:
         """Return the state of the device."""
         if self._device.alarm_state == SHCIntrusionSystem.AlarmState.ALARM_ON:
             return AlarmControlPanelState.TRIGGERED
@@ -127,7 +136,7 @@ class IntrusionSystemAlarmControlPanel(AlarmControlPanelEntity):
         return None
 
     @property
-    def supported_features(self):
+    def supported_features(self) -> AlarmControlPanelEntityFeature:
         """Return the list of supported features."""
         return (
             AlarmControlPanelEntityFeature.ARM_AWAY
@@ -136,43 +145,42 @@ class IntrusionSystemAlarmControlPanel(AlarmControlPanelEntity):
         )
 
     @property
-    def manufacturer(self):
+    def manufacturer(self) -> str:
         """Return manufacturer of the device."""
         return self._device.manufacturer
 
     @property
-    def code_format(self):
+    def code_format(self) -> None:
         """Return the regex for code format or None if no code is required."""
         return None
-        # return FORMAT_NUMBER
 
     @property
-    def code_arm_required(self):
+    def code_arm_required(self) -> bool:
         """Whether the code is required for arm actions."""
         return False
 
-    async def async_alarm_disarm(self, code=None):
+    async def async_alarm_disarm(self, code: str | None = None) -> None:
         """Send disarm command."""
         await self._device.async_disarm()
 
-    async def async_alarm_arm_away(self, code=None):
+    async def async_alarm_arm_away(self, code: str | None = None) -> None:
         """Send arm away command."""
         await self._device.async_arm_full_protection()
 
-    async def async_alarm_arm_home(self, code=None):
+    async def async_alarm_arm_home(self, code: str | None = None) -> None:
         """Send arm home command."""
         await self._device.async_arm_partial_protection()
 
-    async def async_alarm_arm_custom_bypass(self, code=None):
-        """Send arm home command."""
+    async def async_alarm_arm_custom_bypass(self, code: str | None = None) -> None:
+        """Send arm custom bypass command."""
         await self._device.async_arm_individual_protection()
 
-    async def async_alarm_mute(self):
+    async def async_alarm_mute(self) -> None:
         """Mute alarm command."""
         await self._device.async_mute()
 
     @property
-    def extra_state_attributes(self):
+    def extra_state_attributes(self) -> dict[str, Any]:
         """Return additional IDS state attributes.
 
         Exposes alarm_state_incidents, security_gaps, and remaining_time_until_armed
