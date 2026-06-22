@@ -151,7 +151,7 @@ class EntityUniqueIdFormatChecker(BaseChecker):
                 "Entity class `%s` embeds the integration's domain (its "
                 "manifest `domain` field) in `_attr_unique_id`; the entity "
                 "registry already namespaces unique IDs per integration, so "
-                "this prefix is redundant"
+                "including the domain is redundant"
             ),
             "home-assistant-entity-unique-id-redundant-domain",
             (
