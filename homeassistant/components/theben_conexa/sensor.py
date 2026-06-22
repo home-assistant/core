@@ -64,13 +64,13 @@ class TotalInOutSensor(ConexaSMGWEntity, SensorEntity):
 
         self._attr_translation_key = translation_key
         self._key = key
-        self._attr_native_value = coordinator.data[key].value
+        self.native_value = coordinator.data[key].value
         # As far as I know the Conexa 3.0 returns always Wh but there is the possibility that it returns Joules
         if coordinator.data[key].unit.upper() == "J":
-            self._attr_native_unit_of_measurement = UnitOfEnergy.JOULE
+            self.native_unit_of_measurement = UnitOfEnergy.JOULE
         self._attr_unique_id = f"{coordinator.gateway_info.smgwID}-{key}"
 
     def _handle_coordinator_update(self) -> None:
         """Handle updated data from the coordinator."""
-        self._attr_native_value = self.coordinator.data[self._key].value
+        self.native_value = self.coordinator.data[self._key].value
         self.async_write_ha_state()

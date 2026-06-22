@@ -24,5 +24,8 @@ async def async_setup_entry(hass: HomeAssistant, entry: ThebenConfigEntry) -> bo
 
 
 async def async_unload_entry(hass: HomeAssistant, entry: ThebenConfigEntry) -> bool:
-    """Unload a config entry."""
+    """Unload a config entry.
+
+    The Conexa http based query protocol does not need any cleanup
+    """
     return await hass.config_entries.async_unload_platforms(entry, _PLATFORMS)
