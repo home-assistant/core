@@ -7,19 +7,11 @@ from typing import Any
 from neopool_modbus.registers import DEFAULT_MODBUS_FRAMER
 import voluptuous as vol
 
-from homeassistant import config_entries
-from homeassistant.config_entries import ConfigFlowResult
+from homeassistant.config_entries import ConfigFlow, ConfigFlowResult
 from homeassistant.const import CONF_HOST, CONF_PORT
 from homeassistant.helpers import translation as ha_translation
 
-from .const import (
-    CONF_FILTRATION_PUMP_POWER,
-    CURRENT_VERSION,
-    DEFAULT_PORT,
-    DEFAULT_UNIT_ID,
-    DOMAIN,
-    NAME,
-)
+from .const import CURRENT_VERSION, DEFAULT_PORT, DEFAULT_UNIT_ID, DOMAIN, NAME
 from .helpers import async_get_device_serial
 
 _LOGGER = logging.getLogger(__name__)
@@ -36,7 +28,7 @@ async def is_host_port_open(host: str, port: int, timeout: int = 3) -> bool:
     return True
 
 
-class NeoPoolConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
+class NeoPoolConfigFlow(ConfigFlow, domain=DOMAIN):
     """Handle a config flow for NeoPool."""
 
     VERSION = CURRENT_VERSION
@@ -74,10 +66,6 @@ class NeoPoolConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
                     "modbus_framer",
                     default=DEFAULT_MODBUS_FRAMER,
                 ): vol.In(("tcp", "rtu")),
-                vol.Optional(
-                    CONF_FILTRATION_PUMP_POWER,
-                    default=0,
-                ): vol.All(int, vol.Range(min=0)),
             }
         )
         errors = {}
@@ -120,58 +108,4 @@ class NeoPoolConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         return self.async_show_form(
             step_id="user",
             data_schema=data_schema,
-        )
-
-    async def async_step_reconfigure(
-        self, user_input: dict[str, Any] | None = None
-    ) -> ConfigFlowResult:
-        """Handle reconfiguration of an existing entry."""
-        entry_id = self.context.get("entry_id")
-        if entry_id is None:
-            return self.async_abort(reason="entry_not_found")
-        entry = self.hass.config_entries.async_get_entry(entry_id)
-        if entry is None:
-            return self.async_abort(reason="entry_not_found")
-
-        current = entry.data
-
-        data_schema = vol.Schema(
-            {
-                vol.Required(CONF_HOST, default=current.get(CONF_HOST, "")): str,
-                vol.Optional(
-                    CONF_PORT, default=current.get(CONF_PORT, DEFAULT_PORT)
-                ): int,
-                vol.Optional(
-                    "unit_id",
-                    default=current.get("unit_id", DEFAULT_UNIT_ID),
-                ): int,
-                vol.Optional(
-                    "modbus_framer",
-                    default=current.get("modbus_framer", DEFAULT_MODBUS_FRAMER),
-                ): vol.In(("tcp", "rtu")),
-            }
-        )
-
-        errors = {}
-        if user_input is not None:
-            errors = await self._async_validate_connection(user_input)
-            if not errors:
-                if entry.unique_id:
-                    serial = await async_get_device_serial({**current, **user_input})
-                    if serial and f"neopool_{serial}" != entry.unique_id:
-                        errors[CONF_HOST] = "serial_mismatch"
-                    elif not serial:
-                        errors[CONF_HOST] = "cannot_read_modbus"
-
-            if not errors:
-                new_data = {**current, **user_input}
-                return self.async_update_reload_and_abort(
-                    entry,
-                    data=new_data,
-                )
-
-        return self.async_show_form(
-            step_id="reconfigure",
-            data_schema=data_schema,
-            errors=errors,
         )

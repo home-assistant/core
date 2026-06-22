@@ -5,9 +5,8 @@ from unittest.mock import AsyncMock, MagicMock, patch
 import pytest
 
 from homeassistant.components.neopool import config_flow
-from homeassistant.components.neopool.config_flow import NeoPoolConfigFlow
 from homeassistant.components.neopool.const import DOMAIN
-from homeassistant.config_entries import SOURCE_USER, ConfigEntryState
+from homeassistant.config_entries import SOURCE_USER
 from homeassistant.const import CONF_HOST, CONF_PORT
 from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
@@ -151,118 +150,6 @@ async def test_user_flow_already_configured(
     assert result["reason"] == "already_configured"
 
 
-async def test_reconfigure_flow_happy_path(
-    hass: HomeAssistant,
-    mock_config_entry: MockConfigEntry,
-    mock_neopool_client: MagicMock,
-) -> None:
-    """A reconfigure flow updates host/port and reloads the entry."""
-    mock_config_entry.add_to_hass(hass)
-
-    result = await mock_config_entry.start_reconfigure_flow(hass)
-    assert result["type"] is FlowResultType.FORM
-    assert result["step_id"] == "reconfigure"
-
-    result = await hass.config_entries.flow.async_configure(
-        result["flow_id"],
-        {
-            CONF_HOST: "192.0.2.50",
-            CONF_PORT: 1502,
-            "unit_id": 2,
-            "modbus_framer": "tcp",
-        },
-    )
-    assert result["type"] is FlowResultType.ABORT
-    assert result["reason"] == "reconfigure_successful"
-    assert mock_config_entry.data[CONF_HOST] == "192.0.2.50"
-    assert mock_config_entry.data[CONF_PORT] == 1502
-
-    while mock_config_entry.state is not ConfigEntryState.LOADED:
-        await hass.async_block_till_done()
-    await hass.config_entries.async_unload(mock_config_entry.entry_id)
-    await hass.async_block_till_done()
-
-
-async def test_reconfigure_flow_cannot_connect(
-    hass: HomeAssistant,
-    mock_config_entry: MockConfigEntry,
-    mock_neopool_client: MagicMock,
-) -> None:
-    """A reconfigure flow with an unreachable host shows the cannot_connect error."""
-    mock_config_entry.add_to_hass(hass)
-    result = await mock_config_entry.start_reconfigure_flow(hass)
-
-    with pytest.MonkeyPatch.context() as mp:
-        mp.setattr(config_flow, "is_host_port_open", AsyncMock(return_value=False))
-        result = await hass.config_entries.flow.async_configure(
-            result["flow_id"],
-            {
-                CONF_HOST: "192.0.2.99",
-                CONF_PORT: 502,
-                "unit_id": 1,
-                "modbus_framer": "tcp",
-            },
-        )
-    assert result["type"] is FlowResultType.FORM
-    assert result["errors"] == {CONF_HOST: "cannot_connect"}
-
-
-async def test_reconfigure_flow_serial_mismatch(
-    hass: HomeAssistant,
-    mock_config_entry: MockConfigEntry,
-    mock_neopool_client: MagicMock,
-) -> None:
-    """A reconfigure that targets a different physical controller is rejected."""
-    mock_config_entry.add_to_hass(hass)
-    result = await mock_config_entry.start_reconfigure_flow(hass)
-
-    with pytest.MonkeyPatch.context() as mp:
-        mp.setattr(
-            config_flow,
-            "async_get_device_serial",
-            AsyncMock(return_value="9999999999"),
-        )
-        result = await hass.config_entries.flow.async_configure(
-            result["flow_id"],
-            {
-                CONF_HOST: "192.0.2.50",
-                CONF_PORT: 502,
-                "unit_id": 1,
-                "modbus_framer": "tcp",
-            },
-        )
-    assert result["type"] is FlowResultType.FORM
-    assert result["errors"] == {CONF_HOST: "serial_mismatch"}
-
-
-async def test_reconfigure_flow_cannot_read_modbus(
-    hass: HomeAssistant,
-    mock_config_entry: MockConfigEntry,
-    mock_neopool_client: MagicMock,
-) -> None:
-    """If the serial probe fails on reconfigure, we surface cannot_read_modbus."""
-    mock_config_entry.add_to_hass(hass)
-    result = await mock_config_entry.start_reconfigure_flow(hass)
-
-    with pytest.MonkeyPatch.context() as mp:
-        mp.setattr(
-            config_flow,
-            "async_get_device_serial",
-            AsyncMock(return_value=None),
-        )
-        result = await hass.config_entries.flow.async_configure(
-            result["flow_id"],
-            {
-                CONF_HOST: "192.0.2.50",
-                CONF_PORT: 502,
-                "unit_id": 1,
-                "modbus_framer": "tcp",
-            },
-        )
-    assert result["type"] is FlowResultType.FORM
-    assert result["errors"] == {CONF_HOST: "cannot_read_modbus"}
-
-
 async def test_default_name_translation_failure_falls_back(
     hass: HomeAssistant,
     mock_neopool_client: MagicMock,
@@ -276,27 +163,3 @@ async def test_default_name_translation_failure_falls_back(
             DOMAIN, context={"source": SOURCE_USER}
         )
     assert result["type"] is FlowResultType.FORM
-
-
-async def test_reconfigure_flow_aborts_when_entry_id_missing(
-    hass: HomeAssistant,
-) -> None:
-    """async_step_reconfigure aborts when context has no entry_id."""
-    flow = NeoPoolConfigFlow()
-    flow.hass = hass
-    flow.context = {}
-    result = await flow.async_step_reconfigure()
-    assert result["type"] is FlowResultType.ABORT
-    assert result["reason"] == "entry_not_found"
-
-
-async def test_reconfigure_flow_aborts_when_entry_not_found(
-    hass: HomeAssistant,
-) -> None:
-    """async_step_reconfigure aborts when the referenced entry was deleted."""
-    flow = NeoPoolConfigFlow()
-    flow.hass = hass
-    flow.context = {"entry_id": "nonexistent"}
-    result = await flow.async_step_reconfigure()
-    assert result["type"] is FlowResultType.ABORT
-    assert result["reason"] == "entry_not_found"

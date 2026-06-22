@@ -1,35 +1,15 @@
 {
   "config": {
     "abort": {
-      "already_configured": "[%key:common::config_flow::abort::already_configured_device%]",
-      "entry_not_found": "The integration entry could not be found.",
-      "reconfigure_successful": "[%key:common::config_flow::abort::reconfigure_successful%]"
+      "already_configured": "[%key:common::config_flow::abort::already_configured_device%]"
     },
     "error": {
       "cannot_connect": "[%key:common::config_flow::error::cannot_connect%]",
-      "cannot_read_modbus": "Connected, but cannot read from the Modbus device. Check unit ID and framer settings.",
-      "serial_mismatch": "The device at this address has a different serial number than the one originally configured."
+      "cannot_read_modbus": "Connected, but cannot read from the Modbus device. Check unit ID and framer settings."
     },
     "step": {
-      "reconfigure": {
-        "data": {
-          "host": "[%key:common::config_flow::data::host%]",
-          "modbus_framer": "[%key:component::neopool::config::step::user::data::modbus_framer%]",
-          "port": "[%key:common::config_flow::data::port%]",
-          "unit_id": "[%key:component::neopool::config::step::user::data::unit_id%]"
-        },
-        "data_description": {
-          "host": "[%key:component::neopool::config::step::user::data_description::host%]",
-          "modbus_framer": "[%key:component::neopool::config::step::user::data_description::modbus_framer%]",
-          "port": "[%key:component::neopool::config::step::user::data_description::port%]",
-          "unit_id": "[%key:component::neopool::config::step::user::data_description::unit_id%]"
-        },
-        "description": "Update the connection settings for your NeoPool controller.",
-        "title": "Reconfigure NeoPool Connection"
-      },
       "user": {
         "data": {
-          "filtration_pump_power": "Filtration pump power (W, 0 = disabled)",
           "host": "[%key:common::config_flow::data::host%]",
           "modbus_framer": "Modbus framer",
           "name_default": "Pool",
@@ -37,7 +17,6 @@
           "unit_id": "Unit ID"
         },
         "data_description": {
-          "filtration_pump_power": "Set the rated wattage of the filtration pump. When non-zero, two sensors are created: instantaneous power (W) and cumulative energy (Wh), both usable in the Energy dashboard.",
           "host": "Enter the IP address of the Modbus TCP gateway connected to your pool controller.",
           "modbus_framer": "Select 'tcp' for gateways that convert between TCP and RTU. Select 'rtu' for transparent gateways that forward raw RTU frames over TCP.",
           "port": "Standard Modbus TCP port (default: 502). Change only if your gateway uses a non-standard port.",

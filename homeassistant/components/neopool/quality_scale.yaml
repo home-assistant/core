@@ -39,7 +39,7 @@ rules:
 
   # Gold
   devices: done
-  diagnostics: done
+  diagnostics: todo
   discovery:
     status: exempt
     comment: |
@@ -68,7 +68,7 @@ rules:
   entity-translations: done
   exception-translations: done
   icon-translations: done
-  reconfiguration-flow: done
+  reconfiguration-flow: todo
   repair-issues: done
   stale-devices:
     status: exempt
