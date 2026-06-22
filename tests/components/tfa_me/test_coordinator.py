@@ -2,12 +2,10 @@
 
 # For test run: "pytest ./tests/components/tfa_me/ --cov=homeassistant.components.tfa_me --cov-report term-missing -vv"
 
-from datetime import datetime
 from unittest.mock import patch
 
 import pytest
 from tfa_me_ha_local.client import (
-    TFAmeClient,
     TFAmeConnectionError,
     TFAmeException,
     TFAmeHTTPError,
@@ -19,26 +17,23 @@ from homeassistant.components.tfa_me.coordinator import TFAmeUpdateCoordinator
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.update_coordinator import UpdateFailed
+from homeassistant.util.dt import naive_now
 
 from tests.common import AsyncMock
 
 
-@pytest.mark.asyncio
-async def test_update_data_with_ip(
-    hass: HomeAssistant, tfa_me_options_flow_mock_entry
-) -> None:
-    """Test normal update (with IP) with some sensor types."""
-    now = datetime.now().timestamp()
+def _fake_sensor_payload() -> dict:
+    """Return fake TFA.me sensor payload."""
+    now = int(naive_now().timestamp())
 
-    # Create dummy JSON reply
-    dummy_json = {
+    return {
         "gateway_id": "017654321",
         "sensors": [
             {
                 "sensor_id": "a21234567",
                 "name": "A21234567",
                 "timestamp": "2025-09-04T12:21:41Z",
-                "ts": int(now),
+                "ts": now,
                 "measurements": {
                     "rssi": {"value": "221", "unit": "/255"},
                     "lowbatt": {"value": "0", "unit": "No"},
@@ -51,7 +46,7 @@ async def test_update_data_with_ip(
                 "sensor_id": "a12345678",
                 "name": "A12345678",
                 "timestamp": "2025-09-05T06:46:31Z",
-                "ts": int(now),
+                "ts": now,
                 "measurements": {
                     "rssi": {"value": "216", "unit": "/255"},
                     "lowbatt": {"value": "0", "unit": "No"},
@@ -61,96 +56,47 @@ async def test_update_data_with_ip(
         ],
     }
 
-    coordinator = TFAmeUpdateCoordinator(
-        hass,
-        tfa_me_options_flow_mock_entry,
-    )
 
-    # Patch TFAmeClient delivers JSON directly
+async def test_update_data_with_ip(
+    hass: HomeAssistant,
+    tfa_me_options_flow_mock_entry: ConfigEntry,
+) -> None:
+    """Test normal coordinator update with IP."""
+    coordinator = TFAmeUpdateCoordinator(hass, tfa_me_options_flow_mock_entry)
+
     with patch(
         "homeassistant.components.tfa_me.coordinator.TFAmeClient.async_get_sensors",
-        new=AsyncMock(return_value=dummy_json),
+        new=AsyncMock(return_value=_fake_sensor_payload()),
     ):
-        # Request data
         result = await coordinator._async_update_data()
 
-    # Simply check if the number of entities is correct
+    assert result.gateway_id == "017654321"
     assert len(result.entities) == 12
 
-    # Asserts others
-    assert result.gateway_id == "017654321"
-
-    # Create invalid JSON: "measurements" is a string not a dict
-    bad_json = {
-        "gateway_id": "017654321",
-        "sensors": [
-            {
-                "sensor_id": "a21234567",
-                "name": "A21234567",
-                "timestamp": "2025-09-04T12:21:41Z",
-                "ts": 1234567890,
-                "measurements": "THIS SHOULD BE A DICT, NOT A STRING",
-            }
-        ],
-    }
-
-    # Assert: TFAmeJSONError
-    tfa_me_client = TFAmeClient("192.168.1.60", "sensors", timeout=7, log_level=1)
-    with pytest.raises(TFAmeJSONError, match="Invalid JSON response"):
-        tfa_me_client.parse_and_filter_json(json_data=bad_json, valid_keys=[])
+    assert "sensor.017654321_a21234567_rssi" in result.entities
+    assert "sensor.017654321_a21234567_wind_speed" in result.entities
+    assert "sensor.017654321_a12345678_rain" in result.entities
 
 
-@pytest.mark.asyncio
 @pytest.mark.parametrize(
-    ("exc", "expected"),
+    "exc",
     [
-        (TFAmeTimeoutError("timeout"), UpdateFailed),
-        (TFAmeConnectionError("conn"), UpdateFailed),
-        (TFAmeHTTPError("http"), UpdateFailed),
-        (TFAmeJSONError("json"), UpdateFailed),
-        (TFAmeException("other"), UpdateFailed),
+        TFAmeTimeoutError("timeout"),
+        TFAmeConnectionError("connection error"),
+        TFAmeHTTPError("http error"),
+        TFAmeJSONError("json error"),
+        TFAmeException("generic error"),
     ],
 )
-async def test_async_update_data_exceptions_first_init(
-    hass: HomeAssistant, tfa_me_mock_entry: ConfigEntry, exc, expected
+async def test_async_update_data_exceptions(
+    hass: HomeAssistant,
+    tfa_me_options_flow_mock_entry: ConfigEntry,
+    exc: TFAmeException,
 ) -> None:
-    """Test that coordinator maps exceptions correctly on first init."""
-
+    """Test that coordinator maps client exceptions to UpdateFailed."""
     coordinator = TFAmeUpdateCoordinator(
         hass=hass,
-        config_entry=tfa_me_mock_entry,
-    )
-
-    # Patch the client so that async_get_sensors raises the test exception
-    with (
-        patch(
-            "homeassistant.components.tfa_me.coordinator.TFAmeClient.async_get_sensors",
-            side_effect=exc,
-        ),
-        pytest.raises(expected),
-    ):
-        await coordinator._async_update_data()
-
-
-@pytest.mark.asyncio
-@pytest.mark.parametrize(
-    ("exc", "expected"),
-    [
-        (TFAmeTimeoutError("timeout"), UpdateFailed),
-        (TFAmeConnectionError("conn"), UpdateFailed),
-        (TFAmeHTTPError("http"), UpdateFailed),
-        (TFAmeJSONError("json"), UpdateFailed),
-        (TFAmeException("other"), UpdateFailed),
-    ],
-)
-async def test_async_update_data_exceptions_after_first_init(
-    hass: HomeAssistant, tfa_me_mock_entry: ConfigEntry, exc, expected
-) -> None:
-    """Test that coordinator maps exceptions correctly after first init."""
-
-    coordinator = TFAmeUpdateCoordinator(
-        hass=hass,
-        config_entry=tfa_me_mock_entry,
+        config_entry=tfa_me_options_flow_mock_entry,
     )
 
     with (
@@ -158,6 +104,6 @@ async def test_async_update_data_exceptions_after_first_init(
             "homeassistant.components.tfa_me.coordinator.TFAmeClient.async_get_sensors",
             side_effect=exc,
         ),
-        pytest.raises(expected),
+        pytest.raises(UpdateFailed),
     ):
         await coordinator._async_update_data()

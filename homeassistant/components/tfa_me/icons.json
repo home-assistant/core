@@ -92,6 +92,27 @@
           "15": "mdi:arrow-bottom-right"
         }
       },
+      "wind_direction_deg": {
+        "default": "mdi:compass-outline",
+        "range": {
+          "0": "mdi:arrow-down",
+          "22": "mdi:arrow-down",
+          "45": "mdi:arrow-bottom-left",
+          "68": "mdi:arrow-bottom-left",
+          "90": "mdi:arrow-left",
+          "112": "mdi:arrow-left",
+          "135": "mdi:arrow-top-left",
+          "157": "mdi:arrow-top-left",
+          "180": "mdi:arrow-up",
+          "202": "mdi:arrow-up",
+          "225": "mdi:arrow-top-right",
+          "247": "mdi:arrow-top-right",
+          "270": "mdi:arrow-right",
+          "292": "mdi:arrow-right",
+          "315": "mdi:arrow-bottom-right",
+          "337": "mdi:arrow-bottom-right"
+        }
+      },
       "wind_gust": {
         "default": "mdi:weather-windy-variant"
       },

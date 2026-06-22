@@ -1,5 +1,7 @@
 """TFA.me station integration: config_flow.py."""
 
+# For test run: "pytest ./tests/components/tfa_me/ --cov=homeassistant.components.tfa_me --cov-report term-missing -vv"
+
 import logging
 from typing import Any
 
@@ -19,14 +21,6 @@ from homeassistant.const import CONF_IP_ADDRESS
 from .const import CONF_NAME_WITH_STATION_ID, DEFAULT_STATION_NAME, DOMAIN
 from .data import TFAmeUniqueID
 
-DATA_SCHEMA = vol.Schema(
-    {
-        vol.Required(CONF_IP_ADDRESS): str,
-        vol.Required(CONF_NAME_WITH_STATION_ID): bool,
-    }
-)
-
-
 _LOGGER = logging.getLogger(__name__)
 
 
@@ -38,11 +32,8 @@ class TFAmeConfigFlow(ConfigFlow, domain=DOMAIN):
 
     def __init__(self) -> None:
         """Initialize the config flow."""
-        self.data: dict[str, Any] = {}
-        self.name_with_station_id: bool = False
 
-        # For zeroconf discovery
-        self._discovered_host_or_id: str | None = None
+        self.name_with_station_id: bool = False
 
     async def async_step_user(
         self, user_input: dict[str, Any] | None = None
@@ -50,7 +41,7 @@ class TFAmeConfigFlow(ConfigFlow, domain=DOMAIN):
         """Handle the initial step of the config flow."""
         errors: dict[str, str] = {}
 
-        default_host = self._discovered_host_or_id or ""
+        default_host = ""
         default_name_with_id = False
 
         data_schema = vol.Schema(

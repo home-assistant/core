@@ -4,8 +4,8 @@
 
 from __future__ import annotations
 
+from collections.abc import Mapping
 import contextlib
-from typing import Any
 from unittest.mock import patch
 
 import pytest
@@ -16,27 +16,28 @@ from tfa_me_ha_local.client import (
     TFAmeJSONError,
     TFAmeTimeoutError,
 )
-import voluptuous as vol
 
 from homeassistant import config_entries, data_entry_flow
 from homeassistant.components.tfa_me.const import CONF_NAME_WITH_STATION_ID, DOMAIN
 from homeassistant.const import CONF_IP_ADDRESS
 from homeassistant.core import HomeAssistant
 
+type PatchKwargs = Mapping[str, object] | None
+type UserInput = dict[str, object]
+type ExpectedError = str | tuple[str, ...]
 
-@pytest.mark.asyncio
+
 async def test_show_form(hass: HomeAssistant) -> None:
-    """Test: Flow starts with form."""
+    """Test that the flow starts with the user form."""
     result = await hass.config_entries.flow.async_init(
         DOMAIN,
         context={"source": config_entries.SOURCE_USER},
     )
 
-    assert result["type"] == data_entry_flow.FlowResultType.FORM
+    assert result["type"] is data_entry_flow.FlowResultType.FORM
     assert result["step_id"] == "user"
 
 
-@pytest.mark.asyncio
 @pytest.mark.parametrize(
     (
         "patch_target",
@@ -47,153 +48,124 @@ async def test_show_form(hass: HomeAssistant) -> None:
         "check_in_values",
     ),
     [
-        (  # 1) TFAmeTimeoutError raised -> error stored under "base"
+        (
             "homeassistant.components.tfa_me.config_flow.TFAmeUniqueID",
             {"side_effect": TFAmeTimeoutError("timeout_connect")},
-            {
-                CONF_IP_ADDRESS: "192.168.0.10",
-                CONF_NAME_WITH_STATION_ID: True,
-            },
+            {CONF_IP_ADDRESS: "192.168.0.10", CONF_NAME_WITH_STATION_ID: True},
             "base",
             "timeout_connect",
             False,
         ),
-        (  # 2) TFAmeConnectionError raised -> error stored under "base"
+        (
             "homeassistant.components.tfa_me.config_flow.TFAmeUniqueID",
             {"side_effect": TFAmeConnectionError("cannot_connect")},
-            {
-                CONF_IP_ADDRESS: "192.168.0.10",
-                CONF_NAME_WITH_STATION_ID: True,
-            },
+            {CONF_IP_ADDRESS: "192.168.0.10", CONF_NAME_WITH_STATION_ID: True},
             "base",
             "cannot_connect",
             False,
         ),
-        (  # 3) TFAmeHTTPError raised -> error stored under "base"
+        (
             "homeassistant.components.tfa_me.config_flow.TFAmeUniqueID",
             {"side_effect": TFAmeHTTPError("invalid_response")},
-            {
-                CONF_IP_ADDRESS: "192.168.0.10",
-                CONF_NAME_WITH_STATION_ID: True,
-            },
+            {CONF_IP_ADDRESS: "192.168.0.10", CONF_NAME_WITH_STATION_ID: True},
             "base",
             "invalid_response",
             False,
         ),
-        (  # 4) TFAmeJSONError raised -> error stored under "base"
+        (
             "homeassistant.components.tfa_me.config_flow.TFAmeUniqueID",
             {"side_effect": TFAmeJSONError("invalid_response")},
-            {
-                CONF_IP_ADDRESS: "192.168.0.10",
-                CONF_NAME_WITH_STATION_ID: True,
-            },
+            {CONF_IP_ADDRESS: "192.168.0.10", CONF_NAME_WITH_STATION_ID: True},
             "base",
             "invalid_response",
             False,
         ),
-        (  # 5) TFAmeException raised -> error stored under "base"
+        (
             "homeassistant.components.tfa_me.config_flow.TFAmeUniqueID",
             {"side_effect": TFAmeException("unknown")},
-            {
-                CONF_IP_ADDRESS: "192.168.0.10",
-                CONF_NAME_WITH_STATION_ID: True,
-            },
+            {CONF_IP_ADDRESS: "192.168.0.10", CONF_NAME_WITH_STATION_ID: True},
             "base",
             "unknown",
             False,
         ),
-        (  # 6) Invalid IP/hostname -> error stored under CONF_IP_ADDRESS
+        (
             None,
             None,
-            {
-                CONF_IP_ADDRESS: "NotIP",
-                CONF_NAME_WITH_STATION_ID: False,
-            },
+            {CONF_IP_ADDRESS: "NotIP", CONF_NAME_WITH_STATION_ID: False},
             CONF_IP_ADDRESS,
             "invalid_ip_host",
             False,
         ),
-        (  # 7) Invalid CONF_NAME_WITH_STATION_ID type -> only the value matters
+        (
             None,
             None,
-            {
-                CONF_IP_ADDRESS: "192.168.1.10",
-                CONF_NAME_WITH_STATION_ID: 123,  # wrong value type
-            },
-            None,  # key is not relevant here
+            {CONF_IP_ADDRESS: "192.168.1.10", CONF_NAME_WITH_STATION_ID: 123},
+            None,
             "invalid_name_with_station_id",
-            True,  # check error via values()
+            True,
         ),
-        (  # 8) Generic exception while connecting -> error on "base"
+        (
             "homeassistant.components.tfa_me.config_flow.TFAmeUniqueID.get_identifier",
             {"side_effect": Exception("connection error")},
-            {
-                CONF_IP_ADDRESS: "192.168.1.10",
-                CONF_NAME_WITH_STATION_ID: True,
-            },
+            {CONF_IP_ADDRESS: "192.168.1.10", CONF_NAME_WITH_STATION_ID: True},
             "base",
-            ("cannot_connect", "unknown"),  # both are allowed
+            ("cannot_connect", "unknown"),
             False,
         ),
     ],
     ids=[
         "timeout_connect",
         "cannot_connect",
-        "invalid_response",
-        "invalid_response",
+        "http_invalid_response",
+        "json_invalid_response",
         "unknown",
         "invalid_ip_host",
         "invalid_name_with_station_id",
-        "cannot_connect",
+        "generic_exception",
     ],
 )
 async def test_config_flow_errors_recover(
     hass: HomeAssistant,
-    patch_target,
-    patch_kwargs,
-    initial_user_input,
-    error_key,
-    expected_error,
-    check_in_values,
+    patch_target: str | None,
+    patch_kwargs: PatchKwargs,
+    initial_user_input: UserInput,
+    error_key: str | None,
+    expected_error: ExpectedError,
+    check_in_values: bool,
 ) -> None:
-    """Test all error cases of the config flow and ensure recovery to CREATE_ENTRY."""
-
-    # Optional patch to simulate specific failure mode
+    """Test config flow error handling and recovery."""
     if patch_target is not None:
-        cm = patch(patch_target, **(patch_kwargs or {}))
+        manager = patch(patch_target, **dict(patch_kwargs or {}))
     else:
-        cm = contextlib.nullcontext()
+        manager = contextlib.nullcontext()
 
-    # Step 1: Trigger the error on initial init
-    with cm:
+    with manager:
         result = await hass.config_entries.flow.async_init(
             DOMAIN,
             context={"source": config_entries.SOURCE_USER},
             data=initial_user_input,
         )
 
-    assert result["type"] == data_entry_flow.FlowResultType.FORM
+    assert result["type"] is data_entry_flow.FlowResultType.FORM
 
-    # Validate the error reported by the flow
+    errors = result["errors"]
     if check_in_values:
-        # We only care that the expected_error appears in the error values
         if isinstance(expected_error, tuple):
-            assert any(v in expected_error for v in result["errors"].values())
+            assert any(error in expected_error for error in errors.values())
         else:
-            assert expected_error in result["errors"].values()
+            assert expected_error in errors.values()
     else:
-        # We expect a specific key to be present with a specific value (or one of several)
-        assert error_key in result["errors"]
+        assert error_key is not None
+        assert error_key in errors
         if isinstance(expected_error, tuple):
-            assert result["errors"][error_key] in expected_error
+            assert errors[error_key] in expected_error
         else:
-            assert result["errors"][error_key] == expected_error
+            assert errors[error_key] == expected_error
 
-    # Step 2: User corrects the input and retries
     with (
         patch(
             "homeassistant.components.tfa_me.config_flow.TFAmeUniqueID.get_identifier",
-            return_value="192.168.1.10",
+            return_value="0101234567",
         ),
         patch(
             "homeassistant.components.tfa_me.async_setup_entry",
@@ -208,20 +180,5 @@ async def test_config_flow_errors_recover(
             },
         )
 
-    # Step 3: Ensure the flow recovers and creates an entry
-    assert result2["type"] == data_entry_flow.FlowResultType.CREATE_ENTRY
+    assert result2["type"] is data_entry_flow.FlowResultType.CREATE_ENTRY
     assert result2["title"] == "TFA.me Station '192.168.1.10'"
-
-
-def _get_default_from_schema(schema: vol.Schema, key: str) -> Any:
-    """Extract (and evaluate) default value for a key in a voluptuous schema."""
-    for marker in schema.schema:
-        if getattr(marker, "schema", None) == key:
-            default = getattr(marker, "default", vol.UNDEFINED)
-
-            # HA/voluptuous may store defaults as callables (default_factory)
-            if callable(default):
-                return default()
-
-            return default
-    raise AssertionError(f"Key {key} not found in schema")

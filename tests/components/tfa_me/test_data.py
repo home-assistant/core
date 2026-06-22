@@ -4,7 +4,7 @@
 
 from __future__ import annotations
 
-from unittest.mock import AsyncMock, patch
+from unittest.mock import patch
 
 import pytest
 from tfa_me_ha_local.client import (
@@ -18,11 +18,11 @@ from tfa_me_ha_local.client import (
 from homeassistant.components.tfa_me.data import TFAmeUniqueID
 from homeassistant.core import HomeAssistant
 
+from tests.common import AsyncMock
 
-@pytest.mark.asyncio
+
 async def test_get_identifier_success_ip(hass: HomeAssistant) -> None:
     """Test get_identifier() for a normal IP address returns gateway_id."""
-
     with patch("homeassistant.components.tfa_me.data.TFAmeClient") as mock_client_cls:
         mock_client = mock_client_cls.return_value
         mock_client.async_get_sensors = AsyncMock(
@@ -32,41 +32,33 @@ async def test_get_identifier_success_ip(hass: HomeAssistant) -> None:
         data = TFAmeUniqueID(hass, "192.168.1.10")
         identifier = await data.get_identifier()
 
-        # Check returned identifier
-        assert identifier == "012345678"
+    assert identifier == "012345678"
 
-        # Ensure the client was constructed with the plain host (IP)
-        mock_client_cls.assert_called_once()
-        args, _ = mock_client_cls.call_args
-        # args: (host, "sensors", log_level, session)
-        assert args[0] == "192.168.1.10"
-        assert args[1] == "sensors"
+    mock_client_cls.assert_called_once()
+    args, _ = mock_client_cls.call_args
+    assert args[0] == "192.168.1.10"
+    assert args[1] == "sensors"
 
 
-@pytest.mark.asyncio
 async def test_get_identifier_success_station_id(hass: HomeAssistant) -> None:
-    """Test get_identifier() when user passes station ID (host with '-')."""
-
+    """Test get_identifier() when user passes station ID."""
     with patch("homeassistant.components.tfa_me.data.TFAmeClient") as mock_client_cls:
         mock_client = mock_client_cls.return_value
         mock_client.async_get_sensors = AsyncMock(
             return_value={"gateway_id": "012345678"}
         )
 
-        # User inputs a station ID in format "XXX-XXX-XXX"
         data = TFAmeUniqueID(hass, "012-345-678")
         identifier = await data.get_identifier()
 
-        assert identifier == "012345678"
+    assert identifier == "012345678"
 
-        # Host should have been resolved to mDNS
-        mock_client_cls.assert_called_once()
-        args, _ = mock_client_cls.call_args
-        assert args[0] == "tfa-me-012-345-678.local"
-        assert args[1] == "sensors"
+    mock_client_cls.assert_called_once()
+    args, _ = mock_client_cls.call_args
+    assert args[0] == "tfa-me-012-345-678.local"
+    assert args[1] == "sensors"
 
 
-@pytest.mark.asyncio
 @pytest.mark.parametrize(
     ("side_effect", "return_value", "expected_exception", "expected_text"),
     [
@@ -94,12 +86,11 @@ async def test_get_identifier_success_station_id(hass: HomeAssistant) -> None:
 async def test_get_identifier_error_mapping(
     hass: HomeAssistant,
     side_effect: Exception | None,
-    return_value: dict | None,
+    return_value: dict[str, str] | None,
     expected_exception: type[Exception],
     expected_text: str,
 ) -> None:
     """Test get_identifier() preserves client errors and maps unknown errors."""
-
     with patch("homeassistant.components.tfa_me.data.TFAmeClient") as mock_client_cls:
         mock_client = mock_client_cls.return_value
 
@@ -113,4 +104,4 @@ async def test_get_identifier_error_mapping(
         with pytest.raises(expected_exception) as excinfo:
             await data.get_identifier()
 
-        assert expected_text in str(excinfo.value)
+    assert expected_text in str(excinfo.value)

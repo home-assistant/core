@@ -2,59 +2,19 @@
 
 # For test run: "pytest ./tests/components/tfa_me/ --cov=homeassistant.components.tfa_me --cov-report term-missing -vv"
 
-from datetime import datetime
-from unittest.mock import MagicMock
-
 import pytest
 
 from homeassistant.components.tfa_me.const import CONF_NAME_WITH_STATION_ID, DOMAIN
-from homeassistant.components.tfa_me.coordinator import (
-    TFAmeConfigEntry,
-    TFAmeCoordinatorData,
-    TFAmeUpdateCoordinator,
-)
-from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import CONF_IP_ADDRESS, CONF_NAME
+from homeassistant.const import CONF_IP_ADDRESS
 from homeassistant.core import HomeAssistant
 
-from tests.common import AsyncMock, Mock, MockConfigEntry
-
-
-@pytest.fixture
-def mock_config_entry(hass: HomeAssistant, tfa_me_mock_entry) -> ConfigEntry:
-    """Create dummy ConfigEntry."""
-    entry = MagicMock(spec=TFAmeConfigEntry)
-    entry.entry_id = "test-1234"
-    entry.domain = DOMAIN
-    coordy = TFAmeUpdateCoordinator(hass=hass, config_entry=tfa_me_mock_entry)
-    coordy.sensor_entity_list = []
-    entry.runtime_data = coordy
-    return entry
-
-
-@pytest.fixture
-def tfa_me_mock_entry(hass: HomeAssistant, tfa_me_mock_coordinator):
-    """Return a mock ConfigEntry."""
-
-    entry = MockConfigEntry(
-        domain=DOMAIN,
-        title="TFA.me",
-        data={
-            CONF_IP_ADDRESS: "192.168.1.46",
-            CONF_NAME: "TFA.me",
-            CONF_NAME_WITH_STATION_ID: False,
-        },
-        entry_id="1234",
-    )
-    entry.runtime_data = tfa_me_mock_coordinator
-    entry.add_to_hass(hass)
-    return entry
+from tests.common import MockConfigEntry
 
 
 @pytest.fixture
 def tfa_me_options_flow_mock_entry(hass: HomeAssistant) -> MockConfigEntry:
-    """Create default mock config entry for options flow test."""
-    default_entry_x = MockConfigEntry(
+    """Create default mock config entry."""
+    return MockConfigEntry(
         domain=DOMAIN,
         data={
             CONF_IP_ADDRESS: "127.0.0.1",
@@ -62,99 +22,22 @@ def tfa_me_options_flow_mock_entry(hass: HomeAssistant) -> MockConfigEntry:
         },
         unique_id="test-1234",
     )
-    default_entry_x.add_to_hass(hass)
-    return default_entry_x
 
 
 @pytest.fixture
-def tfa_me_mock_coordinator():
-    """Return a mock coordinator with dummy data."""
-    coordinator = MagicMock(spec=TFAmeUpdateCoordinator)
+def tfa_me_config_entry(hass: HomeAssistant) -> MockConfigEntry:
+    """Return a default TFA.me config entry."""
 
-    coordinator.async_add_listener = Mock(return_value=lambda: None)
-    coordinator.async_request_refresh = AsyncMock()
-    coordinator.async_update = AsyncMock()
-    coordinator.host = "192.168.1.10"
-    coordinator.name_with_station_id = False
-    coordinator.sensor_entity_list = []
-    now = datetime.now().timestamp()
-    gateway_id = "017654321"
-    gateway_sw = "1.12345 / 1"
-    # Some entities used for 100% test coverage
-    entities = {
-        "sensor.017654321_a01234567_temperature": {
-            "value": "23.5",
-            "unit": "°C",
-            "ts": int(now),
+    entry = MockConfigEntry(
+        domain=DOMAIN,
+        data={
+            CONF_IP_ADDRESS: "192.168.1.10",
+            CONF_NAME_WITH_STATION_ID: True,
         },
-        "sensor.017654321_a2ffffffb_wind_direction": {
-            "value": "8",
-            "unit": "°",
-            "ts": int(now),
-        },
-        "sensor.017654321_a2ffffffb_wind_direction_deg": {
-            "value": "8",
-            "unit": "°",
-            "ts": int(now),
-        },
-        "sensor.017654321_a2ffffffc_wind_direction_deg": {
-            "value": "xxx",  # Set to invalid value
-            "unit": "°",
-            "ts": int(now),
-        },
-        "sensor.017654321_a2ffffffc_rssi": {
-            "value": "222",
-            "unit": "/255",
-            "ts": int(now) - 1000000,  # Set to old value
-        },
-        "sensor.017654321_a1fffffea_rain": {
-            "value": "7.4",
-            "unit": "mm",
-            "ts": int(now),
-            "reset_rain": False,
-        },
-        "sensor.017654321_a1fffffea_rain_rel": {
-            "value": "7.4",
-            "unit": "mm",
-            "ts": int(now),
-            "reset_rain": True,
-        },
-        "sensor.017654321_a1fffffea_rain_1_hour": {
-            "value": "7.4",
-            "unit": "mm",
-            "ts": int(now) - 60,
-            "reset_rain": True,
-        },
-        "sensor.017654321_a1fffffec_rain_24_hours": {
-            "value": "7.4",
-            "unit": "mm",
-            "ts": int(now) - 60,
-            "reset_rain": False,
-        },
-        "sensor.017654321_a1fffffea_rain_24_hours": {
-            "value": "7.4",
-            "unit": "mm",
-            "ts": int(now),
-            "reset_rain": True,
-        },
-        "sensor.017654321_017654321_barometric_pressure": {
-            "value": "1000.1",
-            "unit": "hPa",
-            "ts": int(now),
-            "info": "",
-        },
-        "sensor.017654321_017654322_barometric_pressure": {
-            "value": "1000.1",
-            "unit": "hPa",
-            "ts": int(now),
-        },
-    }
-
-    coordinator.data = TFAmeCoordinatorData(
-        entities=entities, gateway_id=gateway_id, gateway_sw=gateway_sw
+        title="TFA.me Station '05B3E4E44'",
     )
-
-    return coordinator
+    entry.add_to_hass(hass)
+    return entry
 
 
 # Original JSON data from a TFA.me station for snapshot testing
@@ -219,7 +102,7 @@ FAKE_JSON = {
             "ts": "1764169727",
             "measurements": {
                 "rssi": {"value": "226", "unit": "/255"},
-                "lowbatt": {"value": "0", "unit": "No"},
+                "lowbatt": {"value": "0", "unit": ""},
                 "temperature": {"value": "23.9", "unit": "°C"},
             },
         },
@@ -243,7 +126,18 @@ FAKE_JSON = {
             "ts": "1764169317",
             "measurements": {
                 "rssi": {"value": "192", "unit": "/255"},
-                "lowbatt": {"value": "0", "unit": "No"},
+                "lowbatt": {"value": "0", "unit": ""},
+                "rain": {"value": "7.4", "unit": "mm"},
+            },
+        },
+        {
+            "sensor_id": "bb1234567",  # invalid sensor type, sensor types 'bb' does not exist
+            "name": "BB1234567",
+            "timestamp": "2025-11-26T15:01:57Z",
+            "ts": "1764169317",
+            "measurements": {
+                "rssi": {"value": "192", "unit": "/255"},
+                "lowbatt": {"value": "0", "unit": ""},
                 "rain": {"value": "7.4", "unit": "mm"},
             },
         },

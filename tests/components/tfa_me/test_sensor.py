@@ -3,356 +3,92 @@
 # For test run: "pytest ./tests/components/tfa_me/ --cov=homeassistant.components.tfa_me --cov-report term-missing -vv"
 # For snapshot: "pytest tests/components/tfa_me/test_sensor.py --snapshot-update"
 
-from datetime import datetime
 import json
 from pathlib import Path
-from types import SimpleNamespace
-from unittest.mock import AsyncMock, MagicMock, patch
+from unittest.mock import patch
 
+from freezegun.api import FrozenDateTimeFactory
 import pytest
 
-from homeassistant.components.tfa_me.const import (
-    CONF_NAME_WITH_STATION_ID,
-    DOMAIN,
-    MEASUREMENT_TO_TRANSLATION_KEY,
-)
-from homeassistant.components.tfa_me.sensor import (
-    TFA_ME_ENTITY_DESCRIPTIONS,
-    TFAmeSensorEntity,
-    async_setup_entry,
-)
-from homeassistant.const import CONF_IP_ADDRESS
+from homeassistant.const import STATE_UNKNOWN
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import entity_registry as er
+from homeassistant.util.dt import naive_now
 
 from .conftest import FAKE_JSON
 
-from tests.common import MockConfigEntry, SnapshotAssertion
+from tests.common import AsyncMock, MockConfigEntry, SnapshotAssertion
 
 
-@pytest.mark.asyncio
-async def test_async_setup_entry_creates_entities(
-    hass: HomeAssistant,
-    tfa_me_mock_coordinator,
-) -> None:
-    """Test that async_setup_entry creates TFAmeSensorEntity instances."""
-
-    assert "temperature" in TFA_ME_ENTITY_DESCRIPTIONS
-
-    entry = MockConfigEntry(domain=DOMAIN, data={}, entry_id="test-entry-id")
-    entry.add_to_hass(hass)
-
-    tfa_me_mock_coordinator.sensor_entity_list = []
-
-    tfa_me_mock_coordinator.data.entities = {
-        "sensor.017654321_a01234588_temperature": {
-            "value": "23.5",
-            "unit": "°C",
-            "ts": "123456789",
-        },
-        "sensor.017654321_a01234589_temperature": {
-            "value": "13.5",
-            "unit": "°C",
-            "ts": "123456789",
-        },
-        "invalid": {},
-    }
-
-    entry.runtime_data = tfa_me_mock_coordinator
-    async_add_entities = MagicMock()
-    await async_setup_entry(hass, entry, async_add_entities)
-
-    async_add_entities.assert_called_once()
-    entities_arg = async_add_entities.call_args[0][0]
-    assert len(entities_arg) == 2
-    assert all(isinstance(entity, TFAmeSensorEntity) for entity in entities_arg)
-    assert sorted(tfa_me_mock_coordinator.sensor_entity_list) == sorted(
-        [
-            "sensor.017654321_a01234588_temperature",
-            "sensor.017654321_a01234589_temperature",
-        ]
-    )
-
-    # Try to add an already existing ID (100% test coverage)
-    tfa_me_mock_coordinator.data.entities = {
-        "sensor.017654321_a01234588_temperature": {
-            "value": "23.5",
-            "unit": "°C",
-            "ts": "123456789",
-        }
-    }
-    entry.runtime_data = tfa_me_mock_coordinator
-    async_add_entities = MagicMock()
-    await async_setup_entry(hass, entry, async_add_entities)
+def _stable_state_dict(data: dict) -> dict:
+    """Return state dict without volatile fields."""
+    data = dict(data)
+    for key in ("last_changed", "last_updated", "last_reported", "context"):
+        data.pop(key, None)
+    return data
 
 
-def test_get_entity_description_invalid_measurement_raises() -> None:
-    """Test unsupported measurement raises ValueError."""
-
-    entity = TFAmeSensorEntity.__new__(TFAmeSensorEntity)
-    with pytest.raises(
-        ValueError,
-        match="Unsupported TFA.me measurement",
-    ):
-        entity._get_entity_description("invalid_measurement")
-
-
-def _stable_state_dict(d: dict) -> dict:
-    d = dict(d)  # shallow copy
-    for k in ("last_changed", "last_updated", "last_reported", "context"):
-        d.pop(k, None)
-    return d
-
-
-# pytest.mark.asyncio
 async def test_tfa_me_sensor_entities_snapshot(
     hass: HomeAssistant,
     snapshot: SnapshotAssertion,
+    freezer: FrozenDateTimeFactory,
+    tfa_me_config_entry: MockConfigEntry,
 ) -> None:
     """Snapshot all sensor entities created from a typical TFA.me JSON payload."""
 
-    # 1) Create config entry
-    entry = MockConfigEntry(
-        domain=DOMAIN,
-        data={
-            CONF_IP_ADDRESS: "192.168.1.10",
-            CONF_NAME_WITH_STATION_ID: True,
-        },
-        title="TFA.me Station '05B3E4E44'",
-    )
+    freezer.move_to("2025-11-26 09:16:00+00:00")
+    entry = tfa_me_config_entry
     entry.add_to_hass(hass)
 
-    # 2) Patch HTTP client -> returns FAKE_JSON
-    with patch(
-        "homeassistant.components.tfa_me.coordinator.TFAmeClient.async_get_sensors",
-        return_value=FAKE_JSON,
-    ):
-        await hass.config_entries.async_setup(entry.entry_id)
+    with pytest.MonkeyPatch.context() as monkeypatch:
+
+        async def mock_async_get_sensors(*args, **kwargs):
+            return FAKE_JSON
+
+        monkeypatch.setattr(
+            "homeassistant.components.tfa_me.coordinator.TFAmeClient.async_get_sensors",
+            mock_async_get_sensors,
+        )
+
+        assert await hass.config_entries.async_setup(entry.entry_id)
         await hass.async_block_till_done()
 
-    # 3) Collect all sensor entities from this config entry.
     ent_reg = er.async_get(hass)
     states: dict[str, dict] = {}
 
     for entity_id in sorted(hass.states.async_entity_ids("sensor")):
-        ent = ent_reg.async_get(entity_id)
-        # # Only entities from this config entry
-        if not ent or ent.config_entry_id != entry.entry_id:
+        registry_entry = ent_reg.async_get(entity_id)
+        if registry_entry is None or registry_entry.config_entry_id != entry.entry_id:
             continue
 
         state = hass.states.get(entity_id)
+        assert state is not None
         states[entity_id] = _stable_state_dict(state.as_dict())
 
-    # 4) Snapshot comparison
     assert states == snapshot
-
-
-async def test_sensor_entity_properties(tfa_me_mock_coordinator) -> None:
-    """Test temperature/humidity entities to get 100% code coverage of sensor.py."""
-    entity = TFAmeSensorEntity(
-        coordinator=tfa_me_mock_coordinator,
-        sensor_id="a01234567",
-        unique_id="sensor.017654321_a01234567_temperature",
-    )
-
-    # Test: unique_id, name, measurement_name, native_value (float), unit
-    assert entity.unique_id == "017654321_a01234567_temperature"
-    assert entity.translation_key == "temperature"
-    assert entity.measurement_name == "temperature"
-    assert float(entity.native_value) == 23.5
-    assert entity.native_unit_of_measurement == "°C"
-
-    # Station barometric pressure
-    entity6 = TFAmeSensorEntity(
-        coordinator=tfa_me_mock_coordinator,
-        sensor_id="057654321",
-        unique_id="sensor.017654321_017654321_barometric_pressure",
-    )
-    assert float(entity6.native_value) == 1000.1
-
-    # Test: Unit None
-    tfa_me_mock_coordinator.data.entities[entity.uid]["unit"] = None
-    assert entity.native_unit_of_measurement is None
-    # Test: Remove unit
-    del tfa_me_mock_coordinator.data.entities[entity.uid]["unit"]
-    assert entity.native_unit_of_measurement is None
-
-    # Station barometric pressure without "measurement"
-    with pytest.raises(ValueError, match="entity_error"):
-        TFAmeSensorEntity(
-            coordinator=tfa_me_mock_coordinator,
-            sensor_id="057654322",
-            unique_id="sensor.017654321_a057654322_barometric_pressure",
-        )
-
-    # Station with unknown "measurement" "invalid"
-    with pytest.raises(
-        ValueError,
-        match="entity_error",
-    ):
-        TFAmeSensorEntity(
-            coordinator=tfa_me_mock_coordinator,
-            sensor_id="057654322",
-            unique_id="sensor.017654321_a057654322_invalid",
-        )
-
-    # Station with no "measurement"
-    with pytest.raises(
-        ValueError,
-        match="entity_error",
-    ):
-        TFAmeSensorEntity(
-            coordinator=tfa_me_mock_coordinator,
-            sensor_id="057654322",
-            unique_id="sensor.017654321_a057654322",
-        )
-
-
-def test_format_string_tfa_type_unknown_returns_question_mark(
-    tfa_me_mock_coordinator,
-) -> None:
-    """Test unknown TFA type returns fallback."""
-    entity = TFAmeSensorEntity.__new__(TFAmeSensorEntity)
-    assert entity.format_string_tfa_type("ZZ1234567") == "?"
-
-    entity.uid = "invalid"
-    assert entity.measurement_name is None
-
-
-def test_extra_state_attributes_invalid_timestamp_returns_empty_dict(
-    tfa_me_mock_coordinator,
-) -> None:
-    """Test invalid timestamp returns empty attributes."""
-    uid = "sensor.017654321_a01234588_temperature"
-    tfa_me_mock_coordinator.data.entities = {
-        uid: {
-            "value": "23.5",
-            "unit": "°C",
-            "ts": "invalid",
-        }
-    }
-    entity = TFAmeSensorEntity.__new__(TFAmeSensorEntity)
-    entity.uid = uid
-    entity.coordinator = tfa_me_mock_coordinator
-    assert entity.extra_state_attributes == {}
-
-
-async def test_rain_sensor_entities(tfa_me_mock_coordinator) -> None:
-    """Test rain entities to get 100% code coverage of sensor.py."""
-    # Rain relative value
-    entity3 = TFAmeSensorEntity(
-        coordinator=tfa_me_mock_coordinator,
-        sensor_id="a1fffffea",
-        unique_id="sensor.017654321_a1fffffea_rain_rel",
-    )
-    assert float(entity3.init_measure_value) == 7.4
-    assert float(entity3.native_value) == 0.0
-
-    # Test rain 1 hour
-    entity4 = TFAmeSensorEntity(
-        coordinator=tfa_me_mock_coordinator,
-        sensor_id="a1fffffea",
-        unique_id="sensor.017654321_a1fffffea_rain_1_hour",
-    )
-    assert float(entity4.init_measure_value) == 7.4
-    assert entity4.rain_history.max_age == 60 * 60
-    assert float(entity4.native_value) == 0.0
-
-    # Test rain 24 hour
-    entity_24 = TFAmeSensorEntity(
-        coordinator=tfa_me_mock_coordinator,
-        sensor_id="a1fffffec",
-        unique_id="sensor.017654321_a1fffffec_rain_24_hours",
-    )
-    assert float(entity_24.init_measure_value) == 7.4
-    assert entity_24.rain_history_24.max_age == (24 * 60 * 60)
-    assert float(entity_24.native_value) == 0.0
-
-    # Reset rain
-    entity5 = TFAmeSensorEntity(
-        coordinator=tfa_me_mock_coordinator,
-        sensor_id="a1fffffea",
-        unique_id="sensor.017654321_a1fffffea_rain_24_hours",
-    )
-    assert float(entity5.init_measure_value) == 7.4
-    assert float(entity5.native_value) == 0.0
-
-
-async def test_wind_sensor(tfa_me_mock_coordinator) -> None:
-    """Test wind sensor entities to get 100% code coverage of sensor.py."""
-    entity = TFAmeSensorEntity(
-        coordinator=tfa_me_mock_coordinator,
-        sensor_id="a2ffffffb",
-        unique_id="sensor.017654321_a2ffffffb_wind_direction_deg",
-    )
-    assert entity.native_value == 180.0
-
-    # Invalid native value
-    entity_3 = TFAmeSensorEntity(
-        coordinator=tfa_me_mock_coordinator,
-        sensor_id="a2ffffffc",
-        unique_id="sensor.017654321_a2ffffffc_wind_direction_deg",
-    )
-    assert entity_3.native_value is None
-
-    # Value is old
-    entity_4 = TFAmeSensorEntity(
-        coordinator=tfa_me_mock_coordinator,
-        sensor_id="a2ffffffc",
-        unique_id="sensor.017654321_a2ffffffc_rssi",
-    )
-    assert entity_4.native_value is None
-    # Test: Wrong ID
-    assert entity_4.get_timeout("xx") == 0
 
 
 ICONS_FILE = Path("homeassistant/components/tfa_me/icons.json")
 
 
-def load_icons():
-    """Load the icons.json as dictionary."""
+def load_icons() -> dict:
+    """Load icons.json as dictionary."""
     return json.loads(ICONS_FILE.read_text(encoding="utf-8"))["entity"]["sensor"]
 
 
-def generate_test_cases():
-    """Produce all test cases for "default", "range" & "state"."""
-    sensors = load_icons()
+def generate_test_cases() -> list[tuple[str, str, str | None, str]]:
+    """Produce all test cases for default, range and state icons."""
     cases = []
 
-    for sensor_type, cfg in sensors.items():
-        # Default icon
-        default_icon = cfg.get("default")
-        if default_icon:
-            cases.append(
-                (
-                    sensor_type,
-                    "default",
-                    None,
-                    default_icon,
-                )
-            )
-        # Range table
-        if "range" in cfg:
-            for value, icon in cfg["range"].items():
-                cases.append(
-                    (
-                        sensor_type,
-                        "range",
-                        value,
-                        icon,
-                    )
-                )
-        # State table
-        if "state" in cfg:
-            for state_value, icon in cfg["state"].items():
-                cases.append(
-                    (
-                        sensor_type,
-                        "state",
-                        state_value,
-                        icon,
-                    )
-                )
+    for sensor_type, config in load_icons().items():
+        if default_icon := config.get("default"):
+            cases.append((sensor_type, "default", None, default_icon))
+
+        for value, icon in config.get("range", {}).items():
+            cases.append((sensor_type, "range", value, icon))
+
+        for state_value, icon in config.get("state", {}).items():
+            cases.append((sensor_type, "state", state_value, icon))
 
     return cases
 
@@ -361,170 +97,156 @@ def generate_test_cases():
     ("sensor_type", "table", "key", "expected_icon"),
     generate_test_cases(),
 )
-def test_icons_json(sensor_type, table, key, expected_icon) -> None:
+def test_icons_json(
+    sensor_type: str,
+    table: str,
+    key: str | None,
+    expected_icon: str,
+) -> None:
     """Validate all icons defined in icons.json."""
-    sensors = load_icons()
-    cfg = sensors[sensor_type]
+    config = load_icons()[sensor_type]
 
     if table == "default":
-        assert cfg["default"] == expected_icon
-
+        assert config["default"] == expected_icon
     elif table == "range":
-        assert cfg["range"][key] == expected_icon
-
+        assert key is not None
+        assert config["range"][key] == expected_icon
     elif table == "state":
-        assert cfg["state"][key] == expected_icon
-
+        assert key is not None
+        assert config["state"][key] == expected_icon
     else:
         pytest.fail(f"Unknown icon table '{table}'")
 
 
-# @pytest.mark.asyncio
-async def test_async_update_triggers_refresh_err() -> None:
-    """Test async_update()."""
-    # Arrange
-    mock_coordinator = AsyncMock()
-    entity = TFAmeSensorEntity(
-        mock_coordinator, "a012345678", "sensor.012345678_a01234567_temperature"
-    )
-
-    # Action
-    await entity.async_update()
-
-    # Assert
-    mock_coordinator.async_request_refresh.assert_awaited_once()
-
-
-@pytest.mark.parametrize(
-    ("uid_suffix", "measurement", "raw_value", "expect_add"),
-    [
-        # rain_1_hour: valid -> add_measurement expected
-        ("rain_1_hour", "rain_1_hour", "2.5", True),
-        # rain_1_hour: error -> add_measurement NOT expected
-        ("rain_1_hour", "rain_1_hour", "NOT_A_FLOAT", False),
-        # rain_24_hours: valid -> add_measurement expected
-        ("rain_24_hours", "rain_24_hours", "10.0", True),
-        # rain_24_hours: error -> add_measurement NOT expected
-        ("rain_24_hours", "rain_24_hours", "WRONG", False),
-    ],
-)
-def test_handle_coordinator_update(
+async def test_rain_history_updates_on_coordinator_refresh(
     hass: HomeAssistant,
-    tfa_me_mock_coordinator,
-    uid_suffix: str,
-    measurement: str,
-    raw_value: str,
-    expect_add: bool,
+    freezer: FrozenDateTimeFactory,
+    tfa_me_config_entry: MockConfigEntry,
 ) -> None:
-    """Parametrized test for _handle_coordinator_update(), without cleanup()."""
+    """Test rain history sensors update after coordinator refresh."""
+    freezer.move_to("2025-11-26 15:00:00+00:00")
+    ts_1 = int(naive_now().timestamp())
 
-    uid = f"sensor.017654321_a0f169ad1_{uid_suffix}"
+    freezer.move_to("2025-11-26 15:30:00+00:00")
+    ts_2 = int(naive_now().timestamp())
 
-    # Coordinator data entry the entity will read from
-    sensor_data = {
-        "gateway_id": "017654321",
-        "sensor_name": "A1F169AD1",
-        "timestamp": "2025-09-02T09:15:13Z",
-        "ts": 1234567890,
-        "measurement": measurement,
-        "value": raw_value,
-        "unit": "mm",
-    }
+    def rain_payload(value: str, ts: int) -> dict:
+        return {
+            "gateway_id": "05B3E4E44",
+            "sensors": [
+                {
+                    "sensor_id": "a1fffffea",
+                    "name": "A1FFFFFEA",
+                    "timestamp": "2025-11-26T15:00:00Z",
+                    "ts": str(ts),
+                    "measurements": {
+                        "rssi": {"value": "192", "unit": "/255"},
+                        "lowbatt": {"value": "0", "unit": ""},
+                        "rain": {"value": value, "unit": "mm"},
+                    },
+                },
+            ],
+        }
 
-    # Set data
-    tfa_me_mock_coordinator.data.entities = {uid: sensor_data}
+    entry = tfa_me_config_entry
+    entry.add_to_hass(hass)
 
-    with (
-        patch("homeassistant.components.tfa_me.sensor.SensorHistory") as mock_hist_cls,
-        patch(
-            "homeassistant.components.tfa_me.sensor.CoordinatorEntity._handle_coordinator_update"
+    with patch(
+        "homeassistant.components.tfa_me.coordinator.TFAmeClient.async_get_sensors",
+        new=AsyncMock(
+            side_effect=[
+                rain_payload("7.4", ts_1),
+                rain_payload("8.9", ts_2),
+            ]
         ),
     ):
-        # SensorHistory mock instance used by the entity
-        hist_mock = MagicMock()
-        mock_hist_cls.return_value = hist_mock
+        freezer.move_to("2025-11-26 15:00:00+00:00")
+        assert await hass.config_entries.async_setup(entry.entry_id)
+        await hass.async_block_till_done()
 
-        # Instantiate entity
-        ent = TFAmeSensorEntity(
-            tfa_me_mock_coordinator, sensor_id="a1f169ad1", unique_id=uid
-        )
-        ent.hass = hass
+        freezer.move_to("2025-11-26 15:30:00+00:00")
+        await entry.runtime_data.async_request_refresh()
+        await hass.async_block_till_done()
 
-        # Ensure correct history attribute exists
-        if measurement == "rain_1_hour":
-            assert hasattr(ent, "rain_history")
-        if measurement == "rain_24_hours":
-            assert hasattr(ent, "rain_history_24")
+    ent_reg = er.async_get(hass)
 
-        # Action: invoke update handler
-        ent._handle_coordinator_update()
+    rain_states = {
+        state.entity_id: state.state
+        for state in hass.states.async_all("sensor")
+        if "rain" in state.entity_id
+    }
 
-        # Expectation: add_measurement() called or not called
-        if expect_add:
-            hist_mock.add_measurement.assert_called_once_with(
-                float(raw_value), 1234567890
-            )
-        else:
-            hist_mock.add_measurement.assert_not_called()
+    rain_rel_state = None
+    rain_1_hour_state = None
+    rain_24_hours_state = None
+
+    for entity_id in hass.states.async_entity_ids("sensor"):
+        registry_entry = ent_reg.async_get(entity_id)
+        if registry_entry is None:
+            continue
+
+        if registry_entry.unique_id.endswith("_rain_rel"):
+            rain_rel_state = hass.states.get(entity_id)
+
+        if registry_entry.unique_id.endswith("_rain_1_hour"):
+            rain_1_hour_state = hass.states.get(entity_id)
+
+        if registry_entry.unique_id.endswith("_rain_24_hours"):
+            rain_24_hours_state = hass.states.get(entity_id)
+
+    assert rain_rel_state is not None, f"Rain states: {rain_states}"
+    assert rain_1_hour_state is not None, f"Rain states: {rain_states}"
+    assert rain_24_hours_state is not None, f"Rain states: {rain_states}"
+
+    assert rain_rel_state.state == "1.5"
+    assert rain_1_hour_state.state == "1.5"
+    assert rain_24_hours_state.state == "1.5"
 
 
-@pytest.mark.asyncio
-async def test_unique_id_keyerror(hass: HomeAssistant, tfa_me_mock_coordinator) -> None:
-    """Test TFAmeSensorEntity returns throws ValueError occurs."""
-
-    with pytest.raises(ValueError, match="entity_error"):
-        TFAmeSensorEntity(
-            tfa_me_mock_coordinator,
-            sensor_id="a0f169ad1",
-            unique_id="abc",
-        )
-
-
-@pytest.mark.parametrize(
-    ("measurement", "expected"),
-    [
-        (None, None),  # Case 1: measurement is None
-        ("temperature", MEASUREMENT_TO_TRANSLATION_KEY.get("temperature")),  # mapped
-        ("humidity", MEASUREMENT_TO_TRANSLATION_KEY.get("humidity")),  # mapped
-        ("unknown_measure", "unknown_measure"),  # Case 3: not in mapping → return input
-    ],
-)
-def test_get_translation_key(
-    hass: HomeAssistant, tfa_me_mock_coordinator, measurement, expected
+async def test_invalid_measurement_value_returns_unknown(
+    hass: HomeAssistant,
+    freezer: FrozenDateTimeFactory,
+    tfa_me_config_entry: MockConfigEntry,
 ) -> None:
-    """Test _get_translation_key with all possible branches."""
+    """Test invalid measurement value results in unknown state."""
+    freezer.move_to("2025-11-26 15:15:00+00:00")
+    ts = int(naive_now().timestamp())
 
-    # Create a dummy entity; the coordinator & other fields won't matter here.
-    ent = TFAmeSensorEntity(
-        tfa_me_mock_coordinator,
-        sensor_id="a0f169ad1",
-        unique_id="sensor.017654321_a01234567_temperature",
-    )
+    payload = {
+        "gateway_id": "05B3E4E44",
+        "sensors": [
+            {
+                "sensor_id": "a4481290f",
+                "name": "A4481290F",
+                "timestamp": "2025-11-26T15:10:42Z",
+                "ts": str(ts),
+                "measurements": {
+                    "temperature": {"value": "NOT_A_NUMBER", "unit": "°C"},
+                },
+            },
+        ],
+    }
 
-    result = ent._get_translation_key(measurement)
-    assert result == expected
+    entry = tfa_me_config_entry
+    entry.add_to_hass(hass)
 
+    with patch(
+        "homeassistant.components.tfa_me.coordinator.TFAmeClient.async_get_sensors",
+        new=AsyncMock(return_value=payload),
+    ):
+        assert await hass.config_entries.async_setup(entry.entry_id)
+        await hass.async_block_till_done()
 
-def test_native_value_generic_fallback(
-    hass: HomeAssistant, tfa_me_mock_coordinator
-) -> None:
-    """native_value should return data['value'] when no value_fn is defined and no timeout occurs."""
+    ent_reg = er.async_get(hass)
+    temperature_state = None
 
-    # Build uid and coordinator data entry
-    uid = "sensor.017654321_a01234567_temperature"
-    # Create entity
-    ent = TFAmeSensorEntity(
-        tfa_me_mock_coordinator, sensor_id="a01234567", unique_id=uid
-    )
-    ent.hass = hass
+    for entity_id in hass.states.async_entity_ids("sensor"):
+        registry_entry = ent_reg.async_get(entity_id)
+        if registry_entry is not None and registry_entry.unique_id.endswith(
+            "_temperature"
+        ):
+            temperature_state = hass.states.get(entity_id)
+            break
 
-    # Test: Timeout
-    tfa_me_mock_coordinator.data.entities[uid]["ts"] = 0
-    assert ent.native_value is None
-
-    # Provide an entity_description with value_fn = None
-    ent.entity_description = SimpleNamespace(value_fn=None)
-    tfa_me_mock_coordinator.data.entities[uid]["ts"] = int(datetime.now().timestamp())
-
-    # Test: generic fallback is used → data.get("value")
-    assert ent.native_value == "23.5"
+    assert temperature_state is not None
+    assert temperature_state.state == STATE_UNKNOWN

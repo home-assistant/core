@@ -20,12 +20,7 @@ from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 from homeassistant.util import dt as dt_util
 
-from .const import (
-    DEVICE_MAPPING,
-    DOMAIN,
-    MEASUREMENT_TO_TRANSLATION_KEY,
-    TIMEOUT_MAPPING,
-)
+from .const import DEVICE_MAPPING, DOMAIN, TIMEOUT_MAPPING
 from .coordinator import TFAmeConfigEntry, TFAmeUpdateCoordinator, resolve_tfa_host
 
 PARALLEL_UPDATES = 1
@@ -36,10 +31,10 @@ class TFAmeSensorEntityDescription(SensorEntityDescription):
     """Entity description for TFA.me sensor entity."""
 
     # value_fn gets entity and the raw data dict (coordinator.data.entities[self.uid])
-    value_fn: Callable[["TFAmeSensorEntity", dict[str, Any]], StateType] | None = None
+    value_fn: Callable[[TFAmeSensorEntity, dict[str, Any]], StateType] | None = None
 
 
-def _calc_rain_last_hour(entity: "TFAmeSensorEntity", data: dict[str, Any]) -> float:
+def _calc_rain_last_hour(entity: TFAmeSensorEntity, data: dict[str, Any]) -> float:
     """Get rainfall of the last hour and optional handle a reset."""
     reset_rain = data.get("reset_rain", False)
     if reset_rain:
@@ -50,7 +45,7 @@ def _calc_rain_last_hour(entity: "TFAmeSensorEntity", data: dict[str, Any]) -> f
     return round(value, 1)
 
 
-def _calc_rain_last_24h(entity: "TFAmeSensorEntity", data: dict[str, Any]) -> float:
+def _calc_rain_last_24h(entity: TFAmeSensorEntity, data: dict[str, Any]) -> float:
     """Get rainfall of the last 24 hours and optional handle a reset."""
     reset_rain = data.get("reset_rain", False)
     if reset_rain:
@@ -112,7 +107,6 @@ TFA_ME_ENTITY_DESCRIPTIONS: dict[str, TFAmeSensorEntityDescription] = {
     "rssi": TFAmeSensorEntityDescription(
         key="rssi",
         translation_key="rssi",
-        device_class=None,
         state_class=SensorStateClass.MEASUREMENT,
         suggested_display_precision=0,
         value_fn=lambda entity, data: int(data["value"]),
@@ -122,14 +116,12 @@ TFA_ME_ENTITY_DESCRIPTIONS: dict[str, TFAmeSensorEntityDescription] = {
     "lowbatt": TFAmeSensorEntityDescription(
         key="lowbatt",
         translation_key="lowbatt",
-        state_class=None,
         value_fn=lambda entity, data: int(data["value"]),
     ),
     # Wind direction (Index 0..15)
     "wind_direction": TFAmeSensorEntityDescription(
         key="wind_direction",
         translation_key="wind_direction",
-        device_class=None,
         state_class=SensorStateClass.MEASUREMENT,
         value_fn=lambda entity, data: int(data["value"]),
     ),
@@ -137,7 +129,6 @@ TFA_ME_ENTITY_DESCRIPTIONS: dict[str, TFAmeSensorEntityDescription] = {
     "wind_direction_deg": TFAmeSensorEntityDescription(
         key="wind_direction_deg",
         translation_key="wind_direction_deg",
-        device_class=None,
         state_class=SensorStateClass.MEASUREMENT,
         suggested_display_precision=1,
         value_fn=lambda entity, data: round(
@@ -276,25 +267,23 @@ class TFAmeSensorEntity(CoordinatorEntity[TFAmeUpdateCoordinator], SensorEntity)
         unique_id: str,
     ) -> None:
         """Initialize sensor entity."""
+
+        super().__init__(coordinator)
+
+        # Unique ID (sets unique_id), will never be changed
+        # Name schema for unique_id is: f"sensor.{StationID}_{SensorID}_{MeasurementName}".lower()
+        self._attr_unique_id = unique_id.removeprefix("sensor.")
+        self.uid: str = unique_id
+
+        # Do not set self.entity_id: HA will do and user can edit this entity ID later
+        # Name schema created by HA with x... = Sensor ID, y... = Gateway/station ID:
+        # sensor.tfa_me_xxx_xxx_xxx_MeasurementName, e.g. "sensor.tfa_me_a0f_fff_f81_humidity" or
+        # sensor.tfa_me_xxx_xxx_xxx_yyyyyyyyy_MeasurementName, e.g. "sensor.tfa_me_a0f_fff_f81_05b3e4e44_humidity"
+        self.name_with_station_id = coordinator.name_with_station_id
+        self.gateway_id = self.coordinator.data.gateway_id
+        self.sensor_id = sensor_id
+
         try:
-            super().__init__(coordinator)
-            self._initialized_once = False
-            self.coordinator: TFAmeUpdateCoordinator = coordinator
-            # Unique ID (sets unique_id), will never be changed
-            # Name schema for unique_id is: f"sensor.{StationID}_{SensorID}_{MeasurementName}".lower()
-            self._attr_unique_id = unique_id.removeprefix("sensor.")
-            self.uid: str = unique_id
-
-            # Do not set self.entity_id: HA will do and user can edit this entity ID later
-            # Name schema created by HA with x... = Sensor ID, y... = Gateway/station ID:
-            # sensor.tfa_me_xxx_xxx_xxx_MeasurementName, e.g. "sensor.tfa_me_a0f_fff_f81_humidity" or
-            # sensor.tfa_me_xxx_xxx_xxx_yyyyyyyyy_MeasurementName, e.g. "sensor.tfa_me_a0f_fff_f81_05b3e4e44_humidity"
-            self.host = coordinator.host
-            self.name_with_station_id = coordinator.name_with_station_id
-            self.gateway_id = self.coordinator.data.gateway_id
-            self._attr_icon = None
-            self.sensor_id = sensor_id
-
             ids_str = f"{sensor_id}_{self.gateway_id}"
             self._attr_device_info = DeviceInfo(
                 identifiers={(DOMAIN, ids_str)},
@@ -310,8 +299,10 @@ class TFAmeSensorEntity(CoordinatorEntity[TFAmeUpdateCoordinator], SensorEntity)
             # Some rain specials
             if self.measure_name == "rain_1_hour":
                 self.rain_history = SensorHistory(max_age_minutes=60)
+                self._add_rain_measurement()
             if self.measure_name == "rain_24_hours":
                 self.rain_history_24 = SensorHistory(max_age_minutes=24 * 60)
+                self._add_rain_measurement()
 
             # Depending on station or sensor add additional information
             hex_value = int(sensor_id[:2], 16)  # This is the device type
@@ -350,38 +341,27 @@ class TFAmeSensorEntity(CoordinatorEntity[TFAmeUpdateCoordinator], SensorEntity)
 
         return description
 
-    def _get_translation_key(self, measurement: str | None) -> str | None:
-        """Map measurement type to translation key for icon translations."""
-        if measurement is None:
-            return None
-        return MEASUREMENT_TO_TRANSLATION_KEY.get(measurement, measurement)
-
     async def async_added_to_hass(self) -> None:
         """Called once if entity is added to HA instance."""
         await super().async_added_to_hass()
-        self._initialized_once = True
+
+    def _add_rain_measurement(self) -> None:
+        """Add current rain measurement to history."""
+        try:
+            value = float(self.coordinator.data.entities[self.uid]["value"])
+            ts = self.coordinator.data.entities[self.uid]["ts"]
+        except ValueError, TypeError, KeyError:
+            return
+
+        if "rain_1_hour" in self.uid:
+            self.rain_history.add_measurement(value, ts)
+
+        if "rain_24_hours" in self.uid:
+            self.rain_history_24.add_measurement(value, ts)
 
     def _handle_coordinator_update(self) -> None:
         """Called when coordinator has new data, used to update rain histories."""
-
-        if "rain_1_hour" in self.uid:
-            try:
-                value = float(self.coordinator.data.entities[self.uid]["value"])
-                ts = self.coordinator.data.entities[self.uid]["ts"]
-                self.rain_history.add_measurement(value, ts)
-
-            except (ValueError, TypeError, KeyError):
-                value = 0
-
-        if "rain_24_hours" in self.uid:
-            try:
-                value = float(self.coordinator.data.entities[self.uid]["value"])
-                ts = self.coordinator.data.entities[self.uid]["ts"]
-                self.rain_history_24.add_measurement(value, ts)
-
-            except (ValueError, TypeError, KeyError):
-                value = 0
-
+        self._add_rain_measurement()
         # Update state in HA
         super()._handle_coordinator_update()
 
@@ -408,14 +388,6 @@ class TFAmeSensorEntity(CoordinatorEntity[TFAmeUpdateCoordinator], SensorEntity)
         return info_str
 
     @property
-    def measurement_name(self) -> str | None:
-        """Name of measurement."""
-        try:
-            return self.uid.removeprefix("sensor.").split("_", 2)[2]
-        except (AttributeError, IndexError):
-            return None
-
-    @property
     def native_value(self) -> StateType:
         """Actual measurement value of an entity."""
         try:
@@ -434,7 +406,7 @@ class TFAmeSensorEntity(CoordinatorEntity[TFAmeUpdateCoordinator], SensorEntity)
             # generic fallback
             return data.get("value")
 
-        except (ValueError, TypeError, KeyError):
+        except ValueError, TypeError, KeyError:
             return None
 
     @property
@@ -446,12 +418,12 @@ class TFAmeSensorEntity(CoordinatorEntity[TFAmeUpdateCoordinator], SensorEntity)
             if unit is None:
                 return None  # HA shows "unavailable"
             return str(unit)
-        except (ValueError, TypeError, KeyError):
+        except ValueError, TypeError, KeyError:
             return None
 
     @property
     def extra_state_attributes(self) -> dict[str, Any]:
-        """Extra attributes dictionary for an entity: sensor ID, measurement, timestamp, icon."""
+        """Extra attributes dictionary for an entity: sensor ID, measurement, timestamp."""
 
         try:
             sensor_data = self.coordinator.data.entities[self.uid]
@@ -460,14 +432,14 @@ class TFAmeSensorEntity(CoordinatorEntity[TFAmeUpdateCoordinator], SensorEntity)
             )  # ISO-8601-UTC format
 
             return {
-                "Unique ID": self.format_string_tfa_id_only(self.uid[17:26].upper()),
-                "Measurement": self.uid[27:],  # measurement type
-                "Timestamp": dt,
-                "Via TFA.me station": self.format_string_tfa_id_only(
+                "sensor_id": self.format_string_tfa_id_only(self.sensor_id.upper()),
+                "measurement": self.measure_name,
+                "timestamp": dt,
+                "via tfa.me station": self.format_string_tfa_id_only(
                     self.gateway_id.upper()
                 ),
             }
-        except (ValueError, TypeError, KeyError):
+        except ValueError, TypeError, KeyError:
             return {}
 
     def get_timeout(self, sensor_id: str):
@@ -478,7 +450,3 @@ class TFAmeSensorEntity(CoordinatorEntity[TFAmeUpdateCoordinator], SensorEntity)
         except KeyError:
             timeout_val = 0
         return timeout_val
-
-    async def async_update(self) -> None:
-        """Manual Updating."""
-        await self.coordinator.async_request_refresh()

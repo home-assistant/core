@@ -90,6 +90,3 @@ VALID_JSON_MEASUREMENT_KEYS = [
     "wind_gust",
     "rain",
 ]
-
-# Rain sub keys
-RAIN_KEYS = ("_rain_1_hour", "_rain_24_hours")

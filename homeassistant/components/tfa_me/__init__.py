@@ -1,6 +1,5 @@
 """TFA.me station integration: __init__.py."""
 
-from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import Platform
 from homeassistant.core import HomeAssistant
 
@@ -21,7 +20,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: TFAmeConfigEntry) -> boo
     return True
 
 
-async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
+async def async_unload_entry(hass: HomeAssistant, entry: TFAmeConfigEntry) -> bool:
     """Unload a config entry."""
 
     return await hass.config_entries.async_unload_platforms(entry, PLATFORMS)
