@@ -48,7 +48,7 @@ aio-geojson-nsw-rfs-incidents==0.7 ; sys_platform == 'darwin' or sys_platform ==
     # via -r requirements_all.txt
 aio-geojson-usgs-earthquakes==0.3 ; sys_platform == 'darwin' or sys_platform == 'linux'
     # via -r requirements_all.txt
-aio-georss-client==0.14 ; sys_platform == 'darwin' or sys_platform == 'linux'
+aio-georss-client==2026.6.0 ; sys_platform == 'darwin' or sys_platform == 'linux'
     # via aio-georss-gdacs
 aio-georss-gdacs==0.10 ; sys_platform == 'darwin' or sys_platform == 'linux'
     # via -r requirements_all.txt
@@ -3608,7 +3608,7 @@ pre-commit==4.6.0 ; sys_platform == 'darwin' or sys_platform == 'linux'
     # via pyhive-integration
 prek==0.2.28 ; sys_platform == 'darwin' or sys_platform == 'linux'
     # via -r requirements_test.txt
-prettytable==3.17.0 ; sys_platform == 'darwin' or sys_platform == 'linux'
+prettytable==3.18.0 ; sys_platform == 'darwin' or sys_platform == 'linux'
     # via
     #   aiosomecomfort
     #   concord232
