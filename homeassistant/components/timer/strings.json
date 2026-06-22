@@ -167,7 +167,7 @@
           "name": "Time remaining"
         }
       },
-      "name": "Timer reached remaining time"
+      "name": "Timer remaining time reached"
     },
     "restarted": {
       "description": "Triggers when one or more timers are restarted.",
