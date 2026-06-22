@@ -13,6 +13,8 @@ from homeassistant.components.climate import (
     ATTR_CURRENT_TEMPERATURE,
     ATTR_FAN_MODE,
     ATTR_HVAC_MODE,
+    ATTR_MAX_TEMP,
+    ATTR_MIN_TEMP,
     ATTR_TEMPERATURE,
     DOMAIN as CLIMATE_DOMAIN,
     FAN_HIGH,
@@ -173,3 +175,8 @@ async def test_climate_fahrenheit_unit(hass: HomeAssistant) -> None:
     assert state is not None
     assert state.attributes[ATTR_CURRENT_TEMPERATURE] == 75
     assert state.attributes[ATTR_TEMPERATURE] == 86
+    # Bounds default to 17/30 °C; on a Fahrenheit entity they're converted
+    # (and HA rounds to whole degrees) so the slider lands at the manual's
+    # documented 62-86 °F range instead of being stuck at 17-30 °F.
+    assert state.attributes[ATTR_MIN_TEMP] == 63
+    assert state.attributes[ATTR_MAX_TEMP] == 86

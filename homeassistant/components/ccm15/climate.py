@@ -23,6 +23,7 @@ from homeassistant.core import HomeAssistant
 from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
+from homeassistant.util.unit_conversion import TemperatureConverter
 
 from .const import CONST_CMD_FAN_MAP, CONST_CMD_STATE_MAP, DOMAIN
 from .coordinator import CCM15ConfigEntry, CCM15Coordinator
@@ -138,13 +139,23 @@ class CCM15Climate(CoordinatorEntity[CCM15Coordinator], ClimateEntity):
 
     @property
     def min_temp(self) -> float:
-        """Return the configured minimum target temperature."""
-        return self.coordinator.min_temp
+        """Return the minimum target temperature in the entity's unit."""
+        return self._unit_aware_bound(self.coordinator.min_temp)
 
     @property
     def max_temp(self) -> float:
-        """Return the configured maximum target temperature."""
-        return self.coordinator.max_temp
+        """Return the maximum target temperature in the entity's unit."""
+        return self._unit_aware_bound(self.coordinator.max_temp)
+
+    def _unit_aware_bound(self, celsius_value: int) -> float:
+        """Convert a Celsius bound to the entity's reported unit."""
+        if self.temperature_unit == UnitOfTemperature.FAHRENHEIT:
+            return TemperatureConverter.convert(
+                celsius_value,
+                UnitOfTemperature.CELSIUS,
+                UnitOfTemperature.FAHRENHEIT,
+            )
+        return celsius_value
 
     @property
     def available(self) -> bool:

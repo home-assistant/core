@@ -24,6 +24,7 @@ _LOGGER = logging.getLogger(__name__)
 
 
 def _build_schema(defaults: dict[str, Any] | None = None) -> vol.Schema:
+    """Build the user/reconfigure form schema, prefilled from ``defaults``."""
     defaults = defaults or {}
     return vol.Schema(
         {
@@ -44,6 +45,7 @@ def _build_schema(defaults: dict[str, Any] | None = None) -> vol.Schema:
 
 
 def _validate_temps(user_input: dict[str, Any]) -> str | None:
+    """Return the form error key if min/max are inverted or equal, else ``None``."""
     if user_input[CONF_MIN_TEMP] >= user_input[CONF_MAX_TEMP]:
         return "invalid_temp_range"
     return None

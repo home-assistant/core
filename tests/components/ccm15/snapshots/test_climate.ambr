@@ -21,7 +21,7 @@
         <HVACMode.AUTO: 'auto'>,
       ]),
       'max_temp': 30,
-      'min_temp': 18,
+      'min_temp': 17,
       'swing_modes': list([
         'off',
         'on',
@@ -80,7 +80,7 @@
         <HVACMode.AUTO: 'auto'>,
       ]),
       'max_temp': 30,
-      'min_temp': 18,
+      'min_temp': 17,
       'swing_modes': list([
         'off',
         'on',
@@ -139,7 +139,7 @@
         <HVACMode.AUTO: 'auto'>,
       ]),
       'max_temp': 30,
-      'min_temp': 18,
+      'min_temp': 17,
       'supported_features': <ClimateEntityFeature: 425>,
       'swing_mode': 'off',
       'swing_modes': list([
@@ -179,7 +179,7 @@
         <HVACMode.AUTO: 'auto'>,
       ]),
       'max_temp': 30,
-      'min_temp': 18,
+      'min_temp': 17,
       'supported_features': <ClimateEntityFeature: 425>,
       'swing_mode': 'off',
       'swing_modes': list([
@@ -219,7 +219,7 @@
         <HVACMode.AUTO: 'auto'>,
       ]),
       'max_temp': 30,
-      'min_temp': 18,
+      'min_temp': 17,
       'swing_modes': list([
         'off',
         'on',
@@ -278,7 +278,7 @@
         <HVACMode.AUTO: 'auto'>,
       ]),
       'max_temp': 30,
-      'min_temp': 18,
+      'min_temp': 17,
       'swing_modes': list([
         'off',
         'on',
@@ -334,7 +334,7 @@
         <HVACMode.AUTO: 'auto'>,
       ]),
       'max_temp': 30,
-      'min_temp': 18,
+      'min_temp': 17,
       'supported_features': <ClimateEntityFeature: 425>,
       'swing_modes': list([
         'off',
@@ -369,7 +369,7 @@
         <HVACMode.AUTO: 'auto'>,
       ]),
       'max_temp': 30,
-      'min_temp': 18,
+      'min_temp': 17,
       'supported_features': <ClimateEntityFeature: 425>,
       'swing_modes': list([
         'off',
