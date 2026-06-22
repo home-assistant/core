@@ -498,11 +498,18 @@ class MusicAssistantPlayer(MusicAssistantEntity, MediaPlayerEntity):
                 elif await asyncio.to_thread(os.path.isfile, media_id_str):
                     media_uris.append(media_id_str)
                     continue
-            elif await self.mass.music.verify_item_uri(
-                uri=media_id_str, username=username
-            ) or await asyncio.to_thread(os.path.isfile, media_id_str):
-                media_uris.append(media_id_str)
-                continue
+            else:
+                media_id_verify_str = media_id_str
+                if media_type and media_id_str.isnumeric():
+                    # construct in library uri as replacement for pre 33 isnumeric path
+                    media_id_verify_str = (
+                        f"library://{MediaType(media_type).value}/{media_id_str}"
+                    )
+                if await self.mass.music.verify_item_uri(
+                    uri=media_id_verify_str, username=username
+                ) or await asyncio.to_thread(os.path.isfile, media_id_str):
+                    media_uris.append(media_id_str)
+                    continue
             # last resort: search for media item by name/search
             if item := await self.mass.music.get_item_by_name(
                 name=media_id_str,
