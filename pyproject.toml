@@ -96,7 +96,9 @@ hass = "homeassistant.__main__:main"
 
 [tool.uv]
 # Constrain the universal `uv pip compile` resolution (used for the .lock files)
-# to the platforms Home Assistant actually targets: Linux and macOS.
+# to the platforms Home Assistant actually targets:
+# - Linux
+# - macOS (just dev env)
 environments = [
     "sys_platform == 'linux'",
     "sys_platform == 'darwin'",
