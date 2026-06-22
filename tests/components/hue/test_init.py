@@ -63,7 +63,7 @@ async def test_unload_entry(hass: HomeAssistant, mock_bridge_setup) -> None:
         return True
 
     mock_bridge_setup.async_reset = mock_reset
-    assert await hue.async_unload_entry(hass, entry)
+    assert await hass.config_entries.async_unload(entry.entry_id)
     assert not hasattr(entry, "runtime_data")
 
 

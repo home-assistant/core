@@ -14,6 +14,7 @@ from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
+from homeassistant.util import dt as dt_util
 
 from .const import (
     CONF_FALLBACK,
@@ -155,7 +156,7 @@ class TadoDataUpdateCoordinator(DataUpdateCoordinator[dict[str, Any]]):
 
         # Tado resets somewhere between 12:00 and 13:00, Berlin time
         # So let's pretend we're in Berlin...
-        reset_time = datetime.now(ZoneInfo("Europe/Berlin"))
+        reset_time = dt_util.now(ZoneInfo("Europe/Berlin"))
 
         today_reset = datetime.combine(
             reset_time.date(),
@@ -446,7 +447,7 @@ class TadoDataUpdateCoordinator(DataUpdateCoordinator[dict[str, Any]]):
 
     async def set_meter_reading(self, reading: int) -> dict[str, Any]:
         """Send meter reading to Tado."""
-        dt: str = datetime.now().strftime("%Y-%m-%d")
+        dt: str = datetime.now().strftime("%Y-%m-%d")  # pylint: disable=home-assistant-enforce-naive-now
         if self._tado is None:
             raise HomeAssistantError("Tado client is not initialized")
 

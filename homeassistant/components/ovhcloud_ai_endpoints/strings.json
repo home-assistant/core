@@ -74,7 +74,7 @@
             "llm_hass_api": "[%key:component::ovhcloud_ai_endpoints::config_subentries::conversation::step::init::data_description::llm_hass_api%]",
             "prompt": "[%key:component::ovhcloud_ai_endpoints::config_subentries::conversation::step::init::data_description::prompt%]"
           },
-          "description": "Update the prompt and Home Assistant LLM APIs for this conversation agent. Create a new conversation agent to use a different model."
+          "description": "Update the prompt and the Home Assistant LLM APIs for this conversation agent. Create a new conversation agent to use a different model."
         }
       }
     }

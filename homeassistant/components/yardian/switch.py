@@ -1,5 +1,6 @@
 """Support for Yardian integration."""
 
+import asyncio
 from typing import Any
 
 import voluptuous as vol
@@ -10,7 +11,7 @@ from homeassistant.helpers import config_validation as cv, entity_platform
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from homeassistant.helpers.typing import VolDictType
 
-from .const import DEFAULT_WATERING_DURATION
+from .const import DEFAULT_WATERING_DURATION, SWITCH_REFRESH_DELAY
 from .coordinator import YardianConfigEntry, YardianUpdateCoordinator
 from .entity import YardianZoneEntity
 
@@ -46,7 +47,7 @@ async def async_setup_entry(
 class YardianSwitch(YardianZoneEntity, SwitchEntity):
     """Representation of a Yardian switch."""
 
-    _attr_name = None
+    _attr_translation_key = "switch"
 
     def __init__(self, coordinator: YardianUpdateCoordinator, zone_id: int) -> None:
         """Initialize a Yardian Switch Device."""
@@ -69,9 +70,11 @@ class YardianSwitch(YardianZoneEntity, SwitchEntity):
             self._zone_id,
             kwargs.get("duration", DEFAULT_WATERING_DURATION),
         )
+        await asyncio.sleep(SWITCH_REFRESH_DELAY)
         await self.coordinator.async_request_refresh()
 
     async def async_turn_off(self, **kwargs: Any) -> None:
         """Turn the switch off."""
         await self.coordinator.controller.stop_irrigation()
+        await asyncio.sleep(SWITCH_REFRESH_DELAY)
         await self.coordinator.async_request_refresh()
