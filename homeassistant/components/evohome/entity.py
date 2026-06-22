@@ -28,12 +28,10 @@ def _recurse_and_revert(val: Any, _key: str | None = None) -> Any:
         return {k: _recurse_and_revert(v, k) for k, v in val.items()}
     if isinstance(val, (list, tuple)):
         return type(val)(_recurse_and_revert(v) for v in val)
+    if isinstance(val, datetime) and _key in ("since", "until"):
+        return val.isoformat()
     if isinstance(val, StrEnum):
         return "".join(word.capitalize() for word in val.value.split("_"))
-    if not isinstance(val, datetime):
-        return val
-    if _key in ("since", "until"):
-        return val.isoformat()
     return val
 
 
