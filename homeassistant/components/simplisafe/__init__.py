@@ -281,15 +281,18 @@ def _async_register_camera(
 
     device_registry = dr.async_get(hass)
 
-    model = camera.camera_type.name.capitalize().replace("_", " ")
-    device_name = f"{camera.name.capitalize()} {model}"
+    model_name = camera.camera_type.name.capitalize().replace("_", " ")
+    model_id = system.camera_data[camera.serial]["model"]
+    device_name = f"{camera.name.capitalize()} {model_name}"
 
     device_registry.async_get_or_create(
         config_entry_id=entry.entry_id,
         identifiers={(DOMAIN, camera.serial)},
         manufacturer="SimpliSafe",
-        model=model,
+        model=model_name,
+        model_id=model_id,
         name=device_name,
+        serial_number=camera.serial,
         via_device=(DOMAIN, str(system.system_id)),
     )
 

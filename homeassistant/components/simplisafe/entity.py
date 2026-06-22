@@ -102,6 +102,7 @@ class SimpliSafeEntity(CoordinatorEntity[SimpliSafeDataUpdateCoordinator]):
             manufacturer="SimpliSafe",
             model=model,
             name=device_name,
+            serial_number=serial,
             via_device=(DOMAIN, str(system.system_id)),
         )
 

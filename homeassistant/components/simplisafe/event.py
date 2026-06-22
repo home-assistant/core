@@ -126,13 +126,14 @@ class SimpliSafeEvent(SimpliSafeEntity, EventEntity):
     def async_update_from_websocket_event(self, event: WebsocketEvent) -> None:
         """Update the entity when new data comes from the websocket."""
         assert event.event_type is not None
-        self._trigger_event(
-            event.event_type,
-            event_attributes={
-                "changed_by": event.changed_by,
-                "info": event.info,
-                "sensor_name": event.sensor_name,
-                "sensor_serial": event.sensor_serial,
-                "sensor_type": event.sensor_type.name if event.sensor_type else None,
-            },
-        )
+        event_attributes: dict[str, str | None] = {
+            "changed_by": event.changed_by,
+            "info": event.info,
+        }
+        if not self._ws_serial:
+            event_attributes["sensor_name"] = event.sensor_name
+            event_attributes["sensor_serial"] = event.sensor_serial
+            event_attributes["sensor_type"] = (
+                event.sensor_type.name if event.sensor_type else None
+            )
+        self._trigger_event(event.event_type, event_attributes=event_attributes)
