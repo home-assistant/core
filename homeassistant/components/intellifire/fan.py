@@ -3,7 +3,7 @@
 from collections.abc import Awaitable, Callable
 from dataclasses import dataclass
 import math
-from typing import Any
+from typing import Any, override
 
 from intellifire4py.control import IntelliFireController
 from intellifire4py.model import IntelliFirePollData
@@ -80,11 +80,13 @@ class IntellifireFan(IntellifireEntity, FanEntity):
     )
 
     @property
+    @override
     def is_on(self) -> bool:
         """Return on or off."""
         return self.entity_description.value_fn(self.coordinator.read_api.data) >= 1
 
     @property
+    @override
     def percentage(self) -> int | None:
         """Return fan percentage."""
         return ranged_value_to_percentage(
@@ -93,10 +95,12 @@ class IntellifireFan(IntellifireEntity, FanEntity):
         )
 
     @property
+    @override
     def speed_count(self) -> int:
         """Count of supported speeds."""
         return self.entity_description.speed_range[1]
 
+    @override
     async def async_set_percentage(self, percentage: int) -> None:
         """Set the speed percentage of the fan."""
         # Calculate percentage steps
@@ -108,6 +112,7 @@ class IntellifireFan(IntellifireEntity, FanEntity):
         await self.entity_description.set_fn(self.coordinator.control_api, int_value)
         await self.coordinator.async_request_refresh()
 
+    @override
     async def async_turn_on(
         self,
         percentage: int | None = None,
@@ -126,6 +131,7 @@ class IntellifireFan(IntellifireEntity, FanEntity):
         await self.entity_description.set_fn(self.coordinator.control_api, int_value)
         await self.coordinator.async_request_refresh()
 
+    @override
     async def async_turn_off(self, **kwargs: Any) -> None:
         """Turn off the fan."""
         await self.entity_description.set_fn(self.coordinator.control_api, 0)

@@ -4,7 +4,7 @@ from collections import OrderedDict
 from collections.abc import Callable
 import logging
 import math
-from typing import TYPE_CHECKING, Any, NamedTuple
+from typing import TYPE_CHECKING, Any, NamedTuple, override
 from uuid import UUID
 
 import voluptuous as vol
@@ -318,7 +318,7 @@ class BayesianBinarySensor(BinarySensorEntity):
     ) -> None:
         """Initialize the Bayesian sensor."""
         self._attr_name = name
-        self._attr_unique_id = unique_id and f"bayesian-{unique_id}"
+        self._attr_unique_id = unique_id and f"bayesian-{unique_id}"  # pylint: disable=home-assistant-entity-unique-id-redundant-domain
 
         self._observations = [
             Observation(
@@ -354,6 +354,7 @@ class BayesianBinarySensor(BinarySensorEntity):
             "state": self._process_state,
         }
 
+    @override
     async def async_added_to_hass(self) -> None:
         """Call when entity about to be added.
 
@@ -638,6 +639,7 @@ class BayesianBinarySensor(BinarySensorEntity):
             return result
 
     @property
+    @override
     def extra_state_attributes(self) -> dict[str, Any]:
         """Return the state attributes of the sensor."""
 

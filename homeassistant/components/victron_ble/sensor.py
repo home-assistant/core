@@ -2,7 +2,7 @@
 
 from dataclasses import dataclass
 import logging
-from typing import Any
+from typing import Any, override
 
 from sensor_state_data import DeviceKey
 from victron_ble_ha_parser import Keys, Units
@@ -532,6 +532,7 @@ class VictronBLESensorEntity(PassiveBluetoothProcessorEntity, SensorEntity):
     entity_description: VictronBLESensorEntityDescription
 
     @property
+    @override
     def native_value(self) -> float | int | str | None:
         """Return the state of the sensor."""
         value = self.processor.entity_data.get(self.entity_key)

@@ -1,6 +1,7 @@
 """Support for number entities."""
 
 import logging
+from typing import override
 
 from thinqconnect import DeviceType
 from thinqconnect.devices.const import Property as ThinQProperty
@@ -240,6 +241,7 @@ class ThinQNumberEntity(ThinQEntity, NumberEntity):
 
     _attr_mode = NumberMode.BOX
 
+    @override
     def _update_status(self) -> None:
         """Update status itself."""
         super()._update_status()
@@ -283,6 +285,7 @@ class ThinQNumberEntity(ThinQEntity, NumberEntity):
             self.native_step,
         )
 
+    @override
     async def async_set_native_value(self, value: float) -> None:
         """Change to new number value."""
         if self.step.is_integer():

@@ -11,7 +11,6 @@ from tests.components.common import (
     ConditionStateDescription,
     assert_condition_behavior_all,
     assert_condition_behavior_any,
-    assert_condition_gated_by_labs_flag,
     assert_condition_options_supported,
     create_target_condition,
     parametrize_condition_states_all,
@@ -33,21 +32,6 @@ async def target_input_booleans(hass: HomeAssistant) -> dict[str, list[str]]:
     return await target_entities(hass, "input_boolean")
 
 
-@pytest.mark.parametrize(
-    "condition",
-    [
-        "switch.is_off",
-        "switch.is_on",
-    ],
-)
-async def test_switch_conditions_gated_by_labs_flag(
-    hass: HomeAssistant, caplog: pytest.LogCaptureFixture, condition: str
-) -> None:
-    """Test the switch conditions are gated by the labs flag."""
-    await assert_condition_gated_by_labs_flag(hass, caplog, condition)
-
-
-@pytest.mark.usefixtures("enable_labs_preview_features")
 @pytest.mark.parametrize(
     ("condition_key", "base_options", "supports_behavior", "supports_duration"),
     [
@@ -72,7 +56,6 @@ async def test_switch_condition_options_validation(
     )
 
 
-@pytest.mark.usefixtures("enable_labs_preview_features")
 @pytest.mark.parametrize(
     ("condition_target_config", "entity_id", "entities_in_target"),
     parametrize_target_entities("switch"),
@@ -117,7 +100,6 @@ async def test_switch_state_condition_behavior_any(
     )
 
 
-@pytest.mark.usefixtures("enable_labs_preview_features")
 @pytest.mark.parametrize(
     ("condition_target_config", "entity_id", "entities_in_target"),
     parametrize_target_entities("switch"),
@@ -189,7 +171,6 @@ CONDITION_STATES_ALL = [
 ]
 
 
-@pytest.mark.usefixtures("enable_labs_preview_features")
 @pytest.mark.parametrize(
     ("condition_target_config", "entity_id", "entities_in_target"),
     parametrize_target_entities("input_boolean"),
@@ -221,7 +202,6 @@ async def test_input_boolean_state_condition_behavior_any(
     )
 
 
-@pytest.mark.usefixtures("enable_labs_preview_features")
 @pytest.mark.parametrize(
     ("condition_target_config", "entity_id", "entities_in_target"),
     parametrize_target_entities("input_boolean"),
@@ -253,7 +233,6 @@ async def test_input_boolean_state_condition_behavior_all(
     )
 
 
-@pytest.mark.usefixtures("enable_labs_preview_features")
 async def test_switch_condition_evaluates_both_domains(
     hass: HomeAssistant,
 ) -> None:

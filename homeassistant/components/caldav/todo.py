@@ -4,7 +4,7 @@ import asyncio
 from datetime import date, datetime, timedelta
 from functools import partial
 import logging
-from typing import Any, cast
+from typing import Any, cast, override
 
 import caldav
 from caldav.lib.error import DAVError, NotFoundError
@@ -121,6 +121,7 @@ class WebDavTodoListEntity(TodoListEntity):
             if (todo_item := _todo_item(resource)) is not None
         ]
 
+    @override
     async def async_create_todo_item(self, item: TodoItem) -> None:
         """Add an item to the To-do list."""
         item_data: dict[str, Any] = {}
@@ -141,6 +142,7 @@ class WebDavTodoListEntity(TodoListEntity):
         except (requests.ConnectionError, requests.Timeout, DAVError) as err:
             raise HomeAssistantError(f"CalDAV save error: {err}") from err
 
+    @override
     async def async_update_todo_item(self, item: TodoItem) -> None:
         """Update a To-do item."""
         uid: str = cast(str, item.uid)
@@ -177,6 +179,7 @@ class WebDavTodoListEntity(TodoListEntity):
         except (requests.ConnectionError, requests.Timeout, DAVError) as err:
             raise HomeAssistantError(f"CalDAV save error: {err}") from err
 
+    @override
     async def async_delete_todo_items(self, uids: list[str]) -> None:
         """Delete To-do items."""
         tasks = (

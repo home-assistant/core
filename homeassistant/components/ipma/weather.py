@@ -3,7 +3,7 @@
 import asyncio
 import contextlib
 import logging
-from typing import Literal
+from typing import Literal, override
 
 from pyipma.api import IPMA_API
 from pyipma.forecast import Forecast as IPMAForecast
@@ -131,6 +131,7 @@ class IPMAWeather(WeatherEntity, IPMADevice):
         return CONDITION_MAP.get(identifier)
 
     @property
+    @override
     def condition(self) -> str | None:
         """Return the current condition.
 
@@ -144,6 +145,7 @@ class IPMAWeather(WeatherEntity, IPMADevice):
         return self._condition_conversion(forecast[0].weather_type.id, None)
 
     @property
+    @override
     def native_temperature(self) -> float | None:
         """Return the current temperature."""
         if not self._observation:
@@ -152,6 +154,7 @@ class IPMAWeather(WeatherEntity, IPMADevice):
         return self._observation.temperature
 
     @property
+    @override
     def native_pressure(self) -> float | None:
         """Return the current pressure."""
         if not self._observation:
@@ -160,6 +163,7 @@ class IPMAWeather(WeatherEntity, IPMADevice):
         return self._observation.pressure
 
     @property
+    @override
     def humidity(self) -> float | None:
         """Return the name of the sensor."""
         if not self._observation:
@@ -168,6 +172,7 @@ class IPMAWeather(WeatherEntity, IPMADevice):
         return self._observation.humidity
 
     @property
+    @override
     def native_wind_speed(self) -> float | None:
         """Return the current windspeed."""
         if not self._observation:
@@ -176,6 +181,7 @@ class IPMAWeather(WeatherEntity, IPMADevice):
         return self._observation.wind_intensity_km
 
     @property
+    @override
     def wind_bearing(self) -> float | None:
         """Return the current wind bearing (degrees)."""
         if not self._observation:
@@ -215,11 +221,13 @@ class IPMAWeather(WeatherEntity, IPMADevice):
             async with asyncio.timeout(10):
                 await self._update_forecast(forecast_type, period, False)
 
+    @override
     async def async_forecast_daily(self) -> list[Forecast]:
         """Return the daily forecast in native units."""
         await self._try_update_forecast("daily", 24)
         return self._forecast(self._daily_forecast)
 
+    @override
     async def async_forecast_hourly(self) -> list[Forecast]:
         """Return the hourly forecast in native units."""
         await self._try_update_forecast("hourly", 1)

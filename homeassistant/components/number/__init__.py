@@ -6,7 +6,7 @@ import dataclasses
 from datetime import timedelta
 import logging
 from math import ceil, floor
-from typing import TYPE_CHECKING, Any, Self, final
+from typing import TYPE_CHECKING, Any, Self, final, override
 
 from propcache.api import cached_property
 import voluptuous as vol
@@ -201,6 +201,7 @@ class NumberEntity(Entity, cached_properties=CACHED_PROPERTIES_WITH_ATTR_):
     _deprecated_number_entity_reported = False
     _number_option_unit_of_measurement: str | None = None
 
+    @override
     def __init_subclass__(cls, **kwargs: Any) -> None:
         """Post initialisation processing."""
         super().__init_subclass__(**kwargs)
@@ -230,6 +231,7 @@ class NumberEntity(Entity, cached_properties=CACHED_PROPERTIES_WITH_ATTR_):
                 report_issue,
             )
 
+    @override
     async def async_internal_added_to_hass(self) -> None:
         """Call when the number entity is added to hass."""
         await super().async_internal_added_to_hass()
@@ -238,6 +240,7 @@ class NumberEntity(Entity, cached_properties=CACHED_PROPERTIES_WITH_ATTR_):
         self.async_registry_entry_updated()
 
     @property
+    @override
     def capability_attributes(self) -> dict[str, Any]:
         """Return capability attributes."""
         device_class = self.device_class
@@ -254,6 +257,7 @@ class NumberEntity(Entity, cached_properties=CACHED_PROPERTIES_WITH_ATTR_):
             ATTR_MODE: self.mode,
         }
 
+    @override
     def _default_to_device_class_name(self) -> bool:
         """Return True if an unnamed entity should be named by its device class.
 
@@ -262,6 +266,7 @@ class NumberEntity(Entity, cached_properties=CACHED_PROPERTIES_WITH_ATTR_):
         return self.device_class is not None
 
     @cached_property
+    @override
     def device_class(self) -> NumberDeviceClass | None:
         """Return the class of this entity."""
         if hasattr(self, "_attr_device_class"):
@@ -353,6 +358,7 @@ class NumberEntity(Entity, cached_properties=CACHED_PROPERTIES_WITH_ATTR_):
 
     @property
     @final
+    @override
     def state(self) -> float | None:
         """Return the entity state."""
         return self.value
@@ -381,6 +387,7 @@ class NumberEntity(Entity, cached_properties=CACHED_PROPERTIES_WITH_ATTR_):
 
     @property
     @final
+    @override
     def unit_of_measurement(self) -> str | None:
         """Return the unit of measurement of the entity, after unit conversion."""
         if self._number_option_unit_of_measurement:
@@ -502,6 +509,7 @@ class NumberEntity(Entity, cached_properties=CACHED_PROPERTIES_WITH_ATTR_):
         return value
 
     @callback
+    @override
     def async_registry_entry_updated(self) -> None:
         """Run when the entity registry entry has been updated."""
         if TYPE_CHECKING:
@@ -530,6 +538,7 @@ class NumberExtraStoredData(ExtraStoredData):
     native_unit_of_measurement: str | None
     native_value: float | None
 
+    @override
     def as_dict(self) -> dict[str, Any]:
         """Return a dict representation of the number data."""
         return dataclasses.asdict(self)
@@ -553,6 +562,7 @@ class RestoreNumber(NumberEntity, RestoreEntity):
     """Mixin class for restoring previous number state."""
 
     @property
+    @override
     def extra_restore_state_data(self) -> NumberExtraStoredData:
         """Return number specific state data to be restored."""
         return NumberExtraStoredData(

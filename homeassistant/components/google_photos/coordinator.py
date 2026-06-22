@@ -9,7 +9,7 @@ are short lived.
 import asyncio
 import datetime
 import logging
-from typing import Final
+from typing import Final, override
 
 from google_photos_library_api.api import GooglePhotosLibraryApi
 from google_photos_library_api.exceptions import GooglePhotosApiError
@@ -51,6 +51,7 @@ class GooglePhotosUpdateCoordinator(DataUpdateCoordinator[dict[str, str]]):
         )
         self.client = client
 
+    @override
     async def _async_update_data(self) -> dict[str, str]:
         """Fetch albums from API endpoint."""
         albums: dict[str, str] = {}

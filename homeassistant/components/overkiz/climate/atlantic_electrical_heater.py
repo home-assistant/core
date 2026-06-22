@@ -1,6 +1,6 @@
 """Support for Atlantic Electrical Heater."""
 
-from typing import cast
+from typing import cast, override
 
 from pyoverkiz.enums import OverkizCommand, OverkizCommandParam, OverkizState
 
@@ -54,6 +54,7 @@ class AtlanticElectricalHeater(OverkizEntity, ClimateEntity):
     _attr_translation_key = DOMAIN
 
     @property
+    @override
     def hvac_mode(self) -> HVACMode:
         """Return hvac operation ie. heat, cool mode."""
         if OverkizState.CORE_ON_OFF in self.device.states:
@@ -63,6 +64,7 @@ class AtlanticElectricalHeater(OverkizEntity, ClimateEntity):
 
         return HVACMode.OFF
 
+    @override
     async def async_set_hvac_mode(self, hvac_mode: HVACMode) -> None:
         """Set new target hvac mode."""
         await self.executor.async_execute_command(
@@ -70,6 +72,7 @@ class AtlanticElectricalHeater(OverkizEntity, ClimateEntity):
         )
 
     @property
+    @override
     def preset_mode(self) -> str | None:
         """Return the current preset mode, e.g., home, away, temp."""
         return OVERKIZ_TO_PRESET_MODES[
@@ -78,6 +81,7 @@ class AtlanticElectricalHeater(OverkizEntity, ClimateEntity):
             )
         ]
 
+    @override
     async def async_set_preset_mode(self, preset_mode: str) -> None:
         """Set new preset mode."""
         await self.executor.async_execute_command(

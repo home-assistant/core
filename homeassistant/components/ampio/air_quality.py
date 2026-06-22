@@ -1,7 +1,7 @@
 """Support for Ampio Air Quality data."""
 
 import logging
-from typing import Final
+from typing import Final, override
 
 from asmog import AmpioSmog
 import voluptuous as vol
@@ -64,21 +64,25 @@ class AmpioSmogQuality(AirQualityEntity):
         self._name = name or api.api.name
 
     @property
+    @override
     def name(self) -> str:
         """Return the name of the air quality entity."""
         return self._name
 
     @property
+    @override
     def unique_id(self) -> str:
         """Return unique_name."""
-        return f"ampio_smog_{self._station_id}"
+        return f"ampio_smog_{self._station_id}"  # pylint: disable=home-assistant-entity-unique-id-redundant-domain
 
     @property
+    @override
     def particulate_matter_2_5(self) -> str | None:
         """Return the particulate matter 2.5 level."""
         return self._ampio.api.pm2_5  # type: ignore[no-any-return]
 
     @property
+    @override
     def particulate_matter_10(self) -> str | None:
         """Return the particulate matter 10 level."""
         return self._ampio.api.pm10  # type: ignore[no-any-return]
