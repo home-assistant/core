@@ -11,6 +11,7 @@ from pyoverkiz.const import (
     REXEL_OAUTH_TOKEN_URL,
 )
 from pyoverkiz.exceptions import (
+    ApplicationNotAllowedError,
     BadCredentialsError,
     MaintenanceError,
     NoSuchTokenError,
@@ -229,6 +230,7 @@ async def test_form_local_happy_flow(
         (MaintenanceError, "server_in_maintenance"),
         (TooManyAttemptsBannedError, "too_many_attempts"),
         (UnknownUserError, "unsupported_hardware"),
+        (ApplicationNotAllowedError, "application_not_allowed"),
         (Exception, "unknown"),
     ],
 )
