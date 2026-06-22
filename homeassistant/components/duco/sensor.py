@@ -224,12 +224,12 @@ async def async_setup_entry(
                 for description in SENSOR_DESCRIPTIONS
                 if node.general.node_type in description.node_types
             )
-            if node.general.node_type == NodeType.BOX:
-                new_entities.extend(
-                    DucoBoxSensorEntity(coordinator, node, description)
-                    for description in BOX_SENSOR_DESCRIPTIONS
-                    if description.supported_fn(coordinator)
-                )
+            new_entities.extend(
+                DucoBoxSensorEntity(coordinator, node, description)
+                for description in BOX_SENSOR_DESCRIPTIONS
+                if node.general.node_type == NodeType.BOX
+                and description.supported_fn(coordinator)
+            )
         if new_entities:
             async_add_entities(new_entities)
 

@@ -83,7 +83,7 @@
         "name": "Target flow level"
       },
       "time_filter_remain": {
-        "name": "Filter remaining"
+        "name": "Filter remaining time"
       },
       "time_state_end": {
         "name": "State end time"

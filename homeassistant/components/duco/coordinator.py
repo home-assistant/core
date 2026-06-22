@@ -25,7 +25,7 @@ _LOGGER = logging.getLogger(__name__)
 type DucoConfigEntry = ConfigEntry[DucoCoordinator]
 
 
-@dataclass(slots=True, kw_only=True)
+@dataclass
 class DucoData:
     """Data returned by the Duco coordinator."""
 

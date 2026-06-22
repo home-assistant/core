@@ -26,7 +26,7 @@ from . import setup_platform_integration
 
 from tests.common import MockConfigEntry, async_fire_time_changed, snapshot_platform
 
-FILTER_REMAINING_ENTITY_ID = "sensor.living_filter_remaining"
+FILTER_REMAINING_ENTITY_ID = "sensor.living_filter_remaining_time"
 
 
 @pytest.fixture
