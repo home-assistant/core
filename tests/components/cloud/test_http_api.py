@@ -1656,6 +1656,56 @@ async def test_update_alexa_entity(
     }
 
 
+async def test_update_alexa_entity_name(
+    hass: HomeAssistant,
+    entity_registry: er.EntityRegistry,
+    hass_ws_client: WebSocketGenerator,
+    setup_cloud: None,
+) -> None:
+    """Test that we can set and clear the Alexa name override."""
+    entry = entity_registry.async_get_or_create(
+        "light", "test", "unique", suggested_object_id="kitchen"
+    )
+    client = await hass_ws_client(hass)
+
+    await client.send_json_auto_id(
+        {
+            "type": "cloud/alexa/entities/update",
+            "entity_id": entry.entity_id,
+            "name": "Override",
+        }
+    )
+    response = await client.receive_json()
+    assert response["success"]
+    assert exposed_entities.async_get_entity_settings(hass, entry.entity_id) == {
+        "cloud.alexa": {"name": "Override"}
+    }
+
+    await client.send_json_auto_id(
+        {"type": "cloud/alexa/entities/get", "entity_id": entry.entity_id}
+    )
+    response = await client.receive_json()
+    assert response["success"]
+    assert response["result"] == {"name": "Override"}
+
+    await client.send_json_auto_id(
+        {
+            "type": "cloud/alexa/entities/update",
+            "entity_id": entry.entity_id,
+            "name": None,
+        }
+    )
+    response = await client.receive_json()
+    assert response["success"]
+
+    await client.send_json_auto_id(
+        {"type": "cloud/alexa/entities/get", "entity_id": entry.entity_id}
+    )
+    response = await client.receive_json()
+    assert response["success"]
+    assert response["result"] == {"name": None}
+
+
 async def test_sync_alexa_entities_timeout(
     hass: HomeAssistant,
     hass_ws_client: WebSocketGenerator,

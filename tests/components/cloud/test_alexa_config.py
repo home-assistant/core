@@ -12,10 +12,12 @@ import pytest
 
 from homeassistant.components.alexa import errors
 from homeassistant.components.cloud import ALEXA_SCHEMA, alexa_config
+from homeassistant.components.cloud.alexa_config import CLOUD_ALEXA
 from homeassistant.components.cloud.const import (
     DATA_CLOUD,
     PREF_ALEXA_DEFAULT_EXPOSE,
     PREF_ALEXA_ENTITY_CONFIGS,
+    PREF_ENTITY_NAME,
     PREF_SHOULD_EXPOSE,
 )
 from homeassistant.components.cloud.prefs import CloudPreferences
@@ -23,13 +25,14 @@ from homeassistant.components.homeassistant.exposed_entities import (
     DATA_EXPOSED_ENTITIES,
     async_expose_entity,
     async_get_entity_settings,
+    async_set_assistant_option,
 )
 from homeassistant.const import (
     EVENT_HOMEASSISTANT_START,
     EVENT_HOMEASSISTANT_STARTED,
     EntityCategory,
 )
-from homeassistant.core import CoreState, HomeAssistant
+from homeassistant.core import CoreState, HomeAssistant, State
 from homeassistant.helpers import entity_registry as er
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 from homeassistant.setup import async_setup_component
@@ -905,3 +908,65 @@ async def test_alexa_config_migrate_expose_entity_prefs_default(
     assert async_get_entity_settings(hass, water_heater.entity_id) == {
         "cloud.alexa": {"should_expose": False}
     }
+
+
+@pytest.mark.parametrize(
+    ("yaml_name", "override_name", "registry_name", "expected"),
+    [
+        pytest.param("Yaml", "Override", "Registry", "Yaml", id="yaml-wins"),
+        pytest.param(None, "Override", "Registry", "Override", id="override-wins"),
+        pytest.param(None, None, "Registry", "Registry", id="registry-wins"),
+        pytest.param(None, None, None, "State", id="state-fallback"),
+    ],
+)
+async def test_get_entity_name_fallback_chain(
+    hass: HomeAssistant,
+    cloud_prefs: CloudPreferences,
+    cloud_stub: Mock,
+    entity_registry: er.EntityRegistry,
+    yaml_name: str | None,
+    override_name: str | None,
+    registry_name: str | None,
+    expected: str,
+) -> None:
+    """Test the name fallback chain: YAML > override > registry > state."""
+    assert await async_setup_component(hass, "homeassistant", {})
+
+    entry = entity_registry.async_get_or_create(
+        "light", "test", "unique", suggested_object_id="kitchen"
+    )
+    if registry_name is not None:
+        entry = entity_registry.async_update_entity(entry.entity_id, name=registry_name)
+
+    if override_name is not None:
+        async_set_assistant_option(
+            hass, CLOUD_ALEXA, entry.entity_id, PREF_ENTITY_NAME, override_name
+        )
+
+    entity_config = {entry.entity_id: {"name": yaml_name}} if yaml_name else {}
+    conf = alexa_config.CloudAlexaConfig(
+        hass,
+        ALEXA_SCHEMA({"entity_config": entity_config}),
+        "mock-user-id",
+        cloud_prefs,
+        cloud_stub,
+    )
+
+    state = State(entry.entity_id, "on", {"friendly_name": "State"})
+    assert conf.get_entity_name(entry, state) == expected
+
+
+async def test_get_entity_name_no_registry_entry(
+    hass: HomeAssistant,
+    cloud_prefs: CloudPreferences,
+    cloud_stub: Mock,
+) -> None:
+    """Test fallback to state name when no registry entry exists."""
+    assert await async_setup_component(hass, "homeassistant", {})
+
+    conf = alexa_config.CloudAlexaConfig(
+        hass, ALEXA_SCHEMA({}), "mock-user-id", cloud_prefs, cloud_stub
+    )
+
+    state = State("light.kitchen", "on", {"friendly_name": "State"})
+    assert conf.get_entity_name(None, state) == "State"
