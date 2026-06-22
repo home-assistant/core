@@ -1,6 +1,6 @@
 """Switch integration microBees."""
 
-from typing import Any
+from typing import Any, override
 
 from homeassistant.components.switch import SwitchEntity
 from homeassistant.core import HomeAssistant
@@ -45,15 +45,18 @@ class MBSwitch(MicroBeesActuatorEntity, SwitchEntity):
         self._attr_translation_key = SOCKET_TRANSLATIONS.get(self.bee.productID)
 
     @property
+    @override
     def name(self) -> str:
         """Name of the switch."""
         return self.actuator.name
 
     @property
+    @override
     def is_on(self) -> bool:
         """Status of the switch."""
         return self.actuator.value
 
+    @override
     async def async_turn_on(self, **kwargs: Any) -> None:
         """Turn on the switch."""
         send_command = await self.coordinator.microbees.sendCommand(self.actuator_id, 1)
@@ -63,6 +66,7 @@ class MBSwitch(MicroBeesActuatorEntity, SwitchEntity):
         self.actuator.value = True
         self.async_write_ha_state()
 
+    @override
     async def async_turn_off(self, **kwargs: Any) -> None:
         """Turn off the switch."""
         send_command = await self.coordinator.microbees.sendCommand(self.actuator_id, 0)

@@ -1,7 +1,7 @@
 """Switchbot integration light platform."""
 
 import logging
-from typing import Any, cast
+from typing import Any, cast, override
 
 import switchbot
 from switchbot import ColorMode as SwitchBotColorMode
@@ -59,6 +59,7 @@ class SwitchbotAirPurifierLightEntity(SwitchbotEntity, LightEntity, RestoreEntit
         super().__init__(coordinator)
         self._attr_unique_id = f"{coordinator.base_unique_id}_light"
 
+    @override
     async def async_added_to_hass(self) -> None:
         """Call when entity is added to hass."""
         await super().async_added_to_hass()
@@ -67,21 +68,25 @@ class SwitchbotAirPurifierLightEntity(SwitchbotEntity, LightEntity, RestoreEntit
             self._attr_is_on = last_state.state == STATE_ON
 
     @property
+    @override
     def brightness(self) -> int:
         """Return the brightness of the light."""
         return max(0, min(255, round(self._device.brightness * 2.55)))
 
     @property
+    @override
     def rgb_color(self) -> tuple[int, int, int] | None:
         """Return the RGB color of the light."""
         return self._device.rgb
 
     @property
+    @override
     def is_on(self) -> bool | None:
         """Return true if the light is on."""
         return self._attr_is_on
 
     @exception_handler
+    @override
     async def async_turn_on(self, **kwargs: Any) -> None:
         """Instruct the light to turn on."""
         _LOGGER.debug("Turning on light %s, address %s", kwargs, self._address)
@@ -100,6 +105,7 @@ class SwitchbotAirPurifierLightEntity(SwitchbotEntity, LightEntity, RestoreEntit
         self.async_write_ha_state()
 
     @exception_handler
+    @override
     async def async_turn_off(self, **kwargs: Any) -> None:
         """Instruct the light to turn off."""
         _LOGGER.debug("Turning off light %s, address %s", kwargs, self._address)
@@ -116,31 +122,37 @@ class SwitchbotLightEntity(SwitchbotEntity, LightEntity):
     _attr_translation_key = "light"
 
     @property
+    @override
     def max_color_temp_kelvin(self) -> int:
         """Return the max color temperature."""
         return self._device.max_temp
 
     @property
+    @override
     def min_color_temp_kelvin(self) -> int:
         """Return the min color temperature."""
         return self._device.min_temp
 
     @property
+    @override
     def supported_color_modes(self) -> set[ColorMode]:
         """Return the supported color modes."""
         return {SWITCHBOT_COLOR_MODE_TO_HASS[mode] for mode in self._device.color_modes}
 
     @property
+    @override
     def supported_features(self) -> LightEntityFeature:
         """Return the supported features."""
         return LightEntityFeature.EFFECT if self.effect_list else LightEntityFeature(0)
 
     @property
+    @override
     def brightness(self) -> int | None:
         """Return the brightness of the light."""
         return max(0, min(255, round(self._device.brightness * 2.55)))
 
     @property
+    @override
     def color_mode(self) -> ColorMode:
         """Return the color mode of the light."""
         return SWITCHBOT_COLOR_MODE_TO_HASS.get(
@@ -148,31 +160,37 @@ class SwitchbotLightEntity(SwitchbotEntity, LightEntity):
         )
 
     @property
+    @override
     def effect_list(self) -> list[str] | None:
         """Return the list of effects supported by the light."""
         return self._device.get_effect_list
 
     @property
+    @override
     def effect(self) -> str | None:
         """Return the current effect of the light."""
         return self._device.get_effect()
 
     @property
+    @override
     def rgb_color(self) -> tuple[int, int, int] | None:
         """Return the RGB color of the light."""
         return self._device.rgb
 
     @property
+    @override
     def color_temp_kelvin(self) -> int | None:
         """Return the color temperature of the light."""
         return self._device.color_temp
 
     @property
+    @override
     def is_on(self) -> bool:
         """Return true if the light is on."""
         return self._device.on
 
     @exception_handler
+    @override
     async def async_turn_on(self, **kwargs: Any) -> None:
         """Instruct the light to turn on."""
         _LOGGER.debug("Turning on light %s, address %s", kwargs, self._address)
@@ -202,6 +220,7 @@ class SwitchbotLightEntity(SwitchbotEntity, LightEntity):
         await self._device.turn_on()
 
     @exception_handler
+    @override
     async def async_turn_off(self, **kwargs: Any) -> None:
         """Instruct the light to turn off."""
         _LOGGER.debug("Turning off light %s, address %s", kwargs, self._address)
