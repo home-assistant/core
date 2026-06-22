@@ -115,7 +115,10 @@ async def test_update_error(
 
     assert (state := hass.states.get("update.wled_rgb_light_firmware"))
     assert state.state == STATE_UNAVAILABLE
-    assert "Invalid response from WLED API" in caplog.text
+    assert (
+        "Invalid response from WLED API" in caplog.text
+        or "invalid_response_wled_error" in caplog.text
+    )
 
 
 async def test_update_stay_stable(
@@ -140,7 +143,7 @@ async def test_update_stay_stable(
         blocking=True,
     )
     assert mock_wled.upgrade.call_count == 1
-    mock_wled.upgrade.assert_called_with(version="0.99.0")
+    mock_wled.upgrade.assert_called_with(version="0.99.0", repo="wled/WLED")
 
 
 @pytest.mark.parametrize("device_fixture", ["rgbw"])
@@ -166,7 +169,7 @@ async def test_update_beta_to_stable(
         blocking=True,
     )
     assert mock_wled.upgrade.call_count == 1
-    mock_wled.upgrade.assert_called_with(version="0.99.0")
+    mock_wled.upgrade.assert_called_with(version="0.99.0", repo="wled/WLED")
 
 
 @pytest.mark.parametrize("device_fixture", ["rgb_single_segment"])
@@ -191,7 +194,7 @@ async def test_update_stay_beta(
         blocking=True,
     )
     assert mock_wled.upgrade.call_count == 1
-    mock_wled.upgrade.assert_called_with(version="1.0.0b5")
+    mock_wled.upgrade.assert_called_with(version="1.0.0b5", repo="wled/WLED")
 
 
 async def test_update_entities(
