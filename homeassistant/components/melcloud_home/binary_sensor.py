@@ -2,6 +2,7 @@
 
 from collections.abc import Callable
 from dataclasses import dataclass
+from typing import override
 
 from aiomelcloudhome import ATAUnit, ATWUnit
 
@@ -147,6 +148,7 @@ class ATABinarySensor(MelCloudHomeATAUnitEntity, BinarySensorEntity):
         self._attr_unique_id = f"{unit.id}_{entity_description.key}"
 
     @property
+    @override
     def is_on(self) -> bool | None:
         """Return true if the binary sensor is on."""
         return self.entity_description.state_fn(self.unit)
@@ -169,6 +171,7 @@ class ATWBinarySensor(MelCloudHomeATWUnitEntity, BinarySensorEntity):
         self._attr_unique_id = f"{unit.id}_{entity_description.key}"
 
     @property
+    @override
     def is_on(self) -> bool | None:
         """Return true if the binary sensor is on."""
         return self.entity_description.state_fn(self.unit)
