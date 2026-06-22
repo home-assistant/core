@@ -181,9 +181,9 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
     """Handle a config flow for Bosch SHC."""
 
     VERSION = 1
-    info = None
-    host = None
-    hostname = None
+    info: dict[str, Any] | None = None
+    host: str | None = None
+    hostname: str | None = None
 
     @staticmethod
     def async_get_options_flow(config_entry: ConfigEntry) -> OptionsFlow:
@@ -387,6 +387,7 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
                     CONF_TOKEN: result["token"],
                     CONF_HOSTNAME: hostname,
                 }
+                assert self.info is not None
                 existing_entry = await self.async_set_unique_id(self.info["unique_id"])
                 if existing_entry:
                     return self.async_update_reload_and_abort(
@@ -427,6 +428,7 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
             self.info = await self._get_info(discovery_info.host)
         except SHCConnectionError:
             return self.async_abort(reason="cannot_connect")
+        assert self.info is not None
         self.host = discovery_info.host
 
         local_name = discovery_info.hostname[:-1]
