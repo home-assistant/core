@@ -1,7 +1,7 @@
 """Config flow for National Weather Service (NWS) integration."""
 
 import logging
-from typing import Any
+from typing import Any, override
 
 import aiohttp
 from pynws import SimpleNWS
@@ -56,6 +56,7 @@ class NWSConfigFlow(ConfigFlow, domain=DOMAIN):
 
     VERSION = 1
 
+    @override
     async def async_step_user(
         self, user_input: dict[str, Any] | None = None
     ) -> ConfigFlowResult:

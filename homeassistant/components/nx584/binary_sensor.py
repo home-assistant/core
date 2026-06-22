@@ -3,7 +3,7 @@
 import logging
 import threading
 import time
-from typing import Any
+from typing import Any, override
 
 from nx584 import client as nx584_client
 import requests
@@ -96,17 +96,20 @@ class NX584ZoneSensor(BinarySensorEntity):
         self._attr_device_class = zone_type
 
     @property
+    @override
     def name(self):
         """Return the name of the binary sensor."""
         return self._zone["name"]
 
     @property
+    @override
     def is_on(self) -> bool:
         """Return true if the binary sensor is on."""
         # True means "faulted" or "open" or "abnormal state"
         return self._zone["state"]
 
     @property
+    @override
     def extra_state_attributes(self) -> dict[str, Any]:
         """Return the state attributes."""
         return {
@@ -144,6 +147,7 @@ class NX584Watcher(threading.Thread):
             if events := self._client.get_events():
                 self._process_events(events)
 
+    @override
     def run(self):
         """Run the watcher."""
         while True:
