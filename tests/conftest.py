@@ -1486,6 +1486,7 @@ def mock_async_zeroconf(mock_zeroconf: MagicMock) -> Generator[MagicMock]:
         zc.async_unregister_service = AsyncMock()
         zc.async_register_service = AsyncMock()
         zc.async_update_service = AsyncMock()
+        zc.async_update_interfaces = AsyncMock()
         zc.zeroconf = Mock(spec=Zeroconf)
         zc.zeroconf.async_wait_for_start = AsyncMock()
         # DNSCache has strong Cython type checks, and MagicMock does not work
