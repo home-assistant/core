@@ -16,7 +16,7 @@ Follow these systematic steps to successfully bump a python package requirement 
 
 ### Phase A: Research and Plan
 - [ ] **1. Identify Targets**: Note the requested target package and target version to bump.
-- [ ] **2. Discover Codebase References**: Search the codebase (using `grep` or similar search tools) to find all `manifest.json` and requirements files referencing the package.
+- [ ] **2. Discover Codebase References**: Search the codebase to find all `manifest.json` and requirements files referencing the package.
 - [ ] **3. Resolve Version/Tag Details**: Run the integrated validation helper script to resolve version details, GitHub repo, release tag format, and formatted PR links:
   ```bash
   uv run python3 ./.claude/skills/bump-dependency/scripts/resolve_dependency.py <package> <old_version> [--new-version <new_version>]
