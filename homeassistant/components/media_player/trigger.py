@@ -16,7 +16,7 @@ from homeassistant.helpers.trigger import (
 from . import ATTR_MEDIA_VOLUME_LEVEL, ATTR_MEDIA_VOLUME_MUTED, MediaPlayerState
 from .const import DOMAIN
 
-VOLUME_DOMAIN_SPECS = {
+VOLUME_DOMAIN_SPECS: dict[str, DomainSpec] = {
     DOMAIN: DomainSpec(value_source=ATTR_MEDIA_VOLUME_LEVEL),
 }
 

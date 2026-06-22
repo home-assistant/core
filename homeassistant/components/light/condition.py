@@ -14,7 +14,7 @@ from homeassistant.helpers.condition import (
 from . import ATTR_BRIGHTNESS
 from .const import DOMAIN
 
-BRIGHTNESS_DOMAIN_SPECS = {
+BRIGHTNESS_DOMAIN_SPECS: dict[str, DomainSpec] = {
     DOMAIN: DomainSpec(value_source=ATTR_BRIGHTNESS),
 }
 
