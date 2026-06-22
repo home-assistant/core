@@ -13,7 +13,15 @@ from homeassistant.helpers import issue_registry as ir
 from homeassistant.helpers.discovery import Platform
 from homeassistant.helpers.script_variables import ScriptVariables
 from homeassistant.helpers.template import Template
+from homeassistant.helpers.typing import ConfigType
 from homeassistant.setup import async_setup_component
+
+from .conftest import (
+    ConfigurationStyle,
+    TemplatePlatformSetup,
+    make_test_trigger,
+    setup_entity,
+)
 
 from tests.common import assert_platform_setup_creates_issue, assert_setup_component
 
@@ -281,6 +289,192 @@ async def test_invalid_binary_sensor_schema_with_auto_off(
     assert (
         expected_error is None and "ERROR" not in caplog.text
     ) or expected_error in caplog.text
+
+
+@pytest.mark.parametrize(
+    ("platform", "extra_config"),
+    [
+        (
+            Platform.ALARM_CONTROL_PANEL,
+            {
+                "state": "{{ 'disarmed' }}",
+            },
+        ),
+        (
+            Platform.BINARY_SENSOR,
+            {
+                "state": "{{ 'on' }}",
+            },
+        ),
+        (
+            Platform.COVER,
+            {
+                "state": "{{ 'open' }}",
+                "open_cover": [],
+                "close_cover": [],
+            },
+        ),
+        (
+            Platform.DEVICE_TRACKER,
+            {
+                "in_zones": "{{ ['zone.home'] }}",
+            },
+        ),
+        (
+            Platform.EVENT,
+            {
+                "event_type": "{{ 'single' }}",
+                "event_types": "{{ ['single'] }}",
+            },
+        ),
+        (
+            Platform.FAN,
+            {
+                "state": "{{ 'on' }}",
+                "turn_on": [],
+                "turn_off": [],
+            },
+        ),
+        (
+            Platform.IMAGE,
+            {
+                "url": "{{ 'http://www.test.com' }}",
+            },
+        ),
+        (
+            Platform.LIGHT,
+            {
+                "state": "{{ 'on' }}",
+                "turn_on": [],
+                "turn_off": [],
+            },
+        ),
+        (
+            Platform.LOCK,
+            {
+                "state": "{{ 'on' }}",
+                "lock": [],
+                "unlock": [],
+            },
+        ),
+        (
+            Platform.NUMBER,
+            {
+                "state": "{{ 4 }}",
+                "min": "0",
+                "max": "100",
+                "step": "0.1",
+                "unit_of_measurement": "cm",
+                "set_value": [],
+            },
+        ),
+        (
+            Platform.SELECT,
+            {
+                "state": "{{ 'on' }}",
+                "options": "{{ ['off', 'on', 'auto'] }}",
+                "select_option": [],
+            },
+        ),
+        (
+            Platform.SENSOR,
+            {
+                "state": "{{ 'yes' }}",
+            },
+        ),
+        (
+            Platform.SWITCH,
+            {
+                "state": "{{ 'on' }}",
+                "turn_on": [],
+                "turn_off": [],
+            },
+        ),
+        (
+            Platform.UPDATE,
+            {
+                "installed_version": "{{ '1.0' }}",
+                "latest_version": "{{ '2.0' }}",
+            },
+        ),
+        (
+            Platform.VACUUM,
+            {
+                "state": "{{ 'docked' }}",
+                "start": [],
+            },
+        ),
+        (
+            Platform.WEATHER,
+            {
+                "condition": "{{ 'cloudy' }}",
+                "temperature": "{{ 20 }}",
+                "humidity": "{{ 50 }}",
+            },
+        ),
+    ],
+)
+@pytest.mark.parametrize(
+    ("config", "style", "will_error", "count"),
+    [
+        (
+            {
+                "conditions": {
+                    "condition": "template",
+                    "value_template": "{{ 1 == 1 }}",
+                },
+            },
+            ConfigurationStyle.TRIGGER,
+            False,
+            1,
+        ),
+        (
+            {},
+            ConfigurationStyle.MODERN,
+            False,
+            1,
+        ),
+        (
+            {
+                "conditions": {
+                    "condition": "template",
+                    "value_template": "{{ 1 == 1 }}",
+                },
+            },
+            ConfigurationStyle.MODERN,
+            True,
+            0,
+        ),
+    ],
+)
+async def test_invalid_schema_with_conditions(
+    hass: HomeAssistant,
+    platform: Platform,
+    style: ConfigurationStyle,
+    config: ConfigType,
+    extra_config: ConfigType,
+    count: int,
+    will_error: bool,
+    caplog: pytest.LogCaptureFixture,
+) -> None:
+    """Test conditions schema with valid and invalid configurations."""
+
+    await setup_entity(
+        hass,
+        TemplatePlatformSetup(
+            platform, "test_entity", make_test_trigger("sensor.test_state")
+        ),
+        style,
+        count,
+        config,
+        extra_config=extra_config,
+    )
+
+    error = (
+        f"The conditions option for template {platform.replace('_', ' ')}: name: test_entity requires a trigger,"
+        " remove the conditions option or rewrite configuration to use a trigger"
+    )
+    assert (not will_error and "ERROR" not in caplog.text) or (error in caplog.text)
 
 
 @pytest.mark.parametrize(

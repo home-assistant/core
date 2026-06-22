@@ -10,6 +10,7 @@ from voluptuous.humanize import humanize_error
 from homeassistant.components import blueprint
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import (
+    CONF_CONDITIONS,
     CONF_NAME,
     CONF_STATE,
     CONF_UNIQUE_ID,
@@ -19,6 +20,7 @@ from homeassistant.const import (
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.exceptions import HomeAssistantError, PlatformNotReady
 from homeassistant.helpers import template
+from homeassistant.helpers.condition import async_validate_conditions_config
 from homeassistant.helpers.entity import Entity
 from homeassistant.helpers.entity_platform import (
     AddConfigEntryEntitiesCallback,
@@ -129,14 +131,12 @@ def _get_config_breadcrumbs(config: ConfigType) -> str:
     return breadcrumb
 
 
-async def validate_template_scripts(
+async def validate_actions_and_conditions_config(
     hass: HomeAssistant,
     config: ConfigType,
     script_options: tuple[str, ...] | None = None,
 ) -> None:
-    """Validate template scripts."""
-    if not script_options:
-        return
+    """Validate template entity actions and conditions."""
 
     def _humanize(err: Exception, data: Any) -> str:
         """Humanize vol.Invalid, stringify other exceptions."""
@@ -145,6 +145,23 @@ async def validate_template_scripts(
         return str(err)
 
     breadcrumb: str | None = None
+    if (condition_config := config.pop(CONF_CONDITIONS, None)) is not None:
+        try:
+            config[CONF_CONDITIONS] = await async_validate_conditions_config(
+                hass, condition_config
+            )
+        except (vol.Invalid, HomeAssistantError) as err:
+            if not breadcrumb:
+                breadcrumb = _get_config_breadcrumbs(config)
+            _LOGGER.error(
+                "The condition for %s failed to setup: %s",
+                breadcrumb,
+                _humanize(err, condition_config),
+            )
+
+    if not script_options:
+        return
+
     for script_option in script_options:
         if (script_config := config.pop(script_option, None)) is not None:
             try:
@@ -201,7 +218,9 @@ async def async_setup_template_platform(
         if trigger_entity_cls:
             entities = []
             for entity_config in discovery_info["entities"]:
-                await validate_template_scripts(hass, entity_config, script_options)
+                await validate_actions_and_conditions_config(
+                    hass, entity_config, script_options
+                )
                 entities.append(
                     trigger_entity_cls(
                         hass, discovery_info["coordinator"], entity_config
@@ -216,7 +235,9 @@ async def async_setup_template_platform(
 
     # Modern Configuration
     for entity_config in discovery_info["entities"]:
-        await validate_template_scripts(hass, entity_config, script_options)
+        await validate_actions_and_conditions_config(
+            hass, entity_config, script_options
+        )
 
     async_create_template_tracking_entities(
         state_entity_cls,
@@ -247,7 +268,7 @@ async def async_setup_template_entry(
         options[CONF_STATE] = options.pop(CONF_VALUE_TEMPLATE)
 
     validated_config = config_schema(options)
-    await validate_template_scripts(hass, validated_config, script_options)
+    await validate_actions_and_conditions_config(hass, validated_config, script_options)
 
     async_add_entities(
         [state_entity_cls(hass, validated_config, config_entry.entry_id)]

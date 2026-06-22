@@ -3,6 +3,7 @@
 import voluptuous as vol
 
 from homeassistant.const import (
+    CONF_CONDITIONS,
     CONF_DEVICE_ID,
     CONF_ENTITY_PICTURE_TEMPLATE,
     CONF_ICON,
@@ -93,6 +94,7 @@ def make_template_entity_common_modern_schema(
         {
             vol.Optional(CONF_AVAILABILITY): cv.template,
             vol.Optional(CONF_VARIABLES): cv.SCRIPT_VARIABLES_SCHEMA,
+            vol.Optional(CONF_CONDITIONS): cv.CONDITIONS_SCHEMA,
         }
     ).extend(make_template_entity_base_schema(domain, default_name).schema)
 

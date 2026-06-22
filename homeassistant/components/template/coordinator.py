@@ -26,6 +26,23 @@ from .const import DOMAIN, PLATFORMS
 _LOGGER = logging.getLogger(__name__)
 
 
+def check_conditions(
+    condition_func: condition.ConditionsChecker | None, run_variables: TemplateVarsType
+) -> bool:
+    """Check if conditions have been met using run variables."""
+    if not condition_func:
+        return True
+
+    condition_result = condition_func.async_check(variables=run_variables)
+    if condition_result is False:
+        _LOGGER.debug(
+            "Conditions not met, aborting template trigger update. Condition summary: %s",
+            trace_get(clear=False),
+        )
+
+    return condition_result
+
+
 class TriggerUpdateCoordinator(DataUpdateCoordinator):
     """Data update coordinator for trigger based template entities."""
 
@@ -135,7 +152,7 @@ class TriggerUpdateCoordinator(DataUpdateCoordinator):
         if self._run_variables:
             run_variables = self._run_variables.async_render(self.hass, run_variables)
 
-        if not self._check_condition(run_variables):
+        if not check_conditions(self._cond_func, run_variables):
             return
         # Create a context referring to the trigger context.
         trigger_context_id = None if context is None else context.id
@@ -153,21 +170,9 @@ class TriggerUpdateCoordinator(DataUpdateCoordinator):
         if self._run_variables:
             run_variables = self._run_variables.async_render(self.hass, run_variables)
 
-        if not self._check_condition(run_variables):
+        if not check_conditions(self._cond_func, run_variables):
             return
         self._execute_update(run_variables, context)
-
-    def _check_condition(self, run_variables: TemplateVarsType) -> bool:
-        if not self._cond_func:
-            return True
-        condition_result = self._cond_func.async_check(variables=run_variables)
-        if condition_result is False:
-            _LOGGER.debug(
-                "Conditions not met, aborting template"
-                " trigger update. Condition summary: %s",
-                trace_get(clear=False),
-            )
-        return condition_result
 
     @callback
     def _execute_update(
