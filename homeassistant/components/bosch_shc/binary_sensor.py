@@ -1,9 +1,10 @@
 """Platform for binarysensor integration."""
 
-from collections.abc import Callable
+from collections.abc import Callable, Mapping
 import contextlib
 from datetime import UTC, datetime, timedelta
 import json
+from typing import Any
 
 from boschshcpy import (
     SHCBatteryDevice,
@@ -37,7 +38,7 @@ from homeassistant.core import HomeAssistant, callback
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import entity_platform
 import homeassistant.helpers.config_validation as cv
-from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
 from .const import (
     ATTR_EVENT_SUBTYPE,
@@ -63,7 +64,7 @@ PARALLEL_UPDATES = 1
 async def async_setup_entry(  # noqa: C901  # inherent complexity of device-type dispatch
     hass: HomeAssistant,
     config_entry: ConfigEntry,
-    async_add_entities: AddEntitiesCallback,
+    async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up the SHC binary sensor platform."""
     entities: list[BinarySensorEntity] = []
@@ -305,7 +306,7 @@ class CallForHeatSensor(SHCEntity, BinarySensorEntity):
         self._attr_unique_id = f"{device.root_device_id}_{device.id}_callforheat"
 
     @property
-    def is_on(self):
+    def is_on(self) -> bool | None:
         """Return True when the room climate control is calling for heat."""
         return bool(getattr(self._device, "has_demand", False))
 
@@ -314,12 +315,12 @@ class ShutterContactSensor(SHCEntity, BinarySensorEntity):
     """Representation of a SHC shutter contact sensor."""
 
     @property
-    def is_on(self):
+    def is_on(self) -> bool | None:
         """Return the state of the sensor."""
         return self._device.state == SHCShutterContact.ShutterContactService.State.OPEN
 
     @property
-    def device_class(self):
+    def device_class(self) -> BinarySensorDeviceClass | None:
         """Return the class of this device."""
         switcher = {
             "ENTRANCE_DOOR": BinarySensorDeviceClass.DOOR,
@@ -342,7 +343,7 @@ class ShutterContactVibrationSensor(SHCEntity, BinarySensorEntity):
         self._attr_unique_id = f"{device.root_device_id}_{device.id}_vibration"
 
     @property
-    def is_on(self):
+    def is_on(self) -> bool | None:
         """Return the state of the sensor."""
         return (
             self._device.vibrationsensor
@@ -355,7 +356,7 @@ class MotionDetectionSensor(SHCEntity, BinarySensorEntity):
 
     _attr_device_class = BinarySensorDeviceClass.MOTION
 
-    def __init__(self, hass, device, entry_id: str):
+    def __init__(self, hass: HomeAssistant, device: SHCDevice, entry_id: str) -> None:
         """Initialize the motion detection device."""
         self.hass = hass
         self._service = None
@@ -369,7 +370,7 @@ class MotionDetectionSensor(SHCEntity, BinarySensorEntity):
 
         hass.bus.async_listen_once(EVENT_HOMEASSISTANT_STOP, self._handle_ha_stop)
 
-    async def async_added_to_hass(self):
+    async def async_added_to_hass(self) -> None:
         """Subscribe to SHC events and cache device_id."""
         await super().async_added_to_hass()
         self._cached_device_id = await async_get_device_id(self.hass, self._device.id)
@@ -404,7 +405,7 @@ class MotionDetectionSensor(SHCEntity, BinarySensorEntity):
         self._service.unsubscribe_callback(self._device.id + "_eventlistener")
 
     @property
-    def is_on(self):
+    def is_on(self) -> bool | None:
         """Return the state of the sensor."""
         try:
             latestmotion = datetime.strptime(
@@ -422,12 +423,12 @@ class MotionDetectionSensor(SHCEntity, BinarySensorEntity):
         return True
 
     @property
-    def should_poll(self):
+    def should_poll(self) -> bool:
         """Retrieve motion state."""
         return True
 
     @property
-    def extra_state_attributes(self):
+    def extra_state_attributes(self) -> Mapping[str, Any] | None:
         """Return the state attributes."""
         return {
             "last_motion_detected": self._device.latestmotion,
@@ -444,7 +445,7 @@ class SmokeDetectorSensor(SHCEntity, BinarySensorEntity):
         device: SHCSmokeDetector,
         hass: HomeAssistant,
         entry_id: str,
-    ):
+    ) -> None:
         """Initialize the smoke detector device."""
         self._hass = hass
         self._service = None
@@ -458,7 +459,7 @@ class SmokeDetectorSensor(SHCEntity, BinarySensorEntity):
 
         hass.bus.async_listen_once(EVENT_HOMEASSISTANT_STOP, self._handle_ha_stop)
 
-    async def async_added_to_hass(self):
+    async def async_added_to_hass(self) -> None:
         """Subscribe to SHC events and cache device_id."""
         await super().async_added_to_hass()
         self._cached_device_id = await async_get_device_id(self._hass, self._device.id)
@@ -490,7 +491,7 @@ class SmokeDetectorSensor(SHCEntity, BinarySensorEntity):
         self._service.unsubscribe_callback(self._device.id + "_eventlistener")
 
     @property
-    def is_on(self):
+    def is_on(self) -> bool | None:
         """Return the state of the sensor."""
         # Only PRIMARY_ALARM and SECONDARY_ALARM are smoke-related states.
         # INTRUSION_ALARM is set by the IDS (intrusion detection system) on all
@@ -503,7 +504,7 @@ class SmokeDetectorSensor(SHCEntity, BinarySensorEntity):
         )
 
     @property
-    def icon(self):
+    def icon(self) -> str | None:
         """Return the icon of the sensor."""
         return "mdi:smoke-detector"
 
@@ -530,7 +531,7 @@ class SmokeDetectorSensor(SHCEntity, BinarySensorEntity):
             ) from err
 
     @property
-    def extra_state_attributes(self):
+    def extra_state_attributes(self) -> Mapping[str, Any] | None:
         """Return the state attributes."""
         try:
             check_state = self._device.smokedetectorcheck_state.name
@@ -556,7 +557,7 @@ class WaterLeakageDetectorSensor(SHCEntity, BinarySensorEntity):
     _attr_device_class = BinarySensorDeviceClass.MOISTURE
 
     @property
-    def is_on(self):
+    def is_on(self) -> bool | None:
         """Return the state of the sensor."""
         return (
             self._device.leakage_state
@@ -564,12 +565,12 @@ class WaterLeakageDetectorSensor(SHCEntity, BinarySensorEntity):
         )
 
     @property
-    def icon(self):
+    def icon(self) -> str | None:
         """Return the icon of the sensor."""
         return "mdi:water-alert"
 
     @property
-    def extra_state_attributes(self):
+    def extra_state_attributes(self) -> Mapping[str, Any] | None:
         """Return the state attributes."""
         return {
             "push_notification_state": self._device.push_notification_state.name,
@@ -587,7 +588,7 @@ class SmokeDetectionSystemSensor(SHCEntity, BinarySensorEntity):
         device: SHCSmokeDetectionSystem,
         hass: HomeAssistant,
         entry_id: str,
-    ):
+    ) -> None:
         """Initialize the smoke detection system device."""
         self._hass = hass
         self._service = None
@@ -603,7 +604,7 @@ class SmokeDetectionSystemSensor(SHCEntity, BinarySensorEntity):
 
         hass.bus.async_listen_once(EVENT_HOMEASSISTANT_STOP, self._handle_ha_stop)
 
-    async def async_added_to_hass(self):
+    async def async_added_to_hass(self) -> None:
         """Subscribe to SHC events and cache device_id."""
         await super().async_added_to_hass()
         self._cached_device_id = await async_get_device_id(self._hass, self._device.id)
@@ -635,7 +636,7 @@ class SmokeDetectionSystemSensor(SHCEntity, BinarySensorEntity):
         self._service.unsubscribe_callback(self._device.id + "_eventlistener")
 
     @property
-    def is_on(self):
+    def is_on(self) -> bool | None:
         """Return the state of the sensor."""
         return (
             self._device.alarm
@@ -643,12 +644,12 @@ class SmokeDetectionSystemSensor(SHCEntity, BinarySensorEntity):
         )
 
     @property
-    def icon(self):
+    def icon(self) -> str | None:
         """Return the icon of the sensor."""
         return "mdi:smoke-detector"
 
     @property
-    def extra_state_attributes(self):
+    def extra_state_attributes(self) -> Mapping[str, Any] | None:
         """Return the state attributes."""
         return {
             "alarm_state": self._device.alarm.name,
@@ -915,7 +916,7 @@ class BatterySensor(SHCEntity, BinarySensorEntity):
         self._attr_entity_category = EntityCategory.DIAGNOSTIC
 
     @property
-    def is_on(self):
+    def is_on(self) -> bool | None:
         """Return the state of the sensor.
 
         Returns True (battery problem) only for LOW_BATTERY, CRITICAL_LOW, and
@@ -959,7 +960,7 @@ class OccupancyDetectionSensor(SHCEntity, BinarySensorEntity):
         return self._device.occupied
 
     @property
-    def extra_state_attributes(self):
+    def extra_state_attributes(self) -> Mapping[str, Any] | None:
         """Return last occupancy change time as an extra attribute."""
         return {
             "last_occupancy_change": self._device.last_occupancy_change_time,
@@ -988,7 +989,7 @@ class TamperSensor(SHCEntity, BinarySensorEntity):
         return bool(getattr(self._device, "was_tampered", False))
 
     @property
-    def extra_state_attributes(self):
+    def extra_state_attributes(self) -> Mapping[str, Any] | None:
         """Return the last tamper time as an extra attribute."""
         return {
             "last_tamper_time": getattr(self._device, "last_tamper_time", None),

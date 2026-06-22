@@ -14,7 +14,7 @@ from homeassistant.components.cover import (
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import Platform
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
 from .const import DATA_SESSION, DOMAIN, LOGGER
 from .entity import SHCEntity, async_migrate_to_new_unique_id, device_excluded
@@ -25,7 +25,7 @@ PARALLEL_UPDATES = 1
 async def async_setup_entry(
     hass: HomeAssistant,
     config_entry: ConfigEntry,
-    async_add_entities: AddEntitiesCallback,
+    async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up the SHC cover platform."""
     entities = []
@@ -242,7 +242,7 @@ class ShutterControlCover(SHCEntity, CoverEntity):
         # for BBL devices, we can rely on the level attribute to determine the current position, even when moving
         return round(self._device.level * 100.0)
 
-    async def async_stop_cover(self, **kwargs):
+    async def async_stop_cover(self, **kwargs: Any) -> None:
         """Stop the cover."""
         self._micromodule_keypad_switch_off()
         self._attr_is_opening = False
@@ -260,7 +260,7 @@ class ShutterControlCover(SHCEntity, CoverEntity):
             and self._device.level == 0.0
         )
 
-    async def async_open_cover(self, **kwargs):
+    async def async_open_cover(self, **kwargs: Any) -> None:
         """Open the cover."""
         self._micromodule_keypad_switch_off()
         self._attr_is_opening = True
@@ -269,7 +269,7 @@ class ShutterControlCover(SHCEntity, CoverEntity):
         self._skip_update = True
         self._app_command = True
 
-    async def async_close_cover(self, **kwargs):
+    async def async_close_cover(self, **kwargs: Any) -> None:
         """Close cover."""
         self._micromodule_keypad_switch_off()
         self._attr_is_closing = True
@@ -278,7 +278,7 @@ class ShutterControlCover(SHCEntity, CoverEntity):
         self._skip_update = True
         self._app_command = True
 
-    async def async_set_cover_position(self, **kwargs):
+    async def async_set_cover_position(self, **kwargs: Any) -> None:
         """Move the cover to a specific position."""
         if self._device.device_model == "MICROMODULE_SHUTTER":
             self._micromodule_keypad_switch_off()
@@ -290,7 +290,7 @@ class ShutterControlCover(SHCEntity, CoverEntity):
         self._app_command = True
 
     @property
-    def extra_state_attributes(self):
+    def extra_state_attributes(self) -> dict[str, Any] | None:
         """Return the state attributes."""
         return {
             "operation_state": self._device.operation_state,
@@ -312,7 +312,7 @@ class BlindsControlCover(ShutterControlCover, CoverEntity):
         | CoverEntityFeature.STOP_TILT
     )
 
-    async def async_open_cover(self, **kwargs):
+    async def async_open_cover(self, **kwargs: Any) -> None:
         """Open the cover (lift) via ShutterControl.level."""
         self._attr_is_opening = True
         self._attr_is_closing = False
@@ -321,7 +321,7 @@ class BlindsControlCover(ShutterControlCover, CoverEntity):
         self._skip_update = True
         self._app_command = True
 
-    async def async_close_cover(self, **kwargs):
+    async def async_close_cover(self, **kwargs: Any) -> None:
         """Close cover (lift) via ShutterControl.level."""
         self._attr_is_closing = True
         self._attr_is_opening = False
@@ -330,7 +330,7 @@ class BlindsControlCover(ShutterControlCover, CoverEntity):
         self._skip_update = True
         self._app_command = True
 
-    async def async_set_cover_position(self, **kwargs):
+    async def async_set_cover_position(self, **kwargs: Any) -> None:
         """Move the cover (lift) to a specific position via ShutterControl.level."""
         position = kwargs[ATTR_POSITION]
         await self._device.async_set_level(position / 100.0)
@@ -376,15 +376,15 @@ class BlindsControlCover(ShutterControlCover, CoverEntity):
         """Return the current cover tilt position."""
         return round((1.0 - self._device.current_angle) * 100.0)
 
-    async def async_open_cover_tilt(self, **kwargs):
+    async def async_open_cover_tilt(self, **kwargs: Any) -> None:
         """Open the cover tilt."""
         await self._device.async_set_target_angle(1.0 - 1.0)
 
-    async def async_close_cover_tilt(self, **kwargs):
+    async def async_close_cover_tilt(self, **kwargs: Any) -> None:
         """Close cover tilt."""
         await self._device.async_set_target_angle(1.0 - 0.0)
 
-    async def async_set_cover_tilt_position(self, **kwargs):
+    async def async_set_cover_tilt_position(self, **kwargs: Any) -> None:
         """Move the cover tilt to a specific position."""
         tilt_position = kwargs[ATTR_TILT_POSITION]
         await self._device.async_set_target_angle(1.0 - (tilt_position / 100.0))

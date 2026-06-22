@@ -15,7 +15,8 @@ from homeassistant.const import (
     UnitOfTime,
 )
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.exceptions import HomeAssistantError
+from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
 from .const import DATA_SESSION, DOMAIN
 from .entity import SHCEntity, device_excluded
@@ -28,7 +29,7 @@ PARALLEL_UPDATES = 1
 async def async_setup_entry(
     hass: HomeAssistant,
     config_entry: ConfigEntry,
-    async_add_entities: AddEntitiesCallback,
+    async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up the SHC number platform."""
     entities: list[NumberEntity] = []
@@ -183,6 +184,9 @@ class SHCNumber(SHCEntity, NumberEntity):
             await self._device.async_set_offset(clamped)
         except (TimeoutError, AttributeError, KeyError, aiohttp.ClientError) as err:
             LOGGER.warning("Unable to set offset for %s: %s", self._device.name, err)
+            raise HomeAssistantError(
+                f"Unable to set offset for {self._device.name}: {err}"
+            ) from err
 
     @property
     def native_value(self) -> float:
@@ -246,6 +250,9 @@ class ImpulseLengthNumber(SHCEntity, NumberEntity):
             LOGGER.warning(
                 "Unable to set impulse length for %s: %s", self._device.name, err
             )
+            raise HomeAssistantError(
+                f"Unable to set impulse length for {self._device.name}: {err}"
+            ) from err
 
 
 class HeatingCircuitSetpointNumber(SHCEntity, NumberEntity):
@@ -321,6 +328,9 @@ class HeatingCircuitSetpointNumber(SHCEntity, NumberEntity):
                 self._device.name,
                 err,
             )
+            raise HomeAssistantError(
+                f"Unable to write {self._setter_name} for {self._device.name}: {err}"
+            ) from err
 
 
 class PowerThresholdNumber(SHCEntity, NumberEntity):
@@ -360,6 +370,9 @@ class PowerThresholdNumber(SHCEntity, NumberEntity):
             LOGGER.warning(
                 "Unable to set power threshold for %s: %s", self._device.name, err
             )
+            raise HomeAssistantError(
+                f"Unable to set power threshold for {self._device.name}: {err}"
+            ) from err
 
 
 class EnterDurationNumber(SHCEntity, NumberEntity):
@@ -403,6 +416,9 @@ class EnterDurationNumber(SHCEntity, NumberEntity):
             LOGGER.warning(
                 "Unable to set enter duration for %s: %s", self._device.name, err
             )
+            raise HomeAssistantError(
+                f"Unable to set enter duration for {self._device.name}: {err}"
+            ) from err
 
 
 class LedBrightnessNumber(SHCEntity, NumberEntity):
@@ -464,6 +480,9 @@ class LedBrightnessNumber(SHCEntity, NumberEntity):
             LOGGER.warning(
                 "Unable to set LED brightness for %s: %s", self._device.name, err
             )
+            raise HomeAssistantError(
+                f"Unable to set LED brightness for {self._device.name}: {err}"
+            ) from err
 
 
 class DisplayBrightnessNumber(SHCEntity, NumberEntity):
@@ -521,6 +540,9 @@ class DisplayBrightnessNumber(SHCEntity, NumberEntity):
             LOGGER.warning(
                 "Unable to set display brightness for %s: %s", self._device.name, err
             )
+            raise HomeAssistantError(
+                f"Unable to set display brightness for {self._device.name}: {err}"
+            ) from err
 
 
 class DisplayOnTimeNumber(SHCEntity, NumberEntity):
@@ -585,3 +607,6 @@ class DisplayOnTimeNumber(SHCEntity, NumberEntity):
             LOGGER.warning(
                 "Unable to set display on-time for %s: %s", self._device.name, err
             )
+            raise HomeAssistantError(
+                f"Unable to set display on-time for {self._device.name}: {err}"
+            ) from err

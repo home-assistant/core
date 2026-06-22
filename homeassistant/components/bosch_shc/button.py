@@ -7,7 +7,8 @@ from homeassistant.components.button import ButtonEntity
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.device_registry import DeviceEntry
-from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.entity import DeviceInfo
+from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
 from .const import DATA_SESSION, DATA_SHC, DOMAIN, LOGGER, OPT_SCENARIOS_AS_BUTTONS
 from .entity import SHCEntity, device_excluded
@@ -18,7 +19,7 @@ PARALLEL_UPDATES = 1
 async def async_setup_entry(
     hass: HomeAssistant,
     config_entry: ConfigEntry,
-    async_add_entities: AddEntitiesCallback,
+    async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up the SHC binary sensor platform."""
     entities: list[ButtonEntity] = []
@@ -194,16 +195,16 @@ class SHCScenarioButton(ButtonEntity):
         self._attr_name = scenario.name
 
     @property
-    def device_info(self):
+    def device_info(self) -> DeviceInfo | None:
         """Return the device info (links this button to the SHC controller device)."""
         if self._shc_device is None:
             return None
-        return {
-            "identifiers": self._shc_device.identifiers,
-            "name": self._shc_device.name,
-            "manufacturer": self._shc_device.manufacturer,
-            "model": self._shc_device.model,
-        }
+        return DeviceInfo(
+            identifiers=self._shc_device.identifiers,
+            name=self._shc_device.name,
+            manufacturer=self._shc_device.manufacturer,
+            model=self._shc_device.model,
+        )
 
     def press(self) -> None:
         """Trigger the scenario (runs in executor — scenario.trigger() is sync)."""

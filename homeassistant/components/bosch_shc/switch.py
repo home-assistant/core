@@ -3,6 +3,7 @@
 import contextlib
 from dataclasses import dataclass
 import logging
+from typing import Any
 
 import aiohttp
 from boschshcpy import (
@@ -31,7 +32,8 @@ from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import EntityCategory, Platform
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.device_registry import DeviceEntry
-from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.entity import DeviceInfo
+from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from homeassistant.helpers.typing import StateType
 from homeassistant.util import slugify
 
@@ -327,7 +329,7 @@ SWITCH_TYPES: dict[str, SHCSwitchEntityDescription] = {
 async def async_setup_entry(  # noqa: C901  # inherent complexity of device-type dispatch
     hass: HomeAssistant,
     config_entry: ConfigEntry,
-    async_add_entities: AddEntitiesCallback,
+    async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up the SHC switch platform."""
     entities: list[SwitchEntity] = []
@@ -906,7 +908,7 @@ class SHCSwitch(SHCEntity, SwitchEntity):
         except AttributeError:
             return None
 
-    async def async_turn_on(self, **kwargs) -> None:
+    async def async_turn_on(self, **kwargs: Any) -> None:
         """Turn the switch on.
 
         Guard against AttributeError: some devices (e.g. MicromoduleRelay with
@@ -931,7 +933,7 @@ class SHCSwitch(SHCEntity, SwitchEntity):
                 self.entity_id,
             )
 
-    async def async_turn_off(self, **kwargs) -> None:
+    async def async_turn_off(self, **kwargs: Any) -> None:
         """Turn the switch off.
 
         Same guard as async_turn_on — see that docstring.
@@ -1007,7 +1009,7 @@ class SHCUserDefinedStateSwitch(SwitchEntity):
         )
         self._shc: DeviceEntry = hass.data[DOMAIN][entry_id][DATA_SHC]
 
-    async def async_added_to_hass(self):
+    async def async_added_to_hass(self) -> None:
         """Subscribe to SHC events."""
         await super().async_added_to_hass()
 
@@ -1033,7 +1035,7 @@ class SHCUserDefinedStateSwitch(SwitchEntity):
             self._device.id, update_entity_information
         )
 
-    async def async_will_remove_from_hass(self):
+    async def async_will_remove_from_hass(self) -> None:
         """Unsubscribe from SHC events."""
         await super().async_will_remove_from_hass()
         self._session.unsubscribe_userdefinedstate_callbacks(self._device.id)
@@ -1046,14 +1048,14 @@ class SHCUserDefinedStateSwitch(SwitchEntity):
             == self.entity_description.on_value
         )
 
-    async def async_turn_on(self, **kwargs) -> None:
+    async def async_turn_on(self, **kwargs: Any) -> None:
         """Turn the switch on."""
         await getattr(
             self._device,
             f"async_set_{self.entity_description.on_key}",
         )(True)
 
-    async def async_turn_off(self, **kwargs) -> None:
+    async def async_turn_off(self, **kwargs: Any) -> None:
         """Turn the switch off."""
         await getattr(
             self._device,
@@ -1087,11 +1089,11 @@ class SHCUserDefinedStateSwitch(SwitchEntity):
         return self._shc.id
 
     @property
-    def device_info(self):
+    def device_info(self) -> DeviceInfo | None:
         """Return the device info."""
-        return {
-            "identifiers": self._shc.identifiers,
-            "name": self._shc.name,
-            "manufacturer": self._shc.manufacturer,
-            "model": self._shc.model,
-        }
+        return DeviceInfo(
+            identifiers=self._shc.identifiers,
+            name=self._shc.name,
+            manufacturer=self._shc.manufacturer,
+            model=self._shc.model,
+        )

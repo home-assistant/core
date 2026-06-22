@@ -1,5 +1,7 @@
 """Platform for light integration."""
 
+from typing import Any
+
 from boschshcpy import SHCSession
 
 from homeassistant.components.light import (
@@ -9,7 +11,10 @@ from homeassistant.components.light import (
     ColorMode,
     LightEntity,
 )
+from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import Platform
+from homeassistant.core import HomeAssistant
+from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from homeassistant.util import color as color_util
 
 from .const import DATA_SESSION, DOMAIN
@@ -18,7 +23,11 @@ from .entity import SHCEntity, async_migrate_to_new_unique_id, device_excluded
 PARALLEL_UPDATES = 1
 
 
-async def async_setup_entry(hass, config_entry, async_add_entities):
+async def async_setup_entry(
+    hass: HomeAssistant,
+    config_entry: ConfigEntry,
+    async_add_entities: AddConfigEntryEntitiesCallback,
+) -> None:
     """Set up the light platform."""
     entities = []
     session: SHCSession = hass.data[DOMAIN][config_entry.entry_id][DATA_SESSION]
@@ -95,7 +104,7 @@ class LightSwitch(SHCEntity, LightEntity):
             self._attr_color_mode = ColorMode.ONOFF
 
     @property
-    def is_on(self):
+    def is_on(self) -> bool | None:
         """Return light state."""
         return self._device.binarystate
 
@@ -108,20 +117,20 @@ class LightSwitch(SHCEntity, LightEntity):
         return round(raw * 255 / 100)
 
     @property
-    def hs_color(self):
+    def hs_color(self) -> tuple[float, float] | None:
         """Return the rgb color of this light."""
         rgb_raw = self._device.rgb
         rgb = ((rgb_raw >> 16) & 0xFF, (rgb_raw >> 8) & 0xFF, rgb_raw & 0xFF)
         return color_util.color_RGB_to_hs(*rgb)
 
     @property
-    def color_temp_kelvin(self):
+    def color_temp_kelvin(self) -> int | None:
         """Return the color temp of this light."""
         if not self._device.color:
             return None
         return color_util.color_temperature_mired_to_kelvin(self._device.color)
 
-    async def async_turn_on(self, **kwargs):
+    async def async_turn_on(self, **kwargs: Any) -> None:
         """Turn the light on."""
         hs_color = kwargs.get(ATTR_HS_COLOR)
         color_temp_kelvin = kwargs.get(ATTR_COLOR_TEMP_KELVIN)
@@ -152,7 +161,7 @@ class LightSwitch(SHCEntity, LightEntity):
 
         self.schedule_update_ha_state()
 
-    async def async_turn_off(self, **kwargs):
+    async def async_turn_off(self, **kwargs: Any) -> None:
         """Turn the light off."""
         await self._device.async_set_binarystate(False)
 
@@ -182,7 +191,7 @@ class MotionDetectorLight(SHCEntity, LightEntity):
             return 0
         return round(level * 255 / 100)
 
-    async def async_turn_on(self, **kwargs) -> None:
+    async def async_turn_on(self, **kwargs: Any) -> None:
         """Turn the light on, optionally setting brightness."""
         brightness = kwargs.get(ATTR_BRIGHTNESS)
         if brightness is not None:
@@ -192,6 +201,6 @@ class MotionDetectorLight(SHCEntity, LightEntity):
         if not self.is_on:
             await self._device.async_set_binaryswitch(True)
 
-    async def async_turn_off(self, **kwargs) -> None:
+    async def async_turn_off(self, **kwargs: Any) -> None:
         """Turn the light off."""
         await self._device.async_set_binaryswitch(False)

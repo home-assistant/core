@@ -103,7 +103,7 @@ class SHCEntity(Entity):
     def _update_attr(self) -> None:
         pass
 
-    async def async_added_to_hass(self):
+    async def async_added_to_hass(self) -> None:
         """Subscribe to SHC events."""
         await super().async_added_to_hass()
 
@@ -127,7 +127,7 @@ class SHCEntity(Entity):
             service.subscribe_callback(self.entity_id, on_state_changed)
         self._device.subscribe_callback(self.entity_id, update_entity_information)
 
-    async def async_will_remove_from_hass(self):
+    async def async_will_remove_from_hass(self) -> None:
         """Unsubscribe from SHC events."""
         await super().async_will_remove_from_hass()
         for service in self._device.device_services:
@@ -156,11 +156,11 @@ class SHCEntity(Entity):
         )
 
     @property
-    def available(self):
+    def available(self) -> bool:
         """Return false if status is unavailable."""
         return self._device.status == "AVAILABLE"
 
     @property
-    def should_poll(self):
+    def should_poll(self) -> bool:
         """Report polling mode. SHC Entity is communicating via long polling."""
         return False

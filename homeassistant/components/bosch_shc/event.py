@@ -18,7 +18,8 @@ from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import ATTR_DEVICE_ID, ATTR_ID, ATTR_NAME
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.device_registry import DeviceEntry
-from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.entity import DeviceInfo
+from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from homeassistant.util import slugify
 
 from .const import (
@@ -38,7 +39,7 @@ PARALLEL_UPDATES = 1
 async def async_setup_entry(
     hass: HomeAssistant,
     entry: ConfigEntry,
-    async_add_entities: AddEntitiesCallback,
+    async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up the BoschSHC event entities."""
     session: SHCSession = hass.data[DOMAIN][entry.entry_id][DATA_SESSION]
@@ -297,14 +298,14 @@ class SHCScenarioEvent(EventEntity):
         return self._shc.id
 
     @property
-    def device_info(self):
+    def device_info(self) -> DeviceInfo | None:
         """Return the device info."""
-        return {
-            "identifiers": self._shc.identifiers,
-            "name": self._shc.name,
-            "manufacturer": self._shc.manufacturer,
-            "model": self._shc.model,
-        }
+        return DeviceInfo(
+            identifiers=self._shc.identifiers,
+            name=self._shc.name,
+            manufacturer=self._shc.manufacturer,
+            model=self._shc.model,
+        )
 
     async def async_added_to_hass(self) -> None:
         """Call when entity is added to hass."""
@@ -381,7 +382,7 @@ class SmokeDetectionSystemEvent(SHCEntity, EventEntity):
         self,
         device: SHCSmokeDetectionSystem,
         entry_id: str,
-    ):
+    ) -> None:
         """Initialize the smoke detection system device."""
         super().__init__(device=device, entry_id=entry_id)
         self._attr_unique_id = f"{device.root_device_id}_{device.id}"
@@ -423,7 +424,7 @@ class SmokeDetectorEvent(SHCEntity, EventEntity):
         self,
         device: SHCSmokeDetector,
         entry_id: str,
-    ):
+    ) -> None:
         """Initialize the smoke detection system device."""
         super().__init__(device=device, entry_id=entry_id)
         self._attr_unique_id = f"{device.root_device_id}_{device.id}"

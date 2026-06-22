@@ -1,5 +1,8 @@
 """Platform for sensor integration."""
 
+from collections.abc import Mapping
+from typing import Any
+
 from boschshcpy import SHCEmma, SHCSession
 from boschshcpy.device import SHCDevice
 
@@ -20,7 +23,7 @@ from homeassistant.const import (
     UnitOfTemperature,
 )
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
 from .const import DATA_SESSION, DOMAIN, LOGGER, OPT_DIAGNOSTIC_ENTITIES
 from .entity import SHCEntity, async_migrate_to_new_unique_id, device_excluded
@@ -31,7 +34,7 @@ PARALLEL_UPDATES = 1
 async def async_setup_entry(  # noqa: C901  # inherent complexity of device-type dispatch
     hass: HomeAssistant,
     config_entry: ConfigEntry,
-    async_add_entities: AddEntitiesCallback,
+    async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up the SHC sensor platform."""
     entities: list[SensorEntity] = []
@@ -525,7 +528,7 @@ class AirQualitySensor(SHCEntity, SensorEntity):
             return None
 
     @property
-    def extra_state_attributes(self):
+    def extra_state_attributes(self) -> Mapping[str, Any] | None:
         """Return the state attributes.
 
         comfort_zone is read from the AirQualityLevelService via a service-level
@@ -540,7 +543,7 @@ class AirQualitySensor(SHCEntity, SensorEntity):
                 comfort_zone = service.comfortZone
         except AttributeError, KeyError:
             pass
-        attrs = {
+        attrs: dict[str, Any] = {
             "rating_description": self._device.description,
         }
         if comfort_zone is not None:
@@ -667,7 +670,7 @@ class EmmaPowerSensor(SHCEntity, SensorEntity):
         self._attr_name = "Power"
         self._attr_unique_id = f"{device.root_device_id}_{device.id}_power"
 
-    async def async_added_to_hass(self):
+    async def async_added_to_hass(self) -> None:
         """Subscribe to SHC events."""
         await super().async_added_to_hass()
 
@@ -676,7 +679,7 @@ class EmmaPowerSensor(SHCEntity, SensorEntity):
 
         self._device.subscribe_callback(self.entity_id, update_entity_information)
 
-    async def async_will_remove_from_hass(self):
+    async def async_will_remove_from_hass(self) -> None:
         """Unsubscribe from SHC events."""
         await super().async_will_remove_from_hass()
         self._device.unsubscribe_callback(self.entity_id)
@@ -687,7 +690,7 @@ class EmmaPowerSensor(SHCEntity, SensorEntity):
         return self._device.value
 
     @property
-    def extra_state_attributes(self):
+    def extra_state_attributes(self) -> Mapping[str, Any] | None:
         """Return the state attributes."""
         return {
             "power_flow": self._device.localizedSubtitles,
@@ -786,7 +789,7 @@ class ValveTappetSensor(SHCEntity, SensorEntity):
         return self._device.position
 
     @property
-    def extra_state_attributes(self):
+    def extra_state_attributes(self) -> Mapping[str, Any] | None:
         """Return the state attributes."""
         try:
             valve_tappet_state = self._device.valvestate.name
