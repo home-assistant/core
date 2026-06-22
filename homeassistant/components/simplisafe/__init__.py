@@ -254,6 +254,7 @@ def _async_register_base_station(
         manufacturer="SimpliSafe",
         model=str(system.version),
         name=system.address,
+        serial_number=system.serial,
     )
 
     # Check for an old system ID format and remove it:
