@@ -1,4 +1,4 @@
-"""Control which entities are recorded."""
+"""Control recorder entity options."""
 
 import dataclasses
 from enum import StrEnum
@@ -24,8 +24,8 @@ def is_entity_recorded(hass: HomeAssistant, entity_id: str) -> bool:
 
 @callback
 def async_setup(hass: HomeAssistant) -> None:
-    """Set up the recorded entities."""
-    websocket_api.async_register_command(hass, ws_get_recorded_entity)
+    """Set up the recorder entity options."""
+    websocket_api.async_register_command(hass, ws_get_entity_options)
 
 
 class EntityRecordingDisabler(StrEnum):
@@ -35,8 +35,8 @@ class EntityRecordingDisabler(StrEnum):
 
 
 @dataclasses.dataclass(frozen=True)
-class RecordedEntity:
-    """A recorded entity without a unique_id."""
+class RecorderEntityOptions:
+    """Recorder options for an entity."""
 
     recording_disabled_by: EntityRecordingDisabler | None = None
 
@@ -47,15 +47,15 @@ class RecordedEntity:
         }
 
 
-@callback
 @websocket_api.require_admin
 @websocket_api.websocket_command(
     {
-        vol.Required("type"): "recorder/recorded_entities/get",
+        vol.Required("type"): "recorder/entity_options/get",
         vol.Required("entity_id"): cv.strict_entity_id,
     }
 )
-def ws_get_recorded_entity(
+@callback
+def ws_get_entity_options(
     hass: HomeAssistant, connection: websocket_api.ActiveConnection, msg: dict[str, Any]
 ) -> None:
     """Get recorder settings for a single entity."""
@@ -64,5 +64,5 @@ def ws_get_recorded_entity(
         None if is_entity_recorded(hass, entity_id) else EntityRecordingDisabler.USER
     )
 
-    options = RecordedEntity(recording_disabled_by=recording_disabled)
+    options = RecorderEntityOptions(recording_disabled_by=recording_disabled)
     connection.send_result(msg["id"], options.to_json())
