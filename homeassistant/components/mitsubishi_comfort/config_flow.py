@@ -211,5 +211,9 @@ class MitsubishiComfortOptionsFlow(OptionsFlow):
                 schema, user_input if user_input is not None else stored_addresses
             ),
             errors=errors,
-            description_placeholders={"devices": ", ".join(macs.values())},
+            # The fields are keyed (and labelled) by raw MAC, so pair each name
+            # with its MAC here or the user cannot tell which field is which.
+            description_placeholders={
+                "devices": ", ".join(f"{name} ({mac})" for mac, name in macs.items())
+            },
         )

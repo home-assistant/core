@@ -341,6 +341,9 @@ class TestOptionsFlow:
         )
         assert result["type"] is FlowResultType.FORM
         assert result["step_id"] == "init"
+        # The fields are labelled by raw MAC, so the description must pair each
+        # MAC with its device name for the user to tell the fields apart.
+        assert dr.format_mac(MOCK_MAC) in result["description_placeholders"]["devices"]
 
         result = await hass.config_entries.options.async_configure(
             result["flow_id"], {dr.format_mac(MOCK_MAC): "192.168.1.50"}
