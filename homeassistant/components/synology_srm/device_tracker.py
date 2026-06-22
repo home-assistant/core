@@ -1,7 +1,5 @@
 """Device tracker for Synology SRM routers."""
 
-from __future__ import annotations
-
 from collections.abc import Callable
 from datetime import datetime, timedelta
 import logging
@@ -269,7 +267,7 @@ class SynologySRMScannerEntity(ScannerEntity):
     @property
     def hostname(self) -> str | None:
         """Return hostname of the device."""
-        return self._device["hostname"]
+        return self._device.get("hostname")
 
     @property
     def ip_address(self) -> str | None:
