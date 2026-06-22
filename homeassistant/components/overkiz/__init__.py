@@ -10,7 +10,7 @@ from pyoverkiz.auth.credentials import (
     RexelTokenCredentials,
     UsernamePasswordCredentials,
 )
-from pyoverkiz.client import OverkizClient
+from pyoverkiz.client import OverkizClient, OverkizClientSettings
 from pyoverkiz.const import REXEL_OAUTH_CLIENT_ID
 from pyoverkiz.enums import APIType, OverkizState, Server, UIClass, UIWidget
 from pyoverkiz.exceptions import (
@@ -317,6 +317,7 @@ def create_local_client(
         credentials=LocalTokenCredentials(token),
         session=session,
         verify_ssl=verify_ssl,
+        settings=OverkizClientSettings(default_rts_command_duration=0),
     )
 
 
@@ -332,6 +333,7 @@ def create_cloud_client(
         server=server,
         credentials=UsernamePasswordCredentials(username, password),
         session=session,
+        settings=OverkizClientSettings(default_rts_command_duration=0),
     )
 
 
