@@ -3,7 +3,7 @@
 from collections.abc import Mapping
 from datetime import datetime
 import logging
-from typing import Any
+from typing import Any, override
 
 from nice_go import AuthFailedError, NiceGOApi
 import voluptuous as vol
@@ -29,6 +29,7 @@ class NiceGOConfigFlow(ConfigFlow, domain=DOMAIN):
 
     VERSION = 1
 
+    @override
     async def async_step_user(
         self, user_input: dict[str, Any] | None = None
     ) -> ConfigFlowResult:

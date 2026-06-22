@@ -1,6 +1,6 @@
 """Support for numbers which integrates with other components."""
 
-from typing import TYPE_CHECKING, Any
+from typing import TYPE_CHECKING, Any, override
 
 import voluptuous as vol
 
@@ -152,6 +152,7 @@ class AbstractTemplateNumber(AbstractTemplateEntity, NumberEntity):
 
         self.add_script(CONF_SET_VALUE, config[CONF_SET_VALUE], name, DOMAIN)
 
+    @override
     async def async_set_native_value(self, value: float) -> None:
         """Set value of the number."""
         if self._attr_assumed_state:

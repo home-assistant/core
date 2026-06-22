@@ -1,7 +1,7 @@
 """Roon event entities."""
 
 import logging
-from typing import cast
+from typing import cast, override
 
 from homeassistant.components.event import EventDeviceClass, EventEntity
 from homeassistant.core import HomeAssistant, callback
@@ -92,6 +92,7 @@ class RoonEventEntity(EventEntity):
         self._trigger_event(event)
         self.schedule_update_ha_state()
 
+    @override
     async def async_added_to_hass(self) -> None:
         """Register volume hooks with the roon api."""
 
@@ -107,6 +108,7 @@ class RoonEventEntity(EventEntity):
             False,
         )
 
+    @override
     async def async_will_remove_from_hass(self) -> None:
         """Unregister volume hooks from the roon api."""
         self._server.roonapi.unregister_volume_control(self.unique_id)

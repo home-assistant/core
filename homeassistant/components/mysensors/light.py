@@ -1,6 +1,6 @@
 """Support for MySensors lights."""
 
-from typing import Any, cast
+from typing import Any, cast, override
 
 from homeassistant.components.light import (
     ATTR_BRIGHTNESS,
@@ -61,6 +61,7 @@ class MySensorsLight(MySensorsChildEntity, LightEntity):
         self._state: bool | None = None
 
     @property
+    @override
     def is_on(self) -> bool:
         """Return true if device is on."""
         return bool(self._state)
@@ -91,6 +92,7 @@ class MySensorsLight(MySensorsChildEntity, LightEntity):
             self.node_id, self.child_id, set_req.V_DIMMER, percent, ack=1
         )
 
+    @override
     async def async_turn_off(self, **kwargs: Any) -> None:
         """Turn the device off."""
         value_type = self.gateway.const.SetReq.V_LIGHT
@@ -118,12 +120,14 @@ class MySensorsLightDimmer(MySensorsLight):
     _attr_supported_color_modes = {ColorMode.BRIGHTNESS}
     _attr_color_mode = ColorMode.BRIGHTNESS
 
+    @override
     async def async_turn_on(self, **kwargs: Any) -> None:
         """Turn the device on."""
         self._turn_on_light()
         self._turn_on_dimmer(**kwargs)
 
     @callback
+    @override
     def _async_update(self) -> None:
         """Update the controller with the latest value from a sensor."""
         super()._async_update()
@@ -137,6 +141,7 @@ class MySensorsLightRGB(MySensorsLight):
     _attr_supported_color_modes = {ColorMode.RGB}
     _attr_color_mode = ColorMode.RGB
 
+    @override
     async def async_turn_on(self, **kwargs: Any) -> None:
         """Turn the device on."""
         self._turn_on_light()
@@ -156,6 +161,7 @@ class MySensorsLightRGB(MySensorsLight):
         )
 
     @callback
+    @override
     def _async_update(self) -> None:
         """Update the controller with the latest value from a sensor."""
         super()._async_update()
@@ -178,6 +184,7 @@ class MySensorsLightRGBW(MySensorsLightRGB):
     _attr_supported_color_modes = {ColorMode.RGBW}
     _attr_color_mode = ColorMode.RGBW
 
+    @override
     async def async_turn_on(self, **kwargs: Any) -> None:
         """Turn the device on."""
         self._turn_on_light()
@@ -197,6 +204,7 @@ class MySensorsLightRGBW(MySensorsLightRGB):
         )
 
     @callback
+    @override
     def _async_update_rgb_or_w(self) -> None:
         """Update the controller with values from RGBW child."""
         value = self._values[self.value_type]

@@ -2,7 +2,7 @@
 
 from datetime import datetime
 from time import localtime, mktime
-from typing import cast
+from typing import cast, override
 
 from homeassistant.components.sensor import SensorEntity, SensorEntityDescription
 from homeassistant.core import HomeAssistant
@@ -50,6 +50,7 @@ class SteamSensor(SteamEntity, SensorEntity):
         self._attr_unique_id = f"sensor.steam_{account}"
 
     @property
+    @override
     def native_value(self) -> StateType:
         """Return the state of the sensor."""
         if self.entity_description.key in self.coordinator.data:
@@ -58,6 +59,7 @@ class SteamSensor(SteamEntity, SensorEntity):
         return None
 
     @property
+    @override
     def extra_state_attributes(self) -> dict[str, str | int | datetime]:
         """Return the state attributes of the sensor."""
         if self.entity_description.key not in self.coordinator.data:

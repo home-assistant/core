@@ -2,6 +2,7 @@
 
 from dataclasses import dataclass
 from datetime import time
+from typing import override
 
 from pysmartthings import Attribute, Capability, Command, SmartThings
 
@@ -74,6 +75,7 @@ class SmartThingsDnDTime(SmartThingsEntity, TimeEntity):
             f"_{entity_description.attribute}"
         )
 
+    @override
     async def async_set_value(self, value: time) -> None:
         """Set the time value."""
         payload = {
@@ -99,6 +101,7 @@ class SmartThingsDnDTime(SmartThingsEntity, TimeEntity):
         )
 
     @property
+    @override
     def native_value(self) -> time:
         """Return the time value."""
         state = self.get_attribute_value(
