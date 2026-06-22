@@ -3,7 +3,6 @@
 This module defines and sets up the select entities for the MyNeomitis integration.
 """
 
-from collections.abc import Mapping
 from dataclasses import dataclass
 import logging
 from typing import Any
@@ -41,18 +40,8 @@ def _resolve_select_maps(
     fallback_reverse: dict[int, str],
     fallback_order: list[str] | None = None,
 ) -> tuple[list[str], dict[str, int], dict[int, str]]:
-    """Resolve select maps for both old and new pyaxencoapi structures."""
     preset_model = PRESET_MODE_MODELS.get(model_key)
     if preset_model is not None:
-        if isinstance(preset_model, Mapping) or hasattr(preset_model, "items"):
-            preset_map = dict(preset_model)
-            reverse_map = (
-                preset_model.reverse
-                if hasattr(preset_model, "reverse")
-                else {code: key for key, code in preset_map.items()}
-            )
-            return list(preset_model), preset_map, reverse_map
-
         options = list(preset_model)
         preset_map = {
             key: PRESET_MODE_MAP[key] for key in options if key in PRESET_MODE_MAP

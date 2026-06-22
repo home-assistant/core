@@ -1,6 +1,5 @@
 """Climate entities for MyNeomitis integration."""
 
-from collections.abc import Mapping
 import logging
 from typing import Any
 
@@ -32,24 +31,16 @@ SETPOINT_PRESET = Preset.SETPOINT.key
 def _resolve_preset_maps(
     model: str,
 ) -> tuple[list[str], dict[str, int], dict[int, str]]:
-    """Resolve preset maps for both old and new pyaxencoapi structures."""
     preset_model = PRESET_MODE_MODELS[model]
+    if preset_model is not None:
+        preset_modes = list(preset_model)
+        preset_map = {
+            key: PRESET_MODE_MAP[key] for key in preset_modes if key in PRESET_MODE_MAP
+        }
+        reverse_map = {code: key for key, code in preset_map.items()}
+        return preset_modes, preset_map, reverse_map
 
-    if isinstance(preset_model, Mapping) or hasattr(preset_model, "items"):
-        preset_map = dict(preset_model)
-        reverse_map = (
-            preset_model.reverse
-            if hasattr(preset_model, "reverse")
-            else {code: key for key, code in preset_map.items()}
-        )
-        return list(preset_model), preset_map, reverse_map
-
-    preset_modes = list(preset_model)
-    preset_map = {
-        key: PRESET_MODE_MAP[key] for key in preset_modes if key in PRESET_MODE_MAP
-    }
-    reverse_map = {code: key for key, code in preset_map.items()}
-    return preset_modes, preset_map, reverse_map
+    return [], {}, {}
 
 
 async def async_setup_entry(
