@@ -215,7 +215,7 @@
       "name": "Vacuum cleaner paused cleaning"
     },
     "returned_to_dock": {
-      "description": "Triggers when one or more vacuum cleaners return to dock.",
+      "description": "Triggers when one or more vacuum cleaners have returned to dock.",
       "fields": {
         "behavior": {
           "name": "[%key:component::vacuum::common::trigger_behavior_name%]"
