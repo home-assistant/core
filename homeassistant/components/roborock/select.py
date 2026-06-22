@@ -4,7 +4,7 @@ import asyncio
 from collections.abc import Awaitable, Callable
 from dataclasses import dataclass
 import logging
-from typing import Any
+from typing import Any, override
 
 from roborock import B01Props, CleanTypeMapping
 from roborock.data import (
@@ -305,6 +305,7 @@ class RoborockB01SelectEntity(RoborockCoordinatedEntityB01Q7, SelectEntity):
         )
         self._attr_options = options
 
+    @override
     async def async_select_option(self, option: str) -> None:
         """Set the option."""
         try:
@@ -320,6 +321,7 @@ class RoborockB01SelectEntity(RoborockCoordinatedEntityB01Q7, SelectEntity):
         await self.coordinator.async_refresh()
 
     @property
+    @override
     def current_option(self) -> str | None:
         """Return the current option."""
         return self.entity_description.value_fn(self.coordinator.data)
@@ -345,6 +347,7 @@ class RoborockSelectEntity(RoborockCoordinatedEntityV1, SelectEntity):
         )
         self._attr_options = options
 
+    @override
     async def async_select_option(self, option: str) -> None:
         """Set the option."""
         await self.send(
@@ -355,6 +358,7 @@ class RoborockSelectEntity(RoborockCoordinatedEntityV1, SelectEntity):
         )
 
     @property
+    @override
     def current_option(self) -> str | None:
         """Get the current status of the select entity from device props."""
         return self.entity_description.value_fn(self.coordinator.properties_api)
@@ -386,6 +390,7 @@ class RoborockCurrentMapSelectEntity(RoborockCoordinatedEntityV1, SelectEntity):
             for map_id, map_ in (self._home_trait.home_map_info or {}).items()
         }
 
+    @override
     async def async_select_option(self, option: str) -> None:
         """Set the option."""
         for map_id, map_name in self._available_map_names.items():
@@ -413,11 +418,13 @@ class RoborockCurrentMapSelectEntity(RoborockCoordinatedEntityV1, SelectEntity):
                 break
 
     @property
+    @override
     def options(self) -> list[str]:
         """Gets all of the names of rooms that we are currently aware of."""
         return list(self._available_map_names.values())
 
     @property
+    @override
     def current_option(self) -> str | None:
         """Get the current status of the select entity from device_status."""
         if current_map_info := self._home_trait.current_map_data:
@@ -443,6 +450,7 @@ class RoborockSelectEntityA01(RoborockCoordinatedEntityA01, SelectEntity):
         )
         self._attr_options = list(entity_description.enum_class.keys())
 
+    @override
     async def async_select_option(self, option: str) -> None:
         """Set the option."""
         # Get the protocol value for the selected option
@@ -470,6 +478,7 @@ class RoborockSelectEntityA01(RoborockCoordinatedEntityA01, SelectEntity):
         await self.coordinator.async_request_refresh()
 
     @property
+    @override
     def current_option(self) -> str | None:
         """Get the current status of the select entity from coordinator data."""
         if self.entity_description.data_protocol not in self.coordinator.data:
@@ -503,6 +512,7 @@ class RoborockQ10CleanModeSelectEntity(RoborockCoordinatedEntityB01Q10, SelectEn
             coordinator,
         )
 
+    @override
     async def async_added_to_hass(self) -> None:
         """Register trait listener for push-based status updates."""
         await super().async_added_to_hass()
@@ -511,11 +521,13 @@ class RoborockQ10CleanModeSelectEntity(RoborockCoordinatedEntityB01Q10, SelectEn
         )
 
     @property
+    @override
     def options(self) -> list[str]:
         """Return available cleaning modes."""
         return [mode.value for mode in YXCleanType if mode != YXCleanType.UNKNOWN]
 
     @property
+    @override
     def current_option(self) -> str | None:
         """Get the current cleaning mode."""
         clean_mode = self.coordinator.api.status.clean_mode
@@ -523,6 +535,7 @@ class RoborockQ10CleanModeSelectEntity(RoborockCoordinatedEntityB01Q10, SelectEn
             return None
         return clean_mode.value
 
+    @override
     async def async_select_option(self, option: str) -> None:
         """Set the cleaning mode."""
         try:

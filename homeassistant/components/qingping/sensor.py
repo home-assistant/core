@@ -1,5 +1,7 @@
 """Support for Qingping sensors."""
 
+from typing import override
+
 from qingping_ble import (
     SensorDeviceClass as QingpingSensorDeviceClass,
     SensorUpdate,
@@ -164,6 +166,7 @@ class QingpingBluetoothSensorEntity(
     """Representation of a Qingping sensor."""
 
     @property
+    @override
     def native_value(self) -> int | float | None:
         """Return the native value."""
         return self.processor.entity_data.get(self.entity_key)

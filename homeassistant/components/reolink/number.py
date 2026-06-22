@@ -2,7 +2,7 @@
 
 from collections.abc import Callable
 from dataclasses import dataclass
-from typing import Any
+from typing import Any, override
 
 from reolink_aio.api import Chime, Host
 
@@ -1005,11 +1005,13 @@ class ReolinkNumberEntity(ReolinkChannelCoordinatorEntity, NumberEntity):
         self._attr_mode = entity_description.mode
 
     @property
+    @override
     def native_value(self) -> float | None:
         """State of the number entity."""
         return self.entity_description.value(self._host.api, self._channel)
 
     @raise_translated_error
+    @override
     async def async_set_native_value(self, value: float) -> None:
         """Update the current value."""
         await self.entity_description.method(self._host.api, self._channel, value)
@@ -1046,6 +1048,7 @@ class ReolinkSmartAINumberEntity(ReolinkChannelCoordinatorEntity, NumberEntity):
         }
 
     @property
+    @override
     def native_value(self) -> float | None:
         """State of the number entity."""
         return self.entity_description.value(
@@ -1053,6 +1056,7 @@ class ReolinkSmartAINumberEntity(ReolinkChannelCoordinatorEntity, NumberEntity):
         )
 
     @raise_translated_error
+    @override
     async def async_set_native_value(self, value: float) -> None:
         """Update the current value."""
         await self.entity_description.method(
@@ -1078,11 +1082,13 @@ class ReolinkHostNumberEntity(ReolinkHostCoordinatorEntity, NumberEntity):
         self._attr_mode = entity_description.mode
 
     @property
+    @override
     def native_value(self) -> float | None:
         """State of the number entity."""
         return self.entity_description.value(self._host.api)
 
     @raise_translated_error
+    @override
     async def async_set_native_value(self, value: float) -> None:
         """Update the current value."""
         await self.entity_description.method(self._host.api, value)
@@ -1107,11 +1113,13 @@ class ReolinkChimeNumberEntity(ReolinkChimeCoordinatorEntity, NumberEntity):
         self._attr_mode = entity_description.mode
 
     @property
+    @override
     def native_value(self) -> float | None:
         """State of the number entity."""
         return self.entity_description.value(self._chime)
 
     @raise_translated_error
+    @override
     async def async_set_native_value(self, value: float) -> None:
         """Update the current value."""
         await self.entity_description.method(self._chime, value)
@@ -1136,11 +1144,13 @@ class ReolinkHostChimeNumberEntity(ReolinkHostChimeCoordinatorEntity, NumberEnti
         self._attr_mode = entity_description.mode
 
     @property
+    @override
     def native_value(self) -> float | None:
         """State of the number entity."""
         return self.entity_description.value(self._chime)
 
     @raise_translated_error
+    @override
     async def async_set_native_value(self, value: float) -> None:
         """Update the current value."""
         await self.entity_description.method(self._chime, value)

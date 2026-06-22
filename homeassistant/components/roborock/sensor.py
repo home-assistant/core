@@ -4,6 +4,7 @@ from collections.abc import Callable
 from dataclasses import dataclass
 import datetime
 import logging
+from typing import override
 
 from roborock.data import (
     B01Props,
@@ -601,6 +602,7 @@ class RoborockSensorEntity(RoborockCoordinatedEntityV1, SensorEntity):
         )
 
     @property
+    @override
     def native_value(self) -> StateType | datetime.datetime:
         """Return the value reported by the sensor."""
         if self.coordinator.data is None:
@@ -629,6 +631,7 @@ class RoborockCurrentRoom(RoborockCoordinatedEntityV1, SensorEntity):
         self._map_content_trait = coordinator.properties_api.map_content
 
     @property
+    @override
     def options(self) -> list[str]:
         """Return the currently valid rooms."""
         if self._home_trait.current_map_data is not None:
@@ -636,6 +639,7 @@ class RoborockCurrentRoom(RoborockCoordinatedEntityV1, SensorEntity):
         return []
 
     @property
+    @override
     def native_value(self) -> str | None:
         """Return the value reported by the sensor."""
         if (
@@ -664,6 +668,7 @@ class RoborockSensorEntityA01(RoborockCoordinatedEntityA01, SensorEntity):
         super().__init__(f"{description.key}_{coordinator.duid_slug}", coordinator)
 
     @property
+    @override
     def native_value(self) -> StateType:
         """Return the value reported by the sensor."""
         return self.coordinator.data[self.entity_description.data_protocol]
@@ -684,6 +689,7 @@ class RoborockSensorEntityB01Q7(RoborockCoordinatedEntityB01Q7, SensorEntity):
         super().__init__(f"{description.key}_{coordinator.duid_slug}", coordinator)
 
     @property
+    @override
     def native_value(self) -> StateType:
         """Return the value reported by the sensor."""
         return self.entity_description.value_fn(self.coordinator.data)
@@ -703,6 +709,7 @@ class RoborockSensorEntityB01Q10(RoborockCoordinatedEntityB01Q10, SensorEntity):
         self.entity_description = description
         super().__init__(f"{description.key}_{coordinator.duid_slug}", coordinator)
 
+    @override
     async def async_added_to_hass(self) -> None:
         """Register trait listener for push-based status updates."""
         await super().async_added_to_hass()
@@ -711,6 +718,7 @@ class RoborockSensorEntityB01Q10(RoborockCoordinatedEntityB01Q10, SensorEntity):
         )
 
     @property
+    @override
     def native_value(self) -> StateType:
         """Return the value reported by the sensor."""
         return self.entity_description.value_fn(self.coordinator.api.status)
