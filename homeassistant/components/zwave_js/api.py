@@ -1559,6 +1559,19 @@ async def websocket_replace_failed_node(
         )
 
     @callback
+    def forward_progress(event: dict) -> None:
+        connection.send_message(
+            websocket_api.event_message(
+                msg[ID],
+                {
+                    "event": event["event"],
+                    "stage": event["stage"],
+                    "progress": event["progress"],
+                },
+            )
+        )
+
+    @callback
     def node_found(event: dict) -> None:
         node = event["node"]
         node_details = {
@@ -1577,6 +1590,7 @@ async def websocket_replace_failed_node(
             node.on("interview started", forward_event),
             node.on("interview completed", forward_event),
             node.on("interview stage completed", forward_stage),
+            node.on("interview progress", forward_progress),
             node.on("interview failed", forward_event),
         ]
         unsubs.extend(interview_unsubs)
