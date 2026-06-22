@@ -3,7 +3,7 @@
 from collections.abc import Sequence
 from dataclasses import dataclass
 from functools import partial
-from typing import Any, Literal
+from typing import Any, Literal, override
 
 from uiprotect.data import (
     Camera,
@@ -502,6 +502,7 @@ class ProtectPrivacyModeSwitch(RestoreEntity, ProtectSwitch):
             self._attr_extra_state_attributes = {}
 
     @callback
+    @override
     def _async_update_device_from_protect(self, device: ProtectDeviceType) -> None:
         super()._async_update_device_from_protect(device)
         # do not add extra state attribute on initialize
@@ -509,6 +510,7 @@ class ProtectPrivacyModeSwitch(RestoreEntity, ProtectSwitch):
             self._update_previous_attr()
 
     @async_ufp_instance_command
+    @override
     async def async_turn_on(self, **kwargs: Any) -> None:
         """Turn the device on."""
         self._previous_mic_level = self.device.mic_volume
@@ -516,6 +518,7 @@ class ProtectPrivacyModeSwitch(RestoreEntity, ProtectSwitch):
         await self.device.set_privacy(True, 0, RecordingMode.NEVER)
 
     @async_ufp_instance_command
+    @override
     async def async_turn_off(self, **kwargs: Any) -> None:
         """Turn the device off."""
         extra_state = self.extra_state_attributes or {}
@@ -523,6 +526,7 @@ class ProtectPrivacyModeSwitch(RestoreEntity, ProtectSwitch):
         prev_record = extra_state.get(ATTR_PREV_RECORD, self._previous_record_mode)
         await self.device.set_privacy(False, prev_mic, prev_record)
 
+    @override
     async def async_added_to_hass(self) -> None:
         """Restore extra state attributes on startup."""
         await super().async_added_to_hass()
@@ -653,6 +657,7 @@ class ProtectRelayOutputSwitch(SwitchEntity):
         if (self._attr_available, self._attr_is_on) != prev_state:
             self.async_write_ha_state()
 
+    @override
     async def async_added_to_hass(self) -> None:
         """Subscribe to public relay WS updates dispatched by ProtectData."""
         await super().async_added_to_hass()
@@ -675,11 +680,13 @@ class ProtectRelayOutputSwitch(SwitchEntity):
         await relay.activate_output(self._output_id, state=state)
 
     @async_ufp_instance_command
+    @override
     async def async_turn_on(self, **kwargs: Any) -> None:
         """Turn the relay output on."""
         await self._activate_output("on")
 
     @async_ufp_instance_command
+    @override
     async def async_turn_off(self, **kwargs: Any) -> None:
         """Turn the relay output off."""
         await self._activate_output("off")

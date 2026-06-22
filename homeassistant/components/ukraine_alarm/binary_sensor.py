@@ -1,5 +1,7 @@
 """binary sensors for Ukraine Alarm integration."""
 
+from typing import override
+
 from homeassistant.components.binary_sensor import (
     BinarySensorDeviceClass,
     BinarySensorEntity,
@@ -108,6 +110,7 @@ class UkraineAlarmSensor(
         )
 
     @property
+    @override
     def is_on(self) -> bool | None:
         """Return true if the binary sensor is on."""
         return self.coordinator.data.get(self.entity_description.key, None)

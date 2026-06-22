@@ -1,6 +1,6 @@
 """Base entity for Withings."""
 
-from typing import Any
+from typing import Any, override
 
 from aiowithings import Device
 
@@ -54,6 +54,7 @@ class WithingsDeviceEntity(WithingsEntity[WithingsDeviceDataUpdateCoordinator]):
         )
 
     @property
+    @override
     def available(self) -> bool:
         """Return True if entity is available."""
         return super().available and self.device_id in self.coordinator.data

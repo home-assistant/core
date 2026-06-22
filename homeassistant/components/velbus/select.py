@@ -1,5 +1,7 @@
 """Support for Velbus select."""
 
+from typing import override
+
 from velbusaio.properties import SelectedProgram
 
 from homeassistant.components.select import SelectEntity
@@ -43,11 +45,13 @@ class VelbusSelect(VelbusEntity, SelectEntity):
         self._attr_unique_id = f"{self._attr_unique_id}-program_select"
 
     @api_call
+    @override
     async def async_select_option(self, option: str) -> None:
         """Update the program on the module."""
         await self._channel.set_selected_program(option)
 
     @property
+    @override
     def current_option(self) -> str:
         """Return the selected option."""
         return self._channel.get_selected_program()

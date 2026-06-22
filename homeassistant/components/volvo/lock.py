@@ -2,7 +2,7 @@
 
 from dataclasses import dataclass
 import logging
-from typing import Any, cast
+from typing import Any, cast, override
 
 from volvocarsapi.models import VolvoApiException, VolvoCarsApiBaseModel, VolvoCarsValue
 
@@ -65,14 +65,17 @@ class VolvoLock(VolvoEntity, LockEntity):
 
     entity_description: VolvoLockDescription
 
+    @override
     async def async_lock(self, **kwargs: Any) -> None:
         """Lock the car."""
         await self._async_handle_command(self.entity_description.lock_command, True)
 
+    @override
     async def async_unlock(self, **kwargs: Any) -> None:
         """Unlock the car."""
         await self._async_handle_command(self.entity_description.unlock_command, False)
 
+    @override
     def _update_state(self, api_field: VolvoCarsApiBaseModel | None) -> None:
         """Update the state of the entity."""
         if api_field is None:

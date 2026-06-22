@@ -3,7 +3,7 @@
 from dataclasses import dataclass
 from datetime import datetime, timedelta
 import logging
-from typing import TYPE_CHECKING
+from typing import TYPE_CHECKING, override
 
 from visionpluspython.client import WattsVisionClient
 from visionpluspython.exceptions import (
@@ -64,6 +64,7 @@ class WattsVisionHubCoordinator(DataUpdateCoordinator[dict[str, Device]]):
         self.last_discovery: datetime | None = None
         self.previous_devices: set[str] = set()
 
+    @override
     async def _async_update_data(self) -> dict[str, Device]:
         """Fetch data and periodic device discovery."""
         now = datetime.now()  # pylint: disable=home-assistant-enforce-naive-now
@@ -202,6 +203,7 @@ class WattsVisionDeviceCoordinator(DataUpdateCoordinator[WattsVisionDeviceData])
             self.last_update_success = True
             self.async_update_listeners()
 
+    @override
     async def _async_update_data(self) -> WattsVisionDeviceData:
         """Refresh specific device."""
         if self.fast_polling_until and datetime.now() > self.fast_polling_until:  # pylint: disable=home-assistant-enforce-naive-now

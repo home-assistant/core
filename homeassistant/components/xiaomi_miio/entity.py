@@ -4,7 +4,7 @@ import datetime
 from enum import Enum
 from functools import partial
 import logging
-from typing import TYPE_CHECKING, Any
+from typing import TYPE_CHECKING, Any, override
 
 from miio import Device as MiioDevice, DeviceException
 
@@ -44,6 +44,7 @@ class XiaomiMiioEntity(Entity):
         self._attr_available = False
 
     @property
+    @override
     def device_info(self) -> DeviceInfo:
         """Return the device info."""
         if TYPE_CHECKING:
@@ -85,6 +86,7 @@ class XiaomiCoordinatedMiioEntity[_T: DataUpdateCoordinator[Any]](
         self._attr_unique_id = unique_id
 
     @property
+    @override
     def device_info(self) -> DeviceInfo:
         """Return the device info."""
         if TYPE_CHECKING:
@@ -167,6 +169,7 @@ class XiaomiGatewayDevice(CoordinatorEntity[GatewayDeviceCoordinator], Entity):
         )
 
     @property
+    @override
     def device_info(self) -> DeviceInfo:
         """Return the device info of the gateway."""
         if TYPE_CHECKING:

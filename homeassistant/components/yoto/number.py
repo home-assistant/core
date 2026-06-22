@@ -2,6 +2,7 @@
 
 from collections.abc import Callable
 from dataclasses import dataclass
+from typing import override
 
 from yoto_api import PlayerConfig, YotoPlayer
 
@@ -116,6 +117,7 @@ class YotoNumber(YotoConfigEntity, NumberEntity):
         self._attr_unique_id = f"{player.id}_{description.key}"
 
     @property
+    @override
     def available(self) -> bool:
         """Return if the entity is available."""
         return super().available and self.entity_description.available_fn(
@@ -123,10 +125,12 @@ class YotoNumber(YotoConfigEntity, NumberEntity):
         )
 
     @property
+    @override
     def native_value(self) -> float | None:
         """Return the configured value."""
         return self.entity_description.value_fn(self.player.info.config)
 
+    @override
     async def async_set_native_value(self, value: float) -> None:
         """Update the configured value."""
         await self._async_set_config(

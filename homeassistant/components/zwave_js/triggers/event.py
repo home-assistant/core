@@ -2,7 +2,7 @@
 
 from collections.abc import Callable
 import functools
-from typing import Any
+from typing import Any, override
 
 from pydantic import ValidationError
 import voluptuous as vol
@@ -132,6 +132,7 @@ class EventTrigger(Trigger):
     _action_runner: TriggerActionRunner
 
     @classmethod
+    @override
     async def async_validate_complete_config(
         cls, hass: HomeAssistant, complete_config: ConfigType
     ) -> ConfigType:
@@ -142,6 +143,7 @@ class EventTrigger(Trigger):
         return await super().async_validate_complete_config(hass, complete_config)
 
     @classmethod
+    @override
     async def async_validate_config(
         cls, hass: HomeAssistant, config: ConfigType
     ) -> ConfigType:
@@ -172,6 +174,7 @@ class EventTrigger(Trigger):
         assert config.options is not None
         self._options = config.options
 
+    @override
     async def async_attach_runner(
         self,
         run_action: TriggerActionRunner,

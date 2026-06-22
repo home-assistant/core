@@ -1,6 +1,6 @@
 """Support for VELUX scenes."""
 
-from typing import Any
+from typing import Any, override
 
 from pyvlx import Scene as PyVLXScene
 
@@ -51,6 +51,7 @@ class VeluxScene(Scene):
         )
 
     @wrap_pyvlx_call_exceptions
+    @override
     async def async_activate(self, **kwargs: Any) -> None:
         """Activate the scene."""
         await self.scene.run(wait_for_completion=False)

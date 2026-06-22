@@ -2,7 +2,7 @@
 
 from collections.abc import Callable
 from dataclasses import dataclass
-from typing import Any
+from typing import Any, override
 
 from yolink.const import (
     ATTR_DEVICE_CO_SMOKE_SENSOR,
@@ -460,6 +460,7 @@ class YoLinkSensorEntity(YoLinkEntity, SensorEntity):
         )
 
     @callback
+    @override
     def update_entity_state(self, state: dict) -> None:
         """Update HA Entity State."""
         if (
@@ -473,6 +474,7 @@ class YoLinkSensorEntity(YoLinkEntity, SensorEntity):
         self.async_write_ha_state()
 
     @property
+    @override
     def available(self) -> bool:
         """Return true is device is available."""
         return super().available and self.coordinator.dev_online

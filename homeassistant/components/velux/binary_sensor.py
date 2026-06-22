@@ -1,5 +1,7 @@
 """Support for rain sensors built into some Velux windows."""
 
+from typing import override
+
 from pyvlx import Window
 
 from homeassistant.components.binary_sensor import (
@@ -53,6 +55,7 @@ class VeluxRainSensor(
         self._attr_unique_id = f"{unique_id}_rain_sensor"
         self._attr_device_info = velux_device_info(node, config_entry_id)
 
+    @override
     async def async_added_to_hass(self) -> None:
         """Called when the entity is added to Home Assistant."""
         await super().async_added_to_hass()
@@ -60,6 +63,7 @@ class VeluxRainSensor(
         await self.coordinator.async_request_refresh()
 
     @property
+    @override
     def is_on(self) -> bool | None:
         """Return true if rain is detected."""
         # Velux windows with rain sensors report an opening

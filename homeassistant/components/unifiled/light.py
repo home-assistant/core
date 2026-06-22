@@ -1,7 +1,7 @@
 """Support for Unifi Led lights."""
 
 import logging
-from typing import Any
+from typing import Any, override
 
 from unifiled import unifiled
 import voluptuous as vol
@@ -74,6 +74,7 @@ class UnifiLedLight(LightEntity):
         self._attr_available = light["isOnline"]
         self._attr_brightness = self._api.convertfrom100to255(light["status"]["led"])
 
+    @override
     def turn_on(self, **kwargs: Any) -> None:
         """Instruct the light to turn on."""
         self._api.setdevicebrightness(
@@ -82,6 +83,7 @@ class UnifiLedLight(LightEntity):
         )
         self._api.setdeviceoutput(self._light_id, 1)
 
+    @override
     def turn_off(self, **kwargs: Any) -> None:
         """Instruct the light to turn off."""
         self._api.setdeviceoutput(self._light_id, 0)

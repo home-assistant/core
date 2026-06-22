@@ -3,6 +3,7 @@
 from collections.abc import Callable
 from dataclasses import dataclass
 import logging
+from typing import override
 
 from pyvesync.base_devices.vesyncbasedevice import VeSyncBaseDevice
 from pyvesync.device_container import DeviceContainer
@@ -284,11 +285,13 @@ class VeSyncSensorEntity(VeSyncBaseEntity, SensorEntity):
         self._attr_unique_id = f"{super().unique_id}-{description.key}"
 
     @property
+    @override
     def native_value(self) -> StateType:
         """Return the state of the sensor."""
         return self.entity_description.value_fn(self.device)
 
     @property
+    @override
     def native_unit_of_measurement(self) -> str | None:
         """Return the unit the value was reported in by the sensor."""
         if self.entity_description.use_device_temperature_unit:

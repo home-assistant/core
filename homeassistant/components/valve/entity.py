@@ -1,7 +1,7 @@
 """Base entity for the Valve platform."""
 
 from dataclasses import dataclass
-from typing import Any, final
+from typing import Any, final, override
 
 from homeassistant.helpers.entity import Entity, EntityDescription
 
@@ -51,6 +51,7 @@ class ValveEntity(Entity):
         return self._attr_current_valve_position
 
     @property
+    @override
     def device_class(self) -> ValveDeviceClass | None:
         """Return the class of this entity."""
         if hasattr(self, "_attr_device_class"):
@@ -61,6 +62,7 @@ class ValveEntity(Entity):
 
     @property
     @final
+    @override
     def state(self) -> str | None:
         """Return the state of the valve."""
         reports_position = self.reports_position
@@ -81,6 +83,7 @@ class ValveEntity(Entity):
 
     @final
     @property
+    @override
     def state_attributes(self) -> dict[str, Any]:
         """Return the state attributes."""
         data: dict[str, Any] = {}
@@ -97,6 +100,7 @@ class ValveEntity(Entity):
         return data
 
     @property
+    @override
     def supported_features(self) -> ValveEntityFeature:
         """Flag supported features."""
         return self._attr_supported_features

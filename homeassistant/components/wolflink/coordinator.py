@@ -2,6 +2,7 @@
 
 from datetime import timedelta
 import logging
+from typing import override
 
 from httpx import RequestError
 from wolf_comm.models import Parameter
@@ -47,6 +48,7 @@ class WolfLinkCoordinator(DataUpdateCoordinator[dict[int, tuple[int, str]]]):
         self.device_id = device_id
         self._refetch_parameters = False
 
+    @override
     async def _async_update_data(self) -> dict[int, tuple[int, str]]:
         """Update all stored entities for Wolf SmartSet."""
         try:

@@ -2,6 +2,7 @@
 
 from collections.abc import Callable
 from dataclasses import dataclass
+from typing import override
 
 from homeassistant.components.binary_sensor import (
     BinarySensorDeviceClass,
@@ -125,6 +126,7 @@ class YardianBinarySensor(YardianEntity, BinarySensorEntity):
         self._attr_unique_id = f"{coordinator.yid}-{description.key}"
 
     @property
+    @override
     def is_on(self) -> bool | None:
         """Return the current state based on the description's value function."""
         return self.entity_description.value_fn(self.coordinator)
@@ -147,6 +149,7 @@ class YardianZoneBinarySensor(YardianZoneEntity, BinarySensorEntity):
         self._attr_unique_id = f"{coordinator.yid}-{description.key}"
 
     @property
+    @override
     def is_on(self) -> bool | None:
         """Return the current state based on the description's value function."""
         return self.entity_description.value_fn(self.coordinator)

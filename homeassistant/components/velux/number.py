@@ -1,5 +1,7 @@
 """Support for Velux exterior heating number entities."""
 
+from typing import override
+
 from pyvlx import ExteriorHeating, Intensity
 
 from homeassistant.components.number import NumberEntity
@@ -39,6 +41,7 @@ class VeluxExteriorHeatingNumber(VeluxEntity, NumberEntity):
     node: ExteriorHeating
 
     @property
+    @override
     def native_value(self) -> float | None:
         """Return the current heating intensity in percent."""
         return (
@@ -46,6 +49,7 @@ class VeluxExteriorHeatingNumber(VeluxEntity, NumberEntity):
         )
 
     @wrap_pyvlx_call_exceptions
+    @override
     async def async_set_native_value(self, value: float) -> None:
         """Set the heating intensity."""
         await self.node.set_intensity(

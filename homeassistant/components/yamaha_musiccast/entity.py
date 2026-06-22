@@ -1,5 +1,7 @@
 """The MusicCast integration."""
 
+from typing import override
+
 from aiomusiccast.capabilities import Capability
 
 from homeassistant.const import ATTR_CONNECTIONS, ATTR_VIA_DEVICE
@@ -46,6 +48,7 @@ class MusicCastDeviceEntity(MusicCastEntity):
         return self.coordinator.data.zones[self._zone_id].name
 
     @property
+    @override
     def device_info(self) -> DeviceInfo:
         """Return device information about this MusicCast device."""
 
@@ -72,12 +75,14 @@ class MusicCastDeviceEntity(MusicCastEntity):
 
         return device_info
 
+    @override
     async def async_added_to_hass(self) -> None:
         """Run when this Entity has been added to HA."""
         await super().async_added_to_hass()
         # All entities should register callbacks to update HA when their state changes
         self.coordinator.musiccast.register_callback(self.async_write_ha_state)
 
+    @override
     async def async_will_remove_from_hass(self) -> None:
         """Entity being removed from hass."""
         await super().async_will_remove_from_hass()
@@ -101,6 +106,7 @@ class MusicCastCapabilityEntity(MusicCastDeviceEntity):
         self._attr_entity_category = ENTITY_CATEGORY_MAPPING.get(capability.entity_type)
 
     @property
+    @override
     def unique_id(self) -> str:
         """Return the unique ID for this entity."""
         return f"{self.device_id}_{self.capability.id}"

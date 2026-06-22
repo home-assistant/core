@@ -5,7 +5,7 @@ from dataclasses import dataclass
 from datetime import datetime
 from functools import partial
 import logging
-from typing import Any
+from typing import Any, override
 
 from uiprotect.data import (
     NVR,
@@ -64,6 +64,7 @@ class ProtectSensorEntityDescription(
 
     precision: int | None = None
 
+    @override
     def __post_init__(self) -> None:
         """Ensure values are rounded if precision is set."""
         super().__post_init__()
@@ -645,6 +646,7 @@ class BaseProtectSensor(BaseProtectEntity, SensorEntity):
     entity_description: ProtectSensorEntityDescription
     _state_attrs = ("_attr_available", "_attr_native_value")
 
+    @override
     def _async_update_device_from_protect(self, device: ProtectDeviceType) -> None:
         super()._async_update_device_from_protect(device)
         self._attr_native_value = self.entity_description.get_value(

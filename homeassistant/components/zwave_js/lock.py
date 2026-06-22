@@ -1,6 +1,6 @@
 """Representation of Z-Wave locks."""
 
-from typing import Any
+from typing import Any, override
 
 from zwave_js_server.const import CommandClass
 from zwave_js_server.const.command_class.lock import (
@@ -94,6 +94,7 @@ class ZWaveLock(ZWaveBaseEntity, LockEntity):
     """Representation of a Z-Wave lock."""
 
     @property
+    @override
     def is_locked(self) -> bool | None:
         """Return true if the lock is locked."""
         value = self.info.primary_value
@@ -121,10 +122,12 @@ class ZWaveLock(ZWaveBaseEntity, LockEntity):
                 STATE_TO_ZWAVE_MAP[self.info.primary_value.command_class][target_state],
             )
 
+    @override
     async def async_lock(self, **kwargs: Any) -> None:
         """Lock the lock."""
         await self._set_lock_state(LockState.LOCKED)
 
+    @override
     async def async_unlock(self, **kwargs: Any) -> None:
         """Unlock the lock."""
         await self._set_lock_state(LockState.UNLOCKED)

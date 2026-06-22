@@ -7,7 +7,7 @@ from enum import Enum
 from functools import partial
 import logging
 from operator import attrgetter
-from typing import TYPE_CHECKING, Any, Generic, TypeVar
+from typing import TYPE_CHECKING, Any, Generic, TypeVar, override
 
 from uiprotect import make_enabled_getter, make_required_getter, make_value_getter
 from uiprotect.data import (
@@ -287,6 +287,7 @@ class BaseProtectEntity(Entity):
         )
         self._async_updated_event(self.device)
 
+    @override
     async def async_added_to_hass(self) -> None:
         """When entity is added to hass."""
         await super().async_added_to_hass()
@@ -316,6 +317,7 @@ class ProtectIsOnEntity(BaseProtectEntity):
     _attr_is_on: bool | None
     entity_description: ProtectEntityDescription
 
+    @override
     def _async_update_device_from_protect(
         self, device: ProtectAdoptableDeviceModel | NVR
     ) -> None:
@@ -330,6 +332,7 @@ class ProtectDeviceEntity(BaseProtectEntity):
     """Base class for UniFi protect entities."""
 
     @callback
+    @override
     def _async_set_device_info(self) -> None:
         self._attr_device_info = DeviceInfo(
             name=self.device.display_name,
@@ -349,6 +352,7 @@ class ProtectNVREntity(BaseProtectEntity):
     device: NVR
 
     @callback
+    @override
     def _async_set_device_info(self) -> None:
         self._attr_device_info = DeviceInfo(
             connections={(dr.CONNECTION_NETWORK_MAC, self.device.mac)},
@@ -483,6 +487,7 @@ class ProtectEventMixin(ProtectEntityDescription[T]):
             not (obj_type := self.ufp_obj_type) or obj_type in event.smart_detect_types
         )
 
+    @override
     def __post_init__(self) -> None:
         """Override get_event_obj if ufp_event_obj is set."""
         if (_ufp_event_obj := self.ufp_event_obj) is not None:

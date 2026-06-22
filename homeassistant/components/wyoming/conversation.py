@@ -2,7 +2,7 @@
 
 import asyncio
 import logging
-from typing import Any, Literal
+from typing import Any, Literal, override
 
 from wyoming.asr import Transcript
 from wyoming.client import AsyncTcpClient
@@ -96,6 +96,7 @@ class WyomingConversationEntity(
         self._attr_unique_id = f"{config_entry.entry_id}-conversation"
 
     @property
+    @override
     def supported_languages(self) -> list[str] | Literal["*"]:
         """Return a list of supported languages."""
         if not self._supported_languages:
@@ -103,6 +104,7 @@ class WyomingConversationEntity(
 
         return self._supported_languages
 
+    @override
     async def async_process(
         self, user_input: conversation.ConversationInput
     ) -> conversation.ConversationResult:

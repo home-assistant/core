@@ -2,7 +2,7 @@
 
 from collections.abc import Callable
 from dataclasses import dataclass
-from typing import Any
+from typing import Any, override
 
 from yoto_api import Capabilities, PlayerConfig, YotoPlayer, caps_for
 
@@ -97,14 +97,17 @@ class YotoSwitch(YotoConfigEntity, SwitchEntity):
         self._attr_unique_id = f"{player.id}_{description.key}"
 
     @property
+    @override
     def is_on(self) -> bool | None:
         """Return whether the setting is enabled."""
         return self.entity_description.value_fn(self.player.info.config)
 
+    @override
     async def async_turn_on(self, **kwargs: Any) -> None:
         """Enable the setting."""
         await self._async_set_config(**self.entity_description.write_fn(True))
 
+    @override
     async def async_turn_off(self, **kwargs: Any) -> None:
         """Disable the setting."""
         await self._async_set_config(**self.entity_description.write_fn(False))

@@ -4,7 +4,7 @@ from collections.abc import Callable
 import logging
 from operator import attrgetter
 import sys
-from typing import Any, Self, cast
+from typing import Any, Self, cast, override
 
 import voluptuous as vol
 
@@ -296,15 +296,18 @@ class ZoneStorageCollection(collection.DictStorageCollection):
     CREATE_SCHEMA = vol.Schema(CREATE_FIELDS)
     UPDATE_SCHEMA = vol.Schema(UPDATE_FIELDS)
 
+    @override
     async def _process_create_data(self, data: dict) -> dict:
         """Validate the config is valid."""
         return cast(dict, self.CREATE_SCHEMA(data))
 
     @callback
+    @override
     def _get_suggested_id(self, info: dict) -> str:
         """Suggest an ID based on the config."""
         return cast(str, info[CONF_NAME])
 
+    @override
     async def _update_data(self, item: dict, update_data: dict) -> dict:
         """Return a new updated data object."""
         update_data = self.UPDATE_SCHEMA(update_data)
@@ -434,6 +437,7 @@ class Zone(collection.CollectionEntity):
         self._attr_icon = config.get(CONF_ICON)
 
     @classmethod
+    @override
     def from_storage(cls, config: ConfigType) -> Self:
         """Return entity instance initialized from storage."""
         zone = cls(config)
@@ -442,6 +446,7 @@ class Zone(collection.CollectionEntity):
         return zone
 
     @classmethod
+    @override
     def from_yaml(cls, config: ConfigType) -> Self:
         """Return entity instance initialized from yaml."""
         zone = cls(config)
@@ -450,10 +455,12 @@ class Zone(collection.CollectionEntity):
         return zone
 
     @property
+    @override
     def state(self) -> int:
         """Return the state property really does nothing for a zone."""
         return len(self._persons_in_zone)
 
+    @override
     async def async_update_config(self, config: ConfigType) -> None:
         """Handle when the config is updated."""
         if self._config == config:
@@ -477,6 +484,7 @@ class Zone(collection.CollectionEntity):
             self._generate_attrs()
             self.async_write_ha_state()
 
+    @override
     async def async_added_to_hass(self) -> None:
         """Run when entity about to be added to hass."""
         await super().async_added_to_hass()

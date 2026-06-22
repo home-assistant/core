@@ -1,6 +1,6 @@
 """YoLink Lock V1/V2."""
 
-from typing import Any
+from typing import Any, override
 
 from yolink.client_request import ClientRequest
 from yolink.const import ATTR_DEVICE_LOCK, ATTR_DEVICE_LOCK_V2
@@ -44,6 +44,7 @@ class YoLinkLockEntity(YoLinkEntity, LockEntity):
         self._attr_unique_id = f"{coordinator.device.device_id}_lock_state"
 
     @callback
+    @override
     def update_entity_state(self, state: dict[str, Any]) -> None:
         """Update HA Entity State."""
         state_value = state.get("state")
@@ -69,6 +70,7 @@ class YoLinkLockEntity(YoLinkEntity, LockEntity):
         self._attr_is_locked = state in ["locked", "lock"]
         self.async_write_ha_state()
 
+    @override
     async def async_lock(self, **kwargs: Any) -> None:
         """Lock device."""
         state_param = (
@@ -78,6 +80,7 @@ class YoLinkLockEntity(YoLinkEntity, LockEntity):
         )
         await self.call_lock_state_change(state_param)
 
+    @override
     async def async_unlock(self, **kwargs: Any) -> None:
         """Unlock device."""
         state_param = (
