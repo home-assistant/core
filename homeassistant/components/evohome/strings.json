@@ -26,10 +26,6 @@
     }
   },
   "issues": {
-    "breaking_change_attribute_names": {
-      "description": "Entity attributes, JSON keys, and mode values for Evohome have changed from `camelCase`/`PascalCase` to `snake_case` to align with modern Python standards. Any Jinja templates, automations, or scripts that reference Evohome keys, modes, or states must be updated. For example, `faultType` is now `fault_type`, `'Away'` is now `'away'`, `'PermanentOverride'` is now `'permanent_override'`, and `'On'` is now `'on'`.",
-      "title": "Evohome attribute names changed to snake_case"
-    },
     "deprecated_clear_zone_override_service": {
       "description": "The `clear_zone_override` action is deprecated and will stop working in Home Assistant {breaks_in_ha_version}. Use the zone's Reset button instead.",
       "title": "Evohome 'Clear zone override' action is deprecated"
