@@ -9,7 +9,7 @@ from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
-from .const import CONF_INFRARED_ENTITY_ID
+from .const import CONF_IR_EMITTER_ENTITY_ID
 from .entity import OsramIrEmitterEntity
 
 PARALLEL_UPDATES = 1
@@ -37,11 +37,11 @@ async def async_setup_entry(
     async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up OSRAM infrared buttons from a config entry."""
-    if not (infrared_entity_id := entry.data.get(CONF_INFRARED_ENTITY_ID)):
+    if not (ir_emitter_entity_id := entry.data.get(CONF_IR_EMITTER_ENTITY_ID)):
         return
 
     async_add_entities(
-        OsramIrButton(entry, infrared_entity_id, description)
+        OsramIrButton(entry, ir_emitter_entity_id, description)
         for description in BUTTON_DESCRIPTIONS
     )
 
@@ -54,13 +54,13 @@ class OsramIrButton(OsramIrEmitterEntity, ButtonEntity):
     def __init__(
         self,
         entry: ConfigEntry,
-        infrared_entity_id: str,
+        ir_emitter_entity_id: str,
         description: OsramIrButtonEntityDescription,
     ) -> None:
         """Initialize an OSRAM infrared button."""
         super().__init__(
             entry,
-            infrared_entity_id,
+            ir_emitter_entity_id,
             unique_id_suffix=f"button_{description.key}",
         )
         self.entity_description = description

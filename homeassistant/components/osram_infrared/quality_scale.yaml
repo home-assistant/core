@@ -14,32 +14,35 @@ rules:
   config-flow-test-coverage: done
   config-flow: done
   dependency-transparency: done
-  docs-actions: done
+  docs-actions:
+    status: exempt
+    comment: |
+      This integration does not provide additional actions.
   docs-high-level-description: done
   docs-installation-instructions: done
   docs-removal-instructions: done
   entity-event-setup: done
   entity-unique-id: done
   has-entity-name: done
-  runtime-data: done
+  runtime-data:
+    status: exempt
+    comment: |
+      This integration does not store runtime data.
   test-before-configure: done
-  test-before-setup: done
+  test-before-setup:
+    status: exempt
+    comment: |
+      This integration only proxies commands through an existing infrared
+      entity, so there is no separate connection to validate during setup.
   unique-config-entry: done
-
   # Silver
   action-exceptions:
     status: exempt
     comment: |
       This integration does not provide additional service actions.
   config-entry-unloading: done
-  docs-configuration-parameters:
-    status: todo
-    comment: |
-      Document the selected infrared emitter entity and any future options.
-  docs-installation-parameters:
-    status: todo
-    comment: |
-      Document the infrared emitter entity selected during installation.
+  docs-configuration-parameters: done
+  docs-installation-parameters: done
   entity-unavailable: done
   integration-owner: done
   log-when-unavailable: done
@@ -72,10 +75,9 @@ rules:
       The integration is configured manually by selecting an existing infrared
       emitter entity.
   docs-data-update:
-    status: todo
+    status: exempt
     comment: |
-      Document that the light uses assumed state because infrared transmission
-      does not provide device feedback.
+      This integration does not fetch data from devices.
   docs-examples:
     status: todo
     comment: |
@@ -149,13 +151,12 @@ rules:
       device. There are no dynamically managed devices.
 
   # Platinum
-  async-dependency: done
+  async-dependency:
+    status: exempt
+    comment: |
+      This integration has no external dependencies.
   inject-websession:
     status: exempt
     comment: |
-      This integration does not perform HTTP requests.
-  strict-typing:
-    status: todo
-    comment: |
-      Complete strict typing review after the implementation and tests are
-      finalized.
+      This integration does not make HTTP requests.
+  strict-typing: done

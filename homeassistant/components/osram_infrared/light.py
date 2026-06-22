@@ -33,7 +33,7 @@ from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from homeassistant.helpers.event import async_track_state_change_event
 from homeassistant.util.color import brightness_to_value, value_to_brightness
 
-from .const import CONF_INFRARED_ENTITY_ID, CONF_INFRARED_RECEIVER_ENTITY_ID
+from .const import CONF_IR_EMITTER_ENTITY_ID, CONF_IR_RECEIVER_ENTITY_ID
 from .entity import OsramIrEmitterEntity
 
 _LOGGER = logging.getLogger(__name__)
@@ -41,7 +41,7 @@ _LOGGER = logging.getLogger(__name__)
 PARALLEL_UPDATES = 1
 
 BRIGHTNESS_LEVELS = 5
-BRIGHTNESS_SCALE = (0, BRIGHTNESS_LEVELS)
+BRIGHTNESS_SCALE = (1, BRIGHTNESS_LEVELS)
 
 # Use the dedicated white command for colors with low saturation.
 WHITE_SATURATION_THRESHOLD = 45.0
@@ -97,15 +97,15 @@ async def async_setup_entry(
     async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up an OSRAM infrared light from a config entry."""
-    if not (infrared_entity_id := entry.data.get(CONF_INFRARED_ENTITY_ID)):
+    if not (emitter_entity_id := entry.data.get(CONF_IR_EMITTER_ENTITY_ID)):
         return
 
     async_add_entities(
         [
             OsramIrLight(
                 entry,
-                infrared_entity_id,
-                entry.data.get(CONF_INFRARED_RECEIVER_ENTITY_ID),
+                emitter_entity_id,
+                entry.data.get(CONF_IR_RECEIVER_ENTITY_ID),
             )
         ]
     )
@@ -126,17 +126,17 @@ class OsramIrLight(OsramIrEmitterEntity, LightEntity):
     def __init__(
         self,
         entry: ConfigEntry,
-        infrared_entity_id: str,
-        infrared_receiver_entity_id: str | None,
+        emitter_entity_id: str,
+        receiver_entity_id: str | None,
     ) -> None:
         """Initialize an OSRAM infrared light."""
         super().__init__(
             entry,
-            infrared_entity_id,
+            emitter_entity_id,
             unique_id_suffix="light",
         )
 
-        self._infrared_receiver_entity_id = infrared_receiver_entity_id
+        self._infrared_receiver_entity_id = receiver_entity_id
         self._remove_signal_subscription: CALLBACK_TYPE | None = None
 
         # The bulb does not provide direct state feedback. Track an assumed

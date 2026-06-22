@@ -35,12 +35,12 @@ class OsramIrEmitterEntity(OsramIrEntity, InfraredEmitterConsumerEntity):
     def __init__(
         self,
         entry: ConfigEntry,
-        infrared_entity_id: str,
+        emitter_entity_id: str,
         unique_id_suffix: str,
     ) -> None:
         """Initialize an OSRAM IR emitter consumer entity."""
         super().__init__(entry, unique_id_suffix)
-        self._infrared_emitter_entity_id = infrared_entity_id
+        self._infrared_emitter_entity_id = emitter_entity_id
 
     async def _async_send_code(
         self,

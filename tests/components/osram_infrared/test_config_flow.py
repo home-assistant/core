@@ -3,8 +3,8 @@
 import pytest
 
 from homeassistant.components.osram_infrared.const import (
-    CONF_INFRARED_ENTITY_ID,
-    CONF_INFRARED_RECEIVER_ENTITY_ID,
+    CONF_IR_EMITTER_ENTITY_ID,
+    CONF_IR_RECEIVER_ENTITY_ID,
     DOMAIN,
     get_unique_id,
 )
@@ -37,16 +37,16 @@ async def test_user_flow_success(hass: HomeAssistant) -> None:
     result = await hass.config_entries.flow.async_configure(
         result["flow_id"],
         user_input={
-            CONF_INFRARED_ENTITY_ID: MOCK_INFRARED_EMITTER_ENTITY_ID,
-            CONF_INFRARED_RECEIVER_ENTITY_ID: MOCK_INFRARED_RECEIVER_ENTITY_ID,
+            CONF_IR_EMITTER_ENTITY_ID: MOCK_INFRARED_EMITTER_ENTITY_ID,
+            CONF_IR_RECEIVER_ENTITY_ID: MOCK_INFRARED_RECEIVER_ENTITY_ID,
         },
     )
 
     assert result["type"] is FlowResultType.CREATE_ENTRY
     assert result["title"] == "OSRAM light via Test IR emitter"
     assert result["data"] == {
-        CONF_INFRARED_ENTITY_ID: MOCK_INFRARED_EMITTER_ENTITY_ID,
-        CONF_INFRARED_RECEIVER_ENTITY_ID: MOCK_INFRARED_RECEIVER_ENTITY_ID,
+        CONF_IR_EMITTER_ENTITY_ID: MOCK_INFRARED_EMITTER_ENTITY_ID,
+        CONF_IR_RECEIVER_ENTITY_ID: MOCK_INFRARED_RECEIVER_ENTITY_ID,
     }
     assert result["result"].unique_id == get_unique_id(MOCK_INFRARED_EMITTER_ENTITY_ID)
 
@@ -69,7 +69,7 @@ async def test_user_flow_already_configured(
     result = await hass.config_entries.flow.async_configure(
         result["flow_id"],
         user_input={
-            CONF_INFRARED_ENTITY_ID: MOCK_INFRARED_EMITTER_ENTITY_ID,
+            CONF_IR_EMITTER_ENTITY_ID: MOCK_INFRARED_EMITTER_ENTITY_ID,
         },
     )
 
@@ -117,7 +117,7 @@ async def test_user_flow_title_from_entity_name(
     result = await hass.config_entries.flow.async_configure(
         result["flow_id"],
         user_input={
-            CONF_INFRARED_ENTITY_ID: MOCK_INFRARED_EMITTER_ENTITY_ID,
+            CONF_IR_EMITTER_ENTITY_ID: MOCK_INFRARED_EMITTER_ENTITY_ID,
         },
     )
 
@@ -138,11 +138,11 @@ async def test_user_flow_without_receiver(hass: HomeAssistant) -> None:
     result = await hass.config_entries.flow.async_configure(
         result["flow_id"],
         user_input={
-            CONF_INFRARED_ENTITY_ID: MOCK_INFRARED_EMITTER_ENTITY_ID,
+            CONF_IR_EMITTER_ENTITY_ID: MOCK_INFRARED_EMITTER_ENTITY_ID,
         },
     )
 
     assert result["type"] is FlowResultType.CREATE_ENTRY
     assert result["data"] == {
-        CONF_INFRARED_ENTITY_ID: MOCK_INFRARED_EMITTER_ENTITY_ID,
+        CONF_IR_EMITTER_ENTITY_ID: MOCK_INFRARED_EMITTER_ENTITY_ID,
     }

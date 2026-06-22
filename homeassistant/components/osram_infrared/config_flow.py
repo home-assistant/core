@@ -14,8 +14,8 @@ from homeassistant.helpers import entity_registry as er
 from homeassistant.helpers.selector import EntitySelector, EntitySelectorConfig
 
 from .const import (
-    CONF_INFRARED_ENTITY_ID,
-    CONF_INFRARED_RECEIVER_ENTITY_ID,
+    CONF_IR_EMITTER_ENTITY_ID,
+    CONF_IR_RECEIVER_ENTITY_ID,
     DOMAIN,
     get_unique_id,
 )
@@ -40,7 +40,7 @@ class OsramIrConfigFlow(ConfigFlow, domain=DOMAIN):
             return self.async_abort(reason="no_infrared_emitters")
 
         if user_input is not None:
-            emitter_entity_id = user_input[CONF_INFRARED_ENTITY_ID]
+            emitter_entity_id = user_input[CONF_IR_EMITTER_ENTITY_ID]
 
             await self.async_set_unique_id(get_unique_id(emitter_entity_id))
             self._abort_if_unique_id_configured()
@@ -62,13 +62,13 @@ class OsramIrConfigFlow(ConfigFlow, domain=DOMAIN):
             step_id="user",
             data_schema=vol.Schema(
                 {
-                    vol.Required(CONF_INFRARED_ENTITY_ID): EntitySelector(
+                    vol.Required(CONF_IR_EMITTER_ENTITY_ID): EntitySelector(
                         EntitySelectorConfig(
                             domain=INFRARED_DOMAIN,
                             include_entities=emitter_entity_ids,
                         )
                     ),
-                    vol.Optional(CONF_INFRARED_RECEIVER_ENTITY_ID): EntitySelector(
+                    vol.Optional(CONF_IR_RECEIVER_ENTITY_ID): EntitySelector(
                         EntitySelectorConfig(
                             domain=INFRARED_DOMAIN,
                             include_entities=receiver_entity_ids,
