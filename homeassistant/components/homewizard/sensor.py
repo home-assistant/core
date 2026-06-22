@@ -3,6 +3,7 @@
 from collections.abc import Callable
 from dataclasses import dataclass
 from datetime import datetime, timedelta
+import logging
 from typing import Final
 
 from homewizard_energy.const import Model
@@ -31,6 +32,7 @@ from homeassistant.const import (
     UnitOfVolumeFlowRate,
 )
 from homeassistant.core import HomeAssistant
+from homeassistant.helpers import device_registry as dr
 from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from homeassistant.helpers.typing import StateType
@@ -41,6 +43,7 @@ from .coordinator import HomeWizardConfigEntry, HWEnergyDeviceUpdateCoordinator
 from .entity import HomeWizardEntity
 
 PARALLEL_UPDATES = 1
+_LOGGER = logging.getLogger(__name__)
 
 
 @dataclass(frozen=True, kw_only=True)
@@ -771,18 +774,75 @@ async def async_setup_entry(
     # Initialize external devices
     measurement = entry.runtime_data.data.measurement
     if measurement.external_devices is not None:
-        for unique_id, device in measurement.external_devices.items():
+        dev_reg = dr.async_get(hass)
+        parent_serial = entry.runtime_data.data.device.serial
+
+        # This migration can be removed after 2026.10.0.
+        # This cleanup must run at setup because the external device mapping
+        # needed for old->new identifier conversion is only available in runtime
+        # measurement data.
+        for new_unique_id, device in measurement.external_devices.items():
+            _async_migrate_external_device_identifier(
+                dev_reg,
+                entry,
+                str(device.unique_id),
+                new_unique_id,
+                parent_serial,
+            )
+
             if device.type is not None and (
                 description := EXTERNAL_SENSORS.get(device.type)
             ):
                 # Add external device
                 entities.append(
                     HomeWizardExternalSensorEntity(
-                        entry.runtime_data, description, unique_id
+                        entry.runtime_data, description, new_unique_id
                     )
                 )
 
     async_add_entities(entities)
+
+
+def _async_migrate_external_device_identifier(
+    dev_reg: dr.DeviceRegistry,
+    entry: HomeWizardConfigEntry,
+    old_unique_id: str,
+    new_unique_id: str,
+    parent_serial: str | None,
+) -> None:
+    """Migrate a HomeWizard external device identifier when needed."""
+    old_device = dev_reg.async_get_device(identifiers={(DOMAIN, old_unique_id)})
+    if old_device is None:
+        return
+
+    if (
+        entry.entry_id not in old_device.config_entries
+        or len(old_device.config_entries) > 1
+        or old_unique_id == parent_serial
+    ):
+        return
+
+    new_device = dev_reg.async_get_device(identifiers={(DOMAIN, new_unique_id)})
+    if new_device is None:
+        dev_reg.async_update_device(
+            old_device.id,
+            new_identifiers={(DOMAIN, new_unique_id)},
+            serial_number=new_unique_id,
+        )
+        return
+
+    if (
+        entry.entry_id not in new_device.config_entries
+        or old_device.id == new_device.id
+    ):
+        return
+
+    _LOGGER.debug(
+        "Removing migrated HomeWizard external device %s in favor of %s",
+        old_unique_id,
+        new_unique_id,
+    )
+    dev_reg.async_remove_device(old_device.id)
 
 
 class HomeWizardSensorEntity(HomeWizardEntity, SensorEntity):
