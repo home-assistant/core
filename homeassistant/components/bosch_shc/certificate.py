@@ -8,9 +8,7 @@ from homeassistant.exceptions import HomeAssistantError
 
 try:
     from cryptography import x509
-    from cryptography.hazmat.backends import (
-        default_backend,
-    )
+    from cryptography.hazmat.backends import default_backend
 except Exception as exc:  # pragma: no cover - cryptography should exist in HA
     raise HomeAssistantError("cryptography library not available") from exc
 

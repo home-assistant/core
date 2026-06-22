@@ -33,7 +33,7 @@ async def async_get_device_id(hass: HomeAssistant, device_id: str) -> str | None
 
 
 async def async_remove_devices(
-    hass: HomeAssistant, entity: "SHCEntity", entry_id: str
+    hass: HomeAssistant, entity: SHCEntity, entry_id: str
 ) -> None:
     """Get item that is removed from session."""
     dev_registry = get_dev_reg(hass)

@@ -40,12 +40,12 @@ from homeassistant.exceptions import (
     ServiceValidationError,
 )
 from homeassistant.helpers import config_validation as cv, device_registry as dr
-from homeassistant.helpers.typing import ConfigType
 from homeassistant.helpers.event import (
     async_track_state_change_event,
     async_track_time_change,
     async_track_time_interval,
 )
+from homeassistant.helpers.typing import ConfigType
 from homeassistant.util import dt as dt_util
 
 from .certificate import parse_certificate
@@ -681,7 +681,9 @@ async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
 class SwitchDeviceEventListener:
     """Event listener for a Switch device."""
 
-    def __init__(self, hass: HomeAssistant, entry: ConfigEntry, device: SHCUniversalSwitch) -> None:
+    def __init__(
+        self, hass: HomeAssistant, entry: ConfigEntry, device: SHCUniversalSwitch
+    ) -> None:
         """Initialize the Switch device event listener."""
         self.hass = hass
         self.entry = entry

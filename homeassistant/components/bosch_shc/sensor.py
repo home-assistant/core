@@ -11,9 +11,9 @@ from homeassistant.components.sensor import (
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import (
     CONCENTRATION_PARTS_PER_MILLION,
-    EntityCategory,
     LIGHT_LUX,
     PERCENTAGE,
+    EntityCategory,
     Platform,
     UnitOfEnergy,
     UnitOfPower,
