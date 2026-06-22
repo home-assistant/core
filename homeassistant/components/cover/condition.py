@@ -1,6 +1,7 @@
 """Provides conditions for covers."""
 
 from collections.abc import Mapping
+from typing import override
 
 from homeassistant.const import STATE_OFF, STATE_ON
 from homeassistant.core import HomeAssistant, State
@@ -15,6 +16,7 @@ class CoverConditionBase(EntityConditionBase):
 
     _domain_specs: Mapping[str, CoverDomainSpec]
 
+    @override
     def is_valid_state(self, entity_state: State) -> bool:
         """Check if the state matches the expected cover state."""
         domain_spec = self._domain_specs[entity_state.domain]

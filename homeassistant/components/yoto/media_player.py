@@ -2,7 +2,7 @@
 
 from collections.abc import Awaitable, Callable
 from datetime import datetime
-from typing import Any
+from typing import Any, override
 
 from yoto_api import Card, Chapter, Group, PlaybackStatus, Track, YotoError, YotoPlayer
 
@@ -22,7 +22,7 @@ from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
 from .const import DOMAIN
 from .coordinator import YotoConfigEntry, YotoDataUpdateCoordinator
-from .entity import YotoEntity
+from .entity import YotoPlayerEntity
 
 URI_SCHEME = "yoto"
 URI_CARD = "card"
@@ -53,7 +53,7 @@ async def async_setup_entry(
     )
 
 
-class YotoMediaPlayer(YotoEntity, MediaPlayerEntity):
+class YotoMediaPlayer(YotoPlayerEntity, MediaPlayerEntity):
     """Representation of a Yoto Player."""
 
     _attr_name = None
@@ -83,11 +83,7 @@ class YotoMediaPlayer(YotoEntity, MediaPlayerEntity):
         self._attr_unique_id = player.id
 
     @property
-    def available(self) -> bool:
-        """Return whether the player is reachable through the Yoto cloud."""
-        return super().available and bool(self.player.is_online)
-
-    @property
+    @override
     def state(self) -> MediaPlayerState:
         """Return the playback state."""
         status = self.player.last_event.playback_status
@@ -96,44 +92,52 @@ class YotoMediaPlayer(YotoEntity, MediaPlayerEntity):
         return PLAYBACK_STATE_MAP.get(status, MediaPlayerState.IDLE)
 
     @property
+    @override
     def volume_level(self) -> float | None:
         """Return the current volume level."""
         return self.player.last_event.volume_percentage
 
     @property
+    @override
     def media_duration(self) -> int | None:
         """Return the current track duration in seconds."""
         return self.player.last_event.track_length
 
     @property
+    @override
     def media_position(self) -> int | None:
         """Return the current playback position in seconds."""
         return self.player.last_event.position
 
     @property
+    @override
     def media_position_updated_at(self) -> datetime | None:
         """Return the time the media position was last refreshed."""
         return self.player.last_event_received_at
 
     @property
+    @override
     def media_title(self) -> str | None:
         """Return the title of the currently playing track."""
         event = self.player.last_event
         return event.track_title or event.chapter_title
 
     @property
+    @override
     def media_album_name(self) -> str | None:
         """Return the title of the active card."""
         card = self._current_card()
         return card.title if card else None
 
     @property
+    @override
     def media_artist(self) -> str | None:
         """Return the author of the active card."""
         card = self._current_card()
         return card.author if card else None
 
     @property
+    @override
     def media_image_url(self) -> str | None:
         """Return the cover image URL of the active card."""
         card = self._current_card()
@@ -146,18 +150,22 @@ class YotoMediaPlayer(YotoEntity, MediaPlayerEntity):
             return None
         return self.coordinator.client.library.get(card_id)
 
+    @override
     async def async_media_play(self) -> None:
         """Resume playback."""
         await self._async_run(self.coordinator.client.resume, self._player_id)
 
+    @override
     async def async_media_pause(self) -> None:
         """Pause playback."""
         await self._async_run(self.coordinator.client.pause, self._player_id)
 
+    @override
     async def async_media_stop(self) -> None:
         """Stop playback."""
         await self._async_run(self.coordinator.client.stop, self._player_id)
 
+    @override
     async def async_set_volume_level(self, volume: float) -> None:
         """Set the playback volume (0.0 - 1.0)."""
         await self._async_run(
@@ -166,20 +174,24 @@ class YotoMediaPlayer(YotoEntity, MediaPlayerEntity):
             round(volume * 100),
         )
 
+    @override
     async def async_media_seek(self, position: float) -> None:
         """Seek to ``position`` seconds in the active track."""
         await self._async_run(
             self.coordinator.client.seek, self._player_id, int(position)
         )
 
+    @override
     async def async_media_next_track(self) -> None:
         """Skip to the next track on the active card."""
         await self._async_run(self.coordinator.client.next_track, self._player_id)
 
+    @override
     async def async_media_previous_track(self) -> None:
         """Skip to the previous track on the active card."""
         await self._async_run(self.coordinator.client.previous_track, self._player_id)
 
+    @override
     async def async_play_media(
         self, media_type: MediaType | str, media_id: str, **kwargs: Any
     ) -> None:
@@ -254,6 +266,7 @@ class YotoMediaPlayer(YotoEntity, MediaPlayerEntity):
                 translation_placeholders={"error": str(err)},
             ) from err
 
+    @override
     async def async_browse_media(
         self,
         media_content_type: MediaType | str | None = None,

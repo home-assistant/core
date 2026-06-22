@@ -8,6 +8,7 @@ from homeassistant.core import HomeAssistant
 from .coordinator import DropletConfigEntry, DropletDataCoordinator
 
 PLATFORMS: list[Platform] = [
+    Platform.BINARY_SENSOR,
     Platform.SENSOR,
 ]
 

@@ -2,7 +2,7 @@
 
 from datetime import timedelta
 import logging
-from typing import TYPE_CHECKING
+from typing import TYPE_CHECKING, override
 
 from screenlogicpy import ScreenLogicGateway
 from screenlogicpy.const.common import (
@@ -91,6 +91,7 @@ class ScreenlogicDataUpdateCoordinator(DataUpdateCoordinator[None]):
         if EQUIPMENT_FLAG.CHLORINATOR in self.gateway.equipment_flags:
             await self.gateway.async_get_scg()
 
+    @override
     async def _async_update_data(self) -> None:
         """Fetch data from the Screenlogic gateway."""
         try:

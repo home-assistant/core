@@ -1,5 +1,7 @@
 """Device tracker support for OPNsense routers."""
 
+from typing import override
+
 from homeassistant.components.device_tracker import ScannerEntity
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.device_registry import format_mac
@@ -69,6 +71,7 @@ class OPNsenseDeviceTrackerEntity(
         return None
 
     @property
+    @override
     def is_connected(self) -> bool:
         """Return true if the device is connected to the network."""
         return (
@@ -77,6 +80,7 @@ class OPNsenseDeviceTrackerEntity(
         )
 
     @property
+    @override
     def name(self) -> str:
         """Return device name."""
         device_data = self.device_data
@@ -85,6 +89,7 @@ class OPNsenseDeviceTrackerEntity(
         return f"OPNsense {self.mac_address}"
 
     @property
+    @override
     def ip_address(self) -> str | None:
         """Return the primary IP address of the device."""
         device_data = self.device_data
@@ -95,6 +100,7 @@ class OPNsenseDeviceTrackerEntity(
         return None
 
     @property
+    @override
     def hostname(self) -> str | None:
         """Return hostname of the device."""
         device_data = self.device_data
