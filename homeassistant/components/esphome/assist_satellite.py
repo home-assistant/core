@@ -812,7 +812,7 @@ class EsphomeAssistSatellite(
                             return
 
                         fmt_validated = True
-                        del bytes_buffer[: 8 + chunk_size]
+                        del bytes_buffer[: 8 + chunk_size + (chunk_size & 1)]
 
                     elif chunk_id == b"data":
                         # Found data chunk!
@@ -829,10 +829,11 @@ class EsphomeAssistSatellite(
                         start_time = asyncio.get_running_loop().time()
                         break
                     else:
-                        # Skip other chunks
-                        if len(bytes_buffer) < 8 + chunk_size:
+                        # Skip other chunks (account for RIFF word-alignment pad)
+                        padded_size = chunk_size + (chunk_size & 1)
+                        if len(bytes_buffer) < 8 + padded_size:
                             break  # wait for full chunk to skip
-                        del bytes_buffer[: 8 + chunk_size]
+                        del bytes_buffer[: 8 + padded_size]
 
                 if found_data_chunk:
                     while len(bytes_buffer) >= bytes_per_chunk_payload:
