@@ -493,6 +493,32 @@ def test_decode_returns_none_for_non_lg_ac() -> None:
     assert ac_encoder.decode_timings(junk) is None
 
 
+def test_decode_returns_none_for_invalid_header() -> None:
+    """decode_timings must return None when header matches neither LG standard nor LG2."""
+    # Header mark 500 µs is outside both LG ranges ([6500,10500] and [1200,5200])
+    timings = [500, -500] + [550, -550] * 28
+    assert ac_encoder.decode_timings(timings) is None
+
+
+def test_decode_returns_none_for_bad_checksum() -> None:
+    """decode_timings must return None when LG AC checksum nibble is wrong."""
+    # 0x8800001: valid 0x88 signature but checksum nibble 1 instead of correct 0
+    timings = ac_encoder._encode_frame(
+        0x8800001, ac_encoder._HDR_MARK, ac_encoder._HDR_SPACE
+    )
+    assert ac_encoder.decode_timings(timings) is None
+
+
+def test_decode_returns_none_for_unknown_mode() -> None:
+    """decode_timings must return None when mode nibbles have no mapping."""
+    # (nibs[4], nibs[3]) = (0xF, 0xF) is not in _CMD_NIBS_TO_MODE
+    frame = ac_encoder._checksum(0x88FF000)
+    timings = ac_encoder._encode_frame(
+        frame, ac_encoder._HDR_MARK, ac_encoder._HDR_SPACE
+    )
+    assert ac_encoder.decode_timings(timings) is None
+
+
 # ── Helpers ───────────────────────────────────────────────────────────────────
 
 

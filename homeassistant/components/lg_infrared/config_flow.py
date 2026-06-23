@@ -161,11 +161,7 @@ class LgIrConfigFlow(ConfigFlow, domain=DOMAIN):
         errors: dict[str, str] = {}
 
         if user_input is not None:
-            if user_input.get(CONF_INFRARED_ENTITY_ID):
-                return await self._async_create_device_entry(
-                    LGDeviceType.AC, user_input
-                )
-            errors[CONF_INFRARED_ENTITY_ID] = "infrared_entity_id"
+            return await self._async_create_device_entry(LGDeviceType.AC, user_input)
 
         return self.async_show_form(
             step_id="ac",
@@ -241,11 +237,9 @@ class LgIrConfigFlow(ConfigFlow, domain=DOMAIN):
                     )
                 errors["base"] = "missing_infrared_entity"
             else:
-                if user_input.get(CONF_INFRARED_ENTITY_ID):
-                    return self.async_update_reload_and_abort(
-                        entry, data_updates=user_input
-                    )
-                errors[CONF_INFRARED_ENTITY_ID] = "infrared_entity_id"
+                return self.async_update_reload_and_abort(
+                    entry, data_updates=user_input
+                )
 
         if device_type == LGDeviceType.TV:
             schema = vol.Schema(

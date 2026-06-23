@@ -160,9 +160,6 @@ def decode_timings(
         i += 2
         bits_read += 1
 
-    if bits_read < _BITS:
-        return None
-
     # Validate LG AC signature: top 8 bits must be 0x88
     if frame >> 20 != 0x88:
         return None

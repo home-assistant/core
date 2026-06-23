@@ -343,3 +343,52 @@ async def test_reconfigure_tv(
 
     assert result["type"] is FlowResultType.ABORT
     assert result["reason"] == "reconfigure_successful"
+
+
+@pytest.mark.usefixtures(
+    "mock_infrared_emitter_entity", "mock_infrared_receiver_entity"
+)
+async def test_reconfigure_tv_requires_emitter_or_receiver(
+    hass: HomeAssistant,
+) -> None:
+    """Test reconfigure TV shows error when neither emitter nor receiver is provided."""
+    # Entry has no entity IDs so schema defaults are vol.UNDEFINED — submitting {}
+    # leaves both Optional fields absent, triggering the missing-entity error.
+    entry = MockConfigEntry(
+        domain=DOMAIN,
+        data={CONF_DEVICE_TYPE: LGDeviceType.TV},
+    )
+    entry.add_to_hass(hass)
+
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN,
+        context={"source": "reconfigure", "entry_id": entry.entry_id},
+    )
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"], user_input={}
+    )
+
+    assert result["type"] is FlowResultType.FORM
+    assert result["errors"] == {"base": "missing_infrared_entity"}
+
+
+@pytest.mark.usefixtures(
+    "mock_infrared_emitter_entity", "mock_infrared_receiver_entity"
+)
+async def test_reconfigure_ac_with_receiver_shows_defaults(
+    hass: HomeAssistant,
+    mock_ac_config_entry_with_receiver: MockConfigEntry,
+) -> None:
+    """Test reconfigure AC entry with receiver pre-fills receiver default in schema."""
+    mock_ac_config_entry_with_receiver.add_to_hass(hass)
+
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN,
+        context={
+            "source": "reconfigure",
+            "entry_id": mock_ac_config_entry_with_receiver.entry_id,
+        },
+    )
+
+    assert result["type"] is FlowResultType.FORM
+    assert result["step_id"] == "reconfigure"
