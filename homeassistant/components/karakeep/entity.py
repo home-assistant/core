@@ -19,7 +19,6 @@ class KarakeepEntity(CoordinatorEntity[KarakeepDataUpdateCoordinator]):
         url = coordinator.config_entry.data[CONF_URL]
         self._attr_device_info = DeviceInfo(
             identifiers={(DOMAIN, coordinator.config_entry.entry_id)},
-            name="Karakeep",
             manufacturer="Karakeep",
             entry_type=DeviceEntryType.SERVICE,
             configuration_url=url,
