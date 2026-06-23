@@ -117,4 +117,3 @@ class VictronSensor(VictronBaseEntity, SensorEntity):
         if isinstance(value, VictronEnum):
             return value.id
         return value
-
