@@ -41,7 +41,7 @@ class OsramIrConfigFlow(ConfigFlow, domain=DOMAIN):
                 ent_reg = er.async_get(self.hass)
                 entry = ent_reg.async_get(emitter_entity_id)
                 title_entity_name = (
-                    entry.name or entry.original_name or emitter_entity_id
+                    (entry.name or entry.original_name or emitter_entity_id)
                     if entry
                     else emitter_entity_id
                 )
