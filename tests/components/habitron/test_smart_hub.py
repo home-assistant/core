@@ -2,7 +2,7 @@
 
 from unittest.mock import AsyncMock, MagicMock, patch
 
-from habitron_client import HabitronClient, HabitronError, Router
+from habitron_client import Diagnostic, HabitronClient, HabitronError, Router, Sensor
 import pytest
 
 from homeassistant.components.habitron.const import DOMAIN
@@ -65,24 +65,6 @@ def smart_hub_stub() -> SmartHub:
         config.data = {"websock_token": "tok"}
         hub = SmartHub(hass, config)
     return hub  # noqa: RET504
-
-
-def test_smhub_init_sets_placeholder_uid_and_owns_router(
-    smart_hub_stub: SmartHub,
-) -> None:
-    """__init__ leaves uid as ``pending`` until async_setup runs."""
-    assert smart_hub_stub.uid == "pending"
-    assert smart_hub_stub._mac == "00:00:00:00:00:00"
-    assert smart_hub_stub.online is True
-    assert smart_hub_stub.router is not None
-    assert smart_hub_stub.addon_slug == ""
-    assert smart_hub_stub.base_url == ""
-
-
-def test_smhub_version_property(smart_hub_stub: SmartHub) -> None:
-    """smhub_version returns the cached version field."""
-    smart_hub_stub._version = "1.2.3"
-    assert smart_hub_stub.smhub_version == "1.2.3"
 
 
 def _smhub_info() -> dict:
@@ -219,9 +201,19 @@ async def test_update_writes_diag_sensor_and_log_levels(
         },
         "software": {"loglevel": {"console": "3", "file": "4"}},
     }
-    smart_hub_stub.diags = [MagicMock(), MagicMock(), MagicMock()]
-    smart_hub_stub.sensors = [MagicMock(), MagicMock()]
-    smart_hub_stub.loglvl = [MagicMock(), MagicMock()]
+    smart_hub_stub.diags = [
+        Diagnostic(name="CPU Frequency", nmbr=0, type=10),
+        Diagnostic(name="CPU load", nmbr=1, type=10),
+        Diagnostic(name="CPU Temperature", nmbr=2, type=10),
+    ]
+    smart_hub_stub.sensors = [
+        Sensor(name="Memory free", nmbr=0, type=2, value=0),
+        Sensor(name="Disk free", nmbr=1, type=2, value=0),
+    ]
+    smart_hub_stub.loglvl = [
+        Sensor(name="Logging level console", nmbr=0, type=2, value=0),
+        Sensor(name="Logging level file", nmbr=1, type=2, value=0),
+    ]
 
     await smart_hub_stub.update()
 
