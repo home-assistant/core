@@ -2,8 +2,7 @@
   "config": {
     "abort": {
       "already_configured": "This LG device has already been configured with this infrared entity.",
-      "no_infrared_entities": "[%key:common::config_flow::abort::no_infrared_entities%]",
-      "reconfigure_successful": "[%key:common::config_flow::abort::reconfigure_successful%]"
+      "no_infrared_entities": "[%key:common::config_flow::abort::no_infrared_entities%]"
     },
     "error": {
       "infrared_entity_id": "Select an infrared emitter.",
@@ -23,20 +22,6 @@
         },
         "description": "Select an infrared emitter and the modes your LG AC supports.",
         "title": "Set up LG AC"
-      },
-      "reconfigure": {
-        "data": {
-          "hvac_modes": "Supported modes",
-          "infrared_entity_id": "[%key:common::config_flow::data::infrared_entity_id%]",
-          "infrared_receiver_entity_id": "[%key:common::config_flow::data::infrared_receiver_entity_id%]"
-        },
-        "data_description": {
-          "hvac_modes": "Select the operating modes your AC unit supports.",
-          "infrared_entity_id": "[%key:common::config_flow::data_description::infrared_entity_id%]",
-          "infrared_receiver_entity_id": "Optional — allows the integration to update state when the physical remote is used."
-        },
-        "description": "Update infrared entities or AC operating modes.",
-        "title": "Reconfigure LG IR"
       },
       "tv": {
         "data": {

@@ -10,7 +10,7 @@ from homeassistant.components.infrared import (
     async_get_emitters,
     async_get_receivers,
 )
-from homeassistant.config_entries import ConfigEntry, ConfigFlow, ConfigFlowResult
+from homeassistant.config_entries import ConfigFlow, ConfigFlowResult
 from homeassistant.helpers import entity_registry as er
 from homeassistant.helpers.selector import (
     EntitySelector,
@@ -216,68 +216,4 @@ class LgIrConfigFlow(ConfigFlow, domain=DOMAIN):
                     )
                 ),
             }
-        )
-
-    async def async_step_reconfigure(
-        self, user_input: dict[str, Any] | None = None
-    ) -> ConfigFlowResult:
-        """Handle reconfiguration."""
-        entry: ConfigEntry = self._get_reconfigure_entry()
-        device_type = LGDeviceType(entry.data[CONF_DEVICE_TYPE])
-        emitter_ids = async_get_emitters(self.hass)
-        receiver_ids = async_get_receivers(self.hass)
-        errors: dict[str, str] = {}
-
-        if user_input is not None:
-            if device_type == LGDeviceType.TV:
-                if user_input.get(CONF_INFRARED_ENTITY_ID) or user_input.get(
-                    CONF_INFRARED_RECEIVER_ENTITY_ID
-                ):
-                    return self.async_update_reload_and_abort(
-                        entry, data_updates=user_input
-                    )
-                errors["base"] = "missing_infrared_entity"
-            else:
-                return self.async_update_reload_and_abort(
-                    entry, data_updates=user_input
-                )
-
-        if device_type == LGDeviceType.TV:
-            schema = vol.Schema(
-                {
-                    vol.Optional(
-                        CONF_INFRARED_ENTITY_ID,
-                        default=entry.data.get(CONF_INFRARED_ENTITY_ID, vol.UNDEFINED),
-                    ): EntitySelector(
-                        EntitySelectorConfig(
-                            domain=INFRARED_DOMAIN,
-                            include_entities=emitter_ids,
-                        )
-                    ),
-                    vol.Optional(
-                        CONF_INFRARED_RECEIVER_ENTITY_ID,
-                        default=entry.data.get(
-                            CONF_INFRARED_RECEIVER_ENTITY_ID, vol.UNDEFINED
-                        ),
-                    ): EntitySelector(
-                        EntitySelectorConfig(
-                            domain=INFRARED_DOMAIN,
-                            include_entities=receiver_ids,
-                        )
-                    ),
-                }
-            )
-        else:
-            schema = self._ac_schema(
-                emitter_ids,
-                receiver_ids,
-                default_emitter=entry.data.get(CONF_INFRARED_ENTITY_ID),
-                default_receiver=entry.data.get(CONF_INFRARED_RECEIVER_ENTITY_ID),
-                default_modes=entry.data.get(CONF_HVAC_MODES, _DEFAULT_HVAC_MODES),
-            )
-
-        return self.async_show_form(
-            step_id="reconfigure",
-            data_schema=schema,
-            errors=errors,
         )
