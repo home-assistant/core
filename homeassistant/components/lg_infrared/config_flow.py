@@ -89,9 +89,9 @@ class LgIrConfigFlow(ConfigFlow, domain=DOMAIN):
         self, user_input: dict[str, Any] | None = None
     ) -> ConfigFlowResult:
         """Handle device type selection."""
-        emitter_ids = async_get_emitters(self.hass)
-        receiver_ids = async_get_receivers(self.hass)
-        if not emitter_ids and not receiver_ids:
+        emitter_entity_ids = async_get_emitters(self.hass)
+        receiver_entity_ids = async_get_receivers(self.hass)
+        if not emitter_entity_ids and not receiver_entity_ids:
             return self.async_abort(reason="no_infrared_entities")
 
         if user_input is not None:
@@ -106,7 +106,7 @@ class LgIrConfigFlow(ConfigFlow, domain=DOMAIN):
                 {
                     vol.Required(CONF_DEVICE_TYPE): SelectSelector(
                         SelectSelectorConfig(
-                            options=[dt.value for dt in LGDeviceType],
+                            options=[device_type.value for device_type in LGDeviceType],
                             translation_key=CONF_DEVICE_TYPE,
                             mode=SelectSelectorMode.DROPDOWN,
                         )
@@ -119,8 +119,8 @@ class LgIrConfigFlow(ConfigFlow, domain=DOMAIN):
         self, user_input: dict[str, Any] | None = None
     ) -> ConfigFlowResult:
         """Handle TV entity selection."""
-        emitter_ids = async_get_emitters(self.hass)
-        receiver_ids = async_get_receivers(self.hass)
+        emitter_entity_ids = async_get_emitters(self.hass)
+        receiver_entity_ids = async_get_receivers(self.hass)
         errors: dict[str, str] = {}
 
         if user_input is not None:
@@ -139,13 +139,13 @@ class LgIrConfigFlow(ConfigFlow, domain=DOMAIN):
                     vol.Optional(CONF_INFRARED_ENTITY_ID): EntitySelector(
                         EntitySelectorConfig(
                             domain=INFRARED_DOMAIN,
-                            include_entities=emitter_ids,
+                            include_entities=emitter_entity_ids,
                         )
                     ),
                     vol.Optional(CONF_INFRARED_RECEIVER_ENTITY_ID): EntitySelector(
                         EntitySelectorConfig(
                             domain=INFRARED_DOMAIN,
-                            include_entities=receiver_ids,
+                            include_entities=receiver_entity_ids,
                         )
                     ),
                 }
@@ -157,8 +157,8 @@ class LgIrConfigFlow(ConfigFlow, domain=DOMAIN):
         self, user_input: dict[str, Any] | None = None
     ) -> ConfigFlowResult:
         """Handle AC entity and mode selection."""
-        emitter_ids = async_get_emitters(self.hass)
-        receiver_ids = async_get_receivers(self.hass)
+        emitter_entity_ids = async_get_emitters(self.hass)
+        receiver_entity_ids = async_get_receivers(self.hass)
         errors: dict[str, str] = {}
 
         if user_input is not None:
@@ -166,27 +166,27 @@ class LgIrConfigFlow(ConfigFlow, domain=DOMAIN):
 
         return self.async_show_form(
             step_id="ac",
-            data_schema=self._ac_schema(emitter_ids, receiver_ids),
+            data_schema=self._ac_schema(emitter_entity_ids, receiver_entity_ids),
             errors=errors,
         )
 
     def _ac_schema(
         self,
-        emitter_ids: list[str],
-        receiver_ids: list[str],
+        emitter_entity_ids: list[str],
+        receiver_entity_ids: list[str],
     ) -> vol.Schema:
         return vol.Schema(
             {
                 vol.Required(CONF_INFRARED_ENTITY_ID): EntitySelector(
                     EntitySelectorConfig(
                         domain=INFRARED_DOMAIN,
-                        include_entities=emitter_ids,
+                        include_entities=emitter_entity_ids,
                     )
                 ),
                 vol.Optional(CONF_INFRARED_RECEIVER_ENTITY_ID): EntitySelector(
                     EntitySelectorConfig(
                         domain=INFRARED_DOMAIN,
-                        include_entities=receiver_ids,
+                        include_entities=receiver_entity_ids,
                     )
                 ),
                 vol.Required(
