@@ -220,6 +220,36 @@ async def test_diagnostic_subsystem_sensor_state_becomes_unknown_when_missing(
 
 
 @pytest.mark.usefixtures("entity_registry_enabled_by_default", "init_integration")
+async def test_diagnostic_subsystem_sensor_keeps_previous_state_on_refresh_error(
+    hass: HomeAssistant,
+    mock_duco_client: AsyncMock,
+    freezer: FrozenDateTimeFactory,
+) -> None:
+    """Test diagnostics sensors keep their last value on refresh errors."""
+    mock_duco_client.async_get_diagnostics_info.return_value = DiagInfo(
+        diagnostic_subsystems=(DiagComponent(component="Ventilation", status="Ok"),)
+    )
+
+    freezer.tick(SCAN_INTERVAL)
+    async_fire_time_changed(hass)
+    await hass.async_block_till_done(wait_background_tasks=True)
+
+    state = hass.states.get("sensor.living_ventilation")
+    assert state is not None
+    assert state.state == "Ok"
+
+    mock_duco_client.async_get_diagnostics_info.side_effect = DucoError("diag error")
+
+    freezer.tick(SCAN_INTERVAL)
+    async_fire_time_changed(hass)
+    await hass.async_block_till_done(wait_background_tasks=True)
+
+    state = hass.states.get("sensor.living_ventilation")
+    assert state is not None
+    assert state.state == "Ok"
+
+
+@pytest.mark.usefixtures("entity_registry_enabled_by_default", "init_integration")
 async def test_diagnostic_subsystem_sensors_are_not_added_after_setup(
     hass: HomeAssistant,
     mock_duco_client: AsyncMock,
