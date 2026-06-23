@@ -17,6 +17,7 @@ DEPRECATED_REMOVAL_VERSION = "2026.12.0"
 def deprecate_entity(
     hass: HomeAssistant,
     entity_registry: er.EntityRegistry,
+    *,
     platform_domain: str,
     entity_unique_id: str,
     issue_id: str,

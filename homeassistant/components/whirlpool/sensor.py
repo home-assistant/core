@@ -255,18 +255,8 @@ OVEN_CAVITY_SENSORS: tuple[WhirlpoolOvenCavitySensorEntityDescription, ...] = (
         state_class=SensorStateClass.MEASUREMENT,
         native_unit_of_measurement=UnitOfTemperature.CELSIUS,
         value_fn=lambda oven, cavity: oven.get_target_temp(cavity),
-        entity_registry_enabled_default=False,
     ),
 )
-
-
-def _oven_cavity_suffix(oven: Oven, cavity: OvenCavity) -> str:
-    """Return the unique-id suffix used for an oven cavity."""
-    if oven.get_oven_cavity_exists(OvenCavity.Upper) and oven.get_oven_cavity_exists(
-        OvenCavity.Lower
-    ):
-        return "_upper" if cavity == OvenCavity.Upper else "_lower"
-    return ""
 
 
 def _build_oven_cavity_sensors(
@@ -276,20 +266,20 @@ def _build_oven_cavity_sensors(
     cavity: OvenCavity,
 ) -> list[SensorEntity]:
     """Build the sensors for a single oven cavity, handling deprecations."""
-    suffix = _oven_cavity_suffix(oven, cavity)
+    suffix = WhirlpoolOvenEntity.cavity_suffix(oven, cavity)
     sensors: list[SensorEntity] = []
     for description in OVEN_CAVITY_SENSORS:
         # The oven target temperature sensor has been replaced by a number entity.
         if description.key == "oven_target_temperature" and not deprecate_entity(
             hass,
             entity_registry,
-            Platform.SENSOR,
-            f"{oven.said}-oven_target_temperature{suffix}",
-            f"deprecated_oven_target_temperature_{oven.said}{suffix}",
-            "deprecated_oven_target_temperature",
-            Platform.NUMBER,
-            f"{oven.said}-target_temperature{suffix}",
-            f"number.oven_target_temperature{suffix}",
+            platform_domain=Platform.SENSOR,
+            entity_unique_id=f"{oven.said}-oven_target_temperature{suffix}",
+            issue_id=f"deprecated_oven_target_temperature_{oven.said}{suffix}",
+            translation_key="deprecated_oven_target_temperature",
+            replacement_platform_domain=Platform.NUMBER,
+            replacement_entity_unique_id=f"{oven.said}-target_temperature{suffix}",
+            replacement_entity_id=f"number.oven_target_temperature{suffix}",
         ):
             continue
         sensors.append(WhirlpoolOvenCavitySensor(oven, cavity, description))
