@@ -798,13 +798,14 @@ def test_redundant_platform_fires(
     root_node = _parse(
         code, integration_dir, module_name=module_name, file_name=file_name
     )
+    value_node = _find_attr_value_node(root_node)
+    class_node = next(root_node.nodes_of_class(nodes.ClassDef))
     walker = ASTWalker(linter)
     walker.add_checker(checker)
-    walker.walk(root_node)
-    messages = linter.release_messages()
-    assert len(messages) == 1
-    assert messages[0].msg_id == "home-assistant-entity-unique-id-redundant-platform"
-    assert messages[0].args[1] == platform
+    with assert_adds_messages(
+        linter, _expect_redundant_platform(value_node, class_node.name, platform)
+    ):
+        walker.walk(root_node)
 
 
 @pytest.mark.parametrize(
