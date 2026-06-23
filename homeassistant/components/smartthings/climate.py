@@ -452,13 +452,16 @@ class SmartThingsAirConditioner(SmartThingsEntity, ClimateEntity):
 
         mode = STATE_TO_AC_MODE[hvac_mode]
 
-        # If new hvac_mode is HVACMode.AUTO and 
-        # AirConditioner doesn't support "auto" 
+        # If new hvac_mode is HVACMode.AUTO and
+        # AirConditioner doesn't support "auto"
         # but supports "aIComfort", change mode to "aIComfort"
         if hvac_mode == HVACMode.AUTO:
-            supported_modes = self.get_attribute_value(
-                Capability.AIR_CONDITIONER_MODE, Attribute.SUPPORTED_AC_MODES
-            ) or []
+            supported_modes = (
+                self.get_attribute_value(
+                    Capability.AIR_CONDITIONER_MODE, Attribute.SUPPORTED_AC_MODES
+                )
+                or []
+            )
             if "auto" not in supported_modes and "aIComfort" in supported_modes:
                 mode = "aIComfort"
 

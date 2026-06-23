@@ -223,7 +223,10 @@ async def test_ac_set_hvac_mode_auto_uses_aicomfort(
     await hass.services.async_call(
         CLIMATE_DOMAIN,
         SERVICE_SET_HVAC_MODE,
-        {ATTR_ENTITY_ID: "climate.theater_ac_office_granit", ATTR_HVAC_MODE: HVACMode.AUTO},
+        {
+            ATTR_ENTITY_ID: "climate.theater_ac_office_granit",
+            ATTR_HVAC_MODE: HVACMode.AUTO,
+        },
         blocking=True,
     )
     devices.execute_device_command.assert_called_once_with(
@@ -255,7 +258,10 @@ async def test_ac_set_hvac_mode_auto_prefers_auto_when_aicomfort_supported(
     await hass.services.async_call(
         CLIMATE_DOMAIN,
         SERVICE_SET_HVAC_MODE,
-        {ATTR_ENTITY_ID: "climate.theater_ac_office_granit", ATTR_HVAC_MODE: HVACMode.AUTO},
+        {
+            ATTR_ENTITY_ID: "climate.theater_ac_office_granit",
+            ATTR_HVAC_MODE: HVACMode.AUTO,
+        },
         blocking=True,
     )
     devices.execute_device_command.assert_called_once_with(
