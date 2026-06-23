@@ -470,7 +470,12 @@ class MusicAssistantPlayer(MusicAssistantEntity, MediaPlayerEntity):
             ]
             if username not in available_usernames:
                 raise ServiceValidationError(
-                    f"The username {username} does not exist. Available usernames are {', '.join(available_usernames)}."
+                    translation_domain=DOMAIN,
+                    translation_key="invalid_username",
+                    translation_placeholders={
+                        "username": username,
+                        "available_usernames": ", ".join(available_usernames),
+                    },
                 )
 
         media_uris: list[str] = []

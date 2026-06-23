@@ -259,6 +259,11 @@
       }
     }
   },
+  "exceptions": {
+    "invalid_username": {
+      "message": "The username {username} does not exist. Available usernames are {available_usernames}."
+    }
+  },
   "issues": {
     "invalid_server_version": {
       "description": "Check if there are updates available for the Music Assistant server and/or integration.",
