@@ -333,6 +333,7 @@ class KnxPayloadSelector(KNXSelectorBase):
         """Initialize the KNX payload selector."""
         self.ga_path = ga_path
 
+    @override
     def serialize(self) -> dict[str, Any]:
         """Serialize the selector to a dictionary."""
         return {
@@ -340,6 +341,7 @@ class KnxPayloadSelector(KNXSelectorBase):
             "ga_path": self.ga_path,
         }
 
+    @override
     def __call__(self, data: Any) -> Any:
         """Validate the passed data."""
         validated = self.schema(data)
