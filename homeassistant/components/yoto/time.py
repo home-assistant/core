@@ -3,6 +3,7 @@
 from collections.abc import Callable
 from dataclasses import dataclass
 from datetime import time
+from typing import override
 
 from yoto_api import PlayerConfig, YotoPlayer
 
@@ -77,10 +78,12 @@ class YotoTime(YotoConfigEntity, TimeEntity):
         self._attr_unique_id = f"{player.id}_{description.key}"
 
     @property
+    @override
     def native_value(self) -> time | None:
         """Return the configured time."""
         return self.entity_description.value_fn(self.player.info.config)
 
+    @override
     async def async_set_value(self, value: time) -> None:
         """Update the configured time."""
         await self._async_set_config(**{self.entity_description.config_field: value})

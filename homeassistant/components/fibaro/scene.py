@@ -1,6 +1,6 @@
 """Support for Fibaro scenes."""
 
-from typing import Any
+from typing import Any, override
 
 from pyfibaro.fibaro_scene import SceneModel
 
@@ -50,6 +50,7 @@ class FibaroScene(Scene):
             identifiers={(DOMAIN, controller.hub_serial)}
         )
 
+    @override
     def activate(self, **kwargs: Any) -> None:
         """Activate the scene."""
         self._fibaro_scene.start()

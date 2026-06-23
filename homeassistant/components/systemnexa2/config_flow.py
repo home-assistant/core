@@ -3,7 +3,7 @@
 from dataclasses import dataclass
 import logging
 import socket
-from typing import Any
+from typing import Any, override
 
 import aiohttp
 from sn2.device import Device
@@ -56,6 +56,7 @@ class SystemNexa2ConfigFlow(ConfigFlow, domain=DOMAIN):
         """Initialize the config flow."""
         self._discovered_device: _DiscoveryInfo
 
+    @override
     async def async_step_user(
         self, user_input: dict[str, Any] | None = None
     ) -> ConfigFlowResult:
@@ -131,6 +132,7 @@ class SystemNexa2ConfigFlow(ConfigFlow, domain=DOMAIN):
             errors=errors,
         )
 
+    @override
     async def async_step_zeroconf(
         self, discovery_info: ZeroconfServiceInfo
     ) -> ConfigFlowResult:

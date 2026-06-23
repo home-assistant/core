@@ -2,11 +2,12 @@
 
 import datetime
 import logging
+from typing import override
 
-from ccm15 import CCM15Device, CCM15DeviceState, CCM15SlaveDevice
+from ccm15 import CCM15Device, CCM15DeviceState, CCM15SlaveDevice, TriState
 import httpx
 
-from homeassistant.components.climate import HVACMode
+from homeassistant.components.climate import SWING_ON, HVACMode
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.httpx_client import get_async_client
@@ -47,6 +48,7 @@ class CCM15Coordinator(DataUpdateCoordinator[CCM15DeviceState]):
         """Get the host."""
         return self._host
 
+    @override
     async def _async_update_data(self) -> CCM15DeviceState:
         """Fetch data from Rain Bird device."""
         try:
@@ -82,6 +84,14 @@ class CCM15Coordinator(DataUpdateCoordinator[CCM15DeviceState]):
         """Set the fan mode."""
         _LOGGER.debug("Set Fan[%s]='%s'", ac_index, fan_mode)
         data.fan_mode = CONST_FAN_CMD_MAP[fan_mode]
+        await self.async_set_state(ac_index, data)
+
+    async def async_set_swing_mode(
+        self, ac_index: int, data: CCM15SlaveDevice, swing_mode: str
+    ) -> None:
+        """Set the swing mode."""
+        _LOGGER.debug("Set Swing[%s]='%s'", ac_index, swing_mode)
+        data.desired_swing = TriState.ON if swing_mode == SWING_ON else TriState.OFF
         await self.async_set_state(ac_index, data)
 
     async def async_set_temperature(

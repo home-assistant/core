@@ -1,7 +1,7 @@
 """AdGuard Home Update platform."""
 
 from datetime import timedelta
-from typing import Any
+from typing import Any, override
 
 from adguardhome import AdGuardHomeError
 
@@ -50,6 +50,7 @@ class AdGuardHomeUpdate(AdGuardHomeEntity, UpdateEntity):
             [DOMAIN, self.adguard.host, str(self.adguard.port), "update"]
         )
 
+    @override
     async def _adguard_update(self) -> None:
         """Update AdGuard Home entity."""
         value = await self.adguard.update.update_available()
@@ -58,6 +59,7 @@ class AdGuardHomeUpdate(AdGuardHomeEntity, UpdateEntity):
         self._attr_release_summary = value.announcement
         self._attr_release_url = value.announcement_url
 
+    @override
     async def async_install(
         self, version: str | None, backup: bool, **kwargs: Any
     ) -> None:

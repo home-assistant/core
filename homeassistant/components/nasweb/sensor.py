@@ -2,6 +2,7 @@
 
 import logging
 import time
+from typing import override
 
 from webio_api import Input as NASwebInput, TempSensor
 from webio_api.const import (
@@ -93,6 +94,7 @@ class BaseSensorEntity(SensorEntity, BaseCoordinatorEntity):
         self._attr_has_entity_name = True
         self._attr_should_poll = False
 
+    @override
     async def async_added_to_hass(self) -> None:
         """When entity is added to hass."""
         await super().async_added_to_hass()
@@ -109,6 +111,7 @@ class BaseSensorEntity(SensorEntity, BaseCoordinatorEntity):
         else:
             self._attr_available = available if available is not None else False
 
+    @override
     async def async_update(self) -> None:
         """Update the entity.
 
@@ -149,6 +152,7 @@ class InputStateSensor(BaseSensorEntity):
         )
 
     @callback
+    @override
     def _handle_coordinator_update(self) -> None:
         """Handle updated data from the coordinator."""
         if self._input.state is None or self._input.state in self._attr_options:
@@ -181,6 +185,7 @@ class TemperatureSensor(BaseSensorEntity):
         )
 
     @callback
+    @override
     def _handle_coordinator_update(self) -> None:
         """Handle updated data from the coordinator."""
         self._attr_native_value = self._temp_sensor.value

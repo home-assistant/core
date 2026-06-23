@@ -1,5 +1,7 @@
 """Base class for Squeezebox Sensor entities."""
 
+from typing import override
+
 from homeassistant.helpers.device_registry import (
     CONNECTION_NETWORK_MAC,
     DeviceInfo,
@@ -30,6 +32,7 @@ class SqueezeboxEntity(CoordinatorEntity[SqueezeBoxPlayerUpdateCoordinator]):
         )
 
     @property
+    @override
     def available(self) -> bool:
         """Return True if entity is available."""
         # super().available refers to
