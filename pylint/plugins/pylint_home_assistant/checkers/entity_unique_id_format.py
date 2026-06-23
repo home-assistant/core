@@ -50,7 +50,7 @@ assignments inside method bodies, and ``return`` values inside a
 (``from .const import DOMAIN as MY_DOMAIN``) are not scanned.
 """
 
-from collections.abc import Callable
+from collections.abc import Callable, Iterable
 import re
 
 from astroid import nodes
@@ -69,20 +69,70 @@ _ATTR_NAME = "_attr_unique_id"
 _PROPERTY_NAME = "unique_id"
 
 
+_FSTRING_PLACEHOLDER = "a"
+
+
+def _joined_str_approximation(node: nodes.JoinedStr) -> str:
+    """Build the runtime string of *node* with f-string expressions replaced.
+
+    Each ``FormattedValue`` is replaced by a single alphanumeric character
+    so that boundary checks at part boundaries do not claim a delimiter
+    that may not exist at runtime. Const string parts are concatenated
+    verbatim.
+    """
+    parts: list[str] = []
+    for v in node.values:
+        if isinstance(v, nodes.Const) and isinstance(v.value, str):
+            parts.append(v.value)
+        else:
+            parts.append(_FSTRING_PLACEHOLDER)
+    return "".join(parts)
+
+
+def _is_inside_joined_str(node: nodes.NodeNG) -> bool:
+    """Return True if *node* has a ``JoinedStr`` ancestor."""
+    parent = node.parent
+    while parent is not None:
+        if isinstance(parent, nodes.JoinedStr):
+            return True
+        parent = parent.parent
+    return False
+
+
+def _iter_string_literals(value: nodes.NodeNG) -> Iterable[str]:
+    """Yield the static string approximations contained in *value*.
+
+    For f-strings (``JoinedStr``), expression parts are substituted with
+    a single alphanumeric placeholder so boundary checks evaluate
+    against the whole runtime string instead of per-fragment.
+    ``Const`` strings outside any ``JoinedStr`` are yielded verbatim;
+    those nested inside a ``JoinedStr`` are skipped because they are
+    already covered by the ``JoinedStr`` approximation.
+    """
+    for node in value.nodes_of_class(nodes.JoinedStr):
+        yield _joined_str_approximation(node)
+    for const in value.nodes_of_class(nodes.Const):
+        if isinstance(const.value, str) and not _is_inside_joined_str(const):
+            yield const.value
+
+
 def _value_contains_segment(value: nodes.NodeNG, segment: str) -> bool:
-    """Return True if a string Const in *value* contains *segment* delimited.
+    """Return True if any string literal in *value* contains *segment* delimited.
 
     A segment is considered delimited when bordered by a non-alphanumeric
     character (``_``, ``-``, ``.``, ``:``, space, ...) or a string
     boundary. Letters and digits are excluded from the boundary set
     because both are valid in HA integration domain names, so substrings
     like ``"myhubitat_..."`` or ``"myhub2"`` don't match ``myhub``.
+
+    f-strings are evaluated against the full runtime string (with
+    expression parts substituted by a placeholder), so e.g.
+    ``f"{prefix}sensor_{key}"`` does not match ``sensor`` (because the
+    character before ``sensor`` at runtime is unknown and may not be a
+    delimiter).
     """
     pattern = re.compile(rf"(?:^|[^a-zA-Z0-9]){re.escape(segment)}(?:[^a-zA-Z0-9]|$)")
-    return any(
-        isinstance(const.value, str) and pattern.search(const.value)
-        for const in value.nodes_of_class(nodes.Const)
-    )
+    return any(pattern.search(s) for s in _iter_string_literals(value))
 
 
 def _value_references_domain(value: nodes.NodeNG | None, domain: str | None) -> bool:

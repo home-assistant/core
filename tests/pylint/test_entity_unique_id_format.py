@@ -495,6 +495,36 @@ class MySensor(Entity):
 """,
             id="domain_followed_by_digit",
         ),
+        pytest.param(
+            """
+from homeassistant.helpers.entity import Entity
+
+class MySensor(Entity):
+    def __init__(self, prefix, key):
+        self._attr_unique_id = f"{prefix}myhub-{key}"
+""",
+            id="domain_at_const_start_after_fstring_expr",
+        ),
+        pytest.param(
+            """
+from homeassistant.helpers.entity import Entity
+
+class MySensor(Entity):
+    def __init__(self, suffix, key):
+        self._attr_unique_id = f"-myhub{suffix}-{key}"
+""",
+            id="domain_at_const_end_before_fstring_expr",
+        ),
+        pytest.param(
+            """
+from homeassistant.helpers.entity import Entity
+
+class MySensor(Entity):
+    def __init__(self, key):
+        self._attr_unique_id = f"myhub{key}"
+""",
+            id="domain_at_fstring_start_then_expr",
+        ),
     ],
 )
 def test_redundant_domain_literal_does_not_fire_on_word_substrings(
