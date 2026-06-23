@@ -4,7 +4,7 @@ from collections.abc import Awaitable, Callable, Coroutine, Iterable
 from datetime import datetime, timedelta
 from functools import wraps
 import logging
-from typing import Any, Concatenate, Final
+from typing import Any, Concatenate, Final, override
 
 from pybravia import (
     BraviaAuthError,
@@ -151,6 +151,7 @@ class BraviaTVCoordinator(DataUpdateCoordinator[None]):
             if add_to_list and title not in self.source_list:
                 self.source_list.append(title)
 
+    @override
     async def _async_update_data(self) -> None:
         """Connect and fetch data."""
         try:

@@ -1,6 +1,6 @@
 """Support for locks which integrates with other components."""
 
-from typing import TYPE_CHECKING, Any
+from typing import TYPE_CHECKING, Any, override
 
 import voluptuous as vol
 
@@ -190,6 +190,7 @@ class AbstractTemplateLock(AbstractTemplateEntity, LockEntity):
             self._attr_code_format = render
             self._code_format_template_error = None
 
+    @override
     async def async_lock(self, **kwargs: Any) -> None:
         """Lock the device."""
         # Check if we need to raise for incorrect code format
@@ -208,6 +209,7 @@ class AbstractTemplateLock(AbstractTemplateEntity, LockEntity):
             context=self._context,
         )
 
+    @override
     async def async_unlock(self, **kwargs: Any) -> None:
         """Unlock the device."""
         # Check if we need to raise for incorrect code format
@@ -226,6 +228,7 @@ class AbstractTemplateLock(AbstractTemplateEntity, LockEntity):
             context=self._context,
         )
 
+    @override
     async def async_open(self, **kwargs: Any) -> None:
         """Open the device."""
         # Check if we need to raise for incorrect code format

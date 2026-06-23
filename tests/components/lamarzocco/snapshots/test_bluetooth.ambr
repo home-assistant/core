@@ -235,7 +235,7 @@
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'friendly_name': 'MR012345 Steam level',
-      'options': list([
+      <SelectEntityCapabilityAttribute.OPTIONS: 'options'>: list([
         '1',
         '2',
         '3',

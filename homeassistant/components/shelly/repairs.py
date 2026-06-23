@@ -1,6 +1,6 @@
 """Repairs flow for Shelly."""
 
-from typing import TYPE_CHECKING
+from typing import TYPE_CHECKING, override
 
 from aioshelly.block_device import BlockDevice
 from aioshelly.const import MODEL_OUT_PLUG_S_G3, MODEL_PLUG_S_G3, RPC_GENERATIONS
@@ -289,6 +289,7 @@ class ShellyRpcRepairsFlow(RepairsFlow):
 class FirmwareUpdateFlow(ShellyRpcRepairsFlow):
     """Handler for Firmware Update flow."""
 
+    @override
     async def _async_step_confirm(self) -> RepairsFlowResult:
         """Handle the confirm step of a fix flow."""
         return await self.async_step_update_firmware()
@@ -310,6 +311,7 @@ class FirmwareUpdateFlow(ShellyRpcRepairsFlow):
 class DisableOutboundWebSocketFlow(ShellyRpcRepairsFlow):
     """Handler for Disable Outbound WebSocket flow."""
 
+    @override
     async def _async_step_confirm(self) -> RepairsFlowResult:
         """Handle the confirm step of a fix flow."""
         return await self.async_step_disable_outbound_websocket()

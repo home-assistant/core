@@ -4,7 +4,7 @@ from collections import OrderedDict
 from collections.abc import Callable
 import logging
 import math
-from typing import TYPE_CHECKING, Any, NamedTuple
+from typing import TYPE_CHECKING, Any, NamedTuple, override
 from uuid import UUID
 
 import voluptuous as vol
@@ -354,6 +354,7 @@ class BayesianBinarySensor(BinarySensorEntity):
             "state": self._process_state,
         }
 
+    @override
     async def async_added_to_hass(self) -> None:
         """Call when entity about to be added.
 
@@ -638,6 +639,7 @@ class BayesianBinarySensor(BinarySensorEntity):
             return result
 
     @property
+    @override
     def extra_state_attributes(self) -> dict[str, Any]:
         """Return the state attributes of the sensor."""
 

@@ -150,6 +150,7 @@ class SAJsensor(CoordinatorEntity[SAJDataUpdateCoordinator], SensorEntity):
             self._attr_device_class = SensorDeviceClass.TEMPERATURE
 
     @property
+    @override
     def native_value(self) -> StateType:
         """Return the state of the sensor."""
         return self._sensor.value

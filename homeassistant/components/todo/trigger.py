@@ -130,6 +130,7 @@ class ItemTriggerBase(Trigger, abc.ABC):
     """todo item trigger base."""
 
     @classmethod
+    @override
     async def async_validate_config(
         cls, hass: HomeAssistant, config: ConfigType
     ) -> ConfigType:
@@ -144,6 +145,7 @@ class ItemTriggerBase(Trigger, abc.ABC):
             assert config.target is not None
         self._target = config.target
 
+    @override
     async def async_attach_runner(
         self,
         run_action: TriggerActionRunner,

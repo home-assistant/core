@@ -2,7 +2,7 @@
 
 from collections.abc import Generator
 from contextlib import contextmanager
-from typing import Any
+from typing import Any, override
 
 from homeassistant.components.trace import (
     CONF_STORED_TRACES,
@@ -38,6 +38,7 @@ class AutomationTrace(ActionTrace):
         """Set trigger description."""
         self._trigger_description = trigger
 
+    @override
     def as_short_dict(self) -> dict[str, Any]:
         """Return a brief dictionary version of this AutomationTrace."""
         if self._short_dict:

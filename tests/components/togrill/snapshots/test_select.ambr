@@ -6,7 +6,7 @@
     ]),
     'area_id': None,
     'capabilities': dict({
-      'options': list([
+      <SelectEntityCapabilityAttribute.OPTIONS: 'options'>: list([
         'none',
         'beef',
         'veal',
@@ -59,7 +59,7 @@
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'friendly_name': 'Probe 1 Grill type',
-      'options': list([
+      <SelectEntityCapabilityAttribute.OPTIONS: 'options'>: list([
         'none',
         'beef',
         'veal',
@@ -93,7 +93,7 @@
     ]),
     'area_id': None,
     'capabilities': dict({
-      'options': list([
+      <SelectEntityCapabilityAttribute.OPTIONS: 'options'>: list([
         'none',
         'rare',
         'medium_rare',
@@ -136,7 +136,7 @@
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'friendly_name': 'Probe 1 Taste',
-      'options': list([
+      <SelectEntityCapabilityAttribute.OPTIONS: 'options'>: list([
         'none',
         'rare',
         'medium_rare',
@@ -160,7 +160,7 @@
     ]),
     'area_id': None,
     'capabilities': dict({
-      'options': list([
+      <SelectEntityCapabilityAttribute.OPTIONS: 'options'>: list([
         'none',
         'beef',
         'veal',
@@ -213,7 +213,7 @@
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'friendly_name': 'Probe 2 Grill type',
-      'options': list([
+      <SelectEntityCapabilityAttribute.OPTIONS: 'options'>: list([
         'none',
         'beef',
         'veal',
@@ -247,7 +247,7 @@
     ]),
     'area_id': None,
     'capabilities': dict({
-      'options': list([
+      <SelectEntityCapabilityAttribute.OPTIONS: 'options'>: list([
         'none',
         'rare',
         'medium_rare',
@@ -290,7 +290,7 @@
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'friendly_name': 'Probe 2 Taste',
-      'options': list([
+      <SelectEntityCapabilityAttribute.OPTIONS: 'options'>: list([
         'none',
         'rare',
         'medium_rare',
@@ -314,7 +314,7 @@
     ]),
     'area_id': None,
     'capabilities': dict({
-      'options': list([
+      <SelectEntityCapabilityAttribute.OPTIONS: 'options'>: list([
         'none',
         'beef',
         'veal',
@@ -367,7 +367,7 @@
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'friendly_name': 'Probe 1 Grill type',
-      'options': list([
+      <SelectEntityCapabilityAttribute.OPTIONS: 'options'>: list([
         'none',
         'beef',
         'veal',
@@ -401,7 +401,7 @@
     ]),
     'area_id': None,
     'capabilities': dict({
-      'options': list([
+      <SelectEntityCapabilityAttribute.OPTIONS: 'options'>: list([
         'none',
         'rare',
         'medium_rare',
@@ -444,7 +444,7 @@
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'friendly_name': 'Probe 1 Taste',
-      'options': list([
+      <SelectEntityCapabilityAttribute.OPTIONS: 'options'>: list([
         'none',
         'rare',
         'medium_rare',
@@ -468,7 +468,7 @@
     ]),
     'area_id': None,
     'capabilities': dict({
-      'options': list([
+      <SelectEntityCapabilityAttribute.OPTIONS: 'options'>: list([
         'none',
         'beef',
         'veal',
@@ -521,7 +521,7 @@
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'friendly_name': 'Probe 2 Grill type',
-      'options': list([
+      <SelectEntityCapabilityAttribute.OPTIONS: 'options'>: list([
         'none',
         'beef',
         'veal',
@@ -555,7 +555,7 @@
     ]),
     'area_id': None,
     'capabilities': dict({
-      'options': list([
+      <SelectEntityCapabilityAttribute.OPTIONS: 'options'>: list([
         'none',
         'rare',
         'medium_rare',
@@ -598,7 +598,7 @@
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'friendly_name': 'Probe 2 Taste',
-      'options': list([
+      <SelectEntityCapabilityAttribute.OPTIONS: 'options'>: list([
         'none',
         'rare',
         'medium_rare',
@@ -622,7 +622,7 @@
     ]),
     'area_id': None,
     'capabilities': dict({
-      'options': list([
+      <SelectEntityCapabilityAttribute.OPTIONS: 'options'>: list([
         'none',
         'beef',
         'veal',
@@ -675,7 +675,7 @@
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'friendly_name': 'Probe 1 Grill type',
-      'options': list([
+      <SelectEntityCapabilityAttribute.OPTIONS: 'options'>: list([
         'none',
         'beef',
         'veal',
@@ -709,7 +709,7 @@
     ]),
     'area_id': None,
     'capabilities': dict({
-      'options': list([
+      <SelectEntityCapabilityAttribute.OPTIONS: 'options'>: list([
         'none',
         'rare',
         'medium_rare',
@@ -752,7 +752,7 @@
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'friendly_name': 'Probe 1 Taste',
-      'options': list([
+      <SelectEntityCapabilityAttribute.OPTIONS: 'options'>: list([
         'none',
         'rare',
         'medium_rare',
@@ -776,7 +776,7 @@
     ]),
     'area_id': None,
     'capabilities': dict({
-      'options': list([
+      <SelectEntityCapabilityAttribute.OPTIONS: 'options'>: list([
         'none',
         'beef',
         'veal',
@@ -829,7 +829,7 @@
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'friendly_name': 'Probe 2 Grill type',
-      'options': list([
+      <SelectEntityCapabilityAttribute.OPTIONS: 'options'>: list([
         'none',
         'beef',
         'veal',
@@ -863,7 +863,7 @@
     ]),
     'area_id': None,
     'capabilities': dict({
-      'options': list([
+      <SelectEntityCapabilityAttribute.OPTIONS: 'options'>: list([
         'none',
         'rare',
         'medium_rare',
@@ -906,7 +906,7 @@
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'friendly_name': 'Probe 2 Taste',
-      'options': list([
+      <SelectEntityCapabilityAttribute.OPTIONS: 'options'>: list([
         'none',
         'rare',
         'medium_rare',

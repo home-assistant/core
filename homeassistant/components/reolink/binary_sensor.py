@@ -2,6 +2,7 @@
 
 from collections.abc import Callable
 from dataclasses import dataclass
+from typing import override
 
 from reolink_aio.api import (
     FACE_DETECTION_TYPE,
@@ -363,6 +364,7 @@ class ReolinkBinarySensorEntity(ReolinkChannelCoordinatorEntity, BinarySensorEnt
         super().__init__(reolink_data, channel)
 
     @property
+    @override
     def is_on(self) -> bool:
         """State of the sensor."""
         return self.entity_description.value(self._host.api, self._channel)
@@ -371,6 +373,7 @@ class ReolinkBinarySensorEntity(ReolinkChannelCoordinatorEntity, BinarySensorEnt
 class ReolinkPushBinarySensorEntity(ReolinkBinarySensorEntity):
     """Binary-sensor class for Reolink IP camera motion sensors."""
 
+    @override
     async def async_added_to_hass(self) -> None:
         """Entity created."""
         await super().async_added_to_hass()
@@ -424,6 +427,7 @@ class ReolinkSmartAIBinarySensorEntity(
         }
 
     @property
+    @override
     def is_on(self) -> bool:
         """State of the sensor."""
         return self.entity_description.value(
@@ -454,6 +458,7 @@ class ReolinkIndexBinarySensorEntity(
         self._attr_translation_placeholders = {"index": str(index)}
 
     @property
+    @override
     def is_on(self) -> bool | None:
         """State of the sensor."""
         return self.entity_description.value(self._host.api, self._channel, self._index)

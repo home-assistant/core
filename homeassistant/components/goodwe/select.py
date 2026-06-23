@@ -1,6 +1,7 @@
 """GoodWe PV inverter selection settings entities."""
 
 import logging
+from typing import override
 
 from goodwe import Inverter, InverterError, OperationMode
 
@@ -102,6 +103,7 @@ class InverterOperationModeEntity(SelectEntity):
         value = await self._inverter.get_operation_mode()
         self._attr_current_option = _MODE_TO_OPTION[value]
 
+    @override
     async def async_select_option(self, option: str) -> None:
         """Change the selected option."""
         await self._inverter.set_operation_mode(_OPTION_TO_MODE[option])

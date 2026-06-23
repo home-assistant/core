@@ -2,7 +2,7 @@
 
 from collections.abc import Callable, Coroutine, Mapping
 from functools import partial
-from typing import Any, cast
+from typing import Any, cast, override
 
 import voluptuous as vol
 
@@ -786,11 +786,13 @@ class TemplateConfigFlowHandler(SchemaConfigFlowHandler, domain=DOMAIN):
     VERSION = 1
 
     @callback
+    @override
     def async_config_entry_title(self, options: Mapping[str, Any]) -> str:
         """Return config entry title."""
         return cast(str, options["name"])
 
     @staticmethod
+    @override
     async def async_setup_preview(hass: HomeAssistant) -> None:
         """Set up preview WS API."""
         websocket_api.async_register_command(hass, ws_start_preview)
