@@ -2,6 +2,7 @@
 
 from dataclasses import dataclass
 from datetime import timedelta
+import logging
 from typing import ClassVar, override
 
 import steam.api
@@ -15,6 +16,8 @@ from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, Upda
 from .const import CONF_ACCOUNTS, DOMAIN, LOGGER
 
 type SteamConfigEntry = ConfigEntry[SteamDataUpdateCoordinator]
+
+_LOGGER = logging.getLogger(__name__)
 
 
 @dataclass(kw_only=True, frozen=True)
@@ -108,7 +111,19 @@ class SteamDataUpdateCoordinator(DataUpdateCoordinator[dict[str, PlayerData]]):
         try:
             return await self.hass.async_add_executor_job(self._update)
 
+        except steam.api.HTTPTimeoutError as ex:
+            raise UpdateFailed(
+                translation_domain=DOMAIN,
+                translation_key="timeout_exception",
+            ) from ex
         except steam.api.HTTPError as ex:
-            if "401" in str(ex):
-                raise ConfigEntryAuthFailed from ex
-            raise UpdateFailed(ex) from ex
+            _LOGGER.debug("Full exception:", exc_info=True)
+            if "401" in str(ex) or "403" in str(ex):
+                raise ConfigEntryAuthFailed(
+                    translation_domain=DOMAIN,
+                    translation_key="auth_exception",
+                ) from ex
+            raise UpdateFailed(
+                translation_domain=DOMAIN,
+                translation_key="request_exception",
+            ) from ex

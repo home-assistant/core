@@ -50,15 +50,23 @@ async def test_setup_errors(
     assert config_entry.state is ConfigEntryState.SETUP_RETRY
 
 
+@pytest.mark.parametrize(
+    "side_effect",
+    [
+        steam.api.HTTPError("Server connection failed: Forbidden (403)"),
+        steam.api.HTTPError("Server connection failed: Unauthorized (401)"),
+    ],
+)
 async def test_setup_auth_failed(
     hass: HomeAssistant,
     config_entry: MockConfigEntry,
     steam_api: MagicMock,
+    side_effect: Exception,
 ) -> None:
     """Test that it throws ConfigEntryAuthFailed when authentication fails."""
     config_entry.add_to_hass(hass)
 
-    steam_api.return_value.GetPlayerSummaries.side_effect = steam.api.HTTPError("401")
+    steam_api.return_value.GetPlayerSummaries.side_effect = side_effect
 
     await hass.config_entries.async_setup(config_entry.entry_id)
     await hass.async_block_till_done()
