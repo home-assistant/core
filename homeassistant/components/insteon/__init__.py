@@ -118,6 +118,11 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         )
         device = devices.add_x10_device(housecode, unitcode, x10_type, steps)
 
+    if entry.unique_id != str(devices.modem.address):
+        hass.config_entries.async_update_entry(
+            entry, unique_id=str(devices.modem.address)
+        )
+
     create_insteon_device(hass, devices.modem, entry.entry_id)
 
     await hass.config_entries.async_forward_entry_setups(entry, INSTEON_PLATFORMS)

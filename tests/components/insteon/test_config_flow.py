@@ -30,12 +30,15 @@ from .const import (
     MOCK_USER_INPUT_PLM_MANUAL,
     PATCH_ASYNC_SETUP_ENTRY,
     PATCH_CONNECTION,
+    PATCH_DEVICES,
     PATCH_USB_LIST,
 )
 
 from tests.common import MockConfigEntry
 
 USB_PORTS = {"/dev/ttyUSB0": "/dev/ttyUSB0", MOCK_DEVICE: MOCK_DEVICE}
+
+MOCK_MODEM_ADDRESS = "1a2b3c"
 
 
 async def mock_successful_connection(*args, **kwargs):
@@ -56,6 +59,14 @@ def patch_usb_list():
         mock_usb_list,
     ):
         yield
+
+
+@pytest.fixture(autouse=True)
+def patch_modem_address():
+    """Mock the modem address used to derive the config entry unique ID."""
+    with patch(PATCH_DEVICES) as mock_devices:
+        mock_devices.modem.address = MOCK_MODEM_ADDRESS
+        yield mock_devices
 
 
 async def mock_failed_connection(*args, **kwargs):
@@ -351,7 +362,9 @@ async def test_reconfigure(
     expected_data: dict[str, Any],
 ) -> None:
     """Test reconfiguring the modem connection updates the existing entry."""
-    config_entry = MockConfigEntry(domain=DOMAIN, data=entry_data)
+    config_entry = MockConfigEntry(
+        domain=DOMAIN, data=entry_data, unique_id=MOCK_MODEM_ADDRESS
+    )
     config_entry.add_to_hass(hass)
 
     result = await config_entry.start_reconfigure_flow(hass)
@@ -370,7 +383,9 @@ async def test_reconfigure(
 async def test_reconfigure_hub_keeps_existing_values(hass: HomeAssistant) -> None:
     """Test the reconfigure form is pre-filled with the current connection info."""
     config_entry = MockConfigEntry(
-        domain=DOMAIN, data={**MOCK_USER_INPUT_HUB_V2, CONF_HUB_VERSION: 2}
+        domain=DOMAIN,
+        data={**MOCK_USER_INPUT_HUB_V2, CONF_HUB_VERSION: 2},
+        unique_id=MOCK_MODEM_ADDRESS,
     )
     config_entry.add_to_hass(hass)
 
@@ -387,7 +402,9 @@ async def test_reconfigure_hub_keeps_existing_values(hass: HomeAssistant) -> Non
 async def test_reconfigure_failed_connection(hass: HomeAssistant) -> None:
     """Test a failed reconfigure connection recovers into a successful flow."""
     entry_data = {**MOCK_USER_INPUT_HUB_V2, CONF_HUB_VERSION: 2}
-    config_entry = MockConfigEntry(domain=DOMAIN, data=entry_data)
+    config_entry = MockConfigEntry(
+        domain=DOMAIN, data=entry_data, unique_id=MOCK_MODEM_ADDRESS
+    )
     config_entry.add_to_hass(hass)
 
     result = await config_entry.start_reconfigure_flow(hass)
@@ -420,7 +437,9 @@ async def test_reconfigure_failed_connection(hass: HomeAssistant) -> None:
 
 async def test_reconfigure_plm_manual(hass: HomeAssistant) -> None:
     """Test reconfiguring a PLM falls back to manual entry when no USB ports exist."""
-    config_entry = MockConfigEntry(domain=DOMAIN, data=MOCK_USER_INPUT_PLM)
+    config_entry = MockConfigEntry(
+        domain=DOMAIN, data=MOCK_USER_INPUT_PLM, unique_id=MOCK_MODEM_ADDRESS
+    )
     config_entry.add_to_hass(hass)
 
     async def _no_usb_ports(hass: HomeAssistant) -> dict[str, str]:
@@ -441,3 +460,25 @@ async def test_reconfigure_plm_manual(hass: HomeAssistant) -> None:
     assert result["reason"] == "reconfigure_successful"
     assert config_entry.data == {CONF_DEVICE: "/dev/ttyUSB99"}
     assert len(mock_setup_entry.mock_calls) == 1
+
+
+async def test_reconfigure_unique_id_mismatch(hass: HomeAssistant) -> None:
+    """Test reconfiguring against a different modem aborts."""
+    config_entry = MockConfigEntry(
+        domain=DOMAIN,
+        data={**MOCK_USER_INPUT_HUB_V2, CONF_HUB_VERSION: 2},
+        unique_id="other-modem",
+    )
+    config_entry.add_to_hass(hass)
+
+    result = await config_entry.start_reconfigure_flow(hass)
+
+    result, _ = await _device_form(
+        hass,
+        result["flow_id"],
+        mock_successful_connection,
+        {**MOCK_USER_INPUT_HUB_V2, CONF_HOST: "2.3.4.5"},
+    )
+    assert result["type"] is FlowResultType.ABORT
+    assert result["reason"] == "unique_id_mismatch"
+    assert config_entry.data == {**MOCK_USER_INPUT_HUB_V2, CONF_HUB_VERSION: 2}
