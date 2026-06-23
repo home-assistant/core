@@ -73,7 +73,9 @@ async def test_stream_wav_unsupported_format() -> None:
 async def test_stream_wav_invalid_header() -> None:
     """Test streaming with an invalid WAV header."""
     invalid_wav = b"RIFFinvalidheader"
-    with pytest.raises(ValueError, match="Invalid WAV format: missing RIFF/WAVE header"):
+    with pytest.raises(
+        ValueError, match="Invalid WAV format: missing RIFF/WAVE header"
+    ):
         async for _, _ in stream_wav(
             _async_generator(invalid_wav),
             expected_channels=1,
@@ -87,9 +89,15 @@ async def test_stream_wav_missing_data_chunk() -> None:
     """Test streaming a WAV that is missing data chunk."""
     # Write only a fmt chunk
     header = b"RIFF" + struct.pack("<I", 24) + b"WAVE"
-    fmt_chunk = b"fmt " + struct.pack("<I", 16) + struct.pack("<HHIIHH", 1, 1, 16000, 32000, 2, 16)
+    fmt_chunk = (
+        b"fmt "
+        + struct.pack("<I", 16)
+        + struct.pack("<HHIIHH", 1, 1, 16000, 32000, 2, 16)
+    )
     wav_bytes = header + fmt_chunk
-    with pytest.raises(ValueError, match="Invalid WAV format: incomplete or missing data chunk"):
+    with pytest.raises(
+        ValueError, match="Invalid WAV format: incomplete or missing data chunk"
+    ):
         async for _, _ in stream_wav(
             _async_generator(wav_bytes),
             expected_channels=1,
@@ -138,7 +146,11 @@ async def test_stream_wav_non_pcm() -> None:
     """Test non-PCM WAV format."""
     header = b"RIFF" + struct.pack("<I", 36) + b"WAVE"
     # Format code 3 is IEEE Float (non-PCM)
-    fmt_chunk = b"fmt " + struct.pack("<I", 16) + struct.pack("<HHIIHH", 3, 1, 16000, 64000, 4, 32)
+    fmt_chunk = (
+        b"fmt "
+        + struct.pack("<I", 16)
+        + struct.pack("<HHIIHH", 3, 1, 16000, 64000, 4, 32)
+    )
     data_chunk = b"data" + struct.pack("<I", 100)
     wav_bytes = header + fmt_chunk + data_chunk
     with pytest.raises(ValueError, match="Can only stream PCM WAV, got format 3"):
