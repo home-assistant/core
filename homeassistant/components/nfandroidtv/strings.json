@@ -99,7 +99,7 @@
           "name": "Font size"
         },
         "icon": {
-          "description": "The image displayed as the notification icon left to notification text.",
+          "description": "The image displayed as the notification icon to the left of the notification text.",
           "name": "Icon"
         },
         "image": {
