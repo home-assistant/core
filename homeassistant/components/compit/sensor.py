@@ -1,6 +1,7 @@
 """Sensor platform for Compit integration."""
 
 from dataclasses import dataclass
+from typing import override
 
 from compit_inext_api.consts import CompitParameter
 
@@ -574,6 +575,9 @@ DEVICE_DEFINITIONS: dict[int, CompitDeviceDescription] = {
             CompitParameter.VENTILATION_ALARM: DESCRIPTIONS[
                 CompitParameter.VENTILATION_ALARM
             ],
+            CompitParameter.VENTILATION_GEAR: DESCRIPTIONS[
+                CompitParameter.VENTILATION_GEAR
+            ],
         },
     ),
     14: CompitDeviceDescription(
@@ -1002,6 +1006,7 @@ class CompitSensor(CoordinatorEntity[CompitDataUpdateCoordinator], SensorEntity)
         self.parameter_code = parameter_code
 
     @property
+    @override
     def available(self) -> bool:
         """Return if entity is available."""
         return (
@@ -1010,6 +1015,7 @@ class CompitSensor(CoordinatorEntity[CompitDataUpdateCoordinator], SensorEntity)
         )
 
     @property
+    @override
     def native_value(self) -> float | str | None:
         """Return the state of the sensor."""
         value = self.coordinator.connector.get_current_value(

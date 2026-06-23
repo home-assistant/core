@@ -3,6 +3,7 @@
 import asyncio
 from datetime import timedelta
 import logging
+from typing import override
 
 from ourgroceries import OurGroceries
 
@@ -50,6 +51,7 @@ class OurGroceriesDataUpdateCoordinator(DataUpdateCoordinator[dict[str, dict]]):
             return
         self._cache[list_id] = await self.og.get_list_items(list_id=list_id)
 
+    @override
     async def _async_update_data(self) -> dict[str, dict]:
         """Fetch data from OurGroceries."""
         self.lists = (await self.og.get_my_lists())["shoppingLists"]

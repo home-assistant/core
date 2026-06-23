@@ -279,6 +279,20 @@
           "no_alarm": "mdi:check-circle"
         }
       }
+    },
+    "switch": {
+      "device_on_off": {
+        "default": "mdi:power",
+        "state": {
+          "off": "mdi:power-off"
+        }
+      },
+      "force_dhw": {
+        "default": "mdi:water-boiler",
+        "state": {
+          "off": "mdi:water-boiler-off"
+        }
+      }
     }
   }
 }

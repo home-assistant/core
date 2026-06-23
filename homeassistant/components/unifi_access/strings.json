@@ -11,6 +11,7 @@
       "protect_api_key": "This API key is associated with UniFi Protect, not UniFi Access. Please generate a new API key from the UniFi Access application settings.",
       "unknown": "[%key:common::config_flow::error::unknown%]"
     },
+    "flow_title": "{name} ({ip_address})",
     "step": {
       "discovery_confirm": {
         "data": {
@@ -133,6 +134,12 @@
     }
   },
   "exceptions": {
+    "auth_failed": {
+      "message": "Authentication failed for UniFi Access at {host}."
+    },
+    "cannot_connect": {
+      "message": "Unable to connect to UniFi Access at {host}."
+    },
     "emergency_failed": {
       "message": "Failed to set emergency status."
     },
@@ -150,6 +157,18 @@
     },
     "unlock_failed": {
       "message": "Failed to unlock the door."
+    },
+    "update_failed_api": {
+      "message": "Error communicating with the UniFi Access API."
+    },
+    "update_failed_auth": {
+      "message": "Authentication failed while updating data."
+    },
+    "update_failed_connection": {
+      "message": "Error connecting to the UniFi Access API."
+    },
+    "update_failed_timeout": {
+      "message": "Timeout communicating with the UniFi Access API."
     }
   },
   "selector": {

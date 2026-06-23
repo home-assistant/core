@@ -25,14 +25,8 @@ async def test_network_speed(
     """Test missed call sensor."""
     await setup_platform(hass, SENSOR_DOMAIN)
 
-    assert (
-        hass.states.get("sensor.freebox_server_r2_freebox_download_speed").state
-        == "198.9"
-    )
-    assert (
-        hass.states.get("sensor.freebox_server_r2_freebox_upload_speed").state
-        == "1440.0"
-    )
+    assert hass.states.get("sensor.freebox_server_r2_download_speed").state == "198.9"
+    assert hass.states.get("sensor.freebox_server_r2_upload_speed").state == "1440.0"
 
     # Simulate a changed speed
     data_connection_get_status_changed = deepcopy(DATA_CONNECTION_GET_STATUS)
@@ -44,14 +38,8 @@ async def test_network_speed(
     async_fire_time_changed(hass)
     # To execute the save
     await hass.async_block_till_done()
-    assert (
-        hass.states.get("sensor.freebox_server_r2_freebox_download_speed").state
-        == "123.4"
-    )
-    assert (
-        hass.states.get("sensor.freebox_server_r2_freebox_upload_speed").state
-        == "432.1"
-    )
+    assert hass.states.get("sensor.freebox_server_r2_download_speed").state == "123.4"
+    assert hass.states.get("sensor.freebox_server_r2_upload_speed").state == "432.1"
 
 
 async def test_call(
@@ -60,7 +48,7 @@ async def test_call(
     """Test missed call sensor."""
     await setup_platform(hass, SENSOR_DOMAIN)
 
-    assert hass.states.get("sensor.freebox_server_r2_freebox_missed_calls").state == "3"
+    assert hass.states.get("sensor.freebox_server_r2_missed_calls").state == "3"
 
     # Simulate we marked calls as read
     data_call_get_calls_marked_as_read = []
@@ -70,7 +58,7 @@ async def test_call(
     async_fire_time_changed(hass)
     # To execute the save
     await hass.async_block_till_done()
-    assert hass.states.get("sensor.freebox_server_r2_freebox_missed_calls").state == "0"
+    assert hass.states.get("sensor.freebox_server_r2_missed_calls").state == "0"
 
 
 async def test_disk(
@@ -104,15 +92,25 @@ async def test_disk(
     assert hass.states.get("sensor.disk_3000_freebox_free_space").state == "44.9"
 
 
+async def test_temperature(hass: HomeAssistant, router: Mock) -> None:
+    """Test temperature sensors expose API names and values."""
+    await setup_platform(hass, SENSOR_DOMAIN)
+
+    assert hass.states.get("sensor.freebox_server_r2_disque_dur").state == "40"
+    assert hass.states.get("sensor.freebox_server_r2_temperature_switch").state == "50"
+    assert hass.states.get("sensor.freebox_server_r2_temperature_cpu_m").state == "60"
+    assert hass.states.get("sensor.freebox_server_r2_temperature_cpu_b").state == "56"
+
+
 async def test_battery(
     hass: HomeAssistant, freezer: FrozenDateTimeFactory, router: Mock
 ) -> None:
     """Test battery sensor."""
     await setup_platform(hass, SENSOR_DOMAIN)
 
-    assert hass.states.get("sensor.telecommande_niveau_de_batterie").state == "100"
-    assert hass.states.get("sensor.ouverture_porte_niveau_de_batterie").state == "100"
-    assert hass.states.get("sensor.detecteur_niveau_de_batterie").state == "100"
+    assert hass.states.get("sensor.telecommande_battery").state == "100"
+    assert hass.states.get("sensor.ouverture_porte_battery").state == "100"
+    assert hass.states.get("sensor.detecteur_battery").state == "100"
 
     # Simulate a changed battery
     data_home_get_nodes_changed = deepcopy(DATA_HOME_GET_NODES)
@@ -125,6 +123,6 @@ async def test_battery(
     async_fire_time_changed(hass)
     # To execute the save
     await hass.async_block_till_done()
-    assert hass.states.get("sensor.telecommande_niveau_de_batterie").state == "25"
-    assert hass.states.get("sensor.ouverture_porte_niveau_de_batterie").state == "50"
-    assert hass.states.get("sensor.detecteur_niveau_de_batterie").state == "75"
+    assert hass.states.get("sensor.telecommande_battery").state == "25"
+    assert hass.states.get("sensor.ouverture_porte_battery").state == "50"
+    assert hass.states.get("sensor.detecteur_battery").state == "75"

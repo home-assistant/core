@@ -6,7 +6,7 @@ from dataclasses import dataclass
 from datetime import timedelta
 from functools import partial
 import logging
-from typing import Any, final
+from typing import Any, final, override
 
 from propcache.api import cached_property
 import voluptuous as vol
@@ -197,6 +197,7 @@ class StateVacuumEntity(
     __vacuum_legacy_battery_icon: bool = False
     __vacuum_legacy_battery_feature: bool = False
 
+    @override
     def __init_subclass__(cls, **kwargs: Any) -> None:
         """Post initialisation processing."""
         super().__init_subclass__(**kwargs)
@@ -212,6 +213,7 @@ class StateVacuumEntity(
             # Integrations should use a separate battery sensor.
             cls.__vacuum_legacy_battery_icon = True
 
+    @override
     def __setattr__(self, name: str, value: Any) -> None:
         """Set attribute.
 
@@ -223,6 +225,7 @@ class StateVacuumEntity(
         return super().__setattr__(name, value)
 
     @callback
+    @override
     def add_to_platform_start(
         self,
         hass: HomeAssistant,
@@ -237,6 +240,7 @@ class StateVacuumEntity(
             self._report_deprecated_battery_properties("battery_icon")
 
     @callback
+    @override
     def async_registry_entry_updated(self) -> None:
         """Run when the entity registry entry has been updated."""
         self._async_check_segments_issues()
@@ -279,7 +283,8 @@ class StateVacuumEntity(
             # Don't report usage until after entity added to hass, after init
             report_usage(
                 f"is setting the battery supported feature which has been deprecated."
-                f" Integration {self.platform.platform_name} should remove this as part of migrating"
+                f" Integration {self.platform.platform_name}"
+                " should remove this as part of migrating"
                 " the battery level and icon to a sensor",
                 core_behavior=ReportBehavior.LOG,
                 core_integration_behavior=ReportBehavior.IGNORE,
@@ -304,6 +309,7 @@ class StateVacuumEntity(
         )
 
     @property
+    @override
     def capability_attributes(self) -> dict[str, Any] | None:
         """Return capability attributes."""
         if VacuumEntityFeature.FAN_SPEED in self.supported_features:
@@ -321,6 +327,7 @@ class StateVacuumEntity(
         return self._attr_fan_speed_list
 
     @property
+    @override
     def state_attributes(self) -> dict[str, Any]:
         """Return the state attributes of the vacuum cleaner."""
         data: dict[str, Any] = {}
@@ -340,6 +347,7 @@ class StateVacuumEntity(
 
     @final
     @property
+    @override
     def state(self) -> str | None:
         """Return the state of the vacuum cleaner."""
         if (activity := self.activity) is not None:
@@ -356,6 +364,7 @@ class StateVacuumEntity(
         return self._attr_activity
 
     @cached_property
+    @override
     def supported_features(self) -> VacuumEntityFeature:
         """Flag vacuum cleaner features that are supported."""
         return self._attr_supported_features

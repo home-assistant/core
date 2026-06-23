@@ -6,7 +6,7 @@ from operator import itemgetter
 import random
 import re
 import string
-from typing import Any, Final, TypedDict
+from typing import Any, Final, TypedDict, override
 
 import voluptuous as vol
 
@@ -208,6 +208,7 @@ class HomeKitConfigFlow(ConfigFlow, domain=DOMAIN):
         """Initialize config flow."""
         self.hk_data: dict[str, Any] = {}
 
+    @override
     async def async_step_user(
         self, user_input: dict[str, Any] | None = None
     ) -> ConfigFlowResult:
@@ -358,6 +359,7 @@ class HomeKitConfigFlow(ConfigFlow, domain=DOMAIN):
 
     @staticmethod
     @callback
+    @override
     def async_get_options_flow(
         config_entry: ConfigEntry,
     ) -> OptionsFlowHandler:
@@ -384,18 +386,17 @@ class OptionsFlowHandler(OptionsFlow):
 
         return self.async_show_form(step_id="yaml")
 
-    async def async_step_advanced(
+    async def async_step_bridged_device_triggers(
         self, user_input: dict[str, Any] | None = None
     ) -> ConfigFlowResult:
-        """Choose advanced options."""
+        """Choose bridged device triggers options."""
         hk_options = self.hk_options
-        show_advanced_options = self.show_advanced_options
         bridge_mode = hk_options[CONF_HOMEKIT_MODE] == HOMEKIT_MODE_BRIDGE
 
-        if not show_advanced_options or user_input is not None or not bridge_mode:
+        if user_input is not None or not bridge_mode:
             if user_input:
                 hk_options.update(user_input)
-                if show_advanced_options and bridge_mode:
+                if bridge_mode:
                     hk_options[CONF_DEVICES] = user_input[CONF_DEVICES]
 
             hk_options.pop(CONF_DOMAINS, None)
@@ -411,7 +412,7 @@ class OptionsFlowHandler(OptionsFlow):
             if device_id in all_supported_devices
         ]
         return self.async_show_form(
-            step_id="advanced",
+            step_id="bridged_device_triggers",
             data_schema=vol.Schema(
                 {
                     vol.Optional(CONF_DEVICES, default=devices): cv.multi_select(
@@ -446,7 +447,7 @@ class OptionsFlowHandler(OptionsFlow):
                 if not entity_config:
                     all_entity_config.pop(entity_id)
 
-            return await self.async_step_advanced()
+            return await self.async_step_bridged_device_triggers()
 
         cameras_with_audio = []
         cameras_with_copy = []
@@ -495,7 +496,7 @@ class OptionsFlowHandler(OptionsFlow):
             hk_options[CONF_FILTER] = entity_filter
             if self.included_cameras:
                 return await self.async_step_cameras()
-            return await self.async_step_advanced()
+            return await self.async_step_bridged_device_triggers()
 
         entity_filter = hk_options.get(CONF_FILTER, {})
         entities = entity_filter.get(CONF_INCLUDE_ENTITIES, [])
@@ -539,7 +540,7 @@ class OptionsFlowHandler(OptionsFlow):
             hk_options[CONF_FILTER] = _async_build_entities_filter(domains, entities)
             if self.included_cameras:
                 return await self.async_step_cameras()
-            return await self.async_step_advanced()
+            return await self.async_step_bridged_device_triggers()
 
         entity_filter: EntityFilterDict = hk_options.get(CONF_FILTER, {})
         entities = entity_filter.get(CONF_INCLUDE_ENTITIES, [])
@@ -594,7 +595,7 @@ class OptionsFlowHandler(OptionsFlow):
             )
             if self.included_cameras:
                 return await self.async_step_cameras()
-            return await self.async_step_advanced()
+            return await self.async_step_bridged_device_triggers()
 
         entity_filter = self.hk_options.get(CONF_FILTER, {})
         entities = entity_filter.get(CONF_INCLUDE_ENTITIES, [])

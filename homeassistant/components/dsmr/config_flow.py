@@ -2,7 +2,7 @@
 
 import asyncio
 from functools import partial
-from typing import Any
+from typing import Any, override
 
 from dsmr_parser import obis_references as obis_ref
 from dsmr_parser.clients.protocol import create_dsmr_reader, create_tcp_dsmr_reader
@@ -11,10 +11,8 @@ from dsmr_parser.clients.rfxtrx_protocol import (
     create_rfxtrx_tcp_dsmr_reader,
 )
 from dsmr_parser.objects import DSMRObject
-import serial
 import voluptuous as vol
 
-from homeassistant.components import usb
 from homeassistant.config_entries import (
     ConfigEntry,
     ConfigFlow,
@@ -24,6 +22,7 @@ from homeassistant.config_entries import (
 from homeassistant.const import CONF_HOST, CONF_PORT, CONF_PROTOCOL, CONF_TYPE
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.exceptions import HomeAssistantError
+from homeassistant.helpers.selector import SerialPortSelector
 
 from .const import (
     CONF_DSMR_VERSION,
@@ -37,8 +36,6 @@ from .const import (
     LOGGER,
     RFXTRX_DSMR_PROTOCOL,
 )
-
-CONF_MANUAL_PATH = "Enter Manually"
 
 
 class DSMRConnection:
@@ -117,7 +114,7 @@ class DSMRConnection:
 
         try:
             transport, protocol = await asyncio.create_task(reader_factory())
-        except serial.SerialException, OSError:
+        except OSError:
             LOGGER.exception("Error connecting to DSMR")
             return False
 
@@ -166,16 +163,16 @@ class DSMRFlowHandler(ConfigFlow, domain=DOMAIN):
 
     VERSION = 1
 
-    _dsmr_version: str | None = None
-
     @staticmethod
     @callback
+    @override
     def async_get_options_flow(
         config_entry: ConfigEntry,
     ) -> DSMROptionFlowHandler:
         """Get the options flow for this handler."""
         return DSMROptionFlowHandler()
 
+    @override
     async def async_step_user(
         self, user_input: dict[str, Any] | None = None
     ) -> ConfigFlowResult:
@@ -223,34 +220,13 @@ class DSMRFlowHandler(ConfigFlow, domain=DOMAIN):
         """Step when setting up serial configuration."""
         errors: dict[str, str] = {}
         if user_input is not None:
-            user_selection = user_input[CONF_PORT]
-            if user_selection == CONF_MANUAL_PATH:
-                self._dsmr_version = user_input[CONF_DSMR_VERSION]
-                return await self.async_step_setup_serial_manual_path()
-
-            dev_path = user_selection
-
-            validate_data = {
-                CONF_PORT: dev_path,
-                CONF_DSMR_VERSION: user_input[CONF_DSMR_VERSION],
-            }
-
-            data = await self.async_validate_dsmr(validate_data, errors)
+            data = await self.async_validate_dsmr(user_input, errors)
             if not errors:
                 return self.async_create_entry(title=data[CONF_PORT], data=data)
 
-        ports = await usb.async_scan_serial_ports(self.hass)
-        list_of_ports = {
-            port.device: f"{port.device} - {port.description or 'n/a'}"
-            f", s/n: {port.serial_number or 'n/a'}"
-            + (f" - {port.manufacturer}" if port.manufacturer else "")
-            for port in ports
-        }
-        list_of_ports[CONF_MANUAL_PATH] = CONF_MANUAL_PATH
-
         schema = vol.Schema(
             {
-                vol.Required(CONF_PORT): vol.In(list_of_ports),
+                vol.Required(CONF_PORT): SerialPortSelector(),
                 vol.Required(CONF_DSMR_VERSION): vol.In(DSMR_VERSIONS),
             }
         )
@@ -258,27 +234,6 @@ class DSMRFlowHandler(ConfigFlow, domain=DOMAIN):
             step_id="setup_serial",
             data_schema=schema,
             errors=errors,
-        )
-
-    async def async_step_setup_serial_manual_path(
-        self, user_input: dict[str, Any] | None = None
-    ) -> ConfigFlowResult:
-        """Select path manually."""
-        if user_input is not None:
-            validate_data = {
-                CONF_PORT: user_input[CONF_PORT],
-                CONF_DSMR_VERSION: self._dsmr_version,
-            }
-
-            errors: dict[str, str] = {}
-            data = await self.async_validate_dsmr(validate_data, errors)
-            if not errors:
-                return self.async_create_entry(title=data[CONF_PORT], data=data)
-
-        schema = vol.Schema({vol.Required(CONF_PORT): str})
-        return self.async_show_form(
-            step_id="setup_serial_manual_path",
-            data_schema=schema,
         )
 
     async def async_validate_dsmr(

@@ -1,5 +1,5 @@
 # serializer version: 1
-# name: test_entities[climate.bedroom_thermostat-entry]
+# name: test_entities[climate.bedroom_bedroom_thermostat-entry]
   EntityRegistryEntrySnapshot({
     'aliases': list([
       None,
@@ -27,7 +27,7 @@
     'disabled_by': None,
     'domain': 'climate',
     'entity_category': None,
-    'entity_id': 'climate.bedroom_thermostat',
+    'entity_id': 'climate.bedroom_bedroom_thermostat',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -50,7 +50,7 @@
     'unit_of_measurement': None,
   })
 # ---
-# name: test_entities[climate.bedroom_thermostat-state]
+# name: test_entities[climate.bedroom_bedroom_thermostat-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'current_temperature': 19.0,
@@ -74,14 +74,14 @@
       'temperature': 21.0,
     }),
     'context': <ANY>,
-    'entity_id': 'climate.bedroom_thermostat',
+    'entity_id': 'climate.bedroom_bedroom_thermostat',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': 'auto',
   })
 # ---
-# name: test_entities[climate.living_room_thermostat-entry]
+# name: test_entities[climate.living_room_living_room_thermostat-entry]
   EntityRegistryEntrySnapshot({
     'aliases': list([
       None,
@@ -109,7 +109,7 @@
     'disabled_by': None,
     'domain': 'climate',
     'entity_category': None,
-    'entity_id': 'climate.living_room_thermostat',
+    'entity_id': 'climate.living_room_living_room_thermostat',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -132,7 +132,7 @@
     'unit_of_measurement': None,
   })
 # ---
-# name: test_entities[climate.living_room_thermostat-state]
+# name: test_entities[climate.living_room_living_room_thermostat-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'current_temperature': 20.5,
@@ -156,7 +156,7 @@
       'temperature': 22.0,
     }),
     'context': <ANY>,
-    'entity_id': 'climate.living_room_thermostat',
+    'entity_id': 'climate.living_room_living_room_thermostat',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,

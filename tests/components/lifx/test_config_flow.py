@@ -640,7 +640,7 @@ async def test_suggested_area(
         await async_setup_component(hass, DOMAIN, {DOMAIN: {}})
         await hass.async_block_till_done()
 
-    entity_id = "light.my_bulb"
+    entity_id = "light.my_lifx_group_my_bulb"
     entity = entity_registry.async_get(entity_id)
 
     device = device_registry.async_get(entity.device_id)

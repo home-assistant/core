@@ -242,4 +242,4 @@ async def test_setup_exceptions(
     """Test the client async_connect."""
     mock_satel.connect.side_effect = exception
     await setup_integration(hass, mock_config_entry)
-    assert mock_config_entry.state == expected_state
+    assert mock_config_entry.state is expected_state

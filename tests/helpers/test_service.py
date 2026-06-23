@@ -415,9 +415,13 @@ def label_mock(hass: HomeAssistant) -> None:
         {
             config_entity_with_my_label.entity_id: config_entity_with_my_label,
             diag_entity_with_my_label.entity_id: diag_entity_with_my_label,
-            entity_with_label1_and_label2_from_device.entity_id: entity_with_label1_and_label2_from_device,
+            entity_with_label1_and_label2_from_device.entity_id: (
+                entity_with_label1_and_label2_from_device
+            ),
             entity_with_label1_from_device.entity_id: entity_with_label1_from_device,
-            entity_with_label1_from_device_and_different_area.entity_id: entity_with_label1_from_device_and_different_area,
+            entity_with_label1_from_device_and_different_area.entity_id: (
+                entity_with_label1_from_device_and_different_area
+            ),
             entity_with_labels_from_device.entity_id: entity_with_labels_from_device,
             entity_with_my_label.entity_id: entity_with_my_label,
             entity_with_no_labels.entity_id: entity_with_no_labels,
@@ -3383,4 +3387,44 @@ async def test_get_service_config_entry(hass: HomeAssistant) -> None:
     entry1.mock_state(hass, config_entries.ConfigEntryState.NOT_LOADED)
     with pytest.raises(exceptions.ServiceValidationError) as err:
         service.async_get_config_entry(hass, domain, entry_id)
+    assert err.value.translation_key == "service_config_entry_not_loaded"
+
+
+async def test_get_service_config_entry_none(hass: HomeAssistant) -> None:
+    """Test that we can get a service config entry if no entry ID is provided."""
+    domain = "mock_integration"
+
+    # No config entry exists
+    with pytest.raises(exceptions.ServiceValidationError) as err:
+        service.async_get_config_entry(hass, domain, None)
+    assert err.value.translation_key == "service_found_no_config_entry_for_domain"
+
+    # A single config entry exists and is loaded
+    entry1 = MockConfigEntry(domain=domain)
+    entry1.add_to_hass(hass)
+    entry1.mock_state(hass, config_entries.ConfigEntryState.LOADED)
+    assert service.async_get_config_entry(hass, domain, None) is entry1
+
+    # Ignored and disabled entries are not counted
+    ignored_entry = MockConfigEntry(domain=domain, source=config_entries.SOURCE_IGNORE)
+    ignored_entry.add_to_hass(hass)
+    disabled_entry = MockConfigEntry(
+        domain=domain, disabled_by=config_entries.ConfigEntryDisabler.USER
+    )
+    disabled_entry.add_to_hass(hass)
+    assert service.async_get_config_entry(hass, domain, None) is entry1
+
+    # Multiple config entries exist
+    entry2 = MockConfigEntry(domain=domain)
+    entry2.add_to_hass(hass)
+    entry2.mock_state(hass, config_entries.ConfigEntryState.LOADED)
+    with pytest.raises(exceptions.ServiceValidationError) as err:
+        service.async_get_config_entry(hass, domain, None)
+    assert err.value.translation_key == "service_found_multiple_config_entry_for_domain"
+
+    # A single config entry exists, but is not loaded
+    await hass.config_entries.async_remove(entry2.entry_id)
+    entry1.mock_state(hass, config_entries.ConfigEntryState.NOT_LOADED)
+    with pytest.raises(exceptions.ServiceValidationError) as err:
+        service.async_get_config_entry(hass, domain, None)
     assert err.value.translation_key == "service_config_entry_not_loaded"

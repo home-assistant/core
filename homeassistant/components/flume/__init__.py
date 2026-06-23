@@ -109,7 +109,7 @@ def setup_service(hass: HomeAssistant) -> None:
         entry: FlumeConfigEntry | None = hass.config_entries.async_get_entry(entry_id)
         if not entry:
             raise ValueError(f"Invalid config entry: {entry_id}")
-        if not entry.state == ConfigEntryState.LOADED:
+        if entry.state is not ConfigEntryState.LOADED:
             raise ValueError(f"Config entry not loaded: {entry_id}")
         return {
             "notifications": entry.runtime_data.notifications_coordinator.notifications  # type: ignore[dict-item]

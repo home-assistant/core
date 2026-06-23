@@ -5,7 +5,7 @@ from collections.abc import AsyncGenerator
 import io
 import logging
 import time
-from typing import Any, Final
+from typing import Any, Final, override
 import wave
 
 from wyoming.asr import Transcribe, Transcript
@@ -134,16 +134,19 @@ class WyomingAssistSatellite(WyomingSatelliteEntity, AssistSatelliteEntity):
         self._is_tts_streaming: bool = False
 
     @property
+    @override
     def pipeline_entity_id(self) -> str | None:
         """Return the entity ID of the pipeline to use for the next conversation."""
         return self.device.get_pipeline_entity_id(self.hass)
 
     @property
+    @override
     def vad_sensitivity_entity_id(self) -> str | None:
-        """Return the entity ID of the VAD sensitivity to use for the next conversation."""
+        """Return the VAD sensitivity entity ID for next conversation."""
         return self.device.get_vad_sensitivity_entity_id(self.hass)
 
     @property
+    @override
     def tts_options(self) -> dict[str, Any] | None:
         """Options passed for text-to-speech."""
         return {
@@ -153,29 +156,34 @@ class WyomingAssistSatellite(WyomingSatelliteEntity, AssistSatelliteEntity):
             tts.ATTR_PREFERRED_SAMPLE_BYTES: SAMPLE_WIDTH,
         }
 
+    @override
     async def async_added_to_hass(self) -> None:
         """Run when entity about to be added to hass."""
         await super().async_added_to_hass()
         self.start_satellite()
 
+    @override
     async def async_will_remove_from_hass(self) -> None:
         """Run when entity will be removed from hass."""
         await super().async_will_remove_from_hass()
         self.stop_satellite()
 
     @callback
+    @override
     def async_get_configuration(
         self,
     ) -> AssistSatelliteConfiguration:
         """Get the current satellite configuration."""
         raise NotImplementedError
 
+    @override
     async def async_set_configuration(
         self, config: AssistSatelliteConfiguration
     ) -> None:
         """Set the current satellite configuration."""
         raise NotImplementedError
 
+    @override
     def on_pipeline_event(self, event: PipelineEvent) -> None:
         """Set state based on pipeline stage."""
         if event.type == assist_pipeline.PipelineEventType.RUN_END:
@@ -193,7 +201,7 @@ class WyomingAssistSatellite(WyomingSatelliteEntity, AssistSatelliteEntity):
             return
 
         if event.type == assist_pipeline.PipelineEventType.RUN_START:
-            if event.data and (tts_output := event.data["tts_output"]):
+            if event.data and (tts_output := event.data.get("tts_output")):
                 # Get stream token early.
                 # If "tts_start_streaming" is True in INTENT_PROGRESS event, we
                 # can start streaming TTS before the TTS_END event.
@@ -299,7 +307,8 @@ class WyomingAssistSatellite(WyomingSatelliteEntity, AssistSatelliteEntity):
                 and not self._is_tts_streaming
                 and (stream := tts.async_get_stream(self.hass, tts_output["token"]))
             ):
-                # Send TTS only if we haven't already started streaming it in INTENT_PROGRESS.
+                # Send TTS only if we haven't already started
+                # streaming it in INTENT_PROGRESS.
                 self.config_entry.async_create_background_task(
                     self.hass,
                     self._stream_tts(stream),
@@ -318,6 +327,7 @@ class WyomingAssistSatellite(WyomingSatelliteEntity, AssistSatelliteEntity):
                     f"{self.entity_id} {event.type}",
                 )
 
+    @override
     async def async_announce(self, announcement: AssistSatelliteAnnouncement) -> None:
         """Announce media on the satellite.
 
@@ -347,6 +357,8 @@ class WyomingAssistSatellite(WyomingSatelliteEntity, AssistSatelliteEntity):
             # Use ffmpeg to convert to raw PCM audio with the appropriate format
             proc = await asyncio.create_subprocess_exec(
                 self._ffmpeg_manager.binary,
+                "-protocol_whitelist",
+                "http,https,file,tcp,tls",
                 "-i",
                 announcement.media_id,
                 "-f",
@@ -467,7 +479,7 @@ class WyomingAssistSatellite(WyomingSatelliteEntity, AssistSatelliteEntity):
 
     async def on_restart(self) -> None:
         """Block until pipeline loop will be restarted."""
-        _LOGGER.warning(
+        _LOGGER.debug(
             "Satellite has been disconnected. Reconnecting in %s second(s)",
             _RECONNECT_SECONDS,
         )

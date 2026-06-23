@@ -55,7 +55,7 @@ async def setup_rfx_test_cfg(
         host=host,
         port=port,
     )
-    mock_entry = MockConfigEntry(domain="rfxtrx", unique_id=DOMAIN, data=entry_data)
+    mock_entry = MockConfigEntry(domain=DOMAIN, unique_id=DOMAIN, data=entry_data)
     mock_entry.supports_remove_device = True
     mock_entry.add_to_hass(hass)
 

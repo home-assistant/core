@@ -1,7 +1,7 @@
 """Matter light."""
 
 from dataclasses import dataclass
-from typing import Any
+from typing import Any, override
 
 from chip.clusters import Objects as clusters
 from chip.clusters.Objects import NullValue
@@ -38,10 +38,12 @@ from .util import (
     renormalize,
 )
 
+_CC_COLOR_MODE = clusters.ColorControl.Enums.ColorModeEnum
+
 COLOR_MODE_MAP = {
-    clusters.ColorControl.Enums.ColorModeEnum.kCurrentHueAndCurrentSaturation: ColorMode.HS,
-    clusters.ColorControl.Enums.ColorModeEnum.kCurrentXAndCurrentY: ColorMode.XY,
-    clusters.ColorControl.Enums.ColorModeEnum.kColorTemperatureMireds: ColorMode.COLOR_TEMP,
+    _CC_COLOR_MODE.kCurrentHueAndCurrentSaturation: ColorMode.HS,
+    _CC_COLOR_MODE.kCurrentXAndCurrentY: ColorMode.XY,
+    _CC_COLOR_MODE.kColorTemperatureMireds: ColorMode.COLOR_TEMP,
 }
 
 # Maximum Mireds value per the Matter spec is 65279
@@ -299,6 +301,7 @@ class MatterLight(MatterEntity, LightEntity):
 
         return ha_color_mode
 
+    @override
     async def async_turn_on(self, **kwargs: Any) -> None:
         """Turn light on."""
 
@@ -329,6 +332,7 @@ class MatterLight(MatterEntity, LightEntity):
             clusters.OnOff.Commands.On(),
         )
 
+    @override
     async def async_turn_off(self, **kwargs: Any) -> None:
         """Turn light off."""
         await self.send_device_command(
@@ -336,6 +340,7 @@ class MatterLight(MatterEntity, LightEntity):
         )
 
     @callback
+    @override
     def _update_from_device(self) -> None:
         """Update from device."""
         if self._attr_supported_color_modes is None:
@@ -362,24 +367,16 @@ class MatterLight(MatterEntity, LightEntity):
 
                 assert capabilities is not None
 
-                if (
-                    capabilities
-                    & clusters.ColorControl.Bitmaps.ColorCapabilitiesBitmap.kHueSaturation
-                ):
+                color_caps = clusters.ColorControl.Bitmaps.ColorCapabilitiesBitmap
+                if capabilities & color_caps.kHueSaturation:
                     supported_color_modes.add(ColorMode.HS)
                     self._supports_color = True
 
-                if (
-                    capabilities
-                    & clusters.ColorControl.Bitmaps.ColorCapabilitiesBitmap.kXy
-                ):
+                if capabilities & color_caps.kXy:
                     supported_color_modes.add(ColorMode.XY)
                     self._supports_color = True
 
-                if (
-                    capabilities
-                    & clusters.ColorControl.Bitmaps.ColorCapabilitiesBitmap.kColorTemperature
-                ):
+                if capabilities & color_caps.kColorTemperature:
                     supported_color_modes.add(ColorMode.COLOR_TEMP)
                     self._supports_color_temperature = True
                     min_mireds = self.get_matter_attribute_value(
@@ -463,7 +460,14 @@ class MatterLight(MatterEntity, LightEntity):
             self._transitions_disabled = True
             LOGGER.warning(
                 "Detected a device that has been reported to have firmware issues "
-                "with light transitions. Transitions will be disabled for this light"
+                "with light transitions. Transitions will be disabled for this "
+                "light: %s %s (vendor_id: %s, product_id: %s, hw: %s, sw: %s)",
+                device_info.vendorName,
+                device_info.productName,
+                device_info.vendorID,
+                device_info.productID,
+                device_info.hardwareVersionString,
+                device_info.softwareVersionString,
             )
 
 

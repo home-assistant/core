@@ -2,7 +2,7 @@
 
 from collections.abc import Mapping
 import logging
-from typing import Any
+from typing import Any, override
 
 import PyTado
 import voluptuous as vol
@@ -342,6 +342,7 @@ class TadoClimate(TadoZoneEntity, ClimateEntity):
         self._async_update_zone_data()
 
     @callback
+    @override
     def _handle_coordinator_update(self) -> None:
         """Handle updated data from the coordinator."""
         self._async_update_zone_data()
@@ -388,16 +389,19 @@ class TadoClimate(TadoZoneEntity, ClimateEntity):
         self._async_update_zone_data()
 
     @property
+    @override
     def current_humidity(self) -> int | None:
         """Return the current humidity."""
         return self._tado_zone_data.current_humidity
 
     @property
+    @override
     def current_temperature(self) -> float | None:
         """Return the sensor temperature."""
         return self._tado_zone_data.current_temp
 
     @property
+    @override
     def hvac_mode(self) -> HVACMode:
         """Return hvac operation ie. heat, cool mode.
 
@@ -406,6 +410,7 @@ class TadoClimate(TadoZoneEntity, ClimateEntity):
         return TADO_TO_HA_HVAC_MODE_MAP.get(self._current_tado_hvac_mode, HVACMode.OFF)
 
     @property
+    @override
     def hvac_action(self) -> HVACAction:
         """Return the current running hvac operation if supported.
 
@@ -416,6 +421,7 @@ class TadoClimate(TadoZoneEntity, ClimateEntity):
         )
 
     @property
+    @override
     def fan_mode(self) -> str | None:
         """Return the fan setting."""
         if self._ac_device:
@@ -430,6 +436,7 @@ class TadoClimate(TadoZoneEntity, ClimateEntity):
             return FAN_AUTO
         return None
 
+    @override
     async def async_set_fan_mode(self, fan_mode: str) -> None:
         """Turn fan on/off."""
         if self._is_valid_setting_for_hvac_mode(TADO_FANSPEED_SETTING):
@@ -439,6 +446,7 @@ class TadoClimate(TadoZoneEntity, ClimateEntity):
         await self.coordinator.async_request_refresh()
 
     @property
+    @override
     def preset_mode(self) -> str:
         """Return the current preset mode (home, away or auto)."""
 
@@ -453,18 +461,21 @@ class TadoClimate(TadoZoneEntity, ClimateEntity):
         return PRESET_HOME
 
     @property
+    @override
     def preset_modes(self) -> list[str]:
         """Return a list of available preset modes."""
         if self._auto_geofencing_supported:
             return SUPPORT_PRESET_AUTO
         return SUPPORT_PRESET_MANUAL
 
+    @override
     async def async_set_preset_mode(self, preset_mode: str) -> None:
         """Set new preset mode."""
         await self._tado.set_presence(preset_mode)
         await self.coordinator.async_request_refresh()
 
     @property
+    @override
     def target_temperature_step(self) -> float | None:
         """Return the supported step of target temperature."""
         if self._tado_zone_data.current_hvac_mode == CONST_MODE_COOL:
@@ -472,6 +483,7 @@ class TadoClimate(TadoZoneEntity, ClimateEntity):
         return self._heat_step or self._cool_step
 
     @property
+    @override
     def target_temperature(self) -> float | None:
         """Return the temperature we try to reach."""
         if self._current_tado_hvac_mode == CONST_MODE_OFF:
@@ -506,6 +518,7 @@ class TadoClimate(TadoZoneEntity, ClimateEntity):
         await self._tado.set_temperature_offset(self._device_id, offset)
         await self.coordinator.async_request_refresh()
 
+    @override
     async def async_set_temperature(self, **kwargs: Any) -> None:
         """Set new target temperature."""
         if (temperature := kwargs.get(ATTR_TEMPERATURE)) is None:
@@ -524,6 +537,7 @@ class TadoClimate(TadoZoneEntity, ClimateEntity):
         await self._control_hvac(target_temp=temperature, hvac_mode=new_hvac_mode)
         await self.coordinator.async_request_refresh()
 
+    @override
     async def async_set_hvac_mode(self, hvac_mode: HVACMode) -> None:
         """Set new target hvac mode."""
         _LOGGER.debug(
@@ -533,11 +547,13 @@ class TadoClimate(TadoZoneEntity, ClimateEntity):
         await self.coordinator.async_request_refresh()
 
     @property
+    @override
     def available(self) -> bool:
         """Return if the device is available."""
         return self._tado_zone_data.available
 
     @property
+    @override
     def min_temp(self) -> float:
         """Return the minimum temperature."""
         if (
@@ -551,6 +567,7 @@ class TadoClimate(TadoZoneEntity, ClimateEntity):
         return TADO_DEFAULT_MIN_TEMP
 
     @property
+    @override
     def max_temp(self) -> float:
         """Return the maximum temperature."""
         if (
@@ -564,6 +581,7 @@ class TadoClimate(TadoZoneEntity, ClimateEntity):
         return TADO_DEFAULT_MAX_TEMP
 
     @property
+    @override
     def swing_mode(self) -> str | None:
         """Active swing mode for the device."""
         swing_modes_tuple = (
@@ -585,6 +603,7 @@ class TadoClimate(TadoZoneEntity, ClimateEntity):
         return TADO_TO_HA_SWING_MODE_MAP[TADO_SWING_OFF]
 
     @property
+    @override
     def extra_state_attributes(self) -> Mapping[str, Any] | None:
         """Return temperature offset."""
         state_attr: dict[str, Any] = self._tado_zone_temp_offset
@@ -596,6 +615,7 @@ class TadoClimate(TadoZoneEntity, ClimateEntity):
         )
         return state_attr
 
+    @override
     async def async_set_swing_mode(self, swing_mode: str) -> None:
         """Set swing modes for the device."""
         vertical_swing = None
@@ -781,11 +801,11 @@ class TadoClimate(TadoZoneEntity, ClimateEntity):
             duration=duration,
             device_type=self.zone_type,
             mode=self._current_tado_hvac_mode,
-            fan_speed=fan_speed,  # api defaults to not sending fanSpeed if None specified
-            swing=swing,  # api defaults to not sending swing if None specified
-            fan_level=fan_level,  # api defaults to not sending fanLevel if fanSpeend not None
-            vertical_swing=vertical_swing,  # api defaults to not sending verticalSwing if swing not None
-            horizontal_swing=horizontal_swing,  # api defaults to not sending horizontalSwing if swing not None
+            fan_speed=fan_speed,
+            swing=swing,
+            fan_level=fan_level,
+            vertical_swing=vertical_swing,
+            horizontal_swing=horizontal_swing,
         )
 
     def _is_valid_setting_for_hvac_mode(self, setting: str) -> bool:

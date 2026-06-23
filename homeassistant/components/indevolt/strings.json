@@ -31,6 +31,10 @@
         },
         "description": "Enter the connection details for your Indevolt device.",
         "title": "Connect to Indevolt device"
+      },
+      "zeroconf_confirm": {
+        "description": "Do you want to add {model} ({host}) to Home Assistant?",
+        "title": "Discovered Indevolt {model}"
       }
     }
   },
@@ -114,6 +118,9 @@
       "battery_pack_1_current": {
         "name": "Battery pack 1 current"
       },
+      "battery_pack_1_cycles": {
+        "name": "Battery pack 1 cycle count"
+      },
       "battery_pack_1_mos_temperature": {
         "name": "Battery pack 1 MOS temperature"
       },
@@ -131,6 +138,9 @@
       },
       "battery_pack_2_current": {
         "name": "Battery pack 2 current"
+      },
+      "battery_pack_2_cycles": {
+        "name": "Battery pack 2 cycle count"
       },
       "battery_pack_2_mos_temperature": {
         "name": "Battery pack 2 MOS temperature"
@@ -150,6 +160,9 @@
       "battery_pack_3_current": {
         "name": "Battery pack 3 current"
       },
+      "battery_pack_3_cycles": {
+        "name": "Battery pack 3 cycle count"
+      },
       "battery_pack_3_mos_temperature": {
         "name": "Battery pack 3 MOS temperature"
       },
@@ -168,6 +181,9 @@
       "battery_pack_4_current": {
         "name": "Battery pack 4 current"
       },
+      "battery_pack_4_cycles": {
+        "name": "Battery pack 4 cycle count"
+      },
       "battery_pack_4_mos_temperature": {
         "name": "Battery pack 4 MOS temperature"
       },
@@ -185,6 +201,9 @@
       },
       "battery_pack_5_current": {
         "name": "Battery pack 5 current"
+      },
+      "battery_pack_5_cycles": {
+        "name": "Battery pack 5 cycle count"
       },
       "battery_pack_5_mos_temperature": {
         "name": "Battery pack 5 MOS temperature"
@@ -221,9 +240,6 @@
       },
       "cumulative_production": {
         "name": "Cumulative production"
-      },
-      "cycle_count": {
-        "name": "Cycle count"
       },
       "daily_production": {
         "name": "Daily production"
@@ -279,6 +295,9 @@
           "self_consumed_prioritized": "Self-consumed prioritized"
         }
       },
+      "equivalent_full_cycles": {
+        "name": "Equivalent full cycles"
+      },
       "grid_frequency": {
         "name": "Grid frequency"
       },
@@ -290,6 +309,12 @@
       },
       "main_current": {
         "name": "Main current"
+      },
+      "main_cycles": {
+        "name": "Main cycle count"
+      },
+      "main_mos_temperature": {
+        "name": "Main MOS temperature"
       },
       "main_serial_number": {
         "name": "Main serial number"
@@ -326,6 +351,20 @@
       "rated_capacity": {
         "name": "Rated capacity"
       },
+      "realtime_command": {
+        "name": "Real-time mode",
+        "state": {
+          "charging": "[%key:common::state::charging%]",
+          "discharging": "[%key:common::state::discharging%]",
+          "standby": "[%key:common::state::standby%]"
+        }
+      },
+      "realtime_power_limit": {
+        "name": "Real-time power limit"
+      },
+      "realtime_target_soc": {
+        "name": "Real-time target SOC"
+      },
       "serial_number": {
         "name": "Serial number"
       },
@@ -355,6 +394,9 @@
     }
   },
   "exceptions": {
+    "config_entry_not_ready": {
+      "message": "Device config retrieval failed: {error}"
+    },
     "energy_mode_change_unavailable_outdoor_portable": {
       "message": "Energy mode cannot be changed when the device is in outdoor/portable mode"
     },
@@ -381,6 +423,9 @@
     },
     "soc_below_minimum": {
       "message": "Target SOC ({target}%) is below the device minimum ({minimum_soc}%)"
+    },
+    "update_failed": {
+      "message": "Device update failed: {error}"
     },
     "write_error": {
       "message": "Cannot update value for {name}"

@@ -3,6 +3,7 @@
 from collections.abc import Callable
 from dataclasses import dataclass
 from datetime import date, datetime
+from typing import override
 
 from opower import MeterType, UnitOfMeasure
 
@@ -233,13 +234,13 @@ async def async_setup_entry(
             )
             sensors: tuple[OpowerEntityDescription, ...] = COMMON_SENSORS
             if (
-                account.meter_type == MeterType.ELEC
+                account.meter_type is MeterType.ELEC
                 and forecast is not None
-                and forecast.unit_of_measure == UnitOfMeasure.KWH
+                and forecast.unit_of_measure is UnitOfMeasure.KWH
             ):
                 sensors += ELEC_SENSORS
             elif (
-                account.meter_type == MeterType.GAS
+                account.meter_type is MeterType.GAS
                 and forecast is not None
                 and forecast.unit_of_measure in [UnitOfMeasure.THERM, UnitOfMeasure.CCF]
             ):
@@ -326,11 +327,13 @@ class OpowerSensor(CoordinatorEntity[OpowerCoordinator], SensorEntity):
         self.utility_account_id = utility_account_id
 
     @property
+    @override
     def available(self) -> bool:
         """Return if entity is available."""
         return super().available and self.utility_account_id in self.coordinator.data
 
     @property
+    @override
     def native_value(self) -> StateType | date | datetime:
         """Return the state."""
         return self.entity_description.value_fn(

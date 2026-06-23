@@ -3,7 +3,7 @@
 from collections.abc import Callable
 from dataclasses import dataclass
 import logging
-from typing import Any, Final
+from typing import Any, Final, override
 
 from homeassistant.components.button import (
     ButtonDeviceClass,
@@ -184,6 +184,7 @@ class FritzButton(ButtonEntity):
             name=device_friendly_name,
         )
 
+    @override
     async def async_press(self) -> None:
         """Triggers Fritz!Box service."""
         if self.entity_description.key == "cleanup":
@@ -217,9 +218,6 @@ def _async_wol_buttons_list(
 
     new_wols: list[FritzBoxWOLButton] = []
 
-    if avm_wrapper.unique_id not in data_fritz.wol_buttons:
-        data_fritz.wol_buttons[avm_wrapper.unique_id] = set()
-
     for mac, device in avm_wrapper.devices.items():
         if _is_tracked(mac, data_fritz.wol_buttons.values()):
             _LOGGER.debug("Skipping wol button creation for device %s", device.hostname)
@@ -251,6 +249,7 @@ class FritzBoxWOLButton(FritzDeviceBase, ButtonEntity):
         self._attr_unique_id = f"{self._mac}_wake_on_lan"
         self._is_available = True
 
+    @override
     async def async_press(self) -> None:
         """Press the button."""
         if self.mac_address:
