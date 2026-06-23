@@ -614,11 +614,14 @@ when bordered by a non-alphanumeric character (`_`, `-`, `.`, `:`,
 space, ...) or a string boundary, so unrelated substrings like
 `"highlight-..."` or `"light2"` don't match `light`.
 
-Scope is narrower than `W7425`: only platform modules whose file
-name matches a known entity platform are checked.
-`entity.py`, `__init__.py`, and other helper sub-modules are out of
-scope because the platform context is ambiguous there. The three
-in-class scan locations are the same as for `W7425`.
+Scope is narrower than `W7425`: only files whose integration
+sub-module path keys off a known entity platform name are checked.
+Both single-file platform modules (`sensor.py`, `light.py`, ...) and
+platform packages (`sensor/__init__.py`, `sensor/helpers.py`, ...)
+are in scope. `entity.py`, `__init__.py` at the integration root, and
+other helper sub-modules are out of scope because the platform
+context is ambiguous there. The three in-class scan locations are
+the same as for `W7425`.
 
 
 ## `home_assistant_entity_description_defaults` checker

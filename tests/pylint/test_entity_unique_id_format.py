@@ -781,6 +781,19 @@ class MySwitch(Entity):
             "switch.py",
             id="switch_class_body_literal",
         ),
+        pytest.param(
+            """
+from homeassistant.helpers.entity import Entity
+
+class MySensor(Entity):
+    def __init__(self, key):
+        self._attr_unique_id = f"sensor_{key}"
+""",
+            "sensor",
+            "homeassistant.components.test_integration.sensor.helpers",
+            "sensor/helpers.py",
+            id="platform_package_submodule",
+        ),
     ],
 )
 def test_redundant_platform_fires(

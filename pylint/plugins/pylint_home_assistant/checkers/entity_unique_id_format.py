@@ -37,10 +37,12 @@ user-facing vocabulary: the *platform*, e.g. ``sensor``, ``light``,
 ``binary_sensor``) is already known from the module the entity lives
 in. Repeating that name as a delimited segment of the entity's unique
 ID duplicates information already present in the registry key. The
-rule only fires inside platform modules whose file name matches a
-known entity platform (``sensor.py``, ``binary_sensor.py``,
-``light.py``, ...); shared bases in ``entity.py`` and code in
-``__init__.py`` are not in scope because the platform context is
+rule fires when the integration sub-module path keys off a known
+entity platform name; both single-file platform modules
+(``sensor.py``, ``binary_sensor.py``, ``light.py``, ...) and platform
+packages (``sensor/__init__.py``, ``sensor/helpers.py``, ...) are in
+scope. Shared bases in ``entity.py`` and code in ``__init__.py`` at
+the integration root are not in scope because the platform context is
 ambiguous there.
 
 Three locations are scanned for both rules: class-body
