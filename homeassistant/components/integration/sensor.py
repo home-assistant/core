@@ -410,7 +410,8 @@ class IntegrationSensor(RestoreSensor):
             # User device class is not compatible, issue warning and fail back to
             # inferred class.
             _LOGGER.warning(
-                "Specified device class '%s' is not compatible with inferred unit or state class of this sensor",
+                "%s: Specified device class '%s' is not compatible with the derived unit or the state class of this sensor",
+                self.entity_id,
                 device_class,
             )
 
