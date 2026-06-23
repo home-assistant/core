@@ -366,7 +366,7 @@ async def test_reconfigure_updates_entry(
     assert result["type"] is FlowResultType.ABORT
     assert result["reason"] == "reconfigure_successful"
     assert config_entry.data == expected_data
-    assert len(mock_setup_entry.mock_calls) == 1
+    assert len(mock_setup_entry.mock_calls) == 0
 
 
 async def test_reconfigure_hub_keeps_existing_values(hass: HomeAssistant) -> None:
@@ -417,7 +417,7 @@ async def test_reconfigure_failed_connection(hass: HomeAssistant) -> None:
         CONF_HOST: "2.3.4.5",
         CONF_HUB_VERSION: 2,
     }
-    assert len(mock_setup_entry.mock_calls) == 1
+    assert len(mock_setup_entry.mock_calls) == 0
 
 
 async def test_reconfigure_plm_manual(hass: HomeAssistant) -> None:
@@ -442,7 +442,7 @@ async def test_reconfigure_plm_manual(hass: HomeAssistant) -> None:
     assert result["type"] is FlowResultType.ABORT
     assert result["reason"] == "reconfigure_successful"
     assert config_entry.data == {CONF_DEVICE: "/dev/ttyUSB99"}
-    assert len(mock_setup_entry.mock_calls) == 1
+    assert len(mock_setup_entry.mock_calls) == 0
 
 
 async def test_reconfigure_closes_existing_connection(hass: HomeAssistant) -> None:

@@ -81,9 +81,12 @@ class InsteonFlowHandler(ConfigFlow, domain=DOMAIN):
     def _async_finish_flow(self, data: dict[str, Any]) -> ConfigFlowResult:
         """Update the existing entry when reconfiguring, otherwise create one."""
         if self.source == SOURCE_RECONFIGURE:
-            return self.async_update_reload_and_abort(
+            # The connection is re-established in place when validating the new
+            # settings, so update the entry without reloading the integration.
+            self.hass.config_entries.async_update_entry(
                 self._get_reconfigure_entry(), data=data
             )
+            return self.async_abort(reason="reconfigure_successful")
         return self.async_create_entry(title="", data=data)
 
     async def async_step_plm(
