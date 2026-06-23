@@ -11,6 +11,9 @@ from duco_connectivity import (
     ApiInfo,
     BoardInfo,
     DiagComponent,
+    InfoGroup,
+    InfoZone,
+    InfoZonesOverview,
     KnownActionName,
     LanInfo,
     Node,
@@ -134,7 +137,7 @@ def mock_board_info() -> BoardInfo:
 def mock_api_info() -> ApiInfo:
     """Return mock API info."""
     return ApiInfo(
-        api_version="2.5",
+        public_api_version="2.5",
         reported_api_version="2.5.1",
         endpoints=[
             ApiEndpointInfo(
@@ -213,11 +216,31 @@ def dynamic_sensor_nodes() -> dict[int, Node]:
 
 
 @pytest.fixture
+def mock_zones_info() -> InfoZonesOverview:
+    """Return mock zone info used for subnode visit links."""
+    return InfoZonesOverview(
+        zones=[
+            InfoZone(
+                zone_id=1,
+                name="VentEtaCentral",
+                groups=[
+                    InfoGroup(
+                        group_id=1,
+                        nodes=[2, 113],
+                    )
+                ],
+            )
+        ]
+    )
+
+
+@pytest.fixture
 def mock_duco_client(
     mock_api_info: ApiInfo,
     mock_board_info: BoardInfo,
     mock_lan_info: LanInfo,
     mock_nodes: list[Node],
+    mock_zones_info: InfoZonesOverview,
     mock_node_actions: NodeListActionItemList,
 ) -> Generator[AsyncMock]:
     """Return a mocked DucoClient used by both the integration and config flow."""
@@ -236,7 +259,9 @@ def mock_duco_client(
         client.async_get_board_info.return_value = mock_board_info
         client.async_get_lan_info.return_value = mock_lan_info
         client.async_get_nodes.return_value = mock_nodes
+        client.async_get_zones_info.return_value = mock_zones_info
         client.async_get_node_actions.return_value = mock_node_actions
+        client.async_get_zones_info.return_value = mock_zones_info
         client.async_get_diagnostics.return_value = [
             DiagComponent(component="Ventilation", status="Ok")
         ]

@@ -4,11 +4,10 @@ from typing import override
 
 from duco_connectivity.models import Node, NodeType
 
-from homeassistant.const import ATTR_VIA_DEVICE
 from homeassistant.helpers.device_registry import CONNECTION_NETWORK_MAC, DeviceInfo
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
-from .const import DOMAIN
+from .const import BOX_NODE_ID, DOMAIN
 from .coordinator import DucoCoordinator
 
 
@@ -21,24 +20,41 @@ class DucoEntity(CoordinatorEntity[DucoCoordinator]):
         """Initialize the entity."""
         super().__init__(coordinator)
         self._node_id = node.node_id
-        mac = coordinator.config_entry.unique_id
-        assert mac is not None
+        if (mac := coordinator.config_entry.unique_id) is None:
+            raise ValueError("Duco config entry unique ID is missing")
+
+        self._is_box = node.general.node_type == NodeType.BOX
+        device_name: str
+        if self._is_box:
+            device_name = node.general.name or coordinator.board_info.box_name
+        else:
+            device_name = node.general.name or f"Node {node.node_id}"
+
         device_info = DeviceInfo(
-            identifiers={(DOMAIN, f"{mac}_{node.node_id}")},
+            identifiers={(DOMAIN, coordinator.device_identifier(node.node_id))},
             manufacturer="Duco",
-            model=coordinator.board_info.box_name
-            if node.general.node_type == NodeType.BOX
-            else node.general.node_type,
-            name=node.general.name or f"Node {node.node_id}",
+            model=(
+                coordinator.board_info.box_name
+                if self._is_box
+                else node.general.node_type
+            ),
+            name=device_name,
+            configuration_url=coordinator.configuration_url(
+                node.node_id, is_box=self._is_box
+            ),
         )
-        device_info.update(
-            {
-                "connections": {(CONNECTION_NETWORK_MAC, mac)},
-                "serial_number": coordinator.board_info.serial_board_box,
-            }
-            if node.general.node_type == NodeType.BOX
-            else {ATTR_VIA_DEVICE: (DOMAIN, f"{mac}_1")}
-        )
+        if self._is_box:
+            device_info["connections"] = {(CONNECTION_NETWORK_MAC, mac)}
+            device_info["serial_number"] = coordinator.board_info.serial_board_box
+            device_info["sw_version"] = coordinator.board_info.software_version
+            if model_id := coordinator.board_info.box_sub_type_name:
+                device_info["model_id"] = model_id
+        else:
+            device_info["via_device"] = (
+                DOMAIN,
+                coordinator.device_identifier(BOX_NODE_ID),
+            )
+
         self._attr_device_info = device_info
 
     @property
