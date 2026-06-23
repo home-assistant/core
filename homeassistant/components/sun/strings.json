@@ -2,8 +2,8 @@
   "common": {
     "trigger_for_name": "For at least",
     "trigger_threshold_name": "Threshold type",
-    "trigger_twilight_description": "The twilight phase that defines when dawn and dusk occur.",
-    "trigger_twilight_name": "Twilight type"
+    "twilight_type_description": "The phase of twilight.",
+    "twilight_type_name": "Twilight type"
   },
   "config": {
     "step": {
@@ -43,7 +43,7 @@
     }
   },
   "selector": {
-    "trigger_twilight": {
+    "twilight_type": {
       "options": {
         "astronomical": "Astronomical",
         "civil": "Civil",
@@ -56,9 +56,9 @@
     "dawn": {
       "description": "Triggers at dawn, when the morning twilight begins.",
       "fields": {
-        "twilight": {
-          "description": "[%key:component::sun::common::trigger_twilight_description%]",
-          "name": "[%key:component::sun::common::trigger_twilight_name%]"
+        "type": {
+          "description": "[%key:component::sun::common::twilight_type_description%]",
+          "name": "[%key:component::sun::common::twilight_type_name%]"
         }
       },
       "name": "Dawn"
@@ -66,9 +66,9 @@
     "dusk": {
       "description": "Triggers at dusk, when the evening twilight ends.",
       "fields": {
-        "twilight": {
-          "description": "[%key:component::sun::common::trigger_twilight_description%]",
-          "name": "[%key:component::sun::common::trigger_twilight_name%]"
+        "type": {
+          "description": "[%key:component::sun::common::twilight_type_description%]",
+          "name": "[%key:component::sun::common::twilight_type_name%]"
         }
       },
       "name": "Dusk"

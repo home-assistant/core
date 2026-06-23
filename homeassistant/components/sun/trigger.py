@@ -11,6 +11,7 @@ from homeassistant.const import (
     CONF_FOR,
     CONF_OFFSET,
     CONF_OPTIONS,
+    CONF_TYPE,
     DEGREE,
     EVENT_CORE_CONFIG_UPDATE,
     SUN_EVENT_SUNRISE,
@@ -53,7 +54,6 @@ SUN_EVENT_SOLAR_MIDNIGHT = "midnight"
 SUN_EVENT_DAWN = "dawn"
 SUN_EVENT_DUSK = "dusk"
 
-CONF_TWILIGHT = "twilight"
 TWILIGHT_CIVIL = "civil"
 TWILIGHT_NAUTICAL = "nautical"
 TWILIGHT_ASTRONOMICAL = "astronomical"
@@ -226,7 +226,7 @@ class SolarMidnightTrigger(SunEventTrigger):
 _DAWN_DUSK_TRIGGER_SCHEMA = vol.Schema(
     {
         vol.Required(CONF_OPTIONS, default=dict): {
-            vol.Optional(CONF_TWILIGHT, default=TWILIGHT_CIVIL): vol.In(
+            vol.Optional(CONF_TYPE, default=TWILIGHT_CIVIL): vol.In(
                 _TWILIGHT_DEPRESSIONS
             ),
         }
@@ -242,7 +242,7 @@ class SunDawnDuskTrigger(SunEventTrigger):
     def __init__(self, hass: HomeAssistant, config: TriggerConfig) -> None:
         """Initialize the trigger."""
         super().__init__(hass, config)
-        self._twilight: str = self._options[CONF_TWILIGHT]
+        self._twilight: str = self._options[CONF_TYPE]
         self._depression = _TWILIGHT_DEPRESSIONS[self._twilight]
 
     @override
@@ -256,7 +256,7 @@ class SunDawnDuskTrigger(SunEventTrigger):
 
     @override
     def _action_payload(self) -> dict[str, Any]:
-        return {CONF_TWILIGHT: self._twilight}
+        return {CONF_TYPE: self._twilight}
 
 
 class DawnTrigger(SunDawnDuskTrigger):

@@ -282,8 +282,8 @@ async def test_dawn_dusk_trigger_fires(
     with freeze_time(_NOW):
         await _arm_automation(
             hass,
-            {"platform": trigger_key, "options": {"twilight": twilight}},
-            {"twilight": "{{ trigger.twilight }}"},
+            {"platform": trigger_key, "options": {"type": twilight}},
+            {"type": "{{ trigger.type }}"},
         )
         expected = _expected_dawn_dusk(
             hass, event, _TWILIGHT_DEPRESSIONS[twilight], _NOW
@@ -293,7 +293,7 @@ async def test_dawn_dusk_trigger_fires(
         await hass.async_block_till_done()
 
     assert len(service_calls) == 1
-    assert service_calls[0].data["twilight"] == twilight
+    assert service_calls[0].data["type"] == twilight
 
 
 async def test_dawn_defaults_to_civil(
@@ -302,7 +302,7 @@ async def test_dawn_defaults_to_civil(
     """Test the dawn trigger defaults to civil twilight."""
     with freeze_time(_NOW):
         await _arm_automation(
-            hass, {"platform": "sun.dawn"}, {"twilight": "{{ trigger.twilight }}"}
+            hass, {"platform": "sun.dawn"}, {"type": "{{ trigger.type }}"}
         )
         # Nautical dawn happens earlier than civil dawn and must not fire.
         civil = _expected_dawn_dusk(hass, "dawn", 6.0, _NOW)
@@ -316,7 +316,7 @@ async def test_dawn_defaults_to_civil(
         async_fire_time_changed(hass, civil + timedelta(seconds=1))
         await hass.async_block_till_done()
         assert len(service_calls) == 1
-        assert service_calls[0].data["twilight"] == "civil"
+        assert service_calls[0].data["type"] == "civil"
 
 
 # --- Edge cases: no matching solar event on the following day ----------------
@@ -396,7 +396,7 @@ async def test_dawn_dusk_trigger_no_event_next_day(
 
     with freeze_time(now):
         await _arm_automation(
-            hass, {"platform": trigger_key, "options": {"twilight": "civil"}}, {}
+            hass, {"platform": trigger_key, "options": {"type": "civil"}}, {}
         )
         expected = _expected_dawn_dusk(hass, event, _TWILIGHT_DEPRESSIONS["civil"], now)
         # The event does not occur on the following day at this latitude/season.
@@ -561,7 +561,7 @@ async def test_dawn_dusk_twilight_validation(
     hass: HomeAssistant, twilight: str, valid: bool
 ) -> None:
     """Test the dawn/dusk triggers validate the twilight option."""
-    config = {"platform": "sun.dawn", "options": {"twilight": twilight}}
+    config = {"platform": "sun.dawn", "options": {"type": twilight}}
     if valid:
         await async_validate_trigger_config(hass, [config])
     else:

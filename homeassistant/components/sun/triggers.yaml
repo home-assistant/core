@@ -1,9 +1,9 @@
-.twilight: &trigger_twilight
+.type: &twilight_type
   required: true
   default: civil
   selector:
     select:
-      translation_key: trigger_twilight
+      translation_key: twilight_type
       options:
         - civil
         - nautical
@@ -36,11 +36,11 @@ solar_midnight: {}
 
 dawn:
   fields:
-    twilight: *trigger_twilight
+    type: *twilight_type
 
 dusk:
   fields:
-    twilight: *trigger_twilight
+    type: *twilight_type
 
 elevation_changed:
   fields:
