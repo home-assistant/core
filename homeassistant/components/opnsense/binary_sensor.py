@@ -1,42 +1,33 @@
-"""Sensor platform for OPNsense routers."""
+"""Binary sensor platform for OPNsense routers."""
 
 from dataclasses import dataclass
-from datetime import datetime, timedelta
 
-from homeassistant.components.sensor import (
-    SensorDeviceClass,
-    SensorEntity,
-    SensorEntityDescription,
+from homeassistant.components.binary_sensor import (
+    BinarySensorEntity,
+    BinarySensorEntityDescription,
 )
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.device_registry import CONNECTION_NETWORK_MAC, DeviceInfo
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
-from homeassistant.util import dt as dt_util
 
 from .coordinator import OPNsenseConfigEntry, OPNsenseCoordinator
 from .types import DeviceDetails
 
 
 @dataclass(frozen=True, kw_only=True)
-class OPNsenseSensorDescription(SensorEntityDescription):
-    """Description of an OPNsense sensor entity."""
+class OPNsenseBinarySensorEntityDescription(BinarySensorEntityDescription):
+    """Description of an OPNsense binary sensor entity."""
 
     data_key: str
 
 
-SENSOR_DESCRIPTIONS: tuple[OPNsenseSensorDescription, ...] = (
-    OPNsenseSensorDescription(
-        key="expires",
-        translation_key="expires",
-        data_key="expires",
-        device_class=SensorDeviceClass.TIMESTAMP,
+BINARY_SENSOR_DESCRIPTIONS: tuple[OPNsenseBinarySensorEntityDescription, ...] = (
+    OPNsenseBinarySensorEntityDescription(
+        key="expired",
+        translation_key="expired",
+        data_key="expired",
         entity_registry_enabled_default=False,
-    ),
-    OPNsenseSensorDescription(
-        key="interface",
-        translation_key="interface",
-        data_key="intf_description",
     ),
 )
 
@@ -55,14 +46,14 @@ async def async_setup_entry(
         if not coordinator.data:
             return
 
-        entities: list[OPNsenseSensorEntity] = []
+        entities: list[OPNsenseBinarySensorEntity] = []
         for mac_address in coordinator.data:
-            for sensor_description in SENSOR_DESCRIPTIONS:
+            for sensor_description in BINARY_SENSOR_DESCRIPTIONS:
                 unique_id = f"{mac_address}_{sensor_description.key}"
                 if unique_id in coordinator.tracked_devices:
                     continue
                 entities.append(
-                    OPNsenseSensorEntity(
+                    OPNsenseBinarySensorEntity(
                         coordinator,
                         mac_address,
                         sensor_description,
@@ -78,17 +69,19 @@ async def async_setup_entry(
     _async_add_new_entities()
 
 
-class OPNsenseSensorEntity(CoordinatorEntity[OPNsenseCoordinator], SensorEntity):
-    """Representation of an OPNsense sensor for one tracked device."""
+class OPNsenseBinarySensorEntity(
+    CoordinatorEntity[OPNsenseCoordinator], BinarySensorEntity
+):
+    """Representation of an OPNsense binary sensor for one tracked device."""
 
     _attr_has_entity_name = True
-    entity_description: OPNsenseSensorDescription
+    entity_description: OPNsenseBinarySensorEntityDescription
 
     def __init__(
         self,
         coordinator: OPNsenseCoordinator,
         mac_address: str,
-        description: OPNsenseSensorDescription,
+        description: OPNsenseBinarySensorEntityDescription,
     ) -> None:
         """Initialize the sensor entity."""
         super().__init__(coordinator)
@@ -116,24 +109,15 @@ class OPNsenseSensorEntity(CoordinatorEntity[OPNsenseCoordinator], SensorEntity)
         return self.coordinator.data[self._mac_address]
 
     @property
-    def native_value(self) -> datetime | str | None:
-        """Return sensor value."""
+    def is_on(self) -> bool:
+        """Return True if entity is on."""
         if not self.available:
-            return None
+            return False
 
         device_data = self.device_data
 
         value = device_data.get(self.entity_description.data_key)
         if value in (None, ""):
-            return None
+            return False
 
-        if self.entity_description.device_class is SensorDeviceClass.TIMESTAMP:
-            # Should be the number of seconds until the device expires, so convert to a timestamp
-            if type(value) is int:
-                return dt_util.utcnow() + timedelta(seconds=value)
-            return None
-
-        if isinstance(value, str):
-            return value
-
-        return str(value)
+        return bool(value)

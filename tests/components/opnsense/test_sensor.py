@@ -37,13 +37,11 @@ async def test_sensor_setup(
         entity for entity in sensor_entities if entity.domain == sensor.DOMAIN
     ]
 
-    assert len(sensor_entities) == 6
+    assert len(sensor_entities) == 4
 
     entity_unique_ids = {entity.unique_id for entity in sensor_entities}
-    assert "ff:ff:ff:ff:ff:ff_expired" in entity_unique_ids
     assert "ff:ff:ff:ff:ff:ff_expires" in entity_unique_ids
     assert "ff:ff:ff:ff:ff:ff_interface" in entity_unique_ids
-    assert "ff:ff:ff:ff:ff:fe_expired" in entity_unique_ids
     assert "ff:ff:ff:ff:ff:fe_expires" in entity_unique_ids
     assert "ff:ff:ff:ff:ff:fe_interface" in entity_unique_ids
 
