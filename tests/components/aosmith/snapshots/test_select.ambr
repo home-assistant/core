@@ -6,7 +6,7 @@
     ]),
     'area_id': None,
     'capabilities': dict({
-      'options': list([
+      <SelectEntityCapabilityAttribute.OPTIONS: 'options'>: list([
         'off',
         'level1',
         'level2',
@@ -47,7 +47,7 @@
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'friendly_name': 'My water heater Hot Water+ level',
-      'options': list([
+      <SelectEntityCapabilityAttribute.OPTIONS: 'options'>: list([
         'off',
         'level1',
         'level2',
