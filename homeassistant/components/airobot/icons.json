@@ -17,9 +17,9 @@
       "child_lock": {
         "default": "mdi:lock"
       },
-      "boost_enabled": {
+      "boost_mode": {
         "default": "mdi:heat-wave"
-      }      
+      }
     }
   }
 }
