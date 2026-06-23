@@ -30,7 +30,6 @@ from homeassistant.components.media_player import (
     ATTR_MEDIA_TITLE,
     ATTR_MEDIA_VOLUME_LEVEL,
     ATTR_MEDIA_VOLUME_MUTED,
-    DATA_COMPONENT,
     DOMAIN as MEDIA_PLAYER_DOMAIN,
     SERVICE_BROWSE_MEDIA,
     SERVICE_JOIN,
@@ -51,9 +50,9 @@ from homeassistant.components.media_player import (
     MediaType,
     RepeatMode,
 )
+from homeassistant.components.wiim.const import DATA_WIIM
 from homeassistant.const import ATTR_ENTITY_ID
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers.dispatcher import async_dispatcher_send
 
 from . import fire_general_update, fire_transport_update, setup_integration
 
@@ -444,6 +443,11 @@ async def test_group_refresh_dispatcher_sends_to_followers_and_refreshes_member(
 ) -> None:
     """Test leader group refresh signals make followers pull leader metadata."""
     await setup_integration(hass, mock_config_entry)
+    follower_entity_id = "media_player.follower_wiim_device"
+    second_follower_entity_id = "media_player.second_follower_wiim_device"
+    wiim_data = hass.data[DATA_WIIM]
+    wiim_data.entity_id_to_udn_map[follower_entity_id] = "uuid:follower-1234"
+    wiim_data.entity_id_to_udn_map[second_follower_entity_id] = "uuid:follower-5678"
     mock_wiim_controller.get_group_snapshot.return_value = WiimGroupSnapshot(
         role=WiimGroupRole.LEADER,
         leader_udn=mock_wiim_device.udn,
@@ -457,8 +461,24 @@ async def test_group_refresh_dispatcher_sends_to_followers_and_refreshes_member(
     with patch(
         "homeassistant.components.wiim.media_player.async_dispatcher_send"
     ) as mock_dispatcher_send:
-        await fire_general_update(hass, mock_wiim_device)
+        await hass.services.async_call(
+            MEDIA_PLAYER_DOMAIN,
+            SERVICE_JOIN,
+            {
+                ATTR_ENTITY_ID: MEDIA_PLAYER_ENTITY_ID,
+                ATTR_GROUP_MEMBERS: [
+                    MEDIA_PLAYER_ENTITY_ID,
+                    follower_entity_id,
+                    second_follower_entity_id,
+                ],
+            },
+            blocking=True,
+        )
 
+    mock_wiim_controller.async_join_group.assert_awaited_once_with(
+        mock_wiim_device.udn,
+        ["uuid:follower-1234", "uuid:follower-5678"],
+    )
     mock_dispatcher_send.assert_any_call(
         hass, "wiim_group_member_state_uuid:follower-1234"
     )
@@ -493,8 +513,21 @@ async def test_group_refresh_dispatcher_sends_to_followers_and_refreshes_member(
         leader_device if udn == leader_device.udn else mock_wiim_device
     )
 
-    async_dispatcher_send(hass, f"wiim_group_member_state_{mock_wiim_device.udn}")
-    await hass.async_block_till_done()
+    mock_wiim_controller.async_join_group.reset_mock()
+    await hass.services.async_call(
+        MEDIA_PLAYER_DOMAIN,
+        SERVICE_JOIN,
+        {
+            ATTR_ENTITY_ID: MEDIA_PLAYER_ENTITY_ID,
+            ATTR_GROUP_MEMBERS: [MEDIA_PLAYER_ENTITY_ID, follower_entity_id],
+        },
+        blocking=True,
+    )
+
+    mock_wiim_controller.async_join_group.assert_awaited_once_with(
+        leader_device.udn,
+        ["uuid:follower-1234"],
+    )
 
     state = hass.states.get(MEDIA_PLAYER_ENTITY_ID)
     assert state.state == MediaPlayerState.PLAYING
@@ -803,9 +836,8 @@ async def test_join_and_unjoin_services_use_resolved_member_udns(
     """Test grouping services call the controller with resolved UDNs."""
     await setup_integration(hass, mock_config_entry)
     follower_entity_id = "media_player.follower_wiim_device"
-    entity = hass.data[DATA_COMPONENT].get_entity(MEDIA_PLAYER_ENTITY_ID)
-    assert entity is not None
-    entity._wiim_data.entity_id_to_udn_map[follower_entity_id] = "uuid:follower-1234"
+    wiim_data = hass.data[DATA_WIIM]
+    wiim_data.entity_id_to_udn_map[follower_entity_id] = "uuid:follower-1234"
 
     await hass.services.async_call(
         MEDIA_PLAYER_DOMAIN,
@@ -837,9 +869,7 @@ async def test_join_and_unjoin_services_use_resolved_member_udns(
     )
     leader_device.current_media = None
     second_follower_entity_id = "media_player.second_follower_wiim_device"
-    entity._wiim_data.entity_id_to_udn_map[second_follower_entity_id] = (
-        "uuid:follower-5678"
-    )
+    wiim_data.entity_id_to_udn_map[second_follower_entity_id] = "uuid:follower-5678"
     mock_wiim_controller.get_group_snapshot.return_value = WiimGroupSnapshot(
         role=WiimGroupRole.FOLLOWER,
         leader_udn=leader_device.udn,
