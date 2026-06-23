@@ -2,6 +2,7 @@
 
 from dataclasses import dataclass
 from datetime import datetime
+from typing import override
 
 from homeassistant.components.sensor import (
     SensorDeviceClass,
@@ -175,12 +176,14 @@ class UpnpSensor(UpnpEntity, SensorEntity):
     entity_description: UpnpSensorEntityDescription
 
     @property
+    @override
     def native_value(self) -> str | datetime | int | float | None:
         """Return the state of the device."""
         if (key := self.entity_description.value_key) is None:
             return None
         return self.coordinator.data[key]
 
+    @override
     async def async_added_to_hass(self) -> None:
         """Subscribe to updates."""
         await super().async_added_to_hass()

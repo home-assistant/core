@@ -216,9 +216,6 @@
       "overlay_show_nerd_mode": {
         "name": "Overlay: show nerd mode"
       },
-      "package_detected": {
-        "name": "Package detected"
-      },
       "person_detected": {
         "name": "Person detected"
       },
@@ -298,6 +295,16 @@
           "event_type": {
             "state": {
               "scanned": "Scanned"
+            }
+          }
+        }
+      },
+      "package": {
+        "name": "Package",
+        "state_attributes": {
+          "event_type": {
+            "state": {
+              "detected": "Detected"
             }
           }
         }
@@ -706,6 +713,9 @@
     "ptz_preset_not_found": {
       "message": "Could not find PTZ preset with name {preset_name} on camera {camera_name}"
     },
+    "public_bootstrap_failed": {
+      "message": "Could not load the public API bootstrap for camera streams"
+    },
     "relay_not_available": {
       "message": "Relay is no longer available"
     },
@@ -744,35 +754,28 @@
       "description": "UniFi Protect v3 added a new state for HDR (auto). As a result, the HDR Mode switch has been replaced with an HDR Mode select, and it is deprecated.\n\nBelow are the detected automations or scripts that use one or more of the deprecated entities:\n{items}\nThe above list may be incomplete and it does not include any template usages inside of dashboards. Please update any templates, automations or scripts accordingly.",
       "title": "HDR Mode switch deprecated"
     },
-    "rtsp_disabled_readonly": {
-      "fix_flow": {
-        "step": {
-          "confirm": {
-            "description": "Are you sure you want to leave RTSPS disabled for {camera}?",
-            "title": "[%key:component::unifiprotect::issues::rtsp_disabled_readonly::fix_flow::step::start::title%]"
-          },
-          "start": {
-            "description": "RTSPS is disabled on the camera {camera}. RTSPS is required to be able to live stream your camera within Home Assistant. If you do not enable RTSPS, it may create an additional load on your UniFi Protect NVR, as any live video players will default to rapidly pulling snapshots from the camera.\n\nPlease [enable RTSPS]({learn_more}) on the camera and then come back and confirm this repair.",
-            "title": "RTSPS is disabled on camera {camera}"
-          }
-        }
-      },
-      "title": "RTSPS is disabled on camera {camera}"
+    "insecure_camera_removed": {
+      "description": "The camera entity `{entity_id}` used plain RTSP, which is no longer available now that streams come from the UniFi Protect public API (RTSPS only). It has been removed; use `{replacement}` instead.\n\nUpdate the following automations and scripts:\n{items}",
+      "title": "Insecure camera entity removed"
     },
-    "rtsp_disabled_writable": {
+    "package_binary_sensor_removed": {
+      "description": "The binary sensor `{entity_id}` for package detection has been removed. Package detection is a momentary smart-detect event, so it is now provided by the package event entity instead.\n\nUpdate the following automations and scripts:\n{items}",
+      "title": "Package binary sensor removed"
+    },
+    "rtsp_disabled": {
       "fix_flow": {
         "step": {
           "confirm": {
-            "description": "[%key:component::unifiprotect::issues::rtsp_disabled_readonly::fix_flow::step::confirm::description%]",
-            "title": "[%key:component::unifiprotect::issues::rtsp_disabled_readonly::fix_flow::step::start::title%]"
+            "description": "Home Assistant could not enable an RTSPS stream for {camera}. You may need to enable a stream manually on the camera, or disable the camera entity if you only need snapshots.",
+            "title": "[%key:component::unifiprotect::issues::rtsp_disabled::fix_flow::step::start::title%]"
           },
           "start": {
-            "description": "RTSPS is disabled on the camera {camera}. RTSPS is required to live stream your camera within Home Assistant. If you do not enable RTSPS, it may create an additional load on your UniFi Protect NVR as any live video players will default to rapidly pulling snapshots from the camera.\n\nYou may manually [enable RTSPS]({learn_more}) on your selected camera quality channel or Home Assistant can automatically enable the highest quality channel for you. Confirm this repair once you have enabled the RTSPS channel or if you want Home Assistant to enable the highest quality automatically.",
-            "title": "[%key:component::unifiprotect::issues::rtsp_disabled_readonly::fix_flow::step::start::title%]"
+            "description": "No RTSPS stream is available for the camera {camera}, so it cannot live stream within Home Assistant. Until a stream is enabled, live views fall back to rapidly pulling snapshots (effectively a slideshow), which can put significant load on your UniFi Protect console. Confirm this repair and Home Assistant will create the highest quality RTSPS stream for you through the UniFi Protect public API.",
+            "title": "No stream is available for camera {camera}"
           }
         }
       },
-      "title": "RTSPS is disabled on camera {camera}"
+      "title": "No stream is available for camera {camera}"
     }
   },
   "options": {
