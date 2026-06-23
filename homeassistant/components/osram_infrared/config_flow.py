@@ -4,7 +4,11 @@ from typing import Any
 
 import voluptuous as vol
 
-from homeassistant.components.infrared import DOMAIN as INFRARED_DOMAIN
+from homeassistant.components.infrared import (
+    DOMAIN as INFRARED_DOMAIN,
+    async_get_emitters,
+    async_get_receivers,
+)
 from homeassistant.config_entries import ConfigFlow, ConfigFlowResult
 from homeassistant.helpers import entity_registry as er
 from homeassistant.helpers.selector import EntitySelector, EntitySelectorConfig
@@ -17,63 +21,53 @@ class OsramIrConfigFlow(ConfigFlow, domain=DOMAIN):
 
     VERSION = 2
 
-    def _async_has_infrared_entities(self) -> bool:
-        """Return if any infrared entities are available."""
-        entity_registry = er.async_get(self.hass)
-
-        return any(
-            entity_entry.domain == INFRARED_DOMAIN
-            for entity_entry in entity_registry.entities.values()
-        )
-
-    def _async_get_entry_title(self, emitter_entity_id: str) -> str:
-        """Return config entry title for the selected emitter."""
-        entity_registry = er.async_get(self.hass)
-        entity_entry = entity_registry.async_get(emitter_entity_id)
-
-        if entity_entry is None:
-            emitter_name = emitter_entity_id
-        else:
-            emitter_name = (
-                entity_entry.name
-                or entity_entry.original_name
-                or entity_entry.entity_id
-            )
-
-        return f"OSRAM light via {emitter_name}"
-
     async def async_step_user(
         self,
         user_input: dict[str, Any] | None = None,
     ) -> ConfigFlowResult:
         """Handle the initial step."""
-        if not self._async_has_infrared_entities():
+        emitter_entity_ids = async_get_emitters(self.hass)
+        receiver_entity_ids = async_get_receivers(self.hass)
+        if not emitter_entity_ids:
             return self.async_abort(reason="no_infrared_emitters")
 
         if user_input is not None:
             emitter_entity_id = user_input[CONF_IR_EMITTER_ENTITY_ID]
+            if emitter_entity_id:
+                self._async_abort_entries_match(
+                    {CONF_IR_EMITTER_ENTITY_ID: emitter_entity_id}
+                )
 
-            self._async_abort_entries_match(
-                {CONF_IR_EMITTER_ENTITY_ID: emitter_entity_id}
-            )
+                ent_reg = er.async_get(self.hass)
+                entry = ent_reg.async_get(emitter_entity_id)
+                title_entity_name = (
+                    entry.name or entry.original_name or emitter_entity_id
+                    if entry
+                    else emitter_entity_id
+                )
+                title = f"OSRAM light via {title_entity_name}"
 
+                return self.async_create_entry(title=title, data=user_input)
             return self.async_create_entry(
-                title=self._async_get_entry_title(emitter_entity_id),
+                title=emitter_entity_id,
                 data=user_input,
             )
-
-        if not self._async_has_infrared_entities():
-            return self.async_abort(reason="no_infrared_emitters")
 
         return self.async_show_form(
             step_id="user",
             data_schema=vol.Schema(
                 {
                     vol.Required(CONF_IR_EMITTER_ENTITY_ID): EntitySelector(
-                        EntitySelectorConfig(domain=INFRARED_DOMAIN)
+                        EntitySelectorConfig(
+                            domain=INFRARED_DOMAIN,
+                            include_entities=emitter_entity_ids,
+                        )
                     ),
                     vol.Optional(CONF_IR_RECEIVER_ENTITY_ID): EntitySelector(
-                        EntitySelectorConfig(domain=INFRARED_DOMAIN)
+                        EntitySelectorConfig(
+                            domain=INFRARED_DOMAIN,
+                            include_entities=receiver_entity_ids,
+                        )
                     ),
                 }
             ),

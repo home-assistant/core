@@ -7,5 +7,5 @@
   "documentation": "https://www.home-assistant.io/integrations/osram_infrared",
   "integration_type": "device",
   "iot_class": "assumed_state",
-  "quality_scale": "bronze"
+  "quality_scale": "silver"
 }
