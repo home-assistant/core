@@ -27,7 +27,6 @@ from .const import (
     CONF_SHC_KEY,
     CONF_SSL_CERTIFICATE,
     CONF_SSL_KEY,
-    DOMAIN,
 )
 
 _MANIFEST: dict[str, Any] = json.loads(

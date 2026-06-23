@@ -24,7 +24,6 @@ from homeassistant.helpers import device_registry as dr
 from homeassistant.helpers.trigger import TriggerActionType, TriggerInfo
 from homeassistant.helpers.typing import ConfigType
 
-from .data import SHCData
 from .const import (
     ALARM_EVENTS_SUBTYPES_SD,
     ALARM_EVENTS_SUBTYPES_SDS,
@@ -38,6 +37,7 @@ from .const import (
     LOGGER,
     SUPPORTED_INPUTS_EVENTS_TYPES,
 )
+from .data import SHCData
 
 TRIGGER_SCHEMA = DEVICE_TRIGGER_BASE_SCHEMA.extend(
     {

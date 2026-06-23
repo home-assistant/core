@@ -2,8 +2,6 @@
 
 import logging
 
-from homeassistant.const import ATTR_NAME
-
 ATTR_EVENT_TYPE = "event_type"
 ATTR_EVENT_SUBTYPE = "event_subtype"
 ATTR_LAST_TIME_TRIGGERED = "lastTimeTriggered"

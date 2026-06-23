@@ -9,7 +9,7 @@ from homeassistant.core import HomeAssistant
 from homeassistant.helpers.device_registry import DeviceEntry, DeviceInfo
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
-from .const import DOMAIN, LOGGER, OPT_SCENARIOS_AS_BUTTONS
+from .const import LOGGER, OPT_SCENARIOS_AS_BUTTONS
 from .entity import SHCEntity, device_excluded
 
 PARALLEL_UPDATES = 1

@@ -20,13 +20,7 @@ from homeassistant.helpers.device_registry import DeviceEntry, DeviceInfo
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from homeassistant.util import slugify
 
-from .const import (
-    ATTR_EVENT_SUBTYPE,
-    ATTR_EVENT_TYPE,
-    ATTR_LAST_TIME_TRIGGERED,
-    DOMAIN,
-    LOGGER,
-)
+from .const import ATTR_EVENT_SUBTYPE, ATTR_EVENT_TYPE, ATTR_LAST_TIME_TRIGGERED, LOGGER
 from .entity import SHCEntity, device_excluded
 
 PARALLEL_UPDATES = 1
@@ -282,7 +276,8 @@ class SHCScenarioEvent(EventEntity):
         self._attr_unique_id = f"{session.information.unique_id}_{self._scenario.id}"
 
         entry = hass.config_entries.async_get_entry(entry_id)
-        self._shc: DeviceEntry = entry.runtime_data.shc_device  # type: ignore[union-attr]
+        assert entry is not None
+        self._shc: DeviceEntry = entry.runtime_data.shc_device
 
     @property
     def device_name(self):

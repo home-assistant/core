@@ -320,7 +320,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:  #
             return  # no cert configured — nothing to check (mirrors startup guard)
         try:
             info = await hass.async_add_executor_job(parse_certificate, cert_path)
-        except (OSError, ValueError):  # file-read or crypto-parse errors; silently skip
+        except OSError, ValueError:  # file-read or crypto-parse errors; silently skip
             return
         if info.days_remaining < 0:
             LOGGER.error(
@@ -369,7 +369,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:  #
             if domain == "zone":
                 try:
                     return int(value) > 0
-                except (TypeError, ValueError):
+                except TypeError, ValueError:
                     return False
             if domain in ("binary_sensor", "input_boolean"):
                 return value == "on"
@@ -472,7 +472,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:  #
             minute = int(parts[1]) if len(parts) > 1 else 0
             second = int(parts[2]) if len(parts) > 2 else 0
             return dt_time(hour, minute, second)
-        except (ValueError, IndexError):
+        except ValueError, IndexError:
             return None
 
     silent_start = _parse_time(entry.options.get(OPT_SILENT_MODE_START))
@@ -489,7 +489,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:  #
             if domain == "zone":
                 try:
                     return int(value) > 0
-                except (TypeError, ValueError):
+                except TypeError, ValueError:
                     return False
             if domain in ("binary_sensor", "input_boolean"):
                 return value == "on"
@@ -576,9 +576,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:  #
         )
         await session.stop_polling()
 
-    LOGGER.debug(
-        "Bosch SHC '%s': starting long-poll session (local_push)", entry.title
-    )
+    LOGGER.debug("Bosch SHC '%s': starting long-poll session (local_push)", entry.title)
     # Async long-poll: start_polling() creates an asyncio.Task on the loop
     # (no thread, no executor). Callbacks fire on the event loop directly.
     await session.start_polling()
