@@ -158,7 +158,7 @@ class MeteoLtWeatherEntity(CoordinatorEntity[MeteoLtUpdateCoordinator], WeatherE
         cc = self.coordinator.data.current_conditions
         if cc is None:
             return None
-        return self._map_condition(cc.condition, cc.datetime)
+        return self._map_condition(cc.condition_code, cc.datetime)
 
     def _convert_forecast_data(
         self, forecast_data: Any, include_templow: bool = False

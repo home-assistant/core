@@ -8,6 +8,9 @@ from syrupy.assertion import SnapshotAssertion
 
 from homeassistant.components.weather import (
     ATTR_CONDITION_CLEAR_NIGHT,
+    ATTR_CONDITION_CLOUDY,
+    ATTR_CONDITION_PARTLYCLOUDY,
+    ATTR_CONDITION_RAINY,
     ATTR_CONDITION_SUNNY,
 )
 from homeassistant.const import Platform
@@ -78,11 +81,11 @@ async def test_condition_clear_maps_day_night(
 
 
 @pytest.mark.freeze_time("2025-09-25 9:00:00")
-async def test_forecast_no_limits(
+async def test_forecast_hourly(
     hass: HomeAssistant,
     mock_config_entry: MockConfigEntry,
 ) -> None:
-    """Test that forecast returns all available data from API without limits."""
+    """Test hourly forecast returns all entries with correct condition mapping."""
     mock_config_entry.add_to_hass(hass)
     await hass.config_entries.async_setup(mock_config_entry.entry_id)
     await hass.async_block_till_done()
@@ -94,8 +97,23 @@ async def test_forecast_no_limits(
         blocking=True,
         return_response=True,
     )
-    hourly_forecasts = result["weather.vilnius"]["forecast"]
-    assert len(hourly_forecasts) == 9
+    forecasts = result["weather.vilnius"]["forecast"]
+
+    assert len(forecasts) == 9
+    assert forecasts[1]["condition"] == ATTR_CONDITION_PARTLYCLOUDY
+    assert forecasts[2]["condition"] == ATTR_CONDITION_CLOUDY
+    assert forecasts[3]["condition"] == ATTR_CONDITION_RAINY
+
+
+@pytest.mark.freeze_time("2025-09-25 9:00:00")
+async def test_forecast_daily(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+) -> None:
+    """Test daily forecast aggregates hourly entries into per-day summaries."""
+    mock_config_entry.add_to_hass(hass)
+    await hass.config_entries.async_setup(mock_config_entry.entry_id)
+    await hass.async_block_till_done()
 
     result = await hass.services.async_call(
         "weather",
@@ -104,5 +122,15 @@ async def test_forecast_no_limits(
         blocking=True,
         return_response=True,
     )
-    daily_forecasts = result["weather.vilnius"]["forecast"]
-    assert len(daily_forecasts) == 7
+    forecasts = result["weather.vilnius"]["forecast"]
+
+    assert len(forecasts) == 7
+
+    first_day = forecasts[0]
+    assert first_day["temperature"] == 13.5  # max(10.9, 12.2, 13.5)
+    assert first_day["templow"] == 10.9  # min(10.9, 12.2, 13.5)
+    assert first_day["precipitation"] == pytest.approx(0.1)  # sum: 0 + 0 + 0.1
+    assert first_day["condition"] == ATTR_CONDITION_CLOUDY  # midday 12:00 → "cloudy"
+
+    second_day = forecasts[1]
+    assert second_day["condition"] == ATTR_CONDITION_RAINY  # 2025-09-26 → "rain"
