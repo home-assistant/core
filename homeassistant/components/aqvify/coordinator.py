@@ -209,7 +209,7 @@ class AqvifyAggrDataCoordinator(
         device_data: dict[str, AqvifyHourAggregatedValues] = {}
         base_time = utcnow() - timedelta(hours=1)
         beg_time = base_time.replace(minute=0, second=0, microsecond=0)
-        end_time = base_time.replace(minute=59, second=59, microsecond=999999)
+        end_time = base_time.replace(minute=59, second=0, microsecond=0)
         for device in devices.devices.values():
             device_key = device.device_key
             if TYPE_CHECKING:
