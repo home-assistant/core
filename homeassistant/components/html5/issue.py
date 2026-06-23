@@ -63,28 +63,14 @@ def deprecated_event_bus(hass: HomeAssistant, event: str) -> None:
             hass,
             DOMAIN,
             f"deprecated_event_bus_{event}",
-            breaks_in_ha_version="2026.11.0",
+            breaks_in_ha_version="2027.1.0",
             is_fixable=False,
             severity=IssueSeverity.WARNING,
             translation_key="deprecated_event_bus",
             translation_placeholders={
                 "event": event,
                 "listeners": str(listeners),
-                "example_yaml": """
-```yaml
-triggers:
-  - trigger: state
-    entity_id:
-      - event.my_device
-    not_from:
-      - unavailable
-conditions:
-  - condition: template
-    value_template: |
-      "{{ trigger.to_state.attributes.event_type == 'clicked' }}"
-```
-""",
-                "example_yaml_trigger": """```yaml
+                "example_yaml": """```yaml
 triggers:
   - trigger: event.received
     target:

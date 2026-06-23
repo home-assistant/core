@@ -56,7 +56,7 @@
       "title": "[%key:component::html5::issues::deprecated_notify_action::title%]"
     },
     "deprecated_event_bus": {
-      "description": "Detected **{listeners}** listener(s) for the event `{event}`.\n\nThe HTML5 Push Notifications integration firing events on the event bus is deprecated and this functionality will be removed in a future release.\n\nPlease update your automations and scripts to use the event entities instead.\n\n## Example automation:\n\n{example_yaml}\n\n## Example using a purpose-specific trigger:\n\n{example_yaml_trigger}",
+      "description": "Detected **{listeners}** listener(s) for the event `{event}`.\n\nThe HTML5 Push Notifications integration firing events on the event bus is deprecated and this functionality will be removed in a future release.\n\nPlease update your automations and scripts to use the event entities instead.\n\n## Example automation:\n\n{example_yaml}",
       "title": "Detected use of deprecated event {event}"
     },
     "deprecated_notify_action": {
