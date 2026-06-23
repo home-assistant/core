@@ -1017,6 +1017,20 @@ async def test_get_trigger_platform_registers_triggers(
     assert len(subscriber_events) == 1
 
 
+# Trigger keys the sun integration registers besides the legacy ``sun`` trigger.
+# These tests mock sun/triggers.yaml, so the modern triggers have no description.
+_MODERN_SUN_TRIGGERS = (
+    "sun.dawn",
+    "sun.dusk",
+    "sun.elevation_changed",
+    "sun.elevation_crossed_threshold",
+    "sun.solar_midnight",
+    "sun.solar_noon",
+    "sun.sunrise",
+    "sun.sunset",
+)
+
+
 @pytest.mark.parametrize(
     "sun_trigger_descriptions",
     [
@@ -1121,7 +1135,9 @@ async def test_async_get_all_descriptions(
                 },
                 "offset": {"selector": {"time": {}}},
             }
-        }
+        },
+        # The modern sun triggers have no entry in the mocked triggers.yaml.
+        **dict.fromkeys(_MODERN_SUN_TRIGGERS),
     }
 
     assert descriptions == expected_descriptions
@@ -1230,7 +1246,7 @@ async def test_async_get_all_descriptions_with_yaml_error(
     ):
         descriptions = await trigger.async_get_all_descriptions(hass)
 
-    assert descriptions == {SUN_DOMAIN: None}
+    assert descriptions == {SUN_DOMAIN: None, **dict.fromkeys(_MODERN_SUN_TRIGGERS)}
 
     assert expected_message in caplog.text
 
@@ -1263,7 +1279,7 @@ async def test_async_get_all_descriptions_with_bad_description(
     ):
         descriptions = await trigger.async_get_all_descriptions(hass)
 
-    assert descriptions == {SUN_DOMAIN: None}
+    assert descriptions == {SUN_DOMAIN: None, **dict.fromkeys(_MODERN_SUN_TRIGGERS)}
 
     assert (
         "Unable to parse triggers.yaml for the sun integration: "
@@ -1323,7 +1339,7 @@ async def test_subscribe_triggers(
     trigger.async_subscribe_platform_events(hass, good_subscriber)
 
     assert await async_setup_component(hass, "sun", {})
-    assert trigger_events == [{"sun"}]
+    assert trigger_events == [{"sun", *_MODERN_SUN_TRIGGERS}]
     assert "Error while notifying trigger platform listener" in caplog.text
 
     await hass.data["entity_components"][SUN_DOMAIN]._async_reset()
