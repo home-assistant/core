@@ -25,6 +25,7 @@ from .const import (
     SERVICE_SELECT_LAST,
     SERVICE_SELECT_NEXT,
     SERVICE_SELECT_PREVIOUS,
+    SelectEntityCapabilityAttribute,
 )
 
 _LOGGER = logging.getLogger(__name__)
@@ -121,7 +122,9 @@ CACHED_PROPERTIES_WITH_ATTR_ = {
 class SelectEntity(Entity, cached_properties=CACHED_PROPERTIES_WITH_ATTR_):
     """Representation of a Select entity."""
 
-    _entity_component_unrecorded_attributes = frozenset({ATTR_OPTIONS})
+    _entity_component_unrecorded_attributes = frozenset(
+        {SelectEntityCapabilityAttribute.OPTIONS}
+    )
 
     entity_description: SelectEntityDescription
     _attr_current_option: str | None = None
@@ -133,7 +136,7 @@ class SelectEntity(Entity, cached_properties=CACHED_PROPERTIES_WITH_ATTR_):
     def capability_attributes(self) -> dict[str, Any]:
         """Return capability attributes."""
         return {
-            ATTR_OPTIONS: self.options,
+            SelectEntityCapabilityAttribute.OPTIONS: self.options,
         }
 
     @property

@@ -909,9 +909,6 @@ elevenlabs==2.51.0
 # homeassistant.components.elgato
 elgato==5.1.2
 
-# homeassistant.components.eliqonline
-eliqonline==1.2.2
-
 # homeassistant.components.elkm1
 elkm1-lib==2.2.15
 
@@ -3271,9 +3268,6 @@ unifi-discovery==1.5.0
 
 # homeassistant.components.unifi_direct
 unifi_ap==0.0.2
-
-# homeassistant.components.unifiled
-unifiled==0.11
 
 # homeassistant.components.homeassistant_hardware
 universal-silabs-flasher==1.1.0
