@@ -395,13 +395,19 @@ class MotionDetectionSensor(SHCEntity, BinarySensorEntity):
             },
         )
 
+    async def async_will_remove_from_hass(self) -> None:
+        """Unsubscribe SHC callback when entity is removed (e.g. config-entry reload)."""
+        if self._service is not None:
+            self._service.unsubscribe_callback(self._device.id + "_eventlistener")
+
     @callback
     def _handle_ha_stop(self, _):
         """Handle Home Assistant stopping."""
         LOGGER.debug(
             "Stopping motion detection event listener for %s", self._device.name
         )
-        self._service.unsubscribe_callback(self._device.id + "_eventlistener")
+        if self._service is not None:
+            self._service.unsubscribe_callback(self._device.id + "_eventlistener")
 
     @property
     def is_on(self) -> bool | None:
@@ -483,11 +489,17 @@ class SmokeDetectorSensor(SHCEntity, BinarySensorEntity):
             },
         )
 
+    async def async_will_remove_from_hass(self) -> None:
+        """Unsubscribe SHC callback when entity is removed (e.g. config-entry reload)."""
+        if self._service is not None:
+            self._service.unsubscribe_callback(self._device.id + "_eventlistener")
+
     @callback
     def _handle_ha_stop(self, _):
         """Handle Home Assistant stopping."""
         LOGGER.debug("Stopping alarm event listener for %s", self._device.name)
-        self._service.unsubscribe_callback(self._device.id + "_eventlistener")
+        if self._service is not None:
+            self._service.unsubscribe_callback(self._device.id + "_eventlistener")
 
     @property
     def is_on(self) -> bool | None:
@@ -628,11 +640,17 @@ class SmokeDetectionSystemSensor(SHCEntity, BinarySensorEntity):
             },
         )
 
+    async def async_will_remove_from_hass(self) -> None:
+        """Unsubscribe SHC callback when entity is removed (e.g. config-entry reload)."""
+        if self._service is not None:
+            self._service.unsubscribe_callback(self._device.id + "_eventlistener")
+
     @callback
     def _handle_ha_stop(self, _):
         """Handle Home Assistant stopping."""
         LOGGER.debug("Stopping alarm event listener for %s", self._device.name)
-        self._service.unsubscribe_callback(self._device.id + "_eventlistener")
+        if self._service is not None:
+            self._service.unsubscribe_callback(self._device.id + "_eventlistener")
 
     @property
     def is_on(self) -> bool | None:

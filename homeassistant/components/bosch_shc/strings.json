@@ -307,7 +307,7 @@
       "description": "Triggers a rawscan on Bosch SHC to discover devices. Result streamed to info logger.",
       "fields": {
         "command": {
-          "description": "Rawscan command to trigger. Possible commands are 'devices', 'device', 'services', 'device_services', 'device_service', 'rooms', 'scenarios', 'info', 'information', 'public_information', 'intrusion_detection'",
+          "description": "Rawscan command to trigger. Possible commands are 'devices', 'device', 'services', 'device_services', 'device_service', 'rooms', 'scenarios', 'info', 'information', 'public_information', 'intrusion_detection', 'messages'",
           "name": "Rawscan command"
         },
         "device_id": {

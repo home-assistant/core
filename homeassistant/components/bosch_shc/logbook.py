@@ -1,17 +1,24 @@
 """Describe Bosch SHC logbook events."""
 
+from collections.abc import Callable
+
 from homeassistant.const import ATTR_NAME
-from homeassistant.core import callback
+from homeassistant.core import Event, HomeAssistant, callback
 
 from .const import ATTR_EVENT_SUBTYPE, ATTR_EVENT_TYPE, DOMAIN, EVENT_BOSCH_SHC
 
 
 @callback
-def async_describe_events(hass, async_describe_event):
+def async_describe_events(
+    hass: HomeAssistant,
+    async_describe_event: Callable[
+        [str, str, Callable[[Event], dict[str, str]]], None
+    ],
+) -> None:
     """Describe logbook events."""
 
     @callback
-    def async_describe_bosch_shc_event(event):
+    def async_describe_bosch_shc_event(event: Event) -> dict[str, str]:
         """Describe bosch_shc.click logbook event."""
         device_name = event.data[ATTR_NAME]
         event_subtype = event.data[ATTR_EVENT_SUBTYPE]

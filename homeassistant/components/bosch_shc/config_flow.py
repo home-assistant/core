@@ -288,6 +288,7 @@ class BoschSHCConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
                 LOGGER.exception("Unexpected exception during repair_credentials")
                 errors["base"] = "unknown"
             else:
+                assert result is not None
                 hostname = result["token"].split(":", 1)[1]
                 new_entry_data = {
                     CONF_SSL_CERTIFICATE: self.hass.config.path(
@@ -354,6 +355,7 @@ class BoschSHCConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         errors: dict[str, str] = {}
         if user_input is not None:
             zeroconf_instance = await zeroconf.async_get_instance(self.hass)
+            assert self.host is not None
             try:
                 result = await self.hass.async_add_executor_job(
                     create_credentials_and_validate,
@@ -376,6 +378,7 @@ class BoschSHCConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
                 LOGGER.exception("Unexpected exception")
                 errors["base"] = "unknown"
             else:
+                assert result is not None
                 hostname = result["token"].split(":", 1)[1]
                 entry_data = {
                     CONF_SSL_CERTIFICATE: self.hass.config.path(

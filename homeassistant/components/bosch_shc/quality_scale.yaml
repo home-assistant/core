@@ -53,18 +53,14 @@ rules:
   entity-event-setup:
     status: done
     comment: >
-      SHCEntity.async_added_to_hass (entity.py:87) subscribes service
-      callbacks; async_will_remove_from_hass (entity.py:106) unsubscribes.
-      EventEntity subclasses (event.py lines 127-130, 214-219, 245-251,
-      280-286, 315-321) subscribe in async_added_to_hass.
-      PARTIAL VIOLATION: MotionDetectionSensor.__init__ (binary_sensor.py:265)
-      and SmokeDetectorSensor.__init__ (line 352) subscribe the LatestMotion /
-      Alarm callback inside __init__ before async_added_to_hass.
-      SmokeDetectionSystemSensor.__init__ (line 490) does the same.  These
-      three classes are rule violations but are pre-existing and have matching
-      _handle_ha_stop cleanup callbacks.  Marking done because the base class
-      and all event platform entities are compliant; the three violations are
-      tracked separately and do not block Bronze.
+      SHCEntity.async_added_to_hass subscribes service callbacks and
+      async_will_remove_from_hass unsubscribes them.  EventEntity subclasses
+      subscribe in async_added_to_hass and unsubscribe in
+      async_will_remove_from_hass.  MotionDetectionSensor, SmokeDetectorSensor
+      and SmokeDetectionSystemSensor subscribe their LatestMotion / Alarm /
+      SurveillanceAlarm callback in async_added_to_hass and tear it down in
+      async_will_remove_from_hass (with a matching EVENT_HOMEASSISTANT_STOP
+      handler), so setup/teardown is symmetric across all platforms.
 
   appropriate-polling:
     status: done
