@@ -407,7 +407,7 @@ class IntegrationSensor(RestoreSensor):
                 and (allowed_units is None or unit_of_measurement in allowed_units)
             ):
                 return device_class
-            # User device class is not compatible, issue warning and fail back to
+            # User device class is not compatible, issue warning and fall back to
             # inferred class.
             _LOGGER.warning(
                 "%s: Specified device class '%s' is not compatible with the derived unit or the state class of this sensor",
