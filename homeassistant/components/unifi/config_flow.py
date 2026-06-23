@@ -10,7 +10,7 @@ from collections.abc import Mapping
 import operator
 import socket
 from types import MappingProxyType
-from typing import Any
+from typing import Any, override
 
 from aiounifi.interfaces.sites import Sites
 import voluptuous as vol
@@ -24,6 +24,7 @@ from homeassistant.config_entries import (
 )
 from homeassistant.const import (
     CONF_HOST,
+    CONF_NAME,
     CONF_PASSWORD,
     CONF_PORT,
     CONF_USERNAME,
@@ -70,6 +71,7 @@ class UnifiFlowHandler(ConfigFlow, domain=DOMAIN):
 
     @staticmethod
     @callback
+    @override
     def async_get_options_flow(
         config_entry: UnifiConfigEntry,
     ) -> UnifiOptionsFlowHandler:
@@ -81,6 +83,7 @@ class UnifiFlowHandler(ConfigFlow, domain=DOMAIN):
         self.config: dict[str, Any] = {}
         self.reauth_schema: dict[vol.Marker, Any] = {}
 
+    @override
     async def async_step_user(
         self, user_input: dict[str, Any] | None = None
     ) -> ConfigFlowResult:
@@ -192,7 +195,7 @@ class UnifiFlowHandler(ConfigFlow, domain=DOMAIN):
 
         self.context["title_placeholders"] = {
             CONF_HOST: reauth_entry.data[CONF_HOST],
-            CONF_SITE_ID: reauth_entry.title,
+            CONF_NAME: reauth_entry.title,
         }
 
         self.reauth_schema = {
@@ -207,6 +210,7 @@ class UnifiFlowHandler(ConfigFlow, domain=DOMAIN):
 
         return await self.async_step_user()
 
+    @override
     async def async_step_integration_discovery(
         self, discovery_info: DiscoveryInfoType
     ) -> ConfigFlowResult:
@@ -231,8 +235,13 @@ class UnifiFlowHandler(ConfigFlow, domain=DOMAIN):
         self._abort_if_unique_id_configured(updates=self.config, reload_on_update=False)
 
         self.context["title_placeholders"] = {
-            CONF_HOST: host,
-            CONF_SITE_ID: DEFAULT_SITE_ID,
+            CONF_NAME: (
+                discovery_info.get("name")
+                or discovery_info.get("hostname")
+                or discovery_info.get("product_name")
+                or "UniFi Network"
+            ),
+            CONF_HOST: source_ip,
         }
         self.context["configuration_url"] = f"https://{host}"
 

@@ -349,6 +349,7 @@ class WhirlpoolSensor(WhirlpoolEntity, SensorEntity):
         self.entity_description: WhirlpoolSensorEntityDescription = description
 
     @property
+    @override
     def native_value(self) -> StateType | str:
         """Return native value of sensor."""
         return self.entity_description.value_fn(self._appliance)
@@ -378,6 +379,7 @@ class WasherDryerTimeSensorBase(WhirlpoolEntity, RestoreSensor, ABC):
     def _is_machine_state_running(self) -> bool:
         """Return true if the machine is in a running state."""
 
+    @override
     async def async_added_to_hass(self) -> None:
         """Register attribute updates callback."""
         if restored_data := await self.async_get_last_sensor_data():
@@ -417,6 +419,7 @@ class WasherTimeSensor(WasherDryerTimeSensorBase):
 
     _appliance: Washer
 
+    @override
     def _is_machine_state_finished(self) -> bool:
         """Return true if the machine is in a finished state."""
         return self._appliance.get_machine_state() in {
@@ -424,6 +427,7 @@ class WasherTimeSensor(WasherDryerTimeSensorBase):
             WasherMachineState.Standby,
         }
 
+    @override
     def _is_machine_state_running(self) -> bool:
         """Return true if the machine is in a running state."""
         return (
@@ -436,6 +440,7 @@ class DryerTimeSensor(WasherDryerTimeSensorBase):
 
     _appliance: Dryer
 
+    @override
     def _is_machine_state_finished(self) -> bool:
         """Return true if the machine is in a finished state."""
         return self._appliance.get_machine_state() in {
@@ -443,6 +448,7 @@ class DryerTimeSensor(WasherDryerTimeSensorBase):
             DryerMachineState.Standby,
         }
 
+    @override
     def _is_machine_state_running(self) -> bool:
         """Return true if the machine is in a running state."""
         return self._appliance.get_machine_state() is DryerMachineState.RunningMainCycle
@@ -466,6 +472,7 @@ class WhirlpoolOvenCavitySensor(WhirlpoolOvenEntity, SensorEntity):
         )
 
     @property
+    @override
     def native_value(self) -> StateType:
         """Return native value of sensor."""
         return self.entity_description.value_fn(self._appliance, self.cavity)

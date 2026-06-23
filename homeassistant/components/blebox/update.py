@@ -1,7 +1,7 @@
 """BleBox update entities implementation."""
 
 from datetime import timedelta
-from typing import Any, Final
+from typing import Any, Final, override
 
 from blebox_uniapi.error import ConnectionError as BleBoxConnectionError, Error
 import blebox_uniapi.update
@@ -53,6 +53,7 @@ class BleBoxUpdateEntity(BleBoxEntity[blebox_uniapi.update.Update], UpdateEntity
     )
 
     @property
+    @override
     def should_poll(self) -> bool:
         """Return True because firmware versions cannot be fetched via coordinator."""
         return True
@@ -67,6 +68,7 @@ class BleBoxUpdateEntity(BleBoxEntity[blebox_uniapi.update.Update], UpdateEntity
         self._poll_attempts: int = 0
 
     @property
+    @override
     def in_progress(self) -> bool:
         """Return True while the device hasn't yet rebooted to the new firmware."""
         return (
@@ -82,6 +84,7 @@ class BleBoxUpdateEntity(BleBoxEntity[blebox_uniapi.update.Update], UpdateEntity
                 sw_version=self._feature.installed_version,
             )
 
+    @override
     async def async_update(self) -> None:
         """Update state and refresh sw_version in device registry."""
         try:
@@ -95,11 +98,13 @@ class BleBoxUpdateEntity(BleBoxEntity[blebox_uniapi.update.Update], UpdateEntity
         self._sync_sw_version()
 
     @property
+    @override
     def installed_version(self) -> str | None:
         """Version installed and in use."""
         return self._feature.installed_version
 
     @property
+    @override
     def latest_version(self) -> str | None:
         """Latest version available for install."""
         return self._feature.latest_version
@@ -114,6 +119,7 @@ class BleBoxUpdateEntity(BleBoxEntity[blebox_uniapi.update.Update], UpdateEntity
         self._poll_attempts = 0
         self.async_write_ha_state()
 
+    @override
     async def async_install(
         self, version: str | None, backup: bool, **kwargs: Any
     ) -> None:
@@ -135,6 +141,7 @@ class BleBoxUpdateEntity(BleBoxEntity[blebox_uniapi.update.Update], UpdateEntity
             self.hass, _POLL_INTERVAL_SECONDS, self._poll_until_updated
         )
 
+    @override
     async def async_will_remove_from_hass(self) -> None:
         """Cancel any pending poll timer when the entity is removed."""
         self._cancel_poll()
