@@ -2567,7 +2567,7 @@ async def test_stream_tts_audio_edge_cases(
         b"\x00" * 640,
     )
 
-    # Cancel/abort when self._is_running becomes False
+    # Cancel/abort when self._is_running becomes False (between chunks)
     mock_client.send_voice_assistant_audio.reset_mock()
     header_chunk = make_wav_header(data_chunk_size=8)
 
@@ -2580,3 +2580,65 @@ async def test_stream_tts_audio_edge_cases(
     stream.async_stream_result = async_stream_cancel
     await satellite._stream_tts_audio(stream)
     mock_client.send_voice_assistant_audio.assert_not_called()
+
+    satellite._is_running = True
+
+    # Cancel/abort when self._is_running becomes False (inner chunk loop)
+    # Simulates a TTS provider delivering all audio in a single chunk.
+    mock_client.send_voice_assistant_audio.reset_mock()
+    audio_data = b"\x00" * 2048
+    full_wav = make_wav_header(data_chunk_size=len(audio_data)) + audio_data
+
+    original_send = satellite._send_tts_audio
+
+    def send_then_stop(payload: bytes) -> None:
+        original_send(payload)
+        satellite._is_running = False
+
+    stream = ChunkedMockResultStream(hass, "wav", [full_wav])
+    with patch.object(satellite, "_send_tts_audio", side_effect=send_then_stop):
+        await satellite._stream_tts_audio(stream, samples_per_chunk=512)
+    assert mock_client.send_voice_assistant_audio.call_count == 1
+
+    satellite._is_running = True
+
+    # Malformed fmt chunk (chunk_size < 16)
+    mock_client.send_voice_assistant_audio.reset_mock()
+    tiny_fmt = (
+        struct.pack("<4sI4s", b"RIFF", 100, b"WAVE")
+        + struct.pack("<4sI", b"fmt ", 8)
+        + b"\x00" * 8
+        + struct.pack("<4sI", b"data", 4)
+        + b"\x01\x02\x03\x04"
+    )
+    stream = ChunkedMockResultStream(hass, "wav", [tiny_fmt])
+    await satellite._stream_tts_audio(stream)
+    mock_client.send_voice_assistant_audio.assert_not_called()
+
+    # Odd-sized JUNK chunk with RIFF word-alignment padding
+    mock_client.send_voice_assistant_audio.reset_mock()
+    odd_junk_chunk = struct.pack("<4sI", b"JUNK", 5) + b"junk!" + b"\x00"  # 5 bytes + 1 pad
+    header_with_odd_junk = (
+        struct.pack("<4sI4s", b"RIFF", 200, b"WAVE")
+        + odd_junk_chunk
+        + struct.pack("<4sI", b"fmt ", 16)
+        + struct.pack("<HHIIHH", 1, 1, 16000, 32000, 2, 16)
+        + struct.pack("<4sI", b"data", 4)
+        + b"\xaa\xbb\xcc\xdd"
+    )
+    stream = ChunkedMockResultStream(hass, "wav", [header_with_odd_junk])
+    await satellite._stream_tts_audio(stream)
+    mock_client.send_voice_assistant_audio.assert_called_once_with(b"\xaa\xbb\xcc\xdd")
+
+    # Trailing metadata after data chunk is not forwarded as audio
+    mock_client.send_voice_assistant_audio.reset_mock()
+    audio_payload = b"\x11\x22" * 4  # 8 bytes of audio
+    trailing_list = struct.pack("<4sI", b"LIST", 4) + b"INFO"
+    wav_with_trailing = (
+        make_wav_header(data_chunk_size=len(audio_payload))
+        + audio_payload
+        + trailing_list
+    )
+    stream = ChunkedMockResultStream(hass, "wav", [wav_with_trailing])
+    await satellite._stream_tts_audio(stream)
+    mock_client.send_voice_assistant_audio.assert_called_once_with(audio_payload)
