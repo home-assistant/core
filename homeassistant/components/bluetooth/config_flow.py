@@ -1,7 +1,7 @@
 """Config flow to configure the Bluetooth integration."""
 
 import platform
-from typing import Any, cast
+from typing import Any, cast, override
 
 from bluetooth_adapters import (
     ADAPTER_ADDRESS,
@@ -103,6 +103,7 @@ class BluetoothConfigFlow(ConfigFlow, domain=DOMAIN):
         self._adapters: dict[str, AdapterDetails] = {}
         self._placeholders: dict[str, str] = {}
 
+    @override
     async def async_step_integration_discovery(
         self, discovery_info: DiscoveryInfoType
     ) -> ConfigFlowResult:
@@ -240,6 +241,7 @@ class BluetoothConfigFlow(ConfigFlow, domain=DOMAIN):
         assert scanner is not None
         return self.async_create_entry(title=scanner.name, data=data)
 
+    @override
     async def async_step_user(
         self, user_input: dict[str, Any] | None = None
     ) -> ConfigFlowResult:
@@ -248,6 +250,7 @@ class BluetoothConfigFlow(ConfigFlow, domain=DOMAIN):
 
     @staticmethod
     @callback
+    @override
     def async_get_options_flow(
         config_entry: ConfigEntry,
     ) -> (
@@ -264,6 +267,7 @@ class BluetoothConfigFlow(ConfigFlow, domain=DOMAIN):
 
     @classmethod
     @callback
+    @override
     def async_supports_options_flow(cls, config_entry: ConfigEntry) -> bool:
         """Return options flow support for this handler."""
         return bool((manager := get_manager()) and manager.supports_passive_scan)

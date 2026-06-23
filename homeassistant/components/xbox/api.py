@@ -1,5 +1,7 @@
 """API for xbox bound to Home Assistant OAuth."""
 
+from typing import override
+
 from aiohttp import ClientError
 from httpx import AsyncClient, HTTPStatusError, RequestError
 from pythonxbox.authentication.manager import AuthenticationManager
@@ -28,6 +30,7 @@ class AsyncConfigEntryAuth(AuthenticationManager):
         self._oauth_session = oauth_session
         self.oauth = self._get_oauth_token()
 
+    @override
     async def refresh_tokens(self) -> None:
         """Return a valid access token."""
 

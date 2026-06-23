@@ -1,7 +1,7 @@
 """Config flow to configure the GeoJSON events integration."""
 
 from collections.abc import Mapping
-from typing import Any
+from typing import Any, override
 
 import voluptuous as vol
 
@@ -32,6 +32,7 @@ DATA_SCHEMA = vol.Schema(
 class GeoJsonEventsFlowHandler(ConfigFlow, domain=DOMAIN):
     """Handle a GeoJSON events config flow."""
 
+    @override
     async def async_step_user(
         self, user_input: dict[str, Any] | None = None
     ) -> ConfigFlowResult:
