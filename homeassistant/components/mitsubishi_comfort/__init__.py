@@ -26,7 +26,7 @@ from .const import (
     PLATFORMS,
 )
 from .coordinator import MitsubishiComfortConfigEntry, MitsubishiComfortCoordinator
-from .helpers import build_credentials
+from .helpers import build_credentials, is_fully_credentialed
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -118,9 +118,7 @@ async def async_setup_entry(
     no_address: list[str] = []
     no_credentials: list[str] = []
     for serial, info in devices.items():
-        if not info.password or not info.crypto_serial:
-            # The cloud occasionally omits a device's credentials; the local API
-            # can't be authenticated without them, so skip it this cycle.
+        if not is_fully_credentialed(info):
             no_credentials.append(info.label)
             continue
         address = addresses.get(dr.format_mac(info.mac))
