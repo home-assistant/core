@@ -115,65 +115,52 @@ class MeteoLtWeatherEntity(CoordinatorEntity[MeteoLtUpdateCoordinator], WeatherE
         return _CONDITION_MAP.get(condition_code, ATTR_CONDITION_EXCEPTIONAL)
 
     @property
-    def _current_conditions(self) -> ForecastTimestamp | None:
-        """Return current conditions, or None when no forecast matches the current hour."""
-        return self.coordinator.data.current_conditions
-
-    @property
     def native_temperature(self) -> float | None:
         """Return the temperature."""
-        cc = self._current_conditions
-        return cc.temperature if cc is not None else None
+        return self.coordinator.data.current_conditions.temperature
 
     @property
     def native_apparent_temperature(self) -> float | None:
         """Return the apparent temperature."""
-        cc = self._current_conditions
-        return cc.apparent_temperature if cc is not None else None
+        return self.coordinator.data.current_conditions.apparent_temperature
 
     @property
     def humidity(self) -> int | None:
         """Return the humidity."""
-        cc = self._current_conditions
-        return cc.humidity if cc is not None else None
+        return self.coordinator.data.current_conditions.humidity
 
     @property
     def native_pressure(self) -> float | None:
         """Return the pressure."""
-        cc = self._current_conditions
-        return cc.pressure if cc is not None else None
+        return self.coordinator.data.current_conditions.pressuree
 
     @property
     def native_wind_speed(self) -> float | None:
         """Return the wind speed."""
-        cc = self._current_conditions
-        return cc.wind_speed if cc is not None else None
+        return self.coordinator.data.current_conditions.wind_speed
 
     @property
     def wind_bearing(self) -> int | None:
         """Return the wind bearing."""
-        cc = self._current_conditions
-        return cc.wind_bearing if cc is not None else None
+        return self.coordinator.data.current_conditions.wind_bearing
 
     @property
     def native_wind_gust_speed(self) -> float | None:
         """Return the wind gust speed."""
-        cc = self._current_conditions
-        return cc.wind_gust_speed if cc is not None else None
+        return self.coordinator.data.current_conditions.wind_gust_speed
 
     @property
     def cloud_coverage(self) -> int | None:
         """Return the cloud coverage."""
-        cc = self._current_conditions
-        return cc.cloud_coverage if cc is not None else None
+        return self.coordinator.data.current_conditions.cloud_coverage
 
     @property
     def condition(self) -> str | None:
         """Return the current condition."""
-        cc = self._current_conditions
+        cc = self.coordinator.data.current_conditions
         if cc is None:
             return None
-        return self._map_condition(cc.condition_code, cc.datetime)
+        return self._map_condition(cc.condition, cc.datetime)
 
     def _convert_forecast_data(
         self, forecast_data: Any, include_templow: bool = False
