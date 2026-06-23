@@ -2,7 +2,7 @@
 
 import asyncio
 from dataclasses import dataclass
-from typing import Any
+from typing import Any, override
 
 from pysnooz.advertisement import SnoozAdvertisementData
 import voluptuous as vol
@@ -42,6 +42,7 @@ class SnoozConfigFlow(ConfigFlow, domain=DOMAIN):
         self._discovered_devices: dict[str, DiscoveredSnooz] = {}
         self._pairing_task: asyncio.Task | None = None
 
+    @override
     async def async_step_bluetooth(
         self, discovery_info: BluetoothServiceInfo
     ) -> ConfigFlowResult:
@@ -74,6 +75,7 @@ class SnoozConfigFlow(ConfigFlow, domain=DOMAIN):
             step_id="bluetooth_confirm", description_placeholders=placeholders
         )
 
+    @override
     async def async_step_user(
         self, user_input: dict[str, Any] | None = None
     ) -> ConfigFlowResult:

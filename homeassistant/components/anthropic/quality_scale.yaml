@@ -4,10 +4,7 @@ rules:
     status: exempt
     comment: |
       Integration has no actions.
-  appropriate-polling:
-    status: exempt
-    comment: |
-      Integration does not poll.
+  appropriate-polling: done
   brands: done
   common-modules: done
   config-flow-test-coverage: done
@@ -52,10 +49,7 @@ rules:
     status: exempt
     comment: |
       Service integration, no discovery.
-  docs-data-update:
-    status: exempt
-    comment: |
-      No data updates.
+  docs-data-update: done
   docs-examples: done
   docs-known-limitations: done
   docs-supported-devices: done

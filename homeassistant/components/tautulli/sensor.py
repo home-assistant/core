@@ -2,7 +2,7 @@
 
 from collections.abc import Callable
 from dataclasses import dataclass
-from typing import cast
+from typing import cast, override
 
 from pytautulli import (
     PyTautulliApiActivity,
@@ -244,6 +244,7 @@ class TautulliSensor(TautulliEntity, SensorEntity):
     entity_description: TautulliSensorEntityDescription
 
     @property
+    @override
     def native_value(self) -> StateType:
         """Return the state of the sensor."""
         return self.entity_description.value_fn(
@@ -270,6 +271,7 @@ class TautulliSessionSensor(TautulliEntity, SensorEntity):
         self._attr_unique_id = f"{entry_id}_{user.user_id}_{description.key}"
 
     @property
+    @override
     def native_value(self) -> StateType:
         """Return the state of the sensor."""
         if self.coordinator.activity:

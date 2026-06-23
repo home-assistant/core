@@ -1,7 +1,8 @@
 """Config flow for MELCloud Home."""
 
+from collections.abc import Mapping
 import logging
-from typing import Any
+from typing import Any, override
 
 from aiomelcloudhome import MELCloudHome, MelCloudHomeAuth
 from aiomelcloudhome.exceptions import (
@@ -68,6 +69,7 @@ class MelCloudHomeConfigFlow(ConfigFlow, domain=DOMAIN):
 
         return errors, user_id
 
+    @override
     async def async_step_user(
         self, user_input: dict[str, Any] | None = None
     ) -> ConfigFlowResult:
@@ -91,6 +93,39 @@ class MelCloudHomeConfigFlow(ConfigFlow, domain=DOMAIN):
 
         return self.async_show_form(
             step_id="user",
+            data_schema=STEP_USER_DATA_SCHEMA,
+            errors=errors,
+        )
+
+    async def async_step_reauth(
+        self, entry_data: Mapping[str, Any]
+    ) -> ConfigFlowResult:
+        """Perform reauth when MELCloud Home API authentication fails."""
+        return await self.async_step_reauth_confirm()
+
+    async def async_step_reauth_confirm(
+        self, user_input: dict[str, Any] | None = None
+    ) -> ConfigFlowResult:
+        """Handle reauth: ask for new API token and validate."""
+        errors: dict[str, str] = {}
+        reauth_entry = self._get_reauth_entry()
+        if user_input is not None:
+            errors, user_id = await self._async_validate_credentials(
+                user_input[CONF_EMAIL], user_input[CONF_PASSWORD]
+            )
+            if not errors:
+                await self.async_set_unique_id(user_id)
+                self._abort_if_unique_id_mismatch()
+                return self.async_update_reload_and_abort(
+                    reauth_entry,
+                    data_updates={
+                        CONF_EMAIL: user_input[CONF_EMAIL],
+                        CONF_PASSWORD: user_input[CONF_PASSWORD],
+                    },
+                )
+
+        return self.async_show_form(
+            step_id="reauth_confirm",
             data_schema=STEP_USER_DATA_SCHEMA,
             errors=errors,
         )

@@ -1,7 +1,7 @@
 """Base entity for entities in victron_gx integration."""
 
 from abc import abstractmethod
-from typing import Any
+from typing import Any, override
 
 from victron_mqtt import (
     Device as VictronVenusDevice,
@@ -90,11 +90,13 @@ class VictronBaseEntity(Entity):
     def _on_update(self, _: VictronVenusMetric, value: Any) -> None:
         self._on_update_cb(value)
 
+    @override
     async def async_added_to_hass(self) -> None:
         """Run when entity about to be added to hass."""
         await super().async_added_to_hass()
         self._metric.on_update = self._on_update
 
+    @override
     async def async_will_remove_from_hass(self) -> None:
         """Run when entity will be removed from hass."""
         # Unregister update callback

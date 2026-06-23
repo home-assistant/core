@@ -3,7 +3,7 @@
 from collections.abc import Iterable
 from datetime import timedelta
 from functools import partial
-from typing import Any, cast
+from typing import Any, cast, override
 
 import pypck
 
@@ -111,6 +111,7 @@ class LcnClimate(LcnEntity, ClimateEntity):
             )
 
     @property
+    @override
     def temperature_unit(self) -> str:
         """Return the unit of measurement."""
         # Config schema only allows for:
@@ -121,6 +122,7 @@ class LcnClimate(LcnEntity, ClimateEntity):
         return UnitOfTemperature.CELSIUS
 
     @property
+    @override
     def hvac_mode(self) -> HVACMode:
         """Return hvac operation ie. heat, cool mode.
 
@@ -131,15 +133,18 @@ class LcnClimate(LcnEntity, ClimateEntity):
         return HVACMode.OFF
 
     @property
+    @override
     def max_temp(self) -> float:
         """Return the maximum temperature."""
         return cast(float, self._max_temp)
 
     @property
+    @override
     def min_temp(self) -> float:
         """Return the minimum temperature."""
         return cast(float, self._min_temp)
 
+    @override
     async def async_set_hvac_mode(self, hvac_mode: HVACMode) -> None:
         """Set new target hvac mode."""
         if hvac_mode == HVACMode.HEAT:
@@ -158,6 +163,7 @@ class LcnClimate(LcnEntity, ClimateEntity):
             self._attr_target_temperature = None
             self.async_write_ha_state()
 
+    @override
     async def async_set_temperature(self, **kwargs: Any) -> None:
         """Set new target temperature."""
         if (temperature := kwargs.get(ATTR_TEMPERATURE)) is None:
@@ -183,6 +189,7 @@ class LcnClimate(LcnEntity, ClimateEntity):
             ]
         )
 
+    @override
     def input_received(self, input_obj: InputType) -> None:
         """Set temperature value when LCN input object is received."""
         if not isinstance(input_obj, pypck.inputs.ModStatusVar):

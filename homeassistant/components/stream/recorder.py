@@ -5,7 +5,7 @@ from io import DEFAULT_BUFFER_SIZE, BytesIO
 import logging
 import math
 import os
-from typing import TYPE_CHECKING
+from typing import TYPE_CHECKING, override
 
 import av
 import av.container
@@ -47,6 +47,7 @@ class RecorderOutput(StreamOutput):
         self.video_path: str
 
     @property
+    @override
     def name(self) -> str:
         """Return provider name."""
         return RECORDER_PROVIDER
@@ -55,6 +56,7 @@ class RecorderOutput(StreamOutput):
         """Prepend segments to existing list."""
         self._segments.extendleft(reversed(segments))
 
+    @override
     def cleanup(self) -> None:
         """Handle cleanup."""
         self.idle_timer.idle = True

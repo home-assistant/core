@@ -1,6 +1,6 @@
 """Vistapool Light entities."""
 
-from typing import Any
+from typing import Any, override
 
 from aioaquarite import AquariteError
 
@@ -44,6 +44,7 @@ class VistapoolLight(VistapoolEntity, LightEntity):
         self._attr_unique_id = self.build_unique_id("pool_light")
 
     @property
+    @override
     def is_on(self) -> bool | None:
         """Return true if the light is on."""
         value = self.coordinator.get_value(_VALUE_PATH)
@@ -51,10 +52,12 @@ class VistapoolLight(VistapoolEntity, LightEntity):
             return None
         return value in (True, "1")
 
+    @override
     async def async_turn_on(self, **kwargs: Any) -> None:
         """Turn the light on."""
         await self._async_set_value(1)
 
+    @override
     async def async_turn_off(self, **kwargs: Any) -> None:
         """Turn the light off."""
         await self._async_set_value(0)
@@ -71,3 +74,4 @@ class VistapoolLight(VistapoolEntity, LightEntity):
                 translation_key="set_failed",
                 translation_placeholders={"entity": self.entity_id},
             ) from err
+        self.coordinator.apply_optimistic(_VALUE_PATH, value)

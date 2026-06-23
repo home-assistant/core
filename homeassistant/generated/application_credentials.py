@@ -35,6 +35,7 @@ APPLICATION_CREDENTIALS = [
     "ondilo_ico",
     "onedrive",
     "onedrive_for_business",
+    "overkiz",
     "point",
     "senz",
     "smartthings",

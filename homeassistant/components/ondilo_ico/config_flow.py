@@ -1,7 +1,7 @@
 """Config flow for Ondilo ICO."""
 
 import logging
-from typing import Any
+from typing import Any, override
 
 from homeassistant.components.application_credentials import (
     ClientCredential,
@@ -18,6 +18,7 @@ class OndiloIcoOAuth2FlowHandler(AbstractOAuth2FlowHandler, domain=DOMAIN):
 
     DOMAIN = DOMAIN
 
+    @override
     async def async_step_user(
         self, user_input: dict[str, Any] | None = None
     ) -> ConfigFlowResult:
@@ -31,11 +32,13 @@ class OndiloIcoOAuth2FlowHandler(AbstractOAuth2FlowHandler, domain=DOMAIN):
         return await super().async_step_user(user_input)
 
     @property
+    @override
     def logger(self) -> logging.Logger:
         """Return logger."""
         return logging.getLogger(__name__)
 
     @property
+    @override
     def extra_authorize_data(self) -> dict:
         """Extra data that needs to be appended to the authorize url."""
         return {"scope": "api"}

@@ -2,6 +2,7 @@
 
 from collections.abc import Callable
 from dataclasses import dataclass
+from typing import override
 
 from pytile.tile import Tile
 
@@ -64,6 +65,7 @@ class TileBinarySensor(TileEntity, BinarySensorEntity):
         )
 
     @property
+    @override
     def is_on(self) -> bool:
         """Return True if the binary sensor is on."""
         return self.entity_description.is_on_fn(self._tile)
