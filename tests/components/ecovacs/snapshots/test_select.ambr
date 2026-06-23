@@ -6,7 +6,7 @@
     ]),
     'area_id': None,
     'capabilities': dict({
-      'options': list([
+      <SelectEntityCapabilityAttribute.OPTIONS: 'options'>: list([
         'Map 2',
         '1',
       ]),
@@ -45,7 +45,7 @@
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'friendly_name': 'X8 PRO OMNI Active map',
-      'options': list([
+      <SelectEntityCapabilityAttribute.OPTIONS: 'options'>: list([
         'Map 2',
         '1',
       ]),
@@ -65,7 +65,7 @@
     ]),
     'area_id': None,
     'capabilities': dict({
-      'options': list([
+      <SelectEntityCapabilityAttribute.OPTIONS: 'options'>: list([
         'auto',
         'smart',
       ]),
@@ -104,7 +104,7 @@
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'friendly_name': 'X8 PRO OMNI Auto-empty frequency',
-      'options': list([
+      <SelectEntityCapabilityAttribute.OPTIONS: 'options'>: list([
         'auto',
         'smart',
       ]),
@@ -124,7 +124,7 @@
     ]),
     'area_id': None,
     'capabilities': dict({
-      'options': list([
+      <SelectEntityCapabilityAttribute.OPTIONS: 'options'>: list([
         'mop',
         'mop_after_vacuum',
         'vacuum',
@@ -165,7 +165,7 @@
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'friendly_name': 'X8 PRO OMNI Work mode',
-      'options': list([
+      <SelectEntityCapabilityAttribute.OPTIONS: 'options'>: list([
         'mop',
         'mop_after_vacuum',
         'vacuum',
@@ -187,7 +187,7 @@
     ]),
     'area_id': None,
     'capabilities': dict({
-      'options': list([
+      <SelectEntityCapabilityAttribute.OPTIONS: 'options'>: list([
         'Map 2',
         '1',
       ]),
@@ -226,7 +226,7 @@
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'friendly_name': 'Dusty Active map',
-      'options': list([
+      <SelectEntityCapabilityAttribute.OPTIONS: 'options'>: list([
         'Map 2',
         '1',
       ]),
@@ -246,7 +246,7 @@
     ]),
     'area_id': None,
     'capabilities': dict({
-      'options': list([
+      <SelectEntityCapabilityAttribute.OPTIONS: 'options'>: list([
         'auto',
         'smart',
       ]),
@@ -285,7 +285,7 @@
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'friendly_name': 'Dusty Auto-empty frequency',
-      'options': list([
+      <SelectEntityCapabilityAttribute.OPTIONS: 'options'>: list([
         'auto',
         'smart',
       ]),
@@ -305,7 +305,7 @@
     ]),
     'area_id': None,
     'capabilities': dict({
-      'options': list([
+      <SelectEntityCapabilityAttribute.OPTIONS: 'options'>: list([
         'low',
         'medium',
         'high',
@@ -345,7 +345,7 @@
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'friendly_name': 'Dusty Water flow level',
-      'options': list([
+      <SelectEntityCapabilityAttribute.OPTIONS: 'options'>: list([
         'low',
         'medium',
         'high',
@@ -366,7 +366,7 @@
     ]),
     'area_id': None,
     'capabilities': dict({
-      'options': list([
+      <SelectEntityCapabilityAttribute.OPTIONS: 'options'>: list([
         'Map 2',
         '1',
       ]),
@@ -405,7 +405,7 @@
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'friendly_name': 'Ozmo 950 Active map',
-      'options': list([
+      <SelectEntityCapabilityAttribute.OPTIONS: 'options'>: list([
         'Map 2',
         '1',
       ]),
@@ -425,7 +425,7 @@
     ]),
     'area_id': None,
     'capabilities': dict({
-      'options': list([
+      <SelectEntityCapabilityAttribute.OPTIONS: 'options'>: list([
         'low',
         'medium',
         'high',
@@ -466,7 +466,7 @@
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'friendly_name': 'Ozmo 950 Water flow level',
-      'options': list([
+      <SelectEntityCapabilityAttribute.OPTIONS: 'options'>: list([
         'low',
         'medium',
         'high',

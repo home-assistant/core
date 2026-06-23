@@ -4,7 +4,7 @@ from dataclasses import asdict, dataclass
 from datetime import datetime, timedelta
 from enum import StrEnum
 import logging
-from typing import Any, Self, final
+from typing import Any, Self, final, override
 
 from propcache.api import cached_property
 
@@ -84,6 +84,7 @@ class EventExtraStoredData(ExtraStoredData):
     last_event_type: str | None
     last_event_attributes: dict[str, Any] | None
 
+    @override
     def as_dict(self) -> dict[str, Any]:
         """Return a dict representation of the event data."""
         return asdict(self)
@@ -121,6 +122,7 @@ class EventEntity(RestoreEntity, cached_properties=CACHED_PROPERTIES_WITH_ATTR_)
     __last_event_attributes: dict[str, Any] | None = None
 
     @cached_property
+    @override
     def device_class(self) -> EventDeviceClass | None:
         """Return the class of this entity."""
         if hasattr(self, "_attr_device_class"):
@@ -152,6 +154,7 @@ class EventEntity(RestoreEntity, cached_properties=CACHED_PROPERTIES_WITH_ATTR_)
         self.__last_event_type = event_type
         self.__last_event_attributes = event_attributes
 
+    @override
     def _default_to_device_class_name(self) -> bool:
         """Return True if an unnamed entity should be named by its device class.
 
@@ -161,6 +164,7 @@ class EventEntity(RestoreEntity, cached_properties=CACHED_PROPERTIES_WITH_ATTR_)
 
     @property
     @final
+    @override
     def capability_attributes(self) -> dict[str, list[str]]:
         """Return capability attributes."""
         return {
@@ -169,6 +173,7 @@ class EventEntity(RestoreEntity, cached_properties=CACHED_PROPERTIES_WITH_ATTR_)
 
     @property
     @final
+    @override
     def state(self) -> str | None:
         """Return the entity state."""
         if (last_event := self.__last_event_triggered) is None:
@@ -177,6 +182,7 @@ class EventEntity(RestoreEntity, cached_properties=CACHED_PROPERTIES_WITH_ATTR_)
 
     @final
     @property
+    @override
     def state_attributes(self) -> dict[str, Any]:
         """Return the state attributes."""
         attributes = {ATTR_EVENT_TYPE: self.__last_event_type}
@@ -185,6 +191,7 @@ class EventEntity(RestoreEntity, cached_properties=CACHED_PROPERTIES_WITH_ATTR_)
         return attributes
 
     @final
+    @override
     async def async_internal_added_to_hass(self) -> None:
         """Call when the event entity is added to hass."""
         await super().async_internal_added_to_hass()
@@ -213,6 +220,7 @@ class EventEntity(RestoreEntity, cached_properties=CACHED_PROPERTIES_WITH_ATTR_)
             self.__last_event_attributes = event_data.last_event_attributes
 
     @property
+    @override
     def extra_restore_state_data(self) -> EventExtraStoredData:
         """Return event specific state data to be restored."""
         return EventExtraStoredData(

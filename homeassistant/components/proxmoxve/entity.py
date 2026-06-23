@@ -1,6 +1,6 @@
 """Proxmox parent entity class."""
 
-from typing import Any
+from typing import Any, override
 
 from yarl import URL
 
@@ -62,6 +62,7 @@ class ProxmoxNodeEntity(ProxmoxCoordinatorEntity):
         )
 
     @property
+    @override
     def available(self) -> bool:
         """Return if the device is available."""
         return super().available and self.device_name in self.coordinator.data
@@ -110,6 +111,7 @@ class ProxmoxStorageEntity(ProxmoxCoordinatorEntity):
         )
 
     @property
+    @override
     def available(self) -> bool:
         """Return if the device is available."""
         return (
@@ -163,6 +165,7 @@ class ProxmoxVMEntity(ProxmoxCoordinatorEntity):
         )
 
     @property
+    @override
     def available(self) -> bool:
         """Return if the device is available."""
         return (
@@ -219,6 +222,7 @@ class ProxmoxContainerEntity(ProxmoxCoordinatorEntity):
         )
 
     @property
+    @override
     def available(self) -> bool:
         """Return if the device is available."""
         return (

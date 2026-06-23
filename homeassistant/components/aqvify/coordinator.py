@@ -3,7 +3,7 @@
 from dataclasses import dataclass
 from datetime import timedelta
 import logging
-from typing import TYPE_CHECKING
+from typing import TYPE_CHECKING, override
 
 from aiohttp import ClientResponseError
 from pyaqvify import (
@@ -67,6 +67,7 @@ class AqvifyCoordinator(DataUpdateCoordinator[AqvifyCoordinatorData]):
         self.api_client = api_client
         self.previous_devices: set[str] = set()
 
+    @override
     async def _async_setup(self) -> None:
         """Set up the coordinator."""
         try:
@@ -93,6 +94,7 @@ class AqvifyCoordinator(DataUpdateCoordinator[AqvifyCoordinatorData]):
                 },
             ) from err
 
+    @override
     async def _async_update_data(self) -> AqvifyCoordinatorData:
         """Fetch device state."""
         try:
@@ -208,6 +210,7 @@ class AqvifyAggrDataCoordinator(
         end_time = base_time.replace(minute=59).strftime(date_time_fmt)
         return beg_time, end_time
 
+    @override
     async def _async_update_data(self) -> dict[str, AqvifyHourAggregatedValues]:
         """Fetch device state."""
         devices = self.config_entry.runtime_data.coordinator.data.devices

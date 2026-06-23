@@ -2,7 +2,7 @@
 
 import logging
 import os
-from typing import Any
+from typing import Any, override
 
 from androidtv import state_detection_rules_validator
 import voluptuous as vol
@@ -152,6 +152,7 @@ class AndroidTVFlowHandler(ConfigFlow, domain=DOMAIN):
         await aftv.adb_close()
         return None, unique_id
 
+    @override
     async def async_step_user(
         self, user_input: dict[str, Any] | None = None
     ) -> ConfigFlowResult:
@@ -193,6 +194,7 @@ class AndroidTVFlowHandler(ConfigFlow, domain=DOMAIN):
 
     @staticmethod
     @callback
+    @override
     def async_get_options_flow(config_entry: ConfigEntry) -> OptionsFlowHandler:
         """Get the options flow for this handler."""
         return OptionsFlowHandler(config_entry)

@@ -1,7 +1,7 @@
 """Config flow for CometBlue."""
 
 import logging
-from typing import Any
+from typing import Any, override
 
 from bleak.exc import BleakError
 from eurotronic_cometblue_ha import AsyncCometBlue
@@ -127,6 +127,7 @@ class CometBlueConfigFlow(ConfigFlow, domain=DOMAIN):
             errors=errors,
         )
 
+    @override
     async def async_step_bluetooth(
         self, discovery_info: BluetoothServiceInfoBleak
     ) -> ConfigFlowResult:
@@ -176,6 +177,7 @@ class CometBlueConfigFlow(ConfigFlow, domain=DOMAIN):
             ),
         )
 
+    @override
     async def async_step_user(
         self, user_input: dict[str, Any] | None = None
     ) -> ConfigFlowResult:

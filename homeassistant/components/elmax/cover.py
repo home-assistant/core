@@ -1,7 +1,7 @@
 """Elmax cover platform."""
 
 import logging
-from typing import Any
+from typing import Any, override
 
 from elmax_api.model.command import CoverCommand
 from elmax_api.model.cover_status import CoverStatus
@@ -81,11 +81,13 @@ class ElmaxCover(ElmaxEntity, CoverEntity):
         return state == status_to_check
 
     @property
+    @override
     def is_closed(self) -> bool | None:
         """Tells if the cover is closed or not."""
         return self.coordinator.get_cover_state(self._device.endpoint_id).position == 0
 
     @property
+    @override
     def current_cover_position(self) -> int | None:
         """Return current position of cover.
 
@@ -94,15 +96,18 @@ class ElmaxCover(ElmaxEntity, CoverEntity):
         return self.coordinator.get_cover_state(self._device.endpoint_id).position
 
     @property
+    @override
     def is_opening(self) -> bool | None:
         """Tells if the cover is opening or not."""
         return self.__check_cover_status(CoverStatus.UP)
 
     @property
+    @override
     def is_closing(self) -> bool | None:
         """Return if the cover is closing or not."""
         return self.__check_cover_status(CoverStatus.DOWN)
 
+    @override
     async def async_stop_cover(self, **kwargs: Any) -> None:
         """Stop the cover."""
         # To stop the cover, Elmax requires us to re-issue the
@@ -121,12 +126,14 @@ class ElmaxCover(ElmaxEntity, CoverEntity):
         else:
             _LOGGER.debug("Ignoring stop request as the cover is IDLE")
 
+    @override
     async def async_open_cover(self, **kwargs: Any) -> None:
         """Open the cover."""
         await self.coordinator.http_client.execute_command(
             endpoint_id=self._device.endpoint_id, command=CoverCommand.UP
         )
 
+    @override
     async def async_close_cover(self, **kwargs: Any) -> None:
         """Close the cover."""
         await self.coordinator.http_client.execute_command(
