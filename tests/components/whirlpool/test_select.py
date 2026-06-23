@@ -180,3 +180,23 @@ async def test_oven_cook_mode_select_from_idle(
     mock.set_cook.assert_called_once_with(
         target_temp=175, mode=whirlpool.oven.CookMode.Broil, cavity=cavity
     )
+
+
+async def test_oven_cook_mode_select_value_error(
+    hass: HomeAssistant,
+    oven_cook_mode_entity: tuple[str, str, whirlpool.oven.Cavity],
+    request: pytest.FixtureRequest,
+) -> None:
+    """Test a ValueError while setting the cook mode raises ServiceValidationError."""
+    entity_id, mock_fixture, _ = oven_cook_mode_entity
+    mock = request.getfixturevalue(mock_fixture)
+    mock.set_cook.side_effect = ValueError
+    await init_integration(hass)
+
+    with pytest.raises(ServiceValidationError):
+        await hass.services.async_call(
+            SELECT_DOMAIN,
+            SERVICE_SELECT_OPTION,
+            {ATTR_ENTITY_ID: entity_id, ATTR_OPTION: "broil"},
+            blocking=True,
+        )

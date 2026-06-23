@@ -19,8 +19,6 @@ from .entity import WhirlpoolEntity, WhirlpoolOvenEntity
 
 PARALLEL_UPDATES = 1
 
-# Selectable oven cook modes (Standby is not user-selectable). The option
-# strings match the translations under entity.select.oven_cook_mode.
 OVEN_COOK_MODES: Final[dict[CookMode, str]] = {
     CookMode.Bake: "bake",
     CookMode.ConvectBake: "convection_bake",
@@ -131,10 +129,16 @@ class WhirlpoolOvenCookModeSelect(WhirlpoolOvenEntity, SelectEntity):
         target = self._appliance.get_target_temp(self.cavity)
         if target is None:
             target = DEFAULT_OVEN_TEMP
-        WhirlpoolOvenCookModeSelect._check_service_request(
-            await self._appliance.set_cook(
-                target_temp=target,
-                mode=OPTION_TO_OVEN_COOK_MODE[option],
-                cavity=self.cavity,
+        try:
+            WhirlpoolOvenCookModeSelect._check_service_request(
+                await self._appliance.set_cook(
+                    target_temp=target,
+                    mode=OPTION_TO_OVEN_COOK_MODE[option],
+                    cavity=self.cavity,
+                )
             )
-        )
+        except ValueError as err:
+            raise ServiceValidationError(
+                translation_domain=DOMAIN,
+                translation_key="invalid_value_set",
+            ) from err
