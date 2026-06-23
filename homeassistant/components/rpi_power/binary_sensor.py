@@ -15,6 +15,7 @@ from homeassistant.const import EntityCategory
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
+from homeassistant.helpers.issue_registry import IssueSeverity, create_issue
 
 from . import RpiPowerConfigEntry
 from .const import DOMAIN
@@ -45,7 +46,7 @@ class RaspberryChargerBinarySensor(BinarySensorEntity):
     _attr_entity_category = EntityCategory.DIAGNOSTIC
     _attr_translation_key = "rpi_power"
     _attr_has_entity_name = True
-    _attr_unique_id = "rpi_power"  # only one sensor possible
+    _attr_unique_id = "rpi_power"  # only one sensor possible  # pylint: disable=home-assistant-entity-unique-id-redundant-domain
 
     def __init__(self, under_voltage: UnderVoltage) -> None:
         """Initialize the binary sensor."""
@@ -63,6 +64,15 @@ class RaspberryChargerBinarySensor(BinarySensorEntity):
         if self._attr_is_on != value:
             if value:
                 _LOGGER.warning(DESCRIPTION_UNDER_VOLTAGE)
+                create_issue(
+                    self.hass,
+                    DOMAIN,
+                    "under_voltage_detected",
+                    is_fixable=True,
+                    is_persistent=True,
+                    severity=IssueSeverity.CRITICAL,
+                    translation_key="under_voltage_detected",
+                )
             else:
                 _LOGGER.debug(DESCRIPTION_NORMALIZED)
             self._attr_is_on = value

@@ -66,6 +66,51 @@ def test_render_needs_agent_emits_generic_placeholders() -> None:
     assert "{{CHECK_CELL:pkg:async_blocking}}" in rendered
     assert "{{CHECK_DETAIL:pkg:async_blocking}}" in rendered
     assert "<details open>" in rendered
+    # A deterministic WARN (CI_UPLOAD) already forces the attention verdict
+    # regardless of how the agent resolves the pending checks, so the summary
+    # is rendered directly rather than deferred to the agent.
+    assert "⚠️ Some checks require attention — see the details below." in rendered
+    assert "{{SUMMARY}}" not in rendered
+
+
+def test_render_pass_or_pending_defers_summary_to_agent() -> None:
+    """With only PASS and NEEDS_AGENT checks, the summary is left as a placeholder.
+
+    The final verdict depends entirely on how the agent resolves the pending
+    checks, so the deterministic stage must not bake in a summary line.
+    """
+    pkg = PackageChange(
+        name="pkg",
+        old_version=None,
+        new_version="1.0.0",
+        repo_url="https://github.com/x/pkg",
+        checks={
+            CheckKind.CI_UPLOAD: _pass("attestation found"),
+            CheckKind.SECURITY: CheckResult(CheckStatus.NEEDS_AGENT, ""),
+            CheckKind.ASYNC_BLOCKING: CheckResult(CheckStatus.NEEDS_AGENT, ""),
+        },
+    )
+    rendered = render_comment(CheckRunResult(pr_number=1, packages=[pkg]))
+    assert "{{SUMMARY}}" in rendered
+    assert "All requirements checks passed. ✅" not in rendered
+    assert "⚠️ Some checks require attention" not in rendered
+
+
+def test_render_deterministic_warn_renders_attention_summary() -> None:
+    """A WARN with no agent-pending checks renders the attention line directly."""
+    pkg = PackageChange(
+        name="pkg",
+        old_version="1.0.0",
+        new_version="1.1.0",
+        repo_url="https://github.com/x/pkg",
+        checks={
+            CheckKind.CI_UPLOAD: _pass("attestation found"),
+            CheckKind.SECURITY: CheckResult(CheckStatus.WARN, "partial scan"),
+        },
+    )
+    rendered = render_comment(CheckRunResult(pr_number=1, packages=[pkg]))
+    assert "⚠️ Some checks require attention — see the details below." in rendered
+    assert "{{SUMMARY}}" not in rendered
 
 
 def test_render_empty_change_set() -> None:

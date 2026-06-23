@@ -1,7 +1,7 @@
 """Config flow for WiZ Platform."""
 
 import logging
-from typing import Any
+from typing import Any, override
 
 from pywizlight import wizlight
 from pywizlight.discovery import DiscoveredBulb
@@ -34,6 +34,7 @@ class WizConfigFlow(ConfigFlow, domain=DOMAIN):
         """Initialize the config flow."""
         self._discovered_devices: dict[str, DiscoveredBulb] = {}
 
+    @override
     async def async_step_dhcp(
         self, discovery_info: DhcpServiceInfo
     ) -> ConfigFlowResult:
@@ -43,6 +44,7 @@ class WizConfigFlow(ConfigFlow, domain=DOMAIN):
         )
         return await self._async_handle_discovery()
 
+    @override
     async def async_step_integration_discovery(
         self, discovery_info: dict[str, str]
     ) -> ConfigFlowResult:
@@ -148,6 +150,7 @@ class WizConfigFlow(ConfigFlow, domain=DOMAIN):
             data_schema=vol.Schema({vol.Required(CONF_DEVICE): vol.In(devices_name)}),
         )
 
+    @override
     async def async_step_user(
         self, user_input: dict[str, Any] | None = None
     ) -> ConfigFlowResult:

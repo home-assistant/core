@@ -1,6 +1,6 @@
 """Config flow for LG IR integration."""
 
-from typing import TYPE_CHECKING, Any
+from typing import TYPE_CHECKING, Any, override
 
 import voluptuous as vol
 
@@ -84,6 +84,7 @@ class LgIrConfigFlow(ConfigFlow, domain=DOMAIN):
             data={CONF_DEVICE_TYPE: device_type, **user_input},
         )
 
+    @override
     async def async_step_user(
         self, user_input: dict[str, Any] | None = None
     ) -> ConfigFlowResult:

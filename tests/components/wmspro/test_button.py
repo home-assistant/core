@@ -22,32 +22,42 @@ from . import setup_config_entry
 from tests.common import MockConfigEntry, async_fire_time_changed
 
 
+@pytest.mark.parametrize(
+    ("mock_hub_configuration", "mock_hub_status"),
+    [("config_prod_awning_dimmer.json", "status_prod_awning.json")],
+    indirect=True,
+)
 async def test_button_update(
     hass: HomeAssistant,
     mock_config_entry: MockConfigEntry,
     mock_hub_ping: AsyncMock,
-    mock_hub_configuration_prod_awning_dimmer: AsyncMock,
-    mock_hub_status_prod_awning: AsyncMock,
+    mock_hub_configuration: AsyncMock,
+    mock_hub_status: AsyncMock,
     mock_action_call: AsyncMock,
     snapshot: SnapshotAssertion,
 ) -> None:
     """Test that a button entity is created and updated correctly."""
     assert await setup_config_entry(hass, mock_config_entry)
     assert len(mock_hub_ping.mock_calls) == 1
-    assert len(mock_hub_configuration_prod_awning_dimmer.mock_calls) == 1
-    assert len(mock_hub_status_prod_awning.mock_calls) == 2
+    assert len(mock_hub_configuration.mock_calls) == 1
+    assert len(mock_hub_status.mock_calls) == 2
 
     entity = hass.states.get("button.terrasse_markise_identify")
     assert entity is not None
     assert entity == snapshot
 
 
+@pytest.mark.parametrize(
+    ("mock_hub_configuration", "mock_hub_status"),
+    [("config_prod_awning_dimmer.json", "status_prod_awning.json")],
+    indirect=True,
+)
 async def test_button_press(
     hass: HomeAssistant,
     mock_config_entry: MockConfigEntry,
     mock_hub_ping: AsyncMock,
-    mock_hub_configuration_prod_awning_dimmer: AsyncMock,
-    mock_hub_status_prod_awning: AsyncMock,
+    mock_hub_configuration: AsyncMock,
+    mock_hub_status: AsyncMock,
     mock_action_call: AsyncMock,
 ) -> None:
     """Test that a button entity is pressed correctly."""
@@ -58,7 +68,7 @@ async def test_button_press(
         "wmspro.destination.Destination.refresh",
         return_value=True,
     ):
-        before = len(mock_hub_status_prod_awning.mock_calls)
+        before = len(mock_hub_status.mock_calls)
         entity = hass.states.get("button.terrasse_markise_identify")
         assert entity is not None
         before_state = entity.state
@@ -73,7 +83,7 @@ async def test_button_press(
         entity = hass.states.get("button.terrasse_markise_identify")
         assert entity is not None
         assert entity.state != before_state
-        assert len(mock_hub_status_prod_awning.mock_calls) == before
+        assert len(mock_hub_status.mock_calls) == before
 
 
 @pytest.mark.parametrize(
@@ -93,12 +103,17 @@ async def test_button_press(
         ),
     ],
 )
+@pytest.mark.parametrize(
+    ("mock_hub_configuration", "mock_hub_status"),
+    [("config_prod_slat_rotate.json", "status_prod_slat_rotate.json")],
+    indirect=True,
+)
 async def test_button_rotation_reset_press(
     hass: HomeAssistant,
     mock_config_entry: MockConfigEntry,
     mock_hub_ping: AsyncMock,
-    mock_hub_configuration_prod_slat_rotate: AsyncMock,
-    mock_hub_status_prod_slat_rotate: AsyncMock,
+    mock_hub_configuration: AsyncMock,
+    mock_hub_status: AsyncMock,
     mock_action_call: AsyncMock,
     freezer: FrozenDateTimeFactory,
     button_entity_id: str,
@@ -109,8 +124,8 @@ async def test_button_rotation_reset_press(
     """Test that the rotation reset button can be pressed."""
     assert await setup_config_entry(hass, mock_config_entry)
     assert len(mock_hub_ping.mock_calls) == 1
-    assert len(mock_hub_configuration_prod_slat_rotate.mock_calls) == 1
-    assert len(mock_hub_status_prod_slat_rotate.mock_calls) >= 1
+    assert len(mock_hub_configuration.mock_calls) == 1
+    assert len(mock_hub_status.mock_calls) >= 1
 
     entity = hass.states.get(range_entity_id)
     assert entity is not None
