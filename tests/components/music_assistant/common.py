@@ -75,7 +75,7 @@ async def setup_integration_from_fixtures(
     music.get_library_podcasts = AsyncMock(return_value=library_podcasts)
     music.get_item_by_uri = AsyncMock()
 
-    users = create_list_users_from_fixture()
+    users = create_users_from_fixture()
     music_assistant_client.auth.list_users = AsyncMock(return_value=users)
 
     config_entry.add_to_hass(hass)
@@ -158,7 +158,7 @@ def create_library_podcasts_from_fixture() -> list[Podcast]:
     return [Podcast.from_dict(radio_data) for radio_data in fixture_data]
 
 
-def create_list_users_from_fixture() -> list[User]:
+def create_users_from_fixture() -> list[User]:
     """Create MA Users from fixture."""
     fixture_data = load_and_parse_fixture("users")
     return [User.from_dict(user_data) for user_data in fixture_data]

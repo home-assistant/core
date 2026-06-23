@@ -572,6 +572,34 @@ async def test_media_player_play_media_action_legacy(
             },
             blocking=True,
         )
+    # disabled username
+    music_assistant_client.send_command.reset_mock()
+    with pytest.raises(ServiceValidationError):
+        await hass.services.async_call(
+            DOMAIN,
+            SERVICE_PLAY_MEDIA_ADVANCED,
+            {
+                ATTR_ENTITY_ID: entity_id,
+                ATTR_MEDIA_ID: "spotify://track/1234",
+                ATTR_MEDIA_ENQUEUE: "add",
+                ATTR_USERNAME: "user_disabled",
+            },
+            blocking=True,
+        )
+    # guest username
+    music_assistant_client.send_command.reset_mock()
+    with pytest.raises(ServiceValidationError):
+        await hass.services.async_call(
+            DOMAIN,
+            SERVICE_PLAY_MEDIA_ADVANCED,
+            {
+                ATTR_ENTITY_ID: entity_id,
+                ATTR_MEDIA_ID: "spotify://track/1234",
+                ATTR_MEDIA_ENQUEUE: "add",
+                ATTR_USERNAME: "party_guest",
+            },
+            blocking=True,
+        )
 
 
 async def test_media_player_play_media_action(
@@ -763,6 +791,34 @@ async def test_media_player_play_media_action(
                 ATTR_MEDIA_ID: "spotify://track/1234",
                 ATTR_MEDIA_ENQUEUE: "add",
                 ATTR_USERNAME: "non_existing_username",
+            },
+            blocking=True,
+        )
+    # disabled username
+    music_assistant_client.send_command.reset_mock()
+    with pytest.raises(ServiceValidationError):
+        await hass.services.async_call(
+            DOMAIN,
+            SERVICE_PLAY_MEDIA_ADVANCED,
+            {
+                ATTR_ENTITY_ID: entity_id,
+                ATTR_MEDIA_ID: "spotify://track/1234",
+                ATTR_MEDIA_ENQUEUE: "add",
+                ATTR_USERNAME: "user_disabled",
+            },
+            blocking=True,
+        )
+    # guest username
+    music_assistant_client.send_command.reset_mock()
+    with pytest.raises(ServiceValidationError):
+        await hass.services.async_call(
+            DOMAIN,
+            SERVICE_PLAY_MEDIA_ADVANCED,
+            {
+                ATTR_ENTITY_ID: entity_id,
+                ATTR_MEDIA_ID: "spotify://track/1234",
+                ATTR_MEDIA_ENQUEUE: "add",
+                ATTR_USERNAME: "party_guest",
             },
             blocking=True,
         )
