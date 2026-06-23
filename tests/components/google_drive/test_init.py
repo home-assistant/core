@@ -232,8 +232,7 @@ async def test_runtime_token_refresh_failures(
         **mock_kwargs,
     )
 
-    # Trigger a coordinator update. Because the token is expired, the native
-    # `AbstractAuth.request` will attempt to refresh the token, hitting our mock.
+    # The expired token forces a refresh during the update, hitting our mock.
     coordinator = config_entry.runtime_data
     await coordinator.async_refresh()
 
