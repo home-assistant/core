@@ -1,7 +1,7 @@
 """Config flow to configure the Nextcloud integration."""
 
 from collections.abc import Mapping
-from typing import Any
+from typing import Any, override
 
 from nextcloudmonitor import (
     NextcloudMonitor,
@@ -46,6 +46,7 @@ class NextcloudConfigFlow(ConfigFlow, domain=DOMAIN):
             user_input.get(CONF_VERIFY_SSL, DEFAULT_VERIFY_SSL),
         )
 
+    @override
     async def async_step_user(
         self, user_input: dict[str, Any] | None = None
     ) -> ConfigFlowResult:

@@ -2,7 +2,7 @@
 
 from datetime import timedelta
 import logging
-from typing import Any, final
+from typing import Any, final, override
 
 from propcache.api import cached_property
 
@@ -69,6 +69,7 @@ class GeolocationEvent(Entity, cached_properties=CACHED_PROPERTIES_WITH_ATTR_):
 
     @final
     @property
+    @override
     def state(self) -> float | None:
         """Return the state of the sensor."""
         if self.distance is not None:
@@ -97,6 +98,7 @@ class GeolocationEvent(Entity, cached_properties=CACHED_PROPERTIES_WITH_ATTR_):
 
     @final
     @property
+    @override
     def state_attributes(self) -> dict[str, Any]:
         """Return the state attributes of this external event."""
         data: dict[str, Any] = {ATTR_SOURCE: self.source}

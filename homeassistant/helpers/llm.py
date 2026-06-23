@@ -8,7 +8,7 @@ from decimal import Decimal
 from enum import Enum
 from functools import cache, partial
 from operator import attrgetter
-from typing import Any, cast
+from typing import Any, cast, override
 
 import slugify as unicode_slug
 import voluptuous as vol
@@ -224,6 +224,7 @@ class Tool:
         """Call the tool."""
         raise NotImplementedError
 
+    @override
     def __repr__(self) -> str:
         """Represent a string of a Tool."""
         return f"<{self.__class__.__name__} - {self.name}>"
@@ -303,6 +304,7 @@ class IntentTool(Tool):
         if extra_slots:
             self.extra_slots = extra_slots
 
+    @override
     async def async_call(
         self, hass: HomeAssistant, tool_input: ToolInput, llm_context: LLMContext
     ) -> JsonObjectType:
@@ -374,6 +376,7 @@ class NamespacedTool(Tool):
         self.parameters = tool.parameters
         self.tool = tool
 
+    @override
     async def async_call(
         self, hass: HomeAssistant, tool_input: ToolInput, llm_context: LLMContext
     ) -> JsonObjectType:
@@ -407,6 +410,7 @@ class MergedAPI(API):
         )
         self.llm_apis = llm_apis
 
+    @override
     async def async_get_api_instance(self, llm_context: LLMContext) -> APIInstance:
         """Return the instance of the API."""
         # These usually don't do I/O and execute right away
@@ -482,6 +486,7 @@ class AssistAPI(API):
             partial(unicode_slug.slugify, separator="_", lowercase=False)
         )
 
+    @override
     async def async_get_api_instance(self, llm_context: LLMContext) -> APIInstance:
         """Return the instance of the API."""
         if llm_context.assistant:
@@ -998,6 +1003,7 @@ class ActionTool(Tool):
             hass, domain, action
         )
 
+    @override
     async def async_call(
         self, hass: HomeAssistant, tool_input: ToolInput, llm_context: LLMContext
     ) -> JsonObjectType:
@@ -1087,6 +1093,7 @@ class CalendarGetEventsTool(Tool):
             }
         )
 
+    @override
     async def async_call(
         self, hass: HomeAssistant, tool_input: ToolInput, llm_context: LLMContext
     ) -> JsonObjectType:
@@ -1163,6 +1170,7 @@ class TodoGetItemsTool(Tool):
             }
         )
 
+    @override
     async def async_call(
         self, hass: HomeAssistant, tool_input: ToolInput, llm_context: LLMContext
     ) -> JsonObjectType:
@@ -1266,6 +1274,7 @@ class GetLiveContextTool(Tool):
         }
     )
 
+    @override
     async def async_call(
         self,
         hass: HomeAssistant,
@@ -1352,6 +1361,7 @@ class GetDateTimeTool(Tool):
     name = "GetDateTime"
     description = "Provides the current date and time."
 
+    @override
     async def async_call(
         self,
         hass: HomeAssistant,

@@ -8,7 +8,7 @@ from dataclasses import dataclass, field
 from enum import Enum, StrEnum, auto
 from itertools import groupby
 import logging
-from typing import Any
+from typing import Any, override
 
 from propcache.api import cached_property
 import voluptuous as vol
@@ -190,6 +190,7 @@ class MatchFailedError(IntentError):
         self.constraints = constraints
         self.preferences = preferences
 
+    @override
     def __str__(self) -> str:
         """Return string representation."""
         return (
@@ -853,6 +854,7 @@ class IntentHandler:
         """Handle the intent."""
         raise NotImplementedError
 
+    @override
     def __repr__(self) -> str:
         """Represent a string of an intent handler."""
         return f"<{self.__class__.__name__} - {self.intent_type}>"
@@ -937,6 +939,7 @@ class DynamicServiceIntentHandler(IntentHandler):
         )
 
     @cached_property
+    @override
     def slot_schema(self) -> dict:
         """Return a slot schema."""
         domain_validator = (
@@ -1001,6 +1004,7 @@ class DynamicServiceIntentHandler(IntentHandler):
         """Get the domain and service name to call."""
         raise NotImplementedError
 
+    @override
     async def async_handle(self, intent_obj: Intent) -> IntentResponse:
         """Handle the hass intent."""
         hass = intent_obj.hass
@@ -1228,6 +1232,7 @@ class ServiceIntentHandler(DynamicServiceIntentHandler):
         self.domain = domain
         self.service = service
 
+    @override
     def get_domain_and_service(
         self, intent_obj: Intent, state: State
     ) -> tuple[str, str]:

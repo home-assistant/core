@@ -2,7 +2,7 @@
 
 import itertools
 import logging
-from typing import Any
+from typing import Any, override
 
 import jinja2
 import voluptuous as vol
@@ -202,26 +202,31 @@ class TriggerBaseEntity(Entity):
         self._available = True
 
     @property
+    @override
     def name(self) -> str | None:
         """Name of the entity."""
         return self._rendered.get(CONF_NAME)
 
     @property
+    @override
     def unique_id(self) -> str | None:
         """Return unique ID of the entity."""
         return self._unique_id
 
     @property
+    @override
     def icon(self) -> str | None:
         """Return icon."""
         return self._rendered.get(CONF_ICON)
 
     @property
+    @override
     def entity_picture(self) -> str | None:
         """Return entity picture."""
         return self._rendered.get(CONF_PICTURE)
 
     @property
+    @override
     def available(self) -> bool:
         """Return availability of the entity."""
         if self._availability_template is None:
@@ -230,6 +235,7 @@ class TriggerBaseEntity(Entity):
         return self._available
 
     @property
+    @override
     def extra_state_attributes(self) -> dict[str, Any] | None:
         """Return extra attributes."""
         return self._rendered.get(CONF_ATTRIBUTES)

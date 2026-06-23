@@ -3,7 +3,7 @@
 from abc import abstractmethod
 from collections.abc import Callable
 from dataclasses import dataclass
-from typing import Any
+from typing import Any, override
 
 from proxmoxer import AuthenticationError
 from proxmoxer.core import ResourceException
@@ -316,6 +316,7 @@ class ProxmoxBaseButton(ButtonEntity):
     async def _async_press_call(self) -> None:
         """Abstract method used per Proxmox button class."""
 
+    @override
     async def async_press(self) -> None:
         """Trigger the Proxmox button press service."""
         try:
@@ -347,6 +348,7 @@ class ProxmoxNodeButtonEntity(ProxmoxNodeEntity, ProxmoxBaseButton):
 
     entity_description: ProxmoxNodeButtonNodeEntityDescription
 
+    @override
     async def _async_press_call(self) -> None:
         """Execute the node button action via executor."""
         node_id = self._node_data.node["node"]
@@ -372,6 +374,7 @@ class ProxmoxVMButtonEntity(ProxmoxVMEntity, ProxmoxBaseButton):
 
     entity_description: ProxmoxVMButtonEntityDescription
 
+    @override
     async def _async_press_call(self) -> None:
         """Execute the VM button action via executor."""
         vmid = self.vm_data["vmid"]
@@ -398,6 +401,7 @@ class ProxmoxContainerButtonEntity(ProxmoxContainerEntity, ProxmoxBaseButton):
 
     entity_description: ProxmoxContainerButtonEntityDescription
 
+    @override
     async def _async_press_call(self) -> None:
         """Execute the container button action via executor."""
         vmid = self.container_data["vmid"]
