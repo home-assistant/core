@@ -61,7 +61,6 @@ async def async_setup_entry(
             HeatingCircuit(
                 device=heating_circuit,
                 entry_id=config_entry.entry_id,
-                name=heating_circuit.name,
             )
         )
 
@@ -412,12 +411,13 @@ class HeatingCircuit(SHCEntity, ClimateEntity):
     def __init__(
         self,
         device: SHCHeatingCircuit,
-        name: str,
         entry_id: str,
     ) -> None:
         """Initialize the SHC heating circuit."""
         super().__init__(device=device, entry_id=entry_id)
-        self._attr_name = name
+        # Primary entity of its device: _attr_name = None lets HA use the
+        # device name and avoids a doubled "<name> <name>" friendly name.
+        self._attr_name = None
         self._attr_unique_id = f"{device.root_device_id}_{device.id}"
 
     @property

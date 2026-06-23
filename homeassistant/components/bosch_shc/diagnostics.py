@@ -85,12 +85,16 @@ async def async_get_config_entry_diagnostics(
         return diag
 
     info = session.information
+    # The async information object (_AsyncSHCInformation) only exposes
+    # unique_id/name/version; the other fields exist on the sync object. Guard
+    # them so downloading diagnostics never crashes on the async session.
+    update_state = getattr(info, "updateState", None)
     diag["shc"] = async_redact_data(
         {
             "version": info.version,
-            "update_state": info.updateState.name,
-            "macAddress": info.macAddress,
-            "ip": info.shcIpAddress,
+            "update_state": update_state.name if update_state is not None else None,
+            "macAddress": getattr(info, "macAddress", None),
+            "ip": getattr(info, "shcIpAddress", None),
         },
         TO_REDACT,
     )

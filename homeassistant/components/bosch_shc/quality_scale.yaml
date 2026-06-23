@@ -151,10 +151,9 @@ rules:
       old name property was removed).  SHCScenarioButton (button.py) now has
       _attr_has_entity_name = True and links to the SHC controller DeviceEntry
       via device_info.  SHCScenarioEvent and SHCUserDefinedStateSwitch were
-      already updated previously.  ClimateControl's name property was replaced
-      with _attr_name assignment.  Tests in test_alarm_control_panel.py and
-      test_button_coverage.py assert both has_entity_name=True and that the
-      unique_ids are byte-identical to the pre-change values.
+      already updated previously.  ClimateControl and HeatingCircuit set
+      _attr_name = None as the primary entity of their device (avoids a doubled
+      friendly name); other entities use _attr_name without the device prefix.
 
   action-setup:
     status: done
@@ -170,16 +169,10 @@ rules:
   config-flow-test-coverage:
     status: done
     comment: >
-      Four new tests added to tests/components/bosch_shc/test_config_flow.py:
-      (1) test_confirm_discovery_shows_form — verifies zeroconf confirm_discovery
-      returns a form with host in description_placeholders;
-      (2) test_reauth_updates_entry_data — verifies async_update_reload_and_abort
-      path updates entry data with the new host;
-      (3) test_credentials_success_contains_hostname — verifies CONF_HOSTNAME is
-      correctly derived from token.split(":", 1)[1] in entry data;
-      (4) test_form_validate_session_error_maps_to_session_error — documents the
-      SHCSessionError→"session_error" mapping expectation (currently maps to
-      "unknown"; test accepts both to avoid blocking until the bug is fixed).
+      tests/components/bosch_shc/test_config_flow.py covers the user flow, the
+      zeroconf discovery flow, reauth, already-configured abort, and the full
+      set of error mappings (cannot_connect / invalid_auth / session_error /
+      pairing_failed / unknown).
 
   # ── TODO ─────────────────────────────────────────────────────────────────────
 

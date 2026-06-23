@@ -1,6 +1,6 @@
 """Test the Bosch SHC setup/unload."""
 
-from unittest.mock import MagicMock
+from unittest.mock import MagicMock, patch
 
 from homeassistant.components.bosch_shc.const import DOMAIN
 from homeassistant.config_entries import ConfigEntryState
@@ -44,8 +44,6 @@ async def test_setup_expired_certificate(
     mock_session: MagicMock,
 ) -> None:
     """An expired client certificate triggers reauth (ConfigEntryAuthFailed)."""
-    from unittest.mock import patch
-
     cert_info = MagicMock()
     cert_info.days_remaining = -1
     cert_info.not_after = MagicMock()
