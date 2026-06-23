@@ -2498,7 +2498,7 @@
       'icon': 'mdi:thermostat-box',
       'max_temp': 35,
       'min_temp': 7,
-      'preset_mode': None,
+      'preset_mode': 'away',
       'preset_modes': list([
         'eco',
         'away',
@@ -2512,8 +2512,9 @@
         ),
         'system_id': '4187769',
         'system_mode_status': dict({
-          'is_permanent': True,
-          'mode': 'Auto',
+          'is_permanent': False,
+          'mode': 'Away',
+          'time_until': '2023-06-30T01:00:00+02:00',
         }),
       }),
       'supported_features': <ClimateEntityFeature: 400>,
@@ -2537,7 +2538,7 @@
       ]),
       'max_temp': 35.0,
       'min_temp': 5.0,
-      'preset_mode': 'permanent',
+      'preset_mode': 'away',
       'preset_modes': list([
         'none',
         'temporary',
@@ -2570,7 +2571,7 @@
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
-    'state': 'heat',
+    'state': 'auto',
   })
 # ---
 # name: test_zone_set_hvac_mode[default]

@@ -28,7 +28,7 @@ def _recurse_and_revert(val: Any, _key: str | None = None) -> Any:
         return {k: _recurse_and_revert(v, k) for k, v in val.items()}
     if isinstance(val, (list, tuple)):
         return type(val)(_recurse_and_revert(v) for v in val)
-    if isinstance(val, datetime) and _key in ("since", "until"):
+    if isinstance(val, datetime) and _key in ("since", "time_until", "until"):
         return val.isoformat()
     if isinstance(val, StrEnum):
         return "".join(word.capitalize() for word in val.value.split("_"))
