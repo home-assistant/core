@@ -9,7 +9,6 @@ import json
 import logging
 from pathlib import Path
 import socket
-import struct
 from typing import Any, cast, override
 
 from aioesphomeapi import (
@@ -52,6 +51,7 @@ from .entity import EsphomeAssistEntity, convert_api_error_ha_error
 from .entry_data import ESPHomeConfigEntry
 from .enum_mapper import EsphomeEnumMapper
 from .ffmpeg_proxy import async_create_proxy_url
+from .wav_parser import stream_wav
 
 PARALLEL_UPDATES = 0
 
@@ -725,150 +725,41 @@ class EsphomeAssistSatellite(
                 )
                 return
 
-            bytes_buffer = bytearray()
-            found_data_chunk = False
-            fmt_validated = False
-            riff_checked = False
-            parsing_headers = True
-
-            bytes_per_chunk_payload = samples_per_chunk * sample_width * sample_channels
             seconds_in_chunk = samples_per_chunk / sample_rate
-
             start_time: float | None = None
             audio_duration_sent = 0.0
 
-            async for chunk in tts_result.async_stream_result():
-                # mypy incorrectly assumes self._is_running is always True,
-                # however, a separate task can set this to False because we
-                # yield in the "async for" above.
-                if not self._is_running:
-                    break  # type: ignore[unreachable]
-
-                bytes_buffer.extend(chunk)
-
-                while parsing_headers:
-                    if not riff_checked:
-                        if len(bytes_buffer) < 12:
-                            break  # wait for more data
-                        riff, _, wave_fmt = struct.unpack("<4sI4s", bytes_buffer[:12])
-                        if riff != b"RIFF" or wave_fmt != b"WAVE":
-                            _LOGGER.error(
-                                "Invalid WAV format: missing RIFF/WAVE header"
-                            )
-                            return
-                        riff_checked = True
-                        del bytes_buffer[:12]
-
-                    if len(bytes_buffer) < 8:
-                        break  # wait for more data
-
-                    chunk_id, chunk_size = struct.unpack("<4sI", bytes_buffer[:8])
-
-                    if chunk_id == b"fmt ":
-                        if len(bytes_buffer) < 8 + chunk_size:
-                            break  # wait for full fmt chunk
-
-                        if chunk_size < 16:
-                            _LOGGER.error(
-                                "WAV fmt chunk too small: %s bytes", chunk_size
-                            )
-                            return
-
-                        # Parse fmt chunk (we only need the first 16 bytes of it)
-                        (
-                            audio_format,
-                            num_channels,
-                            chunk_sample_rate,
-                            _,
-                            _,
-                            bits_per_sample,
-                        ) = struct.unpack("<HHIIHH", bytes_buffer[8:24])
-
-                        if audio_format != 1:
-                            _LOGGER.error(
-                                "Can only stream PCM WAV, got format %s", audio_format
-                            )
-                            return
-                        if num_channels != sample_channels:
-                            _LOGGER.error(
-                                "Expected %s channels, got %s",
-                                sample_channels,
-                                num_channels,
-                            )
-                            return
-                        if chunk_sample_rate != sample_rate:
-                            _LOGGER.error(
-                                "Expected %s Hz, got %s Hz",
-                                sample_rate,
-                                chunk_sample_rate,
-                            )
-                            return
-                        if bits_per_sample // 8 != sample_width:
-                            _LOGGER.error(
-                                "Expected %s bytes per sample, got %s",
-                                sample_width,
-                                bits_per_sample // 8,
-                            )
-                            return
-
-                        fmt_validated = True
-                        del bytes_buffer[: 8 + chunk_size + (chunk_size & 1)]
-
-                    elif chunk_id == b"data":
-                        # Found data chunk!
-                        if not fmt_validated:
-                            _LOGGER.error("WAV missing fmt chunk before data chunk")
-                            return
-
-                        found_data_chunk = True
-                        data_bytes_remaining = chunk_size
-                        parsing_headers = False
-                        del bytes_buffer[:8]
-                        _LOGGER.debug(
-                            "Validated WAV header and found data chunk, starting streaming"
-                        )
-                        start_time = asyncio.get_running_loop().time()
-                        break
-                    else:
-                        # Skip other chunks (account for RIFF word-alignment pad)
-                        padded_size = chunk_size + (chunk_size & 1)
-                        if len(bytes_buffer) < 8 + padded_size:
-                            break  # wait for full chunk to skip
-                        del bytes_buffer[: 8 + padded_size]
-
-                if found_data_chunk:
-                    while (
-                        data_bytes_remaining >= bytes_per_chunk_payload
-                        and len(bytes_buffer) >= bytes_per_chunk_payload
-                    ):
-                        if not self._is_running:
-                            break  # type: ignore[unreachable]
-
-                        payload = bytes(bytes_buffer[:bytes_per_chunk_payload])
-                        del bytes_buffer[:bytes_per_chunk_payload]
-                        data_bytes_remaining -= bytes_per_chunk_payload
-
-                        self._send_tts_audio(payload)
-
-                        audio_duration_sent += seconds_in_chunk
-
-                        # The ring buffer in the remote device is fixed at 512ms.
-                        # We want to keep it at around 384ms (75% full) to prevent
-                        # the buffer from overflowing or underflowing.
-                        assert start_time is not None
-                        elapsed = asyncio.get_running_loop().time() - start_time
-                        if (wait_time := (audio_duration_sent - 0.384) - elapsed) > 0:
-                            await asyncio.sleep(wait_time)
-
-            if (
-                found_data_chunk
-                and data_bytes_remaining > 0
-                and len(bytes_buffer) > 0
-                and self._is_running
+            async for chunk, is_last in stream_wav(
+                tts_result.async_stream_result(),
+                expected_format="pcm",
+                expected_channels=sample_channels,
+                expected_width=sample_width,
+                expected_sample_rate=sample_rate,
+                samples_per_chunk=samples_per_chunk,
             ):
-                remaining = bytes(bytes_buffer[:data_bytes_remaining])
-                self._send_tts_audio(remaining)
+                if not self._is_running:
+                    break
 
+                if start_time is None:
+                    start_time = asyncio.get_running_loop().time()
+
+                self._send_tts_audio(chunk)
+
+                audio_duration_sent += seconds_in_chunk
+
+                if is_last:
+                    break
+
+                # The ring buffer in the remote device is fixed at 512ms.
+                # We want to keep it at around 384ms (75% full) to prevent
+                # the buffer from overflowing or underflowing.
+                assert start_time is not None
+                elapsed = asyncio.get_running_loop().time() - start_time
+                if (wait_time := (audio_duration_sent - 0.384) - elapsed) > 0:
+                    await asyncio.sleep(wait_time)
+
+        except ValueError as err:
+            _LOGGER.error("Error streaming WAV: %s", err)
         except asyncio.CancelledError:
             return  # Don't trigger state change
         finally:
