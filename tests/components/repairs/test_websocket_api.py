@@ -102,6 +102,7 @@ EXPECTED_DATA = {
     "issue_2": {"blah": "bleh"},
     "abort_issue1": None,
     "issue_3": {"flow_type": ANY},
+    "error_issue": {"error_type": ANY},
 }
 
 
@@ -199,12 +200,14 @@ class MockFixFlowNextFlow(RepairsFlow):
         entries = self.hass.config_entries.async_entries("comp")
         assert len(entries) == 1
         mock_entry: MockConfigEntry = entries[0]
-        subentries = mock_entry.subentries
-        assert len(subentries.keys()) == 1
-        mock_subentry_id = list(subentries.keys())[0]
+        flow_type: str | None = self.data.get("flow_type")
+        error_type: str | None = self.data.get("error_type")
+        if error_type is None:
+            subentries = mock_entry.subentries
+            assert len(subentries.keys()) == 1
+            mock_subentry_id = list(subentries.keys())[0]
 
         with mock_core_config_flow():
-            flow_type: str = self.data["flow_type"]
             if flow_type == FlowType.CONFIG_FLOW:
                 next_flow = await mock_entry.start_reconfigure_flow(self.hass)
             elif flow_type == "create_entry_flow":
@@ -220,13 +223,19 @@ class MockFixFlowNextFlow(RepairsFlow):
                 next_flow = await mock_entry.start_subentry_reconfigure_flow(
                     self.hass, mock_subentry_id
                 )
-            elif flow_type == "invalid_flow":
+            elif error_type == "invalid_flow":
                 next_flow = {"flow_id": "fake_flow_id"}
-            elif flow_type == "unknown_entry":
+            elif error_type == "unknown_entry":
                 next_flow = await mock_entry.start_reconfigure_flow(self.hass)
-                # Remove the entry to trigger UnknownEntity error.
+                # Remove the entry to trigger UnknownEntry error.
                 await self.hass.config_entries.async_remove(mock_entry.entry_id)
                 flow_type = FlowType.CONFIG_FLOW
+            elif flow_type == "abort_flow":
+                next_flow = await mock_entry.start_reconfigure_flow(self.hass)
+                return self.async_abort(
+                    reason="test_abort",
+                    next_flow=(FlowType.CONFIG_FLOW, next_flow["flow_id"]),
+                )
             return self.async_create_entry(
                 data={},
                 next_flow=(
@@ -251,7 +260,7 @@ async def mock_repairs_integration(hass: HomeAssistant) -> None:
 
         if issue_id == "abort_issue1":
             return MockFixFlowAbort()
-        if issue_id == "issue_3":
+        if issue_id in ["issue_3", "error_issue"]:
             return MockFixFlowNextFlow()
         return MockFixFlow()
 
@@ -499,8 +508,6 @@ async def test_fix_issue(
         ("create_entry_flow", ["fake_integration"]),
         (FlowType.OPTIONS_FLOW, ["fake_integration"]),
         (FlowType.CONFIG_SUBENTRIES_FLOW, ["fake_integration"]),
-        ("invalid_flow", ["fake_integration"]),
-        ("unknown_entry", ["fake_integration"]),
     ],
 )
 async def test_fix_issue_next_flow(
@@ -520,6 +527,7 @@ async def test_fix_issue_next_flow(
         {**DEFAULT_ISSUES[0], "data": {"flow_type": flow_type}, "issue_id": "issue_3"}
     ]
     await create_issues(hass, ws_client, issues=issues)
+
     mock_entry = MockConfigEntry(
         domain="comp",
         data={},
@@ -540,18 +548,6 @@ async def test_fix_issue_next_flow(
         url, json={"handler": "fake_integration", "issue_id": "issue_3"}
     )
 
-    if flow_type == "invalid_flow":
-        assert resp.status == HTTPStatus.BAD_REQUEST
-        data = await resp.json()
-        assert "Invalid next_flow type" in data["message"]
-        return
-
-    if flow_type == "unknown_entry":
-        assert resp.status == HTTPStatus.BAD_REQUEST
-        data = await resp.json()
-        assert "not found in next_flow" in data["message"]
-        return
-
     assert resp.status == HTTPStatus.OK, (
         f"Error: {resp.status} cause {await resp.text()}"
     )
@@ -565,7 +561,7 @@ async def test_fix_issue_next_flow(
         "flow_id": ANY,
         "handler": "fake_integration",
         "description": None,
-        "type": "create_entry",
+        "type": data_entry_flow.FlowResultType.CREATE_ENTRY,
         "result": orjson.loads(orjson.dumps(mock_entry.as_json_fragment)),
         "next_flow": [flow_type, next_flow_id],
     }
@@ -575,6 +571,139 @@ async def test_fix_issue_next_flow(
         del to_assert["result"]
 
     assert data == to_assert
+
+
+@pytest.mark.parametrize("ignore_translations_for_mock_domains", ["fake_integration"])
+async def test_fix_issue_next_flow_abort(
+    hass: HomeAssistant,
+    hass_client: ClientSessionGenerator,
+    hass_ws_client: WebSocketGenerator,
+) -> None:
+    """Test next_flow RepairFlows."""
+    assert await async_setup_component(hass, "http", {})
+    assert await async_setup_component(hass, DOMAIN, {})
+
+    ws_client = await hass_ws_client(hass)
+    client = await hass_client()
+
+    issues = [
+        {
+            **DEFAULT_ISSUES[0],
+            "data": {"flow_type": "abort_flow"},
+            "issue_id": "issue_3",
+        }
+    ]
+    await create_issues(hass, ws_client, issues=issues)
+    await ws_client.send_json({"id": 3, "type": "repairs/list_issues"})
+    msg = await ws_client.receive_json()
+
+    assert msg["success"]
+    assert len(msg["result"]["issues"]) == 1
+
+    first_issue = msg["result"]["issues"][0]
+
+    mock_entry = MockConfigEntry(
+        domain="comp",
+        data={},
+        subentries_data=[
+            ConfigSubentry(
+                title="Mock Subentry",
+                unique_id="mock_subentry1",
+                subentry_type="test_subentry",
+                data={},
+            ).as_dict()
+        ],
+    )
+    mock_entry.add_to_hass(hass)
+
+    url = "/api/repairs/issues/fix"
+
+    resp = await client.post(
+        url, json={"handler": "fake_integration", "issue_id": "issue_3"}
+    )
+
+    assert resp.status == HTTPStatus.OK, (
+        f"Error: {resp.status} cause {await resp.text()}"
+    )
+
+    data = await resp.json()
+
+    _, next_flow_id = data["next_flow"]
+
+    to_assert = {
+        "description_placeholders": None,
+        "flow_id": ANY,
+        "handler": "fake_integration",
+        "reason": "test_abort",
+        "type": data_entry_flow.FlowResultType.ABORT,
+        "result": orjson.loads(orjson.dumps(mock_entry.as_json_fragment)),
+        "next_flow": [FlowType.CONFIG_FLOW, next_flow_id],
+    }
+
+    # Ensure the issue still exists.
+    await ws_client.send_json({"id": 4, "type": "repairs/list_issues"})
+    msg = await ws_client.receive_json()
+
+    assert msg["success"]
+    assert len(msg["result"]["issues"]) == 1
+    assert msg["result"]["issues"][0] == first_issue
+
+    assert data == to_assert
+
+
+@pytest.mark.parametrize(
+    (
+        "error_type",
+        "ignore_translations_for_mock_domains",
+    ),
+    [
+        ("invalid_flow", ["fake_integration"]),
+        ("unknown_entry", ["fake_integration"]),
+    ],
+)
+async def test_fix_issue_next_flow_errors(
+    hass: HomeAssistant,
+    hass_client: ClientSessionGenerator,
+    hass_ws_client: WebSocketGenerator,
+    error_type: str,
+) -> None:
+    """Test next_flow RepairFlows."""
+    assert await async_setup_component(hass, "http", {})
+    assert await async_setup_component(hass, DOMAIN, {})
+
+    ws_client = await hass_ws_client(hass)
+    client = await hass_client()
+
+    issues = [
+        {
+            **DEFAULT_ISSUES[0],
+            "data": {"error_type": error_type},
+            "issue_id": "error_issue",
+        }
+    ]
+    await create_issues(hass, ws_client, issues=issues)
+    mock_entry = MockConfigEntry(
+        domain="comp",
+        data={},
+    )
+    mock_entry.add_to_hass(hass)
+
+    url = "/api/repairs/issues/fix"
+
+    resp = await client.post(
+        url, json={"handler": "fake_integration", "issue_id": "error_issue"}
+    )
+
+    assert resp.status == HTTPStatus.BAD_REQUEST
+    data = await resp.json()
+
+    if error_type == "invalid_flow":
+        assert "Invalid next_flow type" in data["message"]
+        return
+
+    if error_type == "unknown_entry":
+        assert "not found in next_flow" in data["message"]
+        return
 
 
 async def test_fix_issue_unauth(
