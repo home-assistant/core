@@ -139,7 +139,7 @@
             ]),
             'area_id': None,
             'capabilities': dict({
-              'options': list([
+              <SelectEntityCapabilityAttribute.OPTIONS: 'options'>: list([
                 'automatic',
                 'manual',
               ]),
@@ -176,7 +176,7 @@
           'state': dict({
             'attributes': dict({
               'friendly_name': 'Airversa AP2 1808 Air Purifier Mode',
-              'options': list([
+              <SelectEntityCapabilityAttribute.OPTIONS: 'options'>: list([
                 'automatic',
                 'manual',
               ]),
@@ -3813,7 +3813,7 @@
             ]),
             'area_id': None,
             'capabilities': dict({
-              'options': list([
+              <SelectEntityCapabilityAttribute.OPTIONS: 'options'>: list([
                 'home',
                 'sleep',
                 'away',
@@ -3851,7 +3851,7 @@
           'state': dict({
             'attributes': dict({
               'friendly_name': 'HomeW Current Mode',
-              'options': list([
+              <SelectEntityCapabilityAttribute.OPTIONS: 'options'>: list([
                 'home',
                 'sleep',
                 'away',
@@ -3868,7 +3868,7 @@
             ]),
             'area_id': None,
             'capabilities': dict({
-              'options': list([
+              <SelectEntityCapabilityAttribute.OPTIONS: 'options'>: list([
                 'celsius',
                 'fahrenheit',
               ]),
@@ -3905,7 +3905,7 @@
           'state': dict({
             'attributes': dict({
               'friendly_name': 'HomeW Temperature Display Units',
-              'options': list([
+              <SelectEntityCapabilityAttribute.OPTIONS: 'options'>: list([
                 'celsius',
                 'fahrenheit',
               ]),
@@ -7226,7 +7226,7 @@
             ]),
             'area_id': None,
             'capabilities': dict({
-              'options': list([
+              <SelectEntityCapabilityAttribute.OPTIONS: 'options'>: list([
                 'home',
                 'sleep',
                 'away',
@@ -7264,7 +7264,7 @@
           'state': dict({
             'attributes': dict({
               'friendly_name': 'Thermostat Current Mode',
-              'options': list([
+              <SelectEntityCapabilityAttribute.OPTIONS: 'options'>: list([
                 'home',
                 'sleep',
                 'away',
@@ -7281,7 +7281,7 @@
             ]),
             'area_id': None,
             'capabilities': dict({
-              'options': list([
+              <SelectEntityCapabilityAttribute.OPTIONS: 'options'>: list([
                 'celsius',
                 'fahrenheit',
               ]),
@@ -7318,7 +7318,7 @@
           'state': dict({
             'attributes': dict({
               'friendly_name': 'Thermostat Temperature Display Units',
-              'options': list([
+              <SelectEntityCapabilityAttribute.OPTIONS: 'options'>: list([
                 'celsius',
                 'fahrenheit',
               ]),
@@ -8257,7 +8257,7 @@
             ]),
             'area_id': None,
             'capabilities': dict({
-              'options': list([
+              <SelectEntityCapabilityAttribute.OPTIONS: 'options'>: list([
                 'home',
                 'sleep',
                 'away',
@@ -8295,7 +8295,7 @@
           'state': dict({
             'attributes': dict({
               'friendly_name': 'HomeW Current Mode',
-              'options': list([
+              <SelectEntityCapabilityAttribute.OPTIONS: 'options'>: list([
                 'home',
                 'sleep',
                 'away',
@@ -8312,7 +8312,7 @@
             ]),
             'area_id': None,
             'capabilities': dict({
-              'options': list([
+              <SelectEntityCapabilityAttribute.OPTIONS: 'options'>: list([
                 'celsius',
                 'fahrenheit',
               ]),
@@ -8349,7 +8349,7 @@
           'state': dict({
             'attributes': dict({
               'friendly_name': 'HomeW Temperature Display Units',
-              'options': list([
+              <SelectEntityCapabilityAttribute.OPTIONS: 'options'>: list([
                 'celsius',
                 'fahrenheit',
               ]),
@@ -8744,7 +8744,7 @@
             ]),
             'area_id': None,
             'capabilities': dict({
-              'options': list([
+              <SelectEntityCapabilityAttribute.OPTIONS: 'options'>: list([
                 'celsius',
                 'fahrenheit',
               ]),
@@ -8781,7 +8781,7 @@
           'state': dict({
             'attributes': dict({
               'friendly_name': 'HomeW Temperature Display Units',
-              'options': list([
+              <SelectEntityCapabilityAttribute.OPTIONS: 'options'>: list([
                 'celsius',
                 'fahrenheit',
               ]),
@@ -9546,7 +9546,7 @@
             ]),
             'area_id': None,
             'capabilities': dict({
-              'options': list([
+              <SelectEntityCapabilityAttribute.OPTIONS: 'options'>: list([
                 'home',
                 'sleep',
                 'away',
@@ -9584,7 +9584,7 @@
           'state': dict({
             'attributes': dict({
               'friendly_name': 'My ecobee Current Mode',
-              'options': list([
+              <SelectEntityCapabilityAttribute.OPTIONS: 'options'>: list([
                 'home',
                 'sleep',
                 'away',
@@ -9601,7 +9601,7 @@
             ]),
             'area_id': None,
             'capabilities': dict({
-              'options': list([
+              <SelectEntityCapabilityAttribute.OPTIONS: 'options'>: list([
                 'celsius',
                 'fahrenheit',
               ]),
@@ -9638,7 +9638,7 @@
           'state': dict({
             'attributes': dict({
               'friendly_name': 'My ecobee Temperature Display Units',
-              'options': list([
+              <SelectEntityCapabilityAttribute.OPTIONS: 'options'>: list([
                 'celsius',
                 'fahrenheit',
               ]),
@@ -10207,7 +10207,7 @@
             ]),
             'area_id': None,
             'capabilities': dict({
-              'options': list([
+              <SelectEntityCapabilityAttribute.OPTIONS: 'options'>: list([
                 'celsius',
                 'fahrenheit',
               ]),
@@ -10244,7 +10244,7 @@
           'state': dict({
             'attributes': dict({
               'friendly_name': 'Eve Degree AA11 Temperature Display Units',
-              'options': list([
+              <SelectEntityCapabilityAttribute.OPTIONS: 'options'>: list([
                 'celsius',
                 'fahrenheit',
               ]),
@@ -12173,7 +12173,7 @@
             ]),
             'area_id': None,
             'capabilities': dict({
-              'options': list([
+              <SelectEntityCapabilityAttribute.OPTIONS: 'options'>: list([
                 'celsius',
                 'fahrenheit',
               ]),
@@ -12210,7 +12210,7 @@
           'state': dict({
             'attributes': dict({
               'friendly_name': '89 Living Room Temperature Display Units',
-              'options': list([
+              <SelectEntityCapabilityAttribute.OPTIONS: 'options'>: list([
                 'celsius',
                 'fahrenheit',
               ]),
@@ -13875,7 +13875,7 @@
             ]),
             'area_id': None,
             'capabilities': dict({
-              'options': list([
+              <SelectEntityCapabilityAttribute.OPTIONS: 'options'>: list([
                 'celsius',
                 'fahrenheit',
               ]),
@@ -13912,7 +13912,7 @@
           'state': dict({
             'attributes': dict({
               'friendly_name': '89 Living Room Temperature Display Units',
-              'options': list([
+              <SelectEntityCapabilityAttribute.OPTIONS: 'options'>: list([
                 'celsius',
                 'fahrenheit',
               ]),
@@ -18040,7 +18040,7 @@
             ]),
             'area_id': None,
             'capabilities': dict({
-              'options': list([
+              <SelectEntityCapabilityAttribute.OPTIONS: 'options'>: list([
                 'celsius',
                 'fahrenheit',
               ]),
@@ -18077,7 +18077,7 @@
           'state': dict({
             'attributes': dict({
               'friendly_name': 'Lennox Temperature Display Units',
-              'options': list([
+              <SelectEntityCapabilityAttribute.OPTIONS: 'options'>: list([
                 'celsius',
                 'fahrenheit',
               ]),
@@ -19239,7 +19239,7 @@
             ]),
             'area_id': None,
             'capabilities': dict({
-              'options': list([
+              <SelectEntityCapabilityAttribute.OPTIONS: 'options'>: list([
                 'celsius',
                 'fahrenheit',
               ]),
@@ -19276,7 +19276,7 @@
           'state': dict({
             'attributes': dict({
               'friendly_name': 'Mysa-85dda9 Temperature Display Units',
-              'options': list([
+              <SelectEntityCapabilityAttribute.OPTIONS: 'options'>: list([
                 'celsius',
                 'fahrenheit',
               ]),
