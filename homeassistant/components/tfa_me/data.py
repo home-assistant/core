@@ -70,10 +70,9 @@ class TFAmeUniqueID:
             raise TFAmeException(f"unknown: {err}") from err
 
         # Extract the actual station/gateway ID from json_data
-        identifier: str | None = None
         identifier = json_data.get("gateway_id")
 
-        if not identifier:
+        if not isinstance(identifier, str) or not identifier:
             # No ID, something is wrong with the data format
             raise TFAmeException("missing_identifier")
 

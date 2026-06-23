@@ -19,12 +19,7 @@ from homeassistant.core import HomeAssistant
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
 
-from .const import (
-    CONF_NAME_WITH_STATION_ID,
-    DOMAIN,
-    LOCAL_POLL_INTERVAL,
-    VALID_JSON_MEASUREMENT_KEYS,
-)
+from .const import DOMAIN, LOCAL_POLL_INTERVAL, VALID_JSON_MEASUREMENT_KEYS
 from .data import TFAmeCoordinatorData
 from .helper import resolve_tfa_host
 
@@ -47,9 +42,6 @@ class TFAmeUpdateCoordinator(DataUpdateCoordinator[TFAmeCoordinatorData]):
         """Initialize data update coordinator."""
 
         self.host = config_entry.data[CONF_IP_ADDRESS]  # Get IP or station-ID
-        self.name_with_station_id = config_entry.data[
-            CONF_NAME_WITH_STATION_ID
-        ]  # Use name with station ID option
         self.sensor_entity_list: list[str] = []  # [Entity ID strings]
 
         # Resolve host only once for client construction:

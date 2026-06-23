@@ -3,8 +3,6 @@
 # For test run: "pytest ./tests/components/tfa_me/ --cov=homeassistant.components.tfa_me --cov-report term-missing -vv"
 # For snapshot: "pytest tests/components/tfa_me/test_sensor.py --snapshot-update"
 
-import json
-from pathlib import Path
 from unittest.mock import patch
 
 from freezegun.api import FrozenDateTimeFactory
@@ -66,56 +64,6 @@ async def test_tfa_me_sensor_entities_snapshot(
         states[entity_id] = _stable_state_dict(state.as_dict())
 
     assert states == snapshot
-
-
-ICONS_FILE = Path("homeassistant/components/tfa_me/icons.json")
-
-
-def load_icons() -> dict:
-    """Load icons.json as dictionary."""
-    return json.loads(ICONS_FILE.read_text(encoding="utf-8"))["entity"]["sensor"]
-
-
-def generate_test_cases() -> list[tuple[str, str, str | None, str]]:
-    """Produce all test cases for default, range and state icons."""
-    cases = []
-
-    for sensor_type, config in load_icons().items():
-        if default_icon := config.get("default"):
-            cases.append((sensor_type, "default", None, default_icon))
-
-        for value, icon in config.get("range", {}).items():
-            cases.append((sensor_type, "range", value, icon))
-
-        for state_value, icon in config.get("state", {}).items():
-            cases.append((sensor_type, "state", state_value, icon))
-
-    return cases
-
-
-@pytest.mark.parametrize(
-    ("sensor_type", "table", "key", "expected_icon"),
-    generate_test_cases(),
-)
-def test_icons_json(
-    sensor_type: str,
-    table: str,
-    key: str | None,
-    expected_icon: str,
-) -> None:
-    """Validate all icons defined in icons.json."""
-    config = load_icons()[sensor_type]
-
-    if table == "default":
-        assert config["default"] == expected_icon
-    elif table == "range":
-        assert key is not None
-        assert config["range"][key] == expected_icon
-    elif table == "state":
-        assert key is not None
-        assert config["state"][key] == expected_icon
-    else:
-        pytest.fail(f"Unknown icon table '{table}'")
 
 
 async def test_rain_history_updates_on_coordinator_refresh(

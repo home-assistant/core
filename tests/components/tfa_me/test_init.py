@@ -6,6 +6,8 @@ from unittest.mock import patch
 
 from homeassistant.core import HomeAssistant
 
+from .conftest import FAKE_JSON
+
 from tests.common import AsyncMock, MockConfigEntry
 
 
@@ -31,15 +33,15 @@ async def test_full_entry_setup(
 
 
 async def test_async_unload_entry(
-    hass: HomeAssistant, tfa_me_config_entry: MockConfigEntry
+    hass: HomeAssistant,
+    tfa_me_config_entry: MockConfigEntry,
 ) -> None:
     """Test unload of the integration."""
     config_entry = tfa_me_config_entry
-    config_entry.add_to_hass(hass)
 
     with patch(
-        "homeassistant.components.tfa_me.TFAmeUpdateCoordinator.async_config_entry_first_refresh",
-        new=AsyncMock(return_value=True),
+        "homeassistant.components.tfa_me.coordinator.TFAmeClient.async_get_sensors",
+        new=AsyncMock(return_value=FAKE_JSON),
     ):
         assert await hass.config_entries.async_setup(config_entry.entry_id)
         await hass.async_block_till_done()

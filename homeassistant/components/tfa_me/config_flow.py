@@ -18,7 +18,7 @@ import voluptuous as vol
 from homeassistant.config_entries import ConfigFlow, ConfigFlowResult
 from homeassistant.const import CONF_IP_ADDRESS
 
-from .const import CONF_NAME_WITH_STATION_ID, DEFAULT_STATION_NAME, DOMAIN
+from .const import DEFAULT_STATION_NAME, DOMAIN
 from .data import TFAmeUniqueID
 
 _LOGGER = logging.getLogger(__name__)
@@ -33,8 +33,6 @@ class TFAmeConfigFlow(ConfigFlow, domain=DOMAIN):
     def __init__(self) -> None:
         """Initialize the config flow."""
 
-        self.name_with_station_id: bool = False
-
     async def async_step_user(
         self, user_input: dict[str, Any] | None = None
     ) -> ConfigFlowResult:
@@ -42,26 +40,14 @@ class TFAmeConfigFlow(ConfigFlow, domain=DOMAIN):
         errors: dict[str, str] = {}
 
         default_host = ""
-        default_name_with_id = False
 
         data_schema = vol.Schema(
             {
                 vol.Required(CONF_IP_ADDRESS, default=default_host): str,
-                vol.Required(
-                    CONF_NAME_WITH_STATION_ID, default=default_name_with_id
-                ): bool,
             }
         )
 
         if user_input is not None:
-            # Validate "name_with_station_id" option
-            add_station_id = user_input.get(CONF_NAME_WITH_STATION_ID)
-            if not isinstance(add_station_id, bool):
-                self.name_with_station_id = False
-                errors[CONF_NAME_WITH_STATION_ID] = "invalid_name_with_station_id"
-            else:
-                self.name_with_station_id = add_station_id
-
             # Validate the host (IP or mDNS hostname)
             ip_host_str = user_input.get(CONF_IP_ADDRESS)
             validator = TFAmeValidator()
@@ -90,8 +76,11 @@ class TFAmeConfigFlow(ConfigFlow, domain=DOMAIN):
                 except TFAmeJSONError:
                     errors["base"] = "invalid_response"
 
-                except TFAmeException:
-                    errors["base"] = "unknown"
+                except TFAmeException as err:
+                    if str(err) == "missing_identifier":
+                        errors["base"] = "missing_identifier"
+                    else:
+                        errors["base"] = "unknown"
 
                 except Exception:
                     # Any unexpected exception should be logged and shown generically

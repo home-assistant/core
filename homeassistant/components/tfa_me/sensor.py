@@ -23,7 +23,7 @@ from homeassistant.util import dt as dt_util
 from .const import DEVICE_MAPPING, DOMAIN, TIMEOUT_MAPPING
 from .coordinator import TFAmeConfigEntry, TFAmeUpdateCoordinator, resolve_tfa_host
 
-PARALLEL_UPDATES = 1
+PARALLEL_UPDATES = 0
 
 
 @dataclass(frozen=True, kw_only=True)
@@ -279,7 +279,7 @@ class TFAmeSensorEntity(CoordinatorEntity[TFAmeUpdateCoordinator], SensorEntity)
         # Name schema created by HA with x... = Sensor ID, y... = Gateway/station ID:
         # sensor.tfa_me_xxx_xxx_xxx_MeasurementName, e.g. "sensor.tfa_me_a0f_fff_f81_humidity" or
         # sensor.tfa_me_xxx_xxx_xxx_yyyyyyyyy_MeasurementName, e.g. "sensor.tfa_me_a0f_fff_f81_05b3e4e44_humidity"
-        self.name_with_station_id = coordinator.name_with_station_id
+        self.name_with_station_id: bool = True
         self.gateway_id = self.coordinator.data.gateway_id
         self.sensor_id = sensor_id
 
@@ -340,10 +340,6 @@ class TFAmeSensorEntity(CoordinatorEntity[TFAmeUpdateCoordinator], SensorEntity)
             raise ValueError(f"Unsupported TFA.me measurement: {measure_name}")
 
         return description
-
-    async def async_added_to_hass(self) -> None:
-        """Called once if entity is added to HA instance."""
-        await super().async_added_to_hass()
 
     def _add_rain_measurement(self) -> None:
         """Add current rain measurement to history."""
@@ -433,11 +429,8 @@ class TFAmeSensorEntity(CoordinatorEntity[TFAmeUpdateCoordinator], SensorEntity)
 
             return {
                 "sensor_id": self.format_string_tfa_id_only(self.sensor_id.upper()),
-                "measurement": self.measure_name,
-                "timestamp": dt,
-                "via tfa.me station": self.format_string_tfa_id_only(
-                    self.gateway_id.upper()
-                ),
+                "timestamp": dt,  # measurement timestamp
+                "gateway_id": self.format_string_tfa_id_only(self.gateway_id.upper()),
             }
         except ValueError, TypeError, KeyError:
             return {}

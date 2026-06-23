@@ -2,26 +2,7 @@
 
 DOMAIN = "tfa_me"
 DEFAULT_STATION_NAME = "TFA.me Station"
-CONF_NAME_WITH_STATION_ID = "name_with_station_id"
 LOCAL_POLL_INTERVAL = 60
-
-MEASUREMENT_TO_TRANSLATION_KEY = {
-    "temperature": "temperature",
-    "temperature_probe": "temperature",
-    "humidity": "humidity",
-    "co2": "co2",
-    "barometric_pressure": "barometric_pressure",
-    "rssi": "rssi",
-    "lowbatt": "lowbatt",
-    "wind_direction": "wind_direction",
-    "wind_direction_deg": "wind_direction",
-    "wind_speed": "wind_speed",
-    "wind_gust": "wind_gust",
-    "rain": "rain",
-    "rain_rel": "rain_relative",
-    "rain_1_hour": "rain_1_hour",
-    "rain_24_hours": "rain_24_hours",
-}
 
 # Short description of all stations & sensors
 DEVICE_MAPPING = {

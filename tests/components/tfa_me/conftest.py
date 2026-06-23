@@ -4,7 +4,7 @@
 
 import pytest
 
-from homeassistant.components.tfa_me.const import CONF_NAME_WITH_STATION_ID, DOMAIN
+from homeassistant.components.tfa_me.const import DOMAIN
 from homeassistant.const import CONF_IP_ADDRESS
 from homeassistant.core import HomeAssistant
 
@@ -18,7 +18,6 @@ def tfa_me_options_flow_mock_entry(hass: HomeAssistant) -> MockConfigEntry:
         domain=DOMAIN,
         data={
             CONF_IP_ADDRESS: "127.0.0.1",
-            CONF_NAME_WITH_STATION_ID: True,
         },
         unique_id="test-1234",
     )
@@ -32,7 +31,6 @@ def tfa_me_config_entry(hass: HomeAssistant) -> MockConfigEntry:
         domain=DOMAIN,
         data={
             CONF_IP_ADDRESS: "192.168.1.10",
-            CONF_NAME_WITH_STATION_ID: True,
         },
         title="TFA.me Station '05B3E4E44'",
     )

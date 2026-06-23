@@ -18,7 +18,7 @@ from tfa_me_ha_local.client import (
 )
 
 from homeassistant import config_entries, data_entry_flow
-from homeassistant.components.tfa_me.const import CONF_NAME_WITH_STATION_ID, DOMAIN
+from homeassistant.components.tfa_me.const import DOMAIN
 from homeassistant.const import CONF_IP_ADDRESS
 from homeassistant.core import HomeAssistant
 
@@ -51,7 +51,7 @@ async def test_show_form(hass: HomeAssistant) -> None:
         (
             "homeassistant.components.tfa_me.config_flow.TFAmeUniqueID",
             {"side_effect": TFAmeTimeoutError("timeout_connect")},
-            {CONF_IP_ADDRESS: "192.168.0.10", CONF_NAME_WITH_STATION_ID: True},
+            {CONF_IP_ADDRESS: "192.168.0.10"},
             "base",
             "timeout_connect",
             False,
@@ -59,7 +59,7 @@ async def test_show_form(hass: HomeAssistant) -> None:
         (
             "homeassistant.components.tfa_me.config_flow.TFAmeUniqueID",
             {"side_effect": TFAmeConnectionError("cannot_connect")},
-            {CONF_IP_ADDRESS: "192.168.0.10", CONF_NAME_WITH_STATION_ID: True},
+            {CONF_IP_ADDRESS: "192.168.0.10"},
             "base",
             "cannot_connect",
             False,
@@ -67,7 +67,7 @@ async def test_show_form(hass: HomeAssistant) -> None:
         (
             "homeassistant.components.tfa_me.config_flow.TFAmeUniqueID",
             {"side_effect": TFAmeHTTPError("invalid_response")},
-            {CONF_IP_ADDRESS: "192.168.0.10", CONF_NAME_WITH_STATION_ID: True},
+            {CONF_IP_ADDRESS: "192.168.0.10"},
             "base",
             "invalid_response",
             False,
@@ -75,7 +75,7 @@ async def test_show_form(hass: HomeAssistant) -> None:
         (
             "homeassistant.components.tfa_me.config_flow.TFAmeUniqueID",
             {"side_effect": TFAmeJSONError("invalid_response")},
-            {CONF_IP_ADDRESS: "192.168.0.10", CONF_NAME_WITH_STATION_ID: True},
+            {CONF_IP_ADDRESS: "192.168.0.10"},
             "base",
             "invalid_response",
             False,
@@ -83,7 +83,7 @@ async def test_show_form(hass: HomeAssistant) -> None:
         (
             "homeassistant.components.tfa_me.config_flow.TFAmeUniqueID",
             {"side_effect": TFAmeException("unknown")},
-            {CONF_IP_ADDRESS: "192.168.0.10", CONF_NAME_WITH_STATION_ID: True},
+            {CONF_IP_ADDRESS: "192.168.0.10"},
             "base",
             "unknown",
             False,
@@ -91,25 +91,25 @@ async def test_show_form(hass: HomeAssistant) -> None:
         (
             None,
             None,
-            {CONF_IP_ADDRESS: "NotIP", CONF_NAME_WITH_STATION_ID: False},
+            {CONF_IP_ADDRESS: "NotIP"},
             CONF_IP_ADDRESS,
             "invalid_ip_host",
             False,
         ),
         (
-            None,
-            None,
-            {CONF_IP_ADDRESS: "192.168.1.10", CONF_NAME_WITH_STATION_ID: 123},
-            None,
-            "invalid_name_with_station_id",
-            True,
-        ),
-        (
             "homeassistant.components.tfa_me.config_flow.TFAmeUniqueID.get_identifier",
             {"side_effect": Exception("connection error")},
-            {CONF_IP_ADDRESS: "192.168.1.10", CONF_NAME_WITH_STATION_ID: True},
+            {CONF_IP_ADDRESS: "192.168.1.10"},
             "base",
             ("cannot_connect", "unknown"),
+            False,
+        ),
+        (
+            "homeassistant.components.tfa_me.config_flow.TFAmeUniqueID",
+            {"side_effect": TFAmeException("missing_identifier")},
+            {CONF_IP_ADDRESS: "192.168.0.10"},
+            "base",
+            "missing_identifier",
             False,
         ),
     ],
@@ -120,8 +120,8 @@ async def test_show_form(hass: HomeAssistant) -> None:
         "json_invalid_response",
         "unknown",
         "invalid_ip_host",
-        "invalid_name_with_station_id",
         "generic_exception",
+        "missing_identifier",
     ],
 )
 async def test_config_flow_errors_recover(
@@ -176,7 +176,6 @@ async def test_config_flow_errors_recover(
             result["flow_id"],
             user_input={
                 CONF_IP_ADDRESS: "192.168.1.10",
-                CONF_NAME_WITH_STATION_ID: True,
             },
         )
 
