@@ -58,8 +58,17 @@
     }
   },
   "exceptions": {
+    "api_setup_failed": {
+      "message": "API setup failed: {error}"
+    },
     "communication_error": {
       "message": "Error communicating with device: {error}"
+    },
+    "ha_control_disabled": {
+      "message": "Home Assistant control is disabled on the device. Please enable it in the device web interface"
+    },
+    "invalid_auth": {
+      "message": "Authentication failed - invalid credentials"
     },
     "no_status": {
       "message": "Failed to fetch device status"
