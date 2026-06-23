@@ -6,7 +6,7 @@
     ]),
     'area_id': None,
     'capabilities': dict({
-      'options': list([
+      <SelectEntityCapabilityAttribute.OPTIONS: 'options'>: list([
         '0°C',
         '2°C',
         '5°C',
@@ -47,7 +47,7 @@
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'friendly_name': '12345 Freeze protection temperature',
-      'options': list([
+      <SelectEntityCapabilityAttribute.OPTIONS: 'options'>: list([
         '0°C',
         '2°C',
         '5°C',
