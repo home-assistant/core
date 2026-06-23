@@ -131,8 +131,6 @@ class MyPVConfigFlow(ConfigFlow, domain=DOMAIN):
         errors: dict[str, str] = {}
 
         if user_input is not None:
-            HOST_SCHEMA(user_input)
-
             host = user_input[CONF_HOST]
             password_needed = False
 
@@ -177,8 +175,6 @@ class MyPVConfigFlow(ConfigFlow, domain=DOMAIN):
         errors: dict[str, str] = {}
 
         if user_input is not None:
-            AUTH_SCHEMA(user_input)
-
             host = self._host
             password = user_input[CONF_PASSWORD]
 
