@@ -31,7 +31,7 @@ class ReolinkTimeEntityDescription(
 
 
 def _schedule_time(api: Host, ch: int, prefix: str) -> time | None:
-    """Return the start time of the floodlight schedule."""
+    """Return the start or end time of the floodlight schedule."""
     schedule = api.whiteled_schedule(ch)
     if not schedule:
         return None
