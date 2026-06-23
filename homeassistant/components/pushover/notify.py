@@ -29,7 +29,6 @@ from .const import (
     ATTR_URL,
     ATTR_URL_TITLE,
     CONF_USER_KEY,
-    DOMAIN,
 )
 
 _LOGGER = logging.getLogger(__name__)
@@ -43,11 +42,10 @@ async def async_get_service(
     """Get the Pushover notification service."""
     if discovery_info is None:
         return None
-    # Uses legacy hass.data[DOMAIN] pattern
-    # pylint: disable-next=home-assistant-use-runtime-data
-    pushover_api: PushoverAPI = hass.data[DOMAIN][discovery_info["entry_id"]]
+    entry = hass.config_entries.async_get_entry(discovery_info["entry_id"])
+    assert entry is not None
     return PushoverNotificationService(
-        hass, pushover_api, discovery_info[CONF_USER_KEY]
+        hass, entry.runtime_data, discovery_info[CONF_USER_KEY]
     )
 
 

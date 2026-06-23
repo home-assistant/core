@@ -17,6 +17,8 @@ PLATFORMS = [Platform.NOTIFY]
 
 CONFIG_SCHEMA = cv.config_entry_only_config_schema(DOMAIN)
 
+type PushoverConfigEntry = ConfigEntry[PushoverAPI]
+
 
 async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     """Set up the pushover component."""
@@ -25,7 +27,7 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     return True
 
 
-async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
+async def async_setup_entry(hass: HomeAssistant, entry: PushoverConfigEntry) -> bool:
     """Set up pushover from a config entry."""
 
     # remove unique_id for beta users
@@ -43,7 +45,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
             raise ConfigEntryAuthFailed(err) from err
         raise ConfigEntryNotReady(err) from err
 
-    hass.data.setdefault(DOMAIN, {})[entry.entry_id] = pushover_api
+    entry.runtime_data = pushover_api
 
     hass.async_create_task(
         discovery.async_load_platform(
