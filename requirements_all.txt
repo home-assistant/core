@@ -2970,9 +2970,6 @@ satel-integra==1.3.1
 # homeassistant.components.screenlogic
 screenlogicpy==0.10.2
 
-# homeassistant.components.scsgate
-scsgate==0.1.0
-
 # homeassistant.components.backup
 securetar==2026.4.1
 
