@@ -14,6 +14,7 @@ from pyoverkiz.client import GatewayCandidate, OverkizClient
 from pyoverkiz.const import SERVERS_WITH_LOCAL_API, SUPPORTED_SERVERS
 from pyoverkiz.enums import APIType, Server
 from pyoverkiz.exceptions import (
+    ApplicationNotAllowedError,
     BadCredentialsError,
     CozyTouchBadCredentialsError,
     MaintenanceError,
@@ -193,6 +194,8 @@ class OverkizConfigFlow(
                 await self.async_validate_input(user_input)
             except TooManyRequestsError:
                 errors["base"] = "too_many_requests"
+            except ApplicationNotAllowedError:
+                errors["base"] = "application_not_allowed"
             except (BadCredentialsError, NotAuthenticatedError) as exception:
                 # If authentication with CozyTouch auth server is
                 # valid, but token is invalid for Overkiz API

@@ -138,7 +138,7 @@ class TeslaFleetVehicleDataCoordinator(DataUpdateCoordinator[dict[str, Any]]):
         self.endpoints = (
             ENDPOINTS
             if location
-            else [ep for ep in ENDPOINTS if ep is not VehicleDataEndpoint.LOCATION_DATA]
+            else [ep for ep in ENDPOINTS if ep != VehicleDataEndpoint.LOCATION_DATA]
         )
 
     @override
