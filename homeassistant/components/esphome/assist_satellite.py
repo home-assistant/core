@@ -738,7 +738,7 @@ class EsphomeAssistSatellite(
                 samples_per_chunk=samples_per_chunk,
             ):
                 if not self._is_running:
-                    break # type: ignore[unreachable]
+                    break  # type: ignore[unreachable]
 
                 if start_time is None:
                     start_time = asyncio.get_running_loop().time()
