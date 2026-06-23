@@ -1,10 +1,9 @@
 """Roborock Coordinator."""
 
 from collections.abc import Callable
-from dataclasses import dataclass
 from datetime import datetime, timedelta
 import logging
-from typing import Any
+from typing import Any, override
 
 from propcache.api import cached_property
 from roborock import B01Props
@@ -58,14 +57,38 @@ MIN_UNAVAILABLE_DURATION = timedelta(minutes=2)
 _LOGGER = logging.getLogger(__name__)
 
 
-@dataclass
 class RoborockCoordinators:
     """Roborock coordinators type."""
 
-    v1: list[RoborockDataUpdateCoordinator]
-    a01: list[RoborockDataUpdateCoordinatorA01]
-    b01_q7: list[RoborockB01Q7UpdateCoordinator]
-    b01_q10: list[RoborockB01Q10UpdateCoordinator]
+    def __init__(
+        self,
+    ) -> None:
+        """Initialize."""
+        self._coordinators: dict[
+            str,
+            RoborockDataUpdateCoordinator
+            | RoborockDataUpdateCoordinatorA01
+            | RoborockB01Q7UpdateCoordinator
+            | RoborockB01Q10UpdateCoordinator,
+        ] = {}
+
+    def add(
+        self,
+        coordinator: RoborockDataUpdateCoordinator
+        | RoborockDataUpdateCoordinatorA01
+        | RoborockB01Q7UpdateCoordinator
+        | RoborockB01Q10UpdateCoordinator,
+    ) -> None:
+        """Add a coordinator."""
+        self._coordinators[coordinator.duid] = coordinator
+
+    def __contains__(self, duid: str) -> bool:
+        """Check if a coordinator exists by DUID."""
+        return duid in self._coordinators
+
+    def keys(self) -> list[str]:
+        """Return DUIDs of all registered coordinators."""
+        return list(self._coordinators.keys())
 
     def values(
         self,
@@ -77,6 +100,42 @@ class RoborockCoordinators:
     ]:
         """Return all coordinators."""
         return self.v1 + self.a01 + self.b01_q7 + self.b01_q10
+
+    @property
+    def v1(self) -> list[RoborockDataUpdateCoordinator]:
+        """Return V1 coordinators."""
+        return [
+            coord
+            for coord in self._coordinators.values()
+            if isinstance(coord, RoborockDataUpdateCoordinator)
+        ]
+
+    @property
+    def a01(self) -> list[RoborockDataUpdateCoordinatorA01]:
+        """Return A01 coordinators."""
+        return [
+            coord
+            for coord in self._coordinators.values()
+            if isinstance(coord, RoborockDataUpdateCoordinatorA01)
+        ]
+
+    @property
+    def b01_q7(self) -> list[RoborockB01Q7UpdateCoordinator]:
+        """Return Q7 coordinators."""
+        return [
+            coord
+            for coord in self._coordinators.values()
+            if isinstance(coord, RoborockB01Q7UpdateCoordinator)
+        ]
+
+    @property
+    def b01_q10(self) -> list[RoborockB01Q10UpdateCoordinator]:
+        """Return Q10 coordinators."""
+        return [
+            coord
+            for coord in self._coordinators.values()
+            if isinstance(coord, RoborockB01Q10UpdateCoordinator)
+        ]
 
 
 type RoborockConfigEntry = ConfigEntry[RoborockCoordinators]
@@ -110,13 +169,14 @@ class RoborockDataUpdateCoordinator(DataUpdateCoordinator[DeviceState | None]):
             self.device_info[ATTR_CONNECTIONS] = {(dr.CONNECTION_NETWORK_MAC, mac)}
         self.last_update_state: str | None = None
         # Keep track of last attempt to refresh maps/rooms to know when to try again.
-        self._last_home_update_attempt: datetime
+        self._last_home_update_attempt = dt_util.utcnow()
         self.last_home_update: datetime | None = None
         # Tracks the last successful update to control when we report failure
         # to the base class. This is reset on successful data update.
         self._last_update_success_time: datetime | None = None
         self._has_connected_locally: bool = False
         self._unsubs: list[Callable[[], None]] = []
+        self._setup_completed = False
 
     @cached_property
     def dock_device_info(self) -> DeviceInfo:
@@ -135,13 +195,13 @@ class RoborockDataUpdateCoordinator(DataUpdateCoordinator[DeviceState | None]):
             sw_version=self._device.device_info.fv,
         )
 
+    @override
     async def _async_setup(self) -> None:
         """Set up the coordinator."""
         await self._verify_api()
         try:
             await self.properties_api.status.refresh()
         except RoborockException as err:
-            _LOGGER.debug("Failed to update data during setup: %s", err)
             raise UpdateFailed(
                 translation_domain=DOMAIN,
                 translation_key="update_data_fail",
@@ -235,9 +295,14 @@ class RoborockDataUpdateCoordinator(DataUpdateCoordinator[DeviceState | None]):
         )
         _LOGGER.debug("Updated device properties")
 
+    @override
     async def _async_update_data(self) -> DeviceState | None:
         """Update data via library."""
-        await self._verify_api()
+        if not self._setup_completed:
+            await self._async_setup()
+            self._setup_completed = True
+        else:
+            await self._verify_api()
         try:
             # Update device props and standard api information
             await self._update_device_prop()
@@ -312,6 +377,7 @@ class RoborockDataUpdateCoordinator(DataUpdateCoordinator[DeviceState | None]):
         # We optimize streaming updates to catch state transitions immediately, but
         # secondary updates (like refreshing the map) can happen on their own interval.
 
+    @override
     async def async_shutdown(self) -> None:
         """Shutdown coordinator and unsubscribe update listeners."""
         await super().async_shutdown()
@@ -460,6 +526,7 @@ class RoborockWashingMachineUpdateCoordinator(
             RoborockZeoProtocol.SOUND_SET,
         ]
 
+    @override
     async def _async_update_data(
         self,
     ) -> dict[RoborockZeoProtocol, StateType]:
@@ -498,6 +565,7 @@ class RoborockWetDryVacUpdateCoordinator(
             RoborockDyadDataProtocol.TOTAL_RUN_TIME,
         ]
 
+    @override
     async def _async_update_data(
         self,
     ) -> dict[RoborockDyadDataProtocol, StateType]:
@@ -579,6 +647,7 @@ class RoborockB01Q7UpdateCoordinator(RoborockDataUpdateCoordinatorB01):
             RoborockB01Props.QUANTITY,
         ]
 
+    @override
     async def _async_update_data(
         self,
     ) -> B01Props:
@@ -631,6 +700,7 @@ class RoborockB01Q10UpdateCoordinator(DataUpdateCoordinator[None]):
         self.api = api
         self.device_info = get_device_info(device)
 
+    @override
     async def _async_update_data(self) -> None:
         """Request a status push from the device.
 
@@ -661,3 +731,11 @@ class RoborockB01Q10UpdateCoordinator(DataUpdateCoordinator[None]):
     def device(self) -> RoborockDevice:
         """Get the RoborockDevice."""
         return self._device
+
+
+type RoborockCoordinatorType = (
+    RoborockDataUpdateCoordinator
+    | RoborockDataUpdateCoordinatorA01[Any]
+    | RoborockB01Q7UpdateCoordinator
+    | RoborockB01Q10UpdateCoordinator
+)

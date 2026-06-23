@@ -2,7 +2,7 @@
 
 from dataclasses import dataclass
 import logging
-from typing import TYPE_CHECKING
+from typing import TYPE_CHECKING, override
 
 from homeassistant.components.sensor import (
     SensorDeviceClass,
@@ -232,6 +232,7 @@ class PooldoseSensor(PooldoseEntity, SensorEntity):
     entity_description: PooldoseSensorEntityDescription
 
     @property
+    @override
     def native_value(self) -> float | int | str | None:
         """Return the current value of the sensor."""
         data = self.get_data()
@@ -240,6 +241,7 @@ class PooldoseSensor(PooldoseEntity, SensorEntity):
         return None
 
     @property
+    @override
     def native_unit_of_measurement(self) -> str | None:
         """Return the unit of measurement."""
         if (

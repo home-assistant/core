@@ -1,7 +1,7 @@
 """Support for Vivotek IP Cameras."""
 
 import logging
-from typing import TYPE_CHECKING, Final
+from typing import TYPE_CHECKING, Final, override
 
 from libpyvivotek.vivotek import VivotekCamera
 
@@ -75,21 +75,25 @@ class VivotekCam(Camera):
         self._attr_name = name
         self._stream_source = stream_source
 
+    @override
     def camera_image(
         self, width: int | None = None, height: int | None = None
     ) -> bytes | None:
         """Return bytes of camera image."""
         return self._cam.snapshot()
 
+    @override
     async def stream_source(self) -> str:
         """Return the source of the stream."""
         return self._stream_source
 
+    @override
     def disable_motion_detection(self) -> None:
         """Disable motion detection in camera."""
         response = self._cam.set_param(DEFAULT_EVENT_0_KEY, 0)
         self._attr_motion_detection_enabled = int(response) == 1
 
+    @override
     def enable_motion_detection(self) -> None:
         """Enable motion detection in camera."""
         response = self._cam.set_param(DEFAULT_EVENT_0_KEY, 1)

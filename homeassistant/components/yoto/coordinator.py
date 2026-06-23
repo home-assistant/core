@@ -1,6 +1,7 @@
 """Coordinator for the Yoto integration."""
 
 from datetime import datetime
+from typing import override
 
 import aiohttp
 from yoto_api import AuthenticationError, Token, YotoClient, YotoError, YotoPlayer
@@ -58,6 +59,7 @@ class YotoDataUpdateCoordinator(DataUpdateCoordinator[dict[str, YotoPlayer]]):
             valid_until=dt_util.utc_from_timestamp(token["expires_at"]),
         )
 
+    @override
     async def _async_setup(self) -> None:
         """Set up the coordinator."""
         try:
@@ -95,12 +97,9 @@ class YotoDataUpdateCoordinator(DataUpdateCoordinator[dict[str, YotoPlayer]]):
             )
         )
 
+    @override
     async def _async_update_data(self) -> dict[str, YotoPlayer]:
         """Fetch fresh data from the Yoto cloud."""
-        # _async_setup already populated the client; skip the duplicate first fetch.
-        if self.data is None:
-            return self.client.players
-
         try:
             await self._session.async_ensure_token_valid()
         except OAuth2TokenRequestReauthError as err:
@@ -155,6 +154,7 @@ class YotoDataUpdateCoordinator(DataUpdateCoordinator[dict[str, YotoPlayer]]):
         """Handle a real-time update pushed by the Yoto MQTT broker."""
         self.async_set_updated_data(self.client.players)
 
+    @override
     async def async_shutdown(self) -> None:
         """Shut down the coordinator."""
         await self.client.disconnect_events()

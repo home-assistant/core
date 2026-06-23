@@ -1,6 +1,6 @@
 """Support for switches which integrates with other components."""
 
-from typing import TYPE_CHECKING, Any
+from typing import TYPE_CHECKING, Any, override
 
 import voluptuous as vol
 
@@ -139,6 +139,7 @@ class AbstractTemplateSwitch(AbstractTemplateEntity, SwitchEntity, RestoreEntity
         if (off_action := config.get(CONF_TURN_OFF)) is not None:
             self.add_script(CONF_TURN_OFF, off_action, name, DOMAIN)
 
+    @override
     async def async_turn_on(self, **kwargs: Any) -> None:
         """Fire the on action."""
         if on_script := self._action_scripts.get(CONF_TURN_ON):
@@ -147,6 +148,7 @@ class AbstractTemplateSwitch(AbstractTemplateEntity, SwitchEntity, RestoreEntity
             self._attr_is_on = True
             self.async_write_ha_state()
 
+    @override
     async def async_turn_off(self, **kwargs: Any) -> None:
         """Fire the off action."""
         if off_script := self._action_scripts.get(CONF_TURN_OFF):

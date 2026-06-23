@@ -1,6 +1,6 @@
 """Config flow for Edifier infrared integration."""
 
-from typing import Any
+from typing import Any, override
 
 from infrared_protocols.codes.edifier.models import MODEL_TO_COMMAND_SET, EdifierModel
 import voluptuous as vol
@@ -28,6 +28,7 @@ class EdifierIrConfigFlow(ConfigFlow, domain=DOMAIN):
     VERSION = 1
     MINOR_VERSION = 1
 
+    @override
     async def async_step_user(
         self, user_input: dict[str, Any] | None = None
     ) -> ConfigFlowResult:

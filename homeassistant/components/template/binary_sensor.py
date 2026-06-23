@@ -5,7 +5,7 @@ from dataclasses import dataclass
 from datetime import datetime, timedelta
 from functools import partial
 import logging
-from typing import Any, Self
+from typing import Any, Self, override
 
 import voluptuous as vol
 
@@ -186,6 +186,7 @@ class StateBinarySensorEntity(TemplateEntity, AbstractTemplateBinarySensor):
         AbstractTemplateBinarySensor.__init__(self, config)
 
     @callback
+    @override
     def _update_state(self, result):
         super()._update_state(result)
 
@@ -316,6 +317,7 @@ class TriggerBinarySensorEntity(TriggerEntity, AbstractTemplateBinarySensor):
             self._auto_off_time = None
 
     @callback
+    @override
     def _update_state(self, result):
         state: bool | None = None
         if result is not None:
@@ -387,6 +389,7 @@ class TriggerBinarySensorEntity(TriggerEntity, AbstractTemplateBinarySensor):
         auto_off_time = dt_util.utcnow() + auto_off_delay
         self._set_auto_off(auto_off_time)
 
+    @override
     def _render_availability_template(self, variables):
         available = super()._render_availability_template(variables)
         if not available:
@@ -408,6 +411,7 @@ class TriggerBinarySensorEntity(TriggerEntity, AbstractTemplateBinarySensor):
         )
 
     @property
+    @override
     def extra_restore_state_data(self) -> AutoOffExtraStoredData:
         """Return specific state data to be restored."""
         return AutoOffExtraStoredData(self._auto_off_time)

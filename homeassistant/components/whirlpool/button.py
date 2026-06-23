@@ -1,5 +1,7 @@
 """Button platform for the Whirlpool Appliances integration."""
 
+from typing import override
+
 from whirlpool.oven import Cavity as OvenCavity, Oven
 
 from homeassistant.components.button import ButtonEntity
@@ -36,6 +38,7 @@ class WhirlpoolOvenStopButton(WhirlpoolOvenEntity, ButtonEntity):
         """Initialize the oven stop button."""
         super().__init__(appliance, cavity, "oven_stop", "-stop")
 
+    @override
     async def async_press(self) -> None:
         """Stop cooking."""
         WhirlpoolOvenStopButton._check_service_request(

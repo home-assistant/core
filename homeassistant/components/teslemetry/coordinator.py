@@ -1,7 +1,7 @@
 """Teslemetry Data Coordinator."""
 
 from datetime import datetime, timedelta
-from typing import TYPE_CHECKING, Any
+from typing import TYPE_CHECKING, Any, override
 
 from tesla_fleet_api.const import TeslaEnergyPeriod, VehicleDataEndpoint
 from tesla_fleet_api.exceptions import (
@@ -80,6 +80,7 @@ class TeslemetryMetadataCoordinator(DataUpdateCoordinator[dict[str, Any]]):
         )
         self.teslemetry = teslemetry
 
+    @override
     async def _async_update_data(self) -> dict[str, Any]:
         """Fetch latest metadata for subscription status."""
         try:
@@ -129,8 +130,9 @@ class TeslemetryVehicleDataCoordinator(DataUpdateCoordinator[dict[str, Any]]):
 
         self.api = api
         self.data = flatten(product)
-        self.last_active = datetime.now()
+        self.last_active = datetime.now()  # pylint: disable=home-assistant-enforce-naive-now
 
+    @override
     async def _async_update_data(self) -> dict[str, Any]:
         """Update vehicle data using Teslemetry API."""
         try:
@@ -183,6 +185,7 @@ class TeslemetryEnergySiteLiveCoordinator(DataUpdateCoordinator[dict[str, Any]])
         }
         self.data = data
 
+    @override
     async def _async_update_data(self) -> dict[str, Any]:
         """Update energy site data using Teslemetry API."""
         try:
@@ -232,6 +235,7 @@ class TeslemetryEnergySiteInfoCoordinator(DataUpdateCoordinator[dict[str, Any]])
         self.api = api
         self.data = product
 
+    @override
     async def _async_update_data(self) -> dict[str, Any]:
         """Update energy site data using Teslemetry API."""
         try:
@@ -280,6 +284,7 @@ class TeslemetryEnergyHistoryCoordinator(DataUpdateCoordinator[dict[str, Any]]):
         self.api = api
         self.data = {}
 
+    @override
     async def _async_update_data(self) -> dict[str, Any]:
         """Update energy site data using Teslemetry API."""
         try:

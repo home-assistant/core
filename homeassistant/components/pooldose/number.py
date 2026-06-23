@@ -1,7 +1,7 @@
 """Number entities for the Seko PoolDose integration."""
 
 import logging
-from typing import TYPE_CHECKING, Any, cast
+from typing import TYPE_CHECKING, Any, cast, override
 
 from homeassistant.components.number import (
     NumberDeviceClass,
@@ -163,6 +163,7 @@ class PooldoseNumber(PooldoseEntity, NumberEntity):
         super().__init__(coordinator, serial_number, device_info, description, "number")
         self._async_update_attrs()
 
+    @override
     def _handle_coordinator_update(self) -> None:
         """Handle updated data from the coordinator."""
         self._async_update_attrs()
@@ -176,6 +177,7 @@ class PooldoseNumber(PooldoseEntity, NumberEntity):
         self._attr_native_max_value = data["max"]
         self._attr_native_step = data["step"]
 
+    @override
     async def async_set_native_value(self, value: float) -> None:
         """Set new value."""
         await self._async_perform_write(

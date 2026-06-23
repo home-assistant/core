@@ -2,7 +2,7 @@
 
 from collections.abc import Callable
 from dataclasses import dataclass
-from typing import Any
+from typing import Any, override
 
 from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.entity import EntityDescription
@@ -27,6 +27,7 @@ class PrusaLinkEntity(CoordinatorEntity[PrusaLinkUpdateCoordinator]):
     entity_description: PrusaLinkEntityDescription
 
     @property
+    @override
     def available(self) -> bool:
         """Return if entity is available."""
         # `coordinator.data` can be None when the underlying endpoint
@@ -41,6 +42,7 @@ class PrusaLinkEntity(CoordinatorEntity[PrusaLinkUpdateCoordinator]):
         )
 
     @property
+    @override
     def device_info(self) -> DeviceInfo:
         """Return device information about this PrusaLink device."""
         coordinators = self.coordinator.config_entry.runtime_data
