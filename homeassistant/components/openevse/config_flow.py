@@ -7,7 +7,7 @@ from openevsehttp.__main__ import OpenEVSE
 from openevsehttp.exceptions import AuthenticationError, MissingSerial
 import voluptuous as vol
 
-from homeassistant.config_entries import ConfigEntry, ConfigFlow, ConfigFlowResult
+from homeassistant.config_entries import ConfigFlow, ConfigFlowResult
 from homeassistant.const import (
     CONF_HOST,
     CONF_ID,
@@ -25,6 +25,14 @@ USER_SCHEMA = vol.Schema({vol.Required(CONF_HOST): cv.string})
 
 AUTH_SCHEMA = vol.Schema(
     {vol.Required(CONF_USERNAME): cv.string, vol.Required(CONF_PASSWORD): cv.string}
+)
+
+RECONFIGURE_SCHEMA = vol.Schema(
+    {
+        vol.Required(CONF_HOST): cv.string,
+        vol.Optional(CONF_USERNAME): cv.string,
+        vol.Optional(CONF_PASSWORD): cv.string,
+    }
 )
 
 
@@ -224,12 +232,14 @@ class OpenEVSEConfigFlow(ConfigFlow, domain=DOMAIN):
             username = user_input.get(CONF_USERNAME) or None
             password = user_input.get(CONF_PASSWORD) or None
 
+            self._async_abort_entries_match({CONF_HOST: host})
+
             errors, serial = await self.check_status(host, username, password)
             if errors:
                 return self.async_show_form(
                     step_id="reconfigure",
                     data_schema=self.add_suggested_values_to_schema(
-                        self._get_reconfigure_schema(reconfigure_entry), user_input
+                        RECONFIGURE_SCHEMA, user_input
                     ),
                     errors=errors,
                 )
@@ -252,22 +262,6 @@ class OpenEVSEConfigFlow(ConfigFlow, domain=DOMAIN):
         return self.async_show_form(
             step_id="reconfigure",
             data_schema=self.add_suggested_values_to_schema(
-                self._get_reconfigure_schema(reconfigure_entry), None
+                RECONFIGURE_SCHEMA, reconfigure_entry.data
             ),
-        )
-
-    def _get_reconfigure_schema(self, config_entry: ConfigEntry) -> vol.Schema:
-        """Get the reconfigure schema."""
-        data = config_entry.data
-
-        return vol.Schema(
-            {
-                vol.Required(CONF_HOST, default=data.get(CONF_HOST, "")): cv.string,
-                vol.Optional(
-                    CONF_USERNAME, default=data.get(CONF_USERNAME, "")
-                ): cv.string,
-                vol.Optional(
-                    CONF_PASSWORD, default=data.get(CONF_PASSWORD, "")
-                ): cv.string,
-            }
         )

@@ -627,6 +627,46 @@ async def test_reconfigure_flow_with_auth(
     }
 
 
+@pytest.mark.usefixtures("mock_setup_entry")
+async def test_reconfigure_flow_duplicate_host(
+    hass: HomeAssistant, mock_charger: MagicMock
+) -> None:
+    """Test reconfiguration flow aborts when host matches another entry."""
+    other_entry = MockConfigEntry(
+        title="openevse_other_config",
+        domain=DOMAIN,
+        data={CONF_HOST: "192.168.1.101"},
+        entry_id="OTHER",
+        unique_id="otherfeedfeed",
+    )
+    other_entry.add_to_hass(hass)
+
+    config_entry = MockConfigEntry(
+        title="openevse_mock_config",
+        domain=DOMAIN,
+        data={CONF_HOST: "192.168.1.100"},
+        entry_id="FAKE",
+        unique_id="deadbeeffeed",
+    )
+    config_entry.add_to_hass(hass)
+
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN,
+        context={"source": SOURCE_RECONFIGURE, "entry_id": config_entry.entry_id},
+    )
+
+    assert result["type"] is FlowResultType.FORM
+    assert result["step_id"] == "reconfigure"
+
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"], {CONF_HOST: "192.168.1.101"}
+    )
+
+    assert result["type"] is FlowResultType.ABORT
+    assert result["reason"] == "already_configured"
+    assert config_entry.data == {CONF_HOST: "192.168.1.100"}
+
+
 @pytest.mark.parametrize(
     ("exception", "error_base"),
     [
@@ -677,41 +717,6 @@ async def test_reconfigure_flow_errors(
     assert result["reason"] == "reconfigure_successful"
     assert config_entry.data == {
         CONF_HOST: "192.168.1.102",
-        CONF_USERNAME: None,
-        CONF_PASSWORD: None,
-    }
-
-
-@pytest.mark.usefixtures("mock_setup_entry")
-async def test_reconfigure_flow_matching_serial(
-    hass: HomeAssistant, mock_charger: MagicMock
-) -> None:
-    """Test reconfiguration flow succeeds when device serial matches."""
-    config_entry = MockConfigEntry(
-        title="openevse_mock_config",
-        domain=DOMAIN,
-        data={CONF_HOST: "192.168.1.100"},
-        entry_id="FAKE",
-        unique_id="deadbeeffeed",
-    )
-    config_entry.add_to_hass(hass)
-
-    result = await hass.config_entries.flow.async_init(
-        DOMAIN,
-        context={"source": SOURCE_RECONFIGURE, "entry_id": config_entry.entry_id},
-    )
-
-    assert result["type"] is FlowResultType.FORM
-    assert result["step_id"] == "reconfigure"
-
-    result = await hass.config_entries.flow.async_configure(
-        result["flow_id"], {CONF_HOST: "192.168.1.101"}
-    )
-
-    assert result["type"] is FlowResultType.ABORT
-    assert result["reason"] == "reconfigure_successful"
-    assert config_entry.data == {
-        CONF_HOST: "192.168.1.101",
         CONF_USERNAME: None,
         CONF_PASSWORD: None,
     }
