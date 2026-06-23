@@ -90,7 +90,7 @@ class InsteonFlowHandler(ConfigFlow, domain=DOMAIN):
         self, user_input: dict[str, Any] | None = None
     ) -> ConfigFlowResult:
         """Set up the PLM modem type."""
-        errors = {}
+        errors: dict[str, str] = {}
         schema_defaults: dict[str, Any] = {}
         if self.source == SOURCE_RECONFIGURE:
             schema_defaults = dict(self._get_reconfigure_entry().data)
@@ -114,7 +114,7 @@ class InsteonFlowHandler(ConfigFlow, domain=DOMAIN):
         self, user_input: dict[str, Any] | None = None
     ) -> ConfigFlowResult:
         """Set up the PLM modem type manually."""
-        errors = {}
+        errors: dict[str, str] = {}
         schema_defaults: dict[str, Any] = {}
         if self.source == SOURCE_RECONFIGURE:
             schema_defaults = dict(self._get_reconfigure_entry().data)
@@ -144,7 +144,7 @@ class InsteonFlowHandler(ConfigFlow, domain=DOMAIN):
         self, hub_version: int, user_input: dict[str, Any] | None
     ) -> ConfigFlowResult:
         """Set up the Hub versions 1 and 2."""
-        errors = {}
+        errors: dict[str, str] = {}
         schema_defaults: dict[str, Any] = dict(self.discovered_conf)
         if self.source == SOURCE_RECONFIGURE:
             schema_defaults = dict(self._get_reconfigure_entry().data)

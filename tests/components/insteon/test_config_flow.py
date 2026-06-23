@@ -345,7 +345,7 @@ async def test_discovery_via_usb_already_setup(hass: HomeAssistant) -> None:
         ),
     ],
 )
-async def test_reconfigure(
+async def test_reconfigure_updates_entry(
     hass: HomeAssistant,
     entry_data: dict[str, Any],
     step_id: str,
