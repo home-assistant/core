@@ -370,7 +370,7 @@
           "name": "Media"
         }
       },
-      "name": "Play media"
+      "name": "Play specified media"
     },
     "repeat_set": {
       "description": "Sets the repeat mode of a media player.",
