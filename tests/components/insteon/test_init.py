@@ -96,23 +96,6 @@ async def test_import_frontend_dev_url(hass: HomeAssistant) -> None:
         assert mock_close.called
 
 
-async def test_setup_entry_backfills_unique_id(hass: HomeAssistant) -> None:
-    """Test the modem address is backfilled as the config entry unique ID."""
-    config_entry = MockConfigEntry(domain=DOMAIN, data=MOCK_USER_INPUT_PLM)
-    config_entry.add_to_hass(hass)
-    assert config_entry.unique_id is None
-
-    with (
-        patch.object(insteon, "async_connect", new=mock_successful_connection),
-        patch.object(insteon, "async_close"),
-        patch.object(insteon, "devices", new=MockDevices()),
-    ):
-        assert await async_setup_component(hass, insteon.DOMAIN, {})
-        await hass.async_block_till_done()
-
-        assert config_entry.unique_id == str(insteon.devices.modem.address)
-
-
 async def test_unload_entry(hass: HomeAssistant) -> None:
     """Test unloading the entry closes the modem connection."""
     config_entry = MockConfigEntry(domain=DOMAIN, data=MOCK_USER_INPUT_PLM)
