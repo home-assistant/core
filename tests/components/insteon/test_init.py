@@ -6,6 +6,7 @@ import pytest
 
 from homeassistant.components import insteon
 from homeassistant.components.insteon.const import CONF_DEV_PATH, DOMAIN
+from homeassistant.config_entries import ConfigEntryState
 from homeassistant.const import EVENT_HOMEASSISTANT_STOP
 from homeassistant.core import HomeAssistant
 from homeassistant.setup import async_setup_component
@@ -92,4 +93,25 @@ async def test_import_frontend_dev_url(hass: HomeAssistant) -> None:
         hass.bus.async_fire(EVENT_HOMEASSISTANT_STOP)
         await hass.async_block_till_done()
         assert insteon.devices.async_save.call_count == 1
+        assert mock_close.called
+
+
+async def test_unload_entry(hass: HomeAssistant) -> None:
+    """Test unloading the entry closes the modem connection."""
+    config_entry = MockConfigEntry(domain=DOMAIN, data=MOCK_USER_INPUT_PLM)
+    config_entry.add_to_hass(hass)
+
+    with (
+        patch.object(insteon, "async_connect", new=mock_successful_connection),
+        patch.object(insteon, "async_close") as mock_close,
+        patch.object(insteon, "devices", new=MockDevices()),
+    ):
+        assert await async_setup_component(hass, insteon.DOMAIN, {})
+        await hass.async_block_till_done()
+        assert config_entry.state is ConfigEntryState.LOADED
+
+        assert await hass.config_entries.async_unload(config_entry.entry_id)
+        await hass.async_block_till_done()
+
+        assert config_entry.state is ConfigEntryState.NOT_LOADED
         assert mock_close.called
