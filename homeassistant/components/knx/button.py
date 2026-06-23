@@ -1,6 +1,5 @@
 """Support for KNX button entities."""
 
-import logging
 from typing import Any, override
 
 from xknx.devices import ExposeSensor as XknxExposeSensor, RawValue as XknxRawValue
@@ -20,8 +19,6 @@ from .entity import KnxUiEntity, KnxUiEntityPlatformController, KnxYamlEntity
 from .knx_module import KNXModule
 from .storage.const import CONF_DATA, CONF_ENTITY, CONF_GA_SEND
 from .storage.util import ConfigExtractor
-
-logger = logging.getLogger(__name__)
 
 
 async def async_setup_entry(
