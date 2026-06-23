@@ -14,7 +14,6 @@ from aiokarakeep import (
 
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
-from homeassistant.exceptions import ConfigEntryAuthFailed
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
 
 from .const import DOMAIN, UPDATE_INTERVAL
@@ -60,7 +59,7 @@ class KarakeepDataUpdateCoordinator(DataUpdateCoordinator[KarakeepStats]):
         try:
             return await self.client.async_get_stats()
         except KarakeepAuthError as err:
-            raise ConfigEntryAuthFailed("Invalid Karakeep API token") from err
+            raise UpdateFailed("Invalid Karakeep API token") from err
         except KarakeepConnectionError as err:
             raise UpdateFailed(f"Error communicating with Karakeep: {err}") from err
         except (KarakeepApiError, KarakeepInvalidResponseError) as err:
