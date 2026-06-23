@@ -252,3 +252,31 @@ async def test_unload_entry(
     await hass.async_block_till_done()
 
     assert mock_config_entry.state is ConfigEntryState.NOT_LOADED
+
+
+async def test_unload_entry_clears_missing_address_issue(
+    hass: HomeAssistant,
+    issue_registry: ir.IssueRegistry,
+    mock_cloud_account: AsyncMock,
+) -> None:
+    """Test unloading clears the missing-address repair issue.
+
+    Without the cleanup, removing the integration would leave a stale issue for
+    a device that never had a resolved LAN address.
+    """
+    entry = MockConfigEntry(
+        domain=DOMAIN,
+        data={CONF_USERNAME: MOCK_USERNAME, CONF_PASSWORD: MOCK_PASSWORD},
+        unique_id="user-12345",
+    )
+    entry.add_to_hass(hass)
+
+    await hass.config_entries.async_setup(entry.entry_id)
+    await hass.async_block_till_done()
+    issue_id = f"missing_address_{entry.entry_id}"
+    assert issue_registry.async_get_issue(DOMAIN, issue_id)
+
+    assert await hass.config_entries.async_unload(entry.entry_id)
+    await hass.async_block_till_done()
+
+    assert not issue_registry.async_get_issue(DOMAIN, issue_id)
