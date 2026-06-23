@@ -1,6 +1,7 @@
 """Config flow for Slack integration."""
 
 import logging
+from typing import override
 
 from slack_sdk.errors import SlackApiError
 from slack_sdk.web.async_client import AsyncSlackResponse, AsyncWebClient
@@ -27,6 +28,7 @@ CONFIG_SCHEMA = vol.Schema(
 class SlackFlowHandler(ConfigFlow, domain=DOMAIN):
     """Handle a config flow for Slack."""
 
+    @override
     async def async_step_user(
         self, user_input: dict[str, str] | None = None
     ) -> ConfigFlowResult:

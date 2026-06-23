@@ -2,6 +2,7 @@
 
 from collections.abc import Callable
 from datetime import timedelta
+from typing import override
 
 from wmspro.const import WMS_WebControl_pro_API_actionDescription as ACTION_DESC
 
@@ -46,6 +47,7 @@ class WebControlProSlatRange(WebControlProGenericEntity, NumberEntity):
     _value_func: Callable
     _value_name: str
 
+    @override
     async def async_update(self) -> None:
         """Update the entity and learn current rotation."""
         await super().async_update()
@@ -59,6 +61,7 @@ class WebControlProSlatRange(WebControlProGenericEntity, NumberEntity):
             )
 
     @property
+    @override
     def native_min_value(self) -> float:
         """Return the minimum value."""
         action = self._dest.action(ACTION_DESC.SlatRotate)
@@ -66,6 +69,7 @@ class WebControlProSlatRange(WebControlProGenericEntity, NumberEntity):
         return self._value_func(action.wms__minValue, 0)
 
     @property
+    @override
     def native_max_value(self) -> float:
         """Return the maximum value."""
         action = self._dest.action(ACTION_DESC.SlatRotate)
@@ -73,6 +77,7 @@ class WebControlProSlatRange(WebControlProGenericEntity, NumberEntity):
         return self._value_func(0, action.wms__maxValue)
 
     @property
+    @override
     def native_value(self) -> float:
         """Return the current min/max value."""
         action = self._dest.action(ACTION_DESC.SlatRotate)
@@ -83,6 +88,7 @@ class WebControlProSlatRange(WebControlProGenericEntity, NumberEntity):
             value = self._value_func(-75, 75)
         return value
 
+    @override
     async def async_set_native_value(self, value: float) -> None:
         """Update the current min/max value."""
         action = self._dest.action(ACTION_DESC.SlatRotate)
@@ -115,18 +121,21 @@ class WebControlProSlatRotation(WebControlProGenericEntity, NumberEntity):
     _attr_translation_key = "rotation"
 
     @property
+    @override
     def native_min_value(self) -> float:
         """Return the minimum value."""
         action = self._dest.action(ACTION_DESC.SlatRotate)
         return action.minValue
 
     @property
+    @override
     def native_max_value(self) -> float:
         """Return the maximum value."""
         action = self._dest.action(ACTION_DESC.SlatRotate)
         return action.maxValue
 
     @property
+    @override
     def native_value(self) -> float | None:
         """Return the current value."""
         action = self._dest.action(ACTION_DESC.SlatRotate)
@@ -135,6 +144,7 @@ class WebControlProSlatRotation(WebControlProGenericEntity, NumberEntity):
             return None
         return rotation
 
+    @override
     async def async_set_native_value(self, value: float) -> None:
         """Update the current value."""
         action = self._dest.action(ACTION_DESC.SlatRotate)
@@ -148,12 +158,14 @@ class WebControlProSlatRotationRaw(WebControlProSlatRotation):
     _attr_translation_key = "rotation-raw"
 
     @property
+    @override
     def native_min_value(self) -> float:
         """Return the minimum value."""
         action = self._dest.action(ACTION_DESC.SlatRotate)
         return action.wms__minValue
 
     @property
+    @override
     def native_max_value(self) -> float:
         """Return the maximum value."""
         action = self._dest.action(ACTION_DESC.SlatRotate)

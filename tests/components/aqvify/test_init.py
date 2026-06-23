@@ -24,7 +24,9 @@ from tests.common import (
 )
 
 WATER_LEVEL_SENSOR = "sensor.device_1_water_level"
+IN_FLOW_SENSOR = "sensor.device_1_inflow"
 EXPECTED_WATER_LEVEL = "-0.136786005"
+EXPECTED_IN_FLOW = "24.4735918930962"
 
 
 async def test_load_unload_entry(
@@ -126,7 +128,7 @@ async def test_autoremove_stale_devices(
         await async_load_json_array_fixture(hass, "removed_devices.json", DOMAIN)
     )
 
-    freezer.tick(timedelta(minutes=5))
+    freezer.tick(timedelta(minutes=10))
     async_fire_time_changed(hass)
     await hass.async_block_till_done()
 
@@ -151,7 +153,7 @@ async def test_devices_multiple_created_count(
         await async_load_json_array_fixture(hass, "added_devices.json", DOMAIN)
     )
 
-    freezer.tick(timedelta(seconds=240))
+    freezer.tick(timedelta(minutes=6))
     async_fire_time_changed(hass)
     await hass.async_block_till_done()
 
@@ -254,3 +256,47 @@ async def test_coordinator_get_device_data_error(
     await hass.async_block_till_done()
 
     assert hass.states.get(WATER_LEVEL_SENSOR).state == expected_state
+
+
+@pytest.mark.parametrize(
+    ("exception", "log_message", "expected_state"),
+    [
+        (TimeoutError, "Timeout occurred while communicating", EXPECTED_IN_FLOW),
+        (
+            ClientResponseError(Mock(), Mock(), status=500),
+            "An error occurred while communicating",
+            EXPECTED_IN_FLOW,
+        ),
+        (AqvifyAuthException, "Invalid API key.", "unavailable"),
+    ],
+    ids=["timeout_error", "communications_error", "auth_error"],
+)
+async def test_coordinator_async_get_hour_aggregation(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    mock_aqvify_client: MagicMock,
+    freezer: FrozenDateTimeFactory,
+    caplog: pytest.LogCaptureFixture,
+    exception: Exception,
+    log_message: str,
+    expected_state: str,
+) -> None:
+    """Tests that the coordinator handles errors from async_get_hour_aggregation."""
+
+    await setup_integration(hass, mock_config_entry)
+
+    mock_aqvify_client.async_get_hour_aggregation.side_effect = exception
+
+    caplog.clear()
+    freezer.tick(delta=timedelta(hours=1))
+    async_fire_time_changed(hass)
+    await hass.async_block_till_done()
+
+    assert hass.states.get(IN_FLOW_SENSOR).state == STATE_UNAVAILABLE
+    assert log_message in caplog.text
+    mock_aqvify_client.async_get_hour_aggregation.side_effect = None
+    freezer.tick(delta=timedelta(hours=1))
+    async_fire_time_changed(hass)
+    await hass.async_block_till_done()
+
+    assert hass.states.get(IN_FLOW_SENSOR).state == expected_state

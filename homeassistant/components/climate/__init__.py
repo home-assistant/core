@@ -3,7 +3,7 @@
 from datetime import timedelta
 import functools as ft
 import logging
-from typing import Any, Literal, final
+from typing import Any, Literal, final, override
 
 from propcache.api import cached_property
 import voluptuous as vol
@@ -285,6 +285,7 @@ class ClimateEntity(Entity, cached_properties=CACHED_PROPERTIES_WITH_ATTR_):
 
     @final
     @property
+    @override
     def state(self) -> str | None:
         """Return the current state."""
         hvac_mode = self.hvac_mode
@@ -305,6 +306,7 @@ class ClimateEntity(Entity, cached_properties=CACHED_PROPERTIES_WITH_ATTR_):
         return PRECISION_WHOLE
 
     @property
+    @override
     def capability_attributes(self) -> dict[str, Any] | None:
         """Return the capability attributes."""
         supported_features = self.supported_features
@@ -344,6 +346,7 @@ class ClimateEntity(Entity, cached_properties=CACHED_PROPERTIES_WITH_ATTR_):
 
     @final
     @property
+    @override
     def state_attributes(self) -> dict[str, Any]:
         """Return the optional state attributes."""
         supported_features = self.supported_features
@@ -701,6 +704,7 @@ class ClimateEntity(Entity, cached_properties=CACHED_PROPERTIES_WITH_ATTR_):
             await self.async_turn_off()
 
     @cached_property
+    @override
     def supported_features(self) -> ClimateEntityFeature:
         """Return the list of supported features."""
         return self._attr_supported_features
