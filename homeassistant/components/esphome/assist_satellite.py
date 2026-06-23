@@ -830,6 +830,9 @@ class EsphomeAssistSatellite(
 
                 if found_data_chunk:
                     while len(bytes_buffer) >= bytes_per_chunk_payload:
+                        if not self._is_running:
+                            break  # type: ignore[unreachable]
+
                         payload = bytes(bytes_buffer[:bytes_per_chunk_payload])
                         del bytes_buffer[:bytes_per_chunk_payload]
 
