@@ -130,7 +130,7 @@ async def get_prices(call: ServiceCall) -> ServiceResponse:
     """Return raw 15-minute-slot electricity prices for the next N hours.
 
     Prices are in EUR/kWh. Slots for which the API has no data yet (e.g.
-    when the requested window extends beyond tomorrow) are silently omitted
+    tomorrow's prices have not been published yet) are silently omitted
     from the result.
     """
     entry = async_get_config_entry(call.hass, DOMAIN, call.data[ATTR_CONFIG_ENTRY_ID])
