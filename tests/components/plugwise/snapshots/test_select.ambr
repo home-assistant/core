@@ -6,7 +6,7 @@
     ]),
     'area_id': None,
     'capabilities': dict({
-      'options': list([
+      <SelectEntityCapabilityAttribute.OPTIONS: 'options'>: list([
         'away',
         'full',
         'vacation',
@@ -46,7 +46,7 @@
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'friendly_name': 'Adam Gateway mode',
-      'options': list([
+      <SelectEntityCapabilityAttribute.OPTIONS: 'options'>: list([
         'away',
         'full',
         'vacation',
@@ -67,7 +67,7 @@
     ]),
     'area_id': None,
     'capabilities': dict({
-      'options': list([
+      <SelectEntityCapabilityAttribute.OPTIONS: 'options'>: list([
         'bleeding_cold',
         'heating',
         'off',
@@ -109,7 +109,7 @@
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'friendly_name': 'Adam Regulation mode',
-      'options': list([
+      <SelectEntityCapabilityAttribute.OPTIONS: 'options'>: list([
         'bleeding_cold',
         'heating',
         'off',
@@ -132,7 +132,7 @@
     ]),
     'area_id': None,
     'capabilities': dict({
-      'options': list([
+      <SelectEntityCapabilityAttribute.OPTIONS: 'options'>: list([
         'Badkamer',
         'Vakantie',
         'Weekschema',
@@ -174,7 +174,7 @@
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'friendly_name': 'Bathroom Thermostat schedule',
-      'options': list([
+      <SelectEntityCapabilityAttribute.OPTIONS: 'options'>: list([
         'Badkamer',
         'Vakantie',
         'Weekschema',
@@ -197,7 +197,7 @@
     ]),
     'area_id': None,
     'capabilities': dict({
-      'options': list([
+      <SelectEntityCapabilityAttribute.OPTIONS: 'options'>: list([
         'active',
         'off',
         'passive',
@@ -237,7 +237,7 @@
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'friendly_name': 'Bathroom Zone profile',
-      'options': list([
+      <SelectEntityCapabilityAttribute.OPTIONS: 'options'>: list([
         'active',
         'off',
         'passive',
@@ -258,7 +258,7 @@
     ]),
     'area_id': None,
     'capabilities': dict({
-      'options': list([
+      <SelectEntityCapabilityAttribute.OPTIONS: 'options'>: list([
         'Badkamer',
         'Vakantie',
         'Weekschema',
@@ -300,7 +300,7 @@
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'friendly_name': 'Living room Thermostat schedule',
-      'options': list([
+      <SelectEntityCapabilityAttribute.OPTIONS: 'options'>: list([
         'Badkamer',
         'Vakantie',
         'Weekschema',
@@ -323,7 +323,7 @@
     ]),
     'area_id': None,
     'capabilities': dict({
-      'options': list([
+      <SelectEntityCapabilityAttribute.OPTIONS: 'options'>: list([
         'active',
         'off',
         'passive',
@@ -363,7 +363,7 @@
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'friendly_name': 'Living room Zone profile',
-      'options': list([
+      <SelectEntityCapabilityAttribute.OPTIONS: 'options'>: list([
         'active',
         'off',
         'passive',
@@ -384,7 +384,7 @@
     ]),
     'area_id': None,
     'capabilities': dict({
-      'options': list([
+      <SelectEntityCapabilityAttribute.OPTIONS: 'options'>: list([
         'CV Roan',
         'Bios Schema met Film Avond',
         'GF7  Woonkamer',
@@ -427,7 +427,7 @@
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'friendly_name': 'Badkamer Thermostat schedule',
-      'options': list([
+      <SelectEntityCapabilityAttribute.OPTIONS: 'options'>: list([
         'CV Roan',
         'Bios Schema met Film Avond',
         'GF7  Woonkamer',
@@ -451,7 +451,7 @@
     ]),
     'area_id': None,
     'capabilities': dict({
-      'options': list([
+      <SelectEntityCapabilityAttribute.OPTIONS: 'options'>: list([
         'CV Roan',
         'Bios Schema met Film Avond',
         'GF7  Woonkamer',
@@ -494,7 +494,7 @@
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'friendly_name': 'Bios Thermostat schedule',
-      'options': list([
+      <SelectEntityCapabilityAttribute.OPTIONS: 'options'>: list([
         'CV Roan',
         'Bios Schema met Film Avond',
         'GF7  Woonkamer',
@@ -518,7 +518,7 @@
     ]),
     'area_id': None,
     'capabilities': dict({
-      'options': list([
+      <SelectEntityCapabilityAttribute.OPTIONS: 'options'>: list([
         'CV Roan',
         'Bios Schema met Film Avond',
         'GF7  Woonkamer',
@@ -561,7 +561,7 @@
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'friendly_name': 'Jessie Thermostat schedule',
-      'options': list([
+      <SelectEntityCapabilityAttribute.OPTIONS: 'options'>: list([
         'CV Roan',
         'Bios Schema met Film Avond',
         'GF7  Woonkamer',
@@ -585,7 +585,7 @@
     ]),
     'area_id': None,
     'capabilities': dict({
-      'options': list([
+      <SelectEntityCapabilityAttribute.OPTIONS: 'options'>: list([
         'CV Roan',
         'Bios Schema met Film Avond',
         'GF7  Woonkamer',
@@ -628,7 +628,7 @@
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'friendly_name': 'Woonkamer Thermostat schedule',
-      'options': list([
+      <SelectEntityCapabilityAttribute.OPTIONS: 'options'>: list([
         'CV Roan',
         'Bios Schema met Film Avond',
         'GF7  Woonkamer',
