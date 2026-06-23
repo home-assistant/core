@@ -185,10 +185,9 @@ EXCEPTIONS = {
     "crownstone-core",  # https://github.com/crownstone/crownstone-lib-python-core/pull/6
     "crownstone-sse",  # https://github.com/crownstone/crownstone-lib-python-sse/pull/2
     "crownstone-uart",  # https://github.com/crownstone/crownstone-lib-python-uart/pull/12
-    "eliqonline",  # https://github.com/molobrakos/eliqonline/pull/17
     "imutils",  # https://github.com/PyImageSearch/imutils/pull/292
     "iso4217",  # Public domain
-    "kiwiki_client",  # https://github.com/c7h/kiwiki_client/pull/6
+    "kiwiki-client",  # https://github.com/c7h/kiwiki_client/pull/6
     "ld2410-ble",  # https://github.com/930913/ld2410-ble/pull/7
     "maxcube-api",  # https://github.com/uebelack/python-maxcube-api/pull/48
     "neurio",  # https://github.com/jordanh/neurio-python/pull/13

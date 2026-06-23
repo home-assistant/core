@@ -30,7 +30,7 @@ pytest-github-actions-annotate-failures==0.4.0
 pytest-socket==0.8.0
 pytest-sugar==1.1.1
 pytest-timeout==2.4.0
-pytest-unordered==0.7.0
+pytest-unordered==0.8.0
 pytest-picked==0.5.1
 pytest-xdist==3.8.0
 pytest==9.0.3

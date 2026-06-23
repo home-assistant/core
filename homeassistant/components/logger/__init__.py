@@ -2,6 +2,7 @@
 
 import logging
 import re
+from typing import override
 
 import voluptuous as vol
 
@@ -124,6 +125,7 @@ def _get_logger_class(hass_overrides: dict[str, int]) -> type[logging.Logger]:
     class HassLogger(logging.Logger):
         """Home Assistant aware logger class."""
 
+        @override
         def setLevel(self, level: int | str) -> None:
             """Set the log level unless overridden."""
             if self.name in hass_overrides:

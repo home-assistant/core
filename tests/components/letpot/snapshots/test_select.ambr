@@ -6,7 +6,7 @@
     ]),
     'area_id': None,
     'capabilities': dict({
-      'options': list([
+      <SelectEntityCapabilityAttribute.OPTIONS: 'options'>: list([
         'low',
         'high',
       ]),
@@ -45,7 +45,7 @@
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'friendly_name': 'Garden Light brightness',
-      'options': list([
+      <SelectEntityCapabilityAttribute.OPTIONS: 'options'>: list([
         'low',
         'high',
       ]),
@@ -65,7 +65,7 @@
     ]),
     'area_id': None,
     'capabilities': dict({
-      'options': list([
+      <SelectEntityCapabilityAttribute.OPTIONS: 'options'>: list([
         'flower',
         'vegetable',
       ]),
@@ -104,7 +104,7 @@
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'friendly_name': 'Garden Light mode',
-      'options': list([
+      <SelectEntityCapabilityAttribute.OPTIONS: 'options'>: list([
         'flower',
         'vegetable',
       ]),
@@ -124,7 +124,7 @@
     ]),
     'area_id': None,
     'capabilities': dict({
-      'options': list([
+      <SelectEntityCapabilityAttribute.OPTIONS: 'options'>: list([
         'flower',
         'vegetable',
       ]),
@@ -163,7 +163,7 @@
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'friendly_name': 'Garden Light mode',
-      'options': list([
+      <SelectEntityCapabilityAttribute.OPTIONS: 'options'>: list([
         'flower',
         'vegetable',
       ]),
@@ -183,7 +183,7 @@
     ]),
     'area_id': None,
     'capabilities': dict({
-      'options': list([
+      <SelectEntityCapabilityAttribute.OPTIONS: 'options'>: list([
         'fahrenheit',
         'celsius',
       ]),
@@ -222,7 +222,7 @@
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'friendly_name': 'Garden Temperature unit on display',
-      'options': list([
+      <SelectEntityCapabilityAttribute.OPTIONS: 'options'>: list([
         'fahrenheit',
         'celsius',
       ]),

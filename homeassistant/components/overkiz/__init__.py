@@ -10,7 +10,7 @@ from pyoverkiz.auth.credentials import (
     RexelTokenCredentials,
     UsernamePasswordCredentials,
 )
-from pyoverkiz.client import OverkizClient
+from pyoverkiz.client import OverkizClient, OverkizClientSettings
 from pyoverkiz.const import REXEL_OAUTH_CLIENT_ID
 from pyoverkiz.enums import APIType, OverkizState, Server, UIClass, UIWidget
 from pyoverkiz.exceptions import (
@@ -18,6 +18,7 @@ from pyoverkiz.exceptions import (
     MaintenanceError,
     NoSuchTokenError,
     NotAuthenticatedError,
+    ServiceUnavailableError,
     TooManyRequestsError,
 )
 from pyoverkiz.models import Device, PersistedActionGroup
@@ -147,6 +148,8 @@ async def async_setup_entry(hass: HomeAssistant, entry: OverkizDataConfigEntry) 
         raise ConfigEntryNotReady("Failed to connect") from exception
     except MaintenanceError as exception:
         raise ConfigEntryNotReady("Server is down for maintenance") from exception
+    except ServiceUnavailableError as exception:
+        raise ConfigEntryNotReady("Server is unavailable") from exception
 
     coordinator = OverkizDataUpdateCoordinator(
         hass,
@@ -314,6 +317,7 @@ def create_local_client(
         credentials=LocalTokenCredentials(token),
         session=session,
         verify_ssl=verify_ssl,
+        settings=OverkizClientSettings(default_rts_command_duration=0),
     )
 
 
@@ -329,6 +333,7 @@ def create_cloud_client(
         server=server,
         credentials=UsernamePasswordCredentials(username, password),
         session=session,
+        settings=OverkizClientSettings(default_rts_command_duration=0),
     )
 
 

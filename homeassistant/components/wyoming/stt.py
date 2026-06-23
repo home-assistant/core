@@ -2,6 +2,7 @@
 
 from collections.abc import AsyncIterable
 import logging
+from typing import override
 
 from wyoming.asr import Transcribe, Transcript
 from wyoming.audio import AudioChunk, AudioStart, AudioStop
@@ -55,35 +56,42 @@ class WyomingSttProvider(stt.SpeechToTextEntity):
         self._attr_unique_id = f"{config_entry.entry_id}-stt"
 
     @property
+    @override
     def supported_languages(self) -> list[str]:
         """Return a list of supported languages."""
         return self._supported_languages
 
     @property
+    @override
     def supported_formats(self) -> list[stt.AudioFormats]:
         """Return a list of supported formats."""
         return [stt.AudioFormats.WAV]
 
     @property
+    @override
     def supported_codecs(self) -> list[stt.AudioCodecs]:
         """Return a list of supported codecs."""
         return [stt.AudioCodecs.PCM]
 
     @property
+    @override
     def supported_bit_rates(self) -> list[stt.AudioBitRates]:
         """Return a list of supported bitrates."""
         return [stt.AudioBitRates.BITRATE_16]
 
     @property
+    @override
     def supported_sample_rates(self) -> list[stt.AudioSampleRates]:
         """Return a list of supported samplerates."""
         return [stt.AudioSampleRates.SAMPLERATE_16000]
 
     @property
+    @override
     def supported_channels(self) -> list[stt.AudioChannels]:
         """Return a list of supported channels."""
         return [stt.AudioChannels.CHANNEL_MONO]
 
+    @override
     async def async_process_audio_stream(
         self, metadata: stt.SpeechMetadata, stream: AsyncIterable[bytes]
     ) -> stt.SpeechResult:

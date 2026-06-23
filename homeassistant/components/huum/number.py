@@ -1,6 +1,7 @@
 """Control for steamer."""
 
 import logging
+from typing import override
 
 from huum.const import SaunaStatus
 
@@ -47,10 +48,12 @@ class HuumSteamer(HuumBaseEntity, NumberEntity):
         self._attr_unique_id = coordinator.config_entry.entry_id
 
     @property
+    @override
     def native_value(self) -> float | None:
         """Return the current value."""
         return self.coordinator.data.humidity
 
+    @override
     async def async_set_native_value(self, value: float) -> None:
         """Update the current value."""
         target_temperature = self.coordinator.data.target_temperature
