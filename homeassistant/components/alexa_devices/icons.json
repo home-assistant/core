@@ -5,6 +5,16 @@
         "default": "mdi:chat-processing"
       }
     },
+    "select": {
+      "dropin": {
+        "default": "mdi:account-multiple-plus",
+        "state": {
+          "all": "mdi:account-multiple-plus",
+          "home": "mdi:home-plus",
+          "off": "mdi:phone-off"
+        }
+      }
+    },
     "sensor": {
       "voc_index": {
         "default": "mdi:molecule"
