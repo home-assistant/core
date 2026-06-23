@@ -191,3 +191,47 @@ async def test_stream_wav_small_fmt_chunk() -> None:
             expected_sample_rate=16000,
         ):
             pass
+
+
+async def test_stream_wav_trailing_data() -> None:
+    """Test streaming a WAV file where audio data size is not a multiple of chunk size."""
+    audio_data = b"\x01\x02\x03\x04" * 150  # 600 bytes
+    wav_bytes = _create_wav(data=audio_data)
+
+    chunks = []
+    async for chunk, is_last in stream_wav(
+        _async_generator(wav_bytes, chunk_size=100),
+        expected_format="pcm",
+        expected_channels=1,
+        expected_width=2,
+        expected_sample_rate=16000,
+        samples_per_chunk=256,  # 512 bytes per chunk
+    ):
+        chunks.append((chunk, is_last))
+
+    # First chunk: 512 bytes, not last
+    # Second chunk: 88 bytes, last
+    assert len(chunks) == 2
+    assert chunks[0] == (audio_data[:512], False)
+    assert chunks[1] == (audio_data[512:], True)
+
+
+async def test_stream_wav_small_chunks() -> None:
+    """Test streaming a WAV file in very small chunks to test partial header parsing."""
+    audio_data = b"\x01\x02\x03\x04" * 256  # 1024 bytes
+    wav_bytes = _create_wav(data=audio_data)
+
+    chunks = []
+    async for chunk, is_last in stream_wav(
+        _async_generator(wav_bytes, chunk_size=5),
+        expected_format="pcm",
+        expected_channels=1,
+        expected_width=2,
+        expected_sample_rate=16000,
+        samples_per_chunk=256,
+    ):
+        chunks.append((chunk, is_last))
+
+    assert len(chunks) == 2
+    assert chunks[0] == (audio_data[:512], False)
+    assert chunks[1] == (audio_data[512:], True)

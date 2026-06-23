@@ -24,7 +24,7 @@ class WAVHeaderParser:
 
     def parse(self, bytes_buffer: bytearray) -> bool:
         """Parse headers from the buffer. Returns True if headers are fully parsed."""
-        while not self.found_data:
+        while True:
             if not self.riff_checked:
                 if len(bytes_buffer) < 12:
                     return False
@@ -88,8 +88,6 @@ class WAVHeaderParser:
                 if len(bytes_buffer) < 8 + padded_size:
                     return False
                 del bytes_buffer[: 8 + padded_size]
-
-        return True
 
 
 async def stream_wav(
