@@ -36,7 +36,6 @@ from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from homeassistant.helpers.typing import StateType
 from homeassistant.util import slugify
 
-from .const import DOMAIN
 from .entity import SHCEntity, async_migrate_to_new_unique_id, device_excluded
 
 LOGGER = logging.getLogger(__name__)
