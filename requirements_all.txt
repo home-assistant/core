@@ -3466,6 +3466,9 @@ zeroconf==0.150.0
 zeversolar==0.3.2
 
 # homeassistant.components.zha
+zha-quirks==1.2.0
+
+# homeassistant.components.zha
 zha==1.4.1
 
 # homeassistant.components.zhong_hong
