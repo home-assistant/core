@@ -505,6 +505,7 @@ async def test_devices(
     """Test devices are registered."""
     with selected_platforms(
         [
+            Platform.BINARY_SENSOR,
             Platform.CAMERA,
             Platform.CLIMATE,
             Platform.COVER,

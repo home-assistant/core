@@ -362,59 +362,6 @@
     'state': 'unknown',
   })
 # ---
-# name: test_entity[sensor.baby_bedroom_reachability-entry]
-  EntityRegistryEntrySnapshot({
-    'aliases': list([
-      None,
-    ]),
-    'area_id': None,
-    'capabilities': None,
-    'config_entry_id': <ANY>,
-    'config_subentry_id': <ANY>,
-    'device_class': None,
-    'device_id': <ANY>,
-    'disabled_by': None,
-    'domain': 'sensor',
-    'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
-    'entity_id': 'sensor.baby_bedroom_reachability',
-    'has_entity_name': True,
-    'hidden_by': None,
-    'icon': None,
-    'id': <ANY>,
-    'labels': set({
-    }),
-    'name': None,
-    'object_id_base': 'Reachability',
-    'options': dict({
-    }),
-    'original_device_class': None,
-    'original_icon': None,
-    'original_name': 'Reachability',
-    'platform': 'netatmo',
-    'previous_unique_id': None,
-    'suggested_object_id': None,
-    'supported_features': 0,
-    'translation_key': 'reachable',
-    'unique_id': '12:34:56:26:68:92-reachable',
-    'unit_of_measurement': None,
-  })
-# ---
-# name: test_entity[sensor.baby_bedroom_reachability-state]
-  StateSnapshot({
-    'attributes': ReadOnlyDict({
-      'attribution': 'Data provided by Netatmo',
-      'friendly_name': 'Baby Bedroom Reachability',
-      'latitude': 13.377726,
-      'longitude': 52.516263,
-    }),
-    'context': <ANY>,
-    'entity_id': 'sensor.baby_bedroom_reachability',
-    'last_changed': <ANY>,
-    'last_reported': <ANY>,
-    'last_updated': <ANY>,
-    'state': 'True',
-  })
-# ---
 # name: test_entity[sensor.baby_bedroom_temperature-entry]
   EntityRegistryEntrySnapshot({
     'aliases': list([
@@ -933,59 +880,6 @@
     'state': 'unavailable',
   })
 # ---
-# name: test_entity[sensor.bedroom_reachability-entry]
-  EntityRegistryEntrySnapshot({
-    'aliases': list([
-      None,
-    ]),
-    'area_id': None,
-    'capabilities': None,
-    'config_entry_id': <ANY>,
-    'config_subentry_id': <ANY>,
-    'device_class': None,
-    'device_id': <ANY>,
-    'disabled_by': None,
-    'domain': 'sensor',
-    'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
-    'entity_id': 'sensor.bedroom_reachability',
-    'has_entity_name': True,
-    'hidden_by': None,
-    'icon': None,
-    'id': <ANY>,
-    'labels': set({
-    }),
-    'name': None,
-    'object_id_base': 'Reachability',
-    'options': dict({
-    }),
-    'original_device_class': None,
-    'original_icon': None,
-    'original_name': 'Reachability',
-    'platform': 'netatmo',
-    'previous_unique_id': None,
-    'suggested_object_id': None,
-    'supported_features': 0,
-    'translation_key': 'reachable',
-    'unique_id': '12:34:56:26:69:0c-reachable',
-    'unit_of_measurement': None,
-  })
-# ---
-# name: test_entity[sensor.bedroom_reachability-state]
-  StateSnapshot({
-    'attributes': ReadOnlyDict({
-      'attribution': 'Data provided by Netatmo',
-      'friendly_name': 'Bedroom Reachability',
-      'latitude': 13.377726,
-      'longitude': 52.516263,
-    }),
-    'context': <ANY>,
-    'entity_id': 'sensor.bedroom_reachability',
-    'last_changed': <ANY>,
-    'last_reported': <ANY>,
-    'last_updated': <ANY>,
-    'state': 'False',
-  })
-# ---
 # name: test_entity[sensor.bedroom_temperature-entry]
   EntityRegistryEntrySnapshot({
     'aliases': list([
@@ -1146,7 +1040,7 @@
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
-    'state': 'High',
+    'state': 'unknown',
   })
 # ---
 # name: test_entity[sensor.bureau_modulate_battery-entry]
@@ -1203,108 +1097,6 @@
     'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': '90',
-  })
-# ---
-# name: test_entity[sensor.cold_water-entry]
-  EntityRegistryEntrySnapshot({
-    'aliases': list([
-      None,
-    ]),
-    'area_id': None,
-    'capabilities': None,
-    'config_entry_id': <ANY>,
-    'config_subentry_id': <ANY>,
-    'device_class': None,
-    'device_id': <ANY>,
-    'disabled_by': None,
-    'domain': 'sensor',
-    'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
-    'entity_id': 'sensor.cold_water',
-    'has_entity_name': True,
-    'hidden_by': None,
-    'icon': None,
-    'id': <ANY>,
-    'labels': set({
-    }),
-    'name': None,
-    'object_id_base': None,
-    'options': dict({
-    }),
-    'original_device_class': None,
-    'original_icon': None,
-    'original_name': None,
-    'platform': 'netatmo',
-    'previous_unique_id': None,
-    'suggested_object_id': None,
-    'supported_features': 0,
-    'translation_key': None,
-    'unique_id': '12:34:56:00:16:0e#8-12:34:56:00:16:0e#8-reachable',
-    'unit_of_measurement': None,
-  })
-# ---
-# name: test_entity[sensor.cold_water-state]
-  StateSnapshot({
-    'attributes': ReadOnlyDict({
-      'attribution': 'Data provided by Netatmo',
-      'friendly_name': 'Cold water',
-    }),
-    'context': <ANY>,
-    'entity_id': 'sensor.cold_water',
-    'last_changed': <ANY>,
-    'last_reported': <ANY>,
-    'last_updated': <ANY>,
-    'state': 'True',
-  })
-# ---
-# name: test_entity[sensor.consumption_meter-entry]
-  EntityRegistryEntrySnapshot({
-    'aliases': list([
-      None,
-    ]),
-    'area_id': None,
-    'capabilities': None,
-    'config_entry_id': <ANY>,
-    'config_subentry_id': <ANY>,
-    'device_class': None,
-    'device_id': <ANY>,
-    'disabled_by': None,
-    'domain': 'sensor',
-    'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
-    'entity_id': 'sensor.consumption_meter',
-    'has_entity_name': True,
-    'hidden_by': None,
-    'icon': None,
-    'id': <ANY>,
-    'labels': set({
-    }),
-    'name': None,
-    'object_id_base': None,
-    'options': dict({
-    }),
-    'original_device_class': None,
-    'original_icon': None,
-    'original_name': None,
-    'platform': 'netatmo',
-    'previous_unique_id': None,
-    'suggested_object_id': None,
-    'supported_features': 0,
-    'translation_key': None,
-    'unique_id': '12:34:56:00:00:a1:4c:da-12:34:56:00:00:a1:4c:da-reachable',
-    'unit_of_measurement': None,
-  })
-# ---
-# name: test_entity[sensor.consumption_meter-state]
-  StateSnapshot({
-    'attributes': ReadOnlyDict({
-      'attribution': 'Data provided by Netatmo',
-      'friendly_name': 'Consumption meter',
-    }),
-    'context': <ANY>,
-    'entity_id': 'sensor.consumption_meter',
-    'last_changed': <ANY>,
-    'last_reported': <ANY>,
-    'last_updated': <ANY>,
-    'state': 'True',
   })
 # ---
 # name: test_entity[sensor.consumption_meter_power-entry]
@@ -1420,108 +1212,6 @@
     'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': '67',
-  })
-# ---
-# name: test_entity[sensor.ecocompteur-entry]
-  EntityRegistryEntrySnapshot({
-    'aliases': list([
-      None,
-    ]),
-    'area_id': None,
-    'capabilities': None,
-    'config_entry_id': <ANY>,
-    'config_subentry_id': <ANY>,
-    'device_class': None,
-    'device_id': <ANY>,
-    'disabled_by': None,
-    'domain': 'sensor',
-    'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
-    'entity_id': 'sensor.ecocompteur',
-    'has_entity_name': True,
-    'hidden_by': None,
-    'icon': None,
-    'id': <ANY>,
-    'labels': set({
-    }),
-    'name': None,
-    'object_id_base': None,
-    'options': dict({
-    }),
-    'original_device_class': None,
-    'original_icon': None,
-    'original_name': None,
-    'platform': 'netatmo',
-    'previous_unique_id': None,
-    'suggested_object_id': None,
-    'supported_features': 0,
-    'translation_key': None,
-    'unique_id': '12:34:56:00:16:0e-12:34:56:00:16:0e-reachable',
-    'unit_of_measurement': None,
-  })
-# ---
-# name: test_entity[sensor.ecocompteur-state]
-  StateSnapshot({
-    'attributes': ReadOnlyDict({
-      'attribution': 'Data provided by Netatmo',
-      'friendly_name': 'Écocompteur',
-    }),
-    'context': <ANY>,
-    'entity_id': 'sensor.ecocompteur',
-    'last_changed': <ANY>,
-    'last_reported': <ANY>,
-    'last_updated': <ANY>,
-    'state': 'unavailable',
-  })
-# ---
-# name: test_entity[sensor.gas-entry]
-  EntityRegistryEntrySnapshot({
-    'aliases': list([
-      None,
-    ]),
-    'area_id': None,
-    'capabilities': None,
-    'config_entry_id': <ANY>,
-    'config_subentry_id': <ANY>,
-    'device_class': None,
-    'device_id': <ANY>,
-    'disabled_by': None,
-    'domain': 'sensor',
-    'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
-    'entity_id': 'sensor.gas',
-    'has_entity_name': True,
-    'hidden_by': None,
-    'icon': None,
-    'id': <ANY>,
-    'labels': set({
-    }),
-    'name': None,
-    'object_id_base': None,
-    'options': dict({
-    }),
-    'original_device_class': None,
-    'original_icon': None,
-    'original_name': None,
-    'platform': 'netatmo',
-    'previous_unique_id': None,
-    'suggested_object_id': None,
-    'supported_features': 0,
-    'translation_key': None,
-    'unique_id': '12:34:56:00:16:0e#6-12:34:56:00:16:0e#6-reachable',
-    'unit_of_measurement': None,
-  })
-# ---
-# name: test_entity[sensor.gas-state]
-  StateSnapshot({
-    'attributes': ReadOnlyDict({
-      'attribution': 'Data provided by Netatmo',
-      'friendly_name': 'Gas',
-    }),
-    'context': <ANY>,
-    'entity_id': 'sensor.gas',
-    'last_changed': <ANY>,
-    'last_reported': <ANY>,
-    'last_updated': <ANY>,
-    'state': 'True',
   })
 # ---
 # name: test_entity[sensor.home_avg_atmospheric_pressure-entry]
@@ -3336,57 +3026,6 @@
     'state': '15',
   })
 # ---
-# name: test_entity[sensor.hot_water-entry]
-  EntityRegistryEntrySnapshot({
-    'aliases': list([
-      None,
-    ]),
-    'area_id': None,
-    'capabilities': None,
-    'config_entry_id': <ANY>,
-    'config_subentry_id': <ANY>,
-    'device_class': None,
-    'device_id': <ANY>,
-    'disabled_by': None,
-    'domain': 'sensor',
-    'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
-    'entity_id': 'sensor.hot_water',
-    'has_entity_name': True,
-    'hidden_by': None,
-    'icon': None,
-    'id': <ANY>,
-    'labels': set({
-    }),
-    'name': None,
-    'object_id_base': None,
-    'options': dict({
-    }),
-    'original_device_class': None,
-    'original_icon': None,
-    'original_name': None,
-    'platform': 'netatmo',
-    'previous_unique_id': None,
-    'suggested_object_id': None,
-    'supported_features': 0,
-    'translation_key': None,
-    'unique_id': '12:34:56:00:16:0e#7-12:34:56:00:16:0e#7-reachable',
-    'unit_of_measurement': None,
-  })
-# ---
-# name: test_entity[sensor.hot_water-state]
-  StateSnapshot({
-    'attributes': ReadOnlyDict({
-      'attribution': 'Data provided by Netatmo',
-      'friendly_name': 'Hot water',
-    }),
-    'context': <ANY>,
-    'entity_id': 'sensor.hot_water',
-    'last_changed': <ANY>,
-    'last_reported': <ANY>,
-    'last_updated': <ANY>,
-    'state': 'True',
-  })
-# ---
 # name: test_entity[sensor.kitchen_atmospheric_pressure-entry]
   EntityRegistryEntrySnapshot({
     'aliases': list([
@@ -3750,59 +3389,6 @@
     'state': 'unknown',
   })
 # ---
-# name: test_entity[sensor.kitchen_reachability-entry]
-  EntityRegistryEntrySnapshot({
-    'aliases': list([
-      None,
-    ]),
-    'area_id': None,
-    'capabilities': None,
-    'config_entry_id': <ANY>,
-    'config_subentry_id': <ANY>,
-    'device_class': None,
-    'device_id': <ANY>,
-    'disabled_by': None,
-    'domain': 'sensor',
-    'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
-    'entity_id': 'sensor.kitchen_reachability',
-    'has_entity_name': True,
-    'hidden_by': None,
-    'icon': None,
-    'id': <ANY>,
-    'labels': set({
-    }),
-    'name': None,
-    'object_id_base': 'Reachability',
-    'options': dict({
-    }),
-    'original_device_class': None,
-    'original_icon': None,
-    'original_name': 'Reachability',
-    'platform': 'netatmo',
-    'previous_unique_id': None,
-    'suggested_object_id': None,
-    'supported_features': 0,
-    'translation_key': 'reachable',
-    'unique_id': '12:34:56:25:cf:a8-reachable',
-    'unit_of_measurement': None,
-  })
-# ---
-# name: test_entity[sensor.kitchen_reachability-state]
-  StateSnapshot({
-    'attributes': ReadOnlyDict({
-      'attribution': 'Data provided by Netatmo',
-      'friendly_name': 'Kitchen Reachability',
-      'latitude': 13.377726,
-      'longitude': 52.516263,
-    }),
-    'context': <ANY>,
-    'entity_id': 'sensor.kitchen_reachability',
-    'last_changed': <ANY>,
-    'last_reported': <ANY>,
-    'last_updated': <ANY>,
-    'state': 'True',
-  })
-# ---
 # name: test_entity[sensor.kitchen_temperature-entry]
   EntityRegistryEntrySnapshot({
     'aliases': list([
@@ -3968,261 +3554,6 @@
     'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': 'Full',
-  })
-# ---
-# name: test_entity[sensor.line_1-entry]
-  EntityRegistryEntrySnapshot({
-    'aliases': list([
-      None,
-    ]),
-    'area_id': None,
-    'capabilities': None,
-    'config_entry_id': <ANY>,
-    'config_subentry_id': <ANY>,
-    'device_class': None,
-    'device_id': <ANY>,
-    'disabled_by': None,
-    'domain': 'sensor',
-    'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
-    'entity_id': 'sensor.line_1',
-    'has_entity_name': True,
-    'hidden_by': None,
-    'icon': None,
-    'id': <ANY>,
-    'labels': set({
-    }),
-    'name': None,
-    'object_id_base': None,
-    'options': dict({
-    }),
-    'original_device_class': None,
-    'original_icon': None,
-    'original_name': None,
-    'platform': 'netatmo',
-    'previous_unique_id': None,
-    'suggested_object_id': None,
-    'supported_features': 0,
-    'translation_key': None,
-    'unique_id': '12:34:56:00:16:0e#0-12:34:56:00:16:0e#0-reachable',
-    'unit_of_measurement': None,
-  })
-# ---
-# name: test_entity[sensor.line_1-state]
-  StateSnapshot({
-    'attributes': ReadOnlyDict({
-      'attribution': 'Data provided by Netatmo',
-      'friendly_name': 'Line 1',
-    }),
-    'context': <ANY>,
-    'entity_id': 'sensor.line_1',
-    'last_changed': <ANY>,
-    'last_reported': <ANY>,
-    'last_updated': <ANY>,
-    'state': 'True',
-  })
-# ---
-# name: test_entity[sensor.line_2-entry]
-  EntityRegistryEntrySnapshot({
-    'aliases': list([
-      None,
-    ]),
-    'area_id': None,
-    'capabilities': None,
-    'config_entry_id': <ANY>,
-    'config_subentry_id': <ANY>,
-    'device_class': None,
-    'device_id': <ANY>,
-    'disabled_by': None,
-    'domain': 'sensor',
-    'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
-    'entity_id': 'sensor.line_2',
-    'has_entity_name': True,
-    'hidden_by': None,
-    'icon': None,
-    'id': <ANY>,
-    'labels': set({
-    }),
-    'name': None,
-    'object_id_base': None,
-    'options': dict({
-    }),
-    'original_device_class': None,
-    'original_icon': None,
-    'original_name': None,
-    'platform': 'netatmo',
-    'previous_unique_id': None,
-    'suggested_object_id': None,
-    'supported_features': 0,
-    'translation_key': None,
-    'unique_id': '12:34:56:00:16:0e#1-12:34:56:00:16:0e#1-reachable',
-    'unit_of_measurement': None,
-  })
-# ---
-# name: test_entity[sensor.line_2-state]
-  StateSnapshot({
-    'attributes': ReadOnlyDict({
-      'attribution': 'Data provided by Netatmo',
-      'friendly_name': 'Line 2',
-    }),
-    'context': <ANY>,
-    'entity_id': 'sensor.line_2',
-    'last_changed': <ANY>,
-    'last_reported': <ANY>,
-    'last_updated': <ANY>,
-    'state': 'True',
-  })
-# ---
-# name: test_entity[sensor.line_3-entry]
-  EntityRegistryEntrySnapshot({
-    'aliases': list([
-      None,
-    ]),
-    'area_id': None,
-    'capabilities': None,
-    'config_entry_id': <ANY>,
-    'config_subentry_id': <ANY>,
-    'device_class': None,
-    'device_id': <ANY>,
-    'disabled_by': None,
-    'domain': 'sensor',
-    'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
-    'entity_id': 'sensor.line_3',
-    'has_entity_name': True,
-    'hidden_by': None,
-    'icon': None,
-    'id': <ANY>,
-    'labels': set({
-    }),
-    'name': None,
-    'object_id_base': None,
-    'options': dict({
-    }),
-    'original_device_class': None,
-    'original_icon': None,
-    'original_name': None,
-    'platform': 'netatmo',
-    'previous_unique_id': None,
-    'suggested_object_id': None,
-    'supported_features': 0,
-    'translation_key': None,
-    'unique_id': '12:34:56:00:16:0e#2-12:34:56:00:16:0e#2-reachable',
-    'unit_of_measurement': None,
-  })
-# ---
-# name: test_entity[sensor.line_3-state]
-  StateSnapshot({
-    'attributes': ReadOnlyDict({
-      'attribution': 'Data provided by Netatmo',
-      'friendly_name': 'Line 3',
-    }),
-    'context': <ANY>,
-    'entity_id': 'sensor.line_3',
-    'last_changed': <ANY>,
-    'last_reported': <ANY>,
-    'last_updated': <ANY>,
-    'state': 'True',
-  })
-# ---
-# name: test_entity[sensor.line_4-entry]
-  EntityRegistryEntrySnapshot({
-    'aliases': list([
-      None,
-    ]),
-    'area_id': None,
-    'capabilities': None,
-    'config_entry_id': <ANY>,
-    'config_subentry_id': <ANY>,
-    'device_class': None,
-    'device_id': <ANY>,
-    'disabled_by': None,
-    'domain': 'sensor',
-    'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
-    'entity_id': 'sensor.line_4',
-    'has_entity_name': True,
-    'hidden_by': None,
-    'icon': None,
-    'id': <ANY>,
-    'labels': set({
-    }),
-    'name': None,
-    'object_id_base': None,
-    'options': dict({
-    }),
-    'original_device_class': None,
-    'original_icon': None,
-    'original_name': None,
-    'platform': 'netatmo',
-    'previous_unique_id': None,
-    'suggested_object_id': None,
-    'supported_features': 0,
-    'translation_key': None,
-    'unique_id': '12:34:56:00:16:0e#3-12:34:56:00:16:0e#3-reachable',
-    'unit_of_measurement': None,
-  })
-# ---
-# name: test_entity[sensor.line_4-state]
-  StateSnapshot({
-    'attributes': ReadOnlyDict({
-      'attribution': 'Data provided by Netatmo',
-      'friendly_name': 'Line 4',
-    }),
-    'context': <ANY>,
-    'entity_id': 'sensor.line_4',
-    'last_changed': <ANY>,
-    'last_reported': <ANY>,
-    'last_updated': <ANY>,
-    'state': 'True',
-  })
-# ---
-# name: test_entity[sensor.line_5-entry]
-  EntityRegistryEntrySnapshot({
-    'aliases': list([
-      None,
-    ]),
-    'area_id': None,
-    'capabilities': None,
-    'config_entry_id': <ANY>,
-    'config_subentry_id': <ANY>,
-    'device_class': None,
-    'device_id': <ANY>,
-    'disabled_by': None,
-    'domain': 'sensor',
-    'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
-    'entity_id': 'sensor.line_5',
-    'has_entity_name': True,
-    'hidden_by': None,
-    'icon': None,
-    'id': <ANY>,
-    'labels': set({
-    }),
-    'name': None,
-    'object_id_base': None,
-    'options': dict({
-    }),
-    'original_device_class': None,
-    'original_icon': None,
-    'original_name': None,
-    'platform': 'netatmo',
-    'previous_unique_id': None,
-    'suggested_object_id': None,
-    'supported_features': 0,
-    'translation_key': None,
-    'unique_id': '12:34:56:00:16:0e#4-12:34:56:00:16:0e#4-reachable',
-    'unit_of_measurement': None,
-  })
-# ---
-# name: test_entity[sensor.line_5-state]
-  StateSnapshot({
-    'attributes': ReadOnlyDict({
-      'attribution': 'Data provided by Netatmo',
-      'friendly_name': 'Line 5',
-    }),
-    'context': <ANY>,
-    'entity_id': 'sensor.line_5',
-    'last_changed': <ANY>,
-    'last_reported': <ANY>,
-    'last_updated': <ANY>,
-    'state': 'True',
   })
 # ---
 # name: test_entity[sensor.livingroom_atmospheric_pressure-entry]
@@ -4642,59 +3973,6 @@
     'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': 'unknown',
-  })
-# ---
-# name: test_entity[sensor.livingroom_reachability-entry]
-  EntityRegistryEntrySnapshot({
-    'aliases': list([
-      None,
-    ]),
-    'area_id': None,
-    'capabilities': None,
-    'config_entry_id': <ANY>,
-    'config_subentry_id': <ANY>,
-    'device_class': None,
-    'device_id': <ANY>,
-    'disabled_by': None,
-    'domain': 'sensor',
-    'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
-    'entity_id': 'sensor.livingroom_reachability',
-    'has_entity_name': True,
-    'hidden_by': None,
-    'icon': None,
-    'id': <ANY>,
-    'labels': set({
-    }),
-    'name': None,
-    'object_id_base': 'Reachability',
-    'options': dict({
-    }),
-    'original_device_class': None,
-    'original_icon': None,
-    'original_name': 'Reachability',
-    'platform': 'netatmo',
-    'previous_unique_id': None,
-    'suggested_object_id': None,
-    'supported_features': 0,
-    'translation_key': 'reachable',
-    'unique_id': '12:34:56:26:65:14-reachable',
-    'unit_of_measurement': None,
-  })
-# ---
-# name: test_entity[sensor.livingroom_reachability-state]
-  StateSnapshot({
-    'attributes': ReadOnlyDict({
-      'attribution': 'Data provided by Netatmo',
-      'friendly_name': 'Livingroom Reachability',
-      'latitude': 13.377726,
-      'longitude': 52.516263,
-    }),
-    'context': <ANY>,
-    'entity_id': 'sensor.livingroom_reachability',
-    'last_changed': <ANY>,
-    'last_reported': <ANY>,
-    'last_updated': <ANY>,
-    'state': 'True',
   })
 # ---
 # name: test_entity[sensor.livingroom_temperature-entry]
@@ -5227,59 +4505,6 @@
     'state': 'unknown',
   })
 # ---
-# name: test_entity[sensor.parents_bedroom_reachability-entry]
-  EntityRegistryEntrySnapshot({
-    'aliases': list([
-      None,
-    ]),
-    'area_id': None,
-    'capabilities': None,
-    'config_entry_id': <ANY>,
-    'config_subentry_id': <ANY>,
-    'device_class': None,
-    'device_id': <ANY>,
-    'disabled_by': None,
-    'domain': 'sensor',
-    'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
-    'entity_id': 'sensor.parents_bedroom_reachability',
-    'has_entity_name': True,
-    'hidden_by': None,
-    'icon': None,
-    'id': <ANY>,
-    'labels': set({
-    }),
-    'name': None,
-    'object_id_base': 'Reachability',
-    'options': dict({
-    }),
-    'original_device_class': None,
-    'original_icon': None,
-    'original_name': 'Reachability',
-    'platform': 'netatmo',
-    'previous_unique_id': None,
-    'suggested_object_id': None,
-    'supported_features': 0,
-    'translation_key': 'reachable',
-    'unique_id': '12:34:56:3e:c5:46-reachable',
-    'unit_of_measurement': None,
-  })
-# ---
-# name: test_entity[sensor.parents_bedroom_reachability-state]
-  StateSnapshot({
-    'attributes': ReadOnlyDict({
-      'attribution': 'Data provided by Netatmo',
-      'friendly_name': 'Parents Bedroom Reachability',
-      'latitude': 13.377726,
-      'longitude': 52.516263,
-    }),
-    'context': <ANY>,
-    'entity_id': 'sensor.parents_bedroom_reachability',
-    'last_changed': <ANY>,
-    'last_reported': <ANY>,
-    'last_updated': <ANY>,
-    'state': 'True',
-  })
-# ---
 # name: test_entity[sensor.parents_bedroom_temperature-entry]
   EntityRegistryEntrySnapshot({
     'aliases': list([
@@ -5447,57 +4672,6 @@
     'state': 'High',
   })
 # ---
-# name: test_entity[sensor.prise-entry]
-  EntityRegistryEntrySnapshot({
-    'aliases': list([
-      None,
-    ]),
-    'area_id': None,
-    'capabilities': None,
-    'config_entry_id': <ANY>,
-    'config_subentry_id': <ANY>,
-    'device_class': None,
-    'device_id': <ANY>,
-    'disabled_by': None,
-    'domain': 'sensor',
-    'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
-    'entity_id': 'sensor.prise',
-    'has_entity_name': True,
-    'hidden_by': None,
-    'icon': None,
-    'id': <ANY>,
-    'labels': set({
-    }),
-    'name': None,
-    'object_id_base': None,
-    'options': dict({
-    }),
-    'original_device_class': None,
-    'original_icon': None,
-    'original_name': None,
-    'platform': 'netatmo',
-    'previous_unique_id': None,
-    'suggested_object_id': None,
-    'supported_features': 0,
-    'translation_key': None,
-    'unique_id': '12:34:56:80:00:12:ac:f2-12:34:56:80:00:12:ac:f2-reachable',
-    'unit_of_measurement': None,
-  })
-# ---
-# name: test_entity[sensor.prise-state]
-  StateSnapshot({
-    'attributes': ReadOnlyDict({
-      'attribution': 'Data provided by Netatmo',
-      'friendly_name': 'Prise',
-    }),
-    'context': <ANY>,
-    'entity_id': 'sensor.prise',
-    'last_changed': <ANY>,
-    'last_reported': <ANY>,
-    'last_updated': <ANY>,
-    'state': 'True',
-  })
-# ---
 # name: test_entity[sensor.prise_power-entry]
   EntityRegistryEntrySnapshot({
     'aliases': list([
@@ -5555,57 +4729,6 @@
     'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': '0',
-  })
-# ---
-# name: test_entity[sensor.total-entry]
-  EntityRegistryEntrySnapshot({
-    'aliases': list([
-      None,
-    ]),
-    'area_id': None,
-    'capabilities': None,
-    'config_entry_id': <ANY>,
-    'config_subentry_id': <ANY>,
-    'device_class': None,
-    'device_id': <ANY>,
-    'disabled_by': None,
-    'domain': 'sensor',
-    'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
-    'entity_id': 'sensor.total',
-    'has_entity_name': True,
-    'hidden_by': None,
-    'icon': None,
-    'id': <ANY>,
-    'labels': set({
-    }),
-    'name': None,
-    'object_id_base': None,
-    'options': dict({
-    }),
-    'original_device_class': None,
-    'original_icon': None,
-    'original_name': None,
-    'platform': 'netatmo',
-    'previous_unique_id': None,
-    'suggested_object_id': None,
-    'supported_features': 0,
-    'translation_key': None,
-    'unique_id': '12:34:56:00:16:0e#5-12:34:56:00:16:0e#5-reachable',
-    'unit_of_measurement': None,
-  })
-# ---
-# name: test_entity[sensor.total-state]
-  StateSnapshot({
-    'attributes': ReadOnlyDict({
-      'attribution': 'Data provided by Netatmo',
-      'friendly_name': 'Total',
-    }),
-    'context': <ANY>,
-    'entity_id': 'sensor.total',
-    'last_changed': <ANY>,
-    'last_reported': <ANY>,
-    'last_updated': <ANY>,
-    'state': 'True',
   })
 # ---
 # name: test_entity[sensor.valve1_battery-entry]
@@ -5952,57 +5075,6 @@
     'state': '55',
   })
 # ---
-# name: test_entity[sensor.villa_bathroom_reachability-entry]
-  EntityRegistryEntrySnapshot({
-    'aliases': list([
-      None,
-    ]),
-    'area_id': None,
-    'capabilities': None,
-    'config_entry_id': <ANY>,
-    'config_subentry_id': <ANY>,
-    'device_class': None,
-    'device_id': <ANY>,
-    'disabled_by': None,
-    'domain': 'sensor',
-    'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
-    'entity_id': 'sensor.villa_bathroom_reachability',
-    'has_entity_name': True,
-    'hidden_by': None,
-    'icon': None,
-    'id': <ANY>,
-    'labels': set({
-    }),
-    'name': None,
-    'object_id_base': 'Reachability',
-    'options': dict({
-    }),
-    'original_device_class': None,
-    'original_icon': None,
-    'original_name': 'Reachability',
-    'platform': 'netatmo',
-    'previous_unique_id': None,
-    'suggested_object_id': None,
-    'supported_features': 0,
-    'translation_key': 'reachable',
-    'unique_id': '12:34:56:80:7e:18-reachable',
-    'unit_of_measurement': None,
-  })
-# ---
-# name: test_entity[sensor.villa_bathroom_reachability-state]
-  StateSnapshot({
-    'attributes': ReadOnlyDict({
-      'attribution': 'Data provided by Netatmo',
-      'friendly_name': 'Villa Bathroom Reachability',
-    }),
-    'context': <ANY>,
-    'entity_id': 'sensor.villa_bathroom_reachability',
-    'last_changed': <ANY>,
-    'last_reported': <ANY>,
-    'last_updated': <ANY>,
-    'state': 'True',
-  })
-# ---
 # name: test_entity[sensor.villa_bathroom_rf_strength-entry]
   EntityRegistryEntrySnapshot({
     'aliases': list([
@@ -6330,57 +5402,6 @@
     'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': '53',
-  })
-# ---
-# name: test_entity[sensor.villa_bedroom_reachability-entry]
-  EntityRegistryEntrySnapshot({
-    'aliases': list([
-      None,
-    ]),
-    'area_id': None,
-    'capabilities': None,
-    'config_entry_id': <ANY>,
-    'config_subentry_id': <ANY>,
-    'device_class': None,
-    'device_id': <ANY>,
-    'disabled_by': None,
-    'domain': 'sensor',
-    'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
-    'entity_id': 'sensor.villa_bedroom_reachability',
-    'has_entity_name': True,
-    'hidden_by': None,
-    'icon': None,
-    'id': <ANY>,
-    'labels': set({
-    }),
-    'name': None,
-    'object_id_base': 'Reachability',
-    'options': dict({
-    }),
-    'original_device_class': None,
-    'original_icon': None,
-    'original_name': 'Reachability',
-    'platform': 'netatmo',
-    'previous_unique_id': None,
-    'suggested_object_id': None,
-    'supported_features': 0,
-    'translation_key': 'reachable',
-    'unique_id': '12:34:56:80:44:92-reachable',
-    'unit_of_measurement': None,
-  })
-# ---
-# name: test_entity[sensor.villa_bedroom_reachability-state]
-  StateSnapshot({
-    'attributes': ReadOnlyDict({
-      'attribution': 'Data provided by Netatmo',
-      'friendly_name': 'Villa Bedroom Reachability',
-    }),
-    'context': <ANY>,
-    'entity_id': 'sensor.villa_bedroom_reachability',
-    'last_changed': <ANY>,
-    'last_reported': <ANY>,
-    'last_updated': <ANY>,
-    'state': 'True',
   })
 # ---
 # name: test_entity[sensor.villa_bedroom_rf_strength-entry]
@@ -6846,57 +5867,6 @@
     'state': '9',
   })
 # ---
-# name: test_entity[sensor.villa_garden_reachability-entry]
-  EntityRegistryEntrySnapshot({
-    'aliases': list([
-      None,
-    ]),
-    'area_id': None,
-    'capabilities': None,
-    'config_entry_id': <ANY>,
-    'config_subentry_id': <ANY>,
-    'device_class': None,
-    'device_id': <ANY>,
-    'disabled_by': None,
-    'domain': 'sensor',
-    'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
-    'entity_id': 'sensor.villa_garden_reachability',
-    'has_entity_name': True,
-    'hidden_by': None,
-    'icon': None,
-    'id': <ANY>,
-    'labels': set({
-    }),
-    'name': None,
-    'object_id_base': 'Reachability',
-    'options': dict({
-    }),
-    'original_device_class': None,
-    'original_icon': None,
-    'original_name': 'Reachability',
-    'platform': 'netatmo',
-    'previous_unique_id': None,
-    'suggested_object_id': None,
-    'supported_features': 0,
-    'translation_key': 'reachable',
-    'unique_id': '12:34:56:03:1b:e4-reachable',
-    'unit_of_measurement': None,
-  })
-# ---
-# name: test_entity[sensor.villa_garden_reachability-state]
-  StateSnapshot({
-    'attributes': ReadOnlyDict({
-      'attribution': 'Data provided by Netatmo',
-      'friendly_name': 'Villa Garden Reachability',
-    }),
-    'context': <ANY>,
-    'entity_id': 'sensor.villa_garden_reachability',
-    'last_changed': <ANY>,
-    'last_reported': <ANY>,
-    'last_updated': <ANY>,
-    'state': 'True',
-  })
-# ---
 # name: test_entity[sensor.villa_garden_rf_strength-entry]
   EntityRegistryEntrySnapshot({
     'aliases': list([
@@ -7308,7 +6278,7 @@
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
-    'state': '27',
+    'state': 'unknown',
   })
 # ---
 # name: test_entity[sensor.villa_outdoor_humidity-entry]
@@ -7367,57 +6337,6 @@
     'state': 'unavailable',
   })
 # ---
-# name: test_entity[sensor.villa_outdoor_reachability-entry]
-  EntityRegistryEntrySnapshot({
-    'aliases': list([
-      None,
-    ]),
-    'area_id': None,
-    'capabilities': None,
-    'config_entry_id': <ANY>,
-    'config_subentry_id': <ANY>,
-    'device_class': None,
-    'device_id': <ANY>,
-    'disabled_by': None,
-    'domain': 'sensor',
-    'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
-    'entity_id': 'sensor.villa_outdoor_reachability',
-    'has_entity_name': True,
-    'hidden_by': None,
-    'icon': None,
-    'id': <ANY>,
-    'labels': set({
-    }),
-    'name': None,
-    'object_id_base': 'Reachability',
-    'options': dict({
-    }),
-    'original_device_class': None,
-    'original_icon': None,
-    'original_name': 'Reachability',
-    'platform': 'netatmo',
-    'previous_unique_id': None,
-    'suggested_object_id': None,
-    'supported_features': 0,
-    'translation_key': 'reachable',
-    'unique_id': '12:34:56:80:1c:42-reachable',
-    'unit_of_measurement': None,
-  })
-# ---
-# name: test_entity[sensor.villa_outdoor_reachability-state]
-  StateSnapshot({
-    'attributes': ReadOnlyDict({
-      'attribution': 'Data provided by Netatmo',
-      'friendly_name': 'Villa Outdoor Reachability',
-    }),
-    'context': <ANY>,
-    'entity_id': 'sensor.villa_outdoor_reachability',
-    'last_changed': <ANY>,
-    'last_reported': <ANY>,
-    'last_updated': <ANY>,
-    'state': 'False',
-  })
-# ---
 # name: test_entity[sensor.villa_outdoor_rf_strength-entry]
   EntityRegistryEntrySnapshot({
     'aliases': list([
@@ -7466,7 +6385,7 @@
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
-    'state': 'High',
+    'state': 'unknown',
   })
 # ---
 # name: test_entity[sensor.villa_outdoor_temperature-entry]
@@ -7865,57 +6784,6 @@
     'state': '6.9',
   })
 # ---
-# name: test_entity[sensor.villa_rain_reachability-entry]
-  EntityRegistryEntrySnapshot({
-    'aliases': list([
-      None,
-    ]),
-    'area_id': None,
-    'capabilities': None,
-    'config_entry_id': <ANY>,
-    'config_subentry_id': <ANY>,
-    'device_class': None,
-    'device_id': <ANY>,
-    'disabled_by': None,
-    'domain': 'sensor',
-    'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
-    'entity_id': 'sensor.villa_rain_reachability',
-    'has_entity_name': True,
-    'hidden_by': None,
-    'icon': None,
-    'id': <ANY>,
-    'labels': set({
-    }),
-    'name': None,
-    'object_id_base': 'Reachability',
-    'options': dict({
-    }),
-    'original_device_class': None,
-    'original_icon': None,
-    'original_name': 'Reachability',
-    'platform': 'netatmo',
-    'previous_unique_id': None,
-    'suggested_object_id': None,
-    'supported_features': 0,
-    'translation_key': 'reachable',
-    'unique_id': '12:34:56:80:c1:ea-reachable',
-    'unit_of_measurement': None,
-  })
-# ---
-# name: test_entity[sensor.villa_rain_reachability-state]
-  StateSnapshot({
-    'attributes': ReadOnlyDict({
-      'attribution': 'Data provided by Netatmo',
-      'friendly_name': 'Villa Rain Reachability',
-    }),
-    'context': <ANY>,
-    'entity_id': 'sensor.villa_rain_reachability',
-    'last_changed': <ANY>,
-    'last_reported': <ANY>,
-    'last_updated': <ANY>,
-    'state': 'True',
-  })
-# ---
 # name: test_entity[sensor.villa_rain_rf_strength-entry]
   EntityRegistryEntrySnapshot({
     'aliases': list([
@@ -7965,59 +6833,6 @@
     'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': 'Medium',
-  })
-# ---
-# name: test_entity[sensor.villa_reachability-entry]
-  EntityRegistryEntrySnapshot({
-    'aliases': list([
-      None,
-    ]),
-    'area_id': None,
-    'capabilities': None,
-    'config_entry_id': <ANY>,
-    'config_subentry_id': <ANY>,
-    'device_class': None,
-    'device_id': <ANY>,
-    'disabled_by': None,
-    'domain': 'sensor',
-    'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
-    'entity_id': 'sensor.villa_reachability',
-    'has_entity_name': True,
-    'hidden_by': None,
-    'icon': None,
-    'id': <ANY>,
-    'labels': set({
-    }),
-    'name': None,
-    'object_id_base': 'Reachability',
-    'options': dict({
-    }),
-    'original_device_class': None,
-    'original_icon': None,
-    'original_name': 'Reachability',
-    'platform': 'netatmo',
-    'previous_unique_id': None,
-    'suggested_object_id': None,
-    'supported_features': 0,
-    'translation_key': 'reachable',
-    'unique_id': '12:34:56:80:bb:26-reachable',
-    'unit_of_measurement': None,
-  })
-# ---
-# name: test_entity[sensor.villa_reachability-state]
-  StateSnapshot({
-    'attributes': ReadOnlyDict({
-      'attribution': 'Data provided by Netatmo',
-      'friendly_name': 'Villa Reachability',
-      'latitude': 46.123456,
-      'longitude': 6.1234567,
-    }),
-    'context': <ANY>,
-    'entity_id': 'sensor.villa_reachability',
-    'last_changed': <ANY>,
-    'last_reported': <ANY>,
-    'last_updated': <ANY>,
-    'state': 'True',
   })
 # ---
 # name: test_entity[sensor.villa_temperature-entry]
