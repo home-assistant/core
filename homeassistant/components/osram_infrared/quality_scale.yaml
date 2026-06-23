@@ -110,7 +110,8 @@ rules:
   entity-category:
     status: exempt
     comment: |
-      The integration currently exposes only the primary light entity.
+      The integration currently exposes only the light entity and a mode button.
+      Neither entity is a configuration or diagnostic entity, so no entity category is required.
   entity-device-class:
     status: exempt
     comment: |
@@ -118,7 +119,8 @@ rules:
   entity-disabled-by-default:
     status: exempt
     comment: |
-      The integration currently exposes only the primary light entity.
+      The integration currently exposes only the light entity and a mode button.
+      Both should be enabled by default.
   entity-translations: done
   exception-translations:
     status: todo
