@@ -1042,15 +1042,19 @@ async def google_assistant_list(
     cloud = hass.data[DATA_CLOUD]
     gconf = await cloud.client.get_google_config()
     entities = google_helpers.async_get_entities(hass, gconf)
+    settings = exposed_entities.async_get_assistant_settings(hass, CLOUD_GOOGLE)
 
-    result = [
-        {
-            "entity_id": entity.entity_id,
-            "traits": [trait.name for trait in entity.traits()],
-            "might_2fa": entity.might_2fa_traits(),
-        }
-        for entity in entities
-    ]
+    result = []
+    for entity in entities:
+        assistant_options = settings.get(entity.entity_id, {})
+        result.append(
+            {
+                "entity_id": entity.entity_id,
+                "traits": [trait.name for trait in entity.traits()],
+                "might_2fa": entity.might_2fa_traits(),
+                PREF_ENTITY_ALIASES: assistant_options.get(PREF_ENTITY_ALIASES),
+            }
+        )
 
     connection.send_result(msg["id"], result)
 

@@ -1362,11 +1362,13 @@ async def test_list_google_entities(
         "entity_id": "light.kitchen",
         "might_2fa": False,
         "traits": ["action.devices.traits.OnOff"],
+        "aliases": None,
     }
     assert response["result"][1] == {
         "entity_id": "cover.garage",
         "might_2fa": True,
         "traits": ["action.devices.traits.OpenClose"],
+        "aliases": None,
     }
 
     # Add the entities to the entity registry
@@ -1375,6 +1377,11 @@ async def test_list_google_entities(
     )
     entity_registry.async_get_or_create(
         "cover", "test", "unique", suggested_object_id="garage"
+    )
+
+    # Set an aliases override on one entity
+    exposed_entities.async_set_assistant_option(
+        hass, "cloud.google_assistant", "light.kitchen", "aliases", ["Stove light"]
     )
 
     with patch(
@@ -1390,11 +1397,13 @@ async def test_list_google_entities(
         "entity_id": "light.kitchen",
         "might_2fa": False,
         "traits": ["action.devices.traits.OnOff"],
+        "aliases": ["Stove light"],
     }
     assert response["result"][1] == {
         "entity_id": "cover.garage",
         "might_2fa": True,
         "traits": ["action.devices.traits.OpenClose"],
+        "aliases": None,
     }
 
 
