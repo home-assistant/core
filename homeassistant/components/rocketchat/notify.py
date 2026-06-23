@@ -2,7 +2,7 @@
 
 from http import HTTPStatus
 import logging
-from typing import Any
+from typing import Any, override
 
 from rocketchat_API.APIExceptions.RocketExceptions import (
     RocketAuthenticationException,
@@ -69,6 +69,7 @@ class RocketChatNotificationService(BaseNotificationService):
         self._room = room
         self._server = RocketChat(username, password, server_url=url)
 
+    @override
     def send_message(self, message: str = "", **kwargs: Any) -> None:
         """Send a message to Rocket.Chat."""
         data = kwargs.get(ATTR_DATA) or {}

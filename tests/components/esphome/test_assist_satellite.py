@@ -258,12 +258,14 @@ async def test_pipeline_api_audio(
             {"tts_start_streaming": "1"},
         )
 
+        intent_response = intent_helper.IntentResponse("en")
+        intent_response.async_set_speech("test response")
         event_callback(
             PipelineEvent(
                 type=PipelineEventType.INTENT_END,
                 data={
                     "intent_output": conversation.ConversationResult(
-                        response=intent_helper.IntentResponse("en"),
+                        response=intent_response,
                         conversation_id=conversation_id,
                         continue_conversation=True,
                     ).as_dict()
@@ -275,6 +277,7 @@ async def test_pipeline_api_audio(
             {
                 "conversation_id": conversation_id,
                 "continue_conversation": "1",
+                "speech": "test response",
             },
         )
 

@@ -1,5 +1,5 @@
 # serializer version: 1
-# name: test_scene_activate
+# name: test_scene_activate[config_test.json]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'attribution': 'Data provided by WMS WebControl pro API',
@@ -13,7 +13,7 @@
     'state': 'unknown',
   })
 # ---
-# name: test_scene_room_device
+# name: test_scene_room_device[config_test.json]
   DeviceRegistryEntrySnapshot({
     'area_id': 'raum_0',
     'config_entries': <ANY>,

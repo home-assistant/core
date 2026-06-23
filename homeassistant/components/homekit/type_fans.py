@@ -1,7 +1,7 @@
 """Class to hold all fan accessories."""
 
 import logging
-from typing import Any
+from typing import Any, override
 
 from pyhap.const import CATEGORY_FAN
 from pyhap.service import Service
@@ -255,6 +255,7 @@ class Fan(HomeAccessory):
         self.async_call_service(FAN_DOMAIN, SERVICE_SET_PERCENTAGE, params, value)
 
     @callback
+    @override
     def async_update_state(self, new_state: State) -> None:
         """Update fan after state change."""
         # Handle State

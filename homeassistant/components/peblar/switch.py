@@ -2,7 +2,7 @@
 
 from collections.abc import Awaitable, Callable
 from dataclasses import dataclass
-from typing import Any
+from typing import Any, override
 
 from peblar import PeblarEVInterface
 
@@ -92,17 +92,20 @@ class PeblarSwitchEntity(
     entity_description: PeblarSwitchEntityDescription
 
     @property
+    @override
     def is_on(self) -> bool:
         """Return state of the switch."""
         return self.entity_description.is_on_fn(self.coordinator.data)
 
     @peblar_exception_handler
+    @override
     async def async_turn_on(self, **kwargs: Any) -> None:
         """Turn the entity on."""
         await self.entity_description.set_fn(self.coordinator, True)
         await self.coordinator.async_request_refresh()
 
     @peblar_exception_handler
+    @override
     async def async_turn_off(self, **kwargs: Any) -> None:
         """Turn the entity off."""
         await self.entity_description.set_fn(self.coordinator, False)
