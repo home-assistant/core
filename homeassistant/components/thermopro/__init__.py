@@ -26,6 +26,8 @@ PLATFORMS: list[Platform] = [Platform.BUTTON, Platform.SENSOR]
 
 _LOGGER = logging.getLogger(__name__)
 
+type ThermoProConfigEntry = ConfigEntry[PassiveBluetoothProcessorCoordinator]
+
 
 def process_service_info(
     hass: HomeAssistant,
@@ -41,19 +43,17 @@ def process_service_info(
     return update
 
 
-async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
+async def async_setup_entry(hass: HomeAssistant, entry: ThermoProConfigEntry) -> bool:
     """Set up ThermoPro BLE device from a config entry."""
     address = entry.unique_id
     assert address is not None
     data = ThermoProBluetoothDeviceData()
-    coordinator = hass.data.setdefault(DOMAIN, {})[entry.entry_id] = (
-        PassiveBluetoothProcessorCoordinator(
-            hass,
-            _LOGGER,
-            address=address,
-            mode=BluetoothScanningMode.ACTIVE,
-            update_method=partial(process_service_info, hass, entry, data),
-        )
+    entry.runtime_data = coordinator = PassiveBluetoothProcessorCoordinator(
+        hass,
+        _LOGGER,
+        address=address,
+        mode=BluetoothScanningMode.ACTIVE,
+        update_method=partial(process_service_info, hass, entry, data),
     )
     await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
     # only start after all platforms have had a chance to subscribe
@@ -61,9 +61,8 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     return True
 
 
-async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
+async def async_unload_entry(
+    hass: HomeAssistant, entry: ThermoProConfigEntry
+) -> bool:
     """Unload a config entry."""
-    if unload_ok := await hass.config_entries.async_unload_platforms(entry, PLATFORMS):
-        hass.data[DOMAIN].pop(entry.entry_id)
-
-    return unload_ok
+    return await hass.config_entries.async_unload_platforms(entry, PLATFORMS)
