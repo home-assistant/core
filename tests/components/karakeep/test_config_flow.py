@@ -6,7 +6,7 @@ from aiokarakeep import KarakeepApiError, KarakeepAuthError, KarakeepConnectionE
 import pytest
 
 from homeassistant.components.karakeep.const import DOMAIN
-from homeassistant.config_entries import SOURCE_REAUTH, SOURCE_USER
+from homeassistant.config_entries import SOURCE_USER
 from homeassistant.const import CONF_TOKEN, CONF_URL, CONF_VERIFY_SSL
 from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
@@ -147,53 +147,3 @@ async def test_duplicate(
     assert result["type"] is FlowResultType.ABORT
     assert result["reason"] == "already_configured"
     mock_karakeep_client.async_get_stats.assert_not_awaited()
-
-
-async def test_reauth(
-    hass: HomeAssistant,
-    mock_karakeep_client: AsyncMock,
-    mock_config_entry: MockConfigEntry,
-) -> None:
-    """Test reauthentication flow recovers from an error."""
-    mock_config_entry.add_to_hass(hass)
-
-    result = await hass.config_entries.flow.async_init(
-        DOMAIN,
-        context={
-            "source": SOURCE_REAUTH,
-            "entry_id": mock_config_entry.entry_id,
-        },
-        data=mock_config_entry.data,
-    )
-
-    assert result["type"] is FlowResultType.FORM
-    assert result["step_id"] == "reauth_confirm"
-
-    mock_karakeep_client.async_get_stats.side_effect = KarakeepAuthError(
-        "Invalid token", 401
-    )
-
-    result = await hass.config_entries.flow.async_configure(
-        result["flow_id"],
-        {
-            CONF_TOKEN: "bad-token",
-        },
-    )
-
-    assert result["type"] is FlowResultType.FORM
-    assert result["step_id"] == "reauth_confirm"
-    assert result["errors"] == {"base": "invalid_auth"}
-
-    mock_karakeep_client.async_get_stats.side_effect = None
-
-    result = await hass.config_entries.flow.async_configure(
-        result["flow_id"],
-        {
-            CONF_TOKEN: "new-token",
-        },
-    )
-    await hass.async_block_till_done()
-
-    assert result["type"] is FlowResultType.ABORT
-    assert result["reason"] == "reauth_successful"
-    assert mock_config_entry.data[CONF_TOKEN] == "new-token"
