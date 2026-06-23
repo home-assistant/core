@@ -2,7 +2,7 @@
 
 from collections.abc import Awaitable, Callable, Coroutine
 from functools import wraps
-from typing import Any, Concatenate
+from typing import Any, Concatenate, override
 
 from async_upnp_client.client import UpnpService, UpnpStateVariable
 from wiim.consts import PlayingStatus as SDKPlayingStatus
@@ -145,6 +145,7 @@ class WiimMediaPlayerEntity(WiimBaseEntity, MediaPlayerEntity):
         return self.hass.data[DATA_WIIM]
 
     @property
+    @override
     def supported_features(self) -> MediaPlayerEntityFeature:
         """Return the features supported by the current device state."""
         features = SUPPORT_WIIM_BASE
@@ -503,6 +504,7 @@ class WiimMediaPlayerEntity(WiimBaseEntity, MediaPlayerEntity):
         )
 
     @callback
+    @override
     def _async_registry_updated(
         self, event: Event[er.EventEntityRegistryUpdatedData]
     ) -> None:
@@ -517,6 +519,7 @@ class WiimMediaPlayerEntity(WiimBaseEntity, MediaPlayerEntity):
 
         super()._async_registry_updated(event)
 
+    @override
     async def async_added_to_hass(self) -> None:
         """Run when entity is added to Home Assistant."""
         await super().async_added_to_hass()
@@ -548,6 +551,7 @@ class WiimMediaPlayerEntity(WiimBaseEntity, MediaPlayerEntity):
             self._device.name,
         )
 
+    @override
     async def async_will_remove_from_hass(self) -> None:
         """Run when entity will be removed from Home Assistant."""
         # Unregister SDK callbacks
@@ -579,21 +583,25 @@ class WiimMediaPlayerEntity(WiimBaseEntity, MediaPlayerEntity):
         await self._wiim_data.controller.async_update_all_multiroom_status()
 
     @media_player_exception_wrap
+    @override
     async def async_set_volume_level(self, volume: float) -> None:
         """Set volume level, range 0-1."""
         await self._device.async_set_volume(round(volume * 100))
 
     @media_player_exception_wrap
+    @override
     async def async_mute_volume(self, mute: bool) -> None:
         """Mute (true) or unmute (false) media player."""
         await self._device.async_set_mute(mute)
 
     @media_player_exception_wrap
+    @override
     async def async_media_play(self) -> None:
         """Send play command."""
         await self._get_command_target_device("media_play").async_play()
 
     @media_player_exception_wrap
+    @override
     async def async_media_pause(self) -> None:
         """Send pause command."""
         target_device = self._get_command_target_device("media_pause")
@@ -601,26 +609,31 @@ class WiimMediaPlayerEntity(WiimBaseEntity, MediaPlayerEntity):
         await target_device.sync_device_duration_and_position()
 
     @media_player_exception_wrap
+    @override
     async def async_media_stop(self) -> None:
         """Send stop command."""
         await self._get_command_target_device("media_stop").async_stop()
 
     @media_player_exception_wrap
+    @override
     async def async_media_next_track(self) -> None:
         """Send next track command."""
         await self._get_command_target_device("media_next_track").async_next()
 
     @media_player_exception_wrap
+    @override
     async def async_media_previous_track(self) -> None:
         """Send previous track command."""
         await self._get_command_target_device("media_previous_track").async_previous()
 
     @media_player_exception_wrap
+    @override
     async def async_media_seek(self, position: float) -> None:
         """Seek to a specific position in the track."""
         await self._get_command_target_device("media_seek").async_seek(int(position))
 
     @media_player_exception_wrap
+    @override
     async def async_play_media(
         self, media_type: MediaType | str, media_id: str, **kwargs: Any
     ) -> None:
@@ -682,6 +695,7 @@ class WiimMediaPlayerEntity(WiimBaseEntity, MediaPlayerEntity):
         self._attr_state = MediaPlayerState.PLAYING
 
     @media_player_exception_wrap
+    @override
     async def async_set_repeat(self, repeat: RepeatMode) -> None:
         """Set repeat mode."""
         target_device = self._get_command_target_device("repeat_set")
@@ -690,6 +704,7 @@ class WiimMediaPlayerEntity(WiimBaseEntity, MediaPlayerEntity):
         )
 
     @media_player_exception_wrap
+    @override
     async def async_set_shuffle(self, shuffle: bool) -> None:
         """Enable/disable shuffle mode."""
         repeat = self._attr_repeat or WiimRepeatMode.OFF
@@ -699,12 +714,14 @@ class WiimMediaPlayerEntity(WiimBaseEntity, MediaPlayerEntity):
         )
 
     @media_player_exception_wrap
+    @override
     async def async_select_source(self, source: str) -> None:
         """Select input mode."""
         await self._get_command_target_device("select_source").async_set_play_mode(
             source
         )
 
+    @override
     async def async_browse_media(
         self,
         media_content_type: MediaType | str | None = None,

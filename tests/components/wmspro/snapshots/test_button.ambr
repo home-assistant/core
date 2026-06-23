@@ -1,5 +1,5 @@
 # serializer version: 1
-# name: test_button_update
+# name: test_button_update[config_prod_awning_dimmer.json-status_prod_awning.json]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'attribution': 'Data provided by WMS WebControl pro API',

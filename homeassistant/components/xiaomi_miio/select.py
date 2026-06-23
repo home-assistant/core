@@ -2,7 +2,7 @@
 
 from dataclasses import dataclass, field
 import logging
-from typing import Any, NamedTuple
+from typing import Any, NamedTuple, override
 
 from miio import Device as MiioDevice
 from miio.fan_common import LedBrightness as FanLedBrightness
@@ -281,6 +281,7 @@ class XiaomiGenericSelector(XiaomiSelector):
         self._enum_class = enum_class
 
     @callback
+    @override
     def _handle_coordinator_update(self):
         """Fetch state from the device."""
         try:
@@ -299,6 +300,7 @@ class XiaomiGenericSelector(XiaomiSelector):
             self.async_write_ha_state()
 
     @property
+    @override
     def current_option(self) -> str | None:
         """Return the current option."""
         option = self._reverse_map.get(self._current_attr)
@@ -306,6 +308,7 @@ class XiaomiGenericSelector(XiaomiSelector):
             return option.lower()
         return None
 
+    @override
     async def async_select_option(self, option: str) -> None:
         """Set an option of the miio device."""
         await self.async_set_attr(option.title())

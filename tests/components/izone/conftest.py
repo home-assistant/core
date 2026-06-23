@@ -6,7 +6,7 @@ from unittest.mock import AsyncMock, Mock, patch
 from pizone import Controller, Zone
 import pytest
 
-from homeassistant.components.izone.const import IZONE
+from homeassistant.components.izone.const import DOMAIN
 
 from tests.common import MockConfigEntry
 
@@ -15,7 +15,7 @@ from tests.common import MockConfigEntry
 def mock_config_entry() -> MockConfigEntry:
     """Create a mock config entry for iZone."""
     return MockConfigEntry(
-        domain=IZONE,
+        domain=DOMAIN,
         title="iZone",
         data={},
         entry_id="test_entry_id",

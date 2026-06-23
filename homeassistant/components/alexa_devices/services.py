@@ -11,7 +11,7 @@ from homeassistant.exceptions import ServiceValidationError
 from homeassistant.helpers import config_validation as cv, device_registry as dr
 
 from .const import DOMAIN, INFO_SKILLS_MAPPING
-from .coordinator import AmazonConfigEntry
+from .coordinator import AmazonConfigEntry, alexa_api_call
 
 ATTR_TEXT_COMMAND = "text_command"
 ATTR_SOUND = "sound"
@@ -85,13 +85,15 @@ async def _async_execute_action(call: ServiceCall, attribute: str) -> None:
                 translation_key="invalid_sound_value",
                 translation_placeholders={"sound": value},
             )
-        await coordinator.api.call_alexa_sound(
-            coordinator.data[device.serial_number], value
-        )
+        async with alexa_api_call():
+            await coordinator.api.call_alexa_sound(
+                coordinator.data[device.serial_number], value
+            )
     elif attribute == ATTR_TEXT_COMMAND:
-        await coordinator.api.call_alexa_text_command(
-            coordinator.data[device.serial_number], value
-        )
+        async with alexa_api_call():
+            await coordinator.api.call_alexa_text_command(
+                coordinator.data[device.serial_number], value
+            )
     elif attribute == ATTR_INFO_SKILL:
         info_skill = INFO_SKILLS_MAPPING.get(value)
         if info_skill not in ALEXA_INFO_SKILLS:
@@ -100,9 +102,10 @@ async def _async_execute_action(call: ServiceCall, attribute: str) -> None:
                 translation_key="invalid_info_skill_value",
                 translation_placeholders={"info_skill": value},
             )
-        await coordinator.api.call_alexa_info_skill(
-            coordinator.data[device.serial_number], info_skill
-        )
+        async with alexa_api_call():
+            await coordinator.api.call_alexa_info_skill(
+                coordinator.data[device.serial_number], info_skill
+            )
 
 
 async def async_send_sound_notification(call: ServiceCall) -> None:

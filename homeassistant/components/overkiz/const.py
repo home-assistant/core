@@ -38,6 +38,7 @@ LOGGER: logging.Logger = logging.getLogger(__package__)
 
 CONF_API_TYPE: Final = "api_type"
 CONF_HUB: Final = "hub"
+CONF_GATEWAY_ID: Final = "gateway_id"
 DEFAULT_SERVER: Final = Server.SOMFY_EUROPE
 DEFAULT_HOST: Final = "gateway-xxxx-xxxx-xxxx.local:8443"
 
@@ -51,6 +52,7 @@ PLATFORMS: list[Platform] = [
     Platform.BUTTON,
     Platform.CLIMATE,
     Platform.COVER,
+    Platform.FAN,
     Platform.LIGHT,
     Platform.LOCK,
     Platform.NUMBER,
@@ -87,6 +89,7 @@ OVERKIZ_DEVICE_TO_PLATFORM: dict[UIClass | UIWidget, Platform | None] = {
     UIClass.SWIMMING_POOL: Platform.SWITCH,
     UIClass.SWINGING_SHUTTER: Platform.COVER,
     UIClass.VENETIAN_BLIND: Platform.COVER,
+    UIClass.VENTILATION_SYSTEM: Platform.FAN,
     UIClass.WINDOW: Platform.COVER,
     UIWidget.ALARM_PANEL_CONTROLLER: Platform.ALARM_CONTROL_PANEL,
     UIWidget.ATLANTIC_ELECTRICAL_HEATER: Platform.CLIMATE,
@@ -118,7 +121,7 @@ OVERKIZ_DEVICE_TO_PLATFORM: dict[UIClass | UIWidget, Platform | None] = {
     UIWidget.STATELESS_ALARM_CONTROLLER: Platform.SWITCH,
     UIWidget.STATEFUL_ALARM_CONTROLLER: Platform.ALARM_CONTROL_PANEL,
     UIWidget.STATELESS_EXTERIOR_HEATING: Platform.SWITCH,
-    UIWidget.TSKALARM_CONTROLLER: Platform.ALARM_CONTROL_PANEL,
+    UIWidget.TSK_ALARM_CONTROLLER: Platform.ALARM_CONTROL_PANEL,
     UIWidget.VALVE_HEATING_TEMPERATURE_INTERFACE: Platform.CLIMATE,
 }
 

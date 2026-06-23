@@ -1,6 +1,6 @@
 """A entity class for Tractive integration."""
 
-from typing import Any
+from typing import Any, override
 
 from homeassistant.core import callback
 from homeassistant.helpers.device_registry import DeviceEntryType, DeviceInfo
@@ -29,7 +29,8 @@ class TractiveEntity(Entity):
             self._attr_device_info = DeviceInfo(
                 configuration_url="https://my.tractive.com/",
                 identifiers={(DOMAIN, tracker_details["_id"])},
-                name=f"Tracker {tracker_details['_id']}",
+                translation_key="tracker",
+                translation_placeholders={"id": tracker_details["_id"]},
                 manufacturer="Tractive GmbH",
                 sw_version=tracker_details["fw_version"],
                 model_id=tracker_details["model_number"],
@@ -47,6 +48,7 @@ class TractiveEntity(Entity):
         self._client = client
         self._dispatcher_signal = dispatcher_signal
 
+    @override
     async def async_added_to_hass(self) -> None:
         """Handle entity which will be added."""
         if not self._client.subscribed:

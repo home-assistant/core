@@ -3,7 +3,7 @@
 from collections.abc import Callable
 from dataclasses import asdict, dataclass
 import logging
-from typing import Any, Literal, Self
+from typing import Any, Literal, Self, override
 
 import voluptuous as vol
 
@@ -510,6 +510,7 @@ class AbstractTemplateWeather(AbstractTemplateEntity, WeatherEntity):
             self._attr_supported_features |= WeatherEntityFeature.FORECAST_TWICE_DAILY
 
     @property
+    @override
     def attribution(self) -> str | None:
         """Return the attribution."""
         if self._attribution is None:
@@ -538,14 +539,17 @@ class AbstractTemplateWeather(AbstractTemplateEntity, WeatherEntity):
 
         return update
 
+    @override
     async def async_forecast_daily(self) -> list[Forecast]:
         """Return the daily forecast in native units."""
         return self._forecast_daily or []
 
+    @override
     async def async_forecast_hourly(self) -> list[Forecast]:
         """Return the daily forecast in native units."""
         return self._forecast_hourly or []
 
+    @override
     async def async_forecast_twice_daily(self) -> list[Forecast]:
         """Return the daily forecast in native units."""
         return self._forecast_twice_daily or []
@@ -584,6 +588,7 @@ class WeatherExtraStoredData(ExtraStoredData):
     last_wind_gust_speed: float | None
     last_wind_speed: float | None
 
+    @override
     def as_dict(self) -> dict[str, Any]:
         """Return a dict representation of the event data."""
         return asdict(self)
@@ -643,6 +648,7 @@ class TriggerWeatherEntity(TriggerEntity, AbstractTemplateWeather, RestoreEntity
         TriggerEntity.__init__(self, hass, coordinator, config)
         AbstractTemplateWeather.__init__(self, config)
 
+    @override
     async def async_added_to_hass(self) -> None:
         """Restore last state."""
         await super().async_added_to_hass()
@@ -669,6 +675,7 @@ class TriggerWeatherEntity(TriggerEntity, AbstractTemplateWeather, RestoreEntity
             self._attr_native_wind_speed = weather_data.last_wind_speed
 
     @property
+    @override
     def extra_restore_state_data(self) -> WeatherExtraStoredData:
         """Return weather specific state data to be restored."""
         return WeatherExtraStoredData(

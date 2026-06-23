@@ -12,6 +12,7 @@ protocol specification.
 
 from collections.abc import Callable
 import logging
+from typing import override
 
 from bleak.backends.device import BLEDevice
 from home_assistant_bluetooth import BluetoothServiceInfoBleak
@@ -23,6 +24,7 @@ from matter_ble_proxy import (
 )
 
 from homeassistant.components.bluetooth import (
+    MONOTONIC_TIME,
     BluetoothScanningMode,
     async_ble_device_from_address,
     async_register_callback,
@@ -44,6 +46,7 @@ class HaBluetoothScanSource(BleScanSource):
         self._hass = hass
         self._cancel: CALLBACK_TYPE | None = None
 
+    @override
     async def start(  # pylint: disable=arguments-renamed
         self, callback_fn: Callable[[AdvertisementData], None]
     ) -> None:
@@ -51,11 +54,18 @@ class HaBluetoothScanSource(BleScanSource):
         if self._cancel is not None:
             return
 
+        # Drop HA's synchronous replay of stale history on register; otherwise a
+        # rotating peripheral's old addresses each become a parallel connect candidate.
+        # `MONOTONIC_TIME` is the clock that stamps `service_info.time`.
+        scan_start = MONOTONIC_TIME()
+
         @callback
         def _on_advertisement(
             service_info: BluetoothServiceInfoBleak,
             _change: object,
         ) -> None:
+            if service_info.time < scan_start:
+                return
             try:
                 callback_fn(_to_advertisement_data(service_info))
             except Exception:
@@ -68,6 +78,7 @@ class HaBluetoothScanSource(BleScanSource):
             BluetoothScanningMode.PASSIVE,
         )
 
+    @override
     async def stop(self) -> None:
         """Unregister the advertisement callback."""
         if self._cancel is not None:
@@ -82,6 +93,7 @@ class HaBluetoothDeviceResolver(BleDeviceResolver):
         """Initialize."""
         self._hass = hass
 
+    @override
     async def resolve(self, address: str) -> BLEDevice | None:
         """Return HA's cached BLEDevice for `address`, or None if unknown."""
         return async_ble_device_from_address(self._hass, address, connectable=True)
