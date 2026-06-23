@@ -2,6 +2,7 @@
 
 from unittest.mock import AsyncMock, call
 
+import pyaxencoapi
 import pytest
 from syrupy.assertion import SnapshotAssertion
 
@@ -37,12 +38,14 @@ CLIMATE_SUB_DEVICE = {
         "currentTemp": 19.0,
         "targetTemp": 20.0,
         "targetMode": 1,
+        "comfTemp": 20.0,
+        "ecoTemp": 16.5,
         "comfLimitMin": 7,
         "comfLimitMax": 30,
         "connected": True,
     },
     "connected": True,
-    "parents": {"gateway": "gw-1"},
+    "parents": ",gw-1,",
     "rfid": "rfid-1",
     "program": {"data": {}},
 }
@@ -55,13 +58,15 @@ CLIMATE_NTD_COOL = {
         "currentTemp": 20.0,
         "targetTemp": 21.0,
         "targetMode": 1,
+        "comfTemp": 26.0,
+        "ecoTemp": 28.0,
         "comfLimitMin": 7,
         "comfLimitMax": 30,
         "changeOverUser": 1,
         "connected": True,
     },
     "connected": True,
-    "parents": {"gateway": "gw-ntd"},
+    "parents": ",gw-ntd,",
     "rfid": "rfid-ntd",
     "program": {"data": {}},
 }
@@ -113,6 +118,36 @@ async def test_set_temperature(
     state = hass.states.get(entity_id)
     assert state is not None
     assert state.attributes["temperature"] == 23.5
+
+
+async def test_select_options_from_preset_model(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    mock_pyaxenco_client: AsyncMock,
+) -> None:
+    """Test select entity exposes options from the preset model."""
+    mock_pyaxenco_client.get_devices.return_value = [CLIMATE_DEVICE]
+
+    mock_config_entry.add_to_hass(hass)
+    await hass.config_entries.async_setup(mock_config_entry.entry_id)
+    await hass.async_block_till_done()
+
+    state = hass.states.get("climate.climate_device")
+    assert state is not None
+    assert state.attributes["preset_modes"] == list(
+        pyaxencoapi.PRESET_MODE_MODELS["EV30"]
+    )
+
+    await hass.services.async_call(
+        "climate",
+        "set_preset_mode",
+        {ATTR_ENTITY_ID: "climate.climate_device", "preset_mode": "comfort"},
+        blocking=True,
+    )
+
+    mock_pyaxenco_client.set_device_mode.assert_awaited_once_with(
+        "climate1", pyaxencoapi.PRESET_MODE_MAP["comfort"]
+    )
 
 
 async def test_set_preset_mode(
@@ -209,7 +244,7 @@ async def test_set_preset_mode_sub_device_timeout(
             blocking=True,
         )
 
-    mock_pyaxenco_client.set_sub_device_mode.assert_awaited_with("gw-1", "rfid-1", 2)
+    mock_pyaxenco_client.set_sub_device_mode.assert_awaited_with(",gw-1,", "rfid-1", 2)
 
 
 async def test_set_temperature_sub_device_missing_parents(
@@ -370,9 +405,9 @@ async def test_set_temperature_sub_device(
         blocking=True,
     )
 
-    mock_pyaxenco_client.set_sub_device_mode.assert_awaited_with("gw-1", "rfid-1", 8)
+    mock_pyaxenco_client.set_sub_device_mode.assert_awaited_with(",gw-1,", "rfid-1", 8)
     mock_pyaxenco_client.set_sub_device_temperature.assert_awaited_with(
-        "gw-1", "rfid-1", 21.0
+        ",gw-1,", "rfid-1", 21.0
     )
 
 
@@ -395,7 +430,7 @@ async def test_set_preset_mode_sub_device(
         blocking=True,
     )
 
-    mock_pyaxenco_client.set_sub_device_mode.assert_awaited_with("gw-1", "rfid-1", 2)
+    mock_pyaxenco_client.set_sub_device_mode.assert_awaited_with(",gw-1,", "rfid-1", 2)
 
 
 async def test_ntd_changeover_sets_cool(
@@ -558,7 +593,12 @@ async def test_changeover_updates_hvac_when_not_off(
         **CLIMATE_NTD_COOL,
         "_id": "climate_ntd_heat",
         "name": "Climate NTD Heat",
-        "state": {**CLIMATE_NTD_COOL["state"], "changeOverUser": 0},
+        "state": {
+            **CLIMATE_NTD_COOL["state"],
+            "changeOverUser": 0,
+            "comfTemp": 20.0,
+            "ecoTemp": 16.5,
+        },
     }
     mock_pyaxenco_client.get_devices.return_value = [ntd_heat]
     mock_config_entry.add_to_hass(hass)
@@ -629,7 +669,7 @@ async def test_set_preset_mode_when_hvac_off_ntd_sets_cool(
     )
 
     mock_pyaxenco_client.set_sub_device_mode.assert_has_awaits(
-        [call("gw-ntd", "rfid-ntd", 4), call("gw-ntd", "rfid-ntd", 2)]
+        [call(",gw-ntd,", "rfid-ntd", 4), call(",gw-ntd,", "rfid-ntd", 2)]
     )
     state = hass.states.get(entity_id)
     assert state is not None

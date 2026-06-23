@@ -2,6 +2,7 @@
 
 from unittest.mock import AsyncMock
 
+import pyaxencoapi
 from syrupy.assertion import SnapshotAssertion
 
 from homeassistant.const import ATTR_ENTITY_ID
@@ -33,6 +34,8 @@ UFH_DEVICE = {
     "name": "UFH Device",
     "model": "UFH",
     "state": {"changeOverUser": 0},
+    "parents": ",gw-ufh,",
+    "rfid": "rfid-ufh",
     "connected": True,
     "program": {"data": {}},
 }
@@ -91,6 +94,62 @@ async def test_select_option(
     state = hass.states.get("select.relais_device")
     assert state is not None
     assert state.state == "on"
+
+
+async def test_select_options_from_preset_model(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    mock_pyaxenco_client: AsyncMock,
+) -> None:
+    """Test select entity exposes options from the preset model."""
+    mock_pyaxenco_client.get_devices.return_value = [RELAIS_DEVICE]
+
+    mock_config_entry.add_to_hass(hass)
+    await hass.config_entries.async_setup(mock_config_entry.entry_id)
+    await hass.async_block_till_done()
+
+    state = hass.states.get("select.relais_device")
+    assert state is not None
+    assert state.attributes["options"] == list(pyaxencoapi.PRESET_MODE_MAP_RELAIS)
+
+    await hass.services.async_call(
+        "select",
+        "select_option",
+        {ATTR_ENTITY_ID: "select.relais_device", "option": "on"},
+        blocking=True,
+    )
+
+    mock_pyaxenco_client.set_device_mode.assert_awaited_once_with(
+        "relais1", pyaxencoapi.PRESET_MODE_MAP_RELAIS["on"]
+    )
+
+
+async def test_select_option_ufh(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    mock_pyaxenco_client: AsyncMock,
+) -> None:
+    """Test UFH select option update uses sub-device UFH API route."""
+    mock_pyaxenco_client.get_devices.return_value = [UFH_DEVICE]
+
+    mock_config_entry.add_to_hass(hass)
+    await hass.config_entries.async_setup(mock_config_entry.entry_id)
+    await hass.async_block_till_done()
+
+    await hass.services.async_call(
+        "select",
+        "select_option",
+        {ATTR_ENTITY_ID: "select.ufh_device", "option": "cooling"},
+        blocking=True,
+    )
+
+    mock_pyaxenco_client.set_sub_device_mode_ufh.assert_awaited_once_with(
+        ",gw-ufh,", "rfid-ufh", 1
+    )
+
+    state = hass.states.get("select.ufh_device")
+    assert state is not None
+    assert state.state == "cooling"
 
 
 async def test_websocket_state_update(
