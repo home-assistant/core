@@ -362,6 +362,7 @@ class ATANumber(MelCloudHomeATAUnitEntity, NumberEntity):
         """Return the current value."""
         return self.entity_description.value_fn(self.unit)
 
+    @override
     async def async_set_native_value(self, value: float) -> None:
         """Set the protection temperature threshold."""
         if self.entity_description.validate_fn and (
@@ -407,6 +408,7 @@ class ATWNumber(MelCloudHomeATWUnitEntity, NumberEntity):
         """Return the current value."""
         return self.entity_description.value_fn(self.unit)
 
+    @override
     async def async_set_native_value(self, value: float) -> None:
         """Set the protection temperature threshold."""
         if self.entity_description.validate_fn and (
