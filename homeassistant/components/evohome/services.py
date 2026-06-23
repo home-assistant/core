@@ -163,14 +163,14 @@ def _register_dhw_entity_services(hass: HomeAssistant) -> None:
 def _validate_set_system_mode_params(tcs: ControlSystem, data: dict[str, Any]) -> None:
     """Validate that a set_system_mode service call is properly formed."""
 
-    mode = data[ATTR_MODE]
-    tcs_modes = {m[SZ_SYSTEM_MODE]: m for m in tcs.allowed_system_modes}
+    mode = _as_snake_case(data[ATTR_MODE])
+    tcs_modes = {m[SZ_SYSTEM_MODE].value: m for m in tcs.allowed_system_modes}
 
     # Validation occurs here, instead of in the library, because it uses a slightly
     # different schema (until instead of duration/period) for the method invoked
     # via this service call
 
-    if (mode_info := tcs_modes.get(_as_snake_case(mode))) is None:  # type: ignore[call-overload]
+    if (mode_info := tcs_modes.get(mode)) is None:
         raise ServiceValidationError(
             translation_domain=DOMAIN,
             translation_key="mode_not_supported",
