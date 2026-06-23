@@ -1,10 +1,8 @@
 """Support for Neato Connected Vacuums."""
 
-from __future__ import annotations
-
 from datetime import timedelta
 import logging
-from typing import Any
+from typing import Any, override
 
 from pybotvac import Robot
 from pybotvac.exceptions import NeatoRobotException
@@ -230,6 +228,7 @@ class NeatoConnectedVacuum(NeatoEntity, StateVacuumEntity):
                     )
 
     @property
+    @override
     def extra_state_attributes(self) -> dict[str, Any]:
         """Return the state attributes of the vacuum cleaner."""
         data: dict[str, Any] = {}
@@ -260,6 +259,7 @@ class NeatoConnectedVacuum(NeatoEntity, StateVacuumEntity):
         return data
 
     @property
+    @override
     def device_info(self) -> DeviceInfo:
         """Device info for neato robot."""
         device_info = self._attr_device_info
@@ -269,6 +269,7 @@ class NeatoConnectedVacuum(NeatoEntity, StateVacuumEntity):
             device_info["sw_version"] = self._robot_stats["firmware"]
         return device_info
 
+    @override
     def start(self) -> None:
         """Start cleaning or resume cleaning."""
         if self._state:
@@ -277,20 +278,24 @@ class NeatoConnectedVacuum(NeatoEntity, StateVacuumEntity):
                     self.robot.start_cleaning()
                 elif self._state["state"] == 3:
                     self.robot.resume_cleaning()
+            # pylint: disable-next=home-assistant-action-swallowed-exception
             except NeatoRobotException as ex:
                 _LOGGER.error(
                     "Neato vacuum connection error for '%s': %s", self.entity_id, ex
                 )
 
+    @override
     def pause(self) -> None:
         """Pause the vacuum."""
         try:
             self.robot.pause_cleaning()
+        # pylint: disable-next=home-assistant-action-swallowed-exception
         except NeatoRobotException as ex:
             _LOGGER.error(
                 "Neato vacuum connection error for '%s': %s", self.entity_id, ex
             )
 
+    @override
     def return_to_base(self, **kwargs: Any) -> None:
         """Set the vacuum cleaner to return to the dock."""
         try:
@@ -298,33 +303,40 @@ class NeatoConnectedVacuum(NeatoEntity, StateVacuumEntity):
                 self.robot.pause_cleaning()
             self._attr_activity = VacuumActivity.RETURNING
             self.robot.send_to_base()
+        # pylint: disable-next=home-assistant-action-swallowed-exception
         except NeatoRobotException as ex:
             _LOGGER.error(
                 "Neato vacuum connection error for '%s': %s", self.entity_id, ex
             )
 
+    @override
     def stop(self, **kwargs: Any) -> None:
         """Stop the vacuum cleaner."""
         try:
             self.robot.stop_cleaning()
+        # pylint: disable-next=home-assistant-action-swallowed-exception
         except NeatoRobotException as ex:
             _LOGGER.error(
                 "Neato vacuum connection error for '%s': %s", self.entity_id, ex
             )
 
+    @override
     def locate(self, **kwargs: Any) -> None:
         """Locate the robot by making it emit a sound."""
         try:
             self.robot.locate()
+        # pylint: disable-next=home-assistant-action-swallowed-exception
         except NeatoRobotException as ex:
             _LOGGER.error(
                 "Neato vacuum connection error for '%s': %s", self.entity_id, ex
             )
 
+    @override
     def clean_spot(self, **kwargs: Any) -> None:
         """Run a spot cleaning starting from the base."""
         try:
             self.robot.start_spot_cleaning()
+        # pylint: disable-next=home-assistant-action-swallowed-exception
         except NeatoRobotException as ex:
             _LOGGER.error(
                 "Neato vacuum connection error for '%s': %s", self.entity_id, ex

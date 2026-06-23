@@ -42,10 +42,10 @@ from . import setup_integration
 from tests.common import MockConfigEntry, async_load_json_array_fixture
 
 
+@pytest.mark.usefixtures("mock_setup_entry")
 async def test_config_import(
     hass: HomeAssistant,
     mock_proxmox_client: MagicMock,
-    mock_setup_entry: MagicMock,
     issue_registry: ir.IssueRegistry,
 ) -> None:
     """Test sensor initialization."""
@@ -162,7 +162,7 @@ async def test_setup_exceptions(
     attr_to_mock.side_effect = exception
 
     await setup_integration(hass, mock_config_entry)
-    assert mock_config_entry.state == expected_state
+    assert mock_config_entry.state is expected_state
 
 
 async def test_migration_v1_to_v3(
@@ -317,7 +317,7 @@ async def test_new_vm_creates_entity(
     """Test that a VM appearing after initial load gets an entity created."""
     mock_proxmox_client._node_mock.qemu.get.return_value = []
     await setup_integration(hass, mock_config_entry)
-    assert mock_config_entry.state == ConfigEntryState.LOADED
+    assert mock_config_entry.state is ConfigEntryState.LOADED
 
     initial_count = len(
         er.async_entries_for_config_entry(entity_registry, mock_config_entry.entry_id)
@@ -350,7 +350,7 @@ async def test_new_container_creates_entity(
     """Test that a container appearing after initial load gets an entity created."""
     mock_proxmox_client._node_mock.lxc.get.return_value = []
     await setup_integration(hass, mock_config_entry)
-    assert mock_config_entry.state == ConfigEntryState.LOADED
+    assert mock_config_entry.state is ConfigEntryState.LOADED
 
     initial_count = len(
         er.async_entries_for_config_entry(entity_registry, mock_config_entry.entry_id)

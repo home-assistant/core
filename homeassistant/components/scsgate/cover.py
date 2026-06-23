@@ -1,9 +1,7 @@
 """Support for SCSGate covers."""
 
-from __future__ import annotations
-
 import logging
-from typing import Any
+from typing import Any, override
 
 from scsgate.tasks import (
     HaltRollerShutterTask,
@@ -78,23 +76,28 @@ class SCSGateCover(CoverEntity):
         return self._scs_id
 
     @property
+    @override
     def name(self) -> str:
         """Return the name of the cover."""
         return self._name
 
     @property
+    @override
     def is_closed(self) -> None:
         """Return if the cover is closed."""
         return None
 
+    @override
     def open_cover(self, **kwargs: Any) -> None:
         """Move the cover."""
         self._scsgate.append_task(RaiseRollerShutterTask(target=self._scs_id))
 
+    @override
     def close_cover(self, **kwargs: Any) -> None:
         """Move the cover down."""
         self._scsgate.append_task(LowerRollerShutterTask(target=self._scs_id))
 
+    @override
     def stop_cover(self, **kwargs: Any) -> None:
         """Stop the cover."""
         self._scsgate.append_task(HaltRollerShutterTask(target=self._scs_id))

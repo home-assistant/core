@@ -1,9 +1,7 @@
 """Config flow to configure the Twinkly integration."""
 
-from __future__ import annotations
-
 import logging
-from typing import Any
+from typing import Any, override
 
 from aiohttp import ClientError
 from ttls.client import Twinkly
@@ -29,6 +27,7 @@ class TwinklyConfigFlow(ConfigFlow, domain=DOMAIN):
         """Initialize the config flow."""
         self._discovered_device: tuple[dict[str, Any], str] | None = None
 
+    @override
     async def async_step_user(
         self, user_input: dict[str, Any] | None = None
     ) -> ConfigFlowResult:
@@ -57,6 +56,7 @@ class TwinklyConfigFlow(ConfigFlow, domain=DOMAIN):
             step_id="user", data_schema=Schema(schema), errors=errors
         )
 
+    @override
     async def async_step_dhcp(
         self, discovery_info: DhcpServiceInfo
     ) -> ConfigFlowResult:

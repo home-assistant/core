@@ -1,6 +1,6 @@
 """Music Assistant Button platform."""
 
-from __future__ import annotations
+from typing import override
 
 from homeassistant.components.button import ButtonEntity, ButtonEntityDescription
 from homeassistant.const import Platform
@@ -34,7 +34,7 @@ async def async_setup_entry(
 
 
 class MusicAssistantFavoriteButton(MusicAssistantEntity, ButtonEntity):
-    """Representation of a Button entity to favorite the currently playing item on a player."""
+    """Representation of a Button entity to favorite the current item."""
 
     entity_description = ButtonEntityDescription(
         key="favorite_now_playing",
@@ -42,6 +42,7 @@ class MusicAssistantFavoriteButton(MusicAssistantEntity, ButtonEntity):
     )
 
     @catch_musicassistant_error
+    @override
     async def async_press(self) -> None:
         """Handle the button press command."""
         await self.mass.players.add_currently_playing_to_favorites(self.player_id)

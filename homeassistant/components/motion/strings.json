@@ -31,25 +31,10 @@
       "name": "Motion is not detected"
     }
   },
-  "selector": {
-    "condition_behavior": {
-      "options": {
-        "all": "All",
-        "any": "Any"
-      }
-    },
-    "trigger_behavior": {
-      "options": {
-        "any": "Any",
-        "first": "First",
-        "last": "Last"
-      }
-    }
-  },
   "title": "Motion",
   "triggers": {
     "cleared": {
-      "description": "Triggers after one or more motion sensors stop detecting motion.",
+      "description": "Triggers when one or more motion sensors stop detecting motion.",
       "fields": {
         "behavior": {
           "name": "[%key:component::motion::common::trigger_behavior_name%]"
@@ -61,7 +46,7 @@
       "name": "Motion cleared"
     },
     "detected": {
-      "description": "Triggers after one or more motion sensors start detecting motion.",
+      "description": "Triggers when one or more motion sensors start detecting motion.",
       "fields": {
         "behavior": {
           "name": "[%key:component::motion::common::trigger_behavior_name%]"

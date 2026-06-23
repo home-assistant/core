@@ -1,7 +1,5 @@
 """Test Scrape component setup process."""
 
-from __future__ import annotations
-
 from dataclasses import dataclass
 from http import HTTPStatus
 from typing import Any

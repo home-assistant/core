@@ -1,7 +1,5 @@
 """Tests for the Backup integration."""
 
-from __future__ import annotations
-
 import asyncio
 from collections.abc import Callable, Generator
 from dataclasses import replace
@@ -378,7 +376,8 @@ async def test_create_backup_when_busy(
         ),
         (
             {"agent_ids": ["non_existing"]},
-            "At least one available backup agent must be selected, got ['non_existing']",
+            "At least one available backup agent must be"
+            " selected, got ['non_existing']",
         ),
         (
             {"include_addons": ["ssl"], "include_all_addons": True},
@@ -2085,6 +2084,36 @@ async def test_receive_backup_path_traversal(
         "/api/backup/upload?agent_id=backup.local",
         data=data,
     )
+
+    assert resp.status == 400
+
+
+@pytest.mark.parametrize(
+    "name",
+    [
+        "/absolute/path",
+        "../parent",
+        "with/slash",
+    ],
+)
+async def test_receive_backup_rejects_unsafe_inner_name(
+    hass: HomeAssistant,
+    hass_client: ClientSessionGenerator,
+    name: str,
+) -> None:
+    """Test receive backup rejects an inner name that would escape the backup dir."""
+    await setup_backup_integration(hass)
+    client = await hass_client()
+
+    backup = replace(TEST_BACKUP_ABC123, name=name)
+    with patch(
+        "homeassistant.components.backup.manager.read_backup",
+        return_value=backup,
+    ):
+        resp = await client.post(
+            "/api/backup/upload?agent_id=backup.local",
+            data={"file": StringIO("test")},
+        )
 
     assert resp.status == 400
 

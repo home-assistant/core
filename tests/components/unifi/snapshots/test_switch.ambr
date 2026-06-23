@@ -1,5 +1,5 @@
 # serializer version: 1
-# name: test_entity_and_device_data[site_payload0-wlan_payload0-traffic_rule_payload0-port_forward_payload0-dpi_group_payload0-dpi_app_payload0-device_payload0-client_payload0-config_entry_options0][switch.block_client_1-entry]
+# name: test_entity_and_device_data[site_payload0-wlan_payload0-traffic_rule_payload0-port_forward_payload0-dpi_group_payload0-dpi_app_payload0-device_payload0-client_payload0-config_entry_options0][switch.block_client_1_blocked-entry]
   EntityRegistryEntrySnapshot({
     'aliases': list([
       None,
@@ -13,7 +13,7 @@
     'disabled_by': None,
     'domain': 'switch',
     'entity_category': <EntityCategory.CONFIG: 'config'>,
-    'entity_id': 'switch.block_client_1',
+    'entity_id': 'switch.block_client_1_blocked',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -21,12 +21,12 @@
     'labels': set({
     }),
     'name': None,
-    'object_id_base': None,
+    'object_id_base': 'Blocked',
     'options': dict({
     }),
     'original_device_class': <SwitchDeviceClass.SWITCH: 'switch'>,
     'original_icon': None,
-    'original_name': None,
+    'original_name': 'Blocked',
     'platform': 'unifi',
     'previous_unique_id': None,
     'suggested_object_id': None,
@@ -36,14 +36,14 @@
     'unit_of_measurement': None,
   })
 # ---
-# name: test_entity_and_device_data[site_payload0-wlan_payload0-traffic_rule_payload0-port_forward_payload0-dpi_group_payload0-dpi_app_payload0-device_payload0-client_payload0-config_entry_options0][switch.block_client_1-state]
+# name: test_entity_and_device_data[site_payload0-wlan_payload0-traffic_rule_payload0-port_forward_payload0-dpi_group_payload0-dpi_app_payload0-device_payload0-client_payload0-config_entry_options0][switch.block_client_1_blocked-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'device_class': 'switch',
-      'friendly_name': 'Block Client 1',
+      'friendly_name': 'Block Client 1 Blocked',
     }),
     'context': <ANY>,
-    'entity_id': 'switch.block_client_1',
+    'entity_id': 'switch.block_client_1_blocked',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
@@ -184,7 +184,7 @@
     'previous_unique_id': None,
     'suggested_object_id': None,
     'supported_features': 0,
-    'translation_key': 'port_control',
+    'translation_key': None,
     'unique_id': 'port-10:00:00:00:01:01_1',
     'unit_of_measurement': None,
   })
@@ -286,7 +286,7 @@
     'previous_unique_id': None,
     'suggested_object_id': None,
     'supported_features': 0,
-    'translation_key': 'port_control',
+    'translation_key': None,
     'unique_id': 'port-10:00:00:00:01:01_2',
     'unit_of_measurement': None,
   })
@@ -388,7 +388,7 @@
     'previous_unique_id': None,
     'suggested_object_id': None,
     'supported_features': 0,
-    'translation_key': 'port_control',
+    'translation_key': None,
     'unique_id': 'port-10:00:00:00:01:01_3',
     'unit_of_measurement': None,
   })
@@ -439,7 +439,7 @@
     'previous_unique_id': None,
     'suggested_object_id': None,
     'supported_features': 0,
-    'translation_key': 'port_control',
+    'translation_key': None,
     'unique_id': 'port-10:00:00:00:01:01_4',
     'unit_of_measurement': None,
   })
@@ -560,7 +560,7 @@
     'state': 'on',
   })
 # ---
-# name: test_entity_and_device_data[site_payload0-wlan_payload0-traffic_rule_payload0-port_forward_payload0-dpi_group_payload0-dpi_app_payload0-device_payload0-client_payload0-config_entry_options0][switch.ssid_1-entry]
+# name: test_entity_and_device_data[site_payload0-wlan_payload0-traffic_rule_payload0-port_forward_payload0-dpi_group_payload0-dpi_app_payload0-device_payload0-client_payload0-config_entry_options0][switch.ssid_1_enabled-entry]
   EntityRegistryEntrySnapshot({
     'aliases': list([
       None,
@@ -574,7 +574,7 @@
     'disabled_by': None,
     'domain': 'switch',
     'entity_category': <EntityCategory.CONFIG: 'config'>,
-    'entity_id': 'switch.ssid_1',
+    'entity_id': 'switch.ssid_1_enabled',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -582,12 +582,12 @@
     'labels': set({
     }),
     'name': None,
-    'object_id_base': None,
+    'object_id_base': 'Enabled',
     'options': dict({
     }),
     'original_device_class': <SwitchDeviceClass.SWITCH: 'switch'>,
     'original_icon': None,
-    'original_name': None,
+    'original_name': 'Enabled',
     'platform': 'unifi',
     'previous_unique_id': None,
     'suggested_object_id': None,
@@ -597,14 +597,14 @@
     'unit_of_measurement': None,
   })
 # ---
-# name: test_entity_and_device_data[site_payload0-wlan_payload0-traffic_rule_payload0-port_forward_payload0-dpi_group_payload0-dpi_app_payload0-device_payload0-client_payload0-config_entry_options0][switch.ssid_1-state]
+# name: test_entity_and_device_data[site_payload0-wlan_payload0-traffic_rule_payload0-port_forward_payload0-dpi_group_payload0-dpi_app_payload0-device_payload0-client_payload0-config_entry_options0][switch.ssid_1_enabled-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'device_class': 'switch',
-      'friendly_name': 'SSID 1',
+      'friendly_name': 'SSID 1 Enabled',
     }),
     'context': <ANY>,
-    'entity_id': 'switch.ssid_1',
+    'entity_id': 'switch.ssid_1_enabled',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
@@ -643,7 +643,7 @@
     'previous_unique_id': None,
     'suggested_object_id': None,
     'supported_features': 0,
-    'translation_key': 'dpi_restriction',
+    'translation_key': None,
     'unique_id': '5f976f4ae3c58f018ec7dff6',
     'unit_of_measurement': None,
   })
@@ -693,7 +693,7 @@
     'previous_unique_id': None,
     'suggested_object_id': None,
     'supported_features': 0,
-    'translation_key': 'port_forward_control',
+    'translation_key': None,
     'unique_id': 'port_forward-5a32aa4ee4b0412345678911',
     'unit_of_measurement': None,
   })
@@ -744,7 +744,7 @@
     'previous_unique_id': None,
     'suggested_object_id': None,
     'supported_features': 0,
-    'translation_key': 'traffic_rule_control',
+    'translation_key': None,
     'unique_id': 'traffic_rule-6452cd9b859d5b11aa002ea1',
     'unit_of_measurement': None,
   })

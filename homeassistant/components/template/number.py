@@ -1,22 +1,25 @@
 """Support for numbers which integrates with other components."""
 
-from __future__ import annotations
-
-from typing import TYPE_CHECKING, Any
+from typing import TYPE_CHECKING, Any, override
 
 import voluptuous as vol
 
 from homeassistant.components.number import (
-    ATTR_VALUE,
     DEFAULT_MAX_VALUE,
     DEFAULT_MIN_VALUE,
     DEFAULT_STEP,
+    DEVICE_CLASSES_SCHEMA,
     DOMAIN as NUMBER_DOMAIN,
     ENTITY_ID_FORMAT,
     NumberEntity,
 )
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import CONF_NAME, CONF_STATE, CONF_UNIT_OF_MEASUREMENT
+from homeassistant.const import (
+    CONF_DEVICE_CLASS,
+    CONF_NAME,
+    CONF_STATE,
+    CONF_UNIT_OF_MEASUREMENT,
+)
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.entity_platform import (
@@ -50,6 +53,7 @@ SCRIPT_FIELDS = (CONF_SET_VALUE,)
 
 NUMBER_COMMON_SCHEMA = vol.Schema(
     {
+        vol.Optional(CONF_DEVICE_CLASS): DEVICE_CLASSES_SCHEMA,
         vol.Optional(CONF_MAX, default=DEFAULT_MAX_VALUE): cv.template,
         vol.Optional(CONF_MIN, default=DEFAULT_MIN_VALUE): cv.template,
         vol.Required(CONF_SET_VALUE): cv.SCRIPT_SCHEMA,
@@ -120,10 +124,14 @@ class AbstractTemplateNumber(AbstractTemplateEntity, NumberEntity):
     _optimistic_entity = True
     _state_option = CONF_STATE
 
-    # The super init is not called because TemplateEntity and TriggerEntity will call AbstractTemplateEntity.__init__.
-    # This ensures that the __init__ on AbstractTemplateEntity is not called twice.
+    # The super init is not called because TemplateEntity
+    # and TriggerEntity will call
+    # AbstractTemplateEntity.__init__. This ensures that
+    # the __init__ on AbstractTemplateEntity is not
+    # called twice.
     def __init__(self, name: str, config: dict[str, Any]) -> None:  # pylint: disable=super-init-not-called
         """Initialize the features."""
+        self._attr_device_class = config.get(CONF_DEVICE_CLASS)
         self._attr_native_unit_of_measurement = config.get(CONF_UNIT_OF_MEASUREMENT)
         self._attr_native_step = DEFAULT_STEP
         self._attr_native_min_value = DEFAULT_MIN_VALUE
@@ -144,6 +152,7 @@ class AbstractTemplateNumber(AbstractTemplateEntity, NumberEntity):
 
         self.add_script(CONF_SET_VALUE, config[CONF_SET_VALUE], name, DOMAIN)
 
+    @override
     async def async_set_native_value(self, value: float) -> None:
         """Set value of the number."""
         if self._attr_assumed_state:
@@ -152,7 +161,7 @@ class AbstractTemplateNumber(AbstractTemplateEntity, NumberEntity):
         if set_value := self._action_scripts.get(CONF_SET_VALUE):
             await self.async_run_script(
                 set_value,
-                run_variables={ATTR_VALUE: value},
+                run_variables={"value": value},
                 context=self._context,
             )
 

@@ -1,7 +1,5 @@
 """Component to interface with cameras."""
 
-from __future__ import annotations
-
 import asyncio
 import collections
 from collections.abc import Awaitable, Callable, Coroutine
@@ -14,7 +12,7 @@ import logging
 import os
 from random import SystemRandom
 import time
-from typing import Any, Final, final
+from typing import Any, Final, final, override
 
 from aiohttp import hdrs, web
 import attr
@@ -447,7 +445,7 @@ class Camera(Entity, cached_properties=CACHED_PROPERTIES_WITH_ATTR_):
         self.stream: Stream | None = None
         self.stream_options: dict[str, str | bool | float] = {}
         self.content_type: str = DEFAULT_CONTENT_TYPE
-        self.access_tokens: collections.deque = collections.deque([], 2)
+        self.access_tokens: collections.deque = collections.deque(maxlen=2)
         self._warned_old_signature = False
         self.async_update_token()
         self._create_stream_lock: asyncio.Lock | None = None
@@ -458,6 +456,7 @@ class Camera(Entity, cached_properties=CACHED_PROPERTIES_WITH_ATTR_):
         )
 
     @cached_property
+    @override
     def entity_picture(self) -> str:
         """Return a link to the camera feed as entity picture."""
         if self._attr_entity_picture is not None:
@@ -470,6 +469,7 @@ class Camera(Entity, cached_properties=CACHED_PROPERTIES_WITH_ATTR_):
         return False
 
     @cached_property
+    @override
     def supported_features(self) -> CameraEntityFeature:
         """Flag supported features."""
         return self._attr_supported_features
@@ -505,6 +505,7 @@ class Camera(Entity, cached_properties=CACHED_PROPERTIES_WITH_ATTR_):
         return self._attr_frame_interval
 
     @property
+    @override
     def available(self) -> bool:
         """Return True if entity is available."""
         if (stream := self.stream) and not stream.available:
@@ -547,10 +548,13 @@ class Camera(Entity, cached_properties=CACHED_PROPERTIES_WITH_ATTR_):
     ) -> None:
         """Handle the async WebRTC offer.
 
-        Async means that it could take some time to process the offer and responses/message
-        will be sent with the send_message callback.
-        This method is used by cameras with CameraEntityFeature.STREAM.
-        An integration overriding this method must also implement async_on_webrtc_candidate.
+        Async means that it could take some time to process
+        the offer and responses/message will be sent with the
+        send_message callback.
+        This method is used by cameras with
+        CameraEntityFeature.STREAM.
+        An integration overriding this method must also
+        implement async_on_webrtc_candidate.
 
         Integrations can override with a native WebRTC implementation.
         """
@@ -596,6 +600,7 @@ class Camera(Entity, cached_properties=CACHED_PROPERTIES_WITH_ATTR_):
 
     @property
     @final
+    @override
     def state(self) -> str:
         """Return the camera state."""
         if self.is_recording:
@@ -643,6 +648,7 @@ class Camera(Entity, cached_properties=CACHED_PROPERTIES_WITH_ATTR_):
 
     @final
     @property
+    @override
     def state_attributes(self) -> dict[str, str | None]:
         """Return the camera state attributes."""
         attrs = {"access_token": self.access_tokens[-1]}
@@ -664,6 +670,7 @@ class Camera(Entity, cached_properties=CACHED_PROPERTIES_WITH_ATTR_):
         self.access_tokens.append(hex(_RND.getrandbits(256))[2:])
         self.__dict__.pop("entity_picture", None)
 
+    @override
     async def async_internal_added_to_hass(self) -> None:
         """Run when entity about to be added to hass."""
         await super().async_internal_added_to_hass()
@@ -709,7 +716,10 @@ class Camera(Entity, cached_properties=CACHED_PROPERTIES_WITH_ATTR_):
     @final
     @callback
     def async_get_webrtc_client_configuration(self) -> WebRTCClientConfiguration:
-        """Return the WebRTC client configuration and extend it with the registered ice servers."""
+        """Return the WebRTC client configuration.
+
+        Extend it with the registered ice servers.
+        """
         config = self._async_get_webrtc_client_configuration()
 
         ice_servers = async_get_ice_servers(self.hass)
@@ -755,6 +765,7 @@ class Camera(Entity, cached_properties=CACHED_PROPERTIES_WITH_ATTR_):
         return CameraCapabilities(frontend_stream_types)
 
     @callback
+    @override
     def _async_write_ha_state(self) -> None:
         """Write the state to the state machine.
 
@@ -781,7 +792,9 @@ class CameraView(HomeAssistantView):
     async def get(self, request: web.Request, entity_id: str) -> web.StreamResponse:
         """Start a GET request."""
         if (camera := self.component.get_entity(entity_id)) is None:
-            raise web.HTTPNotFound
+            raise (
+                web.HTTPNotFound if request[KEY_AUTHENTICATED] else web.HTTPUnauthorized
+            )
 
         authenticated = (
             request[KEY_AUTHENTICATED]
@@ -789,11 +802,15 @@ class CameraView(HomeAssistantView):
         )
 
         if not authenticated:
-            # Attempt with invalid bearer token, raise unauthorized
-            # so ban middleware can handle it.
             if hdrs.AUTHORIZATION in request.headers:
+                # A failed request that carried an Authorization header is a real
+                # Bearer auth attempt — return 401 and let the ban middleware count
+                # it as a wrong login.
                 raise web.HTTPUnauthorized
-            # Invalid sigAuth or camera access token
+            # No Authorization header: most likely a benign signed-URL / query-
+            # token request whose token has expired (e.g. a browser tab left
+            # open that re-fetches resources later). Return 403 so it doesn't
+            # register as a wrong login and ban the user's own IP.
             raise web.HTTPForbidden
 
         if not camera.is_on:
@@ -813,6 +830,7 @@ class CameraImageView(CameraView):
     url = "/api/camera_proxy/{entity_id}"
     name = "api:camera:image"
 
+    @override
     async def handle(self, request: web.Request, camera: Camera) -> web.Response:
         """Serve camera image."""
         width = request.query.get("width")
@@ -836,6 +854,7 @@ class CameraMjpegStream(CameraView):
     url = "/api/camera_proxy_stream/{entity_id}"
     name = "api:camera:stream"
 
+    @override
     async def handle(self, request: web.Request, camera: Camera) -> web.StreamResponse:
         """Serve camera stream, possibly with interval."""
         if (interval_str := request.query.get("interval")) is None:
@@ -926,6 +945,7 @@ async def websocket_get_prefs(
         vol.Optional(PREF_ORIENTATION): vol.Coerce(Orientation),
     }
 )
+@websocket_api.require_admin
 @websocket_api.async_response
 async def websocket_update_prefs(
     hass: HomeAssistant, connection: ActiveConnection, msg: dict[str, Any]
@@ -980,6 +1000,7 @@ class _TemplateCameraEntity:
         self._report_issue()
         return getattr(self._camera, name)
 
+    @override
     def __str__(self) -> str:
         """Forward to the camera entity."""
         self._report_issue()
@@ -1000,7 +1021,9 @@ async def async_handle_snapshot_service(
     # check if we allow to access to that file
     if not hass.config.is_allowed_path(snapshot_file):
         raise HomeAssistantError(
-            f"Cannot write `{snapshot_file}`, no access to path; `allowlist_external_dirs` may need to be adjusted in `configuration.yaml`"
+            f"Cannot write `{snapshot_file}`, no access to path;"
+            " `allowlist_external_dirs` may need to be adjusted"
+            " in `configuration.yaml`"
         )
 
     try:

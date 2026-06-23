@@ -1,9 +1,7 @@
 """Support for YoLink Device."""
 
-from __future__ import annotations
-
 from abc import abstractmethod
-from typing import Any
+from typing import Any, override
 
 from yolink.client_request import ClientRequest
 
@@ -34,12 +32,14 @@ class YoLinkEntity(CoordinatorEntity[YoLinkCoordinator]):
         """Return the device id of the YoLink device."""
         return self.coordinator.device.device_id
 
+    @override
     async def async_added_to_hass(self) -> None:
         """Update state."""
         await super().async_added_to_hass()
         return self._handle_coordinator_update()
 
     @callback
+    @override
     def _handle_coordinator_update(self) -> None:
         """Update state."""
         data = self.coordinator.data
@@ -47,6 +47,7 @@ class YoLinkEntity(CoordinatorEntity[YoLinkCoordinator]):
             self.update_entity_state(data)
 
     @property
+    @override
     def device_info(self) -> DeviceInfo:
         """Return the device info for HA."""
         return DeviceInfo(

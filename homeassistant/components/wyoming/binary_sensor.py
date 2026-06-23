@@ -1,6 +1,6 @@
 """Binary sensor for Wyoming."""
 
-from __future__ import annotations
+from typing import override
 
 from homeassistant.components.binary_sensor import (
     BinarySensorEntity,
@@ -37,6 +37,7 @@ class WyomingSatelliteAssistInProgress(WyomingSatelliteEntity, BinarySensorEntit
     )
     _attr_is_on = False
 
+    @override
     async def async_added_to_hass(self) -> None:
         """Call when entity about to be added to hass."""
         await super().async_added_to_hass()

@@ -1,10 +1,8 @@
 """Config flow for OpenDisplay integration."""
 
-from __future__ import annotations
-
 from collections.abc import Mapping
 import logging
-from typing import TYPE_CHECKING, Any
+from typing import TYPE_CHECKING, Any, override
 
 from opendisplay import (
     MANUFACTURER_ID,
@@ -53,6 +51,7 @@ class OpenDisplayConfigFlow(ConfigFlow, domain=DOMAIN):
         ) as device:
             await device.read_firmware_version()
 
+    @override
     async def async_step_bluetooth(
         self, discovery_info: BluetoothServiceInfoBleak
     ) -> ConfigFlowResult:
@@ -89,6 +88,7 @@ class OpenDisplayConfigFlow(ConfigFlow, domain=DOMAIN):
 
         return self.async_create_entry(title=self._discovery_info.name, data={})
 
+    @override
     async def async_step_user(
         self, user_input: dict[str, Any] | None = None
     ) -> ConfigFlowResult:

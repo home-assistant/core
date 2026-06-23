@@ -43,8 +43,12 @@ async def test_async_setup_entry_device_not_found(
     """Test setup raises ConfigEntryNotReady when BLE device is not found."""
     mock_config_entry.add_to_hass(hass)
 
-    # Do not inject BLE info — device is not in the cache
-    await hass.config_entries.async_setup(mock_config_entry.entry_id)
+    with patch(
+        "homeassistant.components.bluetooth.async_address_reachability_diagnostics",
+        return_value="no_reason",
+    ):
+        # Do not inject BLE info — device is not in the cache
+        await hass.config_entries.async_setup(mock_config_entry.entry_id)
 
     assert mock_config_entry.state is ConfigEntryState.SETUP_RETRY
 
@@ -56,7 +60,7 @@ async def test_async_unload_entry(
     result = await hass.config_entries.async_unload(config_entry.entry_id)
 
     assert result is True
-    assert config_entry.state == ConfigEntryState.NOT_LOADED
+    assert config_entry.state is ConfigEntryState.NOT_LOADED
 
 
 async def test_device_info(

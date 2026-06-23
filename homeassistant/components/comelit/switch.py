@@ -1,8 +1,6 @@
 """Support for switches."""
 
-from __future__ import annotations
-
-from typing import Any, cast
+from typing import Any, cast, override
 
 from aiocomelit import ComelitSerialBridgeObject
 from aiocomelit.const import IRRIGATION, OTHER, STATE_OFF, STATE_ON
@@ -71,15 +69,18 @@ class ComelitSwitchEntity(ComelitBridgeBaseEntity, SwitchEntity):
         self.coordinator.data[self._device.type][self._device.index].status = state
         self.async_write_ha_state()
 
+    @override
     async def async_turn_on(self, **kwargs: Any) -> None:
         """Turn the switch on."""
         await self._switch_set_state(STATE_ON)
 
+    @override
     async def async_turn_off(self, **kwargs: Any) -> None:
         """Turn the switch off."""
         await self._switch_set_state(STATE_OFF)
 
     @property
+    @override
     def is_on(self) -> bool:
         """Return True if switch is on."""
         return bool(

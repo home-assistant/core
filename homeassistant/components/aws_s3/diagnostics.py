@@ -1,21 +1,14 @@
 """Diagnostics support for AWS S3."""
 
-from __future__ import annotations
-
 import dataclasses
 from typing import Any
 
 from homeassistant.components.backup import DATA_MANAGER as BACKUP_DATA_MANAGER
 from homeassistant.components.diagnostics import async_redact_data
+from homeassistant.const import CONF_PREFIX
 from homeassistant.core import HomeAssistant
 
-from .const import (
-    CONF_ACCESS_KEY_ID,
-    CONF_BUCKET,
-    CONF_PREFIX,
-    CONF_SECRET_ACCESS_KEY,
-    DOMAIN,
-)
+from .const import CONF_ACCESS_KEY_ID, CONF_BUCKET, CONF_SECRET_ACCESS_KEY, DOMAIN
 from .coordinator import S3ConfigEntry
 from .helpers import async_list_backups_from_s3
 

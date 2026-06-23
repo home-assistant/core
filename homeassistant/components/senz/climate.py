@@ -1,8 +1,6 @@
 """nVent RAYCHEM SENZ climate platform."""
 
-from __future__ import annotations
-
-from typing import Any
+from typing import Any, override
 
 from httpx import RequestError
 from pysenz import MODE_AUTO, Thermostat
@@ -65,27 +63,32 @@ class SENZClimate(CoordinatorEntity[SENZDataUpdateCoordinator], ClimateEntity):
         )
 
     @callback
+    @override
     def _handle_coordinator_update(self) -> None:
         """Handle updated data from the coordinator."""
         self._thermostat = self.coordinator.data[self._thermostat.serial_number]
         self.async_write_ha_state()
 
     @property
+    @override
     def current_temperature(self) -> float:
         """Return the current temperature."""
         return self._thermostat.current_temperatue
 
     @property
+    @override
     def target_temperature(self) -> float:
         """Return the temperature we try to reach."""
         return self._thermostat.setpoint_temperature
 
     @property
+    @override
     def available(self) -> bool:
         """Return True if the thermostat is available."""
         return super().available and self._thermostat.online
 
     @property
+    @override
     def hvac_mode(self) -> HVACMode:
         """Return hvac operation ie. auto, heat mode."""
         if self._thermostat.mode == MODE_AUTO:
@@ -93,10 +96,12 @@ class SENZClimate(CoordinatorEntity[SENZDataUpdateCoordinator], ClimateEntity):
         return HVACMode.HEAT
 
     @property
+    @override
     def hvac_action(self) -> HVACAction:
         """Return current hvac action."""
         return HVACAction.HEATING if self._thermostat.is_heating else HVACAction.IDLE
 
+    @override
     async def async_set_hvac_mode(self, hvac_mode: HVACMode) -> None:
         """Set new target hvac mode."""
         try:
@@ -114,6 +119,7 @@ class SENZClimate(CoordinatorEntity[SENZDataUpdateCoordinator], ClimateEntity):
             ) from err
         await self.coordinator.async_request_refresh()
 
+    @override
     async def async_set_temperature(self, **kwargs: Any) -> None:
         """Set new target temperature."""
         temp: float = kwargs[ATTR_TEMPERATURE]

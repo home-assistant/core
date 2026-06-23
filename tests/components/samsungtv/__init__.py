@@ -1,7 +1,5 @@
 """Tests for the samsungtv component."""
 
-from __future__ import annotations
-
 from collections.abc import Mapping
 from typing import Any
 

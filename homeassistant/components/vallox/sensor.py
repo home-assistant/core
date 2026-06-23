@@ -1,9 +1,8 @@
 """Support for Vallox ventilation unit sensors."""
 
-from __future__ import annotations
-
 from dataclasses import dataclass
 from datetime import datetime, time
+from typing import override
 
 from homeassistant.components.sensor import (
     SensorDeviceClass,
@@ -55,6 +54,7 @@ class ValloxSensorEntity(ValloxEntity, SensorEntity):
         self._attr_unique_id = f"{self._device_uuid}-{description.key}"
 
     @property
+    @override
     def native_value(self) -> StateType | datetime:
         """Return the value reported by the sensor."""
         if (metric_key := self.entity_description.metric_key) is None:
@@ -74,22 +74,27 @@ class ValloxProfileSensor(ValloxSensorEntity):
     """Child class for profile reporting."""
 
     @property
+    @override
     def native_value(self) -> StateType:
         """Return the value reported by the sensor."""
         vallox_profile = self.coordinator.data.profile
         return VALLOX_PROFILE_TO_PRESET_MODE.get(vallox_profile)
 
 
-# There is a quirk with respect to the fan speed reporting. The device keeps on reporting the last
-# valid fan speed from when the device was in regular operation mode, even if it left that state and
-# has been shut off in the meantime.
+# There is a quirk with respect to the fan speed
+# reporting. The device keeps on reporting the last valid
+# fan speed from when the device was in regular operation
+# mode, even if it left that state and has been shut off
+# in the meantime.
 #
-# Therefore, first query the overall state of the device, and report zero percent fan speed in case
+# Therefore, first query the overall state of the device,
+# and report zero percent fan speed in case
 # it is not in regular operation mode.
 class ValloxFanSpeedSensor(ValloxSensorEntity):
     """Child class for fan speed reporting."""
 
     @property
+    @override
     def native_value(self) -> StateType | datetime:
         """Return the value reported by the sensor."""
         fan_is_on = self.coordinator.data.get(METRIC_KEY_MODE) == MODE_ON
@@ -100,6 +105,7 @@ class ValloxFilterRemainingSensor(ValloxSensorEntity):
     """Child class for filter remaining time reporting."""
 
     @property
+    @override
     def native_value(self) -> StateType | datetime:
         """Return the value reported by the sensor."""
         next_filter_change_date = self.coordinator.data.next_filter_change_date
@@ -117,6 +123,7 @@ class ValloxCellStateSensor(ValloxSensorEntity):
     """Child class for cell state reporting."""
 
     @property
+    @override
     def native_value(self) -> StateType:
         """Return the value reported by the sensor."""
         super_native_value = super().native_value
@@ -131,6 +138,7 @@ class ValloxProfileDurationSensor(ValloxSensorEntity):
     """Child class for profile duration reporting."""
 
     @property
+    @override
     def native_value(self) -> StateType:
         """Return the value reported by the sensor."""
 

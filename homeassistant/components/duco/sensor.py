@@ -1,11 +1,12 @@
 """Sensor platform for the Duco integration."""
 
-from __future__ import annotations
-
 from collections.abc import Callable
 from dataclasses import dataclass
+from datetime import datetime
+import logging
+from typing import override
 
-from duco.models import Node, NodeType, VentilationState
+from duco_connectivity.models import Node, NodeType, VentilationState
 
 from homeassistant.components.sensor import (
     SensorDeviceClass,
@@ -22,10 +23,13 @@ from homeassistant.const import (
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers import device_registry as dr
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
+from homeassistant.util import dt as dt_util
 
-from .const import DOMAIN
+from .const import BOX_NODE_ID, DOMAIN
 from .coordinator import DucoConfigEntry, DucoCoordinator
 from .entity import DucoEntity
+
+_LOGGER = logging.getLogger(__name__)
 
 PARALLEL_UPDATES = 0
 
@@ -34,7 +38,7 @@ PARALLEL_UPDATES = 0
 class DucoSensorEntityDescription(SensorEntityDescription):
     """Duco sensor entity description."""
 
-    value_fn: Callable[[Node], int | float | str | None]
+    value_fn: Callable[[Node], datetime | int | float | str | None]
     node_types: tuple[NodeType, ...]
 
 
@@ -50,9 +54,39 @@ SENSOR_DESCRIPTIONS: tuple[DucoSensorEntityDescription, ...] = (
         key="ventilation_state",
         translation_key="ventilation_state",
         device_class=SensorDeviceClass.ENUM,
-        options=[s.lower() for s in VentilationState],
+        options=[
+            state.lower()
+            for state in VentilationState
+            if state != VentilationState.UNKNOWN
+        ],
         value_fn=lambda node: (
-            node.ventilation.state.lower() if node.ventilation else None
+            node.ventilation.state.lower()
+            if node.ventilation and node.ventilation.state != VentilationState.UNKNOWN
+            else None
+        ),
+        node_types=(NodeType.BOX,),
+    ),
+    DucoSensorEntityDescription(
+        key="target_flow_level",
+        translation_key="target_flow_level",
+        state_class=SensorStateClass.MEASUREMENT,
+        native_unit_of_measurement=PERCENTAGE,
+        suggested_display_precision=0,
+        value_fn=lambda node: (
+            node.ventilation.flow_lvl_tgt if node.ventilation else None
+        ),
+        node_types=(NodeType.BOX,),
+    ),
+    DucoSensorEntityDescription(
+        key="time_state_end",
+        translation_key="time_state_end",
+        device_class=SensorDeviceClass.TIMESTAMP,
+        value_fn=lambda node: (
+            dt_util.utc_from_timestamp(node.ventilation.time_state_end).replace(
+                second=0, microsecond=0
+            )
+            if node.ventilation and node.ventilation.time_state_end != 0
+            else None
         ),
         node_types=(NodeType.BOX,),
     ),
@@ -62,7 +96,12 @@ SENSOR_DESCRIPTIONS: tuple[DucoSensorEntityDescription, ...] = (
         state_class=SensorStateClass.MEASUREMENT,
         native_unit_of_measurement=CONCENTRATION_PARTS_PER_MILLION,
         value_fn=lambda node: node.sensor.co2 if node.sensor else None,
-        node_types=(NodeType.UCCO2,),
+        node_types=(
+            NodeType.BSCO2,
+            NodeType.UCCO2,
+            NodeType.VLVCO2,
+            NodeType.VLVCO2RH,
+        ),
     ),
     DucoSensorEntityDescription(
         key="iaq_co2",
@@ -71,7 +110,12 @@ SENSOR_DESCRIPTIONS: tuple[DucoSensorEntityDescription, ...] = (
         state_class=SensorStateClass.MEASUREMENT,
         entity_registry_enabled_default=False,
         value_fn=lambda node: node.sensor.iaq_co2 if node.sensor else None,
-        node_types=(NodeType.UCCO2,),
+        node_types=(
+            NodeType.BSCO2,
+            NodeType.UCCO2,
+            NodeType.VLVCO2,
+            NodeType.VLVCO2RH,
+        ),
     ),
     DucoSensorEntityDescription(
         key="humidity",
@@ -79,7 +123,7 @@ SENSOR_DESCRIPTIONS: tuple[DucoSensorEntityDescription, ...] = (
         state_class=SensorStateClass.MEASUREMENT,
         native_unit_of_measurement=PERCENTAGE,
         value_fn=lambda node: node.sensor.rh if node.sensor else None,
-        node_types=(NodeType.BSRH,),
+        node_types=(NodeType.BSRH, NodeType.UCRH, NodeType.VLVRH, NodeType.VLVCO2RH),
     ),
     DucoSensorEntityDescription(
         key="iaq_rh",
@@ -88,7 +132,7 @@ SENSOR_DESCRIPTIONS: tuple[DucoSensorEntityDescription, ...] = (
         state_class=SensorStateClass.MEASUREMENT,
         entity_registry_enabled_default=False,
         value_fn=lambda node: node.sensor.iaq_rh if node.sensor else None,
-        node_types=(NodeType.BSRH,),
+        node_types=(NodeType.BSRH, NodeType.UCRH, NodeType.VLVRH, NodeType.VLVCO2RH),
     ),
 )
 
@@ -120,11 +164,18 @@ async def async_setup_entry(
 
     @callback
     def _async_add_new_entities() -> None:
+        """Add new sensor entities and remove stale ones on coordinator updates."""
         # Remove devices whose nodes have disappeared from the API.
         # The firmware removes deregistered RF/wired nodes automatically.
         # BSRH box sensors that are physically unplugged from the PCB are
         # not deregistered by the firmware and will never appear here as stale.
-        stale_node_ids = known_nodes - coordinator.data.nodes.keys()
+        # The BOX node can transiently disappear from the API response, so keep
+        # node 1 to avoid removing the main controller device.
+        stale_node_ids = {
+            node_id
+            for node_id in known_nodes - coordinator.data.nodes.keys()
+            if node_id != BOX_NODE_ID
+        }
         if stale_node_ids:
             device_reg = dr.async_get(hass)
             mac = entry.unique_id
@@ -142,6 +193,18 @@ async def async_setup_entry(
         new_entities: list[SensorEntity] = []
         for node in coordinator.data.nodes.values():
             if node.node_id in known_nodes:
+                continue
+            if node.general.node_type == NodeType.UNKNOWN:
+                # Do not add the node to known_nodes so that it is re-evaluated
+                # on every coordinator update. This allows entities to be
+                # created automatically once a firmware update or library
+                # update adds support for the device type.
+                _LOGGER.debug(
+                    "Duco node %s (%s) has an unsupported device type and will be "
+                    "retried on subsequent coordinator updates",
+                    node.node_id,
+                    node.general.name,
+                )
                 continue
             known_nodes.add(node.node_id)
             new_entities.extend(
@@ -180,7 +243,8 @@ class DucoSensorEntity(DucoEntity, SensorEntity):
         )
 
     @property
-    def native_value(self) -> int | float | str | None:
+    @override
+    def native_value(self) -> datetime | int | float | str | None:
         """Return the sensor value."""
         return self.entity_description.value_fn(self._node)
 
@@ -204,6 +268,7 @@ class DucoBoxSensorEntity(DucoEntity, SensorEntity):
         )
 
     @property
+    @override
     def native_value(self) -> int | float | None:
         """Return the sensor value."""
         return self.entity_description.value_fn(self.coordinator)

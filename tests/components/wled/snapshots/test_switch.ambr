@@ -151,6 +151,106 @@
     'state': 'on',
   })
 # ---
+# name: test_snapshots[rgb][switch.wled_rgb_light_freeze-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': list([
+      None,
+    ]),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'switch',
+    'entity_category': <EntityCategory.CONFIG: 'config'>,
+    'entity_id': 'switch.wled_rgb_light_freeze',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'Freeze',
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'Freeze',
+    'platform': 'wled',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'freeze',
+    'unique_id': 'aabbccddeeff_freeze_0',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_snapshots[rgb][switch.wled_rgb_light_freeze-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'friendly_name': 'WLED RGB Light Freeze',
+    }),
+    'context': <ANY>,
+    'entity_id': 'switch.wled_rgb_light_freeze',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'off',
+  })
+# ---
+# name: test_snapshots[rgb][switch.wled_rgb_light_segment_1_freeze-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': list([
+      None,
+    ]),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'switch',
+    'entity_category': <EntityCategory.CONFIG: 'config'>,
+    'entity_id': 'switch.wled_rgb_light_segment_1_freeze',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'Segment 1 freeze',
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'Segment 1 freeze',
+    'platform': 'wled',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'segment_freeze',
+    'unique_id': 'aabbccddeeff_freeze_1',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_snapshots[rgb][switch.wled_rgb_light_segment_1_freeze-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'friendly_name': 'WLED RGB Light Segment 1 freeze',
+    }),
+    'context': <ANY>,
+    'entity_id': 'switch.wled_rgb_light_segment_1_freeze',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'on',
+  })
+# ---
 # name: test_snapshots[rgb][switch.wled_rgb_light_sync_receive-entry]
   EntityRegistryEntrySnapshot({
     'aliases': list([
@@ -349,6 +449,56 @@
     }),
     'context': <ANY>,
     'entity_id': 'switch.wled_rgb_light_reverse',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'off',
+  })
+# ---
+# name: test_snapshots[rgb_single_segment][switch.wled_rgb_light_freeze-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': list([
+      None,
+    ]),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'switch',
+    'entity_category': <EntityCategory.CONFIG: 'config'>,
+    'entity_id': 'switch.wled_rgb_light_freeze',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'Freeze',
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'Freeze',
+    'platform': 'wled',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'freeze',
+    'unique_id': 'aabbccddeeff_freeze_0',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_snapshots[rgb_single_segment][switch.wled_rgb_light_freeze-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'friendly_name': 'WLED RGB Light Freeze',
+    }),
+    'context': <ANY>,
+    'entity_id': 'switch.wled_rgb_light_freeze',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,

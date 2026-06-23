@@ -1,7 +1,5 @@
 """Sensor for the CityBikes data."""
 
-from __future__ import annotations
-
 import asyncio
 from datetime import timedelta
 import logging
@@ -19,6 +17,8 @@ from homeassistant.components.sensor import (
 )
 from homeassistant.const import (
     APPLICATION_NAME,
+    ATTR_LATITUDE,
+    ATTR_LONGITUDE,
     CONF_LATITUDE,
     CONF_LONGITUDE,
     CONF_NAME,
@@ -47,8 +47,6 @@ HA_USER_AGENT = (
 )
 
 ATTR_UID = "uid"
-ATTR_LATITUDE = "latitude"
-ATTR_LONGITUDE = "longitude"
 ATTR_EMPTY_SLOTS = "empty_slots"
 ATTR_FREE_EBIKES = "free_ebikes"
 ATTR_TIMESTAMP = "timestamp"

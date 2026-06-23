@@ -1,11 +1,10 @@
 """Support for Tuya event entities."""
 
-from __future__ import annotations
-
 from dataclasses import dataclass
+from typing import override
 
 from tuya_device_handlers.definition.event import (
-    TuyaEventDefinition,
+    EventDefinition,
     get_default_definition,
 )
 from tuya_device_handlers.device_wrapper.common import DPCodeTypeInformationWrapper
@@ -158,13 +157,14 @@ class TuyaEventEntity(TuyaEntity, EventEntity):
         device: CustomerDevice,
         device_manager: Manager,
         description: EventEntityDescription,
-        definition: TuyaEventDefinition,
+        definition: EventDefinition,
     ) -> None:
         """Init Tuya event entity."""
         super().__init__(device, device_manager, description)
         self._dpcode_wrapper = definition.event_wrapper
         self._attr_event_types = definition.event_wrapper.options
 
+    @override
     async def _process_device_update(
         self,
         updated_status_properties: list[str],

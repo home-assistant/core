@@ -1,6 +1,6 @@
 """Sensor for the Open Sky Network."""
 
-from __future__ import annotations
+from typing import override
 
 from homeassistant.components.sensor import SensorEntity, SensorStateClass
 from homeassistant.config_entries import ConfigEntry
@@ -50,7 +50,7 @@ class OpenSkySensor(CoordinatorEntity[OpenSkyDataUpdateCoordinator], SensorEntit
     ) -> None:
         """Initialize the sensor."""
         super().__init__(coordinator)
-        self._attr_unique_id = f"{config_entry.entry_id}_opensky"
+        self._attr_unique_id = f"{config_entry.entry_id}_opensky"  # pylint: disable=home-assistant-entity-unique-id-redundant-domain
         self._attr_device_info = DeviceInfo(
             identifiers={(DOMAIN, f"{coordinator.config_entry.entry_id}")},
             manufacturer=MANUFACTURER,
@@ -59,6 +59,7 @@ class OpenSkySensor(CoordinatorEntity[OpenSkyDataUpdateCoordinator], SensorEntit
         )
 
     @property
+    @override
     def native_value(self) -> int:
         """Return the state of the sensor."""
         return self.coordinator.data

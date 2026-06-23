@@ -50,7 +50,9 @@ async def test_pressing_button(
         BUTTON_DOMAIN,
         SERVICE_PRESS,
         {
-            ATTR_ENTITY_ID: "button.cookidoo_clear_shopping_list_and_additional_purchases",
+            ATTR_ENTITY_ID: (
+                "button.cookidoo_clear_shopping_list_and_additional_purchases"
+            ),
         },
         blocking=True,
     )
@@ -78,7 +80,9 @@ async def test_pressing_button_exception(
             BUTTON_DOMAIN,
             SERVICE_PRESS,
             {
-                ATTR_ENTITY_ID: "button.cookidoo_clear_shopping_list_and_additional_purchases",
+                ATTR_ENTITY_ID: (
+                    "button.cookidoo_clear_shopping_list_and_additional_purchases"
+                ),
             },
             blocking=True,
         )

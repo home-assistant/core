@@ -1,7 +1,5 @@
 """Weather component that handles meteorological data for your location."""
 
-from __future__ import annotations
-
 import abc
 from collections.abc import Callable, Iterable
 from contextlib import suppress
@@ -18,6 +16,7 @@ from typing import (
     TypeVar,
     cast,
     final,
+    override,
 )
 
 from propcache.api import cached_property
@@ -243,6 +242,7 @@ class WeatherEntityDescription(EntityDescription, frozen_or_thawed=True):
 class PostInitMeta(ABCCachedProperties):
     """Meta class which calls __post_init__ after __new__ and __init__."""
 
+    @override
     def __call__(cls, *args: Any, **kwargs: Any) -> Any:  # noqa: N805  ruff bug, ruff does not understand this is a metaclass
         """Create an instance."""
         instance: PostInit = super().__call__(*args, **kwargs)
@@ -317,10 +317,12 @@ class WeatherEntity(Entity, PostInit, cached_properties=CACHED_PROPERTIES_WITH_A
     _weather_option_precipitation_unit: str | None = None
     _weather_option_wind_speed_unit: str | None = None
 
+    @override
     def __post_init__(self, *args: Any, **kwargs: Any) -> None:
         """Finish initializing."""
         self._forecast_listeners = {"daily": [], "hourly": [], "twice_daily": []}
 
+    @override
     async def async_internal_added_to_hass(self) -> None:
         """Call when the weather entity is added to hass."""
         await super().async_internal_added_to_hass()
@@ -557,6 +559,7 @@ class WeatherEntity(Entity, PostInit, cached_properties=CACHED_PROPERTIES_WITH_A
 
     @final
     @property
+    @override
     def state_attributes(self) -> dict[str, Any]:
         """Return the state attributes, converted.
 
@@ -876,6 +879,7 @@ class WeatherEntity(Entity, PostInit, cached_properties=CACHED_PROPERTIES_WITH_A
 
     @property
     @final
+    @override
     def state(self) -> str | None:
         """Return the current state."""
         return self.condition
@@ -886,6 +890,7 @@ class WeatherEntity(Entity, PostInit, cached_properties=CACHED_PROPERTIES_WITH_A
         return self._attr_condition
 
     @callback
+    @override
     def async_registry_entry_updated(self) -> None:
         """Run when the entity registry entry has been updated."""
         assert self.registry_entry
@@ -988,7 +993,8 @@ class WeatherEntity(Entity, PostInit, cached_properties=CACHED_PROPERTIES_WITH_A
                 for fc_twice_daily in native_forecast_list:
                     if fc_twice_daily.get(ATTR_FORECAST_IS_DAYTIME) is None:
                         raise ValueError(
-                            "is_daytime mandatory attribute for forecast_twice_daily is missing"
+                            "is_daytime mandatory attribute"
+                            " for forecast_twice_daily is missing"
                         )
 
             converted_forecast_list = self._convert_forecast(native_forecast_list)
@@ -1072,6 +1078,7 @@ class CoordinatorWeatherEntity(
             "twice_daily": None,
         }
 
+    @override
     async def async_added_to_hass(self) -> None:
         """When entity is added to hass."""
         await super().async_added_to_hass()
@@ -1088,6 +1095,7 @@ class CoordinatorWeatherEntity(
             self.unsub_forecast[forecast_type] = None
 
     @callback
+    @override
     def _async_subscription_started(
         self,
         forecast_type: Literal["daily", "hourly", "twice_daily"],
@@ -1126,6 +1134,7 @@ class CoordinatorWeatherEntity(
         )
 
     @callback
+    @override
     def _async_subscription_ended(
         self,
         forecast_type: Literal["daily", "hourly", "twice_daily"],
@@ -1186,16 +1195,19 @@ class CoordinatorWeatherEntity(
         )
 
     @final
+    @override
     async def async_forecast_daily(self) -> list[Forecast] | None:
         """Return the daily forecast in native units."""
         return await self._async_forecast("daily")
 
     @final
+    @override
     async def async_forecast_hourly(self) -> list[Forecast] | None:
         """Return the hourly forecast in native units."""
         return await self._async_forecast("hourly")
 
     @final
+    @override
     async def async_forecast_twice_daily(self) -> list[Forecast] | None:
         """Return the twice daily forecast in native units."""
         return await self._async_forecast("twice_daily")
@@ -1220,6 +1232,7 @@ class SingleCoordinatorWeatherEntity(
         super().__init__(coordinator, context=context)
 
     @callback
+    @override
     def _handle_coordinator_update(self) -> None:
         """Handle updated data from the coordinator."""
         super()._handle_coordinator_update()

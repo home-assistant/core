@@ -1,7 +1,7 @@
 """Class to hold all thermostat accessories."""
 
 import logging
-from typing import Any
+from typing import Any, override
 
 from pyhap.const import CATEGORY_THERMOSTAT
 
@@ -483,8 +483,9 @@ class Thermostat(HomeAccessory):
                 f" {char_values[CHAR_TARGET_HEATING_COOLING]}"
             )
             # Many integrations do not actually implement `hvac_mode` for the
-            # `SERVICE_SET_TEMPERATURE_THERMOSTAT` service so we made a call to
-            # `SERVICE_SET_HVAC_MODE_THERMOSTAT` before calling `SERVICE_SET_TEMPERATURE_THERMOSTAT`
+            # `SERVICE_SET_TEMPERATURE_THERMOSTAT` service so we
+            # made a call to `SERVICE_SET_HVAC_MODE_THERMOSTAT`
+            # before calling `SERVICE_SET_TEMPERATURE_THERMOSTAT`
             # to ensure the device is in the right mode before setting the temp.
             self.async_call_service(
                 CLIMATE_DOMAIN,
@@ -619,6 +620,7 @@ class Thermostat(HomeAccessory):
         )
 
     @callback
+    @override
     def async_update_state(self, new_state: State) -> None:
         """Update state without rechecking the device features."""
         attributes = new_state.attributes
@@ -873,6 +875,7 @@ class WaterHeater(HomeAccessory):
         )
 
     @callback
+    @override
     def async_update_state(self, new_state: State) -> None:
         """Update water_heater state after state change."""
         # Update current and target temperature

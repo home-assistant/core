@@ -1,10 +1,8 @@
 """Config flow for Hue BLE integration."""
 
-from __future__ import annotations
-
 from enum import Enum
 import logging
-from typing import Any
+from typing import Any, override
 
 from bleak.backends.scanner import AdvertisementData
 from HueBLE import ConnectionError, HueBleError, HueBleLight, PairingError
@@ -85,6 +83,7 @@ class HueBleConfigFlow(ConfigFlow, domain=DOMAIN):
         self._discovered_devices: dict[str, bluetooth.BluetoothServiceInfoBleak] = {}
         self._discovery_info: bluetooth.BluetoothServiceInfoBleak | None = None
 
+    @override
     async def async_step_user(
         self, user_input: dict[str, Any] | None = None
     ) -> ConfigFlowResult:
@@ -132,6 +131,7 @@ class HueBleConfigFlow(ConfigFlow, domain=DOMAIN):
             errors=errors,
         )
 
+    @override
     async def async_step_bluetooth(
         self, discovery_info: bluetooth.BluetoothServiceInfoBleak
     ) -> ConfigFlowResult:

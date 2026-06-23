@@ -1,11 +1,10 @@
 """Coordinator for Home Connect."""
 
-from __future__ import annotations
-
 from asyncio import sleep as asyncio_sleep
 from collections.abc import Callable
 from dataclasses import dataclass
 import logging
+from typing import override
 
 from aiohomeconnect.client import Client as HomeConnectClient
 from aiohomeconnect.model import (
@@ -43,6 +42,7 @@ from .const import (
     APPLIANCES_WITH_PROGRAMS,
     BSH_OPERATION_STATE_PAUSE,
     DOMAIN,
+    FAVORITE_PROGRAMS,
 )
 from .utils import get_dict_from_home_connect_error
 
@@ -393,6 +393,7 @@ class HomeConnectApplianceCoordinator(DataUpdateCoordinator[HomeConnectAppliance
         for listener, _ in self._listeners.values():
             listener()
 
+    @override
     async def _async_update_data(self) -> HomeConnectApplianceData:
         """Fetch data from Home Connect."""
         while True:
@@ -532,15 +533,9 @@ class HomeConnectApplianceCoordinator(DataUpdateCoordinator[HomeConnectAppliance
                         )
                         current_program_key = program.key
                         program_options = program.options
-                        if (
-                            current_program_key
-                            in (
-                                ProgramKey.BSH_COMMON_FAVORITE_001,
-                                ProgramKey.BSH_COMMON_FAVORITE_002,
-                            )
-                            and program_options
-                        ):
-                            # The API doesn't allow to fetch the options from the favorite program.
+                        if current_program_key in FAVORITE_PROGRAMS and program_options:
+                            # The API doesn't allow to fetch the
+                            # options from the favorite program.
                             # We can attempt to get the base program and get the options
                             for option in program_options:
                                 if option.key == OptionKey.BSH_COMMON_BASE_PROGRAM:
@@ -620,11 +615,7 @@ class HomeConnectApplianceCoordinator(DataUpdateCoordinator[HomeConnectAppliance
         options_to_notify = options.copy()
         options.clear()
         if (
-            program_key
-            in (
-                ProgramKey.BSH_COMMON_FAVORITE_001,
-                ProgramKey.BSH_COMMON_FAVORITE_002,
-            )
+            program_key in FAVORITE_PROGRAMS
             and (event := events.get(EventKey.BSH_COMMON_OPTION_BASE_PROGRAM))
             and isinstance(event.value, str)
         ):
@@ -637,16 +628,19 @@ class HomeConnectApplianceCoordinator(DataUpdateCoordinator[HomeConnectAppliance
         options.update(await self.get_options_definitions(resolved_program_key))
 
         for option in options.values():
-            option_value = option.constraints.default if option.constraints else None
-            if option_value is not None:
-                option_event_key = EventKey(option.key)
+            option_event_key = EventKey(option.key)
+            if (
+                option_event_key not in events
+                and option.constraints
+                and (option_default_value := option.constraints.default) is not None
+            ):
                 events[option_event_key] = Event(
                     option_event_key,
                     option.key.value,
                     0,
                     "",
                     "",
-                    option_value,
+                    option_default_value,
                     option.name,
                     unit=option.unit,
                 )
@@ -676,7 +670,8 @@ class HomeConnectApplianceCoordinator(DataUpdateCoordinator[HomeConnectAppliance
                 _LOGGER.warning(
                     'Too many connected/paired events for appliance "%s" '
                     "(%s times in less than %s minutes), updates have been disabled "
-                    "and they will be enabled again whenever the connection stabilizes. "
+                    "and they will be enabled again whenever "
+                    "the connection stabilizes. "
                     "Consider trying to unplug the appliance "
                     "for a while to perform a soft reset",
                     self.data.info.name,

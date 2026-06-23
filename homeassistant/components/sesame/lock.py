@@ -1,8 +1,6 @@
 """Support for Sesame, by CANDY HOUSE."""
 
-from __future__ import annotations
-
-from typing import Any
+from typing import Any, override
 
 import pysesame2
 import voluptuous as vol
@@ -53,24 +51,29 @@ class SesameDevice(LockEntity):
         self._battery = -1
 
     @property
+    @override
     def name(self) -> str | None:
         """Return the name of the device."""
         return self._nickname
 
     @property
+    @override
     def available(self) -> bool:
         """Return True if entity is available."""
         return self._responsive
 
     @property
+    @override
     def is_locked(self) -> bool:
         """Return True if the device is currently locked, else False."""
         return self._is_locked
 
+    @override
     def lock(self, **kwargs: Any) -> None:
         """Lock the device."""
         self._sesame.lock()
 
+    @override
     def unlock(self, **kwargs: Any) -> None:
         """Unlock the device."""
         self._sesame.unlock()
@@ -86,6 +89,7 @@ class SesameDevice(LockEntity):
         self._responsive = status["responsive"]
 
     @property
+    @override
     def extra_state_attributes(self) -> dict[str, Any]:
         """Return the state attributes."""
         return {

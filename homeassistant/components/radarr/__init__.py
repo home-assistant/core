@@ -1,7 +1,5 @@
 """The Radarr component."""
 
-from __future__ import annotations
-
 from dataclasses import fields
 
 from aiopyarr.models.host_configuration import PyArrHostConfiguration

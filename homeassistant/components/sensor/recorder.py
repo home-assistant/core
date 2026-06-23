@@ -1,7 +1,5 @@
 """Statistics helper for sensor."""
 
-from __future__ import annotations
-
 from collections import defaultdict
 from collections.abc import Callable, Iterable
 from contextlib import suppress
@@ -94,7 +92,8 @@ WARN_NEGATIVE: HassKey[set[str]] = HassKey(f"{DOMAIN}_warn_total_increasing_nega
 # Keep track of entities for which a warning about unsupported unit has been logged
 WARN_UNSUPPORTED_UNIT: HassKey[set[str]] = HassKey(f"{DOMAIN}_warn_unsupported_unit")
 WARN_UNSTABLE_UNIT: HassKey[set[str]] = HassKey(f"{DOMAIN}_warn_unstable_unit")
-# Keep track of entities for which a warning about statistics mean algorithm change has been logged
+# Keep track of entities for which a warning about
+# statistics mean algorithm change has been logged
 WARN_STATISTICS_MEAN_CHANGED: HassKey[set[str]] = HassKey(
     f"{DOMAIN}_warn_statistics_mean_change"
 )
@@ -167,8 +166,8 @@ def _time_weighted_circular_mean(
 ) -> tuple[float, float]:
     """Calculate a time weighted circular mean.
 
-    The circular mean is calculated by weighting the states by duration in seconds between
-    state changes.
+    The circular mean is calculated by weighting the states
+    by duration in seconds between state changes.
     Note: there's no interpolation of values between state changes.
     """
     old_fstate: float | None = None
@@ -409,11 +408,12 @@ def _suggest_report_issue(hass: HomeAssistant, entity_id: str) -> str:
 def warn_dip(
     hass: HomeAssistant, entity_id: str, state: State, previous_fstate: float
 ) -> None:
-    """Log a warning once if a sensor with state class TOTAL_INCREASING has a decreasing value.
+    """Log a warning once if a sensor with TOTAL_INCREASING has a decreasing value.
 
-    The log will be suppressed until two dips have been seen to prevent warning due to
-    rounding issues with databases storing the state as a single precision float, which
-    was fixed in recorder DB version 20.
+    The log will be suppressed until two dips have been seen
+    to prevent warning due to rounding issues with databases
+    storing the state as a single precision float, which was
+    fixed in recorder DB version 20.
     """
     if SEEN_DIP not in hass.data:
         hass.data[SEEN_DIP] = set()
@@ -445,7 +445,7 @@ def warn_dip(
 
 
 def warn_negative(hass: HomeAssistant, entity_id: str, state: State) -> None:
-    """Log a warning once if a sensor with state class TOTAL_INCREASING has a negative value."""
+    """Log a warning once if a sensor with TOTAL_INCREASING has a negative value."""
     if WARN_NEGATIVE not in hass.data:
         hass.data[WARN_NEGATIVE] = set()
     if entity_id not in hass.data[WARN_NEGATIVE]:
@@ -664,7 +664,8 @@ def compile_statistics(  # noqa: C901
                     hass.data[WARN_STATISTICS_MEAN_CHANGED].add(entity_id)
                     _LOGGER.warning(
                         (
-                            "The statistics mean algorithm for %s have changed from %s to %s."
+                            "The statistics mean algorithm for %s have"
+                            " changed from %s to %s."
                             " Generation of long term statistics will be suppressed"
                             " unless it changes back or go to %s to delete the old"
                             " statistics"

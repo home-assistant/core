@@ -1,9 +1,7 @@
 """Offer sun based automation rules."""
 
-from __future__ import annotations
-
 from datetime import datetime, timedelta
-from typing import Any, Unpack, cast
+from typing import Any, Unpack, cast, override
 
 import voluptuous as vol
 
@@ -13,7 +11,6 @@ from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.automation import move_top_level_schema_fields_to_options
 from homeassistant.helpers.condition import (
     Condition,
-    ConditionChecker,
     ConditionCheckParams,
     ConditionConfig,
     condition_trace_set_result,
@@ -130,6 +127,7 @@ class SunCondition(Condition):
     _options: dict[str, Any]
 
     @classmethod
+    @override
     async def async_validate_complete_config(
         cls, hass: HomeAssistant, complete_config: ConfigType
     ) -> ConfigType:
@@ -140,6 +138,7 @@ class SunCondition(Condition):
         return await super().async_validate_complete_config(hass, complete_config)
 
     @classmethod
+    @override
     async def async_validate_config(
         cls, hass: HomeAssistant, config: ConfigType
     ) -> ConfigType:
@@ -151,19 +150,21 @@ class SunCondition(Condition):
         super().__init__(hass, config)
         assert config.options is not None
         self._options = config.options
+        self._before = self._options.get("before")
+        self._after = self._options.get("after")
+        self._before_offset = self._options.get("before_offset")
+        self._after_offset = self._options.get("after_offset")
 
-    async def async_get_checker(self) -> ConditionChecker:
-        """Wrap action method with sun based condition."""
-        before = self._options.get("before")
-        after = self._options.get("after")
-        before_offset = self._options.get("before_offset")
-        after_offset = self._options.get("after_offset")
-
-        def sun_if(**kwargs: Unpack[ConditionCheckParams]) -> bool:
-            """Validate time based if-condition."""
-            return sun(self._hass, before, after, before_offset, after_offset)
-
-        return sun_if
+    @override
+    def _async_check(self, **kwargs: Unpack[ConditionCheckParams]) -> bool:
+        """Check the condition."""
+        return sun(
+            self._hass,
+            self._before,
+            self._after,
+            self._before_offset,
+            self._after_offset,
+        )
 
 
 CONDITIONS: dict[str, type[Condition]] = {

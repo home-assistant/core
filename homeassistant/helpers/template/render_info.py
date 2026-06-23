@@ -1,11 +1,9 @@
 """Template render information tracking for Home Assistant."""
 
-from __future__ import annotations
-
 import collections.abc
 from collections.abc import Callable
 from contextvars import ContextVar
-from typing import TYPE_CHECKING, cast
+from typing import TYPE_CHECKING, cast, override
 
 from homeassistant.core import split_entity_id
 
@@ -71,6 +69,7 @@ class RenderInfo:
         self.rate_limit: float | None = None
         self.has_time = False
 
+    @override
     def __repr__(self) -> str:
         """Representation of RenderInfo."""
         return (

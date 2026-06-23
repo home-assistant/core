@@ -1,10 +1,8 @@
 """Support for IKEA Tradfri sensors."""
 
-from __future__ import annotations
-
 from collections.abc import Callable
 from dataclasses import dataclass
-from typing import Any, cast
+from typing import Any, cast, override
 
 from pytradfri.command import Command
 from pytradfri.device import Device
@@ -187,6 +185,7 @@ class TradfriSensor(TradfriBaseEntity, SensorEntity):
 
         self._refresh()  # Set initial state
 
+    @override
     def _refresh(self) -> None:
         """Refresh the device."""
         self._attr_native_value = self.entity_description.value(self.coordinator.data)

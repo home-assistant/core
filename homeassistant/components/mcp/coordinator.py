@@ -5,6 +5,7 @@ from collections.abc import AsyncGenerator, Awaitable, Callable
 from contextlib import asynccontextmanager
 import datetime
 import logging
+from typing import override
 
 import httpx
 from mcp import McpError
@@ -106,6 +107,7 @@ class ModelContextProtocolTool(llm.Tool):
         self.server_url = server_url
         self.token_manager = token_manager
 
+    @override
     async def async_call(
         self,
         hass: HomeAssistant,
@@ -151,6 +153,7 @@ class ModelContextProtocolCoordinator(DataUpdateCoordinator[list[llm.Tool]]):
         )
         self.token_manager = token_manager
 
+    @override
     async def _async_update_data(self) -> list[llm.Tool]:
         """Fetch data from API endpoint.
 

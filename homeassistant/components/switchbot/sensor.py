@@ -1,9 +1,8 @@
 """Support for SwitchBot sensors."""
 
-from __future__ import annotations
-
 from collections.abc import Callable
 from dataclasses import dataclass
+from typing import override
 
 import switchbot
 from switchbot import AirQualityLevel, HumidifierWaterLevel, SwitchbotModel
@@ -234,6 +233,7 @@ class SwitchBotSensor(SwitchbotEntity, SensorEntity):
             self._attr_unique_id = f"{coordinator.base_unique_id}-{sensor}"
 
     @property
+    @override
     def native_value(self) -> str | int | None:
         """Return the state of the sensor."""
         return self.entity_description.value_fn(self.parsed_data.get(self._sensor))
@@ -243,6 +243,7 @@ class SwitchbotRSSISensor(SwitchBotSensor):
     """Representation of a Switchbot RSSI sensor."""
 
     @property
+    @override
     def native_value(self) -> str | int | None:
         """Return the state of the sensor."""
         # Switchbot supports both connectable and non-connectable devices

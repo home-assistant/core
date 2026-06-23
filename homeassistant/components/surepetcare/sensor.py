@@ -1,8 +1,6 @@
 """Support for Sure PetCare Flaps/Pets sensors."""
 
-from __future__ import annotations
-
-from typing import cast
+from typing import cast, override
 
 from surepy.entities import SurepyEntity
 from surepy.entities.devices import Felaqua as SurepyFelaqua
@@ -65,6 +63,7 @@ class SureBattery(SurePetcareEntity, SensorEntity):
         self._attr_unique_id = f"{self._device_id}-battery"
 
     @callback
+    @override
     def _update_attr(self, surepy_entity: SurepyEntity) -> None:
         """Update the state and attributes."""
         state = surepy_entity.raw_data()["status"]
@@ -107,6 +106,7 @@ class Felaqua(SurePetcareEntity, SensorEntity):
         self._attr_entity_picture = surepy_entity.icon
 
     @callback
+    @override
     def _update_attr(self, surepy_entity: SurepyEntity) -> None:
         """Update the state."""
         surepy_entity = cast(SurepyFelaqua, surepy_entity)
@@ -132,6 +132,7 @@ class PetLastSeenFlapDevice(SurePetcareEntity, SensorEntity):
         self._attr_unique_id = f"{self._device_id}-last_seen_flap_device"
 
     @callback
+    @override
     def _update_attr(self, surepy_entity: SurepyEntity) -> None:
         surepy_entity = cast(SurepyPet, surepy_entity)
         position = surepy_entity._data.get("position", {})  # noqa: SLF001
@@ -158,6 +159,7 @@ class PetLastSeenUser(SurePetcareEntity, SensorEntity):
         self._attr_unique_id = f"{self._device_id}-last_seen_user"
 
     @callback
+    @override
     def _update_attr(self, surepy_entity: SurepyEntity) -> None:
         surepy_entity = cast(SurepyPet, surepy_entity)
         position = surepy_entity._data.get("position", {})  # noqa: SLF001

@@ -1,13 +1,11 @@
 """Tests for the Overkiz sensor platform."""
 
-from __future__ import annotations
-
 from collections.abc import Generator
 from pathlib import Path
 from unittest.mock import patch
 
 from freezegun.api import FrozenDateTimeFactory
-from pyoverkiz.enums import EventName, OverkizState
+from pyoverkiz.enums import OverkizState
 import pytest
 from syrupy.assertion import SnapshotAssertion
 
@@ -16,19 +14,23 @@ from homeassistant.core import HomeAssistant
 from homeassistant.helpers import entity_registry as er
 
 from .conftest import FixtureDevice, MockOverkizClient, SetupOverkizIntegration
-from .helpers import async_deliver_events, build_event
+from .helpers import (
+    async_deliver_events,
+    device_state_changed_event,
+    device_unavailable_event,
+)
 
 from tests.common import snapshot_platform
 
 TEMPERATURE_SENSOR = FixtureDevice(
     "setup/cloud_nexity_rail_din_europe.json",
     "io://1234-5678-1698/15702199#2",
-    "sensor.garden_radiator_bathroom_temperature_sensor_temperature",
+    "sensor.maple_residence_garden_radiator_bathroom_temperature_sensor_temperature",
 )
 HEATING_BATTERY = FixtureDevice(
     "setup/cloud_nexity_rail_din_europe.json",
     "io://1234-5678-1698/15702199#1",
-    "sensor.garden_radiator_battery_level",
+    "sensor.maple_residence_garden_radiator_battery_level",
 )
 TEMPERATURE_SENSOR_LOCAL = FixtureDevice(
     "setup/local_somfy_tahoma_switch_europe_3.json",
@@ -44,7 +46,7 @@ HOMEKIT_STACK = FixtureDevice(
 COZYTOUCH_DHW = FixtureDevice(
     "setup/cloud_atlantic_cozytouch.json",
     "io://1234-5678-5643/109286#2",
-    "sensor.patio_water_heating_office_energy_meter_electric_energy_consumption",
+    "sensor.my_home_patio_water_heating_office_energy_meter_electric_energy_consumption",
 )
 
 SNAPSHOT_FIXTURES = [
@@ -99,8 +101,7 @@ async def test_sensor_temperature_state_update(
         freezer,
         mock_client,
         [
-            build_event(
-                EventName.DEVICE_STATE_CHANGED.value,
+            device_state_changed_event(
                 device_url=TEMPERATURE_SENSOR.device_url,
                 device_states=[
                     {
@@ -135,8 +136,7 @@ async def test_sensor_battery_level_state_update(
         freezer,
         mock_client,
         [
-            build_event(
-                EventName.DEVICE_STATE_CHANGED.value,
+            device_state_changed_event(
                 device_url=HEATING_BATTERY.device_url,
                 device_states=[
                     {
@@ -171,8 +171,7 @@ async def test_sensor_unavailability(
         freezer,
         mock_client,
         [
-            build_event(
-                EventName.DEVICE_UNAVAILABLE.value,
+            device_unavailable_event(
                 device_url=TEMPERATURE_SENSOR.device_url,
             )
         ],

@@ -1,7 +1,5 @@
 """Base class for common speaker tasks."""
 
-from __future__ import annotations
-
 import asyncio
 from collections.abc import Callable, Collection, Coroutine
 import contextlib
@@ -200,6 +198,7 @@ class SonosSpeaker:
             self._battery_poll_timer = async_track_time_interval(
                 self.hass, self.async_poll_battery, BATTERY_SCAN_INTERVAL
             )
+        entry.async_on_unload(self.async_shutdown)
 
         self.websocket = SonosWebsocket(
             self.soco.ip_address,
@@ -353,7 +352,7 @@ class SonosSpeaker:
     def log_subscription_result(
         self, result: Any, event: str, level: int = logging.DEBUG
     ) -> None:
-        """Log a message if a subscription action (create/renew/stop) results in an exception."""
+        """Log if a subscription action results in an exception."""
         if not isinstance(result, Exception):
             return
 
@@ -440,6 +439,17 @@ class SonosSpeaker:
         for result in results:
             self.log_subscription_result(result, "Unsubscribe")
         self._subscriptions = []
+
+    @callback
+    def async_shutdown(self) -> None:
+        """Cancel speaker-owned timers during unload."""
+        if self._battery_poll_timer:
+            self._battery_poll_timer()
+            self._battery_poll_timer = None
+
+        if self._poll_timer:
+            self._poll_timer()
+            self._poll_timer = None
 
     @callback
     def async_renew_failed(self, exception: Exception) -> None:
@@ -940,12 +950,14 @@ class SonosSpeaker:
 
             for uid in group:
                 speaker = self.data.discovered.get(uid)
-                if speaker:
+                entity_id = (
+                    entity_registry.async_get_entity_id(MP_DOMAIN, DOMAIN, uid)
+                    if speaker
+                    else None
+                )
+                if speaker and entity_id:
                     self._group_members_missing.discard(uid)
                     sonos_group.append(speaker)
-                    entity_id = cast(
-                        str, entity_registry.async_get_entity_id(MP_DOMAIN, DOMAIN, uid)
-                    )
                     sonos_group_entities.append(entity_id)
                 else:
                     self._group_members_missing.add(uid)
@@ -966,7 +978,8 @@ class SonosSpeaker:
             new_members = set(sonos_group[1:])
             removed_members = old_members - new_members
             for removed_speaker in removed_members:
-                # Only clear if this speaker was coordinated by self and in the same group
+                # Only clear if this speaker was coordinated
+                # by self and in the same group
                 if (
                     removed_speaker.coordinator == self
                     and removed_speaker.sonos_group is self.sonos_group
@@ -1176,10 +1189,12 @@ class SonosSpeaker:
             if not with_group:
                 return groups
 
-            # Unjoin non-coordinator speakers not contained in the desired snapshot group
+            # Unjoin non-coordinator speakers not contained in
+            # the desired snapshot group
             #
-            # If a coordinator is unjoined from its group, another speaker from the group
-            # will inherit the coordinator's playqueue and its own playqueue will be lost
+            # If a coordinator is unjoined from its group,
+            # another speaker from the group will inherit the
+            # coordinator's playqueue and its own will be lost
             speakers_to_unjoin = set()
             for speaker in speakers:
                 if speaker.sonos_group == speaker.snapshot_group:
@@ -1265,7 +1280,8 @@ class SonosSpeaker:
                     await config_entry.runtime_data.topology_condition.wait()
         except TimeoutError:
             group_description = "; ".join(
-                f"{group[0].zone_name}: {', '.join(speaker.zone_name for speaker in group)}"
+                f"{group[0].zone_name}: "
+                f"{', '.join(speaker.zone_name for speaker in group)}"
                 for group in groups
             )
             raise HomeAssistantError(

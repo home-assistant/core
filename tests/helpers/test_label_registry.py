@@ -217,7 +217,7 @@ async def test_update_label_with_same_data(
 async def test_update_label_with_same_name_change_case(
     label_registry: lr.LabelRegistry,
 ) -> None:
-    """Make sure that we can reapply the same name with a different case to the label."""
+    """Make sure we can reapply the same name with a different case."""
     label = label_registry.async_create("mock")
 
     updated_label = label_registry.async_update(label.label_id, name="Mock")

@@ -1,7 +1,5 @@
 """Set up some common test helper things."""
 
-from __future__ import annotations
-
 import asyncio
 from collections.abc import AsyncGenerator, Callable, Coroutine, Generator
 from contextlib import AsyncExitStack, asynccontextmanager, contextmanager
@@ -62,14 +60,14 @@ from homeassistant.auth.models import Credentials
 from homeassistant.auth.providers import homeassistant
 from homeassistant.components.device_tracker.legacy import Device
 
-# pylint: disable-next=hass-component-root-import
+# pylint: disable-next=home-assistant-component-root-import
 from homeassistant.components.websocket_api.auth import (
     TYPE_AUTH,
     TYPE_AUTH_OK,
     TYPE_AUTH_REQUIRED,
 )
 
-# pylint: disable-next=hass-component-root-import
+# pylint: disable-next=home-assistant-component-root-import
 from homeassistant.components.websocket_api.http import URL
 from homeassistant.config import YAML_CONFIG_FILE
 from homeassistant.config_entries import (
@@ -206,7 +204,9 @@ def pytest_runtest_setup() -> None:
       of times it was raised.
 
     freezegun:
-    - Modified to include https://github.com/spulec/freezegun/pull/424 and improve class str.
+    - Modified to include
+      https://github.com/spulec/freezegun/pull/424
+      and improve class str.
     """
     pytest_socket.socket_allow_hosts(["127.0.0.1"])
     pytest_socket.disable_socket(allow_unix_socket=True)
@@ -231,9 +231,9 @@ def pytest_runtest_setup() -> None:
         _validate_host(host)
         return (host, [], [host])
 
-    setattr(socket, "getaddrinfo", getaddrinfo_patched)
-    setattr(socket, "gethostbyname", gethostbyname_patched)
-    setattr(socket, "gethostbyname_ex", gethostbyname_ex_patched)
+    socket.getaddrinfo = getaddrinfo_patched
+    socket.gethostbyname = gethostbyname_patched
+    socket.gethostbyname_ex = gethostbyname_ex_patched
 
     pytest_socket.SocketBlockedError = HASocketBlockedError
 
@@ -453,7 +453,8 @@ def verify_cleanup(
     try:
         # Verify respx.mock has been cleaned up
         assert not respx.mock.routes, (
-            "respx.mock routes not cleaned up, maybe the test needs to be decorated with @respx.mock"
+            "respx.mock routes not cleaned up, maybe the test"
+            " needs to be decorated with @respx.mock"
         )
     finally:
         # Clear mock routes not break subsequent tests
@@ -561,7 +562,9 @@ def aiohttp_client_cls() -> type[CoalescingClient]:
 
 @pytest.fixture
 def aiohttp_client() -> Generator[ClientSessionGenerator]:
-    """Override the default aiohttp_client since 3.x does not support aiohttp_client_cls.
+    """Override the default aiohttp_client since 3.x does not support it.
+
+    The aiohttp_client_cls is not supported in 3.x.
 
     Remove this when upgrading to 4.x as aiohttp_client_cls
     will do the same thing
@@ -693,7 +696,8 @@ async def hass(
 
         yield hass
 
-        # Config entries are not normally unloaded on HA shutdown. They are unloaded here
+        # Config entries are not normally unloaded on HA shutdown.
+        # They are unloaded here
         # to ensure that they could, and to help track lingering tasks and timers.
         loaded_entries = [
             entry
@@ -1013,7 +1017,11 @@ def hass_ws_client(
 def fail_on_log_exception(
     request: pytest.FixtureRequest, monkeypatch: pytest.MonkeyPatch
 ) -> None:
-    """Fixture to fail if a callback wrapped by catch_log_exception or coroutine wrapped by async_create_catching_coro throws."""
+    """Fixture to fail if a callback or coroutine throws.
+
+    Catches callbacks wrapped by catch_log_exception or coroutines
+    wrapped by async_create_catching_coro.
+    """
     if "no_fail_on_log_exception" in request.keywords:
         return
 
@@ -1059,23 +1067,23 @@ def mqtt_client_mock(hass: HomeAssistant) -> Generator[MqttMockPahoClient]:
             self.mid = mid
             self.rc = 0
 
-    with patch(
-        "homeassistant.components.mqtt.async_client.AsyncMQTTClient"
-    ) as mock_client:
+    with patch("homeassistant.components.mqtt.client.AsyncMQTTClient") as mock_client:
         # The below use a call_soon for the on_publish/on_subscribe/on_unsubscribe
         # callbacks to simulate the behavior of the real MQTT client which will
         # not be synchronous.
 
         @ha.callback
-        def _async_fire_mqtt_message(topic, payload, qos, retain):
-            async_fire_mqtt_message(hass, topic, payload or b"", qos, retain)
+        def _async_fire_mqtt_message(topic, payload, qos, retain, properties=None):
+            async_fire_mqtt_message(
+                hass, topic, payload or b"", qos, retain, properties=properties
+            )
             mid = get_mid()
             hass.loop.call_soon(
                 mock_client.on_publish, Mock(), 0, mid, MockMqttReasonCode(), None
             )
             return FakeInfo(mid)
 
-        def _subscribe(topic, qos=0):
+        def _subscribe(topic_or_list, qos=0, **kwargs):
             mid = get_mid()
             hass.loop.call_soon(
                 mock_client.on_subscribe, Mock(), 0, mid, [MockMqttReasonCode()], None
@@ -1142,7 +1150,10 @@ async def _mqtt_mock_entry(
     from homeassistant.components import mqtt  # noqa: PLC0415
 
     if mqtt_config_entry_data is None:
-        mqtt_config_entry_data = {mqtt.CONF_BROKER: "mock-broker"}
+        mqtt_config_entry_data = {
+            mqtt.CONF_BROKER: "mock-broker",
+            mqtt.CONF_PROTOCOL: "5",
+        }
     if mqtt_config_entry_options is None:
         mqtt_config_entry_options = {mqtt.CONF_BIRTH_MESSAGE: {}}
 
@@ -1632,7 +1643,8 @@ def recorder_db_url(
             # to ensure that InnoDB does not deadlock.
             with engine.begin() as connection:
                 query = sa.text(
-                    "select id FROM information_schema.processlist WHERE db=:db and id != CONNECTION_ID()"
+                    "select id FROM information_schema.processlist"
+                    " WHERE db=:db and id != CONNECTION_ID()"
                 )
                 rows = connection.execute(query, parameters={"db": db}).fetchall()
                 if rows:
@@ -1962,6 +1974,15 @@ async def mock_enable_bluetooth(
 def mock_bluetooth_adapters() -> Generator[None]:
     """Fixture to mock bluetooth adapters."""
     with (
+        # Simulate the Bluetooth management API being unavailable, as it is on
+        # CI and most dev machines. Letting the real setup() run would attempt
+        # real socket I/O on Linux hosts that do have BlueZ available, and
+        # mocking it as successful would enable the advertising side channel,
+        # changing the scanner code path the existing tests were written for.
+        patch(
+            "habluetooth.channels.bluez.MGMTBluetoothCtl.setup",
+            AsyncMock(side_effect=OSError),
+        ),
         patch("habluetooth.util.recover_adapter"),
         patch("bluetooth_auto_recovery.recover_adapter"),
         patch("bluetooth_adapters.systems.platform.system", return_value="Linux"),
@@ -2224,7 +2245,8 @@ _real_dhcp_service_info_init = DhcpServiceInfo.__init__
 def _dhcp_service_info_init(self: DhcpServiceInfo, *args: Any, **kwargs: Any) -> None:
     """Override __init__ for DhcpServiceInfo.
 
-    Ensure that the macaddress is always in lowercase and without colons to match DHCP service.
+    Ensure that the macaddress is always in lowercase and
+    without colons to match DHCP service.
     """
     _real_dhcp_service_info_init(self, *args, **kwargs)
     if self.macaddress != self.macaddress.lower().replace(":", ""):

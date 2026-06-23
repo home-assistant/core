@@ -1,7 +1,5 @@
 """Handle legacy notification platforms."""
 
-from __future__ import annotations
-
 import asyncio
 from collections.abc import Coroutine, Mapping
 from functools import partial

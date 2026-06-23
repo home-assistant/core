@@ -1,15 +1,11 @@
 """Typing Helpers for Home Assistant."""
 
-from __future__ import annotations
-
 from collections.abc import Callable
 from functools import lru_cache
 from math import floor, log10
+from typing import override
 
 from homeassistant.const import (
-    CONCENTRATION_GRAMS_PER_CUBIC_METER,
-    CONCENTRATION_MICROGRAMS_PER_CUBIC_METER,
-    CONCENTRATION_MILLIGRAMS_PER_CUBIC_METER,
     CONCENTRATION_PARTS_PER_BILLION,
     CONCENTRATION_PARTS_PER_MILLION,
     PERCENTAGE,
@@ -19,6 +15,7 @@ from homeassistant.const import (
     UnitOfBloodGlucoseConcentration,
     UnitOfConductivity,
     UnitOfDataRate,
+    UnitOfDensity,
     UnitOfElectricCurrent,
     UnitOfElectricPotential,
     UnitOfEnergy,
@@ -156,7 +153,10 @@ class BaseUnitConverter:
     def converter_factory_allow_none(
         cls, from_unit: str | None, to_unit: str | None
     ) -> Callable[[float | None], float | None]:
-        """Return a function to convert one unit of measurement to another which allows None."""
+        """Return a function to convert a unit to another.
+
+        Allows None values.
+        """
         if from_unit == to_unit:
             return lambda value: value
         from_ratio, to_ratio = cls._get_from_to_ratio(from_unit, to_unit)
@@ -247,18 +247,18 @@ class CarbonMonoxideConcentrationConverter(BaseUnitConverter):
     _UNIT_CONVERSION: dict[str | None, float] = {
         CONCENTRATION_PARTS_PER_BILLION: 1e9,
         CONCENTRATION_PARTS_PER_MILLION: 1e6,
-        CONCENTRATION_MILLIGRAMS_PER_CUBIC_METER: (
+        UnitOfDensity.MILLIGRAMS_PER_CUBIC_METER: (
             _CARBON_MONOXIDE_MOLAR_MASS / _AMBIENT_IDEAL_GAS_MOLAR_VOLUME * 1e3
         ),
-        CONCENTRATION_MICROGRAMS_PER_CUBIC_METER: (
+        UnitOfDensity.MICROGRAMS_PER_CUBIC_METER: (
             _CARBON_MONOXIDE_MOLAR_MASS / _AMBIENT_IDEAL_GAS_MOLAR_VOLUME * 1e6
         ),
     }
     VALID_UNITS = {
         CONCENTRATION_PARTS_PER_BILLION,
         CONCENTRATION_PARTS_PER_MILLION,
-        CONCENTRATION_MILLIGRAMS_PER_CUBIC_METER,
-        CONCENTRATION_MICROGRAMS_PER_CUBIC_METER,
+        UnitOfDensity.MILLIGRAMS_PER_CUBIC_METER,
+        UnitOfDensity.MICROGRAMS_PER_CUBIC_METER,
     }
 
 
@@ -493,14 +493,14 @@ class MassVolumeConcentrationConverter(BaseUnitConverter):
 
     UNIT_CLASS = "concentration"
     _UNIT_CONVERSION: dict[str | None, float] = {
-        CONCENTRATION_MICROGRAMS_PER_CUBIC_METER: 1_000_000.0,  # 1000 µg/m³ = 1 mg/m³
-        CONCENTRATION_MILLIGRAMS_PER_CUBIC_METER: 1000.0,  # 1000 mg/m³ = 1 g/m³
-        CONCENTRATION_GRAMS_PER_CUBIC_METER: 1.0,
+        UnitOfDensity.MICROGRAMS_PER_CUBIC_METER: 1_000_000.0,  # 1000 µg/m³ = 1 mg/m³
+        UnitOfDensity.MILLIGRAMS_PER_CUBIC_METER: 1000.0,  # 1000 mg/m³ = 1 g/m³
+        UnitOfDensity.GRAMS_PER_CUBIC_METER: 1.0,
     }
     VALID_UNITS = {
-        CONCENTRATION_MICROGRAMS_PER_CUBIC_METER,
-        CONCENTRATION_MILLIGRAMS_PER_CUBIC_METER,
-        CONCENTRATION_GRAMS_PER_CUBIC_METER,
+        UnitOfDensity.MICROGRAMS_PER_CUBIC_METER,
+        UnitOfDensity.MILLIGRAMS_PER_CUBIC_METER,
+        UnitOfDensity.GRAMS_PER_CUBIC_METER,
     }
 
 
@@ -511,14 +511,14 @@ class NitrogenDioxideConcentrationConverter(BaseUnitConverter):
     _UNIT_CONVERSION: dict[str | None, float] = {
         CONCENTRATION_PARTS_PER_BILLION: 1e9,
         CONCENTRATION_PARTS_PER_MILLION: 1e6,
-        CONCENTRATION_MICROGRAMS_PER_CUBIC_METER: (
+        UnitOfDensity.MICROGRAMS_PER_CUBIC_METER: (
             _NITROGEN_DIOXIDE_MOLAR_MASS / _AMBIENT_IDEAL_GAS_MOLAR_VOLUME * 1e6
         ),
     }
     VALID_UNITS = {
         CONCENTRATION_PARTS_PER_BILLION,
         CONCENTRATION_PARTS_PER_MILLION,
-        CONCENTRATION_MICROGRAMS_PER_CUBIC_METER,
+        UnitOfDensity.MICROGRAMS_PER_CUBIC_METER,
     }
 
 
@@ -528,13 +528,13 @@ class NitrogenMonoxideConcentrationConverter(BaseUnitConverter):
     UNIT_CLASS = "nitrogen_monoxide"
     _UNIT_CONVERSION: dict[str | None, float] = {
         CONCENTRATION_PARTS_PER_BILLION: 1e9,
-        CONCENTRATION_MICROGRAMS_PER_CUBIC_METER: (
+        UnitOfDensity.MICROGRAMS_PER_CUBIC_METER: (
             _NITROGEN_MONOXIDE_MOLAR_MASS / _AMBIENT_IDEAL_GAS_MOLAR_VOLUME * 1e6
         ),
     }
     VALID_UNITS = {
         CONCENTRATION_PARTS_PER_BILLION,
-        CONCENTRATION_MICROGRAMS_PER_CUBIC_METER,
+        UnitOfDensity.MICROGRAMS_PER_CUBIC_METER,
     }
 
 
@@ -545,14 +545,14 @@ class OzoneConcentrationConverter(BaseUnitConverter):
     _UNIT_CONVERSION: dict[str | None, float] = {
         CONCENTRATION_PARTS_PER_BILLION: 1e9,
         CONCENTRATION_PARTS_PER_MILLION: 1e6,
-        CONCENTRATION_MICROGRAMS_PER_CUBIC_METER: (
+        UnitOfDensity.MICROGRAMS_PER_CUBIC_METER: (
             _OZONE_MOLAR_MASS / _AMBIENT_IDEAL_GAS_MOLAR_VOLUME * 1e6
         ),
     }
     VALID_UNITS = {
         CONCENTRATION_PARTS_PER_BILLION,
         CONCENTRATION_PARTS_PER_MILLION,
-        CONCENTRATION_MICROGRAMS_PER_CUBIC_METER,
+        UnitOfDensity.MICROGRAMS_PER_CUBIC_METER,
     }
 
 
@@ -678,6 +678,7 @@ class SpeedConverter(BaseUnitConverter):
 
     @classmethod
     @lru_cache
+    @override
     def converter_factory(
         cls, from_unit: str | None, to_unit: str | None
     ) -> Callable[[float], float]:
@@ -692,10 +693,14 @@ class SpeedConverter(BaseUnitConverter):
 
     @classmethod
     @lru_cache
+    @override
     def converter_factory_allow_none(
         cls, from_unit: str | None, to_unit: str | None
     ) -> Callable[[float | None], float | None]:
-        """Return a function to convert a speed from one unit to another which allows None."""
+        """Return a function to convert speed units.
+
+        Allows None values.
+        """
         if from_unit == to_unit:
             # Return a function that does nothing. This is not
             # in _converter_factory because we do not want to wrap
@@ -747,13 +752,13 @@ class SulphurDioxideConcentrationConverter(BaseUnitConverter):
     UNIT_CLASS = "sulphur_dioxide"
     _UNIT_CONVERSION: dict[str | None, float] = {
         CONCENTRATION_PARTS_PER_BILLION: 1e9,
-        CONCENTRATION_MICROGRAMS_PER_CUBIC_METER: (
+        UnitOfDensity.MICROGRAMS_PER_CUBIC_METER: (
             _SULPHUR_DIOXIDE_MOLAR_MASS / _AMBIENT_IDEAL_GAS_MOLAR_VOLUME * 1e6
         ),
     }
     VALID_UNITS = {
         CONCENTRATION_PARTS_PER_BILLION,
-        CONCENTRATION_MICROGRAMS_PER_CUBIC_METER,
+        UnitOfDensity.MICROGRAMS_PER_CUBIC_METER,
     }
 
 
@@ -774,6 +779,7 @@ class TemperatureConverter(BaseUnitConverter):
 
     @classmethod
     @lru_cache
+    @override
     def converter_factory(
         cls, from_unit: str | None, to_unit: str | None
     ) -> Callable[[float], float]:
@@ -788,10 +794,14 @@ class TemperatureConverter(BaseUnitConverter):
 
     @classmethod
     @lru_cache
+    @override
     def converter_factory_allow_none(
         cls, from_unit: str | None, to_unit: str | None
     ) -> Callable[[float | None], float | None]:
-        """Return a function to convert a temperature from one unit to another which allows None."""
+        """Return a function to convert temperature units.
+
+        Allows None values.
+        """
         if from_unit == to_unit:
             # Return a function that does nothing. This is not
             # in _converter_factory because we do not want to wrap

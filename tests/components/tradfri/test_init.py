@@ -148,7 +148,8 @@ async def test_migrate_config_entry_and_identifiers(
         name="Gateway",
     )
 
-    # Create bulb 1 on gateway 1 in Device Registry - this has the old identifiers format
+    # Create bulb 1 on gateway 1 in Device Registry
+    # this has the old identifiers format
     gateway1_bulb1 = device_registry.async_get_or_create(
         config_entry_id=config_entry1.entry_id,
         identifiers={(tradfri.DOMAIN, 65537)},
@@ -156,13 +157,14 @@ async def test_migrate_config_entry_and_identifiers(
     )
 
     # Update bulb 1 device to have both config entry IDs
-    # This is to simulate existing data scenario with older version of tradfri component
+    # This simulates existing data scenario with older tradfri version
     device_registry.async_update_device(
         gateway1_bulb1.id,
         add_config_entry_id=config_entry2.entry_id,
     )
 
-    # Create bulb 2 on gateway 1 in Device Registry - this has the new identifiers format
+    # Create bulb 2 on gateway 1 in Device Registry
+    # this has the new identifiers format
     gateway1_bulb2 = device_registry.async_get_or_create(
         config_entry_id=config_entry1.entry_id,
         identifiers={(tradfri.DOMAIN, f"{GATEWAY_ID1}-65538")},
@@ -212,8 +214,9 @@ async def test_migrate_config_entry_and_identifiers(
     assert device_entries[0].identifiers == gateway1_device.identifiers
     assert device_entries[0].config_entries == gateway1_device.config_entries
 
-    # Validate that gateway 1 bulb 2 now only exists associated to config entry 3.
-    # The device will have had its identifiers updated to the new format (for the tradfri
+    # Validate that gateway 1 bulb 2 now only exists associated to
+    # config entry 3. The device will have had its identifiers
+    # updated to the new format (for the tradfri
     # domain) per migrate_config_entry_and_identifiers().
     # The device will have then been removed from config entry 1 (gateway1)
     # due to it not matching a device in the command store.
@@ -230,9 +233,11 @@ async def test_migrate_config_entry_and_identifiers(
         ("test_domain", "config_entry_3-device2"),
     }
 
-    # Validate that gateway 2 bulb 1 has been added to device registry and with correct unique identifiers
-    # (This bulb device exists on gateway 2 because the command_store created above will be executed
-    # for each gateway being set up.)
+    # Validate that gateway 2 bulb 1 has been added to device
+    # registry and with correct unique identifiers
+    # (This bulb device exists on gateway 2 because the
+    # command_store created above will be executed for each
+    # gateway being set up.)
     device_entries = dr.async_entries_for_config_entry(
         device_registry, config_entry2.entry_id
     )

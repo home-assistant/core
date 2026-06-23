@@ -1,8 +1,6 @@
 """Config flow for the SensorPush Cloud integration."""
 
-from __future__ import annotations
-
-from typing import Any
+from typing import Any, override
 
 from sensorpush_ha import SensorPushCloudApi, SensorPushCloudAuthError
 import voluptuous as vol
@@ -22,6 +20,7 @@ from .const import DOMAIN, LOGGER
 class SensorPushCloudConfigFlow(ConfigFlow, domain=DOMAIN):
     """Handle a config flow for SensorPush Cloud."""
 
+    @override
     async def async_step_user(
         self, user_input: dict[str, Any] | None = None
     ) -> ConfigFlowResult:

@@ -1,20 +1,17 @@
 """Allow to set up simple automation rules via the config file."""
 
-from __future__ import annotations
-
 from abc import ABC, abstractmethod
 import asyncio
-from collections.abc import Callable, Mapping
+from collections.abc import Callable
 from dataclasses import dataclass
 import logging
-from typing import Any, Protocol, cast
+from typing import Any, cast, override
 
 from propcache.api import cached_property
 import voluptuous as vol
 
-from homeassistant.components import labs, websocket_api
+from homeassistant.components import websocket_api
 from homeassistant.components.blueprint import CONF_USE_BLUEPRINT
-from homeassistant.components.labs import async_subscribe_preview_feature
 from homeassistant.const import (
     ATTR_AREA_ID,
     ATTR_ENTITY_ID,
@@ -114,128 +111,11 @@ ATTR_SOURCE = "source"
 ATTR_VARIABLES = "variables"
 SERVICE_TRIGGER = "trigger"
 
-NEW_TRIGGERS_CONDITIONS_FEATURE_FLAG = "new_triggers_conditions"
 
-_EXPERIMENTAL_CONDITION_PLATFORMS = {
-    "air_quality",
-    "alarm_control_panel",
-    "assist_satellite",
-    "battery",
-    "calendar",
-    "climate",
-    "counter",
-    "cover",
-    "device_tracker",
-    "door",
-    "fan",
-    "garage_door",
-    "gate",
-    "humidifier",
-    "humidity",
-    "illuminance",
-    "lawn_mower",
-    "light",
-    "lock",
-    "media_player",
-    "moisture",
-    "motion",
-    "occupancy",
-    "person",
-    "power",
-    "remote",
-    "schedule",
-    "select",
-    "siren",
-    "switch",
-    "temperature",
-    "text",
-    "timer",
-    "todo",
-    "update",
-    "vacuum",
-    "valve",
-    "water_heater",
-    "window",
-}
-
-_EXPERIMENTAL_TRIGGER_PLATFORMS = {
-    "air_quality",
-    "alarm_control_panel",
-    "assist_satellite",
-    "battery",
-    "button",
-    "climate",
-    "counter",
-    "cover",
-    "device_tracker",
-    "door",
-    "doorbell",
-    "event",
-    "fan",
-    "garage_door",
-    "gate",
-    "humidifier",
-    "humidity",
-    "illuminance",
-    "lawn_mower",
-    "light",
-    "lock",
-    "media_player",
-    "moisture",
-    "motion",
-    "occupancy",
-    "person",
-    "power",
-    "remote",
-    "scene",
-    "schedule",
-    "select",
-    "siren",
-    "switch",
-    "temperature",
-    "text",
-    "todo",
-    "update",
-    "vacuum",
-    "valve",
-    "water_heater",
-    "window",
-}
-
-
-@callback
-def is_disabled_experimental_condition(hass: HomeAssistant, platform: str) -> bool:
-    """Check if the platform is a disabled experimental condition platform."""
-    return (
-        platform in _EXPERIMENTAL_CONDITION_PLATFORMS
-        and not labs.async_is_preview_feature_enabled(
-            hass,
-            DOMAIN,
-            NEW_TRIGGERS_CONDITIONS_FEATURE_FLAG,
-        )
-    )
-
-
-@callback
-def is_disabled_experimental_trigger(hass: HomeAssistant, platform: str) -> bool:
-    """Check if the platform is a disabled experimental trigger platform."""
-    return (
-        platform in _EXPERIMENTAL_TRIGGER_PLATFORMS
-        and not labs.async_is_preview_feature_enabled(
-            hass,
-            DOMAIN,
-            NEW_TRIGGERS_CONDITIONS_FEATURE_FLAG,
-        )
-    )
-
-
-class IfAction(Protocol):
+class IfAction(condition_helper.ConditionsChecker):
     """Define the format of if_action."""
 
     config: list[ConfigType]
-
-    def __call__(self, variables: Mapping[str, Any] | None = None) -> bool:
-        """AND all conditions."""
 
 
 def is_on(hass: HomeAssistant, entity_id: str) -> bool:
@@ -429,19 +309,6 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
         schema=vol.Schema({vol.Optional(CONF_ID): str}),
     )
 
-    async def new_triggers_conditions_listener(
-        _event_data: labs.EventLabsUpdatedData,
-    ) -> None:
-        """Handle new_triggers_conditions flag change."""
-        await reload_helper.execute_service(ServiceCall(hass, DOMAIN, SERVICE_RELOAD))
-
-    async_subscribe_preview_feature(
-        hass,
-        DOMAIN,
-        NEW_TRIGGERS_CONDITIONS_FEATURE_FLAG,
-        new_triggers_conditions_listener,
-    )
-
     websocket_api.async_register_command(hass, websocket_config)
 
     return True
@@ -456,6 +323,7 @@ class BaseAutomationEntity(ToggleEntity, ABC):
     raw_config: ConfigType | None
 
     @property
+    @override
     def capability_attributes(self) -> dict[str, Any] | None:
         """Return capability attributes."""
         if self.unique_id is not None:
@@ -527,35 +395,42 @@ class UnavailableAutomationEntity(BaseAutomationEntity):
         self._validation_status = validation_status
 
     @cached_property
+    @override
     def referenced_labels(self) -> set[str]:
         """Return a set of referenced labels."""
         return set()
 
     @cached_property
+    @override
     def referenced_floors(self) -> set[str]:
         """Return a set of referenced floors."""
         return set()
 
     @cached_property
+    @override
     def referenced_areas(self) -> set[str]:
         """Return a set of referenced areas."""
         return set()
 
     @property
+    @override
     def referenced_blueprint(self) -> str | None:
         """Return referenced blueprint or None."""
         return None
 
     @cached_property
+    @override
     def referenced_devices(self) -> set[str]:
         """Return a set of referenced devices."""
         return set()
 
     @cached_property
+    @override
     def referenced_entities(self) -> set[str]:
         """Return a set of referenced entities."""
         return set()
 
+    @override
     async def async_added_to_hass(self) -> None:
         """Create a repair issue to notify the user the automation has errors."""
         await super().async_added_to_hass()
@@ -574,6 +449,7 @@ class UnavailableAutomationEntity(BaseAutomationEntity):
             },
         )
 
+    @override
     async def async_will_remove_from_hass(self) -> None:
         """Run when entity will be removed from hass."""
         await super().async_will_remove_from_hass()
@@ -581,6 +457,7 @@ class UnavailableAutomationEntity(BaseAutomationEntity):
             self.hass, DOMAIN, f"{self.entity_id}_validation_{self._validation_status}"
         )
 
+    @override
     async def async_trigger(
         self,
         run_variables: dict[str, Any],
@@ -627,6 +504,7 @@ class AutomationEntity(BaseAutomationEntity, RestoreEntity):
         self._attr_unique_id = automation_id
 
     @property
+    @override
     def extra_state_attributes(self) -> dict[str, Any]:
         """Return the entity state attributes."""
         attrs = {
@@ -639,11 +517,13 @@ class AutomationEntity(BaseAutomationEntity, RestoreEntity):
         return attrs
 
     @property
+    @override
     def is_on(self) -> bool:
         """Return True if entity is on."""
         return self._async_detach_triggers is not None or self._is_enabled
 
     @cached_property
+    @override
     def referenced_labels(self) -> set[str]:
         """Return a set of referenced labels."""
         referenced = self.action_script.referenced_labels
@@ -659,6 +539,7 @@ class AutomationEntity(BaseAutomationEntity, RestoreEntity):
         return referenced
 
     @cached_property
+    @override
     def referenced_floors(self) -> set[str]:
         """Return a set of referenced floors."""
         referenced = self.action_script.referenced_floors
@@ -674,6 +555,7 @@ class AutomationEntity(BaseAutomationEntity, RestoreEntity):
         return referenced
 
     @cached_property
+    @override
     def referenced_areas(self) -> set[str]:
         """Return a set of referenced areas."""
         referenced = self.action_script.referenced_areas
@@ -687,6 +569,7 @@ class AutomationEntity(BaseAutomationEntity, RestoreEntity):
         return referenced
 
     @property
+    @override
     def referenced_blueprint(self) -> str | None:
         """Return referenced blueprint or None."""
         if self._blueprint_inputs is None:
@@ -694,6 +577,7 @@ class AutomationEntity(BaseAutomationEntity, RestoreEntity):
         return cast(str, self._blueprint_inputs[CONF_USE_BLUEPRINT][CONF_PATH])
 
     @cached_property
+    @override
     def referenced_devices(self) -> set[str]:
         """Return a set of referenced devices."""
         referenced = self.action_script.referenced_devices
@@ -708,6 +592,7 @@ class AutomationEntity(BaseAutomationEntity, RestoreEntity):
         return referenced
 
     @cached_property
+    @override
     def referenced_entities(self) -> set[str]:
         """Return a set of referenced entities."""
         referenced = self.action_script.referenced_entities
@@ -722,6 +607,7 @@ class AutomationEntity(BaseAutomationEntity, RestoreEntity):
 
         return referenced
 
+    @override
     async def async_added_to_hass(self) -> None:
         """Startup with initial state or previous state."""
         await super().async_added_to_hass()
@@ -761,11 +647,13 @@ class AutomationEntity(BaseAutomationEntity, RestoreEntity):
         if enable_automation:
             await self._async_enable()
 
+    @override
     async def async_turn_on(self, **kwargs: Any) -> None:
         """Turn the entity on and update the state."""
         await self._async_enable()
         self.async_write_ha_state()
 
+    @override
     async def async_turn_off(self, **kwargs: Any) -> None:
         """Turn the entity off."""
         if CONF_STOP_ACTIONS in kwargs:
@@ -774,6 +662,7 @@ class AutomationEntity(BaseAutomationEntity, RestoreEntity):
             await self._async_disable()
         self.async_write_ha_state()
 
+    @override
     async def async_trigger(
         self,
         run_variables: dict[str, Any],
@@ -835,7 +724,7 @@ class AutomationEntity(BaseAutomationEntity, RestoreEntity):
             if (
                 not skip_condition
                 and self._condition is not None
-                and not self._condition(variables)
+                and not self._condition.async_check(variables=variables)
             ):
                 self._logger.debug(
                     "Conditions not met, aborting automation. Condition summary: %s",
@@ -900,10 +789,19 @@ class AutomationEntity(BaseAutomationEntity, RestoreEntity):
 
             return None
 
+    @override
     async def async_will_remove_from_hass(self) -> None:
         """Remove listeners when removing automation from Home Assistant."""
         await super().async_will_remove_from_hass()
-        await self._async_disable()
+        if self.registry_entry and self.registry_entry.entity_id != self.entity_id:
+            # Entity ID change, do not unload the script or conditions as they will
+            # be reused.
+            await self._async_disable()
+            return
+        await self._async_disable(stop_actions=False)
+        await self.action_script.async_unload()
+        if self._condition is not None:
+            self._condition.async_unload()
 
     async def _async_enable_automation(self, event: Event) -> None:
         """Start automation on startup."""
@@ -972,6 +870,51 @@ class AutomationEntity(BaseAutomationEntity, RestoreEntity):
             return None
         return await self.async_trigger(run_variables, context, skip_condition)
 
+    @callback
+    def _handle_not_triggered(
+        self,
+        run_variables: dict[str, Any],
+        info: trigger_helper.NotTriggeredInfo,
+        context: Context | None = None,
+    ) -> None:
+        """Record a trace for a trigger that evaluated a change but did not fire.
+
+        This is the diagnostic sibling of async_trigger: a trigger calls it - in
+        certain interesting cases - when it does not run the action, so the user
+        can see in the trace why the automation was not triggered.
+        """
+        if not self._is_enabled:
+            return
+
+        # Create a new context referring to the old context.
+        parent_id = None if context is None else context.id
+        trigger_context = Context(parent_id=parent_id)
+
+        with trace_automation(
+            self.hass,
+            self.unique_id,
+            self.raw_config,
+            self._blueprint_inputs,
+            trigger_context,
+            self._trace_config,
+            not_triggered=True,
+        ) as automation_trace:
+            automation_trace.set_trace(trace_get())
+
+            trigger_description = run_variables.get("trigger", {}).get("description")
+            automation_trace.set_trigger_description(trigger_description)
+
+            # Record the trigger and its diagnostics as the trigger step.
+            if "idx" in run_variables.get("trigger", {}):
+                trigger_path = f"trigger/{run_variables['trigger']['idx']}"
+            else:
+                trigger_path = "trigger"
+            trace_element = TraceElement(run_variables, trigger_path)
+            trace_element.set_result(**info.as_dict())
+            trace_append_element(trace_element)
+
+            script_execution_set("not_triggered")
+
     async def _async_attach_triggers(
         self, home_assistant_start: bool
     ) -> Callable[[], None] | None:
@@ -1000,6 +943,7 @@ class AutomationEntity(BaseAutomationEntity, RestoreEntity):
             self._log_callback,
             home_assistant_start,
             variables,
+            did_not_trigger=self._handle_not_triggered,
         )
 
 
@@ -1151,7 +1095,7 @@ async def _async_process_config(
         automations: list[BaseAutomationEntity],
         automation_configs: list[AutomationEntityConfig],
     ) -> tuple[set[int], set[int]]:
-        """Find matches between a list of automation entities and a list of configurations.
+        """Find matches between automation entities and configurations.
 
         An automation or configuration is only allowed to match at most once to handle
         the case of multiple automations with identical configuration.
@@ -1276,6 +1220,7 @@ async def _async_process_if(
 
 
 @websocket_api.websocket_command({"type": "automation/config", "entity_id": str})
+@websocket_api.require_admin
 def websocket_config(
     hass: HomeAssistant,
     connection: websocket_api.ActiveConnection,

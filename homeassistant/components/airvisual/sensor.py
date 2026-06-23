@@ -1,6 +1,6 @@
 """Support for AirVisual air quality sensors."""
 
-from __future__ import annotations
+from typing import override
 
 from homeassistant.components.sensor import (
     SensorDeviceClass,
@@ -142,11 +142,13 @@ class AirVisualGeographySensor(AirVisualEntity, SensorEntity):
         self._locale = locale
 
     @property
+    @override
     def available(self) -> bool:
         """Return if entity is available."""
         return super().available and self.coordinator.data["current"]["pollution"]
 
     @callback
+    @override
     def update_from_latest_data(self) -> None:
         """Update the entity from the latest data."""
         try:

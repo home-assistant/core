@@ -1,7 +1,5 @@
 """Ecovacs services."""
 
-from __future__ import annotations
-
 from homeassistant.components.vacuum import DOMAIN as VACUUM_DOMAIN
 from homeassistant.core import HomeAssistant, SupportsResponse, callback
 from homeassistant.helpers import service

@@ -201,11 +201,6 @@ SSDP = {
             "manufacturer": "ZyXEL Communications Corp.",
         },
     ],
-    "konnected": [
-        {
-            "manufacturer": "konnected.io",
-        },
-    ],
     "lametric": [
         {
             "deviceType": "urn:schemas-upnp-org:device:LaMetric:1",
@@ -339,24 +334,6 @@ SSDP = {
         {
             "deviceType": "urn:schemas-upnp-org:device:Basic:1",
             "manufacturer": "Synology",
-        },
-    ],
-    "unifi": [
-        {
-            "manufacturer": "Ubiquiti Networks",
-            "modelDescription": "UniFi Dream Machine",
-        },
-        {
-            "manufacturer": "Ubiquiti Networks",
-            "modelDescription": "UniFi Dream Machine Pro",
-        },
-        {
-            "manufacturer": "Ubiquiti Networks",
-            "modelDescription": "UniFi Dream Machine SE",
-        },
-        {
-            "manufacturer": "Ubiquiti Networks",
-            "modelDescription": "UniFi Dream Machine Pro Max",
         },
     ],
     "unifi_discovery": [

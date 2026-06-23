@@ -245,8 +245,13 @@ async def test_set_scan_interval_via_platform(hass: HomeAssistant) -> None:
         await component.async_setup({DOMAIN: {"platform": "platform"}})
 
         await hass.async_block_till_done()
-    assert mock_track.called
-    assert mock_track.call_args[0][0] == 30.0
+    poll_calls = [
+        call
+        for call in mock_track.call_args_list
+        if getattr(call.args[1], "__name__", None) == "_async_handle_interval_callback"
+    ]
+    assert len(poll_calls) == 1
+    assert poll_calls[0].args[0] == 30.0
 
 
 async def test_adding_entities_with_generator_and_thread_callback(
@@ -967,7 +972,7 @@ async def test_setup_entry_platform_not_ready_with_message(
 async def test_setup_entry_platform_not_ready_from_exception(
     hass: HomeAssistant, caplog: pytest.LogCaptureFixture
 ) -> None:
-    """Test when an entry is not ready yet that includes the causing exception string."""
+    """Test entry not ready yet includes the causing exception string."""
     original_exception = HomeAssistantError("The device dropped the connection")
     platform_exception = PlatformNotReady()
     platform_exception.__cause__ = original_exception
@@ -1014,7 +1019,7 @@ async def test_reset_cancels_retry_setup(hass: HomeAssistant) -> None:
 
 
 async def test_reset_cancels_retry_setup_when_not_started(hass: HomeAssistant) -> None:
-    """Test that resetting a platform will cancel scheduled a setup retry when not yet started."""
+    """Test resetting a platform cancels setup retry when not yet started."""
     hass.set_state(CoreState.starting)
     async_setup_entry = Mock(side_effect=PlatformNotReady)
     initial_listeners = hass.bus.async_listeners()[EVENT_HOMEASSISTANT_STARTED]
@@ -1606,7 +1611,8 @@ async def test_platform_with_no_setup(
     await entity_platform.async_setup(None)
 
     assert (
-        "The mock-platform platform for the mock-integration integration does not support platform setup."
+        "The mock-platform platform for the mock-integration"
+        " integration does not support platform setup, please remove it from your config"
         in caplog.text
     )
     issue = issue_registry.async_get_issue(
@@ -1616,10 +1622,10 @@ async def test_platform_with_no_setup(
     assert issue
     assert issue.issue_domain == "mock-platform"
     assert issue.learn_more_url is None
-    assert issue.translation_key == "no_platform_setup"
+    assert issue.translation_key == "platform_setup_not_supported"
     assert issue.translation_placeholders == {
-        "domain": "mock-integration",
-        "platform": "mock-platform",
+        "platform_domain": "mock-integration",
+        "integration_domain": "mock-platform",
         "platform_key": "platform: mock-platform",
         "yaml_example": "```yaml\nmock-integration:\n  - platform: mock-platform\n```",
     }
@@ -1630,7 +1636,7 @@ async def test_platform_with_no_setup_custom_component_hint(
     caplog: pytest.LogCaptureFixture,
     issue_registry: ir.IssueRegistry,
 ) -> None:
-    """Test setting up a custom integration platform without setup logs extra warning."""
+    """Test custom integration platform without setup logs extra warning."""
     platform_mod = types.ModuleType("custom_components.mock_integration.mock_platform")
     platform_mod.__file__ = (
         "/config/custom_components/mock_integration/mock_platform.py"
@@ -1742,7 +1748,7 @@ async def test_register_entity_service_response_data(hass: HomeAssistant) -> Non
 async def test_register_entity_service_response_data_multiple_matches(
     hass: HomeAssistant,
 ) -> None:
-    """Test an entity service that does supports response data and matching many entities."""
+    """Test entity service with response data matching many entities."""
 
     async def generate_response(
         target: MockEntity, call: ServiceCall
@@ -2237,6 +2243,61 @@ async def test_entity_name_influences_entity_id(
 
     assert len(hass.states.async_entity_ids()) == 1
     assert entity_registry.async_get(expected_entity_id) is not None
+
+
+async def test_area_influences_entity_id(
+    hass: HomeAssistant,
+    area_registry: ar.AreaRegistry,
+    device_registry: dr.DeviceRegistry,
+    entity_registry: er.EntityRegistry,
+) -> None:
+    """Test entity_id is influenced by the device's area."""
+    config_entry = MockConfigEntry(entry_id="super-mock-id")
+    config_entry.add_to_hass(hass)
+
+    area = area_registry.async_create("Living Room")
+    device = device_registry.async_get_or_create(
+        config_entry_id=config_entry.entry_id,
+        connections={(dr.CONNECTION_NETWORK_MAC, "abcd")},
+        identifiers={("hue", "1234")},
+        name="Device Bla",
+    )
+    device_registry.async_update_device(device.id, area_id=area.id)
+
+    async def async_setup_entry(
+        hass: HomeAssistant,
+        config_entry: ConfigEntry,
+        async_add_entities: AddConfigEntryEntitiesCallback,
+    ) -> None:
+        """Mock setup entry method."""
+        async_add_entities(
+            [
+                MockEntity(
+                    unique_id="qwer",
+                    device_info={
+                        "identifiers": {("hue", "1234")},
+                        "connections": {(dr.CONNECTION_NETWORK_MAC, "abcd")},
+                        "name": "Device Bla",
+                    },
+                    has_entity_name=True,
+                    name="Entity Blu",
+                ),
+            ],
+        )
+
+    platform = MockPlatform(async_setup_entry=async_setup_entry)
+    entity_platform = MockEntityPlatform(
+        hass, platform_name=config_entry.domain, platform=platform
+    )
+
+    assert await entity_platform.async_setup_entry(config_entry)
+    await hass.async_block_till_done()
+
+    assert len(hass.states.async_entity_ids()) == 1
+    assert (
+        entity_registry.async_get("test_domain.living_room_device_bla_entity_blu")
+        is not None
+    )
 
 
 @pytest.mark.parametrize(

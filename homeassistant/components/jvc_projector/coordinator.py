@@ -1,13 +1,16 @@
 """Data update coordinator for the jvc_projector integration."""
 
-from __future__ import annotations
-
 import asyncio
 from datetime import timedelta
 import logging
-from typing import TYPE_CHECKING, Any
+from typing import TYPE_CHECKING, Any, override
 
-from jvcprojector import JvcProjector, JvcProjectorTimeoutError, command as cmd
+from jvcprojector import (
+    JvcProjector,
+    JvcProjectorCommandError,
+    JvcProjectorTimeoutError,
+    command as cmd,
+)
 
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
@@ -66,6 +69,7 @@ class JvcProjectorDataUpdateCoordinator(DataUpdateCoordinator[dict[str, str]]):
 
         self.state: dict[type[Command], str] = {}
 
+    @override
     async def _async_update_data(self) -> dict[str, Any]:
         """Update state with the current value of a command."""
         commands: set[type[Command]] = set(self.async_contexts())
@@ -78,7 +82,8 @@ class JvcProjectorDataUpdateCoordinator(DataUpdateCoordinator[dict[str, str]]):
                 new_state = await self._get_device_state(commands)
                 break
             except JvcProjectorTimeoutError as err:
-                # Timeouts are expected when the projector loses signal and ignores commands for a brief time.
+                # Timeouts are expected when the projector
+                # loses signal and ignores commands briefly.
                 last_timeout = err
                 await asyncio.sleep(TIMEOUT_SLEEP)
         else:
@@ -144,7 +149,16 @@ class JvcProjectorDataUpdateCoordinator(DataUpdateCoordinator[dict[str, str]]):
         self, command: type[Command], new_state: dict[type[Command], str]
     ) -> str | None:
         """Update state with the current value of a command."""
-        value = await self.device.get(command)
+        try:
+            value = await self.device.get(command)
+        except JvcProjectorCommandError as err:
+            _LOGGER.warning("Command %s failed: %s", command.name, err)
+            cached = self.state.get(command)
+            if command is cmd.Power and cached is None:
+                raise UpdateFailed(
+                    f"Failed to fetch {command.name} and no cached value is available"
+                ) from err
+            return cached
 
         if value != self.state.get(command):
             new_state[command] = value
