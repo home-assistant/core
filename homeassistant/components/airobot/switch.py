@@ -55,6 +55,16 @@ SWITCH_TYPES: tuple[AirobotSwitchEntityDescription, ...] = (
             False
         ),
     ),
+    AirobotSwitchEntityDescription(
+        key="boost_mode",
+        translation_key="boost_mode",
+        entity_category=EntityCategory.CONFIG,
+        is_on_fn=lambda coordinator: (
+            coordinator.data.settings.setting_flags.boost_enabled
+        ),
+        turn_on_fn=lambda coordinator: coordinator.client.set_boost_mode(True),
+        turn_off_fn=lambda coordinator: coordinator.client.set_boost_mode(False),
+    ),
 )
 
 
