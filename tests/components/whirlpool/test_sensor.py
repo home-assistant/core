@@ -9,10 +9,11 @@ from whirlpool.dryer import MachineState as DryerMachineState
 from whirlpool.oven import CavityState as OvenCavityState, CookMode
 from whirlpool.washer import MachineState as WasherMachineState
 
+from homeassistant.components.whirlpool.const import DOMAIN
 from homeassistant.components.whirlpool.sensor import SCAN_INTERVAL
 from homeassistant.const import STATE_UNKNOWN, Platform
 from homeassistant.core import HomeAssistant, State
-from homeassistant.helpers import entity_registry as er
+from homeassistant.helpers import entity_registry as er, issue_registry as ir
 from homeassistant.util.dt import as_timestamp, utc_from_timestamp, utcnow
 
 from . import init_integration, snapshot_whirlpool_entities, trigger_attr_callback
@@ -390,3 +391,72 @@ async def test_simple_enum_sensors(
         state = hass.states.get(entity_id)
         assert state is not None
         assert state.state == expected_state
+
+
+# The oven target temperature sensor has been replaced by a number entity.
+DEPRECATED_TARGET_TEMP_UNIQUE_ID = "said_oven_single-oven_target_temperature"
+DEPRECATED_TARGET_TEMP_ISSUE_ID = "deprecated_oven_target_temperature_said_oven_single"
+
+
+async def test_oven_target_temperature_sensor_not_created_for_new_installs(
+    hass: HomeAssistant,
+    entity_registry: er.EntityRegistry,
+    issue_registry: ir.IssueRegistry,
+) -> None:
+    """Test the deprecated target temperature sensor is not created on a fresh install."""
+    await init_integration(hass)
+
+    assert hass.states.get("sensor.single_cavity_oven_target_temperature") is None
+    assert (
+        entity_registry.async_get_entity_id(
+            Platform.SENSOR, DOMAIN, DEPRECATED_TARGET_TEMP_UNIQUE_ID
+        )
+        is None
+    )
+    assert (DOMAIN, DEPRECATED_TARGET_TEMP_ISSUE_ID) not in issue_registry.issues
+
+
+async def test_oven_target_temperature_sensor_deprecated(
+    hass: HomeAssistant,
+    entity_registry: er.EntityRegistry,
+    issue_registry: ir.IssueRegistry,
+) -> None:
+    """Test an existing target temperature sensor is kept and raises a repair issue."""
+    entity_registry.async_get_or_create(
+        Platform.SENSOR,
+        DOMAIN,
+        DEPRECATED_TARGET_TEMP_UNIQUE_ID,
+        suggested_object_id="single_cavity_oven_target_temperature",
+    )
+
+    await init_integration(hass)
+
+    state = hass.states.get("sensor.single_cavity_oven_target_temperature")
+    assert state is not None
+    assert state.state == "200"
+    assert (DOMAIN, DEPRECATED_TARGET_TEMP_ISSUE_ID) in issue_registry.issues
+
+
+async def test_oven_target_temperature_sensor_removed_when_disabled(
+    hass: HomeAssistant,
+    entity_registry: er.EntityRegistry,
+    issue_registry: ir.IssueRegistry,
+) -> None:
+    """Test a disabled deprecated target temperature sensor is removed."""
+    entity_registry.async_get_or_create(
+        Platform.SENSOR,
+        DOMAIN,
+        DEPRECATED_TARGET_TEMP_UNIQUE_ID,
+        suggested_object_id="single_cavity_oven_target_temperature",
+        disabled_by=er.RegistryEntryDisabler.USER,
+    )
+
+    await init_integration(hass)
+
+    assert (
+        entity_registry.async_get_entity_id(
+            Platform.SENSOR, DOMAIN, DEPRECATED_TARGET_TEMP_UNIQUE_ID
+        )
+        is None
+    )
+    assert (DOMAIN, DEPRECATED_TARGET_TEMP_ISSUE_ID) not in issue_registry.issues
