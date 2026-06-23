@@ -668,9 +668,10 @@ async def async_enable_logging(
         disabled_log_file_reason = None
         err_log_path = os.path.abspath(log_file)
 
+    hass.data.pop(DATA_LOGGING_DISABLED_REASON, None)
     if err_log_path:
         err_handler = await hass.async_add_executor_job(
-            _create_log_handler, err_log_path, log_rotate_days
+            _create_log_file, err_log_path, log_rotate_days
         )
 
         err_handler.setFormatter(logging.Formatter(fmt, datefmt=FORMAT_DATETIME))
@@ -678,11 +679,8 @@ async def async_enable_logging(
 
         # Save the log file location for access by other components.
         hass.data[DATA_LOGGING] = err_log_path
-        hass.data.pop(DATA_LOGGING_DISABLED_REASON, None)
     elif disabled_log_file_reason == LOG_FILE_DISABLED_REASON_ENVIRONMENT:
         hass.data[DATA_LOGGING_DISABLED_REASON] = disabled_log_file_reason
-    else:
-        hass.data.pop(DATA_LOGGING_DISABLED_REASON, None)
 
     async_activate_log_queue_handler(hass)
 
@@ -709,7 +707,7 @@ def _log_file_disabled_reason() -> str | None:
     return None
 
 
-def _create_log_handler(
+def _create_log_file(
     err_log_path: str, log_rotate_days: int | None
 ) -> RotatingFileHandler | TimedRotatingFileHandler:
     """Create log file and do roll over."""
