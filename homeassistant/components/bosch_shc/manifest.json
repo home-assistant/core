@@ -2,7 +2,7 @@
   "domain": "bosch_shc",
   "name": "Bosch SHC",
   "after_dependencies": ["zeroconf"],
-  "codeowners": ["@tschamm"],
+  "codeowners": ["@tschamm", "@mosandlt"],
   "config_flow": true,
   "documentation": "https://www.home-assistant.io/integrations/bosch_shc",
   "integration_type": "hub",
