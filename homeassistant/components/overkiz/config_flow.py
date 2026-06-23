@@ -137,7 +137,7 @@ class OverkizConfigFlow(
         if self.source == SOURCE_REAUTH:
             self._abort_if_unique_id_mismatch(reason="reauth_wrong_account")
             return self.async_update_reload_and_abort(
-                self._get_reauth_entry(), data_updates=user_input
+                self._get_reauth_entry(), data=user_input
             )
 
         if self.source == SOURCE_RECONFIGURE:

@@ -748,6 +748,9 @@ async def test_local_reauth_legacy(hass: HomeAssistant) -> None:
         assert mock_entry.data["host"] == TEST_HOST
         assert mock_entry.data["token"] == "new_token"
         assert mock_entry.data["verify_ssl"] is True
+        # The legacy username/password are dropped after migrating to a token.
+        assert "username" not in mock_entry.data
+        assert "password" not in mock_entry.data
 
 
 async def test_local_reauth_success(hass: HomeAssistant) -> None:
