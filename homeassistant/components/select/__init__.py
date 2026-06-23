@@ -25,6 +25,8 @@ from .const import (
     SERVICE_SELECT_LAST,
     SERVICE_SELECT_NEXT,
     SERVICE_SELECT_PREVIOUS,
+    SelectEntityAttribute,
+    SelectServiceArgument,
 )
 
 _LOGGER = logging.getLogger(__name__)
@@ -50,7 +52,9 @@ __all__ = [
     "SERVICE_SELECT_OPTION",
     "SERVICE_SELECT_PREVIOUS",
     "SelectEntity",
+    "SelectEntityAttribute",
     "SelectEntityDescription",
+    "SelectServiceArgument",
 ]
 
 # mypy: disallow-any-generics
@@ -77,19 +81,19 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
 
     component.async_register_entity_service(
         SERVICE_SELECT_NEXT,
-        {vol.Optional(ATTR_CYCLE, default=True): bool},
+        {vol.Optional(SelectServiceArgument.CYCLE, default=True): bool},
         SelectEntity.async_next.__name__,
     )
 
     component.async_register_entity_service(
         SERVICE_SELECT_OPTION,
-        {vol.Required(ATTR_OPTION): cv.string},
+        {vol.Required(SelectServiceArgument.OPTION): cv.string},
         SelectEntity.async_handle_select_option.__name__,
     )
 
     component.async_register_entity_service(
         SERVICE_SELECT_PREVIOUS,
-        {vol.Optional(ATTR_CYCLE, default=True): bool},
+        {vol.Optional(SelectServiceArgument.CYCLE, default=True): bool},
         SelectEntity.async_previous.__name__,
     )
 
@@ -121,7 +125,7 @@ CACHED_PROPERTIES_WITH_ATTR_ = {
 class SelectEntity(Entity, cached_properties=CACHED_PROPERTIES_WITH_ATTR_):
     """Representation of a Select entity."""
 
-    _entity_component_unrecorded_attributes = frozenset({ATTR_OPTIONS})
+    _entity_component_unrecorded_attributes = frozenset({SelectEntityAttribute.OPTIONS})
 
     entity_description: SelectEntityDescription
     _attr_current_option: str | None = None
@@ -133,7 +137,7 @@ class SelectEntity(Entity, cached_properties=CACHED_PROPERTIES_WITH_ATTR_):
     def capability_attributes(self) -> dict[str, Any]:
         """Return capability attributes."""
         return {
-            ATTR_OPTIONS: self.options,
+            SelectEntityAttribute.OPTIONS.value: self.options,
         }
 
     @property
