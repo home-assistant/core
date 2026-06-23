@@ -41,7 +41,7 @@ class DucoCoordinator(DataUpdateCoordinator[DucoData]):
 
     config_entry: DucoConfigEntry
     board_info: BoardInfo
-    _supports_time_filter_remain: bool | None
+    _supports_time_filter_remain: bool
 
     def __init__(
         self,
@@ -58,7 +58,7 @@ class DucoCoordinator(DataUpdateCoordinator[DucoData]):
             update_interval=SCAN_INTERVAL,
         )
         self.client = client
-        self._supports_time_filter_remain = None
+        self._supports_time_filter_remain = True
 
     async def _async_setup(self) -> None:
         """Fetch board info once during initial setup."""
@@ -132,7 +132,7 @@ class DucoCoordinator(DataUpdateCoordinator[DucoData]):
         # failures on this supplemental endpoint should not make the primary
         # node entities unavailable.
         time_filter_remain = None
-        if self._supports_time_filter_remain is not False:
+        if self._supports_time_filter_remain:
             with suppress(DucoError):
                 time_filter_remain = await self.client.async_get_time_filter_remaining()
                 self._supports_time_filter_remain = time_filter_remain is not None
