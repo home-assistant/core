@@ -84,6 +84,7 @@ class AmazonNotifyEntity(AmazonEntity, NotifyEntity):
     entity_description: AmazonNotifyEntityDescription
 
     @property
+    @override
     def available(self) -> bool:
         """Return if entity is available."""
         return (
