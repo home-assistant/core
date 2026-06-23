@@ -174,29 +174,16 @@ class LgIrConfigFlow(ConfigFlow, domain=DOMAIN):
         self,
         emitter_ids: list[str],
         receiver_ids: list[str],
-        default_emitter: str | None = None,
-        default_receiver: str | None = None,
-        default_modes: list[str] | None = None,
     ) -> vol.Schema:
-        emitter_kwargs: dict[str, Any] = {}
-        if default_emitter:
-            emitter_kwargs["default"] = default_emitter
-
-        receiver_kwargs: dict[str, Any] = {}
-        if default_receiver:
-            receiver_kwargs["default"] = default_receiver
-
         return vol.Schema(
             {
-                vol.Required(CONF_INFRARED_ENTITY_ID, **emitter_kwargs): EntitySelector(
+                vol.Required(CONF_INFRARED_ENTITY_ID): EntitySelector(
                     EntitySelectorConfig(
                         domain=INFRARED_DOMAIN,
                         include_entities=emitter_ids,
                     )
                 ),
-                vol.Optional(
-                    CONF_INFRARED_RECEIVER_ENTITY_ID, **receiver_kwargs
-                ): EntitySelector(
+                vol.Optional(CONF_INFRARED_RECEIVER_ENTITY_ID): EntitySelector(
                     EntitySelectorConfig(
                         domain=INFRARED_DOMAIN,
                         include_entities=receiver_ids,
@@ -204,9 +191,7 @@ class LgIrConfigFlow(ConfigFlow, domain=DOMAIN):
                 ),
                 vol.Required(
                     CONF_HVAC_MODES,
-                    default=default_modes
-                    if default_modes is not None
-                    else _DEFAULT_HVAC_MODES,
+                    default=_DEFAULT_HVAC_MODES,
                 ): SelectSelector(
                     SelectSelectorConfig(
                         options=[m.value for m in _HVAC_MODE_OPTIONS],

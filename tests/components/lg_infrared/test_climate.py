@@ -3,6 +3,7 @@
 from collections.abc import Callable
 from unittest.mock import patch
 
+from infrared_protocols.commands.lg_ac import LgAcCommand, LgAcFanSpeed, LgAcMode
 import pytest
 from syrupy.assertion import SnapshotAssertion
 
@@ -18,8 +19,6 @@ from homeassistant.components.climate import (
     HVACMode,
 )
 from homeassistant.components.infrared import InfraredReceivedSignal
-from homeassistant.components.lg_infrared import ac_encoder
-from homeassistant.components.lg_infrared.climate import LgAcClimateEntity
 from homeassistant.components.lg_infrared.const import MIN_TEMP
 from homeassistant.const import ATTR_ENTITY_ID, ATTR_TEMPERATURE, Platform
 from homeassistant.core import HomeAssistant
@@ -88,7 +87,7 @@ async def test_set_hvac_mode_off(
 
     assert len(mock_infrared_emitter_entity.send_command_calls) == 1
     timings = mock_infrared_emitter_entity.send_command_calls[0].get_raw_timings()
-    assert timings == ac_encoder.encode_off()
+    assert timings == LgAcCommand(mode=LgAcMode.OFF).get_raw_timings()
 
 
 @pytest.mark.usefixtures("init_ac_integration")
@@ -99,28 +98,36 @@ async def test_set_hvac_mode_off(
             HVACMode.COOL,
             24,
             FAN_AUTO,
-            lambda: ac_encoder.encode_cool(24, FAN_AUTO),
+            lambda: LgAcCommand(
+                mode=LgAcMode.COOL, temperature=24, fan=LgAcFanSpeed.AUTO
+            ).get_raw_timings(),
             id="cool_24_auto",
         ),
         pytest.param(
             HVACMode.COOL,
             18,
             FAN_LOW,
-            lambda: ac_encoder.encode_cool(18, FAN_LOW),
+            lambda: LgAcCommand(
+                mode=LgAcMode.COOL, temperature=18, fan=LgAcFanSpeed.LOW
+            ).get_raw_timings(),
             id="cool_18_low",
         ),
         pytest.param(
             HVACMode.COOL,
             30,
             FAN_HIGH,
-            lambda: ac_encoder.encode_cool(30, FAN_HIGH),
+            lambda: LgAcCommand(
+                mode=LgAcMode.COOL, temperature=30, fan=LgAcFanSpeed.HIGH
+            ).get_raw_timings(),
             id="cool_30_high",
         ),
         pytest.param(
             HVACMode.DRY,
             24,
             FAN_MEDIUM,
-            lambda: ac_encoder.encode_dry(FAN_MEDIUM),
+            lambda: LgAcCommand(
+                mode=LgAcMode.DRY, fan=LgAcFanSpeed.MEDIUM
+            ).get_raw_timings(),
             id="dry_medium",
         ),
     ],
@@ -167,12 +174,16 @@ async def test_set_hvac_mode_encodes_correctly(
     [
         pytest.param(
             HVACMode.HEAT,
-            lambda: ac_encoder.encode_heat(MIN_TEMP, FAN_AUTO),
+            lambda: LgAcCommand(
+                mode=LgAcMode.HEAT, temperature=MIN_TEMP, fan=LgAcFanSpeed.AUTO
+            ).get_raw_timings(),
             id="heat",
         ),
         pytest.param(
             HVACMode.FAN_ONLY,
-            lambda: ac_encoder.encode_fan_only(FAN_AUTO),
+            lambda: LgAcCommand(
+                mode=LgAcMode.FAN_ONLY, fan=LgAcFanSpeed.AUTO
+            ).get_raw_timings(),
             id="fan_only",
         ),
     ],
@@ -194,15 +205,6 @@ async def test_set_hvac_mode_heat_and_fan_only(
     assert len(mock_infrared_emitter_entity.send_command_calls) == 1
     timings = mock_infrared_emitter_entity.send_command_calls[0].get_raw_timings()
     assert timings == expected_timings_fn()
-
-
-def test_encode_mode_rejects_unsupported_mode(
-    mock_ac_config_entry: MockConfigEntry,
-) -> None:
-    """Test _encode_mode raises for a mode outside the supported set."""
-    entity = LgAcClimateEntity(mock_ac_config_entry, EMITTER_ENTITY_ID)
-    with pytest.raises(HomeAssistantError):
-        entity._encode_mode(HVACMode.AUTO, MIN_TEMP, FAN_AUTO)
 
 
 # ── Temperature ───────────────────────────────────────────────────────────────
@@ -232,7 +234,12 @@ async def test_set_temperature_sends_command_when_active(
 
     assert len(mock_infrared_emitter_entity.send_command_calls) == 1
     timings = mock_infrared_emitter_entity.send_command_calls[0].get_raw_timings()
-    assert timings == ac_encoder.encode_cool(26, FAN_AUTO)
+    assert (
+        timings
+        == LgAcCommand(
+            mode=LgAcMode.COOL, temperature=26, fan=LgAcFanSpeed.AUTO
+        ).get_raw_timings()
+    )
 
     state = hass.states.get(_CLIMATE_ENTITY_ID)
     assert state is not None
@@ -309,7 +316,12 @@ async def test_set_fan_mode_sends_command_when_active(
 
     assert len(mock_infrared_emitter_entity.send_command_calls) == 1
     timings = mock_infrared_emitter_entity.send_command_calls[0].get_raw_timings()
-    assert timings == ac_encoder.encode_cool(MIN_TEMP, FAN_HIGH)
+    assert (
+        timings
+        == LgAcCommand(
+            mode=LgAcMode.COOL, temperature=MIN_TEMP, fan=LgAcFanSpeed.HIGH
+        ).get_raw_timings()
+    )
 
 
 # ── Receiver state updates ────────────────────────────────────────────────────
@@ -321,7 +333,9 @@ async def test_receiver_updates_state_on_cool_signal(
     mock_infrared_receiver_entity: MockInfraredReceiverEntity,
 ) -> None:
     """Test that a received cool signal updates the climate entity state."""
-    timings = ac_encoder.encode_cool(24, FAN_MEDIUM)
+    timings = LgAcCommand(
+        mode=LgAcMode.COOL, temperature=24, fan=LgAcFanSpeed.MEDIUM
+    ).get_raw_timings()
 
     signal = InfraredReceivedSignal(timings=timings)
     mock_infrared_receiver_entity._handle_received_signal(signal)
@@ -341,7 +355,7 @@ async def test_receiver_updates_state_on_off_signal(
 ) -> None:
     """Test that a received off signal sets mode to off."""
     mock_infrared_receiver_entity._handle_received_signal(
-        InfraredReceivedSignal(timings=ac_encoder.encode_off())
+        InfraredReceivedSignal(timings=LgAcCommand(mode=LgAcMode.OFF).get_raw_timings())
     )
     await hass.async_block_till_done()
 
@@ -391,144 +405,3 @@ async def test_receiver_subscribe_failure_warns_and_continues(
     state = hass.states.get(_CLIMATE_ENTITY_ID)
     assert state is not None
     assert "physical remote state updates will be unavailable" in caplog.text
-
-
-# ── Encoder unit tests ────────────────────────────────────────────────────────
-
-
-def test_encode_off_frame() -> None:
-    """encode_off must produce frame 0x88C0051 (verified against captures)."""
-    timings = ac_encoder.encode_off()
-    # header is LG2-short: 3200/9900
-    assert timings[0] == ac_encoder._OFF_HDR_MARK
-    assert abs(timings[1]) == ac_encoder._OFF_HDR_SPACE
-    # decode and verify frame value
-    frame = _extract_frame(timings)
-    assert frame == 0x88C0051
-
-
-def test_encode_cool_24_auto_frame() -> None:
-    """encode_cool(24,'auto') must produce frame 0x880095E (verified against captures)."""
-    timings = ac_encoder.encode_cool(24, FAN_AUTO)
-    assert timings[0] == ac_encoder._HDR_MARK
-    frame = _extract_frame(timings)
-    assert frame == 0x880095E
-
-
-def test_encode_dry_auto_frame() -> None:
-    """encode_dry('auto') must produce frame 0x880195F (verified against captures)."""
-    timings = ac_encoder.encode_dry(FAN_AUTO)
-    frame = _extract_frame(timings)
-    assert frame == 0x880195F
-
-
-@pytest.mark.parametrize(
-    ("temp", "fan", "expected_hex"),
-    [
-        pytest.param(18, FAN_AUTO, 0x8800358, id="18_auto"),
-        pytest.param(30, FAN_AUTO, 0x8800F54, id="30_auto"),
-        pytest.param(24, FAN_LOW, 0x8800909, id="24_low"),
-        pytest.param(24, FAN_MEDIUM, 0x880092B, id="24_medium"),
-        pytest.param(24, FAN_HIGH, 0x880094D, id="24_high"),
-    ],
-)
-def test_encode_cool_frames(temp: int, fan: str, expected_hex: int) -> None:
-    """Verify cool encoder against known-good frames."""
-    timings = ac_encoder.encode_cool(temp, fan)
-    frame = _extract_frame(timings)
-    assert frame == expected_hex
-
-
-def test_decode_roundtrip_cool() -> None:
-    """Decoded cool frame must reconstruct original mode/fan/temp."""
-    timings = ac_encoder.encode_cool(22, FAN_HIGH)
-    result = ac_encoder.decode_timings(timings)
-    assert result is not None
-    assert result["mode"] == HVACMode.COOL
-    assert result["fan"] == FAN_HIGH
-    assert result["temp_c"] == 22
-
-
-def test_decode_roundtrip_off() -> None:
-    """Decoded off frame must return HVACMode.OFF."""
-    result = ac_encoder.decode_timings(ac_encoder.encode_off())
-    assert result is not None
-    assert result["mode"] == HVACMode.OFF
-
-
-def test_decode_roundtrip_dry() -> None:
-    """Decoded dry frame must return HVACMode.DRY."""
-    result = ac_encoder.decode_timings(ac_encoder.encode_dry(FAN_LOW))
-    assert result is not None
-    assert result["mode"] == HVACMode.DRY
-    assert result["fan"] == FAN_LOW
-
-
-def test_decode_roundtrip_heat() -> None:
-    """Decoded heat frame must reconstruct original mode/fan/temp."""
-    result = ac_encoder.decode_timings(ac_encoder.encode_heat(26, FAN_MEDIUM))
-    assert result is not None
-    assert result["mode"] == HVACMode.HEAT
-    assert result["fan"] == FAN_MEDIUM
-    assert result["temp_c"] == 26
-
-
-def test_decode_roundtrip_fan_only() -> None:
-    """Decoded fan-only frame must return HVACMode.FAN_ONLY."""
-    result = ac_encoder.decode_timings(ac_encoder.encode_fan_only(FAN_HIGH))
-    assert result is not None
-    assert result["mode"] == HVACMode.FAN_ONLY
-    assert result["fan"] == FAN_HIGH
-
-
-def test_decode_returns_none_for_short_timings() -> None:
-    """decode_timings must return None for incomplete signals."""
-    assert ac_encoder.decode_timings([500, -400]) is None
-
-
-def test_decode_returns_none_for_non_lg_ac() -> None:
-    """decode_timings must return None for non-LG-AC frames."""
-    # NEC-style header (9000/4500) with wrong signature
-    junk = [9000, -4500] + [550, -1600] * 32
-    assert ac_encoder.decode_timings(junk) is None
-
-
-def test_decode_returns_none_for_invalid_header() -> None:
-    """decode_timings must return None when header matches neither LG standard nor LG2."""
-    # Header mark 500 µs is outside both LG ranges ([6500,10500] and [1200,5200])
-    timings = [500, -500] + [550, -550] * 28
-    assert ac_encoder.decode_timings(timings) is None
-
-
-def test_decode_returns_none_for_bad_checksum() -> None:
-    """decode_timings must return None when LG AC checksum nibble is wrong."""
-    # 0x8800001: valid 0x88 signature but checksum nibble 1 instead of correct 0
-    timings = ac_encoder._encode_frame(
-        0x8800001, ac_encoder._HDR_MARK, ac_encoder._HDR_SPACE
-    )
-    assert ac_encoder.decode_timings(timings) is None
-
-
-def test_decode_returns_none_for_unknown_mode() -> None:
-    """decode_timings must return None when mode nibbles have no mapping."""
-    # (nibs[4], nibs[3]) = (0xF, 0xF) is not in _CMD_NIBS_TO_MODE
-    frame = ac_encoder._checksum(0x88FF000)
-    timings = ac_encoder._encode_frame(
-        frame, ac_encoder._HDR_MARK, ac_encoder._HDR_SPACE
-    )
-    assert ac_encoder.decode_timings(timings) is None
-
-
-# ── Helpers ───────────────────────────────────────────────────────────────────
-
-
-def _extract_frame(timings: list[int]) -> int:
-    """Extract the 28-bit frame integer from raw timings."""
-    frame = 0
-    i = 2
-    bits_read = 0
-    while i + 1 < len(timings) and bits_read < 28:
-        frame = (frame << 1) | (1 if abs(timings[i + 1]) > 1000 else 0)
-        i += 2
-        bits_read += 1
-    return frame
