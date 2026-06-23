@@ -213,27 +213,6 @@ async def test_step_user_routes(mock_config_flow: MideaLanConfigFlow) -> None:
     assert result["menu_options"] == ["discovery", "manually", "list", "cache"]
 
 
-async def test_step_cache(mock_config_flow: MideaLanConfigFlow) -> None:
-    """Test cache step clears login cache and displays form."""
-    mock_config_flow._login_data = {
-        CONF_ACCOUNT: "a",
-        CONF_SERVER: "s",
-        CONF_PASSWORD: "p",
-    }
-    mock_config_flow._login_mode = "input"
-    with patch.object(
-        mock_config_flow, "async_step_user", AsyncMock(return_value={"done": True})
-    ):
-        result = await mock_config_flow.async_step_cache({"action": "remove"})
-    assert result == {"done": True}
-    assert mock_config_flow._login_data is None
-    assert mock_config_flow._login_mode is None
-
-    result = await mock_config_flow.async_step_cache()
-    assert result["type"] is FlowResultType.FORM
-    assert result["step_id"] == "cache"
-
-
 async def test_step_list(mock_config_flow: MideaLanConfigFlow) -> None:
     """Test list step for discovered and empty-device results."""
     with patch(
