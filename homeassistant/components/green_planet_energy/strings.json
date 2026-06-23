@@ -58,7 +58,7 @@
   },
   "services": {
     "get_cheapest_duration": {
-      "description": "Retrieve electricity price data and find the cheapest consecutive time window for a given duration.",
+      "description": "Retrieves electricity price data and finds the cheapest consecutive time window for a given duration.",
       "fields": {
         "duration": {
           "description": "Duration in hours for which to find the cheapest time window.",
@@ -69,7 +69,7 @@
           "name": "Time range"
         }
       },
-      "name": "Get cheapest duration"
+      "name": "Get cheapest time window"
     }
   }
 }

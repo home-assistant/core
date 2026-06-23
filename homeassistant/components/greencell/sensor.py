@@ -3,7 +3,7 @@
 from collections.abc import Callable
 from dataclasses import dataclass
 import logging
-from typing import Any
+from typing import Any, override
 
 from greencell_client.access import GreencellAccess
 from greencell_client.elec_data import ElecData3Phase, ElecDataSinglePhase
@@ -276,10 +276,12 @@ class HabuSensor(SensorEntity):
         )
 
     @property
+    @override
     def available(self) -> bool:
         """Return True if the entity is available."""
         return not self._access.is_disabled()
 
+    @override
     async def async_added_to_hass(self) -> None:
         """Register the entity with Home Assistant."""
         unsub = self._access.register_listener(self._schedule_update)
@@ -309,6 +311,7 @@ class Habu3PhaseSensor(HabuSensor):
         self._phase = phase
 
     @property
+    @override
     def native_value(self) -> StateType:
         """Return the state of the sensor."""
         raw_value = self._sensor_data.get_value(self._phase)
@@ -333,6 +336,7 @@ class HabuSingleSensor(HabuSensor):
         self._value = sensor_data
 
     @property
+    @override
     def native_value(self) -> StateType:
         """Return the state of the sensor."""
         raw_value = self._value.data

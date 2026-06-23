@@ -4,7 +4,7 @@ import asyncio
 from collections.abc import Coroutine
 import json
 import logging
-from typing import Any
+from typing import Any, override
 
 import aiohttp
 from aiohttp.hdrs import CONTENT_TYPE
@@ -236,11 +236,13 @@ class MicrosoftFaceGroupEntity(Entity):
         self._attr_name = name
 
     @property
+    @override
     def state(self) -> int:
         """Return the state of the entity."""
         return len(self._api.store[self._id])
 
     @property
+    @override
     def extra_state_attributes(self) -> dict[str, Any]:
         """Return device specific state attributes."""
         return dict(self._api.store[self._id])

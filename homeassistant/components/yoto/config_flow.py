@@ -2,7 +2,7 @@
 
 from collections.abc import Mapping
 import logging
-from typing import Any
+from typing import Any, override
 
 from yoto_api import YotoError, get_account_id
 
@@ -20,11 +20,13 @@ class YotoOAuth2FlowHandler(
     DOMAIN = DOMAIN
 
     @property
+    @override
     def logger(self) -> logging.Logger:
         """Return the logger used for the OAuth2 flow."""
         return _LOGGER
 
     @property
+    @override
     def extra_authorize_data(self) -> dict[str, Any]:
         """Append Yoto's audience and scopes to the authorize URL."""
         return {
@@ -46,6 +48,7 @@ class YotoOAuth2FlowHandler(
             return self.async_show_form(step_id="reauth_confirm")
         return await self.async_step_user()
 
+    @override
     async def async_oauth_create_entry(self, data: dict[str, Any]) -> ConfigFlowResult:
         """Identify the Yoto account from the access token."""
         try:

@@ -1,6 +1,7 @@
 """DataUpdateCoordinator for Meteo.lt integration."""
 
 import logging
+from typing import override
 
 import aiohttp
 from meteo_lt import Forecast as MeteoLtForecast, MeteoLtAPI
@@ -37,6 +38,7 @@ class MeteoLtUpdateCoordinator(DataUpdateCoordinator[MeteoLtForecast]):
             config_entry=config_entry,
         )
 
+    @override
     async def _async_update_data(self) -> MeteoLtForecast:
         """Fetch data from Meteo.lt API."""
         try:

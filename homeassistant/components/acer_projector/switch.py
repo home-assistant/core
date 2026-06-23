@@ -2,7 +2,7 @@
 
 import logging
 import re
-from typing import Any
+from typing import Any, override
 
 from serialx import Serial, SerialException
 import voluptuous as vol
@@ -140,12 +140,14 @@ class AcerSwitch(SwitchEntity):
                 self._attributes[key] = awns
         self._attr_extra_state_attributes = self._attributes
 
+    @override
     def turn_on(self, **kwargs: Any) -> None:
         """Turn the projector on."""
         msg = CMD_DICT[STATE_ON]
         self._write_read(msg)
         self._attr_is_on = True
 
+    @override
     def turn_off(self, **kwargs: Any) -> None:
         """Turn the projector off."""
         msg = CMD_DICT[STATE_OFF]

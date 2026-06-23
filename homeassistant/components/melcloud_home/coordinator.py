@@ -3,6 +3,7 @@
 from collections.abc import Callable
 from datetime import timedelta
 import logging
+from typing import override
 
 from aiomelcloudhome import ATAUnit, ATWUnit, MELCloudHome, UserContext
 from aiomelcloudhome.exceptions import (
@@ -105,6 +106,7 @@ class MelCloudHomeCoordinator(DataUpdateCoordinator[UserContext]):
                     device.id, remove_config_entry_id=self.config_entry.entry_id
                 )
 
+    @override
     async def _async_update_data(self) -> UserContext:
         """Fetch data from the MELCloud Home API."""
         try:
@@ -161,6 +163,7 @@ class MelCloudHomeCoordinator(DataUpdateCoordinator[UserContext]):
             return data
 
     @callback
+    @override
     def _async_refresh_finished(self) -> None:
         """Notify entity callbacks after coordinator data has been updated."""
         if self.data is not None:

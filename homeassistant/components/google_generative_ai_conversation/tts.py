@@ -1,7 +1,7 @@
 """Text to speech support for Google Generative AI."""
 
 from collections.abc import Mapping
-from typing import Any
+from typing import Any, override
 
 from google.genai import types
 from google.genai.errors import APIError, ClientError
@@ -182,17 +182,20 @@ class GoogleGenerativeAITextToSpeechEntity(
         super().__init__(config_entry, subentry, RECOMMENDED_TTS_MODEL)
 
     @callback
+    @override
     def async_get_supported_voices(self, language: str) -> list[Voice]:
         """Return a list of supported voices for a language."""
         return self._supported_voices
 
     @cached_property
+    @override
     def default_options(self) -> Mapping[str, Any]:
         """Return a mapping with the default options."""
         return {
             ATTR_VOICE: self._supported_voices[0].voice_id,
         }
 
+    @override
     async def async_get_tts_audio(
         self, message: str, language: str, options: dict[str, Any]
     ) -> TtsAudioType:

@@ -5,17 +5,26 @@ from dataclasses import dataclass
 from datetime import timedelta
 from unittest.mock import Mock
 
-from uiprotect import ProtectApiClient
+from uiprotect import EventChange, ProtectApiClient, ProtectEvent
 from uiprotect.data import (
     Bootstrap,
     Camera,
+    DeviceState,
     Event,
     EventType,
     ModelType,
     ProtectAdoptableDeviceModel,
+    ProtectModelWithId,
+    PublicBootstrap,
+    Sensor,
     WSSubscriptionMessage,
 )
 from uiprotect.data.bootstrap import ProtectDeviceRef
+from uiprotect.data.public_devices import (
+    PublicSensor,
+    PublicWirelessBatteryStatus,
+    PublicWirelessConnectionState,
+)
 from uiprotect.test_util.anonymize import random_hex
 from uiprotect.websocket import WebsocketState
 
@@ -37,6 +46,7 @@ class MockUFPFixture:
     ws_subscription: Callable[[WSSubscriptionMessage], None] | None = None
     ws_state_subscription: Callable[[WebsocketState], None] | None = None
     devices_ws_subscription: Callable[[WSSubscriptionMessage], None] | None = None
+    events_subscription: Callable[[ProtectEvent, EventChange], None] | None = None
     devices_ws_state_subscription: Callable[[WebsocketState], None] | None = None
 
     def ws_msg(self, msg: WSSubscriptionMessage) -> None:
@@ -44,6 +54,12 @@ class MockUFPFixture:
 
         if self.ws_subscription is not None:
             self.ws_subscription(msg)
+
+    def events_msg(self, event: ProtectEvent, change: EventChange) -> None:
+        """Emit a public-API events websocket message for testing."""
+
+        if self.events_subscription is not None:
+            self.events_subscription(event, change)
 
 
 def reset_objects(bootstrap: Bootstrap):
@@ -202,6 +218,72 @@ async def init_entry(
 
     await hass.config_entries.async_setup(ufp.entry.entry_id)
     await hass.async_block_till_done()
+
+
+def make_public_sensor(
+    sensor: Sensor,
+    *,
+    percentage: int | None = None,
+    is_low: bool | None = None,
+    state: DeviceState | None = None,
+) -> Mock:
+    """Build a public-API sensor mirroring a private sensor's battery state.
+
+    Real ``wireless_connection_state`` models back the migrated value path so a
+    wrong ``ufp_public_value`` path fails the test; identifiers come from the
+    (synthetic) private sensor fixture, never from real capture data.
+    """
+    public = Mock(spec=PublicSensor)
+    public.id = sensor.id
+    public.mac = sensor.mac
+    public.model = ModelType.SENSOR
+    public.state = DeviceState[sensor.state.name] if state is None else state
+    public.wireless_connection_state = PublicWirelessConnectionState(
+        battery_status=PublicWirelessBatteryStatus(
+            percentage=(
+                sensor.battery_status.percentage if percentage is None else percentage
+            ),
+            is_low=sensor.battery_status.is_low if is_low is None else is_low,
+        )
+    )
+    return public
+
+
+def setup_public_sensor(ufp: MockUFPFixture) -> None:
+    """Expose private sensors over the public API via a real ``PublicBootstrap``.
+
+    Lookups go through the real ``PublicBootstrap.get``; the mirror resolves
+    against the private bootstrap at call time, so it is robust to ``init_entry``
+    regenerating device ids.
+    """
+    public_bootstrap = PublicBootstrap()
+    pb = Mock(spec=PublicBootstrap)
+    pb.sensors = public_bootstrap.sensors
+    pb.relays = {}
+    pb.sirens = {}
+    pb.arm_mode = None
+    pb.arm_profiles = {}
+
+    def _get(model: ModelType, obj_id: str) -> ProtectModelWithId | None:
+        if (
+            model is ModelType.SENSOR
+            and (private := ufp.api.bootstrap.sensors.get(obj_id)) is not None
+        ):
+            public_bootstrap.sensors[obj_id] = make_public_sensor(private)
+        return public_bootstrap.get(model, obj_id)
+
+    pb.get = _get
+    ufp.api.has_public_bootstrap = True
+    ufp.api.public_bootstrap = pb
+
+
+def public_device_ws_message(public_obj: Mock) -> Mock:
+    """Build a public devices WS message carrying a public object."""
+    msg = Mock()
+    msg.changed_data = {}
+    msg.old_obj = None
+    msg.new_obj = public_obj
+    return msg
 
 
 async def remove_entities(

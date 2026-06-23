@@ -1,5 +1,7 @@
 """Event module."""
 
+from typing import override
+
 from deebot_client.capabilities import CapabilityEvent
 from deebot_client.device import Device
 from deebot_client.events import CleanJobStatus, ReportStatsEvent
@@ -43,6 +45,7 @@ class EcovacsLastJobEventEntity(
         """Initialize entity."""
         super().__init__(device, device.capabilities.stats.report)
 
+    @override
     async def async_added_to_hass(self) -> None:
         """Set up the event listeners now that hass is ready."""
         await super().async_added_to_hass()
