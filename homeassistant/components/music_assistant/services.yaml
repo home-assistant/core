@@ -48,6 +48,10 @@ play_media:
     radio_mode:
       selector:
         boolean:
+    username:
+      example: "john"
+      selector:
+        text:
 
 play_announcement:
   target:
