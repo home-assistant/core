@@ -21,7 +21,7 @@ from .coordinator import CompitConfigEntry, CompitDataUpdateCoordinator
 
 PARALLEL_UPDATES = 0
 NO_SENSOR = "no_sensor"
-ON_STATES = ["on", "yes", "charging", "alert", "exceeded"]
+ON_STATES = ["on", "yes", "charging", "alert", "exceeded", "open"]
 
 DESCRIPTIONS: dict[CompitParameter, BinarySensorEntityDescription] = {
     CompitParameter.AIRING: BinarySensorEntityDescription(
