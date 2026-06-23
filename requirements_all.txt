@@ -1809,7 +1809,7 @@ oru==0.1.11
 orvibo==1.1.2
 
 # homeassistant.components.ouman_eh_800
-ouman-eh-800-api==0.5.0
+ouman-eh-800-api==1.0.0
 
 # homeassistant.components.ourgroceries
 ourgroceries==1.5.4
