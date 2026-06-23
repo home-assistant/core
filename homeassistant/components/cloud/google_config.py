@@ -402,6 +402,7 @@ class CloudGoogleConfig(AbstractConfig):
         assistant_options = settings.get(CLOUD_GOOGLE, {})
         return not assistant_options.get(PREF_DISABLE_2FA, DEFAULT_DISABLE_2FA)
 
+    @override
     def get_entity_names(
         self, entry: er.RegistryEntry | None, state: State
     ) -> tuple[str, list[str]]:

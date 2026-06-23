@@ -206,6 +206,7 @@ class GoogleConfig(AbstractConfig):
         """If an entity should have 2FA checked."""
         return True
 
+    @override
     def get_entity_names(
         self, entry: er.RegistryEntry | None, state: State
     ) -> tuple[str, list[str]]:
