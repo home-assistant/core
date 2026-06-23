@@ -37,7 +37,7 @@ def async_setup_services(hass: HomeAssistant) -> None:
         entity_domain=NOTIFY_DOMAIN,
         schema={
             vol.Optional(ATTR_TITLE): cv.string,
-            vol.Optional(ATTR_MESSAGE): cv.string,
+            vol.Required(ATTR_MESSAGE): cv.string,
             vol.Optional(ATTR_IMAGE): MediaSelector({"accept": ["image/*", "video/*"]}),
             vol.Optional(ATTR_ICON): MediaSelector({"accept": ["image/*", "video/*"]}),
             vol.Optional(ATTR_POSITION): vol.In(Notifications.POSITIONS),

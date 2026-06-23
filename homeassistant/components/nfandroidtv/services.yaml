@@ -10,7 +10,7 @@ send_message:
         text:
       example: Hello
     message:
-      required: false
+      required: true
       selector:
         text:
           multiline: true

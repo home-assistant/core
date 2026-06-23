@@ -100,7 +100,7 @@ class NFAndroidTVNotifyEntity(NotifyEntity):
                 translation_placeholders={CONF_NAME: self.entry.title},
             ) from e
 
-    async def nfandroidtv_send_message(self, **kwargs: Any) -> None:
+    async def nfandroidtv_send_message(self, message: str, **kwargs: Any) -> None:
         """Send a message via nfandroidtv.send_message."""
         params: dict[str, Any] = kwargs
 
@@ -119,7 +119,9 @@ class NFAndroidTVNotifyEntity(NotifyEntity):
             params[ATTR_BKGCOLOR] = kwargs.pop(ATTR_BGCOLOR)
 
         try:
-            await self.hass.async_add_executor_job(lambda: self.client.send(**params))
+            await self.hass.async_add_executor_job(
+                lambda: self.client.send(message=message, **params)
+            )
         except ConnectError as e:
             raise HomeAssistantError(
                 translation_domain=DOMAIN,

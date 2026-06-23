@@ -261,7 +261,7 @@ async def test_nfandroidtv_send_message_image_snapshot(
 
     with patch(
         "homeassistant.components.image.async_get_image",
-        return_value=image.Image(content_type="image/jpeg", content=b"\x89PNG"),
+        return_value=image.Image(content_type="image/png", content=b"\x89PNG"),
     ) as mock_get_image:
         await hass.services.async_call(
             DOMAIN,
