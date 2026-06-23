@@ -40,136 +40,7 @@
       }
     }
   },
-  "device_automation": {
-    "trigger_type": {
-      "finger": "{entity_name} (General): Any finger",
-      "left_index": "User {entity_name}: index finger left",
-      "left_middle": "User {entity_name}: middle finger left",
-      "left_pinky": "User {entity_name}: small finger left",
-      "left_ring": "User {entity_name}: ring finger left",
-      "left_thumb": "User {entity_name}: thumb left",
-      "long_press": "{entity_name} long pressed",
-      "long_press_end": "{entity_name} long press released",
-      "right_index": "User {entity_name}: index finger right",
-      "right_middle": "User {entity_name}: middle finger right",
-      "right_pinky": "User {entity_name}: small finger right",
-      "right_ring": "User {entity_name}: ring finger right",
-      "right_thumb": "User {entity_name}: thumb right",
-      "single_press": "{entity_name} short pressed"
-    }
-  },
   "entity": {
-    "binary_sensor": {
-      "hub_state": {
-        "name": "Hub state"
-      },
-      "input_switch": {
-        "name": "Input switch"
-      },
-      "listening_status": {
-        "name": "Listening status"
-      },
-      "motion": {
-        "name": "Motion"
-      },
-      "rain": {
-        "name": "Rain"
-      }
-    },
-    "button": {
-      "count_down": {
-        "name": "Count down"
-      },
-      "count_up": {
-        "name": "Count up"
-      },
-      "hub_reboot": {
-        "name": "Hub reboot"
-      },
-      "hub_restart": {
-        "name": "Hub restart"
-      },
-      "module_reset": {
-        "name": "Module reset"
-      },
-      "power_cycle": {
-        "name": "Power cycle"
-      },
-      "restart_fwd_table": {
-        "name": "Restart forwarding table"
-      },
-      "router_reset_all": {
-        "name": "Reset all modules"
-      },
-      "voice_input": {
-        "name": "Voice input"
-      }
-    },
-    "event": {
-      "hbtn_event": {
-        "state_attributes": {
-          "event_type": {
-            "state": {
-              "inactive": "Inactive",
-              "left_index": "index finger left",
-              "left_middle": "middle finger left",
-              "left_pinky": "small finger left",
-              "left_ring": "ring finger left",
-              "left_thumb": "thumb left",
-              "long_press": "long pressed",
-              "long_press_end": "long press released",
-              "right_index": "index finger right",
-              "right_middle": "middle finger right",
-              "right_pinky": "small finger right",
-              "right_ring": "ring finger right",
-              "right_thumb": "thumb right",
-              "single_press": "short pressed"
-            }
-          }
-        }
-      }
-    },
-    "light": {
-      "dimmed_output": {
-        "name": "Dimmed output"
-      }
-    },
-    "media_player": {
-      "habitron_speaker": {
-        "name": "Speaker"
-      }
-    },
-    "number": {
-      "analog_output": {
-        "name": "Analog output"
-      }
-    },
-    "select": {
-      "habitron_loglevel": {
-        "state": {
-          "critical": "Critical",
-          "debug": "Debug",
-          "error": "Error",
-          "info": "Info",
-          "notset": "Not Set",
-          "warning": "Warning"
-        }
-      },
-      "habitron_mode": {
-        "state": {
-          "absent": "Absent",
-          "config": "Config",
-          "day": "Day",
-          "night": "Night",
-          "off": "Off",
-          "on": "On",
-          "present": "Present",
-          "sleeping": "Sleeping",
-          "update": "Update",
-          "vacation": "Vacation"
-        }
-      }
-    },
     "sensor": {
       "airquality": {
         "name": "Air quality"
@@ -209,22 +80,6 @@
       },
       "wind": {
         "name": "Wind"
-      }
-    },
-    "switch": {
-      "climate_ctl": {
-        "name": "Climate controller"
-      },
-      "habitron_flag": {
-        "name": "Flag"
-      },
-      "microphone": {
-        "name": "Microphone"
-      }
-    },
-    "text": {
-      "message": {
-        "name": "Message"
       }
     }
   },
@@ -385,7 +240,7 @@
       "name": "Save router status"
     },
     "update_entity": {
-      "description": "Internal hook used by automations to inject state-change events into a hub.",
+      "description": "Delivers a bus state-change event into Home Assistant. The SmartHub calls this over the WebSocket API to push updates; the fields carry raw Habitron event codes and are not normally set by hand.",
       "fields": {
         "evnt_arg1": {
           "description": "First event argument.",

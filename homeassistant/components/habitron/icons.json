@@ -1,81 +1,5 @@
 {
   "entity": {
-    "binary_sensor": {
-      "hub_state": {
-        "default": "mdi:alert-circle-outline",
-        "state": {
-          "on": "mdi:checkbox-marked-circle-outline"
-        }
-      },
-      "input_switch": {
-        "default": "mdi:toggle-switch-variant-off",
-        "state": {
-          "on": "mdi:toggle-switch-variant"
-        }
-      },
-      "listening_status": {
-        "default": "mdi:microphone-message-off",
-        "state": {
-          "on": "mdi:microphone-message"
-        }
-      },
-      "motion": {
-        "default": "mdi:motion-sensor-off",
-        "state": {
-          "on": "mdi:motion-sensor"
-        }
-      },
-      "rain": {
-        "default": "mdi:weather-partly-cloudy",
-        "state": {
-          "on": "mdi:weather-rainy"
-        }
-      }
-    },
-    "button": {
-      "count_down": {
-        "default": "mdi:chevron-down-box-outline"
-      },
-      "count_up": {
-        "default": "mdi:chevron-up-box-outline"
-      },
-      "hub_reboot": {
-        "default": "mdi:restart-alert"
-      },
-      "hub_restart": {
-        "default": "mdi:restart"
-      },
-      "module_reset": {
-        "default": "mdi:restart"
-      },
-      "power_cycle": {
-        "default": "mdi:backup-restore"
-      },
-      "restart_fwd_table": {
-        "default": "mdi:restore"
-      },
-      "router_reset_all": {
-        "default": "mdi:restart"
-      },
-      "voice_input": {
-        "default": "mdi:account-voice"
-      }
-    },
-    "light": {
-      "dimmed_output": {
-        "default": "mdi:lightbulb-on-60"
-      }
-    },
-    "media_player": {
-      "habitron_speaker": {
-        "default": "mdi:speaker"
-      }
-    },
-    "number": {
-      "analog_output": {
-        "default": "mdi:sine-wave"
-      }
-    },
     "sensor": {
       "airquality": {
         "default": "mdi:air-filter"
@@ -97,34 +21,6 @@
       },
       "wind": {
         "default": "mdi:weather-windy-variant"
-      }
-    },
-    "switch": {
-      "climate_ctl": {
-        "default": "mdi:heat-pump-outline",
-        "state": {
-          "on": "mdi:heat-pump"
-        }
-      },
-      "habitron_flag": {
-        "default": "mdi:bookmark-outline",
-        "state": {
-          "on": "mdi:bookmark-check"
-        }
-      },
-      "microphone": {
-        "default": "mdi:microphone-message",
-        "state": {
-          "on": "mdi:webcam"
-        }
-      }
-    },
-    "text": {
-      "ekey_finger": {
-        "default": "mdi:fingerprint"
-      },
-      "ekey_user": {
-        "default": "mdi:fingerprint"
       }
     }
   },
