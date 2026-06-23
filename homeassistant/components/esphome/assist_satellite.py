@@ -866,7 +866,7 @@ class EsphomeAssistSatellite(
                 and len(bytes_buffer) > 0
                 and self._is_running
             ):
-                remaining = bytes(bytes_buffer[: data_bytes_remaining])
+                remaining = bytes(bytes_buffer[:data_bytes_remaining])
                 self._send_tts_audio(remaining)
 
         except asyncio.CancelledError:

@@ -2630,7 +2630,9 @@ async def test_stream_tts_audio_edge_cases(
 
     # Odd-sized JUNK chunk with RIFF word-alignment padding
     mock_client.send_voice_assistant_audio.reset_mock()
-    odd_junk_chunk = struct.pack("<4sI", b"JUNK", 5) + b"junk!" + b"\x00"  # 5 bytes + 1 pad
+    odd_junk_chunk = (
+        struct.pack("<4sI", b"JUNK", 5) + b"junk!" + b"\x00"
+    )  # 5 bytes + 1 pad
     header_with_odd_junk = (
         struct.pack("<4sI4s", b"RIFF", 200, b"WAVE")
         + odd_junk_chunk
@@ -2655,4 +2657,3 @@ async def test_stream_tts_audio_edge_cases(
     stream = _ChunkedMockResultStream(hass, "wav", [wav_with_trailing])
     await satellite._stream_tts_audio(stream)
     mock_client.send_voice_assistant_audio.assert_called_once_with(audio_payload)
-
