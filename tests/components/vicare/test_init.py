@@ -321,11 +321,13 @@ async def test_setup_entry_all_devices_offline(
     hass: HomeAssistant,
     mock_config_entry: MockConfigEntry,
 ) -> None:
-    """Test setup raises ConfigEntryNotReady when all known devices are offline."""
+    """Test setup retries when a supported device exists but is offline."""
     mock_config_entry.add_to_hass(hass)
 
+    supported_device = Mock()
+    supported_device.getModel.return_value = "Vitodens300W"
     client = Mock()
-    client.devices = [Mock()]  # account has at least one device, but all offline
+    client.devices = [supported_device]  # supported, but offline -> filtered out
 
     with (
         patch(
@@ -342,19 +344,22 @@ async def test_setup_entry_all_devices_offline(
     assert mock_config_entry.state is ConfigEntryState.SETUP_RETRY
 
 
-async def test_setup_entry_empty_account(
+async def test_setup_entry_no_supported_devices(
     hass: HomeAssistant,
     mock_config_entry: MockConfigEntry,
 ) -> None:
-    """Test setup completes for an empty account without retrying.
+    """Test setup completes when the account has no supported device.
 
-    An account with no devices is not a transient failure, so it must not
-    raise ConfigEntryNotReady (which would retry forever).
+    The gateway is always present in ``client.devices`` but is filtered out by
+    model. With no supported device this is not a transient failure, so it must
+    not raise ConfigEntryNotReady (which would retry forever).
     """
     mock_config_entry.add_to_hass(hass)
 
+    gateway = Mock()
+    gateway.getModel.return_value = "Heatbox1"  # in UNSUPPORTED_DEVICES
     client = Mock()
-    client.devices = []  # truly empty ViCare account
+    client.devices = [gateway]
 
     with (
         patch(

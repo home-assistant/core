@@ -171,13 +171,18 @@ async def async_setup_entry(hass: HomeAssistant, entry: ViCareConfigEntry) -> bo
     ) as err:
         raise ConfigEntryAuthFailed("Authentication failed") from err
 
-    if entry.runtime_data.client.devices and not entry.runtime_data.devices:
-        # Devices exist on the account but every one reports
-        # `isOnline() == False`. Typical cause: the integration is set up while
-        # the Viessmann gateway is still booting (e.g. after a power outage)
-        # and HA was back faster than the gateway. Raise so HA core retries
-        # setup with its usual backoff instead of leaving the entry
-        # permanently empty until a manual reload.
+    if (
+        get_supported_devices(entry.runtime_data.client.devices)
+        and not entry.runtime_data.devices
+    ):
+        # Supported devices exist but every one reports `isOnline() == False`.
+        # Typical cause: the integration is set up while the Viessmann gateway
+        # is still booting (e.g. after a power outage) and HA was back faster
+        # than the gateway. Raise so HA core retries setup with its usual
+        # backoff instead of leaving the entry permanently empty until a manual
+        # reload. Checked against the model-supported list, not the raw client
+        # list (which always carries the gateway), so an account with no
+        # supported device completes setup instead of retrying forever.
         raise ConfigEntryNotReady("All ViCare devices are currently offline")
 
     for device in entry.runtime_data.devices:
