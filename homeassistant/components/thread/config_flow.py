@@ -1,6 +1,6 @@
 """Config flow for the Thread integration."""
 
-from typing import Any
+from typing import Any, override
 
 from homeassistant.components import onboarding
 from homeassistant.config_entries import (
@@ -25,6 +25,7 @@ class ThreadConfigFlow(ConfigFlow, domain=DOMAIN):
         )
         return self.async_create_entry(title="Thread", data={})
 
+    @override
     async def async_step_user(
         self, user_input: dict[str, str] | None = None
     ) -> ConfigFlowResult:
@@ -34,6 +35,7 @@ class ThreadConfigFlow(ConfigFlow, domain=DOMAIN):
         )
         return self.async_create_entry(title="Thread", data={})
 
+    @override
     async def async_step_zeroconf(
         self, discovery_info: ZeroconfServiceInfo
     ) -> ConfigFlowResult:

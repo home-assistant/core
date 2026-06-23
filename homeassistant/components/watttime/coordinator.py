@@ -1,6 +1,7 @@
 """Coordinator for the WattTime integration."""
 
 from datetime import timedelta
+from typing import override
 
 from aiowatttime import Client
 from aiowatttime.emissions import RealTimeEmissionsResponseType
@@ -40,6 +41,7 @@ class WattTimeCoordinator(DataUpdateCoordinator[RealTimeEmissionsResponseType]):
         )
         self.client = client
 
+    @override
     async def _async_update_data(self) -> RealTimeEmissionsResponseType:
         """Get the latest realtime emissions data."""
         try:

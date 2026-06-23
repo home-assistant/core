@@ -6,7 +6,7 @@
     ]),
     'area_id': None,
     'capabilities': dict({
-      'options': list([
+      <SelectEntityCapabilityAttribute.OPTIONS: 'options'>: list([
         'color',
         'demo',
         'effect',
@@ -50,7 +50,7 @@
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'friendly_name': 'Tree 1 Mode',
-      'options': list([
+      <SelectEntityCapabilityAttribute.OPTIONS: 'options'>: list([
         'color',
         'demo',
         'effect',

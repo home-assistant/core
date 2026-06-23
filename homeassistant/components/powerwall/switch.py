@@ -1,6 +1,6 @@
 """Support for Powerwall Switches (V2 API only)."""
 
-from typing import Any
+from typing import Any, override
 
 from tesla_powerwall import GridStatus, IslandMode, PowerwallError
 
@@ -45,14 +45,17 @@ class PowerwallOffGridEnabledEntity(PowerWallEntity, SwitchEntity):
         self._attr_unique_id = f"{self.base_unique_id}_off_grid_operation"
 
     @property
+    @override
     def is_on(self) -> bool:
         """Return true if the powerwall is off-grid."""
         return self.coordinator.data.grid_status in OFF_GRID_STATUSES
 
+    @override
     async def async_turn_on(self, **kwargs: Any) -> None:
         """Turn off-grid mode on."""
         await self._async_set_island_mode(IslandMode.OFFGRID)
 
+    @override
     async def async_turn_off(self, **kwargs: Any) -> None:
         """Turn off-grid mode off (return to on-grid usage)."""
         await self._async_set_island_mode(IslandMode.ONGRID)

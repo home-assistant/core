@@ -2,7 +2,7 @@
 
 from datetime import tzinfo
 import logging
-from typing import Any
+from typing import Any, override
 
 from homeassistant.components.climate import HVACMode
 from homeassistant.components.switch import SwitchEntity
@@ -85,6 +85,7 @@ class EcobeeVentilator20MinSwitch(EcobeeBaseEntity, SwitchEntity):
             self._operating_timezone
         )
 
+    @override
     async def async_turn_on(self, **kwargs: Any) -> None:
         """Set ventilator 20 min timer on."""
         await self.hass.async_add_executor_job(
@@ -92,6 +93,7 @@ class EcobeeVentilator20MinSwitch(EcobeeBaseEntity, SwitchEntity):
         )
         self.update_without_throttle = True
 
+    @override
     async def async_turn_off(self, **kwargs: Any) -> None:
         """Set ventilator 20 min timer off."""
         await self.hass.async_add_executor_job(
@@ -118,11 +120,13 @@ class EcobeeSwitchAuxHeatOnly(EcobeeBaseEntity, SwitchEntity):
             HVACMode.HEAT_COOL
         )
 
+    @override
     def turn_on(self, **kwargs: Any) -> None:
         """Set the hvacMode to auxHeatOnly."""
         self._last_hvac_mode_before_aux_heat = self.thermostat["settings"]["hvacMode"]
         self.data.ecobee.set_hvac_mode(self.thermostat_index, ECOBEE_AUX_HEAT_ONLY)
 
+    @override
     def turn_off(self, **kwargs: Any) -> None:
         """Set the hvacMode back to the prior setting."""
         self.data.ecobee.set_hvac_mode(
@@ -130,6 +134,7 @@ class EcobeeSwitchAuxHeatOnly(EcobeeBaseEntity, SwitchEntity):
         )
 
     @property
+    @override
     def is_on(self) -> bool:
         """Return true if auxHeatOnly mode is active."""
         return self.thermostat["settings"]["hvacMode"] == ECOBEE_AUX_HEAT_ONLY

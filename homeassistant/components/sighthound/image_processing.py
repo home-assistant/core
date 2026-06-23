@@ -3,7 +3,7 @@
 import io
 import logging
 from pathlib import Path
-from typing import TYPE_CHECKING, Any
+from typing import TYPE_CHECKING, Any, override
 
 from PIL import Image, ImageDraw, UnidentifiedImageError
 import simplehound.core as hound
@@ -113,6 +113,7 @@ class SighthoundEntity(ImageProcessingEntity):
         self._save_file_folder = save_file_folder
         self._save_timestamped_file = save_timestamped_file
 
+    @override
     def process_image(self, image: bytes) -> None:
         """Process an image."""
         detections = self._api.detect(image)
@@ -171,6 +172,7 @@ class SighthoundEntity(ImageProcessingEntity):
             _LOGGER.debug("Sighthound saved file %s", timestamp_save_path)
 
     @property
+    @override
     def extra_state_attributes(self) -> dict[str, str]:
         """Return the attributes."""
         if not self._last_detection:

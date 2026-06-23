@@ -5,7 +5,7 @@ from datetime import timedelta
 from enum import StrEnum
 import logging
 import re
-from typing import Any, final
+from typing import Any, final, override
 
 from propcache.api import cached_property
 import voluptuous as vol
@@ -132,6 +132,7 @@ class TextEntity(Entity, cached_properties=CACHED_PROPERTIES_WITH_ATTR_):
     __pattern_cmp: re.Pattern | None = None
 
     @property
+    @override
     def capability_attributes(self) -> dict[str, Any]:
         """Return capability attributes."""
         return {
@@ -143,6 +144,7 @@ class TextEntity(Entity, cached_properties=CACHED_PROPERTIES_WITH_ATTR_):
 
     @property
     @final
+    @override
     def state(self) -> str | None:
         """Return the entity state."""
         if self.native_value is None:
@@ -245,6 +247,7 @@ class TextExtraStoredData(ExtraStoredData):
     native_min: int
     native_max: int
 
+    @override
     def as_dict(self) -> dict[str, Any]:
         """Return a dict representation of the text data."""
         return asdict(self)
@@ -266,6 +269,7 @@ class RestoreText(TextEntity, RestoreEntity):
     """Mixin class for restoring previous text state."""
 
     @property
+    @override
     def extra_restore_state_data(self) -> TextExtraStoredData:
         """Return text specific state data to be restored."""
         return TextExtraStoredData(

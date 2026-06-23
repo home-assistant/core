@@ -1,7 +1,7 @@
 """Support for displaying details about a Gitter.im chat room."""
 
 import logging
-from typing import Any
+from typing import Any, override
 
 from gitterpy.client import GitterClient
 from gitterpy.errors import GitterRoomError, GitterTokenError
@@ -74,21 +74,25 @@ class GitterSensor(SensorEntity):
         self._unit_of_measurement = "Msg"
 
     @property
+    @override
     def name(self):
         """Return the name of the sensor."""
         return self._name
 
     @property
+    @override
     def native_value(self):
         """Return the state of the sensor."""
         return self._state
 
     @property
+    @override
     def native_unit_of_measurement(self):
         """Return the unit the value is expressed in."""
         return self._unit_of_measurement
 
     @property
+    @override
     def extra_state_attributes(self) -> dict[str, Any]:
         """Return the state attributes."""
         return {

@@ -157,7 +157,7 @@
   "title": "Assist satellite",
   "triggers": {
     "idle": {
-      "description": "Triggers after one or more Assist satellites become idle after having processed a command.",
+      "description": "Triggers when one or more Assist satellites become idle after having processed a command.",
       "fields": {
         "behavior": {
           "name": "[%key:component::assist_satellite::common::trigger_behavior_name%]"
@@ -169,7 +169,7 @@
       "name": "Satellite became idle"
     },
     "listening": {
-      "description": "Triggers after one or more Assist satellites start listening for a command from someone.",
+      "description": "Triggers when one or more Assist satellites start listening for a command from someone.",
       "fields": {
         "behavior": {
           "name": "[%key:component::assist_satellite::common::trigger_behavior_name%]"
@@ -181,7 +181,7 @@
       "name": "Satellite started listening"
     },
     "processing": {
-      "description": "Triggers after one or more Assist satellites start processing a command after having heard it.",
+      "description": "Triggers when one or more Assist satellites start processing a command after having heard it.",
       "fields": {
         "behavior": {
           "name": "[%key:component::assist_satellite::common::trigger_behavior_name%]"
@@ -193,7 +193,7 @@
       "name": "Satellite started processing"
     },
     "responding": {
-      "description": "Triggers after one or more Assist satellites start responding to a command after having processed it, or start announcing something.",
+      "description": "Triggers when one or more Assist satellites start responding to a command after having processed it, or start announcing something.",
       "fields": {
         "behavior": {
           "name": "[%key:component::assist_satellite::common::trigger_behavior_name%]"

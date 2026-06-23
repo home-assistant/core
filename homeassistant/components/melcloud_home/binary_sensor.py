@@ -2,6 +2,7 @@
 
 from collections.abc import Callable
 from dataclasses import dataclass
+from typing import override
 
 from aiomelcloudhome import ATAUnit, ATWUnit
 
@@ -64,6 +65,12 @@ ATA_SENSORS: tuple[ATABinarySensorEntityDescription, ...] = (
         ),
         entity_category=EntityCategory.DIAGNOSTIC,
     ),
+    ATABinarySensorEntityDescription(
+        key="holiday_mode",
+        translation_key="holiday_mode",
+        state_fn=lambda unit: unit.holiday_mode.enabled if unit.holiday_mode else None,
+        entity_category=EntityCategory.DIAGNOSTIC,
+    ),
 )
 
 ATW_SENSORS: tuple[ATWBinarySensorEntityDescription, ...] = (
@@ -84,6 +91,12 @@ ATW_SENSORS: tuple[ATWBinarySensorEntityDescription, ...] = (
         key="forced_hot_water",
         translation_key="forced_hot_water",
         state_fn=lambda unit: unit.forced_hot_water_mode,
+        entity_category=EntityCategory.DIAGNOSTIC,
+    ),
+    ATWBinarySensorEntityDescription(
+        key="holiday_mode",
+        translation_key="holiday_mode",
+        state_fn=lambda unit: unit.holiday_mode.enabled if unit.holiday_mode else None,
         entity_category=EntityCategory.DIAGNOSTIC,
     ),
 )
@@ -135,6 +148,7 @@ class ATABinarySensor(MelCloudHomeATAUnitEntity, BinarySensorEntity):
         self._attr_unique_id = f"{unit.id}_{entity_description.key}"
 
     @property
+    @override
     def is_on(self) -> bool | None:
         """Return true if the binary sensor is on."""
         return self.entity_description.state_fn(self.unit)
@@ -157,6 +171,7 @@ class ATWBinarySensor(MelCloudHomeATWUnitEntity, BinarySensorEntity):
         self._attr_unique_id = f"{unit.id}_{entity_description.key}"
 
     @property
+    @override
     def is_on(self) -> bool | None:
         """Return true if the binary sensor is on."""
         return self.entity_description.state_fn(self.unit)
