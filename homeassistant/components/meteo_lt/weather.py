@@ -132,7 +132,7 @@ class MeteoLtWeatherEntity(CoordinatorEntity[MeteoLtUpdateCoordinator], WeatherE
     @property
     def native_pressure(self) -> float | None:
         """Return the pressure."""
-        return self.coordinator.data.current_conditions.pressuree
+        return self.coordinator.data.current_conditions.pressure
 
     @property
     def native_wind_speed(self) -> float | None:
