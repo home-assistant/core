@@ -9,7 +9,6 @@ from homeassistant.components.sensor import (
     SensorEntityDescription,
     SensorStateClass,
 )
-from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import (
     LIGHT_LUX,
     PERCENTAGE,
@@ -25,6 +24,7 @@ from homeassistant.core import HomeAssistant
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
+from . import TelldusLiveConfigEntry
 from .const import DOMAIN, TELLDUS_DISCOVERY_NEW
 from .entity import TelldusLiveEntity
 
@@ -120,17 +120,14 @@ SENSOR_TYPES: dict[str, SensorEntityDescription] = {
 
 async def async_setup_entry(
     hass: HomeAssistant,
-    config_entry: ConfigEntry,
+    config_entry: TelldusLiveConfigEntry,
     async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up tellduslive sensors dynamically."""
 
     async def async_discover_sensor(device_id):
         """Discover and add a discovered sensor."""
-        # Uses legacy hass.data[DOMAIN] pattern
-        # pylint: disable-next=home-assistant-use-runtime-data
-        client = hass.data[DOMAIN]
-        async_add_entities([TelldusLiveSensor(client, device_id)])
+        async_add_entities([TelldusLiveSensor(config_entry.runtime_data, device_id)])
 
     async_dispatcher_connect(
         hass,

@@ -4,29 +4,25 @@ from typing import Any, override
 
 from homeassistant.components import cover
 from homeassistant.components.cover import CoverEntity
-from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
-from . import TelldusLiveClient
+from . import TelldusLiveConfigEntry
 from .const import DOMAIN, TELLDUS_DISCOVERY_NEW
 from .entity import TelldusLiveEntity
 
 
 async def async_setup_entry(
     hass: HomeAssistant,
-    config_entry: ConfigEntry,
+    config_entry: TelldusLiveConfigEntry,
     async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up tellduslive sensors dynamically."""
 
     async def async_discover_cover(device_id):
         """Discover and add a discovered sensor."""
-        # Uses legacy hass.data[DOMAIN] pattern
-        # pylint: disable-next=home-assistant-use-runtime-data
-        client: TelldusLiveClient = hass.data[DOMAIN]
-        async_add_entities([TelldusLiveCover(client, device_id)])
+        async_add_entities([TelldusLiveCover(config_entry.runtime_data, device_id)])
 
     async_dispatcher_connect(
         hass,

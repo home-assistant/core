@@ -53,7 +53,12 @@ NEW_CLIENT_TASK = "telldus_new_client_task"
 INTERVAL_TRACKER = f"{DOMAIN}_INTERVAL"
 
 
-async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
+type TelldusLiveConfigEntry = ConfigEntry[TelldusLiveClient]
+
+
+async def async_setup_entry(
+    hass: HomeAssistant, entry: TelldusLiveConfigEntry
+) -> bool:
     """Create a tellduslive session."""
     conf = entry.data[KEY_SESSION]
 
@@ -79,14 +84,14 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     return True
 
 
-async def async_new_client(hass, session, entry):
+async def async_new_client(
+    hass: HomeAssistant, session: Session, entry: TelldusLiveConfigEntry
+) -> None:
     """Add the hubs associated with the current client to device_registry."""
     interval = entry.data[KEY_SCAN_INTERVAL]
     _LOGGER.debug("Update interval %s seconds", interval)
     client = TelldusLiveClient(hass, entry, session, interval)
-    # Uses legacy hass.data[DOMAIN] pattern
-    # pylint: disable-next=home-assistant-use-runtime-data
-    hass.data[DOMAIN] = client
+    entry.runtime_data = client
     dev_reg = dr.async_get(hass)
     for hub in await client.async_get_hubs():
         _LOGGER.debug("Connected hub %s", hub["name"])
@@ -99,7 +104,6 @@ async def async_new_client(hass, session, entry):
             sw_version=hub["version"],
         )
     await client.update()
-
 
 async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     """Set up the Telldus Live component."""
@@ -119,7 +123,9 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     return True
 
 
-async def async_unload_entry(hass: HomeAssistant, config_entry: ConfigEntry) -> bool:
+async def async_unload_entry(
+    hass: HomeAssistant, config_entry: TelldusLiveConfigEntry
+) -> bool:
     """Unload a config entry."""
     if not hass.data[NEW_CLIENT_TASK].done():
         hass.data[NEW_CLIENT_TASK].cancel()
@@ -128,7 +134,6 @@ async def async_unload_entry(hass: HomeAssistant, config_entry: ConfigEntry) -> 
     unload_ok = await hass.config_entries.async_unload_platforms(
         config_entry, CONFIG_ENTRY_IS_SETUP
     )
-    del hass.data[DOMAIN]
     del hass.data[DATA_CONFIG_ENTRY_LOCK]
     del hass.data[CONFIG_ENTRY_IS_SETUP]
     return unload_ok
