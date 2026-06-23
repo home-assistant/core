@@ -47,5 +47,21 @@
         "name": "Raw Rotation"
       }
     }
+  },
+  "services": {
+    "move_cover": {
+      "description": "Move a cover to a specific position and tilt position.",
+      "fields": {
+        "position": {
+          "description": "The position to move the cover to, in percentage (0-100).",
+          "name": "Position"
+        },
+        "tilt_position": {
+          "description": "The tilt position to move the cover to, as angle (-127 to 127).",
+          "name": "Tilt Position"
+        }
+      },
+      "name": "Move Cover"
+    }
   }
 }

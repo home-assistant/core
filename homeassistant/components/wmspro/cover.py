@@ -144,7 +144,7 @@ class WebControlProSlatRotate(WebControlProSlat):
         action_list = action_drive.prep(percentage=0)
         action_tilt = self._dest.action(self._tilt_action_desc)
         action_list += action_tilt.prep(rotation=action_tilt.minValue)
-        await action_list()
+        await action_list()  # perform a combined move and tilt action
 
     @override
     async def async_close_cover(self, **kwargs: Any) -> None:
@@ -153,7 +153,7 @@ class WebControlProSlatRotate(WebControlProSlat):
         action_list = action_drive.prep(percentage=100)
         action_tilt = self._dest.action(self._tilt_action_desc)
         action_list += action_tilt.prep(rotation=action_tilt.maxValue)
-        await action_list()
+        await action_list()  # perform a combined move and tilt action
 
     @override
     async def async_set_cover_position(self, **kwargs: Any) -> None:
@@ -206,3 +206,15 @@ class WebControlProSlatRotate(WebControlProSlat):
         # with the close position the slat is perpendicular to the ground.
         # This position will block the light best.
         await action(rotation=action.maxValue)
+
+    async def async_service_move_cover(self, **kwargs: Any) -> None:
+        """Handle the service action call to move and tilt the cover."""
+        action_drive = self._dest.action(self._drive_action_desc)
+        action_list = action_drive.prep(percentage=100 - kwargs[ATTR_POSITION])
+        action_tilt = self._dest.action(self._tilt_action_desc)
+        rotation = percentage_to_ranged_value(
+            (action_tilt.minValue, action_tilt.maxValue),
+            100 - kwargs[ATTR_TILT_POSITION],
+        )
+        action_list += action_tilt.prep(rotation=rotation)
+        await action_list()  # perform a combined move and tilt action

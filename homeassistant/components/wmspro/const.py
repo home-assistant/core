@@ -7,3 +7,4 @@ ATTRIBUTION = "Data provided by WMS WebControl pro API"
 MANUFACTURER = "WAREMA Renkhoff SE"
 
 BRIGHTNESS_SCALE = (1, 100)
+SERVICE_MOVE_COVER = "move_cover"
