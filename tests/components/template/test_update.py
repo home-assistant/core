@@ -980,3 +980,63 @@ async def test_flow_preview(
     assert state["state"] == STATE_ON
     assert state["attributes"]["installed_version"] == "1.0"
     assert state["attributes"]["latest_version"] == "2.0"
+
+
+@pytest.mark.parametrize(
+    "style", [ConfigurationStyle.MODERN, ConfigurationStyle.TRIGGER]
+)
+async def test_release_notes_field(
+    hass: HomeAssistant,
+    hass_ws_client: WebSocketGenerator,
+    style: ConfigurationStyle,
+) -> None:
+    """Test the new release_notes field works correctly for both state and trigger entities."""
+    release_notes_content = (
+        "These are the **full** release notes with unlimited length. " * 20 + "END"
+    )
+    release_summary_content = "Short summary"
+
+    await setup_entity(
+        hass,
+        TEST_UPDATE,
+        style,
+        1,
+        {
+            "installed_version": "{{ '1.0' }}",
+            "latest_version": "{{ '2.0' }}",
+            "release_notes": f"{{{{ '{release_notes_content}' }}}}",
+            "release_summary": f"{{{{ '{release_summary_content}' }}}}",
+        },
+    )
+
+    if style == ConfigurationStyle.TRIGGER:
+        hass.states.async_set(TEST_INSTALLED_SENSOR, "1.0")
+        await hass.async_block_till_done()
+
+    state = hass.states.get(TEST_UPDATE.entity_id)
+    assert state is not None
+
+    assert (
+        state.attributes.get("supported_features", 0)
+        & update.UpdateEntityFeature.RELEASE_NOTES
+    )
+
+    assert "release_summary" in state.attributes
+    assert len(state.attributes["release_summary"]) <= 255
+
+    assert "release_notes" not in state.attributes
+
+    client = await hass_ws_client(hass)
+    await hass.async_block_till_done()
+
+    await client.send_json(
+        {
+            "id": 1,
+            "type": "update/release_notes",
+            "entity_id": TEST_UPDATE.entity_id,
+        }
+    )
+
+    result = await client.receive_json()
+    assert result["success"] is True
+    assert result["result"] == release_notes_content
