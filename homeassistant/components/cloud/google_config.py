@@ -418,8 +418,8 @@ class CloudGoogleConfig(AbstractConfig):
 
         if config_name is not None:
             name = config_name
-        elif (override := options.get(PREF_ENTITY_NAME)) is not None:
-            name = override
+        elif (name_override := options.get(PREF_ENTITY_NAME)) is not None:
+            name = name_override
         elif entry is not None and (
             full_name := er.async_get_full_entity_name(self.hass, entry)
         ):
