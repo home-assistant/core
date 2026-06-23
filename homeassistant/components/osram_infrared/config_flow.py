@@ -33,25 +33,20 @@ class OsramIrConfigFlow(ConfigFlow, domain=DOMAIN):
 
         if user_input is not None:
             emitter_entity_id = user_input[CONF_IR_EMITTER_ENTITY_ID]
-            if emitter_entity_id:
-                self._async_abort_entries_match(
-                    {CONF_IR_EMITTER_ENTITY_ID: emitter_entity_id}
-                )
-
-                ent_reg = er.async_get(self.hass)
-                entry = ent_reg.async_get(emitter_entity_id)
-                title_entity_name = (
-                    (entry.name or entry.original_name or emitter_entity_id)
-                    if entry
-                    else emitter_entity_id
-                )
-                title = f"OSRAM light via {title_entity_name}"
-
-                return self.async_create_entry(title=title, data=user_input)
-            return self.async_create_entry(
-                title=emitter_entity_id,
-                data=user_input,
+            self._async_abort_entries_match(
+                {CONF_IR_EMITTER_ENTITY_ID: emitter_entity_id}
             )
+
+            ent_reg = er.async_get(self.hass)
+            entry = ent_reg.async_get(emitter_entity_id)
+            title_entity_name = (
+                (entry.name or entry.original_name or emitter_entity_id)
+                if entry
+                else emitter_entity_id
+            )
+            title = f"OSRAM light via {title_entity_name}"
+
+            return self.async_create_entry(title=title, data=user_input)
 
         return self.async_show_form(
             step_id="user",
