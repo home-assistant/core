@@ -1,6 +1,5 @@
 """SmartHub class — the integration's thin binding to the habitron_client model."""
 
-from enum import Enum
 import logging
 
 from habitron_client import (
@@ -20,17 +19,6 @@ from .const import DOMAIN
 from .coordinator import HbtnCoordinator
 
 _LOGGER = logging.getLogger(__name__)
-
-
-class LoggingLevels(Enum):
-    """Definition of logging levels for selector."""
-
-    notset = 0
-    debug = 1
-    info = 2
-    warning = 3
-    error = 4
-    critical = 5
 
 
 def _area_name(router: Router, area_no: int) -> str:
@@ -229,30 +217,6 @@ class SmartHub:
             member.value = value
             member.notify()
 
-    async def async_update(self) -> None:
-        """Async wrapper retained for callers expecting the old API."""
-        await self.update()
-
     async def async_close(self) -> None:
-        """Close the underlying client connection on entry unload."""
+        """Close the hub's bus client when the entry is unloaded."""
         await self.comm.async_close()
-
-    async def get_version(self) -> str:
-        """Test connectivity to SmartHub is OK."""
-        resp = await self.comm.get_smhub_version()
-        ver_string = resp.decode("iso8859-1")
-        return ver_string[9:] if ver_string.startswith("SmartIP") else "0.0.0"
-
-    async def restart(self, rt_id: int) -> None:
-        """Restart hub.
-
-        ``rt_id`` is accepted for forward compatibility with multi-router
-        setups but is unused today — the bus protocol exposes a single
-        ``hub_restart`` command without a target selector.
-        """
-        del rt_id
-        await self.comm.hub_restart()
-
-    async def reboot(self) -> None:
-        """Reboot hub."""
-        await self.comm.hub_reboot()

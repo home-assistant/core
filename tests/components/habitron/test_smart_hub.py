@@ -6,7 +6,7 @@ from habitron_client import Diagnostic, HabitronClient, HabitronError, Router, S
 import pytest
 
 from homeassistant.components.habitron.const import DOMAIN
-from homeassistant.components.habitron.smart_hub import LoggingLevels, SmartHub
+from homeassistant.components.habitron.smart_hub import SmartHub
 from homeassistant.components.habitron.system_health import (
     async_register,
     system_health_info,
@@ -17,16 +17,6 @@ from homeassistant.helpers import device_registry as dr
 from .const import MOCK_CONFIG_DATA, MOCK_CONFIG_OPTIONS, MOCK_HOST, MOCK_NAME, MOCK_UID
 
 from tests.common import MockConfigEntry
-
-
-def test_logging_levels_enum_values() -> None:
-    """LoggingLevels exposes the documented int values for each named level."""
-    assert LoggingLevels.notset.value == 0
-    assert LoggingLevels.debug.value == 1
-    assert LoggingLevels.info.value == 2
-    assert LoggingLevels.warning.value == 3
-    assert LoggingLevels.error.value == 4
-    assert LoggingLevels.critical.value == 5
 
 
 @pytest.fixture
@@ -48,13 +38,10 @@ def smart_hub_stub() -> SmartHub:
         comm.async_close = AsyncMock()
         comm.get_smhub_info = AsyncMock()
         comm.get_smhub_update = AsyncMock()
-        comm.get_smhub_version = AsyncMock()
         comm.reinit_hub = AsyncMock()
         comm.send_network_info = AsyncMock()
         comm.send_devregid = AsyncMock()
         comm.set_router = MagicMock()
-        comm.hub_restart = AsyncMock()
-        comm.hub_reboot = AsyncMock()
         mock_com.return_value = comm
 
         hass = MagicMock()
@@ -226,56 +213,12 @@ async def test_update_writes_diag_sensor_and_log_levels(
     assert smart_hub_stub.loglvl[1].value == 4
 
 
-async def test_async_update_delegates_to_update(
-    smart_hub_stub: SmartHub,
-) -> None:
-    """async_update is now a thin awaiter around update() directly."""
-    smart_hub_stub.comm.get_smhub_update.return_value = None
-    smart_hub_stub.diags = []
-    await smart_hub_stub.async_update()
-    smart_hub_stub.comm.get_smhub_update.assert_awaited()
-
-
 async def test_async_close_delegates_to_comm(
     smart_hub_stub: SmartHub,
 ) -> None:
-    """async_close hands off to comm.async_close to tear down the persistent client."""
+    """async_close hands off to comm.async_close to release the bus client."""
     await smart_hub_stub.async_close()
     smart_hub_stub.comm.async_close.assert_awaited()
-
-
-async def test_get_version_strips_smartip_prefix(
-    smart_hub_stub: SmartHub,
-) -> None:
-    """``get_version`` strips the leading SmartIP marker from the reply."""
-    # ``get_version`` returns ver_string[9:] when the SmartIP prefix is
-    # present — so the version payload sits at byte index 9.
-    smart_hub_stub.comm.get_smhub_version = AsyncMock(
-        return_value=b"SmartIP\x00\x001.2.3.4"
-    )
-    ver = await smart_hub_stub.get_version()
-    assert ver == "1.2.3.4"
-
-
-async def test_get_version_returns_zero_default_when_marker_missing(
-    smart_hub_stub: SmartHub,
-) -> None:
-    """If the SmartIP marker is missing, ``get_version`` falls back to 0.0.0."""
-    smart_hub_stub.comm.get_smhub_version = AsyncMock(return_value=b"garbled")
-    ver = await smart_hub_stub.get_version()
-    assert ver == "0.0.0"
-
-
-async def test_restart_forwards_to_comm(smart_hub_stub: SmartHub) -> None:
-    """``restart`` accepts a router id (forward-compat) but forwards a no-arg call."""
-    await smart_hub_stub.restart(7)
-    smart_hub_stub.comm.hub_restart.assert_awaited_with()
-
-
-async def test_reboot_forwards_to_comm(smart_hub_stub: SmartHub) -> None:
-    """reboot() forwards the call to ``comm.hub_reboot``."""
-    await smart_hub_stub.reboot()
-    smart_hub_stub.comm.hub_reboot.assert_awaited()
 
 
 def test_async_register_forwards_system_health_info() -> None:
