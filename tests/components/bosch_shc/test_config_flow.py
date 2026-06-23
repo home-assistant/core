@@ -708,27 +708,28 @@ async def test_reauth(hass: HomeAssistant) -> None:
 
 async def test_tls_assets_writer(hass: HomeAssistant) -> None:
     """Test we write tls assets to correct location."""
-    unique_id = "test-mac"
     assets = {
         "token": "abc:123",
         "cert": b"content_cert",
         "key": b"content_key",
     }
+    cert_filename = CONF_SHC_CERT + "_123.pem"
+    key_filename = CONF_SHC_KEY + "_123.pem"
     with (
-        patch("os.mkdir"),
+        patch("homeassistant.components.bosch_shc.config_flow.makedirs"),
         patch(
             "homeassistant.components.bosch_shc.config_flow.open", mock_open()
         ) as mocked_file,
     ):
-        write_tls_asset(hass, unique_id, CONF_SHC_CERT, assets["cert"])
+        write_tls_asset(hass, cert_filename, assets["cert"])
         mocked_file.assert_called_with(
-            hass.config.path(DOMAIN, unique_id, CONF_SHC_CERT), "w", encoding="utf8"
+            hass.config.path(DOMAIN, cert_filename), "w", encoding="utf8"
         )
         mocked_file().write.assert_called_with("content_cert")
 
-        write_tls_asset(hass, unique_id, CONF_SHC_KEY, assets["key"])
+        write_tls_asset(hass, key_filename, assets["key"])
         mocked_file.assert_called_with(
-            hass.config.path(DOMAIN, unique_id, CONF_SHC_KEY), "w", encoding="utf8"
+            hass.config.path(DOMAIN, key_filename), "w", encoding="utf8"
         )
         mocked_file().write.assert_called_with("content_key")
 
@@ -812,8 +813,8 @@ async def test_register_multiple_controllers(hass: HomeAssistant) -> None:
     assert ctrl_1_result3["context"]["unique_id"] == controller_1["mac"]
     assert ctrl_1_result3["data"] == {
         "host": "1.1.1.1",
-        "ssl_certificate": hass.config.path(DOMAIN, controller_1["mac"], CONF_SHC_CERT),
-        "ssl_key": hass.config.path(DOMAIN, controller_1["mac"], CONF_SHC_KEY),
+        "ssl_certificate": hass.config.path(DOMAIN, CONF_SHC_CERT + "_shc111111.pem"),
+        "ssl_key": hass.config.path(DOMAIN, CONF_SHC_KEY + "_shc111111.pem"),
         "token": "abc:shc111111",
         "hostname": "shc111111",
     }
@@ -868,8 +869,8 @@ async def test_register_multiple_controllers(hass: HomeAssistant) -> None:
     assert ctrl_2_result3["context"]["unique_id"] == controller_2["mac"]
     assert ctrl_2_result3["data"] == {
         "host": "2.2.2.2",
-        "ssl_certificate": hass.config.path(DOMAIN, controller_2["mac"], CONF_SHC_CERT),
-        "ssl_key": hass.config.path(DOMAIN, controller_2["mac"], CONF_SHC_KEY),
+        "ssl_certificate": hass.config.path(DOMAIN, CONF_SHC_CERT + "_shc222222.pem"),
+        "ssl_key": hass.config.path(DOMAIN, CONF_SHC_KEY + "_shc222222.pem"),
         "token": "abc:shc222222",
         "hostname": "shc222222",
     }
