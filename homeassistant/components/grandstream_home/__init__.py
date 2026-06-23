@@ -103,7 +103,11 @@ async def _setup_api(
     try:
         success, error_type = await hass.async_add_executor_job(attempt_login, api)
     except (OSError, RuntimeError) as e:
-        raise ConfigEntryNotReady(f"API setup failed: {e}") from e
+        raise ConfigEntryNotReady(
+            translation_domain=DOMAIN,
+            translation_key="api_setup_failed",
+            translation_placeholders={"error": str(e)},
+        ) from e
 
     if success:
         return api
@@ -114,15 +118,18 @@ async def _setup_api(
 
     if error_type == "ha_control_disabled":
         raise ConfigEntryNotReady(
-            "Home Assistant control is disabled on the device. "
-            "Please enable it in the device web interface."
+            translation_domain=DOMAIN,
+            translation_key="ha_control_disabled",
         )
 
     if error_type == "account_locked":
         _LOGGER.debug("Account is temporarily locked, integration will retry later")
         return api
 
-    raise ConfigEntryNotReady("Authentication failed - invalid credentials")
+    raise ConfigEntryNotReady(
+        translation_domain=DOMAIN,
+        translation_key="invalid_auth",
+    )
 
 
 async def async_setup_entry(hass: HomeAssistant, entry: GrandstreamConfigEntry) -> bool:
