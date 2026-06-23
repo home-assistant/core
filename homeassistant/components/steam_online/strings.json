@@ -28,6 +28,30 @@
       }
     }
   },
+  "entity": {
+    "sensor": {
+      "account": {
+        "state": {
+          "away": "Away",
+          "busy": "Busy",
+          "looking_to_play": "Looking to play",
+          "looking_to_trade": "Looking to trade",
+          "offline": "Offline",
+          "online": "Online",
+          "snooze": "Snooze"
+        },
+        "state_attributes": {
+          "game": { "name": "Game" },
+          "game_icon": { "name": "Game icon" },
+          "game_id": { "name": "Game ID" },
+          "game_image_header": { "name": "Game header image" },
+          "game_image_main": { "name": "Game image" },
+          "last_online": { "name": "Last online" },
+          "level": { "name": "Level" }
+        }
+      }
+    }
+  },
   "options": {
     "error": {
       "unauthorized": "Friends list restricted: Please refer to the documentation on how to see all other friends"

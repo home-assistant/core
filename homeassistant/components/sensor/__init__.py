@@ -220,6 +220,7 @@ class SensorEntity(Entity, cached_properties=CACHED_PROPERTIES_WITH_ATTR_):
         return self._get_uptime(current_uptime)
 
     @callback
+    @override
     def add_to_platform_start(
         self,
         hass: HomeAssistant,
@@ -295,6 +296,7 @@ class SensorEntity(Entity, cached_properties=CACHED_PROPERTIES_WITH_ATTR_):
         # is stored in the entity registry.
         self._async_read_entity_options()
 
+    @override
     async def async_internal_added_to_hass(self) -> None:
         """Call when the sensor entity is added to hass."""
         await super().async_internal_added_to_hass()
@@ -309,6 +311,7 @@ class SensorEntity(Entity, cached_properties=CACHED_PROPERTIES_WITH_ATTR_):
         self._async_read_entity_options()
         self._update_suggested_precision()
 
+    @override
     def _default_to_device_class_name(self) -> bool:
         """Return True if an unnamed entity should be named by its device class.
 
@@ -435,6 +438,7 @@ class SensorEntity(Entity, cached_properties=CACHED_PROPERTIES_WITH_ATTR_):
 
         return suggested_unit_of_measurement
 
+    @override
     def get_initial_entity_options(self) -> er.EntityOptionsType | None:
         """Return initial entity options.
 
@@ -925,6 +929,7 @@ class SensorEntity(Entity, cached_properties=CACHED_PROPERTIES_WITH_ATTR_):
         return cast(str, custom_unit)
 
     @callback
+    @override
     def async_registry_entry_updated(self) -> None:
         """Run when the entity registry entry has been updated."""
         self._async_read_entity_options()
@@ -965,6 +970,7 @@ class SensorExtraStoredData(ExtraStoredData):
     native_value: StateType | date | datetime | Decimal
     native_unit_of_measurement: str | None
 
+    @override
     def as_dict(self) -> dict[str, Any]:
         """Return a dict representation of the sensor data."""
         native_value: StateType | date | datetime | Decimal | dict[str, str] = (
@@ -1018,6 +1024,7 @@ class RestoreSensor(SensorEntity, RestoreEntity):
     """Mixin class for restoring previous sensor state."""
 
     @property
+    @override
     def extra_restore_state_data(self) -> SensorExtraStoredData:
         """Return sensor specific state data to be restored."""
         return SensorExtraStoredData(self.native_value, self.native_unit_of_measurement)

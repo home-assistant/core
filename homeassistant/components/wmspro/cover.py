@@ -1,7 +1,7 @@
 """Support for covers connected with WMS WebControl pro."""
 
 from datetime import timedelta
-from typing import Any
+from typing import Any, override
 
 from wmspro.const import (
     WMS_WebControl_pro_API_actionDescription as ACTION_DESC,
@@ -61,6 +61,7 @@ class WebControlProCover(WebControlProGenericEntity, CoverEntity):
     _attr_name = None
 
     @property
+    @override
     def current_cover_position(self) -> int | None:
         """Return current position of cover."""
         action = self._dest.action(self._drive_action_desc)
@@ -68,26 +69,31 @@ class WebControlProCover(WebControlProGenericEntity, CoverEntity):
             return None
         return 100 - action["percentage"]
 
+    @override
     async def async_set_cover_position(self, **kwargs: Any) -> None:
         """Move the cover to a specific position."""
         action = self._dest.action(self._drive_action_desc)
         await action(percentage=100 - kwargs[ATTR_POSITION])
 
     @property
+    @override
     def is_closed(self) -> bool | None:
         """Return if the cover is closed."""
         return self.current_cover_position == 0
 
+    @override
     async def async_open_cover(self, **kwargs: Any) -> None:
         """Open the cover."""
         action = self._dest.action(self._drive_action_desc)
         await action(percentage=0)
 
+    @override
     async def async_close_cover(self, **kwargs: Any) -> None:
         """Close the cover."""
         action = self._dest.action(self._drive_action_desc)
         await action(percentage=100)
 
+    @override
     async def async_stop_cover(self, **kwargs: Any) -> None:
         """Stop the device if in motion."""
         action = self._dest.action(
@@ -131,6 +137,7 @@ class WebControlProSlatRotate(WebControlProSlat):
 
     _tilt_action_desc = ACTION_DESC.SlatRotate
 
+    @override
     async def async_open_cover(self, **kwargs: Any) -> None:
         """Open the cover and tilt to minimum like the WMS WebControl pro."""
         action_drive = self._dest.action(self._drive_action_desc)
@@ -139,6 +146,7 @@ class WebControlProSlatRotate(WebControlProSlat):
         action_list += action_tilt.prep(rotation=action_tilt.minValue)
         await action_list()
 
+    @override
     async def async_close_cover(self, **kwargs: Any) -> None:
         """Close the cover and tilt to maximum like the WMS WebControl pro."""
         action_drive = self._dest.action(self._drive_action_desc)
@@ -147,6 +155,7 @@ class WebControlProSlatRotate(WebControlProSlat):
         action_list += action_tilt.prep(rotation=action_tilt.maxValue)
         await action_list()
 
+    @override
     async def async_set_cover_position(self, **kwargs: Any) -> None:
         """Move the cover to a specific position and tilt for open/close."""
         target_position = kwargs[ATTR_POSITION]
@@ -158,6 +167,7 @@ class WebControlProSlatRotate(WebControlProSlat):
             await super().async_set_cover_position(**kwargs)
 
     @property
+    @override
     def current_cover_tilt_position(self) -> int | None:
         """Return current position of cover tilt."""
         action = self._dest.action(self._tilt_action_desc)
@@ -168,6 +178,7 @@ class WebControlProSlatRotate(WebControlProSlat):
             action["rotation"],
         )
 
+    @override
     async def async_set_cover_tilt_position(self, **kwargs: Any) -> None:
         """Set the cover tilt position."""
         action = self._dest.action(self._tilt_action_desc)
@@ -177,6 +188,7 @@ class WebControlProSlatRotate(WebControlProSlat):
         )
         await action(rotation=rotation)
 
+    @override
     async def async_open_cover_tilt(self, **kwargs: Any) -> None:
         """Open the cover tilt."""
         action = self._dest.action(self._tilt_action_desc)
@@ -186,6 +198,7 @@ class WebControlProSlatRotate(WebControlProSlat):
         # is required to fully store the cover in the box.
         await action(rotation=0)
 
+    @override
     async def async_close_cover_tilt(self, **kwargs: Any) -> None:
         """Close the cover tilt."""
         action = self._dest.action(self._tilt_action_desc)

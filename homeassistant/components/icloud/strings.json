@@ -37,6 +37,7 @@
       },
       "verification_code": {
         "data": {
+          "request_new_code": "Request a new verification code",
           "verification_code": "Verification code"
         },
         "description": "Please enter the verification code you just received from Apple",
@@ -118,7 +119,7 @@
           "name": "Message"
         },
         "number": {
-          "description": "The phone number to call in lost mode (must contain country code).",
+          "description": "The phone number to call in lost mode. Must contain country code.",
           "name": "Number"
         }
       },
@@ -142,7 +143,7 @@
       "description": "Asks for a state update of all devices linked to an Apple Account.",
       "fields": {
         "account": {
-          "description": "Your Apple Account username (email).",
+          "description": "Your Apple Account username/email.",
           "name": "Account"
         }
       },

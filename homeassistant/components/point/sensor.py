@@ -1,6 +1,7 @@
 """Support for Minut Point sensors."""
 
 import logging
+from typing import override
 
 from homeassistant.components.sensor import (
     SensorDeviceClass,
@@ -80,6 +81,7 @@ class MinutPointSensor(MinutPointEntity, SensorEntity):
         self._attr_unique_id = f"point.{device_id}-{description.key}"  # pylint: disable=home-assistant-entity-unique-id-redundant-domain
 
     @property
+    @override
     def native_value(self) -> StateType:
         """Return the state of the sensor."""
         return self.coordinator.data[self.device_id].get(self.entity_description.key)

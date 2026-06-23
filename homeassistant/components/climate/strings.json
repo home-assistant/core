@@ -84,7 +84,7 @@
       },
       "name": "Thermostat is on"
     },
-    "target_humidity": {
+    "is_target_humidity": {
       "description": "Tests the humidity setpoint of one or more thermostats.",
       "fields": {
         "behavior": {
@@ -99,7 +99,7 @@
       },
       "name": "Thermostat target humidity"
     },
-    "target_temperature": {
+    "is_target_temperature": {
       "description": "Tests the temperature setpoint of one or more thermostats.",
       "fields": {
         "behavior": {
@@ -396,7 +396,7 @@
   "title": "Climate",
   "triggers": {
     "hvac_mode_changed": {
-      "description": "Triggers after the mode of one or more thermostats changes.",
+      "description": "Triggers when the mode of one or more thermostats changes.",
       "fields": {
         "behavior": {
           "name": "[%key:component::climate::common::trigger_behavior_name%]"
@@ -412,7 +412,7 @@
       "name": "Thermostat mode changed"
     },
     "started_cooling": {
-      "description": "Triggers after one or more thermostats start cooling.",
+      "description": "Triggers when one or more thermostats start cooling.",
       "fields": {
         "behavior": {
           "name": "[%key:component::climate::common::trigger_behavior_name%]"
@@ -424,7 +424,7 @@
       "name": "Thermostat started cooling"
     },
     "started_drying": {
-      "description": "Triggers after one or more thermostats start drying.",
+      "description": "Triggers when one or more thermostats start drying.",
       "fields": {
         "behavior": {
           "name": "[%key:component::climate::common::trigger_behavior_name%]"
@@ -436,7 +436,7 @@
       "name": "Thermostat started drying"
     },
     "started_heating": {
-      "description": "Triggers after one or more thermostats start heating.",
+      "description": "Triggers when one or more thermostats start heating.",
       "fields": {
         "behavior": {
           "name": "[%key:component::climate::common::trigger_behavior_name%]"
@@ -448,7 +448,7 @@
       "name": "Thermostat started heating"
     },
     "target_humidity_changed": {
-      "description": "Triggers after the humidity setpoint of one or more thermostats changes.",
+      "description": "Triggers when the humidity setpoint of one or more thermostats changes.",
       "fields": {
         "threshold": {
           "name": "[%key:component::climate::common::trigger_threshold_name%]"
@@ -457,7 +457,7 @@
       "name": "Thermostat target humidity changed"
     },
     "target_humidity_crossed_threshold": {
-      "description": "Triggers after the humidity setpoint of one or more thermostats crosses a threshold.",
+      "description": "Triggers when the humidity setpoint of one or more thermostats crosses a threshold.",
       "fields": {
         "behavior": {
           "name": "[%key:component::climate::common::trigger_behavior_name%]"
@@ -472,7 +472,7 @@
       "name": "Thermostat target humidity crossed threshold"
     },
     "target_temperature_changed": {
-      "description": "Triggers after the temperature setpoint of one or more thermostats changes.",
+      "description": "Triggers when the temperature setpoint of one or more thermostats changes.",
       "fields": {
         "threshold": {
           "name": "[%key:component::climate::common::trigger_threshold_name%]"
@@ -481,7 +481,7 @@
       "name": "Thermostat target temperature changed"
     },
     "target_temperature_crossed_threshold": {
-      "description": "Triggers after the temperature setpoint of one or more thermostats crosses a threshold.",
+      "description": "Triggers when the temperature setpoint of one or more thermostats crosses a threshold.",
       "fields": {
         "behavior": {
           "name": "[%key:component::climate::common::trigger_behavior_name%]"
@@ -496,7 +496,7 @@
       "name": "Thermostat target temperature crossed threshold"
     },
     "turned_off": {
-      "description": "Triggers after one or more thermostats turn off.",
+      "description": "Triggers when one or more thermostats turn off.",
       "fields": {
         "behavior": {
           "name": "[%key:component::climate::common::trigger_behavior_name%]"
@@ -508,7 +508,7 @@
       "name": "Thermostat turned off"
     },
     "turned_on": {
-      "description": "Triggers after one or more thermostats turn on, regardless of the mode.",
+      "description": "Triggers when one or more thermostats turn on, regardless of the mode.",
       "fields": {
         "behavior": {
           "name": "[%key:component::climate::common::trigger_behavior_name%]"

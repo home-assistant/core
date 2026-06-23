@@ -2,7 +2,7 @@
 
 from datetime import timedelta
 import logging
-from typing import Any
+from typing import Any, override
 
 from pyanglianwater import AnglianWater
 from pyanglianwater.exceptions import (
@@ -58,6 +58,7 @@ class AnglianWaterUpdateCoordinator(DataUpdateCoordinator[None]):
         )
         self.api = api
 
+    @override
     async def _async_update_data(self) -> None:
         """Update data from Anglian Water's API."""
         try:

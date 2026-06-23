@@ -977,6 +977,11 @@
       "integration_type": "virtual",
       "supported_by": "opower"
     },
+    "bwt": {
+      "name": "BWT",
+      "integration_type": "virtual",
+      "supported_by": "pooldose"
+    },
     "caldav": {
       "name": "CalDAV",
       "integration_type": "service",
@@ -1753,12 +1758,6 @@
           "name": "Elgato Light"
         }
       }
-    },
-    "eliqonline": {
-      "name": "Eliqonline",
-      "integration_type": "hub",
-      "config_flow": false,
-      "iot_class": "cloud_polling"
     },
     "elkm1": {
       "name": "Elk-M1 Control",
@@ -4747,6 +4746,11 @@
       "config_flow": false,
       "iot_class": "cloud_polling"
     },
+    "nexen": {
+      "name": "Nexen",
+      "integration_type": "virtual",
+      "supported_by": "hypontech"
+    },
     "nexity": {
       "name": "Nexity Eug\u00e9nie",
       "integration_type": "virtual",
@@ -7595,12 +7599,6 @@
           "iot_class": "local_polling",
           "name": "UniFi AP"
         },
-        "unifiled": {
-          "integration_type": "hub",
-          "config_flow": false,
-          "iot_class": "local_polling",
-          "name": "UniFi LED"
-        },
         "unifiprotect": {
           "integration_type": "hub",
           "config_flow": true,
@@ -8079,7 +8077,7 @@
     },
     "wolflink": {
       "name": "Wolf SmartSet Service",
-      "integration_type": "device",
+      "integration_type": "hub",
       "config_flow": true,
       "iot_class": "cloud_polling"
     },

@@ -4,7 +4,7 @@ from contextlib import suppress
 from dataclasses import dataclass
 from datetime import timedelta
 import logging
-from typing import TYPE_CHECKING
+from typing import TYPE_CHECKING, override
 
 from amcrest import AmcrestError
 import voluptuous as vol
@@ -173,6 +173,7 @@ class AmcrestBinarySensor(BinarySensorEntity):
         self._attr_should_poll = entity_description.should_poll
 
     @property
+    @override
     def available(self) -> bool:
         """Return True if entity is available."""
         return self.entity_description.key == _ONLINE_KEY or self._api.available
@@ -248,6 +249,7 @@ class AmcrestBinarySensor(BinarySensorEntity):
         self._attr_is_on = state
         self.async_write_ha_state()
 
+    @override
     async def async_added_to_hass(self) -> None:
         """Subscribe to signals."""
         if self.entity_description.key == _ONLINE_KEY:

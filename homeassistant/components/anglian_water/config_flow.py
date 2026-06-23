@@ -1,7 +1,7 @@
 """Config flow for the Anglian Water integration."""
 
 import logging
-from typing import TYPE_CHECKING, Any
+from typing import TYPE_CHECKING, Any, override
 
 from aiohttp import CookieJar
 from pyanglianwater import AnglianWater
@@ -86,6 +86,7 @@ class AnglianWaterConfigFlow(ConfigFlow, domain=DOMAIN):
         self.accounts: list[selector.SelectOptionDict] = []
         self.user_input: dict[str, Any] | None = None
 
+    @override
     async def async_step_user(
         self, user_input: dict[str, Any] | None = None
     ) -> ConfigFlowResult:

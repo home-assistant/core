@@ -2,7 +2,7 @@
 
 from collections.abc import Mapping
 import logging
-from typing import Any
+from typing import Any, override
 
 from bring_api import (
     Bring,
@@ -51,6 +51,7 @@ class BringConfigFlow(ConfigFlow, domain=DOMAIN):
     reauth_entry: BringConfigEntry
     info: BringAuthResponse
 
+    @override
     async def async_step_user(
         self, user_input: dict[str, Any] | None = None
     ) -> ConfigFlowResult:
