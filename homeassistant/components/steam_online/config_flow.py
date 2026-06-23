@@ -61,7 +61,7 @@ class SteamFlowHandler(ConfigFlow, domain=DOMAIN):
                     name = str(res["personaname"])
                 else:
                     errors["base"] = "invalid_account"
-            except (steam.api.HTTPError, steam.api.HTTPTimeoutError) as ex:
+            except steam.api.HTTPError as ex:
                 errors["base"] = (
                     "invalid_auth" if "403" in str(ex) else "cannot_connect"
                 )
@@ -103,7 +103,7 @@ class SteamFlowHandler(ConfigFlow, domain=DOMAIN):
                     validate_input, {**entry.data, **user_input}
                 ):
                     errors["base"] = "invalid_account"
-            except (steam.api.HTTPError, steam.api.HTTPTimeoutError) as ex:
+            except steam.api.HTTPError as ex:
                 errors["base"] = (
                     "invalid_auth" if "403" in str(ex) else "cannot_connect"
                 )
