@@ -2,7 +2,7 @@
 
 from collections.abc import Callable, Coroutine
 from dataclasses import dataclass
-from typing import Any
+from typing import Any, override
 
 from aiomelcloudhome import ATAUnit, ATWUnit, MELCloudHome
 from aiomelcloudhome.exceptions import (
@@ -351,11 +351,13 @@ class ATANumber(MelCloudHomeATAUnitEntity, NumberEntity):
         self._attr_unique_id = f"{unit.id}_{entity_description.key}"
 
     @property
+    @override
     def available(self) -> bool:
         """Return if the entity is available."""
         return super().available and self.entity_description.available_fn(self.unit)
 
     @property
+    @override
     def native_value(self) -> float | None:
         """Return the current value."""
         return self.entity_description.value_fn(self.unit)
@@ -394,11 +396,13 @@ class ATWNumber(MelCloudHomeATWUnitEntity, NumberEntity):
         self._attr_unique_id = f"{unit.id}_{entity_description.key}"
 
     @property
+    @override
     def available(self) -> bool:
         """Return if the entity is available."""
         return super().available and self.entity_description.available_fn(self.unit)
 
     @property
+    @override
     def native_value(self) -> float | None:
         """Return the current value."""
         return self.entity_description.value_fn(self.unit)
