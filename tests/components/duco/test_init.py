@@ -5,6 +5,7 @@ from unittest.mock import ANY, AsyncMock, patch
 from duco_connectivity import (
     BoardInfo,
     DiagComponent,
+    DiagInfo,
     DucoConnectionError,
     DucoError,
     DucoResponseError,
@@ -68,6 +69,20 @@ from tests.common import MockConfigEntry
             None,
             False,
         ),
+        (
+            "async_get_diagnostics_info",
+            DucoConnectionError("Connection refused"),
+            ConfigEntryState.SETUP_RETRY,
+            None,
+            False,
+        ),
+        (
+            "async_get_diagnostics_info",
+            DucoError("Unexpected API error"),
+            ConfigEntryState.SETUP_RETRY,
+            None,
+            False,
+        ),
     ],
 )
 async def test_setup_entry_error(
@@ -94,6 +109,23 @@ async def test_setup_entry_error(
         }
     else:
         assert mock_config_entry.error_reason_translation_placeholders is None
+
+
+async def test_setup_entry_retries_without_initial_diagnostics(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    mock_duco_client: AsyncMock,
+) -> None:
+    """Test setup retries when the initial diagnostics payload is empty."""
+    mock_duco_client.async_get_diagnostics_info.return_value = DiagInfo()
+    mock_config_entry.add_to_hass(hass)
+
+    await hass.config_entries.async_setup(mock_config_entry.entry_id)
+    await hass.async_block_till_done()
+
+    assert mock_config_entry.state is ConfigEntryState.SETUP_RETRY
+    assert mock_config_entry.error_reason_translation_key is None
+    assert mock_config_entry.error_reason_translation_placeholders is None
 
 
 @pytest.mark.usefixtures("mock_duco_client")

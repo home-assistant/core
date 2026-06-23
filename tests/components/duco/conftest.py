@@ -11,6 +11,7 @@ from duco_connectivity import (
     ApiInfo,
     BoardInfo,
     DiagComponent,
+    DiagInfo,
     KnownActionName,
     LanInfo,
     Node,
@@ -241,6 +242,9 @@ def mock_duco_client(
         client.async_get_diagnostics.return_value = [
             DiagComponent(component="Ventilation", status="Ok")
         ]
+        client.async_get_diagnostics_info.return_value = DiagInfo(
+            diagnostic_subsystems=(DiagComponent(component="Ventilation", status="Ok"),)
+        )
         client.async_get_write_requests_remaining.return_value = 100
         yield client
 
