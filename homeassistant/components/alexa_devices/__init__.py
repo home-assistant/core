@@ -16,6 +16,7 @@ PLATFORMS = [
     Platform.EVENT,
     Platform.MEDIA_PLAYER,
     Platform.NOTIFY,
+    Platform.SELECT,
     Platform.SENSOR,
     Platform.SWITCH,
     Platform.TODO,
