@@ -85,8 +85,8 @@ class GoveeBLEBluetoothProcessorCoordinator(
         mode = BluetoothScanningMode.ACTIVE
         scan_duration: float | None = None
         if device_type := entry.data.get(CONF_DEVICE_TYPE):
-            self.set_model_info(device_type)
-            if self.model_info and self.model_info.requires_active_scan:
+            self.model_info = model_info = get_model_info(device_type)
+            if model_info.requires_active_scan:
                 scan_duration = ACTIVE_SCAN_DURATION
             else:
                 mode = BluetoothScanningMode.PASSIVE
