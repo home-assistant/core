@@ -55,6 +55,7 @@ async def test_flow_user(
     ("side_effect", "error_msg"),
     [
         (steam.api.HTTPTimeoutError, "cannot_connect"),
+        (steam.api.HTTPError, "cannot_connect"),
         (steam.api.HTTPError("403"), "invalid_auth"),
         (ValueError, "unknown"),
         ([{"response": {"players": {"player": [None]}}}], "invalid_account"),
@@ -146,6 +147,7 @@ async def test_flow_reauth(
     ("side_effect", "error_msg"),
     [
         (steam.api.HTTPTimeoutError, "cannot_connect"),
+        (steam.api.HTTPError, "cannot_connect"),
         (steam.api.HTTPError("403"), "invalid_auth"),
         (ValueError, "unknown"),
         ([{"response": {"players": {"player": [None]}}}], "invalid_account"),
