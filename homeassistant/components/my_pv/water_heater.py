@@ -103,10 +103,8 @@ class MyPVWaterHeater(MyPVDataEntity, WaterHeaterEntity):
 
     async def async_set_temperature(self, **kwargs: Any) -> None:
         """Set new target temperature."""
-        temperature = kwargs.get(ATTR_TEMPERATURE)
-
-        if temperature is None or not await self.coordinator.set_target_temperature(
-            float(temperature)
+        if not await self.coordinator.set_target_temperature(
+            float(kwargs[ATTR_TEMPERATURE])
         ):
             raise HomeAssistantError(
                 translation_domain=DOMAIN, translation_key="unknown_error"
