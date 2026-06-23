@@ -80,12 +80,9 @@ class HomematicipFullFlushLockControllerButton(HomematicipGenericEntity, ButtonE
 
     @override
     async def async_press(self) -> None:
-        """Handle the button press.
+        """Pull the latch via the access-authorization channel.
 
-        Pulls the latch via the device's ACCESS_AUTHORIZATION_CHANNEL with
-        role DOOR_OPENER_ACTUATOR. The cloud routes the impulse through the
-        access-authorization profile, which is the only endpoint non-admin
-        clients are allowed to invoke (calling the underlying door-switch
-        channel's start_impulse fails with CLIENT_ACCESS_DENIED).
+        This is the only path non-admin clients may use; the door-switch
+        channel rejects them with CLIENT_ACCESS_DENIED.
         """
         await self._auth_channel.async_pull_latch()
