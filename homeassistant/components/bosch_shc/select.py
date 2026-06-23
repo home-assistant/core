@@ -2,7 +2,7 @@
 
 import logging
 
-from boschshcpy import SHCSession, SHCShutterContact2Plus
+from boschshcpy import SHCShutterContact2Plus
 from boschshcpy.device import SHCDevice
 from boschshcpy.services_impl import (
     DisplayDirection,
@@ -24,7 +24,7 @@ from homeassistant.const import EntityCategory
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
-from .const import DATA_SESSION, DOMAIN
+from .const import DOMAIN
 from .entity import SHCEntity, device_excluded
 
 LOGGER = logging.getLogger(__name__)
@@ -147,7 +147,7 @@ async def async_setup_entry(  # noqa: C901  # inherent complexity of device-type
 ) -> None:
     """Set up the SHC select platform."""
     entities: list[SelectEntity] = []
-    session: SHCSession = hass.data[DOMAIN][config_entry.entry_id][DATA_SESSION]
+    session = config_entry.runtime_data.session
 
     for device in session.device_helper.motion_detectors2:
         if device_excluded(device, config_entry.options):

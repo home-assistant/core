@@ -3,8 +3,8 @@
 from boschshcpy.device import SHCDevice
 
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers import entity_registry as er
-from homeassistant.helpers.device_registry import DeviceInfo, async_get as get_dev_reg
+from homeassistant.helpers import device_registry as dr, entity_registry as er
+from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.entity import Entity
 
 from .const import DOMAIN, LOGGER, OPT_EXCLUDED_DEVICES, OPT_EXCLUDED_ROOMS
@@ -25,7 +25,7 @@ def device_excluded(device, options) -> bool:
 
 async def async_get_device_id(hass: HomeAssistant, device_id: str) -> str | None:
     """Get device id from device registry."""
-    dev_registry = get_dev_reg(hass)
+    dev_registry = dr.async_get(hass)
     device = dev_registry.async_get_device(
         identifiers={(DOMAIN, device_id)}, connections=set()
     )
@@ -36,7 +36,7 @@ async def async_remove_devices(
     hass: HomeAssistant, entity: SHCEntity, entry_id: str
 ) -> None:
     """Get item that is removed from session."""
-    dev_registry = get_dev_reg(hass)
+    dev_registry = dr.async_get(hass)
     device = dev_registry.async_get_device(
         identifiers={(DOMAIN, entity.device_id)}, connections=set()
     )

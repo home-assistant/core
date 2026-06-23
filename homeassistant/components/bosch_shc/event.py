@@ -3,7 +3,6 @@
 from boschshcpy import (
     SHCLightControl,
     SHCMotionDetector,
-    SHCSession,
     SHCSmokeDetectionSystem,
     SHCSmokeDetector,
     SHCUniversalSwitch,
@@ -25,8 +24,6 @@ from .const import (
     ATTR_EVENT_SUBTYPE,
     ATTR_EVENT_TYPE,
     ATTR_LAST_TIME_TRIGGERED,
-    DATA_SESSION,
-    DATA_SHC,
     DOMAIN,
     LOGGER,
 )
@@ -41,7 +38,7 @@ async def async_setup_entry(
     async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up the BoschSHC event entities."""
-    session: SHCSession = hass.data[DOMAIN][entry.entry_id][DATA_SESSION]
+    session = entry.runtime_data.session
 
     entities: list[EventEntity] = []
     for switch_device in session.device_helper.universal_switches:
@@ -284,7 +281,8 @@ class SHCScenarioEvent(EventEntity):
         self._attr_name = f"{self._scenario.name} Scenario"
         self._attr_unique_id = f"{session.information.unique_id}_{self._scenario.id}"
 
-        self._shc: DeviceEntry = hass.data[DOMAIN][entry_id][DATA_SHC]
+        entry = hass.config_entries.async_get_entry(entry_id)
+        self._shc: DeviceEntry = entry.runtime_data.shc_device  # type: ignore[union-attr]
 
     @property
     def device_name(self):

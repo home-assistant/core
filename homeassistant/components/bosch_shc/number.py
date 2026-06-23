@@ -3,7 +3,7 @@
 import logging
 
 import aiohttp
-from boschshcpy import SHCSession, SHCThermostat
+from boschshcpy import SHCThermostat
 from boschshcpy.device import SHCDevice
 
 from homeassistant.components.number import NumberDeviceClass, NumberEntity, NumberMode
@@ -18,7 +18,7 @@ from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
-from .const import DATA_SESSION, DOMAIN
+from .const import DOMAIN
 from .entity import SHCEntity, device_excluded
 
 LOGGER = logging.getLogger(__name__)
@@ -33,7 +33,7 @@ async def async_setup_entry(
 ) -> None:
     """Set up the SHC number platform."""
     entities: list[NumberEntity] = []
-    session: SHCSession = hass.data[DOMAIN][config_entry.entry_id][DATA_SESSION]
+    session = config_entry.runtime_data.session
 
     for number in (
         session.device_helper.thermostats + session.device_helper.roomthermostats

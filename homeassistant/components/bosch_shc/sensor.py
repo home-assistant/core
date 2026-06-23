@@ -3,7 +3,7 @@
 from collections.abc import Mapping
 from typing import Any
 
-from boschshcpy import SHCEmma, SHCSession
+from boschshcpy import SHCEmma
 from boschshcpy.device import SHCDevice
 
 from homeassistant.components.sensor import (
@@ -25,7 +25,7 @@ from homeassistant.const import (
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
-from .const import DATA_SESSION, DOMAIN, LOGGER, OPT_DIAGNOSTIC_ENTITIES
+from .const import DOMAIN, LOGGER, OPT_DIAGNOSTIC_ENTITIES
 from .entity import SHCEntity, async_migrate_to_new_unique_id, device_excluded
 
 PARALLEL_UPDATES = 1
@@ -38,7 +38,7 @@ async def async_setup_entry(  # noqa: C901  # inherent complexity of device-type
 ) -> None:
     """Set up the SHC sensor platform."""
     entities: list[SensorEntity] = []
-    session: SHCSession = hass.data[DOMAIN][config_entry.entry_id][DATA_SESSION]
+    session = config_entry.runtime_data.session
     sensor: SHCDevice
     diagnostic_enabled = config_entry.options.get(OPT_DIAGNOSTIC_ENTITIES, True)
 

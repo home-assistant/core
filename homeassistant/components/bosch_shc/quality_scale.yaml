@@ -135,8 +135,8 @@ rules:
       data.py introduces SHCData dataclass (session, shc_device, title,
       polling_handler, cert_check_unsub).  async_setup_entry assigns
       entry.runtime_data = SHCData(...) and async_unload_entry reads from it.
-      hass.data[DOMAIN] is kept in parallel for legacy code paths (device_trigger,
-      diagnostics) during transition.  Domain services in async_setup iterate
+      All platforms read config_entry.runtime_data.session directly.
+      Domain services in async_setup iterate
       hass.config_entries.async_entries(DOMAIN) and read entry.runtime_data
       directly.
 

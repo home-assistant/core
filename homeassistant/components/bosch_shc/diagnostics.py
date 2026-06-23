@@ -27,7 +27,6 @@ from .const import (
     CONF_SHC_KEY,
     CONF_SSL_CERTIFICATE,
     CONF_SSL_KEY,
-    DATA_SESSION,
     DOMAIN,
 )
 
@@ -88,8 +87,8 @@ async def async_get_config_entry_diagnostics(
         },
     }
 
-    container = hass.data.get(DOMAIN, {}).get(entry.entry_id)
-    session = container.get(DATA_SESSION) if container else None
+    session = getattr(entry, "runtime_data", None)
+    session = session.session if session is not None else None
     if session is None:
         diag["session"] = "not loaded"
         return diag

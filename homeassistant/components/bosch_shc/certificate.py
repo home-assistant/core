@@ -5,6 +5,7 @@ from pathlib import Path
 from typing import NamedTuple
 
 from homeassistant.exceptions import HomeAssistantError
+from homeassistant.util import dt as dt_util
 
 try:
     from cryptography import x509
@@ -36,7 +37,7 @@ def parse_certificate(cert_path: str) -> CertificateInfo:
     except Exception as exc:  # pragma: no cover - defensive
         raise HomeAssistantError(f"Invalid certificate: {cert_path}") from exc
 
-    now = datetime.now(UTC)
+    now = dt_util.utcnow()
     # Use *_utc properties (cryptography >= 41), fallback to naive + replace for older.
     if hasattr(cert, "not_valid_before_utc"):
         not_before = cert.not_valid_before_utc

@@ -1,6 +1,6 @@
 """Platform for button integration."""
 
-from boschshcpy import SHCDevice, SHCSession
+from boschshcpy import SHCDevice
 from boschshcpy.services_impl import DetectionTestService, WalkTestService
 
 from homeassistant.components.button import ButtonEntity
@@ -9,7 +9,7 @@ from homeassistant.core import HomeAssistant
 from homeassistant.helpers.device_registry import DeviceEntry, DeviceInfo
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
-from .const import DATA_SESSION, DATA_SHC, DOMAIN, LOGGER, OPT_SCENARIOS_AS_BUTTONS
+from .const import DOMAIN, LOGGER, OPT_SCENARIOS_AS_BUTTONS
 from .entity import SHCEntity, device_excluded
 
 PARALLEL_UPDATES = 1
@@ -22,7 +22,7 @@ async def async_setup_entry(
 ) -> None:
     """Set up the SHC binary sensor platform."""
     entities: list[ButtonEntity] = []
-    session: SHCSession = hass.data[DOMAIN][config_entry.entry_id][DATA_SESSION]
+    session = config_entry.runtime_data.session
 
     for button in getattr(session.device_helper, "micromodule_impulse_relays", []):
         if device_excluded(button, config_entry.options):
@@ -108,7 +108,7 @@ async def async_setup_entry(
     if config_entry.options.get(OPT_SCENARIOS_AS_BUTTONS, False):
         entry_unique_id = config_entry.unique_id
         entry_id = config_entry.entry_id
-        shc_device: DeviceEntry = hass.data[DOMAIN][entry_id][DATA_SHC]
+        shc_device = config_entry.runtime_data.shc_device
         for scenario in session.scenarios:
             try:
                 entities.append(

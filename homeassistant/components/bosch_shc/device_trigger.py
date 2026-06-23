@@ -2,7 +2,7 @@
 
 from typing import Any
 
-from boschshcpy import SHCDevice, SHCSession
+from boschshcpy import SHCDevice
 import voluptuous as vol
 
 from homeassistant.components.device_automation import DEVICE_TRIGGER_BASE_SCHEMA
@@ -10,6 +10,7 @@ from homeassistant.components.device_automation.exceptions import (
     InvalidDeviceAutomationConfig,
 )
 from homeassistant.components.homeassistant.triggers import event as event_trigger
+from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import (
     ATTR_DEVICE_ID,
     CONF_DEVICE_ID,
@@ -23,13 +24,13 @@ from homeassistant.helpers import device_registry as dr
 from homeassistant.helpers.trigger import TriggerActionType, TriggerInfo
 from homeassistant.helpers.typing import ConfigType
 
+from .data import SHCData
 from .const import (
     ALARM_EVENTS_SUBTYPES_SD,
     ALARM_EVENTS_SUBTYPES_SDS,
     ATTR_EVENT_SUBTYPE,
     ATTR_EVENT_TYPE,
     CONF_SUBTYPE,
-    DATA_SESSION,
     DOMAIN,
     EVENT_BOSCH_SHC,
     INPUTS_EVENTS_SUBTYPES_SWITCH2,
@@ -49,8 +50,12 @@ TRIGGER_SCHEMA = DEVICE_TRIGGER_BASE_SCHEMA.extend(
 async def get_device_from_id(hass, device_id) -> tuple[SHCDevice, str]:
     """Get the device for the given device id."""
     dev_registry = dr.async_get(hass)
-    for config_entry in hass.data[DOMAIN]:
-        session: SHCSession = hass.data[DOMAIN][config_entry][DATA_SESSION]
+    config_entry: ConfigEntry
+    for config_entry in hass.config_entries.async_entries(DOMAIN):
+        if not hasattr(config_entry, "runtime_data"):
+            continue
+        runtime: SHCData = config_entry.runtime_data
+        session = runtime.session
 
         for shc_device in session.devices:
             device = dev_registry.async_get_device(
@@ -104,7 +109,7 @@ async def async_get_triggers(
                         )
                     case _:  # pragma: no cover — unreachable: outer guard checks WRC2/SWITCH2
                         LOGGER.debug(
-                            "Device type %s unknown, no triggers added.", dev_type
+                            "Device type %s unknown, no triggers added", dev_type
                         )
 
         for trigger, subtype in input_triggers:

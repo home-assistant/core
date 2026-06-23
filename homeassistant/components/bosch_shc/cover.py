@@ -2,7 +2,7 @@
 
 from typing import Any
 
-from boschshcpy import SHCMicromoduleShutterControl, SHCSession, SHCShutterControl
+from boschshcpy import SHCMicromoduleShutterControl, SHCShutterControl
 
 from homeassistant.components.cover import (
     ATTR_POSITION,
@@ -16,7 +16,7 @@ from homeassistant.const import Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
-from .const import DATA_SESSION, DOMAIN, LOGGER
+from .const import DOMAIN, LOGGER
 from .entity import SHCEntity, async_migrate_to_new_unique_id, device_excluded
 
 PARALLEL_UPDATES = 1
@@ -29,7 +29,7 @@ async def async_setup_entry(
 ) -> None:
     """Set up the SHC cover platform."""
     entities = []
-    session: SHCSession = hass.data[DOMAIN][config_entry.entry_id][DATA_SESSION]
+    session = config_entry.runtime_data.session
 
     for cover in (
         session.device_helper.shutter_controls

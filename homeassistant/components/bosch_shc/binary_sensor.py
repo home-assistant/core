@@ -39,12 +39,12 @@ from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import entity_platform
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
+from homeassistant.util import dt as dt_util
 
 from .const import (
     ATTR_EVENT_SUBTYPE,
     ATTR_EVENT_TYPE,
     ATTR_LAST_TIME_TRIGGERED,
-    DATA_SESSION,
     DOMAIN,
     EVENT_BOSCH_SHC,
     LOGGER,
@@ -68,7 +68,7 @@ async def async_setup_entry(  # noqa: C901  # inherent complexity of device-type
 ) -> None:
     """Set up the SHC binary sensor platform."""
     entities: list[BinarySensorEntity] = []
-    session: SHCSession = hass.data[DOMAIN][config_entry.entry_id][DATA_SESSION]
+    session = config_entry.runtime_data.session
 
     @callback
     def async_add_shuttercontact(
@@ -417,7 +417,7 @@ class MotionDetectionSensor(SHCEntity, BinarySensorEntity):
             # it must be marked UTC-aware to subtract from datetime.now(timezone.utc).
             return False
 
-        elapsed = datetime.now(UTC) - latestmotion
+        elapsed = dt_util.utcnow() - latestmotion
         if elapsed > timedelta(seconds=4 * 60):
             return False
         return True

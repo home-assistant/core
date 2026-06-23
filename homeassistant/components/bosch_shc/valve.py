@@ -1,6 +1,6 @@
 """Platform for valve integration."""
 
-from boschshcpy import SHCSession, SHCThermostat
+from boschshcpy import SHCThermostat
 from boschshcpy.device import SHCDevice
 
 from homeassistant.components.valve import ValveDeviceClass, ValveEntity
@@ -9,7 +9,7 @@ from homeassistant.const import EntityCategory
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
-from .const import DATA_SESSION, DOMAIN, LOGGER
+from .const import DOMAIN, LOGGER
 from .entity import SHCEntity, device_excluded
 
 PARALLEL_UPDATES = 1
@@ -22,7 +22,7 @@ async def async_setup_entry(
 ) -> None:
     """Set up the SHC valve platform."""
     entities: list[ValveEntity] = []
-    session: SHCSession = hass.data[DOMAIN][config_entry.entry_id][DATA_SESSION]
+    session = config_entry.runtime_data.session
 
     for valve in session.device_helper.thermostats:
         if device_excluded(valve, config_entry.options):

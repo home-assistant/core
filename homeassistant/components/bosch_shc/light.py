@@ -2,7 +2,6 @@
 
 from typing import Any
 
-from boschshcpy import SHCSession
 
 from homeassistant.components.light import (
     ATTR_BRIGHTNESS,
@@ -17,7 +16,7 @@ from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from homeassistant.util import color as color_util
 
-from .const import DATA_SESSION, DOMAIN
+from .const import DOMAIN
 from .entity import SHCEntity, async_migrate_to_new_unique_id, device_excluded
 
 PARALLEL_UPDATES = 1
@@ -30,7 +29,7 @@ async def async_setup_entry(
 ) -> None:
     """Set up the light platform."""
     entities: list[LightSwitch | MotionDetectorLight] = []
-    session: SHCSession = hass.data[DOMAIN][config_entry.entry_id][DATA_SESSION]
+    session = config_entry.runtime_data.session
 
     for light in (
         session.device_helper.ledvance_lights

@@ -16,7 +16,7 @@ import voluptuous as vol
 from homeassistant import config_entries, core
 from homeassistant.components import zeroconf
 from homeassistant.config_entries import ConfigEntry, ConfigFlowResult, OptionsFlow
-from homeassistant.const import CONF_HOST, CONF_NAME, CONF_PASSWORD, CONF_TOKEN
+from homeassistant.const import CONF_HOST, CONF_PASSWORD, CONF_TOKEN
 from homeassistant.data_entry_flow import section
 from homeassistant.helpers.selector import (
     BooleanSelector,
@@ -42,7 +42,6 @@ from .const import (
     CONF_SHC_KEY,
     CONF_SSL_CERTIFICATE,
     CONF_SSL_KEY,
-    DATA_SESSION,
     DOMAIN,
     LOGGER,
     OPT_CHILD_LOCK_ENABLED,
@@ -145,7 +144,7 @@ def write_tls_asset(hass: core.HomeAssistant, filename: str, asset: bytes) -> No
 def create_credentials_and_validate(hass, host, user_input, zeroconf_instance):
     """Create and store credentials and validate session."""
     helper = SHCRegisterClient(host, user_input[CONF_PASSWORD])
-    result = helper.register(user_input[CONF_NAME].lower(), user_input[CONF_NAME])
+    result = helper.register("homeassistant", "HomeAssistant")
 
     if result is not None:
         hostname = result["token"].split(":", 1)[1]
@@ -310,9 +309,6 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
                 vol.Required(CONF_PASSWORD): TextSelector(
                     TextSelectorConfig(type=TextSelectorType.PASSWORD)
                 ),
-                vol.Optional(CONF_NAME, default="HomeAssistant"): TextSelector(
-                    TextSelectorConfig(type=TextSelectorType.TEXT)
-                ),
             }
         )
 
@@ -407,9 +403,6 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
                 vol.Required(
                     CONF_PASSWORD, default=user_input.get(CONF_PASSWORD, "")
                 ): TextSelector(TextSelectorConfig(type=TextSelectorType.PASSWORD)),
-                vol.Optional(
-                    CONF_NAME, default=user_input.get(CONF_NAME, "HomeAssistant")
-                ): TextSelector(TextSelectorConfig(type=TextSelectorType.TEXT)),
             }
         )
 
@@ -495,9 +488,9 @@ class OptionsFlowHandler(config_entries.OptionsFlowWithReload):
         device_options: list[SelectOptionDict] = []
         room_options: list[SelectOptionDict] = []
         try:
-            data = self.hass.data.get(DOMAIN, {}).get(self.config_entry.entry_id)
-            if data:
-                session = data[DATA_SESSION]
+            runtime = getattr(self.config_entry, "runtime_data", None)
+            if runtime is not None:
+                session = runtime.session
                 rooms = {r.id: r.name for r in session.rooms}
                 for dev in session.devices:
                     room_name = rooms.get(getattr(dev, "room_id", None), "")

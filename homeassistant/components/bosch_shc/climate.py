@@ -2,12 +2,12 @@
 
 from typing import Any
 
-from boschshcpy import SHCClimateControl, SHCHeatingCircuit, SHCSession
+from boschshcpy import SHCClimateControl, SHCHeatingCircuit
 from boschshcpy.exceptions import JSONRPCError, SHCException
 
-from homeassistant.components.climate import ClimateEntity
-from homeassistant.components.climate.const import (
+from homeassistant.components.climate import (
     ATTR_HVAC_MODE,
+    ClimateEntity,
     ClimateEntityFeature,
     HVACAction,
     HVACMode,
@@ -15,10 +15,11 @@ from homeassistant.components.climate.const import (
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import ATTR_TEMPERATURE, UnitOfTemperature
 from homeassistant.core import HomeAssistant
+
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
-from .const import DATA_SESSION, DOMAIN, LOGGER
+from .const import LOGGER
 from .entity import SHCEntity, device_excluded
 
 PARALLEL_UPDATES = 1
@@ -40,7 +41,7 @@ async def async_setup_entry(
 ) -> None:
     """Set up the SHC climate platform."""
     entities: list[ClimateControl | HeatingCircuit] = []
-    session: SHCSession = hass.data[DOMAIN][config_entry.entry_id][DATA_SESSION]
+    session = config_entry.runtime_data.session
 
     for climate in session.device_helper.climate_controls:
         if device_excluded(climate, config_entry.options):
@@ -259,7 +260,7 @@ class ClimateControl(SHCEntity, ClimateEntity):
         # skip the setpoint write every time.  Only skip when truly OFF. #196
         if self.hvac_mode == HVACMode.OFF:
             LOGGER.debug(
-                "Skipping setting temperature as device %s is off.",
+                "Skipping setting temperature as device %s is off",
                 self.device_name,
             )
             return
@@ -267,7 +268,7 @@ class ClimateControl(SHCEntity, ClimateEntity):
         if self.preset_mode == PRESET_BOOST:
             LOGGER.warning(
                 "Cannot set temperature on device %s while in BOOST mode "
-                "(SHC rejects setpoint writes in this state).",
+                "(SHC rejects setpoint writes in this state)",
                 self.device_name,
             )
             return

@@ -36,7 +36,7 @@ from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from homeassistant.helpers.typing import StateType
 from homeassistant.util import slugify
 
-from .const import DATA_SESSION, DATA_SHC, DOMAIN
+from .const import DOMAIN
 from .entity import SHCEntity, async_migrate_to_new_unique_id, device_excluded
 
 LOGGER = logging.getLogger(__name__)
@@ -71,14 +71,12 @@ SWITCH_TYPES: dict[str, SHCSwitchEntityDescription] = {
         device_class=SwitchDeviceClass.OUTLET,
         on_key="switchstate",
         on_value=SHCSmartPlug.PowerSwitchService.State.ON,
-        should_poll=False,
     ),
     "smartplug_routing": SHCSwitchEntityDescription(
         key="smartplug_routing",
         device_class=SwitchDeviceClass.SWITCH,
         on_key="routing",
         on_value=SHCSmartPlug.RoutingService.State.ENABLED,
-        should_poll=False,
         entity_category=EntityCategory.CONFIG,
         icon="mdi:wifi",
     ),
@@ -87,21 +85,18 @@ SWITCH_TYPES: dict[str, SHCSwitchEntityDescription] = {
         device_class=SwitchDeviceClass.OUTLET,
         on_key="switchstate",
         on_value=SHCSmartPlugCompact.PowerSwitchService.State.ON,
-        should_poll=False,
     ),
     "micromodule_relay_switch": SHCSwitchEntityDescription(
         key="micromodule_relay_switch",
         device_class=SwitchDeviceClass.OUTLET,
         on_key="switchstate",
         on_value=SHCMicromoduleRelay.PowerSwitchService.State.ON,
-        should_poll=False,
     ),
     "lightswitch": SHCSwitchEntityDescription(
         key="lightswitch",
         device_class=SwitchDeviceClass.SWITCH,
         on_key="switchstate",
         on_value=SHCLightSwitch.PowerSwitchService.State.ON,
-        should_poll=False,
     ),
     "cameraeyes": SHCSwitchEntityDescription(
         key="cameraeyes",
@@ -177,14 +172,12 @@ SWITCH_TYPES: dict[str, SHCSwitchEntityDescription] = {
         device_class=SwitchDeviceClass.SWITCH,
         on_key="enabled",
         on_value=True,
-        should_poll=False,
     ),
     "bypass": SHCSwitchEntityDescription(
         key="bypass",
         device_class=SwitchDeviceClass.SWITCH,
         on_key="bypass",
         on_value=SHCShutterContact2.BypassService.State.BYPASS_ACTIVE,
-        should_poll=False,
     ),
     "child_lock": SHCSwitchEntityDescription(
         key="child_lock",
@@ -192,7 +185,6 @@ SWITCH_TYPES: dict[str, SHCSwitchEntityDescription] = {
         on_key="child_lock",
         on_value=True,
         entity_category=EntityCategory.CONFIG,
-        should_poll=False,
         icon="mdi:lock",
     ),
     "child_lock_thermostat": SHCSwitchEntityDescription(
@@ -204,7 +196,6 @@ SWITCH_TYPES: dict[str, SHCSwitchEntityDescription] = {
         # made the switch read OFF permanently. Compare against the enum member.
         on_value=SHCThermostat.ThermostatService.State.ON,
         entity_category=EntityCategory.CONFIG,
-        should_poll=False,
         icon="mdi:lock",
     ),
     "pet_immunity_enabled": SHCSwitchEntityDescription(
@@ -213,7 +204,6 @@ SWITCH_TYPES: dict[str, SHCSwitchEntityDescription] = {
         on_key="pet_immunity_enabled",
         on_value=True,
         entity_category=EntityCategory.CONFIG,
-        should_poll=False,
         icon="mdi:paw",
     ),
     "energy_saving_mode_enabled": SHCSwitchEntityDescription(
@@ -222,7 +212,6 @@ SWITCH_TYPES: dict[str, SHCSwitchEntityDescription] = {
         on_key="energy_saving_mode_enabled",
         on_value=True,
         entity_category=EntityCategory.CONFIG,
-        should_poll=False,
         icon="mdi:leaf",
     ),
     "warning_suppressed": SHCSwitchEntityDescription(
@@ -231,7 +220,6 @@ SWITCH_TYPES: dict[str, SHCSwitchEntityDescription] = {
         on_key="warning_suppressed",
         on_value=True,
         entity_category=EntityCategory.CONFIG,
-        should_poll=False,
         icon="mdi:bell-off",
     ),
     "nightly_promise_enabled": SHCSwitchEntityDescription(
@@ -240,7 +228,6 @@ SWITCH_TYPES: dict[str, SHCSwitchEntityDescription] = {
         on_key="nightly_promise_enabled",
         on_value=True,
         entity_category=EntityCategory.CONFIG,
-        should_poll=False,
         icon="mdi:shield-check",
     ),
     "humidity_warning_enabled": SHCSwitchEntityDescription(
@@ -249,7 +236,6 @@ SWITCH_TYPES: dict[str, SHCSwitchEntityDescription] = {
         on_key="humidity_warning_enabled",
         on_value=True,
         entity_category=EntityCategory.CONFIG,
-        should_poll=False,
         icon="mdi:water-alert",
     ),
     "swap_inputs": SHCSwitchEntityDescription(
@@ -258,7 +244,6 @@ SWITCH_TYPES: dict[str, SHCSwitchEntityDescription] = {
         on_key="swap_inputs",
         on_value=True,
         entity_category=EntityCategory.CONFIG,
-        should_poll=False,
         icon="mdi:swap-horizontal",
     ),
     "swap_outputs": SHCSwitchEntityDescription(
@@ -267,7 +252,6 @@ SWITCH_TYPES: dict[str, SHCSwitchEntityDescription] = {
         on_key="swap_outputs",
         on_value=True,
         entity_category=EntityCategory.CONFIG,
-        should_poll=False,
         icon="mdi:swap-horizontal-bold",
     ),
     "pre_alarm_enabled": SHCSwitchEntityDescription(
@@ -276,7 +260,6 @@ SWITCH_TYPES: dict[str, SHCSwitchEntityDescription] = {
         on_key="pre_alarm_enabled",
         on_value=True,
         entity_category=EntityCategory.CONFIG,
-        should_poll=False,
         icon="mdi:smoke-detector",
     ),
     "smart_sensitivity_enabled": SHCSwitchEntityDescription(
@@ -285,7 +268,6 @@ SWITCH_TYPES: dict[str, SHCSwitchEntityDescription] = {
         on_key="smart_sensitivity_enabled",
         on_value=True,
         entity_category=EntityCategory.CONFIG,
-        should_poll=False,
         icon="mdi:tune",
     ),
     "tamper_protection_enabled": SHCSwitchEntityDescription(
@@ -294,7 +276,6 @@ SWITCH_TYPES: dict[str, SHCSwitchEntityDescription] = {
         on_key="tamper_protection_enabled",
         on_value=True,
         entity_category=EntityCategory.CONFIG,
-        should_poll=False,
         icon="mdi:shield-lock",
     ),
     "silent_mode": SHCSwitchEntityDescription(
@@ -303,7 +284,6 @@ SWITCH_TYPES: dict[str, SHCSwitchEntityDescription] = {
         on_key="silentmode",
         on_value=SHCThermostat.SilentModeService.State.MODE_SILENT,
         entity_category=EntityCategory.CONFIG,
-        should_poll=False,
         icon="mdi:sleep",
     ),
     "vibration_enabled": SHCSwitchEntityDescription(
@@ -312,7 +292,6 @@ SWITCH_TYPES: dict[str, SHCSwitchEntityDescription] = {
         on_key="enabled",
         on_value=True,
         entity_category=EntityCategory.CONFIG,
-        should_poll=False,
     ),
     "user_defined_state": SHCSwitchEntityDescription(
         key="user_defined_state",
@@ -320,7 +299,6 @@ SWITCH_TYPES: dict[str, SHCSwitchEntityDescription] = {
         on_key="state",
         on_value=True,
         entity_category=EntityCategory.CONFIG,
-        should_poll=False,
     ),
 }
 
@@ -332,7 +310,7 @@ async def async_setup_entry(  # noqa: C901  # inherent complexity of device-type
 ) -> None:
     """Set up the SHC switch platform."""
     entities: list[SwitchEntity] = []
-    session: SHCSession = hass.data[DOMAIN][config_entry.entry_id][DATA_SESSION]
+    session = config_entry.runtime_data.session
 
     for switch in session.device_helper.smart_plugs:
         if device_excluded(switch, config_entry.options):
@@ -1006,7 +984,8 @@ class SHCUserDefinedStateSwitch(SwitchEntity):
             if attr_name is None
             else f"{device.root_device_id}_{device.id}_{attr_name.lower()}"
         )
-        self._shc: DeviceEntry = hass.data[DOMAIN][entry_id][DATA_SHC]
+        entry = hass.config_entries.async_get_entry(entry_id)
+        self._shc: DeviceEntry = entry.runtime_data.shc_device  # type: ignore[union-attr]
 
     async def async_added_to_hass(self) -> None:
         """Subscribe to SHC events."""

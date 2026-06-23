@@ -99,8 +99,8 @@ async def test_form_user(hass: HomeAssistant) -> None:
     assert result3["title"] == "shc012345"
     assert result3["data"] == {
         "host": "1.1.1.1",
-        "ssl_certificate": hass.config.path(DOMAIN, "test-mac", CONF_SHC_CERT),
-        "ssl_key": hass.config.path(DOMAIN, "test-mac", CONF_SHC_KEY),
+        "ssl_certificate": hass.config.path(DOMAIN, CONF_SHC_CERT + "_123.pem"),
+        "ssl_key": hass.config.path(DOMAIN, CONF_SHC_KEY + "_123.pem"),
         "token": "abc:123",
         "hostname": "123",
     }
@@ -549,8 +549,8 @@ async def test_zeroconf(hass: HomeAssistant) -> None:
     assert result3["title"] == "shc012345"
     assert result3["data"] == {
         "host": "1.1.1.1",
-        "ssl_certificate": hass.config.path(DOMAIN, "test-mac", CONF_SHC_CERT),
-        "ssl_key": hass.config.path(DOMAIN, "test-mac", CONF_SHC_KEY),
+        "ssl_certificate": hass.config.path(DOMAIN, CONF_SHC_CERT + "_123.pem"),
+        "ssl_key": hass.config.path(DOMAIN, CONF_SHC_KEY + "_123.pem"),
         "token": "abc:123",
         "hostname": "123",
     }
