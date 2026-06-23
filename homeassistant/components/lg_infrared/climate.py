@@ -1,7 +1,7 @@
 """Climate platform for LG IR integration — LG AC."""
 
 import logging
-from typing import Any
+from typing import Any, override
 
 from infrared_protocols.commands import Command
 
@@ -96,6 +96,7 @@ class LgAcClimateEntity(LgIrEntity, InfraredEmitterConsumerEntity, ClimateEntity
         self._attr_target_temperature = float(MIN_TEMP)
         self._attr_fan_mode = FAN_AUTO
 
+    @override
     async def async_added_to_hass(self) -> None:
         """Subscribe to infrared availability and receiver signals."""
         await super().async_added_to_hass()
@@ -126,6 +127,7 @@ class LgAcClimateEntity(LgIrEntity, InfraredEmitterConsumerEntity, ClimateEntity
             self._attr_target_temperature = float(state["temp_c"])
         self.async_write_ha_state()
 
+    @override
     async def async_set_hvac_mode(self, hvac_mode: HVACMode) -> None:
         """Set HVAC mode."""
         if hvac_mode == HVACMode.OFF:
@@ -143,6 +145,7 @@ class LgAcClimateEntity(LgIrEntity, InfraredEmitterConsumerEntity, ClimateEntity
         self._attr_hvac_mode = hvac_mode
         self.async_write_ha_state()
 
+    @override
     async def async_set_temperature(self, **kwargs: Any) -> None:
         """Set target temperature."""
         temp = int(kwargs[ATTR_TEMPERATURE])
@@ -164,6 +167,7 @@ class LgAcClimateEntity(LgIrEntity, InfraredEmitterConsumerEntity, ClimateEntity
             )
         self.async_write_ha_state()
 
+    @override
     async def async_set_fan_mode(self, fan_mode: str) -> None:
         """Set fan mode."""
         self._attr_fan_mode = fan_mode
