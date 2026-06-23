@@ -701,6 +701,12 @@
     }
   },
   "exceptions": {
+    "addon_not_installed": {
+      "message": "The Matter Server app is not installed."
+    },
+    "addon_not_running": {
+      "message": "The Matter Server app is not running."
+    },
     "credential_type_not_supported": {
       "message": "The lock does not support credential type `{credential_type}`."
     },

@@ -389,11 +389,17 @@ async def _async_ensure_addon_running(
             addon_info.options,
             catch_error=True,
         )
-        raise ConfigEntryNotReady
+        raise ConfigEntryNotReady(
+            translation_domain=DOMAIN,
+            translation_key="addon_not_installed",
+        )
 
     if addon_state is AddonState.NOT_RUNNING:
         addon_manager.async_schedule_start_addon(catch_error=True)
-        raise ConfigEntryNotReady
+        raise ConfigEntryNotReady(
+            translation_domain=DOMAIN,
+            translation_key="addon_not_running",
+        )
 
 
 @callback
