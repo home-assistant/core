@@ -3,7 +3,6 @@
 from collections.abc import Mapping
 import logging
 from typing import Any
-from urllib.parse import urlparse
 
 from aiokarakeep import (
     KarakeepApiError,
@@ -13,6 +12,7 @@ from aiokarakeep import (
     KarakeepInvalidResponseError,
 )
 import voluptuous as vol
+from yarl import URL
 
 from homeassistant import config_entries
 from homeassistant.config_entries import ConfigFlowResult
@@ -68,13 +68,14 @@ class KarakeepConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         errors: dict[str, str] = {}
 
         if user_input is not None:
-            url = _normalize_url(user_input[CONF_URL])
+            parsed_url = URL(user_input[CONF_URL].strip())
             token = user_input[CONF_TOKEN].strip()
             verify_ssl = user_input[CONF_VERIFY_SSL]
 
-            if not _is_valid_url(url):
+            if parsed_url.scheme not in ("http", "https") or not parsed_url.host:
                 errors["base"] = "invalid_url_format"
             else:
+                url = str(parsed_url).rstrip("/")
                 self._async_abort_entries_match({CONF_URL: url})
 
                 errors = await self._async_validate_input(url, token, verify_ssl)
@@ -126,14 +127,3 @@ class KarakeepConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
             data_schema=STEP_REAUTH_DATA_SCHEMA,
             errors=errors,
         )
-
-
-def _normalize_url(url: str) -> str:
-    """Normalize a Karakeep URL."""
-    return url.strip().rstrip("/")
-
-
-def _is_valid_url(url: str) -> bool:
-    """Return whether the URL looks valid."""
-    parsed = urlparse(url)
-    return parsed.scheme in {"http", "https"} and bool(parsed.netloc)
