@@ -214,41 +214,8 @@ async def async_setup_entry(
     # later if their capability probe transiently failed during initial setup.
     known_box_sensors: set[tuple[int, str]] = set()
 
-    initial_entities: list[SensorEntity] = []
-    for node in coordinator.data.nodes.values():
-        if node.general.node_type == NodeType.UNKNOWN:
-            continue
-        known_nodes.add(node.node_id)
-        initial_entities.extend(
-            DucoSensorEntity(coordinator, node, description)
-            for description in SENSOR_DESCRIPTIONS
-            if node.general.node_type in description.node_types
-        )
-        if node.general.node_type != NodeType.BOX:
-            continue
-        for description in BOX_SENSOR_DESCRIPTIONS:
-            if not description.supported_fn(coordinator):
-                continue
-            known_box_sensors.add((node.node_id, description.key))
-            initial_entities.append(DucoBoxSensorEntity(coordinator, node, description))
-
-    if box_node is not None:
-        # Duco diagnostics belong to the box itself and the reported subsystem
-        # set is expected to stay stable for a given device. We therefore
-        # create those entities once during setup and only refresh their state
-        # through the coordinator. This intentionally differs from the current
-        # filter_remaining pattern in dev: we prefer the simpler PEP 20 setup
-        # model here and can align filter_remaining in a later rework.
-        initial_entities.extend(
-            DucoDiagnosticSensorEntity(coordinator, box_node, diagnostic.component)
-            for diagnostic in coordinator.data.diagnostic_subsystems
-        )
-
-    if initial_entities:
-        async_add_entities(initial_entities)
-
     @callback
-    def _async_add_new_entities() -> None:
+    def _async_add_new_entities(*, initial_setup: bool = False) -> None:
         """Add new sensor entities and remove stale ones on coordinator updates."""
         # Remove devices whose nodes have disappeared from the API.
         # The firmware removes deregistered RF/wired nodes automatically.
@@ -313,14 +280,25 @@ async def async_setup_entry(
                     continue
                 # Optional box sensors can appear later when a startup
                 # capability probe fails transiently, so keep late entity
-                # creation for them until filter_remaining is reworked.
+                # creation for them.
                 if not description.supported_fn(coordinator):
                     continue
                 known_box_sensors.add(description_key)
                 new_entities.append(DucoBoxSensorEntity(coordinator, node, description))
+
+        if initial_setup and box_node is not None:
+            # Duco diagnostics belong to the box itself and the reported
+            # subsystem set is expected to stay stable for a given device, so
+            # create those entities once during setup and only refresh their
+            # state through the coordinator.
+            new_entities.extend(
+                DucoDiagnosticSensorEntity(coordinator, box_node, diagnostic.component)
+                for diagnostic in coordinator.data.diagnostic_subsystems
+            )
         if new_entities:
             async_add_entities(new_entities)
 
+    _async_add_new_entities(initial_setup=True)
     entry.async_on_unload(coordinator.async_add_listener(_async_add_new_entities))
 
 
@@ -386,7 +364,6 @@ class DucoDiagnosticSensorEntity(DucoEntity, SensorEntity):
         component: str,
     ) -> None:
         """Initialize the diagnostic sensor entity."""
-        self._component = component
         self.entity_description = DucoDiagnosticSensorEntityDescription(
             key=slugify(component),
             component=component,
@@ -410,6 +387,6 @@ class DucoDiagnosticSensorEntity(DucoEntity, SensorEntity):
         # Keep the raw Duco string so future firmware states remain visible
         # without requiring a Home Assistant integration update first.
         for diagnostic in self.coordinator.data.diagnostic_subsystems:
-            if diagnostic.component == self._component:
+            if diagnostic.component == self.entity_description.component:
                 return diagnostic.status
         return None
