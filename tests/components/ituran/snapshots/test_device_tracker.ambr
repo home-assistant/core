@@ -5,7 +5,9 @@
       None,
     ]),
     'area_id': None,
-    'capabilities': None,
+    'capabilities': dict({
+      'tracking_type': <TrackingType.POSITION: 'position'>,
+    }),
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
     'device_class': None,
@@ -46,6 +48,7 @@
       'latitude': 25.0,
       'longitude': -71.0,
       'source_type': <SourceType.GPS: 'gps'>,
+      'tracking_type': <TrackingType.POSITION: 'position'>,
     }),
     'context': <ANY>,
     'entity_id': 'device_tracker.mock_model',

@@ -2,7 +2,7 @@
 
 from dataclasses import dataclass, field
 from datetime import datetime, timedelta
-from typing import TYPE_CHECKING, cast
+from typing import TYPE_CHECKING, cast, override
 
 from chip.clusters import Objects as clusters
 from chip.clusters.ClusterObjects import ClusterAttributeDescriptor
@@ -27,6 +27,7 @@ from homeassistant.const import (
     LIGHT_LUX,
     PERCENTAGE,
     REVOLUTIONS_PER_MINUTE,
+    SIGNAL_STRENGTH_DECIBELS_MILLIWATT,
     EntityCategory,
     Platform,
     UnitOfApparentPower,
@@ -135,6 +136,17 @@ RVC_OPERATIONAL_STATE_ERROR_MAP = {
     _rvc_err.kWheelsJammed: "wheels_jammed",
     _rvc_err.kBrushJammed: "brush_jammed",
     _rvc_err.kNavigationSensorObscured: ("navigation_sensor_obscured"),
+}
+
+THREAD_ROUTING_ROLE_MAP = {
+    clusters.ThreadNetworkDiagnostics.Enums.RoutingRoleEnum.kUnspecified: "unspecified",
+    clusters.ThreadNetworkDiagnostics.Enums.RoutingRoleEnum.kUnassigned: "unassigned",
+    clusters.ThreadNetworkDiagnostics.Enums.RoutingRoleEnum.kSleepyEndDevice: "sleepy_end_device",
+    clusters.ThreadNetworkDiagnostics.Enums.RoutingRoleEnum.kEndDevice: "end_device",
+    clusters.ThreadNetworkDiagnostics.Enums.RoutingRoleEnum.kReed: "reed",
+    clusters.ThreadNetworkDiagnostics.Enums.RoutingRoleEnum.kRouter: "router",
+    clusters.ThreadNetworkDiagnostics.Enums.RoutingRoleEnum.kLeader: "leader",
+    clusters.ThreadNetworkDiagnostics.Enums.RoutingRoleEnum.kUnknownEnumValue: "unknown",
 }
 
 BOOT_REASON_MAP = {
@@ -286,6 +298,7 @@ class MatterSensor(MatterEntity, SensorEntity):
     entity_description: MatterSensorEntityDescription
 
     @callback
+    @override
     def _update_from_device(self) -> None:
         """Update from device."""
         value: Nullable | float | None
@@ -303,6 +316,7 @@ class MatterDraftElectricalMeasurementSensor(MatterEntity, SensorEntity):
     entity_description: MatterSensorEntityDescription
 
     @callback
+    @override
     def _update_from_device(self) -> None:
         """Update from device."""
         raw_value: Nullable | float | None
@@ -333,6 +347,7 @@ class MatterOperationalStateSensor(MatterSensor):
     states_map: dict[int, str]
 
     @callback
+    @override
     def _update_from_device(self) -> None:
         """Update from device."""
         # the operational state list is a list of the possible operational states
@@ -371,6 +386,7 @@ class MatterListSensor(MatterSensor):
     _attr_device_class = SensorDeviceClass.ENUM
 
     @callback
+    @override
     def _update_from_device(self) -> None:
         """Update from device."""
         self._attr_options = list_values = cast(
@@ -1598,6 +1614,58 @@ DISCOVERY_SCHEMAS = [
         entity_class=MatterSensor,
         required_attributes=(clusters.DoorLock.Attributes.DoorClosedEvents,),
         featuremap_contains=clusters.DoorLock.Bitmaps.Feature.kDoorPositionSensor,
+    ),
+    # WiFiNetworkDiagnostics cluster sensors
+    MatterDiscoverySchema(
+        platform=Platform.SENSOR,
+        entity_description=MatterSensorEntityDescription(
+            key="WiFiDiagnosticsRssi",
+            translation_key="wifi_rssi",
+            native_unit_of_measurement=SIGNAL_STRENGTH_DECIBELS_MILLIWATT,
+            device_class=SensorDeviceClass.SIGNAL_STRENGTH,
+            entity_category=EntityCategory.DIAGNOSTIC,
+            entity_registry_enabled_default=False,
+            state_class=SensorStateClass.MEASUREMENT,
+        ),
+        entity_class=MatterSensor,
+        required_attributes=(clusters.WiFiNetworkDiagnostics.Attributes.Rssi,),
+    ),
+    # ThreadNetworkDiagnostics cluster sensors
+    MatterDiscoverySchema(
+        platform=Platform.SENSOR,
+        entity_description=MatterSensorEntityDescription(
+            key="ThreadDiagnosticsChannel",
+            translation_key="thread_channel",
+            entity_category=EntityCategory.DIAGNOSTIC,
+            entity_registry_enabled_default=False,
+        ),
+        entity_class=MatterSensor,
+        required_attributes=(clusters.ThreadNetworkDiagnostics.Attributes.Channel,),
+    ),
+    MatterDiscoverySchema(
+        platform=Platform.SENSOR,
+        entity_description=MatterSensorEntityDescription(
+            key="ThreadDiagnosticsRoutingRole",
+            translation_key="thread_routing_role",
+            device_class=SensorDeviceClass.ENUM,
+            entity_category=EntityCategory.DIAGNOSTIC,
+            entity_registry_enabled_default=False,
+            options=list(THREAD_ROUTING_ROLE_MAP.values()),
+            device_to_ha=lambda value: THREAD_ROUTING_ROLE_MAP.get(value, "unknown"),
+        ),
+        entity_class=MatterSensor,
+        required_attributes=(clusters.ThreadNetworkDiagnostics.Attributes.RoutingRole,),
+    ),
+    MatterDiscoverySchema(
+        platform=Platform.SENSOR,
+        entity_description=MatterSensorEntityDescription(
+            key="ThreadDiagnosticsNetworkName",
+            translation_key="thread_network_name",
+            entity_category=EntityCategory.DIAGNOSTIC,
+            entity_registry_enabled_default=False,
+        ),
+        entity_class=MatterSensor,
+        required_attributes=(clusters.ThreadNetworkDiagnostics.Attributes.NetworkName,),
     ),
     # GeneralDiagnostics cluster sensors
     MatterDiscoverySchema(

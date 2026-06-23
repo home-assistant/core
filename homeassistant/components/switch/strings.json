@@ -90,7 +90,7 @@
   "title": "Switch",
   "triggers": {
     "turned_off": {
-      "description": "Triggers after one or more switches turn off.",
+      "description": "Triggers when one or more switches turn off.",
       "fields": {
         "behavior": {
           "name": "[%key:component::switch::common::trigger_behavior_name%]"
@@ -102,7 +102,7 @@
       "name": "Switch turned off"
     },
     "turned_on": {
-      "description": "Triggers after one or more switches turn on.",
+      "description": "Triggers when one or more switches turn on.",
       "fields": {
         "behavior": {
           "name": "[%key:component::switch::common::trigger_behavior_name%]"

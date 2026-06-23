@@ -2,7 +2,7 @@
 
 from datetime import datetime
 import logging
-from typing import Any
+from typing import Any, override
 
 from uiprotect.data import Siren, SirenDuration
 
@@ -91,7 +91,7 @@ class ProtectSiren(SirenEntity):
     @callback
     def _update_from_siren(self, siren: Siren) -> None:
         """Refresh cached attributes from the siren object."""
-        self._attr_available = self.data.last_update_success
+        self._attr_available = self.data.last_public_update_success
         self._attr_is_on = siren.is_active
 
     @callback
@@ -145,6 +145,7 @@ class ProtectSiren(SirenEntity):
         self._attr_is_on = False
         self.async_write_ha_state()
 
+    @override
     async def async_added_to_hass(self) -> None:
         """Subscribe to public WS updates dispatched by ProtectData."""
         await super().async_added_to_hass()
@@ -165,6 +166,7 @@ class ProtectSiren(SirenEntity):
             self._cancel_scheduled_off = None
 
     @async_ufp_instance_command
+    @override
     async def async_turn_on(self, **kwargs: Any) -> None:
         """Activate the siren, optionally for a given duration and/or volume."""
         if (siren := self._siren) is None:
@@ -200,12 +202,13 @@ class ProtectSiren(SirenEntity):
 
         # Set volume if requested (separate API call).
         if volume_level is not None:
-            # HA passes volume as 0.0–1.0; UFP expects 0–100.
+            # HA passes volume as 0.0-1.0; UFP expects 0-100.
             await siren.set_volume(round(volume_level * 100))
 
         await siren.play(duration=norm_duration)
 
     @async_ufp_instance_command
+    @override
     async def async_turn_off(self, **kwargs: Any) -> None:
         """Stop the siren."""
         if (siren := self._siren) is None:

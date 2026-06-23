@@ -381,7 +381,7 @@
     ]),
     'area_id': None,
     'capabilities': dict({
-      'options': list([
+      <SelectEntityCapabilityAttribute.OPTIONS: 'options'>: list([
         'hall',
         'bedroom',
         'living_room',
@@ -425,7 +425,7 @@
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'friendly_name': 'Test name Mode',
-      'options': list([
+      <SelectEntityCapabilityAttribute.OPTIONS: 'options'>: list([
         'hall',
         'bedroom',
         'living_room',

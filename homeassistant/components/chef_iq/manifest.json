@@ -1,0 +1,19 @@
+{
+  "domain": "chef_iq",
+  "name": "Chef iQ",
+  "bluetooth": [
+    {
+      "connectable": false,
+      "manufacturer_id": 1485
+    }
+  ],
+  "codeowners": ["@Invader444"],
+  "config_flow": true,
+  "dependencies": ["bluetooth_adapters"],
+  "documentation": "https://www.home-assistant.io/integrations/chef_iq",
+  "integration_type": "device",
+  "iot_class": "local_push",
+  "loggers": ["chefiq_ble"],
+  "quality_scale": "bronze",
+  "requirements": ["chefiq-ble==1.0.1"]
+}

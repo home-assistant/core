@@ -16,7 +16,7 @@ from homeassistant.components.assist_satellite import AssistSatelliteEntity
 
 # pylint: disable-next=home-assistant-component-root-import
 from homeassistant.components.assist_satellite.entity import AssistSatelliteState
-from homeassistant.components.voip import HassVoipDatagramProtocol
+from homeassistant.components.voip import DOMAIN, HassVoipDatagramProtocol
 from homeassistant.components.voip.assist_satellite import Tones, VoipAssistSatellite
 from homeassistant.components.voip.devices import VoIPDevice, VoIPDevices
 from homeassistant.components.voip.voip import PreRecordMessageProtocol, make_protocol
@@ -76,7 +76,7 @@ async def test_is_valid_call(
     call_info: CallInfo,
 ) -> None:
     """Test that a call is now allowed from an unknown device."""
-    assert await async_setup_component(hass, "voip", {})
+    assert await async_setup_component(hass, DOMAIN, {})
     protocol = HassVoipDatagramProtocol(hass, voip_devices)
     assert not protocol.is_valid_call(call_info)
 
@@ -102,7 +102,7 @@ async def test_calls_not_allowed(
     snapshot: SnapshotAssertion,
 ) -> None:
     """Test that a pre-recorded message is played when calls aren't allowed."""
-    assert await async_setup_component(hass, "voip", {})
+    assert await async_setup_component(hass, DOMAIN, {})
     protocol: PreRecordMessageProtocol = make_protocol(hass, voip_devices, call_info)
     assert isinstance(protocol, PreRecordMessageProtocol)
     assert protocol.file_name == "problem.pcm"
@@ -139,7 +139,7 @@ async def test_pipeline_not_found(
     snapshot: SnapshotAssertion,
 ) -> None:
     """Test that a pre-recorded message is played when a pipeline isn't found."""
-    assert await async_setup_component(hass, "voip", {})
+    assert await async_setup_component(hass, DOMAIN, {})
 
     with patch(
         "homeassistant.components.voip.voip.async_get_pipeline", return_value=None
@@ -160,7 +160,7 @@ async def test_satellite_prepared(
     snapshot: SnapshotAssertion,
 ) -> None:
     """Test that satellite is prepared for a call."""
-    assert await async_setup_component(hass, "voip", {})
+    assert await async_setup_component(hass, DOMAIN, {})
 
     pipeline = assist_pipeline.Pipeline(
         conversation_engine="test",
@@ -196,7 +196,7 @@ async def test_pipeline(
     call_info: CallInfo,
 ) -> None:
     """Test that pipeline function is called from RTP protocol."""
-    assert await async_setup_component(hass, "voip", {})
+    assert await async_setup_component(hass, DOMAIN, {})
 
     satellite = async_get_satellite_entity(hass, voip.DOMAIN, voip_device.voip_id)
     assert isinstance(satellite, VoipAssistSatellite)
@@ -371,7 +371,7 @@ async def test_stt_stream_timeout(
     hass: HomeAssistant, voip_devices: VoIPDevices, voip_device: VoIPDevice
 ) -> None:
     """Test timeout in STT stream during pipeline run."""
-    assert await async_setup_component(hass, "voip", {})
+    assert await async_setup_component(hass, DOMAIN, {})
 
     satellite = async_get_satellite_entity(hass, voip.DOMAIN, voip_device.voip_id)
     assert isinstance(satellite, VoipAssistSatellite)
@@ -410,7 +410,7 @@ async def test_tts_timeout(
     voip_device: VoIPDevice,
 ) -> None:
     """Test that TTS will time out based on its length."""
-    assert await async_setup_component(hass, "voip", {})
+    assert await async_setup_component(hass, DOMAIN, {})
 
     satellite = async_get_satellite_entity(hass, voip.DOMAIN, voip_device.voip_id)
     assert isinstance(satellite, VoipAssistSatellite)
@@ -509,7 +509,7 @@ async def test_tts_wrong_extension(
     voip_device: VoIPDevice,
 ) -> None:
     """Test that TTS will only stream WAV audio."""
-    assert await async_setup_component(hass, "voip", {})
+    assert await async_setup_component(hass, DOMAIN, {})
 
     satellite = async_get_satellite_entity(hass, voip.DOMAIN, voip_device.voip_id)
     satellite.addr = ("192.168.1.1", 12345)
@@ -602,7 +602,7 @@ async def test_tts_wrong_wav_format(
     voip_device: VoIPDevice,
 ) -> None:
     """Test that TTS will only stream WAV audio with a specific format."""
-    assert await async_setup_component(hass, "voip", {})
+    assert await async_setup_component(hass, DOMAIN, {})
 
     satellite = async_get_satellite_entity(hass, voip.DOMAIN, voip_device.voip_id)
     satellite.addr = ("192.168.1.1", 12345)
@@ -695,7 +695,7 @@ async def test_empty_tts_output(
     voip_device: VoIPDevice,
 ) -> None:
     """Test that TTS will not stream when output is empty."""
-    assert await async_setup_component(hass, "voip", {})
+    assert await async_setup_component(hass, DOMAIN, {})
 
     satellite = async_get_satellite_entity(hass, voip.DOMAIN, voip_device.voip_id)
     satellite.addr = ("192.168.1.1", 12345)
@@ -781,7 +781,7 @@ async def test_pipeline_error(
     snapshot: SnapshotAssertion,
 ) -> None:
     """Test that a pipeline error causes the error tone to be played."""
-    assert await async_setup_component(hass, "voip", {})
+    assert await async_setup_component(hass, DOMAIN, {})
 
     satellite = async_get_satellite_entity(hass, voip.DOMAIN, voip_device.voip_id)
     assert isinstance(satellite, VoipAssistSatellite)
@@ -834,7 +834,7 @@ async def test_announce(
     voip_device: VoIPDevice,
 ) -> None:
     """Test announcement."""
-    assert await async_setup_component(hass, "voip", {})
+    assert await async_setup_component(hass, DOMAIN, {})
 
     satellite = async_get_satellite_entity(hass, voip.DOMAIN, voip_device.voip_id)
     assert isinstance(satellite, VoipAssistSatellite)
@@ -903,7 +903,7 @@ async def test_voip_id_is_ip_address(
     voip_device: VoIPDevice,
 ) -> None:
     """Test announcement when VoIP is an IP address instead of a SIP header."""
-    assert await async_setup_component(hass, "voip", {})
+    assert await async_setup_component(hass, DOMAIN, {})
 
     satellite = async_get_satellite_entity(hass, voip.DOMAIN, voip_device.voip_id)
     assert isinstance(satellite, VoipAssistSatellite)
@@ -964,7 +964,7 @@ async def test_announce_timeout(
     voip_device: VoIPDevice,
 ) -> None:
     """Test announcement when user does not pick up the phone in time."""
-    assert await async_setup_component(hass, "voip", {})
+    assert await async_setup_component(hass, DOMAIN, {})
 
     satellite = async_get_satellite_entity(hass, voip.DOMAIN, voip_device.voip_id)
     assert isinstance(satellite, VoipAssistSatellite)
@@ -1007,7 +1007,7 @@ async def test_start_conversation(
     voip_device: VoIPDevice,
 ) -> None:
     """Test start conversation."""
-    assert await async_setup_component(hass, "voip", {})
+    assert await async_setup_component(hass, DOMAIN, {})
 
     satellite = async_get_satellite_entity(hass, voip.DOMAIN, voip_device.voip_id)
     assert isinstance(satellite, VoipAssistSatellite)
@@ -1116,7 +1116,7 @@ async def test_start_conversation_user_doesnt_pick_up(
     voip_device: VoIPDevice,
 ) -> None:
     """Test start conversation when the user doesn't pick up."""
-    assert await async_setup_component(hass, "voip", {})
+    assert await async_setup_component(hass, DOMAIN, {})
 
     satellite = async_get_satellite_entity(hass, voip.DOMAIN, voip_device.voip_id)
     satellite.addr = ("192.168.1.1", 12345)

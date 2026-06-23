@@ -7,7 +7,7 @@ from datetime import datetime, timedelta
 from functools import partial
 import logging
 import re
-from typing import Any, TypedDict, cast
+from typing import Any, TypedDict, cast, override
 from xml.etree.ElementTree import ParseError
 
 from fritzconnection import FritzConnection
@@ -307,6 +307,7 @@ class FritzBoxTools(DataUpdateCoordinator[UpdateCoordinatorDataType]):
                 )
         return entity_states
 
+    @override
     async def _async_update_data(self) -> UpdateCoordinatorDataType:
         """Update FritzboxTools data."""
         entity_data: UpdateCoordinatorDataType = {
@@ -938,3 +939,15 @@ class AvmWrapper(FritzBoxTools):
             "X_AVM-DE_WakeOnLANByMACAddress",
             NewMACAddress=mac_address,
         )
+
+    async def async_get_firmware_extra_infos(self) -> dict[str, Any]:
+        """Return extra infos for firmware."""
+        return await self._async_service_call("UserInterface", "1", "X_AVM-DE_GetInfo")
+
+    async def async_get_device_uptime_hours(self) -> int:
+        """Get device uptime in hours."""
+
+        def _get_uptime_hours() -> int:
+            return int(self.fritz_status.device_uptime // 3600)
+
+        return await self.hass.async_add_executor_job(_get_uptime_hours)

@@ -1,6 +1,7 @@
 """Button support for SwitchBot devices."""
 
 import logging
+from typing import override
 
 import switchbot
 from switchbot import SwitchbotModel
@@ -65,6 +66,7 @@ class LightSensorButton(SwitchbotEntity, ButtonEntity):
         self._attr_unique_id = f"{coordinator.base_unique_id}_light_sensor"
 
     @exception_handler
+    @override
     async def async_press(self) -> None:
         """Handle the button press."""
         _LOGGER.debug("Toggling light sensor mode for %s", self._address)
@@ -89,6 +91,7 @@ class SwitchBotArtFrameNextButton(SwitchBotArtFrameButtonBase):
     """Representation of a next image button."""
 
     @exception_handler
+    @override
     async def async_press(self) -> None:
         """Handle the button press."""
         _LOGGER.debug("Pressing next image button %s", self._address)
@@ -99,6 +102,7 @@ class SwitchBotArtFramePrevButton(SwitchBotArtFrameButtonBase):
     """Representation of a previous image button."""
 
     @exception_handler
+    @override
     async def async_press(self) -> None:
         """Handle the button press."""
         _LOGGER.debug("Pressing previous image button %s", self._address)
@@ -118,6 +122,7 @@ class SwitchBotMeterProCO2SyncDateTimeButton(SwitchbotEntity, ButtonEntity):
         self._attr_unique_id = f"{coordinator.base_unique_id}_sync_datetime"
 
     @exception_handler
+    @override
     async def async_press(self) -> None:
         """Sync time with Home Assistant."""
         now = dt_util.now()
@@ -160,6 +165,7 @@ class HalfLockButton(SwitchbotEntity, ButtonEntity):
         self._attr_unique_id = f"{coordinator.base_unique_id}_half_lock"
 
     @exception_handler
+    @override
     async def async_press(self) -> None:
         """Handle the button press."""
         _LOGGER.debug("Sending half lock command for %s", self._address)

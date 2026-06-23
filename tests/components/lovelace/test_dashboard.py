@@ -8,7 +8,7 @@ from unittest.mock import MagicMock, patch
 import pytest
 
 from homeassistant.components import frontend
-from homeassistant.components.lovelace import const, dashboard
+from homeassistant.components.lovelace import DOMAIN, const, dashboard
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import issue_registry as ir
 from homeassistant.setup import async_setup_component
@@ -36,7 +36,7 @@ async def test_lovelace_from_storage_new_installation(
     hass_storage: dict[str, Any],
 ) -> None:
     """Test new installation has default lovelace panel but no dashboard entry."""
-    assert await async_setup_component(hass, "lovelace", {})
+    assert await async_setup_component(hass, DOMAIN, {})
 
     # Default lovelace panel is registered for backward compatibility
     assert "lovelace" in hass.data[frontend.DATA_PANELS]
@@ -63,7 +63,7 @@ async def test_lovelace_from_storage_migration(
         "data": {"config": {"views": [{"title": "Home"}]}},
     }
 
-    assert await async_setup_component(hass, "lovelace", {})
+    assert await async_setup_component(hass, DOMAIN, {})
 
     # After migration, lovelace panel should be registered as a dashboard
     assert "lovelace" in hass.data[frontend.DATA_PANELS]
@@ -151,7 +151,7 @@ async def test_lovelace_dashboard_deleted_re_registers_panel(
         "data": {"config": {"views": [{"title": "Home"}]}},
     }
 
-    assert await async_setup_component(hass, "lovelace", {})
+    assert await async_setup_component(hass, DOMAIN, {})
 
     # After migration, lovelace panel should be registered as a dashboard
     assert "lovelace" in hass.data[frontend.DATA_PANELS]
@@ -201,7 +201,7 @@ async def test_lovelace_migration_completes_when_both_files_exist(
     }
 
     with patch("homeassistant.components.lovelace.os.rename") as mock_rename:
-        assert await async_setup_component(hass, "lovelace", {})
+        assert await async_setup_component(hass, DOMAIN, {})
 
     # Old file should be renamed as backup
     old_path = hass.config.path(".storage", dashboard.CONFIG_STORAGE_KEY_DEFAULT)
@@ -258,7 +258,7 @@ async def test_lovelace_migration_skipped_when_already_migrated(
         "data": {"config": {"views": [{"title": "Old"}]}},
     }
 
-    assert await async_setup_component(hass, "lovelace", {})
+    assert await async_setup_component(hass, DOMAIN, {})
 
     client = await hass_ws_client(hass)
     await client.send_json({"id": 5, "type": "lovelace/dashboards/list"})
@@ -276,7 +276,7 @@ async def test_lovelace_from_yaml(
     hass: HomeAssistant, hass_ws_client: WebSocketGenerator
 ) -> None:
     """Test we load lovelace config from yaml."""
-    assert await async_setup_component(hass, "lovelace", {"lovelace": {"mode": "YAML"}})
+    assert await async_setup_component(hass, DOMAIN, {"lovelace": {"mode": "YAML"}})
     assert hass.data[frontend.DATA_PANELS]["lovelace"].config == {"mode": "yaml"}
 
     client = await hass_ws_client(hass)
@@ -366,7 +366,7 @@ async def test_lovelace_from_yaml_creates_repair_issue(
     hass: HomeAssistant, hass_ws_client: WebSocketGenerator
 ) -> None:
     """Test YAML mode creates a repair issue."""
-    assert await async_setup_component(hass, "lovelace", {"lovelace": {"mode": "YAML"}})
+    assert await async_setup_component(hass, DOMAIN, {"lovelace": {"mode": "YAML"}})
 
     # Panel should be registered as a YAML dashboard
     assert hass.data[frontend.DATA_PANELS]["lovelace"].config == {"mode": "yaml"}
@@ -387,7 +387,7 @@ async def test_dashboard_from_yaml(
     """Test we load lovelace dashboard config from yaml."""
     assert await async_setup_component(
         hass,
-        "lovelace",
+        DOMAIN,
         {
             "lovelace": {
                 "dashboards": {
@@ -493,7 +493,7 @@ async def test_wrong_key_dashboard_from_yaml(hass: HomeAssistant) -> None:
     with assert_setup_component(0, "lovelace"):
         assert not await async_setup_component(
             hass,
-            "lovelace",
+            DOMAIN,
             {
                 "lovelace": {
                     "dashboards": {
@@ -517,7 +517,7 @@ async def test_storage_dashboards(
     hass_storage: dict[str, Any],
 ) -> None:
     """Test we load lovelace config from storage."""
-    assert await async_setup_component(hass, "lovelace", {})
+    assert await async_setup_component(hass, DOMAIN, {})
 
     # Default lovelace panel is registered for backward compatibility
     assert "lovelace" in hass.data[frontend.DATA_PANELS]
@@ -684,7 +684,7 @@ async def test_websocket_list_dashboards(
     """Test listing dashboards both storage + YAML."""
     assert await async_setup_component(
         hass,
-        "lovelace",
+        DOMAIN,
         {
             "lovelace": {
                 "dashboards": {
@@ -744,7 +744,7 @@ async def test_lovelace_migration_sets_default_panel(
 
     # Need to setup frontend to register the websocket commands
     assert await async_setup_component(hass, "frontend", {})
-    assert await async_setup_component(hass, "lovelace", {})
+    assert await async_setup_component(hass, DOMAIN, {})
 
     # Verify default_panel was set in frontend system storage via websocket
     client = await hass_ws_client(hass)
@@ -776,7 +776,7 @@ async def test_lovelace_migration_preserves_existing_default_panel(
 
     # Need to setup frontend to register the websocket commands
     assert await async_setup_component(hass, "frontend", {})
-    assert await async_setup_component(hass, "lovelace", {})
+    assert await async_setup_component(hass, DOMAIN, {})
 
     # Verify default_panel was NOT overwritten via websocket
     client = await hass_ws_client(hass)
@@ -795,7 +795,7 @@ async def test_lovelace_no_migration_no_default_panel_set(
     # Need to setup frontend to register the websocket commands
     assert await async_setup_component(hass, "frontend", {})
     # No pre-existing lovelace storage = no migration
-    assert await async_setup_component(hass, "lovelace", {})
+    assert await async_setup_component(hass, DOMAIN, {})
 
     # Verify default_panel was NOT set via websocket
     client = await hass_ws_client(hass)
@@ -809,7 +809,7 @@ async def test_lovelace_info_default(
     hass: HomeAssistant, hass_ws_client: WebSocketGenerator
 ) -> None:
     """Test lovelace/info returns default resource_mode."""
-    assert await async_setup_component(hass, "lovelace", {})
+    assert await async_setup_component(hass, DOMAIN, {})
 
     client = await hass_ws_client(hass)
 
@@ -824,7 +824,7 @@ async def test_lovelace_info_yaml_resource_mode(
 ) -> None:
     """Test lovelace/info returns yaml resource_mode."""
     assert await async_setup_component(
-        hass, "lovelace", {"lovelace": {"resource_mode": "yaml"}}
+        hass, DOMAIN, {"lovelace": {"resource_mode": "yaml"}}
     )
 
     client = await hass_ws_client(hass)
@@ -839,7 +839,7 @@ async def test_lovelace_info_yaml_mode_fallback(
     hass: HomeAssistant, hass_ws_client: WebSocketGenerator
 ) -> None:
     """Test lovelace/info returns yaml resource_mode when mode is yaml."""
-    assert await async_setup_component(hass, "lovelace", {"lovelace": {"mode": "yaml"}})
+    assert await async_setup_component(hass, DOMAIN, {"lovelace": {"mode": "yaml"}})
 
     client = await hass_ws_client(hass)
 

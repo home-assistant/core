@@ -32,11 +32,11 @@ from tests.common import MockConfigEntry
         DEFAULT_OPTIONS,
         {
             CONF_ROUTE_MODE: ROUTE_MODE_FASTEST,
-            CONF_DEPARTURE_TIME: datetime.now(),
+            CONF_DEPARTURE_TIME: datetime.now(),  # pylint: disable=home-assistant-enforce-naive-now
         },
         {
             CONF_ROUTE_MODE: ROUTE_MODE_FASTEST,
-            CONF_ARRIVAL_TIME: datetime.now(),
+            CONF_ARRIVAL_TIME: datetime.now(),  # pylint: disable=home-assistant-enforce-naive-now
         },
         {
             CONF_ROUTE_MODE: ROUTE_MODE_FASTEST,

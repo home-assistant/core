@@ -10,6 +10,7 @@ from b2sdk.v2.exception import (
 )
 import pytest
 
+from homeassistant.components.backblaze_b2 import DOMAIN
 from homeassistant.components.backblaze_b2.repairs import (
     async_check_for_repair_issues,
     async_create_fix_flow,
@@ -24,7 +25,7 @@ from tests.common import MockConfigEntry
 @pytest.fixture
 def mock_entry():
     """Create a mock config entry with runtime data."""
-    entry = MockConfigEntry(domain="backblaze_b2", data={"bucket": "test"})
+    entry = MockConfigEntry(domain=DOMAIN, data={"bucket": "test"})
     entry.runtime_data = Mock()
     return entry
 
