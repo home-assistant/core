@@ -174,6 +174,7 @@ class CCM15Climate(CoordinatorEntity[CCM15Coordinator], ClimateEntity):
         """Set the fan mode."""
         await self.coordinator.async_set_fan_mode(self._ac_index, self.data, fan_mode)
 
+    @override
     async def async_set_swing_mode(self, swing_mode: str) -> None:
         """Set the swing mode."""
         await self.coordinator.async_set_swing_mode(
