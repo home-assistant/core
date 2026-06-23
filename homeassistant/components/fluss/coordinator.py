@@ -1,7 +1,7 @@
 """DataUpdateCoordinator for Fluss+ integration."""
 
 import asyncio
-from typing import Any
+from typing import Any, override
 
 from fluss_api import (
     FlussApiClient,
@@ -12,7 +12,7 @@ from fluss_api import (
 
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
-from homeassistant.exceptions import ConfigEntryError
+from homeassistant.exceptions import ConfigEntryAuthFailed
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 from homeassistant.helpers.debounce import Debouncer
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
@@ -55,12 +55,13 @@ class FlussDataUpdateCoordinator(DataUpdateCoordinator[dict[str, dict[str, Any]]
             raise UpdateFailed(f"Error fetching Fluss device status: {err}") from err
         return response["status"]
 
+    @override
     async def _async_update_data(self) -> dict[str, dict[str, Any]]:
         """Fetch Fluss+ devices and merge per-device status."""
         try:
             devices = await self.api.async_get_devices()
         except FlussApiClientAuthenticationError as err:
-            raise ConfigEntryError(f"Authentication failed: {err}") from err
+            raise ConfigEntryAuthFailed(f"Authentication failed: {err}") from err
         except FlussApiClientError as err:
             raise UpdateFailed(f"Error fetching Fluss devices: {err}") from err
 

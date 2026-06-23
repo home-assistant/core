@@ -2,7 +2,7 @@
 
 from datetime import datetime, time, timedelta
 import logging
-from typing import Any
+from typing import Any, override
 from zoneinfo import ZoneInfo
 
 from PyTado.interface import Tado
@@ -84,6 +84,7 @@ class TadoDataUpdateCoordinator(DataUpdateCoordinator[dict[str, Any]]):
         """Return fallback flag to Smart Schedule."""
         return self._fallback
 
+    @override
     async def _async_update_data(self) -> dict[str, Any]:
         """Fetch the (initial) latest data from Tado."""
 
@@ -447,7 +448,7 @@ class TadoDataUpdateCoordinator(DataUpdateCoordinator[dict[str, Any]]):
 
     async def set_meter_reading(self, reading: int) -> dict[str, Any]:
         """Send meter reading to Tado."""
-        dt: str = datetime.now().strftime("%Y-%m-%d")
+        dt: str = datetime.now().strftime("%Y-%m-%d")  # pylint: disable=home-assistant-enforce-naive-now
         if self._tado is None:
             raise HomeAssistantError("Tado client is not initialized")
 

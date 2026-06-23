@@ -9,7 +9,6 @@ UNIQUE_ID = "abc-123"
 CONFIG_V1 = {CONF_ACCESS_TOKEN: "abc-123"}
 
 WAKE_UP_ONLINE = {"response": {"state": TeslemetryState.ONLINE}, "error": None}
-WAKE_UP_ASLEEP = {"response": {"state": TeslemetryState.ASLEEP}, "error": None}
 
 PRODUCTS = load_json_object_fixture("products.json", DOMAIN)
 PRODUCTS_MODERN = load_json_object_fixture("products.json", DOMAIN)
@@ -41,6 +40,16 @@ COMMAND_ERRORS = (COMMAND_REASON, COMMAND_NOREASON, COMMAND_ERROR, COMMAND_NOERR
 
 RESPONSE_OK = {"response": {}, "error": None}
 
+# Per-vehicle config cache returned in the metadata endpoint. The select
+# platform reads rear_seat_heaters and third_row_seats to decide which rear
+# seat-heater entities exist. Defaults match the Model 3 in vehicle_data.json
+# (heated rear bench, no third row, no seat cooling).
+VEHICLE_CONFIG = {
+    "rear_seat_heaters": 1,
+    "third_row_seats": "None",
+    "has_seat_cooling": False,
+}
+
 METADATA = {
     "uid": UNIQUE_ID,
     "region": "NA",
@@ -64,6 +73,7 @@ METADATA = {
             "discounted": False,
             "fleet_telemetry": "1.0.2",
             "name": "Home Assistant",
+            "config": VEHICLE_CONFIG,
         }
     },
     "energy_sites": {
@@ -96,6 +106,7 @@ METADATA_LEGACY = {
             "discounted": True,
             "fleet_telemetry": "unknown",
             "name": "Home Assistant",
+            "config": VEHICLE_CONFIG,
         }
     },
     "energy_sites": {
@@ -118,6 +129,7 @@ METADATA_NOSCOPE = {
             "discounted": True,
             "fleet_telemetry": "unknown",
             "name": "Home Assistant",
+            "config": VEHICLE_CONFIG,
         }
     },
     "energy_sites": {

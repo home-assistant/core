@@ -3,6 +3,7 @@
 from datetime import datetime, timedelta
 import hashlib
 import logging
+from typing import override
 
 from androidtv.constants import APPS, KEYS
 from androidtv.setup_async import AndroidTVAsync, FireTVAsync
@@ -127,6 +128,7 @@ class ADBDevice(AndroidTVEntity, MediaPlayerEntity):
         self.turn_off_command = options.get(CONF_TURN_OFF_COMMAND)
         self.turn_on_command = options.get(CONF_TURN_ON_COMMAND)
 
+    @override
     async def async_added_to_hass(self) -> None:
         """Set config parameter when add to hass."""
         await super().async_added_to_hass()
@@ -176,26 +178,31 @@ class ADBDevice(AndroidTVEntity, MediaPlayerEntity):
             self._media_image = None, None
             self._attr_media_image_hash = None
 
+    @override
     async def async_get_media_image(self) -> tuple[bytes | None, str | None]:
         """Fetch current playing image."""
         return self._media_image
 
     @adb_decorator()
+    @override
     async def async_media_play(self) -> None:
         """Send play command."""
         await self.aftv.media_play()
 
     @adb_decorator()
+    @override
     async def async_media_pause(self) -> None:
         """Send pause command."""
         await self.aftv.media_pause()
 
     @adb_decorator()
+    @override
     async def async_media_play_pause(self) -> None:
         """Send play/pause command."""
         await self.aftv.media_play_pause()
 
     @adb_decorator()
+    @override
     async def async_turn_on(self) -> None:
         """Turn on the device."""
         if self.turn_on_command:
@@ -204,6 +211,7 @@ class ADBDevice(AndroidTVEntity, MediaPlayerEntity):
             await self.aftv.turn_on()
 
     @adb_decorator()
+    @override
     async def async_turn_off(self) -> None:
         """Turn off the device."""
         if self.turn_off_command:
@@ -212,16 +220,19 @@ class ADBDevice(AndroidTVEntity, MediaPlayerEntity):
             await self.aftv.turn_off()
 
     @adb_decorator()
+    @override
     async def async_media_previous_track(self) -> None:
         """Send previous track command (results in rewind)."""
         await self.aftv.media_previous_track()
 
     @adb_decorator()
+    @override
     async def async_media_next_track(self) -> None:
         """Send next track command (results in fast-forward)."""
         await self.aftv.media_next_track()
 
     @adb_decorator()
+    @override
     async def async_select_source(self, source: str) -> None:
         """Select input source.
 
@@ -365,11 +376,13 @@ class AndroidTVDevice(ADBDevice):
         await self._async_get_screencap(prev_app_id)
 
     @adb_decorator()
+    @override
     async def async_media_stop(self) -> None:
         """Send stop command."""
         await self.aftv.media_stop()
 
     @adb_decorator()
+    @override
     async def async_mute_volume(self, mute: bool) -> None:
         """Mute the volume."""
         is_muted = await self.aftv.is_volume_muted()
@@ -379,16 +392,19 @@ class AndroidTVDevice(ADBDevice):
             await self.aftv.mute_volume()
 
     @adb_decorator()
+    @override
     async def async_set_volume_level(self, volume: float) -> None:
         """Set the volume level."""
         await self.aftv.set_volume_level(volume)
 
     @adb_decorator()
+    @override
     async def async_volume_down(self) -> None:
         """Send volume down command."""
         self._attr_volume_level = await self.aftv.volume_down(self._attr_volume_level)
 
     @adb_decorator()
+    @override
     async def async_volume_up(self) -> None:
         """Send volume up command."""
         self._attr_volume_level = await self.aftv.volume_up(self._attr_volume_level)
@@ -455,6 +471,7 @@ class FireTVDevice(ADBDevice):
         await self._async_get_screencap(prev_app_id)
 
     @adb_decorator()
+    @override
     async def async_media_stop(self) -> None:
         """Send stop (back) command."""
         await self.aftv.back()

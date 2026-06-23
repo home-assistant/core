@@ -2464,6 +2464,522 @@
     'state': 'unknown',
   })
 # ---
+# name: test_sensor_entities_snapshot[cloud_nexity_rail_din_europe.json][sensor.maple_residence_living_room_air_inlet_discrete_rssi_level-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': list([
+      None,
+    ]),
+    'area_id': None,
+    'capabilities': dict({
+      'options': list([
+        'verylow',
+        'low',
+        'normal',
+        'good',
+      ]),
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
+    'entity_id': 'sensor.maple_residence_living_room_air_inlet_discrete_rssi_level',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'Discrete RSSI level',
+    'options': dict({
+    }),
+    'original_device_class': <SensorDeviceClass.ENUM: 'enum'>,
+    'original_icon': 'mdi:wifi',
+    'original_name': 'Discrete RSSI level',
+    'platform': 'overkiz',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'discrete_rssi_level',
+    'unique_id': 'io://1234-5678-1698/10001-core:DiscreteRSSILevelState',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_sensor_entities_snapshot[cloud_nexity_rail_din_europe.json][sensor.maple_residence_living_room_air_inlet_discrete_rssi_level-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'device_class': 'enum',
+      'friendly_name': 'Living Room Air Inlet Discrete RSSI level',
+      'icon': 'mdi:wifi',
+      'options': list([
+        'verylow',
+        'low',
+        'normal',
+        'good',
+      ]),
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.maple_residence_living_room_air_inlet_discrete_rssi_level',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'unknown',
+  })
+# ---
+# name: test_sensor_entities_snapshot[cloud_nexity_rail_din_europe.json][sensor.maple_residence_living_room_air_inlet_priority_lock_timer-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': list([
+      None,
+    ]),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': None,
+    'entity_id': 'sensor.maple_residence_living_room_air_inlet_priority_lock_timer',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'Priority lock timer',
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': 'mdi:lock-clock',
+    'original_name': 'Priority lock timer',
+    'platform': 'overkiz',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': None,
+    'unique_id': 'io://1234-5678-1698/10001-core:PriorityLockTimerState',
+    'unit_of_measurement': <UnitOfTime.SECONDS: 's'>,
+  })
+# ---
+# name: test_sensor_entities_snapshot[cloud_nexity_rail_din_europe.json][sensor.maple_residence_living_room_air_inlet_priority_lock_timer-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'friendly_name': 'Living Room Air Inlet Priority lock timer',
+      'icon': 'mdi:lock-clock',
+      'unit_of_measurement': <UnitOfTime.SECONDS: 's'>,
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.maple_residence_living_room_air_inlet_priority_lock_timer',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'unknown',
+  })
+# ---
+# name: test_sensor_entities_snapshot[cloud_nexity_rail_din_europe.json][sensor.maple_residence_living_room_air_inlet_rssi_level-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': list([
+      None,
+    ]),
+    'area_id': None,
+    'capabilities': dict({
+      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
+    'entity_id': 'sensor.maple_residence_living_room_air_inlet_rssi_level',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'RSSI level',
+    'options': dict({
+    }),
+    'original_device_class': <SensorDeviceClass.SIGNAL_STRENGTH: 'signal_strength'>,
+    'original_icon': None,
+    'original_name': 'RSSI level',
+    'platform': 'overkiz',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': None,
+    'unique_id': 'io://1234-5678-1698/10001-core:RSSILevelState',
+    'unit_of_measurement': 'dB',
+  })
+# ---
+# name: test_sensor_entities_snapshot[cloud_nexity_rail_din_europe.json][sensor.maple_residence_living_room_air_inlet_rssi_level-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'device_class': 'signal_strength',
+      'friendly_name': 'Living Room Air Inlet RSSI level',
+      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+      'unit_of_measurement': 'dB',
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.maple_residence_living_room_air_inlet_rssi_level',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '88',
+  })
+# ---
+# name: test_sensor_entities_snapshot[cloud_nexity_rail_din_europe.json][sensor.maple_residence_living_room_air_outlet_discrete_rssi_level-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': list([
+      None,
+    ]),
+    'area_id': None,
+    'capabilities': dict({
+      'options': list([
+        'verylow',
+        'low',
+        'normal',
+        'good',
+      ]),
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
+    'entity_id': 'sensor.maple_residence_living_room_air_outlet_discrete_rssi_level',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'Discrete RSSI level',
+    'options': dict({
+    }),
+    'original_device_class': <SensorDeviceClass.ENUM: 'enum'>,
+    'original_icon': 'mdi:wifi',
+    'original_name': 'Discrete RSSI level',
+    'platform': 'overkiz',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'discrete_rssi_level',
+    'unique_id': 'io://1234-5678-1698/10002-core:DiscreteRSSILevelState',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_sensor_entities_snapshot[cloud_nexity_rail_din_europe.json][sensor.maple_residence_living_room_air_outlet_discrete_rssi_level-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'device_class': 'enum',
+      'friendly_name': 'Living Room Air Outlet Discrete RSSI level',
+      'icon': 'mdi:wifi',
+      'options': list([
+        'verylow',
+        'low',
+        'normal',
+        'good',
+      ]),
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.maple_residence_living_room_air_outlet_discrete_rssi_level',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'unknown',
+  })
+# ---
+# name: test_sensor_entities_snapshot[cloud_nexity_rail_din_europe.json][sensor.maple_residence_living_room_air_outlet_priority_lock_timer-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': list([
+      None,
+    ]),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': None,
+    'entity_id': 'sensor.maple_residence_living_room_air_outlet_priority_lock_timer',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'Priority lock timer',
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': 'mdi:lock-clock',
+    'original_name': 'Priority lock timer',
+    'platform': 'overkiz',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': None,
+    'unique_id': 'io://1234-5678-1698/10002-core:PriorityLockTimerState',
+    'unit_of_measurement': <UnitOfTime.SECONDS: 's'>,
+  })
+# ---
+# name: test_sensor_entities_snapshot[cloud_nexity_rail_din_europe.json][sensor.maple_residence_living_room_air_outlet_priority_lock_timer-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'friendly_name': 'Living Room Air Outlet Priority lock timer',
+      'icon': 'mdi:lock-clock',
+      'unit_of_measurement': <UnitOfTime.SECONDS: 's'>,
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.maple_residence_living_room_air_outlet_priority_lock_timer',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'unknown',
+  })
+# ---
+# name: test_sensor_entities_snapshot[cloud_nexity_rail_din_europe.json][sensor.maple_residence_living_room_air_outlet_rssi_level-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': list([
+      None,
+    ]),
+    'area_id': None,
+    'capabilities': dict({
+      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
+    'entity_id': 'sensor.maple_residence_living_room_air_outlet_rssi_level',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'RSSI level',
+    'options': dict({
+    }),
+    'original_device_class': <SensorDeviceClass.SIGNAL_STRENGTH: 'signal_strength'>,
+    'original_icon': None,
+    'original_name': 'RSSI level',
+    'platform': 'overkiz',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': None,
+    'unique_id': 'io://1234-5678-1698/10002-core:RSSILevelState',
+    'unit_of_measurement': 'dB',
+  })
+# ---
+# name: test_sensor_entities_snapshot[cloud_nexity_rail_din_europe.json][sensor.maple_residence_living_room_air_outlet_rssi_level-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'device_class': 'signal_strength',
+      'friendly_name': 'Living Room Air Outlet RSSI level',
+      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+      'unit_of_measurement': 'dB',
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.maple_residence_living_room_air_outlet_rssi_level',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '88',
+  })
+# ---
+# name: test_sensor_entities_snapshot[cloud_nexity_rail_din_europe.json][sensor.maple_residence_living_room_air_transfer_discrete_rssi_level-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': list([
+      None,
+    ]),
+    'area_id': None,
+    'capabilities': dict({
+      'options': list([
+        'verylow',
+        'low',
+        'normal',
+        'good',
+      ]),
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
+    'entity_id': 'sensor.maple_residence_living_room_air_transfer_discrete_rssi_level',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'Discrete RSSI level',
+    'options': dict({
+    }),
+    'original_device_class': <SensorDeviceClass.ENUM: 'enum'>,
+    'original_icon': 'mdi:wifi',
+    'original_name': 'Discrete RSSI level',
+    'platform': 'overkiz',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'discrete_rssi_level',
+    'unique_id': 'io://1234-5678-1698/10003-core:DiscreteRSSILevelState',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_sensor_entities_snapshot[cloud_nexity_rail_din_europe.json][sensor.maple_residence_living_room_air_transfer_discrete_rssi_level-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'device_class': 'enum',
+      'friendly_name': 'Living Room Air Transfer Discrete RSSI level',
+      'icon': 'mdi:wifi',
+      'options': list([
+        'verylow',
+        'low',
+        'normal',
+        'good',
+      ]),
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.maple_residence_living_room_air_transfer_discrete_rssi_level',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'unknown',
+  })
+# ---
+# name: test_sensor_entities_snapshot[cloud_nexity_rail_din_europe.json][sensor.maple_residence_living_room_air_transfer_priority_lock_timer-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': list([
+      None,
+    ]),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': None,
+    'entity_id': 'sensor.maple_residence_living_room_air_transfer_priority_lock_timer',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'Priority lock timer',
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': 'mdi:lock-clock',
+    'original_name': 'Priority lock timer',
+    'platform': 'overkiz',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': None,
+    'unique_id': 'io://1234-5678-1698/10003-core:PriorityLockTimerState',
+    'unit_of_measurement': <UnitOfTime.SECONDS: 's'>,
+  })
+# ---
+# name: test_sensor_entities_snapshot[cloud_nexity_rail_din_europe.json][sensor.maple_residence_living_room_air_transfer_priority_lock_timer-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'friendly_name': 'Living Room Air Transfer Priority lock timer',
+      'icon': 'mdi:lock-clock',
+      'unit_of_measurement': <UnitOfTime.SECONDS: 's'>,
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.maple_residence_living_room_air_transfer_priority_lock_timer',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'unknown',
+  })
+# ---
+# name: test_sensor_entities_snapshot[cloud_nexity_rail_din_europe.json][sensor.maple_residence_living_room_air_transfer_rssi_level-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': list([
+      None,
+    ]),
+    'area_id': None,
+    'capabilities': dict({
+      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
+    'entity_id': 'sensor.maple_residence_living_room_air_transfer_rssi_level',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'RSSI level',
+    'options': dict({
+    }),
+    'original_device_class': <SensorDeviceClass.SIGNAL_STRENGTH: 'signal_strength'>,
+    'original_icon': None,
+    'original_name': 'RSSI level',
+    'platform': 'overkiz',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': None,
+    'unique_id': 'io://1234-5678-1698/10003-core:RSSILevelState',
+    'unit_of_measurement': 'dB',
+  })
+# ---
+# name: test_sensor_entities_snapshot[cloud_nexity_rail_din_europe.json][sensor.maple_residence_living_room_air_transfer_rssi_level-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'device_class': 'signal_strength',
+      'friendly_name': 'Living Room Air Transfer RSSI level',
+      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+      'unit_of_measurement': 'dB',
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.maple_residence_living_room_air_transfer_rssi_level',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '88',
+  })
+# ---
 # name: test_sensor_entities_snapshot[cloud_nexity_rail_din_europe.json][sensor.maple_residence_living_room_radiator_battery_level-entry]
   EntityRegistryEntrySnapshot({
     'aliases': list([
@@ -3010,6 +3526,67 @@
     'state': 'good',
   })
 # ---
+# name: test_sensor_entities_snapshot[cloud_nexity_rail_din_europe.json][sensor.maple_residence_living_room_smoke_detector_radio_battery-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': list([
+      None,
+    ]),
+    'area_id': None,
+    'capabilities': dict({
+      'options': list([
+        'low',
+        'normal',
+      ]),
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
+    'entity_id': 'sensor.maple_residence_living_room_smoke_detector_radio_battery',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'Radio battery',
+    'options': dict({
+    }),
+    'original_device_class': <SensorDeviceClass.ENUM: 'enum'>,
+    'original_icon': 'mdi:battery',
+    'original_name': 'Radio battery',
+    'platform': 'overkiz',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'battery',
+    'unique_id': 'io://1234-5678-1698/8907539-io:MaintenanceRadioPartBatteryState',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_sensor_entities_snapshot[cloud_nexity_rail_din_europe.json][sensor.maple_residence_living_room_smoke_detector_radio_battery-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'device_class': 'enum',
+      'friendly_name': 'Living Room Smoke Detector Radio battery',
+      'icon': 'mdi:battery',
+      'options': list([
+        'low',
+        'normal',
+      ]),
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.maple_residence_living_room_smoke_detector_radio_battery',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'normal',
+  })
+# ---
 # name: test_sensor_entities_snapshot[cloud_nexity_rail_din_europe.json][sensor.maple_residence_living_room_smoke_detector_rssi_level-entry]
   EntityRegistryEntrySnapshot({
     'aliases': list([
@@ -3063,6 +3640,69 @@
     'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': '100',
+  })
+# ---
+# name: test_sensor_entities_snapshot[cloud_nexity_rail_din_europe.json][sensor.maple_residence_living_room_smoke_detector_sensor_battery-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': list([
+      None,
+    ]),
+    'area_id': None,
+    'capabilities': dict({
+      'options': list([
+        'absence',
+        'low',
+        'normal',
+      ]),
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
+    'entity_id': 'sensor.maple_residence_living_room_smoke_detector_sensor_battery',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'Sensor battery',
+    'options': dict({
+    }),
+    'original_device_class': <SensorDeviceClass.ENUM: 'enum'>,
+    'original_icon': 'mdi:battery',
+    'original_name': 'Sensor battery',
+    'platform': 'overkiz',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'battery',
+    'unique_id': 'io://1234-5678-1698/8907539-io:MaintenanceSensorPartBatteryState',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_sensor_entities_snapshot[cloud_nexity_rail_din_europe.json][sensor.maple_residence_living_room_smoke_detector_sensor_battery-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'device_class': 'enum',
+      'friendly_name': 'Living Room Smoke Detector Sensor battery',
+      'icon': 'mdi:battery',
+      'options': list([
+        'absence',
+        'low',
+        'normal',
+      ]),
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.maple_residence_living_room_smoke_detector_sensor_battery',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'normal',
   })
 # ---
 # name: test_sensor_entities_snapshot[cloud_nexity_rail_din_europe.json][sensor.maple_residence_living_room_smoke_detector_sensor_defect-entry]

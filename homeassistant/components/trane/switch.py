@@ -1,6 +1,6 @@
 """Switch platform for the Trane Local integration."""
 
-from typing import Any
+from typing import Any, override
 
 from steamloop import HoldType, ThermostatConnection
 
@@ -37,14 +37,17 @@ class TraneHoldSwitch(TraneZoneEntity, SwitchEntity):
         super().__init__(conn, entry_id, zone_id, "hold")
 
     @property
+    @override
     def is_on(self) -> bool:
         """Return true if the zone is in permanent hold."""
         return self._zone.hold_type == HoldType.MANUAL
 
+    @override
     async def async_turn_on(self, **kwargs: Any) -> None:
         """Enable permanent hold."""
         self._conn.set_temperature_setpoint(self._zone_id, hold_type=HoldType.MANUAL)
 
+    @override
     async def async_turn_off(self, **kwargs: Any) -> None:
         """Return to schedule."""
         self._conn.set_temperature_setpoint(self._zone_id, hold_type=HoldType.SCHEDULE)

@@ -3,7 +3,7 @@
 from collections.abc import Callable, Coroutine
 from dataclasses import dataclass
 from datetime import time
-from typing import Any
+from typing import Any, override
 
 from letpot.deviceclient import LetPotDeviceClient
 from letpot.models import LetPotDeviceStatus
@@ -89,11 +89,13 @@ class LetPotTimeEntity[_DataT: LetPotDeviceStatus](LetPotEntity[_DataT], TimeEnt
         )
 
     @property
+    @override
     def native_value(self) -> time | None:
         """Return the time."""
         return self.entity_description.value_fn(self.coordinator.data)
 
     @exception_handler
+    @override
     async def async_set_value(self, value: time) -> None:
         """Set the time."""
         await self.entity_description.set_value_fn(
