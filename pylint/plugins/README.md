@@ -565,14 +565,13 @@ serial, MAC, etc.) or declaring the integration as
 
 Hosts format-related checks on the value an entity uses for its unique
 ID (`_attr_unique_id` assignments and `unique_id` property/method
-returns). Unlike the gated `entity-unique-id` quality-scale checks,
+returns). Migrating unique_ids after an integration has shipped risks
+disrupting existing users, so the antipatterns must be caught before
+they ship. Unlike the gated `entity-unique-id` quality-scale checks,
 these checks are **not** gated on `quality_scale.yaml` claims, and they
 fire on every class inheriting from `Entity` anywhere inside an
 integration (including shared bases in `entity.py` and mixins/abstract
-bases subclassed by other classes in the same module). Once an
-integration ships with malformed unique_ids, the IDs cannot be changed
-without an entity-registry migration, so the antipatterns must be
-caught before they ship.
+bases subclassed by other classes in the same module).
 
 ### `W7425`: `home-assistant-entity-unique-id-redundant-domain`
 
