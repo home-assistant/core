@@ -6,7 +6,7 @@
     ]),
     'area_id': None,
     'capabilities': dict({
-      'options': list([
+      <SelectEntityCapabilityAttribute.OPTIONS: 'options'>: list([
         'dynamic',
         'self_use',
         'fast_discharge',
@@ -48,7 +48,7 @@
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'friendly_name': 'Zinvolt Batterij Mode',
-      'options': list([
+      <SelectEntityCapabilityAttribute.OPTIONS: 'options'>: list([
         'dynamic',
         'self_use',
         'fast_discharge',

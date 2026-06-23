@@ -6,7 +6,7 @@
     ]),
     'area_id': None,
     'capabilities': dict({
-      'options': list([
+      <SelectEntityCapabilityAttribute.OPTIONS: 'options'>: list([
         'comfort',
         'eco',
         'antifrost',
@@ -53,7 +53,7 @@
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'friendly_name': 'Pilote Device',
-      'options': list([
+      <SelectEntityCapabilityAttribute.OPTIONS: 'options'>: list([
         'comfort',
         'eco',
         'antifrost',
@@ -81,7 +81,7 @@
     ]),
     'area_id': None,
     'capabilities': dict({
-      'options': list([
+      <SelectEntityCapabilityAttribute.OPTIONS: 'options'>: list([
         'on',
         'off',
         'auto',
@@ -121,7 +121,7 @@
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'friendly_name': 'Relais Device',
-      'options': list([
+      <SelectEntityCapabilityAttribute.OPTIONS: 'options'>: list([
         'on',
         'off',
         'auto',
@@ -142,7 +142,7 @@
     ]),
     'area_id': None,
     'capabilities': dict({
-      'options': list([
+      <SelectEntityCapabilityAttribute.OPTIONS: 'options'>: list([
         'heating',
         'cooling',
       ]),
@@ -181,7 +181,7 @@
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'friendly_name': 'UFH Device',
-      'options': list([
+      <SelectEntityCapabilityAttribute.OPTIONS: 'options'>: list([
         'heating',
         'cooling',
       ]),

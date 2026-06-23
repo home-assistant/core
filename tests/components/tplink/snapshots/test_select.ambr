@@ -41,7 +41,7 @@
     ]),
     'area_id': None,
     'capabilities': dict({
-      'options': list([
+      <SelectEntityCapabilityAttribute.OPTIONS: 'options'>: list([
         'Doorbell Ring 1',
         'Doorbell Ring 2',
         'Doorbell Ring 3',
@@ -97,7 +97,7 @@
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'friendly_name': 'my_device Alarm sound',
-      'options': list([
+      <SelectEntityCapabilityAttribute.OPTIONS: 'options'>: list([
         'Doorbell Ring 1',
         'Doorbell Ring 2',
         'Doorbell Ring 3',
@@ -134,7 +134,7 @@
     ]),
     'area_id': None,
     'capabilities': dict({
-      'options': list([
+      <SelectEntityCapabilityAttribute.OPTIONS: 'options'>: list([
         'low',
         'normal',
         'high',
@@ -174,7 +174,7 @@
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'friendly_name': 'my_device Alarm volume',
-      'options': list([
+      <SelectEntityCapabilityAttribute.OPTIONS: 'options'>: list([
         'low',
         'normal',
         'high',
@@ -195,7 +195,7 @@
     ]),
     'area_id': None,
     'capabilities': dict({
-      'options': list([
+      <SelectEntityCapabilityAttribute.OPTIONS: 'options'>: list([
         'Off',
         'Preset 1',
         'Preset 2',
@@ -235,7 +235,7 @@
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'friendly_name': 'my_device Light preset',
-      'options': list([
+      <SelectEntityCapabilityAttribute.OPTIONS: 'options'>: list([
         'Off',
         'Preset 1',
         'Preset 2',

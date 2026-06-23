@@ -6,7 +6,7 @@
     ]),
     'area_id': None,
     'capabilities': dict({
-      'options': list([
+      <SelectEntityCapabilityAttribute.OPTIONS: 'options'>: list([
         'quiet',
         'cool',
         'full_speed',
@@ -47,7 +47,7 @@
     'attributes': ReadOnlyDict({
       'attribution': 'Data provided by Synology',
       'friendly_name': 'nas.meontheinternet.com Fan speed mode',
-      'options': list([
+      <SelectEntityCapabilityAttribute.OPTIONS: 'options'>: list([
         'quiet',
         'cool',
         'full_speed',

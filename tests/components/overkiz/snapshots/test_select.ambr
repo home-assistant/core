@@ -6,7 +6,7 @@
     ]),
     'area_id': None,
     'capabilities': dict({
-      'options': list([
+      <SelectEntityCapabilityAttribute.OPTIONS: 'options'>: list([
         <OverkizCommandParam.OPEN: 'open'>,
         <OverkizCommandParam.PEDESTRIAN: 'pedestrian'>,
         <OverkizCommandParam.CLOSED: 'closed'>,
@@ -46,7 +46,7 @@
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'friendly_name': 'Garden Gate Position',
-      'options': list([
+      <SelectEntityCapabilityAttribute.OPTIONS: 'options'>: list([
         <OverkizCommandParam.OPEN: 'open'>,
         <OverkizCommandParam.PEDESTRIAN: 'pedestrian'>,
         <OverkizCommandParam.CLOSED: 'closed'>,
@@ -67,7 +67,7 @@
     ]),
     'area_id': None,
     'capabilities': dict({
-      'options': list([
+      <SelectEntityCapabilityAttribute.OPTIONS: 'options'>: list([
         <OverkizCommandParam.OPEN: 'open'>,
         <OverkizCommandParam.PARTIAL: 'partial'>,
         <OverkizCommandParam.CLOSED: 'closed'>,
@@ -107,7 +107,7 @@
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'friendly_name': 'Partial Garage Door Position',
-      'options': list([
+      <SelectEntityCapabilityAttribute.OPTIONS: 'options'>: list([
         <OverkizCommandParam.OPEN: 'open'>,
         <OverkizCommandParam.PARTIAL: 'partial'>,
         <OverkizCommandParam.CLOSED: 'closed'>,
@@ -128,7 +128,7 @@
     ]),
     'area_id': None,
     'capabilities': dict({
-      'options': list([
+      <SelectEntityCapabilityAttribute.OPTIONS: 'options'>: list([
         <OverkizCommandParam.OPEN: 'open'>,
         <OverkizCommandParam.PEDESTRIAN: 'pedestrian'>,
         <OverkizCommandParam.CLOSED: 'closed'>,
@@ -168,7 +168,7 @@
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'friendly_name': 'Sliding Gate Position',
-      'options': list([
+      <SelectEntityCapabilityAttribute.OPTIONS: 'options'>: list([
         <OverkizCommandParam.OPEN: 'open'>,
         <OverkizCommandParam.PEDESTRIAN: 'pedestrian'>,
         <OverkizCommandParam.CLOSED: 'closed'>,
@@ -189,7 +189,7 @@
     ]),
     'area_id': None,
     'capabilities': dict({
-      'options': list([
+      <SelectEntityCapabilityAttribute.OPTIONS: 'options'>: list([
         '',
         'A',
         'B',
@@ -234,7 +234,7 @@
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'friendly_name': 'Protexiom Active zones',
-      'options': list([
+      <SelectEntityCapabilityAttribute.OPTIONS: 'options'>: list([
         '',
         'A',
         'B',
@@ -260,7 +260,7 @@
     ]),
     'area_id': None,
     'capabilities': dict({
-      'options': list([
+      <SelectEntityCapabilityAttribute.OPTIONS: 'options'>: list([
         <OverkizCommandParam.STANDARD: 'standard'>,
         <OverkizCommandParam.HIGHEST: 'highest'>,
       ]),
@@ -299,7 +299,7 @@
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'friendly_name': 'Siren Memorized simple volume',
-      'options': list([
+      <SelectEntityCapabilityAttribute.OPTIONS: 'options'>: list([
         <OverkizCommandParam.STANDARD: 'standard'>,
         <OverkizCommandParam.HIGHEST: 'highest'>,
       ]),

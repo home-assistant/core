@@ -6,7 +6,7 @@
     ]),
     'area_id': None,
     'capabilities': dict({
-      'options': list([
+      <SelectEntityCapabilityAttribute.OPTIONS: 'options'>: list([
         '-4',
         '-2',
         '0',
@@ -48,7 +48,7 @@
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'friendly_name': 'Beer fridge Temperature level',
-      'options': list([
+      <SelectEntityCapabilityAttribute.OPTIONS: 'options'>: list([
         '-4',
         '-2',
         '0',

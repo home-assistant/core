@@ -6,7 +6,7 @@
     ]),
     'area_id': None,
     'capabilities': dict({
-      'options': list([
+      <SelectEntityCapabilityAttribute.OPTIONS: 'options'>: list([
         'slow',
         'medium',
         'high',
@@ -46,7 +46,7 @@
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'friendly_name': 'My Pool Filtration timer speed 1',
-      'options': list([
+      <SelectEntityCapabilityAttribute.OPTIONS: 'options'>: list([
         'slow',
         'medium',
         'high',
@@ -67,7 +67,7 @@
     ]),
     'area_id': None,
     'capabilities': dict({
-      'options': list([
+      <SelectEntityCapabilityAttribute.OPTIONS: 'options'>: list([
         'slow',
         'medium',
         'high',
@@ -107,7 +107,7 @@
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'friendly_name': 'My Pool Filtration timer speed 2',
-      'options': list([
+      <SelectEntityCapabilityAttribute.OPTIONS: 'options'>: list([
         'slow',
         'medium',
         'high',
@@ -128,7 +128,7 @@
     ]),
     'area_id': None,
     'capabilities': dict({
-      'options': list([
+      <SelectEntityCapabilityAttribute.OPTIONS: 'options'>: list([
         'slow',
         'medium',
         'high',
@@ -168,7 +168,7 @@
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'friendly_name': 'My Pool Filtration timer speed 3',
-      'options': list([
+      <SelectEntityCapabilityAttribute.OPTIONS: 'options'>: list([
         'slow',
         'medium',
         'high',
@@ -189,7 +189,7 @@
     ]),
     'area_id': None,
     'capabilities': dict({
-      'options': list([
+      <SelectEntityCapabilityAttribute.OPTIONS: 'options'>: list([
         'manual',
         'auto',
         'heat',
@@ -231,7 +231,7 @@
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'friendly_name': 'My Pool Pump mode',
-      'options': list([
+      <SelectEntityCapabilityAttribute.OPTIONS: 'options'>: list([
         'manual',
         'auto',
         'heat',
@@ -254,7 +254,7 @@
     ]),
     'area_id': None,
     'capabilities': dict({
-      'options': list([
+      <SelectEntityCapabilityAttribute.OPTIONS: 'options'>: list([
         'slow',
         'medium',
         'high',
@@ -294,7 +294,7 @@
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'friendly_name': 'My Pool Pump speed',
-      'options': list([
+      <SelectEntityCapabilityAttribute.OPTIONS: 'options'>: list([
         'slow',
         'medium',
         'high',

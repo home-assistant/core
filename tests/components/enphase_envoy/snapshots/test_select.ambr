@@ -6,7 +6,7 @@
     ]),
     'area_id': None,
     'capabilities': dict({
-      'options': list([
+      <SelectEntityCapabilityAttribute.OPTIONS: 'options'>: list([
         'backup',
         'self_consumption',
         'savings',
@@ -46,7 +46,7 @@
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'friendly_name': 'Envoy 1234 Storage mode',
-      'options': list([
+      <SelectEntityCapabilityAttribute.OPTIONS: 'options'>: list([
         'backup',
         'self_consumption',
         'savings',
@@ -67,7 +67,7 @@
     ]),
     'area_id': None,
     'capabilities': dict({
-      'options': list([
+      <SelectEntityCapabilityAttribute.OPTIONS: 'options'>: list([
         'backup',
         'self_consumption',
         'savings',
@@ -107,7 +107,7 @@
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'friendly_name': 'Enpower 654321 Storage mode',
-      'options': list([
+      <SelectEntityCapabilityAttribute.OPTIONS: 'options'>: list([
         'backup',
         'self_consumption',
         'savings',
@@ -128,7 +128,7 @@
     ]),
     'area_id': None,
     'capabilities': dict({
-      'options': list([
+      <SelectEntityCapabilityAttribute.OPTIONS: 'options'>: list([
         'powered',
         'not_powered',
         'schedule',
@@ -169,7 +169,7 @@
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'friendly_name': 'NC1 Fixture Generator action',
-      'options': list([
+      <SelectEntityCapabilityAttribute.OPTIONS: 'options'>: list([
         'powered',
         'not_powered',
         'schedule',
@@ -191,7 +191,7 @@
     ]),
     'area_id': None,
     'capabilities': dict({
-      'options': list([
+      <SelectEntityCapabilityAttribute.OPTIONS: 'options'>: list([
         'powered',
         'not_powered',
         'schedule',
@@ -232,7 +232,7 @@
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'friendly_name': 'NC1 Fixture Grid action',
-      'options': list([
+      <SelectEntityCapabilityAttribute.OPTIONS: 'options'>: list([
         'powered',
         'not_powered',
         'schedule',
@@ -254,7 +254,7 @@
     ]),
     'area_id': None,
     'capabilities': dict({
-      'options': list([
+      <SelectEntityCapabilityAttribute.OPTIONS: 'options'>: list([
         'powered',
         'not_powered',
         'schedule',
@@ -295,7 +295,7 @@
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'friendly_name': 'NC1 Fixture Microgrid action',
-      'options': list([
+      <SelectEntityCapabilityAttribute.OPTIONS: 'options'>: list([
         'powered',
         'not_powered',
         'schedule',
@@ -317,7 +317,7 @@
     ]),
     'area_id': None,
     'capabilities': dict({
-      'options': list([
+      <SelectEntityCapabilityAttribute.OPTIONS: 'options'>: list([
         'standard',
         'battery',
       ]),
@@ -356,7 +356,7 @@
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'friendly_name': 'NC1 Fixture Mode',
-      'options': list([
+      <SelectEntityCapabilityAttribute.OPTIONS: 'options'>: list([
         'standard',
         'battery',
       ]),
@@ -376,7 +376,7 @@
     ]),
     'area_id': None,
     'capabilities': dict({
-      'options': list([
+      <SelectEntityCapabilityAttribute.OPTIONS: 'options'>: list([
         'powered',
         'not_powered',
         'schedule',
@@ -417,7 +417,7 @@
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'friendly_name': 'NC2 Fixture Generator action',
-      'options': list([
+      <SelectEntityCapabilityAttribute.OPTIONS: 'options'>: list([
         'powered',
         'not_powered',
         'schedule',
@@ -439,7 +439,7 @@
     ]),
     'area_id': None,
     'capabilities': dict({
-      'options': list([
+      <SelectEntityCapabilityAttribute.OPTIONS: 'options'>: list([
         'powered',
         'not_powered',
         'schedule',
@@ -480,7 +480,7 @@
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'friendly_name': 'NC2 Fixture Grid action',
-      'options': list([
+      <SelectEntityCapabilityAttribute.OPTIONS: 'options'>: list([
         'powered',
         'not_powered',
         'schedule',
@@ -502,7 +502,7 @@
     ]),
     'area_id': None,
     'capabilities': dict({
-      'options': list([
+      <SelectEntityCapabilityAttribute.OPTIONS: 'options'>: list([
         'powered',
         'not_powered',
         'schedule',
@@ -543,7 +543,7 @@
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'friendly_name': 'NC2 Fixture Microgrid action',
-      'options': list([
+      <SelectEntityCapabilityAttribute.OPTIONS: 'options'>: list([
         'powered',
         'not_powered',
         'schedule',
@@ -565,7 +565,7 @@
     ]),
     'area_id': None,
     'capabilities': dict({
-      'options': list([
+      <SelectEntityCapabilityAttribute.OPTIONS: 'options'>: list([
         'standard',
         'battery',
       ]),
@@ -604,7 +604,7 @@
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'friendly_name': 'NC2 Fixture Mode',
-      'options': list([
+      <SelectEntityCapabilityAttribute.OPTIONS: 'options'>: list([
         'standard',
         'battery',
       ]),
@@ -624,7 +624,7 @@
     ]),
     'area_id': None,
     'capabilities': dict({
-      'options': list([
+      <SelectEntityCapabilityAttribute.OPTIONS: 'options'>: list([
         'powered',
         'not_powered',
         'schedule',
@@ -665,7 +665,7 @@
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'friendly_name': 'NC3 Fixture Generator action',
-      'options': list([
+      <SelectEntityCapabilityAttribute.OPTIONS: 'options'>: list([
         'powered',
         'not_powered',
         'schedule',
@@ -687,7 +687,7 @@
     ]),
     'area_id': None,
     'capabilities': dict({
-      'options': list([
+      <SelectEntityCapabilityAttribute.OPTIONS: 'options'>: list([
         'powered',
         'not_powered',
         'schedule',
@@ -728,7 +728,7 @@
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'friendly_name': 'NC3 Fixture Grid action',
-      'options': list([
+      <SelectEntityCapabilityAttribute.OPTIONS: 'options'>: list([
         'powered',
         'not_powered',
         'schedule',
@@ -750,7 +750,7 @@
     ]),
     'area_id': None,
     'capabilities': dict({
-      'options': list([
+      <SelectEntityCapabilityAttribute.OPTIONS: 'options'>: list([
         'powered',
         'not_powered',
         'schedule',
@@ -791,7 +791,7 @@
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'friendly_name': 'NC3 Fixture Microgrid action',
-      'options': list([
+      <SelectEntityCapabilityAttribute.OPTIONS: 'options'>: list([
         'powered',
         'not_powered',
         'schedule',
@@ -813,7 +813,7 @@
     ]),
     'area_id': None,
     'capabilities': dict({
-      'options': list([
+      <SelectEntityCapabilityAttribute.OPTIONS: 'options'>: list([
         'standard',
         'battery',
       ]),
@@ -852,7 +852,7 @@
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'friendly_name': 'NC3 Fixture Mode',
-      'options': list([
+      <SelectEntityCapabilityAttribute.OPTIONS: 'options'>: list([
         'standard',
         'battery',
       ]),

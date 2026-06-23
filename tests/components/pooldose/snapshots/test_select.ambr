@@ -6,7 +6,7 @@
     ]),
     'area_id': None,
     'capabilities': dict({
-      'options': list([
+      <SelectEntityCapabilityAttribute.OPTIONS: 'options'>: list([
         'off',
         'proportional',
         'on_off',
@@ -47,7 +47,7 @@
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'friendly_name': 'Pool Device Chlorine dosing method',
-      'options': list([
+      <SelectEntityCapabilityAttribute.OPTIONS: 'options'>: list([
         'off',
         'proportional',
         'on_off',
@@ -69,7 +69,7 @@
     ]),
     'area_id': None,
     'capabilities': dict({
-      'options': list([
+      <SelectEntityCapabilityAttribute.OPTIONS: 'options'>: list([
         'low',
         'high',
       ]),
@@ -108,7 +108,7 @@
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'friendly_name': 'Pool Device Chlorine dosing set',
-      'options': list([
+      <SelectEntityCapabilityAttribute.OPTIONS: 'options'>: list([
         'low',
         'high',
       ]),
@@ -128,7 +128,7 @@
     ]),
     'area_id': None,
     'capabilities': dict({
-      'options': list([
+      <SelectEntityCapabilityAttribute.OPTIONS: 'options'>: list([
         <UnitOfVolumeFlowRate.CUBIC_METERS_PER_HOUR: 'm³/h'>,
         <UnitOfVolumeFlowRate.LITERS_PER_SECOND: 'L/s'>,
       ]),
@@ -167,7 +167,7 @@
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'friendly_name': 'Pool Device Flow rate unit',
-      'options': list([
+      <SelectEntityCapabilityAttribute.OPTIONS: 'options'>: list([
         <UnitOfVolumeFlowRate.CUBIC_METERS_PER_HOUR: 'm³/h'>,
         <UnitOfVolumeFlowRate.LITERS_PER_SECOND: 'L/s'>,
       ]),
@@ -187,7 +187,7 @@
     ]),
     'area_id': None,
     'capabilities': dict({
-      'options': list([
+      <SelectEntityCapabilityAttribute.OPTIONS: 'options'>: list([
         'off',
         'proportional',
         'on_off',
@@ -228,7 +228,7 @@
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'friendly_name': 'Pool Device ORP dosing method',
-      'options': list([
+      <SelectEntityCapabilityAttribute.OPTIONS: 'options'>: list([
         'off',
         'proportional',
         'on_off',
@@ -250,7 +250,7 @@
     ]),
     'area_id': None,
     'capabilities': dict({
-      'options': list([
+      <SelectEntityCapabilityAttribute.OPTIONS: 'options'>: list([
         'low',
         'high',
       ]),
@@ -289,7 +289,7 @@
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'friendly_name': 'Pool Device ORP dosing set',
-      'options': list([
+      <SelectEntityCapabilityAttribute.OPTIONS: 'options'>: list([
         'low',
         'high',
       ]),
@@ -309,7 +309,7 @@
     ]),
     'area_id': None,
     'capabilities': dict({
-      'options': list([
+      <SelectEntityCapabilityAttribute.OPTIONS: 'options'>: list([
         'off',
         'proportional',
         'on_off',
@@ -350,7 +350,7 @@
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'friendly_name': 'Pool Device pH dosing method',
-      'options': list([
+      <SelectEntityCapabilityAttribute.OPTIONS: 'options'>: list([
         'off',
         'proportional',
         'on_off',
@@ -372,7 +372,7 @@
     ]),
     'area_id': None,
     'capabilities': dict({
-      'options': list([
+      <SelectEntityCapabilityAttribute.OPTIONS: 'options'>: list([
         'alcalyne',
         'acid',
       ]),
@@ -411,7 +411,7 @@
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'friendly_name': 'Pool Device pH dosing set',
-      'options': list([
+      <SelectEntityCapabilityAttribute.OPTIONS: 'options'>: list([
         'alcalyne',
         'acid',
       ]),
@@ -431,7 +431,7 @@
     ]),
     'area_id': None,
     'capabilities': dict({
-      'options': list([
+      <SelectEntityCapabilityAttribute.OPTIONS: 'options'>: list([
         <UnitOfVolume.LITERS: 'L'>,
         <UnitOfVolume.CUBIC_METERS: 'm³'>,
       ]),
@@ -470,7 +470,7 @@
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'friendly_name': 'Pool Device Water meter unit',
-      'options': list([
+      <SelectEntityCapabilityAttribute.OPTIONS: 'options'>: list([
         <UnitOfVolume.LITERS: 'L'>,
         <UnitOfVolume.CUBIC_METERS: 'm³'>,
       ]),

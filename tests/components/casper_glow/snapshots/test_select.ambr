@@ -6,7 +6,7 @@
     ]),
     'area_id': None,
     'capabilities': dict({
-      'options': list([
+      <SelectEntityCapabilityAttribute.OPTIONS: 'options'>: list([
         '15',
         '30',
         '45',
@@ -48,7 +48,7 @@
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'friendly_name': 'Jar Dimming time',
-      'options': list([
+      <SelectEntityCapabilityAttribute.OPTIONS: 'options'>: list([
         '15',
         '30',
         '45',

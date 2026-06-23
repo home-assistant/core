@@ -6,7 +6,7 @@
     ]),
     'area_id': None,
     'capabilities': dict({
-      'options': list([
+      <SelectEntityCapabilityAttribute.OPTIONS: 'options'>: list([
         '0',
         'Here comes',
         'the hotstepper',
@@ -54,7 +54,7 @@
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'friendly_name': 'CTD 000001 Stepper',
-      'options': list([
+      <SelectEntityCapabilityAttribute.OPTIONS: 'options'>: list([
         '0',
         'Here comes',
         'the hotstepper',

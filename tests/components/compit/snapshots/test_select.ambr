@@ -6,7 +6,7 @@
     ]),
     'area_id': None,
     'capabilities': dict({
-      'options': list([
+      <SelectEntityCapabilityAttribute.OPTIONS: 'options'>: list([
         'off',
         'auto',
         'on',
@@ -46,7 +46,7 @@
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'friendly_name': 'Nano Color 2 Bypass',
-      'options': list([
+      <SelectEntityCapabilityAttribute.OPTIONS: 'options'>: list([
         'off',
         'auto',
         'on',
@@ -67,7 +67,7 @@
     ]),
     'area_id': None,
     'capabilities': dict({
-      'options': list([
+      <SelectEntityCapabilityAttribute.OPTIONS: 'options'>: list([
         'polish',
         'english',
       ]),
@@ -106,7 +106,7 @@
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'friendly_name': 'Nano Color 2 Language',
-      'options': list([
+      <SelectEntityCapabilityAttribute.OPTIONS: 'options'>: list([
         'polish',
         'english',
       ]),
@@ -126,7 +126,7 @@
     ]),
     'area_id': None,
     'capabilities': dict({
-      'options': list([
+      <SelectEntityCapabilityAttribute.OPTIONS: 'options'>: list([
         'disabled',
         'eco',
         'hybrid',
@@ -166,7 +166,7 @@
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'friendly_name': 'R 900 Operating mode',
-      'options': list([
+      <SelectEntityCapabilityAttribute.OPTIONS: 'options'>: list([
         'disabled',
         'eco',
         'hybrid',

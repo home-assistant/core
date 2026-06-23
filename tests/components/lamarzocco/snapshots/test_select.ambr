@@ -3,7 +3,7 @@
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'friendly_name': 'LM012345 Brew by weight dose mode',
-      'options': list([
+      <SelectEntityCapabilityAttribute.OPTIONS: 'options'>: list([
         'continuous',
         'dose1',
         'dose2',
@@ -24,7 +24,7 @@
     ]),
     'area_id': None,
     'capabilities': dict({
-      'options': list([
+      <SelectEntityCapabilityAttribute.OPTIONS: 'options'>: list([
         'continuous',
         'dose1',
         'dose2',
@@ -64,7 +64,7 @@
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'friendly_name': 'GS012345 Prebrew/-infusion mode',
-      'options': list([
+      <SelectEntityCapabilityAttribute.OPTIONS: 'options'>: list([
         'disabled',
         'prebrew',
         'preinfusion',
@@ -85,7 +85,7 @@
     ]),
     'area_id': None,
     'capabilities': dict({
-      'options': list([
+      <SelectEntityCapabilityAttribute.OPTIONS: 'options'>: list([
         'disabled',
         'prebrew',
         'preinfusion',
@@ -125,7 +125,7 @@
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'friendly_name': 'MR012345 Prebrew/-infusion mode',
-      'options': list([
+      <SelectEntityCapabilityAttribute.OPTIONS: 'options'>: list([
         'disabled',
         'prebrew',
         'preinfusion',
@@ -146,7 +146,7 @@
     ]),
     'area_id': None,
     'capabilities': dict({
-      'options': list([
+      <SelectEntityCapabilityAttribute.OPTIONS: 'options'>: list([
         'disabled',
         'prebrew',
         'preinfusion',
@@ -186,7 +186,7 @@
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'friendly_name': 'LM012345 Prebrew/-infusion mode',
-      'options': list([
+      <SelectEntityCapabilityAttribute.OPTIONS: 'options'>: list([
         'disabled',
         'prebrew',
         'preinfusion',
@@ -207,7 +207,7 @@
     ]),
     'area_id': None,
     'capabilities': dict({
-      'options': list([
+      <SelectEntityCapabilityAttribute.OPTIONS: 'options'>: list([
         'disabled',
         'prebrew',
         'preinfusion',
@@ -247,7 +247,7 @@
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'friendly_name': 'GS012345 Smart standby mode',
-      'options': list([
+      <SelectEntityCapabilityAttribute.OPTIONS: 'options'>: list([
         'power_on',
         'last_brewing',
       ]),
@@ -267,7 +267,7 @@
     ]),
     'area_id': None,
     'capabilities': dict({
-      'options': list([
+      <SelectEntityCapabilityAttribute.OPTIONS: 'options'>: list([
         'power_on',
         'last_brewing',
       ]),
@@ -306,7 +306,7 @@
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'friendly_name': 'MR012345 Steam level',
-      'options': list([
+      <SelectEntityCapabilityAttribute.OPTIONS: 'options'>: list([
         '1',
         '2',
         '3',
@@ -327,7 +327,7 @@
     ]),
     'area_id': None,
     'capabilities': dict({
-      'options': list([
+      <SelectEntityCapabilityAttribute.OPTIONS: 'options'>: list([
         '1',
         '2',
         '3',
