@@ -6,7 +6,7 @@
       "already_configured": "Accessory is already configured with this controller.",
       "already_in_progress": "[%key:common::config_flow::abort::already_in_progress%]",
       "already_paired": "This accessory is already paired to another device. Please reset the accessory and try again.",
-      "ignored_model": "HomeKit support for this model is blocked as a more feature complete native integration is available.",
+      "ignored_model": "HomeKit support for this model is blocked as a more feature-complete native integration is available.",
       "invalid_config_entry": "This device is showing as ready to pair but there is already a conflicting configuration entry for it in Home Assistant that must first be removed.",
       "invalid_properties": "Invalid properties announced by device.",
       "no_devices": "No unpaired devices could be found"
@@ -22,11 +22,11 @@
     "flow_title": "{name} ({category})",
     "step": {
       "busy_error": {
-        "description": "Abort pairing on all controllers, or try restarting the device, then continue to resume pairing.",
+        "description": "Abort pairing on all controllers, or try restarting the device, then try pairing again.",
         "title": "The device is already pairing with another controller"
       },
       "max_tries_error": {
-        "description": "The device has received more than 100 unsuccessful authentication attempts. Try restarting the device, then continue to resume pairing.",
+        "description": "The device has received more than 100 unsuccessful authentication attempts. Try restarting the device, then try pairing again.",
         "title": "Maximum authentication attempts exceeded"
       },
       "pair": {
@@ -38,7 +38,7 @@
         "title": "Pair with a device via HomeKit Accessory Protocol"
       },
       "protocol_error": {
-        "description": "The device may not be in pairing mode and may require a physical or virtual button press. Ensure the device is in pairing mode or try restarting the device, then continue to resume pairing.",
+        "description": "The device may not be in pairing mode and may require a physical or virtual button press. Ensure the device is in pairing mode or try restarting the device, then try pairing again.",
         "title": "Error communicating with the accessory"
       },
       "user": {

@@ -8,7 +8,13 @@ import httpx
 import ollama
 
 from homeassistant.config_entries import ConfigEntry, ConfigSubentry
-from homeassistant.const import CONF_API_KEY, CONF_URL, Platform
+from homeassistant.const import (
+    CONF_API_KEY,
+    CONF_MODEL,
+    CONF_PROMPT,
+    CONF_URL,
+    Platform,
+)
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import (
     ConfigEntryAuthFailed,
@@ -26,9 +32,7 @@ from homeassistant.util.ssl import get_default_context
 from .const import (
     CONF_KEEP_ALIVE,
     CONF_MAX_HISTORY,
-    CONF_MODEL,
     CONF_NUM_CTX,
-    CONF_PROMPT,
     CONF_THINK,
     DEFAULT_AI_TASK_NAME,
     DEFAULT_NAME,
@@ -89,7 +93,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: OllamaConfigEntry) -> bo
         # in the UI, instead of ConfigEntryNotReady which would
         # just keep retrying.
         raise ConfigEntryError(err) from err
-    except (TimeoutError, httpx.ConnectError) as err:
+    except (TimeoutError, httpx.ConnectError, ConnectionError) as err:
         raise ConfigEntryNotReady(err) from err
 
     entry.runtime_data = client
@@ -231,10 +235,6 @@ async def async_migrate_integration(hass: HomeAssistant) -> None:
 async def async_migrate_entry(hass: HomeAssistant, entry: OllamaConfigEntry) -> bool:
     """Migrate entry."""
     _LOGGER.debug("Migrating from version %s:%s", entry.version, entry.minor_version)
-
-    if entry.version > 3:
-        # This means the user has downgraded from a future version
-        return False
 
     if entry.version == 2 and entry.minor_version == 1:
         # Correct broken device migration in Home Assistant Core 2025.7.0b0-2025.7.0b1

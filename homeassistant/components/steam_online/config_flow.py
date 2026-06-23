@@ -1,7 +1,7 @@
 """Config flow for Steam integration."""
 
 from collections.abc import Iterator, Mapping
-from typing import Any
+from typing import Any, override
 
 import steam
 import voluptuous as vol
@@ -36,12 +36,14 @@ class SteamFlowHandler(ConfigFlow, domain=DOMAIN):
 
     @staticmethod
     @callback
+    @override
     def async_get_options_flow(
         config_entry: SteamConfigEntry,
     ) -> SteamOptionsFlowHandler:
         """Get the options flow for this handler."""
         return SteamOptionsFlowHandler(config_entry)
 
+    @override
     async def async_step_user(
         self, user_input: dict[str, Any] | None = None
     ) -> ConfigFlowResult:

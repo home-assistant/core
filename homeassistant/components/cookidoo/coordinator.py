@@ -3,6 +3,7 @@
 from dataclasses import dataclass
 from datetime import timedelta
 import logging
+from typing import override
 
 from cookidoo_api import (
     Cookidoo,
@@ -59,6 +60,7 @@ class CookidooDataUpdateCoordinator(DataUpdateCoordinator[CookidooData]):
         )
         self.cookidoo = cookidoo
 
+    @override
     async def _async_setup(self) -> None:
         try:
             await self.cookidoo.login()
@@ -77,6 +79,7 @@ class CookidooDataUpdateCoordinator(DataUpdateCoordinator[CookidooData]):
                 },
             ) from e
 
+    @override
     async def _async_update_data(self) -> CookidooData:
         try:
             ingredient_items = await self.cookidoo.get_ingredient_items()
@@ -87,7 +90,7 @@ class CookidooDataUpdateCoordinator(DataUpdateCoordinator[CookidooData]):
             )
         except CookidooAuthException:
             try:
-                await self.cookidoo.refresh_token()
+                await self.cookidoo.login()
             except CookidooAuthException as exc:
                 raise ConfigEntryAuthFailed(
                     translation_domain=DOMAIN,
@@ -95,6 +98,11 @@ class CookidooDataUpdateCoordinator(DataUpdateCoordinator[CookidooData]):
                     translation_placeholders={
                         CONF_EMAIL: self.config_entry.data[CONF_EMAIL]
                     },
+                ) from exc
+            except CookidooRequestException as exc:
+                raise UpdateFailed(
+                    translation_domain=DOMAIN,
+                    translation_key="setup_request_exception",
                 ) from exc
             _LOGGER.debug(
                 "Authentication failed but re-authentication"

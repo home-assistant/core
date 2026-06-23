@@ -1,9 +1,8 @@
 """Support for entities of the Evohome integration."""
 
 from collections.abc import Mapping
-from datetime import UTC, datetime
 import logging
-from typing import Any
+from typing import Any, override
 
 import evohomeasync2 as evo
 from evohomeasync2.schemas.const import (
@@ -14,6 +13,7 @@ from evohomeasync2.schemas.typedefs import DayOfWeekDhwT
 
 from homeassistant.core import callback
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
+from homeassistant.util import dt as dt_util
 
 from .coordinator import EvoDataUpdateCoordinator
 
@@ -58,11 +58,13 @@ class EvoEntity(CoordinatorEntity[EvoDataUpdateCoordinator]):
         self._device_state_attrs: dict[str, Any] = {}
 
     @property
+    @override
     def extra_state_attributes(self) -> Mapping[str, Any]:
         """Return the evohome-specific state attributes."""
         return {"status": self._device_state_attrs}
 
     @callback
+    @override
     def _handle_coordinator_update(self) -> None:
         """Handle updated data from the coordinator."""
 
@@ -161,7 +163,7 @@ class EvoChild(EvoEntity):
             or self._schedule is None
             or (
                 (until := self._setpoints.get("next_sp_from")) is not None
-                and until < datetime.now(UTC)
+                and until < dt_util.utcnow()
             )
         ):  # must use self._setpoints, not self.setpoints
             await get_schedule()
@@ -169,6 +171,7 @@ class EvoChild(EvoEntity):
         _ = self.setpoints  # update the setpoints attr
 
     @callback
+    @override
     def _handle_coordinator_update(self) -> None:
         """Handle updated data from the coordinator."""
 
@@ -179,6 +182,7 @@ class EvoChild(EvoEntity):
 
         super()._handle_coordinator_update()
 
+    @override
     async def update_attrs(self) -> None:
         """Update the entity's extra state attrs."""
         await self._update_schedule()

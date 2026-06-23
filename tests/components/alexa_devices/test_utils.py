@@ -3,7 +3,11 @@
 from unittest.mock import AsyncMock
 
 from aioamazondevices.const.devices import SPEAKER_GROUP_FAMILY
-from aioamazondevices.exceptions import CannotConnect, CannotRetrieveData
+from aioamazondevices.exceptions import (
+    CannotAuthenticate,
+    CannotConnect,
+    CannotRetrieveData,
+)
 import pytest
 
 from homeassistant.components.alexa_devices.const import DOMAIN
@@ -25,15 +29,37 @@ ENTITY_ID = "switch.echo_test_do_not_disturb"
 @pytest.mark.parametrize(
     ("side_effect", "key", "error"),
     [
-        (CannotConnect, "cannot_connect_with_error", "CannotConnect()"),
-        (CannotRetrieveData, "cannot_retrieve_data_with_error", "CannotRetrieveData()"),
+        pytest.param(
+            CannotAuthenticate,
+            "invalid_auth",
+            "CannotAuthenticate()",
+            id="cannot_authenticate",
+        ),
+        pytest.param(
+            CannotConnect,
+            "cannot_connect_with_error",
+            "CannotConnect()",
+            id="cannot_connect",
+        ),
+        pytest.param(
+            CannotRetrieveData,
+            "cannot_retrieve_data_with_error",
+            "CannotRetrieveData()",
+            id="cannot_retrieve_data",
+        ),
+        pytest.param(
+            ValueError,
+            "cannot_retrieve_data_with_error",
+            "ValueError()",
+            id="value_error",
+        ),
     ],
 )
 async def test_alexa_api_call_exceptions(
     hass: HomeAssistant,
     mock_amazon_devices_client: AsyncMock,
     mock_config_entry: MockConfigEntry,
-    side_effect: Exception,
+    side_effect: type[Exception],
     key: str,
     error: str,
 ) -> None:
