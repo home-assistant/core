@@ -512,11 +512,16 @@ async def _async_get_webhook_url(
 
     When a Nabu Casa cloud subscription is active we create (and persist) a
     cloudhook and prefer it, so local-only installs without a public
-    ``external_url`` can still receive SwitchBot push events. Otherwise we fall
-    back to the locally generated webhook URL.
+    ``external_url`` can still receive SwitchBot push events. Creating a
+    cloudhook requires the cloud connection to be established; when a
+    subscription is active but not yet connected, we fall back to the local URL
+    and let the connection-change listener create the cloudhook once connected.
+    Without a subscription we use the locally generated webhook URL.
     """
     if cloud.async_active_subscription(hass):
-        if CONF_CLOUDHOOK_URL not in entry.data:
+        if CONF_CLOUDHOOK_URL in entry.data:
+            return str(entry.data[CONF_CLOUDHOOK_URL])
+        if cloud.async_is_connected(hass):
             webhook_id = entry.data[CONF_WEBHOOK_ID]
             # A previous run may have left a cloudhook registered for this
             # webhook id; delete it so we can create a fresh one.
@@ -528,7 +533,6 @@ async def _async_get_webhook_url(
             )
             _LOGGER.debug("Created SwitchBot Cloud cloudhook: %s", cloudhook_url)
             return cloudhook_url
-        return str(entry.data[CONF_CLOUDHOOK_URL])
 
     return webhook.async_generate_url(
         hass,

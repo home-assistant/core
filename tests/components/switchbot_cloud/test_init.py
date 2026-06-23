@@ -546,6 +546,69 @@ async def test_cloud_connects_after_setup(
 
     # Cloud becomes active and connects.
     with (
+        patch("homeassistant.components.cloud.async_is_connected", return_value=True),
+        patch.object(cloud, "async_active_subscription", return_value=True),
+        patch(
+            "homeassistant.components.cloud.async_create_cloudhook",
+            return_value=CLOUDHOOK_URL,
+        ) as fake_create_cloudhook,
+        patch("homeassistant.components.cloud.async_delete_cloudhook"),
+    ):
+        async_mock_cloud_connection_status(hass, True)
+        await hass.async_block_till_done()
+
+        fake_create_cloudhook.assert_called_once()
+        assert entry.data[CONF_CLOUDHOOK_URL] == CLOUDHOOK_URL
+        mock_setup_webhook.assert_called_with(CLOUDHOOK_URL)
+
+
+async def test_setup_active_subscription_not_connected(
+    hass: HomeAssistant,
+    mock_list_devices,
+    mock_get_status,
+    mock_get_webook_configuration,
+    mock_delete_webhook,
+    mock_setup_webhook,
+) -> None:
+    """Test no cloudhook is created while the cloud is not yet connected.
+
+    ``async_active_subscription`` is true as soon as the user is logged in with a
+    valid subscription, but ``async_create_cloudhook`` raises ``CloudNotConnected``
+    until the cloud connection is established. Setup must not call it (which would
+    propagate and abort setup); the connection-change listener creates the
+    cloudhook once connected.
+    """
+    await mock_cloud(hass)
+    await hass.async_block_till_done()
+
+    mock_get_webook_configuration.return_value = {"urls": []}
+    mock_list_devices.return_value = [_water_detector()]
+    mock_get_status.return_value = {"battery": 100}
+    mock_delete_webhook.return_value = {}
+    mock_setup_webhook.return_value = {}
+
+    # Subscription active, but the cloud connection is not established yet.
+    with (
+        patch("homeassistant.components.cloud.async_is_logged_in", return_value=True),
+        patch("homeassistant.components.cloud.async_is_connected", return_value=False),
+        patch.object(cloud, "async_active_subscription", return_value=True),
+        patch(
+            "homeassistant.components.cloud.async_create_cloudhook",
+            side_effect=cloud.CloudNotConnected,
+        ) as fake_create_cloudhook,
+        patch("homeassistant.components.cloud.async_delete_cloudhook"),
+    ):
+        entry = await configure_integration(hass)
+        await hass.async_block_till_done()
+
+        # Setup completed without aborting, and no cloudhook was created.
+        assert entry.state is ConfigEntryState.LOADED
+        fake_create_cloudhook.assert_not_called()
+        assert CONF_CLOUDHOOK_URL not in entry.data
+
+    # Once the cloud connects, the cloudhook is created and registered.
+    with (
+        patch("homeassistant.components.cloud.async_is_connected", return_value=True),
         patch.object(cloud, "async_active_subscription", return_value=True),
         patch(
             "homeassistant.components.cloud.async_create_cloudhook",
