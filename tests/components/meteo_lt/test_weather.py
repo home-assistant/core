@@ -80,7 +80,7 @@ async def test_condition_clear_maps_day_night(
     assert state.state == expected_condition
 
 
-@pytest.mark.freeze_time("2025-09-25 9:00:00")
+@pytest.mark.freeze_time("2025-09-25 10:00:00")
 async def test_forecast_hourly(
     hass: HomeAssistant,
     mock_config_entry: MockConfigEntry,
@@ -99,13 +99,13 @@ async def test_forecast_hourly(
     )
     forecasts = result["weather.vilnius"]["forecast"]
 
-    assert len(forecasts) == 9
-    assert forecasts[1]["condition"] == ATTR_CONDITION_PARTLYCLOUDY
-    assert forecasts[2]["condition"] == ATTR_CONDITION_CLOUDY
-    assert forecasts[3]["condition"] == ATTR_CONDITION_RAINY
+    assert len(forecasts) == 8
+    assert forecasts[0]["condition"] == ATTR_CONDITION_PARTLYCLOUDY  # 11:00
+    assert forecasts[1]["condition"] == ATTR_CONDITION_CLOUDY  # 12:00
+    assert forecasts[3]["condition"] == ATTR_CONDITION_RAINY  # 2025-09-27
 
 
-@pytest.mark.freeze_time("2025-09-25 9:00:00")
+@pytest.mark.freeze_time("2025-09-25 10:00:00")
 async def test_forecast_daily(
     hass: HomeAssistant,
     mock_config_entry: MockConfigEntry,
@@ -127,10 +127,10 @@ async def test_forecast_daily(
     assert len(forecasts) == 7
 
     first_day = forecasts[0]
-    assert first_day["temperature"] == 13.5  # max(10.9, 12.2, 13.5)
-    assert first_day["templow"] == 10.9  # min(10.9, 12.2, 13.5)
-    assert first_day["precipitation"] == pytest.approx(0.1)  # sum: 0 + 0 + 0.1
+    assert first_day["temperature"] == 13.5  # max(12.2, 13.5)
+    assert first_day["templow"] == 12.2  # min(12.2, 13.5)
+    assert first_day["precipitation"] == pytest.approx(0.1)  # sum: 0 + 0.1
     assert first_day["condition"] == ATTR_CONDITION_CLOUDY  # midday 12:00 → "cloudy"
 
-    second_day = forecasts[1]
-    assert second_day["condition"] == ATTR_CONDITION_RAINY  # 2025-09-26 → "rain"
+    rainy_day = forecasts[2]
+    assert rainy_day["condition"] == ATTR_CONDITION_RAINY  # 2025-09-27 → "rain"
