@@ -256,10 +256,10 @@
       "name": "Dial a phone number"
     },
     "get_mesh_info": {
-      "description": "Return the last mesh information reported by the FRITZ!Box.",
+      "description": "Returns the last mesh information reported by the FRITZ!Box.",
       "fields": {
         "config_entry_id": {
-          "description": "Config entry to use for the service call.",
+          "description": "The config entry to use for this action.",
           "name": "Config entry"
         }
       },

@@ -364,7 +364,7 @@ async def test_service_dial_unloaded(
         )
 
 
-async def test_get_mesh_topology_and_hosts_services_return_values(
+async def test_get_mesh_info_service_returns_stored_values(
     hass: HomeAssistant,
     fc_class_mock,
     fh_class_mock,
@@ -393,7 +393,7 @@ async def test_get_mesh_topology_and_hosts_services_return_values(
     }
 
 
-async def test_get_mesh_topology_and_hosts_services_raise_when_no_entries(
+async def test_get_mesh_info_service_raises_on_invalid_entry(
     hass: HomeAssistant,
 ) -> None:
     """Service should raise when invalid config entry is targeted."""
