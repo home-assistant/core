@@ -3,7 +3,11 @@
 from datetime import datetime, timedelta
 from typing import Any
 
-from astral.sun import dawn as astral_dawn, dusk as astral_dusk
+from astral.sun import (
+    dawn as astral_dawn,
+    dusk as astral_dusk,
+    elevation as astral_elevation,
+)
 from freezegun import freeze_time
 import pytest
 import voluptuous as vol
@@ -437,6 +441,60 @@ async def test_two_sunsets_on_one_day_at_kotzebue(
         async_fire_time_changed(hass, second + timedelta(seconds=1))
         await hass.async_block_till_done()
         assert len(service_calls) == 2
+
+
+@pytest.mark.parametrize(
+    ("trigger_key", "astral_event", "now", "above_horizon"),
+    [
+        # Midnight sun at Svalbard: solar midnight still occurs, with the sun's
+        # lowest point above the horizon.
+        (
+            "sun.solar_midnight",
+            "midnight",
+            datetime(2015, 6, 15, tzinfo=dt_util.UTC),
+            True,
+        ),
+        # Polar night at Svalbard: solar noon still occurs, with the sun's
+        # highest point below the horizon.
+        (
+            "sun.solar_noon",
+            "noon",
+            datetime(2015, 12, 15, tzinfo=dt_util.UTC),
+            False,
+        ),
+    ],
+)
+async def test_solar_noon_midnight_in_polar_regions(
+    hass: HomeAssistant,
+    service_calls: list[ServiceCall],
+    trigger_key: str,
+    astral_event: str,
+    now: datetime,
+    above_horizon: bool,
+) -> None:
+    """Test solar noon/midnight fire even when the sun never crosses the horizon.
+
+    Solar noon and solar midnight are the extremes of the sun's daily arc, so
+    they occur every day regardless of the horizon: solar midnight happens during
+    midnight sun (sun stays up) and solar noon happens during polar night (sun
+    stays down).
+    """
+    latitude, longitude, time_zone = _SVALBARD
+    await hass.config.async_set_time_zone(time_zone)
+    await hass.config.async_update(latitude=latitude, longitude=longitude, elevation=0)
+
+    with freeze_time(now):
+        await _arm_automation(hass, {"platform": trigger_key}, {})
+        expected = get_astral_event_next(hass, astral_event, now)
+        # The defining property: at the sun's lowest point it is still up
+        # (midnight sun), or at its highest point it is still down (polar night).
+        elevation = astral_elevation(get_astral_observer(hass), expected)
+        assert (elevation > -0.833) is above_horizon
+
+        async_fire_time_changed(hass, expected + timedelta(seconds=1))
+        await hass.async_block_till_done()
+
+    assert len(service_calls) == 1
 
 
 # --- Sun elevation triggers --------------------------------------------------
