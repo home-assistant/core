@@ -821,6 +821,7 @@ class EsphomeAssistSatellite(
                             return
 
                         found_data_chunk = True
+                        data_bytes_remaining = chunk_size
                         parsing_headers = False
                         del bytes_buffer[:8]
                         _LOGGER.debug(
@@ -836,12 +837,16 @@ class EsphomeAssistSatellite(
                         del bytes_buffer[: 8 + padded_size]
 
                 if found_data_chunk:
-                    while len(bytes_buffer) >= bytes_per_chunk_payload:
+                    while (
+                        data_bytes_remaining >= bytes_per_chunk_payload
+                        and len(bytes_buffer) >= bytes_per_chunk_payload
+                    ):
                         if not self._is_running:
                             break  # type: ignore[unreachable]
 
                         payload = bytes(bytes_buffer[:bytes_per_chunk_payload])
                         del bytes_buffer[:bytes_per_chunk_payload]
+                        data_bytes_remaining -= bytes_per_chunk_payload
 
                         self._send_tts_audio(payload)
 
@@ -855,8 +860,14 @@ class EsphomeAssistSatellite(
                         if (wait_time := (audio_duration_sent - 0.384) - elapsed) > 0:
                             await asyncio.sleep(wait_time)
 
-            if found_data_chunk and len(bytes_buffer) > 0 and self._is_running:
-                self._send_tts_audio(bytes(bytes_buffer))
+            if (
+                found_data_chunk
+                and data_bytes_remaining > 0
+                and len(bytes_buffer) > 0
+                and self._is_running
+            ):
+                remaining = bytes(bytes_buffer[: data_bytes_remaining])
+                self._send_tts_audio(remaining)
 
         except asyncio.CancelledError:
             return  # Don't trigger state change
