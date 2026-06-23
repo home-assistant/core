@@ -296,9 +296,9 @@ class BaseProtectEntity(Entity):
         )
         # Not every entity carries an entity_description (e.g. cameras), so getattr.
         description = getattr(self, "entity_description", None)
-        if (
-            isinstance(description, ProtectEntityDescription)
-            and description.ufp_public_value is not None
+        if isinstance(description, ProtectEntityDescription) and (
+            description.ufp_public_value is not None
+            or description.ufp_public_value_fn is not None
         ):
             self._ufp_uses_public = True
             self._ufp_public_obj = self.data.async_get_public_device(self.device)
@@ -423,6 +423,8 @@ class ProtectEntityDescription(EntityDescription, Generic[T]):  # noqa: UP046
     ufp_value: str | None = None
     ufp_value_fn: Callable[[T], Any] | None = None
     ufp_public_value: str | None = None
+    # Callable variant of ``ufp_public_value`` for public values needing a transform.
+    ufp_public_value_fn: Callable[[PublicDeviceModel], Any] | None = None
     ufp_enabled: str | None = None
     ufp_perm: PermRequired | None = None
 
@@ -443,10 +445,13 @@ class ProtectEntityDescription(EntityDescription, Generic[T]):  # noqa: UP046
     def get_value(self, obj: T, public_obj: PublicDeviceModel | None = None) -> Any:
         """Return the value, reading from the public object when migrated.
 
-        A migrated description sets ``ufp_public_value`` and drops the private
-        ``ufp_value``: the value comes only from the public object, or ``None``
-        when it is absent (the entity is then marked unavailable).
+        A migrated description sets ``ufp_public_value`` (or ``ufp_public_value_fn``)
+        and drops the private ``ufp_value``: the value comes only from the public
+        object, or ``None`` when it is absent (the entity is then marked
+        unavailable).
         """
+        if (fn := self.ufp_public_value_fn) is not None:
+            return None if public_obj is None else fn(public_obj)
         if (getter := self.get_ufp_public_value) is not None:
             return None if public_obj is None else getter(public_obj)
         return self.get_ufp_value(obj)
