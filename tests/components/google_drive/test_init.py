@@ -195,7 +195,7 @@ async def test_runtime_token_refresh_failures(
 ) -> None:
     """Test transient and auth errors during runtime token refresh."""
     # We purposefully do not use `mock_api` here. We mock the raw HTTP endpoints
-    # so the integration natively tests its own auth layer during setup.
+    # so the integration exercises its own auth layer during runtime polling.
     aioclient_mock.get(
         "https://www.googleapis.com/drive/v3/files",
         json={"files": []},
