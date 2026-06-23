@@ -1,0 +1,20 @@
+[
+  {
+    "category": "server",
+    "data": {
+      "id": "vpn-server-1",
+      "name": "Road Warriors",
+      "status": true,
+      "vpnType": 3
+    }
+  },
+  {
+    "category": "site_to_site",
+    "data": {
+      "id": "vpn-s2s-1",
+      "name": "Branch Office",
+      "status": false,
+      "vpnType": 2
+    }
+  }
+]
