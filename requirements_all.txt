@@ -809,7 +809,7 @@ datadog==0.52.1
 datapoint==0.12.1
 
 # homeassistant.components.bluetooth
-dbus-fast==5.0.16
+dbus-fast==5.0.22
 
 # homeassistant.components.debugpy
 debugpy==1.8.21
@@ -1165,7 +1165,7 @@ goslide-api==0.7.4
 gotailwind==0.4.0
 
 # homeassistant.components.govee_ble
-govee-ble==1.2.0
+govee-ble==1.4.0
 
 # homeassistant.components.govee_light_local
 govee-local-api==2.4.0
