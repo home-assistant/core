@@ -130,6 +130,25 @@ class OverkizConfigFlow(
 
         return user_input
 
+    def _async_finish_validated_entry(
+        self, user_input: dict[str, Any], title: str
+    ) -> ConfigFlowResult:
+        """Create or update the entry once credentials have been validated."""
+        if self.source == SOURCE_REAUTH:
+            self._abort_if_unique_id_mismatch(reason="reauth_wrong_account")
+            return self.async_update_reload_and_abort(
+                self._get_reauth_entry(), data_updates=user_input
+            )
+
+        if self.source == SOURCE_RECONFIGURE:
+            self._abort_if_unique_id_mismatch(reason="reconfigure_wrong_account")
+            return self.async_update_reload_and_abort(
+                self._get_reconfigure_entry(), data=user_input
+            )
+
+        self._abort_if_unique_id_configured()
+        return self.async_create_entry(title=title, data=user_input)
+
     @override
     async def async_step_user(
         self, user_input: dict[str, Any] | None = None
@@ -266,27 +285,8 @@ class OverkizConfigFlow(
                 errors["base"] = "unknown"
                 LOGGER.exception("Unknown error")
             else:
-                if self.source == SOURCE_REAUTH:
-                    self._abort_if_unique_id_mismatch(reason="reauth_wrong_account")
-
-                    return self.async_update_reload_and_abort(
-                        self._get_reauth_entry(), data_updates=user_input
-                    )
-
-                if self.source == SOURCE_RECONFIGURE:
-                    self._abort_if_unique_id_mismatch(
-                        reason="reconfigure_wrong_account"
-                    )
-
-                    return self.async_update_reload_and_abort(
-                        self._get_reconfigure_entry(), data=user_input
-                    )
-
-                # Create new entry
-                self._abort_if_unique_id_configured()
-
-                return self.async_create_entry(
-                    title=user_input[CONF_USERNAME], data=user_input
+                return self._async_finish_validated_entry(
+                    user_input, title=user_input[CONF_USERNAME]
                 )
 
         return self.async_show_form(
@@ -345,27 +345,8 @@ class OverkizConfigFlow(
                 errors["base"] = "unknown"
                 LOGGER.exception("Unknown error")
             else:
-                if self.source == SOURCE_REAUTH:
-                    self._abort_if_unique_id_mismatch(reason="reauth_wrong_account")
-
-                    return self.async_update_reload_and_abort(
-                        self._get_reauth_entry(), data_updates=user_input
-                    )
-
-                if self.source == SOURCE_RECONFIGURE:
-                    self._abort_if_unique_id_mismatch(
-                        reason="reconfigure_wrong_account"
-                    )
-
-                    return self.async_update_reload_and_abort(
-                        self._get_reconfigure_entry(), data=user_input
-                    )
-
-                # Create new entry
-                self._abort_if_unique_id_configured()
-
-                return self.async_create_entry(
-                    title=user_input[CONF_HOST], data=user_input
+                return self._async_finish_validated_entry(
+                    user_input, title=user_input[CONF_HOST]
                 )
 
         return self.async_show_form(
