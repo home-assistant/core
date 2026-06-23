@@ -153,7 +153,7 @@
               'forced_hot_water_mode': False,
               'frost_protection': dict({
                 'active': False,
-                'enabled': False,
+                'enabled': True,
                 'max': 8.0,
                 'min': 5.0,
               }),
