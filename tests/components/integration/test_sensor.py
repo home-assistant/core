@@ -750,27 +750,35 @@ async def test_units(hass: HomeAssistant) -> None:
 
 
 @pytest.mark.parametrize(
-    ("source_sensor", "source_unit", "device_class", "expected_class"),
+    ("source_sensor", "source_unit", "source_class", "device_class", "expected_class"),
     [
         # Water supports the m³ unit, so it will be allowed
         (
             "sensor.cubic_meters_per_hour",
             "m³/h",
+            None,
             SensorDeviceClass.WATER,
             SensorDeviceClass.WATER,
         ),
         # Energy does not support this unit, so the device class will not be applied
-        ("sensor.cubic_meters_per_hour", "m³/h", SensorDeviceClass.ENERGY, None),
+        ("sensor.cubic_meters_per_hour", "m³/h", None, SensorDeviceClass.ENERGY, None),
         # With no user-supplied device class, infer it from the source sensor (which has none for this test source)
-        ("sensor.cubic_meters_per_hour", "m³/h", None, None),
+        ("sensor.cubic_meters_per_hour", "m³/h", None, None, None),
         # With no user-supplied device class, infer it from the source sensor (which is energy for this test source)
-        ("sensor.power", UnitOfPower.KILO_WATT, None, SensorDeviceClass.ENERGY),
+        (
+            "sensor.power",
+            UnitOfPower.KILO_WATT,
+            SensorDeviceClass.POWER,
+            None,
+            SensorDeviceClass.ENERGY,
+        ),
         # Date is not allowed because it has no supported state class
-        ("sensor.cubic_meters_per_hour", "m³/h", SensorDeviceClass.DATE, None),
+        ("sensor.cubic_meters_per_hour", "m³/h", None, SensorDeviceClass.DATE, None),
         # Monetary allows any unit, so the device class will be applied even if the unit is nonsense
         (
             "sensor.cubic_meters_per_hour",
             "m³/h",
+            None,
             SensorDeviceClass.MONETARY,
             SensorDeviceClass.MONETARY,
         ),
@@ -780,6 +788,7 @@ async def test_device_class_user(
     hass: HomeAssistant,
     source_sensor: str,
     source_unit: str,
+    source_class: SensorDeviceClass | None,
     device_class: SensorDeviceClass | None,
     expected_class: SensorDeviceClass | None,
 ) -> None:
@@ -797,13 +806,9 @@ async def test_device_class_user(
     if device_class is not None:
         config["sensor"]["device_class"] = device_class
 
-    if source_unit == UnitOfPower.KILO_WATT:
-        source_config = {
-            ATTR_DEVICE_CLASS: SensorDeviceClass.POWER,
-            ATTR_UNIT_OF_MEASUREMENT: source_unit,
-        }
-    else:
-        source_config = {ATTR_UNIT_OF_MEASUREMENT: source_unit}
+    source_config = {ATTR_UNIT_OF_MEASUREMENT: source_unit}
+    if source_class is not None:
+        source_config[ATTR_DEVICE_CLASS] = source_class
 
     assert await async_setup_component(hass, "sensor", config)
 
@@ -833,11 +838,7 @@ async def test_device_class_user(
     assert state is not None
 
     # Ensure user device class matches expected
-    actual_class = state.attributes.get(ATTR_DEVICE_CLASS)
-    if expected_class is None:
-        assert actual_class is None
-    else:
-        assert actual_class == expected_class
+    assert state.attributes.get(ATTR_DEVICE_CLASS) == expected_class
 
 
 @pytest.mark.parametrize("method", ["trapezoidal", "left", "right"])
