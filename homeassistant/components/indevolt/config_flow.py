@@ -250,7 +250,7 @@ class IndevoltOptionsFlowHandler(OptionsFlow):
         # Reverse-look up the semantic key for the currently stored interval
         current_key = next(
             (k for k, v in SCAN_INTERVAL_OPTIONS.items() if v == current_interval),
-            "standard",
+            "frequency_medium",
         )
         return self.async_show_form(
             step_id="init",
