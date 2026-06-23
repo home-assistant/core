@@ -93,8 +93,8 @@
       "child_lock": {
         "name": "Child lock"
       },
-      "boost_enabled": {
-        "name": "Boost enabled"
+      "boost_mode": {
+        "name": "Boost mode"
       }
     }
   },
