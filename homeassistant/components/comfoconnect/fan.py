@@ -2,7 +2,7 @@
 
 import logging
 import math
-from typing import Any
+from typing import Any, override
 
 from pycomfoconnect import (
     CMD_FAN_MODE_AWAY,
@@ -77,6 +77,7 @@ class ComfoConnectFan(FanEntity):
         self._attr_unique_id = ccb.unique_id
         self._attr_preset_mode = None
 
+    @override
     async def async_added_to_hass(self) -> None:
         """Register for sensor updates."""
         _LOGGER.debug("Registering for fan speed")
@@ -120,6 +121,7 @@ class ComfoConnectFan(FanEntity):
         self.schedule_update_ha_state()
 
     @property
+    @override
     def percentage(self) -> int | None:
         """Return the current speed percentage."""
         if self.current_speed is None:
@@ -127,10 +129,12 @@ class ComfoConnectFan(FanEntity):
         return ranged_value_to_percentage(SPEED_RANGE, self.current_speed)
 
     @property
+    @override
     def speed_count(self) -> int:
         """Return the number of speeds the fan supports."""
         return int_states_in_range(SPEED_RANGE)
 
+    @override
     def turn_on(
         self,
         percentage: int | None = None,
@@ -147,10 +151,12 @@ class ComfoConnectFan(FanEntity):
         else:
             self.set_percentage(percentage)
 
+    @override
     def turn_off(self, **kwargs: Any) -> None:
         """Turn off the fan (to away)."""
         self.set_percentage(0)
 
+    @override
     def set_percentage(self, percentage: int) -> None:
         """Set fan speed percentage."""
         _LOGGER.debug("Changing fan speed percentage to %s", percentage)
@@ -163,6 +169,7 @@ class ComfoConnectFan(FanEntity):
 
         self._ccb.comfoconnect.cmd_rmi_request(cmd)
 
+    @override
     def set_preset_mode(self, preset_mode: str) -> None:
         """Set new preset mode."""
         if not self.preset_modes or preset_mode not in self.preset_modes:

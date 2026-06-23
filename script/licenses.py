@@ -69,6 +69,7 @@ OSI_APPROVED_LICENSES_SPDX = {
     "BSD-1-Clause",
     "BSD-2-Clause",
     "BSD-3-Clause",
+    "CNRI-Python",
     "EPL-1.0",
     "EPL-2.0",
     "GPL-2.0-only",
@@ -187,12 +188,11 @@ EXCEPTIONS = {
     "eliqonline",  # https://github.com/molobrakos/eliqonline/pull/17
     "imutils",  # https://github.com/PyImageSearch/imutils/pull/292
     "iso4217",  # Public domain
-    "kiwiki_client",  # https://github.com/c7h/kiwiki_client/pull/6
+    "kiwiki-client",  # https://github.com/c7h/kiwiki_client/pull/6
     "ld2410-ble",  # https://github.com/930913/ld2410-ble/pull/7
     "maxcube-api",  # https://github.com/uebelack/python-maxcube-api/pull/48
     "neurio",  # https://github.com/jordanh/neurio-python/pull/13
     "nsw-fuel-api-client",  # https://github.com/nickw444/nsw-fuel-api-client/pull/14
-    "ollama",  # https://github.com/ollama/ollama-python/pull/526
     "pigpio",  # https://github.com/joan2937/pigpio/pull/608
     "pymitv",  # MIT
     "pybbox",  # https://github.com/HydrelioxGitHub/pybbox/pull/5

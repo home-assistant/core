@@ -1,7 +1,7 @@
 """Kodi notification service."""
 
 import logging
-from typing import Any
+from typing import Any, override
 
 import aiohttp
 import jsonrpc_async
@@ -92,6 +92,7 @@ class KodiNotificationService(BaseNotificationService):
 
         self._server = jsonrpc_async.Server(self._url, **kwargs)
 
+    @override
     async def async_send_message(self, message: str = "", **kwargs: Any) -> None:
         """Send a message to Kodi."""
         try:

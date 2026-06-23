@@ -486,7 +486,7 @@ async def test_assist_api_tools_conversion(
     mock_create_stream,
 ) -> None:
     """Test that we are able to convert actual tools from Assist API."""
-    for component in (
+    for domain in (
         "calendar",
         "climate",
         "cover",
@@ -500,9 +500,9 @@ async def test_assist_api_tools_conversion(
         "vacuum",
         "weather",
     ):
-        assert await async_setup_component(hass, component, {})
-        hass.states.async_set(f"{component}.test", "on")
-        async_expose_entity(hass, "conversation", f"{component}.test", True)
+        assert await async_setup_component(hass, domain, {})
+        hass.states.async_set(f"{domain}.test", "on")
+        async_expose_entity(hass, "conversation", f"{domain}.test", True)
 
     async_register_timer_handler(hass, "test_device", lambda *args: None)
 

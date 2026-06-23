@@ -1,5 +1,7 @@
 """Support for Solax inverter via local API."""
 
+from typing import override
+
 from solax.units import Units
 
 from homeassistant.components.sensor import (
@@ -143,6 +145,7 @@ class InverterSensorEntity(CoordinatorEntity, SensorEntity):
         self.key = key
 
     @property
+    @override
     def native_value(self):
         """State of this inverter attribute."""
         return self.coordinator.data.data[self.key]

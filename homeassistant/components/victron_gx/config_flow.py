@@ -2,7 +2,7 @@
 
 from collections.abc import Mapping
 import logging
-from typing import Any
+from typing import Any, override
 from urllib.parse import urlparse
 
 from victron_mqtt import AuthenticationError, CannotConnectError, Hub as VictronVenusHub
@@ -111,6 +111,7 @@ class VictronGXConfigFlow(ConfigFlow, domain=DOMAIN):
         self.friendly_name: str | None = None
         self.model_name: str | None = None
 
+    @override
     async def async_step_user(
         self, user_input: dict[str, Any] | None = None
     ) -> ConfigFlowResult:
@@ -161,6 +162,7 @@ class VictronGXConfigFlow(ConfigFlow, domain=DOMAIN):
             errors=errors,
         )
 
+    @override
     async def async_step_ssdp(
         self, discovery_info: SsdpServiceInfo
     ) -> ConfigFlowResult:

@@ -1,6 +1,6 @@
 """Support for NZBGet switches."""
 
-from typing import Any
+from typing import Any, override
 
 from homeassistant.components.switch import SwitchEntity
 from homeassistant.const import CONF_NAME
@@ -51,15 +51,18 @@ class NZBGetDownloadSwitch(NZBGetEntity, SwitchEntity):
         )
 
     @property
+    @override
     def is_on(self) -> bool:
         """Return the state of the switch."""
         return not self.coordinator.data["status"].get("DownloadPaused", False)
 
+    @override
     async def async_turn_on(self, **kwargs: Any) -> None:
         """Set downloads to enabled."""
         await self.hass.async_add_executor_job(self.coordinator.nzbget.resumedownload)
         await self.coordinator.async_request_refresh()
 
+    @override
     async def async_turn_off(self, **kwargs: Any) -> None:
         """Set downloads to paused."""
         await self.hass.async_add_executor_job(self.coordinator.nzbget.pausedownload)
