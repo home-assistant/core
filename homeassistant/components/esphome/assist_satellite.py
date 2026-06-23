@@ -768,6 +768,12 @@ class EsphomeAssistSatellite(
                         if len(bytes_buffer) < 8 + chunk_size:
                             break  # wait for full fmt chunk
 
+                        if chunk_size < 16:
+                            _LOGGER.error(
+                                "WAV fmt chunk too small: %s bytes", chunk_size
+                            )
+                            return
+
                         # Parse fmt chunk (we only need the first 16 bytes of it)
                         (
                             audio_format,
