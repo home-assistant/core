@@ -30,6 +30,8 @@ from .const import (
     MOCK_USER_INPUT_PLM_MANUAL,
     PATCH_ASYNC_SETUP_ENTRY,
     PATCH_CONNECTION,
+    PATCH_CONNECTION_CLOSE,
+    PATCH_DEVICES,
     PATCH_USB_LIST,
 )
 
@@ -441,3 +443,30 @@ async def test_reconfigure_plm_manual(hass: HomeAssistant) -> None:
     assert result["reason"] == "reconfigure_successful"
     assert config_entry.data == {CONF_DEVICE: "/dev/ttyUSB99"}
     assert len(mock_setup_entry.mock_calls) == 1
+
+
+async def test_reconfigure_closes_existing_connection(hass: HomeAssistant) -> None:
+    """Test reconfiguring a connected modem closes the old connection first."""
+    config_entry = MockConfigEntry(
+        domain=DOMAIN, data={**MOCK_USER_INPUT_HUB_V2, CONF_HUB_VERSION: 2}
+    )
+    config_entry.add_to_hass(hass)
+
+    result = await config_entry.start_reconfigure_flow(hass)
+    assert result["type"] is FlowResultType.FORM
+
+    with (
+        patch(PATCH_CONNECTION, new=mock_successful_connection),
+        patch(PATCH_CONNECTION_CLOSE) as mock_close,
+        patch(PATCH_DEVICES) as mock_devices,
+        patch(PATCH_ASYNC_SETUP_ENTRY, return_value=True),
+    ):
+        mock_devices.modem = True
+        result = await hass.config_entries.flow.async_configure(
+            result["flow_id"], {**MOCK_USER_INPUT_HUB_V2, CONF_HOST: "2.3.4.5"}
+        )
+        await hass.async_block_till_done()
+
+    assert mock_close.called
+    assert result["type"] is FlowResultType.ABORT
+    assert result["reason"] == "reconfigure_successful"

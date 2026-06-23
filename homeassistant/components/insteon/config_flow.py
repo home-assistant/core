@@ -3,7 +3,7 @@
 import logging
 from typing import Any
 
-from pyinsteon import async_connect
+from pyinsteon import async_close, async_connect, devices
 
 from homeassistant.components import usb
 from homeassistant.config_entries import (
@@ -40,6 +40,8 @@ _LOGGER = logging.getLogger(__name__)
 
 async def _async_connect(**kwargs):
     """Connect to the Insteon modem."""
+    if devices.modem:
+        await async_close()
     try:
         await async_connect(**kwargs)
     except ConnectionError:
