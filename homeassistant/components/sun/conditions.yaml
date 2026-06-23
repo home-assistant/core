@@ -1,0 +1,23 @@
+.type: &condition_type
+  required: true
+  default: any
+  selector:
+    select:
+      translation_key: twilight_type
+      options:
+        - any
+        - civil
+        - nautical
+        - astronomical
+
+is_above_horizon: {}
+is_below_horizon: {}
+is_rising: {}
+is_descending: {}
+is_night: {}
+is_morning_twilight:
+  fields:
+    type: *condition_type
+is_evening_twilight:
+  fields:
+    type: *condition_type

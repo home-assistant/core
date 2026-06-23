@@ -1,4 +1,27 @@
 {
+  "conditions": {
+    "is_above_horizon": {
+      "condition": "mdi:weather-sunny"
+    },
+    "is_below_horizon": {
+      "condition": "mdi:weather-sunny-off"
+    },
+    "is_descending": {
+      "condition": "mdi:weather-sunset-down"
+    },
+    "is_evening_twilight": {
+      "condition": "mdi:weather-sunset-down"
+    },
+    "is_morning_twilight": {
+      "condition": "mdi:weather-sunset-up"
+    },
+    "is_night": {
+      "condition": "mdi:weather-night"
+    },
+    "is_rising": {
+      "condition": "mdi:weather-sunset-up"
+    }
+  },
   "entity": {
     "binary_sensor": {
       "solar_rising": {

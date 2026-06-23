@@ -4,15 +4,21 @@ from datetime import datetime
 
 from freezegun import freeze_time
 import pytest
+import voluptuous as vol
 
 from homeassistant.components import automation
 from homeassistant.const import SUN_EVENT_SUNRISE, SUN_EVENT_SUNSET
 from homeassistant.core import HomeAssistant, ServiceCall
 from homeassistant.helpers import trace
+from homeassistant.helpers.condition import async_validate_condition_config
 from homeassistant.setup import async_setup_component
 from homeassistant.util import dt as dt_util
 
 from tests.typing import WebSocketGenerator
+
+# San Diego (default test location) and Longyearbyen, Svalbard (deep polar).
+_SAN_DIEGO = (32.87336, -117.22743, "US/Pacific")
+_SVALBARD = (78.22, 15.65, "Europe/Oslo")
 
 
 @pytest.fixture(autouse=True)
@@ -1248,3 +1254,269 @@ async def test_if_action_after_sunset_no_offset_kotzebue(
         "sun",
         {"result": True, "wanted_time_after": "2015-07-23T11:22:18.467277+00:00"},
     )
+
+
+@pytest.mark.parametrize(
+    ("condition_key", "location", "now", "expected"),
+    [
+        # San Diego, just after solar noon (sun high, descending).
+        (
+            "sun.is_above_horizon",
+            _SAN_DIEGO,
+            datetime(2015, 9, 15, 20, tzinfo=dt_util.UTC),
+            True,
+        ),
+        (
+            "sun.is_below_horizon",
+            _SAN_DIEGO,
+            datetime(2015, 9, 15, 20, tzinfo=dt_util.UTC),
+            False,
+        ),
+        (
+            "sun.is_descending",
+            _SAN_DIEGO,
+            datetime(2015, 9, 15, 20, tzinfo=dt_util.UTC),
+            True,
+        ),
+        (
+            "sun.is_rising",
+            _SAN_DIEGO,
+            datetime(2015, 9, 15, 20, tzinfo=dt_util.UTC),
+            False,
+        ),
+        (
+            "sun.is_night",
+            _SAN_DIEGO,
+            datetime(2015, 9, 15, 20, tzinfo=dt_util.UTC),
+            False,
+        ),
+        # San Diego, just before solar noon (sun high, rising).
+        (
+            "sun.is_rising",
+            _SAN_DIEGO,
+            datetime(2015, 9, 15, 19, tzinfo=dt_util.UTC),
+            True,
+        ),
+        (
+            "sun.is_descending",
+            _SAN_DIEGO,
+            datetime(2015, 9, 15, 19, tzinfo=dt_util.UTC),
+            False,
+        ),
+        # San Diego, deep night.
+        (
+            "sun.is_below_horizon",
+            _SAN_DIEGO,
+            datetime(2015, 9, 15, 8, 30, tzinfo=dt_util.UTC),
+            True,
+        ),
+        (
+            "sun.is_above_horizon",
+            _SAN_DIEGO,
+            datetime(2015, 9, 15, 8, 30, tzinfo=dt_util.UTC),
+            False,
+        ),
+        (
+            "sun.is_night",
+            _SAN_DIEGO,
+            datetime(2015, 9, 15, 8, 30, tzinfo=dt_util.UTC),
+            True,
+        ),
+        # Svalbard: above the horizon during midnight sun (June), below during
+        # polar night (December).
+        (
+            "sun.is_above_horizon",
+            _SVALBARD,
+            datetime(2015, 6, 15, 12, tzinfo=dt_util.UTC),
+            True,
+        ),
+        (
+            "sun.is_below_horizon",
+            _SVALBARD,
+            datetime(2015, 12, 15, 12, tzinfo=dt_util.UTC),
+            True,
+        ),
+    ],
+)
+async def test_sun_state_conditions(
+    hass: HomeAssistant,
+    service_calls: list[ServiceCall],
+    condition_key: str,
+    location: tuple[float, float, str],
+    now: datetime,
+    expected: bool,
+) -> None:
+    """Test the option-less sun state conditions evaluate from the sun position."""
+    latitude, longitude, time_zone = location
+    await hass.config.async_set_time_zone(time_zone)
+    hass.config.latitude = latitude
+    hass.config.longitude = longitude
+    await async_setup_component(
+        hass,
+        automation.DOMAIN,
+        {
+            automation.DOMAIN: {
+                "trigger": {"platform": "event", "event_type": "test_event"},
+                "condition": {"condition": condition_key},
+                "action": {"service": "test.automation"},
+            }
+        },
+    )
+
+    with freeze_time(now):
+        hass.bus.async_fire("test_event")
+        await hass.async_block_till_done()
+
+    assert bool(service_calls) is expected
+
+
+@pytest.mark.parametrize(
+    "condition_key",
+    [
+        "sun.is_above_horizon",
+        "sun.is_below_horizon",
+        "sun.is_rising",
+        "sun.is_descending",
+        "sun.is_night",
+    ],
+)
+async def test_sun_state_condition_takes_no_options(
+    hass: HomeAssistant, condition_key: str
+) -> None:
+    """Test the sun state conditions accept no target and reject options."""
+    await async_validate_condition_config(hass, {"condition": condition_key})
+    with pytest.raises(vol.Invalid):
+        await async_validate_condition_config(
+            hass, {"condition": condition_key, "options": {"unknown": True}}
+        )
+
+
+@pytest.mark.parametrize(
+    ("condition_key", "twilight_type", "now", "expected"),
+    [
+        # San Diego morning twilight (rising). Elevations: 13:15Z ~ -4.4 (civil),
+        # 13:00Z ~ -7.6 (nautical), 12:30Z ~ -13.8 (astronomical), 12:00Z ~ -19.8
+        # (night).
+        (
+            "sun.is_morning_twilight",
+            "any",
+            datetime(2015, 9, 15, 13, 15, tzinfo=dt_util.UTC),
+            True,
+        ),
+        (
+            "sun.is_morning_twilight",
+            "civil",
+            datetime(2015, 9, 15, 13, 15, tzinfo=dt_util.UTC),
+            True,
+        ),
+        (
+            "sun.is_morning_twilight",
+            "nautical",
+            datetime(2015, 9, 15, 13, 15, tzinfo=dt_util.UTC),
+            False,
+        ),
+        (
+            "sun.is_morning_twilight",
+            "nautical",
+            datetime(2015, 9, 15, 13, 0, tzinfo=dt_util.UTC),
+            True,
+        ),
+        (
+            "sun.is_morning_twilight",
+            "astronomical",
+            datetime(2015, 9, 15, 12, 30, tzinfo=dt_util.UTC),
+            True,
+        ),
+        (
+            "sun.is_morning_twilight",
+            "civil",
+            datetime(2015, 9, 15, 12, 30, tzinfo=dt_util.UTC),
+            False,
+        ),
+        (
+            "sun.is_morning_twilight",
+            "any",
+            datetime(2015, 9, 15, 12, 0, tzinfo=dt_util.UTC),
+            False,
+        ),
+        # Dawn requires the sun to be rising; an evening (descending) time is False.
+        (
+            "sun.is_morning_twilight",
+            "any",
+            datetime(2015, 9, 16, 2, 45, tzinfo=dt_util.UTC),
+            False,
+        ),
+        # San Diego evening twilight (descending). Elevations: 02:15Z ~ -4.9
+        # (civil), 02:45Z ~ -11.2 (nautical), 03:15Z ~ -17.3 (astronomical).
+        (
+            "sun.is_evening_twilight",
+            "any",
+            datetime(2015, 9, 16, 2, 15, tzinfo=dt_util.UTC),
+            True,
+        ),
+        (
+            "sun.is_evening_twilight",
+            "civil",
+            datetime(2015, 9, 16, 2, 15, tzinfo=dt_util.UTC),
+            True,
+        ),
+        (
+            "sun.is_evening_twilight",
+            "astronomical",
+            datetime(2015, 9, 16, 2, 15, tzinfo=dt_util.UTC),
+            False,
+        ),
+        (
+            "sun.is_evening_twilight",
+            "nautical",
+            datetime(2015, 9, 16, 2, 45, tzinfo=dt_util.UTC),
+            True,
+        ),
+        (
+            "sun.is_evening_twilight",
+            "astronomical",
+            datetime(2015, 9, 16, 3, 15, tzinfo=dt_util.UTC),
+            True,
+        ),
+        # Dusk requires the sun to be descending; a morning (rising) time is False.
+        (
+            "sun.is_evening_twilight",
+            "any",
+            datetime(2015, 9, 15, 13, 0, tzinfo=dt_util.UTC),
+            False,
+        ),
+    ],
+)
+async def test_twilight_condition_type(
+    hass: HomeAssistant,
+    service_calls: list[ServiceCall],
+    condition_key: str,
+    twilight_type: str,
+    now: datetime,
+    expected: bool,
+) -> None:
+    """Test the morning/evening twilight conditions honor the twilight type band."""
+    latitude, longitude, time_zone = _SAN_DIEGO
+    await hass.config.async_set_time_zone(time_zone)
+    hass.config.latitude = latitude
+    hass.config.longitude = longitude
+    await async_setup_component(
+        hass,
+        automation.DOMAIN,
+        {
+            automation.DOMAIN: {
+                "trigger": {"platform": "event", "event_type": "test_event"},
+                "condition": {
+                    "condition": condition_key,
+                    "options": {"type": twilight_type},
+                },
+                "action": {"service": "test.automation"},
+            }
+        },
+    )
+
+    with freeze_time(now):
+        hass.bus.async_fire("test_event")
+        await hass.async_block_till_done()
+
+    assert bool(service_calls) is expected

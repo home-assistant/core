@@ -5,6 +5,48 @@
     "twilight_type_description": "The phase of twilight.",
     "twilight_type_name": "Twilight type"
   },
+  "conditions": {
+    "is_above_horizon": {
+      "description": "Tests if the sun is above the horizon.",
+      "name": "Sun is above horizon"
+    },
+    "is_below_horizon": {
+      "description": "Tests if the sun is below the horizon.",
+      "name": "Sun is below horizon"
+    },
+    "is_descending": {
+      "description": "Tests if the sun is descending.",
+      "name": "Sun is descending"
+    },
+    "is_evening_twilight": {
+      "description": "Tests if it is evening twilight, optionally of a specific type.",
+      "fields": {
+        "type": {
+          "description": "[%key:component::sun::common::twilight_type_description%]",
+          "name": "[%key:component::sun::common::twilight_type_name%]"
+        }
+      },
+      "name": "Is evening twilight"
+    },
+    "is_morning_twilight": {
+      "description": "Tests if it is morning twilight, optionally of a specific type.",
+      "fields": {
+        "type": {
+          "description": "[%key:component::sun::common::twilight_type_description%]",
+          "name": "[%key:component::sun::common::twilight_type_name%]"
+        }
+      },
+      "name": "Is morning twilight"
+    },
+    "is_night": {
+      "description": "Tests if it is night, when the sun is below all twilight.",
+      "name": "Is night"
+    },
+    "is_rising": {
+      "description": "Tests if the sun is rising.",
+      "name": "Sun is rising"
+    }
+  },
   "config": {
     "step": {
       "user": {
@@ -45,6 +87,7 @@
   "selector": {
     "twilight_type": {
       "options": {
+        "any": "Any",
         "astronomical": "Astronomical",
         "civil": "Civil",
         "nautical": "Nautical"

@@ -3,9 +3,15 @@
 from datetime import datetime, timedelta
 from typing import Any, Unpack, cast, override
 
+import astral.sun
 import voluptuous as vol
 
-from homeassistant.const import CONF_OPTIONS, SUN_EVENT_SUNRISE, SUN_EVENT_SUNSET
+from homeassistant.const import (
+    CONF_OPTIONS,
+    CONF_TYPE,
+    SUN_EVENT_SUNRISE,
+    SUN_EVENT_SUNSET,
+)
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.automation import move_top_level_schema_fields_to_options
@@ -16,7 +22,7 @@ from homeassistant.helpers.condition import (
     condition_trace_set_result,
     condition_trace_update_result,
 )
-from homeassistant.helpers.sun import get_astral_event_date
+from homeassistant.helpers.sun import get_astral_event_date, get_astral_observer
 from homeassistant.helpers.typing import ConfigType
 from homeassistant.util import dt as dt_util
 
@@ -167,8 +173,153 @@ class SunCondition(Condition):
         )
 
 
+# Elevation thresholds, matching the sun entity. The horizon split is the same
+# value astral uses for sunrise/sunset; astronomical night is the sun fully
+# below all twilight.
+_HORIZON_ELEVATION = -0.833
+_NIGHT_ELEVATION = -18.0
+
+# The sun is a singleton, so these conditions take no target and no options.
+_STATE_CONDITION_SCHEMA = vol.Schema({vol.Required(CONF_OPTIONS, default=dict): {}})
+
+
+def _solar_position(hass: HomeAssistant) -> tuple[float, bool]:
+    """Return the sun's current elevation in degrees and whether it is rising."""
+    observer = get_astral_observer(hass)
+    now = dt_util.utcnow()
+    elevation = astral.sun.elevation(observer, now)
+    rising = astral.sun.elevation(observer, now + timedelta(minutes=1)) > elevation
+    return elevation, rising
+
+
+class _SunStateCondition(Condition):
+    """Base class for the option-less sun state conditions."""
+
+    @classmethod
+    async def async_validate_config(
+        cls, hass: HomeAssistant, config: ConfigType
+    ) -> ConfigType:
+        """Validate config."""
+        return cast(ConfigType, _STATE_CONDITION_SCHEMA(config))
+
+
+class _AboveHorizonCondition(_SunStateCondition):
+    """Test if the sun is above the horizon."""
+
+    def _async_check(self, **kwargs: Unpack[ConditionCheckParams]) -> bool:
+        """Check the condition."""
+        elevation, _ = _solar_position(self._hass)
+        return elevation > _HORIZON_ELEVATION
+
+
+class _BelowHorizonCondition(_SunStateCondition):
+    """Test if the sun is below the horizon."""
+
+    def _async_check(self, **kwargs: Unpack[ConditionCheckParams]) -> bool:
+        """Check the condition."""
+        elevation, _ = _solar_position(self._hass)
+        return elevation <= _HORIZON_ELEVATION
+
+
+class _RisingCondition(_SunStateCondition):
+    """Test if the sun is rising."""
+
+    def _async_check(self, **kwargs: Unpack[ConditionCheckParams]) -> bool:
+        """Check the condition."""
+        _, rising = _solar_position(self._hass)
+        return rising
+
+
+class _DescendingCondition(_SunStateCondition):
+    """Test if the sun is descending."""
+
+    def _async_check(self, **kwargs: Unpack[ConditionCheckParams]) -> bool:
+        """Check the condition."""
+        _, rising = _solar_position(self._hass)
+        return not rising
+
+
+class _NightCondition(_SunStateCondition):
+    """Test if it is astronomical night (the sun is below all twilight)."""
+
+    def _async_check(self, **kwargs: Unpack[ConditionCheckParams]) -> bool:
+        """Check the condition."""
+        elevation, _ = _solar_position(self._hass)
+        return elevation < _NIGHT_ELEVATION
+
+
+TWILIGHT_ANY = "any"
+TWILIGHT_CIVIL = "civil"
+TWILIGHT_NAUTICAL = "nautical"
+TWILIGHT_ASTRONOMICAL = "astronomical"
+
+# Elevation band (min, max) in degrees for each twilight type.
+_TWILIGHT_BANDS = {
+    TWILIGHT_ANY: (_NIGHT_ELEVATION, _HORIZON_ELEVATION),
+    TWILIGHT_CIVIL: (-6.0, _HORIZON_ELEVATION),
+    TWILIGHT_NAUTICAL: (-12.0, -6.0),
+    TWILIGHT_ASTRONOMICAL: (_NIGHT_ELEVATION, -12.0),
+}
+
+_TWILIGHT_CONDITION_SCHEMA = vol.Schema(
+    {
+        vol.Required(CONF_OPTIONS, default=dict): {
+            vol.Optional(CONF_TYPE, default=TWILIGHT_ANY): vol.In(_TWILIGHT_BANDS),
+        }
+    }
+)
+
+
+class _TwilightCondition(Condition):
+    """Base class for the morning and evening twilight conditions.
+
+    The sun is in twilight when its elevation is within the selected band;
+    morning twilight requires the sun to be rising and evening twilight to be
+    descending.
+    """
+
+    _rising: bool
+
+    @classmethod
+    async def async_validate_config(
+        cls, hass: HomeAssistant, config: ConfigType
+    ) -> ConfigType:
+        """Validate config."""
+        return cast(ConfigType, _TWILIGHT_CONDITION_SCHEMA(config))
+
+    def __init__(self, hass: HomeAssistant, config: ConditionConfig) -> None:
+        """Initialize condition."""
+        super().__init__(hass, config)
+        assert config.options is not None
+        self._low, self._high = _TWILIGHT_BANDS[config.options[CONF_TYPE]]
+
+    def _async_check(self, **kwargs: Unpack[ConditionCheckParams]) -> bool:
+        """Check the condition."""
+        elevation, rising = _solar_position(self._hass)
+        return rising == self._rising and self._low <= elevation <= self._high
+
+
+class _MorningTwilightCondition(_TwilightCondition):
+    """Test if it is morning twilight (the sun is rising through twilight)."""
+
+    _rising = True
+
+
+class _EveningTwilightCondition(_TwilightCondition):
+    """Test if it is evening twilight (the sun is descending through twilight)."""
+
+    _rising = False
+
+
 CONDITIONS: dict[str, type[Condition]] = {
     "_": SunCondition,
+    "is_above_horizon": _AboveHorizonCondition,
+    "is_below_horizon": _BelowHorizonCondition,
+    "is_rising": _RisingCondition,
+    "is_descending": _DescendingCondition,
+    "is_night": _NightCondition,
+    "is_morning_twilight": _MorningTwilightCondition,
+    "is_evening_twilight": _EveningTwilightCondition,
 }
 
 
