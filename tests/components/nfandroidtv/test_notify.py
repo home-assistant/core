@@ -70,7 +70,7 @@ async def test_notify_platform(
     await snapshot_platform(hass, entity_registry, snapshot, config_entry.entry_id)
 
 
-@pytest.mark.freeze_time("1970-01-01T0:00:00+00:00")
+@pytest.mark.freeze_time("1970-01-01T00:00:00+00:00")
 async def test_send_message(
     hass: HomeAssistant,
     config_entry: MockConfigEntry,
@@ -143,13 +143,13 @@ async def test_send_message_exception(
     )
 
 
-@pytest.mark.freeze_time("1970-01-01T0:00:00+00:00")
+@pytest.mark.freeze_time("1970-01-01T00:00:00+00:00")
 async def test_nfandroidtv_send_message(
     hass: HomeAssistant,
     config_entry: MockConfigEntry,
     mock_notifications_android_tv: AsyncMock,
 ) -> None:
-    """Test sending a message via nfandroid.send_message action."""
+    """Test sending a message via nfandroidtv.send_message action."""
     entity_id = "notify.android_tv_fire_tv_1_2_3_4"
     config_entry.add_to_hass(hass)
     await hass.config_entries.async_setup(config_entry.entry_id)
@@ -194,13 +194,13 @@ async def test_nfandroidtv_send_message(
     assert state.state == "1970-01-01T00:00:00+00:00"
 
 
-@pytest.mark.freeze_time("1970-01-01T0:00:00+00:00")
+@pytest.mark.freeze_time("1970-01-01T00:00:00+00:00")
 async def test_nfandroidtv_send_message_camera_snapshot(
     hass: HomeAssistant,
     config_entry: MockConfigEntry,
     mock_notifications_android_tv: AsyncMock,
 ) -> None:
-    """Test sending a message with camera snapshot via nfandroid.send_message action."""
+    """Test sending a message with camera snapshot via nfandroidtv.send_message action."""
     entity_id = "notify.android_tv_fire_tv_1_2_3_4"
     config_entry.add_to_hass(hass)
     await hass.config_entries.async_setup(config_entry.entry_id)
@@ -241,13 +241,13 @@ async def test_nfandroidtv_send_message_camera_snapshot(
     assert state.state == "1970-01-01T00:00:00+00:00"
 
 
-@pytest.mark.freeze_time("1970-01-01T0:00:00+00:00")
+@pytest.mark.freeze_time("1970-01-01T00:00:00+00:00")
 async def test_nfandroidtv_send_message_image_snapshot(
     hass: HomeAssistant,
     config_entry: MockConfigEntry,
     mock_notifications_android_tv: AsyncMock,
 ) -> None:
-    """Test sending a message with image snapshot via nfandroid.send_message action."""
+    """Test sending a message with image snapshot via nfandroidtv.send_message action."""
     entity_id = "notify.android_tv_fire_tv_1_2_3_4"
     config_entry.add_to_hass(hass)
     await hass.config_entries.async_setup(config_entry.entry_id)
@@ -287,13 +287,13 @@ async def test_nfandroidtv_send_message_image_snapshot(
     assert state.state == "1970-01-01T00:00:00+00:00"
 
 
-@pytest.mark.freeze_time("1970-01-01T0:00:00+00:00")
+@pytest.mark.freeze_time("1970-01-01T00:00:00+00:00")
 async def test_nfandroidtv_send_message_local_media_source(
     hass: HomeAssistant,
     config_entry: MockConfigEntry,
     mock_notifications_android_tv: AsyncMock,
 ) -> None:
-    """Test sending a message with local media source via nfandroid.send_message action."""
+    """Test sending a message with local media source via nfandroidtv.send_message action."""
     assert await async_setup_component(hass, "media_source", {})
     entity_id = "notify.android_tv_fire_tv_1_2_3_4"
     config_entry.add_to_hass(hass)
@@ -332,13 +332,13 @@ async def test_nfandroidtv_send_message_local_media_source(
     assert state.state == "1970-01-01T00:00:00+00:00"
 
 
-@pytest.mark.freeze_time("1970-01-01T0:00:00+00:00")
+@pytest.mark.freeze_time("1970-01-01T00:00:00+00:00")
 async def test_nfandroidtv_send_message_unsupported_source(
     hass: HomeAssistant,
     config_entry: MockConfigEntry,
     mock_notifications_android_tv: AsyncMock,
 ) -> None:
-    """Test sending a message with unsupported media source via nfandroid.send_message action."""
+    """Test sending a message with unsupported media source via nfandroidtv.send_message action."""
     assert await async_setup_component(hass, "media_source", {})
     entity_id = "notify.android_tv_fire_tv_1_2_3_4"
     config_entry.add_to_hass(hass)

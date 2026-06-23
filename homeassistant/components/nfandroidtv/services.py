@@ -25,21 +25,6 @@ from .const import (
     DOMAIN,
 )
 
-SERVICE_SEND_MESSAGE_SCHEMA = cv.make_entity_service_schema(
-    {
-        vol.Optional(ATTR_TITLE): cv.string,
-        vol.Optional(ATTR_MESSAGE): cv.string,
-        vol.Optional(ATTR_IMAGE): MediaSelector({"accept": ["image/*", "video/*"]}),
-        vol.Optional(ATTR_ICON): MediaSelector({"accept": ["image/*", "video/*"]}),
-        vol.Optional(ATTR_POSITION): vol.In(Notifications.POSITIONS),
-        vol.Optional(ATTR_DURATION): vol.All(cv.time_period),
-        vol.Optional(ATTR_INTERACTIVE): cv.boolean,
-        vol.Optional(ATTR_BGCOLOR): vol.In(Notifications.BKG_COLORS),
-        vol.Optional(ATTR_FONTSIZE): vol.In(Notifications.FONTSIZES),
-        vol.Optional(ATTR_TRANSPARENCY): vol.In(Notifications.TRANSPARENCIES),
-    }
-)
-
 
 @callback
 def async_setup_services(hass: HomeAssistant) -> None:
@@ -50,6 +35,17 @@ def async_setup_services(hass: HomeAssistant) -> None:
         DOMAIN,
         SERVICE_SEND_MESSAGE,
         entity_domain=NOTIFY_DOMAIN,
-        schema=SERVICE_SEND_MESSAGE_SCHEMA,
+        schema={
+            vol.Optional(ATTR_TITLE): cv.string,
+            vol.Optional(ATTR_MESSAGE): cv.string,
+            vol.Optional(ATTR_IMAGE): MediaSelector({"accept": ["image/*", "video/*"]}),
+            vol.Optional(ATTR_ICON): MediaSelector({"accept": ["image/*", "video/*"]}),
+            vol.Optional(ATTR_POSITION): vol.In(Notifications.POSITIONS),
+            vol.Optional(ATTR_DURATION): vol.All(cv.time_period),
+            vol.Optional(ATTR_INTERACTIVE): cv.boolean,
+            vol.Optional(ATTR_BGCOLOR): vol.In(Notifications.BKG_COLORS),
+            vol.Optional(ATTR_FONTSIZE): vol.In(Notifications.FONTSIZES),
+            vol.Optional(ATTR_TRANSPARENCY): vol.In(Notifications.TRANSPARENCIES),
+        },
         func="nfandroidtv_send_message",
     )
