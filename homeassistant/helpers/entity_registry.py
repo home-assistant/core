@@ -1152,7 +1152,11 @@ class EntityRegistry(BaseRegistry):
     def async_get_entity_id(
         self, domain: str, platform: str, unique_id: str
     ) -> str | None:
-        """Check if an entity_id is currently registered."""
+        """Check if an entity_id is currently registered.
+
+        domain: entity platform domain (e.g. light, sensor)
+        platform: integration domain (e.g. hue, zwave)
+        """
         return self.entities.get_entity_id((domain, platform, unique_id))
 
     @callback
