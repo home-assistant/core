@@ -5,7 +5,7 @@ from pyanglianwater import AnglianWater
 from pyanglianwater.auth import MSOB2CAuth
 from pyanglianwater.exceptions import (
     ConsentRequiredError,
-    ExpiredAccessTokenError,
+    InvalidGrantError,
     SelfAssertedError,
     SmartMeterUnavailableError,
 )
@@ -50,7 +50,7 @@ async def async_setup_entry(
         ir.async_create_issue(
             hass,
             DOMAIN,
-            "consent_required",
+            f"consent_required_{entry.data[CONF_ACCOUNT_NUMBER]}",
             is_fixable=False,
             severity=ir.IssueSeverity.ERROR,
             translation_key="consent_required",
@@ -63,8 +63,11 @@ async def async_setup_entry(
             translation_domain=DOMAIN,
             translation_key="consent_required",
         ) from err
-    except (ExpiredAccessTokenError, SelfAssertedError) as err:
-        raise ConfigEntryAuthFailed from err
+    except (InvalidGrantError, SelfAssertedError) as err:
+        raise ConfigEntryAuthFailed(
+            translation_domain=DOMAIN,
+            translation_key="auth_expired",
+        ) from err
 
     _aw = AnglianWater(authenticator=auth)
 

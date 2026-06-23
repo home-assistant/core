@@ -16,6 +16,8 @@ from homeassistant.config_entries import ConfigEntryState
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import issue_registry as ir
 
+from .const import CONSENT_REQUIRED_ISSUE_ID
+
 from tests.common import MockConfigEntry
 
 
@@ -73,6 +75,7 @@ async def test_setup_auth_failures(
 
 
 async def test_setup_consent_required(
+    recorder_mock: Recorder,
     hass: HomeAssistant,
     mock_config_entry: MockConfigEntry,
     mock_anglian_water_client: AsyncMock,
@@ -91,7 +94,15 @@ async def test_setup_consent_required(
 
     # Assert issue was created
     issue_registry = ir.async_get(hass)
-    assert issue_registry.async_get_issue(DOMAIN, "consent_required") is not None
+    assert issue_registry.async_get_issue(DOMAIN, CONSENT_REQUIRED_ISSUE_ID) is not None
+
+    # Test that the issue is deleted once consent is granted
+    mock_anglian_water_authenticator.send_refresh_request.side_effect = None
+    await hass.config_entries.async_reload(mock_config_entry.entry_id)
+    await hass.async_block_till_done()
+
+    assert mock_config_entry.state is ConfigEntryState.LOADED
+    assert issue_registry.async_get_issue(DOMAIN, CONSENT_REQUIRED_ISSUE_ID) is None
 
 
 async def test_setup_smart_meter_unavailable(

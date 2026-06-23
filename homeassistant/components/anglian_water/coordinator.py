@@ -8,6 +8,7 @@ from pyanglianwater import AnglianWater
 from pyanglianwater.exceptions import (
     ConsentRequiredError,
     ExpiredAccessTokenError,
+    InvalidGrantError,
     UnknownEndpointError,
 )
 
@@ -69,7 +70,7 @@ class AnglianWaterUpdateCoordinator(DataUpdateCoordinator[None]):
             ir.async_create_issue(
                 self.hass,
                 DOMAIN,
-                "consent_required",
+                f"consent_required_{self.config_entry.data[CONF_ACCOUNT_NUMBER]}",
                 is_fixable=False,
                 severity=ir.IssueSeverity.ERROR,
                 translation_key="consent_required",
@@ -83,7 +84,7 @@ class AnglianWaterUpdateCoordinator(DataUpdateCoordinator[None]):
                 translation_key="consent_required",
                 retry_after=900.0,
             ) from err
-        except ExpiredAccessTokenError as err:
+        except (ExpiredAccessTokenError, InvalidGrantError) as err:
             raise ConfigEntryAuthFailed(
                 translation_domain=DOMAIN,
                 translation_key="auth_expired",
@@ -95,7 +96,11 @@ class AnglianWaterUpdateCoordinator(DataUpdateCoordinator[None]):
                 retry_after=60.0,
             ) from err
         else:
-            ir.async_delete_issue(self.hass, DOMAIN, "consent_required")
+            ir.async_delete_issue(
+                self.hass,
+                DOMAIN,
+                f"consent_required_{self.config_entry.data[CONF_ACCOUNT_NUMBER]}",
+            )
 
     async def _insert_statistics(self) -> None:
         """Insert statistics for water meters into Home Assistant."""
