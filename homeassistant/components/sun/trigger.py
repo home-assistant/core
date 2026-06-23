@@ -3,6 +3,7 @@
 from datetime import datetime, timedelta
 from typing import Any, cast, override
 
+import astral
 import voluptuous as vol
 
 from homeassistant.const import (
@@ -48,26 +49,26 @@ from homeassistant.util import dt as dt_util
 
 from .const import DOMAIN, STATE_ATTR_ELEVATION
 
-# Astral event names.
-SUN_EVENT_SOLAR_NOON = "noon"
-SUN_EVENT_SOLAR_MIDNIGHT = "midnight"
-SUN_EVENT_DAWN = "dawn"
-SUN_EVENT_DUSK = "dusk"
+# Names of solar events supported by the astral.sun module
+_SUN_EVENT_SOLAR_NOON = "noon"
+_SUN_EVENT_SOLAR_MIDNIGHT = "midnight"
+_SUN_EVENT_DAWN = "dawn"
+_SUN_EVENT_DUSK = "dusk"
 
-TWILIGHT_CIVIL = "civil"
-TWILIGHT_NAUTICAL = "nautical"
-TWILIGHT_ASTRONOMICAL = "astronomical"
+_TWILIGHT_CIVIL = "civil"
+_TWILIGHT_NAUTICAL = "nautical"
+_TWILIGHT_ASTRONOMICAL = "astronomical"
 
-# Angle of the sun below the horizon for each twilight phase.
+# Sun depression below the horizon for each twilight phase, as defined by astral.
 _TWILIGHT_DEPRESSIONS = {
-    TWILIGHT_CIVIL: 6.0,
-    TWILIGHT_NAUTICAL: 12.0,
-    TWILIGHT_ASTRONOMICAL: 18.0,
+    _TWILIGHT_CIVIL: astral.Depression.CIVIL,
+    _TWILIGHT_NAUTICAL: astral.Depression.NAUTICAL,
+    _TWILIGHT_ASTRONOMICAL: astral.Depression.ASTRONOMICAL,
 }
 
 # The sun is a singleton, so the elevation triggers always target sun.sun
 # instead of asking the user to pick an entity.
-SUN_ENTITY_ID = f"{DOMAIN}.{DOMAIN}"
+_SUN_ENTITY_ID = f"{DOMAIN}.{DOMAIN}"
 _ELEVATION_DOMAIN_SPECS = {DOMAIN: DomainSpec(value_source=STATE_ATTR_ELEVATION)}
 
 _ELEVATION_CHANGED_TRIGGER_SCHEMA = vol.Schema(
@@ -106,7 +107,7 @@ class SunElevationTrigger(EntityNumericalStateTriggerBase):
             hass,
             TriggerConfig(
                 key=config.key,
-                target={ATTR_ENTITY_ID: [SUN_ENTITY_ID]},
+                target={ATTR_ENTITY_ID: [_SUN_ENTITY_ID]},
                 options=config.options,
             ),
         )
@@ -214,19 +215,19 @@ class SunsetTrigger(SunEventTrigger):
 class SolarNoonTrigger(SunEventTrigger):
     """Trigger that fires at solar noon."""
 
-    _event = SUN_EVENT_SOLAR_NOON
+    _event = _SUN_EVENT_SOLAR_NOON
 
 
 class SolarMidnightTrigger(SunEventTrigger):
     """Trigger that fires at solar midnight."""
 
-    _event = SUN_EVENT_SOLAR_MIDNIGHT
+    _event = _SUN_EVENT_SOLAR_MIDNIGHT
 
 
 _DAWN_DUSK_TRIGGER_SCHEMA = vol.Schema(
     {
         vol.Required(CONF_OPTIONS, default=dict): {
-            vol.Optional(CONF_TYPE, default=TWILIGHT_CIVIL): vol.In(
+            vol.Optional(CONF_TYPE, default=_TWILIGHT_CIVIL): vol.In(
                 _TWILIGHT_DEPRESSIONS
             ),
         }
@@ -262,13 +263,13 @@ class SunDawnDuskTrigger(SunEventTrigger):
 class DawnTrigger(SunDawnDuskTrigger):
     """Trigger that fires at dawn."""
 
-    _event = SUN_EVENT_DAWN
+    _event = _SUN_EVENT_DAWN
 
 
 class DuskTrigger(SunDawnDuskTrigger):
     """Trigger that fires at dusk."""
 
-    _event = SUN_EVENT_DUSK
+    _event = _SUN_EVENT_DUSK
 
 
 _LEGACY_OPTIONS_SCHEMA_DICT: dict[vol.Marker, Any] = {

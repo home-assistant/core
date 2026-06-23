@@ -3,11 +3,7 @@
 from datetime import datetime, timedelta
 from typing import Any
 
-from astral.sun import (
-    dawn as astral_dawn,
-    dusk as astral_dusk,
-    elevation as astral_elevation,
-)
+from astral.sun import elevation as astral_elevation
 from freezegun import freeze_time
 import pytest
 import voluptuous as vol
@@ -22,7 +18,11 @@ from homeassistant.const import (
     SUN_EVENT_SUNSET,
 )
 from homeassistant.core import HomeAssistant, ServiceCall
-from homeassistant.helpers.sun import get_astral_event_next, get_astral_observer
+from homeassistant.helpers.sun import (
+    get_astral_event_next,
+    get_astral_observer,
+    get_observer_astral_event_next,
+)
 from homeassistant.helpers.trigger import async_validate_trigger_config
 from homeassistant.setup import async_setup_component
 from homeassistant.util import dt as dt_util
@@ -30,9 +30,23 @@ from homeassistant.util import dt as dt_util
 from tests.common import async_fire_time_changed, mock_component
 from tests.components.common import assert_trigger_options_supported
 
-_NOW = datetime(2015, 9, 15, 1, tzinfo=dt_util.UTC)
+_TEST_DATETIME = datetime(2015, 9, 15, 1, tzinfo=dt_util.UTC)
 _SUN_ENTITY_ID = "sun.sun"
-_TWILIGHT_DEPRESSIONS = {"civil": 6.0, "nautical": 12.0, "astronomical": 18.0}
+
+# Next dawn/dusk after _TEST_DATETIME at the default test location (San Diego),
+# precomputed to serve as an independent oracle for the trigger's scheduler.
+_DAWN_DUSK = {
+    ("dawn", "civil"): datetime(2015, 9, 15, 13, 7, 26, 84892, tzinfo=dt_util.UTC),
+    ("dawn", "nautical"): datetime(2015, 9, 15, 12, 38, 34, 55317, tzinfo=dt_util.UTC),
+    ("dawn", "astronomical"): datetime(
+        2015, 9, 15, 12, 9, 9, 742065, tzinfo=dt_util.UTC
+    ),
+    ("dusk", "civil"): datetime(2015, 9, 15, 2, 21, 39, 56429, tzinfo=dt_util.UTC),
+    ("dusk", "nautical"): datetime(2015, 9, 15, 2, 50, 29, 596023, tzinfo=dt_util.UTC),
+    ("dusk", "astronomical"): datetime(
+        2015, 9, 15, 3, 19, 52, 663966, tzinfo=dt_util.UTC
+    ),
+}
 
 
 @pytest.fixture(autouse=True)
@@ -40,27 +54,6 @@ async def setup_comp(hass: HomeAssistant) -> None:
     """Initialize components."""
     mock_component(hass, "group")
     await async_setup_component(hass, sun.DOMAIN, {sun.DOMAIN: {}})
-
-
-def _expected_dawn_dusk(
-    hass: HomeAssistant,
-    event: str,
-    depression: float,
-    utc_point_in_time: datetime,
-) -> datetime:
-    """Compute the next dawn/dusk independently from the trigger implementation."""
-    observer = get_astral_observer(hass)
-    func = astral_dawn if event == "dawn" else astral_dusk
-    start = dt_util.as_local(utc_point_in_time).date()
-    for mod in range(-1, 367):
-        try:
-            candidate = func(observer, start + timedelta(days=mod), depression)
-        except ValueError:
-            # No such twilight on this day (e.g. polar day/night).
-            continue
-        if candidate > utc_point_in_time:
-            return candidate
-    raise AssertionError("No event found")
 
 
 async def _arm_automation(
@@ -243,9 +236,9 @@ async def test_event_trigger_fires(
     astral_event: str,
 ) -> None:
     """Test the modern solar event triggers fire at the event time."""
-    with freeze_time(_NOW):
+    with freeze_time(_TEST_DATETIME):
         await _arm_automation(hass, {"platform": trigger_key}, {})
-        expected = get_astral_event_next(hass, astral_event, _NOW)
+        expected = get_astral_event_next(hass, astral_event, _TEST_DATETIME)
 
         async_fire_time_changed(hass, expected + timedelta(seconds=1))
         await hass.async_block_till_done()
@@ -257,18 +250,44 @@ async def test_event_trigger_reschedules(
     hass: HomeAssistant, service_calls: list[ServiceCall]
 ) -> None:
     """Test that a solar event trigger reschedules for the following day."""
-    with freeze_time(_NOW):
+    with freeze_time(_TEST_DATETIME) as freezer:
         await _arm_automation(hass, {"platform": "sun.sunrise"}, {})
-        first = get_astral_event_next(hass, SUN_EVENT_SUNRISE, _NOW)
+        first = get_astral_event_next(hass, SUN_EVENT_SUNRISE, _TEST_DATETIME)
+
+        freezer.move_to(first + timedelta(seconds=1))
         async_fire_time_changed(hass, first + timedelta(seconds=1))
         await hass.async_block_till_done()
         assert len(service_calls) == 1
 
+        # The reschedule computes the next event from the now-advanced clock.
         second = get_astral_event_next(hass, SUN_EVENT_SUNRISE, first)
         assert second > first
+
+        freezer.move_to(second + timedelta(seconds=1))
         async_fire_time_changed(hass, second + timedelta(seconds=1))
         await hass.async_block_till_done()
         assert len(service_calls) == 2
+
+
+async def test_event_trigger_reschedules_on_location_change(
+    hass: HomeAssistant, service_calls: list[ServiceCall]
+) -> None:
+    """Test a solar event trigger reschedules when the location changes."""
+    with freeze_time(_TEST_DATETIME):
+        await _arm_automation(hass, {"platform": "sun.sunrise"}, {})
+        first = get_astral_event_next(hass, SUN_EVENT_SUNRISE, _TEST_DATETIME)
+
+        # Move far east so the next sunrise occurs earlier (in UTC) than before.
+        await hass.config.async_update(latitude=51.5, longitude=0.0)
+        await hass.async_block_till_done()
+        rescheduled = get_astral_event_next(hass, SUN_EVENT_SUNRISE, _TEST_DATETIME)
+        assert rescheduled < first
+
+        # Firing at the new, earlier event time proves the schedule moved with it:
+        # the original schedule pointed at the later sunrise and would not fire yet.
+        async_fire_time_changed(hass, rescheduled + timedelta(seconds=1))
+        await hass.async_block_till_done()
+        assert len(service_calls) == 1
 
 
 @pytest.mark.parametrize("trigger_key", ["sun.dawn", "sun.dusk"])
@@ -281,15 +300,13 @@ async def test_dawn_dusk_trigger_fires(
 ) -> None:
     """Test the dawn and dusk triggers fire for each twilight phase."""
     event = trigger_key.split(".")[1]
-    with freeze_time(_NOW):
+    with freeze_time(_TEST_DATETIME):
         await _arm_automation(
             hass,
             {"platform": trigger_key, "options": {"type": twilight}},
             {"type": "{{ trigger.type }}"},
         )
-        expected = _expected_dawn_dusk(
-            hass, event, _TWILIGHT_DEPRESSIONS[twilight], _NOW
-        )
+        expected = _DAWN_DUSK[event, twilight]
 
         async_fire_time_changed(hass, expected + timedelta(seconds=1))
         await hass.async_block_till_done()
@@ -302,13 +319,13 @@ async def test_dawn_defaults_to_civil(
     hass: HomeAssistant, service_calls: list[ServiceCall]
 ) -> None:
     """Test the dawn trigger defaults to civil twilight."""
-    with freeze_time(_NOW):
+    with freeze_time(_TEST_DATETIME):
         await _arm_automation(
             hass, {"platform": "sun.dawn"}, {"type": "{{ trigger.type }}"}
         )
         # Nautical dawn happens earlier than civil dawn and must not fire.
-        civil = _expected_dawn_dusk(hass, "dawn", 6.0, _NOW)
-        nautical = _expected_dawn_dusk(hass, "dawn", 12.0, _NOW)
+        civil = _DAWN_DUSK["dawn", "civil"]
+        nautical = _DAWN_DUSK["dawn", "nautical"]
         assert nautical < civil
 
         async_fire_time_changed(hass, nautical + timedelta(seconds=1))
@@ -331,7 +348,7 @@ _KOTZEBUE = (66.8983, -162.5966, "America/Anchorage")
 
 
 @pytest.mark.parametrize(
-    ("location", "now", "trigger_key", "astral_event"),
+    ("location", "now", "trigger_key", "astral_event", "options", "depression"),
     [
         # Polar night: no sunrise for ~2 months.
         (
@@ -339,6 +356,8 @@ _KOTZEBUE = (66.8983, -162.5966, "America/Anchorage")
             datetime(2015, 12, 15, 12, tzinfo=dt_util.UTC),
             "sun.sunrise",
             "sunrise",
+            {},
+            None,
         ),
         # Midnight sun (skewed time zone): no sunset for ~6 weeks.
         (
@@ -346,6 +365,26 @@ _KOTZEBUE = (66.8983, -162.5966, "America/Anchorage")
             datetime(2015, 6, 15, 12, tzinfo=dt_util.UTC),
             "sun.sunset",
             "sunset",
+            {},
+            None,
+        ),
+        # No civil dawn at Svalbard during polar night.
+        (
+            _SVALBARD,
+            datetime(2015, 12, 15, 12, tzinfo=dt_util.UTC),
+            "sun.dawn",
+            "dawn",
+            {"type": "civil"},
+            6.0,
+        ),
+        # No civil dusk at Kotzebue around the summer solstice (skewed tz).
+        (
+            _KOTZEBUE,
+            datetime(2015, 6, 15, 12, tzinfo=dt_util.UTC),
+            "sun.dusk",
+            "dusk",
+            {"type": "civil"},
+            6.0,
         ),
     ],
 )
@@ -356,6 +395,8 @@ async def test_event_trigger_no_event_next_day(
     now: datetime,
     trigger_key: str,
     astral_event: str,
+    options: dict[str, Any],
+    depression: float | None,
 ) -> None:
     """Test event triggers scan forward to the next day that has the event."""
     latitude, longitude, time_zone = location
@@ -363,44 +404,10 @@ async def test_event_trigger_no_event_next_day(
     await hass.config.async_update(latitude=latitude, longitude=longitude, elevation=0)
 
     with freeze_time(now):
-        await _arm_automation(hass, {"platform": trigger_key}, {})
-        expected = get_astral_event_next(hass, astral_event, now)
-        # The event does not occur on the following day at this latitude/season.
-        assert expected > now + timedelta(days=1)
-
-        async_fire_time_changed(hass, expected + timedelta(seconds=1))
-        await hass.async_block_till_done()
-
-    assert len(service_calls) == 1
-
-
-@pytest.mark.parametrize(
-    ("location", "now", "trigger_key"),
-    [
-        # No civil dawn at Svalbard during polar night.
-        (_SVALBARD, datetime(2015, 12, 15, 12, tzinfo=dt_util.UTC), "sun.dawn"),
-        # No civil dusk at Kotzebue around the summer solstice (skewed tz).
-        (_KOTZEBUE, datetime(2015, 6, 15, 12, tzinfo=dt_util.UTC), "sun.dusk"),
-    ],
-)
-async def test_dawn_dusk_trigger_no_event_next_day(
-    hass: HomeAssistant,
-    service_calls: list[ServiceCall],
-    location: tuple[float, float, str],
-    now: datetime,
-    trigger_key: str,
-) -> None:
-    """Test dawn/dusk triggers scan forward to the next day that has the event."""
-    latitude, longitude, time_zone = location
-    await hass.config.async_set_time_zone(time_zone)
-    await hass.config.async_update(latitude=latitude, longitude=longitude, elevation=0)
-    event = trigger_key.split(".")[1]
-
-    with freeze_time(now):
-        await _arm_automation(
-            hass, {"platform": trigger_key, "options": {"type": "civil"}}, {}
+        await _arm_automation(hass, {"platform": trigger_key, "options": options}, {})
+        expected = get_observer_astral_event_next(
+            get_astral_observer(hass), astral_event, now, depression=depression
         )
-        expected = _expected_dawn_dusk(hass, event, _TWILIGHT_DEPRESSIONS["civil"], now)
         # The event does not occur on the following day at this latitude/season.
         assert expected > now + timedelta(days=1)
 
@@ -426,7 +433,7 @@ async def test_two_sunsets_on_one_day_at_kotzebue(
 
     # 2015-08-07 08:03:42 UTC (00:03 local) and 2015-08-08 07:59:25 UTC (23:59 local)
     now = datetime(2015, 8, 7, 7, tzinfo=dt_util.UTC)
-    with freeze_time(now):
+    with freeze_time(now) as freezer:
         await _arm_automation(hass, {"platform": "sun.sunset"}, {})
         first = get_astral_event_next(hass, "sunset", now)
         second = get_astral_event_next(hass, "sunset", first)
@@ -434,10 +441,12 @@ async def test_two_sunsets_on_one_day_at_kotzebue(
         assert dt_util.as_local(first).date() == dt_util.as_local(second).date()
         assert timedelta(hours=23) < second - first < timedelta(hours=25)
 
+        freezer.move_to(first + timedelta(seconds=1))
         async_fire_time_changed(hass, first + timedelta(seconds=1))
         await hass.async_block_till_done()
         assert len(service_calls) == 1
 
+        freezer.move_to(second + timedelta(seconds=1))
         async_fire_time_changed(hass, second + timedelta(seconds=1))
         await hass.async_block_till_done()
         assert len(service_calls) == 2
