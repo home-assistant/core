@@ -166,7 +166,6 @@ class SteamOptionsFlowHandler(OptionsFlowWithReload):
     ) -> ConfigFlowResult:
         """Manage Steam options."""
         if user_input is not None:
-            await self.hass.config_entries.async_unload(self.config_entry.entry_id)
             for _id in self.options[CONF_ACCOUNTS]:
                 if _id not in user_input[CONF_ACCOUNTS] and (
                     entity_id := er.async_get(self.hass).async_get_entity_id(
