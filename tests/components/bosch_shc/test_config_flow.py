@@ -18,6 +18,7 @@ from homeassistant.components.bosch_shc.const import CONF_SHC_CERT, CONF_SHC_KEY
 from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
 from homeassistant.helpers.service_info.zeroconf import ZeroconfServiceInfo
+
 from tests.common import MockConfigEntry
 
 MOCK_SETTINGS = {
