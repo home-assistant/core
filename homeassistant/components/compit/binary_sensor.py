@@ -30,18 +30,6 @@ DESCRIPTIONS: dict[CompitParameter, BinarySensorEntityDescription] = {
         device_class=BinarySensorDeviceClass.WINDOW,
         entity_category=EntityCategory.DIAGNOSTIC,
     ),
-    CompitParameter.GWC: BinarySensorEntityDescription(
-        key=CompitParameter.GWC.value,
-        translation_key="ground_heat_exchanger_attached",
-        device_class=BinarySensorDeviceClass.CONNECTIVITY,
-        entity_category=EntityCategory.DIAGNOSTIC,
-    ),
-    CompitParameter.MIXER_PUMP_STATUS: BinarySensorEntityDescription(
-        key=CompitParameter.MIXER_PUMP_STATUS.value,
-        translation_key="mixer_pump_status",
-        device_class=BinarySensorDeviceClass.RUNNING,
-        entity_category=EntityCategory.DIAGNOSTIC,
-    ),
     CompitParameter.BATTERY_CHARGE_STATUS: BinarySensorEntityDescription(
         key=CompitParameter.BATTERY_CHARGE_STATUS.value,
         device_class=BinarySensorDeviceClass.BATTERY_CHARGING,
@@ -63,6 +51,18 @@ DESCRIPTIONS: dict[CompitParameter, BinarySensorEntityDescription] = {
         key=CompitParameter.DUST_ALERT.value,
         translation_key="dust_alert",
         device_class=BinarySensorDeviceClass.PROBLEM,
+        entity_category=EntityCategory.DIAGNOSTIC,
+    ),
+    CompitParameter.GWC: BinarySensorEntityDescription(
+        key=CompitParameter.GWC.value,
+        translation_key="ground_heat_exchanger_attached",
+        device_class=BinarySensorDeviceClass.CONNECTIVITY,
+        entity_category=EntityCategory.DIAGNOSTIC,
+    ),
+    CompitParameter.MIXER_PUMP_STATUS: BinarySensorEntityDescription(
+        key=CompitParameter.MIXER_PUMP_STATUS.value,
+        translation_key="mixer_pump_status",
+        device_class=BinarySensorDeviceClass.RUNNING,
         entity_category=EntityCategory.DIAGNOSTIC,
     ),
     CompitParameter.PUMP_STATUS: BinarySensorEntityDescription(
