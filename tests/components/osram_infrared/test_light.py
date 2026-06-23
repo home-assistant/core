@@ -257,6 +257,59 @@ async def test_turn_on_with_effect_sends_effect_code(
 
 
 @pytest.mark.usefixtures("init_integration")
+async def test_turn_on_with_effect_off_restores_last_static_color(
+    hass: HomeAssistant,
+    mock_infrared_emitter_entity: MockInfraredEmitterEntity,
+) -> None:
+    """Test turning an effect off restores the last static color."""
+    await hass.services.async_call(
+        LIGHT_DOMAIN,
+        SERVICE_TURN_ON,
+        {
+            ATTR_ENTITY_ID: "light.osram_light",
+            ATTR_HS_COLOR: (92.0, 100.0),
+        },
+        blocking=True,
+    )
+
+    await hass.services.async_call(
+        LIGHT_DOMAIN,
+        SERVICE_TURN_ON,
+        {
+            ATTR_ENTITY_ID: "light.osram_light",
+            ATTR_EFFECT: EFFECT_FLASH,
+        },
+        blocking=True,
+    )
+
+    mock_infrared_emitter_entity.send_command_calls.clear()
+
+    await hass.services.async_call(
+        LIGHT_DOMAIN,
+        SERVICE_TURN_ON,
+        {
+            ATTR_ENTITY_ID: "light.osram_light",
+            ATTR_EFFECT: EFFECT_OFF,
+        },
+        blocking=True,
+    )
+
+    assert (
+        mock_infrared_emitter_entity.send_command_calls
+        == [
+            OsramLightCode.HUE_120,
+        ]
+        * 5
+    )
+
+    state = hass.states.get("light.osram_light")
+    assert state
+    assert state.state == STATE_ON
+    assert state.attributes[ATTR_EFFECT] == EFFECT_OFF
+    assert tuple(state.attributes[ATTR_HS_COLOR]) == (120.0, 100.0)
+
+
+@pytest.mark.usefixtures("init_integration")
 async def test_light_availability_follows_ir_entity(
     hass: HomeAssistant,
 ) -> None:
@@ -448,27 +501,17 @@ async def test_receiver_resubscribes_after_receiver_unavailable(
 
 
 @pytest.mark.usefixtures("init_integration")
-async def test_turn_on_with_effect_off_restores_last_static_color(
+async def test_turn_on_with_increased_brightness_sends_brightness_up_codes(
     hass: HomeAssistant,
     mock_infrared_emitter_entity: MockInfraredEmitterEntity,
 ) -> None:
-    """Test turning an effect off restores the last static color."""
+    """Test increasing brightness sends brightness up codes."""
     await hass.services.async_call(
         LIGHT_DOMAIN,
         SERVICE_TURN_ON,
         {
             ATTR_ENTITY_ID: "light.osram_light",
-            ATTR_HS_COLOR: (92.0, 100.0),
-        },
-        blocking=True,
-    )
-
-    await hass.services.async_call(
-        LIGHT_DOMAIN,
-        SERVICE_TURN_ON,
-        {
-            ATTR_ENTITY_ID: "light.osram_light",
-            ATTR_EFFECT: EFFECT_FLASH,
+            ATTR_BRIGHTNESS: 1,
         },
         blocking=True,
     )
@@ -480,7 +523,7 @@ async def test_turn_on_with_effect_off_restores_last_static_color(
         SERVICE_TURN_ON,
         {
             ATTR_ENTITY_ID: "light.osram_light",
-            ATTR_EFFECT: EFFECT_OFF,
+            ATTR_BRIGHTNESS: 255,
         },
         blocking=True,
     )
@@ -488,13 +531,80 @@ async def test_turn_on_with_effect_off_restores_last_static_color(
     assert (
         mock_infrared_emitter_entity.send_command_calls
         == [
-            OsramLightCode.HUE_120,
+            OsramLightCode.BRIGHTNESS_UP,
         ]
-        * 5
+        * 4
     )
 
+
+@pytest.mark.parametrize(
+    "received_code",
+    [
+        OsramLightCode.ON,
+        OsramLightCode.MODE,
+    ],
+)
+@pytest.mark.usefixtures("init_integration")
+async def test_receiver_on_like_codes_turn_light_on(
+    hass: HomeAssistant,
+    mock_infrared_receiver_entity: MockInfraredReceiverEntity,
+    received_code: OsramLightCode,
+) -> None:
+    """Test receiving ON-like commands marks the assumed light state as on."""
+    command = NECCommand(
+        address=OSRAM_ADDRESS,
+        command=received_code,
+    )
+
+    mock_infrared_receiver_entity._handle_received_signal(
+        InfraredReceivedSignal(timings=command.get_raw_timings())
+    )
+    await hass.async_block_till_done()
+
     state = hass.states.get("light.osram_light")
-    assert state
+    assert state is not None
     assert state.state == STATE_ON
-    assert state.attributes[ATTR_EFFECT] == EFFECT_OFF
-    assert tuple(state.attributes[ATTR_HS_COLOR]) == (120.0, 100.0)
+
+
+@pytest.mark.usefixtures("init_integration")
+async def test_receiver_brightness_down_is_limited_to_minimum(
+    hass: HomeAssistant,
+    mock_infrared_receiver_entity: MockInfraredReceiverEntity,
+) -> None:
+    """Test received brightness down commands do not go below the minimum."""
+    command = NECCommand(
+        address=OSRAM_ADDRESS,
+        command=OsramLightCode.BRIGHTNESS_DOWN,
+    )
+
+    for _ in range(10):
+        mock_infrared_receiver_entity._handle_received_signal(
+            InfraredReceivedSignal(timings=command.get_raw_timings())
+        )
+        await hass.async_block_till_done()
+
+    state = hass.states.get("light.osram_light")
+    assert state is not None
+    assert state.state == STATE_ON
+    assert state.attributes[ATTR_BRIGHTNESS] == value_to_brightness((1, 5), 1)
+
+
+@pytest.mark.usefixtures("init_integration")
+async def test_receiver_ignores_unknown_osram_command(
+    hass: HomeAssistant,
+    mock_infrared_receiver_entity: MockInfraredReceiverEntity,
+) -> None:
+    """Test receiver ignores unknown OSRAM NEC commands."""
+    command = NECCommand(
+        address=OSRAM_ADDRESS,
+        command=0xFF,
+    )
+
+    mock_infrared_receiver_entity._handle_received_signal(
+        InfraredReceivedSignal(timings=command.get_raw_timings())
+    )
+    await hass.async_block_till_done()
+
+    state = hass.states.get("light.osram_light")
+    assert state is not None
+    assert state.state == STATE_OFF
