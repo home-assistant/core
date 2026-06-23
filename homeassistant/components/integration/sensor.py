@@ -346,7 +346,7 @@ class IntegrationSensor(RestoreSensor):
         self._attr_device_class: SensorDeviceClass | None = None
         self._attr_icon = "mdi:chart-histogram"
         self._source_entity: str = source_entity
-        self._source_device_class: SensorDeviceClass | str | None = None
+        self._source_device_class: SensorDeviceClass | None = None
         self._last_valid_state: Decimal | None = None
         self._refresh_device_class: bool = True
         self.device_entry = async_entity_id_to_device(
@@ -428,12 +428,19 @@ class IntegrationSensor(RestoreSensor):
 
     def _derive_and_set_attributes_from_state(self, source_state: State) -> None:
         source_unit = source_state.attributes.get(ATTR_UNIT_OF_MEASUREMENT)
-        source_device_class = source_state.attributes.get(ATTR_DEVICE_CLASS)
         if source_unit is not None:
             unit_of_measurement = self._calculate_unit(source_unit)
         else:
             # If the source has no defined unit we cannot derive a unit for the integral
             unit_of_measurement = None
+        source_device_class_raw = source_state.attributes.get(ATTR_DEVICE_CLASS)
+        source_device_class: SensorDeviceClass | None = None
+        if isinstance(source_device_class_raw, str):
+            try:
+                source_device_class = SensorDeviceClass(source_device_class_raw)
+            except ValueError:
+                # If the source device class is invalid string, do not use it.
+                source_device_class = None
 
         # Only update device class if unit of measurement or source device class change,
         # or if a manual update has been requested (e.g. on sensor being added)
