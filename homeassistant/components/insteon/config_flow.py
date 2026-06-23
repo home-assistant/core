@@ -80,10 +80,12 @@ class InsteonFlowHandler(ConfigFlow, domain=DOMAIN):
             str(devices.modem.address), raise_on_progress=False
         )
         if self.source == SOURCE_RECONFIGURE:
-            self._abort_if_unique_id_mismatch()
-            return self.async_update_reload_and_abort(
-                self._get_reconfigure_entry(), data=data
-            )
+            reconfigure_entry = self._get_reconfigure_entry()
+            # Legacy entries may have no unique ID yet; it is backfilled on the
+            # next successful setup, so only enforce the match when one exists.
+            if reconfigure_entry.unique_id is not None:
+                self._abort_if_unique_id_mismatch()
+            return self.async_update_reload_and_abort(reconfigure_entry, data=data)
         return self.async_create_entry(title="", data=data)
 
     async def async_step_plm(

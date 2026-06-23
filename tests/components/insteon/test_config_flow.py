@@ -482,3 +482,29 @@ async def test_reconfigure_unique_id_mismatch(hass: HomeAssistant) -> None:
     assert result["type"] is FlowResultType.ABORT
     assert result["reason"] == "unique_id_mismatch"
     assert config_entry.data == {**MOCK_USER_INPUT_HUB_V2, CONF_HUB_VERSION: 2}
+
+
+async def test_reconfigure_legacy_entry_without_unique_id(hass: HomeAssistant) -> None:
+    """Test reconfiguring a legacy entry that has no unique ID is not blocked."""
+    config_entry = MockConfigEntry(
+        domain=DOMAIN, data={**MOCK_USER_INPUT_HUB_V2, CONF_HUB_VERSION: 2}
+    )
+    config_entry.add_to_hass(hass)
+    assert config_entry.unique_id is None
+
+    result = await config_entry.start_reconfigure_flow(hass)
+
+    result, mock_setup_entry = await _device_form(
+        hass,
+        result["flow_id"],
+        mock_successful_connection,
+        {**MOCK_USER_INPUT_HUB_V2, CONF_HOST: "2.3.4.5"},
+    )
+    assert result["type"] is FlowResultType.ABORT
+    assert result["reason"] == "reconfigure_successful"
+    assert config_entry.data == {
+        **MOCK_USER_INPUT_HUB_V2,
+        CONF_HOST: "2.3.4.5",
+        CONF_HUB_VERSION: 2,
+    }
+    assert len(mock_setup_entry.mock_calls) == 1
