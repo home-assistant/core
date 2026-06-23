@@ -4,6 +4,7 @@ from datetime import timedelta
 
 import voluptuous as vol
 
+from homeassistant.config_entries import ConfigEntryState
 from homeassistant.const import ATTR_CONFIG_ENTRY_ID
 from homeassistant.core import (
     HomeAssistant,
@@ -11,6 +12,7 @@ from homeassistant.core import (
     ServiceResponse,
     SupportsResponse,
 )
+from homeassistant.exceptions import ServiceValidationError
 from homeassistant.helpers.selector import ConfigEntrySelector
 from homeassistant.helpers.service import async_get_config_entry
 from homeassistant.util import dt as dt_util
@@ -20,6 +22,14 @@ from .const import DOMAIN
 
 SERVICE_GET_PRICES = "get_prices"
 ATTR_HOURS = "hours"
+SERVICE_GET_CHEAPEST_DURATION = "get_cheapest_duration"
+
+ATTR_DURATION = "duration"
+ATTR_TIME_RANGE = "time_range"
+
+TIME_RANGE_DAY = "day"
+TIME_RANGE_NIGHT = "night"
+TIME_RANGE_FULL_DAY = "full_day"
 
 
 def _validate_hours(v: float) -> float:
@@ -41,6 +51,79 @@ SERVICE_GET_PRICES_SCHEMA = vol.Schema(
         ),
     }
 )
+
+SERVICE_GET_CHEAPEST_DURATION_SCHEMA = vol.Schema(
+    {
+        vol.Required(ATTR_DURATION): vol.All(
+            vol.Coerce(float), vol.Range(min=0.5, max=24)
+        ),
+        vol.Optional(ATTR_TIME_RANGE, default=TIME_RANGE_FULL_DAY): vol.In(
+            [TIME_RANGE_DAY, TIME_RANGE_NIGHT, TIME_RANGE_FULL_DAY]
+        ),
+    }
+)
+
+
+async def get_cheapest_duration(call: ServiceCall) -> ServiceResponse:
+    """Find the cheapest consecutive time window for a given duration."""
+    entries = call.hass.config_entries.async_entries(DOMAIN)
+
+    if not entries:
+        raise ServiceValidationError(
+            translation_domain=DOMAIN,
+            translation_key="no_config_entry",
+        )
+
+    entry = entries[0]
+
+    if entry.state is not ConfigEntryState.LOADED:
+        raise ServiceValidationError(
+            translation_domain=DOMAIN,
+            translation_key="config_entry_not_loaded",
+        )
+
+    coordinator = entry.runtime_data
+    duration = call.data[ATTR_DURATION]
+    time_range = call.data[ATTR_TIME_RANGE]
+    data = coordinator.data
+    api = coordinator.api
+    now = dt_util.now()
+    current_hour = now.hour
+
+    result: tuple[float | None, int | None]
+
+    if time_range == TIME_RANGE_DAY:
+        result = api.get_cheapest_duration_day(data, duration, current_hour)
+    elif time_range == TIME_RANGE_NIGHT:
+        result = api.get_cheapest_duration_night(data, duration, current_hour)
+    else:
+        result = api.get_cheapest_duration(data, duration, current_hour)
+
+    avg_price, start_hour_result = result
+
+    if avg_price is None or start_hour_result is None:
+        raise ServiceValidationError(
+            translation_domain=DOMAIN,
+            translation_key="no_data_available",
+        )
+
+    start_time = dt_util.start_of_local_day(now).replace(
+        hour=start_hour_result, minute=0, second=0, microsecond=0
+    )
+    if start_time < now:
+        start_time = start_time + timedelta(days=1)
+
+    end_time = start_time + timedelta(hours=duration)
+    hours_until_start = (start_time - now).total_seconds() / 3600
+
+    return {
+        "duration": duration,
+        "average_price": round(avg_price / 100, 4),
+        "start_time": start_time.isoformat(),
+        "end_time": end_time.isoformat(),
+        "hours_until_start": round(hours_until_start, 1),
+        "time_range": time_range,
+    }
 
 
 async def get_prices(call: ServiceCall) -> ServiceResponse:
@@ -96,6 +179,14 @@ async def get_prices(call: ServiceCall) -> ServiceResponse:
 
 def async_setup_services(hass: HomeAssistant) -> None:
     """Set up services for Green Planet Energy."""
+
+    hass.services.async_register(
+        DOMAIN,
+        SERVICE_GET_CHEAPEST_DURATION,
+        get_cheapest_duration,
+        schema=SERVICE_GET_CHEAPEST_DURATION_SCHEMA,
+        supports_response=SupportsResponse.ONLY,
+    )
 
     hass.services.async_register(
         DOMAIN,
