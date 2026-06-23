@@ -6,7 +6,7 @@ import logging
 import os
 import pathlib
 import shutil
-from typing import Any, TypedDict
+from typing import Any, TypedDict, override
 
 from aiohttp import hdrs, web, web_urldispatcher
 import jinja2
@@ -785,6 +785,7 @@ class IndexView(web_urldispatcher.AbstractResource):
         self._template_cache: jinja2.Template | None = None
 
     @cached_property
+    @override
     def canonical(self) -> str:
         """Return resource's canonical path."""
         return "/"
@@ -794,10 +795,12 @@ class IndexView(web_urldispatcher.AbstractResource):
         """Return the index route."""
         return web_urldispatcher.ResourceRoute("GET", self.get, self)
 
+    @override
     def url_for(self, **kwargs: str) -> URL:
         """Construct url for resource with additional params."""
         return URL("/")
 
+    @override
     async def resolve(
         self, request: web.Request
     ) -> tuple[web_urldispatcher.UrlMappingMatchInfo | None, set[str]]:
@@ -818,17 +821,20 @@ class IndexView(web_urldispatcher.AbstractResource):
 
         return web_urldispatcher.UrlMappingMatchInfo({}, self._route), {"GET"}
 
+    @override
     def add_prefix(self, prefix: str) -> None:
         """Add a prefix to processed URLs.
 
         Required for subapplications support.
         """
 
+    @override
     def get_info(self) -> dict[str, list[str]]:  # type: ignore[override]
         """Return a dict with additional info useful for introspection."""
         panels = self.hass.data[DATA_PANELS]
         return {"panels": list(panels)}
 
+    @override
     def raw_match(self, path: str) -> bool:
         """Perform a raw match against path."""
         return False
@@ -879,10 +885,12 @@ class IndexView(web_urldispatcher.AbstractResource):
         response.enable_compression()
         return response
 
+    @override
     def __len__(self) -> int:
         """Return length of resource."""
         return 1
 
+    @override
     def __iter__(self) -> Iterator[web_urldispatcher.ResourceRoute]:
         """Iterate over routes."""
         return iter([self._route])

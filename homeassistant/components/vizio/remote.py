@@ -2,7 +2,7 @@
 
 import asyncio
 from collections.abc import Iterable
-from typing import TYPE_CHECKING, Any
+from typing import TYPE_CHECKING, Any, override
 
 import voluptuous as vol
 
@@ -52,6 +52,7 @@ class VizioRemote(CoordinatorEntity[VizioDeviceCoordinator], RemoteEntity):
         self._command_map: dict[str, str] = {key.lower(): key for key in valid_keys}
 
     @property
+    @override
     def is_on(self) -> bool:
         """Return True if device is on."""
         return self.coordinator.data.is_on
@@ -66,14 +67,17 @@ class VizioRemote(CoordinatorEntity[VizioDeviceCoordinator], RemoteEntity):
             translation_placeholders={"command": command},
         )
 
+    @override
     async def async_turn_on(self, **kwargs: Any) -> None:
         """Turn on the device."""
         await self._device.pow_on(log_api_exception=False)
 
+    @override
     async def async_turn_off(self, **kwargs: Any) -> None:
         """Turn off the device."""
         await self._device.pow_off(log_api_exception=False)
 
+    @override
     async def async_send_command(self, command: Iterable[str], **kwargs: Any) -> None:
         """Send remote commands to the device."""
         num_repeats: int = kwargs.get(ATTR_NUM_REPEATS, 1)

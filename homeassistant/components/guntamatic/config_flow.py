@@ -1,7 +1,7 @@
 """Config flow for the guntamatic integration."""
 
 import logging
-from typing import Any
+from typing import Any, override
 
 from guntamatic.heater import Heater, NoSerialException
 import requests
@@ -27,6 +27,7 @@ class GuntamaticConfigFlow(ConfigFlow, domain=DOMAIN):
 
     _discovered_ip: str
 
+    @override
     async def async_step_dhcp(
         self, discovery_info: DhcpServiceInfo
     ) -> ConfigFlowResult:
@@ -58,6 +59,7 @@ class GuntamaticConfigFlow(ConfigFlow, domain=DOMAIN):
         self._set_confirm_only()
         return self.async_show_form(step_id="discovery_confirm")
 
+    @override
     async def async_step_user(
         self, user_input: dict[str, Any] | None = None
     ) -> ConfigFlowResult:

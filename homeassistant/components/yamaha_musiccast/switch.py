@@ -1,6 +1,6 @@
 """The switch entities for musiccast."""
 
-from typing import Any
+from typing import Any, override
 
 from aiomusiccast.capabilities import BinarySetter
 
@@ -42,14 +42,17 @@ class SwitchCapability(MusicCastCapabilityEntity, SwitchEntity):
     capability: BinarySetter
 
     @property
+    @override
     def is_on(self) -> bool:
         """Return the current status."""
         return self.capability.current
 
+    @override
     async def async_turn_on(self, **kwargs: Any) -> None:
         """Turn on the capability."""
         await self.capability.set(True)
 
+    @override
     async def async_turn_off(self, **kwargs: Any) -> None:
         """Turn off the capability."""
         await self.capability.set(False)

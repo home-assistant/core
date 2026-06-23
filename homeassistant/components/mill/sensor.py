@@ -1,5 +1,7 @@
 """Support for mill wifi-enabled home heaters."""
 
+from typing import override
+
 import mill
 
 from homeassistant.components.sensor import (
@@ -190,6 +192,7 @@ class MillSensor(MillBaseEntity, SensorEntity):
         super().__init__(coordinator, mill_device)
 
     @callback
+    @override
     def _update_attr(self, device):
         self._available = device.available
         self._attr_native_value = getattr(device, self.entity_description.key)
@@ -221,6 +224,7 @@ class LocalMillSensor(CoordinatorEntity[MillDataUpdateCoordinator], SensorEntity
             )
 
     @property
+    @override
     def native_value(self) -> StateType:
         """Return the native value of the sensor."""
         return self.coordinator.data[self.entity_description.key]
