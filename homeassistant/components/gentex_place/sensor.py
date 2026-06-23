@@ -14,7 +14,7 @@ from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
-from .const import AlarmStatus
+from .const import DOMAIN, AlarmStatus
 from .coordinator import PlaceConfigEntry, PlaceCoordinator
 from .models import PlaceDeviceShadow
 
@@ -87,14 +87,14 @@ class PlaceAlarmSensorEntity(SensorEntity):
         """Initialize the sensor."""
         self.coordinator = coordinator
         self._thing_name: str = device.thing_name
-        self._device_identifier: str = (
+        self._device_name: str = (
             device.location or device.device_name or device.device_id
         )
         self.entity_description = description
-        self._attr_unique_id = f"{self._device_identifier}_{description.key}"
+        self._attr_unique_id = f"{self._thing_name}_{description.key}"
         self._attr_device_info = DeviceInfo(
-            identifiers={("gentex_place", self._device_identifier)},
-            name=self._device_identifier,
+            identifiers={(DOMAIN, self._thing_name)},
+            name=self._device_name,
             manufacturer="Gentex",
             model=getattr(device, "model_number", None),
             sw_version=getattr(device, "firmware_version", None),
