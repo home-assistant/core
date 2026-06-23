@@ -1,4 +1,5 @@
 """The Steamist integration."""
+# pylint: disable=home-assistant-use-runtime-data  # Discovery list is shared across entries
 
 from datetime import timedelta
 from typing import Any
@@ -27,6 +28,8 @@ PLATFORMS: list[str] = [Platform.SENSOR, Platform.SWITCH]
 DISCOVERY_INTERVAL = timedelta(minutes=15)
 CONFIG_SCHEMA = cv.config_entry_only_config_schema(DOMAIN)
 
+type SteamistConfigEntry = ConfigEntry[SteamistDataUpdateCoordinator]
+
 
 async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     """Set up the steamist component."""
@@ -45,7 +48,7 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     return True
 
 
-async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
+async def async_setup_entry(hass: HomeAssistant, entry: SteamistConfigEntry) -> bool:
     """Set up Steamist from a config entry."""
     host = entry.data[CONF_HOST]
     coordinator = SteamistDataUpdateCoordinator(
@@ -57,13 +60,11 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     if not async_get_discovery(hass, host):
         if discovery := await async_discover_device(hass, host):
             async_update_entry_from_discovery(hass, entry, discovery)
-    hass.data.setdefault(DOMAIN, {})[entry.entry_id] = coordinator
+    entry.runtime_data = coordinator
     await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
     return True
 
 
-async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
+async def async_unload_entry(hass: HomeAssistant, entry: SteamistConfigEntry) -> bool:
     """Unload a config entry."""
-    if unload_ok := await hass.config_entries.async_unload_platforms(entry, PLATFORMS):
-        hass.data[DOMAIN].pop(entry.entry_id)
-    return unload_ok
+    return await hass.config_entries.async_unload_platforms(entry, PLATFORMS)

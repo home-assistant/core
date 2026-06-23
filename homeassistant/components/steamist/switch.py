@@ -3,12 +3,10 @@
 from typing import Any, override
 
 from homeassistant.components.switch import SwitchEntity, SwitchEntityDescription
-from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
-from .const import DOMAIN
-from .coordinator import SteamistDataUpdateCoordinator
+from . import SteamistConfigEntry
 from .entity import SteamistEntity
 
 ACTIVE_SWITCH = SwitchEntityDescription(
@@ -19,15 +17,11 @@ ACTIVE_SWITCH = SwitchEntityDescription(
 
 async def async_setup_entry(
     hass: HomeAssistant,
-    config_entry: ConfigEntry,
+    config_entry: SteamistConfigEntry,
     async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up sensors."""
-    # Uses legacy hass.data[DOMAIN] pattern
-    # pylint: disable-next=home-assistant-use-runtime-data
-    coordinator: SteamistDataUpdateCoordinator = hass.data[DOMAIN][
-        config_entry.entry_id
-    ]
+    coordinator = config_entry.runtime_data
     async_add_entities([SteamistSwitchEntity(coordinator, config_entry, ACTIVE_SWITCH)])
 
 
