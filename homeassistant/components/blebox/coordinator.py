@@ -2,6 +2,7 @@
 
 from datetime import timedelta
 import logging
+from typing import override
 
 from blebox_uniapi.box import Box
 from blebox_uniapi.error import Error, UnauthorizedRequest
@@ -37,6 +38,7 @@ class BleBoxCoordinator(DataUpdateCoordinator[None]):
         )
         self.box = box
 
+    @override
     async def _async_update_data(self) -> None:
         """Fetch data from the BleBox device."""
         try:

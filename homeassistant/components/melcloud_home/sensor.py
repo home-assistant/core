@@ -2,6 +2,7 @@
 
 from collections.abc import Callable
 from dataclasses import dataclass
+from typing import override
 
 from aiomelcloudhome import ATAUnit, ATWUnit
 
@@ -153,6 +154,7 @@ class ATASensor(MelCloudHomeATAUnitEntity, SensorEntity):
         self._attr_unique_id = f"{unit.id}_{entity_description.key}"
 
     @property
+    @override
     def native_value(self) -> StateType:
         """Return the state of the sensor."""
         return self.entity_description.value_fn(self.unit)
@@ -175,6 +177,7 @@ class ATWSensor(MelCloudHomeATWUnitEntity, SensorEntity):
         self._attr_unique_id = f"{unit.id}_{entity_description.key}"
 
     @property
+    @override
     def native_value(self) -> StateType:
         """Return the state of the sensor."""
         return self.entity_description.value_fn(self.unit)

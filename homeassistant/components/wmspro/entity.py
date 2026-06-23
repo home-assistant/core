@@ -1,5 +1,7 @@
 """Generic entity for the WMS WebControl pro API integration."""
 
+from typing import override
+
 from wmspro.destination import Destination
 
 from homeassistant.helpers.device_registry import DeviceInfo
@@ -37,6 +39,7 @@ class WebControlProGenericEntity(Entity):
         await self._dest.refresh()
 
     @property
+    @override
     def available(self) -> bool:
         """Return if entity is available."""
         return self._dest.available

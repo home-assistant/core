@@ -4,6 +4,7 @@ from collections.abc import Callable
 from dataclasses import dataclass
 from datetime import datetime
 import logging
+from typing import override
 
 from duco_connectivity.models import Node, NodeType, VentilationState
 
@@ -242,6 +243,7 @@ class DucoSensorEntity(DucoEntity, SensorEntity):
         )
 
     @property
+    @override
     def native_value(self) -> datetime | int | float | str | None:
         """Return the sensor value."""
         return self.entity_description.value_fn(self._node)
@@ -266,6 +268,7 @@ class DucoBoxSensorEntity(DucoEntity, SensorEntity):
         )
 
     @property
+    @override
     def native_value(self) -> int | float | None:
         """Return the sensor value."""
         return self.entity_description.value_fn(self.coordinator)

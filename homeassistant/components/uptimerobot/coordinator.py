@@ -1,6 +1,6 @@
 """DataUpdateCoordinator for the uptimerobot integration."""
 
-from typing import TYPE_CHECKING
+from typing import TYPE_CHECKING, override
 
 from pyuptimerobot import (
     UptimeRobot,
@@ -43,6 +43,7 @@ class UptimeRobotDataUpdateCoordinator(
         )
         self.api = api
 
+    @override
     async def _async_update_data(self) -> dict[int, UptimeRobotMonitor]:
         """Update data."""
         try:

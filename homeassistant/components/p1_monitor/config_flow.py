@@ -1,6 +1,6 @@
 """Config flow for P1 Monitor integration."""
 
-from typing import Any
+from typing import Any, override
 
 from p1monitor import P1Monitor, P1MonitorError
 import voluptuous as vol
@@ -23,6 +23,7 @@ class P1MonitorFlowHandler(ConfigFlow, domain=DOMAIN):
 
     VERSION = 2
 
+    @override
     async def async_step_user(
         self, user_input: dict[str, Any] | None = None
     ) -> ConfigFlowResult:

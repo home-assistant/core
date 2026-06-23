@@ -1,7 +1,7 @@
 {
   "domain": "honeywell",
   "name": "Honeywell Total Connect Comfort (US)",
-  "codeowners": ["@rdfurman", "@mkmer"],
+  "codeowners": ["@mkmer"],
   "config_flow": true,
   "documentation": "https://www.home-assistant.io/integrations/honeywell",
   "integration_type": "hub",

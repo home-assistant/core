@@ -1,5 +1,7 @@
 """Base class for Portainer entities."""
 
+from typing import override
+
 from yarl import URL
 
 from homeassistant.const import CONF_URL
@@ -65,6 +67,7 @@ class PortainerEndpointEntity(PortainerCoordinatorEntity):
         )
 
     @property
+    @override
     def available(self) -> bool:
         """Return if the device is available."""
         return super().available and self.device_id in self.coordinator.data
@@ -124,6 +127,7 @@ class PortainerContainerEntity(PortainerCoordinatorEntity):
         )
 
     @property
+    @override
     def available(self) -> bool:
         """Return if the device is available."""
         return (
@@ -181,6 +185,7 @@ class PortainerStackEntity(PortainerCoordinatorEntity):
         )
 
     @property
+    @override
     def available(self) -> bool:
         """Return if the stack is available."""
         return (
@@ -232,6 +237,7 @@ class PortainerDockerSystemDiskSpaceEndpointEntity(
         )
 
     @property
+    @override
     def available(self) -> bool:
         """Return if the device is available."""
         return (
@@ -284,6 +290,7 @@ class PortainerVolumeEntity(PortainerCoordinatorEntity):
         )
 
     @property
+    @override
     def available(self) -> bool:
         """Return if the volume is available."""
         return (

@@ -1,6 +1,6 @@
 """Switch entity for myUplink."""
 
-from typing import Any
+from typing import Any, override
 
 import aiohttp
 from myuplink import DevicePoint
@@ -108,15 +108,18 @@ class MyUplinkDevicePointSwitch(MyUplinkEntity, SwitchEntity):
             self.entity_description = entity_description
 
     @property
+    @override
     def is_on(self) -> bool:
         """Switch state value."""
         device_point = self.coordinator.data.points[self.device_id][self.point_id]
         return int(device_point.value) != 0
 
+    @override
     async def async_turn_on(self, **kwargs: Any) -> None:
         """Turn on switch."""
         await self._async_turn_switch(1)
 
+    @override
     async def async_turn_off(self, **kwargs: Any) -> None:
         """Turn off switch."""
         await self._async_turn_switch(0)

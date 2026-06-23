@@ -1,5 +1,7 @@
 """Support for Button entities of the Evohome integration."""
 
+from typing import override
+
 import evohomeasync2 as evo
 
 from homeassistant.components.button import ButtonEntity
@@ -56,6 +58,7 @@ class EvoResetButtonBase(CoordinatorEntity[EvoDataUpdateCoordinator], ButtonEnti
         super().__init__(coordinator, context=evo_device.id)
         self._evo_device = evo_device
 
+    @override
     async def async_press(self) -> None:
         """Reset the Evohome entity to its base operating mode."""
         await self.coordinator.call_client_api(self._evo_device.reset())
@@ -110,6 +113,7 @@ class EvoResetZoneButton(EvoResetButtonBase):
         self._attr_unique_id = f"{unique_zone_id(evo_device)}_reset"
 
     @property
+    @override
     def name(self) -> str:
         """Return the name, dynamically following any zone rename."""
         return f"Reset {self._evo_device.name}"

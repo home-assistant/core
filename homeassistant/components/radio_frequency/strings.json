@@ -1,4 +1,9 @@
 {
+  "entity_component": {
+    "_": {
+      "name": "Radio frequency transmitter"
+    }
+  },
   "exceptions": {
     "component_not_loaded": {
       "message": "Radio Frequency component not loaded"
