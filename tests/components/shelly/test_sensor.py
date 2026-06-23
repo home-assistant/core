@@ -1390,6 +1390,32 @@ async def test_rpc_device_virtual_number_sensor(
     assert state.state == "56.7"
 
 
+async def test_rpc_device_virtual_number_sensor_no_unit(
+    hass: HomeAssistant,
+    mock_rpc_device: Mock,
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    """Test a virtual number sensor with no unit key in meta.ui."""
+    config = deepcopy(mock_rpc_device.config)
+    config["number:203"] = {
+        "name": "Virtual number sensor",
+        "min": 0,
+        "max": 100,
+        "meta": {"ui": {"step": 0.1, "view": "label"}},
+    }
+    monkeypatch.setattr(mock_rpc_device, "config", config)
+
+    status = deepcopy(mock_rpc_device.status)
+    status["number:203"] = {"value": 34.5}
+    monkeypatch.setattr(mock_rpc_device, "status", status)
+
+    await init_integration(hass, 3)
+
+    assert (state := hass.states.get("sensor.test_name_virtual_number_sensor"))
+    assert state.state == "34.5"
+    assert state.attributes.get(ATTR_UNIT_OF_MEASUREMENT) is None
+
+
 @pytest.mark.usefixtures("disable_async_remove_shelly_rpc_entities")
 async def test_rpc_remove_number_virtual_sensor_when_mode_field(
     hass: HomeAssistant,

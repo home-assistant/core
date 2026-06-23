@@ -114,7 +114,7 @@ async def help_setup_notify(
     # Mock platform with service
     mock_notify_platform(hass, tmp_path, "test", async_get_service=async_get_service)
     # Setup the platform
-    await async_setup_component(hass, "notify", {"notify": [{"platform": "test"}]})
+    await async_setup_component(hass, DOMAIN, {"notify": [{"platform": "test"}]})
     await hass.async_block_till_done()
 
     # Return mock for assertion service calls
@@ -193,9 +193,7 @@ async def test_invalid_platform(
     """Test service setup with an invalid platform."""
     mock_notify_platform(hass, tmp_path, "testnotify1")
     # Setup the platform
-    await async_setup_component(
-        hass, "notify", {"notify": [{"platform": "testnotify1"}]}
-    )
+    await async_setup_component(hass, DOMAIN, {"notify": [{"platform": "testnotify1"}]})
     await hass.async_block_till_done()
     assert "Invalid notify platform" in caplog.text
     caplog.clear()
@@ -303,9 +301,7 @@ async def test_reload_with_notify_builtin_platform_reload(
     await notify.async_reload(hass, "testnotify")
 
     # Setup the platform
-    await async_setup_component(
-        hass, "notify", {"notify": [{"platform": "testnotify"}]}
-    )
+    await async_setup_component(hass, DOMAIN, {"notify": [{"platform": "testnotify"}]})
     await hass.async_block_till_done()
     assert hass.services.has_service(notify.DOMAIN, "testnotify_a")
     assert hass.services.has_service(notify.DOMAIN, "testnotify_b")
@@ -360,9 +356,7 @@ async def test_setup_platform_and_reload(hass: HomeAssistant, tmp_path: Path) ->
     )
 
     # Setup the testnotify platform
-    await async_setup_component(
-        hass, "notify", {"notify": [{"platform": "testnotify"}]}
-    )
+    await async_setup_component(hass, DOMAIN, {"notify": [{"platform": "testnotify"}]})
     await hass.async_block_till_done()
     assert hass.services.has_service("testnotify", SERVICE_RELOAD)
     assert hass.services.has_service(notify.DOMAIN, "testnotify_a")
@@ -474,7 +468,7 @@ async def test_setup_platform_before_notify_setup(
     )
 
     # Setup the testnotify platform
-    setup_coro = async_setup_component(hass, "notify", hass_config)
+    setup_coro = async_setup_component(hass, DOMAIN, hass_config)
 
     load_task = asyncio.create_task(load_coro)
     setup_task = asyncio.create_task(setup_coro)
@@ -541,7 +535,7 @@ async def test_setup_platform_after_notify_setup(
     )
 
     # Setup the testnotify platform
-    setup_coro = async_setup_component(hass, "notify", hass_config)
+    setup_coro = async_setup_component(hass, DOMAIN, hass_config)
 
     setup_task = asyncio.create_task(setup_coro)
     load_task = asyncio.create_task(load_coro)

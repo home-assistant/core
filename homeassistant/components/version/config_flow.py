@@ -1,6 +1,6 @@
 """Config flow for Version integration."""
 
-from typing import Any
+from typing import Any, override
 
 import voluptuous as vol
 
@@ -40,6 +40,7 @@ class VersionConfigFlow(ConfigFlow, domain=DOMAIN):
         """Initialize the Version config flow."""
         self._entry_data: dict[str, Any] = DEFAULT_CONFIGURATION.copy()
 
+    @override
     async def async_step_user(
         self,
         user_input: dict[str, Any] | None = None,

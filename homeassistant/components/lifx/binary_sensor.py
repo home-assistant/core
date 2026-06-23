@@ -1,5 +1,7 @@
 """Binary sensor entities for LIFX integration."""
 
+from typing import override
+
 from homeassistant.components.binary_sensor import (
     BinarySensorDeviceClass,
     BinarySensorEntity,
@@ -51,6 +53,7 @@ class LIFXHevCycleBinarySensorEntity(LIFXEntity, BinarySensorEntity):
         self._async_update_attrs()
 
     @callback
+    @override
     def _handle_coordinator_update(self) -> None:
         """Handle updated data from the coordinator."""
         self._async_update_attrs()

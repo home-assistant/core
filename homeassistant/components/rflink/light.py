@@ -2,7 +2,7 @@
 
 import logging
 import re
-from typing import Any
+from typing import Any, override
 
 import voluptuous as vol
 
@@ -207,6 +207,7 @@ class DimmableRflinkLight(SwitchableRflinkDevice, LightEntity):
     _attr_supported_color_modes = {ColorMode.BRIGHTNESS}
     _brightness = 255
 
+    @override
     async def async_added_to_hass(self) -> None:
         """Restore RFLink light brightness attribute."""
         await super().async_added_to_hass()
@@ -219,6 +220,7 @@ class DimmableRflinkLight(SwitchableRflinkDevice, LightEntity):
             # restore also brightness in dimmables devices
             self._brightness = int(old_state.attributes[ATTR_BRIGHTNESS])
 
+    @override
     async def async_turn_on(self, **kwargs: Any) -> None:
         """Turn the device on."""
         if ATTR_BRIGHTNESS in kwargs:
@@ -230,6 +232,7 @@ class DimmableRflinkLight(SwitchableRflinkDevice, LightEntity):
         # Turn on light at the requested dim level
         await self._async_handle_command("dim", self._brightness)
 
+    @override
     def _handle_event(self, event):
         """Adjust state if Rflink picks up a remote command for this device."""
         self.cancel_queued_send_commands()
@@ -245,6 +248,7 @@ class DimmableRflinkLight(SwitchableRflinkDevice, LightEntity):
             self._state = True
 
     @property
+    @override
     def brightness(self) -> int:
         """Return the brightness of this light between 0..255."""
         return self._brightness
@@ -265,6 +269,7 @@ class HybridRflinkLight(DimmableRflinkLight):
     Which results in a nice house disco :)
     """
 
+    @override
     async def async_turn_on(self, **kwargs: Any) -> None:
         """Turn the device on and set dim level."""
         await super().async_turn_on(**kwargs)
@@ -283,6 +288,7 @@ class ToggleRflinkLight(RflinkLight):
     and if the light is off and 'on' gets sent, the light will turn on.
     """
 
+    @override
     def _handle_event(self, event):
         """Adjust state if Rflink picks up a remote command for this device."""
         self.cancel_queued_send_commands()
@@ -292,10 +298,12 @@ class ToggleRflinkLight(RflinkLight):
             # if the state is true, it gets set as false
             self._state = self._state in [None, False]
 
+    @override
     async def async_turn_on(self, **kwargs: Any) -> None:
         """Turn the device on."""
         await self._async_handle_command("toggle")
 
+    @override
     async def async_turn_off(self, **kwargs: Any) -> None:
         """Turn the device off."""
         await self._async_handle_command("toggle")

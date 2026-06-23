@@ -6,7 +6,7 @@
     ]),
     'area_id': None,
     'capabilities': dict({
-      'options': list([
+      <SelectEntityCapabilityAttribute.OPTIONS: 'options'>: list([
         'always',
         'always_charging',
         'schedule_mode',
@@ -47,7 +47,7 @@
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'friendly_name': 'REG-ZOE-40 Charge mode',
-      'options': list([
+      <SelectEntityCapabilityAttribute.OPTIONS: 'options'>: list([
         'always',
         'always_charging',
         'schedule_mode',
@@ -69,7 +69,7 @@
     ]),
     'area_id': None,
     'capabilities': dict({
-      'options': list([
+      <SelectEntityCapabilityAttribute.OPTIONS: 'options'>: list([
         'always',
         'always_charging',
         'schedule_mode',
@@ -110,7 +110,7 @@
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'friendly_name': 'REG-ZOE-40 Charge mode',
-      'options': list([
+      <SelectEntityCapabilityAttribute.OPTIONS: 'options'>: list([
         'always',
         'always_charging',
         'schedule_mode',
@@ -132,7 +132,7 @@
     ]),
     'area_id': None,
     'capabilities': dict({
-      'options': list([
+      <SelectEntityCapabilityAttribute.OPTIONS: 'options'>: list([
         'always',
         'always_charging',
         'schedule_mode',
@@ -173,7 +173,7 @@
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'friendly_name': 'REG-ZOE-40 Charge mode',
-      'options': list([
+      <SelectEntityCapabilityAttribute.OPTIONS: 'options'>: list([
         'always',
         'always_charging',
         'schedule_mode',

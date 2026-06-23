@@ -24,7 +24,6 @@
   ReadOnlyDict({
     'device_class': 'timestamp',
     'friendly_name': 'System Monitor Battery empty',
-    'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
   })
 # ---
 # name: test_sensor[sensor.system_monitor_battery_empty - state]

@@ -1,7 +1,7 @@
 """Config flow to configure LinkPlay component."""
 
 import logging
-from typing import Any
+from typing import Any, override
 
 from aiohttp import ClientSession
 from linkplay.bridge import LinkPlayBridge
@@ -27,6 +27,7 @@ class LinkPlayConfigFlow(ConfigFlow, domain=DOMAIN):
         """Initialize the LinkPlay config flow."""
         self.data: dict[str, Any] = {}
 
+    @override
     async def async_step_zeroconf(
         self, discovery_info: ZeroconfServiceInfo
     ) -> ConfigFlowResult:
@@ -78,6 +79,7 @@ class LinkPlayConfigFlow(ConfigFlow, domain=DOMAIN):
             },
         )
 
+    @override
     async def async_step_user(
         self, user_input: dict[str, Any] | None = None
     ) -> ConfigFlowResult:
