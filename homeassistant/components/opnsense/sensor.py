@@ -1,5 +1,6 @@
 """Sensor platform for OPNsense routers."""
 
+from collections import abc
 from dataclasses import dataclass
 from datetime import datetime, timedelta
 
@@ -17,12 +18,29 @@ from homeassistant.util import dt as dt_util
 from .coordinator import OPNsenseConfigEntry, OPNsenseCoordinator
 from .types import DeviceDetails
 
+type OPNsenseRawValue = str | int | bool
+
+
+def _convert_expires(value: OPNsenseRawValue) -> datetime | str | None:
+    """Convert expires value to a timestamp when possible."""
+    if type(value) is int:
+        return dt_util.utcnow() + timedelta(seconds=value)
+    return None
+
+
+def _convert_interface(value: OPNsenseRawValue) -> datetime | str | None:
+    """Convert interface value to a string."""
+    if isinstance(value, str):
+        return value
+    return str(value)
+
 
 @dataclass(frozen=True, kw_only=True)
 class OPNsenseSensorDescription(SensorEntityDescription):
     """Description of an OPNsense sensor entity."""
 
     data_key: str
+    value_fn: abc.Callable[[OPNsenseRawValue], datetime | str | None]
 
 
 SENSOR_DESCRIPTIONS: tuple[OPNsenseSensorDescription, ...] = (
@@ -30,6 +48,7 @@ SENSOR_DESCRIPTIONS: tuple[OPNsenseSensorDescription, ...] = (
         key="expires",
         translation_key="expires",
         data_key="expires",
+        value_fn=_convert_expires,
         device_class=SensorDeviceClass.TIMESTAMP,
         entity_registry_enabled_default=False,
     ),
@@ -37,6 +56,7 @@ SENSOR_DESCRIPTIONS: tuple[OPNsenseSensorDescription, ...] = (
         key="interface",
         translation_key="interface",
         data_key="intf_description",
+        value_fn=_convert_interface,
     ),
 )
 
@@ -121,19 +141,11 @@ class OPNsenseSensorEntity(CoordinatorEntity[OPNsenseCoordinator], SensorEntity)
         if not self.available:
             return None
 
-        device_data = self.device_data
-
-        value = device_data.get(self.entity_description.data_key)
-        if value in (None, ""):
+        value = self.device_data.get(self.entity_description.data_key)
+        if value is None:
             return None
 
-        if self.entity_description.device_class is SensorDeviceClass.TIMESTAMP:
-            # Should be the number of seconds until the device expires, so convert to a timestamp
-            if type(value) is int:
-                return dt_util.utcnow() + timedelta(seconds=value)
+        if value == "":
             return None
 
-        if isinstance(value, str):
-            return value
-
-        return str(value)
+        return self.entity_description.value_fn(value)
