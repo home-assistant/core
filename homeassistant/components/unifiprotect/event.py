@@ -85,15 +85,14 @@ class ProtectDeviceRingEventEntity(EventEntityMixin, ProtectDeviceEntity, EventE
         await super().async_added_to_hass()
         self.async_on_remove(
             self.data.async_subscribe_public_event(
-                self.device.mac, self._async_ring_event
+                self.device.mac, EventType.RING, self._async_ring_event
             )
         )
 
     @callback
     def _async_ring_event(self, event: ProtectEvent) -> None:
-        if event.type is EventType.RING:
-            self._trigger_event(DoorbellEventType.RING, {ATTR_EVENT_ID: event.id})
-            self.async_write_ha_state()
+        self._trigger_event(DoorbellEventType.RING, {ATTR_EVENT_ID: event.id})
+        self.async_write_ha_state()
 
 
 class ProtectDeviceNFCEventEntity(EventEntityMixin, ProtectDeviceEntity, EventEntity):
@@ -381,7 +380,7 @@ class ProtectDeviceSmartDetectEventEntity(
         await super().async_added_to_hass()
         self.async_on_remove(
             self.data.async_subscribe_public_event(
-                self.device.mac, self._async_smart_detect_event
+                self.device.mac, EventType.SMART_DETECT, self._async_smart_detect_event
             )
         )
 

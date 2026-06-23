@@ -282,6 +282,24 @@ async def test_package_detected(
     await hass.async_block_till_done()
     assert len(events) == 2
 
+    # A non-smart-detect event that happens to carry a matching object type is
+    # routed by type, so it must not reach the smart-detect entity.
+    ufp.events_msg(
+        ProtectEvent(
+            id="test_ring_with_package_types",
+            type=EventType.RING,
+            channel=ProtectEventChannel.DETECTION,
+            device_id=doorbell.id,
+            device_mac=doorbell.mac,
+            start=fixed_now,
+            end=fixed_now,
+            smart_detect_types=(SmartDetectObjectType.PACKAGE,),
+        ),
+        EventChange.STARTED,
+    )
+    await hass.async_block_till_done()
+    assert len(events) == 2
+
     unsub()
 
 
