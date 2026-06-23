@@ -7,6 +7,7 @@ from freezegun.api import FrozenDateTimeFactory
 import pytest
 from syrupy.assertion import SnapshotAssertion
 from tesla_fleet_api.const import EnergyExportMode, EnergyOperationMode
+from tesla_fleet_api.exceptions import InvalidCommand
 from teslemetry_stream.const import Signal
 
 from homeassistant.components.select import (
@@ -18,12 +19,23 @@ from homeassistant.components.teslemetry.coordinator import ENERGY_INFO_INTERVAL
 from homeassistant.components.teslemetry.select import LOW
 from homeassistant.const import ATTR_ENTITY_ID, STATE_UNKNOWN, Platform
 from homeassistant.core import HomeAssistant
+from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import entity_registry as er
 
 from . import assert_entities, reload_platform, setup_platform
-from .const import COMMAND_OK, SITE_INFO, VEHICLE_DATA_ALT
+from .const import COMMAND_ERRORS, COMMAND_OK, METADATA, SITE_INFO, VEHICLE_DATA_ALT
 
 from tests.common import async_fire_time_changed
+
+# Entity description keys for the rear seat-heater entities gated by config.
+REAR_LEFT = "climate_state_seat_heater_rear_left"
+REAR_CENTER = "climate_state_seat_heater_rear_center"
+REAR_RIGHT = "climate_state_seat_heater_rear_right"
+THIRD_LEFT = "climate_state_seat_heater_third_row_left"
+THIRD_RIGHT = "climate_state_seat_heater_third_row_right"
+ALL_REAR_KEYS = {REAR_LEFT, REAR_CENTER, REAR_RIGHT, THIRD_LEFT, THIRD_RIGHT}
+
+VEHICLE_VIN = "LRW3F7EK4NC700000"
 
 
 @pytest.mark.usefixtures("entity_registry_enabled_by_default")
@@ -37,6 +49,69 @@ async def test_select(
 
     entry = await setup_platform(hass, [Platform.SELECT])
     assert_entities(hass, entry.entry_id, entity_registry, snapshot)
+
+
+@pytest.mark.parametrize(
+    ("config", "expected"),
+    [
+        pytest.param({}, set(), id="no_config"),
+        pytest.param(
+            {"rear_seat_heaters": 0, "third_row_seats": "None"},
+            set(),
+            id="0_no_rear_heaters",
+        ),
+        pytest.param(
+            {"rear_seat_heaters": 1, "third_row_seats": "None"},
+            {REAR_LEFT, REAR_CENTER, REAR_RIGHT},
+            id="1_heated_rear_bench",
+        ),
+        pytest.param(
+            {"rear_seat_heaters": 2, "third_row_seats": "None"},
+            {REAR_LEFT, REAR_RIGHT},
+            id="2_legacy_model_s_outboard_only",
+        ),
+        pytest.param(
+            {"rear_seat_heaters": 3, "third_row_seats": "FoldFlatPowerStrutSeats"},
+            {REAR_LEFT, REAR_CENTER, REAR_RIGHT, THIRD_LEFT, THIRD_RIGHT},
+            id="3_model_x_with_third_row",
+        ),
+        pytest.param(
+            {"rear_seat_heaters": 3, "third_row_seats": "None"},
+            {REAR_LEFT, REAR_CENTER, REAR_RIGHT},
+            id="3_model_x_five_seat_no_third_row",
+        ),
+    ],
+)
+async def test_rear_seat_heater_configurations(
+    hass: HomeAssistant,
+    entity_registry: er.EntityRegistry,
+    mock_metadata: AsyncMock,
+    config: dict[str, int | str],
+    expected: set[str],
+) -> None:
+    """Verify which rear seat-heater entities exist per rear_seat_heaters config.
+
+    rear_seat_heaters is an undocumented Tesla enum. Behaviour inferred from
+    vehicle models/years/config observed across the fleet:
+      0 - no heated rear seats
+      1 - heated rear bench: left, center, right (Model 3/Y, modern S/X, ...)
+      2 - outboard rear only: left, right, no center (classic Model S)
+      3 - heated rear bench plus third row (Model X)
+    Third-row heaters additionally require an actual third row, since some
+    5-seat Model X report 3 without having a third row. third_row_seats is a
+    string ("None" when absent), not a bool.
+    """
+    metadata = deepcopy(METADATA)
+    metadata["vehicles"][VEHICLE_VIN]["config"] = config
+    mock_metadata.return_value = metadata
+
+    entry = await setup_platform(hass, [Platform.SELECT])
+
+    created = {
+        entity.unique_id.removeprefix(f"{VEHICLE_VIN}-")
+        for entity in er.async_entries_for_config_entry(entity_registry, entry.entry_id)
+    }
+    assert (created & ALL_REAR_KEYS) == expected
 
 
 async def test_select_services(hass: HomeAssistant, mock_vehicle_data) -> None:
@@ -106,6 +181,51 @@ async def test_select_services(hass: HomeAssistant, mock_vehicle_data) -> None:
         state = hass.states.get(entity_id)
         assert state.state == EnergyExportMode.BATTERY_OK.value
         call.assert_called_once()
+
+
+@pytest.mark.parametrize("response", COMMAND_ERRORS)
+async def test_select_command_errors(
+    hass: HomeAssistant, mock_vehicle_data: AsyncMock, response: dict
+) -> None:
+    """Tests that vehicle command failures raise HomeAssistantError."""
+    mock_vehicle_data.return_value = VEHICLE_DATA_ALT
+    await setup_platform(hass, [Platform.SELECT])
+
+    with (
+        patch(
+            "tesla_fleet_api.teslemetry.Vehicle.remote_seat_heater_request",
+            return_value=response,
+        ),
+        pytest.raises(HomeAssistantError),
+    ):
+        await hass.services.async_call(
+            SELECT_DOMAIN,
+            SERVICE_SELECT_OPTION,
+            {ATTR_ENTITY_ID: "select.test_seat_heater_front_left", ATTR_OPTION: LOW},
+            blocking=True,
+        )
+
+
+async def test_select_command_exception(hass: HomeAssistant) -> None:
+    """Tests that an energy command SDK exception raises HomeAssistantError."""
+    await setup_platform(hass, [Platform.SELECT])
+
+    with (
+        patch(
+            "tesla_fleet_api.teslemetry.EnergySite.operation",
+            side_effect=InvalidCommand,
+        ),
+        pytest.raises(HomeAssistantError),
+    ):
+        await hass.services.async_call(
+            SELECT_DOMAIN,
+            SERVICE_SELECT_OPTION,
+            {
+                ATTR_ENTITY_ID: "select.energy_site_operation_mode",
+                ATTR_OPTION: EnergyOperationMode.AUTONOMOUS.value,
+            },
+            blocking=True,
+        )
 
 
 async def test_select_invalid_data(
@@ -239,7 +359,8 @@ async def test_export_rule_restore(
             },
             EnergyExportMode.NEVER.value,
         ),
-        # Path 3: In VPP, Export enabled but state shows disabled (current_option is NEVER)
+        # Path 3: In VPP, Export enabled but state shows disabled
+        # (current_option is NEVER)
         (
             {
                 "customer_preferred_export_rule": "never",

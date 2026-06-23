@@ -3,8 +3,6 @@
 Requires Smoke Gateway Wifi with an internet connection.
 """
 
-from __future__ import annotations
-
 import logging
 
 from requests import RequestException

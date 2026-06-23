@@ -1,7 +1,5 @@
 """Support to serve the Home Assistant API as WSGI application."""
 
-from __future__ import annotations
-
 import asyncio
 from collections.abc import Collection
 from dataclasses import dataclass
@@ -14,7 +12,7 @@ from pathlib import Path
 import socket
 import ssl
 from tempfile import NamedTemporaryFile
-from typing import Any, Final, TypedDict, cast
+from typing import Any, Final, TypedDict, cast, override
 
 from aiohttp import web
 from aiohttp.abc import AbstractStreamWriter
@@ -51,7 +49,6 @@ from homeassistant.helpers.http import (
 from homeassistant.helpers.importlib import async_import_module
 from homeassistant.helpers.network import NoURLAvailableError, get_url
 from homeassistant.helpers.typing import ConfigType
-from homeassistant.loader import bind_hass
 from homeassistant.setup import (
     SetupPhases,
     async_start_setup,
@@ -175,7 +172,6 @@ class ConfData(TypedDict, total=False):
     ssl_profile: str
 
 
-@bind_hass
 async def async_get_last_config(hass: HomeAssistant) -> dict[str, Any] | None:
     """Return the last known working config."""
     store = storage.Store[dict[str, Any]](hass, STORAGE_VERSION, STORAGE_KEY)
@@ -340,6 +336,7 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
 class HomeAssistantRequest(web.Request):
     """Home Assistant request object."""
 
+    @override
     async def json(self, *, loads: JSONDecoder = json_loads) -> Any:
         """Return body as JSON."""
         # json_loads is a wrapper around orjson.loads that handles
@@ -350,6 +347,7 @@ class HomeAssistantRequest(web.Request):
 class HomeAssistantApplication(web.Application):
     """Home Assistant application."""
 
+    @override
     def _make_request(
         self,
         message: RawRequestMessage,

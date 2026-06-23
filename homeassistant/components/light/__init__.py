@@ -1,7 +1,5 @@
 """Provides functionality to interact with lights."""
 
-from __future__ import annotations
-
 from collections.abc import Iterable
 import csv
 import dataclasses
@@ -26,7 +24,6 @@ from homeassistant.helpers.entity import ToggleEntity, ToggleEntityDescription
 from homeassistant.helpers.entity_component import EntityComponent
 from homeassistant.helpers.frame import ReportBehavior, report_usage
 from homeassistant.helpers.typing import ConfigType, VolDictType
-from homeassistant.loader import bind_hass
 from homeassistant.util import color as color_util
 
 from .const import (  # noqa: F401
@@ -223,7 +220,6 @@ LIGHT_TURN_OFF_SCHEMA: VolDictType = {
 _LOGGER = logging.getLogger(__name__)
 
 
-@bind_hass
 def is_on(hass: HomeAssistant, entity_id: str) -> bool:
     """Return if the lights are on based on the statemachine."""
     return hass.states.is_state(entity_id, STATE_ON)
@@ -245,7 +241,7 @@ def preprocess_turn_on_alternatives(
 
     if (color_name := params.pop(ATTR_COLOR_NAME, None)) is not None:
         try:
-            params[ATTR_RGB_COLOR] = color_util.color_name_to_rgb(color_name)
+            params[ATTR_RGB_COLOR] = tuple(color_util.color_name_to_rgb(color_name))
         except ValueError:
             _LOGGER.warning("Got unknown color %s, falling back to white", color_name)
             params[ATTR_RGB_COLOR] = (255, 255, 255)
@@ -873,6 +869,7 @@ class LightEntity(ToggleEntity, cached_properties=CACHED_PROPERTIES_WITH_ATTR_):
         return self._attr_effect
 
     @property
+    @override
     def capability_attributes(self) -> dict[str, Any]:
         """Return capability attributes."""
         data: dict[str, Any] = {}
@@ -985,6 +982,7 @@ class LightEntity(ToggleEntity, cached_properties=CACHED_PROPERTIES_WITH_ATTR_):
 
     @final
     @property
+    @override
     def state_attributes(self) -> dict[str, Any] | None:
         """Return state attributes."""
         data: dict[str, Any] = {}
@@ -1051,6 +1049,7 @@ class LightEntity(ToggleEntity, cached_properties=CACHED_PROPERTIES_WITH_ATTR_):
         return self._attr_supported_color_modes
 
     @cached_property
+    @override
     def supported_features(self) -> LightEntityFeature:
         """Flag supported features."""
         return self._attr_supported_features

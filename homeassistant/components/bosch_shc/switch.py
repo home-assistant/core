@@ -1,9 +1,7 @@
 """Platform for switch integration."""
 
-from __future__ import annotations
-
 from dataclasses import dataclass
-from typing import Any
+from typing import Any, override
 
 from boschshcpy import (
     SHCCamera360,
@@ -163,6 +161,7 @@ class SHCSwitch(SHCEntity, SwitchEntity):
         self.entity_description = description
 
     @property
+    @override
     def is_on(self) -> bool:
         """Return the state of the switch."""
         return (
@@ -170,15 +169,18 @@ class SHCSwitch(SHCEntity, SwitchEntity):
             == self.entity_description.on_value
         )
 
+    @override
     def turn_on(self, **kwargs: Any) -> None:
         """Turn the switch on."""
         setattr(self._device, self.entity_description.on_key, True)
 
+    @override
     def turn_off(self, **kwargs: Any) -> None:
         """Turn the switch off."""
         setattr(self._device, self.entity_description.on_key, False)
 
     @property
+    @override
     def should_poll(self) -> bool:
         """Switch needs polling."""
         return self.entity_description.should_poll
@@ -200,14 +202,17 @@ class SHCRoutingSwitch(SHCEntity, SwitchEntity):
         self._attr_unique_id = f"{device.serial}_routing"
 
     @property
+    @override
     def is_on(self) -> bool:
         """Return the state of the switch."""
         return self._device.routing.name == "ENABLED"
 
+    @override
     def turn_on(self, **kwargs: Any) -> None:
         """Turn the switch on."""
         self._device.routing = True
 
+    @override
     def turn_off(self, **kwargs: Any) -> None:
         """Turn the switch off."""
         self._device.routing = False

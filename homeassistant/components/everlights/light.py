@@ -1,10 +1,8 @@
 """Support for EverLights lights."""
 
-from __future__ import annotations
-
 from datetime import timedelta
 import logging
-from typing import Any, cast
+from typing import Any, cast, override
 
 import pyeverlights
 import voluptuous as vol
@@ -100,10 +98,12 @@ class EverLightsLight(LightEntity):
         self._attr_unique_id = f"{self._mac}-{self._channel}"
 
     @property
+    @override
     def is_on(self) -> bool:
         """Return true if device is on."""
         return self._status[f"ch{self._channel}Active"] == 1
 
+    @override
     async def async_turn_on(self, **kwargs: Any) -> None:
         """Turn the light on."""
         hs_color = cast(
@@ -132,6 +132,7 @@ class EverLightsLight(LightEntity):
         self._attr_brightness = brightness
         self._attr_effect = effect
 
+    @override
     async def async_turn_off(self, **kwargs: Any) -> None:
         """Turn the light off."""
         await self._api.clear_pattern(self._channel)

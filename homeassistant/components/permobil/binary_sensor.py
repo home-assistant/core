@@ -1,10 +1,8 @@
 """Platform for binary sensor integration."""
 
-from __future__ import annotations
-
 from collections.abc import Callable
 from dataclasses import dataclass
-from typing import Any
+from typing import Any, override
 
 from mypermobil import BATTERY_CHARGING
 
@@ -58,11 +56,13 @@ class PermobilbinarySensor(PermobilEntity, BinarySensorEntity):
     entity_description: PermobilBinarySensorEntityDescription
 
     @property
+    @override
     def is_on(self) -> bool:
         """Return True if the wheelchair is charging."""
         return self.entity_description.is_on_fn(self.coordinator.data)
 
     @property
+    @override
     def available(self) -> bool:
         """Return True if the sensor has value."""
         return super().available and self.entity_description.available_fn(

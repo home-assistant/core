@@ -1,6 +1,8 @@
 """Support for Qbus sensor."""
 
 from dataclasses import dataclass
+from enum import StrEnum
+from typing import override
 
 from qbusmqttapi.discovery import QbusMqttOutput
 from qbusmqttapi.state import (
@@ -13,6 +15,7 @@ from qbusmqttapi.state import (
 )
 
 from homeassistant.components.sensor import (
+    DEVICE_CLASS_UNITS,
     SensorDeviceClass,
     SensorEntity,
     SensorEntityDescription,
@@ -48,8 +51,10 @@ class QbusWeatherDescription(SensorEntityDescription):
     """Description for Qbus weather entities."""
 
     property: str
+    scale_factor: int | None = None
 
 
+# Qbus reports illuminance in klux, HA only supports lux.
 _WEATHER_DESCRIPTIONS = (
     QbusWeatherDescription(
         key="daylight",
@@ -58,6 +63,7 @@ _WEATHER_DESCRIPTIONS = (
         device_class=SensorDeviceClass.ILLUMINANCE,
         state_class=SensorStateClass.MEASUREMENT,
         native_unit_of_measurement=LIGHT_LUX,
+        scale_factor=1000,
     ),
     QbusWeatherDescription(
         key="light",
@@ -65,6 +71,7 @@ _WEATHER_DESCRIPTIONS = (
         device_class=SensorDeviceClass.ILLUMINANCE,
         state_class=SensorStateClass.MEASUREMENT,
         native_unit_of_measurement=LIGHT_LUX,
+        scale_factor=1000,
     ),
     QbusWeatherDescription(
         key="light_east",
@@ -73,6 +80,7 @@ _WEATHER_DESCRIPTIONS = (
         device_class=SensorDeviceClass.ILLUMINANCE,
         state_class=SensorStateClass.MEASUREMENT,
         native_unit_of_measurement=LIGHT_LUX,
+        scale_factor=1000,
     ),
     QbusWeatherDescription(
         key="light_south",
@@ -81,6 +89,7 @@ _WEATHER_DESCRIPTIONS = (
         device_class=SensorDeviceClass.ILLUMINANCE,
         state_class=SensorStateClass.MEASUREMENT,
         native_unit_of_measurement=LIGHT_LUX,
+        scale_factor=1000,
     ),
     QbusWeatherDescription(
         key="light_west",
@@ -89,6 +98,7 @@ _WEATHER_DESCRIPTIONS = (
         device_class=SensorDeviceClass.ILLUMINANCE,
         state_class=SensorStateClass.MEASUREMENT,
         native_unit_of_measurement=LIGHT_LUX,
+        scale_factor=1000,
     ),
     QbusWeatherDescription(
         key="temperature",
@@ -289,7 +299,7 @@ async def async_setup_entry(
         async_add_entities(entities)
 
     _check_outputs()
-    entry.async_on_unload(coordinator.async_add_listener(_check_outputs))
+    coordinator.async_add_listener(_check_outputs)
 
 
 class QbusGaugeVariantSensor(QbusEntity, SensorEntity):
@@ -308,8 +318,32 @@ class QbusGaugeVariantSensor(QbusEntity, SensorEntity):
         variant = str(mqtt_output.variant)
         self.entity_description = _GAUGE_VARIANT_DESCRIPTIONS[variant.upper()]
 
+        allowed_units = (
+            DEVICE_CLASS_UNITS.get(self.entity_description.device_class)
+            if self.entity_description.device_class
+            else None
+        )
+        value_properties: dict = mqtt_output.properties.get("currentValue", {})
+        unit = self._find_matching_unit(value_properties.get("unit"), allowed_units)
+
+        if allowed_units is not None and unit in allowed_units:
+            self._attr_native_unit_of_measurement = unit
+
+    @override
     async def _handle_state_received(self, state: QbusMqttGaugeState) -> None:
         self._attr_native_value = state.read_value(GaugeStateProperty.CURRENT_VALUE)
+
+    def _find_matching_unit(
+        self,
+        unit: str | None,
+        allowed_units: set[type[StrEnum] | str | None] | None,
+    ) -> str | None:
+        """Do a case-insensitive search in the allowed units. Returns the properly cased unit if found, else None."""
+        if unit is None or allowed_units is None:
+            return None
+
+        lookup = {str(u).casefold(): str(u) for u in allowed_units if u is not None}
+        return lookup.get(unit.casefold())
 
 
 class QbusHumiditySensor(QbusEntity, SensorEntity):
@@ -322,6 +356,7 @@ class QbusHumiditySensor(QbusEntity, SensorEntity):
     _attr_native_unit_of_measurement = PERCENTAGE
     _attr_state_class = SensorStateClass.MEASUREMENT
 
+    @override
     async def _handle_state_received(self, state: QbusMqttHumidityState) -> None:
         self._attr_native_value = state.read_value()
 
@@ -335,6 +370,7 @@ class QbusThermoSensor(QbusEntity, SensorEntity):
     _attr_native_unit_of_measurement = UnitOfTemperature.CELSIUS
     _attr_state_class = SensorStateClass.MEASUREMENT
 
+    @override
     async def _handle_state_received(self, state: QbusMqttThermoState) -> None:
         self._attr_native_value = state.read_current_temperature()
 
@@ -350,6 +386,7 @@ class QbusVentilationSensor(QbusEntity, SensorEntity):
     _attr_state_class = SensorStateClass.MEASUREMENT
     _attr_suggested_display_precision = 0
 
+    @override
     async def _handle_state_received(self, state: QbusMqttVentilationState) -> None:
         self._attr_native_value = state.read_co2()
 
@@ -373,6 +410,11 @@ class QbusWeatherSensor(QbusEntity, SensorEntity):
         if description.key == "temperature":
             self._attr_name = None
 
+    @override
     async def _handle_state_received(self, state: QbusMqttWeatherState) -> None:
         if value := state.read_property(self.entity_description.property, None):
-            self.native_value = value
+            self.native_value = (
+                value * self.entity_description.scale_factor
+                if self.entity_description.scale_factor is not None
+                else value
+            )

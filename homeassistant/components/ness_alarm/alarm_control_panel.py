@@ -1,8 +1,7 @@
 """Support for Ness D8X/D16X alarm panel."""
 
-from __future__ import annotations
-
 import logging
+from typing import override
 
 from nessclient import ArmingMode, ArmingState, Client
 
@@ -25,10 +24,12 @@ _LOGGER = logging.getLogger(__name__)
 ARMING_MODE_TO_STATE = {
     ArmingMode.ARMED_AWAY: AlarmControlPanelState.ARMED_AWAY,
     ArmingMode.ARMED_HOME: AlarmControlPanelState.ARMED_HOME,
-    ArmingMode.ARMED_DAY: AlarmControlPanelState.ARMED_AWAY,  # no applicable state, fallback to away
+    # no applicable state, fallback to away
+    ArmingMode.ARMED_DAY: AlarmControlPanelState.ARMED_AWAY,
     ArmingMode.ARMED_NIGHT: AlarmControlPanelState.ARMED_NIGHT,
     ArmingMode.ARMED_VACATION: AlarmControlPanelState.ARMED_VACATION,
-    ArmingMode.ARMED_HIGHEST: AlarmControlPanelState.ARMED_AWAY,  # no applicable state, fallback to away
+    # no applicable state, fallback to away
+    ArmingMode.ARMED_HIGHEST: AlarmControlPanelState.ARMED_AWAY,
 }
 
 
@@ -69,6 +70,7 @@ class NessAlarmPanel(AlarmControlPanelEntity):
             features |= AlarmControlPanelEntityFeature.ARM_HOME
         self._attr_supported_features = features
 
+    @override
     async def async_added_to_hass(self) -> None:
         """Register callbacks."""
         self.async_on_remove(
@@ -77,18 +79,22 @@ class NessAlarmPanel(AlarmControlPanelEntity):
             )
         )
 
+    @override
     async def async_alarm_disarm(self, code: str | None = None) -> None:
         """Send disarm command."""
         await self._client.disarm(code)
 
+    @override
     async def async_alarm_arm_away(self, code: str | None = None) -> None:
         """Send arm away command."""
         await self._client.arm_away(code)
 
+    @override
     async def async_alarm_arm_home(self, code: str | None = None) -> None:
         """Send arm home command."""
         await self._client.arm_home(code)
 
+    @override
     async def async_alarm_trigger(self, code: str | None = None) -> None:
         """Send trigger/panic command."""
         await self._client.panic(code)

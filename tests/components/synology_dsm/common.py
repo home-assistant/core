@@ -1,14 +1,18 @@
 """Configure Synology DSM tests."""
 
-from __future__ import annotations
-
 from unittest.mock import AsyncMock, Mock
 
 from awesomeversion import AwesomeVersion
 from synology_dsm.api.core.external_usb import SynoCoreExternalUSBDevice
+from synology_dsm.api.core.hardware import FanSpeed
 from synology_dsm.api.storage.storage import SynoStorageDisk, SynoStorageVolume
 
 from .consts import SERIAL
+
+
+def mock_dsm_hardware(fan_speed: FanSpeed = FanSpeed.COOL) -> Mock:
+    """Mock SynologyDSM hardware information."""
+    return AsyncMock(update=AsyncMock(), fan_speed=fan_speed)
 
 
 def mock_dsm_information(

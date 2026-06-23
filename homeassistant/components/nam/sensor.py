@@ -1,11 +1,10 @@
 """Support for the Nettigo Air Monitor service."""
 
-from __future__ import annotations
-
 from collections.abc import Callable
 from dataclasses import dataclass
 from datetime import datetime, timedelta
 import logging
+from typing import override
 
 from nettigo_air_monitor import NAMSensors
 
@@ -358,8 +357,7 @@ SENSORS: tuple[NAMSensorEntityDescription, ...] = (
     ),
     NAMSensorEntityDescription(
         key=ATTR_UPTIME,
-        translation_key="last_restart",
-        device_class=SensorDeviceClass.TIMESTAMP,
+        device_class=SensorDeviceClass.UPTIME,
         entity_registry_enabled_default=False,
         entity_category=EntityCategory.DIAGNOSTIC,
         value=lambda sensors: utcnow() - timedelta(seconds=sensors.uptime or 0),
@@ -417,6 +415,7 @@ class NAMSensor(CoordinatorEntity[NAMDataUpdateCoordinator], SensorEntity):
         self.entity_description = description
 
     @property
+    @override
     def available(self) -> bool:
         """Return if entity is available."""
         available = super().available
@@ -430,6 +429,7 @@ class NAMSensor(CoordinatorEntity[NAMDataUpdateCoordinator], SensorEntity):
         )
 
     @property
+    @override
     def native_value(self) -> StateType | datetime:
         """Return the state."""
         return self.entity_description.value(self.coordinator.data)

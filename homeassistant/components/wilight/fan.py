@@ -1,8 +1,6 @@
 """Support for WiLight Fan."""
 
-from __future__ import annotations
-
-from typing import Any
+from typing import Any, override
 
 from pywilight.const import (
     FAN_V1,
@@ -17,7 +15,6 @@ from pywilight.const import (
 from pywilight.wilight_device import PyWiLightDevice
 
 from homeassistant.components.fan import DIRECTION_FORWARD, FanEntity, FanEntityFeature
-from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from homeassistant.util.percentage import (
@@ -25,20 +22,19 @@ from homeassistant.util.percentage import (
     percentage_to_ordered_list_item,
 )
 
-from .const import DOMAIN
 from .entity import WiLightDevice
-from .parent_device import WiLightParent
+from .parent_device import WiLightConfigEntry
 
 ORDERED_NAMED_FAN_SPEEDS = [WL_SPEED_LOW, WL_SPEED_MEDIUM, WL_SPEED_HIGH]
 
 
 async def async_setup_entry(
     hass: HomeAssistant,
-    entry: ConfigEntry,
+    entry: WiLightConfigEntry,
     async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up WiLight lights from a config entry."""
-    parent: WiLightParent = hass.data[DOMAIN][entry.entry_id]
+    parent = entry.runtime_data
 
     # Handle a discovered WiLight device.
     entities = []
@@ -74,11 +70,13 @@ class WiLightFan(WiLightDevice, FanEntity):
         self._direction = WL_DIRECTION_FORWARD
 
     @property
+    @override
     def is_on(self) -> bool:
         """Return true if device is on."""
         return self._status.get("direction", WL_DIRECTION_OFF) != WL_DIRECTION_OFF
 
     @property
+    @override
     def percentage(self) -> int | None:
         """Return the current speed percentage."""
         if (
@@ -92,6 +90,7 @@ class WiLightFan(WiLightDevice, FanEntity):
         return ordered_list_item_to_percentage(ORDERED_NAMED_FAN_SPEEDS, wl_speed)
 
     @property
+    @override
     def current_direction(self) -> str:
         """Return the current direction of the fan."""
         if (
@@ -101,6 +100,7 @@ class WiLightFan(WiLightDevice, FanEntity):
             self._direction = self._status["direction"]
         return self._direction
 
+    @override
     async def async_turn_on(
         self,
         percentage: int | None = None,
@@ -113,6 +113,7 @@ class WiLightFan(WiLightDevice, FanEntity):
         else:
             await self.async_set_percentage(percentage)
 
+    @override
     async def async_set_percentage(self, percentage: int) -> None:
         """Set the speed of the fan."""
         if percentage == 0:
@@ -126,6 +127,7 @@ class WiLightFan(WiLightDevice, FanEntity):
         wl_speed = percentage_to_ordered_list_item(ORDERED_NAMED_FAN_SPEEDS, percentage)
         await self._client.set_fan_speed(self._index, wl_speed)
 
+    @override
     async def async_set_direction(self, direction: str) -> None:
         """Set the direction of the fan."""
         wl_direction = WL_DIRECTION_REVERSE
@@ -133,6 +135,7 @@ class WiLightFan(WiLightDevice, FanEntity):
             wl_direction = WL_DIRECTION_FORWARD
         await self._client.set_fan_direction(self._index, wl_direction)
 
+    @override
     async def async_turn_off(self, **kwargs: Any) -> None:
         """Turn the fan off."""
         await self._client.set_fan_direction(self._index, WL_DIRECTION_OFF)

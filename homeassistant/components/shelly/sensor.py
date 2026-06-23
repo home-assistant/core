@@ -1,9 +1,8 @@
 """Sensor for Shelly."""
 
-from __future__ import annotations
-
 from dataclasses import dataclass
-from typing import Final, cast
+from datetime import timedelta
+from typing import Final, cast, override
 
 from aioshelly.block_device import Block
 from aioshelly.const import RPC_GENERATIONS
@@ -41,8 +40,9 @@ from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from homeassistant.helpers.entity_registry import RegistryEntry
 from homeassistant.helpers.typing import StateType
+from homeassistant.util.dt import utcnow
 
-from .const import CONF_SLEEP_PERIOD, ROLE_GENERIC
+from .const import CONF_SLEEP_PERIOD, DRIVER_MISSING_ERROR, ROLE_GENERIC
 from .coordinator import ShellyBlockCoordinator, ShellyConfigEntry, ShellyRpcCoordinator
 from .entity import (
     BlockEntityDescription,
@@ -62,7 +62,6 @@ from .utils import (
     async_remove_orphaned_entities,
     get_blu_trv_device_info,
     get_device_entry_gen,
-    get_device_uptime,
     get_shelly_air_lamp_life,
     get_virtual_component_unit,
     is_rpc_wifi_stations_disabled,
@@ -114,6 +113,7 @@ class RpcSensor(ShellyRpcAttributeEntity, SensorEntity):
             self.configure_translation_attributes()
 
     @property
+    @override
     def native_value(self) -> StateType:
         """Return value of sensor."""
         attribute_value = self.attribute_value
@@ -134,6 +134,7 @@ class RpcEnergyConsumedSensor(RpcSensor):
     """Represent a RPC energy consumed sensor."""
 
     @property
+    @override
     def native_value(self) -> StateType:
         """Return value of sensor."""
         total_energy = self.status["aenergy"]["total"]
@@ -151,6 +152,7 @@ class RpcPresenceSensor(RpcSensor):
     """Represent a RPC presence sensor."""
 
     @property
+    @override
     def available(self) -> bool:
         """Available."""
         available = super().available
@@ -466,9 +468,8 @@ REST_SENSORS: Final = {
     ),
     "uptime": RestSensorDescription(
         key="uptime",
-        translation_key="last_restart",
-        value=lambda status, last: get_device_uptime(status["uptime"], last),
-        device_class=SensorDeviceClass.TIMESTAMP,
+        value=lambda status, _: utcnow() - timedelta(seconds=status["uptime"]),
+        device_class=SensorDeviceClass.UPTIME,
         entity_registry_enabled_default=False,
         entity_category=EntityCategory.DIAGNOSTIC,
     ),
@@ -1227,6 +1228,9 @@ RPC_SENSORS: Final = {
         suggested_display_precision=1,
         device_class=SensorDeviceClass.TEMPERATURE,
         state_class=SensorStateClass.MEASUREMENT,
+        removal_condition=lambda _, status, key: (
+            DRIVER_MISSING_ERROR in status[key].get("errors", [])
+        ),
     ),
     "rssi": RpcSensorDescription(
         key="wifi",
@@ -1242,9 +1246,8 @@ RPC_SENSORS: Final = {
     "uptime": RpcSensorDescription(
         key="sys",
         sub_key="uptime",
-        translation_key="last_restart",
-        value=get_device_uptime,
-        device_class=SensorDeviceClass.TIMESTAMP,
+        device_class=SensorDeviceClass.UPTIME,
+        value=lambda status, _: utcnow() - timedelta(seconds=status),
         entity_registry_enabled_default=False,
         entity_category=EntityCategory.DIAGNOSTIC,
         use_polling_coordinator=True,
@@ -1256,6 +1259,9 @@ RPC_SENSORS: Final = {
         suggested_display_precision=1,
         device_class=SensorDeviceClass.HUMIDITY,
         state_class=SensorStateClass.MEASUREMENT,
+        removal_condition=lambda _, status, key: (
+            DRIVER_MISSING_ERROR in status[key].get("errors", [])
+        ),
     ),
     "battery": RpcSensorDescription(
         key="devicepower",
@@ -1814,6 +1820,7 @@ class BlockSensor(ShellyBlockAttributeEntity, SensorEntity):
         self._attr_native_unit_of_measurement = description.native_unit_of_measurement
 
     @property
+    @override
     def native_value(self) -> StateType:
         """Return value of sensor."""
         return self.attribute_value
@@ -1825,6 +1832,7 @@ class RestSensor(ShellyRestAttributeEntity, SensorEntity):
     entity_description: RestSensorDescription
 
     @property
+    @override
     def native_value(self) -> StateType:
         """Return value of sensor."""
         return self.attribute_value
@@ -1847,12 +1855,14 @@ class BlockSleepingSensor(ShellySleepingBlockAttributeEntity, RestoreSensor):
         super().__init__(coordinator, block, attribute, description, entry)
         self.restored_data: SensorExtraStoredData | None = None
 
+    @override
     async def async_added_to_hass(self) -> None:
         """Handle entity which will be added."""
         await super().async_added_to_hass()
         self.restored_data = await self.async_get_last_sensor_data()
 
     @property
+    @override
     def native_value(self) -> StateType:
         """Return value of sensor."""
         if self.block is not None:
@@ -1864,6 +1874,7 @@ class BlockSleepingSensor(ShellySleepingBlockAttributeEntity, RestoreSensor):
         return cast(StateType, self.restored_data.native_value)
 
     @property
+    @override
     def native_unit_of_measurement(self) -> str | None:
         """Return the unit of measurement of the sensor, if any."""
         if self.block is not None:
@@ -1895,12 +1906,14 @@ class RpcSleepingSensor(ShellySleepingRpcAttributeEntity, RestoreSensor):
         if coordinator.device.initialized:
             self.configure_translation_attributes()
 
+    @override
     async def async_added_to_hass(self) -> None:
         """Handle entity which will be added."""
         await super().async_added_to_hass()
         self.restored_data = await self.async_get_last_sensor_data()
 
     @property
+    @override
     def native_value(self) -> StateType:
         """Return value of sensor."""
         if self.coordinator.device.initialized:
@@ -1912,6 +1925,7 @@ class RpcSleepingSensor(ShellySleepingRpcAttributeEntity, RestoreSensor):
         return cast(StateType, self.restored_data.native_value)
 
     @property
+    @override
     def native_unit_of_measurement(self) -> str | None:
         """Return the unit of measurement of the sensor, if any."""
         return self.entity_description.native_unit_of_measurement

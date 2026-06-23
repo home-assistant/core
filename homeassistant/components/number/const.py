@@ -1,7 +1,5 @@
 """Provides the constants needed for the component."""
 
-from __future__ import annotations
-
 from enum import StrEnum
 from typing import Final
 
@@ -60,6 +58,7 @@ from homeassistant.util.unit_conversion import (
     ElectricPotentialConverter,
     EnergyConverter,
     EnergyDistanceConverter,
+    FrequencyConverter,
     InformationConverter,
     MassConverter,
     MassVolumeConcentrationConverter,
@@ -150,7 +149,8 @@ class NumberDeviceClass(StrEnum):
     CO = "carbon_monoxide"
     """Carbon Monoxide gas concentration.
 
-    Unit of measurement: `ppb` (parts per billion), `ppm` (parts per million), `mg/m³`, `μg/m³`
+    Unit of measurement: `ppb` (parts per billion),
+    `ppm` (parts per million), `mg/m³`, `μg/m³`
     """
 
     CO2 = "carbon_dioxide"
@@ -168,7 +168,7 @@ class NumberDeviceClass(StrEnum):
     CURRENT = "current"
     """Current.
 
-    Unit of measurement: `A`,  `mA`
+    Unit of measurement: `A`,  `mA`, `μA`
     """
 
     DATA_RATE = "data_rate"
@@ -200,14 +200,17 @@ class NumberDeviceClass(StrEnum):
     ENERGY = "energy"
     """Energy.
 
-    Unit of measurement: `J`, `kJ`, `MJ`, `GJ`, `mWh`, `Wh`, `kWh`, `MWh`, `GWh`, `TWh`, `cal`, `kcal`, `Mcal`, `Gcal`
+    Unit of measurement: `J`, `kJ`, `MJ`, `GJ`, `mWh`,
+    `Wh`, `kWh`, `MWh`, `GWh`, `TWh`, `cal`, `kcal`,
+    `Mcal`, `Gcal`
     """
 
     ENERGY_DISTANCE = "energy_distance"
     """Energy distance.
 
-    Use this device class for sensors measuring energy by distance, for example the amount
-    of electric energy consumed by an electric car.
+    Use this device class for sensors measuring energy by
+    distance, for example the amount of electric energy
+    consumed by an electric car.
 
     Unit of measurement: `kWh/100km`, `Wh/km`, `mi/kWh`, `km/kWh`
     """
@@ -215,10 +218,14 @@ class NumberDeviceClass(StrEnum):
     ENERGY_STORAGE = "energy_storage"
     """Stored energy.
 
-    Use this device class for sensors measuring stored energy, for example the amount
-    of electric energy currently stored in a battery or the capacity of a battery.
+    Use this device class for sensors measuring stored
+    energy, for example the amount of electric energy
+    currently stored in a battery or the capacity of a
+    battery.
 
-    Unit of measurement: `J`, `kJ`, `MJ`, `GJ`, `mWh`, `Wh`, `kWh`, `MWh`, `GWh`, `TWh`, `cal`, `kcal`, `Mcal`, `Gcal`
+    Unit of measurement: `J`, `kJ`, `MJ`, `GJ`, `mWh`,
+    `Wh`, `kWh`, `MWh`, `GWh`, `TWh`, `cal`, `kcal`,
+    `Mcal`, `Gcal`
     """
 
     FREQUENCY = "frequency"
@@ -436,20 +443,22 @@ class NumberDeviceClass(StrEnum):
 
     Unit of measurement: `VOLUME_*` units
     - SI / metric: `mL`, `L`, `m³`
-    - USCS / imperial: `ft³`, `CCF`, `MCF`, `fl. oz.`, `gal` (warning: volumes expressed in
-    USCS/imperial units are currently assumed to be US volumes)
+    - USCS / imperial: `ft³`, `CCF`, `MCF`, `fl. oz.`,
+    `gal` (warning: volumes expressed in USCS/imperial
+    units are currently assumed to be US volumes)
     """
 
     VOLUME_STORAGE = "volume_storage"
     """Generic stored volume.
 
-    Use this device class for sensors measuring stored volume, for example the amount
-    of fuel in a fuel tank.
+    Use this device class for sensors measuring stored
+    volume, for example the amount of fuel in a fuel tank.
 
     Unit of measurement: `VOLUME_*` units
     - SI / metric: `mL`, `L`, `m³`
-    - USCS / imperial: `ft³`, `CCF`, `MCF`, `fl. oz.`, `gal` (warning: volumes expressed in
-    USCS/imperial units are currently assumed to be US volumes)
+    - USCS / imperial: `ft³`, `CCF`, `MCF`, `fl. oz.`,
+    `gal` (warning: volumes expressed in USCS/imperial
+    units are currently assumed to be US volumes)
     """
 
     VOLUME_FLOW_RATE = "volume_flow_rate"
@@ -629,6 +638,7 @@ UNIT_CONVERTERS: dict[NumberDeviceClass, type[BaseUnitConverter]] = {
     NumberDeviceClass.ENERGY: EnergyConverter,
     NumberDeviceClass.ENERGY_DISTANCE: EnergyDistanceConverter,
     NumberDeviceClass.ENERGY_STORAGE: EnergyConverter,
+    NumberDeviceClass.FREQUENCY: FrequencyConverter,
     NumberDeviceClass.GAS: VolumeConverter,
     NumberDeviceClass.NITROGEN_DIOXIDE: NitrogenDioxideConcentrationConverter,
     NumberDeviceClass.NITROGEN_MONOXIDE: NitrogenMonoxideConcentrationConverter,

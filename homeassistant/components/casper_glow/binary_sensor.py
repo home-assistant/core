@@ -1,6 +1,6 @@
 """Casper Glow integration binary sensor platform."""
 
-from __future__ import annotations
+from typing import override
 
 from pycasperglow import GlowState
 
@@ -45,6 +45,7 @@ class CasperGlowPausedBinarySensor(CasperGlowEntity, BinarySensorEntity):
         if coordinator.device.state.is_paused is not None:
             self._attr_is_on = coordinator.device.state.is_paused
 
+    @override
     async def async_added_to_hass(self) -> None:
         """Register state update callback when entity is added."""
         await super().async_added_to_hass()
@@ -73,6 +74,7 @@ class CasperGlowChargingBinarySensor(CasperGlowEntity, BinarySensorEntity):
         if coordinator.device.state.is_charging is not None:
             self._attr_is_on = coordinator.device.state.is_charging
 
+    @override
     async def async_added_to_hass(self) -> None:
         """Register state update callback when entity is added."""
         await super().async_added_to_hass()

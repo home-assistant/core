@@ -10,10 +10,10 @@ from homeassistant.core import HomeAssistant
 
 from tests.components.common import (
     TriggerStateDescription,
-    assert_trigger_behavior_any,
+    assert_trigger_behavior_all,
+    assert_trigger_behavior_each,
     assert_trigger_behavior_first,
-    assert_trigger_behavior_last,
-    assert_trigger_gated_by_labs_flag,
+    assert_trigger_options_supported,
     parametrize_target_entities,
     parametrize_trigger_states,
     target_entities,
@@ -35,21 +35,37 @@ async def target_covers(hass: HomeAssistant) -> dict[str, list[str]]:
 
 
 @pytest.mark.parametrize(
-    "trigger_key",
+    ("trigger_key", "base_options", "supports_behavior", "supports_duration"),
     [
-        trigger
-        for _, opened, closed in DEVICE_CLASS_TRIGGERS
-        for trigger in (opened, closed)
+        ("cover.awning_closed", {}, True, True),
+        ("cover.awning_opened", {}, True, True),
+        ("cover.blind_closed", {}, True, True),
+        ("cover.blind_opened", {}, True, True),
+        ("cover.curtain_closed", {}, True, True),
+        ("cover.curtain_opened", {}, True, True),
+        ("cover.shade_closed", {}, True, True),
+        ("cover.shade_opened", {}, True, True),
+        ("cover.shutter_closed", {}, True, True),
+        ("cover.shutter_opened", {}, True, True),
     ],
 )
-async def test_cover_triggers_gated_by_labs_flag(
-    hass: HomeAssistant, caplog: pytest.LogCaptureFixture, trigger_key: str
+async def test_cover_trigger_options_validation(
+    hass: HomeAssistant,
+    trigger_key: str,
+    base_options: dict[str, Any] | None,
+    supports_behavior: bool,
+    supports_duration: bool,
 ) -> None:
-    """Test the cover triggers are gated by the labs flag."""
-    await assert_trigger_gated_by_labs_flag(hass, caplog, trigger_key)
+    """Test that cover triggers support the expected options."""
+    await assert_trigger_options_supported(
+        hass,
+        trigger_key,
+        base_options,
+        supports_behavior=supports_behavior,
+        supports_duration=supports_duration,
+    )
 
 
-@pytest.mark.usefixtures("enable_labs_preview_features")
 @pytest.mark.parametrize(
     ("trigger_target_config", "entity_id", "entities_in_target"),
     parametrize_target_entities("cover"),
@@ -98,7 +114,7 @@ async def test_cover_triggers_gated_by_labs_flag(
         )
     ],
 )
-async def test_cover_trigger_behavior_any(
+async def test_cover_trigger_behavior_each(
     hass: HomeAssistant,
     target_covers: dict[str, list[str]],
     trigger_target_config: dict,
@@ -109,7 +125,7 @@ async def test_cover_trigger_behavior_any(
     states: list[TriggerStateDescription],
 ) -> None:
     """Test cover trigger fires for cover entities with matching device_class."""
-    await assert_trigger_behavior_any(
+    await assert_trigger_behavior_each(
         hass,
         target_entities=target_covers,
         trigger_target_config=trigger_target_config,
@@ -121,7 +137,6 @@ async def test_cover_trigger_behavior_any(
     )
 
 
-@pytest.mark.usefixtures("enable_labs_preview_features")
 @pytest.mark.parametrize(
     ("trigger_target_config", "entity_id", "entities_in_target"),
     parametrize_target_entities("cover"),
@@ -193,7 +208,6 @@ async def test_cover_trigger_behavior_first(
     )
 
 
-@pytest.mark.usefixtures("enable_labs_preview_features")
 @pytest.mark.parametrize(
     ("trigger_target_config", "entity_id", "entities_in_target"),
     parametrize_target_entities("cover"),
@@ -242,7 +256,7 @@ async def test_cover_trigger_behavior_first(
         )
     ],
 )
-async def test_cover_trigger_behavior_last(
+async def test_cover_trigger_behavior_all(
     hass: HomeAssistant,
     target_covers: dict[str, list[str]],
     trigger_target_config: dict,
@@ -252,8 +266,8 @@ async def test_cover_trigger_behavior_last(
     trigger_options: dict[str, Any],
     states: list[TriggerStateDescription],
 ) -> None:
-    """Test cover trigger fires when the last cover changes state."""
-    await assert_trigger_behavior_last(
+    """Test cover trigger fires when all covers have changed state."""
+    await assert_trigger_behavior_all(
         hass,
         target_entities=target_covers,
         trigger_target_config=trigger_target_config,

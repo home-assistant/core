@@ -1,7 +1,5 @@
 """The dhcp integration."""
 
-from __future__ import annotations
-
 from collections.abc import Callable
 import dataclasses
 from dataclasses import dataclass

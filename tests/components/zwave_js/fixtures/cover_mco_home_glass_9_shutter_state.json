@@ -1533,7 +1533,7 @@
       "firmwareVersion": "4.13.8",
       "zwavePlusVersion": 2,
       "name": "gp9",
-      "location": "**REDACTED**",
+      "location": "",
       "deviceConfig": {
         "filename": "/root/zwave/store/config/devices/0x015f/glass9.json",
         "isEmbedded": false,

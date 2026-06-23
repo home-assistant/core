@@ -1,7 +1,7 @@
 """Test the lutron config flow."""
 
 from email.message import Message
-from unittest.mock import AsyncMock, patch
+from unittest.mock import patch
 from urllib.error import HTTPError
 
 import pytest
@@ -21,7 +21,8 @@ MOCK_DATA_STEP = {
 }
 
 
-async def test_full_flow(hass: HomeAssistant, mock_setup_entry: AsyncMock) -> None:
+@pytest.mark.usefixtures("mock_setup_entry")
+async def test_full_flow(hass: HomeAssistant) -> None:
     """Test success response."""
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": SOURCE_USER}
@@ -52,11 +53,9 @@ async def test_full_flow(hass: HomeAssistant, mock_setup_entry: AsyncMock) -> No
         (Exception, "unknown"),
     ],
 )
+@pytest.mark.usefixtures("mock_setup_entry")
 async def test_flow_failure(
-    hass: HomeAssistant,
-    mock_setup_entry: AsyncMock,
-    raise_error: Exception,
-    text_error: str,
+    hass: HomeAssistant, raise_error: Exception, text_error: str
 ) -> None:
     """Test unknown errors."""
     result = await hass.config_entries.flow.async_init(
@@ -93,9 +92,8 @@ async def test_flow_failure(
         assert result["data"] == MOCK_DATA_STEP
 
 
-async def test_flow_incorrect_guid(
-    hass: HomeAssistant, mock_setup_entry: AsyncMock
-) -> None:
+@pytest.mark.usefixtures("mock_setup_entry")
+async def test_flow_incorrect_guid(hass: HomeAssistant) -> None:
     """Test configuring flow with incorrect guid."""
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": SOURCE_USER}

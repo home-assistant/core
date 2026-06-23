@@ -326,7 +326,9 @@ async def test_select_streaming(
                 Signal.RIGHT_HAND_DRIVE: True,
                 Signal.HVAC_LEFT_TEMPERATURE_REQUEST: 22,
                 Signal.HVAC_RIGHT_TEMPERATURE_REQUEST: 21,
-                Signal.CABIN_OVERHEAT_PROTECTION_MODE: "CabinOverheatProtectionModeStateOn",
+                Signal.CABIN_OVERHEAT_PROTECTION_MODE: (
+                    "CabinOverheatProtectionModeStateOn"
+                ),
                 Signal.CABIN_OVERHEAT_PROTECTION_TEMPERATURE_LIMIT: 35,
             },
             "createdAt": "2024-10-04T10:45:17.537Z",

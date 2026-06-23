@@ -1,7 +1,5 @@
 """The Sensibo component."""
 
-from __future__ import annotations
-
 from pysensibo.exceptions import AuthenticationError
 
 from homeassistant.components.climate import DOMAIN as CLIMATE_DOMAIN

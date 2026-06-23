@@ -2,6 +2,7 @@
 
 from collections.abc import Callable
 from dataclasses import dataclass
+from typing import override
 
 from weheat.abstractions.heat_pump import HeatPump
 
@@ -218,7 +219,7 @@ ENERGY_SENSORS = [
         key="energy_output",
         native_unit_of_measurement=UnitOfEnergy.KILO_WATT_HOUR,
         device_class=SensorDeviceClass.ENERGY,
-        state_class=SensorStateClass.TOTAL_INCREASING,
+        state_class=SensorStateClass.TOTAL,
         value_fn=lambda status: status.energy_output,
     ),
     WeHeatSensorEntityDescription(
@@ -244,6 +245,14 @@ ENERGY_SENSORS = [
         device_class=SensorDeviceClass.ENERGY,
         state_class=SensorStateClass.TOTAL_INCREASING,
         value_fn=lambda status: status.energy_in_defrost,
+    ),
+    WeHeatSensorEntityDescription(
+        translation_key="electricity_used_standby",
+        key="electricity_used_standby",
+        native_unit_of_measurement=UnitOfEnergy.KILO_WATT_HOUR,
+        device_class=SensorDeviceClass.ENERGY,
+        state_class=SensorStateClass.TOTAL_INCREASING,
+        value_fn=lambda status: status.energy_in_standby,
     ),
     WeHeatSensorEntityDescription(
         translation_key="energy_output_heating",
@@ -364,6 +373,7 @@ class WeheatHeatPumpSensor(WeheatEntity, SensorEntity):
         self._attr_unique_id = f"{heat_pump_info.heatpump_id}_{entity_description.key}"
 
     @property
+    @override
     def native_value(self) -> StateType:
         """Return the state of the sensor."""
         return self.entity_description.value_fn(self.coordinator.data)

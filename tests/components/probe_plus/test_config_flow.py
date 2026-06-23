@@ -35,10 +35,9 @@ def mock_discovered_service_info() -> Generator[AsyncMock]:
         yield mock_discovered_service_info
 
 
+@pytest.mark.usefixtures("mock_setup_entry")
 async def test_user_config_flow_creates_entry(
-    hass: HomeAssistant,
-    mock_setup_entry: AsyncMock,
-    mock_discovered_service_info: AsyncMock,
+    hass: HomeAssistant, mock_discovered_service_info: AsyncMock
 ) -> None:
     """Test the user configuration flow successfully creates a config entry."""
     result = await hass.config_entries.flow.async_init(
@@ -60,11 +59,11 @@ async def test_user_config_flow_creates_entry(
     assert result["data"] == {CONF_ADDRESS: "aa:bb:cc:dd:ee:ff", CONF_MODEL: "FM210"}
 
 
+@pytest.mark.usefixtures("mock_setup_entry")
 async def test_user_flow_already_configured(
     hass: HomeAssistant,
     mock_discovered_service_info: AsyncMock,
     mock_config_entry: MockConfigEntry,
-    mock_setup_entry: AsyncMock,
 ) -> None:
     """Test that the user flow aborts when the entry is already configured."""
     mock_config_entry.add_to_hass(hass)
@@ -77,10 +76,9 @@ async def test_user_flow_already_configured(
     assert result["reason"] == "no_devices_found"
 
 
+@pytest.mark.usefixtures("mock_setup_entry")
 async def test_bluetooth_discovery(
-    hass: HomeAssistant,
-    mock_setup_entry: AsyncMock,
-    mock_discovered_service_info: AsyncMock,
+    hass: HomeAssistant, mock_discovered_service_info: AsyncMock
 ) -> None:
     """Test we can discover a device."""
     result = await hass.config_entries.flow.async_init(
@@ -116,10 +114,9 @@ async def test_already_configured_bluetooth_discovery(
     assert result["reason"] == "already_configured"
 
 
+@pytest.mark.usefixtures("mock_setup_entry")
 async def test_no_bluetooth_devices(
-    hass: HomeAssistant,
-    mock_setup_entry: AsyncMock,
-    mock_discovered_service_info: AsyncMock,
+    hass: HomeAssistant, mock_discovered_service_info: AsyncMock
 ) -> None:
     """Test flow aborts on unsupported device."""
     mock_discovered_service_info.return_value = []
@@ -131,10 +128,9 @@ async def test_no_bluetooth_devices(
     assert result["reason"] == "no_devices_found"
 
 
+@pytest.mark.usefixtures("mock_setup_entry")
 async def test_user_setup_replaces_ignored_device(
-    hass: HomeAssistant,
-    mock_setup_entry: AsyncMock,
-    mock_discovered_service_info: AsyncMock,
+    hass: HomeAssistant, mock_discovered_service_info: AsyncMock
 ) -> None:
     """Test the user flow can replace an ignored device."""
     entry = MockConfigEntry(

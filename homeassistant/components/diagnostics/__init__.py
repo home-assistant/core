@@ -1,7 +1,5 @@
 """The Diagnostics integration."""
 
-from __future__ import annotations
-
 from collections.abc import Callable, Coroutine, Mapping
 from dataclasses import dataclass, field
 from http import HTTPStatus
@@ -245,6 +243,7 @@ class DownloadDiagnosticsView(http.HomeAssistantView):
     extra_urls = ["/api/diagnostics/{d_type}/{d_id}/{sub_type}/{sub_id}"]
     name = "api:diagnostics"
 
+    @http.require_admin
     async def get(
         self,
         request: web.Request,

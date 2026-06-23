@@ -1,9 +1,8 @@
 """Component providing binary sensors for UniFi Protect."""
 
-from __future__ import annotations
-
 from collections.abc import Sequence
 import dataclasses
+from typing import override
 
 from uiprotect.data import (
     NVR,
@@ -325,7 +324,7 @@ SENSE_SENSORS: tuple[ProtectBinaryEntityDescription, ...] = (
         key="battery_low",
         device_class=BinarySensorDeviceClass.BATTERY,
         entity_category=EntityCategory.DIAGNOSTIC,
-        ufp_value="battery_status.is_low",
+        ufp_public_value="wireless_connection_state.battery_status.is_low",
     ),
     ProtectBinaryEntityDescription(
         key="motion",
@@ -427,15 +426,8 @@ EVENT_SENSORS: tuple[ProtectBinaryEventEntityDescription, ...] = (
         ufp_enabled="is_animal_detection_on",
         ufp_event_obj="last_animal_detect_event",
     ),
-    ProtectBinaryEventEntityDescription(
-        key="smart_obj_package",
-        translation_key="package_detected",
-        entity_registry_enabled_default=False,
-        ufp_obj_type=SmartDetectObjectType.PACKAGE,
-        ufp_required_field="can_detect_package",
-        ufp_enabled="is_package_detection_on",
-        ufp_event_obj="last_package_detect_event",
-    ),
+    # Package detection is a momentary smart-detect event, not a sustained state:
+    # it is the package event entity (event.py), not a binary sensor.
     ProtectBinaryEventEntityDescription(
         key="smart_audio_any",
         translation_key="audio_object_detected",
@@ -518,22 +510,6 @@ EVENT_SENSORS: tuple[ProtectBinaryEventEntityDescription, ...] = (
     ),
 )
 
-DOORLOCK_SENSORS: tuple[ProtectBinaryEntityDescription, ...] = (
-    ProtectBinaryEntityDescription(
-        key="battery_low",
-        device_class=BinarySensorDeviceClass.BATTERY,
-        entity_category=EntityCategory.DIAGNOSTIC,
-        ufp_value="battery_status.is_low",
-    ),
-    ProtectBinaryEntityDescription(
-        key="status_light",
-        translation_key="status_light",
-        entity_category=EntityCategory.DIAGNOSTIC,
-        ufp_value="led_settings.is_enabled",
-        ufp_perm=PermRequired.NO_WRITE,
-    ),
-)
-
 VIEWER_SENSORS: tuple[ProtectBinaryEntityDescription, ...] = (
     ProtectBinaryEntityDescription(
         key="ssh",
@@ -558,7 +534,6 @@ _MODEL_DESCRIPTIONS: dict[ModelType, Sequence[ProtectEntityDescription]] = {
     ModelType.CAMERA: CAMERA_SENSORS,
     ModelType.LIGHT: LIGHT_SENSORS,
     ModelType.SENSOR: SENSE_SENSORS,
-    ModelType.DOORLOCK: DOORLOCK_SENSORS,
     ModelType.VIEWPORT: VIEWER_SENSORS,
 }
 
@@ -582,6 +557,7 @@ class MountableProtectDeviceBinarySensor(ProtectDeviceBinarySensor):
     _state_attrs = ("_attr_available", "_attr_is_on", "_attr_device_class")
 
     @callback
+    @override
     def _async_update_device_from_protect(self, device: ProtectDeviceType) -> None:
         super()._async_update_device_from_protect(device)
         # UP Sense can be any of the 3 contact sensor device classes
@@ -616,6 +592,7 @@ class ProtectDiskBinarySensor(ProtectNVREntity, BinarySensorEntity):
         super().__init__(data, device, description)
 
     @callback
+    @override
     def _async_update_device_from_protect(self, device: ProtectDeviceType) -> None:
         super()._async_update_device_from_protect(device)
         slot = self._disk.slot
@@ -641,6 +618,7 @@ class ProtectEventBinarySensor(EventEntityMixin, BinarySensorEntity):
     _state_attrs = ("_attr_available", "_attr_is_on", "_attr_extra_state_attributes")
 
     @callback
+    @override
     def _set_event_done(self) -> None:
         self._attr_is_on = False
         self._attr_extra_state_attributes = {}
@@ -671,6 +649,7 @@ class ProtectEventBinarySensor(EventEntityMixin, BinarySensorEntity):
         return None
 
     @callback
+    @override
     def _async_update_device_from_protect(self, device: ProtectDeviceType) -> None:
         description = self.entity_description
 

@@ -1,7 +1,5 @@
 """The sql integration models."""
 
-from __future__ import annotations
-
 from dataclasses import dataclass
 
 from sqlalchemy.orm import scoped_session

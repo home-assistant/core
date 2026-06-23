@@ -1,12 +1,10 @@
 """Component for handling incoming events as a platform."""
 
-from __future__ import annotations
-
 from dataclasses import asdict, dataclass
 from datetime import datetime, timedelta
 from enum import StrEnum
 import logging
-from typing import Any, Self, final
+from typing import Any, Self, final, override
 
 from propcache.api import cached_property
 
@@ -20,7 +18,7 @@ from homeassistant.helpers.typing import ConfigType
 from homeassistant.util import dt as dt_util
 from homeassistant.util.hass_dict import HassKey
 
-from .const import ATTR_EVENT_TYPE, ATTR_EVENT_TYPES, DOMAIN
+from .const import ATTR_EVENT_TYPE, ATTR_EVENT_TYPES, DOMAIN, DoorbellEventType
 
 _LOGGER = logging.getLogger(__name__)
 DATA_COMPONENT: HassKey[EntityComponent[EventEntity]] = HassKey(DOMAIN)
@@ -44,6 +42,7 @@ __all__ = [
     "DOMAIN",
     "PLATFORM_SCHEMA",
     "PLATFORM_SCHEMA_BASE",
+    "DoorbellEventType",
     "EventDeviceClass",
     "EventEntity",
     "EventEntityDescription",
@@ -85,6 +84,7 @@ class EventExtraStoredData(ExtraStoredData):
     last_event_type: str | None
     last_event_attributes: dict[str, Any] | None
 
+    @override
     def as_dict(self) -> dict[str, Any]:
         """Return a dict representation of the event data."""
         return asdict(self)
@@ -122,6 +122,7 @@ class EventEntity(RestoreEntity, cached_properties=CACHED_PROPERTIES_WITH_ATTR_)
     __last_event_attributes: dict[str, Any] | None = None
 
     @cached_property
+    @override
     def device_class(self) -> EventDeviceClass | None:
         """Return the class of this entity."""
         if hasattr(self, "_attr_device_class"):
@@ -153,6 +154,7 @@ class EventEntity(RestoreEntity, cached_properties=CACHED_PROPERTIES_WITH_ATTR_)
         self.__last_event_type = event_type
         self.__last_event_attributes = event_attributes
 
+    @override
     def _default_to_device_class_name(self) -> bool:
         """Return True if an unnamed entity should be named by its device class.
 
@@ -162,6 +164,7 @@ class EventEntity(RestoreEntity, cached_properties=CACHED_PROPERTIES_WITH_ATTR_)
 
     @property
     @final
+    @override
     def capability_attributes(self) -> dict[str, list[str]]:
         """Return capability attributes."""
         return {
@@ -170,6 +173,7 @@ class EventEntity(RestoreEntity, cached_properties=CACHED_PROPERTIES_WITH_ATTR_)
 
     @property
     @final
+    @override
     def state(self) -> str | None:
         """Return the entity state."""
         if (last_event := self.__last_event_triggered) is None:
@@ -178,6 +182,7 @@ class EventEntity(RestoreEntity, cached_properties=CACHED_PROPERTIES_WITH_ATTR_)
 
     @final
     @property
+    @override
     def state_attributes(self) -> dict[str, Any]:
         """Return the state attributes."""
         attributes = {ATTR_EVENT_TYPE: self.__last_event_type}
@@ -186,9 +191,25 @@ class EventEntity(RestoreEntity, cached_properties=CACHED_PROPERTIES_WITH_ATTR_)
         return attributes
 
     @final
+    @override
     async def async_internal_added_to_hass(self) -> None:
         """Call when the event entity is added to hass."""
         await super().async_internal_added_to_hass()
+
+        if (
+            self.device_class == EventDeviceClass.DOORBELL
+            and DoorbellEventType.RING not in self.event_types
+        ):
+            report_issue = self._suggest_report_issue()
+            _LOGGER.warning(
+                "Entity %s is a doorbell event entity but does not support "
+                "the '%s' event type. This will stop working in "
+                "Home Assistant 2027.4, please %s",
+                self.entity_id,
+                DoorbellEventType.RING,
+                report_issue,
+            )
+
         if (
             (state := await self.async_get_last_state())
             and state.state is not None
@@ -199,6 +220,7 @@ class EventEntity(RestoreEntity, cached_properties=CACHED_PROPERTIES_WITH_ATTR_)
             self.__last_event_attributes = event_data.last_event_attributes
 
     @property
+    @override
     def extra_restore_state_data(self) -> EventExtraStoredData:
         """Return event specific state data to be restored."""
         return EventExtraStoredData(

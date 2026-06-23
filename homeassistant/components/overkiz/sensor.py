@@ -1,15 +1,14 @@
 """Support for Overkiz sensors."""
 
-from __future__ import annotations
-
 from collections.abc import Callable
 from dataclasses import dataclass
-from typing import cast
+from typing import cast, override
 
 from pyoverkiz.enums import OverkizAttribute, OverkizState, UIWidget
 from pyoverkiz.types import StateType as OverkizStateType
 
 from homeassistant.components.sensor import (
+    DEVICE_CLASS_UNITS,
     SensorDeviceClass,
     SensorEntity,
     SensorEntityDescription,
@@ -78,6 +77,26 @@ SENSOR_DESCRIPTIONS: list[OverkizSensorDescription] = [
         icon="mdi:battery",
         device_class=SensorDeviceClass.ENUM,
         options=["good", "medium", "low", "critical"],
+        translation_key="battery",
+    ),
+    # SmokeSensor with separate batteries for the radio and sensor parts,
+    # e.g. the Somfy smoke sensor (9V radio block + 3V CR123 sensor cell).
+    OverkizSensorDescription(
+        key=OverkizState.IO_MAINTENANCE_RADIO_PART_BATTERY,
+        name="Radio battery",
+        entity_category=EntityCategory.DIAGNOSTIC,
+        icon="mdi:battery",
+        device_class=SensorDeviceClass.ENUM,
+        options=["low", "normal"],
+        translation_key="battery",
+    ),
+    OverkizSensorDescription(
+        key=OverkizState.IO_MAINTENANCE_SENSOR_PART_BATTERY,
+        name="Sensor battery",
+        entity_category=EntityCategory.DIAGNOSTIC,
+        icon="mdi:battery",
+        device_class=SensorDeviceClass.ENUM,
+        options=["absence", "low", "normal"],
         translation_key="battery",
     ),
     OverkizSensorDescription(
@@ -551,7 +570,7 @@ async def async_setup_entry(
                 description,
             )
             for state in device.definition.states
-            if (description := SUPPORTED_STATES.get(state.qualified_name))
+            if (description := SUPPORTED_STATES.get(state))
         )
 
     async_add_entities(entities)
@@ -563,6 +582,7 @@ class OverkizStateSensor(OverkizDescriptiveEntity, SensorEntity):
     entity_description: OverkizSensorDescription
 
     @property
+    @override
     def native_value(self) -> StateType:
         """Return the value of the sensor."""
         state = self.device.states.get(self.entity_description.key)
@@ -588,6 +608,7 @@ class OverkizStateSensor(OverkizDescriptiveEntity, SensorEntity):
         return state.value
 
     @property
+    @override
     def native_unit_of_measurement(self) -> str | None:
         """Return the unit of measurement."""
         if (
@@ -598,17 +619,32 @@ class OverkizStateSensor(OverkizDescriptiveEntity, SensorEntity):
             return default_unit
 
         attrs = self.device.attributes
-        if (unit := attrs[f"{state.name}MeasuredValueType"]) and (
+        if (unit := attrs.get(f"{state.name}MeasuredValueType")) and (
             unit_value := unit.value_as_str
         ):
             return OVERKIZ_UNIT_TO_HA.get(unit_value, default_unit)
 
-        if (unit := attrs[OverkizAttribute.CORE_MEASURED_VALUE_TYPE]) and (
+        if (unit := attrs.get(OverkizAttribute.CORE_MEASURED_VALUE_TYPE)) and (
             unit_value := unit.value_as_str
         ):
-            return OVERKIZ_UNIT_TO_HA.get(unit_value, default_unit)
+            ha_unit = OVERKIZ_UNIT_TO_HA.get(unit_value, default_unit)
+            if self._is_unit_valid_for_device_class(ha_unit):
+                return ha_unit
 
         return default_unit
+
+    def _is_unit_valid_for_device_class(self, unit: str) -> bool:
+        """Check if a unit is valid for this sensor's device class.
+
+        The device-level core:MeasuredValueType attribute describes the primary
+        sensor (e.g. luminance/temperature), but must not override the unit of
+        unrelated sensors on the same device (e.g. RSSI).
+        """
+        if not (device_class := self.entity_description.device_class):
+            return True
+        if (valid_units := DEVICE_CLASS_UNITS.get(device_class)) is None:
+            return True
+        return unit in valid_units
 
 
 class OverkizHomeKitSetupCodeSensor(OverkizEntity, SensorEntity):
@@ -625,6 +661,7 @@ class OverkizHomeKitSetupCodeSensor(OverkizEntity, SensorEntity):
         self._attr_name = "HomeKit setup code"
 
     @property
+    @override
     def native_value(self) -> str | None:
         """Return the value of the sensor."""
         if state := self.device.attributes.get(OverkizAttribute.HOMEKIT_SETUP_CODE):
@@ -632,11 +669,12 @@ class OverkizHomeKitSetupCodeSensor(OverkizEntity, SensorEntity):
         return None
 
     @property
+    @override
     def device_info(self) -> DeviceInfo:
         """Return device registry information for this entity."""
         # By default this sensor will be listed at a virtual HomekitStack device,
         # but it makes more sense to show this at the gateway device
         # in the entity registry.
         return DeviceInfo(
-            identifiers={(DOMAIN, self.executor.get_gateway_id())},
+            identifiers={(DOMAIN, self.device.identifier.gateway_id)},
         )

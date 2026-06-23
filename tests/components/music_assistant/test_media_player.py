@@ -24,9 +24,11 @@ from homeassistant.components.media_player import (
     ATTR_MEDIA_SHUFFLE,
     ATTR_MEDIA_VOLUME_LEVEL,
     ATTR_MEDIA_VOLUME_MUTED,
+    ATTR_SOUND_MODE,
     DOMAIN as MEDIA_PLAYER_DOMAIN,
     SERVICE_CLEAR_PLAYLIST,
     SERVICE_JOIN,
+    SERVICE_SELECT_SOUND_MODE,
     SERVICE_SELECT_SOURCE,
     SERVICE_UNJOIN,
     MediaPlayerEntityFeature,
@@ -409,6 +411,8 @@ async def test_media_player_play_media_action(
         option=None,
         radio_mode=False,
         start_item=None,
+        username=None,
+        sort_by=None,
     )
 
     # test simple play_media call with URI and enqueue specified
@@ -431,6 +435,8 @@ async def test_media_player_play_media_action(
         option=QueueOption.ADD,
         radio_mode=False,
         start_item=None,
+        username=None,
+        sort_by=None,
     )
 
     # test basic play_media call with URL and radio mode specified
@@ -453,6 +459,8 @@ async def test_media_player_play_media_action(
         option=None,
         radio_mode=True,
         start_item=None,
+        username=None,
+        sort_by=None,
     )
 
     # test play_media call with media id and media type specified
@@ -480,6 +488,8 @@ async def test_media_player_play_media_action(
         option=None,
         radio_mode=False,
         start_item=None,
+        username=None,
+        sort_by=None,
     )
 
     # test play_media call by name
@@ -511,6 +521,8 @@ async def test_media_player_play_media_action(
         option=None,
         radio_mode=False,
         start_item=None,
+        username=None,
+        sort_by=None,
     )
 
 
@@ -653,6 +665,49 @@ async def test_media_player_select_source_action(
     )
 
 
+async def test_media_player_select_sound_mode_action(
+    hass: HomeAssistant,
+    music_assistant_client: MagicMock,
+) -> None:
+    """Test media_player entity select sound mode action."""
+    await setup_integration_from_fixtures(hass, music_assistant_client)
+    entity_id = "media_player.test_player_1"
+    mass_player_id = "00:00:00:00:00:01"
+    state = hass.states.get(entity_id)
+    assert state
+    await hass.services.async_call(
+        MEDIA_PLAYER_DOMAIN,
+        SERVICE_SELECT_SOUND_MODE,
+        {
+            ATTR_ENTITY_ID: entity_id,
+            ATTR_SOUND_MODE: "munich_translation",
+        },
+        blocking=True,
+    )
+    assert music_assistant_client.send_command.call_count == 1
+    assert music_assistant_client.send_command.call_args == call(
+        "players/cmd/select_sound_mode",
+        player_id=mass_player_id,
+        sound_mode="munich_id",
+    )
+
+
+async def test_passive_sound_mode_ignored(
+    hass: HomeAssistant,
+    music_assistant_client: MagicMock,
+) -> None:
+    """Verify, that a passive sound mode is ignored."""
+    await setup_integration_from_fixtures(hass, music_assistant_client)
+    entity_id = "media_player.test_player_1"
+    passive_sound_mode_translation_key = "passive_sound_mode_translation"
+    active_sound_mode_translation_key = "munich_translation"
+    state = hass.states.get(entity_id)
+    assert state
+    sound_modes = state.attributes["sound_mode_list"]
+    assert active_sound_mode_translation_key in sound_modes
+    assert passive_sound_mode_translation_key not in sound_modes
+
+
 async def test_media_player_supported_features(
     hass: HomeAssistant,
     music_assistant_client: MagicMock,
@@ -686,6 +741,7 @@ async def test_media_player_supported_features(
         | MediaPlayerEntityFeature.TURN_OFF
         | MediaPlayerEntityFeature.SEARCH_MEDIA
         | MediaPlayerEntityFeature.SELECT_SOURCE
+        | MediaPlayerEntityFeature.SELECT_SOUND_MODE
     )
     assert state.attributes["supported_features"] == expected_features
     # remove power control capability from player, trigger subscription callback
@@ -747,7 +803,7 @@ async def test_media_image_prefers_current_media(
     hass: HomeAssistant,
     music_assistant_client: MagicMock,
 ) -> None:
-    """Test that entity_picture uses player.current_media.image_url over static queue image."""
+    """Test entity_picture prefers current_media.image_url over queue."""
     await setup_integration_from_fixtures(hass, music_assistant_client)
     entity_id = "media_player.test_group_player_1"
     mass_player_id = "test_group_player_1"
@@ -785,7 +841,7 @@ async def test_media_image_falls_back_to_queue_item(
     hass: HomeAssistant,
     music_assistant_client: MagicMock,
 ) -> None:
-    """Test that entity_picture falls back to queue item image when current_media has none."""
+    """Test entity_picture falls back to queue image when none."""
     await setup_integration_from_fixtures(hass, music_assistant_client)
     entity_id = "media_player.test_group_player_1"
     mass_player_id = "test_group_player_1"

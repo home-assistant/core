@@ -1,7 +1,5 @@
 """Support to use flic buttons as a binary sensor."""
 
-from __future__ import annotations
-
 import logging
 import threading
 

@@ -1,9 +1,8 @@
 """Renson ventilation unit buttons."""
 
-from __future__ import annotations
-
 from collections.abc import Callable
 from dataclasses import dataclass
+from typing import override
 
 from renson_endura_delta.renson import RensonVentilation
 
@@ -12,13 +11,11 @@ from homeassistant.components.button import (
     ButtonEntity,
     ButtonEntityDescription,
 )
-from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import EntityCategory
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
-from . import RensonCoordinator, RensonData
-from .const import DOMAIN
+from .coordinator import RensonConfigEntry, RensonCoordinator
 from .entity import RensonEntity
 
 
@@ -53,12 +50,12 @@ ENTITY_DESCRIPTIONS: tuple[RensonButtonEntityDescription, ...] = (
 
 async def async_setup_entry(
     hass: HomeAssistant,
-    config_entry: ConfigEntry,
+    config_entry: RensonConfigEntry,
     async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up the Renson button platform."""
 
-    data: RensonData = hass.data[DOMAIN][config_entry.entry_id]
+    data = config_entry.runtime_data
 
     entities = [
         RensonButton(description, data.api, data.coordinator)
@@ -85,6 +82,7 @@ class RensonButton(RensonEntity, ButtonEntity):
 
         self.entity_description = description
 
+    @override
     def press(self) -> None:
         """Triggers the action."""
         self.entity_description.action_fn(self.api)

@@ -1,13 +1,11 @@
 """Component to interface with locks that can be controlled remotely."""
 
-from __future__ import annotations
-
 from datetime import timedelta
 from enum import IntFlag
 import functools as ft
 import logging
 import re
-from typing import TYPE_CHECKING, Any, final
+from typing import TYPE_CHECKING, Any, final, override
 
 from propcache.api import cached_property
 import voluptuous as vol
@@ -244,6 +242,7 @@ class LockEntity(Entity, cached_properties=CACHED_PROPERTIES_WITH_ATTR_):
 
     @final
     @property
+    @override
     def state_attributes(self) -> dict[str, StateType]:
         """Return the state attributes."""
         state_attr = {}
@@ -254,6 +253,7 @@ class LockEntity(Entity, cached_properties=CACHED_PROPERTIES_WITH_ATTR_):
 
     @final
     @property
+    @override
     def state(self) -> str | None:
         """Return the state."""
         if self.is_jammed:
@@ -271,10 +271,12 @@ class LockEntity(Entity, cached_properties=CACHED_PROPERTIES_WITH_ATTR_):
         return LockState.LOCKED if locked else LockState.UNLOCKED
 
     @cached_property
+    @override
     def supported_features(self) -> LockEntityFeature:
         """Return the list of supported features."""
         return self._attr_supported_features
 
+    @override
     async def async_internal_added_to_hass(self) -> None:
         """Call when the sensor entity is added to hass."""
         await super().async_internal_added_to_hass()
@@ -283,6 +285,7 @@ class LockEntity(Entity, cached_properties=CACHED_PROPERTIES_WITH_ATTR_):
         self._async_read_entity_options()
 
     @callback
+    @override
     def async_registry_entry_updated(self) -> None:
         """Run when the entity registry entry has been updated."""
         self._async_read_entity_options()

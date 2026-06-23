@@ -1,10 +1,8 @@
 """Button platform for Teslemetry integration."""
 
-from __future__ import annotations
-
 from collections.abc import Awaitable, Callable
 from dataclasses import dataclass
-from typing import Any
+from typing import Any, override
 
 from tesla_fleet_api.const import Scope
 from tesla_fleet_api.teslemetry import Vehicle
@@ -92,6 +90,7 @@ class TeslemetryButtonEntity(TeslemetryVehicleStreamEntity, ButtonEntity):
     def _async_update_attrs(self) -> None:
         """Update the attributes of the entity."""
 
+    @override
     async def async_press(self) -> None:
         """Press the button."""
         await self.entity_description.func(self)

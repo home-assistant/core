@@ -9,7 +9,7 @@
     "error": {
       "cannot_connect": "[%key:common::config_flow::error::cannot_connect%]",
       "invalid_auth": "[%key:common::config_flow::error::invalid_auth%]",
-      "missing_data": "Missing data: please retry later or an other configuration",
+      "missing_data": "Missing data: please retry later or try a different configuration",
       "otp_failed": "Two-step authentication failed, retry with a new passcode",
       "unknown": "[%key:common::config_flow::error::unknown%]"
     },
@@ -79,6 +79,16 @@
     "button": {
       "shutdown": {
         "name": "Shut down"
+      }
+    },
+    "select": {
+      "fan_speed_mode": {
+        "name": "Fan speed mode",
+        "state": {
+          "cool": "Cool mode",
+          "full_speed": "Full-speed mode",
+          "quiet": "Quiet mode"
+        }
       }
     },
     "sensor": {
@@ -157,9 +167,6 @@
       "temperature": {
         "name": "[%key:component::sensor::entity_component::temperature::name%]"
       },
-      "uptime": {
-        "name": "Last boot"
-      },
       "volume_disk_temp_avg": {
         "name": "Average disk temp"
       },
@@ -188,6 +195,17 @@
       "update": {
         "name": "DSM update"
       }
+    }
+  },
+  "exceptions": {
+    "execution_error": {
+      "message": "Execute {action} on DSM with serial {serial} not possible, because of {error}."
+    },
+    "missing_serial": {
+      "message": "More than one DSM configured, must specify one of serials: {serials}."
+    },
+    "serial_not_found": {
+      "message": "DSM with specified serial {serial} not found."
     }
   },
   "issues": {

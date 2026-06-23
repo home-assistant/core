@@ -1,8 +1,6 @@
 """Support for Modbus lights."""
 
-from __future__ import annotations
-
-from typing import Any
+from typing import Any, override
 
 from homeassistant.components.light import (
     ATTR_BRIGHTNESS,
@@ -74,6 +72,7 @@ class ModbusLight(ModbusToggleEntity, LightEntity):
                 CONF_MAX_TEMP, LIGHT_DEFAULT_MAX_KELVIN
             )
 
+    @override
     async def async_added_to_hass(self) -> None:
         """Handle entity which will be added."""
         await super().async_added_to_hass()
@@ -95,6 +94,7 @@ class ModbusLight(ModbusToggleEntity, LightEntity):
             return ColorMode.BRIGHTNESS
         return ColorMode.ONOFF
 
+    @override
     async def async_turn_on(self, **kwargs: Any) -> None:
         """Turn light on and set brightness if provided."""
         brightness = kwargs.get(ATTR_BRIGHTNESS)
@@ -105,6 +105,7 @@ class ModbusLight(ModbusToggleEntity, LightEntity):
             await self.async_set_color_temp(color_temp)
         await self.async_turn(self.command_on)
 
+    @override
     async def async_turn_off(self, **kwargs: Any) -> None:
         """Turn light off."""
         await self.async_turn(self._command_off)
@@ -141,6 +142,7 @@ class ModbusLight(ModbusToggleEntity, LightEntity):
         if not self._verify_active:
             self._attr_color_temp_kelvin = color_temp_kelvin
 
+    @override
     async def _async_update(self) -> None:
         """Update the entity state, including brightness and color temperature."""
         await super()._async_update()
@@ -193,7 +195,7 @@ class ModbusLight(ModbusToggleEntity, LightEntity):
         )
 
     def _convert_modbus_percent_to_temperature(self, percent: int) -> int:
-        """Convert Modbus scale (0-100) to the color temperature in Kelvin (2000-7000 К)."""
+        """Convert Modbus scale (0-100) to color temp in Kelvin (2000-7000 K)."""
         return round(
             self._attr_min_color_temp_kelvin
             + (

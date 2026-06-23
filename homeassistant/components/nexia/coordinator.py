@@ -1,10 +1,8 @@
 """Component to embed nexia devices."""
 
-from __future__ import annotations
-
 from datetime import timedelta
 import logging
-from typing import Any
+from typing import Any, override
 
 from nexia.home import NexiaHome
 
@@ -39,6 +37,7 @@ class NexiaDataUpdateCoordinator(DataUpdateCoordinator[dict[str, Any]]):
             always_update=False,
         )
 
+    @override
     async def _async_update_data(self) -> dict[str, Any]:
         """Fetch data from API endpoint."""
         return await self.nexia_home.update()

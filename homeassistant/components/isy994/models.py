@@ -1,7 +1,5 @@
 """The ISY/IoX integration data models."""
 
-from __future__ import annotations
-
 from dataclasses import dataclass
 from typing import cast
 

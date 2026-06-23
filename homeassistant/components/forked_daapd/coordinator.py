@@ -1,7 +1,5 @@
 """Support forked_daapd media player."""
 
-from __future__ import annotations
-
 import asyncio
 from collections.abc import Sequence
 import logging

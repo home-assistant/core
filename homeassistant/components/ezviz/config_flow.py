@@ -1,10 +1,8 @@
 """Config flow for EZVIZ."""
 
-from __future__ import annotations
-
 from collections.abc import Mapping
 import logging
-from typing import TYPE_CHECKING, Any
+from typing import TYPE_CHECKING, Any, override
 
 from pyezvizapi.client import EzvizClient
 from pyezvizapi.exceptions import (
@@ -124,17 +122,15 @@ class EzvizConfigFlow(ConfigFlow, domain=DOMAIN):
 
         ezviz_client = EzvizClient(token=ezviz_token, timeout=ezviz_timeout)
 
-        # We need to wake hibernating cameras.
-        # First create EZVIZ API instance.
-        await self.hass.async_add_executor_job(ezviz_client.login)
+        def _login_wake_and_test() -> None:
+            # Login to create EZVIZ API instance.
+            ezviz_client.login()
+            # Wake hibernating camera.
+            ezviz_client.get_detection_sensibility(data[ATTR_SERIAL])
+            # Attempt an authenticated RTSP DESCRIBE request.
+            _test_camera_rtsp_creds(data)
 
-        # Secondly try to wake hybernating camera.
-        await self.hass.async_add_executor_job(
-            ezviz_client.get_detection_sensibility, data[ATTR_SERIAL]
-        )
-
-        # Thirdly attempts an authenticated RTSP DESCRIBE request.
-        await self.hass.async_add_executor_job(_test_camera_rtsp_creds, data)
+        await self.hass.async_add_executor_job(_login_wake_and_test)
 
         return self.async_create_entry(
             title=data[ATTR_SERIAL],
@@ -148,12 +144,14 @@ class EzvizConfigFlow(ConfigFlow, domain=DOMAIN):
 
     @staticmethod
     @callback
+    @override
     def async_get_options_flow(
         config_entry: EzvizConfigEntry,
     ) -> EzvizOptionsFlowHandler:
         """Get the options flow for this handler."""
         return EzvizOptionsFlowHandler()
 
+    @override
     async def async_step_user(
         self, user_input: dict[str, Any] | None = None
     ) -> ConfigFlowResult:
@@ -268,6 +266,7 @@ class EzvizConfigFlow(ConfigFlow, domain=DOMAIN):
             step_id="user_custom_url", data_schema=data_schema_custom_url, errors=errors
         )
 
+    @override
     async def async_step_integration_discovery(
         self, discovery_info: dict[str, Any]
     ) -> ConfigFlowResult:

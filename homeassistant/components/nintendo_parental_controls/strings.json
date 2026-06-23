@@ -47,6 +47,9 @@
       }
     },
     "sensor": {
+      "player_playing_time": {
+        "name": "{nickname} used screen time"
+      },
       "playing_time": {
         "name": "Used screen time"
       },

@@ -1,17 +1,14 @@
 """Test the UniFi Protect number platform."""
 
-from __future__ import annotations
-
 from datetime import timedelta
 from unittest.mock import AsyncMock, Mock
 
 import pytest
-from uiprotect.data import Camera, Chime, Doorlock, IRLEDMode, Light, RingSetting
+from uiprotect.data import Camera, Chime, IRLEDMode, Light, RingSetting
 
 from homeassistant.components.unifiprotect.const import DEFAULT_ATTRIBUTION
 from homeassistant.components.unifiprotect.number import (
     CAMERA_NUMBERS,
-    DOORLOCK_NUMBERS,
     LIGHT_NUMBERS,
     ProtectNumberEntityDescription,
 )
@@ -54,19 +51,6 @@ async def test_number_sensor_light_remove(
     assert_entity_counts(hass, Platform.NUMBER, 0, 0)
     await adopt_devices(hass, ufp, [light])
     assert_entity_counts(hass, Platform.NUMBER, 2, 2)
-
-
-async def test_number_lock_remove(
-    hass: HomeAssistant, ufp: MockUFPFixture, doorlock: Doorlock
-) -> None:
-    """Test removing and re-adding a light device."""
-
-    await init_entry(hass, ufp, [doorlock])
-    assert_entity_counts(hass, Platform.NUMBER, 1, 1)
-    await remove_entities(hass, ufp, [doorlock])
-    assert_entity_counts(hass, Platform.NUMBER, 0, 0)
-    await adopt_devices(hass, ufp, [doorlock])
-    assert_entity_counts(hass, Platform.NUMBER, 1, 1)
 
 
 async def test_number_setup_light(
@@ -239,33 +223,6 @@ async def test_number_camera_simple(
         mock_method.assert_called_once_with(1.0)
 
 
-async def test_number_lock_auto_close(
-    hass: HomeAssistant, ufp: MockUFPFixture, doorlock: Doorlock
-) -> None:
-    """Test auto-lock timeout for locks."""
-
-    await init_entry(hass, ufp, [doorlock])
-    assert_entity_counts(hass, Platform.NUMBER, 1, 1)
-
-    description = DOORLOCK_NUMBERS[0]
-
-    _, entity_id = await ids_from_device_description(
-        hass, Platform.NUMBER, doorlock, description
-    )
-
-    with patch_ufp_method(
-        doorlock, "set_auto_close_time", new_callable=AsyncMock
-    ) as mock_method:
-        await hass.services.async_call(
-            "number",
-            "set_value",
-            {ATTR_ENTITY_ID: entity_id, "value": 15.0},
-            blocking=True,
-        )
-
-        mock_method.assert_called_once_with(timedelta(seconds=15.0))
-
-
 def _setup_chime_with_doorbell(
     chime: Chime, doorbell: Camera, volume: int = 50
 ) -> None:
@@ -328,6 +285,41 @@ async def test_chime_ring_volume_set_value(
         )
 
         mock_method.assert_called_once_with(doorbell, 80)
+
+
+async def test_chime_volume_set_value(
+    hass: HomeAssistant,
+    ufp: MockUFPFixture,
+    chime: Chime,
+    doorbell: Camera,
+) -> None:
+    """Test setting overall chime volume calls public ring-settings API."""
+    _setup_chime_with_doorbell(chime, doorbell, volume=40)
+
+    await init_entry(hass, ufp, [chime, doorbell], regenerate_ids=False)
+
+    entity_id = "number.test_chime_volume"
+
+    with patch_ufp_method(
+        chime, "set_ring_settings_public", new_callable=AsyncMock
+    ) as mock_method:
+        await hass.services.async_call(
+            "number",
+            "set_value",
+            {ATTR_ENTITY_ID: entity_id, "value": 75.0},
+            blocking=True,
+        )
+
+        mock_method.assert_called_once_with(
+            [
+                {
+                    "cameraId": doorbell.id,
+                    "volume": 75,
+                    "repeatTimes": 1,
+                    "ringtoneId": "test-ringtone-id",
+                }
+            ]
+        )
 
 
 async def test_chime_ring_volume_multiple_cameras(

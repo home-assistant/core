@@ -1,8 +1,7 @@
 """Helper and coordinator for refoss."""
 
-from __future__ import annotations
-
 from datetime import timedelta
+from typing import override
 
 from refoss_ha.controller.device import BaseDevice
 from refoss_ha.exceptions import DeviceTimeoutError
@@ -33,6 +32,7 @@ class RefossDataUpdateCoordinator(DataUpdateCoordinator[None]):
         self.device = device
         self._error_count = 0
 
+    @override
     async def _async_update_data(self) -> None:
         """Update the state of the device."""
         try:

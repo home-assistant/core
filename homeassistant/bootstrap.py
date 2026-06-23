@@ -1,7 +1,5 @@
 """Provide methods to bootstrap a Home Assistant instance."""
 
-from __future__ import annotations
-
 import asyncio
 from collections import defaultdict
 import contextlib
@@ -16,10 +14,11 @@ import platform
 import sys
 import threading
 from time import monotonic
-from typing import TYPE_CHECKING, Any
+from typing import TYPE_CHECKING, Any, override
 
 # Import cryptography early since import openssl is not thread-safe
-# _frozen_importlib._DeadlockError: deadlock detected by _ModuleLock('cryptography.hazmat.backends.openssl.backend')
+# _frozen_importlib._DeadlockError: deadlock detected by
+# _ModuleLock('cryptography.hazmat.backends.openssl.backend')
 import cryptography.hazmat.backends.openssl.backend  # noqa: F401
 import voluptuous as vol
 import yarl
@@ -167,10 +166,14 @@ FRONTEND_INTEGRATIONS = {
     # visible in frontend
     "frontend",
 }
-# Stage 0 is divided into substages. Each substage has a name, a set of integrations and a timeout.
-# The substage containing recorder should have no timeout, as it could cancel a database migration.
-# Recorder freezes "recorder" timeout during a migration, but it does not freeze other timeouts.
-# If we add timeouts to the frontend substages, we should make sure they don't apply in recovery mode.
+# Stage 0 is divided into substages. Each substage has a name,
+# a set of integrations and a timeout.
+# The substage containing recorder should have no timeout, as it
+# could cancel a database migration.
+# Recorder freezes "recorder" timeout during a migration, but it
+# does not freeze other timeouts.
+# If we add timeouts to the frontend substages, we should make sure
+# they don't apply in recovery mode.
 STAGE_0_INTEGRATIONS = (
     # Load logging and http deps as soon as possible
     ("logging, http deps", LOGGING_AND_HTTP_DEPS_INTEGRATIONS, None),
@@ -694,6 +697,7 @@ def _create_log_file(
 class _RotatingFileHandlerWithoutShouldRollOver(RotatingFileHandler):
     """RotatingFileHandler that does not check if it should roll over on every log."""
 
+    @override
     def shouldRollover(self, record: logging.LogRecord) -> bool:
         """Never roll over.
 

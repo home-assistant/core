@@ -3,11 +3,9 @@
 DEVELOPMENT OF THE ALERT INTEGRATION IS FROZEN.
 """
 
-from __future__ import annotations
-
 from collections.abc import Callable
 from datetime import timedelta
-from typing import Any
+from typing import Any, override
 
 from homeassistant.components.notify import (
     ATTR_DATA,
@@ -81,6 +79,7 @@ class AlertEntity(Entity):
         )
 
     @property
+    @override
     def state(self) -> str:
         """Return the alert status."""
         if self._firing:

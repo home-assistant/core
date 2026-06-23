@@ -1,6 +1,6 @@
 """Support for Tellstick covers using Tellstick Net."""
 
-from typing import Any
+from typing import Any, override
 
 from homeassistant.components import cover
 from homeassistant.components.cover import CoverEntity
@@ -23,6 +23,8 @@ async def async_setup_entry(
 
     async def async_discover_cover(device_id):
         """Discover and add a discovered sensor."""
+        # Uses legacy hass.data[DOMAIN] pattern
+        # pylint: disable-next=home-assistant-use-runtime-data
         client: TelldusLiveClient = hass.data[DOMAIN]
         async_add_entities([TelldusLiveCover(client, device_id)])
 
@@ -39,20 +41,24 @@ class TelldusLiveCover(TelldusLiveEntity, CoverEntity):
     _attr_name = None
 
     @property
+    @override
     def is_closed(self) -> bool:
         """Return the current position of the cover."""
         return self.device.is_down
 
+    @override
     def close_cover(self, **kwargs: Any) -> None:
         """Close the cover."""
         self.device.down()
         self.schedule_update_ha_state()
 
+    @override
     def open_cover(self, **kwargs: Any) -> None:
         """Open the cover."""
         self.device.up()
         self.schedule_update_ha_state()
 
+    @override
     def stop_cover(self, **kwargs: Any) -> None:
         """Stop the cover."""
         self.device.stop()

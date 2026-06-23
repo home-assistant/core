@@ -1,7 +1,5 @@
 """Support for SmartThings Cloud."""
 
-from __future__ import annotations
-
 from collections.abc import Callable
 import contextlib
 from copy import deepcopy
@@ -158,7 +156,8 @@ async def async_setup_entry(hass: HomeAssistant, entry: SmartThingsConfigEntry) 
 
     def _handle_max_connections() -> None:
         _LOGGER.debug(
-            "We hit the limit of max connections or we could not remove the old one, so retrying"
+            "We hit the limit of max connections or we could"
+            " not remove the old one, so retrying"
         )
         hass.config_entries.async_schedule_reload(entry.entry_id)
 
@@ -337,7 +336,8 @@ async def async_migrate_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Handle config entry migration."""
 
     if entry.version < 3:
-        # We keep the old data around, so we can use that to clean up the webhook in the future
+        # We keep the old data around, so we can use that
+        # to clean up the webhook in the future
         hass.config_entries.async_update_entry(
             entry, version=3, data={OLD_DATA: dict(entry.data)}
         )
@@ -379,7 +379,12 @@ async def async_migrate_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
                         "energySaved_meter",
                     }:
                         return {
-                            "new_unique_id": f"{device_id}_{MAIN}_{Capability.POWER_CONSUMPTION_REPORT}_{Attribute.POWER_CONSUMPTION}_{attribute}",
+                            "new_unique_id": (
+                                f"{device_id}_{MAIN}"
+                                f"_{Capability.POWER_CONSUMPTION_REPORT}"
+                                f"_{Attribute.POWER_CONSUMPTION}"
+                                f"_{attribute}"
+                            ),
                         }
                     if attribute in {
                         "X Coordinate",
@@ -392,7 +397,12 @@ async def async_migrate_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
                             "Z Coordinate": "z_coordinate",
                         }[attribute]
                         return {
-                            "new_unique_id": f"{device_id}_{MAIN}_{Capability.THREE_AXIS}_{Attribute.THREE_AXIS}_{new_attribute}",
+                            "new_unique_id": (
+                                f"{device_id}_{MAIN}"
+                                f"_{Capability.THREE_AXIS}"
+                                f"_{Attribute.THREE_AXIS}"
+                                f"_{new_attribute}"
+                            ),
                         }
                     if attribute in {
                         Attribute.MACHINE_STATE,
@@ -404,16 +414,27 @@ async def async_migrate_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
                         if capability is None:
                             return None
                         return {
-                            "new_unique_id": f"{device_id}_{MAIN}_{capability}_{attribute}_{attribute}",
+                            "new_unique_id": (
+                                f"{device_id}_{MAIN}"
+                                f"_{capability}"
+                                f"_{attribute}_{attribute}"
+                            ),
                         }
                     return None
                 return {
-                    "new_unique_id": f"{device_id}_{MAIN}_{capability}_{attribute}_{attribute}",
+                    "new_unique_id": (
+                        f"{device_id}_{MAIN}_{capability}_{attribute}_{attribute}"
+                    ),
                 }
 
             if entity_entry.domain == "switch":
                 return {
-                    "new_unique_id": f"{entity_entry.unique_id}_{MAIN}_{Capability.SWITCH}_{Attribute.SWITCH}_{Attribute.SWITCH}",
+                    "new_unique_id": (
+                        f"{entity_entry.unique_id}_{MAIN}"
+                        f"_{Capability.SWITCH}"
+                        f"_{Attribute.SWITCH}"
+                        f"_{Attribute.SWITCH}"
+                    ),
                 }
 
             return None

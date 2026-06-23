@@ -15,9 +15,9 @@ from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from homeassistant.helpers.trigger import TriggerActionType, TriggerInfo
 from homeassistant.helpers.typing import ConfigType, VolDictType
 
-from .const import DOMAIN
+from .const import DOMAIN, SIGNAL_KNX_TELEGRAM
 from .schema import ga_validator
-from .telegrams import SIGNAL_KNX_TELEGRAM, TelegramDict, decode_telegram_payload
+from .telegrams import TelegramDict, decode_telegram_payload
 from .validation import dpt_base_type_validator
 
 TRIGGER_TELEGRAM: Final = "telegram"

@@ -1,22 +1,16 @@
 """Support for scripts."""
 
-from __future__ import annotations
-
 from abc import ABC, abstractmethod
 import asyncio
 from dataclasses import dataclass
 import logging
-from typing import TYPE_CHECKING, Any, cast
+from typing import TYPE_CHECKING, Any, cast, override
 
 from propcache.api import cached_property
 import voluptuous as vol
 
-from homeassistant.components import automation, websocket_api
+from homeassistant.components import websocket_api
 from homeassistant.components.blueprint import CONF_USE_BLUEPRINT
-from homeassistant.components.labs import (
-    EventLabsUpdatedData,
-    async_subscribe_preview_feature,
-)
 from homeassistant.const import (
     ATTR_ENTITY_ID,
     ATTR_MODE,
@@ -65,7 +59,6 @@ from homeassistant.helpers.script import (
 from homeassistant.helpers.service import async_set_service_schema
 from homeassistant.helpers.trace import trace_get, trace_path
 from homeassistant.helpers.typing import ConfigType
-from homeassistant.loader import bind_hass
 from homeassistant.util.async_ import create_eager_task
 from homeassistant.util.dt import parse_datetime
 
@@ -91,7 +84,6 @@ SCRIPT_TURN_ONOFF_SCHEMA = make_entity_service_schema(
 RELOAD_SERVICE_SCHEMA = vol.Schema({})
 
 
-@bind_hass
 def is_on(hass: HomeAssistant, entity_id: str) -> bool:
     """Return if the script is on based on the statemachine."""
     return hass.states.is_state(entity_id, STATE_ON)
@@ -282,19 +274,6 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     )
     hass.services.async_register(
         DOMAIN, SERVICE_TOGGLE, toggle_service, schema=SCRIPT_TURN_ONOFF_SCHEMA
-    )
-
-    async def new_triggers_conditions_listener(
-        _event_data: EventLabsUpdatedData,
-    ) -> None:
-        """Handle new_triggers_conditions flag change."""
-        await reload_service(ServiceCall(hass, DOMAIN, SERVICE_RELOAD))
-
-    async_subscribe_preview_feature(
-        hass,
-        automation.DOMAIN,
-        automation.NEW_TRIGGERS_CONDITIONS_FEATURE_FLAG,
-        new_triggers_conditions_listener,
     )
 
     websocket_api.async_register_command(hass, websocket_config)
@@ -499,35 +478,42 @@ class UnavailableScriptEntity(BaseScriptEntity):
         self._validation_status = validation_status
 
     @cached_property
+    @override
     def referenced_labels(self) -> set[str]:
         """Return a set of referenced labels."""
         return set()
 
     @cached_property
+    @override
     def referenced_floors(self) -> set[str]:
         """Return a set of referenced floors."""
         return set()
 
     @cached_property
+    @override
     def referenced_areas(self) -> set[str]:
         """Return a set of referenced areas."""
         return set()
 
     @property
+    @override
     def referenced_blueprint(self) -> str | None:
         """Return referenced blueprint or None."""
         return None
 
     @cached_property
+    @override
     def referenced_devices(self) -> set[str]:
         """Return a set of referenced devices."""
         return set()
 
     @cached_property
+    @override
     def referenced_entities(self) -> set[str]:
         """Return a set of referenced entities."""
         return set()
 
+    @override
     async def async_added_to_hass(self) -> None:
         """Create a repair issue to notify the user the automation has errors."""
         await super().async_added_to_hass()
@@ -546,6 +532,7 @@ class UnavailableScriptEntity(BaseScriptEntity):
             },
         )
 
+    @override
     async def async_will_remove_from_hass(self) -> None:
         """Run when entity will be removed from hass."""
         await super().async_will_remove_from_hass()
@@ -598,6 +585,7 @@ class ScriptEntity(BaseScriptEntity, RestoreEntity):
         self._attr_name = self.script.name
 
     @property
+    @override
     def extra_state_attributes(self) -> dict[str, Any]:
         """Return the state attributes."""
         script = self.script
@@ -613,26 +601,31 @@ class ScriptEntity(BaseScriptEntity, RestoreEntity):
         return attrs
 
     @property
+    @override
     def is_on(self) -> bool:
         """Return true if script is on."""
         return self.script.is_running
 
     @cached_property
+    @override
     def referenced_labels(self) -> set[str]:
         """Return a set of referenced labels."""
         return self.script.referenced_labels
 
     @cached_property
+    @override
     def referenced_floors(self) -> set[str]:
         """Return a set of referenced floors."""
         return self.script.referenced_floors
 
     @cached_property
+    @override
     def referenced_areas(self) -> set[str]:
         """Return a set of referenced areas."""
         return self.script.referenced_areas
 
     @property
+    @override
     def referenced_blueprint(self) -> str | None:
         """Return referenced blueprint or None."""
         if self._blueprint_inputs is None:
@@ -641,11 +634,13 @@ class ScriptEntity(BaseScriptEntity, RestoreEntity):
         return path
 
     @cached_property
+    @override
     def referenced_devices(self) -> set[str]:
         """Return a set of referenced devices."""
         return self.script.referenced_devices
 
     @cached_property
+    @override
     def referenced_entities(self) -> set[str]:
         """Return a set of referenced entities."""
         return self.script.referenced_entities
@@ -656,6 +651,7 @@ class ScriptEntity(BaseScriptEntity, RestoreEntity):
         self.async_write_ha_state()
         self._changed.set()
 
+    @override
     async def async_turn_on(self, **kwargs: Any) -> None:
         """Run the script.
 
@@ -723,6 +719,7 @@ class ScriptEntity(BaseScriptEntity, RestoreEntity):
                 script_vars = {"this": this, **(variables or {})}
                 return await self.script.async_run(script_vars, context)
 
+    @override
     async def async_turn_off(self, **kwargs: Any) -> None:
         """Stop running the script.
 
@@ -739,6 +736,7 @@ class ScriptEntity(BaseScriptEntity, RestoreEntity):
             return response or {}
         return None
 
+    @override
     async def async_added_to_hass(self) -> None:
         """Restore last triggered on startup and register service."""
         if TYPE_CHECKING:
@@ -768,12 +766,16 @@ class ScriptEntity(BaseScriptEntity, RestoreEntity):
         ):
             self.script.last_triggered = parse_datetime(last_triggered)
 
+    @override
     async def async_will_remove_from_hass(self) -> None:
         """Stop script and remove service when it will be removed from HA."""
-        await self.script.async_stop()
-
-        # remove service
         self.hass.services.async_remove(DOMAIN, self._attr_unique_id)
+
+        if self.registry_entry and self.registry_entry.entity_id != self.entity_id:
+            # Entity ID change, do not unload the script as it will be reused.
+            await self.script.async_stop()
+            return
+        await self.script.async_unload()
 
 
 @websocket_api.websocket_command({"type": "script/config", "entity_id": str})

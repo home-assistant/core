@@ -47,9 +47,8 @@ async def test_user_flow(hass: HomeAssistant, mock_setup_entry, account) -> None
     mock_setup_entry.assert_called_once()
 
 
-async def test_form_invalid_auth(
-    hass: HomeAssistant, smarttub_api, mock_setup_entry
-) -> None:
+@pytest.mark.usefixtures("mock_setup_entry")
+async def test_form_invalid_auth(hass: HomeAssistant, smarttub_api) -> None:
     """Test we handle invalid auth and can recover."""
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": config_entries.SOURCE_USER}
@@ -97,7 +96,7 @@ async def test_reauth_success(hass: HomeAssistant, smarttub_api, config_entry) -
 async def test_reauth_wrong_account(
     hass: HomeAssistant, smarttub_api, account, config_entry
 ) -> None:
-    """Test reauthentication flow if the user enters credentials for a different already-configured account."""
+    """Test reauth flow with credentials for a different account."""
     config_entry.add_to_hass(hass)
 
     mock_entry2 = MockConfigEntry(

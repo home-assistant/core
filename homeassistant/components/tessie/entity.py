@@ -3,7 +3,7 @@
 from abc import abstractmethod
 from collections.abc import Awaitable, Callable
 from inspect import isawaitable
-from typing import Any
+from typing import Any, override
 
 from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
@@ -57,6 +57,7 @@ class TessieBaseEntity(
         """Return a specific value from coordinator data."""
         return self.coordinator.data.get(key or self.data_key, default)
 
+    @override
     def _handle_coordinator_update(self) -> None:
         """Handle updated data from the coordinator."""
         self._async_update_attrs()
@@ -77,6 +78,7 @@ class TessieEntity(TessieBaseEntity):
         data_key: str | None = None,
     ) -> None:
         """Initialize common aspects of a Tessie vehicle entity."""
+        self.api = vehicle.api
         self.vin = vehicle.vin
         self._session = vehicle.data_coordinator.session
         self._api_key = vehicle.data_coordinator.api_key
@@ -111,6 +113,7 @@ class TessieEntity(TessieBaseEntity):
             name=getattr(self, "name", self.entity_id),
         )
 
+    @override
     def _async_update_attrs(self) -> None:
         """Update the attributes of the entity."""
         # Not used in this class yet
@@ -175,6 +178,7 @@ class TessieWallConnectorEntity(TessieBaseEntity):
         super().__init__(data.live_coordinator, key, data_key)
 
     @property
+    @override
     def _value(self) -> int:
         """Return a specific wall connector value from coordinator data."""
         return (

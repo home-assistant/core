@@ -1,10 +1,8 @@
 """Config flow for the Homevolt integration."""
 
-from __future__ import annotations
-
 from collections.abc import Mapping
 import logging
-from typing import Any
+from typing import Any, override
 
 from homevolt import Homevolt, HomevoltAuthenticationError, HomevoltConnectionError
 import voluptuous as vol
@@ -56,6 +54,7 @@ class HomevoltConfigFlow(ConfigFlow, domain=DOMAIN):
             errors["base"] = "unknown"
         return errors
 
+    @override
     async def async_step_user(
         self, user_input: dict[str, Any] | None = None
     ) -> ConfigFlowResult:
@@ -159,6 +158,7 @@ class HomevoltConfigFlow(ConfigFlow, domain=DOMAIN):
             description_placeholders={"host": self._host},
         )
 
+    @override
     async def async_step_zeroconf(
         self, discovery_info: ZeroconfServiceInfo
     ) -> ConfigFlowResult:

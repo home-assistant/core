@@ -1,0 +1,303 @@
+# serializer version: 1
+# name: test_entities[binary_sensor.openevse_mock_config_divert_active-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': list([
+      None,
+    ]),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'binary_sensor',
+    'entity_category': None,
+    'entity_id': 'binary_sensor.openevse_mock_config_divert_active',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'Divert active',
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'Divert active',
+    'platform': 'openevse',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'divert_active',
+    'unique_id': 'deadbeeffeed-divert_active',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_entities[binary_sensor.openevse_mock_config_divert_active-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'friendly_name': 'openevse_mock_config Divert active',
+    }),
+    'context': <ANY>,
+    'entity_id': 'binary_sensor.openevse_mock_config_divert_active',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'off',
+  })
+# ---
+# name: test_entities[binary_sensor.openevse_mock_config_ethernet_connected-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': list([
+      None,
+    ]),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'binary_sensor',
+    'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
+    'entity_id': 'binary_sensor.openevse_mock_config_ethernet_connected',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'Ethernet connected',
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'Ethernet connected',
+    'platform': 'openevse',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'using_ethernet',
+    'unique_id': 'deadbeeffeed-using_ethernet',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_entities[binary_sensor.openevse_mock_config_ethernet_connected-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'friendly_name': 'openevse_mock_config Ethernet connected',
+    }),
+    'context': <ANY>,
+    'entity_id': 'binary_sensor.openevse_mock_config_ethernet_connected',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'off',
+  })
+# ---
+# name: test_entities[binary_sensor.openevse_mock_config_limit_active-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': list([
+      None,
+    ]),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'binary_sensor',
+    'entity_category': None,
+    'entity_id': 'binary_sensor.openevse_mock_config_limit_active',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'Limit active',
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'Limit active',
+    'platform': 'openevse',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'has_limit',
+    'unique_id': 'deadbeeffeed-has_limit',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_entities[binary_sensor.openevse_mock_config_limit_active-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'friendly_name': 'openevse_mock_config Limit active',
+    }),
+    'context': <ANY>,
+    'entity_id': 'binary_sensor.openevse_mock_config_limit_active',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'off',
+  })
+# ---
+# name: test_entities[binary_sensor.openevse_mock_config_mqtt_connected-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': list([
+      None,
+    ]),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'binary_sensor',
+    'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
+    'entity_id': 'binary_sensor.openevse_mock_config_mqtt_connected',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'MQTT connected',
+    'options': dict({
+    }),
+    'original_device_class': <BinarySensorDeviceClass.CONNECTIVITY: 'connectivity'>,
+    'original_icon': None,
+    'original_name': 'MQTT connected',
+    'platform': 'openevse',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'mqtt_connected',
+    'unique_id': 'deadbeeffeed-mqtt_connected',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_entities[binary_sensor.openevse_mock_config_mqtt_connected-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'device_class': 'connectivity',
+      'friendly_name': 'openevse_mock_config MQTT connected',
+    }),
+    'context': <ANY>,
+    'entity_id': 'binary_sensor.openevse_mock_config_mqtt_connected',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'off',
+  })
+# ---
+# name: test_entities[binary_sensor.openevse_mock_config_shaper_active-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': list([
+      None,
+    ]),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'binary_sensor',
+    'entity_category': None,
+    'entity_id': 'binary_sensor.openevse_mock_config_shaper_active',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'Shaper active',
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'Shaper active',
+    'platform': 'openevse',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'shaper_active',
+    'unique_id': 'deadbeeffeed-shaper_active',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_entities[binary_sensor.openevse_mock_config_shaper_active-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'friendly_name': 'openevse_mock_config Shaper active',
+    }),
+    'context': <ANY>,
+    'entity_id': 'binary_sensor.openevse_mock_config_shaper_active',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'off',
+  })
+# ---
+# name: test_entities[binary_sensor.openevse_mock_config_vehicle_connected-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': list([
+      None,
+    ]),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'binary_sensor',
+    'entity_category': None,
+    'entity_id': 'binary_sensor.openevse_mock_config_vehicle_connected',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'Vehicle connected',
+    'options': dict({
+    }),
+    'original_device_class': <BinarySensorDeviceClass.PLUG: 'plug'>,
+    'original_icon': None,
+    'original_name': 'Vehicle connected',
+    'platform': 'openevse',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'vehicle',
+    'unique_id': 'deadbeeffeed-vehicle',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_entities[binary_sensor.openevse_mock_config_vehicle_connected-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'device_class': 'plug',
+      'friendly_name': 'openevse_mock_config Vehicle connected',
+    }),
+    'context': <ANY>,
+    'entity_id': 'binary_sensor.openevse_mock_config_vehicle_connected',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'on',
+  })
+# ---

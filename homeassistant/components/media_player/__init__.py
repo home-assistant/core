@@ -1,7 +1,5 @@
 """Component to interface with various media players."""
 
-from __future__ import annotations
-
 import asyncio
 import collections
 from collections.abc import Callable
@@ -14,11 +12,11 @@ import hashlib
 from http import HTTPStatus
 import logging
 import secrets
-from typing import Any, Final, Required, TypedDict, final
+from typing import Any, Final, Required, TypedDict, final, override
 from urllib.parse import quote, urlparse
 
 import aiohttp
-from aiohttp import web
+from aiohttp import hdrs, web
 from aiohttp.hdrs import CACHE_CONTROL, CONTENT_TYPE
 from aiohttp.typedefs import LooseHeaders
 from propcache.api import cached_property
@@ -59,7 +57,6 @@ from homeassistant.helpers.entity import Entity, EntityDescription
 from homeassistant.helpers.entity_component import EntityComponent
 from homeassistant.helpers.network import get_url
 from homeassistant.helpers.typing import ConfigType
-from homeassistant.loader import bind_hass
 from homeassistant.util.hass_dict import HassKey
 
 from .browse_media import (  # noqa: F401
@@ -75,7 +72,6 @@ from .const import (  # noqa: F401
     ATTR_GROUP_MEMBERS,
     ATTR_INPUT_SOURCE,
     ATTR_INPUT_SOURCE_LIST,
-    ATTR_LAST_NON_BUFFERING_STATE,
     ATTR_MEDIA_ALBUM_ARTIST,
     ATTR_MEDIA_ALBUM_NAME,
     ATTR_MEDIA_ANNOUNCE,
@@ -159,6 +155,7 @@ class MediaPlayerDeviceClass(StrEnum):
     TV = "tv"
     SPEAKER = "speaker"
     RECEIVER = "receiver"
+    PROJECTOR = "projector"
 
 
 DEVICE_CLASSES_SCHEMA = vol.All(vol.Lower, vol.Coerce(MediaPlayerDeviceClass))
@@ -172,7 +169,9 @@ def _promote_media_fields(data: dict[str, Any]) -> dict[str, Any]:
     if ATTR_MEDIA in data and isinstance(data[ATTR_MEDIA], dict):
         if ATTR_MEDIA_CONTENT_TYPE in data or ATTR_MEDIA_CONTENT_ID in data:
             raise vol.Invalid(
-                f"Play media cannot contain '{ATTR_MEDIA}' and '{ATTR_MEDIA_CONTENT_ID}' or '{ATTR_MEDIA_CONTENT_TYPE}'"
+                f"Play media cannot contain '{ATTR_MEDIA}' and "
+                f"'{ATTR_MEDIA_CONTENT_ID}' or "
+                f"'{ATTR_MEDIA_CONTENT_TYPE}'"
             )
         media_data = data[ATTR_MEDIA]
 
@@ -247,7 +246,6 @@ class _ImageCache(TypedDict):
 _ENTITY_IMAGE_CACHE = _ImageCache(images=collections.OrderedDict(), maxsize=16)
 
 
-@bind_hass
 def is_on(hass: HomeAssistant, entity_id: str | None = None) -> bool:
     """Return true if specified media player entity_id is on.
 
@@ -588,10 +586,9 @@ class MediaPlayerEntity(Entity, cached_properties=CACHED_PROPERTIES_WITH_ATTR_):
     _attr_volume_level: float | None = None
     _attr_volume_step: float
 
-    __last_non_buffering_state: MediaPlayerState | None = None
-
     # Implement these for your media player
     @cached_property
+    @override
     def device_class(self) -> MediaPlayerDeviceClass | None:
         """Return the class of this entity."""
         if hasattr(self, "_attr_device_class"):
@@ -601,6 +598,7 @@ class MediaPlayerEntity(Entity, cached_properties=CACHED_PROPERTIES_WITH_ATTR_):
         return None
 
     @cached_property
+    @override
     def state(self) -> MediaPlayerState | None:
         """State of the player."""
         return self._attr_state
@@ -798,6 +796,7 @@ class MediaPlayerEntity(Entity, cached_properties=CACHED_PROPERTIES_WITH_ATTR_):
         return self._attr_group_members
 
     @cached_property
+    @override
     def supported_features(self) -> MediaPlayerEntityFeature:
         """Flag media player features that are supported."""
         return self._attr_supported_features
@@ -1084,6 +1083,7 @@ class MediaPlayerEntity(Entity, cached_properties=CACHED_PROPERTIES_WITH_ATTR_):
             await self.async_media_play()
 
     @property
+    @override
     def entity_picture(self) -> str | None:
         """Return image of the media playing."""
         if self.state == MediaPlayerState.OFF:
@@ -1106,6 +1106,7 @@ class MediaPlayerEntity(Entity, cached_properties=CACHED_PROPERTIES_WITH_ATTR_):
         )
 
     @property
+    @override
     def capability_attributes(self) -> dict[str, Any]:
         """Return capability attributes."""
         data: dict[str, Any] = {}
@@ -1125,14 +1126,10 @@ class MediaPlayerEntity(Entity, cached_properties=CACHED_PROPERTIES_WITH_ATTR_):
 
     @final
     @property
+    @override
     def state_attributes(self) -> dict[str, Any]:
         """Return the state attributes."""
-        if (state := self.state) != MediaPlayerState.BUFFERING:
-            self.__last_non_buffering_state = state
-
-        state_attr: dict[str, Any] = {
-            ATTR_LAST_NON_BUFFERING_STATE: self.__last_non_buffering_state
-        }
+        state_attr: dict[str, Any] = {}
 
         if self.support_grouping:
             state_attr[ATTR_GROUP_MEMBERS] = self.group_members
@@ -1280,12 +1277,9 @@ class MediaPlayerImageView(HomeAssistantView):
     ) -> web.Response:
         """Start a get request."""
         if (player := self.component.get_entity(entity_id)) is None:
-            status = (
-                HTTPStatus.NOT_FOUND
-                if request[KEY_AUTHENTICATED]
-                else HTTPStatus.UNAUTHORIZED
+            raise (
+                web.HTTPNotFound if request[KEY_AUTHENTICATED] else web.HTTPUnauthorized
             )
-            return web.Response(status=status)
 
         assert isinstance(player, MediaPlayerEntity)
         authenticated = (
@@ -1294,7 +1288,16 @@ class MediaPlayerImageView(HomeAssistantView):
         )
 
         if not authenticated:
-            return web.Response(status=HTTPStatus.UNAUTHORIZED)
+            if hdrs.AUTHORIZATION in request.headers:
+                # A failed request that carried an Authorization header is a real
+                # Bearer auth attempt — return 401 and let the ban middleware count
+                # it as a wrong login.
+                raise web.HTTPUnauthorized
+            # No Authorization header: most likely a benign signed-URL / query-
+            # token request whose token has expired (e.g. a browser tab left
+            # open that re-fetches resources later). Return 403 so it doesn't
+            # register as a wrong login and ban the user's own IP.
+            raise web.HTTPForbidden
 
         if media_content_type and media_content_id:
             media_image_id = request.query.get("media_image_id")
@@ -1305,7 +1308,7 @@ class MediaPlayerImageView(HomeAssistantView):
             data, content_type = await player.async_get_media_image()
 
         if data is None:
-            return web.Response(status=HTTPStatus.INTERNAL_SERVER_ERROR)
+            return web.Response(status=HTTPStatus.NOT_FOUND)
 
         headers: LooseHeaders = {CACHE_CONTROL: "max-age=3600"}
         return web.Response(body=data, content_type=content_type, headers=headers)

@@ -1,11 +1,9 @@
 """Sensor platform for Sensibo integration."""
 
-from __future__ import annotations
-
 from collections.abc import Callable, Mapping
 from dataclasses import dataclass
 from datetime import datetime
-from typing import TYPE_CHECKING, Any
+from typing import TYPE_CHECKING, Any, override
 
 from pysensibo.model import MotionSensor, PureAQI, SensiboDevice
 
@@ -317,6 +315,7 @@ class SensiboMotionSensor(SensiboMotionBaseEntity, SensorEntity):
         self._attr_unique_id = f"{sensor_id}-{entity_description.key}"
 
     @property
+    @override
     def native_value(self) -> StateType:
         """Return value of sensor."""
         if TYPE_CHECKING:
@@ -344,11 +343,13 @@ class SensiboDeviceSensor(SensiboDeviceBaseEntity, SensorEntity):
         self._attr_unique_id = f"{device_id}-{entity_description.key}"
 
     @property
+    @override
     def native_value(self) -> StateType | datetime:
         """Return value of sensor."""
         return self.entity_description.value_fn(self.device_data)
 
     @property
+    @override
     def extra_state_attributes(self) -> Mapping[str, Any] | None:
         """Return additional attributes."""
         if self.entity_description.extra_fn is not None:

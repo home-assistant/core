@@ -1,17 +1,14 @@
 """Support for Template alarm control panels."""
 
-from __future__ import annotations
-
 from enum import Enum
 import logging
-from typing import TYPE_CHECKING, Any
+from typing import TYPE_CHECKING, Any, override
 
 import voluptuous as vol
 
 from homeassistant.components.alarm_control_panel import (
     DOMAIN as ALARM_CONTROL_PANEL_DOMAIN,
     ENTITY_ID_FORMAT,
-    PLATFORM_SCHEMA as ALARM_CONTROL_PANEL_PLATFORM_SCHEMA,
     AlarmControlPanelEntity,
     AlarmControlPanelEntityFeature,
     AlarmControlPanelState,
@@ -22,8 +19,6 @@ from homeassistant.const import (
     ATTR_CODE,
     CONF_NAME,
     CONF_STATE,
-    CONF_UNIQUE_ID,
-    CONF_VALUE_TEMPLATE,
     STATE_UNAVAILABLE,
     STATE_UNKNOWN,
 )
@@ -56,7 +51,6 @@ from .trigger_entity import TriggerEntity
 
 _LOGGER = logging.getLogger(__name__)
 
-CONF_ALARM_CONTROL_PANELS = "panels"
 CONF_ARM_AWAY_ACTION = "arm_away"
 CONF_ARM_CUSTOM_BYPASS_ACTION = "arm_custom_bypass"
 CONF_ARM_HOME_ACTION = "arm_home"
@@ -75,10 +69,6 @@ class TemplateCodeFormat(Enum):
     number = CodeFormat.NUMBER
     text = CodeFormat.TEXT
 
-
-LEGACY_FIELDS = {
-    CONF_VALUE_TEMPLATE: CONF_STATE,
-}
 
 SCRIPT_FIELDS = (
     CONF_ARM_AWAY_ACTION,
@@ -115,33 +105,6 @@ ALARM_CONTROL_PANEL_YAML_SCHEMA = ALARM_CONTROL_PANEL_COMMON_SCHEMA.extend(
     make_template_entity_common_modern_schema(
         ALARM_CONTROL_PANEL_DOMAIN, DEFAULT_NAME
     ).schema
-)
-
-ALARM_CONTROL_PANEL_LEGACY_YAML_SCHEMA = vol.Schema(
-    {
-        vol.Optional(CONF_ARM_AWAY_ACTION): cv.SCRIPT_SCHEMA,
-        vol.Optional(CONF_ARM_CUSTOM_BYPASS_ACTION): cv.SCRIPT_SCHEMA,
-        vol.Optional(CONF_ARM_HOME_ACTION): cv.SCRIPT_SCHEMA,
-        vol.Optional(CONF_ARM_NIGHT_ACTION): cv.SCRIPT_SCHEMA,
-        vol.Optional(CONF_ARM_VACATION_ACTION): cv.SCRIPT_SCHEMA,
-        vol.Optional(CONF_CODE_ARM_REQUIRED, default=True): cv.boolean,
-        vol.Optional(CONF_CODE_FORMAT, default=TemplateCodeFormat.number.name): cv.enum(
-            TemplateCodeFormat
-        ),
-        vol.Optional(CONF_DISARM_ACTION): cv.SCRIPT_SCHEMA,
-        vol.Optional(CONF_NAME): cv.string,
-        vol.Optional(CONF_TRIGGER_ACTION): cv.SCRIPT_SCHEMA,
-        vol.Optional(CONF_UNIQUE_ID): cv.string,
-        vol.Optional(CONF_VALUE_TEMPLATE): cv.template,
-    }
-)
-
-PLATFORM_SCHEMA = ALARM_CONTROL_PANEL_PLATFORM_SCHEMA.extend(
-    {
-        vol.Required(CONF_ALARM_CONTROL_PANELS): cv.schema_with_slug_keys(
-            ALARM_CONTROL_PANEL_LEGACY_YAML_SCHEMA
-        ),
-    }
 )
 
 ALARM_CONTROL_PANEL_CONFIG_ENTRY_SCHEMA = ALARM_CONTROL_PANEL_COMMON_SCHEMA.extend(
@@ -181,8 +144,6 @@ async def async_setup_platform(
         TriggerAlarmControlPanelEntity,
         async_add_entities,
         discovery_info,
-        LEGACY_FIELDS,
-        legacy_key=CONF_ALARM_CONTROL_PANELS,
         script_options=SCRIPT_FIELDS,
     )
 
@@ -211,7 +172,8 @@ class AbstractTemplateAlarmControlPanel(
     _optimistic_entity = True
     _state_option = CONF_STATE
 
-    # The super init is not called because TemplateEntity calls AbstractTemplateEntity.__init__.
+    # The super init is not called because
+    # TemplateEntity calls AbstractTemplateEntity.__init__.
     def __init__(self, name: str) -> None:  # pylint: disable=super-init-not-called
         """Setup the templates and scripts."""
 
@@ -265,6 +227,7 @@ class AbstractTemplateAlarmControlPanel(
             self._attr_alarm_state = state
             self.async_write_ha_state()
 
+    @override
     async def async_alarm_arm_away(self, code: str | None = None) -> None:
         """Arm the panel to Away."""
         await self._async_alarm_arm(
@@ -273,6 +236,7 @@ class AbstractTemplateAlarmControlPanel(
             code=code,
         )
 
+    @override
     async def async_alarm_arm_home(self, code: str | None = None) -> None:
         """Arm the panel to Home."""
         await self._async_alarm_arm(
@@ -281,6 +245,7 @@ class AbstractTemplateAlarmControlPanel(
             code=code,
         )
 
+    @override
     async def async_alarm_arm_night(self, code: str | None = None) -> None:
         """Arm the panel to Night."""
         await self._async_alarm_arm(
@@ -289,6 +254,7 @@ class AbstractTemplateAlarmControlPanel(
             code=code,
         )
 
+    @override
     async def async_alarm_arm_vacation(self, code: str | None = None) -> None:
         """Arm the panel to Vacation."""
         await self._async_alarm_arm(
@@ -297,6 +263,7 @@ class AbstractTemplateAlarmControlPanel(
             code=code,
         )
 
+    @override
     async def async_alarm_arm_custom_bypass(self, code: str | None = None) -> None:
         """Arm the panel to Custom Bypass."""
         await self._async_alarm_arm(
@@ -305,6 +272,7 @@ class AbstractTemplateAlarmControlPanel(
             code=code,
         )
 
+    @override
     async def async_alarm_disarm(self, code: str | None = None) -> None:
         """Disarm the panel."""
         await self._async_alarm_arm(
@@ -313,6 +281,7 @@ class AbstractTemplateAlarmControlPanel(
             code=code,
         )
 
+    @override
     async def async_alarm_trigger(self, code: str | None = None) -> None:
         """Trigger the panel."""
         await self._async_alarm_arm(
@@ -341,6 +310,7 @@ class StateAlarmControlPanelEntity(TemplateEntity, AbstractTemplateAlarmControlP
 
         AbstractTemplateAlarmControlPanel.__init__(self, name)
 
+    @override
     async def async_added_to_hass(self) -> None:
         """Restore last state."""
         await super().async_added_to_hass()
@@ -363,6 +333,7 @@ class TriggerAlarmControlPanelEntity(TriggerEntity, AbstractTemplateAlarmControl
         self._attr_name = name = self._rendered.get(CONF_NAME, DEFAULT_NAME)
         AbstractTemplateAlarmControlPanel.__init__(self, name)
 
+    @override
     async def async_added_to_hass(self) -> None:
         """Restore last state."""
         await super().async_added_to_hass()

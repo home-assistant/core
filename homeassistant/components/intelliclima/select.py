@@ -1,5 +1,7 @@
 """Select platform for IntelliClima VMC."""
 
+from typing import override
+
 from pyintelliclima.const import FanMode, FanSpeed
 from pyintelliclima.intelliclima_types import IntelliClimaECO
 
@@ -59,6 +61,7 @@ class IntelliClimaVMCFanModeSelect(IntelliClimaECOEntity, SelectEntity):
         self._attr_unique_id = f"{device.id}_fan_mode"
 
     @property
+    @override
     def current_option(self) -> str | None:
         """Return the current fan mode."""
         device_data = self._device_data
@@ -66,7 +69,8 @@ class IntelliClimaVMCFanModeSelect(IntelliClimaECOEntity, SelectEntity):
         if device_data.mode_set == FanMode.off:
             return None
 
-        # If in auto mode (sensor mode with auto speed), return None (handled by fan entity preset mode)
+        # If in auto mode (sensor mode with auto speed),
+        # return None (handled by fan entity preset mode)
         if (
             device_data.speed_set == FanSpeed.auto_get
             and device_data.mode_set == FanMode.sensor
@@ -75,6 +79,7 @@ class IntelliClimaVMCFanModeSelect(IntelliClimaECOEntity, SelectEntity):
 
         return INTELLICLIMA_MODE_TO_FAN_MODE.get(device_data.mode_set)
 
+    @override
     async def async_select_option(self, option: str) -> None:
         """Set the fan mode."""
         device_data = self._device_data
