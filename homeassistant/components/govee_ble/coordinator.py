@@ -23,9 +23,9 @@ type GoveeBLEConfigEntry = ConfigEntry[GoveeBLEBluetoothProcessorCoordinator]
 
 # Models such as the H5074 carry their measurements only in the scan response,
 # so the scanner must stay active long enough to capture one; the default 10s
-# window misses them most cycles. 25s covers a full broadcast interval with
-# margin to absorb jitter.
-ACTIVE_SCAN_DURATION = 25.0
+# window misses them most cycles. 30s is the longest active window habluetooth
+# allows (AUTO_WINDOW_MAX_DURATION) and reliably spans a full broadcast cycle.
+ACTIVE_SCAN_DURATION = 30.0
 
 
 def process_service_info(
