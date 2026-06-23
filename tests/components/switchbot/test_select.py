@@ -127,51 +127,6 @@ async def test_set_time_format(
 
 
 @pytest.mark.parametrize(
-    ("entity_id", "set_method"),
-    [
-        (
-            "select.test_name_horizontal_oscillation_angle",
-            "set_horizontal_oscillation_angle",
-        ),
-        (
-            "select.test_name_vertical_oscillation_angle",
-            "set_vertical_oscillation_angle",
-        ),
-    ],
-)
-async def test_standing_fan_oscillation_angle_select(
-    hass: HomeAssistant,
-    mock_entry_factory: Callable[[str], MockConfigEntry],
-    entity_id: str,
-    set_method: str,
-) -> None:
-    """Test horizontal/vertical oscillation angle selects."""
-    await async_setup_component(hass, DOMAIN, {})
-    inject_bluetooth_service_info(hass, STANDING_FAN_SERVICE_INFO)
-
-    entry = mock_entry_factory(sensor_type="standing_fan")
-    entry.add_to_hass(hass)
-
-    mocked_set = AsyncMock(return_value=True)
-    with patch.multiple(
-        "homeassistant.components.switchbot.select.switchbot.SwitchbotStandingFan",
-        get_basic_info=AsyncMock(return_value=None),
-        **{set_method: mocked_set},
-    ):
-        assert await hass.config_entries.async_setup(entry.entry_id)
-        await hass.async_block_till_done()
-
-        await hass.services.async_call(
-            SELECT_DOMAIN,
-            SERVICE_SELECT_OPTION,
-            {ATTR_ENTITY_ID: entity_id, ATTR_OPTION: "60"},
-            blocking=True,
-        )
-
-        mocked_set.assert_awaited_once_with(60)
-
-
-@pytest.mark.parametrize(
     ("device_state", "option", "expected_state"),
     [
         (NightLightState.OFF.value, "level_1", NightLightState.LEVEL_1),

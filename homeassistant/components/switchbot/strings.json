@@ -287,17 +287,15 @@
     "number": {
       "display_time_offset": {
         "name": "Display time offset"
+      },
+      "horizontal_oscillation_angle": {
+        "name": "Horizontal oscillation angle"
+      },
+      "vertical_oscillation_angle": {
+        "name": "Vertical oscillation angle"
       }
     },
     "select": {
-      "horizontal_oscillation_angle": {
-        "name": "Horizontal oscillation angle",
-        "state": {
-          "30": "30°",
-          "60": "60°",
-          "90": "90°"
-        }
-      },
       "night_light": {
         "name": "Night light",
         "state": {
@@ -311,14 +309,6 @@
         "state": {
           "12h": "12-hour (AM/PM)",
           "24h": "24-hour"
-        }
-      },
-      "vertical_oscillation_angle": {
-        "name": "Vertical oscillation angle",
-        "state": {
-          "30": "30°",
-          "60": "60°",
-          "90": "90°"
         }
       }
     },

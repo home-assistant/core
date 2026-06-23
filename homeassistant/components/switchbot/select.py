@@ -1,7 +1,5 @@
 """Select platform for SwitchBot."""
 
-from collections.abc import Awaitable, Callable
-from dataclasses import dataclass
 from datetime import timedelta
 import logging
 
@@ -36,13 +34,7 @@ async def async_setup_entry(
     if isinstance(coordinator.device, switchbot.SwitchbotMeterProCO2):
         async_add_entities([SwitchBotMeterProCO2TimeFormatSelect(coordinator)], True)
     elif isinstance(coordinator.device, switchbot.SwitchbotStandingFan):
-        async_add_entities(
-            [
-                SwitchBotStandingFanOscillationSelect(coordinator, desc)
-                for desc in OSCILLATION_SELECT_DESCRIPTIONS
-            ]
-            + [SwitchBotStandingFanNightLightSelect(coordinator)]
-        )
+        async_add_entities([SwitchBotStandingFanNightLightSelect(coordinator)])
 
 
 class SwitchBotMeterProCO2TimeFormatSelect(SwitchbotEntity, SelectEntity):
@@ -83,8 +75,6 @@ class SwitchBotMeterProCO2TimeFormatSelect(SwitchbotEntity, SelectEntity):
         )
 
 
-OSCILLATION_ANGLE_OPTIONS = ["30", "60", "90"]
-
 NIGHT_LIGHT_OFF = "off"
 NIGHT_LIGHT_LEVEL_1 = "level_1"
 NIGHT_LIGHT_LEVEL_2 = "level_2"
@@ -97,66 +87,6 @@ NIGHT_LIGHT_TO_STATE: dict[str, NightLightState] = {
 NIGHT_LIGHT_FROM_STATE: dict[int, str] = {
     state.value: option for option, state in NIGHT_LIGHT_TO_STATE.items()
 }
-
-
-@dataclass(frozen=True, kw_only=True)
-class SwitchBotOscillationSelectEntityDescription:
-    """Describes a Standing Fan oscillation angle select entity."""
-
-    translation_key: str
-    unique_id_suffix: str
-    setter: Callable[[switchbot.SwitchbotStandingFan, int], Awaitable[None]]
-
-
-OSCILLATION_SELECT_DESCRIPTIONS: tuple[
-    SwitchBotOscillationSelectEntityDescription, ...
-] = (
-    SwitchBotOscillationSelectEntityDescription(
-        translation_key="horizontal_oscillation_angle",
-        unique_id_suffix="horizontal_oscillation_angle",
-        setter=lambda device, angle: device.set_horizontal_oscillation_angle(angle),
-    ),
-    SwitchBotOscillationSelectEntityDescription(
-        translation_key="vertical_oscillation_angle",
-        unique_id_suffix="vertical_oscillation_angle",
-        setter=lambda device, angle: device.set_vertical_oscillation_angle(angle),
-    ),
-)
-
-
-class SwitchBotStandingFanOscillationSelect(SwitchbotEntity, SelectEntity):
-    """Select entity for oscillation angle on Standing Fan.
-
-    Uses assumed_state=True because the device does not report its current
-    oscillation angle back to HA — state is only known after the user sets it.
-    update_before_add is intentionally omitted (contrast with
-    SwitchBotMeterProCO2TimeFormatSelect which polls via async_update).
-    """
-
-    _device: switchbot.SwitchbotStandingFan
-    _attr_assumed_state = True
-    _attr_entity_category = EntityCategory.CONFIG
-    _attr_options = OSCILLATION_ANGLE_OPTIONS
-
-    def __init__(
-        self,
-        coordinator: SwitchbotDataUpdateCoordinator,
-        description: SwitchBotOscillationSelectEntityDescription,
-    ) -> None:
-        """Initialize the oscillation select entity."""
-        super().__init__(coordinator)
-        self._description = description
-        self._attr_translation_key = description.translation_key
-        self._attr_unique_id = (
-            f"{coordinator.base_unique_id}_{description.unique_id_suffix}"
-        )
-
-    @exception_handler
-    async def async_select_option(self, option: str) -> None:
-        """Set oscillation angle."""
-        await self._description.setter(self._device, int(option))
-        self._attr_current_option = option
-        self.async_write_ha_state()
 
 
 class SwitchBotStandingFanNightLightSelect(SwitchbotEntity, SelectEntity):
