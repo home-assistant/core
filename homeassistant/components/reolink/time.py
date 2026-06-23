@@ -30,20 +30,12 @@ class ReolinkTimeEntityDescription(
     value: Callable[[Host, int], time | None]
 
 
-def _start_time(api: Host, ch: int) -> time | None:
+def _schedule_time(api: Host, ch: int, prefix: str) -> time | None:
     """Return the start time of the floodlight schedule."""
     schedule = api.whiteled_schedule(ch)
     if not schedule:
         return None
-    return time(hour=schedule["StartHour"], minute=schedule["StartMin"])
-
-
-def _end_time(api: Host, ch: int) -> time | None:
-    """Return the end time of the floodlight schedule."""
-    schedule = api.whiteled_schedule(ch)
-    if not schedule:
-        return None
-    return time(hour=schedule["EndHour"], minute=schedule["EndMin"])
+    return time(hour=schedule[f"{prefix}Hour"], minute=schedule[f"{prefix}Min"])
 
 
 def _set_start(api: Host, ch: int, value: time) -> Any:
@@ -81,7 +73,7 @@ TIME_ENTITIES = (
         supported=lambda api, ch: (
             SpotlightModeEnum.schedule.name in api.whiteled_mode_list(ch)
         ),
-        value=_start_time,
+        value=lambda api, ch: _schedule_time(api, ch, "Start"),
         method=_set_start,
     ),
     ReolinkTimeEntityDescription(
@@ -94,7 +86,7 @@ TIME_ENTITIES = (
         supported=lambda api, ch: (
             SpotlightModeEnum.schedule.name in api.whiteled_mode_list(ch)
         ),
-        value=_end_time,
+        value=lambda api, ch: _schedule_time(api, ch, "End"),
         method=_set_end,
     ),
 )
@@ -106,7 +98,7 @@ async def async_setup_entry(
     async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up Reolink time entities."""
-    reolink_data: ReolinkData = config_entry.runtime_data
+    reolink_data = config_entry.runtime_data
     api = reolink_data.host.api
 
     async_add_entities(
