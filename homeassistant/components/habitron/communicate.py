@@ -157,7 +157,12 @@ class HbtnComm:
         return self._hostname
 
     async def async_setup(self) -> None:
-        """Resolve hub host, open the persistent client connection."""
+        """Resolve the hub host and probe reachability.
+
+        The client uses a fresh socket per command, so ``connect()`` only opens
+        and closes a probe socket to fail fast on an unreachable host; no
+        connection is kept open afterwards.
+        """
         if not self._host:
             if self._host_conf == "local":
                 self._host = await self._hass.async_add_executor_job(get_own_ip)
@@ -176,7 +181,12 @@ class HbtnComm:
         await self._client.connect()
 
     async def async_close(self) -> None:
-        """Close the persistent client connection during entry unload."""
+        """Release the bus client on entry unload.
+
+        With per-command sockets there is no long-lived connection to tear
+        down; this drops the client reference and lets it close any probe
+        socket it may still hold.
+        """
         if self._client is not None:
             await self._client.close()
             self._client = None
