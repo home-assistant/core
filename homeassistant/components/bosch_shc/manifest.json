@@ -8,7 +8,7 @@
   "integration_type": "hub",
   "iot_class": "local_push",
   "loggers": ["boschshcpy"],
-  "requirements": ["boschshcpy==0.2.111"],
+  "requirements": ["boschshcpy==0.3.5"],
   "zeroconf": [
     {
       "name": "bosch shc*",
