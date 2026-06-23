@@ -176,6 +176,9 @@
       "lifespan_brush": {
         "name": "Main brush lifespan"
       },
+      "lifespan_cleaning_solution": {
+        "name": "Cleaning solution lifespan"
+      },
       "lifespan_dust_bag": {
         "name": "Dust bag lifespan"
       },
@@ -194,6 +197,9 @@
       "lifespan_round_mop": {
         "name": "Round mop lifespan"
       },
+      "lifespan_sewage_box": {
+        "name": "Sewage box lifespan"
+      },
       "lifespan_side_brush": {
         "name": "Side brush lifespan"
       },
@@ -202,6 +208,9 @@
       },
       "lifespan_uv_sanitizer": {
         "name": "UV sanitizer lifespan"
+      },
+      "lifespan_water_sink": {
+        "name": "Water sink lifespan"
       },
       "network_ip": {
         "name": "IP address"
