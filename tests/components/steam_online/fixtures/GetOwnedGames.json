@@ -1,0 +1,9 @@
+{
+  "response": { "game_count": 1 },
+  "games": [
+    {
+      "appid": 20900,
+      "img_icon_url": "746d1cd48fb2e57d579b05b6e9eccba95859e549"
+    }
+  ]
+}
