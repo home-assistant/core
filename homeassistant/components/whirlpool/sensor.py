@@ -239,7 +239,6 @@ OVEN_CAVITY_SENSORS: tuple[WhirlpoolOvenCavitySensorEntityDescription, ...] = (
             if (cook_mode := oven.get_cook_mode(cavity)) is not None
             else None
         ),
-        entity_registry_enabled_default=False,
     ),
     WhirlpoolOvenCavitySensorEntityDescription(
         key="oven_current_temperature",
@@ -260,15 +259,6 @@ OVEN_CAVITY_SENSORS: tuple[WhirlpoolOvenCavitySensorEntityDescription, ...] = (
 )
 
 
-def _oven_cavity_suffix(oven: Oven, cavity: OvenCavity) -> str:
-    """Return the unique-id suffix used for an oven cavity."""
-    if oven.get_oven_cavity_exists(OvenCavity.Upper) and oven.get_oven_cavity_exists(
-        OvenCavity.Lower
-    ):
-        return "_upper" if cavity == OvenCavity.Upper else "_lower"
-    return ""
-
-
 def _build_oven_cavity_sensors(
     hass: HomeAssistant,
     entity_registry: er.EntityRegistry,
@@ -276,20 +266,20 @@ def _build_oven_cavity_sensors(
     cavity: OvenCavity,
 ) -> list[SensorEntity]:
     """Build the sensors for a single oven cavity, handling deprecations."""
-    suffix = _oven_cavity_suffix(oven, cavity)
+    suffix = WhirlpoolOvenEntity.cavity_suffix(oven, cavity)
     sensors: list[SensorEntity] = []
     for description in OVEN_CAVITY_SENSORS:
         # The oven cook mode sensor has been replaced by a select entity.
         if description.key == "oven_cook_mode" and not deprecate_entity(
             hass,
             entity_registry,
-            Platform.SENSOR,
-            f"{oven.said}-oven_cook_mode{suffix}",
-            f"deprecated_oven_cook_mode_{oven.said}{suffix}",
-            "deprecated_oven_cook_mode",
-            Platform.SELECT,
-            f"{oven.said}-cook_mode{suffix}",
-            f"select.oven_cook_mode{suffix}",
+            platform_domain=Platform.SENSOR,
+            entity_unique_id=f"{oven.said}-oven_cook_mode{suffix}",
+            issue_id=f"deprecated_oven_cook_mode_{oven.said}{suffix}",
+            translation_key="deprecated_oven_cook_mode",
+            replacement_platform_domain=Platform.SELECT,
+            replacement_entity_unique_id=f"{oven.said}-cook_mode{suffix}",
+            replacement_entity_id=f"select.oven_cook_mode{suffix}",
         ):
             continue
         sensors.append(WhirlpoolOvenCavitySensor(oven, cavity, description))
