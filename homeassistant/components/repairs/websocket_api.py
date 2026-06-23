@@ -2,7 +2,7 @@
 
 from collections.abc import Callable
 from http import HTTPStatus
-from typing import Any
+from typing import Any, override
 
 from aiohttp import web
 import voluptuous as vol
@@ -153,6 +153,7 @@ class RepairsFlowIndexView(FlowManagerIndexView[RepairsFlowManager]):
             )
         return self.json(self._prepare_result_json(result))
 
+    @override
     def _prepare_result_json(
         self, result: data_entry_flow.FlowResult
     ) -> dict[str, Any]:
@@ -176,6 +177,7 @@ class RepairsFlowResourceView(FlowManagerResourceView[RepairsFlowManager]):
         """Handle a POST request."""
         return await super().post(request, flow_id)
 
+    @override
     def _prepare_result_json(
         self, result: data_entry_flow.FlowResult
     ) -> dict[str, Any]:

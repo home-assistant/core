@@ -1,7 +1,7 @@
 """Models for Repairs."""
 
 from collections.abc import Mapping
-from typing import Any, Protocol
+from typing import Any, Protocol, override
 
 from homeassistant import data_entry_flow
 from homeassistant.config_entries import (
@@ -29,6 +29,7 @@ class RepairsFlow(
     issue_id: str
     data: dict[str, str | int | float | None] | None
 
+    @override
     @callback
     def async_create_entry(
         self,
@@ -51,6 +52,7 @@ class RepairsFlow(
 
         return result
 
+    @override
     @callback
     def async_abort(
         self,
