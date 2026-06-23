@@ -75,6 +75,18 @@ async def test_user_flow_already_configured(
     assert result["reason"] == "already_configured"
 
 
+@pytest.mark.usefixtures("init_infrared")
+async def test_user_flow_no_emitters(hass: HomeAssistant) -> None:
+    """Test user flow aborts when no infrared emitter exists."""
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN,
+        context={"source": SOURCE_USER},
+    )
+
+    assert result["type"] is FlowResultType.ABORT
+    assert result["reason"] == "no_infrared_emitters"
+
+
 @pytest.mark.usefixtures("mock_infrared_emitter_entity")
 @pytest.mark.parametrize(
     ("entity_name", "expected_title"),

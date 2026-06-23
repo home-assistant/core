@@ -47,6 +47,9 @@ class OsramIrConfigFlow(ConfigFlow, domain=DOMAIN):
         user_input: dict[str, Any] | None = None,
     ) -> ConfigFlowResult:
         """Handle the initial step."""
+        if not self._async_has_infrared_entities():
+            return self.async_abort(reason="no_infrared_emitters")
+
         if user_input is not None:
             emitter_entity_id = user_input[CONF_IR_EMITTER_ENTITY_ID]
 
