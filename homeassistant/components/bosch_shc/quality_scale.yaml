@@ -1,6 +1,5 @@
 rules:
-  # Bronze tier rules — full audit 2026-06-20 / updated 2026-06-22 against bosch_shc v0.4.108
-  # Rule count (Bronze): 18 total  |  DONE: 17  |  TODO: 1 (brands)  |  N/A: 0
+  # Bronze and Silver quality-scale audit for the bosch_shc Core integration.
 
   # ── DONE ─────────────────────────────────────────────────────────────────────
 
@@ -81,34 +80,37 @@ rules:
   docs-high-level-description:
     status: done
     comment: >
-      README.md contains a clear description of the integration purpose,
-      supported SHC model, supported devices, and the local-API architecture.
-      manifest.json documentation field points to the README.
+      The integration documentation on home-assistant.io provides a clear
+      description of the integration purpose, supported SHC model, supported
+      devices, and the local-API architecture.
+      manifest.json documentation field points to the documentation page.
 
   docs-installation-instructions:
     status: done
     comment: >
-      README.md has a full Installation section with HACS install steps and
-      a Manual Installation section with step-by-step file placement.
-      Screenshots are referenced (images/config_step*.png).
+      The integration documentation on home-assistant.io covers installation
+      via the standard HA Integrations UI (Settings → Devices & Services →
+      Add Integration → Bosch SHC), including the zeroconf discovery path and
+      the manual host-entry path.  No separate file-placement steps are required
+      for a Core integration.
 
   docs-actions:
     status: done
     comment: >
       services.yaml declares trigger_scenario, trigger_rawscan,
       smokedetector_check, smokedetector_alarmstate.  strings.json services
-      section provides name/description/fields for each.  README.md describes
-      the trigger_scenario service; info.md documents rawscan.  Minor wording
-      gap: smokedetector_alarmstate description in strings.json reads "Name
-      of the smoke detector entity to set" (not a field description) but
-      this is non-blocking.
+      section provides name/description/fields for each.  The integration
+      documentation on home-assistant.io describes available actions.
+      Minor wording gap: smokedetector_alarmstate description in strings.json
+      reads "Name of the smoke detector entity to set" (not a field
+      description) but this is non-blocking.
 
   dependency-transparency:
     status: done
     comment: >
-      manifest.json "requirements": ["boschshcpy==0.2.117"] pins the exact
-      PyPI package.  No vendored hidden external deps; certificate.py is an
-      internal parser, not an external dependency.
+      manifest.json "requirements": ["boschshcpy==0.3.5"] pins the exact
+      PyPI-published package (BSD-3 licence).  No vendored hidden external
+      deps; certificate.py is an internal parser, not an external dependency.
 
   common-modules:
     status: done
@@ -119,14 +121,14 @@ rules:
       shared cert parsing.  Platform files import from .entity and .const
       consistently, with no duplicated patterns across files.
 
-  # ── DONE (bronze-quality-scale branch, 2026-06-20) ───────────────────────────
+  # ── DONE (continued) ─────────────────────────────────────────────────────────
 
   docs-removal-instructions:
     status: done
     comment: >
-      README.md now has a "Removal" section (added 2026-06-20) explaining how
-      to remove the integration via Settings → Devices & Services → Delete and
-      noting that PEM cert/key files under /config/bosch_shc/ must be deleted
+      The integration documentation on home-assistant.io documents how to
+      remove the integration via Settings → Devices & Services → Delete and
+      notes that PEM cert/key files under /config/bosch_shc/ must be deleted
       manually as they are not removed on unload.
 
   runtime-data:
@@ -172,7 +174,7 @@ rules:
   config-flow-test-coverage:
     status: done
     comment: >
-      Four new tests added to tests/bosch_shc/test_config_flow.py (2026-06-20):
+      Four new tests added to tests/components/bosch_shc/test_config_flow.py:
       (1) test_confirm_discovery_shows_form — verifies zeroconf confirm_discovery
       returns a form with host in description_placeholders;
       (2) test_reauth_updates_entry_data — verifies async_update_reload_and_abort
@@ -194,8 +196,6 @@ rules:
   # ── NOT APPLICABLE ────────────────────────────────────────────────────────────
 
   # ── SILVER TIER ──────────────────────────────────────────────────────────────
-  # Silver rules — audited 2026-06-22 against bosch_shc v0.4.108
-  # Rule count (Silver): 17 total  |  DONE: 11  |  TODO: 4  |  EXEMPT: 1  |  (test-coverage → DONE)
 
   # Silver DONE
 
@@ -260,21 +260,21 @@ rules:
   docs-configuration-parameters:
     status: done
     comment: >
-      README.md "Configuration" section documents every config-flow field:
-      host (auto-discovered via zeroconf or manually entered), system password,
-      and the client-registration step (front-button press).  The "Options"
-      table documents all options-flow fields with their defaults and effects:
-      Scenarios as buttons, Diagnostic entities, Rawscan service, Presence
-      child lock, Excluded devices/rooms, Long-poll timeout, Hostname verify.
+      The integration documentation on home-assistant.io documents every
+      config-flow field: host (auto-discovered via zeroconf or manually
+      entered), system password, and the client-registration step (front-button
+      press).  The Options section documents all options-flow fields with their
+      defaults and effects: Scenarios as buttons, Diagnostic entities, Rawscan
+      service, Presence child lock, Excluded devices/rooms, Hostname verify.
 
   docs-installation-parameters:
     status: done
     comment: >
-      README.md Installation section covers HACS (recommended) and Manual
-      paths.  Manual install prerequisites are documented: HA with HACS or
-      direct file copy, internet access for boschshcpy pip-install, and
-      the SHC pairing-mode step (front-button press).  No platform-specific
-      prerequisites beyond a working HA instance.
+      The integration documentation on home-assistant.io covers installation
+      prerequisites: a working Home Assistant instance and a reachable Bosch
+      SHC on the local network.  The pairing step (SHC front-button press) is
+      documented.  No additional platform-specific prerequisites beyond a
+      standard HA Core installation.
 
   # Silver TODO
 
@@ -310,12 +310,11 @@ rules:
   entity-translations:
     status: todo
     comment: >
-      strings.json has no "entity" section with translation keys for entity
-      state or attribute values.  The integration uses _attr_name strings
-      directly (English literals like "Temperature", "Battery", "Smoke Test")
-      rather than translation keys.  To close: add an "entity" section to
-      strings.json with keys for each platform's entity names, and switch
-      _attr_translation_key to the key instead of setting _attr_name.
+      Most entities still set _attr_name with English literals rather than
+      using _attr_translation_key, so the strings.json "entity" section does
+      not yet cover every entity name/state.  To close: add translation keys
+      for each platform's entities and switch from _attr_name to
+      _attr_translation_key.
 
   icon-translations:
     status: todo
@@ -344,21 +343,21 @@ rules:
       an ir.async_create_issue call for cert expiry, with a repair step
       that links to the reconfigure flow.
 
-  # Silver EXEMPT
+  # Silver DONE (continued)
 
   integration-owner:
-    status: exempt
-    comment: >
-      This is a HACS custom integration, not in HA Core.  The
-      homeassistant/core CODEOWNERS file rule does not apply — tschamm is
-      the codeowner on the tschamm/boschshc-hass GitHub repo via GitHub
-      branch protection, which is the equivalent mechanism for HACS repos.
-
-  test-coverage:
     status: done
     comment: >
-      Unit-test suite in tests/bosch_shc/ covers all platforms.  Coverage
-      was raised from 48% to ≥90% across the 0.4.104–0.4.108 releases.
-      The ignored test files (test_config_flow.py, test_device_trigger.py)
-      require the HA harness and are exercised by the upstream CI (hassfest
-      + HACS validate).  All 2196 isolation-safe tests pass.
+      The code owner is declared as @tschamm in manifest.json (codeowners
+      field) and in the homeassistant/core CODEOWNERS file, satisfying the
+      integration-owner rule for a Core integration.
+
+  test-coverage:
+    status: todo
+    comment: >
+      Config-flow tests exist at tests/components/bosch_shc/test_config_flow.py.
+      Per-platform tests for the newly added platforms (alarm_control_panel,
+      binary_sensor, button, climate, cover, event, light, number, select,
+      sensor, switch, valve) still need to be added under
+      tests/components/bosch_shc/.  Closing this rule requires adequate
+      platform-level test coverage in the Core test tree.

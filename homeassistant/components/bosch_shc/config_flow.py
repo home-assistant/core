@@ -17,14 +17,12 @@ from homeassistant import config_entries, core
 from homeassistant.components import zeroconf
 from homeassistant.config_entries import ConfigEntry, ConfigFlowResult, OptionsFlow
 from homeassistant.const import CONF_HOST, CONF_PASSWORD, CONF_TOKEN
+from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import section
 from homeassistant.helpers.selector import (
     BooleanSelector,
     EntitySelector,
     EntitySelectorConfig,
-    NumberSelector,
-    NumberSelectorConfig,
-    NumberSelectorMode,
     SelectOptionDict,
     SelectSelector,
     SelectSelectorConfig,
@@ -49,7 +47,6 @@ from .const import (
     OPT_ENABLE_RAWSCAN,
     OPT_EXCLUDED_DEVICES,
     OPT_EXCLUDED_ROOMS,
-    OPT_LONG_POLL_TIMEOUT,
     OPT_PRESENCE_ENTITY,
     OPT_SCENARIOS_AS_BUTTONS,
     OPT_SILENT_MODE_ENABLED,
@@ -79,7 +76,6 @@ OPTIONS_SECTIONS: dict[str, list[str]] = {
     "advanced": [
         OPT_SSL_VERIFY_HOSTNAME,
         OPT_SSL_SKIP_VERIFY,
-        OPT_LONG_POLL_TIMEOUT,
         OPT_EXCLUDED_DEVICES,
         OPT_EXCLUDED_ROOMS,
     ],
@@ -141,7 +137,12 @@ def write_tls_asset(hass: core.HomeAssistant, filename: str, asset: bytes) -> No
         file_handle.write(asset.decode("utf-8"))
 
 
-def create_credentials_and_validate(hass, host, user_input, zeroconf_instance):
+def create_credentials_and_validate(
+    hass: HomeAssistant,
+    host: str,
+    user_input: dict[str, Any],
+    zeroconf_instance: zeroconf.HaZeroconf,
+) -> dict[str, Any] | None:
     """Create and store credentials and validate session."""
     helper = SHCRegisterClient(host, user_input[CONF_PASSWORD])
     result = helper.register("homeassistant", "HomeAssistant")
@@ -163,7 +164,11 @@ def create_credentials_and_validate(hass, host, user_input, zeroconf_instance):
     return result
 
 
-def get_info_from_host(hass, host, zeroconf_instance):
+def get_info_from_host(
+    hass: HomeAssistant,
+    host: str,
+    zeroconf_instance: zeroconf.HaZeroconf,
+) -> dict[str, Any]:
     """Get information from host."""
     session = SHCSession(
         host,
@@ -176,7 +181,7 @@ def get_info_from_host(hass, host, zeroconf_instance):
     return {"title": information.name, "unique_id": information.unique_id}
 
 
-class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
+class BoschSHCConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
     """Handle a config flow for Bosch SHC."""
 
     VERSION = 1
@@ -425,7 +430,7 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         self.host = discovery_info.host
 
         local_name = discovery_info.hostname[:-1]
-        node_name = local_name[: -len(".local")]
+        node_name = local_name.removesuffix(".local")
 
         await self.async_set_unique_id(self.info["unique_id"])
         self._abort_if_unique_id_configured({CONF_HOST: self.host})
@@ -576,18 +581,6 @@ class OptionsFlowHandler(config_entries.OptionsFlowWithReload):
                                 OPT_SSL_SKIP_VERIFY,
                                 default=current.get(OPT_SSL_SKIP_VERIFY, False),
                             ): BooleanSelector(),
-                            vol.Optional(
-                                OPT_LONG_POLL_TIMEOUT,
-                                default=current.get(OPT_LONG_POLL_TIMEOUT, 10),
-                            ): NumberSelector(
-                                NumberSelectorConfig(
-                                    min=5,
-                                    max=60,
-                                    step=1,
-                                    unit_of_measurement="s",
-                                    mode=NumberSelectorMode.BOX,
-                                )
-                            ),
                             vol.Optional(
                                 OPT_EXCLUDED_DEVICES,
                                 default=current.get(OPT_EXCLUDED_DEVICES, []),

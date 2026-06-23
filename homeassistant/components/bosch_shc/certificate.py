@@ -1,17 +1,13 @@
 """Helper functions for Bosch SHC client certificate handling."""
 
-from datetime import UTC, datetime
+from datetime import datetime
 from pathlib import Path
 from typing import NamedTuple
 
+from cryptography import x509
+
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.util import dt as dt_util
-
-try:
-    from cryptography import x509
-    from cryptography.hazmat.backends import default_backend
-except Exception as exc:  # pragma: no cover - cryptography should exist in HA
-    raise HomeAssistantError("cryptography library not available") from exc
 
 
 class CertificateInfo(NamedTuple):
@@ -33,17 +29,12 @@ def parse_certificate(cert_path: str) -> CertificateInfo:
 
     data = path.read_bytes()
     try:
-        cert = x509.load_pem_x509_certificate(data, default_backend())
+        cert = x509.load_pem_x509_certificate(data)
     except Exception as exc:  # pragma: no cover - defensive
         raise HomeAssistantError(f"Invalid certificate: {cert_path}") from exc
 
     now = dt_util.utcnow()
-    # Use *_utc properties (cryptography >= 41), fallback to naive + replace for older.
-    if hasattr(cert, "not_valid_before_utc"):
-        not_before = cert.not_valid_before_utc
-        not_after = cert.not_valid_after_utc
-    else:
-        not_before = cert.not_valid_before.replace(tzinfo=UTC)
-        not_after = cert.not_valid_after.replace(tzinfo=UTC)
+    not_before = cert.not_valid_before_utc
+    not_after = cert.not_valid_after_utc
     days_remaining = int((not_after - now).total_seconds() // 86400)
     return CertificateInfo(not_before, not_after, days_remaining)

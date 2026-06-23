@@ -1,7 +1,6 @@
 """The Bosch Smart Home Controller integration."""
 
 from datetime import time as dt_time, timedelta
-import inspect
 
 import aiohttp
 from boschshcpy import SHCSessionAsync, SHCUniversalSwitch
@@ -58,6 +57,7 @@ from .const import (
     CERT_EXPIRY_WARNING_DAYS,
     CONF_SSL_CERTIFICATE,
     CONF_SSL_KEY,
+    DEFAULT_LONGPOLL_TIMEOUT,
     DOMAIN,
     DOMAIN_NOTIFICATION_ID,
     EVENT_BOSCH_SHC,
@@ -90,9 +90,8 @@ PLATFORMS = [
     Platform.SELECT,
     Platform.SENSOR,
     Platform.SWITCH,
+    Platform.VALVE,
 ]
-if hasattr(Platform, "VALVE"):
-    PLATFORMS.append(Platform.VALVE)
 
 
 async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
@@ -246,9 +245,12 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:  #
                 notification_id=DOMAIN_NOTIFICATION_ID,
             )
 
-    # NumberSelector yields a float; the SHC long-poll RPC expects an integer
-    # number of seconds, so coerce it.
-    long_poll_timeout = int(entry.options.get(OPT_LONG_POLL_TIMEOUT, 10))
+    # Long-poll cadence is a fixed internal constant (not user-tunable per HA
+    # Core policy). The option key is still read for backwards compatibility
+    # with entries that persisted a value before it was removed from the UI.
+    long_poll_timeout = int(
+        entry.options.get(OPT_LONG_POLL_TIMEOUT, DEFAULT_LONGPOLL_TIMEOUT)
+    )
     # Async migration (phase 3b): the integration runs SHCSessionAsync — aiohttp
     # I/O + an asyncio.Task long-poll, no thread, no executor. Construction does
     # NO network I/O; async_init() enumerates the device model on the loop.
@@ -261,19 +263,18 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:  #
         )
     # Build the mTLS SSLContext off the event loop — it reads the cert/key/CA
     # PEM files (blocking I/O) — then hand it to the session so construction on
-    # the loop stays non-blocking. Guard for older libs lacking the kwarg.
-    _session_kwargs = {"long_poll_timeout": long_poll_timeout}
-    if "ssl_context" in inspect.signature(SHCSessionAsync.__init__).parameters:
-        _session_kwargs["ssl_context"] = await hass.async_add_executor_job(
-            build_ssl_context,
-            data[CONF_SSL_CERTIFICATE],
-            data[CONF_SSL_KEY],
-        )
+    # the loop stays non-blocking. boschshcpy>=0.3.5 always accepts ssl_context.
+    ssl_context = await hass.async_add_executor_job(
+        build_ssl_context,
+        data[CONF_SSL_CERTIFICATE],
+        data[CONF_SSL_KEY],
+    )
     session = SHCSessionAsync(
         data[CONF_HOST],
         data[CONF_SSL_CERTIFICATE],
         data[CONF_SSL_KEY],
-        **_session_kwargs,
+        long_poll_timeout=long_poll_timeout,
+        ssl_context=ssl_context,
     )
     try:
         await session.async_init()
@@ -320,7 +321,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:  #
             return  # no cert configured — nothing to check (mirrors startup guard)
         try:
             info = await hass.async_add_executor_job(parse_certificate, cert_path)
-        except OSError, ValueError:  # file-read or crypto-parse errors; silently skip
+        except (OSError, ValueError):  # file-read or crypto-parse errors; silently skip
             return
         if info.days_remaining < 0:
             LOGGER.error(
@@ -369,7 +370,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:  #
             if domain == "zone":
                 try:
                     return int(value) > 0
-                except TypeError, ValueError:
+                except (TypeError, ValueError):
                     return False
             if domain in ("binary_sensor", "input_boolean"):
                 return value == "on"
@@ -472,7 +473,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:  #
             minute = int(parts[1]) if len(parts) > 1 else 0
             second = int(parts[2]) if len(parts) > 2 else 0
             return dt_time(hour, minute, second)
-        except ValueError, IndexError:
+        except (ValueError, IndexError):
             return None
 
     silent_start = _parse_time(entry.options.get(OPT_SILENT_MODE_START))
@@ -489,7 +490,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:  #
             if domain == "zone":
                 try:
                     return int(value) > 0
-                except TypeError, ValueError:
+                except (TypeError, ValueError):
                     return False
             if domain in ("binary_sensor", "input_boolean"):
                 return value == "on"
@@ -606,6 +607,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:  #
     for switch_device in session.device_helper.universal_switches:
         event_listener = SwitchDeviceEventListener(hass, entry, switch_device)
         await event_listener.async_setup()
+        entry.runtime_data.switch_event_listeners.append(event_listener)
 
     await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
 
@@ -626,6 +628,9 @@ async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     for _unsub in runtime.silent_mode_unsubs:
         _unsub()
     runtime.silent_mode_unsubs.clear()
+    for _listener in runtime.switch_event_listeners:
+        _listener.shutdown()
+    runtime.switch_event_listeners.clear()
     await runtime.session.stop_polling()
 
     return await hass.config_entries.async_unload_platforms(entry, PLATFORMS)
@@ -705,7 +710,8 @@ class SwitchDeviceEventListener:
         if self._ha_stop_unsub is not None:
             self._ha_stop_unsub()
             self._ha_stop_unsub = None
-        self._keypad_service.unsubscribe_callback(self._device.id)
+        if self._keypad_service is not None:
+            self._keypad_service.unsubscribe_callback(self._device.id)
 
     @callback
     def _handle_ha_stop(self, _):

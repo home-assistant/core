@@ -20,7 +20,7 @@ async def async_setup_entry(
     config_entry: ConfigEntry,
     async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
-    """Set up the SHC binary sensor platform."""
+    """Set up the SHC button platform."""
     entities: list[ButtonEntity] = []
     session = config_entry.runtime_data.session
 

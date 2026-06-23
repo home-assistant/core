@@ -903,7 +903,7 @@ class SHCSwitch(SHCEntity, SwitchEntity):
                 "turn_on skipped for %s: service not available (no load/service?)",
                 self.entity_id,
             )
-        except TimeoutError, aiohttp.ClientError:
+        except (TimeoutError, aiohttp.ClientError):
             LOGGER.debug(
                 "turn_on skipped for %s: service not available (no load/service?)",
                 self.entity_id,
@@ -924,7 +924,7 @@ class SHCSwitch(SHCEntity, SwitchEntity):
                 "turn_off skipped for %s: service not available (no load/service?)",
                 self.entity_id,
             )
-        except TimeoutError, aiohttp.ClientError:
+        except (TimeoutError, aiohttp.ClientError):
             LOGGER.debug(
                 "turn_off skipped for %s: service not available (no load/service?)",
                 self.entity_id,

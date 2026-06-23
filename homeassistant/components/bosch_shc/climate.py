@@ -179,11 +179,8 @@ class ClimateControl(SHCEntity, ClimateEntity):
             and self.hvac_mode == HVACMode.COOL
         ):
             return HVACAction.COOLING
-        # getattr guard: has_demand needs boschshcpy >= 0.2.120; tolerate older libs
         return (
-            HVACAction.HEATING
-            if getattr(self._device, "has_demand", False)
-            else HVACAction.IDLE
+            HVACAction.HEATING if self._device.has_demand else HVACAction.IDLE
         )
 
     @property
@@ -199,7 +196,7 @@ class ClimateControl(SHCEntity, ClimateEntity):
         if self._device.supports_boost_mode and self._device.boost_mode:
             return PRESET_BOOST
 
-        if getattr(self._device, "low", False):
+        if self._device.supports_low and self._device.low:
             return PRESET_ECO
 
         if (
@@ -216,14 +213,7 @@ class ClimateControl(SHCEntity, ClimateEntity):
         presets = [PRESET_AUTO, PRESET_MANUAL]
         if self._device.supports_boost_mode:
             presets.append(PRESET_BOOST)
-        # `low` is a Python property that always exists, so the old hasattr check
-        # always added ECO. Gate on the lib capability (the `low` field actually
-        # being present in the device state) instead. Falls back to hasattr for
-        # older libs that predate supports_low.
-        if getattr(self._device, "supports_low", None) is not None:
-            if self._device.supports_low:
-                presets.append(PRESET_ECO)
-        elif hasattr(self._device, "low"):
+        if self._device.supports_low:
             presets.append(PRESET_ECO)
         return presets
 
@@ -357,17 +347,16 @@ class ClimateControl(SHCEntity, ClimateEntity):
                 await self._device.async_set_boost_mode(True)
 
             elif preset_mode == PRESET_ECO:
-                if hasattr(self._device, "low"):
-                    # Clear boost first so states don't stack
-                    if self._device.supports_boost_mode and self._device.boost_mode:
-                        await self._device.async_set_boost_mode(False)
-                    await self._device.async_set_low(True)
+                # Clear boost first so states don't stack
+                if self._device.supports_boost_mode and self._device.boost_mode:
+                    await self._device.async_set_boost_mode(False)
+                await self._device.async_set_low(True)
 
             elif preset_mode == PRESET_AUTO:
                 # Clear overrides then set schedule mode
                 if self._device.supports_boost_mode and self._device.boost_mode:
                     await self._device.async_set_boost_mode(False)
-                if hasattr(self._device, "low") and self._device.low:
+                if self._device.supports_low and self._device.low:
                     await self._device.async_set_low(False)
                 await self._device.async_set_operation_mode(
                     SHCClimateControl.RoomClimateControlService.OperationMode.AUTOMATIC
@@ -377,7 +366,7 @@ class ClimateControl(SHCEntity, ClimateEntity):
                 # Clear overrides then set manual mode
                 if self._device.supports_boost_mode and self._device.boost_mode:
                     await self._device.async_set_boost_mode(False)
-                if hasattr(self._device, "low") and self._device.low:
+                if self._device.supports_low and self._device.low:
                     await self._device.async_set_low(False)
                 await self._device.async_set_operation_mode(
                     SHCClimateControl.RoomClimateControlService.OperationMode.MANUAL

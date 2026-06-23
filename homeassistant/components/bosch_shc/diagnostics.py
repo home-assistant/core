@@ -12,8 +12,6 @@ homeassistant.components.diagnostics.async_redact_data, which walks the structur
 recursively and replaces matching keys.
 """
 
-import json
-import pathlib
 from typing import Any
 
 from homeassistant.components.diagnostics import async_redact_data
@@ -28,11 +26,6 @@ from .const import (
     CONF_SSL_CERTIFICATE,
     CONF_SSL_KEY,
 )
-
-_MANIFEST: dict[str, Any] = json.loads(
-    (pathlib.Path(__file__).parent / "manifest.json").read_text(encoding="utf-8")
-)
-INTEGRATION_VERSION: str = _MANIFEST.get("version", "unknown")
 
 # Keys whose values are secrets or network PII. async_redact_data matches by key
 # name recursively, so config-entry keys and the device-level keys below are all
@@ -78,7 +71,6 @@ async def async_get_config_entry_diagnostics(
 ) -> dict[str, Any]:
     """Return redacted diagnostics for a Bosch SHC config entry."""
     diag: dict[str, Any] = {
-        "integration_version": INTEGRATION_VERSION,
         "entry": {
             "title": entry.title,
             "data": async_redact_data(dict(entry.data), TO_REDACT),

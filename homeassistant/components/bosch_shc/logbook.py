@@ -1,4 +1,4 @@
-"""Describe Shelly logbook events."""
+"""Describe Bosch SHC logbook events."""
 
 from homeassistant.const import ATTR_NAME
 from homeassistant.core import callback

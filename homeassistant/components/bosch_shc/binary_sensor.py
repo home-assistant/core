@@ -410,7 +410,7 @@ class MotionDetectionSensor(SHCEntity, BinarySensorEntity):
             latestmotion = datetime.strptime(
                 self._device.latestmotion, "%Y-%m-%dT%H:%M:%S.%fZ"
             ).replace(tzinfo=UTC)
-        except ValueError, TypeError:
+        except (ValueError, TypeError):
             # ValueError: unparsable timestamp; TypeError: latestmotion is None.
             # The trailing literal "Z" makes strptime return a naive datetime, so
             # it must be marked UTC-aware to subtract from datetime.now(timezone.utc).
@@ -834,7 +834,7 @@ class TwinguardAlarmTracker:
             return []
         try:
             parsed = json.loads(raw_events)
-        except TypeError, json.JSONDecodeError:
+        except (TypeError, json.JSONDecodeError):
             return []
         if not isinstance(parsed, list):
             return []

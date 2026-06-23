@@ -541,7 +541,7 @@ class AirQualitySensor(SHCEntity, SensorEntity):
             service = getattr(self._device, "_airqualitylevel_service", None)
             if service is not None:
                 comfort_zone = service.comfortZone
-        except AttributeError, KeyError:
+        except (AttributeError, KeyError):
             pass
         attrs: dict[str, Any] = {
             "rating_description": self._device.description,
@@ -949,7 +949,7 @@ class WalkStateSensor(SHCEntity, SensorEntity):
             val = self._device.walk_state
             if val is None:
                 return None
-        except AttributeError, ValueError:
+        except (AttributeError, ValueError):
             return None
         else:
             return val.name
@@ -983,7 +983,7 @@ class DetectionStateSensor(SHCEntity, SensorEntity):
             val = self._device.detection_state
             if val is None:
                 return None
-        except AttributeError, ValueError:
+        except (AttributeError, ValueError):
             return None
         else:
             return val.name

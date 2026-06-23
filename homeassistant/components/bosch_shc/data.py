@@ -2,10 +2,14 @@
 
 from collections.abc import Callable
 from dataclasses import dataclass, field
+from typing import TYPE_CHECKING
 
 from boschshcpy import SHCSession
 
 from homeassistant.helpers.device_registry import DeviceEntry
+
+if TYPE_CHECKING:
+    from . import SwitchDeviceEventListener
 
 
 @dataclass
@@ -19,3 +23,6 @@ class SHCData:
     cert_check_unsub: Callable[[], None] | None = field(default=None)
     presence_unsub: Callable[[], None] | None = field(default=None)
     silent_mode_unsubs: list[Callable[[], None]] = field(default_factory=list)
+    switch_event_listeners: list[SwitchDeviceEventListener] = field(
+        default_factory=list
+    )

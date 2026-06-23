@@ -307,6 +307,11 @@ class SHCScenarioEvent(EventEntity):
             self._scenario.id, self._event_callback
         )
 
+    async def async_will_remove_from_hass(self) -> None:
+        """Unsubscribe the scenario callback on entity removal."""
+        await super().async_will_remove_from_hass()
+        self._session.unsubscribe_scenario_callback(self._scenario.id)
+
     def _event_callback(self, event_data) -> None:
         event_type = "SCENARIO"
         event_attributes = {
@@ -333,7 +338,7 @@ class MotionDetectorEvent(SHCEntity, EventEntity):
     _attr_event_types = ["MOTION"]
 
     def __init__(self, device: SHCMotionDetector, entry_id: str) -> None:
-        """Initialize the Universal Switch device."""
+        """Initialize the motion detector device."""
         super().__init__(device, entry_id)
         self._device = device
 
@@ -417,7 +422,7 @@ class SmokeDetectorEvent(SHCEntity, EventEntity):
         device: SHCSmokeDetector,
         entry_id: str,
     ) -> None:
-        """Initialize the smoke detection system device."""
+        """Initialize the individual smoke detector device."""
         super().__init__(device=device, entry_id=entry_id)
         self._attr_unique_id = f"{device.root_device_id}_{device.id}"
 

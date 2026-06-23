@@ -63,11 +63,7 @@ async def async_setup_entry(
 class ShutterControlCover(SHCEntity, CoverEntity):
     """Representation of a SHC shutter control device.
 
-    Issue #183 (resolved): State stops refreshing after hours was caused by
-    boschshcpy's long-polling loop not pushing a fresh state snapshot after
-    re-subscribing on poll-ID invalidation (JSONRPCError -32001).  The lib
-    now calls short_poll() on each service immediately after re-subscription,
-    so callbacks are delivered and state is restored without HA-side polling.
+    The authoritative lift position is ShutterControl.level (range 0.0-1.0).
     """
 
     _attr_supported_features = (
@@ -110,12 +106,11 @@ class ShutterControlCover(SHCEntity, CoverEntity):
             self._attr_is_closing = False
             self._attr_is_opening = False
             if not self._skip_update:
-                # Refresh the reference position on every rest for level-based
-                # devices, so the next movement's direction is computed against the
-                # actual resting position. This must include physical-switch moves
-                # of MICROMODULE shutters/blinds: their Keypad events arrive as
-                # PRESS_SHORT (not SWITCH_ON), so they never hit the keycode
-                # direction branch below and rely on this reference (issue #294).
+                # Refresh the reference position on every rest so the next
+                # movement's direction is computed against the actual resting
+                # position. Physical-switch moves on MICROMODULE devices arrive
+                # as PRESS_SHORT and rely on this reference rather than the
+                # keycode branch below.
                 if (
                     self._device.device_model
                     in ("BBL", "MICROMODULE_SHUTTER", "MICROMODULE_BLINDS")
@@ -150,7 +145,7 @@ class ShutterControlCover(SHCEntity, CoverEntity):
                     == SHCMicromoduleShutterControl.KeypadService.KeyEvent.SWITCH_ON
                     and self._device.keycode == 1
                 ):
-                    # When the event is triggered by the physical switch, we can determine the movement direction based on the keycode (1 for open, 2 for close), as the level attribute is not reliable during movement
+                    # Physical switch: keycode 1 = open, 2 = close; level is unreliable during movement.
                     self._last_position = round(self._device.level * 100.0)
                     self._attr_is_closing = False
                     self._attr_is_opening = True
@@ -192,17 +187,9 @@ class ShutterControlCover(SHCEntity, CoverEntity):
                 self._attr_is_closing = None
                 self._attr_is_opening = None
 
-        # Shutter Control II devices (MICROMODULE_BLINDS / MICROMODULE_SHUTTER)
-        # report the movement direction DIRECTLY via operationState — the Bosch
-        # spec enum is [STOPPED, OPENING, CLOSING] and they never emit MOVING
-        # (Shutter-II-local-openapi-v3.yml). The STOPPED/MOVING branches above
-        # therefore never matched these states, so physical-switch and Bosch-app
-        # moves left is_opening/is_closing unset while HA-initiated moves (which
-        # set the flags directly in open_cover/close_cover) looked correct — the
-        # exact direction symptom in issue #100. We set ONLY the direction flags
-        # here: it is purely additive (handles states that previously fell
-        # through) and deliberately does not touch _target_position, so the
-        # position-during-move display is unchanged for all models.
+        # Some devices report movement direction directly via OPENING/CLOSING
+        # operationState (never MOVING). Update direction flags only; do not
+        # touch _target_position so position-during-move display is unchanged.
         if (
             self._current_operation_state
             == SHCShutterControl.ShutterControlService.State.OPENING
@@ -300,7 +287,6 @@ class ShutterControlCover(SHCEntity, CoverEntity):
 class BlindsControlCover(ShutterControlCover, CoverEntity):
     """Representation of a SHC blinds cover device."""
 
-    _attr_device_class = CoverDeviceClass.BLIND
     _attr_supported_features = (
         CoverEntityFeature.OPEN
         | CoverEntityFeature.CLOSE
@@ -311,6 +297,11 @@ class BlindsControlCover(ShutterControlCover, CoverEntity):
         | CoverEntityFeature.STOP
         | CoverEntityFeature.STOP_TILT
     )
+
+    @property
+    def device_class(self) -> CoverDeviceClass | None:
+        """Return the device class for blinds."""
+        return CoverDeviceClass.BLIND
 
     async def async_open_cover(self, **kwargs: Any) -> None:
         """Open the cover (lift) via ShutterControl.level."""
@@ -340,23 +331,7 @@ class BlindsControlCover(ShutterControlCover, CoverEntity):
 
     @property
     def current_cover_position(self):
-        """Return the current cover (lift) position from ShutterControl.level.
-
-        Issue #100 ("fully up shows 0%", reporter-confirmed on a DEGREE_180
-        MICROMODULE_BLINDS, dev 6c5cb1…): venetian blinds expose THREE services
-        - ShutterControl (level = the live lift, 1=up/open .. 0=down/closed),
-          operationState only ever STOPPED/MOVING (never directional);
-        - BlindsControl (currentAngle = slat tilt); and
-        - BlindsSceneControl (level/angle = the last *scene* values, not the
-          live lift).
-        The previous code read the lift from blinds_level
-        (BlindsSceneControl.level), which on this device sat at 0.0 while the
-        blind was fully up -> HA showed 0% for a fully-open blind. The authori-
-        tative lift is ShutterControl.level (inherited self._device.level), the
-        same source the parent ShutterControlCover uses for non-
-        MICROMODULE_SHUTTER models, so this also matches the BBL mapping. Tilt
-        stays on BlindsControl (see current_cover_tilt_position).
-        """
+        """Return the current cover (lift) position from ShutterControl.level."""
         return round(self._device.level * 100.0)
 
     async def async_stop_cover(self, **kwargs: Any) -> None:
