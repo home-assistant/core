@@ -568,20 +568,23 @@ ID (`_attr_unique_id` assignments and `unique_id` property/method
 returns). Migrating unique_ids after an integration has shipped risks
 disrupting existing users, so the antipatterns must be caught before
 they ship. Unlike the gated `entity-unique-id` quality-scale checks,
-these checks are **not** gated on `quality_scale.yaml` claims, and they
-fire on every class inheriting from `Entity` anywhere inside an
-integration (including shared bases in `entity.py` and mixins/abstract
-bases subclassed by other classes in the same module).
+these checks are **not** gated on `quality_scale.yaml` claims. Both
+checks inspect every class inheriting from `Entity` in their
+respective scopes (including shared bases and mixins/abstract bases
+subclassed by other classes in the same module); see the per-rule
+sections below for the module scope.
 
 ### `W7425`: `home-assistant-entity-unique-id-redundant-domain`
 
 The entity registry already keys uniqueness on `(domain, platform,
 unique_id)` where `platform` is the integration's name (as declared
-by the `"domain"` field in `manifest.json`). Any prefix in the
-unique_id that repeats the integration's name duplicates information
-already present in the registry key.
+by the `"domain"` field in `manifest.json`). Any occurrence of the
+integration's name in the unique_id duplicates information already
+present in the registry key.
 
-The rule fires when the value used for the entity's unique id either:
+The rule fires in every integration module (entity-platform modules,
+`entity.py`, `__init__.py`, ...) when the value used for the entity's
+unique id either:
 
 - references the `DOMAIN` name at any depth (e.g.
   `f"{DOMAIN}_{entry.entry_id}"`), or
@@ -603,16 +606,18 @@ scanned.
 ### `W7427`: `home-assistant-entity-unique-id-redundant-platform`
 
 In `(domain, platform, unique_id)` the `domain` field is the entity
-platform (e.g. `sensor`, `light`, `binary_sensor` — the file the
-entity lives in), so embedding that name as a delimited segment of
-the unique id duplicates information already in the registry key.
+platform (e.g. `sensor`, `light`, `binary_sensor` — derived from the
+module the entity lives in), so embedding that name as a delimited
+segment of the unique id duplicates information already in the
+registry key.
 
-The rule fires when a string literal in `_attr_unique_id` contains
-the current module's platform name as a delimited segment. The same
-boundary rules as `W7425` apply: a segment is considered delimited
-when bordered by a non-alphanumeric character (`_`, `-`, `.`, `:`,
-space, ...) or a string boundary, so unrelated substrings like
-`"highlight-..."` or `"light2"` don't match `light`.
+The rule fires when the value used for the entity's unique id
+contains the current module's platform name as a delimited segment of
+any string literal. The same boundary rules as `W7425` apply: a
+segment is considered delimited when bordered by a non-alphanumeric
+character (`_`, `-`, `.`, `:`, space, ...) or a string boundary, so
+unrelated substrings like `"highlight-..."` or `"light2"` don't match
+`light`.
 
 Scope is narrower than `W7425`: only files whose integration
 sub-module path keys off a known entity platform name are checked.

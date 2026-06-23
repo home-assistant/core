@@ -4,19 +4,21 @@ Hosts format-related checks on the value an entity uses for its unique
 ID (``_attr_unique_id`` assignments and ``unique_id`` property/method
 returns). Migrating unique_ids after an integration has shipped risks
 disrupting existing users, so these checks are **not** gated on
-``quality_scale.yaml`` claims and they fire on every class inheriting
-from ``Entity`` anywhere inside an integration (including shared bases
-in ``entity.py`` and mixins/abstract bases subclassed by other classes
-in the same module).
+``quality_scale.yaml`` claims. Both checks inspect every class
+inheriting from ``Entity`` in their respective scopes (including
+shared bases and mixins/abstract bases subclassed by other classes in
+the same module); see the per-rule sections below for the module
+scope.
 
 ``W7425`` (``home-assistant-entity-unique-id-redundant-domain``)
 ----------------------------------------------------------------
 The entity registry keys uniqueness on ``(domain, platform, unique_id)``
 where ``platform`` is the integration's name (as declared by the
-``"domain"`` field in ``manifest.json``). Any prefix in the unique_id
-that repeats the integration's name duplicates information already
-present in the registry key. The rule fires when the value used for
-the entity's unique id either:
+``"domain"`` field in ``manifest.json``). Any occurrence of the
+integration's name in the unique_id duplicates information already
+present in the registry key. The rule fires in every integration
+module (entity-platform modules, ``entity.py``, ``__init__.py``, ...)
+when the value used for the entity's unique id either:
 
 - references the ``DOMAIN`` name at any depth (e.g.
   ``f"{DOMAIN}_{entry.entry_id}"``), or
@@ -141,9 +143,9 @@ def _value_references_domain(value: nodes.NodeNG | None, domain: str | None) -> 
     """Return True if the value expression embeds the integration's domain.
 
     Matches either a ``Name(name="DOMAIN")`` reference at any depth, or
-    the integration's domain string appearing as a delimited segment
-    inside any string ``Const`` in the value (including f-string literal
-    parts).
+    the integration's domain string appearing as a delimited segment of
+    any string literal in the value (with f-strings evaluated against
+    their full runtime approximation, see ``_iter_string_literals``).
     """
     if value is None:
         return False
