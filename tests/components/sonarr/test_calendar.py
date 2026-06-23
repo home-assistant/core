@@ -12,24 +12,12 @@ from homeassistant.components.calendar import (
     DOMAIN as CALENDAR_DOMAIN,
     SERVICE_GET_EVENTS,
 )
-from homeassistant.components.sonarr.calendar import _get_calendar_event
 from homeassistant.const import STATE_OFF, STATE_ON
 from homeassistant.core import HomeAssistant
 
-from tests.common import MockConfigEntry, load_fixture
+from tests.common import MockConfigEntry, async_load_fixture
 
 ENTITY_ID = "calendar.sonarr"
-
-
-def test_get_calendar_event_without_overview() -> None:
-    """Test that episodes without an overview do not raise (real Sonarr omits it)."""
-    raw = json.loads(load_fixture("sonarr/calendar.json"))[0]
-    raw.pop("overview")
-
-    event = _get_calendar_event(SonarrCalendar(raw))
-
-    assert event.description is None
-    assert event.summary == "Bob's Burgers - S04E11 - Easy Com-mercial, Easy Go-mercial"
 
 
 @pytest.mark.parametrize(
@@ -119,3 +107,39 @@ async def test_calendar_get_events(
     assert events[0]["start"] == "2014-01-27T01:30:00+00:00"
     assert events[0]["end"] == "2014-01-27T02:00:00+00:00"
     assert mock_sonarr.async_get_calendar.call_args.kwargs["include_series"] is True
+
+
+async def test_calendar_get_events_without_overview(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    mock_sonarr: MagicMock,
+) -> None:
+    """Test that episodes without an overview are handled (real Sonarr omits it)."""
+    await hass.config.async_set_time_zone("UTC")
+    raw = json.loads(await async_load_fixture(hass, "calendar.json", "sonarr"))[0]
+    raw.pop("overview")
+    mock_sonarr.async_get_calendar.return_value = [SonarrCalendar(raw)]
+
+    mock_config_entry.add_to_hass(hass)
+    await hass.config_entries.async_setup(mock_config_entry.entry_id)
+    await hass.async_block_till_done()
+
+    response = await hass.services.async_call(
+        CALENDAR_DOMAIN,
+        SERVICE_GET_EVENTS,
+        {
+            "entity_id": ENTITY_ID,
+            "start_date_time": datetime(2014, 1, 1).isoformat(),
+            "end_date_time": datetime(2014, 2, 1).isoformat(),
+        },
+        blocking=True,
+        return_response=True,
+    )
+
+    events = response[ENTITY_ID]["events"]
+    assert len(events) == 1
+    assert (
+        events[0]["summary"]
+        == "Bob's Burgers - S04E11 - Easy Com-mercial, Easy Go-mercial"
+    )
+    assert events[0].get("description") is None
