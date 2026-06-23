@@ -8,7 +8,7 @@ from functools import partial
 import logging
 from typing import TYPE_CHECKING, Any, cast
 
-from uiprotect import EventChange, ProtectApiClient, ProtectEvent, ProtectEventChannel
+from uiprotect import EventChange, ProtectApiClient, ProtectEvent
 from uiprotect.api import RTSPSStreams
 from uiprotect.data import (
     NVR,
@@ -91,7 +91,7 @@ class ProtectData:
         self._siren_subscriptions: defaultdict[str, set[Callable[[Siren], None]]] = (
             defaultdict(set)
         )
-        self._smart_detect_subscriptions: defaultdict[
+        self._public_event_subscriptions: defaultdict[
             str, set[Callable[[ProtectEvent], None]]
         ] = defaultdict(set)
         self._public_subscriptions: defaultdict[
@@ -260,24 +260,20 @@ class ProtectData:
     def _async_process_public_event(
         self, event: ProtectEvent, change: EventChange
     ) -> None:
-        """Process a smart-detect event from the public events websocket.
+        """Dispatch a public events websocket event to per-device subscribers.
 
-        Only the start of a detection is dispatched; the per-camera entities
-        filter by object type. The camera is resolved by ``device_id`` (the
+        Only the start of an event is dispatched; the per-device entities filter
+        by event (and object) type. The device is resolved by ``device_id`` (the
         stable cross-API join key), not the public ``device_mac``, so the
         dispatch key comes from the same store the entities derive
         ``self.device.mac`` from and matches without assuming both mac strings
         are byte-identical.
         """
-        if (
-            change is not EventChange.STARTED
-            or event.channel is not ProtectEventChannel.DETECTION
-            or not event.smart_detect_types
-        ):
+        if change is not EventChange.STARTED:
             return
         device = self.api.bootstrap.get_device_from_id(event.device_id)
         if device is None or not (
-            subscriptions := self._smart_detect_subscriptions.get(device.mac)
+            subscriptions := self._public_event_subscriptions.get(device.mac)
         ):
             return
         for update_callback in subscriptions:
@@ -548,21 +544,21 @@ class ProtectData:
             del self._siren_subscriptions[mac]
 
     @callback
-    def async_subscribe_smart_detect(
+    def async_subscribe_public_event(
         self, mac: str, update_callback: Callable[[ProtectEvent], None]
     ) -> CALLBACK_TYPE:
-        """Add a callback subscriber for public smart-detect events by camera mac."""
-        self._smart_detect_subscriptions[mac].add(update_callback)
-        return partial(self._async_unsubscribe_smart_detect, mac, update_callback)
+        """Add a callback subscriber for public events by device mac."""
+        self._public_event_subscriptions[mac].add(update_callback)
+        return partial(self._async_unsubscribe_public_event, mac, update_callback)
 
     @callback
-    def _async_unsubscribe_smart_detect(
+    def _async_unsubscribe_public_event(
         self, mac: str, update_callback: Callable[[ProtectEvent], None]
     ) -> None:
-        """Remove a smart-detect callback subscriber."""
-        self._smart_detect_subscriptions[mac].remove(update_callback)
-        if not self._smart_detect_subscriptions[mac]:
-            del self._smart_detect_subscriptions[mac]
+        """Remove a public event callback subscriber."""
+        self._public_event_subscriptions[mac].remove(update_callback)
+        if not self._public_event_subscriptions[mac]:
+            del self._public_event_subscriptions[mac]
 
     @callback
     def async_subscribe_public(
