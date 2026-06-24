@@ -192,7 +192,7 @@
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'category': 'site_to_site',
-      'friendly_name': 'Test Router Branch Office',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Test Router Branch Office',
       'vpn_type': 'IPsec',
     }),
     'context': <ANY>,
@@ -244,7 +244,7 @@
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'category': 'server',
-      'friendly_name': 'Test Router Road Warriors',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Test Router Road Warriors',
       'vpn_type': 'OpenVPN',
     }),
     'context': <ANY>,
