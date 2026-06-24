@@ -6,7 +6,7 @@
     ]),
     'area_id': None,
     'capabilities': dict({
-      'source_list': list([
+      <MediaPlayerEntityCapabilityAttribute.INPUT_SOURCE_LIST: 'source_list'>: list([
         'tv',
         'hdmi_1',
         'hdmi_2',
@@ -50,7 +50,7 @@
       'assumed_state': True,
       'device_class': 'tv',
       'friendly_name': 'Samsung TV',
-      'source_list': list([
+      <MediaPlayerEntityCapabilityAttribute.INPUT_SOURCE_LIST: 'source_list'>: list([
         'tv',
         'hdmi_1',
         'hdmi_2',

@@ -16,23 +16,23 @@
         }),
       }),
       'device_class': 'speaker',
-      'entity_picture_local': None,
+      <MediaPlayerEntityStateAttribute.ENTITY_PICTURE_LOCAL: 'entity_picture_local'>: None,
       'friendly_name': 'Living room Balance',
-      'group_members': list([
+      <MediaPlayerEntityStateAttribute.GROUP_MEMBERS: 'group_members'>: list([
         'media_player.living_room_balance',
         'listener_not_in_hass-1111.1111111.33333333@products.bang-olufsen.com',
         'listener_not_in_hass-1111.1111111.44444444@products.bang-olufsen.com',
       ]),
-      'media_content_type': <MediaType.MUSIC: 'music'>,
-      'repeat': <RepeatMode.OFF: 'off'>,
-      'shuffle': False,
-      'sound_mode': 'Test Listening Mode (123)',
-      'sound_mode_list': list([
+      <MediaPlayerEntityStateAttribute.MEDIA_CONTENT_TYPE: 'media_content_type'>: <MediaType.MUSIC: 'music'>,
+      <MediaPlayerEntityStateAttribute.MEDIA_REPEAT: 'repeat'>: <RepeatMode.OFF: 'off'>,
+      <MediaPlayerEntityStateAttribute.MEDIA_SHUFFLE: 'shuffle'>: False,
+      <MediaPlayerEntityStateAttribute.SOUND_MODE: 'sound_mode'>: 'Test Listening Mode (123)',
+      <MediaPlayerEntityCapabilityAttribute.SOUND_MODE_LIST: 'sound_mode_list'>: list([
         'Test Listening Mode (123)',
         'Test Listening Mode (234)',
         'Test Listening Mode 2 (345)',
       ]),
-      'source_list': list([
+      <MediaPlayerEntityCapabilityAttribute.INPUT_SOURCE_LIST: 'source_list'>: list([
         'Tidal',
         'Line-In',
         'HDMI A',
@@ -64,24 +64,24 @@
         }),
       }),
       'device_class': 'speaker',
-      'entity_picture_local': None,
+      <MediaPlayerEntityStateAttribute.ENTITY_PICTURE_LOCAL: 'entity_picture_local'>: None,
       'friendly_name': 'Living room Balance',
-      'group_members': list([
+      <MediaPlayerEntityStateAttribute.GROUP_MEMBERS: 'group_members'>: list([
         'media_player.living_room_balance',
         'listener_not_in_hass-1111.1111111.33333333@products.bang-olufsen.com',
         'listener_not_in_hass-1111.1111111.44444444@products.bang-olufsen.com',
       ]),
-      'media_content_type': <BeoMediaType.TIDAL: 'tidal'>,
-      'repeat': <RepeatMode.OFF: 'off'>,
-      'shuffle': False,
-      'sound_mode': 'Test Listening Mode (123)',
-      'sound_mode_list': list([
+      <MediaPlayerEntityStateAttribute.MEDIA_CONTENT_TYPE: 'media_content_type'>: <BeoMediaType.TIDAL: 'tidal'>,
+      <MediaPlayerEntityStateAttribute.MEDIA_REPEAT: 'repeat'>: <RepeatMode.OFF: 'off'>,
+      <MediaPlayerEntityStateAttribute.MEDIA_SHUFFLE: 'shuffle'>: False,
+      <MediaPlayerEntityStateAttribute.SOUND_MODE: 'sound_mode'>: 'Test Listening Mode (123)',
+      <MediaPlayerEntityCapabilityAttribute.SOUND_MODE_LIST: 'sound_mode_list'>: list([
         'Test Listening Mode (123)',
         'Test Listening Mode (234)',
         'Test Listening Mode 2 (345)',
       ]),
-      'source': 'Tidal',
-      'source_list': list([
+      <MediaPlayerEntityStateAttribute.INPUT_SOURCE: 'source'>: 'Tidal',
+      <MediaPlayerEntityCapabilityAttribute.INPUT_SOURCE_LIST: 'source_list'>: list([
         'Tidal',
         'Line-In',
         'HDMI A',
@@ -113,24 +113,24 @@
         }),
       }),
       'device_class': 'speaker',
-      'entity_picture_local': None,
+      <MediaPlayerEntityStateAttribute.ENTITY_PICTURE_LOCAL: 'entity_picture_local'>: None,
       'friendly_name': 'Living room Balance',
-      'group_members': list([
+      <MediaPlayerEntityStateAttribute.GROUP_MEMBERS: 'group_members'>: list([
         'media_player.living_room_balance',
         'listener_not_in_hass-1111.1111111.33333333@products.bang-olufsen.com',
         'listener_not_in_hass-1111.1111111.44444444@products.bang-olufsen.com',
       ]),
-      'media_content_type': <BeoMediaType.TIDAL: 'tidal'>,
-      'repeat': <RepeatMode.OFF: 'off'>,
-      'shuffle': False,
-      'sound_mode': 'Test Listening Mode (123)',
-      'sound_mode_list': list([
+      <MediaPlayerEntityStateAttribute.MEDIA_CONTENT_TYPE: 'media_content_type'>: <BeoMediaType.TIDAL: 'tidal'>,
+      <MediaPlayerEntityStateAttribute.MEDIA_REPEAT: 'repeat'>: <RepeatMode.OFF: 'off'>,
+      <MediaPlayerEntityStateAttribute.MEDIA_SHUFFLE: 'shuffle'>: False,
+      <MediaPlayerEntityStateAttribute.SOUND_MODE: 'sound_mode'>: 'Test Listening Mode (123)',
+      <MediaPlayerEntityCapabilityAttribute.SOUND_MODE_LIST: 'sound_mode_list'>: list([
         'Test Listening Mode (123)',
         'Test Listening Mode (234)',
         'Test Listening Mode 2 (345)',
       ]),
-      'source': 'Tidal',
-      'source_list': list([
+      <MediaPlayerEntityStateAttribute.INPUT_SOURCE: 'source'>: 'Tidal',
+      <MediaPlayerEntityCapabilityAttribute.INPUT_SOURCE_LIST: 'source_list'>: list([
         'Tidal',
         'Line-In',
         'HDMI A',
@@ -162,24 +162,24 @@
         }),
       }),
       'device_class': 'speaker',
-      'entity_picture_local': None,
+      <MediaPlayerEntityStateAttribute.ENTITY_PICTURE_LOCAL: 'entity_picture_local'>: None,
       'friendly_name': 'Living room Balance',
-      'group_members': list([
+      <MediaPlayerEntityStateAttribute.GROUP_MEMBERS: 'group_members'>: list([
         'media_player.living_room_balance',
         'listener_not_in_hass-1111.1111111.33333333@products.bang-olufsen.com',
         'listener_not_in_hass-1111.1111111.44444444@products.bang-olufsen.com',
       ]),
-      'media_content_type': <BeoMediaType.TIDAL: 'tidal'>,
-      'repeat': <RepeatMode.OFF: 'off'>,
-      'shuffle': False,
-      'sound_mode': 'Test Listening Mode (123)',
-      'sound_mode_list': list([
+      <MediaPlayerEntityStateAttribute.MEDIA_CONTENT_TYPE: 'media_content_type'>: <BeoMediaType.TIDAL: 'tidal'>,
+      <MediaPlayerEntityStateAttribute.MEDIA_REPEAT: 'repeat'>: <RepeatMode.OFF: 'off'>,
+      <MediaPlayerEntityStateAttribute.MEDIA_SHUFFLE: 'shuffle'>: False,
+      <MediaPlayerEntityStateAttribute.SOUND_MODE: 'sound_mode'>: 'Test Listening Mode (123)',
+      <MediaPlayerEntityCapabilityAttribute.SOUND_MODE_LIST: 'sound_mode_list'>: list([
         'Test Listening Mode (123)',
         'Test Listening Mode (234)',
         'Test Listening Mode 2 (345)',
       ]),
-      'source': 'Tidal',
-      'source_list': list([
+      <MediaPlayerEntityStateAttribute.INPUT_SOURCE: 'source'>: 'Tidal',
+      <MediaPlayerEntityCapabilityAttribute.INPUT_SOURCE_LIST: 'source_list'>: list([
         'Tidal',
         'Line-In',
         'HDMI A',
@@ -211,24 +211,24 @@
         }),
       }),
       'device_class': 'speaker',
-      'entity_picture_local': None,
+      <MediaPlayerEntityStateAttribute.ENTITY_PICTURE_LOCAL: 'entity_picture_local'>: None,
       'friendly_name': 'Living room Balance',
-      'group_members': list([
+      <MediaPlayerEntityStateAttribute.GROUP_MEMBERS: 'group_members'>: list([
         'media_player.living_room_balance',
         'listener_not_in_hass-1111.1111111.33333333@products.bang-olufsen.com',
         'listener_not_in_hass-1111.1111111.44444444@products.bang-olufsen.com',
       ]),
-      'media_content_type': <BeoMediaType.TIDAL: 'tidal'>,
-      'repeat': <RepeatMode.OFF: 'off'>,
-      'shuffle': False,
-      'sound_mode': 'Test Listening Mode (123)',
-      'sound_mode_list': list([
+      <MediaPlayerEntityStateAttribute.MEDIA_CONTENT_TYPE: 'media_content_type'>: <BeoMediaType.TIDAL: 'tidal'>,
+      <MediaPlayerEntityStateAttribute.MEDIA_REPEAT: 'repeat'>: <RepeatMode.OFF: 'off'>,
+      <MediaPlayerEntityStateAttribute.MEDIA_SHUFFLE: 'shuffle'>: False,
+      <MediaPlayerEntityStateAttribute.SOUND_MODE: 'sound_mode'>: 'Test Listening Mode (123)',
+      <MediaPlayerEntityCapabilityAttribute.SOUND_MODE_LIST: 'sound_mode_list'>: list([
         'Test Listening Mode (123)',
         'Test Listening Mode (234)',
         'Test Listening Mode 2 (345)',
       ]),
-      'source': 'Tidal',
-      'source_list': list([
+      <MediaPlayerEntityStateAttribute.INPUT_SOURCE: 'source'>: 'Tidal',
+      <MediaPlayerEntityCapabilityAttribute.INPUT_SOURCE_LIST: 'source_list'>: list([
         'Tidal',
         'Line-In',
         'HDMI A',
@@ -260,23 +260,23 @@
         }),
       }),
       'device_class': 'speaker',
-      'entity_picture_local': None,
+      <MediaPlayerEntityStateAttribute.ENTITY_PICTURE_LOCAL: 'entity_picture_local'>: None,
       'friendly_name': 'Living room Balance',
-      'group_members': list([
+      <MediaPlayerEntityStateAttribute.GROUP_MEMBERS: 'group_members'>: list([
         'media_player.living_room_balance',
         'listener_not_in_hass-1111.1111111.33333333@products.bang-olufsen.com',
         'listener_not_in_hass-1111.1111111.44444444@products.bang-olufsen.com',
       ]),
-      'media_content_type': <MediaType.MUSIC: 'music'>,
-      'repeat': <RepeatMode.OFF: 'off'>,
-      'shuffle': False,
-      'sound_mode': 'Test Listening Mode (123)',
-      'sound_mode_list': list([
+      <MediaPlayerEntityStateAttribute.MEDIA_CONTENT_TYPE: 'media_content_type'>: <MediaType.MUSIC: 'music'>,
+      <MediaPlayerEntityStateAttribute.MEDIA_REPEAT: 'repeat'>: <RepeatMode.OFF: 'off'>,
+      <MediaPlayerEntityStateAttribute.MEDIA_SHUFFLE: 'shuffle'>: False,
+      <MediaPlayerEntityStateAttribute.SOUND_MODE: 'sound_mode'>: 'Test Listening Mode (123)',
+      <MediaPlayerEntityCapabilityAttribute.SOUND_MODE_LIST: 'sound_mode_list'>: list([
         'Test Listening Mode (123)',
         'Test Listening Mode (234)',
         'Test Listening Mode 2 (345)',
       ]),
-      'source_list': list([
+      <MediaPlayerEntityCapabilityAttribute.INPUT_SOURCE_LIST: 'source_list'>: list([
         'Tidal',
         'Line-In',
         'HDMI A',
@@ -308,23 +308,23 @@
         }),
       }),
       'device_class': 'speaker',
-      'entity_picture_local': None,
+      <MediaPlayerEntityStateAttribute.ENTITY_PICTURE_LOCAL: 'entity_picture_local'>: None,
       'friendly_name': 'Living room Balance',
-      'group_members': list([
+      <MediaPlayerEntityStateAttribute.GROUP_MEMBERS: 'group_members'>: list([
         'media_player.living_room_balance',
         'listener_not_in_hass-1111.1111111.33333333@products.bang-olufsen.com',
         'listener_not_in_hass-1111.1111111.44444444@products.bang-olufsen.com',
       ]),
-      'media_content_type': <MediaType.MUSIC: 'music'>,
-      'repeat': <RepeatMode.OFF: 'off'>,
-      'shuffle': False,
-      'sound_mode': 'Test Listening Mode (123)',
-      'sound_mode_list': list([
+      <MediaPlayerEntityStateAttribute.MEDIA_CONTENT_TYPE: 'media_content_type'>: <MediaType.MUSIC: 'music'>,
+      <MediaPlayerEntityStateAttribute.MEDIA_REPEAT: 'repeat'>: <RepeatMode.OFF: 'off'>,
+      <MediaPlayerEntityStateAttribute.MEDIA_SHUFFLE: 'shuffle'>: False,
+      <MediaPlayerEntityStateAttribute.SOUND_MODE: 'sound_mode'>: 'Test Listening Mode (123)',
+      <MediaPlayerEntityCapabilityAttribute.SOUND_MODE_LIST: 'sound_mode_list'>: list([
         'Test Listening Mode (123)',
         'Test Listening Mode (234)',
         'Test Listening Mode 2 (345)',
       ]),
-      'source_list': list([
+      <MediaPlayerEntityCapabilityAttribute.INPUT_SOURCE_LIST: 'source_list'>: list([
         'Tidal',
         'Line-In',
         'HDMI A',
@@ -356,23 +356,23 @@
         }),
       }),
       'device_class': 'speaker',
-      'entity_picture_local': None,
+      <MediaPlayerEntityStateAttribute.ENTITY_PICTURE_LOCAL: 'entity_picture_local'>: None,
       'friendly_name': 'Living room Balance',
-      'group_members': list([
+      <MediaPlayerEntityStateAttribute.GROUP_MEMBERS: 'group_members'>: list([
         'media_player.living_room_balance',
         'listener_not_in_hass-1111.1111111.33333333@products.bang-olufsen.com',
         'listener_not_in_hass-1111.1111111.44444444@products.bang-olufsen.com',
       ]),
-      'media_content_type': <MediaType.MUSIC: 'music'>,
-      'repeat': <RepeatMode.OFF: 'off'>,
-      'shuffle': False,
-      'sound_mode': 'Test Listening Mode (123)',
-      'sound_mode_list': list([
+      <MediaPlayerEntityStateAttribute.MEDIA_CONTENT_TYPE: 'media_content_type'>: <MediaType.MUSIC: 'music'>,
+      <MediaPlayerEntityStateAttribute.MEDIA_REPEAT: 'repeat'>: <RepeatMode.OFF: 'off'>,
+      <MediaPlayerEntityStateAttribute.MEDIA_SHUFFLE: 'shuffle'>: False,
+      <MediaPlayerEntityStateAttribute.SOUND_MODE: 'sound_mode'>: 'Test Listening Mode (123)',
+      <MediaPlayerEntityCapabilityAttribute.SOUND_MODE_LIST: 'sound_mode_list'>: list([
         'Test Listening Mode (123)',
         'Test Listening Mode (234)',
         'Test Listening Mode 2 (345)',
       ]),
-      'source_list': list([
+      <MediaPlayerEntityCapabilityAttribute.INPUT_SOURCE_LIST: 'source_list'>: list([
         'Tidal',
         'Line-In',
         'HDMI A',
@@ -404,23 +404,23 @@
         }),
       }),
       'device_class': 'speaker',
-      'entity_picture_local': None,
+      <MediaPlayerEntityStateAttribute.ENTITY_PICTURE_LOCAL: 'entity_picture_local'>: None,
       'friendly_name': 'Living room Balance',
-      'group_members': list([
+      <MediaPlayerEntityStateAttribute.GROUP_MEMBERS: 'group_members'>: list([
         'media_player.living_room_balance',
         'listener_not_in_hass-1111.1111111.33333333@products.bang-olufsen.com',
         'listener_not_in_hass-1111.1111111.44444444@products.bang-olufsen.com',
       ]),
-      'media_content_type': <MediaType.MUSIC: 'music'>,
-      'repeat': <RepeatMode.OFF: 'off'>,
-      'shuffle': False,
-      'sound_mode': 'Test Listening Mode (123)',
-      'sound_mode_list': list([
+      <MediaPlayerEntityStateAttribute.MEDIA_CONTENT_TYPE: 'media_content_type'>: <MediaType.MUSIC: 'music'>,
+      <MediaPlayerEntityStateAttribute.MEDIA_REPEAT: 'repeat'>: <RepeatMode.OFF: 'off'>,
+      <MediaPlayerEntityStateAttribute.MEDIA_SHUFFLE: 'shuffle'>: False,
+      <MediaPlayerEntityStateAttribute.SOUND_MODE: 'sound_mode'>: 'Test Listening Mode (123)',
+      <MediaPlayerEntityCapabilityAttribute.SOUND_MODE_LIST: 'sound_mode_list'>: list([
         'Test Listening Mode (123)',
         'Test Listening Mode (234)',
         'Test Listening Mode 2 (345)',
       ]),
-      'source_list': list([
+      <MediaPlayerEntityCapabilityAttribute.INPUT_SOURCE_LIST: 'source_list'>: list([
         'Tidal',
         'Line-In',
         'HDMI A',
@@ -452,23 +452,23 @@
         }),
       }),
       'device_class': 'speaker',
-      'entity_picture_local': None,
+      <MediaPlayerEntityStateAttribute.ENTITY_PICTURE_LOCAL: 'entity_picture_local'>: None,
       'friendly_name': 'Living room Balance',
-      'group_members': list([
+      <MediaPlayerEntityStateAttribute.GROUP_MEMBERS: 'group_members'>: list([
         'media_player.living_room_balance',
         'listener_not_in_hass-1111.1111111.33333333@products.bang-olufsen.com',
         'listener_not_in_hass-1111.1111111.44444444@products.bang-olufsen.com',
       ]),
-      'media_content_type': <MediaType.MUSIC: 'music'>,
-      'repeat': <RepeatMode.OFF: 'off'>,
-      'shuffle': False,
-      'sound_mode': 'Test Listening Mode (123)',
-      'sound_mode_list': list([
+      <MediaPlayerEntityStateAttribute.MEDIA_CONTENT_TYPE: 'media_content_type'>: <MediaType.MUSIC: 'music'>,
+      <MediaPlayerEntityStateAttribute.MEDIA_REPEAT: 'repeat'>: <RepeatMode.OFF: 'off'>,
+      <MediaPlayerEntityStateAttribute.MEDIA_SHUFFLE: 'shuffle'>: False,
+      <MediaPlayerEntityStateAttribute.SOUND_MODE: 'sound_mode'>: 'Test Listening Mode (123)',
+      <MediaPlayerEntityCapabilityAttribute.SOUND_MODE_LIST: 'sound_mode_list'>: list([
         'Test Listening Mode (123)',
         'Test Listening Mode (234)',
         'Test Listening Mode 2 (345)',
       ]),
-      'source_list': list([
+      <MediaPlayerEntityCapabilityAttribute.INPUT_SOURCE_LIST: 'source_list'>: list([
         'Tidal',
         'Line-In',
         'HDMI A',
@@ -500,23 +500,23 @@
         }),
       }),
       'device_class': 'speaker',
-      'entity_picture_local': None,
+      <MediaPlayerEntityStateAttribute.ENTITY_PICTURE_LOCAL: 'entity_picture_local'>: None,
       'friendly_name': 'Living room Balance',
-      'group_members': list([
+      <MediaPlayerEntityStateAttribute.GROUP_MEMBERS: 'group_members'>: list([
         'media_player.living_room_balance',
         'listener_not_in_hass-1111.1111111.33333333@products.bang-olufsen.com',
         'listener_not_in_hass-1111.1111111.44444444@products.bang-olufsen.com',
       ]),
-      'media_content_type': <MediaType.MUSIC: 'music'>,
-      'repeat': <RepeatMode.OFF: 'off'>,
-      'shuffle': False,
-      'sound_mode': 'Test Listening Mode (123)',
-      'sound_mode_list': list([
+      <MediaPlayerEntityStateAttribute.MEDIA_CONTENT_TYPE: 'media_content_type'>: <MediaType.MUSIC: 'music'>,
+      <MediaPlayerEntityStateAttribute.MEDIA_REPEAT: 'repeat'>: <RepeatMode.OFF: 'off'>,
+      <MediaPlayerEntityStateAttribute.MEDIA_SHUFFLE: 'shuffle'>: False,
+      <MediaPlayerEntityStateAttribute.SOUND_MODE: 'sound_mode'>: 'Test Listening Mode (123)',
+      <MediaPlayerEntityCapabilityAttribute.SOUND_MODE_LIST: 'sound_mode_list'>: list([
         'Test Listening Mode (123)',
         'Test Listening Mode (234)',
         'Test Listening Mode 2 (345)',
       ]),
-      'source_list': list([
+      <MediaPlayerEntityCapabilityAttribute.INPUT_SOURCE_LIST: 'source_list'>: list([
         'Tidal',
         'Line-In',
         'HDMI A',
@@ -548,23 +548,23 @@
         }),
       }),
       'device_class': 'speaker',
-      'entity_picture_local': None,
+      <MediaPlayerEntityStateAttribute.ENTITY_PICTURE_LOCAL: 'entity_picture_local'>: None,
       'friendly_name': 'Living room Balance',
-      'group_members': list([
+      <MediaPlayerEntityStateAttribute.GROUP_MEMBERS: 'group_members'>: list([
         'media_player.living_room_balance',
         'listener_not_in_hass-1111.1111111.33333333@products.bang-olufsen.com',
         'listener_not_in_hass-1111.1111111.44444444@products.bang-olufsen.com',
       ]),
-      'media_content_type': <MediaType.MUSIC: 'music'>,
-      'repeat': <RepeatMode.OFF: 'off'>,
-      'shuffle': False,
-      'sound_mode': 'Test Listening Mode (123)',
-      'sound_mode_list': list([
+      <MediaPlayerEntityStateAttribute.MEDIA_CONTENT_TYPE: 'media_content_type'>: <MediaType.MUSIC: 'music'>,
+      <MediaPlayerEntityStateAttribute.MEDIA_REPEAT: 'repeat'>: <RepeatMode.OFF: 'off'>,
+      <MediaPlayerEntityStateAttribute.MEDIA_SHUFFLE: 'shuffle'>: False,
+      <MediaPlayerEntityStateAttribute.SOUND_MODE: 'sound_mode'>: 'Test Listening Mode (123)',
+      <MediaPlayerEntityCapabilityAttribute.SOUND_MODE_LIST: 'sound_mode_list'>: list([
         'Test Listening Mode (123)',
         'Test Listening Mode (234)',
         'Test Listening Mode 2 (345)',
       ]),
-      'source_list': list([
+      <MediaPlayerEntityCapabilityAttribute.INPUT_SOURCE_LIST: 'source_list'>: list([
         'Tidal',
         'Line-In',
         'HDMI A',
@@ -596,24 +596,24 @@
         }),
       }),
       'device_class': 'speaker',
-      'entity_picture_local': None,
+      <MediaPlayerEntityStateAttribute.ENTITY_PICTURE_LOCAL: 'entity_picture_local'>: None,
       'friendly_name': 'Living room Balance',
-      'group_members': list([
+      <MediaPlayerEntityStateAttribute.GROUP_MEMBERS: 'group_members'>: list([
         'media_player.living_room_balance',
         'listener_not_in_hass-1111.1111111.33333333@products.bang-olufsen.com',
         'listener_not_in_hass-1111.1111111.44444444@products.bang-olufsen.com',
       ]),
-      'media_content_type': <BeoMediaType.TIDAL: 'tidal'>,
-      'repeat': <RepeatMode.OFF: 'off'>,
-      'shuffle': False,
-      'sound_mode': 'Test Listening Mode (123)',
-      'sound_mode_list': list([
+      <MediaPlayerEntityStateAttribute.MEDIA_CONTENT_TYPE: 'media_content_type'>: <BeoMediaType.TIDAL: 'tidal'>,
+      <MediaPlayerEntityStateAttribute.MEDIA_REPEAT: 'repeat'>: <RepeatMode.OFF: 'off'>,
+      <MediaPlayerEntityStateAttribute.MEDIA_SHUFFLE: 'shuffle'>: False,
+      <MediaPlayerEntityStateAttribute.SOUND_MODE: 'sound_mode'>: 'Test Listening Mode (123)',
+      <MediaPlayerEntityCapabilityAttribute.SOUND_MODE_LIST: 'sound_mode_list'>: list([
         'Test Listening Mode (123)',
         'Test Listening Mode (234)',
         'Test Listening Mode 2 (345)',
       ]),
-      'source': 'Tidal',
-      'source_list': list([
+      <MediaPlayerEntityStateAttribute.INPUT_SOURCE: 'source'>: 'Tidal',
+      <MediaPlayerEntityCapabilityAttribute.INPUT_SOURCE_LIST: 'source_list'>: list([
         'Tidal',
         'Line-In',
         'HDMI A',
@@ -645,29 +645,29 @@
         }),
       }),
       'device_class': 'speaker',
-      'entity_picture_local': None,
+      <MediaPlayerEntityStateAttribute.ENTITY_PICTURE_LOCAL: 'entity_picture_local'>: None,
       'friendly_name': 'Living room Balance',
-      'group_members': list([
+      <MediaPlayerEntityStateAttribute.GROUP_MEMBERS: 'group_members'>: list([
         'media_player.laundry_room_core',
         'listener_not_in_hass-1111.1111111.33333333@products.bang-olufsen.com',
         'listener_not_in_hass-1111.1111111.44444444@products.bang-olufsen.com',
       ]),
-      'media_content_type': <MediaType.MUSIC: 'music'>,
-      'repeat': <RepeatMode.OFF: 'off'>,
-      'shuffle': False,
-      'sound_mode': 'Test Listening Mode (123)',
-      'sound_mode_list': list([
+      <MediaPlayerEntityStateAttribute.MEDIA_CONTENT_TYPE: 'media_content_type'>: <MediaType.MUSIC: 'music'>,
+      <MediaPlayerEntityStateAttribute.MEDIA_REPEAT: 'repeat'>: <RepeatMode.OFF: 'off'>,
+      <MediaPlayerEntityStateAttribute.MEDIA_SHUFFLE: 'shuffle'>: False,
+      <MediaPlayerEntityStateAttribute.SOUND_MODE: 'sound_mode'>: 'Test Listening Mode (123)',
+      <MediaPlayerEntityCapabilityAttribute.SOUND_MODE_LIST: 'sound_mode_list'>: list([
         'Test Listening Mode (123)',
         'Test Listening Mode (234)',
         'Test Listening Mode 2 (345)',
       ]),
-      'source_list': list([
+      <MediaPlayerEntityCapabilityAttribute.INPUT_SOURCE_LIST: 'source_list'>: list([
         'Tidal',
         'Line-In',
         'HDMI A',
       ]),
       'supported_features': <MediaPlayerEntityFeature: 2095933>,
-      'volume_level': 0.0,
+      <MediaPlayerEntityStateAttribute.MEDIA_VOLUME_LEVEL: 'volume_level'>: 0.0,
     }),
     'context': <ANY>,
     'entity_id': 'media_player.laundry_room_core',
@@ -694,24 +694,24 @@
         }),
       }),
       'device_class': 'speaker',
-      'entity_picture_local': None,
+      <MediaPlayerEntityStateAttribute.ENTITY_PICTURE_LOCAL: 'entity_picture_local'>: None,
       'friendly_name': 'Living room Balance',
-      'group_members': list([
+      <MediaPlayerEntityStateAttribute.GROUP_MEMBERS: 'group_members'>: list([
         'media_player.living_room_balance',
         'listener_not_in_hass-1111.1111111.33333333@products.bang-olufsen.com',
         'listener_not_in_hass-1111.1111111.44444444@products.bang-olufsen.com',
       ]),
-      'media_content_type': <BeoMediaType.TIDAL: 'tidal'>,
-      'repeat': <RepeatMode.OFF: 'off'>,
-      'shuffle': False,
-      'sound_mode': 'Test Listening Mode (123)',
-      'sound_mode_list': list([
+      <MediaPlayerEntityStateAttribute.MEDIA_CONTENT_TYPE: 'media_content_type'>: <BeoMediaType.TIDAL: 'tidal'>,
+      <MediaPlayerEntityStateAttribute.MEDIA_REPEAT: 'repeat'>: <RepeatMode.OFF: 'off'>,
+      <MediaPlayerEntityStateAttribute.MEDIA_SHUFFLE: 'shuffle'>: False,
+      <MediaPlayerEntityStateAttribute.SOUND_MODE: 'sound_mode'>: 'Test Listening Mode (123)',
+      <MediaPlayerEntityCapabilityAttribute.SOUND_MODE_LIST: 'sound_mode_list'>: list([
         'Test Listening Mode (123)',
         'Test Listening Mode (234)',
         'Test Listening Mode 2 (345)',
       ]),
-      'source': 'Tidal',
-      'source_list': list([
+      <MediaPlayerEntityStateAttribute.INPUT_SOURCE: 'source'>: 'Tidal',
+      <MediaPlayerEntityCapabilityAttribute.INPUT_SOURCE_LIST: 'source_list'>: list([
         'Tidal',
         'Line-In',
         'HDMI A',
@@ -743,29 +743,29 @@
         }),
       }),
       'device_class': 'speaker',
-      'entity_picture_local': None,
+      <MediaPlayerEntityStateAttribute.ENTITY_PICTURE_LOCAL: 'entity_picture_local'>: None,
       'friendly_name': 'Living room Balance',
-      'group_members': list([
+      <MediaPlayerEntityStateAttribute.GROUP_MEMBERS: 'group_members'>: list([
         'media_player.laundry_room_core',
         'listener_not_in_hass-1111.1111111.33333333@products.bang-olufsen.com',
         'listener_not_in_hass-1111.1111111.44444444@products.bang-olufsen.com',
       ]),
-      'media_content_type': <MediaType.MUSIC: 'music'>,
-      'repeat': <RepeatMode.OFF: 'off'>,
-      'shuffle': False,
-      'sound_mode': 'Test Listening Mode (123)',
-      'sound_mode_list': list([
+      <MediaPlayerEntityStateAttribute.MEDIA_CONTENT_TYPE: 'media_content_type'>: <MediaType.MUSIC: 'music'>,
+      <MediaPlayerEntityStateAttribute.MEDIA_REPEAT: 'repeat'>: <RepeatMode.OFF: 'off'>,
+      <MediaPlayerEntityStateAttribute.MEDIA_SHUFFLE: 'shuffle'>: False,
+      <MediaPlayerEntityStateAttribute.SOUND_MODE: 'sound_mode'>: 'Test Listening Mode (123)',
+      <MediaPlayerEntityCapabilityAttribute.SOUND_MODE_LIST: 'sound_mode_list'>: list([
         'Test Listening Mode (123)',
         'Test Listening Mode (234)',
         'Test Listening Mode 2 (345)',
       ]),
-      'source_list': list([
+      <MediaPlayerEntityCapabilityAttribute.INPUT_SOURCE_LIST: 'source_list'>: list([
         'Tidal',
         'Line-In',
         'HDMI A',
       ]),
       'supported_features': <MediaPlayerEntityFeature: 2095933>,
-      'volume_level': 0.0,
+      <MediaPlayerEntityStateAttribute.MEDIA_VOLUME_LEVEL: 'volume_level'>: 0.0,
     }),
     'context': <ANY>,
     'entity_id': 'media_player.laundry_room_core',
@@ -792,25 +792,25 @@
         }),
       }),
       'device_class': 'speaker',
-      'entity_picture_local': None,
+      <MediaPlayerEntityStateAttribute.ENTITY_PICTURE_LOCAL: 'entity_picture_local'>: None,
       'friendly_name': 'Living room Balance',
-      'group_members': list([
+      <MediaPlayerEntityStateAttribute.GROUP_MEMBERS: 'group_members'>: list([
         'media_player.living_room_balance',
         'listener_not_in_hass-1111.1111111.33333333@products.bang-olufsen.com',
         'listener_not_in_hass-1111.1111111.44444444@products.bang-olufsen.com',
       ]),
-      'media_content_type': <MediaType.MUSIC: 'music'>,
-      'media_position': 0,
-      'repeat': <RepeatMode.OFF: 'off'>,
-      'shuffle': False,
-      'sound_mode': 'Test Listening Mode (123)',
-      'sound_mode_list': list([
+      <MediaPlayerEntityStateAttribute.MEDIA_CONTENT_TYPE: 'media_content_type'>: <MediaType.MUSIC: 'music'>,
+      <MediaPlayerEntityStateAttribute.MEDIA_POSITION: 'media_position'>: 0,
+      <MediaPlayerEntityStateAttribute.MEDIA_REPEAT: 'repeat'>: <RepeatMode.OFF: 'off'>,
+      <MediaPlayerEntityStateAttribute.MEDIA_SHUFFLE: 'shuffle'>: False,
+      <MediaPlayerEntityStateAttribute.SOUND_MODE: 'sound_mode'>: 'Test Listening Mode (123)',
+      <MediaPlayerEntityCapabilityAttribute.SOUND_MODE_LIST: 'sound_mode_list'>: list([
         'Test Listening Mode (123)',
         'Test Listening Mode (234)',
         'Test Listening Mode 2 (345)',
       ]),
-      'source': 'Line-In',
-      'source_list': list([
+      <MediaPlayerEntityStateAttribute.INPUT_SOURCE: 'source'>: 'Line-In',
+      <MediaPlayerEntityCapabilityAttribute.INPUT_SOURCE_LIST: 'source_list'>: list([
         'Tidal',
         'Line-In',
         'HDMI A',
@@ -842,29 +842,29 @@
         }),
       }),
       'device_class': 'speaker',
-      'entity_picture_local': None,
+      <MediaPlayerEntityStateAttribute.ENTITY_PICTURE_LOCAL: 'entity_picture_local'>: None,
       'friendly_name': 'Living room Balance',
-      'group_members': list([
+      <MediaPlayerEntityStateAttribute.GROUP_MEMBERS: 'group_members'>: list([
         'media_player.laundry_room_core',
         'listener_not_in_hass-1111.1111111.33333333@products.bang-olufsen.com',
         'listener_not_in_hass-1111.1111111.44444444@products.bang-olufsen.com',
       ]),
-      'media_content_type': <MediaType.MUSIC: 'music'>,
-      'repeat': <RepeatMode.OFF: 'off'>,
-      'shuffle': False,
-      'sound_mode': 'Test Listening Mode (123)',
-      'sound_mode_list': list([
+      <MediaPlayerEntityStateAttribute.MEDIA_CONTENT_TYPE: 'media_content_type'>: <MediaType.MUSIC: 'music'>,
+      <MediaPlayerEntityStateAttribute.MEDIA_REPEAT: 'repeat'>: <RepeatMode.OFF: 'off'>,
+      <MediaPlayerEntityStateAttribute.MEDIA_SHUFFLE: 'shuffle'>: False,
+      <MediaPlayerEntityStateAttribute.SOUND_MODE: 'sound_mode'>: 'Test Listening Mode (123)',
+      <MediaPlayerEntityCapabilityAttribute.SOUND_MODE_LIST: 'sound_mode_list'>: list([
         'Test Listening Mode (123)',
         'Test Listening Mode (234)',
         'Test Listening Mode 2 (345)',
       ]),
-      'source_list': list([
+      <MediaPlayerEntityCapabilityAttribute.INPUT_SOURCE_LIST: 'source_list'>: list([
         'Tidal',
         'Line-In',
         'HDMI A',
       ]),
       'supported_features': <MediaPlayerEntityFeature: 2095933>,
-      'volume_level': 0.0,
+      <MediaPlayerEntityStateAttribute.MEDIA_VOLUME_LEVEL: 'volume_level'>: 0.0,
     }),
     'context': <ANY>,
     'entity_id': 'media_player.laundry_room_core',
@@ -891,24 +891,24 @@
         }),
       }),
       'device_class': 'speaker',
-      'entity_picture_local': None,
+      <MediaPlayerEntityStateAttribute.ENTITY_PICTURE_LOCAL: 'entity_picture_local'>: None,
       'friendly_name': 'Living room Balance',
-      'group_members': list([
+      <MediaPlayerEntityStateAttribute.GROUP_MEMBERS: 'group_members'>: list([
         'media_player.living_room_balance',
         'listener_not_in_hass-1111.1111111.33333333@products.bang-olufsen.com',
         'listener_not_in_hass-1111.1111111.44444444@products.bang-olufsen.com',
       ]),
-      'media_content_type': <BeoMediaType.TIDAL: 'tidal'>,
-      'repeat': <RepeatMode.OFF: 'off'>,
-      'shuffle': False,
-      'sound_mode': 'Test Listening Mode (123)',
-      'sound_mode_list': list([
+      <MediaPlayerEntityStateAttribute.MEDIA_CONTENT_TYPE: 'media_content_type'>: <BeoMediaType.TIDAL: 'tidal'>,
+      <MediaPlayerEntityStateAttribute.MEDIA_REPEAT: 'repeat'>: <RepeatMode.OFF: 'off'>,
+      <MediaPlayerEntityStateAttribute.MEDIA_SHUFFLE: 'shuffle'>: False,
+      <MediaPlayerEntityStateAttribute.SOUND_MODE: 'sound_mode'>: 'Test Listening Mode (123)',
+      <MediaPlayerEntityCapabilityAttribute.SOUND_MODE_LIST: 'sound_mode_list'>: list([
         'Test Listening Mode (123)',
         'Test Listening Mode (234)',
         'Test Listening Mode 2 (345)',
       ]),
-      'source': 'Tidal',
-      'source_list': list([
+      <MediaPlayerEntityStateAttribute.INPUT_SOURCE: 'source'>: 'Tidal',
+      <MediaPlayerEntityCapabilityAttribute.INPUT_SOURCE_LIST: 'source_list'>: list([
         'Tidal',
         'Line-In',
         'HDMI A',
@@ -940,29 +940,29 @@
         }),
       }),
       'device_class': 'speaker',
-      'entity_picture_local': None,
+      <MediaPlayerEntityStateAttribute.ENTITY_PICTURE_LOCAL: 'entity_picture_local'>: None,
       'friendly_name': 'Living room Balance',
-      'group_members': list([
+      <MediaPlayerEntityStateAttribute.GROUP_MEMBERS: 'group_members'>: list([
         'media_player.laundry_room_core',
         'listener_not_in_hass-1111.1111111.33333333@products.bang-olufsen.com',
         'listener_not_in_hass-1111.1111111.44444444@products.bang-olufsen.com',
       ]),
-      'media_content_type': <MediaType.MUSIC: 'music'>,
-      'repeat': <RepeatMode.OFF: 'off'>,
-      'shuffle': False,
-      'sound_mode': 'Test Listening Mode (123)',
-      'sound_mode_list': list([
+      <MediaPlayerEntityStateAttribute.MEDIA_CONTENT_TYPE: 'media_content_type'>: <MediaType.MUSIC: 'music'>,
+      <MediaPlayerEntityStateAttribute.MEDIA_REPEAT: 'repeat'>: <RepeatMode.OFF: 'off'>,
+      <MediaPlayerEntityStateAttribute.MEDIA_SHUFFLE: 'shuffle'>: False,
+      <MediaPlayerEntityStateAttribute.SOUND_MODE: 'sound_mode'>: 'Test Listening Mode (123)',
+      <MediaPlayerEntityCapabilityAttribute.SOUND_MODE_LIST: 'sound_mode_list'>: list([
         'Test Listening Mode (123)',
         'Test Listening Mode (234)',
         'Test Listening Mode 2 (345)',
       ]),
-      'source_list': list([
+      <MediaPlayerEntityCapabilityAttribute.INPUT_SOURCE_LIST: 'source_list'>: list([
         'Tidal',
         'Line-In',
         'HDMI A',
       ]),
       'supported_features': <MediaPlayerEntityFeature: 2095933>,
-      'volume_level': 0.0,
+      <MediaPlayerEntityStateAttribute.MEDIA_VOLUME_LEVEL: 'volume_level'>: 0.0,
     }),
     'context': <ANY>,
     'entity_id': 'media_player.laundry_room_core',
@@ -989,23 +989,23 @@
         }),
       }),
       'device_class': 'speaker',
-      'entity_picture_local': None,
+      <MediaPlayerEntityStateAttribute.ENTITY_PICTURE_LOCAL: 'entity_picture_local'>: None,
       'friendly_name': 'Living room Balance',
-      'group_members': list([
+      <MediaPlayerEntityStateAttribute.GROUP_MEMBERS: 'group_members'>: list([
         'media_player.living_room_balance',
         'listener_not_in_hass-1111.1111111.33333333@products.bang-olufsen.com',
         'listener_not_in_hass-1111.1111111.44444444@products.bang-olufsen.com',
       ]),
-      'media_content_type': <MediaType.MUSIC: 'music'>,
-      'repeat': <RepeatMode.OFF: 'off'>,
-      'shuffle': False,
-      'sound_mode': 'Test Listening Mode (123)',
-      'sound_mode_list': list([
+      <MediaPlayerEntityStateAttribute.MEDIA_CONTENT_TYPE: 'media_content_type'>: <MediaType.MUSIC: 'music'>,
+      <MediaPlayerEntityStateAttribute.MEDIA_REPEAT: 'repeat'>: <RepeatMode.OFF: 'off'>,
+      <MediaPlayerEntityStateAttribute.MEDIA_SHUFFLE: 'shuffle'>: False,
+      <MediaPlayerEntityStateAttribute.SOUND_MODE: 'sound_mode'>: 'Test Listening Mode (123)',
+      <MediaPlayerEntityCapabilityAttribute.SOUND_MODE_LIST: 'sound_mode_list'>: list([
         'Test Listening Mode (123)',
         'Test Listening Mode (234)',
         'Test Listening Mode 2 (345)',
       ]),
-      'source_list': list([
+      <MediaPlayerEntityCapabilityAttribute.INPUT_SOURCE_LIST: 'source_list'>: list([
         'Tidal',
         'Line-In',
         'HDMI A',
@@ -1036,22 +1036,22 @@
         }),
       }),
       'device_class': 'speaker',
-      'entity_picture_local': None,
+      <MediaPlayerEntityStateAttribute.ENTITY_PICTURE_LOCAL: 'entity_picture_local'>: None,
       'friendly_name': 'Living room Balance',
-      'group_members': list([
+      <MediaPlayerEntityStateAttribute.GROUP_MEMBERS: 'group_members'>: list([
         'media_player.laundry_room_core',
         'media_player.living_room_balance',
       ]),
-      'media_content_type': <MediaType.MUSIC: 'music'>,
-      'repeat': <RepeatMode.OFF: 'off'>,
-      'shuffle': False,
-      'sound_mode': 'Test Listening Mode (123)',
-      'sound_mode_list': list([
+      <MediaPlayerEntityStateAttribute.MEDIA_CONTENT_TYPE: 'media_content_type'>: <MediaType.MUSIC: 'music'>,
+      <MediaPlayerEntityStateAttribute.MEDIA_REPEAT: 'repeat'>: <RepeatMode.OFF: 'off'>,
+      <MediaPlayerEntityStateAttribute.MEDIA_SHUFFLE: 'shuffle'>: False,
+      <MediaPlayerEntityStateAttribute.SOUND_MODE: 'sound_mode'>: 'Test Listening Mode (123)',
+      <MediaPlayerEntityCapabilityAttribute.SOUND_MODE_LIST: 'sound_mode_list'>: list([
         'Test Listening Mode (123)',
         'Test Listening Mode (234)',
         'Test Listening Mode 2 (345)',
       ]),
-      'source_list': list([
+      <MediaPlayerEntityCapabilityAttribute.INPUT_SOURCE_LIST: 'source_list'>: list([
         'Tidal',
         'Line-In',
         'HDMI A',
@@ -1083,29 +1083,29 @@
         }),
       }),
       'device_class': 'speaker',
-      'entity_picture_local': None,
+      <MediaPlayerEntityStateAttribute.ENTITY_PICTURE_LOCAL: 'entity_picture_local'>: None,
       'friendly_name': 'Living room Balance',
-      'group_members': list([
+      <MediaPlayerEntityStateAttribute.GROUP_MEMBERS: 'group_members'>: list([
         'media_player.laundry_room_core',
         'listener_not_in_hass-1111.1111111.33333333@products.bang-olufsen.com',
         'listener_not_in_hass-1111.1111111.44444444@products.bang-olufsen.com',
       ]),
-      'media_content_type': <MediaType.MUSIC: 'music'>,
-      'repeat': <RepeatMode.OFF: 'off'>,
-      'shuffle': False,
-      'sound_mode': 'Test Listening Mode (123)',
-      'sound_mode_list': list([
+      <MediaPlayerEntityStateAttribute.MEDIA_CONTENT_TYPE: 'media_content_type'>: <MediaType.MUSIC: 'music'>,
+      <MediaPlayerEntityStateAttribute.MEDIA_REPEAT: 'repeat'>: <RepeatMode.OFF: 'off'>,
+      <MediaPlayerEntityStateAttribute.MEDIA_SHUFFLE: 'shuffle'>: False,
+      <MediaPlayerEntityStateAttribute.SOUND_MODE: 'sound_mode'>: 'Test Listening Mode (123)',
+      <MediaPlayerEntityCapabilityAttribute.SOUND_MODE_LIST: 'sound_mode_list'>: list([
         'Test Listening Mode (123)',
         'Test Listening Mode (234)',
         'Test Listening Mode 2 (345)',
       ]),
-      'source_list': list([
+      <MediaPlayerEntityCapabilityAttribute.INPUT_SOURCE_LIST: 'source_list'>: list([
         'Tidal',
         'Line-In',
         'HDMI A',
       ]),
       'supported_features': <MediaPlayerEntityFeature: 2095933>,
-      'volume_level': 0.0,
+      <MediaPlayerEntityStateAttribute.MEDIA_VOLUME_LEVEL: 'volume_level'>: 0.0,
     }),
     'context': <ANY>,
     'entity_id': 'media_player.laundry_room_core',
