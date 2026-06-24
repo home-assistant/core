@@ -4,7 +4,7 @@ import logging
 from typing import Any, Final, override
 
 from my_pv import MyPVLocalDevice
-from my_pv.exceptions import MyPVAuthenticationError
+from my_pv.exceptions import MyPVAuthenticationError, MyPVConnectionError
 import voluptuous as vol
 
 from homeassistant.config_entries import ConfigFlow, ConfigFlowResult
@@ -91,6 +91,8 @@ class MyPVConfigFlow(ConfigFlow, domain=DOMAIN):
         try:
             if not await device.connect():
                 return self.async_abort(reason="cannot_connect")
+        except MyPVConnectionError:
+            return self.async_abort(reason="cannot_connect")
         except MyPVAuthenticationError:
             password_needed = True
         finally:
@@ -142,6 +144,8 @@ class MyPVConfigFlow(ConfigFlow, domain=DOMAIN):
             try:
                 if not await device.connect():
                     errors[CONF_BASE] = "cannot_connect"
+            except MyPVConnectionError:
+                return self.async_abort(reason="cannot_connect")
             except MyPVAuthenticationError:
                 password_needed = True
             finally:
@@ -186,6 +190,8 @@ class MyPVConfigFlow(ConfigFlow, domain=DOMAIN):
             try:
                 if not await device.connect():
                     errors[CONF_BASE] = "cannot_connect"
+            except MyPVConnectionError:
+                return self.async_abort(reason="cannot_connect")
             except MyPVAuthenticationError:
                 errors[CONF_PASSWORD] = "invalid_password"
             finally:
