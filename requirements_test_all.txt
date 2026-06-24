@@ -1251,7 +1251,7 @@ lunatone-rest-api-client==0.5.7
 lupupy==0.3.2
 
 # homeassistant.components.scrape
-lxml==6.0.1
+lxml==6.1.1
 
 # homeassistant.components.matrix
 matrix-nio==0.25.2
