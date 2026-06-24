@@ -306,8 +306,7 @@ class ProtectDeviceVehicleEventEntity(
             event_id: The event ID to include in the fired event data.
             thumbnails: Pre-stored thumbnails to use. If None, fetches from
                 the current event (used when event is still active).
-            event_start: Device-side event start timestamp (ISO). Derived from
-                the current event when not provided (active-event path).
+            event_start: Device-side event start timestamp (ISO).
         """
         if thumbnails is None:
             # No stored thumbnails; try to get from current event
@@ -315,8 +314,6 @@ class ProtectDeviceVehicleEventEntity(
             if not event or event.id != event_id:
                 return
             thumbnails = self._get_vehicle_thumbnails(event)
-            if event_start is None:
-                event_start = _event_start(event)
 
         if not thumbnails:
             return
