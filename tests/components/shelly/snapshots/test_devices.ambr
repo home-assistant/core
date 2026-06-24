@@ -5934,8 +5934,8 @@
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'device_class': 'button',
-      'event_type': None,
-      'event_types': list([
+      <EventEntityStateAttribute.EVENT_TYPE: 'event_type'>: None,
+      <EventEntityCapabilityAttribute.EVENT_TYPES: 'event_types'>: list([
         'btn_down',
         'btn_up',
         'double_push',
@@ -5995,8 +5995,8 @@
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'device_class': 'button',
-      'event_type': None,
-      'event_types': list([
+      <EventEntityStateAttribute.EVENT_TYPE: 'event_type'>: None,
+      <EventEntityCapabilityAttribute.EVENT_TYPES: 'event_types'>: list([
         'btn_down',
         'btn_up',
         'double_push',
@@ -6056,8 +6056,8 @@
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'device_class': 'button',
-      'event_type': None,
-      'event_types': list([
+      <EventEntityStateAttribute.EVENT_TYPE: 'event_type'>: None,
+      <EventEntityCapabilityAttribute.EVENT_TYPES: 'event_types'>: list([
         'btn_down',
         'btn_up',
         'double_push',

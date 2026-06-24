@@ -7,8 +7,8 @@
   +     'Command': 'On',
   +     'Rssi numeric': 5,
         ...
-  -     'event_type': None,
-  +     'event_type': 'on',
+  -     <EventEntityStateAttribute.EVENT_TYPE: 'event_type'>: None,
+  +     <EventEntityStateAttribute.EVENT_TYPE: 'event_type'>: 'on',
           ...
   -   'state': 'unknown',
   +   'state': '2021-01-09T12:00:00.000+00:00',
@@ -18,7 +18,7 @@
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'assumed_state': True,
-      'event_type': None,
+      <EventEntityStateAttribute.EVENT_TYPE: 'event_type'>: None,
       <EventEntityCapabilityAttribute.EVENT_TYPES: 'event_types'>: list([
         'off',
         'on',
@@ -43,7 +43,7 @@
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'assumed_state': True,
-      'event_type': None,
+      <EventEntityStateAttribute.EVENT_TYPE: 'event_type'>: None,
       <EventEntityCapabilityAttribute.EVENT_TYPES: 'event_types'>: list([
         'off',
         'on',
@@ -70,8 +70,8 @@
   +     'Rssi numeric': 8,
   +     'Sensor Status': 'Normal',
         ...
-  -     'event_type': None,
-  +     'event_type': 'normal',
+  -     <EventEntityStateAttribute.EVENT_TYPE: 'event_type'>: None,
+  +     <EventEntityStateAttribute.EVENT_TYPE: 'event_type'>: 'normal',
           ...
   -   'state': 'unknown',
   +   'state': '2021-01-09T12:00:00.000+00:00',
@@ -81,7 +81,7 @@
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'assumed_state': True,
-      'event_type': None,
+      <EventEntityStateAttribute.EVENT_TYPE: 'event_type'>: None,
       <EventEntityCapabilityAttribute.EVENT_TYPES: 'event_types'>: list([
         'normal',
         'normal_delayed',

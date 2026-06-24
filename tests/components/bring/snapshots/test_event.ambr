@@ -46,7 +46,7 @@
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'entity_picture': 'https://api.getbring.com/rest/v2/bringusers/profilepictures/9a21fdfc-63a4-441a-afc1-ef3030605a9d',
-      'event_type': 'list_items_changed',
+      <EventEntityStateAttribute.EVENT_TYPE: 'event_type'>: 'list_items_changed',
       <EventEntityCapabilityAttribute.EVENT_TYPES: 'event_types'>: list([
         'list_items_changed',
         'list_items_added',
@@ -133,7 +133,7 @@
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'entity_picture': 'https://api.getbring.com/rest/v2/bringusers/profilepictures/9a21fdfc-63a4-441a-afc1-ef3030605a9d',
-      'event_type': 'list_items_changed',
+      <EventEntityStateAttribute.EVENT_TYPE: 'event_type'>: 'list_items_changed',
       <EventEntityCapabilityAttribute.EVENT_TYPES: 'event_types'>: list([
         'list_items_changed',
         'list_items_added',

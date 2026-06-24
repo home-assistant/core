@@ -50,7 +50,7 @@
       'content_type': None,
       'entity_picture': 'https://example.com/icon.png',
       'event': <Event.MESSAGE: 'message'>,
-      'event_type': 'Title: Hello',
+      <EventEntityStateAttribute.EVENT_TYPE: 'event_type'>: 'Title: Hello',
       <EventEntityCapabilityAttribute.EVENT_TYPES: 'event_types'>: list([
         'Title: Hello',
       ]),

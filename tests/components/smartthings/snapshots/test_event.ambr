@@ -42,7 +42,7 @@
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'device_class': 'button',
-      'event_type': None,
+      <EventEntityStateAttribute.EVENT_TYPE: 'event_type'>: None,
       <EventEntityCapabilityAttribute.EVENT_TYPES: 'event_types'>: None,
       'friendly_name': 'Dimmer entré 1 1 button1',
     }),
@@ -97,7 +97,7 @@
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'device_class': 'button',
-      'event_type': None,
+      <EventEntityStateAttribute.EVENT_TYPE: 'event_type'>: None,
       <EventEntityCapabilityAttribute.EVENT_TYPES: 'event_types'>: None,
       'friendly_name': 'Dimmer entré 1 1 button2',
     }),
@@ -156,7 +156,7 @@
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'device_class': 'button',
-      'event_type': None,
+      <EventEntityStateAttribute.EVENT_TYPE: 'event_type'>: None,
       <EventEntityCapabilityAttribute.EVENT_TYPES: 'event_types'>: list([
         'pushed',
         'held',
@@ -219,7 +219,7 @@
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'device_class': 'button',
-      'event_type': None,
+      <EventEntityStateAttribute.EVENT_TYPE: 'event_type'>: None,
       <EventEntityCapabilityAttribute.EVENT_TYPES: 'event_types'>: list([
         'pushed',
         'held',
@@ -282,7 +282,7 @@
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'device_class': 'button',
-      'event_type': None,
+      <EventEntityStateAttribute.EVENT_TYPE: 'event_type'>: None,
       <EventEntityCapabilityAttribute.EVENT_TYPES: 'event_types'>: list([
         'pushed',
         'held',
@@ -345,7 +345,7 @@
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'device_class': 'button',
-      'event_type': None,
+      <EventEntityStateAttribute.EVENT_TYPE: 'event_type'>: None,
       <EventEntityCapabilityAttribute.EVENT_TYPES: 'event_types'>: list([
         'pushed',
         'held',
@@ -408,7 +408,7 @@
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'device_class': 'button',
-      'event_type': None,
+      <EventEntityStateAttribute.EVENT_TYPE: 'event_type'>: None,
       <EventEntityCapabilityAttribute.EVENT_TYPES: 'event_types'>: list([
         'pushed',
         'held',
@@ -471,7 +471,7 @@
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'device_class': 'button',
-      'event_type': None,
+      <EventEntityStateAttribute.EVENT_TYPE: 'event_type'>: None,
       <EventEntityCapabilityAttribute.EVENT_TYPES: 'event_types'>: list([
         'pushed',
         'held',

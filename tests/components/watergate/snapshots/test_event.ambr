@@ -43,7 +43,7 @@
 # name: test_event[event.sonic_duration_auto_shut_off-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'event_type': None,
+      <EventEntityStateAttribute.EVENT_TYPE: 'event_type'>: None,
       <EventEntityCapabilityAttribute.EVENT_TYPES: 'event_types'>: list([
         'duration_threshold',
       ]),
@@ -101,7 +101,7 @@
 # name: test_event[event.sonic_volume_auto_shut_off-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'event_type': None,
+      <EventEntityStateAttribute.EVENT_TYPE: 'event_type'>: None,
       <EventEntityCapabilityAttribute.EVENT_TYPES: 'event_types'>: list([
         'volume_threshold',
       ]),

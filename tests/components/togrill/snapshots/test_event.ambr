@@ -54,7 +54,7 @@
 # name: test_setup[no_data][event.probe_1_event-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'event_type': None,
+      <EventEntityStateAttribute.EVENT_TYPE: 'event_type'>: None,
       <EventEntityCapabilityAttribute.EVENT_TYPES: 'event_types'>: list([
         'probe_acknowledge',
         'device_low_power',
@@ -134,7 +134,7 @@
 # name: test_setup[no_data][event.probe_2_event-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'event_type': None,
+      <EventEntityStateAttribute.EVENT_TYPE: 'event_type'>: None,
       <EventEntityCapabilityAttribute.EVENT_TYPES: 'event_types'>: list([
         'probe_acknowledge',
         'device_low_power',
@@ -214,7 +214,7 @@
 # name: test_setup[non_event_packet][event.probe_1_event-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'event_type': None,
+      <EventEntityStateAttribute.EVENT_TYPE: 'event_type'>: None,
       <EventEntityCapabilityAttribute.EVENT_TYPES: 'event_types'>: list([
         'probe_acknowledge',
         'device_low_power',
@@ -294,7 +294,7 @@
 # name: test_setup[non_event_packet][event.probe_2_event-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'event_type': None,
+      <EventEntityStateAttribute.EVENT_TYPE: 'event_type'>: None,
       <EventEntityCapabilityAttribute.EVENT_TYPES: 'event_types'>: list([
         'probe_acknowledge',
         'device_low_power',
@@ -374,7 +374,7 @@
 # name: test_setup[non_known_message][event.probe_1_event-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'event_type': None,
+      <EventEntityStateAttribute.EVENT_TYPE: 'event_type'>: None,
       <EventEntityCapabilityAttribute.EVENT_TYPES: 'event_types'>: list([
         'probe_acknowledge',
         'device_low_power',
@@ -454,7 +454,7 @@
 # name: test_setup[non_known_message][event.probe_2_event-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'event_type': None,
+      <EventEntityStateAttribute.EVENT_TYPE: 'event_type'>: None,
       <EventEntityCapabilityAttribute.EVENT_TYPES: 'event_types'>: list([
         'probe_acknowledge',
         'device_low_power',

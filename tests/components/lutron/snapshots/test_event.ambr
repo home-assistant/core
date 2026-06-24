@@ -43,7 +43,7 @@
 # name: test_event_setup[event.test_keypad_test_button-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'event_type': None,
+      <EventEntityStateAttribute.EVENT_TYPE: 'event_type'>: None,
       <EventEntityCapabilityAttribute.EVENT_TYPES: 'event_types'>: list([
         <LutronEventType.SINGLE_PRESS: 'single_press'>,
       ]),

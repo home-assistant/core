@@ -46,7 +46,7 @@
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'device_class': 'button',
-      'event_type': None,
+      <EventEntityStateAttribute.EVENT_TYPE: 'event_type'>: None,
       <EventEntityCapabilityAttribute.EVENT_TYPES: 'event_types'>: list([
         'upper',
         'lower',
@@ -109,7 +109,7 @@
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'device_class': 'button',
-      'event_type': None,
+      <EventEntityStateAttribute.EVENT_TYPE: 'event_type'>: None,
       <EventEntityCapabilityAttribute.EVENT_TYPES: 'event_types'>: list([
         'upper',
         'lower',
@@ -179,7 +179,7 @@
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'device_class': 'button',
-      'event_type': None,
+      <EventEntityStateAttribute.EVENT_TYPE: 'event_type'>: None,
       <EventEntityCapabilityAttribute.EVENT_TYPES: 'event_types'>: list([
         'released',
         'up',
@@ -249,7 +249,7 @@
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'device_class': 'button',
-      'event_type': None,
+      <EventEntityStateAttribute.EVENT_TYPE: 'event_type'>: None,
       <EventEntityCapabilityAttribute.EVENT_TYPES: 'event_types'>: list([
         'upper',
         'lower',
@@ -312,7 +312,7 @@
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'device_class': 'button',
-      'event_type': None,
+      <EventEntityStateAttribute.EVENT_TYPE: 'event_type'>: None,
       <EventEntityCapabilityAttribute.EVENT_TYPES: 'event_types'>: list([
         'upper',
         'lower',
@@ -382,7 +382,7 @@
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'device_class': 'button',
-      'event_type': None,
+      <EventEntityStateAttribute.EVENT_TYPE: 'event_type'>: None,
       <EventEntityCapabilityAttribute.EVENT_TYPES: 'event_types'>: list([
         'released',
         'up',
@@ -452,7 +452,7 @@
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'device_class': 'button',
-      'event_type': None,
+      <EventEntityStateAttribute.EVENT_TYPE: 'event_type'>: None,
       <EventEntityCapabilityAttribute.EVENT_TYPES: 'event_types'>: list([
         'upper',
         'lower',
@@ -515,7 +515,7 @@
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'device_class': 'button',
-      'event_type': None,
+      <EventEntityStateAttribute.EVENT_TYPE: 'event_type'>: None,
       <EventEntityCapabilityAttribute.EVENT_TYPES: 'event_types'>: list([
         'upper',
         'lower',
@@ -585,7 +585,7 @@
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'device_class': 'button',
-      'event_type': None,
+      <EventEntityStateAttribute.EVENT_TYPE: 'event_type'>: None,
       <EventEntityCapabilityAttribute.EVENT_TYPES: 'event_types'>: list([
         'released',
         'up',
@@ -655,7 +655,7 @@
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'device_class': 'button',
-      'event_type': None,
+      <EventEntityStateAttribute.EVENT_TYPE: 'event_type'>: None,
       <EventEntityCapabilityAttribute.EVENT_TYPES: 'event_types'>: list([
         'upper',
         'lower',
@@ -718,7 +718,7 @@
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'device_class': 'button',
-      'event_type': None,
+      <EventEntityStateAttribute.EVENT_TYPE: 'event_type'>: None,
       <EventEntityCapabilityAttribute.EVENT_TYPES: 'event_types'>: list([
         'upper',
         'lower',
@@ -788,7 +788,7 @@
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'device_class': 'button',
-      'event_type': None,
+      <EventEntityStateAttribute.EVENT_TYPE: 'event_type'>: None,
       <EventEntityCapabilityAttribute.EVENT_TYPES: 'event_types'>: list([
         'released',
         'up',
@@ -858,7 +858,7 @@
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'device_class': 'button',
-      'event_type': None,
+      <EventEntityStateAttribute.EVENT_TYPE: 'event_type'>: None,
       <EventEntityCapabilityAttribute.EVENT_TYPES: 'event_types'>: list([
         'upper',
         'lower',
@@ -921,7 +921,7 @@
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'device_class': 'button',
-      'event_type': None,
+      <EventEntityStateAttribute.EVENT_TYPE: 'event_type'>: None,
       <EventEntityCapabilityAttribute.EVENT_TYPES: 'event_types'>: list([
         'upper',
         'lower',
@@ -991,7 +991,7 @@
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'device_class': 'button',
-      'event_type': None,
+      <EventEntityStateAttribute.EVENT_TYPE: 'event_type'>: None,
       <EventEntityCapabilityAttribute.EVENT_TYPES: 'event_types'>: list([
         'released',
         'up',

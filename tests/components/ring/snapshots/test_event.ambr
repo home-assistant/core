@@ -45,7 +45,7 @@
     'attributes': ReadOnlyDict({
       'attribution': 'Data provided by Ring.com',
       'device_class': 'doorbell',
-      'event_type': None,
+      <EventEntityStateAttribute.EVENT_TYPE: 'event_type'>: None,
       <EventEntityCapabilityAttribute.EVENT_TYPES: 'event_types'>: list([
         <DoorbellEventType.RING: 'ring'>,
       ]),
@@ -105,7 +105,7 @@
     'attributes': ReadOnlyDict({
       'attribution': 'Data provided by Ring.com',
       'device_class': 'motion',
-      'event_type': None,
+      <EventEntityStateAttribute.EVENT_TYPE: 'event_type'>: None,
       <EventEntityCapabilityAttribute.EVENT_TYPES: 'event_types'>: list([
         'motion',
       ]),
@@ -165,7 +165,7 @@
     'attributes': ReadOnlyDict({
       'attribution': 'Data provided by Ring.com',
       'device_class': 'motion',
-      'event_type': None,
+      <EventEntityStateAttribute.EVENT_TYPE: 'event_type'>: None,
       <EventEntityCapabilityAttribute.EVENT_TYPES: 'event_types'>: list([
         'motion',
       ]),
@@ -225,7 +225,7 @@
     'attributes': ReadOnlyDict({
       'attribution': 'Data provided by Ring.com',
       'device_class': 'doorbell',
-      'event_type': None,
+      <EventEntityStateAttribute.EVENT_TYPE: 'event_type'>: None,
       <EventEntityCapabilityAttribute.EVENT_TYPES: 'event_types'>: list([
         <DoorbellEventType.RING: 'ring'>,
       ]),
@@ -285,7 +285,7 @@
     'attributes': ReadOnlyDict({
       'attribution': 'Data provided by Ring.com',
       'device_class': 'button',
-      'event_type': None,
+      <EventEntityStateAttribute.EVENT_TYPE: 'event_type'>: None,
       <EventEntityCapabilityAttribute.EVENT_TYPES: 'event_types'>: list([
         'intercom_unlock',
       ]),
@@ -345,7 +345,7 @@
     'attributes': ReadOnlyDict({
       'attribution': 'Data provided by Ring.com',
       'device_class': 'motion',
-      'event_type': None,
+      <EventEntityStateAttribute.EVENT_TYPE: 'event_type'>: None,
       <EventEntityCapabilityAttribute.EVENT_TYPES: 'event_types'>: list([
         'motion',
       ]),

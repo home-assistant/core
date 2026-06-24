@@ -60,7 +60,7 @@
 # name: test_events[event.fakespa_fault-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'event_type': None,
+      <EventEntityStateAttribute.EVENT_TYPE: 'event_type'>: None,
       <EventEntityCapabilityAttribute.EVENT_TYPES: 'event_types'>: list([
         'clock_failed',
         'flow_failed',

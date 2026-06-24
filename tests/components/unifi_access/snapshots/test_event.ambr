@@ -44,7 +44,7 @@
 # name: test_event_entities[event.back_door_access-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'event_type': None,
+      <EventEntityStateAttribute.EVENT_TYPE: 'event_type'>: None,
       <EventEntityCapabilityAttribute.EVENT_TYPES: 'event_types'>: list([
         'access_granted',
         'access_denied',
@@ -104,7 +104,7 @@
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'device_class': 'doorbell',
-      'event_type': None,
+      <EventEntityStateAttribute.EVENT_TYPE: 'event_type'>: None,
       <EventEntityCapabilityAttribute.EVENT_TYPES: 'event_types'>: list([
         <DoorbellEventType.RING: 'ring'>,
       ]),
@@ -163,7 +163,7 @@
 # name: test_event_entities[event.front_door_access-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'event_type': None,
+      <EventEntityStateAttribute.EVENT_TYPE: 'event_type'>: None,
       <EventEntityCapabilityAttribute.EVENT_TYPES: 'event_types'>: list([
         'access_granted',
         'access_denied',
@@ -223,7 +223,7 @@
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'device_class': 'doorbell',
-      'event_type': None,
+      <EventEntityStateAttribute.EVENT_TYPE: 'event_type'>: None,
       <EventEntityCapabilityAttribute.EVENT_TYPES: 'event_types'>: list([
         <DoorbellEventType.RING: 'ring'>,
       ]),

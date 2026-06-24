@@ -165,7 +165,7 @@
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'date_time': HAFakeDatetime(2025, 7, 13, 15, 30, tzinfo=datetime.timezone.utc),
-      'event_type': 'wheel_motor_overloaded_rear_left',
+      <EventEntityStateAttribute.EVENT_TYPE: 'event_type'>: 'wheel_motor_overloaded_rear_left',
       <EventEntityCapabilityAttribute.EVENT_TYPES: 'event_types'>: list([
         'alarm_mower_in_motion',
         'alarm_mower_lifted',

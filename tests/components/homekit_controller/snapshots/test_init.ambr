@@ -16079,7 +16079,7 @@
             ]),
             'area_id': None,
             'capabilities': dict({
-              'event_types': list([
+              <EventEntityCapabilityAttribute.EVENT_TYPES: 'event_types'>: list([
                 'single_press',
               ]),
             }),
@@ -16115,8 +16115,8 @@
           'state': dict({
             'attributes': dict({
               'device_class': 'button',
-              'event_type': None,
-              'event_types': list([
+              <EventEntityStateAttribute.EVENT_TYPE: 'event_type'>: None,
+              <EventEntityCapabilityAttribute.EVENT_TYPES: 'event_types'>: list([
                 'single_press',
               ]),
               'friendly_name': 'Hue dimmer switch Button 1',
@@ -16132,7 +16132,7 @@
             ]),
             'area_id': None,
             'capabilities': dict({
-              'event_types': list([
+              <EventEntityCapabilityAttribute.EVENT_TYPES: 'event_types'>: list([
                 'single_press',
               ]),
             }),
@@ -16168,8 +16168,8 @@
           'state': dict({
             'attributes': dict({
               'device_class': 'button',
-              'event_type': None,
-              'event_types': list([
+              <EventEntityStateAttribute.EVENT_TYPE: 'event_type'>: None,
+              <EventEntityCapabilityAttribute.EVENT_TYPES: 'event_types'>: list([
                 'single_press',
               ]),
               'friendly_name': 'Hue dimmer switch Button 2',
@@ -16185,7 +16185,7 @@
             ]),
             'area_id': None,
             'capabilities': dict({
-              'event_types': list([
+              <EventEntityCapabilityAttribute.EVENT_TYPES: 'event_types'>: list([
                 'single_press',
               ]),
             }),
@@ -16221,8 +16221,8 @@
           'state': dict({
             'attributes': dict({
               'device_class': 'button',
-              'event_type': None,
-              'event_types': list([
+              <EventEntityStateAttribute.EVENT_TYPE: 'event_type'>: None,
+              <EventEntityCapabilityAttribute.EVENT_TYPES: 'event_types'>: list([
                 'single_press',
               ]),
               'friendly_name': 'Hue dimmer switch Button 3',
@@ -16238,7 +16238,7 @@
             ]),
             'area_id': None,
             'capabilities': dict({
-              'event_types': list([
+              <EventEntityCapabilityAttribute.EVENT_TYPES: 'event_types'>: list([
                 'single_press',
               ]),
             }),
@@ -16274,8 +16274,8 @@
           'state': dict({
             'attributes': dict({
               'device_class': 'button',
-              'event_type': None,
-              'event_types': list([
+              <EventEntityStateAttribute.EVENT_TYPE: 'event_type'>: None,
+              <EventEntityCapabilityAttribute.EVENT_TYPES: 'event_types'>: list([
                 'single_press',
               ]),
               'friendly_name': 'Hue dimmer switch Button 4',
@@ -19847,7 +19847,7 @@
             ]),
             'area_id': None,
             'capabilities': dict({
-              'event_types': list([
+              <EventEntityCapabilityAttribute.EVENT_TYPES: 'event_types'>: list([
                 'single_press',
                 'double_press',
                 'long_press',
@@ -19885,8 +19885,8 @@
           'state': dict({
             'attributes': dict({
               'device_class': 'doorbell',
-              'event_type': None,
-              'event_types': list([
+              <EventEntityStateAttribute.EVENT_TYPE: 'event_type'>: None,
+              <EventEntityCapabilityAttribute.EVENT_TYPES: 'event_types'>: list([
                 'single_press',
                 'double_press',
                 'long_press',
