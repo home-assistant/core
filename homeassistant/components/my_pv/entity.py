@@ -2,6 +2,8 @@
 
 from typing import override
 
+from my_pv.exceptions import MyPVNotSupportedError
+
 from homeassistant.helpers.entity import EntityDescription
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
@@ -42,7 +44,10 @@ class MyPVDataEntity(CoordinatorEntity[MyPVCoordinator]):
             return False
         if self.coordinator.device.is_on is None:
             return False
-        if self.coordinator.get_data_value(self.entity_description.key) is None:
+        try:
+            if self.coordinator.get_data_value(self.entity_description.key) is None:
+                return False
+        except MyPVNotSupportedError:
             return False
 
         return self.coordinator.last_update_success
