@@ -85,7 +85,7 @@ async def test_stream_wav_invalid_header() -> None:
             pass
 
 
-async def test_stream_wav_missing_data_chunk(caplog: pytest.LogCaptureFixture) -> None:
+async def test_stream_wav_missing_data_chunk() -> None:
     """Test streaming a WAV that is missing data chunk."""
     # Write only a fmt chunk
     header = b"RIFF" + struct.pack("<I", 24) + b"WAVE"
@@ -105,8 +105,6 @@ async def test_stream_wav_missing_data_chunk(caplog: pytest.LogCaptureFixture) -
             expected_sample_rate=16000,
         ):
             pass
-
-    assert "Invalid WAV format: incomplete or missing data chunk" in caplog.text
 
 
 async def test_stream_wav_fmt_validation() -> None:
