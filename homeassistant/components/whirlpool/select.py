@@ -20,6 +20,7 @@ from .entity import WhirlpoolEntity, WhirlpoolOvenEntity
 PARALLEL_UPDATES = 1
 
 OVEN_COOK_MODES: Final[dict[CookMode, str]] = {
+    CookMode.Standby: "standby",
     CookMode.Bake: "bake",
     CookMode.ConvectBake: "convection_bake",
     CookMode.Broil: "broil",

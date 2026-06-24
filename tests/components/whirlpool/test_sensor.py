@@ -9,11 +9,13 @@ from whirlpool.dryer import MachineState as DryerMachineState
 from whirlpool.oven import CavityState as OvenCavityState
 from whirlpool.washer import MachineState as WasherMachineState
 
+from homeassistant.components.automation import DOMAIN as AUTOMATION_DOMAIN
 from homeassistant.components.whirlpool.const import DOMAIN
 from homeassistant.components.whirlpool.sensor import SCAN_INTERVAL
 from homeassistant.const import STATE_UNKNOWN, Platform
 from homeassistant.core import HomeAssistant, State
 from homeassistant.helpers import entity_registry as er, issue_registry as ir
+from homeassistant.setup import async_setup_component
 from homeassistant.util.dt import as_timestamp, utc_from_timestamp, utcnow
 
 from . import init_integration, snapshot_whirlpool_entities, trigger_attr_callback
@@ -428,3 +430,46 @@ async def test_oven_cook_mode_sensor_removed_when_disabled(
         is None
     )
     assert (DOMAIN, DEPRECATED_COOK_MODE_ISSUE_ID) not in issue_registry.issues
+
+
+async def test_oven_cook_mode_sensor_kept_when_used_by_automation(
+    hass: HomeAssistant,
+    entity_registry: er.EntityRegistry,
+    issue_registry: ir.IssueRegistry,
+) -> None:
+    """Test a disabled cook mode sensor used by an automation is kept and flagged."""
+    entity_registry.async_get_or_create(
+        Platform.SENSOR,
+        DOMAIN,
+        DEPRECATED_COOK_MODE_UNIQUE_ID,
+        suggested_object_id="single_cavity_oven_cook_mode",
+        disabled_by=er.RegistryEntryDisabler.USER,
+    )
+    assert await async_setup_component(
+        hass,
+        AUTOMATION_DOMAIN,
+        {
+            AUTOMATION_DOMAIN: {
+                "alias": "test_automation",
+                "trigger": {
+                    "platform": "state",
+                    "entity_id": "sensor.single_cavity_oven_cook_mode",
+                },
+                "action": {"action": "notify.notify", "data": {}},
+            }
+        },
+    )
+
+    await init_integration(hass)
+
+    # The sensor is still referenced by an automation, so it is kept and the
+    # repair issue switches to the variant that lists the usage.
+    assert (
+        entity_registry.async_get_entity_id(
+            Platform.SENSOR, DOMAIN, DEPRECATED_COOK_MODE_UNIQUE_ID
+        )
+        is not None
+    )
+    issue = issue_registry.async_get_issue(DOMAIN, DEPRECATED_COOK_MODE_ISSUE_ID)
+    assert issue is not None
+    assert issue.translation_key == "deprecated_oven_cook_mode_scripts"
