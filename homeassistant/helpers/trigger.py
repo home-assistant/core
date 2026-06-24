@@ -112,7 +112,6 @@ DATA_PLUGGABLE_ACTIONS: HassKey[defaultdict[tuple, PluggableActionsEntry]] = Has
 TRIGGER_DESCRIPTION_CACHE: HassKey[dict[str, dict[str, Any] | None]] = HassKey(
     "trigger_description_cache"
 )
-TRIGGER_DISABLED_TRIGGERS: HassKey[set[str]] = HassKey("trigger_disabled_triggers")
 TRIGGER_PLATFORM_SUBSCRIPTIONS: HassKey[
     list[Callable[[set[str]], Coroutine[Any, Any, None]]]
 ] = HassKey("trigger_platform_subscriptions")
@@ -154,27 +153,9 @@ _TRIGGERS_DESCRIPTION_SCHEMA = vol.Schema(
 
 async def async_setup(hass: HomeAssistant) -> None:
     """Set up the trigger helper."""
-    from homeassistant.components import automation, labs  # noqa: PLC0415
-
     hass.data[TRIGGER_DESCRIPTION_CACHE] = {}
-    hass.data[TRIGGER_DISABLED_TRIGGERS] = set()
     hass.data[TRIGGER_PLATFORM_SUBSCRIPTIONS] = []
     hass.data[TRIGGERS] = {}
-
-    async def new_triggers_conditions_listener(
-        _event_data: labs.EventLabsUpdatedData,
-    ) -> None:
-        """Handle new_triggers_conditions flag change."""
-        # Invalidate the cache
-        hass.data[TRIGGER_DESCRIPTION_CACHE] = {}
-        hass.data[TRIGGER_DISABLED_TRIGGERS] = set()
-
-    labs.async_subscribe_preview_feature(
-        hass,
-        automation.DOMAIN,
-        automation.NEW_TRIGGERS_CONDITIONS_FEATURE_FLAG,
-        new_triggers_conditions_listener,
-    )
 
     await async_process_integration_platforms(
         hass, "trigger", _register_trigger_platform, wait_for_platforms=True
@@ -201,11 +182,9 @@ async def _register_trigger_platform(
 ) -> None:
     """Register a trigger platform and notify listeners.
 
-    If the trigger platform does not provide any triggers, or it is disabled,
+    If the trigger platform does not provide any triggers,
     listeners will not be notified.
     """
-    from homeassistant.components import automation  # noqa: PLC0415
-
     new_triggers: set[str] = set()
     triggers = hass.data[TRIGGERS]
 
@@ -235,10 +214,6 @@ async def _register_trigger_platform(
             "Integration %s does not provide trigger support, skipping",
             integration_domain,
         )
-        return
-
-    if automation.is_disabled_experimental_trigger(hass, integration_domain):
-        _LOGGER.debug("Triggers for integration %s are disabled", integration_domain)
         return
 
     # We don't use gather here because gather adds additional overhead
@@ -722,6 +697,7 @@ class EntityTargetStateTriggerBase(EntityTriggerBase):
 
     _to_states: set[str]
 
+    @override
     def is_valid_transition(self, from_state: State, to_state: State) -> bool:
         """Check the value changed and the origin was not already a target state."""
         from_value = self._get_tracked_value(from_state)
@@ -730,6 +706,7 @@ class EntityTargetStateTriggerBase(EntityTriggerBase):
             and from_value not in self._to_states
         )
 
+    @override
     def is_valid_state(self, state: State) -> bool:
         """Check if the new state matches the expected state."""
         return self._get_tracked_value(state) in self._to_states
@@ -741,6 +718,7 @@ class EntityTransitionTriggerBase(EntityTriggerBase):
     _from_states: set[str | bool]
     _to_states: set[str | bool]
 
+    @override
     def is_valid_transition(self, from_state: State, to_state: State) -> bool:
         """Check if the origin state matches the expected ones."""
         from_value = self._get_tracked_value(from_state)
@@ -749,6 +727,7 @@ class EntityTransitionTriggerBase(EntityTriggerBase):
             and from_value in self._from_states
         )
 
+    @override
     def is_valid_state(self, state: State) -> bool:
         """Check if the new state matches the expected states."""
         return self._get_tracked_value(state) in self._to_states
@@ -759,6 +738,7 @@ class EntityOriginStateTriggerBase(EntityTriggerBase):
 
     _from_state: str
 
+    @override
     def is_valid_transition(self, from_state: State, to_state: State) -> bool:
         """Check if origin state matches expected and that the state changed."""
         return bool(
@@ -766,6 +746,7 @@ class EntityOriginStateTriggerBase(EntityTriggerBase):
             and self._get_tracked_value(to_state) != self._from_state
         )
 
+    @override
     def is_valid_state(self, state: State) -> bool:
         """Check that the new state is different from the origin state."""
         return bool(self._get_tracked_value(state) != self._from_state)
@@ -841,6 +822,7 @@ class EntityNumericalStateTriggerBase(EntityTriggerBase):
             # Entity state is not a valid number
             return None
 
+    @override
     def _get_tracked_value(self, state: State) -> float | None:
         """Get the tracked numerical value from a state."""
         domain_spec = self._domain_specs[state.domain]
@@ -858,6 +840,7 @@ class EntityNumericalStateTriggerBase(EntityTriggerBase):
             # Entity state is not a valid number
             return None
 
+    @override
     def is_valid_state(self, state: State) -> bool:
         """Check if the new state or state attribute matches the expected one."""
         # Handle missing or None value case first to avoid expensive exceptions
@@ -902,6 +885,7 @@ class EntityNumericalStateTriggerWithUnitBase(EntityNumericalStateTriggerBase):
         """Get the unit of an entity from its state."""
         return state.attributes.get(ATTR_UNIT_OF_MEASUREMENT)
 
+    @override
     def _get_threshold_value(self, threshold: ThresholdConfig | None) -> float | None:
         """Get threshold value from float or entity state."""
         if threshold is None:
@@ -930,6 +914,7 @@ class EntityNumericalStateTriggerWithUnitBase(EntityNumericalStateTriggerBase):
             # Unit conversion failed (i.e. incompatible units), treat as invalid number
             return None
 
+    @override
     def _get_tracked_value(self, state: State) -> float | None:
         """Get the tracked numerical value from a state."""
         domain_spec = self._domain_specs[state.domain]
@@ -959,6 +944,7 @@ class EntityNumericalStateChangedTriggerBase(EntityNumericalStateTriggerBase):
 
     _schema = NUMERICAL_ATTRIBUTE_CHANGED_TRIGGER_SCHEMA
 
+    @override
     def is_valid_transition(self, from_state: State, to_state: State) -> bool:
         """Check if the tracked numeric value has changed."""
         return self._get_tracked_value(from_state) != self._get_tracked_value(to_state)
@@ -990,6 +976,7 @@ class EntityNumericalStateChangedTriggerWithUnitBase(
 ):
     """Trigger for numerical state and state attribute changes."""
 
+    @override
     def __init_subclass__(cls, **kwargs: Any) -> None:
         """Create a schema."""
         super().__init_subclass__(**kwargs)
@@ -1018,6 +1005,7 @@ class EntityNumericalStateCrossedThresholdTriggerBase(EntityNumericalStateTrigge
 
     _schema = NUMERICAL_ATTRIBUTE_CROSSED_THRESHOLD_SCHEMA
 
+    @override
     def is_valid_transition(self, from_state: State, to_state: State) -> bool:
         """Check that the tracked value crossed into the threshold range."""
         return not self.is_valid_state(from_state)
@@ -1051,6 +1039,7 @@ class EntityNumericalStateCrossedThresholdTriggerWithUnitBase(
 ):
     """Trigger for numerical state and state attribute changes."""
 
+    @override
     def __init_subclass__(cls, **kwargs: Any) -> None:
         """Create a schema."""
         super().__init_subclass__(**kwargs)
@@ -1484,21 +1473,12 @@ class PluggableAction:
 async def _async_get_trigger_platform(
     hass: HomeAssistant, trigger_key: str
 ) -> tuple[str, TriggerProtocol]:
-    from homeassistant.components import automation  # noqa: PLC0415
-
     platform_and_sub_type = trigger_key.split(".")
     platform = platform_and_sub_type[0]
     # Only apply aliases for old-style triggers (no sub_type).
     # New-style triggers (e.g. "event.received") use the integration domain directly.
     if len(platform_and_sub_type) == 1:
         platform = _PLATFORM_ALIASES.get(platform, platform)
-
-    if automation.is_disabled_experimental_trigger(hass, platform):
-        raise vol.Invalid(
-            f"Trigger '{trigger_key}' requires the experimental 'New triggers and "
-            "conditions' feature to be enabled in Home Assistant Labs settings "
-            f"(feature flag: '{automation.NEW_TRIGGERS_CONDITIONS_FEATURE_FLAG}')"
-        )
 
     try:
         integration = await async_get_integration(hass, platform)
@@ -1815,8 +1795,6 @@ async def async_get_all_descriptions(
     hass: HomeAssistant,
 ) -> dict[str, dict[str, Any] | None]:
     """Return descriptions (i.e. user documentation) for all triggers."""
-    from homeassistant.components import automation  # noqa: PLC0415
-
     descriptions_cache = hass.data[TRIGGER_DESCRIPTION_CACHE]
 
     triggers = hass.data[TRIGGERS]
@@ -1825,9 +1803,7 @@ async def async_get_all_descriptions(
     all_triggers = set(triggers)
     previous_all_triggers = set(descriptions_cache)
     # If the triggers are the same, we can return the cache
-
-    # mypy complains: Invalid index type "HassKey[set[str]]" for "HassDict"
-    if previous_all_triggers | hass.data[TRIGGER_DISABLED_TRIGGERS] == all_triggers:  # type: ignore[index]
+    if previous_all_triggers == all_triggers:
         return descriptions_cache
 
     # Files we loaded for missing descriptions
@@ -1865,10 +1841,6 @@ async def async_get_all_descriptions(
     new_descriptions_cache = descriptions_cache.copy()
     for missing_trigger in missing_triggers:
         domain = triggers[missing_trigger]
-        if automation.is_disabled_experimental_trigger(hass, domain):
-            hass.data[TRIGGER_DISABLED_TRIGGERS].add(missing_trigger)
-            continue
-
         if (
             yaml_description := new_triggers_descriptions.get(domain, {}).get(
                 missing_trigger

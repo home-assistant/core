@@ -2,7 +2,7 @@
 
 from enum import StrEnum
 import logging
-from typing import TYPE_CHECKING, Any
+from typing import TYPE_CHECKING, Any, override
 
 import voluptuous as vol
 
@@ -227,10 +227,12 @@ class AbstractTemplateFan(AbstractTemplateEntity, FanEntity):
                 self._attr_supported_features |= supported_feature
 
     @property
+    @override
     def is_on(self) -> bool | None:
         """Return true if device is on."""
         return self._attr_is_on
 
+    @override
     async def async_turn_on(
         self,
         percentage: int | None = None,
@@ -256,6 +258,7 @@ class AbstractTemplateFan(AbstractTemplateEntity, FanEntity):
             self._attr_is_on = True
             self.async_write_ha_state()
 
+    @override
     async def async_turn_off(self, **kwargs: Any) -> None:
         """Turn off the fan."""
         await self.async_run_script(
@@ -266,6 +269,7 @@ class AbstractTemplateFan(AbstractTemplateEntity, FanEntity):
             self._attr_is_on = False
             self.async_write_ha_state()
 
+    @override
     async def async_set_percentage(self, percentage: int) -> None:
         """Set the percentage speed of the fan."""
         self._attr_percentage = percentage
@@ -283,6 +287,7 @@ class AbstractTemplateFan(AbstractTemplateEntity, FanEntity):
         if self._attr_assumed_state or CONF_PERCENTAGE not in self._templates:
             self.async_write_ha_state()
 
+    @override
     async def async_set_preset_mode(self, preset_mode: str) -> None:
         """Set the preset_mode of the fan."""
         self._attr_preset_mode = preset_mode
@@ -300,6 +305,7 @@ class AbstractTemplateFan(AbstractTemplateEntity, FanEntity):
         if self._attr_assumed_state or CONF_PRESET_MODE not in self._templates:
             self.async_write_ha_state()
 
+    @override
     async def async_oscillate(self, oscillating: bool) -> None:
         """Set oscillation of the fan."""
         self._attr_oscillating = oscillating
@@ -315,6 +321,7 @@ class AbstractTemplateFan(AbstractTemplateEntity, FanEntity):
         if CONF_OSCILLATING not in self._templates:
             self.async_write_ha_state()
 
+    @override
     async def async_set_direction(self, direction: str) -> None:
         """Set the direction of the fan."""
         if direction in _VALID_DIRECTIONS:

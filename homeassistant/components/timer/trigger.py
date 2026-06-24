@@ -180,7 +180,7 @@ TRIGGERS: dict[str, type[Trigger]] = {
     "started": make_entity_target_state_trigger(
         {DOMAIN: DomainSpec(value_source=ATTR_LAST_TRANSITION)}, "started"
     ),
-    "time_remaining": TimeRemainingTrigger,
+    "remaining_time_reached": TimeRemainingTrigger,
 }
 
 

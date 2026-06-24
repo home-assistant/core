@@ -1,7 +1,7 @@
 """Support for Melnor RainCloud sprinkler water timer."""
 
 import logging
-from typing import cast
+from typing import cast, override
 
 import voluptuous as vol
 
@@ -70,6 +70,7 @@ class RainCloudSensor(RainCloudEntity, SensorEntity):
     """A sensor implementation for raincloud device."""
 
     @property
+    @override
     def native_unit_of_measurement(self) -> str | None:
         """Return the units of measurement."""
         return UNIT_OF_MEASUREMENT_MAP.get(self._sensor_type)
@@ -83,6 +84,7 @@ class RainCloudSensor(RainCloudEntity, SensorEntity):
             self._attr_native_value = getattr(self.data, self._sensor_type)
 
     @property
+    @override
     def icon(self) -> str | None:
         """Icon to use in the frontend, if any."""
         if self._sensor_type == "battery" and self.native_value is not None:

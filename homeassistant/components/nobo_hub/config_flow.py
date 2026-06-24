@@ -1,7 +1,7 @@
 """Config flow for Nobø Ecohub integration."""
 
 import socket
-from typing import TYPE_CHECKING, Any
+from typing import TYPE_CHECKING, Any, override
 
 from pynobo import nobo
 import voluptuous as vol
@@ -43,6 +43,7 @@ class NoboHubConfigFlow(ConfigFlow, domain=DOMAIN):
         self._hub: str | None = None
         self._mac: str | None = None
 
+    @override
     async def async_step_user(
         self, user_input: dict[str, Any] | None = None
     ) -> ConfigFlowResult:
@@ -72,6 +73,7 @@ class NoboHubConfigFlow(ConfigFlow, domain=DOMAIN):
             data_schema=data_schema,
         )
 
+    @override
     async def async_step_dhcp(
         self, discovery_info: DhcpServiceInfo
     ) -> ConfigFlowResult:
@@ -257,6 +259,7 @@ class NoboHubConfigFlow(ConfigFlow, domain=DOMAIN):
 
     @staticmethod
     @callback
+    @override
     def async_get_options_flow(
         config_entry: NoboHubConfigEntry,
     ) -> OptionsFlowHandler:

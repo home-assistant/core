@@ -3,7 +3,7 @@
 from collections.abc import Callable
 from dataclasses import dataclass
 import logging
-from typing import Any, Self
+from typing import Any, Self, override
 
 import voluptuous as vol
 
@@ -73,6 +73,7 @@ class MobileAppDeviceTrackerExtraStoredData(ExtraStoredData):
 
     data: dict[str, Any]
 
+    @override
     def as_dict(self) -> dict[str, Any]:
         """Return a dict representation of the stored data."""
         return {"data": self.data}
@@ -110,16 +111,19 @@ class MobileAppEntity(TrackerEntity, RestoreEntity):
         self._dispatch_unsub: Callable[[], None] | None = None
 
     @property
+    @override
     def unique_id(self) -> str:
         """Return the unique ID."""
         return self._entry.data[ATTR_DEVICE_ID]
 
     @property
+    @override
     def battery_level(self) -> int | None:
         """Return the battery level of the device."""
         return self._data.get(ATTR_BATTERY)
 
     @property
+    @override
     def extra_state_attributes(self) -> dict[str, Any]:
         """Return device specific attributes."""
         attrs = {}
@@ -130,16 +134,19 @@ class MobileAppEntity(TrackerEntity, RestoreEntity):
         return attrs
 
     @property
+    @override
     def in_zones(self) -> list[str] | None:
         """Return the zones the device is currently in."""
         return self._data.get(ATTR_IN_ZONES)
 
     @property
+    @override
     def location_accuracy(self) -> float:
         """Return the gps accuracy of the device."""
         return self._data.get(ATTR_GPS_ACCURACY, 0)
 
     @property
+    @override
     def latitude(self) -> float | None:
         """Return latitude value of the device."""
         if (gps := self._data.get(ATTR_GPS)) is None:
@@ -148,6 +155,7 @@ class MobileAppEntity(TrackerEntity, RestoreEntity):
         return gps[0]
 
     @property
+    @override
     def longitude(self) -> float | None:
         """Return longitude value of the device."""
         if (gps := self._data.get(ATTR_GPS)) is None:
@@ -156,6 +164,7 @@ class MobileAppEntity(TrackerEntity, RestoreEntity):
         return gps[1]
 
     @property
+    @override
     def location_name(self) -> str | None:
         """Return a location name for the current location of the device."""
         if ATTR_IN_ZONES in self._data:
@@ -174,15 +183,18 @@ class MobileAppEntity(TrackerEntity, RestoreEntity):
         return None
 
     @property
+    @override
     def name(self) -> str:
         """Return the name of the device."""
         return self._entry.data[ATTR_DEVICE_NAME]
 
     @property
+    @override
     def device_info(self) -> DeviceInfo:
         """Return the device info."""
         return device_info(self._entry.data)
 
+    @override
     async def async_added_to_hass(self) -> None:
         """Call when entity about to be added to Home Assistant."""
         await super().async_added_to_hass()
@@ -217,10 +229,12 @@ class MobileAppEntity(TrackerEntity, RestoreEntity):
         self._data = data
 
     @property
+    @override
     def extra_restore_state_data(self) -> MobileAppDeviceTrackerExtraStoredData:
         """Return the entity data to be restored."""
         return MobileAppDeviceTrackerExtraStoredData(self._data)
 
+    @override
     async def async_will_remove_from_hass(self) -> None:
         """Call when entity is being removed from hass."""
         await super().async_will_remove_from_hass()

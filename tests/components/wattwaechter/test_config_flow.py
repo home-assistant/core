@@ -3,7 +3,7 @@
 from __future__ import annotations
 
 from ipaddress import ip_address
-from unittest.mock import AsyncMock
+from unittest.mock import AsyncMock, MagicMock
 
 from aio_wattwaechter import (
     WattwaechterAuthenticationError,
@@ -398,3 +398,84 @@ async def test_zeroconf_flow_device_name_fetch_fails(
         CONF_MAC: MOCK_MAC,
     }
     assert len(mock_setup_entry.mock_calls) == 1
+
+
+async def test_reauth_flow_success(
+    hass: HomeAssistant,
+    mock_client: AsyncMock,
+    mock_config_entry: MockConfigEntry,
+) -> None:
+    """Test reauthentication updates the stored token."""
+    result = await mock_config_entry.start_reauth_flow(hass)
+    assert result["type"] is FlowResultType.FORM
+    assert result["step_id"] == "reauth_confirm"
+
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"], {CONF_TOKEN: "new-token"}
+    )
+    await hass.async_block_till_done()
+
+    assert result["type"] is FlowResultType.ABORT
+    assert result["reason"] == "reauth_successful"
+    assert mock_config_entry.data[CONF_TOKEN] == "new-token"
+
+
+@pytest.mark.parametrize(
+    ("side_effect", "expected_error"),
+    [
+        (WattwaechterAuthenticationError("Invalid token"), "invalid_auth"),
+        (WattwaechterConnectionError("Connection lost"), "cannot_connect"),
+    ],
+)
+async def test_reauth_flow_errors(
+    hass: HomeAssistant,
+    mock_client: AsyncMock,
+    mock_config_entry: MockConfigEntry,
+    side_effect: Exception,
+    expected_error: str,
+) -> None:
+    """Test reauth recovers after an invalid token or connection failure."""
+    result = await mock_config_entry.start_reauth_flow(hass)
+    assert result["step_id"] == "reauth_confirm"
+
+    mock_client.system_info.side_effect = side_effect
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"], {CONF_TOKEN: "bad-token"}
+    )
+
+    assert result["type"] is FlowResultType.FORM
+    assert result["step_id"] == "reauth_confirm"
+    assert result["errors"]["base"] == expected_error
+
+    # Retry with a working token succeeds
+    mock_client.system_info.side_effect = None
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"], {CONF_TOKEN: MOCK_TOKEN}
+    )
+    await hass.async_block_till_done()
+
+    assert result["type"] is FlowResultType.ABORT
+    assert result["reason"] == "reauth_successful"
+    assert mock_config_entry.data[CONF_TOKEN] == MOCK_TOKEN
+
+
+async def test_reauth_flow_wrong_device(
+    hass: HomeAssistant,
+    mock_client: AsyncMock,
+    mock_config_entry: MockConfigEntry,
+) -> None:
+    """Test reauth aborts when the host now points to a different device."""
+    result = await mock_config_entry.start_reauth_flow(hass)
+    assert result["step_id"] == "reauth_confirm"
+
+    # Device reports a different esp_id than the one stored in the entry
+    mock_client.system_info.return_value = MagicMock(
+        **{"get_value.return_value": "WRONG-DEVICE"}
+    )
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"], {CONF_TOKEN: "new-token"}
+    )
+
+    assert result["type"] is FlowResultType.ABORT
+    assert result["reason"] == "wrong_device"
+    assert mock_config_entry.data[CONF_TOKEN] == MOCK_TOKEN

@@ -1,7 +1,7 @@
 """Class to hold all sensor accessories."""
 
 import logging
-from typing import Any
+from typing import Any, override
 
 from pyhap.const import CATEGORY_SENSOR
 from pyhap.util import callback as pyhap_callback
@@ -108,6 +108,7 @@ class DeviceTriggerAccessory(HomeAccessory):
 
     @pyhap_callback  # type: ignore[untyped-decorator]
     @callback
+    @override
     def run(self) -> None:
         """Run the accessory."""
         # Triggers have not entities so we do not call super().run()
@@ -130,12 +131,14 @@ class DeviceTriggerAccessory(HomeAccessory):
         self.triggers[idx].set_value(0)
 
     @callback
+    @override
     def async_stop(self) -> None:
         """Handle accessory driver stop event."""
         self._remove_triggers_if_configured()
         super().async_stop()
 
     @property
+    @override
     def available(self) -> bool:
         """Return available."""
         return True
