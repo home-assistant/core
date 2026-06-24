@@ -18,6 +18,7 @@ from uiprotect.data import (
 
 from homeassistant.components.unifiprotect.const import (
     ATTR_EVENT_ID,
+    ATTR_EVENT_START,
     DEFAULT_ATTRIBUTION,
     EVENT_TYPE_PACKAGE_DETECTED,
 )
@@ -116,6 +117,10 @@ async def test_doorbell_ring(
     assert state
     assert state.attributes[ATTR_ATTRIBUTION] == DEFAULT_ATTRIBUTION
     assert state.attributes[ATTR_EVENT_ID] == "test_ring_event"
+    assert (
+        state.attributes[ATTR_EVENT_START]
+        == (fixed_now - timedelta(seconds=1)).isoformat()
+    )
 
     # A non-ring event on the same camera must not fire the doorbell entity.
     ufp.events_msg(
@@ -208,6 +213,10 @@ async def test_package_detected(
     assert state
     assert state.attributes[ATTR_ATTRIBUTION] == DEFAULT_ATTRIBUTION
     assert state.attributes[ATTR_EVENT_ID] == "test_package_event"
+    assert (
+        state.attributes[ATTR_EVENT_START]
+        == (fixed_now - timedelta(seconds=1)).isoformat()
+    )
     assert state.attributes["event_type"] == EVENT_TYPE_PACKAGE_DETECTED
 
     # A non-package detection must not fire the package entity.
@@ -372,6 +381,10 @@ async def test_doorbell_nfc_scanned(
     assert state
     assert state.attributes[ATTR_ATTRIBUTION] == DEFAULT_ATTRIBUTION
     assert state.attributes[ATTR_EVENT_ID] == "test_event_id"
+    assert (
+        state.attributes[ATTR_EVENT_START]
+        == (fixed_now - timedelta(seconds=1)).isoformat()
+    )
     assert state.attributes["nfc_id"] == "test_nfc_id"
     assert state.attributes["full_name"] == test_user_full_name
 
@@ -645,6 +658,10 @@ async def test_doorbell_fingerprint_identified(
     assert state
     assert state.attributes[ATTR_ATTRIBUTION] == DEFAULT_ATTRIBUTION
     assert state.attributes[ATTR_EVENT_ID] == "test_event_id"
+    assert (
+        state.attributes[ATTR_EVENT_START]
+        == (fixed_now - timedelta(seconds=1)).isoformat()
+    )
     assert state.attributes["ulp_id"] == ulp_id
     assert state.attributes["full_name"] == test_user_full_name
 
@@ -906,6 +923,10 @@ async def test_vehicle_detection_basic(
     assert state
     assert state.attributes[ATTR_ATTRIBUTION] == DEFAULT_ATTRIBUTION
     assert state.attributes[ATTR_EVENT_ID] == "test_vehicle_event_id"
+    assert (
+        state.attributes[ATTR_EVENT_START]
+        == (fixed_now - timedelta(seconds=1)).isoformat()
+    )
     assert state.attributes["confidence"] == 95
     assert "clock_best_wall" in state.attributes
     assert "license_plate" not in state.attributes
