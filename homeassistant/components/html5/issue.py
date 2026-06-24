@@ -63,7 +63,7 @@ def deprecated_event_bus(hass: HomeAssistant, event: str) -> None:
             hass,
             DOMAIN,
             f"deprecated_event_bus_{event}",
-            breaks_in_ha_version="2027.1.0",
+            breaks_in_ha_version="2027.2.0",
             is_fixable=False,
             severity=IssueSeverity.WARNING,
             translation_key="deprecated_event_bus",
