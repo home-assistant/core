@@ -44,6 +44,20 @@
     }
   },
   "entity": {
+    "number": {
+      "display_brightness": {
+        "name": "Display brightness"
+      },
+      "display_on_time": {
+        "name": "Display on-time"
+      },
+      "impulse_length": {
+        "name": "Impulse length"
+      },
+      "thermostat_offset": {
+        "name": "Temperature offset"
+      }
+    },
     "sensor": {
       "air_quality": {
         "name": "Air quality"
