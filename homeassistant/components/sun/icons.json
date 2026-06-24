@@ -1,10 +1,10 @@
 {
   "conditions": {
-    "is_above_horizon": {
-      "condition": "mdi:weather-sunny"
+    "elevation": {
+      "condition": "mdi:sun-angle"
     },
-    "is_below_horizon": {
-      "condition": "mdi:weather-sunny-off"
+    "is_ascending": {
+      "condition": "mdi:weather-sunset-up"
     },
     "is_descending": {
       "condition": "mdi:weather-sunset-down"
@@ -18,8 +18,11 @@
     "is_night": {
       "condition": "mdi:weather-night"
     },
-    "is_rising": {
-      "condition": "mdi:weather-sunset-up"
+    "is_set": {
+      "condition": "mdi:weather-sunny-off"
+    },
+    "is_up": {
+      "condition": "mdi:weather-sunny"
     }
   },
   "entity": {

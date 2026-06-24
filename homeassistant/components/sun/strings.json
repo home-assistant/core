@@ -1,18 +1,24 @@
 {
   "common": {
+    "condition_threshold_name": "Threshold type",
     "trigger_for_name": "For at least",
     "trigger_threshold_name": "Threshold type",
     "twilight_type_description": "The phase of twilight.",
     "twilight_type_name": "Twilight type"
   },
   "conditions": {
-    "is_above_horizon": {
-      "description": "Tests if the sun is above the horizon.",
-      "name": "Sun is above horizon"
+    "elevation": {
+      "description": "Tests the sun's elevation against a threshold you set.",
+      "fields": {
+        "threshold": {
+          "name": "[%key:component::sun::common::condition_threshold_name%]"
+        }
+      },
+      "name": "Sun elevation"
     },
-    "is_below_horizon": {
-      "description": "Tests if the sun is below the horizon.",
-      "name": "Sun is below horizon"
+    "is_ascending": {
+      "description": "Tests if the sun is ascending.",
+      "name": "Sun is ascending"
     },
     "is_descending": {
       "description": "Tests if the sun is descending.",
@@ -26,7 +32,7 @@
           "name": "[%key:component::sun::common::twilight_type_name%]"
         }
       },
-      "name": "Is evening twilight"
+      "name": "It is evening twilight"
     },
     "is_morning_twilight": {
       "description": "Tests if it is morning twilight, optionally of a specific type.",
@@ -36,15 +42,19 @@
           "name": "[%key:component::sun::common::twilight_type_name%]"
         }
       },
-      "name": "Is morning twilight"
+      "name": "It is morning twilight"
     },
     "is_night": {
-      "description": "Tests if it is night, when the sun is below all twilight.",
-      "name": "Is night"
+      "description": "Tests if it is night.",
+      "name": "It is night"
     },
-    "is_rising": {
-      "description": "Tests if the sun is rising.",
-      "name": "Sun is rising"
+    "is_set": {
+      "description": "Tests if the sun is set.",
+      "name": "Sun is set"
+    },
+    "is_up": {
+      "description": "Tests if the sun is up.",
+      "name": "Sun is up"
     }
   },
   "config": {

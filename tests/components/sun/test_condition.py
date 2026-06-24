@@ -1261,13 +1261,13 @@ async def test_if_action_after_sunset_no_offset_kotzebue(
     [
         # San Diego, just after solar noon (sun high, descending).
         (
-            "sun.is_above_horizon",
+            "sun.is_up",
             _SAN_DIEGO,
             datetime(2015, 9, 15, 20, tzinfo=dt_util.UTC),
             True,
         ),
         (
-            "sun.is_below_horizon",
+            "sun.is_set",
             _SAN_DIEGO,
             datetime(2015, 9, 15, 20, tzinfo=dt_util.UTC),
             False,
@@ -1279,7 +1279,7 @@ async def test_if_action_after_sunset_no_offset_kotzebue(
             True,
         ),
         (
-            "sun.is_rising",
+            "sun.is_ascending",
             _SAN_DIEGO,
             datetime(2015, 9, 15, 20, tzinfo=dt_util.UTC),
             False,
@@ -1292,7 +1292,7 @@ async def test_if_action_after_sunset_no_offset_kotzebue(
         ),
         # San Diego, just before solar noon (sun high, rising).
         (
-            "sun.is_rising",
+            "sun.is_ascending",
             _SAN_DIEGO,
             datetime(2015, 9, 15, 19, tzinfo=dt_util.UTC),
             True,
@@ -1305,13 +1305,13 @@ async def test_if_action_after_sunset_no_offset_kotzebue(
         ),
         # San Diego, deep night.
         (
-            "sun.is_below_horizon",
+            "sun.is_set",
             _SAN_DIEGO,
             datetime(2015, 9, 15, 8, 30, tzinfo=dt_util.UTC),
             True,
         ),
         (
-            "sun.is_above_horizon",
+            "sun.is_up",
             _SAN_DIEGO,
             datetime(2015, 9, 15, 8, 30, tzinfo=dt_util.UTC),
             False,
@@ -1325,13 +1325,13 @@ async def test_if_action_after_sunset_no_offset_kotzebue(
         # Svalbard: above the horizon during midnight sun (June), below during
         # polar night (December).
         (
-            "sun.is_above_horizon",
+            "sun.is_up",
             _SVALBARD,
             datetime(2015, 6, 15, 12, tzinfo=dt_util.UTC),
             True,
         ),
         (
-            "sun.is_below_horizon",
+            "sun.is_set",
             _SVALBARD,
             datetime(2015, 12, 15, 12, tzinfo=dt_util.UTC),
             True,
@@ -1373,9 +1373,9 @@ async def test_sun_state_conditions(
 @pytest.mark.parametrize(
     "condition_key",
     [
-        "sun.is_above_horizon",
-        "sun.is_below_horizon",
-        "sun.is_rising",
+        "sun.is_up",
+        "sun.is_set",
+        "sun.is_ascending",
         "sun.is_descending",
         "sun.is_night",
     ],
@@ -1389,6 +1389,65 @@ async def test_sun_state_condition_takes_no_options(
         await async_validate_condition_config(
             hass, {"condition": condition_key, "options": {"unknown": True}}
         )
+
+
+@pytest.mark.parametrize(
+    ("threshold", "elevation", "expected"),
+    [
+        ({"type": "above", "value": {"number": 10}}, 15.0, True),
+        ({"type": "above", "value": {"number": 10}}, 5.0, False),
+        ({"type": "below", "value": {"number": 0}}, -5.0, True),
+        ({"type": "below", "value": {"number": 0}}, 5.0, False),
+        # Negative thresholds (sun below the horizon) are valid.
+        ({"type": "below", "value": {"number": -6}}, -10.0, True),
+        (
+            {
+                "type": "between",
+                "value_min": {"number": -6},
+                "value_max": {"number": 6},
+            },
+            0.0,
+            True,
+        ),
+        (
+            {
+                "type": "between",
+                "value_min": {"number": -6},
+                "value_max": {"number": 6},
+            },
+            10.0,
+            False,
+        ),
+    ],
+)
+async def test_elevation_condition(
+    hass: HomeAssistant,
+    service_calls: list[ServiceCall],
+    threshold: dict[str, object],
+    elevation: float,
+    expected: bool,
+) -> None:
+    """Test the elevation condition compares the sun's elevation to a threshold."""
+    hass.states.async_set("sun.sun", "above_horizon", {"elevation": elevation})
+    await async_setup_component(
+        hass,
+        automation.DOMAIN,
+        {
+            automation.DOMAIN: {
+                "trigger": {"platform": "event", "event_type": "test_event"},
+                "condition": {
+                    "condition": "sun.elevation",
+                    "options": {"threshold": threshold},
+                },
+                "action": {"service": "test.automation"},
+            }
+        },
+    )
+
+    hass.bus.async_fire("test_event")
+    await hass.async_block_till_done()
+
+    assert bool(service_calls) is expected
 
 
 @pytest.mark.parametrize(
