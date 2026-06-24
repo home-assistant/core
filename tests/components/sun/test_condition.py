@@ -20,6 +20,8 @@ from tests.typing import WebSocketGenerator
 _SAN_DIEGO = (32.87336, -117.22743, "US/Pacific")
 _SVALBARD = (78.22, 15.65, "Europe/Oslo")
 
+_TWILIGHT_TYPES = ("any", "civil", "nautical", "astronomical")
+
 
 @pytest.fixture(autouse=True)
 def prepare_condition_trace() -> None:
@@ -1451,98 +1453,67 @@ async def test_elevation_condition(
 
 
 @pytest.mark.parametrize(
-    ("condition_key", "twilight_type", "now", "expected"),
+    ("condition_key", "now", "expected_true"),
     [
-        # San Diego morning twilight (rising). Elevations: 13:15Z ~ -4.4 (civil),
-        # 13:00Z ~ -7.6 (nautical), 12:30Z ~ -13.8 (astronomical), 12:00Z ~ -19.8
-        # (night).
+        # San Diego morning twilight (rising). The twilight bands are mutually
+        # exclusive, so at each elevation exactly one specific band matches (plus
+        # "any" whenever the sun is in any twilight band at all).
+        # 13:15Z ~ -4.4° (civil band).
         (
             "sun.is_morning_twilight",
-            "any",
             datetime(2015, 9, 15, 13, 15, tzinfo=dt_util.UTC),
-            True,
+            {"any", "civil"},
         ),
+        # 13:00Z ~ -7.6° (nautical band).
         (
             "sun.is_morning_twilight",
-            "civil",
-            datetime(2015, 9, 15, 13, 15, tzinfo=dt_util.UTC),
-            True,
-        ),
-        (
-            "sun.is_morning_twilight",
-            "nautical",
-            datetime(2015, 9, 15, 13, 15, tzinfo=dt_util.UTC),
-            False,
-        ),
-        (
-            "sun.is_morning_twilight",
-            "nautical",
             datetime(2015, 9, 15, 13, 0, tzinfo=dt_util.UTC),
-            True,
+            {"any", "nautical"},
         ),
+        # 12:30Z ~ -13.8° (astronomical band).
         (
             "sun.is_morning_twilight",
-            "astronomical",
             datetime(2015, 9, 15, 12, 30, tzinfo=dt_util.UTC),
-            True,
+            {"any", "astronomical"},
         ),
+        # 12:00Z ~ -19.8° (night, below all twilight bands).
         (
             "sun.is_morning_twilight",
-            "civil",
-            datetime(2015, 9, 15, 12, 30, tzinfo=dt_util.UTC),
-            False,
-        ),
-        (
-            "sun.is_morning_twilight",
-            "any",
             datetime(2015, 9, 15, 12, 0, tzinfo=dt_util.UTC),
-            False,
+            set(),
         ),
-        # Dawn requires the sun to be rising; an evening (descending) time is False.
+        # Morning twilight requires the sun to be rising; an evening (descending)
+        # time matches no type.
         (
             "sun.is_morning_twilight",
-            "any",
             datetime(2015, 9, 16, 2, 45, tzinfo=dt_util.UTC),
-            False,
+            set(),
         ),
-        # San Diego evening twilight (descending). Elevations: 02:15Z ~ -4.9
-        # (civil), 02:45Z ~ -11.2 (nautical), 03:15Z ~ -17.3 (astronomical).
+        # San Diego evening twilight (descending).
+        # 02:15Z ~ -4.9° (civil band).
         (
             "sun.is_evening_twilight",
-            "any",
             datetime(2015, 9, 16, 2, 15, tzinfo=dt_util.UTC),
-            True,
+            {"any", "civil"},
         ),
+        # 02:45Z ~ -11.2° (nautical band).
         (
             "sun.is_evening_twilight",
-            "civil",
-            datetime(2015, 9, 16, 2, 15, tzinfo=dt_util.UTC),
-            True,
-        ),
-        (
-            "sun.is_evening_twilight",
-            "astronomical",
-            datetime(2015, 9, 16, 2, 15, tzinfo=dt_util.UTC),
-            False,
-        ),
-        (
-            "sun.is_evening_twilight",
-            "nautical",
             datetime(2015, 9, 16, 2, 45, tzinfo=dt_util.UTC),
-            True,
+            {"any", "nautical"},
         ),
+        # 03:15Z ~ -17.3° (astronomical band).
         (
             "sun.is_evening_twilight",
-            "astronomical",
             datetime(2015, 9, 16, 3, 15, tzinfo=dt_util.UTC),
-            True,
+            {"any", "astronomical"},
         ),
-        # Dusk requires the sun to be descending; a morning (rising) time is False.
+        # Evening twilight requires the sun to be descending; a morning (rising)
+        # time matches no type.
         (
             "sun.is_evening_twilight",
-            "any",
             datetime(2015, 9, 15, 13, 0, tzinfo=dt_util.UTC),
-            False,
+            set(),
         ),
     ],
 )
@@ -1550,11 +1521,14 @@ async def test_twilight_condition_type(
     hass: HomeAssistant,
     service_calls: list[ServiceCall],
     condition_key: str,
-    twilight_type: str,
     now: datetime,
-    expected: bool,
+    expected_true: set[str],
 ) -> None:
-    """Test the morning/evening twilight conditions honor the twilight type band."""
+    """Test the morning/evening twilight conditions honor the twilight type band.
+
+    At a single point in time every twilight type is checked, so the mutually
+    exclusive bands are all asserted together.
+    """
     latitude, longitude, time_zone = _SAN_DIEGO
     await hass.config.async_set_time_zone(time_zone)
     hass.config.latitude = latitude
@@ -1563,14 +1537,20 @@ async def test_twilight_condition_type(
         hass,
         automation.DOMAIN,
         {
-            automation.DOMAIN: {
-                "trigger": {"platform": "event", "event_type": "test_event"},
-                "condition": {
-                    "condition": condition_key,
-                    "options": {"type": twilight_type},
-                },
-                "action": {"service": "test.automation"},
-            }
+            automation.DOMAIN: [
+                {
+                    "trigger": {"platform": "event", "event_type": "test_event"},
+                    "condition": {
+                        "condition": condition_key,
+                        "options": {"type": twilight_type},
+                    },
+                    "action": {
+                        "service": "test.automation",
+                        "data": {"type": twilight_type},
+                    },
+                }
+                for twilight_type in _TWILIGHT_TYPES
+            ]
         },
     )
 
@@ -1578,4 +1558,4 @@ async def test_twilight_condition_type(
         hass.bus.async_fire("test_event")
         await hass.async_block_till_done()
 
-    assert bool(service_calls) is expected
+    assert {call.data["type"] for call in service_calls} == expected_true

@@ -72,7 +72,7 @@ PHASE_SMALL_DAY = "small_day"
 PHASE_DAY = "day"
 
 # Sun elevation (degrees above the horizon) at the start of the "small day" phase.
-ELEVATION_SMALL_DAY = 10.0
+_ELEVATION_SMALL_DAY = 10.0
 
 # 4 mins is one degree of arc change of the sun on its circle.
 # During the night and the middle of the day we don't update
@@ -223,10 +223,10 @@ class Sun(Entity):
             utc_point_in_time, SUN_EVENT_SUNRISE, PHASE_TWILIGHT
         )
         self._check_event(
-            utc_point_in_time, "dawn", PHASE_SMALL_DAY, ELEVATION_SMALL_DAY
+            utc_point_in_time, "dawn", PHASE_SMALL_DAY, _ELEVATION_SMALL_DAY
         )
         self.next_noon = self._check_event(utc_point_in_time, "noon", None)
-        self._check_event(utc_point_in_time, "dusk", PHASE_DAY, ELEVATION_SMALL_DAY)
+        self._check_event(utc_point_in_time, "dusk", PHASE_DAY, _ELEVATION_SMALL_DAY)
         self.next_setting = self._check_event(
             utc_point_in_time, SUN_EVENT_SUNSET, PHASE_SMALL_DAY
         )
