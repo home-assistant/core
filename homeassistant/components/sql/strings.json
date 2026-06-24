@@ -35,7 +35,7 @@
               "value_template": "Template to extract a value from the payload (optional)"
             },
             "description": "Provide additional configuration to the sensor",
-            "name": "Advanced options"
+            "name": "Additional options"
           }
         }
       },
