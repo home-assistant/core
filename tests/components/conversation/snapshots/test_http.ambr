@@ -545,7 +545,7 @@
           }),
           'domain': dict({
             'name': 'domain',
-            'text': 'lights',
+            'text': '',
             'value': 'light',
           }),
           'state': dict({
