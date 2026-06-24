@@ -33,7 +33,14 @@
     "cloudBase": 0.74,
     "cloudCeiling": 0.74,
     "uvIndex": 3,
-    "uvHealthConcern": 1
+    "uvHealthConcern": 1,
+    "rainIntensity": 2.5,
+    "snowIntensity": 0.5,
+    "sleetIntensity": 0.1,
+    "freezingRainIntensity": 0.3,
+    "precipitationIntensity": 3.4,
+    "precipitationProbability": 45,
+    "altimeterSetting": 1013.0
   },
   "forecasts": {
     "nowcast": [
