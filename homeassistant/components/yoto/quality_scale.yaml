@@ -55,6 +55,7 @@ rules:
   discovery-update-info:
     status: exempt
     comment: Cloud connection; DHCP discovery only triggers setup, no network address is persisted to update.
+  discovery: done
   docs-data-update: done
   docs-examples: done
   docs-known-limitations: done
