@@ -44,7 +44,7 @@ merged-state).
 
 from datetime import UTC, datetime
 from typing import Any
-from unittest.mock import patch
+from unittest.mock import AsyncMock, patch
 
 from aioabrp import Telemetry
 from freezegun import freeze_time
@@ -192,16 +192,11 @@ async def _restart_setup(
     await hass.async_block_till_done()
 
 
-# ---------------------------------------------------------------------------
-# T1 — Cold install (no prior registry, no restore cache): lazy preserved
-# ---------------------------------------------------------------------------
-
-
 @pytest.mark.usefixtures("mock_abrp_client", "fake_stream")
 async def test_cold_install_lazy_create_preserved(
     hass: HomeAssistant,
     config_entry_with_vehicles: MockConfigEntry,
-    mock_abrp_client: Any,
+    mock_abrp_client: AsyncMock,
     fake_stream: Any,
 ) -> None:
     """Cold install: no registry, no seed, no frame → no entity yet; frame creates.
@@ -228,17 +223,12 @@ async def test_cold_install_lazy_create_preserved(
     assert state.state == "400.0"
 
 
-# ---------------------------------------------------------------------------
-# T2 — Restart with prior registry → eager-create from registry probe
-# ---------------------------------------------------------------------------
-
-
 @pytest.mark.usefixtures("mock_abrp_client", "fake_stream")
 async def test_restart_eager_create_from_registry(
     hass: HomeAssistant,
     config_entry_with_vehicles: MockConfigEntry,
     entity_registry: er.EntityRegistry,
-    mock_abrp_client: Any,
+    mock_abrp_client: AsyncMock,
 ) -> None:
     """Prior voltage registry entry → entity eager-created BEFORE any frame.
 
@@ -269,11 +259,6 @@ async def test_restart_eager_create_from_registry(
     assert state is not None
 
 
-# ---------------------------------------------------------------------------
-# T3 + T4 + T5 — Restore + optional live-frame (parametrized)
-# ---------------------------------------------------------------------------
-
-
 @pytest.mark.parametrize(
     ("live_voltage", "expected_state"),
     [
@@ -288,7 +273,7 @@ async def test_restore_native_value_then_optional_frame(
     hass: HomeAssistant,
     config_entry_with_vehicles: MockConfigEntry,
     entity_registry: er.EntityRegistry,
-    mock_abrp_client: Any,
+    mock_abrp_client: AsyncMock,
     fake_stream: Any,
     live_voltage: float | None,
     expected_state: str,
@@ -334,7 +319,7 @@ async def test_restore_last_reported_at_round_trips_as_datetime(
     hass: HomeAssistant,
     config_entry_with_vehicles: MockConfigEntry,
     entity_registry: er.EntityRegistry,
-    mock_abrp_client: Any,
+    mock_abrp_client: AsyncMock,
 ) -> None:
     """Restored ISO ``last_reported_at`` parses back to ``datetime`` on the entity.
 
@@ -363,17 +348,12 @@ async def test_restore_last_reported_at_round_trips_as_datetime(
     assert stamp == RESTORED_STAMP_DT
 
 
-# ---------------------------------------------------------------------------
-# T6 — Malformed restored stamp: attribute omitted entirely
-# ---------------------------------------------------------------------------
-
-
 @pytest.mark.usefixtures("mock_abrp_client", "fake_stream")
 async def test_malformed_restored_stamp_omits_attribute(
     hass: HomeAssistant,
     config_entry_with_vehicles: MockConfigEntry,
     entity_registry: er.EntityRegistry,
-    mock_abrp_client: Any,
+    mock_abrp_client: AsyncMock,
 ) -> None:
     """Malformed stamp → ``last_reported_at`` ABSENT from attributes (not None).
 
@@ -406,17 +386,12 @@ async def test_malformed_restored_stamp_omits_attribute(
     assert "last_reported_at" not in state.attributes
 
 
-# ---------------------------------------------------------------------------
-# last_reported_at stamps per-metric-in-batch, NOT per merged-state
-# ---------------------------------------------------------------------------
-
-
 @pytest.mark.usefixtures("mock_abrp_client")
 async def test_last_reported_at_stamps_per_metric_not_per_merged_state(
     hass: HomeAssistant,
     config_entry_with_vehicles: MockConfigEntry,
     entity_registry: er.EntityRegistry,
-    mock_abrp_client: Any,
+    mock_abrp_client: AsyncMock,
     fake_stream: Any,
 ) -> None:
     """Stamp refreshes only on frames whose batch carries the voltage metric.
@@ -483,24 +458,17 @@ async def test_last_reported_at_stamps_per_metric_not_per_merged_state(
     assert state.attributes.get("last_reported_at") == t3
 
 
-# ---------------------------------------------------------------------------
-# Provider attribute on telemetry sensors (sensor surface)
-# ---------------------------------------------------------------------------
-#
 # Symmetric reject contract: empty-string / padded / non-str is malformed
 # input, rejected on BOTH live and restore paths. The sensor's
 # ``extra_state_attributes`` composes ``provider`` alongside
 # ``last_reported_at`` with per-attribute live-wins-over-restored fallback.
 
 
-# --- S1 -------------------------------------------------------------------
-
-
 @pytest.mark.usefixtures("mock_abrp_client", "fake_stream")
 async def test_provider_attribute_appears_from_live_frame(
     hass: HomeAssistant,
     config_entry_with_vehicles: MockConfigEntry,
-    mock_abrp_client: Any,
+    mock_abrp_client: AsyncMock,
     fake_stream: Any,
 ) -> None:
     """A live frame carrying a provider exposes ``state.attributes["provider"]``.
@@ -523,14 +491,11 @@ async def test_provider_attribute_appears_from_live_frame(
     assert state.attributes.get("provider") == RESTORED_PROVIDER
 
 
-# --- S2 -------------------------------------------------------------------
-
-
 @pytest.mark.usefixtures("mock_abrp_client", "fake_stream")
 async def test_provider_attribute_absent_when_live_frame_lacks_provider(
     hass: HomeAssistant,
     config_entry_with_vehicles: MockConfigEntry,
-    mock_abrp_client: Any,
+    mock_abrp_client: AsyncMock,
     fake_stream: Any,
 ) -> None:
     """No prior + frame without a provider → ``provider`` key absent.
@@ -557,15 +522,12 @@ async def test_provider_attribute_absent_when_live_frame_lacks_provider(
     assert "provider" not in state.attributes
 
 
-# --- S3 -------------------------------------------------------------------
-
-
 @pytest.mark.usefixtures("mock_abrp_client", "fake_stream")
 async def test_provider_attribute_restored_from_recorder_when_no_live_frame(
     hass: HomeAssistant,
     config_entry_with_vehicles: MockConfigEntry,
     entity_registry: er.EntityRegistry,
-    mock_abrp_client: Any,
+    mock_abrp_client: AsyncMock,
 ) -> None:
     """Restored ``provider`` surfaces even before any live frame arrives.
 
@@ -594,15 +556,12 @@ async def test_provider_attribute_restored_from_recorder_when_no_live_frame(
     assert stamp == RESTORED_STAMP_DT
 
 
-# --- S4 -------------------------------------------------------------------
-
-
 @pytest.mark.usefixtures("mock_abrp_client")
 async def test_provider_per_attribute_live_wins_over_restored(
     hass: HomeAssistant,
     config_entry_with_vehicles: MockConfigEntry,
     entity_registry: er.EntityRegistry,
-    mock_abrp_client: Any,
+    mock_abrp_client: AsyncMock,
     fake_stream: Any,
 ) -> None:
     """Live and restored attributes compose per-attribute, not whole-mapping.
@@ -650,9 +609,6 @@ async def test_provider_per_attribute_live_wins_over_restored(
     assert float(state.state) == 420.0
 
 
-# --- S5 + S6 (parametrised — symmetric malformed-restore rejection) -------
-
-
 @pytest.mark.parametrize(
     "restored_provider",
     [
@@ -681,7 +637,7 @@ async def test_provider_attribute_absent_when_restored_value_malformed(
     hass: HomeAssistant,
     config_entry_with_vehicles: MockConfigEntry,
     entity_registry: er.EntityRegistry,
-    mock_abrp_client: Any,
+    mock_abrp_client: AsyncMock,
     restored_provider: Any,
 ) -> None:
     """Malformed restored ``provider`` → attribute OMITTED entirely on the entity.
@@ -713,17 +669,12 @@ async def test_provider_attribute_absent_when_restored_value_malformed(
     assert stamp == RESTORED_STAMP_DT
 
 
-# ---------------------------------------------------------------------------
-# vehicle-removed-mid-restore
-# ---------------------------------------------------------------------------
-
-
 @pytest.mark.usefixtures("mock_abrp_client", "fake_stream")
 async def test_deselected_vehicle_skips_eager_create_with_restore_cache(
     hass: HomeAssistant,
     token_entry: dict[str, Any],
     entity_registry: er.EntityRegistry,
-    mock_abrp_client: Any,
+    mock_abrp_client: AsyncMock,
 ) -> None:
     """Registry + recorder hold a voltage row but CONF_VEHICLE_IDS = [] → skip.
 
@@ -764,11 +715,6 @@ async def test_deselected_vehicle_skips_eager_create_with_restore_cache(
     assert hass.states.get(VOLTAGE_ENTITY_ID) is None
 
 
-# ---------------------------------------------------------------------------
-# malformed restored native_value → entity unavailable
-# ---------------------------------------------------------------------------
-
-
 @pytest.mark.parametrize(
     "bad_native_value",
     [
@@ -784,7 +730,7 @@ async def test_restored_native_value_rejected_when_malformed(
     hass: HomeAssistant,
     config_entry_with_vehicles: MockConfigEntry,
     entity_registry: er.EntityRegistry,
-    mock_abrp_client: Any,
+    mock_abrp_client: AsyncMock,
     bad_native_value: Any,
 ) -> None:
     """Malformed restored ``native_value`` + no live frame → entity unavailable.
@@ -816,18 +762,13 @@ async def test_restored_native_value_rejected_when_malformed(
     assert state.state == "unavailable"
 
 
-# ---------------------------------------------------------------------------
-# eager-create probe skips registry rows owned by a foreign entry
-# ---------------------------------------------------------------------------
-
-
 @pytest.mark.usefixtures("mock_abrp_client", "fake_stream")
 async def test_foreign_config_entry_voltage_row_skipped_by_eager_probe(
     hass: HomeAssistant,
     config_entry_with_vehicles: MockConfigEntry,
     token_entry: dict[str, Any],
     entity_registry: er.EntityRegistry,
-    mock_abrp_client: Any,
+    mock_abrp_client: AsyncMock,
 ) -> None:
     """Eager-create probe MUST filter on ``config_entry_id`` — foreign rows skipped.
 
@@ -889,11 +830,6 @@ async def test_foreign_config_entry_voltage_row_skipped_by_eager_probe(
     refetched = entity_registry.async_get(foreign_row.entity_id)
     assert refetched is not None
     assert refetched.config_entry_id == foreign_entry.entry_id
-
-
-# ---------------------------------------------------------------------------
-# Setup wiring: poll one-shot only for vehicles with no registered sensors
-# ---------------------------------------------------------------------------
 
 
 @pytest.mark.usefixtures("mock_abrp_client", "fake_stream")

@@ -63,9 +63,6 @@ def telemetry_coordinator_fixture(
     return AbrpTelemetryCoordinator(hass, config_entry_with_vehicles)
 
 
-# ---------- 1. provider stickiness -----------------------------------------
-
-
 async def test_provider_set_then_sticky_on_omission_then_updated(
     telemetry_coordinator: AbrpTelemetryCoordinator,
 ) -> None:
@@ -131,9 +128,6 @@ async def test_provider_isolated_per_vehicle_and_metric(
     assert Metric.VOLTAGE not in coordinator.last_provider[MOCK_VEHICLE_ID]
 
 
-# ---------- 2. last_reported_at receipt-time -------------------------------
-
-
 async def test_last_reported_at_is_receipt_time_not_wire_time(
     telemetry_coordinator: AbrpTelemetryCoordinator,
 ) -> None:
@@ -161,9 +155,6 @@ async def test_last_reported_at_is_receipt_time_not_wire_time(
     stamp = coordinator.last_reported_at[MOCK_VEHICLE_ID][Metric.SOC]
     assert stamp == receipt
     assert stamp != wire_time
-
-
-# ---------- 3. presence dispatch -------------------------------------------
 
 
 async def test_presence_dispatch_fires_on_first_seen_for_registered_metrics(
@@ -240,9 +231,6 @@ async def test_mark_metric_seen_suppresses_dispatch(
         unsub()
 
 
-# ---------- 4. AUTH_FAILED logging -----------------------------------------
-
-
 async def test_auth_failed_connection_event_logs_warning(
     hass: HomeAssistant,
     telemetry_coordinator: AbrpTelemetryCoordinator,
@@ -294,9 +282,6 @@ async def test_disconnected_only_logs_and_connected_bumps_count(
     assert not hass.config_entries.flow.async_progress()
 
 
-# ---------- 5. once-per-outage logging -------------------------------------
-
-
 async def test_connection_logging_is_once_per_transition(
     telemetry_coordinator: AbrpTelemetryCoordinator,
     caplog: pytest.LogCaptureFixture,
@@ -336,9 +321,6 @@ async def test_connection_logging_is_once_per_transition(
     # The most recent event is always recorded even when it didn't log.
     assert coordinator.last_connection_event is not None
     assert coordinator.last_connection_event.state is ConnectionState.CONNECTED
-
-
-# ---------- 7. async_seed tolerance ----------------------------------------
 
 
 class _FatalSignal(BaseException):

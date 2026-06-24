@@ -314,7 +314,6 @@ async def test_available_follows_native_value(
     assert state.state == "12000.0"
 
 
-# ---------- Range + Battery Temperature sensors ----------------------------
 #
 # * Range: HA ``translation_key="range"``. DISTANCE class, MEASUREMENT
 #   state_class (instantaneous level, not accumulating). Native ``m``,
@@ -426,10 +425,6 @@ async def test_battery_temperature_sensor_state(
     assert state.state == expected_state
 
 
-# ---------------------------------------------------------------------------
-# DeviceInfo.model: composed from the per-typecode display endpoint
-# ---------------------------------------------------------------------------
-#
 # Each vehicle's device-card model/manufacturer are composed at setup from the
 # per-typecode display fetch (``async_get_vehicle_model_display`` →
 # ``VehicleModelDisplay.display_name``); a display miss leaves the display
@@ -485,9 +480,6 @@ def _lookup_sensor_entity_id(
     return entity_registry.async_get_entity_id(
         "sensor", DOMAIN, f"{_scope(entry, vehicle_id)}_{translation_key}"
     )
-
-
-# ---- DeviceInfo.model: computed via catalog prefix-match --------
 
 
 # Vehicle typecode with paint+option suffix decoration. The catalog
@@ -725,9 +717,6 @@ async def test_device_info_configuration_url_is_per_vehicle_deep_link(
         )
 
 
-# ---- Sensor-bucket UX: telemetry sensors promoted to the primary bucket ---
-
-
 @pytest.mark.usefixtures(
     "entity_registry_enabled_by_default", "mock_abrp_client", "fake_stream"
 )
@@ -816,9 +805,6 @@ async def test_calibrated_ref_cons_renamed_to_short_form(
     entry = entity_registry.async_get(entity_id)
     assert entry is not None
     assert entry.original_name == "Calibrated ref cons"
-
-
-# ---- Device anchor at setup + Type Code sensor absence -------------------
 
 
 @pytest.mark.usefixtures("entity_registry_enabled_by_default", "fake_stream")
@@ -917,10 +903,6 @@ async def test_no_type_code_entity_created(
     assert type_code_entries == []
 
 
-# ---------------------------------------------------------------------------
-# chargingState ENUM sensor
-# ---------------------------------------------------------------------------
-#
 # A single ``SensorDeviceClass.ENUM`` sensor surfacing the categorical
 # ``charging_state`` metric. The library emits a typed ``ChargingState``
 # member; the integration maps it to its HA option string
@@ -1072,9 +1054,6 @@ async def test_charging_state_provider_and_stamp_attributes(
     assert state.attributes.get("last_reported_at") == stamp
 
 
-# ---- chargingState restore across HA restart -----------------------------
-
-
 def _charging_restored_state(
     *,
     native_value: str | None = "not_charging",
@@ -1223,9 +1202,6 @@ async def test_charging_state_restores_provider_and_stamp(
     assert state.state == "not_charging"
     assert state.attributes.get("provider") == "RIVIAN_STREAM"
     assert state.attributes.get("last_reported_at") == stamp_dt
-
-
-# ---- cross-pin guard (drift protection) ----------------------------------
 
 
 def test_charging_state_options_cross_pinned() -> None:

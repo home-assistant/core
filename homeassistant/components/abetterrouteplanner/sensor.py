@@ -357,7 +357,11 @@ async def async_setup_entry(
     entry: AbetterrouteplannerConfigEntry,
     async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
-    """Emit per-vehicle garage attribute sensors + lazily-created telemetry sensors."""
+    """Create telemetry sensors for the selected vehicles.
+
+    Three creation paths: an eager-from-registry probe, a seed-frame scan, and
+    the late-metric dispatcher for metrics that first appear on the stream.
+    """
     runtime = entry.runtime_data
     vehicles = runtime.vehicles
     telemetry_coordinator = runtime.telemetry_coordinator

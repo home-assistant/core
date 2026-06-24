@@ -30,7 +30,7 @@ from tests.typing import ClientSessionGenerator
 USER_SUB = "user-sub-12345"
 REDIRECT_URI = "https://example.com/auth/external/callback"
 
-# Sample identity drawn from /tmp/abrp_garage_fixture.json (live probe).
+# Sample vehicle identity used across the tests.
 MOCK_VEHICLE_ID = 941349991303
 MOCK_VEHICLE_NAME = "Rivian R2 2027 Standard Long Range"
 MOCK_VEHICLE_MODEL = "rivian:r2:26:ncma91:rwd:w21"

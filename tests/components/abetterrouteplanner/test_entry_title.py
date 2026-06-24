@@ -68,11 +68,6 @@ def _queue_token_post(aioclient_mock: AiohttpClientMocker, id_token: str) -> Non
     )
 
 
-# ---------------------------------------------------------------------------
-# Title appends the resolved display name, else falls back to the bare name
-# ---------------------------------------------------------------------------
-
-
 @pytest.mark.parametrize(
     ("payload", "expected_title"),
     [

@@ -80,11 +80,6 @@ def _unique_id_lookup(
     )
 
 
-# ---------------------------------------------------------------------------
-# Test 1 - seed-only path
-# ---------------------------------------------------------------------------
-
-
 @pytest.mark.usefixtures("mock_abrp_client", "fake_stream")
 async def test_seed_only_soc_creates_only_soc_entity(
     hass: HomeAssistant,
@@ -109,11 +104,6 @@ async def test_seed_only_soc_creates_only_soc_entity(
     assert entity_registry.async_get(SOC_ENTITY_ID) is not None
     assert entity_registry.async_get(POWER_ENTITY_ID) is None
     assert entity_registry.async_get(VOLTAGE_ENTITY_ID) is None
-
-
-# ---------------------------------------------------------------------------
-# Test 2 - stream-only metric (not in seed) creates its entity
-# ---------------------------------------------------------------------------
 
 
 @pytest.mark.usefixtures("mock_abrp_client")
@@ -145,11 +135,6 @@ async def test_stream_only_metric_creates_entity(
 
     assert entity_registry.async_get(SOC_ENTITY_ID) is None
     assert entity_registry.async_get(VOLTAGE_ENTITY_ID) is None
-
-
-# ---------------------------------------------------------------------------
-# Test 3 - dispatcher creates entity on a late frame
-# ---------------------------------------------------------------------------
 
 
 @pytest.mark.usefixtures("mock_abrp_client")
@@ -197,11 +182,6 @@ async def test_post_setup_dispatcher_creates_entity(
     assert registry_entry.entity_category is None
 
 
-# ---------------------------------------------------------------------------
-# Test 4 - dispatcher idempotency
-# ---------------------------------------------------------------------------
-
-
 @pytest.mark.usefixtures("mock_abrp_client")
 async def test_dispatcher_idempotent_on_repeated_frames(
     hass: HomeAssistant,
@@ -240,11 +220,6 @@ async def test_dispatcher_idempotent_on_repeated_frames(
     state = hass.states.get(POWER_ENTITY_ID)
     assert state is not None
     assert state.state == "6000.0"
-
-
-# ---------------------------------------------------------------------------
-# Test 5 - multi-vehicle isolation
-# ---------------------------------------------------------------------------
 
 
 @pytest.mark.usefixtures("mock_abrp_client")
@@ -308,11 +283,6 @@ async def test_multi_vehicle_entity_isolation(
     assert entity_registry.async_get(absent_entity_id) is None
 
 
-# ---------------------------------------------------------------------------
-# Test 6 - absent-metric entities are never created
-# ---------------------------------------------------------------------------
-
-
 @pytest.mark.usefixtures("mock_abrp_client", "fake_stream")
 async def test_absent_metric_entities_not_created(
     hass: HomeAssistant,
@@ -333,11 +303,6 @@ async def test_absent_metric_entities_not_created(
     assert entity_registry.async_get(SOC_ENTITY_ID) is None
     assert entity_registry.async_get(POWER_ENTITY_ID) is None
     assert entity_registry.async_get(VOLTAGE_ENTITY_ID) is None
-
-
-# ---------------------------------------------------------------------------
-# SoE + odometer sensors (lazy-creation + native/suggested units)
-# ---------------------------------------------------------------------------
 
 
 @pytest.mark.usefixtures("mock_abrp_client")
@@ -416,11 +381,6 @@ async def test_odometer_sensor_lazy_creates_on_first_frame(
     assert state.attributes["unit_of_measurement"] == "km"
     assert state.attributes["device_class"] == "distance"
     assert state.attributes["state_class"] == "total_increasing"
-
-
-# ---------------------------------------------------------------------------
-# Ref Consumption (LTS) + Battery Capacity (STATIC) + State of Health (LTS)
-# ---------------------------------------------------------------------------
 
 
 @pytest.mark.usefixtures("mock_abrp_client")

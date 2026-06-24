@@ -43,9 +43,6 @@ async def client_fixture(hass: HomeAssistant) -> AbrpClient:
     )
 
 
-# ---------- vehicle fetch → (vehicle, display) pairs -----------------------
-
-
 async def test_fetch_pairs_vehicles_with_display(
     client: AbrpClient,
     mock_abrp_client: AsyncMock,
@@ -67,9 +64,6 @@ async def test_fetch_pairs_vehicles_with_display(
     # Empty catalog → display is None for every vehicle.
     assert display0 is None
     assert display1 is None
-
-
-# ---------- per-vehicle display fetch --------------------------------------
 
 
 async def test_display_fetched_for_every_vehicle(
@@ -140,9 +134,6 @@ async def test_unexpected_display_error_degrades_and_warns(
         record.levelno == logging.WARNING and "display" in record.message.lower()
         for record in caplog.records
     )
-
-
-# ---------- garage error mapping -------------------------------------------
 
 
 async def test_garage_auth_error_raises_config_entry_auth_failed(
