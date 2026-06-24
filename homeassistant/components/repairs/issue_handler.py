@@ -63,7 +63,9 @@ class RepairsFlowManager(
         issue_registry = ir.async_get(self.hass)
         issue = issue_registry.async_get_issue(handler_key, issue_id)
         if issue is None or not issue.is_fixable:
-            raise data_entry_flow.UnknownStep
+            raise data_entry_flow.UnknownStep(
+                f"issue id {issue_id} is {'not found' if issue is None else 'not fixable'}"
+            )
 
         if "platforms" not in self.hass.data[DOMAIN]:
             await async_process_repairs_platforms(self.hass)
