@@ -410,5 +410,8 @@ def _get_addon_manager(hass: HomeAssistant) -> AddonManager:
     """
     addon_manager: AddonManager = get_addon_manager(hass)
     if addon_manager.task_in_progress():
-        raise ConfigEntryNotReady
+        raise ConfigEntryNotReady(
+            translation_domain=DOMAIN,
+            translation_key="addon_not_ready",
+        )
     return addon_manager

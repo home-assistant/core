@@ -325,6 +325,7 @@ async def test_raise_addon_task_in_progress(
     await asyncio.sleep(0.05)
 
     assert entry.state is ConfigEntryState.SETUP_RETRY
+    assert entry.error_reason_translation_key == "addon_not_ready"
     assert install_addon.call_count == 1
     assert start_addon.call_count == 0
 
