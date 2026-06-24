@@ -255,6 +255,10 @@
     "deprecated_oven_target_temperature": {
       "description": "The `{entity_id}` ({entity_name}) sensor is deprecated and has been replaced by the `{replacement_entity_id}` number entity, which can both read and change the oven target temperature.\n\nUpdate any dashboards, templates, automations or scripts to use the new number entity, then disable `{entity_id}` to have it removed.",
       "title": "The Whirlpool oven target temperature sensor is deprecated"
+    },
+    "deprecated_oven_target_temperature_scripts": {
+      "description": "The `{entity_id}` ({entity_name}) sensor is deprecated and has been replaced by the `{replacement_entity_id}` number entity, which can both read and change the oven target temperature.\n\nIt is still used in the following automations or scripts:\n{items}\n\nUpdate them to use the new number entity, then disable `{entity_id}` to have it removed.",
+      "title": "[%key:component::whirlpool::issues::deprecated_oven_target_temperature::title%]"
     }
   }
 }

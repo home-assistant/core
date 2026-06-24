@@ -259,6 +259,15 @@ OVEN_CAVITY_SENSORS: tuple[WhirlpoolOvenCavitySensorEntityDescription, ...] = (
 )
 
 
+def _oven_cavity_suffix(oven: Oven, cavity: OvenCavity) -> str:
+    """Return the unique-id suffix used for an oven cavity."""
+    if oven.get_oven_cavity_exists(OvenCavity.Upper) and oven.get_oven_cavity_exists(
+        OvenCavity.Lower
+    ):
+        return "_upper" if cavity == OvenCavity.Upper else "_lower"
+    return ""
+
+
 def _build_oven_cavity_sensors(
     hass: HomeAssistant,
     entity_registry: er.EntityRegistry,
@@ -266,7 +275,7 @@ def _build_oven_cavity_sensors(
     cavity: OvenCavity,
 ) -> list[SensorEntity]:
     """Build the sensors for a single oven cavity, handling deprecations."""
-    suffix = WhirlpoolOvenEntity.cavity_suffix(oven, cavity)
+    suffix = _oven_cavity_suffix(oven, cavity)
     sensors: list[SensorEntity] = []
     for description in OVEN_CAVITY_SENSORS:
         # The oven target temperature sensor has been replaced by a number entity.
