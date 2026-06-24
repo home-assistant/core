@@ -6,7 +6,7 @@
     ]),
     'area_id': None,
     'capabilities': dict({
-      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+      <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -46,7 +46,7 @@
     'attributes': ReadOnlyDict({
       'device_class': 'temperature',
       'friendly_name': 'Patio Water Heating Bottom tank water temperature',
-      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+      <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
       'unit_of_measurement': <UnitOfTemperature.CELSIUS: '°C'>,
     }),
     'context': <ANY>,
@@ -64,7 +64,7 @@
     ]),
     'area_id': None,
     'capabilities': dict({
-      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+      <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -104,7 +104,7 @@
     'attributes': ReadOnlyDict({
       'device_class': 'temperature',
       'friendly_name': 'Patio Water Heating Control water target temperature',
-      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+      <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
       'unit_of_measurement': <UnitOfTemperature.CELSIUS: '°C'>,
     }),
     'context': <ANY>,
@@ -122,7 +122,7 @@
     ]),
     'area_id': None,
     'capabilities': dict({
-      'options': list([
+      <SensorEntityCapabilityAttribute.OPTIONS: 'options'>: list([
         'verylow',
         'low',
         'normal',
@@ -165,7 +165,7 @@
       'device_class': 'enum',
       'friendly_name': 'Patio Water Heating Discrete RSSI level',
       'icon': 'mdi:wifi',
-      'options': list([
+      <SensorEntityCapabilityAttribute.OPTIONS: 'options'>: list([
         'verylow',
         'low',
         'normal',
@@ -242,7 +242,7 @@
     ]),
     'area_id': None,
     'capabilities': dict({
-      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+      <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -282,7 +282,7 @@
     'attributes': ReadOnlyDict({
       'device_class': 'power',
       'friendly_name': 'Patio Water Heating Electric power consumption',
-      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+      <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
       'unit_of_measurement': <UnitOfPower.WATT: 'W'>,
     }),
     'context': <ANY>,
@@ -300,7 +300,7 @@
     ]),
     'area_id': None,
     'capabilities': dict({
-      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+      <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -337,7 +337,7 @@
     'attributes': ReadOnlyDict({
       'friendly_name': 'Patio Water Heating Expected number of shower',
       'icon': 'mdi:shower-head',
-      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+      <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
     'context': <ANY>,
     'entity_id': 'sensor.my_home_patio_water_heating_expected_number_of_shower',
@@ -409,7 +409,7 @@
     ]),
     'area_id': None,
     'capabilities': dict({
-      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+      <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -449,7 +449,7 @@
     'attributes': ReadOnlyDict({
       'device_class': 'power',
       'friendly_name': 'Patio Water Heating Heat pump power consumption',
-      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+      <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
       'unit_of_measurement': <UnitOfPower.WATT: 'W'>,
     }),
     'context': <ANY>,
@@ -467,7 +467,7 @@
     ]),
     'area_id': None,
     'capabilities': dict({
-      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+      <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -507,7 +507,7 @@
     'attributes': ReadOnlyDict({
       'device_class': 'temperature',
       'friendly_name': 'Patio Water Heating Middle water temperature',
-      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+      <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
       'unit_of_measurement': <UnitOfTemperature.CELSIUS: '°C'>,
     }),
     'context': <ANY>,
@@ -525,7 +525,7 @@
     ]),
     'area_id': None,
     'capabilities': dict({
-      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+      <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -562,7 +562,7 @@
     'attributes': ReadOnlyDict({
       'friendly_name': 'Patio Water Heating Number of shower remaining',
       'icon': 'mdi:shower-head',
-      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+      <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
     'context': <ANY>,
     'entity_id': 'sensor.my_home_patio_water_heating_number_of_shower_remaining',
@@ -579,7 +579,7 @@
     ]),
     'area_id': None,
     'capabilities': dict({
-      'state_class': <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
+      <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
     }),
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -619,7 +619,7 @@
     'attributes': ReadOnlyDict({
       'device_class': 'energy',
       'friendly_name': 'Patio Water Heating Office Energy Meter Consumption tariff 1',
-      'state_class': <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
+      <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
       'unit_of_measurement': <UnitOfEnergy.WATT_HOUR: 'Wh'>,
     }),
     'context': <ANY>,
@@ -637,7 +637,7 @@
     ]),
     'area_id': None,
     'capabilities': dict({
-      'state_class': <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
+      <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
     }),
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -677,7 +677,7 @@
     'attributes': ReadOnlyDict({
       'device_class': 'energy',
       'friendly_name': 'Patio Water Heating Office Energy Meter Consumption tariff 2',
-      'state_class': <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
+      <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
       'unit_of_measurement': <UnitOfEnergy.WATT_HOUR: 'Wh'>,
     }),
     'context': <ANY>,
@@ -695,7 +695,7 @@
     ]),
     'area_id': None,
     'capabilities': dict({
-      'state_class': <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
+      <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
     }),
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -735,7 +735,7 @@
     'attributes': ReadOnlyDict({
       'device_class': 'energy',
       'friendly_name': 'Patio Water Heating Office Energy Meter Consumption tariff 3',
-      'state_class': <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
+      <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
       'unit_of_measurement': <UnitOfEnergy.WATT_HOUR: 'Wh'>,
     }),
     'context': <ANY>,
@@ -753,7 +753,7 @@
     ]),
     'area_id': None,
     'capabilities': dict({
-      'state_class': <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
+      <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
     }),
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -793,7 +793,7 @@
     'attributes': ReadOnlyDict({
       'device_class': 'energy',
       'friendly_name': 'Patio Water Heating Office Energy Meter Consumption tariff 4',
-      'state_class': <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
+      <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
       'unit_of_measurement': <UnitOfEnergy.WATT_HOUR: 'Wh'>,
     }),
     'context': <ANY>,
@@ -811,7 +811,7 @@
     ]),
     'area_id': None,
     'capabilities': dict({
-      'state_class': <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
+      <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
     }),
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -851,7 +851,7 @@
     'attributes': ReadOnlyDict({
       'device_class': 'energy',
       'friendly_name': 'Patio Water Heating Office Energy Meter Consumption tariff 5',
-      'state_class': <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
+      <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
       'unit_of_measurement': <UnitOfEnergy.WATT_HOUR: 'Wh'>,
     }),
     'context': <ANY>,
@@ -869,7 +869,7 @@
     ]),
     'area_id': None,
     'capabilities': dict({
-      'state_class': <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
+      <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
     }),
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -909,7 +909,7 @@
     'attributes': ReadOnlyDict({
       'device_class': 'energy',
       'friendly_name': 'Patio Water Heating Office Energy Meter Consumption tariff 6',
-      'state_class': <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
+      <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
       'unit_of_measurement': <UnitOfEnergy.WATT_HOUR: 'Wh'>,
     }),
     'context': <ANY>,
@@ -927,7 +927,7 @@
     ]),
     'area_id': None,
     'capabilities': dict({
-      'state_class': <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
+      <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
     }),
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -967,7 +967,7 @@
     'attributes': ReadOnlyDict({
       'device_class': 'energy',
       'friendly_name': 'Patio Water Heating Office Energy Meter Consumption tariff 7',
-      'state_class': <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
+      <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
       'unit_of_measurement': <UnitOfEnergy.WATT_HOUR: 'Wh'>,
     }),
     'context': <ANY>,
@@ -985,7 +985,7 @@
     ]),
     'area_id': None,
     'capabilities': dict({
-      'state_class': <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
+      <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
     }),
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -1025,7 +1025,7 @@
     'attributes': ReadOnlyDict({
       'device_class': 'energy',
       'friendly_name': 'Patio Water Heating Office Energy Meter Consumption tariff 8',
-      'state_class': <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
+      <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
       'unit_of_measurement': <UnitOfEnergy.WATT_HOUR: 'Wh'>,
     }),
     'context': <ANY>,
@@ -1043,7 +1043,7 @@
     ]),
     'area_id': None,
     'capabilities': dict({
-      'state_class': <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
+      <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
     }),
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -1083,7 +1083,7 @@
     'attributes': ReadOnlyDict({
       'device_class': 'energy',
       'friendly_name': 'Patio Water Heating Office Energy Meter Consumption tariff 9',
-      'state_class': <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
+      <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
       'unit_of_measurement': <UnitOfEnergy.WATT_HOUR: 'Wh'>,
     }),
     'context': <ANY>,
@@ -1101,7 +1101,7 @@
     ]),
     'area_id': None,
     'capabilities': dict({
-      'state_class': <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
+      <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
     }),
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -1141,7 +1141,7 @@
     'attributes': ReadOnlyDict({
       'device_class': 'energy',
       'friendly_name': 'Patio Water Heating Office Energy Meter Electric energy consumption',
-      'state_class': <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
+      <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
       'unit_of_measurement': <UnitOfEnergy.WATT_HOUR: 'Wh'>,
     }),
     'context': <ANY>,
@@ -1262,7 +1262,7 @@
     ]),
     'area_id': None,
     'capabilities': dict({
-      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+      <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -1299,7 +1299,7 @@
     'attributes': ReadOnlyDict({
       'device_class': 'signal_strength',
       'friendly_name': 'Patio Water Heating RSSI level',
-      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+      <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
       'unit_of_measurement': 'dB',
     }),
     'context': <ANY>,
@@ -1317,7 +1317,7 @@
     ]),
     'area_id': None,
     'capabilities': dict({
-      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+      <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -1357,7 +1357,7 @@
     'attributes': ReadOnlyDict({
       'device_class': 'temperature',
       'friendly_name': 'Patio Water Heating Temperature',
-      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+      <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
       'unit_of_measurement': <UnitOfTemperature.CELSIUS: '°C'>,
     }),
     'context': <ANY>,
@@ -1375,7 +1375,7 @@
     ]),
     'area_id': None,
     'capabilities': dict({
-      'state_class': <SensorStateClass.TOTAL: 'total'>,
+      <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.TOTAL: 'total'>,
     }),
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -1416,7 +1416,7 @@
       'device_class': 'water',
       'friendly_name': 'Patio Water Heating Water consumption',
       'icon': 'mdi:water',
-      'state_class': <SensorStateClass.TOTAL: 'total'>,
+      <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.TOTAL: 'total'>,
       'unit_of_measurement': <UnitOfVolume.LITERS: 'L'>,
     }),
     'context': <ANY>,
@@ -1434,7 +1434,7 @@
     ]),
     'area_id': None,
     'capabilities': dict({
-      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+      <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -1475,7 +1475,7 @@
       'device_class': 'volume_storage',
       'friendly_name': 'Patio Water Heating Water volume estimation at 40 °C',
       'icon': 'mdi:water',
-      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+      <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
       'unit_of_measurement': <UnitOfVolume.LITERS: 'L'>,
     }),
     'context': <ANY>,
@@ -1493,7 +1493,7 @@
     ]),
     'area_id': None,
     'capabilities': dict({
-      'options': list([
+      <SensorEntityCapabilityAttribute.OPTIONS: 'options'>: list([
         'verylow',
         'low',
         'normal',
@@ -1536,7 +1536,7 @@
       'device_class': 'enum',
       'friendly_name': 'Garage Ceiling Light Discrete RSSI level',
       'icon': 'mdi:wifi',
-      'options': list([
+      <SensorEntityCapabilityAttribute.OPTIONS: 'options'>: list([
         'verylow',
         'low',
         'normal',
@@ -1661,7 +1661,7 @@
     ]),
     'area_id': None,
     'capabilities': dict({
-      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+      <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -1698,7 +1698,7 @@
     'attributes': ReadOnlyDict({
       'device_class': 'signal_strength',
       'friendly_name': 'Garage Ceiling Light RSSI level',
-      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+      <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
       'unit_of_measurement': 'dB',
     }),
     'context': <ANY>,
@@ -1716,7 +1716,7 @@
     ]),
     'area_id': None,
     'capabilities': dict({
-      'options': list([
+      <SensorEntityCapabilityAttribute.OPTIONS: 'options'>: list([
         'verylow',
         'low',
         'normal',
@@ -1759,7 +1759,7 @@
       'device_class': 'enum',
       'friendly_name': 'Garden Radiator Bathroom Temperature Sensor Discrete RSSI level',
       'icon': 'mdi:wifi',
-      'options': list([
+      <SensorEntityCapabilityAttribute.OPTIONS: 'options'>: list([
         'verylow',
         'low',
         'normal',
@@ -1781,7 +1781,7 @@
     ]),
     'area_id': None,
     'capabilities': dict({
-      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+      <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -1818,7 +1818,7 @@
     'attributes': ReadOnlyDict({
       'device_class': 'signal_strength',
       'friendly_name': 'Garden Radiator Bathroom Temperature Sensor RSSI level',
-      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+      <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
       'unit_of_measurement': 'dB',
     }),
     'context': <ANY>,
@@ -1836,7 +1836,7 @@
     ]),
     'area_id': None,
     'capabilities': dict({
-      'options': list([
+      <SensorEntityCapabilityAttribute.OPTIONS: 'options'>: list([
         'dead',
         'low_battery',
         'maintenance_required',
@@ -1878,7 +1878,7 @@
     'attributes': ReadOnlyDict({
       'device_class': 'enum',
       'friendly_name': 'Garden Radiator Bathroom Temperature Sensor Sensor defect',
-      'options': list([
+      <SensorEntityCapabilityAttribute.OPTIONS: 'options'>: list([
         'dead',
         'low_battery',
         'maintenance_required',
@@ -1900,7 +1900,7 @@
     ]),
     'area_id': None,
     'capabilities': dict({
-      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+      <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -1940,7 +1940,7 @@
     'attributes': ReadOnlyDict({
       'device_class': 'temperature',
       'friendly_name': 'Garden Radiator Bathroom Temperature Sensor Temperature',
-      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+      <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
       'unit_of_measurement': <UnitOfTemperature.CELSIUS: '°C'>,
     }),
     'context': <ANY>,
@@ -1958,7 +1958,7 @@
     ]),
     'area_id': None,
     'capabilities': dict({
-      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+      <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -1995,7 +1995,7 @@
     'attributes': ReadOnlyDict({
       'device_class': 'battery',
       'friendly_name': 'Garden Radiator Battery level',
-      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+      <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
       'unit_of_measurement': '%',
     }),
     'context': <ANY>,
@@ -2013,7 +2013,7 @@
     ]),
     'area_id': None,
     'capabilities': dict({
-      'options': list([
+      <SensorEntityCapabilityAttribute.OPTIONS: 'options'>: list([
         'verylow',
         'low',
         'normal',
@@ -2056,7 +2056,7 @@
       'device_class': 'enum',
       'friendly_name': 'Garden Radiator Discrete RSSI level',
       'icon': 'mdi:wifi',
-      'options': list([
+      <SensorEntityCapabilityAttribute.OPTIONS: 'options'>: list([
         'verylow',
         'low',
         'normal',
@@ -2078,7 +2078,7 @@
     ]),
     'area_id': None,
     'capabilities': dict({
-      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+      <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -2115,7 +2115,7 @@
     'attributes': ReadOnlyDict({
       'device_class': 'signal_strength',
       'friendly_name': 'Garden Radiator RSSI level',
-      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+      <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
       'unit_of_measurement': 'dB',
     }),
     'context': <ANY>,
@@ -2133,7 +2133,7 @@
     ]),
     'area_id': None,
     'capabilities': dict({
-      'options': list([
+      <SensorEntityCapabilityAttribute.OPTIONS: 'options'>: list([
         'dead',
         'low_battery',
         'maintenance_required',
@@ -2175,7 +2175,7 @@
     'attributes': ReadOnlyDict({
       'device_class': 'enum',
       'friendly_name': 'Garden Radiator Sensor defect',
-      'options': list([
+      <SensorEntityCapabilityAttribute.OPTIONS: 'options'>: list([
         'dead',
         'low_battery',
         'maintenance_required',
@@ -2197,7 +2197,7 @@
     ]),
     'area_id': None,
     'capabilities': dict({
-      'options': list([
+      <SensorEntityCapabilityAttribute.OPTIONS: 'options'>: list([
         'verylow',
         'low',
         'normal',
@@ -2240,7 +2240,7 @@
       'device_class': 'enum',
       'friendly_name': 'Hallway Shutter Discrete RSSI level',
       'icon': 'mdi:wifi',
-      'options': list([
+      <SensorEntityCapabilityAttribute.OPTIONS: 'options'>: list([
         'verylow',
         'low',
         'normal',
@@ -2365,7 +2365,7 @@
     ]),
     'area_id': None,
     'capabilities': dict({
-      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+      <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -2402,7 +2402,7 @@
     'attributes': ReadOnlyDict({
       'device_class': 'signal_strength',
       'friendly_name': 'Hallway Shutter RSSI level',
-      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+      <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
       'unit_of_measurement': 'dB',
     }),
     'context': <ANY>,
@@ -2464,6 +2464,522 @@
     'state': 'unknown',
   })
 # ---
+# name: test_sensor_entities_snapshot[cloud_nexity_rail_din_europe.json][sensor.maple_residence_living_room_air_inlet_discrete_rssi_level-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': list([
+      None,
+    ]),
+    'area_id': None,
+    'capabilities': dict({
+      <SensorEntityCapabilityAttribute.OPTIONS: 'options'>: list([
+        'verylow',
+        'low',
+        'normal',
+        'good',
+      ]),
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
+    'entity_id': 'sensor.maple_residence_living_room_air_inlet_discrete_rssi_level',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'Discrete RSSI level',
+    'options': dict({
+    }),
+    'original_device_class': <SensorDeviceClass.ENUM: 'enum'>,
+    'original_icon': 'mdi:wifi',
+    'original_name': 'Discrete RSSI level',
+    'platform': 'overkiz',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'discrete_rssi_level',
+    'unique_id': 'io://1234-5678-1698/10001-core:DiscreteRSSILevelState',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_sensor_entities_snapshot[cloud_nexity_rail_din_europe.json][sensor.maple_residence_living_room_air_inlet_discrete_rssi_level-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'device_class': 'enum',
+      'friendly_name': 'Living Room Air Inlet Discrete RSSI level',
+      'icon': 'mdi:wifi',
+      <SensorEntityCapabilityAttribute.OPTIONS: 'options'>: list([
+        'verylow',
+        'low',
+        'normal',
+        'good',
+      ]),
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.maple_residence_living_room_air_inlet_discrete_rssi_level',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'unknown',
+  })
+# ---
+# name: test_sensor_entities_snapshot[cloud_nexity_rail_din_europe.json][sensor.maple_residence_living_room_air_inlet_priority_lock_timer-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': list([
+      None,
+    ]),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': None,
+    'entity_id': 'sensor.maple_residence_living_room_air_inlet_priority_lock_timer',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'Priority lock timer',
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': 'mdi:lock-clock',
+    'original_name': 'Priority lock timer',
+    'platform': 'overkiz',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': None,
+    'unique_id': 'io://1234-5678-1698/10001-core:PriorityLockTimerState',
+    'unit_of_measurement': <UnitOfTime.SECONDS: 's'>,
+  })
+# ---
+# name: test_sensor_entities_snapshot[cloud_nexity_rail_din_europe.json][sensor.maple_residence_living_room_air_inlet_priority_lock_timer-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'friendly_name': 'Living Room Air Inlet Priority lock timer',
+      'icon': 'mdi:lock-clock',
+      'unit_of_measurement': <UnitOfTime.SECONDS: 's'>,
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.maple_residence_living_room_air_inlet_priority_lock_timer',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'unknown',
+  })
+# ---
+# name: test_sensor_entities_snapshot[cloud_nexity_rail_din_europe.json][sensor.maple_residence_living_room_air_inlet_rssi_level-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': list([
+      None,
+    ]),
+    'area_id': None,
+    'capabilities': dict({
+      <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
+    'entity_id': 'sensor.maple_residence_living_room_air_inlet_rssi_level',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'RSSI level',
+    'options': dict({
+    }),
+    'original_device_class': <SensorDeviceClass.SIGNAL_STRENGTH: 'signal_strength'>,
+    'original_icon': None,
+    'original_name': 'RSSI level',
+    'platform': 'overkiz',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': None,
+    'unique_id': 'io://1234-5678-1698/10001-core:RSSILevelState',
+    'unit_of_measurement': 'dB',
+  })
+# ---
+# name: test_sensor_entities_snapshot[cloud_nexity_rail_din_europe.json][sensor.maple_residence_living_room_air_inlet_rssi_level-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'device_class': 'signal_strength',
+      'friendly_name': 'Living Room Air Inlet RSSI level',
+      <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
+      'unit_of_measurement': 'dB',
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.maple_residence_living_room_air_inlet_rssi_level',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '88',
+  })
+# ---
+# name: test_sensor_entities_snapshot[cloud_nexity_rail_din_europe.json][sensor.maple_residence_living_room_air_outlet_discrete_rssi_level-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': list([
+      None,
+    ]),
+    'area_id': None,
+    'capabilities': dict({
+      <SensorEntityCapabilityAttribute.OPTIONS: 'options'>: list([
+        'verylow',
+        'low',
+        'normal',
+        'good',
+      ]),
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
+    'entity_id': 'sensor.maple_residence_living_room_air_outlet_discrete_rssi_level',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'Discrete RSSI level',
+    'options': dict({
+    }),
+    'original_device_class': <SensorDeviceClass.ENUM: 'enum'>,
+    'original_icon': 'mdi:wifi',
+    'original_name': 'Discrete RSSI level',
+    'platform': 'overkiz',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'discrete_rssi_level',
+    'unique_id': 'io://1234-5678-1698/10002-core:DiscreteRSSILevelState',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_sensor_entities_snapshot[cloud_nexity_rail_din_europe.json][sensor.maple_residence_living_room_air_outlet_discrete_rssi_level-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'device_class': 'enum',
+      'friendly_name': 'Living Room Air Outlet Discrete RSSI level',
+      'icon': 'mdi:wifi',
+      <SensorEntityCapabilityAttribute.OPTIONS: 'options'>: list([
+        'verylow',
+        'low',
+        'normal',
+        'good',
+      ]),
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.maple_residence_living_room_air_outlet_discrete_rssi_level',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'unknown',
+  })
+# ---
+# name: test_sensor_entities_snapshot[cloud_nexity_rail_din_europe.json][sensor.maple_residence_living_room_air_outlet_priority_lock_timer-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': list([
+      None,
+    ]),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': None,
+    'entity_id': 'sensor.maple_residence_living_room_air_outlet_priority_lock_timer',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'Priority lock timer',
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': 'mdi:lock-clock',
+    'original_name': 'Priority lock timer',
+    'platform': 'overkiz',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': None,
+    'unique_id': 'io://1234-5678-1698/10002-core:PriorityLockTimerState',
+    'unit_of_measurement': <UnitOfTime.SECONDS: 's'>,
+  })
+# ---
+# name: test_sensor_entities_snapshot[cloud_nexity_rail_din_europe.json][sensor.maple_residence_living_room_air_outlet_priority_lock_timer-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'friendly_name': 'Living Room Air Outlet Priority lock timer',
+      'icon': 'mdi:lock-clock',
+      'unit_of_measurement': <UnitOfTime.SECONDS: 's'>,
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.maple_residence_living_room_air_outlet_priority_lock_timer',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'unknown',
+  })
+# ---
+# name: test_sensor_entities_snapshot[cloud_nexity_rail_din_europe.json][sensor.maple_residence_living_room_air_outlet_rssi_level-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': list([
+      None,
+    ]),
+    'area_id': None,
+    'capabilities': dict({
+      <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
+    'entity_id': 'sensor.maple_residence_living_room_air_outlet_rssi_level',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'RSSI level',
+    'options': dict({
+    }),
+    'original_device_class': <SensorDeviceClass.SIGNAL_STRENGTH: 'signal_strength'>,
+    'original_icon': None,
+    'original_name': 'RSSI level',
+    'platform': 'overkiz',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': None,
+    'unique_id': 'io://1234-5678-1698/10002-core:RSSILevelState',
+    'unit_of_measurement': 'dB',
+  })
+# ---
+# name: test_sensor_entities_snapshot[cloud_nexity_rail_din_europe.json][sensor.maple_residence_living_room_air_outlet_rssi_level-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'device_class': 'signal_strength',
+      'friendly_name': 'Living Room Air Outlet RSSI level',
+      <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
+      'unit_of_measurement': 'dB',
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.maple_residence_living_room_air_outlet_rssi_level',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '88',
+  })
+# ---
+# name: test_sensor_entities_snapshot[cloud_nexity_rail_din_europe.json][sensor.maple_residence_living_room_air_transfer_discrete_rssi_level-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': list([
+      None,
+    ]),
+    'area_id': None,
+    'capabilities': dict({
+      <SensorEntityCapabilityAttribute.OPTIONS: 'options'>: list([
+        'verylow',
+        'low',
+        'normal',
+        'good',
+      ]),
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
+    'entity_id': 'sensor.maple_residence_living_room_air_transfer_discrete_rssi_level',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'Discrete RSSI level',
+    'options': dict({
+    }),
+    'original_device_class': <SensorDeviceClass.ENUM: 'enum'>,
+    'original_icon': 'mdi:wifi',
+    'original_name': 'Discrete RSSI level',
+    'platform': 'overkiz',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'discrete_rssi_level',
+    'unique_id': 'io://1234-5678-1698/10003-core:DiscreteRSSILevelState',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_sensor_entities_snapshot[cloud_nexity_rail_din_europe.json][sensor.maple_residence_living_room_air_transfer_discrete_rssi_level-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'device_class': 'enum',
+      'friendly_name': 'Living Room Air Transfer Discrete RSSI level',
+      'icon': 'mdi:wifi',
+      <SensorEntityCapabilityAttribute.OPTIONS: 'options'>: list([
+        'verylow',
+        'low',
+        'normal',
+        'good',
+      ]),
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.maple_residence_living_room_air_transfer_discrete_rssi_level',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'unknown',
+  })
+# ---
+# name: test_sensor_entities_snapshot[cloud_nexity_rail_din_europe.json][sensor.maple_residence_living_room_air_transfer_priority_lock_timer-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': list([
+      None,
+    ]),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': None,
+    'entity_id': 'sensor.maple_residence_living_room_air_transfer_priority_lock_timer',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'Priority lock timer',
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': 'mdi:lock-clock',
+    'original_name': 'Priority lock timer',
+    'platform': 'overkiz',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': None,
+    'unique_id': 'io://1234-5678-1698/10003-core:PriorityLockTimerState',
+    'unit_of_measurement': <UnitOfTime.SECONDS: 's'>,
+  })
+# ---
+# name: test_sensor_entities_snapshot[cloud_nexity_rail_din_europe.json][sensor.maple_residence_living_room_air_transfer_priority_lock_timer-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'friendly_name': 'Living Room Air Transfer Priority lock timer',
+      'icon': 'mdi:lock-clock',
+      'unit_of_measurement': <UnitOfTime.SECONDS: 's'>,
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.maple_residence_living_room_air_transfer_priority_lock_timer',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'unknown',
+  })
+# ---
+# name: test_sensor_entities_snapshot[cloud_nexity_rail_din_europe.json][sensor.maple_residence_living_room_air_transfer_rssi_level-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': list([
+      None,
+    ]),
+    'area_id': None,
+    'capabilities': dict({
+      <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
+    'entity_id': 'sensor.maple_residence_living_room_air_transfer_rssi_level',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'RSSI level',
+    'options': dict({
+    }),
+    'original_device_class': <SensorDeviceClass.SIGNAL_STRENGTH: 'signal_strength'>,
+    'original_icon': None,
+    'original_name': 'RSSI level',
+    'platform': 'overkiz',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': None,
+    'unique_id': 'io://1234-5678-1698/10003-core:RSSILevelState',
+    'unit_of_measurement': 'dB',
+  })
+# ---
+# name: test_sensor_entities_snapshot[cloud_nexity_rail_din_europe.json][sensor.maple_residence_living_room_air_transfer_rssi_level-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'device_class': 'signal_strength',
+      'friendly_name': 'Living Room Air Transfer RSSI level',
+      <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
+      'unit_of_measurement': 'dB',
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.maple_residence_living_room_air_transfer_rssi_level',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '88',
+  })
+# ---
 # name: test_sensor_entities_snapshot[cloud_nexity_rail_din_europe.json][sensor.maple_residence_living_room_radiator_battery_level-entry]
   EntityRegistryEntrySnapshot({
     'aliases': list([
@@ -2471,7 +2987,7 @@
     ]),
     'area_id': None,
     'capabilities': dict({
-      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+      <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -2508,7 +3024,7 @@
     'attributes': ReadOnlyDict({
       'device_class': 'battery',
       'friendly_name': 'Living Room Radiator Battery level',
-      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+      <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
       'unit_of_measurement': '%',
     }),
     'context': <ANY>,
@@ -2526,7 +3042,7 @@
     ]),
     'area_id': None,
     'capabilities': dict({
-      'options': list([
+      <SensorEntityCapabilityAttribute.OPTIONS: 'options'>: list([
         'verylow',
         'low',
         'normal',
@@ -2569,7 +3085,7 @@
       'device_class': 'enum',
       'friendly_name': 'Living Room Radiator Discrete RSSI level',
       'icon': 'mdi:wifi',
-      'options': list([
+      <SensorEntityCapabilityAttribute.OPTIONS: 'options'>: list([
         'verylow',
         'low',
         'normal',
@@ -2591,7 +3107,7 @@
     ]),
     'area_id': None,
     'capabilities': dict({
-      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+      <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -2628,7 +3144,7 @@
     'attributes': ReadOnlyDict({
       'device_class': 'signal_strength',
       'friendly_name': 'Living Room Radiator RSSI level',
-      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+      <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
       'unit_of_measurement': 'dB',
     }),
     'context': <ANY>,
@@ -2646,7 +3162,7 @@
     ]),
     'area_id': None,
     'capabilities': dict({
-      'options': list([
+      <SensorEntityCapabilityAttribute.OPTIONS: 'options'>: list([
         'dead',
         'low_battery',
         'maintenance_required',
@@ -2688,7 +3204,7 @@
     'attributes': ReadOnlyDict({
       'device_class': 'enum',
       'friendly_name': 'Living Room Radiator Sensor defect',
-      'options': list([
+      <SensorEntityCapabilityAttribute.OPTIONS: 'options'>: list([
         'dead',
         'low_battery',
         'maintenance_required',
@@ -2710,7 +3226,7 @@
     ]),
     'area_id': None,
     'capabilities': dict({
-      'options': list([
+      <SensorEntityCapabilityAttribute.OPTIONS: 'options'>: list([
         'verylow',
         'low',
         'normal',
@@ -2753,7 +3269,7 @@
       'device_class': 'enum',
       'friendly_name': 'Living Room Radiator Study Temp Probe Discrete RSSI level',
       'icon': 'mdi:wifi',
-      'options': list([
+      <SensorEntityCapabilityAttribute.OPTIONS: 'options'>: list([
         'verylow',
         'low',
         'normal',
@@ -2775,7 +3291,7 @@
     ]),
     'area_id': None,
     'capabilities': dict({
-      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+      <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -2812,7 +3328,7 @@
     'attributes': ReadOnlyDict({
       'device_class': 'signal_strength',
       'friendly_name': 'Living Room Radiator Study Temp Probe RSSI level',
-      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+      <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
       'unit_of_measurement': 'dB',
     }),
     'context': <ANY>,
@@ -2830,7 +3346,7 @@
     ]),
     'area_id': None,
     'capabilities': dict({
-      'options': list([
+      <SensorEntityCapabilityAttribute.OPTIONS: 'options'>: list([
         'dead',
         'low_battery',
         'maintenance_required',
@@ -2872,7 +3388,7 @@
     'attributes': ReadOnlyDict({
       'device_class': 'enum',
       'friendly_name': 'Living Room Radiator Study Temp Probe Sensor defect',
-      'options': list([
+      <SensorEntityCapabilityAttribute.OPTIONS: 'options'>: list([
         'dead',
         'low_battery',
         'maintenance_required',
@@ -2894,7 +3410,7 @@
     ]),
     'area_id': None,
     'capabilities': dict({
-      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+      <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -2934,7 +3450,7 @@
     'attributes': ReadOnlyDict({
       'device_class': 'temperature',
       'friendly_name': 'Living Room Radiator Study Temp Probe Temperature',
-      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+      <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
       'unit_of_measurement': <UnitOfTemperature.CELSIUS: '°C'>,
     }),
     'context': <ANY>,
@@ -2952,7 +3468,7 @@
     ]),
     'area_id': None,
     'capabilities': dict({
-      'options': list([
+      <SensorEntityCapabilityAttribute.OPTIONS: 'options'>: list([
         'verylow',
         'low',
         'normal',
@@ -2995,7 +3511,7 @@
       'device_class': 'enum',
       'friendly_name': 'Living Room Smoke Detector Discrete RSSI level',
       'icon': 'mdi:wifi',
-      'options': list([
+      <SensorEntityCapabilityAttribute.OPTIONS: 'options'>: list([
         'verylow',
         'low',
         'normal',
@@ -3010,6 +3526,67 @@
     'state': 'good',
   })
 # ---
+# name: test_sensor_entities_snapshot[cloud_nexity_rail_din_europe.json][sensor.maple_residence_living_room_smoke_detector_radio_battery-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': list([
+      None,
+    ]),
+    'area_id': None,
+    'capabilities': dict({
+      <SensorEntityCapabilityAttribute.OPTIONS: 'options'>: list([
+        'low',
+        'normal',
+      ]),
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
+    'entity_id': 'sensor.maple_residence_living_room_smoke_detector_radio_battery',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'Radio battery',
+    'options': dict({
+    }),
+    'original_device_class': <SensorDeviceClass.ENUM: 'enum'>,
+    'original_icon': 'mdi:battery',
+    'original_name': 'Radio battery',
+    'platform': 'overkiz',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'battery',
+    'unique_id': 'io://1234-5678-1698/8907539-io:MaintenanceRadioPartBatteryState',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_sensor_entities_snapshot[cloud_nexity_rail_din_europe.json][sensor.maple_residence_living_room_smoke_detector_radio_battery-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'device_class': 'enum',
+      'friendly_name': 'Living Room Smoke Detector Radio battery',
+      'icon': 'mdi:battery',
+      <SensorEntityCapabilityAttribute.OPTIONS: 'options'>: list([
+        'low',
+        'normal',
+      ]),
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.maple_residence_living_room_smoke_detector_radio_battery',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'normal',
+  })
+# ---
 # name: test_sensor_entities_snapshot[cloud_nexity_rail_din_europe.json][sensor.maple_residence_living_room_smoke_detector_rssi_level-entry]
   EntityRegistryEntrySnapshot({
     'aliases': list([
@@ -3017,7 +3594,7 @@
     ]),
     'area_id': None,
     'capabilities': dict({
-      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+      <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -3054,7 +3631,7 @@
     'attributes': ReadOnlyDict({
       'device_class': 'signal_strength',
       'friendly_name': 'Living Room Smoke Detector RSSI level',
-      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+      <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
       'unit_of_measurement': 'dB',
     }),
     'context': <ANY>,
@@ -3065,6 +3642,69 @@
     'state': '100',
   })
 # ---
+# name: test_sensor_entities_snapshot[cloud_nexity_rail_din_europe.json][sensor.maple_residence_living_room_smoke_detector_sensor_battery-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': list([
+      None,
+    ]),
+    'area_id': None,
+    'capabilities': dict({
+      <SensorEntityCapabilityAttribute.OPTIONS: 'options'>: list([
+        'absence',
+        'low',
+        'normal',
+      ]),
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
+    'entity_id': 'sensor.maple_residence_living_room_smoke_detector_sensor_battery',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'Sensor battery',
+    'options': dict({
+    }),
+    'original_device_class': <SensorDeviceClass.ENUM: 'enum'>,
+    'original_icon': 'mdi:battery',
+    'original_name': 'Sensor battery',
+    'platform': 'overkiz',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'battery',
+    'unique_id': 'io://1234-5678-1698/8907539-io:MaintenanceSensorPartBatteryState',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_sensor_entities_snapshot[cloud_nexity_rail_din_europe.json][sensor.maple_residence_living_room_smoke_detector_sensor_battery-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'device_class': 'enum',
+      'friendly_name': 'Living Room Smoke Detector Sensor battery',
+      'icon': 'mdi:battery',
+      <SensorEntityCapabilityAttribute.OPTIONS: 'options'>: list([
+        'absence',
+        'low',
+        'normal',
+      ]),
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.maple_residence_living_room_smoke_detector_sensor_battery',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'normal',
+  })
+# ---
 # name: test_sensor_entities_snapshot[cloud_nexity_rail_din_europe.json][sensor.maple_residence_living_room_smoke_detector_sensor_defect-entry]
   EntityRegistryEntrySnapshot({
     'aliases': list([
@@ -3072,7 +3712,7 @@
     ]),
     'area_id': None,
     'capabilities': dict({
-      'options': list([
+      <SensorEntityCapabilityAttribute.OPTIONS: 'options'>: list([
         'dead',
         'low_battery',
         'maintenance_required',
@@ -3114,7 +3754,7 @@
     'attributes': ReadOnlyDict({
       'device_class': 'enum',
       'friendly_name': 'Living Room Smoke Detector Sensor defect',
-      'options': list([
+      <SensorEntityCapabilityAttribute.OPTIONS: 'options'>: list([
         'dead',
         'low_battery',
         'maintenance_required',
@@ -3136,7 +3776,7 @@
     ]),
     'area_id': None,
     'capabilities': dict({
-      'options': list([
+      <SensorEntityCapabilityAttribute.OPTIONS: 'options'>: list([
         'clean',
         'dirty',
       ]),
@@ -3177,7 +3817,7 @@
       'device_class': 'enum',
       'friendly_name': 'Living Room Smoke Detector Sensor room',
       'icon': 'mdi:spray-bottle',
-      'options': list([
+      <SensorEntityCapabilityAttribute.OPTIONS: 'options'>: list([
         'clean',
         'dirty',
       ]),
@@ -3197,7 +3837,7 @@
     ]),
     'area_id': None,
     'capabilities': dict({
-      'options': list([
+      <SensorEntityCapabilityAttribute.OPTIONS: 'options'>: list([
         'verylow',
         'low',
         'normal',
@@ -3240,7 +3880,7 @@
       'device_class': 'enum',
       'friendly_name': 'Nursery Shutter Discrete RSSI level',
       'icon': 'mdi:wifi',
-      'options': list([
+      <SensorEntityCapabilityAttribute.OPTIONS: 'options'>: list([
         'verylow',
         'low',
         'normal',
@@ -3365,7 +4005,7 @@
     ]),
     'area_id': None,
     'capabilities': dict({
-      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+      <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -3402,7 +4042,7 @@
     'attributes': ReadOnlyDict({
       'device_class': 'signal_strength',
       'friendly_name': 'Nursery Shutter RSSI level',
-      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+      <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
       'unit_of_measurement': 'dB',
     }),
     'context': <ANY>,
@@ -3471,7 +4111,7 @@
     ]),
     'area_id': None,
     'capabilities': dict({
-      'options': list([
+      <SensorEntityCapabilityAttribute.OPTIONS: 'options'>: list([
         'verylow',
         'low',
         'normal',
@@ -3514,7 +4154,7 @@
       'device_class': 'enum',
       'friendly_name': 'Office Shutter Discrete RSSI level',
       'icon': 'mdi:wifi',
-      'options': list([
+      <SensorEntityCapabilityAttribute.OPTIONS: 'options'>: list([
         'verylow',
         'low',
         'normal',
@@ -3639,7 +4279,7 @@
     ]),
     'area_id': None,
     'capabilities': dict({
-      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+      <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -3676,7 +4316,7 @@
     'attributes': ReadOnlyDict({
       'device_class': 'signal_strength',
       'friendly_name': 'Office Shutter RSSI level',
-      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+      <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
       'unit_of_measurement': 'dB',
     }),
     'context': <ANY>,
@@ -3745,7 +4385,7 @@
     ]),
     'area_id': None,
     'capabilities': dict({
-      'options': list([
+      <SensorEntityCapabilityAttribute.OPTIONS: 'options'>: list([
         'verylow',
         'low',
         'normal',
@@ -3788,7 +4428,7 @@
       'device_class': 'enum',
       'friendly_name': 'Study Ceiling Light Discrete RSSI level',
       'icon': 'mdi:wifi',
-      'options': list([
+      <SensorEntityCapabilityAttribute.OPTIONS: 'options'>: list([
         'verylow',
         'low',
         'normal',
@@ -3913,7 +4553,7 @@
     ]),
     'area_id': None,
     'capabilities': dict({
-      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+      <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -3950,7 +4590,7 @@
     'attributes': ReadOnlyDict({
       'device_class': 'signal_strength',
       'friendly_name': 'Study Ceiling Light RSSI level',
-      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+      <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
       'unit_of_measurement': 'dB',
     }),
     'context': <ANY>,
@@ -3968,7 +4608,7 @@
     ]),
     'area_id': None,
     'capabilities': dict({
-      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+      <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -4005,7 +4645,7 @@
     'attributes': ReadOnlyDict({
       'device_class': 'battery',
       'friendly_name': 'Study Radiator Battery level',
-      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+      <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
       'unit_of_measurement': '%',
     }),
     'context': <ANY>,
@@ -4023,7 +4663,7 @@
     ]),
     'area_id': None,
     'capabilities': dict({
-      'options': list([
+      <SensorEntityCapabilityAttribute.OPTIONS: 'options'>: list([
         'verylow',
         'low',
         'normal',
@@ -4066,7 +4706,7 @@
       'device_class': 'enum',
       'friendly_name': 'Study Radiator Discrete RSSI level',
       'icon': 'mdi:wifi',
-      'options': list([
+      <SensorEntityCapabilityAttribute.OPTIONS: 'options'>: list([
         'verylow',
         'low',
         'normal',
@@ -4088,7 +4728,7 @@
     ]),
     'area_id': None,
     'capabilities': dict({
-      'options': list([
+      <SensorEntityCapabilityAttribute.OPTIONS: 'options'>: list([
         'verylow',
         'low',
         'normal',
@@ -4131,7 +4771,7 @@
       'device_class': 'enum',
       'friendly_name': 'Study Radiator Nursery Temp Probe Discrete RSSI level',
       'icon': 'mdi:wifi',
-      'options': list([
+      <SensorEntityCapabilityAttribute.OPTIONS: 'options'>: list([
         'verylow',
         'low',
         'normal',
@@ -4153,7 +4793,7 @@
     ]),
     'area_id': None,
     'capabilities': dict({
-      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+      <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -4190,7 +4830,7 @@
     'attributes': ReadOnlyDict({
       'device_class': 'signal_strength',
       'friendly_name': 'Study Radiator Nursery Temp Probe RSSI level',
-      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+      <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
       'unit_of_measurement': 'dB',
     }),
     'context': <ANY>,
@@ -4208,7 +4848,7 @@
     ]),
     'area_id': None,
     'capabilities': dict({
-      'options': list([
+      <SensorEntityCapabilityAttribute.OPTIONS: 'options'>: list([
         'dead',
         'low_battery',
         'maintenance_required',
@@ -4250,7 +4890,7 @@
     'attributes': ReadOnlyDict({
       'device_class': 'enum',
       'friendly_name': 'Study Radiator Nursery Temp Probe Sensor defect',
-      'options': list([
+      <SensorEntityCapabilityAttribute.OPTIONS: 'options'>: list([
         'dead',
         'low_battery',
         'maintenance_required',
@@ -4272,7 +4912,7 @@
     ]),
     'area_id': None,
     'capabilities': dict({
-      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+      <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -4312,7 +4952,7 @@
     'attributes': ReadOnlyDict({
       'device_class': 'temperature',
       'friendly_name': 'Study Radiator Nursery Temp Probe Temperature',
-      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+      <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
       'unit_of_measurement': <UnitOfTemperature.CELSIUS: '°C'>,
     }),
     'context': <ANY>,
@@ -4330,7 +4970,7 @@
     ]),
     'area_id': None,
     'capabilities': dict({
-      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+      <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -4367,7 +5007,7 @@
     'attributes': ReadOnlyDict({
       'device_class': 'signal_strength',
       'friendly_name': 'Study Radiator RSSI level',
-      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+      <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
       'unit_of_measurement': 'dB',
     }),
     'context': <ANY>,
@@ -4385,7 +5025,7 @@
     ]),
     'area_id': None,
     'capabilities': dict({
-      'options': list([
+      <SensorEntityCapabilityAttribute.OPTIONS: 'options'>: list([
         'dead',
         'low_battery',
         'maintenance_required',
@@ -4427,7 +5067,7 @@
     'attributes': ReadOnlyDict({
       'device_class': 'enum',
       'friendly_name': 'Study Radiator Sensor defect',
-      'options': list([
+      <SensorEntityCapabilityAttribute.OPTIONS: 'options'>: list([
         'dead',
         'low_battery',
         'maintenance_required',
@@ -4449,7 +5089,7 @@
     ]),
     'area_id': None,
     'capabilities': dict({
-      'options': list([
+      <SensorEntityCapabilityAttribute.OPTIONS: 'options'>: list([
         'verylow',
         'low',
         'normal',
@@ -4492,7 +5132,7 @@
       'device_class': 'enum',
       'friendly_name': 'Terrace Ceiling Light Discrete RSSI level',
       'icon': 'mdi:wifi',
-      'options': list([
+      <SensorEntityCapabilityAttribute.OPTIONS: 'options'>: list([
         'verylow',
         'low',
         'normal',
@@ -4617,7 +5257,7 @@
     ]),
     'area_id': None,
     'capabilities': dict({
-      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+      <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -4654,7 +5294,7 @@
     'attributes': ReadOnlyDict({
       'device_class': 'signal_strength',
       'friendly_name': 'Terrace Ceiling Light RSSI level',
-      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+      <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
       'unit_of_measurement': 'dB',
     }),
     'context': <ANY>,
@@ -4672,7 +5312,7 @@
     ]),
     'area_id': None,
     'capabilities': dict({
-      'options': list([
+      <SensorEntityCapabilityAttribute.OPTIONS: 'options'>: list([
         'full',
         'normal',
         'medium',
@@ -4716,7 +5356,7 @@
       'device_class': 'enum',
       'friendly_name': 'Terrace Radiator Battery',
       'icon': 'mdi:battery',
-      'options': list([
+      <SensorEntityCapabilityAttribute.OPTIONS: 'options'>: list([
         'full',
         'normal',
         'medium',
@@ -4739,7 +5379,7 @@
     ]),
     'area_id': None,
     'capabilities': dict({
-      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+      <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -4779,7 +5419,7 @@
     'attributes': ReadOnlyDict({
       'device_class': 'temperature',
       'friendly_name': 'Terrace Radiator Garage Temp Probe Temperature',
-      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+      <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
       'unit_of_measurement': <UnitOfTemperature.CELSIUS: '°C'>,
     }),
     'context': <ANY>,
@@ -4849,7 +5489,7 @@
     ]),
     'area_id': None,
     'capabilities': dict({
-      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+      <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -4886,7 +5526,7 @@
     'attributes': ReadOnlyDict({
       'device_class': 'battery',
       'friendly_name': 'Attic Heater Battery level',
-      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+      <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
       'unit_of_measurement': '%',
     }),
     'context': <ANY>,
@@ -4904,7 +5544,7 @@
     ]),
     'area_id': None,
     'capabilities': dict({
-      'options': list([
+      <SensorEntityCapabilityAttribute.OPTIONS: 'options'>: list([
         'verylow',
         'low',
         'normal',
@@ -4947,7 +5587,7 @@
       'device_class': 'enum',
       'friendly_name': 'Attic Heater Discrete RSSI level',
       'icon': 'mdi:wifi',
-      'options': list([
+      <SensorEntityCapabilityAttribute.OPTIONS: 'options'>: list([
         'verylow',
         'low',
         'normal',
@@ -4969,7 +5609,7 @@
     ]),
     'area_id': None,
     'capabilities': dict({
-      'options': list([
+      <SensorEntityCapabilityAttribute.OPTIONS: 'options'>: list([
         'verylow',
         'low',
         'normal',
@@ -5012,7 +5652,7 @@
       'device_class': 'enum',
       'friendly_name': 'Attic Heater Hallway Temperature Sensor Discrete RSSI level',
       'icon': 'mdi:wifi',
-      'options': list([
+      <SensorEntityCapabilityAttribute.OPTIONS: 'options'>: list([
         'verylow',
         'low',
         'normal',
@@ -5034,7 +5674,7 @@
     ]),
     'area_id': None,
     'capabilities': dict({
-      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+      <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -5071,7 +5711,7 @@
     'attributes': ReadOnlyDict({
       'device_class': 'signal_strength',
       'friendly_name': 'Attic Heater Hallway Temperature Sensor RSSI level',
-      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+      <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
       'unit_of_measurement': 'dB',
     }),
     'context': <ANY>,
@@ -5089,7 +5729,7 @@
     ]),
     'area_id': None,
     'capabilities': dict({
-      'options': list([
+      <SensorEntityCapabilityAttribute.OPTIONS: 'options'>: list([
         'dead',
         'low_battery',
         'maintenance_required',
@@ -5131,7 +5771,7 @@
     'attributes': ReadOnlyDict({
       'device_class': 'enum',
       'friendly_name': 'Attic Heater Hallway Temperature Sensor Sensor defect',
-      'options': list([
+      <SensorEntityCapabilityAttribute.OPTIONS: 'options'>: list([
         'dead',
         'low_battery',
         'maintenance_required',
@@ -5153,7 +5793,7 @@
     ]),
     'area_id': None,
     'capabilities': dict({
-      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+      <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -5193,7 +5833,7 @@
     'attributes': ReadOnlyDict({
       'device_class': 'temperature',
       'friendly_name': 'Attic Heater Hallway Temperature Sensor Temperature',
-      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+      <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
       'unit_of_measurement': <UnitOfTemperature.CELSIUS: '°C'>,
     }),
     'context': <ANY>,
@@ -5211,7 +5851,7 @@
     ]),
     'area_id': None,
     'capabilities': dict({
-      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+      <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -5248,7 +5888,7 @@
     'attributes': ReadOnlyDict({
       'device_class': 'signal_strength',
       'friendly_name': 'Attic Heater RSSI level',
-      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+      <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
       'unit_of_measurement': 'dB',
     }),
     'context': <ANY>,
@@ -5266,7 +5906,7 @@
     ]),
     'area_id': None,
     'capabilities': dict({
-      'options': list([
+      <SensorEntityCapabilityAttribute.OPTIONS: 'options'>: list([
         'dead',
         'low_battery',
         'maintenance_required',
@@ -5308,7 +5948,7 @@
     'attributes': ReadOnlyDict({
       'device_class': 'enum',
       'friendly_name': 'Attic Heater Sensor defect',
-      'options': list([
+      <SensorEntityCapabilityAttribute.OPTIONS: 'options'>: list([
         'dead',
         'low_battery',
         'maintenance_required',
@@ -5330,7 +5970,7 @@
     ]),
     'area_id': None,
     'capabilities': dict({
-      'options': list([
+      <SensorEntityCapabilityAttribute.OPTIONS: 'options'>: list([
         'verylow',
         'low',
         'normal',
@@ -5373,7 +6013,7 @@
       'device_class': 'enum',
       'friendly_name': 'Conservatory Screen Discrete RSSI level',
       'icon': 'mdi:wifi',
-      'options': list([
+      <SensorEntityCapabilityAttribute.OPTIONS: 'options'>: list([
         'verylow',
         'low',
         'normal',
@@ -5395,7 +6035,7 @@
     ]),
     'area_id': None,
     'capabilities': dict({
-      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+      <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -5432,7 +6072,7 @@
     'attributes': ReadOnlyDict({
       'device_class': 'signal_strength',
       'friendly_name': 'Conservatory Screen RSSI level',
-      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+      <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
       'unit_of_measurement': 'dB',
     }),
     'context': <ANY>,
@@ -5501,7 +6141,7 @@
     ]),
     'area_id': None,
     'capabilities': dict({
-      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+      <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -5538,7 +6178,7 @@
     'attributes': ReadOnlyDict({
       'device_class': 'battery',
       'friendly_name': 'Dining Room Thermostat Battery level',
-      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+      <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
       'unit_of_measurement': '%',
     }),
     'context': <ANY>,
@@ -5556,7 +6196,7 @@
     ]),
     'area_id': None,
     'capabilities': dict({
-      'options': list([
+      <SensorEntityCapabilityAttribute.OPTIONS: 'options'>: list([
         'verylow',
         'low',
         'normal',
@@ -5599,7 +6239,7 @@
       'device_class': 'enum',
       'friendly_name': 'Dining Room Thermostat Discrete RSSI level',
       'icon': 'mdi:wifi',
-      'options': list([
+      <SensorEntityCapabilityAttribute.OPTIONS: 'options'>: list([
         'verylow',
         'low',
         'normal',
@@ -5621,7 +6261,7 @@
     ]),
     'area_id': None,
     'capabilities': dict({
-      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+      <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -5658,7 +6298,7 @@
     'attributes': ReadOnlyDict({
       'device_class': 'signal_strength',
       'friendly_name': 'Dining Room Thermostat RSSI level',
-      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+      <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
       'unit_of_measurement': 'dB',
     }),
     'context': <ANY>,
@@ -5676,7 +6316,7 @@
     ]),
     'area_id': None,
     'capabilities': dict({
-      'options': list([
+      <SensorEntityCapabilityAttribute.OPTIONS: 'options'>: list([
         'dead',
         'low_battery',
         'maintenance_required',
@@ -5718,7 +6358,7 @@
     'attributes': ReadOnlyDict({
       'device_class': 'enum',
       'friendly_name': 'Dining Room Thermostat Sensor defect',
-      'options': list([
+      <SensorEntityCapabilityAttribute.OPTIONS: 'options'>: list([
         'dead',
         'low_battery',
         'maintenance_required',
@@ -5740,7 +6380,7 @@
     ]),
     'area_id': None,
     'capabilities': dict({
-      'options': list([
+      <SensorEntityCapabilityAttribute.OPTIONS: 'options'>: list([
         'verylow',
         'low',
         'normal',
@@ -5783,7 +6423,7 @@
       'device_class': 'enum',
       'friendly_name': 'Dining Room Wall Light Discrete RSSI level',
       'icon': 'mdi:wifi',
-      'options': list([
+      <SensorEntityCapabilityAttribute.OPTIONS: 'options'>: list([
         'verylow',
         'low',
         'normal',
@@ -5805,7 +6445,7 @@
     ]),
     'area_id': None,
     'capabilities': dict({
-      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+      <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -5842,7 +6482,7 @@
     'attributes': ReadOnlyDict({
       'device_class': 'signal_strength',
       'friendly_name': 'Dining Room Wall Light RSSI level',
-      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+      <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
       'unit_of_measurement': 'dB',
     }),
     'context': <ANY>,
@@ -5860,7 +6500,7 @@
     ]),
     'area_id': None,
     'capabilities': dict({
-      'options': list([
+      <SensorEntityCapabilityAttribute.OPTIONS: 'options'>: list([
         'verylow',
         'low',
         'normal',
@@ -5903,7 +6543,7 @@
       'device_class': 'enum',
       'friendly_name': 'Garage Radiator Bathroom Temp Probe Discrete RSSI level',
       'icon': 'mdi:wifi',
-      'options': list([
+      <SensorEntityCapabilityAttribute.OPTIONS: 'options'>: list([
         'verylow',
         'low',
         'normal',
@@ -5925,7 +6565,7 @@
     ]),
     'area_id': None,
     'capabilities': dict({
-      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+      <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -5962,7 +6602,7 @@
     'attributes': ReadOnlyDict({
       'device_class': 'signal_strength',
       'friendly_name': 'Garage Radiator Bathroom Temp Probe RSSI level',
-      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+      <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
       'unit_of_measurement': 'dB',
     }),
     'context': <ANY>,
@@ -5980,7 +6620,7 @@
     ]),
     'area_id': None,
     'capabilities': dict({
-      'options': list([
+      <SensorEntityCapabilityAttribute.OPTIONS: 'options'>: list([
         'dead',
         'low_battery',
         'maintenance_required',
@@ -6022,7 +6662,7 @@
     'attributes': ReadOnlyDict({
       'device_class': 'enum',
       'friendly_name': 'Garage Radiator Bathroom Temp Probe Sensor defect',
-      'options': list([
+      <SensorEntityCapabilityAttribute.OPTIONS: 'options'>: list([
         'dead',
         'low_battery',
         'maintenance_required',
@@ -6044,7 +6684,7 @@
     ]),
     'area_id': None,
     'capabilities': dict({
-      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+      <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -6084,7 +6724,7 @@
     'attributes': ReadOnlyDict({
       'device_class': 'temperature',
       'friendly_name': 'Garage Radiator Bathroom Temp Probe Temperature',
-      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+      <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
       'unit_of_measurement': <UnitOfTemperature.CELSIUS: '°C'>,
     }),
     'context': <ANY>,
@@ -6102,7 +6742,7 @@
     ]),
     'area_id': None,
     'capabilities': dict({
-      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+      <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -6139,7 +6779,7 @@
     'attributes': ReadOnlyDict({
       'device_class': 'battery',
       'friendly_name': 'Garage Radiator Battery level',
-      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+      <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
       'unit_of_measurement': '%',
     }),
     'context': <ANY>,
@@ -6157,7 +6797,7 @@
     ]),
     'area_id': None,
     'capabilities': dict({
-      'options': list([
+      <SensorEntityCapabilityAttribute.OPTIONS: 'options'>: list([
         'verylow',
         'low',
         'normal',
@@ -6200,7 +6840,7 @@
       'device_class': 'enum',
       'friendly_name': 'Garage Radiator Discrete RSSI level',
       'icon': 'mdi:wifi',
-      'options': list([
+      <SensorEntityCapabilityAttribute.OPTIONS: 'options'>: list([
         'verylow',
         'low',
         'normal',
@@ -6222,7 +6862,7 @@
     ]),
     'area_id': None,
     'capabilities': dict({
-      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+      <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -6259,7 +6899,7 @@
     'attributes': ReadOnlyDict({
       'device_class': 'signal_strength',
       'friendly_name': 'Garage Radiator RSSI level',
-      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+      <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
       'unit_of_measurement': 'dB',
     }),
     'context': <ANY>,
@@ -6277,7 +6917,7 @@
     ]),
     'area_id': None,
     'capabilities': dict({
-      'options': list([
+      <SensorEntityCapabilityAttribute.OPTIONS: 'options'>: list([
         'dead',
         'low_battery',
         'maintenance_required',
@@ -6319,7 +6959,7 @@
     'attributes': ReadOnlyDict({
       'device_class': 'enum',
       'friendly_name': 'Garage Radiator Sensor defect',
-      'options': list([
+      <SensorEntityCapabilityAttribute.OPTIONS: 'options'>: list([
         'dead',
         'low_battery',
         'maintenance_required',
@@ -6341,7 +6981,7 @@
     ]),
     'area_id': None,
     'capabilities': dict({
-      'options': list([
+      <SensorEntityCapabilityAttribute.OPTIONS: 'options'>: list([
         'verylow',
         'low',
         'normal',
@@ -6384,7 +7024,7 @@
       'device_class': 'enum',
       'friendly_name': 'Garage Thermostat Bathroom Temperature Sensor Discrete RSSI level',
       'icon': 'mdi:wifi',
-      'options': list([
+      <SensorEntityCapabilityAttribute.OPTIONS: 'options'>: list([
         'verylow',
         'low',
         'normal',
@@ -6406,7 +7046,7 @@
     ]),
     'area_id': None,
     'capabilities': dict({
-      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+      <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -6443,7 +7083,7 @@
     'attributes': ReadOnlyDict({
       'device_class': 'signal_strength',
       'friendly_name': 'Garage Thermostat Bathroom Temperature Sensor RSSI level',
-      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+      <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
       'unit_of_measurement': 'dB',
     }),
     'context': <ANY>,
@@ -6461,7 +7101,7 @@
     ]),
     'area_id': None,
     'capabilities': dict({
-      'options': list([
+      <SensorEntityCapabilityAttribute.OPTIONS: 'options'>: list([
         'dead',
         'low_battery',
         'maintenance_required',
@@ -6503,7 +7143,7 @@
     'attributes': ReadOnlyDict({
       'device_class': 'enum',
       'friendly_name': 'Garage Thermostat Bathroom Temperature Sensor Sensor defect',
-      'options': list([
+      <SensorEntityCapabilityAttribute.OPTIONS: 'options'>: list([
         'dead',
         'low_battery',
         'maintenance_required',
@@ -6525,7 +7165,7 @@
     ]),
     'area_id': None,
     'capabilities': dict({
-      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+      <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -6565,7 +7205,7 @@
     'attributes': ReadOnlyDict({
       'device_class': 'temperature',
       'friendly_name': 'Garage Thermostat Bathroom Temperature Sensor Temperature',
-      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+      <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
       'unit_of_measurement': <UnitOfTemperature.CELSIUS: '°C'>,
     }),
     'context': <ANY>,
@@ -6583,7 +7223,7 @@
     ]),
     'area_id': None,
     'capabilities': dict({
-      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+      <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -6620,7 +7260,7 @@
     'attributes': ReadOnlyDict({
       'device_class': 'battery',
       'friendly_name': 'Garage Thermostat Battery level',
-      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+      <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
       'unit_of_measurement': '%',
     }),
     'context': <ANY>,
@@ -6638,7 +7278,7 @@
     ]),
     'area_id': None,
     'capabilities': dict({
-      'options': list([
+      <SensorEntityCapabilityAttribute.OPTIONS: 'options'>: list([
         'verylow',
         'low',
         'normal',
@@ -6681,7 +7321,7 @@
       'device_class': 'enum',
       'friendly_name': 'Garage Thermostat Discrete RSSI level',
       'icon': 'mdi:wifi',
-      'options': list([
+      <SensorEntityCapabilityAttribute.OPTIONS: 'options'>: list([
         'verylow',
         'low',
         'normal',
@@ -6703,7 +7343,7 @@
     ]),
     'area_id': None,
     'capabilities': dict({
-      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+      <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -6740,7 +7380,7 @@
     'attributes': ReadOnlyDict({
       'device_class': 'signal_strength',
       'friendly_name': 'Garage Thermostat RSSI level',
-      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+      <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
       'unit_of_measurement': 'dB',
     }),
     'context': <ANY>,
@@ -6758,7 +7398,7 @@
     ]),
     'area_id': None,
     'capabilities': dict({
-      'options': list([
+      <SensorEntityCapabilityAttribute.OPTIONS: 'options'>: list([
         'dead',
         'low_battery',
         'maintenance_required',
@@ -6800,7 +7440,7 @@
     'attributes': ReadOnlyDict({
       'device_class': 'enum',
       'friendly_name': 'Garage Thermostat Sensor defect',
-      'options': list([
+      <SensorEntityCapabilityAttribute.OPTIONS: 'options'>: list([
         'dead',
         'low_battery',
         'maintenance_required',
@@ -6822,7 +7462,7 @@
     ]),
     'area_id': None,
     'capabilities': dict({
-      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+      <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -6859,7 +7499,7 @@
     'attributes': ReadOnlyDict({
       'device_class': 'battery',
       'friendly_name': 'Garden Radiator Battery level',
-      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+      <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
       'unit_of_measurement': '%',
     }),
     'context': <ANY>,
@@ -6877,7 +7517,7 @@
     ]),
     'area_id': None,
     'capabilities': dict({
-      'options': list([
+      <SensorEntityCapabilityAttribute.OPTIONS: 'options'>: list([
         'verylow',
         'low',
         'normal',
@@ -6920,7 +7560,7 @@
       'device_class': 'enum',
       'friendly_name': 'Garden Radiator Discrete RSSI level',
       'icon': 'mdi:wifi',
-      'options': list([
+      <SensorEntityCapabilityAttribute.OPTIONS: 'options'>: list([
         'verylow',
         'low',
         'normal',
@@ -6942,7 +7582,7 @@
     ]),
     'area_id': None,
     'capabilities': dict({
-      'options': list([
+      <SensorEntityCapabilityAttribute.OPTIONS: 'options'>: list([
         'verylow',
         'low',
         'normal',
@@ -6985,7 +7625,7 @@
       'device_class': 'enum',
       'friendly_name': 'Garden Radiator Garage Temp Probe Discrete RSSI level',
       'icon': 'mdi:wifi',
-      'options': list([
+      <SensorEntityCapabilityAttribute.OPTIONS: 'options'>: list([
         'verylow',
         'low',
         'normal',
@@ -7007,7 +7647,7 @@
     ]),
     'area_id': None,
     'capabilities': dict({
-      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+      <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -7044,7 +7684,7 @@
     'attributes': ReadOnlyDict({
       'device_class': 'signal_strength',
       'friendly_name': 'Garden Radiator Garage Temp Probe RSSI level',
-      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+      <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
       'unit_of_measurement': 'dB',
     }),
     'context': <ANY>,
@@ -7062,7 +7702,7 @@
     ]),
     'area_id': None,
     'capabilities': dict({
-      'options': list([
+      <SensorEntityCapabilityAttribute.OPTIONS: 'options'>: list([
         'dead',
         'low_battery',
         'maintenance_required',
@@ -7104,7 +7744,7 @@
     'attributes': ReadOnlyDict({
       'device_class': 'enum',
       'friendly_name': 'Garden Radiator Garage Temp Probe Sensor defect',
-      'options': list([
+      <SensorEntityCapabilityAttribute.OPTIONS: 'options'>: list([
         'dead',
         'low_battery',
         'maintenance_required',
@@ -7126,7 +7766,7 @@
     ]),
     'area_id': None,
     'capabilities': dict({
-      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+      <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -7166,7 +7806,7 @@
     'attributes': ReadOnlyDict({
       'device_class': 'temperature',
       'friendly_name': 'Garden Radiator Garage Temp Probe Temperature',
-      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+      <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
       'unit_of_measurement': <UnitOfTemperature.CELSIUS: '°C'>,
     }),
     'context': <ANY>,
@@ -7184,7 +7824,7 @@
     ]),
     'area_id': None,
     'capabilities': dict({
-      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+      <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -7221,7 +7861,7 @@
     'attributes': ReadOnlyDict({
       'device_class': 'signal_strength',
       'friendly_name': 'Garden Radiator RSSI level',
-      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+      <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
       'unit_of_measurement': 'dB',
     }),
     'context': <ANY>,
@@ -7239,7 +7879,7 @@
     ]),
     'area_id': None,
     'capabilities': dict({
-      'options': list([
+      <SensorEntityCapabilityAttribute.OPTIONS: 'options'>: list([
         'dead',
         'low_battery',
         'maintenance_required',
@@ -7281,7 +7921,7 @@
     'attributes': ReadOnlyDict({
       'device_class': 'enum',
       'friendly_name': 'Garden Radiator Sensor defect',
-      'options': list([
+      <SensorEntityCapabilityAttribute.OPTIONS: 'options'>: list([
         'dead',
         'low_battery',
         'maintenance_required',
@@ -7303,7 +7943,7 @@
     ]),
     'area_id': None,
     'capabilities': dict({
-      'options': list([
+      <SensorEntityCapabilityAttribute.OPTIONS: 'options'>: list([
         'verylow',
         'low',
         'normal',
@@ -7346,7 +7986,7 @@
       'device_class': 'enum',
       'friendly_name': 'Dining Room Thermostat Garden Temp Probe Discrete RSSI level',
       'icon': 'mdi:wifi',
-      'options': list([
+      <SensorEntityCapabilityAttribute.OPTIONS: 'options'>: list([
         'verylow',
         'low',
         'normal',
@@ -7368,7 +8008,7 @@
     ]),
     'area_id': None,
     'capabilities': dict({
-      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+      <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -7405,7 +8045,7 @@
     'attributes': ReadOnlyDict({
       'device_class': 'signal_strength',
       'friendly_name': 'Dining Room Thermostat Garden Temp Probe RSSI level',
-      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+      <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
       'unit_of_measurement': 'dB',
     }),
     'context': <ANY>,
@@ -7423,7 +8063,7 @@
     ]),
     'area_id': None,
     'capabilities': dict({
-      'options': list([
+      <SensorEntityCapabilityAttribute.OPTIONS: 'options'>: list([
         'dead',
         'low_battery',
         'maintenance_required',
@@ -7465,7 +8105,7 @@
     'attributes': ReadOnlyDict({
       'device_class': 'enum',
       'friendly_name': 'Dining Room Thermostat Garden Temp Probe Sensor defect',
-      'options': list([
+      <SensorEntityCapabilityAttribute.OPTIONS: 'options'>: list([
         'dead',
         'low_battery',
         'maintenance_required',
@@ -7487,7 +8127,7 @@
     ]),
     'area_id': None,
     'capabilities': dict({
-      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+      <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -7527,7 +8167,7 @@
     'attributes': ReadOnlyDict({
       'device_class': 'temperature',
       'friendly_name': 'Dining Room Thermostat Garden Temp Probe Temperature',
-      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+      <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
       'unit_of_measurement': <UnitOfTemperature.CELSIUS: '°C'>,
     }),
     'context': <ANY>,
@@ -7545,7 +8185,7 @@
     ]),
     'area_id': None,
     'capabilities': dict({
-      'options': list([
+      <SensorEntityCapabilityAttribute.OPTIONS: 'options'>: list([
         'verylow',
         'low',
         'normal',
@@ -7588,7 +8228,7 @@
       'device_class': 'enum',
       'friendly_name': 'Patio Thermostat Garden Temperature Sensor Discrete RSSI level',
       'icon': 'mdi:wifi',
-      'options': list([
+      <SensorEntityCapabilityAttribute.OPTIONS: 'options'>: list([
         'verylow',
         'low',
         'normal',
@@ -7610,7 +8250,7 @@
     ]),
     'area_id': None,
     'capabilities': dict({
-      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+      <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -7647,7 +8287,7 @@
     'attributes': ReadOnlyDict({
       'device_class': 'signal_strength',
       'friendly_name': 'Patio Thermostat Garden Temperature Sensor RSSI level',
-      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+      <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
       'unit_of_measurement': 'dB',
     }),
     'context': <ANY>,
@@ -7665,7 +8305,7 @@
     ]),
     'area_id': None,
     'capabilities': dict({
-      'options': list([
+      <SensorEntityCapabilityAttribute.OPTIONS: 'options'>: list([
         'dead',
         'low_battery',
         'maintenance_required',
@@ -7707,7 +8347,7 @@
     'attributes': ReadOnlyDict({
       'device_class': 'enum',
       'friendly_name': 'Patio Thermostat Garden Temperature Sensor Sensor defect',
-      'options': list([
+      <SensorEntityCapabilityAttribute.OPTIONS: 'options'>: list([
         'dead',
         'low_battery',
         'maintenance_required',
@@ -7729,7 +8369,7 @@
     ]),
     'area_id': None,
     'capabilities': dict({
-      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+      <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -7769,7 +8409,7 @@
     'attributes': ReadOnlyDict({
       'device_class': 'temperature',
       'friendly_name': 'Patio Thermostat Garden Temperature Sensor Temperature',
-      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+      <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
       'unit_of_measurement': <UnitOfTemperature.CELSIUS: '°C'>,
     }),
     'context': <ANY>,
@@ -7787,7 +8427,7 @@
     ]),
     'area_id': None,
     'capabilities': dict({
-      'options': list([
+      <SensorEntityCapabilityAttribute.OPTIONS: 'options'>: list([
         'verylow',
         'low',
         'normal',
@@ -7830,7 +8470,7 @@
       'device_class': 'enum',
       'friendly_name': 'Guest Room Ceiling Light Discrete RSSI level',
       'icon': 'mdi:wifi',
-      'options': list([
+      <SensorEntityCapabilityAttribute.OPTIONS: 'options'>: list([
         'verylow',
         'low',
         'normal',
@@ -7852,7 +8492,7 @@
     ]),
     'area_id': None,
     'capabilities': dict({
-      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+      <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -7889,7 +8529,7 @@
     'attributes': ReadOnlyDict({
       'device_class': 'signal_strength',
       'friendly_name': 'Guest Room Ceiling Light RSSI level',
-      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+      <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
       'unit_of_measurement': 'dB',
     }),
     'context': <ANY>,
@@ -7907,7 +8547,7 @@
     ]),
     'area_id': None,
     'capabilities': dict({
-      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+      <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -7944,7 +8584,7 @@
     'attributes': ReadOnlyDict({
       'device_class': 'battery',
       'friendly_name': 'Hallway Radiator Battery level',
-      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+      <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
       'unit_of_measurement': '%',
     }),
     'context': <ANY>,
@@ -7962,7 +8602,7 @@
     ]),
     'area_id': None,
     'capabilities': dict({
-      'options': list([
+      <SensorEntityCapabilityAttribute.OPTIONS: 'options'>: list([
         'verylow',
         'low',
         'normal',
@@ -8005,7 +8645,7 @@
       'device_class': 'enum',
       'friendly_name': 'Hallway Radiator Discrete RSSI level',
       'icon': 'mdi:wifi',
-      'options': list([
+      <SensorEntityCapabilityAttribute.OPTIONS: 'options'>: list([
         'verylow',
         'low',
         'normal',
@@ -8027,7 +8667,7 @@
     ]),
     'area_id': None,
     'capabilities': dict({
-      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+      <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -8064,7 +8704,7 @@
     'attributes': ReadOnlyDict({
       'device_class': 'signal_strength',
       'friendly_name': 'Hallway Radiator RSSI level',
-      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+      <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
       'unit_of_measurement': 'dB',
     }),
     'context': <ANY>,
@@ -8082,7 +8722,7 @@
     ]),
     'area_id': None,
     'capabilities': dict({
-      'options': list([
+      <SensorEntityCapabilityAttribute.OPTIONS: 'options'>: list([
         'dead',
         'low_battery',
         'maintenance_required',
@@ -8124,7 +8764,7 @@
     'attributes': ReadOnlyDict({
       'device_class': 'enum',
       'friendly_name': 'Hallway Radiator Sensor defect',
-      'options': list([
+      <SensorEntityCapabilityAttribute.OPTIONS: 'options'>: list([
         'dead',
         'low_battery',
         'maintenance_required',
@@ -8146,7 +8786,7 @@
     ]),
     'area_id': None,
     'capabilities': dict({
-      'options': list([
+      <SensorEntityCapabilityAttribute.OPTIONS: 'options'>: list([
         'verylow',
         'low',
         'normal',
@@ -8189,7 +8829,7 @@
       'device_class': 'enum',
       'friendly_name': 'Hallway Radiator Terrace Temp Probe Discrete RSSI level',
       'icon': 'mdi:wifi',
-      'options': list([
+      <SensorEntityCapabilityAttribute.OPTIONS: 'options'>: list([
         'verylow',
         'low',
         'normal',
@@ -8211,7 +8851,7 @@
     ]),
     'area_id': None,
     'capabilities': dict({
-      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+      <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -8248,7 +8888,7 @@
     'attributes': ReadOnlyDict({
       'device_class': 'signal_strength',
       'friendly_name': 'Hallway Radiator Terrace Temp Probe RSSI level',
-      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+      <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
       'unit_of_measurement': 'dB',
     }),
     'context': <ANY>,
@@ -8266,7 +8906,7 @@
     ]),
     'area_id': None,
     'capabilities': dict({
-      'options': list([
+      <SensorEntityCapabilityAttribute.OPTIONS: 'options'>: list([
         'dead',
         'low_battery',
         'maintenance_required',
@@ -8308,7 +8948,7 @@
     'attributes': ReadOnlyDict({
       'device_class': 'enum',
       'friendly_name': 'Hallway Radiator Terrace Temp Probe Sensor defect',
-      'options': list([
+      <SensorEntityCapabilityAttribute.OPTIONS: 'options'>: list([
         'dead',
         'low_battery',
         'maintenance_required',
@@ -8330,7 +8970,7 @@
     ]),
     'area_id': None,
     'capabilities': dict({
-      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+      <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -8370,7 +9010,7 @@
     'attributes': ReadOnlyDict({
       'device_class': 'temperature',
       'friendly_name': 'Hallway Radiator Terrace Temp Probe Temperature',
-      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+      <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
       'unit_of_measurement': <UnitOfTemperature.CELSIUS: '°C'>,
     }),
     'context': <ANY>,
@@ -8388,7 +9028,7 @@
     ]),
     'area_id': None,
     'capabilities': dict({
-      'options': list([
+      <SensorEntityCapabilityAttribute.OPTIONS: 'options'>: list([
         'verylow',
         'low',
         'normal',
@@ -8431,7 +9071,7 @@
       'device_class': 'enum',
       'friendly_name': 'Kitchen Ceiling Light Discrete RSSI level',
       'icon': 'mdi:wifi',
-      'options': list([
+      <SensorEntityCapabilityAttribute.OPTIONS: 'options'>: list([
         'verylow',
         'low',
         'normal',
@@ -8453,7 +9093,7 @@
     ]),
     'area_id': None,
     'capabilities': dict({
-      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+      <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -8490,7 +9130,7 @@
     'attributes': ReadOnlyDict({
       'device_class': 'signal_strength',
       'friendly_name': 'Kitchen Ceiling Light RSSI level',
-      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+      <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
       'unit_of_measurement': 'dB',
     }),
     'context': <ANY>,
@@ -8508,7 +9148,7 @@
     ]),
     'area_id': None,
     'capabilities': dict({
-      'options': list([
+      <SensorEntityCapabilityAttribute.OPTIONS: 'options'>: list([
         'verylow',
         'low',
         'normal',
@@ -8551,7 +9191,7 @@
       'device_class': 'enum',
       'friendly_name': 'Living Room Thermostat Kitchen Temp Probe Discrete RSSI level',
       'icon': 'mdi:wifi',
-      'options': list([
+      <SensorEntityCapabilityAttribute.OPTIONS: 'options'>: list([
         'verylow',
         'low',
         'normal',
@@ -8573,7 +9213,7 @@
     ]),
     'area_id': None,
     'capabilities': dict({
-      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+      <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -8610,7 +9250,7 @@
     'attributes': ReadOnlyDict({
       'device_class': 'signal_strength',
       'friendly_name': 'Living Room Thermostat Kitchen Temp Probe RSSI level',
-      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+      <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
       'unit_of_measurement': 'dB',
     }),
     'context': <ANY>,
@@ -8628,7 +9268,7 @@
     ]),
     'area_id': None,
     'capabilities': dict({
-      'options': list([
+      <SensorEntityCapabilityAttribute.OPTIONS: 'options'>: list([
         'dead',
         'low_battery',
         'maintenance_required',
@@ -8670,7 +9310,7 @@
     'attributes': ReadOnlyDict({
       'device_class': 'enum',
       'friendly_name': 'Living Room Thermostat Kitchen Temp Probe Sensor defect',
-      'options': list([
+      <SensorEntityCapabilityAttribute.OPTIONS: 'options'>: list([
         'dead',
         'low_battery',
         'maintenance_required',
@@ -8692,7 +9332,7 @@
     ]),
     'area_id': None,
     'capabilities': dict({
-      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+      <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -8732,7 +9372,7 @@
     'attributes': ReadOnlyDict({
       'device_class': 'temperature',
       'friendly_name': 'Living Room Thermostat Kitchen Temp Probe Temperature',
-      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+      <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
       'unit_of_measurement': <UnitOfTemperature.CELSIUS: '°C'>,
     }),
     'context': <ANY>,
@@ -8750,7 +9390,7 @@
     ]),
     'area_id': None,
     'capabilities': dict({
-      'options': list([
+      <SensorEntityCapabilityAttribute.OPTIONS: 'options'>: list([
         'verylow',
         'low',
         'normal',
@@ -8793,7 +9433,7 @@
       'device_class': 'enum',
       'friendly_name': 'Library Screen Discrete RSSI level',
       'icon': 'mdi:wifi',
-      'options': list([
+      <SensorEntityCapabilityAttribute.OPTIONS: 'options'>: list([
         'verylow',
         'low',
         'normal',
@@ -8815,7 +9455,7 @@
     ]),
     'area_id': None,
     'capabilities': dict({
-      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+      <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -8852,7 +9492,7 @@
     'attributes': ReadOnlyDict({
       'device_class': 'signal_strength',
       'friendly_name': 'Library Screen RSSI level',
-      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+      <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
       'unit_of_measurement': 'dB',
     }),
     'context': <ANY>,
@@ -8921,7 +9561,7 @@
     ]),
     'area_id': None,
     'capabilities': dict({
-      'options': list([
+      <SensorEntityCapabilityAttribute.OPTIONS: 'options'>: list([
         'verylow',
         'low',
         'normal',
@@ -8964,7 +9604,7 @@
       'device_class': 'enum',
       'friendly_name': 'Living Room Ceiling Light Discrete RSSI level',
       'icon': 'mdi:wifi',
-      'options': list([
+      <SensorEntityCapabilityAttribute.OPTIONS: 'options'>: list([
         'verylow',
         'low',
         'normal',
@@ -8986,7 +9626,7 @@
     ]),
     'area_id': None,
     'capabilities': dict({
-      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+      <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -9023,7 +9663,7 @@
     'attributes': ReadOnlyDict({
       'device_class': 'signal_strength',
       'friendly_name': 'Living Room Ceiling Light RSSI level',
-      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+      <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
       'unit_of_measurement': 'dB',
     }),
     'context': <ANY>,
@@ -9041,7 +9681,7 @@
     ]),
     'area_id': None,
     'capabilities': dict({
-      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+      <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -9078,7 +9718,7 @@
     'attributes': ReadOnlyDict({
       'device_class': 'battery',
       'friendly_name': 'Living Room Thermostat Battery level',
-      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+      <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
       'unit_of_measurement': '%',
     }),
     'context': <ANY>,
@@ -9096,7 +9736,7 @@
     ]),
     'area_id': None,
     'capabilities': dict({
-      'options': list([
+      <SensorEntityCapabilityAttribute.OPTIONS: 'options'>: list([
         'verylow',
         'low',
         'normal',
@@ -9139,7 +9779,7 @@
       'device_class': 'enum',
       'friendly_name': 'Living Room Thermostat Discrete RSSI level',
       'icon': 'mdi:wifi',
-      'options': list([
+      <SensorEntityCapabilityAttribute.OPTIONS: 'options'>: list([
         'verylow',
         'low',
         'normal',
@@ -9161,7 +9801,7 @@
     ]),
     'area_id': None,
     'capabilities': dict({
-      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+      <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -9198,7 +9838,7 @@
     'attributes': ReadOnlyDict({
       'device_class': 'signal_strength',
       'friendly_name': 'Living Room Thermostat RSSI level',
-      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+      <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
       'unit_of_measurement': 'dB',
     }),
     'context': <ANY>,
@@ -9216,7 +9856,7 @@
     ]),
     'area_id': None,
     'capabilities': dict({
-      'options': list([
+      <SensorEntityCapabilityAttribute.OPTIONS: 'options'>: list([
         'dead',
         'low_battery',
         'maintenance_required',
@@ -9258,7 +9898,7 @@
     'attributes': ReadOnlyDict({
       'device_class': 'enum',
       'friendly_name': 'Living Room Thermostat Sensor defect',
-      'options': list([
+      <SensorEntityCapabilityAttribute.OPTIONS: 'options'>: list([
         'dead',
         'low_battery',
         'maintenance_required',
@@ -9280,7 +9920,7 @@
     ]),
     'area_id': None,
     'capabilities': dict({
-      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+      <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -9317,7 +9957,7 @@
     'attributes': ReadOnlyDict({
       'device_class': 'battery',
       'friendly_name': 'Patio Thermostat Battery level',
-      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+      <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
       'unit_of_measurement': '%',
     }),
     'context': <ANY>,
@@ -9335,7 +9975,7 @@
     ]),
     'area_id': None,
     'capabilities': dict({
-      'options': list([
+      <SensorEntityCapabilityAttribute.OPTIONS: 'options'>: list([
         'verylow',
         'low',
         'normal',
@@ -9378,7 +10018,7 @@
       'device_class': 'enum',
       'friendly_name': 'Patio Thermostat Discrete RSSI level',
       'icon': 'mdi:wifi',
-      'options': list([
+      <SensorEntityCapabilityAttribute.OPTIONS: 'options'>: list([
         'verylow',
         'low',
         'normal',
@@ -9400,7 +10040,7 @@
     ]),
     'area_id': None,
     'capabilities': dict({
-      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+      <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -9437,7 +10077,7 @@
     'attributes': ReadOnlyDict({
       'device_class': 'signal_strength',
       'friendly_name': 'Patio Thermostat RSSI level',
-      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+      <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
       'unit_of_measurement': 'dB',
     }),
     'context': <ANY>,
@@ -9455,7 +10095,7 @@
     ]),
     'area_id': None,
     'capabilities': dict({
-      'options': list([
+      <SensorEntityCapabilityAttribute.OPTIONS: 'options'>: list([
         'dead',
         'low_battery',
         'maintenance_required',
@@ -9497,7 +10137,7 @@
     'attributes': ReadOnlyDict({
       'device_class': 'enum',
       'friendly_name': 'Patio Thermostat Sensor defect',
-      'options': list([
+      <SensorEntityCapabilityAttribute.OPTIONS: 'options'>: list([
         'dead',
         'low_battery',
         'maintenance_required',
@@ -9519,7 +10159,7 @@
     ]),
     'area_id': None,
     'capabilities': dict({
-      'options': list([
+      <SensorEntityCapabilityAttribute.OPTIONS: 'options'>: list([
         'verylow',
         'low',
         'normal',
@@ -9562,7 +10202,7 @@
       'device_class': 'enum',
       'friendly_name': 'Patio Window Discrete RSSI level',
       'icon': 'mdi:wifi',
-      'options': list([
+      <SensorEntityCapabilityAttribute.OPTIONS: 'options'>: list([
         'verylow',
         'low',
         'normal',
@@ -9584,7 +10224,7 @@
     ]),
     'area_id': None,
     'capabilities': dict({
-      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+      <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -9621,7 +10261,7 @@
     'attributes': ReadOnlyDict({
       'device_class': 'signal_strength',
       'friendly_name': 'Patio Window RSSI level',
-      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+      <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
       'unit_of_measurement': 'dB',
     }),
     'context': <ANY>,
@@ -9639,7 +10279,7 @@
     ]),
     'area_id': None,
     'capabilities': dict({
-      'options': list([
+      <SensorEntityCapabilityAttribute.OPTIONS: 'options'>: list([
         'verylow',
         'low',
         'normal',
@@ -9682,7 +10322,7 @@
       'device_class': 'enum',
       'friendly_name': 'Sunroom Shades Discrete RSSI level',
       'icon': 'mdi:wifi',
-      'options': list([
+      <SensorEntityCapabilityAttribute.OPTIONS: 'options'>: list([
         'verylow',
         'low',
         'normal',
@@ -9704,7 +10344,7 @@
     ]),
     'area_id': None,
     'capabilities': dict({
-      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+      <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -9741,7 +10381,7 @@
     'attributes': ReadOnlyDict({
       'device_class': 'signal_strength',
       'friendly_name': 'Sunroom Shades RSSI level',
-      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+      <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
       'unit_of_measurement': 'dB',
     }),
     'context': <ANY>,
@@ -9759,7 +10399,7 @@
     ]),
     'area_id': None,
     'capabilities': dict({
-      'options': list([
+      <SensorEntityCapabilityAttribute.OPTIONS: 'options'>: list([
         'verylow',
         'low',
         'normal',
@@ -9802,7 +10442,7 @@
       'device_class': 'enum',
       'friendly_name': 'Terrace Awning Discrete RSSI level',
       'icon': 'mdi:wifi',
-      'options': list([
+      <SensorEntityCapabilityAttribute.OPTIONS: 'options'>: list([
         'verylow',
         'low',
         'normal',
@@ -9824,7 +10464,7 @@
     ]),
     'area_id': None,
     'capabilities': dict({
-      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+      <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -9861,7 +10501,7 @@
     'attributes': ReadOnlyDict({
       'device_class': 'signal_strength',
       'friendly_name': 'Terrace Awning RSSI level',
-      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+      <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
       'unit_of_measurement': 'dB',
     }),
     'context': <ANY>,

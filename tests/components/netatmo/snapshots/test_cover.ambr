@@ -40,10 +40,10 @@
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'attribution': 'Data provided by Netatmo',
-      'current_position': 0,
+      <CoverEntityStateAttribute.CURRENT_POSITION: 'current_position'>: 0,
       'device_class': 'shutter',
       'friendly_name': 'Bubendorff blind',
-      'is_closed': True,
+      <CoverEntityStateAttribute.IS_CLOSED: 'is_closed'>: True,
       'supported_features': <CoverEntityFeature: 15>,
     }),
     'context': <ANY>,
@@ -95,10 +95,10 @@
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'attribution': 'Data provided by Netatmo',
-      'current_position': 0,
+      <CoverEntityStateAttribute.CURRENT_POSITION: 'current_position'>: 0,
       'device_class': 'shutter',
       'friendly_name': 'Entrance Blinds',
-      'is_closed': True,
+      <CoverEntityStateAttribute.IS_CLOSED: 'is_closed'>: True,
       'supported_features': <CoverEntityFeature: 15>,
     }),
     'context': <ANY>,

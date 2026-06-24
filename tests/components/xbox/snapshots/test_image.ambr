@@ -39,7 +39,7 @@
 # name: test_image_platform[image.erics273_avatar-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'access_token': '520',
+      <ImageEntityStateAttribute.ACCESS_TOKEN: 'access_token'>: '520',
       'entity_picture': '/api/image_proxy/image.erics273_avatar?token=520',
       'friendly_name': 'erics273 Avatar',
     }),
@@ -91,7 +91,7 @@
 # name: test_image_platform[image.erics273_gamerpic-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'access_token': '520',
+      <ImageEntityStateAttribute.ACCESS_TOKEN: 'access_token'>: '520',
       'entity_picture': '/api/image_proxy/image.erics273_gamerpic?token=520',
       'friendly_name': 'erics273 Gamerpic',
     }),
@@ -143,7 +143,7 @@
 # name: test_image_platform[image.erics273_now_playing-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'access_token': '520',
+      <ImageEntityStateAttribute.ACCESS_TOKEN: 'access_token'>: '520',
       'entity_picture': '/api/image_proxy/image.erics273_now_playing?token=520',
       'friendly_name': 'erics273 Now playing',
     }),
@@ -195,7 +195,7 @@
 # name: test_image_platform[image.gsr_ae_avatar-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'access_token': '520',
+      <ImageEntityStateAttribute.ACCESS_TOKEN: 'access_token'>: '520',
       'entity_picture': '/api/image_proxy/image.gsr_ae_avatar?token=520',
       'friendly_name': 'GSR Ae Avatar',
     }),
@@ -247,7 +247,7 @@
 # name: test_image_platform[image.gsr_ae_gamerpic-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'access_token': '520',
+      <ImageEntityStateAttribute.ACCESS_TOKEN: 'access_token'>: '520',
       'entity_picture': '/api/image_proxy/image.gsr_ae_gamerpic?token=520',
       'friendly_name': 'GSR Ae Gamerpic',
     }),
@@ -299,7 +299,7 @@
 # name: test_image_platform[image.gsr_ae_now_playing-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'access_token': '520',
+      <ImageEntityStateAttribute.ACCESS_TOKEN: 'access_token'>: '520',
       'entity_picture': '/api/image_proxy/image.gsr_ae_now_playing?token=520',
       'friendly_name': 'GSR Ae Now playing',
     }),
@@ -351,7 +351,7 @@
 # name: test_image_platform[image.ikken_hissatsuu_avatar-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'access_token': '520',
+      <ImageEntityStateAttribute.ACCESS_TOKEN: 'access_token'>: '520',
       'entity_picture': '/api/image_proxy/image.ikken_hissatsuu_avatar?token=520',
       'friendly_name': 'Ikken Hissatsuu Avatar',
     }),
@@ -403,7 +403,7 @@
 # name: test_image_platform[image.ikken_hissatsuu_gamerpic-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'access_token': '520',
+      <ImageEntityStateAttribute.ACCESS_TOKEN: 'access_token'>: '520',
       'entity_picture': '/api/image_proxy/image.ikken_hissatsuu_gamerpic?token=520',
       'friendly_name': 'Ikken Hissatsuu Gamerpic',
     }),
@@ -455,7 +455,7 @@
 # name: test_image_platform[image.ikken_hissatsuu_now_playing-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'access_token': '520',
+      <ImageEntityStateAttribute.ACCESS_TOKEN: 'access_token'>: '520',
       'entity_picture': '/api/image_proxy/image.ikken_hissatsuu_now_playing?token=520',
       'friendly_name': 'Ikken Hissatsuu Now playing',
     }),

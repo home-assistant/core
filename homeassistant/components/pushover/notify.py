@@ -1,7 +1,7 @@
 """Pushover platform for notify component."""
 
 import logging
-from typing import Any
+from typing import Any, override
 
 from pushover_complete import BadAPIRequestError, PushoverAPI
 
@@ -62,6 +62,7 @@ class PushoverNotificationService(BaseNotificationService):
         self._user_key = user_key
         self.pushover = pushover
 
+    @override
     def send_message(self, message: str = "", **kwargs: Any) -> None:
         """Send a message to a user."""
 

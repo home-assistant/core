@@ -2,7 +2,7 @@
 
 import importlib
 import time
-from typing import Any
+from typing import Any, override
 
 import voluptuous as vol
 
@@ -107,6 +107,7 @@ class AvionLight(LightEntity):
                 self._switch.connect()
         return True
 
+    @override
     def turn_on(self, **kwargs: Any) -> None:
         """Turn the specified or all lights on."""
         if (brightness := kwargs.get(ATTR_BRIGHTNESS)) is not None:
@@ -115,6 +116,7 @@ class AvionLight(LightEntity):
         self.set_state(self.brightness)
         self._attr_is_on = True
 
+    @override
     def turn_off(self, **kwargs: Any) -> None:
         """Turn the specified or all lights off."""
         self.set_state(0)
