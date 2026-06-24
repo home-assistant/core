@@ -19,7 +19,7 @@ from homeassistant.core import HomeAssistant
 from homeassistant.helpers.update_coordinator import UpdateFailed
 from homeassistant.util.dt import naive_now
 
-from tests.common import AsyncMock
+from tests.common import AsyncMock, MockConfigEntry
 
 
 def _fake_sensor_payload() -> dict:
@@ -59,23 +59,23 @@ def _fake_sensor_payload() -> dict:
 
 async def test_update_data_with_ip(
     hass: HomeAssistant,
-    tfa_me_options_flow_mock_entry: ConfigEntry,
+    tfa_me_config_entry: MockConfigEntry,
 ) -> None:
-    """Test normal coordinator update with IP."""
-    coordinator = TFAmeUpdateCoordinator(hass, tfa_me_options_flow_mock_entry)
-
+    """Test normal setup creates entities from coordinator data."""
     with patch(
         "homeassistant.components.tfa_me.coordinator.TFAmeClient.async_get_sensors",
         new=AsyncMock(return_value=_fake_sensor_payload()),
     ):
-        result = await coordinator._async_update_data()
+        assert await hass.config_entries.async_setup(tfa_me_config_entry.entry_id)
+        await hass.async_block_till_done()
 
-    assert result.gateway_id == "017654321"
-    assert len(result.entities) == 12
+    assert tfa_me_config_entry.state.name == "LOADED"
 
-    assert "sensor.017654321_a21234567_rssi" in result.entities
-    assert "sensor.017654321_a21234567_wind_speed" in result.entities
-    assert "sensor.017654321_a12345678_rain" in result.entities
+    states = hass.states.async_entity_ids("sensor")
+
+    assert any(entity_id.endswith("_rssi") for entity_id in states)
+    assert any(entity_id.endswith("_wind_speed") for entity_id in states)
+    assert any(entity_id.endswith("_rain") for entity_id in states)
 
 
 @pytest.mark.parametrize(

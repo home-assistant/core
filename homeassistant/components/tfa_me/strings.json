@@ -6,7 +6,7 @@
     "error": {
       "cannot_connect": "Cannot connect to the station.",
       "invalid_ip_host": "Invalid IP or station ID.",
-      "invalid_response": "Response invalid from station.",
+      "invalid_response": "Invalid response from the station.",
       "timeout_connect": "Timeout while connecting to the station.",
       "unknown": "Unexpected error."
     },
@@ -50,7 +50,7 @@
         "name": "Relative rain"
       },
       "rssi": {
-        "name": "RSSI (Signal strength)"
+        "name": "RSSI"
       },
       "temperature": {
         "name": "Temperature"
@@ -62,7 +62,7 @@
         "name": "Wind direction"
       },
       "wind_direction_deg": {
-        "name": "Wind direction deg"
+        "name": "Wind direction (degrees)"
       },
 
       "wind_gust": {

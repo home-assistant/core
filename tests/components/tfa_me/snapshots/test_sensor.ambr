@@ -169,7 +169,7 @@
     'state': '1',
   })
 # ---
-# name: test_tfa_me_sensor_entities_snapshot[sensor.tfa_me_05b_3e4_e44_05b3e4e44_rssi_signal_strength-entry]
+# name: test_tfa_me_sensor_entities_snapshot[sensor.tfa_me_05b_3e4_e44_05b3e4e44_rssi-entry]
   EntityRegistryEntrySnapshot({
     'aliases': list([
       None,
@@ -185,7 +185,7 @@
     'disabled_by': None,
     'domain': 'sensor',
     'entity_category': None,
-    'entity_id': 'sensor.tfa_me_05b_3e4_e44_05b3e4e44_rssi_signal_strength',
+    'entity_id': 'sensor.tfa_me_05b_3e4_e44_05b3e4e44_rssi',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -193,7 +193,7 @@
     'labels': set({
     }),
     'name': None,
-    'object_id_base': 'RSSI (Signal strength)',
+    'object_id_base': 'RSSI',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 0,
@@ -201,7 +201,7 @@
     }),
     'original_device_class': None,
     'original_icon': None,
-    'original_name': 'RSSI (Signal strength)',
+    'original_name': 'RSSI',
     'platform': 'tfa_me',
     'previous_unique_id': None,
     'suggested_object_id': None,
@@ -211,16 +211,16 @@
     'unit_of_measurement': '/255',
   })
 # ---
-# name: test_tfa_me_sensor_entities_snapshot[sensor.tfa_me_05b_3e4_e44_05b3e4e44_rssi_signal_strength-state]
+# name: test_tfa_me_sensor_entities_snapshot[sensor.tfa_me_05b_3e4_e44_05b3e4e44_rssi-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'TFA.me 05B-3E4-E44 (05B3E4E44) RSSI (Signal strength)',
+      'friendly_name': 'TFA.me 05B-3E4-E44 (05B3E4E44) RSSI',
       'measurement_timestamp': HAFakeDatetime(2025, 11, 26, 15, 7, 26, tzinfo=datetime.timezone.utc),
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
       'unit_of_measurement': '/255',
     }),
     'context': <ANY>,
-    'entity_id': 'sensor.tfa_me_05b_3e4_e44_05b3e4e44_rssi_signal_strength',
+    'entity_id': 'sensor.tfa_me_05b_3e4_e44_05b3e4e44_rssi',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
@@ -574,7 +574,7 @@
     'state': '0.0',
   })
 # ---
-# name: test_tfa_me_sensor_entities_snapshot[sensor.tfa_me_a1f_fff_fea_05b3e4e44_rssi_signal_strength-entry]
+# name: test_tfa_me_sensor_entities_snapshot[sensor.tfa_me_a1f_fff_fea_05b3e4e44_rssi-entry]
   EntityRegistryEntrySnapshot({
     'aliases': list([
       None,
@@ -590,7 +590,7 @@
     'disabled_by': None,
     'domain': 'sensor',
     'entity_category': None,
-    'entity_id': 'sensor.tfa_me_a1f_fff_fea_05b3e4e44_rssi_signal_strength',
+    'entity_id': 'sensor.tfa_me_a1f_fff_fea_05b3e4e44_rssi',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -598,7 +598,7 @@
     'labels': set({
     }),
     'name': None,
-    'object_id_base': 'RSSI (Signal strength)',
+    'object_id_base': 'RSSI',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 0,
@@ -606,7 +606,7 @@
     }),
     'original_device_class': None,
     'original_icon': None,
-    'original_name': 'RSSI (Signal strength)',
+    'original_name': 'RSSI',
     'platform': 'tfa_me',
     'previous_unique_id': None,
     'suggested_object_id': None,
@@ -616,16 +616,16 @@
     'unit_of_measurement': '/255',
   })
 # ---
-# name: test_tfa_me_sensor_entities_snapshot[sensor.tfa_me_a1f_fff_fea_05b3e4e44_rssi_signal_strength-state]
+# name: test_tfa_me_sensor_entities_snapshot[sensor.tfa_me_a1f_fff_fea_05b3e4e44_rssi-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'TFA.me A1F-FFF-FEA (05B3E4E44) RSSI (Signal strength)',
+      'friendly_name': 'TFA.me A1F-FFF-FEA (05B3E4E44) RSSI',
       'measurement_timestamp': HAFakeDatetime(2025, 11, 26, 15, 1, 57, tzinfo=datetime.timezone.utc),
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
       'unit_of_measurement': '/255',
     }),
     'context': <ANY>,
-    'entity_id': 'sensor.tfa_me_a1f_fff_fea_05b3e4e44_rssi_signal_strength',
+    'entity_id': 'sensor.tfa_me_a1f_fff_fea_05b3e4e44_rssi',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
@@ -684,7 +684,7 @@
     'state': '0',
   })
 # ---
-# name: test_tfa_me_sensor_entities_snapshot[sensor.tfa_me_a20_4e4_df6_05b3e4e44_rssi_signal_strength-entry]
+# name: test_tfa_me_sensor_entities_snapshot[sensor.tfa_me_a20_4e4_df6_05b3e4e44_rssi-entry]
   EntityRegistryEntrySnapshot({
     'aliases': list([
       None,
@@ -700,7 +700,7 @@
     'disabled_by': None,
     'domain': 'sensor',
     'entity_category': None,
-    'entity_id': 'sensor.tfa_me_a20_4e4_df6_05b3e4e44_rssi_signal_strength',
+    'entity_id': 'sensor.tfa_me_a20_4e4_df6_05b3e4e44_rssi',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -708,7 +708,7 @@
     'labels': set({
     }),
     'name': None,
-    'object_id_base': 'RSSI (Signal strength)',
+    'object_id_base': 'RSSI',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 0,
@@ -716,7 +716,7 @@
     }),
     'original_device_class': None,
     'original_icon': None,
-    'original_name': 'RSSI (Signal strength)',
+    'original_name': 'RSSI',
     'platform': 'tfa_me',
     'previous_unique_id': None,
     'suggested_object_id': None,
@@ -726,16 +726,16 @@
     'unit_of_measurement': '/255',
   })
 # ---
-# name: test_tfa_me_sensor_entities_snapshot[sensor.tfa_me_a20_4e4_df6_05b3e4e44_rssi_signal_strength-state]
+# name: test_tfa_me_sensor_entities_snapshot[sensor.tfa_me_a20_4e4_df6_05b3e4e44_rssi-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'TFA.me A20-4E4-DF6 (05B3E4E44) RSSI (Signal strength)',
+      'friendly_name': 'TFA.me A20-4E4-DF6 (05B3E4E44) RSSI',
       'measurement_timestamp': HAFakeDatetime(2025, 11, 26, 15, 11, 26, tzinfo=datetime.timezone.utc),
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
       'unit_of_measurement': '/255',
     }),
     'context': <ANY>,
-    'entity_id': 'sensor.tfa_me_a20_4e4_df6_05b3e4e44_rssi_signal_strength',
+    'entity_id': 'sensor.tfa_me_a20_4e4_df6_05b3e4e44_rssi',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
@@ -797,7 +797,7 @@
     'state': '8',
   })
 # ---
-# name: test_tfa_me_sensor_entities_snapshot[sensor.tfa_me_a20_4e4_df6_05b3e4e44_wind_direction_deg-entry]
+# name: test_tfa_me_sensor_entities_snapshot[sensor.tfa_me_a20_4e4_df6_05b3e4e44_wind_direction_degrees-entry]
   EntityRegistryEntrySnapshot({
     'aliases': list([
       None,
@@ -813,7 +813,7 @@
     'disabled_by': None,
     'domain': 'sensor',
     'entity_category': None,
-    'entity_id': 'sensor.tfa_me_a20_4e4_df6_05b3e4e44_wind_direction_deg',
+    'entity_id': 'sensor.tfa_me_a20_4e4_df6_05b3e4e44_wind_direction_degrees',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -821,7 +821,7 @@
     'labels': set({
     }),
     'name': None,
-    'object_id_base': 'Wind direction deg',
+    'object_id_base': 'Wind direction (degrees)',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 1,
@@ -829,7 +829,7 @@
     }),
     'original_device_class': None,
     'original_icon': None,
-    'original_name': 'Wind direction deg',
+    'original_name': 'Wind direction (degrees)',
     'platform': 'tfa_me',
     'previous_unique_id': None,
     'suggested_object_id': None,
@@ -839,16 +839,16 @@
     'unit_of_measurement': '°',
   })
 # ---
-# name: test_tfa_me_sensor_entities_snapshot[sensor.tfa_me_a20_4e4_df6_05b3e4e44_wind_direction_deg-state]
+# name: test_tfa_me_sensor_entities_snapshot[sensor.tfa_me_a20_4e4_df6_05b3e4e44_wind_direction_degrees-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'TFA.me A20-4E4-DF6 (05B3E4E44) Wind direction deg',
+      'friendly_name': 'TFA.me A20-4E4-DF6 (05B3E4E44) Wind direction (degrees)',
       'measurement_timestamp': HAFakeDatetime(2025, 11, 26, 15, 11, 26, tzinfo=datetime.timezone.utc),
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
       'unit_of_measurement': '°',
     }),
     'context': <ANY>,
-    'entity_id': 'sensor.tfa_me_a20_4e4_df6_05b3e4e44_wind_direction_deg',
+    'entity_id': 'sensor.tfa_me_a20_4e4_df6_05b3e4e44_wind_direction_degrees',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
@@ -1031,7 +1031,7 @@
     'state': '0',
   })
 # ---
-# name: test_tfa_me_sensor_entities_snapshot[sensor.tfa_me_a2f_fff_ffb_05b3e4e44_rssi_signal_strength-entry]
+# name: test_tfa_me_sensor_entities_snapshot[sensor.tfa_me_a2f_fff_ffb_05b3e4e44_rssi-entry]
   EntityRegistryEntrySnapshot({
     'aliases': list([
       None,
@@ -1047,7 +1047,7 @@
     'disabled_by': None,
     'domain': 'sensor',
     'entity_category': None,
-    'entity_id': 'sensor.tfa_me_a2f_fff_ffb_05b3e4e44_rssi_signal_strength',
+    'entity_id': 'sensor.tfa_me_a2f_fff_ffb_05b3e4e44_rssi',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -1055,7 +1055,7 @@
     'labels': set({
     }),
     'name': None,
-    'object_id_base': 'RSSI (Signal strength)',
+    'object_id_base': 'RSSI',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 0,
@@ -1063,7 +1063,7 @@
     }),
     'original_device_class': None,
     'original_icon': None,
-    'original_name': 'RSSI (Signal strength)',
+    'original_name': 'RSSI',
     'platform': 'tfa_me',
     'previous_unique_id': None,
     'suggested_object_id': None,
@@ -1073,16 +1073,16 @@
     'unit_of_measurement': '/255',
   })
 # ---
-# name: test_tfa_me_sensor_entities_snapshot[sensor.tfa_me_a2f_fff_ffb_05b3e4e44_rssi_signal_strength-state]
+# name: test_tfa_me_sensor_entities_snapshot[sensor.tfa_me_a2f_fff_ffb_05b3e4e44_rssi-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'TFA.me A2F-FFF-FFB (05B3E4E44) RSSI (Signal strength)',
+      'friendly_name': 'TFA.me A2F-FFF-FFB (05B3E4E44) RSSI',
       'measurement_timestamp': HAFakeDatetime(2025, 11, 26, 15, 10, 23, tzinfo=datetime.timezone.utc),
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
       'unit_of_measurement': '/255',
     }),
     'context': <ANY>,
-    'entity_id': 'sensor.tfa_me_a2f_fff_ffb_05b3e4e44_rssi_signal_strength',
+    'entity_id': 'sensor.tfa_me_a2f_fff_ffb_05b3e4e44_rssi',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
@@ -1144,7 +1144,7 @@
     'state': '8',
   })
 # ---
-# name: test_tfa_me_sensor_entities_snapshot[sensor.tfa_me_a2f_fff_ffb_05b3e4e44_wind_direction_deg-entry]
+# name: test_tfa_me_sensor_entities_snapshot[sensor.tfa_me_a2f_fff_ffb_05b3e4e44_wind_direction_degrees-entry]
   EntityRegistryEntrySnapshot({
     'aliases': list([
       None,
@@ -1160,7 +1160,7 @@
     'disabled_by': None,
     'domain': 'sensor',
     'entity_category': None,
-    'entity_id': 'sensor.tfa_me_a2f_fff_ffb_05b3e4e44_wind_direction_deg',
+    'entity_id': 'sensor.tfa_me_a2f_fff_ffb_05b3e4e44_wind_direction_degrees',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -1168,7 +1168,7 @@
     'labels': set({
     }),
     'name': None,
-    'object_id_base': 'Wind direction deg',
+    'object_id_base': 'Wind direction (degrees)',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 1,
@@ -1176,7 +1176,7 @@
     }),
     'original_device_class': None,
     'original_icon': None,
-    'original_name': 'Wind direction deg',
+    'original_name': 'Wind direction (degrees)',
     'platform': 'tfa_me',
     'previous_unique_id': None,
     'suggested_object_id': None,
@@ -1186,16 +1186,16 @@
     'unit_of_measurement': '°',
   })
 # ---
-# name: test_tfa_me_sensor_entities_snapshot[sensor.tfa_me_a2f_fff_ffb_05b3e4e44_wind_direction_deg-state]
+# name: test_tfa_me_sensor_entities_snapshot[sensor.tfa_me_a2f_fff_ffb_05b3e4e44_wind_direction_degrees-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'TFA.me A2F-FFF-FFB (05B3E4E44) Wind direction deg',
+      'friendly_name': 'TFA.me A2F-FFF-FFB (05B3E4E44) Wind direction (degrees)',
       'measurement_timestamp': HAFakeDatetime(2025, 11, 26, 15, 10, 23, tzinfo=datetime.timezone.utc),
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
       'unit_of_measurement': '°',
     }),
     'context': <ANY>,
-    'entity_id': 'sensor.tfa_me_a2f_fff_ffb_05b3e4e44_wind_direction_deg',
+    'entity_id': 'sensor.tfa_me_a2f_fff_ffb_05b3e4e44_wind_direction_degrees',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
@@ -1378,7 +1378,7 @@
     'state': '0',
   })
 # ---
-# name: test_tfa_me_sensor_entities_snapshot[sensor.tfa_me_a36_4f3_d67_05b3e4e44_rssi_signal_strength-entry]
+# name: test_tfa_me_sensor_entities_snapshot[sensor.tfa_me_a36_4f3_d67_05b3e4e44_rssi-entry]
   EntityRegistryEntrySnapshot({
     'aliases': list([
       None,
@@ -1394,7 +1394,7 @@
     'disabled_by': None,
     'domain': 'sensor',
     'entity_category': None,
-    'entity_id': 'sensor.tfa_me_a36_4f3_d67_05b3e4e44_rssi_signal_strength',
+    'entity_id': 'sensor.tfa_me_a36_4f3_d67_05b3e4e44_rssi',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -1402,7 +1402,7 @@
     'labels': set({
     }),
     'name': None,
-    'object_id_base': 'RSSI (Signal strength)',
+    'object_id_base': 'RSSI',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 0,
@@ -1410,7 +1410,7 @@
     }),
     'original_device_class': None,
     'original_icon': None,
-    'original_name': 'RSSI (Signal strength)',
+    'original_name': 'RSSI',
     'platform': 'tfa_me',
     'previous_unique_id': None,
     'suggested_object_id': None,
@@ -1420,16 +1420,16 @@
     'unit_of_measurement': '/255',
   })
 # ---
-# name: test_tfa_me_sensor_entities_snapshot[sensor.tfa_me_a36_4f3_d67_05b3e4e44_rssi_signal_strength-state]
+# name: test_tfa_me_sensor_entities_snapshot[sensor.tfa_me_a36_4f3_d67_05b3e4e44_rssi-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'TFA.me A36-4F3-D67 (05B3E4E44) RSSI (Signal strength)',
+      'friendly_name': 'TFA.me A36-4F3-D67 (05B3E4E44) RSSI',
       'measurement_timestamp': HAFakeDatetime(2025, 11, 26, 15, 8, 47, tzinfo=datetime.timezone.utc),
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
       'unit_of_measurement': '/255',
     }),
     'context': <ANY>,
-    'entity_id': 'sensor.tfa_me_a36_4f3_d67_05b3e4e44_rssi_signal_strength',
+    'entity_id': 'sensor.tfa_me_a36_4f3_d67_05b3e4e44_rssi',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
@@ -1606,7 +1606,7 @@
     'state': '0',
   })
 # ---
-# name: test_tfa_me_sensor_entities_snapshot[sensor.tfa_me_a44_812_90f_05b3e4e44_rssi_signal_strength-entry]
+# name: test_tfa_me_sensor_entities_snapshot[sensor.tfa_me_a44_812_90f_05b3e4e44_rssi-entry]
   EntityRegistryEntrySnapshot({
     'aliases': list([
       None,
@@ -1622,7 +1622,7 @@
     'disabled_by': None,
     'domain': 'sensor',
     'entity_category': None,
-    'entity_id': 'sensor.tfa_me_a44_812_90f_05b3e4e44_rssi_signal_strength',
+    'entity_id': 'sensor.tfa_me_a44_812_90f_05b3e4e44_rssi',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -1630,7 +1630,7 @@
     'labels': set({
     }),
     'name': None,
-    'object_id_base': 'RSSI (Signal strength)',
+    'object_id_base': 'RSSI',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 0,
@@ -1638,7 +1638,7 @@
     }),
     'original_device_class': None,
     'original_icon': None,
-    'original_name': 'RSSI (Signal strength)',
+    'original_name': 'RSSI',
     'platform': 'tfa_me',
     'previous_unique_id': None,
     'suggested_object_id': None,
@@ -1648,16 +1648,16 @@
     'unit_of_measurement': '/255',
   })
 # ---
-# name: test_tfa_me_sensor_entities_snapshot[sensor.tfa_me_a44_812_90f_05b3e4e44_rssi_signal_strength-state]
+# name: test_tfa_me_sensor_entities_snapshot[sensor.tfa_me_a44_812_90f_05b3e4e44_rssi-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'TFA.me A44-812-90F (05B3E4E44) RSSI (Signal strength)',
+      'friendly_name': 'TFA.me A44-812-90F (05B3E4E44) RSSI',
       'measurement_timestamp': HAFakeDatetime(2025, 11, 26, 15, 10, 42, tzinfo=datetime.timezone.utc),
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
       'unit_of_measurement': '/255',
     }),
     'context': <ANY>,
-    'entity_id': 'sensor.tfa_me_a44_812_90f_05b3e4e44_rssi_signal_strength',
+    'entity_id': 'sensor.tfa_me_a44_812_90f_05b3e4e44_rssi',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
@@ -1893,7 +1893,7 @@
     'state': '1',
   })
 # ---
-# name: test_tfa_me_sensor_entities_snapshot[sensor.tfa_me_a6f_169_ad1_05b3e4e44_rssi_signal_strength-entry]
+# name: test_tfa_me_sensor_entities_snapshot[sensor.tfa_me_a6f_169_ad1_05b3e4e44_rssi-entry]
   EntityRegistryEntrySnapshot({
     'aliases': list([
       None,
@@ -1909,7 +1909,7 @@
     'disabled_by': None,
     'domain': 'sensor',
     'entity_category': None,
-    'entity_id': 'sensor.tfa_me_a6f_169_ad1_05b3e4e44_rssi_signal_strength',
+    'entity_id': 'sensor.tfa_me_a6f_169_ad1_05b3e4e44_rssi',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -1917,7 +1917,7 @@
     'labels': set({
     }),
     'name': None,
-    'object_id_base': 'RSSI (Signal strength)',
+    'object_id_base': 'RSSI',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 0,
@@ -1925,7 +1925,7 @@
     }),
     'original_device_class': None,
     'original_icon': None,
-    'original_name': 'RSSI (Signal strength)',
+    'original_name': 'RSSI',
     'platform': 'tfa_me',
     'previous_unique_id': None,
     'suggested_object_id': None,
@@ -1935,16 +1935,16 @@
     'unit_of_measurement': '/255',
   })
 # ---
-# name: test_tfa_me_sensor_entities_snapshot[sensor.tfa_me_a6f_169_ad1_05b3e4e44_rssi_signal_strength-state]
+# name: test_tfa_me_sensor_entities_snapshot[sensor.tfa_me_a6f_169_ad1_05b3e4e44_rssi-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'TFA.me A6F-169-AD1 (05B3E4E44) RSSI (Signal strength)',
+      'friendly_name': 'TFA.me A6F-169-AD1 (05B3E4E44) RSSI',
       'measurement_timestamp': HAFakeDatetime(2025, 11, 26, 15, 11, 5, tzinfo=datetime.timezone.utc),
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
       'unit_of_measurement': '/255',
     }),
     'context': <ANY>,
-    'entity_id': 'sensor.tfa_me_a6f_169_ad1_05b3e4e44_rssi_signal_strength',
+    'entity_id': 'sensor.tfa_me_a6f_169_ad1_05b3e4e44_rssi',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
@@ -2298,7 +2298,7 @@
     'state': '0.0',
   })
 # ---
-# name: test_tfa_me_sensor_entities_snapshot[sensor.tfa_me_bb1_234_567_05b3e4e44_rssi_signal_strength-entry]
+# name: test_tfa_me_sensor_entities_snapshot[sensor.tfa_me_bb1_234_567_05b3e4e44_rssi-entry]
   EntityRegistryEntrySnapshot({
     'aliases': list([
       None,
@@ -2314,7 +2314,7 @@
     'disabled_by': None,
     'domain': 'sensor',
     'entity_category': None,
-    'entity_id': 'sensor.tfa_me_bb1_234_567_05b3e4e44_rssi_signal_strength',
+    'entity_id': 'sensor.tfa_me_bb1_234_567_05b3e4e44_rssi',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -2322,7 +2322,7 @@
     'labels': set({
     }),
     'name': None,
-    'object_id_base': 'RSSI (Signal strength)',
+    'object_id_base': 'RSSI',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 0,
@@ -2330,7 +2330,7 @@
     }),
     'original_device_class': None,
     'original_icon': None,
-    'original_name': 'RSSI (Signal strength)',
+    'original_name': 'RSSI',
     'platform': 'tfa_me',
     'previous_unique_id': None,
     'suggested_object_id': None,
@@ -2340,16 +2340,16 @@
     'unit_of_measurement': '/255',
   })
 # ---
-# name: test_tfa_me_sensor_entities_snapshot[sensor.tfa_me_bb1_234_567_05b3e4e44_rssi_signal_strength-state]
+# name: test_tfa_me_sensor_entities_snapshot[sensor.tfa_me_bb1_234_567_05b3e4e44_rssi-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'TFA.me BB1-234-567 (05B3E4E44) RSSI (Signal strength)',
+      'friendly_name': 'TFA.me BB1-234-567 (05B3E4E44) RSSI',
       'measurement_timestamp': HAFakeDatetime(2025, 11, 26, 15, 1, 57, tzinfo=datetime.timezone.utc),
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
       'unit_of_measurement': '/255',
     }),
     'context': <ANY>,
-    'entity_id': 'sensor.tfa_me_bb1_234_567_05b3e4e44_rssi_signal_strength',
+    'entity_id': 'sensor.tfa_me_bb1_234_567_05b3e4e44_rssi',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,

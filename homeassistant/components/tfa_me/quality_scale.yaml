@@ -48,7 +48,10 @@ rules:
   # Gold
   devices: done
   diagnostics: todo
-  discovery-update-info: todo
+  discovery-update-info:
+    status: exempt
+    comment: |
+      This integration does not use discovery, therefore update-info is not applicable.
   discovery:
     status: exempt
     comment: |

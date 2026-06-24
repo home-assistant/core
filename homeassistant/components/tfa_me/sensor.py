@@ -21,7 +21,8 @@ from homeassistant.helpers.update_coordinator import CoordinatorEntity
 from homeassistant.util import dt as dt_util
 
 from .const import DEVICE_MAPPING, DOMAIN, TIMEOUT_FOR_5_MIN, TIMEOUT_MAPPING
-from .coordinator import TFAmeConfigEntry, TFAmeUpdateCoordinator, resolve_tfa_host
+from .coordinator import TFAmeConfigEntry, TFAmeUpdateCoordinator
+from .helper import resolve_tfa_host
 
 PARALLEL_UPDATES = 0
 

@@ -44,16 +44,14 @@ class TFAmeConfigFlow(ConfigFlow, domain=DOMAIN):
         )
 
         if user_input is not None:
-            ip_host_str = user_input.get(CONF_IP_ADDRESS)
+            ip_host_str = user_input[CONF_IP_ADDRESS]
             validator = TFAmeValidator()
 
             if validator.is_valid_ip_or_tfa_me(ip_host_str):
-                title_str = DEFAULT_STATION_NAME
-                if isinstance(ip_host_str, str):
-                    title_str = f"{DEFAULT_STATION_NAME} '{ip_host_str.upper()}'"
+                title_str = f"{DEFAULT_STATION_NAME} '{ip_host_str.upper()}'"
 
                 try:
-                    data_helper = TFAmeUniqueID(self.hass, str(ip_host_str))
+                    data_helper = TFAmeUniqueID(self.hass, ip_host_str)
                     identifier = await data_helper.get_identifier()
 
                 except TFAmeTimeoutError:
