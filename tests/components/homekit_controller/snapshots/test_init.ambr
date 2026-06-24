@@ -1587,9 +1587,9 @@
           }),
           'state': dict({
             'attributes': dict({
-              'changed_by': None,
-              'code_arm_required': False,
-              'code_format': None,
+              <AlarmControlPanelEntityStateAttribute.CHANGED_BY: 'changed_by'>: None,
+              <AlarmControlPanelEntityStateAttribute.CODE_ARM_REQUIRED: 'code_arm_required'>: False,
+              <AlarmControlPanelEntityStateAttribute.CODE_FORMAT: 'code_format'>: None,
               'friendly_name': 'Aqara-Hub-E1-00A0 Security System',
               'supported_features': <AlarmControlPanelEntityFeature: 7>,
             }),
@@ -1987,9 +1987,9 @@
           }),
           'state': dict({
             'attributes': dict({
-              'changed_by': None,
-              'code_arm_required': False,
-              'code_format': None,
+              <AlarmControlPanelEntityStateAttribute.CHANGED_BY: 'changed_by'>: None,
+              <AlarmControlPanelEntityStateAttribute.CODE_ARM_REQUIRED: 'code_arm_required'>: False,
+              <AlarmControlPanelEntityStateAttribute.CODE_FORMAT: 'code_format'>: None,
               'friendly_name': 'Aqara Hub-1563 Security System',
               'supported_features': <AlarmControlPanelEntityFeature: 7>,
             }),

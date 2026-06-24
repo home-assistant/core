@@ -2,9 +2,9 @@
 # name: test_setup_config_entry
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'changed_by': None,
-      'code_arm_required': True,
-      'code_format': <CodeFormat.NUMBER: 'number'>,
+      <AlarmControlPanelEntityStateAttribute.CHANGED_BY: 'changed_by'>: None,
+      <AlarmControlPanelEntityStateAttribute.CODE_ARM_REQUIRED: 'code_arm_required'>: True,
+      <AlarmControlPanelEntityStateAttribute.CODE_FORMAT: 'code_format'>: <CodeFormat.NUMBER: 'number'>,
       'friendly_name': 'My template',
       'supported_features': <AlarmControlPanelEntityFeature: 0>,
     }),
