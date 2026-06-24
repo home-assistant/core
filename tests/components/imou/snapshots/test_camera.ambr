@@ -39,7 +39,7 @@
 # name: test_camera_entities_snapshot[imou_mock_devices0][camera.device_1_live_view_hd-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'access_token': '1caab5c3b3',
+      <CameraEntityStateAttribute.ACCESS_TOKEN: 'access_token'>: '1caab5c3b3',
       'entity_picture': '/api/camera_proxy/camera.device_1_live_view_hd?token=1caab5c3b3',
       'friendly_name': 'Device 1 Live view HD',
       'supported_features': <CameraEntityFeature: 2>,
@@ -92,7 +92,7 @@
 # name: test_camera_entities_snapshot[imou_mock_devices0][camera.device_1_live_view_sd-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'access_token': '1caab5c3b3',
+      <CameraEntityStateAttribute.ACCESS_TOKEN: 'access_token'>: '1caab5c3b3',
       'entity_picture': '/api/camera_proxy/camera.device_1_live_view_sd?token=1caab5c3b3',
       'friendly_name': 'Device 1 Live view SD',
       'supported_features': <CameraEntityFeature: 2>,
@@ -108,10 +108,10 @@
 # name: test_camera_state[both_detect_on-camera_hd]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'access_token': '1caab5c3b3',
+      <CameraEntityStateAttribute.ACCESS_TOKEN: 'access_token'>: '1caab5c3b3',
       'entity_picture': '/api/camera_proxy/camera.device_1_live_view_hd?token=1caab5c3b3',
       'friendly_name': 'Device 1 Live view HD',
-      'motion_detection': True,
+      <CameraEntityStateAttribute.MOTION_DETECTION: 'motion_detection'>: True,
       'supported_features': <CameraEntityFeature: 2>,
     }),
     'context': <ANY>,
@@ -125,10 +125,10 @@
 # name: test_camera_state[both_detect_on-camera_sd]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'access_token': '1caab5c3b3',
+      <CameraEntityStateAttribute.ACCESS_TOKEN: 'access_token'>: '1caab5c3b3',
       'entity_picture': '/api/camera_proxy/camera.device_1_live_view_sd?token=1caab5c3b3',
       'friendly_name': 'Device 1 Live view SD',
-      'motion_detection': True,
+      <CameraEntityStateAttribute.MOTION_DETECTION: 'motion_detection'>: True,
       'supported_features': <CameraEntityFeature: 2>,
     }),
     'context': <ANY>,
@@ -142,10 +142,10 @@
 # name: test_camera_state[header_detect_on-camera_hd]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'access_token': '1caab5c3b3',
+      <CameraEntityStateAttribute.ACCESS_TOKEN: 'access_token'>: '1caab5c3b3',
       'entity_picture': '/api/camera_proxy/camera.device_1_live_view_hd?token=1caab5c3b3',
       'friendly_name': 'Device 1 Live view HD',
-      'motion_detection': True,
+      <CameraEntityStateAttribute.MOTION_DETECTION: 'motion_detection'>: True,
       'supported_features': <CameraEntityFeature: 2>,
     }),
     'context': <ANY>,
@@ -159,10 +159,10 @@
 # name: test_camera_state[header_detect_on-camera_sd]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'access_token': '1caab5c3b3',
+      <CameraEntityStateAttribute.ACCESS_TOKEN: 'access_token'>: '1caab5c3b3',
       'entity_picture': '/api/camera_proxy/camera.device_1_live_view_sd?token=1caab5c3b3',
       'friendly_name': 'Device 1 Live view SD',
-      'motion_detection': True,
+      <CameraEntityStateAttribute.MOTION_DETECTION: 'motion_detection'>: True,
       'supported_features': <CameraEntityFeature: 2>,
     }),
     'context': <ANY>,
@@ -176,10 +176,10 @@
 # name: test_camera_state[motion_detect_on-camera_hd]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'access_token': '1caab5c3b3',
+      <CameraEntityStateAttribute.ACCESS_TOKEN: 'access_token'>: '1caab5c3b3',
       'entity_picture': '/api/camera_proxy/camera.device_1_live_view_hd?token=1caab5c3b3',
       'friendly_name': 'Device 1 Live view HD',
-      'motion_detection': True,
+      <CameraEntityStateAttribute.MOTION_DETECTION: 'motion_detection'>: True,
       'supported_features': <CameraEntityFeature: 2>,
     }),
     'context': <ANY>,
@@ -193,10 +193,10 @@
 # name: test_camera_state[motion_detect_on-camera_sd]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'access_token': '1caab5c3b3',
+      <CameraEntityStateAttribute.ACCESS_TOKEN: 'access_token'>: '1caab5c3b3',
       'entity_picture': '/api/camera_proxy/camera.device_1_live_view_sd?token=1caab5c3b3',
       'friendly_name': 'Device 1 Live view SD',
-      'motion_detection': True,
+      <CameraEntityStateAttribute.MOTION_DETECTION: 'motion_detection'>: True,
       'supported_features': <CameraEntityFeature: 2>,
     }),
     'context': <ANY>,
@@ -210,7 +210,7 @@
 # name: test_camera_state[no_detect_switches-camera_hd]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'access_token': '1caab5c3b3',
+      <CameraEntityStateAttribute.ACCESS_TOKEN: 'access_token'>: '1caab5c3b3',
       'entity_picture': '/api/camera_proxy/camera.device_1_live_view_hd?token=1caab5c3b3',
       'friendly_name': 'Device 1 Live view HD',
       'supported_features': <CameraEntityFeature: 2>,
@@ -226,7 +226,7 @@
 # name: test_camera_state[no_detect_switches-camera_sd]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'access_token': '1caab5c3b3',
+      <CameraEntityStateAttribute.ACCESS_TOKEN: 'access_token'>: '1caab5c3b3',
       'entity_picture': '/api/camera_proxy/camera.device_1_live_view_sd?token=1caab5c3b3',
       'friendly_name': 'Device 1 Live view SD',
       'supported_features': <CameraEntityFeature: 2>,
