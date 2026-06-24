@@ -139,7 +139,7 @@
             ]),
             'area_id': None,
             'capabilities': dict({
-              'options': list([
+              <SelectEntityCapabilityAttribute.OPTIONS: 'options'>: list([
                 'automatic',
                 'manual',
               ]),
@@ -176,7 +176,7 @@
           'state': dict({
             'attributes': dict({
               'friendly_name': 'Airversa AP2 1808 Air Purifier Mode',
-              'options': list([
+              <SelectEntityCapabilityAttribute.OPTIONS: 'options'>: list([
                 'automatic',
                 'manual',
               ]),
@@ -192,7 +192,7 @@
             ]),
             'area_id': None,
             'capabilities': dict({
-              'options': list([
+              <SensorEntityCapabilityAttribute.OPTIONS: 'options'>: list([
                 'inactive',
                 'idle',
                 'purifying',
@@ -231,7 +231,7 @@
             'attributes': dict({
               'device_class': 'enum',
               'friendly_name': 'Airversa AP2 1808 Air Purifier Status',
-              'options': list([
+              <SensorEntityCapabilityAttribute.OPTIONS: 'options'>: list([
                 'inactive',
                 'idle',
                 'purifying',
@@ -248,7 +248,7 @@
             ]),
             'area_id': None,
             'capabilities': dict({
-              'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+              <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
             }),
             'config_entry_id': <ANY>,
             'config_subentry_id': <ANY>,
@@ -283,7 +283,7 @@
             'attributes': dict({
               'device_class': 'aqi',
               'friendly_name': 'Airversa AP2 1808 Air Quality',
-              'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+              <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
             }),
             'entity_id': 'sensor.airversa_ap2_1808_air_quality',
             'state': '1',
@@ -296,7 +296,7 @@
             ]),
             'area_id': None,
             'capabilities': dict({
-              'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+              <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
             }),
             'config_entry_id': <ANY>,
             'config_subentry_id': <ANY>,
@@ -330,7 +330,7 @@
           'state': dict({
             'attributes': dict({
               'friendly_name': 'Airversa AP2 1808 Filter lifetime',
-              'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+              <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
               'unit_of_measurement': '%',
             }),
             'entity_id': 'sensor.airversa_ap2_1808_filter_lifetime',
@@ -344,7 +344,7 @@
             ]),
             'area_id': None,
             'capabilities': dict({
-              'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+              <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
             }),
             'config_entry_id': <ANY>,
             'config_subentry_id': <ANY>,
@@ -379,7 +379,7 @@
             'attributes': dict({
               'device_class': 'pm25',
               'friendly_name': 'Airversa AP2 1808 PM2.5 Density',
-              'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+              <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
               'unit_of_measurement': 'μg/m³',
             }),
             'entity_id': 'sensor.airversa_ap2_1808_pm2_5_density',
@@ -393,7 +393,7 @@
             ]),
             'area_id': None,
             'capabilities': dict({
-              'options': list([
+              <SensorEntityCapabilityAttribute.OPTIONS: 'options'>: list([
                 'border_router_capable',
                 'full',
                 'minimal',
@@ -435,7 +435,7 @@
             'attributes': dict({
               'device_class': 'enum',
               'friendly_name': 'Airversa AP2 1808 Thread Capabilities',
-              'options': list([
+              <SensorEntityCapabilityAttribute.OPTIONS: 'options'>: list([
                 'border_router_capable',
                 'full',
                 'minimal',
@@ -455,7 +455,7 @@
             ]),
             'area_id': None,
             'capabilities': dict({
-              'options': list([
+              <SensorEntityCapabilityAttribute.OPTIONS: 'options'>: list([
                 'border_router',
                 'child',
                 'detached',
@@ -498,7 +498,7 @@
             'attributes': dict({
               'device_class': 'enum',
               'friendly_name': 'Airversa AP2 1808 Thread Status',
-              'options': list([
+              <SensorEntityCapabilityAttribute.OPTIONS: 'options'>: list([
                 'border_router',
                 'child',
                 'detached',
@@ -901,7 +901,7 @@
             ]),
             'area_id': None,
             'capabilities': dict({
-              'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+              <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
             }),
             'config_entry_id': <ANY>,
             'config_subentry_id': <ANY>,
@@ -937,7 +937,7 @@
               'device_class': 'battery',
               'friendly_name': 'eufyCam2-0000 Battery',
               'icon': 'mdi:battery-20',
-              'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+              <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
               'unit_of_measurement': '%',
             }),
             'entity_id': 'sensor.eufycam2_0000_battery',
@@ -1163,7 +1163,7 @@
             ]),
             'area_id': None,
             'capabilities': dict({
-              'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+              <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
             }),
             'config_entry_id': <ANY>,
             'config_subentry_id': <ANY>,
@@ -1199,7 +1199,7 @@
               'device_class': 'battery',
               'friendly_name': 'eufyCam2-000A Battery',
               'icon': 'mdi:battery-40',
-              'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+              <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
               'unit_of_measurement': '%',
             }),
             'entity_id': 'sensor.eufycam2_000a_battery',
@@ -1425,7 +1425,7 @@
             ]),
             'area_id': None,
             'capabilities': dict({
-              'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+              <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
             }),
             'config_entry_id': <ANY>,
             'config_subentry_id': <ANY>,
@@ -1461,7 +1461,7 @@
               'device_class': 'battery',
               'friendly_name': 'eufyCam2-000A Battery',
               'icon': 'mdi:battery-alert',
-              'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+              <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
               'unit_of_measurement': '%',
             }),
             'entity_id': 'sensor.eufycam2_000a_battery_2',
@@ -1587,9 +1587,9 @@
           }),
           'state': dict({
             'attributes': dict({
-              'changed_by': None,
-              'code_arm_required': False,
-              'code_format': None,
+              <AlarmControlPanelEntityStateAttribute.CHANGED_BY: 'changed_by'>: None,
+              <AlarmControlPanelEntityStateAttribute.CODE_ARM_REQUIRED: 'code_arm_required'>: False,
+              <AlarmControlPanelEntityStateAttribute.CODE_FORMAT: 'code_format'>: None,
               'friendly_name': 'Aqara-Hub-E1-00A0 Security System',
               'supported_features': <AlarmControlPanelEntityFeature: 7>,
             }),
@@ -1649,10 +1649,10 @@
             ]),
             'area_id': None,
             'capabilities': dict({
-              'max': 100,
-              'min': 0.0,
-              'mode': <NumberMode.AUTO: 'auto'>,
-              'step': 1,
+              <NumberEntityCapabilityAttribute.MAX: 'max'>: 100,
+              <NumberEntityCapabilityAttribute.MIN: 'min'>: 0.0,
+              <NumberEntityCapabilityAttribute.MODE: 'mode'>: <NumberMode.AUTO: 'auto'>,
+              <NumberEntityCapabilityAttribute.STEP: 'step'>: 1,
             }),
             'config_entry_id': <ANY>,
             'config_subentry_id': <ANY>,
@@ -1686,10 +1686,10 @@
           'state': dict({
             'attributes': dict({
               'friendly_name': 'Aqara-Hub-E1-00A0 Volume',
-              'max': 100,
-              'min': 0.0,
-              'mode': <NumberMode.AUTO: 'auto'>,
-              'step': 1,
+              <NumberEntityCapabilityAttribute.MAX: 'max'>: 100,
+              <NumberEntityCapabilityAttribute.MIN: 'min'>: 0.0,
+              <NumberEntityCapabilityAttribute.MODE: 'mode'>: <NumberMode.AUTO: 'auto'>,
+              <NumberEntityCapabilityAttribute.STEP: 'step'>: 1,
             }),
             'entity_id': 'number.aqara_hub_e1_00a0_volume',
             'state': '40',
@@ -1869,7 +1869,7 @@
             ]),
             'area_id': None,
             'capabilities': dict({
-              'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+              <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
             }),
             'config_entry_id': <ANY>,
             'config_subentry_id': <ANY>,
@@ -1905,7 +1905,7 @@
               'device_class': 'battery',
               'friendly_name': 'Contact Sensor Battery Sensor',
               'icon': 'mdi:battery',
-              'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+              <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
               'unit_of_measurement': '%',
             }),
             'entity_id': 'sensor.contact_sensor_battery_sensor',
@@ -1987,9 +1987,9 @@
           }),
           'state': dict({
             'attributes': dict({
-              'changed_by': None,
-              'code_arm_required': False,
-              'code_format': None,
+              <AlarmControlPanelEntityStateAttribute.CHANGED_BY: 'changed_by'>: None,
+              <AlarmControlPanelEntityStateAttribute.CODE_ARM_REQUIRED: 'code_arm_required'>: False,
+              <AlarmControlPanelEntityStateAttribute.CODE_FORMAT: 'code_format'>: None,
               'friendly_name': 'Aqara Hub-1563 Security System',
               'supported_features': <AlarmControlPanelEntityFeature: 7>,
             }),
@@ -2049,9 +2049,9 @@
             ]),
             'area_id': None,
             'capabilities': dict({
-              'max_color_temp_kelvin': 6535,
-              'min_color_temp_kelvin': 2000,
-              'supported_color_modes': list([
+              <LightEntityCapabilityAttribute.MAX_COLOR_TEMP_KELVIN: 'max_color_temp_kelvin'>: 6535,
+              <LightEntityCapabilityAttribute.MIN_COLOR_TEMP_KELVIN: 'min_color_temp_kelvin'>: 2000,
+              <LightEntityCapabilityAttribute.SUPPORTED_COLOR_MODES: 'supported_color_modes'>: list([
                 <ColorMode.COLOR_TEMP: 'color_temp'>,
                 <ColorMode.HS: 'hs'>,
               ]),
@@ -2087,20 +2087,20 @@
           }),
           'state': dict({
             'attributes': dict({
-              'brightness': None,
-              'color_mode': None,
-              'color_temp_kelvin': None,
+              <LightEntityStateAttribute.BRIGHTNESS: 'brightness'>: None,
+              <LightEntityStateAttribute.COLOR_MODE: 'color_mode'>: None,
+              <LightEntityStateAttribute.COLOR_TEMP_KELVIN: 'color_temp_kelvin'>: None,
               'friendly_name': 'Aqara Hub-1563 Lightbulb-1563',
-              'hs_color': None,
-              'max_color_temp_kelvin': 6535,
-              'min_color_temp_kelvin': 2000,
-              'rgb_color': None,
-              'supported_color_modes': list([
+              <LightEntityStateAttribute.HS_COLOR: 'hs_color'>: None,
+              <LightEntityCapabilityAttribute.MAX_COLOR_TEMP_KELVIN: 'max_color_temp_kelvin'>: 6535,
+              <LightEntityCapabilityAttribute.MIN_COLOR_TEMP_KELVIN: 'min_color_temp_kelvin'>: 2000,
+              <LightEntityStateAttribute.RGB_COLOR: 'rgb_color'>: None,
+              <LightEntityCapabilityAttribute.SUPPORTED_COLOR_MODES: 'supported_color_modes'>: list([
                 <ColorMode.COLOR_TEMP: 'color_temp'>,
                 <ColorMode.HS: 'hs'>,
               ]),
               'supported_features': <LightEntityFeature: 0>,
-              'xy_color': None,
+              <LightEntityStateAttribute.XY_COLOR: 'xy_color'>: None,
             }),
             'entity_id': 'light.aqara_hub_1563_lightbulb_1563',
             'state': 'off',
@@ -2113,10 +2113,10 @@
             ]),
             'area_id': None,
             'capabilities': dict({
-              'max': 100,
-              'min': 0.0,
-              'mode': <NumberMode.AUTO: 'auto'>,
-              'step': 1,
+              <NumberEntityCapabilityAttribute.MAX: 'max'>: 100,
+              <NumberEntityCapabilityAttribute.MIN: 'min'>: 0.0,
+              <NumberEntityCapabilityAttribute.MODE: 'mode'>: <NumberMode.AUTO: 'auto'>,
+              <NumberEntityCapabilityAttribute.STEP: 'step'>: 1,
             }),
             'config_entry_id': <ANY>,
             'config_subentry_id': <ANY>,
@@ -2150,10 +2150,10 @@
           'state': dict({
             'attributes': dict({
               'friendly_name': 'Aqara Hub-1563 Volume',
-              'max': 100,
-              'min': 0.0,
-              'mode': <NumberMode.AUTO: 'auto'>,
-              'step': 1,
+              <NumberEntityCapabilityAttribute.MAX: 'max'>: 100,
+              <NumberEntityCapabilityAttribute.MIN: 'min'>: 0.0,
+              <NumberEntityCapabilityAttribute.MODE: 'mode'>: <NumberMode.AUTO: 'auto'>,
+              <NumberEntityCapabilityAttribute.STEP: 'step'>: 1,
             }),
             'entity_id': 'number.aqara_hub_1563_volume',
             'state': '40',
@@ -2292,7 +2292,7 @@
             ]),
             'area_id': None,
             'capabilities': dict({
-              'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+              <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
             }),
             'config_entry_id': <ANY>,
             'config_subentry_id': <ANY>,
@@ -2328,7 +2328,7 @@
               'device_class': 'battery',
               'friendly_name': 'Programmable Switch Battery Sensor',
               'icon': 'mdi:battery',
-              'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+              <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
               'unit_of_measurement': '%',
             }),
             'entity_id': 'sensor.programmable_switch_battery_sensor',
@@ -2514,9 +2514,9 @@
             ]),
             'area_id': None,
             'capabilities': dict({
-              'max_color_temp_kelvin': 6535,
-              'min_color_temp_kelvin': 2000,
-              'supported_color_modes': list([
+              <LightEntityCapabilityAttribute.MAX_COLOR_TEMP_KELVIN: 'max_color_temp_kelvin'>: 6535,
+              <LightEntityCapabilityAttribute.MIN_COLOR_TEMP_KELVIN: 'min_color_temp_kelvin'>: 2000,
+              <LightEntityCapabilityAttribute.SUPPORTED_COLOR_MODES: 'supported_color_modes'>: list([
                 <ColorMode.COLOR_TEMP: 'color_temp'>,
                 <ColorMode.HS: 'hs'>,
               ]),
@@ -2552,20 +2552,20 @@
           }),
           'state': dict({
             'attributes': dict({
-              'brightness': None,
-              'color_mode': None,
-              'color_temp_kelvin': None,
+              <LightEntityStateAttribute.BRIGHTNESS: 'brightness'>: None,
+              <LightEntityStateAttribute.COLOR_MODE: 'color_mode'>: None,
+              <LightEntityStateAttribute.COLOR_TEMP_KELVIN: 'color_temp_kelvin'>: None,
               'friendly_name': 'ArloBabyA0 Nightlight',
-              'hs_color': None,
-              'max_color_temp_kelvin': 6535,
-              'min_color_temp_kelvin': 2000,
-              'rgb_color': None,
-              'supported_color_modes': list([
+              <LightEntityStateAttribute.HS_COLOR: 'hs_color'>: None,
+              <LightEntityCapabilityAttribute.MAX_COLOR_TEMP_KELVIN: 'max_color_temp_kelvin'>: 6535,
+              <LightEntityCapabilityAttribute.MIN_COLOR_TEMP_KELVIN: 'min_color_temp_kelvin'>: 2000,
+              <LightEntityStateAttribute.RGB_COLOR: 'rgb_color'>: None,
+              <LightEntityCapabilityAttribute.SUPPORTED_COLOR_MODES: 'supported_color_modes'>: list([
                 <ColorMode.COLOR_TEMP: 'color_temp'>,
                 <ColorMode.HS: 'hs'>,
               ]),
               'supported_features': <LightEntityFeature: 0>,
-              'xy_color': None,
+              <LightEntityStateAttribute.XY_COLOR: 'xy_color'>: None,
             }),
             'entity_id': 'light.arlobabya0_nightlight',
             'state': 'off',
@@ -2578,7 +2578,7 @@
             ]),
             'area_id': None,
             'capabilities': dict({
-              'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+              <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
             }),
             'config_entry_id': <ANY>,
             'config_subentry_id': <ANY>,
@@ -2613,7 +2613,7 @@
             'attributes': dict({
               'device_class': 'aqi',
               'friendly_name': 'ArloBabyA0 Air Quality',
-              'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+              <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
             }),
             'entity_id': 'sensor.arlobabya0_air_quality',
             'state': '1',
@@ -2626,7 +2626,7 @@
             ]),
             'area_id': None,
             'capabilities': dict({
-              'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+              <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
             }),
             'config_entry_id': <ANY>,
             'config_subentry_id': <ANY>,
@@ -2662,7 +2662,7 @@
               'device_class': 'battery',
               'friendly_name': 'ArloBabyA0 Battery',
               'icon': 'mdi:battery-80',
-              'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+              <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
               'unit_of_measurement': '%',
             }),
             'entity_id': 'sensor.arlobabya0_battery',
@@ -2676,7 +2676,7 @@
             ]),
             'area_id': None,
             'capabilities': dict({
-              'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+              <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
             }),
             'config_entry_id': <ANY>,
             'config_subentry_id': <ANY>,
@@ -2711,7 +2711,7 @@
             'attributes': dict({
               'device_class': 'humidity',
               'friendly_name': 'ArloBabyA0 Humidity',
-              'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+              <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
               'unit_of_measurement': '%',
             }),
             'entity_id': 'sensor.arlobabya0_humidity',
@@ -2725,7 +2725,7 @@
             ]),
             'area_id': None,
             'capabilities': dict({
-              'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+              <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
             }),
             'config_entry_id': <ANY>,
             'config_subentry_id': <ANY>,
@@ -2763,7 +2763,7 @@
             'attributes': dict({
               'device_class': 'temperature',
               'friendly_name': 'ArloBabyA0 Temperature',
-              'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+              <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
               'unit_of_measurement': <UnitOfTemperature.CELSIUS: '°C'>,
             }),
             'entity_id': 'sensor.arlobabya0_temperature',
@@ -2947,7 +2947,7 @@
             ]),
             'area_id': None,
             'capabilities': dict({
-              'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+              <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
             }),
             'config_entry_id': <ANY>,
             'config_subentry_id': <ANY>,
@@ -2985,7 +2985,7 @@
             'attributes': dict({
               'device_class': 'current',
               'friendly_name': 'InWall Outlet-0394DE Current',
-              'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+              <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
               'unit_of_measurement': <UnitOfElectricCurrent.AMPERE: 'A'>,
             }),
             'entity_id': 'sensor.inwall_outlet_0394de_current',
@@ -2999,7 +2999,7 @@
             ]),
             'area_id': None,
             'capabilities': dict({
-              'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+              <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
             }),
             'config_entry_id': <ANY>,
             'config_subentry_id': <ANY>,
@@ -3037,7 +3037,7 @@
             'attributes': dict({
               'device_class': 'current',
               'friendly_name': 'InWall Outlet-0394DE Current',
-              'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+              <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
               'unit_of_measurement': <UnitOfElectricCurrent.AMPERE: 'A'>,
             }),
             'entity_id': 'sensor.inwall_outlet_0394de_current_2',
@@ -3051,7 +3051,7 @@
             ]),
             'area_id': None,
             'capabilities': dict({
-              'state_class': <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
+              <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
             }),
             'config_entry_id': <ANY>,
             'config_subentry_id': <ANY>,
@@ -3089,7 +3089,7 @@
             'attributes': dict({
               'device_class': 'energy',
               'friendly_name': 'InWall Outlet-0394DE Energy kWh',
-              'state_class': <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
+              <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
               'unit_of_measurement': <UnitOfEnergy.KILO_WATT_HOUR: 'kWh'>,
             }),
             'entity_id': 'sensor.inwall_outlet_0394de_energy_kwh',
@@ -3103,7 +3103,7 @@
             ]),
             'area_id': None,
             'capabilities': dict({
-              'state_class': <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
+              <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
             }),
             'config_entry_id': <ANY>,
             'config_subentry_id': <ANY>,
@@ -3141,7 +3141,7 @@
             'attributes': dict({
               'device_class': 'energy',
               'friendly_name': 'InWall Outlet-0394DE Energy kWh',
-              'state_class': <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
+              <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
               'unit_of_measurement': <UnitOfEnergy.KILO_WATT_HOUR: 'kWh'>,
             }),
             'entity_id': 'sensor.inwall_outlet_0394de_energy_kwh_2',
@@ -3155,7 +3155,7 @@
             ]),
             'area_id': None,
             'capabilities': dict({
-              'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+              <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
             }),
             'config_entry_id': <ANY>,
             'config_subentry_id': <ANY>,
@@ -3193,7 +3193,7 @@
             'attributes': dict({
               'device_class': 'power',
               'friendly_name': 'InWall Outlet-0394DE Power',
-              'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+              <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
               'unit_of_measurement': <UnitOfPower.WATT: 'W'>,
             }),
             'entity_id': 'sensor.inwall_outlet_0394de_power',
@@ -3207,7 +3207,7 @@
             ]),
             'area_id': None,
             'capabilities': dict({
-              'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+              <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
             }),
             'config_entry_id': <ANY>,
             'config_subentry_id': <ANY>,
@@ -3245,7 +3245,7 @@
             'attributes': dict({
               'device_class': 'power',
               'friendly_name': 'InWall Outlet-0394DE Power',
-              'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+              <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
               'unit_of_measurement': <UnitOfPower.WATT: 'W'>,
             }),
             'entity_id': 'sensor.inwall_outlet_0394de_power_2',
@@ -3476,7 +3476,7 @@
             ]),
             'area_id': None,
             'capabilities': dict({
-              'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+              <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
             }),
             'config_entry_id': <ANY>,
             'config_subentry_id': <ANY>,
@@ -3514,7 +3514,7 @@
             'attributes': dict({
               'device_class': 'temperature',
               'friendly_name': 'Basement Temperature',
-              'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+              <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
               'unit_of_measurement': <UnitOfTemperature.CELSIUS: '°C'>,
             }),
             'entity_id': 'sensor.basement_temperature',
@@ -3740,16 +3740,16 @@
             ]),
             'area_id': None,
             'capabilities': dict({
-              'hvac_modes': list([
+              <ClimateEntityCapabilityAttribute.HVAC_MODES: 'hvac_modes'>: list([
                 <HVACMode.OFF: 'off'>,
                 <HVACMode.HEAT: 'heat'>,
                 <HVACMode.COOL: 'cool'>,
                 <HVACMode.HEAT_COOL: 'heat_cool'>,
               ]),
-              'max_humidity': 50,
-              'max_temp': 33.3,
-              'min_humidity': 20,
-              'min_temp': 7.2,
+              <ClimateEntityCapabilityAttribute.MAX_HUMIDITY: 'max_humidity'>: 50,
+              <ClimateEntityCapabilityAttribute.MAX_TEMP: 'max_temp'>: 33.3,
+              <ClimateEntityCapabilityAttribute.MIN_HUMIDITY: 'min_humidity'>: 20,
+              <ClimateEntityCapabilityAttribute.MIN_TEMP: 'min_temp'>: 7.2,
             }),
             'config_entry_id': <ANY>,
             'config_subentry_id': <ANY>,
@@ -3782,25 +3782,25 @@
           }),
           'state': dict({
             'attributes': dict({
-              'current_humidity': 34,
-              'current_temperature': 21.8,
+              <ClimateEntityStateAttribute.CURRENT_HUMIDITY: 'current_humidity'>: 34,
+              <ClimateEntityStateAttribute.CURRENT_TEMPERATURE: 'current_temperature'>: 21.8,
               'friendly_name': 'HomeW',
-              'humidity': 36,
-              'hvac_action': <HVACAction.HEATING: 'heating'>,
-              'hvac_modes': list([
+              <ClimateEntityStateAttribute.HUMIDITY: 'humidity'>: 36,
+              <ClimateEntityStateAttribute.HVAC_ACTION: 'hvac_action'>: <HVACAction.HEATING: 'heating'>,
+              <ClimateEntityCapabilityAttribute.HVAC_MODES: 'hvac_modes'>: list([
                 <HVACMode.OFF: 'off'>,
                 <HVACMode.HEAT: 'heat'>,
                 <HVACMode.COOL: 'cool'>,
                 <HVACMode.HEAT_COOL: 'heat_cool'>,
               ]),
-              'max_humidity': 50,
-              'max_temp': 33.3,
-              'min_humidity': 20,
-              'min_temp': 7.2,
+              <ClimateEntityCapabilityAttribute.MAX_HUMIDITY: 'max_humidity'>: 50,
+              <ClimateEntityCapabilityAttribute.MAX_TEMP: 'max_temp'>: 33.3,
+              <ClimateEntityCapabilityAttribute.MIN_HUMIDITY: 'min_humidity'>: 20,
+              <ClimateEntityCapabilityAttribute.MIN_TEMP: 'min_temp'>: 7.2,
               'supported_features': <ClimateEntityFeature: 391>,
-              'target_temp_high': None,
-              'target_temp_low': None,
-              'temperature': 22.2,
+              <ClimateEntityStateAttribute.TARGET_TEMP_HIGH: 'target_temp_high'>: None,
+              <ClimateEntityStateAttribute.TARGET_TEMP_LOW: 'target_temp_low'>: None,
+              <ClimateEntityStateAttribute.TEMPERATURE: 'temperature'>: 22.2,
             }),
             'entity_id': 'climate.homew',
             'state': 'heat',
@@ -3813,7 +3813,7 @@
             ]),
             'area_id': None,
             'capabilities': dict({
-              'options': list([
+              <SelectEntityCapabilityAttribute.OPTIONS: 'options'>: list([
                 'home',
                 'sleep',
                 'away',
@@ -3851,7 +3851,7 @@
           'state': dict({
             'attributes': dict({
               'friendly_name': 'HomeW Current Mode',
-              'options': list([
+              <SelectEntityCapabilityAttribute.OPTIONS: 'options'>: list([
                 'home',
                 'sleep',
                 'away',
@@ -3868,7 +3868,7 @@
             ]),
             'area_id': None,
             'capabilities': dict({
-              'options': list([
+              <SelectEntityCapabilityAttribute.OPTIONS: 'options'>: list([
                 'celsius',
                 'fahrenheit',
               ]),
@@ -3905,7 +3905,7 @@
           'state': dict({
             'attributes': dict({
               'friendly_name': 'HomeW Temperature Display Units',
-              'options': list([
+              <SelectEntityCapabilityAttribute.OPTIONS: 'options'>: list([
                 'celsius',
                 'fahrenheit',
               ]),
@@ -3921,7 +3921,7 @@
             ]),
             'area_id': None,
             'capabilities': dict({
-              'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+              <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
             }),
             'config_entry_id': <ANY>,
             'config_subentry_id': <ANY>,
@@ -3956,7 +3956,7 @@
             'attributes': dict({
               'device_class': 'humidity',
               'friendly_name': 'HomeW Current Humidity',
-              'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+              <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
               'unit_of_measurement': '%',
             }),
             'entity_id': 'sensor.homew_current_humidity',
@@ -3970,7 +3970,7 @@
             ]),
             'area_id': None,
             'capabilities': dict({
-              'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+              <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
             }),
             'config_entry_id': <ANY>,
             'config_subentry_id': <ANY>,
@@ -4008,7 +4008,7 @@
             'attributes': dict({
               'device_class': 'temperature',
               'friendly_name': 'HomeW Current Temperature',
-              'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+              <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
               'unit_of_measurement': <UnitOfTemperature.CELSIUS: '°C'>,
             }),
             'entity_id': 'sensor.homew_current_temperature',
@@ -4145,7 +4145,7 @@
             ]),
             'area_id': None,
             'capabilities': dict({
-              'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+              <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
             }),
             'config_entry_id': <ANY>,
             'config_subentry_id': <ANY>,
@@ -4183,7 +4183,7 @@
             'attributes': dict({
               'device_class': 'temperature',
               'friendly_name': 'Kitchen Temperature',
-              'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+              <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
               'unit_of_measurement': <UnitOfTemperature.CELSIUS: '°C'>,
             }),
             'entity_id': 'sensor.kitchen_temperature',
@@ -4320,7 +4320,7 @@
             ]),
             'area_id': None,
             'capabilities': dict({
-              'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+              <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
             }),
             'config_entry_id': <ANY>,
             'config_subentry_id': <ANY>,
@@ -4358,7 +4358,7 @@
             'attributes': dict({
               'device_class': 'temperature',
               'friendly_name': 'Porch Temperature',
-              'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+              <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
               'unit_of_measurement': <UnitOfTemperature.CELSIUS: '°C'>,
             }),
             'entity_id': 'sensor.porch_temperature',
@@ -4544,7 +4544,7 @@
             ]),
             'area_id': None,
             'capabilities': dict({
-              'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+              <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
             }),
             'config_entry_id': <ANY>,
             'config_subentry_id': <ANY>,
@@ -4580,7 +4580,7 @@
               'device_class': 'battery',
               'friendly_name': 'Basement Battery',
               'icon': 'mdi:battery',
-              'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+              <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
               'unit_of_measurement': '%',
             }),
             'entity_id': 'sensor.basement_battery',
@@ -4594,7 +4594,7 @@
             ]),
             'area_id': None,
             'capabilities': dict({
-              'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+              <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
             }),
             'config_entry_id': <ANY>,
             'config_subentry_id': <ANY>,
@@ -4632,7 +4632,7 @@
             'attributes': dict({
               'device_class': 'temperature',
               'friendly_name': 'Basement Temperature',
-              'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+              <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
               'unit_of_measurement': <UnitOfTemperature.CELSIUS: '°C'>,
             }),
             'entity_id': 'sensor.basement_temperature',
@@ -4859,7 +4859,7 @@
             ]),
             'area_id': None,
             'capabilities': dict({
-              'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+              <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
             }),
             'config_entry_id': <ANY>,
             'config_subentry_id': <ANY>,
@@ -4895,7 +4895,7 @@
               'device_class': 'battery',
               'friendly_name': 'Basement Window 1 Battery',
               'icon': 'mdi:battery',
-              'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+              <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
               'unit_of_measurement': '%',
             }),
             'entity_id': 'sensor.basement_window_1_battery',
@@ -5122,7 +5122,7 @@
             ]),
             'area_id': None,
             'capabilities': dict({
-              'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+              <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
             }),
             'config_entry_id': <ANY>,
             'config_subentry_id': <ANY>,
@@ -5158,7 +5158,7 @@
               'device_class': 'battery',
               'friendly_name': 'Deck Door Battery',
               'icon': 'mdi:battery',
-              'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+              <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
               'unit_of_measurement': '%',
             }),
             'entity_id': 'sensor.deck_door_battery',
@@ -5385,7 +5385,7 @@
             ]),
             'area_id': None,
             'capabilities': dict({
-              'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+              <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
             }),
             'config_entry_id': <ANY>,
             'config_subentry_id': <ANY>,
@@ -5421,7 +5421,7 @@
               'device_class': 'battery',
               'friendly_name': 'Front Door Battery',
               'icon': 'mdi:battery',
-              'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+              <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
               'unit_of_measurement': '%',
             }),
             'entity_id': 'sensor.front_door_battery',
@@ -5648,7 +5648,7 @@
             ]),
             'area_id': None,
             'capabilities': dict({
-              'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+              <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
             }),
             'config_entry_id': <ANY>,
             'config_subentry_id': <ANY>,
@@ -5684,7 +5684,7 @@
               'device_class': 'battery',
               'friendly_name': 'Garage Door Battery',
               'icon': 'mdi:battery',
-              'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+              <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
               'unit_of_measurement': '%',
             }),
             'entity_id': 'sensor.garage_door_battery',
@@ -5866,7 +5866,7 @@
             ]),
             'area_id': None,
             'capabilities': dict({
-              'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+              <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
             }),
             'config_entry_id': <ANY>,
             'config_subentry_id': <ANY>,
@@ -5902,7 +5902,7 @@
               'device_class': 'battery',
               'friendly_name': 'Living Room Battery',
               'icon': 'mdi:battery',
-              'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+              <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
               'unit_of_measurement': '%',
             }),
             'entity_id': 'sensor.living_room_battery',
@@ -5916,7 +5916,7 @@
             ]),
             'area_id': None,
             'capabilities': dict({
-              'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+              <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
             }),
             'config_entry_id': <ANY>,
             'config_subentry_id': <ANY>,
@@ -5954,7 +5954,7 @@
             'attributes': dict({
               'device_class': 'temperature',
               'friendly_name': 'Living Room Temperature',
-              'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+              <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
               'unit_of_measurement': <UnitOfTemperature.CELSIUS: '°C'>,
             }),
             'entity_id': 'sensor.living_room_temperature',
@@ -6181,7 +6181,7 @@
             ]),
             'area_id': None,
             'capabilities': dict({
-              'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+              <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
             }),
             'config_entry_id': <ANY>,
             'config_subentry_id': <ANY>,
@@ -6217,7 +6217,7 @@
               'device_class': 'battery',
               'friendly_name': 'Living Room Window 1 Battery',
               'icon': 'mdi:battery',
-              'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+              <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
               'unit_of_measurement': '%',
             }),
             'entity_id': 'sensor.living_room_window_1_battery',
@@ -6444,7 +6444,7 @@
             ]),
             'area_id': None,
             'capabilities': dict({
-              'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+              <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
             }),
             'config_entry_id': <ANY>,
             'config_subentry_id': <ANY>,
@@ -6480,7 +6480,7 @@
               'device_class': 'battery',
               'friendly_name': 'Loft window Battery',
               'icon': 'mdi:battery',
-              'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+              <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
               'unit_of_measurement': '%',
             }),
             'entity_id': 'sensor.loft_window_battery',
@@ -6662,7 +6662,7 @@
             ]),
             'area_id': None,
             'capabilities': dict({
-              'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+              <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
             }),
             'config_entry_id': <ANY>,
             'config_subentry_id': <ANY>,
@@ -6698,7 +6698,7 @@
               'device_class': 'battery',
               'friendly_name': 'Master BR Battery',
               'icon': 'mdi:battery',
-              'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+              <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
               'unit_of_measurement': '%',
             }),
             'entity_id': 'sensor.master_br_battery',
@@ -6712,7 +6712,7 @@
             ]),
             'area_id': None,
             'capabilities': dict({
-              'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+              <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
             }),
             'config_entry_id': <ANY>,
             'config_subentry_id': <ANY>,
@@ -6750,7 +6750,7 @@
             'attributes': dict({
               'device_class': 'temperature',
               'friendly_name': 'Master BR Temperature',
-              'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+              <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
               'unit_of_measurement': <UnitOfTemperature.CELSIUS: '°C'>,
             }),
             'entity_id': 'sensor.master_br_temperature',
@@ -6977,7 +6977,7 @@
             ]),
             'area_id': None,
             'capabilities': dict({
-              'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+              <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
             }),
             'config_entry_id': <ANY>,
             'config_subentry_id': <ANY>,
@@ -7013,7 +7013,7 @@
               'device_class': 'battery',
               'friendly_name': 'Master BR Window Battery',
               'icon': 'mdi:battery',
-              'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+              <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
               'unit_of_measurement': '%',
             }),
             'entity_id': 'sensor.master_br_window_battery',
@@ -7149,18 +7149,18 @@
             ]),
             'area_id': None,
             'capabilities': dict({
-              'fan_modes': list([
+              <ClimateEntityCapabilityAttribute.FAN_MODES: 'fan_modes'>: list([
                 'on',
                 'auto',
               ]),
-              'hvac_modes': list([
+              <ClimateEntityCapabilityAttribute.HVAC_MODES: 'hvac_modes'>: list([
                 <HVACMode.OFF: 'off'>,
                 <HVACMode.HEAT: 'heat'>,
                 <HVACMode.COOL: 'cool'>,
                 <HVACMode.HEAT_COOL: 'heat_cool'>,
               ]),
-              'max_temp': 35,
-              'min_temp': 7,
+              <ClimateEntityCapabilityAttribute.MAX_TEMP: 'max_temp'>: 35,
+              <ClimateEntityCapabilityAttribute.MIN_TEMP: 'min_temp'>: 7,
             }),
             'config_entry_id': <ANY>,
             'config_subentry_id': <ANY>,
@@ -7193,27 +7193,27 @@
           }),
           'state': dict({
             'attributes': dict({
-              'current_humidity': 45.0,
-              'current_temperature': 21.2,
-              'fan_mode': 'on',
-              'fan_modes': list([
+              <ClimateEntityStateAttribute.CURRENT_HUMIDITY: 'current_humidity'>: 45.0,
+              <ClimateEntityStateAttribute.CURRENT_TEMPERATURE: 'current_temperature'>: 21.2,
+              <ClimateEntityStateAttribute.FAN_MODE: 'fan_mode'>: 'on',
+              <ClimateEntityCapabilityAttribute.FAN_MODES: 'fan_modes'>: list([
                 'on',
                 'auto',
               ]),
               'friendly_name': 'Thermostat',
-              'hvac_action': <HVACAction.FAN: 'fan'>,
-              'hvac_modes': list([
+              <ClimateEntityStateAttribute.HVAC_ACTION: 'hvac_action'>: <HVACAction.FAN: 'fan'>,
+              <ClimateEntityCapabilityAttribute.HVAC_MODES: 'hvac_modes'>: list([
                 <HVACMode.OFF: 'off'>,
                 <HVACMode.HEAT: 'heat'>,
                 <HVACMode.COOL: 'cool'>,
                 <HVACMode.HEAT_COOL: 'heat_cool'>,
               ]),
-              'max_temp': 35,
-              'min_temp': 7,
+              <ClimateEntityCapabilityAttribute.MAX_TEMP: 'max_temp'>: 35,
+              <ClimateEntityCapabilityAttribute.MIN_TEMP: 'min_temp'>: 7,
               'supported_features': <ClimateEntityFeature: 395>,
-              'target_temp_high': None,
-              'target_temp_low': None,
-              'temperature': None,
+              <ClimateEntityStateAttribute.TARGET_TEMP_HIGH: 'target_temp_high'>: None,
+              <ClimateEntityStateAttribute.TARGET_TEMP_LOW: 'target_temp_low'>: None,
+              <ClimateEntityStateAttribute.TEMPERATURE: 'temperature'>: None,
             }),
             'entity_id': 'climate.thermostat',
             'state': 'off',
@@ -7226,7 +7226,7 @@
             ]),
             'area_id': None,
             'capabilities': dict({
-              'options': list([
+              <SelectEntityCapabilityAttribute.OPTIONS: 'options'>: list([
                 'home',
                 'sleep',
                 'away',
@@ -7264,7 +7264,7 @@
           'state': dict({
             'attributes': dict({
               'friendly_name': 'Thermostat Current Mode',
-              'options': list([
+              <SelectEntityCapabilityAttribute.OPTIONS: 'options'>: list([
                 'home',
                 'sleep',
                 'away',
@@ -7281,7 +7281,7 @@
             ]),
             'area_id': None,
             'capabilities': dict({
-              'options': list([
+              <SelectEntityCapabilityAttribute.OPTIONS: 'options'>: list([
                 'celsius',
                 'fahrenheit',
               ]),
@@ -7318,7 +7318,7 @@
           'state': dict({
             'attributes': dict({
               'friendly_name': 'Thermostat Temperature Display Units',
-              'options': list([
+              <SelectEntityCapabilityAttribute.OPTIONS: 'options'>: list([
                 'celsius',
                 'fahrenheit',
               ]),
@@ -7334,7 +7334,7 @@
             ]),
             'area_id': None,
             'capabilities': dict({
-              'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+              <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
             }),
             'config_entry_id': <ANY>,
             'config_subentry_id': <ANY>,
@@ -7369,7 +7369,7 @@
             'attributes': dict({
               'device_class': 'humidity',
               'friendly_name': 'Thermostat Current Humidity',
-              'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+              <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
               'unit_of_measurement': '%',
             }),
             'entity_id': 'sensor.thermostat_current_humidity',
@@ -7383,7 +7383,7 @@
             ]),
             'area_id': None,
             'capabilities': dict({
-              'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+              <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
             }),
             'config_entry_id': <ANY>,
             'config_subentry_id': <ANY>,
@@ -7421,7 +7421,7 @@
             'attributes': dict({
               'device_class': 'temperature',
               'friendly_name': 'Thermostat Current Temperature',
-              'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+              <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
               'unit_of_measurement': <UnitOfTemperature.CELSIUS: '°C'>,
             }),
             'entity_id': 'sensor.thermostat_current_temperature',
@@ -7603,7 +7603,7 @@
             ]),
             'area_id': None,
             'capabilities': dict({
-              'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+              <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
             }),
             'config_entry_id': <ANY>,
             'config_subentry_id': <ANY>,
@@ -7639,7 +7639,7 @@
               'device_class': 'battery',
               'friendly_name': 'Upstairs BR Battery',
               'icon': 'mdi:battery',
-              'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+              <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
               'unit_of_measurement': '%',
             }),
             'entity_id': 'sensor.upstairs_br_battery',
@@ -7653,7 +7653,7 @@
             ]),
             'area_id': None,
             'capabilities': dict({
-              'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+              <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
             }),
             'config_entry_id': <ANY>,
             'config_subentry_id': <ANY>,
@@ -7691,7 +7691,7 @@
             'attributes': dict({
               'device_class': 'temperature',
               'friendly_name': 'Upstairs BR Temperature',
-              'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+              <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
               'unit_of_measurement': <UnitOfTemperature.CELSIUS: '°C'>,
             }),
             'entity_id': 'sensor.upstairs_br_temperature',
@@ -7918,7 +7918,7 @@
             ]),
             'area_id': None,
             'capabilities': dict({
-              'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+              <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
             }),
             'config_entry_id': <ANY>,
             'config_subentry_id': <ANY>,
@@ -7954,7 +7954,7 @@
               'device_class': 'battery',
               'friendly_name': 'Upstairs BR Window Battery',
               'icon': 'mdi:battery',
-              'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+              <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
               'unit_of_measurement': '%',
             }),
             'entity_id': 'sensor.upstairs_br_window_battery',
@@ -8184,16 +8184,16 @@
             ]),
             'area_id': None,
             'capabilities': dict({
-              'hvac_modes': list([
+              <ClimateEntityCapabilityAttribute.HVAC_MODES: 'hvac_modes'>: list([
                 <HVACMode.OFF: 'off'>,
                 <HVACMode.HEAT: 'heat'>,
                 <HVACMode.COOL: 'cool'>,
                 <HVACMode.HEAT_COOL: 'heat_cool'>,
               ]),
-              'max_humidity': 50,
-              'max_temp': 33.3,
-              'min_humidity': 20,
-              'min_temp': 7.2,
+              <ClimateEntityCapabilityAttribute.MAX_HUMIDITY: 'max_humidity'>: 50,
+              <ClimateEntityCapabilityAttribute.MAX_TEMP: 'max_temp'>: 33.3,
+              <ClimateEntityCapabilityAttribute.MIN_HUMIDITY: 'min_humidity'>: 20,
+              <ClimateEntityCapabilityAttribute.MIN_TEMP: 'min_temp'>: 7.2,
             }),
             'config_entry_id': <ANY>,
             'config_subentry_id': <ANY>,
@@ -8226,25 +8226,25 @@
           }),
           'state': dict({
             'attributes': dict({
-              'current_humidity': 34,
-              'current_temperature': 21.8,
+              <ClimateEntityStateAttribute.CURRENT_HUMIDITY: 'current_humidity'>: 34,
+              <ClimateEntityStateAttribute.CURRENT_TEMPERATURE: 'current_temperature'>: 21.8,
               'friendly_name': 'HomeW',
-              'humidity': 36,
-              'hvac_action': <HVACAction.HEATING: 'heating'>,
-              'hvac_modes': list([
+              <ClimateEntityStateAttribute.HUMIDITY: 'humidity'>: 36,
+              <ClimateEntityStateAttribute.HVAC_ACTION: 'hvac_action'>: <HVACAction.HEATING: 'heating'>,
+              <ClimateEntityCapabilityAttribute.HVAC_MODES: 'hvac_modes'>: list([
                 <HVACMode.OFF: 'off'>,
                 <HVACMode.HEAT: 'heat'>,
                 <HVACMode.COOL: 'cool'>,
                 <HVACMode.HEAT_COOL: 'heat_cool'>,
               ]),
-              'max_humidity': 50,
-              'max_temp': 33.3,
-              'min_humidity': 20,
-              'min_temp': 7.2,
+              <ClimateEntityCapabilityAttribute.MAX_HUMIDITY: 'max_humidity'>: 50,
+              <ClimateEntityCapabilityAttribute.MAX_TEMP: 'max_temp'>: 33.3,
+              <ClimateEntityCapabilityAttribute.MIN_HUMIDITY: 'min_humidity'>: 20,
+              <ClimateEntityCapabilityAttribute.MIN_TEMP: 'min_temp'>: 7.2,
               'supported_features': <ClimateEntityFeature: 391>,
-              'target_temp_high': None,
-              'target_temp_low': None,
-              'temperature': 22.2,
+              <ClimateEntityStateAttribute.TARGET_TEMP_HIGH: 'target_temp_high'>: None,
+              <ClimateEntityStateAttribute.TARGET_TEMP_LOW: 'target_temp_low'>: None,
+              <ClimateEntityStateAttribute.TEMPERATURE: 'temperature'>: 22.2,
             }),
             'entity_id': 'climate.homew',
             'state': 'heat',
@@ -8257,7 +8257,7 @@
             ]),
             'area_id': None,
             'capabilities': dict({
-              'options': list([
+              <SelectEntityCapabilityAttribute.OPTIONS: 'options'>: list([
                 'home',
                 'sleep',
                 'away',
@@ -8295,7 +8295,7 @@
           'state': dict({
             'attributes': dict({
               'friendly_name': 'HomeW Current Mode',
-              'options': list([
+              <SelectEntityCapabilityAttribute.OPTIONS: 'options'>: list([
                 'home',
                 'sleep',
                 'away',
@@ -8312,7 +8312,7 @@
             ]),
             'area_id': None,
             'capabilities': dict({
-              'options': list([
+              <SelectEntityCapabilityAttribute.OPTIONS: 'options'>: list([
                 'celsius',
                 'fahrenheit',
               ]),
@@ -8349,7 +8349,7 @@
           'state': dict({
             'attributes': dict({
               'friendly_name': 'HomeW Temperature Display Units',
-              'options': list([
+              <SelectEntityCapabilityAttribute.OPTIONS: 'options'>: list([
                 'celsius',
                 'fahrenheit',
               ]),
@@ -8365,7 +8365,7 @@
             ]),
             'area_id': None,
             'capabilities': dict({
-              'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+              <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
             }),
             'config_entry_id': <ANY>,
             'config_subentry_id': <ANY>,
@@ -8400,7 +8400,7 @@
             'attributes': dict({
               'device_class': 'humidity',
               'friendly_name': 'HomeW Current Humidity',
-              'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+              <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
               'unit_of_measurement': '%',
             }),
             'entity_id': 'sensor.homew_current_humidity',
@@ -8414,7 +8414,7 @@
             ]),
             'area_id': None,
             'capabilities': dict({
-              'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+              <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
             }),
             'config_entry_id': <ANY>,
             'config_subentry_id': <ANY>,
@@ -8452,7 +8452,7 @@
             'attributes': dict({
               'device_class': 'temperature',
               'friendly_name': 'HomeW Current Temperature',
-              'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+              <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
               'unit_of_measurement': <UnitOfTemperature.CELSIUS: '°C'>,
             }),
             'entity_id': 'sensor.homew_current_temperature',
@@ -8671,16 +8671,16 @@
             ]),
             'area_id': None,
             'capabilities': dict({
-              'hvac_modes': list([
+              <ClimateEntityCapabilityAttribute.HVAC_MODES: 'hvac_modes'>: list([
                 <HVACMode.OFF: 'off'>,
                 <HVACMode.HEAT: 'heat'>,
                 <HVACMode.COOL: 'cool'>,
                 <HVACMode.HEAT_COOL: 'heat_cool'>,
               ]),
-              'max_humidity': 50,
-              'max_temp': 33.3,
-              'min_humidity': 20,
-              'min_temp': 7.2,
+              <ClimateEntityCapabilityAttribute.MAX_HUMIDITY: 'max_humidity'>: 50,
+              <ClimateEntityCapabilityAttribute.MAX_TEMP: 'max_temp'>: 33.3,
+              <ClimateEntityCapabilityAttribute.MIN_HUMIDITY: 'min_humidity'>: 20,
+              <ClimateEntityCapabilityAttribute.MIN_TEMP: 'min_temp'>: 7.2,
             }),
             'config_entry_id': <ANY>,
             'config_subentry_id': <ANY>,
@@ -8713,25 +8713,25 @@
           }),
           'state': dict({
             'attributes': dict({
-              'current_humidity': 34,
-              'current_temperature': 21.8,
+              <ClimateEntityStateAttribute.CURRENT_HUMIDITY: 'current_humidity'>: 34,
+              <ClimateEntityStateAttribute.CURRENT_TEMPERATURE: 'current_temperature'>: 21.8,
               'friendly_name': 'HomeW',
-              'humidity': 36,
-              'hvac_action': <HVACAction.HEATING: 'heating'>,
-              'hvac_modes': list([
+              <ClimateEntityStateAttribute.HUMIDITY: 'humidity'>: 36,
+              <ClimateEntityStateAttribute.HVAC_ACTION: 'hvac_action'>: <HVACAction.HEATING: 'heating'>,
+              <ClimateEntityCapabilityAttribute.HVAC_MODES: 'hvac_modes'>: list([
                 <HVACMode.OFF: 'off'>,
                 <HVACMode.HEAT: 'heat'>,
                 <HVACMode.COOL: 'cool'>,
                 <HVACMode.HEAT_COOL: 'heat_cool'>,
               ]),
-              'max_humidity': 50,
-              'max_temp': 33.3,
-              'min_humidity': 20,
-              'min_temp': 7.2,
+              <ClimateEntityCapabilityAttribute.MAX_HUMIDITY: 'max_humidity'>: 50,
+              <ClimateEntityCapabilityAttribute.MAX_TEMP: 'max_temp'>: 33.3,
+              <ClimateEntityCapabilityAttribute.MIN_HUMIDITY: 'min_humidity'>: 20,
+              <ClimateEntityCapabilityAttribute.MIN_TEMP: 'min_temp'>: 7.2,
               'supported_features': <ClimateEntityFeature: 391>,
-              'target_temp_high': None,
-              'target_temp_low': None,
-              'temperature': 22.2,
+              <ClimateEntityStateAttribute.TARGET_TEMP_HIGH: 'target_temp_high'>: None,
+              <ClimateEntityStateAttribute.TARGET_TEMP_LOW: 'target_temp_low'>: None,
+              <ClimateEntityStateAttribute.TEMPERATURE: 'temperature'>: 22.2,
             }),
             'entity_id': 'climate.homew',
             'state': 'heat',
@@ -8744,7 +8744,7 @@
             ]),
             'area_id': None,
             'capabilities': dict({
-              'options': list([
+              <SelectEntityCapabilityAttribute.OPTIONS: 'options'>: list([
                 'celsius',
                 'fahrenheit',
               ]),
@@ -8781,7 +8781,7 @@
           'state': dict({
             'attributes': dict({
               'friendly_name': 'HomeW Temperature Display Units',
-              'options': list([
+              <SelectEntityCapabilityAttribute.OPTIONS: 'options'>: list([
                 'celsius',
                 'fahrenheit',
               ]),
@@ -8797,7 +8797,7 @@
             ]),
             'area_id': None,
             'capabilities': dict({
-              'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+              <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
             }),
             'config_entry_id': <ANY>,
             'config_subentry_id': <ANY>,
@@ -8832,7 +8832,7 @@
             'attributes': dict({
               'device_class': 'humidity',
               'friendly_name': 'HomeW Current Humidity',
-              'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+              <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
               'unit_of_measurement': '%',
             }),
             'entity_id': 'sensor.homew_current_humidity',
@@ -8846,7 +8846,7 @@
             ]),
             'area_id': None,
             'capabilities': dict({
-              'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+              <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
             }),
             'config_entry_id': <ANY>,
             'config_subentry_id': <ANY>,
@@ -8884,7 +8884,7 @@
             'attributes': dict({
               'device_class': 'temperature',
               'friendly_name': 'HomeW Current Temperature',
-              'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+              <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
               'unit_of_measurement': <UnitOfTemperature.CELSIUS: '°C'>,
             }),
             'entity_id': 'sensor.homew_current_temperature',
@@ -9021,7 +9021,7 @@
             ]),
             'area_id': None,
             'capabilities': dict({
-              'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+              <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
             }),
             'config_entry_id': <ANY>,
             'config_subentry_id': <ANY>,
@@ -9059,7 +9059,7 @@
             'attributes': dict({
               'device_class': 'temperature',
               'friendly_name': 'Kitchen Temperature',
-              'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+              <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
               'unit_of_measurement': <UnitOfTemperature.CELSIUS: '°C'>,
             }),
             'entity_id': 'sensor.kitchen_temperature',
@@ -9196,7 +9196,7 @@
             ]),
             'area_id': None,
             'capabilities': dict({
-              'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+              <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
             }),
             'config_entry_id': <ANY>,
             'config_subentry_id': <ANY>,
@@ -9234,7 +9234,7 @@
             'attributes': dict({
               'device_class': 'temperature',
               'friendly_name': 'Porch Temperature',
-              'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+              <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
               'unit_of_measurement': <UnitOfTemperature.CELSIUS: '°C'>,
             }),
             'entity_id': 'sensor.porch_temperature',
@@ -9464,20 +9464,20 @@
             ]),
             'area_id': None,
             'capabilities': dict({
-              'fan_modes': list([
+              <ClimateEntityCapabilityAttribute.FAN_MODES: 'fan_modes'>: list([
                 'on',
                 'auto',
               ]),
-              'hvac_modes': list([
+              <ClimateEntityCapabilityAttribute.HVAC_MODES: 'hvac_modes'>: list([
                 <HVACMode.OFF: 'off'>,
                 <HVACMode.HEAT: 'heat'>,
                 <HVACMode.COOL: 'cool'>,
                 <HVACMode.HEAT_COOL: 'heat_cool'>,
               ]),
-              'max_humidity': 50,
-              'max_temp': 33.3,
-              'min_humidity': 20,
-              'min_temp': 7.2,
+              <ClimateEntityCapabilityAttribute.MAX_HUMIDITY: 'max_humidity'>: 50,
+              <ClimateEntityCapabilityAttribute.MAX_TEMP: 'max_temp'>: 33.3,
+              <ClimateEntityCapabilityAttribute.MIN_HUMIDITY: 'min_humidity'>: 20,
+              <ClimateEntityCapabilityAttribute.MIN_TEMP: 'min_temp'>: 7.2,
             }),
             'config_entry_id': <ANY>,
             'config_subentry_id': <ANY>,
@@ -9510,30 +9510,30 @@
           }),
           'state': dict({
             'attributes': dict({
-              'current_humidity': 55.0,
-              'current_temperature': 21.3,
-              'fan_mode': 'auto',
-              'fan_modes': list([
+              <ClimateEntityStateAttribute.CURRENT_HUMIDITY: 'current_humidity'>: 55.0,
+              <ClimateEntityStateAttribute.CURRENT_TEMPERATURE: 'current_temperature'>: 21.3,
+              <ClimateEntityStateAttribute.FAN_MODE: 'fan_mode'>: 'auto',
+              <ClimateEntityCapabilityAttribute.FAN_MODES: 'fan_modes'>: list([
                 'on',
                 'auto',
               ]),
               'friendly_name': 'My ecobee',
-              'humidity': 36.0,
-              'hvac_action': <HVACAction.IDLE: 'idle'>,
-              'hvac_modes': list([
+              <ClimateEntityStateAttribute.HUMIDITY: 'humidity'>: 36.0,
+              <ClimateEntityStateAttribute.HVAC_ACTION: 'hvac_action'>: <HVACAction.IDLE: 'idle'>,
+              <ClimateEntityCapabilityAttribute.HVAC_MODES: 'hvac_modes'>: list([
                 <HVACMode.OFF: 'off'>,
                 <HVACMode.HEAT: 'heat'>,
                 <HVACMode.COOL: 'cool'>,
                 <HVACMode.HEAT_COOL: 'heat_cool'>,
               ]),
-              'max_humidity': 50,
-              'max_temp': 33.3,
-              'min_humidity': 20,
-              'min_temp': 7.2,
+              <ClimateEntityCapabilityAttribute.MAX_HUMIDITY: 'max_humidity'>: 50,
+              <ClimateEntityCapabilityAttribute.MAX_TEMP: 'max_temp'>: 33.3,
+              <ClimateEntityCapabilityAttribute.MIN_HUMIDITY: 'min_humidity'>: 20,
+              <ClimateEntityCapabilityAttribute.MIN_TEMP: 'min_temp'>: 7.2,
               'supported_features': <ClimateEntityFeature: 399>,
-              'target_temp_high': 25.6,
-              'target_temp_low': 7.2,
-              'temperature': None,
+              <ClimateEntityStateAttribute.TARGET_TEMP_HIGH: 'target_temp_high'>: 25.6,
+              <ClimateEntityStateAttribute.TARGET_TEMP_LOW: 'target_temp_low'>: 7.2,
+              <ClimateEntityStateAttribute.TEMPERATURE: 'temperature'>: None,
             }),
             'entity_id': 'climate.my_ecobee',
             'state': 'heat_cool',
@@ -9546,7 +9546,7 @@
             ]),
             'area_id': None,
             'capabilities': dict({
-              'options': list([
+              <SelectEntityCapabilityAttribute.OPTIONS: 'options'>: list([
                 'home',
                 'sleep',
                 'away',
@@ -9584,7 +9584,7 @@
           'state': dict({
             'attributes': dict({
               'friendly_name': 'My ecobee Current Mode',
-              'options': list([
+              <SelectEntityCapabilityAttribute.OPTIONS: 'options'>: list([
                 'home',
                 'sleep',
                 'away',
@@ -9601,7 +9601,7 @@
             ]),
             'area_id': None,
             'capabilities': dict({
-              'options': list([
+              <SelectEntityCapabilityAttribute.OPTIONS: 'options'>: list([
                 'celsius',
                 'fahrenheit',
               ]),
@@ -9638,7 +9638,7 @@
           'state': dict({
             'attributes': dict({
               'friendly_name': 'My ecobee Temperature Display Units',
-              'options': list([
+              <SelectEntityCapabilityAttribute.OPTIONS: 'options'>: list([
                 'celsius',
                 'fahrenheit',
               ]),
@@ -9654,7 +9654,7 @@
             ]),
             'area_id': None,
             'capabilities': dict({
-              'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+              <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
             }),
             'config_entry_id': <ANY>,
             'config_subentry_id': <ANY>,
@@ -9689,7 +9689,7 @@
             'attributes': dict({
               'device_class': 'humidity',
               'friendly_name': 'My ecobee Current Humidity',
-              'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+              <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
               'unit_of_measurement': '%',
             }),
             'entity_id': 'sensor.my_ecobee_current_humidity',
@@ -9703,7 +9703,7 @@
             ]),
             'area_id': None,
             'capabilities': dict({
-              'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+              <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
             }),
             'config_entry_id': <ANY>,
             'config_subentry_id': <ANY>,
@@ -9741,7 +9741,7 @@
             'attributes': dict({
               'device_class': 'temperature',
               'friendly_name': 'My ecobee Current Temperature',
-              'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+              <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
               'unit_of_measurement': <UnitOfTemperature.CELSIUS: '°C'>,
             }),
             'entity_id': 'sensor.my_ecobee_current_temperature',
@@ -9927,7 +9927,7 @@
             ]),
             'area_id': None,
             'capabilities': dict({
-              'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+              <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
             }),
             'config_entry_id': <ANY>,
             'config_subentry_id': <ANY>,
@@ -9962,7 +9962,7 @@
             'attributes': dict({
               'device_class': 'illuminance',
               'friendly_name': 'Master Fan Light Level',
-              'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+              <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
               'unit_of_measurement': 'lx',
             }),
             'entity_id': 'sensor.master_fan_light_level',
@@ -9976,7 +9976,7 @@
             ]),
             'area_id': None,
             'capabilities': dict({
-              'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+              <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
             }),
             'config_entry_id': <ANY>,
             'config_subentry_id': <ANY>,
@@ -10014,7 +10014,7 @@
             'attributes': dict({
               'device_class': 'temperature',
               'friendly_name': 'Master Fan Temperature',
-              'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+              <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
               'unit_of_measurement': <UnitOfTemperature.CELSIUS: '°C'>,
             }),
             'entity_id': 'sensor.master_fan_temperature',
@@ -10154,10 +10154,10 @@
             ]),
             'area_id': None,
             'capabilities': dict({
-              'max': 9000,
-              'min': -450,
-              'mode': <NumberMode.AUTO: 'auto'>,
-              'step': 1,
+              <NumberEntityCapabilityAttribute.MAX: 'max'>: 9000,
+              <NumberEntityCapabilityAttribute.MIN: 'min'>: -450,
+              <NumberEntityCapabilityAttribute.MODE: 'mode'>: <NumberMode.AUTO: 'auto'>,
+              <NumberEntityCapabilityAttribute.STEP: 'step'>: 1,
             }),
             'config_entry_id': <ANY>,
             'config_subentry_id': <ANY>,
@@ -10191,10 +10191,10 @@
           'state': dict({
             'attributes': dict({
               'friendly_name': 'Eve Degree AA11 Elevation',
-              'max': 9000,
-              'min': -450,
-              'mode': <NumberMode.AUTO: 'auto'>,
-              'step': 1,
+              <NumberEntityCapabilityAttribute.MAX: 'max'>: 9000,
+              <NumberEntityCapabilityAttribute.MIN: 'min'>: -450,
+              <NumberEntityCapabilityAttribute.MODE: 'mode'>: <NumberMode.AUTO: 'auto'>,
+              <NumberEntityCapabilityAttribute.STEP: 'step'>: 1,
             }),
             'entity_id': 'number.eve_degree_aa11_elevation',
             'state': '0',
@@ -10207,7 +10207,7 @@
             ]),
             'area_id': None,
             'capabilities': dict({
-              'options': list([
+              <SelectEntityCapabilityAttribute.OPTIONS: 'options'>: list([
                 'celsius',
                 'fahrenheit',
               ]),
@@ -10244,7 +10244,7 @@
           'state': dict({
             'attributes': dict({
               'friendly_name': 'Eve Degree AA11 Temperature Display Units',
-              'options': list([
+              <SelectEntityCapabilityAttribute.OPTIONS: 'options'>: list([
                 'celsius',
                 'fahrenheit',
               ]),
@@ -10260,7 +10260,7 @@
             ]),
             'area_id': None,
             'capabilities': dict({
-              'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+              <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
             }),
             'config_entry_id': <ANY>,
             'config_subentry_id': <ANY>,
@@ -10298,7 +10298,7 @@
             'attributes': dict({
               'device_class': 'pressure',
               'friendly_name': 'Eve Degree AA11 Air Pressure',
-              'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+              <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
               'unit_of_measurement': <UnitOfPressure.HPA: 'hPa'>,
             }),
             'entity_id': 'sensor.eve_degree_aa11_air_pressure',
@@ -10312,7 +10312,7 @@
             ]),
             'area_id': None,
             'capabilities': dict({
-              'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+              <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
             }),
             'config_entry_id': <ANY>,
             'config_subentry_id': <ANY>,
@@ -10348,7 +10348,7 @@
               'device_class': 'battery',
               'friendly_name': 'Eve Degree AA11 Battery',
               'icon': 'mdi:battery-60',
-              'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+              <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
               'unit_of_measurement': '%',
             }),
             'entity_id': 'sensor.eve_degree_aa11_battery',
@@ -10362,7 +10362,7 @@
             ]),
             'area_id': None,
             'capabilities': dict({
-              'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+              <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
             }),
             'config_entry_id': <ANY>,
             'config_subentry_id': <ANY>,
@@ -10397,7 +10397,7 @@
             'attributes': dict({
               'device_class': 'humidity',
               'friendly_name': 'Eve Degree AA11 Humidity',
-              'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+              <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
               'unit_of_measurement': '%',
             }),
             'entity_id': 'sensor.eve_degree_aa11_humidity',
@@ -10411,7 +10411,7 @@
             ]),
             'area_id': None,
             'capabilities': dict({
-              'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+              <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
             }),
             'config_entry_id': <ANY>,
             'config_subentry_id': <ANY>,
@@ -10449,7 +10449,7 @@
             'attributes': dict({
               'device_class': 'temperature',
               'friendly_name': 'Eve Degree AA11 Temperature',
-              'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+              <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
               'unit_of_measurement': <UnitOfTemperature.CELSIUS: '°C'>,
             }),
             'entity_id': 'sensor.eve_degree_aa11_temperature',
@@ -10545,7 +10545,7 @@
             ]),
             'area_id': None,
             'capabilities': dict({
-              'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+              <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
             }),
             'config_entry_id': <ANY>,
             'config_subentry_id': <ANY>,
@@ -10583,7 +10583,7 @@
             'attributes': dict({
               'device_class': 'current',
               'friendly_name': 'Eve Energy 50FF Amps',
-              'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+              <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
               'unit_of_measurement': <UnitOfElectricCurrent.AMPERE: 'A'>,
             }),
             'entity_id': 'sensor.eve_energy_50ff_amps',
@@ -10597,7 +10597,7 @@
             ]),
             'area_id': None,
             'capabilities': dict({
-              'state_class': <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
+              <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
             }),
             'config_entry_id': <ANY>,
             'config_subentry_id': <ANY>,
@@ -10635,7 +10635,7 @@
             'attributes': dict({
               'device_class': 'energy',
               'friendly_name': 'Eve Energy 50FF Energy kWh',
-              'state_class': <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
+              <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
               'unit_of_measurement': <UnitOfEnergy.KILO_WATT_HOUR: 'kWh'>,
             }),
             'entity_id': 'sensor.eve_energy_50ff_energy_kwh',
@@ -10649,7 +10649,7 @@
             ]),
             'area_id': None,
             'capabilities': dict({
-              'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+              <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
             }),
             'config_entry_id': <ANY>,
             'config_subentry_id': <ANY>,
@@ -10687,7 +10687,7 @@
             'attributes': dict({
               'device_class': 'power',
               'friendly_name': 'Eve Energy 50FF Power',
-              'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+              <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
               'unit_of_measurement': <UnitOfPower.WATT: 'W'>,
             }),
             'entity_id': 'sensor.eve_energy_50ff_power',
@@ -10701,7 +10701,7 @@
             ]),
             'area_id': None,
             'capabilities': dict({
-              'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+              <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
             }),
             'config_entry_id': <ANY>,
             'config_subentry_id': <ANY>,
@@ -10739,7 +10739,7 @@
             'attributes': dict({
               'device_class': 'voltage',
               'friendly_name': 'Eve Energy 50FF Volts',
-              'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+              <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
               'unit_of_measurement': <UnitOfElectricPotential.VOLT: 'V'>,
             }),
             'entity_id': 'sensor.eve_energy_50ff_volts',
@@ -11321,7 +11321,7 @@
             ]),
             'area_id': None,
             'capabilities': dict({
-              'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+              <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
             }),
             'config_entry_id': <ANY>,
             'config_subentry_id': <ANY>,
@@ -11357,7 +11357,7 @@
               'device_class': 'battery',
               'friendly_name': 'Family Room North Battery',
               'icon': 'mdi:battery',
-              'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+              <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
               'unit_of_measurement': '%',
             }),
             'entity_id': 'sensor.family_room_north_battery',
@@ -11574,7 +11574,7 @@
             ]),
             'area_id': None,
             'capabilities': dict({
-              'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+              <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
             }),
             'config_entry_id': <ANY>,
             'config_subentry_id': <ANY>,
@@ -11610,7 +11610,7 @@
               'device_class': 'battery',
               'friendly_name': 'Kitchen Window Battery',
               'icon': 'mdi:battery',
-              'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+              <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
               'unit_of_measurement': '%',
             }),
             'entity_id': 'sensor.kitchen_window_battery',
@@ -12051,15 +12051,15 @@
             ]),
             'area_id': None,
             'capabilities': dict({
-              'hvac_modes': list([
+              <ClimateEntityCapabilityAttribute.HVAC_MODES: 'hvac_modes'>: list([
                 <HVACMode.HEAT_COOL: 'heat_cool'>,
                 <HVACMode.HEAT: 'heat'>,
                 <HVACMode.COOL: 'cool'>,
                 <HVACMode.OFF: 'off'>,
               ]),
-              'max_temp': 35,
-              'min_temp': 7,
-              'target_temp_step': 1.0,
+              <ClimateEntityCapabilityAttribute.MAX_TEMP: 'max_temp'>: 35,
+              <ClimateEntityCapabilityAttribute.MIN_TEMP: 'min_temp'>: 7,
+              <ClimateEntityCapabilityAttribute.TARGET_TEMP_STEP: 'target_temp_step'>: 1.0,
             }),
             'config_entry_id': <ANY>,
             'config_subentry_id': <ANY>,
@@ -12092,19 +12092,19 @@
           }),
           'state': dict({
             'attributes': dict({
-              'current_temperature': 22.8,
+              <ClimateEntityStateAttribute.CURRENT_TEMPERATURE: 'current_temperature'>: 22.8,
               'friendly_name': '89 Living Room',
-              'hvac_action': <HVACAction.HEATING: 'heating'>,
-              'hvac_modes': list([
+              <ClimateEntityStateAttribute.HVAC_ACTION: 'hvac_action'>: <HVACAction.HEATING: 'heating'>,
+              <ClimateEntityCapabilityAttribute.HVAC_MODES: 'hvac_modes'>: list([
                 <HVACMode.HEAT_COOL: 'heat_cool'>,
                 <HVACMode.HEAT: 'heat'>,
                 <HVACMode.COOL: 'cool'>,
                 <HVACMode.OFF: 'off'>,
               ]),
-              'max_temp': 35,
-              'min_temp': 7,
+              <ClimateEntityCapabilityAttribute.MAX_TEMP: 'max_temp'>: 35,
+              <ClimateEntityCapabilityAttribute.MIN_TEMP: 'min_temp'>: 7,
               'supported_features': <ClimateEntityFeature: 384>,
-              'target_temp_step': 1.0,
+              <ClimateEntityCapabilityAttribute.TARGET_TEMP_STEP: 'target_temp_step'>: 1.0,
             }),
             'entity_id': 'climate.89_living_room',
             'state': 'heat_cool',
@@ -12173,7 +12173,7 @@
             ]),
             'area_id': None,
             'capabilities': dict({
-              'options': list([
+              <SelectEntityCapabilityAttribute.OPTIONS: 'options'>: list([
                 'celsius',
                 'fahrenheit',
               ]),
@@ -12210,7 +12210,7 @@
           'state': dict({
             'attributes': dict({
               'friendly_name': '89 Living Room Temperature Display Units',
-              'options': list([
+              <SelectEntityCapabilityAttribute.OPTIONS: 'options'>: list([
                 'celsius',
                 'fahrenheit',
               ]),
@@ -12226,7 +12226,7 @@
             ]),
             'area_id': None,
             'capabilities': dict({
-              'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+              <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
             }),
             'config_entry_id': <ANY>,
             'config_subentry_id': <ANY>,
@@ -12261,7 +12261,7 @@
             'attributes': dict({
               'device_class': 'humidity',
               'friendly_name': '89 Living Room Current Humidity',
-              'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+              <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
               'unit_of_measurement': '%',
             }),
             'entity_id': 'sensor.89_living_room_current_humidity',
@@ -12275,7 +12275,7 @@
             ]),
             'area_id': None,
             'capabilities': dict({
-              'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+              <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
             }),
             'config_entry_id': <ANY>,
             'config_subentry_id': <ANY>,
@@ -12313,7 +12313,7 @@
             'attributes': dict({
               'device_class': 'temperature',
               'friendly_name': '89 Living Room Current Temperature',
-              'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+              <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
               'unit_of_measurement': <UnitOfTemperature.CELSIUS: '°C'>,
             }),
             'entity_id': 'sensor.89_living_room_current_temperature',
@@ -12565,7 +12565,7 @@
             ]),
             'area_id': None,
             'capabilities': dict({
-              'supported_color_modes': list([
+              <LightEntityCapabilityAttribute.SUPPORTED_COLOR_MODES: 'supported_color_modes'>: list([
                 <ColorMode.BRIGHTNESS: 'brightness'>,
               ]),
             }),
@@ -12600,10 +12600,10 @@
           }),
           'state': dict({
             'attributes': dict({
-              'brightness': None,
-              'color_mode': None,
+              <LightEntityStateAttribute.BRIGHTNESS: 'brightness'>: None,
+              <LightEntityStateAttribute.COLOR_MODE: 'color_mode'>: None,
               'friendly_name': 'Laundry Smoke ED78',
-              'supported_color_modes': list([
+              <LightEntityCapabilityAttribute.SUPPORTED_COLOR_MODES: 'supported_color_modes'>: list([
                 <ColorMode.BRIGHTNESS: 'brightness'>,
               ]),
               'supported_features': <LightEntityFeature: 0>,
@@ -12619,7 +12619,7 @@
             ]),
             'area_id': None,
             'capabilities': dict({
-              'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+              <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
             }),
             'config_entry_id': <ANY>,
             'config_subentry_id': <ANY>,
@@ -12655,7 +12655,7 @@
               'device_class': 'battery',
               'friendly_name': 'Laundry Smoke ED78 Battery',
               'icon': 'mdi:battery',
-              'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+              <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
               'unit_of_measurement': '%',
             }),
             'entity_id': 'sensor.laundry_smoke_ed78_battery',
@@ -12798,7 +12798,7 @@
             ]),
             'area_id': None,
             'capabilities': dict({
-              'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+              <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
             }),
             'config_entry_id': <ANY>,
             'config_subentry_id': <ANY>,
@@ -12834,7 +12834,7 @@
               'device_class': 'battery',
               'friendly_name': 'Family Room North Battery',
               'icon': 'mdi:battery',
-              'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+              <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
               'unit_of_measurement': '%',
             }),
             'entity_id': 'sensor.family_room_north_battery',
@@ -13051,7 +13051,7 @@
             ]),
             'area_id': None,
             'capabilities': dict({
-              'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+              <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
             }),
             'config_entry_id': <ANY>,
             'config_subentry_id': <ANY>,
@@ -13087,7 +13087,7 @@
               'device_class': 'battery',
               'friendly_name': 'Kitchen Window Battery',
               'icon': 'mdi:battery',
-              'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+              <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
               'unit_of_measurement': '%',
             }),
             'entity_id': 'sensor.kitchen_window_battery',
@@ -13744,19 +13744,19 @@
             ]),
             'area_id': None,
             'capabilities': dict({
-              'hvac_modes': list([
+              <ClimateEntityCapabilityAttribute.HVAC_MODES: 'hvac_modes'>: list([
                 <HVACMode.HEAT_COOL: 'heat_cool'>,
                 <HVACMode.HEAT: 'heat'>,
                 <HVACMode.COOL: 'cool'>,
                 <HVACMode.OFF: 'off'>,
               ]),
-              'max_temp': 35,
-              'min_temp': 7,
-              'swing_modes': list([
+              <ClimateEntityCapabilityAttribute.MAX_TEMP: 'max_temp'>: 35,
+              <ClimateEntityCapabilityAttribute.MIN_TEMP: 'min_temp'>: 7,
+              <ClimateEntityCapabilityAttribute.SWING_MODES: 'swing_modes'>: list([
                 'off',
                 'vertical',
               ]),
-              'target_temp_step': 1.0,
+              <ClimateEntityCapabilityAttribute.TARGET_TEMP_STEP: 'target_temp_step'>: 1.0,
             }),
             'config_entry_id': <ANY>,
             'config_subentry_id': <ANY>,
@@ -13789,24 +13789,24 @@
           }),
           'state': dict({
             'attributes': dict({
-              'current_temperature': 22.8,
+              <ClimateEntityStateAttribute.CURRENT_TEMPERATURE: 'current_temperature'>: 22.8,
               'friendly_name': '89 Living Room',
-              'hvac_action': <HVACAction.HEATING: 'heating'>,
-              'hvac_modes': list([
+              <ClimateEntityStateAttribute.HVAC_ACTION: 'hvac_action'>: <HVACAction.HEATING: 'heating'>,
+              <ClimateEntityCapabilityAttribute.HVAC_MODES: 'hvac_modes'>: list([
                 <HVACMode.HEAT_COOL: 'heat_cool'>,
                 <HVACMode.HEAT: 'heat'>,
                 <HVACMode.COOL: 'cool'>,
                 <HVACMode.OFF: 'off'>,
               ]),
-              'max_temp': 35,
-              'min_temp': 7,
+              <ClimateEntityCapabilityAttribute.MAX_TEMP: 'max_temp'>: 35,
+              <ClimateEntityCapabilityAttribute.MIN_TEMP: 'min_temp'>: 7,
               'supported_features': <ClimateEntityFeature: 416>,
-              'swing_mode': 'vertical',
-              'swing_modes': list([
+              <ClimateEntityStateAttribute.SWING_MODE: 'swing_mode'>: 'vertical',
+              <ClimateEntityCapabilityAttribute.SWING_MODES: 'swing_modes'>: list([
                 'off',
                 'vertical',
               ]),
-              'target_temp_step': 1.0,
+              <ClimateEntityCapabilityAttribute.TARGET_TEMP_STEP: 'target_temp_step'>: 1.0,
             }),
             'entity_id': 'climate.89_living_room',
             'state': 'heat_cool',
@@ -13875,7 +13875,7 @@
             ]),
             'area_id': None,
             'capabilities': dict({
-              'options': list([
+              <SelectEntityCapabilityAttribute.OPTIONS: 'options'>: list([
                 'celsius',
                 'fahrenheit',
               ]),
@@ -13912,7 +13912,7 @@
           'state': dict({
             'attributes': dict({
               'friendly_name': '89 Living Room Temperature Display Units',
-              'options': list([
+              <SelectEntityCapabilityAttribute.OPTIONS: 'options'>: list([
                 'celsius',
                 'fahrenheit',
               ]),
@@ -13928,7 +13928,7 @@
             ]),
             'area_id': None,
             'capabilities': dict({
-              'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+              <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
             }),
             'config_entry_id': <ANY>,
             'config_subentry_id': <ANY>,
@@ -13963,7 +13963,7 @@
             'attributes': dict({
               'device_class': 'humidity',
               'friendly_name': '89 Living Room Current Humidity',
-              'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+              <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
               'unit_of_measurement': '%',
             }),
             'entity_id': 'sensor.89_living_room_current_humidity',
@@ -13977,7 +13977,7 @@
             ]),
             'area_id': None,
             'capabilities': dict({
-              'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+              <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
             }),
             'config_entry_id': <ANY>,
             'config_subentry_id': <ANY>,
@@ -14015,7 +14015,7 @@
             'attributes': dict({
               'device_class': 'temperature',
               'friendly_name': '89 Living Room Current Temperature',
-              'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+              <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
               'unit_of_measurement': <UnitOfTemperature.CELSIUS: '°C'>,
             }),
             'entity_id': 'sensor.89_living_room_current_temperature',
@@ -14329,7 +14329,7 @@
             ]),
             'area_id': None,
             'capabilities': dict({
-              'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+              <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
             }),
             'config_entry_id': <ANY>,
             'config_subentry_id': <ANY>,
@@ -14364,7 +14364,7 @@
             'attributes': dict({
               'device_class': 'humidity',
               'friendly_name': 'Humidifier 182A Current Humidity',
-              'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+              <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
               'unit_of_measurement': '%',
             }),
             'entity_id': 'sensor.humidifier_182a_current_humidity',
@@ -14600,7 +14600,7 @@
             ]),
             'area_id': None,
             'capabilities': dict({
-              'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+              <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
             }),
             'config_entry_id': <ANY>,
             'config_subentry_id': <ANY>,
@@ -14635,7 +14635,7 @@
             'attributes': dict({
               'device_class': 'humidity',
               'friendly_name': 'Humidifier 182A Current Humidity',
-              'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+              <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
               'unit_of_measurement': '%',
             }),
             'entity_id': 'sensor.humidifier_182a_current_humidity',
@@ -14809,9 +14809,9 @@
             ]),
             'area_id': None,
             'capabilities': dict({
-              'max_color_temp_kelvin': 6535,
-              'min_color_temp_kelvin': 2000,
-              'supported_color_modes': list([
+              <LightEntityCapabilityAttribute.MAX_COLOR_TEMP_KELVIN: 'max_color_temp_kelvin'>: 6535,
+              <LightEntityCapabilityAttribute.MIN_COLOR_TEMP_KELVIN: 'min_color_temp_kelvin'>: 2000,
+              <LightEntityCapabilityAttribute.SUPPORTED_COLOR_MODES: 'supported_color_modes'>: list([
                 <ColorMode.COLOR_TEMP: 'color_temp'>,
                 <ColorMode.HS: 'hs'>,
               ]),
@@ -14847,20 +14847,20 @@
           }),
           'state': dict({
             'attributes': dict({
-              'brightness': None,
-              'color_mode': None,
-              'color_temp_kelvin': None,
+              <LightEntityStateAttribute.BRIGHTNESS: 'brightness'>: None,
+              <LightEntityStateAttribute.COLOR_MODE: 'color_mode'>: None,
+              <LightEntityStateAttribute.COLOR_TEMP_KELVIN: 'color_temp_kelvin'>: None,
               'friendly_name': 'Laundry Smoke ED78',
-              'hs_color': None,
-              'max_color_temp_kelvin': 6535,
-              'min_color_temp_kelvin': 2000,
-              'rgb_color': None,
-              'supported_color_modes': list([
+              <LightEntityStateAttribute.HS_COLOR: 'hs_color'>: None,
+              <LightEntityCapabilityAttribute.MAX_COLOR_TEMP_KELVIN: 'max_color_temp_kelvin'>: 6535,
+              <LightEntityCapabilityAttribute.MIN_COLOR_TEMP_KELVIN: 'min_color_temp_kelvin'>: 2000,
+              <LightEntityStateAttribute.RGB_COLOR: 'rgb_color'>: None,
+              <LightEntityCapabilityAttribute.SUPPORTED_COLOR_MODES: 'supported_color_modes'>: list([
                 <ColorMode.COLOR_TEMP: 'color_temp'>,
                 <ColorMode.HS: 'hs'>,
               ]),
               'supported_features': <LightEntityFeature: 0>,
-              'xy_color': None,
+              <LightEntityStateAttribute.XY_COLOR: 'xy_color'>: None,
             }),
             'entity_id': 'light.laundry_smoke_ed78',
             'state': 'off',
@@ -14873,7 +14873,7 @@
             ]),
             'area_id': None,
             'capabilities': dict({
-              'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+              <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
             }),
             'config_entry_id': <ANY>,
             'config_subentry_id': <ANY>,
@@ -14909,7 +14909,7 @@
               'device_class': 'battery',
               'friendly_name': 'Laundry Smoke ED78 Battery',
               'icon': 'mdi:battery',
-              'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+              <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
               'unit_of_measurement': '%',
             }),
             'entity_id': 'sensor.laundry_smoke_ed78_battery',
@@ -15005,21 +15005,21 @@
             ]),
             'area_id': None,
             'capabilities': dict({
-              'fan_modes': list([
+              <ClimateEntityCapabilityAttribute.FAN_MODES: 'fan_modes'>: list([
                 'off',
                 'low',
                 'medium',
                 'high',
               ]),
-              'hvac_modes': list([
+              <ClimateEntityCapabilityAttribute.HVAC_MODES: 'hvac_modes'>: list([
                 <HVACMode.HEAT_COOL: 'heat_cool'>,
                 <HVACMode.HEAT: 'heat'>,
                 <HVACMode.COOL: 'cool'>,
                 <HVACMode.OFF: 'off'>,
               ]),
-              'max_temp': 32,
-              'min_temp': 18,
-              'target_temp_step': 0.5,
+              <ClimateEntityCapabilityAttribute.MAX_TEMP: 'max_temp'>: 32,
+              <ClimateEntityCapabilityAttribute.MIN_TEMP: 'min_temp'>: 18,
+              <ClimateEntityCapabilityAttribute.TARGET_TEMP_STEP: 'target_temp_step'>: 0.5,
             }),
             'config_entry_id': <ANY>,
             'config_subentry_id': <ANY>,
@@ -15052,27 +15052,27 @@
           }),
           'state': dict({
             'attributes': dict({
-              'current_temperature': 27.9,
-              'fan_mode': 'high',
-              'fan_modes': list([
+              <ClimateEntityStateAttribute.CURRENT_TEMPERATURE: 'current_temperature'>: 27.9,
+              <ClimateEntityStateAttribute.FAN_MODE: 'fan_mode'>: 'high',
+              <ClimateEntityCapabilityAttribute.FAN_MODES: 'fan_modes'>: list([
                 'off',
                 'low',
                 'medium',
                 'high',
               ]),
               'friendly_name': 'Air Conditioner SlaveID 1',
-              'hvac_action': <HVACAction.COOLING: 'cooling'>,
-              'hvac_modes': list([
+              <ClimateEntityStateAttribute.HVAC_ACTION: 'hvac_action'>: <HVACAction.COOLING: 'cooling'>,
+              <ClimateEntityCapabilityAttribute.HVAC_MODES: 'hvac_modes'>: list([
                 <HVACMode.HEAT_COOL: 'heat_cool'>,
                 <HVACMode.HEAT: 'heat'>,
                 <HVACMode.COOL: 'cool'>,
                 <HVACMode.OFF: 'off'>,
               ]),
-              'max_temp': 32,
-              'min_temp': 18,
+              <ClimateEntityCapabilityAttribute.MAX_TEMP: 'max_temp'>: 32,
+              <ClimateEntityCapabilityAttribute.MIN_TEMP: 'min_temp'>: 18,
               'supported_features': <ClimateEntityFeature: 393>,
-              'target_temp_step': 0.5,
-              'temperature': 24.5,
+              <ClimateEntityCapabilityAttribute.TARGET_TEMP_STEP: 'target_temp_step'>: 0.5,
+              <ClimateEntityStateAttribute.TEMPERATURE: 'temperature'>: 24.5,
             }),
             'entity_id': 'climate.air_conditioner_slaveid_1',
             'state': 'cool',
@@ -15085,7 +15085,7 @@
             ]),
             'area_id': None,
             'capabilities': dict({
-              'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+              <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
             }),
             'config_entry_id': <ANY>,
             'config_subentry_id': <ANY>,
@@ -15123,7 +15123,7 @@
             'attributes': dict({
               'device_class': 'temperature',
               'friendly_name': 'Air Conditioner Current Temperature',
-              'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+              <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
               'unit_of_measurement': <UnitOfTemperature.CELSIUS: '°C'>,
             }),
             'entity_id': 'sensor.air_conditioner_current_temperature',
@@ -15219,9 +15219,9 @@
             ]),
             'area_id': None,
             'capabilities': dict({
-              'max_color_temp_kelvin': 6535,
-              'min_color_temp_kelvin': 2202,
-              'supported_color_modes': list([
+              <LightEntityCapabilityAttribute.MAX_COLOR_TEMP_KELVIN: 'max_color_temp_kelvin'>: 6535,
+              <LightEntityCapabilityAttribute.MIN_COLOR_TEMP_KELVIN: 'min_color_temp_kelvin'>: 2202,
+              <LightEntityCapabilityAttribute.SUPPORTED_COLOR_MODES: 'supported_color_modes'>: list([
                 <ColorMode.COLOR_TEMP: 'color_temp'>,
               ]),
             }),
@@ -15256,19 +15256,19 @@
           }),
           'state': dict({
             'attributes': dict({
-              'brightness': None,
-              'color_mode': None,
-              'color_temp_kelvin': None,
+              <LightEntityStateAttribute.BRIGHTNESS: 'brightness'>: None,
+              <LightEntityStateAttribute.COLOR_MODE: 'color_mode'>: None,
+              <LightEntityStateAttribute.COLOR_TEMP_KELVIN: 'color_temp_kelvin'>: None,
               'friendly_name': 'Hue ambiance candle',
-              'hs_color': None,
-              'max_color_temp_kelvin': 6535,
-              'min_color_temp_kelvin': 2202,
-              'rgb_color': None,
-              'supported_color_modes': list([
+              <LightEntityStateAttribute.HS_COLOR: 'hs_color'>: None,
+              <LightEntityCapabilityAttribute.MAX_COLOR_TEMP_KELVIN: 'max_color_temp_kelvin'>: 6535,
+              <LightEntityCapabilityAttribute.MIN_COLOR_TEMP_KELVIN: 'min_color_temp_kelvin'>: 2202,
+              <LightEntityStateAttribute.RGB_COLOR: 'rgb_color'>: None,
+              <LightEntityCapabilityAttribute.SUPPORTED_COLOR_MODES: 'supported_color_modes'>: list([
                 <ColorMode.COLOR_TEMP: 'color_temp'>,
               ]),
               'supported_features': <LightEntityFeature: 0>,
-              'xy_color': None,
+              <LightEntityStateAttribute.XY_COLOR: 'xy_color'>: None,
             }),
             'entity_id': 'light.hue_ambiance_candle_4',
             'state': 'off',
@@ -15359,9 +15359,9 @@
             ]),
             'area_id': None,
             'capabilities': dict({
-              'max_color_temp_kelvin': 6535,
-              'min_color_temp_kelvin': 2202,
-              'supported_color_modes': list([
+              <LightEntityCapabilityAttribute.MAX_COLOR_TEMP_KELVIN: 'max_color_temp_kelvin'>: 6535,
+              <LightEntityCapabilityAttribute.MIN_COLOR_TEMP_KELVIN: 'min_color_temp_kelvin'>: 2202,
+              <LightEntityCapabilityAttribute.SUPPORTED_COLOR_MODES: 'supported_color_modes'>: list([
                 <ColorMode.COLOR_TEMP: 'color_temp'>,
               ]),
             }),
@@ -15396,19 +15396,19 @@
           }),
           'state': dict({
             'attributes': dict({
-              'brightness': None,
-              'color_mode': None,
-              'color_temp_kelvin': None,
+              <LightEntityStateAttribute.BRIGHTNESS: 'brightness'>: None,
+              <LightEntityStateAttribute.COLOR_MODE: 'color_mode'>: None,
+              <LightEntityStateAttribute.COLOR_TEMP_KELVIN: 'color_temp_kelvin'>: None,
               'friendly_name': 'Hue ambiance candle',
-              'hs_color': None,
-              'max_color_temp_kelvin': 6535,
-              'min_color_temp_kelvin': 2202,
-              'rgb_color': None,
-              'supported_color_modes': list([
+              <LightEntityStateAttribute.HS_COLOR: 'hs_color'>: None,
+              <LightEntityCapabilityAttribute.MAX_COLOR_TEMP_KELVIN: 'max_color_temp_kelvin'>: 6535,
+              <LightEntityCapabilityAttribute.MIN_COLOR_TEMP_KELVIN: 'min_color_temp_kelvin'>: 2202,
+              <LightEntityStateAttribute.RGB_COLOR: 'rgb_color'>: None,
+              <LightEntityCapabilityAttribute.SUPPORTED_COLOR_MODES: 'supported_color_modes'>: list([
                 <ColorMode.COLOR_TEMP: 'color_temp'>,
               ]),
               'supported_features': <LightEntityFeature: 0>,
-              'xy_color': None,
+              <LightEntityStateAttribute.XY_COLOR: 'xy_color'>: None,
             }),
             'entity_id': 'light.hue_ambiance_candle_3',
             'state': 'off',
@@ -15499,9 +15499,9 @@
             ]),
             'area_id': None,
             'capabilities': dict({
-              'max_color_temp_kelvin': 6535,
-              'min_color_temp_kelvin': 2202,
-              'supported_color_modes': list([
+              <LightEntityCapabilityAttribute.MAX_COLOR_TEMP_KELVIN: 'max_color_temp_kelvin'>: 6535,
+              <LightEntityCapabilityAttribute.MIN_COLOR_TEMP_KELVIN: 'min_color_temp_kelvin'>: 2202,
+              <LightEntityCapabilityAttribute.SUPPORTED_COLOR_MODES: 'supported_color_modes'>: list([
                 <ColorMode.COLOR_TEMP: 'color_temp'>,
               ]),
             }),
@@ -15536,19 +15536,19 @@
           }),
           'state': dict({
             'attributes': dict({
-              'brightness': None,
-              'color_mode': None,
-              'color_temp_kelvin': None,
+              <LightEntityStateAttribute.BRIGHTNESS: 'brightness'>: None,
+              <LightEntityStateAttribute.COLOR_MODE: 'color_mode'>: None,
+              <LightEntityStateAttribute.COLOR_TEMP_KELVIN: 'color_temp_kelvin'>: None,
               'friendly_name': 'Hue ambiance candle',
-              'hs_color': None,
-              'max_color_temp_kelvin': 6535,
-              'min_color_temp_kelvin': 2202,
-              'rgb_color': None,
-              'supported_color_modes': list([
+              <LightEntityStateAttribute.HS_COLOR: 'hs_color'>: None,
+              <LightEntityCapabilityAttribute.MAX_COLOR_TEMP_KELVIN: 'max_color_temp_kelvin'>: 6535,
+              <LightEntityCapabilityAttribute.MIN_COLOR_TEMP_KELVIN: 'min_color_temp_kelvin'>: 2202,
+              <LightEntityStateAttribute.RGB_COLOR: 'rgb_color'>: None,
+              <LightEntityCapabilityAttribute.SUPPORTED_COLOR_MODES: 'supported_color_modes'>: list([
                 <ColorMode.COLOR_TEMP: 'color_temp'>,
               ]),
               'supported_features': <LightEntityFeature: 0>,
-              'xy_color': None,
+              <LightEntityStateAttribute.XY_COLOR: 'xy_color'>: None,
             }),
             'entity_id': 'light.hue_ambiance_candle_2',
             'state': 'off',
@@ -15639,9 +15639,9 @@
             ]),
             'area_id': None,
             'capabilities': dict({
-              'max_color_temp_kelvin': 6535,
-              'min_color_temp_kelvin': 2202,
-              'supported_color_modes': list([
+              <LightEntityCapabilityAttribute.MAX_COLOR_TEMP_KELVIN: 'max_color_temp_kelvin'>: 6535,
+              <LightEntityCapabilityAttribute.MIN_COLOR_TEMP_KELVIN: 'min_color_temp_kelvin'>: 2202,
+              <LightEntityCapabilityAttribute.SUPPORTED_COLOR_MODES: 'supported_color_modes'>: list([
                 <ColorMode.COLOR_TEMP: 'color_temp'>,
               ]),
             }),
@@ -15676,19 +15676,19 @@
           }),
           'state': dict({
             'attributes': dict({
-              'brightness': None,
-              'color_mode': None,
-              'color_temp_kelvin': None,
+              <LightEntityStateAttribute.BRIGHTNESS: 'brightness'>: None,
+              <LightEntityStateAttribute.COLOR_MODE: 'color_mode'>: None,
+              <LightEntityStateAttribute.COLOR_TEMP_KELVIN: 'color_temp_kelvin'>: None,
               'friendly_name': 'Hue ambiance candle',
-              'hs_color': None,
-              'max_color_temp_kelvin': 6535,
-              'min_color_temp_kelvin': 2202,
-              'rgb_color': None,
-              'supported_color_modes': list([
+              <LightEntityStateAttribute.HS_COLOR: 'hs_color'>: None,
+              <LightEntityCapabilityAttribute.MAX_COLOR_TEMP_KELVIN: 'max_color_temp_kelvin'>: 6535,
+              <LightEntityCapabilityAttribute.MIN_COLOR_TEMP_KELVIN: 'min_color_temp_kelvin'>: 2202,
+              <LightEntityStateAttribute.RGB_COLOR: 'rgb_color'>: None,
+              <LightEntityCapabilityAttribute.SUPPORTED_COLOR_MODES: 'supported_color_modes'>: list([
                 <ColorMode.COLOR_TEMP: 'color_temp'>,
               ]),
               'supported_features': <LightEntityFeature: 0>,
-              'xy_color': None,
+              <LightEntityStateAttribute.XY_COLOR: 'xy_color'>: None,
             }),
             'entity_id': 'light.hue_ambiance_candle',
             'state': 'off',
@@ -15779,9 +15779,9 @@
             ]),
             'area_id': None,
             'capabilities': dict({
-              'max_color_temp_kelvin': 6535,
-              'min_color_temp_kelvin': 2202,
-              'supported_color_modes': list([
+              <LightEntityCapabilityAttribute.MAX_COLOR_TEMP_KELVIN: 'max_color_temp_kelvin'>: 6535,
+              <LightEntityCapabilityAttribute.MIN_COLOR_TEMP_KELVIN: 'min_color_temp_kelvin'>: 2202,
+              <LightEntityCapabilityAttribute.SUPPORTED_COLOR_MODES: 'supported_color_modes'>: list([
                 <ColorMode.COLOR_TEMP: 'color_temp'>,
               ]),
             }),
@@ -15816,26 +15816,26 @@
           }),
           'state': dict({
             'attributes': dict({
-              'brightness': 255.0,
-              'color_mode': <ColorMode.COLOR_TEMP: 'color_temp'>,
-              'color_temp_kelvin': 2732,
+              <LightEntityStateAttribute.BRIGHTNESS: 'brightness'>: 255.0,
+              <LightEntityStateAttribute.COLOR_MODE: 'color_mode'>: <ColorMode.COLOR_TEMP: 'color_temp'>,
+              <LightEntityStateAttribute.COLOR_TEMP_KELVIN: 'color_temp_kelvin'>: 2732,
               'friendly_name': 'Hue ambiance spot',
-              'hs_color': tuple(
+              <LightEntityStateAttribute.HS_COLOR: 'hs_color'>: tuple(
                 28.327,
                 64.71,
               ),
-              'max_color_temp_kelvin': 6535,
-              'min_color_temp_kelvin': 2202,
-              'rgb_color': tuple(
+              <LightEntityCapabilityAttribute.MAX_COLOR_TEMP_KELVIN: 'max_color_temp_kelvin'>: 6535,
+              <LightEntityCapabilityAttribute.MIN_COLOR_TEMP_KELVIN: 'min_color_temp_kelvin'>: 2202,
+              <LightEntityStateAttribute.RGB_COLOR: 'rgb_color'>: tuple(
                 255,
                 168,
                 90,
               ),
-              'supported_color_modes': list([
+              <LightEntityCapabilityAttribute.SUPPORTED_COLOR_MODES: 'supported_color_modes'>: list([
                 <ColorMode.COLOR_TEMP: 'color_temp'>,
               ]),
               'supported_features': <LightEntityFeature: 0>,
-              'xy_color': tuple(
+              <LightEntityStateAttribute.XY_COLOR: 'xy_color'>: tuple(
                 0.522,
                 0.387,
               ),
@@ -15929,9 +15929,9 @@
             ]),
             'area_id': None,
             'capabilities': dict({
-              'max_color_temp_kelvin': 6535,
-              'min_color_temp_kelvin': 2202,
-              'supported_color_modes': list([
+              <LightEntityCapabilityAttribute.MAX_COLOR_TEMP_KELVIN: 'max_color_temp_kelvin'>: 6535,
+              <LightEntityCapabilityAttribute.MIN_COLOR_TEMP_KELVIN: 'min_color_temp_kelvin'>: 2202,
+              <LightEntityCapabilityAttribute.SUPPORTED_COLOR_MODES: 'supported_color_modes'>: list([
                 <ColorMode.COLOR_TEMP: 'color_temp'>,
               ]),
             }),
@@ -15966,26 +15966,26 @@
           }),
           'state': dict({
             'attributes': dict({
-              'brightness': 255.0,
-              'color_mode': <ColorMode.COLOR_TEMP: 'color_temp'>,
-              'color_temp_kelvin': 2732,
+              <LightEntityStateAttribute.BRIGHTNESS: 'brightness'>: 255.0,
+              <LightEntityStateAttribute.COLOR_MODE: 'color_mode'>: <ColorMode.COLOR_TEMP: 'color_temp'>,
+              <LightEntityStateAttribute.COLOR_TEMP_KELVIN: 'color_temp_kelvin'>: 2732,
               'friendly_name': 'Hue ambiance spot',
-              'hs_color': tuple(
+              <LightEntityStateAttribute.HS_COLOR: 'hs_color'>: tuple(
                 28.327,
                 64.71,
               ),
-              'max_color_temp_kelvin': 6535,
-              'min_color_temp_kelvin': 2202,
-              'rgb_color': tuple(
+              <LightEntityCapabilityAttribute.MAX_COLOR_TEMP_KELVIN: 'max_color_temp_kelvin'>: 6535,
+              <LightEntityCapabilityAttribute.MIN_COLOR_TEMP_KELVIN: 'min_color_temp_kelvin'>: 2202,
+              <LightEntityStateAttribute.RGB_COLOR: 'rgb_color'>: tuple(
                 255,
                 168,
                 90,
               ),
-              'supported_color_modes': list([
+              <LightEntityCapabilityAttribute.SUPPORTED_COLOR_MODES: 'supported_color_modes'>: list([
                 <ColorMode.COLOR_TEMP: 'color_temp'>,
               ]),
               'supported_features': <LightEntityFeature: 0>,
-              'xy_color': tuple(
+              <LightEntityStateAttribute.XY_COLOR: 'xy_color'>: tuple(
                 0.522,
                 0.387,
               ),
@@ -16079,7 +16079,7 @@
             ]),
             'area_id': None,
             'capabilities': dict({
-              'event_types': list([
+              <EventEntityCapabilityAttribute.EVENT_TYPES: 'event_types'>: list([
                 'single_press',
               ]),
             }),
@@ -16115,8 +16115,8 @@
           'state': dict({
             'attributes': dict({
               'device_class': 'button',
-              'event_type': None,
-              'event_types': list([
+              <EventEntityStateAttribute.EVENT_TYPE: 'event_type'>: None,
+              <EventEntityCapabilityAttribute.EVENT_TYPES: 'event_types'>: list([
                 'single_press',
               ]),
               'friendly_name': 'Hue dimmer switch Button 1',
@@ -16132,7 +16132,7 @@
             ]),
             'area_id': None,
             'capabilities': dict({
-              'event_types': list([
+              <EventEntityCapabilityAttribute.EVENT_TYPES: 'event_types'>: list([
                 'single_press',
               ]),
             }),
@@ -16168,8 +16168,8 @@
           'state': dict({
             'attributes': dict({
               'device_class': 'button',
-              'event_type': None,
-              'event_types': list([
+              <EventEntityStateAttribute.EVENT_TYPE: 'event_type'>: None,
+              <EventEntityCapabilityAttribute.EVENT_TYPES: 'event_types'>: list([
                 'single_press',
               ]),
               'friendly_name': 'Hue dimmer switch Button 2',
@@ -16185,7 +16185,7 @@
             ]),
             'area_id': None,
             'capabilities': dict({
-              'event_types': list([
+              <EventEntityCapabilityAttribute.EVENT_TYPES: 'event_types'>: list([
                 'single_press',
               ]),
             }),
@@ -16221,8 +16221,8 @@
           'state': dict({
             'attributes': dict({
               'device_class': 'button',
-              'event_type': None,
-              'event_types': list([
+              <EventEntityStateAttribute.EVENT_TYPE: 'event_type'>: None,
+              <EventEntityCapabilityAttribute.EVENT_TYPES: 'event_types'>: list([
                 'single_press',
               ]),
               'friendly_name': 'Hue dimmer switch Button 3',
@@ -16238,7 +16238,7 @@
             ]),
             'area_id': None,
             'capabilities': dict({
-              'event_types': list([
+              <EventEntityCapabilityAttribute.EVENT_TYPES: 'event_types'>: list([
                 'single_press',
               ]),
             }),
@@ -16274,8 +16274,8 @@
           'state': dict({
             'attributes': dict({
               'device_class': 'button',
-              'event_type': None,
-              'event_types': list([
+              <EventEntityStateAttribute.EVENT_TYPE: 'event_type'>: None,
+              <EventEntityCapabilityAttribute.EVENT_TYPES: 'event_types'>: list([
                 'single_press',
               ]),
               'friendly_name': 'Hue dimmer switch Button 4',
@@ -16291,7 +16291,7 @@
             ]),
             'area_id': None,
             'capabilities': dict({
-              'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+              <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
             }),
             'config_entry_id': <ANY>,
             'config_subentry_id': <ANY>,
@@ -16327,7 +16327,7 @@
               'device_class': 'battery',
               'friendly_name': 'Hue dimmer switch Battery',
               'icon': 'mdi:battery',
-              'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+              <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
               'unit_of_measurement': '%',
             }),
             'entity_id': 'sensor.hue_dimmer_switch_battery',
@@ -16419,7 +16419,7 @@
             ]),
             'area_id': None,
             'capabilities': dict({
-              'supported_color_modes': list([
+              <LightEntityCapabilityAttribute.SUPPORTED_COLOR_MODES: 'supported_color_modes'>: list([
                 <ColorMode.BRIGHTNESS: 'brightness'>,
               ]),
             }),
@@ -16454,10 +16454,10 @@
           }),
           'state': dict({
             'attributes': dict({
-              'brightness': None,
-              'color_mode': None,
+              <LightEntityStateAttribute.BRIGHTNESS: 'brightness'>: None,
+              <LightEntityStateAttribute.COLOR_MODE: 'color_mode'>: None,
               'friendly_name': 'Hue white lamp',
-              'supported_color_modes': list([
+              <LightEntityCapabilityAttribute.SUPPORTED_COLOR_MODES: 'supported_color_modes'>: list([
                 <ColorMode.BRIGHTNESS: 'brightness'>,
               ]),
               'supported_features': <LightEntityFeature: 0>,
@@ -16551,7 +16551,7 @@
             ]),
             'area_id': None,
             'capabilities': dict({
-              'supported_color_modes': list([
+              <LightEntityCapabilityAttribute.SUPPORTED_COLOR_MODES: 'supported_color_modes'>: list([
                 <ColorMode.BRIGHTNESS: 'brightness'>,
               ]),
             }),
@@ -16586,10 +16586,10 @@
           }),
           'state': dict({
             'attributes': dict({
-              'brightness': None,
-              'color_mode': None,
+              <LightEntityStateAttribute.BRIGHTNESS: 'brightness'>: None,
+              <LightEntityStateAttribute.COLOR_MODE: 'color_mode'>: None,
               'friendly_name': 'Hue white lamp',
-              'supported_color_modes': list([
+              <LightEntityCapabilityAttribute.SUPPORTED_COLOR_MODES: 'supported_color_modes'>: list([
                 <ColorMode.BRIGHTNESS: 'brightness'>,
               ]),
               'supported_features': <LightEntityFeature: 0>,
@@ -16683,7 +16683,7 @@
             ]),
             'area_id': None,
             'capabilities': dict({
-              'supported_color_modes': list([
+              <LightEntityCapabilityAttribute.SUPPORTED_COLOR_MODES: 'supported_color_modes'>: list([
                 <ColorMode.BRIGHTNESS: 'brightness'>,
               ]),
             }),
@@ -16718,10 +16718,10 @@
           }),
           'state': dict({
             'attributes': dict({
-              'brightness': None,
-              'color_mode': None,
+              <LightEntityStateAttribute.BRIGHTNESS: 'brightness'>: None,
+              <LightEntityStateAttribute.COLOR_MODE: 'color_mode'>: None,
               'friendly_name': 'Hue white lamp',
-              'supported_color_modes': list([
+              <LightEntityCapabilityAttribute.SUPPORTED_COLOR_MODES: 'supported_color_modes'>: list([
                 <ColorMode.BRIGHTNESS: 'brightness'>,
               ]),
               'supported_features': <LightEntityFeature: 0>,
@@ -16815,7 +16815,7 @@
             ]),
             'area_id': None,
             'capabilities': dict({
-              'supported_color_modes': list([
+              <LightEntityCapabilityAttribute.SUPPORTED_COLOR_MODES: 'supported_color_modes'>: list([
                 <ColorMode.BRIGHTNESS: 'brightness'>,
               ]),
             }),
@@ -16850,10 +16850,10 @@
           }),
           'state': dict({
             'attributes': dict({
-              'brightness': None,
-              'color_mode': None,
+              <LightEntityStateAttribute.BRIGHTNESS: 'brightness'>: None,
+              <LightEntityStateAttribute.COLOR_MODE: 'color_mode'>: None,
               'friendly_name': 'Hue white lamp',
-              'supported_color_modes': list([
+              <LightEntityCapabilityAttribute.SUPPORTED_COLOR_MODES: 'supported_color_modes'>: list([
                 <ColorMode.BRIGHTNESS: 'brightness'>,
               ]),
               'supported_features': <LightEntityFeature: 0>,
@@ -16947,7 +16947,7 @@
             ]),
             'area_id': None,
             'capabilities': dict({
-              'supported_color_modes': list([
+              <LightEntityCapabilityAttribute.SUPPORTED_COLOR_MODES: 'supported_color_modes'>: list([
                 <ColorMode.BRIGHTNESS: 'brightness'>,
               ]),
             }),
@@ -16982,10 +16982,10 @@
           }),
           'state': dict({
             'attributes': dict({
-              'brightness': None,
-              'color_mode': None,
+              <LightEntityStateAttribute.BRIGHTNESS: 'brightness'>: None,
+              <LightEntityStateAttribute.COLOR_MODE: 'color_mode'>: None,
               'friendly_name': 'Hue white lamp',
-              'supported_color_modes': list([
+              <LightEntityCapabilityAttribute.SUPPORTED_COLOR_MODES: 'supported_color_modes'>: list([
                 <ColorMode.BRIGHTNESS: 'brightness'>,
               ]),
               'supported_features': <LightEntityFeature: 0>,
@@ -17079,7 +17079,7 @@
             ]),
             'area_id': None,
             'capabilities': dict({
-              'supported_color_modes': list([
+              <LightEntityCapabilityAttribute.SUPPORTED_COLOR_MODES: 'supported_color_modes'>: list([
                 <ColorMode.BRIGHTNESS: 'brightness'>,
               ]),
             }),
@@ -17114,10 +17114,10 @@
           }),
           'state': dict({
             'attributes': dict({
-              'brightness': None,
-              'color_mode': None,
+              <LightEntityStateAttribute.BRIGHTNESS: 'brightness'>: None,
+              <LightEntityStateAttribute.COLOR_MODE: 'color_mode'>: None,
               'friendly_name': 'Hue white lamp',
-              'supported_color_modes': list([
+              <LightEntityCapabilityAttribute.SUPPORTED_COLOR_MODES: 'supported_color_modes'>: list([
                 <ColorMode.BRIGHTNESS: 'brightness'>,
               ]),
               'supported_features': <LightEntityFeature: 0>,
@@ -17211,7 +17211,7 @@
             ]),
             'area_id': None,
             'capabilities': dict({
-              'supported_color_modes': list([
+              <LightEntityCapabilityAttribute.SUPPORTED_COLOR_MODES: 'supported_color_modes'>: list([
                 <ColorMode.BRIGHTNESS: 'brightness'>,
               ]),
             }),
@@ -17246,10 +17246,10 @@
           }),
           'state': dict({
             'attributes': dict({
-              'brightness': None,
-              'color_mode': None,
+              <LightEntityStateAttribute.BRIGHTNESS: 'brightness'>: None,
+              <LightEntityStateAttribute.COLOR_MODE: 'color_mode'>: None,
               'friendly_name': 'Hue white lamp',
-              'supported_color_modes': list([
+              <LightEntityCapabilityAttribute.SUPPORTED_COLOR_MODES: 'supported_color_modes'>: list([
                 <ColorMode.BRIGHTNESS: 'brightness'>,
               ]),
               'supported_features': <LightEntityFeature: 0>,
@@ -17425,9 +17425,9 @@
             ]),
             'area_id': None,
             'capabilities': dict({
-              'max_color_temp_kelvin': 6535,
-              'min_color_temp_kelvin': 2000,
-              'supported_color_modes': list([
+              <LightEntityCapabilityAttribute.MAX_COLOR_TEMP_KELVIN: 'max_color_temp_kelvin'>: 6535,
+              <LightEntityCapabilityAttribute.MIN_COLOR_TEMP_KELVIN: 'min_color_temp_kelvin'>: 2000,
+              <LightEntityCapabilityAttribute.SUPPORTED_COLOR_MODES: 'supported_color_modes'>: list([
                 <ColorMode.COLOR_TEMP: 'color_temp'>,
                 <ColorMode.HS: 'hs'>,
               ]),
@@ -17463,20 +17463,20 @@
           }),
           'state': dict({
             'attributes': dict({
-              'brightness': None,
-              'color_mode': None,
-              'color_temp_kelvin': None,
+              <LightEntityStateAttribute.BRIGHTNESS: 'brightness'>: None,
+              <LightEntityStateAttribute.COLOR_MODE: 'color_mode'>: None,
+              <LightEntityStateAttribute.COLOR_TEMP_KELVIN: 'color_temp_kelvin'>: None,
               'friendly_name': 'Koogeek-LS1-20833F Light Strip',
-              'hs_color': None,
-              'max_color_temp_kelvin': 6535,
-              'min_color_temp_kelvin': 2000,
-              'rgb_color': None,
-              'supported_color_modes': list([
+              <LightEntityStateAttribute.HS_COLOR: 'hs_color'>: None,
+              <LightEntityCapabilityAttribute.MAX_COLOR_TEMP_KELVIN: 'max_color_temp_kelvin'>: 6535,
+              <LightEntityCapabilityAttribute.MIN_COLOR_TEMP_KELVIN: 'min_color_temp_kelvin'>: 2000,
+              <LightEntityStateAttribute.RGB_COLOR: 'rgb_color'>: None,
+              <LightEntityCapabilityAttribute.SUPPORTED_COLOR_MODES: 'supported_color_modes'>: list([
                 <ColorMode.COLOR_TEMP: 'color_temp'>,
                 <ColorMode.HS: 'hs'>,
               ]),
               'supported_features': <LightEntityFeature: 0>,
-              'xy_color': None,
+              <LightEntityStateAttribute.XY_COLOR: 'xy_color'>: None,
             }),
             'entity_id': 'light.koogeek_ls1_20833f_light_strip',
             'state': 'off',
@@ -17571,7 +17571,7 @@
             ]),
             'area_id': None,
             'capabilities': dict({
-              'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+              <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
             }),
             'config_entry_id': <ANY>,
             'config_subentry_id': <ANY>,
@@ -17609,7 +17609,7 @@
             'attributes': dict({
               'device_class': 'power',
               'friendly_name': 'Koogeek-P1-A00AA0 Power',
-              'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+              <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
               'unit_of_measurement': <UnitOfPower.WATT: 'W'>,
             }),
             'entity_id': 'sensor.koogeek_p1_a00aa0_power',
@@ -17750,7 +17750,7 @@
             ]),
             'area_id': None,
             'capabilities': dict({
-              'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+              <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
             }),
             'config_entry_id': <ANY>,
             'config_subentry_id': <ANY>,
@@ -17788,7 +17788,7 @@
             'attributes': dict({
               'device_class': 'power',
               'friendly_name': 'Koogeek-SW2-187A91 Power',
-              'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+              <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
               'unit_of_measurement': <UnitOfPower.WATT: 'W'>,
             }),
             'entity_id': 'sensor.koogeek_sw2_187a91_power',
@@ -17972,14 +17972,14 @@
             ]),
             'area_id': None,
             'capabilities': dict({
-              'hvac_modes': list([
+              <ClimateEntityCapabilityAttribute.HVAC_MODES: 'hvac_modes'>: list([
                 <HVACMode.OFF: 'off'>,
                 <HVACMode.HEAT: 'heat'>,
                 <HVACMode.COOL: 'cool'>,
                 <HVACMode.HEAT_COOL: 'heat_cool'>,
               ]),
-              'max_temp': 37,
-              'min_temp': 4.5,
+              <ClimateEntityCapabilityAttribute.MAX_TEMP: 'max_temp'>: 37,
+              <ClimateEntityCapabilityAttribute.MIN_TEMP: 'min_temp'>: 4.5,
             }),
             'config_entry_id': <ANY>,
             'config_subentry_id': <ANY>,
@@ -18012,22 +18012,22 @@
           }),
           'state': dict({
             'attributes': dict({
-              'current_humidity': 34,
-              'current_temperature': 20.5,
+              <ClimateEntityStateAttribute.CURRENT_HUMIDITY: 'current_humidity'>: 34,
+              <ClimateEntityStateAttribute.CURRENT_TEMPERATURE: 'current_temperature'>: 20.5,
               'friendly_name': 'Lennox',
-              'hvac_action': <HVACAction.HEATING: 'heating'>,
-              'hvac_modes': list([
+              <ClimateEntityStateAttribute.HVAC_ACTION: 'hvac_action'>: <HVACAction.HEATING: 'heating'>,
+              <ClimateEntityCapabilityAttribute.HVAC_MODES: 'hvac_modes'>: list([
                 <HVACMode.OFF: 'off'>,
                 <HVACMode.HEAT: 'heat'>,
                 <HVACMode.COOL: 'cool'>,
                 <HVACMode.HEAT_COOL: 'heat_cool'>,
               ]),
-              'max_temp': 37,
-              'min_temp': 4.5,
+              <ClimateEntityCapabilityAttribute.MAX_TEMP: 'max_temp'>: 37,
+              <ClimateEntityCapabilityAttribute.MIN_TEMP: 'min_temp'>: 4.5,
               'supported_features': <ClimateEntityFeature: 387>,
-              'target_temp_high': 29.5,
-              'target_temp_low': 21,
-              'temperature': None,
+              <ClimateEntityStateAttribute.TARGET_TEMP_HIGH: 'target_temp_high'>: 29.5,
+              <ClimateEntityStateAttribute.TARGET_TEMP_LOW: 'target_temp_low'>: 21,
+              <ClimateEntityStateAttribute.TEMPERATURE: 'temperature'>: None,
             }),
             'entity_id': 'climate.lennox',
             'state': 'heat_cool',
@@ -18040,7 +18040,7 @@
             ]),
             'area_id': None,
             'capabilities': dict({
-              'options': list([
+              <SelectEntityCapabilityAttribute.OPTIONS: 'options'>: list([
                 'celsius',
                 'fahrenheit',
               ]),
@@ -18077,7 +18077,7 @@
           'state': dict({
             'attributes': dict({
               'friendly_name': 'Lennox Temperature Display Units',
-              'options': list([
+              <SelectEntityCapabilityAttribute.OPTIONS: 'options'>: list([
                 'celsius',
                 'fahrenheit',
               ]),
@@ -18093,7 +18093,7 @@
             ]),
             'area_id': None,
             'capabilities': dict({
-              'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+              <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
             }),
             'config_entry_id': <ANY>,
             'config_subentry_id': <ANY>,
@@ -18128,7 +18128,7 @@
             'attributes': dict({
               'device_class': 'humidity',
               'friendly_name': 'Lennox Current Humidity',
-              'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+              <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
               'unit_of_measurement': '%',
             }),
             'entity_id': 'sensor.lennox_current_humidity',
@@ -18142,7 +18142,7 @@
             ]),
             'area_id': None,
             'capabilities': dict({
-              'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+              <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
             }),
             'config_entry_id': <ANY>,
             'config_subentry_id': <ANY>,
@@ -18180,7 +18180,7 @@
             'attributes': dict({
               'device_class': 'temperature',
               'friendly_name': 'Lennox Current Temperature',
-              'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+              <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
               'unit_of_measurement': <UnitOfTemperature.CELSIUS: '°C'>,
             }),
             'entity_id': 'sensor.lennox_current_temperature',
@@ -18983,7 +18983,7 @@
             ]),
             'area_id': None,
             'capabilities': dict({
-              'supported_color_modes': list([
+              <LightEntityCapabilityAttribute.SUPPORTED_COLOR_MODES: 'supported_color_modes'>: list([
                 <ColorMode.BRIGHTNESS: 'brightness'>,
               ]),
             }),
@@ -19018,10 +19018,10 @@
           }),
           'state': dict({
             'attributes': dict({
-              'brightness': 170.85,
-              'color_mode': <ColorMode.BRIGHTNESS: 'brightness'>,
+              <LightEntityStateAttribute.BRIGHTNESS: 'brightness'>: 170.85,
+              <LightEntityStateAttribute.COLOR_MODE: 'color_mode'>: <ColorMode.BRIGHTNESS: 'brightness'>,
               'friendly_name': 'MSS565-28da Dimmer Switch',
-              'supported_color_modes': list([
+              <LightEntityCapabilityAttribute.SUPPORTED_COLOR_MODES: 'supported_color_modes'>: list([
                 <ColorMode.BRIGHTNESS: 'brightness'>,
               ]),
               'supported_features': <LightEntityFeature: 0>,
@@ -19119,14 +19119,14 @@
             ]),
             'area_id': None,
             'capabilities': dict({
-              'hvac_modes': list([
+              <ClimateEntityCapabilityAttribute.HVAC_MODES: 'hvac_modes'>: list([
                 <HVACMode.OFF: 'off'>,
                 <HVACMode.HEAT: 'heat'>,
                 <HVACMode.COOL: 'cool'>,
                 <HVACMode.HEAT_COOL: 'heat_cool'>,
               ]),
-              'max_temp': 35,
-              'min_temp': 7,
+              <ClimateEntityCapabilityAttribute.MAX_TEMP: 'max_temp'>: 35,
+              <ClimateEntityCapabilityAttribute.MIN_TEMP: 'min_temp'>: 7,
             }),
             'config_entry_id': <ANY>,
             'config_subentry_id': <ANY>,
@@ -19159,20 +19159,20 @@
           }),
           'state': dict({
             'attributes': dict({
-              'current_humidity': 40,
-              'current_temperature': 24.1,
+              <ClimateEntityStateAttribute.CURRENT_HUMIDITY: 'current_humidity'>: 40,
+              <ClimateEntityStateAttribute.CURRENT_TEMPERATURE: 'current_temperature'>: 24.1,
               'friendly_name': 'Mysa-85dda9 Thermostat',
-              'hvac_action': <HVACAction.IDLE: 'idle'>,
-              'hvac_modes': list([
+              <ClimateEntityStateAttribute.HVAC_ACTION: 'hvac_action'>: <HVACAction.IDLE: 'idle'>,
+              <ClimateEntityCapabilityAttribute.HVAC_MODES: 'hvac_modes'>: list([
                 <HVACMode.OFF: 'off'>,
                 <HVACMode.HEAT: 'heat'>,
                 <HVACMode.COOL: 'cool'>,
                 <HVACMode.HEAT_COOL: 'heat_cool'>,
               ]),
-              'max_temp': 35,
-              'min_temp': 7,
+              <ClimateEntityCapabilityAttribute.MAX_TEMP: 'max_temp'>: 35,
+              <ClimateEntityCapabilityAttribute.MIN_TEMP: 'min_temp'>: 7,
               'supported_features': <ClimateEntityFeature: 385>,
-              'temperature': None,
+              <ClimateEntityStateAttribute.TEMPERATURE: 'temperature'>: None,
             }),
             'entity_id': 'climate.mysa_85dda9_thermostat',
             'state': 'off',
@@ -19185,7 +19185,7 @@
             ]),
             'area_id': None,
             'capabilities': dict({
-              'supported_color_modes': list([
+              <LightEntityCapabilityAttribute.SUPPORTED_COLOR_MODES: 'supported_color_modes'>: list([
                 <ColorMode.BRIGHTNESS: 'brightness'>,
               ]),
             }),
@@ -19220,10 +19220,10 @@
           }),
           'state': dict({
             'attributes': dict({
-              'brightness': None,
-              'color_mode': None,
+              <LightEntityStateAttribute.BRIGHTNESS: 'brightness'>: None,
+              <LightEntityStateAttribute.COLOR_MODE: 'color_mode'>: None,
               'friendly_name': 'Mysa-85dda9 Display',
-              'supported_color_modes': list([
+              <LightEntityCapabilityAttribute.SUPPORTED_COLOR_MODES: 'supported_color_modes'>: list([
                 <ColorMode.BRIGHTNESS: 'brightness'>,
               ]),
               'supported_features': <LightEntityFeature: 0>,
@@ -19239,7 +19239,7 @@
             ]),
             'area_id': None,
             'capabilities': dict({
-              'options': list([
+              <SelectEntityCapabilityAttribute.OPTIONS: 'options'>: list([
                 'celsius',
                 'fahrenheit',
               ]),
@@ -19276,7 +19276,7 @@
           'state': dict({
             'attributes': dict({
               'friendly_name': 'Mysa-85dda9 Temperature Display Units',
-              'options': list([
+              <SelectEntityCapabilityAttribute.OPTIONS: 'options'>: list([
                 'celsius',
                 'fahrenheit',
               ]),
@@ -19292,7 +19292,7 @@
             ]),
             'area_id': None,
             'capabilities': dict({
-              'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+              <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
             }),
             'config_entry_id': <ANY>,
             'config_subentry_id': <ANY>,
@@ -19327,7 +19327,7 @@
             'attributes': dict({
               'device_class': 'humidity',
               'friendly_name': 'Mysa-85dda9 Current Humidity',
-              'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+              <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
               'unit_of_measurement': '%',
             }),
             'entity_id': 'sensor.mysa_85dda9_current_humidity',
@@ -19341,7 +19341,7 @@
             ]),
             'area_id': None,
             'capabilities': dict({
-              'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+              <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
             }),
             'config_entry_id': <ANY>,
             'config_subentry_id': <ANY>,
@@ -19379,7 +19379,7 @@
             'attributes': dict({
               'device_class': 'temperature',
               'friendly_name': 'Mysa-85dda9 Current Temperature',
-              'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+              <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
               'unit_of_measurement': <UnitOfTemperature.CELSIUS: '°C'>,
             }),
             'entity_id': 'sensor.mysa_85dda9_current_temperature',
@@ -19475,9 +19475,9 @@
             ]),
             'area_id': None,
             'capabilities': dict({
-              'max_color_temp_kelvin': 6535,
-              'min_color_temp_kelvin': 2127,
-              'supported_color_modes': list([
+              <LightEntityCapabilityAttribute.MAX_COLOR_TEMP_KELVIN: 'max_color_temp_kelvin'>: 6535,
+              <LightEntityCapabilityAttribute.MIN_COLOR_TEMP_KELVIN: 'min_color_temp_kelvin'>: 2127,
+              <LightEntityCapabilityAttribute.SUPPORTED_COLOR_MODES: 'supported_color_modes'>: list([
                 <ColorMode.COLOR_TEMP: 'color_temp'>,
                 <ColorMode.HS: 'hs'>,
               ]),
@@ -19513,27 +19513,27 @@
           }),
           'state': dict({
             'attributes': dict({
-              'brightness': 255.0,
-              'color_mode': <ColorMode.HS: 'hs'>,
-              'color_temp_kelvin': None,
+              <LightEntityStateAttribute.BRIGHTNESS: 'brightness'>: 255.0,
+              <LightEntityStateAttribute.COLOR_MODE: 'color_mode'>: <ColorMode.HS: 'hs'>,
+              <LightEntityStateAttribute.COLOR_TEMP_KELVIN: 'color_temp_kelvin'>: None,
               'friendly_name': 'Nanoleaf Strip 3B32 Nanoleaf Light Strip',
-              'hs_color': tuple(
+              <LightEntityStateAttribute.HS_COLOR: 'hs_color'>: tuple(
                 30.0,
                 89.0,
               ),
-              'max_color_temp_kelvin': 6535,
-              'min_color_temp_kelvin': 2127,
-              'rgb_color': tuple(
+              <LightEntityCapabilityAttribute.MAX_COLOR_TEMP_KELVIN: 'max_color_temp_kelvin'>: 6535,
+              <LightEntityCapabilityAttribute.MIN_COLOR_TEMP_KELVIN: 'min_color_temp_kelvin'>: 2127,
+              <LightEntityStateAttribute.RGB_COLOR: 'rgb_color'>: tuple(
                 255,
                 142,
                 28,
               ),
-              'supported_color_modes': list([
+              <LightEntityCapabilityAttribute.SUPPORTED_COLOR_MODES: 'supported_color_modes'>: list([
                 <ColorMode.COLOR_TEMP: 'color_temp'>,
                 <ColorMode.HS: 'hs'>,
               ]),
               'supported_features': <LightEntityFeature: 0>,
-              'xy_color': tuple(
+              <LightEntityStateAttribute.XY_COLOR: 'xy_color'>: tuple(
                 0.588,
                 0.386,
               ),
@@ -19549,7 +19549,7 @@
             ]),
             'area_id': None,
             'capabilities': dict({
-              'options': list([
+              <SensorEntityCapabilityAttribute.OPTIONS: 'options'>: list([
                 'border_router_capable',
                 'full',
                 'minimal',
@@ -19591,7 +19591,7 @@
             'attributes': dict({
               'device_class': 'enum',
               'friendly_name': 'Nanoleaf Strip 3B32 Thread Capabilities',
-              'options': list([
+              <SensorEntityCapabilityAttribute.OPTIONS: 'options'>: list([
                 'border_router_capable',
                 'full',
                 'minimal',
@@ -19611,7 +19611,7 @@
             ]),
             'area_id': None,
             'capabilities': dict({
-              'options': list([
+              <SensorEntityCapabilityAttribute.OPTIONS: 'options'>: list([
                 'border_router',
                 'child',
                 'detached',
@@ -19654,7 +19654,7 @@
             'attributes': dict({
               'device_class': 'enum',
               'friendly_name': 'Nanoleaf Strip 3B32 Thread Status',
-              'options': list([
+              <SensorEntityCapabilityAttribute.OPTIONS: 'options'>: list([
                 'border_router',
                 'child',
                 'detached',
@@ -19847,7 +19847,7 @@
             ]),
             'area_id': None,
             'capabilities': dict({
-              'event_types': list([
+              <EventEntityCapabilityAttribute.EVENT_TYPES: 'event_types'>: list([
                 'single_press',
                 'double_press',
                 'long_press',
@@ -19885,8 +19885,8 @@
           'state': dict({
             'attributes': dict({
               'device_class': 'doorbell',
-              'event_type': None,
-              'event_types': list([
+              <EventEntityStateAttribute.EVENT_TYPE: 'event_type'>: None,
+              <EventEntityCapabilityAttribute.EVENT_TYPES: 'event_types'>: list([
                 'single_press',
                 'double_press',
                 'long_press',
@@ -20246,7 +20246,7 @@
             ]),
             'area_id': None,
             'capabilities': dict({
-              'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+              <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
             }),
             'config_entry_id': <ANY>,
             'config_subentry_id': <ANY>,
@@ -20281,7 +20281,7 @@
             'attributes': dict({
               'device_class': 'aqi',
               'friendly_name': 'Healthy Home Coach Air Quality',
-              'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+              <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
             }),
             'entity_id': 'sensor.healthy_home_coach_air_quality',
             'state': '1',
@@ -20294,7 +20294,7 @@
             ]),
             'area_id': None,
             'capabilities': dict({
-              'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+              <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
             }),
             'config_entry_id': <ANY>,
             'config_subentry_id': <ANY>,
@@ -20329,7 +20329,7 @@
             'attributes': dict({
               'device_class': 'carbon_dioxide',
               'friendly_name': 'Healthy Home Coach Carbon Dioxide sensor',
-              'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+              <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
               'unit_of_measurement': 'ppm',
             }),
             'entity_id': 'sensor.healthy_home_coach_carbon_dioxide_sensor',
@@ -20343,7 +20343,7 @@
             ]),
             'area_id': None,
             'capabilities': dict({
-              'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+              <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
             }),
             'config_entry_id': <ANY>,
             'config_subentry_id': <ANY>,
@@ -20378,7 +20378,7 @@
             'attributes': dict({
               'device_class': 'humidity',
               'friendly_name': 'Healthy Home Coach Humidity sensor',
-              'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+              <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
               'unit_of_measurement': '%',
             }),
             'entity_id': 'sensor.healthy_home_coach_humidity_sensor',
@@ -20392,7 +20392,7 @@
             ]),
             'area_id': None,
             'capabilities': dict({
-              'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+              <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
             }),
             'config_entry_id': <ANY>,
             'config_subentry_id': <ANY>,
@@ -20430,7 +20430,7 @@
             'attributes': dict({
               'device_class': 'sound_pressure',
               'friendly_name': 'Healthy Home Coach Noise',
-              'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+              <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
               'unit_of_measurement': <UnitOfSoundPressure.DECIBEL: 'dB'>,
             }),
             'entity_id': 'sensor.healthy_home_coach_noise',
@@ -20444,7 +20444,7 @@
             ]),
             'area_id': None,
             'capabilities': dict({
-              'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+              <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
             }),
             'config_entry_id': <ANY>,
             'config_subentry_id': <ANY>,
@@ -20482,7 +20482,7 @@
             'attributes': dict({
               'device_class': 'temperature',
               'friendly_name': 'Healthy Home Coach Temperature sensor',
-              'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+              <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
               'unit_of_measurement': <UnitOfTemperature.CELSIUS: '°C'>,
             }),
             'entity_id': 'sensor.healthy_home_coach_temperature_sensor',
@@ -21083,7 +21083,7 @@
             ]),
             'area_id': None,
             'capabilities': dict({
-              'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+              <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
             }),
             'config_entry_id': <ANY>,
             'config_subentry_id': <ANY>,
@@ -21119,7 +21119,7 @@
               'device_class': 'battery',
               'friendly_name': 'Master Bath South RYSE Shade Battery',
               'icon': 'mdi:battery',
-              'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+              <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
               'unit_of_measurement': '%',
             }),
             'entity_id': 'sensor.master_bath_south_ryse_shade_battery',
@@ -21336,7 +21336,7 @@
             ]),
             'area_id': None,
             'capabilities': dict({
-              'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+              <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
             }),
             'config_entry_id': <ANY>,
             'config_subentry_id': <ANY>,
@@ -21372,7 +21372,7 @@
               'device_class': 'battery',
               'friendly_name': 'RYSE SmartShade RYSE Shade Battery',
               'icon': 'mdi:battery',
-              'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+              <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
               'unit_of_measurement': '%',
             }),
             'entity_id': 'sensor.ryse_smartshade_ryse_shade_battery',
@@ -21515,7 +21515,7 @@
             ]),
             'area_id': None,
             'capabilities': dict({
-              'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+              <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
             }),
             'config_entry_id': <ANY>,
             'config_subentry_id': <ANY>,
@@ -21551,7 +21551,7 @@
               'device_class': 'battery',
               'friendly_name': 'BR Left RYSE Shade Battery',
               'icon': 'mdi:battery',
-              'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+              <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
               'unit_of_measurement': '%',
             }),
             'entity_id': 'sensor.br_left_ryse_shade_battery',
@@ -21690,7 +21690,7 @@
             ]),
             'area_id': None,
             'capabilities': dict({
-              'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+              <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
             }),
             'config_entry_id': <ANY>,
             'config_subentry_id': <ANY>,
@@ -21726,7 +21726,7 @@
               'device_class': 'battery',
               'friendly_name': 'LR Left RYSE Shade Battery',
               'icon': 'mdi:battery-90',
-              'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+              <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
               'unit_of_measurement': '%',
             }),
             'entity_id': 'sensor.lr_left_ryse_shade_battery',
@@ -21865,7 +21865,7 @@
             ]),
             'area_id': None,
             'capabilities': dict({
-              'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+              <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
             }),
             'config_entry_id': <ANY>,
             'config_subentry_id': <ANY>,
@@ -21901,7 +21901,7 @@
               'device_class': 'battery',
               'friendly_name': 'LR Right RYSE Shade Battery',
               'icon': 'mdi:battery',
-              'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+              <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
               'unit_of_measurement': '%',
             }),
             'entity_id': 'sensor.lr_right_ryse_shade_battery',
@@ -22118,7 +22118,7 @@
             ]),
             'area_id': None,
             'capabilities': dict({
-              'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+              <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
             }),
             'config_entry_id': <ANY>,
             'config_subentry_id': <ANY>,
@@ -22154,7 +22154,7 @@
               'device_class': 'battery',
               'friendly_name': 'RZSS RYSE Shade Battery',
               'icon': 'mdi:battery-alert',
-              'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+              <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
               'unit_of_measurement': '%',
             }),
             'entity_id': 'sensor.rzss_ryse_shade_battery',
@@ -22431,7 +22431,7 @@
             ]),
             'area_id': None,
             'capabilities': dict({
-              'supported_color_modes': list([
+              <LightEntityCapabilityAttribute.SUPPORTED_COLOR_MODES: 'supported_color_modes'>: list([
                 <ColorMode.BRIGHTNESS: 'brightness'>,
               ]),
             }),
@@ -22466,10 +22466,10 @@
           }),
           'state': dict({
             'attributes': dict({
-              'brightness': 76.5,
-              'color_mode': <ColorMode.BRIGHTNESS: 'brightness'>,
+              <LightEntityStateAttribute.BRIGHTNESS: 'brightness'>: 76.5,
+              <LightEntityStateAttribute.COLOR_MODE: 'color_mode'>: <ColorMode.BRIGHTNESS: 'brightness'>,
               'friendly_name': 'SIMPLEconnect Fan-06F674 Hunter Light',
-              'supported_color_modes': list([
+              <LightEntityCapabilityAttribute.SUPPORTED_COLOR_MODES: 'supported_color_modes'>: list([
                 <ColorMode.BRIGHTNESS: 'brightness'>,
               ]),
               'supported_features': <LightEntityFeature: 0>,
@@ -22697,15 +22697,15 @@
             ]),
             'area_id': None,
             'capabilities': dict({
-              'hvac_modes': list([
+              <ClimateEntityCapabilityAttribute.HVAC_MODES: 'hvac_modes'>: list([
                 <HVACMode.HEAT_COOL: 'heat_cool'>,
                 <HVACMode.HEAT: 'heat'>,
                 <HVACMode.COOL: 'cool'>,
                 <HVACMode.OFF: 'off'>,
               ]),
-              'max_temp': 35,
-              'min_temp': 7,
-              'target_temp_step': 1.0,
+              <ClimateEntityCapabilityAttribute.MAX_TEMP: 'max_temp'>: 35,
+              <ClimateEntityCapabilityAttribute.MIN_TEMP: 'min_temp'>: 7,
+              <ClimateEntityCapabilityAttribute.TARGET_TEMP_STEP: 'target_temp_step'>: 1.0,
             }),
             'config_entry_id': <ANY>,
             'config_subentry_id': <ANY>,
@@ -22738,20 +22738,20 @@
           }),
           'state': dict({
             'attributes': dict({
-              'current_temperature': 21.7,
+              <ClimateEntityStateAttribute.CURRENT_TEMPERATURE: 'current_temperature'>: 21.7,
               'friendly_name': 'U by Moen-015F44',
-              'hvac_action': <HVACAction.OFF: 'off'>,
-              'hvac_modes': list([
+              <ClimateEntityStateAttribute.HVAC_ACTION: 'hvac_action'>: <HVACAction.OFF: 'off'>,
+              <ClimateEntityCapabilityAttribute.HVAC_MODES: 'hvac_modes'>: list([
                 <HVACMode.HEAT_COOL: 'heat_cool'>,
                 <HVACMode.HEAT: 'heat'>,
                 <HVACMode.COOL: 'cool'>,
                 <HVACMode.OFF: 'off'>,
               ]),
-              'max_temp': 35,
-              'min_temp': 7,
+              <ClimateEntityCapabilityAttribute.MAX_TEMP: 'max_temp'>: 35,
+              <ClimateEntityCapabilityAttribute.MIN_TEMP: 'min_temp'>: 7,
               'supported_features': <ClimateEntityFeature: 385>,
-              'target_temp_step': 1.0,
-              'temperature': None,
+              <ClimateEntityCapabilityAttribute.TARGET_TEMP_STEP: 'target_temp_step'>: 1.0,
+              <ClimateEntityStateAttribute.TEMPERATURE: 'temperature'>: None,
             }),
             'entity_id': 'climate.u_by_moen_015f44',
             'state': 'off',
@@ -22764,7 +22764,7 @@
             ]),
             'area_id': None,
             'capabilities': dict({
-              'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+              <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
             }),
             'config_entry_id': <ANY>,
             'config_subentry_id': <ANY>,
@@ -22802,7 +22802,7 @@
             'attributes': dict({
               'device_class': 'temperature',
               'friendly_name': 'U by Moen-015F44 Current Temperature',
-              'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+              <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
               'unit_of_measurement': <UnitOfTemperature.CELSIUS: '°C'>,
             }),
             'entity_id': 'sensor.u_by_moen_015f44_current_temperature',
@@ -23122,7 +23122,7 @@
             ]),
             'area_id': None,
             'capabilities': dict({
-              'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+              <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
             }),
             'config_entry_id': <ANY>,
             'config_subentry_id': <ANY>,
@@ -23157,7 +23157,7 @@
             'attributes': dict({
               'device_class': 'carbon_dioxide',
               'friendly_name': 'VELUX Sensor Carbon Dioxide sensor',
-              'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+              <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
               'unit_of_measurement': 'ppm',
             }),
             'entity_id': 'sensor.velux_sensor_carbon_dioxide_sensor',
@@ -23171,7 +23171,7 @@
             ]),
             'area_id': None,
             'capabilities': dict({
-              'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+              <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
             }),
             'config_entry_id': <ANY>,
             'config_subentry_id': <ANY>,
@@ -23206,7 +23206,7 @@
             'attributes': dict({
               'device_class': 'humidity',
               'friendly_name': 'VELUX Sensor Humidity sensor',
-              'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+              <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
               'unit_of_measurement': '%',
             }),
             'entity_id': 'sensor.velux_sensor_humidity_sensor',
@@ -23220,7 +23220,7 @@
             ]),
             'area_id': None,
             'capabilities': dict({
-              'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+              <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
             }),
             'config_entry_id': <ANY>,
             'config_subentry_id': <ANY>,
@@ -23258,7 +23258,7 @@
             'attributes': dict({
               'device_class': 'temperature',
               'friendly_name': 'VELUX Sensor Temperature sensor',
-              'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+              <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
               'unit_of_measurement': <UnitOfTemperature.CELSIUS: '°C'>,
             }),
             'entity_id': 'sensor.velux_sensor_temperature_sensor',
@@ -23432,7 +23432,7 @@
             ]),
             'area_id': None,
             'capabilities': dict({
-              'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+              <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
             }),
             'config_entry_id': <ANY>,
             'config_subentry_id': <ANY>,
@@ -23467,7 +23467,7 @@
             'attributes': dict({
               'device_class': 'carbon_dioxide',
               'friendly_name': 'VELUX Sensor Carbon Dioxide sensor',
-              'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+              <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
               'unit_of_measurement': 'ppm',
             }),
             'entity_id': 'sensor.velux_sensor_carbon_dioxide_sensor',
@@ -23481,7 +23481,7 @@
             ]),
             'area_id': None,
             'capabilities': dict({
-              'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+              <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
             }),
             'config_entry_id': <ANY>,
             'config_subentry_id': <ANY>,
@@ -23516,7 +23516,7 @@
             'attributes': dict({
               'device_class': 'humidity',
               'friendly_name': 'VELUX Sensor Humidity sensor',
-              'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+              <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
               'unit_of_measurement': '%',
             }),
             'entity_id': 'sensor.velux_sensor_humidity_sensor',
@@ -23530,7 +23530,7 @@
             ]),
             'area_id': None,
             'capabilities': dict({
-              'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+              <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
             }),
             'config_entry_id': <ANY>,
             'config_subentry_id': <ANY>,
@@ -23568,7 +23568,7 @@
             'attributes': dict({
               'device_class': 'temperature',
               'friendly_name': 'VELUX Sensor Temperature sensor',
-              'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+              <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
               'unit_of_measurement': <UnitOfTemperature.CELSIUS: '°C'>,
             }),
             'entity_id': 'sensor.velux_sensor_temperature_sensor',
@@ -24111,9 +24111,9 @@
             ]),
             'area_id': None,
             'capabilities': dict({
-              'max_color_temp_kelvin': 6535,
-              'min_color_temp_kelvin': 2000,
-              'supported_color_modes': list([
+              <LightEntityCapabilityAttribute.MAX_COLOR_TEMP_KELVIN: 'max_color_temp_kelvin'>: 6535,
+              <LightEntityCapabilityAttribute.MIN_COLOR_TEMP_KELVIN: 'min_color_temp_kelvin'>: 2000,
+              <LightEntityCapabilityAttribute.SUPPORTED_COLOR_MODES: 'supported_color_modes'>: list([
                 <ColorMode.COLOR_TEMP: 'color_temp'>,
                 <ColorMode.HS: 'hs'>,
               ]),
@@ -24149,27 +24149,27 @@
           }),
           'state': dict({
             'attributes': dict({
-              'brightness': 127.5,
-              'color_mode': <ColorMode.HS: 'hs'>,
-              'color_temp_kelvin': None,
+              <LightEntityStateAttribute.BRIGHTNESS: 'brightness'>: 127.5,
+              <LightEntityStateAttribute.COLOR_MODE: 'color_mode'>: <ColorMode.HS: 'hs'>,
+              <LightEntityStateAttribute.COLOR_TEMP_KELVIN: 'color_temp_kelvin'>: None,
               'friendly_name': 'VOCOlinc-Flowerbud-0d324b Mood Light',
-              'hs_color': tuple(
+              <LightEntityStateAttribute.HS_COLOR: 'hs_color'>: tuple(
                 120.0,
                 100.0,
               ),
-              'max_color_temp_kelvin': 6535,
-              'min_color_temp_kelvin': 2000,
-              'rgb_color': tuple(
+              <LightEntityCapabilityAttribute.MAX_COLOR_TEMP_KELVIN: 'max_color_temp_kelvin'>: 6535,
+              <LightEntityCapabilityAttribute.MIN_COLOR_TEMP_KELVIN: 'min_color_temp_kelvin'>: 2000,
+              <LightEntityStateAttribute.RGB_COLOR: 'rgb_color'>: tuple(
                 0,
                 255,
                 0,
               ),
-              'supported_color_modes': list([
+              <LightEntityCapabilityAttribute.SUPPORTED_COLOR_MODES: 'supported_color_modes'>: list([
                 <ColorMode.COLOR_TEMP: 'color_temp'>,
                 <ColorMode.HS: 'hs'>,
               ]),
               'supported_features': <LightEntityFeature: 0>,
-              'xy_color': tuple(
+              <LightEntityStateAttribute.XY_COLOR: 'xy_color'>: tuple(
                 0.172,
                 0.747,
               ),
@@ -24185,10 +24185,10 @@
             ]),
             'area_id': None,
             'capabilities': dict({
-              'max': 5,
-              'min': 1,
-              'mode': <NumberMode.AUTO: 'auto'>,
-              'step': 1,
+              <NumberEntityCapabilityAttribute.MAX: 'max'>: 5,
+              <NumberEntityCapabilityAttribute.MIN: 'min'>: 1,
+              <NumberEntityCapabilityAttribute.MODE: 'mode'>: <NumberMode.AUTO: 'auto'>,
+              <NumberEntityCapabilityAttribute.STEP: 'step'>: 1,
             }),
             'config_entry_id': <ANY>,
             'config_subentry_id': <ANY>,
@@ -24222,10 +24222,10 @@
           'state': dict({
             'attributes': dict({
               'friendly_name': 'VOCOlinc-Flowerbud-0d324b Spray Quantity',
-              'max': 5,
-              'min': 1,
-              'mode': <NumberMode.AUTO: 'auto'>,
-              'step': 1,
+              <NumberEntityCapabilityAttribute.MAX: 'max'>: 5,
+              <NumberEntityCapabilityAttribute.MIN: 'min'>: 1,
+              <NumberEntityCapabilityAttribute.MODE: 'mode'>: <NumberMode.AUTO: 'auto'>,
+              <NumberEntityCapabilityAttribute.STEP: 'step'>: 1,
             }),
             'entity_id': 'number.vocolinc_flowerbud_0d324b_spray_quantity',
             'state': '5',
@@ -24238,7 +24238,7 @@
             ]),
             'area_id': None,
             'capabilities': dict({
-              'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+              <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
             }),
             'config_entry_id': <ANY>,
             'config_subentry_id': <ANY>,
@@ -24273,7 +24273,7 @@
             'attributes': dict({
               'device_class': 'humidity',
               'friendly_name': 'VOCOlinc-Flowerbud-0d324b Current Humidity',
-              'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+              <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
               'unit_of_measurement': '%',
             }),
             'entity_id': 'sensor.vocolinc_flowerbud_0d324b_current_humidity',
@@ -24369,7 +24369,7 @@
             ]),
             'area_id': None,
             'capabilities': dict({
-              'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+              <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
             }),
             'config_entry_id': <ANY>,
             'config_subentry_id': <ANY>,
@@ -24407,7 +24407,7 @@
             'attributes': dict({
               'device_class': 'power',
               'friendly_name': 'VOCOlinc-VP3-123456 Power',
-              'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+              <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
               'unit_of_measurement': <UnitOfPower.WATT: 'W'>,
             }),
             'entity_id': 'sensor.vocolinc_vp3_123456_power',

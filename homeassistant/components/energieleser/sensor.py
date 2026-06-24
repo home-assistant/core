@@ -2,7 +2,7 @@
 
 from collections.abc import Callable
 from dataclasses import dataclass
-from typing import TYPE_CHECKING
+from typing import TYPE_CHECKING, override
 
 from energieleser import (
     GasleserDevice,
@@ -405,6 +405,7 @@ class StromleserSensor(_EnergieleserSensorBase):
     entity_description: StromleserSensorEntityDescription
 
     @property
+    @override
     def native_value(self) -> StateType:
         """Return the sensor value."""
         device = self.coordinator.data
@@ -413,6 +414,7 @@ class StromleserSensor(_EnergieleserSensorBase):
         return self.entity_description.value_fn(device)
 
     @property
+    @override
     def native_unit_of_measurement(self) -> str | None:
         """Return the unit, preferring the device-reported one when available."""
         if self.entity_description.unit_fn is not None:
@@ -431,6 +433,7 @@ class GasleserSensor(_EnergieleserSensorBase):
     entity_description: GasleserSensorEntityDescription
 
     @property
+    @override
     def native_value(self) -> StateType:
         """Return the sensor value."""
         device = self.coordinator.data
@@ -445,6 +448,7 @@ class WasserleserSensor(_EnergieleserSensorBase):
     entity_description: WasserleserSensorEntityDescription
 
     @property
+    @override
     def native_value(self) -> StateType:
         """Return the sensor value."""
         device = self.coordinator.data
@@ -459,6 +463,7 @@ class WaermeleserSensor(_EnergieleserSensorBase):
     entity_description: WaermeleserSensorEntityDescription
 
     @property
+    @override
     def native_value(self) -> StateType:
         """Return the sensor value."""
         device = self.coordinator.data

@@ -2,7 +2,7 @@
 
 from asyncio import timeout
 from logging import getLogger
-from typing import Any
+from typing import Any, override
 
 from switchbot_api import Device, Remote, SwitchBotAPI, SwitchBotConnectionError
 
@@ -60,6 +60,7 @@ class SwitchBotCoordinator(DataUpdateCoordinator[Status]):
         """Return update_by_webhook value."""
         return self._manageable_by_webhook
 
+    @override
     async def _async_update_data(self) -> Status:
         """Fetch data from API endpoint."""
         if not self._should_poll:

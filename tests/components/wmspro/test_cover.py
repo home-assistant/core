@@ -35,40 +35,50 @@ from . import setup_config_entry
 from tests.common import MockConfigEntry, async_fire_time_changed
 
 
+@pytest.mark.parametrize(
+    ("mock_hub_configuration", "mock_hub_status"),
+    [("config_prod_awning_dimmer.json", "status_prod_awning.json")],
+    indirect=True,
+)
 async def test_cover_device(
     hass: HomeAssistant,
     mock_config_entry: MockConfigEntry,
     mock_hub_ping: AsyncMock,
-    mock_hub_configuration_prod_awning_dimmer: AsyncMock,
-    mock_hub_status_prod_awning: AsyncMock,
+    mock_hub_configuration: AsyncMock,
+    mock_hub_status: AsyncMock,
     device_registry: dr.DeviceRegistry,
     snapshot: SnapshotAssertion,
 ) -> None:
     """Test that a cover device is created correctly."""
     assert await setup_config_entry(hass, mock_config_entry)
     assert len(mock_hub_ping.mock_calls) == 1
-    assert len(mock_hub_configuration_prod_awning_dimmer.mock_calls) == 1
-    assert len(mock_hub_status_prod_awning.mock_calls) == 2
+    assert len(mock_hub_configuration.mock_calls) == 1
+    assert len(mock_hub_status.mock_calls) == 2
 
     device_entry = device_registry.async_get_device(identifiers={(DOMAIN, "58717")})
     assert device_entry is not None
     assert device_entry == snapshot
 
 
+@pytest.mark.parametrize(
+    ("mock_hub_configuration", "mock_hub_status"),
+    [("config_prod_awning_dimmer.json", "status_prod_awning.json")],
+    indirect=True,
+)
 async def test_cover_update(
     hass: HomeAssistant,
     mock_config_entry: MockConfigEntry,
     mock_hub_ping: AsyncMock,
-    mock_hub_configuration_prod_awning_dimmer: AsyncMock,
-    mock_hub_status_prod_awning: AsyncMock,
+    mock_hub_configuration: AsyncMock,
+    mock_hub_status: AsyncMock,
     freezer: FrozenDateTimeFactory,
     snapshot: SnapshotAssertion,
 ) -> None:
     """Test that a cover entity is created and updated correctly."""
     assert await setup_config_entry(hass, mock_config_entry)
     assert len(mock_hub_ping.mock_calls) == 1
-    assert len(mock_hub_configuration_prod_awning_dimmer.mock_calls) == 1
-    assert len(mock_hub_status_prod_awning.mock_calls) == 2
+    assert len(mock_hub_configuration.mock_calls) == 1
+    assert len(mock_hub_status.mock_calls) == 2
 
     entity = hass.states.get("cover.terrasse_markise")
     assert entity is not None
@@ -79,38 +89,39 @@ async def test_cover_update(
     async_fire_time_changed(hass)
     await hass.async_block_till_done(wait_background_tasks=True)
 
-    assert len(mock_hub_status_prod_awning.mock_calls) >= 3
+    assert len(mock_hub_status.mock_calls) >= 3
 
 
 @pytest.mark.parametrize(
     ("mock_hub_configuration", "mock_hub_status", "entity_id"),
     [
         (
-            "mock_hub_configuration_prod_awning_dimmer",
-            "mock_hub_status_prod_awning",
+            "config_prod_awning_dimmer.json",
+            "status_prod_awning.json",
             "cover.terrasse_markise",
         ),
         (
-            "mock_hub_configuration_prod_awning_valance",
-            "mock_hub_status_prod_valance",
+            "config_prod_awning_valance.json",
+            "status_prod_valance.json",
             "cover.raum_0_markise_2",
         ),
         (
-            "mock_hub_configuration_prod_roller_shutter",
-            "mock_hub_status_prod_roller_shutter",
+            "config_prod_roller_shutter.json",
+            "status_prod_roller_shutter.json",
             "cover.wohnbereich_wohnebene_alle",
         ),
         (
-            "mock_hub_configuration_prod_slat_drive",
-            "mock_hub_status_prod_slat_drive",
+            "config_prod_slat_drive.json",
+            "status_prod_slat_drive.json",
             "cover.terrasse_lamellen",
         ),
         (
-            "mock_hub_configuration_prod_slat_rotate",
-            "mock_hub_status_prod_slat_rotate",
+            "config_prod_slat_rotate.json",
+            "status_prod_slat_rotate.json",
             "cover.zonwering_begane_grond_keuken_alle",
         ),
     ],
+    indirect=["mock_hub_configuration", "mock_hub_status"],
 )
 async def test_cover_open_and_close(
     hass: HomeAssistant,
@@ -120,13 +131,9 @@ async def test_cover_open_and_close(
     mock_hub_status: AsyncMock,
     mock_action_call: AsyncMock,
     mock_action_list_call: AsyncMock,
-    request: pytest.FixtureRequest,
     entity_id: str,
 ) -> None:
     """Test that a cover entity is opened and closed correctly."""
-    mock_hub_configuration = request.getfixturevalue(mock_hub_configuration)
-    mock_hub_status = request.getfixturevalue(mock_hub_status)
-
     assert await setup_config_entry(hass, mock_config_entry)
     assert len(mock_hub_ping.mock_calls) == 1
     assert len(mock_hub_configuration.mock_calls) == 1
@@ -180,31 +187,32 @@ async def test_cover_open_and_close(
     ("mock_hub_configuration", "mock_hub_status", "entity_id"),
     [
         (
-            "mock_hub_configuration_prod_awning_dimmer",
-            "mock_hub_status_prod_awning",
+            "config_prod_awning_dimmer.json",
+            "status_prod_awning.json",
             "cover.terrasse_markise",
         ),
         (
-            "mock_hub_configuration_prod_awning_valance",
-            "mock_hub_status_prod_valance",
+            "config_prod_awning_valance.json",
+            "status_prod_valance.json",
             "cover.raum_0_markise_2",
         ),
         (
-            "mock_hub_configuration_prod_roller_shutter",
-            "mock_hub_status_prod_roller_shutter",
+            "config_prod_roller_shutter.json",
+            "status_prod_roller_shutter.json",
             "cover.wohnbereich_wohnebene_alle",
         ),
         (
-            "mock_hub_configuration_prod_slat_drive",
-            "mock_hub_status_prod_slat_drive",
+            "config_prod_slat_drive.json",
+            "status_prod_slat_drive.json",
             "cover.terrasse_lamellen",
         ),
         (
-            "mock_hub_configuration_prod_slat_rotate",
-            "mock_hub_status_prod_slat_rotate",
+            "config_prod_slat_rotate.json",
+            "status_prod_slat_rotate.json",
             "cover.zonwering_begane_grond_keuken_alle",
         ),
     ],
+    indirect=["mock_hub_configuration", "mock_hub_status"],
 )
 async def test_cover_open_to_pos(
     hass: HomeAssistant,
@@ -213,13 +221,9 @@ async def test_cover_open_to_pos(
     mock_hub_configuration: AsyncMock,
     mock_hub_status: AsyncMock,
     mock_action_call: AsyncMock,
-    request: pytest.FixtureRequest,
     entity_id: str,
 ) -> None:
     """Test that a cover entity is opened to correct position."""
-    mock_hub_configuration = request.getfixturevalue(mock_hub_configuration)
-    mock_hub_status = request.getfixturevalue(mock_hub_status)
-
     assert await setup_config_entry(hass, mock_config_entry)
     assert len(mock_hub_ping.mock_calls) == 1
     assert len(mock_hub_configuration.mock_calls) == 1
@@ -254,31 +258,32 @@ async def test_cover_open_to_pos(
     ("mock_hub_configuration", "mock_hub_status", "entity_id"),
     [
         (
-            "mock_hub_configuration_prod_awning_dimmer",
-            "mock_hub_status_prod_awning",
+            "config_prod_awning_dimmer.json",
+            "status_prod_awning.json",
             "cover.terrasse_markise",
         ),
         (
-            "mock_hub_configuration_prod_awning_valance",
-            "mock_hub_status_prod_valance",
+            "config_prod_awning_valance.json",
+            "status_prod_valance.json",
             "cover.raum_0_markise_2",
         ),
         (
-            "mock_hub_configuration_prod_roller_shutter",
-            "mock_hub_status_prod_roller_shutter",
+            "config_prod_roller_shutter.json",
+            "status_prod_roller_shutter.json",
             "cover.wohnbereich_wohnebene_alle",
         ),
         (
-            "mock_hub_configuration_prod_slat_drive",
-            "mock_hub_status_prod_slat_drive",
+            "config_prod_slat_drive.json",
+            "status_prod_slat_drive.json",
             "cover.terrasse_lamellen",
         ),
         (
-            "mock_hub_configuration_prod_slat_rotate",
-            "mock_hub_status_prod_slat_rotate",
+            "config_prod_slat_rotate.json",
+            "status_prod_slat_rotate.json",
             "cover.zonwering_begane_grond_keuken_alle",
         ),
     ],
+    indirect=["mock_hub_configuration", "mock_hub_status"],
 )
 async def test_cover_open_and_stop(
     hass: HomeAssistant,
@@ -287,13 +292,9 @@ async def test_cover_open_and_stop(
     mock_hub_configuration: AsyncMock,
     mock_hub_status: AsyncMock,
     mock_action_call: AsyncMock,
-    request: pytest.FixtureRequest,
     entity_id: str,
 ) -> None:
     """Test that a cover entity is opened and stopped correctly."""
-    mock_hub_configuration = request.getfixturevalue(mock_hub_configuration)
-    mock_hub_status = request.getfixturevalue(mock_hub_status)
-
     assert await setup_config_entry(hass, mock_config_entry)
     assert len(mock_hub_ping.mock_calls) == 1
     assert len(mock_hub_configuration.mock_calls) == 1
@@ -347,11 +348,12 @@ async def test_cover_open_and_stop(
     ("mock_hub_configuration", "mock_hub_status", "entity_id"),
     [
         (
-            "mock_hub_configuration_prod_slat_rotate",
-            "mock_hub_status_prod_slat_rotate",
+            "config_prod_slat_rotate.json",
+            "status_prod_slat_rotate.json",
             "cover.zonwering_begane_grond_keuken_alle",
         ),
     ],
+    indirect=["mock_hub_configuration", "mock_hub_status"],
 )
 async def test_cover_tilt_open_and_close(
     hass: HomeAssistant,
@@ -361,13 +363,9 @@ async def test_cover_tilt_open_and_close(
     mock_hub_status: AsyncMock,
     mock_action_call: AsyncMock,
     mock_action_list_call: AsyncMock,
-    request: pytest.FixtureRequest,
     entity_id: str,
 ) -> None:
     """Test that a cover entity is tilted open and closed correctly."""
-    mock_hub_configuration = request.getfixturevalue(mock_hub_configuration)
-    mock_hub_status = request.getfixturevalue(mock_hub_status)
-
     assert await setup_config_entry(hass, mock_config_entry)
     assert len(mock_hub_ping.mock_calls) == 1
     assert len(mock_hub_configuration.mock_calls) == 1
@@ -420,11 +418,12 @@ async def test_cover_tilt_open_and_close(
     ("mock_hub_configuration", "mock_hub_status", "entity_id"),
     [
         (
-            "mock_hub_configuration_prod_slat_rotate",
-            "mock_hub_status_prod_slat_rotate",
+            "config_prod_slat_rotate.json",
+            "status_prod_slat_rotate.json",
             "cover.zonwering_begane_grond_keuken_alle",
         ),
     ],
+    indirect=["mock_hub_configuration", "mock_hub_status"],
 )
 async def test_cover_tilt_to_pos(
     hass: HomeAssistant,
@@ -434,13 +433,9 @@ async def test_cover_tilt_to_pos(
     mock_hub_status: AsyncMock,
     mock_action_call: AsyncMock,
     mock_action_list_call: AsyncMock,
-    request: pytest.FixtureRequest,
     entity_id: str,
 ) -> None:
     """Test that a cover entity is tilted to correct position."""
-    mock_hub_configuration = request.getfixturevalue(mock_hub_configuration)
-    mock_hub_status = request.getfixturevalue(mock_hub_status)
-
     assert await setup_config_entry(hass, mock_config_entry)
     assert len(mock_hub_ping.mock_calls) == 1
     assert len(mock_hub_configuration.mock_calls) == 1
@@ -475,11 +470,12 @@ async def test_cover_tilt_to_pos(
     ("mock_hub_configuration", "mock_hub_status", "entity_id"),
     [
         (
-            "mock_hub_configuration_prod_slat_rotate",
-            "mock_hub_status_prod_slat_rotate",
+            "config_prod_slat_rotate.json",
+            "status_prod_slat_rotate.json",
             "cover.zonwering_begane_grond_keuken_alle",
         ),
     ],
+    indirect=["mock_hub_configuration", "mock_hub_status"],
 )
 async def test_cover_tilt_with_open_and_close_pos(
     hass: HomeAssistant,
@@ -489,13 +485,9 @@ async def test_cover_tilt_with_open_and_close_pos(
     mock_hub_status: AsyncMock,
     mock_action_call: AsyncMock,
     mock_action_list_call: AsyncMock,
-    request: pytest.FixtureRequest,
     entity_id: str,
 ) -> None:
     """Test that a cover entity is tilted to correct position."""
-    mock_hub_configuration = request.getfixturevalue(mock_hub_configuration)
-    mock_hub_status = request.getfixturevalue(mock_hub_status)
-
     assert await setup_config_entry(hass, mock_config_entry)
     assert len(mock_hub_ping.mock_calls) == 1
     assert len(mock_hub_configuration.mock_calls) == 1

@@ -20,7 +20,7 @@
     'attributes': ReadOnlyDict({
       'entity_picture': 'https://yt3.ggpht.com/fca_HuJ99xUxflWdex0XViC3NfctBFreIl8y4i9z411asnGTWY-Ql3MeH_ybA4kNaOjY7kyA=s800-c-k-c0x00ffffff-no-rj',
       'friendly_name': 'Google for Developers Subscribers',
-      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+      <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
       'unit_of_measurement': 'subscribers',
     }),
     'context': <ANY>,
@@ -36,7 +36,7 @@
     'attributes': ReadOnlyDict({
       'friendly_name': 'Google for Developers Videos',
       'icon': 'mdi:filmstrip-box-multiple',
-      'state_class': <SensorStateClass.TOTAL: 'total'>,
+      <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.TOTAL: 'total'>,
       'unit_of_measurement': 'videos',
     }),
     'context': <ANY>,
@@ -52,7 +52,7 @@
     'attributes': ReadOnlyDict({
       'entity_picture': 'https://yt3.ggpht.com/fca_HuJ99xUxflWdex0XViC3NfctBFreIl8y4i9z411asnGTWY-Ql3MeH_ybA4kNaOjY7kyA=s800-c-k-c0x00ffffff-no-rj',
       'friendly_name': 'Google for Developers Views',
-      'state_class': <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
+      <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
       'unit_of_measurement': 'views',
     }),
     'context': <ANY>,
@@ -81,7 +81,7 @@
     'attributes': ReadOnlyDict({
       'entity_picture': 'https://yt3.ggpht.com/fca_HuJ99xUxflWdex0XViC3NfctBFreIl8y4i9z411asnGTWY-Ql3MeH_ybA4kNaOjY7kyA=s800-c-k-c0x00ffffff-no-rj',
       'friendly_name': 'Google for Developers Subscribers',
-      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+      <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
       'unit_of_measurement': 'subscribers',
     }),
     'context': <ANY>,
@@ -97,7 +97,7 @@
     'attributes': ReadOnlyDict({
       'friendly_name': 'Google for Developers Videos',
       'icon': 'mdi:filmstrip-box-multiple',
-      'state_class': <SensorStateClass.TOTAL: 'total'>,
+      <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.TOTAL: 'total'>,
       'unit_of_measurement': 'videos',
     }),
     'context': <ANY>,
@@ -113,7 +113,7 @@
     'attributes': ReadOnlyDict({
       'entity_picture': 'https://yt3.ggpht.com/fca_HuJ99xUxflWdex0XViC3NfctBFreIl8y4i9z411asnGTWY-Ql3MeH_ybA4kNaOjY7kyA=s800-c-k-c0x00ffffff-no-rj',
       'friendly_name': 'Google for Developers Views',
-      'state_class': <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
+      <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
       'unit_of_measurement': 'views',
     }),
     'context': <ANY>,

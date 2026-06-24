@@ -7,7 +7,7 @@ import enum
 import logging
 import os
 import pathlib
-from typing import TYPE_CHECKING, Any, Final
+from typing import TYPE_CHECKING, Any, Final, override
 from urllib.parse import urlparse
 
 import voluptuous as vol
@@ -504,6 +504,7 @@ class _ComponentSet(set[str]):
         self._top_level_components = top_level_components
         self._all_components = all_components
 
+    @override
     def add(self, value: str) -> None:
         """Add a component to the store."""
         if "." not in value:
@@ -515,6 +516,7 @@ class _ComponentSet(set[str]):
                 self._all_components.add(platform)
         return super().add(value)
 
+    @override
     def remove(self, value: str) -> None:
         """Remove a component from the store."""
         if "." in value:
@@ -522,6 +524,7 @@ class _ComponentSet(set[str]):
         self._top_level_components.remove(value)
         return super().remove(value)
 
+    @override
     def discard(self, value: object) -> None:
         """Remove a component from the store."""
         raise NotImplementedError("_ComponentSet does not support discard, use remove")
@@ -841,6 +844,7 @@ class Config:
             )
             self._original_unit_system: str | None = None  # from old store 1.1
 
+        @override
         async def _async_migrate_func(
             self,
             old_major_version: int,
@@ -893,6 +897,7 @@ class Config:
                 raise NotImplementedError
             return data
 
+        @override
         async def async_save(self, data: dict[str, Any]) -> None:
             if self._original_unit_system:
                 data["unit_system"] = self._original_unit_system

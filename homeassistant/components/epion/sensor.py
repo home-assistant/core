@@ -1,6 +1,6 @@
 """Support for Epion API."""
 
-from typing import Any
+from typing import Any, override
 
 from homeassistant.components.sensor import (
     SensorDeviceClass,
@@ -96,6 +96,7 @@ class EpionSensor(CoordinatorEntity[EpionCoordinator], SensorEntity):
         )
 
     @property
+    @override
     def native_value(self) -> float | None:
         """Return the value reported by the sensor.
 
@@ -105,6 +106,7 @@ class EpionSensor(CoordinatorEntity[EpionCoordinator], SensorEntity):
         return self.device.get(self.entity_description.key)
 
     @property
+    @override
     def available(self) -> bool:
         """Return the availability of the device that provides this sensor data."""
         return super().available and self._epion_device_id in self.coordinator.data

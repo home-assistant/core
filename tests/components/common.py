@@ -44,7 +44,6 @@ from homeassistant.helpers.trigger import (
     async_validate_trigger_config,
 )
 from homeassistant.helpers.typing import UNDEFINED, TemplateVarsType, UndefinedType
-from homeassistant.setup import async_setup_component
 from homeassistant.util.yaml import load_yaml_dict
 
 from tests.common import MockConfigEntry, mock_device_registry
@@ -375,7 +374,7 @@ def parametrize_condition_states_any(
     every other targeted entity has been set to the same state.
 
     Args:
-        condition: Condition key, e.g. `"climate.target_humidity"`.
+        condition: Condition key, e.g. `"climate.is_target_humidity"`.
         condition_options: Options dict passed to the condition (typically
             includes the `threshold` block); merged into each generated tuple.
         target_states: States the condition is expected to evaluate True
@@ -434,7 +433,7 @@ def parametrize_condition_states_all(
     every other targeted entity has been set to the same state.
 
     Args:
-        condition: Condition key, e.g. `"climate.target_humidity"`.
+        condition: Condition key, e.g. `"climate.is_target_humidity"`.
         condition_options: Options dict passed to the condition (typically
             includes the `threshold` block); merged into each generated tuple.
         target_states: States the condition is expected to evaluate True for
@@ -1413,72 +1412,6 @@ def other_states(state: StrEnum | Iterable[StrEnum]) -> list[str]:
     return sorted({s.value for s in enum_class} - excluded_values)
 
 
-async def assert_condition_gated_by_labs_flag(
-    hass: HomeAssistant, caplog: pytest.LogCaptureFixture, condition: str
-) -> None:
-    """Helper to check that a condition is gated by the labs flag."""
-
-    # Local include to avoid importing the automation component unnecessarily
-    from homeassistant.components import automation  # noqa: PLC0415
-
-    await async_setup_component(
-        hass,
-        automation.DOMAIN,
-        {
-            automation.DOMAIN: {
-                "trigger": {"platform": "event", "event_type": "test_event"},
-                "condition": {
-                    CONF_CONDITION: condition,
-                    CONF_TARGET: {ATTR_LABEL_ID: "test_label"},
-                    CONF_OPTIONS: {"behavior": "any"},
-                },
-                "action": {
-                    "service": "test.automation",
-                },
-            }
-        },
-    )
-
-    assert (
-        "Unnamed automation failed to setup conditions and has been disabled: "
-        f"Condition '{condition}' requires the experimental 'New triggers and "
-        "conditions' feature to be enabled in Home Assistant Labs settings "
-        "(feature flag: 'new_triggers_conditions')"
-    ) in caplog.text
-
-
-async def assert_trigger_gated_by_labs_flag(
-    hass: HomeAssistant, caplog: pytest.LogCaptureFixture, trigger: str
-) -> None:
-    """Helper to check that a trigger is gated by the labs flag."""
-
-    # Local include to avoid importing the automation component unnecessarily
-    from homeassistant.components import automation  # noqa: PLC0415
-
-    await async_setup_component(
-        hass,
-        automation.DOMAIN,
-        {
-            automation.DOMAIN: {
-                "trigger": {
-                    CONF_PLATFORM: trigger,
-                    CONF_TARGET: {ATTR_LABEL_ID: "test_label"},
-                },
-                "action": {
-                    "service": "test.automation",
-                },
-            }
-        },
-    )
-
-    assert (
-        "Unnamed automation failed to setup triggers and has been disabled: Trigger "
-        f"'{trigger}' requires the experimental 'New triggers and conditions' "
-        "feature to be enabled in Home Assistant Labs settings (feature flag: "
-        "'new_triggers_conditions')"
-    ) in caplog.text
-
-
 async def _validate_condition_options(
     hass: HomeAssistant,
     condition: str,
@@ -2203,7 +2136,7 @@ def parametrize_numerical_attribute_condition_above_below_any(
 
     Uses behavior=any. Generates state sequences for a condition
     that reads its tracked value from a state attribute
-    (e.g. `climate.target_humidity`). The condition
+    (e.g. `climate.is_target_humidity`). The condition
     is exercised across three threshold types in turn — "above", "below",
     "between" — and for each, the helper invokes
     `parametrize_condition_states_any` with target/other states populated
@@ -2216,7 +2149,7 @@ def parametrize_numerical_attribute_condition_above_below_any(
     `("condition", "condition_options", "states")`.
 
     Args:
-        condition: Condition key, e.g. `"climate.target_humidity"`.
+        condition: Condition key, e.g. `"climate.is_target_humidity"`.
         state: The `state.state` value to use for entities meant to match
             the condition (the attribute lives on top of this state).
         attribute: Name of the attribute the condition reads. The helper
@@ -2363,7 +2296,7 @@ def parametrize_numerical_attribute_condition_above_below_all(
     `("condition", "condition_options", "states")`.
 
     Args:
-        condition: Condition key, e.g. `"climate.target_humidity"`.
+        condition: Condition key, e.g. `"climate.is_target_humidity"`.
         state: The `state.state` value to use for entities meant to match
             the condition (the attribute lives on top of this state).
         attribute: Name of the attribute the condition reads. The helper
@@ -2578,7 +2511,7 @@ async def assert_numerical_condition_unit_conversion(
     entities whose unit_of_measurement is invalid (not convertible).
 
     Args:
-        condition: The condition key (e.g. "climate.target_temperature").
+        condition: The condition key (e.g. "climate.is_target_temperature").
         entity_id: The entity being evaluated by the condition.
         pass_states: Entity states that should make the condition pass.
         fail_states: Entity states that should make the condition fail.

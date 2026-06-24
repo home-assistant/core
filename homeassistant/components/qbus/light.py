@@ -1,6 +1,6 @@
 """Support for Qbus light."""
 
-from typing import Any
+from typing import Any, override
 
 from qbusmqttapi.discovery import QbusMqttOutput
 from qbusmqttapi.state import (
@@ -79,6 +79,7 @@ class QbusLight(QbusEntity, LightEntity):
 
         self._set_state(0)
 
+    @override
     async def async_turn_on(self, **kwargs: Any) -> None:
         """Turn the entity on."""
         brightness = kwargs.get(ATTR_BRIGHTNESS)
@@ -95,6 +96,7 @@ class QbusLight(QbusEntity, LightEntity):
 
         await self._async_publish_output_state(state)
 
+    @override
     async def async_turn_off(self, **kwargs: Any) -> None:
         """Turn the entity off."""
         state = QbusMqttAnalogState(id=self._mqtt_output.id, type=StateType.ACTION)
@@ -102,6 +104,7 @@ class QbusLight(QbusEntity, LightEntity):
 
         await self._async_publish_output_state(state)
 
+    @override
     async def _handle_state_received(self, state: QbusMqttAnalogState) -> None:
         percentage = state.read_percentage()
 
@@ -148,6 +151,7 @@ class QbusMultiColor(QbusEntity, LightEntity):
 
         self._set_state(brightness=0)
 
+    @override
     async def async_turn_on(self, **kwargs: Any) -> None:
         """Turn the entity on."""
 
@@ -178,6 +182,7 @@ class QbusMultiColor(QbusEntity, LightEntity):
 
         await self._async_publish_output_state(state)
 
+    @override
     async def async_turn_off(self, **kwargs: Any) -> None:
         """Turn the entity off."""
         state = QbusMqttMultiColorState(id=self._mqtt_output.id, type=StateType.STATE)
@@ -185,6 +190,7 @@ class QbusMultiColor(QbusEntity, LightEntity):
 
         await self._async_publish_output_state(state)
 
+    @override
     async def _handle_state_received(self, state: QbusMqttMultiColorState) -> None:
         if state.type == StateType.EVENT:
             # An event doesn't contain all properties, request full state

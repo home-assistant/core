@@ -2,7 +2,7 @@
 # name: test_sensor[sensor.system_monitor_another_fan_fan_speed - attributes]
   ReadOnlyDict({
     'friendly_name': 'System Monitor another-fan fan speed',
-    'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+    <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
     'unit_of_measurement': 'rpm',
   })
 # ---
@@ -13,7 +13,7 @@
   ReadOnlyDict({
     'device_class': 'battery',
     'friendly_name': 'System Monitor Battery',
-    'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+    <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
     'unit_of_measurement': '%',
   })
 # ---
@@ -24,7 +24,6 @@
   ReadOnlyDict({
     'device_class': 'timestamp',
     'friendly_name': 'System Monitor Battery empty',
-    'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
   })
 # ---
 # name: test_sensor[sensor.system_monitor_battery_empty - state]
@@ -33,7 +32,7 @@
 # name: test_sensor[sensor.system_monitor_cpu_fan_fan_speed - attributes]
   ReadOnlyDict({
     'friendly_name': 'System Monitor cpu-fan fan speed',
-    'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+    <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
     'unit_of_measurement': 'rpm',
   })
 # ---
@@ -44,7 +43,7 @@
   ReadOnlyDict({
     'device_class': 'data_size',
     'friendly_name': 'System Monitor Disk free /',
-    'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+    <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
     'unit_of_measurement': <UnitOfInformation.GIBIBYTES: 'GiB'>,
   })
 # ---
@@ -55,7 +54,7 @@
   ReadOnlyDict({
     'device_class': 'data_size',
     'friendly_name': 'System Monitor Disk free /media/share',
-    'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+    <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
     'unit_of_measurement': <UnitOfInformation.GIBIBYTES: 'GiB'>,
   })
 # ---
@@ -65,7 +64,7 @@
 # name: test_sensor[sensor.system_monitor_disk_usage - attributes]
   ReadOnlyDict({
     'friendly_name': 'System Monitor Disk usage /',
-    'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+    <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
     'unit_of_measurement': '%',
   })
 # ---
@@ -75,7 +74,7 @@
 # name: test_sensor[sensor.system_monitor_disk_usage_home_notexist - attributes]
   ReadOnlyDict({
     'friendly_name': 'System Monitor Disk usage /home/notexist/',
-    'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+    <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
     'unit_of_measurement': '%',
   })
 # ---
@@ -85,7 +84,7 @@
 # name: test_sensor[sensor.system_monitor_disk_usage_media_share - attributes]
   ReadOnlyDict({
     'friendly_name': 'System Monitor Disk usage /media/share',
-    'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+    <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
     'unit_of_measurement': '%',
   })
 # ---
@@ -96,7 +95,7 @@
   ReadOnlyDict({
     'device_class': 'data_size',
     'friendly_name': 'System Monitor Disk use /',
-    'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+    <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
     'unit_of_measurement': <UnitOfInformation.GIBIBYTES: 'GiB'>,
   })
 # ---
@@ -107,7 +106,7 @@
   ReadOnlyDict({
     'device_class': 'data_size',
     'friendly_name': 'System Monitor Disk use /media/share',
-    'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+    <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
     'unit_of_measurement': <UnitOfInformation.GIBIBYTES: 'GiB'>,
   })
 # ---
@@ -150,7 +149,7 @@
   ReadOnlyDict({
     'friendly_name': 'System Monitor Load (15 min)',
     'icon': 'mdi:cpu-64-bit',
-    'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+    <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
   })
 # ---
 # name: test_sensor[sensor.system_monitor_load_15_min - state]
@@ -160,7 +159,7 @@
   ReadOnlyDict({
     'friendly_name': 'System Monitor Load (1 min)',
     'icon': 'mdi:cpu-64-bit',
-    'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+    <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
   })
 # ---
 # name: test_sensor[sensor.system_monitor_load_1_min - state]
@@ -170,7 +169,7 @@
   ReadOnlyDict({
     'friendly_name': 'System Monitor Load (5 min)',
     'icon': 'mdi:cpu-64-bit',
-    'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+    <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
   })
 # ---
 # name: test_sensor[sensor.system_monitor_load_5_min - state]
@@ -180,7 +179,7 @@
   ReadOnlyDict({
     'device_class': 'data_size',
     'friendly_name': 'System Monitor Memory free',
-    'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+    <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
     'unit_of_measurement': <UnitOfInformation.MEBIBYTES: 'MiB'>,
   })
 # ---
@@ -190,7 +189,7 @@
 # name: test_sensor[sensor.system_monitor_memory_usage - attributes]
   ReadOnlyDict({
     'friendly_name': 'System Monitor Memory usage',
-    'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+    <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
     'unit_of_measurement': '%',
   })
 # ---
@@ -201,7 +200,7 @@
   ReadOnlyDict({
     'device_class': 'data_size',
     'friendly_name': 'System Monitor Memory use',
-    'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+    <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
     'unit_of_measurement': <UnitOfInformation.MEBIBYTES: 'MiB'>,
   })
 # ---
@@ -212,7 +211,7 @@
   ReadOnlyDict({
     'device_class': 'data_size',
     'friendly_name': 'System Monitor Network in eth0',
-    'state_class': <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
+    <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
     'unit_of_measurement': <UnitOfInformation.MEBIBYTES: 'MiB'>,
   })
 # ---
@@ -223,7 +222,7 @@
   ReadOnlyDict({
     'device_class': 'data_size',
     'friendly_name': 'System Monitor Network in eth1',
-    'state_class': <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
+    <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
     'unit_of_measurement': <UnitOfInformation.MEBIBYTES: 'MiB'>,
   })
 # ---
@@ -234,7 +233,7 @@
   ReadOnlyDict({
     'device_class': 'data_size',
     'friendly_name': 'System Monitor Network out eth0',
-    'state_class': <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
+    <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
     'unit_of_measurement': <UnitOfInformation.MEBIBYTES: 'MiB'>,
   })
 # ---
@@ -245,7 +244,7 @@
   ReadOnlyDict({
     'device_class': 'data_size',
     'friendly_name': 'System Monitor Network out eth1',
-    'state_class': <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
+    <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
     'unit_of_measurement': <UnitOfInformation.MEBIBYTES: 'MiB'>,
   })
 # ---
@@ -256,7 +255,7 @@
   ReadOnlyDict({
     'device_class': 'data_rate',
     'friendly_name': 'System Monitor Network throughput in eth0',
-    'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+    <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
     'unit_of_measurement': <UnitOfDataRate.MEGABYTES_PER_SECOND: 'MB/s'>,
   })
 # ---
@@ -267,7 +266,7 @@
   ReadOnlyDict({
     'device_class': 'data_rate',
     'friendly_name': 'System Monitor Network throughput in eth1',
-    'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+    <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
     'unit_of_measurement': <UnitOfDataRate.MEGABYTES_PER_SECOND: 'MB/s'>,
   })
 # ---
@@ -278,7 +277,7 @@
   ReadOnlyDict({
     'device_class': 'data_rate',
     'friendly_name': 'System Monitor Network throughput out eth0',
-    'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+    <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
     'unit_of_measurement': <UnitOfDataRate.MEGABYTES_PER_SECOND: 'MB/s'>,
   })
 # ---
@@ -289,7 +288,7 @@
   ReadOnlyDict({
     'device_class': 'data_rate',
     'friendly_name': 'System Monitor Network throughput out eth1',
-    'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+    <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
     'unit_of_measurement': <UnitOfDataRate.MEGABYTES_PER_SECOND: 'MB/s'>,
   })
 # ---
@@ -299,7 +298,7 @@
 # name: test_sensor[sensor.system_monitor_open_file_descriptors_pip - attributes]
   ReadOnlyDict({
     'friendly_name': 'System Monitor Open file descriptors pip',
-    'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+    <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
   })
 # ---
 # name: test_sensor[sensor.system_monitor_open_file_descriptors_pip - state]
@@ -308,7 +307,7 @@
 # name: test_sensor[sensor.system_monitor_open_file_descriptors_python3 - attributes]
   ReadOnlyDict({
     'friendly_name': 'System Monitor Open file descriptors python3',
-    'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+    <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
   })
 # ---
 # name: test_sensor[sensor.system_monitor_open_file_descriptors_python3 - state]
@@ -317,7 +316,7 @@
 # name: test_sensor[sensor.system_monitor_packets_in_eth0 - attributes]
   ReadOnlyDict({
     'friendly_name': 'System Monitor Packets in eth0',
-    'state_class': <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
+    <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
   })
 # ---
 # name: test_sensor[sensor.system_monitor_packets_in_eth0 - state]
@@ -326,7 +325,7 @@
 # name: test_sensor[sensor.system_monitor_packets_in_eth1 - attributes]
   ReadOnlyDict({
     'friendly_name': 'System Monitor Packets in eth1',
-    'state_class': <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
+    <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
   })
 # ---
 # name: test_sensor[sensor.system_monitor_packets_in_eth1 - state]
@@ -335,7 +334,7 @@
 # name: test_sensor[sensor.system_monitor_packets_out_eth0 - attributes]
   ReadOnlyDict({
     'friendly_name': 'System Monitor Packets out eth0',
-    'state_class': <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
+    <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
   })
 # ---
 # name: test_sensor[sensor.system_monitor_packets_out_eth0 - state]
@@ -344,7 +343,7 @@
 # name: test_sensor[sensor.system_monitor_packets_out_eth1 - attributes]
   ReadOnlyDict({
     'friendly_name': 'System Monitor Packets out eth1',
-    'state_class': <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
+    <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
   })
 # ---
 # name: test_sensor[sensor.system_monitor_packets_out_eth1 - state]
@@ -354,7 +353,7 @@
   ReadOnlyDict({
     'device_class': 'temperature',
     'friendly_name': 'System Monitor Processor temperature',
-    'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+    <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
     'unit_of_measurement': <UnitOfTemperature.CELSIUS: '°C'>,
   })
 # ---
@@ -365,7 +364,7 @@
   ReadOnlyDict({
     'friendly_name': 'System Monitor Processor use',
     'icon': 'mdi:cpu-64-bit',
-    'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+    <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
     'unit_of_measurement': '%',
   })
 # ---
@@ -376,7 +375,7 @@
   ReadOnlyDict({
     'device_class': 'data_size',
     'friendly_name': 'System Monitor Swap free',
-    'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+    <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
     'unit_of_measurement': <UnitOfInformation.MEBIBYTES: 'MiB'>,
   })
 # ---
@@ -386,7 +385,7 @@
 # name: test_sensor[sensor.system_monitor_swap_usage - attributes]
   ReadOnlyDict({
     'friendly_name': 'System Monitor Swap usage',
-    'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+    <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
     'unit_of_measurement': '%',
   })
 # ---
@@ -397,7 +396,7 @@
   ReadOnlyDict({
     'device_class': 'data_size',
     'friendly_name': 'System Monitor Swap use',
-    'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+    <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
     'unit_of_measurement': <UnitOfInformation.MEBIBYTES: 'MiB'>,
   })
 # ---
