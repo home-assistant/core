@@ -193,6 +193,8 @@ def mock_ufp_client(bootstrap: Bootstrap):
     client.public_bootstrap.sirens = {}
     client.public_bootstrap.arm_profiles = {}
     client.public_bootstrap.arm_mode = None
+    # No paired public device by default; tests opt in via setup_public_* helpers.
+    client.public_bootstrap.get = Mock(return_value=None)
 
     async def get_camera_rtsps_streams(
         camera_id: str, *args: Any, **kwargs: Any
