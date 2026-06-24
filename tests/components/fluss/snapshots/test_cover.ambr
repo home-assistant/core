@@ -41,7 +41,7 @@
     'attributes': ReadOnlyDict({
       'device_class': 'garage',
       'friendly_name': 'Device 1',
-      'is_closed': True,
+      <CoverEntityStateAttribute.IS_CLOSED: 'is_closed'>: True,
       'supported_features': <CoverEntityFeature: 3>,
     }),
     'context': <ANY>,
@@ -94,7 +94,7 @@
     'attributes': ReadOnlyDict({
       'device_class': 'garage',
       'friendly_name': 'Device 2',
-      'is_closed': False,
+      <CoverEntityStateAttribute.IS_CLOSED: 'is_closed'>: False,
       'supported_features': <CoverEntityFeature: 3>,
     }),
     'context': <ANY>,

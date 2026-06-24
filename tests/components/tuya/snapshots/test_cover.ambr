@@ -39,10 +39,10 @@
 # name: test_platform_setup_and_discovery[cover.bedroom_blinds_curtain-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'current_position': 0,
+      <CoverEntityStateAttribute.CURRENT_POSITION: 'current_position'>: 0,
       'device_class': 'curtain',
       'friendly_name': 'bedroom blinds Curtain',
-      'is_closed': True,
+      <CoverEntityStateAttribute.IS_CLOSED: 'is_closed'>: True,
       'supported_features': <CoverEntityFeature: 15>,
     }),
     'context': <ANY>,
@@ -93,10 +93,10 @@
 # name: test_platform_setup_and_discovery[cover.blinds_curtain-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'current_position': 36,
+      <CoverEntityStateAttribute.CURRENT_POSITION: 'current_position'>: 36,
       'device_class': 'curtain',
       'friendly_name': 'blinds Curtain',
-      'is_closed': False,
+      <CoverEntityStateAttribute.IS_CLOSED: 'is_closed'>: False,
       'supported_features': <CoverEntityFeature: 15>,
     }),
     'context': <ANY>,
@@ -147,10 +147,10 @@
 # name: test_platform_setup_and_discovery[cover.dining_1_curtain-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'current_position': 0,
+      <CoverEntityStateAttribute.CURRENT_POSITION: 'current_position'>: 0,
       'device_class': 'curtain',
       'friendly_name': 'Dining 1 Curtain',
-      'is_closed': True,
+      <CoverEntityStateAttribute.IS_CLOSED: 'is_closed'>: True,
       'supported_features': <CoverEntityFeature: 15>,
     }),
     'context': <ANY>,
@@ -203,7 +203,7 @@
     'attributes': ReadOnlyDict({
       'device_class': 'curtain',
       'friendly_name': 'Estore Sala Curtain',
-      'is_closed': None,
+      <CoverEntityStateAttribute.IS_CLOSED: 'is_closed'>: None,
       'supported_features': <CoverEntityFeature: 11>,
     }),
     'context': <ANY>,
@@ -254,10 +254,10 @@
 # name: test_platform_setup_and_discovery[cover.fenster_kuche_curtain-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'current_position': 0,
+      <CoverEntityStateAttribute.CURRENT_POSITION: 'current_position'>: 0,
       'device_class': 'curtain',
       'friendly_name': 'Fenster Küche Curtain',
-      'is_closed': True,
+      <CoverEntityStateAttribute.IS_CLOSED: 'is_closed'>: True,
       'supported_features': <CoverEntityFeature: 15>,
     }),
     'context': <ANY>,
@@ -310,7 +310,7 @@
     'attributes': ReadOnlyDict({
       'device_class': 'garage',
       'friendly_name': 'Garage door  Door 1',
-      'is_closed': False,
+      <CoverEntityStateAttribute.IS_CLOSED: 'is_closed'>: False,
       'supported_features': <CoverEntityFeature: 3>,
     }),
     'context': <ANY>,
@@ -363,7 +363,7 @@
     'attributes': ReadOnlyDict({
       'device_class': 'curtain',
       'friendly_name': 'Kit-Blinds Curtain',
-      'is_closed': False,
+      <CoverEntityStateAttribute.IS_CLOSED: 'is_closed'>: False,
       'supported_features': <CoverEntityFeature: 11>,
     }),
     'context': <ANY>,
@@ -414,10 +414,10 @@
 # name: test_platform_setup_and_discovery[cover.kitchen_blinds_blind-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'current_position': 100,
+      <CoverEntityStateAttribute.CURRENT_POSITION: 'current_position'>: 100,
       'device_class': 'blind',
       'friendly_name': 'Kitchen Blinds Blind',
-      'is_closed': False,
+      <CoverEntityStateAttribute.IS_CLOSED: 'is_closed'>: False,
       'supported_features': <CoverEntityFeature: 15>,
     }),
     'context': <ANY>,
@@ -468,10 +468,10 @@
 # name: test_platform_setup_and_discovery[cover.kitchen_blinds_curtain-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'current_position': 48,
+      <CoverEntityStateAttribute.CURRENT_POSITION: 'current_position'>: 48,
       'device_class': 'curtain',
       'friendly_name': 'Kitchen Blinds Curtain',
-      'is_closed': False,
+      <CoverEntityStateAttribute.IS_CLOSED: 'is_closed'>: False,
       'supported_features': <CoverEntityFeature: 15>,
     }),
     'context': <ANY>,
@@ -522,10 +522,10 @@
 # name: test_platform_setup_and_discovery[cover.lounge_dark_blind_curtain-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'current_position': 100,
+      <CoverEntityStateAttribute.CURRENT_POSITION: 'current_position'>: 100,
       'device_class': 'curtain',
       'friendly_name': 'Lounge Dark Blind Curtain',
-      'is_closed': False,
+      <CoverEntityStateAttribute.IS_CLOSED: 'is_closed'>: False,
       'supported_features': <CoverEntityFeature: 15>,
     }),
     'context': <ANY>,
@@ -576,10 +576,10 @@
 # name: test_platform_setup_and_discovery[cover.pergola_curtain-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'current_position': 100,
+      <CoverEntityStateAttribute.CURRENT_POSITION: 'current_position'>: 100,
       'device_class': 'curtain',
       'friendly_name': 'Pergola Curtain',
-      'is_closed': False,
+      <CoverEntityStateAttribute.IS_CLOSED: 'is_closed'>: False,
       'supported_features': <CoverEntityFeature: 15>,
     }),
     'context': <ANY>,
@@ -630,10 +630,10 @@
 # name: test_platform_setup_and_discovery[cover.persiana_do_quarto_curtain-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'current_position': 100,
+      <CoverEntityStateAttribute.CURRENT_POSITION: 'current_position'>: 100,
       'device_class': 'curtain',
       'friendly_name': 'Persiana do Quarto Curtain',
-      'is_closed': False,
+      <CoverEntityStateAttribute.IS_CLOSED: 'is_closed'>: False,
       'supported_features': <CoverEntityFeature: 15>,
     }),
     'context': <ANY>,
@@ -684,10 +684,10 @@
 # name: test_platform_setup_and_discovery[cover.projector_screen_curtain-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'current_position': 100,
+      <CoverEntityStateAttribute.CURRENT_POSITION: 'current_position'>: 100,
       'device_class': 'curtain',
       'friendly_name': 'Projector Screen Curtain',
-      'is_closed': False,
+      <CoverEntityStateAttribute.IS_CLOSED: 'is_closed'>: False,
       'supported_features': <CoverEntityFeature: 15>,
     }),
     'context': <ANY>,
@@ -738,10 +738,10 @@
 # name: test_platform_setup_and_discovery[cover.roller_shutter_living_room_curtain-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'current_position': 75,
+      <CoverEntityStateAttribute.CURRENT_POSITION: 'current_position'>: 75,
       'device_class': 'curtain',
       'friendly_name': 'Roller shutter Living Room Curtain',
-      'is_closed': False,
+      <CoverEntityStateAttribute.IS_CLOSED: 'is_closed'>: False,
       'supported_features': <CoverEntityFeature: 15>,
     }),
     'context': <ANY>,
@@ -792,10 +792,10 @@
 # name: test_platform_setup_and_discovery[cover.tapparelle_studio_curtain-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'current_position': 0,
+      <CoverEntityStateAttribute.CURRENT_POSITION: 'current_position'>: 0,
       'device_class': 'curtain',
       'friendly_name': 'Tapparelle studio Curtain',
-      'is_closed': True,
+      <CoverEntityStateAttribute.IS_CLOSED: 'is_closed'>: True,
       'supported_features': <CoverEntityFeature: 15>,
     }),
     'context': <ANY>,
@@ -846,10 +846,10 @@
 # name: test_platform_setup_and_discovery[cover.vividstorm_screen_curtain-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'current_position': 100,
+      <CoverEntityStateAttribute.CURRENT_POSITION: 'current_position'>: 100,
       'device_class': 'curtain',
       'friendly_name': 'VIVIDSTORM SCREEN Curtain',
-      'is_closed': False,
+      <CoverEntityStateAttribute.IS_CLOSED: 'is_closed'>: False,
       'supported_features': <CoverEntityFeature: 15>,
     }),
     'context': <ANY>,
