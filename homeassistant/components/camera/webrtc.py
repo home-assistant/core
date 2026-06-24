@@ -142,10 +142,10 @@ class CameraWebRTCProvider(ABC):
     ) -> None:
         """Handle the WebRTC candidate."""
 
-    @callback  # noqa: B027
+    @callback
     def async_close_session(self, session_id: str) -> None:
         """Close the session."""
-        ## This is an optional method so we need a default here.
+        return  ## This is an optional method so we need a default here.
 
     async def async_get_image(
         self,
@@ -156,26 +156,17 @@ class CameraWebRTCProvider(ABC):
         """Get an image from the camera."""
         return None
 
-    async def async_register_camera(  # noqa: B027
-        self,
-        camera: Camera,
-    ) -> None:
+    async def async_register_camera(self, camera: Camera) -> None:
         """Will be called when the provider is registered for a camera."""
-        ## This is an optional method so we need a default here.
+        return  ## This is an optional method so we need a default here.
 
-    async def async_unregister_camera(  # noqa: B027
-        self,
-        camera: Camera,
-    ) -> None:
+    async def async_unregister_camera(self, camera: Camera) -> None:
         """Will be called when the provider is unregistered for a camera."""
-        ## This is an optional method so we need a default here.
+        return  ## This is an optional method so we need a default here.
 
-    async def async_on_camera_prefs_update(  # noqa: B027
-        self,
-        camera: Camera,
-    ) -> None:
+    async def async_on_camera_prefs_update(self, camera: Camera) -> None:
         """Will be called when the camera preferences are updated."""
-        ## This is an optional method so we need a default here.
+        return  ## This is an optional method so we need a default here.
 
 
 @callback
