@@ -4,6 +4,7 @@ from datetime import timedelta
 import logging
 import threading
 import time
+from typing import override
 
 from aqualogic.core import AquaLogic
 import voluptuous as vol
@@ -74,6 +75,7 @@ class AquaLogicProcessor(threading.Thread):
         """Aqualogic data changed callback."""
         dispatcher_send(self._hass, UPDATE_TOPIC)
 
+    @override
     def run(self) -> None:
         """Event thread."""
 

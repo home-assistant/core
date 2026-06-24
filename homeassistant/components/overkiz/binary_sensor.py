@@ -2,7 +2,7 @@
 
 from collections.abc import Callable
 from dataclasses import dataclass
-from typing import cast
+from typing import cast, override
 
 from pyoverkiz.enums import OverkizCommandParam, OverkizState
 from pyoverkiz.types import StateType as OverkizStateType
@@ -165,7 +165,7 @@ async def async_setup_entry(
                 description,
             )
             for state in device.definition.states
-            if (description := SUPPORTED_STATES.get(state.qualified_name))
+            if (description := SUPPORTED_STATES.get(state))
         )
 
     async_add_entities(entities)
@@ -177,6 +177,7 @@ class OverkizBinarySensor(OverkizDescriptiveEntity, BinarySensorEntity):
     entity_description: OverkizBinarySensorDescription
 
     @property
+    @override
     def is_on(self) -> bool | None:
         """Return the state of the sensor."""
         if state := self.device.states.get(self.entity_description.key):

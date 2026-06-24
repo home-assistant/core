@@ -2,7 +2,7 @@
 
 from datetime import timedelta
 import logging
-from typing import TYPE_CHECKING
+from typing import TYPE_CHECKING, override
 
 from sense_energy import (
     ASyncSenseable,
@@ -66,6 +66,7 @@ class SenseTrendCoordinator(SenseCoordinator):
         """Initialize."""
         super().__init__(hass, config_entry, gateway, "Trends", TREND_UPDATE_RATE)
 
+    @override
     async def _async_update_data(self) -> None:
         """Update the trend data."""
         try:
@@ -89,6 +90,7 @@ class SenseRealtimeCoordinator(SenseCoordinator):
         """Initialize."""
         super().__init__(hass, config_entry, gateway, "Realtime", ACTIVE_UPDATE_RATE)
 
+    @override
     async def _async_update_data(self) -> None:
         """Retrieve latest state."""
         try:

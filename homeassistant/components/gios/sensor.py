@@ -3,6 +3,7 @@
 from collections.abc import Callable
 from dataclasses import dataclass
 import logging
+from typing import override
 
 from gios.model import GiosSensors
 
@@ -231,11 +232,13 @@ class GiosSensor(CoordinatorEntity[GiosDataUpdateCoordinator], SensorEntity):
         self.entity_description = description
 
     @property
+    @override
     def native_value(self) -> StateType:
         """Return the state."""
         return self.entity_description.value(self.coordinator.data)
 
     @property
+    @override
     def available(self) -> bool:
         """Return if entity is available."""
         sensor_data = getattr(self.coordinator.data, self.entity_description.key)

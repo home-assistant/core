@@ -6,7 +6,7 @@
     ]),
     'area_id': None,
     'capabilities': dict({
-      'event_types': None,
+      <EventEntityCapabilityAttribute.EVENT_TYPES: 'event_types'>: None,
     }),
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -41,10 +41,10 @@
 # name: test_all_entities[fibaro_dimmer_2][event.dimmer_entre_1_1_button1-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'device_class': 'button',
-      'event_type': None,
-      'event_types': None,
-      'friendly_name': 'Dimmer entré 1 1 button1',
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'button',
+      <EventEntityStateAttribute.EVENT_TYPE: 'event_type'>: None,
+      <EventEntityCapabilityAttribute.EVENT_TYPES: 'event_types'>: None,
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Dimmer entré 1 1 button1',
     }),
     'context': <ANY>,
     'entity_id': 'event.dimmer_entre_1_1_button1',
@@ -61,7 +61,7 @@
     ]),
     'area_id': None,
     'capabilities': dict({
-      'event_types': None,
+      <EventEntityCapabilityAttribute.EVENT_TYPES: 'event_types'>: None,
     }),
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -96,10 +96,10 @@
 # name: test_all_entities[fibaro_dimmer_2][event.dimmer_entre_1_1_button2-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'device_class': 'button',
-      'event_type': None,
-      'event_types': None,
-      'friendly_name': 'Dimmer entré 1 1 button2',
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'button',
+      <EventEntityStateAttribute.EVENT_TYPE: 'event_type'>: None,
+      <EventEntityCapabilityAttribute.EVENT_TYPES: 'event_types'>: None,
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Dimmer entré 1 1 button2',
     }),
     'context': <ANY>,
     'entity_id': 'event.dimmer_entre_1_1_button2',
@@ -116,7 +116,7 @@
     ]),
     'area_id': None,
     'capabilities': dict({
-      'event_types': list([
+      <EventEntityCapabilityAttribute.EVENT_TYPES: 'event_types'>: list([
         'pushed',
         'held',
         'down_hold',
@@ -155,14 +155,14 @@
 # name: test_all_entities[heatit_zpushwall][event.livingroom_smart_switch_button1-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'device_class': 'button',
-      'event_type': None,
-      'event_types': list([
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'button',
+      <EventEntityStateAttribute.EVENT_TYPE: 'event_type'>: None,
+      <EventEntityCapabilityAttribute.EVENT_TYPES: 'event_types'>: list([
         'pushed',
         'held',
         'down_hold',
       ]),
-      'friendly_name': 'Livingroom smart switch button1',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Livingroom smart switch button1',
     }),
     'context': <ANY>,
     'entity_id': 'event.livingroom_smart_switch_button1',
@@ -179,7 +179,7 @@
     ]),
     'area_id': None,
     'capabilities': dict({
-      'event_types': list([
+      <EventEntityCapabilityAttribute.EVENT_TYPES: 'event_types'>: list([
         'pushed',
         'held',
         'down_hold',
@@ -218,14 +218,14 @@
 # name: test_all_entities[heatit_zpushwall][event.livingroom_smart_switch_button2-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'device_class': 'button',
-      'event_type': None,
-      'event_types': list([
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'button',
+      <EventEntityStateAttribute.EVENT_TYPE: 'event_type'>: None,
+      <EventEntityCapabilityAttribute.EVENT_TYPES: 'event_types'>: list([
         'pushed',
         'held',
         'down_hold',
       ]),
-      'friendly_name': 'Livingroom smart switch button2',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Livingroom smart switch button2',
     }),
     'context': <ANY>,
     'entity_id': 'event.livingroom_smart_switch_button2',
@@ -242,7 +242,7 @@
     ]),
     'area_id': None,
     'capabilities': dict({
-      'event_types': list([
+      <EventEntityCapabilityAttribute.EVENT_TYPES: 'event_types'>: list([
         'pushed',
         'held',
         'down_hold',
@@ -281,14 +281,14 @@
 # name: test_all_entities[heatit_zpushwall][event.livingroom_smart_switch_button3-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'device_class': 'button',
-      'event_type': None,
-      'event_types': list([
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'button',
+      <EventEntityStateAttribute.EVENT_TYPE: 'event_type'>: None,
+      <EventEntityCapabilityAttribute.EVENT_TYPES: 'event_types'>: list([
         'pushed',
         'held',
         'down_hold',
       ]),
-      'friendly_name': 'Livingroom smart switch button3',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Livingroom smart switch button3',
     }),
     'context': <ANY>,
     'entity_id': 'event.livingroom_smart_switch_button3',
@@ -305,7 +305,7 @@
     ]),
     'area_id': None,
     'capabilities': dict({
-      'event_types': list([
+      <EventEntityCapabilityAttribute.EVENT_TYPES: 'event_types'>: list([
         'pushed',
         'held',
         'down_hold',
@@ -344,14 +344,14 @@
 # name: test_all_entities[heatit_zpushwall][event.livingroom_smart_switch_button4-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'device_class': 'button',
-      'event_type': None,
-      'event_types': list([
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'button',
+      <EventEntityStateAttribute.EVENT_TYPE: 'event_type'>: None,
+      <EventEntityCapabilityAttribute.EVENT_TYPES: 'event_types'>: list([
         'pushed',
         'held',
         'down_hold',
       ]),
-      'friendly_name': 'Livingroom smart switch button4',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Livingroom smart switch button4',
     }),
     'context': <ANY>,
     'entity_id': 'event.livingroom_smart_switch_button4',
@@ -368,7 +368,7 @@
     ]),
     'area_id': None,
     'capabilities': dict({
-      'event_types': list([
+      <EventEntityCapabilityAttribute.EVENT_TYPES: 'event_types'>: list([
         'pushed',
         'held',
         'down_hold',
@@ -407,14 +407,14 @@
 # name: test_all_entities[heatit_zpushwall][event.livingroom_smart_switch_button5-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'device_class': 'button',
-      'event_type': None,
-      'event_types': list([
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'button',
+      <EventEntityStateAttribute.EVENT_TYPE: 'event_type'>: None,
+      <EventEntityCapabilityAttribute.EVENT_TYPES: 'event_types'>: list([
         'pushed',
         'held',
         'down_hold',
       ]),
-      'friendly_name': 'Livingroom smart switch button5',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Livingroom smart switch button5',
     }),
     'context': <ANY>,
     'entity_id': 'event.livingroom_smart_switch_button5',
@@ -431,7 +431,7 @@
     ]),
     'area_id': None,
     'capabilities': dict({
-      'event_types': list([
+      <EventEntityCapabilityAttribute.EVENT_TYPES: 'event_types'>: list([
         'pushed',
         'held',
         'down_hold',
@@ -470,14 +470,14 @@
 # name: test_all_entities[heatit_zpushwall][event.livingroom_smart_switch_button6-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'device_class': 'button',
-      'event_type': None,
-      'event_types': list([
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'button',
+      <EventEntityStateAttribute.EVENT_TYPE: 'event_type'>: None,
+      <EventEntityCapabilityAttribute.EVENT_TYPES: 'event_types'>: list([
         'pushed',
         'held',
         'down_hold',
       ]),
-      'friendly_name': 'Livingroom smart switch button6',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Livingroom smart switch button6',
     }),
     'context': <ANY>,
     'entity_id': 'event.livingroom_smart_switch_button6',

@@ -1,9 +1,11 @@
 """Tests for the mobile app integration."""
 
 from collections.abc import Awaitable, Callable
+from http import HTTPStatus
 from typing import Any
 from unittest.mock import Mock, patch
 
+from aiohttp.test_utils import TestClient
 import pytest
 
 from homeassistant.components.cloud import CloudNotAvailable
@@ -12,12 +14,22 @@ from homeassistant.components.mobile_app.const import (
     CONF_CLOUDHOOK_URL,
     CONF_USER_ID,
     DATA_DELETED_IDS,
+    DATA_LIVE_ACTIVITY_TOKENS,
+    DATA_STORE,
     DOMAIN,
+    STORAGE_KEY,
+    STORAGE_VERSION,
+    STORAGE_VERSION_MINOR,
+)
+from homeassistant.components.mobile_app.live_activity.store import (
+    async_cleanup_expired_live_activity_tokens,
 )
 from homeassistant.config_entries import ConfigEntry, ConfigEntryState
 from homeassistant.const import ATTR_DEVICE_ID, CONF_WEBHOOK_ID
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import device_registry as dr, entity_registry as er
+from homeassistant.setup import async_setup_component
+from homeassistant.util import dt as dt_util
 
 from .const import CALL_SERVICE, REGISTER_CLEARTEXT
 
@@ -615,3 +627,178 @@ async def test_cloudhook_change_listener_update(
 
         # URL should remain the same
         assert config_entry.data[CONF_CLOUDHOOK_URL] == new_url
+
+
+@pytest.mark.usefixtures("create_registrations")
+async def test_reload_preserves_live_activity_tokens(
+    hass: HomeAssistant, webhook_client: TestClient
+) -> None:
+    """Test that live activity tokens survive a reload so the same token is reused."""
+    config_entry = hass.config_entries.async_entries("mobile_app")[1]
+    webhook_id = config_entry.data["webhook_id"]
+    expires_at = dt_util.utcnow().timestamp() + 3600
+
+    resp = await webhook_client.post(
+        f"/api/webhook/{webhook_id}",
+        json={
+            "type": "live_activity_token",
+            "data": {
+                "tag": "washer_cycle",
+                "push_token": "a1b2c3d4e5f6a1b2c3d4e5f6a1b2c3d4e5f6a1b2c3d4e5f6a1b2c3d4e5f6a1b2",
+                "expires_at": expires_at,
+            },
+        },
+    )
+    assert resp.status == HTTPStatus.OK
+    expected = {
+        webhook_id: {
+            "washer_cycle": {
+                "token": (
+                    "a1b2c3d4e5f6a1b2c3d4e5f6a1b2c3d4e5f6a1b2c3d4e5f6a1b2c3d4e5f6a1b2"
+                ),
+                "expires_at": expires_at,
+            },
+        },
+    }
+    assert hass.data[DOMAIN][DATA_LIVE_ACTIVITY_TOKENS] == expected
+
+    await hass.config_entries.async_reload(config_entry.entry_id)
+    await hass.async_block_till_done()
+
+    assert hass.data[DOMAIN][DATA_LIVE_ACTIVITY_TOKENS] == expected
+
+
+@pytest.mark.usefixtures("create_registrations")
+async def test_remove_entry_cleans_live_activity_tokens(
+    hass: HomeAssistant, webhook_client: TestClient
+) -> None:
+    """Test that live activity tokens are removed when the entry is deleted."""
+    config_entry = hass.config_entries.async_entries("mobile_app")[1]
+    webhook_id = config_entry.data["webhook_id"]
+    expires_at = dt_util.utcnow().timestamp() + 3600
+
+    resp = await webhook_client.post(
+        f"/api/webhook/{webhook_id}",
+        json={
+            "type": "live_activity_token",
+            "data": {
+                "tag": "washer_cycle",
+                "push_token": "a1b2c3d4e5f6a1b2c3d4e5f6a1b2c3d4e5f6a1b2c3d4e5f6a1b2c3d4e5f6a1b2",
+                "expires_at": expires_at,
+            },
+        },
+    )
+    assert resp.status == HTTPStatus.OK
+    assert hass.data[DOMAIN][DATA_LIVE_ACTIVITY_TOKENS] == {
+        webhook_id: {
+            "washer_cycle": {
+                "token": (
+                    "a1b2c3d4e5f6a1b2c3d4e5f6a1b2c3d4e5f6a1b2c3d4e5f6a1b2c3d4e5f6a1b2"
+                ),
+                "expires_at": expires_at,
+            },
+        },
+    }
+
+    await hass.config_entries.async_remove(config_entry.entry_id)
+
+    assert hass.data[DOMAIN][DATA_LIVE_ACTIVITY_TOKENS] == {}
+
+
+async def test_storage_migration_adds_live_activity_tokens(
+    hass: HomeAssistant,
+    hass_storage: dict[str, Any],
+    hass_admin_user: MockUser,
+) -> None:
+    """Test that older storage is migrated to include live_activity_tokens."""
+    hass_storage[STORAGE_KEY] = {
+        "key": STORAGE_KEY,
+        "version": 1,
+        "minor_version": 1,
+        "data": {DATA_DELETED_IDS: []},
+    }
+
+    entry = MockConfigEntry(
+        data={**REGISTER_CLEARTEXT, CONF_USER_ID: hass_admin_user.id},
+        domain=DOMAIN,
+        source="registration",
+        title="Test",
+    )
+    entry.add_to_hass(hass)
+    await async_setup_component(hass, DOMAIN, {DOMAIN: {}})
+    await hass.async_block_till_done()
+
+    assert hass.data[DOMAIN][DATA_LIVE_ACTIVITY_TOKENS] == {}
+
+
+async def test_live_activity_expired_tokens_cleaned_at_startup(
+    hass: HomeAssistant,
+    hass_storage: dict[str, Any],
+    hass_admin_user: MockUser,
+) -> None:
+    """Test that expired tokens are dropped at startup and the store is saved."""
+    now = dt_util.utcnow().timestamp()
+    expired_ts = now - 1
+    valid_ts = now + 3600
+
+    hass_storage[STORAGE_KEY] = {
+        "key": STORAGE_KEY,
+        "version": STORAGE_VERSION,
+        "minor_version": STORAGE_VERSION_MINOR,
+        "data": {
+            DATA_DELETED_IDS: [],
+            DATA_LIVE_ACTIVITY_TOKENS: {
+                "wh-1": {
+                    "expired_tag": {"token": "old", "expires_at": expired_ts},
+                    "valid_tag": {"token": "new", "expires_at": valid_ts},
+                },
+            },
+        },
+    }
+
+    entry = MockConfigEntry(
+        data={**REGISTER_CLEARTEXT, CONF_USER_ID: hass_admin_user.id},
+        domain=DOMAIN,
+        source="registration",
+        title="Test",
+    )
+    entry.add_to_hass(hass)
+    await async_setup_component(hass, DOMAIN, {DOMAIN: {}})
+    await hass.async_block_till_done()
+
+    expected = {
+        "wh-1": {
+            "valid_tag": {"token": "new", "expires_at": valid_ts},
+        },
+    }
+
+    assert hass.data[DOMAIN][DATA_LIVE_ACTIVITY_TOKENS] == expected
+    saved = hass_storage[STORAGE_KEY]["data"][DATA_LIVE_ACTIVITY_TOKENS]
+    assert saved == expected
+
+
+async def test_live_activity_cleanup_task_removes_expired_tokens(
+    hass: HomeAssistant,
+    hass_admin_user: MockUser,
+) -> None:
+    """Test that the cleanup task removes expired tokens and saves the store."""
+    entry = MockConfigEntry(
+        data={**REGISTER_CLEARTEXT, CONF_USER_ID: hass_admin_user.id},
+        domain=DOMAIN,
+        source="registration",
+        title="Test",
+    )
+    entry.add_to_hass(hass)
+    await async_setup_component(hass, DOMAIN, {DOMAIN: {}})
+    await hass.async_block_till_done()
+
+    expired_ts = dt_util.utcnow().timestamp() - 1
+    hass.data[DOMAIN][DATA_LIVE_ACTIVITY_TOKENS]["wh-test"] = {
+        "tag1": {"token": "abc", "expires_at": expired_ts},
+    }
+
+    with patch.object(hass.data[DOMAIN][DATA_STORE], "async_save") as mock_save:
+        await async_cleanup_expired_live_activity_tokens(hass)
+
+    assert hass.data[DOMAIN][DATA_LIVE_ACTIVITY_TOKENS] == {}
+    mock_save.assert_called_once()
