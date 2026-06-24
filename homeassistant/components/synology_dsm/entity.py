@@ -1,7 +1,7 @@
 """Entities for Synology DSM."""
 
 from dataclasses import dataclass
-from typing import TYPE_CHECKING, Any
+from typing import TYPE_CHECKING, Any, override
 
 from homeassistant.helpers.device_registry import CONNECTION_NETWORK_MAC, DeviceInfo
 from homeassistant.helpers.entity import EntityDescription
@@ -62,6 +62,7 @@ class SynologyDSMBaseEntity[_CoordinatorT: SynologyDSMUpdateCoordinator[Any]](
             configuration_url=api.config_url,
         )
 
+    @override
     async def async_added_to_hass(self) -> None:
         """Register entity for updates from API."""
         self.async_on_remove(

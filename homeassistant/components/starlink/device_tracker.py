@@ -2,7 +2,7 @@
 
 from collections.abc import Callable
 from dataclasses import dataclass
-from typing import Any
+from typing import Any, override
 
 from homeassistant.components.device_tracker import (
     TrackerEntity,
@@ -55,16 +55,19 @@ class StarlinkDeviceTrackerEntity(StarlinkEntity, TrackerEntity):
     entity_description: StarlinkDeviceTrackerEntityDescription
 
     @property
+    @override
     def latitude(self) -> float | None:
         """Return latitude value of the device."""
         return self.entity_description.latitude_fn(self.coordinator.data)
 
     @property
+    @override
     def longitude(self) -> float | None:
         """Return longitude value of the device."""
         return self.entity_description.longitude_fn(self.coordinator.data)
 
     @property
+    @override
     def extra_state_attributes(self) -> dict[str, Any]:
         """Return device specific attributes."""
         return {

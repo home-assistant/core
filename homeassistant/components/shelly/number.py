@@ -2,7 +2,7 @@
 
 from collections.abc import Callable
 from dataclasses import dataclass
-from typing import TYPE_CHECKING, Final, cast
+from typing import TYPE_CHECKING, Final, cast, override
 
 from aioshelly.block_device import Block
 from aioshelly.const import RPC_GENERATIONS
@@ -105,11 +105,13 @@ class RpcNumber(ShellyRpcAttributeEntity, NumberEntity):
             self._attr_mode = description.mode_fn(coordinator.device.config[key])
 
     @property
+    @override
     def native_value(self) -> float | None:
         """Return value of number."""
         return self.attribute_value
 
     @rpc_call
+    @override
     async def async_set_native_value(self, value: float) -> None:
         """Change the value."""
         method = getattr(self.coordinator.device, self.entity_description.method)
@@ -124,6 +126,7 @@ class RpcCuryIntensityNumber(RpcNumber):
     """Represent a RPC Cury Intensity entity."""
 
     @rpc_call
+    @override
     async def async_set_native_value(self, value: float) -> None:
         """Change the value."""
         method = getattr(self.coordinator.device, self.entity_description.method)
@@ -162,10 +165,12 @@ class RpcBluTrvExtTempNumber(RpcBluTrvNumber):
     _reported_value: float | None = None
 
     @property
+    @override
     def native_value(self) -> float | None:
         """Return value of number."""
         return self._reported_value
 
+    @override
     async def async_set_native_value(self, value: float) -> None:
         """Change the value."""
         await super().async_set_native_value(value)
@@ -407,12 +412,14 @@ class BlockSleepingNumber(ShellySleepingBlockAttributeEntity, RestoreNumber):
         self.restored_data: NumberExtraStoredData | None = None
         super().__init__(coordinator, block, attribute, description, entry)
 
+    @override
     async def async_added_to_hass(self) -> None:
         """Handle entity which will be added."""
         await super().async_added_to_hass()
         self.restored_data = await self.async_get_last_number_data()
 
     @property
+    @override
     def native_value(self) -> float | None:
         """Return value of number."""
         if self.block is not None:
@@ -423,6 +430,7 @@ class BlockSleepingNumber(ShellySleepingBlockAttributeEntity, RestoreNumber):
 
         return cast(float, self.restored_data.native_value)
 
+    @override
     async def async_set_native_value(self, value: float) -> None:
         """Set value."""
         LOGGER.debug(

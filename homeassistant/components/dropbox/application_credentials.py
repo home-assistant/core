@@ -1,5 +1,7 @@
 """Application credentials platform for the Dropbox integration."""
 
+from typing import override
+
 from homeassistant.components.application_credentials import ClientCredential
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.config_entry_oauth2_flow import (
@@ -31,6 +33,7 @@ class DropboxOAuth2Implementation(LocalOAuth2ImplementationWithPkce):
     """
 
     @property
+    @override
     def extra_authorize_data(self) -> dict:
         """Extra data that needs to be appended to the authorize url."""
         data: dict = {

@@ -2,7 +2,7 @@
 
 from collections.abc import Mapping
 import os
-from typing import Any
+from typing import Any, override
 
 import voluptuous as vol
 
@@ -74,11 +74,13 @@ class FolderWatcherConfigFlowHandler(SchemaConfigFlowHandler, domain=DOMAIN):
     config_flow = CONFIG_FLOW
     options_flow = OPTIONS_FLOW
 
+    @override
     def async_config_entry_title(self, options: Mapping[str, Any]) -> str:
         """Return config entry title."""
         return f"Folder Watcher {options[CONF_FOLDER]}"
 
     @callback
+    @override
     def async_create_entry(
         self, data: Mapping[str, Any], **kwargs: Any
     ) -> ConfigFlowResult:

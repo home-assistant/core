@@ -10,7 +10,7 @@ from functools import partial, wraps
 import logging
 from random import randint
 import time
-from typing import TYPE_CHECKING, Any, Concatenate, Generic, TypeVar
+from typing import TYPE_CHECKING, Any, Concatenate, Generic, TypeVar, override
 
 from homeassistant.const import (
     EVENT_CORE_CONFIG_UPDATE,
@@ -975,6 +975,7 @@ class TrackTemplateResultInfo:
         self._track_state_changes: _TrackStateChangeFiltered | None = None
         self._time_listeners: dict[Template, Callable[[], None]] = {}
 
+    @override
     def __repr__(self) -> str:
         """Return the representation."""
         return f"<TrackTemplateResultInfo {self._info}>"
@@ -1318,7 +1319,7 @@ def async_track_template_result(
     evaluation is different from the previous run, the action is passed
     the result.
 
-    If the template results in an TemplateError, this will be returned to
+    If the template results in a TemplateError, this will be returned to
     the listener the first time this happens but not for subsequent errors.
     Once the template returns to a non-error condition the result is sent
     to the action as usual.

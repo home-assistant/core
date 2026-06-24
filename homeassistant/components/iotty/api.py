@@ -1,6 +1,6 @@
 """API for iotty bound to Home Assistant OAuth."""
 
-from typing import Any
+from typing import Any, override
 
 from aiohttp import ClientSession
 from iottycloud.cloudapi import CloudApi
@@ -29,6 +29,7 @@ class IottyProxy(CloudApi):
         self._oauth_session = oauth_session
         self._hass = hass
 
+    @override
     async def async_get_access_token(self) -> Any:
         """Return a valid access token."""
         await self._oauth_session.async_ensure_token_valid()
