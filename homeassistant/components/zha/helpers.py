@@ -314,6 +314,18 @@ class ZHADeviceProxy(EventBase):
         self._unsubs: list[Callable[[], None]] = []
         self._unsubs.append(self.device.on_all_events(self._handle_event_protocol))
 
+    @callback
+    def async_rebind_device(self, device: Device) -> None:
+        """Repoint this proxy to a replacement device object after a re-interview."""
+        for unsub in self._unsubs:
+            unsub()
+
+        self._unsubs.clear()
+
+        self.device = device
+        self._unsubs.append(self.device.on_all_events(self._handle_event_protocol))
+        self._track_firmware_version()
+
     @property
     def device_id(self) -> str:
         """Return the HA device registry device id."""
@@ -728,11 +740,24 @@ class ZHAGatewayProxy(EventBase):
     def handle_device_fully_initialized(self, event: DeviceFullInitEvent) -> None:
         """Handle a device fully initialized event."""
         zha_device = self.gateway.get_device(event.device_info.ieee)
+
+        # If ZHA swaps out the underlying device object, we need to update the proxy to
+        # point to the new one. The replacement is initialized silently
+        # (its entity-added events are suppressed), so we repoint the proxy and re-add
+        # its entities here; the old entities were already removed via teardown events
+        # on the previous object.
+        device_proxy = self.device_proxies.get(zha_device.ieee)
+        swapped_device = (
+            device_proxy is not None and device_proxy.device is not zha_device
+        )
+
         zha_device_proxy = self._async_get_or_create_device_proxy(zha_device)
+        if swapped_device:
+            zha_device_proxy.async_rebind_device(zha_device)
 
         device_info = zha_device_proxy.zha_device_info
         device_info[DEVICE_PAIRING_STATUS] = event.device_info.pairing_status.name
-        if event.new_join:
+        if event.new_join or swapped_device:
             self._create_entity_metadata(zha_device_proxy)
             async_dispatcher_send(self.hass, SIGNAL_ADD_ENTITIES)
         async_dispatcher_send(
