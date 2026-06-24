@@ -60,7 +60,7 @@
     },
     "step": {
       "init": {
-        "description": "Enter the local IP address for each device. Each field is labelled with the device's MAC address; leave a field blank to keep using DHCP discovery (which only works when the device is on the same network as Home Assistant). Devices: {devices}",
+        "description": "Enter the local IP address for each device. Each field is labeled with the device's MAC address; leave a field blank to keep using DHCP discovery (which only works when the device is on the same network as Home Assistant). Devices: {devices}",
         "title": "Device IP addresses"
       }
     }
