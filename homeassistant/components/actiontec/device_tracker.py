@@ -1,5 +1,7 @@
 """Support for Actiontec MI424WR (Verizon FIOS) routers."""
 
+from typing import override
+
 import voluptuous as vol
 
 from homeassistant.components.device_tracker import (
@@ -128,11 +130,13 @@ class ActiontecScannerEntity(
         )
 
     @property
+    @override
     def is_connected(self) -> bool:
         """Return true if the device is connected to the Actiontec router."""
         return self._device is not None
 
     @property
+    @override
     def ip_address(self) -> str | None:
         """Return the primary IP address of the device."""
         if (device := self._device) is not None:
@@ -140,6 +144,7 @@ class ActiontecScannerEntity(
         return None
 
     @property
+    @override
     def mac_address(self) -> str:
         """Return the MAC address of the device."""
         return self._mac_address

@@ -1,6 +1,6 @@
 """Config flow for the Actiontec integration."""
 
-from typing import Any
+from typing import Any, override
 
 import voluptuous as vol
 
@@ -34,6 +34,7 @@ class ActiontecConfigFlow(ConfigFlow, domain=DOMAIN):
         )
         return devices is not None
 
+    @override
     async def async_step_user(
         self, user_input: dict[str, Any] | None = None
     ) -> ConfigFlowResult:
@@ -55,5 +56,7 @@ class ActiontecConfigFlow(ConfigFlow, domain=DOMAIN):
         """Import existing configuration from configuration.yaml."""
         self._async_abort_entries_match({CONF_HOST: import_data[CONF_HOST]})
         if await self._async_can_connect(import_data):
-            return self.async_create_entry(title=import_data[CONF_HOST], data=import_data)
+            return self.async_create_entry(
+                title=import_data[CONF_HOST], data=import_data
+            )
         return self.async_abort(reason="cannot_connect")

@@ -2,6 +2,7 @@
 
 from datetime import timedelta
 import logging
+from typing import override
 
 import telnetlib  # pylint: disable=deprecated-module
 
@@ -20,9 +21,7 @@ UPDATE_INTERVAL = timedelta(seconds=30)
 type ActiontecConfigEntry = ConfigEntry[ActiontecDataUpdateCoordinator]
 
 
-def get_actiontec_data(
-    host: str, username: str, password: str
-) -> list[Device] | None:
+def get_actiontec_data(host: str, username: str, password: str) -> list[Device] | None:
     """Retrieve data from Actiontec MI424WR and return parsed result."""
     try:
         telnet = telnetlib.Telnet(host)
@@ -75,6 +74,7 @@ class ActiontecDataUpdateCoordinator(DataUpdateCoordinator[list[Device]]):
             update_interval=UPDATE_INTERVAL,
         )
 
+    @override
     async def _async_update_data(self) -> list[Device]:
         """Fetch connected devices from the Actiontec router."""
         if (
@@ -82,5 +82,7 @@ class ActiontecDataUpdateCoordinator(DataUpdateCoordinator[list[Device]]):
                 get_actiontec_data, self.host, self.username, self.password
             )
         ) is None:
-            raise UpdateFailed(f"Failed to fetch data from Actiontec router {self.host}")
+            raise UpdateFailed(
+                f"Failed to fetch data from Actiontec router {self.host}"
+            )
         return [device for device in devices if device.timevalid > -60]
