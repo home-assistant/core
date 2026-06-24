@@ -39,7 +39,7 @@
 # name: test_all_entities[c2c_arlo_pro_3_switch][switch.theater_2nd_floor_hallway-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': '2nd Floor Hallway',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: '2nd Floor Hallway',
     }),
     'context': <ANY>,
     'entity_id': 'switch.theater_2nd_floor_hallway',
@@ -89,7 +89,7 @@
 # name: test_all_entities[da_ac_air_000001][switch.air_purifier-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'Air purifier',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Air purifier',
     }),
     'context': <ANY>,
     'entity_id': 'switch.air_purifier',
@@ -139,7 +139,7 @@
 # name: test_all_entities[da_ac_air_01011][switch.air_filter-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'Air filter',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Air filter',
     }),
     'context': <ANY>,
     'entity_id': 'switch.air_filter',
@@ -189,7 +189,7 @@
 # name: test_all_entities[da_ac_cac_01001][switch.ar_varanda_sound_effect-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'Ar Varanda Sound effect',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Ar Varanda Sound effect',
     }),
     'context': <ANY>,
     'entity_id': 'switch.ar_varanda_sound_effect',
@@ -239,7 +239,7 @@
 # name: test_all_entities[da_ac_rac_000001][switch.theater_ac_office_granit_purify-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'AC Office Granit Purify',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'AC Office Granit Purify',
     }),
     'context': <ANY>,
     'entity_id': 'switch.theater_ac_office_granit_purify',
@@ -289,7 +289,7 @@
 # name: test_all_entities[da_ac_rac_01001][switch.theater_aire_dormitorio_principal_display_lighting-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'Aire Dormitorio Principal Display lighting',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Aire Dormitorio Principal Display lighting',
     }),
     'context': <ANY>,
     'entity_id': 'switch.theater_aire_dormitorio_principal_display_lighting',
@@ -339,7 +339,7 @@
 # name: test_all_entities[da_ac_rac_01001][switch.theater_aire_dormitorio_principal_sound_effect-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'Aire Dormitorio Principal Sound effect',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Aire Dormitorio Principal Sound effect',
     }),
     'context': <ANY>,
     'entity_id': 'switch.theater_aire_dormitorio_principal_sound_effect',
@@ -389,7 +389,7 @@
 # name: test_all_entities[da_ks_hood_01001][switch.range_hood-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'Range hood',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Range hood',
     }),
     'context': <ANY>,
     'entity_id': 'switch.range_hood',
@@ -439,7 +439,7 @@
 # name: test_all_entities[da_ks_hood_01001][switch.range_hood_do_not_disturb-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'Range hood Do not disturb',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Range hood Do not disturb',
     }),
     'context': <ANY>,
     'entity_id': 'switch.range_hood_do_not_disturb',
@@ -489,7 +489,7 @@
 # name: test_all_entities[da_ks_walloven_0107x][switch.four_sabbath_mode-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'Four Sabbath mode',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Four Sabbath mode',
     }),
     'context': <ANY>,
     'entity_id': 'switch.four_sabbath_mode',
@@ -539,7 +539,7 @@
 # name: test_all_entities[da_ref_normal_000001][switch.theater_refrigerator_cubed_ice-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'Refrigerator Cubed ice',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Refrigerator Cubed ice',
     }),
     'context': <ANY>,
     'entity_id': 'switch.theater_refrigerator_cubed_ice',
@@ -589,7 +589,7 @@
 # name: test_all_entities[da_ref_normal_000001][switch.theater_refrigerator_power_cool-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'Refrigerator Power cool',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Refrigerator Power cool',
     }),
     'context': <ANY>,
     'entity_id': 'switch.theater_refrigerator_power_cool',
@@ -639,7 +639,7 @@
 # name: test_all_entities[da_ref_normal_000001][switch.theater_refrigerator_power_freeze-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'Refrigerator Power freeze',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Refrigerator Power freeze',
     }),
     'context': <ANY>,
     'entity_id': 'switch.theater_refrigerator_power_freeze',
@@ -689,7 +689,7 @@
 # name: test_all_entities[da_ref_normal_000001][switch.theater_refrigerator_sabbath_mode-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'Refrigerator Sabbath mode',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Refrigerator Sabbath mode',
     }),
     'context': <ANY>,
     'entity_id': 'switch.theater_refrigerator_sabbath_mode',
@@ -739,7 +739,7 @@
 # name: test_all_entities[da_ref_normal_01001][switch.refrigerator_1_cubed_ice-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'Refrigerator 1 Cubed ice',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Refrigerator 1 Cubed ice',
     }),
     'context': <ANY>,
     'entity_id': 'switch.refrigerator_1_cubed_ice',
@@ -789,7 +789,7 @@
 # name: test_all_entities[da_ref_normal_01001][switch.refrigerator_1_power_cool-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'Refrigerator 1 Power cool',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Refrigerator 1 Power cool',
     }),
     'context': <ANY>,
     'entity_id': 'switch.refrigerator_1_power_cool',
@@ -839,7 +839,7 @@
 # name: test_all_entities[da_ref_normal_01001][switch.refrigerator_1_power_freeze-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'Refrigerator 1 Power freeze',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Refrigerator 1 Power freeze',
     }),
     'context': <ANY>,
     'entity_id': 'switch.refrigerator_1_power_freeze',
@@ -889,7 +889,7 @@
 # name: test_all_entities[da_ref_normal_01011][switch.frigo_cubed_ice-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'Frigo Cubed ice',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Frigo Cubed ice',
     }),
     'context': <ANY>,
     'entity_id': 'switch.frigo_cubed_ice',
@@ -939,7 +939,7 @@
 # name: test_all_entities[da_ref_normal_01011][switch.frigo_ice_bites-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'Frigo Ice Bites',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Frigo Ice Bites',
     }),
     'context': <ANY>,
     'entity_id': 'switch.frigo_ice_bites',
@@ -989,7 +989,7 @@
 # name: test_all_entities[da_ref_normal_01011][switch.frigo_power_cool-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'Frigo Power cool',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Frigo Power cool',
     }),
     'context': <ANY>,
     'entity_id': 'switch.frigo_power_cool',
@@ -1039,7 +1039,7 @@
 # name: test_all_entities[da_ref_normal_01011][switch.frigo_power_freeze-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'Frigo Power freeze',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Frigo Power freeze',
     }),
     'context': <ANY>,
     'entity_id': 'switch.frigo_power_freeze',
@@ -1089,7 +1089,7 @@
 # name: test_all_entities[da_ref_normal_01011][switch.frigo_sabbath_mode-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'Frigo Sabbath mode',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Frigo Sabbath mode',
     }),
     'context': <ANY>,
     'entity_id': 'switch.frigo_sabbath_mode',
@@ -1139,7 +1139,7 @@
 # name: test_all_entities[da_ref_normal_01011_onedoor][switch.lodowka_power_cool-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'Lodówka Power cool',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Lodówka Power cool',
     }),
     'context': <ANY>,
     'entity_id': 'switch.lodowka_power_cool',
@@ -1189,7 +1189,7 @@
 # name: test_all_entities[da_rvc_map_01011][switch.robot_vacuum_do_not_disturb-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'Robot Vacuum Do not disturb',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Robot Vacuum Do not disturb',
     }),
     'context': <ANY>,
     'entity_id': 'switch.robot_vacuum_do_not_disturb',
@@ -1239,7 +1239,7 @@
 # name: test_all_entities[da_rvc_map_01011][switch.robot_vacuum_sound_detection-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'Robot Vacuum Sound detection',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Robot Vacuum Sound detection',
     }),
     'context': <ANY>,
     'entity_id': 'switch.robot_vacuum_sound_detection',
@@ -1289,7 +1289,7 @@
 # name: test_all_entities[da_rvc_normal_000001][switch.theater_robot_vacuum_1-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'Robot vacuum 1',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Robot vacuum 1',
     }),
     'context': <ANY>,
     'entity_id': 'switch.theater_robot_vacuum_1',
@@ -1339,7 +1339,7 @@
 # name: test_all_entities[da_vc_stick_01001][switch.stick_vacuum_empty_dustbin-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'Stick vacuum Empty dustbin',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Stick vacuum Empty dustbin',
     }),
     'context': <ANY>,
     'entity_id': 'switch.stick_vacuum_empty_dustbin',
@@ -1389,7 +1389,7 @@
 # name: test_all_entities[da_wm_dw_000001][switch.theater_dishwasher_high_temp_wash-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'Dishwasher High temp wash',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Dishwasher High temp wash',
     }),
     'context': <ANY>,
     'entity_id': 'switch.theater_dishwasher_high_temp_wash',
@@ -1439,7 +1439,7 @@
 # name: test_all_entities[da_wm_dw_000001][switch.theater_dishwasher_sanitize-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'Dishwasher Sanitize',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Dishwasher Sanitize',
     }),
     'context': <ANY>,
     'entity_id': 'switch.theater_dishwasher_sanitize',
@@ -1489,7 +1489,7 @@
 # name: test_all_entities[da_wm_dw_000001][switch.theater_dishwasher_speed_booster-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'Dishwasher Speed booster',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Dishwasher Speed booster',
     }),
     'context': <ANY>,
     'entity_id': 'switch.theater_dishwasher_speed_booster',
@@ -1539,7 +1539,7 @@
 # name: test_all_entities[da_wm_dw_01011][switch.dishwasher_1_sanitize-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'Dishwasher 1 Sanitize',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Dishwasher 1 Sanitize',
     }),
     'context': <ANY>,
     'entity_id': 'switch.dishwasher_1_sanitize',
@@ -1589,7 +1589,7 @@
 # name: test_all_entities[da_wm_dw_01011][switch.dishwasher_1_speed_booster-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'Dishwasher 1 Speed booster',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Dishwasher 1 Speed booster',
     }),
     'context': <ANY>,
     'entity_id': 'switch.dishwasher_1_speed_booster',
@@ -1639,7 +1639,7 @@
 # name: test_all_entities[da_wm_mf_01001][switch.filtro_in_microfibra-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'Filtro in microfibra',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Filtro in microfibra',
     }),
     'context': <ANY>,
     'entity_id': 'switch.filtro_in_microfibra',
@@ -1689,7 +1689,7 @@
 # name: test_all_entities[da_wm_mf_01001][switch.filtro_in_microfibra_bypass_mode-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'Filtro in microfibra Bypass mode',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Filtro in microfibra Bypass mode',
     }),
     'context': <ANY>,
     'entity_id': 'switch.filtro_in_microfibra_bypass_mode',
@@ -1739,7 +1739,7 @@
 # name: test_all_entities[da_wm_sc_000001][switch.airdresser_auto_cycle_link-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'AirDresser Auto Cycle Link',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'AirDresser Auto Cycle Link',
     }),
     'context': <ANY>,
     'entity_id': 'switch.airdresser_auto_cycle_link',
@@ -1789,7 +1789,7 @@
 # name: test_all_entities[da_wm_sc_000001][switch.airdresser_keep_fresh_mode-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'AirDresser Keep fresh mode',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'AirDresser Keep fresh mode',
     }),
     'context': <ANY>,
     'entity_id': 'switch.airdresser_keep_fresh_mode',
@@ -1839,7 +1839,7 @@
 # name: test_all_entities[da_wm_sc_000001][switch.airdresser_sanitize-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'AirDresser Sanitize',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'AirDresser Sanitize',
     }),
     'context': <ANY>,
     'entity_id': 'switch.airdresser_sanitize',
@@ -1889,7 +1889,7 @@
 # name: test_all_entities[da_wm_wd_000001][switch.theater_dryer_wrinkle_prevent-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'Dryer Wrinkle prevent',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Dryer Wrinkle prevent',
     }),
     'context': <ANY>,
     'entity_id': 'switch.theater_dryer_wrinkle_prevent',
@@ -1939,7 +1939,7 @@
 # name: test_all_entities[da_wm_wd_000001_1][switch.seca_roupa_wrinkle_prevent-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'Seca-Roupa Wrinkle prevent',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Seca-Roupa Wrinkle prevent',
     }),
     'context': <ANY>,
     'entity_id': 'switch.seca_roupa_wrinkle_prevent',
@@ -1989,7 +1989,7 @@
 # name: test_all_entities[da_wm_wd_01011][switch.trockner_wrinkle_prevent-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'Trockner Wrinkle prevent',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Trockner Wrinkle prevent',
     }),
     'context': <ANY>,
     'entity_id': 'switch.trockner_wrinkle_prevent',
@@ -2039,7 +2039,7 @@
 # name: test_all_entities[da_wm_wm_000001_1][switch.washing_machine_bubble_soak-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'Washing Machine Bubble Soak',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Washing Machine Bubble Soak',
     }),
     'context': <ANY>,
     'entity_id': 'switch.washing_machine_bubble_soak',
@@ -2089,7 +2089,7 @@
 # name: test_all_entities[da_wm_wm_01011][switch.machine_a_laver_bubble_soak-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'Machine à Laver Bubble Soak',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Machine à Laver Bubble Soak',
     }),
     'context': <ANY>,
     'entity_id': 'switch.machine_a_laver_bubble_soak',
@@ -2139,7 +2139,7 @@
 # name: test_all_entities[generic_ef00_v1][switch.thermostat_kuche-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'Thermostat Küche',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Thermostat Küche',
     }),
     'context': <ANY>,
     'entity_id': 'switch.thermostat_kuche',
@@ -2189,7 +2189,7 @@
 # name: test_all_entities[meross_plug][switch.waschkeller_trockner_plug-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'Waschkeller Trockner Plug',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Waschkeller Trockner Plug',
     }),
     'context': <ANY>,
     'entity_id': 'switch.waschkeller_trockner_plug',
@@ -2239,7 +2239,7 @@
 # name: test_all_entities[sensibo_airconditioner_1][switch.office-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'Office',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Office',
     }),
     'context': <ANY>,
     'entity_id': 'switch.office',
@@ -2289,7 +2289,7 @@
 # name: test_all_entities[smart_plug][switch.theater_arlo_beta_basestation-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'Arlo Beta Basestation',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Arlo Beta Basestation',
     }),
     'context': <ANY>,
     'entity_id': 'switch.theater_arlo_beta_basestation',
@@ -2339,7 +2339,7 @@
 # name: test_all_entities[tplink_p110][switch.spulmaschine-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'Spülmaschine',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Spülmaschine',
     }),
     'context': <ANY>,
     'entity_id': 'switch.spulmaschine',
@@ -2389,7 +2389,7 @@
 # name: test_all_entities[vd_sensor_light_2023][switch.light_sensor_55_the_frame-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'Light Sensor - 55" The Frame',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Light Sensor - 55" The Frame',
     }),
     'context': <ANY>,
     'entity_id': 'switch.light_sensor_55_the_frame',

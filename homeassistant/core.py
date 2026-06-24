@@ -38,6 +38,7 @@ from typing import (
     cast,
     final,
     overload,
+    override,
 )
 
 from propcache.api import cached_property, under_cached_property
@@ -329,6 +330,7 @@ class HassJob[**_P, _R_co]:
         """Return if the job should be cancelled on shutdown."""
         return self._cancel_on_shutdown
 
+    @override
     def __repr__(self) -> str:
         """Return the job."""
         return f"<Job {self.name} {self.job_type} {self.target}>"
@@ -368,6 +370,7 @@ class CoreState(enum.Enum):
     final_write = "FINAL_WRITE"
     stopped = "STOPPED"
 
+    @override
     def __str__(self) -> str:
         """Return the event."""
         return self.value
@@ -386,6 +389,7 @@ class HomeAssistant:
         _hass.hass = hass
         return hass
 
+    @override
     def __repr__(self) -> str:
         """Return the representation."""
         return f"<HomeAssistant {self.state}>"
@@ -1232,6 +1236,7 @@ class Context:
         self.origin_event: Event[Any] | None = None
         self._cache: dict[str, Any] = {}
 
+    @override
     def __eq__(self, other: object) -> bool:
         """Compare contexts."""
         return isinstance(other, Context) and self.id == other.id
@@ -1278,6 +1283,7 @@ class EventOrigin(enum.Enum):
     local = "LOCAL"
     remote = "REMOTE"
 
+    @override
     def __str__(self) -> str:
         """Return the event."""
         return self.value
@@ -1372,6 +1378,7 @@ class Event(Generic[_DataT]):
         """Return an event as a JSON fragment."""
         return json_fragment(json_bytes(self._as_dict))
 
+    @override
     def __repr__(self) -> str:
         """Return the representation."""
         return _event_repr(self.event_type, self.origin, self.data)
@@ -1409,6 +1416,7 @@ class _OneTimeListener(Generic[_DataT]):
         self.remove = None
         self.hass.async_run_hass_job(self.listener_job, event)
 
+    @override
     def __repr__(self) -> str:
         """Return the representation of the listener and source module."""
         module = inspect.getmodule(self.listener_job.target)
@@ -2062,7 +2070,7 @@ class State:
         a new one with the same id to ensure the old state
         can still be examined for comparison against the new state.
 
-        Since we are always going to fire a EVENT_STATE_CHANGED event
+        Since we are always going to fire an EVENT_STATE_CHANGED event
         after we remove a state from the state machine we need to make
         sure we don't end up holding a reference to the original context
         since it can never be garbage collected as each event would
@@ -2072,6 +2080,7 @@ class State:
             self.context.user_id, self.context.parent_id, self.context.id
         )
 
+    @override
     def __repr__(self) -> str:
         """Return the representation of the states."""
         attrs = f"; {util.repr_helper(self.attributes)}" if self.attributes else ""
@@ -2094,15 +2103,18 @@ class States(UserDict[str, State]):
         super().__init__()
         self._domain_index: defaultdict[str, dict[str, State]] = defaultdict(dict)
 
+    @override
     def values(self) -> ValuesView[State]:
         """Return the underlying values to avoid __iter__ overhead."""
         return self.data.values()
 
+    @override
     def __setitem__(self, key: str, entry: State) -> None:
         """Add an item."""
         self.data[key] = entry
         self._domain_index[entry.domain][entry.entity_id] = entry
 
+    @override
     def __delitem__(self, key: str) -> None:
         """Remove an item."""
         entry = self[key]
@@ -2532,6 +2544,7 @@ class ServiceCall:
         self.context = context or Context()
         self.return_response = return_response
 
+    @override
     def __repr__(self) -> str:
         """Return the representation of the service."""
         if self.data:

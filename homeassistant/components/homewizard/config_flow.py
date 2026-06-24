@@ -1,7 +1,7 @@
 """Config flow for HomeWizard."""
 
 from collections.abc import Mapping
-from typing import Any
+from typing import Any, override
 
 from homewizard_energy import (
     HomeWizardEnergy,
@@ -42,6 +42,7 @@ class HomeWizardConfigFlow(ConfigFlow, domain=DOMAIN):
     product_type: str | None = None
     serial: str | None = None
 
+    @override
     async def async_step_user(
         self, user_input: dict[str, Any] | None = None
     ) -> ConfigFlowResult:
@@ -117,6 +118,7 @@ class HomeWizardConfigFlow(ConfigFlow, domain=DOMAIN):
             data=data,
         )
 
+    @override
     async def async_step_zeroconf(
         self, discovery_info: ZeroconfServiceInfo
     ) -> ConfigFlowResult:
@@ -141,6 +143,7 @@ class HomeWizardConfigFlow(ConfigFlow, domain=DOMAIN):
 
         return await self.async_step_discovery_confirm()
 
+    @override
     async def async_step_dhcp(
         self, discovery_info: DhcpServiceInfo
     ) -> ConfigFlowResult:
