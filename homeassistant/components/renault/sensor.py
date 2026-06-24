@@ -321,6 +321,7 @@ SENSOR_TYPES: tuple[RenaultSensorEntityDescription[Any], ...] = (
         options=[
             "always",
             "delayed",
+            "delegated",
             "scheduled",
         ],
         value_lambda=_get_charging_settings_mode_formatted,
