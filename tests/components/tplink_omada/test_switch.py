@@ -400,6 +400,7 @@ async def test_vpn_switches(
         "enabled",
         "server_enabled",
         "site_to_site_enabled",
+        "expected_state",
     ),
     [
         pytest.param(
@@ -409,10 +410,18 @@ async def test_vpn_switches(
             False,
             False,
             False,
+            "off",
             id="turn_off",
         ),
         pytest.param(
-            VPN_S2S_ENTITY_ID, "turn_on", "vpn-s2s-1", True, True, True, id="turn_on"
+            VPN_S2S_ENTITY_ID,
+            "turn_on",
+            "vpn-s2s-1",
+            True,
+            True,
+            True,
+            "on",
+            id="turn_on",
         ),
     ],
 )
@@ -426,6 +435,7 @@ async def test_vpn_switch_toggle(
     enabled: bool,
     server_enabled: bool,
     site_to_site_enabled: bool,
+    expected_state: str,
 ) -> None:
     """Test enabling and disabling a VPN policy."""
     mock_omada_site_client.get_vpn_policies.return_value = _build_vpn_policies(
@@ -440,7 +450,7 @@ async def test_vpn_switch_toggle(
 
     await hass.async_block_till_done()
     entity = hass.states.get(entity_id)
-    assert entity and entity.state == ("on" if enabled else "off")
+    assert entity and entity.state == expected_state
 
 
 async def test_vpn_switch_unavailable_when_policy_removed(
