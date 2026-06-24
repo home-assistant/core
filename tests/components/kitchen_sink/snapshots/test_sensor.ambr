@@ -5,7 +5,7 @@
       'attributes': ReadOnlyDict({
         'device_class': 'power',
         'friendly_name': 'Outlet 1 Power',
-        'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+        <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
         'unit_of_measurement': <UnitOfPower.WATT: 'W'>,
       }),
       'context': <ANY>,
@@ -19,7 +19,7 @@
       'attributes': ReadOnlyDict({
         'device_class': 'power',
         'friendly_name': 'Outlet 2 Power',
-        'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+        <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
         'unit_of_measurement': <UnitOfPower.WATT: 'W'>,
       }),
       'context': <ANY>,
@@ -33,7 +33,7 @@
       'attributes': ReadOnlyDict({
         'device_class': 'wind_direction',
         'friendly_name': 'Statistics issues Issue 5',
-        'state_class': <SensorStateClass.MEASUREMENT_ANGLE: 'measurement_angle'>,
+        <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT_ANGLE: 'measurement_angle'>,
         'unit_of_measurement': '°',
       }),
       'context': <ANY>,
@@ -46,7 +46,7 @@
     StateSnapshot({
       'attributes': ReadOnlyDict({
         'friendly_name': 'Statistics issues Issue 1',
-        'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+        <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
         'unit_of_measurement': <UnitOfPower.WATT: 'W'>,
       }),
       'context': <ANY>,
@@ -59,7 +59,7 @@
     StateSnapshot({
       'attributes': ReadOnlyDict({
         'friendly_name': 'Statistics issues Issue 2',
-        'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+        <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
         'unit_of_measurement': 'dogs',
       }),
       'context': <ANY>,
@@ -89,7 +89,7 @@
       'attributes': ReadOnlyDict({
         'device_class': 'power',
         'friendly_name': 'Outlet 1 Power',
-        'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+        <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
         'unit_of_measurement': <UnitOfPower.WATT: 'W'>,
       }),
       'context': <ANY>,
@@ -103,7 +103,7 @@
       'attributes': ReadOnlyDict({
         'device_class': 'power',
         'friendly_name': 'Outlet 2 Power',
-        'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+        <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
         'unit_of_measurement': <UnitOfPower.WATT: 'W'>,
       }),
       'context': <ANY>,
@@ -117,7 +117,7 @@
       'attributes': ReadOnlyDict({
         'device_class': 'wind_direction',
         'friendly_name': 'Statistics issues Issue 5',
-        'state_class': <SensorStateClass.MEASUREMENT_ANGLE: 'measurement_angle'>,
+        <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT_ANGLE: 'measurement_angle'>,
         'unit_of_measurement': '°',
       }),
       'context': <ANY>,
@@ -141,7 +141,7 @@
     StateSnapshot({
       'attributes': ReadOnlyDict({
         'friendly_name': 'Statistics issues Issue 1',
-        'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+        <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
         'unit_of_measurement': <UnitOfPower.WATT: 'W'>,
       }),
       'context': <ANY>,
@@ -154,7 +154,7 @@
     StateSnapshot({
       'attributes': ReadOnlyDict({
         'friendly_name': 'Statistics issues Issue 2',
-        'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+        <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
         'unit_of_measurement': 'dogs',
       }),
       'context': <ANY>,
