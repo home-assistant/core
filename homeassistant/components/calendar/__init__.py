@@ -68,6 +68,7 @@ from .const import (
     EVENT_UID,
     LIST_EVENT_FIELDS,
     CalendarEntityFeature,
+    CalendarEntityStateAttribute,
 )
 
 # mypy: disallow-any-generics
@@ -573,12 +574,16 @@ class CalendarEntity(Entity):
             return None
 
         return {
-            "message": event.summary,
-            "all_day": event.all_day,
-            "start_time": event.start_datetime_local.strftime(DATE_STR_FORMAT),
-            "end_time": event.end_datetime_local.strftime(DATE_STR_FORMAT),
-            "location": event.location or "",
-            "description": event.description or "",
+            CalendarEntityStateAttribute.MESSAGE: event.summary,
+            CalendarEntityStateAttribute.ALL_DAY: event.all_day,
+            CalendarEntityStateAttribute.START_TIME: event.start_datetime_local.strftime(
+                DATE_STR_FORMAT
+            ),
+            CalendarEntityStateAttribute.END_TIME: event.end_datetime_local.strftime(
+                DATE_STR_FORMAT
+            ),
+            CalendarEntityStateAttribute.LOCATION: event.location or "",
+            CalendarEntityStateAttribute.DESCRIPTION: event.description or "",
         }
 
     @final
