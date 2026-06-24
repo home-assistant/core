@@ -3,11 +3,13 @@
 
 import json
 from pathlib import Path
+import string
 import subprocess
 from typing import Any
 
 from .const import CLI_2_DOCKER_IMAGE, CORE_PROJECT_ID, INTEGRATIONS_DIR
 from .error import ExitApp
+from .upload import generate_upload_data
 from .util import (
     flatten_translations,
     get_lokalise_token,
@@ -64,21 +66,47 @@ def save_json(filename: Path, data: list | dict) -> None:
     filename.write_text(json.dumps(data, sort_keys=True, indent=4), encoding="utf-8")
 
 
+def _placeholder_names(value: str) -> set[str]:
+    """Return the placeholder names a translation string references."""
+    try:
+        return {
+            field_name
+            for _, field_name, _, _ in string.Formatter().parse(value)
+            if field_name
+        }
+    except ValueError:
+        # Non str.format strings can't be introspected; impose no constraint.
+        return set()
+
+
 def filter_translations(translations: dict[str, Any], strings: dict[str, Any]) -> None:
-    """Remove translations that are not in the original strings."""
+    """Remove translations that are missing from or incompatible with strings."""
     for key in list(translations.keys()):
         if key not in strings:
             translations.pop(key)
             continue
 
-        if isinstance(translations[key], dict):
-            if not isinstance(strings[key], dict):
+        value = translations[key]
+        source = strings[key]
+
+        if isinstance(value, dict):
+            if not isinstance(source, dict):
                 translations.pop(key)
                 continue
-            filter_translations(translations[key], strings[key])
-            if not translations[key]:
+            filter_translations(value, source)
+            if not value:
                 translations.pop(key)
-                continue
+            continue
+
+        # Drop a translation referencing a placeholder the source does not
+        # define: it raises at format time, and happens when Lokalise (sourced
+        # from dev) serves a renamed placeholder the branch's strings.json lacks.
+        if (
+            isinstance(value, str)
+            and isinstance(source, str)
+            and not _placeholder_names(value) <= _placeholder_names(source)
+        ):
+            translations.pop(key)
 
 
 def save_language_translations(lang: str, translations: dict[str, Any]) -> None:
@@ -144,6 +172,11 @@ def run() -> None:
     DOWNLOAD_DIR.mkdir(parents=True, exist_ok=True)
 
     run_download_docker()
+
+    # English is this checkout's strings.json, not a Lokalise round-trip, so a
+    # release build ships the English that matches its own code rather than the
+    # dev source the single Lokalise project always tracks.
+    save_json(DOWNLOAD_DIR / "en.json", generate_upload_data())
 
     delete_old_translations()
 
