@@ -54,9 +54,12 @@ class TriggerEntity(  # pylint: disable=home-assistant-enforce-class-module
         """Handle being added to Home Assistant."""
         await super().async_added_to_hass()
         if self.coordinator.data is not None:
+            # The trigger already produced data; rendering it must win over
+            # restored state, so skip restore entirely to avoid clobbering the
+            # freshly rendered attributes.
             self._process_data()
-
-        await self.async_restore_last_state()
+        else:
+            await self.async_restore_last_state()
 
     @override
     def _set_unique_id(self, unique_id: str | None) -> None:

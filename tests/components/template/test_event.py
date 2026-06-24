@@ -6,14 +6,25 @@ import pytest
 from syrupy.assertion import SnapshotAssertion
 
 from homeassistant.components import event, template
+from homeassistant.components.template.const import CONF_ATTRIBUTES, CONF_PICTURE
+from homeassistant.components.template.coordinator import TriggerUpdateCoordinator
+from homeassistant.components.template.event import (
+    CONF_EVENT_TYPE,
+    CONF_EVENT_TYPES,
+    TriggerEventEntity,
+)
 from homeassistant.const import (
     ATTR_ENTITY_PICTURE,
+    ATTR_FRIENDLY_NAME,
     ATTR_ICON,
+    CONF_ICON,
+    CONF_NAME,
     STATE_UNAVAILABLE,
     STATE_UNKNOWN,
 )
-from homeassistant.core import HomeAssistant
+from homeassistant.core import HomeAssistant, State
 from homeassistant.helpers import device_registry as dr, entity_registry as er
+from homeassistant.helpers.template import Template
 
 from .conftest import (
     RESTORE_STATE_SAVED_ATTRIBUTES,
@@ -31,7 +42,7 @@ from .conftest import (
     setup_restore_template_entity,
 )
 
-from tests.common import MockConfigEntry
+from tests.common import MockConfigEntry, MockEntityPlatform, mock_restore_cache
 from tests.conftest import WebSocketGenerator
 
 TEST_STATE_ENTITY_ID = "sensor.test_state"
@@ -522,6 +533,42 @@ async def test_restore_state(
         },
     )
     assert state.state != test_state
+
+
+def _make_trigger_event_entity(hass: HomeAssistant) -> TriggerEventEntity:
+    """Create a trigger event entity that renders fresh, static attributes."""
+    config = {
+        CONF_NAME: Template("fresh_name", hass),
+        CONF_ICON: Template("mdi:fresh", hass),
+        CONF_PICTURE: Template("/local/fresh.png", hass),
+        CONF_EVENT_TYPE: Template("fresh", hass),
+        CONF_EVENT_TYPES: Template("{{ ['fresh'] }}", hass),
+        CONF_ATTRIBUTES: {"attr": Template("fresh_attr", hass)},
+    }
+    coordinator = TriggerUpdateCoordinator(hass, {})
+    entity = TriggerEventEntity(hass, coordinator, config)
+    entity.entity_id = "event.test"
+    entity.platform = MockEntityPlatform(hass)
+    return entity
+
+
+def _mock_stale_restore_cache(hass: HomeAssistant) -> None:
+    """Prime the restore cache with stale attributes for the test entity."""
+    mock_restore_cache(
+        hass,
+        (
+            State(
+                "event.test",
+                "2021-01-01T00:00:00+00:00",
+                {
+                    ATTR_FRIENDLY_NAME: "stale_name",
+                    ATTR_ICON: "mdi:stale",
+                    ATTR_ENTITY_PICTURE: "/local/stale.png",
+                    "attr": "stale_attr",
+                },
+            ),
+        ),
+    )
 
 
 @pytest.mark.parametrize(
