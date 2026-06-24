@@ -187,6 +187,8 @@ async def test_diagnostics(
                     "workers": {
                         "00:00:00:00:00:02": {
                             "failed_window": False,
+                            "last_window_at": 0.0,
+                            "last_window_duration": 0.0,
                             "name": "hci1 (00:00:00:00:00:02)",
                             "next_event_at": ANY,
                             "next_sweep_at": ANY,
