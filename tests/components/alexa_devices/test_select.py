@@ -6,11 +6,18 @@ from unittest.mock import AsyncMock, patch
 import pytest
 from syrupy.assertion import SnapshotAssertion
 
+from homeassistant.components.alexa_devices.const import DOMAIN as ALEXA_DEVICES_DOMAIN
 from homeassistant.components.select import (
     DOMAIN as SELECT_DOMAIN,
     SERVICE_SELECT_OPTION,
 )
-from homeassistant.const import ATTR_ENTITY_ID, ATTR_OPTION, STATE_UNAVAILABLE, Platform
+from homeassistant.const import (
+    ATTR_ENTITY_ID,
+    ATTR_OPTION,
+    STATE_UNAVAILABLE,
+    STATE_UNKNOWN,
+    Platform,
+)
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import entity_registry as er
 
@@ -80,6 +87,46 @@ async def test_select_dropin_option(
     assert mock_amazon_devices_client.set_dropin_status.call_count == 2
     assert (state := hass.states.get(ENTITY_ID))
     assert state.state == "off"
+
+
+async def test_select_dropin_none_option(
+    hass: HomeAssistant,
+    mock_amazon_devices_client: AsyncMock,
+    mock_config_entry: MockConfigEntry,
+) -> None:
+    """Test selecting a drop-in option when the current option is unknown."""
+    device_data = deepcopy(TEST_DEVICE_1)
+    device_data.communication_settings = {
+        "announcements": "ON",
+        "communications": "ON",
+        "dropin": None,
+    }
+    mock_amazon_devices_client.get_devices_data.return_value = {
+        TEST_DEVICE_1_SN: device_data
+    }
+
+    with patch("homeassistant.components.alexa_devices.PLATFORMS", [Platform.SELECT]):
+        await setup_integration(hass, mock_config_entry)
+
+    entity_registry = er.async_get(hass)
+    entity_id = entity_registry.async_get_entity_id(
+        SELECT_DOMAIN, ALEXA_DEVICES_DOMAIN, f"{TEST_DEVICE_1_SN}-dropin"
+    )
+    assert entity_id
+
+    assert (state := hass.states.get(entity_id))
+    assert state.state == STATE_UNKNOWN
+
+    await hass.services.async_call(
+        SELECT_DOMAIN,
+        SERVICE_SELECT_OPTION,
+        {ATTR_ENTITY_ID: entity_id, ATTR_OPTION: "home"},
+        blocking=True,
+    )
+
+    assert mock_amazon_devices_client.set_dropin_status.call_count == 1
+    assert (state := hass.states.get(entity_id))
+    assert state.state == "home"
 
 
 async def test_offline_device(

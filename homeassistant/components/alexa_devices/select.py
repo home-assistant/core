@@ -86,9 +86,12 @@ class AmazonSelectEntity(AmazonEntity, SelectEntity):
     async def async_added_to_hass(self) -> None:
         """Restore last known option."""
         await super().async_added_to_hass()
-        self._attr_current_option = self._device.communication_settings[
+        current_option = self._device.communication_settings[
             self.entity_description.key
-        ].lower()
+        ]
+        self._attr_current_option = (
+            current_option.lower() if current_option is not None else None
+        )
 
     @override
     async def async_select_option(self, option: str) -> None:
