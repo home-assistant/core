@@ -44,7 +44,7 @@
 # name: test_text_entities[text.test_player_1_network_name-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'Test Player 1 Network name',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Test Player 1 Network name',
       <TextEntityCapabilityAttribute.MAX: 'max'>: 255,
       <TextEntityCapabilityAttribute.MIN: 'min'>: 0,
       <TextEntityCapabilityAttribute.MODE: 'mode'>: <TextMode.TEXT: 'text'>,

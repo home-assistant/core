@@ -76,7 +76,7 @@
 # name: test_sensors[HWE-BAT-entity_ids11][sensor.device_battery_cycles:state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'Device Battery cycles',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Device Battery cycles',
       <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
     }),
     'context': <ANY>,
@@ -167,10 +167,10 @@
 # name: test_sensors[HWE-BAT-entity_ids11][sensor.device_current:state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'device_class': 'current',
-      'friendly_name': 'Device Current',
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'current',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Device Current',
       <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
-      'unit_of_measurement': <UnitOfElectricCurrent.AMPERE: 'A'>,
+      <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: <UnitOfElectricCurrent.AMPERE: 'A'>,
     }),
     'context': <ANY>,
     'entity_id': 'sensor.device_current',
@@ -260,10 +260,10 @@
 # name: test_sensors[HWE-BAT-entity_ids11][sensor.device_energy_export:state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'device_class': 'energy',
-      'friendly_name': 'Device Energy export',
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'energy',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Device Energy export',
       <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
-      'unit_of_measurement': <UnitOfEnergy.KILO_WATT_HOUR: 'kWh'>,
+      <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: <UnitOfEnergy.KILO_WATT_HOUR: 'kWh'>,
     }),
     'context': <ANY>,
     'entity_id': 'sensor.device_energy_export',
@@ -353,10 +353,10 @@
 # name: test_sensors[HWE-BAT-entity_ids11][sensor.device_energy_import:state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'device_class': 'energy',
-      'friendly_name': 'Device Energy import',
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'energy',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Device Energy import',
       <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
-      'unit_of_measurement': <UnitOfEnergy.KILO_WATT_HOUR: 'kWh'>,
+      <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: <UnitOfEnergy.KILO_WATT_HOUR: 'kWh'>,
     }),
     'context': <ANY>,
     'entity_id': 'sensor.device_energy_import',
@@ -446,10 +446,10 @@
 # name: test_sensors[HWE-BAT-entity_ids11][sensor.device_frequency:state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'device_class': 'frequency',
-      'friendly_name': 'Device Frequency',
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'frequency',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Device Frequency',
       <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
-      'unit_of_measurement': <UnitOfFrequency.HERTZ: 'Hz'>,
+      <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: <UnitOfFrequency.HERTZ: 'Hz'>,
     }),
     'context': <ANY>,
     'entity_id': 'sensor.device_frequency',
@@ -539,10 +539,10 @@
 # name: test_sensors[HWE-BAT-entity_ids11][sensor.device_power:state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'device_class': 'power',
-      'friendly_name': 'Device Power',
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'power',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Device Power',
       <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
-      'unit_of_measurement': <UnitOfPower.WATT: 'W'>,
+      <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: <UnitOfPower.WATT: 'W'>,
     }),
     'context': <ANY>,
     'entity_id': 'sensor.device_power',
@@ -632,10 +632,10 @@
 # name: test_sensors[HWE-BAT-entity_ids11][sensor.device_production_power:state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'device_class': 'power',
-      'friendly_name': 'Device Production power',
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'power',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Device Production power',
       <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
-      'unit_of_measurement': <UnitOfPower.WATT: 'W'>,
+      <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: <UnitOfPower.WATT: 'W'>,
     }),
     'context': <ANY>,
     'entity_id': 'sensor.device_production_power',
@@ -725,10 +725,10 @@
 # name: test_sensors[HWE-BAT-entity_ids11][sensor.device_state_of_charge:state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'device_class': 'battery',
-      'friendly_name': 'Device State of charge',
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'battery',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Device State of charge',
       <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
-      'unit_of_measurement': '%',
+      <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: '%',
     }),
     'context': <ANY>,
     'entity_id': 'sensor.device_state_of_charge',
@@ -813,8 +813,8 @@
 # name: test_sensors[HWE-BAT-entity_ids11][sensor.device_uptime:state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'device_class': 'uptime',
-      'friendly_name': 'Device Uptime',
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'uptime',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Device Uptime',
     }),
     'context': <ANY>,
     'entity_id': 'sensor.device_uptime',
@@ -904,10 +904,10 @@
 # name: test_sensors[HWE-BAT-entity_ids11][sensor.device_voltage:state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'device_class': 'voltage',
-      'friendly_name': 'Device Voltage',
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'voltage',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Device Voltage',
       <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
-      'unit_of_measurement': <UnitOfElectricPotential.VOLT: 'V'>,
+      <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: <UnitOfElectricPotential.VOLT: 'V'>,
     }),
     'context': <ANY>,
     'entity_id': 'sensor.device_voltage',
@@ -994,9 +994,9 @@
 # name: test_sensors[HWE-BAT-entity_ids11][sensor.device_wi_fi_rssi:state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'Device Wi-Fi RSSI',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Device Wi-Fi RSSI',
       <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
-      'unit_of_measurement': 'dB',
+      <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: 'dB',
     }),
     'context': <ANY>,
     'entity_id': 'sensor.device_wi_fi_rssi',
@@ -1081,7 +1081,7 @@
 # name: test_sensors[HWE-BAT-entity_ids11][sensor.device_wi_fi_ssid:state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'Device Wi-Fi SSID',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Device Wi-Fi SSID',
     }),
     'context': <ANY>,
     'entity_id': 'sensor.device_wi_fi_ssid',
@@ -1171,10 +1171,10 @@
 # name: test_sensors[HWE-KWH1-entity_ids8][sensor.device_apparent_power:state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'device_class': 'apparent_power',
-      'friendly_name': 'Device Apparent power',
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'apparent_power',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Device Apparent power',
       <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
-      'unit_of_measurement': <UnitOfApparentPower.VOLT_AMPERE: 'VA'>,
+      <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: <UnitOfApparentPower.VOLT_AMPERE: 'VA'>,
     }),
     'context': <ANY>,
     'entity_id': 'sensor.device_apparent_power',
@@ -1264,10 +1264,10 @@
 # name: test_sensors[HWE-KWH1-entity_ids8][sensor.device_current:state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'device_class': 'current',
-      'friendly_name': 'Device Current',
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'current',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Device Current',
       <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
-      'unit_of_measurement': <UnitOfElectricCurrent.AMPERE: 'A'>,
+      <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: <UnitOfElectricCurrent.AMPERE: 'A'>,
     }),
     'context': <ANY>,
     'entity_id': 'sensor.device_current',
@@ -1357,10 +1357,10 @@
 # name: test_sensors[HWE-KWH1-entity_ids8][sensor.device_energy_export:state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'device_class': 'energy',
-      'friendly_name': 'Device Energy export',
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'energy',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Device Energy export',
       <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
-      'unit_of_measurement': <UnitOfEnergy.KILO_WATT_HOUR: 'kWh'>,
+      <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: <UnitOfEnergy.KILO_WATT_HOUR: 'kWh'>,
     }),
     'context': <ANY>,
     'entity_id': 'sensor.device_energy_export',
@@ -1450,10 +1450,10 @@
 # name: test_sensors[HWE-KWH1-entity_ids8][sensor.device_energy_import:state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'device_class': 'energy',
-      'friendly_name': 'Device Energy import',
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'energy',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Device Energy import',
       <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
-      'unit_of_measurement': <UnitOfEnergy.KILO_WATT_HOUR: 'kWh'>,
+      <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: <UnitOfEnergy.KILO_WATT_HOUR: 'kWh'>,
     }),
     'context': <ANY>,
     'entity_id': 'sensor.device_energy_import',
@@ -1543,10 +1543,10 @@
 # name: test_sensors[HWE-KWH1-entity_ids8][sensor.device_frequency:state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'device_class': 'frequency',
-      'friendly_name': 'Device Frequency',
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'frequency',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Device Frequency',
       <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
-      'unit_of_measurement': <UnitOfFrequency.HERTZ: 'Hz'>,
+      <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: <UnitOfFrequency.HERTZ: 'Hz'>,
     }),
     'context': <ANY>,
     'entity_id': 'sensor.device_frequency',
@@ -1636,10 +1636,10 @@
 # name: test_sensors[HWE-KWH1-entity_ids8][sensor.device_power:state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'device_class': 'power',
-      'friendly_name': 'Device Power',
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'power',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Device Power',
       <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
-      'unit_of_measurement': <UnitOfPower.WATT: 'W'>,
+      <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: <UnitOfPower.WATT: 'W'>,
     }),
     'context': <ANY>,
     'entity_id': 'sensor.device_power',
@@ -1726,10 +1726,10 @@
 # name: test_sensors[HWE-KWH1-entity_ids8][sensor.device_power_factor:state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'device_class': 'power_factor',
-      'friendly_name': 'Device Power factor',
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'power_factor',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Device Power factor',
       <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
-      'unit_of_measurement': '%',
+      <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: '%',
     }),
     'context': <ANY>,
     'entity_id': 'sensor.device_power_factor',
@@ -1819,10 +1819,10 @@
 # name: test_sensors[HWE-KWH1-entity_ids8][sensor.device_production_power:state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'device_class': 'power',
-      'friendly_name': 'Device Production power',
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'power',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Device Production power',
       <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
-      'unit_of_measurement': <UnitOfPower.WATT: 'W'>,
+      <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: <UnitOfPower.WATT: 'W'>,
     }),
     'context': <ANY>,
     'entity_id': 'sensor.device_production_power',
@@ -1912,10 +1912,10 @@
 # name: test_sensors[HWE-KWH1-entity_ids8][sensor.device_reactive_power:state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'device_class': 'reactive_power',
-      'friendly_name': 'Device Reactive power',
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'reactive_power',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Device Reactive power',
       <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
-      'unit_of_measurement': <UnitOfReactivePower.VOLT_AMPERE_REACTIVE: 'var'>,
+      <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: <UnitOfReactivePower.VOLT_AMPERE_REACTIVE: 'var'>,
     }),
     'context': <ANY>,
     'entity_id': 'sensor.device_reactive_power',
@@ -2005,10 +2005,10 @@
 # name: test_sensors[HWE-KWH1-entity_ids8][sensor.device_voltage:state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'device_class': 'voltage',
-      'friendly_name': 'Device Voltage',
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'voltage',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Device Voltage',
       <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
-      'unit_of_measurement': <UnitOfElectricPotential.VOLT: 'V'>,
+      <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: <UnitOfElectricPotential.VOLT: 'V'>,
     }),
     'context': <ANY>,
     'entity_id': 'sensor.device_voltage',
@@ -2093,7 +2093,7 @@
 # name: test_sensors[HWE-KWH1-entity_ids8][sensor.device_wi_fi_ssid:state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'Device Wi-Fi SSID',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Device Wi-Fi SSID',
     }),
     'context': <ANY>,
     'entity_id': 'sensor.device_wi_fi_ssid',
@@ -2180,9 +2180,9 @@
 # name: test_sensors[HWE-KWH1-entity_ids8][sensor.device_wi_fi_strength:state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'Device Wi-Fi strength',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Device Wi-Fi strength',
       <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
-      'unit_of_measurement': '%',
+      <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: '%',
     }),
     'context': <ANY>,
     'entity_id': 'sensor.device_wi_fi_strength',
@@ -2272,10 +2272,10 @@
 # name: test_sensors[HWE-KWH3-entity_ids9][sensor.device_apparent_power:state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'device_class': 'apparent_power',
-      'friendly_name': 'Device Apparent power',
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'apparent_power',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Device Apparent power',
       <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
-      'unit_of_measurement': <UnitOfApparentPower.VOLT_AMPERE: 'VA'>,
+      <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: <UnitOfApparentPower.VOLT_AMPERE: 'VA'>,
     }),
     'context': <ANY>,
     'entity_id': 'sensor.device_apparent_power',
@@ -2365,10 +2365,10 @@
 # name: test_sensors[HWE-KWH3-entity_ids9][sensor.device_apparent_power_phase_1:state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'device_class': 'apparent_power',
-      'friendly_name': 'Device Apparent power phase 1',
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'apparent_power',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Device Apparent power phase 1',
       <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
-      'unit_of_measurement': <UnitOfApparentPower.VOLT_AMPERE: 'VA'>,
+      <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: <UnitOfApparentPower.VOLT_AMPERE: 'VA'>,
     }),
     'context': <ANY>,
     'entity_id': 'sensor.device_apparent_power_phase_1',
@@ -2458,10 +2458,10 @@
 # name: test_sensors[HWE-KWH3-entity_ids9][sensor.device_apparent_power_phase_2:state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'device_class': 'apparent_power',
-      'friendly_name': 'Device Apparent power phase 2',
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'apparent_power',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Device Apparent power phase 2',
       <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
-      'unit_of_measurement': <UnitOfApparentPower.VOLT_AMPERE: 'VA'>,
+      <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: <UnitOfApparentPower.VOLT_AMPERE: 'VA'>,
     }),
     'context': <ANY>,
     'entity_id': 'sensor.device_apparent_power_phase_2',
@@ -2551,10 +2551,10 @@
 # name: test_sensors[HWE-KWH3-entity_ids9][sensor.device_apparent_power_phase_3:state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'device_class': 'apparent_power',
-      'friendly_name': 'Device Apparent power phase 3',
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'apparent_power',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Device Apparent power phase 3',
       <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
-      'unit_of_measurement': <UnitOfApparentPower.VOLT_AMPERE: 'VA'>,
+      <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: <UnitOfApparentPower.VOLT_AMPERE: 'VA'>,
     }),
     'context': <ANY>,
     'entity_id': 'sensor.device_apparent_power_phase_3',
@@ -2644,10 +2644,10 @@
 # name: test_sensors[HWE-KWH3-entity_ids9][sensor.device_current:state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'device_class': 'current',
-      'friendly_name': 'Device Current',
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'current',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Device Current',
       <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
-      'unit_of_measurement': <UnitOfElectricCurrent.AMPERE: 'A'>,
+      <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: <UnitOfElectricCurrent.AMPERE: 'A'>,
     }),
     'context': <ANY>,
     'entity_id': 'sensor.device_current',
@@ -2737,10 +2737,10 @@
 # name: test_sensors[HWE-KWH3-entity_ids9][sensor.device_current_phase_1:state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'device_class': 'current',
-      'friendly_name': 'Device Current phase 1',
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'current',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Device Current phase 1',
       <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
-      'unit_of_measurement': <UnitOfElectricCurrent.AMPERE: 'A'>,
+      <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: <UnitOfElectricCurrent.AMPERE: 'A'>,
     }),
     'context': <ANY>,
     'entity_id': 'sensor.device_current_phase_1',
@@ -2830,10 +2830,10 @@
 # name: test_sensors[HWE-KWH3-entity_ids9][sensor.device_current_phase_2:state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'device_class': 'current',
-      'friendly_name': 'Device Current phase 2',
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'current',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Device Current phase 2',
       <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
-      'unit_of_measurement': <UnitOfElectricCurrent.AMPERE: 'A'>,
+      <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: <UnitOfElectricCurrent.AMPERE: 'A'>,
     }),
     'context': <ANY>,
     'entity_id': 'sensor.device_current_phase_2',
@@ -2923,10 +2923,10 @@
 # name: test_sensors[HWE-KWH3-entity_ids9][sensor.device_current_phase_3:state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'device_class': 'current',
-      'friendly_name': 'Device Current phase 3',
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'current',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Device Current phase 3',
       <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
-      'unit_of_measurement': <UnitOfElectricCurrent.AMPERE: 'A'>,
+      <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: <UnitOfElectricCurrent.AMPERE: 'A'>,
     }),
     'context': <ANY>,
     'entity_id': 'sensor.device_current_phase_3',
@@ -3016,10 +3016,10 @@
 # name: test_sensors[HWE-KWH3-entity_ids9][sensor.device_energy_export:state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'device_class': 'energy',
-      'friendly_name': 'Device Energy export',
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'energy',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Device Energy export',
       <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
-      'unit_of_measurement': <UnitOfEnergy.KILO_WATT_HOUR: 'kWh'>,
+      <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: <UnitOfEnergy.KILO_WATT_HOUR: 'kWh'>,
     }),
     'context': <ANY>,
     'entity_id': 'sensor.device_energy_export',
@@ -3109,10 +3109,10 @@
 # name: test_sensors[HWE-KWH3-entity_ids9][sensor.device_energy_import:state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'device_class': 'energy',
-      'friendly_name': 'Device Energy import',
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'energy',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Device Energy import',
       <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
-      'unit_of_measurement': <UnitOfEnergy.KILO_WATT_HOUR: 'kWh'>,
+      <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: <UnitOfEnergy.KILO_WATT_HOUR: 'kWh'>,
     }),
     'context': <ANY>,
     'entity_id': 'sensor.device_energy_import',
@@ -3202,10 +3202,10 @@
 # name: test_sensors[HWE-KWH3-entity_ids9][sensor.device_frequency:state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'device_class': 'frequency',
-      'friendly_name': 'Device Frequency',
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'frequency',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Device Frequency',
       <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
-      'unit_of_measurement': <UnitOfFrequency.HERTZ: 'Hz'>,
+      <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: <UnitOfFrequency.HERTZ: 'Hz'>,
     }),
     'context': <ANY>,
     'entity_id': 'sensor.device_frequency',
@@ -3295,10 +3295,10 @@
 # name: test_sensors[HWE-KWH3-entity_ids9][sensor.device_power:state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'device_class': 'power',
-      'friendly_name': 'Device Power',
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'power',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Device Power',
       <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
-      'unit_of_measurement': <UnitOfPower.WATT: 'W'>,
+      <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: <UnitOfPower.WATT: 'W'>,
     }),
     'context': <ANY>,
     'entity_id': 'sensor.device_power',
@@ -3385,10 +3385,10 @@
 # name: test_sensors[HWE-KWH3-entity_ids9][sensor.device_power_factor_phase_1:state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'device_class': 'power_factor',
-      'friendly_name': 'Device Power factor phase 1',
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'power_factor',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Device Power factor phase 1',
       <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
-      'unit_of_measurement': '%',
+      <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: '%',
     }),
     'context': <ANY>,
     'entity_id': 'sensor.device_power_factor_phase_1',
@@ -3475,10 +3475,10 @@
 # name: test_sensors[HWE-KWH3-entity_ids9][sensor.device_power_factor_phase_2:state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'device_class': 'power_factor',
-      'friendly_name': 'Device Power factor phase 2',
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'power_factor',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Device Power factor phase 2',
       <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
-      'unit_of_measurement': '%',
+      <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: '%',
     }),
     'context': <ANY>,
     'entity_id': 'sensor.device_power_factor_phase_2',
@@ -3565,10 +3565,10 @@
 # name: test_sensors[HWE-KWH3-entity_ids9][sensor.device_power_factor_phase_3:state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'device_class': 'power_factor',
-      'friendly_name': 'Device Power factor phase 3',
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'power_factor',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Device Power factor phase 3',
       <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
-      'unit_of_measurement': '%',
+      <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: '%',
     }),
     'context': <ANY>,
     'entity_id': 'sensor.device_power_factor_phase_3',
@@ -3658,10 +3658,10 @@
 # name: test_sensors[HWE-KWH3-entity_ids9][sensor.device_power_phase_1:state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'device_class': 'power',
-      'friendly_name': 'Device Power phase 1',
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'power',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Device Power phase 1',
       <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
-      'unit_of_measurement': <UnitOfPower.WATT: 'W'>,
+      <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: <UnitOfPower.WATT: 'W'>,
     }),
     'context': <ANY>,
     'entity_id': 'sensor.device_power_phase_1',
@@ -3751,10 +3751,10 @@
 # name: test_sensors[HWE-KWH3-entity_ids9][sensor.device_power_phase_2:state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'device_class': 'power',
-      'friendly_name': 'Device Power phase 2',
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'power',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Device Power phase 2',
       <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
-      'unit_of_measurement': <UnitOfPower.WATT: 'W'>,
+      <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: <UnitOfPower.WATT: 'W'>,
     }),
     'context': <ANY>,
     'entity_id': 'sensor.device_power_phase_2',
@@ -3844,10 +3844,10 @@
 # name: test_sensors[HWE-KWH3-entity_ids9][sensor.device_power_phase_3:state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'device_class': 'power',
-      'friendly_name': 'Device Power phase 3',
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'power',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Device Power phase 3',
       <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
-      'unit_of_measurement': <UnitOfPower.WATT: 'W'>,
+      <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: <UnitOfPower.WATT: 'W'>,
     }),
     'context': <ANY>,
     'entity_id': 'sensor.device_power_phase_3',
@@ -3937,10 +3937,10 @@
 # name: test_sensors[HWE-KWH3-entity_ids9][sensor.device_production_power:state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'device_class': 'power',
-      'friendly_name': 'Device Production power',
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'power',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Device Production power',
       <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
-      'unit_of_measurement': <UnitOfPower.WATT: 'W'>,
+      <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: <UnitOfPower.WATT: 'W'>,
     }),
     'context': <ANY>,
     'entity_id': 'sensor.device_production_power',
@@ -4030,10 +4030,10 @@
 # name: test_sensors[HWE-KWH3-entity_ids9][sensor.device_reactive_power:state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'device_class': 'reactive_power',
-      'friendly_name': 'Device Reactive power',
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'reactive_power',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Device Reactive power',
       <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
-      'unit_of_measurement': <UnitOfReactivePower.VOLT_AMPERE_REACTIVE: 'var'>,
+      <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: <UnitOfReactivePower.VOLT_AMPERE_REACTIVE: 'var'>,
     }),
     'context': <ANY>,
     'entity_id': 'sensor.device_reactive_power',
@@ -4123,10 +4123,10 @@
 # name: test_sensors[HWE-KWH3-entity_ids9][sensor.device_reactive_power_phase_1:state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'device_class': 'reactive_power',
-      'friendly_name': 'Device Reactive power phase 1',
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'reactive_power',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Device Reactive power phase 1',
       <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
-      'unit_of_measurement': <UnitOfReactivePower.VOLT_AMPERE_REACTIVE: 'var'>,
+      <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: <UnitOfReactivePower.VOLT_AMPERE_REACTIVE: 'var'>,
     }),
     'context': <ANY>,
     'entity_id': 'sensor.device_reactive_power_phase_1',
@@ -4216,10 +4216,10 @@
 # name: test_sensors[HWE-KWH3-entity_ids9][sensor.device_reactive_power_phase_2:state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'device_class': 'reactive_power',
-      'friendly_name': 'Device Reactive power phase 2',
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'reactive_power',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Device Reactive power phase 2',
       <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
-      'unit_of_measurement': <UnitOfReactivePower.VOLT_AMPERE_REACTIVE: 'var'>,
+      <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: <UnitOfReactivePower.VOLT_AMPERE_REACTIVE: 'var'>,
     }),
     'context': <ANY>,
     'entity_id': 'sensor.device_reactive_power_phase_2',
@@ -4309,10 +4309,10 @@
 # name: test_sensors[HWE-KWH3-entity_ids9][sensor.device_reactive_power_phase_3:state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'device_class': 'reactive_power',
-      'friendly_name': 'Device Reactive power phase 3',
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'reactive_power',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Device Reactive power phase 3',
       <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
-      'unit_of_measurement': <UnitOfReactivePower.VOLT_AMPERE_REACTIVE: 'var'>,
+      <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: <UnitOfReactivePower.VOLT_AMPERE_REACTIVE: 'var'>,
     }),
     'context': <ANY>,
     'entity_id': 'sensor.device_reactive_power_phase_3',
@@ -4402,10 +4402,10 @@
 # name: test_sensors[HWE-KWH3-entity_ids9][sensor.device_voltage_phase_1:state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'device_class': 'voltage',
-      'friendly_name': 'Device Voltage phase 1',
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'voltage',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Device Voltage phase 1',
       <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
-      'unit_of_measurement': <UnitOfElectricPotential.VOLT: 'V'>,
+      <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: <UnitOfElectricPotential.VOLT: 'V'>,
     }),
     'context': <ANY>,
     'entity_id': 'sensor.device_voltage_phase_1',
@@ -4495,10 +4495,10 @@
 # name: test_sensors[HWE-KWH3-entity_ids9][sensor.device_voltage_phase_2:state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'device_class': 'voltage',
-      'friendly_name': 'Device Voltage phase 2',
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'voltage',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Device Voltage phase 2',
       <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
-      'unit_of_measurement': <UnitOfElectricPotential.VOLT: 'V'>,
+      <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: <UnitOfElectricPotential.VOLT: 'V'>,
     }),
     'context': <ANY>,
     'entity_id': 'sensor.device_voltage_phase_2',
@@ -4588,10 +4588,10 @@
 # name: test_sensors[HWE-KWH3-entity_ids9][sensor.device_voltage_phase_3:state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'device_class': 'voltage',
-      'friendly_name': 'Device Voltage phase 3',
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'voltage',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Device Voltage phase 3',
       <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
-      'unit_of_measurement': <UnitOfElectricPotential.VOLT: 'V'>,
+      <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: <UnitOfElectricPotential.VOLT: 'V'>,
     }),
     'context': <ANY>,
     'entity_id': 'sensor.device_voltage_phase_3',
@@ -4676,7 +4676,7 @@
 # name: test_sensors[HWE-KWH3-entity_ids9][sensor.device_wi_fi_ssid:state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'Device Wi-Fi SSID',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Device Wi-Fi SSID',
     }),
     'context': <ANY>,
     'entity_id': 'sensor.device_wi_fi_ssid',
@@ -4763,9 +4763,9 @@
 # name: test_sensors[HWE-KWH3-entity_ids9][sensor.device_wi_fi_strength:state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'Device Wi-Fi strength',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Device Wi-Fi strength',
       <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
-      'unit_of_measurement': '%',
+      <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: '%',
     }),
     'context': <ANY>,
     'entity_id': 'sensor.device_wi_fi_strength',
@@ -4853,9 +4853,9 @@
 # name: test_sensors[HWE-P1-entity_ids0][sensor.device_average_demand:state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'device_class': 'power',
-      'friendly_name': 'Device Average demand',
-      'unit_of_measurement': <UnitOfPower.WATT: 'W'>,
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'power',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Device Average demand',
+      <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: <UnitOfPower.WATT: 'W'>,
     }),
     'context': <ANY>,
     'entity_id': 'sensor.device_average_demand',
@@ -4945,10 +4945,10 @@
 # name: test_sensors[HWE-P1-entity_ids0][sensor.device_battery_group_power:state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'device_class': 'power',
-      'friendly_name': 'Device Battery group power',
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'power',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Device Battery group power',
       <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
-      'unit_of_measurement': <UnitOfPower.WATT: 'W'>,
+      <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: <UnitOfPower.WATT: 'W'>,
     }),
     'context': <ANY>,
     'entity_id': 'sensor.device_battery_group_power',
@@ -5038,10 +5038,10 @@
 # name: test_sensors[HWE-P1-entity_ids0][sensor.device_battery_group_target_power:state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'device_class': 'power',
-      'friendly_name': 'Device Battery group target power',
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'power',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Device Battery group target power',
       <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
-      'unit_of_measurement': <UnitOfPower.WATT: 'W'>,
+      <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: <UnitOfPower.WATT: 'W'>,
     }),
     'context': <ANY>,
     'entity_id': 'sensor.device_battery_group_target_power',
@@ -5131,10 +5131,10 @@
 # name: test_sensors[HWE-P1-entity_ids0][sensor.device_current_phase_1:state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'device_class': 'current',
-      'friendly_name': 'Device Current phase 1',
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'current',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Device Current phase 1',
       <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
-      'unit_of_measurement': <UnitOfElectricCurrent.AMPERE: 'A'>,
+      <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: <UnitOfElectricCurrent.AMPERE: 'A'>,
     }),
     'context': <ANY>,
     'entity_id': 'sensor.device_current_phase_1',
@@ -5224,10 +5224,10 @@
 # name: test_sensors[HWE-P1-entity_ids0][sensor.device_current_phase_2:state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'device_class': 'current',
-      'friendly_name': 'Device Current phase 2',
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'current',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Device Current phase 2',
       <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
-      'unit_of_measurement': <UnitOfElectricCurrent.AMPERE: 'A'>,
+      <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: <UnitOfElectricCurrent.AMPERE: 'A'>,
     }),
     'context': <ANY>,
     'entity_id': 'sensor.device_current_phase_2',
@@ -5317,10 +5317,10 @@
 # name: test_sensors[HWE-P1-entity_ids0][sensor.device_current_phase_3:state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'device_class': 'current',
-      'friendly_name': 'Device Current phase 3',
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'current',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Device Current phase 3',
       <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
-      'unit_of_measurement': <UnitOfElectricCurrent.AMPERE: 'A'>,
+      <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: <UnitOfElectricCurrent.AMPERE: 'A'>,
     }),
     'context': <ANY>,
     'entity_id': 'sensor.device_current_phase_3',
@@ -5405,7 +5405,7 @@
 # name: test_sensors[HWE-P1-entity_ids0][sensor.device_dsmr_version:state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'Device DSMR version',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Device DSMR version',
     }),
     'context': <ANY>,
     'entity_id': 'sensor.device_dsmr_version',
@@ -5495,10 +5495,10 @@
 # name: test_sensors[HWE-P1-entity_ids0][sensor.device_energy_export:state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'device_class': 'energy',
-      'friendly_name': 'Device Energy export',
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'energy',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Device Energy export',
       <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
-      'unit_of_measurement': <UnitOfEnergy.KILO_WATT_HOUR: 'kWh'>,
+      <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: <UnitOfEnergy.KILO_WATT_HOUR: 'kWh'>,
     }),
     'context': <ANY>,
     'entity_id': 'sensor.device_energy_export',
@@ -5588,10 +5588,10 @@
 # name: test_sensors[HWE-P1-entity_ids0][sensor.device_energy_export_tariff_1:state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'device_class': 'energy',
-      'friendly_name': 'Device Energy export tariff 1',
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'energy',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Device Energy export tariff 1',
       <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
-      'unit_of_measurement': <UnitOfEnergy.KILO_WATT_HOUR: 'kWh'>,
+      <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: <UnitOfEnergy.KILO_WATT_HOUR: 'kWh'>,
     }),
     'context': <ANY>,
     'entity_id': 'sensor.device_energy_export_tariff_1',
@@ -5681,10 +5681,10 @@
 # name: test_sensors[HWE-P1-entity_ids0][sensor.device_energy_export_tariff_2:state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'device_class': 'energy',
-      'friendly_name': 'Device Energy export tariff 2',
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'energy',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Device Energy export tariff 2',
       <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
-      'unit_of_measurement': <UnitOfEnergy.KILO_WATT_HOUR: 'kWh'>,
+      <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: <UnitOfEnergy.KILO_WATT_HOUR: 'kWh'>,
     }),
     'context': <ANY>,
     'entity_id': 'sensor.device_energy_export_tariff_2',
@@ -5774,10 +5774,10 @@
 # name: test_sensors[HWE-P1-entity_ids0][sensor.device_energy_export_tariff_3:state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'device_class': 'energy',
-      'friendly_name': 'Device Energy export tariff 3',
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'energy',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Device Energy export tariff 3',
       <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
-      'unit_of_measurement': <UnitOfEnergy.KILO_WATT_HOUR: 'kWh'>,
+      <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: <UnitOfEnergy.KILO_WATT_HOUR: 'kWh'>,
     }),
     'context': <ANY>,
     'entity_id': 'sensor.device_energy_export_tariff_3',
@@ -5867,10 +5867,10 @@
 # name: test_sensors[HWE-P1-entity_ids0][sensor.device_energy_export_tariff_4:state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'device_class': 'energy',
-      'friendly_name': 'Device Energy export tariff 4',
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'energy',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Device Energy export tariff 4',
       <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
-      'unit_of_measurement': <UnitOfEnergy.KILO_WATT_HOUR: 'kWh'>,
+      <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: <UnitOfEnergy.KILO_WATT_HOUR: 'kWh'>,
     }),
     'context': <ANY>,
     'entity_id': 'sensor.device_energy_export_tariff_4',
@@ -5960,10 +5960,10 @@
 # name: test_sensors[HWE-P1-entity_ids0][sensor.device_energy_import:state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'device_class': 'energy',
-      'friendly_name': 'Device Energy import',
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'energy',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Device Energy import',
       <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
-      'unit_of_measurement': <UnitOfEnergy.KILO_WATT_HOUR: 'kWh'>,
+      <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: <UnitOfEnergy.KILO_WATT_HOUR: 'kWh'>,
     }),
     'context': <ANY>,
     'entity_id': 'sensor.device_energy_import',
@@ -6053,10 +6053,10 @@
 # name: test_sensors[HWE-P1-entity_ids0][sensor.device_energy_import_tariff_1:state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'device_class': 'energy',
-      'friendly_name': 'Device Energy import tariff 1',
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'energy',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Device Energy import tariff 1',
       <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
-      'unit_of_measurement': <UnitOfEnergy.KILO_WATT_HOUR: 'kWh'>,
+      <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: <UnitOfEnergy.KILO_WATT_HOUR: 'kWh'>,
     }),
     'context': <ANY>,
     'entity_id': 'sensor.device_energy_import_tariff_1',
@@ -6146,10 +6146,10 @@
 # name: test_sensors[HWE-P1-entity_ids0][sensor.device_energy_import_tariff_2:state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'device_class': 'energy',
-      'friendly_name': 'Device Energy import tariff 2',
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'energy',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Device Energy import tariff 2',
       <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
-      'unit_of_measurement': <UnitOfEnergy.KILO_WATT_HOUR: 'kWh'>,
+      <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: <UnitOfEnergy.KILO_WATT_HOUR: 'kWh'>,
     }),
     'context': <ANY>,
     'entity_id': 'sensor.device_energy_import_tariff_2',
@@ -6239,10 +6239,10 @@
 # name: test_sensors[HWE-P1-entity_ids0][sensor.device_energy_import_tariff_3:state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'device_class': 'energy',
-      'friendly_name': 'Device Energy import tariff 3',
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'energy',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Device Energy import tariff 3',
       <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
-      'unit_of_measurement': <UnitOfEnergy.KILO_WATT_HOUR: 'kWh'>,
+      <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: <UnitOfEnergy.KILO_WATT_HOUR: 'kWh'>,
     }),
     'context': <ANY>,
     'entity_id': 'sensor.device_energy_import_tariff_3',
@@ -6332,10 +6332,10 @@
 # name: test_sensors[HWE-P1-entity_ids0][sensor.device_energy_import_tariff_4:state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'device_class': 'energy',
-      'friendly_name': 'Device Energy import tariff 4',
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'energy',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Device Energy import tariff 4',
       <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
-      'unit_of_measurement': <UnitOfEnergy.KILO_WATT_HOUR: 'kWh'>,
+      <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: <UnitOfEnergy.KILO_WATT_HOUR: 'kWh'>,
     }),
     'context': <ANY>,
     'entity_id': 'sensor.device_energy_import_tariff_4',
@@ -6425,10 +6425,10 @@
 # name: test_sensors[HWE-P1-entity_ids0][sensor.device_frequency:state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'device_class': 'frequency',
-      'friendly_name': 'Device Frequency',
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'frequency',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Device Frequency',
       <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
-      'unit_of_measurement': <UnitOfFrequency.HERTZ: 'Hz'>,
+      <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: <UnitOfFrequency.HERTZ: 'Hz'>,
     }),
     'context': <ANY>,
     'entity_id': 'sensor.device_frequency',
@@ -6513,7 +6513,7 @@
 # name: test_sensors[HWE-P1-entity_ids0][sensor.device_long_power_failures_detected:state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'Device Long power failures detected',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Device Long power failures detected',
     }),
     'context': <ANY>,
     'entity_id': 'sensor.device_long_power_failures_detected',
@@ -6601,9 +6601,9 @@
 # name: test_sensors[HWE-P1-entity_ids0][sensor.device_peak_demand_current_month:state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'device_class': 'power',
-      'friendly_name': 'Device Peak demand current month',
-      'unit_of_measurement': <UnitOfPower.WATT: 'W'>,
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'power',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Device Peak demand current month',
+      <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: <UnitOfPower.WATT: 'W'>,
     }),
     'context': <ANY>,
     'entity_id': 'sensor.device_peak_demand_current_month',
@@ -6693,10 +6693,10 @@
 # name: test_sensors[HWE-P1-entity_ids0][sensor.device_power:state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'device_class': 'power',
-      'friendly_name': 'Device Power',
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'power',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Device Power',
       <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
-      'unit_of_measurement': <UnitOfPower.WATT: 'W'>,
+      <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: <UnitOfPower.WATT: 'W'>,
     }),
     'context': <ANY>,
     'entity_id': 'sensor.device_power',
@@ -6781,7 +6781,7 @@
 # name: test_sensors[HWE-P1-entity_ids0][sensor.device_power_failures_detected:state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'Device Power failures detected',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Device Power failures detected',
     }),
     'context': <ANY>,
     'entity_id': 'sensor.device_power_failures_detected',
@@ -6871,10 +6871,10 @@
 # name: test_sensors[HWE-P1-entity_ids0][sensor.device_power_phase_1:state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'device_class': 'power',
-      'friendly_name': 'Device Power phase 1',
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'power',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Device Power phase 1',
       <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
-      'unit_of_measurement': <UnitOfPower.WATT: 'W'>,
+      <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: <UnitOfPower.WATT: 'W'>,
     }),
     'context': <ANY>,
     'entity_id': 'sensor.device_power_phase_1',
@@ -6964,10 +6964,10 @@
 # name: test_sensors[HWE-P1-entity_ids0][sensor.device_power_phase_2:state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'device_class': 'power',
-      'friendly_name': 'Device Power phase 2',
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'power',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Device Power phase 2',
       <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
-      'unit_of_measurement': <UnitOfPower.WATT: 'W'>,
+      <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: <UnitOfPower.WATT: 'W'>,
     }),
     'context': <ANY>,
     'entity_id': 'sensor.device_power_phase_2',
@@ -7057,10 +7057,10 @@
 # name: test_sensors[HWE-P1-entity_ids0][sensor.device_power_phase_3:state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'device_class': 'power',
-      'friendly_name': 'Device Power phase 3',
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'power',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Device Power phase 3',
       <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
-      'unit_of_measurement': <UnitOfPower.WATT: 'W'>,
+      <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: <UnitOfPower.WATT: 'W'>,
     }),
     'context': <ANY>,
     'entity_id': 'sensor.device_power_phase_3',
@@ -7145,7 +7145,7 @@
 # name: test_sensors[HWE-P1-entity_ids0][sensor.device_smart_meter_identifier:state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'Device Smart meter identifier',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Device Smart meter identifier',
     }),
     'context': <ANY>,
     'entity_id': 'sensor.device_smart_meter_identifier',
@@ -7230,7 +7230,7 @@
 # name: test_sensors[HWE-P1-entity_ids0][sensor.device_smart_meter_model:state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'Device Smart meter model',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Device Smart meter model',
     }),
     'context': <ANY>,
     'entity_id': 'sensor.device_smart_meter_model',
@@ -7322,8 +7322,8 @@
 # name: test_sensors[HWE-P1-entity_ids0][sensor.device_tariff:state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'device_class': 'enum',
-      'friendly_name': 'Device Tariff',
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'enum',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Device Tariff',
       <SensorEntityCapabilityAttribute.OPTIONS: 'options'>: list([
         '1',
         '2',
@@ -7419,10 +7419,10 @@
 # name: test_sensors[HWE-P1-entity_ids0][sensor.device_total_water_usage:state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'device_class': 'water',
-      'friendly_name': 'Device Total water usage',
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'water',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Device Total water usage',
       <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
-      'unit_of_measurement': <UnitOfVolume.CUBIC_METERS: 'm³'>,
+      <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: <UnitOfVolume.CUBIC_METERS: 'm³'>,
     }),
     'context': <ANY>,
     'entity_id': 'sensor.device_total_water_usage',
@@ -7512,10 +7512,10 @@
 # name: test_sensors[HWE-P1-entity_ids0][sensor.device_voltage_phase_1:state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'device_class': 'voltage',
-      'friendly_name': 'Device Voltage phase 1',
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'voltage',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Device Voltage phase 1',
       <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
-      'unit_of_measurement': <UnitOfElectricPotential.VOLT: 'V'>,
+      <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: <UnitOfElectricPotential.VOLT: 'V'>,
     }),
     'context': <ANY>,
     'entity_id': 'sensor.device_voltage_phase_1',
@@ -7605,10 +7605,10 @@
 # name: test_sensors[HWE-P1-entity_ids0][sensor.device_voltage_phase_2:state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'device_class': 'voltage',
-      'friendly_name': 'Device Voltage phase 2',
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'voltage',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Device Voltage phase 2',
       <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
-      'unit_of_measurement': <UnitOfElectricPotential.VOLT: 'V'>,
+      <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: <UnitOfElectricPotential.VOLT: 'V'>,
     }),
     'context': <ANY>,
     'entity_id': 'sensor.device_voltage_phase_2',
@@ -7698,10 +7698,10 @@
 # name: test_sensors[HWE-P1-entity_ids0][sensor.device_voltage_phase_3:state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'device_class': 'voltage',
-      'friendly_name': 'Device Voltage phase 3',
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'voltage',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Device Voltage phase 3',
       <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
-      'unit_of_measurement': <UnitOfElectricPotential.VOLT: 'V'>,
+      <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: <UnitOfElectricPotential.VOLT: 'V'>,
     }),
     'context': <ANY>,
     'entity_id': 'sensor.device_voltage_phase_3',
@@ -7786,7 +7786,7 @@
 # name: test_sensors[HWE-P1-entity_ids0][sensor.device_voltage_sags_detected_phase_1:state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'Device Voltage sags detected phase 1',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Device Voltage sags detected phase 1',
     }),
     'context': <ANY>,
     'entity_id': 'sensor.device_voltage_sags_detected_phase_1',
@@ -7871,7 +7871,7 @@
 # name: test_sensors[HWE-P1-entity_ids0][sensor.device_voltage_sags_detected_phase_2:state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'Device Voltage sags detected phase 2',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Device Voltage sags detected phase 2',
     }),
     'context': <ANY>,
     'entity_id': 'sensor.device_voltage_sags_detected_phase_2',
@@ -7956,7 +7956,7 @@
 # name: test_sensors[HWE-P1-entity_ids0][sensor.device_voltage_sags_detected_phase_3:state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'Device Voltage sags detected phase 3',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Device Voltage sags detected phase 3',
     }),
     'context': <ANY>,
     'entity_id': 'sensor.device_voltage_sags_detected_phase_3',
@@ -8041,7 +8041,7 @@
 # name: test_sensors[HWE-P1-entity_ids0][sensor.device_voltage_swells_detected_phase_1:state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'Device Voltage swells detected phase 1',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Device Voltage swells detected phase 1',
     }),
     'context': <ANY>,
     'entity_id': 'sensor.device_voltage_swells_detected_phase_1',
@@ -8126,7 +8126,7 @@
 # name: test_sensors[HWE-P1-entity_ids0][sensor.device_voltage_swells_detected_phase_2:state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'Device Voltage swells detected phase 2',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Device Voltage swells detected phase 2',
     }),
     'context': <ANY>,
     'entity_id': 'sensor.device_voltage_swells_detected_phase_2',
@@ -8211,7 +8211,7 @@
 # name: test_sensors[HWE-P1-entity_ids0][sensor.device_voltage_swells_detected_phase_3:state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'Device Voltage swells detected phase 3',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Device Voltage swells detected phase 3',
     }),
     'context': <ANY>,
     'entity_id': 'sensor.device_voltage_swells_detected_phase_3',
@@ -8301,10 +8301,10 @@
 # name: test_sensors[HWE-P1-entity_ids0][sensor.device_water_usage:state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'device_class': 'volume_flow_rate',
-      'friendly_name': 'Device Water usage',
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'volume_flow_rate',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Device Water usage',
       <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
-      'unit_of_measurement': <UnitOfVolumeFlowRate.LITERS_PER_MINUTE: 'L/min'>,
+      <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: <UnitOfVolumeFlowRate.LITERS_PER_MINUTE: 'L/min'>,
     }),
     'context': <ANY>,
     'entity_id': 'sensor.device_water_usage',
@@ -8389,7 +8389,7 @@
 # name: test_sensors[HWE-P1-entity_ids0][sensor.device_wi_fi_ssid:state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'Device Wi-Fi SSID',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Device Wi-Fi SSID',
     }),
     'context': <ANY>,
     'entity_id': 'sensor.device_wi_fi_ssid',
@@ -8476,9 +8476,9 @@
 # name: test_sensors[HWE-P1-entity_ids0][sensor.device_wi_fi_strength:state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'Device Wi-Fi strength',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Device Wi-Fi strength',
       <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
-      'unit_of_measurement': '%',
+      <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: '%',
     }),
     'context': <ANY>,
     'entity_id': 'sensor.device_wi_fi_strength',
@@ -8564,10 +8564,10 @@
 # name: test_sensors[HWE-P1-entity_ids0][sensor.gas_meter_gas:state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'device_class': 'gas',
-      'friendly_name': 'Gas meter Gas',
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'gas',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Gas meter Gas',
       <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
-      'unit_of_measurement': <UnitOfVolume.CUBIC_METERS: 'm³'>,
+      <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: <UnitOfVolume.CUBIC_METERS: 'm³'>,
     }),
     'context': <ANY>,
     'entity_id': 'sensor.gas_meter_gas',
@@ -8653,10 +8653,10 @@
 # name: test_sensors[HWE-P1-entity_ids0][sensor.heat_meter_energy:state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'device_class': 'energy',
-      'friendly_name': 'Heat meter Energy',
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'energy',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Heat meter Energy',
       <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
-      'unit_of_measurement': 'GJ',
+      <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: 'GJ',
     }),
     'context': <ANY>,
     'entity_id': 'sensor.heat_meter_energy',
@@ -8739,9 +8739,9 @@
 # name: test_sensors[HWE-P1-entity_ids0][sensor.inlet_heat_meter:state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'Inlet heat meter',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Inlet heat meter',
       <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
-      'unit_of_measurement': <UnitOfVolume.CUBIC_METERS: 'm³'>,
+      <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: <UnitOfVolume.CUBIC_METERS: 'm³'>,
     }),
     'context': <ANY>,
     'entity_id': 'sensor.inlet_heat_meter',
@@ -8827,10 +8827,10 @@
 # name: test_sensors[HWE-P1-entity_ids0][sensor.warm_water_meter_water:state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'device_class': 'water',
-      'friendly_name': 'Warm water meter Water',
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'water',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Warm water meter Water',
       <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
-      'unit_of_measurement': <UnitOfVolume.CUBIC_METERS: 'm³'>,
+      <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: <UnitOfVolume.CUBIC_METERS: 'm³'>,
     }),
     'context': <ANY>,
     'entity_id': 'sensor.warm_water_meter_water',
@@ -8916,10 +8916,10 @@
 # name: test_sensors[HWE-P1-entity_ids0][sensor.water_meter_water:state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'device_class': 'water',
-      'friendly_name': 'Water meter Water',
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'water',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Water meter Water',
       <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
-      'unit_of_measurement': <UnitOfVolume.CUBIC_METERS: 'm³'>,
+      <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: <UnitOfVolume.CUBIC_METERS: 'm³'>,
     }),
     'context': <ANY>,
     'entity_id': 'sensor.water_meter_water',
@@ -9007,9 +9007,9 @@
 # name: test_sensors[HWE-P1-invalid-EAN-entity_ids10][sensor.device_average_demand:state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'device_class': 'power',
-      'friendly_name': 'Device Average demand',
-      'unit_of_measurement': <UnitOfPower.WATT: 'W'>,
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'power',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Device Average demand',
+      <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: <UnitOfPower.WATT: 'W'>,
     }),
     'context': <ANY>,
     'entity_id': 'sensor.device_average_demand',
@@ -9099,10 +9099,10 @@
 # name: test_sensors[HWE-P1-invalid-EAN-entity_ids10][sensor.device_current_phase_1:state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'device_class': 'current',
-      'friendly_name': 'Device Current phase 1',
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'current',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Device Current phase 1',
       <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
-      'unit_of_measurement': <UnitOfElectricCurrent.AMPERE: 'A'>,
+      <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: <UnitOfElectricCurrent.AMPERE: 'A'>,
     }),
     'context': <ANY>,
     'entity_id': 'sensor.device_current_phase_1',
@@ -9192,10 +9192,10 @@
 # name: test_sensors[HWE-P1-invalid-EAN-entity_ids10][sensor.device_current_phase_2:state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'device_class': 'current',
-      'friendly_name': 'Device Current phase 2',
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'current',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Device Current phase 2',
       <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
-      'unit_of_measurement': <UnitOfElectricCurrent.AMPERE: 'A'>,
+      <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: <UnitOfElectricCurrent.AMPERE: 'A'>,
     }),
     'context': <ANY>,
     'entity_id': 'sensor.device_current_phase_2',
@@ -9285,10 +9285,10 @@
 # name: test_sensors[HWE-P1-invalid-EAN-entity_ids10][sensor.device_current_phase_3:state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'device_class': 'current',
-      'friendly_name': 'Device Current phase 3',
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'current',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Device Current phase 3',
       <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
-      'unit_of_measurement': <UnitOfElectricCurrent.AMPERE: 'A'>,
+      <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: <UnitOfElectricCurrent.AMPERE: 'A'>,
     }),
     'context': <ANY>,
     'entity_id': 'sensor.device_current_phase_3',
@@ -9373,7 +9373,7 @@
 # name: test_sensors[HWE-P1-invalid-EAN-entity_ids10][sensor.device_dsmr_version:state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'Device DSMR version',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Device DSMR version',
     }),
     'context': <ANY>,
     'entity_id': 'sensor.device_dsmr_version',
@@ -9463,10 +9463,10 @@
 # name: test_sensors[HWE-P1-invalid-EAN-entity_ids10][sensor.device_energy_export:state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'device_class': 'energy',
-      'friendly_name': 'Device Energy export',
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'energy',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Device Energy export',
       <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
-      'unit_of_measurement': <UnitOfEnergy.KILO_WATT_HOUR: 'kWh'>,
+      <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: <UnitOfEnergy.KILO_WATT_HOUR: 'kWh'>,
     }),
     'context': <ANY>,
     'entity_id': 'sensor.device_energy_export',
@@ -9556,10 +9556,10 @@
 # name: test_sensors[HWE-P1-invalid-EAN-entity_ids10][sensor.device_energy_export_tariff_1:state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'device_class': 'energy',
-      'friendly_name': 'Device Energy export tariff 1',
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'energy',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Device Energy export tariff 1',
       <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
-      'unit_of_measurement': <UnitOfEnergy.KILO_WATT_HOUR: 'kWh'>,
+      <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: <UnitOfEnergy.KILO_WATT_HOUR: 'kWh'>,
     }),
     'context': <ANY>,
     'entity_id': 'sensor.device_energy_export_tariff_1',
@@ -9649,10 +9649,10 @@
 # name: test_sensors[HWE-P1-invalid-EAN-entity_ids10][sensor.device_energy_export_tariff_2:state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'device_class': 'energy',
-      'friendly_name': 'Device Energy export tariff 2',
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'energy',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Device Energy export tariff 2',
       <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
-      'unit_of_measurement': <UnitOfEnergy.KILO_WATT_HOUR: 'kWh'>,
+      <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: <UnitOfEnergy.KILO_WATT_HOUR: 'kWh'>,
     }),
     'context': <ANY>,
     'entity_id': 'sensor.device_energy_export_tariff_2',
@@ -9742,10 +9742,10 @@
 # name: test_sensors[HWE-P1-invalid-EAN-entity_ids10][sensor.device_energy_export_tariff_3:state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'device_class': 'energy',
-      'friendly_name': 'Device Energy export tariff 3',
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'energy',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Device Energy export tariff 3',
       <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
-      'unit_of_measurement': <UnitOfEnergy.KILO_WATT_HOUR: 'kWh'>,
+      <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: <UnitOfEnergy.KILO_WATT_HOUR: 'kWh'>,
     }),
     'context': <ANY>,
     'entity_id': 'sensor.device_energy_export_tariff_3',
@@ -9835,10 +9835,10 @@
 # name: test_sensors[HWE-P1-invalid-EAN-entity_ids10][sensor.device_energy_export_tariff_4:state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'device_class': 'energy',
-      'friendly_name': 'Device Energy export tariff 4',
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'energy',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Device Energy export tariff 4',
       <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
-      'unit_of_measurement': <UnitOfEnergy.KILO_WATT_HOUR: 'kWh'>,
+      <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: <UnitOfEnergy.KILO_WATT_HOUR: 'kWh'>,
     }),
     'context': <ANY>,
     'entity_id': 'sensor.device_energy_export_tariff_4',
@@ -9928,10 +9928,10 @@
 # name: test_sensors[HWE-P1-invalid-EAN-entity_ids10][sensor.device_energy_import:state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'device_class': 'energy',
-      'friendly_name': 'Device Energy import',
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'energy',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Device Energy import',
       <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
-      'unit_of_measurement': <UnitOfEnergy.KILO_WATT_HOUR: 'kWh'>,
+      <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: <UnitOfEnergy.KILO_WATT_HOUR: 'kWh'>,
     }),
     'context': <ANY>,
     'entity_id': 'sensor.device_energy_import',
@@ -10021,10 +10021,10 @@
 # name: test_sensors[HWE-P1-invalid-EAN-entity_ids10][sensor.device_energy_import_tariff_1:state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'device_class': 'energy',
-      'friendly_name': 'Device Energy import tariff 1',
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'energy',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Device Energy import tariff 1',
       <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
-      'unit_of_measurement': <UnitOfEnergy.KILO_WATT_HOUR: 'kWh'>,
+      <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: <UnitOfEnergy.KILO_WATT_HOUR: 'kWh'>,
     }),
     'context': <ANY>,
     'entity_id': 'sensor.device_energy_import_tariff_1',
@@ -10114,10 +10114,10 @@
 # name: test_sensors[HWE-P1-invalid-EAN-entity_ids10][sensor.device_energy_import_tariff_2:state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'device_class': 'energy',
-      'friendly_name': 'Device Energy import tariff 2',
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'energy',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Device Energy import tariff 2',
       <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
-      'unit_of_measurement': <UnitOfEnergy.KILO_WATT_HOUR: 'kWh'>,
+      <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: <UnitOfEnergy.KILO_WATT_HOUR: 'kWh'>,
     }),
     'context': <ANY>,
     'entity_id': 'sensor.device_energy_import_tariff_2',
@@ -10207,10 +10207,10 @@
 # name: test_sensors[HWE-P1-invalid-EAN-entity_ids10][sensor.device_energy_import_tariff_3:state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'device_class': 'energy',
-      'friendly_name': 'Device Energy import tariff 3',
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'energy',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Device Energy import tariff 3',
       <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
-      'unit_of_measurement': <UnitOfEnergy.KILO_WATT_HOUR: 'kWh'>,
+      <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: <UnitOfEnergy.KILO_WATT_HOUR: 'kWh'>,
     }),
     'context': <ANY>,
     'entity_id': 'sensor.device_energy_import_tariff_3',
@@ -10300,10 +10300,10 @@
 # name: test_sensors[HWE-P1-invalid-EAN-entity_ids10][sensor.device_energy_import_tariff_4:state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'device_class': 'energy',
-      'friendly_name': 'Device Energy import tariff 4',
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'energy',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Device Energy import tariff 4',
       <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
-      'unit_of_measurement': <UnitOfEnergy.KILO_WATT_HOUR: 'kWh'>,
+      <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: <UnitOfEnergy.KILO_WATT_HOUR: 'kWh'>,
     }),
     'context': <ANY>,
     'entity_id': 'sensor.device_energy_import_tariff_4',
@@ -10393,10 +10393,10 @@
 # name: test_sensors[HWE-P1-invalid-EAN-entity_ids10][sensor.device_frequency:state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'device_class': 'frequency',
-      'friendly_name': 'Device Frequency',
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'frequency',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Device Frequency',
       <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
-      'unit_of_measurement': <UnitOfFrequency.HERTZ: 'Hz'>,
+      <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: <UnitOfFrequency.HERTZ: 'Hz'>,
     }),
     'context': <ANY>,
     'entity_id': 'sensor.device_frequency',
@@ -10481,7 +10481,7 @@
 # name: test_sensors[HWE-P1-invalid-EAN-entity_ids10][sensor.device_long_power_failures_detected:state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'Device Long power failures detected',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Device Long power failures detected',
     }),
     'context': <ANY>,
     'entity_id': 'sensor.device_long_power_failures_detected',
@@ -10569,9 +10569,9 @@
 # name: test_sensors[HWE-P1-invalid-EAN-entity_ids10][sensor.device_peak_demand_current_month:state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'device_class': 'power',
-      'friendly_name': 'Device Peak demand current month',
-      'unit_of_measurement': <UnitOfPower.WATT: 'W'>,
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'power',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Device Peak demand current month',
+      <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: <UnitOfPower.WATT: 'W'>,
     }),
     'context': <ANY>,
     'entity_id': 'sensor.device_peak_demand_current_month',
@@ -10661,10 +10661,10 @@
 # name: test_sensors[HWE-P1-invalid-EAN-entity_ids10][sensor.device_power:state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'device_class': 'power',
-      'friendly_name': 'Device Power',
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'power',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Device Power',
       <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
-      'unit_of_measurement': <UnitOfPower.WATT: 'W'>,
+      <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: <UnitOfPower.WATT: 'W'>,
     }),
     'context': <ANY>,
     'entity_id': 'sensor.device_power',
@@ -10749,7 +10749,7 @@
 # name: test_sensors[HWE-P1-invalid-EAN-entity_ids10][sensor.device_power_failures_detected:state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'Device Power failures detected',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Device Power failures detected',
     }),
     'context': <ANY>,
     'entity_id': 'sensor.device_power_failures_detected',
@@ -10839,10 +10839,10 @@
 # name: test_sensors[HWE-P1-invalid-EAN-entity_ids10][sensor.device_power_phase_1:state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'device_class': 'power',
-      'friendly_name': 'Device Power phase 1',
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'power',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Device Power phase 1',
       <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
-      'unit_of_measurement': <UnitOfPower.WATT: 'W'>,
+      <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: <UnitOfPower.WATT: 'W'>,
     }),
     'context': <ANY>,
     'entity_id': 'sensor.device_power_phase_1',
@@ -10932,10 +10932,10 @@
 # name: test_sensors[HWE-P1-invalid-EAN-entity_ids10][sensor.device_power_phase_2:state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'device_class': 'power',
-      'friendly_name': 'Device Power phase 2',
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'power',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Device Power phase 2',
       <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
-      'unit_of_measurement': <UnitOfPower.WATT: 'W'>,
+      <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: <UnitOfPower.WATT: 'W'>,
     }),
     'context': <ANY>,
     'entity_id': 'sensor.device_power_phase_2',
@@ -11025,10 +11025,10 @@
 # name: test_sensors[HWE-P1-invalid-EAN-entity_ids10][sensor.device_power_phase_3:state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'device_class': 'power',
-      'friendly_name': 'Device Power phase 3',
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'power',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Device Power phase 3',
       <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
-      'unit_of_measurement': <UnitOfPower.WATT: 'W'>,
+      <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: <UnitOfPower.WATT: 'W'>,
     }),
     'context': <ANY>,
     'entity_id': 'sensor.device_power_phase_3',
@@ -11113,7 +11113,7 @@
 # name: test_sensors[HWE-P1-invalid-EAN-entity_ids10][sensor.device_smart_meter_identifier:state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'Device Smart meter identifier',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Device Smart meter identifier',
     }),
     'context': <ANY>,
     'entity_id': 'sensor.device_smart_meter_identifier',
@@ -11198,7 +11198,7 @@
 # name: test_sensors[HWE-P1-invalid-EAN-entity_ids10][sensor.device_smart_meter_model:state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'Device Smart meter model',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Device Smart meter model',
     }),
     'context': <ANY>,
     'entity_id': 'sensor.device_smart_meter_model',
@@ -11290,8 +11290,8 @@
 # name: test_sensors[HWE-P1-invalid-EAN-entity_ids10][sensor.device_tariff:state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'device_class': 'enum',
-      'friendly_name': 'Device Tariff',
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'enum',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Device Tariff',
       <SensorEntityCapabilityAttribute.OPTIONS: 'options'>: list([
         '1',
         '2',
@@ -11387,10 +11387,10 @@
 # name: test_sensors[HWE-P1-invalid-EAN-entity_ids10][sensor.device_total_water_usage:state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'device_class': 'water',
-      'friendly_name': 'Device Total water usage',
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'water',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Device Total water usage',
       <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
-      'unit_of_measurement': <UnitOfVolume.CUBIC_METERS: 'm³'>,
+      <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: <UnitOfVolume.CUBIC_METERS: 'm³'>,
     }),
     'context': <ANY>,
     'entity_id': 'sensor.device_total_water_usage',
@@ -11480,10 +11480,10 @@
 # name: test_sensors[HWE-P1-invalid-EAN-entity_ids10][sensor.device_voltage_phase_1:state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'device_class': 'voltage',
-      'friendly_name': 'Device Voltage phase 1',
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'voltage',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Device Voltage phase 1',
       <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
-      'unit_of_measurement': <UnitOfElectricPotential.VOLT: 'V'>,
+      <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: <UnitOfElectricPotential.VOLT: 'V'>,
     }),
     'context': <ANY>,
     'entity_id': 'sensor.device_voltage_phase_1',
@@ -11573,10 +11573,10 @@
 # name: test_sensors[HWE-P1-invalid-EAN-entity_ids10][sensor.device_voltage_phase_2:state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'device_class': 'voltage',
-      'friendly_name': 'Device Voltage phase 2',
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'voltage',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Device Voltage phase 2',
       <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
-      'unit_of_measurement': <UnitOfElectricPotential.VOLT: 'V'>,
+      <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: <UnitOfElectricPotential.VOLT: 'V'>,
     }),
     'context': <ANY>,
     'entity_id': 'sensor.device_voltage_phase_2',
@@ -11666,10 +11666,10 @@
 # name: test_sensors[HWE-P1-invalid-EAN-entity_ids10][sensor.device_voltage_phase_3:state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'device_class': 'voltage',
-      'friendly_name': 'Device Voltage phase 3',
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'voltage',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Device Voltage phase 3',
       <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
-      'unit_of_measurement': <UnitOfElectricPotential.VOLT: 'V'>,
+      <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: <UnitOfElectricPotential.VOLT: 'V'>,
     }),
     'context': <ANY>,
     'entity_id': 'sensor.device_voltage_phase_3',
@@ -11754,7 +11754,7 @@
 # name: test_sensors[HWE-P1-invalid-EAN-entity_ids10][sensor.device_voltage_sags_detected_phase_1:state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'Device Voltage sags detected phase 1',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Device Voltage sags detected phase 1',
     }),
     'context': <ANY>,
     'entity_id': 'sensor.device_voltage_sags_detected_phase_1',
@@ -11839,7 +11839,7 @@
 # name: test_sensors[HWE-P1-invalid-EAN-entity_ids10][sensor.device_voltage_sags_detected_phase_2:state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'Device Voltage sags detected phase 2',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Device Voltage sags detected phase 2',
     }),
     'context': <ANY>,
     'entity_id': 'sensor.device_voltage_sags_detected_phase_2',
@@ -11924,7 +11924,7 @@
 # name: test_sensors[HWE-P1-invalid-EAN-entity_ids10][sensor.device_voltage_sags_detected_phase_3:state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'Device Voltage sags detected phase 3',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Device Voltage sags detected phase 3',
     }),
     'context': <ANY>,
     'entity_id': 'sensor.device_voltage_sags_detected_phase_3',
@@ -12009,7 +12009,7 @@
 # name: test_sensors[HWE-P1-invalid-EAN-entity_ids10][sensor.device_voltage_swells_detected_phase_1:state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'Device Voltage swells detected phase 1',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Device Voltage swells detected phase 1',
     }),
     'context': <ANY>,
     'entity_id': 'sensor.device_voltage_swells_detected_phase_1',
@@ -12094,7 +12094,7 @@
 # name: test_sensors[HWE-P1-invalid-EAN-entity_ids10][sensor.device_voltage_swells_detected_phase_2:state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'Device Voltage swells detected phase 2',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Device Voltage swells detected phase 2',
     }),
     'context': <ANY>,
     'entity_id': 'sensor.device_voltage_swells_detected_phase_2',
@@ -12179,7 +12179,7 @@
 # name: test_sensors[HWE-P1-invalid-EAN-entity_ids10][sensor.device_voltage_swells_detected_phase_3:state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'Device Voltage swells detected phase 3',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Device Voltage swells detected phase 3',
     }),
     'context': <ANY>,
     'entity_id': 'sensor.device_voltage_swells_detected_phase_3',
@@ -12269,10 +12269,10 @@
 # name: test_sensors[HWE-P1-invalid-EAN-entity_ids10][sensor.device_water_usage:state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'device_class': 'volume_flow_rate',
-      'friendly_name': 'Device Water usage',
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'volume_flow_rate',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Device Water usage',
       <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
-      'unit_of_measurement': <UnitOfVolumeFlowRate.LITERS_PER_MINUTE: 'L/min'>,
+      <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: <UnitOfVolumeFlowRate.LITERS_PER_MINUTE: 'L/min'>,
     }),
     'context': <ANY>,
     'entity_id': 'sensor.device_water_usage',
@@ -12357,7 +12357,7 @@
 # name: test_sensors[HWE-P1-invalid-EAN-entity_ids10][sensor.device_wi_fi_ssid:state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'Device Wi-Fi SSID',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Device Wi-Fi SSID',
     }),
     'context': <ANY>,
     'entity_id': 'sensor.device_wi_fi_ssid',
@@ -12444,9 +12444,9 @@
 # name: test_sensors[HWE-P1-invalid-EAN-entity_ids10][sensor.device_wi_fi_strength:state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'Device Wi-Fi strength',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Device Wi-Fi strength',
       <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
-      'unit_of_measurement': '%',
+      <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: '%',
     }),
     'context': <ANY>,
     'entity_id': 'sensor.device_wi_fi_strength',
@@ -12532,10 +12532,10 @@
 # name: test_sensors[HWE-P1-invalid-EAN-entity_ids10][sensor.gas_meter_gas:state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'device_class': 'gas',
-      'friendly_name': 'Gas meter Gas',
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'gas',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Gas meter Gas',
       <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
-      'unit_of_measurement': <UnitOfVolume.CUBIC_METERS: 'm³'>,
+      <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: <UnitOfVolume.CUBIC_METERS: 'm³'>,
     }),
     'context': <ANY>,
     'entity_id': 'sensor.gas_meter_gas',
@@ -12621,10 +12621,10 @@
 # name: test_sensors[HWE-P1-invalid-EAN-entity_ids10][sensor.heat_meter_energy:state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'device_class': 'energy',
-      'friendly_name': 'Heat meter Energy',
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'energy',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Heat meter Energy',
       <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
-      'unit_of_measurement': 'GJ',
+      <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: 'GJ',
     }),
     'context': <ANY>,
     'entity_id': 'sensor.heat_meter_energy',
@@ -12707,9 +12707,9 @@
 # name: test_sensors[HWE-P1-invalid-EAN-entity_ids10][sensor.inlet_heat_meter:state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'Inlet heat meter',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Inlet heat meter',
       <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
-      'unit_of_measurement': <UnitOfVolume.CUBIC_METERS: 'm³'>,
+      <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: <UnitOfVolume.CUBIC_METERS: 'm³'>,
     }),
     'context': <ANY>,
     'entity_id': 'sensor.inlet_heat_meter',
@@ -12795,10 +12795,10 @@
 # name: test_sensors[HWE-P1-invalid-EAN-entity_ids10][sensor.warm_water_meter_water:state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'device_class': 'water',
-      'friendly_name': 'Warm water meter Water',
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'water',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Warm water meter Water',
       <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
-      'unit_of_measurement': <UnitOfVolume.CUBIC_METERS: 'm³'>,
+      <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: <UnitOfVolume.CUBIC_METERS: 'm³'>,
     }),
     'context': <ANY>,
     'entity_id': 'sensor.warm_water_meter_water',
@@ -12884,10 +12884,10 @@
 # name: test_sensors[HWE-P1-invalid-EAN-entity_ids10][sensor.water_meter_water:state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'device_class': 'water',
-      'friendly_name': 'Water meter Water',
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'water',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Water meter Water',
       <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
-      'unit_of_measurement': <UnitOfVolume.CUBIC_METERS: 'm³'>,
+      <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: <UnitOfVolume.CUBIC_METERS: 'm³'>,
     }),
     'context': <ANY>,
     'entity_id': 'sensor.water_meter_water',
@@ -12975,9 +12975,9 @@
 # name: test_sensors[HWE-P1-predictive-entity_ids1][sensor.device_average_demand:state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'device_class': 'power',
-      'friendly_name': 'Device Average demand',
-      'unit_of_measurement': <UnitOfPower.WATT: 'W'>,
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'power',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Device Average demand',
+      <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: <UnitOfPower.WATT: 'W'>,
     }),
     'context': <ANY>,
     'entity_id': 'sensor.device_average_demand',
@@ -13067,10 +13067,10 @@
 # name: test_sensors[HWE-P1-predictive-entity_ids1][sensor.device_battery_group_power:state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'device_class': 'power',
-      'friendly_name': 'Device Battery group power',
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'power',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Device Battery group power',
       <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
-      'unit_of_measurement': <UnitOfPower.WATT: 'W'>,
+      <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: <UnitOfPower.WATT: 'W'>,
     }),
     'context': <ANY>,
     'entity_id': 'sensor.device_battery_group_power',
@@ -13160,10 +13160,10 @@
 # name: test_sensors[HWE-P1-predictive-entity_ids1][sensor.device_battery_group_target_power:state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'device_class': 'power',
-      'friendly_name': 'Device Battery group target power',
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'power',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Device Battery group target power',
       <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
-      'unit_of_measurement': <UnitOfPower.WATT: 'W'>,
+      <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: <UnitOfPower.WATT: 'W'>,
     }),
     'context': <ANY>,
     'entity_id': 'sensor.device_battery_group_target_power',
@@ -13253,10 +13253,10 @@
 # name: test_sensors[HWE-P1-predictive-entity_ids1][sensor.device_current_phase_1:state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'device_class': 'current',
-      'friendly_name': 'Device Current phase 1',
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'current',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Device Current phase 1',
       <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
-      'unit_of_measurement': <UnitOfElectricCurrent.AMPERE: 'A'>,
+      <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: <UnitOfElectricCurrent.AMPERE: 'A'>,
     }),
     'context': <ANY>,
     'entity_id': 'sensor.device_current_phase_1',
@@ -13346,10 +13346,10 @@
 # name: test_sensors[HWE-P1-predictive-entity_ids1][sensor.device_current_phase_2:state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'device_class': 'current',
-      'friendly_name': 'Device Current phase 2',
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'current',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Device Current phase 2',
       <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
-      'unit_of_measurement': <UnitOfElectricCurrent.AMPERE: 'A'>,
+      <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: <UnitOfElectricCurrent.AMPERE: 'A'>,
     }),
     'context': <ANY>,
     'entity_id': 'sensor.device_current_phase_2',
@@ -13439,10 +13439,10 @@
 # name: test_sensors[HWE-P1-predictive-entity_ids1][sensor.device_current_phase_3:state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'device_class': 'current',
-      'friendly_name': 'Device Current phase 3',
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'current',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Device Current phase 3',
       <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
-      'unit_of_measurement': <UnitOfElectricCurrent.AMPERE: 'A'>,
+      <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: <UnitOfElectricCurrent.AMPERE: 'A'>,
     }),
     'context': <ANY>,
     'entity_id': 'sensor.device_current_phase_3',
@@ -13527,7 +13527,7 @@
 # name: test_sensors[HWE-P1-predictive-entity_ids1][sensor.device_dsmr_version:state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'Device DSMR version',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Device DSMR version',
     }),
     'context': <ANY>,
     'entity_id': 'sensor.device_dsmr_version',
@@ -13617,10 +13617,10 @@
 # name: test_sensors[HWE-P1-predictive-entity_ids1][sensor.device_energy_export:state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'device_class': 'energy',
-      'friendly_name': 'Device Energy export',
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'energy',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Device Energy export',
       <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
-      'unit_of_measurement': <UnitOfEnergy.KILO_WATT_HOUR: 'kWh'>,
+      <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: <UnitOfEnergy.KILO_WATT_HOUR: 'kWh'>,
     }),
     'context': <ANY>,
     'entity_id': 'sensor.device_energy_export',
@@ -13710,10 +13710,10 @@
 # name: test_sensors[HWE-P1-predictive-entity_ids1][sensor.device_energy_export_tariff_1:state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'device_class': 'energy',
-      'friendly_name': 'Device Energy export tariff 1',
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'energy',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Device Energy export tariff 1',
       <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
-      'unit_of_measurement': <UnitOfEnergy.KILO_WATT_HOUR: 'kWh'>,
+      <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: <UnitOfEnergy.KILO_WATT_HOUR: 'kWh'>,
     }),
     'context': <ANY>,
     'entity_id': 'sensor.device_energy_export_tariff_1',
@@ -13803,10 +13803,10 @@
 # name: test_sensors[HWE-P1-predictive-entity_ids1][sensor.device_energy_export_tariff_2:state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'device_class': 'energy',
-      'friendly_name': 'Device Energy export tariff 2',
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'energy',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Device Energy export tariff 2',
       <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
-      'unit_of_measurement': <UnitOfEnergy.KILO_WATT_HOUR: 'kWh'>,
+      <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: <UnitOfEnergy.KILO_WATT_HOUR: 'kWh'>,
     }),
     'context': <ANY>,
     'entity_id': 'sensor.device_energy_export_tariff_2',
@@ -13896,10 +13896,10 @@
 # name: test_sensors[HWE-P1-predictive-entity_ids1][sensor.device_energy_export_tariff_3:state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'device_class': 'energy',
-      'friendly_name': 'Device Energy export tariff 3',
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'energy',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Device Energy export tariff 3',
       <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
-      'unit_of_measurement': <UnitOfEnergy.KILO_WATT_HOUR: 'kWh'>,
+      <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: <UnitOfEnergy.KILO_WATT_HOUR: 'kWh'>,
     }),
     'context': <ANY>,
     'entity_id': 'sensor.device_energy_export_tariff_3',
@@ -13989,10 +13989,10 @@
 # name: test_sensors[HWE-P1-predictive-entity_ids1][sensor.device_energy_export_tariff_4:state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'device_class': 'energy',
-      'friendly_name': 'Device Energy export tariff 4',
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'energy',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Device Energy export tariff 4',
       <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
-      'unit_of_measurement': <UnitOfEnergy.KILO_WATT_HOUR: 'kWh'>,
+      <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: <UnitOfEnergy.KILO_WATT_HOUR: 'kWh'>,
     }),
     'context': <ANY>,
     'entity_id': 'sensor.device_energy_export_tariff_4',
@@ -14082,10 +14082,10 @@
 # name: test_sensors[HWE-P1-predictive-entity_ids1][sensor.device_energy_import:state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'device_class': 'energy',
-      'friendly_name': 'Device Energy import',
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'energy',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Device Energy import',
       <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
-      'unit_of_measurement': <UnitOfEnergy.KILO_WATT_HOUR: 'kWh'>,
+      <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: <UnitOfEnergy.KILO_WATT_HOUR: 'kWh'>,
     }),
     'context': <ANY>,
     'entity_id': 'sensor.device_energy_import',
@@ -14175,10 +14175,10 @@
 # name: test_sensors[HWE-P1-predictive-entity_ids1][sensor.device_energy_import_tariff_1:state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'device_class': 'energy',
-      'friendly_name': 'Device Energy import tariff 1',
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'energy',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Device Energy import tariff 1',
       <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
-      'unit_of_measurement': <UnitOfEnergy.KILO_WATT_HOUR: 'kWh'>,
+      <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: <UnitOfEnergy.KILO_WATT_HOUR: 'kWh'>,
     }),
     'context': <ANY>,
     'entity_id': 'sensor.device_energy_import_tariff_1',
@@ -14268,10 +14268,10 @@
 # name: test_sensors[HWE-P1-predictive-entity_ids1][sensor.device_energy_import_tariff_2:state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'device_class': 'energy',
-      'friendly_name': 'Device Energy import tariff 2',
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'energy',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Device Energy import tariff 2',
       <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
-      'unit_of_measurement': <UnitOfEnergy.KILO_WATT_HOUR: 'kWh'>,
+      <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: <UnitOfEnergy.KILO_WATT_HOUR: 'kWh'>,
     }),
     'context': <ANY>,
     'entity_id': 'sensor.device_energy_import_tariff_2',
@@ -14361,10 +14361,10 @@
 # name: test_sensors[HWE-P1-predictive-entity_ids1][sensor.device_energy_import_tariff_3:state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'device_class': 'energy',
-      'friendly_name': 'Device Energy import tariff 3',
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'energy',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Device Energy import tariff 3',
       <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
-      'unit_of_measurement': <UnitOfEnergy.KILO_WATT_HOUR: 'kWh'>,
+      <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: <UnitOfEnergy.KILO_WATT_HOUR: 'kWh'>,
     }),
     'context': <ANY>,
     'entity_id': 'sensor.device_energy_import_tariff_3',
@@ -14454,10 +14454,10 @@
 # name: test_sensors[HWE-P1-predictive-entity_ids1][sensor.device_energy_import_tariff_4:state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'device_class': 'energy',
-      'friendly_name': 'Device Energy import tariff 4',
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'energy',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Device Energy import tariff 4',
       <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
-      'unit_of_measurement': <UnitOfEnergy.KILO_WATT_HOUR: 'kWh'>,
+      <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: <UnitOfEnergy.KILO_WATT_HOUR: 'kWh'>,
     }),
     'context': <ANY>,
     'entity_id': 'sensor.device_energy_import_tariff_4',
@@ -14547,10 +14547,10 @@
 # name: test_sensors[HWE-P1-predictive-entity_ids1][sensor.device_frequency:state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'device_class': 'frequency',
-      'friendly_name': 'Device Frequency',
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'frequency',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Device Frequency',
       <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
-      'unit_of_measurement': <UnitOfFrequency.HERTZ: 'Hz'>,
+      <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: <UnitOfFrequency.HERTZ: 'Hz'>,
     }),
     'context': <ANY>,
     'entity_id': 'sensor.device_frequency',
@@ -14635,7 +14635,7 @@
 # name: test_sensors[HWE-P1-predictive-entity_ids1][sensor.device_long_power_failures_detected:state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'Device Long power failures detected',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Device Long power failures detected',
     }),
     'context': <ANY>,
     'entity_id': 'sensor.device_long_power_failures_detected',
@@ -14723,9 +14723,9 @@
 # name: test_sensors[HWE-P1-predictive-entity_ids1][sensor.device_peak_demand_current_month:state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'device_class': 'power',
-      'friendly_name': 'Device Peak demand current month',
-      'unit_of_measurement': <UnitOfPower.WATT: 'W'>,
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'power',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Device Peak demand current month',
+      <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: <UnitOfPower.WATT: 'W'>,
     }),
     'context': <ANY>,
     'entity_id': 'sensor.device_peak_demand_current_month',
@@ -14815,10 +14815,10 @@
 # name: test_sensors[HWE-P1-predictive-entity_ids1][sensor.device_power:state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'device_class': 'power',
-      'friendly_name': 'Device Power',
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'power',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Device Power',
       <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
-      'unit_of_measurement': <UnitOfPower.WATT: 'W'>,
+      <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: <UnitOfPower.WATT: 'W'>,
     }),
     'context': <ANY>,
     'entity_id': 'sensor.device_power',
@@ -14903,7 +14903,7 @@
 # name: test_sensors[HWE-P1-predictive-entity_ids1][sensor.device_power_failures_detected:state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'Device Power failures detected',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Device Power failures detected',
     }),
     'context': <ANY>,
     'entity_id': 'sensor.device_power_failures_detected',
@@ -14993,10 +14993,10 @@
 # name: test_sensors[HWE-P1-predictive-entity_ids1][sensor.device_power_phase_1:state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'device_class': 'power',
-      'friendly_name': 'Device Power phase 1',
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'power',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Device Power phase 1',
       <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
-      'unit_of_measurement': <UnitOfPower.WATT: 'W'>,
+      <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: <UnitOfPower.WATT: 'W'>,
     }),
     'context': <ANY>,
     'entity_id': 'sensor.device_power_phase_1',
@@ -15086,10 +15086,10 @@
 # name: test_sensors[HWE-P1-predictive-entity_ids1][sensor.device_power_phase_2:state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'device_class': 'power',
-      'friendly_name': 'Device Power phase 2',
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'power',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Device Power phase 2',
       <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
-      'unit_of_measurement': <UnitOfPower.WATT: 'W'>,
+      <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: <UnitOfPower.WATT: 'W'>,
     }),
     'context': <ANY>,
     'entity_id': 'sensor.device_power_phase_2',
@@ -15179,10 +15179,10 @@
 # name: test_sensors[HWE-P1-predictive-entity_ids1][sensor.device_power_phase_3:state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'device_class': 'power',
-      'friendly_name': 'Device Power phase 3',
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'power',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Device Power phase 3',
       <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
-      'unit_of_measurement': <UnitOfPower.WATT: 'W'>,
+      <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: <UnitOfPower.WATT: 'W'>,
     }),
     'context': <ANY>,
     'entity_id': 'sensor.device_power_phase_3',
@@ -15267,7 +15267,7 @@
 # name: test_sensors[HWE-P1-predictive-entity_ids1][sensor.device_smart_meter_identifier:state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'Device Smart meter identifier',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Device Smart meter identifier',
     }),
     'context': <ANY>,
     'entity_id': 'sensor.device_smart_meter_identifier',
@@ -15352,7 +15352,7 @@
 # name: test_sensors[HWE-P1-predictive-entity_ids1][sensor.device_smart_meter_model:state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'Device Smart meter model',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Device Smart meter model',
     }),
     'context': <ANY>,
     'entity_id': 'sensor.device_smart_meter_model',
@@ -15444,8 +15444,8 @@
 # name: test_sensors[HWE-P1-predictive-entity_ids1][sensor.device_tariff:state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'device_class': 'enum',
-      'friendly_name': 'Device Tariff',
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'enum',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Device Tariff',
       <SensorEntityCapabilityAttribute.OPTIONS: 'options'>: list([
         '1',
         '2',
@@ -15541,10 +15541,10 @@
 # name: test_sensors[HWE-P1-predictive-entity_ids1][sensor.device_total_water_usage:state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'device_class': 'water',
-      'friendly_name': 'Device Total water usage',
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'water',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Device Total water usage',
       <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
-      'unit_of_measurement': <UnitOfVolume.CUBIC_METERS: 'm³'>,
+      <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: <UnitOfVolume.CUBIC_METERS: 'm³'>,
     }),
     'context': <ANY>,
     'entity_id': 'sensor.device_total_water_usage',
@@ -15634,10 +15634,10 @@
 # name: test_sensors[HWE-P1-predictive-entity_ids1][sensor.device_voltage_phase_1:state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'device_class': 'voltage',
-      'friendly_name': 'Device Voltage phase 1',
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'voltage',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Device Voltage phase 1',
       <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
-      'unit_of_measurement': <UnitOfElectricPotential.VOLT: 'V'>,
+      <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: <UnitOfElectricPotential.VOLT: 'V'>,
     }),
     'context': <ANY>,
     'entity_id': 'sensor.device_voltage_phase_1',
@@ -15727,10 +15727,10 @@
 # name: test_sensors[HWE-P1-predictive-entity_ids1][sensor.device_voltage_phase_2:state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'device_class': 'voltage',
-      'friendly_name': 'Device Voltage phase 2',
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'voltage',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Device Voltage phase 2',
       <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
-      'unit_of_measurement': <UnitOfElectricPotential.VOLT: 'V'>,
+      <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: <UnitOfElectricPotential.VOLT: 'V'>,
     }),
     'context': <ANY>,
     'entity_id': 'sensor.device_voltage_phase_2',
@@ -15820,10 +15820,10 @@
 # name: test_sensors[HWE-P1-predictive-entity_ids1][sensor.device_voltage_phase_3:state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'device_class': 'voltage',
-      'friendly_name': 'Device Voltage phase 3',
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'voltage',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Device Voltage phase 3',
       <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
-      'unit_of_measurement': <UnitOfElectricPotential.VOLT: 'V'>,
+      <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: <UnitOfElectricPotential.VOLT: 'V'>,
     }),
     'context': <ANY>,
     'entity_id': 'sensor.device_voltage_phase_3',
@@ -15908,7 +15908,7 @@
 # name: test_sensors[HWE-P1-predictive-entity_ids1][sensor.device_voltage_sags_detected_phase_1:state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'Device Voltage sags detected phase 1',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Device Voltage sags detected phase 1',
     }),
     'context': <ANY>,
     'entity_id': 'sensor.device_voltage_sags_detected_phase_1',
@@ -15993,7 +15993,7 @@
 # name: test_sensors[HWE-P1-predictive-entity_ids1][sensor.device_voltage_sags_detected_phase_2:state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'Device Voltage sags detected phase 2',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Device Voltage sags detected phase 2',
     }),
     'context': <ANY>,
     'entity_id': 'sensor.device_voltage_sags_detected_phase_2',
@@ -16078,7 +16078,7 @@
 # name: test_sensors[HWE-P1-predictive-entity_ids1][sensor.device_voltage_sags_detected_phase_3:state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'Device Voltage sags detected phase 3',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Device Voltage sags detected phase 3',
     }),
     'context': <ANY>,
     'entity_id': 'sensor.device_voltage_sags_detected_phase_3',
@@ -16163,7 +16163,7 @@
 # name: test_sensors[HWE-P1-predictive-entity_ids1][sensor.device_voltage_swells_detected_phase_1:state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'Device Voltage swells detected phase 1',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Device Voltage swells detected phase 1',
     }),
     'context': <ANY>,
     'entity_id': 'sensor.device_voltage_swells_detected_phase_1',
@@ -16248,7 +16248,7 @@
 # name: test_sensors[HWE-P1-predictive-entity_ids1][sensor.device_voltage_swells_detected_phase_2:state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'Device Voltage swells detected phase 2',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Device Voltage swells detected phase 2',
     }),
     'context': <ANY>,
     'entity_id': 'sensor.device_voltage_swells_detected_phase_2',
@@ -16333,7 +16333,7 @@
 # name: test_sensors[HWE-P1-predictive-entity_ids1][sensor.device_voltage_swells_detected_phase_3:state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'Device Voltage swells detected phase 3',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Device Voltage swells detected phase 3',
     }),
     'context': <ANY>,
     'entity_id': 'sensor.device_voltage_swells_detected_phase_3',
@@ -16423,10 +16423,10 @@
 # name: test_sensors[HWE-P1-predictive-entity_ids1][sensor.device_water_usage:state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'device_class': 'volume_flow_rate',
-      'friendly_name': 'Device Water usage',
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'volume_flow_rate',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Device Water usage',
       <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
-      'unit_of_measurement': <UnitOfVolumeFlowRate.LITERS_PER_MINUTE: 'L/min'>,
+      <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: <UnitOfVolumeFlowRate.LITERS_PER_MINUTE: 'L/min'>,
     }),
     'context': <ANY>,
     'entity_id': 'sensor.device_water_usage',
@@ -16511,7 +16511,7 @@
 # name: test_sensors[HWE-P1-predictive-entity_ids1][sensor.device_wi_fi_ssid:state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'Device Wi-Fi SSID',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Device Wi-Fi SSID',
     }),
     'context': <ANY>,
     'entity_id': 'sensor.device_wi_fi_ssid',
@@ -16598,9 +16598,9 @@
 # name: test_sensors[HWE-P1-predictive-entity_ids1][sensor.device_wi_fi_strength:state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'Device Wi-Fi strength',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Device Wi-Fi strength',
       <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
-      'unit_of_measurement': '%',
+      <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: '%',
     }),
     'context': <ANY>,
     'entity_id': 'sensor.device_wi_fi_strength',
@@ -16686,10 +16686,10 @@
 # name: test_sensors[HWE-P1-predictive-entity_ids1][sensor.gas_meter_gas:state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'device_class': 'gas',
-      'friendly_name': 'Gas meter Gas',
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'gas',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Gas meter Gas',
       <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
-      'unit_of_measurement': <UnitOfVolume.CUBIC_METERS: 'm³'>,
+      <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: <UnitOfVolume.CUBIC_METERS: 'm³'>,
     }),
     'context': <ANY>,
     'entity_id': 'sensor.gas_meter_gas',
@@ -16775,10 +16775,10 @@
 # name: test_sensors[HWE-P1-predictive-entity_ids1][sensor.heat_meter_energy:state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'device_class': 'energy',
-      'friendly_name': 'Heat meter Energy',
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'energy',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Heat meter Energy',
       <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
-      'unit_of_measurement': 'GJ',
+      <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: 'GJ',
     }),
     'context': <ANY>,
     'entity_id': 'sensor.heat_meter_energy',
@@ -16861,9 +16861,9 @@
 # name: test_sensors[HWE-P1-predictive-entity_ids1][sensor.inlet_heat_meter:state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'Inlet heat meter',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Inlet heat meter',
       <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
-      'unit_of_measurement': <UnitOfVolume.CUBIC_METERS: 'm³'>,
+      <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: <UnitOfVolume.CUBIC_METERS: 'm³'>,
     }),
     'context': <ANY>,
     'entity_id': 'sensor.inlet_heat_meter',
@@ -16949,10 +16949,10 @@
 # name: test_sensors[HWE-P1-predictive-entity_ids1][sensor.warm_water_meter_water:state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'device_class': 'water',
-      'friendly_name': 'Warm water meter Water',
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'water',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Warm water meter Water',
       <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
-      'unit_of_measurement': <UnitOfVolume.CUBIC_METERS: 'm³'>,
+      <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: <UnitOfVolume.CUBIC_METERS: 'm³'>,
     }),
     'context': <ANY>,
     'entity_id': 'sensor.warm_water_meter_water',
@@ -17038,10 +17038,10 @@
 # name: test_sensors[HWE-P1-predictive-entity_ids1][sensor.water_meter_water:state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'device_class': 'water',
-      'friendly_name': 'Water meter Water',
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'water',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Water meter Water',
       <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
-      'unit_of_measurement': <UnitOfVolume.CUBIC_METERS: 'm³'>,
+      <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: <UnitOfVolume.CUBIC_METERS: 'm³'>,
     }),
     'context': <ANY>,
     'entity_id': 'sensor.water_meter_water',
@@ -17129,9 +17129,9 @@
 # name: test_sensors[HWE-P1-zero-values-entity_ids2][sensor.device_average_demand:state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'device_class': 'power',
-      'friendly_name': 'Device Average demand',
-      'unit_of_measurement': <UnitOfPower.WATT: 'W'>,
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'power',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Device Average demand',
+      <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: <UnitOfPower.WATT: 'W'>,
     }),
     'context': <ANY>,
     'entity_id': 'sensor.device_average_demand',
@@ -17221,10 +17221,10 @@
 # name: test_sensors[HWE-P1-zero-values-entity_ids2][sensor.device_current_phase_1:state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'device_class': 'current',
-      'friendly_name': 'Device Current phase 1',
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'current',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Device Current phase 1',
       <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
-      'unit_of_measurement': <UnitOfElectricCurrent.AMPERE: 'A'>,
+      <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: <UnitOfElectricCurrent.AMPERE: 'A'>,
     }),
     'context': <ANY>,
     'entity_id': 'sensor.device_current_phase_1',
@@ -17314,10 +17314,10 @@
 # name: test_sensors[HWE-P1-zero-values-entity_ids2][sensor.device_current_phase_2:state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'device_class': 'current',
-      'friendly_name': 'Device Current phase 2',
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'current',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Device Current phase 2',
       <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
-      'unit_of_measurement': <UnitOfElectricCurrent.AMPERE: 'A'>,
+      <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: <UnitOfElectricCurrent.AMPERE: 'A'>,
     }),
     'context': <ANY>,
     'entity_id': 'sensor.device_current_phase_2',
@@ -17407,10 +17407,10 @@
 # name: test_sensors[HWE-P1-zero-values-entity_ids2][sensor.device_current_phase_3:state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'device_class': 'current',
-      'friendly_name': 'Device Current phase 3',
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'current',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Device Current phase 3',
       <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
-      'unit_of_measurement': <UnitOfElectricCurrent.AMPERE: 'A'>,
+      <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: <UnitOfElectricCurrent.AMPERE: 'A'>,
     }),
     'context': <ANY>,
     'entity_id': 'sensor.device_current_phase_3',
@@ -17500,10 +17500,10 @@
 # name: test_sensors[HWE-P1-zero-values-entity_ids2][sensor.device_energy_export:state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'device_class': 'energy',
-      'friendly_name': 'Device Energy export',
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'energy',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Device Energy export',
       <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
-      'unit_of_measurement': <UnitOfEnergy.KILO_WATT_HOUR: 'kWh'>,
+      <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: <UnitOfEnergy.KILO_WATT_HOUR: 'kWh'>,
     }),
     'context': <ANY>,
     'entity_id': 'sensor.device_energy_export',
@@ -17593,10 +17593,10 @@
 # name: test_sensors[HWE-P1-zero-values-entity_ids2][sensor.device_energy_export_tariff_1:state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'device_class': 'energy',
-      'friendly_name': 'Device Energy export tariff 1',
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'energy',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Device Energy export tariff 1',
       <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
-      'unit_of_measurement': <UnitOfEnergy.KILO_WATT_HOUR: 'kWh'>,
+      <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: <UnitOfEnergy.KILO_WATT_HOUR: 'kWh'>,
     }),
     'context': <ANY>,
     'entity_id': 'sensor.device_energy_export_tariff_1',
@@ -17686,10 +17686,10 @@
 # name: test_sensors[HWE-P1-zero-values-entity_ids2][sensor.device_energy_export_tariff_2:state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'device_class': 'energy',
-      'friendly_name': 'Device Energy export tariff 2',
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'energy',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Device Energy export tariff 2',
       <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
-      'unit_of_measurement': <UnitOfEnergy.KILO_WATT_HOUR: 'kWh'>,
+      <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: <UnitOfEnergy.KILO_WATT_HOUR: 'kWh'>,
     }),
     'context': <ANY>,
     'entity_id': 'sensor.device_energy_export_tariff_2',
@@ -17779,10 +17779,10 @@
 # name: test_sensors[HWE-P1-zero-values-entity_ids2][sensor.device_energy_export_tariff_3:state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'device_class': 'energy',
-      'friendly_name': 'Device Energy export tariff 3',
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'energy',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Device Energy export tariff 3',
       <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
-      'unit_of_measurement': <UnitOfEnergy.KILO_WATT_HOUR: 'kWh'>,
+      <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: <UnitOfEnergy.KILO_WATT_HOUR: 'kWh'>,
     }),
     'context': <ANY>,
     'entity_id': 'sensor.device_energy_export_tariff_3',
@@ -17872,10 +17872,10 @@
 # name: test_sensors[HWE-P1-zero-values-entity_ids2][sensor.device_energy_export_tariff_4:state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'device_class': 'energy',
-      'friendly_name': 'Device Energy export tariff 4',
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'energy',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Device Energy export tariff 4',
       <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
-      'unit_of_measurement': <UnitOfEnergy.KILO_WATT_HOUR: 'kWh'>,
+      <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: <UnitOfEnergy.KILO_WATT_HOUR: 'kWh'>,
     }),
     'context': <ANY>,
     'entity_id': 'sensor.device_energy_export_tariff_4',
@@ -17965,10 +17965,10 @@
 # name: test_sensors[HWE-P1-zero-values-entity_ids2][sensor.device_energy_import:state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'device_class': 'energy',
-      'friendly_name': 'Device Energy import',
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'energy',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Device Energy import',
       <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
-      'unit_of_measurement': <UnitOfEnergy.KILO_WATT_HOUR: 'kWh'>,
+      <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: <UnitOfEnergy.KILO_WATT_HOUR: 'kWh'>,
     }),
     'context': <ANY>,
     'entity_id': 'sensor.device_energy_import',
@@ -18058,10 +18058,10 @@
 # name: test_sensors[HWE-P1-zero-values-entity_ids2][sensor.device_energy_import_tariff_1:state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'device_class': 'energy',
-      'friendly_name': 'Device Energy import tariff 1',
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'energy',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Device Energy import tariff 1',
       <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
-      'unit_of_measurement': <UnitOfEnergy.KILO_WATT_HOUR: 'kWh'>,
+      <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: <UnitOfEnergy.KILO_WATT_HOUR: 'kWh'>,
     }),
     'context': <ANY>,
     'entity_id': 'sensor.device_energy_import_tariff_1',
@@ -18151,10 +18151,10 @@
 # name: test_sensors[HWE-P1-zero-values-entity_ids2][sensor.device_energy_import_tariff_2:state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'device_class': 'energy',
-      'friendly_name': 'Device Energy import tariff 2',
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'energy',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Device Energy import tariff 2',
       <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
-      'unit_of_measurement': <UnitOfEnergy.KILO_WATT_HOUR: 'kWh'>,
+      <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: <UnitOfEnergy.KILO_WATT_HOUR: 'kWh'>,
     }),
     'context': <ANY>,
     'entity_id': 'sensor.device_energy_import_tariff_2',
@@ -18244,10 +18244,10 @@
 # name: test_sensors[HWE-P1-zero-values-entity_ids2][sensor.device_energy_import_tariff_3:state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'device_class': 'energy',
-      'friendly_name': 'Device Energy import tariff 3',
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'energy',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Device Energy import tariff 3',
       <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
-      'unit_of_measurement': <UnitOfEnergy.KILO_WATT_HOUR: 'kWh'>,
+      <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: <UnitOfEnergy.KILO_WATT_HOUR: 'kWh'>,
     }),
     'context': <ANY>,
     'entity_id': 'sensor.device_energy_import_tariff_3',
@@ -18337,10 +18337,10 @@
 # name: test_sensors[HWE-P1-zero-values-entity_ids2][sensor.device_energy_import_tariff_4:state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'device_class': 'energy',
-      'friendly_name': 'Device Energy import tariff 4',
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'energy',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Device Energy import tariff 4',
       <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
-      'unit_of_measurement': <UnitOfEnergy.KILO_WATT_HOUR: 'kWh'>,
+      <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: <UnitOfEnergy.KILO_WATT_HOUR: 'kWh'>,
     }),
     'context': <ANY>,
     'entity_id': 'sensor.device_energy_import_tariff_4',
@@ -18430,10 +18430,10 @@
 # name: test_sensors[HWE-P1-zero-values-entity_ids2][sensor.device_frequency:state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'device_class': 'frequency',
-      'friendly_name': 'Device Frequency',
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'frequency',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Device Frequency',
       <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
-      'unit_of_measurement': <UnitOfFrequency.HERTZ: 'Hz'>,
+      <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: <UnitOfFrequency.HERTZ: 'Hz'>,
     }),
     'context': <ANY>,
     'entity_id': 'sensor.device_frequency',
@@ -18518,7 +18518,7 @@
 # name: test_sensors[HWE-P1-zero-values-entity_ids2][sensor.device_long_power_failures_detected:state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'Device Long power failures detected',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Device Long power failures detected',
     }),
     'context': <ANY>,
     'entity_id': 'sensor.device_long_power_failures_detected',
@@ -18608,10 +18608,10 @@
 # name: test_sensors[HWE-P1-zero-values-entity_ids2][sensor.device_power:state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'device_class': 'power',
-      'friendly_name': 'Device Power',
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'power',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Device Power',
       <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
-      'unit_of_measurement': <UnitOfPower.WATT: 'W'>,
+      <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: <UnitOfPower.WATT: 'W'>,
     }),
     'context': <ANY>,
     'entity_id': 'sensor.device_power',
@@ -18696,7 +18696,7 @@
 # name: test_sensors[HWE-P1-zero-values-entity_ids2][sensor.device_power_failures_detected:state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'Device Power failures detected',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Device Power failures detected',
     }),
     'context': <ANY>,
     'entity_id': 'sensor.device_power_failures_detected',
@@ -18786,10 +18786,10 @@
 # name: test_sensors[HWE-P1-zero-values-entity_ids2][sensor.device_power_phase_1:state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'device_class': 'power',
-      'friendly_name': 'Device Power phase 1',
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'power',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Device Power phase 1',
       <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
-      'unit_of_measurement': <UnitOfPower.WATT: 'W'>,
+      <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: <UnitOfPower.WATT: 'W'>,
     }),
     'context': <ANY>,
     'entity_id': 'sensor.device_power_phase_1',
@@ -18879,10 +18879,10 @@
 # name: test_sensors[HWE-P1-zero-values-entity_ids2][sensor.device_power_phase_2:state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'device_class': 'power',
-      'friendly_name': 'Device Power phase 2',
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'power',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Device Power phase 2',
       <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
-      'unit_of_measurement': <UnitOfPower.WATT: 'W'>,
+      <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: <UnitOfPower.WATT: 'W'>,
     }),
     'context': <ANY>,
     'entity_id': 'sensor.device_power_phase_2',
@@ -18972,10 +18972,10 @@
 # name: test_sensors[HWE-P1-zero-values-entity_ids2][sensor.device_power_phase_3:state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'device_class': 'power',
-      'friendly_name': 'Device Power phase 3',
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'power',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Device Power phase 3',
       <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
-      'unit_of_measurement': <UnitOfPower.WATT: 'W'>,
+      <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: <UnitOfPower.WATT: 'W'>,
     }),
     'context': <ANY>,
     'entity_id': 'sensor.device_power_phase_3',
@@ -19065,10 +19065,10 @@
 # name: test_sensors[HWE-P1-zero-values-entity_ids2][sensor.device_total_water_usage:state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'device_class': 'water',
-      'friendly_name': 'Device Total water usage',
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'water',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Device Total water usage',
       <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
-      'unit_of_measurement': <UnitOfVolume.CUBIC_METERS: 'm³'>,
+      <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: <UnitOfVolume.CUBIC_METERS: 'm³'>,
     }),
     'context': <ANY>,
     'entity_id': 'sensor.device_total_water_usage',
@@ -19158,10 +19158,10 @@
 # name: test_sensors[HWE-P1-zero-values-entity_ids2][sensor.device_voltage_phase_1:state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'device_class': 'voltage',
-      'friendly_name': 'Device Voltage phase 1',
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'voltage',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Device Voltage phase 1',
       <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
-      'unit_of_measurement': <UnitOfElectricPotential.VOLT: 'V'>,
+      <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: <UnitOfElectricPotential.VOLT: 'V'>,
     }),
     'context': <ANY>,
     'entity_id': 'sensor.device_voltage_phase_1',
@@ -19251,10 +19251,10 @@
 # name: test_sensors[HWE-P1-zero-values-entity_ids2][sensor.device_voltage_phase_2:state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'device_class': 'voltage',
-      'friendly_name': 'Device Voltage phase 2',
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'voltage',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Device Voltage phase 2',
       <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
-      'unit_of_measurement': <UnitOfElectricPotential.VOLT: 'V'>,
+      <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: <UnitOfElectricPotential.VOLT: 'V'>,
     }),
     'context': <ANY>,
     'entity_id': 'sensor.device_voltage_phase_2',
@@ -19344,10 +19344,10 @@
 # name: test_sensors[HWE-P1-zero-values-entity_ids2][sensor.device_voltage_phase_3:state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'device_class': 'voltage',
-      'friendly_name': 'Device Voltage phase 3',
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'voltage',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Device Voltage phase 3',
       <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
-      'unit_of_measurement': <UnitOfElectricPotential.VOLT: 'V'>,
+      <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: <UnitOfElectricPotential.VOLT: 'V'>,
     }),
     'context': <ANY>,
     'entity_id': 'sensor.device_voltage_phase_3',
@@ -19432,7 +19432,7 @@
 # name: test_sensors[HWE-P1-zero-values-entity_ids2][sensor.device_voltage_sags_detected_phase_1:state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'Device Voltage sags detected phase 1',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Device Voltage sags detected phase 1',
     }),
     'context': <ANY>,
     'entity_id': 'sensor.device_voltage_sags_detected_phase_1',
@@ -19517,7 +19517,7 @@
 # name: test_sensors[HWE-P1-zero-values-entity_ids2][sensor.device_voltage_sags_detected_phase_2:state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'Device Voltage sags detected phase 2',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Device Voltage sags detected phase 2',
     }),
     'context': <ANY>,
     'entity_id': 'sensor.device_voltage_sags_detected_phase_2',
@@ -19602,7 +19602,7 @@
 # name: test_sensors[HWE-P1-zero-values-entity_ids2][sensor.device_voltage_sags_detected_phase_3:state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'Device Voltage sags detected phase 3',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Device Voltage sags detected phase 3',
     }),
     'context': <ANY>,
     'entity_id': 'sensor.device_voltage_sags_detected_phase_3',
@@ -19687,7 +19687,7 @@
 # name: test_sensors[HWE-P1-zero-values-entity_ids2][sensor.device_voltage_swells_detected_phase_1:state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'Device Voltage swells detected phase 1',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Device Voltage swells detected phase 1',
     }),
     'context': <ANY>,
     'entity_id': 'sensor.device_voltage_swells_detected_phase_1',
@@ -19772,7 +19772,7 @@
 # name: test_sensors[HWE-P1-zero-values-entity_ids2][sensor.device_voltage_swells_detected_phase_2:state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'Device Voltage swells detected phase 2',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Device Voltage swells detected phase 2',
     }),
     'context': <ANY>,
     'entity_id': 'sensor.device_voltage_swells_detected_phase_2',
@@ -19857,7 +19857,7 @@
 # name: test_sensors[HWE-P1-zero-values-entity_ids2][sensor.device_voltage_swells_detected_phase_3:state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'Device Voltage swells detected phase 3',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Device Voltage swells detected phase 3',
     }),
     'context': <ANY>,
     'entity_id': 'sensor.device_voltage_swells_detected_phase_3',
@@ -19947,10 +19947,10 @@
 # name: test_sensors[HWE-P1-zero-values-entity_ids2][sensor.device_water_usage:state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'device_class': 'volume_flow_rate',
-      'friendly_name': 'Device Water usage',
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'volume_flow_rate',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Device Water usage',
       <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
-      'unit_of_measurement': <UnitOfVolumeFlowRate.LITERS_PER_MINUTE: 'L/min'>,
+      <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: <UnitOfVolumeFlowRate.LITERS_PER_MINUTE: 'L/min'>,
     }),
     'context': <ANY>,
     'entity_id': 'sensor.device_water_usage',
@@ -20035,7 +20035,7 @@
 # name: test_sensors[HWE-P1-zero-values-entity_ids2][sensor.device_wi_fi_ssid:state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'Device Wi-Fi SSID',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Device Wi-Fi SSID',
     }),
     'context': <ANY>,
     'entity_id': 'sensor.device_wi_fi_ssid',
@@ -20122,9 +20122,9 @@
 # name: test_sensors[HWE-P1-zero-values-entity_ids2][sensor.device_wi_fi_strength:state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'Device Wi-Fi strength',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Device Wi-Fi strength',
       <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
-      'unit_of_measurement': '%',
+      <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: '%',
     }),
     'context': <ANY>,
     'entity_id': 'sensor.device_wi_fi_strength',
@@ -20214,10 +20214,10 @@
 # name: test_sensors[HWE-SKT-11-entity_ids3][sensor.device_energy_export:state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'device_class': 'energy',
-      'friendly_name': 'Device Energy export',
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'energy',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Device Energy export',
       <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
-      'unit_of_measurement': <UnitOfEnergy.KILO_WATT_HOUR: 'kWh'>,
+      <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: <UnitOfEnergy.KILO_WATT_HOUR: 'kWh'>,
     }),
     'context': <ANY>,
     'entity_id': 'sensor.device_energy_export',
@@ -20307,10 +20307,10 @@
 # name: test_sensors[HWE-SKT-11-entity_ids3][sensor.device_energy_import:state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'device_class': 'energy',
-      'friendly_name': 'Device Energy import',
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'energy',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Device Energy import',
       <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
-      'unit_of_measurement': <UnitOfEnergy.KILO_WATT_HOUR: 'kWh'>,
+      <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: <UnitOfEnergy.KILO_WATT_HOUR: 'kWh'>,
     }),
     'context': <ANY>,
     'entity_id': 'sensor.device_energy_import',
@@ -20400,10 +20400,10 @@
 # name: test_sensors[HWE-SKT-11-entity_ids3][sensor.device_power:state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'device_class': 'power',
-      'friendly_name': 'Device Power',
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'power',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Device Power',
       <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
-      'unit_of_measurement': <UnitOfPower.WATT: 'W'>,
+      <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: <UnitOfPower.WATT: 'W'>,
     }),
     'context': <ANY>,
     'entity_id': 'sensor.device_power',
@@ -20493,10 +20493,10 @@
 # name: test_sensors[HWE-SKT-11-entity_ids3][sensor.device_power_phase_1:state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'device_class': 'power',
-      'friendly_name': 'Device Power phase 1',
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'power',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Device Power phase 1',
       <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
-      'unit_of_measurement': <UnitOfPower.WATT: 'W'>,
+      <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: <UnitOfPower.WATT: 'W'>,
     }),
     'context': <ANY>,
     'entity_id': 'sensor.device_power_phase_1',
@@ -20586,10 +20586,10 @@
 # name: test_sensors[HWE-SKT-11-entity_ids3][sensor.device_production_power:state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'device_class': 'power',
-      'friendly_name': 'Device Production power',
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'power',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Device Production power',
       <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
-      'unit_of_measurement': <UnitOfPower.WATT: 'W'>,
+      <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: <UnitOfPower.WATT: 'W'>,
     }),
     'context': <ANY>,
     'entity_id': 'sensor.device_production_power',
@@ -20674,7 +20674,7 @@
 # name: test_sensors[HWE-SKT-11-entity_ids3][sensor.device_wi_fi_ssid:state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'Device Wi-Fi SSID',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Device Wi-Fi SSID',
     }),
     'context': <ANY>,
     'entity_id': 'sensor.device_wi_fi_ssid',
@@ -20761,9 +20761,9 @@
 # name: test_sensors[HWE-SKT-11-entity_ids3][sensor.device_wi_fi_strength:state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'Device Wi-Fi strength',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Device Wi-Fi strength',
       <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
-      'unit_of_measurement': '%',
+      <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: '%',
     }),
     'context': <ANY>,
     'entity_id': 'sensor.device_wi_fi_strength',
@@ -20853,10 +20853,10 @@
 # name: test_sensors[HWE-SKT-21-entity_ids4][sensor.device_apparent_power:state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'device_class': 'apparent_power',
-      'friendly_name': 'Device Apparent power',
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'apparent_power',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Device Apparent power',
       <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
-      'unit_of_measurement': <UnitOfApparentPower.VOLT_AMPERE: 'VA'>,
+      <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: <UnitOfApparentPower.VOLT_AMPERE: 'VA'>,
     }),
     'context': <ANY>,
     'entity_id': 'sensor.device_apparent_power',
@@ -20946,10 +20946,10 @@
 # name: test_sensors[HWE-SKT-21-entity_ids4][sensor.device_current:state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'device_class': 'current',
-      'friendly_name': 'Device Current',
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'current',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Device Current',
       <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
-      'unit_of_measurement': <UnitOfElectricCurrent.AMPERE: 'A'>,
+      <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: <UnitOfElectricCurrent.AMPERE: 'A'>,
     }),
     'context': <ANY>,
     'entity_id': 'sensor.device_current',
@@ -21039,10 +21039,10 @@
 # name: test_sensors[HWE-SKT-21-entity_ids4][sensor.device_energy_export:state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'device_class': 'energy',
-      'friendly_name': 'Device Energy export',
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'energy',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Device Energy export',
       <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
-      'unit_of_measurement': <UnitOfEnergy.KILO_WATT_HOUR: 'kWh'>,
+      <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: <UnitOfEnergy.KILO_WATT_HOUR: 'kWh'>,
     }),
     'context': <ANY>,
     'entity_id': 'sensor.device_energy_export',
@@ -21132,10 +21132,10 @@
 # name: test_sensors[HWE-SKT-21-entity_ids4][sensor.device_energy_import:state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'device_class': 'energy',
-      'friendly_name': 'Device Energy import',
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'energy',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Device Energy import',
       <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
-      'unit_of_measurement': <UnitOfEnergy.KILO_WATT_HOUR: 'kWh'>,
+      <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: <UnitOfEnergy.KILO_WATT_HOUR: 'kWh'>,
     }),
     'context': <ANY>,
     'entity_id': 'sensor.device_energy_import',
@@ -21225,10 +21225,10 @@
 # name: test_sensors[HWE-SKT-21-entity_ids4][sensor.device_frequency:state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'device_class': 'frequency',
-      'friendly_name': 'Device Frequency',
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'frequency',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Device Frequency',
       <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
-      'unit_of_measurement': <UnitOfFrequency.HERTZ: 'Hz'>,
+      <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: <UnitOfFrequency.HERTZ: 'Hz'>,
     }),
     'context': <ANY>,
     'entity_id': 'sensor.device_frequency',
@@ -21318,10 +21318,10 @@
 # name: test_sensors[HWE-SKT-21-entity_ids4][sensor.device_power:state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'device_class': 'power',
-      'friendly_name': 'Device Power',
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'power',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Device Power',
       <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
-      'unit_of_measurement': <UnitOfPower.WATT: 'W'>,
+      <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: <UnitOfPower.WATT: 'W'>,
     }),
     'context': <ANY>,
     'entity_id': 'sensor.device_power',
@@ -21408,10 +21408,10 @@
 # name: test_sensors[HWE-SKT-21-entity_ids4][sensor.device_power_factor:state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'device_class': 'power_factor',
-      'friendly_name': 'Device Power factor',
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'power_factor',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Device Power factor',
       <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
-      'unit_of_measurement': '%',
+      <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: '%',
     }),
     'context': <ANY>,
     'entity_id': 'sensor.device_power_factor',
@@ -21501,10 +21501,10 @@
 # name: test_sensors[HWE-SKT-21-entity_ids4][sensor.device_power_phase_1:state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'device_class': 'power',
-      'friendly_name': 'Device Power phase 1',
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'power',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Device Power phase 1',
       <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
-      'unit_of_measurement': <UnitOfPower.WATT: 'W'>,
+      <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: <UnitOfPower.WATT: 'W'>,
     }),
     'context': <ANY>,
     'entity_id': 'sensor.device_power_phase_1',
@@ -21594,10 +21594,10 @@
 # name: test_sensors[HWE-SKT-21-entity_ids4][sensor.device_production_power:state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'device_class': 'power',
-      'friendly_name': 'Device Production power',
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'power',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Device Production power',
       <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
-      'unit_of_measurement': <UnitOfPower.WATT: 'W'>,
+      <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: <UnitOfPower.WATT: 'W'>,
     }),
     'context': <ANY>,
     'entity_id': 'sensor.device_production_power',
@@ -21687,10 +21687,10 @@
 # name: test_sensors[HWE-SKT-21-entity_ids4][sensor.device_reactive_power:state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'device_class': 'reactive_power',
-      'friendly_name': 'Device Reactive power',
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'reactive_power',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Device Reactive power',
       <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
-      'unit_of_measurement': <UnitOfReactivePower.VOLT_AMPERE_REACTIVE: 'var'>,
+      <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: <UnitOfReactivePower.VOLT_AMPERE_REACTIVE: 'var'>,
     }),
     'context': <ANY>,
     'entity_id': 'sensor.device_reactive_power',
@@ -21780,10 +21780,10 @@
 # name: test_sensors[HWE-SKT-21-entity_ids4][sensor.device_voltage:state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'device_class': 'voltage',
-      'friendly_name': 'Device Voltage',
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'voltage',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Device Voltage',
       <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
-      'unit_of_measurement': <UnitOfElectricPotential.VOLT: 'V'>,
+      <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: <UnitOfElectricPotential.VOLT: 'V'>,
     }),
     'context': <ANY>,
     'entity_id': 'sensor.device_voltage',
@@ -21868,7 +21868,7 @@
 # name: test_sensors[HWE-SKT-21-entity_ids4][sensor.device_wi_fi_ssid:state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'Device Wi-Fi SSID',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Device Wi-Fi SSID',
     }),
     'context': <ANY>,
     'entity_id': 'sensor.device_wi_fi_ssid',
@@ -21955,9 +21955,9 @@
 # name: test_sensors[HWE-SKT-21-entity_ids4][sensor.device_wi_fi_strength:state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'Device Wi-Fi strength',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Device Wi-Fi strength',
       <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
-      'unit_of_measurement': '%',
+      <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: '%',
     }),
     'context': <ANY>,
     'entity_id': 'sensor.device_wi_fi_strength',
@@ -22047,10 +22047,10 @@
 # name: test_sensors[HWE-WTR-entity_ids5][sensor.device_total_water_usage:state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'device_class': 'water',
-      'friendly_name': 'Device Total water usage',
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'water',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Device Total water usage',
       <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
-      'unit_of_measurement': <UnitOfVolume.CUBIC_METERS: 'm³'>,
+      <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: <UnitOfVolume.CUBIC_METERS: 'm³'>,
     }),
     'context': <ANY>,
     'entity_id': 'sensor.device_total_water_usage',
@@ -22140,10 +22140,10 @@
 # name: test_sensors[HWE-WTR-entity_ids5][sensor.device_water_usage:state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'device_class': 'volume_flow_rate',
-      'friendly_name': 'Device Water usage',
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'volume_flow_rate',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Device Water usage',
       <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
-      'unit_of_measurement': <UnitOfVolumeFlowRate.LITERS_PER_MINUTE: 'L/min'>,
+      <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: <UnitOfVolumeFlowRate.LITERS_PER_MINUTE: 'L/min'>,
     }),
     'context': <ANY>,
     'entity_id': 'sensor.device_water_usage',
@@ -22228,7 +22228,7 @@
 # name: test_sensors[HWE-WTR-entity_ids5][sensor.device_wi_fi_ssid:state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'Device Wi-Fi SSID',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Device Wi-Fi SSID',
     }),
     'context': <ANY>,
     'entity_id': 'sensor.device_wi_fi_ssid',
@@ -22315,9 +22315,9 @@
 # name: test_sensors[HWE-WTR-entity_ids5][sensor.device_wi_fi_strength:state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'Device Wi-Fi strength',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Device Wi-Fi strength',
       <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
-      'unit_of_measurement': '%',
+      <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: '%',
     }),
     'context': <ANY>,
     'entity_id': 'sensor.device_wi_fi_strength',
@@ -22407,10 +22407,10 @@
 # name: test_sensors[SDM230-entity_ids6][sensor.device_apparent_power:state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'device_class': 'apparent_power',
-      'friendly_name': 'Device Apparent power',
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'apparent_power',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Device Apparent power',
       <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
-      'unit_of_measurement': <UnitOfApparentPower.VOLT_AMPERE: 'VA'>,
+      <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: <UnitOfApparentPower.VOLT_AMPERE: 'VA'>,
     }),
     'context': <ANY>,
     'entity_id': 'sensor.device_apparent_power',
@@ -22500,10 +22500,10 @@
 # name: test_sensors[SDM230-entity_ids6][sensor.device_current:state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'device_class': 'current',
-      'friendly_name': 'Device Current',
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'current',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Device Current',
       <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
-      'unit_of_measurement': <UnitOfElectricCurrent.AMPERE: 'A'>,
+      <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: <UnitOfElectricCurrent.AMPERE: 'A'>,
     }),
     'context': <ANY>,
     'entity_id': 'sensor.device_current',
@@ -22593,10 +22593,10 @@
 # name: test_sensors[SDM230-entity_ids6][sensor.device_energy_export:state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'device_class': 'energy',
-      'friendly_name': 'Device Energy export',
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'energy',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Device Energy export',
       <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
-      'unit_of_measurement': <UnitOfEnergy.KILO_WATT_HOUR: 'kWh'>,
+      <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: <UnitOfEnergy.KILO_WATT_HOUR: 'kWh'>,
     }),
     'context': <ANY>,
     'entity_id': 'sensor.device_energy_export',
@@ -22686,10 +22686,10 @@
 # name: test_sensors[SDM230-entity_ids6][sensor.device_energy_import:state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'device_class': 'energy',
-      'friendly_name': 'Device Energy import',
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'energy',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Device Energy import',
       <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
-      'unit_of_measurement': <UnitOfEnergy.KILO_WATT_HOUR: 'kWh'>,
+      <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: <UnitOfEnergy.KILO_WATT_HOUR: 'kWh'>,
     }),
     'context': <ANY>,
     'entity_id': 'sensor.device_energy_import',
@@ -22779,10 +22779,10 @@
 # name: test_sensors[SDM230-entity_ids6][sensor.device_frequency:state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'device_class': 'frequency',
-      'friendly_name': 'Device Frequency',
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'frequency',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Device Frequency',
       <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
-      'unit_of_measurement': <UnitOfFrequency.HERTZ: 'Hz'>,
+      <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: <UnitOfFrequency.HERTZ: 'Hz'>,
     }),
     'context': <ANY>,
     'entity_id': 'sensor.device_frequency',
@@ -22872,10 +22872,10 @@
 # name: test_sensors[SDM230-entity_ids6][sensor.device_power:state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'device_class': 'power',
-      'friendly_name': 'Device Power',
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'power',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Device Power',
       <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
-      'unit_of_measurement': <UnitOfPower.WATT: 'W'>,
+      <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: <UnitOfPower.WATT: 'W'>,
     }),
     'context': <ANY>,
     'entity_id': 'sensor.device_power',
@@ -22962,10 +22962,10 @@
 # name: test_sensors[SDM230-entity_ids6][sensor.device_power_factor:state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'device_class': 'power_factor',
-      'friendly_name': 'Device Power factor',
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'power_factor',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Device Power factor',
       <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
-      'unit_of_measurement': '%',
+      <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: '%',
     }),
     'context': <ANY>,
     'entity_id': 'sensor.device_power_factor',
@@ -23055,10 +23055,10 @@
 # name: test_sensors[SDM230-entity_ids6][sensor.device_production_power:state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'device_class': 'power',
-      'friendly_name': 'Device Production power',
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'power',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Device Production power',
       <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
-      'unit_of_measurement': <UnitOfPower.WATT: 'W'>,
+      <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: <UnitOfPower.WATT: 'W'>,
     }),
     'context': <ANY>,
     'entity_id': 'sensor.device_production_power',
@@ -23148,10 +23148,10 @@
 # name: test_sensors[SDM230-entity_ids6][sensor.device_reactive_power:state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'device_class': 'reactive_power',
-      'friendly_name': 'Device Reactive power',
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'reactive_power',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Device Reactive power',
       <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
-      'unit_of_measurement': <UnitOfReactivePower.VOLT_AMPERE_REACTIVE: 'var'>,
+      <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: <UnitOfReactivePower.VOLT_AMPERE_REACTIVE: 'var'>,
     }),
     'context': <ANY>,
     'entity_id': 'sensor.device_reactive_power',
@@ -23241,10 +23241,10 @@
 # name: test_sensors[SDM230-entity_ids6][sensor.device_voltage:state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'device_class': 'voltage',
-      'friendly_name': 'Device Voltage',
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'voltage',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Device Voltage',
       <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
-      'unit_of_measurement': <UnitOfElectricPotential.VOLT: 'V'>,
+      <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: <UnitOfElectricPotential.VOLT: 'V'>,
     }),
     'context': <ANY>,
     'entity_id': 'sensor.device_voltage',
@@ -23329,7 +23329,7 @@
 # name: test_sensors[SDM230-entity_ids6][sensor.device_wi_fi_ssid:state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'Device Wi-Fi SSID',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Device Wi-Fi SSID',
     }),
     'context': <ANY>,
     'entity_id': 'sensor.device_wi_fi_ssid',
@@ -23416,9 +23416,9 @@
 # name: test_sensors[SDM230-entity_ids6][sensor.device_wi_fi_strength:state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'Device Wi-Fi strength',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Device Wi-Fi strength',
       <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
-      'unit_of_measurement': '%',
+      <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: '%',
     }),
     'context': <ANY>,
     'entity_id': 'sensor.device_wi_fi_strength',
@@ -23508,10 +23508,10 @@
 # name: test_sensors[SDM630-entity_ids7][sensor.device_apparent_power:state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'device_class': 'apparent_power',
-      'friendly_name': 'Device Apparent power',
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'apparent_power',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Device Apparent power',
       <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
-      'unit_of_measurement': <UnitOfApparentPower.VOLT_AMPERE: 'VA'>,
+      <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: <UnitOfApparentPower.VOLT_AMPERE: 'VA'>,
     }),
     'context': <ANY>,
     'entity_id': 'sensor.device_apparent_power',
@@ -23601,10 +23601,10 @@
 # name: test_sensors[SDM630-entity_ids7][sensor.device_apparent_power_phase_1:state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'device_class': 'apparent_power',
-      'friendly_name': 'Device Apparent power phase 1',
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'apparent_power',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Device Apparent power phase 1',
       <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
-      'unit_of_measurement': <UnitOfApparentPower.VOLT_AMPERE: 'VA'>,
+      <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: <UnitOfApparentPower.VOLT_AMPERE: 'VA'>,
     }),
     'context': <ANY>,
     'entity_id': 'sensor.device_apparent_power_phase_1',
@@ -23694,10 +23694,10 @@
 # name: test_sensors[SDM630-entity_ids7][sensor.device_apparent_power_phase_2:state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'device_class': 'apparent_power',
-      'friendly_name': 'Device Apparent power phase 2',
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'apparent_power',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Device Apparent power phase 2',
       <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
-      'unit_of_measurement': <UnitOfApparentPower.VOLT_AMPERE: 'VA'>,
+      <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: <UnitOfApparentPower.VOLT_AMPERE: 'VA'>,
     }),
     'context': <ANY>,
     'entity_id': 'sensor.device_apparent_power_phase_2',
@@ -23787,10 +23787,10 @@
 # name: test_sensors[SDM630-entity_ids7][sensor.device_apparent_power_phase_3:state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'device_class': 'apparent_power',
-      'friendly_name': 'Device Apparent power phase 3',
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'apparent_power',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Device Apparent power phase 3',
       <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
-      'unit_of_measurement': <UnitOfApparentPower.VOLT_AMPERE: 'VA'>,
+      <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: <UnitOfApparentPower.VOLT_AMPERE: 'VA'>,
     }),
     'context': <ANY>,
     'entity_id': 'sensor.device_apparent_power_phase_3',
@@ -23880,10 +23880,10 @@
 # name: test_sensors[SDM630-entity_ids7][sensor.device_current:state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'device_class': 'current',
-      'friendly_name': 'Device Current',
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'current',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Device Current',
       <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
-      'unit_of_measurement': <UnitOfElectricCurrent.AMPERE: 'A'>,
+      <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: <UnitOfElectricCurrent.AMPERE: 'A'>,
     }),
     'context': <ANY>,
     'entity_id': 'sensor.device_current',
@@ -23973,10 +23973,10 @@
 # name: test_sensors[SDM630-entity_ids7][sensor.device_current_phase_1:state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'device_class': 'current',
-      'friendly_name': 'Device Current phase 1',
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'current',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Device Current phase 1',
       <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
-      'unit_of_measurement': <UnitOfElectricCurrent.AMPERE: 'A'>,
+      <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: <UnitOfElectricCurrent.AMPERE: 'A'>,
     }),
     'context': <ANY>,
     'entity_id': 'sensor.device_current_phase_1',
@@ -24066,10 +24066,10 @@
 # name: test_sensors[SDM630-entity_ids7][sensor.device_current_phase_2:state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'device_class': 'current',
-      'friendly_name': 'Device Current phase 2',
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'current',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Device Current phase 2',
       <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
-      'unit_of_measurement': <UnitOfElectricCurrent.AMPERE: 'A'>,
+      <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: <UnitOfElectricCurrent.AMPERE: 'A'>,
     }),
     'context': <ANY>,
     'entity_id': 'sensor.device_current_phase_2',
@@ -24159,10 +24159,10 @@
 # name: test_sensors[SDM630-entity_ids7][sensor.device_current_phase_3:state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'device_class': 'current',
-      'friendly_name': 'Device Current phase 3',
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'current',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Device Current phase 3',
       <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
-      'unit_of_measurement': <UnitOfElectricCurrent.AMPERE: 'A'>,
+      <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: <UnitOfElectricCurrent.AMPERE: 'A'>,
     }),
     'context': <ANY>,
     'entity_id': 'sensor.device_current_phase_3',
@@ -24252,10 +24252,10 @@
 # name: test_sensors[SDM630-entity_ids7][sensor.device_energy_export:state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'device_class': 'energy',
-      'friendly_name': 'Device Energy export',
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'energy',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Device Energy export',
       <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
-      'unit_of_measurement': <UnitOfEnergy.KILO_WATT_HOUR: 'kWh'>,
+      <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: <UnitOfEnergy.KILO_WATT_HOUR: 'kWh'>,
     }),
     'context': <ANY>,
     'entity_id': 'sensor.device_energy_export',
@@ -24345,10 +24345,10 @@
 # name: test_sensors[SDM630-entity_ids7][sensor.device_energy_import:state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'device_class': 'energy',
-      'friendly_name': 'Device Energy import',
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'energy',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Device Energy import',
       <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
-      'unit_of_measurement': <UnitOfEnergy.KILO_WATT_HOUR: 'kWh'>,
+      <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: <UnitOfEnergy.KILO_WATT_HOUR: 'kWh'>,
     }),
     'context': <ANY>,
     'entity_id': 'sensor.device_energy_import',
@@ -24438,10 +24438,10 @@
 # name: test_sensors[SDM630-entity_ids7][sensor.device_frequency:state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'device_class': 'frequency',
-      'friendly_name': 'Device Frequency',
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'frequency',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Device Frequency',
       <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
-      'unit_of_measurement': <UnitOfFrequency.HERTZ: 'Hz'>,
+      <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: <UnitOfFrequency.HERTZ: 'Hz'>,
     }),
     'context': <ANY>,
     'entity_id': 'sensor.device_frequency',
@@ -24531,10 +24531,10 @@
 # name: test_sensors[SDM630-entity_ids7][sensor.device_power:state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'device_class': 'power',
-      'friendly_name': 'Device Power',
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'power',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Device Power',
       <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
-      'unit_of_measurement': <UnitOfPower.WATT: 'W'>,
+      <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: <UnitOfPower.WATT: 'W'>,
     }),
     'context': <ANY>,
     'entity_id': 'sensor.device_power',
@@ -24621,10 +24621,10 @@
 # name: test_sensors[SDM630-entity_ids7][sensor.device_power_factor_phase_1:state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'device_class': 'power_factor',
-      'friendly_name': 'Device Power factor phase 1',
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'power_factor',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Device Power factor phase 1',
       <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
-      'unit_of_measurement': '%',
+      <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: '%',
     }),
     'context': <ANY>,
     'entity_id': 'sensor.device_power_factor_phase_1',
@@ -24711,10 +24711,10 @@
 # name: test_sensors[SDM630-entity_ids7][sensor.device_power_factor_phase_2:state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'device_class': 'power_factor',
-      'friendly_name': 'Device Power factor phase 2',
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'power_factor',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Device Power factor phase 2',
       <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
-      'unit_of_measurement': '%',
+      <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: '%',
     }),
     'context': <ANY>,
     'entity_id': 'sensor.device_power_factor_phase_2',
@@ -24801,10 +24801,10 @@
 # name: test_sensors[SDM630-entity_ids7][sensor.device_power_factor_phase_3:state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'device_class': 'power_factor',
-      'friendly_name': 'Device Power factor phase 3',
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'power_factor',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Device Power factor phase 3',
       <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
-      'unit_of_measurement': '%',
+      <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: '%',
     }),
     'context': <ANY>,
     'entity_id': 'sensor.device_power_factor_phase_3',
@@ -24894,10 +24894,10 @@
 # name: test_sensors[SDM630-entity_ids7][sensor.device_power_phase_1:state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'device_class': 'power',
-      'friendly_name': 'Device Power phase 1',
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'power',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Device Power phase 1',
       <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
-      'unit_of_measurement': <UnitOfPower.WATT: 'W'>,
+      <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: <UnitOfPower.WATT: 'W'>,
     }),
     'context': <ANY>,
     'entity_id': 'sensor.device_power_phase_1',
@@ -24987,10 +24987,10 @@
 # name: test_sensors[SDM630-entity_ids7][sensor.device_power_phase_2:state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'device_class': 'power',
-      'friendly_name': 'Device Power phase 2',
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'power',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Device Power phase 2',
       <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
-      'unit_of_measurement': <UnitOfPower.WATT: 'W'>,
+      <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: <UnitOfPower.WATT: 'W'>,
     }),
     'context': <ANY>,
     'entity_id': 'sensor.device_power_phase_2',
@@ -25080,10 +25080,10 @@
 # name: test_sensors[SDM630-entity_ids7][sensor.device_power_phase_3:state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'device_class': 'power',
-      'friendly_name': 'Device Power phase 3',
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'power',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Device Power phase 3',
       <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
-      'unit_of_measurement': <UnitOfPower.WATT: 'W'>,
+      <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: <UnitOfPower.WATT: 'W'>,
     }),
     'context': <ANY>,
     'entity_id': 'sensor.device_power_phase_3',
@@ -25173,10 +25173,10 @@
 # name: test_sensors[SDM630-entity_ids7][sensor.device_production_power:state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'device_class': 'power',
-      'friendly_name': 'Device Production power',
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'power',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Device Production power',
       <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
-      'unit_of_measurement': <UnitOfPower.WATT: 'W'>,
+      <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: <UnitOfPower.WATT: 'W'>,
     }),
     'context': <ANY>,
     'entity_id': 'sensor.device_production_power',
@@ -25266,10 +25266,10 @@
 # name: test_sensors[SDM630-entity_ids7][sensor.device_reactive_power:state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'device_class': 'reactive_power',
-      'friendly_name': 'Device Reactive power',
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'reactive_power',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Device Reactive power',
       <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
-      'unit_of_measurement': <UnitOfReactivePower.VOLT_AMPERE_REACTIVE: 'var'>,
+      <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: <UnitOfReactivePower.VOLT_AMPERE_REACTIVE: 'var'>,
     }),
     'context': <ANY>,
     'entity_id': 'sensor.device_reactive_power',
@@ -25359,10 +25359,10 @@
 # name: test_sensors[SDM630-entity_ids7][sensor.device_reactive_power_phase_1:state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'device_class': 'reactive_power',
-      'friendly_name': 'Device Reactive power phase 1',
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'reactive_power',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Device Reactive power phase 1',
       <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
-      'unit_of_measurement': <UnitOfReactivePower.VOLT_AMPERE_REACTIVE: 'var'>,
+      <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: <UnitOfReactivePower.VOLT_AMPERE_REACTIVE: 'var'>,
     }),
     'context': <ANY>,
     'entity_id': 'sensor.device_reactive_power_phase_1',
@@ -25452,10 +25452,10 @@
 # name: test_sensors[SDM630-entity_ids7][sensor.device_reactive_power_phase_2:state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'device_class': 'reactive_power',
-      'friendly_name': 'Device Reactive power phase 2',
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'reactive_power',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Device Reactive power phase 2',
       <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
-      'unit_of_measurement': <UnitOfReactivePower.VOLT_AMPERE_REACTIVE: 'var'>,
+      <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: <UnitOfReactivePower.VOLT_AMPERE_REACTIVE: 'var'>,
     }),
     'context': <ANY>,
     'entity_id': 'sensor.device_reactive_power_phase_2',
@@ -25545,10 +25545,10 @@
 # name: test_sensors[SDM630-entity_ids7][sensor.device_reactive_power_phase_3:state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'device_class': 'reactive_power',
-      'friendly_name': 'Device Reactive power phase 3',
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'reactive_power',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Device Reactive power phase 3',
       <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
-      'unit_of_measurement': <UnitOfReactivePower.VOLT_AMPERE_REACTIVE: 'var'>,
+      <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: <UnitOfReactivePower.VOLT_AMPERE_REACTIVE: 'var'>,
     }),
     'context': <ANY>,
     'entity_id': 'sensor.device_reactive_power_phase_3',
@@ -25638,10 +25638,10 @@
 # name: test_sensors[SDM630-entity_ids7][sensor.device_voltage_phase_1:state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'device_class': 'voltage',
-      'friendly_name': 'Device Voltage phase 1',
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'voltage',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Device Voltage phase 1',
       <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
-      'unit_of_measurement': <UnitOfElectricPotential.VOLT: 'V'>,
+      <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: <UnitOfElectricPotential.VOLT: 'V'>,
     }),
     'context': <ANY>,
     'entity_id': 'sensor.device_voltage_phase_1',
@@ -25731,10 +25731,10 @@
 # name: test_sensors[SDM630-entity_ids7][sensor.device_voltage_phase_2:state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'device_class': 'voltage',
-      'friendly_name': 'Device Voltage phase 2',
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'voltage',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Device Voltage phase 2',
       <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
-      'unit_of_measurement': <UnitOfElectricPotential.VOLT: 'V'>,
+      <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: <UnitOfElectricPotential.VOLT: 'V'>,
     }),
     'context': <ANY>,
     'entity_id': 'sensor.device_voltage_phase_2',
@@ -25824,10 +25824,10 @@
 # name: test_sensors[SDM630-entity_ids7][sensor.device_voltage_phase_3:state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'device_class': 'voltage',
-      'friendly_name': 'Device Voltage phase 3',
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'voltage',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Device Voltage phase 3',
       <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
-      'unit_of_measurement': <UnitOfElectricPotential.VOLT: 'V'>,
+      <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: <UnitOfElectricPotential.VOLT: 'V'>,
     }),
     'context': <ANY>,
     'entity_id': 'sensor.device_voltage_phase_3',
@@ -25912,7 +25912,7 @@
 # name: test_sensors[SDM630-entity_ids7][sensor.device_wi_fi_ssid:state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'Device Wi-Fi SSID',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Device Wi-Fi SSID',
     }),
     'context': <ANY>,
     'entity_id': 'sensor.device_wi_fi_ssid',
@@ -25999,9 +25999,9 @@
 # name: test_sensors[SDM630-entity_ids7][sensor.device_wi_fi_strength:state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'Device Wi-Fi strength',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Device Wi-Fi strength',
       <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
-      'unit_of_measurement': '%',
+      <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: '%',
     }),
     'context': <ANY>,
     'entity_id': 'sensor.device_wi_fi_strength',

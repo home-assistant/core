@@ -11,8 +11,6 @@ from homeassistant.const import Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import entity_registry as er
 
-from . import patch_interface
-
 from tests.common import MockConfigEntry, snapshot_platform
 
 
@@ -26,6 +24,7 @@ def sensor_only() -> Generator[None]:
         yield
 
 
+@pytest.mark.usefixtures("steam_api")
 async def test_sensors(
     hass: HomeAssistant,
     config_entry: MockConfigEntry,
@@ -33,10 +32,10 @@ async def test_sensors(
     entity_registry: er.EntityRegistry,
 ) -> None:
     """Test setup of the Steam sensor platform."""
-    with patch_interface():
-        config_entry.add_to_hass(hass)
-        await hass.config_entries.async_setup(config_entry.entry_id)
-        await hass.async_block_till_done()
+
+    config_entry.add_to_hass(hass)
+    await hass.config_entries.async_setup(config_entry.entry_id)
+    await hass.async_block_till_done()
 
     assert config_entry.state is ConfigEntryState.LOADED
 

@@ -44,12 +44,12 @@
 # name: test_state[number.pinecil_boost_temperature-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'Pinecil Boost temperature',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Pinecil Boost temperature',
       <NumberEntityCapabilityAttribute.MAX: 'max'>: 450,
       <NumberEntityCapabilityAttribute.MIN: 'min'>: 250,
       <NumberEntityCapabilityAttribute.MODE: 'mode'>: <NumberMode.BOX: 'box'>,
       <NumberEntityCapabilityAttribute.STEP: 'step'>: 10,
-      'unit_of_measurement': <UnitOfTemperature.CELSIUS: '°C'>,
+      <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: <UnitOfTemperature.CELSIUS: '°C'>,
     }),
     'context': <ANY>,
     'entity_id': 'number.pinecil_boost_temperature',
@@ -104,12 +104,12 @@
 # name: test_state[number.pinecil_calibration_offset-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'Pinecil Calibration offset',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Pinecil Calibration offset',
       <NumberEntityCapabilityAttribute.MAX: 'max'>: 2500,
       <NumberEntityCapabilityAttribute.MIN: 'min'>: 100,
       <NumberEntityCapabilityAttribute.MODE: 'mode'>: <NumberMode.BOX: 'box'>,
       <NumberEntityCapabilityAttribute.STEP: 'step'>: 1,
-      'unit_of_measurement': <UnitOfElectricPotential.MICROVOLT: 'μV'>,
+      <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: <UnitOfElectricPotential.MICROVOLT: 'μV'>,
     }),
     'context': <ANY>,
     'entity_id': 'number.pinecil_calibration_offset',
@@ -164,7 +164,7 @@
 # name: test_state[number.pinecil_display_brightness-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'Pinecil Display brightness',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Pinecil Display brightness',
       <NumberEntityCapabilityAttribute.MAX: 'max'>: 5,
       <NumberEntityCapabilityAttribute.MIN: 'min'>: 1,
       <NumberEntityCapabilityAttribute.MODE: 'mode'>: <NumberMode.SLIDER: 'slider'>,
@@ -223,7 +223,7 @@
 # name: test_state[number.pinecil_hall_effect_sensitivity-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'Pinecil Hall effect sensitivity',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Pinecil Hall effect sensitivity',
       <NumberEntityCapabilityAttribute.MAX: 'max'>: 9,
       <NumberEntityCapabilityAttribute.MIN: 'min'>: 0,
       <NumberEntityCapabilityAttribute.MODE: 'mode'>: <NumberMode.SLIDER: 'slider'>,
@@ -282,12 +282,12 @@
 # name: test_state[number.pinecil_hall_sensor_sleep_timeout-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'Pinecil Hall sensor sleep timeout',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Pinecil Hall sensor sleep timeout',
       <NumberEntityCapabilityAttribute.MAX: 'max'>: 60,
       <NumberEntityCapabilityAttribute.MIN: 'min'>: 0,
       <NumberEntityCapabilityAttribute.MODE: 'mode'>: <NumberMode.BOX: 'box'>,
       <NumberEntityCapabilityAttribute.STEP: 'step'>: 5,
-      'unit_of_measurement': <UnitOfTime.SECONDS: 's'>,
+      <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: <UnitOfTime.SECONDS: 's'>,
     }),
     'context': <ANY>,
     'entity_id': 'number.pinecil_hall_sensor_sleep_timeout',
@@ -342,12 +342,12 @@
 # name: test_state[number.pinecil_keep_awake_pulse_delay-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'Pinecil Keep-awake pulse delay',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Pinecil Keep-awake pulse delay',
       <NumberEntityCapabilityAttribute.MAX: 'max'>: 22.5,
       <NumberEntityCapabilityAttribute.MIN: 'min'>: 2.5,
       <NumberEntityCapabilityAttribute.MODE: 'mode'>: <NumberMode.BOX: 'box'>,
       <NumberEntityCapabilityAttribute.STEP: 'step'>: 2.5,
-      'unit_of_measurement': <UnitOfTime.SECONDS: 's'>,
+      <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: <UnitOfTime.SECONDS: 's'>,
     }),
     'context': <ANY>,
     'entity_id': 'number.pinecil_keep_awake_pulse_delay',
@@ -402,12 +402,12 @@
 # name: test_state[number.pinecil_keep_awake_pulse_duration-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'Pinecil Keep-awake pulse duration',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Pinecil Keep-awake pulse duration',
       <NumberEntityCapabilityAttribute.MAX: 'max'>: 2250,
       <NumberEntityCapabilityAttribute.MIN: 'min'>: 250,
       <NumberEntityCapabilityAttribute.MODE: 'mode'>: <NumberMode.BOX: 'box'>,
       <NumberEntityCapabilityAttribute.STEP: 'step'>: 250,
-      'unit_of_measurement': <UnitOfTime.MILLISECONDS: 'ms'>,
+      <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: <UnitOfTime.MILLISECONDS: 'ms'>,
     }),
     'context': <ANY>,
     'entity_id': 'number.pinecil_keep_awake_pulse_duration',
@@ -462,12 +462,12 @@
 # name: test_state[number.pinecil_keep_awake_pulse_intensity-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'Pinecil Keep-awake pulse intensity',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Pinecil Keep-awake pulse intensity',
       <NumberEntityCapabilityAttribute.MAX: 'max'>: 9.9,
       <NumberEntityCapabilityAttribute.MIN: 'min'>: 0,
       <NumberEntityCapabilityAttribute.MODE: 'mode'>: <NumberMode.BOX: 'box'>,
       <NumberEntityCapabilityAttribute.STEP: 'step'>: 0.1,
-      'unit_of_measurement': <UnitOfPower.WATT: 'W'>,
+      <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: <UnitOfPower.WATT: 'W'>,
     }),
     'context': <ANY>,
     'entity_id': 'number.pinecil_keep_awake_pulse_intensity',
@@ -522,12 +522,12 @@
 # name: test_state[number.pinecil_long_press_temperature_step-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'Pinecil Long-press temperature step',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Pinecil Long-press temperature step',
       <NumberEntityCapabilityAttribute.MAX: 'max'>: 90,
       <NumberEntityCapabilityAttribute.MIN: 'min'>: 5,
       <NumberEntityCapabilityAttribute.MODE: 'mode'>: <NumberMode.BOX: 'box'>,
       <NumberEntityCapabilityAttribute.STEP: 'step'>: 5,
-      'unit_of_measurement': <UnitOfTemperature.CELSIUS: '°C'>,
+      <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: <UnitOfTemperature.CELSIUS: '°C'>,
     }),
     'context': <ANY>,
     'entity_id': 'number.pinecil_long_press_temperature_step',
@@ -582,12 +582,12 @@
 # name: test_state[number.pinecil_min_voltage_per_cell-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'Pinecil Min. voltage per cell',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Pinecil Min. voltage per cell',
       <NumberEntityCapabilityAttribute.MAX: 'max'>: 3.8,
       <NumberEntityCapabilityAttribute.MIN: 'min'>: 2.4,
       <NumberEntityCapabilityAttribute.MODE: 'mode'>: <NumberMode.BOX: 'box'>,
       <NumberEntityCapabilityAttribute.STEP: 'step'>: 0.1,
-      'unit_of_measurement': <UnitOfElectricPotential.VOLT: 'V'>,
+      <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: <UnitOfElectricPotential.VOLT: 'V'>,
     }),
     'context': <ANY>,
     'entity_id': 'number.pinecil_min_voltage_per_cell',
@@ -642,7 +642,7 @@
 # name: test_state[number.pinecil_motion_sensitivity-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'Pinecil Motion sensitivity',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Pinecil Motion sensitivity',
       <NumberEntityCapabilityAttribute.MAX: 'max'>: 9,
       <NumberEntityCapabilityAttribute.MIN: 'min'>: 0,
       <NumberEntityCapabilityAttribute.MODE: 'mode'>: <NumberMode.SLIDER: 'slider'>,
@@ -701,13 +701,13 @@
 # name: test_state[number.pinecil_power_delivery_timeout-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'device_class': 'duration',
-      'friendly_name': 'Pinecil Power Delivery timeout',
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'duration',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Pinecil Power Delivery timeout',
       <NumberEntityCapabilityAttribute.MAX: 'max'>: 5.0,
       <NumberEntityCapabilityAttribute.MIN: 'min'>: 0,
       <NumberEntityCapabilityAttribute.MODE: 'mode'>: <NumberMode.BOX: 'box'>,
       <NumberEntityCapabilityAttribute.STEP: 'step'>: 1,
-      'unit_of_measurement': <UnitOfTime.SECONDS: 's'>,
+      <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: <UnitOfTime.SECONDS: 's'>,
     }),
     'context': <ANY>,
     'entity_id': 'number.pinecil_power_delivery_timeout',
@@ -762,12 +762,12 @@
 # name: test_state[number.pinecil_power_limit-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'Pinecil Power limit',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Pinecil Power limit',
       <NumberEntityCapabilityAttribute.MAX: 'max'>: 120,
       <NumberEntityCapabilityAttribute.MIN: 'min'>: 0,
       <NumberEntityCapabilityAttribute.MODE: 'mode'>: <NumberMode.BOX: 'box'>,
       <NumberEntityCapabilityAttribute.STEP: 'step'>: 5,
-      'unit_of_measurement': <UnitOfPower.WATT: 'W'>,
+      <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: <UnitOfPower.WATT: 'W'>,
     }),
     'context': <ANY>,
     'entity_id': 'number.pinecil_power_limit',
@@ -822,13 +822,13 @@
 # name: test_state[number.pinecil_quick_charge_voltage-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'device_class': 'voltage',
-      'friendly_name': 'Pinecil Quick Charge voltage',
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'voltage',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Pinecil Quick Charge voltage',
       <NumberEntityCapabilityAttribute.MAX: 'max'>: 22.0,
       <NumberEntityCapabilityAttribute.MIN: 'min'>: 9.0,
       <NumberEntityCapabilityAttribute.MODE: 'mode'>: <NumberMode.BOX: 'box'>,
       <NumberEntityCapabilityAttribute.STEP: 'step'>: 0.1,
-      'unit_of_measurement': <UnitOfElectricPotential.VOLT: 'V'>,
+      <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: <UnitOfElectricPotential.VOLT: 'V'>,
     }),
     'context': <ANY>,
     'entity_id': 'number.pinecil_quick_charge_voltage',
@@ -883,12 +883,12 @@
 # name: test_state[number.pinecil_setpoint_temperature-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'Pinecil Setpoint temperature',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Pinecil Setpoint temperature',
       <NumberEntityCapabilityAttribute.MAX: 'max'>: 450,
       <NumberEntityCapabilityAttribute.MIN: 'min'>: 10,
       <NumberEntityCapabilityAttribute.MODE: 'mode'>: <NumberMode.BOX: 'box'>,
       <NumberEntityCapabilityAttribute.STEP: 'step'>: 1,
-      'unit_of_measurement': <UnitOfTemperature.CELSIUS: '°C'>,
+      <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: <UnitOfTemperature.CELSIUS: '°C'>,
     }),
     'context': <ANY>,
     'entity_id': 'number.pinecil_setpoint_temperature',
@@ -943,12 +943,12 @@
 # name: test_state[number.pinecil_short_press_temperature_step-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'Pinecil Short-press temperature step',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Pinecil Short-press temperature step',
       <NumberEntityCapabilityAttribute.MAX: 'max'>: 50,
       <NumberEntityCapabilityAttribute.MIN: 'min'>: 1,
       <NumberEntityCapabilityAttribute.MODE: 'mode'>: <NumberMode.BOX: 'box'>,
       <NumberEntityCapabilityAttribute.STEP: 'step'>: 1,
-      'unit_of_measurement': <UnitOfTemperature.CELSIUS: '°C'>,
+      <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: <UnitOfTemperature.CELSIUS: '°C'>,
     }),
     'context': <ANY>,
     'entity_id': 'number.pinecil_short_press_temperature_step',
@@ -1003,13 +1003,13 @@
 # name: test_state[number.pinecil_shutdown_timeout-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'device_class': 'duration',
-      'friendly_name': 'Pinecil Shutdown timeout',
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'duration',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Pinecil Shutdown timeout',
       <NumberEntityCapabilityAttribute.MAX: 'max'>: 60,
       <NumberEntityCapabilityAttribute.MIN: 'min'>: 0,
       <NumberEntityCapabilityAttribute.MODE: 'mode'>: <NumberMode.BOX: 'box'>,
       <NumberEntityCapabilityAttribute.STEP: 'step'>: 1,
-      'unit_of_measurement': <UnitOfTime.MINUTES: 'min'>,
+      <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: <UnitOfTime.MINUTES: 'min'>,
     }),
     'context': <ANY>,
     'entity_id': 'number.pinecil_shutdown_timeout',
@@ -1064,12 +1064,12 @@
 # name: test_state[number.pinecil_sleep_temperature-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'Pinecil Sleep temperature',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Pinecil Sleep temperature',
       <NumberEntityCapabilityAttribute.MAX: 'max'>: 450,
       <NumberEntityCapabilityAttribute.MIN: 'min'>: 10,
       <NumberEntityCapabilityAttribute.MODE: 'mode'>: <NumberMode.BOX: 'box'>,
       <NumberEntityCapabilityAttribute.STEP: 'step'>: 10,
-      'unit_of_measurement': <UnitOfTemperature.CELSIUS: '°C'>,
+      <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: <UnitOfTemperature.CELSIUS: '°C'>,
     }),
     'context': <ANY>,
     'entity_id': 'number.pinecil_sleep_temperature',
@@ -1124,12 +1124,12 @@
 # name: test_state[number.pinecil_sleep_timeout-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'Pinecil Sleep timeout',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Pinecil Sleep timeout',
       <NumberEntityCapabilityAttribute.MAX: 'max'>: 15,
       <NumberEntityCapabilityAttribute.MIN: 'min'>: 0,
       <NumberEntityCapabilityAttribute.MODE: 'mode'>: <NumberMode.BOX: 'box'>,
       <NumberEntityCapabilityAttribute.STEP: 'step'>: 1,
-      'unit_of_measurement': <UnitOfTime.MINUTES: 'min'>,
+      <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: <UnitOfTime.MINUTES: 'min'>,
     }),
     'context': <ANY>,
     'entity_id': 'number.pinecil_sleep_timeout',
@@ -1184,7 +1184,7 @@
 # name: test_state[number.pinecil_voltage_divider-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'Pinecil Voltage divider',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Pinecil Voltage divider',
       <NumberEntityCapabilityAttribute.MAX: 'max'>: 900,
       <NumberEntityCapabilityAttribute.MIN: 'min'>: 360,
       <NumberEntityCapabilityAttribute.MODE: 'mode'>: <NumberMode.BOX: 'box'>,

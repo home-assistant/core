@@ -44,10 +44,10 @@
 # name: test_all_entities[sensor.battery_bat001_charge_energy_today-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'device_class': 'energy',
-      'friendly_name': 'Battery BAT001 Charge energy today',
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'energy',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Battery BAT001 Charge energy today',
       <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
-      'unit_of_measurement': <UnitOfEnergy.WATT_HOUR: 'Wh'>,
+      <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: <UnitOfEnergy.WATT_HOUR: 'Wh'>,
     }),
     'context': <ANY>,
     'entity_id': 'sensor.battery_bat001_charge_energy_today',
@@ -102,10 +102,10 @@
 # name: test_all_entities[sensor.battery_bat001_discharge_energy_today-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'device_class': 'energy',
-      'friendly_name': 'Battery BAT001 Discharge energy today',
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'energy',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Battery BAT001 Discharge energy today',
       <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
-      'unit_of_measurement': <UnitOfEnergy.WATT_HOUR: 'Wh'>,
+      <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: <UnitOfEnergy.WATT_HOUR: 'Wh'>,
     }),
     'context': <ANY>,
     'entity_id': 'sensor.battery_bat001_discharge_energy_today',
@@ -160,10 +160,10 @@
 # name: test_all_entities[sensor.battery_bat001_power-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'device_class': 'power',
-      'friendly_name': 'Battery BAT001 Power',
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'power',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Battery BAT001 Power',
       <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
-      'unit_of_measurement': <UnitOfPower.WATT: 'W'>,
+      <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: <UnitOfPower.WATT: 'W'>,
     }),
     'context': <ANY>,
     'entity_id': 'sensor.battery_bat001_power',
@@ -215,10 +215,10 @@
 # name: test_all_entities[sensor.battery_bat001_state_of_charge-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'device_class': 'battery',
-      'friendly_name': 'Battery BAT001 State of charge',
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'battery',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Battery BAT001 State of charge',
       <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
-      'unit_of_measurement': '%',
+      <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: '%',
     }),
     'context': <ANY>,
     'entity_id': 'sensor.battery_bat001_state_of_charge',
@@ -277,7 +277,7 @@
           'nameplateCapacity': 9700.0,
         }),
       ]),
-      'friendly_name': 'SolarEdge Batteries',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'SolarEdge Batteries',
     }),
     'context': <ANY>,
     'entity_id': 'sensor.solaredge_batteries',
@@ -333,10 +333,10 @@
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'date': '2025-01-01 00:00:00',
-      'device_class': 'energy',
-      'friendly_name': 'SolarEdge Consumed energy',
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'energy',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'SolarEdge Consumed energy',
       <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
-      'unit_of_measurement': 'Wh',
+      <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: 'Wh',
     }),
     'context': <ANY>,
     'entity_id': 'sensor.solaredge_consumed_energy',
@@ -391,10 +391,10 @@
 # name: test_all_entities[sensor.solaredge_current_power-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'device_class': 'power',
-      'friendly_name': 'SolarEdge Current power',
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'power',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'SolarEdge Current power',
       <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
-      'unit_of_measurement': <UnitOfPower.WATT: 'W'>,
+      <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: <UnitOfPower.WATT: 'W'>,
     }),
     'context': <ANY>,
     'entity_id': 'sensor.solaredge_current_power',
@@ -449,10 +449,10 @@
 # name: test_all_entities[sensor.solaredge_energy_this_month-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'device_class': 'energy',
-      'friendly_name': 'SolarEdge Energy this month',
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'energy',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'SolarEdge Energy this month',
       <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
-      'unit_of_measurement': <UnitOfEnergy.WATT_HOUR: 'Wh'>,
+      <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: <UnitOfEnergy.WATT_HOUR: 'Wh'>,
     }),
     'context': <ANY>,
     'entity_id': 'sensor.solaredge_energy_this_month',
@@ -507,10 +507,10 @@
 # name: test_all_entities[sensor.solaredge_energy_this_year-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'device_class': 'energy',
-      'friendly_name': 'SolarEdge Energy this year',
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'energy',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'SolarEdge Energy this year',
       <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
-      'unit_of_measurement': <UnitOfEnergy.WATT_HOUR: 'Wh'>,
+      <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: <UnitOfEnergy.WATT_HOUR: 'Wh'>,
     }),
     'context': <ANY>,
     'entity_id': 'sensor.solaredge_energy_this_year',
@@ -565,10 +565,10 @@
 # name: test_all_entities[sensor.solaredge_energy_today-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'device_class': 'energy',
-      'friendly_name': 'SolarEdge Energy today',
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'energy',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'SolarEdge Energy today',
       <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
-      'unit_of_measurement': <UnitOfEnergy.WATT_HOUR: 'Wh'>,
+      <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: <UnitOfEnergy.WATT_HOUR: 'Wh'>,
     }),
     'context': <ANY>,
     'entity_id': 'sensor.solaredge_energy_today',
@@ -624,10 +624,10 @@
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'date': '2025-01-01 00:00:00',
-      'device_class': 'energy',
-      'friendly_name': 'SolarEdge Exported energy',
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'energy',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'SolarEdge Exported energy',
       <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
-      'unit_of_measurement': 'Wh',
+      <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: 'Wh',
     }),
     'context': <ANY>,
     'entity_id': 'sensor.solaredge_exported_energy',
@@ -677,7 +677,7 @@
 # name: test_all_entities[sensor.solaredge_gateways-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'SolarEdge Gateways',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'SolarEdge Gateways',
       'gateways': list([
         dict({
           'name': 'Gateway1',
@@ -738,8 +738,8 @@
 # name: test_all_entities[sensor.solaredge_grid_flow_direction-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'device_class': 'enum',
-      'friendly_name': 'SolarEdge Grid flow direction',
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'enum',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'SolarEdge Grid flow direction',
       <SensorEntityCapabilityAttribute.OPTIONS: 'options'>: list([
         'export',
         'import',
@@ -798,11 +798,11 @@
 # name: test_all_entities[sensor.solaredge_grid_power-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'device_class': 'power',
-      'friendly_name': 'SolarEdge Grid power',
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'power',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'SolarEdge Grid power',
       <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
       'status': 'Active',
-      'unit_of_measurement': 'W',
+      <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: 'W',
     }),
     'context': <ANY>,
     'entity_id': 'sensor.solaredge_grid_power',
@@ -858,10 +858,10 @@
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'date': '2025-01-01 00:00:00',
-      'device_class': 'energy',
-      'friendly_name': 'SolarEdge Imported energy',
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'energy',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'SolarEdge Imported energy',
       <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
-      'unit_of_measurement': 'Wh',
+      <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: 'Wh',
     }),
     'context': <ANY>,
     'entity_id': 'sensor.solaredge_imported_energy',
@@ -911,7 +911,7 @@
 # name: test_all_entities[sensor.solaredge_inverters-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'SolarEdge Inverters',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'SolarEdge Inverters',
       'inverters': list([
         dict({
           'manufacturer': 'Acme',
@@ -986,10 +986,10 @@
 # name: test_all_entities[sensor.solaredge_lifetime_energy-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'device_class': 'energy',
-      'friendly_name': 'SolarEdge Lifetime energy',
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'energy',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'SolarEdge Lifetime energy',
       <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
-      'unit_of_measurement': <UnitOfEnergy.WATT_HOUR: 'Wh'>,
+      <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: <UnitOfEnergy.WATT_HOUR: 'Wh'>,
     }),
     'context': <ANY>,
     'entity_id': 'sensor.solaredge_lifetime_energy',
@@ -1039,7 +1039,7 @@
 # name: test_all_entities[sensor.solaredge_meters-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'SolarEdge Meters',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'SolarEdge Meters',
       'meters': list([
         dict({
           'manufacturer': 'Acme',
@@ -1106,11 +1106,11 @@
 # name: test_all_entities[sensor.solaredge_power_consumption-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'device_class': 'power',
-      'friendly_name': 'SolarEdge Power consumption',
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'power',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'SolarEdge Power consumption',
       <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
       'status': 'Active',
-      'unit_of_measurement': 'W',
+      <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: 'W',
     }),
     'context': <ANY>,
     'entity_id': 'sensor.solaredge_power_consumption',
@@ -1166,10 +1166,10 @@
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'date': '2025-01-01 00:00:00',
-      'device_class': 'energy',
-      'friendly_name': 'SolarEdge Produced energy',
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'energy',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'SolarEdge Produced energy',
       <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
-      'unit_of_measurement': 'Wh',
+      <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: 'Wh',
     }),
     'context': <ANY>,
     'entity_id': 'sensor.solaredge_produced_energy',
@@ -1225,10 +1225,10 @@
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'date': '2025-01-01 00:00:00',
-      'device_class': 'energy',
-      'friendly_name': 'SolarEdge Self-consumed energy',
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'energy',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'SolarEdge Self-consumed energy',
       <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
-      'unit_of_measurement': 'Wh',
+      <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: 'Wh',
     }),
     'context': <ANY>,
     'entity_id': 'sensor.solaredge_self_consumed_energy',
@@ -1278,7 +1278,7 @@
 # name: test_all_entities[sensor.solaredge_sensors-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'SolarEdge Sensors',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'SolarEdge Sensors',
       'sensors': list([
       ]),
     }),
@@ -1330,7 +1330,7 @@
 # name: test_all_entities[sensor.solaredge_site_details-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'SolarEdge Site details',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'SolarEdge Site details',
       'installation_date': '2024-01-01',
       'last_update_time': '2025-01-01',
       'manufacturer_name': 'TestManufacturer',
@@ -1393,11 +1393,11 @@
 # name: test_all_entities[sensor.solaredge_solar_power-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'device_class': 'power',
-      'friendly_name': 'SolarEdge Solar power',
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'power',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'SolarEdge Solar power',
       <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
       'status': 'Active',
-      'unit_of_measurement': 'W',
+      <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: 'W',
     }),
     'context': <ANY>,
     'entity_id': 'sensor.solaredge_solar_power',
@@ -1452,10 +1452,10 @@
 # name: test_all_entities[sensor.solaredge_storage_charge_energy_today-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'device_class': 'energy',
-      'friendly_name': 'SolarEdge Storage charge energy today',
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'energy',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'SolarEdge Storage charge energy today',
       <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
-      'unit_of_measurement': <UnitOfEnergy.WATT_HOUR: 'Wh'>,
+      <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: <UnitOfEnergy.WATT_HOUR: 'Wh'>,
     }),
     'context': <ANY>,
     'entity_id': 'sensor.solaredge_storage_charge_energy_today',
@@ -1510,10 +1510,10 @@
 # name: test_all_entities[sensor.solaredge_storage_discharge_energy_today-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'device_class': 'energy',
-      'friendly_name': 'SolarEdge Storage discharge energy today',
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'energy',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'SolarEdge Storage discharge energy today',
       <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
-      'unit_of_measurement': <UnitOfEnergy.WATT_HOUR: 'Wh'>,
+      <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: <UnitOfEnergy.WATT_HOUR: 'Wh'>,
     }),
     'context': <ANY>,
     'entity_id': 'sensor.solaredge_storage_discharge_energy_today',
@@ -1568,8 +1568,8 @@
 # name: test_all_entities[sensor.solaredge_storage_flow_direction-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'device_class': 'enum',
-      'friendly_name': 'SolarEdge Storage flow direction',
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'enum',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'SolarEdge Storage flow direction',
       <SensorEntityCapabilityAttribute.OPTIONS: 'options'>: list([
         'charge',
         'discharge',
@@ -1625,10 +1625,10 @@
 # name: test_all_entities[sensor.solaredge_storage_level-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'device_class': 'battery',
-      'friendly_name': 'SolarEdge Storage level',
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'battery',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'SolarEdge Storage level',
       <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
-      'unit_of_measurement': '%',
+      <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: '%',
     }),
     'context': <ANY>,
     'entity_id': 'sensor.solaredge_storage_level',
@@ -1683,11 +1683,11 @@
 # name: test_all_entities[sensor.solaredge_storage_power-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'device_class': 'power',
-      'friendly_name': 'SolarEdge Storage power',
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'power',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'SolarEdge Storage power',
       <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
       'status': 'Charging',
-      'unit_of_measurement': 'W',
+      <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: 'W',
     }),
     'context': <ANY>,
     'entity_id': 'sensor.solaredge_storage_power',

@@ -40,8 +40,8 @@
 # name: test_fan_states[fan_devices.json-platforms0][fan.hob_with_extraction_fan-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'Hob with extraction Fan',
-      'supported_features': <FanEntityFeature: 0>,
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Hob with extraction Fan',
+      <EntityStateAttribute.SUPPORTED_FEATURES: 'supported_features'>: <FanEntityFeature: 0>,
     }),
     'context': <ANY>,
     'entity_id': 'fan.hob_with_extraction_fan',
@@ -92,8 +92,8 @@
 # name: test_fan_states[fan_devices.json-platforms0][fan.hob_with_extraction_fan_2-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'Hob with extraction Fan',
-      'supported_features': <FanEntityFeature: 0>,
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Hob with extraction Fan',
+      <EntityStateAttribute.SUPPORTED_FEATURES: 'supported_features'>: <FanEntityFeature: 0>,
     }),
     'context': <ANY>,
     'entity_id': 'fan.hob_with_extraction_fan_2',
@@ -145,12 +145,12 @@
 # name: test_fan_states[fan_devices.json-platforms0][fan.hood_fan-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'Hood Fan',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Hood Fan',
       <FanEntityStateAttribute.PERCENTAGE: 'percentage'>: 0,
       <FanEntityStateAttribute.PERCENTAGE_STEP: 'percentage_step'>: 25.0,
       <FanEntityStateAttribute.PRESET_MODE: 'preset_mode'>: None,
       <FanEntityCapabilityAttribute.PRESET_MODES: 'preset_modes'>: None,
-      'supported_features': <FanEntityFeature: 49>,
+      <EntityStateAttribute.SUPPORTED_FEATURES: 'supported_features'>: <FanEntityFeature: 49>,
     }),
     'context': <ANY>,
     'entity_id': 'fan.hood_fan',
@@ -202,12 +202,12 @@
 # name: test_fan_states_api_push[platforms0][fan.hood_fan-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'Hood Fan',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Hood Fan',
       <FanEntityStateAttribute.PERCENTAGE: 'percentage'>: 0,
       <FanEntityStateAttribute.PERCENTAGE_STEP: 'percentage_step'>: 25.0,
       <FanEntityStateAttribute.PRESET_MODE: 'preset_mode'>: None,
       <FanEntityCapabilityAttribute.PRESET_MODES: 'preset_modes'>: None,
-      'supported_features': <FanEntityFeature: 49>,
+      <EntityStateAttribute.SUPPORTED_FEATURES: 'supported_features'>: <FanEntityFeature: 49>,
     }),
     'context': <ANY>,
     'entity_id': 'fan.hood_fan',

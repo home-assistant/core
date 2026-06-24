@@ -39,11 +39,11 @@
 # name: test_all_valves[valve.zone_one-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'attribution': 'Data provided by hydrawise.com',
-      'device_class': 'water',
-      'friendly_name': 'Zone One',
+      <EntityStateAttribute.ATTRIBUTION: 'attribution'>: 'Data provided by hydrawise.com',
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'water',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Zone One',
       <ValveEntityStateAttribute.IS_CLOSED: 'is_closed'>: True,
-      'supported_features': <ValveEntityFeature: 3>,
+      <EntityStateAttribute.SUPPORTED_FEATURES: 'supported_features'>: <ValveEntityFeature: 3>,
     }),
     'context': <ANY>,
     'entity_id': 'valve.zone_one',
@@ -93,11 +93,11 @@
 # name: test_all_valves[valve.zone_two-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'attribution': 'Data provided by hydrawise.com',
-      'device_class': 'water',
-      'friendly_name': 'Zone Two',
+      <EntityStateAttribute.ATTRIBUTION: 'attribution'>: 'Data provided by hydrawise.com',
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'water',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Zone Two',
       <ValveEntityStateAttribute.IS_CLOSED: 'is_closed'>: False,
-      'supported_features': <ValveEntityFeature: 3>,
+      <EntityStateAttribute.SUPPORTED_FEATURES: 'supported_features'>: <ValveEntityFeature: 3>,
     }),
     'context': <ANY>,
     'entity_id': 'valve.zone_two',

@@ -51,7 +51,7 @@
     'attributes': ReadOnlyDict({
       <WaterHeaterStateAttribute.AWAY_MODE: 'away_mode'>: 'off',
       <WaterHeaterStateAttribute.CURRENT_TEMPERATURE: 'current_temperature'>: 57,
-      'friendly_name': 'Heat pump',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Heat pump',
       <WaterHeaterCapabilityAttribute.MAX_TEMP: 'max_temp'>: 69,
       <WaterHeaterCapabilityAttribute.MIN_TEMP: 'min_temp'>: 38,
       <WaterHeaterCapabilityAttribute.OPERATION_LIST: 'operation_list'>: list([
@@ -62,7 +62,7 @@
         'high_demand',
       ]),
       <WaterHeaterStateAttribute.OPERATION_MODE: 'operation_mode'>: 'off',
-      'supported_features': <WaterHeaterEntityFeature: 14>,
+      <EntityStateAttribute.SUPPORTED_FEATURES: 'supported_features'>: <WaterHeaterEntityFeature: 14>,
       <WaterHeaterStateAttribute.TARGET_TEMP_HIGH: 'target_temp_high'>: 69,
       <WaterHeaterStateAttribute.TARGET_TEMP_LOW: 'target_temp_low'>: 38,
       <WaterHeaterStateAttribute.TEMPERATURE: 'temperature'>: 56,
@@ -126,7 +126,7 @@
     'attributes': ReadOnlyDict({
       <WaterHeaterStateAttribute.AWAY_MODE: 'away_mode'>: 'off',
       <WaterHeaterStateAttribute.CURRENT_TEMPERATURE: 'current_temperature'>: 40.8,
-      'friendly_name': 'Eco Heating System',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Eco Heating System',
       <WaterHeaterCapabilityAttribute.MAX_TEMP: 'max_temp'>: 60.0,
       <WaterHeaterCapabilityAttribute.MIN_TEMP: 'min_temp'>: 40,
       <WaterHeaterCapabilityAttribute.OPERATION_LIST: 'operation_list'>: list([
@@ -136,7 +136,7 @@
         'high_demand',
       ]),
       <WaterHeaterStateAttribute.OPERATION_MODE: 'operation_mode'>: 'off',
-      'supported_features': <WaterHeaterEntityFeature: 14>,
+      <EntityStateAttribute.SUPPORTED_FEATURES: 'supported_features'>: <WaterHeaterEntityFeature: 14>,
       <WaterHeaterStateAttribute.TARGET_TEMP_HIGH: 'target_temp_high'>: 55,
       <WaterHeaterStateAttribute.TARGET_TEMP_LOW: 'target_temp_low'>: 40,
       <WaterHeaterStateAttribute.TEMPERATURE: 'temperature'>: 48,
@@ -201,7 +201,7 @@
     'attributes': ReadOnlyDict({
       <WaterHeaterStateAttribute.AWAY_MODE: 'away_mode'>: 'off',
       <WaterHeaterStateAttribute.CURRENT_TEMPERATURE: 'current_temperature'>: 49.6,
-      'friendly_name': 'Wärmepumpe',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Wärmepumpe',
       <WaterHeaterCapabilityAttribute.MAX_TEMP: 'max_temp'>: 60.0,
       <WaterHeaterCapabilityAttribute.MIN_TEMP: 'min_temp'>: 40,
       <WaterHeaterCapabilityAttribute.OPERATION_LIST: 'operation_list'>: list([
@@ -212,7 +212,7 @@
         'high_demand',
       ]),
       <WaterHeaterStateAttribute.OPERATION_MODE: 'operation_mode'>: 'heat_pump',
-      'supported_features': <WaterHeaterEntityFeature: 15>,
+      <EntityStateAttribute.SUPPORTED_FEATURES: 'supported_features'>: <WaterHeaterEntityFeature: 15>,
       <WaterHeaterStateAttribute.TARGET_TEMP_HIGH: 'target_temp_high'>: 57,
       <WaterHeaterStateAttribute.TARGET_TEMP_LOW: 'target_temp_low'>: 40,
       <WaterHeaterStateAttribute.TEMPERATURE: 'temperature'>: 52,

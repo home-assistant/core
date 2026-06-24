@@ -40,8 +40,8 @@
 # name: test_media_player[media_player.test_media_player-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'device_class': 'speaker',
-      'friendly_name': 'Test Media player',
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'speaker',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Test Media player',
       <MediaPlayerEntityStateAttribute.MEDIA_ALBUM_NAME: 'media_album_name'>: 'Elon Musk',
       <MediaPlayerEntityStateAttribute.MEDIA_ARTIST: 'media_artist'>: 'Walter Isaacson',
       <MediaPlayerEntityStateAttribute.MEDIA_DURATION: 'media_duration'>: 651.0,
@@ -49,7 +49,7 @@
       <MediaPlayerEntityStateAttribute.MEDIA_POSITION: 'media_position'>: 1.0,
       <MediaPlayerEntityStateAttribute.MEDIA_TITLE: 'media_title'>: 'Chapter 51: Cybertruck: Tesla, 2018–2019',
       <MediaPlayerEntityStateAttribute.INPUT_SOURCE: 'source'>: 'Audible',
-      'supported_features': <MediaPlayerEntityFeature: 16437>,
+      <EntityStateAttribute.SUPPORTED_FEATURES: 'supported_features'>: <MediaPlayerEntityFeature: 16437>,
       <MediaPlayerEntityStateAttribute.MEDIA_VOLUME_LEVEL: 'volume_level'>: 0.16129355359011466,
     }),
     'context': <ANY>,
@@ -63,14 +63,14 @@
 # name: test_media_player_alt[media_player.test_media_player-statealt]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'device_class': 'speaker',
-      'friendly_name': 'Test Media player',
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'speaker',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Test Media player',
       <MediaPlayerEntityStateAttribute.MEDIA_ALBUM_NAME: 'media_album_name'>: '',
       <MediaPlayerEntityStateAttribute.MEDIA_ARTIST: 'media_artist'>: '',
       <MediaPlayerEntityStateAttribute.MEDIA_PLAYLIST: 'media_playlist'>: '',
       <MediaPlayerEntityStateAttribute.MEDIA_TITLE: 'media_title'>: '',
       <MediaPlayerEntityStateAttribute.INPUT_SOURCE: 'source'>: 'Spotify',
-      'supported_features': <MediaPlayerEntityFeature: 16437>,
+      <EntityStateAttribute.SUPPORTED_FEATURES: 'supported_features'>: <MediaPlayerEntityFeature: 16437>,
       <MediaPlayerEntityStateAttribute.MEDIA_VOLUME_LEVEL: 'volume_level'>: 0.25806775026025003,
     }),
     'context': <ANY>,
@@ -122,8 +122,8 @@
 # name: test_media_player_noscope[media_player.test_media_player-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'device_class': 'speaker',
-      'friendly_name': 'Test Media player',
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'speaker',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Test Media player',
       <MediaPlayerEntityStateAttribute.MEDIA_ALBUM_NAME: 'media_album_name'>: 'Elon Musk',
       <MediaPlayerEntityStateAttribute.MEDIA_ARTIST: 'media_artist'>: 'Walter Isaacson',
       <MediaPlayerEntityStateAttribute.MEDIA_DURATION: 'media_duration'>: 651.0,
@@ -131,7 +131,7 @@
       <MediaPlayerEntityStateAttribute.MEDIA_POSITION: 'media_position'>: 1.0,
       <MediaPlayerEntityStateAttribute.MEDIA_TITLE: 'media_title'>: 'Chapter 51: Cybertruck: Tesla, 2018–2019',
       <MediaPlayerEntityStateAttribute.INPUT_SOURCE: 'source'>: 'Audible',
-      'supported_features': <MediaPlayerEntityFeature: 0>,
+      <EntityStateAttribute.SUPPORTED_FEATURES: 'supported_features'>: <MediaPlayerEntityFeature: 0>,
       <MediaPlayerEntityStateAttribute.MEDIA_VOLUME_LEVEL: 'volume_level'>: 0.16129355359011466,
     }),
     'context': <ANY>,

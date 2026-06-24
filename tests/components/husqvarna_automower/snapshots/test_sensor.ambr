@@ -41,10 +41,10 @@
 # name: test_sensor_snapshot[sensor.garden_test_mower_1_battery-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'device_class': 'battery',
-      'friendly_name': 'Test Mower 1 Battery',
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'battery',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Test Mower 1 Battery',
       <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
-      'unit_of_measurement': '%',
+      <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: '%',
     }),
     'context': <ANY>,
     'entity_id': 'sensor.garden_test_mower_1_battery',
@@ -102,10 +102,10 @@
 # name: test_sensor_snapshot[sensor.garden_test_mower_1_cutting_blade_usage_time-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'device_class': 'duration',
-      'friendly_name': 'Test Mower 1 Cutting blade usage time',
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'duration',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Test Mower 1 Cutting blade usage time',
       <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.TOTAL: 'total'>,
-      'unit_of_measurement': <UnitOfTime.HOURS: 'h'>,
+      <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: <UnitOfTime.HOURS: 'h'>,
     }),
     'context': <ANY>,
     'entity_id': 'sensor.garden_test_mower_1_cutting_blade_usage_time',
@@ -163,10 +163,10 @@
 # name: test_sensor_snapshot[sensor.garden_test_mower_1_downtime-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'device_class': 'duration',
-      'friendly_name': 'Test Mower 1 Downtime',
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'duration',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Test Mower 1 Downtime',
       <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.TOTAL: 'total'>,
-      'unit_of_measurement': <UnitOfTime.HOURS: 'h'>,
+      <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: <UnitOfTime.HOURS: 'h'>,
     }),
     'context': <ANY>,
     'entity_id': 'sensor.garden_test_mower_1_downtime',
@@ -349,8 +349,8 @@
 # name: test_sensor_snapshot[sensor.garden_test_mower_1_error-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'device_class': 'enum',
-      'friendly_name': 'Test Mower 1 Error',
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'enum',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Test Mower 1 Error',
       <SensorEntityCapabilityAttribute.OPTIONS: 'options'>: list([
         'alarm_mower_in_motion',
         'alarm_mower_lifted',
@@ -532,8 +532,8 @@
 # name: test_sensor_snapshot[sensor.garden_test_mower_1_front_lawn_last_time_completed-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'device_class': 'timestamp',
-      'friendly_name': 'Test Mower 1 Front lawn last time completed',
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'timestamp',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Test Mower 1 Front lawn last time completed',
     }),
     'context': <ANY>,
     'entity_id': 'sensor.garden_test_mower_1_front_lawn_last_time_completed',
@@ -585,9 +585,9 @@
 # name: test_sensor_snapshot[sensor.garden_test_mower_1_front_lawn_progress-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'Test Mower 1 Front lawn progress',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Test Mower 1 Front lawn progress',
       <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
-      'unit_of_measurement': '%',
+      <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: '%',
     }),
     'context': <ANY>,
     'entity_id': 'sensor.garden_test_mower_1_front_lawn_progress',
@@ -643,8 +643,8 @@
 # name: test_sensor_snapshot[sensor.garden_test_mower_1_inactive_reason-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'device_class': 'enum',
-      'friendly_name': 'Test Mower 1 Inactive reason',
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'enum',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Test Mower 1 Inactive reason',
       <SensorEntityCapabilityAttribute.OPTIONS: 'options'>: list([
         <InactiveReasons.NONE: 'none'>,
         <InactiveReasons.PLANNING: 'planning'>,
@@ -708,8 +708,8 @@
 # name: test_sensor_snapshot[sensor.garden_test_mower_1_mode-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'device_class': 'enum',
-      'friendly_name': 'Test Mower 1 Mode',
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'enum',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Test Mower 1 Mode',
       <SensorEntityCapabilityAttribute.OPTIONS: 'options'>: list([
         <MowerModes.MAIN_AREA: 'main_area'>,
         <MowerModes.DEMO: 'demo'>,
@@ -767,8 +767,8 @@
 # name: test_sensor_snapshot[sensor.garden_test_mower_1_my_lawn_last_time_completed-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'device_class': 'timestamp',
-      'friendly_name': 'Test Mower 1 My lawn last time completed',
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'timestamp',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Test Mower 1 My lawn last time completed',
     }),
     'context': <ANY>,
     'entity_id': 'sensor.garden_test_mower_1_my_lawn_last_time_completed',
@@ -820,9 +820,9 @@
 # name: test_sensor_snapshot[sensor.garden_test_mower_1_my_lawn_progress-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'Test Mower 1 My lawn progress',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Test Mower 1 My lawn progress',
       <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
-      'unit_of_measurement': '%',
+      <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: '%',
     }),
     'context': <ANY>,
     'entity_id': 'sensor.garden_test_mower_1_my_lawn_progress',
@@ -872,8 +872,8 @@
 # name: test_sensor_snapshot[sensor.garden_test_mower_1_next_start-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'device_class': 'timestamp',
-      'friendly_name': 'Test Mower 1 Next start',
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'timestamp',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Test Mower 1 Next start',
     }),
     'context': <ANY>,
     'entity_id': 'sensor.garden_test_mower_1_next_start',
@@ -925,7 +925,7 @@
 # name: test_sensor_snapshot[sensor.garden_test_mower_1_number_of_charging_cycles-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'Test Mower 1 Number of charging cycles',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Test Mower 1 Number of charging cycles',
       <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.TOTAL: 'total'>,
     }),
     'context': <ANY>,
@@ -978,7 +978,7 @@
 # name: test_sensor_snapshot[sensor.garden_test_mower_1_number_of_collisions-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'Test Mower 1 Number of collisions',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Test Mower 1 Number of collisions',
       <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.TOTAL: 'total'>,
     }),
     'context': <ANY>,
@@ -1035,9 +1035,9 @@
 # name: test_sensor_snapshot[sensor.garden_test_mower_1_remaining_charging_time-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'device_class': 'duration',
-      'friendly_name': 'Test Mower 1 Remaining charging time',
-      'unit_of_measurement': <UnitOfTime.MINUTES: 'min'>,
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'duration',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Test Mower 1 Remaining charging time',
+      <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: <UnitOfTime.MINUTES: 'min'>,
     }),
     'context': <ANY>,
     'entity_id': 'sensor.garden_test_mower_1_remaining_charging_time',
@@ -1112,8 +1112,8 @@
 # name: test_sensor_snapshot[sensor.garden_test_mower_1_restricted_reason-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'device_class': 'enum',
-      'friendly_name': 'Test Mower 1 Restricted reason',
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'enum',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Test Mower 1 Restricted reason',
       <SensorEntityCapabilityAttribute.OPTIONS: 'options'>: list([
         <RestrictedReasons.ALL_WORK_AREAS_COMPLETED: 'all_work_areas_completed'>,
         <RestrictedReasons.DAILY_LIMIT: 'daily_limit'>,
@@ -1195,10 +1195,10 @@
 # name: test_sensor_snapshot[sensor.garden_test_mower_1_total_charging_time-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'device_class': 'duration',
-      'friendly_name': 'Test Mower 1 Total charging time',
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'duration',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Test Mower 1 Total charging time',
       <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.TOTAL: 'total'>,
-      'unit_of_measurement': <UnitOfTime.HOURS: 'h'>,
+      <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: <UnitOfTime.HOURS: 'h'>,
     }),
     'context': <ANY>,
     'entity_id': 'sensor.garden_test_mower_1_total_charging_time',
@@ -1256,10 +1256,10 @@
 # name: test_sensor_snapshot[sensor.garden_test_mower_1_total_cutting_time-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'device_class': 'duration',
-      'friendly_name': 'Test Mower 1 Total cutting time',
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'duration',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Test Mower 1 Total cutting time',
       <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.TOTAL: 'total'>,
-      'unit_of_measurement': <UnitOfTime.HOURS: 'h'>,
+      <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: <UnitOfTime.HOURS: 'h'>,
     }),
     'context': <ANY>,
     'entity_id': 'sensor.garden_test_mower_1_total_cutting_time',
@@ -1317,10 +1317,10 @@
 # name: test_sensor_snapshot[sensor.garden_test_mower_1_total_drive_distance-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'device_class': 'distance',
-      'friendly_name': 'Test Mower 1 Total drive distance',
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'distance',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Test Mower 1 Total drive distance',
       <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.TOTAL: 'total'>,
-      'unit_of_measurement': <UnitOfLength.KILOMETERS: 'km'>,
+      <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: <UnitOfLength.KILOMETERS: 'km'>,
     }),
     'context': <ANY>,
     'entity_id': 'sensor.garden_test_mower_1_total_drive_distance',
@@ -1378,10 +1378,10 @@
 # name: test_sensor_snapshot[sensor.garden_test_mower_1_total_running_time-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'device_class': 'duration',
-      'friendly_name': 'Test Mower 1 Total running time',
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'duration',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Test Mower 1 Total running time',
       <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.TOTAL: 'total'>,
-      'unit_of_measurement': <UnitOfTime.HOURS: 'h'>,
+      <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: <UnitOfTime.HOURS: 'h'>,
     }),
     'context': <ANY>,
     'entity_id': 'sensor.garden_test_mower_1_total_running_time',
@@ -1439,10 +1439,10 @@
 # name: test_sensor_snapshot[sensor.garden_test_mower_1_total_searching_time-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'device_class': 'duration',
-      'friendly_name': 'Test Mower 1 Total searching time',
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'duration',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Test Mower 1 Total searching time',
       <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.TOTAL: 'total'>,
-      'unit_of_measurement': <UnitOfTime.HOURS: 'h'>,
+      <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: <UnitOfTime.HOURS: 'h'>,
     }),
     'context': <ANY>,
     'entity_id': 'sensor.garden_test_mower_1_total_searching_time',
@@ -1500,10 +1500,10 @@
 # name: test_sensor_snapshot[sensor.garden_test_mower_1_uptime-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'device_class': 'duration',
-      'friendly_name': 'Test Mower 1 Uptime',
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'duration',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Test Mower 1 Uptime',
       <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.TOTAL: 'total'>,
-      'unit_of_measurement': <UnitOfTime.HOURS: 'h'>,
+      <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: <UnitOfTime.HOURS: 'h'>,
     }),
     'context': <ANY>,
     'entity_id': 'sensor.garden_test_mower_1_uptime',
@@ -1560,8 +1560,8 @@
 # name: test_sensor_snapshot[sensor.garden_test_mower_1_work_area-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'device_class': 'enum',
-      'friendly_name': 'Test Mower 1 Work area',
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'enum',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Test Mower 1 Work area',
       <SensorEntityCapabilityAttribute.OPTIONS: 'options'>: list([
         'Front lawn',
         'Back lawn',
@@ -1624,10 +1624,10 @@
 # name: test_sensor_snapshot[sensor.garden_test_mower_2_battery-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'device_class': 'battery',
-      'friendly_name': 'Test Mower 2 Battery',
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'battery',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Test Mower 2 Battery',
       <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
-      'unit_of_measurement': '%',
+      <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: '%',
     }),
     'context': <ANY>,
     'entity_id': 'sensor.garden_test_mower_2_battery',
@@ -1810,8 +1810,8 @@
 # name: test_sensor_snapshot[sensor.garden_test_mower_2_error-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'device_class': 'enum',
-      'friendly_name': 'Test Mower 2 Error',
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'enum',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Test Mower 2 Error',
       <SensorEntityCapabilityAttribute.OPTIONS: 'options'>: list([
         'alarm_mower_in_motion',
         'alarm_mower_lifted',
@@ -2002,8 +2002,8 @@
 # name: test_sensor_snapshot[sensor.garden_test_mower_2_mode-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'device_class': 'enum',
-      'friendly_name': 'Test Mower 2 Mode',
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'enum',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Test Mower 2 Mode',
       <SensorEntityCapabilityAttribute.OPTIONS: 'options'>: list([
         <MowerModes.MAIN_AREA: 'main_area'>,
         <MowerModes.DEMO: 'demo'>,
@@ -2061,8 +2061,8 @@
 # name: test_sensor_snapshot[sensor.garden_test_mower_2_next_start-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'device_class': 'timestamp',
-      'friendly_name': 'Test Mower 2 Next start',
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'timestamp',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Test Mower 2 Next start',
     }),
     'context': <ANY>,
     'entity_id': 'sensor.garden_test_mower_2_next_start',
@@ -2118,9 +2118,9 @@
 # name: test_sensor_snapshot[sensor.garden_test_mower_2_remaining_charging_time-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'device_class': 'duration',
-      'friendly_name': 'Test Mower 2 Remaining charging time',
-      'unit_of_measurement': <UnitOfTime.MINUTES: 'min'>,
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'duration',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Test Mower 2 Remaining charging time',
+      <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: <UnitOfTime.MINUTES: 'min'>,
     }),
     'context': <ANY>,
     'entity_id': 'sensor.garden_test_mower_2_remaining_charging_time',
@@ -2195,8 +2195,8 @@
 # name: test_sensor_snapshot[sensor.garden_test_mower_2_restricted_reason-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'device_class': 'enum',
-      'friendly_name': 'Test Mower 2 Restricted reason',
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'enum',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Test Mower 2 Restricted reason',
       <SensorEntityCapabilityAttribute.OPTIONS: 'options'>: list([
         <RestrictedReasons.ALL_WORK_AREAS_COMPLETED: 'all_work_areas_completed'>,
         <RestrictedReasons.DAILY_LIMIT: 'daily_limit'>,

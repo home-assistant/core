@@ -44,10 +44,10 @@
     'attributes': ReadOnlyDict({
       <WaterHeaterStateAttribute.AWAY_MODE: 'away_mode'>: 'off',
       <WaterHeaterStateAttribute.CURRENT_TEMPERATURE: 'current_temperature'>: 60,
-      'friendly_name': 'TEST DEVICE',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'TEST DEVICE',
       <WaterHeaterCapabilityAttribute.MAX_TEMP: 'max_temp'>: 75,
       <WaterHeaterCapabilityAttribute.MIN_TEMP: 'min_temp'>: 10,
-      'supported_features': <WaterHeaterEntityFeature: 13>,
+      <EntityStateAttribute.SUPPORTED_FEATURES: 'supported_features'>: <WaterHeaterEntityFeature: 13>,
       <WaterHeaterStateAttribute.TARGET_TEMP_HIGH: 'target_temp_high'>: 63,
       <WaterHeaterStateAttribute.TARGET_TEMP_LOW: 'target_temp_low'>: 57,
       <WaterHeaterStateAttribute.TEMPERATURE: 'temperature'>: 60,
