@@ -2,8 +2,8 @@
 # name: test_light_attributes_state_update
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'brightness': None,
-      'color_mode': None,
+      <LightEntityStateAttribute.BRIGHTNESS: 'brightness'>: None,
+      <LightEntityStateAttribute.COLOR_MODE: 'color_mode'>: None,
       'friendly_name': 'Foyer Sconces',
       'homeworks_address': '[02:08:01:01]',
       <LightEntityCapabilityAttribute.SUPPORTED_COLOR_MODES: 'supported_color_modes'>: list([
@@ -22,8 +22,8 @@
 # name: test_light_attributes_state_update.1
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'brightness': 127,
-      'color_mode': <ColorMode.BRIGHTNESS: 'brightness'>,
+      <LightEntityStateAttribute.BRIGHTNESS: 'brightness'>: 127,
+      <LightEntityStateAttribute.COLOR_MODE: 'color_mode'>: <ColorMode.BRIGHTNESS: 'brightness'>,
       'friendly_name': 'Foyer Sconces',
       'homeworks_address': '[02:08:01:01]',
       <LightEntityCapabilityAttribute.SUPPORTED_COLOR_MODES: 'supported_color_modes'>: list([

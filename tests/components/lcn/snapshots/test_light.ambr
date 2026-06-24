@@ -43,8 +43,8 @@
 # name: test_setup_lcn_light[light.testmodule_light_output1-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'brightness': None,
-      'color_mode': None,
+      <LightEntityStateAttribute.BRIGHTNESS: 'brightness'>: None,
+      <LightEntityStateAttribute.COLOR_MODE: 'color_mode'>: None,
       'friendly_name': 'TestModule Light_Output1',
       <LightEntityCapabilityAttribute.SUPPORTED_COLOR_MODES: 'supported_color_modes'>: list([
         <ColorMode.BRIGHTNESS: 'brightness'>,
@@ -103,7 +103,7 @@
 # name: test_setup_lcn_light[light.testmodule_light_output2-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'color_mode': None,
+      <LightEntityStateAttribute.COLOR_MODE: 'color_mode'>: None,
       'friendly_name': 'TestModule Light_Output2',
       <LightEntityCapabilityAttribute.SUPPORTED_COLOR_MODES: 'supported_color_modes'>: list([
         <ColorMode.ONOFF: 'onoff'>,
@@ -162,7 +162,7 @@
 # name: test_setup_lcn_light[light.testmodule_light_relay1-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'color_mode': None,
+      <LightEntityStateAttribute.COLOR_MODE: 'color_mode'>: None,
       'friendly_name': 'TestModule Light_Relay1',
       <LightEntityCapabilityAttribute.SUPPORTED_COLOR_MODES: 'supported_color_modes'>: list([
         <ColorMode.ONOFF: 'onoff'>,

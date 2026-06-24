@@ -228,10 +228,10 @@
 # name: test_snapshots[cct][light.wled_cct_light-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'brightness': 255,
-      'color_mode': <ColorMode.COLOR_TEMP: 'color_temp'>,
-      'color_temp_kelvin': 2942,
-      'effect': 'Solid',
+      <LightEntityStateAttribute.BRIGHTNESS: 'brightness'>: 255,
+      <LightEntityStateAttribute.COLOR_MODE: 'color_mode'>: <ColorMode.COLOR_TEMP: 'color_temp'>,
+      <LightEntityStateAttribute.COLOR_TEMP_KELVIN: 'color_temp_kelvin'>: 2942,
+      <LightEntityStateAttribute.EFFECT: 'effect'>: 'Solid',
       <LightEntityCapabilityAttribute.EFFECT_LIST: 'effect_list'>: list([
         'Solid',
         'Blink',
@@ -415,24 +415,24 @@
         'Akemi',
       ]),
       'friendly_name': 'WLED CCT light',
-      'hs_color': tuple(
+      <LightEntityStateAttribute.HS_COLOR: 'hs_color'>: tuple(
         27.924,
         58.494,
       ),
       <LightEntityCapabilityAttribute.MAX_COLOR_TEMP_KELVIN: 'max_color_temp_kelvin'>: 6535,
       <LightEntityCapabilityAttribute.MIN_COLOR_TEMP_KELVIN: 'min_color_temp_kelvin'>: 2000,
-      'rgb_color': tuple(
+      <LightEntityStateAttribute.RGB_COLOR: 'rgb_color'>: tuple(
         255,
         175,
         106,
       ),
-      'rgbw_color': None,
+      <LightEntityStateAttribute.RGBW_COLOR: 'rgbw_color'>: None,
       <LightEntityCapabilityAttribute.SUPPORTED_COLOR_MODES: 'supported_color_modes'>: list([
         <ColorMode.COLOR_TEMP: 'color_temp'>,
         <ColorMode.RGBW: 'rgbw'>,
       ]),
       'supported_features': <LightEntityFeature: 36>,
-      'xy_color': tuple(
+      <LightEntityStateAttribute.XY_COLOR: 'xy_color'>: tuple(
         0.501,
         0.384,
       ),
@@ -670,9 +670,9 @@
 # name: test_snapshots[rgb][light.wled_rgb_light-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'brightness': 255,
-      'color_mode': <ColorMode.RGB: 'rgb'>,
-      'effect': 'Solid',
+      <LightEntityStateAttribute.BRIGHTNESS: 'brightness'>: 255,
+      <LightEntityStateAttribute.COLOR_MODE: 'color_mode'>: <ColorMode.RGB: 'rgb'>,
+      <LightEntityStateAttribute.EFFECT: 'effect'>: 'Solid',
       <LightEntityCapabilityAttribute.EFFECT_LIST: 'effect_list'>: list([
         'Solid',
         'Blink',
@@ -855,11 +855,11 @@
         'Akemi',
       ]),
       'friendly_name': 'WLED RGB Light',
-      'hs_color': tuple(
+      <LightEntityStateAttribute.HS_COLOR: 'hs_color'>: tuple(
         218.906,
         50.196,
       ),
-      'rgb_color': tuple(
+      <LightEntityStateAttribute.RGB_COLOR: 'rgb_color'>: tuple(
         127,
         172,
         255,
@@ -868,7 +868,7 @@
         <ColorMode.RGB: 'rgb'>,
       ]),
       'supported_features': <LightEntityFeature: 36>,
-      'xy_color': tuple(
+      <LightEntityStateAttribute.XY_COLOR: 'xy_color'>: tuple(
         0.208,
         0.217,
       ),
@@ -929,8 +929,8 @@
 # name: test_snapshots[rgb][light.wled_rgb_light_main-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'brightness': 128,
-      'color_mode': <ColorMode.BRIGHTNESS: 'brightness'>,
+      <LightEntityStateAttribute.BRIGHTNESS: 'brightness'>: 128,
+      <LightEntityStateAttribute.COLOR_MODE: 'color_mode'>: <ColorMode.BRIGHTNESS: 'brightness'>,
       'friendly_name': 'WLED RGB Light Main',
       'group_entities': list([
         'light.wled_rgb_light',
@@ -1174,9 +1174,9 @@
 # name: test_snapshots[rgb][light.wled_rgb_light_segment_1-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'brightness': 255,
-      'color_mode': <ColorMode.RGB: 'rgb'>,
-      'effect': 'Wipe',
+      <LightEntityStateAttribute.BRIGHTNESS: 'brightness'>: 255,
+      <LightEntityStateAttribute.COLOR_MODE: 'color_mode'>: <ColorMode.RGB: 'rgb'>,
+      <LightEntityStateAttribute.EFFECT: 'effect'>: 'Wipe',
       <LightEntityCapabilityAttribute.EFFECT_LIST: 'effect_list'>: list([
         'Solid',
         'Blink',
@@ -1359,11 +1359,11 @@
         'Akemi',
       ]),
       'friendly_name': 'WLED RGB Light Segment 1',
-      'hs_color': tuple(
+      <LightEntityStateAttribute.HS_COLOR: 'hs_color'>: tuple(
         40.0,
         100.0,
       ),
-      'rgb_color': tuple(
+      <LightEntityStateAttribute.RGB_COLOR: 'rgb_color'>: tuple(
         255,
         170,
         0,
@@ -1372,7 +1372,7 @@
         <ColorMode.RGB: 'rgb'>,
       ]),
       'supported_features': <LightEntityFeature: 36>,
-      'xy_color': tuple(
+      <LightEntityStateAttribute.XY_COLOR: 'xy_color'>: tuple(
         0.555,
         0.422,
       ),
@@ -1610,9 +1610,9 @@
 # name: test_snapshots[rgb_single_segment][light.wled_rgb_light-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'brightness': 128,
-      'color_mode': <ColorMode.RGB: 'rgb'>,
-      'effect': 'Solid',
+      <LightEntityStateAttribute.BRIGHTNESS: 'brightness'>: 128,
+      <LightEntityStateAttribute.COLOR_MODE: 'color_mode'>: <ColorMode.RGB: 'rgb'>,
+      <LightEntityStateAttribute.EFFECT: 'effect'>: 'Solid',
       <LightEntityCapabilityAttribute.EFFECT_LIST: 'effect_list'>: list([
         'Solid',
         'Blink',
@@ -1795,11 +1795,11 @@
         'Akemi',
       ]),
       'friendly_name': 'WLED RGB Light',
-      'hs_color': tuple(
+      <LightEntityStateAttribute.HS_COLOR: 'hs_color'>: tuple(
         218.906,
         50.196,
       ),
-      'rgb_color': tuple(
+      <LightEntityStateAttribute.RGB_COLOR: 'rgb_color'>: tuple(
         127,
         172,
         255,
@@ -1808,7 +1808,7 @@
         <ColorMode.RGB: 'rgb'>,
       ]),
       'supported_features': <LightEntityFeature: 36>,
-      'xy_color': tuple(
+      <LightEntityStateAttribute.XY_COLOR: 'xy_color'>: tuple(
         0.208,
         0.217,
       ),
@@ -2046,9 +2046,9 @@
 # name: test_snapshots[rgb_websocket][light.wled_websocket-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'brightness': 128,
-      'color_mode': <ColorMode.RGB: 'rgb'>,
-      'effect': 'Solid',
+      <LightEntityStateAttribute.BRIGHTNESS: 'brightness'>: 128,
+      <LightEntityStateAttribute.COLOR_MODE: 'color_mode'>: <ColorMode.RGB: 'rgb'>,
+      <LightEntityStateAttribute.EFFECT: 'effect'>: 'Solid',
       <LightEntityCapabilityAttribute.EFFECT_LIST: 'effect_list'>: list([
         'Solid',
         'Blink',
@@ -2231,11 +2231,11 @@
         'Akemi',
       ]),
       'friendly_name': 'WLED WebSocket',
-      'hs_color': tuple(
+      <LightEntityStateAttribute.HS_COLOR: 'hs_color'>: tuple(
         218.906,
         50.196,
       ),
-      'rgb_color': tuple(
+      <LightEntityStateAttribute.RGB_COLOR: 'rgb_color'>: tuple(
         127,
         172,
         255,
@@ -2244,7 +2244,7 @@
         <ColorMode.RGB: 'rgb'>,
       ]),
       'supported_features': <LightEntityFeature: 36>,
-      'xy_color': tuple(
+      <LightEntityStateAttribute.XY_COLOR: 'xy_color'>: tuple(
         0.208,
         0.217,
       ),
@@ -2482,9 +2482,9 @@
 # name: test_snapshots[rgbw][light.wled_rgbw_light-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'brightness': 128,
-      'color_mode': <ColorMode.RGBW: 'rgbw'>,
-      'effect': 'Solid',
+      <LightEntityStateAttribute.BRIGHTNESS: 'brightness'>: 128,
+      <LightEntityStateAttribute.COLOR_MODE: 'color_mode'>: <ColorMode.RGBW: 'rgbw'>,
+      <LightEntityStateAttribute.EFFECT: 'effect'>: 'Solid',
       <LightEntityCapabilityAttribute.EFFECT_LIST: 'effect_list'>: list([
         'Solid',
         'Blink',
@@ -2667,16 +2667,16 @@
         'Akemi',
       ]),
       'friendly_name': 'WLED RGBW Light',
-      'hs_color': tuple(
+      <LightEntityStateAttribute.HS_COLOR: 'hs_color'>: tuple(
         0.0,
         64.706,
       ),
-      'rgb_color': tuple(
+      <LightEntityStateAttribute.RGB_COLOR: 'rgb_color'>: tuple(
         255,
         90,
         90,
       ),
-      'rgbw_color': tuple(
+      <LightEntityStateAttribute.RGBW_COLOR: 'rgbw_color'>: tuple(
         255,
         0,
         0,
@@ -2686,7 +2686,7 @@
         <ColorMode.RGBW: 'rgbw'>,
       ]),
       'supported_features': <LightEntityFeature: 36>,
-      'xy_color': tuple(
+      <LightEntityStateAttribute.XY_COLOR: 'xy_color'>: tuple(
         0.6,
         0.307,
       ),

@@ -45,19 +45,19 @@
 # name: test_all_entities[abl_light_b_001][light.kitchen_light_5-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'brightness': None,
-      'color_mode': None,
-      'color_temp_kelvin': None,
+      <LightEntityStateAttribute.BRIGHTNESS: 'brightness'>: None,
+      <LightEntityStateAttribute.COLOR_MODE: 'color_mode'>: None,
+      <LightEntityStateAttribute.COLOR_TEMP_KELVIN: 'color_temp_kelvin'>: None,
       'friendly_name': 'Kitchen Light 5',
-      'hs_color': None,
+      <LightEntityStateAttribute.HS_COLOR: 'hs_color'>: None,
       <LightEntityCapabilityAttribute.MAX_COLOR_TEMP_KELVIN: 'max_color_temp_kelvin'>: 9000,
       <LightEntityCapabilityAttribute.MIN_COLOR_TEMP_KELVIN: 'min_color_temp_kelvin'>: 2000,
-      'rgb_color': None,
+      <LightEntityStateAttribute.RGB_COLOR: 'rgb_color'>: None,
       <LightEntityCapabilityAttribute.SUPPORTED_COLOR_MODES: 'supported_color_modes'>: list([
         <ColorMode.COLOR_TEMP: 'color_temp'>,
       ]),
       'supported_features': <LightEntityFeature: 32>,
-      'xy_color': None,
+      <LightEntityStateAttribute.XY_COLOR: 'xy_color'>: None,
     }),
     'context': <ANY>,
     'entity_id': 'light.kitchen_light_5',
@@ -111,8 +111,8 @@
 # name: test_all_entities[centralite][light.theater_dimmer_debian-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'brightness': None,
-      'color_mode': None,
+      <LightEntityStateAttribute.BRIGHTNESS: 'brightness'>: None,
+      <LightEntityStateAttribute.COLOR_MODE: 'color_mode'>: None,
       'friendly_name': 'Dimmer Debian',
       <LightEntityCapabilityAttribute.SUPPORTED_COLOR_MODES: 'supported_color_modes'>: list([
         <ColorMode.BRIGHTNESS: 'brightness'>,
@@ -171,8 +171,8 @@
 # name: test_all_entities[da_ks_hood_01001][light.range_hood_light-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'brightness': 127,
-      'color_mode': <ColorMode.BRIGHTNESS: 'brightness'>,
+      <LightEntityStateAttribute.BRIGHTNESS: 'brightness'>: 127,
+      <LightEntityStateAttribute.COLOR_MODE: 'color_mode'>: <ColorMode.BRIGHTNESS: 'brightness'>,
       'friendly_name': 'Range hood Light',
       <LightEntityCapabilityAttribute.SUPPORTED_COLOR_MODES: 'supported_color_modes'>: list([
         <ColorMode.BRIGHTNESS: 'brightness'>,
@@ -231,8 +231,8 @@
 # name: test_all_entities[da_ks_microwave_0101x][light.theater_microwave_light-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'brightness': None,
-      'color_mode': None,
+      <LightEntityStateAttribute.BRIGHTNESS: 'brightness'>: None,
+      <LightEntityStateAttribute.COLOR_MODE: 'color_mode'>: None,
       'friendly_name': 'Microwave Light',
       <LightEntityCapabilityAttribute.SUPPORTED_COLOR_MODES: 'supported_color_modes'>: list([
         <ColorMode.BRIGHTNESS: 'brightness'>,
@@ -291,7 +291,7 @@
 # name: test_all_entities[da_ks_oven_01061][light.oven_light-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'color_mode': <ColorMode.ONOFF: 'onoff'>,
+      <LightEntityStateAttribute.COLOR_MODE: 'color_mode'>: <ColorMode.ONOFF: 'onoff'>,
       'friendly_name': 'Oven Light',
       <LightEntityCapabilityAttribute.SUPPORTED_COLOR_MODES: 'supported_color_modes'>: list([
         <ColorMode.ONOFF: 'onoff'>,
@@ -350,7 +350,7 @@
 # name: test_all_entities[da_ks_oven_0107x][light.kitchen_oven_light-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'color_mode': None,
+      <LightEntityStateAttribute.COLOR_MODE: 'color_mode'>: None,
       'friendly_name': 'Kitchen oven Light',
       <LightEntityCapabilityAttribute.SUPPORTED_COLOR_MODES: 'supported_color_modes'>: list([
         <ColorMode.ONOFF: 'onoff'>,
@@ -409,7 +409,7 @@
 # name: test_all_entities[da_ks_range_0101x][light.vulcan_light-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'color_mode': <ColorMode.ONOFF: 'onoff'>,
+      <LightEntityStateAttribute.COLOR_MODE: 'color_mode'>: <ColorMode.ONOFF: 'onoff'>,
       'friendly_name': 'Vulcan Light',
       <LightEntityCapabilityAttribute.SUPPORTED_COLOR_MODES: 'supported_color_modes'>: list([
         <ColorMode.ONOFF: 'onoff'>,
@@ -468,7 +468,7 @@
 # name: test_all_entities[da_ks_walloven_0107x][light.four_light-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'color_mode': None,
+      <LightEntityStateAttribute.COLOR_MODE: 'color_mode'>: None,
       'friendly_name': 'Four Light',
       <LightEntityCapabilityAttribute.SUPPORTED_COLOR_MODES: 'supported_color_modes'>: list([
         <ColorMode.ONOFF: 'onoff'>,
@@ -527,7 +527,7 @@
 # name: test_all_entities[da_ks_walloven_0107x][light.four_light_2-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'color_mode': <ColorMode.ONOFF: 'onoff'>,
+      <LightEntityStateAttribute.COLOR_MODE: 'color_mode'>: <ColorMode.ONOFF: 'onoff'>,
       'friendly_name': 'Four Light',
       <LightEntityCapabilityAttribute.SUPPORTED_COLOR_MODES: 'supported_color_modes'>: list([
         <ColorMode.ONOFF: 'onoff'>,
@@ -586,8 +586,8 @@
 # name: test_all_entities[fibaro_dimmer_2][light.dimmer_entre_1_1-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'brightness': None,
-      'color_mode': None,
+      <LightEntityStateAttribute.BRIGHTNESS: 'brightness'>: None,
+      <LightEntityStateAttribute.COLOR_MODE: 'color_mode'>: None,
       'friendly_name': 'Dimmer entré 1 1',
       <LightEntityCapabilityAttribute.SUPPORTED_COLOR_MODES: 'supported_color_modes'>: list([
         <ColorMode.BRIGHTNESS: 'brightness'>,
@@ -646,8 +646,8 @@
 # name: test_all_entities[ge_in_wall_smart_dimmer][light.theater_basement_exit_light-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'brightness': None,
-      'color_mode': None,
+      <LightEntityStateAttribute.BRIGHTNESS: 'brightness'>: None,
+      <LightEntityStateAttribute.COLOR_MODE: 'color_mode'>: None,
       'friendly_name': 'Basement Exit Light',
       <LightEntityCapabilityAttribute.SUPPORTED_COLOR_MODES: 'supported_color_modes'>: list([
         <ColorMode.BRIGHTNESS: 'brightness'>,
@@ -708,17 +708,17 @@
 # name: test_all_entities[hue_color_temperature_bulb][light.bathroom_spot-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'brightness': 178,
-      'color_mode': <ColorMode.COLOR_TEMP: 'color_temp'>,
-      'color_temp_kelvin': 3000,
+      <LightEntityStateAttribute.BRIGHTNESS: 'brightness'>: 178,
+      <LightEntityStateAttribute.COLOR_MODE: 'color_mode'>: <ColorMode.COLOR_TEMP: 'color_temp'>,
+      <LightEntityStateAttribute.COLOR_TEMP_KELVIN: 'color_temp_kelvin'>: 3000,
       'friendly_name': 'Bathroom spot',
-      'hs_color': tuple(
+      <LightEntityStateAttribute.HS_COLOR: 'hs_color'>: tuple(
         27.825,
         56.895,
       ),
       <LightEntityCapabilityAttribute.MAX_COLOR_TEMP_KELVIN: 'max_color_temp_kelvin'>: 9000,
       <LightEntityCapabilityAttribute.MIN_COLOR_TEMP_KELVIN: 'min_color_temp_kelvin'>: 2000,
-      'rgb_color': tuple(
+      <LightEntityStateAttribute.RGB_COLOR: 'rgb_color'>: tuple(
         255,
         177,
         110,
@@ -727,7 +727,7 @@
         <ColorMode.COLOR_TEMP: 'color_temp'>,
       ]),
       'supported_features': <LightEntityFeature: 32>,
-      'xy_color': tuple(
+      <LightEntityStateAttribute.XY_COLOR: 'xy_color'>: tuple(
         0.496,
         0.383,
       ),
@@ -787,20 +787,20 @@
 # name: test_all_entities[hue_rgbw_color_bulb][light.standing_light-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'brightness': None,
-      'color_mode': None,
-      'color_temp_kelvin': None,
+      <LightEntityStateAttribute.BRIGHTNESS: 'brightness'>: None,
+      <LightEntityStateAttribute.COLOR_MODE: 'color_mode'>: None,
+      <LightEntityStateAttribute.COLOR_TEMP_KELVIN: 'color_temp_kelvin'>: None,
       'friendly_name': 'Standing light',
-      'hs_color': None,
+      <LightEntityStateAttribute.HS_COLOR: 'hs_color'>: None,
       <LightEntityCapabilityAttribute.MAX_COLOR_TEMP_KELVIN: 'max_color_temp_kelvin'>: 9000,
       <LightEntityCapabilityAttribute.MIN_COLOR_TEMP_KELVIN: 'min_color_temp_kelvin'>: 2000,
-      'rgb_color': None,
+      <LightEntityStateAttribute.RGB_COLOR: 'rgb_color'>: None,
       <LightEntityCapabilityAttribute.SUPPORTED_COLOR_MODES: 'supported_color_modes'>: list([
         <ColorMode.COLOR_TEMP: 'color_temp'>,
         <ColorMode.HS: 'hs'>,
       ]),
       'supported_features': <LightEntityFeature: 32>,
-      'xy_color': None,
+      <LightEntityStateAttribute.XY_COLOR: 'xy_color'>: None,
     }),
     'context': <ANY>,
     'entity_id': 'light.standing_light',
@@ -854,8 +854,8 @@
 # name: test_all_entities[ikea_plug_powermeter][light.ikea_plug_powermeter-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'brightness': 102,
-      'color_mode': <ColorMode.BRIGHTNESS: 'brightness'>,
+      <LightEntityStateAttribute.BRIGHTNESS: 'brightness'>: 102,
+      <LightEntityStateAttribute.COLOR_MODE: 'color_mode'>: <ColorMode.BRIGHTNESS: 'brightness'>,
       'friendly_name': 'IKEA Plug Powermeter',
       <LightEntityCapabilityAttribute.SUPPORTED_COLOR_MODES: 'supported_color_modes'>: list([
         <ColorMode.BRIGHTNESS: 'brightness'>,

@@ -2049,9 +2049,9 @@
             ]),
             'area_id': None,
             'capabilities': dict({
-              'max_color_temp_kelvin': 6535,
-              'min_color_temp_kelvin': 2000,
-              'supported_color_modes': list([
+              <LightEntityCapabilityAttribute.MAX_COLOR_TEMP_KELVIN: 'max_color_temp_kelvin'>: 6535,
+              <LightEntityCapabilityAttribute.MIN_COLOR_TEMP_KELVIN: 'min_color_temp_kelvin'>: 2000,
+              <LightEntityCapabilityAttribute.SUPPORTED_COLOR_MODES: 'supported_color_modes'>: list([
                 <ColorMode.COLOR_TEMP: 'color_temp'>,
                 <ColorMode.HS: 'hs'>,
               ]),
@@ -2087,20 +2087,20 @@
           }),
           'state': dict({
             'attributes': dict({
-              'brightness': None,
-              'color_mode': None,
-              'color_temp_kelvin': None,
+              <LightEntityStateAttribute.BRIGHTNESS: 'brightness'>: None,
+              <LightEntityStateAttribute.COLOR_MODE: 'color_mode'>: None,
+              <LightEntityStateAttribute.COLOR_TEMP_KELVIN: 'color_temp_kelvin'>: None,
               'friendly_name': 'Aqara Hub-1563 Lightbulb-1563',
-              'hs_color': None,
-              'max_color_temp_kelvin': 6535,
-              'min_color_temp_kelvin': 2000,
-              'rgb_color': None,
-              'supported_color_modes': list([
+              <LightEntityStateAttribute.HS_COLOR: 'hs_color'>: None,
+              <LightEntityCapabilityAttribute.MAX_COLOR_TEMP_KELVIN: 'max_color_temp_kelvin'>: 6535,
+              <LightEntityCapabilityAttribute.MIN_COLOR_TEMP_KELVIN: 'min_color_temp_kelvin'>: 2000,
+              <LightEntityStateAttribute.RGB_COLOR: 'rgb_color'>: None,
+              <LightEntityCapabilityAttribute.SUPPORTED_COLOR_MODES: 'supported_color_modes'>: list([
                 <ColorMode.COLOR_TEMP: 'color_temp'>,
                 <ColorMode.HS: 'hs'>,
               ]),
               'supported_features': <LightEntityFeature: 0>,
-              'xy_color': None,
+              <LightEntityStateAttribute.XY_COLOR: 'xy_color'>: None,
             }),
             'entity_id': 'light.aqara_hub_1563_lightbulb_1563',
             'state': 'off',
@@ -2514,9 +2514,9 @@
             ]),
             'area_id': None,
             'capabilities': dict({
-              'max_color_temp_kelvin': 6535,
-              'min_color_temp_kelvin': 2000,
-              'supported_color_modes': list([
+              <LightEntityCapabilityAttribute.MAX_COLOR_TEMP_KELVIN: 'max_color_temp_kelvin'>: 6535,
+              <LightEntityCapabilityAttribute.MIN_COLOR_TEMP_KELVIN: 'min_color_temp_kelvin'>: 2000,
+              <LightEntityCapabilityAttribute.SUPPORTED_COLOR_MODES: 'supported_color_modes'>: list([
                 <ColorMode.COLOR_TEMP: 'color_temp'>,
                 <ColorMode.HS: 'hs'>,
               ]),
@@ -2552,20 +2552,20 @@
           }),
           'state': dict({
             'attributes': dict({
-              'brightness': None,
-              'color_mode': None,
-              'color_temp_kelvin': None,
+              <LightEntityStateAttribute.BRIGHTNESS: 'brightness'>: None,
+              <LightEntityStateAttribute.COLOR_MODE: 'color_mode'>: None,
+              <LightEntityStateAttribute.COLOR_TEMP_KELVIN: 'color_temp_kelvin'>: None,
               'friendly_name': 'ArloBabyA0 Nightlight',
-              'hs_color': None,
-              'max_color_temp_kelvin': 6535,
-              'min_color_temp_kelvin': 2000,
-              'rgb_color': None,
-              'supported_color_modes': list([
+              <LightEntityStateAttribute.HS_COLOR: 'hs_color'>: None,
+              <LightEntityCapabilityAttribute.MAX_COLOR_TEMP_KELVIN: 'max_color_temp_kelvin'>: 6535,
+              <LightEntityCapabilityAttribute.MIN_COLOR_TEMP_KELVIN: 'min_color_temp_kelvin'>: 2000,
+              <LightEntityStateAttribute.RGB_COLOR: 'rgb_color'>: None,
+              <LightEntityCapabilityAttribute.SUPPORTED_COLOR_MODES: 'supported_color_modes'>: list([
                 <ColorMode.COLOR_TEMP: 'color_temp'>,
                 <ColorMode.HS: 'hs'>,
               ]),
               'supported_features': <LightEntityFeature: 0>,
-              'xy_color': None,
+              <LightEntityStateAttribute.XY_COLOR: 'xy_color'>: None,
             }),
             'entity_id': 'light.arlobabya0_nightlight',
             'state': 'off',
@@ -12565,7 +12565,7 @@
             ]),
             'area_id': None,
             'capabilities': dict({
-              'supported_color_modes': list([
+              <LightEntityCapabilityAttribute.SUPPORTED_COLOR_MODES: 'supported_color_modes'>: list([
                 <ColorMode.BRIGHTNESS: 'brightness'>,
               ]),
             }),
@@ -12600,10 +12600,10 @@
           }),
           'state': dict({
             'attributes': dict({
-              'brightness': None,
-              'color_mode': None,
+              <LightEntityStateAttribute.BRIGHTNESS: 'brightness'>: None,
+              <LightEntityStateAttribute.COLOR_MODE: 'color_mode'>: None,
               'friendly_name': 'Laundry Smoke ED78',
-              'supported_color_modes': list([
+              <LightEntityCapabilityAttribute.SUPPORTED_COLOR_MODES: 'supported_color_modes'>: list([
                 <ColorMode.BRIGHTNESS: 'brightness'>,
               ]),
               'supported_features': <LightEntityFeature: 0>,
@@ -14809,9 +14809,9 @@
             ]),
             'area_id': None,
             'capabilities': dict({
-              'max_color_temp_kelvin': 6535,
-              'min_color_temp_kelvin': 2000,
-              'supported_color_modes': list([
+              <LightEntityCapabilityAttribute.MAX_COLOR_TEMP_KELVIN: 'max_color_temp_kelvin'>: 6535,
+              <LightEntityCapabilityAttribute.MIN_COLOR_TEMP_KELVIN: 'min_color_temp_kelvin'>: 2000,
+              <LightEntityCapabilityAttribute.SUPPORTED_COLOR_MODES: 'supported_color_modes'>: list([
                 <ColorMode.COLOR_TEMP: 'color_temp'>,
                 <ColorMode.HS: 'hs'>,
               ]),
@@ -14847,20 +14847,20 @@
           }),
           'state': dict({
             'attributes': dict({
-              'brightness': None,
-              'color_mode': None,
-              'color_temp_kelvin': None,
+              <LightEntityStateAttribute.BRIGHTNESS: 'brightness'>: None,
+              <LightEntityStateAttribute.COLOR_MODE: 'color_mode'>: None,
+              <LightEntityStateAttribute.COLOR_TEMP_KELVIN: 'color_temp_kelvin'>: None,
               'friendly_name': 'Laundry Smoke ED78',
-              'hs_color': None,
-              'max_color_temp_kelvin': 6535,
-              'min_color_temp_kelvin': 2000,
-              'rgb_color': None,
-              'supported_color_modes': list([
+              <LightEntityStateAttribute.HS_COLOR: 'hs_color'>: None,
+              <LightEntityCapabilityAttribute.MAX_COLOR_TEMP_KELVIN: 'max_color_temp_kelvin'>: 6535,
+              <LightEntityCapabilityAttribute.MIN_COLOR_TEMP_KELVIN: 'min_color_temp_kelvin'>: 2000,
+              <LightEntityStateAttribute.RGB_COLOR: 'rgb_color'>: None,
+              <LightEntityCapabilityAttribute.SUPPORTED_COLOR_MODES: 'supported_color_modes'>: list([
                 <ColorMode.COLOR_TEMP: 'color_temp'>,
                 <ColorMode.HS: 'hs'>,
               ]),
               'supported_features': <LightEntityFeature: 0>,
-              'xy_color': None,
+              <LightEntityStateAttribute.XY_COLOR: 'xy_color'>: None,
             }),
             'entity_id': 'light.laundry_smoke_ed78',
             'state': 'off',
@@ -15219,9 +15219,9 @@
             ]),
             'area_id': None,
             'capabilities': dict({
-              'max_color_temp_kelvin': 6535,
-              'min_color_temp_kelvin': 2202,
-              'supported_color_modes': list([
+              <LightEntityCapabilityAttribute.MAX_COLOR_TEMP_KELVIN: 'max_color_temp_kelvin'>: 6535,
+              <LightEntityCapabilityAttribute.MIN_COLOR_TEMP_KELVIN: 'min_color_temp_kelvin'>: 2202,
+              <LightEntityCapabilityAttribute.SUPPORTED_COLOR_MODES: 'supported_color_modes'>: list([
                 <ColorMode.COLOR_TEMP: 'color_temp'>,
               ]),
             }),
@@ -15256,19 +15256,19 @@
           }),
           'state': dict({
             'attributes': dict({
-              'brightness': None,
-              'color_mode': None,
-              'color_temp_kelvin': None,
+              <LightEntityStateAttribute.BRIGHTNESS: 'brightness'>: None,
+              <LightEntityStateAttribute.COLOR_MODE: 'color_mode'>: None,
+              <LightEntityStateAttribute.COLOR_TEMP_KELVIN: 'color_temp_kelvin'>: None,
               'friendly_name': 'Hue ambiance candle',
-              'hs_color': None,
-              'max_color_temp_kelvin': 6535,
-              'min_color_temp_kelvin': 2202,
-              'rgb_color': None,
-              'supported_color_modes': list([
+              <LightEntityStateAttribute.HS_COLOR: 'hs_color'>: None,
+              <LightEntityCapabilityAttribute.MAX_COLOR_TEMP_KELVIN: 'max_color_temp_kelvin'>: 6535,
+              <LightEntityCapabilityAttribute.MIN_COLOR_TEMP_KELVIN: 'min_color_temp_kelvin'>: 2202,
+              <LightEntityStateAttribute.RGB_COLOR: 'rgb_color'>: None,
+              <LightEntityCapabilityAttribute.SUPPORTED_COLOR_MODES: 'supported_color_modes'>: list([
                 <ColorMode.COLOR_TEMP: 'color_temp'>,
               ]),
               'supported_features': <LightEntityFeature: 0>,
-              'xy_color': None,
+              <LightEntityStateAttribute.XY_COLOR: 'xy_color'>: None,
             }),
             'entity_id': 'light.hue_ambiance_candle_4',
             'state': 'off',
@@ -15359,9 +15359,9 @@
             ]),
             'area_id': None,
             'capabilities': dict({
-              'max_color_temp_kelvin': 6535,
-              'min_color_temp_kelvin': 2202,
-              'supported_color_modes': list([
+              <LightEntityCapabilityAttribute.MAX_COLOR_TEMP_KELVIN: 'max_color_temp_kelvin'>: 6535,
+              <LightEntityCapabilityAttribute.MIN_COLOR_TEMP_KELVIN: 'min_color_temp_kelvin'>: 2202,
+              <LightEntityCapabilityAttribute.SUPPORTED_COLOR_MODES: 'supported_color_modes'>: list([
                 <ColorMode.COLOR_TEMP: 'color_temp'>,
               ]),
             }),
@@ -15396,19 +15396,19 @@
           }),
           'state': dict({
             'attributes': dict({
-              'brightness': None,
-              'color_mode': None,
-              'color_temp_kelvin': None,
+              <LightEntityStateAttribute.BRIGHTNESS: 'brightness'>: None,
+              <LightEntityStateAttribute.COLOR_MODE: 'color_mode'>: None,
+              <LightEntityStateAttribute.COLOR_TEMP_KELVIN: 'color_temp_kelvin'>: None,
               'friendly_name': 'Hue ambiance candle',
-              'hs_color': None,
-              'max_color_temp_kelvin': 6535,
-              'min_color_temp_kelvin': 2202,
-              'rgb_color': None,
-              'supported_color_modes': list([
+              <LightEntityStateAttribute.HS_COLOR: 'hs_color'>: None,
+              <LightEntityCapabilityAttribute.MAX_COLOR_TEMP_KELVIN: 'max_color_temp_kelvin'>: 6535,
+              <LightEntityCapabilityAttribute.MIN_COLOR_TEMP_KELVIN: 'min_color_temp_kelvin'>: 2202,
+              <LightEntityStateAttribute.RGB_COLOR: 'rgb_color'>: None,
+              <LightEntityCapabilityAttribute.SUPPORTED_COLOR_MODES: 'supported_color_modes'>: list([
                 <ColorMode.COLOR_TEMP: 'color_temp'>,
               ]),
               'supported_features': <LightEntityFeature: 0>,
-              'xy_color': None,
+              <LightEntityStateAttribute.XY_COLOR: 'xy_color'>: None,
             }),
             'entity_id': 'light.hue_ambiance_candle_3',
             'state': 'off',
@@ -15499,9 +15499,9 @@
             ]),
             'area_id': None,
             'capabilities': dict({
-              'max_color_temp_kelvin': 6535,
-              'min_color_temp_kelvin': 2202,
-              'supported_color_modes': list([
+              <LightEntityCapabilityAttribute.MAX_COLOR_TEMP_KELVIN: 'max_color_temp_kelvin'>: 6535,
+              <LightEntityCapabilityAttribute.MIN_COLOR_TEMP_KELVIN: 'min_color_temp_kelvin'>: 2202,
+              <LightEntityCapabilityAttribute.SUPPORTED_COLOR_MODES: 'supported_color_modes'>: list([
                 <ColorMode.COLOR_TEMP: 'color_temp'>,
               ]),
             }),
@@ -15536,19 +15536,19 @@
           }),
           'state': dict({
             'attributes': dict({
-              'brightness': None,
-              'color_mode': None,
-              'color_temp_kelvin': None,
+              <LightEntityStateAttribute.BRIGHTNESS: 'brightness'>: None,
+              <LightEntityStateAttribute.COLOR_MODE: 'color_mode'>: None,
+              <LightEntityStateAttribute.COLOR_TEMP_KELVIN: 'color_temp_kelvin'>: None,
               'friendly_name': 'Hue ambiance candle',
-              'hs_color': None,
-              'max_color_temp_kelvin': 6535,
-              'min_color_temp_kelvin': 2202,
-              'rgb_color': None,
-              'supported_color_modes': list([
+              <LightEntityStateAttribute.HS_COLOR: 'hs_color'>: None,
+              <LightEntityCapabilityAttribute.MAX_COLOR_TEMP_KELVIN: 'max_color_temp_kelvin'>: 6535,
+              <LightEntityCapabilityAttribute.MIN_COLOR_TEMP_KELVIN: 'min_color_temp_kelvin'>: 2202,
+              <LightEntityStateAttribute.RGB_COLOR: 'rgb_color'>: None,
+              <LightEntityCapabilityAttribute.SUPPORTED_COLOR_MODES: 'supported_color_modes'>: list([
                 <ColorMode.COLOR_TEMP: 'color_temp'>,
               ]),
               'supported_features': <LightEntityFeature: 0>,
-              'xy_color': None,
+              <LightEntityStateAttribute.XY_COLOR: 'xy_color'>: None,
             }),
             'entity_id': 'light.hue_ambiance_candle_2',
             'state': 'off',
@@ -15639,9 +15639,9 @@
             ]),
             'area_id': None,
             'capabilities': dict({
-              'max_color_temp_kelvin': 6535,
-              'min_color_temp_kelvin': 2202,
-              'supported_color_modes': list([
+              <LightEntityCapabilityAttribute.MAX_COLOR_TEMP_KELVIN: 'max_color_temp_kelvin'>: 6535,
+              <LightEntityCapabilityAttribute.MIN_COLOR_TEMP_KELVIN: 'min_color_temp_kelvin'>: 2202,
+              <LightEntityCapabilityAttribute.SUPPORTED_COLOR_MODES: 'supported_color_modes'>: list([
                 <ColorMode.COLOR_TEMP: 'color_temp'>,
               ]),
             }),
@@ -15676,19 +15676,19 @@
           }),
           'state': dict({
             'attributes': dict({
-              'brightness': None,
-              'color_mode': None,
-              'color_temp_kelvin': None,
+              <LightEntityStateAttribute.BRIGHTNESS: 'brightness'>: None,
+              <LightEntityStateAttribute.COLOR_MODE: 'color_mode'>: None,
+              <LightEntityStateAttribute.COLOR_TEMP_KELVIN: 'color_temp_kelvin'>: None,
               'friendly_name': 'Hue ambiance candle',
-              'hs_color': None,
-              'max_color_temp_kelvin': 6535,
-              'min_color_temp_kelvin': 2202,
-              'rgb_color': None,
-              'supported_color_modes': list([
+              <LightEntityStateAttribute.HS_COLOR: 'hs_color'>: None,
+              <LightEntityCapabilityAttribute.MAX_COLOR_TEMP_KELVIN: 'max_color_temp_kelvin'>: 6535,
+              <LightEntityCapabilityAttribute.MIN_COLOR_TEMP_KELVIN: 'min_color_temp_kelvin'>: 2202,
+              <LightEntityStateAttribute.RGB_COLOR: 'rgb_color'>: None,
+              <LightEntityCapabilityAttribute.SUPPORTED_COLOR_MODES: 'supported_color_modes'>: list([
                 <ColorMode.COLOR_TEMP: 'color_temp'>,
               ]),
               'supported_features': <LightEntityFeature: 0>,
-              'xy_color': None,
+              <LightEntityStateAttribute.XY_COLOR: 'xy_color'>: None,
             }),
             'entity_id': 'light.hue_ambiance_candle',
             'state': 'off',
@@ -15779,9 +15779,9 @@
             ]),
             'area_id': None,
             'capabilities': dict({
-              'max_color_temp_kelvin': 6535,
-              'min_color_temp_kelvin': 2202,
-              'supported_color_modes': list([
+              <LightEntityCapabilityAttribute.MAX_COLOR_TEMP_KELVIN: 'max_color_temp_kelvin'>: 6535,
+              <LightEntityCapabilityAttribute.MIN_COLOR_TEMP_KELVIN: 'min_color_temp_kelvin'>: 2202,
+              <LightEntityCapabilityAttribute.SUPPORTED_COLOR_MODES: 'supported_color_modes'>: list([
                 <ColorMode.COLOR_TEMP: 'color_temp'>,
               ]),
             }),
@@ -15816,26 +15816,26 @@
           }),
           'state': dict({
             'attributes': dict({
-              'brightness': 255.0,
-              'color_mode': <ColorMode.COLOR_TEMP: 'color_temp'>,
-              'color_temp_kelvin': 2732,
+              <LightEntityStateAttribute.BRIGHTNESS: 'brightness'>: 255.0,
+              <LightEntityStateAttribute.COLOR_MODE: 'color_mode'>: <ColorMode.COLOR_TEMP: 'color_temp'>,
+              <LightEntityStateAttribute.COLOR_TEMP_KELVIN: 'color_temp_kelvin'>: 2732,
               'friendly_name': 'Hue ambiance spot',
-              'hs_color': tuple(
+              <LightEntityStateAttribute.HS_COLOR: 'hs_color'>: tuple(
                 28.327,
                 64.71,
               ),
-              'max_color_temp_kelvin': 6535,
-              'min_color_temp_kelvin': 2202,
-              'rgb_color': tuple(
+              <LightEntityCapabilityAttribute.MAX_COLOR_TEMP_KELVIN: 'max_color_temp_kelvin'>: 6535,
+              <LightEntityCapabilityAttribute.MIN_COLOR_TEMP_KELVIN: 'min_color_temp_kelvin'>: 2202,
+              <LightEntityStateAttribute.RGB_COLOR: 'rgb_color'>: tuple(
                 255,
                 168,
                 90,
               ),
-              'supported_color_modes': list([
+              <LightEntityCapabilityAttribute.SUPPORTED_COLOR_MODES: 'supported_color_modes'>: list([
                 <ColorMode.COLOR_TEMP: 'color_temp'>,
               ]),
               'supported_features': <LightEntityFeature: 0>,
-              'xy_color': tuple(
+              <LightEntityStateAttribute.XY_COLOR: 'xy_color'>: tuple(
                 0.522,
                 0.387,
               ),
@@ -15929,9 +15929,9 @@
             ]),
             'area_id': None,
             'capabilities': dict({
-              'max_color_temp_kelvin': 6535,
-              'min_color_temp_kelvin': 2202,
-              'supported_color_modes': list([
+              <LightEntityCapabilityAttribute.MAX_COLOR_TEMP_KELVIN: 'max_color_temp_kelvin'>: 6535,
+              <LightEntityCapabilityAttribute.MIN_COLOR_TEMP_KELVIN: 'min_color_temp_kelvin'>: 2202,
+              <LightEntityCapabilityAttribute.SUPPORTED_COLOR_MODES: 'supported_color_modes'>: list([
                 <ColorMode.COLOR_TEMP: 'color_temp'>,
               ]),
             }),
@@ -15966,26 +15966,26 @@
           }),
           'state': dict({
             'attributes': dict({
-              'brightness': 255.0,
-              'color_mode': <ColorMode.COLOR_TEMP: 'color_temp'>,
-              'color_temp_kelvin': 2732,
+              <LightEntityStateAttribute.BRIGHTNESS: 'brightness'>: 255.0,
+              <LightEntityStateAttribute.COLOR_MODE: 'color_mode'>: <ColorMode.COLOR_TEMP: 'color_temp'>,
+              <LightEntityStateAttribute.COLOR_TEMP_KELVIN: 'color_temp_kelvin'>: 2732,
               'friendly_name': 'Hue ambiance spot',
-              'hs_color': tuple(
+              <LightEntityStateAttribute.HS_COLOR: 'hs_color'>: tuple(
                 28.327,
                 64.71,
               ),
-              'max_color_temp_kelvin': 6535,
-              'min_color_temp_kelvin': 2202,
-              'rgb_color': tuple(
+              <LightEntityCapabilityAttribute.MAX_COLOR_TEMP_KELVIN: 'max_color_temp_kelvin'>: 6535,
+              <LightEntityCapabilityAttribute.MIN_COLOR_TEMP_KELVIN: 'min_color_temp_kelvin'>: 2202,
+              <LightEntityStateAttribute.RGB_COLOR: 'rgb_color'>: tuple(
                 255,
                 168,
                 90,
               ),
-              'supported_color_modes': list([
+              <LightEntityCapabilityAttribute.SUPPORTED_COLOR_MODES: 'supported_color_modes'>: list([
                 <ColorMode.COLOR_TEMP: 'color_temp'>,
               ]),
               'supported_features': <LightEntityFeature: 0>,
-              'xy_color': tuple(
+              <LightEntityStateAttribute.XY_COLOR: 'xy_color'>: tuple(
                 0.522,
                 0.387,
               ),
@@ -16419,7 +16419,7 @@
             ]),
             'area_id': None,
             'capabilities': dict({
-              'supported_color_modes': list([
+              <LightEntityCapabilityAttribute.SUPPORTED_COLOR_MODES: 'supported_color_modes'>: list([
                 <ColorMode.BRIGHTNESS: 'brightness'>,
               ]),
             }),
@@ -16454,10 +16454,10 @@
           }),
           'state': dict({
             'attributes': dict({
-              'brightness': None,
-              'color_mode': None,
+              <LightEntityStateAttribute.BRIGHTNESS: 'brightness'>: None,
+              <LightEntityStateAttribute.COLOR_MODE: 'color_mode'>: None,
               'friendly_name': 'Hue white lamp',
-              'supported_color_modes': list([
+              <LightEntityCapabilityAttribute.SUPPORTED_COLOR_MODES: 'supported_color_modes'>: list([
                 <ColorMode.BRIGHTNESS: 'brightness'>,
               ]),
               'supported_features': <LightEntityFeature: 0>,
@@ -16551,7 +16551,7 @@
             ]),
             'area_id': None,
             'capabilities': dict({
-              'supported_color_modes': list([
+              <LightEntityCapabilityAttribute.SUPPORTED_COLOR_MODES: 'supported_color_modes'>: list([
                 <ColorMode.BRIGHTNESS: 'brightness'>,
               ]),
             }),
@@ -16586,10 +16586,10 @@
           }),
           'state': dict({
             'attributes': dict({
-              'brightness': None,
-              'color_mode': None,
+              <LightEntityStateAttribute.BRIGHTNESS: 'brightness'>: None,
+              <LightEntityStateAttribute.COLOR_MODE: 'color_mode'>: None,
               'friendly_name': 'Hue white lamp',
-              'supported_color_modes': list([
+              <LightEntityCapabilityAttribute.SUPPORTED_COLOR_MODES: 'supported_color_modes'>: list([
                 <ColorMode.BRIGHTNESS: 'brightness'>,
               ]),
               'supported_features': <LightEntityFeature: 0>,
@@ -16683,7 +16683,7 @@
             ]),
             'area_id': None,
             'capabilities': dict({
-              'supported_color_modes': list([
+              <LightEntityCapabilityAttribute.SUPPORTED_COLOR_MODES: 'supported_color_modes'>: list([
                 <ColorMode.BRIGHTNESS: 'brightness'>,
               ]),
             }),
@@ -16718,10 +16718,10 @@
           }),
           'state': dict({
             'attributes': dict({
-              'brightness': None,
-              'color_mode': None,
+              <LightEntityStateAttribute.BRIGHTNESS: 'brightness'>: None,
+              <LightEntityStateAttribute.COLOR_MODE: 'color_mode'>: None,
               'friendly_name': 'Hue white lamp',
-              'supported_color_modes': list([
+              <LightEntityCapabilityAttribute.SUPPORTED_COLOR_MODES: 'supported_color_modes'>: list([
                 <ColorMode.BRIGHTNESS: 'brightness'>,
               ]),
               'supported_features': <LightEntityFeature: 0>,
@@ -16815,7 +16815,7 @@
             ]),
             'area_id': None,
             'capabilities': dict({
-              'supported_color_modes': list([
+              <LightEntityCapabilityAttribute.SUPPORTED_COLOR_MODES: 'supported_color_modes'>: list([
                 <ColorMode.BRIGHTNESS: 'brightness'>,
               ]),
             }),
@@ -16850,10 +16850,10 @@
           }),
           'state': dict({
             'attributes': dict({
-              'brightness': None,
-              'color_mode': None,
+              <LightEntityStateAttribute.BRIGHTNESS: 'brightness'>: None,
+              <LightEntityStateAttribute.COLOR_MODE: 'color_mode'>: None,
               'friendly_name': 'Hue white lamp',
-              'supported_color_modes': list([
+              <LightEntityCapabilityAttribute.SUPPORTED_COLOR_MODES: 'supported_color_modes'>: list([
                 <ColorMode.BRIGHTNESS: 'brightness'>,
               ]),
               'supported_features': <LightEntityFeature: 0>,
@@ -16947,7 +16947,7 @@
             ]),
             'area_id': None,
             'capabilities': dict({
-              'supported_color_modes': list([
+              <LightEntityCapabilityAttribute.SUPPORTED_COLOR_MODES: 'supported_color_modes'>: list([
                 <ColorMode.BRIGHTNESS: 'brightness'>,
               ]),
             }),
@@ -16982,10 +16982,10 @@
           }),
           'state': dict({
             'attributes': dict({
-              'brightness': None,
-              'color_mode': None,
+              <LightEntityStateAttribute.BRIGHTNESS: 'brightness'>: None,
+              <LightEntityStateAttribute.COLOR_MODE: 'color_mode'>: None,
               'friendly_name': 'Hue white lamp',
-              'supported_color_modes': list([
+              <LightEntityCapabilityAttribute.SUPPORTED_COLOR_MODES: 'supported_color_modes'>: list([
                 <ColorMode.BRIGHTNESS: 'brightness'>,
               ]),
               'supported_features': <LightEntityFeature: 0>,
@@ -17079,7 +17079,7 @@
             ]),
             'area_id': None,
             'capabilities': dict({
-              'supported_color_modes': list([
+              <LightEntityCapabilityAttribute.SUPPORTED_COLOR_MODES: 'supported_color_modes'>: list([
                 <ColorMode.BRIGHTNESS: 'brightness'>,
               ]),
             }),
@@ -17114,10 +17114,10 @@
           }),
           'state': dict({
             'attributes': dict({
-              'brightness': None,
-              'color_mode': None,
+              <LightEntityStateAttribute.BRIGHTNESS: 'brightness'>: None,
+              <LightEntityStateAttribute.COLOR_MODE: 'color_mode'>: None,
               'friendly_name': 'Hue white lamp',
-              'supported_color_modes': list([
+              <LightEntityCapabilityAttribute.SUPPORTED_COLOR_MODES: 'supported_color_modes'>: list([
                 <ColorMode.BRIGHTNESS: 'brightness'>,
               ]),
               'supported_features': <LightEntityFeature: 0>,
@@ -17211,7 +17211,7 @@
             ]),
             'area_id': None,
             'capabilities': dict({
-              'supported_color_modes': list([
+              <LightEntityCapabilityAttribute.SUPPORTED_COLOR_MODES: 'supported_color_modes'>: list([
                 <ColorMode.BRIGHTNESS: 'brightness'>,
               ]),
             }),
@@ -17246,10 +17246,10 @@
           }),
           'state': dict({
             'attributes': dict({
-              'brightness': None,
-              'color_mode': None,
+              <LightEntityStateAttribute.BRIGHTNESS: 'brightness'>: None,
+              <LightEntityStateAttribute.COLOR_MODE: 'color_mode'>: None,
               'friendly_name': 'Hue white lamp',
-              'supported_color_modes': list([
+              <LightEntityCapabilityAttribute.SUPPORTED_COLOR_MODES: 'supported_color_modes'>: list([
                 <ColorMode.BRIGHTNESS: 'brightness'>,
               ]),
               'supported_features': <LightEntityFeature: 0>,
@@ -17425,9 +17425,9 @@
             ]),
             'area_id': None,
             'capabilities': dict({
-              'max_color_temp_kelvin': 6535,
-              'min_color_temp_kelvin': 2000,
-              'supported_color_modes': list([
+              <LightEntityCapabilityAttribute.MAX_COLOR_TEMP_KELVIN: 'max_color_temp_kelvin'>: 6535,
+              <LightEntityCapabilityAttribute.MIN_COLOR_TEMP_KELVIN: 'min_color_temp_kelvin'>: 2000,
+              <LightEntityCapabilityAttribute.SUPPORTED_COLOR_MODES: 'supported_color_modes'>: list([
                 <ColorMode.COLOR_TEMP: 'color_temp'>,
                 <ColorMode.HS: 'hs'>,
               ]),
@@ -17463,20 +17463,20 @@
           }),
           'state': dict({
             'attributes': dict({
-              'brightness': None,
-              'color_mode': None,
-              'color_temp_kelvin': None,
+              <LightEntityStateAttribute.BRIGHTNESS: 'brightness'>: None,
+              <LightEntityStateAttribute.COLOR_MODE: 'color_mode'>: None,
+              <LightEntityStateAttribute.COLOR_TEMP_KELVIN: 'color_temp_kelvin'>: None,
               'friendly_name': 'Koogeek-LS1-20833F Light Strip',
-              'hs_color': None,
-              'max_color_temp_kelvin': 6535,
-              'min_color_temp_kelvin': 2000,
-              'rgb_color': None,
-              'supported_color_modes': list([
+              <LightEntityStateAttribute.HS_COLOR: 'hs_color'>: None,
+              <LightEntityCapabilityAttribute.MAX_COLOR_TEMP_KELVIN: 'max_color_temp_kelvin'>: 6535,
+              <LightEntityCapabilityAttribute.MIN_COLOR_TEMP_KELVIN: 'min_color_temp_kelvin'>: 2000,
+              <LightEntityStateAttribute.RGB_COLOR: 'rgb_color'>: None,
+              <LightEntityCapabilityAttribute.SUPPORTED_COLOR_MODES: 'supported_color_modes'>: list([
                 <ColorMode.COLOR_TEMP: 'color_temp'>,
                 <ColorMode.HS: 'hs'>,
               ]),
               'supported_features': <LightEntityFeature: 0>,
-              'xy_color': None,
+              <LightEntityStateAttribute.XY_COLOR: 'xy_color'>: None,
             }),
             'entity_id': 'light.koogeek_ls1_20833f_light_strip',
             'state': 'off',
@@ -18983,7 +18983,7 @@
             ]),
             'area_id': None,
             'capabilities': dict({
-              'supported_color_modes': list([
+              <LightEntityCapabilityAttribute.SUPPORTED_COLOR_MODES: 'supported_color_modes'>: list([
                 <ColorMode.BRIGHTNESS: 'brightness'>,
               ]),
             }),
@@ -19018,10 +19018,10 @@
           }),
           'state': dict({
             'attributes': dict({
-              'brightness': 170.85,
-              'color_mode': <ColorMode.BRIGHTNESS: 'brightness'>,
+              <LightEntityStateAttribute.BRIGHTNESS: 'brightness'>: 170.85,
+              <LightEntityStateAttribute.COLOR_MODE: 'color_mode'>: <ColorMode.BRIGHTNESS: 'brightness'>,
               'friendly_name': 'MSS565-28da Dimmer Switch',
-              'supported_color_modes': list([
+              <LightEntityCapabilityAttribute.SUPPORTED_COLOR_MODES: 'supported_color_modes'>: list([
                 <ColorMode.BRIGHTNESS: 'brightness'>,
               ]),
               'supported_features': <LightEntityFeature: 0>,
@@ -19185,7 +19185,7 @@
             ]),
             'area_id': None,
             'capabilities': dict({
-              'supported_color_modes': list([
+              <LightEntityCapabilityAttribute.SUPPORTED_COLOR_MODES: 'supported_color_modes'>: list([
                 <ColorMode.BRIGHTNESS: 'brightness'>,
               ]),
             }),
@@ -19220,10 +19220,10 @@
           }),
           'state': dict({
             'attributes': dict({
-              'brightness': None,
-              'color_mode': None,
+              <LightEntityStateAttribute.BRIGHTNESS: 'brightness'>: None,
+              <LightEntityStateAttribute.COLOR_MODE: 'color_mode'>: None,
               'friendly_name': 'Mysa-85dda9 Display',
-              'supported_color_modes': list([
+              <LightEntityCapabilityAttribute.SUPPORTED_COLOR_MODES: 'supported_color_modes'>: list([
                 <ColorMode.BRIGHTNESS: 'brightness'>,
               ]),
               'supported_features': <LightEntityFeature: 0>,
@@ -19475,9 +19475,9 @@
             ]),
             'area_id': None,
             'capabilities': dict({
-              'max_color_temp_kelvin': 6535,
-              'min_color_temp_kelvin': 2127,
-              'supported_color_modes': list([
+              <LightEntityCapabilityAttribute.MAX_COLOR_TEMP_KELVIN: 'max_color_temp_kelvin'>: 6535,
+              <LightEntityCapabilityAttribute.MIN_COLOR_TEMP_KELVIN: 'min_color_temp_kelvin'>: 2127,
+              <LightEntityCapabilityAttribute.SUPPORTED_COLOR_MODES: 'supported_color_modes'>: list([
                 <ColorMode.COLOR_TEMP: 'color_temp'>,
                 <ColorMode.HS: 'hs'>,
               ]),
@@ -19513,27 +19513,27 @@
           }),
           'state': dict({
             'attributes': dict({
-              'brightness': 255.0,
-              'color_mode': <ColorMode.HS: 'hs'>,
-              'color_temp_kelvin': None,
+              <LightEntityStateAttribute.BRIGHTNESS: 'brightness'>: 255.0,
+              <LightEntityStateAttribute.COLOR_MODE: 'color_mode'>: <ColorMode.HS: 'hs'>,
+              <LightEntityStateAttribute.COLOR_TEMP_KELVIN: 'color_temp_kelvin'>: None,
               'friendly_name': 'Nanoleaf Strip 3B32 Nanoleaf Light Strip',
-              'hs_color': tuple(
+              <LightEntityStateAttribute.HS_COLOR: 'hs_color'>: tuple(
                 30.0,
                 89.0,
               ),
-              'max_color_temp_kelvin': 6535,
-              'min_color_temp_kelvin': 2127,
-              'rgb_color': tuple(
+              <LightEntityCapabilityAttribute.MAX_COLOR_TEMP_KELVIN: 'max_color_temp_kelvin'>: 6535,
+              <LightEntityCapabilityAttribute.MIN_COLOR_TEMP_KELVIN: 'min_color_temp_kelvin'>: 2127,
+              <LightEntityStateAttribute.RGB_COLOR: 'rgb_color'>: tuple(
                 255,
                 142,
                 28,
               ),
-              'supported_color_modes': list([
+              <LightEntityCapabilityAttribute.SUPPORTED_COLOR_MODES: 'supported_color_modes'>: list([
                 <ColorMode.COLOR_TEMP: 'color_temp'>,
                 <ColorMode.HS: 'hs'>,
               ]),
               'supported_features': <LightEntityFeature: 0>,
-              'xy_color': tuple(
+              <LightEntityStateAttribute.XY_COLOR: 'xy_color'>: tuple(
                 0.588,
                 0.386,
               ),
@@ -22431,7 +22431,7 @@
             ]),
             'area_id': None,
             'capabilities': dict({
-              'supported_color_modes': list([
+              <LightEntityCapabilityAttribute.SUPPORTED_COLOR_MODES: 'supported_color_modes'>: list([
                 <ColorMode.BRIGHTNESS: 'brightness'>,
               ]),
             }),
@@ -22466,10 +22466,10 @@
           }),
           'state': dict({
             'attributes': dict({
-              'brightness': 76.5,
-              'color_mode': <ColorMode.BRIGHTNESS: 'brightness'>,
+              <LightEntityStateAttribute.BRIGHTNESS: 'brightness'>: 76.5,
+              <LightEntityStateAttribute.COLOR_MODE: 'color_mode'>: <ColorMode.BRIGHTNESS: 'brightness'>,
               'friendly_name': 'SIMPLEconnect Fan-06F674 Hunter Light',
-              'supported_color_modes': list([
+              <LightEntityCapabilityAttribute.SUPPORTED_COLOR_MODES: 'supported_color_modes'>: list([
                 <ColorMode.BRIGHTNESS: 'brightness'>,
               ]),
               'supported_features': <LightEntityFeature: 0>,
@@ -24111,9 +24111,9 @@
             ]),
             'area_id': None,
             'capabilities': dict({
-              'max_color_temp_kelvin': 6535,
-              'min_color_temp_kelvin': 2000,
-              'supported_color_modes': list([
+              <LightEntityCapabilityAttribute.MAX_COLOR_TEMP_KELVIN: 'max_color_temp_kelvin'>: 6535,
+              <LightEntityCapabilityAttribute.MIN_COLOR_TEMP_KELVIN: 'min_color_temp_kelvin'>: 2000,
+              <LightEntityCapabilityAttribute.SUPPORTED_COLOR_MODES: 'supported_color_modes'>: list([
                 <ColorMode.COLOR_TEMP: 'color_temp'>,
                 <ColorMode.HS: 'hs'>,
               ]),
@@ -24149,27 +24149,27 @@
           }),
           'state': dict({
             'attributes': dict({
-              'brightness': 127.5,
-              'color_mode': <ColorMode.HS: 'hs'>,
-              'color_temp_kelvin': None,
+              <LightEntityStateAttribute.BRIGHTNESS: 'brightness'>: 127.5,
+              <LightEntityStateAttribute.COLOR_MODE: 'color_mode'>: <ColorMode.HS: 'hs'>,
+              <LightEntityStateAttribute.COLOR_TEMP_KELVIN: 'color_temp_kelvin'>: None,
               'friendly_name': 'VOCOlinc-Flowerbud-0d324b Mood Light',
-              'hs_color': tuple(
+              <LightEntityStateAttribute.HS_COLOR: 'hs_color'>: tuple(
                 120.0,
                 100.0,
               ),
-              'max_color_temp_kelvin': 6535,
-              'min_color_temp_kelvin': 2000,
-              'rgb_color': tuple(
+              <LightEntityCapabilityAttribute.MAX_COLOR_TEMP_KELVIN: 'max_color_temp_kelvin'>: 6535,
+              <LightEntityCapabilityAttribute.MIN_COLOR_TEMP_KELVIN: 'min_color_temp_kelvin'>: 2000,
+              <LightEntityStateAttribute.RGB_COLOR: 'rgb_color'>: tuple(
                 0,
                 255,
                 0,
               ),
-              'supported_color_modes': list([
+              <LightEntityCapabilityAttribute.SUPPORTED_COLOR_MODES: 'supported_color_modes'>: list([
                 <ColorMode.COLOR_TEMP: 'color_temp'>,
                 <ColorMode.HS: 'hs'>,
               ]),
               'supported_features': <LightEntityFeature: 0>,
-              'xy_color': tuple(
+              <LightEntityStateAttribute.XY_COLOR: 'xy_color'>: tuple(
                 0.172,
                 0.747,
               ),

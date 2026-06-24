@@ -46,17 +46,17 @@
 # name: test_setup[light.fake_name-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'brightness': 100,
-      'color_mode': <ColorMode.COLOR_TEMP: 'color_temp'>,
-      'color_temp_kelvin': 2700,
+      <LightEntityStateAttribute.BRIGHTNESS: 'brightness'>: 100,
+      <LightEntityStateAttribute.COLOR_MODE: 'color_mode'>: <ColorMode.COLOR_TEMP: 'color_temp'>,
+      <LightEntityStateAttribute.COLOR_TEMP_KELVIN: 'color_temp_kelvin'>: 2700,
       'friendly_name': 'fake_name',
-      'hs_color': tuple(
+      <LightEntityStateAttribute.HS_COLOR: 'hs_color'>: tuple(
         28.395,
         65.723,
       ),
       <LightEntityCapabilityAttribute.MAX_COLOR_TEMP_KELVIN: 'max_color_temp_kelvin'>: 6500,
       <LightEntityCapabilityAttribute.MIN_COLOR_TEMP_KELVIN: 'min_color_temp_kelvin'>: 2700,
-      'rgb_color': tuple(
+      <LightEntityStateAttribute.RGB_COLOR: 'rgb_color'>: tuple(
         255,
         167,
         87,
@@ -66,7 +66,7 @@
         <ColorMode.HS: 'hs'>,
       ]),
       'supported_features': <LightEntityFeature: 0>,
-      'xy_color': tuple(
+      <LightEntityStateAttribute.XY_COLOR: 'xy_color'>: tuple(
         0.525,
         0.388,
       ),
@@ -126,17 +126,17 @@
 # name: test_setup_color[light.fake_name-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'brightness': 100,
-      'color_mode': <ColorMode.HS: 'hs'>,
-      'color_temp_kelvin': None,
+      <LightEntityStateAttribute.BRIGHTNESS: 'brightness'>: 100,
+      <LightEntityStateAttribute.COLOR_MODE: 'color_mode'>: <ColorMode.HS: 'hs'>,
+      <LightEntityStateAttribute.COLOR_TEMP_KELVIN: 'color_temp_kelvin'>: None,
       'friendly_name': 'fake_name',
-      'hs_color': tuple(
+      <LightEntityStateAttribute.HS_COLOR: 'hs_color'>: tuple(
         100,
         70.0,
       ),
       <LightEntityCapabilityAttribute.MAX_COLOR_TEMP_KELVIN: 'max_color_temp_kelvin'>: 6500,
       <LightEntityCapabilityAttribute.MIN_COLOR_TEMP_KELVIN: 'min_color_temp_kelvin'>: 2700,
-      'rgb_color': tuple(
+      <LightEntityStateAttribute.RGB_COLOR: 'rgb_color'>: tuple(
         136,
         255,
         77,
@@ -146,7 +146,7 @@
         <ColorMode.HS: 'hs'>,
       ]),
       'supported_features': <LightEntityFeature: 0>,
-      'xy_color': tuple(
+      <LightEntityStateAttribute.XY_COLOR: 'xy_color'>: tuple(
         0.271,
         0.609,
       ),
@@ -203,8 +203,8 @@
 # name: test_setup_non_color[light.fake_name-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'brightness': 100,
-      'color_mode': <ColorMode.BRIGHTNESS: 'brightness'>,
+      <LightEntityStateAttribute.BRIGHTNESS: 'brightness'>: 100,
+      <LightEntityStateAttribute.COLOR_MODE: 'color_mode'>: <ColorMode.BRIGHTNESS: 'brightness'>,
       'friendly_name': 'fake_name',
       <LightEntityCapabilityAttribute.SUPPORTED_COLOR_MODES: 'supported_color_modes'>: list([
         <ColorMode.BRIGHTNESS: 'brightness'>,
@@ -263,7 +263,7 @@
 # name: test_setup_non_color_non_level[light.fake_name-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'color_mode': <ColorMode.ONOFF: 'onoff'>,
+      <LightEntityStateAttribute.COLOR_MODE: 'color_mode'>: <ColorMode.ONOFF: 'onoff'>,
       'friendly_name': 'fake_name',
       <LightEntityCapabilityAttribute.SUPPORTED_COLOR_MODES: 'supported_color_modes'>: list([
         <ColorMode.ONOFF: 'onoff'>,

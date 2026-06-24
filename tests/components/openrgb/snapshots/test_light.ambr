@@ -53,9 +53,9 @@
 # name: test_entities[light.ene_dram-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'brightness': 255,
-      'color_mode': <ColorMode.RGB: 'rgb'>,
-      'effect': 'off',
+      <LightEntityStateAttribute.BRIGHTNESS: 'brightness'>: 255,
+      <LightEntityStateAttribute.COLOR_MODE: 'color_mode'>: <ColorMode.RGB: 'rgb'>,
+      <LightEntityStateAttribute.EFFECT: 'effect'>: 'off',
       <LightEntityCapabilityAttribute.EFFECT_LIST: 'effect_list'>: list([
         'off',
         'breathing',
@@ -67,12 +67,12 @@
         'random_flicker',
       ]),
       'friendly_name': 'ENE DRAM',
-      'hs_color': tuple(
+      <LightEntityStateAttribute.HS_COLOR: 'hs_color'>: tuple(
         0.0,
         100.0,
       ),
       'icon': 'mdi:memory',
-      'rgb_color': tuple(
+      <LightEntityStateAttribute.RGB_COLOR: 'rgb_color'>: tuple(
         255,
         0,
         0,
@@ -81,7 +81,7 @@
         <ColorMode.RGB: 'rgb'>,
       ]),
       'supported_features': <LightEntityFeature: 4>,
-      'xy_color': tuple(
+      <LightEntityStateAttribute.XY_COLOR: 'xy_color'>: tuple(
         0.701,
         0.299,
       ),

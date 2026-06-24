@@ -46,17 +46,17 @@
 # name: test_light[light.hue_light-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'brightness': 100,
-      'color_mode': <ColorMode.COLOR_TEMP: 'color_temp'>,
-      'color_temp_kelvin': 4000,
+      <LightEntityStateAttribute.BRIGHTNESS: 'brightness'>: 100,
+      <LightEntityStateAttribute.COLOR_MODE: 'color_mode'>: <ColorMode.COLOR_TEMP: 'color_temp'>,
+      <LightEntityStateAttribute.COLOR_TEMP_KELVIN: 'color_temp_kelvin'>: 4000,
       'friendly_name': 'Hue Light',
-      'hs_color': tuple(
+      <LightEntityStateAttribute.HS_COLOR: 'hs_color'>: tuple(
         26.812,
         34.87,
       ),
       <LightEntityCapabilityAttribute.MAX_COLOR_TEMP_KELVIN: 'max_color_temp_kelvin'>: 6535,
       <LightEntityCapabilityAttribute.MIN_COLOR_TEMP_KELVIN: 'min_color_temp_kelvin'>: 2202,
-      'rgb_color': tuple(
+      <LightEntityStateAttribute.RGB_COLOR: 'rgb_color'>: tuple(
         255,
         206,
         166,
@@ -66,7 +66,7 @@
         <ColorMode.XY: 'xy'>,
       ]),
       'supported_features': <LightEntityFeature: 0>,
-      'xy_color': tuple(
+      <LightEntityStateAttribute.XY_COLOR: 'xy_color'>: tuple(
         0.42,
         0.365,
       ),
