@@ -53,6 +53,14 @@ class MyPVConfigFlow(ConfigFlow, domain=DOMAIN):
             discovery_info.ip_address,
         )
 
+        serial_number = discovery_info.properties.get("serialno")
+        if serial_number:
+            await self.async_set_unique_id(serial_number)
+            # Update host ip address when device is already configured and abort.
+            self._abort_if_unique_id_configured(
+                updates={CONF_HOST: discovery_info.ip_address}
+            )
+
         self._host = str(discovery_info.ip_address)
 
         return await self.async_step_discovery_confirm()
