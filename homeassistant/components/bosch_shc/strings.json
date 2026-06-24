@@ -44,6 +44,53 @@
     }
   },
   "entity": {
+    "select": {
+      "actuator_type": {
+        "name": "Actuator type"
+      },
+      "display_direction": {
+        "name": "Display direction"
+      },
+      "displayed_temperature": {
+        "name": "Displayed temperature"
+      },
+      "heater_type": {
+        "name": "Heater type"
+      },
+      "motion_sensitivity": {
+        "name": "Motion sensitivity"
+      },
+      "orientation_light_response": {
+        "name": "Orientation light response time"
+      },
+      "output_mode": {
+        "name": "Output mode"
+      },
+      "smart_sensitivity_comfort": {
+        "name": "Comfort sensitivity level"
+      },
+      "smart_sensitivity_security": {
+        "name": "Security sensitivity level"
+      },
+      "smoke_sensitivity": {
+        "name": "Smoke sensitivity"
+      },
+      "state_after_power_outage": {
+        "name": "State after power outage"
+      },
+      "switch_type": {
+        "name": "Switch type"
+      },
+      "terminal_type": {
+        "name": "Terminal type"
+      },
+      "valve_type": {
+        "name": "Valve type"
+      },
+      "vibration_sensitivity": {
+        "name": "Vibration sensitivity"
+      }
+    },
     "sensor": {
       "air_quality": {
         "name": "Air quality"
