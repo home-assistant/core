@@ -935,6 +935,8 @@ class EntityRegistryItems(BaseRegistryItems[RegistryEntry]):
     - device_id -> dict[key, True]
     - area_id -> dict[key, True]
     - label -> dict[key, True]
+
+    Also maintains a count of enabled entries per config entry id.
     """
 
     def __init__(self) -> None:
@@ -943,6 +945,7 @@ class EntityRegistryItems(BaseRegistryItems[RegistryEntry]):
         self._entry_ids: dict[str, RegistryEntry] = {}
         self._index: dict[tuple[str, str, str], str] = {}
         self._config_entry_id_index: RegistryIndexType = defaultdict(dict)
+        self._config_entry_id_enabled_count: dict[str, int] = {}
         self._device_id_index: RegistryIndexType = defaultdict(dict)
         self._area_id_index: RegistryIndexType = defaultdict(dict)
         self._labels_index: RegistryIndexType = defaultdict(dict)
@@ -956,6 +959,10 @@ class EntityRegistryItems(BaseRegistryItems[RegistryEntry]):
         # https://discuss.python.org/t/add-orderedset-to-stdlib/12730
         if (config_entry_id := entry.config_entry_id) is not None:
             self._config_entry_id_index[config_entry_id][key] = True
+            if not entry.disabled_by:
+                self._config_entry_id_enabled_count[config_entry_id] = (
+                    self._config_entry_id_enabled_count.get(config_entry_id, 0) + 1
+                )
         if (device_id := entry.device_id) is not None:
             self._device_id_index[device_id][key] = True
         if (area_id := entry.area_id) is not None:
@@ -973,6 +980,12 @@ class EntityRegistryItems(BaseRegistryItems[RegistryEntry]):
         del self._index[(entry.domain, entry.platform, entry.unique_id)]
         if config_entry_id := entry.config_entry_id:
             self._unindex_entry_value(key, config_entry_id, self._config_entry_id_index)
+            if not entry.disabled_by:
+                count = self._config_entry_id_enabled_count[config_entry_id] - 1
+                if count:
+                    self._config_entry_id_enabled_count[config_entry_id] = count
+                else:
+                    del self._config_entry_id_enabled_count[config_entry_id]
         if device_id := entry.device_id:
             self._unindex_entry_value(key, device_id, self._device_id_index)
         if area_id := entry.area_id:
@@ -1012,6 +1025,10 @@ class EntityRegistryItems(BaseRegistryItems[RegistryEntry]):
         return [
             data[key] for key in self._config_entry_id_index.get(config_entry_id, ())
         ]
+
+    def get_enabled_count_for_config_entry_id(self, config_entry_id: str) -> int:
+        """Return the number of enabled entries for a config entry."""
+        return self._config_entry_id_enabled_count.get(config_entry_id, 0)
 
     def get_entries_for_area_id(self, area_id: str) -> list[RegistryEntry]:
         """Get entries for area."""
