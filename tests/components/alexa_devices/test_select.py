@@ -6,7 +6,7 @@ from unittest.mock import AsyncMock, patch
 import pytest
 from syrupy.assertion import SnapshotAssertion
 
-from homeassistant.components.alexa_devices.const import DOMAIN as ALEXA_DEVICES_DOMAIN
+from homeassistant.components.alexa_devices.const import DOMAIN
 from homeassistant.components.select import (
     DOMAIN as SELECT_DOMAIN,
     SERVICE_SELECT_OPTION,
@@ -110,7 +110,7 @@ async def test_select_dropin_none_option(
 
     entity_registry = er.async_get(hass)
     entity_id = entity_registry.async_get_entity_id(
-        SELECT_DOMAIN, ALEXA_DEVICES_DOMAIN, f"{TEST_DEVICE_1_SN}-dropin"
+        SELECT_DOMAIN, DOMAIN, f"{TEST_DEVICE_1_SN}-dropin"
     )
     assert entity_id
 
