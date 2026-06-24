@@ -39,8 +39,8 @@
 # name: test_siren_entities_snapshot[local_somfy_tahoma_v2_europe.json][siren.siren-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'Siren',
-      'supported_features': <SirenEntityFeature: 19>,
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Siren',
+      <EntityStateAttribute.SUPPORTED_FEATURES: 'supported_features'>: <SirenEntityFeature: 19>,
     }),
     'context': <ANY>,
     'entity_id': 'siren.siren',

@@ -2,7 +2,7 @@
 # name: test_update_enable_guest_wifi
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'Mock Title Enable guest Wi-Fi',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Mock Title Enable guest Wi-Fi',
     }),
     'context': <ANY>,
     'entity_id': 'switch.mock_title_enable_guest_wi_fi',
@@ -52,7 +52,7 @@
 # name: test_update_enable_leds
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'Mock Title Enable LEDs',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Mock Title Enable LEDs',
     }),
     'context': <ANY>,
     'entity_id': 'switch.mock_title_enable_leds',

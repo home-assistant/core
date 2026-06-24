@@ -24,6 +24,8 @@ from homeassistant.helpers.entity import Entity, EntityDescription
 from homeassistant.helpers.entity_component import EntityComponent
 from homeassistant.helpers.typing import ConfigType
 
+from .const import ImageProcessingEntityStateAttribute
+
 _LOGGER = logging.getLogger(__name__)
 
 DOMAIN = "image_processing"
@@ -233,7 +235,10 @@ class ImageProcessingFaceEntity(ImageProcessingEntity):
     @override
     def state_attributes(self) -> dict[str, Any]:
         """Return device specific state attributes."""
-        return {ATTR_FACES: self.faces, ATTR_TOTAL_FACES: self.total_faces}
+        return {
+            ImageProcessingEntityStateAttribute.FACES: self.faces,
+            ImageProcessingEntityStateAttribute.TOTAL_FACES: self.total_faces,
+        }
 
     def process_faces(self, faces: list[FaceInformation], total: int) -> None:
         """Send event with detected faces and store data."""

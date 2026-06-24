@@ -48,7 +48,7 @@
 # name: test_all_entities[indoor][select.airgradient_co2_automatic_baseline_duration-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'Airgradient CO2 automatic baseline duration',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Airgradient CO2 automatic baseline duration',
       <SelectEntityCapabilityAttribute.OPTIONS: 'options'>: list([
         '1',
         '8',
@@ -111,7 +111,7 @@
 # name: test_all_entities[indoor][select.airgradient_configuration_source-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'Airgradient Configuration source',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Airgradient Configuration source',
       <SelectEntityCapabilityAttribute.OPTIONS: 'options'>: list([
         'cloud',
         'local',
@@ -170,7 +170,7 @@
 # name: test_all_entities[indoor][select.airgradient_display_pm_standard-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'Airgradient Display PM standard',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Airgradient Display PM standard',
       <SelectEntityCapabilityAttribute.OPTIONS: 'options'>: list([
         'ugm3',
         'us_aqi',
@@ -229,7 +229,7 @@
 # name: test_all_entities[indoor][select.airgradient_display_temperature_unit-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'Airgradient Display temperature unit',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Airgradient Display temperature unit',
       <SelectEntityCapabilityAttribute.OPTIONS: 'options'>: list([
         'c',
         'f',
@@ -289,7 +289,7 @@
 # name: test_all_entities[indoor][select.airgradient_led_bar_mode-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'Airgradient LED bar mode',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Airgradient LED bar mode',
       <SelectEntityCapabilityAttribute.OPTIONS: 'options'>: list([
         'off',
         'co2',
@@ -352,7 +352,7 @@
 # name: test_all_entities[indoor][select.airgradient_nox_index_learning_offset-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'Airgradient NOx index learning offset',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Airgradient NOx index learning offset',
       <SelectEntityCapabilityAttribute.OPTIONS: 'options'>: list([
         '12',
         '60',
@@ -417,7 +417,7 @@
 # name: test_all_entities[indoor][select.airgradient_voc_index_learning_offset-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'Airgradient VOC index learning offset',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Airgradient VOC index learning offset',
       <SelectEntityCapabilityAttribute.OPTIONS: 'options'>: list([
         '12',
         '60',
@@ -483,7 +483,7 @@
 # name: test_all_entities[outdoor][select.airgradient_co2_automatic_baseline_duration-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'Airgradient CO2 automatic baseline duration',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Airgradient CO2 automatic baseline duration',
       <SelectEntityCapabilityAttribute.OPTIONS: 'options'>: list([
         '1',
         '8',
@@ -546,7 +546,7 @@
 # name: test_all_entities[outdoor][select.airgradient_configuration_source-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'Airgradient Configuration source',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Airgradient Configuration source',
       <SelectEntityCapabilityAttribute.OPTIONS: 'options'>: list([
         'cloud',
         'local',
@@ -608,7 +608,7 @@
 # name: test_all_entities[outdoor][select.airgradient_nox_index_learning_offset-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'Airgradient NOx index learning offset',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Airgradient NOx index learning offset',
       <SelectEntityCapabilityAttribute.OPTIONS: 'options'>: list([
         '12',
         '60',
@@ -673,7 +673,7 @@
 # name: test_all_entities[outdoor][select.airgradient_voc_index_learning_offset-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'Airgradient VOC index learning offset',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Airgradient VOC index learning offset',
       <SelectEntityCapabilityAttribute.OPTIONS: 'options'>: list([
         '12',
         '60',

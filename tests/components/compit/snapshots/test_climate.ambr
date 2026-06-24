@@ -69,7 +69,7 @@
         'medium',
         'high',
       ]),
-      'friendly_name': 'Nano Color 2',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Nano Color 2',
       <ClimateEntityCapabilityAttribute.HVAC_MODES: 'hvac_modes'>: list([
         <HVACMode.COOL: 'cool'>,
         <HVACMode.HEAT: 'heat'>,
@@ -84,7 +84,7 @@
         'none',
         'away',
       ]),
-      'supported_features': <ClimateEntityFeature: 25>,
+      <EntityStateAttribute.SUPPORTED_FEATURES: 'supported_features'>: <ClimateEntityFeature: 25>,
       <ClimateEntityStateAttribute.TEMPERATURE: 'temperature'>: 22.0,
     }),
     'context': <ANY>,
@@ -147,7 +147,7 @@
   StateSnapshot({
     'attributes': ReadOnlyDict({
       <ClimateEntityStateAttribute.CURRENT_TEMPERATURE: 'current_temperature'>: 21.0,
-      'friendly_name': 'R 900',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'R 900',
       <ClimateEntityCapabilityAttribute.HVAC_MODES: 'hvac_modes'>: list([
         <HVACMode.HEAT: 'heat'>,
         <HVACMode.OFF: 'off'>,
@@ -159,7 +159,7 @@
         'home',
         'away',
       ]),
-      'supported_features': <ClimateEntityFeature: 16>,
+      <EntityStateAttribute.SUPPORTED_FEATURES: 'supported_features'>: <ClimateEntityFeature: 16>,
     }),
     'context': <ANY>,
     'entity_id': 'climate.r_900',
