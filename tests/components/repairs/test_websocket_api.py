@@ -206,6 +206,8 @@ class MockFixFlowNextFlow(RepairsFlow):
             subentries = mock_entry.subentries
             assert len(subentries.keys()) == 1
             mock_subentry_id = list(subentries.keys())[0]
+        elif error_type == "unknown_entry_via_form":
+            return await self.async_step_user()
 
         with mock_core_config_flow():
             if flow_type == FlowType.CONFIG_FLOW:
@@ -243,6 +245,22 @@ class MockFixFlowNextFlow(RepairsFlow):
                     next_flow["flow_id"],
                 ),
             )
+
+    async def async_step_user(
+        self, user_input: dict[str, str] | None = None
+    ) -> data_entry_flow.FlowResult:
+        """Interim step for a RepairsFlow next_flow to test UnknownEntry error."""
+        if user_input:
+            entries = self.hass.config_entries.async_entries("comp")
+            mock_entry: MockConfigEntry = entries[0]
+            next_flow = await mock_entry.start_reconfigure_flow(self.hass)
+            await self.hass.config_entries.async_remove(mock_entry.entry_id)
+            return self.async_create_entry(
+                data={}, next_flow=(FlowType.CONFIG_FLOW, next_flow["flow_id"])
+            )
+        return self.async_show_form(
+            step_id="user",
+        )
 
 
 @pytest.fixture(autouse=True)
@@ -662,6 +680,7 @@ async def test_fix_issue_next_flow_abort(
     [
         ("invalid_flow", "Invalid next_flow type", ["fake_integration"]),
         ("unknown_entry", "not found in next_flow", ["fake_integration"]),
+        ("unknown_entry_via_form", "not found in next_flow", ["fake_integration"]),
     ],
 )
 async def test_fix_issue_next_flow_errors(
@@ -698,7 +717,13 @@ async def test_fix_issue_next_flow_errors(
         url, json={"handler": "fake_integration", "issue_id": "error_issue"}
     )
 
-    assert resp.status == HTTPStatus.BAD_REQUEST
+    if error_type == "unknown_entry_via_form":
+        assert resp.status == HTTPStatus.OK
+        data = await resp.json()
+        assert data["type"] == "form"
+        resp = await client.post(f"{url}/{data['flow_id']}", json={"submit": "True"})
+
+    assert resp.status in [HTTPStatus.BAD_REQUEST, HTTPStatus.NOT_FOUND]
     data = await resp.json()
     assert assert_msg in data["message"]
 

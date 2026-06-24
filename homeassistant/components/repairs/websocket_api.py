@@ -145,7 +145,7 @@ class RepairsFlowIndexView(FlowManagerIndexView[RepairsFlowManager]):
                 data={"issue_id": data["issue_id"]},
             )
         except data_entry_flow.UnknownFlow as ex:
-            return self.json_message(f"Unknown Flow: {ex!s}", HTTPStatus.BAD_REQUEST)
+            return self.json_message(f"Unknown Flow: {ex!s}", HTTPStatus.NOT_FOUND)
         except data_entry_flow.UnknownStep as ex:
             return self.json_message(str(ex), HTTPStatus.BAD_REQUEST)
         except UnknownEntry as ex:
@@ -176,7 +176,14 @@ class RepairsFlowResourceView(FlowManagerResourceView[RepairsFlowManager]):
     @require_admin(permission=POLICY_EDIT)
     async def post(self, request: web.Request, flow_id: str) -> web.Response:
         """Handle a POST request."""
-        return await super().post(request, flow_id)
+        try:
+            result = await super().post(request, flow_id)
+        except UnknownEntry as ex:
+            # Raised by _async_set_next_flow_if_valid in a RepairsFlow's async_abort and async_create_entry
+            return self.json_message(
+                f"Config entry {ex!s} not found in next_flow", HTTPStatus.BAD_REQUEST
+            )
+        return result
 
     @override
     def _prepare_result_json(
