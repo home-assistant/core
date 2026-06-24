@@ -324,7 +324,24 @@ class ZHADeviceProxy(EventBase):
 
         self.device = device
         self._unsubs.append(self.device.on_all_events(self._handle_event_protocol))
-        self._track_firmware_version()
+        self._sync_firmware_version()
+
+    @callback
+    def _sync_firmware_version(self) -> None:
+        """Sync the device's firmware version into the device registry."""
+        device_registry = dr.async_get(self.gateway_proxy.hass)
+
+        def update_sw_version(event: DeviceFirmwareInfoUpdatedEvent) -> None:
+            """Update software version in device registry."""
+            device_registry.async_update_device(
+                self.device_id, sw_version=event.new_firmware_version
+            )
+
+        self._unsubs.append(
+            self.device.on_event(
+                DeviceFirmwareInfoUpdatedEvent.event_type, update_sw_version
+            )
+        )
 
     @property
     def device_id(self) -> str:
@@ -897,19 +914,7 @@ class ZHAGatewayProxy(EventBase):
                 sw_version=zha_device.firmware_version,
             )
             zha_device_proxy.device_id = device_registry_device.id
-
-            def update_sw_version(event: DeviceFirmwareInfoUpdatedEvent) -> None:
-                """Update software version in device registry."""
-                device_registry.async_update_device(
-                    device_registry_device.id,
-                    sw_version=event.new_firmware_version,
-                )
-
-            self._unsubs.append(
-                zha_device.on_event(
-                    DeviceFirmwareInfoUpdatedEvent.event_type, update_sw_version
-                )
-            )
+            zha_device_proxy._sync_firmware_version()
 
         return zha_device_proxy
 
