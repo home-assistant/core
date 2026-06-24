@@ -95,13 +95,7 @@ class CieloSensor(CieloDeviceEntity, SensorEntity):
     @property
     @override
     def native_unit_of_measurement(self) -> str | None:
-        """Return the native unit of measurement.
-
-        Note: The temperature unit is dynamic and can change based on device
-        settings. If a user changes the device's temperature unit, historical
-        statistics may be affected as the same numeric value will be interpreted
-        differently. This is a known limitation of the device's API.
-        """
+        """Return the native unit of measurement."""
         if self.entity_description.unit_fn is not None:
             return self.entity_description.unit_fn(self.client)
         return super().native_unit_of_measurement

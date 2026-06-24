@@ -38,6 +38,7 @@ async def test_all_entities(
     await snapshot_platform(hass, entity_registry, snapshot, mock_config_entry.entry_id)
 
 
+@pytest.mark.usefixtures("mock_cielo_client")
 @pytest.mark.parametrize(
     ("temperature_unit", "hass_units", "expected_unit"),
     [
@@ -63,7 +64,6 @@ async def test_all_entities(
 )
 async def test_temperature_sensor_unit(
     hass: HomeAssistant,
-    mock_cielo_client: MagicMock,
     mock_config_entry: MockConfigEntry,
     mock_cielo_device_api: MagicMock,
     entity_registry: er.EntityRegistry,
