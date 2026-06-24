@@ -3,7 +3,7 @@
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'attribution': 'Data provided by WMS WebControl pro API',
-      'friendly_name': 'Keuken alle Maximum Rotation',
+      'friendly_name': 'Keuken alle Maximum rotation',
       'max': 127,
       'min': 0,
       'mode': <NumberMode.AUTO: 'auto'>,
@@ -21,7 +21,7 @@
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'attribution': 'Data provided by WMS WebControl pro API',
-      'friendly_name': 'Keuken alle Minimum Rotation',
+      'friendly_name': 'Keuken alle Minimum rotation',
       'max': 0,
       'min': -127,
       'mode': <NumberMode.AUTO: 'auto'>,
@@ -39,7 +39,7 @@
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'attribution': 'Data provided by WMS WebControl pro API',
-      'friendly_name': 'Keuken alle Raw Rotation',
+      'friendly_name': 'Keuken alle Raw rotation',
       'max': 127,
       'min': -127,
       'mode': <NumberMode.AUTO: 'auto'>,
