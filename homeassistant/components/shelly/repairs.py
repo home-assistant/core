@@ -375,12 +375,93 @@ class DisableOpenWiFiApFlow(RepairsFlow):
         return self.async_abort(reason="issue_ignored")
 
 
+class DeviceConflictRepairFlow(RepairsFlow):
+    """Handler for fixing a device conflict (hardware replacement)."""
+
+    def __init__(self, data: dict[str, str]) -> None:
+        """Initialize."""
+        self._data = data
+
+    @property
+    def entry_id(self) -> str:
+        """Return the config entry id to migrate."""
+        return self._data["entry_id"]
+
+    @property
+    def old_mac(self) -> str:
+        """Return the stored MAC address of the old device."""
+        return self._data["old_mac"]
+
+    @property
+    def new_mac(self) -> str:
+        """Return the MAC address of the new device."""
+        return self._data["new_mac"]
+
+    @callback
+    def _description_placeholders(self) -> dict[str, str] | None:
+        """Return the issue's translation placeholders."""
+        issue_registry = ir.async_get(self.hass)
+        if issue := issue_registry.async_get_issue(DOMAIN, self.issue_id):
+            return issue.translation_placeholders
+        return None
+
+    async def async_step_init(
+        self, user_input: dict[str, str] | None = None
+    ) -> RepairsFlowResult:
+        """Handle the first step of a fix flow."""
+        return self.async_show_menu(
+            menu_options=["migrate", "manual"],
+            description_placeholders=self._description_placeholders(),
+        )
+
+    async def async_step_migrate(
+        self, user_input: dict[str, str] | None = None
+    ) -> RepairsFlowResult:
+        """Handle the migrate step of a fix flow."""
+        if user_input is None:
+            return self.async_show_form(
+                step_id="migrate",
+                data_schema=vol.Schema({}),
+                description_placeholders=self._description_placeholders(),
+            )
+
+        # Imported here to avoid a circular import (__init__ imports repairs).
+        from . import async_replace_device  # noqa: PLC0415
+
+        await async_replace_device(self.hass, self.entry_id, self.old_mac, self.new_mac)
+        self.hass.config_entries.async_schedule_reload(self.entry_id)
+        return self.async_create_entry(title="", data={})
+
+    async def async_step_manual(
+        self, user_input: dict[str, str] | None = None
+    ) -> RepairsFlowResult:
+        """Handle the manual step of a fix flow."""
+        if user_input is None:
+            return self.async_show_form(
+                step_id="manual",
+                data_schema=vol.Schema({}),
+                description_placeholders=self._description_placeholders(),
+            )
+
+        # The user resolved the conflict on the hardware side (removed or
+        # renamed the duplicate). Reload so a clean connect clears the issue.
+        self.hass.config_entries.async_schedule_reload(self.entry_id)
+        return self.async_create_entry(title="", data={})
+
+
 async def async_create_fix_flow(
     hass: HomeAssistant, issue_id: str, data: dict[str, str] | None
 ) -> RepairsFlow:
     """Create flow."""
     if TYPE_CHECKING:
         assert isinstance(data, dict)
+
+    # A device conflict repair must be routed before the live-device lookup
+    # below: during a hardware swap the entry may have no live device object
+    # at all (it can be in ConfigEntryNotReady), so runtime_data.rpc/block
+    # would not be set. The conflict flow needs only the issue data.
+    if "device_conflict" in issue_id:
+        return DeviceConflictRepairFlow(data)
 
     entry_id = data["entry_id"]
     entry = hass.config_entries.async_get_entry(entry_id)

@@ -26,6 +26,7 @@ from homeassistant.components.shelly.const import (
     CONF_GEN,
     CONF_SLEEP_PERIOD,
     CONF_SSID,
+    DEVICE_CONFLICT_ISSUE_ID,
     DOMAIN,
     BLEScannerMode,
 )
@@ -41,6 +42,7 @@ from homeassistant.const import (
 )
 from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
+from homeassistant.helpers import issue_registry as ir
 from homeassistant.helpers.service_info.zeroconf import (
     ATTR_PROPERTIES_ID,
     ZeroconfServiceInfo,
@@ -3244,6 +3246,247 @@ async def test_zeroconf_wrong_device_name(
     assert result["result"].unique_id == "test-mac"
     assert len(mock_setup.mock_calls) == 1
     assert len(mock_setup_entry.mock_calls) == 1
+
+
+@pytest.mark.usefixtures("mock_rpc_device", "mock_zeroconf")
+async def test_zeroconf_device_conflict(
+    hass: HomeAssistant,
+    issue_registry: ir.IssueRegistry,
+) -> None:
+    """Test a replacement device at a known host raises a conflict repair.
+
+    The discovered device reports a different primary MAC than the stored
+    entry bound to the same host, while reporting the same model and
+    generation: a hardware replacement. The flow aborts and a fixable repair
+    issue is raised so the configuration can be migrated.
+    """
+    entry = MockConfigEntry(
+        domain=DOMAIN,
+        unique_id="123456789ABC",
+        data={
+            CONF_HOST: "1.1.1.1",
+            CONF_GEN: 2,
+            CONF_SLEEP_PERIOD: 0,
+            CONF_MODEL: MODEL_PLUS_2PM,
+        },
+    )
+    entry.add_to_hass(hass)
+
+    with patch(
+        "homeassistant.components.shelly.config_flow.get_info",
+        return_value={
+            "mac": "AABBCCDDEEFF",
+            "model": MODEL_PLUS_2PM,
+            "auth": False,
+            "gen": 2,
+        },
+    ):
+        result = await hass.config_entries.flow.async_init(
+            DOMAIN,
+            data=DISCOVERY_INFO_WITH_MAC,
+            context={"source": config_entries.SOURCE_ZEROCONF},
+        )
+
+    assert result["type"] is FlowResultType.ABORT
+    assert result["reason"] == "device_conflict"
+    assert issue_registry.async_get_issue(
+        DOMAIN, DEVICE_CONFLICT_ISSUE_ID.format(unique=entry.entry_id)
+    )
+
+
+@pytest.mark.usefixtures("mock_rpc_device", "mock_zeroconf")
+async def test_zeroconf_no_conflict_same_mac(
+    hass: HomeAssistant,
+    issue_registry: ir.IssueRegistry,
+) -> None:
+    """Test a normal reconnect (same MAC, same host) raises no conflict."""
+    entry = MockConfigEntry(
+        domain=DOMAIN,
+        unique_id="AABBCCDDEEFF",
+        data={
+            CONF_HOST: "1.1.1.1",
+            CONF_GEN: 2,
+            CONF_SLEEP_PERIOD: 0,
+            CONF_MODEL: MODEL_PLUS_2PM,
+        },
+    )
+    entry.add_to_hass(hass)
+
+    with patch(
+        "homeassistant.components.shelly.config_flow.get_info",
+        return_value={
+            "mac": "AABBCCDDEEFF",
+            "model": MODEL_PLUS_2PM,
+            "auth": False,
+            "gen": 2,
+        },
+    ):
+        result = await hass.config_entries.flow.async_init(
+            DOMAIN,
+            data=DISCOVERY_INFO_WITH_MAC,
+            context={"source": config_entries.SOURCE_ZEROCONF},
+        )
+
+    assert result["type"] is FlowResultType.ABORT
+    assert result["reason"] == "already_configured"
+    assert (
+        issue_registry.async_get_issue(
+            DOMAIN, DEVICE_CONFLICT_ISSUE_ID.format(unique=entry.entry_id)
+        )
+        is None
+    )
+
+
+@pytest.mark.usefixtures("mock_rpc_device", "mock_zeroconf")
+async def test_zeroconf_no_conflict_different_host(
+    hass: HomeAssistant,
+    issue_registry: ir.IssueRegistry,
+) -> None:
+    """Test a new device at a different host raises no conflict."""
+    entry = MockConfigEntry(
+        domain=DOMAIN,
+        unique_id="123456789ABC",
+        data={
+            CONF_HOST: "2.2.2.2",
+            CONF_GEN: 2,
+            CONF_SLEEP_PERIOD: 0,
+            CONF_MODEL: MODEL_PLUS_2PM,
+        },
+    )
+    entry.add_to_hass(hass)
+
+    with patch(
+        "homeassistant.components.shelly.config_flow.get_info",
+        return_value={
+            "mac": "AABBCCDDEEFF",
+            "model": MODEL_PLUS_2PM,
+            "auth": False,
+            "gen": 2,
+        },
+    ):
+        result = await hass.config_entries.flow.async_init(
+            DOMAIN,
+            data=DISCOVERY_INFO_WITH_MAC,
+            context={"source": config_entries.SOURCE_ZEROCONF},
+        )
+
+    # No conflict (host differs); the discovered device is treated as new.
+    assert result["type"] is FlowResultType.FORM
+    assert (
+        issue_registry.async_get_issue(
+            DOMAIN, DEVICE_CONFLICT_ISSUE_ID.format(unique=entry.entry_id)
+        )
+        is None
+    )
+
+
+@pytest.mark.usefixtures("mock_rpc_device", "mock_zeroconf")
+async def test_zeroconf_no_conflict_alternate_interface_mac(
+    hass: HomeAssistant,
+    issue_registry: ir.IssueRegistry,
+) -> None:
+    """Test a multi-interface device (e.g. Pro 3EM) raises no false conflict.
+
+    A device with separate Ethernet and Wi-Fi MACs can advertise an alternate
+    interface MAC in its zeroconf name while still reporting the original
+    primary MAC over the network. Because detection is gated on the device's
+    own primary MAC (``self.info[CONF_MAC]``), not the name-derived MAC, this
+    must not trip the conflict repair.
+    """
+    entry = MockConfigEntry(
+        domain=DOMAIN,
+        unique_id="AABBCCDDEEFF",
+        data={
+            CONF_HOST: "1.1.1.1",
+            CONF_GEN: 2,
+            CONF_SLEEP_PERIOD: 0,
+            CONF_MODEL: MODEL_PLUS_2PM,
+        },
+    )
+    entry.add_to_hass(hass)
+
+    # The zeroconf name carries an alternate-interface MAC, but get_info (the
+    # authoritative primary MAC) still reports the stored, unchanged MAC.
+    with patch(
+        "homeassistant.components.shelly.config_flow.get_info",
+        return_value={
+            "mac": "AABBCCDDEEFF",
+            "model": MODEL_PLUS_2PM,
+            "auth": False,
+            "gen": 2,
+        },
+    ):
+        await hass.config_entries.flow.async_init(
+            DOMAIN,
+            data=replace(
+                DISCOVERY_INFO_WITH_MAC,
+                name="shelly1pm-001122334455",
+                properties={ATTR_PROPERTIES_ID: "shelly1pm-001122334455"},
+            ),
+            context={"source": config_entries.SOURCE_ZEROCONF},
+        )
+
+    # No conflict repair is raised: detection is gated on the primary MAC, which
+    # still matches the stored entry, so the alternate-interface name MAC does
+    # not manufacture a destructive false positive.
+    assert (
+        issue_registry.async_get_issue(
+            DOMAIN, DEVICE_CONFLICT_ISSUE_ID.format(unique=entry.entry_id)
+        )
+        is None
+    )
+
+
+@pytest.mark.usefixtures("mock_rpc_device", "mock_zeroconf")
+async def test_zeroconf_no_conflict_different_model(
+    hass: HomeAssistant,
+    issue_registry: ir.IssueRegistry,
+) -> None:
+    """Test a different device reusing a host's DHCP lease raises no conflict.
+
+    The discovered device has a different primary MAC than the stored entry at
+    the same host, but it also reports a different model. That rules out a
+    hardware replacement (which would be the same model/generation) and points
+    at an unrelated device that merely recycled the old device's DHCP lease, so
+    no destructive ``device_conflict`` repair is raised and the flow proceeds.
+    """
+    entry = MockConfigEntry(
+        domain=DOMAIN,
+        unique_id="123456789ABC",
+        data={
+            CONF_HOST: "1.1.1.1",
+            CONF_GEN: 2,
+            CONF_SLEEP_PERIOD: 0,
+            CONF_MODEL: MODEL_PLUS_2PM,
+        },
+    )
+    entry.add_to_hass(hass)
+
+    with patch(
+        "homeassistant.components.shelly.config_flow.get_info",
+        return_value={
+            "mac": "AABBCCDDEEFF",
+            "model": MODEL_1,
+            "auth": False,
+            "gen": 2,
+        },
+    ):
+        result = await hass.config_entries.flow.async_init(
+            DOMAIN,
+            data=DISCOVERY_INFO_WITH_MAC,
+            context={"source": config_entries.SOURCE_ZEROCONF},
+        )
+
+    # The discovered device is a different model, so it is treated as a new
+    # device and the flow proceeds normally instead of aborting with a conflict.
+    assert result["type"] is FlowResultType.FORM
+    assert result.get("reason") != "device_conflict"
+    assert (
+        issue_registry.async_get_issue(
+            DOMAIN, DEVICE_CONFLICT_ISSUE_ID.format(unique=entry.entry_id)
+        )
+        is None
+    )
 
 
 @pytest.mark.usefixtures(

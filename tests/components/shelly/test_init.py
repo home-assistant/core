@@ -25,6 +25,7 @@ from homeassistant.components.shelly.const import (
     CONF_BLE_SCANNER_MODE,
     CONF_GEN,
     CONF_SLEEP_PERIOD,
+    DEVICE_CONFLICT_ISSUE_ID,
     DOMAIN,
     MODELS_WITH_WRONG_SLEEP_PERIOD,
     BLEScannerMode,
@@ -213,6 +214,62 @@ async def test_mac_mismatch_error(
 
     entry = await init_integration(hass, gen)
     assert entry.state is ConfigEntryState.SETUP_RETRY
+
+
+@pytest.mark.parametrize("gen", [2, 3])
+async def test_rpc_mac_mismatch_raises_device_conflict_issue(
+    hass: HomeAssistant,
+    gen: int,
+    mock_rpc_device: Mock,
+    issue_registry: ir.IssueRegistry,
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    """Test a MAC mismatch on RPC setup raises a device_conflict repair issue.
+
+    This is the fallback detection path (no zeroconf): when the RPC device
+    reports a different primary MAC than the stored entry, the repair is
+    offered even though discovery never fires.
+    """
+    monkeypatch.setitem(mock_rpc_device.shelly, "mac", "AABBCCDDEEFF")
+    monkeypatch.setattr(
+        mock_rpc_device, "initialize", AsyncMock(side_effect=MacAddressMismatchError)
+    )
+
+    entry = await init_integration(hass, gen)
+
+    assert entry.state is ConfigEntryState.SETUP_RETRY
+    assert issue_registry.async_get_issue(
+        DOMAIN, DEVICE_CONFLICT_ISSUE_ID.format(unique=entry.entry_id)
+    )
+
+
+@pytest.mark.parametrize("gen", [2, 3])
+async def test_rpc_mac_mismatch_same_mac_no_issue(
+    hass: HomeAssistant,
+    gen: int,
+    mock_rpc_device: Mock,
+    issue_registry: ir.IssueRegistry,
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    """Test a MAC mismatch error with a matching reported MAC raises no issue.
+
+    Guards against a false positive when the device's reported MAC equals the
+    stored entry unique_id (e.g. a transient mismatch).
+    """
+    # mock_rpc_device.shelly["mac"] defaults to MOCK_MAC == entry.unique_id.
+    monkeypatch.setattr(
+        mock_rpc_device, "initialize", AsyncMock(side_effect=MacAddressMismatchError)
+    )
+
+    entry = await init_integration(hass, gen)
+
+    assert entry.state is ConfigEntryState.SETUP_RETRY
+    assert (
+        issue_registry.async_get_issue(
+            DOMAIN, DEVICE_CONFLICT_ISSUE_ID.format(unique=entry.entry_id)
+        )
+        is None
+    )
 
 
 @pytest.mark.parametrize("gen", [1, 2, 3])

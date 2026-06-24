@@ -2,7 +2,7 @@
 
 import asyncio
 from functools import partial
-from typing import Final
+from typing import TYPE_CHECKING, Final
 
 from aioshelly.ble.const import BLE_SCRIPT_NAME
 from aioshelly.block_device import BlockDevice
@@ -20,12 +20,13 @@ import voluptuous as vol
 from homeassistant.components.bluetooth import async_remove_scanner
 from homeassistant.const import (
     CONF_HOST,
+    CONF_MAC,
     CONF_MODEL,
     CONF_PASSWORD,
     CONF_USERNAME,
     Platform,
 )
-from homeassistant.core import HomeAssistant
+from homeassistant.core import HomeAssistant, callback
 from homeassistant.exceptions import ConfigEntryAuthFailed, ConfigEntryNotReady
 from homeassistant.helpers import (
     config_validation as cv,
@@ -43,6 +44,7 @@ from .const import (
     CONF_BLE_SCANNER_MODE,
     CONF_COAP_PORT,
     CONF_SLEEP_PERIOD,
+    DEVICE_CONFLICT_ISSUE_ID,
     DOMAIN,
     FIRMWARE_UNSUPPORTED_ISSUE_ID,
     LOGGER,
@@ -236,6 +238,12 @@ async def _async_setup_block_entry(
                     translation_placeholders={"device": entry.title},
                 )
         except (DeviceConnectionError, MacAddressMismatchError) as err:
+            # Unlike the RPC path, the Block setup cannot offer a device conflict
+            # repair: aioshelly raises MacAddressMismatchError from inside
+            # get_info() and discards the response, so the observed MAC is not
+            # available on the device object. A gen1 hardware swap on a static-IP
+            # device thus surfaces as a generic error until rediscovered via
+            # zeroconf.
             await device.shutdown()
             raise ConfigEntryNotReady(
                 translation_domain=DOMAIN,
@@ -282,6 +290,11 @@ async def _async_setup_block_entry(
 
     ir.async_delete_issue(
         hass, DOMAIN, FIRMWARE_UNSUPPORTED_ISSUE_ID.format(unique=entry.unique_id)
+    )
+    # The device connected cleanly with a matching MAC, so any pending device
+    # conflict (hardware replacement) repair issue is resolved.
+    ir.async_delete_issue(
+        hass, DOMAIN, DEVICE_CONFLICT_ISSUE_ID.format(unique=entry.entry_id)
     )
     return True
 
@@ -346,7 +359,21 @@ async def _async_setup_rpc_entry(hass: HomeAssistant, entry: ShellyConfigEntry) 
                     device, ignore_scripts=[BLE_SCRIPT_NAME]
                 )
             remove_stale_blu_trv_devices(hass, device, entry)
-        except (DeviceConnectionError, MacAddressMismatchError, RpcCallError) as err:
+        except MacAddressMismatchError as err:
+            # The device answering at this host reports a different MAC than the
+            # one stored on the entry: the hardware was most likely replaced.
+            # The device's own primary MAC is available here (Shelly.GetDeviceInfo
+            # is fetched before aioshelly raises), so we can offer a repair to
+            # migrate the configuration even when zeroconf discovery never fires
+            # (static IP, discovery disabled, different subnet).
+            _async_create_device_conflict_issue(hass, entry, device.shelly[CONF_MAC])
+            await device.shutdown()
+            raise ConfigEntryNotReady(
+                translation_domain=DOMAIN,
+                translation_key="device_communication_error",
+                translation_placeholders={"device": entry.title},
+            ) from err
+        except (DeviceConnectionError, RpcCallError) as err:
             await device.shutdown()
             raise ConfigEntryNotReady(
                 translation_domain=DOMAIN,
@@ -430,6 +457,11 @@ async def _async_setup_rpc_entry(hass: HomeAssistant, entry: ShellyConfigEntry) 
     ir.async_delete_issue(
         hass, DOMAIN, FIRMWARE_UNSUPPORTED_ISSUE_ID.format(unique=entry.unique_id)
     )
+    # The device connected cleanly with a matching MAC, so any pending device
+    # conflict (hardware replacement) repair issue is resolved.
+    ir.async_delete_issue(
+        hass, DOMAIN, DEVICE_CONFLICT_ISSUE_ID.format(unique=entry.entry_id)
+    )
     return True
 
 
@@ -458,8 +490,140 @@ async def async_unload_entry(hass: HomeAssistant, entry: ShellyConfigEntry) -> b
 
 async def async_remove_entry(hass: HomeAssistant, entry: ShellyConfigEntry) -> None:
     """Remove a config entry."""
+    ir.async_delete_issue(
+        hass, DOMAIN, DEVICE_CONFLICT_ISSUE_ID.format(unique=entry.entry_id)
+    )
     if get_device_entry_gen(entry) in RPC_GENERATIONS and (
         mac_address := entry.unique_id
     ):
         source = dr.format_mac(bluetooth_mac_from_primary_mac(mac_address)).upper()
         async_remove_scanner(hass, source)
+
+
+@callback
+def _async_create_device_conflict_issue(
+    hass: HomeAssistant, entry: ShellyConfigEntry, new_mac: str
+) -> None:
+    """Raise a repair issue for a replacement device detected during setup.
+
+    Used when a device answering at the configured host reports a different
+    primary MAC than the one stored on the entry (``MacAddressMismatchError``).
+    This is the fallback detection path for devices that are never rediscovered
+    via zeroconf (static IP, discovery disabled, different subnet).
+    """
+    stored_mac = entry.unique_id
+    if (
+        not stored_mac
+        or stored_mac.replace(":", "").upper() == new_mac.replace(":", "").upper()
+    ):
+        # No stored identity, or the observed MAC matches it: nothing to migrate.
+        return
+
+    ir.async_create_issue(
+        hass,
+        DOMAIN,
+        DEVICE_CONFLICT_ISSUE_ID.format(unique=entry.entry_id),
+        is_fixable=True,
+        severity=ir.IssueSeverity.ERROR,
+        translation_key="device_conflict",
+        translation_placeholders={
+            "device_name": entry.title,
+            "host": entry.data[CONF_HOST],
+            "old_mac": dr.format_mac(stored_mac).upper(),
+            "new_mac": dr.format_mac(new_mac).upper(),
+        },
+        data={
+            "entry_id": entry.entry_id,
+            "device_name": entry.title,
+            "host": entry.data[CONF_HOST],
+            "old_mac": stored_mac,
+            "new_mac": new_mac,
+        },
+    )
+
+
+async def async_replace_device(
+    hass: HomeAssistant,
+    entry_id: str,
+    old_mac: str,
+    new_mac: str,
+) -> None:
+    """Migrate a Shelly config entry to a replacement device with a new MAC.
+
+    Rewrites the config entry unique_id, the main device's connections and
+    identifiers, every Shelly sub-device identifier, and every entity
+    unique_id, so the Home Assistant device, entity_ids, history and
+    automations are preserved on the new hardware.
+
+    Bluetooth/BLU sub-devices (keyed by their own BLE address, not the
+    gateway MAC) are deliberately left untouched.
+    """
+    entry = hass.config_entries.async_get_entry(entry_id)
+    if TYPE_CHECKING:
+        assert entry is not None
+
+    # MAC casing: identifiers and entity unique_ids use UPPERCASE bare;
+    # the connection tuple is format_mac'd to lowercase colon-separated.
+    old_mac_upper = old_mac.replace(":", "").upper()
+    new_mac_upper = new_mac.replace(":", "").upper()
+
+    # 1. Config entry unique_id. Shelly stores the bare MAC UPPERCASE (it is
+    #    set from the device's reported MAC, which aioshelly returns upper),
+    #    and coordinator.mac == entry.unique_id feeds every device identifier
+    #    and entity unique_id. Storing the upper form keeps the reload from
+    #    re-deriving a mismatching MAC. The next device.initialize() then sees
+    #    a matching MAC and the conflict does not re-fire (Shelly re-derives
+    #    identity live; there is no Store cache to update).
+    hass.config_entries.async_update_entry(entry, unique_id=new_mac_upper)
+
+    # 2. Main device: rewrite both the MAC connection and the (DOMAIN, MAC)
+    #    identifier. Sub-devices: rewrite the MAC-prefixed identifier.
+    dev_reg = dr.async_get(hass)
+    new_connection = (CONNECTION_NETWORK_MAC, dr.format_mac(new_mac))
+    old_main_identifier = (DOMAIN, old_mac_upper)
+    new_main_identifier = (DOMAIN, new_mac_upper)
+    sub_prefix = f"{old_mac_upper}-"
+    for device in dr.async_entries_for_config_entry(dev_reg, entry_id):
+        new_identifiers: set[tuple[str, str]] | None = None
+        if old_main_identifier in device.identifiers:
+            # Main device.
+            new_identifiers = {
+                new_main_identifier if ident == old_main_identifier else ident
+                for ident in device.identifiers
+            }
+            dev_reg.async_update_device(
+                device.id,
+                new_connections={new_connection},
+                new_identifiers=new_identifiers,
+            )
+            continue
+
+        # Sub-device. Rewrite only DOMAIN identifiers prefixed with the old
+        # MAC; this naturally skips BLU/bthome sub-devices (BLE-addr keyed).
+        if any(
+            domain == DOMAIN and ident.startswith(sub_prefix)
+            for domain, ident in device.identifiers
+        ):
+            new_identifiers = {
+                (domain, f"{new_mac_upper}-{ident[len(sub_prefix) :]}")
+                if domain == DOMAIN and ident.startswith(sub_prefix)
+                else (domain, ident)
+                for domain, ident in device.identifiers
+            }
+            dev_reg.async_update_device(device.id, new_identifiers=new_identifiers)
+
+    # 3. Entity unique_ids: rewrite the MAC prefix. BLU entities are
+    #    BLE-addr prefixed and skipped by the startswith guard.
+    @callback
+    def _migrate_unique_id(
+        entity_entry: er.RegistryEntry,
+    ) -> dict[str, str] | None:
+        """Rewrite the old MAC prefix of an entity unique_id to the new MAC."""
+        if entity_entry.unique_id.startswith(sub_prefix):
+            return {
+                "new_unique_id": new_mac_upper
+                + entity_entry.unique_id[len(old_mac_upper) :]
+            }
+        return None
+
+    await er.async_migrate_entries(hass, entry_id, _migrate_unique_id)
