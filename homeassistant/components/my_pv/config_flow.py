@@ -93,7 +93,7 @@ class MyPVConfigFlow(ConfigFlow, domain=DOMAIN):
 
         password_needed = False
 
-        device = await MyPVLocalDevice(self._host)
+        device = MyPVLocalDevice(self._host)
         try:
             if not await device.connect():
                 return self.async_abort(reason="cannot_connect")
@@ -144,7 +144,7 @@ class MyPVConfigFlow(ConfigFlow, domain=DOMAIN):
             host = user_input[CONF_HOST]
             password_needed = False
 
-            device = await MyPVLocalDevice(host)
+            device = MyPVLocalDevice(host)
             try:
                 if not await device.connect():
                     errors[CONF_BASE] = "cannot_connect"
@@ -188,7 +188,7 @@ class MyPVConfigFlow(ConfigFlow, domain=DOMAIN):
             host = self._host
             password = user_input[CONF_PASSWORD]
 
-            device = await MyPVLocalDevice(host, password)
+            device = MyPVLocalDevice(host, password)
             try:
                 if not await device.connect():
                     errors[CONF_BASE] = "cannot_connect"

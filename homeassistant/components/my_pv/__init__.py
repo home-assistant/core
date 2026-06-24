@@ -18,7 +18,7 @@ PLATFORMS: list[Platform] = [
 async def async_setup_entry(hass: HomeAssistant, entry: MyPVConfigEntry) -> bool:
     """Set up my-PV from a config entry."""
 
-    device = await MyPVLocalDevice(entry.data[CONF_HOST], entry.data.get(CONF_PASSWORD))
+    device = MyPVLocalDevice(entry.data[CONF_HOST], entry.data.get(CONF_PASSWORD))
 
     try:
         if not await device.connect():
