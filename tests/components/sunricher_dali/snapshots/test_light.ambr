@@ -6,9 +6,9 @@
     ]),
     'area_id': None,
     'capabilities': dict({
-      'max_color_temp_kelvin': 8000,
-      'min_color_temp_kelvin': 1000,
-      'supported_color_modes': list([
+      <LightEntityCapabilityAttribute.MAX_COLOR_TEMP_KELVIN: 'max_color_temp_kelvin'>: 8000,
+      <LightEntityCapabilityAttribute.MIN_COLOR_TEMP_KELVIN: 'min_color_temp_kelvin'>: 1000,
+      <LightEntityCapabilityAttribute.SUPPORTED_COLOR_MODES: 'supported_color_modes'>: list([
         <ColorMode.COLOR_TEMP: 'color_temp'>,
       ]),
     }),
@@ -50,10 +50,10 @@
       'color_temp_kelvin': None,
       'friendly_name': 'CCT 0000-03',
       'hs_color': None,
-      'max_color_temp_kelvin': 8000,
-      'min_color_temp_kelvin': 1000,
+      <LightEntityCapabilityAttribute.MAX_COLOR_TEMP_KELVIN: 'max_color_temp_kelvin'>: 8000,
+      <LightEntityCapabilityAttribute.MIN_COLOR_TEMP_KELVIN: 'min_color_temp_kelvin'>: 1000,
       'rgb_color': None,
-      'supported_color_modes': list([
+      <LightEntityCapabilityAttribute.SUPPORTED_COLOR_MODES: 'supported_color_modes'>: list([
         <ColorMode.COLOR_TEMP: 'color_temp'>,
       ]),
       'supported_features': <LightEntityFeature: 0>,
@@ -74,7 +74,7 @@
     ]),
     'area_id': None,
     'capabilities': dict({
-      'supported_color_modes': list([
+      <LightEntityCapabilityAttribute.SUPPORTED_COLOR_MODES: 'supported_color_modes'>: list([
         <ColorMode.BRIGHTNESS: 'brightness'>,
       ]),
     }),
@@ -114,7 +114,7 @@
       'brightness': None,
       'color_mode': None,
       'friendly_name': 'Dimmer 0000-02',
-      'supported_color_modes': list([
+      <LightEntityCapabilityAttribute.SUPPORTED_COLOR_MODES: 'supported_color_modes'>: list([
         <ColorMode.BRIGHTNESS: 'brightness'>,
       ]),
       'supported_features': <LightEntityFeature: 0>,
@@ -134,7 +134,7 @@
     ]),
     'area_id': None,
     'capabilities': dict({
-      'supported_color_modes': list([
+      <LightEntityCapabilityAttribute.SUPPORTED_COLOR_MODES: 'supported_color_modes'>: list([
         <ColorMode.HS: 'hs'>,
       ]),
     }),
@@ -176,7 +176,7 @@
       'friendly_name': 'HS Color Light',
       'hs_color': None,
       'rgb_color': None,
-      'supported_color_modes': list([
+      <LightEntityCapabilityAttribute.SUPPORTED_COLOR_MODES: 'supported_color_modes'>: list([
         <ColorMode.HS: 'hs'>,
       ]),
       'supported_features': <LightEntityFeature: 0>,
@@ -197,7 +197,7 @@
     ]),
     'area_id': None,
     'capabilities': dict({
-      'supported_color_modes': list([
+      <LightEntityCapabilityAttribute.SUPPORTED_COLOR_MODES: 'supported_color_modes'>: list([
         <ColorMode.RGBW: 'rgbw'>,
       ]),
     }),
@@ -240,7 +240,7 @@
       'hs_color': None,
       'rgb_color': None,
       'rgbw_color': None,
-      'supported_color_modes': list([
+      <LightEntityCapabilityAttribute.SUPPORTED_COLOR_MODES: 'supported_color_modes'>: list([
         <ColorMode.RGBW: 'rgbw'>,
       ]),
       'supported_features': <LightEntityFeature: 0>,

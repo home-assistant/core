@@ -5,7 +5,7 @@
     'color_mode': <ColorMode.COLOR_TEMP: 'color_temp'>,
     'color_temp_kelvin': 5000,
     'effect': None,
-    'effect_list': list([
+    <LightEntityCapabilityAttribute.EFFECT_LIST: 'effect_list'>: list([
       'Strobe color',
       'Police',
       'Christmas',
@@ -40,8 +40,8 @@
       27.001,
       19.243,
     ),
-    'max_color_temp_kelvin': 6500,
-    'min_color_temp_kelvin': 1700,
+    <LightEntityCapabilityAttribute.MAX_COLOR_TEMP_KELVIN: 'max_color_temp_kelvin'>: 6500,
+    <LightEntityCapabilityAttribute.MIN_COLOR_TEMP_KELVIN: 'min_color_temp_kelvin'>: 1700,
     'music_mode': False,
     'night_light': False,
     'rgb_color': tuple(
@@ -49,7 +49,7 @@
       228,
       206,
     ),
-    'supported_color_modes': list([
+    <LightEntityCapabilityAttribute.SUPPORTED_COLOR_MODES: 'supported_color_modes'>: list([
       <ColorMode.COLOR_TEMP: 'color_temp'>,
       <ColorMode.HS: 'hs'>,
       <ColorMode.RGB: 'rgb'>,
@@ -67,7 +67,7 @@
     'color_mode': <ColorMode.HS: 'hs'>,
     'color_temp_kelvin': None,
     'effect': None,
-    'effect_list': list([
+    <LightEntityCapabilityAttribute.EFFECT_LIST: 'effect_list'>: list([
       'Strobe color',
       'Police',
       'Christmas',
@@ -102,8 +102,8 @@
       200,
       70,
     ),
-    'max_color_temp_kelvin': 6500,
-    'min_color_temp_kelvin': 1700,
+    <LightEntityCapabilityAttribute.MAX_COLOR_TEMP_KELVIN: 'max_color_temp_kelvin'>: 6500,
+    <LightEntityCapabilityAttribute.MIN_COLOR_TEMP_KELVIN: 'min_color_temp_kelvin'>: 1700,
     'music_mode': False,
     'night_light': False,
     'rgb_color': tuple(
@@ -111,7 +111,7 @@
       195,
       255,
     ),
-    'supported_color_modes': list([
+    <LightEntityCapabilityAttribute.SUPPORTED_COLOR_MODES: 'supported_color_modes'>: list([
       <ColorMode.COLOR_TEMP: 'color_temp'>,
       <ColorMode.HS: 'hs'>,
       <ColorMode.RGB: 'rgb'>,
@@ -129,7 +129,7 @@
     'color_mode': <ColorMode.RGB: 'rgb'>,
     'color_temp_kelvin': None,
     'effect': None,
-    'effect_list': list([
+    <LightEntityCapabilityAttribute.EFFECT_LIST: 'effect_list'>: list([
       'Strobe color',
       'Police',
       'Christmas',
@@ -164,8 +164,8 @@
       120.0,
       100.0,
     ),
-    'max_color_temp_kelvin': 6500,
-    'min_color_temp_kelvin': 1700,
+    <LightEntityCapabilityAttribute.MAX_COLOR_TEMP_KELVIN: 'max_color_temp_kelvin'>: 6500,
+    <LightEntityCapabilityAttribute.MIN_COLOR_TEMP_KELVIN: 'min_color_temp_kelvin'>: 1700,
     'music_mode': False,
     'night_light': False,
     'rgb_color': tuple(
@@ -173,7 +173,7 @@
       255,
       0,
     ),
-    'supported_color_modes': list([
+    <LightEntityCapabilityAttribute.SUPPORTED_COLOR_MODES: 'supported_color_modes'>: list([
       <ColorMode.COLOR_TEMP: 'color_temp'>,
       <ColorMode.HS: 'hs'>,
       <ColorMode.RGB: 'rgb'>,
@@ -191,7 +191,7 @@
     'color_mode': <ColorMode.COLOR_TEMP: 'color_temp'>,
     'color_temp_kelvin': 4000,
     'effect': None,
-    'effect_list': list([
+    <LightEntityCapabilityAttribute.EFFECT_LIST: 'effect_list'>: list([
       'Strobe color',
       'Police',
       'Christmas',
@@ -226,8 +226,8 @@
       26.812,
       34.87,
     ),
-    'max_color_temp_kelvin': 6500,
-    'min_color_temp_kelvin': 1700,
+    <LightEntityCapabilityAttribute.MAX_COLOR_TEMP_KELVIN: 'max_color_temp_kelvin'>: 6500,
+    <LightEntityCapabilityAttribute.MIN_COLOR_TEMP_KELVIN: 'min_color_temp_kelvin'>: 1700,
     'music_mode': False,
     'night_light': False,
     'rgb_color': tuple(
@@ -235,7 +235,7 @@
       206,
       166,
     ),
-    'supported_color_modes': list([
+    <LightEntityCapabilityAttribute.SUPPORTED_COLOR_MODES: 'supported_color_modes'>: list([
       <ColorMode.COLOR_TEMP: 'color_temp'>,
       <ColorMode.HS: 'hs'>,
       <ColorMode.RGB: 'rgb'>,
@@ -254,7 +254,7 @@
     'friendly_name': 'Yeelight Color 0x15243f Nightlight',
     'music_mode': False,
     'night_light': True,
-    'supported_color_modes': list([
+    <LightEntityCapabilityAttribute.SUPPORTED_COLOR_MODES: 'supported_color_modes'>: list([
       <ColorMode.ONOFF: 'onoff'>,
     ]),
     'supported_features': <LightEntityFeature: 0>,
@@ -266,7 +266,7 @@
     'color_mode': <ColorMode.COLOR_TEMP: 'color_temp'>,
     'color_temp_kelvin': 1700,
     'effect': None,
-    'effect_list': list([
+    <LightEntityCapabilityAttribute.EFFECT_LIST: 'effect_list'>: list([
       'Strobe color',
       'Police',
       'Christmas',
@@ -301,8 +301,8 @@
       28.401,
       100.0,
     ),
-    'max_color_temp_kelvin': 6500,
-    'min_color_temp_kelvin': 1700,
+    <LightEntityCapabilityAttribute.MAX_COLOR_TEMP_KELVIN: 'max_color_temp_kelvin'>: 6500,
+    <LightEntityCapabilityAttribute.MIN_COLOR_TEMP_KELVIN: 'min_color_temp_kelvin'>: 1700,
     'music_mode': False,
     'night_light': True,
     'rgb_color': tuple(
@@ -310,7 +310,7 @@
       121,
       0,
     ),
-    'supported_color_modes': list([
+    <LightEntityCapabilityAttribute.SUPPORTED_COLOR_MODES: 'supported_color_modes'>: list([
       <ColorMode.COLOR_TEMP: 'color_temp'>,
       <ColorMode.HS: 'hs'>,
       <ColorMode.RGB: 'rgb'>,
@@ -328,7 +328,7 @@
     'color_mode': <ColorMode.HS: 'hs'>,
     'color_temp_kelvin': None,
     'effect': None,
-    'effect_list': list([
+    <LightEntityCapabilityAttribute.EFFECT_LIST: 'effect_list'>: list([
       'Strobe color',
       'Police',
       'Christmas',
@@ -363,8 +363,8 @@
       100,
       35,
     ),
-    'max_color_temp_kelvin': 6500,
-    'min_color_temp_kelvin': 1700,
+    <LightEntityCapabilityAttribute.MAX_COLOR_TEMP_KELVIN: 'max_color_temp_kelvin'>: 6500,
+    <LightEntityCapabilityAttribute.MIN_COLOR_TEMP_KELVIN: 'min_color_temp_kelvin'>: 1700,
     'music_mode': False,
     'night_light': False,
     'rgb_color': tuple(
@@ -372,7 +372,7 @@
       255,
       166,
     ),
-    'supported_color_modes': list([
+    <LightEntityCapabilityAttribute.SUPPORTED_COLOR_MODES: 'supported_color_modes'>: list([
       <ColorMode.COLOR_TEMP: 'color_temp'>,
       <ColorMode.HS: 'hs'>,
       <ColorMode.RGB: 'rgb'>,
@@ -391,7 +391,7 @@
     'friendly_name': 'Yeelight Color 0x15243f Nightlight',
     'music_mode': False,
     'night_light': True,
-    'supported_color_modes': list([
+    <LightEntityCapabilityAttribute.SUPPORTED_COLOR_MODES: 'supported_color_modes'>: list([
       <ColorMode.ONOFF: 'onoff'>,
     ]),
     'supported_features': <LightEntityFeature: 0>,
@@ -403,7 +403,7 @@
     'color_mode': <ColorMode.HS: 'hs'>,
     'color_temp_kelvin': None,
     'effect': None,
-    'effect_list': list([
+    <LightEntityCapabilityAttribute.EFFECT_LIST: 'effect_list'>: list([
       'Strobe color',
       'Police',
       'Christmas',
@@ -435,12 +435,12 @@
     'flowing': False,
     'friendly_name': 'Yeelight Color 0x15243f',
     'hs_color': None,
-    'max_color_temp_kelvin': 6500,
-    'min_color_temp_kelvin': 1700,
+    <LightEntityCapabilityAttribute.MAX_COLOR_TEMP_KELVIN: 'max_color_temp_kelvin'>: 6500,
+    <LightEntityCapabilityAttribute.MIN_COLOR_TEMP_KELVIN: 'min_color_temp_kelvin'>: 1700,
     'music_mode': False,
     'night_light': False,
     'rgb_color': None,
-    'supported_color_modes': list([
+    <LightEntityCapabilityAttribute.SUPPORTED_COLOR_MODES: 'supported_color_modes'>: list([
       <ColorMode.COLOR_TEMP: 'color_temp'>,
       <ColorMode.HS: 'hs'>,
       <ColorMode.RGB: 'rgb'>,
@@ -456,7 +456,7 @@
     'friendly_name': 'Yeelight Color 0x15243f Nightlight',
     'music_mode': False,
     'night_light': True,
-    'supported_color_modes': list([
+    <LightEntityCapabilityAttribute.SUPPORTED_COLOR_MODES: 'supported_color_modes'>: list([
       <ColorMode.ONOFF: 'onoff'>,
     ]),
     'supported_features': <LightEntityFeature: 0>,
@@ -468,7 +468,7 @@
     'color_mode': <ColorMode.RGB: 'rgb'>,
     'color_temp_kelvin': None,
     'effect': None,
-    'effect_list': list([
+    <LightEntityCapabilityAttribute.EFFECT_LIST: 'effect_list'>: list([
       'Strobe color',
       'Police',
       'Christmas',
@@ -503,8 +503,8 @@
       0.0,
       100.0,
     ),
-    'max_color_temp_kelvin': 6500,
-    'min_color_temp_kelvin': 1700,
+    <LightEntityCapabilityAttribute.MAX_COLOR_TEMP_KELVIN: 'max_color_temp_kelvin'>: 6500,
+    <LightEntityCapabilityAttribute.MIN_COLOR_TEMP_KELVIN: 'min_color_temp_kelvin'>: 1700,
     'music_mode': False,
     'night_light': False,
     'rgb_color': tuple(
@@ -512,7 +512,7 @@
       0,
       0,
     ),
-    'supported_color_modes': list([
+    <LightEntityCapabilityAttribute.SUPPORTED_COLOR_MODES: 'supported_color_modes'>: list([
       <ColorMode.COLOR_TEMP: 'color_temp'>,
       <ColorMode.HS: 'hs'>,
       <ColorMode.RGB: 'rgb'>,
@@ -531,7 +531,7 @@
     'friendly_name': 'Yeelight Color 0x15243f Nightlight',
     'music_mode': False,
     'night_light': True,
-    'supported_color_modes': list([
+    <LightEntityCapabilityAttribute.SUPPORTED_COLOR_MODES: 'supported_color_modes'>: list([
       <ColorMode.ONOFF: 'onoff'>,
     ]),
     'supported_features': <LightEntityFeature: 0>,
@@ -543,7 +543,7 @@
     'color_mode': <ColorMode.RGB: 'rgb'>,
     'color_temp_kelvin': None,
     'effect': None,
-    'effect_list': list([
+    <LightEntityCapabilityAttribute.EFFECT_LIST: 'effect_list'>: list([
       'Strobe color',
       'Police',
       'Christmas',
@@ -575,12 +575,12 @@
     'flowing': False,
     'friendly_name': 'Yeelight Color 0x15243f',
     'hs_color': None,
-    'max_color_temp_kelvin': 6500,
-    'min_color_temp_kelvin': 1700,
+    <LightEntityCapabilityAttribute.MAX_COLOR_TEMP_KELVIN: 'max_color_temp_kelvin'>: 6500,
+    <LightEntityCapabilityAttribute.MIN_COLOR_TEMP_KELVIN: 'min_color_temp_kelvin'>: 1700,
     'music_mode': False,
     'night_light': False,
     'rgb_color': None,
-    'supported_color_modes': list([
+    <LightEntityCapabilityAttribute.SUPPORTED_COLOR_MODES: 'supported_color_modes'>: list([
       <ColorMode.COLOR_TEMP: 'color_temp'>,
       <ColorMode.HS: 'hs'>,
       <ColorMode.RGB: 'rgb'>,
@@ -596,7 +596,7 @@
     'friendly_name': 'Yeelight Color 0x15243f Nightlight',
     'music_mode': False,
     'night_light': True,
-    'supported_color_modes': list([
+    <LightEntityCapabilityAttribute.SUPPORTED_COLOR_MODES: 'supported_color_modes'>: list([
       <ColorMode.ONOFF: 'onoff'>,
     ]),
     'supported_features': <LightEntityFeature: 0>,
@@ -608,7 +608,7 @@
     'color_mode': <ColorMode.UNKNOWN: 'unknown'>,
     'color_temp_kelvin': None,
     'effect': None,
-    'effect_list': list([
+    <LightEntityCapabilityAttribute.EFFECT_LIST: 'effect_list'>: list([
       'Strobe color',
       'Police',
       'Christmas',
@@ -640,12 +640,12 @@
     'flowing': False,
     'friendly_name': 'Yeelight Color 0x15243f',
     'hs_color': None,
-    'max_color_temp_kelvin': 6500,
-    'min_color_temp_kelvin': 1700,
+    <LightEntityCapabilityAttribute.MAX_COLOR_TEMP_KELVIN: 'max_color_temp_kelvin'>: 6500,
+    <LightEntityCapabilityAttribute.MIN_COLOR_TEMP_KELVIN: 'min_color_temp_kelvin'>: 1700,
     'music_mode': False,
     'night_light': False,
     'rgb_color': None,
-    'supported_color_modes': list([
+    <LightEntityCapabilityAttribute.SUPPORTED_COLOR_MODES: 'supported_color_modes'>: list([
       <ColorMode.COLOR_TEMP: 'color_temp'>,
       <ColorMode.HS: 'hs'>,
       <ColorMode.RGB: 'rgb'>,
@@ -661,7 +661,7 @@
     'friendly_name': 'Yeelight Color 0x15243f Nightlight',
     'music_mode': False,
     'night_light': True,
-    'supported_color_modes': list([
+    <LightEntityCapabilityAttribute.SUPPORTED_COLOR_MODES: 'supported_color_modes'>: list([
       <ColorMode.ONOFF: 'onoff'>,
     ]),
     'supported_features': <LightEntityFeature: 0>,
@@ -672,7 +672,7 @@
     'brightness': 128,
     'color_mode': <ColorMode.BRIGHTNESS: 'brightness'>,
     'effect': None,
-    'effect_list': list([
+    <LightEntityCapabilityAttribute.EFFECT_LIST: 'effect_list'>: list([
       'Disco',
       'Strobe epilepsy!',
       'Alarm',
@@ -690,7 +690,7 @@
     'friendly_name': 'Yeelight Color 0x15243f',
     'music_mode': False,
     'night_light': False,
-    'supported_color_modes': list([
+    <LightEntityCapabilityAttribute.SUPPORTED_COLOR_MODES: 'supported_color_modes'>: list([
       <ColorMode.BRIGHTNESS: 'brightness'>,
     ]),
     'supported_features': <LightEntityFeature: 44>,
@@ -701,7 +701,7 @@
     'brightness': 128,
     'color_mode': <ColorMode.BRIGHTNESS: 'brightness'>,
     'effect': None,
-    'effect_list': list([
+    <LightEntityCapabilityAttribute.EFFECT_LIST: 'effect_list'>: list([
       'Disco',
       'Strobe epilepsy!',
       'Alarm',
@@ -719,7 +719,7 @@
     'friendly_name': 'Yeelight Color 0x15243f',
     'music_mode': False,
     'night_light': False,
-    'supported_color_modes': list([
+    <LightEntityCapabilityAttribute.SUPPORTED_COLOR_MODES: 'supported_color_modes'>: list([
       <ColorMode.BRIGHTNESS: 'brightness'>,
     ]),
     'supported_features': <LightEntityFeature: 44>,
@@ -731,7 +731,7 @@
     'color_mode': <ColorMode.COLOR_TEMP: 'color_temp'>,
     'color_temp_kelvin': 4000,
     'effect': None,
-    'effect_list': list([
+    <LightEntityCapabilityAttribute.EFFECT_LIST: 'effect_list'>: list([
       'Slow Temp',
       'Stop',
     ]),
@@ -741,8 +741,8 @@
       26.812,
       34.87,
     ),
-    'max_color_temp_kelvin': 6500,
-    'min_color_temp_kelvin': 2700,
+    <LightEntityCapabilityAttribute.MAX_COLOR_TEMP_KELVIN: 'max_color_temp_kelvin'>: 6500,
+    <LightEntityCapabilityAttribute.MIN_COLOR_TEMP_KELVIN: 'min_color_temp_kelvin'>: 2700,
     'music_mode': False,
     'night_light': False,
     'rgb_color': tuple(
@@ -750,7 +750,7 @@
       206,
       166,
     ),
-    'supported_color_modes': list([
+    <LightEntityCapabilityAttribute.SUPPORTED_COLOR_MODES: 'supported_color_modes'>: list([
       <ColorMode.COLOR_TEMP: 'color_temp'>,
     ]),
     'supported_features': <LightEntityFeature: 44>,
@@ -768,7 +768,7 @@
     'friendly_name': 'Yeelight Color 0x15243f Nightlight',
     'music_mode': False,
     'night_light': True,
-    'supported_color_modes': list([
+    <LightEntityCapabilityAttribute.SUPPORTED_COLOR_MODES: 'supported_color_modes'>: list([
       <ColorMode.BRIGHTNESS: 'brightness'>,
     ]),
     'supported_features': <LightEntityFeature: 0>,
@@ -780,7 +780,7 @@
     'color_mode': <ColorMode.COLOR_TEMP: 'color_temp'>,
     'color_temp_kelvin': 2700,
     'effect': None,
-    'effect_list': list([
+    <LightEntityCapabilityAttribute.EFFECT_LIST: 'effect_list'>: list([
       'Slow Temp',
       'Stop',
     ]),
@@ -790,8 +790,8 @@
       28.395,
       65.723,
     ),
-    'max_color_temp_kelvin': 6500,
-    'min_color_temp_kelvin': 2700,
+    <LightEntityCapabilityAttribute.MAX_COLOR_TEMP_KELVIN: 'max_color_temp_kelvin'>: 6500,
+    <LightEntityCapabilityAttribute.MIN_COLOR_TEMP_KELVIN: 'min_color_temp_kelvin'>: 2700,
     'music_mode': False,
     'night_light': True,
     'rgb_color': tuple(
@@ -799,7 +799,7 @@
       167,
       87,
     ),
-    'supported_color_modes': list([
+    <LightEntityCapabilityAttribute.SUPPORTED_COLOR_MODES: 'supported_color_modes'>: list([
       <ColorMode.COLOR_TEMP: 'color_temp'>,
     ]),
     'supported_features': <LightEntityFeature: 44>,
@@ -815,7 +815,7 @@
     'color_mode': <ColorMode.COLOR_TEMP: 'color_temp'>,
     'color_temp_kelvin': 4000,
     'effect': None,
-    'effect_list': list([
+    <LightEntityCapabilityAttribute.EFFECT_LIST: 'effect_list'>: list([
       'Slow Temp',
       'Stop',
     ]),
@@ -825,8 +825,8 @@
       26.812,
       34.87,
     ),
-    'max_color_temp_kelvin': 6500,
-    'min_color_temp_kelvin': 2700,
+    <LightEntityCapabilityAttribute.MAX_COLOR_TEMP_KELVIN: 'max_color_temp_kelvin'>: 6500,
+    <LightEntityCapabilityAttribute.MIN_COLOR_TEMP_KELVIN: 'min_color_temp_kelvin'>: 2700,
     'music_mode': False,
     'night_light': False,
     'rgb_color': tuple(
@@ -834,7 +834,7 @@
       206,
       166,
     ),
-    'supported_color_modes': list([
+    <LightEntityCapabilityAttribute.SUPPORTED_COLOR_MODES: 'supported_color_modes'>: list([
       <ColorMode.COLOR_TEMP: 'color_temp'>,
     ]),
     'supported_features': <LightEntityFeature: 44>,
@@ -852,7 +852,7 @@
     'friendly_name': 'Yeelight Color 0x15243f Nightlight',
     'music_mode': False,
     'night_light': True,
-    'supported_color_modes': list([
+    <LightEntityCapabilityAttribute.SUPPORTED_COLOR_MODES: 'supported_color_modes'>: list([
       <ColorMode.BRIGHTNESS: 'brightness'>,
     ]),
     'supported_features': <LightEntityFeature: 0>,
@@ -864,7 +864,7 @@
     'color_mode': <ColorMode.COLOR_TEMP: 'color_temp'>,
     'color_temp_kelvin': 2700,
     'effect': None,
-    'effect_list': list([
+    <LightEntityCapabilityAttribute.EFFECT_LIST: 'effect_list'>: list([
       'Slow Temp',
       'Stop',
     ]),
@@ -874,8 +874,8 @@
       28.395,
       65.723,
     ),
-    'max_color_temp_kelvin': 6500,
-    'min_color_temp_kelvin': 2700,
+    <LightEntityCapabilityAttribute.MAX_COLOR_TEMP_KELVIN: 'max_color_temp_kelvin'>: 6500,
+    <LightEntityCapabilityAttribute.MIN_COLOR_TEMP_KELVIN: 'min_color_temp_kelvin'>: 2700,
     'music_mode': False,
     'night_light': True,
     'rgb_color': tuple(
@@ -883,7 +883,7 @@
       167,
       87,
     ),
-    'supported_color_modes': list([
+    <LightEntityCapabilityAttribute.SUPPORTED_COLOR_MODES: 'supported_color_modes'>: list([
       <ColorMode.COLOR_TEMP: 'color_temp'>,
     ]),
     'supported_features': <LightEntityFeature: 44>,

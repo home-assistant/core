@@ -6,7 +6,7 @@
     ]),
     'area_id': None,
     'capabilities': dict({
-      'effect_list': list([
+      <LightEntityCapabilityAttribute.EFFECT_LIST: 'effect_list'>: list([
         'Solid',
         'Blink',
         'Breathe',
@@ -188,9 +188,9 @@
         'Rocktaves',
         'Akemi',
       ]),
-      'max_color_temp_kelvin': 6535,
-      'min_color_temp_kelvin': 2000,
-      'supported_color_modes': list([
+      <LightEntityCapabilityAttribute.MAX_COLOR_TEMP_KELVIN: 'max_color_temp_kelvin'>: 6535,
+      <LightEntityCapabilityAttribute.MIN_COLOR_TEMP_KELVIN: 'min_color_temp_kelvin'>: 2000,
+      <LightEntityCapabilityAttribute.SUPPORTED_COLOR_MODES: 'supported_color_modes'>: list([
         <ColorMode.COLOR_TEMP: 'color_temp'>,
         <ColorMode.RGBW: 'rgbw'>,
       ]),
@@ -232,7 +232,7 @@
       'color_mode': <ColorMode.COLOR_TEMP: 'color_temp'>,
       'color_temp_kelvin': 2942,
       'effect': 'Solid',
-      'effect_list': list([
+      <LightEntityCapabilityAttribute.EFFECT_LIST: 'effect_list'>: list([
         'Solid',
         'Blink',
         'Breathe',
@@ -419,15 +419,15 @@
         27.924,
         58.494,
       ),
-      'max_color_temp_kelvin': 6535,
-      'min_color_temp_kelvin': 2000,
+      <LightEntityCapabilityAttribute.MAX_COLOR_TEMP_KELVIN: 'max_color_temp_kelvin'>: 6535,
+      <LightEntityCapabilityAttribute.MIN_COLOR_TEMP_KELVIN: 'min_color_temp_kelvin'>: 2000,
       'rgb_color': tuple(
         255,
         175,
         106,
       ),
       'rgbw_color': None,
-      'supported_color_modes': list([
+      <LightEntityCapabilityAttribute.SUPPORTED_COLOR_MODES: 'supported_color_modes'>: list([
         <ColorMode.COLOR_TEMP: 'color_temp'>,
         <ColorMode.RGBW: 'rgbw'>,
       ]),
@@ -452,7 +452,7 @@
     ]),
     'area_id': None,
     'capabilities': dict({
-      'effect_list': list([
+      <LightEntityCapabilityAttribute.EFFECT_LIST: 'effect_list'>: list([
         'Solid',
         'Blink',
         'Breathe',
@@ -633,7 +633,7 @@
         'Rocktaves',
         'Akemi',
       ]),
-      'supported_color_modes': list([
+      <LightEntityCapabilityAttribute.SUPPORTED_COLOR_MODES: 'supported_color_modes'>: list([
         <ColorMode.RGB: 'rgb'>,
       ]),
     }),
@@ -673,7 +673,7 @@
       'brightness': 255,
       'color_mode': <ColorMode.RGB: 'rgb'>,
       'effect': 'Solid',
-      'effect_list': list([
+      <LightEntityCapabilityAttribute.EFFECT_LIST: 'effect_list'>: list([
         'Solid',
         'Blink',
         'Breathe',
@@ -864,7 +864,7 @@
         172,
         255,
       ),
-      'supported_color_modes': list([
+      <LightEntityCapabilityAttribute.SUPPORTED_COLOR_MODES: 'supported_color_modes'>: list([
         <ColorMode.RGB: 'rgb'>,
       ]),
       'supported_features': <LightEntityFeature: 36>,
@@ -892,7 +892,7 @@
         'light.wled_rgb_light',
         'light.wled_rgb_light_segment_1',
       ]),
-      'supported_color_modes': list([
+      <LightEntityCapabilityAttribute.SUPPORTED_COLOR_MODES: 'supported_color_modes'>: list([
         <ColorMode.BRIGHTNESS: 'brightness'>,
       ]),
     }),
@@ -936,7 +936,7 @@
         'light.wled_rgb_light',
         'light.wled_rgb_light_segment_1',
       ]),
-      'supported_color_modes': list([
+      <LightEntityCapabilityAttribute.SUPPORTED_COLOR_MODES: 'supported_color_modes'>: list([
         <ColorMode.BRIGHTNESS: 'brightness'>,
       ]),
       'supported_features': <LightEntityFeature: 32>,
@@ -956,7 +956,7 @@
     ]),
     'area_id': None,
     'capabilities': dict({
-      'effect_list': list([
+      <LightEntityCapabilityAttribute.EFFECT_LIST: 'effect_list'>: list([
         'Solid',
         'Blink',
         'Breathe',
@@ -1137,7 +1137,7 @@
         'Rocktaves',
         'Akemi',
       ]),
-      'supported_color_modes': list([
+      <LightEntityCapabilityAttribute.SUPPORTED_COLOR_MODES: 'supported_color_modes'>: list([
         <ColorMode.RGB: 'rgb'>,
       ]),
     }),
@@ -1177,7 +1177,7 @@
       'brightness': 255,
       'color_mode': <ColorMode.RGB: 'rgb'>,
       'effect': 'Wipe',
-      'effect_list': list([
+      <LightEntityCapabilityAttribute.EFFECT_LIST: 'effect_list'>: list([
         'Solid',
         'Blink',
         'Breathe',
@@ -1368,7 +1368,7 @@
         170,
         0,
       ),
-      'supported_color_modes': list([
+      <LightEntityCapabilityAttribute.SUPPORTED_COLOR_MODES: 'supported_color_modes'>: list([
         <ColorMode.RGB: 'rgb'>,
       ]),
       'supported_features': <LightEntityFeature: 36>,
@@ -1392,7 +1392,7 @@
     ]),
     'area_id': None,
     'capabilities': dict({
-      'effect_list': list([
+      <LightEntityCapabilityAttribute.EFFECT_LIST: 'effect_list'>: list([
         'Solid',
         'Blink',
         'Breathe',
@@ -1573,7 +1573,7 @@
         'Rocktaves',
         'Akemi',
       ]),
-      'supported_color_modes': list([
+      <LightEntityCapabilityAttribute.SUPPORTED_COLOR_MODES: 'supported_color_modes'>: list([
         <ColorMode.RGB: 'rgb'>,
       ]),
     }),
@@ -1613,7 +1613,7 @@
       'brightness': 128,
       'color_mode': <ColorMode.RGB: 'rgb'>,
       'effect': 'Solid',
-      'effect_list': list([
+      <LightEntityCapabilityAttribute.EFFECT_LIST: 'effect_list'>: list([
         'Solid',
         'Blink',
         'Breathe',
@@ -1804,7 +1804,7 @@
         172,
         255,
       ),
-      'supported_color_modes': list([
+      <LightEntityCapabilityAttribute.SUPPORTED_COLOR_MODES: 'supported_color_modes'>: list([
         <ColorMode.RGB: 'rgb'>,
       ]),
       'supported_features': <LightEntityFeature: 36>,
@@ -1828,7 +1828,7 @@
     ]),
     'area_id': None,
     'capabilities': dict({
-      'effect_list': list([
+      <LightEntityCapabilityAttribute.EFFECT_LIST: 'effect_list'>: list([
         'Solid',
         'Blink',
         'Breathe',
@@ -2009,7 +2009,7 @@
         'Rocktaves',
         'Akemi',
       ]),
-      'supported_color_modes': list([
+      <LightEntityCapabilityAttribute.SUPPORTED_COLOR_MODES: 'supported_color_modes'>: list([
         <ColorMode.RGB: 'rgb'>,
       ]),
     }),
@@ -2049,7 +2049,7 @@
       'brightness': 128,
       'color_mode': <ColorMode.RGB: 'rgb'>,
       'effect': 'Solid',
-      'effect_list': list([
+      <LightEntityCapabilityAttribute.EFFECT_LIST: 'effect_list'>: list([
         'Solid',
         'Blink',
         'Breathe',
@@ -2240,7 +2240,7 @@
         172,
         255,
       ),
-      'supported_color_modes': list([
+      <LightEntityCapabilityAttribute.SUPPORTED_COLOR_MODES: 'supported_color_modes'>: list([
         <ColorMode.RGB: 'rgb'>,
       ]),
       'supported_features': <LightEntityFeature: 36>,
@@ -2264,7 +2264,7 @@
     ]),
     'area_id': None,
     'capabilities': dict({
-      'effect_list': list([
+      <LightEntityCapabilityAttribute.EFFECT_LIST: 'effect_list'>: list([
         'Solid',
         'Blink',
         'Breathe',
@@ -2445,7 +2445,7 @@
         'Rocktaves',
         'Akemi',
       ]),
-      'supported_color_modes': list([
+      <LightEntityCapabilityAttribute.SUPPORTED_COLOR_MODES: 'supported_color_modes'>: list([
         <ColorMode.RGBW: 'rgbw'>,
       ]),
     }),
@@ -2485,7 +2485,7 @@
       'brightness': 128,
       'color_mode': <ColorMode.RGBW: 'rgbw'>,
       'effect': 'Solid',
-      'effect_list': list([
+      <LightEntityCapabilityAttribute.EFFECT_LIST: 'effect_list'>: list([
         'Solid',
         'Blink',
         'Breathe',
@@ -2682,7 +2682,7 @@
         0,
         139,
       ),
-      'supported_color_modes': list([
+      <LightEntityCapabilityAttribute.SUPPORTED_COLOR_MODES: 'supported_color_modes'>: list([
         <ColorMode.RGBW: 'rgbw'>,
       ]),
       'supported_features': <LightEntityFeature: 36>,
