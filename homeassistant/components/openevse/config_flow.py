@@ -17,6 +17,11 @@ from homeassistant.const import (
 )
 from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
+from homeassistant.helpers.selector import (
+    TextSelector,
+    TextSelectorConfig,
+    TextSelectorType,
+)
 from homeassistant.helpers.service_info import zeroconf
 
 from .const import CONF_SERIAL, DOMAIN
@@ -29,9 +34,16 @@ AUTH_SCHEMA = vol.Schema(
 
 RECONFIGURE_SCHEMA = vol.Schema(
     {
-        vol.Required(CONF_HOST): cv.string,
-        vol.Optional(CONF_USERNAME): cv.string,
-        vol.Optional(CONF_PASSWORD): cv.string,
+        vol.Required(CONF_HOST): TextSelector(),
+        vol.Optional(CONF_USERNAME): TextSelector(
+            TextSelectorConfig(autocomplete="username")
+        ),
+        vol.Optional(CONF_PASSWORD): TextSelector(
+            TextSelectorConfig(
+                type=TextSelectorType.PASSWORD,
+                autocomplete="current-password",
+            )
+        ),
     }
 )
 
@@ -248,15 +260,13 @@ class OpenEVSEConfigFlow(ConfigFlow, domain=DOMAIN):
                 await self.async_set_unique_id(serial)
                 self._abort_if_unique_id_mismatch()
 
-            data_updates = {
-                CONF_HOST: host,
-                CONF_USERNAME: username,
-                CONF_PASSWORD: password,
-            }
-
             return self.async_update_reload_and_abort(
                 reconfigure_entry,
-                data_updates=data_updates,
+                data_updates={
+                    CONF_HOST: host,
+                    CONF_USERNAME: username,
+                    CONF_PASSWORD: password,
+                },
             )
 
         return self.async_show_form(
