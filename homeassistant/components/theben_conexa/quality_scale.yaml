@@ -8,13 +8,13 @@ rules:
   config-flow: done
   dependency-transparency: done
   docs-actions:
-    status: done
+    status: exempt
     comment: "Integration doesn't provide service actions"
   docs-high-level-description: done
   docs-installation-instructions: done
   docs-removal-instructions: done
   entity-event-setup:
-    status: done
+    status: exempt
     comment: "Integration doesn't register events"
   entity-unique-id: done
   has-entity-name: done
@@ -25,7 +25,7 @@ rules:
 
   # Silver
   action-exceptions:
-    status: done
+    status: exempt
     comment: "Integration doesn't provide service actions"
   config-entry-unloading: done
   docs-configuration-parameters: todo
@@ -52,7 +52,7 @@ rules:
   docs-troubleshooting: done
   docs-use-cases: todo
   dynamic-devices:
-    status: done
+    status: exempt
     comment: "Impossible as every device has its own set of IP/User/Password"
   entity-category: todo
   entity-device-class: done

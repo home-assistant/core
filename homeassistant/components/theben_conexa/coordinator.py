@@ -47,7 +47,7 @@ class SmgwSensorCoordinator(DataUpdateCoordinator[dict[str, ConexaSMGW.MeterValu
         try:
             # This function tries to establish a TCP connection and raises an exception on error
             await checkNetworkConnection(self.config_entry.data[CONF_HOST])
-        except aiohttp.ClientError as e:
+        except (TimeoutError, ConnectionRefusedError, OSError) as e:
             raise ConfigEntryNotReady("Device is not reachable") from e
 
         # Unfortunately the Conexa 3.0 doesn't provide separate authentication feedback it just ignores
@@ -60,7 +60,7 @@ class SmgwSensorCoordinator(DataUpdateCoordinator[dict[str, ConexaSMGW.MeterValu
                 self.config_entry.data[CONF_USERNAME],
                 self.config_entry.data[CONF_PASSWORD],
             )
-        except aiohttp.ClientError as e:
+        except (TimeoutError, aiohttp.ClientError) as e:
             raise ConfigEntryAuthFailed("Authentication failed") from e
 
         self.gateway_info = self._api.gatewayInfo
@@ -82,7 +82,7 @@ class SmgwSensorCoordinator(DataUpdateCoordinator[dict[str, ConexaSMGW.MeterValu
         _LOGGER.debug("Fetching data from API")
         vals = await self._api.getLatestValues()
 
-        if _LOGGER.isEnabledFor(logging.DEBUG):
+        if _LOGGER.isEnabledFor(logging.DEBUG) and vals:
             now_utc = dt_util.utcnow()
             meter_timestamp: str = next(iter(vals.values())).utcTimestamp
             meter_datetime = dt_util.parse_datetime(meter_timestamp)
@@ -97,7 +97,7 @@ class SmgwSensorCoordinator(DataUpdateCoordinator[dict[str, ConexaSMGW.MeterValu
         return vals
 
     async def _scheduled_update(self, now: datetime) -> None:
-        """Triggered exactly at the in async_init specified time pattern."""
+        """Triggered exactly at the time pattern specified in async_init."""
         _LOGGER.debug("Starting scheduled poll at %s", now)
         await self.async_refresh()
 
