@@ -254,8 +254,8 @@ CLAUDE.md @home-assistant/core
 /tests/components/bond/ @bdraco @prystupa @joshs85 @marciogranzotto
 /homeassistant/components/bosch_alarm/ @mag1024 @sanjay900
 /tests/components/bosch_alarm/ @mag1024 @sanjay900
-/homeassistant/components/bosch_shc/ @tschamm
-/tests/components/bosch_shc/ @tschamm
+/homeassistant/components/bosch_shc/ @tschamm @mosandlt
+/tests/components/bosch_shc/ @tschamm @mosandlt
 /homeassistant/components/brands/ @home-assistant/core
 /tests/components/brands/ @home-assistant/core
 /homeassistant/components/braviatv/ @bieniu @Drafteed
