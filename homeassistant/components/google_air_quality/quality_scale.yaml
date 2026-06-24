@@ -10,6 +10,9 @@ rules:
     comment: Integration does not have actions
   appropriate-polling: done
   test-before-configure: done
+  docs-triggers:
+    status: exempt
+    comment: This integration does not have any triggers.
   entity-event-setup:
     status: exempt
     comment: Integration does not subscribe to events.
@@ -18,6 +21,9 @@ rules:
   docs-installation-instructions: done
   docs-removal-instructions: done
   test-before-setup: done
+  docs-conditions:
+    status: exempt
+    comment: This integration does not have any conditions.
   docs-high-level-description: done
   config-flow-test-coverage: done
   docs-actions:
