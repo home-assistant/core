@@ -26,7 +26,7 @@ class CieloSensorEntityDescription(SensorEntityDescription):
     """Describes a Cielo Home sensor entity."""
 
     value_fn: Callable[[CieloDeviceAPI, CieloDevice | None], float | int | None]
-    unit_fn: Callable[[CieloDeviceAPI, CieloDevice | None], str | None] | None = None
+    unit_fn: Callable[[CieloDeviceAPI], str | None] | None = None
 
 
 SENSOR_DESCRIPTIONS: tuple[CieloSensorEntityDescription, ...] = (
@@ -100,5 +100,5 @@ class CieloSensor(CieloDeviceEntity, SensorEntity):
         differently. This is a known limitation of the device's API.
         """
         if self.entity_description.unit_fn is not None:
-            return self.entity_description.unit_fn(self.client, self.device_data)
+            return self.entity_description.unit_fn(self.client)
         return super().native_unit_of_measurement
