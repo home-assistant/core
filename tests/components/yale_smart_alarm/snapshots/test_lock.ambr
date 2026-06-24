@@ -39,7 +39,7 @@
 # name: test_lock[load_platforms0][lock.device1-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'code_format': '^\\d{6}$',
+      <LockEntityStateAttribute.CODE_FORMAT: 'code_format'>: '^\\d{6}$',
       'friendly_name': 'Device1',
       'supported_features': <LockEntityFeature: 0>,
     }),
@@ -91,7 +91,7 @@
 # name: test_lock[load_platforms0][lock.device2-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'code_format': '^\\d{6}$',
+      <LockEntityStateAttribute.CODE_FORMAT: 'code_format'>: '^\\d{6}$',
       'friendly_name': 'Device2',
       'supported_features': <LockEntityFeature: 0>,
     }),
@@ -143,7 +143,7 @@
 # name: test_lock[load_platforms0][lock.device3-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'code_format': '^\\d{6}$',
+      <LockEntityStateAttribute.CODE_FORMAT: 'code_format'>: '^\\d{6}$',
       'friendly_name': 'Device3',
       'supported_features': <LockEntityFeature: 0>,
     }),
@@ -195,7 +195,7 @@
 # name: test_lock[load_platforms0][lock.device7-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'code_format': '^\\d{6}$',
+      <LockEntityStateAttribute.CODE_FORMAT: 'code_format'>: '^\\d{6}$',
       'friendly_name': 'Device7',
       'supported_features': <LockEntityFeature: 0>,
     }),
@@ -247,7 +247,7 @@
 # name: test_lock[load_platforms0][lock.device8-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'code_format': '^\\d{6}$',
+      <LockEntityStateAttribute.CODE_FORMAT: 'code_format'>: '^\\d{6}$',
       'friendly_name': 'Device8',
       'supported_features': <LockEntityFeature: 0>,
     }),
@@ -299,7 +299,7 @@
 # name: test_lock[load_platforms0][lock.device9-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'code_format': '^\\d{6}$',
+      <LockEntityStateAttribute.CODE_FORMAT: 'code_format'>: '^\\d{6}$',
       'friendly_name': 'Device9',
       'supported_features': <LockEntityFeature: 0>,
     }),
