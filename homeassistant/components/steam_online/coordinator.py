@@ -93,13 +93,13 @@ class SteamDataUpdateCoordinator(DataUpdateCoordinator[dict[str, PlayerData]]):
 
         for player in players.values():
             if player.gameid and player.gameid not in self.game_icons:
-                res = self.player_interface.GetOwnedGames(
+                response = self.player_interface.GetOwnedGames(
                     steamid=player.steamid, include_appinfo=1
                 )["response"]
                 self.game_icons.update(
                     {
                         str(game["appid"]): game["img_icon_url"]
-                        for game in res.get("games", [])
+                        for game in response.get("games", [])
                     }
                 )
 
