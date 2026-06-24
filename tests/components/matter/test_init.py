@@ -325,6 +325,7 @@ async def test_raise_addon_task_in_progress(
     await asyncio.sleep(0.05)
 
     assert entry.state is ConfigEntryState.SETUP_RETRY
+    assert entry.error_reason_translation_key == "addon_not_ready"
     assert install_addon.call_count == 1
     assert start_addon.call_count == 0
 
@@ -357,6 +358,7 @@ async def test_start_addon(
     await hass.async_block_till_done()
 
     assert entry.state is ConfigEntryState.SETUP_RETRY
+    assert entry.error_reason_translation_key == "addon_not_running"
     assert addon_info.call_count == 1
     assert install_addon.call_count == 0
     assert start_addon.call_count == 1
@@ -384,6 +386,7 @@ async def test_install_addon(
     await hass.async_block_till_done()
 
     assert entry.state is ConfigEntryState.SETUP_RETRY
+    assert entry.error_reason_translation_key == "addon_not_installed"
     assert addon_store_info.call_count == 2
     assert install_addon.call_count == 1
     assert install_addon.call_args == call("core_matter_server")
