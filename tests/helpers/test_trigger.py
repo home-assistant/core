@@ -110,8 +110,8 @@ async def _arm_numerical_trigger(
     trigger_cls: type[Trigger],
     options: dict[str, Any],
     calls: list[dict[str, Any]],
-    reports: list[NotTriggeredInfo],
-    entity_ids: list[str] | None = None,
+    did_not_trigger_reports: list[NotTriggeredInfo],
+    entity_id: str = "test.test_entity",
 ) -> CALLBACK_TYPE:
     """Arm a numerical trigger directly, capturing fires and did-not-trigger reports.
 
@@ -127,7 +127,7 @@ async def _arm_numerical_trigger(
 
     trigger_config = {
         CONF_PLATFORM: "test.numerical",
-        CONF_TARGET: {CONF_ENTITY_ID: entity_ids or ["test.test_entity"]},
+        CONF_TARGET: {CONF_ENTITY_ID: entity_id},
         CONF_OPTIONS: options,
     }
     log = logging.getLogger(__name__)
@@ -142,7 +142,7 @@ async def _arm_numerical_trigger(
         info: NotTriggeredInfo,
         context: Context | None = None,
     ) -> None:
-        reports.append(info)
+        did_not_trigger_reports.append(info)
 
     validated_config = await async_validate_trigger_config(hass, [trigger_config])
     unsub = await async_initialize_triggers(
@@ -1771,7 +1771,7 @@ async def test_numerical_state_attribute_changed_error_handling(
     await hass.async_block_till_done()
 
     calls: list[dict[str, Any]] = []
-    reports: list[NotTriggeredInfo] = []
+    did_not_trigger_reports: list[NotTriggeredInfo] = []
     unsub = await _arm_numerical_trigger(
         hass,
         trigger_cls,
@@ -1783,7 +1783,7 @@ async def test_numerical_state_attribute_changed_error_handling(
             }
         },
         calls,
-        reports,
+        did_not_trigger_reports,
     )
 
     # Test the trigger works
@@ -1792,14 +1792,14 @@ async def test_numerical_state_attribute_changed_error_handling(
     hass.states.async_set("test.test_entity", "on", {"test_attribute": 50})
     await hass.async_block_till_done()
     assert len(calls) == 1
-    assert reports == []
+    assert did_not_trigger_reports == []
     calls.clear()
 
     # Test the trigger fires again when still within limits
     hass.states.async_set("test.test_entity", "on", {"test_attribute": 51})
     await hass.async_block_till_done()
     assert len(calls) == 1
-    assert reports == []
+    assert did_not_trigger_reports == []
     calls.clear()
 
     # Test the trigger does not fire when the from-state is unknown or unavailable
@@ -1808,27 +1808,27 @@ async def test_numerical_state_attribute_changed_error_handling(
         hass.states.async_set("test.test_entity", "on", {"test_attribute": 50})
         await hass.async_block_till_done()
         assert calls == []
-        assert reports == []
+        assert did_not_trigger_reports == []
 
     # Test the trigger does not fire when the attribute value is outside the limits
     for value in (5, 95):
         hass.states.async_set("test.test_entity", "on", {"test_attribute": value})
         await hass.async_block_till_done()
         assert calls == []
-        assert reports == []
+        assert did_not_trigger_reports == []
 
     # Test the trigger does not fire when the attribute value is missing
     hass.states.async_set("test.test_entity", "on", {})
     await hass.async_block_till_done()
     assert calls == []
-    assert reports == []
+    assert did_not_trigger_reports == []
 
     # Test the trigger does not fire when the attribute value is invalid
     for value in ("cat", None):
         hass.states.async_set("test.test_entity", "on", {"test_attribute": value})
         await hass.async_block_till_done()
         assert calls == []
-        assert reports == []
+        assert did_not_trigger_reports == []
 
     # Test the trigger does not fire when the above sensor does not exist
     hass.states.async_remove("sensor.above")
@@ -1836,7 +1836,7 @@ async def test_numerical_state_attribute_changed_error_handling(
     hass.states.async_set("test.test_entity", "on", {"test_attribute": 50})
     await hass.async_block_till_done()
     assert calls == []
-    assert reports == []
+    assert did_not_trigger_reports == []
 
     # Test the trigger does not fire when the above sensor state is not numeric
     for invalid_value in ("cat", None):
@@ -1845,7 +1845,7 @@ async def test_numerical_state_attribute_changed_error_handling(
         hass.states.async_set("test.test_entity", "on", {"test_attribute": 50})
         await hass.async_block_till_done()
         assert calls == []
-        assert reports == []
+        assert did_not_trigger_reports == []
 
     # Reset the above sensor state to a valid numeric value
     hass.states.async_set("sensor.above", "10")
@@ -1856,7 +1856,7 @@ async def test_numerical_state_attribute_changed_error_handling(
     hass.states.async_set("test.test_entity", "on", {"test_attribute": 50})
     await hass.async_block_till_done()
     assert calls == []
-    assert reports == []
+    assert did_not_trigger_reports == []
 
     # Test the trigger does not fire when the below sensor state is not numeric
     for invalid_value in ("cat", None):
@@ -1865,7 +1865,7 @@ async def test_numerical_state_attribute_changed_error_handling(
         hass.states.async_set("test.test_entity", "on", {"test_attribute": 50})
         await hass.async_block_till_done()
         assert calls == []
-        assert reports == []
+        assert did_not_trigger_reports == []
 
     unsub()
 
@@ -2237,9 +2237,10 @@ async def test_numerical_state_attribute_changed_with_unit_error_handling(
     )
     await hass.async_block_till_done()
 
-    # calls/reports[0] track the numerical-threshold trigger, [1] the entity one
-    calls: list[list[dict[str, Any]]] = [[], []]
-    reports: list[list[NotTriggeredInfo]] = [[], []]
+    numeric_calls: list[dict[str, Any]] = []
+    entity_calls: list[dict[str, Any]] = []
+    numeric_did_not_trigger_reports: list[NotTriggeredInfo] = []
+    entity_did_not_trigger_reports: list[NotTriggeredInfo] = []
     unsubs: list[CALLBACK_TYPE] = []
     unsubs.append(
         await _arm_numerical_trigger(
@@ -2252,8 +2253,8 @@ async def test_numerical_state_attribute_changed_with_unit_error_handling(
                     "value_max": {"number": 30, "unit_of_measurement": "°C"},
                 }
             },
-            calls[0],
-            reports[0],
+            numeric_calls,
+            numeric_did_not_trigger_reports,
         )
     )
     unsubs.append(
@@ -2267,8 +2268,8 @@ async def test_numerical_state_attribute_changed_with_unit_error_handling(
                     "value_max": {"entity": "sensor.below"},
                 }
             },
-            calls[1],
-            reports[1],
+            entity_calls,
+            entity_did_not_trigger_reports,
         )
     )
 
@@ -2283,10 +2284,10 @@ async def test_numerical_state_attribute_changed_with_unit_error_handling(
         },
     )
     await hass.async_block_till_done()
-    assert len(calls[0]) == 1
-    assert calls[1] == []
-    assert reports == [[], []]
-    calls[0].clear()
+    assert len(numeric_calls) == 1
+    assert entity_calls == []
+    assert numeric_did_not_trigger_reports == entity_did_not_trigger_reports == []
+    numeric_calls.clear()
 
     # 59°F = 15°C, below 20°C - should NOT trigger
     hass.states.async_set(
@@ -2298,8 +2299,8 @@ async def test_numerical_state_attribute_changed_with_unit_error_handling(
         },
     )
     await hass.async_block_till_done()
-    assert calls == [[], []]
-    assert reports == [[], []]
+    assert numeric_calls == entity_calls == []
+    assert numeric_did_not_trigger_reports == entity_did_not_trigger_reports == []
 
     # 95°F = 35°C, above 30°C - should NOT trigger
     hass.states.async_set(
@@ -2311,8 +2312,8 @@ async def test_numerical_state_attribute_changed_with_unit_error_handling(
         },
     )
     await hass.async_block_till_done()
-    assert calls == [[], []]
-    assert reports == [[], []]
+    assert numeric_calls == entity_calls == []
+    assert numeric_did_not_trigger_reports == entity_did_not_trigger_reports == []
 
     # Set up entity limits referencing sensors that report in °F
     hass.states.async_set(
@@ -2336,17 +2337,17 @@ async def test_numerical_state_attribute_changed_with_unit_error_handling(
         },
     )
     await hass.async_block_till_done()
-    assert len(calls[0]) == 1
-    assert len(calls[1]) == 1
-    assert reports == [[], []]
-    calls[0].clear()
-    calls[1].clear()
+    assert len(numeric_calls) == 1
+    assert len(entity_calls) == 1
+    assert numeric_did_not_trigger_reports == entity_did_not_trigger_reports == []
+    numeric_calls.clear()
+    entity_calls.clear()
 
     # Test the trigger does not fire when the attribute value is missing
     hass.states.async_set("test.test_entity", "on", {})
     await hass.async_block_till_done()
-    assert calls == [[], []]
-    assert reports == [[], []]
+    assert numeric_calls == entity_calls == []
+    assert numeric_did_not_trigger_reports == entity_did_not_trigger_reports == []
 
     # Test the trigger does not fire when the attribute value is invalid
     for value in ("cat", None):
@@ -2359,8 +2360,8 @@ async def test_numerical_state_attribute_changed_with_unit_error_handling(
             },
         )
         await hass.async_block_till_done()
-        assert calls == [[], []]
-        assert reports == [[], []]
+        assert numeric_calls == entity_calls == []
+        assert numeric_did_not_trigger_reports == entity_did_not_trigger_reports == []
 
     # Test the trigger does not fire when the unit is incompatible
     hass.states.async_set(
@@ -2372,8 +2373,8 @@ async def test_numerical_state_attribute_changed_with_unit_error_handling(
         },
     )
     await hass.async_block_till_done()
-    assert calls == [[], []]
-    assert reports == [[], []]
+    assert numeric_calls == entity_calls == []
+    assert numeric_did_not_trigger_reports == entity_did_not_trigger_reports == []
 
     # Test the trigger does not fire when the above sensor does not exist
     hass.states.async_remove("sensor.above")
@@ -2391,8 +2392,8 @@ async def test_numerical_state_attribute_changed_with_unit_error_handling(
         {"test_attribute": 50, ATTR_UNIT_OF_MEASUREMENT: UnitOfTemperature.FAHRENHEIT},
     )
     await hass.async_block_till_done()
-    assert calls == [[], []]
-    assert reports == [[], []]
+    assert numeric_calls == entity_calls == []
+    assert numeric_did_not_trigger_reports == entity_did_not_trigger_reports == []
 
     # Test the trigger does not fire when the above sensor state is not numeric
     for invalid_value in ("cat", None):
@@ -2418,8 +2419,8 @@ async def test_numerical_state_attribute_changed_with_unit_error_handling(
             },
         )
         await hass.async_block_till_done()
-        assert calls == [[], []]
-        assert reports == [[], []]
+        assert numeric_calls == entity_calls == []
+        assert numeric_did_not_trigger_reports == entity_did_not_trigger_reports == []
 
     # Test the trigger does not fire when the above sensor's unit is incompatible
     hass.states.async_set(
@@ -2441,8 +2442,8 @@ async def test_numerical_state_attribute_changed_with_unit_error_handling(
         {"test_attribute": 50, ATTR_UNIT_OF_MEASUREMENT: UnitOfTemperature.FAHRENHEIT},
     )
     await hass.async_block_till_done()
-    assert calls == [[], []]
-    assert reports == [[], []]
+    assert numeric_calls == entity_calls == []
+    assert numeric_did_not_trigger_reports == entity_did_not_trigger_reports == []
 
     # Reset the above sensor state to a valid numeric value
     hass.states.async_set(
@@ -2467,8 +2468,8 @@ async def test_numerical_state_attribute_changed_with_unit_error_handling(
         {"test_attribute": 50, ATTR_UNIT_OF_MEASUREMENT: UnitOfTemperature.FAHRENHEIT},
     )
     await hass.async_block_till_done()
-    assert calls == [[], []]
-    assert reports == [[], []]
+    assert numeric_calls == entity_calls == []
+    assert numeric_did_not_trigger_reports == entity_did_not_trigger_reports == []
 
     # Test the trigger does not fire when the below sensor state is not numeric
     for invalid_value in ("cat", None):
@@ -2490,8 +2491,8 @@ async def test_numerical_state_attribute_changed_with_unit_error_handling(
             },
         )
         await hass.async_block_till_done()
-        assert calls == [[], []]
-        assert reports == [[], []]
+        assert numeric_calls == entity_calls == []
+        assert numeric_did_not_trigger_reports == entity_did_not_trigger_reports == []
 
     # Test the trigger does not fire when the below sensor's unit is incompatible
     hass.states.async_set(
@@ -2513,8 +2514,8 @@ async def test_numerical_state_attribute_changed_with_unit_error_handling(
         {"test_attribute": 50, ATTR_UNIT_OF_MEASUREMENT: UnitOfTemperature.FAHRENHEIT},
     )
     await hass.async_block_till_done()
-    assert calls == [[], []]
-    assert reports == [[], []]
+    assert numeric_calls == entity_calls == []
+    assert numeric_did_not_trigger_reports == entity_did_not_trigger_reports == []
 
     for unsub in unsubs:
         unsub()
@@ -2919,7 +2920,7 @@ async def test_numerical_state_attribute_crossed_threshold_error_handling(
     await hass.async_block_till_done()
 
     calls: list[dict[str, Any]] = []
-    reports: list[NotTriggeredInfo] = []
+    did_not_trigger_reports: list[NotTriggeredInfo] = []
     unsub = await _arm_numerical_trigger(
         hass,
         trigger_cls,
@@ -2931,7 +2932,7 @@ async def test_numerical_state_attribute_crossed_threshold_error_handling(
             }
         },
         calls,
-        reports,
+        did_not_trigger_reports,
     )
 
     # Test the trigger works
@@ -2940,14 +2941,14 @@ async def test_numerical_state_attribute_crossed_threshold_error_handling(
     hass.states.async_set("test.test_entity", "on", {"test_attribute": 50})
     await hass.async_block_till_done()
     assert len(calls) == 1
-    assert reports == []
+    assert did_not_trigger_reports == []
     calls.clear()
 
     # Test the trigger does not fire again when still within limits
     hass.states.async_set("test.test_entity", "on", {"test_attribute": 51})
     await hass.async_block_till_done()
     assert calls == []
-    assert reports == []
+    assert did_not_trigger_reports == []
 
     # Test the trigger does not fire when the from-state is unknown or unavailable
     for from_state in (STATE_UNKNOWN, STATE_UNAVAILABLE):
@@ -2955,14 +2956,14 @@ async def test_numerical_state_attribute_crossed_threshold_error_handling(
         hass.states.async_set("test.test_entity", "on", {"test_attribute": 50})
         await hass.async_block_till_done()
         assert calls == []
-        assert reports == []
+        assert did_not_trigger_reports == []
 
     # Test the trigger does fire when the attribute value is changing from None
     hass.states.async_set("test.test_entity", "on", {"test_attribute": None})
     hass.states.async_set("test.test_entity", "on", {"test_attribute": 50})
     await hass.async_block_till_done()
     assert len(calls) == 1
-    assert reports == []
+    assert did_not_trigger_reports == []
     calls.clear()
 
     # Test the trigger does not fire when the attribute value is outside the limits
@@ -2970,20 +2971,20 @@ async def test_numerical_state_attribute_crossed_threshold_error_handling(
         hass.states.async_set("test.test_entity", "on", {"test_attribute": value})
         await hass.async_block_till_done()
         assert calls == []
-        assert reports == []
+        assert did_not_trigger_reports == []
 
     # Test the trigger does not fire when the attribute value is missing
     hass.states.async_set("test.test_entity", "on", {})
     await hass.async_block_till_done()
     assert calls == []
-    assert reports == []
+    assert did_not_trigger_reports == []
 
     # Test the trigger does not fire when the attribute value is invalid
     for value in ("cat", None):
         hass.states.async_set("test.test_entity", "on", {"test_attribute": value})
         await hass.async_block_till_done()
         assert calls == []
-        assert reports == []
+        assert did_not_trigger_reports == []
 
     # Test the trigger does not fire when the lower sensor does not exist
     hass.states.async_remove("sensor.lower")
@@ -2991,7 +2992,7 @@ async def test_numerical_state_attribute_crossed_threshold_error_handling(
     hass.states.async_set("test.test_entity", "on", {"test_attribute": 50})
     await hass.async_block_till_done()
     assert calls == []
-    assert reports == []
+    assert did_not_trigger_reports == []
 
     # Test the trigger does not fire when the lower sensor state is not numeric
     for invalid_value in ("cat", None):
@@ -3000,7 +3001,7 @@ async def test_numerical_state_attribute_crossed_threshold_error_handling(
         hass.states.async_set("test.test_entity", "on", {"test_attribute": 50})
         await hass.async_block_till_done()
         assert calls == []
-        assert reports == []
+        assert did_not_trigger_reports == []
 
     # Reset the lower sensor state to a valid numeric value
     hass.states.async_set("sensor.lower", "10")
@@ -3011,7 +3012,7 @@ async def test_numerical_state_attribute_crossed_threshold_error_handling(
     hass.states.async_set("test.test_entity", "on", {"test_attribute": 50})
     await hass.async_block_till_done()
     assert calls == []
-    assert reports == []
+    assert did_not_trigger_reports == []
 
     # Test the trigger does not fire when the upper sensor state is not numeric
     for invalid_value in ("cat", None):
@@ -3020,7 +3021,7 @@ async def test_numerical_state_attribute_crossed_threshold_error_handling(
         hass.states.async_set("test.test_entity", "on", {"test_attribute": 50})
         await hass.async_block_till_done()
         assert calls == []
-        assert reports == []
+        assert did_not_trigger_reports == []
 
     unsub()
 
@@ -3320,7 +3321,7 @@ async def test_numerical_state_attribute_crossed_threshold_with_unit_error_handl
     await hass.async_block_till_done()
 
     calls: list[dict[str, Any]] = []
-    reports: list[NotTriggeredInfo] = []
+    did_not_trigger_reports: list[NotTriggeredInfo] = []
     unsub = await _arm_numerical_trigger(
         hass,
         trigger_cls,
@@ -3334,7 +3335,7 @@ async def test_numerical_state_attribute_crossed_threshold_with_unit_error_handl
             }
         },
         calls,
-        reports,
+        did_not_trigger_reports,
     )
 
     # 80.6°F = 27°C, above 25°C threshold - should trigger
@@ -3348,7 +3349,7 @@ async def test_numerical_state_attribute_crossed_threshold_with_unit_error_handl
     )
     await hass.async_block_till_done()
     assert len(calls) == 1
-    assert reports == []
+    assert did_not_trigger_reports == []
     calls.clear()
 
     # Still above threshold - should NOT trigger (already crossed)
@@ -3362,7 +3363,7 @@ async def test_numerical_state_attribute_crossed_threshold_with_unit_error_handl
     )
     await hass.async_block_till_done()
     assert calls == []
-    assert reports == []
+    assert did_not_trigger_reports == []
 
     # Drop below threshold and cross again
     hass.states.async_set(
@@ -3375,7 +3376,7 @@ async def test_numerical_state_attribute_crossed_threshold_with_unit_error_handl
     )
     await hass.async_block_till_done()
     assert calls == []
-    assert reports == []
+    assert did_not_trigger_reports == []
 
     hass.states.async_set(
         "test.test_entity",
@@ -3387,7 +3388,7 @@ async def test_numerical_state_attribute_crossed_threshold_with_unit_error_handl
     )
     await hass.async_block_till_done()
     assert len(calls) == 1
-    assert reports == []
+    assert did_not_trigger_reports == []
     calls.clear()
 
     # Test with incompatible unit - should NOT trigger
@@ -3401,8 +3402,7 @@ async def test_numerical_state_attribute_crossed_threshold_with_unit_error_handl
     )
     await hass.async_block_till_done()
     assert calls == []
-    assert reports == []
-    reports.clear()
+    assert did_not_trigger_reports == []
 
     unsub()
 
