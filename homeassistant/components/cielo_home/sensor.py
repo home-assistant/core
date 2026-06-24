@@ -2,6 +2,7 @@
 
 from collections.abc import Callable
 from dataclasses import dataclass
+from typing import override
 
 from cieloconnectapi.device import CieloDeviceAPI
 from cieloconnectapi.model import CieloDevice
@@ -86,11 +87,13 @@ class CieloSensor(CieloDeviceEntity, SensorEntity):
         self._attr_unique_id = f"{device_id}-{entity_description.key}"
 
     @property
+    @override
     def native_value(self) -> float | int | None:
         """Return the native value of the sensor."""
         return self.entity_description.value_fn(self.client, self.device_data)
 
     @property
+    @override
     def native_unit_of_measurement(self) -> str | None:
         """Return the native unit of measurement.
 
