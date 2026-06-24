@@ -97,8 +97,8 @@ class PlaceAlarmSensorEntity(SensorEntity):
             identifiers={(DOMAIN, self._thing_name)},
             name=self._device_name,
             manufacturer="Gentex",
-            model=getattr(device, "model_number", None),
-            sw_version=getattr(device, "firmware_version", None),
+            model=device.model_number,
+            sw_version=device.firmware_version,
         )
 
     @property
