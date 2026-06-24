@@ -41,10 +41,10 @@
 # name: test_sensor_entities_state[sensor.bathroom_rh_humidity-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'device_class': 'humidity',
-      'friendly_name': 'Bathroom RH Humidity',
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'humidity',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Bathroom RH Humidity',
       <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
-      'unit_of_measurement': '%',
+      <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: '%',
     }),
     'context': <ANY>,
     'entity_id': 'sensor.bathroom_rh_humidity',
@@ -96,9 +96,9 @@
 # name: test_sensor_entities_state[sensor.bathroom_rh_humidity_air_quality_index-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'Bathroom RH Humidity air quality index',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Bathroom RH Humidity air quality index',
       <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
-      'unit_of_measurement': '%',
+      <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: '%',
     }),
     'context': <ANY>,
     'entity_id': 'sensor.bathroom_rh_humidity_air_quality_index',
@@ -150,10 +150,10 @@
 # name: test_sensor_entities_state[sensor.bedroom_valve_humidity-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'device_class': 'humidity',
-      'friendly_name': 'Bedroom valve Humidity',
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'humidity',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Bedroom valve Humidity',
       <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
-      'unit_of_measurement': '%',
+      <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: '%',
     }),
     'context': <ANY>,
     'entity_id': 'sensor.bedroom_valve_humidity',
@@ -205,9 +205,9 @@
 # name: test_sensor_entities_state[sensor.bedroom_valve_humidity_air_quality_index-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'Bedroom valve Humidity air quality index',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Bedroom valve Humidity air quality index',
       <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
-      'unit_of_measurement': '%',
+      <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: '%',
     }),
     'context': <ANY>,
     'entity_id': 'sensor.bedroom_valve_humidity_air_quality_index',
@@ -259,10 +259,10 @@
 # name: test_sensor_entities_state[sensor.hall_valve_carbon_dioxide-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'device_class': 'carbon_dioxide',
-      'friendly_name': 'Hall valve Carbon dioxide',
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'carbon_dioxide',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Hall valve Carbon dioxide',
       <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
-      'unit_of_measurement': 'ppm',
+      <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: 'ppm',
     }),
     'context': <ANY>,
     'entity_id': 'sensor.hall_valve_carbon_dioxide',
@@ -314,9 +314,9 @@
 # name: test_sensor_entities_state[sensor.hall_valve_co2_air_quality_index-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'Hall valve CO2 air quality index',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Hall valve CO2 air quality index',
       <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
-      'unit_of_measurement': '%',
+      <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: '%',
     }),
     'context': <ANY>,
     'entity_id': 'sensor.hall_valve_co2_air_quality_index',
@@ -368,10 +368,10 @@
 # name: test_sensor_entities_state[sensor.kitchen_rh_humidity-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'device_class': 'humidity',
-      'friendly_name': 'Kitchen RH Humidity',
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'humidity',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Kitchen RH Humidity',
       <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
-      'unit_of_measurement': '%',
+      <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: '%',
     }),
     'context': <ANY>,
     'entity_id': 'sensor.kitchen_rh_humidity',
@@ -423,9 +423,9 @@
 # name: test_sensor_entities_state[sensor.kitchen_rh_humidity_air_quality_index-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'Kitchen RH Humidity air quality index',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Kitchen RH Humidity air quality index',
       <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
-      'unit_of_measurement': '%',
+      <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: '%',
     }),
     'context': <ANY>,
     'entity_id': 'sensor.kitchen_rh_humidity_air_quality_index',
@@ -478,9 +478,9 @@
 # name: test_sensor_entities_state[sensor.living_filter_remaining-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'device_class': 'duration',
-      'friendly_name': 'Living Filter remaining',
-      'unit_of_measurement': <UnitOfTime.DAYS: 'd'>,
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'duration',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Living Filter remaining',
+      <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: <UnitOfTime.DAYS: 'd'>,
     }),
     'context': <ANY>,
     'entity_id': 'sensor.living_filter_remaining',
@@ -532,10 +532,10 @@
 # name: test_sensor_entities_state[sensor.living_signal_strength-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'device_class': 'signal_strength',
-      'friendly_name': 'Living Signal strength',
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'signal_strength',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Living Signal strength',
       <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
-      'unit_of_measurement': 'dBm',
+      <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: 'dBm',
     }),
     'context': <ANY>,
     'entity_id': 'sensor.living_signal_strength',
@@ -585,8 +585,8 @@
 # name: test_sensor_entities_state[sensor.living_state_end_time-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'device_class': 'timestamp',
-      'friendly_name': 'Living State end time',
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'timestamp',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Living State end time',
     }),
     'context': <ANY>,
     'entity_id': 'sensor.living_state_end_time',
@@ -641,9 +641,9 @@
 # name: test_sensor_entities_state[sensor.living_target_flow_level-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'Living Target flow level',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Living Target flow level',
       <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
-      'unit_of_measurement': '%',
+      <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: '%',
     }),
     'context': <ANY>,
     'entity_id': 'sensor.living_target_flow_level',
@@ -714,8 +714,8 @@
 # name: test_sensor_entities_state[sensor.living_ventilation_state-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'device_class': 'enum',
-      'friendly_name': 'Living Ventilation state',
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'enum',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Living Ventilation state',
       <SensorEntityCapabilityAttribute.OPTIONS: 'options'>: list([
         'auto',
         'aut1',
@@ -787,10 +787,10 @@
 # name: test_sensor_entities_state[sensor.office_co2_carbon_dioxide-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'device_class': 'carbon_dioxide',
-      'friendly_name': 'Office CO2 Carbon dioxide',
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'carbon_dioxide',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Office CO2 Carbon dioxide',
       <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
-      'unit_of_measurement': 'ppm',
+      <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: 'ppm',
     }),
     'context': <ANY>,
     'entity_id': 'sensor.office_co2_carbon_dioxide',
@@ -842,9 +842,9 @@
 # name: test_sensor_entities_state[sensor.office_co2_co2_air_quality_index-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'Office CO2 CO2 air quality index',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Office CO2 CO2 air quality index',
       <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
-      'unit_of_measurement': '%',
+      <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: '%',
     }),
     'context': <ANY>,
     'entity_id': 'sensor.office_co2_co2_air_quality_index',
@@ -896,10 +896,10 @@
 # name: test_sensor_entities_state[sensor.study_valve_carbon_dioxide-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'device_class': 'carbon_dioxide',
-      'friendly_name': 'Study valve Carbon dioxide',
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'carbon_dioxide',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Study valve Carbon dioxide',
       <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
-      'unit_of_measurement': 'ppm',
+      <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: 'ppm',
     }),
     'context': <ANY>,
     'entity_id': 'sensor.study_valve_carbon_dioxide',
@@ -951,9 +951,9 @@
 # name: test_sensor_entities_state[sensor.study_valve_co2_air_quality_index-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'Study valve CO2 air quality index',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Study valve CO2 air quality index',
       <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
-      'unit_of_measurement': '%',
+      <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: '%',
     }),
     'context': <ANY>,
     'entity_id': 'sensor.study_valve_co2_air_quality_index',
@@ -1005,10 +1005,10 @@
 # name: test_sensor_entities_state[sensor.study_valve_humidity-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'device_class': 'humidity',
-      'friendly_name': 'Study valve Humidity',
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'humidity',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Study valve Humidity',
       <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
-      'unit_of_measurement': '%',
+      <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: '%',
     }),
     'context': <ANY>,
     'entity_id': 'sensor.study_valve_humidity',
@@ -1060,9 +1060,9 @@
 # name: test_sensor_entities_state[sensor.study_valve_humidity_air_quality_index-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'Study valve Humidity air quality index',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Study valve Humidity air quality index',
       <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
-      'unit_of_measurement': '%',
+      <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: '%',
     }),
     'context': <ANY>,
     'entity_id': 'sensor.study_valve_humidity_air_quality_index',

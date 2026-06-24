@@ -41,7 +41,7 @@
 # name: test_entity_and_device_data[site_payload0-device_payload0-client_payload0][device_tracker.switch_1-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'Device 6 Switch 1',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Device 6 Switch 1',
       <DeviceTrackerEntityStateAttribute.IN_ZONES: 'in_zones'>: list([
         'zone.home',
       ]),
@@ -100,7 +100,7 @@
 # name: test_entity_and_device_data[site_payload0-device_payload0-client_payload0][device_tracker.wd_client_1-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'Device 1 wd_client_1',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Device 1 wd_client_1',
       <ScannerEntityStateAttribute.HOST_NAME: 'host_name'>: 'wd_client_1',
       <DeviceTrackerEntityStateAttribute.IN_ZONES: 'in_zones'>: list([
       ]),
@@ -158,7 +158,7 @@
 # name: test_entity_and_device_data[site_payload0-device_payload0-client_payload0][device_tracker.ws_client_1-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'Device 0 ws_client_1',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Device 0 ws_client_1',
       <ScannerEntityStateAttribute.HOST_NAME: 'host_name'>: 'ws_client_1',
       <DeviceTrackerEntityStateAttribute.IN_ZONES: 'in_zones'>: list([
       ]),

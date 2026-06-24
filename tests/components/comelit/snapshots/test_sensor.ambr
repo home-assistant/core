@@ -53,8 +53,8 @@
 # name: test_all_entities[sensor.zone0-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'device_class': 'enum',
-      'friendly_name': 'Zone0',
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'enum',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Zone0',
       <SensorEntityCapabilityAttribute.OPTIONS: 'options'>: list([
         'alarm',
         'armed',

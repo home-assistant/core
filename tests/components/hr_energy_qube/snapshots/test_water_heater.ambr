@@ -47,7 +47,7 @@
   StateSnapshot({
     'attributes': ReadOnlyDict({
       <WaterHeaterStateAttribute.CURRENT_TEMPERATURE: 'current_temperature'>: 50.0,
-      'friendly_name': 'Qube heat pump Domestic hot water',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Qube heat pump Domestic hot water',
       <WaterHeaterCapabilityAttribute.MAX_TEMP: 'max_temp'>: 65,
       <WaterHeaterCapabilityAttribute.MIN_TEMP: 'min_temp'>: 40,
       <WaterHeaterCapabilityAttribute.OPERATION_LIST: 'operation_list'>: list([
@@ -55,7 +55,7 @@
         'performance',
       ]),
       <WaterHeaterStateAttribute.OPERATION_MODE: 'operation_mode'>: 'heat_pump',
-      'supported_features': <WaterHeaterEntityFeature: 3>,
+      <EntityStateAttribute.SUPPORTED_FEATURES: 'supported_features'>: <WaterHeaterEntityFeature: 3>,
       <WaterHeaterStateAttribute.TARGET_TEMP_HIGH: 'target_temp_high'>: None,
       <WaterHeaterStateAttribute.TARGET_TEMP_LOW: 'target_temp_low'>: None,
       <WaterHeaterStateAttribute.TEMPERATURE: 'temperature'>: 50.0,

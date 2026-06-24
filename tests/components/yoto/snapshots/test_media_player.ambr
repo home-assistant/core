@@ -40,17 +40,17 @@
 # name: test_entity_state[media_player.nursery_yoto-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'device_class': 'speaker',
-      'entity_picture': 'https://example.test/cover.jpg',
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'speaker',
+      <EntityStateAttribute.ENTITY_PICTURE: 'entity_picture'>: 'https://example.test/cover.jpg',
       <MediaPlayerEntityStateAttribute.ENTITY_PICTURE_LOCAL: 'entity_picture_local'>: '/api/media_player_proxy/media_player.nursery_yoto?token=abcdef&cache=1cbba102718cbf3f',
-      'friendly_name': 'Nursery Yoto',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Nursery Yoto',
       <MediaPlayerEntityStateAttribute.MEDIA_ALBUM_NAME: 'media_album_name'>: 'Outer Space',
       <MediaPlayerEntityStateAttribute.MEDIA_ARTIST: 'media_artist'>: 'Ladybird Audio Adventures',
       <MediaPlayerEntityStateAttribute.MEDIA_DURATION: 'media_duration'>: 300,
       <MediaPlayerEntityStateAttribute.MEDIA_POSITION: 'media_position'>: 120,
       <MediaPlayerEntityStateAttribute.MEDIA_POSITION_UPDATED_AT: 'media_position_updated_at'>: datetime.datetime(2026, 5, 8, 12, 0, tzinfo=datetime.timezone.utc),
       <MediaPlayerEntityStateAttribute.MEDIA_TITLE: 'media_title'>: 'Introduction',
-      'supported_features': <MediaPlayerEntityFeature: 153143>,
+      <EntityStateAttribute.SUPPORTED_FEATURES: 'supported_features'>: <MediaPlayerEntityFeature: 153143>,
       <MediaPlayerEntityStateAttribute.MEDIA_VOLUME_LEVEL: 'volume_level'>: 0.5,
     }),
     'context': <ANY>,

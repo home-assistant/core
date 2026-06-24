@@ -39,7 +39,7 @@
 # name: test_sensors[sensor.aach_affected_areas_1-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'Aach Affected areas 1',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Aach Affected areas 1',
     }),
     'context': <ANY>,
     'entity_id': 'sensor.aach_affected_areas_1',
@@ -89,7 +89,7 @@
 # name: test_sensors[sensor.aach_affected_areas_2-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'Aach Affected areas 2',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Aach Affected areas 2',
     }),
     'context': <ANY>,
     'entity_id': 'sensor.aach_affected_areas_2',
@@ -139,7 +139,7 @@
 # name: test_sensors[sensor.aach_affected_areas_3-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'Aach Affected areas 3',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Aach Affected areas 3',
     }),
     'context': <ANY>,
     'entity_id': 'sensor.aach_affected_areas_3',
@@ -189,7 +189,7 @@
 # name: test_sensors[sensor.aach_affected_areas_4-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'Aach Affected areas 4',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Aach Affected areas 4',
     }),
     'context': <ANY>,
     'entity_id': 'sensor.aach_affected_areas_4',
@@ -239,7 +239,7 @@
 # name: test_sensors[sensor.aach_affected_areas_5-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'Aach Affected areas 5',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Aach Affected areas 5',
     }),
     'context': <ANY>,
     'entity_id': 'sensor.aach_affected_areas_5',
@@ -289,8 +289,8 @@
 # name: test_sensors[sensor.aach_expires_1-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'device_class': 'timestamp',
-      'friendly_name': 'Aach Expires 1',
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'timestamp',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Aach Expires 1',
     }),
     'context': <ANY>,
     'entity_id': 'sensor.aach_expires_1',
@@ -340,8 +340,8 @@
 # name: test_sensors[sensor.aach_expires_2-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'device_class': 'timestamp',
-      'friendly_name': 'Aach Expires 2',
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'timestamp',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Aach Expires 2',
     }),
     'context': <ANY>,
     'entity_id': 'sensor.aach_expires_2',
@@ -391,8 +391,8 @@
 # name: test_sensors[sensor.aach_expires_3-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'device_class': 'timestamp',
-      'friendly_name': 'Aach Expires 3',
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'timestamp',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Aach Expires 3',
     }),
     'context': <ANY>,
     'entity_id': 'sensor.aach_expires_3',
@@ -442,8 +442,8 @@
 # name: test_sensors[sensor.aach_expires_4-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'device_class': 'timestamp',
-      'friendly_name': 'Aach Expires 4',
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'timestamp',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Aach Expires 4',
     }),
     'context': <ANY>,
     'entity_id': 'sensor.aach_expires_4',
@@ -493,8 +493,8 @@
 # name: test_sensors[sensor.aach_expires_5-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'device_class': 'timestamp',
-      'friendly_name': 'Aach Expires 5',
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'timestamp',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Aach Expires 5',
     }),
     'context': <ANY>,
     'entity_id': 'sensor.aach_expires_5',
@@ -544,7 +544,7 @@
 # name: test_sensors[sensor.aach_headline_1-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'Aach Headline 1',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Aach Headline 1',
     }),
     'context': <ANY>,
     'entity_id': 'sensor.aach_headline_1',
@@ -594,7 +594,7 @@
 # name: test_sensors[sensor.aach_headline_2-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'Aach Headline 2',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Aach Headline 2',
     }),
     'context': <ANY>,
     'entity_id': 'sensor.aach_headline_2',
@@ -644,7 +644,7 @@
 # name: test_sensors[sensor.aach_headline_3-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'Aach Headline 3',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Aach Headline 3',
     }),
     'context': <ANY>,
     'entity_id': 'sensor.aach_headline_3',
@@ -694,7 +694,7 @@
 # name: test_sensors[sensor.aach_headline_4-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'Aach Headline 4',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Aach Headline 4',
     }),
     'context': <ANY>,
     'entity_id': 'sensor.aach_headline_4',
@@ -744,7 +744,7 @@
 # name: test_sensors[sensor.aach_headline_5-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'Aach Headline 5',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Aach Headline 5',
     }),
     'context': <ANY>,
     'entity_id': 'sensor.aach_headline_5',
@@ -794,7 +794,7 @@
 # name: test_sensors[sensor.aach_more_information_url_1-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'Aach More information URL 1',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Aach More information URL 1',
     }),
     'context': <ANY>,
     'entity_id': 'sensor.aach_more_information_url_1',
@@ -844,7 +844,7 @@
 # name: test_sensors[sensor.aach_more_information_url_2-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'Aach More information URL 2',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Aach More information URL 2',
     }),
     'context': <ANY>,
     'entity_id': 'sensor.aach_more_information_url_2',
@@ -894,7 +894,7 @@
 # name: test_sensors[sensor.aach_more_information_url_3-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'Aach More information URL 3',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Aach More information URL 3',
     }),
     'context': <ANY>,
     'entity_id': 'sensor.aach_more_information_url_3',
@@ -944,7 +944,7 @@
 # name: test_sensors[sensor.aach_more_information_url_4-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'Aach More information URL 4',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Aach More information URL 4',
     }),
     'context': <ANY>,
     'entity_id': 'sensor.aach_more_information_url_4',
@@ -994,7 +994,7 @@
 # name: test_sensors[sensor.aach_more_information_url_5-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'Aach More information URL 5',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Aach More information URL 5',
     }),
     'context': <ANY>,
     'entity_id': 'sensor.aach_more_information_url_5',
@@ -1044,7 +1044,7 @@
 # name: test_sensors[sensor.aach_sender_1-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'Aach Sender 1',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Aach Sender 1',
     }),
     'context': <ANY>,
     'entity_id': 'sensor.aach_sender_1',
@@ -1094,7 +1094,7 @@
 # name: test_sensors[sensor.aach_sender_2-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'Aach Sender 2',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Aach Sender 2',
     }),
     'context': <ANY>,
     'entity_id': 'sensor.aach_sender_2',
@@ -1144,7 +1144,7 @@
 # name: test_sensors[sensor.aach_sender_3-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'Aach Sender 3',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Aach Sender 3',
     }),
     'context': <ANY>,
     'entity_id': 'sensor.aach_sender_3',
@@ -1194,7 +1194,7 @@
 # name: test_sensors[sensor.aach_sender_4-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'Aach Sender 4',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Aach Sender 4',
     }),
     'context': <ANY>,
     'entity_id': 'sensor.aach_sender_4',
@@ -1244,7 +1244,7 @@
 # name: test_sensors[sensor.aach_sender_5-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'Aach Sender 5',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Aach Sender 5',
     }),
     'context': <ANY>,
     'entity_id': 'sensor.aach_sender_5',
@@ -1294,8 +1294,8 @@
 # name: test_sensors[sensor.aach_sent_1-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'device_class': 'timestamp',
-      'friendly_name': 'Aach Sent 1',
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'timestamp',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Aach Sent 1',
     }),
     'context': <ANY>,
     'entity_id': 'sensor.aach_sent_1',
@@ -1345,8 +1345,8 @@
 # name: test_sensors[sensor.aach_sent_2-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'device_class': 'timestamp',
-      'friendly_name': 'Aach Sent 2',
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'timestamp',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Aach Sent 2',
     }),
     'context': <ANY>,
     'entity_id': 'sensor.aach_sent_2',
@@ -1396,8 +1396,8 @@
 # name: test_sensors[sensor.aach_sent_3-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'device_class': 'timestamp',
-      'friendly_name': 'Aach Sent 3',
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'timestamp',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Aach Sent 3',
     }),
     'context': <ANY>,
     'entity_id': 'sensor.aach_sent_3',
@@ -1447,8 +1447,8 @@
 # name: test_sensors[sensor.aach_sent_4-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'device_class': 'timestamp',
-      'friendly_name': 'Aach Sent 4',
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'timestamp',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Aach Sent 4',
     }),
     'context': <ANY>,
     'entity_id': 'sensor.aach_sent_4',
@@ -1498,8 +1498,8 @@
 # name: test_sensors[sensor.aach_sent_5-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'device_class': 'timestamp',
-      'friendly_name': 'Aach Sent 5',
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'timestamp',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Aach Sent 5',
     }),
     'context': <ANY>,
     'entity_id': 'sensor.aach_sent_5',
@@ -1557,8 +1557,8 @@
 # name: test_sensors[sensor.aach_severity_1-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'device_class': 'enum',
-      'friendly_name': 'Aach Severity 1',
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'enum',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Aach Severity 1',
       <SensorEntityCapabilityAttribute.OPTIONS: 'options'>: list([
         'extreme',
         'severe',
@@ -1623,8 +1623,8 @@
 # name: test_sensors[sensor.aach_severity_2-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'device_class': 'enum',
-      'friendly_name': 'Aach Severity 2',
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'enum',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Aach Severity 2',
       <SensorEntityCapabilityAttribute.OPTIONS: 'options'>: list([
         'extreme',
         'severe',
@@ -1689,8 +1689,8 @@
 # name: test_sensors[sensor.aach_severity_3-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'device_class': 'enum',
-      'friendly_name': 'Aach Severity 3',
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'enum',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Aach Severity 3',
       <SensorEntityCapabilityAttribute.OPTIONS: 'options'>: list([
         'extreme',
         'severe',
@@ -1755,8 +1755,8 @@
 # name: test_sensors[sensor.aach_severity_4-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'device_class': 'enum',
-      'friendly_name': 'Aach Severity 4',
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'enum',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Aach Severity 4',
       <SensorEntityCapabilityAttribute.OPTIONS: 'options'>: list([
         'extreme',
         'severe',
@@ -1821,8 +1821,8 @@
 # name: test_sensors[sensor.aach_severity_5-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'device_class': 'enum',
-      'friendly_name': 'Aach Severity 5',
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'enum',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Aach Severity 5',
       <SensorEntityCapabilityAttribute.OPTIONS: 'options'>: list([
         'extreme',
         'severe',
@@ -1879,8 +1879,8 @@
 # name: test_sensors[sensor.aach_start_1-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'device_class': 'timestamp',
-      'friendly_name': 'Aach Start 1',
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'timestamp',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Aach Start 1',
     }),
     'context': <ANY>,
     'entity_id': 'sensor.aach_start_1',
@@ -1930,8 +1930,8 @@
 # name: test_sensors[sensor.aach_start_2-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'device_class': 'timestamp',
-      'friendly_name': 'Aach Start 2',
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'timestamp',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Aach Start 2',
     }),
     'context': <ANY>,
     'entity_id': 'sensor.aach_start_2',
@@ -1981,8 +1981,8 @@
 # name: test_sensors[sensor.aach_start_3-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'device_class': 'timestamp',
-      'friendly_name': 'Aach Start 3',
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'timestamp',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Aach Start 3',
     }),
     'context': <ANY>,
     'entity_id': 'sensor.aach_start_3',
@@ -2032,8 +2032,8 @@
 # name: test_sensors[sensor.aach_start_4-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'device_class': 'timestamp',
-      'friendly_name': 'Aach Start 4',
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'timestamp',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Aach Start 4',
     }),
     'context': <ANY>,
     'entity_id': 'sensor.aach_start_4',
@@ -2083,8 +2083,8 @@
 # name: test_sensors[sensor.aach_start_5-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'device_class': 'timestamp',
-      'friendly_name': 'Aach Start 5',
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'timestamp',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Aach Start 5',
     }),
     'context': <ANY>,
     'entity_id': 'sensor.aach_start_5',

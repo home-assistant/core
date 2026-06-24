@@ -39,8 +39,8 @@
 # name: test_setup[binary_sensor.raspberry_pi_power_status-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'device_class': 'problem',
-      'friendly_name': 'Raspberry Pi Power status',
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'problem',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Raspberry Pi Power status',
     }),
     'context': <ANY>,
     'entity_id': 'binary_sensor.raspberry_pi_power_status',

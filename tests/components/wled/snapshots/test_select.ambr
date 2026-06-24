@@ -113,7 +113,7 @@
 # name: test_snapshots[select.wled_rgb_light_color_palette-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'WLED RGB Light Color palette',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'WLED RGB Light Color palette',
       <SelectEntityCapabilityAttribute.OPTIONS: 'options'>: list([
         '* Color 1',
         '* Color Gradient',
@@ -242,7 +242,7 @@
 # name: test_snapshots[select.wled_rgb_light_live_override-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'WLED RGB Light Live override',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'WLED RGB Light Live override',
       <SelectEntityCapabilityAttribute.OPTIONS: 'options'>: list([
         '0',
         '1',
@@ -300,7 +300,7 @@
 # name: test_snapshots[select.wled_rgb_light_playlist-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'WLED RGB Light Playlist',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'WLED RGB Light Playlist',
       <SelectEntityCapabilityAttribute.OPTIONS: 'options'>: list([
       ]),
     }),
@@ -355,7 +355,7 @@
 # name: test_snapshots[select.wled_rgb_light_preset-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'WLED RGB Light Preset',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'WLED RGB Light Preset',
       <SelectEntityCapabilityAttribute.OPTIONS: 'options'>: list([
       ]),
     }),
@@ -481,7 +481,7 @@
 # name: test_snapshots[select.wled_rgb_light_segment_1_color_palette-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'WLED RGB Light Segment 1 color palette',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'WLED RGB Light Segment 1 color palette',
       <SelectEntityCapabilityAttribute.OPTIONS: 'options'>: list([
         '* Color 1',
         '* Color Gradient',

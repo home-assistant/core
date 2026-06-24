@@ -56,7 +56,7 @@
   StateSnapshot({
     'attributes': ReadOnlyDict({
       <ClimateEntityStateAttribute.CURRENT_TEMPERATURE: 'current_temperature'>: 17.9,
-      'friendly_name': 'Bathroom',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Bathroom',
       <ClimateEntityStateAttribute.HVAC_ACTION: 'hvac_action'>: <HVACAction.IDLE: 'idle'>,
       <ClimateEntityCapabilityAttribute.HVAC_MODES: 'hvac_modes'>: list([
         <HVACMode.OFF: 'off'>,
@@ -73,7 +73,7 @@
         'home',
         'away',
       ]),
-      'supported_features': <ClimateEntityFeature: 401>,
+      <EntityStateAttribute.SUPPORTED_FEATURES: 'supported_features'>: <ClimateEntityFeature: 401>,
       <ClimateEntityCapabilityAttribute.TARGET_TEMP_STEP: 'target_temp_step'>: 0.1,
       <ClimateEntityStateAttribute.TEMPERATURE: 'temperature'>: 15.0,
     }),
@@ -142,7 +142,7 @@
   StateSnapshot({
     'attributes': ReadOnlyDict({
       <ClimateEntityStateAttribute.CURRENT_TEMPERATURE: 'current_temperature'>: 19.1,
-      'friendly_name': 'Living room',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Living room',
       <ClimateEntityStateAttribute.HVAC_ACTION: 'hvac_action'>: <HVACAction.PREHEATING: 'preheating'>,
       <ClimateEntityCapabilityAttribute.HVAC_MODES: 'hvac_modes'>: list([
         <HVACMode.OFF: 'off'>,
@@ -159,7 +159,7 @@
         'home',
         'away',
       ]),
-      'supported_features': <ClimateEntityFeature: 401>,
+      <EntityStateAttribute.SUPPORTED_FEATURES: 'supported_features'>: <ClimateEntityFeature: 401>,
       <ClimateEntityCapabilityAttribute.TARGET_TEMP_STEP: 'target_temp_step'>: 0.1,
       <ClimateEntityStateAttribute.TEMPERATURE: 'temperature'>: 20.0,
     }),
@@ -227,7 +227,7 @@
   StateSnapshot({
     'attributes': ReadOnlyDict({
       <ClimateEntityStateAttribute.CURRENT_TEMPERATURE: 'current_temperature'>: 18.9,
-      'friendly_name': 'Badkamer',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Badkamer',
       <ClimateEntityStateAttribute.HVAC_ACTION: 'hvac_action'>: <HVACAction.IDLE: 'idle'>,
       <ClimateEntityCapabilityAttribute.HVAC_MODES: 'hvac_modes'>: list([
         <HVACMode.AUTO: 'auto'>,
@@ -243,7 +243,7 @@
         'vacation',
         'no_frost',
       ]),
-      'supported_features': <ClimateEntityFeature: 17>,
+      <EntityStateAttribute.SUPPORTED_FEATURES: 'supported_features'>: <ClimateEntityFeature: 17>,
       <ClimateEntityCapabilityAttribute.TARGET_TEMP_STEP: 'target_temp_step'>: 0.1,
       <ClimateEntityStateAttribute.TEMPERATURE: 'temperature'>: 14.0,
     }),
@@ -311,7 +311,7 @@
   StateSnapshot({
     'attributes': ReadOnlyDict({
       <ClimateEntityStateAttribute.CURRENT_TEMPERATURE: 'current_temperature'>: 16.5,
-      'friendly_name': 'Bios',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Bios',
       <ClimateEntityStateAttribute.HVAC_ACTION: 'hvac_action'>: <HVACAction.IDLE: 'idle'>,
       <ClimateEntityCapabilityAttribute.HVAC_MODES: 'hvac_modes'>: list([
         <HVACMode.AUTO: 'auto'>,
@@ -327,7 +327,7 @@
         'vacation',
         'no_frost',
       ]),
-      'supported_features': <ClimateEntityFeature: 17>,
+      <EntityStateAttribute.SUPPORTED_FEATURES: 'supported_features'>: <ClimateEntityFeature: 17>,
       <ClimateEntityCapabilityAttribute.TARGET_TEMP_STEP: 'target_temp_step'>: 0.1,
       <ClimateEntityStateAttribute.TEMPERATURE: 'temperature'>: 13.0,
     }),
@@ -394,7 +394,7 @@
   StateSnapshot({
     'attributes': ReadOnlyDict({
       <ClimateEntityStateAttribute.CURRENT_TEMPERATURE: 'current_temperature'>: 15.6,
-      'friendly_name': 'Garage',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Garage',
       <ClimateEntityStateAttribute.HVAC_ACTION: 'hvac_action'>: <HVACAction.IDLE: 'idle'>,
       <ClimateEntityCapabilityAttribute.HVAC_MODES: 'hvac_modes'>: list([
         <HVACMode.HEAT: 'heat'>,
@@ -409,7 +409,7 @@
         'vacation',
         'no_frost',
       ]),
-      'supported_features': <ClimateEntityFeature: 17>,
+      <EntityStateAttribute.SUPPORTED_FEATURES: 'supported_features'>: <ClimateEntityFeature: 17>,
       <ClimateEntityCapabilityAttribute.TARGET_TEMP_STEP: 'target_temp_step'>: 0.1,
       <ClimateEntityStateAttribute.TEMPERATURE: 'temperature'>: 5.5,
     }),
@@ -477,7 +477,7 @@
   StateSnapshot({
     'attributes': ReadOnlyDict({
       <ClimateEntityStateAttribute.CURRENT_TEMPERATURE: 'current_temperature'>: 17.2,
-      'friendly_name': 'Jessie',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Jessie',
       <ClimateEntityStateAttribute.HVAC_ACTION: 'hvac_action'>: <HVACAction.IDLE: 'idle'>,
       <ClimateEntityCapabilityAttribute.HVAC_MODES: 'hvac_modes'>: list([
         <HVACMode.AUTO: 'auto'>,
@@ -493,7 +493,7 @@
         'vacation',
         'no_frost',
       ]),
-      'supported_features': <ClimateEntityFeature: 17>,
+      <EntityStateAttribute.SUPPORTED_FEATURES: 'supported_features'>: <ClimateEntityFeature: 17>,
       <ClimateEntityCapabilityAttribute.TARGET_TEMP_STEP: 'target_temp_step'>: 0.1,
       <ClimateEntityStateAttribute.TEMPERATURE: 'temperature'>: 15.0,
     }),
@@ -561,7 +561,7 @@
   StateSnapshot({
     'attributes': ReadOnlyDict({
       <ClimateEntityStateAttribute.CURRENT_TEMPERATURE: 'current_temperature'>: 20.9,
-      'friendly_name': 'Woonkamer',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Woonkamer',
       <ClimateEntityStateAttribute.HVAC_ACTION: 'hvac_action'>: <HVACAction.HEATING: 'heating'>,
       <ClimateEntityCapabilityAttribute.HVAC_MODES: 'hvac_modes'>: list([
         <HVACMode.AUTO: 'auto'>,
@@ -577,7 +577,7 @@
         'vacation',
         'no_frost',
       ]),
-      'supported_features': <ClimateEntityFeature: 17>,
+      <EntityStateAttribute.SUPPORTED_FEATURES: 'supported_features'>: <ClimateEntityFeature: 17>,
       <ClimateEntityCapabilityAttribute.TARGET_TEMP_STEP: 'target_temp_step'>: 0.1,
       <ClimateEntityStateAttribute.TEMPERATURE: 'temperature'>: 21.5,
     }),
@@ -645,7 +645,7 @@
   StateSnapshot({
     'attributes': ReadOnlyDict({
       <ClimateEntityStateAttribute.CURRENT_TEMPERATURE: 'current_temperature'>: 26.3,
-      'friendly_name': 'Anna',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Anna',
       <ClimateEntityStateAttribute.HVAC_ACTION: 'hvac_action'>: <HVACAction.COOLING: 'cooling'>,
       <ClimateEntityCapabilityAttribute.HVAC_MODES: 'hvac_modes'>: list([
         <HVACMode.AUTO: 'auto'>,
@@ -661,7 +661,7 @@
         'asleep',
         'vacation',
       ]),
-      'supported_features': <ClimateEntityFeature: 18>,
+      <EntityStateAttribute.SUPPORTED_FEATURES: 'supported_features'>: <ClimateEntityFeature: 18>,
       <ClimateEntityStateAttribute.TARGET_TEMP_HIGH: 'target_temp_high'>: 30.0,
       <ClimateEntityStateAttribute.TARGET_TEMP_LOW: 'target_temp_low'>: 20.5,
       <ClimateEntityCapabilityAttribute.TARGET_TEMP_STEP: 'target_temp_step'>: 0.1,
@@ -730,7 +730,7 @@
   StateSnapshot({
     'attributes': ReadOnlyDict({
       <ClimateEntityStateAttribute.CURRENT_TEMPERATURE: 'current_temperature'>: 19.3,
-      'friendly_name': 'Anna',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Anna',
       <ClimateEntityStateAttribute.HVAC_ACTION: 'hvac_action'>: <HVACAction.HEATING: 'heating'>,
       <ClimateEntityCapabilityAttribute.HVAC_MODES: 'hvac_modes'>: list([
         <HVACMode.AUTO: 'auto'>,
@@ -746,7 +746,7 @@
         'asleep',
         'vacation',
       ]),
-      'supported_features': <ClimateEntityFeature: 18>,
+      <EntityStateAttribute.SUPPORTED_FEATURES: 'supported_features'>: <ClimateEntityFeature: 18>,
       <ClimateEntityStateAttribute.TARGET_TEMP_HIGH: 'target_temp_high'>: 30.0,
       <ClimateEntityStateAttribute.TARGET_TEMP_LOW: 'target_temp_low'>: 20.5,
       <ClimateEntityCapabilityAttribute.TARGET_TEMP_STEP: 'target_temp_step'>: 0.1,
@@ -815,7 +815,7 @@
   StateSnapshot({
     'attributes': ReadOnlyDict({
       <ClimateEntityStateAttribute.CURRENT_TEMPERATURE: 'current_temperature'>: 19.4,
-      'friendly_name': 'Anna',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Anna',
       <ClimateEntityStateAttribute.HVAC_ACTION: 'hvac_action'>: <HVACAction.IDLE: 'idle'>,
       <ClimateEntityCapabilityAttribute.HVAC_MODES: 'hvac_modes'>: list([
         <HVACMode.AUTO: 'auto'>,
@@ -831,7 +831,7 @@
         'vacation',
         'no_frost',
       ]),
-      'supported_features': <ClimateEntityFeature: 17>,
+      <EntityStateAttribute.SUPPORTED_FEATURES: 'supported_features'>: <ClimateEntityFeature: 17>,
       <ClimateEntityCapabilityAttribute.TARGET_TEMP_STEP: 'target_temp_step'>: 0.1,
       <ClimateEntityStateAttribute.TEMPERATURE: 'temperature'>: 19.0,
     }),
