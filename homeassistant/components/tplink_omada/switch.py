@@ -138,7 +138,7 @@ async def async_setup_entry(
                 return
             known_policy_ids.update(policy.policy_id for policy in new_policies)
             async_add_entities(
-                TpLinkOmadaVpnSwitch(vpn_coordinator, gateway, policy)
+                OmadaVpnSwitch(vpn_coordinator, gateway, policy)
                 for policy in new_policies
             )
 
@@ -377,7 +377,7 @@ class OmadaDevicePortSwitchEntity[
         self.async_write_ha_state()
 
 
-class TpLinkOmadaVpnSwitch(
+class OmadaVpnSwitch(
     OmadaDeviceEntity[OmadaVpnPoliciesCoordinator],
     SwitchEntity,
 ):
