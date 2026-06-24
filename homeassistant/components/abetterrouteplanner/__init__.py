@@ -218,11 +218,21 @@ async def async_remove_config_entry_device(
     config_entry: AbetterrouteplannerConfigEntry,
     device_entry: dr.DeviceEntry,
 ) -> bool:
-    """Allow the HA UI's "Delete from this integration" link for any device.
+    """Allow deleting a device only once its vehicle is no longer active.
 
-    Always returns ``True`` — even for a vehicle still in the
-    ``selected ∩ present`` set. If the user removes an active device the row
-    stays gone until the next entry reload (handled by the standard re-register
-    path on setup), which is the expected escape hatch behaviour.
+    Refused while the vehicle is still in the ``selected ∩ present`` set;
+    allowed once it drops out of either (deselected in the config entry, or
+    gone from the garage), so an orphaned device card can be cleaned up.
     """
-    return True
+    selected_ids = {
+        int(vehicle_id) for vehicle_id in config_entry.data[CONF_VEHICLE_IDS]
+    }
+    active_scopes = {
+        f"{config_entry.unique_id}_{vehicle.vehicle_id}"
+        for vehicle in config_entry.runtime_data.garage_coordinator.data
+        if vehicle.vehicle_id in selected_ids
+    }
+    return not any(
+        identifier[0] == DOMAIN and identifier[1] in active_scopes
+        for identifier in device_entry.identifiers
+    )

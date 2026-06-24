@@ -128,7 +128,7 @@ class GarageVehicle:
         a poll returns ``previous_data == self.data``. Without an explicit
         ``__eq__`` this ``__slots__`` class falls back to identity, so every
         10-min poll would compare unequal and spuriously re-fire the
-        stale-device / auto-add / rename listeners on an unchanged garage.
+        device-metadata propagation listener on an unchanged garage.
         ``AbrpVehicle`` is a frozen value-equal dataclass, so this fully
         restores the old suppression.
         """

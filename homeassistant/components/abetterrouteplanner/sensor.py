@@ -392,11 +392,13 @@ async def async_setup_entry(
     missing = selected_ids - present_ids
     for vehicle_id in missing:
         # A selected vehicle missing from the garage is an expected steady state
-        # after it is removed upstream: the stale-device cleanup deletes its
-        # device after the absence threshold, but the selection retains the id
-        # until the user reconfigures. Not actionable per-poll, so debug rather
-        # than warning. Format with the raw int so a user grepping their logs
-        # for the id they saw in the picker finds it verbatim.
+        # after it is removed upstream: its device card is left orphaned and the
+        # user can delete it via the integration's delete link
+        # (async_remove_config_entry_device permits removal once a vehicle is no
+        # longer present), while the selection retains the id until the user
+        # reconfigures. Not actionable per-poll, so debug rather than warning.
+        # Format with the raw int so a user grepping their logs for the id they
+        # saw in the picker finds it verbatim.
         _LOGGER.debug(
             "Selected vehicle %d is not in the ABRP garage; skipping",
             vehicle_id,
