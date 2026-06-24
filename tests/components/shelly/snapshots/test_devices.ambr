@@ -6118,9 +6118,9 @@
     'attributes': ReadOnlyDict({
       'device_class': 'speaker',
       'friendly_name': 'Test name',
-      'media_content_type': <MediaType.MUSIC: 'music'>,
+      <MediaPlayerEntityStateAttribute.MEDIA_CONTENT_TYPE: 'media_content_type'>: <MediaType.MUSIC: 'music'>,
       'supported_features': <MediaPlayerEntityFeature: 152117>,
-      'volume_level': 0.7,
+      <MediaPlayerEntityStateAttribute.MEDIA_VOLUME_LEVEL: 'volume_level'>: 0.7,
     }),
     'context': <ANY>,
     'entity_id': 'media_player.test_name',

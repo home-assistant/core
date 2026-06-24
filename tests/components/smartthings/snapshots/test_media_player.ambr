@@ -41,10 +41,10 @@
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'friendly_name': 'Robot Vacuum',
-      'is_volume_muted': False,
-      'repeat': <RepeatMode.ALL: 'all'>,
+      <MediaPlayerEntityStateAttribute.MEDIA_VOLUME_MUTED: 'is_volume_muted'>: False,
+      <MediaPlayerEntityStateAttribute.MEDIA_REPEAT: 'repeat'>: <RepeatMode.ALL: 'all'>,
       'supported_features': <MediaPlayerEntityFeature: 284045>,
-      'volume_level': 0.2,
+      <MediaPlayerEntityStateAttribute.MEDIA_VOLUME_LEVEL: 'volume_level'>: 0.2,
     }),
     'context': <ANY>,
     'entity_id': 'media_player.robot_vacuum',
@@ -61,7 +61,7 @@
     ]),
     'area_id': None,
     'capabilities': dict({
-      'source_list': list([
+      <MediaPlayerEntityCapabilityAttribute.INPUT_SOURCE_LIST: 'source_list'>: list([
         'wifi',
         'bluetooth',
         'hdmi1',
@@ -104,11 +104,11 @@
     'attributes': ReadOnlyDict({
       'device_class': 'speaker',
       'friendly_name': 'Soundbar',
-      'is_volume_muted': False,
-      'media_artist': 'Rick Astley',
-      'media_title': 'Never Gonna Give You Up',
-      'source': 'wifi',
-      'source_list': list([
+      <MediaPlayerEntityStateAttribute.MEDIA_VOLUME_MUTED: 'is_volume_muted'>: False,
+      <MediaPlayerEntityStateAttribute.MEDIA_ARTIST: 'media_artist'>: 'Rick Astley',
+      <MediaPlayerEntityStateAttribute.MEDIA_TITLE: 'media_title'>: 'Never Gonna Give You Up',
+      <MediaPlayerEntityStateAttribute.INPUT_SOURCE: 'source'>: 'wifi',
+      <MediaPlayerEntityCapabilityAttribute.INPUT_SOURCE_LIST: 'source_list'>: list([
         'wifi',
         'bluetooth',
         'hdmi1',
@@ -116,7 +116,7 @@
         'digital',
       ]),
       'supported_features': <MediaPlayerEntityFeature: 23949>,
-      'volume_level': 0.01,
+      <MediaPlayerEntityStateAttribute.MEDIA_VOLUME_LEVEL: 'volume_level'>: 0.01,
     }),
     'context': <ANY>,
     'entity_id': 'media_player.soundbar',
@@ -169,11 +169,11 @@
     'attributes': ReadOnlyDict({
       'device_class': 'speaker',
       'friendly_name': 'Galaxy Home Mini',
-      'is_volume_muted': False,
-      'repeat': <RepeatMode.OFF: 'off'>,
-      'shuffle': False,
+      <MediaPlayerEntityStateAttribute.MEDIA_VOLUME_MUTED: 'is_volume_muted'>: False,
+      <MediaPlayerEntityStateAttribute.MEDIA_REPEAT: 'repeat'>: <RepeatMode.OFF: 'off'>,
+      <MediaPlayerEntityStateAttribute.MEDIA_SHUFFLE: 'shuffle'>: False,
       'supported_features': <MediaPlayerEntityFeature: 318477>,
-      'volume_level': 0.52,
+      <MediaPlayerEntityStateAttribute.MEDIA_VOLUME_LEVEL: 'volume_level'>: 0.52,
     }),
     'context': <ANY>,
     'entity_id': 'media_player.galaxy_home_mini',
@@ -226,11 +226,11 @@
     'attributes': ReadOnlyDict({
       'device_class': 'speaker',
       'friendly_name': 'Elliots Rum',
-      'is_volume_muted': False,
-      'media_artist': 'David Guetta',
-      'media_title': 'Forever Young',
+      <MediaPlayerEntityStateAttribute.MEDIA_VOLUME_MUTED: 'is_volume_muted'>: False,
+      <MediaPlayerEntityStateAttribute.MEDIA_ARTIST: 'media_artist'>: 'David Guetta',
+      <MediaPlayerEntityStateAttribute.MEDIA_TITLE: 'media_title'>: 'Forever Young',
       'supported_features': <MediaPlayerEntityFeature: 21517>,
-      'volume_level': 0.15,
+      <MediaPlayerEntityStateAttribute.MEDIA_VOLUME_LEVEL: 'volume_level'>: 0.15,
     }),
     'context': <ANY>,
     'entity_id': 'media_player.theater_elliots_rum',
@@ -283,12 +283,12 @@
     'attributes': ReadOnlyDict({
       'device_class': 'speaker',
       'friendly_name': 'Soundbar Living',
-      'is_volume_muted': False,
-      'media_artist': '',
-      'media_title': '',
-      'source': 'hdmi1',
+      <MediaPlayerEntityStateAttribute.MEDIA_VOLUME_MUTED: 'is_volume_muted'>: False,
+      <MediaPlayerEntityStateAttribute.MEDIA_ARTIST: 'media_artist'>: '',
+      <MediaPlayerEntityStateAttribute.MEDIA_TITLE: 'media_title'>: '',
+      <MediaPlayerEntityStateAttribute.INPUT_SOURCE: 'source'>: 'hdmi1',
       'supported_features': <MediaPlayerEntityFeature: 21901>,
-      'volume_level': 0.17,
+      <MediaPlayerEntityStateAttribute.MEDIA_VOLUME_LEVEL: 'volume_level'>: 0.17,
     }),
     'context': <ANY>,
     'entity_id': 'media_player.theater_soundbar_living',
@@ -358,7 +358,7 @@
     ]),
     'area_id': None,
     'capabilities': dict({
-      'source_list': list([
+      <MediaPlayerEntityCapabilityAttribute.INPUT_SOURCE_LIST: 'source_list'>: list([
         'digital_tv',
         'hdmi1',
         'hdmi2',
@@ -400,16 +400,16 @@
     'attributes': ReadOnlyDict({
       'device_class': 'tv',
       'friendly_name': '[TV] Samsung 8 Series (49)',
-      'is_volume_muted': True,
-      'source': 'hdmi1',
-      'source_list': list([
+      <MediaPlayerEntityStateAttribute.MEDIA_VOLUME_MUTED: 'is_volume_muted'>: True,
+      <MediaPlayerEntityStateAttribute.INPUT_SOURCE: 'source'>: 'hdmi1',
+      <MediaPlayerEntityCapabilityAttribute.INPUT_SOURCE_LIST: 'source_list'>: list([
         'digital_tv',
         'hdmi1',
         'hdmi2',
         'hdmi3',
       ]),
       'supported_features': <MediaPlayerEntityFeature: 23997>,
-      'volume_level': 0.13,
+      <MediaPlayerEntityStateAttribute.MEDIA_VOLUME_LEVEL: 'volume_level'>: 0.13,
     }),
     'context': <ANY>,
     'entity_id': 'media_player.theater_tv_samsung_8_series_49',
