@@ -1186,3 +1186,43 @@ async def test_camera_prefs_update_calls_provider_callback(
 
         # Verify callback was called again
         mock_prefs_update.assert_called_once_with(camera_obj)
+
+
+@pytest.mark.usefixtures("mock_camera", "mock_stream_source")
+@pytest.mark.parametrize(
+    "side_effect",
+    [HomeAssistantError("boom"), ValueError("boom")],
+    ids=["home_assistant_error", "unexpected_error"],
+)
+async def test_camera_prefs_update_provider_callback_error(
+    hass: HomeAssistant,
+    hass_ws_client: WebSocketGenerator,
+    side_effect: Exception,
+) -> None:
+    """Test prefs update succeeds even if the provider callback raises."""
+    await async_setup_component(hass, "camera", {})
+    await hass.async_block_till_done()
+
+    await _register_test_webrtc_provider(hass)
+    camera_obj = get_camera_from_entity_id(hass, "camera.demo_camera")
+    assert camera_obj._webrtc_provider
+
+    with patch.object(
+        camera_obj._webrtc_provider,
+        "async_on_camera_prefs_update",
+        AsyncMock(side_effect=side_effect),
+    ) as mock_prefs_update:
+        client = await hass_ws_client(hass)
+        await client.send_json_auto_id(
+            {
+                "type": "camera/update_prefs",
+                "entity_id": "camera.demo_camera",
+                "preload_stream": True,
+            }
+        )
+        msg = await client.receive_json()
+
+    # The preferences are persisted despite the provider callback failing
+    assert msg["success"]
+    assert msg["result"][PREF_PRELOAD_STREAM] is True
+    mock_prefs_update.assert_called_once_with(camera_obj)

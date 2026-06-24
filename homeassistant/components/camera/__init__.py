@@ -993,7 +993,20 @@ async def websocket_update_prefs(
         if (camera := hass.data[DATA_COMPONENT].get_entity(entity_id)) and (
             provider := camera.webrtc_provider
         ):
-            await provider.async_on_camera_prefs_update(camera)
+            try:
+                await provider.async_on_camera_prefs_update(camera)
+            except HomeAssistantError as ex:
+                _LOGGER.error(
+                    "Error notifying WebRTC provider of %s preferences update: %s",
+                    entity_id,
+                    ex,
+                )
+            except Exception:
+                _LOGGER.exception(
+                    "Unexpected error notifying WebRTC provider of %s preferences "
+                    "update",
+                    entity_id,
+                )
         connection.send_result(msg["id"], entity_prefs)
 
 

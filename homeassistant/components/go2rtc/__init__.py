@@ -424,20 +424,21 @@ class WebRTCProvider(CameraWebRTCProvider):
             )
 
     async def _update_preload_stream(self, camera: Camera) -> None:
+        identifier = get_camera_identifier(camera)
         camera_prefs = await get_dynamic_camera_stream_settings(
             self._hass, camera.entity_id
         )
         preload_streams = await self._rest_client.preload.list()
 
-        if camera_prefs.preload_stream == (camera.entity_id in preload_streams):
+        if camera_prefs.preload_stream == (identifier in preload_streams):
             return
 
         if camera_prefs.preload_stream:
             # We need to first add the stream source otherwise preload enabling will fail
             await self._update_stream_source(camera)
-            await self._rest_client.preload.enable(camera.entity_id)
+            await self._rest_client.preload.enable(identifier)
         else:
-            await self._rest_client.preload.disable(camera.entity_id)
+            await self._rest_client.preload.disable(identifier)
 
     async def teardown(self) -> None:
         """Tear down the provider."""
@@ -460,7 +461,7 @@ class WebRTCProvider(CameraWebRTCProvider):
     ) -> None:
         """Will be called when the provider is unregistered for a camera."""
         streams = await self._rest_client.streams.list()
-        if streams.get(camera.entity_id):
+        if streams.get(get_camera_identifier(camera)):
             # If no stream exists, no need to disable preload
             # as a stream is required to enable preload
             await self._update_preload_stream(camera)

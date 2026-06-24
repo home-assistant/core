@@ -1237,15 +1237,16 @@ async def test_preload_disabled_on_unregister(
     camera = init_test_integration
     assert isinstance(camera._webrtc_provider, WebRTCProvider)
     provider = camera._webrtc_provider
+    identifier = get_camera_identifier(camera)
     rest_client.streams.list.return_value = {
-        camera.entity_id: Stream([Producer("rtsp://stream")])
+        identifier: Stream([Producer("rtsp://stream")])
     }
-    rest_client.preload.list.return_value = {camera.entity_id}
+    rest_client.preload.list.return_value = {identifier}
 
     await provider.async_unregister_camera(camera)
 
     # Verify preload was disabled
-    rest_client.preload.disable.assert_called_once_with(camera.entity_id)
+    rest_client.preload.disable.assert_called_once_with(identifier)
 
 
 @pytest.mark.usefixtures("init_integration", "ws_client")
@@ -1274,6 +1275,7 @@ async def test_preload_toggle_on_preference_update(
     camera = init_test_integration
     assert isinstance(camera._webrtc_provider, WebRTCProvider)
     provider = camera._webrtc_provider
+    identifier = get_camera_identifier(camera)
     test_settings = DynamicStreamSettings(
         orientation=Orientation.NO_TRANSFORM, preload_stream=True
     )
@@ -1283,11 +1285,11 @@ async def test_preload_toggle_on_preference_update(
     await provider.async_on_camera_prefs_update(camera)
 
     # Verify preload was enabled
-    rest_client.preload.enable.assert_called_once_with(camera.entity_id)
+    rest_client.preload.enable.assert_called_once_with(identifier)
     rest_client.preload.disable.assert_not_called()
 
     # Now disable preload preference
-    rest_client.preload.list.return_value = {camera.entity_id}
+    rest_client.preload.list.return_value = {identifier}
     rest_client.preload.enable.reset_mock()
     rest_client.preload.disable.reset_mock()
 
@@ -1300,7 +1302,7 @@ async def test_preload_toggle_on_preference_update(
     await provider.async_on_camera_prefs_update(camera)
 
     # Verify preload was disabled
-    rest_client.preload.disable.assert_called_once_with(camera.entity_id)
+    rest_client.preload.disable.assert_called_once_with(identifier)
     rest_client.preload.enable.assert_not_called()
 
 
@@ -1314,7 +1316,7 @@ async def test_preload_no_change_when_already_enabled(
     camera = init_test_integration
     assert isinstance(camera._webrtc_provider, WebRTCProvider)
     provider = camera._webrtc_provider
-    rest_client.preload.list.return_value = {camera.entity_id}
+    rest_client.preload.list.return_value = {get_camera_identifier(camera)}
     test_settings = DynamicStreamSettings(
         orientation=Orientation.NO_TRANSFORM, preload_stream=True
     )
