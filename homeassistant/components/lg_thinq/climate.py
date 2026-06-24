@@ -278,16 +278,20 @@ class ThinQClimateEntity(ThinQEntity, ClimateEntity):
     @override
     async def async_set_fan_mode(self, fan_mode: str) -> None:
         """Set new target fan mode."""
+        # Handle both reported fan mode variants ("auto" and "nature") safely.
+        thinq_fan_mode = HA_FAN_TO_STR.get(fan_mode, fan_mode)
+        if thinq_fan_mode not in self.data.fan_modes:
+            thinq_fan_mode = fan_mode
         _LOGGER.debug(
             "[%s:%s] async_set_fan_mode: %s",
             self.coordinator.device_name,
             self.property_id,
-            fan_mode,
+            thinq_fan_mode,
         )
         await self.async_call_api(
             self.coordinator.api.async_set_fan_mode(
                 self.property_id,
-                HA_FAN_TO_STR.get(fan_mode, fan_mode),
+                thinq_fan_mode,
             )
         )
 

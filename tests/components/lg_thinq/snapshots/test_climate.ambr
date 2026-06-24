@@ -56,8 +56,8 @@
 # name: test_climate_entities[air_conditioner1][climate.test_air_conditioner1-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'current_temperature': 77,
-      'fan_mode': 'auto',
+      <ClimateEntityStateAttribute.CURRENT_TEMPERATURE: 'current_temperature'>: 77,
+      <ClimateEntityStateAttribute.FAN_MODE: 'fan_mode'>: 'auto',
       <ClimateEntityCapabilityAttribute.FAN_MODES: 'fan_modes'>: list([
         'breeze',
         'auto',
@@ -76,7 +76,7 @@
       <ClimateEntityCapabilityAttribute.MIN_TEMP: 'min_temp'>: 64,
       'supported_features': <ClimateEntityFeature: 393>,
       <ClimateEntityCapabilityAttribute.TARGET_TEMP_STEP: 'target_temp_step'>: 2,
-      'temperature': 66,
+      <ClimateEntityStateAttribute.TEMPERATURE: 'temperature'>: 66,
     }),
     'context': <ANY>,
     'entity_id': 'climate.test_air_conditioner1',
@@ -147,8 +147,8 @@
 # name: test_climate_entities[air_conditioner2][climate.test_air_conditioner2-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'current_temperature': 77,
-      'fan_mode': 'mid_high',
+      <ClimateEntityStateAttribute.CURRENT_TEMPERATURE: 'current_temperature'>: 77,
+      <ClimateEntityStateAttribute.FAN_MODE: 'fan_mode'>: 'mid_high',
       <ClimateEntityCapabilityAttribute.FAN_MODES: 'fan_modes'>: list([
         'breeze',
         'auto',
@@ -171,7 +171,7 @@
       <ClimateEntityCapabilityAttribute.MIN_TEMP: 'min_temp'>: 64,
       'supported_features': <ClimateEntityFeature: 393>,
       <ClimateEntityCapabilityAttribute.TARGET_TEMP_STEP: 'target_temp_step'>: 2,
-      'temperature': 66,
+      <ClimateEntityStateAttribute.TEMPERATURE: 'temperature'>: 66,
     }),
     'context': <ANY>,
     'entity_id': 'climate.test_air_conditioner2',
