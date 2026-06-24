@@ -6,7 +6,7 @@
     ]),
     'area_id': None,
     'capabilities': dict({
-      'tracking_type': <TrackingType.CONNECTION: 'connection'>,
+      <DeviceTrackerEntityCapabilityAttribute.TRACKING_TYPE: 'tracking_type'>: <TrackingType.CONNECTION: 'connection'>,
     }),
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -43,13 +43,13 @@
     'attributes': ReadOnlyDict({
       'friendly_name': 'FreeBSD router',
       'icon': 'mdi:router-network',
-      'in_zones': list([
+      <DeviceTrackerEntityStateAttribute.IN_ZONES: 'in_zones'>: list([
         'zone.home',
       ]),
-      'ip': '192.168.50.1',
-      'mac': '00:00:00:00:00:01',
-      'source_type': <SourceType.ROUTER: 'router'>,
-      'tracking_type': <TrackingType.CONNECTION: 'connection'>,
+      <ScannerEntityStateAttribute.IP: 'ip'>: '192.168.50.1',
+      <ScannerEntityStateAttribute.MAC: 'mac'>: '00:00:00:00:00:01',
+      <DeviceTrackerEntityStateAttribute.SOURCE_TYPE: 'source_type'>: <SourceType.ROUTER: 'router'>,
+      <DeviceTrackerEntityCapabilityAttribute.TRACKING_TYPE: 'tracking_type'>: <TrackingType.CONNECTION: 'connection'>,
     }),
     'context': <ANY>,
     'entity_id': 'device_tracker.freebsd_router',
@@ -66,7 +66,7 @@
     ]),
     'area_id': None,
     'capabilities': dict({
-      'tracking_type': <TrackingType.CONNECTION: 'connection'>,
+      <DeviceTrackerEntityCapabilityAttribute.TRACKING_TYPE: 'tracking_type'>: <TrackingType.CONNECTION: 'connection'>,
     }),
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -103,13 +103,13 @@
     'attributes': ReadOnlyDict({
       'friendly_name': 'PC_HOME',
       'icon': 'mdi:desktop-tower',
-      'in_zones': list([
+      <DeviceTrackerEntityStateAttribute.IN_ZONES: 'in_zones'>: list([
         'zone.home',
       ]),
-      'ip': '192.168.50.3',
-      'mac': '00:00:00:00:00:03',
-      'source_type': <SourceType.ROUTER: 'router'>,
-      'tracking_type': <TrackingType.CONNECTION: 'connection'>,
+      <ScannerEntityStateAttribute.IP: 'ip'>: '192.168.50.3',
+      <ScannerEntityStateAttribute.MAC: 'mac'>: '00:00:00:00:00:03',
+      <DeviceTrackerEntityStateAttribute.SOURCE_TYPE: 'source_type'>: <SourceType.ROUTER: 'router'>,
+      <DeviceTrackerEntityCapabilityAttribute.TRACKING_TYPE: 'tracking_type'>: <TrackingType.CONNECTION: 'connection'>,
     }),
     'context': <ANY>,
     'entity_id': 'device_tracker.pc_home',
@@ -126,7 +126,7 @@
     ]),
     'area_id': None,
     'capabilities': dict({
-      'tracking_type': <TrackingType.CONNECTION: 'connection'>,
+      <DeviceTrackerEntityCapabilityAttribute.TRACKING_TYPE: 'tracking_type'>: <TrackingType.CONNECTION: 'connection'>,
     }),
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -163,13 +163,13 @@
     'attributes': ReadOnlyDict({
       'friendly_name': 'Samsung The Frame 55',
       'icon': 'mdi:television',
-      'in_zones': list([
+      <DeviceTrackerEntityStateAttribute.IN_ZONES: 'in_zones'>: list([
         'zone.home',
       ]),
-      'ip': '192.168.50.2',
-      'mac': '00:00:00:00:00:02',
-      'source_type': <SourceType.ROUTER: 'router'>,
-      'tracking_type': <TrackingType.CONNECTION: 'connection'>,
+      <ScannerEntityStateAttribute.IP: 'ip'>: '192.168.50.2',
+      <ScannerEntityStateAttribute.MAC: 'mac'>: '00:00:00:00:00:02',
+      <DeviceTrackerEntityStateAttribute.SOURCE_TYPE: 'source_type'>: <SourceType.ROUTER: 'router'>,
+      <DeviceTrackerEntityCapabilityAttribute.TRACKING_TYPE: 'tracking_type'>: <TrackingType.CONNECTION: 'connection'>,
     }),
     'context': <ANY>,
     'entity_id': 'device_tracker.samsung_the_frame_55',
