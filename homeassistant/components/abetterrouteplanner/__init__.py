@@ -15,7 +15,7 @@ from homeassistant.helpers import (
     device_registry as dr,
 )
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
-from homeassistant.helpers.typing import UNDEFINED, ConfigType, UndefinedType
+from homeassistant.helpers.typing import ConfigType
 
 from .auth import AbetterrouteplannerAuth
 from .const import ABRP_APP_KEY, CONF_VEHICLE_IDS, DOMAIN, PREWARM_WINDOW_SECONDS
@@ -121,7 +121,8 @@ async def async_setup_entry(
           and ``manufacturer`` is left unset, recomposing when the fetch next
           succeeds.
 
-        Each field is compared before writing so an unchanged poll is a no-op.
+        ``async_update_device`` diffs each field and no-ops (no event, no
+        save) when nothing changed, so an unchanged poll is a no-op.
         """
         device_registry = dr.async_get(hass)
         for vehicle in garage_coordinator.data:
@@ -129,27 +130,12 @@ async def async_setup_entry(
             device = device_registry.async_get_device(identifiers={(DOMAIN, scope)})
             if device is None:
                 continue
-            # ``UNDEFINED`` per field = "leave unchanged"; only the fields that
-            # actually differ are passed, so an unchanged poll is a no-op.
-            name: str | UndefinedType = UNDEFINED
-            candidate_name = vehicle.name or vehicle.vehicle_model
-            if device.name != candidate_name:
-                name = candidate_name
-            model: str | UndefinedType = UNDEFINED
-            candidate_model = vehicle.device_model or vehicle.vehicle_model
-            if device.model != candidate_model:
-                model = candidate_model
-            manufacturer: str | None | UndefinedType = UNDEFINED
-            if device.manufacturer != vehicle.device_manufacturer:
-                manufacturer = vehicle.device_manufacturer
-            if (
-                name is not UNDEFINED
-                or model is not UNDEFINED
-                or manufacturer is not UNDEFINED
-            ):
-                device_registry.async_update_device(
-                    device.id, name=name, model=model, manufacturer=manufacturer
-                )
+            device_registry.async_update_device(
+                device.id,
+                name=vehicle.name or vehicle.vehicle_model,
+                model=vehicle.device_model or vehicle.vehicle_model,
+                manufacturer=vehicle.device_manufacturer,
+            )
 
     entry.async_on_unload(
         garage_coordinator.async_add_listener(_propagate_device_metadata)
