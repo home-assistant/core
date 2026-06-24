@@ -85,7 +85,7 @@ async def test_stream_wav_invalid_header() -> None:
             pass
 
 
-async def test_stream_wav_missing_data_chunk() -> None:
+async def test_stream_wav_missing_data_chunk(caplog: pytest.LogCaptureFixture) -> None:
     """Test streaming a WAV that is missing data chunk."""
     # Write only a fmt chunk
     header = b"RIFF" + struct.pack("<I", 24) + b"WAVE"
@@ -105,6 +105,8 @@ async def test_stream_wav_missing_data_chunk() -> None:
             expected_sample_rate=16000,
         ):
             pass
+
+    assert "Invalid WAV format: incomplete or missing data chunk" in caplog.text
 
 
 async def test_stream_wav_fmt_validation() -> None:
@@ -235,3 +237,36 @@ async def test_stream_wav_small_chunks() -> None:
     assert len(chunks) == 2
     assert chunks[0] == (audio_data[:512], False)
     assert chunks[1] == (audio_data[512:], True)
+
+
+async def test_stream_wav_odd_fmt_chunk() -> None:
+    """Test streaming a WAV file with an odd-sized fmt chunk where the pad byte is in a separate chunk."""
+    header = b"RIFF" + struct.pack("<I", 36) + b"WAVE"
+    fmt_chunk = (
+        b"fmt "
+        + struct.pack("<I", 17)
+        + struct.pack("<HHIIHH", 1, 1, 16000, 32000, 2, 16)
+        + b"\x00"
+    )
+    pad_byte = b"\x00"
+    data_chunk = b"data" + struct.pack("<I", 4) + b"\x01\x02\x03\x04"
+
+    part1 = header + fmt_chunk
+    part2 = pad_byte + data_chunk
+
+    async def stream_generator() -> AsyncIterable[bytes]:
+        yield part1
+        yield part2
+
+    chunks = []
+    async for chunk, is_last in stream_wav(
+        stream_generator(),
+        expected_channels=1,
+        expected_width=2,
+        expected_sample_rate=16000,
+        samples_per_chunk=2,
+    ):
+        chunks.append((chunk, is_last))
+
+    assert len(chunks) == 1
+    assert chunks[0] == (b"\x01\x02\x03\x04", True)

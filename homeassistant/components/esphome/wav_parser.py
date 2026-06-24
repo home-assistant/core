@@ -40,7 +40,7 @@ class WAVHeaderParser:
             chunk_id, chunk_size = struct.unpack("<4sI", bytes_buffer[:8])
 
             if chunk_id == b"fmt ":
-                if len(bytes_buffer) < 8 + chunk_size:
+                if len(bytes_buffer) < 8 + chunk_size + (chunk_size & 1):
                     return False
 
                 if chunk_size < 16:

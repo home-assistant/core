@@ -2539,13 +2539,12 @@ async def test_stream_tts_audio_invalid_wav(
     mock_client.send_voice_assistant_audio.assert_not_called()
 
 
-async def test_stream_tts_audio_edge_cases(
+async def test_stream_tts_audio_junk_chunk_skipping(
     hass: HomeAssistant,
     mock_client: APIClient,
     mock_esphome_device: MockESPHomeDeviceType,
 ) -> None:
-    """Test streaming edge cases in _stream_tts_audio."""
-
+    """Test skipping unknown chunks in _stream_tts_audio."""
     mock_device = await mock_esphome_device(
         mock_client=mock_client,
         device_info={
@@ -2571,16 +2570,48 @@ async def test_stream_tts_audio_edge_cases(
     await satellite._stream_tts_audio(stream)
     mock_client.send_voice_assistant_audio.assert_called_once_with(b"\x00" * 8)
 
-    # Fragmentation of incoming stream bytes (headers split across multiple chunks)
-    mock_client.send_voice_assistant_audio.reset_mock()
+
+async def test_stream_tts_audio_byte_fragmentation(
+    hass: HomeAssistant,
+    mock_client: APIClient,
+    mock_esphome_device: MockESPHomeDeviceType,
+) -> None:
+    """Test fragmentation of incoming stream bytes."""
+    mock_device = await mock_esphome_device(
+        mock_client=mock_client,
+        device_info={
+            "voice_assistant_feature_flags": VoiceAssistantFeature.VOICE_ASSISTANT
+        },
+    )
+    await hass.async_block_till_done()
+
+    satellite = get_satellite_entity(hass, mock_device.device_info.mac_address)
+    assert satellite is not None
+
     full_wav = _make_wav_header(data_chunk_size=4) + b"\x01\x02\x03\x04"
     byte_chunks = [bytes([b]) for b in full_wav]
     stream = _ChunkedMockResultStream(hass, "wav", byte_chunks)
     await satellite._stream_tts_audio(stream)
     mock_client.send_voice_assistant_audio.assert_called_once_with(b"\x01\x02\x03\x04")
 
-    # Multi-chunk streaming with sleep/wait logic
-    mock_client.send_voice_assistant_audio.reset_mock()
+
+async def test_stream_tts_audio_multi_chunk_pacing(
+    hass: HomeAssistant,
+    mock_client: APIClient,
+    mock_esphome_device: MockESPHomeDeviceType,
+) -> None:
+    """Test multi-chunk streaming with sleep/wait logic."""
+    mock_device = await mock_esphome_device(
+        mock_client=mock_client,
+        device_info={
+            "voice_assistant_feature_flags": VoiceAssistantFeature.VOICE_ASSISTANT
+        },
+    )
+    await hass.async_block_till_done()
+
+    satellite = get_satellite_entity(hass, mock_device.device_info.mac_address)
+    assert satellite is not None
+
     wav_with_16000bytes = _make_wav_header(data_chunk_size=16000) + b"\x00" * 16000
     stream = _ChunkedMockResultStream(hass, "wav", [wav_with_16000bytes])
     await satellite._stream_tts_audio(stream, samples_per_chunk=512)
@@ -2593,8 +2624,24 @@ async def test_stream_tts_audio_edge_cases(
         b"\x00" * 640,
     )
 
-    # Cancel/abort when self._is_running becomes False (between chunks)
-    mock_client.send_voice_assistant_audio.reset_mock()
+
+async def test_stream_tts_audio_cancel_between_chunks(
+    hass: HomeAssistant,
+    mock_client: APIClient,
+    mock_esphome_device: MockESPHomeDeviceType,
+) -> None:
+    """Test cancel/abort when self._is_running becomes False (between chunks)."""
+    mock_device = await mock_esphome_device(
+        mock_client=mock_client,
+        device_info={
+            "voice_assistant_feature_flags": VoiceAssistantFeature.VOICE_ASSISTANT
+        },
+    )
+    await hass.async_block_till_done()
+
+    satellite = get_satellite_entity(hass, mock_device.device_info.mac_address)
+    assert satellite is not None
+
     header_chunk = _make_wav_header(data_chunk_size=8)
 
     async def async_stream_cancel():
@@ -2607,11 +2654,24 @@ async def test_stream_tts_audio_edge_cases(
     await satellite._stream_tts_audio(stream)
     mock_client.send_voice_assistant_audio.assert_not_called()
 
-    satellite._is_running = True
 
-    # Cancel/abort when self._is_running becomes False (inner chunk loop)
-    # Simulates a TTS provider delivering all audio in a single chunk.
-    mock_client.send_voice_assistant_audio.reset_mock()
+async def test_stream_tts_audio_cancel_inner_loop(
+    hass: HomeAssistant,
+    mock_client: APIClient,
+    mock_esphome_device: MockESPHomeDeviceType,
+) -> None:
+    """Test cancel/abort when self._is_running becomes False (inner chunk loop)."""
+    mock_device = await mock_esphome_device(
+        mock_client=mock_client,
+        device_info={
+            "voice_assistant_feature_flags": VoiceAssistantFeature.VOICE_ASSISTANT
+        },
+    )
+    await hass.async_block_till_done()
+
+    satellite = get_satellite_entity(hass, mock_device.device_info.mac_address)
+    assert satellite is not None
+
     audio_data = b"\x00" * 2048
     full_wav = _make_wav_header(data_chunk_size=len(audio_data)) + audio_data
 
@@ -2626,10 +2686,24 @@ async def test_stream_tts_audio_edge_cases(
         await satellite._stream_tts_audio(stream, samples_per_chunk=512)
     assert mock_client.send_voice_assistant_audio.call_count == 1
 
-    satellite._is_running = True
 
-    # Odd-sized JUNK chunk with RIFF word-alignment padding
-    mock_client.send_voice_assistant_audio.reset_mock()
+async def test_stream_tts_audio_odd_junk_padding(
+    hass: HomeAssistant,
+    mock_client: APIClient,
+    mock_esphome_device: MockESPHomeDeviceType,
+) -> None:
+    """Test odd-sized JUNK chunk with RIFF word-alignment padding."""
+    mock_device = await mock_esphome_device(
+        mock_client=mock_client,
+        device_info={
+            "voice_assistant_feature_flags": VoiceAssistantFeature.VOICE_ASSISTANT
+        },
+    )
+    await hass.async_block_till_done()
+
+    satellite = get_satellite_entity(hass, mock_device.device_info.mac_address)
+    assert satellite is not None
+
     odd_junk_chunk = (
         struct.pack("<4sI", b"JUNK", 5) + b"junk!" + b"\x00"
     )  # 5 bytes + 1 pad
@@ -2645,8 +2719,24 @@ async def test_stream_tts_audio_edge_cases(
     await satellite._stream_tts_audio(stream)
     mock_client.send_voice_assistant_audio.assert_called_once_with(b"\xaa\xbb\xcc\xdd")
 
-    # Trailing metadata after data chunk is not forwarded as audio
-    mock_client.send_voice_assistant_audio.reset_mock()
+
+async def test_stream_tts_audio_trailing_metadata(
+    hass: HomeAssistant,
+    mock_client: APIClient,
+    mock_esphome_device: MockESPHomeDeviceType,
+) -> None:
+    """Test trailing metadata after data chunk is not forwarded as audio."""
+    mock_device = await mock_esphome_device(
+        mock_client=mock_client,
+        device_info={
+            "voice_assistant_feature_flags": VoiceAssistantFeature.VOICE_ASSISTANT
+        },
+    )
+    await hass.async_block_till_done()
+
+    satellite = get_satellite_entity(hass, mock_device.device_info.mac_address)
+    assert satellite is not None
+
     audio_payload = b"\x11\x22" * 4  # 8 bytes of audio
     trailing_list = struct.pack("<4sI", b"LIST", 4) + b"INFO"
     wav_with_trailing = (
