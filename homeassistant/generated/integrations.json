@@ -6246,12 +6246,6 @@
       "config_flow": true,
       "iot_class": "local_push"
     },
-    "scsgate": {
-      "name": "SCSGate",
-      "integration_type": "hub",
-      "config_flow": false,
-      "iot_class": "local_polling"
-    },
     "season": {
       "integration_type": "service",
       "config_flow": true,
