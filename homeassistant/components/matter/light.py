@@ -317,7 +317,8 @@ class MatterLight(MatterEntity, LightEntity):
             # The light was turned off with a transition, which left it at the
             # minimum level. Restore the brightness it had before being turned off.
             brightness = self._off_brightness
-            self._off_brightness = None
+        # Any turn_on consumes or supersedes the cached value, so clear it.
+        self._off_brightness = None
 
         if self.supported_color_modes is not None:
             if hs_color is not None and ColorMode.HS in self.supported_color_modes:
