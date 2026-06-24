@@ -13,6 +13,7 @@ from uiprotect.data import (
     Event,
     EventType,
     ModelType,
+    MountType,
     ProtectAdoptableDeviceModel,
     ProtectModelWithId,
     PublicBootstrap,
@@ -22,6 +23,7 @@ from uiprotect.data import (
 from uiprotect.data.bootstrap import ProtectDeviceRef
 from uiprotect.data.public_devices import (
     PublicSensor,
+    PublicSensorMotionSettingsRead,
     PublicWirelessBatteryStatus,
     PublicWirelessConnectionState,
 )
@@ -226,18 +228,33 @@ def make_public_sensor(
     percentage: int | None = None,
     is_low: bool | None = None,
     state: DeviceState | None = None,
+    is_motion_detected: bool | None = None,
+    motion_enabled: bool | None = None,
+    mount_type: MountType | None = None,
 ) -> Mock:
-    """Build a public-API sensor mirroring a private sensor's battery state.
+    """Build a public-API sensor mirroring a private sensor's migrated fields.
 
-    Real ``wireless_connection_state`` models back the migrated value path so a
-    wrong ``ufp_public_value`` path fails the test; identifiers come from the
-    (synthetic) private sensor fixture, never from real capture data.
+    Real ``wireless_connection_state`` / ``motion_settings`` models back the
+    migrated value paths so a wrong ``ufp_public_value`` path fails the test;
+    identifiers come from the (synthetic) private sensor fixture, never from real
+    capture data. Each ``*`` override lets a test diverge from the private value.
     """
     public = Mock(spec=PublicSensor)
     public.id = sensor.id
     public.mac = sensor.mac
     public.model = ModelType.SENSOR
     public.state = DeviceState[sensor.state.name] if state is None else state
+    public.mount_type = sensor.mount_type if mount_type is None else mount_type
+    public.is_motion_detected = (
+        sensor.is_motion_detected if is_motion_detected is None else is_motion_detected
+    )
+    public.motion_settings = PublicSensorMotionSettingsRead(
+        is_enabled=(
+            sensor.motion_settings.is_enabled
+            if motion_enabled is None
+            else motion_enabled
+        )
+    )
     public.wireless_connection_state = PublicWirelessConnectionState(
         battery_status=PublicWirelessBatteryStatus(
             percentage=(
