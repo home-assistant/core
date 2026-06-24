@@ -1,5 +1,6 @@
 """Tests for the IOmeter integration."""
 
+import asyncio
 import json
 import logging
 from unittest.mock import AsyncMock, MagicMock, patch
@@ -159,3 +160,45 @@ async def test_error_before_first_data_does_not_mark_unavailable(
 
     assert "stream error" in caplog.text
     assert "Update failed" not in caplog.text
+
+
+@pytest.mark.usefixtures("mock_iometer_client")
+async def test_async_unload_entry(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+) -> None:
+    """Test that unloading an entry succeeds and cleans up the coordinator."""
+    await setup_platform(hass, mock_config_entry, [Platform.SENSOR])
+    assert await hass.config_entries.async_unload(mock_config_entry.entry_id)
+
+
+async def test_async_stop_awaits_pending_tasks(
+    hass: HomeAssistant,
+    mock_iometer_client: MagicMock,
+    mock_config_entry: MockConfigEntry,
+) -> None:
+    """Test async_stop awaits and cancels SSE tasks that have not yet finished."""
+    loop = asyncio.get_running_loop()
+    readings_task = loop.create_task(asyncio.Event().wait(), name="readings-task")
+    status_task = loop.create_task(asyncio.Event().wait(), name="status-task")
+
+    original_readings = mock_iometer_client.subscribe_readings.side_effect
+    original_status = mock_iometer_client.subscribe_status.side_effect
+
+    def subscribe_readings_with_task(*args):
+        original_readings(*args)
+        return readings_task.cancel
+
+    def subscribe_status_with_task(*args):
+        original_status(*args)
+        return status_task.cancel
+
+    mock_iometer_client.subscribe_readings.side_effect = subscribe_readings_with_task
+    mock_iometer_client.subscribe_status.side_effect = subscribe_status_with_task
+
+    await setup_platform(hass, mock_config_entry, [Platform.SENSOR])
+    assert await hass.config_entries.async_unload(mock_config_entry.entry_id)
+    await hass.async_block_till_done()
+
+    assert readings_task.cancelled()
+    assert status_task.cancelled()
