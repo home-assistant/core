@@ -41,7 +41,7 @@
     ]),
     'area_id': None,
     'capabilities': dict({
-      'fan_speed_list': list([
+      <VacuumEntityCapabilityAttribute.FAN_SPEED_LIST: 'fan_speed_list'>: list([
         'quiet',
         'max',
       ]),
@@ -81,8 +81,8 @@
     'attributes': ReadOnlyDict({
       'battery_icon': 'mdi:battery-charging-100',
       'battery_level': 100,
-      'fan_speed': 'max',
-      'fan_speed_list': list([
+      <VacuumEntityStateAttribute.FAN_SPEED: 'fan_speed'>: 'max',
+      <VacuumEntityCapabilityAttribute.FAN_SPEED_LIST: 'fan_speed_list'>: list([
         'quiet',
         'max',
       ]),
