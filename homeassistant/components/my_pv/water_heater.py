@@ -31,8 +31,8 @@ async def async_setup_entry(
     entities = []
 
     if (
-        coordinator.device.get_setup_configuration("devmode")
-        and coordinator.device.get_data_configuration("temp1")
+        coordinator.device.is_on is not None
+        and coordinator.device.current_temperature is not None
         and (
             target_temperature_config := coordinator.device.get_setup_configuration(
                 "ww1target"
