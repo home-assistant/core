@@ -58,7 +58,7 @@ class MyPVConfigFlow(ConfigFlow, domain=DOMAIN):
         if serial_number:
             await self.async_set_unique_id(serial_number)
             self._abort_if_unique_id_configured(
-                updates={CONF_HOST: discovery_info.ip_address}
+                updates={CONF_HOST: str(discovery_info.ip_address)}
             )
 
         self._host = str(discovery_info.ip_address)
