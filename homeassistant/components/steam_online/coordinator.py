@@ -3,7 +3,7 @@
 from datetime import timedelta
 from typing import override
 
-import steam
+import steam.api
 from steam.api import _interface_method as INTMethod
 
 from homeassistant.config_entries import ConfigEntry
@@ -70,7 +70,7 @@ class SteamDataUpdateCoordinator(
         try:
             return await self.hass.async_add_executor_job(self._update)
 
-        except (steam.api.HTTPError, steam.api.HTTPTimeoutError) as ex:
+        except steam.api.HTTPError as ex:
             if "401" in str(ex):
                 raise ConfigEntryAuthFailed from ex
             raise UpdateFailed(ex) from ex
