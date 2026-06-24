@@ -6,7 +6,7 @@
     ]),
     'area_id': None,
     'capabilities': dict({
-      'available_tones': list([
+      <SirenEntityCapabilityAttribute.AVAILABLE_TONES: 'available_tones'>: list([
         'ding',
         'motion',
       ]),
@@ -45,7 +45,7 @@
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'attribution': 'Data provided by Ring.com',
-      'available_tones': list([
+      <SirenEntityCapabilityAttribute.AVAILABLE_TONES: 'available_tones'>: list([
         'ding',
         'motion',
       ]),
