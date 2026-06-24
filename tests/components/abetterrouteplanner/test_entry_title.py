@@ -1,9 +1,9 @@
-"""Tests for config-entry title scoping by authenticated account.
+"""Tests for config-entry title construction on the initial-add path.
 
-The initial-add path titles the entry per a JWT-claims preference chain:
-``name`` (non-empty string) → ``email`` (non-empty string) → bare
-``self.flow_impl.name``. The empty-string fall-through case is the
-explicit empty-name guard.
+The flow appends ``identity.display_name`` to ``self.flow_impl.name`` when the
+library resolves one, falling back to the bare implementation name otherwise.
+Deriving the display name from the OIDC claims is the library's concern
+(``aioabrp.parse_unverified_identity``); these tests only cover the title wiring.
 """
 
 import base64
@@ -41,7 +41,7 @@ def _build_id_token_with_payload(payload: dict[str, Any]) -> str:
 
     The integration only inspects the payload (the OAuth code exchange already
     authenticated the issuer over TLS), so the header and signature are opaque
-    placeholders.  Tests use this to drive the JWT-claims preference chain.
+    placeholders.
 
     ``conftest.build_id_token`` only supports ``sub`` + optional ``email``,
     but these tests need to inject a ``name`` claim too, so the payload is
@@ -69,7 +69,7 @@ def _queue_token_post(aioclient_mock: AiohttpClientMocker, id_token: str) -> Non
 
 
 # ---------------------------------------------------------------------------
-# Parametrized cases — display-name preference chain on initial-add
+# Title appends the resolved display name, else falls back to the bare name
 # ---------------------------------------------------------------------------
 
 
@@ -77,42 +77,31 @@ def _queue_token_post(aioclient_mock: AiohttpClientMocker, id_token: str) -> Non
     ("payload", "expected_title"),
     [
         pytest.param(
-            {"sub": USER_SUB, "name": "Sofie", "email": "s@e.com"},
+            {"sub": USER_SUB, "name": "Sofie"},
             "A Better Routeplanner (Sofie)",
-            id="name_claim_present",
-        ),
-        pytest.param(
-            {"sub": USER_SUB, "email": "s@e.com"},
-            "A Better Routeplanner (s@e.com)",
-            id="name_missing_falls_back_to_email",
+            id="display_name_present",
         ),
         pytest.param(
             {"sub": USER_SUB},
             "A Better Routeplanner",
             id="no_display_name_uses_bare_title",
         ),
-        pytest.param(
-            {"sub": USER_SUB, "name": "", "email": "user@example.com"},
-            "A Better Routeplanner (user@example.com)",
-            id="empty_name_falls_through_to_email",
-        ),
     ],
 )
 @pytest.mark.usefixtures(
     "current_request_with_host", "mock_setup_entry", "mock_abrp_client"
 )
-async def test_entry_title_from_claims(
+async def test_entry_title_uses_display_name(
     hass: HomeAssistant,
     hass_client_no_auth: ClientSessionGenerator,
     aioclient_mock: AiohttpClientMocker,
     payload: dict[str, Any],
     expected_title: str,
 ) -> None:
-    """Initial-add path titles the entry per the JWT-claims preference chain.
+    """The title appends ``display_name`` when present, else uses the bare name.
 
-    Preference order: ``name`` (non-empty string) → ``email`` (non-empty
-    string) → bare ``self.flow_impl.name``. The bare-title branch is the
-    documented fallback when neither claim is present.
+    Resolving the display name from the OIDC claims is the library's concern;
+    this only covers the two title-construction branches the flow itself owns.
     """
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": SOURCE_USER}
@@ -130,39 +119,3 @@ async def test_entry_title_from_claims(
 
     assert result["type"] is FlowResultType.CREATE_ENTRY
     assert result["result"].title == expected_title
-
-
-# ---------------------------------------------------------------------------
-# Malformed JWT aborts on the strict-sub path (no fallback title)
-# ---------------------------------------------------------------------------
-
-
-@pytest.mark.usefixtures("current_request_with_host", "mock_setup_entry")
-async def test_malformed_jwt_aborts_oauth_error(
-    hass: HomeAssistant,
-    hass_client_no_auth: ClientSessionGenerator,
-    aioclient_mock: AiohttpClientMocker,
-) -> None:
-    """A malformed id_token aborts with ``oauth_error`` — never a fallback title.
-
-    The display-name extraction is asymmetric with ``sub`` extraction: the
-    ``name`` / ``email`` chain returns ``None`` on any missing-or-malformed
-    claim AND the title falls back to the bare impl name, but ``sub``
-    extraction is strict — a JWT that can't be parsed never reaches the title
-    code path because the flow aborts with ``oauth_error`` first.
-
-    Regression guard against moving the exception band — any future
-    refactor must not accidentally promote malformed-JWT to "ok with
-    fallback title".
-    """
-    result = await hass.config_entries.flow.async_init(
-        DOMAIN, context={"source": SOURCE_USER}
-    )
-    await complete_oauth_callback(hass, hass_client_no_auth, result["flow_id"])
-    _queue_token_post(aioclient_mock, "header.not-base64!.sig")
-
-    result = await hass.config_entries.flow.async_configure(result["flow_id"])
-
-    assert result["type"] is FlowResultType.ABORT
-    assert result["reason"] == "oauth_error"
-    assert len(hass.config_entries.async_entries(DOMAIN)) == 0

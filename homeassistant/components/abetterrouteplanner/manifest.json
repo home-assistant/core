@@ -8,5 +8,5 @@
   "iot_class": "cloud_push",
   "loggers": ["aioabrp"],
   "quality_scale": "bronze",
-  "requirements": ["aioabrp==0.3.0"]
+  "requirements": ["aioabrp==0.4.0"]
 }

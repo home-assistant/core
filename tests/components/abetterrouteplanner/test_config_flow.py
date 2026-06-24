@@ -80,17 +80,6 @@ def _compute_expected_challenge(verifier: str) -> str:
     return base64.urlsafe_b64encode(digest).rstrip(b"=").decode("ascii")
 
 
-def _id_token_with_raw_payload(payload_json: bytes) -> str:
-    """Build a ``header.payload.signature`` id_token from raw payload bytes.
-
-    Unlike :func:`build_id_token` (which assumes the payload is a dict with a
-    ``sub`` claim), this helper takes the raw payload as bytes so tests can
-    exercise non-dict / malformed-shape branches in ``_decode_jwt_sub``.
-    """
-    payload_b64 = base64.urlsafe_b64encode(payload_json).rstrip(b"=").decode()
-    return f"header.{payload_b64}.sig"
-
-
 @pytest.mark.usefixtures("current_request_with_host")
 async def test_full_flow(
     hass: HomeAssistant,
@@ -295,25 +284,23 @@ async def test_pick_vehicles_creates_entry(
 @pytest.mark.parametrize(
     "id_token",
     [
-        pytest.param("", id="empty"),
-        pytest.param("opaque", id="opaque_single_segment"),
-        pytest.param("header.not-base64!.sig", id="bad_base64"),
-        pytest.param("header..sig", id="empty_payload"),
-        pytest.param(_id_token_with_raw_payload(b"[1,2,3]"), id="payload_is_list"),
-        pytest.param(
-            _id_token_with_raw_payload(b'"justastring"'),
-            id="payload_is_scalar",
-        ),
+        pytest.param(None, id="missing"),
+        pytest.param("header.not-base64!.sig", id="unparsable"),
     ],
 )
 @pytest.mark.usefixtures("current_request_with_host", "mock_setup_entry")
-async def test_initial_add_malformed_id_token_aborts(
+async def test_initial_add_unusable_id_token_aborts(
     hass: HomeAssistant,
     hass_client_no_auth: ClientSessionGenerator,
     aioclient_mock: AiohttpClientMocker,
-    id_token: str,
+    id_token: str | None,
 ) -> None:
-    """Malformed id_token on the initial add aborts cleanly (finding D)."""
+    """An absent or unparsable id_token aborts the initial add (finding D).
+
+    The flow owns two guards: a missing ``id_token`` and an ``AbrpAuthError``
+    raised by ``parse_unverified_identity``. Enumerating the malformed-payload
+    shapes that raise that error is the library's concern, not the integration's.
+    """
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": SOURCE_USER}
     )

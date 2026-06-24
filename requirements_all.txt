@@ -178,7 +178,7 @@ aio-georss-gdacs==0.10
 aio-ownet==0.0.5
 
 # homeassistant.components.abetterrouteplanner
-aioabrp==0.3.0
+aioabrp==0.4.0
 
 # homeassistant.components.acaia
 aioacaia==0.1.18

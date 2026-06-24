@@ -1,11 +1,16 @@
 """Config flow for the A Better Routeplanner integration."""
 
-import base64
-import json
 import logging
-from typing import Any, cast
+from typing import Any
 
-from aioabrp import AbrpApiError, AbrpAuthError, AbrpClient, AbrpVehicle, StaticAuth
+from aioabrp import (
+    AbrpApiError,
+    AbrpAuthError,
+    AbrpClient,
+    AbrpVehicle,
+    StaticAuth,
+    parse_unverified_identity,
+)
 import voluptuous as vol
 
 from homeassistant.config_entries import ConfigFlowResult
@@ -32,7 +37,7 @@ class AbetterrouteplannerFlowHandler(
 
     _oauth_data: dict[str, Any]
     _vehicles: list[AbrpVehicle]
-    _payload: dict[str, Any]
+    _title: str
 
     @property
     def logger(self) -> logging.Logger:
@@ -70,15 +75,21 @@ class AbetterrouteplannerFlowHandler(
         id_token = data["token"].get("id_token")
         if id_token is None:
             return self.async_abort(reason="oauth_error")
+        # AbrpAuthError here means a bad id_token — distinct from the API-auth
+        # use of the same exception in the async_get_vehicles call below.
         try:
-            payload = _decode_jwt_payload(id_token)
-            sub = str(payload["sub"])
-        except ValueError, IndexError, KeyError, TypeError:
+            identity = parse_unverified_identity(id_token)
+        except AbrpAuthError:
             return self.async_abort(reason="oauth_error")
-        self._payload = payload
-        await self.async_set_unique_id(sub)
+        await self.async_set_unique_id(identity.subject)
 
         self._abort_if_unique_id_configured()
+
+        self._title = (
+            f"{self.flow_impl.name} ({identity.display_name})"
+            if identity.display_name
+            else self.flow_impl.name
+        )
 
         client = AbrpClient(
             async_get_clientsession(self.hass),
@@ -114,14 +125,8 @@ class AbetterrouteplannerFlowHandler(
                 # ``async_create_entry`` directly so the ``vehicle_ids`` key we
                 # add to ``data`` doesn't rely on the base class forwarding
                 # unknown keys verbatim.
-                display_name = _display_name_from_claims(self._payload)
-                title = (
-                    f"{self.flow_impl.name} ({display_name})"
-                    if display_name
-                    else self.flow_impl.name
-                )
                 return self.async_create_entry(
-                    title=title,
+                    title=self._title,
                     data={
                         **self._oauth_data,
                         CONF_VEHICLE_IDS: user_input[CONF_VEHICLE_IDS],
@@ -160,30 +165,3 @@ class AbetterrouteplannerFlowHandler(
         return self.async_show_form(
             step_id="pick_vehicles", data_schema=schema, errors=errors
         )
-
-
-def _decode_jwt_payload(id_token: str) -> dict[str, Any]:
-    """Return the full decoded payload of an unverified JWT id_token.
-
-    The token has already been authenticated via the OAuth2 code exchange over
-    TLS to the issuer; we only inspect the payload to extract claims such as
-    ``sub`` (for ``unique_id``) and ``name`` / ``email`` (for the entry title).
-    """
-    payload_b64 = id_token.split(".")[1]
-    # Add base64 padding; urlsafe b64 in JWTs omits ``=``.
-    payload_b64 += "=" * (-len(payload_b64) % 4)
-    return cast(dict[str, Any], json.loads(base64.urlsafe_b64decode(payload_b64)))
-
-
-def _display_name_from_claims(payload: dict[str, Any]) -> str | None:
-    """Return the first non-empty display claim, or ``None`` when none qualifies.
-
-    Walks the OIDC display-claim preference chain (``name`` then ``email``),
-    treating present-but-empty strings and non-string values as absent so the
-    caller falls back to a generic title rather than rendering ``" ()"``.
-    """
-    for key in ("name", "email"):
-        value = payload.get(key)
-        if isinstance(value, str) and value:
-            return value
-    return None
