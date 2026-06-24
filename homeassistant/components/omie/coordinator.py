@@ -3,6 +3,7 @@
 import datetime as dt
 from datetime import timedelta
 import logging
+from typing import override
 
 import pyomie.main as pyomie
 from pyomie.model import OMIEResults, SpotData
@@ -39,6 +40,7 @@ class OMIECoordinator(DataUpdateCoordinator[OMIEResults[SpotData]]):
         )
         self._client_session = async_get_clientsession(hass)
 
+    @override
     async def _async_update_data(self) -> OMIEResults[SpotData]:
         """Update OMIE data, fetching the current CET day."""
         cet_today = dt_util.now().astimezone(CET).date()

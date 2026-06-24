@@ -6,7 +6,7 @@
     ]),
     'area_id': None,
     'capabilities': dict({
-      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+      <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -43,7 +43,7 @@
     'attributes': ReadOnlyDict({
       'device_class': 'signal_strength',
       'friendly_name': 'NanoStation 5AC ap name Antenna gain',
-      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+      <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
       'unit_of_measurement': 'dB',
     }),
     'context': <ANY>,
@@ -61,7 +61,7 @@
     ]),
     'area_id': None,
     'capabilities': dict({
-      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+      <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -100,7 +100,7 @@
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'friendly_name': 'NanoStation 5AC ap name CPU load',
-      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+      <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
       'unit_of_measurement': '%',
     }),
     'context': <ANY>,
@@ -118,7 +118,7 @@
     ]),
     'area_id': None,
     'capabilities': dict({
-      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+      <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -161,7 +161,7 @@
     'attributes': ReadOnlyDict({
       'device_class': 'data_rate',
       'friendly_name': 'NanoStation 5AC ap name Download capacity',
-      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+      <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
       'unit_of_measurement': <UnitOfDataRate.MEGABITS_PER_SECOND: 'Mbit/s'>,
     }),
     'context': <ANY>,
@@ -179,7 +179,7 @@
     ]),
     'area_id': None,
     'capabilities': dict({
-      'options': list([
+      <SensorEntityCapabilityAttribute.OPTIONS: 'options'>: list([
         'bridge',
         'router',
       ]),
@@ -219,7 +219,7 @@
     'attributes': ReadOnlyDict({
       'device_class': 'enum',
       'friendly_name': 'NanoStation 5AC ap name Network role',
-      'options': list([
+      <SensorEntityCapabilityAttribute.OPTIONS: 'options'>: list([
         'bridge',
         'router',
       ]),
@@ -239,7 +239,7 @@
     ]),
     'area_id': None,
     'capabilities': dict({
-      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+      <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -282,7 +282,7 @@
     'attributes': ReadOnlyDict({
       'device_class': 'data_rate',
       'friendly_name': 'NanoStation 5AC ap name Throughput receive (actual)',
-      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+      <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
       'unit_of_measurement': <UnitOfDataRate.MEGABITS_PER_SECOND: 'Mbit/s'>,
     }),
     'context': <ANY>,
@@ -300,7 +300,7 @@
     ]),
     'area_id': None,
     'capabilities': dict({
-      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+      <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -343,7 +343,7 @@
     'attributes': ReadOnlyDict({
       'device_class': 'data_rate',
       'friendly_name': 'NanoStation 5AC ap name Throughput transmit (actual)',
-      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+      <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
       'unit_of_measurement': <UnitOfDataRate.MEGABITS_PER_SECOND: 'Mbit/s'>,
     }),
     'context': <ANY>,
@@ -361,7 +361,7 @@
     ]),
     'area_id': None,
     'capabilities': dict({
-      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+      <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -404,7 +404,7 @@
     'attributes': ReadOnlyDict({
       'device_class': 'data_rate',
       'friendly_name': 'NanoStation 5AC ap name Upload capacity',
-      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+      <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
       'unit_of_measurement': <UnitOfDataRate.MEGABITS_PER_SECOND: 'Mbit/s'>,
     }),
     'context': <ANY>,
@@ -538,7 +538,7 @@
     ]),
     'area_id': None,
     'capabilities': dict({
-      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+      <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -578,7 +578,7 @@
     'attributes': ReadOnlyDict({
       'device_class': 'frequency',
       'friendly_name': 'NanoStation 5AC ap name Wireless frequency',
-      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+      <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
       'unit_of_measurement': <UnitOfFrequency.MEGAHERTZ: 'MHz'>,
     }),
     'context': <ANY>,
@@ -596,7 +596,7 @@
     ]),
     'area_id': None,
     'capabilities': dict({
-      'options': list([
+      <SensorEntityCapabilityAttribute.OPTIONS: 'options'>: list([
         'point_to_point',
         'point_to_multipoint',
       ]),
@@ -636,7 +636,7 @@
     'attributes': ReadOnlyDict({
       'device_class': 'enum',
       'friendly_name': 'NanoStation 5AC ap name Wireless mode',
-      'options': list([
+      <SensorEntityCapabilityAttribute.OPTIONS: 'options'>: list([
         'point_to_point',
         'point_to_multipoint',
       ]),
@@ -656,7 +656,7 @@
     ]),
     'area_id': None,
     'capabilities': dict({
-      'options': list([
+      <SensorEntityCapabilityAttribute.OPTIONS: 'options'>: list([
         'station',
         'access_point',
       ]),
@@ -696,7 +696,7 @@
     'attributes': ReadOnlyDict({
       'device_class': 'enum',
       'friendly_name': 'NanoStation 5AC ap name Wireless role',
-      'options': list([
+      <SensorEntityCapabilityAttribute.OPTIONS: 'options'>: list([
         'station',
         'access_point',
       ]),

@@ -10,7 +10,7 @@ import queue
 import sqlite3
 import threading
 import time
-from typing import TYPE_CHECKING, Any, cast
+from typing import TYPE_CHECKING, Any, cast, override
 
 from propcache.api import cached_property
 import psutil_home_assistant as ha_psutil
@@ -668,6 +668,7 @@ class Recorder(threading.Thread):
             )
             return SHUTDOWN_TASK
 
+    @override
     def run(self) -> None:
         """Run the recorder thread."""
         self.is_running = True

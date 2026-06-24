@@ -4,6 +4,7 @@ from collections.abc import Callable
 from dataclasses import dataclass
 from datetime import datetime, timedelta
 import logging
+from typing import override
 
 from fritzconnection.core.exceptions import FritzConnectionException
 from fritzconnection.lib.fritzstatus import FritzStatus
@@ -348,6 +349,7 @@ class FritzBoxSensor(FritzBoxBaseCoordinatorEntity, SensorEntity):
     )
 
     @property
+    @override
     def native_value(self) -> StateType:
         """Return the value reported by the sensor."""
         return self.coordinator.data["entity_states"].get(self.entity_description.key)

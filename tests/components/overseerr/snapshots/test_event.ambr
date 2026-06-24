@@ -6,7 +6,7 @@
     ]),
     'area_id': None,
     'capabilities': dict({
-      'event_types': list([
+      <EventEntityCapabilityAttribute.EVENT_TYPES: 'event_types'>: list([
         'pending',
         'approved',
         'available',
@@ -49,8 +49,8 @@
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'entity_picture': 'https://image.tmdb.org/t/p/w600_and_h900_bestv2/something.jpg',
-      'event_type': 'auto_approved',
-      'event_types': list([
+      <EventEntityStateAttribute.EVENT_TYPE: 'event_type'>: 'auto_approved',
+      <EventEntityCapabilityAttribute.EVENT_TYPES: 'event_types'>: list([
         'pending',
         'approved',
         'available',

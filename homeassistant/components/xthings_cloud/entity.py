@@ -1,6 +1,6 @@
 """Base entity for Xthings Cloud."""
 
-from typing import Any
+from typing import Any, override
 
 from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
@@ -39,6 +39,7 @@ class XthingsCloudEntity(CoordinatorEntity[XthingsCloudCoordinator]):
         return self.coordinator.data[self._device_id]
 
     @property
+    @override
     def available(self) -> bool:
         """Return whether device is available (online)."""
         return (

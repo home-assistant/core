@@ -1,6 +1,7 @@
 """Support for Tuya sensors."""
 
 from dataclasses import dataclass
+from typing import override
 
 from tuya_device_handlers.definition.sensor import (
     SensorDefinition,
@@ -1351,6 +1352,12 @@ SENSORS: dict[DeviceCategory, tuple[TuyaSensorEntityDescription, ...]] = {
             state_class=SensorStateClass.MEASUREMENT,
         ),
         TuyaSensorEntityDescription(
+            key=DPCode.EXT_TEMP,
+            translation_key="temperature_external",
+            device_class=SensorDeviceClass.TEMPERATURE,
+            state_class=SensorStateClass.MEASUREMENT,
+        ),
+        TuyaSensorEntityDescription(
             key=DPCode.TEMP_CURRENT,
             translation_key="temperature",
             device_class=SensorDeviceClass.TEMPERATURE,
@@ -1810,10 +1817,12 @@ class TuyaSensorEntity(TuyaEntity, SensorEntity):
         )
 
     @property
+    @override
     def native_value(self) -> StateType:
         """Return the value reported by the sensor."""
         return self._read_wrapper(self._dpcode_wrapper)
 
+    @override
     async def _process_device_update(
         self,
         updated_status_properties: list[str],

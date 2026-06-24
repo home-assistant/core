@@ -6,7 +6,7 @@
     ]),
     'area_id': None,
     'capabilities': dict({
-      'supported_color_modes': list([
+      <LightEntityCapabilityAttribute.SUPPORTED_COLOR_MODES: 'supported_color_modes'>: list([
         <ColorMode.ONOFF: 'onoff'>,
       ]),
     }),
@@ -43,9 +43,9 @@
 # name: test_light_entities_snapshot[cloud_nexity_rail_din_europe.json][light.maple_residence_garage_ceiling_light-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'color_mode': None,
+      <LightEntityStateAttribute.COLOR_MODE: 'color_mode'>: None,
       'friendly_name': 'Garage Ceiling Light',
-      'supported_color_modes': list([
+      <LightEntityCapabilityAttribute.SUPPORTED_COLOR_MODES: 'supported_color_modes'>: list([
         <ColorMode.ONOFF: 'onoff'>,
       ]),
       'supported_features': <LightEntityFeature: 0>,
@@ -65,7 +65,7 @@
     ]),
     'area_id': None,
     'capabilities': dict({
-      'supported_color_modes': list([
+      <LightEntityCapabilityAttribute.SUPPORTED_COLOR_MODES: 'supported_color_modes'>: list([
         <ColorMode.ONOFF: 'onoff'>,
       ]),
     }),
@@ -102,9 +102,9 @@
 # name: test_light_entities_snapshot[cloud_nexity_rail_din_europe.json][light.maple_residence_study_ceiling_light-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'color_mode': None,
+      <LightEntityStateAttribute.COLOR_MODE: 'color_mode'>: None,
       'friendly_name': 'Study Ceiling Light',
-      'supported_color_modes': list([
+      <LightEntityCapabilityAttribute.SUPPORTED_COLOR_MODES: 'supported_color_modes'>: list([
         <ColorMode.ONOFF: 'onoff'>,
       ]),
       'supported_features': <LightEntityFeature: 0>,
@@ -124,7 +124,7 @@
     ]),
     'area_id': None,
     'capabilities': dict({
-      'supported_color_modes': list([
+      <LightEntityCapabilityAttribute.SUPPORTED_COLOR_MODES: 'supported_color_modes'>: list([
         <ColorMode.ONOFF: 'onoff'>,
       ]),
     }),
@@ -161,9 +161,9 @@
 # name: test_light_entities_snapshot[cloud_nexity_rail_din_europe.json][light.maple_residence_terrace_ceiling_light-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'color_mode': None,
+      <LightEntityStateAttribute.COLOR_MODE: 'color_mode'>: None,
       'friendly_name': 'Terrace Ceiling Light',
-      'supported_color_modes': list([
+      <LightEntityCapabilityAttribute.SUPPORTED_COLOR_MODES: 'supported_color_modes'>: list([
         <ColorMode.ONOFF: 'onoff'>,
       ]),
       'supported_features': <LightEntityFeature: 0>,
@@ -183,7 +183,7 @@
     ]),
     'area_id': None,
     'capabilities': dict({
-      'supported_color_modes': list([
+      <LightEntityCapabilityAttribute.SUPPORTED_COLOR_MODES: 'supported_color_modes'>: list([
         <ColorMode.BRIGHTNESS: 'brightness'>,
       ]),
     }),
@@ -220,10 +220,10 @@
 # name: test_light_entities_snapshot[local_somfy_tahoma_switch_europe_3.json][light.dining_room_wall_light-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'brightness': 143,
-      'color_mode': <ColorMode.BRIGHTNESS: 'brightness'>,
+      <LightEntityStateAttribute.BRIGHTNESS: 'brightness'>: 143,
+      <LightEntityStateAttribute.COLOR_MODE: 'color_mode'>: <ColorMode.BRIGHTNESS: 'brightness'>,
       'friendly_name': 'Dining Room Wall Light',
-      'supported_color_modes': list([
+      <LightEntityCapabilityAttribute.SUPPORTED_COLOR_MODES: 'supported_color_modes'>: list([
         <ColorMode.BRIGHTNESS: 'brightness'>,
       ]),
       'supported_features': <LightEntityFeature: 0>,
@@ -243,7 +243,7 @@
     ]),
     'area_id': None,
     'capabilities': dict({
-      'supported_color_modes': list([
+      <LightEntityCapabilityAttribute.SUPPORTED_COLOR_MODES: 'supported_color_modes'>: list([
         <ColorMode.BRIGHTNESS: 'brightness'>,
       ]),
     }),
@@ -280,10 +280,10 @@
 # name: test_light_entities_snapshot[local_somfy_tahoma_switch_europe_3.json][light.guest_room_ceiling_light-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'brightness': 143,
-      'color_mode': <ColorMode.BRIGHTNESS: 'brightness'>,
+      <LightEntityStateAttribute.BRIGHTNESS: 'brightness'>: 143,
+      <LightEntityStateAttribute.COLOR_MODE: 'color_mode'>: <ColorMode.BRIGHTNESS: 'brightness'>,
       'friendly_name': 'Guest Room Ceiling Light',
-      'supported_color_modes': list([
+      <LightEntityCapabilityAttribute.SUPPORTED_COLOR_MODES: 'supported_color_modes'>: list([
         <ColorMode.BRIGHTNESS: 'brightness'>,
       ]),
       'supported_features': <LightEntityFeature: 0>,
@@ -303,7 +303,7 @@
     ]),
     'area_id': None,
     'capabilities': dict({
-      'supported_color_modes': list([
+      <LightEntityCapabilityAttribute.SUPPORTED_COLOR_MODES: 'supported_color_modes'>: list([
         <ColorMode.BRIGHTNESS: 'brightness'>,
       ]),
     }),
@@ -340,10 +340,10 @@
 # name: test_light_entities_snapshot[local_somfy_tahoma_switch_europe_3.json][light.kitchen_ceiling_light-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'brightness': None,
-      'color_mode': None,
+      <LightEntityStateAttribute.BRIGHTNESS: 'brightness'>: None,
+      <LightEntityStateAttribute.COLOR_MODE: 'color_mode'>: None,
       'friendly_name': 'Kitchen Ceiling Light',
-      'supported_color_modes': list([
+      <LightEntityCapabilityAttribute.SUPPORTED_COLOR_MODES: 'supported_color_modes'>: list([
         <ColorMode.BRIGHTNESS: 'brightness'>,
       ]),
       'supported_features': <LightEntityFeature: 0>,
@@ -363,7 +363,7 @@
     ]),
     'area_id': None,
     'capabilities': dict({
-      'supported_color_modes': list([
+      <LightEntityCapabilityAttribute.SUPPORTED_COLOR_MODES: 'supported_color_modes'>: list([
         <ColorMode.BRIGHTNESS: 'brightness'>,
       ]),
     }),
@@ -400,10 +400,10 @@
 # name: test_light_entities_snapshot[local_somfy_tahoma_switch_europe_3.json][light.living_room_ceiling_light-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'brightness': 143,
-      'color_mode': <ColorMode.BRIGHTNESS: 'brightness'>,
+      <LightEntityStateAttribute.BRIGHTNESS: 'brightness'>: 143,
+      <LightEntityStateAttribute.COLOR_MODE: 'color_mode'>: <ColorMode.BRIGHTNESS: 'brightness'>,
       'friendly_name': 'Living Room Ceiling Light',
-      'supported_color_modes': list([
+      <LightEntityCapabilityAttribute.SUPPORTED_COLOR_MODES: 'supported_color_modes'>: list([
         <ColorMode.BRIGHTNESS: 'brightness'>,
       ]),
       'supported_features': <LightEntityFeature: 0>,
@@ -423,7 +423,7 @@
     ]),
     'area_id': None,
     'capabilities': dict({
-      'supported_color_modes': list([
+      <LightEntityCapabilityAttribute.SUPPORTED_COLOR_MODES: 'supported_color_modes'>: list([
         <ColorMode.BRIGHTNESS: 'brightness'>,
       ]),
     }),
@@ -460,10 +460,10 @@
 # name: test_light_entities_snapshot[local_somfy_tahoma_v2_europe.json][light.hallway_light-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'brightness': None,
-      'color_mode': None,
+      <LightEntityStateAttribute.BRIGHTNESS: 'brightness'>: None,
+      <LightEntityStateAttribute.COLOR_MODE: 'color_mode'>: None,
       'friendly_name': 'Hallway Light',
-      'supported_color_modes': list([
+      <LightEntityCapabilityAttribute.SUPPORTED_COLOR_MODES: 'supported_color_modes'>: list([
         <ColorMode.BRIGHTNESS: 'brightness'>,
       ]),
       'supported_features': <LightEntityFeature: 0>,
@@ -483,7 +483,7 @@
     ]),
     'area_id': None,
     'capabilities': dict({
-      'supported_color_modes': list([
+      <LightEntityCapabilityAttribute.SUPPORTED_COLOR_MODES: 'supported_color_modes'>: list([
         <ColorMode.RGB: 'rgb'>,
       ]),
     }),
@@ -520,23 +520,23 @@
 # name: test_light_entities_snapshot[local_somfy_tahoma_v2_europe.json][light.light_terras_rgb-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'brightness': 150,
-      'color_mode': <ColorMode.RGB: 'rgb'>,
+      <LightEntityStateAttribute.BRIGHTNESS: 'brightness'>: 150,
+      <LightEntityStateAttribute.COLOR_MODE: 'color_mode'>: <ColorMode.RGB: 'rgb'>,
       'friendly_name': 'Light Terras RGB',
-      'hs_color': tuple(
+      <LightEntityStateAttribute.HS_COLOR: 'hs_color'>: tuple(
         268.235,
         68.0,
       ),
-      'rgb_color': tuple(
+      <LightEntityStateAttribute.RGB_COLOR: 'rgb_color'>: tuple(
         128,
         64,
         200,
       ),
-      'supported_color_modes': list([
+      <LightEntityCapabilityAttribute.SUPPORTED_COLOR_MODES: 'supported_color_modes'>: list([
         <ColorMode.RGB: 'rgb'>,
       ]),
       'supported_features': <LightEntityFeature: 0>,
-      'xy_color': tuple(
+      <LightEntityStateAttribute.XY_COLOR: 'xy_color'>: tuple(
         0.26,
         0.131,
       ),
