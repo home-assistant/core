@@ -567,6 +567,7 @@ class TemplateEntity(AbstractTemplateEntity):
             preview_callback(None, None, None, str(err))
         return self._call_on_remove_callbacks
 
+    @override
     def restore_attribute(self, conf_attr: str, attr: str, restored_value: Any) -> None:
         """Restore an attribute from the last value."""
         setattr(self, attr, restored_value)

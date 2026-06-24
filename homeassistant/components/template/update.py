@@ -241,6 +241,7 @@ class AbstractTemplateUpdate(AbstractTemplateEntity, UpdateEntity):
             context=self._context,
         )
 
+    @override
     def restore_last_state_state(self, last_state: State) -> bool:
         """Restore the state from the last state."""
         self._attr_installed_version = last_state.attributes[ATTR_INSTALLED_VERSION]

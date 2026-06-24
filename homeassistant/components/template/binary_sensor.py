@@ -159,6 +159,7 @@ class AbstractTemplateBinarySensor(
         except vol.Invalid:
             self.setup_template(CONF_DELAY_OFF, "_delay_off", cv.positive_time_period)
 
+    @override
     def restore_last_state_state(self, last_state: State) -> bool:
         """Restore the state from the last state."""
         self._attr_is_on = last_state.state == STATE_ON
@@ -227,6 +228,7 @@ class AutoOffExtraStoredData(ExtraStoredData):
 
     auto_off_time: datetime | None
 
+    @override
     def as_dict(self) -> dict[str, Any]:
         """Return a dict representation of additional data."""
         auto_off_time: datetime | dict[str, str] | None = self.auto_off_time
@@ -291,6 +293,7 @@ class TriggerBinarySensorEntity(TriggerEntity, AbstractTemplateBinarySensor):
             self._to_render_simple.append(CONF_AUTO_OFF)
             self._parse_result.add(CONF_AUTO_OFF)
 
+    @override
     def restore_extra_data(self, extra_data: AutoOffExtraStoredData):
         """Restore extra data from the last state."""
         if CONF_AUTO_OFF not in self._config:

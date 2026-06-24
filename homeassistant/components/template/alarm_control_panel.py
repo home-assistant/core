@@ -274,6 +274,7 @@ class AbstractTemplateAlarmControlPanel(
             code=code,
         )
 
+    @override
     def restore_last_state_state(self, last_state: State) -> bool:
         """Restore the state from the last state."""
         if last_state.state in AlarmControlPanelState:

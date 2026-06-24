@@ -4,7 +4,7 @@ from collections.abc import Callable
 from datetime import date, datetime
 from decimal import Decimal
 import logging
-from typing import Any
+from typing import Any, override
 
 import voluptuous as vol
 
@@ -227,6 +227,7 @@ class AbstractTemplateSensor(AbstractTemplateEntity, RestoreSensor):
 
         return validate_datetime(self, CONF_STATE, self.device_class)(result)
 
+    @override
     def restore_extra_data(self, extra_data: SensorExtraStoredData) -> None:
         """Restore the extra data."""
         self._attr_native_value = extra_data.native_value

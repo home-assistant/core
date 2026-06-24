@@ -635,6 +635,7 @@ class AbstractTemplateWeather(AbstractTemplateEntity, WeatherEntity, RestoreEnti
             last_wind_speed=self.native_wind_speed,
         )
 
+    @override
     def restore_last_state_state(self, last_state: State) -> bool:
         """Restore the state from the last state."""
         self._attr_condition = last_state.state

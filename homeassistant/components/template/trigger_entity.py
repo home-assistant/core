@@ -157,11 +157,13 @@ class TriggerEntity(  # pylint: disable=home-assistant-enforce-class-module
         return super().available
 
     @property
+    @override
     def extra_state_attributes(self) -> dict[str, Any] | None:
         """Return the state attributes."""
         # Override TriggerBaseEntity's extra_state_attributes property to restore Entity's extra state attributes behavior.
         return self._attr_extra_state_attributes
 
+    @override
     def restore_attribute(self, conf_attr: str, attr: str, restored_value: Any) -> None:
         """Restore an attribute from the last value."""
         self._rendered[conf_attr] = restored_value
