@@ -104,7 +104,9 @@ class DoorBirdLastEventImage(ImageEntity, DoorBirdEntity):
             raise HomeAssistantError(
                 f"Error getting image from DoorBird: {error}"
             ) from error
-        content_type = infer_image_type(image_bytes) or "image/jpeg"
+        content_type = infer_image_type(image_bytes)
+        if content_type is None:
+            raise HomeAssistantError("DoorBird returned an unrecognized image")
         self._cached_image = Image(content_type=content_type, content=image_bytes)
         self._attr_content_type = content_type
         return image_bytes

@@ -10,6 +10,10 @@ from .conftest import DoorbirdMockerType
 
 from tests.typing import ClientSessionGenerator
 
+# A body whose first 4 bytes are a recognized JPEG magic number, so
+# infer_image_type accepts it. The trailing bytes are arbitrary padding.
+VALID_JPEG = b"\xff\xd8\xff\xe0junk"
+
 
 async def test_image_entities_registered(
     hass: HomeAssistant,
@@ -69,6 +73,7 @@ async def test_image_entity_fetches_bytes(
 ) -> None:
     """The image proxy returns bytes fetched from the device."""
     doorbird_entry = await doorbird_mocker()
+    doorbird_entry.api.get_image.return_value = VALID_JPEG
     client = await hass_client()
 
     state = hass.states.get("image.mydoorbird_last_ring")
@@ -77,5 +82,23 @@ async def test_image_entity_fetches_bytes(
         f"/api/{IMAGE_DOMAIN}_proxy/image.mydoorbird_last_ring?token={access_token}"
     )
     assert resp.status == 200
-    assert await resp.read() == b"image"
+    assert await resp.read() == VALID_JPEG
     assert doorbird_entry.api.get_image.called
+
+
+async def test_image_rejects_non_image_body(
+    hass: HomeAssistant,
+    hass_client: ClientSessionGenerator,
+    doorbird_mocker: DoorbirdMockerType,
+) -> None:
+    """A body that is not a recognized image is rejected instead of cached."""
+    doorbird_entry = await doorbird_mocker()
+    doorbird_entry.api.get_image.return_value = b"<html>error</html>"
+    client = await hass_client()
+
+    state = hass.states.get("image.mydoorbird_last_ring")
+    access_token = state.attributes["access_token"]
+    resp = await client.get(
+        f"/api/{IMAGE_DOMAIN}_proxy/image.mydoorbird_last_ring?token={access_token}"
+    )
+    assert resp.status == 500
