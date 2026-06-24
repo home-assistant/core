@@ -150,7 +150,7 @@ class MyPVConfigFlow(ConfigFlow, domain=DOMAIN):
                 if not await device.connect():
                     errors[CONF_BASE] = "cannot_connect"
             except MyPVConnectionError:
-                return self.async_abort(reason="cannot_connect")
+                errors[CONF_BASE] = "cannot_connect"
             except MyPVAuthenticationError:
                 password_needed = True
             finally:
@@ -194,7 +194,7 @@ class MyPVConfigFlow(ConfigFlow, domain=DOMAIN):
                 if not await device.connect():
                     errors[CONF_BASE] = "cannot_connect"
             except MyPVConnectionError:
-                return self.async_abort(reason="cannot_connect")
+                errors[CONF_BASE] = "cannot_connect"
             except MyPVAuthenticationError:
                 errors[CONF_PASSWORD] = "invalid_password"
             finally:
