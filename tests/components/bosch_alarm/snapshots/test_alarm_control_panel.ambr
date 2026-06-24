@@ -39,9 +39,9 @@
 # name: test_alarm_control_panel[amax_3000-None][alarm_control_panel.area1-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'changed_by': None,
-      'code_arm_required': False,
-      'code_format': None,
+      <AlarmControlPanelEntityStateAttribute.CHANGED_BY: 'changed_by'>: None,
+      <AlarmControlPanelEntityStateAttribute.CODE_ARM_REQUIRED: 'code_arm_required'>: False,
+      <AlarmControlPanelEntityStateAttribute.CODE_FORMAT: 'code_format'>: None,
       'friendly_name': 'Area1',
       'supported_features': <AlarmControlPanelEntityFeature: 3>,
     }),
@@ -93,9 +93,9 @@
 # name: test_alarm_control_panel[b5512-None][alarm_control_panel.area1-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'changed_by': None,
-      'code_arm_required': False,
-      'code_format': None,
+      <AlarmControlPanelEntityStateAttribute.CHANGED_BY: 'changed_by'>: None,
+      <AlarmControlPanelEntityStateAttribute.CODE_ARM_REQUIRED: 'code_arm_required'>: False,
+      <AlarmControlPanelEntityStateAttribute.CODE_FORMAT: 'code_format'>: None,
       'friendly_name': 'Area1',
       'supported_features': <AlarmControlPanelEntityFeature: 3>,
     }),
@@ -147,9 +147,9 @@
 # name: test_alarm_control_panel[solution_3000-None][alarm_control_panel.area1-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'changed_by': None,
-      'code_arm_required': False,
-      'code_format': None,
+      <AlarmControlPanelEntityStateAttribute.CHANGED_BY: 'changed_by'>: None,
+      <AlarmControlPanelEntityStateAttribute.CODE_ARM_REQUIRED: 'code_arm_required'>: False,
+      <AlarmControlPanelEntityStateAttribute.CODE_FORMAT: 'code_format'>: None,
       'friendly_name': 'Area1',
       'supported_features': <AlarmControlPanelEntityFeature: 3>,
     }),
