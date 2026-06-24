@@ -217,6 +217,7 @@ class _SunStateCondition(Condition):
     """Base class for the option-less sun state conditions."""
 
     @classmethod
+    @override
     async def async_validate_config(
         cls, hass: HomeAssistant, config: ConfigType
     ) -> ConfigType:
@@ -227,6 +228,7 @@ class _SunStateCondition(Condition):
 class _UpCondition(_SunStateCondition):
     """Test if the sun is up."""
 
+    @override
     def _async_check(self, **kwargs: Unpack[ConditionCheckParams]) -> bool:
         """Check the condition."""
         elevation, _ = _solar_position(self._hass)
@@ -236,6 +238,7 @@ class _UpCondition(_SunStateCondition):
 class _SetCondition(_SunStateCondition):
     """Test if the sun is set."""
 
+    @override
     def _async_check(self, **kwargs: Unpack[ConditionCheckParams]) -> bool:
         """Check the condition."""
         elevation, _ = _solar_position(self._hass)
@@ -245,6 +248,7 @@ class _SetCondition(_SunStateCondition):
 class _AscendingCondition(_SunStateCondition):
     """Test if the sun is ascending."""
 
+    @override
     def _async_check(self, **kwargs: Unpack[ConditionCheckParams]) -> bool:
         """Check the condition."""
         _, rising = _solar_position(self._hass)
@@ -254,6 +258,7 @@ class _AscendingCondition(_SunStateCondition):
 class _DescendingCondition(_SunStateCondition):
     """Test if the sun is descending."""
 
+    @override
     def _async_check(self, **kwargs: Unpack[ConditionCheckParams]) -> bool:
         """Check the condition."""
         _, rising = _solar_position(self._hass)
@@ -263,6 +268,7 @@ class _DescendingCondition(_SunStateCondition):
 class _NightCondition(_SunStateCondition):
     """Test if it is night (the sun is below all twilight)."""
 
+    @override
     def _async_check(self, **kwargs: Unpack[ConditionCheckParams]) -> bool:
         """Check the condition."""
         elevation, _ = _solar_position(self._hass)
@@ -302,6 +308,7 @@ class _TwilightCondition(Condition):
     _rising: bool
 
     @classmethod
+    @override
     async def async_validate_config(
         cls, hass: HomeAssistant, config: ConfigType
     ) -> ConfigType:
@@ -314,6 +321,7 @@ class _TwilightCondition(Condition):
         assert config.options is not None
         self._low, self._high = _TWILIGHT_BANDS[config.options[CONF_TYPE]]
 
+    @override
     def _async_check(self, **kwargs: Unpack[ConditionCheckParams]) -> bool:
         """Check the condition."""
         elevation, rising = _solar_position(self._hass)
