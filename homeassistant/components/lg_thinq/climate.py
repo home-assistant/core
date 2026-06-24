@@ -11,6 +11,7 @@ from homeassistant.components.climate import (
     ATTR_HVAC_MODE,
     ATTR_TARGET_TEMP_HIGH,
     ATTR_TARGET_TEMP_LOW,
+    FAN_AUTO,
     FAN_MEDIUM,
     PRESET_NONE,
     SWING_OFF,
@@ -66,6 +67,7 @@ SWING_TO_STR = {v: k for k, v in STR_TO_SWING.items()}
 
 STR_TO_HA_FAN: dict[str, str] = {
     "mid": FAN_MEDIUM,
+    "nature": FAN_AUTO,
 }
 
 HA_FAN_TO_STR = {v: k for k, v in STR_TO_HA_FAN.items()}
