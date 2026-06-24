@@ -20,18 +20,14 @@ import attr
 import voluptuous as vol
 
 from homeassistant.const import (
-    ATTR_DEVICE_CLASS,
-    ATTR_FRIENDLY_NAME,
-    ATTR_ICON,
     ATTR_RESTORED,
-    ATTR_SUPPORTED_FEATURES,
-    ATTR_UNIT_OF_MEASUREMENT,
     EVENT_HOMEASSISTANT_START,
     EVENT_HOMEASSISTANT_STOP,
     MAX_LENGTH_STATE_DOMAIN,
     MAX_LENGTH_STATE_ENTITY_ID,
     STATE_UNAVAILABLE,
     EntityCategory,
+    EntityStateAttribute,
     Platform,
 )
 from homeassistant.core import (
@@ -436,21 +432,25 @@ class RegistryEntry:
 
         device_class = self.device_class or self.original_device_class
         if device_class is not None:
-            attrs[ATTR_DEVICE_CLASS] = device_class
+            attrs[EntityStateAttribute.DEVICE_CLASS.value] = device_class
 
         icon = self.icon or self.original_icon
         if icon is not None:
-            attrs[ATTR_ICON] = icon
+            attrs[EntityStateAttribute.ICON.value] = icon
 
         name = self.name or self.original_name
         if name is not None:
-            attrs[ATTR_FRIENDLY_NAME] = name
+            attrs[EntityStateAttribute.FRIENDLY_NAME.value] = name
 
         if self.supported_features is not None:
-            attrs[ATTR_SUPPORTED_FEATURES] = self.supported_features
+            attrs[EntityStateAttribute.SUPPORTED_FEATURES.value] = (
+                self.supported_features
+            )
 
         if self.unit_of_measurement is not None:
-            attrs[ATTR_UNIT_OF_MEASUREMENT] = self.unit_of_measurement
+            attrs[EntityStateAttribute.UNIT_OF_MEASUREMENT.value] = (
+                self.unit_of_measurement
+            )
 
         hass.states.async_set(self.entity_id, STATE_UNAVAILABLE, attrs)
 

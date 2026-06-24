@@ -28,12 +28,12 @@ from homeassistant.components.sensor import (
     SensorStateClass,
 )
 from homeassistant.const import (
-    ATTR_ATTRIBUTION,
     CONF_LATITUDE,
     CONF_LONGITUDE,
     CONF_NAME,
     DEGREE,
     PERCENTAGE,
+    EntityStateAttribute,
     Platform,
     UnitOfIrradiance,
     UnitOfLength,
@@ -906,14 +906,14 @@ class BrSensor(SensorEntity):
         # update all other sensors
         self._attr_native_value = data.get(sensor_type)
         if sensor_type.startswith(PRECIPITATION_FORECAST):
-            result = {ATTR_ATTRIBUTION: data.get(ATTRIBUTION)}
+            result = {EntityStateAttribute.ATTRIBUTION: data.get(ATTRIBUTION)}
             if self._timeframe is not None:
                 result[TIMEFRAME_LABEL] = f"{self._timeframe} min"
 
             self._attr_extra_state_attributes = result
 
         result = {
-            ATTR_ATTRIBUTION: data.get(ATTRIBUTION),
+            EntityStateAttribute.ATTRIBUTION: data.get(ATTRIBUTION),
             STATIONNAME_LABEL: data.get(STATIONNAME),
         }
         if self._measured is not None:
