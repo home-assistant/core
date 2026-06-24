@@ -5,7 +5,7 @@ Each selected vehicle's device is anchored in
 at setup time. The catalog's display metadata (e.g.
 ``"Rivian R2 2026 RWD"``) surfaces via :attr:`DeviceInfo.model` on the
 device card, composed by :attr:`aioabrp.VehicleModelDisplay.display_name`
-from the v2 catalog at coordinator-refresh time.
+from the v2 catalog by the one-shot garage fetch at setup time.
 
 ``AbrpTelemetrySensor`` exposes the numeric metrics (soc / power /
 voltage / etc.) backed by the SSE telemetry coordinator. Entities are
@@ -50,11 +50,7 @@ from homeassistant.helpers.typing import StateType
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
 from .const import CONF_VEHICLE_IDS, DOMAIN, signal_new_metric
-from .coordinator import (
-    AbetterrouteplannerConfigEntry,
-    AbrpTelemetryCoordinator,
-    GarageVehicle,
-)
+from .coordinator import AbetterrouteplannerConfigEntry, AbrpTelemetryCoordinator
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -342,7 +338,7 @@ def _extract_value(
 def _build_telemetry_sensor(
     coordinator: AbrpTelemetryCoordinator,
     entry: AbetterrouteplannerConfigEntry,
-    vehicle: GarageVehicle,
+    vehicle_id: int,
     description: AbrpNumericSensorEntityDescription | AbrpEnumSensorEntityDescription,
 ) -> AbrpTelemetrySensor[float] | AbrpTelemetrySensor[str]:
     """Dispatch on the description type to the matching concrete sensor.
@@ -352,8 +348,8 @@ def _build_telemetry_sensor(
     isinstance branch.
     """
     if isinstance(description, AbrpEnumSensorEntityDescription):
-        return AbrpEnumSensor(coordinator, entry, vehicle, description)
-    return AbrpNumericSensor(coordinator, entry, vehicle, description)
+        return AbrpEnumSensor(coordinator, entry, vehicle_id, description)
+    return AbrpNumericSensor(coordinator, entry, vehicle_id, description)
 
 
 async def async_setup_entry(
@@ -363,22 +359,22 @@ async def async_setup_entry(
 ) -> None:
     """Emit per-vehicle garage attribute sensors + lazily-created telemetry sensors."""
     runtime = entry.runtime_data
-    garage_coordinator = runtime.garage_coordinator
+    vehicles = runtime.vehicles
     telemetry_coordinator = runtime.telemetry_coordinator
 
     selected_ids = {int(vehicle_id) for vehicle_id in entry.data[CONF_VEHICLE_IDS]}
-    present_ids = {vehicle.vehicle_id for vehicle in garage_coordinator.data}
+    present_ids = {raw.vehicle_id for raw, _ in vehicles}
 
     missing = selected_ids - present_ids
     for vehicle_id in missing:
-        # A selected vehicle missing from the garage is an expected steady state
-        # after it is removed upstream: its device card is left orphaned and the
-        # user can delete it via the integration's delete link
-        # (async_remove_config_entry_device permits removal once a vehicle is no
-        # longer present), while the selection retains the id until the user
-        # reconfigures. Not actionable per-poll, so debug rather than warning.
-        # Format with the raw int so a user grepping their logs for the id they
-        # saw in the picker finds it verbatim.
+        # A selected vehicle missing from the garage snapshot is an expected
+        # steady state after it is removed upstream: its device card is left
+        # orphaned and the user can delete it via the integration's delete link
+        # (async_remove_config_entry_device permits removal once a vehicle is
+        # absent from the snapshot), while the selection retains the id until
+        # the user reconfigures. Not actionable at setup, so debug rather than
+        # warning. Format with the raw int so a user grepping their logs for the
+        # id they saw in the picker finds it verbatim.
         _LOGGER.debug(
             "Selected vehicle %d is not in the ABRP garage; skipping",
             vehicle_id,
@@ -387,8 +383,9 @@ async def async_setup_entry(
     entity_registry = er.async_get(hass)
     added: set[tuple[int, Metric]] = set()
     entities: list[SensorEntity] = []
-    for vehicle in garage_coordinator.data:
-        if vehicle.vehicle_id not in selected_ids:
+    for raw, _ in vehicles:
+        vehicle_id = raw.vehicle_id
+        if vehicle_id not in selected_ids:
             continue
         # Eager-from-registry probe: a prior session recorded entities for
         # wake-only metrics (voltage, power, SoH, ...) that are silent
@@ -399,7 +396,7 @@ async def async_setup_entry(
         # ``async_added_to_hass``. Marked seen so the dispatcher does
         # not double-create when the next frame arrives.
         for description in SENSORS:
-            unique_id = _telemetry_unique_id(entry, vehicle.vehicle_id, description.key)
+            unique_id = _telemetry_unique_id(entry, vehicle_id, description.key)
             entity_id = entity_registry.async_get_entity_id("sensor", DOMAIN, unique_id)
             if entity_id is None:
                 continue
@@ -417,18 +414,16 @@ async def async_setup_entry(
                 continue
             entities.append(
                 _build_telemetry_sensor(
-                    telemetry_coordinator, entry, vehicle, description
+                    telemetry_coordinator, entry, vehicle_id, description
                 )
             )
-            added.add((vehicle.vehicle_id, description.metric))
-            telemetry_coordinator.mark_metric_seen(
-                vehicle.vehicle_id, description.metric
-            )
-        tlm = telemetry_coordinator.data.get(vehicle.vehicle_id)
+            added.add((vehicle_id, description.metric))
+            telemetry_coordinator.mark_metric_seen(vehicle_id, description.metric)
+        tlm = telemetry_coordinator.data.get(vehicle_id)
         if tlm is None:
             continue
         for description in SENSORS:
-            if (vehicle.vehicle_id, description.metric) in added:
+            if (vehicle_id, description.metric) in added:
                 continue
             metric_value = description.value_fn(tlm)
             if metric_value is None:
@@ -437,13 +432,11 @@ async def async_setup_entry(
                 continue
             entities.append(
                 _build_telemetry_sensor(
-                    telemetry_coordinator, entry, vehicle, description
+                    telemetry_coordinator, entry, vehicle_id, description
                 )
             )
-            added.add((vehicle.vehicle_id, description.metric))
-            telemetry_coordinator.mark_metric_seen(
-                vehicle.vehicle_id, description.metric
-            )
+            added.add((vehicle_id, description.metric))
+            telemetry_coordinator.mark_metric_seen(vehicle_id, description.metric)
 
     # mark_metric_seen MUST run before register_presence_predicates: once the
     # predicates are live, the next pushed update compares against
@@ -475,17 +468,13 @@ async def async_setup_entry(
         if vehicle_id not in selected_ids:
             return
         description = SENSORS_BY_METRIC[metric]
-        vehicle = next(
-            (v for v in garage_coordinator.data if v.vehicle_id == vehicle_id),
-            None,
-        )
-        if vehicle is None:
+        if vehicle_id not in present_ids:
             return
         added.add((vehicle_id, metric))
         async_add_entities(
             [
                 _build_telemetry_sensor(
-                    telemetry_coordinator, entry, vehicle, description
+                    telemetry_coordinator, entry, vehicle_id, description
                 )
             ]
         )
@@ -526,18 +515,16 @@ class AbrpTelemetrySensor[T: (float, str)](
         self,
         coordinator: AbrpTelemetryCoordinator,
         entry: AbetterrouteplannerConfigEntry,
-        vehicle: GarageVehicle,
+        vehicle_id: int,
         description: AbrpTelemetrySensorEntityDescription[T],
     ) -> None:
         """Initialize the sensor."""
         super().__init__(coordinator)
         self.entity_description = description
-        self._vehicle_id = vehicle.vehicle_id
+        self._vehicle_id = vehicle_id
         self._metric = description.metric
-        scope = f"{entry.unique_id}_{vehicle.vehicle_id}"
-        self._attr_unique_id = _telemetry_unique_id(
-            entry, vehicle.vehicle_id, description.key
-        )
+        scope = f"{entry.unique_id}_{vehicle_id}"
+        self._attr_unique_id = _telemetry_unique_id(entry, vehicle_id, description.key)
         # Same device identifier shape as the anchor pass in
         # ``async_setup_entry`` so HA links every telemetry entity for
         # this vehicle to the device created there.

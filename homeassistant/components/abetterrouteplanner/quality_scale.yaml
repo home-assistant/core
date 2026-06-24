@@ -3,7 +3,12 @@ rules:
   action-setup:
     status: exempt
     comment: No custom actions.
-  appropriate-polling: done
+  appropriate-polling:
+    status: exempt
+    comment: >-
+      No polling. Telemetry is push-only over the SSE stream
+      (``update_interval=None``); the garage is fetched once at setup
+      (``async_fetch_garage``) to anchor devices and filter the streamable set.
   brands: done
   common-modules: done
   config-flow: done

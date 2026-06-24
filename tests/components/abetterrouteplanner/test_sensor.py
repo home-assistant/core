@@ -427,15 +427,13 @@ async def test_battery_temperature_sensor_state(
 
 
 # ---------------------------------------------------------------------------
-# DeviceInfo.model: computed via catalog prefix-match
+# DeviceInfo.model: composed from the per-typecode display endpoint
 # ---------------------------------------------------------------------------
 #
-# The catalog's display metadata is composed once into a single
-# ``device_model: str | None`` column on :class:`AbrpVehicle` and surfaced
-# via :attr:`DeviceInfo.model` on the per-vehicle device. Resolution is by
-# longest-typecode-prefix-match (not exact ``dict.get``) so a vehicle
-# whose typecode is a suffix-decorated variant of a catalog ancestor
-# still resolves.
+# Each vehicle's device-card model/manufacturer are composed at setup from the
+# per-typecode display fetch (``async_get_vehicle_model_display`` →
+# ``VehicleModelDisplay.display_name``); a display miss leaves the display
+# ``None`` and the card falls back to the raw typecode.
 #
 # Tests pin via the entity_registry surface (translation_key / unique_id
 # / entity_category as registry-options fields). Strings.json slug
@@ -546,9 +544,9 @@ async def test_device_info_model_falls_back_to_typecode_on_display_miss(
     """``DeviceInfo.model`` falls back to the raw typecode on display miss.
 
     The default ``mock_abrp_client`` fixture 404s the display endpoint for
-    every typecode, so ``vehicle.device_model`` stays ``None`` →
-    ``DeviceInfo.model`` falls back to ``vehicle.vehicle_model`` (raw
-    typecode). The device card's Model field is never blank.
+    every typecode, so the display fetch returns ``None`` → ``DeviceInfo.model``
+    falls back to the raw ``vehicle_model`` (typecode). The device card's Model
+    field is never blank.
     """
     mock_abrp_client.return_value = [_make_vehicle()]
 
@@ -559,6 +557,30 @@ async def test_device_info_model_falls_back_to_typecode_on_display_miss(
     )
     assert device is not None
     assert device.model == MOCK_VEHICLE_MODEL
+
+
+@pytest.mark.usefixtures("entity_registry_enabled_by_default", "fake_stream")
+async def test_device_info_name_falls_back_to_typecode_when_unnamed(
+    hass: HomeAssistant,
+    config_entry_with_vehicles: MockConfigEntry,
+    device_registry: dr.DeviceRegistry,
+    mock_abrp_client: AsyncMock,
+) -> None:
+    """``DeviceInfo.name`` falls back to the raw typecode for an unnamed vehicle.
+
+    A vehicle with no user-set nickname (``name=None``) anchors its device with
+    ``name = vehicle.name or vehicle.vehicle_model`` → the raw typecode, so the
+    device card's Name is never blank.
+    """
+    mock_abrp_client.return_value = [_make_vehicle(name=None)]
+
+    await _setup_integration(hass, config_entry_with_vehicles)
+
+    device = device_registry.async_get_device(
+        identifiers={(DOMAIN, _scope(config_entry_with_vehicles, MOCK_VEHICLE_ID))}
+    )
+    assert device is not None
+    assert device.name == MOCK_VEHICLE_MODEL
 
 
 # Two-make display fixtures used by the per-vehicle manufacturer test below.
@@ -653,7 +675,7 @@ async def test_device_info_manufacturer_unset_on_display_miss(
     """``DeviceInfo.manufacturer`` stays unset on display miss.
 
     The default ``mock_abrp_client`` fixture 404s the display endpoint for
-    every typecode → ``vehicle.device_manufacturer`` stays ``None`` →
+    every typecode → the display fetch returns ``None`` →
     ``DeviceInfo.manufacturer`` is left unset rather than guessed. A blank
     Manufacturer field is preferable to an incorrect make.
     """

@@ -1,6 +1,7 @@
 """Tests for the A Better Routeplanner integration setup."""
 
 from http import HTTPStatus
+import logging
 import time
 from typing import Any
 from unittest.mock import AsyncMock, patch
@@ -19,7 +20,7 @@ from homeassistant.components.abetterrouteplanner.const import (
 from homeassistant.config_entries import SOURCE_USER, ConfigEntryState
 from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
-from homeassistant.helpers import config_entry_oauth2_flow
+from homeassistant.helpers import config_entry_oauth2_flow, device_registry as dr
 from homeassistant.helpers.config_entry_oauth2_flow import (
     ImplementationUnavailableError,
     OAuth2Session,
@@ -29,6 +30,7 @@ from homeassistant.setup import async_setup_component
 from .conftest import (
     MOCK_VEHICLE_ID,
     MOCK_VEHICLE_ID_2,
+    MOCK_VEHICLE_MODEL,
     SENSOR_TEST_SUB,
     USER_SUB,
     build_id_token,
@@ -321,13 +323,13 @@ async def test_first_refresh_auth_error_setup_error(
     config_entry: MockConfigEntry,
     mock_abrp_client: AsyncMock,
 ) -> None:
-    """A coordinator first-refresh ``AbrpAuthError`` surfaces as ``SETUP_ERROR``.
+    """A garage-fetch ``AbrpAuthError`` surfaces as ``SETUP_ERROR``.
 
     The OAuth session is valid (no token-refresh failure) but the ABRP API
-    rejects the access token (e.g. ABRP-side revocation). The garage
-    coordinator's ``async_get_vehicles`` raises ``AbrpAuthError`` and the
-    integration must surface this as ``ConfigEntryAuthFailed`` so HA puts the
-    entry in ``SETUP_ERROR``.
+    rejects the access token (e.g. ABRP-side revocation). The setup-time garage
+    fetch's ``async_get_vehicles`` raises ``AbrpAuthError`` and the integration
+    must surface this as ``ConfigEntryAuthFailed`` so HA puts the entry in
+    ``SETUP_ERROR``.
     """
     config_entry.add_to_hass(hass)
     mock_abrp_client.side_effect = AbrpAuthError("invalid session")
@@ -344,10 +346,11 @@ async def test_first_refresh_api_error_setup_retry(
     config_entry: MockConfigEntry,
     mock_abrp_client: AsyncMock,
 ) -> None:
-    """A coordinator first-refresh ``AbrpApiError`` surfaces as ``SETUP_RETRY``.
+    """A garage-fetch ``AbrpApiError`` surfaces as ``SETUP_RETRY``.
 
     Transient API/transport failures should surface as a retry, not an
-    auth-error state; the integration retries on HA's standard backoff instead.
+    auth-error state; the integration maps them to ``ConfigEntryNotReady`` so HA
+    retries on its standard backoff instead.
     """
     config_entry.add_to_hass(hass)
     mock_abrp_client.side_effect = AbrpApiError("backend overloaded")
@@ -357,6 +360,45 @@ async def test_first_refresh_api_error_setup_retry(
 
     assert config_entry.state is ConfigEntryState.SETUP_RETRY
     assert not hass.config_entries.flow.async_progress()
+
+
+@pytest.mark.usefixtures("mock_abrp_client", "fake_stream")
+async def test_setup_succeeds_with_degraded_device_card(
+    hass: HomeAssistant,
+    config_entry_with_vehicles: MockConfigEntry,
+    device_registry: dr.DeviceRegistry,
+    caplog: pytest.LogCaptureFixture,
+) -> None:
+    """A display endpoint that 404s for every typecode must not block setup.
+
+    With no display fixtures the per-typecode fetch 404s, so each vehicle's
+    display degrades to ``None`` and the device card falls back to the raw
+    typecode (manufacturer unset). Setup must still reach ``LOADED`` — a
+    flaky/absent catalog endpoint degrades gracefully rather than failing setup
+    into a retry loop — and a one-time ``INFO`` line flags the degraded card.
+    """
+    config_entry_with_vehicles.add_to_hass(hass)
+
+    with caplog.at_level(logging.INFO):
+        assert await hass.config_entries.async_setup(
+            config_entry_with_vehicles.entry_id
+        )
+        await hass.async_block_till_done()
+
+    assert config_entry_with_vehicles.state is ConfigEntryState.LOADED
+
+    scope = f"{config_entry_with_vehicles.unique_id}_{MOCK_VEHICLE_ID}"
+    device = device_registry.async_get_device(identifiers={(DOMAIN, scope)})
+    assert device is not None
+    assert device.model == MOCK_VEHICLE_MODEL
+    assert device.manufacturer is None
+
+    assert any(
+        record.levelno == logging.INFO
+        and str(MOCK_VEHICLE_ID) in record.message
+        and MOCK_VEHICLE_MODEL in record.message
+        for record in caplog.records
+    )
 
 
 @pytest.mark.usefixtures("mock_abrp_client")

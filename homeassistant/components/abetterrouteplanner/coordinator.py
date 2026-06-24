@@ -1,27 +1,24 @@
-"""DataUpdateCoordinators for the A Better Routeplanner integration.
+"""Telemetry coordinator and one-shot garage fetch for the A Better Routeplanner integration.
 
-Two coordinators back the integration:
+:class:`AbrpTelemetryCoordinator` is a thin push-mode coordinator. The
+:class:`aioabrp.TelemetryStream` (built in ``__init__``) drives state in
+through :meth:`AbrpTelemetryCoordinator.on_update` /
+:meth:`AbrpTelemetryCoordinator.on_connection_change`; this module owns no
+reconnect / merge / staleness machinery — that all lives in the library.
 
-* :class:`AbrpVehiclesCoordinator` polls the authenticated user's garage
-  every :data:`SCAN_INTERVAL` via :meth:`aioabrp.AbrpClient.async_get_vehicles`
-  and resolves each vehicle's device-card strings by calling
-  :meth:`aioabrp.AbrpClient.async_get_vehicle_model_display` per typecode
-  (the composed label comes from
-  :attr:`aioabrp.VehicleModelDisplay.display_name`). The garage rarely
-  changes — vehicles are added or removed manually in the ABRP web app — so a
-  10-minute interval keeps the rate-limit footprint negligible while still
-  picking up additions/removals within one HA dashboard reload.
-* :class:`AbrpTelemetryCoordinator` is a thin push-mode coordinator. The
-  :class:`aioabrp.TelemetryStream` (built in ``__init__``) drives state in
-  through :meth:`AbrpTelemetryCoordinator.on_update` /
-  :meth:`AbrpTelemetryCoordinator.on_connection_change`; this module owns no
-  reconnect / merge / staleness machinery — that all lives in the library.
+:func:`async_fetch_garage` is a one-shot, setup-time fetch of the authenticated
+user's garage (vehicle identity joined with its per-typecode device-card
+display). It is NOT a coordinator: the garage rarely changes and is read once
+at setup to anchor device-registry entries and filter the streamable vehicle
+set. Live propagation of upstream renames / late display recovery is a separate
+follow-up; until then the device card reflects the garage as of the last
+setup/reload.
 """
 
 import asyncio
 from collections.abc import Iterable
 from dataclasses import dataclass
-from datetime import datetime, timedelta
+from datetime import datetime
 import logging
 
 from aioabrp import (
@@ -39,33 +36,26 @@ from aioabrp import (
 
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant, callback
-from homeassistant.exceptions import ConfigEntryAuthFailed
-from homeassistant.helpers.aiohttp_client import async_get_clientsession
+from homeassistant.exceptions import ConfigEntryAuthFailed, ConfigEntryNotReady
 from homeassistant.helpers.config_entry_oauth2_flow import OAuth2Session
 from homeassistant.helpers.dispatcher import async_dispatcher_send
-from homeassistant.helpers.update_coordinator import (
-    TimestampDataUpdateCoordinator,
-    UpdateFailed,
-)
+from homeassistant.helpers.update_coordinator import TimestampDataUpdateCoordinator
 from homeassistant.util import dt as dt_util
 
-from .auth import AbetterrouteplannerAuth
-from .const import ABRP_APP_KEY, DOMAIN, signal_new_metric
+from .const import DOMAIN, signal_new_metric
 
 _LOGGER = logging.getLogger(__name__)
-
-SCAN_INTERVAL = timedelta(minutes=10)
 
 
 @dataclass(frozen=True, slots=True)
 class AbrpData:
     """Runtime data stored on the config entry.
 
-    Two coordinators live side by side: the garage coordinator polls
-    ``/1/session/get_tlm`` every 10 minutes for vehicle identity (stable,
-    drives device-registry entries), while the telemetry coordinator
-    receives push updates from the ``/2/tlm`` SSE stream. Separating them
-    isolates failure modes — SSE flakes never threaten device identity.
+    ``vehicles`` is the garage snapshot fetched once at setup (vehicle identity
+    joined with its per-typecode device-card display); it drives the
+    device-registry entries and filters the streamable vehicle set.
+    ``telemetry_coordinator`` receives push updates from the ``/2/tlm`` SSE
+    stream.
 
     ``stream`` is the push-telemetry SSE consumer owned by the entry. It is
     only created when the entry has live vehicle ids to stream; an entry with
@@ -73,7 +63,7 @@ class AbrpData:
     """
 
     session: OAuth2Session
-    garage_coordinator: AbrpVehiclesCoordinator
+    vehicles: list[tuple[AbrpVehicle, VehicleModelDisplay | None]]
     telemetry_coordinator: AbrpTelemetryCoordinator
     stream: TelemetryStream | None
 
@@ -81,182 +71,88 @@ class AbrpData:
 type AbetterrouteplannerConfigEntry = ConfigEntry[AbrpData]
 
 
-@dataclass(frozen=True, slots=True)
-class GarageVehicle:
-    """One garage vehicle joined with its resolved device-card display.
+async def async_fetch_garage(
+    client: AbrpClient,
+) -> list[tuple[AbrpVehicle, VehicleModelDisplay | None]]:
+    """Fetch the garage once at setup, pairing each vehicle with its display.
 
-    The :class:`aioabrp.AbrpVehicle` returned by the library carries only the
-    raw identity fields (``vehicle_id`` / ``name`` / ``vehicle_model`` /
-    ``paint``). This carrier holds it alongside the per-typecode
-    :class:`aioabrp.VehicleModelDisplay` resolved against the v2 catalog
-    (``None`` when the display fetch failed or the typecode is unknown).
+    Setup-time and one-shot (not a coordinator). An ``AbrpAuthError`` from the
+    garage fetch — a revoked/rotated refresh token, surfaced by
+    :class:`.auth.AbetterrouteplannerAuth` — maps to
+    :class:`ConfigEntryAuthFailed`; any other garage failure maps to
+    :class:`ConfigEntryNotReady` so HA retries setup.
 
-    Identity attributes (``vehicle_id`` / ``name`` / ``vehicle_model``) and the
-    device-card ``device_model`` / ``device_manufacturer`` are re-exported as
-    read-only properties so call sites in ``__init__`` / ``sensor`` keep
-    reading ``item.vehicle_id`` / ``item.device_model`` etc. unchanged.
+    Per-typecode display metadata is fetched per vehicle in parallel via
+    :func:`asyncio.gather` with ``return_exceptions=True`` so one typecode's
+    failure does not block the rest. A per-vehicle display failure degrades only
+    that vehicle to ``None`` (its device card falls back to the raw typecode)
+    and never fails setup:
 
-    ``frozen=True`` gives value equality, which is load-bearing: the polling
-    garage coordinator is a ``TimestampDataUpdateCoordinator`` that suppresses
-    listener fires when a poll returns ``previous_data == self.data``. Both
-    ``AbrpVehicle`` and ``VehicleModelDisplay`` are frozen value-equal
-    dataclasses, so an unchanged garage compares equal and does not spuriously
-    re-fire the device-metadata propagation listener on every 10-min poll.
+    * a 404 for a typecode ABRP does not catalog (``AbrpApiError``),
+    * a transient API / transport / timeout failure, or
+    * an ``AbrpAuthError`` — NOT escalated here: the garage fetch above is the
+      single authoritative auth-failure signal, so surfacing it again would be
+      redundant.
+
+    Each per-vehicle failure logs at DEBUG — this is per-vehicle, so a global
+    outage would emit one line per vehicle; DEBUG keeps that quiet (consistent
+    with :meth:`AbrpTelemetryCoordinator.async_seed`).
     """
+    try:
+        raw_vehicles = await client.async_get_vehicles()
+    except AbrpAuthError as err:
+        raise ConfigEntryAuthFailed(
+            translation_domain=DOMAIN,
+            translation_key="abrp_session_invalid",
+        ) from err
+    except AbrpApiError as err:
+        raise ConfigEntryNotReady(
+            translation_domain=DOMAIN,
+            translation_key="abrp_update_failed",
+        ) from err
 
-    vehicle: AbrpVehicle
-    display: VehicleModelDisplay | None
-
-    @property
-    def vehicle_id(self) -> int:
-        """Return the upstream vehicle id."""
-        return self.vehicle.vehicle_id
-
-    @property
-    def name(self) -> str | None:
-        """Return the user-set vehicle nickname, if any."""
-        return self.vehicle.name
-
-    @property
-    def vehicle_model(self) -> str:
-        """Return the raw vehicle typecode."""
-        return self.vehicle.vehicle_model
-
-    @property
-    def device_model(self) -> str | None:
-        """Return the composed device-card model, if display metadata resolved."""
-        return self.display.display_name if self.display is not None else None
-
-    @property
-    def device_manufacturer(self) -> str | None:
-        """Return the device-card manufacturer, if display metadata resolved."""
-        return self.display.manufacturer if self.display is not None else None
-
-
-class AbrpVehiclesCoordinator(TimestampDataUpdateCoordinator[list[GarageVehicle]]):
-    """Fetch the authenticated user's ABRP garage on a fixed interval."""
-
-    config_entry: AbetterrouteplannerConfigEntry
-
-    def __init__(
-        self,
-        hass: HomeAssistant,
-        entry: AbetterrouteplannerConfigEntry,
-        session: OAuth2Session,
-    ) -> None:
-        """Initialize the coordinator."""
-        super().__init__(
-            hass,
-            _LOGGER,
-            config_entry=entry,
-            name=DOMAIN,
-            update_interval=SCAN_INTERVAL,
-        )
-        self._session = session
-        self._client = AbrpClient(
-            async_get_clientsession(hass),
-            ABRP_APP_KEY,
-            AbetterrouteplannerAuth(session),
-        )
-
-    async def _async_update_data(self) -> list[GarageVehicle]:
-        """Fetch the garage and compose each vehicle's device-card fields.
-
-        The :class:`.auth.AbetterrouteplannerAuth` wrapper handles the OAuth
-        token refresh and maps a revoked/rotated refresh token to
-        :class:`aioabrp.AbrpAuthError`; here that surfaces as
-        :class:`ConfigEntryAuthFailed`. Other garage API failures map to
-        :class:`UpdateFailed`.
-
-        Per-typecode display metadata is fetched fresh for every vehicle on
-        every poll (no cache, by design). A per-vehicle display failure
-        degrades only that vehicle to the raw-typecode fallback (the device
-        card reads ``None`` for the composed model/manufacturer) and never
-        fails the refresh.
-        """
-        try:
-            raw_vehicles = await self._client.async_get_vehicles()
-        except AbrpAuthError as err:
-            raise ConfigEntryAuthFailed(
-                translation_domain=DOMAIN,
-                translation_key="abrp_session_invalid",
-            ) from err
-        except AbrpApiError as err:
-            raise UpdateFailed(
-                translation_domain=DOMAIN,
-                translation_key="abrp_update_failed",
-            ) from err
-
-        displays = await self._async_fetch_displays(raw_vehicles)
-        return [
-            GarageVehicle(raw, display)
-            for raw, display in zip(raw_vehicles, displays, strict=True)
-        ]
-
-    async def _async_fetch_displays(
-        self, raw_vehicles: list[AbrpVehicle]
-    ) -> list[VehicleModelDisplay | None]:
-        """Resolve each vehicle's display metadata, degrading per-vehicle.
-
-        Calls :meth:`aioabrp.AbrpClient.async_get_vehicle_model_display` per
-        vehicle in parallel via :func:`asyncio.gather` with
-        ``return_exceptions=True`` so one typecode's failure does not block the
-        rest. Any failure maps to ``None`` (the vehicle's device card then
-        falls back to the raw typecode):
-
-        * a 404 for a typecode ABRP does not catalog (``AbrpApiError``),
-        * a transient API / transport / timeout failure, or
-        * an ``AbrpAuthError``.
-
-        Auth errors are NOT escalated from here: the garage fetch above is the
-        single authoritative auth-failure signal (it maps auth failure to
-        :class:`ConfigEntryAuthFailed`), so surfacing it again here would be
-        redundant. Each failure logs at DEBUG — this is per-vehicle, so a
-        global outage would emit one line per vehicle; DEBUG keeps that quiet
-        (consistent with :meth:`AbrpTelemetryCoordinator.async_seed`).
-        """
-        results = await asyncio.gather(
-            *(
-                self._client.async_get_vehicle_model_display(raw.vehicle_model)
-                for raw in raw_vehicles
-            ),
-            return_exceptions=True,
-        )
-        displays: list[VehicleModelDisplay | None] = []
-        for raw, result in zip(raw_vehicles, results, strict=True):
-            if isinstance(result, AbrpAuthError):
-                _LOGGER.debug(
-                    "Display metadata for typecode %s rejected (%s); device "
-                    "card falls back to the raw typecode",
+    results = await asyncio.gather(
+        *(
+            client.async_get_vehicle_model_display(raw.vehicle_model)
+            for raw in raw_vehicles
+        ),
+        return_exceptions=True,
+    )
+    paired: list[tuple[AbrpVehicle, VehicleModelDisplay | None]] = []
+    for raw, result in zip(raw_vehicles, results, strict=True):
+        if isinstance(result, AbrpAuthError):
+            _LOGGER.debug(
+                "Display metadata for typecode %s rejected (%s); device "
+                "card falls back to the raw typecode",
+                raw.vehicle_model,
+                result,
+            )
+            paired.append((raw, None))
+            continue
+        if isinstance(result, (AbrpApiError, TimeoutError)):
+            _LOGGER.debug(
+                "Display metadata for typecode %s failed (%s); device "
+                "card falls back to the raw typecode",
+                raw.vehicle_model,
+                result,
+            )
+            paired.append((raw, None))
+            continue
+        if isinstance(result, BaseException):
+            # ``BaseException`` (not ``Exception``) so ``CancelledError`` /
+            # ``KeyboardInterrupt`` / ``SystemExit`` propagate cleanly
+            # rather than being silently turned into "no display".
+            if isinstance(result, Exception):
+                _LOGGER.warning(
+                    "Unexpected display-metadata failure for typecode %s: %s",
                     raw.vehicle_model,
                     result,
                 )
-                displays.append(None)
+                paired.append((raw, None))
                 continue
-            if isinstance(result, (AbrpApiError, TimeoutError)):
-                _LOGGER.debug(
-                    "Display metadata for typecode %s failed (%s); device "
-                    "card falls back to the raw typecode",
-                    raw.vehicle_model,
-                    result,
-                )
-                displays.append(None)
-                continue
-            if isinstance(result, BaseException):
-                # ``BaseException`` (not ``Exception``) so ``CancelledError`` /
-                # ``KeyboardInterrupt`` / ``SystemExit`` propagate cleanly
-                # rather than being silently turned into "no display".
-                if isinstance(result, Exception):
-                    _LOGGER.warning(
-                        "Unexpected display-metadata failure for typecode %s: %s",
-                        raw.vehicle_model,
-                        result,
-                    )
-                    displays.append(None)
-                    continue
-                raise result
-            displays.append(result)
-        return displays
+            raise result
+        paired.append((raw, result))
+    return paired
 
 
 class AbrpTelemetryCoordinator(TimestampDataUpdateCoordinator[dict[int, Telemetry]]):
@@ -445,10 +341,10 @@ class AbrpTelemetryCoordinator(TimestampDataUpdateCoordinator[dict[int, Telemetr
 
         Results apply through the same :meth:`_apply_metrics` path as
         :meth:`on_update` so seed and stream share one assignment code path.
-        Auth errors are NOT escalated from here — the garage coordinator is the
-        authoritative auth-failure signal (it raises
-        :class:`ConfigEntryAuthFailed`); surfacing it here too would be
-        redundant.
+        Auth errors are NOT escalated from here — the garage fetch
+        (:func:`async_fetch_garage`) is the authoritative auth-failure signal
+        (it raises :class:`ConfigEntryAuthFailed`); surfacing it here too would
+        be redundant.
         """
         ids = list(vehicle_ids)
         if not ids:
@@ -461,7 +357,7 @@ class AbrpTelemetryCoordinator(TimestampDataUpdateCoordinator[dict[int, Telemetr
             if isinstance(result, AbrpAuthError):
                 # DEBUG, not WARNING: a globally revoked token would emit one
                 # of these per vehicle (N warnings for N vehicles). The garage
-                # coordinator is the authoritative auth-failure signal.
+                # fetch is the authoritative auth-failure signal.
                 _LOGGER.debug(
                     "Telemetry seed for vehicle %d rejected (%s); stream will retry",
                     vehicle_id,

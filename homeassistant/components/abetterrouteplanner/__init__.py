@@ -1,12 +1,13 @@
 """The A Better Routeplanner integration."""
 
 from http import HTTPStatus
+import logging
 
 from aioabrp import AbrpClient, TelemetryStream
 from aiohttp import ClientError, ClientResponseError
 
 from homeassistant.const import Platform
-from homeassistant.core import HomeAssistant, callback
+from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ConfigEntryAuthFailed, ConfigEntryNotReady
 from homeassistant.helpers import (
     config_entry_oauth2_flow,
@@ -22,10 +23,12 @@ from .coordinator import (
     AbetterrouteplannerConfigEntry,
     AbrpData,
     AbrpTelemetryCoordinator,
-    AbrpVehiclesCoordinator,
+    async_fetch_garage,
 )
 from .oauth import AbetterrouteplannerOAuth2Implementation
 from .sensor import vehicles_without_sensors
+
+_LOGGER = logging.getLogger(__name__)
 
 CONFIG_SCHEMA = cv.config_entry_only_config_schema(DOMAIN)
 
@@ -76,85 +79,57 @@ async def async_setup_entry(
             translation_key="oauth2_token_refresh_failed",
         ) from err
 
-    garage_coordinator = AbrpVehiclesCoordinator(hass, entry, session)
-    await garage_coordinator.async_config_entry_first_refresh()
-
-    # Anchor a device per selected vehicle BEFORE forwarding the platforms and
-    # registering the garage-listener callbacks. The device card is then
-    # present immediately after setup — even for a vehicle that's silent on
-    # SSE — and the ``_propagate_device_metadata`` listener operates against a
-    # populated device registry on its first fire. Formulas mirror those used
-    # by the telemetry entities so the device fields match what an
-    # entity-driven registration would have produced.
-    device_registry = dr.async_get(hass)
-    selected_ids = {int(vehicle_id) for vehicle_id in entry.data[CONF_VEHICLE_IDS]}
-    for vehicle in garage_coordinator.data:
-        if vehicle.vehicle_id not in selected_ids:
-            continue
-        scope = f"{entry.unique_id}_{vehicle.vehicle_id}"
-        device_registry.async_get_or_create(
-            config_entry_id=entry.entry_id,
-            identifiers={(DOMAIN, scope)},
-            manufacturer=vehicle.device_manufacturer,
-            model=vehicle.device_model or vehicle.vehicle_model,
-            name=vehicle.name or vehicle.vehicle_model,
-            configuration_url=(
-                f"https://abetterrouteplanner.com/?vehicle_id={vehicle.vehicle_id}"
-            ),
-        )
-
-    @callback
-    def _propagate_device_metadata() -> None:
-        """Reconcile each device's name, model, and manufacturer on refresh.
-
-        Fires on every successful garage refresh and recomputes the same
-        expressions the setup-time anchor used, so any value that changes
-        upstream is pushed into the registry WITHOUT a config-entry reload:
-
-        * ``name`` — an ABRP vehicle rename.
-        * ``model`` / ``manufacturer`` — recomposed from the per-vehicle
-          display fetch each poll. They are integration-owned (no
-          user-override concept), so they always track the anchor formula:
-          on a display hit they carry the composed model + manufacturer, and
-          on a display miss/failure ``model`` falls back to the raw typecode
-          and ``manufacturer`` is left unset, recomposing when the fetch next
-          succeeds.
-
-        ``async_update_device`` diffs each field and no-ops (no event, no
-        save) when nothing changed, so an unchanged poll is a no-op.
-        """
-        device_registry = dr.async_get(hass)
-        for vehicle in garage_coordinator.data:
-            scope = f"{entry.unique_id}_{vehicle.vehicle_id}"
-            device = device_registry.async_get_device(identifiers={(DOMAIN, scope)})
-            if device is None:
-                continue
-            device_registry.async_update_device(
-                device.id,
-                name=vehicle.name or vehicle.vehicle_model,
-                model=vehicle.device_model or vehicle.vehicle_model,
-                manufacturer=vehicle.device_manufacturer,
-            )
-
-    entry.async_on_unload(
-        garage_coordinator.async_add_listener(_propagate_device_metadata)
-    )
-
-    telemetry_coordinator = AbrpTelemetryCoordinator(hass, entry)
-
-    # Build the auth wrapper + client + websession once; they back both the
-    # seed poll and the SSE consumer below. The stream is owned by the config
-    # entry and stopped on unload.
+    # Build the auth wrapper + client + websession once; they back the
+    # one-shot garage fetch, the seed poll, and the SSE consumer below. The
+    # stream is owned by the config entry and stopped on unload.
     websession = async_get_clientsession(hass)
     auth = AbetterrouteplannerAuth(session)
     client = AbrpClient(websession, ABRP_APP_KEY, auth)
 
-    # Filter the selection against the live garage so we only stream for
-    # vehicles the API actually knows about; the v2 endpoint rejects unknown
-    # IDs, and an entry with no live selections (e.g. user removed every
-    # vehicle in ABRP) should idle until the next garage refresh re-discovers
-    # them.
-    present_ids = {vehicle.vehicle_id for vehicle in garage_coordinator.data}
+    # One-shot garage fetch: vehicle identity joined with its device-card
+    # display. Raises ConfigEntryAuthFailed / ConfigEntryNotReady on failure.
+    vehicles = await async_fetch_garage(client)
+
+    # Anchor a device per selected vehicle BEFORE forwarding the platforms so
+    # the device card is present immediately after setup — even for a vehicle
+    # that's silent on SSE. The composed model/manufacturer mirror what the
+    # telemetry entities would produce. The card reflects the garage as of this
+    # setup/reload; live rename / late-display recovery is a follow-up.
+    device_registry = dr.async_get(hass)
+    selected_ids = {int(vehicle_id) for vehicle_id in entry.data[CONF_VEHICLE_IDS]}
+    for raw, display in vehicles:
+        if raw.vehicle_id not in selected_ids:
+            continue
+        scope = f"{entry.unique_id}_{raw.vehicle_id}"
+        if display is None:
+            # Surface why a selected vehicle's card shows the raw typecode (a
+            # catalog miss) so it is greppable without enabling DEBUG; one line
+            # per degraded vehicle at setup only, no per-poll spam.
+            _LOGGER.info(
+                "No display metadata for vehicle %d (typecode %s); device card "
+                "shows the raw typecode until the entry is reloaded",
+                raw.vehicle_id,
+                raw.vehicle_model,
+            )
+        device_registry.async_get_or_create(
+            config_entry_id=entry.entry_id,
+            identifiers={(DOMAIN, scope)},
+            manufacturer=display.manufacturer if display is not None else None,
+            model=display.display_name if display is not None else raw.vehicle_model,
+            name=raw.name or raw.vehicle_model,
+            configuration_url=(
+                f"https://abetterrouteplanner.com/?vehicle_id={raw.vehicle_id}"
+            ),
+        )
+
+    telemetry_coordinator = AbrpTelemetryCoordinator(hass, entry)
+
+    # Filter the selection against the garage snapshot so we only stream for
+    # vehicles the API actually knows about; the v2 endpoint rejects an unknown
+    # id as a whole-subscription failure, and an entry with no live selections
+    # (e.g. user removed every vehicle in ABRP) should idle until a reload
+    # re-discovers them.
+    present_ids = {raw.vehicle_id for raw, _ in vehicles}
     vehicle_ids = [
         int(vehicle_id)
         for vehicle_id in entry.data[CONF_VEHICLE_IDS]
@@ -188,7 +163,7 @@ async def async_setup_entry(
 
     entry.runtime_data = AbrpData(
         session=session,
-        garage_coordinator=garage_coordinator,
+        vehicles=vehicles,
         telemetry_coordinator=telemetry_coordinator,
         stream=stream,
     )
@@ -213,17 +188,19 @@ async def async_remove_config_entry_device(
 ) -> bool:
     """Allow deleting a device only once its vehicle is no longer active.
 
-    Refused while the vehicle is still in the ``selected ∩ present`` set;
-    allowed once it drops out of either (deselected in the config entry, or
-    gone from the garage), so an orphaned device card can be cleaned up.
+    Refused while the vehicle is still in the ``selected ∩ present`` set, where
+    ``present`` is the garage snapshot taken at the last setup/reload; allowed
+    once it drops out of either (deselected in the config entry, or absent from
+    that snapshot), so an orphaned device card can be cleaned up. A vehicle
+    removed from ABRP after setup stays refused until the entry is reloaded.
     """
     selected_ids = {
         int(vehicle_id) for vehicle_id in config_entry.data[CONF_VEHICLE_IDS]
     }
     active_scopes = {
-        f"{config_entry.unique_id}_{vehicle.vehicle_id}"
-        for vehicle in config_entry.runtime_data.garage_coordinator.data
-        if vehicle.vehicle_id in selected_ids
+        f"{config_entry.unique_id}_{raw.vehicle_id}"
+        for raw, _ in config_entry.runtime_data.vehicles
+        if raw.vehicle_id in selected_ids
     }
     return not any(
         identifier[0] == DOMAIN and identifier[1] in active_scopes

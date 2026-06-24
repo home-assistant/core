@@ -207,9 +207,9 @@ def mock_abrp_client(
 
     Patches the three client methods on the library class object itself, so a
     single fixture covers every ``AbrpClient`` instance the integration builds:
-    the garage coordinator's client, the seed-path client, and the config-flow
-    client all share the same class object, so patching the class methods
-    patches all instances.
+    the setup-time client (which backs the garage fetch, the seed poll, and the
+    SSE stream) and the config-flow client share the same class object, so
+    patching the class methods patches all instances.
 
     - ``async_get_vehicles`` (autospec): returns the 2-vehicle
       ``mock_abrp_vehicles`` list.

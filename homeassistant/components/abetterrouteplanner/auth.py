@@ -14,9 +14,9 @@ refresh token — becomes terminal ``AbrpAuthError``; everything else (5xx,
 generic ``ClientError``, timeouts) propagates unchanged so the library retries.
 
 Deliberately, this does NOT raise ``ConfigEntryAuthFailed`` — that exception is
-inert inside the library's background task. The garage coordinator's
-``_async_update_data`` is the site that surfaces auth failure to HA as
-``ConfigEntryAuthFailed``.
+inert inside the library's background task. The setup-time garage fetch
+(:func:`.coordinator.async_fetch_garage`) is the site that surfaces auth
+failure to HA as ``ConfigEntryAuthFailed``.
 """
 
 from http import HTTPStatus
