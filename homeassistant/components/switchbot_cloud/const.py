@@ -11,6 +11,8 @@ DOMAIN: Final = "switchbot_cloud"
 ENTRY_TITLE = "SwitchBot Cloud"
 DEFAULT_SCAN_INTERVAL = timedelta(seconds=600)
 
+CONF_CLOUDHOOK_URL: Final = "cloudhook_url"
+
 SENSOR_KIND_TEMPERATURE = "temperature"
 SENSOR_KIND_HUMIDITY = "humidity"
 SENSOR_KIND_BATTERY = "battery"

@@ -2,7 +2,7 @@
 
 import asyncio
 import logging
-from typing import TYPE_CHECKING, Any, final
+from typing import TYPE_CHECKING, Any, final, override
 
 from propcache.api import cached_property
 
@@ -171,6 +171,7 @@ class BaseTrackerEntity(Entity):
     _attr_entity_category = EntityCategory.DIAGNOSTIC
     _attr_source_type: SourceType
 
+    @override
     def __init_subclass__(cls, **kwargs: Any) -> None:
         """Post initialisation processing."""
         super().__init_subclass__(**kwargs)
@@ -211,6 +212,7 @@ class BaseTrackerEntity(Entity):
         raise NotImplementedError
 
     @property
+    @override
     def state_attributes(self) -> dict[str, Any]:
         """Return the device state attributes."""
         attr: dict[str, Any] = {ATTR_SOURCE_TYPE: self.source_type}
@@ -256,6 +258,7 @@ class TrackerEntity(
     __deprecated_attr_location_name_reported = False
     __in_zones: list[str] | None = None
 
+    @override
     def __init_subclass__(cls, **kwargs: Any) -> None:
         """Post initialisation processing."""
         super().__init_subclass__(**kwargs)
@@ -279,11 +282,13 @@ class TrackerEntity(
             )
 
     @cached_property
+    @override
     def should_poll(self) -> bool:
         """No polling for entities that have location pushed."""
         return False
 
     @property
+    @override
     def force_update(self) -> bool:
         """All updates need to be written to the state machine if we're not polling."""
         return not self.should_poll
@@ -347,6 +352,7 @@ class TrackerEntity(
         return self._attr_longitude
 
     @callback
+    @override
     def _async_write_ha_state(self) -> None:
         """Calculate active zones."""
         if (zones := self.in_zones) is not None:
@@ -375,6 +381,7 @@ class TrackerEntity(
         super()._async_write_ha_state()
 
     @property
+    @override
     def state(self) -> str | None:
         """Return the state of the device."""
         if self.location_name is not None:
@@ -396,6 +403,7 @@ class TrackerEntity(
 
     @final
     @property
+    @override
     def state_attributes(self) -> dict[str, Any]:
         """Return the device state attributes."""
         attr: dict[str, Any] = {ATTR_IN_ZONES: self.__in_zones or []}
@@ -422,6 +430,7 @@ class BaseScannerEntity(BaseTrackerEntity):
     _scanner_option_associated_zone: str = zone.ENTITY_ID_HOME
     _scanner_option_associated_zone_unsub: CALLBACK_TYPE | None = None
 
+    @override
     async def async_internal_added_to_hass(self) -> None:
         """Call when the scanner entity is added to hass."""
         await super().async_internal_added_to_hass()
@@ -429,6 +438,7 @@ class BaseScannerEntity(BaseTrackerEntity):
             return
         self._async_read_entity_options()
 
+    @override
     async def async_internal_will_remove_from_hass(self) -> None:
         """Call when the scanner entity is about to be removed from hass."""
         await super().async_internal_will_remove_from_hass()
@@ -440,6 +450,7 @@ class BaseScannerEntity(BaseTrackerEntity):
         self._async_clear_associated_zone_issue()
 
     @callback
+    @override
     def async_registry_entry_updated(self) -> None:
         """Run when the entity registry entry has been updated."""
         self._async_read_entity_options()
@@ -520,6 +531,7 @@ class BaseScannerEntity(BaseTrackerEntity):
         return f"associated_zone_missing_{self.registry_entry.id}"
 
     @property
+    @override
     def state(self) -> str | None:
         """Return the state of the device."""
         if self.is_connected is None:
@@ -541,6 +553,7 @@ class BaseScannerEntity(BaseTrackerEntity):
 
     @final
     @property
+    @override
     def state_attributes(self) -> dict[str, Any]:
         """Return the device state attributes."""
         attr: dict[str, Any] = {ATTR_IN_ZONES: []}
@@ -604,17 +617,20 @@ class ScannerEntity(
         return self._attr_hostname
 
     @property
+    @override
     def unique_id(self) -> str | None:
         """Return unique ID of the entity."""
         return self.mac_address
 
     @final
     @property
+    @override
     def device_info(self) -> DeviceInfo | None:
         """Device tracker entities should not create device registry entries."""
         return None
 
     @property
+    @override
     def entity_registry_enabled_default(self) -> bool:
         """Return if entity is enabled by default."""
         # If mac_address is None, we can never find a device entry.
@@ -627,6 +643,7 @@ class ScannerEntity(
         )
 
     @callback
+    @override
     def add_to_platform_start(
         self,
         hass: HomeAssistant,
@@ -659,6 +676,7 @@ class ScannerEntity(
             connections={(dr.CONNECTION_NETWORK_MAC, self.mac_address)}
         )
 
+    @override
     async def async_internal_added_to_hass(self) -> None:
         """Handle added to Home Assistant."""
         # Entities without a unique ID don't have a device
@@ -697,6 +715,7 @@ class ScannerEntity(
     # intentionally extends it with ip/mac/hostname.
     @final  # type: ignore[misc]
     @property
+    @override
     def state_attributes(self) -> dict[str, Any]:
         """Return the device state attributes."""
         attr = super().state_attributes

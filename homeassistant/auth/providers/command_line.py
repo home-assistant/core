@@ -4,7 +4,7 @@ import asyncio
 from collections.abc import Mapping
 import logging
 import os
-from typing import Any
+from typing import Any, override
 
 import voluptuous as vol
 
@@ -57,6 +57,7 @@ class CommandLineAuthProvider(AuthProvider):
         super().__init__(*args, **kwargs)
         self._user_meta: dict[str, dict[str, Any]] = {}
 
+    @override
     async def async_login_flow(
         self, context: AuthFlowContext | None
     ) -> CommandLineLoginFlow:
@@ -105,6 +106,7 @@ class CommandLineAuthProvider(AuthProvider):
                     meta[key] = value
             self._user_meta[username] = meta
 
+    @override
     async def async_get_or_create_credentials(
         self, flow_result: Mapping[str, str]
     ) -> Credentials:
@@ -117,6 +119,7 @@ class CommandLineAuthProvider(AuthProvider):
         # Create new credentials.
         return self.async_create_credentials({"username": username})
 
+    @override
     async def async_user_meta_for_credentials(
         self, credentials: Credentials
     ) -> UserMeta:
@@ -136,6 +139,7 @@ class CommandLineAuthProvider(AuthProvider):
 class CommandLineLoginFlow(LoginFlow[CommandLineAuthProvider]):
     """Handler for the login flow."""
 
+    @override
     async def async_step_init(
         self, user_input: dict[str, str] | None = None
     ) -> AuthFlowResult:

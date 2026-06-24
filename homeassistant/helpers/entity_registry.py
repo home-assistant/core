@@ -14,7 +14,7 @@ from datetime import datetime, timedelta
 from enum import Enum, StrEnum
 import logging
 import time
-from typing import TYPE_CHECKING, Any, Literal, NotRequired, TypedDict
+from typing import TYPE_CHECKING, Any, Literal, NotRequired, TypedDict, override
 
 import attr
 import voluptuous as vol
@@ -747,6 +747,7 @@ class DeletedRegistryEntry:
 class EntityRegistryStore(storage.Store[dict[str, list[dict[str, Any]]]]):
     """Store entity registry data."""
 
+    @override
     async def _async_migrate_func(  # noqa: C901
         self,
         old_major_version: int,
@@ -946,6 +947,7 @@ class EntityRegistryItems(BaseRegistryItems[RegistryEntry]):
         self._area_id_index: RegistryIndexType = defaultdict(dict)
         self._labels_index: RegistryIndexType = defaultdict(dict)
 
+    @override
     def _index_entry(self, key: str, entry: RegistryEntry) -> None:
         """Index an entry."""
         self._entry_ids[entry.id] = entry
@@ -961,6 +963,7 @@ class EntityRegistryItems(BaseRegistryItems[RegistryEntry]):
         for label in entry.labels:
             self._labels_index[label][key] = True
 
+    @override
     def _unindex_entry(
         self, key: str, replacement_entry: RegistryEntry | None = None
     ) -> None:
@@ -1152,7 +1155,11 @@ class EntityRegistry(BaseRegistry):
     def async_get_entity_id(
         self, domain: str, platform: str, unique_id: str
     ) -> str | None:
-        """Check if an entity_id is currently registered."""
+        """Check if an entity_id is currently registered.
+
+        domain: entity platform domain (e.g. light, sensor)
+        platform: integration domain (e.g. hue, zwave)
+        """
         return self.entities.get_entity_id((domain, platform, unique_id))
 
     @callback
@@ -1988,6 +1995,7 @@ class EntityRegistry(BaseRegistry):
             new_options[domain] = options
         return self._async_update_entity(entity_id, options=new_options)
 
+    @override
     async def _async_load(self) -> None:
         """Load the entity registry."""
         # Device registry must be loaded before entity registry because
@@ -2144,6 +2152,7 @@ class EntityRegistry(BaseRegistry):
         self.entities = entities
         self._entities_data = entities.data
 
+    @override
     def _data_to_save(self) -> dict[str, Any]:
         """Return data of entity registry to store in a file."""
         # Create intermediate lists to allow this method to be called from a thread

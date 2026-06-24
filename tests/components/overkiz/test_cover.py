@@ -5,6 +5,7 @@ from pathlib import Path
 from typing import Any
 from unittest.mock import patch
 
+from aiohttp import ClientConnectorError, ServerDisconnectedError
 from freezegun.api import FrozenDateTimeFactory
 from pyoverkiz.enums import ExecutionState, OverkizCommandParam, OverkizState
 import pytest
@@ -35,7 +36,7 @@ from homeassistant.const import (
     Platform,
 )
 from homeassistant.core import HomeAssistant
-from homeassistant.exceptions import ServiceValidationError
+from homeassistant.exceptions import HomeAssistantError, ServiceValidationError
 from homeassistant.helpers import entity_registry as er
 
 from .conftest import FixtureDevice, MockOverkizClient, SetupOverkizIntegration
@@ -245,8 +246,8 @@ async def test_cover_entities_snapshot(
         (DYNAMIC_GARAGE_DOOR, SERVICE_OPEN_COVER, "open", None, CoverState.OPENING),
         (DYNAMIC_GARAGE_DOOR_OGP, SERVICE_OPEN_COVER, "open", None, CoverState.OPENING),
         (DYNAMIC_GATE, SERVICE_OPEN_COVER, "open", None, CoverState.OPENING),
-        (RTS_GATE_4T, SERVICE_OPEN_COVER, "cycle", [0], CoverState.OPENING),
-        (RTS_GARAGE_DOOR_4T, SERVICE_OPEN_COVER, "cycle", [0], CoverState.OPENING),
+        (RTS_GATE_4T, SERVICE_OPEN_COVER, "cycle", None, CoverState.OPENING),
+        (RTS_GARAGE_DOOR_4T, SERVICE_OPEN_COVER, "cycle", None, CoverState.OPENING),
         (CYCLIC_GARAGE_DOOR, SERVICE_OPEN_COVER, "cycle", None, CoverState.OPENING),
         (CYCLIC_SWINGING_GATE, SERVICE_OPEN_COVER, "cycle", None, CoverState.OPENING),
         (SLIDING_DISCRETE_GATE, SERVICE_OPEN_COVER, "open", None, CoverState.OPENING),
@@ -263,12 +264,18 @@ async def test_cover_entities_snapshot(
             UP_DOWN_BIOCLIMATIC_PERGOLA,
             SERVICE_OPEN_COVER,
             "open",
-            [0],
+            None,
             CoverState.OPENING,
         ),
-        (TILT_ONLY_VENETIAN_BLIND, SERVICE_OPEN_COVER, "open", [0], CoverState.OPENING),
-        (UP_DOWN_VENETIAN_BLIND, SERVICE_OPEN_COVER, "open", [0], CoverState.OPENING),
-        (UP_DOWN_SHEER_SCREEN, SERVICE_OPEN_COVER, "open", [0], CoverState.OPENING),
+        (
+            TILT_ONLY_VENETIAN_BLIND,
+            SERVICE_OPEN_COVER,
+            "open",
+            None,
+            CoverState.OPENING,
+        ),
+        (UP_DOWN_VENETIAN_BLIND, SERVICE_OPEN_COVER, "open", None, CoverState.OPENING),
+        (UP_DOWN_SHEER_SCREEN, SERVICE_OPEN_COVER, "open", None, CoverState.OPENING),
         (
             DYNAMIC_VENETIAN_BLIND,
             SERVICE_OPEN_COVER,
@@ -291,8 +298,8 @@ async def test_cover_entities_snapshot(
         (DYNAMIC_GATE, SERVICE_CLOSE_COVER, "close", None, CoverState.CLOSING),
         # Cycle command is used for both open and close; device reports OPENING
         # since the RTS protocol has no directional feedback.
-        (RTS_GATE_4T, SERVICE_CLOSE_COVER, "cycle", [0], CoverState.OPENING),
-        (RTS_GARAGE_DOOR_4T, SERVICE_CLOSE_COVER, "cycle", [0], CoverState.OPENING),
+        (RTS_GATE_4T, SERVICE_CLOSE_COVER, "cycle", None, CoverState.OPENING),
+        (RTS_GARAGE_DOOR_4T, SERVICE_CLOSE_COVER, "cycle", None, CoverState.OPENING),
         (CYCLIC_GARAGE_DOOR, SERVICE_CLOSE_COVER, "cycle", None, CoverState.OPENING),
         (CYCLIC_SWINGING_GATE, SERVICE_CLOSE_COVER, "cycle", None, CoverState.OPENING),
         (SLIDING_DISCRETE_GATE, SERVICE_CLOSE_COVER, "close", None, CoverState.CLOSING),
@@ -309,18 +316,24 @@ async def test_cover_entities_snapshot(
             UP_DOWN_BIOCLIMATIC_PERGOLA,
             SERVICE_CLOSE_COVER,
             "close",
-            [0],
+            None,
             CoverState.CLOSING,
         ),
         (
             TILT_ONLY_VENETIAN_BLIND,
             SERVICE_CLOSE_COVER,
             "close",
-            [0],
+            None,
             CoverState.CLOSING,
         ),
-        (UP_DOWN_VENETIAN_BLIND, SERVICE_CLOSE_COVER, "close", [0], CoverState.CLOSING),
-        (UP_DOWN_SHEER_SCREEN, SERVICE_CLOSE_COVER, "close", [0], CoverState.CLOSING),
+        (
+            UP_DOWN_VENETIAN_BLIND,
+            SERVICE_CLOSE_COVER,
+            "close",
+            None,
+            CoverState.CLOSING,
+        ),
+        (UP_DOWN_SHEER_SCREEN, SERVICE_CLOSE_COVER, "close", None, CoverState.CLOSING),
         (
             DYNAMIC_VENETIAN_BLIND,
             SERVICE_CLOSE_COVER,
@@ -349,10 +362,10 @@ async def test_cover_entities_snapshot(
             UP_DOWN_BIOCLIMATIC_PERGOLA,
             SERVICE_STOP_COVER,
             "stop",
-            [0],
+            None,
             STATE_UNKNOWN,
         ),
-        (TILT_ONLY_VENETIAN_BLIND, SERVICE_STOP_COVER, "stop", [0], STATE_UNKNOWN),
+        (TILT_ONLY_VENETIAN_BLIND, SERVICE_STOP_COVER, "stop", None, STATE_UNKNOWN),
         (
             DYNAMIC_VENETIAN_BLIND,
             SERVICE_STOP_COVER,
@@ -364,65 +377,65 @@ async def test_cover_entities_snapshot(
             TILT_ONLY_VENETIAN_BLIND,
             SERVICE_OPEN_COVER_TILT,
             "tiltPositive",
-            [5, 0],
+            [5],
             CoverState.OPENING,
         ),
         (
             TILT_ONLY_VENETIAN_BLIND,
             SERVICE_CLOSE_COVER_TILT,
             "tiltNegative",
-            [5, 0],
+            [5],
             CoverState.CLOSING,
         ),
         (
             TILT_ONLY_VENETIAN_BLIND,
             SERVICE_STOP_COVER_TILT,
             "stop",
-            [0],
+            None,
             STATE_UNKNOWN,
         ),
-        (UP_DOWN_VENETIAN_BLIND, SERVICE_STOP_COVER, "stop", [0], STATE_UNKNOWN),
-        (UP_DOWN_SHEER_SCREEN, SERVICE_STOP_COVER, "stop", [0], STATE_UNKNOWN),
+        (UP_DOWN_VENETIAN_BLIND, SERVICE_STOP_COVER, "stop", None, STATE_UNKNOWN),
+        (UP_DOWN_SHEER_SCREEN, SERVICE_STOP_COVER, "stop", None, STATE_UNKNOWN),
         (
             UP_DOWN_VENETIAN_BLIND,
             SERVICE_OPEN_COVER_TILT,
             "tiltPositive",
-            [5, 0],
+            [5],
             CoverState.OPENING,
         ),
         (
             UP_DOWN_VENETIAN_BLIND,
             SERVICE_CLOSE_COVER_TILT,
             "tiltNegative",
-            [5, 0],
+            [5],
             CoverState.CLOSING,
         ),
         (
             UP_DOWN_VENETIAN_BLIND,
             SERVICE_STOP_COVER_TILT,
             "stop",
-            [0],
+            None,
             STATE_UNKNOWN,
         ),
         (
             UP_DOWN_SHEER_SCREEN,
             SERVICE_OPEN_COVER_TILT,
             "tiltPositive",
-            [5, 0],
+            [5],
             CoverState.OPENING,
         ),
         (
             UP_DOWN_SHEER_SCREEN,
             SERVICE_CLOSE_COVER_TILT,
             "tiltNegative",
-            [5, 0],
+            [5],
             CoverState.CLOSING,
         ),
         (
             UP_DOWN_SHEER_SCREEN,
             SERVICE_STOP_COVER_TILT,
             "stop",
-            [0],
+            None,
             STATE_UNKNOWN,
         ),
     ],
@@ -523,6 +536,35 @@ async def test_cover_service_actions(
         command_name=command_name,
         parameters=parameters,
     )
+
+
+@pytest.mark.parametrize(
+    "exception",
+    [
+        TimeoutError("Connection timeout to host"),
+        ClientConnectorError(None, OSError()),
+        ServerDisconnectedError(),
+    ],
+    ids=["timeout", "client-connector", "server-disconnected"],
+)
+async def test_cover_command_connection_error_raises(
+    hass: HomeAssistant,
+    setup_overkiz_integration: SetupOverkizIntegration,
+    mock_client: MockOverkizClient,
+    exception: Exception,
+) -> None:
+    """Test that connection failures while sending a command raise HomeAssistantError."""
+    await setup_overkiz_integration(fixture=SHUTTER.fixture)
+
+    mock_client.execute_action_group.side_effect = exception
+
+    with pytest.raises(HomeAssistantError, match="Failed to connect"):
+        await hass.services.async_call(
+            COVER_DOMAIN,
+            SERVICE_CLOSE_COVER,
+            {ATTR_ENTITY_ID: SHUTTER.entity_id},
+            blocking=True,
+        )
 
 
 @pytest.mark.parametrize(

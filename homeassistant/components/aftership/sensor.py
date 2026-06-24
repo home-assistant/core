@@ -1,7 +1,7 @@
 """Support for non-delivered packages recorded in AfterShip."""
 
 import logging
-from typing import Any, Final
+from typing import Any, Final, override
 
 from pyaftership import AfterShip, AfterShipException
 
@@ -96,15 +96,18 @@ class AfterShipSensor(SensorEntity):
         self._attr_name = name
 
     @property
+    @override
     def native_value(self) -> int | None:
         """Return the state of the sensor."""
         return self._state
 
     @property
+    @override
     def extra_state_attributes(self) -> dict[str, str]:
         """Return attributes for the sensor."""
         return self._attributes
 
+    @override
     async def async_added_to_hass(self) -> None:
         """Register callbacks."""
         self.async_on_remove(

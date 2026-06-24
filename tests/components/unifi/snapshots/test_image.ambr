@@ -39,7 +39,7 @@
 # name: test_entity_and_device_data[site_payload0-wlan_payload0][image.ssid_1_qr_code-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'access_token': '1',
+      <ImageEntityStateAttribute.ACCESS_TOKEN: 'access_token'>: '1',
       'entity_picture': '/api/image_proxy/image.ssid_1_qr_code?token=1',
       'friendly_name': 'SSID 1 QR code',
     }),

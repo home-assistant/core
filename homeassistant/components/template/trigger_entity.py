@@ -1,7 +1,7 @@
 """Trigger entity."""
 
 from collections.abc import Callable
-from typing import Any
+from typing import Any, override
 
 from homeassistant.const import CONF_VARIABLES
 from homeassistant.core import HomeAssistant, callback
@@ -49,12 +49,14 @@ class TriggerEntity(  # pylint: disable=home-assistant-enforce-class-module
         if self.skip_rendered_result is not None:
             self._skip_rendered_result.extend(self.skip_rendered_result)
 
+    @override
     async def async_added_to_hass(self) -> None:
         """Handle being added to Home Assistant."""
         await super().async_added_to_hass()
         if self.coordinator.data is not None:
             self._process_data()
 
+    @override
     def _set_unique_id(self, unique_id: str | None) -> None:
         """Set unique id."""
         if unique_id and self.coordinator.unique_id:
@@ -62,6 +64,7 @@ class TriggerEntity(  # pylint: disable=home-assistant-enforce-class-module
         else:
             self._unique_id = unique_id
 
+    @override
     def setup_state_template(
         self,
         attribute: str,
@@ -92,6 +95,7 @@ class TriggerEntity(  # pylint: disable=home-assistant-enforce-class-module
             self._to_render_simple.append(self._state_option)
             self._parse_result.add(self._state_option)
 
+    @override
     def setup_template(
         self,
         option: str,
@@ -133,11 +137,13 @@ class TriggerEntity(  # pylint: disable=home-assistant-enforce-class-module
             self._parse_result.add(option)
 
     @property
+    @override
     def referenced_blueprint(self) -> str | None:
         """Return referenced blueprint or None."""
         return self.coordinator.referenced_blueprint
 
     @property
+    @override
     def available(self) -> bool:
         """Return availability of the entity."""
         if self._state_render_error:
@@ -146,10 +152,12 @@ class TriggerEntity(  # pylint: disable=home-assistant-enforce-class-module
         return super().available
 
     @callback
+    @override
     def _render_script_variables(self) -> dict:
         """Render configured variables."""
         return self._rendered_entity_variables or {}
 
+    @override
     def _render_single_template(
         self,
         key: str,
@@ -177,6 +185,7 @@ class TriggerEntity(  # pylint: disable=home-assistant-enforce-class-module
 
         return _SENTINEL
 
+    @override
     def _render_templates(self, variables: dict[str, Any]) -> None:
         """Render templates."""
         self._state_render_error = False
@@ -272,6 +281,7 @@ class TriggerEntity(  # pylint: disable=home-assistant-enforce-class-module
             self.async_write_ha_state()
 
     @callback
+    @override
     def _handle_coordinator_update(self) -> None:
         """Handle updated data from the coordinator.
 
