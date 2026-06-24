@@ -12,7 +12,11 @@ from propcache.api import cached_property
 import voluptuous as vol
 
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import ATTR_MODE, CONF_UNIT_OF_MEASUREMENT, UnitOfTemperature
+from homeassistant.const import (  # noqa: F401
+    ATTR_MODE,
+    CONF_UNIT_OF_MEASUREMENT,
+    UnitOfTemperature,
+)
 from homeassistant.core import (
     HomeAssistant,
     ServiceCall,
@@ -43,6 +47,7 @@ from .const import (  # noqa: F401
     SERVICE_SET_VALUE,
     UNIT_CONVERTERS,
     NumberDeviceClass,
+    NumberEntityCapabilityAttribute,
     NumberMode,
 )
 from .websocket_api import async_setup as async_setup_ws_api
@@ -181,7 +186,12 @@ class NumberEntity(Entity, cached_properties=CACHED_PROPERTIES_WITH_ATTR_):
     """Representation of a Number entity."""
 
     _entity_component_unrecorded_attributes = frozenset(
-        {ATTR_MIN, ATTR_MAX, ATTR_STEP, ATTR_MODE}
+        {
+            NumberEntityCapabilityAttribute.MIN,
+            NumberEntityCapabilityAttribute.MAX,
+            NumberEntityCapabilityAttribute.STEP,
+            NumberEntityCapabilityAttribute.MODE,
+        }
     )
 
     entity_description: NumberEntityDescription
@@ -251,10 +261,12 @@ class NumberEntity(Entity, cached_properties=CACHED_PROPERTIES_WITH_ATTR_):
             self.native_max_value, ceil_decimal, device_class
         )
         return {
-            ATTR_MIN: min_value,
-            ATTR_MAX: max_value,
-            ATTR_STEP: self._calculate_step(min_value, max_value),
-            ATTR_MODE: self.mode,
+            NumberEntityCapabilityAttribute.MIN: min_value,
+            NumberEntityCapabilityAttribute.MAX: max_value,
+            NumberEntityCapabilityAttribute.STEP: self._calculate_step(
+                min_value, max_value
+            ),
+            NumberEntityCapabilityAttribute.MODE: self.mode,
         }
 
     @override
