@@ -6,6 +6,7 @@
 # deprecate them via a repair issue once users have had time to migrate.
 
 from dataclasses import dataclass
+from typing import override
 
 import aiohttp
 
@@ -90,6 +91,7 @@ class DoorBirdLastEventImage(ImageEntity, DoorBirdEntity):
             if event.event_type == description.doorbird_event_type
         ]
 
+    @override
     async def async_image(self) -> bytes | None:
         """Return bytes of the last event image."""
         if self._cached_image:
@@ -107,6 +109,7 @@ class DoorBirdLastEventImage(ImageEntity, DoorBirdEntity):
         self._attr_content_type = content_type
         return image_bytes
 
+    @override
     async def async_added_to_hass(self) -> None:
         """Subscribe to the underlying DoorBird events."""
         await super().async_added_to_hass()
