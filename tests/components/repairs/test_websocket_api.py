@@ -523,6 +523,8 @@ async def test_fix_issue_next_flow(
     ws_client = await hass_ws_client(hass)
     client = await hass_client()
 
+    create_entry_flow: bool = flow_type == "create_entry_flow"
+
     issues = [
         {**DEFAULT_ISSUES[0], "data": {"flow_type": flow_type}, "issue_id": "issue_3"}
     ]
@@ -562,13 +564,13 @@ async def test_fix_issue_next_flow(
         "handler": "fake_integration",
         "description": None,
         "type": data_entry_flow.FlowResultType.CREATE_ENTRY,
-        "result": orjson.loads(orjson.dumps(mock_entry.as_json_fragment)),
-        "next_flow": [flow_type, next_flow_id],
+        "next_flow": [
+            flow_type if not create_entry_flow else FlowType.CONFIG_FLOW,
+            next_flow_id,
+        ],
     }
-
-    if flow_type == "create_entry_flow":
-        to_assert["next_flow"] = [FlowType.CONFIG_FLOW, next_flow_id]
-        del to_assert["result"]
+    if not create_entry_flow:
+        to_assert["result"] = orjson.loads(orjson.dumps(mock_entry.as_json_fragment))
 
     assert data == to_assert
 
@@ -654,11 +656,12 @@ async def test_fix_issue_next_flow_abort(
 @pytest.mark.parametrize(
     (
         "error_type",
+        "assert_msg",
         "ignore_translations_for_mock_domains",
     ),
     [
-        ("invalid_flow", ["fake_integration"]),
-        ("unknown_entry", ["fake_integration"]),
+        ("invalid_flow", "Invalid next_flow type", ["fake_integration"]),
+        ("unknown_entry", "not found in next_flow", ["fake_integration"]),
     ],
 )
 async def test_fix_issue_next_flow_errors(
@@ -666,6 +669,7 @@ async def test_fix_issue_next_flow_errors(
     hass_client: ClientSessionGenerator,
     hass_ws_client: WebSocketGenerator,
     error_type: str,
+    assert_msg: str,
 ) -> None:
     """Test next_flow RepairFlows."""
     assert await async_setup_component(hass, "http", {})
@@ -696,14 +700,7 @@ async def test_fix_issue_next_flow_errors(
 
     assert resp.status == HTTPStatus.BAD_REQUEST
     data = await resp.json()
-
-    if error_type == "invalid_flow":
-        assert "Invalid next_flow type" in data["message"]
-        return
-
-    if error_type == "unknown_entry":
-        assert "not found in next_flow" in data["message"]
-        return
+    assert assert_msg in data["message"]
 
 
 async def test_fix_issue_unauth(
