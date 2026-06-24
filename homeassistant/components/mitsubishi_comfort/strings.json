@@ -47,8 +47,8 @@
   },
   "issues": {
     "missing_address": {
-      "title": "Mitsubishi Comfort devices have no local IP address",
-      "description": "No local IP address is known for {count} device(s): {devices}.\n\nThey have no entities yet. Devices on Home Assistant's network are added automatically via DHCP discovery. For devices on another subnet or VLAN, enter their IP address in the integration options."
+      "description": "No local IP address is known for {count} device(s): {devices}.\n\nThey have no entities yet. Devices on Home Assistant's network are added automatically via DHCP discovery. For devices on another subnet or VLAN, enter their IP address in the integration options.",
+      "title": "Mitsubishi Comfort devices have no local IP address"
     }
   },
   "options": {
