@@ -144,10 +144,13 @@ class KioskerConfigFlow(ConfigFlow, domain=DOMAIN):
                 **reauth_entry.data,
                 CONF_API_TOKEN: user_input[CONF_API_TOKEN],
             }
-            validation_errors, _ = await validate_input(self.hass, config_data)
+            validation_errors, device_id = await validate_input(self.hass, config_data)
             if validation_errors:
                 errors.update(validation_errors)
             else:
+                assert device_id is not None
+                await self.async_set_unique_id(device_id, raise_on_progress=False)
+                self._abort_if_unique_id_mismatch(reason="wrong_device")
                 return self.async_update_reload_and_abort(
                     reauth_entry,
                     data_updates={CONF_API_TOKEN: user_input[CONF_API_TOKEN]},

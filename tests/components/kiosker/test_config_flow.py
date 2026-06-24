@@ -299,6 +299,25 @@ async def test_reauth_flow_success(
     assert mock_config_entry.data[CONF_API_TOKEN] == "new-token"
 
 
+async def test_reauth_flow_wrong_device(
+    hass: HomeAssistant,
+    mock_kiosker_api: MagicMock,
+    mock_config_entry: MockConfigEntry,
+) -> None:
+    """Test reauth flow aborts when a different device is found at the host."""
+    mock_config_entry.add_to_hass(hass)
+    mock_kiosker_api.status.return_value.device_id = "DIFFERENT-DEVICE-ID"
+
+    result = await mock_config_entry.start_reauth_flow(hass)
+    result2 = await hass.config_entries.flow.async_configure(
+        result["flow_id"],
+        {CONF_API_TOKEN: "new-token"},
+    )
+
+    assert result2["type"] is FlowResultType.ABORT
+    assert result2["reason"] == "wrong_device"
+
+
 @pytest.mark.parametrize(
     ("side_effect", "expected_error"),
     [
