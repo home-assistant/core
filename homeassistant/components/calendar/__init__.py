@@ -520,7 +520,9 @@ class CalendarEntity(Entity):
 
     entity_description: CalendarEntityDescription
 
-    _entity_component_unrecorded_attributes = frozenset({"description"})
+    _entity_component_unrecorded_attributes = frozenset(
+        {CalendarEntityStateAttribute.DESCRIPTION}
+    )
 
     _alarm_unsubs: list[CALLBACK_TYPE] | None = None
     _event_listeners: (
