@@ -24,7 +24,6 @@ def deprecate_entity(
     translation_key: str,
     replacement_platform_domain: str,
     replacement_entity_unique_id: str,
-    replacement_entity_id: str,
 ) -> bool:
     """Handle deprecation of an entity that has been replaced.
 
@@ -66,7 +65,10 @@ def deprecate_entity(
                 entity_registry.async_get_entity_id(
                     replacement_platform_domain, DOMAIN, replacement_entity_unique_id
                 )
-                or replacement_entity_id
+                # The replacement may not be registered yet on the first setup
+                # after the upgrade. It shares this entity's object_id (same
+                # device and name), so derive a valid id from the deprecated one.
+                or f"{replacement_platform_domain}.{entity_id.split('.', 1)[1]}"
             ),
         },
     )

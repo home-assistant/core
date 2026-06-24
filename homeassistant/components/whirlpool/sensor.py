@@ -279,7 +279,6 @@ def _build_oven_cavity_sensors(
             translation_key="deprecated_oven_cook_mode",
             replacement_platform_domain=Platform.SELECT,
             replacement_entity_unique_id=f"{oven.said}-cook_mode{suffix}",
-            replacement_entity_id=f"select.oven_cook_mode{suffix}",
         ):
             continue
         sensors.append(WhirlpoolOvenCavitySensor(oven, cavity, description))
