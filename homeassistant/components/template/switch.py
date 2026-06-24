@@ -118,7 +118,7 @@ class AbstractTemplateSwitch(AbstractTemplateEntity, SwitchEntity, RestoreEntity
     _entity_id_format = ENTITY_ID_FORMAT
     _optimistic_entity = True
     _state_option = CONF_STATE
-    _restore_state_properties = ("is_on",)
+    _restore_state_properties = ("_attr_is_on",)
 
     # The super init is not called because TemplateEntity
     # and TriggerEntity will call
