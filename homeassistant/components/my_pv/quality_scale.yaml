@@ -24,6 +24,12 @@ rules:
   test-before-configure: done
   test-before-setup: done
   unique-config-entry: done
+  docs-conditions:
+    status: exempt
+    comment: This integration does not implement conditions
+  docs-triggers:
+    status: exempt
+    comment: This integration does not implement triggers
 
   # Silver tier rules
   action-exceptions: done
