@@ -34,8 +34,6 @@ class VacuumEntityCapabilityAttribute(StrEnum):
 class VacuumEntityStateAttribute(StrEnum):
     """State attributes for vacuum entities."""
 
-    BATTERY_LEVEL = "battery_level"
-    BATTERY_ICON = "battery_icon"
     FAN_SPEED = "fan_speed"
 
 

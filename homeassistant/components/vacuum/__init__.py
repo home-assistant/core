@@ -344,8 +344,8 @@ class StateVacuumEntity(
             if self.__vacuum_legacy_battery_feature is False:
                 self._report_deprecated_battery_feature()
                 self.__vacuum_legacy_battery_feature = True
-            data[VacuumEntityStateAttribute.BATTERY_LEVEL] = self.battery_level
-            data[VacuumEntityStateAttribute.BATTERY_ICON] = self.battery_icon
+            data[ATTR_BATTERY_LEVEL] = self.battery_level
+            data[ATTR_BATTERY_ICON] = self.battery_icon
 
         if VacuumEntityFeature.FAN_SPEED in supported_features:
             data[VacuumEntityStateAttribute.FAN_SPEED] = self.fan_speed
