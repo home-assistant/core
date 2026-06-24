@@ -112,6 +112,7 @@ def _prepare_repairs_flow_result_json(
     result: data_entry_flow.FlowResult,
     prepare_result_json: Callable[[data_entry_flow.FlowResult], dict[str, Any]],
 ) -> dict[str, Any]:
+    """Convert result to serializable JSON dict."""
     entry: ConfigEntry | None = result.pop("result", None)  # type: ignore[typeddict-item]
     data = prepare_result_json(result)
     if entry is not None:
