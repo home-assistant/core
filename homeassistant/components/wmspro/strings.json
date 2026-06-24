@@ -50,7 +50,7 @@
   },
   "services": {
     "move_cover": {
-      "description": "Move a cover to a specific position and tilt position.",
+      "description": "Moves a cover to a specific position and tilt position.",
       "fields": {
         "position": {
           "description": "The position to move the cover to, in percentage (0-100).",
