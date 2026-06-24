@@ -5,8 +5,8 @@ garage_coordinator.async_add_listener(_propagate_device_metadata))`` after the
 first garage refresh. It iterates ``coordinator.data``, looks up each
 vehicle's device via ``dr.async_get_device(identifiers={(DOMAIN, scope)})``,
 and reconciles three fields against the anchor formula: ``name``
-(``vehicle.name or vehicle.vehicle_model``, skipped when the user owns the
-label via ``name_by_user``), plus the integration-owned ``model``
+(``vehicle.name or vehicle.vehicle_model``), plus the integration-owned
+``model``
 (``vehicle.device_model or vehicle.vehicle_model``) and ``manufacturer``
 (``vehicle.device_manufacturer``, left unset when the make can't be
 resolved). Each field is written only when it differs, so an unchanged poll
@@ -193,61 +193,6 @@ async def test_rename_propagation_table(
     device = device_registry.async_get_device(identifiers={(DOMAIN, scope)})
     assert device is not None
     assert device.name == expected_name
-
-
-# ---------------------------------------------------------------------------
-# name_by_user guard
-# ---------------------------------------------------------------------------
-
-
-@pytest.mark.usefixtures("fake_stream")
-async def test_name_by_user_guard_prevents_overwrite(
-    hass: HomeAssistant,
-    config_entry_with_vehicles: MockConfigEntry,
-    mock_abrp_client: AsyncMock,
-    device_registry: dr.DeviceRegistry,
-) -> None:
-    """A user-set ``name_by_user`` must prevent ABRP renames from propagating.
-
-    Walk-through:
-    1. Poll 1: vehicle named "MG4" → device registered with ``name="MG4"``.
-    2. User sets ``name_by_user="My Tesla"`` via the HA UI.
-    3. Poll 2: ABRP renames vehicle to "Sofie's MG4".
-    4. The listener must see ``device.name_by_user is not None`` → skip.
-
-    After poll 2, ``device.name_by_user`` must remain ``"My Tesla"`` and
-    ``device.name`` must remain ``"MG4"`` — the integration-side name is
-    not overwritten when the user owns the label.
-
-    Active regression guard: a missing guard in the listener would
-    overwrite ``device.name`` and fail the final assertion.
-    """
-    mock_abrp_client.return_value = [
-        _make_vehicle(MOCK_VEHICLE_ID, "MG4", _VEHICLE_MODEL_V1)
-    ]
-    await _setup_integration(hass, config_entry_with_vehicles)
-
-    scope = _device_scope(config_entry_with_vehicles, MOCK_VEHICLE_ID)
-    device = device_registry.async_get_device(identifiers={(DOMAIN, scope)})
-    assert device is not None
-    assert device.name == "MG4"
-
-    # User renames the device in the HA UI
-    device_registry.async_update_device(device.id, name_by_user="My Tesla")
-    device = device_registry.async_get_device(identifiers={(DOMAIN, scope)})
-    assert device is not None
-    assert device.name_by_user == "My Tesla"
-
-    # Poll 2: ABRP rename arrives — listener must skip due to name_by_user guard
-    mock_abrp_client.return_value = [
-        _make_vehicle(MOCK_VEHICLE_ID, "Sofie's MG4", _VEHICLE_MODEL_V1)
-    ]
-    await _poll(hass, config_entry_with_vehicles)
-
-    device = device_registry.async_get_device(identifiers={(DOMAIN, scope)})
-    assert device is not None
-    assert device.name_by_user == "My Tesla"
-    assert device.name == "MG4"
 
 
 # ---------------------------------------------------------------------------

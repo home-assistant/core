@@ -112,8 +112,7 @@ async def async_setup_entry(
         expressions the setup-time anchor used, so any value that changes
         upstream is pushed into the registry WITHOUT a config-entry reload:
 
-        * ``name`` — an ABRP vehicle rename. ``name_by_user`` wins: once the
-          user has overridden the device name in HA, ABRP renames are skipped.
+        * ``name`` — an ABRP vehicle rename.
         * ``model`` / ``manufacturer`` — recomposed from the per-vehicle
           display fetch each poll. They are integration-owned (no
           user-override concept), so they always track the anchor formula:
@@ -133,10 +132,9 @@ async def async_setup_entry(
             # ``UNDEFINED`` per field = "leave unchanged"; only the fields that
             # actually differ are passed, so an unchanged poll is a no-op.
             name: str | UndefinedType = UNDEFINED
-            if device.name_by_user is None:
-                candidate = vehicle.name or vehicle.vehicle_model
-                if device.name != candidate:
-                    name = candidate
+            candidate_name = vehicle.name or vehicle.vehicle_model
+            if device.name != candidate_name:
+                name = candidate_name
             model: str | UndefinedType = UNDEFINED
             candidate_model = vehicle.device_model or vehicle.vehicle_model
             if device.model != candidate_model:
