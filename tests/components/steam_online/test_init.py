@@ -32,19 +32,15 @@ async def test_setup(
     assert not hass.data.get(DOMAIN)
 
 
-@pytest.mark.parametrize(
-    "side_effect", [steam.api.HTTPError]
-)
 async def test_setup_errors(
     hass: HomeAssistant,
     config_entry: MockConfigEntry,
     steam_api: MagicMock,
-    side_effect: Exception,
 ) -> None:
     """Test setup errors."""
     config_entry.add_to_hass(hass)
 
-    steam_api.return_value.GetPlayerSummaries.side_effect = side_effect
+    steam_api.return_value.GetPlayerSummaries.side_effect = steam.api.HTTPError
 
     await hass.config_entries.async_setup(config_entry.entry_id)
     await hass.async_block_till_done()
