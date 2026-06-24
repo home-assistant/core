@@ -1,6 +1,7 @@
 {
   "domain": "switchbot_cloud",
   "name": "SwitchBot Cloud",
+  "after_dependencies": ["cloud"],
   "codeowners": [
     "@SeraphicRav",
     "@laurence-presland",
