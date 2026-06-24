@@ -3,7 +3,7 @@
 from collections.abc import Awaitable, Callable
 from typing import TYPE_CHECKING
 
-from tplink_omada_client import OmadaSiteClient
+from tplink_omada_client import OmadaClient, OmadaSiteClient
 from tplink_omada_client.devices import OmadaListDevice, OmadaSwitch
 
 from homeassistant.core import HomeAssistant, callback
@@ -13,6 +13,7 @@ if TYPE_CHECKING:
 
 from .coordinator import (
     OmadaClientsCoordinator,
+    OmadaControllerInfoCoordinator,
     OmadaDevicesCoordinator,
     OmadaGatewayCoordinator,
     OmadaSwitchPortCoordinator,
@@ -28,6 +29,7 @@ class OmadaSiteController:
         self,
         hass: HomeAssistant,
         config_entry: OmadaConfigEntry,
+        omada_controller_client: OmadaClient,
         omada_client: OmadaSiteClient,
     ) -> None:
         """Create the controller."""
@@ -36,6 +38,9 @@ class OmadaSiteController:
         self._omada_client = omada_client
 
         self._switch_port_coordinators: dict[str, OmadaSwitchPortCoordinator] = {}
+        self._controller_info_coordinator = OmadaControllerInfoCoordinator(
+            hass, config_entry, omada_controller_client
+        )
         self._devices_coordinator = OmadaDevicesCoordinator(
             hass, config_entry, omada_client
         )
@@ -45,6 +50,7 @@ class OmadaSiteController:
 
     async def initialize_first_refresh(self) -> None:
         """Initialize the all coordinators, and perform first refresh."""
+        await self._controller_info_coordinator.async_config_entry_first_refresh()
         await self._devices_coordinator.async_config_entry_first_refresh()
 
         devices = self._devices_coordinator.data.values()
@@ -105,6 +111,11 @@ class OmadaSiteController:
     def omada_client(self) -> OmadaSiteClient:
         """Get the connected client API for the site to manage."""
         return self._omada_client
+
+    @property
+    def controller_info_coordinator(self) -> OmadaControllerInfoCoordinator:
+        """Gets the coordinator for controller information."""
+        return self._controller_info_coordinator
 
     def get_switch_port_coordinator(
         self, switch: OmadaSwitch

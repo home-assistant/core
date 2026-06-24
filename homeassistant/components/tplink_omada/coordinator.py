@@ -5,7 +5,12 @@ from datetime import timedelta
 import logging
 from typing import TYPE_CHECKING, NamedTuple, override
 
-from tplink_omada_client import OmadaSiteClient, OmadaSwitchPortDetails
+from tplink_omada_client import (
+    OmadaClient,
+    OmadaControllerInfo,
+    OmadaSiteClient,
+    OmadaSwitchPortDetails,
+)
 from tplink_omada_client.clients import OmadaWirelessClient
 from tplink_omada_client.devices import (
     OmadaFirmwareUpdate,
@@ -28,6 +33,37 @@ POLL_GATEWAY = 300
 POLL_CLIENTS = 300
 POLL_DEVICES = 300
 POLL_UPGRADE = 60
+
+
+class OmadaControllerInfoCoordinator(DataUpdateCoordinator[OmadaControllerInfo]):
+    """Coordinator for synchronizing Omada controller information."""
+
+    config_entry: OmadaConfigEntry
+
+    def __init__(
+        self,
+        hass: HomeAssistant,
+        config_entry: OmadaConfigEntry,
+        omada_client: OmadaClient,
+    ) -> None:
+        """Initialize the controller info coordinator."""
+        super().__init__(
+            hass,
+            _LOGGER,
+            config_entry=config_entry,
+            name="Omada API Data - Controller Info",
+            update_interval=timedelta(seconds=POLL_DEVICES),
+        )
+        self.omada_client = omada_client
+
+    @override
+    async def _async_update_data(self) -> OmadaControllerInfo:
+        """Fetch controller information from the API endpoint."""
+        try:
+            async with asyncio.timeout(10):
+                return await self.omada_client.get_controller_info()
+        except OmadaClientException as err:
+            raise UpdateFailed(f"Error communicating with API: {err}") from err
 
 
 class OmadaCoordinator[_T](DataUpdateCoordinator[dict[str, _T]]):
