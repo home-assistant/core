@@ -21,6 +21,7 @@ from homeassistant.const import (
     PERCENTAGE,
     UV_INDEX,
     EntityCategory,
+    UnitOfConductivity,
     UnitOfElectricPotential,
     UnitOfIrradiance,
     UnitOfLength,
@@ -29,7 +30,6 @@ from homeassistant.const import (
     UnitOfSpeed,
     UnitOfTemperature,
     UnitOfVolumetricFlux,
-    UnitOfConductivity,
 )
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
