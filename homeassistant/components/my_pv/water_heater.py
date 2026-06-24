@@ -1,7 +1,7 @@
 """Creates Water Heater entities for the my-PV Home Assistant integration."""
 
 import logging
-from typing import Any
+from typing import Any, override
 
 from homeassistant.components.water_heater import (
     STATE_ELECTRIC,
@@ -86,21 +86,25 @@ class MyPVWaterHeater(MyPVDataEntity, WaterHeaterEntity):
         self._attr_min_temp = min_temp
         self._attr_max_temp = max_temp
 
+    @override
     @property
     def current_operation(self) -> str | None:
         """Return current operation."""
         return STATE_ELECTRIC if self.coordinator.device.is_on else STATE_OFF
 
+    @override
     @property
     def current_temperature(self) -> float | None:
         """Return the current temperature."""
         return self.coordinator.device.current_temperature
 
+    @override
     @property
     def target_temperature(self) -> float | None:
         """Return the temperature we try to reach."""
         return self.coordinator.device.target_temperature
 
+    @override
     async def async_set_temperature(self, **kwargs: Any) -> None:
         """Set new target temperature."""
         if not await self.coordinator.set_target_temperature(
@@ -110,6 +114,7 @@ class MyPVWaterHeater(MyPVDataEntity, WaterHeaterEntity):
                 translation_domain=DOMAIN, translation_key="unknown_error"
             )
 
+    @override
     async def async_set_operation_mode(self, operation_mode: str) -> None:
         """Set new operation mode."""
         if operation_mode == STATE_OFF:
@@ -117,6 +122,7 @@ class MyPVWaterHeater(MyPVDataEntity, WaterHeaterEntity):
         else:
             await self.async_turn_on()
 
+    @override
     async def async_turn_on(self, **kwargs: Any) -> None:
         """Turn the water heater on."""
         _LOGGER.debug("Turning on %s", self.name)
@@ -126,6 +132,7 @@ class MyPVWaterHeater(MyPVDataEntity, WaterHeaterEntity):
                 translation_domain=DOMAIN, translation_key="unknown_error"
             )
 
+    @override
     async def async_turn_off(self, **kwargs: Any) -> None:
         """Turn the water heater off."""
         _LOGGER.debug("Turning off %s", self.name)

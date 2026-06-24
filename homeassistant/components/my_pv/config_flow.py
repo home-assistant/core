@@ -1,7 +1,7 @@
 """Config flow for the my-PV integration."""
 
 import logging
-from typing import Any, Final
+from typing import Any, Final, override
 
 from my_pv import MyPVLocalDevice
 from my_pv.exceptions import MyPVAuthenticationError
@@ -43,6 +43,7 @@ class MyPVConfigFlow(ConfigFlow, domain=DOMAIN):
     _host: str
     _device_model: str
 
+    @override
     async def async_step_zeroconf(
         self, discovery_info: ZeroconfServiceInfo
     ) -> ConfigFlowResult:
@@ -56,6 +57,7 @@ class MyPVConfigFlow(ConfigFlow, domain=DOMAIN):
 
         return await self.async_step_discovery_confirm()
 
+    @override
     async def async_step_dhcp(
         self, discovery_info: DhcpServiceInfo
     ) -> ConfigFlowResult:
@@ -124,6 +126,7 @@ class MyPVConfigFlow(ConfigFlow, domain=DOMAIN):
         """Handle discovery password authentication."""
         return await self.async_step_auth(user_input, "discovery_auth")
 
+    @override
     async def async_step_user(
         self, user_input: dict[str, Any] | None = None
     ) -> ConfigFlowResult:

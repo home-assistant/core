@@ -1,5 +1,7 @@
 """Base entity for the my-PV integration."""
 
+from typing import override
+
 from homeassistant.helpers.entity import EntityDescription
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
@@ -25,12 +27,14 @@ class MyPVDataEntity(CoordinatorEntity[MyPVCoordinator]):
 
         self.entity_description = entity_description
 
+    @override
     async def async_added_to_hass(self) -> None:
         """Call when entity is added to Home Assistant."""
         await super().async_added_to_hass()
 
         self._handle_coordinator_update()
 
+    @override
     @property
     def available(self) -> bool:
         """Return if entity is available."""

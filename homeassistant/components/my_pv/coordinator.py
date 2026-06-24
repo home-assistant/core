@@ -4,7 +4,7 @@ from collections.abc import Callable, Coroutine
 from datetime import timedelta
 import functools
 import logging
-from typing import Any
+from typing import Any, override
 
 from my_pv import MyPVDevice
 from my_pv.exceptions import MyPVAuthenticationError, MyPVConnectionError
@@ -120,6 +120,7 @@ class MyPVCoordinator(DataUpdateCoordinator[None]):
         """
         return await self._device.disconnect()
 
+    @override
     async def _async_update_data(self) -> None:
         """Fetch data from API endpoint."""
         if not self._device.connected and not await self._device.connect():
