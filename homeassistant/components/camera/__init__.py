@@ -68,6 +68,7 @@ from .const import (
     PREF_ORIENTATION,
     PREF_PRELOAD_STREAM,
     SERVICE_RECORD,
+    CameraEntityStateAttribute,
     CameraState,
     StreamType,
 )
@@ -421,7 +422,7 @@ class Camera(Entity, cached_properties=CACHED_PROPERTIES_WITH_ATTR_):
     """The base class for camera entities."""
 
     _entity_component_unrecorded_attributes = frozenset(
-        {"access_token", "entity_picture"}
+        {CameraEntityStateAttribute.ACCESS_TOKEN, "entity_picture"}
     )
 
     # Entity Properties
@@ -649,18 +650,22 @@ class Camera(Entity, cached_properties=CACHED_PROPERTIES_WITH_ATTR_):
     @final
     @property
     @override
-    def state_attributes(self) -> dict[str, str | None]:
+    def state_attributes(self) -> dict[str, str | bool | None]:
         """Return the camera state attributes."""
-        attrs = {"access_token": self.access_tokens[-1]}
+        attrs: dict[str, str | bool | None] = {
+            CameraEntityStateAttribute.ACCESS_TOKEN: self.access_tokens[-1]
+        }
 
         if model := self.model:
-            attrs["model_name"] = model
+            attrs[CameraEntityStateAttribute.MODEL_NAME] = model
 
         if brand := self.brand:
-            attrs["brand"] = brand
+            attrs[CameraEntityStateAttribute.BRAND] = brand
 
         if motion_detection_enabled := self.motion_detection_enabled:
-            attrs["motion_detection"] = motion_detection_enabled
+            attrs[CameraEntityStateAttribute.MOTION_DETECTION] = (
+                motion_detection_enabled
+            )
 
         return attrs
 
