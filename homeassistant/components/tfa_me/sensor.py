@@ -36,24 +36,12 @@ class TFAmeSensorEntityDescription(SensorEntityDescription):
 
 def _calc_rain_last_hour(entity: TFAmeSensorEntity, data: dict[str, Any]) -> float:
     """Get rainfall of the last hour and optional handle a reset."""
-    reset_rain = data.get("reset_rain", False)
-    if reset_rain:
-        entity.rain_history.clear()
-        entity.coordinator.data.entities[entity.uid]["reset_rain"] = False
-
-    value = entity.rain_history.get_rain_amount()
-    return round(value, 1)
+    return round(entity.rain_history.get_rain_amount(), 1)
 
 
 def _calc_rain_last_24h(entity: TFAmeSensorEntity, data: dict[str, Any]) -> float:
     """Get rainfall of the last 24 hours and optional handle a reset."""
-    reset_rain = data.get("reset_rain", False)
-    if reset_rain:
-        entity.rain_history_24.clear()
-        entity.coordinator.data.entities[entity.uid]["reset_rain"] = False
-
-    value = entity.rain_history_24.get_rain_amount()
-    return round(value, 1)
+    return round(entity.rain_history_24.get_rain_amount(), 1)
 
 
 # All TFA.me entity descriptions
@@ -277,9 +265,7 @@ class TFAmeSensorEntity(CoordinatorEntity[TFAmeUpdateCoordinator], SensorEntity)
 
         # Do not set self.entity_id: HA will do and user can edit this entity ID later
         # Name schema created by HA with x... = Sensor ID, y... = Gateway/station ID:
-        # sensor.tfa_me_xxx_xxx_xxx_MeasurementName, e.g. "sensor.tfa_me_a0f_fff_f81_humidity" or
         # sensor.tfa_me_xxx_xxx_xxx_yyyyyyyyy_MeasurementName, e.g. "sensor.tfa_me_a0f_fff_f81_05b3e4e44_humidity"
-        self.name_with_station_id: bool = True
         self.gateway_id = self.coordinator.data.gateway_id
         self.sensor_id = sensor_id
 
@@ -287,9 +273,7 @@ class TFAmeSensorEntity(CoordinatorEntity[TFAmeUpdateCoordinator], SensorEntity)
             ids_str = f"{sensor_id}_{self.gateway_id}"
             self._attr_device_info = DeviceInfo(
                 identifiers={(DOMAIN, ids_str)},
-                name=self.format_string_tfa_id(
-                    self.sensor_id, self.gateway_id, self.name_with_station_id
-                ),
+                name=self.format_string_tfa_id(self.sensor_id, self.gateway_id),
                 manufacturer="TFA/Dostmann",
                 model=self.format_string_tfa_type(sensor_id),
             )
@@ -356,17 +340,25 @@ class TFAmeSensorEntity(CoordinatorEntity[TFAmeUpdateCoordinator], SensorEntity)
             self.rain_history_24.add_measurement(value, ts)
 
     def _handle_coordinator_update(self) -> None:
-        """Called when coordinator has new data, used to update rain histories."""
+        """Called when coordinator has new data, used to update rain histories, also optional reset rain."""
+
+        data = self.coordinator.data.entities.get(self.uid)
+        if data is not None and data.get("reset_rain", False):
+            if "rain_1_hour" in self.uid:
+                self.rain_history.clear()
+            if "rain_24_hours" in self.uid:
+                self.rain_history_24.clear()
+            data["reset_rain"] = False
+
         self._add_rain_measurement()
         # Update state in HA
         super()._handle_coordinator_update()
 
-    def format_string_tfa_id(self, s: str, gw_id: str, name_with_station_id: bool):
+    def format_string_tfa_id(self, s: str, gw_id: str):
         """String helper for station & sensor names, convert string 'xxxxxxxxx' into 'TFA.me XXX-XXX-XXX'."""
-        if name_with_station_id:
-            return f"TFA.me {s[:3].upper()}-{s[3:6].upper()}-{s[6:].upper()} ({gw_id.upper()})"
-
-        return f"TFA.me {s[:3].upper()}-{s[3:6].upper()}-{s[6:].upper()}"
+        return (
+            f"TFA.me {s[:3].upper()}-{s[3:6].upper()}-{s[6:].upper()} ({gw_id.upper()})"
+        )
 
     def format_string_tfa_id_only(self, s: str):
         """String helper for station & sensor names, convert string 'xxxxxxxxx' into 'XXX-XXX-XXX'."""
@@ -419,21 +411,17 @@ class TFAmeSensorEntity(CoordinatorEntity[TFAmeUpdateCoordinator], SensorEntity)
 
     @property
     def extra_state_attributes(self) -> dict[str, Any]:
-        """Extra attributes dictionary for an entity: sensor ID, measurement, timestamp."""
-
+        """Return extra state attributes for the entity."""
         try:
             sensor_data = self.coordinator.data.entities[self.uid]
-            dt = datetime.fromtimestamp(
-                int(sensor_data["ts"]), tz=UTC
-            )  # ISO-8601-UTC format
-
-            return {
-                "sensor_id": self.format_string_tfa_id_only(self.sensor_id.upper()),
-                "timestamp": dt,  # measurement timestamp
-                "gateway_id": self.format_string_tfa_id_only(self.gateway_id.upper()),
-            }
+            timestamp = int(sensor_data["ts"])
+            measurement_timestamp = datetime.fromtimestamp(timestamp, tz=UTC)
         except ValueError, TypeError, KeyError:
             return {}
+
+        return {
+            "measurement_timestamp": measurement_timestamp,
+        }
 
     def get_timeout(self, sensor_id: str):
         """Return the timeout time for a station or sensor."""

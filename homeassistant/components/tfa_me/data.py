@@ -73,7 +73,7 @@ class TFAmeUniqueID:
         identifier = json_data.get("gateway_id")
 
         if not isinstance(identifier, str) or not identifier:
-            # No ID, something is wrong with the data format
-            raise TFAmeException("missing_identifier")
+            # No ID, something is wrong with the data format or JSON
+            raise TFAmeJSONError("Missing gateway_id in response")
 
         return identifier

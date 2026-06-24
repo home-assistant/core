@@ -1,11 +1,12 @@
 {
   "config": {
+    "abort": {
+      "already_configured": "This TFA.me station is already configured."
+    },
     "error": {
       "cannot_connect": "Cannot connect to the station.",
-      "host_empty": "Invalid IP or station ID (empty).",
       "invalid_ip_host": "Invalid IP or station ID.",
       "invalid_response": "Response invalid from station.",
-      "missing_identifier": "The station ID is missing in JSON.",
       "timeout_connect": "Timeout while connecting to the station.",
       "unknown": "Unexpected error."
     },

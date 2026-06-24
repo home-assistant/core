@@ -72,7 +72,7 @@ async def test_get_identifier_success_station_id(hass: HomeAssistant) -> None:
             "connection failed",
         ),
         (ValueError("boom"), None, TFAmeException, "unknown"),
-        (None, {}, TFAmeException, "missing_identifier"),
+        (None, {}, TFAmeJSONError, "Missing gateway_id in response"),
     ],
     ids=[
         "http-error-invalid-response",
@@ -80,7 +80,7 @@ async def test_get_identifier_success_station_id(hass: HomeAssistant) -> None:
         "timeout-cannot-connect",
         "connection-error-cannot-connect",
         "unexpected-error-unknown",
-        "missing-identifier",
+        "missing-gateway-id",
     ],
 )
 async def test_get_identifier_error_mapping(

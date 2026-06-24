@@ -6,7 +6,6 @@
 from unittest.mock import patch
 
 from freezegun.api import FrozenDateTimeFactory
-import pytest
 
 from homeassistant.const import STATE_UNKNOWN
 from homeassistant.core import HomeAssistant
@@ -15,7 +14,12 @@ from homeassistant.util.dt import naive_now
 
 from .conftest import FAKE_JSON
 
-from tests.common import AsyncMock, MockConfigEntry, SnapshotAssertion
+from tests.common import (
+    AsyncMock,
+    MockConfigEntry,
+    SnapshotAssertion,
+    snapshot_platform,
+)
 
 
 def _stable_state_dict(data: dict) -> dict:
@@ -33,37 +37,18 @@ async def test_tfa_me_sensor_entities_snapshot(
     tfa_me_config_entry: MockConfigEntry,
 ) -> None:
     """Snapshot all sensor entities created from a typical TFA.me JSON payload."""
-
     freezer.move_to("2025-11-26 09:16:00+00:00")
     entry = tfa_me_config_entry
-    entry.add_to_hass(hass)
 
-    with pytest.MonkeyPatch.context() as monkeypatch:
-
-        async def mock_async_get_sensors(*args, **kwargs):
-            return FAKE_JSON
-
-        monkeypatch.setattr(
-            "homeassistant.components.tfa_me.coordinator.TFAmeClient.async_get_sensors",
-            mock_async_get_sensors,
-        )
-
+    with patch(
+        "homeassistant.components.tfa_me.coordinator.TFAmeClient.async_get_sensors",
+        new=AsyncMock(return_value=FAKE_JSON),
+    ):
         assert await hass.config_entries.async_setup(entry.entry_id)
         await hass.async_block_till_done()
 
-    ent_reg = er.async_get(hass)
-    states: dict[str, dict] = {}
-
-    for entity_id in sorted(hass.states.async_entity_ids("sensor")):
-        registry_entry = ent_reg.async_get(entity_id)
-        if registry_entry is None or registry_entry.config_entry_id != entry.entry_id:
-            continue
-
-        state = hass.states.get(entity_id)
-        assert state is not None
-        states[entity_id] = _stable_state_dict(state.as_dict())
-
-    assert states == snapshot
+    entity_registry = er.async_get(hass)
+    await snapshot_platform(hass, entity_registry, snapshot, entry.entry_id)
 
 
 async def test_rain_history_updates_on_coordinator_refresh(
