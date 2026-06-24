@@ -21,7 +21,7 @@ from contextlib import suppress
 from dataclasses import dataclass
 from datetime import datetime
 import logging
-from typing import Any
+from typing import Any, override
 
 from aioabrp import ChargingState, Metric, MetricValue, Telemetry
 
@@ -551,6 +551,7 @@ class AbrpTelemetrySensor[T: (float, str)](
         """
         raise NotImplementedError
 
+    @override
     async def async_added_to_hass(self) -> None:
         """Lift recorder-cached value + stamp into per-instance restore slots.
 
@@ -586,6 +587,7 @@ class AbrpTelemetrySensor[T: (float, str)](
                 self._restored_provider = provider_raw
 
     @property
+    @override
     def native_value(self) -> StateType:
         """Live value when present, falling back to the restored value.
 
@@ -605,6 +607,7 @@ class AbrpTelemetrySensor[T: (float, str)](
         return self._restored_native_value
 
     @property
+    @override
     def extra_state_attributes(self) -> dict[str, Any] | None:
         """Compose ``last_reported_at`` + ``provider`` (live-wins).
 
@@ -638,6 +641,7 @@ class AbrpTelemetrySensor[T: (float, str)](
         return attrs or None
 
     @property
+    @override
     def available(self) -> bool:
         """True whenever a live OR restored value is surfacing.
 
@@ -654,6 +658,7 @@ class AbrpNumericSensor(AbrpTelemetrySensor[float]):
 
     entity_description: AbrpNumericSensorEntityDescription
 
+    @override
     def _restore_native_value(self, raw: object) -> float | None:
         """Accept an int/float recorder value (rejecting bool), else ``None``.
 
@@ -665,6 +670,7 @@ class AbrpNumericSensor(AbrpTelemetrySensor[float]):
             return float(raw)
         return None
 
+    @override
     def _value_from_metric(self, metric_value: MetricValue) -> float | None:
         """Return the numeric reading; ignore a non-float value defensively.
 
@@ -683,6 +689,7 @@ class AbrpEnumSensor(AbrpTelemetrySensor[str]):
 
     entity_description: AbrpEnumSensorEntityDescription
 
+    @override
     def _restore_native_value(self, raw: object) -> str | None:
         """Accept a restored string only when it is a current ``options`` member.
 
@@ -695,6 +702,7 @@ class AbrpEnumSensor(AbrpTelemetrySensor[str]):
         options = self.entity_description.options or ()
         return raw if isinstance(raw, str) and raw in options else None
 
+    @override
     def _value_from_metric(self, metric_value: MetricValue) -> str | None:
         """Map the library ``ChargingState`` to this integration's option string.
 

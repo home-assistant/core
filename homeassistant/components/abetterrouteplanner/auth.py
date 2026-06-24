@@ -20,7 +20,7 @@ failure to HA as ``ConfigEntryAuthFailed``.
 """
 
 from http import HTTPStatus
-from typing import cast
+from typing import cast, override
 
 from aioabrp import AbrpAuthError, AbstractAuth
 from aiohttp import ClientResponseError
@@ -35,6 +35,7 @@ class AbetterrouteplannerAuth(AbstractAuth):
         """Initialize the auth adapter with an OAuth2 session."""
         self._oauth_session = oauth_session
 
+    @override
     async def async_get_access_token(self) -> str:
         """Return a valid access token, refreshing it if needed.
 

@@ -1,7 +1,7 @@
 """Config flow for the A Better Routeplanner integration."""
 
 import logging
-from typing import Any
+from typing import Any, override
 
 from aioabrp import (
     AbrpApiError,
@@ -40,10 +40,12 @@ class AbetterrouteplannerFlowHandler(
     _title: str
 
     @property
+    @override
     def logger(self) -> logging.Logger:
         """Return logger."""
         return logging.getLogger(__name__)
 
+    @override
     async def async_step_user(
         self, user_input: dict[str, Any] | None = None
     ) -> ConfigFlowResult:
@@ -61,6 +63,7 @@ class AbetterrouteplannerFlowHandler(
             )
         return await super().async_step_user(user_input)
 
+    @override
     async def async_oauth_create_entry(self, data: dict[str, Any]) -> ConfigFlowResult:
         """Handle a successful OAuth2 authorization.
 

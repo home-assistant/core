@@ -7,7 +7,7 @@ integration does not use the Application Credentials platform — the
 client secret.
 """
 
-from typing import Any
+from typing import Any, override
 
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.config_entry_oauth2_flow import (
@@ -38,11 +38,13 @@ class AbetterrouteplannerOAuth2Implementation(LocalOAuth2ImplementationWithPkce)
         )
 
     @property
+    @override
     def name(self) -> str:
         """Name of the implementation."""
         return "A Better Routeplanner"
 
     @property
+    @override
     def extra_authorize_data(self) -> dict[str, Any]:
         """Extra data appended to the authorize URL."""
         return {"scope": " ".join(OAUTH2_SCOPES), **super().extra_authorize_data}
