@@ -127,7 +127,11 @@ async def test_zeroconf_flow(
     assert result["type"] is FlowResultType.FORM
     assert result["step_id"] == "confirm_discovery"
 
-    progress = hass.config_entries.flow.async_progress()
+    progress = [
+        flow
+        for flow in hass.config_entries.flow.async_progress()
+        if flow["handler"] == DOMAIN
+    ]
     assert len(progress) == 1
     assert progress[0]["flow_id"] == result["flow_id"]
     assert progress[0]["context"]["confirm_only"] is True
@@ -164,7 +168,11 @@ async def test_zeroconf_flow_auth(
     assert result["type"] is FlowResultType.FORM
     assert result["step_id"] == "confirm_discovery"
 
-    progress = hass.config_entries.flow.async_progress()
+    progress = [
+        flow
+        for flow in hass.config_entries.flow.async_progress()
+        if flow["handler"] == DOMAIN
+    ]
     assert len(progress) == 1
     assert progress[0]["flow_id"] == result["flow_id"]
     assert progress[0]["context"]["confirm_only"] is True
@@ -176,7 +184,11 @@ async def test_zeroconf_flow_auth(
     assert result2["type"] is FlowResultType.FORM
     assert result2["step_id"] == "auth"
 
-    progress2 = hass.config_entries.flow.async_progress()
+    progress2 = [
+        flow
+        for flow in hass.config_entries.flow.async_progress()
+        if flow["handler"] == DOMAIN
+    ]
     assert len(progress2) == 1
     assert progress2[0]["flow_id"] == result["flow_id"]
 

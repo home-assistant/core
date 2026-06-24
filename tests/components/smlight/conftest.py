@@ -26,6 +26,25 @@ MOCK_USERNAME = "test-user"
 MOCK_PASSWORD = "test-pass"
 
 
+@pytest.fixture(autouse=True)
+def mock_bluetooth_scanner() -> Generator[MagicMock]:
+    """Mock bluetooth scanner."""
+    with patch(
+        "homeassistant.components.smlight.bluetooth.async_register_scanner"
+    ) as mock_register:
+        yield mock_register
+
+
+@pytest.fixture(autouse=True)
+def mock_ble_client() -> Generator[MagicMock]:
+    """Mock ble client."""
+    with patch(
+        "homeassistant.components.smlight.bluetooth.BleProxyClient"
+    ) as mock_client:
+        mock_client.return_value.start = AsyncMock()
+        yield mock_client
+
+
 @pytest.fixture
 def mock_config_entry() -> MockConfigEntry:
     """Return the default mocked config entry."""
