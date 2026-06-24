@@ -1,6 +1,6 @@
 """Config flow to configure flood monitoring gauges."""
 
-from typing import Any
+from typing import Any, override
 
 from aioeafm import get_stations
 import voluptuous as vol
@@ -20,6 +20,7 @@ class UKFloodsFlowHandler(ConfigFlow, domain=DOMAIN):
         """Handle a UK Floods config flow."""
         self.stations: dict[str, str] = {}
 
+    @override
     async def async_step_user(
         self, user_input: dict[str, Any] | None = None
     ) -> ConfigFlowResult:

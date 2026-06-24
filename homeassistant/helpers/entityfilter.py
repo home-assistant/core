@@ -30,7 +30,7 @@ CONF_ENTITY_GLOBS = "entity_globs"
 
 
 class EntityFilter:
-    """A entity filter."""
+    """An entity filter."""
 
     def __init__(self, config: dict[str, list[str]]) -> None:
         """Init the filter."""

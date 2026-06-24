@@ -30,7 +30,7 @@ RT_ACTION_SERVICE_SCHEMA: Final = vol.Schema(
         ),
         vol.Required("power"): vol.All(
             vol.Coerce(int),
-            vol.Range(min=1, max=2400),
+            vol.Range(min=0, max=2400),
         ),
     }
 )

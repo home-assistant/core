@@ -39,8 +39,8 @@
 # name: test_sensor[load_platforms0][sensor.bedroom_bedroom_filter_last_reset-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'device_class': 'timestamp',
-      'friendly_name': 'Bedroom Filter last reset',
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'timestamp',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Bedroom Filter last reset',
     }),
     'context': <ANY>,
     'entity_id': 'sensor.bedroom_bedroom_filter_last_reset',
@@ -57,7 +57,7 @@
     ]),
     'area_id': None,
     'capabilities': dict({
-      'options': list([
+      <SensorEntityCapabilityAttribute.OPTIONS: 'options'>: list([
         'good',
         'moderate',
         'bad',
@@ -96,9 +96,9 @@
 # name: test_sensor[load_platforms0][sensor.bedroom_bedroom_pure_aqi-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'device_class': 'enum',
-      'friendly_name': 'Bedroom Pure AQI',
-      'options': list([
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'enum',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Bedroom Pure AQI',
+      <SensorEntityCapabilityAttribute.OPTIONS: 'options'>: list([
         'good',
         'moderate',
         'bad',
@@ -152,7 +152,7 @@
 # name: test_sensor[load_platforms0][sensor.bedroom_bedroom_pure_sensitivity-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'Bedroom Pure sensitivity',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Bedroom Pure sensitivity',
     }),
     'context': <ANY>,
     'entity_id': 'sensor.bedroom_bedroom_pure_sensitivity',
@@ -169,7 +169,7 @@
     ]),
     'area_id': None,
     'capabilities': dict({
-      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+      <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -207,18 +207,18 @@
 # name: test_sensor[load_platforms0][sensor.hallway_hallway_climate_react_high_temperature_threshold-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'device_class': 'temperature',
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'temperature',
       'fanlevel': 'high',
-      'friendly_name': 'Hallway Climate React high temperature threshold',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Hallway Climate React high temperature threshold',
       'horizontalswing': 'stopped',
       'light': 'on',
       'mode': 'cool',
       'on': True,
-      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+      <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
       'swing': 'stopped',
       'targettemperature': 21,
       'temperatureunit': 'c',
-      'unit_of_measurement': <UnitOfTemperature.CELSIUS: '°C'>,
+      <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: <UnitOfTemperature.CELSIUS: '°C'>,
     }),
     'context': <ANY>,
     'entity_id': 'sensor.hallway_hallway_climate_react_high_temperature_threshold',
@@ -235,7 +235,7 @@
     ]),
     'area_id': None,
     'capabilities': dict({
-      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+      <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -273,18 +273,18 @@
 # name: test_sensor[load_platforms0][sensor.hallway_hallway_climate_react_low_temperature_threshold-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'device_class': 'temperature',
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'temperature',
       'fanlevel': 'low',
-      'friendly_name': 'Hallway Climate React low temperature threshold',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Hallway Climate React low temperature threshold',
       'horizontalswing': 'stopped',
       'light': 'on',
       'mode': 'heat',
       'on': True,
-      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+      <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
       'swing': 'stopped',
       'targettemperature': 21,
       'temperatureunit': 'c',
-      'unit_of_measurement': <UnitOfTemperature.CELSIUS: '°C'>,
+      <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: <UnitOfTemperature.CELSIUS: '°C'>,
     }),
     'context': <ANY>,
     'entity_id': 'sensor.hallway_hallway_climate_react_low_temperature_threshold',
@@ -334,7 +334,7 @@
 # name: test_sensor[load_platforms0][sensor.hallway_hallway_climate_react_type-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'Hallway Climate React type',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Hallway Climate React type',
     }),
     'context': <ANY>,
     'entity_id': 'sensor.hallway_hallway_climate_react_type',
@@ -384,8 +384,8 @@
 # name: test_sensor[load_platforms0][sensor.hallway_hallway_filter_last_reset-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'device_class': 'timestamp',
-      'friendly_name': 'Hallway Filter last reset',
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'timestamp',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Hallway Filter last reset',
     }),
     'context': <ANY>,
     'entity_id': 'sensor.hallway_hallway_filter_last_reset',
@@ -402,7 +402,7 @@
     ]),
     'area_id': None,
     'capabilities': dict({
-      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+      <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -440,10 +440,10 @@
 # name: test_sensor[load_platforms0][sensor.hallway_hallway_temperature_feels_like-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'device_class': 'temperature',
-      'friendly_name': 'Hallway Temperature feels like',
-      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
-      'unit_of_measurement': <UnitOfTemperature.CELSIUS: '°C'>,
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'temperature',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Hallway Temperature feels like',
+      <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
+      <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: <UnitOfTemperature.CELSIUS: '°C'>,
     }),
     'context': <ANY>,
     'entity_id': 'sensor.hallway_hallway_temperature_feels_like',
@@ -493,8 +493,8 @@
 # name: test_sensor[load_platforms0][sensor.hallway_hallway_timer_end_time-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'device_class': 'timestamp',
-      'friendly_name': 'Hallway Timer end time',
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'timestamp',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Hallway Timer end time',
       'id': None,
       'turn_on': None,
     }),
@@ -513,7 +513,7 @@
     ]),
     'area_id': None,
     'capabilities': dict({
-      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+      <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -551,10 +551,10 @@
 # name: test_sensor[load_platforms0][sensor.hallway_motion_sensor_battery_voltage-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'device_class': 'voltage',
-      'friendly_name': 'Hallway Motion Sensor Battery voltage',
-      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
-      'unit_of_measurement': <UnitOfElectricPotential.VOLT: 'V'>,
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'voltage',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Hallway Motion Sensor Battery voltage',
+      <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
+      <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: <UnitOfElectricPotential.VOLT: 'V'>,
     }),
     'context': <ANY>,
     'entity_id': 'sensor.hallway_motion_sensor_battery_voltage',
@@ -571,7 +571,7 @@
     ]),
     'area_id': None,
     'capabilities': dict({
-      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+      <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -606,10 +606,10 @@
 # name: test_sensor[load_platforms0][sensor.hallway_motion_sensor_humidity-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'device_class': 'humidity',
-      'friendly_name': 'Hallway Motion Sensor Humidity',
-      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
-      'unit_of_measurement': '%',
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'humidity',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Hallway Motion Sensor Humidity',
+      <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
+      <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: '%',
     }),
     'context': <ANY>,
     'entity_id': 'sensor.hallway_motion_sensor_humidity',
@@ -626,7 +626,7 @@
     ]),
     'area_id': None,
     'capabilities': dict({
-      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+      <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -661,10 +661,10 @@
 # name: test_sensor[load_platforms0][sensor.hallway_motion_sensor_rssi-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'device_class': 'signal_strength',
-      'friendly_name': 'Hallway Motion Sensor RSSI',
-      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
-      'unit_of_measurement': 'dBm',
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'signal_strength',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Hallway Motion Sensor RSSI',
+      <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
+      <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: 'dBm',
     }),
     'context': <ANY>,
     'entity_id': 'sensor.hallway_motion_sensor_rssi',
@@ -681,7 +681,7 @@
     ]),
     'area_id': None,
     'capabilities': dict({
-      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+      <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -719,10 +719,10 @@
 # name: test_sensor[load_platforms0][sensor.hallway_motion_sensor_temperature-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'device_class': 'temperature',
-      'friendly_name': 'Hallway Motion Sensor Temperature',
-      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
-      'unit_of_measurement': <UnitOfTemperature.CELSIUS: '°C'>,
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'temperature',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Hallway Motion Sensor Temperature',
+      <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
+      <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: <UnitOfTemperature.CELSIUS: '°C'>,
     }),
     'context': <ANY>,
     'entity_id': 'sensor.hallway_motion_sensor_temperature',
@@ -772,8 +772,8 @@
 # name: test_sensor[load_platforms0][sensor.kitchen_kitchen_filter_last_reset-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'device_class': 'timestamp',
-      'friendly_name': 'Kitchen Filter last reset',
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'timestamp',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Kitchen Filter last reset',
     }),
     'context': <ANY>,
     'entity_id': 'sensor.kitchen_kitchen_filter_last_reset',
@@ -790,7 +790,7 @@
     ]),
     'area_id': None,
     'capabilities': dict({
-      'options': list([
+      <SensorEntityCapabilityAttribute.OPTIONS: 'options'>: list([
         'good',
         'moderate',
         'bad',
@@ -829,9 +829,9 @@
 # name: test_sensor[load_platforms0][sensor.kitchen_kitchen_pure_aqi-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'device_class': 'enum',
-      'friendly_name': 'Kitchen Pure AQI',
-      'options': list([
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'enum',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Kitchen Pure AQI',
+      <SensorEntityCapabilityAttribute.OPTIONS: 'options'>: list([
         'good',
         'moderate',
         'bad',
@@ -885,7 +885,7 @@
 # name: test_sensor[load_platforms0][sensor.kitchen_kitchen_pure_sensitivity-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'Kitchen Pure sensitivity',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Kitchen Pure sensitivity',
     }),
     'context': <ANY>,
     'entity_id': 'sensor.kitchen_kitchen_pure_sensitivity',

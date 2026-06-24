@@ -317,7 +317,7 @@ async def test_setup_config_ssl(
         patch("os.access", return_value=True),
         patch("os.path.isfile", return_value=True),
     ):
-        mock_entry = MockConfigEntry(domain="influxdb", data=config)
+        mock_entry = MockConfigEntry(domain=DOMAIN, data=config)
 
         mock_entry.add_to_hass(hass)
 
@@ -505,7 +505,7 @@ async def test_setup_no_import_when_config_entry_exist(
     config["influxdb"].update(config_ext)
 
     mock_entry = MockConfigEntry(
-        domain="influxdb",
+        domain=DOMAIN,
         data=config_base,
     )
     mock_entry.add_to_hass(hass)
@@ -527,7 +527,7 @@ async def _setup(
 ) -> None:
     """Prepare client for next test and return event handler method."""
     mock_entry = MockConfigEntry(
-        domain="influxdb",
+        domain=DOMAIN,
         data=config,
     )
 
@@ -1941,7 +1941,7 @@ async def test_connection_failure_on_startup(
     write_api.side_effect = test_exception
 
     mock_entry = MockConfigEntry(
-        domain="influxdb",
+        domain=DOMAIN,
         data=config_base,
     )
 
