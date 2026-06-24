@@ -1,9 +1,61 @@
 {
   "common": {
+    "condition_threshold_name": "Threshold type",
     "trigger_for_name": "For at least",
     "trigger_threshold_name": "Threshold type",
     "twilight_type_description": "The phase of twilight.",
     "twilight_type_name": "Twilight type"
+  },
+  "conditions": {
+    "elevation": {
+      "description": "Tests the sun's elevation against a threshold you set.",
+      "fields": {
+        "threshold": {
+          "name": "[%key:component::sun::common::condition_threshold_name%]"
+        }
+      },
+      "name": "Sun elevation"
+    },
+    "is_ascending": {
+      "description": "Tests if the sun is ascending.",
+      "name": "Sun is ascending"
+    },
+    "is_descending": {
+      "description": "Tests if the sun is descending.",
+      "name": "Sun is descending"
+    },
+    "is_evening_twilight": {
+      "description": "Tests if it is evening twilight, optionally of a specific type.",
+      "fields": {
+        "type": {
+          "description": "[%key:component::sun::common::twilight_type_description%]",
+          "name": "[%key:component::sun::common::twilight_type_name%]"
+        }
+      },
+      "name": "It is evening twilight"
+    },
+    "is_morning_twilight": {
+      "description": "Tests if it is morning twilight, optionally of a specific type.",
+      "fields": {
+        "type": {
+          "description": "[%key:component::sun::common::twilight_type_description%]",
+          "name": "[%key:component::sun::common::twilight_type_name%]"
+        }
+      },
+      "name": "It is morning twilight"
+    },
+    "is_night": {
+      "description": "Tests if it is night.",
+      "name": "It is night"
+    },
+    "is_set": {
+      "description": "Tests if the sun is set.",
+      "name": "Sun is set"
+    },
+    "is_up": {
+      "description": "Tests if the sun is up.",
+      "name": "Sun is up"
+    }
   },
   "config": {
     "step": {
@@ -45,6 +97,7 @@
   "selector": {
     "twilight_type": {
       "options": {
+        "any": "Any",
         "astronomical": "Astronomical",
         "civil": "Civil",
         "nautical": "Nautical"

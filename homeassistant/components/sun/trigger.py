@@ -3,7 +3,6 @@
 from datetime import datetime, timedelta
 from typing import Any, cast, override
 
-import astral
 import voluptuous as vol
 
 from homeassistant.const import (
@@ -47,7 +46,13 @@ from homeassistant.helpers.trigger import (
 from homeassistant.helpers.typing import ConfigType
 from homeassistant.util import dt as dt_util
 
-from .const import DOMAIN, STATE_ATTR_ELEVATION
+from .const import (
+    DOMAIN,
+    ELEVATION_ASTRONOMICAL,
+    ELEVATION_CIVIL,
+    ELEVATION_NAUTICAL,
+    STATE_ATTR_ELEVATION,
+)
 
 # Names of solar events supported by the astral.sun module
 _SUN_EVENT_SOLAR_NOON = "noon"
@@ -59,11 +64,11 @@ _TWILIGHT_CIVIL = "civil"
 _TWILIGHT_NAUTICAL = "nautical"
 _TWILIGHT_ASTRONOMICAL = "astronomical"
 
-# Sun depression below the horizon for each twilight phase, as defined by astral.
-_TWILIGHT_DEPRESSIONS = {
-    _TWILIGHT_CIVIL: astral.Depression.CIVIL,
-    _TWILIGHT_NAUTICAL: astral.Depression.NAUTICAL,
-    _TWILIGHT_ASTRONOMICAL: astral.Depression.ASTRONOMICAL,
+# Sun elevation at each twilight boundary.
+_TWILIGHT_ELEVATIONS = {
+    _TWILIGHT_CIVIL: ELEVATION_CIVIL,
+    _TWILIGHT_NAUTICAL: ELEVATION_NAUTICAL,
+    _TWILIGHT_ASTRONOMICAL: ELEVATION_ASTRONOMICAL,
 }
 
 # The sun is a singleton, so the elevation triggers always target sun.sun
@@ -228,7 +233,7 @@ _DAWN_DUSK_TRIGGER_SCHEMA = vol.Schema(
     {
         vol.Required(CONF_OPTIONS, default=dict): {
             vol.Optional(CONF_TYPE, default=_TWILIGHT_CIVIL): vol.In(
-                _TWILIGHT_DEPRESSIONS
+                _TWILIGHT_ELEVATIONS
             ),
         }
     }
@@ -244,7 +249,7 @@ class SunDawnDuskTrigger(SunEventTrigger):
         """Initialize the trigger."""
         super().__init__(hass, config)
         self._twilight: str = self._options[CONF_TYPE]
-        self._depression = _TWILIGHT_DEPRESSIONS[self._twilight]
+        self._elevation = _TWILIGHT_ELEVATIONS[self._twilight]
 
     @override
     def _get_next_event(self, utc_point_in_time: datetime) -> datetime:
@@ -252,7 +257,9 @@ class SunDawnDuskTrigger(SunEventTrigger):
             get_astral_observer(self._hass),
             self._event,
             utc_point_in_time,
-            depression=self._depression,
+            # astral takes a depression (degrees below the horizon), i.e. the
+            # negated elevation.
+            depression=-self._elevation,
         )
 
     @override

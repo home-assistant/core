@@ -1,4 +1,30 @@
 {
+  "conditions": {
+    "elevation": {
+      "condition": "mdi:sun-angle"
+    },
+    "is_ascending": {
+      "condition": "mdi:weather-sunset-up"
+    },
+    "is_descending": {
+      "condition": "mdi:weather-sunset-down"
+    },
+    "is_evening_twilight": {
+      "condition": "mdi:weather-sunset-down"
+    },
+    "is_morning_twilight": {
+      "condition": "mdi:weather-sunset-up"
+    },
+    "is_night": {
+      "condition": "mdi:weather-night"
+    },
+    "is_set": {
+      "condition": "mdi:weather-sunny-off"
+    },
+    "is_up": {
+      "condition": "mdi:weather-sunny"
+    }
+  },
   "entity": {
     "binary_sensor": {
       "solar_rising": {
