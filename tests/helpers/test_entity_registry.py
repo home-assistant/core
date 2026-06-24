@@ -1064,6 +1064,64 @@ async def test_removing_config_entry_id(
     }
 
 
+async def test_enabled_count_for_config_entry(
+    hass: HomeAssistant, entity_registry: er.EntityRegistry
+) -> None:
+    """Test counting enabled entries for a config entry."""
+    mock_config = MockConfigEntry(domain="light", entry_id="mock-id-1")
+    mock_config.add_to_hass(hass)
+
+    def enabled_count() -> int:
+        return entity_registry.entities.get_enabled_count_for_config_entry_id(
+            "mock-id-1"
+        )
+
+    assert enabled_count() == 0
+
+    # Enabled entry increments the count
+    entry1 = entity_registry.async_get_or_create(
+        "light", "hue", "1", config_entry=mock_config
+    )
+    assert enabled_count() == 1
+
+    # Disabled-by-default entry does not count
+    entity_registry.async_get_or_create(
+        "light",
+        "hue",
+        "2",
+        config_entry=mock_config,
+        disabled_by=er.RegistryEntryDisabler.INTEGRATION,
+    )
+    assert enabled_count() == 1
+
+    # Disabling an enabled entry decrements the count
+    entity_registry.async_update_entity(
+        entry1.entity_id, disabled_by=er.RegistryEntryDisabler.USER
+    )
+    assert enabled_count() == 0
+
+    # Re-enabling increments it again
+    entity_registry.async_update_entity(entry1.entity_id, disabled_by=None)
+    assert enabled_count() == 1
+
+    # Removing an enabled entry decrements the count
+    entity_registry.async_remove(entry1.entity_id)
+    assert enabled_count() == 0
+
+    # The count matches a filtered scan of the index
+    entity_registry.async_get_or_create("light", "hue", "3", config_entry=mock_config)
+    entity_registry.async_get_or_create("light", "hue", "4", config_entry=mock_config)
+    assert enabled_count() == len(
+        [
+            entry
+            for entry in entity_registry.entities.get_entries_for_config_entry_id(
+                "mock-id-1"
+            )
+            if not entry.disabled
+        ]
+    )
+
+
 async def test_deleted_entity_removing_config_entry_id(
     hass: HomeAssistant,
     entity_registry: er.EntityRegistry,
