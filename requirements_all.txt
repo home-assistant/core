@@ -650,9 +650,6 @@ batinfo==0.4.2
 # homeassistant.components.scrape
 beautifulsoup4==4.13.3
 
-# homeassistant.components.beewi_smartclim
-# beewi-smartclim==0.0.10
-
 # homeassistant.components.bizkaibus
 bizkaibus==0.1.1
 
