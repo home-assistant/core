@@ -18276,7 +18276,7 @@
             ]),
             'area_id': None,
             'capabilities': dict({
-              'source_list': list([
+              <MediaPlayerEntityCapabilityAttribute.INPUT_SOURCE_LIST: 'source_list'>: list([
                 'AirPlay',
                 'Live TV',
                 'HDMI 1',
@@ -18319,8 +18319,8 @@
             'attributes': dict({
               'device_class': 'tv',
               'friendly_name': 'LG webOS TV AF80',
-              'source': 'HDMI 4',
-              'source_list': list([
+              <MediaPlayerEntityStateAttribute.INPUT_SOURCE: 'source'>: 'HDMI 4',
+              <MediaPlayerEntityCapabilityAttribute.INPUT_SOURCE_LIST: 'source_list'>: list([
                 'AirPlay',
                 'Live TV',
                 'HDMI 1',
