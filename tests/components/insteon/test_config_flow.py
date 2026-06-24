@@ -461,7 +461,7 @@ async def test_reconfigure_closes_existing_connection(hass: HomeAssistant) -> No
         patch(PATCH_DEVICES) as mock_devices,
         patch(PATCH_ASYNC_SETUP_ENTRY, return_value=True),
     ):
-        mock_devices.modem = True
+        mock_devices.modem.connected = True
         result = await hass.config_entries.flow.async_configure(
             result["flow_id"], {**MOCK_USER_INPUT_HUB_V2, CONF_HOST: "2.3.4.5"}
         )
@@ -470,3 +470,31 @@ async def test_reconfigure_closes_existing_connection(hass: HomeAssistant) -> No
     assert mock_close.called
     assert result["type"] is FlowResultType.ABORT
     assert result["reason"] == "reconfigure_successful"
+
+
+async def test_reconfigure_restores_connection_on_failure(hass: HomeAssistant) -> None:
+    """Test a failed reconfigure restores the previous modem connection."""
+    entry_data = {**MOCK_USER_INPUT_HUB_V2, CONF_HUB_VERSION: 2}
+    config_entry = MockConfigEntry(domain=DOMAIN, data=entry_data)
+    config_entry.add_to_hass(hass)
+
+    result = await config_entry.start_reconfigure_flow(hass)
+    assert result["type"] is FlowResultType.FORM
+
+    with (
+        patch(PATCH_CONNECTION, side_effect=ConnectionError) as mock_connect,
+        patch(PATCH_CONNECTION_CLOSE),
+        patch(PATCH_DEVICES) as mock_devices,
+        patch(PATCH_ASYNC_SETUP_ENTRY, return_value=True),
+    ):
+        mock_devices.modem.connected = True
+        result = await hass.config_entries.flow.async_configure(
+            result["flow_id"], {**MOCK_USER_INPUT_HUB_V2, CONF_HOST: "2.3.4.5"}
+        )
+        await hass.async_block_till_done()
+
+    assert mock_connect.call_count == 2
+    assert mock_connect.call_args_list[1].kwargs == entry_data
+    assert result["type"] is FlowResultType.FORM
+    assert result["errors"] == {"base": "cannot_connect"}
+    assert config_entry.data == entry_data

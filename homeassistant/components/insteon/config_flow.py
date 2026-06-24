@@ -89,6 +89,25 @@ class InsteonFlowHandler(ConfigFlow, domain=DOMAIN):
             return self.async_abort(reason="reconfigure_successful")
         return self.async_create_entry(title="", data=data)
 
+    async def _async_validate_connection(self, user_input: dict[str, Any]) -> bool:
+        """Connect with the new settings, restoring the old connection on failure.
+
+        A failed reconfigure must not leave a previously connected modem
+        disconnected.
+        """
+        restore_data: dict[str, Any] | None = None
+        if (
+            self.source == SOURCE_RECONFIGURE
+            and devices.modem is not None
+            and devices.modem.connected
+        ):
+            restore_data = dict(self._get_reconfigure_entry().data)
+        if await _async_connect(**user_input):
+            return True
+        if restore_data is not None:
+            await _async_connect(**restore_data)
+        return False
+
     async def async_step_plm(
         self, user_input: dict[str, Any] | None = None
     ) -> ConfigFlowResult:
@@ -100,7 +119,7 @@ class InsteonFlowHandler(ConfigFlow, domain=DOMAIN):
         if user_input is not None:
             if user_input[CONF_DEVICE] == PLM_MANUAL:
                 return await self.async_step_plm_manually()
-            if await _async_connect(**user_input):
+            if await self._async_validate_connection(user_input):
                 return self._async_finish_flow(user_input)
             errors["base"] = "cannot_connect"
             schema_defaults = user_input
@@ -122,7 +141,7 @@ class InsteonFlowHandler(ConfigFlow, domain=DOMAIN):
         if self.source == SOURCE_RECONFIGURE:
             schema_defaults = dict(self._get_reconfigure_entry().data)
         if user_input is not None:
-            if await _async_connect(**user_input):
+            if await self._async_validate_connection(user_input):
                 return self._async_finish_flow(user_input)
             errors["base"] = "cannot_connect"
             schema_defaults = user_input
@@ -154,7 +173,7 @@ class InsteonFlowHandler(ConfigFlow, domain=DOMAIN):
             schema_defaults.pop(CONF_HUB_VERSION, None)
         if user_input is not None:
             user_input[CONF_HUB_VERSION] = hub_version
-            if await _async_connect(**user_input):
+            if await self._async_validate_connection(user_input):
                 return self._async_finish_flow(user_input)
             user_input.pop(CONF_HUB_VERSION)
             errors["base"] = "cannot_connect"
