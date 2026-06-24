@@ -57,7 +57,7 @@
     ]),
     'area_id': None,
     'capabilities': dict({
-      'fan_speed_list': list([
+      <VacuumEntityCapabilityAttribute.FAN_SPEED_LIST: 'fan_speed_list'>: list([
         'gentle',
         'normal',
         'strong',
@@ -96,8 +96,8 @@
 # name: test_platform_setup_and_discovery[vacuum.v20-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'fan_speed': 'strong',
-      'fan_speed_list': list([
+      <VacuumEntityStateAttribute.FAN_SPEED: 'fan_speed'>: 'strong',
+      <VacuumEntityCapabilityAttribute.FAN_SPEED_LIST: 'fan_speed_list'>: list([
         'gentle',
         'normal',
         'strong',
