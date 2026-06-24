@@ -2,7 +2,7 @@
 # name: test_bbw_dose_mode[Linea Mini]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'LM012345 Brew by weight dose mode',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'LM012345 Brew by weight dose mode',
       <SelectEntityCapabilityAttribute.OPTIONS: 'options'>: list([
         'continuous',
         'dose1',
@@ -63,7 +63,7 @@
 # name: test_pre_brew_infusion_select[GS3 AV]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'GS012345 Prebrew/-infusion mode',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'GS012345 Prebrew/-infusion mode',
       <SelectEntityCapabilityAttribute.OPTIONS: 'options'>: list([
         'disabled',
         'prebrew',
@@ -124,7 +124,7 @@
 # name: test_pre_brew_infusion_select[Linea Micra]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'MR012345 Prebrew/-infusion mode',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'MR012345 Prebrew/-infusion mode',
       <SelectEntityCapabilityAttribute.OPTIONS: 'options'>: list([
         'disabled',
         'prebrew',
@@ -185,7 +185,7 @@
 # name: test_pre_brew_infusion_select[Linea Mini]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'LM012345 Prebrew/-infusion mode',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'LM012345 Prebrew/-infusion mode',
       <SelectEntityCapabilityAttribute.OPTIONS: 'options'>: list([
         'disabled',
         'prebrew',
@@ -246,7 +246,7 @@
 # name: test_smart_standby_mode
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'GS012345 Smart standby mode',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'GS012345 Smart standby mode',
       <SelectEntityCapabilityAttribute.OPTIONS: 'options'>: list([
         'power_on',
         'last_brewing',
@@ -305,7 +305,7 @@
 # name: test_steam_boiler_level[Linea Micra]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'MR012345 Steam level',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'MR012345 Steam level',
       <SelectEntityCapabilityAttribute.OPTIONS: 'options'>: list([
         '1',
         '2',
