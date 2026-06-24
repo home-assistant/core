@@ -1,7 +1,7 @@
 """Config flow for the Theben Conexa Smartmeter gateway integration."""
 
 import logging
-from typing import Any
+from typing import Any, override
 
 import aiohttp
 from theben_conexa_smgw import ConexaSMGW, checkNetworkConnection
@@ -30,6 +30,7 @@ class ThebenConfigFlow(ConfigFlow, domain=DOMAIN):
 
     VERSION = 1
 
+    @override
     async def async_step_user(
         self, user_input: dict[str, Any] | None = None
     ) -> ConfigFlowResult:

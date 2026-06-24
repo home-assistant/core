@@ -2,6 +2,7 @@
 
 from datetime import datetime
 import logging
+from typing import override
 
 import aiohttp
 from theben_conexa_smgw import ConexaSMGW, checkNetworkConnection
@@ -74,6 +75,7 @@ class SmgwSensorCoordinator(DataUpdateCoordinator[dict[str, ConexaSMGW.MeterValu
             second=40,
         )
 
+    @override
     async def _async_update_data(self) -> dict[str, ConexaSMGW.MeterValue]:
         """Fetch data from API endpoint."""
 
@@ -99,6 +101,7 @@ class SmgwSensorCoordinator(DataUpdateCoordinator[dict[str, ConexaSMGW.MeterValu
         _LOGGER.debug("Starting scheduled poll at %s", now)
         await self.async_refresh()
 
+    @override
     async def async_shutdown(self) -> None:
         """Cancel any updates before shutting down."""
         if self._scheduled_updates:

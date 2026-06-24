@@ -1,6 +1,7 @@
 """Sensor for the Theben Conexa Smartmeter gateway integration."""
 
 import logging
+from typing import override
 
 from homeassistant.components.sensor import (
     SensorDeviceClass,
@@ -80,6 +81,7 @@ class TotalInOutSensor(ConexaSMGWEntity, SensorEntity):
         self._attr_unique_id = f"{coordinator.gateway_info.smgwID}-{self._key}"
 
     @property
+    @override
     def native_value(self) -> str:
         """Return the current sensor value."""
         return self.coordinator.data[self._key].value
