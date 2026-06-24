@@ -6,7 +6,7 @@
     ]),
     'area_id': None,
     'capabilities': dict({
-      'event_types': list([
+      <EventEntityCapabilityAttribute.EVENT_TYPES: 'event_types'>: list([
         'water_is_full',
       ]),
     }),
@@ -44,7 +44,7 @@
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'event_type': None,
-      'event_types': list([
+      <EventEntityCapabilityAttribute.EVENT_TYPES: 'event_types'>: list([
         'water_is_full',
       ]),
       'friendly_name': 'Test air conditioner Notification',

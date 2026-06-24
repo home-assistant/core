@@ -19,7 +19,7 @@
     'attributes': ReadOnlyDict({
       'assumed_state': True,
       'event_type': None,
-      'event_types': list([
+      <EventEntityCapabilityAttribute.EVENT_TYPES: 'event_types'>: list([
         'off',
         'on',
         'dim',
@@ -44,7 +44,7 @@
     'attributes': ReadOnlyDict({
       'assumed_state': True,
       'event_type': None,
-      'event_types': list([
+      <EventEntityCapabilityAttribute.EVENT_TYPES: 'event_types'>: list([
         'off',
         'on',
         'dim',
@@ -82,7 +82,7 @@
     'attributes': ReadOnlyDict({
       'assumed_state': True,
       'event_type': None,
-      'event_types': list([
+      <EventEntityCapabilityAttribute.EVENT_TYPES: 'event_types'>: list([
         'normal',
         'normal_delayed',
         'alarm',

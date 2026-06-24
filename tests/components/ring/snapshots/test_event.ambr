@@ -6,7 +6,7 @@
     ]),
     'area_id': None,
     'capabilities': dict({
-      'event_types': list([
+      <EventEntityCapabilityAttribute.EVENT_TYPES: 'event_types'>: list([
         <DoorbellEventType.RING: 'ring'>,
       ]),
     }),
@@ -46,7 +46,7 @@
       'attribution': 'Data provided by Ring.com',
       'device_class': 'doorbell',
       'event_type': None,
-      'event_types': list([
+      <EventEntityCapabilityAttribute.EVENT_TYPES: 'event_types'>: list([
         <DoorbellEventType.RING: 'ring'>,
       ]),
       'friendly_name': 'Front Door Ding',
@@ -66,7 +66,7 @@
     ]),
     'area_id': None,
     'capabilities': dict({
-      'event_types': list([
+      <EventEntityCapabilityAttribute.EVENT_TYPES: 'event_types'>: list([
         'motion',
       ]),
     }),
@@ -106,7 +106,7 @@
       'attribution': 'Data provided by Ring.com',
       'device_class': 'motion',
       'event_type': None,
-      'event_types': list([
+      <EventEntityCapabilityAttribute.EVENT_TYPES: 'event_types'>: list([
         'motion',
       ]),
       'friendly_name': 'Front Door Motion',
@@ -126,7 +126,7 @@
     ]),
     'area_id': None,
     'capabilities': dict({
-      'event_types': list([
+      <EventEntityCapabilityAttribute.EVENT_TYPES: 'event_types'>: list([
         'motion',
       ]),
     }),
@@ -166,7 +166,7 @@
       'attribution': 'Data provided by Ring.com',
       'device_class': 'motion',
       'event_type': None,
-      'event_types': list([
+      <EventEntityCapabilityAttribute.EVENT_TYPES: 'event_types'>: list([
         'motion',
       ]),
       'friendly_name': 'Front Motion',
@@ -186,7 +186,7 @@
     ]),
     'area_id': None,
     'capabilities': dict({
-      'event_types': list([
+      <EventEntityCapabilityAttribute.EVENT_TYPES: 'event_types'>: list([
         <DoorbellEventType.RING: 'ring'>,
       ]),
     }),
@@ -226,7 +226,7 @@
       'attribution': 'Data provided by Ring.com',
       'device_class': 'doorbell',
       'event_type': None,
-      'event_types': list([
+      <EventEntityCapabilityAttribute.EVENT_TYPES: 'event_types'>: list([
         <DoorbellEventType.RING: 'ring'>,
       ]),
       'friendly_name': 'Ingress Ding',
@@ -246,7 +246,7 @@
     ]),
     'area_id': None,
     'capabilities': dict({
-      'event_types': list([
+      <EventEntityCapabilityAttribute.EVENT_TYPES: 'event_types'>: list([
         'intercom_unlock',
       ]),
     }),
@@ -286,7 +286,7 @@
       'attribution': 'Data provided by Ring.com',
       'device_class': 'button',
       'event_type': None,
-      'event_types': list([
+      <EventEntityCapabilityAttribute.EVENT_TYPES: 'event_types'>: list([
         'intercom_unlock',
       ]),
       'friendly_name': 'Ingress Intercom unlock',
@@ -306,7 +306,7 @@
     ]),
     'area_id': None,
     'capabilities': dict({
-      'event_types': list([
+      <EventEntityCapabilityAttribute.EVENT_TYPES: 'event_types'>: list([
         'motion',
       ]),
     }),
@@ -346,7 +346,7 @@
       'attribution': 'Data provided by Ring.com',
       'device_class': 'motion',
       'event_type': None,
-      'event_types': list([
+      <EventEntityCapabilityAttribute.EVENT_TYPES: 'event_types'>: list([
         'motion',
       ]),
       'friendly_name': 'Internal Motion',

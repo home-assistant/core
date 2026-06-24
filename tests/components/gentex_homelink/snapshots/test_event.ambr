@@ -6,7 +6,7 @@
     ]),
     'area_id': None,
     'capabilities': dict({
-      'event_types': list([
+      <EventEntityCapabilityAttribute.EVENT_TYPES: 'event_types'>: list([
         'Pressed',
       ]),
     }),
@@ -45,7 +45,7 @@
     'attributes': ReadOnlyDict({
       'device_class': 'button',
       'event_type': None,
-      'event_types': list([
+      <EventEntityCapabilityAttribute.EVENT_TYPES: 'event_types'>: list([
         'Pressed',
       ]),
       'friendly_name': 'TestDevice Button 1',
@@ -65,7 +65,7 @@
     ]),
     'area_id': None,
     'capabilities': dict({
-      'event_types': list([
+      <EventEntityCapabilityAttribute.EVENT_TYPES: 'event_types'>: list([
         'Pressed',
       ]),
     }),
@@ -104,7 +104,7 @@
     'attributes': ReadOnlyDict({
       'device_class': 'button',
       'event_type': None,
-      'event_types': list([
+      <EventEntityCapabilityAttribute.EVENT_TYPES: 'event_types'>: list([
         'Pressed',
       ]),
       'friendly_name': 'TestDevice Button 2',
@@ -124,7 +124,7 @@
     ]),
     'area_id': None,
     'capabilities': dict({
-      'event_types': list([
+      <EventEntityCapabilityAttribute.EVENT_TYPES: 'event_types'>: list([
         'Pressed',
       ]),
     }),
@@ -163,7 +163,7 @@
     'attributes': ReadOnlyDict({
       'device_class': 'button',
       'event_type': None,
-      'event_types': list([
+      <EventEntityCapabilityAttribute.EVENT_TYPES: 'event_types'>: list([
         'Pressed',
       ]),
       'friendly_name': 'TestDevice Button 3',

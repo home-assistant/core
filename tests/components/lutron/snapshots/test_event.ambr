@@ -6,7 +6,7 @@
     ]),
     'area_id': None,
     'capabilities': dict({
-      'event_types': list([
+      <EventEntityCapabilityAttribute.EVENT_TYPES: 'event_types'>: list([
         <LutronEventType.SINGLE_PRESS: 'single_press'>,
       ]),
     }),
@@ -44,7 +44,7 @@
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'event_type': None,
-      'event_types': list([
+      <EventEntityCapabilityAttribute.EVENT_TYPES: 'event_types'>: list([
         <LutronEventType.SINGLE_PRESS: 'single_press'>,
       ]),
       'friendly_name': 'Test Keypad Test Button',

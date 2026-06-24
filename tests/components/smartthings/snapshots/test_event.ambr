@@ -6,7 +6,7 @@
     ]),
     'area_id': None,
     'capabilities': dict({
-      'event_types': None,
+      <EventEntityCapabilityAttribute.EVENT_TYPES: 'event_types'>: None,
     }),
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -43,7 +43,7 @@
     'attributes': ReadOnlyDict({
       'device_class': 'button',
       'event_type': None,
-      'event_types': None,
+      <EventEntityCapabilityAttribute.EVENT_TYPES: 'event_types'>: None,
       'friendly_name': 'Dimmer entré 1 1 button1',
     }),
     'context': <ANY>,
@@ -61,7 +61,7 @@
     ]),
     'area_id': None,
     'capabilities': dict({
-      'event_types': None,
+      <EventEntityCapabilityAttribute.EVENT_TYPES: 'event_types'>: None,
     }),
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -98,7 +98,7 @@
     'attributes': ReadOnlyDict({
       'device_class': 'button',
       'event_type': None,
-      'event_types': None,
+      <EventEntityCapabilityAttribute.EVENT_TYPES: 'event_types'>: None,
       'friendly_name': 'Dimmer entré 1 1 button2',
     }),
     'context': <ANY>,
@@ -116,7 +116,7 @@
     ]),
     'area_id': None,
     'capabilities': dict({
-      'event_types': list([
+      <EventEntityCapabilityAttribute.EVENT_TYPES: 'event_types'>: list([
         'pushed',
         'held',
         'down_hold',
@@ -157,7 +157,7 @@
     'attributes': ReadOnlyDict({
       'device_class': 'button',
       'event_type': None,
-      'event_types': list([
+      <EventEntityCapabilityAttribute.EVENT_TYPES: 'event_types'>: list([
         'pushed',
         'held',
         'down_hold',
@@ -179,7 +179,7 @@
     ]),
     'area_id': None,
     'capabilities': dict({
-      'event_types': list([
+      <EventEntityCapabilityAttribute.EVENT_TYPES: 'event_types'>: list([
         'pushed',
         'held',
         'down_hold',
@@ -220,7 +220,7 @@
     'attributes': ReadOnlyDict({
       'device_class': 'button',
       'event_type': None,
-      'event_types': list([
+      <EventEntityCapabilityAttribute.EVENT_TYPES: 'event_types'>: list([
         'pushed',
         'held',
         'down_hold',
@@ -242,7 +242,7 @@
     ]),
     'area_id': None,
     'capabilities': dict({
-      'event_types': list([
+      <EventEntityCapabilityAttribute.EVENT_TYPES: 'event_types'>: list([
         'pushed',
         'held',
         'down_hold',
@@ -283,7 +283,7 @@
     'attributes': ReadOnlyDict({
       'device_class': 'button',
       'event_type': None,
-      'event_types': list([
+      <EventEntityCapabilityAttribute.EVENT_TYPES: 'event_types'>: list([
         'pushed',
         'held',
         'down_hold',
@@ -305,7 +305,7 @@
     ]),
     'area_id': None,
     'capabilities': dict({
-      'event_types': list([
+      <EventEntityCapabilityAttribute.EVENT_TYPES: 'event_types'>: list([
         'pushed',
         'held',
         'down_hold',
@@ -346,7 +346,7 @@
     'attributes': ReadOnlyDict({
       'device_class': 'button',
       'event_type': None,
-      'event_types': list([
+      <EventEntityCapabilityAttribute.EVENT_TYPES: 'event_types'>: list([
         'pushed',
         'held',
         'down_hold',
@@ -368,7 +368,7 @@
     ]),
     'area_id': None,
     'capabilities': dict({
-      'event_types': list([
+      <EventEntityCapabilityAttribute.EVENT_TYPES: 'event_types'>: list([
         'pushed',
         'held',
         'down_hold',
@@ -409,7 +409,7 @@
     'attributes': ReadOnlyDict({
       'device_class': 'button',
       'event_type': None,
-      'event_types': list([
+      <EventEntityCapabilityAttribute.EVENT_TYPES: 'event_types'>: list([
         'pushed',
         'held',
         'down_hold',
@@ -431,7 +431,7 @@
     ]),
     'area_id': None,
     'capabilities': dict({
-      'event_types': list([
+      <EventEntityCapabilityAttribute.EVENT_TYPES: 'event_types'>: list([
         'pushed',
         'held',
         'down_hold',
@@ -472,7 +472,7 @@
     'attributes': ReadOnlyDict({
       'device_class': 'button',
       'event_type': None,
-      'event_types': list([
+      <EventEntityCapabilityAttribute.EVENT_TYPES: 'event_types'>: list([
         'pushed',
         'held',
         'down_hold',

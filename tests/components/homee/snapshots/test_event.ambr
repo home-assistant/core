@@ -6,7 +6,7 @@
     ]),
     'area_id': None,
     'capabilities': dict({
-      'event_types': list([
+      <EventEntityCapabilityAttribute.EVENT_TYPES: 'event_types'>: list([
         'upper',
         'lower',
         'released',
@@ -47,7 +47,7 @@
     'attributes': ReadOnlyDict({
       'device_class': 'button',
       'event_type': None,
-      'event_types': list([
+      <EventEntityCapabilityAttribute.EVENT_TYPES: 'event_types'>: list([
         'upper',
         'lower',
         'released',
@@ -69,7 +69,7 @@
     ]),
     'area_id': None,
     'capabilities': dict({
-      'event_types': list([
+      <EventEntityCapabilityAttribute.EVENT_TYPES: 'event_types'>: list([
         'upper',
         'lower',
         'released',
@@ -110,7 +110,7 @@
     'attributes': ReadOnlyDict({
       'device_class': 'button',
       'event_type': None,
-      'event_types': list([
+      <EventEntityCapabilityAttribute.EVENT_TYPES: 'event_types'>: list([
         'upper',
         'lower',
         'released',
@@ -132,7 +132,7 @@
     ]),
     'area_id': None,
     'capabilities': dict({
-      'event_types': list([
+      <EventEntityCapabilityAttribute.EVENT_TYPES: 'event_types'>: list([
         'released',
         'up',
         'down',
@@ -180,7 +180,7 @@
     'attributes': ReadOnlyDict({
       'device_class': 'button',
       'event_type': None,
-      'event_types': list([
+      <EventEntityCapabilityAttribute.EVENT_TYPES: 'event_types'>: list([
         'released',
         'up',
         'down',
@@ -209,7 +209,7 @@
     ]),
     'area_id': None,
     'capabilities': dict({
-      'event_types': list([
+      <EventEntityCapabilityAttribute.EVENT_TYPES: 'event_types'>: list([
         'upper',
         'lower',
         'released',
@@ -250,7 +250,7 @@
     'attributes': ReadOnlyDict({
       'device_class': 'button',
       'event_type': None,
-      'event_types': list([
+      <EventEntityCapabilityAttribute.EVENT_TYPES: 'event_types'>: list([
         'upper',
         'lower',
         'released',
@@ -272,7 +272,7 @@
     ]),
     'area_id': None,
     'capabilities': dict({
-      'event_types': list([
+      <EventEntityCapabilityAttribute.EVENT_TYPES: 'event_types'>: list([
         'upper',
         'lower',
         'released',
@@ -313,7 +313,7 @@
     'attributes': ReadOnlyDict({
       'device_class': 'button',
       'event_type': None,
-      'event_types': list([
+      <EventEntityCapabilityAttribute.EVENT_TYPES: 'event_types'>: list([
         'upper',
         'lower',
         'released',
@@ -335,7 +335,7 @@
     ]),
     'area_id': None,
     'capabilities': dict({
-      'event_types': list([
+      <EventEntityCapabilityAttribute.EVENT_TYPES: 'event_types'>: list([
         'released',
         'up',
         'down',
@@ -383,7 +383,7 @@
     'attributes': ReadOnlyDict({
       'device_class': 'button',
       'event_type': None,
-      'event_types': list([
+      <EventEntityCapabilityAttribute.EVENT_TYPES: 'event_types'>: list([
         'released',
         'up',
         'down',
@@ -412,7 +412,7 @@
     ]),
     'area_id': None,
     'capabilities': dict({
-      'event_types': list([
+      <EventEntityCapabilityAttribute.EVENT_TYPES: 'event_types'>: list([
         'upper',
         'lower',
         'released',
@@ -453,7 +453,7 @@
     'attributes': ReadOnlyDict({
       'device_class': 'button',
       'event_type': None,
-      'event_types': list([
+      <EventEntityCapabilityAttribute.EVENT_TYPES: 'event_types'>: list([
         'upper',
         'lower',
         'released',
@@ -475,7 +475,7 @@
     ]),
     'area_id': None,
     'capabilities': dict({
-      'event_types': list([
+      <EventEntityCapabilityAttribute.EVENT_TYPES: 'event_types'>: list([
         'upper',
         'lower',
         'released',
@@ -516,7 +516,7 @@
     'attributes': ReadOnlyDict({
       'device_class': 'button',
       'event_type': None,
-      'event_types': list([
+      <EventEntityCapabilityAttribute.EVENT_TYPES: 'event_types'>: list([
         'upper',
         'lower',
         'released',
@@ -538,7 +538,7 @@
     ]),
     'area_id': None,
     'capabilities': dict({
-      'event_types': list([
+      <EventEntityCapabilityAttribute.EVENT_TYPES: 'event_types'>: list([
         'released',
         'up',
         'down',
@@ -586,7 +586,7 @@
     'attributes': ReadOnlyDict({
       'device_class': 'button',
       'event_type': None,
-      'event_types': list([
+      <EventEntityCapabilityAttribute.EVENT_TYPES: 'event_types'>: list([
         'released',
         'up',
         'down',
@@ -615,7 +615,7 @@
     ]),
     'area_id': None,
     'capabilities': dict({
-      'event_types': list([
+      <EventEntityCapabilityAttribute.EVENT_TYPES: 'event_types'>: list([
         'upper',
         'lower',
         'released',
@@ -656,7 +656,7 @@
     'attributes': ReadOnlyDict({
       'device_class': 'button',
       'event_type': None,
-      'event_types': list([
+      <EventEntityCapabilityAttribute.EVENT_TYPES: 'event_types'>: list([
         'upper',
         'lower',
         'released',
@@ -678,7 +678,7 @@
     ]),
     'area_id': None,
     'capabilities': dict({
-      'event_types': list([
+      <EventEntityCapabilityAttribute.EVENT_TYPES: 'event_types'>: list([
         'upper',
         'lower',
         'released',
@@ -719,7 +719,7 @@
     'attributes': ReadOnlyDict({
       'device_class': 'button',
       'event_type': None,
-      'event_types': list([
+      <EventEntityCapabilityAttribute.EVENT_TYPES: 'event_types'>: list([
         'upper',
         'lower',
         'released',
@@ -741,7 +741,7 @@
     ]),
     'area_id': None,
     'capabilities': dict({
-      'event_types': list([
+      <EventEntityCapabilityAttribute.EVENT_TYPES: 'event_types'>: list([
         'released',
         'up',
         'down',
@@ -789,7 +789,7 @@
     'attributes': ReadOnlyDict({
       'device_class': 'button',
       'event_type': None,
-      'event_types': list([
+      <EventEntityCapabilityAttribute.EVENT_TYPES: 'event_types'>: list([
         'released',
         'up',
         'down',
@@ -818,7 +818,7 @@
     ]),
     'area_id': None,
     'capabilities': dict({
-      'event_types': list([
+      <EventEntityCapabilityAttribute.EVENT_TYPES: 'event_types'>: list([
         'upper',
         'lower',
         'released',
@@ -859,7 +859,7 @@
     'attributes': ReadOnlyDict({
       'device_class': 'button',
       'event_type': None,
-      'event_types': list([
+      <EventEntityCapabilityAttribute.EVENT_TYPES: 'event_types'>: list([
         'upper',
         'lower',
         'released',
@@ -881,7 +881,7 @@
     ]),
     'area_id': None,
     'capabilities': dict({
-      'event_types': list([
+      <EventEntityCapabilityAttribute.EVENT_TYPES: 'event_types'>: list([
         'upper',
         'lower',
         'released',
@@ -922,7 +922,7 @@
     'attributes': ReadOnlyDict({
       'device_class': 'button',
       'event_type': None,
-      'event_types': list([
+      <EventEntityCapabilityAttribute.EVENT_TYPES: 'event_types'>: list([
         'upper',
         'lower',
         'released',
@@ -944,7 +944,7 @@
     ]),
     'area_id': None,
     'capabilities': dict({
-      'event_types': list([
+      <EventEntityCapabilityAttribute.EVENT_TYPES: 'event_types'>: list([
         'released',
         'up',
         'down',
@@ -992,7 +992,7 @@
     'attributes': ReadOnlyDict({
       'device_class': 'button',
       'event_type': None,
-      'event_types': list([
+      <EventEntityCapabilityAttribute.EVENT_TYPES: 'event_types'>: list([
         'released',
         'up',
         'down',

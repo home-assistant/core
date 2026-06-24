@@ -6,7 +6,7 @@
     ]),
     'area_id': None,
     'capabilities': dict({
-      'event_types': list([
+      <EventEntityCapabilityAttribute.EVENT_TYPES: 'event_types'>: list([
         'probe_acknowledge',
         'device_low_power',
         'device_high_temp',
@@ -55,7 +55,7 @@
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'event_type': None,
-      'event_types': list([
+      <EventEntityCapabilityAttribute.EVENT_TYPES: 'event_types'>: list([
         'probe_acknowledge',
         'device_low_power',
         'device_high_temp',
@@ -86,7 +86,7 @@
     ]),
     'area_id': None,
     'capabilities': dict({
-      'event_types': list([
+      <EventEntityCapabilityAttribute.EVENT_TYPES: 'event_types'>: list([
         'probe_acknowledge',
         'device_low_power',
         'device_high_temp',
@@ -135,7 +135,7 @@
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'event_type': None,
-      'event_types': list([
+      <EventEntityCapabilityAttribute.EVENT_TYPES: 'event_types'>: list([
         'probe_acknowledge',
         'device_low_power',
         'device_high_temp',
@@ -166,7 +166,7 @@
     ]),
     'area_id': None,
     'capabilities': dict({
-      'event_types': list([
+      <EventEntityCapabilityAttribute.EVENT_TYPES: 'event_types'>: list([
         'probe_acknowledge',
         'device_low_power',
         'device_high_temp',
@@ -215,7 +215,7 @@
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'event_type': None,
-      'event_types': list([
+      <EventEntityCapabilityAttribute.EVENT_TYPES: 'event_types'>: list([
         'probe_acknowledge',
         'device_low_power',
         'device_high_temp',
@@ -246,7 +246,7 @@
     ]),
     'area_id': None,
     'capabilities': dict({
-      'event_types': list([
+      <EventEntityCapabilityAttribute.EVENT_TYPES: 'event_types'>: list([
         'probe_acknowledge',
         'device_low_power',
         'device_high_temp',
@@ -295,7 +295,7 @@
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'event_type': None,
-      'event_types': list([
+      <EventEntityCapabilityAttribute.EVENT_TYPES: 'event_types'>: list([
         'probe_acknowledge',
         'device_low_power',
         'device_high_temp',
@@ -326,7 +326,7 @@
     ]),
     'area_id': None,
     'capabilities': dict({
-      'event_types': list([
+      <EventEntityCapabilityAttribute.EVENT_TYPES: 'event_types'>: list([
         'probe_acknowledge',
         'device_low_power',
         'device_high_temp',
@@ -375,7 +375,7 @@
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'event_type': None,
-      'event_types': list([
+      <EventEntityCapabilityAttribute.EVENT_TYPES: 'event_types'>: list([
         'probe_acknowledge',
         'device_low_power',
         'device_high_temp',
@@ -406,7 +406,7 @@
     ]),
     'area_id': None,
     'capabilities': dict({
-      'event_types': list([
+      <EventEntityCapabilityAttribute.EVENT_TYPES: 'event_types'>: list([
         'probe_acknowledge',
         'device_low_power',
         'device_high_temp',
@@ -455,7 +455,7 @@
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'event_type': None,
-      'event_types': list([
+      <EventEntityCapabilityAttribute.EVENT_TYPES: 'event_types'>: list([
         'probe_acknowledge',
         'device_low_power',
         'device_high_temp',

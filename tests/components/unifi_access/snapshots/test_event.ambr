@@ -6,7 +6,7 @@
     ]),
     'area_id': None,
     'capabilities': dict({
-      'event_types': list([
+      <EventEntityCapabilityAttribute.EVENT_TYPES: 'event_types'>: list([
         'access_granted',
         'access_denied',
       ]),
@@ -45,7 +45,7 @@
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'event_type': None,
-      'event_types': list([
+      <EventEntityCapabilityAttribute.EVENT_TYPES: 'event_types'>: list([
         'access_granted',
         'access_denied',
       ]),
@@ -66,7 +66,7 @@
     ]),
     'area_id': None,
     'capabilities': dict({
-      'event_types': list([
+      <EventEntityCapabilityAttribute.EVENT_TYPES: 'event_types'>: list([
         <DoorbellEventType.RING: 'ring'>,
       ]),
     }),
@@ -105,7 +105,7 @@
     'attributes': ReadOnlyDict({
       'device_class': 'doorbell',
       'event_type': None,
-      'event_types': list([
+      <EventEntityCapabilityAttribute.EVENT_TYPES: 'event_types'>: list([
         <DoorbellEventType.RING: 'ring'>,
       ]),
       'friendly_name': 'Back Door Doorbell',
@@ -125,7 +125,7 @@
     ]),
     'area_id': None,
     'capabilities': dict({
-      'event_types': list([
+      <EventEntityCapabilityAttribute.EVENT_TYPES: 'event_types'>: list([
         'access_granted',
         'access_denied',
       ]),
@@ -164,7 +164,7 @@
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'event_type': None,
-      'event_types': list([
+      <EventEntityCapabilityAttribute.EVENT_TYPES: 'event_types'>: list([
         'access_granted',
         'access_denied',
       ]),
@@ -185,7 +185,7 @@
     ]),
     'area_id': None,
     'capabilities': dict({
-      'event_types': list([
+      <EventEntityCapabilityAttribute.EVENT_TYPES: 'event_types'>: list([
         <DoorbellEventType.RING: 'ring'>,
       ]),
     }),
@@ -224,7 +224,7 @@
     'attributes': ReadOnlyDict({
       'device_class': 'doorbell',
       'event_type': None,
-      'event_types': list([
+      <EventEntityCapabilityAttribute.EVENT_TYPES: 'event_types'>: list([
         <DoorbellEventType.RING: 'ring'>,
       ]),
       'friendly_name': 'Front Door Doorbell',
