@@ -28,10 +28,10 @@
             'state': dict({
               'attributes': dict({
                 'current_position': 70,
-                'device_class': 'window',
-                'friendly_name': 'Test Window',
+                <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'window',
+                <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Test Window',
                 'is_closed': False,
-                'supported_features': 15,
+                <EntityStateAttribute.SUPPORTED_FEATURES: 'supported_features'>: 15,
               }),
               'entity_id': 'cover.test_window',
               'last_changed': '2025-01-01T00:00:00+00:00',

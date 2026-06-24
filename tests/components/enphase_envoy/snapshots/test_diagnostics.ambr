@@ -108,10 +108,10 @@
             }),
             'state': dict({
               'attributes': dict({
-                'device_class': 'power',
-                'friendly_name': 'Envoy <<envoyserial>> Current power production',
+                <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'power',
+                <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Envoy <<envoyserial>> Current power production',
                 'state_class': 'measurement',
-                'unit_of_measurement': 'kW',
+                <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: 'kW',
               }),
               'entity_id': 'sensor.envoy_<<envoyserial>>_current_power_production',
               'state': '1.234',
@@ -163,10 +163,10 @@
             }),
             'state': dict({
               'attributes': dict({
-                'device_class': 'energy',
-                'friendly_name': 'Envoy <<envoyserial>> Energy production today',
+                <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'energy',
+                <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Envoy <<envoyserial>> Energy production today',
                 'state_class': 'total_increasing',
-                'unit_of_measurement': 'kWh',
+                <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: 'kWh',
               }),
               'entity_id': 'sensor.envoy_<<envoyserial>>_energy_production_today',
               'state': '1.234',
@@ -216,9 +216,9 @@
             }),
             'state': dict({
               'attributes': dict({
-                'device_class': 'energy',
-                'friendly_name': 'Envoy <<envoyserial>> Energy production last seven days',
-                'unit_of_measurement': 'kWh',
+                <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'energy',
+                <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Envoy <<envoyserial>> Energy production last seven days',
+                <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: 'kWh',
               }),
               'entity_id': 'sensor.envoy_<<envoyserial>>_energy_production_last_seven_days',
               'state': '1.234',
@@ -270,10 +270,10 @@
             }),
             'state': dict({
               'attributes': dict({
-                'device_class': 'energy',
-                'friendly_name': 'Envoy <<envoyserial>> Lifetime energy production',
+                <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'energy',
+                <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Envoy <<envoyserial>> Lifetime energy production',
                 'state_class': 'total_increasing',
-                'unit_of_measurement': 'MWh',
+                <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: 'MWh',
               }),
               'entity_id': 'sensor.envoy_<<envoyserial>>_lifetime_energy_production',
               'state': '0.00<<envoyserial>>',
@@ -359,10 +359,10 @@
             }),
             'state': dict({
               'attributes': dict({
-                'device_class': 'power',
-                'friendly_name': 'Inverter 1',
+                <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'power',
+                <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Inverter 1',
                 'state_class': 'measurement',
-                'unit_of_measurement': 'W',
+                <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: 'W',
               }),
               'entity_id': 'sensor.inverter_1',
               'state': '116',
@@ -1023,10 +1023,10 @@
             }),
             'state': dict({
               'attributes': dict({
-                'device_class': 'power',
-                'friendly_name': 'Envoy <<envoyserial>> Current power production',
+                <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'power',
+                <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Envoy <<envoyserial>> Current power production',
                 'state_class': 'measurement',
-                'unit_of_measurement': 'kW',
+                <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: 'kW',
               }),
               'entity_id': 'sensor.envoy_<<envoyserial>>_current_power_production',
               'state': '1.234',
@@ -1078,10 +1078,10 @@
             }),
             'state': dict({
               'attributes': dict({
-                'device_class': 'energy',
-                'friendly_name': 'Envoy <<envoyserial>> Energy production today',
+                <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'energy',
+                <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Envoy <<envoyserial>> Energy production today',
                 'state_class': 'total_increasing',
-                'unit_of_measurement': 'kWh',
+                <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: 'kWh',
               }),
               'entity_id': 'sensor.envoy_<<envoyserial>>_energy_production_today',
               'state': '1.234',
@@ -1131,9 +1131,9 @@
             }),
             'state': dict({
               'attributes': dict({
-                'device_class': 'energy',
-                'friendly_name': 'Envoy <<envoyserial>> Energy production last seven days',
-                'unit_of_measurement': 'kWh',
+                <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'energy',
+                <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Envoy <<envoyserial>> Energy production last seven days',
+                <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: 'kWh',
               }),
               'entity_id': 'sensor.envoy_<<envoyserial>>_energy_production_last_seven_days',
               'state': '1.234',
@@ -1185,10 +1185,10 @@
             }),
             'state': dict({
               'attributes': dict({
-                'device_class': 'energy',
-                'friendly_name': 'Envoy <<envoyserial>> Lifetime energy production',
+                <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'energy',
+                <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Envoy <<envoyserial>> Lifetime energy production',
                 'state_class': 'total_increasing',
-                'unit_of_measurement': 'MWh',
+                <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: 'MWh',
               }),
               'entity_id': 'sensor.envoy_<<envoyserial>>_lifetime_energy_production',
               'state': '0.00<<envoyserial>>',
@@ -1274,10 +1274,10 @@
             }),
             'state': dict({
               'attributes': dict({
-                'device_class': 'power',
-                'friendly_name': 'Inverter 1',
+                <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'power',
+                <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Inverter 1',
                 'state_class': 'measurement',
-                'unit_of_measurement': 'W',
+                <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: 'W',
               }),
               'entity_id': 'sensor.inverter_1',
               'state': '116',
@@ -1982,10 +1982,10 @@
             }),
             'state': dict({
               'attributes': dict({
-                'device_class': 'power',
-                'friendly_name': 'Envoy <<envoyserial>> Current power production',
+                <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'power',
+                <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Envoy <<envoyserial>> Current power production',
                 'state_class': 'measurement',
-                'unit_of_measurement': 'kW',
+                <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: 'kW',
               }),
               'entity_id': 'sensor.envoy_<<envoyserial>>_current_power_production',
               'state': '1.234',
@@ -2037,10 +2037,10 @@
             }),
             'state': dict({
               'attributes': dict({
-                'device_class': 'energy',
-                'friendly_name': 'Envoy <<envoyserial>> Energy production today',
+                <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'energy',
+                <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Envoy <<envoyserial>> Energy production today',
                 'state_class': 'total_increasing',
-                'unit_of_measurement': 'kWh',
+                <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: 'kWh',
               }),
               'entity_id': 'sensor.envoy_<<envoyserial>>_energy_production_today',
               'state': '1.234',
@@ -2090,9 +2090,9 @@
             }),
             'state': dict({
               'attributes': dict({
-                'device_class': 'energy',
-                'friendly_name': 'Envoy <<envoyserial>> Energy production last seven days',
-                'unit_of_measurement': 'kWh',
+                <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'energy',
+                <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Envoy <<envoyserial>> Energy production last seven days',
+                <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: 'kWh',
               }),
               'entity_id': 'sensor.envoy_<<envoyserial>>_energy_production_last_seven_days',
               'state': '1.234',
@@ -2144,10 +2144,10 @@
             }),
             'state': dict({
               'attributes': dict({
-                'device_class': 'energy',
-                'friendly_name': 'Envoy <<envoyserial>> Lifetime energy production',
+                <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'energy',
+                <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Envoy <<envoyserial>> Lifetime energy production',
                 'state_class': 'total_increasing',
-                'unit_of_measurement': 'MWh',
+                <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: 'MWh',
               }),
               'entity_id': 'sensor.envoy_<<envoyserial>>_lifetime_energy_production',
               'state': '0.00<<envoyserial>>',
@@ -2233,10 +2233,10 @@
             }),
             'state': dict({
               'attributes': dict({
-                'device_class': 'power',
-                'friendly_name': 'Inverter 1',
+                <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'power',
+                <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Inverter 1',
                 'state_class': 'measurement',
-                'unit_of_measurement': 'W',
+                <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: 'W',
               }),
               'entity_id': 'sensor.inverter_1',
               'state': '116',
@@ -2959,10 +2959,10 @@
             }),
             'state': dict({
               'attributes': dict({
-                'device_class': 'power',
-                'friendly_name': 'Inverter 1',
+                <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'power',
+                <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Inverter 1',
                 'state_class': 'measurement',
-                'unit_of_measurement': 'W',
+                <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: 'W',
               }),
               'entity_id': 'sensor.inverter_1',
               'state': '116',
@@ -3536,10 +3536,10 @@
             }),
             'state': dict({
               'attributes': dict({
-                'device_class': 'power',
-                'friendly_name': 'Envoy <<envoyserial>> Current power production',
+                <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'power',
+                <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Envoy <<envoyserial>> Current power production',
                 'state_class': 'measurement',
-                'unit_of_measurement': 'kW',
+                <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: 'kW',
               }),
               'entity_id': 'sensor.envoy_<<envoyserial>>_current_power_production',
               'state': '1.234',
@@ -3589,9 +3589,9 @@
             }),
             'state': dict({
               'attributes': dict({
-                'device_class': 'energy',
-                'friendly_name': 'Envoy <<envoyserial>> Energy production last seven days',
-                'unit_of_measurement': 'kWh',
+                <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'energy',
+                <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Envoy <<envoyserial>> Energy production last seven days',
+                <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: 'kWh',
               }),
               'entity_id': 'sensor.envoy_<<envoyserial>>_energy_production_last_seven_days',
               'state': '1.234',
@@ -3643,10 +3643,10 @@
             }),
             'state': dict({
               'attributes': dict({
-                'device_class': 'energy',
-                'friendly_name': 'Envoy <<envoyserial>> Energy production today',
+                <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'energy',
+                <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Envoy <<envoyserial>> Energy production today',
                 'state_class': 'total_increasing',
-                'unit_of_measurement': 'kWh',
+                <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: 'kWh',
               }),
               'entity_id': 'sensor.envoy_<<envoyserial>>_energy_production_today',
               'state': '1.234',
@@ -3698,10 +3698,10 @@
             }),
             'state': dict({
               'attributes': dict({
-                'device_class': 'energy',
-                'friendly_name': 'Envoy <<envoyserial>> Lifetime energy production',
+                <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'energy',
+                <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Envoy <<envoyserial>> Lifetime energy production',
                 'state_class': 'total_increasing',
-                'unit_of_measurement': 'MWh',
+                <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: 'MWh',
               }),
               'entity_id': 'sensor.envoy_<<envoyserial>>_lifetime_energy_production',
               'state': '0.00<<envoyserial>>',
@@ -3883,10 +3883,10 @@
             }),
             'state': dict({
               'attributes': dict({
-                'device_class': 'power',
-                'friendly_name': 'Inverter 1',
+                <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'power',
+                <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Inverter 1',
                 'state_class': 'measurement',
-                'unit_of_measurement': 'W',
+                <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: 'W',
               }),
               'entity_id': 'sensor.inverter_1',
               'state': '1',
@@ -4448,8 +4448,8 @@
             }),
             'state': dict({
               'attributes': dict({
-                'device_class': 'connectivity',
-                'friendly_name': 'Collar 482520020939 Communicating',
+                <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'connectivity',
+                <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Collar 482520020939 Communicating',
               }),
               'entity_id': 'binary_sensor.collar_482520020939_communicating',
               'state': 'on',
@@ -4493,7 +4493,7 @@
             }),
             'state': dict({
               'attributes': dict({
-                'friendly_name': 'Collar 482520020939 Admin state',
+                <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Collar 482520020939 Admin state',
               }),
               'entity_id': 'sensor.collar_482520020939_admin_state',
               'state': 'on_grid',
@@ -4537,7 +4537,7 @@
             }),
             'state': dict({
               'attributes': dict({
-                'friendly_name': 'Collar 482520020939 Grid status',
+                <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Collar 482520020939 Grid status',
               }),
               'entity_id': 'sensor.collar_482520020939_grid_status',
               'state': 'on_grid',
@@ -4581,8 +4581,8 @@
             }),
             'state': dict({
               'attributes': dict({
-                'device_class': 'timestamp',
-                'friendly_name': 'Collar 482520020939 Last reported',
+                <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'timestamp',
+                <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Collar 482520020939 Last reported',
               }),
               'entity_id': 'sensor.collar_482520020939_last_reported',
               'state': '2025-07-19T15:42:39+00:00',
@@ -4626,7 +4626,7 @@
             }),
             'state': dict({
               'attributes': dict({
-                'friendly_name': 'Collar 482520020939 MID state',
+                <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Collar 482520020939 MID state',
               }),
               'entity_id': 'sensor.collar_482520020939_mid_state',
               'state': 'close',
@@ -4675,10 +4675,10 @@
             }),
             'state': dict({
               'attributes': dict({
-                'device_class': 'temperature',
-                'friendly_name': 'Collar 482520020939 Temperature',
+                <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'temperature',
+                <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Collar 482520020939 Temperature',
                 'state_class': 'measurement',
-                'unit_of_measurement': '°C',
+                <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: '°C',
               }),
               'entity_id': 'sensor.collar_482520020939_temperature',
               'state': '42',
@@ -4759,8 +4759,8 @@
             }),
             'state': dict({
               'attributes': dict({
-                'device_class': 'connectivity',
-                'friendly_name': 'C6 Combiner 482523040549 Communicating',
+                <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'connectivity',
+                <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'C6 Combiner 482523040549 Communicating',
               }),
               'entity_id': 'binary_sensor.c6_combiner_482523040549_communicating',
               'state': 'on',
@@ -4804,8 +4804,8 @@
             }),
             'state': dict({
               'attributes': dict({
-                'device_class': 'timestamp',
-                'friendly_name': 'C6 Combiner 482523040549 Last reported',
+                <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'timestamp',
+                <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'C6 Combiner 482523040549 Last reported',
               }),
               'entity_id': 'sensor.c6_combiner_482523040549_last_reported',
               'state': '2025-07-19T17:17:31+00:00',
@@ -4886,8 +4886,8 @@
             }),
             'state': dict({
               'attributes': dict({
-                'device_class': 'connectivity',
-                'friendly_name': 'Enpower 654321 Communicating',
+                <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'connectivity',
+                <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Enpower 654321 Communicating',
               }),
               'entity_id': 'binary_sensor.enpower_654321_communicating',
               'state': 'on',
@@ -4931,7 +4931,7 @@
             }),
             'state': dict({
               'attributes': dict({
-                'friendly_name': 'Enpower 654321 Grid status',
+                <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Enpower 654321 Grid status',
               }),
               'entity_id': 'binary_sensor.enpower_654321_grid_status',
               'state': 'on',
@@ -4980,13 +4980,13 @@
             }),
             'state': dict({
               'attributes': dict({
-                'device_class': 'battery',
-                'friendly_name': 'Enpower 654321 Reserve battery level',
+                <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'battery',
+                <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Enpower 654321 Reserve battery level',
                 'max': 100.0,
                 'min': 0.0,
                 'mode': 'auto',
                 'step': 1.0,
-                'unit_of_measurement': '%',
+                <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: '%',
               }),
               'entity_id': 'number.enpower_654321_reserve_battery_level',
               'state': '15.0',
@@ -5036,7 +5036,7 @@
             }),
             'state': dict({
               'attributes': dict({
-                'friendly_name': 'Enpower 654321 Storage mode',
+                <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Enpower 654321 Storage mode',
                 'options': list([
                   'backup',
                   'self_consumption',
@@ -5085,8 +5085,8 @@
             }),
             'state': dict({
               'attributes': dict({
-                'device_class': 'timestamp',
-                'friendly_name': 'Enpower 654321 Last reported',
+                <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'timestamp',
+                <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Enpower 654321 Last reported',
               }),
               'entity_id': 'sensor.enpower_654321_last_reported',
               'state': '2023-09-26T23:04:07+00:00',
@@ -5135,10 +5135,10 @@
             }),
             'state': dict({
               'attributes': dict({
-                'device_class': 'temperature',
-                'friendly_name': 'Enpower 654321 Temperature',
+                <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'temperature',
+                <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Enpower 654321 Temperature',
                 'state_class': 'measurement',
-                'unit_of_measurement': '°C',
+                <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: '°C',
               }),
               'entity_id': 'sensor.enpower_654321_temperature',
               'state': '26.1111111111111',
@@ -5182,7 +5182,7 @@
             }),
             'state': dict({
               'attributes': dict({
-                'friendly_name': 'Enpower 654321 Charge from grid',
+                <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Enpower 654321 Charge from grid',
               }),
               'entity_id': 'switch.enpower_654321_charge_from_grid',
               'state': 'on',
@@ -5226,7 +5226,7 @@
             }),
             'state': dict({
               'attributes': dict({
-                'friendly_name': 'Enpower 654321 Grid enabled',
+                <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Enpower 654321 Grid enabled',
               }),
               'entity_id': 'switch.enpower_654321_grid_enabled',
               'state': 'on',
@@ -5312,10 +5312,10 @@
             }),
             'state': dict({
               'attributes': dict({
-                'device_class': 'energy_storage',
-                'friendly_name': 'Envoy <<envoyserial>> Available battery energy',
+                <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'energy_storage',
+                <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Envoy <<envoyserial>> Available battery energy',
                 'state_class': 'measurement',
-                'unit_of_measurement': 'Wh',
+                <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: 'Wh',
               }),
               'entity_id': 'sensor.envoy_<<envoyserial>>_available_battery_energy',
               'state': '525',
@@ -5539,10 +5539,10 @@
             }),
             'state': dict({
               'attributes': dict({
-                'device_class': 'energy',
-                'friendly_name': 'Envoy <<envoyserial>> Backfeed CT energy delivered',
+                <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'energy',
+                <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Envoy <<envoyserial>> Backfeed CT energy delivered',
                 'state_class': 'total_increasing',
-                'unit_of_measurement': 'MWh',
+                <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: 'MWh',
               }),
               'entity_id': 'sensor.envoy_<<envoyserial>>_backfeed_ct_energy_delivered',
               'state': '0.04<<envoyserial>>',
@@ -5723,10 +5723,10 @@
             }),
             'state': dict({
               'attributes': dict({
-                'device_class': 'energy',
-                'friendly_name': 'Envoy <<envoyserial>> Backfeed CT energy received',
+                <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'energy',
+                <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Envoy <<envoyserial>> Backfeed CT energy received',
                 'state_class': 'total_increasing',
-                'unit_of_measurement': 'MWh',
+                <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: 'MWh',
               }),
               'entity_id': 'sensor.envoy_<<envoyserial>>_backfeed_ct_energy_received',
               'state': '0.042345',
@@ -5907,10 +5907,10 @@
             }),
             'state': dict({
               'attributes': dict({
-                'device_class': 'power',
-                'friendly_name': 'Envoy <<envoyserial>> Backfeed CT power',
+                <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'power',
+                <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Envoy <<envoyserial>> Backfeed CT power',
                 'state_class': 'measurement',
-                'unit_of_measurement': 'kW',
+                <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: 'kW',
               }),
               'entity_id': 'sensor.envoy_<<envoyserial>>_backfeed_ct_power',
               'state': '0.104',
@@ -6257,10 +6257,10 @@
             }),
             'state': dict({
               'attributes': dict({
-                'device_class': 'battery',
-                'friendly_name': 'Envoy <<envoyserial>> Battery',
+                <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'battery',
+                <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Envoy <<envoyserial>> Battery',
                 'state_class': 'measurement',
-                'unit_of_measurement': '%',
+                <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: '%',
               }),
               'entity_id': 'sensor.envoy_<<envoyserial>>_battery',
               'state': '15',
@@ -6307,9 +6307,9 @@
             }),
             'state': dict({
               'attributes': dict({
-                'device_class': 'energy_storage',
-                'friendly_name': 'Envoy <<envoyserial>> Battery capacity',
-                'unit_of_measurement': 'Wh',
+                <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'energy_storage',
+                <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Envoy <<envoyserial>> Battery capacity',
+                <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: 'Wh',
               }),
               'entity_id': 'sensor.envoy_<<envoyserial>>_battery_capacity',
               'state': '3500',
@@ -6361,10 +6361,10 @@
             }),
             'state': dict({
               'attributes': dict({
-                'device_class': 'power',
-                'friendly_name': 'Envoy <<envoyserial>> Current battery discharge',
+                <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'power',
+                <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Envoy <<envoyserial>> Current battery discharge',
                 'state_class': 'measurement',
-                'unit_of_measurement': 'kW',
+                <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: 'kW',
               }),
               'entity_id': 'sensor.envoy_<<envoyserial>>_current_battery_discharge',
               'state': '0.103',
@@ -6545,10 +6545,10 @@
             }),
             'state': dict({
               'attributes': dict({
-                'device_class': 'power',
-                'friendly_name': 'Envoy <<envoyserial>> Current net power consumption',
+                <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'power',
+                <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Envoy <<envoyserial>> Current net power consumption',
                 'state_class': 'measurement',
-                'unit_of_measurement': 'kW',
+                <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: 'kW',
               }),
               'entity_id': 'sensor.envoy_<<envoyserial>>_current_net_power_consumption',
               'state': '0.101',
@@ -6729,10 +6729,10 @@
             }),
             'state': dict({
               'attributes': dict({
-                'device_class': 'power',
-                'friendly_name': 'Envoy <<envoyserial>> Current power consumption',
+                <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'power',
+                <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Envoy <<envoyserial>> Current power consumption',
                 'state_class': 'measurement',
-                'unit_of_measurement': 'kW',
+                <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: 'kW',
               }),
               'entity_id': 'sensor.envoy_<<envoyserial>>_current_power_consumption',
               'state': '1.234',
@@ -6913,10 +6913,10 @@
             }),
             'state': dict({
               'attributes': dict({
-                'device_class': 'power',
-                'friendly_name': 'Envoy <<envoyserial>> Current power production',
+                <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'power',
+                <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Envoy <<envoyserial>> Current power production',
                 'state_class': 'measurement',
-                'unit_of_measurement': 'kW',
+                <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: 'kW',
               }),
               'entity_id': 'sensor.envoy_<<envoyserial>>_current_power_production',
               'state': '1.234',
@@ -7095,9 +7095,9 @@
             }),
             'state': dict({
               'attributes': dict({
-                'device_class': 'energy',
-                'friendly_name': 'Envoy <<envoyserial>> Energy consumption last seven days',
-                'unit_of_measurement': 'kWh',
+                <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'energy',
+                <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Envoy <<envoyserial>> Energy consumption last seven days',
+                <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: 'kWh',
               }),
               'entity_id': 'sensor.envoy_<<envoyserial>>_energy_consumption_last_seven_days',
               'state': '1.234',
@@ -7272,10 +7272,10 @@
             }),
             'state': dict({
               'attributes': dict({
-                'device_class': 'energy',
-                'friendly_name': 'Envoy <<envoyserial>> Energy consumption today',
+                <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'energy',
+                <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Envoy <<envoyserial>> Energy consumption today',
                 'state_class': 'total_increasing',
-                'unit_of_measurement': 'kWh',
+                <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: 'kWh',
               }),
               'entity_id': 'sensor.envoy_<<envoyserial>>_energy_consumption_today',
               'state': '1.234',
@@ -7454,9 +7454,9 @@
             }),
             'state': dict({
               'attributes': dict({
-                'device_class': 'energy',
-                'friendly_name': 'Envoy <<envoyserial>> Energy production last seven days',
-                'unit_of_measurement': 'kWh',
+                <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'energy',
+                <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Envoy <<envoyserial>> Energy production last seven days',
+                <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: 'kWh',
               }),
               'entity_id': 'sensor.envoy_<<envoyserial>>_energy_production_last_seven_days',
               'state': '1.234',
@@ -7631,10 +7631,10 @@
             }),
             'state': dict({
               'attributes': dict({
-                'device_class': 'energy',
-                'friendly_name': 'Envoy <<envoyserial>> Energy production today',
+                <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'energy',
+                <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Envoy <<envoyserial>> Energy production today',
                 'state_class': 'total_increasing',
-                'unit_of_measurement': 'kWh',
+                <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: 'kWh',
               }),
               'entity_id': 'sensor.envoy_<<envoyserial>>_energy_production_today',
               'state': '1.234',
@@ -7987,10 +7987,10 @@
             }),
             'state': dict({
               'attributes': dict({
-                'device_class': 'energy',
-                'friendly_name': 'Envoy <<envoyserial>> EVSE CT energy delivered',
+                <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'energy',
+                <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Envoy <<envoyserial>> EVSE CT energy delivered',
                 'state_class': 'total_increasing',
-                'unit_of_measurement': 'MWh',
+                <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: 'MWh',
               }),
               'entity_id': 'sensor.envoy_<<envoyserial>>_evse_ct_energy_delivered',
               'state': '0.06<<envoyserial>>',
@@ -8171,10 +8171,10 @@
             }),
             'state': dict({
               'attributes': dict({
-                'device_class': 'energy',
-                'friendly_name': 'Envoy <<envoyserial>> EVSE CT energy received',
+                <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'energy',
+                <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Envoy <<envoyserial>> EVSE CT energy received',
                 'state_class': 'total_increasing',
-                'unit_of_measurement': 'MWh',
+                <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: 'MWh',
               }),
               'entity_id': 'sensor.envoy_<<envoyserial>>_evse_ct_energy_received',
               'state': '0.062345',
@@ -8355,10 +8355,10 @@
             }),
             'state': dict({
               'attributes': dict({
-                'device_class': 'power',
-                'friendly_name': 'Envoy <<envoyserial>> EVSE CT power',
+                <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'power',
+                <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Envoy <<envoyserial>> EVSE CT power',
                 'state_class': 'measurement',
-                'unit_of_measurement': 'kW',
+                <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: 'kW',
               }),
               'entity_id': 'sensor.envoy_<<envoyserial>>_evse_ct_power',
               'state': '0.106',
@@ -9831,10 +9831,10 @@
             }),
             'state': dict({
               'attributes': dict({
-                'device_class': 'energy',
-                'friendly_name': 'Envoy <<envoyserial>> Lifetime battery energy charged',
+                <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'energy',
+                <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Envoy <<envoyserial>> Lifetime battery energy charged',
                 'state_class': 'total_increasing',
-                'unit_of_measurement': 'MWh',
+                <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: 'MWh',
               }),
               'entity_id': 'sensor.envoy_<<envoyserial>>_lifetime_battery_energy_charged',
               'state': '0.032345',
@@ -10015,10 +10015,10 @@
             }),
             'state': dict({
               'attributes': dict({
-                'device_class': 'energy',
-                'friendly_name': 'Envoy <<envoyserial>> Lifetime battery energy discharged',
+                <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'energy',
+                <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Envoy <<envoyserial>> Lifetime battery energy discharged',
                 'state_class': 'total_increasing',
-                'unit_of_measurement': 'MWh',
+                <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: 'MWh',
               }),
               'entity_id': 'sensor.envoy_<<envoyserial>>_lifetime_battery_energy_discharged',
               'state': '0.03<<envoyserial>>',
@@ -10199,10 +10199,10 @@
             }),
             'state': dict({
               'attributes': dict({
-                'device_class': 'energy',
-                'friendly_name': 'Envoy <<envoyserial>> Lifetime energy consumption',
+                <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'energy',
+                <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Envoy <<envoyserial>> Lifetime energy consumption',
                 'state_class': 'total_increasing',
-                'unit_of_measurement': 'MWh',
+                <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: 'MWh',
               }),
               'entity_id': 'sensor.envoy_<<envoyserial>>_lifetime_energy_consumption',
               'state': '0.00<<envoyserial>>',
@@ -10383,10 +10383,10 @@
             }),
             'state': dict({
               'attributes': dict({
-                'device_class': 'energy',
-                'friendly_name': 'Envoy <<envoyserial>> Lifetime energy production',
+                <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'energy',
+                <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Envoy <<envoyserial>> Lifetime energy production',
                 'state_class': 'total_increasing',
-                'unit_of_measurement': 'MWh',
+                <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: 'MWh',
               }),
               'entity_id': 'sensor.envoy_<<envoyserial>>_lifetime_energy_production',
               'state': '0.00<<envoyserial>>',
@@ -10567,10 +10567,10 @@
             }),
             'state': dict({
               'attributes': dict({
-                'device_class': 'energy',
-                'friendly_name': 'Envoy <<envoyserial>> Lifetime net energy consumption',
+                <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'energy',
+                <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Envoy <<envoyserial>> Lifetime net energy consumption',
                 'state_class': 'total_increasing',
-                'unit_of_measurement': 'MWh',
+                <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: 'MWh',
               }),
               'entity_id': 'sensor.envoy_<<envoyserial>>_lifetime_net_energy_consumption',
               'state': '0.02<<envoyserial>>',
@@ -10751,10 +10751,10 @@
             }),
             'state': dict({
               'attributes': dict({
-                'device_class': 'energy',
-                'friendly_name': 'Envoy <<envoyserial>> Lifetime net energy production',
+                <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'energy',
+                <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Envoy <<envoyserial>> Lifetime net energy production',
                 'state_class': 'total_increasing',
-                'unit_of_measurement': 'MWh',
+                <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: 'MWh',
               }),
               'entity_id': 'sensor.envoy_<<envoyserial>>_lifetime_net_energy_production',
               'state': '0.022345',
@@ -11107,10 +11107,10 @@
             }),
             'state': dict({
               'attributes': dict({
-                'device_class': 'energy',
-                'friendly_name': 'Envoy <<envoyserial>> Load CT energy delivered',
+                <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'energy',
+                <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Envoy <<envoyserial>> Load CT energy delivered',
                 'state_class': 'total_increasing',
-                'unit_of_measurement': 'MWh',
+                <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: 'MWh',
               }),
               'entity_id': 'sensor.envoy_<<envoyserial>>_load_ct_energy_delivered',
               'state': '0.05<<envoyserial>>',
@@ -11291,10 +11291,10 @@
             }),
             'state': dict({
               'attributes': dict({
-                'device_class': 'energy',
-                'friendly_name': 'Envoy <<envoyserial>> Load CT energy received',
+                <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'energy',
+                <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Envoy <<envoyserial>> Load CT energy received',
                 'state_class': 'total_increasing',
-                'unit_of_measurement': 'MWh',
+                <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: 'MWh',
               }),
               'entity_id': 'sensor.envoy_<<envoyserial>>_load_ct_energy_received',
               'state': '0.052345',
@@ -11475,10 +11475,10 @@
             }),
             'state': dict({
               'attributes': dict({
-                'device_class': 'power',
-                'friendly_name': 'Envoy <<envoyserial>> Load CT power',
+                <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'power',
+                <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Envoy <<envoyserial>> Load CT power',
                 'state_class': 'measurement',
-                'unit_of_measurement': 'kW',
+                <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: 'kW',
               }),
               'entity_id': 'sensor.envoy_<<envoyserial>>_load_ct_power',
               'state': '0.105',
@@ -15419,10 +15419,10 @@
             }),
             'state': dict({
               'attributes': dict({
-                'device_class': 'energy',
-                'friendly_name': 'Envoy <<envoyserial>> Production CT energy delivered',
+                <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'energy',
+                <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Envoy <<envoyserial>> Production CT energy delivered',
                 'state_class': 'total_increasing',
-                'unit_of_measurement': 'MWh',
+                <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: 'MWh',
               }),
               'entity_id': 'sensor.envoy_<<envoyserial>>_production_ct_energy_delivered',
               'state': '0.01<<envoyserial>>',
@@ -15603,10 +15603,10 @@
             }),
             'state': dict({
               'attributes': dict({
-                'device_class': 'energy',
-                'friendly_name': 'Envoy <<envoyserial>> Production CT energy received',
+                <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'energy',
+                <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Envoy <<envoyserial>> Production CT energy received',
                 'state_class': 'total_increasing',
-                'unit_of_measurement': 'MWh',
+                <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: 'MWh',
               }),
               'entity_id': 'sensor.envoy_<<envoyserial>>_production_ct_energy_received',
               'state': '0.0<<envoyserial>>5',
@@ -15787,10 +15787,10 @@
             }),
             'state': dict({
               'attributes': dict({
-                'device_class': 'power',
-                'friendly_name': 'Envoy <<envoyserial>> Production CT power',
+                <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'power',
+                <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Envoy <<envoyserial>> Production CT power',
                 'state_class': 'measurement',
-                'unit_of_measurement': 'kW',
+                <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: 'kW',
               }),
               'entity_id': 'sensor.envoy_<<envoyserial>>_production_ct_power',
               'state': '0.1',
@@ -16143,10 +16143,10 @@
             }),
             'state': dict({
               'attributes': dict({
-                'device_class': 'energy',
-                'friendly_name': 'Envoy <<envoyserial>> PV3P CT energy delivered',
+                <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'energy',
+                <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Envoy <<envoyserial>> PV3P CT energy delivered',
                 'state_class': 'total_increasing',
-                'unit_of_measurement': 'MWh',
+                <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: 'MWh',
               }),
               'entity_id': 'sensor.envoy_<<envoyserial>>_pv3p_ct_energy_delivered',
               'state': '0.07<<envoyserial>>',
@@ -16327,10 +16327,10 @@
             }),
             'state': dict({
               'attributes': dict({
-                'device_class': 'energy',
-                'friendly_name': 'Envoy <<envoyserial>> PV3P CT energy received',
+                <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'energy',
+                <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Envoy <<envoyserial>> PV3P CT energy received',
                 'state_class': 'total_increasing',
-                'unit_of_measurement': 'MWh',
+                <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: 'MWh',
               }),
               'entity_id': 'sensor.envoy_<<envoyserial>>_pv3p_ct_energy_received',
               'state': '0.072345',
@@ -16511,10 +16511,10 @@
             }),
             'state': dict({
               'attributes': dict({
-                'device_class': 'power',
-                'friendly_name': 'Envoy <<envoyserial>> PV3P CT power',
+                <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'power',
+                <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Envoy <<envoyserial>> PV3P CT power',
                 'state_class': 'measurement',
-                'unit_of_measurement': 'kW',
+                <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: 'kW',
               }),
               'entity_id': 'sensor.envoy_<<envoyserial>>_pv3p_ct_power',
               'state': '0.107',
@@ -16692,10 +16692,10 @@
             }),
             'state': dict({
               'attributes': dict({
-                'device_class': 'energy_storage',
-                'friendly_name': 'Envoy <<envoyserial>> Reserve battery energy',
+                <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'energy_storage',
+                <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Envoy <<envoyserial>> Reserve battery energy',
                 'state_class': 'measurement',
-                'unit_of_measurement': 'Wh',
+                <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: 'Wh',
               }),
               'entity_id': 'sensor.envoy_<<envoyserial>>_reserve_battery_energy',
               'state': '526',
@@ -16741,10 +16741,10 @@
             }),
             'state': dict({
               'attributes': dict({
-                'device_class': 'battery',
-                'friendly_name': 'Envoy <<envoyserial>> Reserve battery level',
+                <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'battery',
+                <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Envoy <<envoyserial>> Reserve battery level',
                 'state_class': 'measurement',
-                'unit_of_measurement': '%',
+                <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: '%',
               }),
               'entity_id': 'sensor.envoy_<<envoyserial>>_reserve_battery_level',
               'state': '15',
@@ -18201,8 +18201,8 @@
             }),
             'state': dict({
               'attributes': dict({
-                'device_class': 'connectivity',
-                'friendly_name': 'Encharge <<envoyserial>>56 Communicating',
+                <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'connectivity',
+                <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Encharge <<envoyserial>>56 Communicating',
               }),
               'entity_id': 'binary_sensor.encharge_<<envoyserial>>56_communicating',
               'state': 'on',
@@ -18246,7 +18246,7 @@
             }),
             'state': dict({
               'attributes': dict({
-                'friendly_name': 'Encharge <<envoyserial>>56 DC switch',
+                <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Encharge <<envoyserial>>56 DC switch',
               }),
               'entity_id': 'binary_sensor.encharge_<<envoyserial>>56_dc_switch',
               'state': 'on',
@@ -18295,10 +18295,10 @@
             }),
             'state': dict({
               'attributes': dict({
-                'device_class': 'apparent_power',
-                'friendly_name': 'Encharge <<envoyserial>>56 Apparent power',
+                <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'apparent_power',
+                <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Encharge <<envoyserial>>56 Apparent power',
                 'state_class': 'measurement',
-                'unit_of_measurement': 'VA',
+                <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: 'VA',
               }),
               'entity_id': 'sensor.encharge_<<envoyserial>>56_apparent_power',
               'state': '0.0',
@@ -18344,10 +18344,10 @@
             }),
             'state': dict({
               'attributes': dict({
-                'device_class': 'battery',
-                'friendly_name': 'Encharge <<envoyserial>>56 Battery',
+                <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'battery',
+                <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Encharge <<envoyserial>>56 Battery',
                 'state_class': 'measurement',
-                'unit_of_measurement': '%',
+                <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: '%',
               }),
               'entity_id': 'sensor.encharge_<<envoyserial>>56_battery',
               'state': '15',
@@ -18391,8 +18391,8 @@
             }),
             'state': dict({
               'attributes': dict({
-                'device_class': 'timestamp',
-                'friendly_name': 'Encharge <<envoyserial>>56 Last reported',
+                <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'timestamp',
+                <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Encharge <<envoyserial>>56 Last reported',
               }),
               'entity_id': 'sensor.encharge_<<envoyserial>>56_last_reported',
               'state': '2023-09-26T23:04:07+00:00',
@@ -18441,10 +18441,10 @@
             }),
             'state': dict({
               'attributes': dict({
-                'device_class': 'power',
-                'friendly_name': 'Encharge <<envoyserial>>56 Power',
+                <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'power',
+                <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Encharge <<envoyserial>>56 Power',
                 'state_class': 'measurement',
-                'unit_of_measurement': 'W',
+                <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: 'W',
               }),
               'entity_id': 'sensor.encharge_<<envoyserial>>56_power',
               'state': '0.0',
@@ -18493,10 +18493,10 @@
             }),
             'state': dict({
               'attributes': dict({
-                'device_class': 'temperature',
-                'friendly_name': 'Encharge <<envoyserial>>56 Temperature',
+                <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'temperature',
+                <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Encharge <<envoyserial>>56 Temperature',
                 'state_class': 'measurement',
-                'unit_of_measurement': '°C',
+                <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: '°C',
               }),
               'entity_id': 'sensor.encharge_<<envoyserial>>56_temperature',
               'state': '29',
@@ -18582,8 +18582,8 @@
             }),
             'state': dict({
               'attributes': dict({
-                'device_class': 'battery',
-                'friendly_name': 'NC1 Fixture Cutoff battery level',
+                <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'battery',
+                <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'NC1 Fixture Cutoff battery level',
                 'max': 100.0,
                 'min': 0.0,
                 'mode': 'auto',
@@ -18636,8 +18636,8 @@
             }),
             'state': dict({
               'attributes': dict({
-                'device_class': 'battery',
-                'friendly_name': 'NC1 Fixture Restore battery level',
+                <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'battery',
+                <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'NC1 Fixture Restore battery level',
                 'max': 100.0,
                 'min': 0.0,
                 'mode': 'auto',
@@ -18692,7 +18692,7 @@
             }),
             'state': dict({
               'attributes': dict({
-                'friendly_name': 'NC1 Fixture Generator action',
+                <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'NC1 Fixture Generator action',
                 'options': list([
                   'powered',
                   'not_powered',
@@ -18749,7 +18749,7 @@
             }),
             'state': dict({
               'attributes': dict({
-                'friendly_name': 'NC1 Fixture Grid action',
+                <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'NC1 Fixture Grid action',
                 'options': list([
                   'powered',
                   'not_powered',
@@ -18806,7 +18806,7 @@
             }),
             'state': dict({
               'attributes': dict({
-                'friendly_name': 'NC1 Fixture Microgrid action',
+                <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'NC1 Fixture Microgrid action',
                 'options': list([
                   'powered',
                   'not_powered',
@@ -18861,7 +18861,7 @@
             }),
             'state': dict({
               'attributes': dict({
-                'friendly_name': 'NC1 Fixture Mode',
+                <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'NC1 Fixture Mode',
                 'options': list([
                   'standard',
                   'battery',
@@ -18909,7 +18909,7 @@
             }),
             'state': dict({
               'attributes': dict({
-                'friendly_name': 'NC1 Fixture',
+                <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'NC1 Fixture',
               }),
               'entity_id': 'switch.nc1_fixture',
               'state': 'off',
@@ -18995,8 +18995,8 @@
             }),
             'state': dict({
               'attributes': dict({
-                'device_class': 'battery',
-                'friendly_name': 'NC2 Fixture Cutoff battery level',
+                <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'battery',
+                <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'NC2 Fixture Cutoff battery level',
                 'max': 100.0,
                 'min': 0.0,
                 'mode': 'auto',
@@ -19049,8 +19049,8 @@
             }),
             'state': dict({
               'attributes': dict({
-                'device_class': 'battery',
-                'friendly_name': 'NC2 Fixture Restore battery level',
+                <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'battery',
+                <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'NC2 Fixture Restore battery level',
                 'max': 100.0,
                 'min': 0.0,
                 'mode': 'auto',
@@ -19105,7 +19105,7 @@
             }),
             'state': dict({
               'attributes': dict({
-                'friendly_name': 'NC2 Fixture Generator action',
+                <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'NC2 Fixture Generator action',
                 'options': list([
                   'powered',
                   'not_powered',
@@ -19162,7 +19162,7 @@
             }),
             'state': dict({
               'attributes': dict({
-                'friendly_name': 'NC2 Fixture Grid action',
+                <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'NC2 Fixture Grid action',
                 'options': list([
                   'powered',
                   'not_powered',
@@ -19219,7 +19219,7 @@
             }),
             'state': dict({
               'attributes': dict({
-                'friendly_name': 'NC2 Fixture Microgrid action',
+                <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'NC2 Fixture Microgrid action',
                 'options': list([
                   'powered',
                   'not_powered',
@@ -19274,7 +19274,7 @@
             }),
             'state': dict({
               'attributes': dict({
-                'friendly_name': 'NC2 Fixture Mode',
+                <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'NC2 Fixture Mode',
                 'options': list([
                   'standard',
                   'battery',
@@ -19322,7 +19322,7 @@
             }),
             'state': dict({
               'attributes': dict({
-                'friendly_name': 'NC2 Fixture',
+                <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'NC2 Fixture',
               }),
               'entity_id': 'switch.nc2_fixture',
               'state': 'on',
@@ -19408,8 +19408,8 @@
             }),
             'state': dict({
               'attributes': dict({
-                'device_class': 'battery',
-                'friendly_name': 'NC3 Fixture Cutoff battery level',
+                <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'battery',
+                <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'NC3 Fixture Cutoff battery level',
                 'max': 100.0,
                 'min': 0.0,
                 'mode': 'auto',
@@ -19462,8 +19462,8 @@
             }),
             'state': dict({
               'attributes': dict({
-                'device_class': 'battery',
-                'friendly_name': 'NC3 Fixture Restore battery level',
+                <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'battery',
+                <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'NC3 Fixture Restore battery level',
                 'max': 100.0,
                 'min': 0.0,
                 'mode': 'auto',
@@ -19518,7 +19518,7 @@
             }),
             'state': dict({
               'attributes': dict({
-                'friendly_name': 'NC3 Fixture Generator action',
+                <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'NC3 Fixture Generator action',
                 'options': list([
                   'powered',
                   'not_powered',
@@ -19575,7 +19575,7 @@
             }),
             'state': dict({
               'attributes': dict({
-                'friendly_name': 'NC3 Fixture Grid action',
+                <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'NC3 Fixture Grid action',
                 'options': list([
                   'powered',
                   'not_powered',
@@ -19632,7 +19632,7 @@
             }),
             'state': dict({
               'attributes': dict({
-                'friendly_name': 'NC3 Fixture Microgrid action',
+                <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'NC3 Fixture Microgrid action',
                 'options': list([
                   'powered',
                   'not_powered',
@@ -19687,7 +19687,7 @@
             }),
             'state': dict({
               'attributes': dict({
-                'friendly_name': 'NC3 Fixture Mode',
+                <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'NC3 Fixture Mode',
                 'options': list([
                   'standard',
                   'battery',
@@ -19735,7 +19735,7 @@
             }),
             'state': dict({
               'attributes': dict({
-                'friendly_name': 'NC3 Fixture',
+                <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'NC3 Fixture',
               }),
               'entity_id': 'switch.nc3_fixture',
               'state': 'off',

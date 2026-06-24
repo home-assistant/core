@@ -9,7 +9,7 @@
         '1 Rainbow',
         '2 Flare',
       ]),
-      'friendly_name': 'Tree 1',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Tree 1',
       'hs_color': list([
         0.0,
         0.0,
@@ -22,7 +22,7 @@
       'supported_color_modes': list([
         'rgb',
       ]),
-      'supported_features': 4,
+      <EntityStateAttribute.SUPPORTED_FEATURES: 'supported_features'>: 4,
       'xy_color': list([
         0.323,
         0.329,

@@ -39,14 +39,14 @@
 # name: test_weather[weather.my_home_station-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'attribution': 'Weather data delivered by WeatherFlow/Tempest API',
+      <EntityStateAttribute.ATTRIBUTION: 'attribution'>: 'Weather data delivered by WeatherFlow/Tempest API',
       <WeatherEntityStateAttribute.DEW_POINT: 'dew_point'>: -13.0,
-      'friendly_name': 'My Home Station',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'My Home Station',
       <WeatherEntityStateAttribute.HUMIDITY: 'humidity'>: 27,
       <WeatherEntityStateAttribute.PRECIPITATION_UNIT: 'precipitation_unit'>: <UnitOfPrecipitationDepth.MILLIMETERS: 'mm'>,
       <WeatherEntityStateAttribute.PRESSURE: 'pressure'>: 795.8,
       <WeatherEntityStateAttribute.PRESSURE_UNIT: 'pressure_unit'>: <UnitOfPressure.HPA: 'hPa'>,
-      'supported_features': <WeatherEntityFeature: 3>,
+      <EntityStateAttribute.SUPPORTED_FEATURES: 'supported_features'>: <WeatherEntityFeature: 3>,
       <WeatherEntityStateAttribute.TEMPERATURE: 'temperature'>: 4.0,
       <WeatherEntityStateAttribute.TEMPERATURE_UNIT: 'temperature_unit'>: <UnitOfTemperature.CELSIUS: '°C'>,
       <WeatherEntityStateAttribute.UV_INDEX: 'uv_index'>: 2,

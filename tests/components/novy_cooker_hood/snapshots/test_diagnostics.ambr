@@ -86,7 +86,7 @@
       'entity_id': 'radio_frequency.test_rf_transmitter',
       'state': dict({
         'attributes': dict({
-          'friendly_name': 'Test RF transmitter',
+          <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Test RF transmitter',
         }),
         'entity_id': 'radio_frequency.test_rf_transmitter',
         'state': 'unknown',

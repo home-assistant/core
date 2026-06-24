@@ -2,10 +2,10 @@
 # name: test_cover_entities[cover.door_1]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'device_class': 'garage',
-      'friendly_name': 'Door 1',
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'garage',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Door 1',
       <CoverEntityStateAttribute.IS_CLOSED: 'is_closed'>: False,
-      'supported_features': <CoverEntityFeature: 3>,
+      <EntityStateAttribute.SUPPORTED_FEATURES: 'supported_features'>: <CoverEntityFeature: 3>,
     }),
     'context': <ANY>,
     'entity_id': 'cover.door_1',
@@ -86,10 +86,10 @@
 # name: test_cover_entities[cover.door_2]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'device_class': 'garage',
-      'friendly_name': 'Door 2',
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'garage',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Door 2',
       <CoverEntityStateAttribute.IS_CLOSED: 'is_closed'>: False,
-      'supported_features': <CoverEntityFeature: 3>,
+      <EntityStateAttribute.SUPPORTED_FEATURES: 'supported_features'>: <CoverEntityFeature: 3>,
     }),
     'context': <ANY>,
     'entity_id': 'cover.door_2',

@@ -39,8 +39,8 @@
 # name: test_platform_setup_and_discovery[vacuum.hoover-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'Hoover',
-      'supported_features': <VacuumEntityFeature: 8984>,
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Hoover',
+      <EntityStateAttribute.SUPPORTED_FEATURES: 'supported_features'>: <VacuumEntityFeature: 8984>,
     }),
     'context': <ANY>,
     'entity_id': 'vacuum.hoover',
@@ -102,8 +102,8 @@
         'normal',
         'strong',
       ]),
-      'friendly_name': 'V20',
-      'supported_features': <VacuumEntityFeature: 13116>,
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'V20',
+      <EntityStateAttribute.SUPPORTED_FEATURES: 'supported_features'>: <VacuumEntityFeature: 13116>,
     }),
     'context': <ANY>,
     'entity_id': 'vacuum.v20',

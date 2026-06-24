@@ -10,7 +10,7 @@
   dict({
     'attributes': dict({
       'entity_id': 'sensor.test_monitored',
-      'friendly_name': 'Test Sensor',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Test Sensor',
       'hysteresis': 0.0,
       'lower': 20.0,
       'position': 'below',
@@ -24,7 +24,7 @@
 # name: test_config_flow_preview_success[missing_upper_lower]
   dict({
     'attributes': dict({
-      'friendly_name': 'Test Sensor',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Test Sensor',
     }),
     'state': 'unavailable',
   })
@@ -33,7 +33,7 @@
   dict({
     'attributes': dict({
       'entity_id': 'sensor.test_monitored',
-      'friendly_name': 'Test Sensor',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Test Sensor',
       'hysteresis': 0.0,
       'lower': 20.0,
       'position': 'below',
@@ -48,7 +48,7 @@
   dict({
     'attributes': dict({
       'entity_id': 'sensor.test_monitored',
-      'friendly_name': 'Test Sensor',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Test Sensor',
       'hysteresis': 0.0,
       'lower': 20.0,
       'position': 'below',

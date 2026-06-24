@@ -82,8 +82,8 @@
               'changed_by': None,
               'code_arm_required': False,
               'code_format': None,
-              'friendly_name': 'Multifunction alarm',
-              'supported_features': 11,
+              <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Multifunction alarm',
+              <EntityStateAttribute.SUPPORTED_FEATURES: 'supported_features'>: 11,
             }),
             'entity_id': 'alarm_control_panel.multifunction_alarm',
             'state': 'disarmed',
@@ -100,13 +100,13 @@
           'original_icon': None,
           'state': dict({
             'attributes': dict({
-              'device_class': 'duration',
-              'friendly_name': 'Multifunction alarm Alarm delay',
+              <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'duration',
+              <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Multifunction alarm Alarm delay',
               'max': 999.0,
               'min': 0.0,
               'mode': 'auto',
               'step': 1.0,
-              'unit_of_measurement': 's',
+              <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: 's',
             }),
             'entity_id': 'number.multifunction_alarm_alarm_delay',
             'state': '20.0',
@@ -123,13 +123,13 @@
           'original_icon': None,
           'state': dict({
             'attributes': dict({
-              'device_class': 'duration',
-              'friendly_name': 'Multifunction alarm Arm delay',
+              <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'duration',
+              <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Multifunction alarm Arm delay',
               'max': 999.0,
               'min': 0.0,
               'mode': 'auto',
               'step': 1.0,
-              'unit_of_measurement': 's',
+              <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: 's',
             }),
             'entity_id': 'number.multifunction_alarm_arm_delay',
             'state': '15.0',
@@ -146,13 +146,13 @@
           'original_icon': None,
           'state': dict({
             'attributes': dict({
-              'device_class': 'duration',
-              'friendly_name': 'Multifunction alarm Siren duration',
+              <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'duration',
+              <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Multifunction alarm Siren duration',
               'max': 999.0,
               'min': 0.0,
               'mode': 'auto',
               'step': 1.0,
-              'unit_of_measurement': 'min',
+              <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: 'min',
             }),
             'entity_id': 'number.multifunction_alarm_siren_duration',
             'state': '3.0',
@@ -169,7 +169,7 @@
           'original_icon': None,
           'state': dict({
             'attributes': dict({
-              'friendly_name': 'Multifunction alarm Arm beep',
+              <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Multifunction alarm Arm beep',
             }),
             'entity_id': 'switch.multifunction_alarm_arm_beep',
             'state': 'on',
@@ -186,7 +186,7 @@
           'original_icon': None,
           'state': dict({
             'attributes': dict({
-              'friendly_name': 'Multifunction alarm Siren',
+              <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Multifunction alarm Siren',
             }),
             'entity_id': 'switch.multifunction_alarm_siren',
             'state': 'on',
@@ -357,8 +357,8 @@
           'original_icon': None,
           'state': dict({
             'attributes': dict({
-              'device_class': 'gas',
-              'friendly_name': 'Gas sensor Gas',
+              <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'gas',
+              <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Gas sensor Gas',
             }),
             'entity_id': 'binary_sensor.gas_sensor_gas',
             'state': 'off',
@@ -375,9 +375,9 @@
           'original_icon': None,
           'state': dict({
             'attributes': dict({
-              'friendly_name': 'Gas sensor Gas',
+              <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Gas sensor Gas',
               'state_class': 'measurement',
-              'unit_of_measurement': 'ppm',
+              <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: 'ppm',
             }),
             'entity_id': 'sensor.gas_sensor_gas',
             'state': '0.0',
@@ -506,7 +506,7 @@
           'original_icon': None,
           'state': dict({
             'attributes': dict({
-              'friendly_name': 'Framboisiers Power-on behavior',
+              <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Framboisiers Power-on behavior',
               'options': list([
                 '0',
                 '1',
@@ -528,8 +528,8 @@
           'original_icon': None,
           'state': dict({
             'attributes': dict({
-              'device_class': 'outlet',
-              'friendly_name': 'Framboisiers Switch 1',
+              <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'outlet',
+              <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Framboisiers Switch 1',
             }),
             'entity_id': 'switch.framboisiers_switch_1',
             'state': 'off',
@@ -653,8 +653,8 @@
               'original_icon': None,
               'state': dict({
                 'attributes': dict({
-                  'device_class': 'gas',
-                  'friendly_name': 'Gas sensor Gas',
+                  <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'gas',
+                  <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Gas sensor Gas',
                 }),
                 'entity_id': 'binary_sensor.gas_sensor_gas',
                 'state': 'off',
@@ -671,9 +671,9 @@
               'original_icon': None,
               'state': dict({
                 'attributes': dict({
-                  'friendly_name': 'Gas sensor Gas',
+                  <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Gas sensor Gas',
                   'state_class': 'measurement',
-                  'unit_of_measurement': 'ppm',
+                  <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: 'ppm',
                 }),
                 'entity_id': 'sensor.gas_sensor_gas',
                 'state': '0.0',

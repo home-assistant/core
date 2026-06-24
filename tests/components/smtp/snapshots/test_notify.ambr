@@ -39,8 +39,8 @@
 # name: test_notify_platform[notify.home_assistant_recipient-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'Home Assistant Recipient',
-      'supported_features': <NotifyEntityFeature: 1>,
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Home Assistant Recipient',
+      <EntityStateAttribute.SUPPORTED_FEATURES: 'supported_features'>: <NotifyEntityFeature: 1>,
     }),
     'context': <ANY>,
     'entity_id': 'notify.home_assistant_recipient',

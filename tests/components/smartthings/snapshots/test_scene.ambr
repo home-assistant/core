@@ -40,8 +40,8 @@
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'color': None,
-      'friendly_name': 'Away',
-      'icon': '203',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Away',
+      <EntityStateAttribute.ICON: 'icon'>: '203',
       'location_id': '88a3a314-f0c8-40b4-bb44-44ba06c9c42f',
     }),
     'context': <ANY>,
@@ -93,8 +93,8 @@
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'color': None,
-      'friendly_name': 'Home',
-      'icon': '204',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Home',
+      <EntityStateAttribute.ICON: 'icon'>: '204',
       'location_id': '88a3a314-f0c8-40b4-bb44-44ba06c9c42f',
     }),
     'context': <ANY>,

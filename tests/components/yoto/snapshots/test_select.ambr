@@ -50,7 +50,7 @@
 # name: test_all_entities[select.nursery_yoto_day_mode_color-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'Nursery Yoto Day mode color',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Nursery Yoto Day mode color',
       <SelectEntityCapabilityAttribute.OPTIONS: 'options'>: list([
         'orange_peel',
         'tambourine_red',
@@ -121,7 +121,7 @@
 # name: test_all_entities[select.nursery_yoto_night_mode_color-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'Nursery Yoto Night mode color',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Nursery Yoto Night mode color',
       <SelectEntityCapabilityAttribute.OPTIONS: 'options'>: list([
         'orange_peel',
         'tambourine_red',

@@ -302,11 +302,11 @@
     'attributes': ReadOnlyDict({
       <LightEntityStateAttribute.BRIGHTNESS: 'brightness'>: 204,
       <LightEntityStateAttribute.COLOR_MODE: 'color_mode'>: <ColorMode.BRIGHTNESS: 'brightness'>,
-      'friendly_name': 'Dimmable Light',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Dimmable Light',
       <LightEntityCapabilityAttribute.SUPPORTED_COLOR_MODES: 'supported_color_modes'>: list([
         <ColorMode.BRIGHTNESS: 'brightness'>,
       ]),
-      'supported_features': <LightEntityFeature: 0>,
+      <EntityStateAttribute.SUPPORTED_FEATURES: 'supported_features'>: <LightEntityFeature: 0>,
     }),
     'context': <ANY>,
     'entity_id': 'light.dimmable_light',
@@ -397,11 +397,11 @@
     'attributes': ReadOnlyDict({
       <LightEntityStateAttribute.BRIGHTNESS: 'brightness'>: 128,
       <LightEntityStateAttribute.COLOR_MODE: 'color_mode'>: <ColorMode.BRIGHTNESS: 'brightness'>,
-      'friendly_name': 'Dimmer Switch',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Dimmer Switch',
       <LightEntityCapabilityAttribute.SUPPORTED_COLOR_MODES: 'supported_color_modes'>: list([
         <ColorMode.BRIGHTNESS: 'brightness'>,
       ]),
-      'supported_features': <LightEntityFeature: 0>,
+      <EntityStateAttribute.SUPPORTED_FEATURES: 'supported_features'>: <LightEntityFeature: 0>,
     }),
     'context': <ANY>,
     'entity_id': 'light.dimmer_switch',
@@ -680,7 +680,7 @@
       <LightEntityStateAttribute.BRIGHTNESS: 'brightness'>: 128,
       <LightEntityStateAttribute.COLOR_MODE: 'color_mode'>: <ColorMode.COLOR_TEMP: 'color_temp'>,
       <LightEntityStateAttribute.COLOR_TEMP_KELVIN: 'color_temp_kelvin'>: 3816,
-      'friendly_name': 'Temperature Light',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Temperature Light',
       <LightEntityStateAttribute.HS_COLOR: 'hs_color'>: tuple(
         26.914,
         38.308,
@@ -695,7 +695,7 @@
       <LightEntityCapabilityAttribute.SUPPORTED_COLOR_MODES: 'supported_color_modes'>: list([
         <ColorMode.COLOR_TEMP: 'color_temp'>,
       ]),
-      'supported_features': <LightEntityFeature: 0>,
+      <EntityStateAttribute.SUPPORTED_FEATURES: 'supported_features'>: <LightEntityFeature: 0>,
       <LightEntityStateAttribute.XY_COLOR: 'xy_color'>: tuple(
         0.432,
         0.368,

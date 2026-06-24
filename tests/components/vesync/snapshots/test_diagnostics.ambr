@@ -204,8 +204,8 @@
           'original_name': 'Low water',
           'state': dict({
             'attributes': dict({
-              'device_class': 'problem',
-              'friendly_name': 'Test Fan Low water',
+              <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'problem',
+              <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Test Fan Low water',
             }),
             'entity_id': 'binary_sensor.test_fan_low_water',
             'last_changed': str,
@@ -229,8 +229,8 @@
           'original_name': 'Water tank lifted',
           'state': dict({
             'attributes': dict({
-              'device_class': 'problem',
-              'friendly_name': 'Test Fan Water tank lifted',
+              <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'problem',
+              <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Test Fan Water tank lifted',
             }),
             'entity_id': 'binary_sensor.test_fan_water_tank_lifted',
             'last_changed': str,
@@ -254,10 +254,10 @@
           'original_name': None,
           'state': dict({
             'attributes': dict({
-              'friendly_name': 'Test Fan',
+              <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Test Fan',
               'preset_modes': list([
               ]),
-              'supported_features': 59,
+              <EntityStateAttribute.SUPPORTED_FEATURES: 'supported_features'>: 59,
             }),
             'entity_id': 'fan.test_fan',
             'last_changed': str,
@@ -281,7 +281,7 @@
           'original_name': 'Air quality',
           'state': dict({
             'attributes': dict({
-              'friendly_name': 'Test Fan Air quality',
+              <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Test Fan Air quality',
             }),
             'entity_id': 'sensor.test_fan_air_quality',
             'last_changed': str,
@@ -305,9 +305,9 @@
           'original_name': 'Filter lifetime',
           'state': dict({
             'attributes': dict({
-              'friendly_name': 'Test Fan Filter lifetime',
+              <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Test Fan Filter lifetime',
               'state_class': 'measurement',
-              'unit_of_measurement': '%',
+              <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: '%',
             }),
             'entity_id': 'sensor.test_fan_filter_lifetime',
             'last_changed': str,
@@ -331,10 +331,10 @@
           'original_name': 'PM1',
           'state': dict({
             'attributes': dict({
-              'device_class': 'pm1',
-              'friendly_name': 'Test Fan PM1',
+              <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'pm1',
+              <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Test Fan PM1',
               'state_class': 'measurement',
-              'unit_of_measurement': 'μg/m³',
+              <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: 'μg/m³',
             }),
             'entity_id': 'sensor.test_fan_pm1',
             'last_changed': str,
@@ -358,10 +358,10 @@
           'original_name': 'PM10',
           'state': dict({
             'attributes': dict({
-              'device_class': 'pm10',
-              'friendly_name': 'Test Fan PM10',
+              <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'pm10',
+              <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Test Fan PM10',
               'state_class': 'measurement',
-              'unit_of_measurement': 'μg/m³',
+              <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: 'μg/m³',
             }),
             'entity_id': 'sensor.test_fan_pm10',
             'last_changed': str,
@@ -385,10 +385,10 @@
           'original_name': 'PM2.5',
           'state': dict({
             'attributes': dict({
-              'device_class': 'pm25',
-              'friendly_name': 'Test Fan PM2.5',
+              <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'pm25',
+              <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Test Fan PM2.5',
               'state_class': 'measurement',
-              'unit_of_measurement': 'μg/m³',
+              <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: 'μg/m³',
             }),
             'entity_id': 'sensor.test_fan_pm2_5',
             'last_changed': str,
@@ -412,7 +412,7 @@
           'original_name': 'Auto Off',
           'state': dict({
             'attributes': dict({
-              'friendly_name': 'Test Fan Auto Off',
+              <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Test Fan Auto Off',
             }),
             'entity_id': 'switch.test_fan_auto_off',
             'last_changed': str,
@@ -436,7 +436,7 @@
           'original_name': 'Child lock',
           'state': dict({
             'attributes': dict({
-              'friendly_name': 'Test Fan Child lock',
+              <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Test Fan Child lock',
             }),
             'entity_id': 'switch.test_fan_child_lock',
             'last_changed': str,
@@ -460,7 +460,7 @@
           'original_name': 'Display',
           'state': dict({
             'attributes': dict({
-              'friendly_name': 'Test Fan Display',
+              <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Test Fan Display',
             }),
             'entity_id': 'switch.test_fan_display',
             'last_changed': str,
@@ -484,10 +484,10 @@
           'original_name': 'Firmware',
           'state': dict({
             'attributes': dict({
-              'device_class': 'firmware',
-              'entity_picture': '/api/brands/integration/vesync/icon.png',
-              'friendly_name': 'Test Fan Firmware',
-              'supported_features': 0,
+              <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'firmware',
+              <EntityStateAttribute.ENTITY_PICTURE: 'entity_picture'>: '/api/brands/integration/vesync/icon.png',
+              <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Test Fan Firmware',
+              <EntityStateAttribute.SUPPORTED_FEATURES: 'supported_features'>: 0,
             }),
             'entity_id': 'update.test_fan_firmware',
             'last_changed': str,

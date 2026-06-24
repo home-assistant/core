@@ -41,12 +41,12 @@
 # name: test_states[fan.my_device-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'my_device',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'my_device',
       <FanEntityStateAttribute.PERCENTAGE: 'percentage'>: None,
       <FanEntityStateAttribute.PERCENTAGE_STEP: 'percentage_step'>: 25.0,
       <FanEntityStateAttribute.PRESET_MODE: 'preset_mode'>: None,
       <FanEntityCapabilityAttribute.PRESET_MODES: 'preset_modes'>: None,
-      'supported_features': <FanEntityFeature: 49>,
+      <EntityStateAttribute.SUPPORTED_FEATURES: 'supported_features'>: <FanEntityFeature: 49>,
     }),
     'context': <ANY>,
     'entity_id': 'fan.my_device',
@@ -98,12 +98,12 @@
 # name: test_states[fan.my_device_my_fan_0-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'my_device my_fan_0',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'my_device my_fan_0',
       <FanEntityStateAttribute.PERCENTAGE: 'percentage'>: None,
       <FanEntityStateAttribute.PERCENTAGE_STEP: 'percentage_step'>: 25.0,
       <FanEntityStateAttribute.PRESET_MODE: 'preset_mode'>: None,
       <FanEntityCapabilityAttribute.PRESET_MODES: 'preset_modes'>: None,
-      'supported_features': <FanEntityFeature: 49>,
+      <EntityStateAttribute.SUPPORTED_FEATURES: 'supported_features'>: <FanEntityFeature: 49>,
     }),
     'context': <ANY>,
     'entity_id': 'fan.my_device_my_fan_0',
@@ -155,12 +155,12 @@
 # name: test_states[fan.my_device_my_fan_1-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'my_device my_fan_1',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'my_device my_fan_1',
       <FanEntityStateAttribute.PERCENTAGE: 'percentage'>: None,
       <FanEntityStateAttribute.PERCENTAGE_STEP: 'percentage_step'>: 25.0,
       <FanEntityStateAttribute.PRESET_MODE: 'preset_mode'>: None,
       <FanEntityCapabilityAttribute.PRESET_MODES: 'preset_modes'>: None,
-      'supported_features': <FanEntityFeature: 49>,
+      <EntityStateAttribute.SUPPORTED_FEATURES: 'supported_features'>: <FanEntityFeature: 49>,
     }),
     'context': <ANY>,
     'entity_id': 'fan.my_device_my_fan_1',

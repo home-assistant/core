@@ -44,7 +44,7 @@
 # name: test_all_entities[da_ac_air_000001][select.air_purifier_lamp-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'Air purifier Lamp',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Air purifier Lamp',
       <SelectEntityCapabilityAttribute.OPTIONS: 'options'>: list([
         'off',
         'high',
@@ -105,7 +105,7 @@
 # name: test_all_entities[da_ac_rac_000003][select.clim_salon_dust_filter_alarm_threshold-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'Clim Salon Dust filter alarm threshold',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Clim Salon Dust filter alarm threshold',
       <SelectEntityCapabilityAttribute.OPTIONS: 'options'>: list([
         '180',
         '300',
@@ -168,7 +168,7 @@
 # name: test_all_entities[da_ac_rac_01001][select.theater_aire_dormitorio_principal_dust_filter_alarm_threshold-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'Aire Dormitorio Principal Dust filter alarm threshold',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Aire Dormitorio Principal Dust filter alarm threshold',
       <SelectEntityCapabilityAttribute.OPTIONS: 'options'>: list([
         '180',
         '300',
@@ -230,7 +230,7 @@
 # name: test_all_entities[da_ks_microwave_0101x][select.theater_microwave_lamp-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'Microwave Lamp',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Microwave Lamp',
       <SelectEntityCapabilityAttribute.OPTIONS: 'options'>: list([
         'off',
         'low',
@@ -290,7 +290,7 @@
 # name: test_all_entities[da_ks_oven_01061][select.oven_lamp-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'Oven Lamp',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Oven Lamp',
       <SelectEntityCapabilityAttribute.OPTIONS: 'options'>: list([
         'off',
         'high',
@@ -349,7 +349,7 @@
 # name: test_all_entities[da_ks_oven_0107x][select.kitchen_oven_lamp-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'Kitchen oven Lamp',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Kitchen oven Lamp',
       <SelectEntityCapabilityAttribute.OPTIONS: 'options'>: list([
         'off',
         'high',
@@ -408,7 +408,7 @@
 # name: test_all_entities[da_ks_range_0101x][select.vulcan_lamp-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'Vulcan Lamp',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Vulcan Lamp',
       <SelectEntityCapabilityAttribute.OPTIONS: 'options'>: list([
         'off',
         'extra_high',
@@ -467,7 +467,7 @@
 # name: test_all_entities[da_ks_walloven_0107x][select.four_lamp-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'Four Lamp',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Four Lamp',
       <SelectEntityCapabilityAttribute.OPTIONS: 'options'>: list([
         'off',
         'high',
@@ -528,7 +528,7 @@
 # name: test_all_entities[da_rvc_map_01011][select.robot_vacuum_cleaning_type-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'Robot Vacuum Cleaning type',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Robot Vacuum Cleaning type',
       <SelectEntityCapabilityAttribute.OPTIONS: 'options'>: list([
         'vacuum',
         'mop',
@@ -590,7 +590,7 @@
 # name: test_all_entities[da_rvc_map_01011][select.robot_vacuum_driving_mode-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'Robot Vacuum Driving mode',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Robot Vacuum Driving mode',
       <SelectEntityCapabilityAttribute.OPTIONS: 'options'>: list([
         'area_then_walls',
         'walls_first',
@@ -650,7 +650,7 @@
 # name: test_all_entities[da_rvc_map_01011][select.robot_vacuum_lamp-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'Robot Vacuum Lamp',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Robot Vacuum Lamp',
       <SelectEntityCapabilityAttribute.OPTIONS: 'options'>: list([
         'on',
         'off',
@@ -710,7 +710,7 @@
 # name: test_all_entities[da_rvc_map_01011][select.robot_vacuum_sound_detection_sensitivity-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'Robot Vacuum Sound detection sensitivity',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Robot Vacuum Sound detection sensitivity',
       <SelectEntityCapabilityAttribute.OPTIONS: 'options'>: list([
         'low',
         'medium',
@@ -771,7 +771,7 @@
 # name: test_all_entities[da_rvc_map_01011][select.robot_vacuum_sound_mode-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'Robot Vacuum Sound mode',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Robot Vacuum Sound mode',
       <SelectEntityCapabilityAttribute.OPTIONS: 'options'>: list([
         'mute',
         'tone',
@@ -834,7 +834,7 @@
 # name: test_all_entities[da_rvc_map_01011][select.robot_vacuum_water_level-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'Robot Vacuum Water level',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Robot Vacuum Water level',
       <SelectEntityCapabilityAttribute.OPTIONS: 'options'>: list([
         'high',
         'moderate_high',
@@ -896,7 +896,7 @@
 # name: test_all_entities[da_vc_stick_01001][select.stick_vacuum_lamp-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'Stick vacuum Lamp',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Stick vacuum Lamp',
       <SelectEntityCapabilityAttribute.OPTIONS: 'options'>: list([
         'on',
         'off',
@@ -956,7 +956,7 @@
 # name: test_all_entities[da_wm_dw_000001][select.theater_dishwasher-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'Dishwasher',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Dishwasher',
       <SelectEntityCapabilityAttribute.OPTIONS: 'options'>: list([
         'stop',
         'run',
@@ -1017,7 +1017,7 @@
 # name: test_all_entities[da_wm_dw_000001][select.theater_dishwasher_selected_zone-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'Dishwasher Selected zone',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Dishwasher Selected zone',
       <SelectEntityCapabilityAttribute.OPTIONS: 'options'>: list([
         'none',
         'lower',
@@ -1077,7 +1077,7 @@
 # name: test_all_entities[da_wm_dw_000001][select.theater_dishwasher_zone_booster-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'Dishwasher Zone booster',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Dishwasher Zone booster',
       <SelectEntityCapabilityAttribute.OPTIONS: 'options'>: list([
         'none',
         'left',
@@ -1137,7 +1137,7 @@
 # name: test_all_entities[da_wm_dw_01011][select.dishwasher_1-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'Dishwasher 1',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Dishwasher 1',
       <SelectEntityCapabilityAttribute.OPTIONS: 'options'>: list([
         'stop',
         'run',
@@ -1197,7 +1197,7 @@
 # name: test_all_entities[da_wm_dw_01011][select.dishwasher_1_selected_zone-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'Dishwasher 1 Selected zone',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Dishwasher 1 Selected zone',
       <SelectEntityCapabilityAttribute.OPTIONS: 'options'>: list([
         'lower',
         'all',
@@ -1257,7 +1257,7 @@
 # name: test_all_entities[da_wm_sc_000001][select.airdresser-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'AirDresser',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'AirDresser',
       <SelectEntityCapabilityAttribute.OPTIONS: 'options'>: list([
         'stop',
         'run',
@@ -1318,7 +1318,7 @@
 # name: test_all_entities[da_wm_wd_000001][select.theater_dryer-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'Dryer',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Dryer',
       <SelectEntityCapabilityAttribute.OPTIONS: 'options'>: list([
         'stop',
         'run',
@@ -1379,7 +1379,7 @@
 # name: test_all_entities[da_wm_wd_000001_1][select.seca_roupa-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'Seca-Roupa',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Seca-Roupa',
       <SelectEntityCapabilityAttribute.OPTIONS: 'options'>: list([
         'stop',
         'run',
@@ -1440,7 +1440,7 @@
 # name: test_all_entities[da_wm_wd_01011][select.trockner-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'Trockner',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Trockner',
       <SelectEntityCapabilityAttribute.OPTIONS: 'options'>: list([
         'stop',
         'run',
@@ -1501,7 +1501,7 @@
 # name: test_all_entities[da_wm_wm_000001][select.theater_washer-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'Washer',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Washer',
       <SelectEntityCapabilityAttribute.OPTIONS: 'options'>: list([
         'stop',
         'run',
@@ -1565,7 +1565,7 @@
 # name: test_all_entities[da_wm_wm_000001][select.theater_washer_soil_level-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'Washer Soil level',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Washer Soil level',
       <SelectEntityCapabilityAttribute.OPTIONS: 'options'>: list([
         'none',
         'extra_light',
@@ -1632,7 +1632,7 @@
 # name: test_all_entities[da_wm_wm_000001][select.theater_washer_spin_level-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'Washer Spin level',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Washer Spin level',
       <SelectEntityCapabilityAttribute.OPTIONS: 'options'>: list([
         'rinse_hold',
         'no_spin',
@@ -1699,7 +1699,7 @@
 # name: test_all_entities[da_wm_wm_000001][select.theater_washer_water_temperature-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'Washer Water temperature',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Washer Water temperature',
       <SelectEntityCapabilityAttribute.OPTIONS: 'options'>: list([
         'none',
         'tap_cold',
@@ -1763,7 +1763,7 @@
 # name: test_all_entities[da_wm_wm_000001_1][select.washing_machine-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'Washing Machine',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Washing Machine',
       <SelectEntityCapabilityAttribute.OPTIONS: 'options'>: list([
         'stop',
         'run',
@@ -1828,7 +1828,7 @@
 # name: test_all_entities[da_wm_wm_000001_1][select.washing_machine_spin_level-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'Washing Machine Spin level',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Washing Machine Spin level',
       <SelectEntityCapabilityAttribute.OPTIONS: 'options'>: list([
         'rinse_hold',
         'no_spin',
@@ -1897,7 +1897,7 @@
 # name: test_all_entities[da_wm_wm_000001_1][select.washing_machine_water_temperature-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'Washing Machine Water temperature',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Washing Machine Water temperature',
       <SelectEntityCapabilityAttribute.OPTIONS: 'options'>: list([
         'none',
         'cold',
@@ -1962,7 +1962,7 @@
 # name: test_all_entities[da_wm_wm_01011][select.machine_a_laver-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'Machine à Laver',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Machine à Laver',
       <SelectEntityCapabilityAttribute.OPTIONS: 'options'>: list([
         'stop',
         'run',
@@ -2024,7 +2024,7 @@
 # name: test_all_entities[da_wm_wm_01011][select.machine_a_laver_detergent_dispense_amount-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'Machine à Laver Detergent dispense amount',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Machine à Laver Detergent dispense amount',
       <SelectEntityCapabilityAttribute.OPTIONS: 'options'>: list([
         'none',
         'less',
@@ -2087,7 +2087,7 @@
 # name: test_all_entities[da_wm_wm_01011][select.machine_a_laver_flexible_compartment_dispense_amount-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'Machine à Laver Flexible compartment dispense amount',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Machine à Laver Flexible compartment dispense amount',
       <SelectEntityCapabilityAttribute.OPTIONS: 'options'>: list([
         'none',
         'less',
@@ -2153,7 +2153,7 @@
 # name: test_all_entities[da_wm_wm_01011][select.machine_a_laver_spin_level-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'Machine à Laver Spin level',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Machine à Laver Spin level',
       <SelectEntityCapabilityAttribute.OPTIONS: 'options'>: list([
         'rinse_hold',
         'no_spin',
@@ -2222,7 +2222,7 @@
 # name: test_all_entities[da_wm_wm_01011][select.machine_a_laver_water_temperature-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'Machine à Laver Water temperature',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Machine à Laver Water temperature',
       <SelectEntityCapabilityAttribute.OPTIONS: 'options'>: list([
         'none',
         'cold',
@@ -2287,7 +2287,7 @@
 # name: test_all_entities[da_wm_wm_100001][select.washer_1-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'Washer 1',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Washer 1',
       <SelectEntityCapabilityAttribute.OPTIONS: 'options'>: list([
         'run',
         'pause',
@@ -2348,7 +2348,7 @@
 # name: test_all_entities[da_wm_wm_100002][select.washer_2-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'Washer 2',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Washer 2',
       <SelectEntityCapabilityAttribute.OPTIONS: 'options'>: list([
         'run',
         'pause',

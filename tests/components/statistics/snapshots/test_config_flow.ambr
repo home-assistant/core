@@ -2,8 +2,8 @@
 # name: test_config_flow_preview_success[missing_size_and_age]
   dict({
     'attributes': dict({
-      'friendly_name': 'Statistical characteristic',
-      'icon': 'mdi:calculator',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Statistical characteristic',
+      <EntityStateAttribute.ICON: 'icon'>: 'mdi:calculator',
     }),
     'state': 'unavailable',
   })
@@ -12,8 +12,8 @@
   dict({
     'attributes': dict({
       'buffer_usage_ratio': 0.1,
-      'friendly_name': 'Statistical characteristic',
-      'icon': 'mdi:calculator',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Statistical characteristic',
+      <EntityStateAttribute.ICON: 'icon'>: 'mdi:calculator',
       'source_value_valid': True,
       'state_class': 'measurement',
     }),
@@ -25,8 +25,8 @@
     'attributes': dict({
       'age_coverage_ratio': 0.0,
       'buffer_usage_ratio': 0.05,
-      'friendly_name': 'Statistical characteristic',
-      'icon': 'mdi:calculator',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Statistical characteristic',
+      <EntityStateAttribute.ICON: 'icon'>: 'mdi:calculator',
       'source_value_valid': True,
       'state_class': 'measurement',
     }),
@@ -38,8 +38,8 @@
     'attributes': dict({
       'age_coverage_ratio': 0.0,
       'buffer_usage_ratio': 0.1,
-      'friendly_name': 'Statistical characteristic',
-      'icon': 'mdi:calculator',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Statistical characteristic',
+      <EntityStateAttribute.ICON: 'icon'>: 'mdi:calculator',
       'source_value_valid': True,
       'state_class': 'measurement',
     }),

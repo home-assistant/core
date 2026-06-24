@@ -78,8 +78,8 @@
         'entity_id': 'binary_sensor.x_wing_motion',
         'state': dict({
           'attributes': dict({
-            'device_class': 'motion',
-            'friendly_name': 'X-Wing Motion',
+            <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'motion',
+            <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'X-Wing Motion',
           }),
           'state': 'off',
         }),
@@ -90,7 +90,7 @@
         'entity_id': 'binary_sensor.x_wing_status',
         'state': dict({
           'attributes': dict({
-            'friendly_name': 'X-Wing Status',
+            <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'X-Wing Status',
           }),
           'state': 'on',
         }),
@@ -103,7 +103,7 @@
           'attributes': dict({
             'category': 'starfighter',
             'custom_attr_1': 'custom_attr_1_value',
-            'friendly_name': 'X-Wing',
+            <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'X-Wing',
             'gps_accuracy': 3.5,
             'in_zones': list([
             ]),
@@ -123,7 +123,7 @@
         'entity_id': 'sensor.x_wing_address',
         'state': dict({
           'attributes': dict({
-            'friendly_name': 'X-Wing Address',
+            <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'X-Wing Address',
           }),
           'state': '**REDACTED**',
         }),
@@ -134,9 +134,9 @@
         'entity_id': 'sensor.x_wing_altitude',
         'state': dict({
           'attributes': dict({
-            'friendly_name': 'X-Wing Altitude',
+            <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'X-Wing Altitude',
             'state_class': 'measurement',
-            'unit_of_measurement': 'm',
+            <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: 'm',
           }),
           'state': '546841384638',
         }),
@@ -147,10 +147,10 @@
         'entity_id': 'sensor.x_wing_battery',
         'state': dict({
           'attributes': dict({
-            'device_class': 'battery',
-            'friendly_name': 'X-Wing Battery',
+            <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'battery',
+            <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'X-Wing Battery',
             'state_class': 'measurement',
-            'unit_of_measurement': '%',
+            <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: '%',
           }),
           'state': '15.00000867601',
         }),
@@ -161,10 +161,10 @@
         'entity_id': 'sensor.x_wing_battery_voltage',
         'state': dict({
           'attributes': dict({
-            'device_class': 'voltage',
-            'friendly_name': 'X-Wing Battery voltage',
+            <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'voltage',
+            <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'X-Wing Battery voltage',
             'state_class': 'measurement',
-            'unit_of_measurement': 'V',
+            <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: 'V',
           }),
           'state': '4.08',
         }),
@@ -175,7 +175,7 @@
         'entity_id': 'sensor.x_wing_geofence',
         'state': dict({
           'attributes': dict({
-            'friendly_name': 'X-Wing Geofence',
+            <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'X-Wing Geofence',
           }),
           'state': 'Tatooine',
         }),
@@ -186,10 +186,10 @@
         'entity_id': 'sensor.x_wing_speed',
         'state': dict({
           'attributes': dict({
-            'device_class': 'speed',
-            'friendly_name': 'X-Wing Speed',
+            <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'speed',
+            <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'X-Wing Speed',
             'state_class': 'measurement',
-            'unit_of_measurement': 'kn',
+            <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: 'kn',
           }),
           'state': '4568795',
         }),
@@ -200,10 +200,10 @@
         'entity_id': 'sensor.x_wing_supply_voltage',
         'state': dict({
           'attributes': dict({
-            'device_class': 'voltage',
-            'friendly_name': 'X-Wing Supply voltage',
+            <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'voltage',
+            <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'X-Wing Supply voltage',
             'state_class': 'measurement',
-            'unit_of_measurement': 'V',
+            <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: 'V',
           }),
           'state': '12.56',
         }),
@@ -444,7 +444,7 @@
           'attributes': dict({
             'category': 'starfighter',
             'custom_attr_1': 'custom_attr_1_value',
-            'friendly_name': 'X-Wing',
+            <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'X-Wing',
             'gps_accuracy': 3.5,
             'in_zones': list([
             ]),

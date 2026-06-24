@@ -44,13 +44,13 @@
 # name: test_number_entities[number.hdfury_vrroom_02_earc_unmute_delay-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'device_class': 'duration',
-      'friendly_name': 'HDFury VRROOM-02 eARC unmute delay',
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'duration',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'HDFury VRROOM-02 eARC unmute delay',
       <NumberEntityCapabilityAttribute.MAX: 'max'>: 1000,
       <NumberEntityCapabilityAttribute.MIN: 'min'>: 0,
       <NumberEntityCapabilityAttribute.MODE: 'mode'>: <NumberMode.BOX: 'box'>,
       <NumberEntityCapabilityAttribute.STEP: 'step'>: 1,
-      'unit_of_measurement': <UnitOfTime.MILLISECONDS: 'ms'>,
+      <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: <UnitOfTime.MILLISECONDS: 'ms'>,
     }),
     'context': <ANY>,
     'entity_id': 'number.hdfury_vrroom_02_earc_unmute_delay',
@@ -105,13 +105,13 @@
 # name: test_number_entities[number.hdfury_vrroom_02_oled_fade_timer-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'device_class': 'duration',
-      'friendly_name': 'HDFury VRROOM-02 OLED fade timer',
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'duration',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'HDFury VRROOM-02 OLED fade timer',
       <NumberEntityCapabilityAttribute.MAX: 'max'>: 100,
       <NumberEntityCapabilityAttribute.MIN: 'min'>: 1,
       <NumberEntityCapabilityAttribute.MODE: 'mode'>: <NumberMode.BOX: 'box'>,
       <NumberEntityCapabilityAttribute.STEP: 'step'>: 1,
-      'unit_of_measurement': <UnitOfTime.SECONDS: 's'>,
+      <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: <UnitOfTime.SECONDS: 's'>,
     }),
     'context': <ANY>,
     'entity_id': 'number.hdfury_vrroom_02_oled_fade_timer',
@@ -166,13 +166,13 @@
 # name: test_number_entities[number.hdfury_vrroom_02_restart_timer-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'device_class': 'duration',
-      'friendly_name': 'HDFury VRROOM-02 Restart timer',
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'duration',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'HDFury VRROOM-02 Restart timer',
       <NumberEntityCapabilityAttribute.MAX: 'max'>: 100,
       <NumberEntityCapabilityAttribute.MIN: 'min'>: 0,
       <NumberEntityCapabilityAttribute.MODE: 'mode'>: <NumberMode.BOX: 'box'>,
       <NumberEntityCapabilityAttribute.STEP: 'step'>: 1,
-      'unit_of_measurement': <UnitOfTime.HOURS: 'h'>,
+      <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: <UnitOfTime.HOURS: 'h'>,
     }),
     'context': <ANY>,
     'entity_id': 'number.hdfury_vrroom_02_restart_timer',
@@ -227,13 +227,13 @@
 # name: test_number_entities[number.hdfury_vrroom_02_unmute_delay-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'device_class': 'duration',
-      'friendly_name': 'HDFury VRROOM-02 Unmute delay',
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'duration',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'HDFury VRROOM-02 Unmute delay',
       <NumberEntityCapabilityAttribute.MAX: 'max'>: 1000,
       <NumberEntityCapabilityAttribute.MIN: 'min'>: 50,
       <NumberEntityCapabilityAttribute.MODE: 'mode'>: <NumberMode.BOX: 'box'>,
       <NumberEntityCapabilityAttribute.STEP: 'step'>: 1,
-      'unit_of_measurement': <UnitOfTime.MILLISECONDS: 'ms'>,
+      <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: <UnitOfTime.MILLISECONDS: 'ms'>,
     }),
     'context': <ANY>,
     'entity_id': 'number.hdfury_vrroom_02_unmute_delay',

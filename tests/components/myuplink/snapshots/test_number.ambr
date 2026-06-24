@@ -44,12 +44,12 @@
 # name: test_number_states[platforms0][number.gotham_city_degree_minutes-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'Gotham City Degree minutes',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Gotham City Degree minutes',
       <NumberEntityCapabilityAttribute.MAX: 'max'>: 3000.0,
       <NumberEntityCapabilityAttribute.MIN: 'min'>: -3000.0,
       <NumberEntityCapabilityAttribute.MODE: 'mode'>: <NumberMode.AUTO: 'auto'>,
       <NumberEntityCapabilityAttribute.STEP: 'step'>: 0.1,
-      'unit_of_measurement': 'DM',
+      <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: 'DM',
     }),
     'context': <ANY>,
     'entity_id': 'number.gotham_city_degree_minutes',
@@ -104,12 +104,12 @@
 # name: test_number_states[platforms0][number.gotham_city_degree_minutes_2-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'Gotham City Degree minutes',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Gotham City Degree minutes',
       <NumberEntityCapabilityAttribute.MAX: 'max'>: 3000.0,
       <NumberEntityCapabilityAttribute.MIN: 'min'>: -3000.0,
       <NumberEntityCapabilityAttribute.MODE: 'mode'>: <NumberMode.AUTO: 'auto'>,
       <NumberEntityCapabilityAttribute.STEP: 'step'>: 0.1,
-      'unit_of_measurement': 'DM',
+      <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: 'DM',
     }),
     'context': <ANY>,
     'entity_id': 'number.gotham_city_degree_minutes_2',
@@ -164,7 +164,7 @@
 # name: test_number_states[platforms0][number.gotham_city_heating_offset_climate_system_1-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'Gotham City Heating offset climate system 1',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Gotham City Heating offset climate system 1',
       <NumberEntityCapabilityAttribute.MAX: 'max'>: 10.0,
       <NumberEntityCapabilityAttribute.MIN: 'min'>: -10.0,
       <NumberEntityCapabilityAttribute.MODE: 'mode'>: <NumberMode.AUTO: 'auto'>,
@@ -223,7 +223,7 @@
 # name: test_number_states[platforms0][number.gotham_city_heating_offset_climate_system_1_2-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'Gotham City Heating offset climate system 1',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Gotham City Heating offset climate system 1',
       <NumberEntityCapabilityAttribute.MAX: 'max'>: 10.0,
       <NumberEntityCapabilityAttribute.MIN: 'min'>: -10.0,
       <NumberEntityCapabilityAttribute.MODE: 'mode'>: <NumberMode.AUTO: 'auto'>,
@@ -282,7 +282,7 @@
 # name: test_number_states[platforms0][number.gotham_city_room_sensor_set_point_value_heating_climate_system_1-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'Gotham City Room sensor set point value heating climate system 1',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Gotham City Room sensor set point value heating climate system 1',
       <NumberEntityCapabilityAttribute.MAX: 'max'>: 35.0,
       <NumberEntityCapabilityAttribute.MIN: 'min'>: 5.0,
       <NumberEntityCapabilityAttribute.MODE: 'mode'>: <NumberMode.AUTO: 'auto'>,
@@ -341,7 +341,7 @@
 # name: test_number_states[platforms0][number.gotham_city_room_sensor_set_point_value_heating_climate_system_1_2-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'Gotham City Room sensor set point value heating climate system 1',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Gotham City Room sensor set point value heating climate system 1',
       <NumberEntityCapabilityAttribute.MAX: 'max'>: 35.0,
       <NumberEntityCapabilityAttribute.MIN: 'min'>: 5.0,
       <NumberEntityCapabilityAttribute.MODE: 'mode'>: <NumberMode.AUTO: 'auto'>,
@@ -400,12 +400,12 @@
 # name: test_number_states[platforms0][number.gotham_city_start_diff_additional_heat-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'Gotham City start diff additional heat',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Gotham City start diff additional heat',
       <NumberEntityCapabilityAttribute.MAX: 'max'>: 2000.0,
       <NumberEntityCapabilityAttribute.MIN: 'min'>: 100.0,
       <NumberEntityCapabilityAttribute.MODE: 'mode'>: <NumberMode.AUTO: 'auto'>,
       <NumberEntityCapabilityAttribute.STEP: 'step'>: 10.0,
-      'unit_of_measurement': 'DM',
+      <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: 'DM',
     }),
     'context': <ANY>,
     'entity_id': 'number.gotham_city_start_diff_additional_heat',
@@ -460,12 +460,12 @@
 # name: test_number_states[platforms0][number.gotham_city_start_diff_additional_heat_2-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'Gotham City start diff additional heat',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Gotham City start diff additional heat',
       <NumberEntityCapabilityAttribute.MAX: 'max'>: 2000.0,
       <NumberEntityCapabilityAttribute.MIN: 'min'>: 100.0,
       <NumberEntityCapabilityAttribute.MODE: 'mode'>: <NumberMode.AUTO: 'auto'>,
       <NumberEntityCapabilityAttribute.STEP: 'step'>: 10.0,
-      'unit_of_measurement': 'DM',
+      <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: 'DM',
     }),
     'context': <ANY>,
     'entity_id': 'number.gotham_city_start_diff_additional_heat_2',

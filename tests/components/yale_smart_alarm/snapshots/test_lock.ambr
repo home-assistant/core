@@ -40,8 +40,8 @@
   StateSnapshot({
     'attributes': ReadOnlyDict({
       <LockEntityStateAttribute.CODE_FORMAT: 'code_format'>: '^\\d{6}$',
-      'friendly_name': 'Device1',
-      'supported_features': <LockEntityFeature: 0>,
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Device1',
+      <EntityStateAttribute.SUPPORTED_FEATURES: 'supported_features'>: <LockEntityFeature: 0>,
     }),
     'context': <ANY>,
     'entity_id': 'lock.device1',
@@ -92,8 +92,8 @@
   StateSnapshot({
     'attributes': ReadOnlyDict({
       <LockEntityStateAttribute.CODE_FORMAT: 'code_format'>: '^\\d{6}$',
-      'friendly_name': 'Device2',
-      'supported_features': <LockEntityFeature: 0>,
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Device2',
+      <EntityStateAttribute.SUPPORTED_FEATURES: 'supported_features'>: <LockEntityFeature: 0>,
     }),
     'context': <ANY>,
     'entity_id': 'lock.device2',
@@ -144,8 +144,8 @@
   StateSnapshot({
     'attributes': ReadOnlyDict({
       <LockEntityStateAttribute.CODE_FORMAT: 'code_format'>: '^\\d{6}$',
-      'friendly_name': 'Device3',
-      'supported_features': <LockEntityFeature: 0>,
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Device3',
+      <EntityStateAttribute.SUPPORTED_FEATURES: 'supported_features'>: <LockEntityFeature: 0>,
     }),
     'context': <ANY>,
     'entity_id': 'lock.device3',
@@ -196,8 +196,8 @@
   StateSnapshot({
     'attributes': ReadOnlyDict({
       <LockEntityStateAttribute.CODE_FORMAT: 'code_format'>: '^\\d{6}$',
-      'friendly_name': 'Device7',
-      'supported_features': <LockEntityFeature: 0>,
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Device7',
+      <EntityStateAttribute.SUPPORTED_FEATURES: 'supported_features'>: <LockEntityFeature: 0>,
     }),
     'context': <ANY>,
     'entity_id': 'lock.device7',
@@ -248,8 +248,8 @@
   StateSnapshot({
     'attributes': ReadOnlyDict({
       <LockEntityStateAttribute.CODE_FORMAT: 'code_format'>: '^\\d{6}$',
-      'friendly_name': 'Device8',
-      'supported_features': <LockEntityFeature: 0>,
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Device8',
+      <EntityStateAttribute.SUPPORTED_FEATURES: 'supported_features'>: <LockEntityFeature: 0>,
     }),
     'context': <ANY>,
     'entity_id': 'lock.device8',
@@ -300,8 +300,8 @@
   StateSnapshot({
     'attributes': ReadOnlyDict({
       <LockEntityStateAttribute.CODE_FORMAT: 'code_format'>: '^\\d{6}$',
-      'friendly_name': 'Device9',
-      'supported_features': <LockEntityFeature: 0>,
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Device9',
+      <EntityStateAttribute.SUPPORTED_FEATURES: 'supported_features'>: <LockEntityFeature: 0>,
     }),
     'context': <ANY>,
     'entity_id': 'lock.device9',
