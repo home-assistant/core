@@ -14,10 +14,12 @@ from .entity import WhirlpoolOvenEntity
 
 PARALLEL_UPDATES = 1
 
-# Oven target temperatures are handled in Celsius.
+# Oven target temperatures are handled in Celsius. The appliance accepts
+# tenth-of-a-degree values, so a 1-degree step gives fine manual control while
+# automations can still set any value Home Assistant passes through.
 OVEN_MIN_TEMP = 30
 OVEN_MAX_TEMP = 290
-OVEN_TEMP_STEP = 5
+OVEN_TEMP_STEP = 1
 
 
 async def async_setup_entry(
@@ -66,6 +68,6 @@ class WhirlpoolOvenTargetTemperature(WhirlpoolOvenEntity, NumberEntity):
             mode = CookMode.Bake
         WhirlpoolOvenTargetTemperature._check_service_request(
             await self._appliance.set_cook(
-                target_temp=int(value), mode=mode, cavity=self.cavity
+                target_temp=value, mode=mode, cavity=self.cavity
             )
         )
