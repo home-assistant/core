@@ -1,5 +1,6 @@
 """Tests for the Anthropic integration."""
 
+from functools import partial
 from unittest.mock import AsyncMock, patch
 
 from anthropic import APITimeoutError, AuthenticationError, RateLimitError
@@ -11,6 +12,7 @@ from homeassistant.components.anthropic.const import DOMAIN
 from homeassistant.components.anthropic.coordinator import (
     UPDATE_INTERVAL_CONNECTED,
     UPDATE_INTERVAL_DISCONNECTED,
+    AnthropicCoordinator,
 )
 from homeassistant.config_entries import SOURCE_REAUTH
 from homeassistant.core import Context, HomeAssistant
@@ -18,6 +20,35 @@ from homeassistant.helpers import intent
 from homeassistant.util import dt as dt_util
 
 from tests.common import MockConfigEntry, async_fire_time_changed
+
+
+async def test_client_setup_uses_executor(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+) -> None:
+    """Test the Anthropic client is created in the executor."""
+    client = object()
+
+    with (
+        patch.object(
+            hass, "async_add_executor_job", wraps=hass.async_add_executor_job
+        ) as mock_add_executor_job,
+        patch(
+            "homeassistant.components.anthropic.coordinator.anthropic.AsyncAnthropic",
+            return_value=client,
+        ) as mock_client,
+    ):
+        coordinator = AnthropicCoordinator(hass, mock_config_entry)
+        mock_client.assert_not_called()
+        await coordinator.async_setup()
+
+    mock_add_executor_job.assert_called_once()
+    create_client = mock_add_executor_job.call_args.args[0]
+    assert isinstance(create_client, partial)
+    assert create_client.func is mock_client
+    assert create_client.keywords["api_key"] == "bla"
+    assert "http_client" in create_client.keywords
+    assert coordinator.client is client
 
 
 @patch("anthropic.resources.models.AsyncModels.list", new_callable=AsyncMock)
