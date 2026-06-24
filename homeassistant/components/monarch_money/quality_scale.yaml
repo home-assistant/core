@@ -18,6 +18,9 @@ rules:
     status: exempt
     comment: |
       This integration does not provide additional actions.
+  docs-conditions:
+    status: exempt
+    comment: This integration does not have any conditions.
   docs-high-level-description: done
   docs-installation-instructions: done
   docs-removal-instructions:
@@ -25,6 +28,9 @@ rules:
     comment: |
       The documentation page does not include a section describing how to remove
       the integration.
+  docs-triggers:
+    status: exempt
+    comment: This integration does not have any triggers.
   entity-event-setup:
     status: exempt
     comment: |
