@@ -1,6 +1,7 @@
 """Support for Sonarr calendar items."""
 
 from datetime import datetime
+from typing import override
 
 from aiopyarr import SonarrCalendar
 
@@ -37,10 +38,12 @@ class SonarrCalendarEntity(SonarrEntity[list[SonarrCalendar]], CalendarEntity):
     coordinator: CalendarDataUpdateCoordinator
 
     @property
+    @override
     def event(self) -> CalendarEvent | None:
         """Return the next upcoming event."""
         return self.coordinator.event
 
+    @override
     async def async_get_events(
         self,
         hass: HomeAssistant,

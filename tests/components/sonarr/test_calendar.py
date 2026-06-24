@@ -3,8 +3,8 @@
 from datetime import UTC, datetime, timedelta
 from unittest.mock import MagicMock
 
-import pytest
 from freezegun.api import FrozenDateTimeFactory
+import pytest
 
 from homeassistant.const import STATE_OFF, STATE_ON
 from homeassistant.core import HomeAssistant
