@@ -34,7 +34,14 @@ from homeassistant.helpers.frame import ReportBehavior, report_usage
 from homeassistant.helpers.icon import icon_for_battery_level
 from homeassistant.helpers.typing import ConfigType
 
-from .const import DATA_COMPONENT, DOMAIN, VacuumActivity, VacuumEntityFeature
+from .const import (
+    DATA_COMPONENT,
+    DOMAIN,
+    VacuumActivity,
+    VacuumEntityCapabilityAttribute,
+    VacuumEntityFeature,
+    VacuumEntityStateAttribute,
+)
 from .websocket import async_register_websocket_handlers
 
 _LOGGER = logging.getLogger(__name__)
@@ -313,7 +320,7 @@ class StateVacuumEntity(
     def capability_attributes(self) -> dict[str, Any] | None:
         """Return capability attributes."""
         if VacuumEntityFeature.FAN_SPEED in self.supported_features:
-            return {ATTR_FAN_SPEED_LIST: self.fan_speed_list}
+            return {VacuumEntityCapabilityAttribute.FAN_SPEED_LIST: self.fan_speed_list}
         return None
 
     @cached_property
@@ -337,11 +344,11 @@ class StateVacuumEntity(
             if self.__vacuum_legacy_battery_feature is False:
                 self._report_deprecated_battery_feature()
                 self.__vacuum_legacy_battery_feature = True
-            data[ATTR_BATTERY_LEVEL] = self.battery_level
-            data[ATTR_BATTERY_ICON] = self.battery_icon
+            data[VacuumEntityStateAttribute.BATTERY_LEVEL] = self.battery_level
+            data[VacuumEntityStateAttribute.BATTERY_ICON] = self.battery_icon
 
         if VacuumEntityFeature.FAN_SPEED in supported_features:
-            data[ATTR_FAN_SPEED] = self.fan_speed
+            data[VacuumEntityStateAttribute.FAN_SPEED] = self.fan_speed
 
         return data
 
