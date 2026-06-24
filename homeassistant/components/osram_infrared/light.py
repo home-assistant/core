@@ -170,6 +170,7 @@ class OsramIrLight(OsramIrEmitterEntity, LightEntity):
 
         self._async_update_receiver_subscription()
 
+    @override
     async def async_turn_on(self, **kwargs: Any) -> None:
         """Turn on the light and apply optional effect, color, and brightness."""
         brightness = kwargs.get(ATTR_BRIGHTNESS)
@@ -195,6 +196,7 @@ class OsramIrLight(OsramIrEmitterEntity, LightEntity):
         self._attr_is_on = True
         self.async_write_ha_state()
 
+    @override
     async def async_turn_off(self, **kwargs: Any) -> None:
         """Turn off the light."""
         await self._async_send_code(

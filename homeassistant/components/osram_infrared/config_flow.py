@@ -1,6 +1,6 @@
 """Config flow for OSRAM Infrared."""
 
-from typing import Any
+from typing import Any, override
 
 import voluptuous as vol
 
@@ -21,6 +21,7 @@ class OsramIrConfigFlow(ConfigFlow, domain=DOMAIN):
 
     VERSION = 2
 
+    @override
     async def async_step_user(
         self,
         user_input: dict[str, Any] | None = None,
