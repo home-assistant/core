@@ -1,5 +1,7 @@
 """Base entity class for Schlage."""
 
+from typing import override
+
 from pyschlage.lock import Lock
 
 from homeassistant.helpers.device_registry import DeviceInfo
@@ -40,6 +42,7 @@ class SchlageEntity(CoordinatorEntity[SchlageDataUpdateCoordinator]):
         return self._lock_data.lock
 
     @property
+    @override
     def available(self) -> bool:
         """Return if entity is available."""
         return (

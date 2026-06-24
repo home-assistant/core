@@ -5,7 +5,7 @@ from collections.abc import Callable, Mapping
 import copy
 from dataclasses import dataclass
 import logging
-from typing import Any, Final, Literal, cast
+from typing import Any, Final, Literal, cast, override
 
 from homeassistant.components.sensor import (
     ATTR_LAST_RESET,
@@ -569,6 +569,7 @@ class EnergyCostSensor(SensorEntity):
 
         return converter(energy_price, energy_unit, energy_price_unit)
 
+    @override
     async def async_added_to_hass(self) -> None:
         """Register callbacks."""
         energy_state = self.hass.states.get(self._config[self._adapter.stat_energy_key])
@@ -604,11 +605,13 @@ class EnergyCostSensor(SensorEntity):
         self.async_write_ha_state()
 
     @callback
+    @override
     def add_to_platform_abort(self) -> None:
         """Abort adding an entity to a platform."""
         _set_result_unless_done(self.add_finished)
         super().add_to_platform_abort()
 
+    @override
     async def async_will_remove_from_hass(self) -> None:
         """Handle removing from hass."""
         self.hass.data[DOMAIN]["cost_sensors"].pop(
@@ -622,11 +625,13 @@ class EnergyCostSensor(SensorEntity):
         self._config = config
 
     @property
+    @override
     def native_unit_of_measurement(self) -> str | None:
         """Return the units of measurement."""
         return self.hass.config.currency
 
     @property
+    @override
     def unique_id(self) -> str | None:
         """Return the unique ID of the sensor."""
         entity_registry = er.async_get(self.hass)
@@ -691,6 +696,7 @@ class EnergyPowerSensor(SensorEntity):
         )
 
     @property
+    @override
     def available(self) -> bool:
         """Return if entity is available."""
         if self._is_inverted:
@@ -765,6 +771,7 @@ class EnergyPowerSensor(SensorEntity):
 
             self._attr_native_value = discharge - charge
 
+    @override
     async def async_added_to_hass(self) -> None:
         """Register callbacks."""
         # Set name based on source sensor(s)
@@ -830,6 +837,7 @@ class EnergyPowerSensor(SensorEntity):
         self.async_write_ha_state()
 
     @callback
+    @override
     def add_to_platform_abort(self) -> None:
         """Abort adding an entity to a platform."""
         _set_result_unless_done(self.add_finished)

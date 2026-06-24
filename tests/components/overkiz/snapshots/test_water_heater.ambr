@@ -1,0 +1,73 @@
+# serializer version: 1
+# name: test_water_heater_entities_snapshot[cloud_atlantic_cozytouch.json][water_heater.my_home_patio_water_heating-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': list([
+      None,
+    ]),
+    'area_id': None,
+    'capabilities': dict({
+      <WaterHeaterCapabilityAttribute.MAX_TEMP: 'max_temp'>: 70.0,
+      <WaterHeaterCapabilityAttribute.MIN_TEMP: 'min_temp'>: 50.0,
+      <WaterHeaterCapabilityAttribute.OPERATION_LIST: 'operation_list'>: list([
+        'auto',
+        'manual',
+        'performance',
+      ]),
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'water_heater',
+    'entity_category': None,
+    'entity_id': 'water_heater.my_home_patio_water_heating',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': None,
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': None,
+    'platform': 'overkiz',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': <WaterHeaterEntityFeature: 7>,
+    'translation_key': 'overkiz',
+    'unique_id': 'io://1234-5678-5643/109286#1',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_water_heater_entities_snapshot[cloud_atlantic_cozytouch.json][water_heater.my_home_patio_water_heating-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      <WaterHeaterStateAttribute.AWAY_MODE: 'away_mode'>: 'off',
+      <WaterHeaterStateAttribute.CURRENT_TEMPERATURE: 'current_temperature'>: 64.4,
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Patio Water Heating',
+      <WaterHeaterCapabilityAttribute.MAX_TEMP: 'max_temp'>: 70.0,
+      <WaterHeaterCapabilityAttribute.MIN_TEMP: 'min_temp'>: 50.0,
+      <WaterHeaterCapabilityAttribute.OPERATION_LIST: 'operation_list'>: list([
+        'auto',
+        'manual',
+        'performance',
+      ]),
+      <WaterHeaterStateAttribute.OPERATION_MODE: 'operation_mode'>: 'manual',
+      <EntityStateAttribute.SUPPORTED_FEATURES: 'supported_features'>: <WaterHeaterEntityFeature: 7>,
+      <WaterHeaterStateAttribute.TARGET_TEMP_HIGH: 'target_temp_high'>: None,
+      <WaterHeaterStateAttribute.TARGET_TEMP_LOW: 'target_temp_low'>: None,
+      <WaterHeaterStateAttribute.TEMPERATURE: 'temperature'>: 60.0,
+    }),
+    'context': <ANY>,
+    'entity_id': 'water_heater.my_home_patio_water_heating',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'manual',
+  })
+# ---

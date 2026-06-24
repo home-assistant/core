@@ -6,7 +6,7 @@
     ]),
     'area_id': None,
     'capabilities': dict({
-      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+      <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -41,10 +41,10 @@
 # name: test_sensors[sensor.kitchen_lunar_ddeeff_battery-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'device_class': 'battery',
-      'friendly_name': 'LUNAR-DDEEFF Battery',
-      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
-      'unit_of_measurement': '%',
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'battery',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'LUNAR-DDEEFF Battery',
+      <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
+      <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: '%',
     }),
     'context': <ANY>,
     'entity_id': 'sensor.kitchen_lunar_ddeeff_battery',
@@ -61,7 +61,7 @@
     ]),
     'area_id': None,
     'capabilities': dict({
-      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+      <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -99,10 +99,10 @@
 # name: test_sensors[sensor.kitchen_lunar_ddeeff_volume_flow_rate-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'device_class': 'volume_flow_rate',
-      'friendly_name': 'LUNAR-DDEEFF Volume flow rate',
-      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
-      'unit_of_measurement': <UnitOfVolumeFlowRate.MILLILITERS_PER_SECOND: 'mL/s'>,
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'volume_flow_rate',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'LUNAR-DDEEFF Volume flow rate',
+      <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
+      <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: <UnitOfVolumeFlowRate.MILLILITERS_PER_SECOND: 'mL/s'>,
     }),
     'context': <ANY>,
     'entity_id': 'sensor.kitchen_lunar_ddeeff_volume_flow_rate',
@@ -119,7 +119,7 @@
     ]),
     'area_id': None,
     'capabilities': dict({
-      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+      <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -157,10 +157,10 @@
 # name: test_sensors[sensor.kitchen_lunar_ddeeff_weight-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'device_class': 'weight',
-      'friendly_name': 'LUNAR-DDEEFF Weight',
-      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
-      'unit_of_measurement': <UnitOfMass.OUNCES: 'oz'>,
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'weight',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'LUNAR-DDEEFF Weight',
+      <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
+      <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: <UnitOfMass.OUNCES: 'oz'>,
     }),
     'context': <ANY>,
     'entity_id': 'sensor.kitchen_lunar_ddeeff_weight',

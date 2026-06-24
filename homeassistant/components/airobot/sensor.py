@@ -3,6 +3,7 @@
 from collections.abc import Callable
 from dataclasses import dataclass
 from datetime import datetime, timedelta
+from typing import override
 
 from pyairobotrest.models import ThermostatStatus
 
@@ -145,6 +146,7 @@ class AirobotSensor(AirobotEntity, SensorEntity):
         self._attr_unique_id = f"{coordinator.data.status.device_id}_{description.key}"
 
     @property
+    @override
     def native_value(self) -> StateType | datetime:
         """Return the state of the sensor."""
         return self.entity_description.value_fn(self.coordinator.data.status)

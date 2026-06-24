@@ -6,7 +6,7 @@
     ]),
     'area_id': None,
     'capabilities': dict({
-      'options': list([
+      <SelectEntityCapabilityAttribute.OPTIONS: 'options'>: list([
         '-4',
         '-2',
         '0',
@@ -47,15 +47,15 @@
 # name: test_all_entities[select.beer_fridge_temperature_level-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'Beer fridge Temperature level',
-      'options': list([
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Beer fridge Temperature level',
+      <SelectEntityCapabilityAttribute.OPTIONS: 'options'>: list([
         '-4',
         '-2',
         '0',
         '3',
         '5',
       ]),
-      'unit_of_measurement': <UnitOfTemperature.CELSIUS: '°C'>,
+      <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: <UnitOfTemperature.CELSIUS: '°C'>,
     }),
     'context': <ANY>,
     'entity_id': 'select.beer_fridge_temperature_level',

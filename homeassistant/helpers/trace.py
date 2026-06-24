@@ -5,7 +5,7 @@ from collections.abc import Callable, Coroutine, Generator
 from contextlib import contextmanager
 from contextvars import ContextVar
 from functools import wraps
-from typing import Any, Literal, overload
+from typing import Any, Literal, overload, override
 
 from homeassistant.core import ServiceResponse
 from homeassistant.util import dt as dt_util
@@ -43,6 +43,7 @@ class TraceElement:
         self._last_variables = variables_cv.get() or {}
         self.update_variables(variables)
 
+    @override
     def __repr__(self) -> str:
         """Container for trace data."""
         return str(self.as_dict())
@@ -87,13 +88,15 @@ class TraceElement:
         if variables is None:
             variables = {}
         last_variables = self._last_variables
-        variables_cv.set(dict(variables))
-        changed_variables = {
+        # variables is often a ChainMap which is costly to iterate, so flatten
+        # it once and reuse the snapshot for both the baseline and the diff.
+        snapshot = dict(variables)
+        variables_cv.set(snapshot)
+        self._variables = {
             key: value
-            for key, value in variables.items()
+            for key, value in snapshot.items()
             if key not in last_variables or last_variables[key] != value
         }
-        self._variables = changed_variables
 
     def as_dict(self) -> dict[str, Any]:
         """Return dictionary version of this TraceElement."""

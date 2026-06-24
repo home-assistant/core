@@ -1,24 +1,53 @@
 """Offer sun based automation rules."""
 
 from datetime import datetime, timedelta
-from typing import Any, Unpack, cast
+from typing import Any, Unpack, cast, override
 
+import astral.sun
 import voluptuous as vol
 
-from homeassistant.const import CONF_OPTIONS, SUN_EVENT_SUNRISE, SUN_EVENT_SUNSET
+from homeassistant.const import (
+    CONF_ENTITY_ID,
+    CONF_OPTIONS,
+    CONF_TARGET,
+    CONF_TYPE,
+    DEGREE,
+    SUN_EVENT_SUNRISE,
+    SUN_EVENT_SUNSET,
+)
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import config_validation as cv
-from homeassistant.helpers.automation import move_top_level_schema_fields_to_options
+from homeassistant.helpers.automation import (
+    DomainSpec,
+    move_top_level_schema_fields_to_options,
+)
 from homeassistant.helpers.condition import (
+    ATTR_BEHAVIOR,
+    BEHAVIOR_ANY,
     Condition,
     ConditionCheckParams,
     ConditionConfig,
+    EntityNumericalConditionBase,
     condition_trace_set_result,
     condition_trace_update_result,
 )
-from homeassistant.helpers.sun import get_astral_event_date
+from homeassistant.helpers.selector import (
+    NumericThresholdMode,
+    NumericThresholdSelector,
+    NumericThresholdSelectorConfig,
+)
+from homeassistant.helpers.sun import get_astral_event_date, get_astral_observer
 from homeassistant.helpers.typing import ConfigType
 from homeassistant.util import dt as dt_util
+
+from .const import (
+    DOMAIN,
+    ELEVATION_ASTRONOMICAL,
+    ELEVATION_CIVIL,
+    ELEVATION_HORIZON,
+    ELEVATION_NAUTICAL,
+    STATE_ATTR_ELEVATION,
+)
 
 _OPTIONS_SCHEMA_DICT: dict[vol.Marker, Any] = {
     vol.Optional("before"): cv.sun_event,
@@ -127,6 +156,7 @@ class SunCondition(Condition):
     _options: dict[str, Any]
 
     @classmethod
+    @override
     async def async_validate_complete_config(
         cls, hass: HomeAssistant, complete_config: ConfigType
     ) -> ConfigType:
@@ -137,6 +167,7 @@ class SunCondition(Condition):
         return await super().async_validate_complete_config(hass, complete_config)
 
     @classmethod
+    @override
     async def async_validate_config(
         cls, hass: HomeAssistant, config: ConfigType
     ) -> ConfigType:
@@ -153,6 +184,7 @@ class SunCondition(Condition):
         self._before_offset = self._options.get("before_offset")
         self._after_offset = self._options.get("after_offset")
 
+    @override
     def _async_check(self, **kwargs: Unpack[ConditionCheckParams]) -> bool:
         """Check the condition."""
         return sun(
@@ -164,8 +196,193 @@ class SunCondition(Condition):
         )
 
 
+# The sun is a singleton, so these conditions take no target and no options.
+_STATE_CONDITION_SCHEMA = vol.Schema({vol.Required(CONF_OPTIONS, default=dict): {}})
+
+# The sun is a singleton, so the elevation condition always targets sun.sun
+# instead of asking the user to pick an entity.
+_SUN_ENTITY_ID = f"{DOMAIN}.{DOMAIN}"
+_ELEVATION_DOMAIN_SPECS = {DOMAIN: DomainSpec(value_source=STATE_ATTR_ELEVATION)}
+
+
+def _solar_position(hass: HomeAssistant) -> tuple[float, bool]:
+    """Return the sun's current elevation in degrees and whether it is rising."""
+    observer = get_astral_observer(hass)
+    now = dt_util.utcnow()
+    elevation = astral.sun.elevation(observer, now)
+    rising = astral.sun.elevation(observer, now + timedelta(minutes=1)) > elevation
+    return elevation, rising
+
+
+class _SunStateCondition(Condition):
+    """Base class for the option-less sun state conditions."""
+
+    @classmethod
+    @override
+    async def async_validate_config(
+        cls, hass: HomeAssistant, config: ConfigType
+    ) -> ConfigType:
+        """Validate config."""
+        return cast(ConfigType, _STATE_CONDITION_SCHEMA(config))
+
+
+class _UpCondition(_SunStateCondition):
+    """Test if the sun is up."""
+
+    @override
+    def _async_check(self, **kwargs: Unpack[ConditionCheckParams]) -> bool:
+        """Check the condition."""
+        elevation, _ = _solar_position(self._hass)
+        return elevation >= ELEVATION_HORIZON
+
+
+class _SetCondition(_SunStateCondition):
+    """Test if the sun is set."""
+
+    @override
+    def _async_check(self, **kwargs: Unpack[ConditionCheckParams]) -> bool:
+        """Check the condition."""
+        elevation, _ = _solar_position(self._hass)
+        return elevation < ELEVATION_HORIZON
+
+
+class _AscendingCondition(_SunStateCondition):
+    """Test if the sun is ascending."""
+
+    @override
+    def _async_check(self, **kwargs: Unpack[ConditionCheckParams]) -> bool:
+        """Check the condition."""
+        _, rising = _solar_position(self._hass)
+        return rising
+
+
+class _DescendingCondition(_SunStateCondition):
+    """Test if the sun is descending."""
+
+    @override
+    def _async_check(self, **kwargs: Unpack[ConditionCheckParams]) -> bool:
+        """Check the condition."""
+        _, rising = _solar_position(self._hass)
+        return not rising
+
+
+class _NightCondition(_SunStateCondition):
+    """Test if it is night (the sun is below all twilight)."""
+
+    @override
+    def _async_check(self, **kwargs: Unpack[ConditionCheckParams]) -> bool:
+        """Check the condition."""
+        elevation, _ = _solar_position(self._hass)
+        return elevation <= ELEVATION_ASTRONOMICAL
+
+
+_TWILIGHT_ANY = "any"
+_TWILIGHT_CIVIL = "civil"
+_TWILIGHT_NAUTICAL = "nautical"
+_TWILIGHT_ASTRONOMICAL = "astronomical"
+
+# Elevation band (min, max) in degrees for each twilight type, bounded by the
+# horizon and the twilight elevations.
+_TWILIGHT_BANDS = {
+    _TWILIGHT_ANY: (ELEVATION_ASTRONOMICAL, ELEVATION_HORIZON),
+    _TWILIGHT_CIVIL: (ELEVATION_CIVIL, ELEVATION_HORIZON),
+    _TWILIGHT_NAUTICAL: (ELEVATION_NAUTICAL, ELEVATION_CIVIL),
+    _TWILIGHT_ASTRONOMICAL: (ELEVATION_ASTRONOMICAL, ELEVATION_NAUTICAL),
+}
+
+_TWILIGHT_CONDITION_SCHEMA = vol.Schema(
+    {
+        vol.Required(CONF_OPTIONS, default=dict): {
+            vol.Optional(CONF_TYPE, default=_TWILIGHT_ANY): vol.In(_TWILIGHT_BANDS),
+        }
+    }
+)
+
+
+class _TwilightCondition(Condition):
+    """Base class for the morning and evening twilight conditions.
+
+    The sun is in twilight when its elevation is within the selected band;
+    morning twilight requires the sun to be rising and evening twilight to be
+    descending.
+    """
+
+    _rising: bool
+
+    @classmethod
+    @override
+    async def async_validate_config(
+        cls, hass: HomeAssistant, config: ConfigType
+    ) -> ConfigType:
+        """Validate config."""
+        return cast(ConfigType, _TWILIGHT_CONDITION_SCHEMA(config))
+
+    def __init__(self, hass: HomeAssistant, config: ConditionConfig) -> None:
+        """Initialize condition."""
+        super().__init__(hass, config)
+        assert config.options is not None
+        self._low, self._high = _TWILIGHT_BANDS[config.options[CONF_TYPE]]
+
+    @override
+    def _async_check(self, **kwargs: Unpack[ConditionCheckParams]) -> bool:
+        """Check the condition."""
+        elevation, rising = _solar_position(self._hass)
+        return rising == self._rising and self._low <= elevation <= self._high
+
+
+class _MorningTwilightCondition(_TwilightCondition):
+    """Test if it is morning twilight (the sun is rising through twilight)."""
+
+    _rising = True
+
+
+class _EveningTwilightCondition(_TwilightCondition):
+    """Test if it is evening twilight (the sun is descending through twilight)."""
+
+    _rising = False
+
+
+_ELEVATION_CONDITION_SCHEMA = vol.Schema(
+    {
+        vol.Required(CONF_OPTIONS, default=dict): {
+            vol.Required("threshold"): NumericThresholdSelector(
+                NumericThresholdSelectorConfig(mode=NumericThresholdMode.IS)
+            ),
+        }
+    }
+)
+
+
+class _ElevationCondition(EntityNumericalConditionBase):
+    """Test the sun's elevation against a threshold."""
+
+    _domain_specs = _ELEVATION_DOMAIN_SPECS
+    _valid_unit = DEGREE
+    _schema = _ELEVATION_CONDITION_SCHEMA
+
+    @classmethod
+    @override
+    async def async_validate_config(
+        cls, hass: HomeAssistant, config: ConfigType
+    ) -> ConfigType:
+        """Validate config and target the singleton sun entity."""
+        config = cast(ConfigType, cls._schema(config))
+        config[CONF_TARGET] = {CONF_ENTITY_ID: [_SUN_ENTITY_ID]}
+        # `behavior` is needed by `EntityConditionBase.__init__`.
+        config[CONF_OPTIONS][ATTR_BEHAVIOR] = BEHAVIOR_ANY
+        return config
+
+
 CONDITIONS: dict[str, type[Condition]] = {
     "_": SunCondition,
+    "is_up": _UpCondition,
+    "is_set": _SetCondition,
+    "is_ascending": _AscendingCondition,
+    "is_descending": _DescendingCondition,
+    "elevation": _ElevationCondition,
+    "is_night": _NightCondition,
+    "is_morning_twilight": _MorningTwilightCondition,
+    "is_evening_twilight": _EveningTwilightCondition,
 }
 
 

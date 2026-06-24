@@ -2,7 +2,7 @@
 
 from contextlib import suppress
 import logging
-from typing import Any
+from typing import Any, override
 
 from fing_agent_api import FingAgent
 import httpx
@@ -22,6 +22,7 @@ class FingConfigFlow(ConfigFlow, domain=DOMAIN):
 
     VERSION = 1
 
+    @override
     async def async_step_user(
         self, user_input: dict[str, Any] | None = None
     ) -> ConfigFlowResult:

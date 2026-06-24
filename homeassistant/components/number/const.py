@@ -92,6 +92,15 @@ DOMAIN = "number"
 SERVICE_SET_VALUE = "set_value"
 
 
+class NumberEntityCapabilityAttribute(StrEnum):
+    """Capability attributes for number entities."""
+
+    MIN = "min"
+    MAX = "max"
+    STEP = "step"
+    MODE = "mode"
+
+
 class NumberMode(StrEnum):
     """Modes for number entities."""
 

@@ -39,7 +39,7 @@
 # name: test_button_entities[button.back_door_unlock-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'Back Door Unlock',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Back Door Unlock',
     }),
     'context': <ANY>,
     'entity_id': 'button.back_door_unlock',
@@ -89,7 +89,7 @@
 # name: test_button_entities[button.front_door_unlock-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'Front Door Unlock',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Front Door Unlock',
     }),
     'context': <ANY>,
     'entity_id': 'button.front_door_unlock',

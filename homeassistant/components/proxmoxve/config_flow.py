@@ -2,7 +2,7 @@
 
 from collections.abc import Mapping
 import logging
-from typing import Any
+from typing import Any, override
 
 from proxmoxer import AuthenticationError, ProxmoxAPI
 from proxmoxer.core import ResourceException
@@ -125,7 +125,9 @@ def _get_nodes_data(data: dict[str, Any]) -> list[dict[str, Any]]:
         raise ProxmoxConnectionError from err
 
     if not nodes:
-        raise ProxmoxNoNodesFound("No nodes found")
+        raise ProxmoxNoNodesFound(
+            translation_domain=DOMAIN, translation_key="no_nodes_found"
+        )
 
     nodes_data: list[dict[str, Any]] = []
     for node in nodes:
@@ -165,6 +167,7 @@ class ProxmoxveConfigFlow(ConfigFlow, domain=DOMAIN):
     _data: dict[str, Any] = {}
     _entry: ConfigEntry
 
+    @override
     async def async_step_user(
         self, user_input: dict[str, Any] | None = None
     ) -> ConfigFlowResult:
