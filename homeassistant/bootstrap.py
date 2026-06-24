@@ -668,7 +668,6 @@ async def async_enable_logging(
         disabled_log_file_reason = None
         err_log_path = os.path.abspath(log_file)
 
-    hass.data.pop(DATA_LOGGING_DISABLED_REASON, None)
     if err_log_path:
         err_handler = await hass.async_add_executor_job(
             _create_log_file, err_log_path, log_rotate_days

@@ -252,7 +252,6 @@ async def test_async_enable_logging_log_file_disable_control(
         # The log file should be created if it is explicitly specified.
         assert len(glob.glob(ARG_LOG_FILE)) > 0
         assert bootstrap.DATA_LOGGING in hass.data
-        assert bootstrap.DATA_LOGGING_DISABLED_REASON not in hass.data
 
     cleanup_log_files()
 
