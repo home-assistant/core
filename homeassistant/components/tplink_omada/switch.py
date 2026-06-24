@@ -384,21 +384,25 @@ class TpLinkOmadaVpnSwitch(
             "category": policy.category.value,
         }
 
+    @override
     @property
     def available(self) -> bool:
         """Return true if the VPN policy still exists on the controller."""
         return super().available and self._policy_id in self.coordinator.data
 
+    @override
     @property
     def is_on(self) -> bool | None:
         """Return true if the VPN policy is enabled."""
         policy = self.coordinator.data.get(self._policy_id)
         return policy.enabled if policy else None
 
+    @override
     async def async_turn_on(self, **kwargs: Any) -> None:
         """Enable the VPN policy."""
         await self.coordinator.set_vpn_policy_enabled(self._policy_id, True)
 
+    @override
     async def async_turn_off(self, **kwargs: Any) -> None:
         """Disable the VPN policy."""
         await self.coordinator.set_vpn_policy_enabled(self._policy_id, False)

@@ -168,6 +168,7 @@ class OmadaVpnPoliciesCoordinator(OmadaCoordinator[OmadaVpnPolicy]):
         """Initialize my coordinator."""
         super().__init__(hass, config_entry, omada_client, "VpnPolicies", POLL_VPN)
 
+    @override
     async def poll_update(self) -> dict[str, OmadaVpnPolicy]:
         """Poll the site's current VPN policies."""
         return {p.policy_id: p for p in await self.omada_client.get_vpn_policies()}
