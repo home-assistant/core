@@ -19,7 +19,6 @@ from homeassistant.config_entries import ConfigEntryState
 from homeassistant.const import Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import device_registry as dr
-from homeassistant.helpers.update_coordinator import UpdateFailed
 
 from . import (
     get_reading_error_callback,
@@ -58,23 +57,6 @@ async def test_new_firmware_version(
     )
     assert device_entry is not None
     assert device_entry.sw_version == "build-62/build-69"
-
-
-async def test_async_setup_entry_connection_error(
-    hass: HomeAssistant,
-    mock_iometer_client: MagicMock,
-    mock_config_entry: MockConfigEntry,
-) -> None:
-    """Test setup retries when initial SSE data never arrives."""
-    mock_config_entry.add_to_hass(hass)
-    with patch.object(
-        IOMeterCoordinator,
-        "_async_update_data",
-        side_effect=UpdateFailed("Timeout waiting for IOmeter data"),
-    ):
-        result = await hass.config_entries.async_setup(mock_config_entry.entry_id)
-    assert not result
-    assert mock_config_entry.state is ConfigEntryState.SETUP_RETRY
 
 
 async def test_first_data_timeout(
@@ -161,32 +143,19 @@ async def test_status_error_callback(
 
 async def test_error_before_first_data_does_not_mark_unavailable(
     hass: HomeAssistant,
+    mock_iometer_client: MagicMock,
     mock_config_entry: MockConfigEntry,
+    caplog: pytest.LogCaptureFixture,
 ) -> None:
     """Test that stream errors before first data do not mark entities unavailable."""
-    mock_config_entry.add_to_hass(hass)
+    mock_iometer_client.subscribe_readings.side_effect = lambda *_: lambda: None
+    mock_iometer_client.subscribe_status.side_effect = lambda *_: lambda: None
 
-    with (
-        patch("homeassistant.components.iometer.IOmeterSSEClient") as mock_sse_class,
-        patch("homeassistant.components.iometer.config_flow.IOmeterClient"),
-        patch("homeassistant.components.iometer.PLATFORMS", []),
-        patch.object(
-            IOMeterCoordinator,
-            "_async_update_data",
-            new_callable=AsyncMock,
-        ),
-    ):
-        sse_client = mock_sse_class.return_value
-        sse_client.subscribe_readings.side_effect = lambda *_: lambda: None
-        sse_client.subscribe_status.side_effect = lambda *_: lambda: None
+    coordinator = IOMeterCoordinator(hass, mock_config_entry, mock_iometer_client)
+    await coordinator.async_start()
 
-        await hass.config_entries.async_setup(mock_config_entry.entry_id)
-        await hass.async_block_till_done()
+    with caplog.at_level(logging.WARNING, logger="homeassistant.components.iometer"):
+        get_reading_error_callback(mock_iometer_client)(IOmeterConnectionError("err"))
 
-        coordinator = mock_config_entry.runtime_data
-        assert coordinator.last_update_success is True
-
-        on_error = sse_client.subscribe_readings.call_args[0][1]
-        on_error(IOmeterConnectionError("err"))
-
-        assert coordinator.last_update_success is True
+    assert "stream error" in caplog.text
+    assert "Update failed" not in caplog.text
