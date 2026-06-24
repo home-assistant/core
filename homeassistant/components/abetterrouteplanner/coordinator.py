@@ -19,9 +19,9 @@ Two coordinators back the integration:
 
 import asyncio
 from collections.abc import Iterable
+from dataclasses import dataclass
 from datetime import datetime, timedelta
 import logging
-from typing import TYPE_CHECKING
 
 from aioabrp import (
     AbrpApiError,
@@ -32,9 +32,11 @@ from aioabrp import (
     ConnectionState,
     Metric,
     Telemetry,
+    TelemetryStream,
     VehicleModelDisplay,
 )
 
+from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.exceptions import ConfigEntryAuthFailed
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
@@ -50,12 +52,33 @@ from .auth import AbetterrouteplannerAuth
 from .const import ABRP_APP_KEY, DOMAIN, signal_new_metric
 from .device_info import ComposedDeviceInfo, compose_device_info
 
-if TYPE_CHECKING:
-    from . import AbetterrouteplannerConfigEntry
-
 _LOGGER = logging.getLogger(__name__)
 
 SCAN_INTERVAL = timedelta(minutes=10)
+
+
+@dataclass(frozen=True, slots=True)
+class AbrpData:
+    """Runtime data stored on the config entry.
+
+    Two coordinators live side by side: the garage coordinator polls
+    ``/1/session/get_tlm`` every 10 minutes for vehicle identity (stable,
+    drives device-registry entries), while the telemetry coordinator
+    receives push updates from the ``/2/tlm`` SSE stream. Separating them
+    isolates failure modes — SSE flakes never threaten device identity.
+
+    ``stream`` is the push-telemetry SSE consumer owned by the entry. It is
+    only created when the entry has live vehicle ids to stream; an entry with
+    no streamable vehicles leaves it ``None``.
+    """
+
+    session: OAuth2Session
+    garage_coordinator: AbrpVehiclesCoordinator
+    telemetry_coordinator: AbrpTelemetryCoordinator
+    stream: TelemetryStream | None
+
+
+type AbetterrouteplannerConfigEntry = ConfigEntry[AbrpData]
 
 
 class GarageVehicle:

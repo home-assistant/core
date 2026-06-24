@@ -49,9 +49,12 @@ from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from homeassistant.helpers.typing import StateType
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
-from . import AbetterrouteplannerConfigEntry
 from .const import CONF_VEHICLE_IDS, DOMAIN, signal_new_metric
-from .coordinator import AbrpTelemetryCoordinator, GarageVehicle
+from .coordinator import (
+    AbetterrouteplannerConfigEntry,
+    AbrpTelemetryCoordinator,
+    GarageVehicle,
+)
 
 _LOGGER = logging.getLogger(__name__)
 

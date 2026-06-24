@@ -1,13 +1,11 @@
 """The A Better Routeplanner integration."""
 
 import asyncio
-from dataclasses import dataclass
 from http import HTTPStatus
 
 from aioabrp import AbrpClient, TelemetryStream
 from aiohttp import ClientError, ClientResponseError
 
-from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import Platform
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.exceptions import ConfigEntryAuthFailed, ConfigEntryNotReady
@@ -21,36 +19,18 @@ from homeassistant.helpers.typing import UNDEFINED, ConfigType, UndefinedType
 
 from .auth import AbetterrouteplannerAuth
 from .const import ABRP_APP_KEY, CONF_VEHICLE_IDS, DOMAIN, PREWARM_WINDOW_SECONDS
-from .coordinator import AbrpTelemetryCoordinator, AbrpVehiclesCoordinator
+from .coordinator import (
+    AbetterrouteplannerConfigEntry,
+    AbrpData,
+    AbrpTelemetryCoordinator,
+    AbrpVehiclesCoordinator,
+)
 from .oauth import AbetterrouteplannerOAuth2Implementation
+from .sensor import vehicles_without_sensors
 
 CONFIG_SCHEMA = cv.config_entry_only_config_schema(DOMAIN)
 
 PLATFORMS: list[Platform] = [Platform.SENSOR]
-
-
-@dataclass(frozen=True, slots=True)
-class AbrpData:
-    """Runtime data stored on the config entry.
-
-    Two coordinators live side by side: the garage coordinator polls
-    ``/1/session/get_tlm`` every 10 minutes for vehicle identity (stable,
-    drives device-registry entries), while the telemetry coordinator
-    receives push updates from the ``/2/tlm`` SSE stream. Separating them
-    isolates failure modes — SSE flakes never threaten device identity.
-
-    ``stream`` is the push-telemetry SSE consumer owned by the entry. It is
-    only created when the entry has live vehicle ids to stream; an entry with
-    no streamable vehicles leaves it ``None``.
-    """
-
-    session: config_entry_oauth2_flow.OAuth2Session
-    garage_coordinator: AbrpVehiclesCoordinator
-    telemetry_coordinator: AbrpTelemetryCoordinator
-    stream: TelemetryStream | None
-
-
-type AbetterrouteplannerConfigEntry = ConfigEntry[AbrpData]
 
 
 async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
@@ -213,11 +193,7 @@ async def async_setup_entry(
         # (fresh install or a newly-added vehicle). Vehicles already known to
         # the entity registry restore their last values via the sensor
         # platform's eager-from-registry probe + ``RestoreSensor``, so
-        # re-polling them on every startup is wasted work. Imported locally:
-        # ``sensor`` imports ``AbetterrouteplannerConfigEntry`` from this
-        # module, so a top-level import would form a circular import.
-        from .sensor import vehicles_without_sensors  # noqa: PLC0415
-
+        # re-polling them on every startup is wasted work.
         new_vehicles = vehicles_without_sensors(hass, entry, vehicle_ids)
         if new_vehicles:
             await telemetry_coordinator.async_seed(client, new_vehicles)
