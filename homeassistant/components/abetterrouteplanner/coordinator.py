@@ -81,6 +81,7 @@ class AbrpData:
 type AbetterrouteplannerConfigEntry = ConfigEntry[AbrpData]
 
 
+@dataclass(frozen=True, slots=True)
 class GarageVehicle:
     """One garage vehicle joined with its composed HA device-card fields.
 
@@ -91,19 +92,21 @@ class GarageVehicle:
     :class:`.device_info.ComposedDeviceInfo` produced by joining its typecode
     against the v2 catalog.
 
-    Identity attributes (``vehicle_id`` / ``name`` / ``vehicle_model``) are
-    re-exported as read-only properties so existing call sites in
-    ``__init__`` / ``sensor`` keep reading ``item.vehicle_id`` etc. unchanged;
-    ``device_model`` / ``device_manufacturer`` resolve from the composed pair.
+    Identity attributes (``vehicle_id`` / ``name`` / ``vehicle_model``) and the
+    composed ``device_model`` / ``device_manufacturer`` are re-exported as
+    read-only properties so call sites in ``__init__`` / ``sensor`` keep
+    reading ``item.vehicle_id`` / ``item.device_model`` etc. unchanged.
+
+    ``frozen=True`` gives value equality, which is load-bearing: the polling
+    garage coordinator is a ``TimestampDataUpdateCoordinator`` that suppresses
+    listener fires when a poll returns ``previous_data == self.data``. Both
+    ``AbrpVehicle`` and ``ComposedDeviceInfo`` are frozen value-equal
+    dataclasses, so an unchanged garage compares equal and does not spuriously
+    re-fire the device-metadata propagation listener on every 10-min poll.
     """
 
-    __slots__ = ("device_manufacturer", "device_model", "vehicle")
-
-    def __init__(self, vehicle: AbrpVehicle, composed: ComposedDeviceInfo) -> None:
-        """Join a raw vehicle with its composed device-card fields."""
-        self.vehicle = vehicle
-        self.device_model = composed.device_model
-        self.device_manufacturer = composed.device_manufacturer
+    vehicle: AbrpVehicle
+    composed: ComposedDeviceInfo
 
     @property
     def vehicle_id(self) -> int:
@@ -120,29 +123,15 @@ class GarageVehicle:
         """Return the raw vehicle typecode."""
         return self.vehicle.vehicle_model
 
-    def __eq__(self, other: object) -> bool:
-        """Compare by value over the raw vehicle + composed device fields.
+    @property
+    def device_model(self) -> str | None:
+        """Return the composed device-card model, if resolved."""
+        return self.composed.device_model
 
-        Value equality is load-bearing: the polling garage coordinator is a
-        ``TimestampDataUpdateCoordinator`` that suppresses listener fires when
-        a poll returns ``previous_data == self.data``. Without an explicit
-        ``__eq__`` this ``__slots__`` class falls back to identity, so every
-        10-min poll would compare unequal and spuriously re-fire the
-        device-metadata propagation listener on an unchanged garage.
-        ``AbrpVehicle`` is a frozen value-equal dataclass, so this fully
-        restores the old suppression.
-        """
-        if not isinstance(other, GarageVehicle):
-            return NotImplemented
-        return (self.vehicle, self.device_model, self.device_manufacturer) == (
-            other.vehicle,
-            other.device_model,
-            other.device_manufacturer,
-        )
-
-    def __hash__(self) -> int:
-        """Hash over the same fields as :meth:`__eq__`."""
-        return hash((self.vehicle, self.device_model, self.device_manufacturer))
+    @property
+    def device_manufacturer(self) -> str | None:
+        """Return the composed device-card manufacturer, if resolved."""
+        return self.composed.device_manufacturer
 
 
 class AbrpVehiclesCoordinator(TimestampDataUpdateCoordinator[list[GarageVehicle]]):
