@@ -2,7 +2,7 @@
 # name: test_siren
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'available_tones': list([
+      <SirenEntityCapabilityAttribute.AVAILABLE_TONES: 'available_tones'>: list([
         0,
       ]),
       'friendly_name': 'Test',
@@ -23,7 +23,7 @@
     ]),
     'area_id': None,
     'capabilities': dict({
-      'available_tones': list([
+      <SirenEntityCapabilityAttribute.AVAILABLE_TONES: 'available_tones'>: list([
         0,
       ]),
     }),
@@ -60,7 +60,7 @@
 # name: test_siren_change_default_tone
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'available_tones': list([
+      <SirenEntityCapabilityAttribute.AVAILABLE_TONES: 'available_tones'>: list([
         0,
       ]),
       'friendly_name': 'Test',
@@ -81,7 +81,7 @@
     ]),
     'area_id': None,
     'capabilities': dict({
-      'available_tones': list([
+      <SirenEntityCapabilityAttribute.AVAILABLE_TONES: 'available_tones'>: list([
         0,
       ]),
     }),
@@ -118,7 +118,7 @@
 # name: test_siren_switching
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'available_tones': list([
+      <SirenEntityCapabilityAttribute.AVAILABLE_TONES: 'available_tones'>: list([
         0,
       ]),
       'friendly_name': 'Test',
@@ -139,7 +139,7 @@
     ]),
     'area_id': None,
     'capabilities': dict({
-      'available_tones': list([
+      <SirenEntityCapabilityAttribute.AVAILABLE_TONES: 'available_tones'>: list([
         0,
       ]),
     }),
