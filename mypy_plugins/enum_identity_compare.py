@@ -28,10 +28,6 @@ just ``homeassistant.data_entry_flow.FlowResultType``.
 ``enum.Flag``/``enum.IntFlag`` are always exempt — bitwise ``==`` is
 idiomatic there.
 
-Usage: add to ``mypy.ini``::
-
-    [mypy]
-    plugins = mypy_plugins.enum_identity_compare
 """
 
 from collections.abc import Callable
