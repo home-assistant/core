@@ -19,6 +19,7 @@ mock-open==1.4.0
 mypy==2.1.0
 prek==0.2.28
 pydantic==2.13.4
+PyGithub==2.9.1
 pylint==4.0.6
 pylint-per-file-ignores==3.2.1
 pipdeptree==2.26.1

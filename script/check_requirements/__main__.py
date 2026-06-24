@@ -2,10 +2,34 @@
 
 import argparse
 import json
+import os
 from pathlib import Path
 import sys
 
+from .gate import GateDecision, decide_skip
 from .runner import run_checks
+
+
+def _write_output(key: str, value: str) -> None:
+    """Append a step output for the workflow to gate later steps on."""
+    output = os.environ.get("GITHUB_OUTPUT")
+    if not output:
+        return
+    with Path(output).open("a", encoding="utf-8") as file:
+        file.write(f"{key}={value}\n")
+
+
+def _resolve_skip(pr_number: int, head_sha: str | None) -> GateDecision:
+    """Decide whether this run can skip re-checking the PR.
+
+    Needs the repo and a token (from the Actions environment) to read prior
+    comments; without them it falls open and runs the checks.
+    """
+    repo = os.environ.get("GITHUB_REPOSITORY")
+    token = os.environ.get("GITHUB_TOKEN")
+    if not head_sha or not repo or not token:
+        return GateDecision(False, "Gate inputs unavailable; running checks.")
+    return decide_skip(pr_number, head_sha, repo, token)
 
 
 def main(argv: list[str] | None = None) -> int:
@@ -30,6 +54,14 @@ def main(argv: list[str] | None = None) -> int:
         help="Path where the results.json artifact will be written.",
     )
     args = parser.parse_args(argv)
+
+    # Skip (and write no artifact) when no tracked requirement file changed
+    # since the last comment; the agentic stage no-ops without the artifact.
+    decision = _resolve_skip(args.pr_number, args.head_sha)
+    print(decision.reason, file=sys.stderr)
+    _write_output("skip", "true" if decision.skip else "false")
+    if decision.skip:
+        return 0
 
     try:
         diff_text = args.diff.read_text(encoding="utf-8")

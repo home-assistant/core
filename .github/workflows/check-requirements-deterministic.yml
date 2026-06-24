@@ -12,6 +12,7 @@ on:
     types: [opened, synchronize, reopened]
     paths:
       - "requirements*.txt"
+      - "**/requirements*.txt"
       - "homeassistant/package_constraints.txt"
   workflow_dispatch:
     inputs:
@@ -57,7 +58,9 @@ jobs:
           HEAD_SHA=$(gh pr view "${PR_NUMBER}" --json headRefOid --jq '.headRefOid')
           echo "head_sha=${HEAD_SHA}" >> "${GITHUB_OUTPUT}"
       - name: Run deterministic checks
+        id: checks
         env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           PR_NUMBER: ${{ inputs.pull_request_number || github.event.pull_request.number }}
           HEAD_SHA: ${{ steps.pr.outputs.head_sha }}
         run: |
@@ -67,6 +70,7 @@ jobs:
             --diff deterministic/pr.diff \
             --output deterministic/results.json
       - name: Upload deterministic-results artifact
+        if: steps.checks.outputs.skip != 'true'
         uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
         with:
           name: check-requirements-deterministic
