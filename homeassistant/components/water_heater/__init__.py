@@ -30,7 +30,7 @@ from homeassistant.helpers.typing import ConfigType, VolDictType
 from homeassistant.util.hass_dict import HassKey
 from homeassistant.util.unit_conversion import TemperatureConverter
 
-from .const import DOMAIN, WaterHeaterCapabilityAttribute, WaterHeaterStateAttribute
+from .const import DOMAIN
 
 DATA_COMPONENT: HassKey[EntityComponent[WaterHeaterEntity]] = HassKey(DOMAIN)
 ENTITY_ID_FORMAT = DOMAIN + ".{}"
@@ -157,10 +157,10 @@ class WaterHeaterEntity(Entity, cached_properties=CACHED_PROPERTIES_WITH_ATTR_):
 
     _entity_component_unrecorded_attributes = frozenset(
         {
-            WaterHeaterCapabilityAttribute.OPERATION_LIST,
-            WaterHeaterCapabilityAttribute.MIN_TEMP,
-            WaterHeaterCapabilityAttribute.MAX_TEMP,
-            WaterHeaterCapabilityAttribute.TARGET_TEMP_STEP,
+            ATTR_OPERATION_LIST,
+            ATTR_MIN_TEMP,
+            ATTR_MAX_TEMP,
+            ATTR_TARGET_TEMP_STEP,
         }
     )
 
@@ -201,20 +201,18 @@ class WaterHeaterEntity(Entity, cached_properties=CACHED_PROPERTIES_WITH_ATTR_):
     def capability_attributes(self) -> dict[str, Any]:
         """Return capability attributes."""
         data: dict[str, Any] = {
-            WaterHeaterCapabilityAttribute.MIN_TEMP: show_temp(
+            ATTR_MIN_TEMP: show_temp(
                 self.hass, self.min_temp, self.temperature_unit, self.precision
             ),
-            WaterHeaterCapabilityAttribute.MAX_TEMP: show_temp(
+            ATTR_MAX_TEMP: show_temp(
                 self.hass, self.max_temp, self.temperature_unit, self.precision
             ),
         }
         if target_temperature_step := self.target_temperature_step:
-            data[WaterHeaterCapabilityAttribute.TARGET_TEMP_STEP] = (
-                target_temperature_step
-            )
+            data[ATTR_TARGET_TEMP_STEP] = target_temperature_step
 
         if WaterHeaterEntityFeature.OPERATION_MODE in self.supported_features:
-            data[WaterHeaterCapabilityAttribute.OPERATION_LIST] = self.operation_list
+            data[ATTR_OPERATION_LIST] = self.operation_list
 
         return data
 
@@ -224,25 +222,25 @@ class WaterHeaterEntity(Entity, cached_properties=CACHED_PROPERTIES_WITH_ATTR_):
     def state_attributes(self) -> dict[str, Any]:
         """Return the optional state attributes."""
         data: dict[str, Any] = {
-            WaterHeaterStateAttribute.CURRENT_TEMPERATURE: show_temp(
+            ATTR_CURRENT_TEMPERATURE: show_temp(
                 self.hass,
                 self.current_temperature,
                 self.temperature_unit,
                 self.precision,
             ),
-            WaterHeaterStateAttribute.TEMPERATURE: show_temp(
+            ATTR_TEMPERATURE: show_temp(
                 self.hass,
                 self.target_temperature,
                 self.temperature_unit,
                 self.precision,
             ),
-            WaterHeaterStateAttribute.TARGET_TEMP_HIGH: show_temp(
+            ATTR_TARGET_TEMP_HIGH: show_temp(
                 self.hass,
                 self.target_temperature_high,
                 self.temperature_unit,
                 self.precision,
             ),
-            WaterHeaterStateAttribute.TARGET_TEMP_LOW: show_temp(
+            ATTR_TARGET_TEMP_LOW: show_temp(
                 self.hass,
                 self.target_temperature_low,
                 self.temperature_unit,
@@ -253,13 +251,11 @@ class WaterHeaterEntity(Entity, cached_properties=CACHED_PROPERTIES_WITH_ATTR_):
         supported_features = self.supported_features
 
         if WaterHeaterEntityFeature.OPERATION_MODE in supported_features:
-            data[WaterHeaterStateAttribute.OPERATION_MODE] = self.current_operation
+            data[ATTR_OPERATION_MODE] = self.current_operation
 
         if WaterHeaterEntityFeature.AWAY_MODE in supported_features:
             is_away = self.is_away_mode_on
-            data[WaterHeaterStateAttribute.AWAY_MODE] = (
-                STATE_ON if is_away else STATE_OFF
-            )
+            data[ATTR_AWAY_MODE] = STATE_ON if is_away else STATE_OFF
 
         return data
 
