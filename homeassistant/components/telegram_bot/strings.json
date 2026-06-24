@@ -67,7 +67,7 @@
               "api_endpoint": "Telegram bot API server endpoint.\nThe bot will be **locked out for 10 minutes** if you switch back to the default.\nDefault: `{default_api_endpoint}`.",
               "proxy_url": "Proxy URL if working behind one, optionally including username and password.\n({socks_url})"
             },
-            "name": "Advanced settings"
+            "name": "Additional settings"
           }
         }
       },
