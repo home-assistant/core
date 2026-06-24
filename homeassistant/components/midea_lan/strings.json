@@ -36,7 +36,7 @@
           "ip_address": "IP address"
         },
         "data_description": {
-          "ip_address": "Enter 'auto' to scan your network or enter a specific IP address"
+          "ip_address": "Enter 'auto' to scan your network, or enter a specific IP address"
         },
         "title": "Discover devices"
       },
@@ -100,10 +100,10 @@
         "name": "Thermostat"
       },
       "climate_zone1": {
-        "name": "Zone 1 Thermostat"
+        "name": "Zone 1 thermostat"
       },
       "climate_zone2": {
-        "name": "Zone 2 Thermostat"
+        "name": "Zone 2 thermostat"
       }
     }
   },
