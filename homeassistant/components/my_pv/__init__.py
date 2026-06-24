@@ -34,7 +34,6 @@ async def async_setup_entry(hass: HomeAssistant, entry: MyPVConfigEntry) -> bool
             translation_key="cannot_connect",
         ) from exc
 
-    # Setup coordinator
     coordinator = MyPVCoordinator(hass, entry, device)
 
     try:
