@@ -389,7 +389,9 @@ class InputDatetime(collection.CollectionEntity, RestoreEntity):
 
         elif not self.has_time:
             extended = py_datetime.datetime.combine(
-                self._current_datetime, py_datetime.time(0, 0)
+                self._current_datetime,
+                py_datetime.time(0, 0),
+                dt_util.get_default_time_zone(),
             )
             attrs[InputDatetimeEntityStateAttribute.TIMESTAMP] = extended.timestamp()
 
