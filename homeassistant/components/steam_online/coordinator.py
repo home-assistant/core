@@ -1,5 +1,6 @@
 """Data update coordinator for the Steam integration."""
 
+from collections import OrderedDict
 from dataclasses import dataclass
 from datetime import timedelta
 import logging
@@ -64,7 +65,17 @@ class SteamDataUpdateCoordinator(DataUpdateCoordinator[dict[str, PlayerData]]):
             name=DOMAIN,
             update_interval=timedelta(seconds=30),
         )
-        self.game_icons: dict[str, str] = {}
+        self.game_icons: OrderedDict[str, str | None] = OrderedDict()
+
+    def cache_game_icon(self, game_id: str, icon_url: str | None) -> None:
+        """Store a game icon in the cache."""
+
+        max_size = len(self.config_entry.options[CONF_ACCOUNTS])
+
+        while len(self.game_icons) >= max_size:
+            self.game_icons.popitem(last=False)
+
+        self.game_icons[game_id] = icon_url
 
     @override
     async def _async_setup(self) -> None:
@@ -93,16 +104,20 @@ class SteamDataUpdateCoordinator(DataUpdateCoordinator[dict[str, PlayerData]]):
 
         for player in players.values():
             if player.gameid and player.gameid not in self.game_icons:
-                response = self.player_interface.GetOwnedGames(
+                games = self.player_interface.GetOwnedGames(
                     steamid=player.steamid, include_appinfo=1
-                )["response"]
-                self.game_icons.update(
-                    {
-                        str(game["appid"]): game["img_icon_url"]
-                        for game in response.get("games", [])
-                    }
+                )["response"].get("games", [])
+                self.cache_game_icon(
+                    player.gameid,
+                    next(
+                        (
+                            game["img_icon_url"]
+                            for game in games
+                            if str(game["appid"]) == player.gameid
+                        ),
+                        None,
+                    ),
                 )
-
         return players
 
     @override
