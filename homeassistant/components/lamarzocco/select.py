@@ -2,7 +2,7 @@
 
 from collections.abc import Callable, Coroutine
 from dataclasses import dataclass
-from typing import Any, cast
+from typing import Any, cast, override
 
 from pylamarzocco.const import (
     DoseMode,
@@ -86,8 +86,10 @@ ENTITIES: tuple[LaMarzoccoSelectEntityDescription, ...] = (
             ).target_level
         ],
         supported_fn=(
-            lambda coordinator: coordinator.device.dashboard.model_name
-            in (ModelName.LINEA_MINI_R, ModelName.LINEA_MICRA)
+            lambda coordinator: (
+                coordinator.device.dashboard.model_name
+                in (ModelName.LINEA_MINI_R, ModelName.LINEA_MICRA)
+            )
         ),
         bt_offline_mode=True,
     ),
@@ -103,12 +105,14 @@ ENTITIES: tuple[LaMarzoccoSelectEntityDescription, ...] = (
             cast(PreBrewing, machine.dashboard.config[WidgetType.CM_PRE_BREWING]).mode
         ],
         supported_fn=(
-            lambda coordinator: coordinator.device.dashboard.model_name
-            in (
-                ModelName.LINEA_MICRA,
-                ModelName.LINEA_MINI,
-                ModelName.LINEA_MINI_R,
-                ModelName.GS3_AV,
+            lambda coordinator: (
+                coordinator.device.dashboard.model_name
+                in (
+                    ModelName.LINEA_MICRA,
+                    ModelName.LINEA_MINI,
+                    ModelName.LINEA_MINI_R,
+                    ModelName.GS3_AV,
+                )
             )
         ),
     ),
@@ -147,10 +151,12 @@ ENTITIES: tuple[LaMarzoccoSelectEntityDescription, ...] = (
             ).scale_connected
         ),
         supported_fn=(
-            lambda coordinator: coordinator.device.dashboard.model_name
-            in (ModelName.LINEA_MINI, ModelName.LINEA_MINI_R)
-            and WidgetType.CM_BREW_BY_WEIGHT_DOSES
-            in coordinator.device.dashboard.config
+            lambda coordinator: (
+                coordinator.device.dashboard.model_name
+                in (ModelName.LINEA_MINI, ModelName.LINEA_MINI_R)
+                and WidgetType.CM_BREW_BY_WEIGHT_DOSES
+                in coordinator.device.dashboard.config
+            )
         ),
     ),
 )
@@ -179,10 +185,12 @@ class LaMarzoccoSelectEntity(LaMarzoccoEntity, SelectEntity):
     entity_description: LaMarzoccoSelectEntityDescription
 
     @property
+    @override
     def current_option(self) -> str | None:
         """Return the current selected option."""
         return self.entity_description.current_option_fn(self.coordinator.device)
 
+    @override
     async def async_select_option(self, option: str) -> None:
         """Change the selected option."""
         if option != self.current_option:

@@ -1,7 +1,5 @@
 """Shared test fixtures for Fluss+ integration."""
 
-from __future__ import annotations
-
 from collections.abc import Generator
 from unittest.mock import AsyncMock, patch
 
@@ -48,8 +46,19 @@ def mock_api_client() -> Generator[AsyncMock]:
         client = mock_client.return_value
         client.async_get_devices.return_value = {
             "devices": [
-                {"deviceId": "2a303030sdj1", "deviceName": "Device 1"},
-                {"deviceId": "ape93k9302j2", "deviceName": "Device 2"},
+                {
+                    "deviceId": "2a303030sdj1",
+                    "deviceName": "Device 1",
+                    "userPermissions": {"canUseWiFi": True},
+                },
+                {
+                    "deviceId": "ape93k9302j2",
+                    "deviceName": "Device 2",
+                    "userPermissions": {"canUseWiFi": True},
+                },
             ]
+        }
+        client.async_get_device_status.return_value = {
+            "status": {"internetConnected": True}
         }
         yield client

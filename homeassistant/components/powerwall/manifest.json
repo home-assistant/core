@@ -9,11 +9,14 @@
     },
     {
       "hostname": "1232100-*"
+    },
+    {
+      "hostname": "teslapw_*"
     }
   ],
   "documentation": "https://www.home-assistant.io/integrations/powerwall",
   "integration_type": "device",
   "iot_class": "local_polling",
   "loggers": ["tesla_powerwall"],
-  "requirements": ["tesla-powerwall==0.5.2"]
+  "requirements": ["tesla-powerwall==0.5.3"]
 }

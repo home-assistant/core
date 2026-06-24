@@ -186,7 +186,7 @@
       },
       "IsHD": true,
       "IsFolder": false,
-      "ParentId": "FOLDER-UUID",
+      "ParentId": "SEASON-UUID",
       "Type": "Episode",
       "People": [
         {

@@ -1,7 +1,164 @@
 {
+  "conditions": {
+    "is_co2_value": {
+      "condition": "mdi:molecule-co2"
+    },
+    "is_co_cleared": {
+      "condition": "mdi:check-circle"
+    },
+    "is_co_detected": {
+      "condition": "mdi:molecule-co"
+    },
+    "is_co_value": {
+      "condition": "mdi:molecule-co"
+    },
+    "is_gas_cleared": {
+      "condition": "mdi:check-circle"
+    },
+    "is_gas_detected": {
+      "condition": "mdi:gas-cylinder"
+    },
+    "is_n2o_value": {
+      "condition": "mdi:factory"
+    },
+    "is_no2_value": {
+      "condition": "mdi:factory"
+    },
+    "is_no_value": {
+      "condition": "mdi:factory"
+    },
+    "is_ozone_value": {
+      "condition": "mdi:weather-sunny-alert"
+    },
+    "is_pm10_value": {
+      "condition": "mdi:blur"
+    },
+    "is_pm1_value": {
+      "condition": "mdi:blur"
+    },
+    "is_pm25_value": {
+      "condition": "mdi:blur"
+    },
+    "is_pm4_value": {
+      "condition": "mdi:blur"
+    },
+    "is_smoke_cleared": {
+      "condition": "mdi:check-circle"
+    },
+    "is_smoke_detected": {
+      "condition": "mdi:smoke-detector-variant"
+    },
+    "is_so2_value": {
+      "condition": "mdi:factory"
+    },
+    "is_voc_ratio_value": {
+      "condition": "mdi:air-filter"
+    },
+    "is_voc_value": {
+      "condition": "mdi:air-filter"
+    }
+  },
   "entity_component": {
     "_": {
       "default": "mdi:air-filter"
+    }
+  },
+  "triggers": {
+    "co2_changed": {
+      "trigger": "mdi:molecule-co2"
+    },
+    "co2_crossed_threshold": {
+      "trigger": "mdi:molecule-co2"
+    },
+    "co_changed": {
+      "trigger": "mdi:molecule-co"
+    },
+    "co_cleared": {
+      "trigger": "mdi:check-circle"
+    },
+    "co_crossed_threshold": {
+      "trigger": "mdi:molecule-co"
+    },
+    "co_detected": {
+      "trigger": "mdi:molecule-co"
+    },
+    "gas_cleared": {
+      "trigger": "mdi:check-circle"
+    },
+    "gas_detected": {
+      "trigger": "mdi:gas-cylinder"
+    },
+    "n2o_changed": {
+      "trigger": "mdi:factory"
+    },
+    "n2o_crossed_threshold": {
+      "trigger": "mdi:factory"
+    },
+    "no2_changed": {
+      "trigger": "mdi:factory"
+    },
+    "no2_crossed_threshold": {
+      "trigger": "mdi:factory"
+    },
+    "no_changed": {
+      "trigger": "mdi:factory"
+    },
+    "no_crossed_threshold": {
+      "trigger": "mdi:factory"
+    },
+    "ozone_changed": {
+      "trigger": "mdi:weather-sunny-alert"
+    },
+    "ozone_crossed_threshold": {
+      "trigger": "mdi:weather-sunny-alert"
+    },
+    "pm10_changed": {
+      "trigger": "mdi:blur"
+    },
+    "pm10_crossed_threshold": {
+      "trigger": "mdi:blur"
+    },
+    "pm1_changed": {
+      "trigger": "mdi:blur"
+    },
+    "pm1_crossed_threshold": {
+      "trigger": "mdi:blur"
+    },
+    "pm25_changed": {
+      "trigger": "mdi:blur"
+    },
+    "pm25_crossed_threshold": {
+      "trigger": "mdi:blur"
+    },
+    "pm4_changed": {
+      "trigger": "mdi:blur"
+    },
+    "pm4_crossed_threshold": {
+      "trigger": "mdi:blur"
+    },
+    "smoke_cleared": {
+      "trigger": "mdi:check-circle"
+    },
+    "smoke_detected": {
+      "trigger": "mdi:smoke-detector-variant"
+    },
+    "so2_changed": {
+      "trigger": "mdi:factory"
+    },
+    "so2_crossed_threshold": {
+      "trigger": "mdi:factory"
+    },
+    "voc_changed": {
+      "trigger": "mdi:air-filter"
+    },
+    "voc_crossed_threshold": {
+      "trigger": "mdi:air-filter"
+    },
+    "voc_ratio_changed": {
+      "trigger": "mdi:air-filter"
+    },
+    "voc_ratio_crossed_threshold": {
+      "trigger": "mdi:air-filter"
     }
   }
 }

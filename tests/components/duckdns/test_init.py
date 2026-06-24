@@ -19,6 +19,7 @@ from homeassistant.config_entries import ConfigEntryState
 from homeassistant.const import CONF_ACCESS_TOKEN, CONF_DOMAIN
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError, ServiceValidationError
+from homeassistant.helpers import issue_registry as ir
 from homeassistant.util.dt import utcnow
 
 from .conftest import TEST_SUBDOMAIN, TEST_TOKEN
@@ -118,7 +119,9 @@ async def test_setup_backoff(
 
 @pytest.mark.usefixtures("setup_duckdns")
 async def test_service_set_txt(
-    hass: HomeAssistant, aioclient_mock: AiohttpClientMocker
+    hass: HomeAssistant,
+    aioclient_mock: AiohttpClientMocker,
+    issue_registry: ir.IssueRegistry,
 ) -> None:
     """Test set txt service call."""
     # Empty the fixture mock requests
@@ -139,6 +142,11 @@ async def test_service_set_txt(
         blocking=True,
     )
     assert aioclient_mock.call_count == 1
+
+    assert issue_registry.async_get_issue(
+        domain=DOMAIN,
+        issue_id="deprecated_call_without_config_entry",
+    )
 
 
 @pytest.mark.usefixtures("setup_duckdns")
@@ -172,8 +180,8 @@ async def test_service_clear_txt(
 @pytest.mark.parametrize(
     ("payload", "exception_msg"),
     [
-        ({ATTR_CONFIG_ENTRY: "1234"}, "Duck DNS integration entry not found"),
-        (None, "Duck DNS integration entry not selected"),
+        ({ATTR_CONFIG_ENTRY: "1234"}, "service_config_entry_not_found"),
+        (None, "entry_not_selected"),
     ],
 )
 @pytest.mark.usefixtures("setup_duckdns")
@@ -193,26 +201,21 @@ async def test_service_exceptions(
         entry_id="67890",
     ).add_to_hass(hass)
 
-    with pytest.raises(ServiceValidationError, match=exception_msg):
+    with pytest.raises(ServiceValidationError) as e:
         await hass.services.async_call(
             DOMAIN,
             SERVICE_SET_TXT,
             payload,
             blocking=True,
         )
+    assert e.value.translation_key == exception_msg
 
 
 @pytest.mark.parametrize(
     ("side_effect", "exception_msg"),
     [
-        (
-            False,
-            "Updating Duck DNS domain homeassistant failed",
-        ),
-        (
-            ClientError,
-            "Updating Duck DNS domain homeassistant failed due to a connection error",
-        ),
+        (False, "update_failed"),
+        (ClientError, "connection_error"),
     ],
 )
 @pytest.mark.usefixtures("setup_duckdns")
@@ -229,7 +232,7 @@ async def test_service_request_exception(
             "homeassistant.components.duckdns.services.update_duckdns",
             side_effect=[side_effect],
         ),
-        pytest.raises(HomeAssistantError, match=exception_msg),
+        pytest.raises(HomeAssistantError) as e,
     ):
         await hass.services.async_call(
             DOMAIN,
@@ -237,6 +240,7 @@ async def test_service_request_exception(
             {ATTR_CONFIG_ENTRY: config_entry.entry_id},
             blocking=True,
         )
+    assert e.value.translation_key == exception_msg
 
 
 @pytest.mark.usefixtures("setup_duckdns")
@@ -244,7 +248,7 @@ async def test_service_select_entry(
     hass: HomeAssistant, aioclient_mock: AiohttpClientMocker
 ) -> None:
     """Test config entry selection."""
-    MockConfigEntry(
+    config_entry = MockConfigEntry(
         domain=DOMAIN,
         title=f"{TEST_SUBDOMAIN}.duckdns.org",
         data={
@@ -252,7 +256,12 @@ async def test_service_select_entry(
             CONF_ACCESS_TOKEN: TEST_TOKEN,
         },
         entry_id="67890",
-    ).add_to_hass(hass)
+    )
+    config_entry.add_to_hass(hass)
+    assert await hass.config_entries.async_setup(config_entry.entry_id)
+    await hass.async_block_till_done()
+
+    assert config_entry.state is ConfigEntryState.LOADED
 
     # Empty the fixture mock requests
     aioclient_mock.clear_requests()

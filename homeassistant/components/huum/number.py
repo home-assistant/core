@@ -1,12 +1,11 @@
 """Control for steamer."""
 
-from __future__ import annotations
-
 import logging
+from typing import override
 
 from huum.const import SaunaStatus
 
-from homeassistant.components.number import NumberEntity
+from homeassistant.components.number import NumberDeviceClass, NumberEntity
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
@@ -15,6 +14,8 @@ from .coordinator import HuumConfigEntry, HuumDataUpdateCoordinator
 from .entity import HuumBaseEntity
 
 _LOGGER = logging.getLogger(__name__)
+
+PARALLEL_UPDATES = 1
 
 
 async def async_setup_entry(
@@ -34,7 +35,9 @@ class HuumSteamer(HuumBaseEntity, NumberEntity):
     """Representation of a steamer."""
 
     _attr_translation_key = "humidity"
-    _attr_native_max_value = 10
+    _attr_device_class = NumberDeviceClass.HUMIDITY
+    _attr_native_unit_of_measurement = "%"
+    _attr_native_max_value = 40
     _attr_native_min_value = 0
     _attr_native_step = 1
 
@@ -45,10 +48,12 @@ class HuumSteamer(HuumBaseEntity, NumberEntity):
         self._attr_unique_id = coordinator.config_entry.entry_id
 
     @property
-    def native_value(self) -> float:
+    @override
+    def native_value(self) -> float | None:
         """Return the current value."""
-        return self.coordinator.data.target_humidity
+        return self.coordinator.data.humidity
 
+    @override
     async def async_set_native_value(self, value: float) -> None:
         """Update the current value."""
         target_temperature = self.coordinator.data.target_temperature

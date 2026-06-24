@@ -1,11 +1,12 @@
 # serializer version: 1
 # name: test_all_entities[sensor.cashflow_expense_year_to_date-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
-      'state_class': <SensorStateClass.TOTAL: 'total'>,
+      <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.TOTAL: 'total'>,
     }),
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -42,7 +43,7 @@
     'attributes': ReadOnlyDict({
       'device_class': 'monetary',
       'friendly_name': 'Cashflow Expense year to date',
-      'state_class': <SensorStateClass.TOTAL: 'total'>,
+      <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.TOTAL: 'total'>,
       'unit_of_measurement': '$',
     }),
     'context': <ANY>,
@@ -55,11 +56,12 @@
 # ---
 # name: test_all_entities[sensor.cashflow_income_year_to_date-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
-      'state_class': <SensorStateClass.TOTAL: 'total'>,
+      <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.TOTAL: 'total'>,
     }),
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -96,7 +98,7 @@
     'attributes': ReadOnlyDict({
       'device_class': 'monetary',
       'friendly_name': 'Cashflow Income year to date',
-      'state_class': <SensorStateClass.TOTAL: 'total'>,
+      <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.TOTAL: 'total'>,
       'unit_of_measurement': '$',
     }),
     'context': <ANY>,
@@ -109,8 +111,9 @@
 # ---
 # name: test_all_entities[sensor.cashflow_savings_rate-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -162,11 +165,12 @@
 # ---
 # name: test_all_entities[sensor.cashflow_savings_year_to_date-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
-      'state_class': <SensorStateClass.TOTAL: 'total'>,
+      <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.TOTAL: 'total'>,
     }),
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -203,7 +207,7 @@
     'attributes': ReadOnlyDict({
       'device_class': 'monetary',
       'friendly_name': 'Cashflow Savings year to date',
-      'state_class': <SensorStateClass.TOTAL: 'total'>,
+      <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.TOTAL: 'total'>,
       'unit_of_measurement': '$',
     }),
     'context': <ANY>,
@@ -216,11 +220,12 @@
 # ---
 # name: test_all_entities[sensor.manual_entry_wallet_balance-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
-      'state_class': <SensorStateClass.TOTAL: 'total'>,
+      <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.TOTAL: 'total'>,
     }),
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -258,7 +263,7 @@
       'attribution': 'Data provided by Monarch Money API via Manual entry',
       'device_class': 'monetary',
       'friendly_name': 'Manual entry Wallet Balance',
-      'state_class': <SensorStateClass.TOTAL: 'total'>,
+      <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.TOTAL: 'total'>,
       'unit_of_measurement': '$',
     }),
     'context': <ANY>,
@@ -271,8 +276,9 @@
 # ---
 # name: test_all_entities[sensor.manual_entry_wallet_data_age-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -322,11 +328,12 @@
 # ---
 # name: test_all_entities[sensor.rando_bank_checking_balance-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
-      'state_class': <SensorStateClass.TOTAL: 'total'>,
+      <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.TOTAL: 'total'>,
     }),
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -365,7 +372,7 @@
       'device_class': 'monetary',
       'entity_picture': 'data:image/png;base64,base64Nonce',
       'friendly_name': 'Rando Bank Checking Balance',
-      'state_class': <SensorStateClass.TOTAL: 'total'>,
+      <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.TOTAL: 'total'>,
       'unit_of_measurement': '$',
     }),
     'context': <ANY>,
@@ -378,8 +385,9 @@
 # ---
 # name: test_all_entities[sensor.rando_bank_checking_data_age-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -429,11 +437,12 @@
 # ---
 # name: test_all_entities[sensor.rando_brokerage_brokerage_balance-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
-      'state_class': <SensorStateClass.TOTAL: 'total'>,
+      <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.TOTAL: 'total'>,
     }),
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -472,7 +481,7 @@
       'device_class': 'monetary',
       'entity_picture': 'base64Nonce',
       'friendly_name': 'Rando Brokerage Brokerage Balance',
-      'state_class': <SensorStateClass.TOTAL: 'total'>,
+      <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.TOTAL: 'total'>,
       'unit_of_measurement': '$',
     }),
     'context': <ANY>,
@@ -485,8 +494,9 @@
 # ---
 # name: test_all_entities[sensor.rando_brokerage_brokerage_data_age-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -536,11 +546,12 @@
 # ---
 # name: test_all_entities[sensor.rando_credit_credit_card_balance-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
-      'state_class': <SensorStateClass.TOTAL: 'total'>,
+      <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.TOTAL: 'total'>,
     }),
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -579,7 +590,7 @@
       'device_class': 'monetary',
       'entity_picture': 'data:image/png;base64,base64Nonce',
       'friendly_name': 'Rando Credit Credit Card Balance',
-      'state_class': <SensorStateClass.TOTAL: 'total'>,
+      <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.TOTAL: 'total'>,
       'unit_of_measurement': '$',
     }),
     'context': <ANY>,
@@ -592,8 +603,9 @@
 # ---
 # name: test_all_entities[sensor.rando_credit_credit_card_data_age-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -643,11 +655,12 @@
 # ---
 # name: test_all_entities[sensor.rando_employer_investments_401_k_balance-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
-      'state_class': <SensorStateClass.TOTAL: 'total'>,
+      <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.TOTAL: 'total'>,
     }),
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -686,7 +699,7 @@
       'device_class': 'monetary',
       'entity_picture': 'data:image/png;base64,base64Nonce',
       'friendly_name': 'Rando Employer Investments 401.k Balance',
-      'state_class': <SensorStateClass.TOTAL: 'total'>,
+      <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.TOTAL: 'total'>,
       'unit_of_measurement': '$',
     }),
     'context': <ANY>,
@@ -699,8 +712,9 @@
 # ---
 # name: test_all_entities[sensor.rando_employer_investments_401_k_data_age-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -750,11 +764,12 @@
 # ---
 # name: test_all_entities[sensor.rando_investments_roth_ira_balance-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
-      'state_class': <SensorStateClass.TOTAL: 'total'>,
+      <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.TOTAL: 'total'>,
     }),
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -793,7 +808,7 @@
       'device_class': 'monetary',
       'entity_picture': 'data:image/png;base64,base64Nonce',
       'friendly_name': 'Rando Investments Roth IRA Balance',
-      'state_class': <SensorStateClass.TOTAL: 'total'>,
+      <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.TOTAL: 'total'>,
       'unit_of_measurement': '$',
     }),
     'context': <ANY>,
@@ -806,8 +821,9 @@
 # ---
 # name: test_all_entities[sensor.rando_investments_roth_ira_data_age-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -857,11 +873,12 @@
 # ---
 # name: test_all_entities[sensor.rando_mortgage_mortgage_balance-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
-      'state_class': <SensorStateClass.TOTAL: 'total'>,
+      <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.TOTAL: 'total'>,
     }),
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -900,7 +917,7 @@
       'device_class': 'monetary',
       'entity_picture': 'data:image/png;base64,base64Nonce',
       'friendly_name': 'Rando Mortgage Mortgage Balance',
-      'state_class': <SensorStateClass.TOTAL: 'total'>,
+      <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.TOTAL: 'total'>,
       'unit_of_measurement': '$',
     }),
     'context': <ANY>,
@@ -913,8 +930,9 @@
 # ---
 # name: test_all_entities[sensor.rando_mortgage_mortgage_data_age-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -964,8 +982,9 @@
 # ---
 # name: test_all_entities[sensor.vinaudit_2050_toyota_rav8_data_age-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -1015,11 +1034,12 @@
 # ---
 # name: test_all_entities[sensor.vinaudit_2050_toyota_rav8_value-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
-      'state_class': <SensorStateClass.TOTAL: 'total'>,
+      <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.TOTAL: 'total'>,
     }),
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -1058,7 +1078,7 @@
       'device_class': 'monetary',
       'entity_picture': 'https://api.monarchmoney.com/cdn-cgi/image/width=128/images/institution/159427559853802644',
       'friendly_name': 'VinAudit 2050 Toyota RAV8 Value',
-      'state_class': <SensorStateClass.TOTAL: 'total'>,
+      <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.TOTAL: 'total'>,
       'unit_of_measurement': '$',
     }),
     'context': <ANY>,
@@ -1071,11 +1091,12 @@
 # ---
 # name: test_all_entities[sensor.zillow_house_balance-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
-      'state_class': <SensorStateClass.TOTAL: 'total'>,
+      <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.TOTAL: 'total'>,
     }),
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -1114,7 +1135,7 @@
       'device_class': 'monetary',
       'entity_picture': 'data:image/png;base64,base64Nonce',
       'friendly_name': 'Zillow House Balance',
-      'state_class': <SensorStateClass.TOTAL: 'total'>,
+      <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.TOTAL: 'total'>,
       'unit_of_measurement': '$',
     }),
     'context': <ANY>,
@@ -1127,8 +1148,9 @@
 # ---
 # name: test_all_entities[sensor.zillow_house_data_age-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,

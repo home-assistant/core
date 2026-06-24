@@ -1,29 +1,33 @@
 """Roomba binary sensor entities."""
 
-from homeassistant.components.binary_sensor import BinarySensorEntity
-from homeassistant.config_entries import ConfigEntry
+from typing import override
+
+from homeassistant.components.binary_sensor import (
+    BinarySensorDeviceClass,
+    BinarySensorEntity,
+)
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
 from . import roomba_reported_state
-from .const import DOMAIN
 from .entity import IRobotEntity
-from .models import RoombaData
+from .models import RoombaConfigEntry
 
 
 async def async_setup_entry(
     hass: HomeAssistant,
-    config_entry: ConfigEntry,
+    config_entry: RoombaConfigEntry,
     async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up the iRobot Roomba vacuum cleaner."""
-    domain_data: RoombaData = hass.data[DOMAIN][config_entry.entry_id]
+    domain_data = config_entry.runtime_data
     roomba = domain_data.roomba
     blid = domain_data.blid
+    entities: list[BinarySensorEntity] = [RoombaCharging(roomba, blid)]
     status = roomba_reported_state(roomba).get("bin", {})
     if "full" in status:
-        roomba_vac = RoombaBinStatus(roomba, blid)
-        async_add_entities([roomba_vac])
+        entities.append(RoombaBinStatus(roomba, blid))
+    async_add_entities(entities)
 
 
 class RoombaBinStatus(IRobotEntity, BinarySensorEntity):
@@ -32,15 +36,46 @@ class RoombaBinStatus(IRobotEntity, BinarySensorEntity):
     _attr_translation_key = "bin_full"
 
     @property
+    @override
     def unique_id(self):
         """Return the ID of this sensor."""
         return f"bin_{self._blid}"
 
     @property
-    def is_on(self):
+    @override
+    def is_on(self) -> bool:
         """Return the state of the sensor."""
         return roomba_reported_state(self.vacuum).get("bin", {}).get("full", False)
 
+    @override
     def new_state_filter(self, new_state):
         """Filter the new state."""
         return "bin" in new_state
+
+
+class RoombaCharging(IRobotEntity, BinarySensorEntity):
+    """Class to hold Roomba charging status."""
+
+    _attr_device_class = BinarySensorDeviceClass.BATTERY_CHARGING
+
+    @property
+    @override
+    def unique_id(self) -> str:
+        """Return the ID of this sensor."""
+        return f"charging_{self._blid}"
+
+    @property
+    @override
+    def is_on(self) -> bool:
+        """Return the state of the sensor."""
+        return (
+            roomba_reported_state(self.vacuum)
+            .get("cleanMissionStatus", {})
+            .get("phase")
+            == "charge"
+        )
+
+    @override
+    def new_state_filter(self, new_state):
+        """Filter the new state."""
+        return "cleanMissionStatus" in new_state

@@ -1,25 +1,23 @@
 """The pi_hole component."""
 
-from __future__ import annotations
+from typing import override
 
 from hole import Hole
 
 from homeassistant.helpers.device_registry import DeviceInfo
-from homeassistant.helpers.update_coordinator import (
-    CoordinatorEntity,
-    DataUpdateCoordinator,
-)
+from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
 from .const import DOMAIN
+from .coordinator import PiHoleUpdateCoordinator
 
 
-class PiHoleEntity(CoordinatorEntity[DataUpdateCoordinator[None]]):
+class PiHoleEntity(CoordinatorEntity[PiHoleUpdateCoordinator]):
     """Representation of a Pi-hole entity."""
 
     def __init__(
         self,
         api: Hole,
-        coordinator: DataUpdateCoordinator[None],
+        coordinator: PiHoleUpdateCoordinator,
         name: str,
         server_unique_id: str,
     ) -> None:
@@ -30,6 +28,7 @@ class PiHoleEntity(CoordinatorEntity[DataUpdateCoordinator[None]]):
         self._server_unique_id = server_unique_id
 
     @property
+    @override
     def device_info(self) -> DeviceInfo:
         """Return the device information of the entity."""
         if (

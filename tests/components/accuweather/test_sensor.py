@@ -12,6 +12,10 @@ from homeassistant.components.accuweather.const import (
     UPDATE_INTERVAL_DAILY_FORECAST,
     UPDATE_INTERVAL_OBSERVATION,
 )
+from homeassistant.components.homeassistant import (
+    DOMAIN as HOMEASSISTANT_DOMAIN,
+    SERVICE_UPDATE_ENTITY,
+)
 from homeassistant.const import (
     ATTR_ENTITY_ID,
     ATTR_UNIT_OF_MEASUREMENT,
@@ -49,7 +53,10 @@ async def test_availability(
     mock_accuweather_client: AsyncMock,
     freezer: FrozenDateTimeFactory,
 ) -> None:
-    """Ensure that we mark the entities unavailable correctly when service is offline."""
+    """Ensure that we mark the entities unavailable correctly.
+
+    Test when service is offline.
+    """
     entity_id = "sensor.home_cloud_ceiling"
     await init_integration(hass)
 
@@ -95,7 +102,10 @@ async def test_availability_forecast(
     mock_accuweather_client: AsyncMock,
     freezer: FrozenDateTimeFactory,
 ) -> None:
-    """Ensure that we mark the entities unavailable correctly when service is offline."""
+    """Ensure that we mark the entities unavailable correctly.
+
+    Test when service is offline.
+    """
     entity_id = "sensor.home_hours_of_sun_day_2"
 
     await init_integration(hass)
@@ -133,13 +143,13 @@ async def test_manual_update_entity(
     """Test manual update entity via service homeassistant/update_entity."""
     await init_integration(hass)
 
-    await async_setup_component(hass, "homeassistant", {})
+    await async_setup_component(hass, HOMEASSISTANT_DOMAIN, {})
 
     assert mock_accuweather_client.async_get_current_conditions.call_count == 1
 
     await hass.services.async_call(
-        "homeassistant",
-        "update_entity",
+        HOMEASSISTANT_DOMAIN,
+        SERVICE_UPDATE_ENTITY,
         {ATTR_ENTITY_ID: ["sensor.home_cloud_ceiling"]},
         blocking=True,
     )

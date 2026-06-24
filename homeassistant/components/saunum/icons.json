@@ -27,5 +27,10 @@
         "default": "mdi:radiator"
       }
     }
+  },
+  "services": {
+    "start_session": {
+      "service": "mdi:heat-wave"
+    }
   }
 }

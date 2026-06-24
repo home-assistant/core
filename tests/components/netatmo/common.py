@@ -83,6 +83,10 @@ async def fake_post_request(hass: HomeAssistant, *args: Any, **kwargs: Any):
     else:
         payload = json.loads(await async_load_fixture(hass, f"{endpoint}.json", DOMAIN))
 
+    # Apply test-specific modifications to the payload
+    if "msg_callback" in kwargs:
+        kwargs["msg_callback"](payload)
+
     return AiohttpClientMockResponse(
         method="POST",
         url=kwargs["endpoint"],

@@ -1,42 +1,23 @@
 """Support for Bond lights."""
 
-from __future__ import annotations
-
 import logging
-from typing import Any
+from typing import Any, override
 
 from aiohttp.client_exceptions import ClientResponseError
 from bond_async import Action, DeviceType
-import voluptuous as vol
 
 from homeassistant.components.light import ATTR_BRIGHTNESS, ColorMode, LightEntity
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.exceptions import HomeAssistantError
-from homeassistant.helpers import config_validation as cv, entity_platform
 from homeassistant.helpers.entity import Entity
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
 from . import BondConfigEntry
-from .const import (
-    ATTR_POWER_STATE,
-    SERVICE_SET_LIGHT_BRIGHTNESS_TRACKED_STATE,
-    SERVICE_SET_LIGHT_POWER_TRACKED_STATE,
-)
 from .entity import BondEntity
 from .models import BondData
 from .utils import BondDevice
 
 _LOGGER = logging.getLogger(__name__)
-
-SERVICE_START_INCREASING_BRIGHTNESS = "start_increasing_brightness"
-SERVICE_START_DECREASING_BRIGHTNESS = "start_decreasing_brightness"
-SERVICE_STOP = "stop"
-
-ENTITY_SERVICES = [
-    SERVICE_START_INCREASING_BRIGHTNESS,
-    SERVICE_START_DECREASING_BRIGHTNESS,
-    SERVICE_STOP,
-]
 
 
 async def async_setup_entry(
@@ -47,14 +28,6 @@ async def async_setup_entry(
     """Set up Bond light devices."""
     data = entry.runtime_data
     hub = data.hub
-
-    platform = entity_platform.async_get_current_platform()
-    for service in ENTITY_SERVICES:
-        platform.async_register_entity_service(
-            service,
-            None,
-            f"async_{service}",
-        )
 
     fan_lights: list[Entity] = [
         BondLight(data, device)
@@ -93,22 +66,6 @@ async def async_setup_entry(
         for device in hub.devices
         if DeviceType.is_light(device.type)
     ]
-
-    platform.async_register_entity_service(
-        SERVICE_SET_LIGHT_BRIGHTNESS_TRACKED_STATE,
-        {
-            vol.Required(ATTR_BRIGHTNESS): vol.All(
-                vol.Number(scale=0), vol.Range(0, 255)
-            )
-        },
-        "async_set_brightness_belief",
-    )
-
-    platform.async_register_entity_service(
-        SERVICE_SET_LIGHT_POWER_TRACKED_STATE,
-        {vol.Required(ATTR_POWER_STATE): vol.All(cv.boolean)},
-        "async_set_power_belief",
-    )
 
     async_add_entities(
         fan_lights + fan_up_lights + fan_down_lights + fireplaces + fp_lights + lights,
@@ -167,12 +124,14 @@ class BondLight(BondBaseLight, BondEntity, LightEntity):
             self._attr_color_mode = ColorMode.BRIGHTNESS
             self._attr_supported_color_modes = {ColorMode.BRIGHTNESS}
 
+    @override
     def _apply_state(self) -> None:
         state = self._device.state
         self._attr_is_on = state.get("light") == 1
         brightness = state.get("brightness")
         self._attr_brightness = round(brightness * 255 / 100) if brightness else None
 
+    @override
     async def async_turn_on(self, **kwargs: Any) -> None:
         """Turn on the light."""
         if brightness := kwargs.get(ATTR_BRIGHTNESS):
@@ -183,6 +142,7 @@ class BondLight(BondBaseLight, BondEntity, LightEntity):
         else:
             await self._bond.action(self._device_id, Action.turn_light_on())
 
+    @override
     async def async_turn_off(self, **kwargs: Any) -> None:
         """Turn off the light."""
         await self._bond.action(self._device_id, Action.turn_light_off())
@@ -228,14 +188,17 @@ class BondLight(BondBaseLight, BondEntity, LightEntity):
 class BondDownLight(BondBaseLight, BondEntity, LightEntity):
     """Representation of a Bond light."""
 
+    @override
     def _apply_state(self) -> None:
         state = self._device.state
         self._attr_is_on = bool(state.get("down_light") and state.get("light"))
 
+    @override
     async def async_turn_on(self, **kwargs: Any) -> None:
         """Turn on the light."""
         await self._bond.action(self._device_id, Action(Action.TURN_DOWN_LIGHT_ON))
 
+    @override
     async def async_turn_off(self, **kwargs: Any) -> None:
         """Turn off the light."""
         await self._bond.action(self._device_id, Action(Action.TURN_DOWN_LIGHT_OFF))
@@ -244,14 +207,17 @@ class BondDownLight(BondBaseLight, BondEntity, LightEntity):
 class BondUpLight(BondBaseLight, BondEntity, LightEntity):
     """Representation of a Bond light."""
 
+    @override
     def _apply_state(self) -> None:
         state = self._device.state
         self._attr_is_on = bool(state.get("up_light") and state.get("light"))
 
+    @override
     async def async_turn_on(self, **kwargs: Any) -> None:
         """Turn on the light."""
         await self._bond.action(self._device_id, Action(Action.TURN_UP_LIGHT_ON))
 
+    @override
     async def async_turn_off(self, **kwargs: Any) -> None:
         """Turn off the light."""
         await self._bond.action(self._device_id, Action(Action.TURN_UP_LIGHT_OFF))
@@ -264,6 +230,7 @@ class BondFireplace(BondEntity, LightEntity):
     _attr_supported_color_modes = {ColorMode.BRIGHTNESS}
     _attr_translation_key = "fireplace"
 
+    @override
     def _apply_state(self) -> None:
         state = self._device.state
         power = state.get("power")
@@ -271,6 +238,7 @@ class BondFireplace(BondEntity, LightEntity):
         self._attr_is_on = power == 1
         self._attr_brightness = round(flame * 255 / 100) if flame else None
 
+    @override
     async def async_turn_on(self, **kwargs: Any) -> None:
         """Turn the fireplace on."""
         _LOGGER.debug("Fireplace async_turn_on called with: %s", kwargs)
@@ -281,6 +249,7 @@ class BondFireplace(BondEntity, LightEntity):
         else:
             await self._bond.action(self._device_id, Action.turn_on())
 
+    @override
     async def async_turn_off(self, **kwargs: Any) -> None:
         """Turn the fireplace off."""
         _LOGGER.debug("Fireplace async_turn_off called with: %s", kwargs)

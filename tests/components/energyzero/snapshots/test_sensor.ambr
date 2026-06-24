@@ -1,8 +1,9 @@
 # serializer version: 1
 # name: test_sensor[sensor.energyzero_today_energy_average_price-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -52,11 +53,12 @@
 # ---
 # name: test_sensor[sensor.energyzero_today_energy_current_hour_price-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
-      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+      <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -93,7 +95,7 @@
     'attributes': ReadOnlyDict({
       'attribution': 'Data provided by EnergyZero',
       'friendly_name': 'Energy market price Current hour',
-      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+      <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
       'unit_of_measurement': '€/kWh',
     }),
     'context': <ANY>,
@@ -106,8 +108,9 @@
 # ---
 # name: test_sensor[sensor.energyzero_today_energy_highest_price_time-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -157,8 +160,9 @@
 # ---
 # name: test_sensor[sensor.energyzero_today_energy_hours_priced_equal_or_lower-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -208,8 +212,9 @@
 # ---
 # name: test_sensor[sensor.energyzero_today_energy_lowest_price_time-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -259,8 +264,9 @@
 # ---
 # name: test_sensor[sensor.energyzero_today_energy_max_price-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -310,8 +316,9 @@
 # ---
 # name: test_sensor[sensor.energyzero_today_energy_min_price-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -361,8 +368,9 @@
 # ---
 # name: test_sensor[sensor.energyzero_today_energy_next_hour_price-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -412,8 +420,9 @@
 # ---
 # name: test_sensor[sensor.energyzero_today_energy_percentage_of_max-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -463,11 +472,12 @@
 # ---
 # name: test_sensor[sensor.energyzero_today_gas_current_hour_price-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
-      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+      <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -504,7 +514,7 @@
     'attributes': ReadOnlyDict({
       'attribution': 'Data provided by EnergyZero',
       'friendly_name': 'Gas market price Current hour',
-      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+      <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
       'unit_of_measurement': '€/m³',
     }),
     'context': <ANY>,
@@ -517,8 +527,9 @@
 # ---
 # name: test_sensor[sensor.energyzero_today_gas_next_hour_price-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,

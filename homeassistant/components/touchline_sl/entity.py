@@ -1,5 +1,7 @@
 """Base class for Touchline SL zone entities."""
 
+from typing import override
+
 from pytouchlinesl import Zone
 
 from homeassistant.helpers.device_registry import DeviceInfo
@@ -19,7 +21,7 @@ class TouchlineSLZoneEntity(CoordinatorEntity[TouchlineSLModuleCoordinator]):
         super().__init__(coordinator)
         self.zone_id = zone_id
         self._attr_device_info = DeviceInfo(
-            identifiers={(DOMAIN, str(zone_id))},
+            identifiers={(DOMAIN, f"{coordinator.data.module.id}-{zone_id}")},
             name=self.zone.name,
             manufacturer="Roth",
             via_device=(DOMAIN, coordinator.data.module.id),
@@ -33,6 +35,11 @@ class TouchlineSLZoneEntity(CoordinatorEntity[TouchlineSLModuleCoordinator]):
         return self.coordinator.data.zones[self.zone_id]
 
     @property
+    @override
     def available(self) -> bool:
         """Return if the device is available."""
-        return super().available and self.zone_id in self.coordinator.data.zones
+        return (
+            super().available
+            and self.zone_id in self.coordinator.data.zones
+            and self.zone.alarm is None
+        )

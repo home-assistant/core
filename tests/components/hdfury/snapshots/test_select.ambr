@@ -1,11 +1,12 @@
 # serializer version: 1
 # name: test_select_entities[select.hdfury_vrroom_02_operation_mode-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
-      'options': list([
+      <SelectEntityCapabilityAttribute.OPTIONS: 'options'>: list([
         '0',
         '1',
         '2',
@@ -48,7 +49,7 @@
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'friendly_name': 'HDFury VRROOM-02 Operation mode',
-      'options': list([
+      <SelectEntityCapabilityAttribute.OPTIONS: 'options'>: list([
         '0',
         '1',
         '2',
@@ -67,11 +68,12 @@
 # ---
 # name: test_select_entities[select.hdfury_vrroom_02_port_select_tx0-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
-      'options': list([
+      <SelectEntityCapabilityAttribute.OPTIONS: 'options'>: list([
         '0',
         '1',
         '2',
@@ -113,7 +115,7 @@
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'friendly_name': 'HDFury VRROOM-02 Port select TX0',
-      'options': list([
+      <SelectEntityCapabilityAttribute.OPTIONS: 'options'>: list([
         '0',
         '1',
         '2',
@@ -131,11 +133,12 @@
 # ---
 # name: test_select_entities[select.hdfury_vrroom_02_port_select_tx1-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
-      'options': list([
+      <SelectEntityCapabilityAttribute.OPTIONS: 'options'>: list([
         '0',
         '1',
         '2',
@@ -177,7 +180,7 @@
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'friendly_name': 'HDFury VRROOM-02 Port select TX1',
-      'options': list([
+      <SelectEntityCapabilityAttribute.OPTIONS: 'options'>: list([
         '0',
         '1',
         '2',

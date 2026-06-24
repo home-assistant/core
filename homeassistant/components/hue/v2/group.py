@@ -1,9 +1,7 @@
 """Support for Hue groups (room/zone)."""
 
-from __future__ import annotations
-
 import asyncio
-from typing import Any
+from typing import Any, override
 
 from aiohue.v2 import HueBridgeV2
 from aiohue.v2.controllers.events import EventType
@@ -81,13 +79,13 @@ async def async_setup_entry(
     )
 
 
-# pylint: disable-next=hass-enforce-class-module
+# pylint: disable-next=home-assistant-enforce-class-module
 class GroupedHueLight(HueBaseEntity, LightEntity):
     """Representation of a Grouped Hue light."""
 
     entity_description = LightEntityDescription(
         key="hue_grouped_light",
-        icon="mdi:lightbulb-group",
+        translation_key="hue_grouped_light",
         has_entity_name=True,
         name=None,
     )
@@ -114,6 +112,7 @@ class GroupedHueLight(HueBaseEntity, LightEntity):
         self._dynamic_mode_active = False
         self._update_values()
 
+    @override
     async def async_added_to_hass(self) -> None:
         """Call when entity is added."""
         await super().async_added_to_hass()
@@ -133,11 +132,13 @@ class GroupedHueLight(HueBaseEntity, LightEntity):
             )
 
     @property
+    @override
     def is_on(self) -> bool:
         """Return true if light is on."""
         return self.resource.on.on
 
     @property
+    @override
     def extra_state_attributes(self) -> dict[str, Any] | None:
         """Return the optional state attributes."""
         scenes = {
@@ -158,6 +159,7 @@ class GroupedHueLight(HueBaseEntity, LightEntity):
             "dynamics": self._dynamic_mode_active,
         }
 
+    @override
     async def async_turn_on(self, **kwargs: Any) -> None:
         """Turn the grouped_light on."""
         transition = normalize_hue_transition(kwargs.get(ATTR_TRANSITION))
@@ -196,6 +198,7 @@ class GroupedHueLight(HueBaseEntity, LightEntity):
             transition_time=transition,
         )
 
+    @override
     async def async_turn_off(self, **kwargs: Any) -> None:
         """Turn the light off."""
         transition = normalize_hue_transition(kwargs.get(ATTR_TRANSITION))
@@ -224,6 +227,7 @@ class GroupedHueLight(HueBaseEntity, LightEntity):
         )
 
     @callback
+    @override
     def on_update(self) -> None:
         """Call on update event."""
         self._update_values()
@@ -231,7 +235,7 @@ class GroupedHueLight(HueBaseEntity, LightEntity):
     @callback
     def _update_values(self) -> None:
         """Set base values from underlying lights of a group."""
-        supported_color_modes: set[ColorMode | str] = set()
+        supported_color_modes: set[ColorMode] = set()
         lights_with_color_support = 0
         lights_with_color_temp_support = 0
         lights_with_dimming_support = 0

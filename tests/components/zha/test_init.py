@@ -4,7 +4,7 @@ import asyncio
 from collections.abc import Callable
 import logging
 import typing
-from unittest.mock import AsyncMock, Mock, patch
+from unittest.mock import AsyncMock, patch
 import zoneinfo
 
 import pytest
@@ -13,11 +13,15 @@ from zigpy.config import CONF_DEVICE, CONF_DEVICE_PATH
 from zigpy.device import Device
 from zigpy.exceptions import TransientConnectionError
 
+from homeassistant.components.homeassistant_hardware import (
+    DOMAIN as HOMEASSISTANT_HARDWARE_DOMAIN,
+)
 from homeassistant.components.homeassistant_hardware.helpers import (
     async_is_firmware_update_in_progress,
     async_register_firmware_update_in_progress,
 )
 from homeassistant.components.usb import USBDevice
+from homeassistant.components.zha.config_flow import ZhaConfigFlowHandler
 from homeassistant.components.zha.const import (
     CONF_BAUDRATE,
     CONF_FLOW_CONTROL,
@@ -138,52 +142,77 @@ async def test_config_depreciation(hass: HomeAssistant, zha_config) -> None:
 
 
 @pytest.mark.parametrize(
-    ("path", "cleaned_path"),
+    ("old_path", "new_path"),
     [
-        # No corrections
-        ("/dev/path1", "/dev/path1"),
-        ("/dev/path1[asd]", "/dev/path1[asd]"),
-        ("/dev/path1 ", "/dev/path1 "),
+        ("/dev/ttyUSB0", "/dev/ttyUSB0"),
         ("socket://1.2.3.4:5678", "socket://1.2.3.4:5678"),
-        # Brackets around URI
-        ("socket://[1.2.3.4]:5678", "socket://1.2.3.4:5678"),
-        # Spaces
-        ("socket://dev/path1 ", "socket://dev/path1"),
-        # Both
-        ("socket://[1.2.3.4]:5678 ", "socket://1.2.3.4:5678"),
+        ("socket://1.2.3.4", "socket://1.2.3.4:6638"),
+        ("tcp://hostname", "tcp://hostname:6638"),
+        ("tcp://hostname:1234", "tcp://hostname:1234"),
+        ("socket://[::1]", "socket://[::1]:6638"),
     ],
 )
-@patch(
-    "homeassistant.components.zha.websocket_api.async_load_api", Mock(return_value=True)
-)
-async def test_setup_with_v3_cleaning_uri(
+@patch("homeassistant.components.zha.async_setup_entry", AsyncMock(return_value=True))
+async def test_migration_v5_explicit_socket_port(
+    old_path: str,
+    new_path: str,
     hass: HomeAssistant,
-    path: str,
-    cleaned_path: str,
-    mock_zigpy_connect: ControllerApplication,
+    config_entry: MockConfigEntry,
 ) -> None:
-    """Test migration of config entry from v3, applying corrections to the port path."""
-    config_entry_v4 = MockConfigEntry(
-        domain=DOMAIN,
+    """Test that socket:// and tcp:// paths get an explicit default port."""
+    config_entry.add_to_hass(hass)
+    hass.config_entries.async_update_entry(
+        config_entry,
         data={
-            CONF_RADIO_TYPE: DATA_RADIO_TYPE,
+            **config_entry.data,
             CONF_DEVICE: {
-                CONF_DEVICE_PATH: path,
-                CONF_BAUDRATE: 115200,
-                CONF_FLOW_CONTROL: None,
+                **config_entry.data[CONF_DEVICE],
+                CONF_DEVICE_PATH: old_path,
             },
         },
         version=5,
+        minor_version=1,
     )
-    config_entry_v4.add_to_hass(hass)
 
-    await hass.config_entries.async_setup(config_entry_v4.entry_id)
+    await hass.config_entries.async_setup(config_entry.entry_id)
     await hass.async_block_till_done()
-    await hass.config_entries.async_unload(config_entry_v4.entry_id)
 
-    assert config_entry_v4.data[CONF_RADIO_TYPE] == DATA_RADIO_TYPE
-    assert config_entry_v4.data[CONF_DEVICE][CONF_DEVICE_PATH] == cleaned_path
-    assert config_entry_v4.version == 5
+    assert config_entry.version == 5
+    assert config_entry.minor_version == 2
+    assert config_entry.data[CONF_DEVICE][CONF_DEVICE_PATH] == new_path
+
+
+@pytest.mark.parametrize(
+    ("version_delta", "minor_delta", "expected_state"),
+    [
+        pytest.param(0, 1, ConfigEntryState.LOADED, id="minor_allowed"),
+        pytest.param(1, 0, ConfigEntryState.MIGRATION_ERROR, id="major_blocked"),
+    ],
+)
+@patch("homeassistant.components.zha.async_setup_entry", AsyncMock(return_value=True))
+async def test_migration_version_downgrade_guard(
+    version_delta: int,
+    minor_delta: int,
+    expected_state: ConfigEntryState,
+    hass: HomeAssistant,
+    config_entry: MockConfigEntry,
+) -> None:
+    """Test the config version downgrade guard."""
+    future_version = ZhaConfigFlowHandler.VERSION + version_delta
+    future_minor_version = ZhaConfigFlowHandler.MINOR_VERSION + minor_delta
+    config_entry.add_to_hass(hass)
+    hass.config_entries.async_update_entry(
+        config_entry,
+        version=future_version,
+        minor_version=future_minor_version,
+    )
+
+    await hass.config_entries.async_setup(config_entry.entry_id)
+    await hass.async_block_till_done()
+
+    assert config_entry.state is expected_state
+    assert config_entry.version == future_version
+    assert config_entry.minor_version == future_minor_version
 
 
 @pytest.mark.parametrize(
@@ -330,7 +359,7 @@ async def test_setup_no_firmware_update_in_progress(
     mock_zigpy_connect: ControllerApplication,
 ) -> None:
     """Test that ZHA setup proceeds normally when no firmware update is in progress."""
-    await async_setup_component(hass, "homeassistant_hardware", {})
+    await async_setup_component(hass, HOMEASSISTANT_HARDWARE_DOMAIN, {})
 
     config_entry.add_to_hass(hass)
     device_path = config_entry.data[CONF_DEVICE][CONF_DEVICE_PATH]
@@ -345,7 +374,7 @@ async def test_setup_firmware_update_in_progress(
     config_entry: MockConfigEntry,
 ) -> None:
     """Test that ZHA setup is blocked when firmware update is in progress."""
-    await async_setup_component(hass, "homeassistant_hardware", {})
+    await async_setup_component(hass, HOMEASSISTANT_HARDWARE_DOMAIN, {})
 
     config_entry.add_to_hass(hass)
     device_path = config_entry.data[CONF_DEVICE][CONF_DEVICE_PATH]
@@ -361,8 +390,8 @@ async def test_setup_firmware_update_in_progress_prevents_silabs_warning(
     config_entry: MockConfigEntry,
     mock_zigpy_connect: ControllerApplication,
 ) -> None:
-    """Test firmware update in progress prevents silabs firmware warning on setup failure."""
-    await async_setup_component(hass, "homeassistant_hardware", {})
+    """Test firmware update prevents silabs warning on setup failure."""
+    await async_setup_component(hass, HOMEASSISTANT_HARDWARE_DOMAIN, {})
 
     config_entry.add_to_hass(hass)
     device_path = config_entry.data[CONF_DEVICE][CONF_DEVICE_PATH]

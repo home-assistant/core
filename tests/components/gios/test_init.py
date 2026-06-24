@@ -4,12 +4,10 @@ from unittest.mock import MagicMock
 
 import pytest
 
-from homeassistant.components.air_quality import DOMAIN as AIR_QUALITY_PLATFORM
 from homeassistant.components.gios.const import DOMAIN
 from homeassistant.config_entries import ConfigEntryState
-from homeassistant.const import STATE_UNAVAILABLE
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers import device_registry as dr, entity_registry as er
+from homeassistant.helpers import device_registry as dr
 
 from . import setup_integration
 
@@ -19,12 +17,10 @@ from tests.common import MockConfigEntry
 @pytest.mark.usefixtures("init_integration")
 async def test_async_setup_entry(
     hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
 ) -> None:
     """Test a successful setup entry."""
-    state = hass.states.get("sensor.home_pm2_5")
-    assert state is not None
-    assert state.state != STATE_UNAVAILABLE
-    assert state.state == "4"
+    assert mock_config_entry.state is ConfigEntryState.LOADED
 
 
 async def test_config_not_ready(
@@ -93,26 +89,3 @@ async def test_migrate_unique_id_to_str(
     await setup_integration(hass, mock_config_entry)
 
     assert mock_config_entry.unique_id == "123"
-
-
-async def test_remove_air_quality_entities(
-    hass: HomeAssistant,
-    entity_registry: er.EntityRegistry,
-    mock_config_entry: MockConfigEntry,
-    mock_gios: MagicMock,
-) -> None:
-    """Test remove air_quality entities from registry."""
-    mock_config_entry.add_to_hass(hass)
-    entity_registry.async_get_or_create(
-        AIR_QUALITY_PLATFORM,
-        DOMAIN,
-        "123",
-        suggested_object_id="home",
-        disabled_by=None,
-    )
-
-    await hass.config_entries.async_setup(mock_config_entry.entry_id)
-    await hass.async_block_till_done()
-
-    entry = entity_registry.async_get("air_quality.home")
-    assert entry is None

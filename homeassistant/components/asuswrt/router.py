@@ -1,7 +1,5 @@
 """Represent the AsusWrt router."""
 
-from __future__ import annotations
-
 from collections.abc import Callable, Mapping
 from datetime import datetime, timedelta
 import logging
@@ -18,7 +16,11 @@ from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import CALLBACK_TYPE, HomeAssistant, callback
 from homeassistant.exceptions import ConfigEntryNotReady
 from homeassistant.helpers import entity_registry as er
-from homeassistant.helpers.device_registry import DeviceInfo, format_mac
+from homeassistant.helpers.device_registry import (
+    CONNECTION_NETWORK_MAC,
+    DeviceInfo,
+    format_mac,
+)
 from homeassistant.helpers.dispatcher import async_dispatcher_send
 from homeassistant.helpers.event import async_track_time_interval
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator
@@ -50,6 +52,20 @@ SCAN_INTERVAL = timedelta(seconds=30)
 SENSORS_TYPE_COUNT = "sensors_count"
 
 _LOGGER = logging.getLogger(__name__)
+
+_ENTITY_MIGRATION_ID = {
+    "sensor_connected_device": "Devices Connected",
+    "sensor_rx_bytes": "Download",
+    "sensor_tx_bytes": "Upload",
+    "sensor_rx_rates": "Download Speed",
+    "sensor_tx_rates": "Upload Speed",
+    "sensor_load_avg1": "Load Avg (1m)",
+    "sensor_load_avg5": "Load Avg (5m)",
+    "sensor_load_avg15": "Load Avg (15m)",
+    "2.4GHz": "2.4GHz Temperature",
+    "5.0GHz": "5GHz Temperature",
+    "CPU": "CPU Temperature",
+}
 
 
 class AsusWrtSensorDataHandler:
@@ -189,20 +205,6 @@ class AsusWrtRouter:
 
     def _migrate_entities_unique_id(self) -> None:
         """Migrate router entities to new unique id format."""
-        _ENTITY_MIGRATION_ID = {
-            "sensor_connected_device": "Devices Connected",
-            "sensor_rx_bytes": "Download",
-            "sensor_tx_bytes": "Upload",
-            "sensor_rx_rates": "Download Speed",
-            "sensor_tx_rates": "Upload Speed",
-            "sensor_load_avg1": "Load Avg (1m)",
-            "sensor_load_avg5": "Load Avg (5m)",
-            "sensor_load_avg15": "Load Avg (15m)",
-            "2.4GHz": "2.4GHz Temperature",
-            "5.0GHz": "5GHz Temperature",
-            "CPU": "CPU Temperature",
-        }
-
         entity_reg = er.async_get(self.hass)
         router_entries = er.async_entries_for_config_entry(
             entity_reg, self._entry.entry_id
@@ -394,6 +396,8 @@ class AsusWrtRouter:
             serial_number=self._api.serial_number,
             manufacturer="Asus",
         )
+        if label_mac := self._api.label_mac:
+            info["connections"] = {(CONNECTION_NETWORK_MAC, label_mac)}
         if self._api.firmware:
             info["sw_version"] = self._api.firmware
 

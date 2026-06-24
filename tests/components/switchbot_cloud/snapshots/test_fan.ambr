@@ -1,11 +1,12 @@
 # serializer version: 1
 # name: test_air_purifier[fan.air_purifier_1-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
-      'preset_modes': list([
+      <FanEntityCapabilityAttribute.PRESET_MODES: 'preset_modes'>: list([
         'normal',
         'auto',
         'sleep',
@@ -46,8 +47,8 @@
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'friendly_name': 'air-purifier-1',
-      'preset_mode': 'auto',
-      'preset_modes': list([
+      <FanEntityStateAttribute.PRESET_MODE: 'preset_mode'>: 'auto',
+      <FanEntityCapabilityAttribute.PRESET_MODES: 'preset_modes'>: list([
         'normal',
         'auto',
         'sleep',

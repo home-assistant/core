@@ -1,14 +1,15 @@
 # serializer version: 1
 # name: test_state[number.pinecil_boost_temperature-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
-      'max': 450,
-      'min': 250,
-      'mode': <NumberMode.BOX: 'box'>,
-      'step': 10,
+      <NumberEntityCapabilityAttribute.MAX: 'max'>: 450,
+      <NumberEntityCapabilityAttribute.MIN: 'min'>: 250,
+      <NumberEntityCapabilityAttribute.MODE: 'mode'>: <NumberMode.BOX: 'box'>,
+      <NumberEntityCapabilityAttribute.STEP: 'step'>: 10,
     }),
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -44,10 +45,10 @@
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'friendly_name': 'Pinecil Boost temperature',
-      'max': 450,
-      'min': 250,
-      'mode': <NumberMode.BOX: 'box'>,
-      'step': 10,
+      <NumberEntityCapabilityAttribute.MAX: 'max'>: 450,
+      <NumberEntityCapabilityAttribute.MIN: 'min'>: 250,
+      <NumberEntityCapabilityAttribute.MODE: 'mode'>: <NumberMode.BOX: 'box'>,
+      <NumberEntityCapabilityAttribute.STEP: 'step'>: 10,
       'unit_of_measurement': <UnitOfTemperature.CELSIUS: '°C'>,
     }),
     'context': <ANY>,
@@ -60,14 +61,15 @@
 # ---
 # name: test_state[number.pinecil_calibration_offset-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
-      'max': 2500,
-      'min': 100,
-      'mode': <NumberMode.BOX: 'box'>,
-      'step': 1,
+      <NumberEntityCapabilityAttribute.MAX: 'max'>: 2500,
+      <NumberEntityCapabilityAttribute.MIN: 'min'>: 100,
+      <NumberEntityCapabilityAttribute.MODE: 'mode'>: <NumberMode.BOX: 'box'>,
+      <NumberEntityCapabilityAttribute.STEP: 'step'>: 1,
     }),
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -103,10 +105,10 @@
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'friendly_name': 'Pinecil Calibration offset',
-      'max': 2500,
-      'min': 100,
-      'mode': <NumberMode.BOX: 'box'>,
-      'step': 1,
+      <NumberEntityCapabilityAttribute.MAX: 'max'>: 2500,
+      <NumberEntityCapabilityAttribute.MIN: 'min'>: 100,
+      <NumberEntityCapabilityAttribute.MODE: 'mode'>: <NumberMode.BOX: 'box'>,
+      <NumberEntityCapabilityAttribute.STEP: 'step'>: 1,
       'unit_of_measurement': <UnitOfElectricPotential.MICROVOLT: 'μV'>,
     }),
     'context': <ANY>,
@@ -119,14 +121,15 @@
 # ---
 # name: test_state[number.pinecil_display_brightness-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
-      'max': 5,
-      'min': 1,
-      'mode': <NumberMode.SLIDER: 'slider'>,
-      'step': 1,
+      <NumberEntityCapabilityAttribute.MAX: 'max'>: 5,
+      <NumberEntityCapabilityAttribute.MIN: 'min'>: 1,
+      <NumberEntityCapabilityAttribute.MODE: 'mode'>: <NumberMode.SLIDER: 'slider'>,
+      <NumberEntityCapabilityAttribute.STEP: 'step'>: 1,
     }),
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -162,10 +165,10 @@
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'friendly_name': 'Pinecil Display brightness',
-      'max': 5,
-      'min': 1,
-      'mode': <NumberMode.SLIDER: 'slider'>,
-      'step': 1,
+      <NumberEntityCapabilityAttribute.MAX: 'max'>: 5,
+      <NumberEntityCapabilityAttribute.MIN: 'min'>: 1,
+      <NumberEntityCapabilityAttribute.MODE: 'mode'>: <NumberMode.SLIDER: 'slider'>,
+      <NumberEntityCapabilityAttribute.STEP: 'step'>: 1,
     }),
     'context': <ANY>,
     'entity_id': 'number.pinecil_display_brightness',
@@ -177,14 +180,15 @@
 # ---
 # name: test_state[number.pinecil_hall_effect_sensitivity-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
-      'max': 9,
-      'min': 0,
-      'mode': <NumberMode.SLIDER: 'slider'>,
-      'step': 1,
+      <NumberEntityCapabilityAttribute.MAX: 'max'>: 9,
+      <NumberEntityCapabilityAttribute.MIN: 'min'>: 0,
+      <NumberEntityCapabilityAttribute.MODE: 'mode'>: <NumberMode.SLIDER: 'slider'>,
+      <NumberEntityCapabilityAttribute.STEP: 'step'>: 1,
     }),
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -220,10 +224,10 @@
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'friendly_name': 'Pinecil Hall effect sensitivity',
-      'max': 9,
-      'min': 0,
-      'mode': <NumberMode.SLIDER: 'slider'>,
-      'step': 1,
+      <NumberEntityCapabilityAttribute.MAX: 'max'>: 9,
+      <NumberEntityCapabilityAttribute.MIN: 'min'>: 0,
+      <NumberEntityCapabilityAttribute.MODE: 'mode'>: <NumberMode.SLIDER: 'slider'>,
+      <NumberEntityCapabilityAttribute.STEP: 'step'>: 1,
     }),
     'context': <ANY>,
     'entity_id': 'number.pinecil_hall_effect_sensitivity',
@@ -235,14 +239,15 @@
 # ---
 # name: test_state[number.pinecil_hall_sensor_sleep_timeout-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
-      'max': 60,
-      'min': 0,
-      'mode': <NumberMode.BOX: 'box'>,
-      'step': 5,
+      <NumberEntityCapabilityAttribute.MAX: 'max'>: 60,
+      <NumberEntityCapabilityAttribute.MIN: 'min'>: 0,
+      <NumberEntityCapabilityAttribute.MODE: 'mode'>: <NumberMode.BOX: 'box'>,
+      <NumberEntityCapabilityAttribute.STEP: 'step'>: 5,
     }),
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -278,10 +283,10 @@
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'friendly_name': 'Pinecil Hall sensor sleep timeout',
-      'max': 60,
-      'min': 0,
-      'mode': <NumberMode.BOX: 'box'>,
-      'step': 5,
+      <NumberEntityCapabilityAttribute.MAX: 'max'>: 60,
+      <NumberEntityCapabilityAttribute.MIN: 'min'>: 0,
+      <NumberEntityCapabilityAttribute.MODE: 'mode'>: <NumberMode.BOX: 'box'>,
+      <NumberEntityCapabilityAttribute.STEP: 'step'>: 5,
       'unit_of_measurement': <UnitOfTime.SECONDS: 's'>,
     }),
     'context': <ANY>,
@@ -294,14 +299,15 @@
 # ---
 # name: test_state[number.pinecil_keep_awake_pulse_delay-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
-      'max': 22.5,
-      'min': 2.5,
-      'mode': <NumberMode.BOX: 'box'>,
-      'step': 2.5,
+      <NumberEntityCapabilityAttribute.MAX: 'max'>: 22.5,
+      <NumberEntityCapabilityAttribute.MIN: 'min'>: 2.5,
+      <NumberEntityCapabilityAttribute.MODE: 'mode'>: <NumberMode.BOX: 'box'>,
+      <NumberEntityCapabilityAttribute.STEP: 'step'>: 2.5,
     }),
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -337,10 +343,10 @@
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'friendly_name': 'Pinecil Keep-awake pulse delay',
-      'max': 22.5,
-      'min': 2.5,
-      'mode': <NumberMode.BOX: 'box'>,
-      'step': 2.5,
+      <NumberEntityCapabilityAttribute.MAX: 'max'>: 22.5,
+      <NumberEntityCapabilityAttribute.MIN: 'min'>: 2.5,
+      <NumberEntityCapabilityAttribute.MODE: 'mode'>: <NumberMode.BOX: 'box'>,
+      <NumberEntityCapabilityAttribute.STEP: 'step'>: 2.5,
       'unit_of_measurement': <UnitOfTime.SECONDS: 's'>,
     }),
     'context': <ANY>,
@@ -353,14 +359,15 @@
 # ---
 # name: test_state[number.pinecil_keep_awake_pulse_duration-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
-      'max': 2250,
-      'min': 250,
-      'mode': <NumberMode.BOX: 'box'>,
-      'step': 250,
+      <NumberEntityCapabilityAttribute.MAX: 'max'>: 2250,
+      <NumberEntityCapabilityAttribute.MIN: 'min'>: 250,
+      <NumberEntityCapabilityAttribute.MODE: 'mode'>: <NumberMode.BOX: 'box'>,
+      <NumberEntityCapabilityAttribute.STEP: 'step'>: 250,
     }),
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -396,10 +403,10 @@
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'friendly_name': 'Pinecil Keep-awake pulse duration',
-      'max': 2250,
-      'min': 250,
-      'mode': <NumberMode.BOX: 'box'>,
-      'step': 250,
+      <NumberEntityCapabilityAttribute.MAX: 'max'>: 2250,
+      <NumberEntityCapabilityAttribute.MIN: 'min'>: 250,
+      <NumberEntityCapabilityAttribute.MODE: 'mode'>: <NumberMode.BOX: 'box'>,
+      <NumberEntityCapabilityAttribute.STEP: 'step'>: 250,
       'unit_of_measurement': <UnitOfTime.MILLISECONDS: 'ms'>,
     }),
     'context': <ANY>,
@@ -412,14 +419,15 @@
 # ---
 # name: test_state[number.pinecil_keep_awake_pulse_intensity-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
-      'max': 9.9,
-      'min': 0,
-      'mode': <NumberMode.BOX: 'box'>,
-      'step': 0.1,
+      <NumberEntityCapabilityAttribute.MAX: 'max'>: 9.9,
+      <NumberEntityCapabilityAttribute.MIN: 'min'>: 0,
+      <NumberEntityCapabilityAttribute.MODE: 'mode'>: <NumberMode.BOX: 'box'>,
+      <NumberEntityCapabilityAttribute.STEP: 'step'>: 0.1,
     }),
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -455,10 +463,10 @@
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'friendly_name': 'Pinecil Keep-awake pulse intensity',
-      'max': 9.9,
-      'min': 0,
-      'mode': <NumberMode.BOX: 'box'>,
-      'step': 0.1,
+      <NumberEntityCapabilityAttribute.MAX: 'max'>: 9.9,
+      <NumberEntityCapabilityAttribute.MIN: 'min'>: 0,
+      <NumberEntityCapabilityAttribute.MODE: 'mode'>: <NumberMode.BOX: 'box'>,
+      <NumberEntityCapabilityAttribute.STEP: 'step'>: 0.1,
       'unit_of_measurement': <UnitOfPower.WATT: 'W'>,
     }),
     'context': <ANY>,
@@ -471,14 +479,15 @@
 # ---
 # name: test_state[number.pinecil_long_press_temperature_step-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
-      'max': 90,
-      'min': 5,
-      'mode': <NumberMode.BOX: 'box'>,
-      'step': 5,
+      <NumberEntityCapabilityAttribute.MAX: 'max'>: 90,
+      <NumberEntityCapabilityAttribute.MIN: 'min'>: 5,
+      <NumberEntityCapabilityAttribute.MODE: 'mode'>: <NumberMode.BOX: 'box'>,
+      <NumberEntityCapabilityAttribute.STEP: 'step'>: 5,
     }),
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -514,10 +523,10 @@
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'friendly_name': 'Pinecil Long-press temperature step',
-      'max': 90,
-      'min': 5,
-      'mode': <NumberMode.BOX: 'box'>,
-      'step': 5,
+      <NumberEntityCapabilityAttribute.MAX: 'max'>: 90,
+      <NumberEntityCapabilityAttribute.MIN: 'min'>: 5,
+      <NumberEntityCapabilityAttribute.MODE: 'mode'>: <NumberMode.BOX: 'box'>,
+      <NumberEntityCapabilityAttribute.STEP: 'step'>: 5,
       'unit_of_measurement': <UnitOfTemperature.CELSIUS: '°C'>,
     }),
     'context': <ANY>,
@@ -530,14 +539,15 @@
 # ---
 # name: test_state[number.pinecil_min_voltage_per_cell-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
-      'max': 3.8,
-      'min': 2.4,
-      'mode': <NumberMode.BOX: 'box'>,
-      'step': 0.1,
+      <NumberEntityCapabilityAttribute.MAX: 'max'>: 3.8,
+      <NumberEntityCapabilityAttribute.MIN: 'min'>: 2.4,
+      <NumberEntityCapabilityAttribute.MODE: 'mode'>: <NumberMode.BOX: 'box'>,
+      <NumberEntityCapabilityAttribute.STEP: 'step'>: 0.1,
     }),
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -573,10 +583,10 @@
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'friendly_name': 'Pinecil Min. voltage per cell',
-      'max': 3.8,
-      'min': 2.4,
-      'mode': <NumberMode.BOX: 'box'>,
-      'step': 0.1,
+      <NumberEntityCapabilityAttribute.MAX: 'max'>: 3.8,
+      <NumberEntityCapabilityAttribute.MIN: 'min'>: 2.4,
+      <NumberEntityCapabilityAttribute.MODE: 'mode'>: <NumberMode.BOX: 'box'>,
+      <NumberEntityCapabilityAttribute.STEP: 'step'>: 0.1,
       'unit_of_measurement': <UnitOfElectricPotential.VOLT: 'V'>,
     }),
     'context': <ANY>,
@@ -589,14 +599,15 @@
 # ---
 # name: test_state[number.pinecil_motion_sensitivity-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
-      'max': 9,
-      'min': 0,
-      'mode': <NumberMode.SLIDER: 'slider'>,
-      'step': 1,
+      <NumberEntityCapabilityAttribute.MAX: 'max'>: 9,
+      <NumberEntityCapabilityAttribute.MIN: 'min'>: 0,
+      <NumberEntityCapabilityAttribute.MODE: 'mode'>: <NumberMode.SLIDER: 'slider'>,
+      <NumberEntityCapabilityAttribute.STEP: 'step'>: 1,
     }),
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -632,10 +643,10 @@
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'friendly_name': 'Pinecil Motion sensitivity',
-      'max': 9,
-      'min': 0,
-      'mode': <NumberMode.SLIDER: 'slider'>,
-      'step': 1,
+      <NumberEntityCapabilityAttribute.MAX: 'max'>: 9,
+      <NumberEntityCapabilityAttribute.MIN: 'min'>: 0,
+      <NumberEntityCapabilityAttribute.MODE: 'mode'>: <NumberMode.SLIDER: 'slider'>,
+      <NumberEntityCapabilityAttribute.STEP: 'step'>: 1,
     }),
     'context': <ANY>,
     'entity_id': 'number.pinecil_motion_sensitivity',
@@ -647,14 +658,15 @@
 # ---
 # name: test_state[number.pinecil_power_delivery_timeout-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
-      'max': 5.0,
-      'min': 0,
-      'mode': <NumberMode.BOX: 'box'>,
-      'step': 1,
+      <NumberEntityCapabilityAttribute.MAX: 'max'>: 5.0,
+      <NumberEntityCapabilityAttribute.MIN: 'min'>: 0,
+      <NumberEntityCapabilityAttribute.MODE: 'mode'>: <NumberMode.BOX: 'box'>,
+      <NumberEntityCapabilityAttribute.STEP: 'step'>: 1,
     }),
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -691,10 +703,10 @@
     'attributes': ReadOnlyDict({
       'device_class': 'duration',
       'friendly_name': 'Pinecil Power Delivery timeout',
-      'max': 5.0,
-      'min': 0,
-      'mode': <NumberMode.BOX: 'box'>,
-      'step': 1,
+      <NumberEntityCapabilityAttribute.MAX: 'max'>: 5.0,
+      <NumberEntityCapabilityAttribute.MIN: 'min'>: 0,
+      <NumberEntityCapabilityAttribute.MODE: 'mode'>: <NumberMode.BOX: 'box'>,
+      <NumberEntityCapabilityAttribute.STEP: 'step'>: 1,
       'unit_of_measurement': <UnitOfTime.SECONDS: 's'>,
     }),
     'context': <ANY>,
@@ -707,14 +719,15 @@
 # ---
 # name: test_state[number.pinecil_power_limit-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
-      'max': 120,
-      'min': 0,
-      'mode': <NumberMode.BOX: 'box'>,
-      'step': 5,
+      <NumberEntityCapabilityAttribute.MAX: 'max'>: 120,
+      <NumberEntityCapabilityAttribute.MIN: 'min'>: 0,
+      <NumberEntityCapabilityAttribute.MODE: 'mode'>: <NumberMode.BOX: 'box'>,
+      <NumberEntityCapabilityAttribute.STEP: 'step'>: 5,
     }),
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -750,10 +763,10 @@
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'friendly_name': 'Pinecil Power limit',
-      'max': 120,
-      'min': 0,
-      'mode': <NumberMode.BOX: 'box'>,
-      'step': 5,
+      <NumberEntityCapabilityAttribute.MAX: 'max'>: 120,
+      <NumberEntityCapabilityAttribute.MIN: 'min'>: 0,
+      <NumberEntityCapabilityAttribute.MODE: 'mode'>: <NumberMode.BOX: 'box'>,
+      <NumberEntityCapabilityAttribute.STEP: 'step'>: 5,
       'unit_of_measurement': <UnitOfPower.WATT: 'W'>,
     }),
     'context': <ANY>,
@@ -766,14 +779,15 @@
 # ---
 # name: test_state[number.pinecil_quick_charge_voltage-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
-      'max': 22.0,
-      'min': 9.0,
-      'mode': <NumberMode.BOX: 'box'>,
-      'step': 0.1,
+      <NumberEntityCapabilityAttribute.MAX: 'max'>: 22.0,
+      <NumberEntityCapabilityAttribute.MIN: 'min'>: 9.0,
+      <NumberEntityCapabilityAttribute.MODE: 'mode'>: <NumberMode.BOX: 'box'>,
+      <NumberEntityCapabilityAttribute.STEP: 'step'>: 0.1,
     }),
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -810,10 +824,10 @@
     'attributes': ReadOnlyDict({
       'device_class': 'voltage',
       'friendly_name': 'Pinecil Quick Charge voltage',
-      'max': 22.0,
-      'min': 9.0,
-      'mode': <NumberMode.BOX: 'box'>,
-      'step': 0.1,
+      <NumberEntityCapabilityAttribute.MAX: 'max'>: 22.0,
+      <NumberEntityCapabilityAttribute.MIN: 'min'>: 9.0,
+      <NumberEntityCapabilityAttribute.MODE: 'mode'>: <NumberMode.BOX: 'box'>,
+      <NumberEntityCapabilityAttribute.STEP: 'step'>: 0.1,
       'unit_of_measurement': <UnitOfElectricPotential.VOLT: 'V'>,
     }),
     'context': <ANY>,
@@ -826,14 +840,15 @@
 # ---
 # name: test_state[number.pinecil_setpoint_temperature-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
-      'max': 450,
-      'min': 10,
-      'mode': <NumberMode.BOX: 'box'>,
-      'step': 5,
+      <NumberEntityCapabilityAttribute.MAX: 'max'>: 450,
+      <NumberEntityCapabilityAttribute.MIN: 'min'>: 10,
+      <NumberEntityCapabilityAttribute.MODE: 'mode'>: <NumberMode.BOX: 'box'>,
+      <NumberEntityCapabilityAttribute.STEP: 'step'>: 1,
     }),
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -869,10 +884,10 @@
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'friendly_name': 'Pinecil Setpoint temperature',
-      'max': 450,
-      'min': 10,
-      'mode': <NumberMode.BOX: 'box'>,
-      'step': 5,
+      <NumberEntityCapabilityAttribute.MAX: 'max'>: 450,
+      <NumberEntityCapabilityAttribute.MIN: 'min'>: 10,
+      <NumberEntityCapabilityAttribute.MODE: 'mode'>: <NumberMode.BOX: 'box'>,
+      <NumberEntityCapabilityAttribute.STEP: 'step'>: 1,
       'unit_of_measurement': <UnitOfTemperature.CELSIUS: '°C'>,
     }),
     'context': <ANY>,
@@ -885,14 +900,15 @@
 # ---
 # name: test_state[number.pinecil_short_press_temperature_step-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
-      'max': 50,
-      'min': 1,
-      'mode': <NumberMode.BOX: 'box'>,
-      'step': 1,
+      <NumberEntityCapabilityAttribute.MAX: 'max'>: 50,
+      <NumberEntityCapabilityAttribute.MIN: 'min'>: 1,
+      <NumberEntityCapabilityAttribute.MODE: 'mode'>: <NumberMode.BOX: 'box'>,
+      <NumberEntityCapabilityAttribute.STEP: 'step'>: 1,
     }),
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -928,10 +944,10 @@
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'friendly_name': 'Pinecil Short-press temperature step',
-      'max': 50,
-      'min': 1,
-      'mode': <NumberMode.BOX: 'box'>,
-      'step': 1,
+      <NumberEntityCapabilityAttribute.MAX: 'max'>: 50,
+      <NumberEntityCapabilityAttribute.MIN: 'min'>: 1,
+      <NumberEntityCapabilityAttribute.MODE: 'mode'>: <NumberMode.BOX: 'box'>,
+      <NumberEntityCapabilityAttribute.STEP: 'step'>: 1,
       'unit_of_measurement': <UnitOfTemperature.CELSIUS: '°C'>,
     }),
     'context': <ANY>,
@@ -944,14 +960,15 @@
 # ---
 # name: test_state[number.pinecil_shutdown_timeout-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
-      'max': 60,
-      'min': 0,
-      'mode': <NumberMode.BOX: 'box'>,
-      'step': 1,
+      <NumberEntityCapabilityAttribute.MAX: 'max'>: 60,
+      <NumberEntityCapabilityAttribute.MIN: 'min'>: 0,
+      <NumberEntityCapabilityAttribute.MODE: 'mode'>: <NumberMode.BOX: 'box'>,
+      <NumberEntityCapabilityAttribute.STEP: 'step'>: 1,
     }),
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -988,10 +1005,10 @@
     'attributes': ReadOnlyDict({
       'device_class': 'duration',
       'friendly_name': 'Pinecil Shutdown timeout',
-      'max': 60,
-      'min': 0,
-      'mode': <NumberMode.BOX: 'box'>,
-      'step': 1,
+      <NumberEntityCapabilityAttribute.MAX: 'max'>: 60,
+      <NumberEntityCapabilityAttribute.MIN: 'min'>: 0,
+      <NumberEntityCapabilityAttribute.MODE: 'mode'>: <NumberMode.BOX: 'box'>,
+      <NumberEntityCapabilityAttribute.STEP: 'step'>: 1,
       'unit_of_measurement': <UnitOfTime.MINUTES: 'min'>,
     }),
     'context': <ANY>,
@@ -1004,14 +1021,15 @@
 # ---
 # name: test_state[number.pinecil_sleep_temperature-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
-      'max': 450,
-      'min': 10,
-      'mode': <NumberMode.BOX: 'box'>,
-      'step': 10,
+      <NumberEntityCapabilityAttribute.MAX: 'max'>: 450,
+      <NumberEntityCapabilityAttribute.MIN: 'min'>: 10,
+      <NumberEntityCapabilityAttribute.MODE: 'mode'>: <NumberMode.BOX: 'box'>,
+      <NumberEntityCapabilityAttribute.STEP: 'step'>: 10,
     }),
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -1047,10 +1065,10 @@
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'friendly_name': 'Pinecil Sleep temperature',
-      'max': 450,
-      'min': 10,
-      'mode': <NumberMode.BOX: 'box'>,
-      'step': 10,
+      <NumberEntityCapabilityAttribute.MAX: 'max'>: 450,
+      <NumberEntityCapabilityAttribute.MIN: 'min'>: 10,
+      <NumberEntityCapabilityAttribute.MODE: 'mode'>: <NumberMode.BOX: 'box'>,
+      <NumberEntityCapabilityAttribute.STEP: 'step'>: 10,
       'unit_of_measurement': <UnitOfTemperature.CELSIUS: '°C'>,
     }),
     'context': <ANY>,
@@ -1063,14 +1081,15 @@
 # ---
 # name: test_state[number.pinecil_sleep_timeout-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
-      'max': 15,
-      'min': 0,
-      'mode': <NumberMode.BOX: 'box'>,
-      'step': 1,
+      <NumberEntityCapabilityAttribute.MAX: 'max'>: 15,
+      <NumberEntityCapabilityAttribute.MIN: 'min'>: 0,
+      <NumberEntityCapabilityAttribute.MODE: 'mode'>: <NumberMode.BOX: 'box'>,
+      <NumberEntityCapabilityAttribute.STEP: 'step'>: 1,
     }),
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -1106,10 +1125,10 @@
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'friendly_name': 'Pinecil Sleep timeout',
-      'max': 15,
-      'min': 0,
-      'mode': <NumberMode.BOX: 'box'>,
-      'step': 1,
+      <NumberEntityCapabilityAttribute.MAX: 'max'>: 15,
+      <NumberEntityCapabilityAttribute.MIN: 'min'>: 0,
+      <NumberEntityCapabilityAttribute.MODE: 'mode'>: <NumberMode.BOX: 'box'>,
+      <NumberEntityCapabilityAttribute.STEP: 'step'>: 1,
       'unit_of_measurement': <UnitOfTime.MINUTES: 'min'>,
     }),
     'context': <ANY>,
@@ -1122,14 +1141,15 @@
 # ---
 # name: test_state[number.pinecil_voltage_divider-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
-      'max': 900,
-      'min': 360,
-      'mode': <NumberMode.BOX: 'box'>,
-      'step': 1,
+      <NumberEntityCapabilityAttribute.MAX: 'max'>: 900,
+      <NumberEntityCapabilityAttribute.MIN: 'min'>: 360,
+      <NumberEntityCapabilityAttribute.MODE: 'mode'>: <NumberMode.BOX: 'box'>,
+      <NumberEntityCapabilityAttribute.STEP: 'step'>: 1,
     }),
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -1165,10 +1185,10 @@
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'friendly_name': 'Pinecil Voltage divider',
-      'max': 900,
-      'min': 360,
-      'mode': <NumberMode.BOX: 'box'>,
-      'step': 1,
+      <NumberEntityCapabilityAttribute.MAX: 'max'>: 900,
+      <NumberEntityCapabilityAttribute.MIN: 'min'>: 360,
+      <NumberEntityCapabilityAttribute.MODE: 'mode'>: <NumberMode.BOX: 'box'>,
+      <NumberEntityCapabilityAttribute.STEP: 'step'>: 1,
     }),
     'context': <ANY>,
     'entity_id': 'number.pinecil_voltage_divider',

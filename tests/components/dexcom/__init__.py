@@ -19,6 +19,8 @@ CONFIG = {
 }
 
 GLUCOSE_READING = GlucoseReading(json.loads(load_fixture("data.json", "dexcom")))
+TEST_ACCOUNT_ID = "99999999-9999-9999-9999-999999999999"
+TEST_SESSION_ID = "55555555-5555-5555-5555-555555555555"
 
 
 async def init_integration(
@@ -38,8 +40,12 @@ async def init_integration(
             return_value=GLUCOSE_READING,
         ),
         patch(
-            "homeassistant.components.dexcom.Dexcom.create_session",
-            return_value="test_session_id",
+            "homeassistant.components.dexcom.Dexcom._get_account_id",
+            return_value=TEST_ACCOUNT_ID,
+        ),
+        patch(
+            "homeassistant.components.dexcom.Dexcom._get_session_id",
+            return_value=TEST_SESSION_ID,
         ),
     ):
         entry.add_to_hass(hass)

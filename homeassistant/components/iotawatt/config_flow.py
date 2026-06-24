@@ -1,9 +1,7 @@
 """Config flow for iotawatt integration."""
 
-from __future__ import annotations
-
 import logging
-from typing import Any
+from typing import Any, override
 
 from iotawattpy.iotawatt import Iotawatt
 import voluptuous as vol
@@ -51,6 +49,7 @@ class IOTaWattConfigFlow(ConfigFlow, domain=DOMAIN):
         """Initialize."""
         self._data: dict[str, Any] = {}
 
+    @override
     async def async_step_user(
         self, user_input: dict[str, Any] | None = None
     ) -> ConfigFlowResult:

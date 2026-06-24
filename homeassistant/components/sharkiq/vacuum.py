@@ -1,28 +1,23 @@
 """Shark IQ Wrapper."""
 
-from __future__ import annotations
-
 from collections.abc import Iterable
-from typing import Any
+from typing import Any, override
 
 from sharkiq import OperatingModes, PowerModes, Properties, SharkIqVacuum
-import voluptuous as vol
 
 from homeassistant.components.vacuum import (
     StateVacuumEntity,
     VacuumActivity,
     VacuumEntityFeature,
 )
-from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ServiceValidationError
-from homeassistant.helpers import config_validation as cv, entity_platform
 from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
-from .const import DOMAIN, LOGGER, SERVICE_CLEAN_ROOM, SHARK
-from .coordinator import SharkIqUpdateCoordinator
+from .const import ATTR_ROOMS, DOMAIN, LOGGER, SHARK
+from .coordinator import SharkIqConfigEntry, SharkIqUpdateCoordinator
 
 OPERATING_STATE_MAP = {
     OperatingModes.PAUSE: VacuumActivity.PAUSED,
@@ -44,16 +39,15 @@ ATTR_ERROR_CODE = "last_error_code"
 ATTR_ERROR_MSG = "last_error_message"
 ATTR_LOW_LIGHT = "low_light"
 ATTR_RECHARGE_RESUME = "recharge_and_resume"
-ATTR_ROOMS = "rooms"
 
 
 async def async_setup_entry(
     hass: HomeAssistant,
-    config_entry: ConfigEntry,
+    config_entry: SharkIqConfigEntry,
     async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up the Shark IQ vacuum cleaner."""
-    coordinator: SharkIqUpdateCoordinator = hass.data[DOMAIN][config_entry.entry_id]
+    coordinator = config_entry.runtime_data
     devices: Iterable[SharkIqVacuum] = coordinator.shark_vacs.values()
     device_names = [d.name for d in devices]
     LOGGER.debug(
@@ -62,17 +56,6 @@ async def async_setup_entry(
         ", ".join([d.name for d in devices]),
     )
     async_add_entities([SharkVacuumEntity(d, coordinator) for d in devices])
-
-    platform = entity_platform.async_get_current_platform()
-    platform.async_register_entity_service(
-        SERVICE_CLEAN_ROOM,
-        {
-            vol.Required(ATTR_ROOMS): vol.All(
-                cv.ensure_list, vol.Length(min=1), [cv.string]
-            ),
-        },
-        "async_clean_room",
-    )
 
 
 class SharkVacuumEntity(CoordinatorEntity[SharkIqUpdateCoordinator], StateVacuumEntity):
@@ -108,10 +91,12 @@ class SharkVacuumEntity(CoordinatorEntity[SharkIqUpdateCoordinator], StateVacuum
             sw_version=sharkiq.get_property_value(Properties.ROBOT_FIRMWARE_VERSION),
         )
 
+    @override
     def clean_spot(self, **kwargs: Any) -> None:
         """Clean a spot. Not yet implemented."""
         raise NotImplementedError
 
+    @override
     def send_command(
         self,
         command: str,
@@ -151,12 +136,14 @@ class SharkVacuumEntity(CoordinatorEntity[SharkIqUpdateCoordinator], StateVacuum
         return self.sharkiq.get_property_value(Properties.RECHARGING_TO_RESUME)
 
     @property
+    @override
     def activity(self) -> VacuumActivity | None:
         """Get the current vacuum state.
 
-        NB: Currently, we do not return an error state because they can be very, very stale.
-        In the app, these are (usually) handled by showing the robot as stopped and sending the
-        user a notification.
+        NB: Currently, we do not return an error state
+        because they can be very, very stale. In the app,
+        these are (usually) handled by showing the robot as
+        stopped and sending the user a notification.
         """
         if self.sharkiq.get_property_value(Properties.CHARGING_STATUS):
             return VacuumActivity.DOCKED
@@ -164,36 +151,43 @@ class SharkVacuumEntity(CoordinatorEntity[SharkIqUpdateCoordinator], StateVacuum
         return OPERATING_STATE_MAP.get(op_mode)
 
     @property
+    @override
     def available(self) -> bool:
         """Determine if the sensor is available based on API results."""
         # If the last update was successful...
         return self.coordinator.last_update_success and self.is_online
 
     @property
+    @override
     def battery_level(self) -> int | None:
         """Get the current battery level."""
         return self.sharkiq.get_property_value(Properties.BATTERY_CAPACITY)
 
+    @override
     async def async_return_to_base(self, **kwargs: Any) -> None:
         """Have the device return to base."""
         await self.sharkiq.async_set_operating_mode(OperatingModes.RETURN)
         await self.coordinator.async_refresh()
 
+    @override
     async def async_pause(self) -> None:
         """Pause the cleaning task."""
         await self.sharkiq.async_set_operating_mode(OperatingModes.PAUSE)
         await self.coordinator.async_refresh()
 
+    @override
     async def async_start(self) -> None:
         """Start the device."""
         await self.sharkiq.async_set_operating_mode(OperatingModes.START)
         await self.coordinator.async_refresh()
 
+    @override
     async def async_stop(self, **kwargs: Any) -> None:
         """Stop the device."""
         await self.sharkiq.async_set_operating_mode(OperatingModes.STOP)
         await self.coordinator.async_refresh()
 
+    @override
     async def async_locate(self, **kwargs: Any) -> None:
         """Cause the device to generate a loud chirp."""
         await self.sharkiq.async_find_device()
@@ -218,6 +212,7 @@ class SharkVacuumEntity(CoordinatorEntity[SharkIqUpdateCoordinator], StateVacuum
         await self.coordinator.async_refresh()
 
     @property
+    @override
     def fan_speed(self) -> str | None:
         """Return the current fan speed."""
         fan_speed = None
@@ -227,6 +222,7 @@ class SharkVacuumEntity(CoordinatorEntity[SharkIqUpdateCoordinator], StateVacuum
                 fan_speed = k
         return fan_speed
 
+    @override
     async def async_set_fan_speed(self, fan_speed: str, **kwargs: Any) -> None:
         """Set the fan speed."""
         await self.sharkiq.async_set_property_value(
@@ -259,6 +255,7 @@ class SharkVacuumEntity(CoordinatorEntity[SharkIqUpdateCoordinator], StateVacuum
         return []
 
     @property
+    @override
     def extra_state_attributes(self) -> dict[str, Any]:
         """Return a dictionary of device state attributes specific to sharkiq."""
         return {

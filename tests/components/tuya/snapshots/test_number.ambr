@@ -1,14 +1,15 @@
 # serializer version: 1
 # name: test_platform_setup_and_discovery[number.aqi_alarm_duration-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
-      'max': 60.0,
-      'min': 1.0,
-      'mode': <NumberMode.AUTO: 'auto'>,
-      'step': 1.0,
+      <NumberEntityCapabilityAttribute.MAX: 'max'>: 60.0,
+      <NumberEntityCapabilityAttribute.MIN: 'min'>: 1.0,
+      <NumberEntityCapabilityAttribute.MODE: 'mode'>: <NumberMode.AUTO: 'auto'>,
+      <NumberEntityCapabilityAttribute.STEP: 'step'>: 1.0,
     }),
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -37,7 +38,7 @@
     'supported_features': 0,
     'translation_key': 'alarm_duration',
     'unique_id': 'tuya.iks13mcaiyie3rryjb2ocalarm_time',
-    'unit_of_measurement': <UnitOfTime.SECONDS: 's'>,
+    'unit_of_measurement': 's',
   })
 # ---
 # name: test_platform_setup_and_discovery[number.aqi_alarm_duration-state]
@@ -45,11 +46,11 @@
     'attributes': ReadOnlyDict({
       'device_class': 'duration',
       'friendly_name': 'AQI Alarm duration',
-      'max': 60.0,
-      'min': 1.0,
-      'mode': <NumberMode.AUTO: 'auto'>,
-      'step': 1.0,
-      'unit_of_measurement': <UnitOfTime.SECONDS: 's'>,
+      <NumberEntityCapabilityAttribute.MAX: 'max'>: 60.0,
+      <NumberEntityCapabilityAttribute.MIN: 'min'>: 1.0,
+      <NumberEntityCapabilityAttribute.MODE: 'mode'>: <NumberMode.AUTO: 'auto'>,
+      <NumberEntityCapabilityAttribute.STEP: 'step'>: 1.0,
+      'unit_of_measurement': 's',
     }),
     'context': <ANY>,
     'entity_id': 'number.aqi_alarm_duration',
@@ -59,16 +60,78 @@
     'state': '1.0',
   })
 # ---
-# name: test_platform_setup_and_discovery[number.blissradia_volume-entry]
+# name: test_platform_setup_and_discovery[number.balkonbewasserung_irrigation_duration-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
-      'max': 100.0,
-      'min': 5.0,
-      'mode': <NumberMode.AUTO: 'auto'>,
-      'step': 1.0,
+      <NumberEntityCapabilityAttribute.MAX: 'max'>: 86400.0,
+      <NumberEntityCapabilityAttribute.MIN: 'min'>: 0.0,
+      <NumberEntityCapabilityAttribute.MODE: 'mode'>: <NumberMode.AUTO: 'auto'>,
+      <NumberEntityCapabilityAttribute.STEP: 'step'>: 1.0,
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'number',
+    'entity_category': <EntityCategory.CONFIG: 'config'>,
+    'entity_id': 'number.balkonbewasserung_irrigation_duration',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'Irrigation duration',
+    'options': dict({
+    }),
+    'original_device_class': <NumberDeviceClass.DURATION: 'duration'>,
+    'original_icon': None,
+    'original_name': 'Irrigation duration',
+    'platform': 'tuya',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'irrigation_duration',
+    'unique_id': 'tuya.73ov8i8iedtylkzrqzkfscountdown',
+    'unit_of_measurement': 's',
+  })
+# ---
+# name: test_platform_setup_and_discovery[number.balkonbewasserung_irrigation_duration-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'device_class': 'duration',
+      'friendly_name': 'balkonbewässerung Irrigation duration',
+      <NumberEntityCapabilityAttribute.MAX: 'max'>: 86400.0,
+      <NumberEntityCapabilityAttribute.MIN: 'min'>: 0.0,
+      <NumberEntityCapabilityAttribute.MODE: 'mode'>: <NumberMode.AUTO: 'auto'>,
+      <NumberEntityCapabilityAttribute.STEP: 'step'>: 1.0,
+      'unit_of_measurement': 's',
+    }),
+    'context': <ANY>,
+    'entity_id': 'number.balkonbewasserung_irrigation_duration',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '0.0',
+  })
+# ---
+# name: test_platform_setup_and_discovery[number.blissradia_volume-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': list([
+      None,
+    ]),
+    'area_id': None,
+    'capabilities': dict({
+      <NumberEntityCapabilityAttribute.MAX: 'max'>: 100.0,
+      <NumberEntityCapabilityAttribute.MIN: 'min'>: 5.0,
+      <NumberEntityCapabilityAttribute.MODE: 'mode'>: <NumberMode.AUTO: 'auto'>,
+      <NumberEntityCapabilityAttribute.STEP: 'step'>: 1.0,
     }),
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -104,10 +167,10 @@
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'friendly_name': 'BlissRadia  Volume',
-      'max': 100.0,
-      'min': 5.0,
-      'mode': <NumberMode.AUTO: 'auto'>,
-      'step': 1.0,
+      <NumberEntityCapabilityAttribute.MAX: 'max'>: 100.0,
+      <NumberEntityCapabilityAttribute.MIN: 'min'>: 5.0,
+      <NumberEntityCapabilityAttribute.MODE: 'mode'>: <NumberMode.AUTO: 'auto'>,
+      <NumberEntityCapabilityAttribute.STEP: 'step'>: 1.0,
       'unit_of_measurement': '',
     }),
     'context': <ANY>,
@@ -120,14 +183,15 @@
 # ---
 # name: test_platform_setup_and_discovery[number.boiler_temperature_controller_temperature_correction-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
-      'max': 9.9,
-      'min': -9.9,
-      'mode': <NumberMode.AUTO: 'auto'>,
-      'step': 0.1,
+      <NumberEntityCapabilityAttribute.MAX: 'max'>: 9.9,
+      <NumberEntityCapabilityAttribute.MIN: 'min'>: -9.9,
+      <NumberEntityCapabilityAttribute.MODE: 'mode'>: <NumberMode.AUTO: 'auto'>,
+      <NumberEntityCapabilityAttribute.STEP: 'step'>: 0.1,
     }),
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -163,10 +227,10 @@
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'friendly_name': 'Boiler Temperature Controller Temperature correction',
-      'max': 9.9,
-      'min': -9.9,
-      'mode': <NumberMode.AUTO: 'auto'>,
-      'step': 0.1,
+      <NumberEntityCapabilityAttribute.MAX: 'max'>: 9.9,
+      <NumberEntityCapabilityAttribute.MIN: 'min'>: -9.9,
+      <NumberEntityCapabilityAttribute.MODE: 'mode'>: <NumberMode.AUTO: 'auto'>,
+      <NumberEntityCapabilityAttribute.STEP: 'step'>: 0.1,
       'unit_of_measurement': '',
     }),
     'context': <ANY>,
@@ -177,16 +241,200 @@
     'state': '-0.8',
   })
 # ---
-# name: test_platform_setup_and_discovery[number.c9_volume-entry]
+# name: test_platform_setup_and_discovery[number.c30_alarm_delay-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
-      'max': 10.0,
-      'min': 1.0,
-      'mode': <NumberMode.AUTO: 'auto'>,
-      'step': 1.0,
+      <NumberEntityCapabilityAttribute.MAX: 'max'>: 256.0,
+      <NumberEntityCapabilityAttribute.MIN: 'min'>: 0.0,
+      <NumberEntityCapabilityAttribute.MODE: 'mode'>: <NumberMode.AUTO: 'auto'>,
+      <NumberEntityCapabilityAttribute.STEP: 'step'>: 1.0,
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'number',
+    'entity_category': <EntityCategory.CONFIG: 'config'>,
+    'entity_id': 'number.c30_alarm_delay',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'Alarm delay',
+    'options': dict({
+    }),
+    'original_device_class': <NumberDeviceClass.DURATION: 'duration'>,
+    'original_icon': None,
+    'original_name': 'Alarm delay',
+    'platform': 'tuya',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'alarm_delay',
+    'unique_id': 'tuya.rirsc4vhpbv2whkp2gwalarm_delay_time',
+    'unit_of_measurement': 's',
+  })
+# ---
+# name: test_platform_setup_and_discovery[number.c30_alarm_delay-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'device_class': 'duration',
+      'friendly_name': 'C30 Alarm delay',
+      <NumberEntityCapabilityAttribute.MAX: 'max'>: 256.0,
+      <NumberEntityCapabilityAttribute.MIN: 'min'>: 0.0,
+      <NumberEntityCapabilityAttribute.MODE: 'mode'>: <NumberMode.AUTO: 'auto'>,
+      <NumberEntityCapabilityAttribute.STEP: 'step'>: 1.0,
+      'unit_of_measurement': 's',
+    }),
+    'context': <ANY>,
+    'entity_id': 'number.c30_alarm_delay',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '20.0',
+  })
+# ---
+# name: test_platform_setup_and_discovery[number.c30_arm_delay-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': list([
+      None,
+    ]),
+    'area_id': None,
+    'capabilities': dict({
+      <NumberEntityCapabilityAttribute.MAX: 'max'>: 256.0,
+      <NumberEntityCapabilityAttribute.MIN: 'min'>: 0.0,
+      <NumberEntityCapabilityAttribute.MODE: 'mode'>: <NumberMode.AUTO: 'auto'>,
+      <NumberEntityCapabilityAttribute.STEP: 'step'>: 1.0,
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'number',
+    'entity_category': <EntityCategory.CONFIG: 'config'>,
+    'entity_id': 'number.c30_arm_delay',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'Arm delay',
+    'options': dict({
+    }),
+    'original_device_class': <NumberDeviceClass.DURATION: 'duration'>,
+    'original_icon': None,
+    'original_name': 'Arm delay',
+    'platform': 'tuya',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'arm_delay',
+    'unique_id': 'tuya.rirsc4vhpbv2whkp2gwdelay_set',
+    'unit_of_measurement': 's',
+  })
+# ---
+# name: test_platform_setup_and_discovery[number.c30_arm_delay-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'device_class': 'duration',
+      'friendly_name': 'C30 Arm delay',
+      <NumberEntityCapabilityAttribute.MAX: 'max'>: 256.0,
+      <NumberEntityCapabilityAttribute.MIN: 'min'>: 0.0,
+      <NumberEntityCapabilityAttribute.MODE: 'mode'>: <NumberMode.AUTO: 'auto'>,
+      <NumberEntityCapabilityAttribute.STEP: 'step'>: 1.0,
+      'unit_of_measurement': 's',
+    }),
+    'context': <ANY>,
+    'entity_id': 'number.c30_arm_delay',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '15.0',
+  })
+# ---
+# name: test_platform_setup_and_discovery[number.c30_siren_duration-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': list([
+      None,
+    ]),
+    'area_id': None,
+    'capabilities': dict({
+      <NumberEntityCapabilityAttribute.MAX: 'max'>: 21.0,
+      <NumberEntityCapabilityAttribute.MIN: 'min'>: 1.0,
+      <NumberEntityCapabilityAttribute.MODE: 'mode'>: <NumberMode.AUTO: 'auto'>,
+      <NumberEntityCapabilityAttribute.STEP: 'step'>: 1.0,
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'number',
+    'entity_category': <EntityCategory.CONFIG: 'config'>,
+    'entity_id': 'number.c30_siren_duration',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'Siren duration',
+    'options': dict({
+    }),
+    'original_device_class': <NumberDeviceClass.DURATION: 'duration'>,
+    'original_icon': None,
+    'original_name': 'Siren duration',
+    'platform': 'tuya',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'siren_duration',
+    'unique_id': 'tuya.rirsc4vhpbv2whkp2gwalarm_time',
+    'unit_of_measurement': 'min',
+  })
+# ---
+# name: test_platform_setup_and_discovery[number.c30_siren_duration-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'device_class': 'duration',
+      'friendly_name': 'C30 Siren duration',
+      <NumberEntityCapabilityAttribute.MAX: 'max'>: 21.0,
+      <NumberEntityCapabilityAttribute.MIN: 'min'>: 1.0,
+      <NumberEntityCapabilityAttribute.MODE: 'mode'>: <NumberMode.AUTO: 'auto'>,
+      <NumberEntityCapabilityAttribute.STEP: 'step'>: 1.0,
+      'unit_of_measurement': 'min',
+    }),
+    'context': <ANY>,
+    'entity_id': 'number.c30_siren_duration',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '3.0',
+  })
+# ---
+# name: test_platform_setup_and_discovery[number.c9_volume-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': list([
+      None,
+    ]),
+    'area_id': None,
+    'capabilities': dict({
+      <NumberEntityCapabilityAttribute.MAX: 'max'>: 10.0,
+      <NumberEntityCapabilityAttribute.MIN: 'min'>: 1.0,
+      <NumberEntityCapabilityAttribute.MODE: 'mode'>: <NumberMode.AUTO: 'auto'>,
+      <NumberEntityCapabilityAttribute.STEP: 'step'>: 1.0,
     }),
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -222,10 +470,10 @@
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'friendly_name': 'C9 Volume',
-      'max': 10.0,
-      'min': 1.0,
-      'mode': <NumberMode.AUTO: 'auto'>,
-      'step': 1.0,
+      <NumberEntityCapabilityAttribute.MAX: 'max'>: 10.0,
+      <NumberEntityCapabilityAttribute.MIN: 'min'>: 1.0,
+      <NumberEntityCapabilityAttribute.MODE: 'mode'>: <NumberMode.AUTO: 'auto'>,
+      <NumberEntityCapabilityAttribute.STEP: 'step'>: 1.0,
       'unit_of_measurement': '',
     }),
     'context': <ANY>,
@@ -238,14 +486,15 @@
 # ---
 # name: test_platform_setup_and_discovery[number.cat_feeder_feed-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
-      'max': 50.0,
-      'min': 1.0,
-      'mode': <NumberMode.AUTO: 'auto'>,
-      'step': 1.0,
+      <NumberEntityCapabilityAttribute.MAX: 'max'>: 50.0,
+      <NumberEntityCapabilityAttribute.MIN: 'min'>: 1.0,
+      <NumberEntityCapabilityAttribute.MODE: 'mode'>: <NumberMode.AUTO: 'auto'>,
+      <NumberEntityCapabilityAttribute.STEP: 'step'>: 1.0,
     }),
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -281,10 +530,10 @@
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'friendly_name': 'Cat Feeder Feed',
-      'max': 50.0,
-      'min': 1.0,
-      'mode': <NumberMode.AUTO: 'auto'>,
-      'step': 1.0,
+      <NumberEntityCapabilityAttribute.MAX: 'max'>: 50.0,
+      <NumberEntityCapabilityAttribute.MIN: 'min'>: 1.0,
+      <NumberEntityCapabilityAttribute.MODE: 'mode'>: <NumberMode.AUTO: 'auto'>,
+      <NumberEntityCapabilityAttribute.STEP: 'step'>: 1.0,
       'unit_of_measurement': '',
     }),
     'context': <ANY>,
@@ -297,14 +546,15 @@
 # ---
 # name: test_platform_setup_and_discovery[number.cat_feeder_voice_times-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
-      'max': 5.0,
-      'min': 0.0,
-      'mode': <NumberMode.AUTO: 'auto'>,
-      'step': 1.0,
+      <NumberEntityCapabilityAttribute.MAX: 'max'>: 5.0,
+      <NumberEntityCapabilityAttribute.MIN: 'min'>: 0.0,
+      <NumberEntityCapabilityAttribute.MODE: 'mode'>: <NumberMode.AUTO: 'auto'>,
+      <NumberEntityCapabilityAttribute.STEP: 'step'>: 1.0,
     }),
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -340,10 +590,10 @@
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'friendly_name': 'Cat Feeder Voice times',
-      'max': 5.0,
-      'min': 0.0,
-      'mode': <NumberMode.AUTO: 'auto'>,
-      'step': 1.0,
+      <NumberEntityCapabilityAttribute.MAX: 'max'>: 5.0,
+      <NumberEntityCapabilityAttribute.MIN: 'min'>: 0.0,
+      <NumberEntityCapabilityAttribute.MODE: 'mode'>: <NumberMode.AUTO: 'auto'>,
+      <NumberEntityCapabilityAttribute.STEP: 'step'>: 1.0,
       'unit_of_measurement': '',
     }),
     'context': <ANY>,
@@ -356,14 +606,15 @@
 # ---
 # name: test_platform_setup_and_discovery[number.cbe_pro_2_battery_backup_reserve-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
-      'max': 100.0,
-      'min': 0.0,
-      'mode': <NumberMode.AUTO: 'auto'>,
-      'step': 1.0,
+      <NumberEntityCapabilityAttribute.MAX: 'max'>: 100.0,
+      <NumberEntityCapabilityAttribute.MIN: 'min'>: 0.0,
+      <NumberEntityCapabilityAttribute.MODE: 'mode'>: <NumberMode.AUTO: 'auto'>,
+      <NumberEntityCapabilityAttribute.STEP: 'step'>: 1.0,
     }),
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -399,10 +650,10 @@
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'friendly_name': 'CBE Pro 2 Battery backup reserve',
-      'max': 100.0,
-      'min': 0.0,
-      'mode': <NumberMode.AUTO: 'auto'>,
-      'step': 1.0,
+      <NumberEntityCapabilityAttribute.MAX: 'max'>: 100.0,
+      <NumberEntityCapabilityAttribute.MIN: 'min'>: 0.0,
+      <NumberEntityCapabilityAttribute.MODE: 'mode'>: <NumberMode.AUTO: 'auto'>,
+      <NumberEntityCapabilityAttribute.STEP: 'step'>: 1.0,
       'unit_of_measurement': '%',
     }),
     'context': <ANY>,
@@ -415,14 +666,15 @@
 # ---
 # name: test_platform_setup_and_discovery[number.cbe_pro_2_inverter_output_power_limit-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
-      'max': 100000.0,
-      'min': 0.0,
-      'mode': <NumberMode.AUTO: 'auto'>,
-      'step': 1.0,
+      <NumberEntityCapabilityAttribute.MAX: 'max'>: 100000.0,
+      <NumberEntityCapabilityAttribute.MIN: 'min'>: 0.0,
+      <NumberEntityCapabilityAttribute.MODE: 'mode'>: <NumberMode.AUTO: 'auto'>,
+      <NumberEntityCapabilityAttribute.STEP: 'step'>: 1.0,
     }),
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -459,10 +711,10 @@
     'attributes': ReadOnlyDict({
       'device_class': 'power',
       'friendly_name': 'CBE Pro 2 Inverter output power limit',
-      'max': 100000.0,
-      'min': 0.0,
-      'mode': <NumberMode.AUTO: 'auto'>,
-      'step': 1.0,
+      <NumberEntityCapabilityAttribute.MAX: 'max'>: 100000.0,
+      <NumberEntityCapabilityAttribute.MIN: 'min'>: 0.0,
+      <NumberEntityCapabilityAttribute.MODE: 'mode'>: <NumberMode.AUTO: 'auto'>,
+      <NumberEntityCapabilityAttribute.STEP: 'step'>: 1.0,
       'unit_of_measurement': 'W',
     }),
     'context': <ANY>,
@@ -475,14 +727,15 @@
 # ---
 # name: test_platform_setup_and_discovery[number.cleverio_pf100_feed-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
-      'max': 20.0,
-      'min': 1.0,
-      'mode': <NumberMode.AUTO: 'auto'>,
-      'step': 1.0,
+      <NumberEntityCapabilityAttribute.MAX: 'max'>: 20.0,
+      <NumberEntityCapabilityAttribute.MIN: 'min'>: 1.0,
+      <NumberEntityCapabilityAttribute.MODE: 'mode'>: <NumberMode.AUTO: 'auto'>,
+      <NumberEntityCapabilityAttribute.STEP: 'step'>: 1.0,
     }),
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -518,10 +771,10 @@
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'friendly_name': 'Cleverio PF100 Feed',
-      'max': 20.0,
-      'min': 1.0,
-      'mode': <NumberMode.AUTO: 'auto'>,
-      'step': 1.0,
+      <NumberEntityCapabilityAttribute.MAX: 'max'>: 20.0,
+      <NumberEntityCapabilityAttribute.MIN: 'min'>: 1.0,
+      <NumberEntityCapabilityAttribute.MODE: 'mode'>: <NumberMode.AUTO: 'auto'>,
+      <NumberEntityCapabilityAttribute.STEP: 'step'>: 1.0,
       'unit_of_measurement': '',
     }),
     'context': <ANY>,
@@ -532,16 +785,78 @@
     'state': '1.0',
   })
 # ---
-# name: test_platform_setup_and_discovery[number.grillhomero_cooking_temperature-entry]
+# name: test_platform_setup_and_discovery[number.garden_valve_yard_irrigation_duration-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
-      'max': 300.0,
-      'min': -30.0,
-      'mode': <NumberMode.AUTO: 'auto'>,
-      'step': 0.1,
+      <NumberEntityCapabilityAttribute.MAX: 'max'>: 86400.0,
+      <NumberEntityCapabilityAttribute.MIN: 'min'>: 0.0,
+      <NumberEntityCapabilityAttribute.MODE: 'mode'>: <NumberMode.AUTO: 'auto'>,
+      <NumberEntityCapabilityAttribute.STEP: 'step'>: 1.0,
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'number',
+    'entity_category': <EntityCategory.CONFIG: 'config'>,
+    'entity_id': 'number.garden_valve_yard_irrigation_duration',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'Irrigation duration',
+    'options': dict({
+    }),
+    'original_device_class': <NumberDeviceClass.DURATION: 'duration'>,
+    'original_icon': None,
+    'original_name': 'Irrigation duration',
+    'platform': 'tuya',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'irrigation_duration',
+    'unique_id': 'tuya.ggimpv4dqzkfscountdown',
+    'unit_of_measurement': 's',
+  })
+# ---
+# name: test_platform_setup_and_discovery[number.garden_valve_yard_irrigation_duration-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'device_class': 'duration',
+      'friendly_name': 'Garden Valve Yard Irrigation duration',
+      <NumberEntityCapabilityAttribute.MAX: 'max'>: 86400.0,
+      <NumberEntityCapabilityAttribute.MIN: 'min'>: 0.0,
+      <NumberEntityCapabilityAttribute.MODE: 'mode'>: <NumberMode.AUTO: 'auto'>,
+      <NumberEntityCapabilityAttribute.STEP: 'step'>: 1.0,
+      'unit_of_measurement': 's',
+    }),
+    'context': <ANY>,
+    'entity_id': 'number.garden_valve_yard_irrigation_duration',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '0.0',
+  })
+# ---
+# name: test_platform_setup_and_discovery[number.grillhomero_cooking_temperature-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': list([
+      None,
+    ]),
+    'area_id': None,
+    'capabilities': dict({
+      <NumberEntityCapabilityAttribute.MAX: 'max'>: 300.0,
+      <NumberEntityCapabilityAttribute.MIN: 'min'>: -30.0,
+      <NumberEntityCapabilityAttribute.MODE: 'mode'>: <NumberMode.AUTO: 'auto'>,
+      <NumberEntityCapabilityAttribute.STEP: 'step'>: 0.1,
     }),
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -577,10 +892,10 @@
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'friendly_name': 'Grillhőmérő Cooking temperature',
-      'max': 300.0,
-      'min': -30.0,
-      'mode': <NumberMode.AUTO: 'auto'>,
-      'step': 0.1,
+      <NumberEntityCapabilityAttribute.MAX: 'max'>: 300.0,
+      <NumberEntityCapabilityAttribute.MIN: 'min'>: -30.0,
+      <NumberEntityCapabilityAttribute.MODE: 'mode'>: <NumberMode.AUTO: 'auto'>,
+      <NumberEntityCapabilityAttribute.STEP: 'step'>: 0.1,
       'unit_of_measurement': '℃',
     }),
     'context': <ANY>,
@@ -593,14 +908,15 @@
 # ---
 # name: test_platform_setup_and_discovery[number.grillhomero_cooking_temperature_2-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
-      'max': 300.0,
-      'min': -30.0,
-      'mode': <NumberMode.AUTO: 'auto'>,
-      'step': 0.1,
+      <NumberEntityCapabilityAttribute.MAX: 'max'>: 300.0,
+      <NumberEntityCapabilityAttribute.MIN: 'min'>: -30.0,
+      <NumberEntityCapabilityAttribute.MODE: 'mode'>: <NumberMode.AUTO: 'auto'>,
+      <NumberEntityCapabilityAttribute.STEP: 'step'>: 0.1,
     }),
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -636,10 +952,10 @@
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'friendly_name': 'Grillhőmérő Cooking temperature 2',
-      'max': 300.0,
-      'min': -30.0,
-      'mode': <NumberMode.AUTO: 'auto'>,
-      'step': 0.1,
+      <NumberEntityCapabilityAttribute.MAX: 'max'>: 300.0,
+      <NumberEntityCapabilityAttribute.MIN: 'min'>: -30.0,
+      <NumberEntityCapabilityAttribute.MODE: 'mode'>: <NumberMode.AUTO: 'auto'>,
+      <NumberEntityCapabilityAttribute.STEP: 'step'>: 0.1,
       'unit_of_measurement': '℃',
     }),
     'context': <ANY>,
@@ -652,14 +968,15 @@
 # ---
 # name: test_platform_setup_and_discovery[number.hot_water_heat_pump_temperature-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
-      'max': 75.0,
-      'min': 15.0,
-      'mode': <NumberMode.AUTO: 'auto'>,
-      'step': 1.0,
+      <NumberEntityCapabilityAttribute.MAX: 'max'>: 75.0,
+      <NumberEntityCapabilityAttribute.MIN: 'min'>: 15.0,
+      <NumberEntityCapabilityAttribute.MODE: 'mode'>: <NumberMode.AUTO: 'auto'>,
+      <NumberEntityCapabilityAttribute.STEP: 'step'>: 1.0,
     }),
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -696,10 +1013,10 @@
     'attributes': ReadOnlyDict({
       'device_class': 'temperature',
       'friendly_name': 'Hot Water Heat Pump Temperature',
-      'max': 75.0,
-      'min': 15.0,
-      'mode': <NumberMode.AUTO: 'auto'>,
-      'step': 1.0,
+      <NumberEntityCapabilityAttribute.MAX: 'max'>: 75.0,
+      <NumberEntityCapabilityAttribute.MIN: 'min'>: 15.0,
+      <NumberEntityCapabilityAttribute.MODE: 'mode'>: <NumberMode.AUTO: 'auto'>,
+      <NumberEntityCapabilityAttribute.STEP: 'step'>: 1.0,
       'unit_of_measurement': <UnitOfTemperature.CELSIUS: '°C'>,
     }),
     'context': <ANY>,
@@ -712,14 +1029,15 @@
 # ---
 # name: test_platform_setup_and_discovery[number.house_water_level_alarm_maximum-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
-      'max': 100.0,
-      'min': 0.0,
-      'mode': <NumberMode.AUTO: 'auto'>,
-      'step': 1.0,
+      <NumberEntityCapabilityAttribute.MAX: 'max'>: 100.0,
+      <NumberEntityCapabilityAttribute.MIN: 'min'>: 0.0,
+      <NumberEntityCapabilityAttribute.MODE: 'mode'>: <NumberMode.AUTO: 'auto'>,
+      <NumberEntityCapabilityAttribute.STEP: 'step'>: 1.0,
     }),
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -755,10 +1073,10 @@
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'friendly_name': 'House Water Level Alarm maximum',
-      'max': 100.0,
-      'min': 0.0,
-      'mode': <NumberMode.AUTO: 'auto'>,
-      'step': 1.0,
+      <NumberEntityCapabilityAttribute.MAX: 'max'>: 100.0,
+      <NumberEntityCapabilityAttribute.MIN: 'min'>: 0.0,
+      <NumberEntityCapabilityAttribute.MODE: 'mode'>: <NumberMode.AUTO: 'auto'>,
+      <NumberEntityCapabilityAttribute.STEP: 'step'>: 1.0,
       'unit_of_measurement': '%',
     }),
     'context': <ANY>,
@@ -771,14 +1089,15 @@
 # ---
 # name: test_platform_setup_and_discovery[number.house_water_level_alarm_minimum-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
-      'max': 100.0,
-      'min': 0.0,
-      'mode': <NumberMode.AUTO: 'auto'>,
-      'step': 1.0,
+      <NumberEntityCapabilityAttribute.MAX: 'max'>: 100.0,
+      <NumberEntityCapabilityAttribute.MIN: 'min'>: 0.0,
+      <NumberEntityCapabilityAttribute.MODE: 'mode'>: <NumberMode.AUTO: 'auto'>,
+      <NumberEntityCapabilityAttribute.STEP: 'step'>: 1.0,
     }),
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -814,10 +1133,10 @@
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'friendly_name': 'House Water Level Alarm minimum',
-      'max': 100.0,
-      'min': 0.0,
-      'mode': <NumberMode.AUTO: 'auto'>,
-      'step': 1.0,
+      <NumberEntityCapabilityAttribute.MAX: 'max'>: 100.0,
+      <NumberEntityCapabilityAttribute.MIN: 'min'>: 0.0,
+      <NumberEntityCapabilityAttribute.MODE: 'mode'>: <NumberMode.AUTO: 'auto'>,
+      <NumberEntityCapabilityAttribute.STEP: 'step'>: 1.0,
       'unit_of_measurement': '%',
     }),
     'context': <ANY>,
@@ -830,14 +1149,15 @@
 # ---
 # name: test_platform_setup_and_discovery[number.house_water_level_installation_height-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
-      'max': 2.5,
-      'min': 0.2,
-      'mode': <NumberMode.AUTO: 'auto'>,
-      'step': 0.001,
+      <NumberEntityCapabilityAttribute.MAX: 'max'>: 2.5,
+      <NumberEntityCapabilityAttribute.MIN: 'min'>: 0.2,
+      <NumberEntityCapabilityAttribute.MODE: 'mode'>: <NumberMode.AUTO: 'auto'>,
+      <NumberEntityCapabilityAttribute.STEP: 'step'>: 0.001,
     }),
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -874,10 +1194,10 @@
     'attributes': ReadOnlyDict({
       'device_class': 'distance',
       'friendly_name': 'House Water Level Installation height',
-      'max': 2.5,
-      'min': 0.2,
-      'mode': <NumberMode.AUTO: 'auto'>,
-      'step': 0.001,
+      <NumberEntityCapabilityAttribute.MAX: 'max'>: 2.5,
+      <NumberEntityCapabilityAttribute.MIN: 'min'>: 0.2,
+      <NumberEntityCapabilityAttribute.MODE: 'mode'>: <NumberMode.AUTO: 'auto'>,
+      <NumberEntityCapabilityAttribute.STEP: 'step'>: 0.001,
       'unit_of_measurement': 'm',
     }),
     'context': <ANY>,
@@ -890,14 +1210,15 @@
 # ---
 # name: test_platform_setup_and_discovery[number.house_water_level_maximum_liquid_depth-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
-      'max': 2.4,
-      'min': 0.1,
-      'mode': <NumberMode.AUTO: 'auto'>,
-      'step': 0.001,
+      <NumberEntityCapabilityAttribute.MAX: 'max'>: 2.4,
+      <NumberEntityCapabilityAttribute.MIN: 'min'>: 0.1,
+      <NumberEntityCapabilityAttribute.MODE: 'mode'>: <NumberMode.AUTO: 'auto'>,
+      <NumberEntityCapabilityAttribute.STEP: 'step'>: 0.001,
     }),
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -934,10 +1255,10 @@
     'attributes': ReadOnlyDict({
       'device_class': 'distance',
       'friendly_name': 'House Water Level Maximum liquid depth',
-      'max': 2.4,
-      'min': 0.1,
-      'mode': <NumberMode.AUTO: 'auto'>,
-      'step': 0.001,
+      <NumberEntityCapabilityAttribute.MAX: 'max'>: 2.4,
+      <NumberEntityCapabilityAttribute.MIN: 'min'>: 0.1,
+      <NumberEntityCapabilityAttribute.MODE: 'mode'>: <NumberMode.AUTO: 'auto'>,
+      <NumberEntityCapabilityAttribute.STEP: 'step'>: 0.001,
       'unit_of_measurement': 'm',
     }),
     'context': <ANY>,
@@ -950,14 +1271,15 @@
 # ---
 # name: test_platform_setup_and_discovery[number.human_presence_office_far_detection-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
-      'max': 1000.0,
-      'min': 0.0,
-      'mode': <NumberMode.AUTO: 'auto'>,
-      'step': 1.0,
+      <NumberEntityCapabilityAttribute.MAX: 'max'>: 1000.0,
+      <NumberEntityCapabilityAttribute.MIN: 'min'>: 0.0,
+      <NumberEntityCapabilityAttribute.MODE: 'mode'>: <NumberMode.AUTO: 'auto'>,
+      <NumberEntityCapabilityAttribute.STEP: 'step'>: 1.0,
     }),
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -994,10 +1316,10 @@
     'attributes': ReadOnlyDict({
       'device_class': 'distance',
       'friendly_name': 'Human presence Office Far detection',
-      'max': 1000.0,
-      'min': 0.0,
-      'mode': <NumberMode.AUTO: 'auto'>,
-      'step': 1.0,
+      <NumberEntityCapabilityAttribute.MAX: 'max'>: 1000.0,
+      <NumberEntityCapabilityAttribute.MIN: 'min'>: 0.0,
+      <NumberEntityCapabilityAttribute.MODE: 'mode'>: <NumberMode.AUTO: 'auto'>,
+      <NumberEntityCapabilityAttribute.STEP: 'step'>: 1.0,
       'unit_of_measurement': 'cm',
     }),
     'context': <ANY>,
@@ -1010,14 +1332,15 @@
 # ---
 # name: test_platform_setup_and_discovery[number.human_presence_office_near_detection-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
-      'max': 1000.0,
-      'min': 0.0,
-      'mode': <NumberMode.AUTO: 'auto'>,
-      'step': 1.0,
+      <NumberEntityCapabilityAttribute.MAX: 'max'>: 1000.0,
+      <NumberEntityCapabilityAttribute.MIN: 'min'>: 0.0,
+      <NumberEntityCapabilityAttribute.MODE: 'mode'>: <NumberMode.AUTO: 'auto'>,
+      <NumberEntityCapabilityAttribute.STEP: 'step'>: 1.0,
     }),
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -1054,10 +1377,10 @@
     'attributes': ReadOnlyDict({
       'device_class': 'distance',
       'friendly_name': 'Human presence Office Near detection',
-      'max': 1000.0,
-      'min': 0.0,
-      'mode': <NumberMode.AUTO: 'auto'>,
-      'step': 1.0,
+      <NumberEntityCapabilityAttribute.MAX: 'max'>: 1000.0,
+      <NumberEntityCapabilityAttribute.MIN: 'min'>: 0.0,
+      <NumberEntityCapabilityAttribute.MODE: 'mode'>: <NumberMode.AUTO: 'auto'>,
+      <NumberEntityCapabilityAttribute.STEP: 'step'>: 1.0,
       'unit_of_measurement': 'cm',
     }),
     'context': <ANY>,
@@ -1070,14 +1393,15 @@
 # ---
 # name: test_platform_setup_and_discovery[number.human_presence_office_sensitivity-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
-      'max': 10.0,
-      'min': 0.0,
-      'mode': <NumberMode.AUTO: 'auto'>,
-      'step': 1.0,
+      <NumberEntityCapabilityAttribute.MAX: 'max'>: 10.0,
+      <NumberEntityCapabilityAttribute.MIN: 'min'>: 0.0,
+      <NumberEntityCapabilityAttribute.MODE: 'mode'>: <NumberMode.AUTO: 'auto'>,
+      <NumberEntityCapabilityAttribute.STEP: 'step'>: 1.0,
     }),
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -1113,10 +1437,10 @@
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'friendly_name': 'Human presence Office Sensitivity',
-      'max': 10.0,
-      'min': 0.0,
-      'mode': <NumberMode.AUTO: 'auto'>,
-      'step': 1.0,
+      <NumberEntityCapabilityAttribute.MAX: 'max'>: 10.0,
+      <NumberEntityCapabilityAttribute.MIN: 'min'>: 0.0,
+      <NumberEntityCapabilityAttribute.MODE: 'mode'>: <NumberMode.AUTO: 'auto'>,
+      <NumberEntityCapabilityAttribute.STEP: 'step'>: 1.0,
       'unit_of_measurement': 'x',
     }),
     'context': <ANY>,
@@ -1127,16 +1451,78 @@
     'state': '3.0',
   })
 # ---
-# name: test_platform_setup_and_discovery[number.jie_hashui_fa_irrigation_duration_1-entry]
+# name: test_platform_setup_and_discovery[number.inverter_pool_heat_pump_temperature-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
-      'max': 1439.0,
-      'min': 1.0,
-      'mode': <NumberMode.AUTO: 'auto'>,
-      'step': 1.0,
+      <NumberEntityCapabilityAttribute.MAX: 'max'>: 104.0,
+      <NumberEntityCapabilityAttribute.MIN: 'min'>: -22.0,
+      <NumberEntityCapabilityAttribute.MODE: 'mode'>: <NumberMode.AUTO: 'auto'>,
+      <NumberEntityCapabilityAttribute.STEP: 'step'>: 1.0,
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'number',
+    'entity_category': None,
+    'entity_id': 'number.inverter_pool_heat_pump_temperature',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'Temperature',
+    'options': dict({
+    }),
+    'original_device_class': <NumberDeviceClass.TEMPERATURE: 'temperature'>,
+    'original_icon': None,
+    'original_name': 'Temperature',
+    'platform': 'tuya',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'temperature',
+    'unique_id': 'tuya.zuqudhznfzttizpgbrnztemp_set',
+    'unit_of_measurement': <UnitOfTemperature.CELSIUS: '°C'>,
+  })
+# ---
+# name: test_platform_setup_and_discovery[number.inverter_pool_heat_pump_temperature-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'device_class': 'temperature',
+      'friendly_name': 'Inverter Pool Heat Pump Temperature',
+      <NumberEntityCapabilityAttribute.MAX: 'max'>: 104.0,
+      <NumberEntityCapabilityAttribute.MIN: 'min'>: -22.0,
+      <NumberEntityCapabilityAttribute.MODE: 'mode'>: <NumberMode.AUTO: 'auto'>,
+      <NumberEntityCapabilityAttribute.STEP: 'step'>: 1.0,
+      'unit_of_measurement': <UnitOfTemperature.CELSIUS: '°C'>,
+    }),
+    'context': <ANY>,
+    'entity_id': 'number.inverter_pool_heat_pump_temperature',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '28.0',
+  })
+# ---
+# name: test_platform_setup_and_discovery[number.jie_hashui_fa_irrigation_duration_1-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': list([
+      None,
+    ]),
+    'area_id': None,
+    'capabilities': dict({
+      <NumberEntityCapabilityAttribute.MAX: 'max'>: 1439.0,
+      <NumberEntityCapabilityAttribute.MIN: 'min'>: 1.0,
+      <NumberEntityCapabilityAttribute.MODE: 'mode'>: <NumberMode.AUTO: 'auto'>,
+      <NumberEntityCapabilityAttribute.STEP: 'step'>: 1.0,
     }),
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -1173,10 +1559,10 @@
     'attributes': ReadOnlyDict({
       'device_class': 'duration',
       'friendly_name': '接HA水阀 Irrigation duration 1',
-      'max': 1439.0,
-      'min': 1.0,
-      'mode': <NumberMode.AUTO: 'auto'>,
-      'step': 1.0,
+      <NumberEntityCapabilityAttribute.MAX: 'max'>: 1439.0,
+      <NumberEntityCapabilityAttribute.MIN: 'min'>: 1.0,
+      <NumberEntityCapabilityAttribute.MODE: 'mode'>: <NumberMode.AUTO: 'auto'>,
+      <NumberEntityCapabilityAttribute.STEP: 'step'>: 1.0,
       'unit_of_measurement': 'min',
     }),
     'context': <ANY>,
@@ -1189,14 +1575,15 @@
 # ---
 # name: test_platform_setup_and_discovery[number.jie_hashui_fa_irrigation_duration_2-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
-      'max': 1439.0,
-      'min': 1.0,
-      'mode': <NumberMode.AUTO: 'auto'>,
-      'step': 1.0,
+      <NumberEntityCapabilityAttribute.MAX: 'max'>: 1439.0,
+      <NumberEntityCapabilityAttribute.MIN: 'min'>: 1.0,
+      <NumberEntityCapabilityAttribute.MODE: 'mode'>: <NumberMode.AUTO: 'auto'>,
+      <NumberEntityCapabilityAttribute.STEP: 'step'>: 1.0,
     }),
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -1233,10 +1620,10 @@
     'attributes': ReadOnlyDict({
       'device_class': 'duration',
       'friendly_name': '接HA水阀 Irrigation duration 2',
-      'max': 1439.0,
-      'min': 1.0,
-      'mode': <NumberMode.AUTO: 'auto'>,
-      'step': 1.0,
+      <NumberEntityCapabilityAttribute.MAX: 'max'>: 1439.0,
+      <NumberEntityCapabilityAttribute.MIN: 'min'>: 1.0,
+      <NumberEntityCapabilityAttribute.MODE: 'mode'>: <NumberMode.AUTO: 'auto'>,
+      <NumberEntityCapabilityAttribute.STEP: 'step'>: 1.0,
       'unit_of_measurement': 'min',
     }),
     'context': <ANY>,
@@ -1249,14 +1636,15 @@
 # ---
 # name: test_platform_setup_and_discovery[number.jie_hashui_fa_irrigation_duration_3-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
-      'max': 1439.0,
-      'min': 1.0,
-      'mode': <NumberMode.AUTO: 'auto'>,
-      'step': 1.0,
+      <NumberEntityCapabilityAttribute.MAX: 'max'>: 1439.0,
+      <NumberEntityCapabilityAttribute.MIN: 'min'>: 1.0,
+      <NumberEntityCapabilityAttribute.MODE: 'mode'>: <NumberMode.AUTO: 'auto'>,
+      <NumberEntityCapabilityAttribute.STEP: 'step'>: 1.0,
     }),
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -1293,10 +1681,10 @@
     'attributes': ReadOnlyDict({
       'device_class': 'duration',
       'friendly_name': '接HA水阀 Irrigation duration 3',
-      'max': 1439.0,
-      'min': 1.0,
-      'mode': <NumberMode.AUTO: 'auto'>,
-      'step': 1.0,
+      <NumberEntityCapabilityAttribute.MAX: 'max'>: 1439.0,
+      <NumberEntityCapabilityAttribute.MIN: 'min'>: 1.0,
+      <NumberEntityCapabilityAttribute.MODE: 'mode'>: <NumberMode.AUTO: 'auto'>,
+      <NumberEntityCapabilityAttribute.STEP: 'step'>: 1.0,
       'unit_of_measurement': 'min',
     }),
     'context': <ANY>,
@@ -1309,14 +1697,15 @@
 # ---
 # name: test_platform_setup_and_discovery[number.jie_hashui_fa_irrigation_duration_4-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
-      'max': 1439.0,
-      'min': 1.0,
-      'mode': <NumberMode.AUTO: 'auto'>,
-      'step': 1.0,
+      <NumberEntityCapabilityAttribute.MAX: 'max'>: 1439.0,
+      <NumberEntityCapabilityAttribute.MIN: 'min'>: 1.0,
+      <NumberEntityCapabilityAttribute.MODE: 'mode'>: <NumberMode.AUTO: 'auto'>,
+      <NumberEntityCapabilityAttribute.STEP: 'step'>: 1.0,
     }),
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -1353,10 +1742,10 @@
     'attributes': ReadOnlyDict({
       'device_class': 'duration',
       'friendly_name': '接HA水阀 Irrigation duration 4',
-      'max': 1439.0,
-      'min': 1.0,
-      'mode': <NumberMode.AUTO: 'auto'>,
-      'step': 1.0,
+      <NumberEntityCapabilityAttribute.MAX: 'max'>: 1439.0,
+      <NumberEntityCapabilityAttribute.MIN: 'min'>: 1.0,
+      <NumberEntityCapabilityAttribute.MODE: 'mode'>: <NumberMode.AUTO: 'auto'>,
+      <NumberEntityCapabilityAttribute.STEP: 'step'>: 1.0,
       'unit_of_measurement': 'min',
     }),
     'context': <ANY>,
@@ -1369,14 +1758,15 @@
 # ---
 # name: test_platform_setup_and_discovery[number.jie_hashui_fa_irrigation_duration_5-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
-      'max': 1439.0,
-      'min': 1.0,
-      'mode': <NumberMode.AUTO: 'auto'>,
-      'step': 1.0,
+      <NumberEntityCapabilityAttribute.MAX: 'max'>: 1439.0,
+      <NumberEntityCapabilityAttribute.MIN: 'min'>: 1.0,
+      <NumberEntityCapabilityAttribute.MODE: 'mode'>: <NumberMode.AUTO: 'auto'>,
+      <NumberEntityCapabilityAttribute.STEP: 'step'>: 1.0,
     }),
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -1413,10 +1803,10 @@
     'attributes': ReadOnlyDict({
       'device_class': 'duration',
       'friendly_name': '接HA水阀 Irrigation duration 5',
-      'max': 1439.0,
-      'min': 1.0,
-      'mode': <NumberMode.AUTO: 'auto'>,
-      'step': 1.0,
+      <NumberEntityCapabilityAttribute.MAX: 'max'>: 1439.0,
+      <NumberEntityCapabilityAttribute.MIN: 'min'>: 1.0,
+      <NumberEntityCapabilityAttribute.MODE: 'mode'>: <NumberMode.AUTO: 'auto'>,
+      <NumberEntityCapabilityAttribute.STEP: 'step'>: 1.0,
       'unit_of_measurement': 'min',
     }),
     'context': <ANY>,
@@ -1429,14 +1819,15 @@
 # ---
 # name: test_platform_setup_and_discovery[number.jie_hashui_fa_irrigation_duration_6-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
-      'max': 1439.0,
-      'min': 1.0,
-      'mode': <NumberMode.AUTO: 'auto'>,
-      'step': 1.0,
+      <NumberEntityCapabilityAttribute.MAX: 'max'>: 1439.0,
+      <NumberEntityCapabilityAttribute.MIN: 'min'>: 1.0,
+      <NumberEntityCapabilityAttribute.MODE: 'mode'>: <NumberMode.AUTO: 'auto'>,
+      <NumberEntityCapabilityAttribute.STEP: 'step'>: 1.0,
     }),
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -1473,10 +1864,10 @@
     'attributes': ReadOnlyDict({
       'device_class': 'duration',
       'friendly_name': '接HA水阀 Irrigation duration 6',
-      'max': 1439.0,
-      'min': 1.0,
-      'mode': <NumberMode.AUTO: 'auto'>,
-      'step': 1.0,
+      <NumberEntityCapabilityAttribute.MAX: 'max'>: 1439.0,
+      <NumberEntityCapabilityAttribute.MIN: 'min'>: 1.0,
+      <NumberEntityCapabilityAttribute.MODE: 'mode'>: <NumberMode.AUTO: 'auto'>,
+      <NumberEntityCapabilityAttribute.STEP: 'step'>: 1.0,
       'unit_of_measurement': 'min',
     }),
     'context': <ANY>,
@@ -1489,14 +1880,15 @@
 # ---
 # name: test_platform_setup_and_discovery[number.jie_hashui_fa_irrigation_duration_7-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
-      'max': 1439.0,
-      'min': 1.0,
-      'mode': <NumberMode.AUTO: 'auto'>,
-      'step': 1.0,
+      <NumberEntityCapabilityAttribute.MAX: 'max'>: 1439.0,
+      <NumberEntityCapabilityAttribute.MIN: 'min'>: 1.0,
+      <NumberEntityCapabilityAttribute.MODE: 'mode'>: <NumberMode.AUTO: 'auto'>,
+      <NumberEntityCapabilityAttribute.STEP: 'step'>: 1.0,
     }),
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -1533,10 +1925,10 @@
     'attributes': ReadOnlyDict({
       'device_class': 'duration',
       'friendly_name': '接HA水阀 Irrigation duration 7',
-      'max': 1439.0,
-      'min': 1.0,
-      'mode': <NumberMode.AUTO: 'auto'>,
-      'step': 1.0,
+      <NumberEntityCapabilityAttribute.MAX: 'max'>: 1439.0,
+      <NumberEntityCapabilityAttribute.MIN: 'min'>: 1.0,
+      <NumberEntityCapabilityAttribute.MODE: 'mode'>: <NumberMode.AUTO: 'auto'>,
+      <NumberEntityCapabilityAttribute.STEP: 'step'>: 1.0,
       'unit_of_measurement': 'min',
     }),
     'context': <ANY>,
@@ -1549,14 +1941,15 @@
 # ---
 # name: test_platform_setup_and_discovery[number.jie_hashui_fa_irrigation_duration_8-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
-      'max': 1439.0,
-      'min': 1.0,
-      'mode': <NumberMode.AUTO: 'auto'>,
-      'step': 1.0,
+      <NumberEntityCapabilityAttribute.MAX: 'max'>: 1439.0,
+      <NumberEntityCapabilityAttribute.MIN: 'min'>: 1.0,
+      <NumberEntityCapabilityAttribute.MODE: 'mode'>: <NumberMode.AUTO: 'auto'>,
+      <NumberEntityCapabilityAttribute.STEP: 'step'>: 1.0,
     }),
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -1593,10 +1986,10 @@
     'attributes': ReadOnlyDict({
       'device_class': 'duration',
       'friendly_name': '接HA水阀 Irrigation duration 8',
-      'max': 1439.0,
-      'min': 1.0,
-      'mode': <NumberMode.AUTO: 'auto'>,
-      'step': 1.0,
+      <NumberEntityCapabilityAttribute.MAX: 'max'>: 1439.0,
+      <NumberEntityCapabilityAttribute.MIN: 'min'>: 1.0,
+      <NumberEntityCapabilityAttribute.MODE: 'mode'>: <NumberMode.AUTO: 'auto'>,
+      <NumberEntityCapabilityAttribute.STEP: 'step'>: 1.0,
       'unit_of_measurement': 'min',
     }),
     'context': <ANY>,
@@ -1609,14 +2002,15 @@
 # ---
 # name: test_platform_setup_and_discovery[number.kabinet_temperature_correction-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
-      'max': 9.0,
-      'min': -9.0,
-      'mode': <NumberMode.AUTO: 'auto'>,
-      'step': 1.0,
+      <NumberEntityCapabilityAttribute.MAX: 'max'>: 9.0,
+      <NumberEntityCapabilityAttribute.MIN: 'min'>: -9.0,
+      <NumberEntityCapabilityAttribute.MODE: 'mode'>: <NumberMode.AUTO: 'auto'>,
+      <NumberEntityCapabilityAttribute.STEP: 'step'>: 1.0,
     }),
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -1652,10 +2046,10 @@
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'friendly_name': 'Кабінет Temperature correction',
-      'max': 9.0,
-      'min': -9.0,
-      'mode': <NumberMode.AUTO: 'auto'>,
-      'step': 1.0,
+      <NumberEntityCapabilityAttribute.MAX: 'max'>: 9.0,
+      <NumberEntityCapabilityAttribute.MIN: 'min'>: -9.0,
+      <NumberEntityCapabilityAttribute.MODE: 'mode'>: <NumberMode.AUTO: 'auto'>,
+      <NumberEntityCapabilityAttribute.STEP: 'step'>: 1.0,
       'unit_of_measurement': '℃',
     }),
     'context': <ANY>,
@@ -1668,14 +2062,15 @@
 # ---
 # name: test_platform_setup_and_discovery[number.kattenbak_delay_clean_time-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
-      'max': 600.0,
-      'min': 0.0,
-      'mode': <NumberMode.AUTO: 'auto'>,
-      'step': 1.0,
+      <NumberEntityCapabilityAttribute.MAX: 'max'>: 600.0,
+      <NumberEntityCapabilityAttribute.MIN: 'min'>: 0.0,
+      <NumberEntityCapabilityAttribute.MODE: 'mode'>: <NumberMode.AUTO: 'auto'>,
+      <NumberEntityCapabilityAttribute.STEP: 'step'>: 1.0,
     }),
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -1712,10 +2107,10 @@
     'attributes': ReadOnlyDict({
       'device_class': 'duration',
       'friendly_name': 'Kattenbak Delay clean time',
-      'max': 600.0,
-      'min': 0.0,
-      'mode': <NumberMode.AUTO: 'auto'>,
-      'step': 1.0,
+      <NumberEntityCapabilityAttribute.MAX: 'max'>: 600.0,
+      <NumberEntityCapabilityAttribute.MIN: 'min'>: 0.0,
+      <NumberEntityCapabilityAttribute.MODE: 'mode'>: <NumberMode.AUTO: 'auto'>,
+      <NumberEntityCapabilityAttribute.STEP: 'step'>: 1.0,
       'unit_of_measurement': 's',
     }),
     'context': <ANY>,
@@ -1726,16 +2121,78 @@
     'state': '90.0',
   })
 # ---
-# name: test_platform_setup_and_discovery[number.mirilla_puerta_volume-entry]
+# name: test_platform_setup_and_discovery[number.madimack_elite_v3_pool_heat_pump_temperature-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
-      'max': 100.0,
-      'min': 1.0,
-      'mode': <NumberMode.AUTO: 'auto'>,
-      'step': 1.0,
+      <NumberEntityCapabilityAttribute.MAX: 'max'>: 104.0,
+      <NumberEntityCapabilityAttribute.MIN: 'min'>: -22.0,
+      <NumberEntityCapabilityAttribute.MODE: 'mode'>: <NumberMode.AUTO: 'auto'>,
+      <NumberEntityCapabilityAttribute.STEP: 'step'>: 1.0,
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'number',
+    'entity_category': None,
+    'entity_id': 'number.madimack_elite_v3_pool_heat_pump_temperature',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'Temperature',
+    'options': dict({
+    }),
+    'original_device_class': <NumberDeviceClass.TEMPERATURE: 'temperature'>,
+    'original_icon': None,
+    'original_name': 'Temperature',
+    'platform': 'tuya',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'temperature',
+    'unique_id': 'tuya.addr6y4u8gb43nl8brnztemp_set',
+    'unit_of_measurement': <UnitOfTemperature.CELSIUS: '°C'>,
+  })
+# ---
+# name: test_platform_setup_and_discovery[number.madimack_elite_v3_pool_heat_pump_temperature-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'device_class': 'temperature',
+      'friendly_name': 'Madimack Elite V3 Pool Heat Pump Temperature',
+      <NumberEntityCapabilityAttribute.MAX: 'max'>: 104.0,
+      <NumberEntityCapabilityAttribute.MIN: 'min'>: -22.0,
+      <NumberEntityCapabilityAttribute.MODE: 'mode'>: <NumberMode.AUTO: 'auto'>,
+      <NumberEntityCapabilityAttribute.STEP: 'step'>: 1.0,
+      'unit_of_measurement': <UnitOfTemperature.CELSIUS: '°C'>,
+    }),
+    'context': <ANY>,
+    'entity_id': 'number.madimack_elite_v3_pool_heat_pump_temperature',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '31.0',
+  })
+# ---
+# name: test_platform_setup_and_discovery[number.mirilla_puerta_volume-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': list([
+      None,
+    ]),
+    'area_id': None,
+    'capabilities': dict({
+      <NumberEntityCapabilityAttribute.MAX: 'max'>: 100.0,
+      <NumberEntityCapabilityAttribute.MIN: 'min'>: 1.0,
+      <NumberEntityCapabilityAttribute.MODE: 'mode'>: <NumberMode.AUTO: 'auto'>,
+      <NumberEntityCapabilityAttribute.STEP: 'step'>: 1.0,
     }),
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -1771,10 +2228,10 @@
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'friendly_name': 'Mirilla puerta Volume',
-      'max': 100.0,
-      'min': 1.0,
-      'mode': <NumberMode.AUTO: 'auto'>,
-      'step': 1.0,
+      <NumberEntityCapabilityAttribute.MAX: 'max'>: 100.0,
+      <NumberEntityCapabilityAttribute.MIN: 'min'>: 1.0,
+      <NumberEntityCapabilityAttribute.MODE: 'mode'>: <NumberMode.AUTO: 'auto'>,
+      <NumberEntityCapabilityAttribute.STEP: 'step'>: 1.0,
       'unit_of_measurement': '%',
     }),
     'context': <ANY>,
@@ -1787,14 +2244,15 @@
 # ---
 # name: test_platform_setup_and_discovery[number.multifunction_alarm_alarm_delay-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
-      'max': 999.0,
-      'min': 0.0,
-      'mode': <NumberMode.AUTO: 'auto'>,
-      'step': 1.0,
+      <NumberEntityCapabilityAttribute.MAX: 'max'>: 999.0,
+      <NumberEntityCapabilityAttribute.MIN: 'min'>: 0.0,
+      <NumberEntityCapabilityAttribute.MODE: 'mode'>: <NumberMode.AUTO: 'auto'>,
+      <NumberEntityCapabilityAttribute.STEP: 'step'>: 1.0,
     }),
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -1831,10 +2289,10 @@
     'attributes': ReadOnlyDict({
       'device_class': 'duration',
       'friendly_name': 'Multifunction alarm Alarm delay',
-      'max': 999.0,
-      'min': 0.0,
-      'mode': <NumberMode.AUTO: 'auto'>,
-      'step': 1.0,
+      <NumberEntityCapabilityAttribute.MAX: 'max'>: 999.0,
+      <NumberEntityCapabilityAttribute.MIN: 'min'>: 0.0,
+      <NumberEntityCapabilityAttribute.MODE: 'mode'>: <NumberMode.AUTO: 'auto'>,
+      <NumberEntityCapabilityAttribute.STEP: 'step'>: 1.0,
       'unit_of_measurement': 's',
     }),
     'context': <ANY>,
@@ -1847,14 +2305,15 @@
 # ---
 # name: test_platform_setup_and_discovery[number.multifunction_alarm_arm_delay-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
-      'max': 999.0,
-      'min': 0.0,
-      'mode': <NumberMode.AUTO: 'auto'>,
-      'step': 1.0,
+      <NumberEntityCapabilityAttribute.MAX: 'max'>: 999.0,
+      <NumberEntityCapabilityAttribute.MIN: 'min'>: 0.0,
+      <NumberEntityCapabilityAttribute.MODE: 'mode'>: <NumberMode.AUTO: 'auto'>,
+      <NumberEntityCapabilityAttribute.STEP: 'step'>: 1.0,
     }),
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -1891,10 +2350,10 @@
     'attributes': ReadOnlyDict({
       'device_class': 'duration',
       'friendly_name': 'Multifunction alarm Arm delay',
-      'max': 999.0,
-      'min': 0.0,
-      'mode': <NumberMode.AUTO: 'auto'>,
-      'step': 1.0,
+      <NumberEntityCapabilityAttribute.MAX: 'max'>: 999.0,
+      <NumberEntityCapabilityAttribute.MIN: 'min'>: 0.0,
+      <NumberEntityCapabilityAttribute.MODE: 'mode'>: <NumberMode.AUTO: 'auto'>,
+      <NumberEntityCapabilityAttribute.STEP: 'step'>: 1.0,
       'unit_of_measurement': 's',
     }),
     'context': <ANY>,
@@ -1907,14 +2366,15 @@
 # ---
 # name: test_platform_setup_and_discovery[number.multifunction_alarm_siren_duration-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
-      'max': 999.0,
-      'min': 0.0,
-      'mode': <NumberMode.AUTO: 'auto'>,
-      'step': 1.0,
+      <NumberEntityCapabilityAttribute.MAX: 'max'>: 999.0,
+      <NumberEntityCapabilityAttribute.MIN: 'min'>: 0.0,
+      <NumberEntityCapabilityAttribute.MODE: 'mode'>: <NumberMode.AUTO: 'auto'>,
+      <NumberEntityCapabilityAttribute.STEP: 'step'>: 1.0,
     }),
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -1951,10 +2411,10 @@
     'attributes': ReadOnlyDict({
       'device_class': 'duration',
       'friendly_name': 'Multifunction alarm Siren duration',
-      'max': 999.0,
-      'min': 0.0,
-      'mode': <NumberMode.AUTO: 'auto'>,
-      'step': 1.0,
+      <NumberEntityCapabilityAttribute.MAX: 'max'>: 999.0,
+      <NumberEntityCapabilityAttribute.MIN: 'min'>: 0.0,
+      <NumberEntityCapabilityAttribute.MODE: 'mode'>: <NumberMode.AUTO: 'auto'>,
+      <NumberEntityCapabilityAttribute.STEP: 'step'>: 1.0,
       'unit_of_measurement': 'min',
     }),
     'context': <ANY>,
@@ -1967,14 +2427,15 @@
 # ---
 # name: test_platform_setup_and_discovery[number.poopy_nano_2_delay_clean_time-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
-      'max': 600.0,
-      'min': 1.0,
-      'mode': <NumberMode.AUTO: 'auto'>,
-      'step': 1.0,
+      <NumberEntityCapabilityAttribute.MAX: 'max'>: 600.0,
+      <NumberEntityCapabilityAttribute.MIN: 'min'>: 1.0,
+      <NumberEntityCapabilityAttribute.MODE: 'mode'>: <NumberMode.AUTO: 'auto'>,
+      <NumberEntityCapabilityAttribute.STEP: 'step'>: 1.0,
     }),
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -2011,10 +2472,10 @@
     'attributes': ReadOnlyDict({
       'device_class': 'duration',
       'friendly_name': 'Poopy Nano 2 Delay clean time',
-      'max': 600.0,
-      'min': 1.0,
-      'mode': <NumberMode.AUTO: 'auto'>,
-      'step': 1.0,
+      <NumberEntityCapabilityAttribute.MAX: 'max'>: 600.0,
+      <NumberEntityCapabilityAttribute.MIN: 'min'>: 1.0,
+      <NumberEntityCapabilityAttribute.MODE: 'mode'>: <NumberMode.AUTO: 'auto'>,
+      <NumberEntityCapabilityAttribute.STEP: 'step'>: 1.0,
       'unit_of_measurement': 's',
     }),
     'context': <ANY>,
@@ -2027,14 +2488,15 @@
 # ---
 # name: test_platform_setup_and_discovery[number.rainwater_tank_level_alarm_maximum-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
-      'max': 100.0,
-      'min': 0.0,
-      'mode': <NumberMode.AUTO: 'auto'>,
-      'step': 1.0,
+      <NumberEntityCapabilityAttribute.MAX: 'max'>: 100.0,
+      <NumberEntityCapabilityAttribute.MIN: 'min'>: 0.0,
+      <NumberEntityCapabilityAttribute.MODE: 'mode'>: <NumberMode.AUTO: 'auto'>,
+      <NumberEntityCapabilityAttribute.STEP: 'step'>: 1.0,
     }),
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -2070,10 +2532,10 @@
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'friendly_name': 'Rainwater Tank Level Alarm maximum',
-      'max': 100.0,
-      'min': 0.0,
-      'mode': <NumberMode.AUTO: 'auto'>,
-      'step': 1.0,
+      <NumberEntityCapabilityAttribute.MAX: 'max'>: 100.0,
+      <NumberEntityCapabilityAttribute.MIN: 'min'>: 0.0,
+      <NumberEntityCapabilityAttribute.MODE: 'mode'>: <NumberMode.AUTO: 'auto'>,
+      <NumberEntityCapabilityAttribute.STEP: 'step'>: 1.0,
       'unit_of_measurement': '%',
     }),
     'context': <ANY>,
@@ -2086,14 +2548,15 @@
 # ---
 # name: test_platform_setup_and_discovery[number.rainwater_tank_level_alarm_minimum-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
-      'max': 100.0,
-      'min': 0.0,
-      'mode': <NumberMode.AUTO: 'auto'>,
-      'step': 1.0,
+      <NumberEntityCapabilityAttribute.MAX: 'max'>: 100.0,
+      <NumberEntityCapabilityAttribute.MIN: 'min'>: 0.0,
+      <NumberEntityCapabilityAttribute.MODE: 'mode'>: <NumberMode.AUTO: 'auto'>,
+      <NumberEntityCapabilityAttribute.STEP: 'step'>: 1.0,
     }),
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -2129,10 +2592,10 @@
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'friendly_name': 'Rainwater Tank Level Alarm minimum',
-      'max': 100.0,
-      'min': 0.0,
-      'mode': <NumberMode.AUTO: 'auto'>,
-      'step': 1.0,
+      <NumberEntityCapabilityAttribute.MAX: 'max'>: 100.0,
+      <NumberEntityCapabilityAttribute.MIN: 'min'>: 0.0,
+      <NumberEntityCapabilityAttribute.MODE: 'mode'>: <NumberMode.AUTO: 'auto'>,
+      <NumberEntityCapabilityAttribute.STEP: 'step'>: 1.0,
       'unit_of_measurement': '%',
     }),
     'context': <ANY>,
@@ -2145,14 +2608,15 @@
 # ---
 # name: test_platform_setup_and_discovery[number.rainwater_tank_level_installation_height-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
-      'max': 3.0,
-      'min': 0.1,
-      'mode': <NumberMode.AUTO: 'auto'>,
-      'step': 0.001,
+      <NumberEntityCapabilityAttribute.MAX: 'max'>: 3.0,
+      <NumberEntityCapabilityAttribute.MIN: 'min'>: 0.1,
+      <NumberEntityCapabilityAttribute.MODE: 'mode'>: <NumberMode.AUTO: 'auto'>,
+      <NumberEntityCapabilityAttribute.STEP: 'step'>: 0.001,
     }),
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -2189,10 +2653,10 @@
     'attributes': ReadOnlyDict({
       'device_class': 'distance',
       'friendly_name': 'Rainwater Tank Level Installation height',
-      'max': 3.0,
-      'min': 0.1,
-      'mode': <NumberMode.AUTO: 'auto'>,
-      'step': 0.001,
+      <NumberEntityCapabilityAttribute.MAX: 'max'>: 3.0,
+      <NumberEntityCapabilityAttribute.MIN: 'min'>: 0.1,
+      <NumberEntityCapabilityAttribute.MODE: 'mode'>: <NumberMode.AUTO: 'auto'>,
+      <NumberEntityCapabilityAttribute.STEP: 'step'>: 0.001,
       'unit_of_measurement': 'm',
     }),
     'context': <ANY>,
@@ -2205,14 +2669,15 @@
 # ---
 # name: test_platform_setup_and_discovery[number.rainwater_tank_level_maximum_liquid_depth-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
-      'max': 2.7,
-      'min': 0.1,
-      'mode': <NumberMode.AUTO: 'auto'>,
-      'step': 0.001,
+      <NumberEntityCapabilityAttribute.MAX: 'max'>: 2.7,
+      <NumberEntityCapabilityAttribute.MIN: 'min'>: 0.1,
+      <NumberEntityCapabilityAttribute.MODE: 'mode'>: <NumberMode.AUTO: 'auto'>,
+      <NumberEntityCapabilityAttribute.STEP: 'step'>: 0.001,
     }),
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -2249,10 +2714,10 @@
     'attributes': ReadOnlyDict({
       'device_class': 'distance',
       'friendly_name': 'Rainwater Tank Level Maximum liquid depth',
-      'max': 2.7,
-      'min': 0.1,
-      'mode': <NumberMode.AUTO: 'auto'>,
-      'step': 0.001,
+      <NumberEntityCapabilityAttribute.MAX: 'max'>: 2.7,
+      <NumberEntityCapabilityAttribute.MIN: 'min'>: 0.1,
+      <NumberEntityCapabilityAttribute.MODE: 'mode'>: <NumberMode.AUTO: 'auto'>,
+      <NumberEntityCapabilityAttribute.STEP: 'step'>: 0.001,
       'unit_of_measurement': 'm',
     }),
     'context': <ANY>,
@@ -2263,16 +2728,197 @@
     'state': '0.1',
   })
 # ---
-# name: test_platform_setup_and_discovery[number.siren_time-entry]
+# name: test_platform_setup_and_discovery[number.security_camera_video_brightness-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
-      'max': 10.0,
-      'min': 1.0,
-      'mode': <NumberMode.AUTO: 'auto'>,
-      'step': 1.0,
+      <NumberEntityCapabilityAttribute.MAX: 'max'>: 100.0,
+      <NumberEntityCapabilityAttribute.MIN: 'min'>: 0.0,
+      <NumberEntityCapabilityAttribute.MODE: 'mode'>: <NumberMode.AUTO: 'auto'>,
+      <NumberEntityCapabilityAttribute.STEP: 'step'>: 1.0,
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'number',
+    'entity_category': <EntityCategory.CONFIG: 'config'>,
+    'entity_id': 'number.security_camera_video_brightness',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'Video brightness',
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'Video brightness',
+    'platform': 'tuya',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'video_brightness',
+    'unique_id': 'tuya.xihygtyd0d1faknkpsipc_bright',
+    'unit_of_measurement': '%',
+  })
+# ---
+# name: test_platform_setup_and_discovery[number.security_camera_video_brightness-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'friendly_name': 'Security Camera Video brightness',
+      <NumberEntityCapabilityAttribute.MAX: 'max'>: 100.0,
+      <NumberEntityCapabilityAttribute.MIN: 'min'>: 0.0,
+      <NumberEntityCapabilityAttribute.MODE: 'mode'>: <NumberMode.AUTO: 'auto'>,
+      <NumberEntityCapabilityAttribute.STEP: 'step'>: 1.0,
+      'unit_of_measurement': '%',
+    }),
+    'context': <ANY>,
+    'entity_id': 'number.security_camera_video_brightness',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '50.0',
+  })
+# ---
+# name: test_platform_setup_and_discovery[number.security_camera_video_contrast-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': list([
+      None,
+    ]),
+    'area_id': None,
+    'capabilities': dict({
+      <NumberEntityCapabilityAttribute.MAX: 'max'>: 100.0,
+      <NumberEntityCapabilityAttribute.MIN: 'min'>: 0.0,
+      <NumberEntityCapabilityAttribute.MODE: 'mode'>: <NumberMode.AUTO: 'auto'>,
+      <NumberEntityCapabilityAttribute.STEP: 'step'>: 1.0,
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'number',
+    'entity_category': <EntityCategory.CONFIG: 'config'>,
+    'entity_id': 'number.security_camera_video_contrast',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'Video contrast',
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'Video contrast',
+    'platform': 'tuya',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'video_contrast',
+    'unique_id': 'tuya.xihygtyd0d1faknkpsipc_contrast',
+    'unit_of_measurement': '%',
+  })
+# ---
+# name: test_platform_setup_and_discovery[number.security_camera_video_contrast-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'friendly_name': 'Security Camera Video contrast',
+      <NumberEntityCapabilityAttribute.MAX: 'max'>: 100.0,
+      <NumberEntityCapabilityAttribute.MIN: 'min'>: 0.0,
+      <NumberEntityCapabilityAttribute.MODE: 'mode'>: <NumberMode.AUTO: 'auto'>,
+      <NumberEntityCapabilityAttribute.STEP: 'step'>: 1.0,
+      'unit_of_measurement': '%',
+    }),
+    'context': <ANY>,
+    'entity_id': 'number.security_camera_video_contrast',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '50.0',
+  })
+# ---
+# name: test_platform_setup_and_discovery[number.security_camera_video_sharpness-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': list([
+      None,
+    ]),
+    'area_id': None,
+    'capabilities': dict({
+      <NumberEntityCapabilityAttribute.MAX: 'max'>: 100.0,
+      <NumberEntityCapabilityAttribute.MIN: 'min'>: 0.0,
+      <NumberEntityCapabilityAttribute.MODE: 'mode'>: <NumberMode.AUTO: 'auto'>,
+      <NumberEntityCapabilityAttribute.STEP: 'step'>: 1.0,
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'number',
+    'entity_category': <EntityCategory.CONFIG: 'config'>,
+    'entity_id': 'number.security_camera_video_sharpness',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'Video sharpness',
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'Video sharpness',
+    'platform': 'tuya',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'video_sharpness',
+    'unique_id': 'tuya.xihygtyd0d1faknkpsipc_sharp',
+    'unit_of_measurement': '%',
+  })
+# ---
+# name: test_platform_setup_and_discovery[number.security_camera_video_sharpness-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'friendly_name': 'Security Camera Video sharpness',
+      <NumberEntityCapabilityAttribute.MAX: 'max'>: 100.0,
+      <NumberEntityCapabilityAttribute.MIN: 'min'>: 0.0,
+      <NumberEntityCapabilityAttribute.MODE: 'mode'>: <NumberMode.AUTO: 'auto'>,
+      <NumberEntityCapabilityAttribute.STEP: 'step'>: 1.0,
+      'unit_of_measurement': '%',
+    }),
+    'context': <ANY>,
+    'entity_id': 'number.security_camera_video_sharpness',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '50.0',
+  })
+# ---
+# name: test_platform_setup_and_discovery[number.siren_time-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': list([
+      None,
+    ]),
+    'area_id': None,
+    'capabilities': dict({
+      <NumberEntityCapabilityAttribute.MAX: 'max'>: 10.0,
+      <NumberEntityCapabilityAttribute.MIN: 'min'>: 1.0,
+      <NumberEntityCapabilityAttribute.MODE: 'mode'>: <NumberMode.AUTO: 'auto'>,
+      <NumberEntityCapabilityAttribute.STEP: 'step'>: 1.0,
     }),
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -2308,10 +2954,10 @@
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'friendly_name': 'Siren Time',
-      'max': 10.0,
-      'min': 1.0,
-      'mode': <NumberMode.AUTO: 'auto'>,
-      'step': 1.0,
+      <NumberEntityCapabilityAttribute.MAX: 'max'>: 10.0,
+      <NumberEntityCapabilityAttribute.MIN: 'min'>: 1.0,
+      <NumberEntityCapabilityAttribute.MODE: 'mode'>: <NumberMode.AUTO: 'auto'>,
+      <NumberEntityCapabilityAttribute.STEP: 'step'>: 1.0,
       'unit_of_measurement': 'min',
     }),
     'context': <ANY>,
@@ -2324,14 +2970,15 @@
 # ---
 # name: test_platform_setup_and_discovery[number.siren_veranda_time-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
-      'max': 30.0,
-      'min': 1.0,
-      'mode': <NumberMode.AUTO: 'auto'>,
-      'step': 1.0,
+      <NumberEntityCapabilityAttribute.MAX: 'max'>: 30.0,
+      <NumberEntityCapabilityAttribute.MIN: 'min'>: 1.0,
+      <NumberEntityCapabilityAttribute.MODE: 'mode'>: <NumberMode.AUTO: 'auto'>,
+      <NumberEntityCapabilityAttribute.STEP: 'step'>: 1.0,
     }),
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -2367,10 +3014,10 @@
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'friendly_name': 'Siren veranda  Time',
-      'max': 30.0,
-      'min': 1.0,
-      'mode': <NumberMode.AUTO: 'auto'>,
-      'step': 1.0,
+      <NumberEntityCapabilityAttribute.MAX: 'max'>: 30.0,
+      <NumberEntityCapabilityAttribute.MIN: 'min'>: 1.0,
+      <NumberEntityCapabilityAttribute.MODE: 'mode'>: <NumberMode.AUTO: 'auto'>,
+      <NumberEntityCapabilityAttribute.STEP: 'step'>: 1.0,
       'unit_of_measurement': '',
     }),
     'context': <ANY>,
@@ -2383,14 +3030,15 @@
 # ---
 # name: test_platform_setup_and_discovery[number.smart_thermostats_temperature_correction-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
-      'max': 9.0,
-      'min': -9.0,
-      'mode': <NumberMode.AUTO: 'auto'>,
-      'step': 1.0,
+      <NumberEntityCapabilityAttribute.MAX: 'max'>: 9.0,
+      <NumberEntityCapabilityAttribute.MIN: 'min'>: -9.0,
+      <NumberEntityCapabilityAttribute.MODE: 'mode'>: <NumberMode.AUTO: 'auto'>,
+      <NumberEntityCapabilityAttribute.STEP: 'step'>: 1.0,
     }),
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -2426,10 +3074,10 @@
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'friendly_name': 'smart thermostats Temperature correction',
-      'max': 9.0,
-      'min': -9.0,
-      'mode': <NumberMode.AUTO: 'auto'>,
-      'step': 1.0,
+      <NumberEntityCapabilityAttribute.MAX: 'max'>: 9.0,
+      <NumberEntityCapabilityAttribute.MIN: 'min'>: -9.0,
+      <NumberEntityCapabilityAttribute.MODE: 'mode'>: <NumberMode.AUTO: 'auto'>,
+      <NumberEntityCapabilityAttribute.STEP: 'step'>: 1.0,
       'unit_of_measurement': '摄氏度',
     }),
     'context': <ANY>,
@@ -2440,16 +3088,78 @@
     'state': '-2.0',
   })
 # ---
-# name: test_platform_setup_and_discovery[number.smart_white_noise_machine_volume-entry]
+# name: test_platform_setup_and_discovery[number.smart_water_timer_irrigation_duration-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
-      'max': 100.0,
-      'min': 0.0,
-      'mode': <NumberMode.AUTO: 'auto'>,
-      'step': 1.0,
+      <NumberEntityCapabilityAttribute.MAX: 'max'>: 86400.0,
+      <NumberEntityCapabilityAttribute.MIN: 'min'>: 0.0,
+      <NumberEntityCapabilityAttribute.MODE: 'mode'>: <NumberMode.AUTO: 'auto'>,
+      <NumberEntityCapabilityAttribute.STEP: 'step'>: 1.0,
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'number',
+    'entity_category': <EntityCategory.CONFIG: 'config'>,
+    'entity_id': 'number.smart_water_timer_irrigation_duration',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'Irrigation duration',
+    'options': dict({
+    }),
+    'original_device_class': <NumberDeviceClass.DURATION: 'duration'>,
+    'original_icon': None,
+    'original_name': 'Irrigation duration',
+    'platform': 'tuya',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'irrigation_duration',
+    'unique_id': 'tuya.bl5cuqxnqzkfscountdown',
+    'unit_of_measurement': 's',
+  })
+# ---
+# name: test_platform_setup_and_discovery[number.smart_water_timer_irrigation_duration-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'device_class': 'duration',
+      'friendly_name': 'Smart Water Timer Irrigation duration',
+      <NumberEntityCapabilityAttribute.MAX: 'max'>: 86400.0,
+      <NumberEntityCapabilityAttribute.MIN: 'min'>: 0.0,
+      <NumberEntityCapabilityAttribute.MODE: 'mode'>: <NumberMode.AUTO: 'auto'>,
+      <NumberEntityCapabilityAttribute.STEP: 'step'>: 1.0,
+      'unit_of_measurement': 's',
+    }),
+    'context': <ANY>,
+    'entity_id': 'number.smart_water_timer_irrigation_duration',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'unavailable',
+  })
+# ---
+# name: test_platform_setup_and_discovery[number.smart_white_noise_machine_volume-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': list([
+      None,
+    ]),
+    'area_id': None,
+    'capabilities': dict({
+      <NumberEntityCapabilityAttribute.MAX: 'max'>: 100.0,
+      <NumberEntityCapabilityAttribute.MIN: 'min'>: 0.0,
+      <NumberEntityCapabilityAttribute.MODE: 'mode'>: <NumberMode.AUTO: 'auto'>,
+      <NumberEntityCapabilityAttribute.STEP: 'step'>: 1.0,
     }),
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -2485,10 +3195,10 @@
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'friendly_name': 'Smart White Noise Machine Volume',
-      'max': 100.0,
-      'min': 0.0,
-      'mode': <NumberMode.AUTO: 'auto'>,
-      'step': 1.0,
+      <NumberEntityCapabilityAttribute.MAX: 'max'>: 100.0,
+      <NumberEntityCapabilityAttribute.MIN: 'min'>: 0.0,
+      <NumberEntityCapabilityAttribute.MODE: 'mode'>: <NumberMode.AUTO: 'auto'>,
+      <NumberEntityCapabilityAttribute.STEP: 'step'>: 1.0,
       'unit_of_measurement': '',
     }),
     'context': <ANY>,
@@ -2501,14 +3211,15 @@
 # ---
 # name: test_platform_setup_and_discovery[number.sous_vide_cooking_temperature-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
-      'max': 92.5,
-      'min': 25.0,
-      'mode': <NumberMode.AUTO: 'auto'>,
-      'step': 0.1,
+      <NumberEntityCapabilityAttribute.MAX: 'max'>: 92.5,
+      <NumberEntityCapabilityAttribute.MIN: 'min'>: 25.0,
+      <NumberEntityCapabilityAttribute.MODE: 'mode'>: <NumberMode.AUTO: 'auto'>,
+      <NumberEntityCapabilityAttribute.STEP: 'step'>: 0.1,
     }),
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -2544,10 +3255,10 @@
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'friendly_name': 'Sous Vide Cooking temperature',
-      'max': 92.5,
-      'min': 25.0,
-      'mode': <NumberMode.AUTO: 'auto'>,
-      'step': 0.1,
+      <NumberEntityCapabilityAttribute.MAX: 'max'>: 92.5,
+      <NumberEntityCapabilityAttribute.MIN: 'min'>: 25.0,
+      <NumberEntityCapabilityAttribute.MODE: 'mode'>: <NumberMode.AUTO: 'auto'>,
+      <NumberEntityCapabilityAttribute.STEP: 'step'>: 0.1,
       'unit_of_measurement': '℃',
     }),
     'context': <ANY>,
@@ -2560,14 +3271,15 @@
 # ---
 # name: test_platform_setup_and_discovery[number.sous_vide_cooking_time-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
-      'max': 5999.0,
-      'min': 1.0,
-      'mode': <NumberMode.AUTO: 'auto'>,
-      'step': 1.0,
+      <NumberEntityCapabilityAttribute.MAX: 'max'>: 5999.0,
+      <NumberEntityCapabilityAttribute.MIN: 'min'>: 1.0,
+      <NumberEntityCapabilityAttribute.MODE: 'mode'>: <NumberMode.AUTO: 'auto'>,
+      <NumberEntityCapabilityAttribute.STEP: 'step'>: 1.0,
     }),
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -2596,18 +3308,18 @@
     'supported_features': 0,
     'translation_key': 'cook_time',
     'unique_id': 'tuya.hyda5jsihokacvaqjzmcook_time',
-    'unit_of_measurement': <UnitOfTime.MINUTES: 'min'>,
+    'unit_of_measurement': 'min',
   })
 # ---
 # name: test_platform_setup_and_discovery[number.sous_vide_cooking_time-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'friendly_name': 'Sous Vide Cooking time',
-      'max': 5999.0,
-      'min': 1.0,
-      'mode': <NumberMode.AUTO: 'auto'>,
-      'step': 1.0,
-      'unit_of_measurement': <UnitOfTime.MINUTES: 'min'>,
+      <NumberEntityCapabilityAttribute.MAX: 'max'>: 5999.0,
+      <NumberEntityCapabilityAttribute.MIN: 'min'>: 1.0,
+      <NumberEntityCapabilityAttribute.MODE: 'mode'>: <NumberMode.AUTO: 'auto'>,
+      <NumberEntityCapabilityAttribute.STEP: 'step'>: 1.0,
+      'unit_of_measurement': 'min',
     }),
     'context': <ANY>,
     'entity_id': 'number.sous_vide_cooking_time',
@@ -2617,16 +3329,78 @@
     'state': 'unavailable',
   })
 # ---
-# name: test_platform_setup_and_discovery[number.v20_volume-entry]
+# name: test_platform_setup_and_discovery[number.sprinkler_cesare_irrigation_duration-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
-      'max': 100.0,
-      'min': 0.0,
-      'mode': <NumberMode.AUTO: 'auto'>,
-      'step': 1.0,
+      <NumberEntityCapabilityAttribute.MAX: 'max'>: 86400.0,
+      <NumberEntityCapabilityAttribute.MIN: 'min'>: 0.0,
+      <NumberEntityCapabilityAttribute.MODE: 'mode'>: <NumberMode.AUTO: 'auto'>,
+      <NumberEntityCapabilityAttribute.STEP: 'step'>: 1.0,
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'number',
+    'entity_category': <EntityCategory.CONFIG: 'config'>,
+    'entity_id': 'number.sprinkler_cesare_irrigation_duration',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'Irrigation duration',
+    'options': dict({
+    }),
+    'original_device_class': <NumberDeviceClass.DURATION: 'duration'>,
+    'original_icon': None,
+    'original_name': 'Irrigation duration',
+    'platform': 'tuya',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'irrigation_duration',
+    'unique_id': 'tuya.tskafaotnfigad6oqzkfscountdown',
+    'unit_of_measurement': 's',
+  })
+# ---
+# name: test_platform_setup_and_discovery[number.sprinkler_cesare_irrigation_duration-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'device_class': 'duration',
+      'friendly_name': 'Sprinkler Cesare Irrigation duration',
+      <NumberEntityCapabilityAttribute.MAX: 'max'>: 86400.0,
+      <NumberEntityCapabilityAttribute.MIN: 'min'>: 0.0,
+      <NumberEntityCapabilityAttribute.MODE: 'mode'>: <NumberMode.AUTO: 'auto'>,
+      <NumberEntityCapabilityAttribute.STEP: 'step'>: 1.0,
+      'unit_of_measurement': 's',
+    }),
+    'context': <ANY>,
+    'entity_id': 'number.sprinkler_cesare_irrigation_duration',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '0.0',
+  })
+# ---
+# name: test_platform_setup_and_discovery[number.v20_volume-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': list([
+      None,
+    ]),
+    'area_id': None,
+    'capabilities': dict({
+      <NumberEntityCapabilityAttribute.MAX: 'max'>: 100.0,
+      <NumberEntityCapabilityAttribute.MIN: 'min'>: 0.0,
+      <NumberEntityCapabilityAttribute.MODE: 'mode'>: <NumberMode.AUTO: 'auto'>,
+      <NumberEntityCapabilityAttribute.STEP: 'step'>: 1.0,
     }),
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -2662,10 +3436,10 @@
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'friendly_name': 'V20 Volume',
-      'max': 100.0,
-      'min': 0.0,
-      'mode': <NumberMode.AUTO: 'auto'>,
-      'step': 1.0,
+      <NumberEntityCapabilityAttribute.MAX: 'max'>: 100.0,
+      <NumberEntityCapabilityAttribute.MIN: 'min'>: 0.0,
+      <NumberEntityCapabilityAttribute.MODE: 'mode'>: <NumberMode.AUTO: 'auto'>,
+      <NumberEntityCapabilityAttribute.STEP: 'step'>: 1.0,
       'unit_of_measurement': '%',
     }),
     'context': <ANY>,
@@ -2676,16 +3450,78 @@
     'state': '95.0',
   })
 # ---
-# name: test_platform_setup_and_discovery[number.white_noise_machine_volume-entry]
+# name: test_platform_setup_and_discovery[number.valve_controller_2_irrigation_duration-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
-      'max': 100.0,
-      'min': 0.0,
-      'mode': <NumberMode.AUTO: 'auto'>,
-      'step': 1.0,
+      <NumberEntityCapabilityAttribute.MAX: 'max'>: 86400.0,
+      <NumberEntityCapabilityAttribute.MIN: 'min'>: 0.0,
+      <NumberEntityCapabilityAttribute.MODE: 'mode'>: <NumberMode.AUTO: 'auto'>,
+      <NumberEntityCapabilityAttribute.STEP: 'step'>: 1.0,
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'number',
+    'entity_category': <EntityCategory.CONFIG: 'config'>,
+    'entity_id': 'number.valve_controller_2_irrigation_duration',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'Irrigation duration',
+    'options': dict({
+    }),
+    'original_device_class': <NumberDeviceClass.DURATION: 'duration'>,
+    'original_icon': None,
+    'original_name': 'Irrigation duration',
+    'platform': 'tuya',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'irrigation_duration',
+    'unique_id': 'tuya.kx8dncf1qzkfscountdown',
+    'unit_of_measurement': 's',
+  })
+# ---
+# name: test_platform_setup_and_discovery[number.valve_controller_2_irrigation_duration-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'device_class': 'duration',
+      'friendly_name': 'Valve Controller 2 Irrigation duration',
+      <NumberEntityCapabilityAttribute.MAX: 'max'>: 86400.0,
+      <NumberEntityCapabilityAttribute.MIN: 'min'>: 0.0,
+      <NumberEntityCapabilityAttribute.MODE: 'mode'>: <NumberMode.AUTO: 'auto'>,
+      <NumberEntityCapabilityAttribute.STEP: 'step'>: 1.0,
+      'unit_of_measurement': 's',
+    }),
+    'context': <ANY>,
+    'entity_id': 'number.valve_controller_2_irrigation_duration',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'unavailable',
+  })
+# ---
+# name: test_platform_setup_and_discovery[number.white_noise_machine_volume-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': list([
+      None,
+    ]),
+    'area_id': None,
+    'capabilities': dict({
+      <NumberEntityCapabilityAttribute.MAX: 'max'>: 100.0,
+      <NumberEntityCapabilityAttribute.MIN: 'min'>: 0.0,
+      <NumberEntityCapabilityAttribute.MODE: 'mode'>: <NumberMode.AUTO: 'auto'>,
+      <NumberEntityCapabilityAttribute.STEP: 'step'>: 1.0,
     }),
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -2721,10 +3557,10 @@
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'friendly_name': 'White Noise Machine Volume',
-      'max': 100.0,
-      'min': 0.0,
-      'mode': <NumberMode.AUTO: 'auto'>,
-      'step': 1.0,
+      <NumberEntityCapabilityAttribute.MAX: 'max'>: 100.0,
+      <NumberEntityCapabilityAttribute.MIN: 'min'>: 0.0,
+      <NumberEntityCapabilityAttribute.MODE: 'mode'>: <NumberMode.AUTO: 'auto'>,
+      <NumberEntityCapabilityAttribute.STEP: 'step'>: 1.0,
       'unit_of_measurement': '',
     }),
     'context': <ANY>,
@@ -2737,14 +3573,15 @@
 # ---
 # name: test_platform_setup_and_discovery[number.wifi_smart_gas_boiler_thermostat_temperature_correction-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
-      'max': 9.9,
-      'min': -9.9,
-      'mode': <NumberMode.AUTO: 'auto'>,
-      'step': 0.1,
+      <NumberEntityCapabilityAttribute.MAX: 'max'>: 9.9,
+      <NumberEntityCapabilityAttribute.MIN: 'min'>: -9.9,
+      <NumberEntityCapabilityAttribute.MODE: 'mode'>: <NumberMode.AUTO: 'auto'>,
+      <NumberEntityCapabilityAttribute.STEP: 'step'>: 0.1,
     }),
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -2780,10 +3617,10 @@
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'friendly_name': 'WiFi Smart Gas Boiler Thermostat  Temperature correction',
-      'max': 9.9,
-      'min': -9.9,
-      'mode': <NumberMode.AUTO: 'auto'>,
-      'step': 0.1,
+      <NumberEntityCapabilityAttribute.MAX: 'max'>: 9.9,
+      <NumberEntityCapabilityAttribute.MIN: 'min'>: -9.9,
+      <NumberEntityCapabilityAttribute.MODE: 'mode'>: <NumberMode.AUTO: 'auto'>,
+      <NumberEntityCapabilityAttribute.STEP: 'step'>: 0.1,
       'unit_of_measurement': '℃',
     }),
     'context': <ANY>,

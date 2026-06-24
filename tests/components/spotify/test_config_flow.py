@@ -4,7 +4,7 @@ from http import HTTPStatus
 from unittest.mock import MagicMock, patch
 
 import pytest
-from spotifyaio import SpotifyConnectionError
+from spotifyaio import SpotifyConnectionError, SpotifyForbiddenError
 
 from homeassistant.components.spotify.const import DOMAIN
 from homeassistant.config_entries import SOURCE_USER
@@ -95,6 +95,13 @@ async def test_full_flow(
     assert result["result"].unique_id == "1112264111"
 
 
+@pytest.mark.parametrize(
+    ("exception", "reason"),
+    [
+        (SpotifyConnectionError, "connection_error"),
+        (SpotifyForbiddenError, "user_not_premium"),
+    ],
+)
 @pytest.mark.usefixtures("current_request_with_host")
 @pytest.mark.usefixtures("setup_credentials")
 async def test_abort_if_spotify_error(
@@ -102,6 +109,8 @@ async def test_abort_if_spotify_error(
     hass_client_no_auth: ClientSessionGenerator,
     aioclient_mock: AiohttpClientMocker,
     mock_spotify: MagicMock,
+    exception: Exception,
+    reason: str,
 ) -> None:
     """Check Spotify errors causes flow to abort."""
     result = await hass.config_entries.flow.async_init(
@@ -128,12 +137,12 @@ async def test_abort_if_spotify_error(
         },
     )
 
-    mock_spotify.return_value.get_current_user.side_effect = SpotifyConnectionError
+    mock_spotify.return_value.get_current_user.side_effect = exception
 
     result = await hass.config_entries.flow.async_configure(result["flow_id"])
 
     assert result["type"] is FlowResultType.ABORT
-    assert result["reason"] == "connection_error"
+    assert result["reason"] == reason
 
 
 @pytest.mark.usefixtures("current_request_with_host")

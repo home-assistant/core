@@ -6,11 +6,19 @@
       'individual_address': '0.0.240',
       'multicast_group': '224.0.23.12',
       'multicast_port': 3671,
+    }),
+    'config_entry_options': dict({
       'rate_limit': 0,
       'state_updater': True,
+      'telegram_db_load_hours': 24,
+      'telegram_db_retention_days': 10,
     }),
     'config_store': dict({
       'entities': dict({
+      }),
+      'expose': dict({
+      }),
+      'time_server': dict({
       }),
     }),
     'configuration_yaml': dict({
@@ -35,12 +43,20 @@
       'knxkeys_password': '**REDACTED**',
       'multicast_group': '224.0.23.12',
       'multicast_port': 3671,
+      'user_password': '**REDACTED**',
+    }),
+    'config_entry_options': dict({
       'rate_limit': 0,
       'state_updater': True,
-      'user_password': '**REDACTED**',
+      'telegram_db_load_hours': 24,
+      'telegram_db_retention_days': 10,
     }),
     'config_store': dict({
       'entities': dict({
+      }),
+      'expose': dict({
+      }),
+      'time_server': dict({
       }),
     }),
     'configuration_yaml': None,
@@ -59,11 +75,19 @@
       'individual_address': '0.0.240',
       'multicast_group': '224.0.23.12',
       'multicast_port': 3671,
+    }),
+    'config_entry_options': dict({
       'rate_limit': 0,
       'state_updater': True,
+      'telegram_db_load_hours': 24,
+      'telegram_db_retention_days': 10,
     }),
     'config_store': dict({
       'entities': dict({
+      }),
+      'expose': dict({
+      }),
+      'time_server': dict({
       }),
     }),
     'configuration_yaml': None,
@@ -82,8 +106,12 @@
       'individual_address': '0.0.240',
       'multicast_group': '224.0.23.12',
       'multicast_port': 3671,
+    }),
+    'config_entry_options': dict({
       'rate_limit': 0,
       'state_updater': True,
+      'telegram_db_load_hours': 24,
+      'telegram_db_retention_days': 10,
     }),
     'config_store': dict({
       'entities': dict({
@@ -127,6 +155,10 @@
             }),
           }),
         }),
+      }),
+      'expose': dict({
+      }),
+      'time_server': dict({
       }),
     }),
     'configuration_yaml': None,

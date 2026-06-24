@@ -3,14 +3,14 @@
 from collections.abc import Iterable
 from datetime import timedelta
 from functools import partial
-from typing import Any
+from typing import Any, override
 
 import pypck
 
 from homeassistant.components.light import (
     ATTR_BRIGHTNESS,
     ATTR_TRANSITION,
-    DOMAIN as DOMAIN_LIGHT,
+    DOMAIN as LIGHT_DOMAIN,
     ColorMode,
     LightEntity,
     LightEntityFeature,
@@ -66,14 +66,14 @@ async def async_setup_entry(
     )
 
     config_entry.runtime_data.add_entities_callbacks.update(
-        {DOMAIN_LIGHT: add_entities}
+        {LIGHT_DOMAIN: add_entities}
     )
 
     add_entities(
         (
             entity_config
             for entity_config in config_entry.data[CONF_ENTITIES]
-            if entity_config[CONF_DOMAIN] == DOMAIN_LIGHT
+            if entity_config[CONF_DOMAIN] == LIGHT_DOMAIN
         ),
     )
 
@@ -102,6 +102,7 @@ class LcnOutputLight(LcnEntity, LightEntity):
             self._attr_color_mode = ColorMode.ONOFF
         self._attr_supported_color_modes = {self._attr_color_mode}
 
+    @override
     async def async_turn_on(self, **kwargs: Any) -> None:
         """Turn the entity on."""
         if ATTR_TRANSITION in kwargs:
@@ -130,6 +131,7 @@ class LcnOutputLight(LcnEntity, LightEntity):
         self._attr_is_on = True
         self.async_write_ha_state()
 
+    @override
     async def async_turn_off(self, **kwargs: Any) -> None:
         """Turn the entity off."""
         if ATTR_TRANSITION in kwargs:
@@ -156,6 +158,7 @@ class LcnOutputLight(LcnEntity, LightEntity):
             is not None
         )
 
+    @override
     def input_received(self, input_obj: InputType) -> None:
         """Set light state when LCN input object (command) is received."""
         if (
@@ -183,6 +186,7 @@ class LcnRelayLight(LcnEntity, LightEntity):
 
         self.output = pypck.lcn_defs.RelayPort[config[CONF_DOMAIN_DATA][CONF_OUTPUT]]
 
+    @override
     async def async_turn_on(self, **kwargs: Any) -> None:
         """Turn the entity on."""
         states = [pypck.lcn_defs.RelayStateModifier.NOCHANGE] * 8
@@ -192,6 +196,7 @@ class LcnRelayLight(LcnEntity, LightEntity):
         self._attr_is_on = True
         self.async_write_ha_state()
 
+    @override
     async def async_turn_off(self, **kwargs: Any) -> None:
         """Turn the entity off."""
         states = [pypck.lcn_defs.RelayStateModifier.NOCHANGE] * 8
@@ -208,6 +213,7 @@ class LcnRelayLight(LcnEntity, LightEntity):
             is not None
         )
 
+    @override
     def input_received(self, input_obj: InputType) -> None:
         """Set light state when LCN input object (command) is received."""
         if not isinstance(input_obj, pypck.inputs.ModStatusRelays):

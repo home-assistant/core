@@ -1,11 +1,9 @@
 """Support for Ecowitt Weather Stations."""
 
-from __future__ import annotations
-
 import dataclasses
 from datetime import datetime
 import logging
-from typing import Final
+from typing import Final, override
 
 from aioecowitt import EcoWittSensor, EcoWittSensorTypes
 
@@ -39,6 +37,8 @@ from homeassistant.util.unit_system import METRIC_SYSTEM, US_CUSTOMARY_SYSTEM
 
 from . import EcowittConfigEntry
 from .entity import EcowittEntity
+
+PARALLEL_UPDATES = 0
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -213,11 +213,13 @@ ECOWITT_SENSORS_MAPPING: Final = {
     ),
     EcoWittSensorTypes.LIGHTNING_DISTANCE_KM: SensorEntityDescription(
         key="LIGHTNING_DISTANCE_KM",
+        device_class=SensorDeviceClass.DISTANCE,
         native_unit_of_measurement=UnitOfLength.KILOMETERS,
         state_class=SensorStateClass.MEASUREMENT,
     ),
     EcoWittSensorTypes.LIGHTNING_DISTANCE_MILES: SensorEntityDescription(
         key="LIGHTNING_DISTANCE_MILES",
+        device_class=SensorDeviceClass.DISTANCE,
         native_unit_of_measurement=UnitOfLength.MILES,
         state_class=SensorStateClass.MEASUREMENT,
     ),
@@ -354,6 +356,7 @@ class EcowittSensorEntity(EcowittEntity, SensorEntity):
         self.entity_description = description
 
     @property
+    @override
     def native_value(self) -> StateType | datetime:
         """Return the state of the sensor."""
         return self.ecowitt.value

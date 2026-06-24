@@ -1,16 +1,14 @@
 """Support for LinkPlay media players."""
-
-from __future__ import annotations
+# pylint: disable=home-assistant-use-runtime-data  # Uses legacy hass.data[DOMAIN] pattern
 
 from datetime import timedelta
 import logging
-from typing import TYPE_CHECKING, Any
+from typing import TYPE_CHECKING, Any, override
 
 from linkplay.bridge import LinkPlayBridge
 from linkplay.consts import EqualizerMode, LoopMode, PlayingMode, PlayingStatus
 from linkplay.controller import LinkPlayController, LinkPlayMultiroom
 from linkplay.exceptions import LinkPlayRequestException
-import voluptuous as vol
 
 from homeassistant.components import media_source
 from homeassistant.components.media_player import (
@@ -25,7 +23,6 @@ from homeassistant.components.media_player import (
 )
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError, ServiceValidationError
-from homeassistant.helpers import config_validation as cv, entity_platform
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from homeassistant.util.dt import utcnow
 
@@ -106,15 +103,6 @@ SEEKABLE_FEATURES: MediaPlayerEntityFeature = (
     | MediaPlayerEntityFeature.SEEK
 )
 
-SERVICE_PLAY_PRESET = "play_preset"
-ATTR_PRESET_NUMBER = "preset_number"
-
-SERVICE_PLAY_PRESET_SCHEMA = cv.make_entity_service_schema(
-    {
-        vol.Required(ATTR_PRESET_NUMBER): cv.positive_int,
-    }
-)
-
 RETRY_POLL_MAXIMUM = 3
 SCAN_INTERVAL = timedelta(seconds=5)
 PARALLEL_UPDATES = 1
@@ -126,14 +114,6 @@ async def async_setup_entry(
     async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up a media player from a config entry."""
-
-    # register services
-    platform = entity_platform.async_get_current_platform()
-    platform.async_register_entity_service(
-        SERVICE_PLAY_PRESET, SERVICE_PLAY_PRESET_SCHEMA, "async_play_preset"
-    )
-
-    # add entities
     async_add_entities([LinkPlayMediaPlayerEntity(entry.runtime_data.bridge)])
 
 
@@ -158,6 +138,7 @@ class LinkPlayMediaPlayerEntity(LinkPlayBaseEntity, MediaPlayerEntity):
             mode.value for mode in bridge.player.available_equalizer_modes
         ]
 
+    @override
     async def async_added_to_hass(self) -> None:
         """Handle common setup when added to hass."""
         await super().async_added_to_hass()
@@ -178,16 +159,19 @@ class LinkPlayMediaPlayerEntity(LinkPlayBaseEntity, MediaPlayerEntity):
                 self._attr_available = False
 
     @exception_wrap
+    @override
     async def async_select_source(self, source: str) -> None:
         """Select input source."""
         await self._bridge.player.set_play_mode(SOURCE_MAP_INV[source])
 
     @exception_wrap
+    @override
     async def async_select_sound_mode(self, sound_mode: str) -> None:
         """Select sound mode."""
         await self._bridge.player.set_equalizer_mode(EQUALIZER_MAP_INV[sound_mode])
 
     @exception_wrap
+    @override
     async def async_mute_volume(self, mute: bool) -> None:
         """Mute the volume."""
         if mute:
@@ -196,40 +180,48 @@ class LinkPlayMediaPlayerEntity(LinkPlayBaseEntity, MediaPlayerEntity):
             await self._bridge.player.unmute()
 
     @exception_wrap
+    @override
     async def async_set_volume_level(self, volume: float) -> None:
         """Set volume level, range 0..1."""
         await self._bridge.player.set_volume(int(volume * 100))
 
     @exception_wrap
+    @override
     async def async_media_pause(self) -> None:
         """Send pause command."""
         await self._bridge.player.pause()
 
     @exception_wrap
+    @override
     async def async_media_play(self) -> None:
         """Send play command."""
         await self._bridge.player.resume()
 
     @exception_wrap
+    @override
     async def async_media_stop(self) -> None:
         """Send stop command."""
         await self._bridge.player.stop()
 
     @exception_wrap
+    @override
     async def async_media_next_track(self) -> None:
         """Send next command."""
         await self._bridge.player.next()
 
     @exception_wrap
+    @override
     async def async_media_previous_track(self) -> None:
         """Send previous command."""
         await self._bridge.player.previous()
 
     @exception_wrap
+    @override
     async def async_set_repeat(self, repeat: RepeatMode) -> None:
         """Set repeat mode."""
         await self._bridge.player.set_loop_mode(REPEAT_MAP_INV[repeat])
 
+    @override
     async def async_browse_media(
         self,
         media_content_type: MediaType | str | None = None,
@@ -243,11 +235,13 @@ class LinkPlayMediaPlayerEntity(LinkPlayBaseEntity, MediaPlayerEntity):
         return await media_source.async_browse_media(
             self.hass,
             media_content_id,
-            # This allows filtering content. In this case it will only show audio sources.
+            # This allows filtering content. In this case it
+            # will only show audio sources.
             content_filter=lambda item: item.media_content_type.startswith("audio/"),
         )
 
     @exception_wrap
+    @override
     async def async_play_media(
         self, media_type: MediaType | str, media_id: str, **kwargs: Any
     ) -> None:
@@ -270,11 +264,13 @@ class LinkPlayMediaPlayerEntity(LinkPlayBaseEntity, MediaPlayerEntity):
             raise HomeAssistantError(err) from err
 
     @exception_wrap
+    @override
     async def async_media_seek(self, position: float) -> None:
         """Seek to a position."""
         await self._bridge.player.seek(round(position))
 
     @exception_wrap
+    @override
     async def async_join_players(self, group_members: list[str]) -> None:
         """Join `group_members` as a player group with the current player."""
 
@@ -308,6 +304,7 @@ class LinkPlayMediaPlayerEntity(LinkPlayBaseEntity, MediaPlayerEntity):
         return bridge
 
     @property
+    @override
     def group_members(self) -> list[str]:
         """List of players which are grouped together."""
         multiroom = self._bridge.multiroom
@@ -330,6 +327,7 @@ class LinkPlayMediaPlayerEntity(LinkPlayBaseEntity, MediaPlayerEntity):
         return [leader_id, *followers]
 
     @property
+    @override
     def media_image_url(self) -> str | None:
         """Image url of playing media."""
         if self._bridge.player.status in [PlayingStatus.PLAYING, PlayingStatus.PAUSED]:
@@ -337,6 +335,7 @@ class LinkPlayMediaPlayerEntity(LinkPlayBaseEntity, MediaPlayerEntity):
         return None
 
     @exception_wrap
+    @override
     async def async_unjoin_player(self) -> None:
         """Remove this player from any group."""
         controller: LinkPlayController = self.hass.data[DOMAIN][SHARED_DATA].controller

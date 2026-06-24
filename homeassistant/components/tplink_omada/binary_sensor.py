@@ -1,10 +1,8 @@
 """Support for TPLink Omada binary sensors."""
 
-from __future__ import annotations
-
 from collections.abc import Callable
 from dataclasses import dataclass
-from typing import TYPE_CHECKING
+from typing import TYPE_CHECKING, override
 
 from tplink_omada_client.definitions import (
     DeviceStatusCategory,
@@ -31,6 +29,8 @@ from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from . import OmadaConfigEntry
 from .controller import OmadaGatewayCoordinator
 from .entity import OmadaDeviceEntity
+
+PARALLEL_UPDATES = 0
 
 
 async def async_setup_entry(
@@ -60,8 +60,10 @@ async def async_setup_entry(
         async_add_entities(entities)
 
     await controller.async_register_device_entities(
-        lambda device: device.type == "gateway"
-        and device.status_category == DeviceStatusCategory.CONNECTED,
+        lambda device: (
+            device.type == "gateway"
+            and device.status_category == DeviceStatusCategory.CONNECTED
+        ),
         _create_gateway_port_entities,
     )
 
@@ -129,6 +131,7 @@ class OmadaGatewayPortBinarySensor(
         self._attr_unique_id = f"{device.mac}_{port_number}_{entity_description.key}"
         self._attr_translation_placeholders = {"port_name": f"{port_number}"}
 
+    @override
     async def async_added_to_hass(self) -> None:
         """When entity is added to hass."""
         await super().async_added_to_hass()
@@ -144,6 +147,7 @@ class OmadaGatewayPortBinarySensor(
             self._attr_is_on = self.entity_description.update_func(port)
 
     @callback
+    @override
     def _handle_coordinator_update(self) -> None:
         """Handle updated data from the coordinator."""
         self._do_update()

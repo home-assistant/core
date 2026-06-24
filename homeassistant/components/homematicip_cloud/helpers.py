@@ -1,7 +1,5 @@
 """Helper functions for Homematicip Cloud Integration."""
 
-from __future__ import annotations
-
 from collections.abc import Callable, Coroutine
 from functools import wraps
 import json
@@ -46,7 +44,9 @@ def handle_errors[_HomematicipGenericEntityT: HomematicipGenericEntity, **_P](
                 json.dumps(result),
             )
             raise HomeAssistantError(
-                f"Error while execute function {func.__name__}: {result.get('errorCode')}. See log for more information."
+                f"Error while execute function {func.__name__}:"
+                f" {result.get('errorCode')}."
+                " See log for more information."
             )
 
     return inner
@@ -59,3 +59,16 @@ def get_channels_from_device(device: Device, channel_type: FunctionalChannelType
         for ch in device.functionalChannels
         if ch.functionalChannelType == channel_type
     ]
+
+
+def smoke_detector_channel_data_exists(device: Device, field: str) -> bool:
+    """Check if a smoke detector's channel payload contains a specific field.
+
+    The library always initializes device attributes with defaults, so hasattr
+    cannot distinguish between actual API data and defaults. This checks the
+    raw channel payload to determine if the field was actually sent by the API.
+    """
+    channels = get_channels_from_device(
+        device, FunctionalChannelType.SMOKE_DETECTOR_CHANNEL
+    )
+    return bool(channels and field in getattr(channels[0], "_rawJSONData", {}))

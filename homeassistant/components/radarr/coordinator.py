@@ -1,12 +1,10 @@
 """Data update coordinator for the Radarr integration."""
 
-from __future__ import annotations
-
 from abc import ABC, abstractmethod
 import asyncio
 from dataclasses import dataclass
 from datetime import date, datetime, timedelta
-from typing import Generic, TypeVar, cast
+from typing import Generic, TypeVar, cast, override
 
 from aiopyarr import (
     Health,
@@ -25,7 +23,7 @@ from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ConfigEntryAuthFailed
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
 
-from .const import DEFAULT_MAX_RECORDS, DOMAIN, LOGGER
+from .const import DOMAIN, LOGGER
 
 
 @dataclass(kw_only=True, slots=True)
@@ -57,7 +55,7 @@ class RadarrEvent(CalendarEvent, RadarrEventMixIn):
     """A class to describe a Radarr calendar event."""
 
 
-class RadarrDataUpdateCoordinator(DataUpdateCoordinator[T], ABC, Generic[T]):
+class RadarrDataUpdateCoordinator(DataUpdateCoordinator[T], ABC, Generic[T]):  # noqa: UP046
     """Data update coordinator for the Radarr integration."""
 
     config_entry: RadarrConfigEntry
@@ -81,6 +79,7 @@ class RadarrDataUpdateCoordinator(DataUpdateCoordinator[T], ABC, Generic[T]):
         self.api_client = api_client
         self.host_configuration = host_configuration
 
+    @override
     async def _async_update_data(self) -> T:
         """Get the latest data from Radarr."""
         try:
@@ -102,6 +101,7 @@ class RadarrDataUpdateCoordinator(DataUpdateCoordinator[T], ABC, Generic[T]):
 class StatusDataUpdateCoordinator(RadarrDataUpdateCoordinator[SystemStatus]):
     """Status update coordinator for Radarr."""
 
+    @override
     async def _fetch_data(self) -> SystemStatus:
         """Fetch the data."""
         return await self.api_client.async_get_system_status()
@@ -110,6 +110,7 @@ class StatusDataUpdateCoordinator(RadarrDataUpdateCoordinator[SystemStatus]):
 class DiskSpaceDataUpdateCoordinator(RadarrDataUpdateCoordinator[list[RootFolder]]):
     """Disk space update coordinator for Radarr."""
 
+    @override
     async def _fetch_data(self) -> list[RootFolder]:
         """Fetch the data."""
         root_folders = await self.api_client.async_get_root_folders()
@@ -121,6 +122,7 @@ class DiskSpaceDataUpdateCoordinator(RadarrDataUpdateCoordinator[list[RootFolder
 class HealthDataUpdateCoordinator(RadarrDataUpdateCoordinator[list[Health]]):
     """Health update coordinator."""
 
+    @override
     async def _fetch_data(self) -> list[Health]:
         """Fetch the health data."""
         health = await self.api_client.async_get_failed_health_checks()
@@ -130,21 +132,22 @@ class HealthDataUpdateCoordinator(RadarrDataUpdateCoordinator[list[Health]]):
 
 
 class MoviesDataUpdateCoordinator(RadarrDataUpdateCoordinator[int]):
-    """Movies update coordinator."""
+    """Movies count update coordinator."""
 
+    @override
     async def _fetch_data(self) -> int:
-        """Fetch the movies data."""
+        """Fetch the total count of movies in Radarr."""
         return len(cast(list[RadarrMovie], await self.api_client.async_get_movies()))
 
 
-class QueueDataUpdateCoordinator(RadarrDataUpdateCoordinator):
-    """Queue update coordinator."""
+class QueueDataUpdateCoordinator(RadarrDataUpdateCoordinator[int]):
+    """Queue count update coordinator."""
 
+    @override
     async def _fetch_data(self) -> int:
-        """Fetch the movies in queue."""
-        return (
-            await self.api_client.async_get_queue(page_size=DEFAULT_MAX_RECORDS)
-        ).totalRecords
+        """Fetch the number of movies in the download queue."""
+        # page_size=1 is sufficient since we only need the totalRecords count
+        return (await self.api_client.async_get_queue(page_size=1)).totalRecords
 
 
 class CalendarUpdateCoordinator(RadarrDataUpdateCoordinator[None]):
@@ -164,6 +167,7 @@ class CalendarUpdateCoordinator(RadarrDataUpdateCoordinator[None]):
         self.event: RadarrEvent | None = None
         self._events: list[RadarrEvent] = []
 
+    @override
     async def _fetch_data(self) -> None:
         """Fetch the calendar."""
         self.event = None
@@ -187,7 +191,7 @@ class CalendarUpdateCoordinator(RadarrDataUpdateCoordinator[None]):
         self._events = [
             e
             for e in self._events
-            if e.start >= datetime.now().date() - timedelta(days=30)
+            if e.start >= datetime.now().date() - timedelta(days=30)  # pylint: disable=home-assistant-enforce-naive-now
         ]
         _days = (end_date - start_date).days
         await asyncio.gather(

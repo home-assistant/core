@@ -3,11 +3,12 @@
 from collections.abc import Iterable
 from datetime import timedelta
 from functools import partial
+from typing import override
 
 import pypck
 
 from homeassistant.components.binary_sensor import (
-    DOMAIN as DOMAIN_BINARY_SENSOR,
+    DOMAIN as BINARY_SENSOR_DOMAIN,
     BinarySensorEntity,
 )
 from homeassistant.const import CONF_DOMAIN, CONF_ENTITIES, CONF_SOURCE
@@ -48,14 +49,14 @@ async def async_setup_entry(
     )
 
     config_entry.runtime_data.add_entities_callbacks.update(
-        {DOMAIN_BINARY_SENSOR: add_entities}
+        {BINARY_SENSOR_DOMAIN: add_entities}
     )
 
     add_entities(
         (
             entity_config
             for entity_config in config_entry.data[CONF_ENTITIES]
-            if entity_config[CONF_DOMAIN] == DOMAIN_BINARY_SENSOR
+            if entity_config[CONF_DOMAIN] == BINARY_SENSOR_DOMAIN
         ),
     )
 
@@ -80,6 +81,7 @@ class LcnBinarySensor(LcnEntity, BinarySensorEntity):
             is not None
         )
 
+    @override
     def input_received(self, input_obj: InputType) -> None:
         """Set sensor value when LCN input object (command) is received."""
         if not isinstance(input_obj, pypck.inputs.ModStatusBinSensors):

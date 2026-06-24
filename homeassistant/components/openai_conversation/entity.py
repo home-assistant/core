@@ -1,7 +1,5 @@
 """Base entity for OpenAI."""
 
-from __future__ import annotations
-
 import base64
 from collections.abc import AsyncGenerator, Callable, Iterable
 import json
@@ -43,7 +41,10 @@ from openai.types.responses import (
     ToolParam,
     WebSearchToolParam,
 )
-from openai.types.responses.response_create_params import ResponseCreateParamsStreaming
+from openai.types.responses.response_create_params import (
+    Reasoning,
+    ResponseCreateParamsStreaming,
+)
 from openai.types.responses.response_input_param import (
     FunctionCallOutput,
     ImageGenerationCall as ImageGenerationCallParam,
@@ -64,6 +65,7 @@ from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import device_registry as dr, issue_registry as ir, llm
 from homeassistant.helpers.entity import Entity
+from homeassistant.helpers.json import json_dumps
 from homeassistant.util import slugify
 
 from .const import (
@@ -72,6 +74,9 @@ from .const import (
     CONF_IMAGE_MODEL,
     CONF_MAX_TOKENS,
     CONF_REASONING_EFFORT,
+    CONF_REASONING_SUMMARY,
+    CONF_SERVICE_TIER,
+    CONF_STORE_RESPONSES,
     CONF_TEMPERATURE,
     CONF_TOP_P,
     CONF_VERBOSITY,
@@ -89,6 +94,10 @@ from .const import (
     RECOMMENDED_IMAGE_MODEL,
     RECOMMENDED_MAX_TOKENS,
     RECOMMENDED_REASONING_EFFORT,
+    RECOMMENDED_REASONING_SUMMARY,
+    RECOMMENDED_SERVICE_TIER,
+    RECOMMENDED_STORE_RESPONSES,
+    RECOMMENDED_STT_MODEL,
     RECOMMENDED_TEMPERATURE,
     RECOMMENDED_TOP_P,
     RECOMMENDED_VERBOSITY,
@@ -106,7 +115,7 @@ MAX_TOOL_ITERATIONS = 10
 
 
 def _adjust_schema(schema: dict[str, Any]) -> None:
-    """Adjust the schema to be compatible with OpenAI API."""
+    """Adjust the output schema to be compatible with OpenAI API."""
     if schema["type"] == "object":
         schema.setdefault("strict", True)
         schema.setdefault("additionalProperties", False)
@@ -150,10 +159,15 @@ def _format_tool(
     tool: llm.Tool, custom_serializer: Callable[[Any], Any] | None
 ) -> FunctionToolParam:
     """Format tool specification."""
+    unsupported_keys = {"oneOf", "anyOf", "allOf", "enum", "not"}
+    schema = convert(tool.parameters, custom_serializer=custom_serializer)
+    if unsupported_keys.intersection(schema):
+        schema = {k: v for k, v in schema.items() if k not in unsupported_keys}
+
     return FunctionToolParam(
         type="function",
         name=tool.name,
-        parameters=convert(tool.parameters, custom_serializer=custom_serializer),
+        parameters=schema,
         description=tool.description,
         strict=False,
     )
@@ -183,7 +197,7 @@ def _convert_content_to_param(
                     FunctionCallOutput(
                         type="function_call_output",
                         call_id=content.tool_call_id,
-                        output=json.dumps(content.tool_result),
+                        output=json_dumps(content.tool_result),
                     )
                 )
             continue
@@ -217,7 +231,7 @@ def _convert_content_to_param(
                             ResponseFunctionToolCallParam(
                                 type="function_call",
                                 name=tool_call.tool_name,
-                                arguments=json.dumps(tool_call.tool_args),
+                                arguments=json_dumps(tool_call.tool_args),
                                 call_id=tool_call.id,
                             )
                         )
@@ -340,7 +354,9 @@ async def _transform_stream(  # noqa: C901 - This is complex, but better to have
                             id=event.item.id,
                             tool_name="web_search_call",
                             tool_args={
-                                "action": event.item.action.to_dict(),
+                                "action": event.item.action.to_dict()
+                                if event.item.action
+                                else None,
                             },
                             external=True,
                         )
@@ -354,6 +370,10 @@ async def _transform_stream(  # noqa: C901 - This is complex, but better to have
                 }
                 last_role = "tool_result"
             elif isinstance(event.item, ImageGenerationCall):
+                if last_summary_index is not None:
+                    yield {"role": "assistant"}
+                    last_role = "assistant"
+                    last_summary_index = None
                 yield {"native": event.item}
                 last_summary_index = -1  # Trigger new assistant message on next turn
         elif isinstance(event, ResponseTextDeltaEvent):
@@ -457,7 +477,7 @@ class OpenAIBaseLLMEntity(Entity):
     """OpenAI conversation agent."""
 
     _attr_has_entity_name = True
-    _attr_name = None
+    _attr_name: str | None = None
 
     def __init__(self, entry: OpenAIConfigEntry, subentry: ConfigSubentry) -> None:
         """Initialize the entity."""
@@ -468,7 +488,12 @@ class OpenAIBaseLLMEntity(Entity):
             identifiers={(DOMAIN, subentry.subentry_id)},
             name=subentry.title,
             manufacturer="OpenAI",
-            model=subentry.data.get(CONF_CHAT_MODEL, RECOMMENDED_CHAT_MODEL),
+            model=subentry.data.get(
+                CONF_CHAT_MODEL,
+                RECOMMENDED_CHAT_MODEL
+                if subentry.subentry_type != "stt"
+                else RECOMMENDED_STT_MODEL,
+            ),
             entry_type=dr.DeviceEntryType.SERVICE,
         )
 
@@ -478,6 +503,7 @@ class OpenAIBaseLLMEntity(Entity):
         structure_name: str | None = None,
         structure: vol.Schema | None = None,
         force_image: bool = False,
+        max_iterations: int = MAX_TOOL_ITERATIONS,
     ) -> None:
         """Generate an answer for the chat log."""
         options = self.subentry.data
@@ -489,19 +515,25 @@ class OpenAIBaseLLMEntity(Entity):
             input=messages,
             max_output_tokens=options.get(CONF_MAX_TOKENS, RECOMMENDED_MAX_TOKENS),
             user=chat_log.conversation_id,
-            store=False,
+            service_tier=options.get(CONF_SERVICE_TIER, RECOMMENDED_SERVICE_TIER),
+            store=options.get(CONF_STORE_RESPONSES, RECOMMENDED_STORE_RESPONSES),
             stream=True,
         )
 
         if model_args["model"].startswith(("o", "gpt-5")):
-            model_args["reasoning"] = {
+            reasoning: Reasoning = {
                 "effort": options.get(
                     CONF_REASONING_EFFORT, RECOMMENDED_REASONING_EFFORT
                 )
                 if not model_args["model"].startswith("gpt-5-pro")
                 else "high",  # GPT-5 pro only supports reasoning.effort: high
-                "summary": "auto",
             }
+            reasoning_summary = options.get(
+                CONF_REASONING_SUMMARY, RECOMMENDED_REASONING_SUMMARY
+            )
+            if reasoning_summary != "off":
+                reasoning["summary"] = reasoning_summary
+            model_args["reasoning"] = reasoning
             model_args["include"] = ["reasoning.encrypted_content"]
 
         if (
@@ -563,8 +595,8 @@ class OpenAIBaseLLMEntity(Entity):
                     )
                 )
 
-                if "reasoning" not in model_args:
-                    # Reasoning models handle this correctly with just a prompt
+                if not model_args["model"].startswith("o"):
+                    # o-series models handle this correctly with just a prompt
                     remove_citations = True
 
             tools.append(web_search)
@@ -587,11 +619,13 @@ class OpenAIBaseLLMEntity(Entity):
                 model=image_model,
                 output_format="png",
             )
-            if image_model == "gpt-image-1":
+            if image_model not in ("gpt-image-1-mini", "gpt-image-2"):
                 image_tool["input_fidelity"] = "high"
             tools.append(image_tool)
+            # Keep image state on OpenAI so follow-up prompts can continue by
+            # conversation ID without resending the generated image data.
+            model_args["store"] = True
             model_args["tool_choice"] = ToolChoiceTypesParam(type="image_generation")
-            model_args["store"] = True  # Avoid sending image data back and forth
 
         if tools:
             model_args["tools"] = tools
@@ -611,8 +645,8 @@ class OpenAIBaseLLMEntity(Entity):
                 and isinstance(last_message["content"], str)
             )
             last_message["content"] = [
-                {"type": "input_text", "text": last_message["content"]},  # type: ignore[list-item]
-                *files,  # type: ignore[list-item]
+                {"type": "input_text", "text": last_message["content"]},
+                *files,
             ]
 
         if structure and structure_name:
@@ -627,22 +661,30 @@ class OpenAIBaseLLMEntity(Entity):
         client = self.entry.runtime_data
 
         # To prevent infinite loops, we limit the number of iterations
-        for _iteration in range(MAX_TOOL_ITERATIONS):
+        for _iteration in range(max_iterations):
             try:
                 stream = await client.responses.create(**model_args)
 
+                content_stream = chat_log.async_add_delta_content_stream(
+                    self.entity_id,
+                    _transform_stream(chat_log, stream, remove_citations),
+                )
                 messages.extend(
                     _convert_content_to_param(
-                        [
-                            content
-                            async for content in chat_log.async_add_delta_content_stream(
-                                self.entity_id,
-                                _transform_stream(chat_log, stream, remove_citations),
-                            )
-                        ]
+                        [content async for content in content_stream]
                     )
                 )
             except openai.RateLimitError as err:
+                if (
+                    model_args["service_tier"] == "flex"
+                    and "resource unavailable" in (err.message or "").lower()
+                ):
+                    LOGGER.info(
+                        "Flex tier is not available at the moment,"
+                        " continuing with default tier"
+                    )
+                    model_args["service_tier"] = "default"
+                    continue
                 LOGGER.error("Rate limited by OpenAI: %s", err)
                 raise HomeAssistantError("Rate limited or insufficient funds") from err
             except openai.OpenAIError as err:

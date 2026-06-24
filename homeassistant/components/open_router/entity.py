@@ -1,7 +1,5 @@
 """Base entity for Open Router."""
 
-from __future__ import annotations
-
 import base64
 from collections.abc import AsyncGenerator, Callable
 import json
@@ -34,11 +32,11 @@ from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import device_registry as dr, llm
 from homeassistant.helpers.entity import Entity
+from homeassistant.helpers.json import json_dumps
 
 from . import OpenRouterConfigEntry
-from .const import DOMAIN, LOGGER
+from .const import CONF_WEB_SEARCH, DOMAIN, LOGGER
 
-# Max number of back and forth with the LLM to generate a response
 MAX_TOOL_ITERATIONS = 10
 
 
@@ -51,7 +49,6 @@ def _adjust_schema(schema: dict[str, Any]) -> None:
         if "required" not in schema:
             schema["required"] = []
 
-        # Ensure all properties are required
         for prop, prop_info in schema["properties"].items():
             _adjust_schema(prop_info)
             if prop not in schema["required"]:
@@ -91,9 +88,13 @@ def _format_tool(
     custom_serializer: Callable[[Any], Any] | None,
 ) -> ChatCompletionFunctionToolParam:
     """Format tool specification."""
+    unsupported_keys = {"oneOf", "anyOf", "allOf"}
+    schema = convert(tool.parameters, custom_serializer=custom_serializer)
+    schema = {k: v for k, v in schema.items() if k not in unsupported_keys}
+
     tool_spec = FunctionDefinition(
         name=tool.name,
-        parameters=convert(tool.parameters, custom_serializer=custom_serializer),
+        parameters=schema,
     )
     if tool.description:
         tool_spec["description"] = tool.description
@@ -109,7 +110,7 @@ def _convert_content_to_chat_message(
         return ChatCompletionToolMessageParam(
             role="tool",
             tool_call_id=content.tool_call_id,
-            content=json.dumps(content.tool_result),
+            content=json_dumps(content.tool_result),
         )
 
     role: Literal["user", "assistant", "system"] = content.role
@@ -130,7 +131,7 @@ def _convert_content_to_chat_message(
                     type="function",
                     id=tool_call.id,
                     function=Function(
-                        arguments=json.dumps(tool_call.tool_args),
+                        arguments=json_dumps(tool_call.tool_args),
                         name=tool_call.tool_name,
                     ),
                 )
@@ -232,14 +233,20 @@ class OpenRouterEntity(Entity):
     ) -> None:
         """Generate an answer for the chat log."""
 
+        model = self.model
+        if self.subentry.data.get(CONF_WEB_SEARCH):
+            model = f"{model}:online"
+
+        extra_body: dict[str, Any] = {"require_parameters": True}
+
         model_args = {
-            "model": self.model,
+            "model": model,
             "user": chat_log.conversation_id,
             "extra_headers": {
                 "X-Title": "Home Assistant",
                 "HTTP-Referer": "https://www.home-assistant.io/integrations/open_router",
             },
-            "extra_body": {"require_parameters": True},
+            "extra_body": extra_body,
         }
 
         tools: list[ChatCompletionFunctionToolParam] | None = None
@@ -294,6 +301,10 @@ class OpenRouterEntity(Entity):
             except openai.OpenAIError as err:
                 LOGGER.error("Error talking to API: %s", err)
                 raise HomeAssistantError("Error talking to API") from err
+
+            if not result.choices:
+                LOGGER.error("API returned empty choices")
+                raise HomeAssistantError("API returned empty response")
 
             result_message = result.choices[0].message
 

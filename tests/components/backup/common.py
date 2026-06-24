@@ -1,7 +1,5 @@
 """Common helpers for the Backup integration tests."""
 
-from __future__ import annotations
-
 from collections.abc import AsyncIterator, Buffer, Callable, Coroutine, Iterable
 from pathlib import Path
 from typing import Any, cast
@@ -173,6 +171,7 @@ async def setup_backup_integration(
                     side_effect=RuntimeError("Local agent does not open stream")
                 ),
                 backup=backup,
+                on_progress=lambda *, on_progress, **_: None,
             )
         local_agent._loaded_backups = True
 

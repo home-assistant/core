@@ -1,6 +1,7 @@
 """Support for Minut Point."""
 
 import logging
+from typing import Any, override
 
 from pypoint import Device, PointSession
 
@@ -46,6 +47,7 @@ class MinutPointEntity(CoordinatorEntity[PointDataUpdateCoordinator]):
         return self.coordinator.point
 
     @property
+    @override
     def available(self) -> bool:
         """Return true if device is not offline."""
         return super().available and self.device_id in self.client.device_ids
@@ -56,7 +58,8 @@ class MinutPointEntity(CoordinatorEntity[PointDataUpdateCoordinator]):
         return self.client.device(self.device_id)
 
     @property
-    def extra_state_attributes(self):
+    @override
+    def extra_state_attributes(self) -> dict[str, Any]:
         """Return status of device."""
         attrs = self.device.device_status
         attrs["last_heard_from"] = as_local(

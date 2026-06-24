@@ -6,7 +6,7 @@ from unittest.mock import MagicMock, patch
 
 import pytest
 
-from homeassistant.components.lovelace import cast as lovelace_cast
+from homeassistant.components.lovelace import DOMAIN, cast as lovelace_cast
 from homeassistant.components.media_player import MediaClass
 from homeassistant.core import HomeAssistant
 from homeassistant.core_config import async_process_ha_core_config
@@ -44,7 +44,7 @@ async def mock_yaml_dashboard(hass: HomeAssistant) -> AsyncGenerator[None]:
     # Set up a YAML dashboard with 2 views.
     assert await async_setup_component(
         hass,
-        "lovelace",
+        DOMAIN,
         {
             "lovelace": {
                 "dashboards": {
@@ -94,14 +94,14 @@ async def test_root_object(hass: HomeAssistant) -> None:
     assert item.media_class == MediaClass.APP
     assert item.media_content_id == ""
     assert item.media_content_type == lovelace_cast.DOMAIN
-    assert item.thumbnail == "https://brands.home-assistant.io/_/lovelace/logo.png"
+    assert item.thumbnail == "/api/brands/integration/lovelace/logo.png"
     assert item.can_play is False
     assert item.can_expand is True
 
 
 async def test_browse_media_error(hass: HomeAssistant) -> None:
     """Test browse media checks valid URL."""
-    assert await async_setup_component(hass, "lovelace", {})
+    assert await async_setup_component(hass, DOMAIN, {})
 
     with pytest.raises(HomeAssistantError):
         await lovelace_cast.async_browse_media(
@@ -130,7 +130,7 @@ async def test_browse_media(hass: HomeAssistant) -> None:
     assert child_1.media_class == MediaClass.APP
     assert child_1.media_content_id == lovelace_cast.DEFAULT_DASHBOARD
     assert child_1.media_content_type == lovelace_cast.DOMAIN
-    assert child_1.thumbnail == "https://brands.home-assistant.io/_/lovelace/logo.png"
+    assert child_1.thumbnail == "/api/brands/integration/lovelace/logo.png"
     assert child_1.can_play is True
     assert child_1.can_expand is False
 
@@ -139,7 +139,7 @@ async def test_browse_media(hass: HomeAssistant) -> None:
     assert child_2.media_class == MediaClass.APP
     assert child_2.media_content_id == "yaml-with-views"
     assert child_2.media_content_type == lovelace_cast.DOMAIN
-    assert child_2.thumbnail == "https://brands.home-assistant.io/_/lovelace/logo.png"
+    assert child_2.thumbnail == "/api/brands/integration/lovelace/logo.png"
     assert child_2.can_play is True
     assert child_2.can_expand is True
 
@@ -154,9 +154,7 @@ async def test_browse_media(hass: HomeAssistant) -> None:
     assert grandchild_1.media_class == MediaClass.APP
     assert grandchild_1.media_content_id == "yaml-with-views/0"
     assert grandchild_1.media_content_type == lovelace_cast.DOMAIN
-    assert (
-        grandchild_1.thumbnail == "https://brands.home-assistant.io/_/lovelace/logo.png"
-    )
+    assert grandchild_1.thumbnail == "/api/brands/integration/lovelace/logo.png"
     assert grandchild_1.can_play is True
     assert grandchild_1.can_expand is False
 
@@ -165,9 +163,7 @@ async def test_browse_media(hass: HomeAssistant) -> None:
     assert grandchild_2.media_class == MediaClass.APP
     assert grandchild_2.media_content_id == "yaml-with-views/second-view"
     assert grandchild_2.media_content_type == lovelace_cast.DOMAIN
-    assert (
-        grandchild_2.thumbnail == "https://brands.home-assistant.io/_/lovelace/logo.png"
-    )
+    assert grandchild_2.thumbnail == "/api/brands/integration/lovelace/logo.png"
     assert grandchild_2.can_play is True
     assert grandchild_2.can_expand is False
 

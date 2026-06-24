@@ -23,7 +23,7 @@
           "pitch": "Default pitch of the voice",
           "profiles": "Default audio profiles",
           "speed": "Default rate/speed of the voice",
-          "stt_model": "Speech-to-Text model",
+          "stt_model": "Speech-to-text model",
           "text_type": "Default text type",
           "voice": "Default voice name (overrides language and gender)"
         }

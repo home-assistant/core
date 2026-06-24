@@ -2,9 +2,8 @@
 
 from collections.abc import Mapping
 import logging
-from typing import Any
+from typing import Any, override
 
-from httpx import AsyncClient
 from pythonxbox.api.client import XboxLiveClient
 from pythonxbox.authentication.manager import AuthenticationManager
 from pythonxbox.authentication.models import OAuth2TokenResponse
@@ -20,6 +19,7 @@ from homeassistant.config_entries import (
 )
 from homeassistant.core import callback
 from homeassistant.helpers import config_entry_oauth2_flow
+from homeassistant.helpers.httpx_client import get_async_client
 from homeassistant.helpers.selector import (
     SelectOptionDict,
     SelectSelector,
@@ -40,11 +40,13 @@ class OAuth2FlowHandler(
     MINOR_VERSION = 3
 
     @property
+    @override
     def logger(self) -> logging.Logger:
         """Return logger."""
         return logging.getLogger(__name__)
 
     @property
+    @override
     def extra_authorize_data(self) -> dict:
         """Extra data that needs to be appended to the authorize url."""
         scopes = ["Xboxlive.signin", "Xboxlive.offline_access"]
@@ -52,29 +54,32 @@ class OAuth2FlowHandler(
 
     @classmethod
     @callback
+    @override
     def async_get_supported_subentry_types(
         cls, config_entry: ConfigEntry
     ) -> dict[str, type[ConfigSubentryFlow]]:
         """Return subentries supported by this integration."""
         return {"friend": FriendSubentryFlowHandler}
 
+    @override
     async def async_step_user(
         self, user_input: dict[str, Any] | None = None
     ) -> ConfigFlowResult:
         """Handle a flow start."""
         return await super().async_step_user(user_input)
 
+    @override
     async def async_oauth_create_entry(self, data: dict) -> ConfigFlowResult:
         """Create an entry for the flow."""
 
-        async with AsyncClient() as session:
-            auth = AuthenticationManager(session, "", "", "")
-            auth.oauth = OAuth2TokenResponse(**data["token"])
-            await auth.refresh_tokens()
+        session = get_async_client(self.hass)
+        auth = AuthenticationManager(session, "", "", "")
+        auth.oauth = OAuth2TokenResponse(**data["token"])
+        await auth.refresh_tokens()
 
-            client = XboxLiveClient(auth)
+        client = XboxLiveClient(auth)
 
-            me = await client.people.get_friends_by_xuid(client.xuid)
+        me = await client.people.get_friend_by_xuid(client.xuid)
 
         await self.async_set_unique_id(client.xuid)
 
@@ -83,9 +88,7 @@ class OAuth2FlowHandler(
                 description_placeholders={"gamertag": me.people[0].gamertag}
             )
 
-            return self.async_update_reload_and_abort(
-                self._get_reauth_entry(), data=data
-            )
+            return self.async_update_and_abort(self._get_reauth_entry(), data=data)
 
         self._abort_if_unique_id_configured()
 

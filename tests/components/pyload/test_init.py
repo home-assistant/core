@@ -1,9 +1,7 @@
 """Test pyLoad init."""
 
-from datetime import timedelta
 from unittest.mock import MagicMock
 
-from freezegun.api import FrozenDateTimeFactory
 from pyloadapi.exceptions import CannotConnect, InvalidAuth, ParserError
 import pytest
 
@@ -11,7 +9,7 @@ from homeassistant.config_entries import SOURCE_REAUTH, ConfigEntryState
 from homeassistant.const import CONF_PATH, CONF_URL
 from homeassistant.core import HomeAssistant
 
-from tests.common import MockConfigEntry, async_fire_time_changed
+from tests.common import MockConfigEntry
 
 
 async def test_entry_setup_unload(
@@ -44,7 +42,7 @@ async def test_config_entry_setup_errors(
     side_effect: Exception,
 ) -> None:
     """Test config entry not ready."""
-    mock_pyloadapi.login.side_effect = side_effect
+    mock_pyloadapi.version.side_effect = side_effect
     config_entry.add_to_hass(hass)
     await hass.config_entries.async_setup(config_entry.entry_id)
     await hass.async_block_till_done()
@@ -58,7 +56,7 @@ async def test_config_entry_setup_invalid_auth(
     mock_pyloadapi: MagicMock,
 ) -> None:
     """Test config entry authentication."""
-    mock_pyloadapi.login.side_effect = InvalidAuth
+    mock_pyloadapi.version.side_effect = InvalidAuth
     config_entry.add_to_hass(hass)
     await hass.config_entries.async_setup(config_entry.entry_id)
     await hass.async_block_till_done()
@@ -72,23 +70,59 @@ async def test_coordinator_update_invalid_auth(
     hass: HomeAssistant,
     config_entry: MockConfigEntry,
     mock_pyloadapi: MagicMock,
-    freezer: FrozenDateTimeFactory,
 ) -> None:
     """Test coordinator authentication."""
+    mock_pyloadapi.get_status.side_effect = InvalidAuth
+
     config_entry.add_to_hass(hass)
     await hass.config_entries.async_setup(config_entry.entry_id)
     await hass.async_block_till_done()
 
-    assert config_entry.state is ConfigEntryState.LOADED
-
-    mock_pyloadapi.login.side_effect = InvalidAuth
-    mock_pyloadapi.get_status.side_effect = InvalidAuth
-
-    freezer.tick(timedelta(seconds=20))
-    async_fire_time_changed(hass)
-    await hass.async_block_till_done()
+    assert config_entry.state is ConfigEntryState.SETUP_ERROR
 
     assert any(config_entry.async_get_active_flows(hass, {SOURCE_REAUTH}))
+
+
+async def test_coordinator_setup_invalid_auth(
+    hass: HomeAssistant,
+    config_entry: MockConfigEntry,
+    mock_pyloadapi: MagicMock,
+) -> None:
+    """Test coordinator setup authentication."""
+    mock_pyloadapi.version.side_effect = InvalidAuth
+
+    config_entry.add_to_hass(hass)
+    await hass.config_entries.async_setup(config_entry.entry_id)
+    await hass.async_block_till_done()
+
+    assert config_entry.state is ConfigEntryState.SETUP_ERROR
+
+    assert any(config_entry.async_get_active_flows(hass, {SOURCE_REAUTH}))
+
+
+@pytest.mark.parametrize(
+    ("exception", "state"),
+    [
+        (CannotConnect, ConfigEntryState.SETUP_RETRY),
+        (InvalidAuth, ConfigEntryState.SETUP_ERROR),
+        (ParserError, ConfigEntryState.SETUP_RETRY),
+    ],
+)
+async def test_coordinator_update_errors(
+    hass: HomeAssistant,
+    config_entry: MockConfigEntry,
+    mock_pyloadapi: MagicMock,
+    exception: Exception,
+    state: ConfigEntryState,
+) -> None:
+    """Test coordinator setup authentication."""
+    mock_pyloadapi.get_status.side_effect = exception
+
+    config_entry.add_to_hass(hass)
+    await hass.config_entries.async_setup(config_entry.entry_id)
+    await hass.async_block_till_done()
+
+    assert config_entry.state is state
 
 
 @pytest.mark.usefixtures("mock_pyloadapi")

@@ -5,19 +5,24 @@ from dataclasses import dataclass
 import datetime
 from datetime import time
 import logging
-from typing import Any
+from typing import Any, override
 
 from roborock.data import DnDTimer, ValleyElectricityTimer
 from roborock.exceptions import RoborockException
 
 from homeassistant.components.time import TimeEntity, TimeEntityDescription
 from homeassistant.const import EntityCategory
-from homeassistant.core import HomeAssistant
+from homeassistant.core import HomeAssistant, callback
 from homeassistant.exceptions import HomeAssistantError
+from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
 from .const import DOMAIN
-from .coordinator import RoborockConfigEntry, RoborockDataUpdateCoordinator
+from .coordinator import (
+    RoborockConfigEntry,
+    RoborockCoordinatorType,
+    RoborockDataUpdateCoordinator,
+)
 from .entity import RoborockEntityV1
 
 _LOGGER = logging.getLogger(__name__)
@@ -123,23 +128,41 @@ async def async_setup_entry(
     async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up Roborock time platform."""
-    async_add_entities(
-        [
+    coordinators = config_entry.runtime_data
+
+    @callback
+    def async_add_coordinator_entities(
+        coordinator: RoborockCoordinatorType,
+    ) -> None:
+        """Add entities for a specific coordinator."""
+        if not isinstance(coordinator, RoborockDataUpdateCoordinator):
+            return
+        entities = [
             RoborockTimeEntity(
                 f"{description.key}_{coordinator.duid_slug}",
                 coordinator,
                 description,
                 trait,
             )
-            for coordinator in config_entry.runtime_data.v1
             for description in TIME_DESCRIPTIONS
             if (trait := description.trait(coordinator.properties_api)) is not None
         ]
+        async_add_entities(entities)
+
+    for coordinator in coordinators.values():
+        async_add_coordinator_entities(coordinator)
+
+    config_entry.async_on_unload(
+        async_dispatcher_connect(
+            hass,
+            f"roborock_coordinator_added_{config_entry.entry_id}",
+            async_add_coordinator_entities,
+        )
     )
 
 
 class RoborockTimeEntity(RoborockEntityV1, TimeEntity):
-    """A class to let you set options on a Roborock vacuum where the potential options are fixed."""
+    """A class to set time options on a Roborock vacuum."""
 
     entity_description: RoborockTimeDescription
 
@@ -158,10 +181,12 @@ class RoborockTimeEntity(RoborockEntityV1, TimeEntity):
         self._trait = trait
 
     @property
+    @override
     def native_value(self) -> time | None:
         """Return the value reported by the time."""
         return self.entity_description.get_value(self._trait)
 
+    @override
     async def async_set_value(self, value: time) -> None:
         """Set the time."""
         try:

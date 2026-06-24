@@ -1,8 +1,6 @@
 """Support for TPLink Omada device firmware updates."""
 
-from __future__ import annotations
-
-from typing import Any
+from typing import Any, override
 
 from tplink_omada_client.devices import OmadaListDevice
 from tplink_omada_client.exceptions import OmadaClientException, RequestFailed
@@ -19,6 +17,8 @@ from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from . import OmadaConfigEntry
 from .coordinator import OmadaFirmwareUpdateCoordinator
 from .entity import OmadaDeviceEntity
+
+PARALLEL_UPDATES = 0
 
 
 async def async_setup_entry(
@@ -67,6 +67,7 @@ class OmadaDeviceUpdate(
 
         self._attr_unique_id = f"{device.mac}_firmware"
 
+    @override
     def release_notes(self) -> str | None:
         """Get the release notes for the latest update."""
         status = self.coordinator.data[self._mac]
@@ -74,6 +75,7 @@ class OmadaDeviceUpdate(
             return status.firmware.release_notes
         return None
 
+    @override
     async def async_install(
         self, version: str | None, backup: bool, **kwargs: Any
     ) -> None:
@@ -86,12 +88,14 @@ class OmadaDeviceUpdate(
             raise HomeAssistantError("Firmware update request rejected") from ex
         except OmadaClientException as ex:
             raise HomeAssistantError(
-                "Unable to send Firmware update request. Check the controller is online."
+                "Unable to send Firmware update request."
+                " Check the controller is online."
             ) from ex
         finally:
             await self.coordinator.async_request_refresh()
 
     @callback
+    @override
     def _handle_coordinator_update(self) -> None:
         """Handle updated data from the coordinator."""
         status = self.coordinator.data[self._mac]

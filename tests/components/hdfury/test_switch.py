@@ -25,6 +25,7 @@ from . import setup_integration
 from tests.common import MockConfigEntry, async_fire_time_changed, snapshot_platform
 
 
+@pytest.mark.usefixtures("entity_registry_enabled_by_default")
 async def test_switch_entities(
     hass: HomeAssistant,
     snapshot: SnapshotAssertion,
@@ -40,6 +41,8 @@ async def test_switch_entities(
 @pytest.mark.parametrize(
     ("entity_id", "method", "service"),
     [
+        ("switch.hdfury_vrroom_02_cec", "set_cec", SERVICE_TURN_ON),
+        ("switch.hdfury_vrroom_02_cec", "set_cec", SERVICE_TURN_OFF),
         (
             "switch.hdfury_vrroom_02_auto_switch_inputs",
             "set_auto_switch_inputs",
@@ -52,8 +55,13 @@ async def test_switch_entities(
         ),
         ("switch.hdfury_vrroom_02_oled_display", "set_oled", SERVICE_TURN_ON),
         ("switch.hdfury_vrroom_02_oled_display", "set_oled", SERVICE_TURN_OFF),
+        ("switch.hdfury_vrroom_02_tx0_force_5v", "set_tx0_force_5v", SERVICE_TURN_ON),
+        ("switch.hdfury_vrroom_02_tx0_force_5v", "set_tx0_force_5v", SERVICE_TURN_OFF),
+        ("switch.hdfury_vrroom_02_tx1_force_5v", "set_tx1_force_5v", SERVICE_TURN_ON),
+        ("switch.hdfury_vrroom_02_tx1_force_5v", "set_tx1_force_5v", SERVICE_TURN_OFF),
     ],
 )
+@pytest.mark.usefixtures("entity_registry_enabled_by_default")
 async def test_switch_turn_on_off(
     hass: HomeAssistant,
     mock_hdfury_client: AsyncMock,

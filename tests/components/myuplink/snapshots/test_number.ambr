@@ -1,14 +1,15 @@
 # serializer version: 1
 # name: test_number_states[platforms0][number.gotham_city_degree_minutes-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
-      'max': 3000.0,
-      'min': -3000.0,
-      'mode': <NumberMode.AUTO: 'auto'>,
-      'step': 0.1,
+      <NumberEntityCapabilityAttribute.MAX: 'max'>: 3000.0,
+      <NumberEntityCapabilityAttribute.MIN: 'min'>: -3000.0,
+      <NumberEntityCapabilityAttribute.MODE: 'mode'>: <NumberMode.AUTO: 'auto'>,
+      <NumberEntityCapabilityAttribute.STEP: 'step'>: 0.1,
     }),
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -44,10 +45,10 @@
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'friendly_name': 'Gotham City Degree minutes',
-      'max': 3000.0,
-      'min': -3000.0,
-      'mode': <NumberMode.AUTO: 'auto'>,
-      'step': 0.1,
+      <NumberEntityCapabilityAttribute.MAX: 'max'>: 3000.0,
+      <NumberEntityCapabilityAttribute.MIN: 'min'>: -3000.0,
+      <NumberEntityCapabilityAttribute.MODE: 'mode'>: <NumberMode.AUTO: 'auto'>,
+      <NumberEntityCapabilityAttribute.STEP: 'step'>: 0.1,
       'unit_of_measurement': 'DM',
     }),
     'context': <ANY>,
@@ -60,14 +61,15 @@
 # ---
 # name: test_number_states[platforms0][number.gotham_city_degree_minutes_2-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
-      'max': 3000.0,
-      'min': -3000.0,
-      'mode': <NumberMode.AUTO: 'auto'>,
-      'step': 0.1,
+      <NumberEntityCapabilityAttribute.MAX: 'max'>: 3000.0,
+      <NumberEntityCapabilityAttribute.MIN: 'min'>: -3000.0,
+      <NumberEntityCapabilityAttribute.MODE: 'mode'>: <NumberMode.AUTO: 'auto'>,
+      <NumberEntityCapabilityAttribute.STEP: 'step'>: 0.1,
     }),
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -103,10 +105,10 @@
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'friendly_name': 'Gotham City Degree minutes',
-      'max': 3000.0,
-      'min': -3000.0,
-      'mode': <NumberMode.AUTO: 'auto'>,
-      'step': 0.1,
+      <NumberEntityCapabilityAttribute.MAX: 'max'>: 3000.0,
+      <NumberEntityCapabilityAttribute.MIN: 'min'>: -3000.0,
+      <NumberEntityCapabilityAttribute.MODE: 'mode'>: <NumberMode.AUTO: 'auto'>,
+      <NumberEntityCapabilityAttribute.STEP: 'step'>: 0.1,
       'unit_of_measurement': 'DM',
     }),
     'context': <ANY>,
@@ -119,14 +121,15 @@
 # ---
 # name: test_number_states[platforms0][number.gotham_city_heating_offset_climate_system_1-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
-      'max': 10.0,
-      'min': -10.0,
-      'mode': <NumberMode.AUTO: 'auto'>,
-      'step': 1.0,
+      <NumberEntityCapabilityAttribute.MAX: 'max'>: 10.0,
+      <NumberEntityCapabilityAttribute.MIN: 'min'>: -10.0,
+      <NumberEntityCapabilityAttribute.MODE: 'mode'>: <NumberMode.AUTO: 'auto'>,
+      <NumberEntityCapabilityAttribute.STEP: 'step'>: 1.0,
     }),
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -162,10 +165,10 @@
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'friendly_name': 'Gotham City Heating offset climate system 1',
-      'max': 10.0,
-      'min': -10.0,
-      'mode': <NumberMode.AUTO: 'auto'>,
-      'step': 1.0,
+      <NumberEntityCapabilityAttribute.MAX: 'max'>: 10.0,
+      <NumberEntityCapabilityAttribute.MIN: 'min'>: -10.0,
+      <NumberEntityCapabilityAttribute.MODE: 'mode'>: <NumberMode.AUTO: 'auto'>,
+      <NumberEntityCapabilityAttribute.STEP: 'step'>: 1.0,
     }),
     'context': <ANY>,
     'entity_id': 'number.gotham_city_heating_offset_climate_system_1',
@@ -177,14 +180,15 @@
 # ---
 # name: test_number_states[platforms0][number.gotham_city_heating_offset_climate_system_1_2-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
-      'max': 10.0,
-      'min': -10.0,
-      'mode': <NumberMode.AUTO: 'auto'>,
-      'step': 1.0,
+      <NumberEntityCapabilityAttribute.MAX: 'max'>: 10.0,
+      <NumberEntityCapabilityAttribute.MIN: 'min'>: -10.0,
+      <NumberEntityCapabilityAttribute.MODE: 'mode'>: <NumberMode.AUTO: 'auto'>,
+      <NumberEntityCapabilityAttribute.STEP: 'step'>: 1.0,
     }),
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -220,10 +224,10 @@
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'friendly_name': 'Gotham City Heating offset climate system 1',
-      'max': 10.0,
-      'min': -10.0,
-      'mode': <NumberMode.AUTO: 'auto'>,
-      'step': 1.0,
+      <NumberEntityCapabilityAttribute.MAX: 'max'>: 10.0,
+      <NumberEntityCapabilityAttribute.MIN: 'min'>: -10.0,
+      <NumberEntityCapabilityAttribute.MODE: 'mode'>: <NumberMode.AUTO: 'auto'>,
+      <NumberEntityCapabilityAttribute.STEP: 'step'>: 1.0,
     }),
     'context': <ANY>,
     'entity_id': 'number.gotham_city_heating_offset_climate_system_1_2',
@@ -235,14 +239,15 @@
 # ---
 # name: test_number_states[platforms0][number.gotham_city_room_sensor_set_point_value_heating_climate_system_1-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
-      'max': 35.0,
-      'min': 5.0,
-      'mode': <NumberMode.AUTO: 'auto'>,
-      'step': 0.5,
+      <NumberEntityCapabilityAttribute.MAX: 'max'>: 35.0,
+      <NumberEntityCapabilityAttribute.MIN: 'min'>: 5.0,
+      <NumberEntityCapabilityAttribute.MODE: 'mode'>: <NumberMode.AUTO: 'auto'>,
+      <NumberEntityCapabilityAttribute.STEP: 'step'>: 0.5,
     }),
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -278,10 +283,10 @@
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'friendly_name': 'Gotham City Room sensor set point value heating climate system 1',
-      'max': 35.0,
-      'min': 5.0,
-      'mode': <NumberMode.AUTO: 'auto'>,
-      'step': 0.5,
+      <NumberEntityCapabilityAttribute.MAX: 'max'>: 35.0,
+      <NumberEntityCapabilityAttribute.MIN: 'min'>: 5.0,
+      <NumberEntityCapabilityAttribute.MODE: 'mode'>: <NumberMode.AUTO: 'auto'>,
+      <NumberEntityCapabilityAttribute.STEP: 'step'>: 0.5,
     }),
     'context': <ANY>,
     'entity_id': 'number.gotham_city_room_sensor_set_point_value_heating_climate_system_1',
@@ -293,14 +298,15 @@
 # ---
 # name: test_number_states[platforms0][number.gotham_city_room_sensor_set_point_value_heating_climate_system_1_2-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
-      'max': 35.0,
-      'min': 5.0,
-      'mode': <NumberMode.AUTO: 'auto'>,
-      'step': 0.5,
+      <NumberEntityCapabilityAttribute.MAX: 'max'>: 35.0,
+      <NumberEntityCapabilityAttribute.MIN: 'min'>: 5.0,
+      <NumberEntityCapabilityAttribute.MODE: 'mode'>: <NumberMode.AUTO: 'auto'>,
+      <NumberEntityCapabilityAttribute.STEP: 'step'>: 0.5,
     }),
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -336,10 +342,10 @@
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'friendly_name': 'Gotham City Room sensor set point value heating climate system 1',
-      'max': 35.0,
-      'min': 5.0,
-      'mode': <NumberMode.AUTO: 'auto'>,
-      'step': 0.5,
+      <NumberEntityCapabilityAttribute.MAX: 'max'>: 35.0,
+      <NumberEntityCapabilityAttribute.MIN: 'min'>: 5.0,
+      <NumberEntityCapabilityAttribute.MODE: 'mode'>: <NumberMode.AUTO: 'auto'>,
+      <NumberEntityCapabilityAttribute.STEP: 'step'>: 0.5,
     }),
     'context': <ANY>,
     'entity_id': 'number.gotham_city_room_sensor_set_point_value_heating_climate_system_1_2',
@@ -351,14 +357,15 @@
 # ---
 # name: test_number_states[platforms0][number.gotham_city_start_diff_additional_heat-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
-      'max': 2000.0,
-      'min': 100.0,
-      'mode': <NumberMode.AUTO: 'auto'>,
-      'step': 10.0,
+      <NumberEntityCapabilityAttribute.MAX: 'max'>: 2000.0,
+      <NumberEntityCapabilityAttribute.MIN: 'min'>: 100.0,
+      <NumberEntityCapabilityAttribute.MODE: 'mode'>: <NumberMode.AUTO: 'auto'>,
+      <NumberEntityCapabilityAttribute.STEP: 'step'>: 10.0,
     }),
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -394,10 +401,10 @@
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'friendly_name': 'Gotham City start diff additional heat',
-      'max': 2000.0,
-      'min': 100.0,
-      'mode': <NumberMode.AUTO: 'auto'>,
-      'step': 10.0,
+      <NumberEntityCapabilityAttribute.MAX: 'max'>: 2000.0,
+      <NumberEntityCapabilityAttribute.MIN: 'min'>: 100.0,
+      <NumberEntityCapabilityAttribute.MODE: 'mode'>: <NumberMode.AUTO: 'auto'>,
+      <NumberEntityCapabilityAttribute.STEP: 'step'>: 10.0,
       'unit_of_measurement': 'DM',
     }),
     'context': <ANY>,
@@ -410,14 +417,15 @@
 # ---
 # name: test_number_states[platforms0][number.gotham_city_start_diff_additional_heat_2-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
-      'max': 2000.0,
-      'min': 100.0,
-      'mode': <NumberMode.AUTO: 'auto'>,
-      'step': 10.0,
+      <NumberEntityCapabilityAttribute.MAX: 'max'>: 2000.0,
+      <NumberEntityCapabilityAttribute.MIN: 'min'>: 100.0,
+      <NumberEntityCapabilityAttribute.MODE: 'mode'>: <NumberMode.AUTO: 'auto'>,
+      <NumberEntityCapabilityAttribute.STEP: 'step'>: 10.0,
     }),
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -453,10 +461,10 @@
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'friendly_name': 'Gotham City start diff additional heat',
-      'max': 2000.0,
-      'min': 100.0,
-      'mode': <NumberMode.AUTO: 'auto'>,
-      'step': 10.0,
+      <NumberEntityCapabilityAttribute.MAX: 'max'>: 2000.0,
+      <NumberEntityCapabilityAttribute.MIN: 'min'>: 100.0,
+      <NumberEntityCapabilityAttribute.MODE: 'mode'>: <NumberMode.AUTO: 'auto'>,
+      <NumberEntityCapabilityAttribute.STEP: 'step'>: 10.0,
       'unit_of_measurement': 'DM',
     }),
     'context': <ANY>,

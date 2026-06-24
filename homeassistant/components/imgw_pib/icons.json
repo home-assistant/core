@@ -1,8 +1,20 @@
 {
   "entity": {
     "sensor": {
+      "emergent_vegetation_cover": {
+        "default": "mdi:leaf-circle-outline"
+      },
+      "floating_vegetation_cover": {
+        "default": "mdi:leaf-circle-outline"
+      },
       "hydrological_alert": {
         "default": "mdi:alert-octagon-outline"
+      },
+      "ice_phenomena": {
+        "default": "mdi:snowflake"
+      },
+      "submerged_vegetation_cover": {
+        "default": "mdi:leaf-circle-outline"
       },
       "water_flow": {
         "default": "mdi:waves-arrow-right"

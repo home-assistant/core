@@ -2,11 +2,16 @@
 
 from unittest.mock import AsyncMock
 
-from aioamazondevices.const.devices import SPEAKER_GROUP_FAMILY, SPEAKER_GROUP_MODEL
-from aioamazondevices.exceptions import CannotConnect, CannotRetrieveData
+from aioamazondevices.const.devices import SPEAKER_GROUP_FAMILY
+from aioamazondevices.exceptions import (
+    CannotAuthenticate,
+    CannotConnect,
+    CannotRetrieveData,
+)
 import pytest
 
 from homeassistant.components.alexa_devices.const import DOMAIN
+from homeassistant.components.sensor import DOMAIN as SENSOR_DOMAIN
 from homeassistant.components.switch import DOMAIN as SWITCH_DOMAIN, SERVICE_TURN_ON
 from homeassistant.const import ATTR_ENTITY_ID, STATE_OFF
 from homeassistant.core import HomeAssistant
@@ -24,15 +29,37 @@ ENTITY_ID = "switch.echo_test_do_not_disturb"
 @pytest.mark.parametrize(
     ("side_effect", "key", "error"),
     [
-        (CannotConnect, "cannot_connect_with_error", "CannotConnect()"),
-        (CannotRetrieveData, "cannot_retrieve_data_with_error", "CannotRetrieveData()"),
+        pytest.param(
+            CannotAuthenticate,
+            "invalid_auth",
+            "CannotAuthenticate()",
+            id="cannot_authenticate",
+        ),
+        pytest.param(
+            CannotConnect,
+            "cannot_connect_with_error",
+            "CannotConnect()",
+            id="cannot_connect",
+        ),
+        pytest.param(
+            CannotRetrieveData,
+            "cannot_retrieve_data_with_error",
+            "CannotRetrieveData()",
+            id="cannot_retrieve_data",
+        ),
+        pytest.param(
+            ValueError,
+            "cannot_retrieve_data_with_error",
+            "ValueError()",
+            id="value_error",
+        ),
     ],
 )
 async def test_alexa_api_call_exceptions(
     hass: HomeAssistant,
     mock_amazon_devices_client: AsyncMock,
     mock_config_entry: MockConfigEntry,
-    side_effect: Exception,
+    side_effect: type[Exception],
     key: str,
     error: str,
 ) -> None:
@@ -80,8 +107,8 @@ async def test_alexa_unique_id_migration(
     )
 
     entity = entity_registry.async_get_or_create(
-        SWITCH_DOMAIN,
         DOMAIN,
+        SWITCH_DOMAIN,
         unique_id=f"{TEST_DEVICE_1_SN}-do_not_disturb",
         device_id=device.id,
         config_entry=mock_config_entry,
@@ -113,7 +140,7 @@ async def test_alexa_dnd_group_removal(
         identifiers={(DOMAIN, mock_config_entry.entry_id)},
         name=mock_config_entry.title,
         manufacturer="Amazon",
-        model=SPEAKER_GROUP_MODEL,
+        model="Speaker Group",
         entry_type=dr.DeviceEntryType.SERVICE,
     )
 
@@ -129,6 +156,45 @@ async def test_alexa_dnd_group_removal(
     mock_amazon_devices_client.get_devices_data.return_value[
         TEST_DEVICE_1_SN
     ].device_family = SPEAKER_GROUP_FAMILY
+
+    await hass.config_entries.async_setup(mock_config_entry.entry_id)
+    await hass.async_block_till_done()
+
+    assert not hass.states.get(entity.entity_id)
+
+
+async def test_alexa_unsupported_notification_sensor_removal(
+    hass: HomeAssistant,
+    mock_amazon_devices_client: AsyncMock,
+    mock_config_entry: MockConfigEntry,
+    device_registry: dr.DeviceRegistry,
+    entity_registry: er.EntityRegistry,
+) -> None:
+    """Test notification sensors are removed from devices that do not support them."""
+
+    mock_config_entry.add_to_hass(hass)
+
+    device = device_registry.async_get_or_create(
+        config_entry_id=mock_config_entry.entry_id,
+        identifiers={(DOMAIN, mock_config_entry.entry_id)},
+        name=mock_config_entry.title,
+        manufacturer="Amazon",
+        model="Speaker Group",
+        entry_type=dr.DeviceEntryType.SERVICE,
+    )
+
+    entity = entity_registry.async_get_or_create(
+        DOMAIN,
+        SENSOR_DOMAIN,
+        unique_id=f"{TEST_DEVICE_1_SN}-Timer",
+        device_id=device.id,
+        config_entry=mock_config_entry,
+        has_entity_name=True,
+    )
+
+    mock_amazon_devices_client.get_devices_data.return_value[
+        TEST_DEVICE_1_SN
+    ].notifications_supported = False
 
     await hass.config_entries.async_setup(mock_config_entry.entry_id)
     await hass.async_block_till_done()

@@ -4,12 +4,11 @@ For more info on the API see:
 https://help.rejseplanen.dk/hc/en-us/articles/214174465-Rejseplanen-s-API
 """
 
-from __future__ import annotations
-
 from contextlib import suppress
 from datetime import datetime, timedelta
 import logging
 from operator import itemgetter
+from typing import Any, override
 
 import rjpl
 import voluptuous as vol
@@ -114,17 +113,20 @@ class RejseplanenTransportSensor(SensorEntity):
         self._times = self._state = None
 
     @property
+    @override
     def name(self):
         """Return the name of the sensor."""
         return self._name
 
     @property
+    @override
     def native_value(self):
         """Return the state of the sensor."""
         return self._state
 
     @property
-    def extra_state_attributes(self):
+    @override
+    def extra_state_attributes(self) -> dict[str, Any]:
         """Return the state attributes."""
         if not self._times:
             return {ATTR_STOP_ID: self._stop_id}
@@ -144,6 +146,7 @@ class RejseplanenTransportSensor(SensorEntity):
         return attributes
 
     @property
+    @override
     def native_unit_of_measurement(self):
         """Return the unit this state is expressed in."""
         return UnitOfTime.MINUTES
@@ -196,7 +199,7 @@ class PublicTransportData:
         except rjpl.rjplAPIError as error:
             _LOGGER.debug("API returned error: %s", error)
             return
-        except (rjpl.rjplConnectionError, rjpl.rjplHTTPError):
+        except rjpl.rjplConnectionError, rjpl.rjplHTTPError:
             _LOGGER.debug("Error occurred while connecting to the API")
             return
 

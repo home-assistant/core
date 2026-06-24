@@ -1,11 +1,9 @@
 """Config flow for WeatherFlow."""
 
-from __future__ import annotations
-
 import asyncio
 from asyncio import Future
 from asyncio.exceptions import CancelledError
-from typing import Any
+from typing import Any, override
 
 from pyweatherflowudp.client import EVENT_DEVICE_DISCOVERED, WeatherFlowListener
 from pyweatherflowudp.errors import AddressInUseError, EndpointError, ListenerError
@@ -47,6 +45,7 @@ class WeatherFlowConfigFlow(ConfigFlow, domain=DOMAIN):
 
     VERSION = 1
 
+    @override
     async def async_step_user(
         self, user_input: dict[str, Any] | None = None
     ) -> ConfigFlowResult:
@@ -63,7 +62,7 @@ class WeatherFlowConfigFlow(ConfigFlow, domain=DOMAIN):
             found = await _async_can_discover_devices()
         except AddressInUseError:
             errors["base"] = ERROR_MSG_ADDRESS_IN_USE
-        except (ListenerError, EndpointError, CancelledError):
+        except ListenerError, EndpointError, CancelledError:
             errors["base"] = ERROR_MSG_CANNOT_CONNECT
 
         if not found and not errors:

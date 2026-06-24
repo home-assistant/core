@@ -6,6 +6,7 @@ To update, run python3 -m script.hassfest
 APPLICATION_CREDENTIALS = [
     "aladdin_connect",
     "august",
+    "dropbox",
     "ekeybionyx",
     "electric_kiwi",
     "fitbit",
@@ -33,6 +34,8 @@ APPLICATION_CREDENTIALS = [
     "netatmo",
     "ondilo_ico",
     "onedrive",
+    "onedrive_for_business",
+    "overkiz",
     "point",
     "senz",
     "smartthings",
@@ -41,6 +44,7 @@ APPLICATION_CREDENTIALS = [
     "teslemetry",
     "tibber",
     "twitch",
+    "vicare",
     "volvo",
     "watts",
     "weheat",
@@ -48,5 +52,6 @@ APPLICATION_CREDENTIALS = [
     "xbox",
     "yale",
     "yolink",
+    "yoto",
     "youtube",
 ]

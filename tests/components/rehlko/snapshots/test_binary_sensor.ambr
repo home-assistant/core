@@ -1,8 +1,9 @@
 # serializer version: 1
 # name: test_sensors[binary_sensor.generator_1_auto_run-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -50,8 +51,9 @@
 # ---
 # name: test_sensors[binary_sensor.generator_1_connectivity-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -98,10 +100,311 @@
     'state': 'on',
   })
 # ---
+# name: test_sensors[binary_sensor.generator_1_load_shed_hvac_a-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': list([
+      None,
+    ]),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'binary_sensor',
+    'entity_category': None,
+    'entity_id': 'binary_sensor.generator_1_load_shed_hvac_a',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'Load shed HVAC A',
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'Load shed HVAC A',
+    'platform': 'rehlko',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'loadshed_parameter',
+    'unique_id': 'myemail@email.com_12345_loadshed_1',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_sensors[binary_sensor.generator_1_load_shed_hvac_a-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'friendly_name': 'Generator 1 Load shed HVAC A',
+    }),
+    'context': <ANY>,
+    'entity_id': 'binary_sensor.generator_1_load_shed_hvac_a',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'off',
+  })
+# ---
+# name: test_sensors[binary_sensor.generator_1_load_shed_hvac_b-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': list([
+      None,
+    ]),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'binary_sensor',
+    'entity_category': None,
+    'entity_id': 'binary_sensor.generator_1_load_shed_hvac_b',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'Load shed HVAC B',
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'Load shed HVAC B',
+    'platform': 'rehlko',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'loadshed_parameter',
+    'unique_id': 'myemail@email.com_12345_loadshed_2',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_sensors[binary_sensor.generator_1_load_shed_hvac_b-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'friendly_name': 'Generator 1 Load shed HVAC B',
+    }),
+    'context': <ANY>,
+    'entity_id': 'binary_sensor.generator_1_load_shed_hvac_b',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'off',
+  })
+# ---
+# name: test_sensors[binary_sensor.generator_1_load_shed_load_a-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': list([
+      None,
+    ]),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'binary_sensor',
+    'entity_category': None,
+    'entity_id': 'binary_sensor.generator_1_load_shed_load_a',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'Load shed Load A',
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'Load shed Load A',
+    'platform': 'rehlko',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'loadshed_parameter',
+    'unique_id': 'myemail@email.com_12345_loadshed_3',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_sensors[binary_sensor.generator_1_load_shed_load_a-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'friendly_name': 'Generator 1 Load shed Load A',
+    }),
+    'context': <ANY>,
+    'entity_id': 'binary_sensor.generator_1_load_shed_load_a',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'off',
+  })
+# ---
+# name: test_sensors[binary_sensor.generator_1_load_shed_load_b-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': list([
+      None,
+    ]),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'binary_sensor',
+    'entity_category': None,
+    'entity_id': 'binary_sensor.generator_1_load_shed_load_b',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'Load shed Load B',
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'Load shed Load B',
+    'platform': 'rehlko',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'loadshed_parameter',
+    'unique_id': 'myemail@email.com_12345_loadshed_4',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_sensors[binary_sensor.generator_1_load_shed_load_b-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'friendly_name': 'Generator 1 Load shed Load B',
+    }),
+    'context': <ANY>,
+    'entity_id': 'binary_sensor.generator_1_load_shed_load_b',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'off',
+  })
+# ---
+# name: test_sensors[binary_sensor.generator_1_load_shed_load_c-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': list([
+      None,
+    ]),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'binary_sensor',
+    'entity_category': None,
+    'entity_id': 'binary_sensor.generator_1_load_shed_load_c',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'Load shed Load C',
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'Load shed Load C',
+    'platform': 'rehlko',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'loadshed_parameter',
+    'unique_id': 'myemail@email.com_12345_loadshed_5',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_sensors[binary_sensor.generator_1_load_shed_load_c-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'friendly_name': 'Generator 1 Load shed Load C',
+    }),
+    'context': <ANY>,
+    'entity_id': 'binary_sensor.generator_1_load_shed_load_c',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'off',
+  })
+# ---
+# name: test_sensors[binary_sensor.generator_1_load_shed_load_d-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': list([
+      None,
+    ]),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'binary_sensor',
+    'entity_category': None,
+    'entity_id': 'binary_sensor.generator_1_load_shed_load_d',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'Load shed Load D',
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'Load shed Load D',
+    'platform': 'rehlko',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'loadshed_parameter',
+    'unique_id': 'myemail@email.com_12345_loadshed_6',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_sensors[binary_sensor.generator_1_load_shed_load_d-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'friendly_name': 'Generator 1 Load shed Load D',
+    }),
+    'context': <ANY>,
+    'entity_id': 'binary_sensor.generator_1_load_shed_load_d',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'off',
+  })
+# ---
 # name: test_sensors[binary_sensor.generator_1_oil_pressure-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,

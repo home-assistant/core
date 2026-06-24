@@ -1,11 +1,9 @@
 """Support for exposing NX584 elements as sensors."""
 
-from __future__ import annotations
-
 import logging
 import threading
 import time
-from typing import Any
+from typing import Any, override
 
 from nx584 import client as nx584_client
 import requests
@@ -30,6 +28,7 @@ CONF_ZONE_TYPES = "zone_types"
 
 DEFAULT_HOST = "localhost"
 DEFAULT_PORT = 5007
+BYPASS_ZONE_FLAGS = {"Bypass", "Inhibit"}
 
 ZONE_TYPES_SCHEMA = vol.Schema({cv.positive_int: BINARY_SENSOR_DEVICE_CLASSES_SCHEMA})
 
@@ -43,6 +42,11 @@ PLATFORM_SCHEMA = BINARY_SENSOR_PLATFORM_SCHEMA.extend(
         vol.Optional(CONF_ZONE_TYPES, default={}): ZONE_TYPES_SCHEMA,
     }
 )
+
+
+def _zone_flags_indicate_bypass(zone_flags: list[str]) -> bool:
+    """Return if NX584 zone condition flags indicate bypass."""
+    return not BYPASS_ZONE_FLAGS.isdisjoint(zone_flags)
 
 
 def setup_platform(
@@ -98,17 +102,20 @@ class NX584ZoneSensor(BinarySensorEntity):
         self._attr_device_class = zone_type
 
     @property
+    @override
     def name(self):
         """Return the name of the binary sensor."""
         return self._zone["name"]
 
     @property
-    def is_on(self):
+    @override
+    def is_on(self) -> bool:
         """Return true if the binary sensor is on."""
         # True means "faulted" or "open" or "abnormal state"
         return self._zone["state"]
 
     @property
+    @override
     def extra_state_attributes(self) -> dict[str, Any]:
         """Return the state attributes."""
         return {
@@ -132,6 +139,10 @@ class NX584Watcher(threading.Thread):
         if not (zone_sensor := self._zone_sensors.get(zone)):
             return
         zone_sensor._zone["state"] = event["zone_state"]  # noqa: SLF001
+        if "zone_flags" in event:
+            zone_sensor._zone["bypassed"] = _zone_flags_indicate_bypass(  # noqa: SLF001
+                event["zone_flags"]
+            )
         zone_sensor.schedule_update_ha_state()
 
     def _process_events(self, events):
@@ -146,6 +157,7 @@ class NX584Watcher(threading.Thread):
             if events := self._client.get_events():
                 self._process_events(events)
 
+    @override
     def run(self):
         """Run the watcher."""
         while True:

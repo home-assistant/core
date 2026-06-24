@@ -1,9 +1,7 @@
 """Support for Notion binary sensors."""
 
-from __future__ import annotations
-
 from dataclasses import dataclass
-from typing import Literal
+from typing import Literal, override
 
 from aionotion.listener.models import ListenerKind
 
@@ -12,13 +10,11 @@ from homeassistant.components.binary_sensor import (
     BinarySensorEntity,
     BinarySensorEntityDescription,
 )
-from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import EntityCategory
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
 from .const import (
-    DOMAIN,
     LOGGER,
     SENSOR_BATTERY,
     SENSOR_DOOR,
@@ -30,7 +26,7 @@ from .const import (
     SENSOR_SMOKE_CO,
     SENSOR_WINDOW_HINGED,
 )
-from .coordinator import NotionDataUpdateCoordinator
+from .coordinator import NotionConfigEntry
 from .entity import NotionEntity, NotionEntityDescription
 
 
@@ -108,11 +104,11 @@ BINARY_SENSOR_DESCRIPTIONS = (
 
 async def async_setup_entry(
     hass: HomeAssistant,
-    entry: ConfigEntry,
+    entry: NotionConfigEntry,
     async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up Notion sensors based on a config entry."""
-    coordinator: NotionDataUpdateCoordinator = hass.data[DOMAIN][entry.entry_id]
+    coordinator = entry.runtime_data
 
     async_add_entities(
         [
@@ -137,6 +133,7 @@ class NotionBinarySensor(NotionEntity, BinarySensorEntity):
     entity_description: NotionBinarySensorDescription
 
     @property
+    @override
     def is_on(self) -> bool | None:
         """Return true if the binary sensor is on."""
         if not self.listener.insights.primary.value:

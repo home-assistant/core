@@ -1,12 +1,10 @@
 """Config flow for Bosch Alarm integration."""
 
-from __future__ import annotations
-
 import asyncio
 from collections.abc import Mapping
 import logging
 import ssl
-from typing import Any, Self
+from typing import Any, Self, override
 
 from bosch_alarm_mode2 import Panel
 import voluptuous as vol
@@ -96,10 +94,12 @@ class BoschAlarmConfigFlow(ConfigFlow, domain=DOMAIN):
         self.mac: str | None = None
         self.host: str | None = None
 
+    @override
     def is_matching(self, other_flow: Self) -> bool:
         """Return True if other_flow is matching this flow."""
         return self.mac == other_flow.mac or self.host == other_flow.host
 
+    @override
     async def async_step_user(
         self, user_input: dict[str, Any] | None = None
     ) -> ConfigFlowResult:
@@ -143,6 +143,7 @@ class BoschAlarmConfigFlow(ConfigFlow, domain=DOMAIN):
             errors=errors,
         )
 
+    @override
     async def async_step_dhcp(
         self, discovery_info: DhcpServiceInfo
     ) -> ConfigFlowResult:

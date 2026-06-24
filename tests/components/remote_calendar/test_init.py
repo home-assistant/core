@@ -4,12 +4,19 @@ from httpx import HTTPError, InvalidURL, Response, TimeoutException
 import pytest
 import respx
 
+from homeassistant.components.remote_calendar.const import CONF_CALENDAR_NAME, DOMAIN
 from homeassistant.config_entries import ConfigEntryState
-from homeassistant.const import STATE_OFF
+from homeassistant.const import (
+    CONF_PASSWORD,
+    CONF_URL,
+    CONF_USERNAME,
+    CONF_VERIFY_SSL,
+    STATE_OFF,
+)
 from homeassistant.core import HomeAssistant
 
 from . import setup_integration
-from .conftest import CALENDER_URL, TEST_ENTITY
+from .conftest import CALENDAR_NAME, CALENDER_URL, TEST_ENTITY
 
 from tests.common import MockConfigEntry
 
@@ -85,3 +92,30 @@ async def test_calendar_parse_error(
     )
     await setup_integration(hass, config_entry)
     assert config_entry.state is ConfigEntryState.SETUP_RETRY
+
+
+@respx.mock
+async def test_load_with_auth(hass: HomeAssistant, ics_content: str) -> None:
+    """Test loading a config entry with basic auth credentials."""
+    config_entry = MockConfigEntry(
+        domain=DOMAIN,
+        data={
+            CONF_CALENDAR_NAME: CALENDAR_NAME,
+            CONF_URL: CALENDER_URL,
+            CONF_VERIFY_SSL: True,
+            CONF_USERNAME: "user",
+            CONF_PASSWORD: "pass",
+        },
+    )
+    respx.get(CALENDER_URL).mock(
+        return_value=Response(
+            status_code=200,
+            text=ics_content,
+        )
+    )
+    await setup_integration(hass, config_entry)
+    assert config_entry.state is ConfigEntryState.LOADED
+
+    state = hass.states.get(TEST_ENTITY)
+    assert state
+    assert state.state == STATE_OFF

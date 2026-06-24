@@ -1,13 +1,11 @@
 """Support for 1-Wire environment sensors."""
 
-from __future__ import annotations
-
 from collections.abc import Callable, Mapping
 import dataclasses
 from datetime import timedelta
 import logging
 import os
-from typing import Any
+from typing import Any, override
 
 from aio_ownet.exceptions import OWServerReturnError
 
@@ -466,6 +464,7 @@ class OneWireSensorEntity(OneWireEntity, SensorEntity):
     """Implementation of a 1-Wire sensor."""
 
     @property
+    @override
     def native_value(self) -> float | int | None:
         """Return the state of the entity."""
         if (state := self._state) is None:

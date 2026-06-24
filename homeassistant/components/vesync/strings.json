@@ -148,7 +148,21 @@
       },
       "display": {
         "name": "Display"
+      },
+      "drying_mode_power_off": {
+        "name": "Enable drying mode while power is off"
       }
+    }
+  },
+  "exceptions": {
+    "api_response_error": {
+      "message": "Invalid response from the VeSync API"
+    },
+    "invalid_auth": {
+      "message": "[%key:common::config_flow::error::invalid_auth%]"
+    },
+    "server_error": {
+      "message": "Server error occurred while connecting to VeSync"
     }
   },
   "services": {

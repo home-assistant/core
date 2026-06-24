@@ -4,20 +4,22 @@ from unittest.mock import AsyncMock
 
 import aiohttp
 
-from homeassistant.components.lunatone.const import DOMAIN
+from homeassistant.components.lunatone.const import DOMAIN, MANUFACTURER
 from homeassistant.config_entries import ConfigEntryState
+from homeassistant.const import CONF_URL
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers import device_registry as dr
+from homeassistant.helpers import device_registry as dr, entity_registry as er
 
-from . import BASE_URL, PRODUCT_NAME, VERSION, setup_integration
+from . import BASE_URL, PRODUCT_NAME, SERIAL_NUMBER, UUID, VERSION, setup_integration
 
 from tests.common import MockConfigEntry
 
 
 async def test_load_unload_config_entry(
     hass: HomeAssistant,
-    mock_lunatone_devices: AsyncMock,
     mock_lunatone_info: AsyncMock,
+    mock_lunatone_devices: AsyncMock,
+    mock_lunatone_sensors: AsyncMock,
     mock_config_entry: MockConfigEntry,
     device_registry: dr.DeviceRegistry,
 ) -> None:
@@ -31,7 +33,7 @@ async def test_load_unload_config_entry(
         identifiers={(DOMAIN, mock_config_entry.unique_id)}
     )
     assert device_entry is not None
-    assert device_entry.manufacturer == "Lunatone"
+    assert device_entry.manufacturer == MANUFACTURER
     assert device_entry.sw_version == VERSION
     assert device_entry.configuration_url == BASE_URL
     assert device_entry.model == PRODUCT_NAME
@@ -47,9 +49,10 @@ async def test_config_entry_not_ready_info_api_fail(
     hass: HomeAssistant,
     mock_lunatone_info: AsyncMock,
     mock_lunatone_devices: AsyncMock,
+    mock_lunatone_sensors: AsyncMock,
     mock_config_entry: MockConfigEntry,
 ) -> None:
-    """Test the Lunatone configuration entry not ready due to a failure in the info API."""
+    """Test config entry not ready due to info API failure."""
     mock_lunatone_info.async_update.side_effect = aiohttp.ClientConnectionError()
 
     await setup_integration(hass, mock_config_entry)
@@ -70,9 +73,10 @@ async def test_config_entry_not_ready_devices_api_fail(
     hass: HomeAssistant,
     mock_lunatone_info: AsyncMock,
     mock_lunatone_devices: AsyncMock,
+    mock_lunatone_sensors: AsyncMock,
     mock_config_entry: MockConfigEntry,
 ) -> None:
-    """Test the Lunatone configuration entry not ready due to a failure in the devices API."""
+    """Test config entry not ready due to devices API failure."""
     mock_lunatone_devices.async_update.side_effect = aiohttp.ClientConnectionError()
 
     await setup_integration(hass, mock_config_entry)
@@ -91,9 +95,38 @@ async def test_config_entry_not_ready_devices_api_fail(
     assert mock_config_entry.state is ConfigEntryState.LOADED
 
 
+async def test_config_entry_not_ready_sensors_api_fail(
+    hass: HomeAssistant,
+    mock_lunatone_info: AsyncMock,
+    mock_lunatone_devices: AsyncMock,
+    mock_lunatone_sensors: AsyncMock,
+    mock_config_entry: MockConfigEntry,
+) -> None:
+    """Test config entry not ready due to sensors API failure."""
+    mock_lunatone_sensors.async_update.side_effect = aiohttp.ClientConnectionError()
+
+    await setup_integration(hass, mock_config_entry)
+
+    mock_lunatone_info.async_update.assert_called_once()
+    mock_lunatone_devices.async_update.assert_called_once()
+    mock_lunatone_sensors.async_update.assert_called_once()
+    assert mock_config_entry.state is ConfigEntryState.SETUP_RETRY
+
+    mock_lunatone_sensors.async_update.side_effect = None
+
+    await hass.config_entries.async_reload(mock_config_entry.entry_id)
+    await hass.async_block_till_done()
+
+    mock_lunatone_info.async_update.assert_called()
+    mock_lunatone_devices.async_update.assert_called()
+    mock_lunatone_sensors.async_update.assert_called()
+    assert mock_config_entry.state is ConfigEntryState.LOADED
+
+
 async def test_config_entry_not_ready_no_info_data(
     hass: HomeAssistant,
     mock_lunatone_info: AsyncMock,
+    mock_lunatone_devices: AsyncMock,
     mock_config_entry: MockConfigEntry,
 ) -> None:
     """Test the Lunatone configuration entry not ready due to missing info data."""
@@ -121,15 +154,87 @@ async def test_config_entry_not_ready_no_devices_data(
     assert mock_config_entry.state is ConfigEntryState.SETUP_RETRY
 
 
+async def test_config_entry_not_ready_no_sensors_data(
+    hass: HomeAssistant,
+    mock_lunatone_info: AsyncMock,
+    mock_lunatone_devices: AsyncMock,
+    mock_lunatone_sensors: AsyncMock,
+    mock_config_entry: MockConfigEntry,
+) -> None:
+    """Test the Lunatone configuration entry not ready due to missing sensors data."""
+    mock_lunatone_sensors.data = None
+
+    await setup_integration(hass, mock_config_entry)
+
+    mock_lunatone_info.async_update.assert_called_once()
+    mock_lunatone_devices.async_update.assert_called_once()
+    mock_lunatone_sensors.async_update.assert_called_once()
+    assert mock_config_entry.state is ConfigEntryState.SETUP_RETRY
+
+
 async def test_config_entry_not_ready_no_serial_number(
     hass: HomeAssistant,
     mock_lunatone_info: AsyncMock,
+    mock_lunatone_devices: AsyncMock,
     mock_config_entry: MockConfigEntry,
 ) -> None:
-    """Test the Lunatone configuration entry not ready due to a missing serial number."""
+    """Test config entry not ready due to missing serial number."""
     mock_lunatone_info.serial_number = None
 
     await setup_integration(hass, mock_config_entry)
 
     mock_lunatone_info.async_update.assert_called_once()
     assert mock_config_entry.state is ConfigEntryState.SETUP_ERROR
+
+
+async def test_config_entry_unique_id_update(
+    hass: HomeAssistant,
+    mock_lunatone_info: AsyncMock,
+    mock_lunatone_devices: AsyncMock,
+    mock_lunatone_sensors: AsyncMock,
+    mock_config_entry: MockConfigEntry,
+    device_registry: dr.DeviceRegistry,
+    entity_registry: er.EntityRegistry,
+) -> None:
+    """Test the Lunatone config entry migration to be successful."""
+    config_entry = MockConfigEntry(
+        title=BASE_URL,
+        domain=DOMAIN,
+        data={CONF_URL: BASE_URL},
+        unique_id=str(SERIAL_NUMBER),
+    )
+
+    expected_unique_id = str(SERIAL_NUMBER)
+    mock_lunatone_info.uid = None
+
+    await setup_integration(hass, config_entry)
+
+    assert config_entry.state is ConfigEntryState.LOADED
+    assert config_entry.unique_id == expected_unique_id
+
+    devices = dr.async_entries_for_config_entry(device_registry, config_entry.entry_id)
+    for device in devices:
+        for identifier in device.identifiers:
+            assert identifier[1].startswith(expected_unique_id)
+
+    entities = er.async_entries_for_config_entry(entity_registry, config_entry.entry_id)
+    for entity in entities:
+        assert entity.unique_id.startswith(expected_unique_id)
+
+    expected_unique_id = UUID.replace("-", "")
+    mock_lunatone_info.uid = UUID
+
+    await hass.config_entries.async_reload(config_entry.entry_id)
+    await hass.async_block_till_done()
+
+    assert config_entry.state is ConfigEntryState.LOADED
+    assert config_entry.unique_id == expected_unique_id
+
+    devices = dr.async_entries_for_config_entry(device_registry, config_entry.entry_id)
+    for device in devices:
+        for identifier in device.identifiers:
+            assert identifier[1].startswith(expected_unique_id)
+
+    entities = er.async_entries_for_config_entry(entity_registry, config_entry.entry_id)
+    for entity in entities:
+        assert entity.unique_id.startswith(expected_unique_id)

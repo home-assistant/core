@@ -1,11 +1,12 @@
 # serializer version: 1
 # name: test_setup[no_data][event.probe_1_event-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
-      'event_types': list([
+      <EventEntityCapabilityAttribute.EVENT_TYPES: 'event_types'>: list([
         'probe_acknowledge',
         'device_low_power',
         'device_high_temp',
@@ -53,8 +54,8 @@
 # name: test_setup[no_data][event.probe_1_event-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'event_type': None,
-      'event_types': list([
+      <EventEntityStateAttribute.EVENT_TYPE: 'event_type'>: None,
+      <EventEntityCapabilityAttribute.EVENT_TYPES: 'event_types'>: list([
         'probe_acknowledge',
         'device_low_power',
         'device_high_temp',
@@ -80,11 +81,12 @@
 # ---
 # name: test_setup[no_data][event.probe_2_event-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
-      'event_types': list([
+      <EventEntityCapabilityAttribute.EVENT_TYPES: 'event_types'>: list([
         'probe_acknowledge',
         'device_low_power',
         'device_high_temp',
@@ -132,8 +134,8 @@
 # name: test_setup[no_data][event.probe_2_event-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'event_type': None,
-      'event_types': list([
+      <EventEntityStateAttribute.EVENT_TYPE: 'event_type'>: None,
+      <EventEntityCapabilityAttribute.EVENT_TYPES: 'event_types'>: list([
         'probe_acknowledge',
         'device_low_power',
         'device_high_temp',
@@ -159,11 +161,12 @@
 # ---
 # name: test_setup[non_event_packet][event.probe_1_event-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
-      'event_types': list([
+      <EventEntityCapabilityAttribute.EVENT_TYPES: 'event_types'>: list([
         'probe_acknowledge',
         'device_low_power',
         'device_high_temp',
@@ -211,8 +214,8 @@
 # name: test_setup[non_event_packet][event.probe_1_event-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'event_type': None,
-      'event_types': list([
+      <EventEntityStateAttribute.EVENT_TYPE: 'event_type'>: None,
+      <EventEntityCapabilityAttribute.EVENT_TYPES: 'event_types'>: list([
         'probe_acknowledge',
         'device_low_power',
         'device_high_temp',
@@ -238,11 +241,12 @@
 # ---
 # name: test_setup[non_event_packet][event.probe_2_event-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
-      'event_types': list([
+      <EventEntityCapabilityAttribute.EVENT_TYPES: 'event_types'>: list([
         'probe_acknowledge',
         'device_low_power',
         'device_high_temp',
@@ -290,8 +294,8 @@
 # name: test_setup[non_event_packet][event.probe_2_event-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'event_type': None,
-      'event_types': list([
+      <EventEntityStateAttribute.EVENT_TYPE: 'event_type'>: None,
+      <EventEntityCapabilityAttribute.EVENT_TYPES: 'event_types'>: list([
         'probe_acknowledge',
         'device_low_power',
         'device_high_temp',
@@ -317,11 +321,12 @@
 # ---
 # name: test_setup[non_known_message][event.probe_1_event-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
-      'event_types': list([
+      <EventEntityCapabilityAttribute.EVENT_TYPES: 'event_types'>: list([
         'probe_acknowledge',
         'device_low_power',
         'device_high_temp',
@@ -369,8 +374,8 @@
 # name: test_setup[non_known_message][event.probe_1_event-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'event_type': None,
-      'event_types': list([
+      <EventEntityStateAttribute.EVENT_TYPE: 'event_type'>: None,
+      <EventEntityCapabilityAttribute.EVENT_TYPES: 'event_types'>: list([
         'probe_acknowledge',
         'device_low_power',
         'device_high_temp',
@@ -396,11 +401,12 @@
 # ---
 # name: test_setup[non_known_message][event.probe_2_event-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
-      'event_types': list([
+      <EventEntityCapabilityAttribute.EVENT_TYPES: 'event_types'>: list([
         'probe_acknowledge',
         'device_low_power',
         'device_high_temp',
@@ -448,8 +454,8 @@
 # name: test_setup[non_known_message][event.probe_2_event-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'event_type': None,
-      'event_types': list([
+      <EventEntityStateAttribute.EVENT_TYPE: 'event_type'>: None,
+      <EventEntityCapabilityAttribute.EVENT_TYPES: 'event_types'>: list([
         'probe_acknowledge',
         'device_low_power',
         'device_high_temp',

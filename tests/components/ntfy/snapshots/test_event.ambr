@@ -1,11 +1,12 @@
 # serializer version: 1
 # name: test_event_platform[event.mytopic-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
-      'event_types': list([
+      <EventEntityCapabilityAttribute.EVENT_TYPES: 'event_types'>: list([
         'Title: Hello',
       ]),
     }),
@@ -49,8 +50,8 @@
       'content_type': None,
       'entity_picture': 'https://example.com/icon.png',
       'event': <Event.MESSAGE: 'message'>,
-      'event_type': 'Title: Hello',
-      'event_types': list([
+      <EventEntityStateAttribute.EVENT_TYPE: 'event_type'>: 'Title: Hello',
+      <EventEntityCapabilityAttribute.EVENT_TYPES: 'event_types'>: list([
         'Title: Hello',
       ]),
       'expires': HAFakeDatetime(2025, 3, 29, 5, 58, 46, tzinfo=datetime.timezone.utc),

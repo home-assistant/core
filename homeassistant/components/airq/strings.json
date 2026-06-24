@@ -1,14 +1,24 @@
 {
   "config": {
     "abort": {
-      "already_configured": "[%key:common::config_flow::abort::already_configured_device%]"
+      "already_configured": "[%key:common::config_flow::abort::already_configured_device%]",
+      "already_in_progress": "[%key:common::config_flow::abort::already_in_progress%]",
+      "incomplete_discovery": "The discovered air-Q device did not provide a device ID. Ensure the firmware is up to date."
     },
     "error": {
       "cannot_connect": "[%key:common::config_flow::error::cannot_connect%]",
       "invalid_auth": "[%key:common::config_flow::error::invalid_auth%]",
       "invalid_input": "[%key:common::config_flow::error::invalid_host%]"
     },
+    "flow_title": "{name}",
     "step": {
+      "discovery_confirm": {
+        "data": {
+          "password": "[%key:common::config_flow::data::password%]"
+        },
+        "description": "Do you want to set up **{name}**?",
+        "title": "Set up air-Q"
+      },
       "user": {
         "data": {
           "ip_address": "[%key:common::config_flow::data::ip%]",

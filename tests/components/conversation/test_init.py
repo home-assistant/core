@@ -9,6 +9,7 @@ import voluptuous as vol
 
 from homeassistant.components import conversation
 from homeassistant.components.conversation import (
+    DOMAIN,
     ConversationInput,
     async_get_agent,
     async_get_chat_log,
@@ -156,7 +157,7 @@ async def test_reload(hass: HomeAssistant) -> None:
     # Confirm intents are loaded
     assert agent._lang_intents.get(language)
     # Confirm config intents are empty
-    assert not agent._config_intents["intents"]
+    assert not agent._config_intents_config["intents"]
 
     # Try to clear for a different language
     await hass.services.async_call(
@@ -166,7 +167,7 @@ async def test_reload(hass: HomeAssistant) -> None:
     # Confirm intents are still loaded
     assert agent._lang_intents.get(language)
     # Confirm config intents are still empty
-    assert not agent._config_intents["intents"]
+    assert not agent._config_intents_config["intents"]
 
     # Reload from a changed configuration file
     hass_config_new = {
@@ -187,7 +188,7 @@ async def test_reload(hass: HomeAssistant) -> None:
     # Confirm intent cache is cleared
     assert not agent._lang_intents.get(language)
     # Confirm new config intents are loaded
-    assert agent._config_intents["intents"]
+    assert agent._config_intents_config["intents"]
 
 
 @pytest.mark.usefixtures("init_components")
@@ -269,7 +270,7 @@ async def test_async_handle_sentence_triggers(
 ) -> None:
     """Test handling sentence triggers with async_handle_sentence_triggers."""
     assert await async_setup_component(hass, "homeassistant", {})
-    assert await async_setup_component(hass, "conversation", {})
+    assert await async_setup_component(hass, DOMAIN, {})
 
     assert await async_setup_component(
         hass,
@@ -311,7 +312,7 @@ async def test_async_handle_sentence_triggers(
 async def test_async_handle_intents(hass: HomeAssistant) -> None:
     """Test handling registered intents with async_handle_intents."""
     assert await async_setup_component(hass, "homeassistant", {})
-    assert await async_setup_component(hass, "conversation", {})
+    assert await async_setup_component(hass, DOMAIN, {})
 
     # Reuse custom sentences in test config to trigger default agent.
     class OrderBeerIntentHandler(intent.IntentHandler):

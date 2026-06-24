@@ -1,5 +1,7 @@
 """sensor integration microBees."""
 
+from typing import override
+
 from microBeesPy import Sensor
 
 from homeassistant.components.sensor import (
@@ -8,7 +10,6 @@ from homeassistant.components.sensor import (
     SensorEntityDescription,
     SensorStateClass,
 )
-from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import (
     CONCENTRATION_PARTS_PER_MILLION,
     LIGHT_LUX,
@@ -19,7 +20,7 @@ from homeassistant.const import (
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
-from .const import DOMAIN
+from . import MicroBeesConfigEntry
 from .coordinator import MicroBeesUpdateCoordinator
 from .entity import MicroBeesEntity
 
@@ -64,11 +65,11 @@ SENSOR_TYPES = {
 
 async def async_setup_entry(
     hass: HomeAssistant,
-    entry: ConfigEntry,
+    entry: MicroBeesConfigEntry,
     async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Config entry."""
-    coordinator = hass.data[DOMAIN][entry.entry_id].coordinator
+    coordinator = entry.runtime_data.coordinator
 
     async_add_entities(
         MBSensor(coordinator, desc, bee_id, sensor.id)
@@ -95,11 +96,13 @@ class MBSensor(MicroBeesEntity, SensorEntity):
         self.entity_description = entity_description
 
     @property
+    @override
     def name(self) -> str:
         """Name of the sensor."""
         return self.sensor.name
 
     @property
+    @override
     def native_value(self) -> float | None:
         """Return the state of the sensor."""
         return self.sensor.value

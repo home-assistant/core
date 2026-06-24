@@ -1,6 +1,6 @@
 """Binary Sensor platform for JVC Projector integration."""
 
-from __future__ import annotations
+from typing import override
 
 from jvcprojector import command as cmd
 
@@ -8,7 +8,6 @@ from homeassistant.components.binary_sensor import BinarySensorEntity
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
-from .const import POWER
 from .coordinator import JVCConfigEntry, JvcProjectorDataUpdateCoordinator
 from .entity import JvcProjectorEntity
 
@@ -39,6 +38,7 @@ class JvcBinarySensor(JvcProjectorEntity, BinarySensorEntity):
         self._attr_unique_id = f"{coordinator.unique_id}_power"
 
     @property
+    @override
     def is_on(self) -> bool:
         """Return true if the JVC Projector is on."""
-        return self.coordinator.data[POWER] in ON_STATUS
+        return self.coordinator.data[cmd.Power.name] in ON_STATUS

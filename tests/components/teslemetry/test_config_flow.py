@@ -147,6 +147,7 @@ async def test_reauth(
 
 
 @pytest.mark.usefixtures("current_request_with_host")
+@pytest.mark.usefixtures("mock_setup_entry")
 async def test_reauth_account_mismatch(
     hass: HomeAssistant,
     hass_client_no_auth: ClientSessionGenerator,
@@ -170,11 +171,8 @@ async def test_reauth_account_mismatch(
     old_entry.add_to_hass(hass)
 
     # Setup the integration properly to import client credentials
-    with patch(
-        "homeassistant.components.teslemetry.async_setup_entry", return_value=True
-    ):
-        await hass.config_entries.async_setup(old_entry.entry_id)
-        await hass.async_block_till_done()
+    await hass.config_entries.async_setup(old_entry.entry_id)
+    await hass.async_block_till_done()
 
     result = await old_entry.start_reauth_flow(hass)
 
@@ -200,10 +198,7 @@ async def test_reauth_account_mismatch(
         },
     )
 
-    with patch(
-        "homeassistant.components.teslemetry.async_setup_entry", return_value=True
-    ):
-        result = await hass.config_entries.flow.async_configure(result["flow_id"])
+    result = await hass.config_entries.flow.async_configure(result["flow_id"])
 
     assert result["type"] is FlowResultType.ABORT
     assert result["reason"] == "reauth_account_mismatch"
@@ -349,6 +344,7 @@ async def test_reconfigure(
 
 
 @pytest.mark.usefixtures("current_request_with_host")
+@pytest.mark.usefixtures("mock_setup_entry")
 async def test_reconfigure_account_mismatch(
     hass: HomeAssistant,
     hass_client_no_auth: ClientSessionGenerator,
@@ -373,11 +369,8 @@ async def test_reconfigure_account_mismatch(
     old_entry.add_to_hass(hass)
 
     # Setup the integration properly to import client credentials
-    with patch(
-        "homeassistant.components.teslemetry.async_setup_entry", return_value=True
-    ):
-        await hass.config_entries.async_setup(old_entry.entry_id)
-        await hass.async_block_till_done()
+    await hass.config_entries.async_setup(old_entry.entry_id)
+    await hass.async_block_till_done()
 
     client = await hass_client_no_auth()
     result = await old_entry.start_reconfigure_flow(hass)
@@ -392,10 +385,7 @@ async def test_reconfigure_account_mismatch(
     await client.get(f"/auth/external/callback?code=abcd&state={state}")
     aioclient_mock.post(TOKEN_URL, json=mock_token_response)
 
-    with patch(
-        "homeassistant.components.teslemetry.async_setup_entry", return_value=True
-    ):
-        result = await hass.config_entries.flow.async_configure(result["flow_id"])
+    result = await hass.config_entries.flow.async_configure(result["flow_id"])
 
     assert result["type"] is FlowResultType.ABORT
     assert result["reason"] == "reconfigure_account_mismatch"

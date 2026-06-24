@@ -1,11 +1,12 @@
 # serializer version: 1
 # name: test_setup[sensor.cookidoo_subscription-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
-      'options': list([
+      <SensorEntityCapabilityAttribute.OPTIONS: 'options'>: list([
         'free',
         'trial',
         'premium',
@@ -46,7 +47,7 @@
     'attributes': ReadOnlyDict({
       'device_class': 'enum',
       'friendly_name': 'Cookidoo Subscription',
-      'options': list([
+      <SensorEntityCapabilityAttribute.OPTIONS: 'options'>: list([
         'free',
         'trial',
         'premium',
@@ -62,8 +63,9 @@
 # ---
 # name: test_setup[sensor.cookidoo_subscription_expiration_date-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,

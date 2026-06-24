@@ -1,9 +1,7 @@
 """Config flow for Essent integration."""
 
-from __future__ import annotations
-
 import logging
-from typing import Any
+from typing import Any, override
 
 from essent_dynamic_pricing import (
     EssentClient,
@@ -25,6 +23,7 @@ class EssentConfigFlow(ConfigFlow, domain=DOMAIN):
 
     VERSION = 1
 
+    @override
     async def async_step_user(
         self, user_input: dict[str, Any] | None = None
     ) -> ConfigFlowResult:
@@ -33,7 +32,7 @@ class EssentConfigFlow(ConfigFlow, domain=DOMAIN):
 
         try:
             await client.async_get_prices()
-        except (EssentConnectionError, EssentResponseError):
+        except EssentConnectionError, EssentResponseError:
             return self.async_abort(reason="cannot_connect")
         except EssentDataError:
             return self.async_abort(reason="invalid_data")

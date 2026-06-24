@@ -1,9 +1,7 @@
 """Config flow for Lidarr."""
 
-from __future__ import annotations
-
 from collections.abc import Mapping
-from typing import Any
+from typing import Any, override
 
 from aiohttp import ClientConnectorError
 from aiopyarr import exceptions
@@ -39,6 +37,7 @@ class LidarrConfigFlow(ConfigFlow, domain=DOMAIN):
         self._set_confirm_only()
         return self.async_show_form(step_id="reauth_confirm")
 
+    @override
     async def async_step_user(
         self, user_input: dict[str, Any] | None = None
     ) -> ConfigFlowResult:
@@ -51,7 +50,7 @@ class LidarrConfigFlow(ConfigFlow, domain=DOMAIN):
                     user_input[CONF_API_KEY] = result[1]
             except exceptions.ArrAuthenticationException:
                 errors = {"base": "invalid_auth"}
-            except (ClientConnectorError, exceptions.ArrConnectionException):
+            except ClientConnectorError, exceptions.ArrConnectionException:
                 errors = {"base": "cannot_connect"}
             except exceptions.ArrWrongAppException:
                 errors = {"base": "wrong_app"}

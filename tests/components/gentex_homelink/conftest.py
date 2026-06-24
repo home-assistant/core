@@ -1,21 +1,29 @@
 """Fixtures for Gentex HomeLink tests."""
 
 from collections.abc import Generator
+from http import HTTPStatus
 from unittest.mock import AsyncMock, patch
 
 from homelink.model.button import Button
 import homelink.model.device
 import pytest
 
-from homeassistant.components.gentex_homelink import DOMAIN
+from homeassistant.components.gentex_homelink.const import DOMAIN, OAUTH2_TOKEN_URL
 
-from . import TEST_ACCESS_JWT
+from . import TEST_ACCESS_JWT, TEST_UNIQUE_ID
 
 from tests.common import MockConfigEntry
+from tests.conftest import AiohttpClientMocker
 
 
 @pytest.fixture
-def mock_srp_auth() -> Generator[AsyncMock]:
+def mock_srp_access_token() -> str:
+    """Return preferred JWT for mock SRP auth requests."""
+    return TEST_ACCESS_JWT
+
+
+@pytest.fixture
+def mock_srp_auth(mock_srp_access_token: str) -> Generator[AsyncMock]:
     """Mock SRP authentication."""
     with patch(
         "homeassistant.components.gentex_homelink.config_flow.SRPAuth"
@@ -23,13 +31,19 @@ def mock_srp_auth() -> Generator[AsyncMock]:
         instance = mock_srp_auth.return_value
         instance.async_get_access_token.return_value = {
             "AuthenticationResult": {
-                "AccessToken": TEST_ACCESS_JWT,
+                "AccessToken": mock_srp_access_token,
                 "RefreshToken": "refresh",
                 "TokenType": "bearer",
                 "ExpiresIn": 3600,
             }
         }
         yield instance
+
+
+@pytest.fixture
+def aioclient_mock_fixture(aioclient_mock: AiohttpClientMocker) -> None:
+    """Fixture to provide a aioclient mocker."""
+    aioclient_mock.post(OAUTH2_TOKEN_URL, status=HTTPStatus.OK, json={})
 
 
 @pytest.fixture
@@ -62,7 +76,7 @@ def mock_device() -> AsyncMock:
 def mock_config_entry() -> MockConfigEntry:
     """Mock setup entry."""
     return MockConfigEntry(
-        unique_id="some-uuid",
+        unique_id=TEST_UNIQUE_ID,
         version=1,
         domain=DOMAIN,
         data={

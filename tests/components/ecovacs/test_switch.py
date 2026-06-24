@@ -33,7 +33,7 @@ from syrupy.assertion import SnapshotAssertion
 
 from homeassistant.components.ecovacs.const import DOMAIN
 from homeassistant.components.ecovacs.controller import EcovacsController
-from homeassistant.components.switch import DOMAIN as PLATFORM_DOMAIN
+from homeassistant.components.switch import DOMAIN as SWITCH_DOMAIN
 from homeassistant.const import (
     ATTR_ENTITY_ID,
     SERVICE_TURN_OFF,
@@ -196,7 +196,7 @@ async def test_switch_entities(
 
         device._execute_command.reset_mock()
         await hass.services.async_call(
-            PLATFORM_DOMAIN,
+            SWITCH_DOMAIN,
             SERVICE_TURN_OFF,
             {ATTR_ENTITY_ID: entity_id},
             blocking=True,
@@ -205,7 +205,7 @@ async def test_switch_entities(
 
         device._execute_command.reset_mock()
         await hass.services.async_call(
-            PLATFORM_DOMAIN,
+            SWITCH_DOMAIN,
             SERVICE_TURN_ON,
             {ATTR_ENTITY_ID: entity_id},
             blocking=True,

@@ -5,8 +5,6 @@ Integrations can register lab preview features in their manifest.json which will
 in the Home Assistant Labs UI for users to enable or disable.
 """
 
-from __future__ import annotations
-
 import logging
 
 from homeassistant.const import EVENT_LABS_UPDATED
@@ -21,6 +19,7 @@ from .const import DOMAIN, LABS_DATA, STORAGE_KEY, STORAGE_VERSION
 from .helpers import (
     async_is_preview_feature_enabled,
     async_listen,
+    async_subscribe_preview_feature,
     async_update_preview_feature,
 )
 from .models import (
@@ -41,6 +40,7 @@ __all__ = [
     "EventLabsUpdatedData",
     "async_is_preview_feature_enabled",
     "async_listen",
+    "async_subscribe_preview_feature",
     "async_update_preview_feature",
 ]
 

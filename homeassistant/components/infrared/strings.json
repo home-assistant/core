@@ -1,0 +1,21 @@
+{
+  "entity_component": {
+    "_": {
+      "name": "Infrared emitter"
+    },
+    "receiver": {
+      "name": "Infrared receiver"
+    }
+  },
+  "exceptions": {
+    "component_not_loaded": {
+      "message": "Infrared component not loaded"
+    },
+    "entity_not_found": {
+      "message": "Infrared entity `{entity_id}` not found"
+    },
+    "receiver_not_found": {
+      "message": "Infrared receiver entity `{entity_id}` not found"
+    }
+  }
+}

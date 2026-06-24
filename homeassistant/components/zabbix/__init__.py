@@ -8,6 +8,7 @@ import math
 import queue
 import threading
 import time
+from typing import override
 from urllib.error import HTTPError
 from urllib.parse import urljoin
 
@@ -164,7 +165,7 @@ def setup(hass: HomeAssistant, config: ConfigType) -> bool:
             attribute_id = f"{entity_id}/{key}"
             try:
                 float_value = float(value)
-            except (ValueError, TypeError):
+            except ValueError, TypeError:
                 float_value = None
             if float_value is None or not math.isfinite(float_value):
                 # Don't store string attributes for now
@@ -285,6 +286,7 @@ class ZabbixThread(threading.Thread):
             except ProcessingError as prerr:
                 _LOGGER.error("Error writing to Zabbix: %s", prerr)
 
+    @override
     def run(self) -> None:
         """Process incoming events."""
         while not self.shutdown:

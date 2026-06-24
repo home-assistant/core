@@ -84,8 +84,8 @@ async def test_general_data(
         build_mock_node("cover_with_position_slats.json"),
         build_mock_node("homee.json"),
     ]
-    mock_homee.get_node_by_id = (
-        lambda node_id: mock_homee.nodes[0] if node_id == 3 else mock_homee.nodes[1]
+    mock_homee.get_node_by_id = lambda node_id: (
+        mock_homee.nodes[0] if node_id == 3 else mock_homee.nodes[1]
     )
     await setup_integration(hass, mock_config_entry)
 
@@ -107,7 +107,7 @@ async def test_software_version(
     mock_homee.nodes = [build_mock_node("cover_without_position.json")]
     await setup_integration(hass, mock_config_entry)
 
-    device = device_registry.async_get_device(identifiers={(DOMAIN, f"{HOMEE_ID}-3")})
+    device = device_registry.async_get_device(identifiers={(DOMAIN, f"{HOMEE_ID}-2")})
     assert device.sw_version == "1.45"
 
 
@@ -123,7 +123,7 @@ async def test_invalid_profile(
     mock_homee.nodes[0].profile = 77
     await setup_integration(hass, mock_config_entry)
 
-    device = device_registry.async_get_device(identifiers={(DOMAIN, f"{HOMEE_ID}-3")})
+    device = device_registry.async_get_device(identifiers={(DOMAIN, f"{HOMEE_ID}-2")})
     assert device.model is None
 
 

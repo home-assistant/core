@@ -1,11 +1,12 @@
 # serializer version: 1
 # name: test_all_selects[select.pool_device_chlorine_dosing_method-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
-      'options': list([
+      <SelectEntityCapabilityAttribute.OPTIONS: 'options'>: list([
         'off',
         'proportional',
         'on_off',
@@ -46,7 +47,7 @@
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'friendly_name': 'Pool Device Chlorine dosing method',
-      'options': list([
+      <SelectEntityCapabilityAttribute.OPTIONS: 'options'>: list([
         'off',
         'proportional',
         'on_off',
@@ -63,11 +64,12 @@
 # ---
 # name: test_all_selects[select.pool_device_chlorine_dosing_set-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
-      'options': list([
+      <SelectEntityCapabilityAttribute.OPTIONS: 'options'>: list([
         'low',
         'high',
       ]),
@@ -106,7 +108,7 @@
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'friendly_name': 'Pool Device Chlorine dosing set',
-      'options': list([
+      <SelectEntityCapabilityAttribute.OPTIONS: 'options'>: list([
         'low',
         'high',
       ]),
@@ -121,11 +123,12 @@
 # ---
 # name: test_all_selects[select.pool_device_flow_rate_unit-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
-      'options': list([
+      <SelectEntityCapabilityAttribute.OPTIONS: 'options'>: list([
         <UnitOfVolumeFlowRate.CUBIC_METERS_PER_HOUR: 'm³/h'>,
         <UnitOfVolumeFlowRate.LITERS_PER_SECOND: 'L/s'>,
       ]),
@@ -164,7 +167,7 @@
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'friendly_name': 'Pool Device Flow rate unit',
-      'options': list([
+      <SelectEntityCapabilityAttribute.OPTIONS: 'options'>: list([
         <UnitOfVolumeFlowRate.CUBIC_METERS_PER_HOUR: 'm³/h'>,
         <UnitOfVolumeFlowRate.LITERS_PER_SECOND: 'L/s'>,
       ]),
@@ -179,11 +182,12 @@
 # ---
 # name: test_all_selects[select.pool_device_orp_dosing_method-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
-      'options': list([
+      <SelectEntityCapabilityAttribute.OPTIONS: 'options'>: list([
         'off',
         'proportional',
         'on_off',
@@ -224,7 +228,7 @@
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'friendly_name': 'Pool Device ORP dosing method',
-      'options': list([
+      <SelectEntityCapabilityAttribute.OPTIONS: 'options'>: list([
         'off',
         'proportional',
         'on_off',
@@ -241,11 +245,12 @@
 # ---
 # name: test_all_selects[select.pool_device_orp_dosing_set-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
-      'options': list([
+      <SelectEntityCapabilityAttribute.OPTIONS: 'options'>: list([
         'low',
         'high',
       ]),
@@ -284,7 +289,7 @@
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'friendly_name': 'Pool Device ORP dosing set',
-      'options': list([
+      <SelectEntityCapabilityAttribute.OPTIONS: 'options'>: list([
         'low',
         'high',
       ]),
@@ -299,11 +304,12 @@
 # ---
 # name: test_all_selects[select.pool_device_ph_dosing_method-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
-      'options': list([
+      <SelectEntityCapabilityAttribute.OPTIONS: 'options'>: list([
         'off',
         'proportional',
         'on_off',
@@ -344,7 +350,7 @@
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'friendly_name': 'Pool Device pH dosing method',
-      'options': list([
+      <SelectEntityCapabilityAttribute.OPTIONS: 'options'>: list([
         'off',
         'proportional',
         'on_off',
@@ -361,11 +367,12 @@
 # ---
 # name: test_all_selects[select.pool_device_ph_dosing_set-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
-      'options': list([
+      <SelectEntityCapabilityAttribute.OPTIONS: 'options'>: list([
         'alcalyne',
         'acid',
       ]),
@@ -404,7 +411,7 @@
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'friendly_name': 'Pool Device pH dosing set',
-      'options': list([
+      <SelectEntityCapabilityAttribute.OPTIONS: 'options'>: list([
         'alcalyne',
         'acid',
       ]),
@@ -419,11 +426,12 @@
 # ---
 # name: test_all_selects[select.pool_device_water_meter_unit-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
-      'options': list([
+      <SelectEntityCapabilityAttribute.OPTIONS: 'options'>: list([
         <UnitOfVolume.LITERS: 'L'>,
         <UnitOfVolume.CUBIC_METERS: 'm³'>,
       ]),
@@ -462,7 +470,7 @@
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'friendly_name': 'Pool Device Water meter unit',
-      'options': list([
+      <SelectEntityCapabilityAttribute.OPTIONS: 'options'>: list([
         <UnitOfVolume.LITERS: 'L'>,
         <UnitOfVolume.CUBIC_METERS: 'm³'>,
       ]),

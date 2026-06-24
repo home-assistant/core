@@ -1,7 +1,10 @@
 """Provides triggers for alarm control panels."""
 
+from typing import override
+
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
+from homeassistant.helpers.automation import DomainSpec
 from homeassistant.helpers.entity import get_supported_features
 from homeassistant.helpers.trigger import (
     EntityTargetStateTriggerBase,
@@ -26,6 +29,7 @@ class EntityStateTriggerRequiredFeatures(EntityTargetStateTriggerBase):
 
     _required_features: int
 
+    @override
     def entity_filter(self, entities: set[str]) -> set[str]:
         """Filter entities of this domain."""
         entities = super().entity_filter(entities)
@@ -44,7 +48,7 @@ def make_entity_state_trigger_required_features(
     class CustomTrigger(EntityStateTriggerRequiredFeatures):
         """Trigger for entity state changes."""
 
-        _domain = domain
+        _domain_specs = {domain: DomainSpec()}
         _to_states = {to_state}
         _required_features = required_features
 

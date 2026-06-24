@@ -1,7 +1,5 @@
 """Test the google config flow."""
 
-from __future__ import annotations
-
 import asyncio
 from collections.abc import Callable
 import datetime
@@ -22,6 +20,7 @@ import pytest
 
 from homeassistant import config_entries
 from homeassistant.components.application_credentials import (
+    DOMAIN as APPLICATION_CREDENTIALS_DOMAIN,
     ClientCredential,
     async_import_client_credential,
 )
@@ -59,7 +58,7 @@ async def request_setup(current_request_with_host: None) -> None:
 @pytest.fixture(autouse=True)
 async def setup_app_creds(hass: HomeAssistant) -> None:
     """Fixture to setup application credentials component."""
-    await async_setup_component(hass, "application_credentials", {})
+    await async_setup_component(hass, APPLICATION_CREDENTIALS_DOMAIN, {})
 
 
 @pytest.fixture
@@ -175,9 +174,9 @@ async def test_full_flow_application_creds(
     assert "token" in data
     assert 0 < data["token"]["expires_in"] < 8 * 86400
     assert (
-        datetime.datetime.now().timestamp()
+        datetime.datetime.now().timestamp()  # pylint: disable=home-assistant-enforce-naive-now
         <= data["token"]["expires_at"]
-        < (datetime.datetime.now() + datetime.timedelta(days=8)).timestamp()
+        < (datetime.datetime.now() + datetime.timedelta(days=8)).timestamp()  # pylint: disable=home-assistant-enforce-naive-now
     )
     data["token"].pop("expires_at")
     data["token"].pop("expires_in")

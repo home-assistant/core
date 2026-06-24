@@ -12,7 +12,7 @@ from syrupy.assertion import SnapshotAssertion
 from homeassistant.components.matter.binary_sensor import (
     DISCOVERY_SCHEMAS as BINARY_SENSOR_SCHEMAS,
 )
-from homeassistant.const import Platform
+from homeassistant.const import EntityCategory, Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import entity_registry as er
 
@@ -45,7 +45,7 @@ async def test_binary_sensors(
     snapshot_matter_entities(hass, entity_registry, snapshot, Platform.BINARY_SENSOR)
 
 
-@pytest.mark.parametrize("node_fixture", ["occupancy_sensor"])
+@pytest.mark.parametrize("node_fixture", ["mock_occupancy_sensor"])
 async def test_occupancy_sensor(
     hass: HomeAssistant,
     matter_client: MagicMock,
@@ -70,7 +70,7 @@ async def test_occupancy_sensor(
     ("node_fixture", "entity_id"),
     [
         ("eve_contact_sensor", "binary_sensor.eve_door_door"),
-        ("leak_sensor", "binary_sensor.water_leak_detector_water_leak"),
+        ("mock_leak_sensor", "binary_sensor.water_leak_detector_water_leak"),
     ],
 )
 async def test_boolean_state_sensors(
@@ -96,7 +96,7 @@ async def test_boolean_state_sensors(
     assert state.state == "off"
 
 
-@pytest.mark.parametrize("node_fixture", ["door_lock"])
+@pytest.mark.parametrize("node_fixture", ["mock_door_lock"])
 async def test_battery_sensor(
     hass: HomeAssistant,
     entity_registry: er.EntityRegistry,
@@ -119,7 +119,30 @@ async def test_battery_sensor(
     assert state.state == "on"
 
 
-@pytest.mark.parametrize("node_fixture", ["door_lock"])
+@pytest.mark.parametrize("node_fixture", ["mock_door_lock"])
+async def test_actuator_sensor(
+    hass: HomeAssistant,
+    entity_registry: er.EntityRegistry,
+    matter_client: MagicMock,
+    matter_node: MatterNode,
+) -> None:
+    """Test actuator enabled sensor."""
+    entity_id = "binary_sensor.mock_door_lock_actuator"
+    state = hass.states.get(entity_id)
+    assert state
+    assert state.state == "on"
+
+    set_node_attribute(matter_node, 1, 257, 2, False)
+    await trigger_subscription_callback(
+        hass, matter_client, data=(matter_node.node_id, "1/257/2", False)
+    )
+
+    state = hass.states.get(entity_id)
+    assert state
+    assert state.state == "off"
+
+
+@pytest.mark.parametrize("node_fixture", ["mock_door_lock"])
 async def test_optional_sensor_from_featuremap(
     hass: HomeAssistant,
     entity_registry: er.EntityRegistry,
@@ -220,7 +243,7 @@ async def test_water_heater(
     assert state.state == "on"
 
 
-@pytest.mark.parametrize("node_fixture", ["pump"])
+@pytest.mark.parametrize("node_fixture", ["mock_pump"])
 async def test_pump(
     hass: HomeAssistant,
     matter_client: MagicMock,
@@ -303,7 +326,7 @@ async def test_dishwasher_alarm(
     assert state.state == "on"
 
 
-@pytest.mark.parametrize("node_fixture", ["valve"])
+@pytest.mark.parametrize("node_fixture", ["mock_valve"])
 async def test_water_valve(
     hass: HomeAssistant,
     matter_client: MagicMock,
@@ -311,15 +334,15 @@ async def test_water_valve(
 ) -> None:
     """Test valve alarms."""
     # ValveFault default state
-    state = hass.states.get("binary_sensor.valve_general_fault")
+    state = hass.states.get("binary_sensor.mock_valve_general_fault")
     assert state
     assert state.state == "off"
 
-    state = hass.states.get("binary_sensor.valve_valve_blocked")
+    state = hass.states.get("binary_sensor.mock_valve_valve_blocked")
     assert state
     assert state.state == "off"
 
-    state = hass.states.get("binary_sensor.valve_valve_leaking")
+    state = hass.states.get("binary_sensor.mock_valve_valve_leaking")
     assert state
     assert state.state == "off"
 
@@ -327,15 +350,15 @@ async def test_water_valve(
     set_node_attribute(matter_node, 1, 129, 9, 1)
     await trigger_subscription_callback(hass, matter_client)
 
-    state = hass.states.get("binary_sensor.valve_general_fault")
+    state = hass.states.get("binary_sensor.mock_valve_general_fault")
     assert state
     assert state.state == "on"
 
-    state = hass.states.get("binary_sensor.valve_valve_blocked")
+    state = hass.states.get("binary_sensor.mock_valve_valve_blocked")
     assert state
     assert state.state == "off"
 
-    state = hass.states.get("binary_sensor.valve_valve_leaking")
+    state = hass.states.get("binary_sensor.mock_valve_valve_leaking")
     assert state
     assert state.state == "off"
 
@@ -343,15 +366,15 @@ async def test_water_valve(
     set_node_attribute(matter_node, 1, 129, 9, 2)
     await trigger_subscription_callback(hass, matter_client)
 
-    state = hass.states.get("binary_sensor.valve_general_fault")
+    state = hass.states.get("binary_sensor.mock_valve_general_fault")
     assert state
     assert state.state == "off"
 
-    state = hass.states.get("binary_sensor.valve_valve_blocked")
+    state = hass.states.get("binary_sensor.mock_valve_valve_blocked")
     assert state
     assert state.state == "on"
 
-    state = hass.states.get("binary_sensor.valve_valve_leaking")
+    state = hass.states.get("binary_sensor.mock_valve_valve_leaking")
     assert state
     assert state.state == "off"
 
@@ -359,15 +382,15 @@ async def test_water_valve(
     set_node_attribute(matter_node, 1, 129, 9, 4)
     await trigger_subscription_callback(hass, matter_client)
 
-    state = hass.states.get("binary_sensor.valve_general_fault")
+    state = hass.states.get("binary_sensor.mock_valve_general_fault")
     assert state
     assert state.state == "off"
 
-    state = hass.states.get("binary_sensor.valve_valve_blocked")
+    state = hass.states.get("binary_sensor.mock_valve_valve_blocked")
     assert state
     assert state.state == "off"
 
-    state = hass.states.get("binary_sensor.valve_valve_leaking")
+    state = hass.states.get("binary_sensor.mock_valve_valve_leaking")
     assert state
     assert state.state == "on"
 
@@ -375,15 +398,15 @@ async def test_water_valve(
     set_node_attribute(matter_node, 1, 129, 9, 5)
     await trigger_subscription_callback(hass, matter_client)
 
-    state = hass.states.get("binary_sensor.valve_general_fault")
+    state = hass.states.get("binary_sensor.mock_valve_general_fault")
     assert state
     assert state.state == "on"
 
-    state = hass.states.get("binary_sensor.valve_valve_blocked")
+    state = hass.states.get("binary_sensor.mock_valve_valve_blocked")
     assert state
     assert state.state == "off"
 
-    state = hass.states.get("binary_sensor.valve_valve_leaking")
+    state = hass.states.get("binary_sensor.mock_valve_valve_leaking")
     assert state
     assert state.state == "on"
 
@@ -596,3 +619,215 @@ async def test_thermostat_remote_sensing(
     state = hass.states.get("binary_sensor.mock_thermostat_occupancy_remote_sensing")
     assert state
     assert state.state == "on"
+
+
+@pytest.mark.parametrize("node_fixture", ["heiman_smoke_detector"])
+async def test_smoke_detector(
+    hass: HomeAssistant,
+    matter_client: MagicMock,
+    matter_node: MatterNode,
+) -> None:
+    """Test smoke detector sensor."""
+    smoke_state_attribute = clusters.SmokeCoAlarm.Attributes.SmokeState
+
+    # Test initial state (SmokeState = 0, kNormal)
+    state = hass.states.get("binary_sensor.smoke_sensor_smoke")
+    assert state
+    assert state.state == "off"
+
+    # Set SmokeState to kWarning (value 1)
+    set_node_attribute(
+        matter_node,
+        1,
+        smoke_state_attribute.cluster_id,
+        smoke_state_attribute.attribute_id,
+        1,
+    )
+    await trigger_subscription_callback(hass, matter_client)
+
+    state = hass.states.get("binary_sensor.smoke_sensor_smoke")
+    assert state
+    assert state.state == "on"
+
+    # Set SmokeState to kCritical (value 2)
+    set_node_attribute(
+        matter_node,
+        1,
+        smoke_state_attribute.cluster_id,
+        smoke_state_attribute.attribute_id,
+        2,
+    )
+    await trigger_subscription_callback(hass, matter_client)
+
+    state = hass.states.get("binary_sensor.smoke_sensor_smoke")
+    assert state
+    assert state.state == "on"
+
+    # Set SmokeState back to kNormal (value 0)
+    set_node_attribute(
+        matter_node,
+        1,
+        smoke_state_attribute.cluster_id,
+        smoke_state_attribute.attribute_id,
+        0,
+    )
+    await trigger_subscription_callback(hass, matter_client)
+
+    state = hass.states.get("binary_sensor.smoke_sensor_smoke")
+    assert state
+    assert state.state == "off"
+
+
+@pytest.mark.parametrize("node_fixture", ["heiman_co_sensor"])
+async def test_co_detector(
+    hass: HomeAssistant,
+    matter_client: MagicMock,
+    matter_node: MatterNode,
+) -> None:
+    """Test CO detector sensor."""
+    co_state_attribute = clusters.SmokeCoAlarm.Attributes.COState
+
+    # Test initial state (COState = 0, kNormal)
+    state = hass.states.get("binary_sensor.smart_co_sensor_carbon_monoxide")
+    assert state
+    assert state.state == "off"
+
+    # Set COState to kWarning (value 1)
+    set_node_attribute(
+        matter_node,
+        1,
+        co_state_attribute.cluster_id,
+        co_state_attribute.attribute_id,
+        1,
+    )
+    await trigger_subscription_callback(hass, matter_client)
+
+    state = hass.states.get("binary_sensor.smart_co_sensor_carbon_monoxide")
+    assert state
+    assert state.state == "on"
+
+    # Set COState to kCritical (value 2)
+    set_node_attribute(
+        matter_node,
+        1,
+        co_state_attribute.cluster_id,
+        co_state_attribute.attribute_id,
+        2,
+    )
+    await trigger_subscription_callback(hass, matter_client)
+
+    state = hass.states.get("binary_sensor.smart_co_sensor_carbon_monoxide")
+    assert state
+    assert state.state == "on"
+
+    # Set COState back to kNormal (value 0)
+    set_node_attribute(
+        matter_node,
+        1,
+        co_state_attribute.cluster_id,
+        co_state_attribute.attribute_id,
+        0,
+    )
+    await trigger_subscription_callback(hass, matter_client)
+
+    state = hass.states.get("binary_sensor.smart_co_sensor_carbon_monoxide")
+    assert state
+    assert state.state == "off"
+
+
+@pytest.mark.usefixtures("entity_registry_enabled_by_default")
+@pytest.mark.parametrize("node_fixture", ["device_diagnostics"])
+async def test_general_diagnostics_fault_sensors(
+    hass: HomeAssistant,
+    entity_registry: er.EntityRegistry,
+    matter_client: MagicMock,
+    matter_node: MatterNode,
+) -> None:
+    """Test GeneralDiagnostics active fault binary sensors."""
+    # ActiveHardwareFaults (cluster 51, attr 5) = [] (no faults)
+    entity_id = "binary_sensor.m5stamp_lighting_app_hardware_faults"
+    state = hass.states.get(entity_id)
+    assert state
+    assert state.state == "off"
+
+    entry = entity_registry.async_get(entity_id)
+    assert entry
+    assert entry.entity_category is EntityCategory.DIAGNOSTIC
+
+    # Simulate hardware fault
+    set_node_attribute(matter_node, 0, 51, 5, [1])
+    await trigger_subscription_callback(hass, matter_client)
+
+    state = hass.states.get(entity_id)
+    assert state
+    assert state.state == "on"
+
+    # Clear faults
+    set_node_attribute(matter_node, 0, 51, 5, [])
+    await trigger_subscription_callback(hass, matter_client)
+
+    state = hass.states.get(entity_id)
+    assert state
+    assert state.state == "off"
+
+    # ActiveRadioFaults (cluster 51, attr 6) = [] (no faults)
+    state = hass.states.get("binary_sensor.m5stamp_lighting_app_radio_faults")
+    assert state
+    assert state.state == "off"
+
+    set_node_attribute(matter_node, 0, 51, 6, [1])
+    await trigger_subscription_callback(hass, matter_client)
+
+    state = hass.states.get("binary_sensor.m5stamp_lighting_app_radio_faults")
+    assert state
+    assert state.state == "on"
+
+    set_node_attribute(matter_node, 0, 51, 6, [])
+    await trigger_subscription_callback(hass, matter_client)
+
+    state = hass.states.get("binary_sensor.m5stamp_lighting_app_radio_faults")
+    assert state
+    assert state.state == "off"
+
+    # ActiveNetworkFaults (cluster 51, attr 7) = [] (no faults)
+    state = hass.states.get("binary_sensor.m5stamp_lighting_app_network_faults")
+    assert state
+    assert state.state == "off"
+
+    set_node_attribute(matter_node, 0, 51, 7, [1])
+    await trigger_subscription_callback(hass, matter_client)
+
+    state = hass.states.get("binary_sensor.m5stamp_lighting_app_network_faults")
+    assert state
+    assert state.state == "on"
+
+    set_node_attribute(matter_node, 0, 51, 7, [])
+    await trigger_subscription_callback(hass, matter_client)
+
+    state = hass.states.get("binary_sensor.m5stamp_lighting_app_network_faults")
+    assert state
+    assert state.state == "off"
+
+    entry = entity_registry.async_get(
+        "binary_sensor.m5stamp_lighting_app_hardware_faults"
+    )
+    assert entry
+    assert entry.entity_category is EntityCategory.DIAGNOSTIC
+
+
+@pytest.mark.parametrize("node_fixture", ["device_diagnostics"])
+async def test_general_diagnostics_fault_sensors_disabled_by_default(
+    hass: HomeAssistant,
+    entity_registry: er.EntityRegistry,
+    matter_client: MagicMock,
+    matter_node: MatterNode,
+) -> None:
+    """Test GeneralDiagnostics fault binary sensors are disabled by default."""
+    for entity_id in (
+        "binary_sensor.m5stamp_lighting_app_hardware_faults",
+        "binary_sensor.m5stamp_lighting_app_radio_faults",
+        "binary_sensor.m5stamp_lighting_app_network_faults",
+    ):
+        entry = entity_registry.async_get(entity_id)
+        assert entry, f"Expected {entity_id} to be registered"
+        assert entry.disabled_by is er.RegistryEntryDisabler.INTEGRATION

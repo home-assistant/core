@@ -31,6 +31,7 @@ HOMEE_UNIT_TO_HA_UNIT = {
     "n/a": None,
     "text": None,
     "%": PERCENTAGE,
+    "Lux": LIGHT_LUX,
     "lx": LIGHT_LUX,
     "klx": LIGHT_LUX,
     "1/min": REVOLUTIONS_PER_MINUTE,

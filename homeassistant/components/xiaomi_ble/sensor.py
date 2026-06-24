@@ -1,8 +1,6 @@
 """Support for xiaomi ble sensors."""
 
-from __future__ import annotations
-
-from typing import cast
+from typing import cast, override
 
 from xiaomi_ble import DeviceClass, SensorUpdate, Units
 from xiaomi_ble.parser import ExtendedSensorDeviceClass
@@ -145,10 +143,9 @@ SENSOR_DESCRIPTIONS = {
         key=str(ExtendedSensorDeviceClass.SCORE),
         state_class=SensorStateClass.MEASUREMENT,
     ),
-    # Counting during brushing
-    (ExtendedSensorDeviceClass.COUNTER, Units.TIME_SECONDS): SensorEntityDescription(
+    # Counter of brushing
+    (ExtendedSensorDeviceClass.COUNTER, None): SensorEntityDescription(
         key=str(ExtendedSensorDeviceClass.COUNTER),
-        native_unit_of_measurement=UnitOfTime.SECONDS,
         state_class=SensorStateClass.MEASUREMENT,
     ),
     # Key id for locks and fingerprint readers
@@ -175,6 +172,24 @@ SENSOR_DESCRIPTIONS = {
     ): SensorEntityDescription(
         key=str(ExtendedSensorDeviceClass.DURATION_CLEARED),
         native_unit_of_measurement=UnitOfTime.MINUTES,
+        state_class=SensorStateClass.MEASUREMENT,
+    ),
+    # Pressure present duration (in seconds) for Pressure Sensor
+    (
+        ExtendedSensorDeviceClass.PRESSURE_PRESENT_DURATION,
+        Units.TIME_SECONDS,
+    ): SensorEntityDescription(
+        key=str(ExtendedSensorDeviceClass.PRESSURE_PRESENT_DURATION),
+        native_unit_of_measurement=UnitOfTime.SECONDS,
+        state_class=SensorStateClass.MEASUREMENT,
+    ),
+    # Pressure not present duration (in seconds) for Pressure Sensor
+    (
+        ExtendedSensorDeviceClass.PRESSURE_NOT_PRESENT_DURATION,
+        Units.TIME_SECONDS,
+    ): SensorEntityDescription(
+        key=str(ExtendedSensorDeviceClass.PRESSURE_NOT_PRESENT_DURATION),
+        native_unit_of_measurement=UnitOfTime.SECONDS,
         state_class=SensorStateClass.MEASUREMENT,
     ),
     # Low frequency impedance sensor (ohm)
@@ -268,11 +283,13 @@ class XiaomiBluetoothSensorEntity(
     """Representation of a xiaomi ble sensor."""
 
     @property
+    @override
     def native_value(self) -> int | float | None:
         """Return the native value."""
         return self.processor.entity_data.get(self.entity_key)
 
     @property
+    @override
     def available(self) -> bool:
         """Return True if entity is available."""
         return self.processor.coordinator.sleepy_device or super().available

@@ -1,9 +1,8 @@
 """Coordinator for the Dormakaba dKey integration."""
 
-from __future__ import annotations
-
 from datetime import timedelta
 import logging
+from typing import override
 
 from py_dormakaba_dkey import DKEYLock
 from py_dormakaba_dkey.errors import DKEY_EXCEPTIONS, NotAssociated
@@ -39,6 +38,7 @@ class DormakabaDkeyCoordinator(DataUpdateCoordinator[None]):
         )
         self.lock = lock
 
+    @override
     async def _async_update_data(self) -> None:
         """Update the device state."""
         try:

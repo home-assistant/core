@@ -3,19 +3,24 @@
 from collections.abc import Callable, Coroutine
 from dataclasses import dataclass
 import logging
-from typing import Any
+from typing import Any, override
 
 from roborock.devices.traits.v1 import PropertiesApi
 from roborock.exceptions import RoborockException
 
 from homeassistant.components.number import NumberEntity, NumberEntityDescription
 from homeassistant.const import PERCENTAGE, EntityCategory
-from homeassistant.core import HomeAssistant
+from homeassistant.core import HomeAssistant, callback
 from homeassistant.exceptions import HomeAssistantError
+from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
 from .const import DOMAIN
-from .coordinator import RoborockConfigEntry, RoborockDataUpdateCoordinator
+from .coordinator import (
+    RoborockConfigEntry,
+    RoborockCoordinatorType,
+    RoborockDataUpdateCoordinator,
+)
 from .entity import RoborockEntityV1
 
 _LOGGER = logging.getLogger(__name__)
@@ -58,23 +63,41 @@ async def async_setup_entry(
     async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up Roborock number platform."""
-    async_add_entities(
-        [
+    coordinators = config_entry.runtime_data
+
+    @callback
+    def async_add_coordinator_entities(
+        coordinator: RoborockCoordinatorType,
+    ) -> None:
+        """Add entities for a specific coordinator."""
+        if not isinstance(coordinator, RoborockDataUpdateCoordinator):
+            return
+        entities = [
             RoborockNumberEntity(
                 f"{description.key}_{coordinator.duid_slug}",
                 coordinator=coordinator,
                 entity_description=description,
                 trait=trait,
             )
-            for coordinator in config_entry.runtime_data.v1
             for description in NUMBER_DESCRIPTIONS
             if (trait := description.trait(coordinator.properties_api)) is not None
         ]
+        async_add_entities(entities)
+
+    for coordinator in coordinators.values():
+        async_add_coordinator_entities(coordinator)
+
+    config_entry.async_on_unload(
+        async_dispatcher_connect(
+            hass,
+            f"roborock_coordinator_added_{config_entry.entry_id}",
+            async_add_coordinator_entities,
+        )
     )
 
 
 class RoborockNumberEntity(RoborockEntityV1, NumberEntity):
-    """A class to let you set options on a Roborock vacuum where the potential options are fixed."""
+    """A class to set options on a Roborock vacuum with fixed options."""
 
     entity_description: RoborockNumberDescription
 
@@ -93,10 +116,12 @@ class RoborockNumberEntity(RoborockEntityV1, NumberEntity):
         self._trait = trait
 
     @property
+    @override
     def native_value(self) -> float | None:
         """Get native value."""
         return self.entity_description.get_value(self._trait)
 
+    @override
     async def async_set_native_value(self, value: float) -> None:
         """Set number value."""
         try:

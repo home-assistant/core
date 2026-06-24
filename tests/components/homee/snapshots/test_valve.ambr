@@ -1,8 +1,9 @@
 # serializer version: 1
 # name: test_valve_snapshot[valve.test_valve_valve_position-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -38,9 +39,10 @@
 # name: test_valve_snapshot[valve.test_valve_valve_position-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'current_position': 0,
+      <ValveEntityStateAttribute.CURRENT_POSITION: 'current_position'>: 0,
       'device_class': 'water',
       'friendly_name': 'Test Valve Valve position',
+      <ValveEntityStateAttribute.IS_CLOSED: 'is_closed'>: True,
       'supported_features': <ValveEntityFeature: 4>,
     }),
     'context': <ANY>,

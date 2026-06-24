@@ -331,16 +331,17 @@
 # name: test_humidifier_state[Humidifier 200s][entities]
   list([
     EntityRegistryEntrySnapshot({
-      'aliases': set({
-      }),
+      'aliases': list([
+        None,
+      ]),
       'area_id': None,
       'capabilities': dict({
-        'available_modes': list([
+        <HumidifierEntityCapabilityAttribute.AVAILABLE_MODES: 'available_modes'>: list([
           'auto',
           'normal',
         ]),
-        'max_humidity': 80,
-        'min_humidity': 30,
+        <HumidifierEntityCapabilityAttribute.MAX_HUMIDITY: 'max_humidity'>: 80,
+        <HumidifierEntityCapabilityAttribute.MIN_HUMIDITY: 'min_humidity'>: 30,
       }),
       'config_entry_id': <ANY>,
       'config_subentry_id': <ANY>,
@@ -376,16 +377,16 @@
 # name: test_humidifier_state[Humidifier 200s][humidifier.humidifier_200s]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'available_modes': list([
+      <HumidifierEntityCapabilityAttribute.AVAILABLE_MODES: 'available_modes'>: list([
         'auto',
         'normal',
       ]),
-      'current_humidity': 35,
+      <HumidifierEntityStateAttribute.CURRENT_HUMIDITY: 'current_humidity'>: 35,
       'friendly_name': 'Humidifier 200s',
-      'humidity': 40,
-      'max_humidity': 80,
-      'min_humidity': 30,
-      'mode': 'normal',
+      <HumidifierEntityStateAttribute.HUMIDITY: 'humidity'>: 40,
+      <HumidifierEntityCapabilityAttribute.MAX_HUMIDITY: 'max_humidity'>: 80,
+      <HumidifierEntityCapabilityAttribute.MIN_HUMIDITY: 'min_humidity'>: 30,
+      <HumidifierEntityStateAttribute.MODE: 'mode'>: 'normal',
       'supported_features': <HumidifierEntityFeature: 1>,
     }),
     'context': <ANY>,
@@ -432,18 +433,19 @@
 # name: test_humidifier_state[Humidifier 6000s][entities]
   list([
     EntityRegistryEntrySnapshot({
-      'aliases': set({
-      }),
+      'aliases': list([
+        None,
+      ]),
       'area_id': None,
       'capabilities': dict({
-        'available_modes': list([
+        <HumidifierEntityCapabilityAttribute.AVAILABLE_MODES: 'available_modes'>: list([
           'auto',
           'humidity',
           'normal',
           'sleep',
         ]),
-        'max_humidity': 80,
-        'min_humidity': 30,
+        <HumidifierEntityCapabilityAttribute.MAX_HUMIDITY: 'max_humidity'>: 80,
+        <HumidifierEntityCapabilityAttribute.MIN_HUMIDITY: 'min_humidity'>: 30,
       }),
       'config_entry_id': <ANY>,
       'config_subentry_id': <ANY>,
@@ -479,18 +481,18 @@
 # name: test_humidifier_state[Humidifier 6000s][humidifier.humidifier_6000s]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'available_modes': list([
+      <HumidifierEntityCapabilityAttribute.AVAILABLE_MODES: 'available_modes'>: list([
         'auto',
         'humidity',
         'normal',
         'sleep',
       ]),
-      'current_humidity': 36,
+      <HumidifierEntityStateAttribute.CURRENT_HUMIDITY: 'current_humidity'>: 36,
       'friendly_name': 'Humidifier 6000s',
-      'humidity': 40,
-      'max_humidity': 80,
-      'min_humidity': 30,
-      'mode': 'humidity',
+      <HumidifierEntityStateAttribute.HUMIDITY: 'humidity'>: 40,
+      <HumidifierEntityCapabilityAttribute.MAX_HUMIDITY: 'max_humidity'>: 80,
+      <HumidifierEntityCapabilityAttribute.MIN_HUMIDITY: 'min_humidity'>: 30,
+      <HumidifierEntityStateAttribute.MODE: 'mode'>: 'humidity',
       'supported_features': <HumidifierEntityFeature: 1>,
     }),
     'context': <ANY>,
@@ -537,17 +539,18 @@
 # name: test_humidifier_state[Humidifier 600S][entities]
   list([
     EntityRegistryEntrySnapshot({
-      'aliases': set({
-      }),
+      'aliases': list([
+        None,
+      ]),
       'area_id': None,
       'capabilities': dict({
-        'available_modes': list([
+        <HumidifierEntityCapabilityAttribute.AVAILABLE_MODES: 'available_modes'>: list([
           'auto',
           'normal',
           'sleep',
         ]),
-        'max_humidity': 80,
-        'min_humidity': 30,
+        <HumidifierEntityCapabilityAttribute.MAX_HUMIDITY: 'max_humidity'>: 80,
+        <HumidifierEntityCapabilityAttribute.MIN_HUMIDITY: 'min_humidity'>: 30,
       }),
       'config_entry_id': <ANY>,
       'config_subentry_id': <ANY>,
@@ -583,17 +586,17 @@
 # name: test_humidifier_state[Humidifier 600S][humidifier.humidifier_600s]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'available_modes': list([
+      <HumidifierEntityCapabilityAttribute.AVAILABLE_MODES: 'available_modes'>: list([
         'auto',
         'normal',
         'sleep',
       ]),
-      'current_humidity': 35,
+      <HumidifierEntityStateAttribute.CURRENT_HUMIDITY: 'current_humidity'>: 35,
       'friendly_name': 'Humidifier 600S',
-      'humidity': 40,
-      'max_humidity': 80,
-      'min_humidity': 30,
-      'mode': 'normal',
+      <HumidifierEntityStateAttribute.HUMIDITY: 'humidity'>: 40,
+      <HumidifierEntityCapabilityAttribute.MAX_HUMIDITY: 'max_humidity'>: 80,
+      <HumidifierEntityCapabilityAttribute.MIN_HUMIDITY: 'min_humidity'>: 30,
+      <HumidifierEntityStateAttribute.MODE: 'mode'>: 'normal',
       'supported_features': <HumidifierEntityFeature: 1>,
     }),
     'context': <ANY>,

@@ -432,7 +432,7 @@ async def test_purge_method(
     await async_wait_purge_done(hass)
 
     # run purge method - no service data, use defaults
-    await hass.services.async_call("recorder", "purge")
+    await hass.services.async_call(DOMAIN, "purge")
     await hass.async_block_till_done()
 
     # Small wait for recorder thread
@@ -449,7 +449,7 @@ async def test_purge_method(
         assert statistics.count() == 4
 
     # run purge method - correct service data
-    await hass.services.async_call("recorder", "purge", service_data=service_data)
+    await hass.services.async_call(DOMAIN, "purge", service_data=service_data)
     await hass.async_block_till_done()
 
     # Small wait for recorder thread
@@ -483,7 +483,7 @@ async def test_purge_method(
 
     # run purge method - correct service data, with repack
     service_data["repack"] = True
-    await hass.services.async_call("recorder", "purge", service_data=service_data)
+    await hass.services.async_call(DOMAIN, "purge", service_data=service_data)
     await hass.async_block_till_done()
     await async_wait_purge_done(hass)
     assert (
@@ -495,7 +495,7 @@ async def test_purge_method(
 @pytest.mark.parametrize("use_sqlite", [True, False], indirect=True)
 @pytest.mark.usefixtures("recorder_mock")
 async def test_purge_edge_case(hass: HomeAssistant, use_sqlite: bool) -> None:
-    """Test states and events are purged even if they occurred shortly before purge_before."""
+    """Test states and events purged even if shortly before purge_before."""
 
     async def _add_db_entries(hass: HomeAssistant, timestamp: datetime) -> None:
         with session_scope(hass=hass) as session:
@@ -559,7 +559,7 @@ async def test_purge_edge_case(hass: HomeAssistant, use_sqlite: bool) -> None:
 
 
 async def test_purge_cutoff_date(hass: HomeAssistant, recorder_mock: Recorder) -> None:
-    """Test states and events are purged only if they occurred before "now() - keep_days"."""
+    """Test purge only removes entries before now() - keep_days."""
 
     async def _add_db_entries(hass: HomeAssistant, cutoff: datetime, rows: int) -> None:
         timestamp_keep = cutoff
@@ -1021,7 +1021,7 @@ async def test_purge_can_mix_legacy_and_new_format(
     assert recorder_mock.use_legacy_events_index is False
 
     def _recreate_legacy_events_index():
-        """Recreate the legacy events index since its no longer created on new instances."""
+        """Recreate the legacy events index."""
         migration._create_index(
             recorder_mock, recorder_mock.get_session, "states", "ix_states_event_id"
         )
@@ -1172,7 +1172,7 @@ async def test_purge_can_mix_legacy_and_new_format_with_detached_state(
     assert recorder_mock.use_legacy_events_index is False
 
     def _recreate_legacy_events_index():
-        """Recreate the legacy events index since its no longer created on new instances."""
+        """Recreate the legacy events index."""
         migration._create_index(
             recorder_mock, recorder_mock.get_session, "states", "ix_states_event_id"
         )

@@ -1,10 +1,8 @@
 """Component providing support for Reolink switch entities."""
 
-from __future__ import annotations
-
 from collections.abc import Callable
 from dataclasses import dataclass
-from typing import Any
+from typing import Any, override
 
 from reolink_aio.api import Chime, Host
 
@@ -129,9 +127,10 @@ SWITCH_ENTITIES = (
     ),
     ReolinkSwitchEntityDescription(
         key="ptz_patrol",
+        cmd_key="64",
         translation_key="ptz_patrol",
         supported=lambda api, ch: api.supported(ch, "ptz_patrol"),
-        value=lambda api, ch: None,
+        value=lambda api, ch: api.baichuan.ptz_patrol_cruising(ch),
         method=lambda api, ch, value: api.ctrl_ptz_patrol(ch, value),
     ),
     ReolinkSwitchEntityDescription(
@@ -322,7 +321,7 @@ RULE_SWITCH_ENTITY = ReolinkSwitchIndexEntityDescription(
     translation_key="rule",
     placeholder=lambda api, ch, idx: api.baichuan.rule_name(ch, idx),
     value=lambda api, ch, idx: api.baichuan.rule_enabled(ch, idx),
-    method=lambda api, ch, idx, value: (api.baichuan.set_rule_enabled(ch, idx, value)),
+    method=lambda api, ch, idx, value: api.baichuan.set_rule_enabled(ch, idx, value),
 )
 
 
@@ -382,17 +381,20 @@ class ReolinkSwitchEntity(ReolinkChannelCoordinatorEntity, SwitchEntity):
         super().__init__(reolink_data, channel)
 
     @property
+    @override
     def is_on(self) -> bool | None:
         """Return true if switch is on."""
         return self.entity_description.value(self._host.api, self._channel)
 
     @raise_translated_error
+    @override
     async def async_turn_on(self, **kwargs: Any) -> None:
         """Turn the entity on."""
         await self.entity_description.method(self._host.api, self._channel, True)
         self.async_write_ha_state()
 
     @raise_translated_error
+    @override
     async def async_turn_off(self, **kwargs: Any) -> None:
         """Turn the entity off."""
         await self.entity_description.method(self._host.api, self._channel, False)
@@ -414,17 +416,20 @@ class ReolinkHostSwitchEntity(ReolinkHostCoordinatorEntity, SwitchEntity):
         super().__init__(reolink_data)
 
     @property
+    @override
     def is_on(self) -> bool:
         """Return true if switch is on."""
         return self.entity_description.value(self._host.api)
 
     @raise_translated_error
+    @override
     async def async_turn_on(self, **kwargs: Any) -> None:
         """Turn the entity on."""
         await self.entity_description.method(self._host.api, True)
         self.async_write_ha_state()
 
     @raise_translated_error
+    @override
     async def async_turn_off(self, **kwargs: Any) -> None:
         """Turn the entity off."""
         await self.entity_description.method(self._host.api, False)
@@ -447,17 +452,20 @@ class ReolinkChimeSwitchEntity(ReolinkChimeCoordinatorEntity, SwitchEntity):
         super().__init__(reolink_data, chime)
 
     @property
+    @override
     def is_on(self) -> bool | None:
         """Return true if switch is on."""
         return self.entity_description.value(self._chime)
 
     @raise_translated_error
+    @override
     async def async_turn_on(self, **kwargs: Any) -> None:
         """Turn the entity on."""
         await self.entity_description.method(self._chime, True)
         self.async_write_ha_state()
 
     @raise_translated_error
+    @override
     async def async_turn_off(self, **kwargs: Any) -> None:
         """Turn the entity off."""
         await self.entity_description.method(self._chime, False)
@@ -480,17 +488,20 @@ class ReolinkHostChimeSwitchEntity(ReolinkHostChimeCoordinatorEntity, SwitchEnti
         super().__init__(reolink_data, chime)
 
     @property
+    @override
     def is_on(self) -> bool | None:
         """Return true if switch is on."""
         return self.entity_description.value(self._chime)
 
     @raise_translated_error
+    @override
     async def async_turn_on(self, **kwargs: Any) -> None:
         """Turn the entity on."""
         await self.entity_description.method(self._chime, True)
         self.async_write_ha_state()
 
     @raise_translated_error
+    @override
     async def async_turn_off(self, **kwargs: Any) -> None:
         """Turn the entity off."""
         await self.entity_description.method(self._chime, False)
@@ -519,11 +530,13 @@ class ReolinkIndexSwitchEntity(ReolinkChannelCoordinatorEntity, SwitchEntity):
         self._attr_unique_id = f"{self._attr_unique_id}_{index}"
 
     @property
+    @override
     def is_on(self) -> bool | None:
         """Return true if switch is on."""
         return self.entity_description.value(self._host.api, self._channel, self._index)
 
     @raise_translated_error
+    @override
     async def async_turn_on(self, **kwargs: Any) -> None:
         """Turn the entity on."""
         await self.entity_description.method(
@@ -532,6 +545,7 @@ class ReolinkIndexSwitchEntity(ReolinkChannelCoordinatorEntity, SwitchEntity):
         self.async_write_ha_state()
 
     @raise_translated_error
+    @override
     async def async_turn_off(self, **kwargs: Any) -> None:
         """Turn the entity off."""
         await self.entity_description.method(

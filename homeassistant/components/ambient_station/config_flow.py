@@ -1,8 +1,6 @@
 """Config flow to configure the Ambient PWS component."""
 
-from __future__ import annotations
-
-from typing import Any
+from typing import Any, override
 
 from aioambient import API
 from aioambient.errors import AmbientError
@@ -31,9 +29,10 @@ class AmbientStationFlowHandler(ConfigFlow, domain=DOMAIN):
         return self.async_show_form(
             step_id="user",
             data_schema=self.data_schema,
-            errors=errors if errors else {},
+            errors=errors or {},
         )
 
+    @override
     async def async_step_user(
         self, user_input: dict[str, Any] | None = None
     ) -> ConfigFlowResult:

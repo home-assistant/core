@@ -1,7 +1,5 @@
 """Support for Prometheus metrics export."""
 
-from __future__ import annotations
-
 from collections import defaultdict
 from collections.abc import Callable, Sequence
 from dataclasses import astuple, dataclass
@@ -44,7 +42,8 @@ from homeassistant.components.humidifier import ATTR_AVAILABLE_MODES, ATTR_HUMID
 from homeassistant.components.light import ATTR_BRIGHTNESS
 from homeassistant.components.sensor import SensorDeviceClass
 
-# Alias water_heater constants to avoid name clashes with similarly named climate constants
+# Alias water_heater constants to avoid name clashes with
+# similarly named climate constants
 from homeassistant.components.water_heater import (
     ATTR_AWAY_MODE as WATER_HEATER_ATTR_AWAY_MODE,
     ATTR_CURRENT_TEMPERATURE as WATER_HEATER_ATTR_CURRENT_TEMPERATURE,
@@ -59,6 +58,8 @@ from homeassistant.const import (
     ATTR_BATTERY_LEVEL,
     ATTR_DEVICE_CLASS,
     ATTR_FRIENDLY_NAME,
+    ATTR_LATITUDE,
+    ATTR_LONGITUDE,
     ATTR_MODE,
     ATTR_TEMPERATURE,
     ATTR_UNIT_OF_MEASUREMENT,
@@ -72,6 +73,7 @@ from homeassistant.const import (
     STATE_OPENING,
     STATE_UNAVAILABLE,
     STATE_UNKNOWN,
+    UnitOfLength,
     UnitOfTemperature,
 )
 from homeassistant.core import Event, EventStateChangedData, HomeAssistant, State
@@ -105,7 +107,7 @@ from homeassistant.helpers.floor_registry import (
 )
 from homeassistant.helpers.typing import ConfigType
 from homeassistant.util.dt import as_timestamp
-from homeassistant.util.unit_conversion import TemperatureConverter
+from homeassistant.util.unit_conversion import DistanceConverter, TemperatureConverter
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -349,7 +351,10 @@ class PrometheusMetrics:
     def handle_entity_registry_updated(
         self, event: Event[EventEntityRegistryUpdatedData]
     ) -> None:
-        """Listen for deleted, disabled or renamed entities and remove them from the Prometheus Registry."""
+        """Listen for entity changes and remove from Prometheus Registry.
+
+        Handles deleted, disabled, or renamed entities.
+        """
         if event.data["action"] in (None, "create"):
             return
 
@@ -384,11 +389,7 @@ class PrometheusMetrics:
         if event.data["action"] != "update" or "area_id" not in event.data["changes"]:
             return
 
-        device_id = event.data.get("device_id")
-
-        if device_id is None:
-            return
-
+        device_id = event.data["device_id"]
         _LOGGER.debug("Handling device update for %s", device_id)
 
         device = self.device_registry.async_get(device_id)
@@ -495,7 +496,7 @@ class PrometheusMetrics:
         entity_id: str,
         ignored_metric_names: set[str] | None = None,
     ) -> None:
-        """Remove labelsets matching the given entity id from all non-ignored metrics."""
+        """Remove labelsets matching the entity id from non-ignored metrics."""
         if ignored_metric_names is None:
             ignored_metric_names = set()
         metric_set = self._metrics_by_entity_id[entity_id]
@@ -521,7 +522,7 @@ class PrometheusMetrics:
         for key, value in state.attributes.items():
             try:
                 value = float(value)
-            except (ValueError, TypeError):
+            except ValueError, TypeError:
                 continue
 
             self._metric(
@@ -559,7 +560,7 @@ class PrometheusMetrics:
 
     @staticmethod
     def _sanitize_metric_name(metric: str) -> str:
-        metric.replace("\u03bc", "\u00b5")
+        metric = metric.replace("\u03bc", "\u00b5")
         return "".join(
             [c if c in ALLOWED_METRIC_CHARS else f"u{hex(ord(c))}" for c in metric]
         )
@@ -756,7 +757,7 @@ class PrometheusMetrics:
         metric.set(value)
 
     def _handle_binary_sensor(self, state: State) -> None:
-        self._numeric_metric(state, "binary_sensor", "binary boolean")
+        self._numeric_metric(state, "binary_sensor", "binary sensor")
 
     def _handle_input_boolean(self, state: State) -> None:
         self._numeric_metric(state, "input_boolean", "input boolean")
@@ -772,6 +773,33 @@ class PrometheusMetrics:
 
     def _handle_person(self, state: State) -> None:
         self._numeric_metric(state, "person", "person")
+
+    def _handle_geo_location(self, state: State) -> None:
+        labels = self._labels(state, {"source": state.attributes.get("source", "")})
+        if (value := self.state_as_number(state)) is not None:
+            unit = state.attributes.get(ATTR_UNIT_OF_MEASUREMENT)
+            if unit is not None:
+                value = DistanceConverter.convert(value, unit, UnitOfLength.METERS)
+            self._metric(
+                "geo_location_distance_meters",
+                prometheus_client.Gauge,
+                "Distance of the geo location event from home in meters",
+                labels,
+            ).set(value)
+        if (latitude := state.attributes.get(ATTR_LATITUDE)) is not None:
+            self._metric(
+                "geo_location_latitude_degrees",
+                prometheus_client.Gauge,
+                "Latitude of the geo location event in degrees",
+                labels,
+            ).set(latitude)
+        if (longitude := state.attributes.get(ATTR_LONGITUDE)) is not None:
+            self._metric(
+                "geo_location_longitude_degrees",
+                prometheus_client.Gauge,
+                "Longitude of the geo location event in degrees",
+                labels,
+            ).set(longitude)
 
     def _handle_lock(self, state: State) -> None:
         self._numeric_metric(state, "lock", "lock")
@@ -907,7 +935,7 @@ class PrometheusMetrics:
             state,
             WATER_HEATER_ATTR_CURRENT_TEMPERATURE,
             "water_heater_current_temperature_celsius",
-            "Target temperature in degrees Celsius",
+            "Current temperature in degrees Celsius",
         )
         self._temperature_metric(
             state,
@@ -1064,7 +1092,10 @@ class PrometheusMetrics:
 
     @staticmethod
     def _sensor_timestamp_metric(state: State, unit: str | None) -> str | None:
-        """Get metric for timestamp sensors, which have no unit of measurement attribute."""
+        """Get metric for timestamp sensors.
+
+        These have no unit of measurement attribute.
+        """
         metric = state.attributes.get(ATTR_DEVICE_CLASS)
         if metric == SensorDeviceClass.TIMESTAMP:
             return f"sensor_{metric}_seconds"

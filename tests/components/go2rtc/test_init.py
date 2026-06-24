@@ -42,7 +42,10 @@ from homeassistant.components.go2rtc.const import (
     DOMAIN,
     RECOMMENDED_VERSION,
 )
-from homeassistant.components.go2rtc.util import get_go2rtc_unix_socket_path
+from homeassistant.components.go2rtc.util import (
+    get_camera_identifier,
+    get_go2rtc_unix_socket_path,
+)
 from homeassistant.components.stream import Orientation
 from homeassistant.config_entries import ConfigEntryState
 from homeassistant.const import CONF_PASSWORD, CONF_URL, CONF_USERNAME
@@ -101,7 +104,7 @@ async def _test_setup_and_signaling(
     camera: MockCamera,
 ) -> None:
     """Test the go2rtc config entry."""
-    entity_id = camera.entity_id
+    identifier = get_camera_identifier(camera)
     assert camera.camera_capabilities.frontend_stream_types == {StreamType.HLS}
 
     assert await async_setup_component(hass, DOMAIN, config)
@@ -138,17 +141,17 @@ async def _test_setup_and_signaling(
     await test("sesion_1")
 
     rest_client.streams.add.assert_called_once_with(
-        entity_id,
+        identifier,
         [
             "rtsp://stream",
-            f"ffmpeg:{camera.entity_id}#audio=opus#query=log_level=debug",
+            f"ffmpeg:{identifier}#audio=opus#query=log_level=debug",
         ],
     )
 
     # Stream exists but the source is different
     rest_client.streams.add.reset_mock()
     rest_client.streams.list.return_value = {
-        entity_id: Stream([Producer("rtsp://different")])
+        identifier: Stream([Producer("rtsp://different")])
     }
 
     receive_message_callback.reset_mock()
@@ -156,17 +159,17 @@ async def _test_setup_and_signaling(
     await test("session_2")
 
     rest_client.streams.add.assert_called_once_with(
-        entity_id,
+        identifier,
         [
             "rtsp://stream",
-            f"ffmpeg:{camera.entity_id}#audio=opus#query=log_level=debug",
+            f"ffmpeg:{identifier}#audio=opus#query=log_level=debug",
         ],
     )
 
     # If the stream is already added, the stream should not be added again.
     rest_client.streams.add.reset_mock()
     rest_client.streams.list.return_value = {
-        entity_id: Stream([Producer("rtsp://stream")])
+        identifier: Stream([Producer("rtsp://stream")])
     }
 
     receive_message_callback.reset_mock()
@@ -205,6 +208,14 @@ async def _test_setup_and_signaling(
     "mock_get_binary",
     "mock_is_docker_env",
     "mock_go2rtc_entry",
+)
+@pytest.mark.parametrize(
+    "camera_unique_id",
+    [
+        "camera_unique_id",
+        None,
+    ],
+    indirect=True,
 )
 @pytest.mark.parametrize(
     ("config", "ui_enabled", "expected_username", "expected_password"),
@@ -297,6 +308,14 @@ async def test_setup_go_binary(
 
 
 @pytest.mark.usefixtures("mock_go2rtc_entry")
+@pytest.mark.parametrize(
+    "camera_unique_id",
+    [
+        "camera_unique_id",
+        None,
+    ],
+    indirect=True,
+)
 @pytest.mark.parametrize(
     ("go2rtc_binary", "is_docker_env"),
     [
@@ -484,8 +503,8 @@ _INVALID_CONFIG = "Invalid config for 'go2rtc': "
 ERR_INVALID_URL = _INVALID_CONFIG + "invalid url"
 ERR_EXCLUSIVE = _INVALID_CONFIG + DEBUG_UI_URL_MESSAGE
 ERR_AUTH_WITHOUT_URL_OR_UI = (
-    _INVALID_CONFIG
-    + "Username and password can only be set when a URL is configured or debug_ui is true"
+    _INVALID_CONFIG + "Username and password can only be set when a URL is configured"
+    " or debug_ui is true"
 )
 ERR_AUTH_INCOMPLETE = (
     _INVALID_CONFIG
@@ -674,7 +693,7 @@ async def test_setup_with_retryable_setup_entry_error_custom_server(
     await hass.async_block_till_done(wait_background_tasks=True)
     config_entries = hass.config_entries.async_entries(DOMAIN)
     assert len(config_entries) == 1
-    assert config_entries[0].state == expected_config_entry_state
+    assert config_entries[0].state is expected_config_entry_state
     assert expected_log_message in caplog.text
 
 
@@ -711,7 +730,7 @@ async def test_setup_with_retryable_setup_entry_error_default_server(
     config_entries = hass.config_entries.async_entries(DOMAIN)
     assert len(config_entries) == has_go2rtc_entry
     for config_entry in config_entries:
-        assert config_entry.state == expected_config_entry_state
+        assert config_entry.state is expected_config_entry_state
     assert expected_log_message in caplog.text
 
 
@@ -745,7 +764,7 @@ async def test_setup_with_version_error(
     await hass.async_block_till_done(wait_background_tasks=True)
     config_entries = hass.config_entries.async_entries(DOMAIN)
     assert len(config_entries) == 1
-    assert config_entries[0].state == expected_config_entry_state
+    assert config_entries[0].state is expected_config_entry_state
     assert expected_log_message in caplog.text
 
 
@@ -830,13 +849,14 @@ async def test_generic_workaround(
         image = await async_get_image(hass, camera.entity_id)
         assert image.content == image_bytes
 
-    rest_client.streams.add.assert_called_once_with(
-        camera.entity_id,
-        [
-            "ffmpeg:https://my_stream_url.m3u8",
-            f"ffmpeg:{camera.entity_id}#audio=opus#query=log_level=debug",
-        ],
-    )
+        identifier = get_camera_identifier(camera)
+        rest_client.streams.add.assert_called_once_with(
+            identifier,
+            [
+                "ffmpeg:https://my_stream_url.m3u8",
+                f"ffmpeg:{identifier}#audio=opus#query=log_level=debug",
+            ],
+        )
 
 
 async def _test_camera_orientation(
@@ -859,11 +879,12 @@ async def _test_camera_orientation(
     await camera_fn(hass, camera)
 
     # Verify the stream was configured correctly
+    identifier = get_camera_identifier(camera)
     rest_client.streams.add.assert_called_once_with(
-        camera.entity_id,
+        identifier,
         [
             expected_stream_source,
-            f"ffmpeg:{camera.entity_id}#audio=opus#query=log_level=debug",
+            f"ffmpeg:{identifier}#audio=opus#query=log_level=debug",
         ],
     )
 
@@ -996,7 +1017,10 @@ async def test_stream_orientation_stream_source_starts_ffmpeg(
         [HomeAssistant, MockCamera, Orientation, AsyncMock, str], Awaitable[None]
     ],
 ) -> None:
-    """Test WebRTC provider applies correct orientation filters when a stream source already starts with ffmpeg."""
+    """Test WebRTC provider applies correct orientation filters.
+
+    Specifically when a stream source already starts with ffmpeg.
+    """
     camera = init_test_integration
     camera.set_stream_source("ffmpeg:rtsp://test.stream")
 
@@ -1104,7 +1128,7 @@ async def test_unix_socket_not_used_for_custom_server(hass: HomeAssistant) -> No
 
 @pytest.mark.usefixtures("rest_client", "server")
 async def test_basic_auth_with_custom_url(hass: HomeAssistant) -> None:
-    """Test BasicAuth session is created when username and password are provided with custom URL."""
+    """Test BasicAuth session is created with username/password and URL."""
     config = {
         DOMAIN: {
             CONF_URL: "http://localhost:1984/",
@@ -1134,7 +1158,7 @@ async def test_basic_auth_with_custom_url(hass: HomeAssistant) -> None:
 
 @pytest.mark.usefixtures("rest_client")
 async def test_basic_auth_with_debug_ui(hass: HomeAssistant, server_dir: Path) -> None:
-    """Test BasicAuth session is created when username and password are provided with debug_ui."""
+    """Test BasicAuth session created with username/password and debug_ui."""
     config = {
         DOMAIN: {
             CONF_DEBUG_UI: True,

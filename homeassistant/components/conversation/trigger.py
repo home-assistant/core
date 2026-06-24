@@ -1,11 +1,11 @@
 """Offer sentence based automation rules."""
 
-from __future__ import annotations
-
 from collections.abc import Awaitable, Callable
-from dataclasses import dataclass
+import re
 from typing import Any
 
+from hassil.parse_expression import parse_sentence
+from hassil.parser import ParseError
 from hassil.recognize import RecognizeResult
 from hassil.util import (
     PUNCTUATION_END,
@@ -31,17 +31,11 @@ TRIGGER_CALLBACK_TYPE = Callable[
 ]
 
 
-@dataclass(slots=True)
-class TriggerDetails:
-    """List of sentences and the callback for a trigger."""
-
-    sentences: list[str]
-    callback: TRIGGER_CALLBACK_TYPE
-
-
 def has_no_punctuation(value: list[str]) -> list[str]:
     """Validate result does not contain punctuation."""
     for sentence in value:
+        # Exclude {list_references} which may contain punctuation characters.
+        sentence = _remove_list_references(sentence)
         if (
             PUNCTUATION_START.search(sentence)
             or PUNCTUATION_END.search(sentence)
@@ -50,6 +44,21 @@ def has_no_punctuation(value: list[str]) -> list[str]:
         ):
             raise vol.Invalid("sentence should not contain punctuation")
 
+    return value
+
+
+def _remove_list_references(sentence: str) -> str:
+    """Remove {list_references} from a sentence for linting."""
+    return re.sub(r"(?<!\\)\{[^{}]*\}", "", sentence)
+
+
+def is_valid_sentence(value: list[str]) -> list[str]:
+    """Validate result can be parsed by hassil."""
+    for sentence in value:
+        try:
+            parse_sentence(sentence)
+        except ParseError as err:
+            raise vol.Invalid(f"invalid sentence: {err}") from err
     return value
 
 
@@ -69,7 +78,11 @@ TRIGGER_SCHEMA = cv.TRIGGER_BASE_SCHEMA.extend(
     {
         vol.Required(CONF_PLATFORM): DOMAIN,
         vol.Required(CONF_COMMAND): vol.All(
-            cv.ensure_list, [cv.string], has_one_non_empty_item, has_no_punctuation
+            cv.ensure_list,
+            [cv.string],
+            has_one_non_empty_item,
+            has_no_punctuation,
+            is_valid_sentence,
         ),
     }
 )
@@ -149,5 +162,5 @@ async def async_attach_trigger(
         return None
 
     return get_agent_manager(hass).register_trigger(
-        TriggerDetails(sentences=sentences, callback=call_action)
+        sentences=sentences, trigger_callback=call_action
     )

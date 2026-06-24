@@ -23,14 +23,14 @@
   },
   "services": {
     "press": {
-      "description": "Presses a button entity.",
-      "name": "Press"
+      "description": "Presses a button.",
+      "name": "Press button"
     }
   },
   "title": "Button",
   "triggers": {
     "pressed": {
-      "description": "Triggers when a button was pressed",
+      "description": "Triggers when one or more buttons are pressed.",
       "name": "Button pressed"
     }
   }

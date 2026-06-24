@@ -1,9 +1,13 @@
 """Tests for the Rituals Perfume Genie switch platform."""
 
-from __future__ import annotations
+import logging
 
-from homeassistant.components.homeassistant import SERVICE_UPDATE_ENTITY
-from homeassistant.components.rituals_perfume_genie.const import DOMAIN
+import pytest
+
+from homeassistant.components.homeassistant import (
+    DOMAIN as HOMEASSISTANT_DOMAIN,
+    SERVICE_UPDATE_ENTITY,
+)
 from homeassistant.components.switch import DOMAIN as SWITCH_DOMAIN
 from homeassistant.const import (
     ATTR_ENTITY_ID,
@@ -13,12 +17,13 @@ from homeassistant.const import (
     STATE_ON,
 )
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers import entity_registry as er
+from homeassistant.helpers import device_registry as dr, entity_registry as er
 from homeassistant.setup import async_setup_component
 
 from .common import (
     init_integration,
     mock_config_entry,
+    mock_diffuser,
     mock_diffuser_v1_battery_cartridge,
 )
 
@@ -45,8 +50,8 @@ async def test_switch_handle_coordinator_update(hass: HomeAssistant) -> None:
     config_entry = mock_config_entry(unique_id="switch_handle_coordinator_update_test")
     diffuser = mock_diffuser_v1_battery_cartridge()
     await init_integration(hass, config_entry, [diffuser])
-    await async_setup_component(hass, "homeassistant", {})
-    coordinator = hass.data[DOMAIN][config_entry.entry_id]["lot123v1"]
+    await async_setup_component(hass, HOMEASSISTANT_DOMAIN, {})
+    coordinator = config_entry.runtime_data["lot123v1"]
     diffuser.is_on = False
 
     state = hass.states.get("switch.genie")
@@ -56,7 +61,7 @@ async def test_switch_handle_coordinator_update(hass: HomeAssistant) -> None:
     call_count_before_update = diffuser.update_data.call_count
 
     await hass.services.async_call(
-        "homeassistant",
+        HOMEASSISTANT_DOMAIN,
         SERVICE_UPDATE_ENTITY,
         {ATTR_ENTITY_ID: ["switch.genie"]},
         blocking=True,
@@ -69,6 +74,28 @@ async def test_switch_handle_coordinator_update(hass: HomeAssistant) -> None:
 
     assert coordinator.last_update_success
     assert diffuser.update_data.call_count == call_count_before_update + 1
+
+
+async def test_device_info_sw_version_dict(
+    hass: HomeAssistant,
+    device_registry: dr.DeviceRegistry,
+    caplog: pytest.LogCaptureFixture,
+) -> None:
+    """Test that sw_version is a string even when the library returns a dict."""
+    diffuser = mock_diffuser(
+        hublot="lot123dict",
+        version={"id": 1, "title": "5.2-rc15", "icon": ""},
+    )
+    config_entry = mock_config_entry(unique_id="id_123_version_dict_test")
+    with caplog.at_level(logging.WARNING, logger="homeassistant.helpers.frame"):
+        await init_integration(hass, config_entry, [diffuser])
+
+    device_entry = device_registry.async_get_device(
+        identifiers={("rituals_perfume_genie", "lot123dict")}
+    )
+    assert device_entry
+    assert device_entry.sw_version == "5.2-rc15"
+    assert "non-string value" not in caplog.text
 
 
 async def test_set_switch_state(hass: HomeAssistant) -> None:

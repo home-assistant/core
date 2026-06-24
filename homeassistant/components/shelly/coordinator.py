@@ -1,12 +1,10 @@
 """Coordinators for the Shelly integration."""
 
-from __future__ import annotations
-
 import asyncio
 from collections.abc import Callable, Coroutine
 from dataclasses import dataclass
 from datetime import timedelta
-from typing import Any, cast
+from typing import Any, cast, override
 
 from aioshelly.ble import async_ensure_ble_enabled, async_stop_scanner
 from aioshelly.block_device import BlockDevice, BlockUpdateType
@@ -47,6 +45,7 @@ from .const import (
     ATTR_DEVICE,
     ATTR_GENERATION,
     BATTERY_DEVICES_WITH_PERMANENT_CONNECTION,
+    COIOT_UNCONFIGURED_ISSUE_ID,
     CONF_BLE_SCANNER_MODE,
     CONF_SLEEP_PERIOD,
     DOMAIN,
@@ -72,6 +71,7 @@ from .const import (
 )
 from .utils import (
     async_create_issue_unsupported_firmware,
+    async_manage_coiot_issues_task,
     get_block_device_sleep_period,
     get_device_entry_gen,
     get_host,
@@ -122,8 +122,9 @@ class ShellyCoordinatorBase[_DeviceT: BlockDevice | RpcDevice](
         self.suggested_area: str | None = None
         device_name = device.name if device.initialized else entry.title
         interval_td = timedelta(seconds=update_interval)
-        # The device has come online at least once. In the case of a sleeping RPC
-        # device, this means that the device has connected to the WS server at least once.
+        # The device has come online at least once. In the case
+        # of a sleeping RPC device, this means that the device
+        # has connected to the WS server at least once.
         self._came_online_once = False
         super().__init__(
             hass,
@@ -396,6 +397,7 @@ class ShellyBlockCoordinator(ShellyCoordinatorBase[BlockDevice]):
             self._debounced_reload.async_schedule_call()
         self._last_cfg_changed = cfg_changed
 
+    @override
     async def _async_update_data(self) -> None:
         """Fetch data."""
         if self.sleep_period:
@@ -442,26 +444,19 @@ class ShellyBlockCoordinator(ShellyCoordinatorBase[BlockDevice]):
                     DOMAIN,
                     PUSH_UPDATE_ISSUE_ID.format(unique=self.mac),
                 )
+                ir.async_delete_issue(
+                    self.hass,
+                    DOMAIN,
+                    COIOT_UNCONFIGURED_ISSUE_ID.format(unique=self.mac),
+                )
             self._push_update_failures = 0
         elif update_type is BlockUpdateType.COAP_REPLY:
             self._push_update_failures += 1
             if self._push_update_failures == MAX_PUSH_UPDATE_FAILURES:
-                LOGGER.debug(
-                    "Creating issue %s", PUSH_UPDATE_ISSUE_ID.format(unique=self.mac)
-                )
-                ir.async_create_issue(
+                self.config_entry.async_create_background_task(
                     self.hass,
-                    DOMAIN,
-                    PUSH_UPDATE_ISSUE_ID.format(unique=self.mac),
-                    is_fixable=False,
-                    is_persistent=False,
-                    severity=ir.IssueSeverity.ERROR,
-                    learn_more_url="https://www.home-assistant.io/integrations/shelly/#shelly-device-configuration-generation-1",
-                    translation_key="push_update_failure",
-                    translation_placeholders={
-                        "device_name": self.config_entry.title,
-                        "ip_address": self.device.ip_address,
-                    },
+                    async_manage_coiot_issues_task(self.hass, self.config_entry),
+                    "coiot_issues",
                 )
         if self._push_update_failures:
             LOGGER.debug(
@@ -469,6 +464,7 @@ class ShellyBlockCoordinator(ShellyCoordinatorBase[BlockDevice]):
             )
         self.async_set_updated_data(None)
 
+    @override
     def async_setup(self, pending_platforms: list[Platform] | None = None) -> None:
         """Set up the coordinator."""
         super().async_setup(pending_platforms)
@@ -492,6 +488,7 @@ class ShellyRestCoordinator(ShellyCoordinatorBase[BlockDevice]):
             )
         super().__init__(hass, entry, device, update_interval)
 
+    @override
     async def _async_update_data(self) -> None:
         """Fetch data."""
         LOGGER.debug("REST update for %s", self.name)
@@ -527,6 +524,8 @@ class ShellyRpcCoordinator(ShellyCoordinatorBase[RpcDevice]):
         super().__init__(hass, entry, device, update_interval)
 
         self.connected = False
+        # Set once BLE scanner setup has been attempted after connecting.
+        self.ble_scanner_setup_done = asyncio.Event()
         self._disconnected_callbacks: list[CALLBACK_TYPE] = []
         self._connection_lock = asyncio.Lock()
         self._event_listeners: list[Callable[[dict[str, Any]], None]] = []
@@ -669,6 +668,7 @@ class ShellyRpcCoordinator(ShellyCoordinatorBase[RpcDevice]):
                 for event_callback in self._ota_event_listeners:
                     event_callback(event)
 
+    @override
     async def _async_update_data(self) -> None:
         """Fetch data."""
         if self.update_sleep_period() or self.hass.is_stopping:
@@ -765,27 +765,30 @@ class ShellyRpcCoordinator(ShellyCoordinatorBase[RpcDevice]):
 
     async def _async_connect_ble_scanner(self) -> None:
         """Connect BLE scanner."""
-        ble_scanner_mode = self.config_entry.options.get(
-            CONF_BLE_SCANNER_MODE, BLEScannerMode.DISABLED
-        )
-        if ble_scanner_mode == BLEScannerMode.DISABLED and self.connected:
-            await async_stop_scanner(self.device)
-            async_remove_scanner(self.hass, self.bluetooth_source)
-            return
-        if await async_ensure_ble_enabled(self.device):
-            # BLE enable required a reboot, don't bother connecting
-            # the scanner since it will be disconnected anyway
-            LOGGER.debug(
-                "Device %s BLE enable required a reboot, skipping scanner connect",
-                self.name,
+        try:
+            ble_scanner_mode = self.config_entry.options.get(
+                CONF_BLE_SCANNER_MODE, BLEScannerMode.DISABLED
             )
-            return
-        assert self.device_id is not None
-        self._disconnected_callbacks.append(
-            await async_connect_scanner(
-                self.hass, self, ble_scanner_mode, self.device_id
+            if ble_scanner_mode == BLEScannerMode.DISABLED and self.connected:
+                await async_stop_scanner(self.device)
+                async_remove_scanner(self.hass, self.bluetooth_source)
+                return
+            if await async_ensure_ble_enabled(self.device):
+                # BLE enable required a reboot, don't bother connecting
+                # the scanner since it will be disconnected anyway
+                LOGGER.debug(
+                    "Device %s BLE enable required a reboot, skipping scanner connect",
+                    self.name,
+                )
+                return
+            assert self.device_id is not None
+            self._disconnected_callbacks.append(
+                await async_connect_scanner(
+                    self.hass, self, ble_scanner_mode, self.device_id
+                )
             )
-        )
+        finally:
+            self.ble_scanner_setup_done.set()
 
     @callback
     def _async_handle_rpc_device_online(self) -> None:
@@ -833,6 +836,7 @@ class ShellyRpcCoordinator(ShellyCoordinatorBase[RpcDevice]):
         elif update_type is RpcUpdateType.EVENT and (event := self.device.event):
             self._async_device_event_handler(event)
 
+    @override
     def async_setup(self, pending_platforms: list[Platform] | None = None) -> None:
         """Set up the coordinator."""
         super().async_setup(pending_platforms)
@@ -843,6 +847,7 @@ class ShellyRpcCoordinator(ShellyCoordinatorBase[RpcDevice]):
                 self.hass, self._async_connected(), eager_start=True
             )
 
+    @override
     async def shutdown(self) -> None:
         """Shutdown the coordinator."""
         if self.device.connected:
@@ -875,6 +880,7 @@ class ShellyRpcPollingCoordinator(ShellyCoordinatorBase[RpcDevice]):
         """Initialize the RPC polling coordinator."""
         super().__init__(hass, entry, device, RPC_SENSORS_POLLING_INTERVAL)
 
+    @override
     async def _async_update_data(self) -> None:
         """Fetch data."""
         if not self.device.connected:

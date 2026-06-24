@@ -1,10 +1,8 @@
 """Support for Wi-Fi enabled iRobot Roombas."""
 
-from __future__ import annotations
-
 import asyncio
 import logging
-from typing import Any
+from typing import Any, override
 
 from homeassistant.components.vacuum import (
     ATTR_STATUS,
@@ -12,16 +10,14 @@ from homeassistant.components.vacuum import (
     VacuumActivity,
     VacuumEntityFeature,
 )
-from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from homeassistant.util import dt as dt_util
 from homeassistant.util.unit_system import METRIC_SYSTEM
 
 from . import roomba_reported_state
-from .const import DOMAIN
 from .entity import IRobotEntity
-from .models import RoombaData
+from .models import RoombaConfigEntry
 
 SUPPORT_IROBOT = (
     VacuumEntityFeature.PAUSE
@@ -87,11 +83,11 @@ SUPPORT_BRAAVA = SUPPORT_IROBOT | VacuumEntityFeature.FAN_SPEED
 
 async def async_setup_entry(
     hass: HomeAssistant,
-    config_entry: ConfigEntry,
+    config_entry: RoombaConfigEntry,
     async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up the iRobot Roomba vacuum cleaner."""
-    domain_data: RoombaData = hass.data[DOMAIN][config_entry.entry_id]
+    domain_data = config_entry.runtime_data
     roomba = domain_data.roomba
     blid = domain_data.blid
 
@@ -125,7 +121,8 @@ class IRobotVacuum(IRobotEntity, StateVacuumEntity):
         self._cap_position = self.vacuum_state.get("cap", {}).get("pose") == 1
 
     @property
-    def activity(self):
+    @override
+    def activity(self) -> VacuumActivity:
         """Return the state of the vacuum cleaner."""
         clean_mission_status = self.vacuum_state.get("cleanMissionStatus", {})
         cycle = clean_mission_status.get("cycle")
@@ -134,11 +131,15 @@ class IRobotVacuum(IRobotEntity, StateVacuumEntity):
             state = STATE_MAP[phase]
         except KeyError:
             return VacuumActivity.ERROR
-        if cycle != "none" and state in (VacuumActivity.IDLE, VacuumActivity.DOCKED):
+        # A robot stopped in the middle of a mission is paused, but one that is
+        # docked to recharge mid-mission stays docked (the charging binary
+        # sensor distinguishes it from a user-initiated pause on the floor).
+        if cycle != "none" and state is VacuumActivity.IDLE:
             state = VacuumActivity.PAUSED
         return state
 
     @property
+    @override
     def extra_state_attributes(self) -> dict[str, Any]:
         """Return the state attributes of the device."""
         state = self.vacuum_state
@@ -199,6 +200,7 @@ class IRobotVacuum(IRobotEntity, StateVacuumEntity):
 
         return (cleaning_time, cleaned_area)
 
+    @override
     def on_message(self, json_data):
         """Update state on message change."""
         state = json_data.get("state", {}).get("reported", {})
@@ -206,6 +208,7 @@ class IRobotVacuum(IRobotEntity, StateVacuumEntity):
             _LOGGER.debug("Got new state from the vacuum: %s", json_data)
             self.schedule_update_ha_state()
 
+    @override
     async def async_start(self) -> None:
         """Start or resume the cleaning task."""
         if self.state == VacuumActivity.PAUSED:
@@ -213,15 +216,18 @@ class IRobotVacuum(IRobotEntity, StateVacuumEntity):
         else:
             await self.hass.async_add_executor_job(self.vacuum.send_command, "start")
 
-    async def async_stop(self, **kwargs):
+    @override
+    async def async_stop(self, **kwargs: Any) -> None:
         """Stop the vacuum cleaner."""
         await self.hass.async_add_executor_job(self.vacuum.send_command, "stop")
 
+    @override
     async def async_pause(self) -> None:
         """Pause the cleaning cycle."""
         await self.hass.async_add_executor_job(self.vacuum.send_command, "pause")
 
-    async def async_return_to_base(self, **kwargs):
+    @override
+    async def async_return_to_base(self, **kwargs: Any) -> None:
         """Set the vacuum cleaner to return to the dock."""
         if self.state == VacuumActivity.CLEANING:
             await self.async_pause()
@@ -231,11 +237,18 @@ class IRobotVacuum(IRobotEntity, StateVacuumEntity):
                 await asyncio.sleep(1)
         await self.hass.async_add_executor_job(self.vacuum.send_command, "dock")
 
-    async def async_locate(self, **kwargs):
+    @override
+    async def async_locate(self, **kwargs: Any) -> None:
         """Located vacuum."""
         await self.hass.async_add_executor_job(self.vacuum.send_command, "find")
 
-    async def async_send_command(self, command, params=None, **kwargs):
+    @override
+    async def async_send_command(
+        self,
+        command: str,
+        params: dict[str, Any] | list[Any] | None = None,
+        **kwargs: Any,
+    ) -> None:
         """Send raw command."""
         _LOGGER.debug("async_send_command %s (%s), %s", command, params, kwargs)
         await self.hass.async_add_executor_job(
@@ -247,6 +260,7 @@ class RoombaVacuum(IRobotVacuum):
     """Basic Roomba robot (without carpet boost)."""
 
     @property
+    @override
     def extra_state_attributes(self) -> dict[str, Any]:
         """Return the state attributes of the device."""
         state_attrs = super().extra_state_attributes
@@ -270,7 +284,8 @@ class RoombaVacuumCarpetBoost(RoombaVacuum):
     _attr_supported_features = SUPPORT_ROOMBA_CARPET_BOOST
 
     @property
-    def fan_speed(self):
+    @override
+    def fan_speed(self) -> str | None:
         """Return the fan speed of the vacuum cleaner."""
         fan_speed = None
         carpet_boost = self.vacuum_state.get("carpetBoost")
@@ -284,7 +299,8 @@ class RoombaVacuumCarpetBoost(RoombaVacuum):
                 fan_speed = FAN_SPEED_ECO
         return fan_speed
 
-    async def async_set_fan_speed(self, fan_speed, **kwargs):
+    @override
+    async def async_set_fan_speed(self, fan_speed: str, **kwargs: Any) -> None:
         """Set fan speed."""
         if fan_speed.capitalize() in FAN_SPEEDS:
             fan_speed = fan_speed.capitalize()
@@ -303,13 +319,13 @@ class RoombaVacuumCarpetBoost(RoombaVacuum):
         else:
             _LOGGER.error("No such fan speed available: %s", fan_speed)
             return
+
         # The set_preference method does only accept string values
-        await self.hass.async_add_executor_job(
-            self.vacuum.set_preference, "carpetBoost", str(carpet_boost)
-        )
-        await self.hass.async_add_executor_job(
-            self.vacuum.set_preference, "vacHigh", str(high_perf)
-        )
+        def _set_fan_speed_preferences() -> None:
+            self.vacuum.set_preference("carpetBoost", str(carpet_boost))
+            self.vacuum.set_preference("vacHigh", str(high_perf))
+
+        await self.hass.async_add_executor_job(_set_fan_speed_preferences)
 
 
 class BraavaJet(IRobotVacuum):
@@ -329,7 +345,8 @@ class BraavaJet(IRobotVacuum):
         ]
 
     @property
-    def fan_speed(self):
+    @override
+    def fan_speed(self) -> str:
         """Return the fan speed of the vacuum cleaner."""
         # Mopping behavior and spray amount as fan speed
         rank_overlap = self.vacuum_state.get("rankOverlap", {})
@@ -345,7 +362,8 @@ class BraavaJet(IRobotVacuum):
         pad_wetness_value = pad_wetness.get("disposable")
         return f"{behavior}-{pad_wetness_value}"
 
-    async def async_set_fan_speed(self, fan_speed, **kwargs):
+    @override
+    async def async_set_fan_speed(self, fan_speed: str, **kwargs: Any) -> None:
         """Set fan speed."""
         try:
             split = fan_speed.split("-", 1)
@@ -353,6 +371,7 @@ class BraavaJet(IRobotVacuum):
             spray = int(split[1])
             if behavior.capitalize() in BRAAVA_MOP_BEHAVIORS:
                 behavior = behavior.capitalize()
+        # pylint: disable-next=home-assistant-action-swallowed-exception
         except IndexError:
             _LOGGER.error(
                 "Fan speed error: expected {behavior}-{spray_amount}, got '%s'",
@@ -384,16 +403,17 @@ class BraavaJet(IRobotVacuum):
             overlap = OVERLAP_DEEP
         else:
             overlap = OVERLAP_EXTENDED
-        await self.hass.async_add_executor_job(
-            self.vacuum.set_preference, "rankOverlap", overlap
-        )
-        await self.hass.async_add_executor_job(
-            self.vacuum.set_preference,
-            "padWetness",
-            {"disposable": spray, "reusable": spray},
-        )
+
+        def _set_mop_preferences() -> None:
+            self.vacuum.set_preference("rankOverlap", overlap)
+            self.vacuum.set_preference(
+                "padWetness", {"disposable": spray, "reusable": spray}
+            )
+
+        await self.hass.async_add_executor_job(_set_mop_preferences)
 
     @property
+    @override
     def extra_state_attributes(self) -> dict[str, Any]:
         """Return the state attributes of the device."""
         state_attrs = super().extra_state_attributes

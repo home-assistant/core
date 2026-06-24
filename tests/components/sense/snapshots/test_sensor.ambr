@@ -1,11 +1,12 @@
 # serializer version: 1
 # name: test_sensors[sensor.car_bill_energy-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
-      'state_class': <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
+      <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
     }),
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -47,7 +48,7 @@
       'device_class': 'energy',
       'friendly_name': 'Car Bill energy',
       'icon': 'mdi:car-electric',
-      'state_class': <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
+      <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
       'unit_of_measurement': <UnitOfEnergy.KILO_WATT_HOUR: 'kWh'>,
     }),
     'context': <ANY>,
@@ -60,11 +61,12 @@
 # ---
 # name: test_sensors[sensor.car_daily_energy-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
-      'state_class': <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
+      <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
     }),
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -106,7 +108,7 @@
       'device_class': 'energy',
       'friendly_name': 'Car Daily energy',
       'icon': 'mdi:car-electric',
-      'state_class': <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
+      <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
       'unit_of_measurement': <UnitOfEnergy.KILO_WATT_HOUR: 'kWh'>,
     }),
     'context': <ANY>,
@@ -119,11 +121,12 @@
 # ---
 # name: test_sensors[sensor.car_monthly_energy-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
-      'state_class': <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
+      <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
     }),
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -165,7 +168,7 @@
       'device_class': 'energy',
       'friendly_name': 'Car Monthly energy',
       'icon': 'mdi:car-electric',
-      'state_class': <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
+      <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
       'unit_of_measurement': <UnitOfEnergy.KILO_WATT_HOUR: 'kWh'>,
     }),
     'context': <ANY>,
@@ -178,11 +181,12 @@
 # ---
 # name: test_sensors[sensor.car_power-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
-      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+      <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -224,7 +228,7 @@
       'device_class': 'power',
       'friendly_name': 'Car Power',
       'icon': 'mdi:car-electric',
-      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+      <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
       'unit_of_measurement': <UnitOfPower.WATT: 'W'>,
     }),
     'context': <ANY>,
@@ -237,11 +241,12 @@
 # ---
 # name: test_sensors[sensor.car_weekly_energy-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
-      'state_class': <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
+      <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
     }),
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -283,7 +288,7 @@
       'device_class': 'energy',
       'friendly_name': 'Car Weekly energy',
       'icon': 'mdi:car-electric',
-      'state_class': <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
+      <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
       'unit_of_measurement': <UnitOfEnergy.KILO_WATT_HOUR: 'kWh'>,
     }),
     'context': <ANY>,
@@ -296,11 +301,12 @@
 # ---
 # name: test_sensors[sensor.car_yearly_energy-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
-      'state_class': <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
+      <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
     }),
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -342,7 +348,7 @@
       'device_class': 'energy',
       'friendly_name': 'Car Yearly energy',
       'icon': 'mdi:car-electric',
-      'state_class': <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
+      <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
       'unit_of_measurement': <UnitOfEnergy.KILO_WATT_HOUR: 'kWh'>,
     }),
     'context': <ANY>,
@@ -355,11 +361,12 @@
 # ---
 # name: test_sensors[sensor.oven_bill_energy-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
-      'state_class': <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
+      <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
     }),
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -401,7 +408,7 @@
       'device_class': 'energy',
       'friendly_name': 'Oven Bill energy',
       'icon': 'mdi:stove',
-      'state_class': <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
+      <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
       'unit_of_measurement': <UnitOfEnergy.KILO_WATT_HOUR: 'kWh'>,
     }),
     'context': <ANY>,
@@ -414,11 +421,12 @@
 # ---
 # name: test_sensors[sensor.oven_daily_energy-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
-      'state_class': <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
+      <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
     }),
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -460,7 +468,7 @@
       'device_class': 'energy',
       'friendly_name': 'Oven Daily energy',
       'icon': 'mdi:stove',
-      'state_class': <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
+      <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
       'unit_of_measurement': <UnitOfEnergy.KILO_WATT_HOUR: 'kWh'>,
     }),
     'context': <ANY>,
@@ -473,11 +481,12 @@
 # ---
 # name: test_sensors[sensor.oven_monthly_energy-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
-      'state_class': <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
+      <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
     }),
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -519,7 +528,7 @@
       'device_class': 'energy',
       'friendly_name': 'Oven Monthly energy',
       'icon': 'mdi:stove',
-      'state_class': <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
+      <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
       'unit_of_measurement': <UnitOfEnergy.KILO_WATT_HOUR: 'kWh'>,
     }),
     'context': <ANY>,
@@ -532,11 +541,12 @@
 # ---
 # name: test_sensors[sensor.oven_power-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
-      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+      <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -578,7 +588,7 @@
       'device_class': 'power',
       'friendly_name': 'Oven Power',
       'icon': 'mdi:stove',
-      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+      <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
       'unit_of_measurement': <UnitOfPower.WATT: 'W'>,
     }),
     'context': <ANY>,
@@ -591,11 +601,12 @@
 # ---
 # name: test_sensors[sensor.oven_weekly_energy-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
-      'state_class': <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
+      <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
     }),
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -637,7 +648,7 @@
       'device_class': 'energy',
       'friendly_name': 'Oven Weekly energy',
       'icon': 'mdi:stove',
-      'state_class': <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
+      <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
       'unit_of_measurement': <UnitOfEnergy.KILO_WATT_HOUR: 'kWh'>,
     }),
     'context': <ANY>,
@@ -650,11 +661,12 @@
 # ---
 # name: test_sensors[sensor.oven_yearly_energy-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
-      'state_class': <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
+      <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
     }),
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -696,7 +708,7 @@
       'device_class': 'energy',
       'friendly_name': 'Oven Yearly energy',
       'icon': 'mdi:stove',
-      'state_class': <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
+      <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
       'unit_of_measurement': <UnitOfEnergy.KILO_WATT_HOUR: 'kWh'>,
     }),
     'context': <ANY>,
@@ -709,11 +721,12 @@
 # ---
 # name: test_sensors[sensor.sense_12345_bill_energy-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
-      'state_class': <SensorStateClass.TOTAL: 'total'>,
+      <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.TOTAL: 'total'>,
     }),
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -754,8 +767,8 @@
       'attribution': 'Data provided by Sense.com',
       'device_class': 'energy',
       'friendly_name': 'Sense 12345 Bill Energy',
-      'last_reset': '2024-01-01T01:01:00+00:00',
-      'state_class': <SensorStateClass.TOTAL: 'total'>,
+      <SensorEntityStateAttribute.LAST_RESET: 'last_reset'>: '2024-01-01T01:01:00+00:00',
+      <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.TOTAL: 'total'>,
       'unit_of_measurement': <UnitOfEnergy.KILO_WATT_HOUR: 'kWh'>,
     }),
     'context': <ANY>,
@@ -768,11 +781,12 @@
 # ---
 # name: test_sensors[sensor.sense_12345_bill_from_grid-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
-      'state_class': <SensorStateClass.TOTAL: 'total'>,
+      <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.TOTAL: 'total'>,
     }),
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -813,8 +827,8 @@
       'attribution': 'Data provided by Sense.com',
       'device_class': 'energy',
       'friendly_name': 'Sense 12345 Bill From Grid',
-      'last_reset': '2024-01-01T01:01:00+00:00',
-      'state_class': <SensorStateClass.TOTAL: 'total'>,
+      <SensorEntityStateAttribute.LAST_RESET: 'last_reset'>: '2024-01-01T01:01:00+00:00',
+      <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.TOTAL: 'total'>,
       'unit_of_measurement': <UnitOfEnergy.KILO_WATT_HOUR: 'kWh'>,
     }),
     'context': <ANY>,
@@ -827,11 +841,12 @@
 # ---
 # name: test_sensors[sensor.sense_12345_bill_net_production-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
-      'state_class': <SensorStateClass.TOTAL: 'total'>,
+      <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.TOTAL: 'total'>,
     }),
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -872,8 +887,8 @@
       'attribution': 'Data provided by Sense.com',
       'device_class': 'energy',
       'friendly_name': 'Sense 12345 Bill Net Production',
-      'last_reset': '2024-01-01T01:01:00+00:00',
-      'state_class': <SensorStateClass.TOTAL: 'total'>,
+      <SensorEntityStateAttribute.LAST_RESET: 'last_reset'>: '2024-01-01T01:01:00+00:00',
+      <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.TOTAL: 'total'>,
       'unit_of_measurement': <UnitOfEnergy.KILO_WATT_HOUR: 'kWh'>,
     }),
     'context': <ANY>,
@@ -886,8 +901,9 @@
 # ---
 # name: test_sensors[sensor.sense_12345_bill_net_production_percentage-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -937,11 +953,12 @@
 # ---
 # name: test_sensors[sensor.sense_12345_bill_production-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
-      'state_class': <SensorStateClass.TOTAL: 'total'>,
+      <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.TOTAL: 'total'>,
     }),
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -982,8 +999,8 @@
       'attribution': 'Data provided by Sense.com',
       'device_class': 'energy',
       'friendly_name': 'Sense 12345 Bill Production',
-      'last_reset': '2024-01-01T01:01:00+00:00',
-      'state_class': <SensorStateClass.TOTAL: 'total'>,
+      <SensorEntityStateAttribute.LAST_RESET: 'last_reset'>: '2024-01-01T01:01:00+00:00',
+      <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.TOTAL: 'total'>,
       'unit_of_measurement': <UnitOfEnergy.KILO_WATT_HOUR: 'kWh'>,
     }),
     'context': <ANY>,
@@ -996,8 +1013,9 @@
 # ---
 # name: test_sensors[sensor.sense_12345_bill_solar_powered_percentage-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -1047,11 +1065,12 @@
 # ---
 # name: test_sensors[sensor.sense_12345_bill_to_grid-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
-      'state_class': <SensorStateClass.TOTAL: 'total'>,
+      <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.TOTAL: 'total'>,
     }),
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -1092,8 +1111,8 @@
       'attribution': 'Data provided by Sense.com',
       'device_class': 'energy',
       'friendly_name': 'Sense 12345 Bill To Grid',
-      'last_reset': '2024-01-01T01:01:00+00:00',
-      'state_class': <SensorStateClass.TOTAL: 'total'>,
+      <SensorEntityStateAttribute.LAST_RESET: 'last_reset'>: '2024-01-01T01:01:00+00:00',
+      <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.TOTAL: 'total'>,
       'unit_of_measurement': <UnitOfEnergy.KILO_WATT_HOUR: 'kWh'>,
     }),
     'context': <ANY>,
@@ -1106,11 +1125,12 @@
 # ---
 # name: test_sensors[sensor.sense_12345_daily_energy-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
-      'state_class': <SensorStateClass.TOTAL: 'total'>,
+      <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.TOTAL: 'total'>,
     }),
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -1151,8 +1171,8 @@
       'attribution': 'Data provided by Sense.com',
       'device_class': 'energy',
       'friendly_name': 'Sense 12345 Daily Energy',
-      'last_reset': '2024-01-01T01:01:00+00:00',
-      'state_class': <SensorStateClass.TOTAL: 'total'>,
+      <SensorEntityStateAttribute.LAST_RESET: 'last_reset'>: '2024-01-01T01:01:00+00:00',
+      <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.TOTAL: 'total'>,
       'unit_of_measurement': <UnitOfEnergy.KILO_WATT_HOUR: 'kWh'>,
     }),
     'context': <ANY>,
@@ -1165,11 +1185,12 @@
 # ---
 # name: test_sensors[sensor.sense_12345_daily_from_grid-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
-      'state_class': <SensorStateClass.TOTAL: 'total'>,
+      <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.TOTAL: 'total'>,
     }),
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -1210,8 +1231,8 @@
       'attribution': 'Data provided by Sense.com',
       'device_class': 'energy',
       'friendly_name': 'Sense 12345 Daily From Grid',
-      'last_reset': '2024-01-01T01:01:00+00:00',
-      'state_class': <SensorStateClass.TOTAL: 'total'>,
+      <SensorEntityStateAttribute.LAST_RESET: 'last_reset'>: '2024-01-01T01:01:00+00:00',
+      <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.TOTAL: 'total'>,
       'unit_of_measurement': <UnitOfEnergy.KILO_WATT_HOUR: 'kWh'>,
     }),
     'context': <ANY>,
@@ -1224,11 +1245,12 @@
 # ---
 # name: test_sensors[sensor.sense_12345_daily_net_production-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
-      'state_class': <SensorStateClass.TOTAL: 'total'>,
+      <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.TOTAL: 'total'>,
     }),
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -1269,8 +1291,8 @@
       'attribution': 'Data provided by Sense.com',
       'device_class': 'energy',
       'friendly_name': 'Sense 12345 Daily Net Production',
-      'last_reset': '2024-01-01T01:01:00+00:00',
-      'state_class': <SensorStateClass.TOTAL: 'total'>,
+      <SensorEntityStateAttribute.LAST_RESET: 'last_reset'>: '2024-01-01T01:01:00+00:00',
+      <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.TOTAL: 'total'>,
       'unit_of_measurement': <UnitOfEnergy.KILO_WATT_HOUR: 'kWh'>,
     }),
     'context': <ANY>,
@@ -1283,8 +1305,9 @@
 # ---
 # name: test_sensors[sensor.sense_12345_daily_net_production_percentage-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -1334,11 +1357,12 @@
 # ---
 # name: test_sensors[sensor.sense_12345_daily_production-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
-      'state_class': <SensorStateClass.TOTAL: 'total'>,
+      <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.TOTAL: 'total'>,
     }),
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -1379,8 +1403,8 @@
       'attribution': 'Data provided by Sense.com',
       'device_class': 'energy',
       'friendly_name': 'Sense 12345 Daily Production',
-      'last_reset': '2024-01-01T01:01:00+00:00',
-      'state_class': <SensorStateClass.TOTAL: 'total'>,
+      <SensorEntityStateAttribute.LAST_RESET: 'last_reset'>: '2024-01-01T01:01:00+00:00',
+      <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.TOTAL: 'total'>,
       'unit_of_measurement': <UnitOfEnergy.KILO_WATT_HOUR: 'kWh'>,
     }),
     'context': <ANY>,
@@ -1393,8 +1417,9 @@
 # ---
 # name: test_sensors[sensor.sense_12345_daily_solar_powered_percentage-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -1444,11 +1469,12 @@
 # ---
 # name: test_sensors[sensor.sense_12345_daily_to_grid-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
-      'state_class': <SensorStateClass.TOTAL: 'total'>,
+      <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.TOTAL: 'total'>,
     }),
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -1489,8 +1515,8 @@
       'attribution': 'Data provided by Sense.com',
       'device_class': 'energy',
       'friendly_name': 'Sense 12345 Daily To Grid',
-      'last_reset': '2024-01-01T01:01:00+00:00',
-      'state_class': <SensorStateClass.TOTAL: 'total'>,
+      <SensorEntityStateAttribute.LAST_RESET: 'last_reset'>: '2024-01-01T01:01:00+00:00',
+      <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.TOTAL: 'total'>,
       'unit_of_measurement': <UnitOfEnergy.KILO_WATT_HOUR: 'kWh'>,
     }),
     'context': <ANY>,
@@ -1503,11 +1529,12 @@
 # ---
 # name: test_sensors[sensor.sense_12345_energy-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
-      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+      <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -1548,7 +1575,7 @@
       'attribution': 'Data provided by Sense.com',
       'device_class': 'power',
       'friendly_name': 'Sense 12345 Energy',
-      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+      <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
       'unit_of_measurement': <UnitOfPower.WATT: 'W'>,
     }),
     'context': <ANY>,
@@ -1561,11 +1588,12 @@
 # ---
 # name: test_sensors[sensor.sense_12345_l1_voltage-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
-      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+      <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -1606,7 +1634,7 @@
       'attribution': 'Data provided by Sense.com',
       'device_class': 'voltage',
       'friendly_name': 'Sense 12345 L1 Voltage',
-      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+      <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
       'unit_of_measurement': <UnitOfElectricPotential.VOLT: 'V'>,
     }),
     'context': <ANY>,
@@ -1619,11 +1647,12 @@
 # ---
 # name: test_sensors[sensor.sense_12345_l2_voltage-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
-      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+      <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -1664,7 +1693,7 @@
       'attribution': 'Data provided by Sense.com',
       'device_class': 'voltage',
       'friendly_name': 'Sense 12345 L2 Voltage',
-      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+      <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
       'unit_of_measurement': <UnitOfElectricPotential.VOLT: 'V'>,
     }),
     'context': <ANY>,
@@ -1677,11 +1706,12 @@
 # ---
 # name: test_sensors[sensor.sense_12345_monthly_energy-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
-      'state_class': <SensorStateClass.TOTAL: 'total'>,
+      <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.TOTAL: 'total'>,
     }),
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -1722,8 +1752,8 @@
       'attribution': 'Data provided by Sense.com',
       'device_class': 'energy',
       'friendly_name': 'Sense 12345 Monthly Energy',
-      'last_reset': '2024-01-01T01:01:00+00:00',
-      'state_class': <SensorStateClass.TOTAL: 'total'>,
+      <SensorEntityStateAttribute.LAST_RESET: 'last_reset'>: '2024-01-01T01:01:00+00:00',
+      <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.TOTAL: 'total'>,
       'unit_of_measurement': <UnitOfEnergy.KILO_WATT_HOUR: 'kWh'>,
     }),
     'context': <ANY>,
@@ -1736,11 +1766,12 @@
 # ---
 # name: test_sensors[sensor.sense_12345_monthly_from_grid-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
-      'state_class': <SensorStateClass.TOTAL: 'total'>,
+      <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.TOTAL: 'total'>,
     }),
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -1781,8 +1812,8 @@
       'attribution': 'Data provided by Sense.com',
       'device_class': 'energy',
       'friendly_name': 'Sense 12345 Monthly From Grid',
-      'last_reset': '2024-01-01T01:01:00+00:00',
-      'state_class': <SensorStateClass.TOTAL: 'total'>,
+      <SensorEntityStateAttribute.LAST_RESET: 'last_reset'>: '2024-01-01T01:01:00+00:00',
+      <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.TOTAL: 'total'>,
       'unit_of_measurement': <UnitOfEnergy.KILO_WATT_HOUR: 'kWh'>,
     }),
     'context': <ANY>,
@@ -1795,11 +1826,12 @@
 # ---
 # name: test_sensors[sensor.sense_12345_monthly_net_production-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
-      'state_class': <SensorStateClass.TOTAL: 'total'>,
+      <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.TOTAL: 'total'>,
     }),
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -1840,8 +1872,8 @@
       'attribution': 'Data provided by Sense.com',
       'device_class': 'energy',
       'friendly_name': 'Sense 12345 Monthly Net Production',
-      'last_reset': '2024-01-01T01:01:00+00:00',
-      'state_class': <SensorStateClass.TOTAL: 'total'>,
+      <SensorEntityStateAttribute.LAST_RESET: 'last_reset'>: '2024-01-01T01:01:00+00:00',
+      <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.TOTAL: 'total'>,
       'unit_of_measurement': <UnitOfEnergy.KILO_WATT_HOUR: 'kWh'>,
     }),
     'context': <ANY>,
@@ -1854,8 +1886,9 @@
 # ---
 # name: test_sensors[sensor.sense_12345_monthly_net_production_percentage-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -1905,11 +1938,12 @@
 # ---
 # name: test_sensors[sensor.sense_12345_monthly_production-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
-      'state_class': <SensorStateClass.TOTAL: 'total'>,
+      <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.TOTAL: 'total'>,
     }),
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -1950,8 +1984,8 @@
       'attribution': 'Data provided by Sense.com',
       'device_class': 'energy',
       'friendly_name': 'Sense 12345 Monthly Production',
-      'last_reset': '2024-01-01T01:01:00+00:00',
-      'state_class': <SensorStateClass.TOTAL: 'total'>,
+      <SensorEntityStateAttribute.LAST_RESET: 'last_reset'>: '2024-01-01T01:01:00+00:00',
+      <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.TOTAL: 'total'>,
       'unit_of_measurement': <UnitOfEnergy.KILO_WATT_HOUR: 'kWh'>,
     }),
     'context': <ANY>,
@@ -1964,8 +1998,9 @@
 # ---
 # name: test_sensors[sensor.sense_12345_monthly_solar_powered_percentage-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -2015,11 +2050,12 @@
 # ---
 # name: test_sensors[sensor.sense_12345_monthly_to_grid-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
-      'state_class': <SensorStateClass.TOTAL: 'total'>,
+      <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.TOTAL: 'total'>,
     }),
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -2060,8 +2096,8 @@
       'attribution': 'Data provided by Sense.com',
       'device_class': 'energy',
       'friendly_name': 'Sense 12345 Monthly To Grid',
-      'last_reset': '2024-01-01T01:01:00+00:00',
-      'state_class': <SensorStateClass.TOTAL: 'total'>,
+      <SensorEntityStateAttribute.LAST_RESET: 'last_reset'>: '2024-01-01T01:01:00+00:00',
+      <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.TOTAL: 'total'>,
       'unit_of_measurement': <UnitOfEnergy.KILO_WATT_HOUR: 'kWh'>,
     }),
     'context': <ANY>,
@@ -2074,11 +2110,12 @@
 # ---
 # name: test_sensors[sensor.sense_12345_production-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
-      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+      <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -2119,7 +2156,7 @@
       'attribution': 'Data provided by Sense.com',
       'device_class': 'power',
       'friendly_name': 'Sense 12345 Production',
-      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+      <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
       'unit_of_measurement': <UnitOfPower.WATT: 'W'>,
     }),
     'context': <ANY>,
@@ -2132,11 +2169,12 @@
 # ---
 # name: test_sensors[sensor.sense_12345_weekly_energy-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
-      'state_class': <SensorStateClass.TOTAL: 'total'>,
+      <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.TOTAL: 'total'>,
     }),
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -2177,8 +2215,8 @@
       'attribution': 'Data provided by Sense.com',
       'device_class': 'energy',
       'friendly_name': 'Sense 12345 Weekly Energy',
-      'last_reset': '2024-01-01T01:01:00+00:00',
-      'state_class': <SensorStateClass.TOTAL: 'total'>,
+      <SensorEntityStateAttribute.LAST_RESET: 'last_reset'>: '2024-01-01T01:01:00+00:00',
+      <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.TOTAL: 'total'>,
       'unit_of_measurement': <UnitOfEnergy.KILO_WATT_HOUR: 'kWh'>,
     }),
     'context': <ANY>,
@@ -2191,11 +2229,12 @@
 # ---
 # name: test_sensors[sensor.sense_12345_weekly_from_grid-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
-      'state_class': <SensorStateClass.TOTAL: 'total'>,
+      <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.TOTAL: 'total'>,
     }),
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -2236,8 +2275,8 @@
       'attribution': 'Data provided by Sense.com',
       'device_class': 'energy',
       'friendly_name': 'Sense 12345 Weekly From Grid',
-      'last_reset': '2024-01-01T01:01:00+00:00',
-      'state_class': <SensorStateClass.TOTAL: 'total'>,
+      <SensorEntityStateAttribute.LAST_RESET: 'last_reset'>: '2024-01-01T01:01:00+00:00',
+      <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.TOTAL: 'total'>,
       'unit_of_measurement': <UnitOfEnergy.KILO_WATT_HOUR: 'kWh'>,
     }),
     'context': <ANY>,
@@ -2250,11 +2289,12 @@
 # ---
 # name: test_sensors[sensor.sense_12345_weekly_net_production-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
-      'state_class': <SensorStateClass.TOTAL: 'total'>,
+      <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.TOTAL: 'total'>,
     }),
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -2295,8 +2335,8 @@
       'attribution': 'Data provided by Sense.com',
       'device_class': 'energy',
       'friendly_name': 'Sense 12345 Weekly Net Production',
-      'last_reset': '2024-01-01T01:01:00+00:00',
-      'state_class': <SensorStateClass.TOTAL: 'total'>,
+      <SensorEntityStateAttribute.LAST_RESET: 'last_reset'>: '2024-01-01T01:01:00+00:00',
+      <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.TOTAL: 'total'>,
       'unit_of_measurement': <UnitOfEnergy.KILO_WATT_HOUR: 'kWh'>,
     }),
     'context': <ANY>,
@@ -2309,8 +2349,9 @@
 # ---
 # name: test_sensors[sensor.sense_12345_weekly_net_production_percentage-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -2360,11 +2401,12 @@
 # ---
 # name: test_sensors[sensor.sense_12345_weekly_production-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
-      'state_class': <SensorStateClass.TOTAL: 'total'>,
+      <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.TOTAL: 'total'>,
     }),
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -2405,8 +2447,8 @@
       'attribution': 'Data provided by Sense.com',
       'device_class': 'energy',
       'friendly_name': 'Sense 12345 Weekly Production',
-      'last_reset': '2024-01-01T01:01:00+00:00',
-      'state_class': <SensorStateClass.TOTAL: 'total'>,
+      <SensorEntityStateAttribute.LAST_RESET: 'last_reset'>: '2024-01-01T01:01:00+00:00',
+      <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.TOTAL: 'total'>,
       'unit_of_measurement': <UnitOfEnergy.KILO_WATT_HOUR: 'kWh'>,
     }),
     'context': <ANY>,
@@ -2419,8 +2461,9 @@
 # ---
 # name: test_sensors[sensor.sense_12345_weekly_solar_powered_percentage-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -2470,11 +2513,12 @@
 # ---
 # name: test_sensors[sensor.sense_12345_weekly_to_grid-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
-      'state_class': <SensorStateClass.TOTAL: 'total'>,
+      <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.TOTAL: 'total'>,
     }),
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -2515,8 +2559,8 @@
       'attribution': 'Data provided by Sense.com',
       'device_class': 'energy',
       'friendly_name': 'Sense 12345 Weekly To Grid',
-      'last_reset': '2024-01-01T01:01:00+00:00',
-      'state_class': <SensorStateClass.TOTAL: 'total'>,
+      <SensorEntityStateAttribute.LAST_RESET: 'last_reset'>: '2024-01-01T01:01:00+00:00',
+      <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.TOTAL: 'total'>,
       'unit_of_measurement': <UnitOfEnergy.KILO_WATT_HOUR: 'kWh'>,
     }),
     'context': <ANY>,
@@ -2529,11 +2573,12 @@
 # ---
 # name: test_sensors[sensor.sense_12345_yearly_energy-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
-      'state_class': <SensorStateClass.TOTAL: 'total'>,
+      <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.TOTAL: 'total'>,
     }),
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -2574,8 +2619,8 @@
       'attribution': 'Data provided by Sense.com',
       'device_class': 'energy',
       'friendly_name': 'Sense 12345 Yearly Energy',
-      'last_reset': '2024-01-01T01:01:00+00:00',
-      'state_class': <SensorStateClass.TOTAL: 'total'>,
+      <SensorEntityStateAttribute.LAST_RESET: 'last_reset'>: '2024-01-01T01:01:00+00:00',
+      <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.TOTAL: 'total'>,
       'unit_of_measurement': <UnitOfEnergy.KILO_WATT_HOUR: 'kWh'>,
     }),
     'context': <ANY>,
@@ -2588,11 +2633,12 @@
 # ---
 # name: test_sensors[sensor.sense_12345_yearly_from_grid-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
-      'state_class': <SensorStateClass.TOTAL: 'total'>,
+      <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.TOTAL: 'total'>,
     }),
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -2633,8 +2679,8 @@
       'attribution': 'Data provided by Sense.com',
       'device_class': 'energy',
       'friendly_name': 'Sense 12345 Yearly From Grid',
-      'last_reset': '2024-01-01T01:01:00+00:00',
-      'state_class': <SensorStateClass.TOTAL: 'total'>,
+      <SensorEntityStateAttribute.LAST_RESET: 'last_reset'>: '2024-01-01T01:01:00+00:00',
+      <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.TOTAL: 'total'>,
       'unit_of_measurement': <UnitOfEnergy.KILO_WATT_HOUR: 'kWh'>,
     }),
     'context': <ANY>,
@@ -2647,11 +2693,12 @@
 # ---
 # name: test_sensors[sensor.sense_12345_yearly_net_production-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
-      'state_class': <SensorStateClass.TOTAL: 'total'>,
+      <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.TOTAL: 'total'>,
     }),
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -2692,8 +2739,8 @@
       'attribution': 'Data provided by Sense.com',
       'device_class': 'energy',
       'friendly_name': 'Sense 12345 Yearly Net Production',
-      'last_reset': '2024-01-01T01:01:00+00:00',
-      'state_class': <SensorStateClass.TOTAL: 'total'>,
+      <SensorEntityStateAttribute.LAST_RESET: 'last_reset'>: '2024-01-01T01:01:00+00:00',
+      <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.TOTAL: 'total'>,
       'unit_of_measurement': <UnitOfEnergy.KILO_WATT_HOUR: 'kWh'>,
     }),
     'context': <ANY>,
@@ -2706,8 +2753,9 @@
 # ---
 # name: test_sensors[sensor.sense_12345_yearly_net_production_percentage-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -2757,11 +2805,12 @@
 # ---
 # name: test_sensors[sensor.sense_12345_yearly_production-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
-      'state_class': <SensorStateClass.TOTAL: 'total'>,
+      <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.TOTAL: 'total'>,
     }),
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -2802,8 +2851,8 @@
       'attribution': 'Data provided by Sense.com',
       'device_class': 'energy',
       'friendly_name': 'Sense 12345 Yearly Production',
-      'last_reset': '2024-01-01T01:01:00+00:00',
-      'state_class': <SensorStateClass.TOTAL: 'total'>,
+      <SensorEntityStateAttribute.LAST_RESET: 'last_reset'>: '2024-01-01T01:01:00+00:00',
+      <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.TOTAL: 'total'>,
       'unit_of_measurement': <UnitOfEnergy.KILO_WATT_HOUR: 'kWh'>,
     }),
     'context': <ANY>,
@@ -2816,8 +2865,9 @@
 # ---
 # name: test_sensors[sensor.sense_12345_yearly_solar_powered_percentage-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -2867,11 +2917,12 @@
 # ---
 # name: test_sensors[sensor.sense_12345_yearly_to_grid-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
-      'state_class': <SensorStateClass.TOTAL: 'total'>,
+      <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.TOTAL: 'total'>,
     }),
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -2912,8 +2963,8 @@
       'attribution': 'Data provided by Sense.com',
       'device_class': 'energy',
       'friendly_name': 'Sense 12345 Yearly To Grid',
-      'last_reset': '2024-01-01T01:01:00+00:00',
-      'state_class': <SensorStateClass.TOTAL: 'total'>,
+      <SensorEntityStateAttribute.LAST_RESET: 'last_reset'>: '2024-01-01T01:01:00+00:00',
+      <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.TOTAL: 'total'>,
       'unit_of_measurement': <UnitOfEnergy.KILO_WATT_HOUR: 'kWh'>,
     }),
     'context': <ANY>,

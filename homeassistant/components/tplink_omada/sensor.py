@@ -1,9 +1,8 @@
 """Support for TPLink Omada binary sensors."""
 
-from __future__ import annotations
-
 from collections.abc import Callable
 from dataclasses import dataclass
+from typing import override
 
 from tplink_omada_client.definitions import DeviceStatus, DeviceStatusCategory
 from tplink_omada_client.devices import OmadaListDevice
@@ -23,6 +22,8 @@ from . import OmadaConfigEntry
 from .const import OmadaDeviceStatus
 from .coordinator import OmadaDevicesCoordinator
 from .entity import OmadaDeviceEntity
+
+PARALLEL_UPDATES = 0
 
 # Useful low level status categories, mapped to a more descriptive status.
 DEVICE_STATUS_MAP = {
@@ -84,7 +85,7 @@ async def async_setup_entry(
 
 @dataclass(frozen=True, kw_only=True)
 class OmadaDeviceSensorEntityDescription(SensorEntityDescription):
-    """Entity description for a status derived from an Omada device in the device list."""
+    """Entity description for status from an Omada device."""
 
     exists_func: Callable[[OmadaListDevice], bool] = lambda _: True
     update_func: Callable[[OmadaListDevice], StateType]
@@ -135,6 +136,7 @@ class OmadaDeviceSensor(OmadaDeviceEntity[OmadaDevicesCoordinator], SensorEntity
         self._attr_unique_id = f"{device.mac}_{entity_description.key}"
 
     @property
+    @override
     def native_value(self) -> StateType:
         """Return the state of the sensor."""
         return self.entity_description.update_func(

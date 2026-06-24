@@ -1,16 +1,15 @@
 """Support for the Nettigo Air Monitor service."""
 
-from __future__ import annotations
-
 from collections.abc import Callable
 from dataclasses import dataclass
 from datetime import datetime, timedelta
 import logging
+from typing import override
 
 from nettigo_air_monitor import NAMSensors
 
 from homeassistant.components.sensor import (
-    DOMAIN as PLATFORM,
+    DOMAIN as SENSOR_DOMAIN,
     SensorDeviceClass,
     SensorEntity,
     SensorEntityDescription,
@@ -358,8 +357,7 @@ SENSORS: tuple[NAMSensorEntityDescription, ...] = (
     ),
     NAMSensorEntityDescription(
         key=ATTR_UPTIME,
-        translation_key="last_restart",
-        device_class=SensorDeviceClass.TIMESTAMP,
+        device_class=SensorDeviceClass.UPTIME,
         entity_registry_enabled_default=False,
         entity_category=EntityCategory.DIAGNOSTIC,
         value=lambda sensors: utcnow() - timedelta(seconds=sensors.uptime or 0),
@@ -381,7 +379,9 @@ async def async_setup_entry(
     for old_sensor, new_sensor in MIGRATION_SENSORS:
         old_unique_id = f"{coordinator.unique_id}-{old_sensor}"
         new_unique_id = f"{coordinator.unique_id}-{new_sensor}"
-        if entity_id := ent_reg.async_get_entity_id(PLATFORM, DOMAIN, old_unique_id):
+        if entity_id := ent_reg.async_get_entity_id(
+            SENSOR_DOMAIN, DOMAIN, old_unique_id
+        ):
             _LOGGER.debug(
                 "Migrating entity %s from old unique ID '%s' to new unique ID '%s'",
                 entity_id,
@@ -415,6 +415,7 @@ class NAMSensor(CoordinatorEntity[NAMDataUpdateCoordinator], SensorEntity):
         self.entity_description = description
 
     @property
+    @override
     def available(self) -> bool:
         """Return if entity is available."""
         available = super().available
@@ -428,6 +429,7 @@ class NAMSensor(CoordinatorEntity[NAMDataUpdateCoordinator], SensorEntity):
         )
 
     @property
+    @override
     def native_value(self) -> StateType | datetime:
         """Return the state."""
         return self.entity_description.value(self.coordinator.data)

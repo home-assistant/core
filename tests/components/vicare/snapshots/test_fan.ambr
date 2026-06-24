@@ -1,11 +1,12 @@
 # serializer version: 1
 # name: test_all_entities[fan.model0_ventilation-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
-      'preset_modes': list([
+      <FanEntityCapabilityAttribute.PRESET_MODES: 'preset_modes'>: list([
         <VentilationMode.PERMANENT: 'permanent'>,
         <VentilationMode.VENTILATION: 'ventilation'>,
         <VentilationMode.SENSOR_DRIVEN: 'sensor_driven'>,
@@ -47,10 +48,10 @@
     'attributes': ReadOnlyDict({
       'friendly_name': 'model0 Ventilation',
       'icon': 'mdi:fan',
-      'percentage': 0,
-      'percentage_step': 25.0,
-      'preset_mode': None,
-      'preset_modes': list([
+      <FanEntityStateAttribute.PERCENTAGE: 'percentage'>: 0,
+      <FanEntityStateAttribute.PERCENTAGE_STEP: 'percentage_step'>: 25.0,
+      <FanEntityStateAttribute.PRESET_MODE: 'preset_mode'>: None,
+      <FanEntityCapabilityAttribute.PRESET_MODES: 'preset_modes'>: list([
         <VentilationMode.PERMANENT: 'permanent'>,
         <VentilationMode.VENTILATION: 'ventilation'>,
         <VentilationMode.SENSOR_DRIVEN: 'sensor_driven'>,
@@ -73,11 +74,12 @@
 # ---
 # name: test_all_entities[fan.model1_ventilation-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
-      'preset_modes': list([
+      <FanEntityCapabilityAttribute.PRESET_MODES: 'preset_modes'>: list([
         <VentilationMode.PERMANENT: 'permanent'>,
         <VentilationMode.VENTILATION: 'ventilation'>,
         <VentilationMode.SENSOR_DRIVEN: 'sensor_driven'>,
@@ -118,10 +120,10 @@
     'attributes': ReadOnlyDict({
       'friendly_name': 'model1 Ventilation',
       'icon': 'mdi:fan',
-      'percentage': 0,
-      'percentage_step': 25.0,
-      'preset_mode': None,
-      'preset_modes': list([
+      <FanEntityStateAttribute.PERCENTAGE: 'percentage'>: 0,
+      <FanEntityStateAttribute.PERCENTAGE_STEP: 'percentage_step'>: 25.0,
+      <FanEntityStateAttribute.PRESET_MODE: 'preset_mode'>: None,
+      <FanEntityCapabilityAttribute.PRESET_MODES: 'preset_modes'>: list([
         <VentilationMode.PERMANENT: 'permanent'>,
         <VentilationMode.VENTILATION: 'ventilation'>,
         <VentilationMode.SENSOR_DRIVEN: 'sensor_driven'>,
@@ -143,11 +145,12 @@
 # ---
 # name: test_all_entities[fan.model2_ventilation-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
-      'preset_modes': list([
+      <FanEntityCapabilityAttribute.PRESET_MODES: 'preset_modes'>: list([
         <VentilationMode.VENTILATION: 'ventilation'>,
         <VentilationMode.STANDBY: 'standby'>,
         <VentilationMode.STANDARD: 'standard'>,
@@ -188,8 +191,8 @@
     'attributes': ReadOnlyDict({
       'friendly_name': 'model2 Ventilation',
       'icon': 'mdi:fan',
-      'preset_mode': None,
-      'preset_modes': list([
+      <FanEntityStateAttribute.PRESET_MODE: 'preset_mode'>: None,
+      <FanEntityCapabilityAttribute.PRESET_MODES: 'preset_modes'>: list([
         <VentilationMode.VENTILATION: 'ventilation'>,
         <VentilationMode.STANDBY: 'standby'>,
         <VentilationMode.STANDARD: 'standard'>,

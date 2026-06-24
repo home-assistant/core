@@ -5,6 +5,8 @@ from unittest.mock import patch
 import pytest
 
 from homeassistant import bootstrap
+from homeassistant.components.default_config import DOMAIN
+from homeassistant.components.homeassistant import DOMAIN as HOMEASSISTANT_DOMAIN
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import recorder as recorder_helper
 from homeassistant.setup import async_setup_component
@@ -28,13 +30,13 @@ def recorder_url_mock():
         yield
 
 
-@pytest.mark.usefixtures("mock_bluetooth", "mock_zeroconf")
+@pytest.mark.usefixtures("mock_bluetooth", "mock_zeroconf", "socket_enabled")
 async def test_setup(hass: HomeAssistant) -> None:
     """Test setup."""
     recorder_helper.async_initialize_recorder(hass)
     # default_config needs the homeassistant integration, assert it will be
     # automatically setup by bootstrap and set it up manually for this test
-    assert "homeassistant" in bootstrap.CORE_INTEGRATIONS
-    assert await async_setup_component(hass, "homeassistant", {"foo": "bar"})
+    assert HOMEASSISTANT_DOMAIN in bootstrap.CORE_INTEGRATIONS
+    assert await async_setup_component(hass, HOMEASSISTANT_DOMAIN, {"foo": "bar"})
 
-    assert await async_setup_component(hass, "default_config", {"foo": "bar"})
+    assert await async_setup_component(hass, DOMAIN, {"foo": "bar"})

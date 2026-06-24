@@ -1,11 +1,12 @@
 # serializer version: 1
 # name: test_sensors[sensor.test_partymember_displayname_class-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
-      'options': list([
+      <SensorEntityCapabilityAttribute.OPTIONS: 'options'>: list([
         'warrior',
         'rogue',
         'wizard',
@@ -48,7 +49,7 @@
       'device_class': 'enum',
       'entity_picture': 'data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHhtbG5zOnhsaW5rPSJodHRwOi8vd3d3LnczLm9yZy8xOTk5L3hsaW5rIiAgdmlld0JveD0iLTEyIC0xMiA3MiA3MiI+CiAgICA8ZGVmcz4KICAgICAgICA8cGF0aCBpZD0iYSIgZD0iTTMxLjM5MiA5LjExNWwtNi43OTEgNy4xMjR2Ni4zMTRsNi43OTEtNi43OTFWOS4xMTV6Ii8+CiAgICA8L2RlZnM+CiAgICA8ZyBmaWxsPSJub25lIiBmaWxsLXJ1bGU9ImV2ZW5vZGQiIHRyYW5zZm9ybT0idHJhbnNsYXRlKDAgMSkiPgogICAgICAgIDxwYXRoIGZpbGw9IiNGMDYxNjYiIGQ9Ik0xOC4zOSAyOC43NjJsNi4zMzQgMi45MmMuNTI2LjI0My44NjguNzMyLjk5OSAxLjI5Ny4yMTkuOTQ4Ljg4MyAzLjE1Ni45MzcgNC4zM2EuODguODggMCAwIDEtMS4yNC44NDRsLTEwLjU4OC01LjA3YTEuNzgxIDEuNzgxIDAgMCAxLS43NjItLjc2M0w5IDIxLjczM2EuODguODggMCAwIDEgLjg0NC0xLjI0YzEuMTczLjA1NCAzLjMzNS42ODMgNC4zMy45MzcuNTYuMTQyIDEuMDU0LjQ3MiAxLjI5Ni45OThsMi45MiA2LjMzNHoiLz4KICAgICAgICA8cGF0aCBmaWxsPSIjQzgyQjJCIiBkPSJNMy4wNzMgNDQuMDg1bDIuNzMyIDIuNzMzIDcuMDg1LS41NTcuMzY0LTQuNjU2IDQuMDY5LTQuMDY3IDcuNDAxIDMuNTIyIDUuNTM2LTEuNDktMi4zMjItOS45OSAxNS41MTQtMTQuNDc3TDQ2LjQyMi43NDFsLS4wMDcuMDAyLjAwMy0uMDAzVi43MzRMMzIuMDU3IDMuNzAyIDE3LjU4IDE5LjIxOGwtOS45OS0yLjMyMkw2LjEgMjIuNDNsMy41MjIgNy40MDNMNS41NTUgMzMuOWwtNC42NTQuMzY3LS41NTkgNy4wODQgMi43MzIgMi43MzN6Ii8+CiAgICAgICAgPHBhdGggZmlsbD0iI0YwNjE2NiIgZD0iTTguOTI3IDQxLjc2OWwtMy41NDQtMy41NDQgOC43NjctOC43NjUgMy41NDIgMy41NDR6Ii8+CiAgICAgICAgPHBhdGggZmlsbD0iI0YwNjE2NiIgZD0iTTMuMzc3IDQwLjIzMWwuMjU1LTMuMjM1IDMuMjM2LS4yNTUgMy41NDQgMy41NDYtLjI1NSAzLjIzMy0zLjIzNC4yNTh6Ii8+CiAgICAgICAgPHBhdGggZmlsbD0iI0ZGQjZCOCIgZD0iTTMzLjkzNSA2LjUyNmwuMyA2LjM5MSA4LjEwOC04LjEwOGMtLjE1LS4xNC02LjI2LjU2NS04LjQwOCAxLjcxNyIvPgogICAgICAgIDxwYXRoIGZpbGw9IiNGMjdCODYiIGQ9Ik0zMy43ODcgNi42MDJMMTYuNjYgMjQuNTY4bDQuMzkgMS41MzggMTMuMTg2LTEzLjE4OS0uMy02LjM5MmMtLjA0OC4wMjctLjE0OC4wNzctLjE0OC4wNzciLz4KICAgICAgICA8cGF0aCBmaWxsPSIjRjI3Qjg2IiBkPSJNMTYuNjYgMjQuNTY3bC0uMTQ4LjE2NCAxLjg2NCA0LjA0NSAyLjY3LTIuNjctNC4zODYtMS41Mzl6TTQwLjYyNCAxMy4yMmwtNi4zOTItLjMgOC4xMDktOC4xMDhjLjE0LjE1LS41NjUgNi4yNTktMS43MTcgOC40MDgiLz4KICAgICAgICA8cGF0aCBmaWxsPSIjRTU0MTREIiBkPSJNNDAuNTQ4IDEzLjM2OEwyMi41ODIgMzAuNDk2bC0xLjUzOC00LjM5TDM0LjIzMyAxMi45Mmw2LjM5MS4zYTUuMDMyIDUuMDMyIDAgMCAwLS4wNzYuMTQ4Ii8+CiAgICAgICAgPHBhdGggZmlsbD0iI0U1NDE0RCIgZD0iTTIyLjU4MiAzMC40OTVsLS4xNjMuMTQ4LTQuMDQ1LTEuODY0IDIuNjctMi42NyAxLjUzOCA0LjM4NnoiLz4KICAgICAgICA8cGF0aCBmaWxsPSIjRkZCNkI4IiBkPSJNNi44NjcgMzYuNzQybC0uNzUgMi43NDItMi40ODYtMi40ODd6TTEwLjQwNiA0MC4yOGwtMi43NDIuNzUgMi40ODYgMi40ODZ6Ii8+CiAgICAgICAgPHBhdGggZmlsbD0iI0ZGQjZCOCIgZD0iTTYuODY3IDM2Ljc0MmwzLjU0NiAzLjU0Ni0yLjc0OC43NDEtMS41NDctMS41NDV6Ii8+CiAgICAgICAgPHBhdGggZmlsbD0iI0YyN0I4NiIgZD0iTTMuMzgyIDQwLjIzN2wyLjc0Mi0uNzUtMi40ODYtMi40ODZ6TTYuOTIxIDQzLjc3NmwuNzUtMi43NDIgMi40ODYgMi40ODZ6Ii8+CiAgICAgICAgPHBhdGggZmlsbD0iI0YyN0I4NiIgZD0iTTMuMzgyIDQwLjIzN2wzLjU0NyAzLjU0Ni43NC0yLjc0OC0xLjU0NS0xLjU0N3oiLz4KICAgICAgICA8cGF0aCBmaWxsPSIjRTU0MTREIiBkPSJNMTQuNzAxIDM2LjAxbC0zLjU1Mi0zLjU1MyAyLjE0My0yLjE0IDMuNTUyIDMuNTV6Ii8+CiAgICAgICAgPHBhdGggZmlsbD0iI0YwNjE2NiIgZD0iTTEyLjU2IDM4LjE1MUw5LjAwOCAzNC42bDIuMTQyLTIuMTQgMy41NTIgMy41NXoiLz4KICAgICAgICA8cGF0aCBmaWxsPSIjRTU0MTREIiBkPSJNMTAuNDE4IDQwLjI5M0w2Ljg2NiAzNi43NGwyLjE0Mi0yLjE0IDMuNTUyIDMuNTV6Ii8+CiAgICAgICAgPHBhdGggZmlsbD0iI0ZGQjZCOCIgZD0iTTE4LjM5NSAyOC43NjRsLTIuOTItNi4zMzRhMS42MjkgMS42MjkgMCAwIDAtLjQ2LS41NzYgMi4xMiAyLjEyIDAgMCAwLS44MzYtLjQyMmMtLjk5NS0uMjU0LTMuMTU3LS44ODMtNC4zMy0uOTM3YS44NzEuODcxIDAgMCAwLS43MjcuMzM2bDQuMjU4IDMuNjM0IDMuMTMgNi4xOTIgMS44OS0xLjg5LS4wMDUtLjAwM3oiLz4KICAgICAgICA8cGF0aCBmaWxsPSIjRjA2MTY2IiBkPSJNMTMuMzggMjQuNDY2TDkuMTIgMjAuODNhLjg3MS44NzEgMCAwIDAtLjExNy45MDRsNS4wNyAxMC41ODdjLjA4NS4xNjUuMTk3LjMxMy4zMjcuNDQ0bDIuMTA5LTIuMTA4LTMuMTMtNi4xOTJ6Ii8+CiAgICAgICAgPHBhdGggZmlsbD0iI0YyN0I4NiIgZD0iTTI2LjY3NCAzNy4zMTJjLS4wNTQtMS4xNzMtLjY4NC0zLjMzNy0uOTM3LTQuMzNhMi4xMiAyLjEyIDAgMCAwLS40MjMtLjgzNiAxLjYyOSAxLjYyOSAwIDAgMC0uNTc2LS40NmwtNi4zMzQtMi45Mi0uMDAyLS4wMDUtMS44OTEgMS44OTEgNi4xOTIgMy4xMyAzLjYzNSA0LjI1OGEuODc0Ljg3NCAwIDAgMCAuMzM2LS43MjgiLz4KICAgICAgICA8cGF0aCBmaWxsPSIjRTU0MTREIiBkPSJNMjIuNzAzIDMzLjc4MWwzLjYzNCA0LjI1OWEuODcxLjg3MSAwIDAgMS0uOTA0LjExN2wtMTAuNTg3LTUuMDdhMS43NjYgMS43NjYgMCAwIDEtLjQ0NC0uMzI3bDIuMTA5LTIuMTA4IDYuMTkyIDMuMTN6Ii8+CiAgICAgICAgPG1hc2sgaWQ9ImIiIGZpbGw9IiNmZmYiPgogICAgICAgICAgICA8dXNlIHhsaW5rOmhyZWY9IiNhIi8+CiAgICAgICAgPC9tYXNrPgogICAgICAgIDxwYXRoIGZpbGw9IiNGRkI2QjgiIGQ9Ik0yOS40NzIgMjMuMjhoLjk4N1Y1LjgyOGgtLjk4N3pNMjQuNjAxIDI3LjY5MmgyLjkyVjEwLjI0aC0yLjkyeiIgbWFzaz0idXJsKCNiKSIvPgogICAgPC9nPgo8L3N2Zz4=',
       'friendly_name': 'test-partymember-displayname Class',
-      'options': list([
+      <SensorEntityCapabilityAttribute.OPTIONS: 'options'>: list([
         'warrior',
         'rogue',
         'wizard',
@@ -65,8 +66,9 @@
 # ---
 # name: test_sensors[sensor.test_partymember_displayname_constitution-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -123,8 +125,9 @@
 # ---
 # name: test_sensors[sensor.test_partymember_displayname_display_name-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -177,8 +180,9 @@
 # ---
 # name: test_sensors[sensor.test_partymember_displayname_experience-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -228,8 +232,9 @@
 # ---
 # name: test_sensors[sensor.test_partymember_displayname_health-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -282,8 +287,9 @@
 # ---
 # name: test_sensors[sensor.test_partymember_displayname_intelligence-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -340,8 +346,9 @@
 # ---
 # name: test_sensors[sensor.test_partymember_displayname_last_check_in-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -390,8 +397,9 @@
 # ---
 # name: test_sensors[sensor.test_partymember_displayname_level-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -439,8 +447,9 @@
 # ---
 # name: test_sensors[sensor.test_partymember_displayname_mana-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -493,8 +502,9 @@
 # ---
 # name: test_sensors[sensor.test_partymember_displayname_max_mana-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -544,8 +554,9 @@
 # ---
 # name: test_sensors[sensor.test_partymember_displayname_next_level-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -595,8 +606,9 @@
 # ---
 # name: test_sensors[sensor.test_partymember_displayname_perception-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -653,8 +665,9 @@
 # ---
 # name: test_sensors[sensor.test_partymember_displayname_strength-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -711,11 +724,12 @@
 # ---
 # name: test_sensors[sensor.test_user_class-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
-      'options': list([
+      <SensorEntityCapabilityAttribute.OPTIONS: 'options'>: list([
         'warrior',
         'rogue',
         'wizard',
@@ -758,7 +772,7 @@
       'device_class': 'enum',
       'entity_picture': 'data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciICB2aWV3Qm94PSItMTIgLTEyIDcyIDcyIj4KICAgIDxnIGZpbGw9Im5vbmUiIGZpbGwtcnVsZT0iZXZlbm9kZCI+CiAgICAgICAgPHBhdGggZmlsbD0iIzFGNkVBMiIgZD0iTTI0LjQ2MiAxLjE1MWMtMy42OTUgMy43MTQtNy4zMjEgMTQuNjItOS4yMzYgMjAuOTEzLS44NC0xLjA2Mi0xLjc5OS0yLjA3Ni0zLjE1OC0zLjMyNi00LjgwNiAzLjUxNC03LjM1NyA3LjI1LTEwLjY0NiAxMS44MTYgOC45MTYgNy45MjYgMTEuMjMzIDkuMjU2IDIyLjk5NSAxNi4wMDVsLjA0NS0uMDI1aC4wMDFsLjA0NS4wMjVjMTEuNzYtNi43NDkgMTQuMDc5LTguMDggMjIuOTk0LTE2LjAwNS0zLjI4Ny00LjU2Ni01Ljg0MS04LjMwMi0xMC42NDUtMTEuODE2LTEuMzYxIDEuMjUtMi4zMTcgMi4yNjQtMy4xNTggMy4zMjYtMS45MTUtNi4yOTQtNS41NDMtMTcuMi05LjIzNi0yMC45MTNoLS4wMDF6Ii8+CiAgICAgICAgPHBhdGggZmlsbD0iIzI3OEFCRiIgZD0iTTI0LjQ2NCAzMi4xMDhsMy41NjEtMS4yNjVjNi4wNzUtLjYwNSA4LjQyNS0yLjI4MSA5LjQyNi0zLjQ5OGw2LjA1MyAyLjcwNy4wMDIuMDEzYS40NS40NSAwIDAgMS0uMTA1LjI4NiA0Ljk3IDQuOTcgMCAwIDEtLjMyLjMzYy0zLjQwNSAzLjMxNS0xOC4yMzcgMTEuOTgxLTE4LjYxNyAxMi4yMDJWMzIuMTA4eiIvPgogICAgICAgIDxwYXRoIGZpbGw9IiM1M0I0RTUiIGQ9Ik0zNi40MDYgMjMuMDQxYy4yMy0uMTg4LjI5Mi0uMzQuNjc0LS4zMzYgMS4xODMuMDY3IDUuMTY5IDUuMTc1IDYuMDY0IDYuNDYxLjE5NC4yNzguMzY2LjYxLjM2Ljg4NWwtNi4wNTMtMi43MDdjLjIzNi0uMzY3LjE5LS45Mi0uMzU1LTEuMjUyLS44MTgtLjUwMS0yLjUyOS45NDktMi45NTkuMjg0LS41OTktLjkyNyAyLjA0LTMuMTQ3IDIuMjctMy4zMzUiLz4KICAgICAgICA8cGF0aCBmaWxsPSIjMkFBMENGIiBkPSJNMjMuNTkxIDcuNDg3Yy01LjM5IDE1LjQxOS04LjIyNyAyMy44MTctOC4yMjcgMjMuODE3bDkuMDk3IDQuNzZWNi44MzljLS4zNiAwLS43MTguMjE2LS44Ny42NDgiLz4KICAgICAgICA8cGF0aCBmaWxsPSIjMjc4QUJGIiBkPSJNMjUuMzMyIDcuNDg3Yy0uMTUyLS40MzItLjUxLS42NDgtLjg3LS42NDh2MjkuMjI1bDkuMDk3LTQuNzZzLTIuODM3LTguMzk4LTguMjI3LTIzLjgxNyIvPgogICAgICAgIDxwYXRoIGZpbGw9IiM0REIyRDYiIGQ9Ik0yNC40NjIgMzIuMTA4TDIwLjkgMzAuODQzYy02LjA3NS0uNjA1LTguMzQyLTIuMzUyLTkuNDI1LTMuNDk4TDUuNDIgMzAuMDUybC0uMDAyLjAxM2EuNDUuNDUgMCAwIDAgLjEwNi4yODZjLjA5LjEwNC4xOTcuMjE1LjMxOC4zMyAzLjQwNiAzLjMxNSAxOC4yMzggMTEuOTgxIDE4LjYxOSAxMi4yMDJWMzIuMTA4eiIvPgogICAgICAgIDxwYXRoIGZpbGw9IiM2QkM0RTkiIGQ9Ik0xMi41MTkgMjMuMDQxYy0uMjMtLjE4OC0uMjkyLS4zNC0uNjc0LS4zMzYtMS4xODMuMDY3LTUuMTY5IDUuMTc1LTYuMDYzIDYuNDYxLS4xOTQuMjc4LS4zNjcuNjEtLjM2MS44ODVsNi4wNTMtMi43MDdjLS4yMzYtLjM2Ny0uMTktLjkyLjM1Ni0xLjI1Mi44MTctLjUwMSAyLjUyOC45NDkgMi45NTguMjg0LjYtLjkyNy0yLjAzOS0zLjE0Ny0yLjI3LTMuMzM1Ii8+CiAgICAgICAgPHBhdGggZmlsbD0iI0E5REJGNiIgZD0iTTI0LjQ2MyAzNC45OTh2LTUuMTAxbC03LjIxLTQuMTMtMS40OCA0LjA0OXoiLz4KICAgICAgICA8cGF0aCBmaWxsPSIjODRDRkYyIiBkPSJNMjQuNDYzIDM0Ljk5OHYtNS4xMDFsNy4yMDctNC4xMyAxLjQ4MyA0LjA0OXoiLz4KICAgIDwvZz4KPC9zdmc+',
       'friendly_name': 'test-user Class',
-      'options': list([
+      <SensorEntityCapabilityAttribute.OPTIONS: 'options'>: list([
         'warrior',
         'rogue',
         'wizard',
@@ -775,8 +789,9 @@
 # ---
 # name: test_sensors[sensor.test_user_constitution-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -833,8 +848,9 @@
 # ---
 # name: test_sensors[sensor.test_user_display_name-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -888,8 +904,9 @@
 # ---
 # name: test_sensors[sensor.test_user_eggs-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -942,8 +959,9 @@
 # ---
 # name: test_sensors[sensor.test_user_experience-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -993,8 +1011,9 @@
 # ---
 # name: test_sensors[sensor.test_user_gems-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -1047,8 +1066,9 @@
 # ---
 # name: test_sensors[sensor.test_user_gold-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -1101,8 +1121,9 @@
 # ---
 # name: test_sensors[sensor.test_user_hatching_potions-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -1155,8 +1176,9 @@
 # ---
 # name: test_sensors[sensor.test_user_health-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -1209,8 +1231,9 @@
 # ---
 # name: test_sensors[sensor.test_user_intelligence-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -1267,8 +1290,9 @@
 # ---
 # name: test_sensors[sensor.test_user_last_check_in-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -1317,8 +1341,9 @@
 # ---
 # name: test_sensors[sensor.test_user_level-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -1366,8 +1391,9 @@
 # ---
 # name: test_sensors[sensor.test_user_mana-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -1420,8 +1446,9 @@
 # ---
 # name: test_sensors[sensor.test_user_max_mana-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -1471,8 +1498,9 @@
 # ---
 # name: test_sensors[sensor.test_user_mystic_hourglasses-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -1525,8 +1553,9 @@
 # ---
 # name: test_sensors[sensor.test_user_next_level-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -1576,8 +1605,9 @@
 # ---
 # name: test_sensors[sensor.test_user_pending_damage-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -1630,8 +1660,9 @@
 # ---
 # name: test_sensors[sensor.test_user_pending_quest_items-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -1680,8 +1711,9 @@
 # ---
 # name: test_sensors[sensor.test_user_perception-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -1738,8 +1770,9 @@
 # ---
 # name: test_sensors[sensor.test_user_pet_food-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -1792,8 +1825,9 @@
 # ---
 # name: test_sensors[sensor.test_user_quest_scrolls-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -1847,8 +1881,9 @@
 # ---
 # name: test_sensors[sensor.test_user_s_party_boss_health-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -1901,8 +1936,9 @@
 # ---
 # name: test_sensors[sensor.test_user_s_party_boss_health_remaining-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -1955,8 +1991,9 @@
 # ---
 # name: test_sensors[sensor.test_user_s_party_boss_rage-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -2009,8 +2046,9 @@
 # ---
 # name: test_sensors[sensor.test_user_s_party_boss_rage_limit_break-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -2065,8 +2103,9 @@
 # ---
 # name: test_sensors[sensor.test_user_s_party_collected_quest_items-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -2117,8 +2156,9 @@
 # ---
 # name: test_sensors[sensor.test_user_s_party_group_leader-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -2166,8 +2206,9 @@
 # ---
 # name: test_sensors[sensor.test_user_s_party_member_count-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -2217,8 +2258,9 @@
 # ---
 # name: test_sensors[sensor.test_user_s_party_quest-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -2269,8 +2311,9 @@
 # ---
 # name: test_sensors[sensor.test_user_s_party_quest_boss-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -2318,8 +2361,9 @@
 # ---
 # name: test_sensors[sensor.test_user_saddles-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -2369,8 +2413,9 @@
 # ---
 # name: test_sensors[sensor.test_user_strength-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,

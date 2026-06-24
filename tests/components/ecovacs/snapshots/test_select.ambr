@@ -1,11 +1,12 @@
 # serializer version: 1
 # name: test_selects[n0vyif-entity_ids2][select.x8_pro_omni_active_map:entity-registry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
-      'options': list([
+      <SelectEntityCapabilityAttribute.OPTIONS: 'options'>: list([
         'Map 2',
         '1',
       ]),
@@ -44,7 +45,7 @@
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'friendly_name': 'X8 PRO OMNI Active map',
-      'options': list([
+      <SelectEntityCapabilityAttribute.OPTIONS: 'options'>: list([
         'Map 2',
         '1',
       ]),
@@ -59,11 +60,12 @@
 # ---
 # name: test_selects[n0vyif-entity_ids2][select.x8_pro_omni_auto_empty_frequency:entity-registry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
-      'options': list([
+      <SelectEntityCapabilityAttribute.OPTIONS: 'options'>: list([
         'auto',
         'smart',
       ]),
@@ -102,7 +104,7 @@
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'friendly_name': 'X8 PRO OMNI Auto-empty frequency',
-      'options': list([
+      <SelectEntityCapabilityAttribute.OPTIONS: 'options'>: list([
         'auto',
         'smart',
       ]),
@@ -117,11 +119,12 @@
 # ---
 # name: test_selects[n0vyif-entity_ids2][select.x8_pro_omni_work_mode:entity-registry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
-      'options': list([
+      <SelectEntityCapabilityAttribute.OPTIONS: 'options'>: list([
         'mop',
         'mop_after_vacuum',
         'vacuum',
@@ -162,7 +165,7 @@
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'friendly_name': 'X8 PRO OMNI Work mode',
-      'options': list([
+      <SelectEntityCapabilityAttribute.OPTIONS: 'options'>: list([
         'mop',
         'mop_after_vacuum',
         'vacuum',
@@ -179,11 +182,12 @@
 # ---
 # name: test_selects[qhe2o2-entity_ids1][select.dusty_active_map:entity-registry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
-      'options': list([
+      <SelectEntityCapabilityAttribute.OPTIONS: 'options'>: list([
         'Map 2',
         '1',
       ]),
@@ -222,7 +226,7 @@
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'friendly_name': 'Dusty Active map',
-      'options': list([
+      <SelectEntityCapabilityAttribute.OPTIONS: 'options'>: list([
         'Map 2',
         '1',
       ]),
@@ -237,11 +241,12 @@
 # ---
 # name: test_selects[qhe2o2-entity_ids1][select.dusty_auto_empty_frequency:entity-registry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
-      'options': list([
+      <SelectEntityCapabilityAttribute.OPTIONS: 'options'>: list([
         'auto',
         'smart',
       ]),
@@ -280,7 +285,7 @@
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'friendly_name': 'Dusty Auto-empty frequency',
-      'options': list([
+      <SelectEntityCapabilityAttribute.OPTIONS: 'options'>: list([
         'auto',
         'smart',
       ]),
@@ -295,11 +300,12 @@
 # ---
 # name: test_selects[qhe2o2-entity_ids1][select.dusty_water_flow_level:entity-registry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
-      'options': list([
+      <SelectEntityCapabilityAttribute.OPTIONS: 'options'>: list([
         'low',
         'medium',
         'high',
@@ -339,7 +345,7 @@
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'friendly_name': 'Dusty Water flow level',
-      'options': list([
+      <SelectEntityCapabilityAttribute.OPTIONS: 'options'>: list([
         'low',
         'medium',
         'high',
@@ -355,11 +361,12 @@
 # ---
 # name: test_selects[yna5x1-entity_ids0][select.ozmo_950_active_map:entity-registry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
-      'options': list([
+      <SelectEntityCapabilityAttribute.OPTIONS: 'options'>: list([
         'Map 2',
         '1',
       ]),
@@ -398,7 +405,7 @@
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'friendly_name': 'Ozmo 950 Active map',
-      'options': list([
+      <SelectEntityCapabilityAttribute.OPTIONS: 'options'>: list([
         'Map 2',
         '1',
       ]),
@@ -413,11 +420,12 @@
 # ---
 # name: test_selects[yna5x1-entity_ids0][select.ozmo_950_water_flow_level:entity-registry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
-      'options': list([
+      <SelectEntityCapabilityAttribute.OPTIONS: 'options'>: list([
         'low',
         'medium',
         'high',
@@ -458,7 +466,7 @@
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'friendly_name': 'Ozmo 950 Water flow level',
-      'options': list([
+      <SelectEntityCapabilityAttribute.OPTIONS: 'options'>: list([
         'low',
         'medium',
         'high',

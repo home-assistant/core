@@ -1,8 +1,6 @@
 """Representation of Z-Wave switches."""
 
-from __future__ import annotations
-
-from typing import Any
+from typing import Any, override
 
 from zwave_js_server.const import TARGET_VALUE_PROPERTY
 from zwave_js_server.const.command_class.barrier_operator import (
@@ -72,6 +70,7 @@ class ZWaveSwitch(ZWaveBaseEntity, SwitchEntity):
         self._target_value = self.get_zwave_value(TARGET_VALUE_PROPERTY)
 
     @property
+    @override
     def is_on(self) -> bool | None:
         """Return a boolean for the state of the switch."""
         if self.info.primary_value.value is None:
@@ -79,11 +78,13 @@ class ZWaveSwitch(ZWaveBaseEntity, SwitchEntity):
             return None
         return bool(self.info.primary_value.value)
 
+    @override
     async def async_turn_on(self, **kwargs: Any) -> None:
         """Turn the switch on."""
         if self._target_value is not None:
             await self._async_set_value(self._target_value, True)
 
+    @override
     async def async_turn_off(self, **kwargs: Any) -> None:
         """Turn the switch off."""
         if self._target_value is not None:
@@ -121,15 +122,18 @@ class ZWaveBarrierEventSignalingSwitch(ZWaveBaseEntity, SwitchEntity):
         self._attr_name = self.generate_name(include_value_name=True)
 
     @callback
+    @override
     def on_value_update(self) -> None:
         """Call when a watched value is added or updated."""
         self._update_state()
 
     @property
+    @override
     def is_on(self) -> bool | None:
         """Return a boolean for the state of the switch."""
         return self._state
 
+    @override
     async def async_turn_on(self, **kwargs: Any) -> None:
         """Turn the switch on."""
         await self._async_set_value(
@@ -139,6 +143,7 @@ class ZWaveBarrierEventSignalingSwitch(ZWaveBaseEntity, SwitchEntity):
         self._state = True
         self.async_write_ha_state()
 
+    @override
     async def async_turn_off(self, **kwargs: Any) -> None:
         """Turn the switch off."""
         await self._async_set_value(
@@ -175,10 +180,12 @@ class ZWaveConfigParameterSwitch(ZWaveSwitch):
             additional_info=[property_key_name] if property_key_name else None,
         )
 
+    @override
     async def async_turn_on(self, **kwargs: Any) -> None:
         """Turn the switch on."""
         await self._async_set_value(self.info.primary_value, 1)
 
+    @override
     async def async_turn_off(self, **kwargs: Any) -> None:
         """Turn the switch off."""
         await self._async_set_value(self.info.primary_value, 0)

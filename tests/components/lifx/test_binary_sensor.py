@@ -1,7 +1,5 @@
 """Test the lifx binary sensor platform."""
 
-from __future__ import annotations
-
 from datetime import timedelta
 
 import pytest
@@ -55,7 +53,7 @@ async def test_hev_cycle_state(
         await async_setup_component(hass, lifx.DOMAIN, {lifx.DOMAIN: {}})
         await hass.async_block_till_done()
 
-    entity_id = "binary_sensor.my_bulb_clean_cycle"
+    entity_id = "binary_sensor.my_group_my_bulb_clean_cycle"
 
     state = hass.states.get(entity_id)
     assert state

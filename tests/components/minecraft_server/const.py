@@ -5,16 +5,13 @@ from mcstatus.responses import (
     BedrockStatusPlayers,
     BedrockStatusResponse,
     BedrockStatusVersion,
+    JavaStatusPlayer,
     JavaStatusPlayers,
     JavaStatusResponse,
     JavaStatusVersion,
     LegacyStatusPlayers,
     LegacyStatusResponse,
     LegacyStatusVersion,
-    RawJavaResponse,
-    RawJavaResponsePlayer,
-    RawJavaResponsePlayers,
-    RawJavaResponseVersion,
 )
 
 from homeassistant.components.minecraft_server.api import MinecraftServerData
@@ -24,26 +21,19 @@ TEST_HOST = "mc.dummyserver.com"
 TEST_PORT = 25566
 TEST_ADDRESS = f"{TEST_HOST}:{TEST_PORT}"
 
-TEST_JAVA_STATUS_RESPONSE_RAW = RawJavaResponse(
-    description="Dummy MOTD",
-    players=RawJavaResponsePlayers(
+TEST_JAVA_STATUS_RESPONSE = JavaStatusResponse(
+    raw={"foo": "bar"},
+    players=JavaStatusPlayers(
         online=3,
         max=10,
         sample=[
-            RawJavaResponsePlayer(id="1", name="Player 1"),
-            RawJavaResponsePlayer(id="2", name="Player 2"),
-            RawJavaResponsePlayer(id="3", name="Player 3"),
+            JavaStatusPlayer(id="1", name="Player 1"),
+            JavaStatusPlayer(id="2", name="Player 2"),
+            JavaStatusPlayer(id="3", name="Player 3"),
         ],
     ),
-    version=RawJavaResponseVersion(name="Dummy Version", protocol=123),
-    favicon="Dummy Icon",
-)
-
-TEST_JAVA_STATUS_RESPONSE = JavaStatusResponse(
-    raw=TEST_JAVA_STATUS_RESPONSE_RAW,
-    players=JavaStatusPlayers.build(TEST_JAVA_STATUS_RESPONSE_RAW["players"]),
-    version=JavaStatusVersion.build(TEST_JAVA_STATUS_RESPONSE_RAW["version"]),
-    motd=Motd.parse(TEST_JAVA_STATUS_RESPONSE_RAW["description"], bedrock=False),
+    version=JavaStatusVersion(name="Dummy Version", protocol=123),
+    motd=Motd.parse("Dummy MOTD", bedrock=False),
     icon=None,
     enforces_secure_chat=False,
     latency=5,

@@ -1,11 +1,12 @@
 # serializer version: 1
 # name: test_sensor_setup[load_platforms0][sensor.test_build_up_index-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
-      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+      <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -42,7 +43,7 @@
     'attributes': ReadOnlyDict({
       'attribution': 'Swedish weather institute (SMHI)',
       'friendly_name': 'Test Build up index',
-      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+      <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
     'context': <ANY>,
     'entity_id': 'sensor.test_build_up_index',
@@ -54,11 +55,12 @@
 # ---
 # name: test_sensor_setup[load_platforms0][sensor.test_drought_code-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
-      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+      <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -95,7 +97,7 @@
     'attributes': ReadOnlyDict({
       'attribution': 'Swedish weather institute (SMHI)',
       'friendly_name': 'Test Drought code',
-      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+      <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
     'context': <ANY>,
     'entity_id': 'sensor.test_drought_code',
@@ -107,11 +109,12 @@
 # ---
 # name: test_sensor_setup[load_platforms0][sensor.test_duff_moisture_code-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
-      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+      <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -148,7 +151,7 @@
     'attributes': ReadOnlyDict({
       'attribution': 'Swedish weather institute (SMHI)',
       'friendly_name': 'Test Duff moisture code',
-      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+      <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
     'context': <ANY>,
     'entity_id': 'sensor.test_duff_moisture_code',
@@ -160,11 +163,12 @@
 # ---
 # name: test_sensor_setup[load_platforms0][sensor.test_fine_fuel_moisture_code-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
-      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+      <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -201,7 +205,7 @@
     'attributes': ReadOnlyDict({
       'attribution': 'Swedish weather institute (SMHI)',
       'friendly_name': 'Test Fine fuel moisture code',
-      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+      <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
     'context': <ANY>,
     'entity_id': 'sensor.test_fine_fuel_moisture_code',
@@ -213,11 +217,12 @@
 # ---
 # name: test_sensor_setup[load_platforms0][sensor.test_fire_weather_index-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
-      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+      <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -254,7 +259,7 @@
     'attributes': ReadOnlyDict({
       'attribution': 'Swedish weather institute (SMHI)',
       'friendly_name': 'Test Fire weather index',
-      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+      <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
     'context': <ANY>,
     'entity_id': 'sensor.test_fire_weather_index',
@@ -266,8 +271,9 @@
 # ---
 # name: test_sensor_setup[load_platforms0][sensor.test_frozen_precipitation-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -317,11 +323,12 @@
 # ---
 # name: test_sensor_setup[load_platforms0][sensor.test_fuel_drying-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
-      'options': list([
+      <SensorEntityCapabilityAttribute.OPTIONS: 'options'>: list([
         'very_wet',
         'wet',
         'moderate_wet',
@@ -366,7 +373,7 @@
       'attribution': 'Swedish weather institute (SMHI)',
       'device_class': 'enum',
       'friendly_name': 'Test Fuel drying',
-      'options': list([
+      <SensorEntityCapabilityAttribute.OPTIONS: 'options'>: list([
         'very_wet',
         'wet',
         'moderate_wet',
@@ -385,11 +392,12 @@
 # ---
 # name: test_sensor_setup[load_platforms0][sensor.test_fwi_index-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
-      'options': list([
+      <SensorEntityCapabilityAttribute.OPTIONS: 'options'>: list([
         'very_low',
         'low',
         'moderate',
@@ -434,7 +442,7 @@
       'attribution': 'Swedish weather institute (SMHI)',
       'device_class': 'enum',
       'friendly_name': 'Test FWI index',
-      'options': list([
+      <SensorEntityCapabilityAttribute.OPTIONS: 'options'>: list([
         'very_low',
         'low',
         'moderate',
@@ -453,8 +461,9 @@
 # ---
 # name: test_sensor_setup[load_platforms0][sensor.test_high_cloud_coverage-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -499,16 +508,17 @@
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
-    'state': '88',
+    'state': '25',
   })
 # ---
 # name: test_sensor_setup[load_platforms0][sensor.test_highest_grass_fire_risk-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
-      'options': list([
+      <SensorEntityCapabilityAttribute.OPTIONS: 'options'>: list([
         'snow_cover',
         'season_over',
         'low',
@@ -553,7 +563,7 @@
       'attribution': 'Swedish weather institute (SMHI)',
       'device_class': 'enum',
       'friendly_name': 'Test Highest grass fire risk',
-      'options': list([
+      <SensorEntityCapabilityAttribute.OPTIONS: 'options'>: list([
         'snow_cover',
         'season_over',
         'low',
@@ -572,11 +582,12 @@
 # ---
 # name: test_sensor_setup[load_platforms0][sensor.test_initial_spread_index-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
-      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+      <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -613,7 +624,7 @@
     'attributes': ReadOnlyDict({
       'attribution': 'Swedish weather institute (SMHI)',
       'friendly_name': 'Test Initial spread index',
-      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+      <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
     'context': <ANY>,
     'entity_id': 'sensor.test_initial_spread_index',
@@ -625,8 +636,9 @@
 # ---
 # name: test_sensor_setup[load_platforms0][sensor.test_low_cloud_coverage-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -676,8 +688,9 @@
 # ---
 # name: test_sensor_setup[load_platforms0][sensor.test_medium_cloud_coverage-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -722,16 +735,17 @@
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
-    'state': '88',
+    'state': '100',
   })
 # ---
 # name: test_sensor_setup[load_platforms0][sensor.test_potential_rate_of_spread-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
-      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+      <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -772,7 +786,7 @@
       'attribution': 'Swedish weather institute (SMHI)',
       'device_class': 'speed',
       'friendly_name': 'Test Potential rate of spread',
-      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+      <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
       'unit_of_measurement': <UnitOfSpeed.METERS_PER_MINUTE: 'm/min'>,
     }),
     'context': <ANY>,
@@ -785,18 +799,25 @@
 # ---
 # name: test_sensor_setup[load_platforms0][sensor.test_precipitation_category-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
-      'options': list([
-        '0',
-        '1',
-        '2',
-        '3',
-        '4',
-        '5',
-        '6',
+      <SensorEntityCapabilityAttribute.OPTIONS: 'options'>: list([
+        'no_precipitation',
+        'rain',
+        'thunderstorm',
+        'freezing_rain',
+        'mixed_ice',
+        'snow',
+        'wet_snow',
+        'rain_snow_mixed',
+        'ice_pellets',
+        'graupel',
+        'hail',
+        'drizzle',
+        'freezing_drizzle',
       ]),
     }),
     'config_entry_id': <ANY>,
@@ -835,14 +856,20 @@
       'attribution': 'Swedish weather institute (SMHI)',
       'device_class': 'enum',
       'friendly_name': 'Test Precipitation category',
-      'options': list([
-        '0',
-        '1',
-        '2',
-        '3',
-        '4',
-        '5',
-        '6',
+      <SensorEntityCapabilityAttribute.OPTIONS: 'options'>: list([
+        'no_precipitation',
+        'rain',
+        'thunderstorm',
+        'freezing_rain',
+        'mixed_ice',
+        'snow',
+        'wet_snow',
+        'rain_snow_mixed',
+        'ice_pellets',
+        'graupel',
+        'hail',
+        'drizzle',
+        'freezing_drizzle',
       ]),
     }),
     'context': <ANY>,
@@ -850,13 +877,14 @@
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
-    'state': '0',
+    'state': 'rain',
   })
 # ---
 # name: test_sensor_setup[load_platforms0][sensor.test_thunder_probability-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -901,13 +929,14 @@
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
-    'state': '37',
+    'state': '0',
   })
 # ---
 # name: test_sensor_setup[load_platforms0][sensor.test_total_cloud_coverage-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,

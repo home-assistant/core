@@ -36,13 +36,18 @@ async def test_create_entity(
         entity_data={"name": test_name},
     )
 
-    # Test if entity is correctly stored in registry
-    await client.send_json_auto_id({"type": "knx/get_entity_entries"})
+    # Test if entity is correctly registered for its group address
+    await client.send_json_auto_id({"type": "knx/get_entities_by_group"})
     res = await client.receive_json()
     assert res["success"], res
-    assert res["result"] == [
-        test_entity.extended_dict,
-    ]
+    # expect group address "1/2/3" to reference the created entity
+    group_mapping = res["result"]
+    assert "1/2/3" in group_mapping
+    # identifiers are returned as a list of dicts; check unique_id present
+    identifiers = group_mapping["1/2/3"]
+    assert identifiers[0]["unique_id"] == test_entity.unique_id
+    assert identifiers[0]["platform"] == Platform.SWITCH
+    assert identifiers[0]["ui"] is True
     # Test if entity is correctly stored in config store
     test_storage_data = next(
         iter(
@@ -94,7 +99,9 @@ async def test_create_entity_error(
     await client.send_json_auto_id(
         {
             "type": "knx/create_entity",
-            "platform": Platform.TTS,  # "tts" is not a supported platform (and is unlikely to ever be)
+            # "tts" is not a supported platform
+            # (and is unlikely to ever be)
+            "platform": Platform.TTS,
             "data": {
                 "entity": {"name": "Test invalid platform"},
                 "knx": {"ga_switch": {"write": "1/2/3"}},
@@ -215,8 +222,9 @@ async def test_update_entity_error(
         {
             "type": "knx/update_entity",
             "platform": Platform.SWITCH,
-            # `sensor` isn't yet supported, but we only have sensor entities automatically
-            # created with no configuration - it doesn't ,atter for the test though
+            # `sensor` isn't yet supported, but we only have sensor
+            # entities automatically created with no configuration -
+            # it doesn't matter for the test though
             "entity_id": "sensor.knx_interface_individual_address",
             "data": {
                 "entity": {"name": new_name},
@@ -445,6 +453,131 @@ async def test_validate_entity(
     assert res["result"]["error_base"].startswith("required key not provided")
 
 
+########
+# EXPOSE
+########
+
+
+async def test_update_expose_error(
+    hass: HomeAssistant,
+    knx: KNXTestKit,
+    hass_ws_client: WebSocketGenerator,
+) -> None:
+    """Test expose update validation errors."""
+    await knx.setup_integration()
+    client = await hass_ws_client(hass)
+
+    await client.send_json_auto_id(
+        {
+            "type": "knx/update_expose",
+            "entity_id": "switch.test",
+            "data": {"options": [{"ga": {"dpt": "1.001"}}]},
+        }
+    )
+    res = await client.receive_json()
+    assert res["success"], res
+    assert res["result"]["success"] is False
+    assert res["result"]["errors"][0]["path"] == ["data", "options", "0", "ga", "write"]
+    assert res["result"]["errors"][0]["error_message"] == "required key not provided"
+
+
+async def test_validate_expose(
+    hass: HomeAssistant,
+    knx: KNXTestKit,
+    hass_ws_client: WebSocketGenerator,
+) -> None:
+    """Test expose validation endpoint."""
+    await knx.setup_integration()
+    client = await hass_ws_client(hass)
+
+    await client.send_json_auto_id(
+        {
+            "type": "knx/validate_expose",
+            "entity_id": "switch.test",
+            "data": {"options": [{"ga": {"write": "1/2/3", "dpt": "1.001"}}]},
+        }
+    )
+    res = await client.receive_json()
+    assert res["success"], res
+    assert res["result"]["success"] is True
+
+    await client.send_json_auto_id(
+        {
+            "type": "knx/validate_expose",
+            "entity_id": "switch.test",
+            "data": {"options": [{"ga": {"write": "1/2/3", "dpt": "invalid"}}]},
+        }
+    )
+    res = await client.receive_json()
+    assert res["success"], res
+    assert res["result"]["success"] is False
+    assert res["result"]["errors"][0]["path"] == ["data", "options", "0", "ga", "dpt"]
+
+
+async def test_delete_expose(
+    hass: HomeAssistant,
+    knx: KNXTestKit,
+    hass_ws_client: WebSocketGenerator,
+    hass_storage: dict[str, Any],
+) -> None:
+    """Test expose deletion."""
+    ENTITY_ID = "switch.test"
+
+    await knx.setup_integration()
+    client = await hass_ws_client(hass)
+
+    expose_options = {"options": [{"ga": {"write": "2/2/2", "dpt": "1.001"}}]}
+
+    await client.send_json_auto_id(
+        {
+            "type": "knx/update_expose",
+            "entity_id": ENTITY_ID,
+            "data": expose_options,
+        }
+    )
+    res = await client.receive_json()
+    assert res["success"], res
+    assert ENTITY_ID in hass_storage[KNX_CONFIG_STORAGE_KEY]["data"]["expose"]
+
+    await client.send_json_auto_id(
+        {
+            "type": "knx/delete_expose",
+            "entity_id": ENTITY_ID,
+        }
+    )
+    res = await client.receive_json()
+    assert res["success"], res
+    assert ENTITY_ID not in hass_storage[KNX_CONFIG_STORAGE_KEY]["data"]["expose"]
+
+
+async def test_delete_expose_error(
+    hass: HomeAssistant,
+    knx: KNXTestKit,
+    hass_ws_client: WebSocketGenerator,
+) -> None:
+    """Test expose deletion errors."""
+    await knx.setup_integration()
+    client = await hass_ws_client(hass)
+
+    await client.send_json_auto_id(
+        {
+            "type": "knx/delete_expose",
+            "entity_id": "switch.non_existing_entity",
+        }
+    )
+    res = await client.receive_json()
+    assert not res["success"], res
+    assert res["error"]["code"] == "home_assistant_error"
+    assert res["error"]["message"].startswith(
+        "Entity not found in expose configuration"
+    )
+
+
+###########
+# MIGRATION
+###########
+
+
 async def test_migration_1_to_2(
     hass: HomeAssistant,
     knx: KNXTestKit,
@@ -460,12 +593,12 @@ async def test_migration_1_to_2(
     assert hass_storage[KNX_CONFIG_STORAGE_KEY] == new_data
 
 
-async def test_migration_2_1_to_2_2(
+async def test_migration_2_1_to_2_4(
     hass: HomeAssistant,
     knx: KNXTestKit,
     hass_storage: dict[str, Any],
 ) -> None:
-    """Test migration from schema 2.1 to schema 2.2."""
+    """Test migration from schema 2.1 to schema 2.4."""
     await knx.setup_integration(
         config_store_fixture="config_store_binarysensor_v2_1.json",
         state_updater=False,

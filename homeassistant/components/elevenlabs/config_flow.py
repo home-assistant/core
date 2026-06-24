@@ -1,16 +1,14 @@
 """Config flow for ElevenLabs text-to-speech integration."""
 
-from __future__ import annotations
-
 import logging
-from typing import Any
+from typing import Any, override
 
 from elevenlabs import AsyncElevenLabs
 from elevenlabs.core import ApiError
 import voluptuous as vol
 
 from homeassistant.config_entries import ConfigFlow, ConfigFlowResult, OptionsFlow
-from homeassistant.const import CONF_API_KEY
+from homeassistant.const import CONF_API_KEY, CONF_MODEL
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.httpx_client import get_async_client
 from homeassistant.helpers.selector import (
@@ -22,7 +20,6 @@ from homeassistant.helpers.selector import (
 from . import ElevenLabsConfigEntry
 from .const import (
     CONF_CONFIGURE_VOICE,
-    CONF_MODEL,
     CONF_SIMILARITY,
     CONF_STABILITY,
     CONF_STT_AUTO_LANGUAGE,
@@ -75,6 +72,7 @@ class ElevenLabsConfigFlow(ConfigFlow, domain=DOMAIN):
     VERSION = 1
     MINOR_VERSION = 2
 
+    @override
     async def async_step_user(
         self, user_input: dict[str, Any] | None = None
     ) -> ConfigFlowResult:
@@ -106,6 +104,7 @@ class ElevenLabsConfigFlow(ConfigFlow, domain=DOMAIN):
         )
 
     @staticmethod
+    @override
     def async_get_options_flow(
         config_entry: ElevenLabsConfigEntry,
     ) -> OptionsFlow:

@@ -1,5 +1,26 @@
 {
   "entity": {
+    "binary_sensor": {
+      "charge_permitted": {
+        "default": "mdi:ev-station"
+      }
+    },
+    "device_tracker": {
+      "gps_tracker": {
+        "default": "mdi:map-marker"
+      }
+    },
+    "number": {
+      "current_set": {
+        "default": "mdi:current-ac"
+      },
+      "energy_limit": {
+        "default": "mdi:battery-charging-100"
+      },
+      "phase_count": {
+        "default": "mdi:sine-wave"
+      }
+    },
     "sensor": {
       "charge_count": {
         "default": "mdi:counter"

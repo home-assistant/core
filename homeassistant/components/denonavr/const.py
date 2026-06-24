@@ -2,6 +2,7 @@
 
 DOMAIN = "denonavr"
 
+ATTR_DYNAMIC_EQ = "dynamic_eq"
 
 CONF_SHOW_ALL_SOURCES = "show_all_sources"
 CONF_ZONE2 = "zone2"

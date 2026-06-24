@@ -1,7 +1,5 @@
 """Support for LCN devices."""
 
-from __future__ import annotations
-
 from functools import partial
 import logging
 from typing import cast
@@ -172,7 +170,8 @@ async def async_migrate_entry(
         new_data[CONF_ENTITIES] = new_entities_data
 
     if config_entry.version < 3:
-        # update to 3.1 (remove resource parameter, add climate target lock value parameter)
+        # update to 3.1 (remove resource parameter,
+        # add climate target lock value parameter)
         for entity in new_data[CONF_ENTITIES]:
             entity.pop(CONF_RESOURCE, None)
 
@@ -247,7 +246,7 @@ def async_host_event_received(
     ):
         _LOGGER.info('The connection to host "%s" has been lost', config_entry.title)
         hass.async_create_task(reload_config_entry())
-    elif event == LcnEvent.BUS_DISCONNECTED:
+    elif event is LcnEvent.BUS_DISCONNECTED:
         _LOGGER.info(
             'The connection to the LCN bus via host "%s" has been disconnected',
             config_entry.title,
@@ -297,7 +296,7 @@ def _async_fire_access_control_event(
     if device is not None:
         event_data.update({CONF_DEVICE_ID: device.id})
 
-    if inp.periphery == pypck.lcn_defs.AccessControlPeriphery.TRANSMITTER:
+    if inp.periphery is pypck.lcn_defs.AccessControlPeriphery.TRANSMITTER:
         event_data.update(
             {
                 "level": inp.level,
@@ -318,7 +317,7 @@ def _async_fire_send_keys_event(
 ) -> None:
     """Fire send_keys event."""
     for table, action in enumerate(inp.actions):
-        if action == pypck.lcn_defs.SendKeyCommand.DONTSEND:
+        if action is pypck.lcn_defs.SendKeyCommand.DONTSEND:
             continue
 
         for key, selected in enumerate(inp.keys):

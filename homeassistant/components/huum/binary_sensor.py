@@ -1,6 +1,6 @@
 """Sensor for door state."""
 
-from __future__ import annotations
+from typing import override
 
 from homeassistant.components.binary_sensor import (
     BinarySensorDeviceClass,
@@ -11,6 +11,8 @@ from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
 from .coordinator import HuumConfigEntry, HuumDataUpdateCoordinator
 from .entity import HuumBaseEntity
+
+PARALLEL_UPDATES = 0
 
 
 async def async_setup_entry(
@@ -36,6 +38,7 @@ class HuumDoorSensor(HuumBaseEntity, BinarySensorEntity):
         self._attr_unique_id = f"{coordinator.config_entry.entry_id}_door"
 
     @property
+    @override
     def is_on(self) -> bool | None:
         """Return the current value."""
         return not self.coordinator.data.door_closed

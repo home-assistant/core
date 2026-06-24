@@ -1,16 +1,15 @@
 """Support for displaying minimal, maximal, mean or median values."""
 
-from __future__ import annotations
-
 from datetime import datetime
 import logging
 import statistics
-from typing import Any
+from typing import Any, override
 
 import voluptuous as vol
 
 from homeassistant.components.sensor import (
     PLATFORM_SCHEMA as SENSOR_PLATFORM_SCHEMA,
+    SensorDeviceClass,
     SensorEntity,
     SensorStateClass,
 )
@@ -25,7 +24,9 @@ from homeassistant.const import (
     STATE_UNKNOWN,
 )
 from homeassistant.core import Event, EventStateChangedData, HomeAssistant, callback
+from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import config_validation as cv, entity_registry as er
+from homeassistant.helpers.entity import get_device_class
 from homeassistant.helpers.entity_platform import (
     AddConfigEntryEntitiesCallback,
     AddEntitiesCallback,
@@ -243,6 +244,7 @@ class MinMaxSensor(SensorEntity):
         self.count_sensors = len(self._entity_ids)
         self.states: dict[str, Any] = {}
 
+    @override
     async def async_added_to_hass(self) -> None:
         """Handle added to Hass."""
         self.async_on_remove(
@@ -259,9 +261,11 @@ class MinMaxSensor(SensorEntity):
             )
             self._async_min_max_sensor_state_listener(state_event, update_state=False)
 
+        self._update_device_class()
         self._calc_values()
 
     @property
+    @override
     def native_value(self) -> StateType | datetime:
         """Return the state of the sensor."""
         if self._unit_of_measurement_mismatch:
@@ -270,6 +274,7 @@ class MinMaxSensor(SensorEntity):
         return value
 
     @property
+    @override
     def native_unit_of_measurement(self) -> str | None:
         """Return the unit the value is expressed in."""
         if self._unit_of_measurement_mismatch:
@@ -277,6 +282,7 @@ class MinMaxSensor(SensorEntity):
         return self._unit_of_measurement
 
     @property
+    @override
     def extra_state_attributes(self) -> dict[str, Any] | None:
         """Return the state attributes of the sensor."""
         attributes: dict[str, list[str] | str | None] = {
@@ -344,6 +350,32 @@ class MinMaxSensor(SensorEntity):
 
         self._calc_values()
         self.async_write_ha_state()
+
+    @callback
+    def _update_device_class(self) -> None:
+        """Update device_class based on source entities.
+
+        If all source entities have the same device_class, inherit it.
+        Otherwise, leave device_class as None.
+        """
+        device_classes: list[SensorDeviceClass | None] = []
+
+        for entity_id in self._entity_ids:
+            try:
+                device_class = get_device_class(self.hass, entity_id)
+                if device_class:
+                    device_classes.append(SensorDeviceClass(device_class))
+                else:
+                    device_classes.append(None)
+            except HomeAssistantError, ValueError:
+                # If we can't get device class for any entity, don't set it
+                device_classes.append(None)
+
+        # Only inherit device_class if all entities have the same non-None device_class
+        if device_classes and all(
+            dc is not None and dc == device_classes[0] for dc in device_classes
+        ):
+            self._attr_device_class = device_classes[0]
 
     @callback
     def _calc_values(self) -> None:

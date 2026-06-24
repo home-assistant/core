@@ -1,10 +1,8 @@
 """Support for vacuum entities."""
 
-from __future__ import annotations
-
 from enum import StrEnum
 import logging
-from typing import Any
+from typing import Any, override
 
 from thinqconnect import DeviceType
 from thinqconnect.integration import ExtendedProperty
@@ -57,6 +55,14 @@ ROBOT_STATUS_TO_HA = {
     "sleep": VacuumActivity.IDLE,
     "standby": VacuumActivity.IDLE,
     "working": VacuumActivity.CLEANING,
+    "station": VacuumActivity.CLEANING,
+    "station_dry": VacuumActivity.CLEANING,
+    "clean_learning": VacuumActivity.CLEANING,
+    "station_mop": VacuumActivity.CLEANING,
+    "water_removal": VacuumActivity.CLEANING,
+    "water_injection": VacuumActivity.CLEANING,
+    "clean_select": VacuumActivity.CLEANING,
+    "clean_select_gozone": VacuumActivity.CLEANING,
     "error": VacuumActivity.ERROR,
 }
 ROBOT_BATT_TO_HA = {
@@ -106,12 +112,13 @@ class ThinQStateVacuumEntity(ThinQEntity, StateVacuumEntity):
         | VacuumEntityFeature.RETURN_HOME
     )
 
+    @override
     def _update_status(self) -> None:
         """Update status itself."""
         super()._update_status()
 
         # Update state.
-        self._attr_activity = ROBOT_STATUS_TO_HA[self.data.current_state]
+        self._attr_activity = ROBOT_STATUS_TO_HA.get(self.data.current_state)
 
         # Update battery.
         if (level := self.data.battery) is not None:
@@ -128,6 +135,7 @@ class ThinQStateVacuumEntity(ThinQEntity, StateVacuumEntity):
             self.battery_level,
         )
 
+    @override
     async def async_start(self, **kwargs) -> None:
         """Start the device."""
         if self.data.current_state == State.SLEEP:
@@ -144,6 +152,7 @@ class ThinQStateVacuumEntity(ThinQEntity, StateVacuumEntity):
             self.coordinator.api.async_set_clean_operation_mode(self.property_id, value)
         )
 
+    @override
     async def async_pause(self, **kwargs) -> None:
         """Pause the device."""
         _LOGGER.debug(
@@ -155,6 +164,7 @@ class ThinQStateVacuumEntity(ThinQEntity, StateVacuumEntity):
             )
         )
 
+    @override
     async def async_return_to_base(self, **kwargs: Any) -> None:
         """Return device to dock."""
         _LOGGER.debug(

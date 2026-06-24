@@ -1,10 +1,9 @@
 """Support for Hydrawise sprinkler binary sensors."""
 
-from __future__ import annotations
-
 from collections.abc import Callable, Iterable
 from dataclasses import dataclass
 from datetime import datetime
+from typing import override
 
 from pydrawise import Controller, Zone
 import voluptuous as vol
@@ -23,6 +22,8 @@ from .const import SERVICE_RESUME, SERVICE_START_WATERING, SERVICE_SUSPEND
 from .coordinator import HydrawiseConfigEntry
 from .entity import HydrawiseEntity
 
+PARALLEL_UPDATES = 1
+
 
 @dataclass(frozen=True, kw_only=True)
 class HydrawiseBinarySensorEntityDescription(BinarySensorEntityDescription):
@@ -37,8 +38,10 @@ CONTROLLER_BINARY_SENSORS: tuple[HydrawiseBinarySensorEntityDescription, ...] = 
         key="status",
         device_class=BinarySensorDeviceClass.CONNECTIVITY,
         value_fn=(
-            lambda status_sensor: status_sensor.coordinator.last_update_success
-            and status_sensor.controller.online
+            lambda status_sensor: (
+                status_sensor.coordinator.last_update_success
+                and status_sensor.controller.online
+            )
         ),
         # Connectivtiy sensor is always available
         always_available=True,
@@ -60,8 +63,9 @@ ZONE_BINARY_SENSORS: tuple[HydrawiseBinarySensorEntityDescription, ...] = (
         translation_key="watering",
         device_class=BinarySensorDeviceClass.RUNNING,
         value_fn=(
-            lambda watering_sensor: watering_sensor.zone.scheduled_runs.current_run
-            is not None
+            lambda watering_sensor: (
+                watering_sensor.zone.scheduled_runs.current_run is not None
+            )
         ),
     ),
 )
@@ -147,11 +151,13 @@ class HydrawiseBinarySensor(HydrawiseEntity, BinarySensorEntity):
 
     entity_description: HydrawiseBinarySensorEntityDescription
 
+    @override
     def _update_attrs(self) -> None:
         """Update state attributes."""
         self._attr_is_on = self.entity_description.value_fn(self)
 
     @property
+    @override
     def available(self) -> bool:
         """Set the entity availability."""
         if self.entity_description.always_available:

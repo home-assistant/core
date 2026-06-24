@@ -1,14 +1,12 @@
 """Helper for WebRTC support."""
 
-from __future__ import annotations
-
 from abc import ABC, abstractmethod
 import asyncio
 from collections.abc import Awaitable, Callable
 from dataclasses import asdict, dataclass, field
 from functools import cache, partial, wraps
 import logging
-from typing import TYPE_CHECKING, Any
+from typing import TYPE_CHECKING, Any, override
 
 from mashumaro import MissingField
 import voluptuous as vol
@@ -75,6 +73,7 @@ class WebRTCCandidate(WebRTCMessage):
 
     candidate: RTCIceCandidate | RTCIceCandidateInit
 
+    @override
     def as_dict(self) -> dict[str, Any]:
         """Return a dict representation of the message."""
         return {
@@ -143,7 +142,7 @@ class CameraWebRTCProvider(ABC):
     ) -> None:
         """Handle the WebRTC candidate."""
 
-    @callback
+    @callback  # noqa: B027
     def async_close_session(self, session_id: str) -> None:
         """Close the session."""
         ## This is an optional method so we need a default here.
@@ -157,21 +156,21 @@ class CameraWebRTCProvider(ABC):
         """Get an image from the camera."""
         return None
 
-    async def async_register_camera(
+    async def async_register_camera(  # noqa: B027
         self,
         camera: Camera,
     ) -> None:
         """Will be called when the provider is registered for a camera."""
         ## This is an optional method so we need a default here.
 
-    async def async_unregister_camera(
+    async def async_unregister_camera(  # noqa: B027
         self,
         camera: Camera,
     ) -> None:
         """Will be called when the provider is unregistered for a camera."""
         ## This is an optional method so we need a default here.
 
-    async def async_on_camera_prefs_update(
+    async def async_on_camera_prefs_update(  # noqa: B027
         self,
         camera: Camera,
     ) -> None:

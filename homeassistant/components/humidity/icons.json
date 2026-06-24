@@ -1,0 +1,15 @@
+{
+  "conditions": {
+    "is_value": {
+      "condition": "mdi:water-percent"
+    }
+  },
+  "triggers": {
+    "changed": {
+      "trigger": "mdi:water-percent"
+    },
+    "crossed_threshold": {
+      "trigger": "mdi:water-percent"
+    }
+  }
+}

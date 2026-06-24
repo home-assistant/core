@@ -1,14 +1,13 @@
 """Switch integration microBees."""
 
-from typing import Any
+from typing import Any, override
 
 from homeassistant.components.switch import SwitchEntity
-from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
-from .const import DOMAIN
+from . import MicroBeesConfigEntry
 from .coordinator import MicroBeesUpdateCoordinator
 from .entity import MicroBeesActuatorEntity
 
@@ -18,11 +17,11 @@ SWITCH_PRODUCT_IDS = {25, 26, 27, 35, 38, 46, 63, 64, 65, 86}
 
 async def async_setup_entry(
     hass: HomeAssistant,
-    entry: ConfigEntry,
+    entry: MicroBeesConfigEntry,
     async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Config entry."""
-    coordinator = hass.data[DOMAIN][entry.entry_id].coordinator
+    coordinator = entry.runtime_data.coordinator
 
     async_add_entities(
         MBSwitch(coordinator, bee_id, switch.id)
@@ -46,15 +45,18 @@ class MBSwitch(MicroBeesActuatorEntity, SwitchEntity):
         self._attr_translation_key = SOCKET_TRANSLATIONS.get(self.bee.productID)
 
     @property
+    @override
     def name(self) -> str:
         """Name of the switch."""
         return self.actuator.name
 
     @property
+    @override
     def is_on(self) -> bool:
         """Status of the switch."""
         return self.actuator.value
 
+    @override
     async def async_turn_on(self, **kwargs: Any) -> None:
         """Turn on the switch."""
         send_command = await self.coordinator.microbees.sendCommand(self.actuator_id, 1)
@@ -64,6 +66,7 @@ class MBSwitch(MicroBeesActuatorEntity, SwitchEntity):
         self.actuator.value = True
         self.async_write_ha_state()
 
+    @override
     async def async_turn_off(self, **kwargs: Any) -> None:
         """Turn off the switch."""
         send_command = await self.coordinator.microbees.sendCommand(self.actuator_id, 0)

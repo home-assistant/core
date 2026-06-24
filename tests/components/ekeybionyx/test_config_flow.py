@@ -6,6 +6,7 @@ import pytest
 
 from homeassistant import config_entries
 from homeassistant.components.application_credentials import (
+    DOMAIN as APPLICATION_CREDENTIALS_DOMAIN,
     ClientCredential,
     async_import_client_credential,
 )
@@ -32,7 +33,7 @@ CLIENT_SECRET = "5678"
 @pytest.fixture
 async def setup_credentials(hass: HomeAssistant) -> None:
     """Fixture to setup credentials."""
-    assert await async_setup_component(hass, "application_credentials", {})
+    assert await async_setup_component(hass, APPLICATION_CREDENTIALS_DOMAIN, {})
     await async_import_client_credential(
         hass,
         DOMAIN,
@@ -137,7 +138,9 @@ async def test_full_flow(
             {
                 "webhook_id": "1234567890",
                 "name": "Test",
-                "auth": "f2156edca7fc6871e13845314a6fc68622e5ad7c58f17663a487ed28cac247f7",
+                "auth": (
+                    "f2156edca7fc6871e13845314a6fc68622e5ad7c58f17663a487ed28cac247f7"
+                ),
                 "ekey_id": "946DA01F-9ABD-4D9D-80C7-02AF85C822A8",
             }
         ]

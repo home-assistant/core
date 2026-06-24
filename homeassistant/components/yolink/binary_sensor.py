@@ -1,9 +1,8 @@
 """YoLink BinarySensor."""
 
-from __future__ import annotations
-
 from collections.abc import Callable
 from dataclasses import dataclass
+from typing import override
 
 from yolink.const import (
     ATTR_DEVICE_CO_SMOKE_SENSOR,
@@ -23,16 +22,11 @@ from homeassistant.components.binary_sensor import (
     BinarySensorEntity,
     BinarySensorEntityDescription,
 )
-from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
-from .const import (
-    DEV_MODEL_WATER_METER_YS5018_EC,
-    DEV_MODEL_WATER_METER_YS5018_UC,
-    DOMAIN,
-)
-from .coordinator import YoLinkCoordinator
+from .const import DEV_MODEL_WATER_METER_YS5018_EC, DEV_MODEL_WATER_METER_YS5018_UC
+from .coordinator import YoLinkConfigEntry, YoLinkCoordinator
 from .entity import YoLinkEntity
 
 
@@ -181,11 +175,11 @@ SENSOR_TYPES: tuple[YoLinkBinarySensorEntityDescription, ...] = (
 
 async def async_setup_entry(
     hass: HomeAssistant,
-    config_entry: ConfigEntry,
+    config_entry: YoLinkConfigEntry,
     async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up YoLink Sensor from a config entry."""
-    device_coordinators = hass.data[DOMAIN][config_entry.entry_id].device_coordinators
+    device_coordinators = config_entry.runtime_data.device_coordinators
     binary_sensor_device_coordinators = [
         device_coordinator
         for device_coordinator in device_coordinators.values()
@@ -208,7 +202,7 @@ class YoLinkBinarySensorEntity(YoLinkEntity, BinarySensorEntity):
 
     def __init__(
         self,
-        config_entry: ConfigEntry,
+        config_entry: YoLinkConfigEntry,
         coordinator: YoLinkCoordinator,
         description: YoLinkBinarySensorEntityDescription,
     ) -> None:
@@ -220,6 +214,7 @@ class YoLinkBinarySensorEntity(YoLinkEntity, BinarySensorEntity):
         )
 
     @callback
+    @override
     def update_entity_state(self, state: dict) -> None:
         """Update HA Entity State."""
         if (
@@ -234,6 +229,7 @@ class YoLinkBinarySensorEntity(YoLinkEntity, BinarySensorEntity):
         self.async_write_ha_state()
 
     @property
+    @override
     def available(self) -> bool:
         """Return true is device is available."""
         return super().available and self.coordinator.dev_online

@@ -1,7 +1,5 @@
 """Common libraries for test setup."""
 
-from __future__ import annotations
-
 from collections.abc import Generator
 import copy
 import shutil
@@ -18,6 +16,7 @@ import pytest
 from yarl import URL
 
 from homeassistant.components.application_credentials import (
+    DOMAIN as APPLICATION_CREDENTIALS_DOMAIN,
     async_import_client_credential,
 )
 from homeassistant.components.nest import DOMAIN
@@ -148,7 +147,21 @@ async def auth(
 def cleanup_media_storage(hass: HomeAssistant) -> Generator[str]:
     """Test cleanup, remove any media storage persisted during the test."""
     tmp_path = str(uuid.uuid4())
-    with patch("homeassistant.components.nest.media_source.MEDIA_PATH", new=tmp_path):
+    with patch(
+        "homeassistant.components.nest.media_source.MEDIA_CACHE_PATH", new=tmp_path
+    ):
+        full_path = hass.config.cache_path(DOMAIN, tmp_path)
+        yield full_path
+        shutil.rmtree(full_path, ignore_errors=True)
+
+
+@pytest.fixture(name="legacy_media_path")
+def cleanup_legacy_media_storage(hass: HomeAssistant) -> Generator[str]:
+    """Test cleanup, remove any media storage persisted during the test."""
+    tmp_path = str(uuid.uuid4())
+    with patch(
+        "homeassistant.components.nest.media_source.LEGACY_MEDIA_PATH", new=tmp_path
+    ):
         full_path = hass.config.path(tmp_path)
         yield full_path
         shutil.rmtree(full_path, ignore_errors=True)
@@ -186,6 +199,16 @@ def mock_subscriber() -> YieldFixture[AsyncMock]:
         return_value=mock_subscriber,
     ):
         yield mock_subscriber
+
+
+@pytest.fixture
+def mock_subscriber_refresh() -> YieldFixture[None]:
+    """Fixture for mocking subscriber refresh."""
+    with patch(
+        "homeassistant.components.nest.api.GoogleNestSubscriber._async_run_refresh",
+        new=AsyncMock(),
+    ):
+        yield
 
 
 @pytest.fixture
@@ -232,7 +255,7 @@ def platforms() -> list[str]:
 
 @pytest.fixture
 def subscriber_id() -> str:
-    """Fixture to let tests override subscriber id regardless of configuration type used."""
+    """Fixture to override subscriber id regardless of config type."""
     return SUBSCRIBER_ID
 
 
@@ -291,7 +314,7 @@ async def credential(hass: HomeAssistant, nest_test_config: NestTestConfig) -> N
     """Fixture that provides the ClientCredential for the test if any."""
     if not nest_test_config.credential:
         return
-    assert await async_setup_component(hass, "application_credentials", {})
+    assert await async_setup_component(hass, APPLICATION_CREDENTIALS_DOMAIN, {})
     await async_import_client_credential(
         hass, DOMAIN, nest_test_config.credential, "imported-cred"
     )

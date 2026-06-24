@@ -4,9 +4,13 @@ from typing import Any
 
 import voluptuous as vol
 
-from homeassistant.components import websocket_api
-from homeassistant.const import EVENT_HOMEASSISTANT_STARTED
-from homeassistant.core import Event, HomeAssistant, callback
+from homeassistant.components import labs, websocket_api
+from homeassistant.components.hassio import HassioNotReadyError
+from homeassistant.config_entries import SOURCE_SYSTEM, ConfigEntry
+from homeassistant.core import HomeAssistant, callback
+from homeassistant.exceptions import ConfigEntryNotReady
+from homeassistant.helpers import discovery_flow
+from homeassistant.helpers.start import async_at_started
 from homeassistant.helpers.typing import ConfigType
 from homeassistant.util.hass_dict import HassKey
 
@@ -18,7 +22,13 @@ from .analytics import (
     EntityAnalyticsModifications,
     async_devices_payload,
 )
-from .const import ATTR_ONBOARDED, ATTR_PREFERENCES, DOMAIN, PREFERENCE_SCHEMA
+from .const import (
+    ATTR_ONBOARDED,
+    ATTR_PREFERENCES,
+    ATTR_SNAPSHOTS,
+    DOMAIN,
+    PREFERENCE_SCHEMA,
+)
 from .http import AnalyticsDevicesView
 
 __all__ = [
@@ -43,36 +53,69 @@ CONFIG_SCHEMA = vol.Schema(
 )
 
 DATA_COMPONENT: HassKey[Analytics] = HassKey(DOMAIN)
+_DATA_SNAPSHOTS_URL: HassKey[str | None] = HassKey(f"{DOMAIN}_snapshots_url")
+
+LABS_SNAPSHOT_FEATURE = "snapshots"
 
 
 async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     """Set up the analytics integration."""
     analytics_config = config.get(DOMAIN, {})
 
-    # For now we want to enable device analytics only if the url option
-    # is explicitly listed in YAML.
+    snapshots_url: str | None = None
     if CONF_SNAPSHOTS_URL in analytics_config:
-        disable_snapshots = False
+        await labs.async_update_preview_feature(
+            hass, DOMAIN, LABS_SNAPSHOT_FEATURE, enabled=True
+        )
         snapshots_url = analytics_config[CONF_SNAPSHOTS_URL]
-    else:
-        disable_snapshots = True
-        snapshots_url = None
 
-    analytics = Analytics(hass, snapshots_url, disable_snapshots)
+    hass.data[_DATA_SNAPSHOTS_URL] = snapshots_url
 
-    # Load stored data
-    await analytics.load()
-
-    async def start_schedule(_event: Event) -> None:
-        """Start the send schedule after the started event."""
-        await analytics.async_schedule()
-
-    hass.bus.async_listen_once(EVENT_HOMEASSISTANT_STARTED, start_schedule)
+    discovery_flow.async_create_flow(
+        hass, DOMAIN, context={"source": SOURCE_SYSTEM}, data={}
+    )
 
     websocket_api.async_register_command(hass, websocket_analytics)
     websocket_api.async_register_command(hass, websocket_analytics_preferences)
 
     hass.http.register_view(AnalyticsDevicesView)
+
+    return True
+
+
+async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
+    """Set up Analytics from a config entry."""
+    snapshots_url = hass.data[_DATA_SNAPSHOTS_URL]
+    analytics = Analytics(hass, snapshots_url)
+
+    try:
+        await analytics.load()
+    except HassioNotReadyError as err:
+        raise ConfigEntryNotReady(
+            translation_domain=DOMAIN,
+            translation_key="supervisor_not_ready",
+        ) from err
+
+    started = False
+
+    async def _async_handle_labs_update(
+        event_data: labs.EventLabsUpdatedData,
+    ) -> None:
+        """Handle labs feature toggle."""
+        await analytics.save_preferences({ATTR_SNAPSHOTS: event_data["enabled"]})
+        if started:
+            await analytics.async_schedule()
+
+    async def start_schedule(hass: HomeAssistant) -> None:
+        """Start the send schedule once Home Assistant has started."""
+        nonlocal started
+        started = True
+        await analytics.async_schedule()
+
+    labs.async_subscribe_preview_feature(
+        hass, DOMAIN, LABS_SNAPSHOT_FEATURE, _async_handle_labs_update
+    )
+    async_at_started(hass, start_schedule)
 
     hass.data[DATA_COMPONENT] = analytics
     return True
@@ -87,7 +130,9 @@ def websocket_analytics(
     msg: dict[str, Any],
 ) -> None:
     """Return analytics preferences."""
-    analytics = hass.data[DATA_COMPONENT]
+    if (analytics := hass.data.get(DATA_COMPONENT)) is None:
+        connection.send_error(msg["id"], websocket_api.ERR_NOT_FOUND, "Not loaded")
+        return
     connection.send_result(
         msg["id"],
         {ATTR_PREFERENCES: analytics.preferences, ATTR_ONBOARDED: analytics.onboarded},
@@ -108,8 +153,10 @@ async def websocket_analytics_preferences(
     msg: dict[str, Any],
 ) -> None:
     """Update analytics preferences."""
+    if (analytics := hass.data.get(DATA_COMPONENT)) is None:
+        connection.send_error(msg["id"], websocket_api.ERR_NOT_FOUND, "Not loaded")
+        return
     preferences = msg[ATTR_PREFERENCES]
-    analytics = hass.data[DATA_COMPONENT]
 
     await analytics.save_preferences(preferences)
     await analytics.async_schedule()

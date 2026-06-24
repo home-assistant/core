@@ -1,9 +1,7 @@
 """Component for interacting with a Lutron Caseta system."""
 
-from __future__ import annotations
-
 import logging
-from typing import Any
+from typing import Any, override
 
 from homeassistant.const import ATTR_SUGGESTED_AREA
 from homeassistant.helpers.device_registry import DeviceInfo
@@ -63,6 +61,7 @@ class LutronCasetaEntity(Entity):
             info[ATTR_SUGGESTED_AREA] = area
         self._attr_device_info = info
 
+    @override
     async def async_added_to_hass(self) -> None:
         """Register callbacks."""
         self._smartbridge.add_subscriber(self.device_id, self._handle_bridge_update)
@@ -88,12 +87,14 @@ class LutronCasetaEntity(Entity):
         return self._device["serial"]
 
     @property
+    @override
     def unique_id(self) -> str:
         """Return the unique ID of the device (serial)."""
         return str(self._handle_none_serial(self.serial))
 
     @property
-    def extra_state_attributes(self):
+    @override
+    def extra_state_attributes(self) -> dict[str, Any]:
         """Return the state attributes."""
         attributes = {
             "device_id": self.device_id,

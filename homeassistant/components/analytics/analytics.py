@@ -1,10 +1,9 @@
 """Analytics helper class for the analytics integration."""
 
-from __future__ import annotations
-
 import asyncio
 from asyncio import timeout
 from collections.abc import Awaitable, Callable, Iterable, Mapping
+import contextlib
 from dataclasses import asdict as dataclass_asdict, dataclass, field
 from datetime import datetime
 import random
@@ -22,6 +21,7 @@ from homeassistant.components.energy import (
     DOMAIN as ENERGY_DOMAIN,
     is_configured as energy_is_configured,
 )
+from homeassistant.components.labs import async_is_preview_feature_enabled
 from homeassistant.components.recorder import (
     DOMAIN as RECORDER_DOMAIN,
     get_instance as get_recorder_instance,
@@ -241,12 +241,10 @@ class Analytics:
         self,
         hass: HomeAssistant,
         snapshots_url: str | None = None,
-        disable_snapshots: bool = False,
     ) -> None:
         """Initialize the Analytics class."""
         self._hass: HomeAssistant = hass
         self._snapshots_url = snapshots_url
-        self._disable_snapshots = disable_snapshots
 
         self._session = async_get_clientsession(hass)
         self._data = AnalyticsData(False, {})
@@ -258,15 +256,13 @@ class Analytics:
     def preferences(self) -> dict:
         """Return the current active preferences."""
         preferences = self._data.preferences
-        result = {
+        return {
             ATTR_BASE: preferences.get(ATTR_BASE, False),
             ATTR_DIAGNOSTICS: preferences.get(ATTR_DIAGNOSTICS, False),
             ATTR_USAGE: preferences.get(ATTR_USAGE, False),
             ATTR_STATISTICS: preferences.get(ATTR_STATISTICS, False),
+            ATTR_SNAPSHOTS: preferences.get(ATTR_SNAPSHOTS, False),
         }
-        if not self._disable_snapshots:
-            result[ATTR_SNAPSHOTS] = preferences.get(ATTR_SNAPSHOTS, False)
-        return result
 
     @property
     def onboarded(self) -> bool:
@@ -291,26 +287,31 @@ class Analytics:
         """Return bool if a supervisor is present."""
         return is_hassio(self._hass)
 
+    @property
+    def _snapshots_enabled(self) -> bool:
+        """Check if snapshots feature is enabled via labs."""
+        return async_is_preview_feature_enabled(self._hass, DOMAIN, "snapshots")
+
     async def load(self) -> None:
         """Load preferences."""
         stored = await self._store.async_load()
         if stored:
             self._data = AnalyticsData.from_dict(stored)
 
-        if (
-            self.supervisor
-            and (supervisor_info := hassio.get_supervisor_info(self._hass)) is not None
-        ):
-            if not self.onboarded:
-                # User have not configured analytics, get this setting from the supervisor
-                if supervisor_info[ATTR_DIAGNOSTICS] and not self.preferences.get(
-                    ATTR_DIAGNOSTICS, False
-                ):
-                    self._data.preferences[ATTR_DIAGNOSTICS] = True
-                elif not supervisor_info[ATTR_DIAGNOSTICS] and self.preferences.get(
-                    ATTR_DIAGNOSTICS, False
-                ):
-                    self._data.preferences[ATTR_DIAGNOSTICS] = False
+        if self.supervisor and not self.onboarded:
+            # This may raise HassioNotReadyError if Supervisor was unreachable.
+            # The caller is responsible for handling this and triggering a retry.
+            supervisor_info = hassio.get_supervisor_info(self._hass)
+
+            # User have not configured analytics, get this setting from the supervisor
+            if supervisor_info[ATTR_DIAGNOSTICS] and not self.preferences.get(
+                ATTR_DIAGNOSTICS, False
+            ):
+                self._data.preferences[ATTR_DIAGNOSTICS] = True
+            elif not supervisor_info[ATTR_DIAGNOSTICS] and self.preferences.get(
+                ATTR_DIAGNOSTICS, False
+            ):
+                self._data.preferences[ATTR_DIAGNOSTICS] = False
 
     async def _save(self) -> None:
         """Save data."""
@@ -336,6 +337,7 @@ class Analytics:
 
         hass = self._hass
         supervisor_info = None
+        addons_info: dict[str, Any] | None = None
         operating_system_info: dict[str, Any] = {}
 
         if self._data.uuid is None:
@@ -343,8 +345,14 @@ class Analytics:
             await self._save()
 
         if self.supervisor:
-            supervisor_info = hassio.get_supervisor_info(hass)
-            operating_system_info = hassio.get_os_info(hass) or {}
+            # Try to pull Supervisor information, but don't fail if some or all
+            # of it is unavailable due to setup failures in the hassio integration.
+            with contextlib.suppress(hassio.HassioNotReadyError):
+                supervisor_info = hassio.get_supervisor_info(hass)
+            with contextlib.suppress(hassio.HassioNotReadyError):
+                operating_system_info = hassio.get_os_info(hass)
+            with contextlib.suppress(hassio.HassioNotReadyError):
+                addons_info = hassio.get_addons_info(hass)
 
         system_info = await async_get_system_info(hass)
         integrations = []
@@ -417,13 +425,10 @@ class Analytics:
 
                 integrations.append(integration.domain)
 
-            if supervisor_info is not None:
+            if addons_info:
                 supervisor_client = hassio.get_supervisor_client(hass)
                 installed_addons = await asyncio.gather(
-                    *(
-                        supervisor_client.addons.addon_info(addon[ATTR_SLUG])
-                        for addon in supervisor_info[ATTR_ADDONS]
-                    )
+                    *(supervisor_client.addons.addon_info(slug) for slug in addons_info)
                 )
                 addons.extend(
                     {
@@ -532,6 +537,10 @@ class Analytics:
 
         payload = await _async_snapshot_payload(self._hass)
 
+        if not payload:
+            LOGGER.info("Skipping snapshot submission, no data to send")
+            return
+
         headers = {
             "Content-Type": "application/json",
             "User-Agent": f"home-assistant/{HA_VERSION}",
@@ -599,7 +608,8 @@ class Analytics:
 
                 else:
                     LOGGER.warning(
-                        "Unexpected status code %s when submitting snapshot analytics to %s",
+                        "Unexpected status code %s when submitting"
+                        " snapshot analytics to %s",
                         response.status,
                         url,
                     )
@@ -645,7 +655,10 @@ class Analytics:
                 ),
             )
 
-        if not self.preferences.get(ATTR_SNAPSHOTS, False) or self._disable_snapshots:
+        if (
+            not self.preferences.get(ATTR_SNAPSHOTS, False)
+            or not self._snapshots_enabled
+        ):
             LOGGER.debug("Snapshot analytics not scheduled")
             if self._snapshot_scheduled:
                 self._snapshot_scheduled()
@@ -798,7 +811,8 @@ async def _async_snapshot_payload(hass: HomeAssistant) -> dict:  # noqa: C901
 
             if not isinstance(integration_config, AnalyticsModifications):
                 LOGGER.error(  # type: ignore[unreachable]
-                    "Calling async_modify_analytics for integration '%s' did not return an AnalyticsConfig",
+                    "Calling async_modify_analytics for integration"
+                    " '%s' did not return an AnalyticsConfig",
                     integration_domain,
                 )
                 integration_configs[integration_domain] = AnalyticsModifications(
@@ -812,7 +826,8 @@ async def _async_snapshot_payload(hass: HomeAssistant) -> dict:  # noqa: C901
 
     # We need to refer to other devices, for example in `via_device` field.
     # We don't however send the original device ids outside of Home Assistant,
-    # instead we refer to devices by (integration_domain, index_in_integration_device_list).
+    # instead we refer to devices by
+    # (integration_domain, index_in_integration_device_list).
     device_id_mapping: dict[str, tuple[str, int]] = {}
 
     # Fill out information about devices

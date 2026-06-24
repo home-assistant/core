@@ -9,7 +9,7 @@ import pytest
 from homeassistant.components import tts
 from homeassistant.components.media_player import (
     ATTR_MEDIA_CONTENT_ID,
-    DOMAIN as DOMAIN_MP,
+    DOMAIN as MP_DOMAIN,
     SERVICE_PLAY_MEDIA,
 )
 from homeassistant.core import HomeAssistant
@@ -64,7 +64,7 @@ async def test_service_say(
     aioclient_mock: AiohttpClientMocker,
 ) -> None:
     """Test service call say."""
-    calls = async_mock_service(hass, DOMAIN_MP, SERVICE_PLAY_MEDIA)
+    calls = async_mock_service(hass, MP_DOMAIN, SERVICE_PLAY_MEDIA)
 
     aioclient_mock.post(URL, data=FORM_DATA, status=HTTPStatus.OK, content=b"test")
 
@@ -99,7 +99,7 @@ async def test_service_say_german_config(
     aioclient_mock: AiohttpClientMocker,
 ) -> None:
     """Test service call say with german code in the config."""
-    calls = async_mock_service(hass, DOMAIN_MP, SERVICE_PLAY_MEDIA)
+    calls = async_mock_service(hass, MP_DOMAIN, SERVICE_PLAY_MEDIA)
 
     form_data = {**FORM_DATA, "hl": "de-de"}
     aioclient_mock.post(URL, data=form_data, status=HTTPStatus.OK, content=b"test")
@@ -141,7 +141,7 @@ async def test_service_say_german_service(
     aioclient_mock: AiohttpClientMocker,
 ) -> None:
     """Test service call say with german code in the service."""
-    calls = async_mock_service(hass, DOMAIN_MP, SERVICE_PLAY_MEDIA)
+    calls = async_mock_service(hass, MP_DOMAIN, SERVICE_PLAY_MEDIA)
 
     form_data = {**FORM_DATA, "hl": "de-de"}
     aioclient_mock.post(URL, data=form_data, status=HTTPStatus.OK, content=b"test")
@@ -178,7 +178,7 @@ async def test_service_say_error(
     aioclient_mock: AiohttpClientMocker,
 ) -> None:
     """Test service call say with http response 400."""
-    calls = async_mock_service(hass, DOMAIN_MP, SERVICE_PLAY_MEDIA)
+    calls = async_mock_service(hass, MP_DOMAIN, SERVICE_PLAY_MEDIA)
 
     aioclient_mock.post(URL, data=FORM_DATA, status=400, content=b"test")
 
@@ -212,7 +212,7 @@ async def test_service_say_timeout(
     aioclient_mock: AiohttpClientMocker,
 ) -> None:
     """Test service call say with http timeout."""
-    calls = async_mock_service(hass, DOMAIN_MP, SERVICE_PLAY_MEDIA)
+    calls = async_mock_service(hass, MP_DOMAIN, SERVICE_PLAY_MEDIA)
 
     aioclient_mock.post(URL, data=FORM_DATA, exc=TimeoutError())
 
@@ -246,7 +246,7 @@ async def test_service_say_error_msg(
     aioclient_mock: AiohttpClientMocker,
 ) -> None:
     """Test service call say with http error api message."""
-    calls = async_mock_service(hass, DOMAIN_MP, SERVICE_PLAY_MEDIA)
+    calls = async_mock_service(hass, MP_DOMAIN, SERVICE_PLAY_MEDIA)
 
     aioclient_mock.post(
         URL,

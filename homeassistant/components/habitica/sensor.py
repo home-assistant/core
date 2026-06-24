@@ -1,13 +1,11 @@
 """Support for Habitica sensors."""
 
-from __future__ import annotations
-
 from collections.abc import Callable
 from dataclasses import dataclass
 from datetime import datetime
 from enum import StrEnum
 import logging
-from typing import Any
+from typing import Any, override
 from uuid import UUID
 
 from habiticalib import ContentData, GroupData, HabiticaClass, TaskData, UserData, ha
@@ -220,9 +218,11 @@ SENSOR_DESCRIPTIONS_COMMON: tuple[HabiticaSensorEntityDescription, ...] = (
         key=HabiticaSensorEntity.LAST_CHECKIN,
         translation_key=HabiticaSensorEntity.LAST_CHECKIN,
         value_fn=(
-            lambda user, _: dt_util.as_local(last)
-            if (last := user.auth.timestamps.loggedin)
-            else None
+            lambda user, _: (
+                dt_util.as_local(last)
+                if (last := user.auth.timestamps.loggedin)
+                else None
+            )
         ),
         device_class=SensorDeviceClass.TIMESTAMP,
     ),
@@ -321,9 +321,11 @@ SENSOR_DESCRIPTIONS_PARTY: tuple[HabiticaPartySensorEntityDescription, ...] = (
         value_fn=lambda p, c: c.quests[p.quest.key].text if p.quest.key else None,
         attributes_fn=quest_attributes,
         entity_picture=(
-            lambda party: f"inventory_quest_scroll_{party.quest.key}.png"
-            if party.quest.key
-            else None
+            lambda party: (
+                f"inventory_quest_scroll_{party.quest.key}.png"
+                if party.quest.key
+                else None
+            )
         ),
     ),
     HabiticaPartySensorEntityDescription(
@@ -349,16 +351,20 @@ SENSOR_DESCRIPTIONS_PARTY: tuple[HabiticaPartySensorEntityDescription, ...] = (
         key=HabiticaSensorEntity.COLLECTED_ITEMS,
         translation_key=HabiticaSensorEntity.COLLECTED_ITEMS,
         value_fn=(
-            lambda p, _: sum(n for n in p.quest.progress.collect.values())
-            if p.quest.progress.collect
-            else None
+            lambda p, _: (
+                sum(n for n in p.quest.progress.collect.values())
+                if p.quest.progress.collect
+                else None
+            )
         ),
         attributes_fn=collected_quest_items,
         entity_picture=(
-            lambda p: f"quest_{p.quest.key}_{k}.png"
-            if p.quest.progress.collect
-            and (k := next(iter(p.quest.progress.collect), None))
-            else None
+            lambda p: (
+                f"quest_{p.quest.key}_{k}.png"
+                if p.quest.progress.collect
+                and (k := next(iter(p.quest.progress.collect), None))
+                else None
+            )
         ),
     ),
     HabiticaPartySensorEntityDescription(
@@ -372,9 +378,9 @@ SENSOR_DESCRIPTIONS_PARTY: tuple[HabiticaPartySensorEntityDescription, ...] = (
         key=HabiticaSensorEntity.BOSS_RAGE_LIMIT,
         translation_key=HabiticaSensorEntity.BOSS_RAGE_LIMIT,
         value_fn=(
-            lambda p, c: boss.rage.value
-            if (boss := quest_boss(p, c)) and boss.rage
-            else None
+            lambda p, c: (
+                boss.rage.value if (boss := quest_boss(p, c)) and boss.rage else None
+            )
         ),
         entity_picture=ha.RAGE,
         suggested_display_precision=0,
@@ -433,6 +439,7 @@ class HabiticaSensor(HabiticaBase, SensorEntity):
     entity_description: HabiticaSensorEntityDescription
 
     @property
+    @override
     def native_value(self) -> StateType | datetime:
         """Return the state of the device."""
 
@@ -443,6 +450,7 @@ class HabiticaSensor(HabiticaBase, SensorEntity):
         )
 
     @property
+    @override
     def extra_state_attributes(self) -> dict[str, float | None] | None:
         """Return entity specific state attributes."""
         if self.user is not None and (func := self.entity_description.attributes_fn):
@@ -450,6 +458,7 @@ class HabiticaSensor(HabiticaBase, SensorEntity):
         return None
 
     @property
+    @override
     def entity_picture(self) -> str | None:
         """Return the entity picture to use in the frontend, if any."""
         if (
@@ -486,6 +495,7 @@ class HabiticaPartySensor(HabiticaPartyBase, SensorEntity):
     entity_description: HabiticaPartySensorEntityDescription
 
     @property
+    @override
     def native_value(self) -> StateType | datetime:
         """Return the state of the device."""
 
@@ -494,6 +504,7 @@ class HabiticaPartySensor(HabiticaPartyBase, SensorEntity):
         )
 
     @property
+    @override
     def entity_picture(self) -> str | None:
         """Return the entity picture to use in the frontend, if any."""
         pic = self.entity_description.entity_picture
@@ -513,6 +524,7 @@ class HabiticaPartySensor(HabiticaPartyBase, SensorEntity):
         )
 
     @property
+    @override
     def extra_state_attributes(self) -> dict[str, Any] | None:
         """Return entity specific state attributes."""
         if func := self.entity_description.attributes_fn:

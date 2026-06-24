@@ -1,6 +1,6 @@
 """Support for Qwikswitch devices."""
 
-from __future__ import annotations
+from typing import override
 
 from homeassistant.components.light import ATTR_BRIGHTNESS
 from homeassistant.core import callback
@@ -26,6 +26,7 @@ class QSEntity(Entity):
         """Receive update packet from QSUSB. Match dispather_send signature."""
         self.async_write_ha_state()
 
+    @override
     async def async_added_to_hass(self) -> None:
         """Listen for updates from QSUSb via dispatcher."""
         self.async_on_remove(
@@ -51,7 +52,7 @@ class QSToggleEntity(QSEntity):
         super().__init__(qsid, self.device.name)
 
     @property
-    def is_on(self):
+    def is_on(self) -> bool:
         """Check if device is on (non-zero)."""
         return self.device.value > 0
 

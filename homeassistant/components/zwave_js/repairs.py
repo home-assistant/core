@@ -1,9 +1,10 @@
 """Repairs for Z-Wave JS."""
 
-from __future__ import annotations
-
-from homeassistant import data_entry_flow
-from homeassistant.components.repairs import ConfirmRepairFlow, RepairsFlow
+from homeassistant.components.repairs import (
+    ConfirmRepairFlow,
+    RepairsFlow,
+    RepairsFlowResult,
+)
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import issue_registry as ir
 
@@ -23,7 +24,7 @@ class DeviceConfigFileChangedFlow(RepairsFlow):
 
     async def async_step_init(
         self, user_input: dict[str, str] | None = None
-    ) -> data_entry_flow.FlowResult:
+    ) -> RepairsFlowResult:
         """Handle the first step of a fix flow."""
         return self.async_show_menu(
             menu_options=["confirm", "ignore"],
@@ -32,7 +33,7 @@ class DeviceConfigFileChangedFlow(RepairsFlow):
 
     async def async_step_confirm(
         self, user_input: dict[str, str] | None = None
-    ) -> data_entry_flow.FlowResult:
+    ) -> RepairsFlowResult:
         """Handle the confirm step of a fix flow."""
         try:
             node = async_get_node_from_device_id(self.hass, self.device_id)
@@ -46,7 +47,7 @@ class DeviceConfigFileChangedFlow(RepairsFlow):
 
     async def async_step_ignore(
         self, user_input: dict[str, str] | None = None
-    ) -> data_entry_flow.FlowResult:
+    ) -> RepairsFlowResult:
         """Handle the ignore step of a fix flow."""
         ir.async_get(self.hass).async_ignore(
             DOMAIN, f"device_config_file_changed.{self.device_id}", True
@@ -66,12 +67,12 @@ class MigrateUniqueIDFlow(RepairsFlow):
 
         try:
             new_unique_id_hex = format_home_id_for_display(int(data["new_unique_id"]))
-        except (ValueError, TypeError):
+        except ValueError, TypeError:
             new_unique_id_hex = data["new_unique_id"]
 
         try:
             old_unique_id_hex = format_home_id_for_display(int(data["old_unique_id"]))
-        except (ValueError, TypeError):
+        except ValueError, TypeError:
             old_unique_id_hex = data["old_unique_id"]
 
         self.description_placeholders: dict[str, str] = {
@@ -85,13 +86,13 @@ class MigrateUniqueIDFlow(RepairsFlow):
 
     async def async_step_init(
         self, user_input: dict[str, str] | None = None
-    ) -> data_entry_flow.FlowResult:
+    ) -> RepairsFlowResult:
         """Handle the first step of a fix flow."""
         return await self.async_step_confirm()
 
     async def async_step_confirm(
         self, user_input: dict[str, str] | None = None
-    ) -> data_entry_flow.FlowResult:
+    ) -> RepairsFlowResult:
         """Handle the confirm step of a fix flow."""
         if user_input is not None:
             config_entry = self.hass.config_entries.async_get_entry(
@@ -117,10 +118,10 @@ async def async_create_fix_flow(
 ) -> RepairsFlow:
     """Create flow."""
 
-    if issue_id.split(".")[0] == "device_config_file_changed":
+    if issue_id.split(".", maxsplit=1)[0] == "device_config_file_changed":
         assert data
         return DeviceConfigFileChangedFlow(data)
-    if issue_id.split(".")[0] == "migrate_unique_id":
+    if issue_id.split(".", maxsplit=1)[0] == "migrate_unique_id":
         assert data
         return MigrateUniqueIDFlow(data)
     return ConfirmRepairFlow()

@@ -1,8 +1,9 @@
 # serializer version: 1
 # name: test_lock[load_platforms0][lock.device1-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -38,7 +39,7 @@
 # name: test_lock[load_platforms0][lock.device1-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'code_format': '^\\d{6}$',
+      <LockEntityStateAttribute.CODE_FORMAT: 'code_format'>: '^\\d{6}$',
       'friendly_name': 'Device1',
       'supported_features': <LockEntityFeature: 0>,
     }),
@@ -52,8 +53,9 @@
 # ---
 # name: test_lock[load_platforms0][lock.device2-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -89,7 +91,7 @@
 # name: test_lock[load_platforms0][lock.device2-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'code_format': '^\\d{6}$',
+      <LockEntityStateAttribute.CODE_FORMAT: 'code_format'>: '^\\d{6}$',
       'friendly_name': 'Device2',
       'supported_features': <LockEntityFeature: 0>,
     }),
@@ -103,8 +105,9 @@
 # ---
 # name: test_lock[load_platforms0][lock.device3-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -140,7 +143,7 @@
 # name: test_lock[load_platforms0][lock.device3-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'code_format': '^\\d{6}$',
+      <LockEntityStateAttribute.CODE_FORMAT: 'code_format'>: '^\\d{6}$',
       'friendly_name': 'Device3',
       'supported_features': <LockEntityFeature: 0>,
     }),
@@ -154,8 +157,9 @@
 # ---
 # name: test_lock[load_platforms0][lock.device7-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -191,7 +195,7 @@
 # name: test_lock[load_platforms0][lock.device7-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'code_format': '^\\d{6}$',
+      <LockEntityStateAttribute.CODE_FORMAT: 'code_format'>: '^\\d{6}$',
       'friendly_name': 'Device7',
       'supported_features': <LockEntityFeature: 0>,
     }),
@@ -205,8 +209,9 @@
 # ---
 # name: test_lock[load_platforms0][lock.device8-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -242,7 +247,7 @@
 # name: test_lock[load_platforms0][lock.device8-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'code_format': '^\\d{6}$',
+      <LockEntityStateAttribute.CODE_FORMAT: 'code_format'>: '^\\d{6}$',
       'friendly_name': 'Device8',
       'supported_features': <LockEntityFeature: 0>,
     }),
@@ -256,8 +261,9 @@
 # ---
 # name: test_lock[load_platforms0][lock.device9-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -293,7 +299,7 @@
 # name: test_lock[load_platforms0][lock.device9-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'code_format': '^\\d{6}$',
+      <LockEntityStateAttribute.CODE_FORMAT: 'code_format'>: '^\\d{6}$',
       'friendly_name': 'Device9',
       'supported_features': <LockEntityFeature: 0>,
     }),

@@ -725,7 +725,7 @@ async def test_wlan_client_sensors(
     assert len(hass.states.async_entity_ids(SENSOR_DOMAIN)) == 1
 
     # Validate state object
-    assert hass.states.get("sensor.ssid_1").state == "1"
+    assert hass.states.get("sensor.ssid_1_clients").state == "1"
 
     # Verify state update - increasing number
     wireless_client_1 = client_payload[0]
@@ -736,13 +736,13 @@ async def test_wlan_client_sensors(
     mock_websocket_message(message=MessageKey.CLIENT, data=wireless_client_2)
     await hass.async_block_till_done()
 
-    ssid_1 = hass.states.get("sensor.ssid_1")
+    ssid_1 = hass.states.get("sensor.ssid_1_clients")
     assert ssid_1.state == "1"
 
     async_fire_time_changed(hass, dt_util.utcnow() + SCAN_INTERVAL)
     await hass.async_block_till_done()
 
-    ssid_1 = hass.states.get("sensor.ssid_1")
+    ssid_1 = hass.states.get("sensor.ssid_1_clients")
     assert ssid_1.state == "2"
 
     # Verify state update - decreasing number
@@ -753,7 +753,7 @@ async def test_wlan_client_sensors(
     async_fire_time_changed(hass, dt_util.utcnow() + SCAN_INTERVAL)
     await hass.async_block_till_done()
 
-    ssid_1 = hass.states.get("sensor.ssid_1")
+    ssid_1 = hass.states.get("sensor.ssid_1_clients")
     assert ssid_1.state == "1"
 
     # Verify state update - decreasing number
@@ -764,31 +764,31 @@ async def test_wlan_client_sensors(
     async_fire_time_changed(hass, dt_util.utcnow() + SCAN_INTERVAL)
     await hass.async_block_till_done()
 
-    ssid_1 = hass.states.get("sensor.ssid_1")
+    ssid_1 = hass.states.get("sensor.ssid_1_clients")
     assert ssid_1.state == "0"
 
     # Availability signalling
 
     # Controller disconnects
     await mock_websocket_state.disconnect()
-    assert hass.states.get("sensor.ssid_1").state == STATE_UNAVAILABLE
+    assert hass.states.get("sensor.ssid_1_clients").state == STATE_UNAVAILABLE
 
     # Controller reconnects
     await mock_websocket_state.reconnect()
-    assert hass.states.get("sensor.ssid_1").state == "0"
+    assert hass.states.get("sensor.ssid_1_clients").state == "0"
 
     # WLAN gets disabled
     wlan_1 = deepcopy(WLAN)
     wlan_1["enabled"] = False
     mock_websocket_message(message=MessageKey.WLAN_CONF_UPDATED, data=wlan_1)
     await hass.async_block_till_done()
-    assert hass.states.get("sensor.ssid_1").state == STATE_UNAVAILABLE
+    assert hass.states.get("sensor.ssid_1_clients").state == STATE_UNAVAILABLE
 
     # WLAN gets re-enabled
     wlan_1["enabled"] = True
     mock_websocket_message(message=MessageKey.WLAN_CONF_UPDATED, data=wlan_1)
     await hass.async_block_till_done()
-    assert hass.states.get("sensor.ssid_1").state == "0"
+    assert hass.states.get("sensor.ssid_1_clients").state == "0"
 
 
 @pytest.mark.parametrize(
@@ -1112,6 +1112,127 @@ async def test_bandwidth_port_sensors(
     assert hass.states.get("sensor.mock_name_port_1_tx") is None
     assert hass.states.get("sensor.mock_name_port_2_rx") is None
     assert hass.states.get("sensor.mock_name_port_2_tx") is None
+
+
+@pytest.mark.parametrize(
+    "config_entry_options",
+    [
+        {
+            CONF_ALLOW_BANDWIDTH_SENSORS: False,
+            CONF_ALLOW_UPTIME_SENSORS: False,
+            CONF_TRACK_CLIENTS: False,
+            CONF_TRACK_DEVICES: False,
+        }
+    ],
+)
+@pytest.mark.parametrize(
+    "device_payload",
+    [
+        [
+            {
+                "board_rev": 2,
+                "device_id": "mock-id",
+                "ip": "10.0.1.1",
+                "mac": "10:00:00:00:01:01",
+                "last_seen": 1562600145,
+                "model": "US16P150",
+                "name": "mock-name",
+                "port_overrides": [],
+                "port_table": [
+                    {
+                        "media": "GE",
+                        "name": "Port 1",
+                        "port_idx": 1,
+                        "poe_class": "Class 4",
+                        "poe_enable": False,
+                        "poe_mode": "auto",
+                        "poe_power": "2.56",
+                        "poe_voltage": "53.40",
+                        "portconf_id": "1a1",
+                        "port_poe": False,
+                        "up": True,
+                        "speed": 1000,
+                    },
+                    {
+                        "media": "GE",
+                        "name": "Port 2",
+                        "port_idx": 2,
+                        "poe_class": "Class 4",
+                        "poe_enable": False,
+                        "poe_mode": "auto",
+                        "poe_power": "2.56",
+                        "poe_voltage": "53.40",
+                        "portconf_id": "1a2",
+                        "port_poe": False,
+                        "up": True,
+                        "speed": 100,
+                    },
+                    {
+                        "media": "GE",
+                        "name": "Port 3",
+                        "port_idx": 3,
+                        "poe_class": "Unknown",
+                        "poe_enable": False,
+                        "poe_mode": "off",
+                        "poe_power": "0.00",
+                        "poe_voltage": "0.00",
+                        "portconf_id": "1a3",
+                        "port_poe": False,
+                        "up": False,
+                        "speed": 0,
+                    },
+                ],
+                "state": 1,
+                "type": "usw",
+                "version": "4.0.42.10433",
+            }
+        ]
+    ],
+)
+@pytest.mark.usefixtures("config_entry_setup")
+async def test_port_link_speed_sensors(
+    hass: HomeAssistant,
+    entity_registry: er.EntityRegistry,
+    mock_websocket_message: WebsocketMessageMock,
+    device_payload: list[dict[str, Any]],
+) -> None:
+    """Verify that port link speed sensors are working as expected."""
+    p1_reg_entry = entity_registry.async_get("sensor.mock_name_port_1_link_speed")
+    assert p1_reg_entry.disabled_by == RegistryEntryDisabler.INTEGRATION
+
+    p2_reg_entry = entity_registry.async_get("sensor.mock_name_port_2_link_speed")
+    assert p2_reg_entry.disabled_by == RegistryEntryDisabler.INTEGRATION
+
+    # Port with speed 0 should not create an entity
+    assert not entity_registry.async_get("sensor.mock_name_port_3_link_speed")
+
+    # Enable entity
+    entity_registry.async_update_entity(
+        entity_id="sensor.mock_name_port_1_link_speed", disabled_by=None
+    )
+    entity_registry.async_update_entity(
+        entity_id="sensor.mock_name_port_2_link_speed", disabled_by=None
+    )
+    await hass.async_block_till_done()
+
+    async_fire_time_changed(
+        hass,
+        dt_util.utcnow() + timedelta(seconds=RELOAD_AFTER_UPDATE_DELAY + 1),
+    )
+    await hass.async_block_till_done()
+
+    # Verify sensor state
+    assert hass.states.get("sensor.mock_name_port_1_link_speed").state == "1000"
+    assert hass.states.get("sensor.mock_name_port_2_link_speed").state == "100"
+
+    # Verify state update
+    device_1 = device_payload[0]
+    device_1["port_table"][0]["speed"] = 100
+
+    mock_websocket_message(message=MessageKey.DEVICE, data=device_1)
+    await hass.async_block_till_done()
+
+    assert hass.states.get("sensor.mock_name_port_1_link_speed").state == "100"
 
 
 @pytest.mark.parametrize(
@@ -1601,9 +1722,9 @@ async def test_wan_monitor_latency_with_no_uptime(
 @pytest.mark.parametrize(
     ("temperature_id", "state", "updated_state", "index_to_update"),
     [
-        ("device_cpu", "66.0", "20", 0),
-        ("device_local", "48.75", "90.64", 1),
-        ("device_phy", "50.25", "80", 2),
+        ("cpu", "66.0", "20", 0),
+        ("local", "48.75", "90.64", 1),
+        ("phy", "50.25", "80", 2),
     ],
 )
 @pytest.mark.usefixtures("config_entry_setup")
@@ -1658,6 +1779,75 @@ async def test_device_temperatures(
     [
         [
             {
+                "board_rev": 3,
+                "device_id": "mock-id",
+                "has_fan": True,
+                "fan_level": 0,
+                "ip": "10.0.1.1",
+                "last_seen": 1562600145,
+                "mac": "00:00:00:00:01:01",
+                "model": "US16P150",
+                "name": "Device",
+                "next_interval": 20,
+                "overheating": True,
+                "state": 1,
+                "type": "usw",
+                "upgradable": True,
+                "uptime": 60,
+                "version": "4.0.42.10433",
+                "temperatures": [
+                    {"name": "CPU", "type": "cpu", "value": 66.0},
+                ],
+            }
+        ]
+    ],
+)
+@pytest.mark.usefixtures("config_entry_setup")
+async def test_device_temperature_with_missing_value(
+    hass: HomeAssistant,
+    entity_registry: er.EntityRegistry,
+    mock_websocket_message,
+    device_payload: list[dict[str, Any]],
+) -> None:
+    """Verify that device temperatures sensors are working as expected."""
+    entity_id = "sensor.device_cpu_temperature"
+
+    temperature_entity = entity_registry.async_get(entity_id)
+    assert temperature_entity.disabled_by == RegistryEntryDisabler.INTEGRATION
+
+    # Enable entity
+    entity_registry.async_update_entity(entity_id=entity_id, disabled_by=None)
+
+    await hass.async_block_till_done()
+
+    async_fire_time_changed(
+        hass,
+        dt_util.utcnow() + timedelta(seconds=RELOAD_AFTER_UPDATE_DELAY + 1),
+    )
+    await hass.async_block_till_done()
+
+    # Verify sensor state
+    assert hass.states.get(entity_id).state == "66.0"
+
+    # Remove temperature value from payload
+    device = deepcopy(device_payload[0])
+    device["temperatures"][0].pop("value")
+
+    mock_websocket_message(message=MessageKey.DEVICE, data=device)
+
+    assert hass.states.get(entity_id).state == STATE_UNAVAILABLE
+
+    # Send original payload again to verify sensor recovers
+    mock_websocket_message(message=MessageKey.DEVICE, data=device_payload[0])
+
+    assert hass.states.get(entity_id).state == "66.0"
+
+
+@pytest.mark.parametrize(
+    "device_payload",
+    [
+        [
+            {
                 "board_rev": 2,
                 "device_id": "mock-id",
                 "ip": "10.0.1.1",
@@ -1683,9 +1873,7 @@ async def test_device_with_no_temperature(
     assert len(hass.states.async_all()) == 6
     assert len(hass.states.async_entity_ids(SENSOR_DOMAIN)) == 2
 
-    temperature_entity = entity_registry.async_get(
-        "sensor.device_device_cpu_temperature"
-    )
+    temperature_entity = entity_registry.async_get("sensor.device_cpu_temperature")
 
     assert temperature_entity is None
 
@@ -1718,14 +1906,12 @@ async def test_device_with_no_matching_temperatures(
     hass: HomeAssistant,
     entity_registry: er.EntityRegistry,
 ) -> None:
-    """Verify that device temperature sensors is not created if there is no matching data."""
+    """Verify device temperature sensors are not created without matching data."""
 
     assert len(hass.states.async_all()) == 6
     assert len(hass.states.async_entity_ids(SENSOR_DOMAIN)) == 2
 
-    temperature_entity = entity_registry.async_get(
-        "sensor.device_device_cpu_temperature"
-    )
+    temperature_entity = entity_registry.async_get("sensor.device_cpu_temperature")
 
     assert temperature_entity is None
 

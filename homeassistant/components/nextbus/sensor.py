@@ -1,9 +1,7 @@
 """NextBus sensor."""
 
-from __future__ import annotations
-
 import logging
-from typing import cast
+from typing import cast, override
 
 from homeassistant.components.sensor import SensorDeviceClass, SensorEntity
 from homeassistant.config_entries import ConfigEntry
@@ -31,6 +29,8 @@ async def async_setup_entry(
     entry_stop = config.data[CONF_STOP]
     coordinator_key = f"{entry_agency}-{entry_stop}"
 
+    # Uses legacy hass.data[DOMAIN] pattern
+    # pylint: disable-next=home-assistant-use-runtime-data
     coordinator: NextBusDataUpdateCoordinator = hass.data[DOMAIN].get(coordinator_key)
 
     async_add_entities(
@@ -95,12 +95,14 @@ class NextBusDepartureSensor(
         msg = f"{self.agency}:{self.route}:{self.stop}:{message}"
         _LOGGER.error(msg, *args)
 
+    @override
     async def async_added_to_hass(self) -> None:
         """Read data from coordinator after adding to hass."""
         self._handle_coordinator_update()
         await super().async_added_to_hass()
 
     @callback
+    @override
     def _handle_coordinator_update(self) -> None:
         """Update sensor with new departures times."""
         results = self.coordinator.get_prediction_data(self.stop, self.route)

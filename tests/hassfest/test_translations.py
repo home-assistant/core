@@ -134,7 +134,7 @@ SAMPLE_STRINGS = {
     "preview_features": {
         "new_feature": {
             "name": "New feature",
-            "description": "This is a new experimental feature",
+            "description": "This is a new experimental feature, see https://example.com",
             "enable_confirmation": "Are you sure you want to enable this feature?",
             "disable_confirmation": "Are you sure you want to disable this feature?",
         },
@@ -165,6 +165,9 @@ SAMPLE_STRINGS = {
                 "field_one": {
                     "name": "Field one",
                     "description": "Description of field one",
+                },
+                "field_two": {
+                    "name": "Field two",
                 },
             },
         },
@@ -221,7 +224,9 @@ SAMPLE_STRINGS = {
         },
     },
     "application_credentials": {
-        "description": "To configure this integration, you need to create an application",
+        "description": (
+            "To configure this integration, you need to create an application"
+        ),
     },
     "issues": {
         "firmware_update_required": {
@@ -346,7 +351,6 @@ SAMPLE_STRINGS = {
                 },
                 "target": {
                     "name": "Target",
-                    "description": "The target device",
                 },
             },
             "sections": {
@@ -371,6 +375,9 @@ SAMPLE_STRINGS = {
                     "description": "The entity to check",
                     "example": "light.living_room",
                 },
+                "some_option": {
+                    "name": "Some option",
+                },
             },
         },
     },
@@ -383,6 +390,9 @@ SAMPLE_STRINGS = {
                     "name": "Entity",
                     "description": "The entity to monitor",
                     "example": "light.living_room",
+                },
+                "some_option": {
+                    "name": "Some option",
                 },
             },
         },
@@ -429,3 +439,23 @@ def test_no_placeholders_used_for_urls(translation_string: str) -> None:
 
     with pytest.raises(vol.Invalid):
         schema(translation_string)
+
+
+@pytest.mark.parametrize(
+    "translation_string",
+    [
+        "An example is: https://example.com.",
+        "www.example.com",
+        "http://example.com:8080",
+        "WWW.EXAMPLE.COM",
+        "HTTPS://www.example.com",
+    ],
+)
+def test_allow_urls_in_translation_value(translation_string: str) -> None:
+    """Test that URLs are allowed when allow_urls=True."""
+    schema = vol.Schema(
+        translations.custom_translation_value_validator(allow_urls=True)
+    )
+
+    # Should not raise
+    schema(translation_string)

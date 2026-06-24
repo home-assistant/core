@@ -1,11 +1,9 @@
 """DataUpdateCoordinator for NRGkick integration."""
 
-from __future__ import annotations
-
 from dataclasses import dataclass
 from datetime import timedelta
 import logging
-from typing import Any
+from typing import Any, override
 
 import aiohttp
 from nrgkick_api import (
@@ -13,11 +11,12 @@ from nrgkick_api import (
     NRGkickAPIDisabledError,
     NRGkickAuthenticationError,
     NRGkickConnectionError,
+    NRGkickInvalidResponseError,
 )
 
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
-from homeassistant.exceptions import ConfigEntryError
+from homeassistant.exceptions import ConfigEntryAuthFailed, ConfigEntryError
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
 
 from .const import DEFAULT_SCAN_INTERVAL, DOMAIN
@@ -57,6 +56,7 @@ class NRGkickDataUpdateCoordinator(DataUpdateCoordinator[NRGkickData]):
             always_update=False,
         )
 
+    @override
     async def _async_update_data(self) -> NRGkickData:
         """Update data via library."""
         try:
@@ -64,7 +64,7 @@ class NRGkickDataUpdateCoordinator(DataUpdateCoordinator[NRGkickData]):
             control = await self.api.get_control()
             values = await self.api.get_values(raw=True)
         except NRGkickAuthenticationError as error:
-            raise ConfigEntryError(
+            raise ConfigEntryAuthFailed(
                 translation_domain=DOMAIN,
                 translation_key="authentication_error",
             ) from error
@@ -78,6 +78,11 @@ class NRGkickDataUpdateCoordinator(DataUpdateCoordinator[NRGkickData]):
                 translation_domain=DOMAIN,
                 translation_key="communication_error",
                 translation_placeholders={"error": str(error)},
+            ) from error
+        except NRGkickInvalidResponseError as error:
+            raise UpdateFailed(
+                translation_domain=DOMAIN,
+                translation_key="invalid_response",
             ) from error
         except (TimeoutError, aiohttp.ClientError, OSError) as error:
             raise UpdateFailed(

@@ -6,7 +6,8 @@
     },
     "error": {
       "cannot_connect": "[%key:common::config_flow::error::cannot_connect%]",
-      "invalid_auth": "[%key:common::config_flow::error::invalid_auth%]"
+      "invalid_auth": "[%key:common::config_flow::error::invalid_auth%]",
+      "transmission_version": "Minimum required version is 4.0.0. Please upgrade Transmission and then retry."
     },
     "step": {
       "reauth_confirm": {
@@ -41,6 +42,20 @@
     }
   },
   "entity": {
+    "event": {
+      "torrent": {
+        "name": "Torrent",
+        "state_attributes": {
+          "event_type": {
+            "state": {
+              "downloaded": "Downloaded",
+              "removed": "Removed",
+              "started": "Started"
+            }
+          }
+        }
+      }
+    },
     "sensor": {
       "active_torrents": {
         "name": "Active torrents",
@@ -57,13 +72,31 @@
         "name": "Paused torrents",
         "unit_of_measurement": "[%key:component::transmission::entity::sensor::active_torrents::unit_of_measurement%]"
       },
+      "session_download": {
+        "name": "Session download"
+      },
+      "session_ratio": {
+        "name": "Session ratio"
+      },
+      "session_upload": {
+        "name": "Session upload"
+      },
       "started_torrents": {
         "name": "Started torrents",
         "unit_of_measurement": "[%key:component::transmission::entity::sensor::active_torrents::unit_of_measurement%]"
       },
+      "total_download": {
+        "name": "Total download"
+      },
+      "total_ratio": {
+        "name": "Total ratio"
+      },
       "total_torrents": {
         "name": "Total torrents",
         "unit_of_measurement": "[%key:component::transmission::entity::sensor::active_torrents::unit_of_measurement%]"
+      },
+      "total_upload": {
+        "name": "Total upload"
       },
       "transmission_status": {
         "name": "Status",
@@ -91,11 +124,8 @@
     "could_not_add_torrent": {
       "message": "Could not add torrent: unsupported type or no permission."
     },
-    "integration_not_found": {
-      "message": "Integration \"{target}\" not found in registry."
-    },
-    "not_loaded": {
-      "message": "{target} is not loaded."
+    "version_error": {
+      "message": "You are running {transmission_version} of Transmission. Minimum required version is {min_version}. Please upgrade Transmission and then restart Home Assistant."
     }
   },
   "options": {

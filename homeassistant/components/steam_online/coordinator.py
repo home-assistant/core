@@ -1,8 +1,7 @@
 """Data update coordinator for the Steam integration."""
 
-from __future__ import annotations
-
 from datetime import timedelta
+from typing import override
 
 import steam
 from steam.api import _interface_method as INTMethod
@@ -65,6 +64,7 @@ class SteamDataUpdateCoordinator(
             value["level"] = data["response"].get("player_level")
         return players
 
+    @override
     async def _async_update_data(self) -> dict[str, dict[str, str | int]]:
         """Send request to the executor."""
         try:

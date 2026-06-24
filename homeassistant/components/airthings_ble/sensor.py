@@ -1,9 +1,8 @@
 """Support for airthings ble sensors."""
 
-from __future__ import annotations
-
 import dataclasses
 import logging
+from typing import override
 
 from airthings_ble import AirthingsConnectivityMode, AirthingsDevice
 
@@ -260,6 +259,7 @@ class AirthingsSensor(
         )
 
     @property
+    @override
     def available(self) -> bool:
         """Check if device and sensor is available in data."""
         return (
@@ -268,6 +268,7 @@ class AirthingsSensor(
         )
 
     @property
+    @override
     def native_value(self) -> StateType:
         """Return the value reported by the sensor."""
         value = self.coordinator.data.sensors[self.entity_description.key]

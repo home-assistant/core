@@ -1,7 +1,5 @@
 """Handle forward of events transmitted by Hue devices to HASS."""
 
-from __future__ import annotations
-
 import logging
 from typing import TYPE_CHECKING
 
@@ -51,7 +49,8 @@ async def async_setup_hue_events(bridge: HueBridge):
 
         # Fire event
         data = {
-            # send slugified entity name as id = backwards compatibility with previous version
+            # send slugified entity name as id = backwards
+            # compatibility with previous version
             CONF_ID: slugify(f"{hue_device.metadata.name} Button"),
             CONF_DEVICE_ID: device.id,  # type: ignore[union-attr]
             CONF_UNIQUE_ID: hue_resource.id,
@@ -80,7 +79,9 @@ async def async_setup_hue_events(bridge: HueBridge):
             CONF_DEVICE_ID: device.id,  # type: ignore[union-attr]
             CONF_UNIQUE_ID: hue_resource.id,
             CONF_TYPE: hue_resource.relative_rotary.rotary_report.action.value,
-            CONF_SUBTYPE: hue_resource.relative_rotary.rotary_report.rotation.direction.value,
+            CONF_SUBTYPE: (
+                hue_resource.relative_rotary.rotary_report.rotation.direction.value
+            ),
             CONF_DURATION: hue_resource.relative_rotary.rotary_report.rotation.duration,
             CONF_STEPS: hue_resource.relative_rotary.rotary_report.rotation.steps,
         }

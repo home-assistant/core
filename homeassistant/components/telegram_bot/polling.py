@@ -1,6 +1,7 @@
 """Support for Telegram bot using polling."""
 
 import logging
+from typing import override
 
 from telegram import Bot, Update
 from telegram.error import NetworkError, RetryAfter, TelegramError, TimedOut
@@ -9,11 +10,12 @@ from telegram.ext import ApplicationBuilder, CallbackContext, TypeHandler
 from homeassistant.core import HomeAssistant
 
 from .bot import BaseTelegramBot, TelegramBotConfigEntry
+from .helpers import get_base_url
 
 _LOGGER = logging.getLogger(__name__)
 
 
-async def async_setup_platform(
+async def async_setup_bot_platform(
     hass: HomeAssistant, bot: Bot, config: TelegramBotConfigEntry
 ) -> BaseTelegramBot | None:
     """Set up the Telegram polling platform."""
@@ -34,7 +36,7 @@ def error_callback(bot: Bot, error: Exception, update: object | None = None) -> 
     """Log the error."""
     try:
         raise error
-    except (TimedOut, NetworkError, RetryAfter):
+    except TimedOut, NetworkError, RetryAfter:
         # Long polling timeout or connection problem. Nothing serious.
         pass
     except TelegramError:
@@ -70,6 +72,7 @@ class PollBot(BaseTelegramBot):
             lambda update, context: process_error(self.bot, update, context)
         )
 
+    @override
     async def shutdown(self) -> None:
         """Shutdown the app."""
         await self.stop_polling()
@@ -82,7 +85,12 @@ class PollBot(BaseTelegramBot):
                 error_callback=lambda error: error_callback(self.bot, error, None)
             )
         await self.application.start()
-        _LOGGER.info("[%s %s] Started polling", self.bot.username, self.bot.id)
+        _LOGGER.info(
+            "[%s %s] Started polling at %s",
+            self.bot.username,
+            self.bot.id,
+            get_base_url(self.bot),
+        )
 
     async def stop_polling(self) -> None:
         """Stop the polling task."""

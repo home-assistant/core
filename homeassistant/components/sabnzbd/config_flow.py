@@ -1,9 +1,7 @@
 """Adds config flow for SabNzbd."""
 
-from __future__ import annotations
-
 import logging
-from typing import Any
+from typing import Any, override
 
 import voluptuous as vol
 import yarl
@@ -53,6 +51,7 @@ class SABnzbdConfigFlow(ConfigFlow, domain=DOMAIN):
         """Handle reconfiguration flow."""
         return await self.async_step_user(user_input)
 
+    @override
     async def async_step_user(
         self, user_input: dict[str, Any] | None = None
     ) -> ConfigFlowResult:

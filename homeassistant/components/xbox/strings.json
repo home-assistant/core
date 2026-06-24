@@ -141,6 +141,7 @@
           },
           "genres": { "name": "Genres" },
           "min_age": { "name": "Minimum age" },
+          "platform": { "name": "Platform" },
           "progress": { "name": "Progress" },
           "publisher": { "name": "Publisher" },
           "release_date": { "name": "Release date" },
@@ -173,6 +174,9 @@
     },
     "timeout_exception": {
       "message": "Failed to connect to Xbox Network due to a connection timeout"
+    },
+    "turn_on_failed": {
+      "message": "Turn on failed. Xbox is not connected to the Xbox Network."
     },
     "xbox_not_configured": {
       "message": "The Xbox integration is not configured."

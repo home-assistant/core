@@ -1,7 +1,5 @@
 """Const for LIFX."""
 
-from __future__ import annotations
-
 import logging
 from typing import TYPE_CHECKING
 
@@ -73,6 +71,3 @@ LIFX_CEILING_PRODUCT_IDS = {176, 177, 201, 202}
 LIFX_128ZONE_CEILING_PRODUCT_IDS = {201, 202}
 
 _LOGGER = logging.getLogger(__package__)
-
-# _ATTR_COLOR_TEMP deprecated - to be removed in 2026.1
-_ATTR_COLOR_TEMP = "color_temp"

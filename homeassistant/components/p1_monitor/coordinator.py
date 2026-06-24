@@ -1,8 +1,6 @@
 """Coordinator for the P1 Monitor integration."""
 
-from __future__ import annotations
-
-from typing import TypedDict
+from typing import TypedDict, override
 
 from p1monitor import (
     P1Monitor,
@@ -68,6 +66,7 @@ class P1MonitorDataUpdateCoordinator(DataUpdateCoordinator[P1MonitorData]):
             session=async_get_clientsession(hass),
         )
 
+    @override
     async def _async_update_data(self) -> P1MonitorData:
         """Fetch data from P1 Monitor."""
         data: P1MonitorData = {
@@ -81,7 +80,7 @@ class P1MonitorDataUpdateCoordinator(DataUpdateCoordinator[P1MonitorData]):
             try:
                 data[SERVICE_WATERMETER] = await self.p1monitor.watermeter()
                 self.has_water_meter = True
-            except (P1MonitorNoDataError, P1MonitorConnectionError):
+            except P1MonitorNoDataError, P1MonitorConnectionError:
                 LOGGER.debug("No water meter data received from P1 Monitor")
                 if self.has_water_meter is None:
                     self.has_water_meter = False

@@ -1,7 +1,5 @@
 """Validate integration translation files."""
 
-from __future__ import annotations
-
 from functools import partial
 import json
 import re
@@ -12,9 +10,10 @@ import voluptuous as vol
 from voluptuous.humanize import humanize_error
 
 import homeassistant.helpers.config_validation as cv
+from homeassistant.helpers.issue_registry import FRONTEND_HANDLED_ISSUES
 from script.translations import upload
 
-from .model import Config, Integration
+from .model import Config, Integration, IntegrationType
 
 UNDEFINED = 0
 REQUIRED = 1
@@ -132,7 +131,9 @@ def translation_key_validator(value: str) -> str:
     return value
 
 
-def validate_translation_value(value: Any, allow_placeholders=True) -> str:
+def validate_translation_value(
+    value: Any, allow_placeholders: bool = True, allow_urls: bool = False
+) -> str:
     """Validate that the value is a valid translation.
 
     - prevents string with HTML
@@ -148,7 +149,7 @@ def validate_translation_value(value: Any, allow_placeholders=True) -> str:
         raise vol.Invalid("the string should not contain combined translations")
     if string_value != string_value.strip():
         raise vol.Invalid("the string should not contain leading or trailing spaces")
-    if RE_URL.search(string_value):
+    if not allow_urls and RE_URL.search(string_value):
         raise vol.Invalid(
             "the string should not contain URLs, "
             "please use description placeholders instead"
@@ -161,11 +162,13 @@ def translation_value_validator(value: Any) -> str:
     return validate_translation_value(value)
 
 
-def custom_translation_value_validator(allow_placeholders=True):
+def custom_translation_value_validator(
+    allow_placeholders: bool = True, allow_urls: bool = False
+):
     """Validate translation value with custom options."""
 
     def _validator(value: Any) -> str:
-        return validate_translation_value(value, allow_placeholders)
+        return validate_translation_value(value, allow_placeholders, allow_urls)
 
     return _validator
 
@@ -301,25 +304,31 @@ def gen_data_entry_schema(
 
 def gen_issues_schema(config: Config, integration: Integration) -> dict[str, Any]:
     """Generate the issues schema."""
-    return {
-        str: vol.All(
-            cv.has_at_least_one_key("description", "fix_flow"),
-            vol.Schema(
-                {
-                    vol.Required("title"): translation_value_validator,
-                    vol.Exclusive(
-                        "description", "fixable"
-                    ): translation_value_validator,
-                    vol.Exclusive("fix_flow", "fixable"): gen_data_entry_schema(
-                        config=config,
-                        integration=integration,
-                        flow_title=UNDEFINED,
-                        require_step_title=False,
-                    ),
-                },
-            ),
-        )
-    }
+    issue_schema = vol.All(
+        cv.has_at_least_one_key("description", "fix_flow"),
+        vol.Schema(
+            {
+                vol.Required("title"): translation_value_validator,
+                vol.Exclusive("description", "fixable"): translation_value_validator,
+                vol.Exclusive("fix_flow", "fixable"): gen_data_entry_schema(
+                    config=config,
+                    integration=integration,
+                    flow_title=UNDEFINED,
+                    require_step_title=False,
+                ),
+            },
+        ),
+    )
+
+    frontend_issue_schema = vol.Schema(
+        {vol.Required("title"): translation_value_validator}
+    )
+
+    schema: dict[str, Any] = {}
+    for key in FRONTEND_HANDLED_ISSUES.get(integration.domain, ()):
+        schema[vol.Optional(key)] = frontend_issue_schema
+    schema[str] = issue_schema
+    return schema
 
 
 _EXCEPTIONS_SCHEMA = {
@@ -341,7 +350,9 @@ def gen_strings_schema(config: Config, integration: Integration) -> vol.Schema:
                 flow_title=REMOVED,
                 require_step_title=False,
                 mandatory_description=(
-                    "user" if integration.integration_type == "helper" else None
+                    "user"
+                    if integration.integration_type == IntegrationType.HELPER
+                    else None
                 ),
             ),
             vol.Optional("config_subentries"): cv.schema_with_slug_keys(
@@ -363,7 +374,10 @@ def gen_strings_schema(config: Config, integration: Integration) -> vol.Schema:
             vol.Optional("preview_features"): cv.schema_with_slug_keys(
                 {
                     vol.Required("name"): translation_value_validator,
-                    vol.Required("description"): translation_value_validator,
+                    vol.Required("description"): custom_translation_value_validator(
+                        allow_placeholders=False,
+                        allow_urls=True,
+                    ),
                     vol.Optional("enable_confirmation"): translation_value_validator,
                     vol.Optional("disable_confirmation"): translation_value_validator,
                 },
@@ -395,7 +409,7 @@ def gen_strings_schema(config: Config, integration: Integration) -> vol.Schema:
                         cv.schema_with_slug_keys(
                             {
                                 vol.Required("name"): str,
-                                vol.Required(
+                                vol.Optional(
                                     "description"
                                 ): translation_value_validator,
                             },
@@ -501,7 +515,7 @@ def gen_strings_schema(config: Config, integration: Integration) -> vol.Schema:
                     vol.Optional("fields"): cv.schema_with_slug_keys(
                         {
                             vol.Required("name"): str,
-                            vol.Required("description"): translation_value_validator,
+                            vol.Optional("description"): translation_value_validator,
                             vol.Optional("example"): translation_value_validator,
                         },
                         slug_validator=translation_key_validator,
@@ -523,7 +537,7 @@ def gen_strings_schema(config: Config, integration: Integration) -> vol.Schema:
                     vol.Optional("fields"): cv.schema_with_slug_keys(
                         {
                             vol.Required("name"): str,
-                            vol.Required("description"): translation_value_validator,
+                            vol.Optional("description"): translation_value_validator,
                             vol.Optional("example"): translation_value_validator,
                         },
                         slug_validator=translation_key_validator,
@@ -538,7 +552,7 @@ def gen_strings_schema(config: Config, integration: Integration) -> vol.Schema:
                     vol.Optional("fields"): cv.schema_with_slug_keys(
                         {
                             vol.Required("name"): str,
-                            vol.Required("description"): translation_value_validator,
+                            vol.Optional("description"): translation_value_validator,
                             vol.Optional("example"): translation_value_validator,
                         },
                         slug_validator=translation_key_validator,

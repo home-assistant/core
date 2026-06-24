@@ -5,7 +5,7 @@ from typing import Any
 from unittest.mock import MagicMock, patch
 from urllib.parse import urlparse
 
-from aiotedee.exception import (
+from aiotedee.exceptions import (
     TedeeAuthException,
     TedeeClientException,
     TedeeWebhookException,

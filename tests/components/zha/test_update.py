@@ -33,6 +33,7 @@ from homeassistant.components.update import (
 from homeassistant.components.zha.helpers import (
     ZHADeviceProxy,
     ZHAGatewayProxy,
+    get_zha_data,
     get_zha_gateway,
     get_zha_gateway_proxy,
 )
@@ -55,6 +56,7 @@ from homeassistant.setup import async_setup_component
 from .common import find_entity_id, update_attribute_cache
 from .conftest import SIG_EP_INPUT, SIG_EP_OUTPUT, SIG_EP_PROFILE, SIG_EP_TYPE
 
+from tests.common import MockConfigEntry
 from tests.typing import WebSocketGenerator
 
 
@@ -267,6 +269,43 @@ async def test_firmware_update_notification_from_service_call(
         )
 
 
+async def test_firmware_update_poll_after_reload(
+    hass: HomeAssistant,
+    setup_zha: Callable[..., Coroutine[None]],
+    config_entry: MockConfigEntry,
+    zigpy_device_mock: Callable[..., Device],
+) -> None:
+    """Test polling a ZHA update entity still works after reloading ZHA."""
+    await setup_zha()
+    await async_setup_component(hass, HA_DOMAIN, {})
+
+    zha_data = get_zha_data(hass)
+    coordinator_before = zha_data.update_coordinator
+    assert coordinator_before is not None
+
+    assert await hass.config_entries.async_reload(config_entry.entry_id)
+    await hass.async_block_till_done()
+
+    coordinator_after = get_zha_data(hass).update_coordinator
+    assert coordinator_after is not None
+    assert coordinator_after is not coordinator_before
+
+    zha_device, _, _, _ = await setup_test_data(hass, zigpy_device_mock)
+    entity_id = find_entity_id(Platform.UPDATE, zha_device, hass)
+    assert entity_id is not None
+
+    with patch("zigpy.ota.OTA.broadcast_notify") as mock_broadcast_notify:
+        await hass.services.async_call(
+            HA_DOMAIN,
+            SERVICE_UPDATE_ENTITY,
+            service_data={ATTR_ENTITY_ID: entity_id},
+            blocking=True,
+        )
+
+        assert mock_broadcast_notify.await_count == 1
+        assert mock_broadcast_notify.call_args_list[0] == call(jitter=100)
+
+
 def make_packet(zigpy_device, cluster, cmd_name: str, **kwargs):
     """Make a zigpy packet."""
     req_hdr, req_cmd = cluster._create_request(
@@ -336,10 +375,17 @@ async def test_firmware_update_success(
         attrs[ATTR_LATEST_VERSION] == f"0x{fw_image.firmware.header.file_version:08x}"
     )
 
+    ota_completed = False
+
     async def endpoint_reply(cluster, sequence, data, **kwargs):
+        nonlocal ota_completed
         if cluster == general.Ota.cluster_id:
             _hdr, cmd = ota_cluster.deserialize(data)
             if isinstance(cmd, general.Ota.ImageNotifyCommand):
+                if ota_completed:
+                    # Post-OTA image_notify: ignore or don't respond
+                    return
+
                 zha_device.device.device.packet_received(
                     make_packet(
                         zha_device.device.device,
@@ -355,6 +401,12 @@ async def test_firmware_update_success(
             elif isinstance(
                 cmd, general.Ota.ClientCommandDefs.query_next_image_response.schema
             ):
+                # After a successful OTA, zigpy sends a post-OTA image_notify
+                # which triggers a query_next_image -> NO_IMAGE_AVAILABLE exchange
+                if cmd.status == foundation.Status.NO_IMAGE_AVAILABLE:
+                    assert ota_completed
+                    return
+
                 assert cmd.status == foundation.Status.SUCCESS
                 assert cmd.manufacturer_code == fw_image.firmware.header.manufacturer_id
                 assert cmd.image_type == fw_image.firmware.header.image_type
@@ -446,6 +498,8 @@ async def test_firmware_update_success(
                 assert cmd.file_version == fw_image.firmware.header.file_version
                 assert cmd.current_time == 0
                 assert cmd.upgrade_time == 0
+
+                ota_completed = True
 
                 def read_new_fw_version(*args, **kwargs):
                     ota_cluster.update_attribute(
@@ -551,6 +605,9 @@ async def test_firmware_update_raises(
             elif isinstance(
                 cmd, general.Ota.ClientCommandDefs.query_next_image_response.schema
             ):
+                if cmd.status == foundation.Status.NO_IMAGE_AVAILABLE:
+                    return
+
                 assert cmd.status == foundation.Status.SUCCESS
                 assert cmd.manufacturer_code == fw_image.firmware.header.manufacturer_id
                 assert cmd.image_type == fw_image.firmware.header.image_type

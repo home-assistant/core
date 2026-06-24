@@ -66,10 +66,11 @@ async def cloud_fixture() -> AsyncGenerator[MagicMock]:
             certificate_status=None,
             instance_domain=None,
             is_connected=False,
+            latency_by_location={},
         )
         mock_cloud.auth = MagicMock(spec=CognitoAuth)
         mock_cloud.iot = MagicMock(
-            spec=CloudIoT, last_disconnect_reason=None, state=STATE_CONNECTED
+            spec=CloudIoT, last_disconnect_reason=None, state=STATE_CONNECTED, tries=0
         )
         mock_cloud.voice = MagicMock(spec=Voice)
         mock_cloud.files = MagicMock(spec=Files)

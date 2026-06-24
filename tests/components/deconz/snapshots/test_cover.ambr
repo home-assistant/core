@@ -1,8 +1,9 @@
 # serializer version: 1
 # name: test_cover[light_payload0][cover.window_covering_device-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -38,9 +39,10 @@
 # name: test_cover[light_payload0][cover.window_covering_device-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'current_position': 0,
+      <CoverEntityStateAttribute.CURRENT_POSITION: 'current_position'>: 0,
       'device_class': 'shade',
       'friendly_name': 'Window covering device',
+      <CoverEntityStateAttribute.IS_CLOSED: 'is_closed'>: True,
       'supported_features': <CoverEntityFeature: 15>,
     }),
     'context': <ANY>,
@@ -53,8 +55,9 @@
 # ---
 # name: test_level_controllable_output_cover[light_payload0][cover.vent-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -90,10 +93,11 @@
 # name: test_level_controllable_output_cover[light_payload0][cover.vent-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'current_position': 5,
-      'current_tilt_position': 97,
+      <CoverEntityStateAttribute.CURRENT_POSITION: 'current_position'>: 5,
+      <CoverEntityStateAttribute.CURRENT_TILT_POSITION: 'current_tilt_position'>: 97,
       'device_class': 'damper',
       'friendly_name': 'Vent',
+      <CoverEntityStateAttribute.IS_CLOSED: 'is_closed'>: False,
       'supported_features': <CoverEntityFeature: 255>,
     }),
     'context': <ANY>,
@@ -106,8 +110,9 @@
 # ---
 # name: test_tilt_cover[light_payload0][cover.covering_device-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -143,10 +148,11 @@
 # name: test_tilt_cover[light_payload0][cover.covering_device-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'current_position': 100,
-      'current_tilt_position': 100,
+      <CoverEntityStateAttribute.CURRENT_POSITION: 'current_position'>: 100,
+      <CoverEntityStateAttribute.CURRENT_TILT_POSITION: 'current_tilt_position'>: 100,
       'device_class': 'shade',
       'friendly_name': 'Covering device',
+      <CoverEntityStateAttribute.IS_CLOSED: 'is_closed'>: False,
       'supported_features': <CoverEntityFeature: 255>,
     }),
     'context': <ANY>,

@@ -1,12 +1,13 @@
 # serializer version: 1
 # name: test_states[event.front_door_ding-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
-      'event_types': list([
-        'ding',
+      <EventEntityCapabilityAttribute.EVENT_TYPES: 'event_types'>: list([
+        <DoorbellEventType.RING: 'ring'>,
       ]),
     }),
     'config_entry_id': <ANY>,
@@ -44,9 +45,9 @@
     'attributes': ReadOnlyDict({
       'attribution': 'Data provided by Ring.com',
       'device_class': 'doorbell',
-      'event_type': None,
-      'event_types': list([
-        'ding',
+      <EventEntityStateAttribute.EVENT_TYPE: 'event_type'>: None,
+      <EventEntityCapabilityAttribute.EVENT_TYPES: 'event_types'>: list([
+        <DoorbellEventType.RING: 'ring'>,
       ]),
       'friendly_name': 'Front Door Ding',
     }),
@@ -60,11 +61,12 @@
 # ---
 # name: test_states[event.front_door_motion-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
-      'event_types': list([
+      <EventEntityCapabilityAttribute.EVENT_TYPES: 'event_types'>: list([
         'motion',
       ]),
     }),
@@ -103,8 +105,8 @@
     'attributes': ReadOnlyDict({
       'attribution': 'Data provided by Ring.com',
       'device_class': 'motion',
-      'event_type': None,
-      'event_types': list([
+      <EventEntityStateAttribute.EVENT_TYPE: 'event_type'>: None,
+      <EventEntityCapabilityAttribute.EVENT_TYPES: 'event_types'>: list([
         'motion',
       ]),
       'friendly_name': 'Front Door Motion',
@@ -119,11 +121,12 @@
 # ---
 # name: test_states[event.front_motion-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
-      'event_types': list([
+      <EventEntityCapabilityAttribute.EVENT_TYPES: 'event_types'>: list([
         'motion',
       ]),
     }),
@@ -162,8 +165,8 @@
     'attributes': ReadOnlyDict({
       'attribution': 'Data provided by Ring.com',
       'device_class': 'motion',
-      'event_type': None,
-      'event_types': list([
+      <EventEntityStateAttribute.EVENT_TYPE: 'event_type'>: None,
+      <EventEntityCapabilityAttribute.EVENT_TYPES: 'event_types'>: list([
         'motion',
       ]),
       'friendly_name': 'Front Motion',
@@ -178,12 +181,13 @@
 # ---
 # name: test_states[event.ingress_ding-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
-      'event_types': list([
-        'ding',
+      <EventEntityCapabilityAttribute.EVENT_TYPES: 'event_types'>: list([
+        <DoorbellEventType.RING: 'ring'>,
       ]),
     }),
     'config_entry_id': <ANY>,
@@ -221,9 +225,9 @@
     'attributes': ReadOnlyDict({
       'attribution': 'Data provided by Ring.com',
       'device_class': 'doorbell',
-      'event_type': None,
-      'event_types': list([
-        'ding',
+      <EventEntityStateAttribute.EVENT_TYPE: 'event_type'>: None,
+      <EventEntityCapabilityAttribute.EVENT_TYPES: 'event_types'>: list([
+        <DoorbellEventType.RING: 'ring'>,
       ]),
       'friendly_name': 'Ingress Ding',
     }),
@@ -237,11 +241,12 @@
 # ---
 # name: test_states[event.ingress_intercom_unlock-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
-      'event_types': list([
+      <EventEntityCapabilityAttribute.EVENT_TYPES: 'event_types'>: list([
         'intercom_unlock',
       ]),
     }),
@@ -280,8 +285,8 @@
     'attributes': ReadOnlyDict({
       'attribution': 'Data provided by Ring.com',
       'device_class': 'button',
-      'event_type': None,
-      'event_types': list([
+      <EventEntityStateAttribute.EVENT_TYPE: 'event_type'>: None,
+      <EventEntityCapabilityAttribute.EVENT_TYPES: 'event_types'>: list([
         'intercom_unlock',
       ]),
       'friendly_name': 'Ingress Intercom unlock',
@@ -296,11 +301,12 @@
 # ---
 # name: test_states[event.internal_motion-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
-      'event_types': list([
+      <EventEntityCapabilityAttribute.EVENT_TYPES: 'event_types'>: list([
         'motion',
       ]),
     }),
@@ -339,8 +345,8 @@
     'attributes': ReadOnlyDict({
       'attribution': 'Data provided by Ring.com',
       'device_class': 'motion',
-      'event_type': None,
-      'event_types': list([
+      <EventEntityStateAttribute.EVENT_TYPE: 'event_type'>: None,
+      <EventEntityCapabilityAttribute.EVENT_TYPES: 'event_types'>: list([
         'motion',
       ]),
       'friendly_name': 'Internal Motion',

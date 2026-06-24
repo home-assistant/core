@@ -4,7 +4,7 @@ from collections.abc import Callable
 from unittest.mock import AsyncMock, patch
 
 import pytest
-from switchbot.devices.device import SwitchbotOperationError
+from switchbot import SwitchbotOperationError
 
 from homeassistant.components.bluetooth import BluetoothServiceInfoBleak
 from homeassistant.components.cover import (
@@ -14,6 +14,11 @@ from homeassistant.components.cover import (
     ATTR_TILT_POSITION,
     DOMAIN as COVER_DOMAIN,
     CoverState,
+)
+from homeassistant.components.switchbot.const import (
+    CONF_CURTAIN_SPEED,
+    CONF_RETRY_COUNT,
+    DEFAULT_RETRY_COUNT,
 )
 from homeassistant.const import (
     ATTR_ENTITY_ID,
@@ -114,7 +119,7 @@ async def test_curtain3_controlling(
         )
         await hass.async_block_till_done()
 
-        mock_open.assert_awaited_once()
+        mock_open.assert_awaited_once_with(255)  # Default speed
         state = hass.states.get(entity_id)
         assert state.state == CoverState.OPEN
         assert state.attributes[ATTR_CURRENT_POSITION] == 95
@@ -132,7 +137,7 @@ async def test_curtain3_controlling(
         )
         await hass.async_block_till_done()
 
-        mock_close.assert_awaited_once()
+        mock_close.assert_awaited_once_with(255)  # Default speed
         state = hass.states.get(entity_id)
         assert state.state == CoverState.CLOSED
         assert state.attributes[ATTR_CURRENT_POSITION] == 12
@@ -169,6 +174,55 @@ async def test_curtain3_controlling(
         state = hass.states.get(entity_id)
         assert state.state == CoverState.OPEN
         assert state.attributes[ATTR_CURRENT_POSITION] == 60
+
+
+async def test_curtain3_custom_speed_controlling(
+    hass: HomeAssistant, mock_entry_factory: Callable[[str], MockConfigEntry]
+) -> None:
+    """Test Curtain3 controlling with custom speed."""
+    inject_bluetooth_service_info(hass, WOCURTAIN3_SERVICE_INFO)
+
+    entry = mock_entry_factory(sensor_type="curtain")
+    entry.add_to_hass(hass)
+
+    # Update entry options using async_update_entry
+    hass.config_entries.async_update_entry(
+        entry,
+        options={
+            CONF_RETRY_COUNT: DEFAULT_RETRY_COUNT,
+            CONF_CURTAIN_SPEED: 50,
+        },
+    )
+
+    with (
+        patch(
+            "homeassistant.components.switchbot.cover.switchbot.SwitchbotCurtain.open",
+            new=AsyncMock(return_value=True),
+        ) as mock_open,
+        patch(
+            "homeassistant.components.switchbot.cover.switchbot.SwitchbotCurtain.close",
+            new=AsyncMock(return_value=True),
+        ) as mock_close,
+    ):
+        assert await hass.config_entries.async_setup(entry.entry_id)
+        await hass.async_block_till_done()
+
+        entity_id = "cover.test_name"
+
+        await hass.services.async_call(
+            COVER_DOMAIN, SERVICE_OPEN_COVER, {ATTR_ENTITY_ID: entity_id}, blocking=True
+        )
+        await hass.async_block_till_done()
+        mock_open.assert_awaited_once_with(50)
+
+        await hass.services.async_call(
+            COVER_DOMAIN,
+            SERVICE_CLOSE_COVER,
+            {ATTR_ENTITY_ID: entity_id},
+            blocking=True,
+        )
+        await hass.async_block_till_done()
+        mock_close.assert_awaited_once_with(50)
 
 
 async def test_blindtilt_setup(
@@ -336,6 +390,37 @@ async def test_blindtilt_controlling(
             state = hass.states.get(entity_id)
             assert state.state == CoverState.OPEN
             assert state.attributes[ATTR_CURRENT_TILT_POSITION] == 50
+
+
+async def test_blindtilt_idle_advertisement(
+    hass: HomeAssistant, mock_entry_factory: Callable[[str], MockConfigEntry]
+) -> None:
+    """Test blindtilt handles BLE advertisement without motionDirection."""
+    inject_bluetooth_service_info(hass, WOBLINDTILT_SERVICE_INFO)
+
+    entry = mock_entry_factory(sensor_type="blind_tilt")
+    entry.add_to_hass(hass)
+
+    with patch(
+        "homeassistant.components.switchbot.cover.switchbot.SwitchbotBlindTilt.get_basic_info",
+        new=AsyncMock(return_value={}),
+    ):
+        assert await hass.config_entries.async_setup(entry.entry_id)
+        await hass.async_block_till_done()
+
+        entity_id = "cover.test_name"
+        address = "AA:BB:CC:DD:EE:FF"
+        service_data = b"x\x00*"
+        manufacturer_data = b"\xfbgA`\x98\xe8\x1d%F\x12\x85"
+
+        inject_bluetooth_service_info(
+            hass, make_advertisement(address, manufacturer_data, service_data)
+        )
+        await hass.async_block_till_done()
+
+        # Should not crash; entity should still exist
+        state = hass.states.get(entity_id)
+        assert state is not None
 
 
 async def test_roller_shade_setup(

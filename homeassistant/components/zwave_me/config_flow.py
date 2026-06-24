@@ -1,8 +1,7 @@
 """Config flow to configure ZWaveMe integration."""
 
-from __future__ import annotations
-
 import logging
+from typing import override
 
 from url_normalize import url_normalize
 import voluptuous as vol
@@ -26,6 +25,7 @@ class ZWaveMeConfigFlow(ConfigFlow, domain=DOMAIN):
         self.token: str | None = None
         self.uuid: str | None = None
 
+    @override
     async def async_step_user(
         self, user_input: dict[str, str] | None = None
     ) -> ConfigFlowResult:
@@ -86,6 +86,7 @@ class ZWaveMeConfigFlow(ConfigFlow, domain=DOMAIN):
             errors=errors,
         )
 
+    @override
     async def async_step_zeroconf(
         self, discovery_info: ZeroconfServiceInfo
     ) -> ConfigFlowResult:

@@ -1,11 +1,12 @@
 # serializer version: 1
 # name: test_select[select.energy_site_allow_export-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
-      'options': list([
+      <SelectEntityCapabilityAttribute.OPTIONS: 'options'>: list([
         <EnergyExportMode.NEVER: 'never'>,
         <EnergyExportMode.BATTERY_OK: 'battery_ok'>,
         <EnergyExportMode.PV_ONLY: 'pv_only'>,
@@ -45,7 +46,7 @@
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'friendly_name': 'Energy Site Allow export',
-      'options': list([
+      <SelectEntityCapabilityAttribute.OPTIONS: 'options'>: list([
         <EnergyExportMode.NEVER: 'never'>,
         <EnergyExportMode.BATTERY_OK: 'battery_ok'>,
         <EnergyExportMode.PV_ONLY: 'pv_only'>,
@@ -61,11 +62,12 @@
 # ---
 # name: test_select[select.energy_site_operation_mode-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
-      'options': list([
+      <SelectEntityCapabilityAttribute.OPTIONS: 'options'>: list([
         <EnergyOperationMode.AUTONOMOUS: 'autonomous'>,
         <EnergyOperationMode.BACKUP: 'backup'>,
         <EnergyOperationMode.SELF_CONSUMPTION: 'self_consumption'>,
@@ -105,7 +107,7 @@
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'friendly_name': 'Energy Site Operation mode',
-      'options': list([
+      <SelectEntityCapabilityAttribute.OPTIONS: 'options'>: list([
         <EnergyOperationMode.AUTONOMOUS: 'autonomous'>,
         <EnergyOperationMode.BACKUP: 'backup'>,
         <EnergyOperationMode.SELF_CONSUMPTION: 'self_consumption'>,
@@ -121,11 +123,12 @@
 # ---
 # name: test_select[select.test_seat_heater_front_left-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
-      'options': list([
+      <SelectEntityCapabilityAttribute.OPTIONS: 'options'>: list([
         'off',
         'low',
         'medium',
@@ -166,7 +169,7 @@
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'friendly_name': 'Test Seat heater front left',
-      'options': list([
+      <SelectEntityCapabilityAttribute.OPTIONS: 'options'>: list([
         'off',
         'low',
         'medium',
@@ -183,11 +186,12 @@
 # ---
 # name: test_select[select.test_seat_heater_front_right-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
-      'options': list([
+      <SelectEntityCapabilityAttribute.OPTIONS: 'options'>: list([
         'off',
         'low',
         'medium',
@@ -228,7 +232,7 @@
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'friendly_name': 'Test Seat heater front right',
-      'options': list([
+      <SelectEntityCapabilityAttribute.OPTIONS: 'options'>: list([
         'off',
         'low',
         'medium',
@@ -245,11 +249,12 @@
 # ---
 # name: test_select[select.test_seat_heater_rear_center-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
-      'options': list([
+      <SelectEntityCapabilityAttribute.OPTIONS: 'options'>: list([
         'off',
         'low',
         'medium',
@@ -290,7 +295,7 @@
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'friendly_name': 'Test Seat heater rear center',
-      'options': list([
+      <SelectEntityCapabilityAttribute.OPTIONS: 'options'>: list([
         'off',
         'low',
         'medium',
@@ -307,11 +312,12 @@
 # ---
 # name: test_select[select.test_seat_heater_rear_left-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
-      'options': list([
+      <SelectEntityCapabilityAttribute.OPTIONS: 'options'>: list([
         'off',
         'low',
         'medium',
@@ -352,7 +358,7 @@
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'friendly_name': 'Test Seat heater rear left',
-      'options': list([
+      <SelectEntityCapabilityAttribute.OPTIONS: 'options'>: list([
         'off',
         'low',
         'medium',
@@ -369,11 +375,12 @@
 # ---
 # name: test_select[select.test_seat_heater_rear_right-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
-      'options': list([
+      <SelectEntityCapabilityAttribute.OPTIONS: 'options'>: list([
         'off',
         'low',
         'medium',
@@ -414,7 +421,7 @@
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'friendly_name': 'Test Seat heater rear right',
-      'options': list([
+      <SelectEntityCapabilityAttribute.OPTIONS: 'options'>: list([
         'off',
         'low',
         'medium',
@@ -431,11 +438,12 @@
 # ---
 # name: test_select[select.test_steering_wheel_heater-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
-      'options': list([
+      <SelectEntityCapabilityAttribute.OPTIONS: 'options'>: list([
         'off',
         'low',
         'high',
@@ -475,7 +483,7 @@
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'friendly_name': 'Test Steering wheel heater',
-      'options': list([
+      <SelectEntityCapabilityAttribute.OPTIONS: 'options'>: list([
         'off',
         'low',
         'high',
@@ -488,22 +496,4 @@
     'last_updated': <ANY>,
     'state': 'off',
   })
-# ---
-# name: test_select_streaming[select.test_seat_heater_front_left]
-  'off'
-# ---
-# name: test_select_streaming[select.test_seat_heater_front_right]
-  'low'
-# ---
-# name: test_select_streaming[select.test_seat_heater_rear_center]
-  'unknown'
-# ---
-# name: test_select_streaming[select.test_seat_heater_rear_left]
-  'medium'
-# ---
-# name: test_select_streaming[select.test_seat_heater_rear_right]
-  'high'
-# ---
-# name: test_select_streaming[select.test_steering_wheel_heater]
-  'off'
 # ---

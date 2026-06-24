@@ -1,9 +1,7 @@
 """Config flow for MusicAssistant integration."""
 
-from __future__ import annotations
-
 from collections.abc import Mapping
-from typing import TYPE_CHECKING, Any
+from typing import TYPE_CHECKING, Any, override
 from urllib.parse import urlencode
 
 from music_assistant_client import MusicAssistantClient
@@ -23,7 +21,7 @@ from homeassistant.config_entries import (
     ConfigFlow,
     ConfigFlowResult,
 )
-from homeassistant.const import CONF_URL
+from homeassistant.const import CONF_TOKEN, CONF_URL
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import aiohttp_client
 from homeassistant.helpers.config_entry_oauth2_flow import (
@@ -33,13 +31,7 @@ from homeassistant.helpers.config_entry_oauth2_flow import (
 from homeassistant.helpers.service_info.hassio import HassioServiceInfo
 from homeassistant.helpers.service_info.zeroconf import ZeroconfServiceInfo
 
-from .const import (
-    AUTH_SCHEMA_VERSION,
-    CONF_TOKEN,
-    DOMAIN,
-    HASSIO_DISCOVERY_SCHEMA_VERSION,
-    LOGGER,
-)
+from .const import AUTH_SCHEMA_VERSION, DOMAIN, HASSIO_DISCOVERY_SCHEMA_VERSION, LOGGER
 
 DEFAULT_TITLE = "Music Assistant"
 DEFAULT_URL = "http://mass.local:8095"
@@ -93,6 +85,7 @@ class MusicAssistantConfigFlow(ConfigFlow, domain=DOMAIN):
         self.token: str | None = None
         self.server_info: ServerInfoMessage | None = None
 
+    @override
     async def async_step_user(
         self, user_input: dict[str, Any] | None = None
     ) -> ConfigFlowResult:
@@ -139,17 +132,20 @@ class MusicAssistantConfigFlow(ConfigFlow, domain=DOMAIN):
             errors=errors,
         )
 
+    @override
     async def async_step_hassio(
         self, discovery_info: HassioServiceInfo
     ) -> ConfigFlowResult:
-        """Handle Home Assistant add-on discovery.
+        """Handle Home Assistant app discovery.
 
-        This flow is triggered by the Music Assistant add-on.
+        This flow is triggered by the Music Assistant app.
         """
-        # Build URL from add-on discovery info
-        # The add-on exposes the API on port 8095, but also hosts an internal-only
-        # webserver (default at port 8094) for the Home Assistant integration to connect to.
-        # The info where the internal API is exposed is passed via discovery_info
+        # Build URL from app discovery info
+        # The app exposes the API on port 8095, but also
+        # hosts an internal-only webserver (default at port
+        # 8094) for the HA integration to connect to.
+        # The info where the internal API is exposed is
+        # passed via discovery_info
         host = discovery_info.config["host"]
         port = discovery_info.config["port"]
         self.url = f"http://{host}:{port}"
@@ -160,7 +156,7 @@ class MusicAssistantConfigFlow(ConfigFlow, domain=DOMAIN):
         except InvalidServerVersion:
             return self.async_abort(reason="invalid_server_version")
         except MusicAssistantClientException:
-            LOGGER.exception("Unexpected exception during add-on discovery")
+            LOGGER.exception("Unexpected exception during HA app discovery")
             return self.async_abort(reason="unknown")
 
         # We trust the token from hassio discovery and validate it during setup
@@ -191,7 +187,7 @@ class MusicAssistantConfigFlow(ConfigFlow, domain=DOMAIN):
     async def async_step_hassio_confirm(
         self, user_input: dict[str, Any] | None = None
     ) -> ConfigFlowResult:
-        """Confirm the add-on discovery."""
+        """Confirm the Home Assistant app discovery."""
         if TYPE_CHECKING:
             assert self.url is not None
 
@@ -207,6 +203,7 @@ class MusicAssistantConfigFlow(ConfigFlow, domain=DOMAIN):
         self._set_confirm_only()
         return self.async_show_form(step_id="hassio_confirm")
 
+    @override
     async def async_step_zeroconf(
         self, discovery_info: ZeroconfServiceInfo
     ) -> ConfigFlowResult:
@@ -214,18 +211,21 @@ class MusicAssistantConfigFlow(ConfigFlow, domain=DOMAIN):
         try:
             # Parse zeroconf properties (strings) to ServerInfoMessage
             server_info = _parse_zeroconf_server_info(discovery_info.properties)
-        except (LookupError, KeyError, ValueError):
+        except LookupError, KeyError, ValueError:
             return self.async_abort(reason="invalid_discovery_info")
 
         if server_info.schema_version >= HASSIO_DISCOVERY_SCHEMA_VERSION:
-            # Ignore servers running as Home Assistant add-on
+            # Ignore servers running as Home Assistant app
             # (they should be discovered through hassio discovery instead)
             if server_info.homeassistant_addon:
-                LOGGER.debug("Ignoring add-on server in zeroconf discovery")
+                LOGGER.debug("Ignoring HA app server in zeroconf discovery")
                 return self.async_abort(reason="already_discovered_addon")
 
         self.url = server_info.base_url
         self.server_info = server_info
+
+        if TYPE_CHECKING:
+            assert self.url is not None
 
         await self.async_set_unique_id(server_info.server_id)
         self._abort_if_unique_id_configured(updates={CONF_URL: self.url})
@@ -290,7 +290,8 @@ class MusicAssistantConfigFlow(ConfigFlow, domain=DOMAIN):
         state = _encode_jwt(
             self.hass, {"flow_id": self.flow_id, "redirect_uri": redirect_uri}
         )
-        # Music Assistant server will redirect to: {redirect_uri}?state={state}&code={token}
+        # Music Assistant server will redirect to:
+        # {redirect_uri}?state={state}&code={token}
         params = urlencode(
             {
                 "return_url": f"{redirect_uri}?state={state}",
@@ -321,7 +322,7 @@ class MusicAssistantConfigFlow(ConfigFlow, domain=DOMAIN):
                 aiohttp_session=session,
             )
             LOGGER.debug("Successfully created long-lived token")
-        except (TimeoutError, CannotConnect):
+        except TimeoutError, CannotConnect:
             return self.async_abort(reason="cannot_connect")
         except (AuthenticationFailed, InvalidToken) as err:
             LOGGER.error("Authentication failed: %s", err)
@@ -364,7 +365,7 @@ class MusicAssistantConfigFlow(ConfigFlow, domain=DOMAIN):
                 return self.async_abort(reason="cannot_connect")
             except InvalidServerVersion:
                 return self.async_abort(reason="invalid_server_version")
-            except (AuthenticationFailed, InvalidToken):
+            except AuthenticationFailed, InvalidToken:
                 errors["base"] = "auth_failed"
             except MusicAssistantClientException:
                 LOGGER.exception("Unexpected exception during manual auth")

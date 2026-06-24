@@ -1,8 +1,6 @@
 """Support for monitoring emoncms feeds."""
 
-from __future__ import annotations
-
-from typing import Any
+from typing import Any, override
 
 from homeassistant.components.sensor import (
     SensorDeviceClass,
@@ -203,7 +201,7 @@ async def async_setup_entry(
 
     coordinator = entry.runtime_data
     # uuid was added in emoncms database 11.5.7
-    unique_id = entry.unique_id if entry.unique_id else entry.entry_id
+    unique_id = entry.unique_id or entry.entry_id
     elems = coordinator.data
     if not elems:
         return
@@ -277,6 +275,7 @@ class EmonCmsSensor(CoordinatorEntity[EmoncmsCoordinator], SensorEntity):
             self._attr_native_value = round(float(elem["value"]), DECIMALS)
 
     @callback
+    @override
     def _handle_coordinator_update(self) -> None:
         """Handle updated data from the coordinator."""
         data = self.coordinator.data

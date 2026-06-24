@@ -1,27 +1,39 @@
 """SMLIGHT SLZB Zigbee device integration."""
 
-from __future__ import annotations
-
 from pysmlight import Api2
 
 from homeassistant.const import CONF_HOST, Platform
 from homeassistant.core import HomeAssistant
+from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
+from homeassistant.helpers.typing import ConfigType
 
+from .const import DOMAIN
 from .coordinator import (
     SmConfigEntry,
     SmDataUpdateCoordinator,
     SmFirmwareUpdateCoordinator,
     SmlightData,
 )
+from .services import async_setup_services
+
+CONFIG_SCHEMA = cv.config_entry_only_config_schema(DOMAIN)
 
 PLATFORMS: list[Platform] = [
     Platform.BINARY_SENSOR,
     Platform.BUTTON,
+    Platform.INFRARED,
+    Platform.LIGHT,
     Platform.SENSOR,
     Platform.SWITCH,
     Platform.UPDATE,
 ]
+
+
+async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
+    """Set up the SMLIGHT services."""
+    async_setup_services(hass)
+    return True
 
 
 async def async_setup_entry(hass: HomeAssistant, entry: SmConfigEntry) -> bool:

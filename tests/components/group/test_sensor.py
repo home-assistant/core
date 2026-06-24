@@ -1,7 +1,5 @@
 """The tests for the Group Sensor platform."""
 
-from __future__ import annotations
-
 from math import prod
 import statistics
 from typing import Any
@@ -12,6 +10,7 @@ import pytest
 from homeassistant import config as hass_config
 from homeassistant.components.group import DOMAIN
 from homeassistant.components.group.sensor import (
+    ATTR_FIRST_AVAILABLE_ENTITY_ID,
     ATTR_LAST_ENTITY_ID,
     ATTR_MAX_ENTITY_ID,
     ATTR_MIN_ENTITY_ID,
@@ -86,6 +85,11 @@ def set_or_remove_state(
         ("mean", MEAN, {}),
         ("median", MEDIAN, {}),
         ("last", VALUES[2], {ATTR_LAST_ENTITY_ID: "sensor.test_3"}),
+        (
+            "first_available",
+            VALUES[0],
+            {ATTR_FIRST_AVAILABLE_ENTITY_ID: "sensor.test_1"},
+        ),
         ("range", RANGE, {}),
         ("stdev", STDEV, {}),
         ("sum", SUM_VALUE, {}),
@@ -590,8 +594,8 @@ async def test_sensor_with_uoms_but_no_device_class(
     assert state.state == STATE_UNKNOWN
 
     assert (
-        "Unable to use state. Only entities with correct unit of measurement is supported"
-        in caplog.text
+        "Unable to use state. Only entities with correct unit"
+        " of measurement is supported" in caplog.text
     )
 
     hass.states.async_set(
@@ -614,7 +618,7 @@ async def test_sensor_with_uoms_but_no_device_class(
 async def test_sensor_calculated_properties_not_same(
     hass: HomeAssistant, issue_registry: ir.IssueRegistry
 ) -> None:
-    """Test the sensor calculating device_class, state_class and unit of measurement not same."""
+    """Test sensor calculating properties when not all the same."""
     config = {
         SENSOR_DOMAIN: {
             "platform": DOMAIN,
@@ -750,7 +754,7 @@ async def test_sensor_calculated_properties_not_convertible_device_class(
     hass: HomeAssistant,
     caplog: pytest.LogCaptureFixture,
 ) -> None:
-    """Test the sensor calculating device_class, state_class and unit of measurement when device class not convertible."""
+    """Test sensor with non-convertible device class."""
     config = {
         SENSOR_DOMAIN: {
             "platform": DOMAIN,
@@ -861,10 +865,66 @@ async def test_last_sensor(hass: HomeAssistant) -> None:
         assert state.attributes.get("last_entity_id") == entity_id
 
 
+async def test_first_available_sensor(hass: HomeAssistant) -> None:
+    """Test the first available sensor."""
+    config = {
+        SENSOR_DOMAIN: {
+            "platform": DOMAIN,
+            "name": "test_first_available",
+            "type": "first_available",
+            "entities": ["sensor.test_1", "sensor.test_2", "sensor.test_3"],
+            "unique_id": "very_unique_id_first_available_sensor",
+            "ignore_non_numeric": True,
+        }
+    }
+
+    assert await async_setup_component(hass, "sensor", config)
+    await hass.async_block_till_done()
+
+    entity_ids = config["sensor"]["entities"]
+
+    # Ensure that while sensor states are being set
+    # the group will always point to the first available sensor.
+
+    for entity_id, value in dict(zip(entity_ids, VALUES, strict=False)).items():
+        hass.states.async_set(entity_id, value)
+        await hass.async_block_till_done()
+        state = hass.states.get("sensor.test_first_available")
+        assert str(float(VALUES[0])) == state.state
+        assert entity_ids[0] == state.attributes.get("first_available_entity_id")
+
+    # If the second sensor of the group becomes unavailable
+    # then the first one should still be taken.
+
+    hass.states.async_set(entity_ids[1], STATE_UNAVAILABLE)
+    await hass.async_block_till_done()
+    state = hass.states.get("sensor.test_first_available")
+    assert str(float(VALUES[0])) == state.state
+    assert entity_ids[0] == state.attributes.get("first_available_entity_id")
+
+    # If the first sensor of the group becomes now unavailable
+    # then the third one should be taken.
+
+    hass.states.async_set(entity_ids[0], STATE_UNAVAILABLE)
+    await hass.async_block_till_done()
+    state = hass.states.get("sensor.test_first_available")
+    assert str(float(VALUES[2])) == state.state
+    assert entity_ids[2] == state.attributes.get("first_available_entity_id")
+
+    # If all sensors of the group become unavailable
+    # then the group should also be unavailable.
+
+    hass.states.async_set(entity_ids[2], STATE_UNAVAILABLE)
+    await hass.async_block_till_done()
+    state = hass.states.get("sensor.test_first_available")
+    assert state.state == STATE_UNAVAILABLE
+    assert state.attributes.get("first_available_entity_id") is None
+
+
 async def test_sensors_attributes_added_when_entity_info_available(
     hass: HomeAssistant,
 ) -> None:
-    """Test the sensor calculate attributes once all entities attributes are available."""
+    """Test sensor calculates attributes once all entities are available."""
     config = {
         SENSOR_DOMAIN: {
             "platform": DOMAIN,

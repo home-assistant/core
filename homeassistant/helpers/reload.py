@@ -1,14 +1,12 @@
 """Class to reload platforms."""
 
-from __future__ import annotations
-
 import asyncio
 from collections.abc import Iterable
 import logging
 from typing import Any, Literal, overload
 
 from homeassistant import config as conf_util
-from homeassistant.const import SERVICE_RELOAD
+from homeassistant.const import SERVICE_RELOAD, Platform
 from homeassistant.core import HomeAssistant, ServiceCall, callback
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.loader import async_get_integration
@@ -26,7 +24,9 @@ PLATFORM_RESET_LOCK = "lock_async_reset_platform_{}"
 
 
 async def async_reload_integration_platforms(
-    hass: HomeAssistant, integration_domain: str, platform_domains: Iterable[str]
+    hass: HomeAssistant,
+    integration_domain: str,
+    platform_domains: Iterable[Platform],
 ) -> None:
     """Reload an integration's platforms.
 
@@ -54,7 +54,7 @@ async def async_reload_integration_platforms(
 async def _resetup_platform(
     hass: HomeAssistant,
     integration_domain: str,
-    platform_domain: str,
+    platform_domain: Platform,
     unprocessed_config: ConfigType,
 ) -> None:
     """Resetup a platform."""
@@ -109,7 +109,7 @@ async def _resetup_platform(
 async def _async_setup_platform(
     hass: HomeAssistant,
     integration_domain: str,
-    platform_domain: str,
+    platform_domain: Platform,
     platform_configs: list[dict[str, Any]],
 ) -> None:
     """Platform for the first time when new configuration is added."""
@@ -136,6 +136,8 @@ async def _async_reconfig_platform(
     await asyncio.gather(*tasks)
 
 
+# The complicated overloads are due to a limitation in mypy, details in
+# https://github.com/python/mypy/issues/7333
 @overload
 async def async_integration_yaml_config(
     hass: HomeAssistant, integration_name: str
@@ -173,7 +175,7 @@ async def async_integration_yaml_config(
 
 @callback
 def async_get_platform_without_config_entry(
-    hass: HomeAssistant, integration_name: str, integration_platform_name: str
+    hass: HomeAssistant, integration_name: str, integration_platform_name: Platform
 ) -> EntityPlatform | None:
     """Find an existing platform that is not a config entry."""
     for integration_platform in async_get_platforms(hass, integration_name):
@@ -187,7 +189,7 @@ def async_get_platform_without_config_entry(
 
 
 async def async_setup_reload_service(
-    hass: HomeAssistant, domain: str, platforms: Iterable[str]
+    hass: HomeAssistant, domain: str, platforms: Iterable[Platform]
 ) -> None:
     """Create the reload service for the domain."""
     if hass.services.has_service(domain, SERVICE_RELOAD):
@@ -202,7 +204,7 @@ async def async_setup_reload_service(
 
 
 def setup_reload_service(
-    hass: HomeAssistant, domain: str, platforms: Iterable[str]
+    hass: HomeAssistant, domain: str, platforms: Iterable[Platform]
 ) -> None:
     """Sync version of async_setup_reload_service."""
     asyncio.run_coroutine_threadsafe(

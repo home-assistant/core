@@ -5,6 +5,7 @@ import logging
 from zoneinfo import ZoneInfo
 
 import voluptuous as vol
+from yarl import URL
 from zha.application.const import BAUD_RATES, RadioType
 from zha.application.gateway import Gateway
 from zha.application.helpers import ZHAData
@@ -43,6 +44,7 @@ from .const import (
     CONF_ZIGPY,
     DATA_ZHA,
     DOMAIN,
+    LEGACY_ZEROCONF_PORT,
 )
 from .helpers import (
     SIGNAL_ADD_ENTITIES,
@@ -274,12 +276,17 @@ async def async_setup_entry(hass: HomeAssistant, config_entry: ConfigEntry) -> b
 
 async def async_unload_entry(hass: HomeAssistant, config_entry: ConfigEntry) -> bool:
     """Unload ZHA config entry."""
+    if not await hass.config_entries.async_unload_platforms(config_entry, PLATFORMS):
+        return False
+
     ha_zha_data = get_zha_data(hass)
     ha_zha_data.config_entry = None
 
     if ha_zha_data.gateway_proxy is not None:
         await ha_zha_data.gateway_proxy.shutdown()
         ha_zha_data.gateway_proxy = None
+
+    ha_zha_data.update_coordinator = None
 
     # clean up any remaining entity metadata
     # (entities that have been discovered but not yet added to HA)
@@ -291,12 +298,16 @@ async def async_unload_entry(hass: HomeAssistant, config_entry: ConfigEntry) -> 
 
     websocket_api.async_unload_api(hass)
 
-    return await hass.config_entries.async_unload_platforms(config_entry, PLATFORMS)
+    return True
 
 
 async def async_migrate_entry(hass: HomeAssistant, config_entry: ConfigEntry) -> bool:
     """Migrate old entry."""
-    _LOGGER.debug("Migrating from version %s", config_entry.version)
+    _LOGGER.debug(
+        "Migrating from version %s.%s",
+        config_entry.version,
+        config_entry.minor_version,
+    )
 
     if config_entry.version == 1:
         data = {
@@ -356,5 +367,24 @@ async def async_migrate_entry(hass: HomeAssistant, config_entry: ConfigEntry) ->
                 version=5,
             )
 
-    _LOGGER.info("Migration to version %s successful", config_entry.version)
+    if config_entry.version == 5 and config_entry.minor_version < 2:
+        data = {**config_entry.data, CONF_DEVICE: {**config_entry.data[CONF_DEVICE]}}
+        device_path = data[CONF_DEVICE][CONF_DEVICE_PATH]
+
+        if device_path.startswith(("socket://", "tcp://")):
+            url = URL(device_path)
+            if url.explicit_port is None:
+                data[CONF_DEVICE][CONF_DEVICE_PATH] = str(
+                    url.with_port(LEGACY_ZEROCONF_PORT)
+                )
+
+        hass.config_entries.async_update_entry(
+            config_entry, data=data, version=5, minor_version=2
+        )
+
+    _LOGGER.info(
+        "Migration to version %s.%s successful",
+        config_entry.version,
+        config_entry.minor_version,
+    )
     return True

@@ -225,7 +225,10 @@ async def test_on_data_none_parsed(
                     "item": {
                         "deviceId": "1",
                         "desired": '{"key": "value"}',
-                        "reported": '{"displayName":"test-display-name", "migrationStatus":"NOT_STARTED"}',
+                        "reported": (
+                            '{"displayName":"test-display-name",'
+                            ' "migrationStatus":"NOT_STARTED"}'
+                        ),
                         "connectionState": {
                             "connected": None,
                             "updatedTimestamp": None,
@@ -336,7 +339,14 @@ async def test_no_connection_state(
                     "item": {
                         "deviceId": "1",
                         "desired": '{"key": "value"}',
-                        "reported": '{"displayName":"Test Garage 1", "migrationStatus":"DONE", "barrierStatus": "1,100,0", "deviceFwVersion": "1.0.0", "lightStatus": "1,100", "vcnMode": false}',
+                        "reported": (
+                            '{"displayName":"Test Garage 1",'
+                            ' "migrationStatus":"DONE",'
+                            ' "barrierStatus": "1,100,0",'
+                            ' "deviceFwVersion": "1.0.0",'
+                            ' "lightStatus": "1,100",'
+                            ' "vcnMode": false}'
+                        ),
                         "connectionState": None,
                         "version": None,
                         "timestamp": None,

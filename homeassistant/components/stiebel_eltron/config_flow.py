@@ -1,9 +1,7 @@
 """Config flow for the STIEBEL ELTRON integration."""
 
-from __future__ import annotations
-
 import logging
-from typing import Any
+from typing import Any, override
 
 from pymodbus.client import ModbusTcpClient
 from pystiebeleltron.pystiebeleltron import StiebelEltronAPI
@@ -22,6 +20,7 @@ class StiebelEltronConfigFlow(ConfigFlow, domain=DOMAIN):
 
     VERSION = 1
 
+    @override
     async def async_step_user(
         self, user_input: dict[str, Any] | None = None
     ) -> ConfigFlowResult:

@@ -13,9 +13,6 @@ from homeassistant.components.teslemetry.services import (
     ATTR_END_OFF_PEAK_TIME,
     ATTR_END_TIME,
     ATTR_GPS,
-    ATTR_ID,
-    ATTR_LOCATION,
-    ATTR_NAME,
     ATTR_OFF_PEAK_CHARGING_ENABLED,
     ATTR_OFF_PEAK_CHARGING_WEEKDAYS,
     ATTR_ONE_TIME,
@@ -24,7 +21,6 @@ from homeassistant.components.teslemetry.services import (
     ATTR_PRECONDITIONING_ENABLED,
     ATTR_PRECONDITIONING_WEEKDAYS,
     ATTR_START_TIME,
-    ATTR_TIME,
     ATTR_TOU_SETTINGS,
     SERVICE_ADD_CHARGE_SCHEDULE,
     SERVICE_ADD_PRECONDITION_SCHEDULE,
@@ -37,13 +33,23 @@ from homeassistant.components.teslemetry.services import (
     SERVICE_TIME_OF_USE,
     SERVICE_VALET_MODE,
 )
-from homeassistant.const import CONF_DEVICE_ID, CONF_LATITUDE, CONF_LONGITUDE
+from homeassistant.const import (
+    ATTR_ID,
+    ATTR_LOCATION,
+    ATTR_NAME,
+    ATTR_TIME,
+    CONF_DEVICE_ID,
+    CONF_LATITUDE,
+    CONF_LONGITUDE,
+)
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError, ServiceValidationError
-from homeassistant.helpers import entity_registry as er
+from homeassistant.helpers import device_registry as dr, entity_registry as er
 
 from . import setup_platform
 from .const import COMMAND_ERROR, COMMAND_OK
+
+from tests.common import MockConfigEntry
 
 lat = -27.9699373
 lon = 153.3726526
@@ -51,11 +57,11 @@ lon = 153.3726526
 
 async def test_services(
     hass: HomeAssistant,
+    entity_registry: er.EntityRegistry,
 ) -> None:
     """Tests that the custom services are correct."""
 
     await setup_platform(hass)
-    entity_registry = er.async_get(hass)
 
     # Get a vehicle device ID
     vehicle_device = entity_registry.async_get("sensor.test_charging").device_id
@@ -206,11 +212,29 @@ async def test_services(
             SERVICE_TIME_OF_USE,
             {
                 CONF_DEVICE_ID: energy_device,
-                ATTR_TOU_SETTINGS: {},
+                ATTR_TOU_SETTINGS: {"utility": "test"},
             },
             blocking=True,
         )
-        set_time_of_use.assert_called_once()
+        set_time_of_use.assert_called_once_with({"utility": "test"})
+
+    # Test that tariff_content_v2 wrapper is unwrapped before passing to SDK
+    with patch(
+        "tesla_fleet_api.teslemetry.EnergySite.time_of_use_settings",
+        return_value=COMMAND_OK,
+    ) as set_time_of_use:
+        await hass.services.async_call(
+            DOMAIN,
+            SERVICE_TIME_OF_USE,
+            {
+                CONF_DEVICE_ID: energy_device,
+                ATTR_TOU_SETTINGS: {
+                    "tariff_content_v2": {"utility": "test"},
+                },
+            },
+            blocking=True,
+        )
+        set_time_of_use.assert_called_once_with({"utility": "test"})
 
     with patch(
         "tesla_fleet_api.teslemetry.Vehicle.add_charge_schedule",
@@ -338,15 +362,16 @@ async def test_services(
 
 async def test_service_validation_errors(
     hass: HomeAssistant,
+    device_registry: dr.DeviceRegistry,
+    entity_registry: er.EntityRegistry,
 ) -> None:
     """Tests that the custom services handle bad data."""
 
     await setup_platform(hass)
-    entity_registry = er.async_get(hass)
     vehicle_device = entity_registry.async_get("sensor.test_charging").device_id
 
-    # Bad device ID
-    with pytest.raises(ServiceValidationError):
+    # Bad device ID - verify translation key is used
+    with pytest.raises(ServiceValidationError) as exc_info:
         await hass.services.async_call(
             DOMAIN,
             SERVICE_NAVIGATE_ATTR_GPS_REQUEST,
@@ -356,9 +381,10 @@ async def test_service_validation_errors(
             },
             blocking=True,
         )
+    assert exc_info.value.translation_key == "invalid_device"
 
     # Test set_scheduled_charging validation error (enable=True but no time)
-    with pytest.raises(ServiceValidationError):
+    with pytest.raises(ServiceValidationError) as exc_info:
         await hass.services.async_call(
             DOMAIN,
             SERVICE_SET_SCHEDULED_CHARGING,
@@ -368,9 +394,11 @@ async def test_service_validation_errors(
             },
             blocking=True,
         )
+    assert exc_info.value.translation_key == "set_scheduled_charging_time"
 
-    # Test set_scheduled_departure validation error (preconditioning_enabled=True but no departure_time)
-    with pytest.raises(ServiceValidationError):
+    # Test set_scheduled_departure validation error
+    # (preconditioning_enabled=True but no departure_time)
+    with pytest.raises(ServiceValidationError) as exc_info:
         await hass.services.async_call(
             DOMAIN,
             SERVICE_SET_SCHEDULED_DEPARTURE,
@@ -380,9 +408,11 @@ async def test_service_validation_errors(
             },
             blocking=True,
         )
+    assert exc_info.value.translation_key == "set_scheduled_departure_preconditioning"
 
-    # Test set_scheduled_departure validation error (off_peak_charging_enabled=True but no end_off_peak_time)
-    with pytest.raises(ServiceValidationError):
+    # Test set_scheduled_departure validation error
+    # (off_peak_charging_enabled=True but no end_off_peak_time)
+    with pytest.raises(ServiceValidationError) as exc_info:
         await hass.services.async_call(
             DOMAIN,
             SERVICE_SET_SCHEDULED_DEPARTURE,
@@ -392,3 +422,54 @@ async def test_service_validation_errors(
             },
             blocking=True,
         )
+    assert exc_info.value.translation_key == "set_scheduled_departure_off_peak"
+
+    energy_device = entity_registry.async_get(
+        "sensor.energy_site_battery_power"
+    ).device_id
+
+    # Vehicle-only service targeting an energy-site device -> no vehicle match
+    with pytest.raises(ServiceValidationError) as exc_info:
+        await hass.services.async_call(
+            DOMAIN,
+            SERVICE_NAVIGATE_ATTR_GPS_REQUEST,
+            {
+                CONF_DEVICE_ID: energy_device,
+                ATTR_GPS: {CONF_LATITUDE: lat, CONF_LONGITUDE: lon},
+            },
+            blocking=True,
+        )
+    assert exc_info.value.translation_key == "no_vehicle_data_for_device"
+
+    # Energy-only service targeting a vehicle device -> no energy-site match
+    with pytest.raises(ServiceValidationError) as exc_info:
+        await hass.services.async_call(
+            DOMAIN,
+            SERVICE_TIME_OF_USE,
+            {
+                CONF_DEVICE_ID: vehicle_device,
+                ATTR_TOU_SETTINGS: {"utility": "test"},
+            },
+            blocking=True,
+        )
+    assert exc_info.value.translation_key == "no_energy_site_data_for_device"
+
+    other_entry = MockConfigEntry(domain="other")
+    other_entry.add_to_hass(hass)
+    other_device = device_registry.async_get_or_create(
+        config_entry_id=other_entry.entry_id,
+        identifiers={("other", "unrelated")},
+    )
+
+    # Teslemetry service targeting a device with no Teslemetry config entry
+    with pytest.raises(ServiceValidationError) as exc_info:
+        await hass.services.async_call(
+            DOMAIN,
+            SERVICE_NAVIGATE_ATTR_GPS_REQUEST,
+            {
+                CONF_DEVICE_ID: other_device.id,
+                ATTR_GPS: {CONF_LATITUDE: lat, CONF_LONGITUDE: lon},
+            },
+            blocking=True,
+        )
+    assert exc_info.value.translation_key == "no_config_entry_for_device"

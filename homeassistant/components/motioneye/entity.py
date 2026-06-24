@@ -1,21 +1,17 @@
 """The motionEye integration."""
 
-from __future__ import annotations
-
 from collections.abc import Mapping
-from typing import Any
+from typing import Any, override
 
 from motioneye_client.client import MotionEyeClient
 from motioneye_client.const import KEY_ID
 
 from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.entity import EntityDescription
-from homeassistant.helpers.update_coordinator import (
-    CoordinatorEntity,
-    DataUpdateCoordinator,
-)
+from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
 from . import get_motioneye_device_identifier
+from .coordinator import MotionEyeUpdateCoordinator
 
 
 def get_motioneye_entity_unique_id(
@@ -25,7 +21,7 @@ def get_motioneye_entity_unique_id(
     return f"{config_entry_id}_{camera_id}_{entity_type}"
 
 
-class MotionEyeEntity(CoordinatorEntity):
+class MotionEyeEntity(CoordinatorEntity[MotionEyeUpdateCoordinator]):
     """Base class for motionEye entities."""
 
     _attr_has_entity_name = True
@@ -36,7 +32,7 @@ class MotionEyeEntity(CoordinatorEntity):
         type_name: str,
         camera: dict[str, Any],
         client: MotionEyeClient,
-        coordinator: DataUpdateCoordinator,
+        coordinator: MotionEyeUpdateCoordinator,
         options: Mapping[str, Any],
         entity_description: EntityDescription | None = None,
     ) -> None:
@@ -58,16 +54,19 @@ class MotionEyeEntity(CoordinatorEntity):
         super().__init__(coordinator)
 
     @property
+    @override
     def unique_id(self) -> str:
         """Return a unique id for this instance."""
         return self._unique_id
 
     @property
+    @override
     def device_info(self) -> DeviceInfo:
         """Return the device information."""
         return DeviceInfo(identifiers={self._device_identifier})
 
     @property
+    @override
     def available(self) -> bool:
         """Return if entity is available."""
         return self._camera is not None and super().available

@@ -1,11 +1,9 @@
 """Http views to control the config manager."""
 
-from __future__ import annotations
-
 from collections.abc import Callable
 from http import HTTPStatus
 import logging
-from typing import Any, NoReturn
+from typing import Any, NoReturn, override
 
 from aiohttp import web
 import aiohttp.web_exceptions
@@ -150,7 +148,7 @@ def _prepare_config_flow_result_json(
     prepare_result_json: Callable[[data_entry_flow.FlowResult], dict[str, Any]],
 ) -> dict[str, Any]:
     """Convert result to JSON."""
-    if result["type"] != data_entry_flow.FlowResultType.CREATE_ENTRY:
+    if result["type"] is not data_entry_flow.FlowResultType.CREATE_ENTRY:
         return prepare_result_json(result)
 
     data = {key: val for key, val in result.items() if key not in ("data", "context")}
@@ -177,16 +175,17 @@ class ConfigManagerFlowIndexView(
         vol.Schema(
             {
                 vol.Required("handler"): vol.Any(str, list),
-                vol.Optional("show_advanced_options", default=False): cv.boolean,
                 vol.Optional("entry_id"): cv.string,
             },
             extra=vol.ALLOW_EXTRA,
         )
     )
+    @override
     async def post(self, request: web.Request, data: dict[str, Any]) -> web.Response:
         """Initialize a POST request for a config entry flow."""
         return await self._post_impl(request, data)
 
+    @override
     async def _post_impl(
         self, request: web.Request, data: dict[str, Any]
     ) -> web.Response:
@@ -199,6 +198,7 @@ class ConfigManagerFlowIndexView(
                 status=HTTPStatus.BAD_REQUEST,
             )
 
+    @override
     def get_context(self, data: dict[str, Any]) -> dict[str, Any]:
         """Return context."""
         context = super().get_context(data)
@@ -208,6 +208,7 @@ class ConfigManagerFlowIndexView(
             context["entry_id"] = entry_id
         return context
 
+    @override
     def _prepare_result_json(
         self, result: data_entry_flow.FlowResult
     ) -> dict[str, Any]:
@@ -224,15 +225,18 @@ class ConfigManagerFlowResourceView(
     name = "api:config:config_entries:flow:resource"
 
     @require_admin(perm_category=CAT_CONFIG_ENTRIES, permission="add")
+    @override
     async def get(self, request: web.Request, /, flow_id: str) -> web.Response:
         """Get the current state of a data_entry_flow."""
         return await super().get(request, flow_id)
 
     @require_admin(perm_category=CAT_CONFIG_ENTRIES, permission="add")
+    @override
     async def post(self, request: web.Request, flow_id: str) -> web.Response:
         """Handle a POST request."""
         return await super().post(request, flow_id)
 
+    @override
     def _prepare_result_json(
         self, result: data_entry_flow.FlowResult
     ) -> dict[str, Any]:
@@ -264,6 +268,7 @@ class OptionManagerFlowIndexView(
     name = "api:config:config_entries:option:flow"
 
     @require_admin(perm_category=CAT_CONFIG_ENTRIES, permission=POLICY_EDIT)
+    @override
     async def post(self, request: web.Request) -> web.Response:
         """Handle a POST request.
 
@@ -281,11 +286,13 @@ class OptionManagerFlowResourceView(
     name = "api:config:config_entries:options:flow:resource"
 
     @require_admin(perm_category=CAT_CONFIG_ENTRIES, permission=POLICY_EDIT)
+    @override
     async def get(self, request: web.Request, /, flow_id: str) -> web.Response:
         """Get the current state of a data_entry_flow."""
         return await super().get(request, flow_id)
 
     @require_admin(perm_category=CAT_CONFIG_ENTRIES, permission=POLICY_EDIT)
+    @override
     async def post(self, request: web.Request, flow_id: str) -> web.Response:
         """Handle a POST request."""
         return await super().post(request, flow_id)
@@ -304,11 +311,11 @@ class SubentryManagerFlowIndexView(
         vol.Schema(
             {
                 vol.Required("handler"): vol.All(vol.Coerce(tuple), (str, str)),
-                vol.Optional("show_advanced_options", default=False): cv.boolean,
             },
             extra=vol.ALLOW_EXTRA,
         )
     )
+    @override
     async def post(self, request: web.Request, data: dict[str, Any]) -> web.Response:
         """Handle a POST request.
 
@@ -316,6 +323,7 @@ class SubentryManagerFlowIndexView(
         """
         return await super()._post_impl(request, data)
 
+    @override
     def get_context(self, data: dict[str, Any]) -> dict[str, Any]:
         """Return context."""
         context = super().get_context(data)
@@ -335,11 +343,13 @@ class SubentryManagerFlowResourceView(
     name = "api:config:config_entries:subentries:flow:resource"
 
     @require_admin(perm_category=CAT_CONFIG_ENTRIES, permission=POLICY_EDIT)
+    @override
     async def get(self, request: web.Request, /, flow_id: str) -> web.Response:
         """Get the current state of a data_entry_flow."""
         return await super().get(request, flow_id)
 
     @require_admin(perm_category=CAT_CONFIG_ENTRIES, permission=POLICY_EDIT)
+    @override
     async def post(self, request: web.Request, flow_id: str) -> web.Response:
         """Handle a POST request."""
         return await super().post(request, flow_id)
@@ -421,7 +431,7 @@ def config_entries_flow_subscribe(
                 config_entries.SOURCE_USER,
             )
         ]
-    except (ValueError, TypeError):
+    except ValueError, TypeError:
         # If we can't serialize, we'll filter out unserializable flows
         serialized_flows = []
         for flw in hass.config_entries.flow.async_progress():
@@ -434,7 +444,7 @@ def config_entries_flow_subscribe(
                 serialized_flows.append(
                     json_bytes({"type": None, "flow_id": flw["flow_id"], "flow": flw})
                 )
-            except (ValueError, TypeError):
+            except ValueError, TypeError:
                 _LOGGER.error(
                     "Unable to serialize to JSON. Bad data found at %s",
                     format_unserializable_data(

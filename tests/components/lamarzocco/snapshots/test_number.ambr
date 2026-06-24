@@ -1,14 +1,15 @@
 # serializer version: 1
 # name: test_brew_by_weight_dose[Linea Mini][entry-dose-1]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
-      'max': 100,
-      'min': 5,
-      'mode': <NumberMode.AUTO: 'auto'>,
-      'step': 0.1,
+      <NumberEntityCapabilityAttribute.MAX: 'max'>: 100,
+      <NumberEntityCapabilityAttribute.MIN: 'min'>: 5,
+      <NumberEntityCapabilityAttribute.MODE: 'mode'>: <NumberMode.AUTO: 'auto'>,
+      <NumberEntityCapabilityAttribute.STEP: 'step'>: 0.1,
     }),
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -42,14 +43,15 @@
 # ---
 # name: test_brew_by_weight_dose[Linea Mini][entry-dose-2]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
-      'max': 100,
-      'min': 5,
-      'mode': <NumberMode.AUTO: 'auto'>,
-      'step': 0.1,
+      <NumberEntityCapabilityAttribute.MAX: 'max'>: 100,
+      <NumberEntityCapabilityAttribute.MIN: 'min'>: 5,
+      <NumberEntityCapabilityAttribute.MODE: 'mode'>: <NumberMode.AUTO: 'auto'>,
+      <NumberEntityCapabilityAttribute.STEP: 'step'>: 0.1,
     }),
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -86,10 +88,10 @@
     'attributes': ReadOnlyDict({
       'device_class': 'weight',
       'friendly_name': 'LM012345 Brew by weight dose 1',
-      'max': 100,
-      'min': 5,
-      'mode': <NumberMode.AUTO: 'auto'>,
-      'step': 0.1,
+      <NumberEntityCapabilityAttribute.MAX: 'max'>: 100,
+      <NumberEntityCapabilityAttribute.MIN: 'min'>: 5,
+      <NumberEntityCapabilityAttribute.MODE: 'mode'>: <NumberMode.AUTO: 'auto'>,
+      <NumberEntityCapabilityAttribute.STEP: 'step'>: 0.1,
       'unit_of_measurement': <UnitOfMass.GRAMS: 'g'>,
     }),
     'context': <ANY>,
@@ -105,10 +107,10 @@
     'attributes': ReadOnlyDict({
       'device_class': 'weight',
       'friendly_name': 'LM012345 Brew by weight dose 2',
-      'max': 100,
-      'min': 5,
-      'mode': <NumberMode.AUTO: 'auto'>,
-      'step': 0.1,
+      <NumberEntityCapabilityAttribute.MAX: 'max'>: 100,
+      <NumberEntityCapabilityAttribute.MIN: 'min'>: 5,
+      <NumberEntityCapabilityAttribute.MODE: 'mode'>: <NumberMode.AUTO: 'auto'>,
+      <NumberEntityCapabilityAttribute.STEP: 'step'>: 0.1,
       'unit_of_measurement': <UnitOfMass.GRAMS: 'g'>,
     }),
     'context': <ANY>,
@@ -124,10 +126,10 @@
     'attributes': ReadOnlyDict({
       'device_class': 'temperature',
       'friendly_name': 'GS012345 Coffee target temperature',
-      'max': 104,
-      'min': 85,
-      'mode': <NumberMode.AUTO: 'auto'>,
-      'step': 0.1,
+      <NumberEntityCapabilityAttribute.MAX: 'max'>: 104,
+      <NumberEntityCapabilityAttribute.MIN: 'min'>: 85,
+      <NumberEntityCapabilityAttribute.MODE: 'mode'>: <NumberMode.AUTO: 'auto'>,
+      <NumberEntityCapabilityAttribute.STEP: 'step'>: 0.1,
       'unit_of_measurement': <UnitOfTemperature.CELSIUS: '°C'>,
     }),
     'context': <ANY>,
@@ -140,14 +142,15 @@
 # ---
 # name: test_general_numbers[coffee_target_temperature-94-set_coffee_target_temperature-kwargs0].1
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
-      'max': 104,
-      'min': 85,
-      'mode': <NumberMode.AUTO: 'auto'>,
-      'step': 0.1,
+      <NumberEntityCapabilityAttribute.MAX: 'max'>: 104,
+      <NumberEntityCapabilityAttribute.MIN: 'min'>: 85,
+      <NumberEntityCapabilityAttribute.MODE: 'mode'>: <NumberMode.AUTO: 'auto'>,
+      <NumberEntityCapabilityAttribute.STEP: 'step'>: 0.1,
     }),
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -184,10 +187,10 @@
     'attributes': ReadOnlyDict({
       'device_class': 'duration',
       'friendly_name': 'GS012345 Smart standby time',
-      'max': 240,
-      'min': 0,
-      'mode': <NumberMode.AUTO: 'auto'>,
-      'step': 1,
+      <NumberEntityCapabilityAttribute.MAX: 'max'>: 240,
+      <NumberEntityCapabilityAttribute.MIN: 'min'>: 0,
+      <NumberEntityCapabilityAttribute.MODE: 'mode'>: <NumberMode.AUTO: 'auto'>,
+      <NumberEntityCapabilityAttribute.STEP: 'step'>: 1,
       'unit_of_measurement': <UnitOfTime.MINUTES: 'min'>,
     }),
     'context': <ANY>,
@@ -200,14 +203,15 @@
 # ---
 # name: test_general_numbers[smart_standby_time-23-set_smart_standby-kwargs1].1
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
-      'max': 240,
-      'min': 0,
-      'mode': <NumberMode.AUTO: 'auto'>,
-      'step': 1,
+      <NumberEntityCapabilityAttribute.MAX: 'max'>: 240,
+      <NumberEntityCapabilityAttribute.MIN: 'min'>: 0,
+      <NumberEntityCapabilityAttribute.MODE: 'mode'>: <NumberMode.AUTO: 'auto'>,
+      <NumberEntityCapabilityAttribute.STEP: 'step'>: 1,
     }),
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -244,10 +248,10 @@
     'attributes': ReadOnlyDict({
       'device_class': 'duration',
       'friendly_name': 'MR012345 Prebrew off time',
-      'max': 10,
-      'min': 0,
-      'mode': <NumberMode.AUTO: 'auto'>,
-      'step': 0.1,
+      <NumberEntityCapabilityAttribute.MAX: 'max'>: 30,
+      <NumberEntityCapabilityAttribute.MIN: 'min'>: 0,
+      <NumberEntityCapabilityAttribute.MODE: 'mode'>: <NumberMode.AUTO: 'auto'>,
+      <NumberEntityCapabilityAttribute.STEP: 'step'>: 0.1,
       'unit_of_measurement': <UnitOfTime.SECONDS: 's'>,
     }),
     'context': <ANY>,
@@ -260,14 +264,15 @@
 # ---
 # name: test_prebrew_off[Linea Micra].1
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
-      'max': 10,
-      'min': 0,
-      'mode': <NumberMode.AUTO: 'auto'>,
-      'step': 0.1,
+      <NumberEntityCapabilityAttribute.MAX: 'max'>: 30,
+      <NumberEntityCapabilityAttribute.MIN: 'min'>: 0,
+      <NumberEntityCapabilityAttribute.MODE: 'mode'>: <NumberMode.AUTO: 'auto'>,
+      <NumberEntityCapabilityAttribute.STEP: 'step'>: 0.1,
     }),
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -304,10 +309,10 @@
     'attributes': ReadOnlyDict({
       'device_class': 'duration',
       'friendly_name': 'MR012345 Prebrew on time',
-      'max': 10,
-      'min': 0,
-      'mode': <NumberMode.AUTO: 'auto'>,
-      'step': 0.1,
+      <NumberEntityCapabilityAttribute.MAX: 'max'>: 30,
+      <NumberEntityCapabilityAttribute.MIN: 'min'>: 0,
+      <NumberEntityCapabilityAttribute.MODE: 'mode'>: <NumberMode.AUTO: 'auto'>,
+      <NumberEntityCapabilityAttribute.STEP: 'step'>: 0.1,
       'unit_of_measurement': <UnitOfTime.SECONDS: 's'>,
     }),
     'context': <ANY>,
@@ -320,14 +325,15 @@
 # ---
 # name: test_prebrew_on[Linea Micra].1
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
-      'max': 10,
-      'min': 0,
-      'mode': <NumberMode.AUTO: 'auto'>,
-      'step': 0.1,
+      <NumberEntityCapabilityAttribute.MAX: 'max'>: 30,
+      <NumberEntityCapabilityAttribute.MIN: 'min'>: 0,
+      <NumberEntityCapabilityAttribute.MODE: 'mode'>: <NumberMode.AUTO: 'auto'>,
+      <NumberEntityCapabilityAttribute.STEP: 'step'>: 0.1,
     }),
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -364,10 +370,10 @@
     'attributes': ReadOnlyDict({
       'device_class': 'duration',
       'friendly_name': 'MR012345 Preinfusion time',
-      'max': 10,
-      'min': 0,
-      'mode': <NumberMode.AUTO: 'auto'>,
-      'step': 0.1,
+      <NumberEntityCapabilityAttribute.MAX: 'max'>: 30,
+      <NumberEntityCapabilityAttribute.MIN: 'min'>: 0,
+      <NumberEntityCapabilityAttribute.MODE: 'mode'>: <NumberMode.AUTO: 'auto'>,
+      <NumberEntityCapabilityAttribute.STEP: 'step'>: 0.1,
       'unit_of_measurement': <UnitOfTime.SECONDS: 's'>,
     }),
     'context': <ANY>,
@@ -380,14 +386,15 @@
 # ---
 # name: test_preinfusion[Linea Micra].1
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
-      'max': 10,
-      'min': 0,
-      'mode': <NumberMode.AUTO: 'auto'>,
-      'step': 0.1,
+      <NumberEntityCapabilityAttribute.MAX: 'max'>: 30,
+      <NumberEntityCapabilityAttribute.MIN: 'min'>: 0,
+      <NumberEntityCapabilityAttribute.MODE: 'mode'>: <NumberMode.AUTO: 'auto'>,
+      <NumberEntityCapabilityAttribute.STEP: 'step'>: 0.1,
     }),
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -424,10 +431,10 @@
     'attributes': ReadOnlyDict({
       'device_class': 'temperature',
       'friendly_name': 'GS012345 Steam target temperature',
-      'max': 134,
-      'min': 20,
-      'mode': <NumberMode.AUTO: 'auto'>,
-      'step': 0.1,
+      <NumberEntityCapabilityAttribute.MAX: 'max'>: 134,
+      <NumberEntityCapabilityAttribute.MIN: 'min'>: 20,
+      <NumberEntityCapabilityAttribute.MODE: 'mode'>: <NumberMode.AUTO: 'auto'>,
+      <NumberEntityCapabilityAttribute.STEP: 'step'>: 0.1,
       'unit_of_measurement': <UnitOfTemperature.CELSIUS: '°C'>,
     }),
     'context': <ANY>,
@@ -440,14 +447,15 @@
 # ---
 # name: test_steam_temperature[GS3 AV].1
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
-      'max': 134,
-      'min': 20,
-      'mode': <NumberMode.AUTO: 'auto'>,
-      'step': 0.1,
+      <NumberEntityCapabilityAttribute.MAX: 'max'>: 134,
+      <NumberEntityCapabilityAttribute.MIN: 'min'>: 20,
+      <NumberEntityCapabilityAttribute.MODE: 'mode'>: <NumberMode.AUTO: 'auto'>,
+      <NumberEntityCapabilityAttribute.STEP: 'step'>: 0.1,
     }),
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,

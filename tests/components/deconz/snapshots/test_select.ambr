@@ -1,11 +1,12 @@
 # serializer version: 1
 # name: test_select[sensor_payload0-expected0][select.aqara_fp1_device_mode-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
-      'options': list([
+      <SelectEntityCapabilityAttribute.OPTIONS: 'options'>: list([
         'leftright',
         'undirected',
       ]),
@@ -44,7 +45,7 @@
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'friendly_name': 'Aqara FP1 Device Mode',
-      'options': list([
+      <SelectEntityCapabilityAttribute.OPTIONS: 'options'>: list([
         'leftright',
         'undirected',
       ]),
@@ -59,11 +60,12 @@
 # ---
 # name: test_select[sensor_payload0-expected0][select.aqara_fp1_sensitivity-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
-      'options': list([
+      <SelectEntityCapabilityAttribute.OPTIONS: 'options'>: list([
         'High',
         'Medium',
         'Low',
@@ -103,7 +105,7 @@
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'friendly_name': 'Aqara FP1 Sensitivity',
-      'options': list([
+      <SelectEntityCapabilityAttribute.OPTIONS: 'options'>: list([
         'High',
         'Medium',
         'Low',
@@ -119,11 +121,12 @@
 # ---
 # name: test_select[sensor_payload0-expected0][select.aqara_fp1_trigger_distance-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
-      'options': list([
+      <SelectEntityCapabilityAttribute.OPTIONS: 'options'>: list([
         'far',
         'medium',
         'near',
@@ -163,7 +166,7 @@
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'friendly_name': 'Aqara FP1 Trigger Distance',
-      'options': list([
+      <SelectEntityCapabilityAttribute.OPTIONS: 'options'>: list([
         'far',
         'medium',
         'near',
@@ -179,11 +182,12 @@
 # ---
 # name: test_select[sensor_payload1-expected1][select.aqara_fp1_device_mode-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
-      'options': list([
+      <SelectEntityCapabilityAttribute.OPTIONS: 'options'>: list([
         'leftright',
         'undirected',
       ]),
@@ -222,7 +226,7 @@
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'friendly_name': 'Aqara FP1 Device Mode',
-      'options': list([
+      <SelectEntityCapabilityAttribute.OPTIONS: 'options'>: list([
         'leftright',
         'undirected',
       ]),
@@ -237,11 +241,12 @@
 # ---
 # name: test_select[sensor_payload1-expected1][select.aqara_fp1_sensitivity-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
-      'options': list([
+      <SelectEntityCapabilityAttribute.OPTIONS: 'options'>: list([
         'High',
         'Medium',
         'Low',
@@ -281,7 +286,7 @@
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'friendly_name': 'Aqara FP1 Sensitivity',
-      'options': list([
+      <SelectEntityCapabilityAttribute.OPTIONS: 'options'>: list([
         'High',
         'Medium',
         'Low',
@@ -297,11 +302,12 @@
 # ---
 # name: test_select[sensor_payload1-expected1][select.aqara_fp1_trigger_distance-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
-      'options': list([
+      <SelectEntityCapabilityAttribute.OPTIONS: 'options'>: list([
         'far',
         'medium',
         'near',
@@ -341,7 +347,7 @@
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'friendly_name': 'Aqara FP1 Trigger Distance',
-      'options': list([
+      <SelectEntityCapabilityAttribute.OPTIONS: 'options'>: list([
         'far',
         'medium',
         'near',
@@ -357,11 +363,12 @@
 # ---
 # name: test_select[sensor_payload2-expected2][select.aqara_fp1_device_mode-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
-      'options': list([
+      <SelectEntityCapabilityAttribute.OPTIONS: 'options'>: list([
         'leftright',
         'undirected',
       ]),
@@ -400,7 +407,7 @@
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'friendly_name': 'Aqara FP1 Device Mode',
-      'options': list([
+      <SelectEntityCapabilityAttribute.OPTIONS: 'options'>: list([
         'leftright',
         'undirected',
       ]),
@@ -415,11 +422,12 @@
 # ---
 # name: test_select[sensor_payload2-expected2][select.aqara_fp1_sensitivity-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
-      'options': list([
+      <SelectEntityCapabilityAttribute.OPTIONS: 'options'>: list([
         'High',
         'Medium',
         'Low',
@@ -459,7 +467,7 @@
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'friendly_name': 'Aqara FP1 Sensitivity',
-      'options': list([
+      <SelectEntityCapabilityAttribute.OPTIONS: 'options'>: list([
         'High',
         'Medium',
         'Low',
@@ -475,11 +483,12 @@
 # ---
 # name: test_select[sensor_payload2-expected2][select.aqara_fp1_trigger_distance-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
-      'options': list([
+      <SelectEntityCapabilityAttribute.OPTIONS: 'options'>: list([
         'far',
         'medium',
         'near',
@@ -519,7 +528,7 @@
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'friendly_name': 'Aqara FP1 Trigger Distance',
-      'options': list([
+      <SelectEntityCapabilityAttribute.OPTIONS: 'options'>: list([
         'far',
         'medium',
         'near',
@@ -535,11 +544,12 @@
 # ---
 # name: test_select[sensor_payload3-expected3][select.ikea_starkvind_fan_mode-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
-      'options': list([
+      <SelectEntityCapabilityAttribute.OPTIONS: 'options'>: list([
         'off',
         'auto',
         'speed_1',
@@ -583,7 +593,7 @@
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'friendly_name': 'IKEA Starkvind Fan Mode',
-      'options': list([
+      <SelectEntityCapabilityAttribute.OPTIONS: 'options'>: list([
         'off',
         'auto',
         'speed_1',

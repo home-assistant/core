@@ -1,11 +1,9 @@
 """Image platform for the Xbox integration."""
 
-from __future__ import annotations
-
 from collections.abc import Callable
 from dataclasses import dataclass
 from enum import StrEnum
-from typing import TYPE_CHECKING
+from typing import TYPE_CHECKING, override
 
 from pythonxbox.api.provider.people.models import Person
 from pythonxbox.api.provider.titlehub.models import Title
@@ -51,8 +49,9 @@ IMAGE_DESCRIPTIONS: tuple[XboxImageEntityDescription, ...] = (
         key=XboxImage.AVATAR,
         translation_key=XboxImage.AVATAR,
         image_url_fn=(
-            lambda person,
-            _: f"https://avatar-ssl.xboxlive.com/avatar/{person.gamertag}/avatar-body.png"
+            lambda person, _: (
+                f"https://avatar-ssl.xboxlive.com/avatar/{person.gamertag}/avatar-body.png"
+            )
         ),
     ),
 )
@@ -108,6 +107,7 @@ class XboxImageEntity(XboxBaseEntity, ImageEntity):
         )
         self._attr_image_last_updated = dt_util.utcnow()
 
+    @override
     def _handle_coordinator_update(self) -> None:
         """Handle updated data from the coordinator."""
 

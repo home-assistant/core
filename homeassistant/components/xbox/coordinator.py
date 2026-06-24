@@ -1,13 +1,11 @@
 """Coordinator for the xbox integration."""
 
-from __future__ import annotations
-
 from abc import abstractmethod
 from dataclasses import dataclass, field
 from datetime import datetime, timedelta
 from http import HTTPStatus
 import logging
-from typing import ClassVar
+from typing import ClassVar, override
 
 from httpx import HTTPStatusError, RequestError, TimeoutException
 from pythonxbox.api.client import XboxLiveClient
@@ -84,6 +82,7 @@ class XboxBaseCoordinator[_DataT](DataUpdateCoordinator[_DataT]):
     async def update_data(self) -> _DataT:
         """Update coordinator data."""
 
+    @override
     async def _async_update_data(self) -> _DataT:
         """Fetch console data."""
 
@@ -108,6 +107,7 @@ class XboxConsolesCoordinator(XboxBaseCoordinator[dict[str, SmartglassConsole]])
     config_entry: XboxConfigEntry
     _update_interval = timedelta(minutes=10)
 
+    @override
     async def update_data(self) -> dict[str, SmartglassConsole]:
         """Fetch console data."""
 
@@ -153,6 +153,7 @@ class XboxConsoleStatusCoordinator(XboxBaseCoordinator[dict[str, ConsoleData]]):
 
         self.consoles: dict[str, SmartglassConsole] | None = consoles
 
+    @override
     async def update_data(self) -> dict[str, ConsoleData]:
         """Fetch console data."""
 
@@ -168,35 +169,39 @@ class XboxConsoleStatusCoordinator(XboxBaseCoordinator[dict[str, ConsoleData]]):
             _LOGGER.debug("%s status: %s", console.name, status.model_dump())
 
             # Setup focus app
-            app_details: Product | None = None
-            if (current_state := self.data.get(console.id)) is not None:
-                app_details = current_state.app_details
+            app_details = (
+                current_state.app_details
+                if (current_state := self.data.get(console.id)) is not None
+                and status.focus_app_aumid
+                else None
+            )
 
-            if status.focus_app_aumid:
-                if (
-                    not current_state
-                    or status.focus_app_aumid != current_state.status.focus_app_aumid
-                ):
-                    app_id = status.focus_app_aumid.split("!")[0]
-                    id_type = AlternateIdType.PACKAGE_FAMILY_NAME
-                    if app_id in SYSTEM_PFN_ID_MAP:
-                        id_type = AlternateIdType.LEGACY_XBOX_PRODUCT_ID
-                        app_id = SYSTEM_PFN_ID_MAP[app_id][id_type]
-
-                    catalog_result = (
-                        await self.client.catalog.get_product_from_alternate_id(
-                            app_id, id_type
-                        )
+            if status.focus_app_aumid and (
+                not current_state
+                or status.focus_app_aumid != current_state.status.focus_app_aumid
+            ):
+                catalog_result = (
+                    await self.client.catalog.get_product_from_alternate_id(
+                        *self._resolve_app_id(status.focus_app_aumid)
                     )
+                )
 
-                    if catalog_result.products:
-                        app_details = catalog_result.products[0]
-            else:
-                app_details = None
+                if catalog_result.products:
+                    app_details = catalog_result.products[0]
 
             data[console.id] = ConsoleData(status=status, app_details=app_details)
 
         return data
+
+    def _resolve_app_id(self, focus_app_aumid: str) -> tuple[str, AlternateIdType]:
+        app_id = focus_app_aumid.split("!", maxsplit=1)[0]
+        id_type = AlternateIdType.PACKAGE_FAMILY_NAME
+
+        if app_id in SYSTEM_PFN_ID_MAP:
+            id_type = AlternateIdType.LEGACY_XBOX_PRODUCT_ID
+            app_id = SYSTEM_PFN_ID_MAP[app_id][id_type]
+
+        return app_id, id_type
 
 
 class XboxPresenceCoordinator(XboxBaseCoordinator[XboxData]):
@@ -206,13 +211,14 @@ class XboxPresenceCoordinator(XboxBaseCoordinator[XboxData]):
     _update_interval = timedelta(seconds=30)
     title_data: ClassVar[dict[str, Title]] = {}
 
+    @override
     async def update_data(self) -> XboxData:
         """Fetch presence data."""
 
-        batch = await self.client.people.get_friends_by_xuid(self.client.xuid)
+        me = await self.client.people.get_friend_by_xuid(self.client.xuid)
         friends = await self.client.people.get_friends_own()
 
-        presence_data = {self.client.xuid: batch.people[0]}
+        presence_data = {self.client.xuid: me.people[0]}
         presence_data.update(
             {
                 friend.xuid: friend
@@ -254,8 +260,10 @@ class XboxPresenceCoordinator(XboxBaseCoordinator[XboxData]):
     def last_seen_timestamp(self, person: Person) -> datetime | None:
         """Returns the most recent of two timestamps."""
 
-        # The Xbox API constantly fluctuates the "last seen" timestamp between two close values,
-        # causing unnecessary updates. We only accept the most recent one as valild to prevent this.
+        # The Xbox API constantly fluctuates the "last seen"
+        # timestamp between two close values, causing
+        # unnecessary updates. We only accept the most
+        # recent one as valid to prevent this.
 
         prev_dt = (
             prev_data.last_seen_date_time_utc

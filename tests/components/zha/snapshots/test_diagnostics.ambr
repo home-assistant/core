@@ -100,7 +100,7 @@
       'discovery_keys': dict({
       }),
       'domain': 'zha',
-      'minor_version': 1,
+      'minor_version': 2,
       'options': dict({
         'custom_configuration': dict({
           'zha_alarm_options': dict({
@@ -185,6 +185,12 @@
                 'zcl_type': 'EUI64',
               }),
               dict({
+                'id': '0x0013',
+                'name': 'current_zone_sensitivity_level',
+                'unsupported': True,
+                'zcl_type': 'uint8',
+              }),
+              dict({
                 'id': '0x0012',
                 'name': 'num_zone_sensitivity_levels_supported',
                 'unsupported': True,
@@ -194,14 +200,14 @@
             'cluster_id': '0x0500',
             'endpoint_attribute': 'ias_zone',
           }),
+        ]),
+        'out_clusters': list([
           dict({
             'attributes': list([
             ]),
             'cluster_id': '0x0501',
             'endpoint_attribute': 'ias_ace',
           }),
-        ]),
-        'out_clusters': list([
         ]),
         'profile_id': 260,
       }),
@@ -240,29 +246,13 @@
     'routes': list([
     ]),
     'rssi': None,
-    'version': 1,
+    'version': 2,
     'zha_lib_entities': dict({
       'alarm_control_panel': list([
         dict({
           'info_object': dict({
             'available': True,
             'class_name': 'AlarmControlPanel',
-            'cluster_handlers': list([
-              dict({
-                'class_name': 'IasAceClusterHandler',
-                'cluster': dict({
-                  'id': 1281,
-                  'name': 'IAS Ancillary Control Equipment',
-                  'type': 'server',
-                }),
-                'endpoint_id': 1,
-                'generic_id': 'cluster_handler_0x0501',
-                'id': '1:0x0501',
-                'status': 'INITIALIZED',
-                'unique_id': '**REDACTED**',
-                'value_attribute': None,
-              }),
-            ]),
             'code_arm_required': False,
             'code_format': 'number',
             'device_class': None,
@@ -296,22 +286,6 @@
             'attribute_name': 'zone_status',
             'available': True,
             'class_name': 'IASZone',
-            'cluster_handlers': list([
-              dict({
-                'class_name': 'IASZoneClusterHandler',
-                'cluster': dict({
-                  'id': 1280,
-                  'name': 'IAS Zone',
-                  'type': 'server',
-                }),
-                'endpoint_id': 1,
-                'generic_id': 'cluster_handler_0x0500',
-                'id': '1:0x0500',
-                'status': 'INITIALIZED',
-                'unique_id': '**REDACTED**',
-                'value_attribute': None,
-              }),
-            ]),
             'device_class': None,
             'device_ieee': '**REDACTED**',
             'enabled': True,
