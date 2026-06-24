@@ -13,7 +13,7 @@ from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ConfigEntryAuthFailed
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
 
-from .const import CONF_ACCOUNTS, DOMAIN, LOGGER
+from .const import CONF_ACCOUNTS, DOMAIN
 
 type SteamConfigEntry = ConfigEntry[SteamDataUpdateCoordinator]
 
@@ -60,7 +60,7 @@ class SteamDataUpdateCoordinator(DataUpdateCoordinator[dict[str, PlayerData]]):
         """Initialize the coordinator."""
         super().__init__(
             hass=hass,
-            logger=LOGGER,
+            logger=_LOGGER,
             config_entry=config_entry,
             name=DOMAIN,
             update_interval=timedelta(seconds=30),

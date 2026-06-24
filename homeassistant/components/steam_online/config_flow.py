@@ -1,6 +1,7 @@
 """Config flow for Steam integration."""
 
 from collections.abc import Iterator, Mapping
+import logging
 from typing import Any, override
 
 import steam.api
@@ -17,8 +18,11 @@ from homeassistant.const import CONF_API_KEY, CONF_NAME, Platform
 from homeassistant.core import callback
 from homeassistant.helpers import config_validation as cv, entity_registry as er
 
-from .const import CONF_ACCOUNT, CONF_ACCOUNTS, DOMAIN, LOGGER, PLACEHOLDERS
+from .const import CONF_ACCOUNT, CONF_ACCOUNTS, DOMAIN, PLACEHOLDERS
 from .coordinator import SteamConfigEntry
+
+_LOGGER = logging.getLogger(__name__)
+
 
 # To avoid too long request URIs, the amount of ids to request is limited
 MAX_IDS_TO_REQUEST = 275
@@ -75,8 +79,8 @@ class SteamFlowHandler(ConfigFlow, domain=DOMAIN):
                 errors["base"] = (
                     "invalid_auth" if "403" in str(ex) else "cannot_connect"
                 )
-            except Exception:  # noqa: BLE001
-                LOGGER.exception("Unknown exception")
+            except Exception:
+                _LOGGER.exception("Unknown exception")
                 errors["base"] = "unknown"
             if not errors:
                 return self.async_create_entry(
@@ -129,8 +133,8 @@ class SteamFlowHandler(ConfigFlow, domain=DOMAIN):
                 errors["base"] = (
                     "invalid_auth" if "403" in str(ex) else "cannot_connect"
                 )
-            except Exception:  # noqa: BLE001
-                LOGGER.exception("Unknown exception")
+            except Exception:
+                _LOGGER.exception("Unknown exception")
                 errors["base"] = "unknown"
 
             if not errors:
