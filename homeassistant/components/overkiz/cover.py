@@ -1,7 +1,7 @@
 """Support for Overkiz covers - shutters etc."""
 
 from dataclasses import dataclass
-from typing import Any
+from typing import Any, override
 
 from pyoverkiz.enums import (
     OverkizCommand,
@@ -33,6 +33,9 @@ from .entity import OverkizDescriptiveEntity
 # Special position values reported by some Overkiz devices
 _POSITION_MY = 108  # "My position" preset
 _POSITION_UNKNOWN = 124  # "Unknown position" preset
+
+# Default tilt step size (in degrees) used for RTS tilt commands
+_TILT_STEP_SIZE = 5
 
 
 @dataclass(frozen=True, kw_only=True)
@@ -113,11 +116,11 @@ COVER_DESCRIPTIONS: list[OverkizCoverDescription] = [
         open_command=OverkizCommand.OPEN,
         close_command=OverkizCommand.CLOSE,
         stop_command=OverkizCommand.STOP,
-        # Tilt commands move the tilt with a few degrees
+        # position (1-127), execution duration (0-15, optional)
         open_tilt_command=OverkizCommand.TILT_POSITIVE,
-        open_tilt_command_args=(1, 0),
+        open_tilt_command_args=(_TILT_STEP_SIZE,),
         close_tilt_command=OverkizCommand.TILT_NEGATIVE,
-        close_tilt_command_args=(1, 0),
+        close_tilt_command_args=(_TILT_STEP_SIZE,),
         stop_tilt_command=OverkizCommand.STOP,
     ),
     # Needs override to support very specific tilt commands
@@ -129,10 +132,11 @@ COVER_DESCRIPTIONS: list[OverkizCoverDescription] = [
         open_command=OverkizCommand.OPEN,
         close_command=OverkizCommand.CLOSE,
         stop_command=OverkizCommand.STOP,
+        # position (1-127), execution duration (0-15, optional)
         open_tilt_command=OverkizCommand.TILT_POSITIVE,
-        open_tilt_command_args=(15, 1),  # position (1-127), speed (1-15)
+        open_tilt_command_args=(_TILT_STEP_SIZE,),
         close_tilt_command=OverkizCommand.TILT_NEGATIVE,
-        close_tilt_command_args=(15, 1),  # position (1-127), speed (1-15)
+        close_tilt_command_args=(_TILT_STEP_SIZE,),
         stop_tilt_command=OverkizCommand.STOP,
     ),
     # Needs override to support very specific tilt commands
@@ -144,10 +148,11 @@ COVER_DESCRIPTIONS: list[OverkizCoverDescription] = [
         open_command=OverkizCommand.OPEN,
         close_command=OverkizCommand.CLOSE,
         stop_command=OverkizCommand.STOP,
+        # position (1-127), execution duration (0-15, optional)
         open_tilt_command=OverkizCommand.TILT_POSITIVE,
-        open_tilt_command_args=(15, 1),  # position (1-127), speed (1-15)
+        open_tilt_command_args=(_TILT_STEP_SIZE,),
         close_tilt_command=OverkizCommand.TILT_NEGATIVE,
-        close_tilt_command_args=(15, 1),  # position (1-127), speed (1-15)
+        close_tilt_command_args=(_TILT_STEP_SIZE,),
         stop_tilt_command=OverkizCommand.STOP,
     ),
     # Needs override to support very specific tilt commands (rts:SheerBlindRTSComponent)
@@ -158,10 +163,11 @@ COVER_DESCRIPTIONS: list[OverkizCoverDescription] = [
         open_command=OverkizCommand.OPEN,
         close_command=OverkizCommand.CLOSE,
         stop_command=OverkizCommand.STOP,
+        # position (1-127), execution duration (0-15, optional)
         open_tilt_command=OverkizCommand.TILT_POSITIVE,
-        open_tilt_command_args=(15, 1),  # position (1-127), speed (1-15)
+        open_tilt_command_args=(_TILT_STEP_SIZE,),
         close_tilt_command=OverkizCommand.TILT_NEGATIVE,
-        close_tilt_command_args=(15, 1),  # position (1-127), speed (1-15)
+        close_tilt_command_args=(_TILT_STEP_SIZE,),
         stop_tilt_command=OverkizCommand.STOP,
     ),
     # Needs override since BioclimaticPergola uses core:SlatsOpenClosedState
@@ -613,6 +619,7 @@ class OverkizCover(OverkizDescriptiveEntity, CoverEntity):
         self._attr_supported_features = supported_features
 
     @property
+    @override
     def is_closed(self) -> bool | None:
         """Return if the cover is closed."""
         if is_closed_state := self.entity_description.is_closed_state:
@@ -630,6 +637,7 @@ class OverkizCover(OverkizDescriptiveEntity, CoverEntity):
         return None
 
     @property
+    @override
     def current_cover_position(self) -> int | None:
         """Return current position of cover.
 
@@ -683,6 +691,7 @@ class OverkizCover(OverkizDescriptiveEntity, CoverEntity):
 
         return position
 
+    @override
     async def async_set_cover_position(self, **kwargs: Any) -> None:
         """Move the cover to a specific position."""
         position = kwargs[ATTR_POSITION]
@@ -692,22 +701,26 @@ class OverkizCover(OverkizDescriptiveEntity, CoverEntity):
         if command := self.entity_description.set_position_command:
             await self.executor.async_execute_command(command, position)
 
+    @override
     async def async_open_cover(self, **kwargs: Any) -> None:
         """Open the cover."""
         if command := self.entity_description.open_command:
             await self.executor.async_execute_command(command)
 
+    @override
     async def async_close_cover(self, **kwargs: Any) -> None:
         """Close the cover."""
         if command := self.entity_description.close_command:
             await self.executor.async_execute_command(command)
 
+    @override
     async def async_stop_cover(self, **kwargs: Any) -> None:
         """Stop the cover."""
         if command := self.entity_description.stop_command:
             await self.executor.async_execute_command(command)
 
     @property
+    @override
     def current_cover_tilt_position(self) -> int | None:
         """Return current position of cover tilt.
 
@@ -727,6 +740,7 @@ class OverkizCover(OverkizDescriptiveEntity, CoverEntity):
 
         return None
 
+    @override
     async def async_set_cover_tilt_position(self, **kwargs: Any) -> None:
         """Move the cover tilt to a specific position."""
         position = kwargs[ATTR_TILT_POSITION]
@@ -768,6 +782,7 @@ class OverkizCover(OverkizDescriptiveEntity, CoverEntity):
             tilt_position,
         )
 
+    @override
     async def async_open_cover_tilt(self, **kwargs: Any) -> None:
         """Open the cover tilt."""
         if command := self.entity_description.open_tilt_command:
@@ -775,6 +790,7 @@ class OverkizCover(OverkizDescriptiveEntity, CoverEntity):
                 command, *self.entity_description.open_tilt_command_args
             )
 
+    @override
     async def async_close_cover_tilt(self, **kwargs: Any) -> None:
         """Close the cover tilt."""
         if command := self.entity_description.close_tilt_command:
@@ -782,12 +798,14 @@ class OverkizCover(OverkizDescriptiveEntity, CoverEntity):
                 command, *self.entity_description.close_tilt_command_args
             )
 
+    @override
     async def async_stop_cover_tilt(self, **kwargs: Any) -> None:
         """Stop the cover tilt."""
         if command := self.entity_description.stop_tilt_command:
             await self.executor.async_execute_command(command)
 
     @property
+    @override
     def is_opening(self) -> bool | None:
         """Return if the cover is opening or not."""
         # Check if any open() commands are currently running for this device
@@ -811,6 +829,7 @@ class OverkizCover(OverkizDescriptiveEntity, CoverEntity):
         return self.moving_offset < 0
 
     @property
+    @override
     def is_closing(self) -> bool | None:
         """Return if the cover is closing or not."""
         # Check if any close() commands are currently running for this device
@@ -838,7 +857,8 @@ class OverkizCover(OverkizDescriptiveEntity, CoverEntity):
         return any(
             execution.get("device_url") == self.device.device_url
             and execution.get("command_name") == command
-            for execution in self.coordinator.executions.values()
+            for executions in self.coordinator.executions.values()
+            for execution in executions
         )
 
     @property
@@ -883,14 +903,17 @@ class OverkizLowSpeedCover(OverkizCover):
         self._attr_name = "Low speed"
         self._attr_unique_id = f"{self._attr_unique_id}_low_speed"
 
+    @override
     async def async_set_cover_position(self, **kwargs: Any) -> None:
         """Move the cover to a specific position."""
         await self._async_set_cover_position_low_speed(kwargs[ATTR_POSITION])
 
+    @override
     async def async_open_cover(self, **kwargs: Any) -> None:
         """Open the cover."""
         await self._async_set_cover_position_low_speed(100)
 
+    @override
     async def async_close_cover(self, **kwargs: Any) -> None:
         """Close the cover."""
         await self._async_set_cover_position_low_speed(0)

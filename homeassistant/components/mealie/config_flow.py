@@ -1,7 +1,7 @@
 """Config flow for Mealie."""
 
 from collections.abc import Mapping
-from typing import Any
+from typing import Any, override
 
 from aiomealie import MealieAuthenticationError, MealieClient, MealieConnectionError
 import voluptuous as vol
@@ -73,6 +73,7 @@ class MealieConfigFlow(ConfigFlow, domain=DOMAIN):
             return {"base": "mealie_version"}, None
         return {}, info.user_id
 
+    @override
     async def async_step_user(
         self, user_input: dict[str, Any] | None = None
     ) -> ConfigFlowResult:
@@ -158,6 +159,7 @@ class MealieConfigFlow(ConfigFlow, domain=DOMAIN):
             description_placeholders={"example_url": EXAMPLE_URL},
         )
 
+    @override
     async def async_step_hassio(
         self, discovery_info: HassioServiceInfo
     ) -> ConfigFlowResult:

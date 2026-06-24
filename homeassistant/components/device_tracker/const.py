@@ -37,6 +37,35 @@ class TrackingType(StrEnum):
     POSITION = "position"
 
 
+class DeviceTrackerEntityCapabilityAttribute(StrEnum):
+    """Capability attributes for device tracker entities."""
+
+    TRACKING_TYPE = "tracking_type"
+
+
+class DeviceTrackerEntityStateAttribute(StrEnum):
+    """State attributes common to device tracker entities."""
+
+    SOURCE_TYPE = "source_type"
+    IN_ZONES = "in_zones"
+
+
+class TrackerEntityStateAttribute(StrEnum):
+    """State attributes set by TrackerEntity."""
+
+    LATITUDE = "latitude"
+    LONGITUDE = "longitude"
+    GPS_ACCURACY = "gps_accuracy"
+
+
+class ScannerEntityStateAttribute(StrEnum):
+    """State attributes set by ScannerEntity."""
+
+    IP = "ip"
+    MAC = "mac"
+    HOST_NAME = "host_name"
+
+
 CONF_SCAN_INTERVAL: Final = "interval_seconds"
 SCAN_INTERVAL: Final = timedelta(seconds=12)
 

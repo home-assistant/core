@@ -1,6 +1,6 @@
 """Support for covers which integrate with other components."""
 
-from typing import TYPE_CHECKING, Any
+from typing import TYPE_CHECKING, Any, override
 
 import voluptuous as vol
 
@@ -214,6 +214,7 @@ class AbstractTemplateCover(AbstractTemplateEntity, CoverEntity):
                 self._attr_supported_features |= supported_feature
 
     @property
+    @override
     def is_closed(self) -> bool | None:
         """Return if the cover is closed."""
         if self._attr_current_cover_position is None:
@@ -239,6 +240,7 @@ class AbstractTemplateCover(AbstractTemplateEntity, CoverEntity):
             self._attr_is_opening = False
             self._attr_is_closing = False
 
+    @override
     async def async_open_cover(self, **kwargs: Any) -> None:
         """Move the cover up."""
         if open_script := self._action_scripts.get(OPEN_ACTION):
@@ -253,6 +255,7 @@ class AbstractTemplateCover(AbstractTemplateEntity, CoverEntity):
             self._attr_current_cover_position = 100
             self.async_write_ha_state()
 
+    @override
     async def async_close_cover(self, **kwargs: Any) -> None:
         """Move the cover down."""
         if close_script := self._action_scripts.get(CLOSE_ACTION):
@@ -267,11 +270,13 @@ class AbstractTemplateCover(AbstractTemplateEntity, CoverEntity):
             self._attr_current_cover_position = 0
             self.async_write_ha_state()
 
+    @override
     async def async_stop_cover(self, **kwargs: Any) -> None:
         """Fire the stop action."""
         if stop_script := self._action_scripts.get(STOP_ACTION):
             await self.async_run_script(stop_script, context=self._context)
 
+    @override
     async def async_set_cover_position(self, **kwargs: Any) -> None:
         """Set cover position."""
         self._attr_current_cover_position = kwargs[ATTR_POSITION]
@@ -283,6 +288,7 @@ class AbstractTemplateCover(AbstractTemplateEntity, CoverEntity):
         if self._attr_assumed_state:
             self.async_write_ha_state()
 
+    @override
     async def async_open_cover_tilt(self, **kwargs: Any) -> None:
         """Tilt the cover open."""
         self._attr_current_cover_tilt_position = 100
@@ -294,6 +300,7 @@ class AbstractTemplateCover(AbstractTemplateEntity, CoverEntity):
         if self._tilt_optimistic:
             self.async_write_ha_state()
 
+    @override
     async def async_close_cover_tilt(self, **kwargs: Any) -> None:
         """Tilt the cover closed."""
         self._attr_current_cover_tilt_position = 0
@@ -305,6 +312,7 @@ class AbstractTemplateCover(AbstractTemplateEntity, CoverEntity):
         if self._tilt_optimistic:
             self.async_write_ha_state()
 
+    @override
     async def async_set_cover_tilt_position(self, **kwargs: Any) -> None:
         """Move the cover tilt to a specific position."""
         self._attr_current_cover_tilt_position = kwargs[ATTR_TILT_POSITION]

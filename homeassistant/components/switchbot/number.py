@@ -2,6 +2,7 @@
 
 from datetime import timedelta
 import logging
+from typing import override
 
 import switchbot
 from switchbot import SwitchbotOperationError
@@ -56,6 +57,7 @@ class SwitchBotMeterProCO2DisplayTimeOffsetNumber(SwitchbotEntity, NumberEntity)
         self._attr_unique_id = f"{coordinator.base_unique_id}_display_time_offset"
 
     @exception_handler
+    @override
     async def async_set_native_value(self, value: float) -> None:
         """Set the time offset."""
         _LOGGER.debug("Setting time offset to %s minutes for %s", value, self._address)
@@ -65,6 +67,7 @@ class SwitchBotMeterProCO2DisplayTimeOffsetNumber(SwitchbotEntity, NumberEntity)
         self._attr_native_value = offset_minutes
         self.async_write_ha_state()
 
+    @override
     async def async_update(self) -> None:
         """Fetch the latest time offset from the device."""
         try:

@@ -1,7 +1,7 @@
 {
   "domain": "sensoterra",
   "name": "Sensoterra",
-  "codeowners": ["@markruys"],
+  "codeowners": ["@SanderBakkumCuriousInc", "@curious-florian", "@markruys"],
   "config_flow": true,
   "documentation": "https://www.home-assistant.io/integrations/sensoterra",
   "integration_type": "hub",
