@@ -31,10 +31,10 @@ async def async_setup_entry(
     entities = []
 
     if (
-        coordinator.get_setup_configuration("devmode")
-        and coordinator.get_data_configuration("temp1")
+        coordinator.device.get_setup_configuration("devmode")
+        and coordinator.device.get_data_configuration("temp1")
         and (
-            target_temperature_config := coordinator.get_setup_configuration(
+            target_temperature_config := coordinator.device.get_setup_configuration(
                 "ww1target"
             )
         )

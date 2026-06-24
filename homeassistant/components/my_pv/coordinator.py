@@ -103,14 +103,6 @@ class MyPVCoordinator(DataUpdateCoordinator[None]):
         """If the device is connected or not."""
         return self._device.connected
 
-    def get_setup_configuration(self, key: str) -> dict[str, Any] | None:
-        """Get setup configuration for given key."""
-        return self._device.get_setup_configuration(key)
-
-    def get_data_configuration(self, key: str) -> dict[str, Any] | None:
-        """Get data configuration for given key."""
-        return self._device.get_data_configuration(key)
-
     async def async_disconnect(self) -> bool:
         """Disconnect from my-PV.
 
