@@ -2927,6 +2927,102 @@ async def test_set_state_via_position_using_stopped_state(
                 cover.DOMAIN: {
                     "name": "test",
                     "state_topic": "state-topic",
+                    "position_topic": "get-position-topic",
+                    "position_open": 100,
+                    "position_closed": 0,
+                    "state_open": "OPEN",
+                    "state_closed": "CLOSE",
+                    "state_stopped": "STOPPED",
+                    "command_topic": "command-topic",
+                    "qos": 0,
+                }
+            }
+        }
+    ],
+)
+async def test_set_state_via_position_using_stopped_state_out_of_order(
+    hass: HomeAssistant, mqtt_mock_entry: MqttMockHAClientGenerator
+) -> None:
+    """Test state reconciliation when stopped arrives before position update."""
+    await mqtt_mock_entry()
+
+    async_fire_mqtt_message(hass, "state-topic", "OPEN")
+
+    state = hass.states.get("cover.test")
+    assert state.state == CoverState.OPEN
+
+    async_fire_mqtt_message(hass, "get-position-topic", "100")
+
+    state = hass.states.get("cover.test")
+    assert state.state == CoverState.OPEN
+
+    async_fire_mqtt_message(hass, "state-topic", "STOPPED")
+
+    state = hass.states.get("cover.test")
+    assert state.state == CoverState.OPEN
+
+    async_fire_mqtt_message(hass, "get-position-topic", "0")
+
+    state = hass.states.get("cover.test")
+    assert state.state == CoverState.CLOSED
+
+
+@pytest.mark.parametrize(
+    "hass_config",
+    [
+        {
+            DOMAIN: {
+                cover.DOMAIN: {
+                    "name": "test",
+                    "state_topic": "state-topic",
+                    "position_topic": "get-position-topic",
+                    "position_open": 100,
+                    "position_closed": 0,
+                    "state_open": "OPEN",
+                    "state_closed": "CLOSE",
+                    "state_stopped": "STOPPED",
+                    "command_topic": "command-topic",
+                    "qos": 0,
+                }
+            }
+        }
+    ],
+)
+async def test_set_state_via_position_using_stopped_state_out_of_order_open(
+    hass: HomeAssistant, mqtt_mock_entry: MqttMockHAClientGenerator
+) -> None:
+    """Test state reconciliation when stopped arrives before open position update."""
+    await mqtt_mock_entry()
+
+    async_fire_mqtt_message(hass, "state-topic", "CLOSE")
+
+    state = hass.states.get("cover.test")
+    assert state.state == CoverState.CLOSED
+
+    async_fire_mqtt_message(hass, "get-position-topic", "0")
+
+    state = hass.states.get("cover.test")
+    assert state.state == CoverState.CLOSED
+
+    async_fire_mqtt_message(hass, "state-topic", "STOPPED")
+
+    state = hass.states.get("cover.test")
+    assert state.state == CoverState.CLOSED
+
+    async_fire_mqtt_message(hass, "get-position-topic", "100")
+
+    state = hass.states.get("cover.test")
+    assert state.state == CoverState.OPEN
+
+
+@pytest.mark.parametrize(
+    "hass_config",
+    [
+        {
+            DOMAIN: {
+                cover.DOMAIN: {
+                    "name": "test",
+                    "state_topic": "state-topic",
                     "command_topic": "command-topic",
                     "set_position_topic": "set-position-topic",
                     "position_topic": "get-position-topic",

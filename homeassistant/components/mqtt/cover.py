@@ -238,6 +238,7 @@ class MqttCover(MqttEntity, CoverEntity):
     _entity_id_format: str = cover.ENTITY_ID_FORMAT
     _optimistic: bool
     _tilt_optimistic: bool
+    _awaiting_position_update_after_stopped: bool
     _tilt_closed_percentage: int
     _tilt_open_percentage: int
     _pos_range: tuple[int, int]
@@ -252,6 +253,7 @@ class MqttCover(MqttEntity, CoverEntity):
     @override
     def _setup_from_config(self, config: ConfigType) -> None:
         """Set up cover from config."""
+        self._awaiting_position_update_after_stopped = False
         self._pos_range = (config[CONF_POSITION_CLOSED] + 1, config[CONF_POSITION_OPEN])
         self._tilt_range = (config[CONF_TILT_MIN] + 1, config[CONF_TILT_MAX])
         self._tilt_closed_percentage = ranged_value_to_percentage(
@@ -378,8 +380,12 @@ class MqttCover(MqttEntity, CoverEntity):
             _LOGGER.debug("Ignoring empty state message from '%s'", msg.topic)
             return
 
+        self._awaiting_position_update_after_stopped = False
         state: str | None
         if payload == self._config[CONF_STATE_STOPPED]:
+            self._awaiting_position_update_after_stopped = (
+                self._config.get(CONF_GET_POSITION_TOPIC) is not None
+            )
             if self._config.get(CONF_GET_POSITION_TOPIC) is not None:
                 state = (
                     CoverState.CLOSED
@@ -455,6 +461,13 @@ class MqttCover(MqttEntity, CoverEntity):
                 if self.current_cover_position == 0
                 else CoverState.OPEN
             )
+        elif self._awaiting_position_update_after_stopped:
+            self._update_state(
+                CoverState.CLOSED
+                if self.current_cover_position == 0
+                else CoverState.OPEN
+            )
+            self._awaiting_position_update_after_stopped = False
 
     @callback
     @override
