@@ -40,7 +40,14 @@ from homeassistant.helpers.sun import get_astral_event_date, get_astral_observer
 from homeassistant.helpers.typing import ConfigType
 from homeassistant.util import dt as dt_util
 
-from .const import DOMAIN, STATE_ATTR_ELEVATION
+from .const import (
+    DEPRESSION_ASTRONOMICAL,
+    DEPRESSION_CIVIL,
+    DEPRESSION_NAUTICAL,
+    DOMAIN,
+    ELEVATION_HORIZON,
+    STATE_ATTR_ELEVATION,
+)
 
 _OPTIONS_SCHEMA_DICT: dict[vol.Marker, Any] = {
     vol.Optional("before"): cv.sun_event,
@@ -189,12 +196,6 @@ class SunCondition(Condition):
         )
 
 
-# Elevation thresholds, matching the sun entity. The horizon split is the same
-# value astral uses for sunrise/sunset; astronomical night is the sun fully
-# below all twilight.
-_HORIZON_ELEVATION = -0.833
-_NIGHT_ELEVATION = -18.0
-
 # The sun is a singleton, so these conditions take no target and no options.
 _STATE_CONDITION_SCHEMA = vol.Schema({vol.Required(CONF_OPTIONS, default=dict): {}})
 
@@ -232,7 +233,7 @@ class _UpCondition(_SunStateCondition):
     def _async_check(self, **kwargs: Unpack[ConditionCheckParams]) -> bool:
         """Check the condition."""
         elevation, _ = _solar_position(self._hass)
-        return elevation >= _HORIZON_ELEVATION
+        return elevation >= ELEVATION_HORIZON
 
 
 class _SetCondition(_SunStateCondition):
@@ -242,7 +243,7 @@ class _SetCondition(_SunStateCondition):
     def _async_check(self, **kwargs: Unpack[ConditionCheckParams]) -> bool:
         """Check the condition."""
         elevation, _ = _solar_position(self._hass)
-        return elevation < _HORIZON_ELEVATION
+        return elevation < ELEVATION_HORIZON
 
 
 class _AscendingCondition(_SunStateCondition):
@@ -272,7 +273,7 @@ class _NightCondition(_SunStateCondition):
     def _async_check(self, **kwargs: Unpack[ConditionCheckParams]) -> bool:
         """Check the condition."""
         elevation, _ = _solar_position(self._hass)
-        return elevation <= _NIGHT_ELEVATION
+        return elevation <= -DEPRESSION_ASTRONOMICAL
 
 
 TWILIGHT_ANY = "any"
@@ -280,12 +281,13 @@ TWILIGHT_CIVIL = "civil"
 TWILIGHT_NAUTICAL = "nautical"
 TWILIGHT_ASTRONOMICAL = "astronomical"
 
-# Elevation band (min, max) in degrees for each twilight type.
+# Elevation band (min, max) in degrees for each twilight type. The edges are
+# the horizon and the twilight depressions (as negative elevations).
 _TWILIGHT_BANDS = {
-    TWILIGHT_ANY: (_NIGHT_ELEVATION, _HORIZON_ELEVATION),
-    TWILIGHT_CIVIL: (-6.0, _HORIZON_ELEVATION),
-    TWILIGHT_NAUTICAL: (-12.0, -6.0),
-    TWILIGHT_ASTRONOMICAL: (_NIGHT_ELEVATION, -12.0),
+    TWILIGHT_ANY: (-DEPRESSION_ASTRONOMICAL, ELEVATION_HORIZON),
+    TWILIGHT_CIVIL: (-DEPRESSION_CIVIL, ELEVATION_HORIZON),
+    TWILIGHT_NAUTICAL: (-DEPRESSION_NAUTICAL, -DEPRESSION_CIVIL),
+    TWILIGHT_ASTRONOMICAL: (-DEPRESSION_ASTRONOMICAL, -DEPRESSION_NAUTICAL),
 }
 
 _TWILIGHT_CONDITION_SCHEMA = vol.Schema(

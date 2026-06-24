@@ -3,7 +3,6 @@
 from datetime import datetime, timedelta
 from typing import Any, cast, override
 
-import astral
 import voluptuous as vol
 
 from homeassistant.const import (
@@ -47,7 +46,13 @@ from homeassistant.helpers.trigger import (
 from homeassistant.helpers.typing import ConfigType
 from homeassistant.util import dt as dt_util
 
-from .const import DOMAIN, STATE_ATTR_ELEVATION
+from .const import (
+    DEPRESSION_ASTRONOMICAL,
+    DEPRESSION_CIVIL,
+    DEPRESSION_NAUTICAL,
+    DOMAIN,
+    STATE_ATTR_ELEVATION,
+)
 
 # Names of solar events supported by the astral.sun module
 _SUN_EVENT_SOLAR_NOON = "noon"
@@ -59,11 +64,11 @@ _TWILIGHT_CIVIL = "civil"
 _TWILIGHT_NAUTICAL = "nautical"
 _TWILIGHT_ASTRONOMICAL = "astronomical"
 
-# Sun depression below the horizon for each twilight phase, as defined by astral.
+# Sun depression below the horizon for each twilight phase.
 _TWILIGHT_DEPRESSIONS = {
-    _TWILIGHT_CIVIL: astral.Depression.CIVIL,
-    _TWILIGHT_NAUTICAL: astral.Depression.NAUTICAL,
-    _TWILIGHT_ASTRONOMICAL: astral.Depression.ASTRONOMICAL,
+    _TWILIGHT_CIVIL: DEPRESSION_CIVIL,
+    _TWILIGHT_NAUTICAL: DEPRESSION_NAUTICAL,
+    _TWILIGHT_ASTRONOMICAL: DEPRESSION_ASTRONOMICAL,
 }
 
 # The sun is a singleton, so the elevation triggers always target sun.sun

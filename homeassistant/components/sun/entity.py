@@ -24,6 +24,10 @@ from homeassistant.helpers.sun import (
 from homeassistant.util import dt as dt_util
 
 from .const import (
+    DEPRESSION_ASTRONOMICAL,
+    DEPRESSION_CIVIL,
+    DEPRESSION_NAUTICAL,
+    ELEVATION_HORIZON,
     SIGNAL_EVENTS_CHANGED,
     SIGNAL_POSITION_CHANGED,
     STATE_ABOVE_HORIZON,
@@ -67,11 +71,8 @@ PHASE_SMALL_DAY = "small_day"
 # > 10° above horizon
 PHASE_DAY = "day"
 
-# Depression angle (degrees below the horizon) of the sun at each dawn/dusk
-# phase boundary. A negative value means the sun is above the horizon.
-DEPRESSION_ASTRONOMICAL = 18.0
-DEPRESSION_NAUTICAL = 12.0
-DEPRESSION_CIVIL = 6.0
+# Depression angle (degrees below the horizon) of the sun at the start of the
+# "small day" phase. A negative value means the sun is above the horizon.
 DEPRESSION_SMALL_DAY = -10.0
 
 # 4 mins is one degree of arc change of the sun on its circle.
@@ -162,8 +163,7 @@ class Sun(Entity):
     @override
     def state(self) -> str:
         """Return the state of the sun."""
-        # 0.8333 is the same value as astral uses
-        if self.solar_elevation > -0.833:
+        if self.solar_elevation > ELEVATION_HORIZON:
             return STATE_ABOVE_HORIZON
 
         return STATE_BELOW_HORIZON
@@ -252,11 +252,11 @@ class Sun(Entity):
                 self.phase = PHASE_DAY
             elif elevation >= 0:
                 self.phase = PHASE_SMALL_DAY
-            elif elevation >= -6:
+            elif elevation >= -DEPRESSION_CIVIL:
                 self.phase = PHASE_TWILIGHT
-            elif elevation >= -12:
+            elif elevation >= -DEPRESSION_NAUTICAL:
                 self.phase = PHASE_NAUTICAL_TWILIGHT
-            elif elevation >= -18:
+            elif elevation >= -DEPRESSION_ASTRONOMICAL:
                 self.phase = PHASE_ASTRONOMICAL_TWILIGHT
             else:
                 self.phase = PHASE_NIGHT
