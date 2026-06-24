@@ -722,7 +722,7 @@
   },
   "issues": {
     "ipv6_disabled": {
-      "description": "Matter requires IPv6 to communicate with your devices, but IPv6 is disabled on your network interface. Matter will not work reliably until you enable IPv6 in the network settings. Select \"Learn more\" to open them.",
+      "description": "Matter relies on IPv6 to communicate with some devices, but IPv6 is disabled on all of your connected network interfaces. Locally connected Wi-Fi and Ethernet devices may still work, but features such as using an external Thread border router need IPv6 enabled. Select \"Learn more\" to open the network settings.",
       "title": "IPv6 is disabled but required by Matter"
     },
     "server_version_version_too_new": {
