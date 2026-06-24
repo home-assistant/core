@@ -399,8 +399,8 @@ class OsramIrLight(OsramIrEmitterEntity, LightEntity):
             return
 
         if code is OsramLightCode.MODE:
-            # MODE is exposed as a separate button. It changes a bulb-specific
-            # mode but does not map reliably to a Home Assistant light effect.
+            # MODE changes a bulb-specific mode but does not map reliably to a
+            # Home Assistant light effect.
             return
 
     @callback
