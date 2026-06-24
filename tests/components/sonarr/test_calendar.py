@@ -3,6 +3,7 @@
 from datetime import UTC, datetime, timedelta
 from unittest.mock import MagicMock
 
+import pytest
 from freezegun.api import FrozenDateTimeFactory
 
 from homeassistant.const import STATE_OFF, STATE_ON
@@ -21,11 +22,11 @@ EPISODE_OVERVIEW = (
 )
 
 
+@pytest.mark.usefixtures("mock_sonarr")
 async def test_calendar(
     hass: HomeAssistant,
     freezer: FrozenDateTimeFactory,
     mock_config_entry: MockConfigEntry,
-    mock_sonarr: MagicMock,
 ) -> None:
     """Test for successfully setting up the Sonarr calendar platform."""
     await hass.config.async_update(time_zone="UTC")
