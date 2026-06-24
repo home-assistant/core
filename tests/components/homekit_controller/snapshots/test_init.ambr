@@ -14267,12 +14267,12 @@
             ]),
             'area_id': None,
             'capabilities': dict({
-              'available_modes': list([
+              <HumidifierEntityCapabilityAttribute.AVAILABLE_MODES: 'available_modes'>: list([
                 'normal',
                 'auto',
               ]),
-              'max_humidity': 100,
-              'min_humidity': 0,
+              <HumidifierEntityCapabilityAttribute.MAX_HUMIDITY: 'max_humidity'>: 100,
+              <HumidifierEntityCapabilityAttribute.MIN_HUMIDITY: 'min_humidity'>: 0,
             }),
             'config_entry_id': <ANY>,
             'config_subentry_id': <ANY>,
@@ -14305,17 +14305,17 @@
           }),
           'state': dict({
             'attributes': dict({
-              'available_modes': list([
+              <HumidifierEntityCapabilityAttribute.AVAILABLE_MODES: 'available_modes'>: list([
                 'normal',
                 'auto',
               ]),
-              'current_humidity': 0,
+              <HumidifierEntityStateAttribute.CURRENT_HUMIDITY: 'current_humidity'>: 0,
               'device_class': 'humidifier',
               'friendly_name': 'Humidifier 182A',
-              'humidity': 45,
-              'max_humidity': 100,
-              'min_humidity': 0,
-              'mode': 'normal',
+              <HumidifierEntityStateAttribute.HUMIDITY: 'humidity'>: 45,
+              <HumidifierEntityCapabilityAttribute.MAX_HUMIDITY: 'max_humidity'>: 100,
+              <HumidifierEntityCapabilityAttribute.MIN_HUMIDITY: 'min_humidity'>: 0,
+              <HumidifierEntityStateAttribute.MODE: 'mode'>: 'normal',
               'supported_features': <HumidifierEntityFeature: 1>,
             }),
             'entity_id': 'humidifier.humidifier_182a',
@@ -14538,12 +14538,12 @@
             ]),
             'area_id': None,
             'capabilities': dict({
-              'available_modes': list([
+              <HumidifierEntityCapabilityAttribute.AVAILABLE_MODES: 'available_modes'>: list([
                 'normal',
                 'auto',
               ]),
-              'max_humidity': 80,
-              'min_humidity': 20,
+              <HumidifierEntityCapabilityAttribute.MAX_HUMIDITY: 'max_humidity'>: 80,
+              <HumidifierEntityCapabilityAttribute.MIN_HUMIDITY: 'min_humidity'>: 20,
             }),
             'config_entry_id': <ANY>,
             'config_subentry_id': <ANY>,
@@ -14576,17 +14576,17 @@
           }),
           'state': dict({
             'attributes': dict({
-              'available_modes': list([
+              <HumidifierEntityCapabilityAttribute.AVAILABLE_MODES: 'available_modes'>: list([
                 'normal',
                 'auto',
               ]),
-              'current_humidity': 0,
+              <HumidifierEntityStateAttribute.CURRENT_HUMIDITY: 'current_humidity'>: 0,
               'device_class': 'humidifier',
               'friendly_name': 'Humidifier 182A',
-              'humidity': 45,
-              'max_humidity': 80,
-              'min_humidity': 20,
-              'mode': 'normal',
+              <HumidifierEntityStateAttribute.HUMIDITY: 'humidity'>: 45,
+              <HumidifierEntityCapabilityAttribute.MAX_HUMIDITY: 'max_humidity'>: 80,
+              <HumidifierEntityCapabilityAttribute.MIN_HUMIDITY: 'min_humidity'>: 20,
+              <HumidifierEntityStateAttribute.MODE: 'mode'>: 'normal',
               'supported_features': <HumidifierEntityFeature: 1>,
             }),
             'entity_id': 'humidifier.humidifier_182a',
@@ -24049,12 +24049,12 @@
             ]),
             'area_id': None,
             'capabilities': dict({
-              'available_modes': list([
+              <HumidifierEntityCapabilityAttribute.AVAILABLE_MODES: 'available_modes'>: list([
                 'normal',
                 'auto',
               ]),
-              'max_humidity': 100,
-              'min_humidity': 0,
+              <HumidifierEntityCapabilityAttribute.MAX_HUMIDITY: 'max_humidity'>: 100,
+              <HumidifierEntityCapabilityAttribute.MIN_HUMIDITY: 'min_humidity'>: 0,
             }),
             'config_entry_id': <ANY>,
             'config_subentry_id': <ANY>,
@@ -24087,17 +24087,17 @@
           }),
           'state': dict({
             'attributes': dict({
-              'available_modes': list([
+              <HumidifierEntityCapabilityAttribute.AVAILABLE_MODES: 'available_modes'>: list([
                 'normal',
                 'auto',
               ]),
-              'current_humidity': 45.0,
+              <HumidifierEntityStateAttribute.CURRENT_HUMIDITY: 'current_humidity'>: 45.0,
               'device_class': 'humidifier',
               'friendly_name': 'VOCOlinc-Flowerbud-0d324b',
-              'humidity': 100.0,
-              'max_humidity': 100,
-              'min_humidity': 0,
-              'mode': 'normal',
+              <HumidifierEntityStateAttribute.HUMIDITY: 'humidity'>: 100.0,
+              <HumidifierEntityCapabilityAttribute.MAX_HUMIDITY: 'max_humidity'>: 100,
+              <HumidifierEntityCapabilityAttribute.MIN_HUMIDITY: 'min_humidity'>: 0,
+              <HumidifierEntityStateAttribute.MODE: 'mode'>: 'normal',
               'supported_features': <HumidifierEntityFeature: 1>,
             }),
             'entity_id': 'humidifier.vocolinc_flowerbud_0d324b',
