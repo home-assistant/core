@@ -3,8 +3,8 @@
   ReadOnlyDict({
     'content': 'Contenido en español',
     'description': 'Resumen en español',
-    'event_type': 'feedreader',
-    'event_types': list([
+    <EventEntityStateAttribute.EVENT_TYPE: 'event_type'>: 'feedreader',
+    <EventEntityCapabilityAttribute.EVENT_TYPES: 'event_types'>: list([
       'feedreader',
     ]),
     'friendly_name': 'Mock Title',
@@ -16,8 +16,8 @@
   ReadOnlyDict({
     'content': 'Contenido 1 en español',
     'description': 'Descripción 1',
-    'event_type': 'feedreader',
-    'event_types': list([
+    <EventEntityStateAttribute.EVENT_TYPE: 'event_type'>: 'feedreader',
+    <EventEntityCapabilityAttribute.EVENT_TYPES: 'event_types'>: list([
       'feedreader',
     ]),
     'friendly_name': 'Mock Title',
