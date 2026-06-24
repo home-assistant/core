@@ -6,7 +6,7 @@
     ]),
     'area_id': None,
     'capabilities': dict({
-      'event_types': list([
+      <EventEntityCapabilityAttribute.EVENT_TYPES: 'event_types'>: list([
         'multi_press_1',
         'multi_press_2',
         'long_press',
@@ -47,8 +47,8 @@
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'device_class': 'button',
-      'event_type': None,
-      'event_types': list([
+      <EventEntityStateAttribute.EVENT_TYPE: 'event_type'>: None,
+      <EventEntityCapabilityAttribute.EVENT_TYPES: 'event_types'>: list([
         'multi_press_1',
         'multi_press_2',
         'long_press',
@@ -71,7 +71,7 @@
     ]),
     'area_id': None,
     'capabilities': dict({
-      'event_types': list([
+      <EventEntityCapabilityAttribute.EVENT_TYPES: 'event_types'>: list([
         'multi_press_1',
         'multi_press_2',
         'long_press',
@@ -112,8 +112,8 @@
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'device_class': 'button',
-      'event_type': None,
-      'event_types': list([
+      <EventEntityStateAttribute.EVENT_TYPE: 'event_type'>: None,
+      <EventEntityCapabilityAttribute.EVENT_TYPES: 'event_types'>: list([
         'multi_press_1',
         'multi_press_2',
         'long_press',
@@ -136,7 +136,7 @@
     ]),
     'area_id': None,
     'capabilities': dict({
-      'event_types': list([
+      <EventEntityCapabilityAttribute.EVENT_TYPES: 'event_types'>: list([
         'multi_press_1',
         'multi_press_2',
         'long_press',
@@ -177,8 +177,8 @@
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'device_class': 'button',
-      'event_type': None,
-      'event_types': list([
+      <EventEntityStateAttribute.EVENT_TYPE: 'event_type'>: None,
+      <EventEntityCapabilityAttribute.EVENT_TYPES: 'event_types'>: list([
         'multi_press_1',
         'multi_press_2',
         'long_press',
@@ -201,7 +201,7 @@
     ]),
     'area_id': None,
     'capabilities': dict({
-      'event_types': list([
+      <EventEntityCapabilityAttribute.EVENT_TYPES: 'event_types'>: list([
         'multi_press_1',
         'multi_press_2',
         'long_press',
@@ -242,8 +242,8 @@
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'device_class': 'button',
-      'event_type': None,
-      'event_types': list([
+      <EventEntityStateAttribute.EVENT_TYPE: 'event_type'>: None,
+      <EventEntityCapabilityAttribute.EVENT_TYPES: 'event_types'>: list([
         'multi_press_1',
         'multi_press_2',
         'long_press',
@@ -266,7 +266,7 @@
     ]),
     'area_id': None,
     'capabilities': dict({
-      'event_types': list([
+      <EventEntityCapabilityAttribute.EVENT_TYPES: 'event_types'>: list([
         'multi_press_1',
         'multi_press_2',
         'long_press',
@@ -307,8 +307,8 @@
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'device_class': 'button',
-      'event_type': None,
-      'event_types': list([
+      <EventEntityStateAttribute.EVENT_TYPE: 'event_type'>: None,
+      <EventEntityCapabilityAttribute.EVENT_TYPES: 'event_types'>: list([
         'multi_press_1',
         'multi_press_2',
         'long_press',
@@ -331,7 +331,7 @@
     ]),
     'area_id': None,
     'capabilities': dict({
-      'event_types': list([
+      <EventEntityCapabilityAttribute.EVENT_TYPES: 'event_types'>: list([
         'multi_press_1',
         'multi_press_2',
         'long_press',
@@ -372,8 +372,8 @@
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'device_class': 'button',
-      'event_type': None,
-      'event_types': list([
+      <EventEntityStateAttribute.EVENT_TYPE: 'event_type'>: None,
+      <EventEntityCapabilityAttribute.EVENT_TYPES: 'event_types'>: list([
         'multi_press_1',
         'multi_press_2',
         'long_press',
@@ -396,7 +396,7 @@
     ]),
     'area_id': None,
     'capabilities': dict({
-      'event_types': list([
+      <EventEntityCapabilityAttribute.EVENT_TYPES: 'event_types'>: list([
         'multi_press_1',
         'multi_press_2',
         'long_press',
@@ -437,8 +437,8 @@
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'device_class': 'button',
-      'event_type': None,
-      'event_types': list([
+      <EventEntityStateAttribute.EVENT_TYPE: 'event_type'>: None,
+      <EventEntityCapabilityAttribute.EVENT_TYPES: 'event_types'>: list([
         'multi_press_1',
         'multi_press_2',
         'long_press',
@@ -461,7 +461,7 @@
     ]),
     'area_id': None,
     'capabilities': dict({
-      'event_types': list([
+      <EventEntityCapabilityAttribute.EVENT_TYPES: 'event_types'>: list([
         'multi_press_1',
         'multi_press_2',
         'long_press',
@@ -502,8 +502,8 @@
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'device_class': 'button',
-      'event_type': None,
-      'event_types': list([
+      <EventEntityStateAttribute.EVENT_TYPE: 'event_type'>: None,
+      <EventEntityCapabilityAttribute.EVENT_TYPES: 'event_types'>: list([
         'multi_press_1',
         'multi_press_2',
         'long_press',
@@ -526,7 +526,7 @@
     ]),
     'area_id': None,
     'capabilities': dict({
-      'event_types': list([
+      <EventEntityCapabilityAttribute.EVENT_TYPES: 'event_types'>: list([
         'multi_press_1',
         'multi_press_2',
         'long_press',
@@ -567,8 +567,8 @@
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'device_class': 'button',
-      'event_type': None,
-      'event_types': list([
+      <EventEntityStateAttribute.EVENT_TYPE: 'event_type'>: None,
+      <EventEntityCapabilityAttribute.EVENT_TYPES: 'event_types'>: list([
         'multi_press_1',
         'multi_press_2',
         'long_press',
@@ -591,7 +591,7 @@
     ]),
     'area_id': None,
     'capabilities': dict({
-      'event_types': list([
+      <EventEntityCapabilityAttribute.EVENT_TYPES: 'event_types'>: list([
         'multi_press_1',
         'multi_press_2',
         'long_press',
@@ -632,8 +632,8 @@
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'device_class': 'button',
-      'event_type': None,
-      'event_types': list([
+      <EventEntityStateAttribute.EVENT_TYPE: 'event_type'>: None,
+      <EventEntityCapabilityAttribute.EVENT_TYPES: 'event_types'>: list([
         'multi_press_1',
         'multi_press_2',
         'long_press',
@@ -656,7 +656,7 @@
     ]),
     'area_id': None,
     'capabilities': dict({
-      'event_types': list([
+      <EventEntityCapabilityAttribute.EVENT_TYPES: 'event_types'>: list([
         'multi_press_1',
         'multi_press_2',
         'long_press',
@@ -697,8 +697,8 @@
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'device_class': 'button',
-      'event_type': None,
-      'event_types': list([
+      <EventEntityStateAttribute.EVENT_TYPE: 'event_type'>: None,
+      <EventEntityCapabilityAttribute.EVENT_TYPES: 'event_types'>: list([
         'multi_press_1',
         'multi_press_2',
         'long_press',
@@ -721,7 +721,7 @@
     ]),
     'area_id': None,
     'capabilities': dict({
-      'event_types': list([
+      <EventEntityCapabilityAttribute.EVENT_TYPES: 'event_types'>: list([
         'multi_press_1',
         'multi_press_2',
         'multi_press_3',
@@ -766,8 +766,8 @@
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'device_class': 'button',
-      'event_type': None,
-      'event_types': list([
+      <EventEntityStateAttribute.EVENT_TYPE: 'event_type'>: None,
+      <EventEntityCapabilityAttribute.EVENT_TYPES: 'event_types'>: list([
         'multi_press_1',
         'multi_press_2',
         'multi_press_3',
@@ -794,7 +794,7 @@
     ]),
     'area_id': None,
     'capabilities': dict({
-      'event_types': list([
+      <EventEntityCapabilityAttribute.EVENT_TYPES: 'event_types'>: list([
         'multi_press_1',
         'multi_press_2',
         'multi_press_3',
@@ -839,8 +839,8 @@
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'device_class': 'button',
-      'event_type': None,
-      'event_types': list([
+      <EventEntityStateAttribute.EVENT_TYPE: 'event_type'>: None,
+      <EventEntityCapabilityAttribute.EVENT_TYPES: 'event_types'>: list([
         'multi_press_1',
         'multi_press_2',
         'multi_press_3',
@@ -867,7 +867,7 @@
     ]),
     'area_id': None,
     'capabilities': dict({
-      'event_types': list([
+      <EventEntityCapabilityAttribute.EVENT_TYPES: 'event_types'>: list([
         'multi_press_1',
         'multi_press_2',
         'multi_press_3',
@@ -909,8 +909,8 @@
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'device_class': 'button',
-      'event_type': None,
-      'event_types': list([
+      <EventEntityStateAttribute.EVENT_TYPE: 'event_type'>: None,
+      <EventEntityCapabilityAttribute.EVENT_TYPES: 'event_types'>: list([
         'multi_press_1',
         'multi_press_2',
         'multi_press_3',
@@ -934,7 +934,7 @@
     ]),
     'area_id': None,
     'capabilities': dict({
-      'event_types': list([
+      <EventEntityCapabilityAttribute.EVENT_TYPES: 'event_types'>: list([
         'multi_press_1',
         'multi_press_2',
         'multi_press_3',
@@ -979,8 +979,8 @@
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'device_class': 'button',
-      'event_type': None,
-      'event_types': list([
+      <EventEntityStateAttribute.EVENT_TYPE: 'event_type'>: None,
+      <EventEntityCapabilityAttribute.EVENT_TYPES: 'event_types'>: list([
         'multi_press_1',
         'multi_press_2',
         'multi_press_3',
@@ -1007,7 +1007,7 @@
     ]),
     'area_id': None,
     'capabilities': dict({
-      'event_types': list([
+      <EventEntityCapabilityAttribute.EVENT_TYPES: 'event_types'>: list([
         'multi_press_1',
         'multi_press_2',
         'multi_press_3',
@@ -1052,8 +1052,8 @@
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'device_class': 'button',
-      'event_type': None,
-      'event_types': list([
+      <EventEntityStateAttribute.EVENT_TYPE: 'event_type'>: None,
+      <EventEntityCapabilityAttribute.EVENT_TYPES: 'event_types'>: list([
         'multi_press_1',
         'multi_press_2',
         'multi_press_3',
@@ -1080,7 +1080,7 @@
     ]),
     'area_id': None,
     'capabilities': dict({
-      'event_types': list([
+      <EventEntityCapabilityAttribute.EVENT_TYPES: 'event_types'>: list([
         'multi_press_1',
         'multi_press_2',
         'multi_press_3',
@@ -1122,8 +1122,8 @@
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'device_class': 'button',
-      'event_type': None,
-      'event_types': list([
+      <EventEntityStateAttribute.EVENT_TYPE: 'event_type'>: None,
+      <EventEntityCapabilityAttribute.EVENT_TYPES: 'event_types'>: list([
         'multi_press_1',
         'multi_press_2',
         'multi_press_3',
@@ -1147,7 +1147,7 @@
     ]),
     'area_id': None,
     'capabilities': dict({
-      'event_types': list([
+      <EventEntityCapabilityAttribute.EVENT_TYPES: 'event_types'>: list([
         'multi_press_1',
         'multi_press_2',
         'multi_press_3',
@@ -1192,8 +1192,8 @@
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'device_class': 'button',
-      'event_type': None,
-      'event_types': list([
+      <EventEntityStateAttribute.EVENT_TYPE: 'event_type'>: None,
+      <EventEntityCapabilityAttribute.EVENT_TYPES: 'event_types'>: list([
         'multi_press_1',
         'multi_press_2',
         'multi_press_3',
@@ -1220,7 +1220,7 @@
     ]),
     'area_id': None,
     'capabilities': dict({
-      'event_types': list([
+      <EventEntityCapabilityAttribute.EVENT_TYPES: 'event_types'>: list([
         'multi_press_1',
         'multi_press_2',
         'multi_press_3',
@@ -1265,8 +1265,8 @@
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'device_class': 'button',
-      'event_type': None,
-      'event_types': list([
+      <EventEntityStateAttribute.EVENT_TYPE: 'event_type'>: None,
+      <EventEntityCapabilityAttribute.EVENT_TYPES: 'event_types'>: list([
         'multi_press_1',
         'multi_press_2',
         'multi_press_3',
@@ -1293,7 +1293,7 @@
     ]),
     'area_id': None,
     'capabilities': dict({
-      'event_types': list([
+      <EventEntityCapabilityAttribute.EVENT_TYPES: 'event_types'>: list([
         'multi_press_1',
         'multi_press_2',
         'multi_press_3',
@@ -1335,8 +1335,8 @@
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'device_class': 'button',
-      'event_type': None,
-      'event_types': list([
+      <EventEntityStateAttribute.EVENT_TYPE: 'event_type'>: None,
+      <EventEntityCapabilityAttribute.EVENT_TYPES: 'event_types'>: list([
         'multi_press_1',
         'multi_press_2',
         'multi_press_3',
@@ -1360,7 +1360,7 @@
     ]),
     'area_id': None,
     'capabilities': dict({
-      'event_types': list([
+      <EventEntityCapabilityAttribute.EVENT_TYPES: 'event_types'>: list([
         'multi_press_1',
         'multi_press_2',
         'multi_press_3',
@@ -1404,8 +1404,8 @@
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'device_class': 'button',
-      'event_type': None,
-      'event_types': list([
+      <EventEntityStateAttribute.EVENT_TYPE: 'event_type'>: None,
+      <EventEntityCapabilityAttribute.EVENT_TYPES: 'event_types'>: list([
         'multi_press_1',
         'multi_press_2',
         'multi_press_3',
@@ -1431,7 +1431,7 @@
     ]),
     'area_id': None,
     'capabilities': dict({
-      'event_types': list([
+      <EventEntityCapabilityAttribute.EVENT_TYPES: 'event_types'>: list([
         'multi_press_1',
         'multi_press_2',
         'multi_press_3',
@@ -1475,8 +1475,8 @@
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'device_class': 'button',
-      'event_type': None,
-      'event_types': list([
+      <EventEntityStateAttribute.EVENT_TYPE: 'event_type'>: None,
+      <EventEntityCapabilityAttribute.EVENT_TYPES: 'event_types'>: list([
         'multi_press_1',
         'multi_press_2',
         'multi_press_3',
@@ -1502,7 +1502,7 @@
     ]),
     'area_id': None,
     'capabilities': dict({
-      'event_types': list([
+      <EventEntityCapabilityAttribute.EVENT_TYPES: 'event_types'>: list([
         'multi_press_1',
         'multi_press_2',
         'multi_press_3',
@@ -1546,8 +1546,8 @@
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'device_class': 'button',
-      'event_type': None,
-      'event_types': list([
+      <EventEntityStateAttribute.EVENT_TYPE: 'event_type'>: None,
+      <EventEntityCapabilityAttribute.EVENT_TYPES: 'event_types'>: list([
         'multi_press_1',
         'multi_press_2',
         'multi_press_3',
@@ -1573,7 +1573,7 @@
     ]),
     'area_id': None,
     'capabilities': dict({
-      'event_types': list([
+      <EventEntityCapabilityAttribute.EVENT_TYPES: 'event_types'>: list([
         'multi_press_1',
         'multi_press_2',
         'multi_press_3',
@@ -1617,8 +1617,8 @@
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'device_class': 'button',
-      'event_type': None,
-      'event_types': list([
+      <EventEntityStateAttribute.EVENT_TYPE: 'event_type'>: None,
+      <EventEntityCapabilityAttribute.EVENT_TYPES: 'event_types'>: list([
         'multi_press_1',
         'multi_press_2',
         'multi_press_3',
@@ -1644,7 +1644,7 @@
     ]),
     'area_id': None,
     'capabilities': dict({
-      'event_types': list([
+      <EventEntityCapabilityAttribute.EVENT_TYPES: 'event_types'>: list([
         'multi_press_1',
         'multi_press_2',
         'multi_press_3',
@@ -1688,8 +1688,8 @@
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'device_class': 'button',
-      'event_type': None,
-      'event_types': list([
+      <EventEntityStateAttribute.EVENT_TYPE: 'event_type'>: None,
+      <EventEntityCapabilityAttribute.EVENT_TYPES: 'event_types'>: list([
         'multi_press_1',
         'multi_press_2',
         'multi_press_3',
@@ -1715,7 +1715,7 @@
     ]),
     'area_id': None,
     'capabilities': dict({
-      'event_types': list([
+      <EventEntityCapabilityAttribute.EVENT_TYPES: 'event_types'>: list([
         'multi_press_1',
         'multi_press_2',
         'multi_press_3',
@@ -1759,8 +1759,8 @@
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'device_class': 'button',
-      'event_type': None,
-      'event_types': list([
+      <EventEntityStateAttribute.EVENT_TYPE: 'event_type'>: None,
+      <EventEntityCapabilityAttribute.EVENT_TYPES: 'event_types'>: list([
         'multi_press_1',
         'multi_press_2',
         'multi_press_3',
@@ -1786,7 +1786,7 @@
     ]),
     'area_id': None,
     'capabilities': dict({
-      'event_types': list([
+      <EventEntityCapabilityAttribute.EVENT_TYPES: 'event_types'>: list([
         'initial_press',
         'short_release',
         'long_press',
@@ -1827,8 +1827,8 @@
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'device_class': 'button',
-      'event_type': None,
-      'event_types': list([
+      <EventEntityStateAttribute.EVENT_TYPE: 'event_type'>: None,
+      <EventEntityCapabilityAttribute.EVENT_TYPES: 'event_types'>: list([
         'initial_press',
         'short_release',
         'long_press',
@@ -1851,7 +1851,7 @@
     ]),
     'area_id': None,
     'capabilities': dict({
-      'event_types': list([
+      <EventEntityCapabilityAttribute.EVENT_TYPES: 'event_types'>: list([
         'multi_press_1',
         'multi_press_2',
         'long_press',
@@ -1892,8 +1892,8 @@
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'device_class': 'button',
-      'event_type': None,
-      'event_types': list([
+      <EventEntityStateAttribute.EVENT_TYPE: 'event_type'>: None,
+      <EventEntityCapabilityAttribute.EVENT_TYPES: 'event_types'>: list([
         'multi_press_1',
         'multi_press_2',
         'long_press',
@@ -1916,7 +1916,7 @@
     ]),
     'area_id': None,
     'capabilities': dict({
-      'event_types': list([
+      <EventEntityCapabilityAttribute.EVENT_TYPES: 'event_types'>: list([
         'multi_press_1',
         'multi_press_2',
         'multi_press_3',
@@ -1959,8 +1959,8 @@
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'device_class': 'button',
-      'event_type': None,
-      'event_types': list([
+      <EventEntityStateAttribute.EVENT_TYPE: 'event_type'>: None,
+      <EventEntityCapabilityAttribute.EVENT_TYPES: 'event_types'>: list([
         'multi_press_1',
         'multi_press_2',
         'multi_press_3',
@@ -1985,7 +1985,7 @@
     ]),
     'area_id': None,
     'capabilities': dict({
-      'event_types': list([
+      <EventEntityCapabilityAttribute.EVENT_TYPES: 'event_types'>: list([
         'initial_press',
         'short_release',
       ]),
@@ -2024,8 +2024,8 @@
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'device_class': 'button',
-      'event_type': None,
-      'event_types': list([
+      <EventEntityStateAttribute.EVENT_TYPE: 'event_type'>: None,
+      <EventEntityCapabilityAttribute.EVENT_TYPES: 'event_types'>: list([
         'initial_press',
         'short_release',
       ]),

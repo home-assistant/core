@@ -28,6 +28,15 @@ CAMERA_STREAM_SOURCE_TIMEOUT: Final = 10
 CAMERA_IMAGE_TIMEOUT: Final = 10
 
 
+class CameraEntityStateAttribute(StrEnum):
+    """State attributes for camera entities."""
+
+    ACCESS_TOKEN = "access_token"
+    MODEL_NAME = "model_name"
+    BRAND = "brand"
+    MOTION_DETECTION = "motion_detection"
+
+
 class CameraState(StrEnum):
     """Camera entity states."""
 

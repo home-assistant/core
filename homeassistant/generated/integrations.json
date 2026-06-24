@@ -24,12 +24,6 @@
       "config_flow": true,
       "iot_class": "cloud_polling"
     },
-    "acer_projector": {
-      "name": "Acer Projector",
-      "integration_type": "hub",
-      "config_flow": false,
-      "iot_class": "local_polling"
-    },
     "acmeda": {
       "name": "Rollease Acmeda Automate",
       "integration_type": "hub",
@@ -330,12 +324,6 @@
       "name": "AMP Motorization",
       "integration_type": "virtual",
       "supported_by": "motion_blinds"
-    },
-    "ampio": {
-      "name": "Ampio Smart Smog System",
-      "integration_type": "hub",
-      "config_flow": false,
-      "iot_class": "cloud_polling"
     },
     "analytics_insights": {
       "name": "Home Assistant Analytics Insights",
@@ -1758,12 +1746,6 @@
           "name": "Elgato Light"
         }
       }
-    },
-    "eliqonline": {
-      "name": "Eliqonline",
-      "integration_type": "hub",
-      "config_flow": false,
-      "iot_class": "cloud_polling"
     },
     "elkm1": {
       "name": "Elk-M1 Control",
@@ -6264,12 +6246,6 @@
       "config_flow": true,
       "iot_class": "local_push"
     },
-    "scsgate": {
-      "name": "SCSGate",
-      "integration_type": "hub",
-      "config_flow": false,
-      "iot_class": "local_polling"
-    },
     "season": {
       "integration_type": "service",
       "config_flow": true,
@@ -7598,12 +7574,6 @@
           "config_flow": true,
           "iot_class": "local_polling",
           "name": "UniFi AP"
-        },
-        "unifiled": {
-          "integration_type": "hub",
-          "config_flow": false,
-          "iot_class": "local_polling",
-          "name": "UniFi LED"
         },
         "unifiprotect": {
           "integration_type": "hub",

@@ -5,7 +5,7 @@ from typing import Any, override
 
 from ouman_eh_800_api import (
     EnumControlOumanEndpoint,
-    IntControlOumanEndpoint,
+    FloatControlOumanEndpoint,
     L1BaseEndpoints,
     L1RoomSensor,
     L2BaseEndpoints,
@@ -57,7 +57,7 @@ class OumanEh800ClimateEntityDescription(
 
     operation_mode_endpoint: EnumControlOumanEndpoint
     current_temperature_endpoint: NumberOumanEndpoint
-    target_temperature_endpoint: IntControlOumanEndpoint
+    target_temperature_endpoint: FloatControlOumanEndpoint
     valve_position_endpoint: NumberOumanEndpoint
 
 
@@ -104,7 +104,7 @@ class OumanEh800ClimateEntity(OumanEh800Entity, ClimateEntity):
 
     _attr_name = None
     _attr_temperature_unit = UnitOfTemperature.CELSIUS
-    _attr_target_temperature_step = 1
+    _attr_target_temperature_step = 0.1
     _attr_hvac_modes = [HVACMode.HEAT, HVACMode.OFF]
     _attr_preset_modes = list(_PRESET_TO_OPERATION_MODE)
     _attr_supported_features = (
@@ -187,7 +187,7 @@ class OumanEh800ClimateEntity(OumanEh800Entity, ClimateEntity):
             await self.async_set_hvac_mode(hvac_mode)
         await self.coordinator.async_set_endpoint_value(
             self.entity_description.target_temperature_endpoint,
-            int(kwargs[ATTR_TEMPERATURE]),
+            kwargs[ATTR_TEMPERATURE],
         )
 
     @override

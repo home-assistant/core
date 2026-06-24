@@ -6,7 +6,7 @@
     ]),
     'area_id': None,
     'capabilities': dict({
-      'options': list([
+      <SensorEntityCapabilityAttribute.OPTIONS: 'options'>: list([
         'code_yellow',
         'code_orange',
         'code_red',
@@ -48,7 +48,7 @@
       'attribution': 'Data provided by atlasleefomgeving.nl',
       'device_class': 'enum',
       'friendly_name': 'Stookwijzer Advice code',
-      'options': list([
+      <SensorEntityCapabilityAttribute.OPTIONS: 'options'>: list([
         'code_yellow',
         'code_orange',
         'code_red',
@@ -69,7 +69,7 @@
     ]),
     'area_id': None,
     'capabilities': dict({
-      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+      <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -107,7 +107,7 @@
       'attribution': 'Data provided by atlasleefomgeving.nl',
       'device_class': 'aqi',
       'friendly_name': 'Stookwijzer Air quality index',
-      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+      <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
     'context': <ANY>,
     'entity_id': 'sensor.stookwijzer_air_quality_index',
@@ -124,7 +124,7 @@
     ]),
     'area_id': None,
     'capabilities': dict({
-      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+      <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -168,7 +168,7 @@
       'attribution': 'Data provided by atlasleefomgeving.nl',
       'device_class': 'wind_speed',
       'friendly_name': 'Stookwijzer Wind speed',
-      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+      <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
       'unit_of_measurement': <UnitOfSpeed.BEAUFORT: 'Beaufort'>,
     }),
     'context': <ANY>,

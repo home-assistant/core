@@ -6,7 +6,7 @@
     ]),
     'area_id': None,
     'capabilities': dict({
-      'preset_modes': list([
+      <FanEntityCapabilityAttribute.PRESET_MODES: 'preset_modes'>: list([
         'boost',
         'night',
         'free_cooling',
@@ -46,10 +46,10 @@
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'friendly_name': 'VMC Soggiorno',
-      'percentage': 25,
-      'percentage_step': 25.0,
-      'preset_mode': None,
-      'preset_modes': list([
+      <FanEntityStateAttribute.PERCENTAGE: 'percentage'>: 25,
+      <FanEntityStateAttribute.PERCENTAGE_STEP: 'percentage_step'>: 25.0,
+      <FanEntityStateAttribute.PRESET_MODE: 'preset_mode'>: None,
+      <FanEntityCapabilityAttribute.PRESET_MODES: 'preset_modes'>: list([
         'boost',
         'night',
         'free_cooling',

@@ -4,7 +4,7 @@
     'attributes': ReadOnlyDict({
       'attribution': 'Information provided by the OpenSky Network (https://opensky-network.org)',
       'friendly_name': 'OpenSky',
-      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+      <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
       'unit_of_measurement': 'flights',
     }),
     'context': <ANY>,
@@ -20,7 +20,7 @@
     'attributes': ReadOnlyDict({
       'attribution': 'Information provided by the OpenSky Network (https://opensky-network.org)',
       'friendly_name': 'OpenSky',
-      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+      <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
       'unit_of_measurement': 'flights',
     }),
     'context': <ANY>,

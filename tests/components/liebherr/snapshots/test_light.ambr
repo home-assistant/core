@@ -6,7 +6,7 @@
     ]),
     'area_id': None,
     'capabilities': dict({
-      'supported_color_modes': list([
+      <LightEntityCapabilityAttribute.SUPPORTED_COLOR_MODES: 'supported_color_modes'>: list([
         <ColorMode.BRIGHTNESS: 'brightness'>,
       ]),
     }),
@@ -43,10 +43,10 @@
 # name: test_lights[light.test_fridge_presentation_light-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'brightness': 153,
-      'color_mode': <ColorMode.BRIGHTNESS: 'brightness'>,
+      <LightEntityStateAttribute.BRIGHTNESS: 'brightness'>: 153,
+      <LightEntityStateAttribute.COLOR_MODE: 'color_mode'>: <ColorMode.BRIGHTNESS: 'brightness'>,
       'friendly_name': 'Test Fridge Presentation light',
-      'supported_color_modes': list([
+      <LightEntityCapabilityAttribute.SUPPORTED_COLOR_MODES: 'supported_color_modes'>: list([
         <ColorMode.BRIGHTNESS: 'brightness'>,
       ]),
       'supported_features': <LightEntityFeature: 0>,

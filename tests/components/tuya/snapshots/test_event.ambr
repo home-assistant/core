@@ -2,8 +2,8 @@
 # name: test_alarm_message_event[event.intercom_doorbell_message-alarm_message-eyJzb21lIjogImpzb24iLCAicmFuZG9tIjogImRhdGEifQ==-sp_csr2fqitalj5o0tq]
   ReadOnlyDict({
     'device_class': 'doorbell',
-    'event_type': 'triggered',
-    'event_types': list([
+    <EventEntityStateAttribute.EVENT_TYPE: 'event_type'>: 'triggered',
+    <EventEntityCapabilityAttribute.EVENT_TYPES: 'event_types'>: list([
       'triggered',
     ]),
     'friendly_name': 'Intercom Doorbell message',
@@ -13,8 +13,8 @@
 # name: test_alarm_message_event[event.intercom_doorbell_picture-doorbell_pic-aHR0cHM6Ly9zb21lLXBpY3R1cmUtdXJsLmNvbS9pbWFnZS5qcGc=-sp_csr2fqitalj5o0tq]
   ReadOnlyDict({
     'device_class': 'doorbell',
-    'event_type': 'triggered',
-    'event_types': list([
+    <EventEntityStateAttribute.EVENT_TYPE: 'event_type'>: 'triggered',
+    <EventEntityCapabilityAttribute.EVENT_TYPES: 'event_types'>: list([
       'triggered',
     ]),
     'friendly_name': 'Intercom Doorbell picture',
@@ -28,7 +28,7 @@
     ]),
     'area_id': None,
     'capabilities': dict({
-      'event_types': list([
+      <EventEntityCapabilityAttribute.EVENT_TYPES: 'event_types'>: list([
         'click',
         'press',
       ]),
@@ -67,8 +67,8 @@
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'device_class': 'button',
-      'event_type': 'click',
-      'event_types': list([
+      <EventEntityStateAttribute.EVENT_TYPE: 'event_type'>: 'click',
+      <EventEntityCapabilityAttribute.EVENT_TYPES: 'event_types'>: list([
         'click',
         'press',
       ]),
@@ -89,7 +89,7 @@
     ]),
     'area_id': None,
     'capabilities': dict({
-      'event_types': list([
+      <EventEntityCapabilityAttribute.EVENT_TYPES: 'event_types'>: list([
         'click',
         'press',
       ]),
@@ -128,8 +128,8 @@
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'device_class': 'button',
-      'event_type': 'click',
-      'event_types': list([
+      <EventEntityStateAttribute.EVENT_TYPE: 'event_type'>: 'click',
+      <EventEntityCapabilityAttribute.EVENT_TYPES: 'event_types'>: list([
         'click',
         'press',
       ]),
@@ -150,7 +150,7 @@
     ]),
     'area_id': None,
     'capabilities': dict({
-      'event_types': list([
+      <EventEntityCapabilityAttribute.EVENT_TYPES: 'event_types'>: list([
         'click',
         'double_click',
         'press',
@@ -190,8 +190,8 @@
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'device_class': 'button',
-      'event_type': 'press',
-      'event_types': list([
+      <EventEntityStateAttribute.EVENT_TYPE: 'event_type'>: 'press',
+      <EventEntityCapabilityAttribute.EVENT_TYPES: 'event_types'>: list([
         'click',
         'double_click',
         'press',
@@ -213,7 +213,7 @@
     ]),
     'area_id': None,
     'capabilities': dict({
-      'event_types': list([
+      <EventEntityCapabilityAttribute.EVENT_TYPES: 'event_types'>: list([
         'triggered',
       ]),
     }),
@@ -251,8 +251,8 @@
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'device_class': 'doorbell',
-      'event_type': 'triggered',
-      'event_types': list([
+      <EventEntityStateAttribute.EVENT_TYPE: 'event_type'>: 'triggered',
+      <EventEntityCapabilityAttribute.EVENT_TYPES: 'event_types'>: list([
         'triggered',
       ]),
       'friendly_name': 'Bürocam Doorbell message',
@@ -273,7 +273,7 @@
     ]),
     'area_id': None,
     'capabilities': dict({
-      'event_types': list([
+      <EventEntityCapabilityAttribute.EVENT_TYPES: 'event_types'>: list([
         'triggered',
       ]),
     }),
@@ -311,8 +311,8 @@
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'device_class': 'doorbell',
-      'event_type': 'triggered',
-      'event_types': list([
+      <EventEntityStateAttribute.EVENT_TYPE: 'event_type'>: 'triggered',
+      <EventEntityCapabilityAttribute.EVENT_TYPES: 'event_types'>: list([
         'triggered',
       ]),
       'friendly_name': 'C9 Doorbell message',
@@ -333,7 +333,7 @@
     ]),
     'area_id': None,
     'capabilities': dict({
-      'event_types': list([
+      <EventEntityCapabilityAttribute.EVENT_TYPES: 'event_types'>: list([
         'triggered',
       ]),
     }),
@@ -371,8 +371,8 @@
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'device_class': 'doorbell',
-      'event_type': 'triggered',
-      'event_types': list([
+      <EventEntityStateAttribute.EVENT_TYPE: 'event_type'>: 'triggered',
+      <EventEntityCapabilityAttribute.EVENT_TYPES: 'event_types'>: list([
         'triggered',
       ]),
       'friendly_name': 'C9 Doorbell picture',
@@ -393,7 +393,7 @@
     ]),
     'area_id': None,
     'capabilities': dict({
-      'event_types': list([
+      <EventEntityCapabilityAttribute.EVENT_TYPES: 'event_types'>: list([
         'triggered',
       ]),
     }),
@@ -431,8 +431,8 @@
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'device_class': 'doorbell',
-      'event_type': 'triggered',
-      'event_types': list([
+      <EventEntityStateAttribute.EVENT_TYPE: 'event_type'>: 'triggered',
+      <EventEntityCapabilityAttribute.EVENT_TYPES: 'event_types'>: list([
         'triggered',
       ]),
       'friendly_name': 'Dolní vchod - západ Doorbell message',
@@ -453,7 +453,7 @@
     ]),
     'area_id': None,
     'capabilities': dict({
-      'event_types': list([
+      <EventEntityCapabilityAttribute.EVENT_TYPES: 'event_types'>: list([
         'triggered',
       ]),
     }),
@@ -491,8 +491,8 @@
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'device_class': 'doorbell',
-      'event_type': 'triggered',
-      'event_types': list([
+      <EventEntityStateAttribute.EVENT_TYPE: 'event_type'>: 'triggered',
+      <EventEntityCapabilityAttribute.EVENT_TYPES: 'event_types'>: list([
         'triggered',
       ]),
       'friendly_name': 'Dolní vchod - západ Doorbell picture',
@@ -513,7 +513,7 @@
     ]),
     'area_id': None,
     'capabilities': dict({
-      'event_types': list([
+      <EventEntityCapabilityAttribute.EVENT_TYPES: 'event_types'>: list([
         'triggered',
       ]),
     }),
@@ -551,8 +551,8 @@
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'device_class': 'doorbell',
-      'event_type': 'triggered',
-      'event_types': list([
+      <EventEntityStateAttribute.EVENT_TYPE: 'event_type'>: 'triggered',
+      <EventEntityCapabilityAttribute.EVENT_TYPES: 'event_types'>: list([
         'triggered',
       ]),
       'friendly_name': 'Garage Camera Doorbell message',
@@ -573,7 +573,7 @@
     ]),
     'area_id': None,
     'capabilities': dict({
-      'event_types': list([
+      <EventEntityCapabilityAttribute.EVENT_TYPES: 'event_types'>: list([
         'triggered',
       ]),
     }),
@@ -611,8 +611,8 @@
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'device_class': 'doorbell',
-      'event_type': 'triggered',
-      'event_types': list([
+      <EventEntityStateAttribute.EVENT_TYPE: 'event_type'>: 'triggered',
+      <EventEntityCapabilityAttribute.EVENT_TYPES: 'event_types'>: list([
         'triggered',
       ]),
       'friendly_name': 'Intercom Doorbell message',
@@ -633,7 +633,7 @@
     ]),
     'area_id': None,
     'capabilities': dict({
-      'event_types': list([
+      <EventEntityCapabilityAttribute.EVENT_TYPES: 'event_types'>: list([
         'triggered',
       ]),
     }),
@@ -671,8 +671,8 @@
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'device_class': 'doorbell',
-      'event_type': 'triggered',
-      'event_types': list([
+      <EventEntityStateAttribute.EVENT_TYPE: 'event_type'>: 'triggered',
+      <EventEntityCapabilityAttribute.EVENT_TYPES: 'event_types'>: list([
         'triggered',
       ]),
       'friendly_name': 'Intercom Doorbell picture',
@@ -693,7 +693,7 @@
     ]),
     'area_id': None,
     'capabilities': dict({
-      'event_types': list([
+      <EventEntityCapabilityAttribute.EVENT_TYPES: 'event_types'>: list([
         'triggered',
       ]),
     }),
@@ -731,8 +731,8 @@
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'device_class': 'doorbell',
-      'event_type': 'triggered',
-      'event_types': list([
+      <EventEntityStateAttribute.EVENT_TYPE: 'event_type'>: 'triggered',
+      <EventEntityCapabilityAttribute.EVENT_TYPES: 'event_types'>: list([
         'triggered',
       ]),
       'friendly_name': 'Mirilla puerta Doorbell message',
@@ -753,7 +753,7 @@
     ]),
     'area_id': None,
     'capabilities': dict({
-      'event_types': list([
+      <EventEntityCapabilityAttribute.EVENT_TYPES: 'event_types'>: list([
         'triggered',
       ]),
     }),
@@ -791,8 +791,8 @@
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'device_class': 'doorbell',
-      'event_type': 'triggered',
-      'event_types': list([
+      <EventEntityStateAttribute.EVENT_TYPE: 'event_type'>: 'triggered',
+      <EventEntityCapabilityAttribute.EVENT_TYPES: 'event_types'>: list([
         'triggered',
       ]),
       'friendly_name': 'Mirilla puerta Doorbell picture',
@@ -813,7 +813,7 @@
     ]),
     'area_id': None,
     'capabilities': dict({
-      'event_types': list([
+      <EventEntityCapabilityAttribute.EVENT_TYPES: 'event_types'>: list([
         'triggered',
       ]),
     }),
@@ -851,8 +851,8 @@
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'device_class': 'doorbell',
-      'event_type': 'triggered',
-      'event_types': list([
+      <EventEntityStateAttribute.EVENT_TYPE: 'event_type'>: 'triggered',
+      <EventEntityCapabilityAttribute.EVENT_TYPES: 'event_types'>: list([
         'triggered',
       ]),
       'friendly_name': 'Security Camera Doorbell message',
