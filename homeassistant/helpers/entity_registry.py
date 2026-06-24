@@ -20,18 +20,13 @@ import attr
 import voluptuous as vol
 
 from homeassistant.const import (
-    ATTR_DEVICE_CLASS,
-    ATTR_FRIENDLY_NAME,
-    ATTR_ICON,
-    ATTR_RESTORED,
-    ATTR_SUPPORTED_FEATURES,
-    ATTR_UNIT_OF_MEASUREMENT,
     EVENT_HOMEASSISTANT_START,
     EVENT_HOMEASSISTANT_STOP,
     MAX_LENGTH_STATE_DOMAIN,
     MAX_LENGTH_STATE_ENTITY_ID,
     STATE_UNAVAILABLE,
     EntityCategory,
+    EntityStateAttribute,
     Platform,
 )
 from homeassistant.core import (
@@ -429,28 +424,28 @@ class RegistryEntry:
     @callback
     def write_unavailable_state(self, hass: HomeAssistant) -> None:
         """Write the unavailable state to the state machine."""
-        attrs: dict[str, Any] = {ATTR_RESTORED: True}
+        attrs: dict[str, Any] = {EntityStateAttribute.RESTORED: True}
 
         if self.capabilities is not None:
             attrs.update(self.capabilities)
 
         device_class = self.device_class or self.original_device_class
         if device_class is not None:
-            attrs[ATTR_DEVICE_CLASS] = device_class
+            attrs[EntityStateAttribute.DEVICE_CLASS] = device_class
 
         icon = self.icon or self.original_icon
         if icon is not None:
-            attrs[ATTR_ICON] = icon
+            attrs[EntityStateAttribute.ICON] = icon
 
         name = self.name or self.original_name
         if name is not None:
-            attrs[ATTR_FRIENDLY_NAME] = name
+            attrs[EntityStateAttribute.FRIENDLY_NAME] = name
 
         if self.supported_features is not None:
-            attrs[ATTR_SUPPORTED_FEATURES] = self.supported_features
+            attrs[EntityStateAttribute.SUPPORTED_FEATURES] = self.supported_features
 
         if self.unit_of_measurement is not None:
-            attrs[ATTR_UNIT_OF_MEASUREMENT] = self.unit_of_measurement
+            attrs[EntityStateAttribute.UNIT_OF_MEASUREMENT] = self.unit_of_measurement
 
         hass.states.async_set(self.entity_id, STATE_UNAVAILABLE, attrs)
 
@@ -2438,7 +2433,9 @@ def _async_setup_entity_restore(hass: HomeAssistant, registry: EntityRegistry) -
         if event.data["action"] == "update":
             old_entity_id = event.data["old_entity_id"]
             old_state = hass.states.get(old_entity_id)
-            if old_state is None or not old_state.attributes.get(ATTR_RESTORED):
+            if old_state is None or not old_state.attributes.get(
+                EntityStateAttribute.RESTORED
+            ):
                 return
             hass.states.async_remove(old_entity_id, context=event.context)
             if entry := registry.async_get(event.data["entity_id"]):
@@ -2447,7 +2444,7 @@ def _async_setup_entity_restore(hass: HomeAssistant, registry: EntityRegistry) -
 
         state = hass.states.get(event.data["entity_id"])
 
-        if state is None or not state.attributes.get(ATTR_RESTORED):
+        if state is None or not state.attributes.get(EntityStateAttribute.RESTORED):
             return
 
         hass.states.async_remove(event.data["entity_id"], context=event.context)
