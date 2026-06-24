@@ -119,11 +119,13 @@ class WhirlpoolOvenCookModeSelect(WhirlpoolOvenEntity, SelectEntity):
         """Initialize the oven cook mode select."""
         super().__init__(appliance, cavity, "oven_cook_mode", "-cook_mode")
 
+    @override
     @property
     def current_option(self) -> str | None:
         """Return the current cook mode, if it is a selectable one."""
         return OVEN_COOK_MODES.get(self._appliance.get_cook_mode(self.cavity))
 
+    @override
     async def async_select_option(self, option: str) -> None:
         """Set the cook mode, keeping the current/last target temperature."""
         target = self._appliance.get_target_temp(self.cavity)

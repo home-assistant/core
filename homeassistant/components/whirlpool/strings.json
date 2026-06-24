@@ -267,8 +267,8 @@
   },
   "issues": {
     "deprecated_oven_cook_mode": {
-      "title": "The Whirlpool oven cook mode sensor is deprecated",
-      "description": "The `{entity_id}` ({entity_name}) sensor is deprecated and has been replaced by the `{replacement_entity_id}` select entity, which can both read and change the oven cook mode.\n\nUpdate any dashboards, templates, automations or scripts to use the new select entity, then disable `{entity_id}` to have it removed."
+      "description": "The `{entity_id}` ({entity_name}) sensor is deprecated and has been replaced by the `{replacement_entity_id}` select entity, which can both read and change the oven cook mode.\n\nUpdate any dashboards, templates, automations or scripts to use the new select entity, then disable `{entity_id}` to have it removed.",
+      "title": "The Whirlpool oven cook mode sensor is deprecated"
     }
   }
 }
