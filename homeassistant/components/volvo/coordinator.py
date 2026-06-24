@@ -368,6 +368,7 @@ class VolvoMediumIntervalCoordinator(VolvoBaseCoordinator):
 
         self._supported_capabilities: list[str] = []
 
+    @override
     async def _async_update_data(self) -> CoordinatorData:
         """Fetch data and trigger location update on engine-off."""
         previous_state = self.get_api_field("engineStatus")
@@ -467,6 +468,7 @@ class VolvoFastIntervalCoordinator(VolvoBaseCoordinator):
             api.async_get_window_states,
         ]
 
+    @override
     async def _async_update_data(self) -> CoordinatorData:
         """Fetch data and trigger location update on lock."""
         previous_state = self.get_api_field("centralLock")

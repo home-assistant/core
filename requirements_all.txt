@@ -684,7 +684,7 @@ bluecurrent-api==1.3.3
 bluemaestro-ble==0.4.1
 
 # homeassistant.components.bluetooth
-bluetooth-adapters==2.3.0
+bluetooth-adapters==2.4.0
 
 # homeassistant.components.bluetooth
 bluetooth-auto-recovery==1.6.4
@@ -809,7 +809,7 @@ datadog==0.52.1
 datapoint==0.12.1
 
 # homeassistant.components.bluetooth
-dbus-fast==5.0.16
+dbus-fast==5.0.22
 
 # homeassistant.components.debugpy
 debugpy==1.8.21
@@ -1165,7 +1165,7 @@ goslide-api==0.7.4
 gotailwind==0.4.0
 
 # homeassistant.components.govee_ble
-govee-ble==1.2.0
+govee-ble==1.4.0
 
 # homeassistant.components.govee_light_local
 govee-local-api==2.4.0
@@ -1228,7 +1228,7 @@ ha-xthings-cloud==1.0.5
 habiticalib==0.4.7
 
 # homeassistant.components.bluetooth
-habluetooth==6.8.3
+habluetooth==6.19.1
 
 # homeassistant.components.hanna
 hanna-cloud==0.0.7
@@ -1365,7 +1365,7 @@ imgw_pib==2.4.0
 incomfort-client==0.7.0
 
 # homeassistant.components.indevolt
-indevolt-api==1.8.5
+indevolt-api==1.8.6
 
 # homeassistant.components.influxdb
 influxdb-client==1.50.0
@@ -1438,7 +1438,7 @@ kiwiki-client==0.1.2
 knocki==0.4.2
 
 # homeassistant.components.knx
-knx-frontend==2026.6.1.213802
+knx-frontend==2026.6.23.203726
 
 # homeassistant.components.knx
 knx-telegram-store[sqlite]==0.3.2
@@ -3466,7 +3466,10 @@ zeroconf==0.150.0
 zeversolar==0.3.2
 
 # homeassistant.components.zha
-zha==1.4.1
+zha-quirks==2.0.0
+
+# homeassistant.components.zha
+zha==2.0.0
 
 # homeassistant.components.zhong_hong
 zhong-hong-hvac==1.0.13

@@ -6,7 +6,7 @@
     ]),
     'area_id': None,
     'capabilities': dict({
-      'state_class': <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
+      <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
     }),
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -49,7 +49,7 @@
     'attributes': ReadOnlyDict({
       'device_class': 'energy',
       'friendly_name': 'Energy Site Battery charged',
-      'state_class': <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
+      <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
       'unit_of_measurement': <UnitOfEnergy.KILO_WATT_HOUR: 'kWh'>,
     }),
     'context': <ANY>,
@@ -65,7 +65,7 @@
     'attributes': ReadOnlyDict({
       'device_class': 'energy',
       'friendly_name': 'Energy Site Battery charged',
-      'state_class': <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
+      <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
       'unit_of_measurement': <UnitOfEnergy.KILO_WATT_HOUR: 'kWh'>,
     }),
     'context': <ANY>,
@@ -83,7 +83,7 @@
     ]),
     'area_id': None,
     'capabilities': dict({
-      'state_class': <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
+      <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
     }),
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -126,7 +126,7 @@
     'attributes': ReadOnlyDict({
       'device_class': 'energy',
       'friendly_name': 'Energy Site Battery discharged',
-      'state_class': <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
+      <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
       'unit_of_measurement': <UnitOfEnergy.KILO_WATT_HOUR: 'kWh'>,
     }),
     'context': <ANY>,
@@ -142,7 +142,7 @@
     'attributes': ReadOnlyDict({
       'device_class': 'energy',
       'friendly_name': 'Energy Site Battery discharged',
-      'state_class': <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
+      <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
       'unit_of_measurement': <UnitOfEnergy.KILO_WATT_HOUR: 'kWh'>,
     }),
     'context': <ANY>,
@@ -160,7 +160,7 @@
     ]),
     'area_id': None,
     'capabilities': dict({
-      'state_class': <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
+      <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
     }),
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -203,7 +203,7 @@
     'attributes': ReadOnlyDict({
       'device_class': 'energy',
       'friendly_name': 'Energy Site Battery exported',
-      'state_class': <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
+      <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
       'unit_of_measurement': <UnitOfEnergy.KILO_WATT_HOUR: 'kWh'>,
     }),
     'context': <ANY>,
@@ -219,7 +219,7 @@
     'attributes': ReadOnlyDict({
       'device_class': 'energy',
       'friendly_name': 'Energy Site Battery exported',
-      'state_class': <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
+      <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
       'unit_of_measurement': <UnitOfEnergy.KILO_WATT_HOUR: 'kWh'>,
     }),
     'context': <ANY>,
@@ -237,7 +237,7 @@
     ]),
     'area_id': None,
     'capabilities': dict({
-      'state_class': <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
+      <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
     }),
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -280,7 +280,7 @@
     'attributes': ReadOnlyDict({
       'device_class': 'energy',
       'friendly_name': 'Energy Site Battery imported from generator',
-      'state_class': <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
+      <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
       'unit_of_measurement': <UnitOfEnergy.KILO_WATT_HOUR: 'kWh'>,
     }),
     'context': <ANY>,
@@ -296,7 +296,7 @@
     'attributes': ReadOnlyDict({
       'device_class': 'energy',
       'friendly_name': 'Energy Site Battery imported from generator',
-      'state_class': <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
+      <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
       'unit_of_measurement': <UnitOfEnergy.KILO_WATT_HOUR: 'kWh'>,
     }),
     'context': <ANY>,
@@ -314,7 +314,7 @@
     ]),
     'area_id': None,
     'capabilities': dict({
-      'state_class': <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
+      <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
     }),
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -357,7 +357,7 @@
     'attributes': ReadOnlyDict({
       'device_class': 'energy',
       'friendly_name': 'Energy Site Battery imported from grid',
-      'state_class': <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
+      <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
       'unit_of_measurement': <UnitOfEnergy.KILO_WATT_HOUR: 'kWh'>,
     }),
     'context': <ANY>,
@@ -373,7 +373,7 @@
     'attributes': ReadOnlyDict({
       'device_class': 'energy',
       'friendly_name': 'Energy Site Battery imported from grid',
-      'state_class': <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
+      <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
       'unit_of_measurement': <UnitOfEnergy.KILO_WATT_HOUR: 'kWh'>,
     }),
     'context': <ANY>,
@@ -391,7 +391,7 @@
     ]),
     'area_id': None,
     'capabilities': dict({
-      'state_class': <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
+      <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
     }),
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -434,7 +434,7 @@
     'attributes': ReadOnlyDict({
       'device_class': 'energy',
       'friendly_name': 'Energy Site Battery imported from solar',
-      'state_class': <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
+      <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
       'unit_of_measurement': <UnitOfEnergy.KILO_WATT_HOUR: 'kWh'>,
     }),
     'context': <ANY>,
@@ -450,7 +450,7 @@
     'attributes': ReadOnlyDict({
       'device_class': 'energy',
       'friendly_name': 'Energy Site Battery imported from solar',
-      'state_class': <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
+      <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
       'unit_of_measurement': <UnitOfEnergy.KILO_WATT_HOUR: 'kWh'>,
     }),
     'context': <ANY>,
@@ -468,7 +468,7 @@
     ]),
     'area_id': None,
     'capabilities': dict({
-      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+      <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -511,7 +511,7 @@
     'attributes': ReadOnlyDict({
       'device_class': 'power',
       'friendly_name': 'Energy Site Battery power',
-      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+      <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
       'unit_of_measurement': <UnitOfPower.KILO_WATT: 'kW'>,
     }),
     'context': <ANY>,
@@ -527,7 +527,7 @@
     'attributes': ReadOnlyDict({
       'device_class': 'power',
       'friendly_name': 'Energy Site Battery power',
-      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+      <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
       'unit_of_measurement': <UnitOfPower.KILO_WATT: 'kW'>,
     }),
     'context': <ANY>,
@@ -545,7 +545,7 @@
     ]),
     'area_id': None,
     'capabilities': dict({
-      'state_class': <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
+      <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
     }),
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -588,7 +588,7 @@
     'attributes': ReadOnlyDict({
       'device_class': 'energy',
       'friendly_name': 'Energy Site Consumer imported from battery',
-      'state_class': <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
+      <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
       'unit_of_measurement': <UnitOfEnergy.KILO_WATT_HOUR: 'kWh'>,
     }),
     'context': <ANY>,
@@ -604,7 +604,7 @@
     'attributes': ReadOnlyDict({
       'device_class': 'energy',
       'friendly_name': 'Energy Site Consumer imported from battery',
-      'state_class': <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
+      <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
       'unit_of_measurement': <UnitOfEnergy.KILO_WATT_HOUR: 'kWh'>,
     }),
     'context': <ANY>,
@@ -622,7 +622,7 @@
     ]),
     'area_id': None,
     'capabilities': dict({
-      'state_class': <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
+      <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
     }),
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -665,7 +665,7 @@
     'attributes': ReadOnlyDict({
       'device_class': 'energy',
       'friendly_name': 'Energy Site Consumer imported from generator',
-      'state_class': <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
+      <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
       'unit_of_measurement': <UnitOfEnergy.KILO_WATT_HOUR: 'kWh'>,
     }),
     'context': <ANY>,
@@ -681,7 +681,7 @@
     'attributes': ReadOnlyDict({
       'device_class': 'energy',
       'friendly_name': 'Energy Site Consumer imported from generator',
-      'state_class': <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
+      <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
       'unit_of_measurement': <UnitOfEnergy.KILO_WATT_HOUR: 'kWh'>,
     }),
     'context': <ANY>,
@@ -699,7 +699,7 @@
     ]),
     'area_id': None,
     'capabilities': dict({
-      'state_class': <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
+      <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
     }),
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -742,7 +742,7 @@
     'attributes': ReadOnlyDict({
       'device_class': 'energy',
       'friendly_name': 'Energy Site Consumer imported from grid',
-      'state_class': <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
+      <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
       'unit_of_measurement': <UnitOfEnergy.KILO_WATT_HOUR: 'kWh'>,
     }),
     'context': <ANY>,
@@ -758,7 +758,7 @@
     'attributes': ReadOnlyDict({
       'device_class': 'energy',
       'friendly_name': 'Energy Site Consumer imported from grid',
-      'state_class': <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
+      <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
       'unit_of_measurement': <UnitOfEnergy.KILO_WATT_HOUR: 'kWh'>,
     }),
     'context': <ANY>,
@@ -776,7 +776,7 @@
     ]),
     'area_id': None,
     'capabilities': dict({
-      'state_class': <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
+      <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
     }),
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -819,7 +819,7 @@
     'attributes': ReadOnlyDict({
       'device_class': 'energy',
       'friendly_name': 'Energy Site Consumer imported from solar',
-      'state_class': <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
+      <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
       'unit_of_measurement': <UnitOfEnergy.KILO_WATT_HOUR: 'kWh'>,
     }),
     'context': <ANY>,
@@ -835,7 +835,7 @@
     'attributes': ReadOnlyDict({
       'device_class': 'energy',
       'friendly_name': 'Energy Site Consumer imported from solar',
-      'state_class': <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
+      <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
       'unit_of_measurement': <UnitOfEnergy.KILO_WATT_HOUR: 'kWh'>,
     }),
     'context': <ANY>,
@@ -853,7 +853,7 @@
     ]),
     'area_id': None,
     'capabilities': dict({
-      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+      <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -896,7 +896,7 @@
     'attributes': ReadOnlyDict({
       'device_class': 'energy_storage',
       'friendly_name': 'Energy Site Energy left',
-      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+      <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
       'unit_of_measurement': <UnitOfEnergy.KILO_WATT_HOUR: 'kWh'>,
     }),
     'context': <ANY>,
@@ -912,7 +912,7 @@
     'attributes': ReadOnlyDict({
       'device_class': 'energy_storage',
       'friendly_name': 'Energy Site Energy left',
-      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+      <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
       'unit_of_measurement': <UnitOfEnergy.KILO_WATT_HOUR: 'kWh'>,
     }),
     'context': <ANY>,
@@ -930,7 +930,7 @@
     ]),
     'area_id': None,
     'capabilities': dict({
-      'state_class': <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
+      <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
     }),
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -973,7 +973,7 @@
     'attributes': ReadOnlyDict({
       'device_class': 'energy',
       'friendly_name': 'Energy Site Generator exported',
-      'state_class': <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
+      <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
       'unit_of_measurement': <UnitOfEnergy.KILO_WATT_HOUR: 'kWh'>,
     }),
     'context': <ANY>,
@@ -989,7 +989,7 @@
     'attributes': ReadOnlyDict({
       'device_class': 'energy',
       'friendly_name': 'Energy Site Generator exported',
-      'state_class': <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
+      <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
       'unit_of_measurement': <UnitOfEnergy.KILO_WATT_HOUR: 'kWh'>,
     }),
     'context': <ANY>,
@@ -1007,7 +1007,7 @@
     ]),
     'area_id': None,
     'capabilities': dict({
-      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+      <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -1050,7 +1050,7 @@
     'attributes': ReadOnlyDict({
       'device_class': 'power',
       'friendly_name': 'Energy Site Generator power',
-      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+      <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
       'unit_of_measurement': <UnitOfPower.KILO_WATT: 'kW'>,
     }),
     'context': <ANY>,
@@ -1066,7 +1066,7 @@
     'attributes': ReadOnlyDict({
       'device_class': 'power',
       'friendly_name': 'Energy Site Generator power',
-      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+      <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
       'unit_of_measurement': <UnitOfPower.KILO_WATT: 'kW'>,
     }),
     'context': <ANY>,
@@ -1084,7 +1084,7 @@
     ]),
     'area_id': None,
     'capabilities': dict({
-      'state_class': <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
+      <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
     }),
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -1127,7 +1127,7 @@
     'attributes': ReadOnlyDict({
       'device_class': 'energy',
       'friendly_name': 'Energy Site Grid exported',
-      'state_class': <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
+      <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
       'unit_of_measurement': <UnitOfEnergy.KILO_WATT_HOUR: 'kWh'>,
     }),
     'context': <ANY>,
@@ -1143,7 +1143,7 @@
     'attributes': ReadOnlyDict({
       'device_class': 'energy',
       'friendly_name': 'Energy Site Grid exported',
-      'state_class': <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
+      <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
       'unit_of_measurement': <UnitOfEnergy.KILO_WATT_HOUR: 'kWh'>,
     }),
     'context': <ANY>,
@@ -1161,7 +1161,7 @@
     ]),
     'area_id': None,
     'capabilities': dict({
-      'state_class': <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
+      <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
     }),
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -1204,7 +1204,7 @@
     'attributes': ReadOnlyDict({
       'device_class': 'energy',
       'friendly_name': 'Energy Site Grid exported from battery',
-      'state_class': <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
+      <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
       'unit_of_measurement': <UnitOfEnergy.KILO_WATT_HOUR: 'kWh'>,
     }),
     'context': <ANY>,
@@ -1220,7 +1220,7 @@
     'attributes': ReadOnlyDict({
       'device_class': 'energy',
       'friendly_name': 'Energy Site Grid exported from battery',
-      'state_class': <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
+      <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
       'unit_of_measurement': <UnitOfEnergy.KILO_WATT_HOUR: 'kWh'>,
     }),
     'context': <ANY>,
@@ -1238,7 +1238,7 @@
     ]),
     'area_id': None,
     'capabilities': dict({
-      'state_class': <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
+      <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
     }),
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -1281,7 +1281,7 @@
     'attributes': ReadOnlyDict({
       'device_class': 'energy',
       'friendly_name': 'Energy Site Grid exported from generator',
-      'state_class': <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
+      <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
       'unit_of_measurement': <UnitOfEnergy.KILO_WATT_HOUR: 'kWh'>,
     }),
     'context': <ANY>,
@@ -1297,7 +1297,7 @@
     'attributes': ReadOnlyDict({
       'device_class': 'energy',
       'friendly_name': 'Energy Site Grid exported from generator',
-      'state_class': <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
+      <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
       'unit_of_measurement': <UnitOfEnergy.KILO_WATT_HOUR: 'kWh'>,
     }),
     'context': <ANY>,
@@ -1315,7 +1315,7 @@
     ]),
     'area_id': None,
     'capabilities': dict({
-      'state_class': <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
+      <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
     }),
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -1358,7 +1358,7 @@
     'attributes': ReadOnlyDict({
       'device_class': 'energy',
       'friendly_name': 'Energy Site Grid exported from solar',
-      'state_class': <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
+      <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
       'unit_of_measurement': <UnitOfEnergy.KILO_WATT_HOUR: 'kWh'>,
     }),
     'context': <ANY>,
@@ -1374,7 +1374,7 @@
     'attributes': ReadOnlyDict({
       'device_class': 'energy',
       'friendly_name': 'Energy Site Grid exported from solar',
-      'state_class': <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
+      <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
       'unit_of_measurement': <UnitOfEnergy.KILO_WATT_HOUR: 'kWh'>,
     }),
     'context': <ANY>,
@@ -1392,7 +1392,7 @@
     ]),
     'area_id': None,
     'capabilities': dict({
-      'state_class': <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
+      <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
     }),
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -1435,7 +1435,7 @@
     'attributes': ReadOnlyDict({
       'device_class': 'energy',
       'friendly_name': 'Energy Site Grid imported',
-      'state_class': <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
+      <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
       'unit_of_measurement': <UnitOfEnergy.KILO_WATT_HOUR: 'kWh'>,
     }),
     'context': <ANY>,
@@ -1451,7 +1451,7 @@
     'attributes': ReadOnlyDict({
       'device_class': 'energy',
       'friendly_name': 'Energy Site Grid imported',
-      'state_class': <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
+      <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
       'unit_of_measurement': <UnitOfEnergy.KILO_WATT_HOUR: 'kWh'>,
     }),
     'context': <ANY>,
@@ -1469,7 +1469,7 @@
     ]),
     'area_id': None,
     'capabilities': dict({
-      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+      <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -1512,7 +1512,7 @@
     'attributes': ReadOnlyDict({
       'device_class': 'power',
       'friendly_name': 'Energy Site Grid power',
-      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+      <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
       'unit_of_measurement': <UnitOfPower.KILO_WATT: 'kW'>,
     }),
     'context': <ANY>,
@@ -1528,7 +1528,7 @@
     'attributes': ReadOnlyDict({
       'device_class': 'power',
       'friendly_name': 'Energy Site Grid power',
-      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+      <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
       'unit_of_measurement': <UnitOfPower.KILO_WATT: 'kW'>,
     }),
     'context': <ANY>,
@@ -1546,7 +1546,7 @@
     ]),
     'area_id': None,
     'capabilities': dict({
-      'state_class': <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
+      <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
     }),
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -1589,7 +1589,7 @@
     'attributes': ReadOnlyDict({
       'device_class': 'energy',
       'friendly_name': 'Energy Site Grid services exported',
-      'state_class': <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
+      <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
       'unit_of_measurement': <UnitOfEnergy.KILO_WATT_HOUR: 'kWh'>,
     }),
     'context': <ANY>,
@@ -1605,7 +1605,7 @@
     'attributes': ReadOnlyDict({
       'device_class': 'energy',
       'friendly_name': 'Energy Site Grid services exported',
-      'state_class': <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
+      <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
       'unit_of_measurement': <UnitOfEnergy.KILO_WATT_HOUR: 'kWh'>,
     }),
     'context': <ANY>,
@@ -1623,7 +1623,7 @@
     ]),
     'area_id': None,
     'capabilities': dict({
-      'state_class': <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
+      <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
     }),
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -1666,7 +1666,7 @@
     'attributes': ReadOnlyDict({
       'device_class': 'energy',
       'friendly_name': 'Energy Site Grid services imported',
-      'state_class': <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
+      <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
       'unit_of_measurement': <UnitOfEnergy.KILO_WATT_HOUR: 'kWh'>,
     }),
     'context': <ANY>,
@@ -1682,7 +1682,7 @@
     'attributes': ReadOnlyDict({
       'device_class': 'energy',
       'friendly_name': 'Energy Site Grid services imported',
-      'state_class': <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
+      <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
       'unit_of_measurement': <UnitOfEnergy.KILO_WATT_HOUR: 'kWh'>,
     }),
     'context': <ANY>,
@@ -1700,7 +1700,7 @@
     ]),
     'area_id': None,
     'capabilities': dict({
-      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+      <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -1743,7 +1743,7 @@
     'attributes': ReadOnlyDict({
       'device_class': 'power',
       'friendly_name': 'Energy Site Grid services power',
-      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+      <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
       'unit_of_measurement': <UnitOfPower.KILO_WATT: 'kW'>,
     }),
     'context': <ANY>,
@@ -1759,7 +1759,7 @@
     'attributes': ReadOnlyDict({
       'device_class': 'power',
       'friendly_name': 'Energy Site Grid services power',
-      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+      <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
       'unit_of_measurement': <UnitOfPower.KILO_WATT: 'kW'>,
     }),
     'context': <ANY>,
@@ -1777,7 +1777,7 @@
     ]),
     'area_id': None,
     'capabilities': dict({
-      'state_class': <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
+      <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
     }),
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -1820,7 +1820,7 @@
     'attributes': ReadOnlyDict({
       'device_class': 'energy',
       'friendly_name': 'Energy Site Home usage',
-      'state_class': <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
+      <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
       'unit_of_measurement': <UnitOfEnergy.KILO_WATT_HOUR: 'kWh'>,
     }),
     'context': <ANY>,
@@ -1836,7 +1836,7 @@
     'attributes': ReadOnlyDict({
       'device_class': 'energy',
       'friendly_name': 'Energy Site Home usage',
-      'state_class': <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
+      <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
       'unit_of_measurement': <UnitOfEnergy.KILO_WATT_HOUR: 'kWh'>,
     }),
     'context': <ANY>,
@@ -1854,7 +1854,7 @@
     ]),
     'area_id': None,
     'capabilities': dict({
-      'options': list([
+      <SensorEntityCapabilityAttribute.OPTIONS: 'options'>: list([
         'on_grid',
         'off_grid',
         'off_grid_intentional',
@@ -1897,7 +1897,7 @@
     'attributes': ReadOnlyDict({
       'device_class': 'enum',
       'friendly_name': 'Energy Site Island status',
-      'options': list([
+      <SensorEntityCapabilityAttribute.OPTIONS: 'options'>: list([
         'on_grid',
         'off_grid',
         'off_grid_intentional',
@@ -1918,7 +1918,7 @@
     'attributes': ReadOnlyDict({
       'device_class': 'enum',
       'friendly_name': 'Energy Site Island status',
-      'options': list([
+      <SensorEntityCapabilityAttribute.OPTIONS: 'options'>: list([
         'on_grid',
         'off_grid',
         'off_grid_intentional',
@@ -1941,7 +1941,7 @@
     ]),
     'area_id': None,
     'capabilities': dict({
-      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+      <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -1984,7 +1984,7 @@
     'attributes': ReadOnlyDict({
       'device_class': 'power',
       'friendly_name': 'Energy Site Load power',
-      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+      <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
       'unit_of_measurement': <UnitOfPower.KILO_WATT: 'kW'>,
     }),
     'context': <ANY>,
@@ -2000,7 +2000,7 @@
     'attributes': ReadOnlyDict({
       'device_class': 'power',
       'friendly_name': 'Energy Site Load power',
-      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+      <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
       'unit_of_measurement': <UnitOfPower.KILO_WATT: 'kW'>,
     }),
     'context': <ANY>,
@@ -2018,7 +2018,7 @@
     ]),
     'area_id': None,
     'capabilities': dict({
-      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+      <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -2058,7 +2058,7 @@
     'attributes': ReadOnlyDict({
       'device_class': 'battery',
       'friendly_name': 'Energy Site Percentage charged',
-      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+      <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
       'unit_of_measurement': '%',
     }),
     'context': <ANY>,
@@ -2074,7 +2074,7 @@
     'attributes': ReadOnlyDict({
       'device_class': 'battery',
       'friendly_name': 'Energy Site Percentage charged',
-      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+      <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
       'unit_of_measurement': '%',
     }),
     'context': <ANY>,
@@ -2092,7 +2092,7 @@
     ]),
     'area_id': None,
     'capabilities': dict({
-      'state_class': <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
+      <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
     }),
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -2135,7 +2135,7 @@
     'attributes': ReadOnlyDict({
       'device_class': 'energy',
       'friendly_name': 'Energy Site Solar exported',
-      'state_class': <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
+      <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
       'unit_of_measurement': <UnitOfEnergy.KILO_WATT_HOUR: 'kWh'>,
     }),
     'context': <ANY>,
@@ -2151,7 +2151,7 @@
     'attributes': ReadOnlyDict({
       'device_class': 'energy',
       'friendly_name': 'Energy Site Solar exported',
-      'state_class': <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
+      <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
       'unit_of_measurement': <UnitOfEnergy.KILO_WATT_HOUR: 'kWh'>,
     }),
     'context': <ANY>,
@@ -2169,7 +2169,7 @@
     ]),
     'area_id': None,
     'capabilities': dict({
-      'state_class': <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
+      <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
     }),
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -2212,7 +2212,7 @@
     'attributes': ReadOnlyDict({
       'device_class': 'energy',
       'friendly_name': 'Energy Site Solar generated',
-      'state_class': <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
+      <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
       'unit_of_measurement': <UnitOfEnergy.KILO_WATT_HOUR: 'kWh'>,
     }),
     'context': <ANY>,
@@ -2228,7 +2228,7 @@
     'attributes': ReadOnlyDict({
       'device_class': 'energy',
       'friendly_name': 'Energy Site Solar generated',
-      'state_class': <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
+      <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
       'unit_of_measurement': <UnitOfEnergy.KILO_WATT_HOUR: 'kWh'>,
     }),
     'context': <ANY>,
@@ -2246,7 +2246,7 @@
     ]),
     'area_id': None,
     'capabilities': dict({
-      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+      <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -2289,7 +2289,7 @@
     'attributes': ReadOnlyDict({
       'device_class': 'power',
       'friendly_name': 'Energy Site Solar power',
-      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+      <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
       'unit_of_measurement': <UnitOfPower.KILO_WATT: 'kW'>,
     }),
     'context': <ANY>,
@@ -2305,7 +2305,7 @@
     'attributes': ReadOnlyDict({
       'device_class': 'power',
       'friendly_name': 'Energy Site Solar power',
-      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+      <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
       'unit_of_measurement': <UnitOfPower.KILO_WATT: 'kW'>,
     }),
     'context': <ANY>,
@@ -2323,7 +2323,7 @@
     ]),
     'area_id': None,
     'capabilities': dict({
-      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+      <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -2366,7 +2366,7 @@
     'attributes': ReadOnlyDict({
       'device_class': 'energy_storage',
       'friendly_name': 'Energy Site Total pack energy',
-      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+      <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
       'unit_of_measurement': <UnitOfEnergy.KILO_WATT_HOUR: 'kWh'>,
     }),
     'context': <ANY>,
@@ -2382,7 +2382,7 @@
     'attributes': ReadOnlyDict({
       'device_class': 'energy_storage',
       'friendly_name': 'Energy Site Total pack energy',
-      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+      <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
       'unit_of_measurement': <UnitOfEnergy.KILO_WATT_HOUR: 'kWh'>,
     }),
     'context': <ANY>,
@@ -2465,7 +2465,7 @@
     ]),
     'area_id': None,
     'capabilities': dict({
-      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+      <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -2504,7 +2504,7 @@
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'friendly_name': 'Teslemetry command credits',
-      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+      <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
       'unit_of_measurement': 'credits',
     }),
     'context': <ANY>,
@@ -2519,7 +2519,7 @@
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'friendly_name': 'Teslemetry command credits',
-      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+      <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
       'unit_of_measurement': 'credits',
     }),
     'context': <ANY>,
@@ -2537,7 +2537,7 @@
     ]),
     'area_id': None,
     'capabilities': dict({
-      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+      <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -2576,7 +2576,7 @@
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'friendly_name': 'Teslemetry command quota used',
-      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+      <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
       'unit_of_measurement': '%',
     }),
     'context': <ANY>,
@@ -2591,7 +2591,7 @@
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'friendly_name': 'Teslemetry command quota used',
-      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+      <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
       'unit_of_measurement': '%',
     }),
     'context': <ANY>,
@@ -2609,7 +2609,7 @@
     ]),
     'area_id': None,
     'capabilities': dict({
-      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+      <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -2649,7 +2649,7 @@
     'attributes': ReadOnlyDict({
       'device_class': 'battery',
       'friendly_name': 'Test Battery level',
-      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+      <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
       'unit_of_measurement': '%',
     }),
     'context': <ANY>,
@@ -2665,7 +2665,7 @@
     'attributes': ReadOnlyDict({
       'device_class': 'battery',
       'friendly_name': 'Test Battery level',
-      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+      <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
       'unit_of_measurement': '%',
     }),
     'context': <ANY>,
@@ -2683,7 +2683,7 @@
     ]),
     'area_id': None,
     'capabilities': dict({
-      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+      <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -2726,7 +2726,7 @@
     'attributes': ReadOnlyDict({
       'device_class': 'distance',
       'friendly_name': 'Test Battery range',
-      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+      <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
       'unit_of_measurement': <UnitOfLength.KILOMETERS: 'km'>,
     }),
     'context': <ANY>,
@@ -2742,7 +2742,7 @@
     'attributes': ReadOnlyDict({
       'device_class': 'distance',
       'friendly_name': 'Test Battery range',
-      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+      <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
       'unit_of_measurement': <UnitOfLength.KILOMETERS: 'km'>,
     }),
     'context': <ANY>,
@@ -2760,7 +2760,7 @@
     ]),
     'area_id': None,
     'capabilities': dict({
-      'options': list([
+      <SensorEntityCapabilityAttribute.OPTIONS: 'options'>: list([
         'iec',
         'sae',
         'gb_ac',
@@ -2802,7 +2802,7 @@
     'attributes': ReadOnlyDict({
       'device_class': 'enum',
       'friendly_name': 'Test Charge cable',
-      'options': list([
+      <SensorEntityCapabilityAttribute.OPTIONS: 'options'>: list([
         'iec',
         'sae',
         'gb_ac',
@@ -2822,7 +2822,7 @@
     'attributes': ReadOnlyDict({
       'device_class': 'enum',
       'friendly_name': 'Test Charge cable',
-      'options': list([
+      <SensorEntityCapabilityAttribute.OPTIONS: 'options'>: list([
         'iec',
         'sae',
         'gb_ac',
@@ -2844,7 +2844,7 @@
     ]),
     'area_id': None,
     'capabilities': dict({
-      'state_class': <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
+      <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
     }),
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -2884,7 +2884,7 @@
     'attributes': ReadOnlyDict({
       'device_class': 'energy',
       'friendly_name': 'Test Charge energy added',
-      'state_class': <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
+      <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
       'unit_of_measurement': <UnitOfEnergy.KILO_WATT_HOUR: 'kWh'>,
     }),
     'context': <ANY>,
@@ -2900,7 +2900,7 @@
     'attributes': ReadOnlyDict({
       'device_class': 'energy',
       'friendly_name': 'Test Charge energy added',
-      'state_class': <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
+      <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
       'unit_of_measurement': <UnitOfEnergy.KILO_WATT_HOUR: 'kWh'>,
     }),
     'context': <ANY>,
@@ -2918,7 +2918,7 @@
     ]),
     'area_id': None,
     'capabilities': dict({
-      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+      <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -2961,7 +2961,7 @@
     'attributes': ReadOnlyDict({
       'device_class': 'speed',
       'friendly_name': 'Test Charge rate',
-      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+      <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
       'unit_of_measurement': <UnitOfSpeed.KILOMETERS_PER_HOUR: 'km/h'>,
     }),
     'context': <ANY>,
@@ -2977,7 +2977,7 @@
     'attributes': ReadOnlyDict({
       'device_class': 'speed',
       'friendly_name': 'Test Charge rate',
-      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+      <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
       'unit_of_measurement': <UnitOfSpeed.KILOMETERS_PER_HOUR: 'km/h'>,
     }),
     'context': <ANY>,
@@ -2995,7 +2995,7 @@
     ]),
     'area_id': None,
     'capabilities': dict({
-      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+      <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -3035,7 +3035,7 @@
     'attributes': ReadOnlyDict({
       'device_class': 'current',
       'friendly_name': 'Test Charger current',
-      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+      <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
       'unit_of_measurement': <UnitOfElectricCurrent.AMPERE: 'A'>,
     }),
     'context': <ANY>,
@@ -3051,7 +3051,7 @@
     'attributes': ReadOnlyDict({
       'device_class': 'current',
       'friendly_name': 'Test Charger current',
-      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+      <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
       'unit_of_measurement': <UnitOfElectricCurrent.AMPERE: 'A'>,
     }),
     'context': <ANY>,
@@ -3069,7 +3069,7 @@
     ]),
     'area_id': None,
     'capabilities': dict({
-      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+      <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -3109,7 +3109,7 @@
     'attributes': ReadOnlyDict({
       'device_class': 'power',
       'friendly_name': 'Test Charger power',
-      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+      <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
       'unit_of_measurement': <UnitOfPower.KILO_WATT: 'kW'>,
     }),
     'context': <ANY>,
@@ -3125,7 +3125,7 @@
     'attributes': ReadOnlyDict({
       'device_class': 'power',
       'friendly_name': 'Test Charger power',
-      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+      <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
       'unit_of_measurement': <UnitOfPower.KILO_WATT: 'kW'>,
     }),
     'context': <ANY>,
@@ -3143,7 +3143,7 @@
     ]),
     'area_id': None,
     'capabilities': dict({
-      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+      <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -3183,7 +3183,7 @@
     'attributes': ReadOnlyDict({
       'device_class': 'voltage',
       'friendly_name': 'Test Charger voltage',
-      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+      <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
       'unit_of_measurement': <UnitOfElectricPotential.VOLT: 'V'>,
     }),
     'context': <ANY>,
@@ -3199,7 +3199,7 @@
     'attributes': ReadOnlyDict({
       'device_class': 'voltage',
       'friendly_name': 'Test Charger voltage',
-      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+      <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
       'unit_of_measurement': <UnitOfElectricPotential.VOLT: 'V'>,
     }),
     'context': <ANY>,
@@ -3217,7 +3217,7 @@
     ]),
     'area_id': None,
     'capabilities': dict({
-      'options': list([
+      <SensorEntityCapabilityAttribute.OPTIONS: 'options'>: list([
         'starting',
         'charging',
         'stopped',
@@ -3261,7 +3261,7 @@
     'attributes': ReadOnlyDict({
       'device_class': 'enum',
       'friendly_name': 'Test Charging',
-      'options': list([
+      <SensorEntityCapabilityAttribute.OPTIONS: 'options'>: list([
         'starting',
         'charging',
         'stopped',
@@ -3283,7 +3283,7 @@
     'attributes': ReadOnlyDict({
       'device_class': 'enum',
       'friendly_name': 'Test Charging',
-      'options': list([
+      <SensorEntityCapabilityAttribute.OPTIONS: 'options'>: list([
         'starting',
         'charging',
         'stopped',
@@ -3370,7 +3370,7 @@
     ]),
     'area_id': None,
     'capabilities': dict({
-      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+      <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -3413,7 +3413,7 @@
     'attributes': ReadOnlyDict({
       'device_class': 'distance',
       'friendly_name': 'Test Distance to arrival',
-      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+      <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
       'unit_of_measurement': <UnitOfLength.KILOMETERS: 'km'>,
     }),
     'context': <ANY>,
@@ -3429,7 +3429,7 @@
     'attributes': ReadOnlyDict({
       'device_class': 'distance',
       'friendly_name': 'Test Distance to arrival',
-      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+      <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
       'unit_of_measurement': <UnitOfLength.KILOMETERS: 'km'>,
     }),
     'context': <ANY>,
@@ -3447,7 +3447,7 @@
     ]),
     'area_id': None,
     'capabilities': dict({
-      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+      <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -3487,7 +3487,7 @@
     'attributes': ReadOnlyDict({
       'device_class': 'temperature',
       'friendly_name': 'Test Driver temperature setting',
-      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+      <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
       'unit_of_measurement': <UnitOfTemperature.CELSIUS: '°C'>,
     }),
     'context': <ANY>,
@@ -3503,7 +3503,7 @@
     'attributes': ReadOnlyDict({
       'device_class': 'temperature',
       'friendly_name': 'Test Driver temperature setting',
-      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+      <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
       'unit_of_measurement': <UnitOfTemperature.CELSIUS: '°C'>,
     }),
     'context': <ANY>,
@@ -3521,7 +3521,7 @@
     ]),
     'area_id': None,
     'capabilities': dict({
-      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+      <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -3564,7 +3564,7 @@
     'attributes': ReadOnlyDict({
       'device_class': 'distance',
       'friendly_name': 'Test Estimate battery range',
-      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+      <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
       'unit_of_measurement': <UnitOfLength.KILOMETERS: 'km'>,
     }),
     'context': <ANY>,
@@ -3580,7 +3580,7 @@
     'attributes': ReadOnlyDict({
       'device_class': 'distance',
       'friendly_name': 'Test Estimate battery range',
-      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+      <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
       'unit_of_measurement': <UnitOfLength.KILOMETERS: 'km'>,
     }),
     'context': <ANY>,
@@ -3661,7 +3661,7 @@
     ]),
     'area_id': None,
     'capabilities': dict({
-      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+      <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -3704,7 +3704,7 @@
     'attributes': ReadOnlyDict({
       'device_class': 'distance',
       'friendly_name': 'Test Ideal battery range',
-      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+      <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
       'unit_of_measurement': <UnitOfLength.KILOMETERS: 'km'>,
     }),
     'context': <ANY>,
@@ -3720,7 +3720,7 @@
     'attributes': ReadOnlyDict({
       'device_class': 'distance',
       'friendly_name': 'Test Ideal battery range',
-      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+      <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
       'unit_of_measurement': <UnitOfLength.KILOMETERS: 'km'>,
     }),
     'context': <ANY>,
@@ -3738,7 +3738,7 @@
     ]),
     'area_id': None,
     'capabilities': dict({
-      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+      <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -3778,7 +3778,7 @@
     'attributes': ReadOnlyDict({
       'device_class': 'temperature',
       'friendly_name': 'Test Inside temperature',
-      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+      <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
       'unit_of_measurement': <UnitOfTemperature.CELSIUS: '°C'>,
     }),
     'context': <ANY>,
@@ -3794,7 +3794,7 @@
     'attributes': ReadOnlyDict({
       'device_class': 'temperature',
       'friendly_name': 'Test Inside temperature',
-      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+      <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
       'unit_of_measurement': <UnitOfTemperature.CELSIUS: '°C'>,
     }),
     'context': <ANY>,
@@ -3812,7 +3812,7 @@
     ]),
     'area_id': None,
     'capabilities': dict({
-      'state_class': <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
+      <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
     }),
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -3855,7 +3855,7 @@
     'attributes': ReadOnlyDict({
       'device_class': 'distance',
       'friendly_name': 'Test Odometer',
-      'state_class': <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
+      <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
       'unit_of_measurement': <UnitOfLength.KILOMETERS: 'km'>,
     }),
     'context': <ANY>,
@@ -3871,7 +3871,7 @@
     'attributes': ReadOnlyDict({
       'device_class': 'distance',
       'friendly_name': 'Test Odometer',
-      'state_class': <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
+      <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
       'unit_of_measurement': <UnitOfLength.KILOMETERS: 'km'>,
     }),
     'context': <ANY>,
@@ -3889,7 +3889,7 @@
     ]),
     'area_id': None,
     'capabilities': dict({
-      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+      <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -3929,7 +3929,7 @@
     'attributes': ReadOnlyDict({
       'device_class': 'temperature',
       'friendly_name': 'Test Outside temperature',
-      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+      <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
       'unit_of_measurement': <UnitOfTemperature.CELSIUS: '°C'>,
     }),
     'context': <ANY>,
@@ -3945,7 +3945,7 @@
     'attributes': ReadOnlyDict({
       'device_class': 'temperature',
       'friendly_name': 'Test Outside temperature',
-      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+      <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
       'unit_of_measurement': <UnitOfTemperature.CELSIUS: '°C'>,
     }),
     'context': <ANY>,
@@ -3963,7 +3963,7 @@
     ]),
     'area_id': None,
     'capabilities': dict({
-      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+      <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -4003,7 +4003,7 @@
     'attributes': ReadOnlyDict({
       'device_class': 'temperature',
       'friendly_name': 'Test Passenger temperature setting',
-      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+      <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
       'unit_of_measurement': <UnitOfTemperature.CELSIUS: '°C'>,
     }),
     'context': <ANY>,
@@ -4019,7 +4019,7 @@
     'attributes': ReadOnlyDict({
       'device_class': 'temperature',
       'friendly_name': 'Test Passenger temperature setting',
-      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+      <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
       'unit_of_measurement': <UnitOfTemperature.CELSIUS: '°C'>,
     }),
     'context': <ANY>,
@@ -4037,7 +4037,7 @@
     ]),
     'area_id': None,
     'capabilities': dict({
-      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+      <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -4077,7 +4077,7 @@
     'attributes': ReadOnlyDict({
       'device_class': 'power',
       'friendly_name': 'Test Power',
-      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+      <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
       'unit_of_measurement': <UnitOfPower.KILO_WATT: 'kW'>,
     }),
     'context': <ANY>,
@@ -4093,7 +4093,7 @@
     'attributes': ReadOnlyDict({
       'device_class': 'power',
       'friendly_name': 'Test Power',
-      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+      <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
       'unit_of_measurement': <UnitOfPower.KILO_WATT: 'kW'>,
     }),
     'context': <ANY>,
@@ -4111,7 +4111,7 @@
     ]),
     'area_id': None,
     'capabilities': dict({
-      'options': list([
+      <SensorEntityCapabilityAttribute.OPTIONS: 'options'>: list([
         'p',
         'd',
         'r',
@@ -4153,7 +4153,7 @@
     'attributes': ReadOnlyDict({
       'device_class': 'enum',
       'friendly_name': 'Test Shift state',
-      'options': list([
+      <SensorEntityCapabilityAttribute.OPTIONS: 'options'>: list([
         'p',
         'd',
         'r',
@@ -4173,7 +4173,7 @@
     'attributes': ReadOnlyDict({
       'device_class': 'enum',
       'friendly_name': 'Test Shift state',
-      'options': list([
+      <SensorEntityCapabilityAttribute.OPTIONS: 'options'>: list([
         'p',
         'd',
         'r',
@@ -4195,7 +4195,7 @@
     ]),
     'area_id': None,
     'capabilities': dict({
-      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+      <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -4238,7 +4238,7 @@
     'attributes': ReadOnlyDict({
       'device_class': 'speed',
       'friendly_name': 'Test Speed',
-      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+      <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
       'unit_of_measurement': <UnitOfSpeed.KILOMETERS_PER_HOUR: 'km/h'>,
     }),
     'context': <ANY>,
@@ -4254,7 +4254,7 @@
     'attributes': ReadOnlyDict({
       'device_class': 'speed',
       'friendly_name': 'Test Speed',
-      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+      <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
       'unit_of_measurement': <UnitOfSpeed.KILOMETERS_PER_HOUR: 'km/h'>,
     }),
     'context': <ANY>,
@@ -4272,7 +4272,7 @@
     ]),
     'area_id': None,
     'capabilities': dict({
-      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+      <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -4309,7 +4309,7 @@
     'attributes': ReadOnlyDict({
       'device_class': 'battery',
       'friendly_name': 'Test State of charge at arrival',
-      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+      <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
       'unit_of_measurement': '%',
     }),
     'context': <ANY>,
@@ -4325,7 +4325,7 @@
     'attributes': ReadOnlyDict({
       'device_class': 'battery',
       'friendly_name': 'Test State of charge at arrival',
-      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+      <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
       'unit_of_measurement': '%',
     }),
     'context': <ANY>,
@@ -4473,7 +4473,7 @@
     ]),
     'area_id': None,
     'capabilities': dict({
-      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+      <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -4516,7 +4516,7 @@
     'attributes': ReadOnlyDict({
       'device_class': 'pressure',
       'friendly_name': 'Test Tire pressure front left',
-      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+      <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
       'unit_of_measurement': <UnitOfPressure.PSI: 'psi'>,
     }),
     'context': <ANY>,
@@ -4532,7 +4532,7 @@
     'attributes': ReadOnlyDict({
       'device_class': 'pressure',
       'friendly_name': 'Test Tire pressure front left',
-      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+      <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
       'unit_of_measurement': <UnitOfPressure.PSI: 'psi'>,
     }),
     'context': <ANY>,
@@ -4550,7 +4550,7 @@
     ]),
     'area_id': None,
     'capabilities': dict({
-      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+      <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -4593,7 +4593,7 @@
     'attributes': ReadOnlyDict({
       'device_class': 'pressure',
       'friendly_name': 'Test Tire pressure front right',
-      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+      <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
       'unit_of_measurement': <UnitOfPressure.PSI: 'psi'>,
     }),
     'context': <ANY>,
@@ -4609,7 +4609,7 @@
     'attributes': ReadOnlyDict({
       'device_class': 'pressure',
       'friendly_name': 'Test Tire pressure front right',
-      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+      <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
       'unit_of_measurement': <UnitOfPressure.PSI: 'psi'>,
     }),
     'context': <ANY>,
@@ -4627,7 +4627,7 @@
     ]),
     'area_id': None,
     'capabilities': dict({
-      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+      <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -4670,7 +4670,7 @@
     'attributes': ReadOnlyDict({
       'device_class': 'pressure',
       'friendly_name': 'Test Tire pressure rear left',
-      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+      <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
       'unit_of_measurement': <UnitOfPressure.PSI: 'psi'>,
     }),
     'context': <ANY>,
@@ -4686,7 +4686,7 @@
     'attributes': ReadOnlyDict({
       'device_class': 'pressure',
       'friendly_name': 'Test Tire pressure rear left',
-      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+      <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
       'unit_of_measurement': <UnitOfPressure.PSI: 'psi'>,
     }),
     'context': <ANY>,
@@ -4704,7 +4704,7 @@
     ]),
     'area_id': None,
     'capabilities': dict({
-      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+      <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -4747,7 +4747,7 @@
     'attributes': ReadOnlyDict({
       'device_class': 'pressure',
       'friendly_name': 'Test Tire pressure rear right',
-      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+      <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
       'unit_of_measurement': <UnitOfPressure.PSI: 'psi'>,
     }),
     'context': <ANY>,
@@ -4763,7 +4763,7 @@
     'attributes': ReadOnlyDict({
       'device_class': 'pressure',
       'friendly_name': 'Test Tire pressure rear right',
-      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+      <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
       'unit_of_measurement': <UnitOfPressure.PSI: 'psi'>,
     }),
     'context': <ANY>,
@@ -4781,7 +4781,7 @@
     ]),
     'area_id': None,
     'capabilities': dict({
-      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+      <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -4821,7 +4821,7 @@
     'attributes': ReadOnlyDict({
       'device_class': 'duration',
       'friendly_name': 'Test Traffic delay',
-      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+      <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
       'unit_of_measurement': <UnitOfTime.MINUTES: 'min'>,
     }),
     'context': <ANY>,
@@ -4837,7 +4837,7 @@
     'attributes': ReadOnlyDict({
       'device_class': 'duration',
       'friendly_name': 'Test Traffic delay',
-      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+      <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
       'unit_of_measurement': <UnitOfTime.MINUTES: 'min'>,
     }),
     'context': <ANY>,
@@ -4855,7 +4855,7 @@
     ]),
     'area_id': None,
     'capabilities': dict({
-      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+      <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -4895,7 +4895,7 @@
     'attributes': ReadOnlyDict({
       'device_class': 'battery',
       'friendly_name': 'Test Usable battery level',
-      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+      <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
       'unit_of_measurement': '%',
     }),
     'context': <ANY>,
@@ -4911,7 +4911,7 @@
     'attributes': ReadOnlyDict({
       'device_class': 'battery',
       'friendly_name': 'Test Usable battery level',
-      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+      <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
       'unit_of_measurement': '%',
     }),
     'context': <ANY>,
@@ -5055,7 +5055,7 @@
     ]),
     'area_id': None,
     'capabilities': dict({
-      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+      <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -5098,7 +5098,7 @@
     'attributes': ReadOnlyDict({
       'device_class': 'power',
       'friendly_name': 'Wall Connector Power',
-      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+      <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
       'unit_of_measurement': <UnitOfPower.KILO_WATT: 'kW'>,
     }),
     'context': <ANY>,
@@ -5114,7 +5114,7 @@
     'attributes': ReadOnlyDict({
       'device_class': 'power',
       'friendly_name': 'Wall Connector Power',
-      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+      <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
       'unit_of_measurement': <UnitOfPower.KILO_WATT: 'kW'>,
     }),
     'context': <ANY>,
@@ -5132,7 +5132,7 @@
     ]),
     'area_id': None,
     'capabilities': dict({
-      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+      <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -5175,7 +5175,7 @@
     'attributes': ReadOnlyDict({
       'device_class': 'power',
       'friendly_name': 'Wall Connector Power',
-      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+      <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
       'unit_of_measurement': <UnitOfPower.KILO_WATT: 'kW'>,
     }),
     'context': <ANY>,
@@ -5191,7 +5191,7 @@
     'attributes': ReadOnlyDict({
       'device_class': 'power',
       'friendly_name': 'Wall Connector Power',
-      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+      <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
       'unit_of_measurement': <UnitOfPower.KILO_WATT: 'kW'>,
     }),
     'context': <ANY>,

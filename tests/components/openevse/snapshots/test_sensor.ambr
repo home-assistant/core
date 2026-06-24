@@ -6,7 +6,7 @@
     ]),
     'area_id': None,
     'capabilities': dict({
-      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+      <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -46,7 +46,7 @@
     'attributes': ReadOnlyDict({
       'device_class': 'temperature',
       'friendly_name': 'openevse_mock_config Ambient temperature',
-      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+      <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
       'unit_of_measurement': <UnitOfTemperature.CELSIUS: '°C'>,
     }),
     'context': <ANY>,
@@ -64,7 +64,7 @@
     ]),
     'area_id': None,
     'capabilities': dict({
-      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+      <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -107,7 +107,7 @@
     'attributes': ReadOnlyDict({
       'device_class': 'duration',
       'friendly_name': 'openevse_mock_config Charge time elapsed',
-      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+      <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
       'unit_of_measurement': <UnitOfTime.MINUTES: 'min'>,
     }),
     'context': <ANY>,
@@ -125,7 +125,7 @@
     ]),
     'area_id': None,
     'capabilities': dict({
-      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+      <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -168,7 +168,7 @@
     'attributes': ReadOnlyDict({
       'device_class': 'current',
       'friendly_name': 'openevse_mock_config Charging current',
-      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+      <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
       'unit_of_measurement': <UnitOfElectricCurrent.AMPERE: 'A'>,
     }),
     'context': <ANY>,
@@ -186,7 +186,7 @@
     ]),
     'area_id': None,
     'capabilities': dict({
-      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+      <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -229,7 +229,7 @@
     'attributes': ReadOnlyDict({
       'device_class': 'power',
       'friendly_name': 'openevse_mock_config Charging power',
-      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+      <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
       'unit_of_measurement': <UnitOfPower.WATT: 'W'>,
     }),
     'context': <ANY>,
@@ -297,7 +297,7 @@
     ]),
     'area_id': None,
     'capabilities': dict({
-      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+      <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -337,7 +337,7 @@
     'attributes': ReadOnlyDict({
       'device_class': 'voltage',
       'friendly_name': 'openevse_mock_config Charging voltage',
-      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+      <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
       'unit_of_measurement': <UnitOfElectricPotential.VOLT: 'V'>,
     }),
     'context': <ANY>,
@@ -355,7 +355,7 @@
     ]),
     'area_id': None,
     'capabilities': dict({
-      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+      <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -395,7 +395,7 @@
     'attributes': ReadOnlyDict({
       'device_class': 'current',
       'friendly_name': 'openevse_mock_config Current capacity',
-      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+      <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
       'unit_of_measurement': <UnitOfElectricCurrent.AMPERE: 'A'>,
     }),
     'context': <ANY>,
@@ -468,7 +468,7 @@
     ]),
     'area_id': None,
     'capabilities': dict({
-      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+      <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -508,7 +508,7 @@
     'attributes': ReadOnlyDict({
       'device_class': 'power',
       'friendly_name': 'openevse_mock_config Current power',
-      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+      <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
       'unit_of_measurement': <UnitOfPower.WATT: 'W'>,
     }),
     'context': <ANY>,
@@ -526,7 +526,7 @@
     ]),
     'area_id': None,
     'capabilities': dict({
-      'state_class': <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
+      <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
     }),
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -566,7 +566,7 @@
     'attributes': ReadOnlyDict({
       'device_class': 'energy',
       'friendly_name': 'openevse_mock_config Daily energy usage',
-      'state_class': <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
+      <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
       'unit_of_measurement': <UnitOfEnergy.KILO_WATT_HOUR: 'kWh'>,
     }),
     'context': <ANY>,
@@ -584,7 +584,7 @@
     ]),
     'area_id': None,
     'capabilities': dict({
-      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+      <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -624,7 +624,7 @@
     'attributes': ReadOnlyDict({
       'device_class': 'temperature',
       'friendly_name': 'openevse_mock_config ESP temperature',
-      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+      <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
       'unit_of_measurement': <UnitOfTemperature.CELSIUS: '°C'>,
     }),
     'context': <ANY>,
@@ -697,7 +697,7 @@
     ]),
     'area_id': None,
     'capabilities': dict({
-      'state_class': <SensorStateClass.TOTAL: 'total'>,
+      <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.TOTAL: 'total'>,
     }),
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -733,7 +733,7 @@
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'friendly_name': 'openevse_mock_config GFCI trip count',
-      'state_class': <SensorStateClass.TOTAL: 'total'>,
+      <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.TOTAL: 'total'>,
     }),
     'context': <ANY>,
     'entity_id': 'sensor.openevse_mock_config_gfci_trip_count',
@@ -750,7 +750,7 @@
     ]),
     'area_id': None,
     'capabilities': dict({
-      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+      <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -790,7 +790,7 @@
     'attributes': ReadOnlyDict({
       'device_class': 'temperature',
       'friendly_name': 'openevse_mock_config IR temperature',
-      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+      <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
       'unit_of_measurement': <UnitOfTemperature.CELSIUS: '°C'>,
     }),
     'context': <ANY>,
@@ -918,7 +918,7 @@
     ]),
     'area_id': None,
     'capabilities': dict({
-      'state_class': <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
+      <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
     }),
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -958,7 +958,7 @@
     'attributes': ReadOnlyDict({
       'device_class': 'energy',
       'friendly_name': 'openevse_mock_config Monthly energy usage',
-      'state_class': <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
+      <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
       'unit_of_measurement': <UnitOfEnergy.KILO_WATT_HOUR: 'kWh'>,
     }),
     'context': <ANY>,
@@ -976,7 +976,7 @@
     ]),
     'area_id': None,
     'capabilities': dict({
-      'state_class': <SensorStateClass.TOTAL: 'total'>,
+      <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.TOTAL: 'total'>,
     }),
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -1012,7 +1012,7 @@
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'friendly_name': 'openevse_mock_config No ground trip count',
-      'state_class': <SensorStateClass.TOTAL: 'total'>,
+      <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.TOTAL: 'total'>,
     }),
     'context': <ANY>,
     'entity_id': 'sensor.openevse_mock_config_no_ground_trip_count',
@@ -1029,7 +1029,7 @@
     ]),
     'area_id': None,
     'capabilities': dict({
-      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+      <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -1069,7 +1069,7 @@
     'attributes': ReadOnlyDict({
       'device_class': 'temperature',
       'friendly_name': 'openevse_mock_config RTC temperature',
-      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+      <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
       'unit_of_measurement': <UnitOfTemperature.CELSIUS: '°C'>,
     }),
     'context': <ANY>,
@@ -1087,7 +1087,7 @@
     ]),
     'area_id': None,
     'capabilities': dict({
-      'options': list([
+      <SensorEntityCapabilityAttribute.OPTIONS: 'options'>: list([
         'level_1',
         'level_2',
         'automatic',
@@ -1128,7 +1128,7 @@
     'attributes': ReadOnlyDict({
       'device_class': 'enum',
       'friendly_name': 'openevse_mock_config Service level',
-      'options': list([
+      <SensorEntityCapabilityAttribute.OPTIONS: 'options'>: list([
         'level_1',
         'level_2',
         'automatic',
@@ -1149,7 +1149,7 @@
     ]),
     'area_id': None,
     'capabilities': dict({
-      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+      <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -1189,7 +1189,7 @@
     'attributes': ReadOnlyDict({
       'device_class': 'current',
       'friendly_name': 'openevse_mock_config Shaper available current',
-      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+      <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
       'unit_of_measurement': <UnitOfElectricCurrent.AMPERE: 'A'>,
     }),
     'context': <ANY>,
@@ -1207,7 +1207,7 @@
     ]),
     'area_id': None,
     'capabilities': dict({
-      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+      <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -1247,7 +1247,7 @@
     'attributes': ReadOnlyDict({
       'device_class': 'power',
       'friendly_name': 'openevse_mock_config Shaper live power',
-      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+      <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
       'unit_of_measurement': <UnitOfPower.WATT: 'W'>,
     }),
     'context': <ANY>,
@@ -1320,7 +1320,7 @@
     ]),
     'area_id': None,
     'capabilities': dict({
-      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+      <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -1357,7 +1357,7 @@
     'attributes': ReadOnlyDict({
       'device_class': 'signal_strength',
       'friendly_name': 'openevse_mock_config Signal strength',
-      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+      <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
       'unit_of_measurement': 'dB',
     }),
     'context': <ANY>,
@@ -1375,7 +1375,7 @@
     ]),
     'area_id': None,
     'capabilities': dict({
-      'state_class': <SensorStateClass.TOTAL: 'total'>,
+      <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.TOTAL: 'total'>,
     }),
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -1411,7 +1411,7 @@
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'friendly_name': 'openevse_mock_config Stuck relay trip count',
-      'state_class': <SensorStateClass.TOTAL: 'total'>,
+      <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.TOTAL: 'total'>,
     }),
     'context': <ANY>,
     'entity_id': 'sensor.openevse_mock_config_stuck_relay_trip_count',
@@ -1428,7 +1428,7 @@
     ]),
     'area_id': None,
     'capabilities': dict({
-      'state_class': <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
+      <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
     }),
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -1468,7 +1468,7 @@
     'attributes': ReadOnlyDict({
       'device_class': 'energy',
       'friendly_name': 'openevse_mock_config Total energy usage',
-      'state_class': <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
+      <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
       'unit_of_measurement': <UnitOfEnergy.KILO_WATT_HOUR: 'kWh'>,
     }),
     'context': <ANY>,
@@ -1541,7 +1541,7 @@
     ]),
     'area_id': None,
     'capabilities': dict({
-      'state_class': <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
+      <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
     }),
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -1584,7 +1584,7 @@
     'attributes': ReadOnlyDict({
       'device_class': 'energy',
       'friendly_name': 'openevse_mock_config Usage this session',
-      'state_class': <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
+      <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
       'unit_of_measurement': <UnitOfEnergy.KILO_WATT_HOUR: 'kWh'>,
     }),
     'context': <ANY>,
@@ -1653,7 +1653,7 @@
     ]),
     'area_id': None,
     'capabilities': dict({
-      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+      <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -1693,7 +1693,7 @@
     'attributes': ReadOnlyDict({
       'device_class': 'distance',
       'friendly_name': 'openevse_mock_config Vehicle range',
-      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+      <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
       'unit_of_measurement': <UnitOfLength.KILOMETERS: 'km'>,
     }),
     'context': <ANY>,
@@ -1711,7 +1711,7 @@
     ]),
     'area_id': None,
     'capabilities': dict({
-      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+      <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -1748,7 +1748,7 @@
     'attributes': ReadOnlyDict({
       'device_class': 'battery',
       'friendly_name': 'openevse_mock_config Vehicle state of charge',
-      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+      <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
       'unit_of_measurement': '%',
     }),
     'context': <ANY>,
@@ -1766,7 +1766,7 @@
     ]),
     'area_id': None,
     'capabilities': dict({
-      'state_class': <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
+      <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
     }),
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -1806,7 +1806,7 @@
     'attributes': ReadOnlyDict({
       'device_class': 'energy',
       'friendly_name': 'openevse_mock_config Weekly energy usage',
-      'state_class': <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
+      <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
       'unit_of_measurement': <UnitOfEnergy.KILO_WATT_HOUR: 'kWh'>,
     }),
     'context': <ANY>,
@@ -1824,7 +1824,7 @@
     ]),
     'area_id': None,
     'capabilities': dict({
-      'state_class': <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
+      <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
     }),
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -1864,7 +1864,7 @@
     'attributes': ReadOnlyDict({
       'device_class': 'energy',
       'friendly_name': 'openevse_mock_config Yearly energy usage',
-      'state_class': <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
+      <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
       'unit_of_measurement': <UnitOfEnergy.KILO_WATT_HOUR: 'kWh'>,
     }),
     'context': <ANY>,

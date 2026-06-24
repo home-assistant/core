@@ -6,7 +6,7 @@
     ]),
     'area_id': None,
     'capabilities': dict({
-      'state_class': <SensorStateClass.TOTAL: 'total'>,
+      <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.TOTAL: 'total'>,
     }),
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -43,7 +43,7 @@
     'attributes': ReadOnlyDict({
       'device_class': 'monetary',
       'friendly_name': 'Bills Budget',
-      'state_class': <SensorStateClass.TOTAL: 'total'>,
+      <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.TOTAL: 'total'>,
       'unit_of_measurement': 'AMS',
     }),
     'context': <ANY>,
@@ -61,7 +61,7 @@
     ]),
     'area_id': None,
     'capabilities': dict({
-      'state_class': <SensorStateClass.TOTAL: 'total'>,
+      <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.TOTAL: 'total'>,
     }),
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -98,7 +98,7 @@
     'attributes': ReadOnlyDict({
       'device_class': 'monetary',
       'friendly_name': 'Credit Card Account Balance',
-      'state_class': <SensorStateClass.TOTAL: 'total'>,
+      <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.TOTAL: 'total'>,
       'unit_of_measurement': 'AMS',
     }),
     'context': <ANY>,
@@ -217,7 +217,7 @@
     ]),
     'area_id': None,
     'capabilities': dict({
-      'state_class': <SensorStateClass.TOTAL: 'total'>,
+      <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.TOTAL: 'total'>,
     }),
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -254,7 +254,7 @@
     'attributes': ReadOnlyDict({
       'device_class': 'monetary',
       'friendly_name': 'Lunch Earned/Spent',
-      'state_class': <SensorStateClass.TOTAL: 'total'>,
+      <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.TOTAL: 'total'>,
       'unit_of_measurement': 'AMS',
     }),
     'context': <ANY>,
@@ -272,7 +272,7 @@
     ]),
     'area_id': None,
     'capabilities': dict({
-      'state_class': <SensorStateClass.TOTAL: 'total'>,
+      <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.TOTAL: 'total'>,
     }),
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -309,7 +309,7 @@
     'attributes': ReadOnlyDict({
       'device_class': 'monetary',
       'friendly_name': 'My checking account Account Balance',
-      'state_class': <SensorStateClass.TOTAL: 'total'>,
+      <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.TOTAL: 'total'>,
       'unit_of_measurement': 'AMS',
     }),
     'context': <ANY>,
@@ -428,7 +428,7 @@
     ]),
     'area_id': None,
     'capabilities': dict({
-      'state_class': <SensorStateClass.TOTAL: 'total'>,
+      <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.TOTAL: 'total'>,
     }),
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -465,7 +465,7 @@
     'attributes': ReadOnlyDict({
       'device_class': 'monetary',
       'friendly_name': 'Savings Account Account Balance',
-      'state_class': <SensorStateClass.TOTAL: 'total'>,
+      <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.TOTAL: 'total'>,
       'unit_of_measurement': 'AMS',
     }),
     'context': <ANY>,

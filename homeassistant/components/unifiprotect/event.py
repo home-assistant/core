@@ -381,6 +381,7 @@ class ProtectDeviceSmartDetectEventEntity(
 
     entity_description: ProtectEventEntityDescription
 
+    @override
     async def async_added_to_hass(self) -> None:
         """Subscribe to public smart-detect events for this camera."""
         await super().async_added_to_hass()
