@@ -39,8 +39,9 @@ def test_filter_translations_drops_incompatible_placeholder() -> None:
     """
     translations = {"config": {"flow_title": "{name} ({host})", "kept": "{host}"}}
     strings = {"config": {"flow_title": "{site} ({host})", "kept": "{host}"}}
-    filter_translations(translations, strings)
+    dropped = filter_translations(translations, strings)
     assert translations == {"config": {"kept": "{host}"}}
+    assert dropped == ["config::flow_title"]
 
 
 @pytest.mark.parametrize(
@@ -98,3 +99,30 @@ def test_run_sources_english_from_strings(
     download.run()
 
     assert json.loads((tmp_path / "en.json").read_text()) == strings_english
+
+
+def test_save_language_resolves_referenced_source_placeholders(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    """A translation using a placeholder from a referenced common string is kept.
+
+    The source value is a ``[%key:...%]`` reference; it must be resolved before
+    its placeholders are compared, otherwise every key referencing a
+    placeholder-bearing common string would be dropped.
+    """
+    captured: dict = {}
+    monkeypatch.setattr(download, "save_json", lambda path, data: captured.update(data))
+    monkeypatch.setattr(
+        download, "load_json_from_path", lambda path: {"title": "[%key:common::x%]"}
+    )
+    monkeypatch.setattr(download.Path, "is_dir", lambda self: True)
+    monkeypatch.setattr(download.Path, "exists", lambda self: True)
+    monkeypatch.setattr(download.Path, "mkdir", lambda self, **kwargs: None)
+
+    translations = {
+        "component": {"demo": {"title": "Translated {name}"}},
+        "common": {"x": "Source {name}"},
+    }
+    download.save_language_translations("de", translations)
+
+    assert captured == {"title": "Translated {name}"}

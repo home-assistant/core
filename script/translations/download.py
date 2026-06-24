@@ -79,8 +79,15 @@ def _placeholder_names(value: str) -> set[str]:
         return set()
 
 
-def filter_translations(translations: dict[str, Any], strings: dict[str, Any]) -> None:
-    """Remove translations that are missing from or incompatible with strings."""
+def filter_translations(
+    translations: dict[str, Any], strings: dict[str, Any], prefix: str = ""
+) -> list[str]:
+    """Remove translations that are missing from or incompatible with strings.
+
+    Returns the keys of translations dropped for referencing a placeholder the
+    source string does not define, so the caller can surface the drift.
+    """
+    incompatible: list[str] = []
     for key in list(translations.keys()):
         if key not in strings:
             translations.pop(key)
@@ -88,12 +95,13 @@ def filter_translations(translations: dict[str, Any], strings: dict[str, Any]) -
 
         value = translations[key]
         source = strings[key]
+        path = f"{prefix}{key}"
 
         if isinstance(value, dict):
             if not isinstance(source, dict):
                 translations.pop(key)
                 continue
-            filter_translations(value, source)
+            incompatible.extend(filter_translations(value, source, f"{path}::"))
             if not value:
                 translations.pop(key)
             continue
@@ -107,6 +115,9 @@ def filter_translations(translations: dict[str, Any], strings: dict[str, Any]) -
             and not _placeholder_names(value) <= _placeholder_names(source)
         ):
             translations.pop(key)
+            incompatible.append(path)
+
+    return incompatible
 
 
 def save_language_translations(lang: str, translations: dict[str, Any]) -> None:
@@ -147,8 +158,18 @@ def save_language_translations(lang: str, translations: dict[str, Any]) -> None:
         component_translations = substitute_references(
             component_translations, flattened_translations, fail_on_missing=False
         )
+        # Resolve the source the same way so referenced common strings expose
+        # their placeholders (e.g. ``[%key:...reauth%]`` -> ``... {name}``); a
+        # raw reference would otherwise look placeholder-less.
+        strings = substitute_references(
+            strings, flattened_translations, fail_on_missing=False
+        )
 
-        filter_translations(component_translations, strings)
+        for incompatible in filter_translations(component_translations, strings):
+            print(
+                f"Dropping {lang} translation {component}::{incompatible}, it uses a"
+                " placeholder the source string does not define"
+            )
 
         save_json(path, component_translations)
 
