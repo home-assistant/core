@@ -1,5 +1,6 @@
 """Config flow for the Anglian Water integration."""
 
+from collections.abc import Mapping
 import logging
 from typing import TYPE_CHECKING, Any, override
 
@@ -7,9 +8,8 @@ from aiohttp import CookieJar
 from pyanglianwater import AnglianWater
 from pyanglianwater.auth import MSOB2CAuth
 from pyanglianwater.exceptions import (
-    ConsentRequiredError,
+    AuthError,
     InvalidAccountIdError,
-    SelfAssertedError,
     SmartMeterUnavailableError,
 )
 import voluptuous as vol
@@ -37,7 +37,7 @@ async def validate_credentials(auth: MSOB2CAuth) -> str | MSOB2CAuth:
     """Validate the provided credentials."""
     try:
         await auth.send_login_request()
-    except ConsentRequiredError, SelfAssertedError:
+    except AuthError:
         return "invalid_auth"
     except Exception:
         _LOGGER.exception("Unexpected exception")
@@ -86,6 +86,17 @@ class AnglianWaterConfigFlow(ConfigFlow, domain=DOMAIN):
         self.accounts: list[selector.SelectOptionDict] = []
         self.user_input: dict[str, Any] | None = None
 
+    def _create_authenticator(self, user_input: dict[str, Any]) -> MSOB2CAuth:
+        """Create an Anglian Water authenticator from user input."""
+        return MSOB2CAuth(
+            username=user_input[CONF_USERNAME],
+            password=user_input[CONF_PASSWORD],
+            session=async_create_clientsession(
+                self.hass,
+                cookie_jar=CookieJar(quote_cookie=False),
+            ),
+        )
+
     @override
     async def async_step_user(
         self, user_input: dict[str, Any] | None = None
@@ -93,14 +104,7 @@ class AnglianWaterConfigFlow(ConfigFlow, domain=DOMAIN):
         """Handle the initial step."""
         errors: dict[str, str] = {}
         if user_input is not None:
-            self.authenticator = MSOB2CAuth(
-                username=user_input[CONF_USERNAME],
-                password=user_input[CONF_PASSWORD],
-                session=async_create_clientsession(
-                    self.hass,
-                    cookie_jar=CookieJar(quote_cookie=False),
-                ),
-            )
+            self.authenticator = self._create_authenticator(user_input)
             validation_response = await validate_credentials(self.authenticator)
             if isinstance(validation_response, str):
                 errors["base"] = validation_response
@@ -168,4 +172,52 @@ class AnglianWaterConfigFlow(ConfigFlow, domain=DOMAIN):
         return self.async_create_entry(
             title=user_input[CONF_ACCOUNT_NUMBER],
             data=config_entry_data,
+        )
+
+    async def async_step_reauth(
+        self, entry_data: Mapping[str, Any]
+    ) -> ConfigFlowResult:
+        """Handle reauthentication."""
+        return await self.async_step_reauth_confirm()
+
+    async def async_step_reauth_confirm(
+        self, user_input: dict[str, Any] | None = None
+    ) -> ConfigFlowResult:
+        """Handle reauthentication confirmation."""
+        errors: dict[str, str] = {}
+        reauth_entry = self._get_reauth_entry()
+
+        if user_input is not None:
+            self.authenticator = self._create_authenticator(user_input)
+            validation_response = await validate_credentials(self.authenticator)
+            if isinstance(validation_response, str):
+                errors["base"] = validation_response
+            else:
+                account_number = str(reauth_entry.data[CONF_ACCOUNT_NUMBER])
+                self.accounts = await get_accounts(self.authenticator)
+                if account_number not in {
+                    account["value"] for account in self.accounts
+                }:
+                    errors["base"] = "wrong_account"
+                else:
+                    validation_result = await validate_account(
+                        self.authenticator,
+                        account_number,
+                    )
+                    if isinstance(validation_result, str):
+                        errors["base"] = validation_result
+                    else:
+                        return self.async_update_reload_and_abort(
+                            reauth_entry,
+                            data_updates={
+                                CONF_USERNAME: user_input[CONF_USERNAME],
+                                CONF_PASSWORD: user_input[CONF_PASSWORD],
+                                CONF_ACCESS_TOKEN: self.authenticator.refresh_token,
+                            },
+                        )
+
+        return self.async_show_form(
+            step_id="reauth_confirm",
+            data_schema=STEP_USER_DATA_SCHEMA,
+            errors=errors,
         )

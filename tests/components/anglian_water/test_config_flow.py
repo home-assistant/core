@@ -271,3 +271,80 @@ async def test_account_recover_exception(
     assert result["data"][CONF_ACCESS_TOKEN] == ACCESS_TOKEN
     assert result["data"][CONF_ACCOUNT_NUMBER] == ACCOUNT_NUMBER
     assert result["result"].unique_id == ACCOUNT_NUMBER
+
+
+@pytest.mark.usefixtures("mock_setup_entry")
+async def test_reauth_flow(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    mock_anglian_water_authenticator: AsyncMock,
+    mock_anglian_water_client: AsyncMock,
+) -> None:
+    """Test reauthentication updates credentials."""
+    mock_config_entry.add_to_hass(hass)
+    mock_anglian_water_authenticator.refresh_token = "new_token"
+
+    result = await mock_config_entry.start_reauth_flow(hass)
+
+    assert result["type"] is FlowResultType.FORM
+    assert result["step_id"] == "reauth_confirm"
+
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"],
+        user_input={
+            CONF_USERNAME: "new@example.com",
+            CONF_PASSWORD: "new-password",
+        },
+    )
+
+    assert result["type"] is FlowResultType.ABORT
+    assert result["reason"] == "reauth_successful"
+    assert mock_config_entry.data[CONF_USERNAME] == "new@example.com"
+    assert mock_config_entry.data[CONF_PASSWORD] == "new-password"
+    assert mock_config_entry.data[CONF_ACCESS_TOKEN] == "new_token"
+    mock_anglian_water_client.validate_smart_meter.assert_called_once_with(
+        ACCOUNT_NUMBER
+    )
+
+
+@pytest.mark.usefixtures("mock_setup_entry")
+async def test_reauth_flow_wrong_account(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    mock_anglian_water_authenticator: AsyncMock,
+    mock_anglian_water_client: AsyncMock,
+) -> None:
+    """Test reauthentication rejects a different account."""
+    mock_config_entry.add_to_hass(hass)
+    mock_anglian_water_client.api.get_associated_accounts.return_value = {
+        "result": {
+            "active": [
+                {
+                    "account_number": "999999999",
+                    "address": {
+                        "building_name": "",
+                        "company_name": "",
+                        "postcode": "AA1 1AA",
+                    },
+                }
+            ]
+        }
+    }
+
+    result = await mock_config_entry.start_reauth_flow(hass)
+
+    assert result["type"] is FlowResultType.FORM
+    assert result["step_id"] == "reauth_confirm"
+
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"],
+        user_input={
+            CONF_USERNAME: "other@example.com",
+            CONF_PASSWORD: "other-password",
+        },
+    )
+
+    assert result["type"] is FlowResultType.FORM
+    assert result["step_id"] == "reauth_confirm"
+    assert result["errors"] == {"base": "wrong_account"}
+    mock_anglian_water_client.validate_smart_meter.assert_not_called()

@@ -1,15 +1,28 @@
 {
   "config": {
     "abort": {
-      "already_configured": "[%key:common::config_flow::abort::already_configured_device%]"
+      "already_configured": "[%key:common::config_flow::abort::already_configured_device%]",
+      "reauth_successful": "[%key:common::config_flow::abort::reauth_successful%]"
     },
     "error": {
       "cannot_connect": "[%key:common::config_flow::error::cannot_connect%]",
       "invalid_auth": "[%key:common::config_flow::error::invalid_auth%]",
       "smart_meter_unavailable": "This account does not have any smart meters associated with it. If this is unexpected, enter your Billing Account Number found at the top of your latest bill.",
-      "unknown": "[%key:common::config_flow::error::unknown%]"
+      "unknown": "[%key:common::config_flow::error::unknown%]",
+      "wrong_account": "You must reauthenticate with an Anglian Water account that includes the originally configured billing account."
     },
     "step": {
+      "reauth_confirm": {
+        "data": {
+          "password": "[%key:common::config_flow::data::password%]",
+          "username": "[%key:common::config_flow::data::username%]"
+        },
+        "data_description": {
+          "password": "Your password",
+          "username": "Username or email used to log in to the Anglian Water website."
+        },
+        "description": "Reauthenticate with your Anglian Water account credentials."
+      },
       "select_account": {
         "data": {
           "account_number": "Billing account number"
