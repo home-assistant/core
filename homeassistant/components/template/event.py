@@ -1,19 +1,22 @@
 """Support for events which integrates with other components."""
 
+from datetime import datetime
 import logging
-from typing import Any, Final
+from typing import Any, Final, override
 
 import voluptuous as vol
 
 from homeassistant.components.event import (
+    ATTR_EVENT_TYPE,
     DOMAIN as EVENT_DOMAIN,
     ENTITY_ID_FORMAT,
     EventDeviceClass,
     EventEntity,
+    EventExtraStoredData,
 )
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_DEVICE_CLASS
-from homeassistant.core import HomeAssistant, callback
+from homeassistant.core import HomeAssistant, State, callback
 from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.entity_platform import (
     AddConfigEntryEntitiesCallback,
@@ -21,6 +24,7 @@ from homeassistant.helpers.entity_platform import (
 )
 from homeassistant.helpers.restore_state import RestoreEntity
 from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
+from homeassistant.util import dt as dt_util
 
 from . import TriggerUpdateCoordinator
 from .entity import AbstractTemplateEntity
@@ -117,6 +121,8 @@ class AbstractTemplateEvent(AbstractTemplateEntity, EventEntity):
     """Representation of a template event features."""
 
     _entity_id_format = ENTITY_ID_FORMAT
+    _restore_state_extra_data = EventExtraStoredData
+    _restore_state_properties = ("_last_triggered",)
 
     # The super init is not called because TemplateEntity
     # and TriggerEntity will call
@@ -127,7 +133,9 @@ class AbstractTemplateEvent(AbstractTemplateEntity, EventEntity):
         """Initialize the features."""
         self._attr_device_class = config.get(CONF_DEVICE_CLASS)
 
-        self._event_type = None
+        self._last_event_type: str | None = None
+        self._last_triggered: datetime | None = None
+
         self._attr_event_types = []
 
         self.setup_template(
@@ -138,7 +146,7 @@ class AbstractTemplateEvent(AbstractTemplateEntity, EventEntity):
         )
         self.setup_template(
             CONF_EVENT_TYPE,
-            "_event_type",
+            "_last_event_type",
             None,
             self._update_event_type,
         )
@@ -161,18 +169,50 @@ class AbstractTemplateEvent(AbstractTemplateEntity, EventEntity):
 
         self._attr_event_types = [str(event_type) for event_type in event_types]
 
+    @property  # type: ignore[misc]
+    @override
+    def state(self) -> str | None:
+        """Return the event state."""
+        if (last_event := self._last_triggered) is None:
+            return None
+        return last_event.isoformat(timespec="milliseconds")
+
+    @property  # type: ignore[misc]
+    @override
+    def state_attributes(self) -> dict[str, Any]:
+        """Return the state attributes."""
+        return {ATTR_EVENT_TYPE: self._last_event_type}
+
     @callback
     def _update_event_type(self, event_type: Any) -> None:
         """Update the effect from the template."""
-        try:
-            self._trigger_event(event_type)
-        except ValueError:
+        if event_type not in self.event_types:
             _LOGGER.error(
                 "Received invalid event_type: %s for entity %s. Expected one of: %s",
                 event_type,
                 self.entity_id,
                 self._attr_event_types,
             )
+            return
+
+        self._last_triggered = dt_util.utcnow()
+        self._last_event_type = event_type
+
+    async def async_get_last_event_data(self) -> EventExtraStoredData | None:
+        """Restore event specific state date."""
+        # Force last_event data to return none, this will override the restore state
+        # functionality on the base EventEntity.
+        return None
+
+    def restore_last_state_state(self, last_state: State) -> bool:
+        """Restore the state from the last state."""
+        self._last_triggered = dt_util.parse_datetime(last_state.state)
+        return True
+
+    @override
+    def restore_extra_data(self, extra_data: EventExtraStoredData):
+        """Restore the extra data."""
+        self._last_event_type = extra_data.last_event_type
 
 
 class StateEventEntity(TemplateEntity, AbstractTemplateEvent):
