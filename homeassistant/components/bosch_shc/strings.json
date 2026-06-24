@@ -28,6 +28,9 @@
         "data": {
           "host": "[%key:common::config_flow::data::host%]"
         },
+        "data_description": {
+          "host": "The hostname or IP address of your Bosch Smart Home Controller."
+        },
         "description": "The Bosch SHC integration needs to re-authenticate your account",
         "title": "[%key:common::config_flow::title::reauth%]"
       },
@@ -44,6 +47,29 @@
     }
   },
   "entity": {
+    "button": {
+      "detection_test": {
+        "name": "Detection test"
+      },
+      "detection_test_stop": {
+        "name": "Stop detection test"
+      },
+      "impulse": {
+        "name": "Trigger"
+      },
+      "reset_tamper": {
+        "name": "Reset tamper"
+      },
+      "smoke_test": {
+        "name": "Smoke test"
+      },
+      "walk_test": {
+        "name": "Walk test"
+      },
+      "walk_test_stop": {
+        "name": "Stop walk test"
+      }
+    },
     "sensor": {
       "air_quality": {
         "name": "Air quality"
