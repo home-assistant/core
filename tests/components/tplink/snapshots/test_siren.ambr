@@ -41,7 +41,7 @@
     ]),
     'area_id': None,
     'capabilities': dict({
-      'available_tones': tuple(
+      <SirenEntityCapabilityAttribute.AVAILABLE_TONES: 'available_tones'>: tuple(
         'Foo',
         'Bar',
       ),
@@ -79,7 +79,7 @@
 # name: test_states[siren.hub-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'available_tones': tuple(
+      <SirenEntityCapabilityAttribute.AVAILABLE_TONES: 'available_tones'>: tuple(
         'Foo',
         'Bar',
       ),

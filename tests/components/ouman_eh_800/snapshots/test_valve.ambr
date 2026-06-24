@@ -39,10 +39,10 @@
 # name: test_entities[valve-room_sensors][valve.heating_circuit_1_patterilammitys_valve_position_setpoint-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'current_position': 0,
+      <ValveEntityStateAttribute.CURRENT_POSITION: 'current_position'>: 0,
       'device_class': 'water',
       'friendly_name': 'Heating circuit 1 Patterilämmitys Valve position setpoint',
-      'is_closed': True,
+      <ValveEntityStateAttribute.IS_CLOSED: 'is_closed'>: True,
       'supported_features': <ValveEntityFeature: 7>,
     }),
     'context': <ANY>,
@@ -93,10 +93,10 @@
 # name: test_entities[valve-room_sensors][valve.heating_circuit_2_lattialammitys_valve_position_setpoint-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'current_position': 0,
+      <ValveEntityStateAttribute.CURRENT_POSITION: 'current_position'>: 0,
       'device_class': 'water',
       'friendly_name': 'Heating circuit 2 Lattialämmitys Valve position setpoint',
-      'is_closed': True,
+      <ValveEntityStateAttribute.IS_CLOSED: 'is_closed'>: True,
       'supported_features': <ValveEntityFeature: 7>,
     }),
     'context': <ANY>,

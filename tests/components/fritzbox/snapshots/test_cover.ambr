@@ -39,10 +39,10 @@
 # name: test_setup[cover.fake_name-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'current_position': 100,
+      <CoverEntityStateAttribute.CURRENT_POSITION: 'current_position'>: 100,
       'device_class': 'blind',
       'friendly_name': 'fake_name',
-      'is_closed': False,
+      <CoverEntityStateAttribute.IS_CLOSED: 'is_closed'>: False,
       'supported_features': <CoverEntityFeature: 15>,
     }),
     'context': <ANY>,

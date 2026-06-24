@@ -6,7 +6,7 @@
     ]),
     'area_id': None,
     'capabilities': dict({
-      'preset_modes': list([
+      <FanEntityCapabilityAttribute.PRESET_MODES: 'preset_modes'>: list([
         'slow',
         'fast',
       ]),
@@ -46,8 +46,8 @@
     'attributes': ReadOnlyDict({
       'attribution': 'Data provided by Netatmo',
       'friendly_name': 'Centralized ventilation controler',
-      'preset_mode': 'slow',
-      'preset_modes': list([
+      <FanEntityStateAttribute.PRESET_MODE: 'preset_mode'>: 'slow',
+      <FanEntityCapabilityAttribute.PRESET_MODES: 'preset_modes'>: list([
         'slow',
         'fast',
       ]),
