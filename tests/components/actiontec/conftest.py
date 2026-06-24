@@ -46,11 +46,14 @@ def mock_config_entry() -> MockConfigEntry:
 def mock_get_actiontec_data() -> Generator[MagicMock]:
     """Mock Actiontec data fetching."""
     mock_get_data = MagicMock(return_value=MOCK_DEVICES)
-    with patch(
-        "homeassistant.components.actiontec.coordinator.get_actiontec_data",
-        new=mock_get_data,
-    ), patch(
-        "homeassistant.components.actiontec.config_flow.get_actiontec_data",
-        new=mock_get_data,
+    with (
+        patch(
+            "homeassistant.components.actiontec.coordinator.get_actiontec_data",
+            new=mock_get_data,
+        ),
+        patch(
+            "homeassistant.components.actiontec.config_flow.get_actiontec_data",
+            new=mock_get_data,
+        ),
     ):
         yield mock_get_data
