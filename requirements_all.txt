@@ -1225,7 +1225,7 @@ ha-xthings-cloud==1.0.5
 habiticalib==0.4.7
 
 # homeassistant.components.bluetooth
-habluetooth==6.19.1
+habluetooth==6.23.1
 
 # homeassistant.components.hanna
 hanna-cloud==0.0.7
@@ -2818,7 +2818,7 @@ pyvesync==3.4.2
 pyvizio==0.1.64
 
 # homeassistant.components.velux
-pyvlx==0.2.35
+pyvlx==0.2.36
 
 # homeassistant.components.volumio
 pyvolumio==0.1.5
