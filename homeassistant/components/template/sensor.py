@@ -230,6 +230,8 @@ class AbstractTemplateSensor(AbstractTemplateEntity, RestoreSensor):
     @override
     def restore_extra_data(self, extra_data: SensorExtraStoredData) -> None:
         """Restore the extra data."""
+        # Do not restore native_unit_of_measurement, this is always pulled from the
+        # sensor configuration.
         self._attr_native_value = extra_data.native_value
 
 

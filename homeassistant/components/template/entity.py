@@ -48,7 +48,7 @@ class AbstractTemplateEntity(Entity):
     _state_option: str | None = None
     _restore_state_extra_data: Any | None = None
 
-    # Restore state properties.  The state will be restored if set None.
+    # Restore state properties. The state will be restored if set to None.
     # If a tuple is supplied, all properties must be None for the state to restore.
     _restore_state_properties: tuple[str, ...] | None = None
 

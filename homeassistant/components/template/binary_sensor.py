@@ -253,10 +253,8 @@ class AutoOffExtraStoredData(ExtraStoredData):
             if type_ == "<class 'datetime.datetime'>":
                 auto_off_time = dt_util.parse_datetime(auto_off_time["isoformat"])
         except TypeError:
-            # native_value is not a dict
             pass
         except KeyError:
-            # native_value is a dict, but does not have all values
             return None
 
         return cls(auto_off_time)
@@ -294,7 +292,7 @@ class TriggerBinarySensorEntity(TriggerEntity, AbstractTemplateBinarySensor):
             self._parse_result.add(CONF_AUTO_OFF)
 
     @override
-    def restore_extra_data(self, extra_data: AutoOffExtraStoredData):
+    def restore_extra_data(self, extra_data: AutoOffExtraStoredData) -> None:
         """Restore extra data from the last state."""
         if CONF_AUTO_OFF not in self._config:
             return
