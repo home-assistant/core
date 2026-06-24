@@ -708,9 +708,6 @@ LIGHT_LUX: Final = "lx"
 # UV Index units
 UV_INDEX: Final = "UV index"
 
-# Percentage units
-PERCENTAGE: Final = "%"
-
 # Rotational speed units
 REVOLUTIONS_PER_MINUTE: Final = "rpm"
 
@@ -772,6 +769,14 @@ class UnitOfDensity(StrEnum):
     MICROGRAMS_PER_CUBIC_FOOT = "μg/ft³"
 
 
+class UnitOfRatio(StrEnum):
+    """Ratio units."""
+
+    PARTS_PER_MILLION = "ppm"
+    PARTS_PER_BILLION = "ppb"
+    PERCENTAGE = "%"
+
+
 # Concentration units
 CONCENTRATION_GRAMS_PER_CUBIC_METER: Final = UnitOfDensity.GRAMS_PER_CUBIC_METER.value
 CONCENTRATION_MILLIGRAMS_PER_CUBIC_METER: Final = (
@@ -786,8 +791,9 @@ CONCENTRATION_MICROGRAMS_PER_CUBIC_FOOT: Final = (
 _DEPRECATED_CONCENTRATION_PARTS_PER_CUBIC_METER = DeprecatedConstant(
     "p/m³", "p/m³", "2027.7"
 )
-CONCENTRATION_PARTS_PER_MILLION: Final = "ppm"
-CONCENTRATION_PARTS_PER_BILLION: Final = "ppb"
+CONCENTRATION_PARTS_PER_MILLION: Final = UnitOfRatio.PARTS_PER_MILLION.value
+CONCENTRATION_PARTS_PER_BILLION: Final = UnitOfRatio.PARTS_PER_BILLION.value
+PERCENTAGE: Final = UnitOfRatio.PERCENTAGE.value
 
 
 class UnitOfBloodGlucoseConcentration(StrEnum):
