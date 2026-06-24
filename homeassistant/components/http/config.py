@@ -9,10 +9,6 @@ from typing import Any, Final, TypedDict, cast, override
 
 import voluptuous as vol
 
-from homeassistant.components.homeassistant import (
-    DOMAIN as HASS_DOMAIN,
-    SERVICE_HOMEASSISTANT_RESTART,
-)
 from homeassistant.const import SERVER_PORT
 from homeassistant.core import CALLBACK_TYPE, HassJob, HomeAssistant, callback
 from homeassistant.exceptions import HomeAssistantError
@@ -363,6 +359,12 @@ class HTTPConfigStore:
         )
         self._pending = None
         await self._async_persist()
+        # Imported here to avoid a circular import at module load time.
+        from homeassistant.components.homeassistant import (  # noqa: PLC0415
+            DOMAIN as HASS_DOMAIN,
+            SERVICE_HOMEASSISTANT_RESTART,
+        )
+
         await self._hass.services.async_call(HASS_DOMAIN, SERVICE_HOMEASSISTANT_RESTART)
 
     async def async_migrate_yaml(self, config: ConfData) -> None:
