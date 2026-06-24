@@ -8,7 +8,7 @@ from unittest.mock import patch
 import pytest
 
 from homeassistant.components import config
-from homeassistant.components.config import automation
+from homeassistant.components.config import DOMAIN, automation
 from homeassistant.const import STATE_ON
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import entity_registry as er
@@ -38,7 +38,7 @@ async def test_get_automation_config(
 ) -> None:
     """Test getting automation config."""
     with patch.object(config, "SECTIONS", [automation]):
-        await async_setup_component(hass, "config", {})
+        await async_setup_component(hass, DOMAIN, {})
 
     client = await hass_client()
 
@@ -61,7 +61,7 @@ async def test_update_automation_config(
 ) -> None:
     """Test updating automation config."""
     with patch.object(config, "SECTIONS", [automation]):
-        await async_setup_component(hass, "config", {})
+        await async_setup_component(hass, DOMAIN, {})
 
     assert sorted(hass.states.async_entity_ids("automation")) == []
 
@@ -153,7 +153,7 @@ async def test_update_automation_config_with_error(
 ) -> None:
     """Test updating automation config with errors."""
     with patch.object(config, "SECTIONS", [automation]):
-        await async_setup_component(hass, "config", {})
+        await async_setup_component(hass, DOMAIN, {})
 
     assert sorted(hass.states.async_entity_ids("automation")) == []
 
@@ -206,7 +206,7 @@ async def test_update_automation_config_with_blueprint_substitution_error(
 ) -> None:
     """Test updating automation config with errors."""
     with patch.object(config, "SECTIONS", [automation]):
-        await async_setup_component(hass, "config", {})
+        await async_setup_component(hass, DOMAIN, {})
 
     assert sorted(hass.states.async_entity_ids("automation")) == []
 
@@ -242,7 +242,7 @@ async def test_update_remove_key_automation_config(
 ) -> None:
     """Test updating automation config while removing a key."""
     with patch.object(config, "SECTIONS", [automation]):
-        await async_setup_component(hass, "config", {})
+        await async_setup_component(hass, DOMAIN, {})
 
     assert sorted(hass.states.async_entity_ids("automation")) == []
 
@@ -284,7 +284,7 @@ async def test_bad_formatted_automations(
 ) -> None:
     """Test that we handle automations without ID."""
     with patch.object(config, "SECTIONS", [automation]):
-        await async_setup_component(hass, "config", {})
+        await async_setup_component(hass, DOMAIN, {})
 
     assert sorted(hass.states.async_entity_ids("automation")) == []
 
@@ -353,7 +353,7 @@ async def test_delete_automation(
     assert len(entity_registry.entities) == 2
 
     with patch.object(config, "SECTIONS", [automation]):
-        assert await async_setup_component(hass, "config", {})
+        assert await async_setup_component(hass, DOMAIN, {})
 
     assert sorted(hass.states.async_entity_ids("automation")) == [
         "automation.automation_0",
@@ -391,7 +391,7 @@ async def test_api_calls_require_admin(
 ) -> None:
     """Test cloud APIs endpoints do not work as a normal user."""
     with patch.object(config, "SECTIONS", [automation]):
-        await async_setup_component(hass, "config", {})
+        await async_setup_component(hass, DOMAIN, {})
 
     hass_config_store["automations.yaml"] = [{"id": "sun"}, {"id": "moon"}]
 

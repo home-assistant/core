@@ -594,7 +594,7 @@
     ]),
     'area_id': None,
     'capabilities': dict({
-      'options': list([
+      <SensorEntityCapabilityAttribute.OPTIONS: 'options'>: list([
         'normal',
         'cancelled',
       ]),
@@ -635,7 +635,7 @@
       'attribution': 'Data provided by NS',
       'device_class': 'enum',
       'friendly_name': 'To home Status',
-      'options': list([
+      <SensorEntityCapabilityAttribute.OPTIONS: 'options'>: list([
         'normal',
         'cancelled',
       ]),
@@ -1294,7 +1294,7 @@
     ]),
     'area_id': None,
     'capabilities': dict({
-      'options': list([
+      <SensorEntityCapabilityAttribute.OPTIONS: 'options'>: list([
         'normal',
         'cancelled',
       ]),
@@ -1335,7 +1335,7 @@
       'attribution': 'Data provided by NS',
       'device_class': 'enum',
       'friendly_name': 'To work Status',
-      'options': list([
+      <SensorEntityCapabilityAttribute.OPTIONS: 'options'>: list([
         'normal',
         'cancelled',
       ]),
@@ -1994,7 +1994,7 @@
     ]),
     'area_id': None,
     'capabilities': dict({
-      'options': list([
+      <SensorEntityCapabilityAttribute.OPTIONS: 'options'>: list([
         'normal',
         'cancelled',
       ]),
@@ -2035,7 +2035,7 @@
       'attribution': 'Data provided by NS',
       'device_class': 'enum',
       'friendly_name': 'To home Status',
-      'options': list([
+      <SensorEntityCapabilityAttribute.OPTIONS: 'options'>: list([
         'normal',
         'cancelled',
       ]),
@@ -2694,7 +2694,7 @@
     ]),
     'area_id': None,
     'capabilities': dict({
-      'options': list([
+      <SensorEntityCapabilityAttribute.OPTIONS: 'options'>: list([
         'normal',
         'cancelled',
       ]),
@@ -2735,7 +2735,7 @@
       'attribution': 'Data provided by NS',
       'device_class': 'enum',
       'friendly_name': 'To work Status',
-      'options': list([
+      <SensorEntityCapabilityAttribute.OPTIONS: 'options'>: list([
         'normal',
         'cancelled',
       ]),

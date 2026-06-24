@@ -2,7 +2,7 @@
 
 from collections.abc import Mapping
 import logging
-from typing import Any
+from typing import Any, override
 
 import evohomeasync2 as evo
 from evohomeasync2.schemas.const import (
@@ -58,11 +58,13 @@ class EvoEntity(CoordinatorEntity[EvoDataUpdateCoordinator]):
         self._device_state_attrs: dict[str, Any] = {}
 
     @property
+    @override
     def extra_state_attributes(self) -> Mapping[str, Any]:
         """Return the evohome-specific state attributes."""
         return {"status": self._device_state_attrs}
 
     @callback
+    @override
     def _handle_coordinator_update(self) -> None:
         """Handle updated data from the coordinator."""
 
@@ -169,6 +171,7 @@ class EvoChild(EvoEntity):
         _ = self.setpoints  # update the setpoints attr
 
     @callback
+    @override
     def _handle_coordinator_update(self) -> None:
         """Handle updated data from the coordinator."""
 
@@ -179,6 +182,7 @@ class EvoChild(EvoEntity):
 
         super()._handle_coordinator_update()
 
+    @override
     async def update_attrs(self) -> None:
         """Update the entity's extra state attrs."""
         await self._update_schedule()

@@ -4,7 +4,7 @@ from abc import abstractmethod
 import asyncio
 import logging
 import math
-from typing import Any
+from typing import Any, override
 
 from miio import Device as MiioDevice
 from miio.fan_common import (
@@ -327,16 +327,19 @@ class XiaomiGenericDevice(
         """Hold operation mode class."""
 
     @property
+    @override
     def percentage(self) -> int | None:
         """Return the percentage based speed of the fan."""
         return None
 
     @property
+    @override
     def is_on(self) -> bool | None:
         """Return true if device is on."""
         # Base FanEntity uses percentage to determine if the device is on.
         return self._attr_is_on
 
+    @override
     async def async_turn_on(
         self,
         percentage: int | None = None,
@@ -359,6 +362,7 @@ class XiaomiGenericDevice(
             self._attr_is_on = True
             self.async_write_ha_state()
 
+    @override
     async def async_turn_off(self, **kwargs: Any) -> None:
         """Turn the device off."""
         result = await self._try_command(
@@ -375,6 +379,7 @@ class XiaomiGenericAirPurifier(XiaomiGenericDevice):
     """Representation of a generic AirPurifier device."""
 
     @property
+    @override
     def preset_mode(self) -> str | None:
         """Get the active preset mode."""
         if self._attr_is_on:
@@ -384,6 +389,7 @@ class XiaomiGenericAirPurifier(XiaomiGenericDevice):
         return None
 
     @callback
+    @override
     def _handle_coordinator_update(self):
         """Fetch state from the device."""
         self._attr_is_on = self.coordinator.data.is_on
@@ -496,11 +502,13 @@ class XiaomiAirPurifier(XiaomiGenericAirPurifier):
         self._fan_level = getattr(self.coordinator.data, ATTR_FAN_LEVEL, None)
 
     @property
+    @override
     def operation_mode_class(self):
         """Hold operation mode class."""
         return AirpurifierOperationMode
 
     @property
+    @override
     def percentage(self) -> int | None:
         """Return the current percentage based speed."""
         if self._attr_is_on:
@@ -512,6 +520,7 @@ class XiaomiAirPurifier(XiaomiGenericAirPurifier):
 
         return None
 
+    @override
     async def async_set_percentage(self, percentage: int) -> None:
         """Set the percentage of the fan.
 
@@ -531,6 +540,7 @@ class XiaomiAirPurifier(XiaomiGenericAirPurifier):
                 self.operation_mode_class(self.SPEED_MODE_MAPPING[speed_mode]),
             )
 
+    @override
     async def async_set_preset_mode(self, preset_mode: str) -> None:
         """Set the preset mode of the fan.
 
@@ -570,11 +580,13 @@ class XiaomiAirPurifierMiot(XiaomiAirPurifier):
     """Representation of a Xiaomi Air Purifier (MiOT protocol)."""
 
     @property
+    @override
     def operation_mode_class(self):
         """Hold operation mode class."""
         return AirpurifierMiotOperationMode
 
     @property
+    @override
     def percentage(self) -> int | None:
         """Return the current percentage based speed."""
         if self._fan_level is None:
@@ -584,6 +596,7 @@ class XiaomiAirPurifierMiot(XiaomiAirPurifier):
 
         return None
 
+    @override
     async def async_set_percentage(self, percentage: int) -> None:
         """Set the percentage of the fan.
 
@@ -634,11 +647,13 @@ class XiaomiAirPurifierMB4(XiaomiGenericAirPurifier):
         self._motor_speed = 0
 
     @property
+    @override
     def operation_mode_class(self):
         """Hold operation mode class."""
         return AirpurifierMiotOperationMode
 
     @property
+    @override
     def percentage(self) -> int | None:
         """Return the current percentage based speed."""
         # show the actual fan speed in silent or auto preset mode
@@ -651,6 +666,7 @@ class XiaomiAirPurifierMB4(XiaomiGenericAirPurifier):
 
         return None
 
+    @override
     async def async_set_percentage(self, percentage: int) -> None:
         """Set the percentage of the fan. This method is a coroutine."""
         if percentage == 0:
@@ -671,6 +687,7 @@ class XiaomiAirPurifierMB4(XiaomiGenericAirPurifier):
             self._mode = self.operation_mode_class["Favorite"].value
             self.async_write_ha_state()
 
+    @override
     async def async_set_preset_mode(self, preset_mode: str) -> None:
         """Set the preset mode of the fan."""
         if not self._attr_is_on:
@@ -685,6 +702,7 @@ class XiaomiAirPurifierMB4(XiaomiGenericAirPurifier):
             self.async_write_ha_state()
 
     @callback
+    @override
     def _handle_coordinator_update(self):
         """Fetch state from the device."""
         self._attr_is_on = self.coordinator.data.is_on
@@ -748,11 +766,13 @@ class XiaomiAirFresh(XiaomiGenericAirPurifier):
         self._mode = self.coordinator.data.mode.value
 
     @property
+    @override
     def operation_mode_class(self):
         """Hold operation mode class."""
         return AirfreshOperationMode
 
     @property
+    @override
     def percentage(self) -> int | None:
         """Return the current percentage based speed."""
         if self._attr_is_on:
@@ -764,6 +784,7 @@ class XiaomiAirFresh(XiaomiGenericAirPurifier):
 
         return None
 
+    @override
     async def async_set_percentage(self, percentage: int) -> None:
         """Set the percentage of the fan.
 
@@ -783,6 +804,7 @@ class XiaomiAirFresh(XiaomiGenericAirPurifier):
                 ).value
                 self.async_write_ha_state()
 
+    @override
     async def async_set_preset_mode(self, preset_mode: str) -> None:
         """Set the preset mode of the fan.
 
@@ -845,11 +867,13 @@ class XiaomiAirFreshA1(XiaomiGenericAirPurifier):
         self._speed_range = (60, 150)
 
     @property
+    @override
     def operation_mode_class(self):
         """Hold operation mode class."""
         return AirfreshOperationModeT2017
 
     @property
+    @override
     def percentage(self) -> int | None:
         """Return the current percentage based speed."""
         if self._favorite_speed is None:
@@ -859,6 +883,7 @@ class XiaomiAirFreshA1(XiaomiGenericAirPurifier):
 
         return None
 
+    @override
     async def async_set_percentage(self, percentage: int) -> None:
         """Set the percentage of the fan. This method is a coroutine."""
         if percentage == 0:
@@ -880,6 +905,7 @@ class XiaomiAirFreshA1(XiaomiGenericAirPurifier):
             self._favorite_speed = favorite_speed
             self.async_write_ha_state()
 
+    @override
     async def async_set_preset_mode(self, preset_mode: str) -> None:
         """Set the preset mode of the fan. This method is a coroutine."""
         if await self._try_command(
@@ -891,6 +917,7 @@ class XiaomiAirFreshA1(XiaomiGenericAirPurifier):
             self.async_write_ha_state()
 
     @callback
+    @override
     def _handle_coordinator_update(self):
         """Fetch state from the device."""
         self._attr_is_on = self.coordinator.data.is_on
@@ -954,11 +981,13 @@ class XiaomiGenericFan(XiaomiGenericDevice):
         self._percentage: int | None = None
 
     @property
+    @override
     def preset_modes(self) -> list[str]:
         """Get the list of available preset modes."""
         return [mode.name for mode in self.operation_mode_class]
 
     @property
+    @override
     def percentage(self) -> int | None:
         """Return the current speed as a percentage."""
         if self._attr_is_on:
@@ -966,6 +995,7 @@ class XiaomiGenericFan(XiaomiGenericDevice):
 
         return None
 
+    @override
     async def async_oscillate(self, oscillating: bool) -> None:
         """Set oscillation."""
         await self._try_command(
@@ -976,6 +1006,7 @@ class XiaomiGenericFan(XiaomiGenericDevice):
         self._attr_oscillating = oscillating
         self.async_write_ha_state()
 
+    @override
     async def async_set_direction(self, direction: str) -> None:
         """Set the direction of the fan."""
         if self._attr_oscillating:
@@ -1010,20 +1041,24 @@ class XiaomiFan(XiaomiGenericFan):
             self._percentage = self.coordinator.data.direct_speed
 
     @property
+    @override
     def operation_mode_class(self):
         """Hold operation mode class."""
 
     @property
+    @override
     def preset_mode(self) -> str:
         """Get the active preset mode."""
         return ATTR_MODE_NATURE if self._nature_mode else ATTR_MODE_NORMAL
 
     @property
+    @override
     def preset_modes(self) -> list[str]:
         """Get the list of available preset modes."""
         return [ATTR_MODE_NATURE, ATTR_MODE_NORMAL]
 
     @callback
+    @override
     def _handle_coordinator_update(self):
         """Fetch state from the device."""
         self._attr_is_on = self.coordinator.data.is_on
@@ -1036,6 +1071,7 @@ class XiaomiFan(XiaomiGenericFan):
 
         self.async_write_ha_state()
 
+    @override
     async def async_set_preset_mode(self, preset_mode: str) -> None:
         """Set the preset mode of the fan."""
         if preset_mode == ATTR_MODE_NATURE:
@@ -1054,6 +1090,7 @@ class XiaomiFan(XiaomiGenericFan):
         self._attr_preset_mode = preset_mode
         self.async_write_ha_state()
 
+    @override
     async def async_set_percentage(self, percentage: int) -> None:
         """Set the percentage of the fan."""
         if percentage == 0:
@@ -1102,11 +1139,13 @@ class XiaomiFanP5(XiaomiGenericFan):
         self._percentage = self.coordinator.data.speed
 
     @property
+    @override
     def operation_mode_class(self):
         """Hold operation mode class."""
         return FanOperationMode
 
     @callback
+    @override
     def _handle_coordinator_update(self):
         """Fetch state from the device."""
         self._attr_is_on = self.coordinator.data.is_on
@@ -1116,6 +1155,7 @@ class XiaomiFanP5(XiaomiGenericFan):
 
         self.async_write_ha_state()
 
+    @override
     async def async_set_preset_mode(self, preset_mode: str) -> None:
         """Set the preset mode of the fan."""
         await self._try_command(
@@ -1126,6 +1166,7 @@ class XiaomiFanP5(XiaomiGenericFan):
         self._attr_preset_mode = preset_mode
         self.async_write_ha_state()
 
+    @override
     async def async_set_percentage(self, percentage: int) -> None:
         """Set the percentage of the fan."""
         if percentage == 0:
@@ -1152,11 +1193,13 @@ class XiaomiFanMiot(XiaomiGenericFan):
     coordinator: DataUpdateCoordinator[FanStatusMiot]
 
     @property
+    @override
     def operation_mode_class(self) -> type[FanOperationMode]:
         """Hold operation mode class."""
         return FanOperationMode
 
     @callback
+    @override
     def _handle_coordinator_update(self) -> None:
         """Fetch state from the device."""
         self._attr_is_on = self.coordinator.data.is_on
@@ -1169,6 +1212,7 @@ class XiaomiFanMiot(XiaomiGenericFan):
 
         self.async_write_ha_state()
 
+    @override
     async def async_set_preset_mode(self, preset_mode: str) -> None:
         """Set the preset mode of the fan."""
         await self._try_command(
@@ -1179,6 +1223,7 @@ class XiaomiFanMiot(XiaomiGenericFan):
         self._attr_preset_mode = preset_mode
         self.async_write_ha_state()
 
+    @override
     async def async_set_percentage(self, percentage: int) -> None:
         """Set the percentage of the fan."""
         if percentage == 0:
@@ -1204,6 +1249,7 @@ class XiaomiFanZA5(XiaomiFanMiot):
     """Representation of a Xiaomi Fan ZA5."""
 
     @property
+    @override
     def operation_mode_class(self):
         """Hold operation mode class."""
         return FanZA5OperationMode
@@ -1224,6 +1270,7 @@ class XiaomiFan1C(XiaomiFanMiot):
         self._attr_speed_count = 3
 
     @callback
+    @override
     def _handle_coordinator_update(self):
         """Fetch state from the device."""
         self._attr_is_on = self.coordinator.data.is_on
@@ -1238,6 +1285,7 @@ class XiaomiFan1C(XiaomiFanMiot):
 
         self.async_write_ha_state()
 
+    @override
     async def async_set_percentage(self, percentage: int) -> None:
         """Set the percentage of the fan."""
         if percentage == 0:

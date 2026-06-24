@@ -5,7 +5,7 @@ from collections.abc import Callable, Container, Coroutine, Mapping
 import copy
 from dataclasses import dataclass
 import types
-from typing import Any, cast
+from typing import Any, cast, override
 
 import voluptuous as vol
 
@@ -314,6 +314,7 @@ class SchemaConfigFlowHandler(ConfigFlow, ABC):
 
     VERSION = 1
 
+    @override
     def __init_subclass__(cls, **kwargs: Any) -> None:
         """Initialize a subclass."""
         super().__init_subclass__(**kwargs)
@@ -352,11 +353,13 @@ class SchemaConfigFlowHandler(ConfigFlow, ABC):
         self._common_handler = SchemaCommonFlowHandler(self, self.config_flow, None)
 
     @staticmethod
+    @override
     async def async_setup_preview(hass: HomeAssistant) -> None:
         """Set up preview."""
 
     @classmethod
     @callback
+    @override
     def async_supports_options_flow(cls, config_entry: ConfigEntry) -> bool:
         """Return options flow support for this handler."""
         return cls.options_flow is not None
@@ -407,6 +410,7 @@ class SchemaConfigFlowHandler(ConfigFlow, ABC):
         """
 
     @callback
+    @override
     def async_create_entry(
         self,
         data: Mapping[str, Any],
@@ -475,6 +479,7 @@ class SchemaOptionsFlowHandler(OptionsFlow):
         return _async_step
 
     @callback
+    @override
     def async_create_entry(
         self,
         data: Mapping[str, Any],

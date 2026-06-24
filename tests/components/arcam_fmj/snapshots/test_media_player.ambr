@@ -42,7 +42,7 @@
     'attributes': ReadOnlyDict({
       'friendly_name': 'Arcam FMJ (127.0.0.1)',
       'supported_features': <MediaPlayerEntityFeature: 200588>,
-      'volume_level': 0.0,
+      <MediaPlayerEntityStateAttribute.MEDIA_VOLUME_LEVEL: 'volume_level'>: 0.0,
     }),
     'context': <ANY>,
     'entity_id': 'media_player.arcam_fmj_127_0_0_1',
@@ -95,7 +95,7 @@
     'attributes': ReadOnlyDict({
       'friendly_name': 'Arcam FMJ (127.0.0.1) Zone 2',
       'supported_features': <MediaPlayerEntityFeature: 135052>,
-      'volume_level': 0.0,
+      <MediaPlayerEntityStateAttribute.MEDIA_VOLUME_LEVEL: 'volume_level'>: 0.0,
     }),
     'context': <ANY>,
     'entity_id': 'media_player.arcam_fmj_127_0_0_1_zone_2',

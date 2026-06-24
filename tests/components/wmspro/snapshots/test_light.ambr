@@ -1,5 +1,5 @@
 # serializer version: 1
-# name: test_light_device
+# name: test_light_device[config_prod_awning_dimmer.json-status_prod_dimmer.json]
   DeviceRegistryEntrySnapshot({
     'area_id': 'terrasse',
     'config_entries': <ANY>,
@@ -30,14 +30,14 @@
     'via_device_id': <ANY>,
   })
 # ---
-# name: test_light_update
+# name: test_light_update[config_prod_awning_dimmer.json-status_prod_dimmer.json]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'attribution': 'Data provided by WMS WebControl pro API',
-      'brightness': None,
-      'color_mode': None,
+      <LightEntityStateAttribute.BRIGHTNESS: 'brightness'>: None,
+      <LightEntityStateAttribute.COLOR_MODE: 'color_mode'>: None,
       'friendly_name': 'Licht',
-      'supported_color_modes': list([
+      <LightEntityCapabilityAttribute.SUPPORTED_COLOR_MODES: 'supported_color_modes'>: list([
         <ColorMode.BRIGHTNESS: 'brightness'>,
       ]),
       'supported_features': <LightEntityFeature: 0>,

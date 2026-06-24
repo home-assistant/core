@@ -6,7 +6,7 @@
     ]),
     'area_id': None,
     'capabilities': dict({
-      'event_types': list([
+      <EventEntityCapabilityAttribute.EVENT_TYPES: 'event_types'>: list([
         'input_event',
         'script_start',
       ]),
@@ -44,8 +44,8 @@
 # name: test_rpc_script_1_event[event.test_name_test_script_js-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'event_type': None,
-      'event_types': list([
+      <EventEntityStateAttribute.EVENT_TYPE: 'event_type'>: None,
+      <EventEntityCapabilityAttribute.EVENT_TYPES: 'event_types'>: list([
         'input_event',
         'script_start',
       ]),

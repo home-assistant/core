@@ -2,7 +2,7 @@
 
 import logging
 import re
-from typing import Any
+from typing import Any, override
 
 from Tami4EdgeAPI import Tami4EdgeAPI, exceptions
 import voluptuous as vol
@@ -28,6 +28,7 @@ class Tami4ConfigFlow(ConfigFlow, domain=DOMAIN):
 
     phone: str
 
+    @override
     async def async_step_user(
         self, user_input: dict[str, Any] | None = None
     ) -> ConfigFlowResult:
