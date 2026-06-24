@@ -42,11 +42,11 @@
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'friendly_name': 'Test Location',
-      <DeviceTrackerEntityStateAttribute.GPS_ACCURACY: 'gps_accuracy'>: 0,
+      <TrackerEntityStateAttribute.GPS_ACCURACY: 'gps_accuracy'>: 0,
       <DeviceTrackerEntityStateAttribute.IN_ZONES: 'in_zones'>: list([
       ]),
-      <DeviceTrackerEntityStateAttribute.LATITUDE: 'latitude'>: -30.222626,
-      <DeviceTrackerEntityStateAttribute.LONGITUDE: 'longitude'>: -97.6236871,
+      <TrackerEntityStateAttribute.LATITUDE: 'latitude'>: -30.222626,
+      <TrackerEntityStateAttribute.LONGITUDE: 'longitude'>: -97.6236871,
       <DeviceTrackerEntityStateAttribute.SOURCE_TYPE: 'source_type'>: <SourceType.GPS: 'gps'>,
       <DeviceTrackerEntityCapabilityAttribute.TRACKING_TYPE: 'tracking_type'>: <TrackingType.POSITION: 'position'>,
     }),
@@ -101,11 +101,11 @@
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'friendly_name': 'Test Route',
-      <DeviceTrackerEntityStateAttribute.GPS_ACCURACY: 'gps_accuracy'>: 0,
+      <TrackerEntityStateAttribute.GPS_ACCURACY: 'gps_accuracy'>: 0,
       <DeviceTrackerEntityStateAttribute.IN_ZONES: 'in_zones'>: list([
       ]),
-      <DeviceTrackerEntityStateAttribute.LATITUDE: 'latitude'>: 30.2226265,
-      <DeviceTrackerEntityStateAttribute.LONGITUDE: 'longitude'>: -97.6236871,
+      <TrackerEntityStateAttribute.LATITUDE: 'latitude'>: 30.2226265,
+      <TrackerEntityStateAttribute.LONGITUDE: 'longitude'>: -97.6236871,
       <DeviceTrackerEntityStateAttribute.SOURCE_TYPE: 'source_type'>: <SourceType.GPS: 'gps'>,
       <DeviceTrackerEntityCapabilityAttribute.TRACKING_TYPE: 'tracking_type'>: <TrackingType.POSITION: 'position'>,
     }),
@@ -121,11 +121,11 @@
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'friendly_name': 'Test Location',
-      <DeviceTrackerEntityStateAttribute.GPS_ACCURACY: 'gps_accuracy'>: 0,
+      <TrackerEntityStateAttribute.GPS_ACCURACY: 'gps_accuracy'>: 0,
       <DeviceTrackerEntityStateAttribute.IN_ZONES: 'in_zones'>: list([
       ]),
-      <DeviceTrackerEntityStateAttribute.LATITUDE: 'latitude'>: -30.222626,
-      <DeviceTrackerEntityStateAttribute.LONGITUDE: 'longitude'>: -97.6236871,
+      <TrackerEntityStateAttribute.LATITUDE: 'latitude'>: -30.222626,
+      <TrackerEntityStateAttribute.LONGITUDE: 'longitude'>: -97.6236871,
       <DeviceTrackerEntityStateAttribute.SOURCE_TYPE: 'source_type'>: <SourceType.GPS: 'gps'>,
       <DeviceTrackerEntityCapabilityAttribute.TRACKING_TYPE: 'tracking_type'>: <TrackingType.POSITION: 'position'>,
     }),
@@ -141,11 +141,11 @@
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'friendly_name': 'Test Route',
-      <DeviceTrackerEntityStateAttribute.GPS_ACCURACY: 'gps_accuracy'>: 0,
+      <TrackerEntityStateAttribute.GPS_ACCURACY: 'gps_accuracy'>: 0,
       <DeviceTrackerEntityStateAttribute.IN_ZONES: 'in_zones'>: list([
       ]),
-      <DeviceTrackerEntityStateAttribute.LATITUDE: 'latitude'>: 30.2226265,
-      <DeviceTrackerEntityStateAttribute.LONGITUDE: 'longitude'>: -97.6236871,
+      <TrackerEntityStateAttribute.LATITUDE: 'latitude'>: 30.2226265,
+      <TrackerEntityStateAttribute.LONGITUDE: 'longitude'>: -97.6236871,
       <DeviceTrackerEntityStateAttribute.SOURCE_TYPE: 'source_type'>: <SourceType.GPS: 'gps'>,
       <DeviceTrackerEntityCapabilityAttribute.TRACKING_TYPE: 'tracking_type'>: <TrackingType.POSITION: 'position'>,
     }),

@@ -42,11 +42,11 @@
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'friendly_name': '2021 Honda Accord',
-      <DeviceTrackerEntityStateAttribute.GPS_ACCURACY: 'gps_accuracy'>: 10,
+      <TrackerEntityStateAttribute.GPS_ACCURACY: 'gps_accuracy'>: 10,
       <DeviceTrackerEntityStateAttribute.IN_ZONES: 'in_zones'>: list([
       ]),
-      <DeviceTrackerEntityStateAttribute.LATITUDE: 'latitude'>: 37.7749,
-      <DeviceTrackerEntityStateAttribute.LONGITUDE: 'longitude'>: -122.4194,
+      <TrackerEntityStateAttribute.LATITUDE: 'latitude'>: 37.7749,
+      <TrackerEntityStateAttribute.LONGITUDE: 'longitude'>: -122.4194,
       <DeviceTrackerEntityStateAttribute.SOURCE_TYPE: 'source_type'>: <SourceType.GPS: 'gps'>,
       <DeviceTrackerEntityCapabilityAttribute.TRACKING_TYPE: 'tracking_type'>: <TrackingType.POSITION: 'position'>,
     }),

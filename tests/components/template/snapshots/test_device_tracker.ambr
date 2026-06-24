@@ -3,11 +3,11 @@
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'friendly_name': 'template_device_tracker',
-      <DeviceTrackerEntityStateAttribute.GPS_ACCURACY: 'gps_accuracy'>: 10.0,
+      <TrackerEntityStateAttribute.GPS_ACCURACY: 'gps_accuracy'>: 10.0,
       <DeviceTrackerEntityStateAttribute.IN_ZONES: 'in_zones'>: list([
       ]),
-      <DeviceTrackerEntityStateAttribute.LATITUDE: 'latitude'>: 10.0,
-      <DeviceTrackerEntityStateAttribute.LONGITUDE: 'longitude'>: 40.0,
+      <TrackerEntityStateAttribute.LATITUDE: 'latitude'>: 10.0,
+      <TrackerEntityStateAttribute.LONGITUDE: 'longitude'>: 40.0,
       <DeviceTrackerEntityStateAttribute.SOURCE_TYPE: 'source_type'>: <SourceType.GPS: 'gps'>,
       <DeviceTrackerEntityCapabilityAttribute.TRACKING_TYPE: 'tracking_type'>: <TrackingType.POSITION: 'position'>,
     }),

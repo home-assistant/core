@@ -42,11 +42,11 @@
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'friendly_name': 'Device 6 Switch 1',
-      'in_zones': list([
+      <DeviceTrackerEntityStateAttribute.IN_ZONES: 'in_zones'>: list([
         'zone.home',
       ]),
-      <DeviceTrackerEntityStateAttribute.IP: 'ip'>: '10.0.1.1',
-      <DeviceTrackerEntityStateAttribute.MAC: 'mac'>: '00:00:00:00:01:01',
+      <ScannerEntityStateAttribute.IP: 'ip'>: '10.0.1.1',
+      <ScannerEntityStateAttribute.MAC: 'mac'>: '00:00:00:00:01:01',
       <DeviceTrackerEntityStateAttribute.SOURCE_TYPE: 'source_type'>: <SourceType.ROUTER: 'router'>,
       <DeviceTrackerEntityCapabilityAttribute.TRACKING_TYPE: 'tracking_type'>: <TrackingType.CONNECTION: 'connection'>,
     }),
@@ -101,10 +101,10 @@
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'friendly_name': 'Device 1 wd_client_1',
-      <DeviceTrackerEntityStateAttribute.HOST_NAME: 'host_name'>: 'wd_client_1',
-      'in_zones': list([
+      <ScannerEntityStateAttribute.HOST_NAME: 'host_name'>: 'wd_client_1',
+      <DeviceTrackerEntityStateAttribute.IN_ZONES: 'in_zones'>: list([
       ]),
-      <DeviceTrackerEntityStateAttribute.MAC: 'mac'>: '00:00:00:00:00:02',
+      <ScannerEntityStateAttribute.MAC: 'mac'>: '00:00:00:00:00:02',
       <DeviceTrackerEntityStateAttribute.SOURCE_TYPE: 'source_type'>: <SourceType.ROUTER: 'router'>,
       <DeviceTrackerEntityCapabilityAttribute.TRACKING_TYPE: 'tracking_type'>: <TrackingType.CONNECTION: 'connection'>,
     }),
@@ -159,11 +159,11 @@
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'friendly_name': 'Device 0 ws_client_1',
-      <DeviceTrackerEntityStateAttribute.HOST_NAME: 'host_name'>: 'ws_client_1',
-      'in_zones': list([
+      <ScannerEntityStateAttribute.HOST_NAME: 'host_name'>: 'ws_client_1',
+      <DeviceTrackerEntityStateAttribute.IN_ZONES: 'in_zones'>: list([
       ]),
-      <DeviceTrackerEntityStateAttribute.IP: 'ip'>: '10.0.0.1',
-      <DeviceTrackerEntityStateAttribute.MAC: 'mac'>: '00:00:00:00:00:01',
+      <ScannerEntityStateAttribute.IP: 'ip'>: '10.0.0.1',
+      <ScannerEntityStateAttribute.MAC: 'mac'>: '00:00:00:00:00:01',
       <DeviceTrackerEntityStateAttribute.SOURCE_TYPE: 'source_type'>: <SourceType.ROUTER: 'router'>,
       <DeviceTrackerEntityCapabilityAttribute.TRACKING_TYPE: 'tracking_type'>: <TrackingType.CONNECTION: 'connection'>,
     }),

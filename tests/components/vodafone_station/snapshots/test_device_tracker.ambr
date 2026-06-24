@@ -42,11 +42,11 @@
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'friendly_name': 'LanDevice1',
-      <DeviceTrackerEntityStateAttribute.HOST_NAME: 'host_name'>: 'LanDevice1',
-      'in_zones': list([
+      <ScannerEntityStateAttribute.HOST_NAME: 'host_name'>: 'LanDevice1',
+      <DeviceTrackerEntityStateAttribute.IN_ZONES: 'in_zones'>: list([
       ]),
-      <DeviceTrackerEntityStateAttribute.IP: 'ip'>: '192.168.1.11',
-      <DeviceTrackerEntityStateAttribute.MAC: 'mac'>: 'yy:yy:yy:yy:yy:yy',
+      <ScannerEntityStateAttribute.IP: 'ip'>: '192.168.1.11',
+      <ScannerEntityStateAttribute.MAC: 'mac'>: 'yy:yy:yy:yy:yy:yy',
       <DeviceTrackerEntityStateAttribute.SOURCE_TYPE: 'source_type'>: <SourceType.ROUTER: 'router'>,
       <DeviceTrackerEntityCapabilityAttribute.TRACKING_TYPE: 'tracking_type'>: <TrackingType.CONNECTION: 'connection'>,
     }),
@@ -101,12 +101,12 @@
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'friendly_name': 'WifiDevice0',
-      <DeviceTrackerEntityStateAttribute.HOST_NAME: 'host_name'>: 'WifiDevice0',
-      'in_zones': list([
+      <ScannerEntityStateAttribute.HOST_NAME: 'host_name'>: 'WifiDevice0',
+      <DeviceTrackerEntityStateAttribute.IN_ZONES: 'in_zones'>: list([
         'zone.home',
       ]),
-      <DeviceTrackerEntityStateAttribute.IP: 'ip'>: '192.168.1.10',
-      <DeviceTrackerEntityStateAttribute.MAC: 'mac'>: 'xx:xx:xx:xx:xx:xx',
+      <ScannerEntityStateAttribute.IP: 'ip'>: '192.168.1.10',
+      <ScannerEntityStateAttribute.MAC: 'mac'>: 'xx:xx:xx:xx:xx:xx',
       <DeviceTrackerEntityStateAttribute.SOURCE_TYPE: 'source_type'>: <SourceType.ROUTER: 'router'>,
       <DeviceTrackerEntityCapabilityAttribute.TRACKING_TYPE: 'tracking_type'>: <TrackingType.CONNECTION: 'connection'>,
     }),

@@ -23,7 +23,7 @@
     StateSnapshot({
       'attributes': ReadOnlyDict({
         'friendly_name': 'Demo scanner',
-        'in_zones': list([
+        <DeviceTrackerEntityStateAttribute.IN_ZONES: 'in_zones'>: list([
           'zone.home',
         ]),
         <DeviceTrackerEntityStateAttribute.SOURCE_TYPE: 'source_type'>: <SourceType.ROUTER: 'router'>,
@@ -39,12 +39,12 @@
     StateSnapshot({
       'attributes': ReadOnlyDict({
         'friendly_name': 'Demo tracker',
-        <DeviceTrackerEntityStateAttribute.GPS_ACCURACY: 'gps_accuracy'>: 10,
+        <TrackerEntityStateAttribute.GPS_ACCURACY: 'gps_accuracy'>: 10,
         <DeviceTrackerEntityStateAttribute.IN_ZONES: 'in_zones'>: list([
           'zone.home',
         ]),
-        <DeviceTrackerEntityStateAttribute.LATITUDE: 'latitude'>: 32.87336,
-        <DeviceTrackerEntityStateAttribute.LONGITUDE: 'longitude'>: -117.22743,
+        <TrackerEntityStateAttribute.LATITUDE: 'latitude'>: 32.87336,
+        <TrackerEntityStateAttribute.LONGITUDE: 'longitude'>: -117.22743,
         <DeviceTrackerEntityStateAttribute.SOURCE_TYPE: 'source_type'>: <SourceType.GPS: 'gps'>,
         <DeviceTrackerEntityCapabilityAttribute.TRACKING_TYPE: 'tracking_type'>: <TrackingType.POSITION: 'position'>,
       }),

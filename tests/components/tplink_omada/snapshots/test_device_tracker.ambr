@@ -3,12 +3,12 @@
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'friendly_name': 'Banana',
-      <DeviceTrackerEntityStateAttribute.HOST_NAME: 'host_name'>: 'testhost',
-      'in_zones': list([
+      <ScannerEntityStateAttribute.HOST_NAME: 'host_name'>: 'testhost',
+      <DeviceTrackerEntityStateAttribute.IN_ZONES: 'in_zones'>: list([
         'zone.home',
       ]),
-      <DeviceTrackerEntityStateAttribute.IP: 'ip'>: '192.168.1.102',
-      <DeviceTrackerEntityStateAttribute.MAC: 'mac'>: '2C-71-FF-ED-34-83',
+      <ScannerEntityStateAttribute.IP: 'ip'>: '192.168.1.102',
+      <ScannerEntityStateAttribute.MAC: 'mac'>: '2C-71-FF-ED-34-83',
       <DeviceTrackerEntityStateAttribute.SOURCE_TYPE: 'source_type'>: <SourceType.ROUTER: 'router'>,
       <DeviceTrackerEntityCapabilityAttribute.TRACKING_TYPE: 'tracking_type'>: <TrackingType.CONNECTION: 'connection'>,
     }),
@@ -24,9 +24,9 @@
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'friendly_name': 'Banana',
-      'in_zones': list([
+      <DeviceTrackerEntityStateAttribute.IN_ZONES: 'in_zones'>: list([
       ]),
-      <DeviceTrackerEntityStateAttribute.MAC: 'mac'>: '2C-71-FF-ED-34-83',
+      <ScannerEntityStateAttribute.MAC: 'mac'>: '2C-71-FF-ED-34-83',
       <DeviceTrackerEntityStateAttribute.SOURCE_TYPE: 'source_type'>: <SourceType.ROUTER: 'router'>,
       <DeviceTrackerEntityCapabilityAttribute.TRACKING_TYPE: 'tracking_type'>: <TrackingType.CONNECTION: 'connection'>,
     }),

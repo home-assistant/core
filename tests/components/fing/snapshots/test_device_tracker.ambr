@@ -43,11 +43,11 @@
     'attributes': ReadOnlyDict({
       'friendly_name': 'FreeBSD router',
       'icon': 'mdi:router-network',
-      'in_zones': list([
+      <DeviceTrackerEntityStateAttribute.IN_ZONES: 'in_zones'>: list([
         'zone.home',
       ]),
-      <DeviceTrackerEntityStateAttribute.IP: 'ip'>: '192.168.50.1',
-      <DeviceTrackerEntityStateAttribute.MAC: 'mac'>: '00:00:00:00:00:01',
+      <ScannerEntityStateAttribute.IP: 'ip'>: '192.168.50.1',
+      <ScannerEntityStateAttribute.MAC: 'mac'>: '00:00:00:00:00:01',
       <DeviceTrackerEntityStateAttribute.SOURCE_TYPE: 'source_type'>: <SourceType.ROUTER: 'router'>,
       <DeviceTrackerEntityCapabilityAttribute.TRACKING_TYPE: 'tracking_type'>: <TrackingType.CONNECTION: 'connection'>,
     }),
@@ -103,11 +103,11 @@
     'attributes': ReadOnlyDict({
       'friendly_name': 'PC_HOME',
       'icon': 'mdi:desktop-tower',
-      'in_zones': list([
+      <DeviceTrackerEntityStateAttribute.IN_ZONES: 'in_zones'>: list([
         'zone.home',
       ]),
-      <DeviceTrackerEntityStateAttribute.IP: 'ip'>: '192.168.50.3',
-      <DeviceTrackerEntityStateAttribute.MAC: 'mac'>: '00:00:00:00:00:03',
+      <ScannerEntityStateAttribute.IP: 'ip'>: '192.168.50.3',
+      <ScannerEntityStateAttribute.MAC: 'mac'>: '00:00:00:00:00:03',
       <DeviceTrackerEntityStateAttribute.SOURCE_TYPE: 'source_type'>: <SourceType.ROUTER: 'router'>,
       <DeviceTrackerEntityCapabilityAttribute.TRACKING_TYPE: 'tracking_type'>: <TrackingType.CONNECTION: 'connection'>,
     }),
@@ -163,11 +163,11 @@
     'attributes': ReadOnlyDict({
       'friendly_name': 'Samsung The Frame 55',
       'icon': 'mdi:television',
-      'in_zones': list([
+      <DeviceTrackerEntityStateAttribute.IN_ZONES: 'in_zones'>: list([
         'zone.home',
       ]),
-      <DeviceTrackerEntityStateAttribute.IP: 'ip'>: '192.168.50.2',
-      <DeviceTrackerEntityStateAttribute.MAC: 'mac'>: '00:00:00:00:00:02',
+      <ScannerEntityStateAttribute.IP: 'ip'>: '192.168.50.2',
+      <ScannerEntityStateAttribute.MAC: 'mac'>: '00:00:00:00:00:02',
       <DeviceTrackerEntityStateAttribute.SOURCE_TYPE: 'source_type'>: <SourceType.ROUTER: 'router'>,
       <DeviceTrackerEntityCapabilityAttribute.TRACKING_TYPE: 'tracking_type'>: <TrackingType.CONNECTION: 'connection'>,
     }),

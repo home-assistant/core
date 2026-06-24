@@ -151,11 +151,11 @@
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'friendly_name': 'REG-CAPTUR-FUEL Location',
-      <DeviceTrackerEntityStateAttribute.GPS_ACCURACY: 'gps_accuracy'>: 0,
+      <TrackerEntityStateAttribute.GPS_ACCURACY: 'gps_accuracy'>: 0,
       <DeviceTrackerEntityStateAttribute.IN_ZONES: 'in_zones'>: list([
       ]),
-      <DeviceTrackerEntityStateAttribute.LATITUDE: 'latitude'>: 48.1234567,
-      <DeviceTrackerEntityStateAttribute.LONGITUDE: 'longitude'>: 11.1234567,
+      <TrackerEntityStateAttribute.LATITUDE: 'latitude'>: 48.1234567,
+      <TrackerEntityStateAttribute.LONGITUDE: 'longitude'>: 11.1234567,
       <DeviceTrackerEntityStateAttribute.SOURCE_TYPE: 'source_type'>: <SourceType.GPS: 'gps'>,
       <DeviceTrackerEntityCapabilityAttribute.TRACKING_TYPE: 'tracking_type'>: <TrackingType.POSITION: 'position'>,
     }),
@@ -210,11 +210,11 @@
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'friendly_name': 'REG-CAPTUR_PHEV Location',
-      <DeviceTrackerEntityStateAttribute.GPS_ACCURACY: 'gps_accuracy'>: 0,
+      <TrackerEntityStateAttribute.GPS_ACCURACY: 'gps_accuracy'>: 0,
       <DeviceTrackerEntityStateAttribute.IN_ZONES: 'in_zones'>: list([
       ]),
-      <DeviceTrackerEntityStateAttribute.LATITUDE: 'latitude'>: 48.1234567,
-      <DeviceTrackerEntityStateAttribute.LONGITUDE: 'longitude'>: 11.1234567,
+      <TrackerEntityStateAttribute.LATITUDE: 'latitude'>: 48.1234567,
+      <TrackerEntityStateAttribute.LONGITUDE: 'longitude'>: 11.1234567,
       <DeviceTrackerEntityStateAttribute.SOURCE_TYPE: 'source_type'>: <SourceType.GPS: 'gps'>,
       <DeviceTrackerEntityCapabilityAttribute.TRACKING_TYPE: 'tracking_type'>: <TrackingType.POSITION: 'position'>,
     }),
@@ -269,11 +269,11 @@
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'friendly_name': 'REG-MEG-0 Location',
-      <DeviceTrackerEntityStateAttribute.GPS_ACCURACY: 'gps_accuracy'>: 0,
+      <TrackerEntityStateAttribute.GPS_ACCURACY: 'gps_accuracy'>: 0,
       <DeviceTrackerEntityStateAttribute.IN_ZONES: 'in_zones'>: list([
       ]),
-      <DeviceTrackerEntityStateAttribute.LATITUDE: 'latitude'>: 48.1234567,
-      <DeviceTrackerEntityStateAttribute.LONGITUDE: 'longitude'>: 11.1234567,
+      <TrackerEntityStateAttribute.LATITUDE: 'latitude'>: 48.1234567,
+      <TrackerEntityStateAttribute.LONGITUDE: 'longitude'>: 11.1234567,
       <DeviceTrackerEntityStateAttribute.SOURCE_TYPE: 'source_type'>: <SourceType.GPS: 'gps'>,
       <DeviceTrackerEntityCapabilityAttribute.TRACKING_TYPE: 'tracking_type'>: <TrackingType.POSITION: 'position'>,
     }),
@@ -328,11 +328,11 @@
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'friendly_name': 'REG-TWINGO-III Location',
-      <DeviceTrackerEntityStateAttribute.GPS_ACCURACY: 'gps_accuracy'>: 0,
+      <TrackerEntityStateAttribute.GPS_ACCURACY: 'gps_accuracy'>: 0,
       <DeviceTrackerEntityStateAttribute.IN_ZONES: 'in_zones'>: list([
       ]),
-      <DeviceTrackerEntityStateAttribute.LATITUDE: 'latitude'>: 48.1234567,
-      <DeviceTrackerEntityStateAttribute.LONGITUDE: 'longitude'>: 11.1234567,
+      <TrackerEntityStateAttribute.LATITUDE: 'latitude'>: 48.1234567,
+      <TrackerEntityStateAttribute.LONGITUDE: 'longitude'>: 11.1234567,
       <DeviceTrackerEntityStateAttribute.SOURCE_TYPE: 'source_type'>: <SourceType.GPS: 'gps'>,
       <DeviceTrackerEntityCapabilityAttribute.TRACKING_TYPE: 'tracking_type'>: <TrackingType.POSITION: 'position'>,
     }),
@@ -387,11 +387,11 @@
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'friendly_name': 'REG-ZOE-50 Location',
-      <DeviceTrackerEntityStateAttribute.GPS_ACCURACY: 'gps_accuracy'>: 0,
+      <TrackerEntityStateAttribute.GPS_ACCURACY: 'gps_accuracy'>: 0,
       <DeviceTrackerEntityStateAttribute.IN_ZONES: 'in_zones'>: list([
       ]),
-      <DeviceTrackerEntityStateAttribute.LATITUDE: 'latitude'>: 48.1234567,
-      <DeviceTrackerEntityStateAttribute.LONGITUDE: 'longitude'>: 11.1234567,
+      <TrackerEntityStateAttribute.LATITUDE: 'latitude'>: 48.1234567,
+      <TrackerEntityStateAttribute.LONGITUDE: 'longitude'>: 11.1234567,
       <DeviceTrackerEntityStateAttribute.SOURCE_TYPE: 'source_type'>: <SourceType.GPS: 'gps'>,
       <DeviceTrackerEntityCapabilityAttribute.TRACKING_TYPE: 'tracking_type'>: <TrackingType.POSITION: 'position'>,
     }),

@@ -44,16 +44,23 @@ class DeviceTrackerEntityCapabilityAttribute(StrEnum):
 
 
 class DeviceTrackerEntityStateAttribute(StrEnum):
-    """State attributes for device tracker entities."""
+    """State attributes common to device tracker entities."""
 
-    # Set by BaseTrackerEntity
     SOURCE_TYPE = "source_type"
-    # Set by TrackerEntity
     IN_ZONES = "in_zones"
+
+
+class TrackerEntityStateAttribute(StrEnum):
+    """State attributes set by TrackerEntity."""
+
     LATITUDE = "latitude"
     LONGITUDE = "longitude"
     GPS_ACCURACY = "gps_accuracy"
-    # Set by ScannerEntity
+
+
+class ScannerEntityStateAttribute(StrEnum):
+    """State attributes set by ScannerEntity."""
+
     IP = "ip"
     MAC = "mac"
     HOST_NAME = "host_name"

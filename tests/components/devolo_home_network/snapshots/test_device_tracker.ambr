@@ -4,10 +4,10 @@
     'attributes': ReadOnlyDict({
       'band': '5 GHz',
       'friendly_name': '00:00:5E:00:53:01',
-      'in_zones': list([
+      <DeviceTrackerEntityStateAttribute.IN_ZONES: 'in_zones'>: list([
         'zone.home',
       ]),
-      <DeviceTrackerEntityStateAttribute.MAC: 'mac'>: '00:00:5E:00:53:01',
+      <ScannerEntityStateAttribute.MAC: 'mac'>: '00:00:5E:00:53:01',
       <DeviceTrackerEntityStateAttribute.SOURCE_TYPE: 'source_type'>: <SourceType.ROUTER: 'router'>,
       <DeviceTrackerEntityCapabilityAttribute.TRACKING_TYPE: 'tracking_type'>: <TrackingType.CONNECTION: 'connection'>,
       'wifi': 'Main',

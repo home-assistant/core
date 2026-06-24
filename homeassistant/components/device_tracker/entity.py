@@ -55,7 +55,9 @@ from .const import (  # noqa: F401
     LOGGER,
     DeviceTrackerEntityCapabilityAttribute,
     DeviceTrackerEntityStateAttribute,
+    ScannerEntityStateAttribute,
     SourceType,
+    TrackerEntityStateAttribute,
     TrackingType,
 )
 
@@ -416,11 +418,9 @@ class TrackerEntity(
         attr.update(super().state_attributes)
 
         if self.latitude is not None and self.longitude is not None:
-            attr[DeviceTrackerEntityStateAttribute.LATITUDE] = self.latitude
-            attr[DeviceTrackerEntityStateAttribute.LONGITUDE] = self.longitude
-            attr[DeviceTrackerEntityStateAttribute.GPS_ACCURACY] = (
-                self.location_accuracy
-            )
+            attr[TrackerEntityStateAttribute.LATITUDE] = self.latitude
+            attr[TrackerEntityStateAttribute.LONGITUDE] = self.longitude
+            attr[TrackerEntityStateAttribute.GPS_ACCURACY] = self.location_accuracy
 
         return attr
 
@@ -564,7 +564,7 @@ class BaseScannerEntity(BaseTrackerEntity):
     @override
     def state_attributes(self) -> dict[str, Any]:
         """Return the device state attributes."""
-        attr: dict[str, Any] = {ATTR_IN_ZONES: []}
+        attr: dict[str, Any] = {DeviceTrackerEntityStateAttribute.IN_ZONES: []}
         attr.update(super().state_attributes)
 
         if not self.is_connected:
@@ -579,7 +579,7 @@ class BaseScannerEntity(BaseTrackerEntity):
         ):
             return attr
 
-        attr[ATTR_IN_ZONES] = [
+        attr[DeviceTrackerEntityStateAttribute.IN_ZONES] = [
             associated_zone,
             *zone.async_get_enclosing_zones(self.hass, associated_zone),
         ]
@@ -729,10 +729,10 @@ class ScannerEntity(
         attr = super().state_attributes
 
         if ip_address := self.ip_address:
-            attr[DeviceTrackerEntityStateAttribute.IP] = ip_address
+            attr[ScannerEntityStateAttribute.IP] = ip_address
         if (mac_address := self.mac_address) is not None:
-            attr[DeviceTrackerEntityStateAttribute.MAC] = mac_address
+            attr[ScannerEntityStateAttribute.MAC] = mac_address
         if (hostname := self.hostname) is not None:
-            attr[DeviceTrackerEntityStateAttribute.HOST_NAME] = hostname
+            attr[ScannerEntityStateAttribute.HOST_NAME] = hostname
 
         return attr
