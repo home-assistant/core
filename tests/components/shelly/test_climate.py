@@ -19,6 +19,7 @@ from homeassistant.components.climate import (
     ATTR_FAN_MODE,
     ATTR_HVAC_ACTION,
     ATTR_HVAC_MODE,
+    ATTR_HVAC_MODES,
     ATTR_PRESET_MODE,
     DOMAIN as CLIMATE_DOMAIN,
     FAN_LOW,
@@ -1060,6 +1061,50 @@ async def test_rpc_linkedgo_st802_thermostat(
 
     assert (state := hass.states.get(entity_id))
     assert state.attributes[ATTR_CURRENT_TEMPERATURE] == 22.4
+
+
+async def test_rpc_linkedgo_st802_floor_heating(
+    hass: HomeAssistant,
+    mock_rpc_device: Mock,
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    """Test LINKEDGO ST802 thermostat with floor heating working mode."""
+    entity_id = "climate.test_name"
+
+    device_fixture = await async_load_json_object_fixture(
+        hass, "st802_gen3.json", DOMAIN
+    )
+    monkeypatch.setattr(mock_rpc_device, "shelly", device_fixture["shelly"])
+    monkeypatch.setattr(mock_rpc_device, "status", device_fixture["status"])
+    monkeypatch.setattr(mock_rpc_device, "config", device_fixture["config"])
+    monkeypatch.setitem(
+        mock_rpc_device.config["enum:201"],
+        "options",
+        ["cool", "dry", "ventilation", "floor_heating"],
+    )
+    monkeypatch.setitem(mock_rpc_device.status["enum:201"], "value", "floor_heating")
+
+    await init_integration(hass, 3, model=MODEL_LINKEDGO_ST802_THERMOSTAT)
+
+    assert (state := hass.states.get(entity_id))
+    assert state.state == HVACMode.HEAT
+    assert state.attributes[ATTR_HVAC_MODES] == [
+        HVACMode.OFF,
+        HVACMode.COOL,
+        HVACMode.DRY,
+        HVACMode.FAN_ONLY,
+        HVACMode.HEAT,
+    ]
+
+    await hass.services.async_call(
+        CLIMATE_DOMAIN,
+        SERVICE_SET_HVAC_MODE,
+        {ATTR_ENTITY_ID: entity_id, ATTR_HVAC_MODE: HVACMode.HEAT},
+        blocking=True,
+    )
+
+    mock_rpc_device.boolean_set.assert_called_once_with(201, True)
+    mock_rpc_device.enum_set.assert_called_once_with(201, "floor_heating")
 
 
 async def test_rpc_linkedgo_st1820_thermostat(

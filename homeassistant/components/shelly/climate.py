@@ -62,11 +62,10 @@ PARALLEL_UPDATES = 0
 THERMOSTAT_TO_HA_MODE = {
     "cool": HVACMode.COOL,
     "dry": HVACMode.DRY,
+    "floor_heating": HVACMode.HEAT,
     "heat": HVACMode.HEAT,
     "ventilation": HVACMode.FAN_ONLY,
 }
-
-HA_TO_THERMOSTAT_MODE = {value: key for key, value in THERMOSTAT_TO_HA_MODE.items()}
 
 PRESET_FROST_PROTECTION = "frost_protection"
 
@@ -131,13 +130,17 @@ class RpcLinkedgoThermostatClimate(ShellyRpcAttributeEntity, ClimateEntity):
 
         # ST1820 only supports HEAT and OFF
         self._attr_hvac_modes = [HVACMode.OFF, HVACMode.HEAT]
+        self._ha_to_thermostat_mode: dict[HVACMode, str] = {}
         # ST802 supports multiple working modes
         self._working_mode_key = get_rpc_key_by_role(config, "working_mode")
         if self._working_mode_key:
             modes = config[self._working_mode_key]["options"]
-            self._attr_hvac_modes = [HVACMode.OFF] + [
-                THERMOSTAT_TO_HA_MODE[mode] for mode in modes
-            ]
+            self._attr_hvac_modes = [HVACMode.OFF]
+            for mode in modes:
+                ha_mode = THERMOSTAT_TO_HA_MODE[mode]
+                if ha_mode not in self._attr_hvac_modes:
+                    self._attr_hvac_modes.append(ha_mode)
+                self._ha_to_thermostat_mode.setdefault(ha_mode, mode)
 
     @property
     def _status(self) -> dict[str, Any]:
@@ -253,7 +256,7 @@ class RpcLinkedgoThermostatClimate(ShellyRpcAttributeEntity, ClimateEntity):
 
         await self.coordinator.device.enum_set(
             get_rpc_key_id(self._working_mode_key),
-            HA_TO_THERMOSTAT_MODE[hvac_mode],
+            self._ha_to_thermostat_mode[hvac_mode],
         )
 
     @override
