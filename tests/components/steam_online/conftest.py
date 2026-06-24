@@ -42,8 +42,7 @@ def mock_steam_api() -> Generator[MagicMock]:
         ) as mock_client,
         patch("homeassistant.components.steam_online.config_flow.steam.api.key.set"),
         patch(
-            "homeassistant.components.steam_online.config_flow.MAX_IDS_TO_REQUEST",
-            return_value=2,
+            "homeassistant.components.steam_online.config_flow.MAX_IDS_TO_REQUEST", 2
         ),
     ):
         client = MagicMock()
