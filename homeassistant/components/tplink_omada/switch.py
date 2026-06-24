@@ -366,7 +366,7 @@ class TpLinkOmadaVpnSwitch(
 ):
     """Switch entity for enabling and disabling an Omada VPN policy."""
 
-    _attr_icon = "mdi:vpn"
+    _attr_translation_key = "vpn_policy"
 
     def __init__(
         self,

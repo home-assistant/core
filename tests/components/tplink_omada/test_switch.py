@@ -393,12 +393,27 @@ async def test_vpn_switches(
 
 
 @pytest.mark.parametrize(
-    ("entity_id", "service", "policy_id", "enabled"),
+    (
+        "entity_id",
+        "service",
+        "policy_id",
+        "enabled",
+        "server_enabled",
+        "site_to_site_enabled",
+    ),
     [
         pytest.param(
-            VPN_SERVER_ENTITY_ID, "turn_off", "vpn-server-1", False, id="turn_off"
+            VPN_SERVER_ENTITY_ID,
+            "turn_off",
+            "vpn-server-1",
+            False,
+            False,
+            False,
+            id="turn_off",
         ),
-        pytest.param(VPN_S2S_ENTITY_ID, "turn_on", "vpn-s2s-1", True, id="turn_on"),
+        pytest.param(
+            VPN_S2S_ENTITY_ID, "turn_on", "vpn-s2s-1", True, True, True, id="turn_on"
+        ),
     ],
 )
 async def test_vpn_switch_toggle(
@@ -409,11 +424,13 @@ async def test_vpn_switch_toggle(
     service: str,
     policy_id: str,
     enabled: bool,
+    server_enabled: bool,
+    site_to_site_enabled: bool,
 ) -> None:
     """Test enabling and disabling a VPN policy."""
     mock_omada_site_client.get_vpn_policies.return_value = _build_vpn_policies(
-        server_enabled=enabled if policy_id == "vpn-server-1" else True,
-        site_to_site_enabled=enabled if policy_id == "vpn-s2s-1" else False,
+        server_enabled=server_enabled,
+        site_to_site_enabled=site_to_site_enabled,
     )
 
     await call_service(hass, service, entity_id)

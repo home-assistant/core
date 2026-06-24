@@ -177,13 +177,13 @@
     'options': dict({
     }),
     'original_device_class': None,
-    'original_icon': 'mdi:vpn',
+    'original_icon': None,
     'original_name': 'Branch Office',
     'platform': 'tplink_omada',
     'previous_unique_id': None,
     'suggested_object_id': None,
     'supported_features': 0,
-    'translation_key': None,
+    'translation_key': 'vpn_policy',
     'unique_id': 'vpn_site_to_site_vpn-s2s-1',
     'unit_of_measurement': None,
   })
@@ -193,7 +193,6 @@
     'attributes': ReadOnlyDict({
       'category': 'site_to_site',
       'friendly_name': 'Test Router Branch Office',
-      'icon': 'mdi:vpn',
       'vpn_type': 'IPsec',
     }),
     'context': <ANY>,
@@ -230,13 +229,13 @@
     'options': dict({
     }),
     'original_device_class': None,
-    'original_icon': 'mdi:vpn',
+    'original_icon': None,
     'original_name': 'Road Warriors',
     'platform': 'tplink_omada',
     'previous_unique_id': None,
     'suggested_object_id': None,
     'supported_features': 0,
-    'translation_key': None,
+    'translation_key': 'vpn_policy',
     'unique_id': 'vpn_server_vpn-server-1',
     'unit_of_measurement': None,
   })
@@ -246,7 +245,6 @@
     'attributes': ReadOnlyDict({
       'category': 'server',
       'friendly_name': 'Test Router Road Warriors',
-      'icon': 'mdi:vpn',
       'vpn_type': 'OpenVPN',
     }),
     'context': <ANY>,
