@@ -790,8 +790,8 @@ CLAUDE.md @home-assistant/core
 /tests/components/html5/ @alexyao2015 @tr4nt0r
 /homeassistant/components/http/ @home-assistant/core
 /tests/components/http/ @home-assistant/core
-/homeassistant/components/huawei_lte/ @scop @fphammerle
-/tests/components/huawei_lte/ @scop @fphammerle
+/homeassistant/components/huawei_lte/ @fphammerle
+/tests/components/huawei_lte/ @fphammerle
 /homeassistant/components/hue/ @marcelveldt
 /tests/components/hue/ @marcelveldt
 /homeassistant/components/hue_ble/ @flip-dots
