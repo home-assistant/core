@@ -30,9 +30,6 @@ class TFAmeConfigFlow(ConfigFlow, domain=DOMAIN):
     VERSION = 1
     MINOR_VERSION = 1
 
-    def __init__(self) -> None:
-        """Initialize the config flow."""
-
     @override
     async def async_step_user(
         self, user_input: dict[str, Any] | None = None

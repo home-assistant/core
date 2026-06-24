@@ -26,7 +26,6 @@ from tests.common import MockConfigEntry
 
 type PatchKwargs = Mapping[str, object] | None
 type UserInput = dict[str, object]
-type ExpectedError = str | tuple[str, ...]
 
 
 async def test_show_form(hass: HomeAssistant) -> None:

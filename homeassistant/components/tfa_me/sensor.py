@@ -20,7 +20,7 @@ from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 from homeassistant.util import dt as dt_util
 
-from .const import DEVICE_MAPPING, DOMAIN, TIMEOUT_MAPPING
+from .const import DEVICE_MAPPING, DOMAIN, TIMEOUT_FOR_5_MIN, TIMEOUT_MAPPING
 from .coordinator import TFAmeConfigEntry, TFAmeUpdateCoordinator, resolve_tfa_host
 
 PARALLEL_UPDATES = 0
@@ -433,5 +433,5 @@ class TFAmeSensorEntity(CoordinatorEntity[TFAmeUpdateCoordinator], SensorEntity)
         try:
             timeout_val = TIMEOUT_MAPPING[sensor_id[:2].upper()]
         except KeyError:
-            timeout_val = 0
+            timeout_val = TIMEOUT_FOR_5_MIN
         return timeout_val

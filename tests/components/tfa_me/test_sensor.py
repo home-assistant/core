@@ -22,14 +22,6 @@ from tests.common import (
 )
 
 
-def _stable_state_dict(data: dict) -> dict:
-    """Return state dict without volatile fields."""
-    data = dict(data)
-    for key in ("last_changed", "last_updated", "last_reported", "context"):
-        data.pop(key, None)
-    return data
-
-
 async def test_tfa_me_sensor_entities_snapshot(
     hass: HomeAssistant,
     snapshot: SnapshotAssertion,
