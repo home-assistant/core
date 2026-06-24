@@ -60,6 +60,9 @@ class DropboxConfigFlow(AbstractOAuth2FlowHandler, domain=DOMAIN):
         self, entry_data: Mapping[str, Any]
     ) -> ConfigFlowResult:
         """Perform reauth upon an API authentication error."""
+        token = entry_data[CONF_TOKEN]
+        if not set(token.get("scope", "").split()).issuperset(OAUTH2_SCOPES):
+            return await self.async_step_reauth_permissions()
         return await self.async_step_reauth_confirm()
 
     async def async_step_reauth_confirm(
@@ -68,4 +71,12 @@ class DropboxConfigFlow(AbstractOAuth2FlowHandler, domain=DOMAIN):
         """Dialog that informs the user that reauth is required."""
         if user_input is None:
             return self.async_show_form(step_id="reauth_confirm")
+        return await self.async_step_user()
+
+    async def async_step_reauth_permissions(
+        self, user_input: dict[str, Any] | None = None
+    ) -> ConfigFlowResult:
+        """Dialog that informs the user that additional permissions are required."""
+        if user_input is None:
+            return self.async_show_form(step_id="reauth_permissions")
         return await self.async_step_user()
