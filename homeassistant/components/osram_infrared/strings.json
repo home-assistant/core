@@ -18,12 +18,5 @@
         "title": "Set up OSRAM infrared light"
       }
     }
-  },
-  "entity": {
-    "button": {
-      "mode": {
-        "name": "Mode"
-      }
-    }
   }
 }

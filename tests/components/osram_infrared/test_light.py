@@ -220,6 +220,43 @@ async def test_turn_on_with_brightness_sends_relative_brightness_codes(
     ]
 
 
+@pytest.mark.usefixtures("init_integration")
+async def test_turn_on_with_increased_brightness_sends_brightness_up_codes(
+    hass: HomeAssistant,
+    mock_infrared_emitter_entity: MockInfraredEmitterEntity,
+) -> None:
+    """Test increasing brightness sends brightness up codes."""
+    await hass.services.async_call(
+        LIGHT_DOMAIN,
+        SERVICE_TURN_ON,
+        {
+            ATTR_ENTITY_ID: "light.osram_light",
+            ATTR_BRIGHTNESS: 1,
+        },
+        blocking=True,
+    )
+
+    mock_infrared_emitter_entity.send_command_calls.clear()
+
+    await hass.services.async_call(
+        LIGHT_DOMAIN,
+        SERVICE_TURN_ON,
+        {
+            ATTR_ENTITY_ID: "light.osram_light",
+            ATTR_BRIGHTNESS: 255,
+        },
+        blocking=True,
+    )
+
+    assert (
+        mock_infrared_emitter_entity.send_command_calls
+        == [
+            OsramLightCode.BRIGHTNESS_UP,
+        ]
+        * 4
+    )
+
+
 @pytest.mark.parametrize(
     ("effect", "expected_code"),
     [
@@ -498,43 +535,6 @@ async def test_receiver_resubscribes_after_receiver_unavailable(
 
     assert state is not None
     assert state.state == STATE_ON
-
-
-@pytest.mark.usefixtures("init_integration")
-async def test_turn_on_with_increased_brightness_sends_brightness_up_codes(
-    hass: HomeAssistant,
-    mock_infrared_emitter_entity: MockInfraredEmitterEntity,
-) -> None:
-    """Test increasing brightness sends brightness up codes."""
-    await hass.services.async_call(
-        LIGHT_DOMAIN,
-        SERVICE_TURN_ON,
-        {
-            ATTR_ENTITY_ID: "light.osram_light",
-            ATTR_BRIGHTNESS: 1,
-        },
-        blocking=True,
-    )
-
-    mock_infrared_emitter_entity.send_command_calls.clear()
-
-    await hass.services.async_call(
-        LIGHT_DOMAIN,
-        SERVICE_TURN_ON,
-        {
-            ATTR_ENTITY_ID: "light.osram_light",
-            ATTR_BRIGHTNESS: 255,
-        },
-        blocking=True,
-    )
-
-    assert (
-        mock_infrared_emitter_entity.send_command_calls
-        == [
-            OsramLightCode.BRIGHTNESS_UP,
-        ]
-        * 4
-    )
 
 
 @pytest.mark.parametrize(
