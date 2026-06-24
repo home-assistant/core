@@ -46,7 +46,7 @@ async def test_setup_errors(
     hass: HomeAssistant,
     config_entry: MockConfigEntry,
     steam_api: MagicMock,
-    side_effect: Exception,
+    side_effect: type[Exception],
 ) -> None:
     """Test setup errors."""
     config_entry.add_to_hass(hass)
@@ -69,7 +69,7 @@ async def test_setup_auth_failed(
     hass: HomeAssistant,
     config_entry: MockConfigEntry,
     steam_api: MagicMock,
-    side_effect: Exception,
+    side_effect: type[Exception],
 ) -> None:
     """Test that it throws ConfigEntryAuthFailed when authentication fails."""
     config_entry.add_to_hass(hass)

@@ -3,7 +3,7 @@
 from dataclasses import dataclass
 from datetime import timedelta
 import logging
-from typing import ClassVar, override
+from typing import override
 
 import steam.api
 
@@ -54,7 +54,6 @@ class SteamDataUpdateCoordinator(DataUpdateCoordinator[dict[str, PlayerData]]):
     config_entry: SteamConfigEntry
     user_interface: steam.api.interface
     player_interface: steam.api.interface
-    game_icons: ClassVar[dict[str, str]] = {}
 
     def __init__(self, hass: HomeAssistant, config_entry: SteamConfigEntry) -> None:
         """Initialize the coordinator."""
@@ -65,6 +64,7 @@ class SteamDataUpdateCoordinator(DataUpdateCoordinator[dict[str, PlayerData]]):
             name=DOMAIN,
             update_interval=timedelta(seconds=30),
         )
+        self.game_icons: dict[str, str] = {}
 
     @override
     async def _async_setup(self) -> None:
