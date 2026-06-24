@@ -2,8 +2,5 @@
 
 DOMAIN = "theben_conexa"
 
-MAX_MEASUREMENT_AGE = 100  # Seconds
-MAX_RETRIES = 2
-
 OBIS_IN = "0100010800ff"
 OBIS_OUT = "0100020800ff"
