@@ -146,9 +146,7 @@ def run() -> None:
 
     run_download_docker()
 
-    # English is this checkout's strings.json, not a Lokalise round-trip, so a
-    # release build ships the English that matches its own code rather than the
-    # dev source the single Lokalise project always tracks.
+    # English is this checkout's strings.json, not the dev-sourced Lokalise round-trip.
     save_json(DOWNLOAD_DIR / "en.json", generate_upload_data())
 
     delete_old_translations()
