@@ -6,7 +6,7 @@
     ]),
     'area_id': None,
     'capabilities': dict({
-      'supported_color_modes': list([
+      <LightEntityCapabilityAttribute.SUPPORTED_COLOR_MODES: 'supported_color_modes'>: list([
         <ColorMode.ONOFF: 'onoff'>,
       ]),
     }),
@@ -44,9 +44,9 @@
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'attribution': 'Data provided by Netatmo',
-      'color_mode': None,
+      <LightEntityStateAttribute.COLOR_MODE: 'color_mode'>: None,
       'friendly_name': 'Bathroom light',
-      'supported_color_modes': list([
+      <LightEntityCapabilityAttribute.SUPPORTED_COLOR_MODES: 'supported_color_modes'>: list([
         <ColorMode.ONOFF: 'onoff'>,
       ]),
       'supported_features': <LightEntityFeature: 0>,
@@ -66,7 +66,7 @@
     ]),
     'area_id': None,
     'capabilities': dict({
-      'supported_color_modes': list([
+      <LightEntityCapabilityAttribute.SUPPORTED_COLOR_MODES: 'supported_color_modes'>: list([
         <ColorMode.ONOFF: 'onoff'>,
       ]),
     }),
@@ -105,7 +105,7 @@
     'attributes': ReadOnlyDict({
       'attribution': 'Data provided by Netatmo',
       'friendly_name': 'Front',
-      'supported_color_modes': list([
+      <LightEntityCapabilityAttribute.SUPPORTED_COLOR_MODES: 'supported_color_modes'>: list([
         <ColorMode.ONOFF: 'onoff'>,
       ]),
       'supported_features': <LightEntityFeature: 0>,
@@ -125,7 +125,7 @@
     ]),
     'area_id': None,
     'capabilities': dict({
-      'supported_color_modes': list([
+      <LightEntityCapabilityAttribute.SUPPORTED_COLOR_MODES: 'supported_color_modes'>: list([
         <ColorMode.BRIGHTNESS: 'brightness'>,
       ]),
     }),
@@ -163,10 +163,10 @@
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'attribution': 'Data provided by Netatmo',
-      'brightness': None,
-      'color_mode': None,
+      <LightEntityStateAttribute.BRIGHTNESS: 'brightness'>: None,
+      <LightEntityStateAttribute.COLOR_MODE: 'color_mode'>: None,
       'friendly_name': 'Unknown 00:11:22:33:00:11:45:fe',
-      'supported_color_modes': list([
+      <LightEntityCapabilityAttribute.SUPPORTED_COLOR_MODES: 'supported_color_modes'>: list([
         <ColorMode.BRIGHTNESS: 'brightness'>,
       ]),
       'supported_features': <LightEntityFeature: 0>,
