@@ -57,7 +57,7 @@
     ]),
     'area_id': None,
     'capabilities': dict({
-      'options': list([
+      <SensorEntityCapabilityAttribute.OPTIONS: 'options'>: list([
         'no_error',
         'rotor_stuck',
         'air_in_filter',
@@ -98,7 +98,7 @@
     'attributes': ReadOnlyDict({
       'device_class': 'enum',
       'friendly_name': 'Mock classicVARIO Error code',
-      'options': list([
+      <SensorEntityCapabilityAttribute.OPTIONS: 'options'>: list([
         'no_error',
         'rotor_stuck',
         'air_in_filter',
