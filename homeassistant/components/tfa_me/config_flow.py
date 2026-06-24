@@ -3,7 +3,7 @@
 # For test run: "pytest ./tests/components/tfa_me/ --cov=homeassistant.components.tfa_me --cov-report term-missing -vv"
 
 import logging
-from typing import Any
+from typing import Any, override
 
 from tfa_me_ha_local.client import (
     TFAmeConnectionError,
@@ -33,6 +33,7 @@ class TFAmeConfigFlow(ConfigFlow, domain=DOMAIN):
     def __init__(self) -> None:
         """Initialize the config flow."""
 
+    @override
     async def async_step_user(
         self, user_input: dict[str, Any] | None = None
     ) -> ConfigFlowResult:

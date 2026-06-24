@@ -2,7 +2,7 @@
 
 from datetime import timedelta
 import logging
-from typing import Any
+from typing import Any, override
 
 from tfa_me_ha_local.client import (
     TFAmeClient,
@@ -61,6 +61,7 @@ class TFAmeUpdateCoordinator(DataUpdateCoordinator[TFAmeCoordinatorData]):
             update_interval=timedelta(seconds=LOCAL_POLL_INTERVAL),
         )
 
+    @override
     async def _async_update_data(self) -> TFAmeCoordinatorData:
         """Request and update data."""
         filtered_list: dict[str, dict[str, Any]] = {}  # filtered entity list

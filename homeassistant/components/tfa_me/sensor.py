@@ -3,7 +3,7 @@
 from collections.abc import Callable
 from dataclasses import dataclass
 from datetime import UTC, datetime
-from typing import Any
+from typing import Any, override
 
 from tfa_me_ha_local.history import SensorHistory
 
@@ -339,6 +339,7 @@ class TFAmeSensorEntity(CoordinatorEntity[TFAmeUpdateCoordinator], SensorEntity)
         if "rain_24_hours" in self.uid:
             self.rain_history_24.add_measurement(value, ts)
 
+    @override
     def _handle_coordinator_update(self) -> None:
         """Called when coordinator has new data, used to update rain histories, also optional reset rain."""
 
@@ -376,6 +377,7 @@ class TFAmeSensorEntity(CoordinatorEntity[TFAmeUpdateCoordinator], SensorEntity)
         return info_str
 
     @property
+    @override
     def native_value(self) -> StateType:
         """Actual measurement value of an entity."""
         try:
@@ -398,6 +400,7 @@ class TFAmeSensorEntity(CoordinatorEntity[TFAmeUpdateCoordinator], SensorEntity)
             return None
 
     @property
+    @override
     def native_unit_of_measurement(self) -> str | None:
         """Unit of measurement value,  e.g. for wind speed unit is "m/s"."""
 
@@ -410,6 +413,7 @@ class TFAmeSensorEntity(CoordinatorEntity[TFAmeUpdateCoordinator], SensorEntity)
             return None
 
     @property
+    @override
     def extra_state_attributes(self) -> dict[str, Any]:
         """Return extra state attributes for the entity."""
         try:
