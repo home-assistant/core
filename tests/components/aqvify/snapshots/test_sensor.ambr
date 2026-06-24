@@ -1,4 +1,62 @@
 # serializer version: 1
+# name: test_sensor_snapshot[sensor.device_1_available_volume-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': list([
+      None,
+    ]),
+    'area_id': None,
+    'capabilities': dict({
+      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': None,
+    'entity_id': 'sensor.device_1_available_volume',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'Available volume',
+    'options': dict({
+      'sensor': dict({
+        'suggested_display_precision': 0,
+      }),
+    }),
+    'original_device_class': <SensorDeviceClass.VOLUME_STORAGE: 'volume_storage'>,
+    'original_icon': None,
+    'original_name': 'Available volume',
+    'platform': 'aqvify',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'available_volume',
+    'unique_id': 'test_account_id_DeviceKey_1_available_volume',
+    'unit_of_measurement': <UnitOfVolume.LITERS: 'L'>,
+  })
+# ---
+# name: test_sensor_snapshot[sensor.device_1_available_volume-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'device_class': 'volume_storage',
+      'friendly_name': 'Device 1 Available volume',
+      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+      'unit_of_measurement': <UnitOfVolume.LITERS: 'L'>,
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.device_1_available_volume',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '345.0',
+  })
+# ---
 # name: test_sensor_snapshot[sensor.device_1_ground_water_level-entry]
   EntityRegistryEntrySnapshot({
     'aliases': list([
@@ -115,7 +173,7 @@
     'state': '24.4735918930962',
   })
 # ---
-# name: test_sensor_snapshot[sensor.device_1_meter_value-entry]
+# name: test_sensor_snapshot[sensor.device_1_level_from_sensor-entry]
   EntityRegistryEntrySnapshot({
     'aliases': list([
       None,
@@ -131,7 +189,7 @@
     'disabled_by': None,
     'domain': 'sensor',
     'entity_category': None,
-    'entity_id': 'sensor.device_1_meter_value',
+    'entity_id': 'sensor.device_1_level_from_sensor',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -139,7 +197,7 @@
     'labels': set({
     }),
     'name': None,
-    'object_id_base': 'Meter value',
+    'object_id_base': 'Level from sensor',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 2,
@@ -147,30 +205,88 @@
     }),
     'original_device_class': <SensorDeviceClass.DISTANCE: 'distance'>,
     'original_icon': None,
-    'original_name': 'Meter value',
+    'original_name': 'Level from sensor',
     'platform': 'aqvify',
     'previous_unique_id': None,
     'suggested_object_id': None,
     'supported_features': 0,
-    'translation_key': 'meter_value',
-    'unique_id': 'test_account_id_DeviceKey_1_meter_value',
+    'translation_key': 'level_from_sensor',
+    'unique_id': 'test_account_id_DeviceKey_1_level_from_sensor',
     'unit_of_measurement': <UnitOfLength.METERS: 'm'>,
   })
 # ---
-# name: test_sensor_snapshot[sensor.device_1_meter_value-state]
+# name: test_sensor_snapshot[sensor.device_1_level_from_sensor-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'device_class': 'distance',
-      'friendly_name': 'Device 1 Meter value',
+      'friendly_name': 'Device 1 Level from sensor',
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
       'unit_of_measurement': <UnitOfLength.METERS: 'm'>,
     }),
     'context': <ANY>,
-    'entity_id': 'sensor.device_1_meter_value',
+    'entity_id': 'sensor.device_1_level_from_sensor',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': '0.823213995',
+  })
+# ---
+# name: test_sensor_snapshot[sensor.device_1_level_from_top-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': list([
+      None,
+    ]),
+    'area_id': None,
+    'capabilities': dict({
+      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': None,
+    'entity_id': 'sensor.device_1_level_from_top',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'Level from top',
+    'options': dict({
+      'sensor': dict({
+        'suggested_display_precision': 2,
+      }),
+    }),
+    'original_device_class': <SensorDeviceClass.DISTANCE: 'distance'>,
+    'original_icon': None,
+    'original_name': 'Level from top',
+    'platform': 'aqvify',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'level_from_top',
+    'unique_id': 'test_account_id_DeviceKey_1_level_from_top',
+    'unit_of_measurement': <UnitOfLength.METERS: 'm'>,
+  })
+# ---
+# name: test_sensor_snapshot[sensor.device_1_level_from_top-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'device_class': 'distance',
+      'friendly_name': 'Device 1 Level from top',
+      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+      'unit_of_measurement': <UnitOfLength.METERS: 'm'>,
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.device_1_level_from_top',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '-0.136786005',
   })
 # ---
 # name: test_sensor_snapshot[sensor.device_1_outflow-entry]
@@ -231,64 +347,6 @@
     'state': '8.36433457791729',
   })
 # ---
-# name: test_sensor_snapshot[sensor.device_1_stored_volume-entry]
-  EntityRegistryEntrySnapshot({
-    'aliases': list([
-      None,
-    ]),
-    'area_id': None,
-    'capabilities': dict({
-      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
-    }),
-    'config_entry_id': <ANY>,
-    'config_subentry_id': <ANY>,
-    'device_class': None,
-    'device_id': <ANY>,
-    'disabled_by': None,
-    'domain': 'sensor',
-    'entity_category': None,
-    'entity_id': 'sensor.device_1_stored_volume',
-    'has_entity_name': True,
-    'hidden_by': None,
-    'icon': None,
-    'id': <ANY>,
-    'labels': set({
-    }),
-    'name': None,
-    'object_id_base': 'Stored volume',
-    'options': dict({
-      'sensor': dict({
-        'suggested_display_precision': 0,
-      }),
-    }),
-    'original_device_class': <SensorDeviceClass.VOLUME_STORAGE: 'volume_storage'>,
-    'original_icon': None,
-    'original_name': 'Stored volume',
-    'platform': 'aqvify',
-    'previous_unique_id': None,
-    'suggested_object_id': None,
-    'supported_features': 0,
-    'translation_key': 'stored_volume',
-    'unique_id': 'test_account_id_DeviceKey_1_stored_volume',
-    'unit_of_measurement': <UnitOfVolume.LITERS: 'L'>,
-  })
-# ---
-# name: test_sensor_snapshot[sensor.device_1_stored_volume-state]
-  StateSnapshot({
-    'attributes': ReadOnlyDict({
-      'device_class': 'volume_storage',
-      'friendly_name': 'Device 1 Stored volume',
-      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
-      'unit_of_measurement': <UnitOfVolume.LITERS: 'L'>,
-    }),
-    'context': <ANY>,
-    'entity_id': 'sensor.device_1_stored_volume',
-    'last_changed': <ANY>,
-    'last_reported': <ANY>,
-    'last_updated': <ANY>,
-    'state': '345.0',
-  })
-# ---
 # name: test_sensor_snapshot[sensor.device_1_temperature-entry]
   EntityRegistryEntrySnapshot({
     'aliases': list([
@@ -347,7 +405,7 @@
     'state': '12.3',
   })
 # ---
-# name: test_sensor_snapshot[sensor.device_1_water_level-entry]
+# name: test_sensor_snapshot[sensor.device_2_available_volume-entry]
   EntityRegistryEntrySnapshot({
     'aliases': list([
       None,
@@ -363,7 +421,7 @@
     'disabled_by': None,
     'domain': 'sensor',
     'entity_category': None,
-    'entity_id': 'sensor.device_1_water_level',
+    'entity_id': 'sensor.device_2_available_volume',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -371,38 +429,38 @@
     'labels': set({
     }),
     'name': None,
-    'object_id_base': 'Water level',
+    'object_id_base': 'Available volume',
     'options': dict({
       'sensor': dict({
-        'suggested_display_precision': 2,
+        'suggested_display_precision': 0,
       }),
     }),
-    'original_device_class': <SensorDeviceClass.DISTANCE: 'distance'>,
+    'original_device_class': <SensorDeviceClass.VOLUME_STORAGE: 'volume_storage'>,
     'original_icon': None,
-    'original_name': 'Water level',
+    'original_name': 'Available volume',
     'platform': 'aqvify',
     'previous_unique_id': None,
     'suggested_object_id': None,
     'supported_features': 0,
-    'translation_key': 'water_level',
-    'unique_id': 'test_account_id_DeviceKey_1_water_level',
-    'unit_of_measurement': <UnitOfLength.METERS: 'm'>,
+    'translation_key': 'available_volume',
+    'unique_id': 'test_account_id_DeviceKey_2_available_volume',
+    'unit_of_measurement': <UnitOfVolume.LITERS: 'L'>,
   })
 # ---
-# name: test_sensor_snapshot[sensor.device_1_water_level-state]
+# name: test_sensor_snapshot[sensor.device_2_available_volume-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'device_class': 'distance',
-      'friendly_name': 'Device 1 Water level',
+      'device_class': 'volume_storage',
+      'friendly_name': 'Device 2 Available volume',
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
-      'unit_of_measurement': <UnitOfLength.METERS: 'm'>,
+      'unit_of_measurement': <UnitOfVolume.LITERS: 'L'>,
     }),
     'context': <ANY>,
-    'entity_id': 'sensor.device_1_water_level',
+    'entity_id': 'sensor.device_2_available_volume',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
-    'state': '-0.136786005',
+    'state': '345.0',
   })
 # ---
 # name: test_sensor_snapshot[sensor.device_2_ground_water_level-entry]
@@ -521,7 +579,7 @@
     'state': '24.4735918930962',
   })
 # ---
-# name: test_sensor_snapshot[sensor.device_2_meter_value-entry]
+# name: test_sensor_snapshot[sensor.device_2_level_from_sensor-entry]
   EntityRegistryEntrySnapshot({
     'aliases': list([
       None,
@@ -537,7 +595,7 @@
     'disabled_by': None,
     'domain': 'sensor',
     'entity_category': None,
-    'entity_id': 'sensor.device_2_meter_value',
+    'entity_id': 'sensor.device_2_level_from_sensor',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -545,7 +603,7 @@
     'labels': set({
     }),
     'name': None,
-    'object_id_base': 'Meter value',
+    'object_id_base': 'Level from sensor',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 2,
@@ -553,30 +611,88 @@
     }),
     'original_device_class': <SensorDeviceClass.DISTANCE: 'distance'>,
     'original_icon': None,
-    'original_name': 'Meter value',
+    'original_name': 'Level from sensor',
     'platform': 'aqvify',
     'previous_unique_id': None,
     'suggested_object_id': None,
     'supported_features': 0,
-    'translation_key': 'meter_value',
-    'unique_id': 'test_account_id_DeviceKey_2_meter_value',
+    'translation_key': 'level_from_sensor',
+    'unique_id': 'test_account_id_DeviceKey_2_level_from_sensor',
     'unit_of_measurement': <UnitOfLength.METERS: 'm'>,
   })
 # ---
-# name: test_sensor_snapshot[sensor.device_2_meter_value-state]
+# name: test_sensor_snapshot[sensor.device_2_level_from_sensor-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'device_class': 'distance',
-      'friendly_name': 'Device 2 Meter value',
+      'friendly_name': 'Device 2 Level from sensor',
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
       'unit_of_measurement': <UnitOfLength.METERS: 'm'>,
     }),
     'context': <ANY>,
-    'entity_id': 'sensor.device_2_meter_value',
+    'entity_id': 'sensor.device_2_level_from_sensor',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': '0.823213995',
+  })
+# ---
+# name: test_sensor_snapshot[sensor.device_2_level_from_top-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': list([
+      None,
+    ]),
+    'area_id': None,
+    'capabilities': dict({
+      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': None,
+    'entity_id': 'sensor.device_2_level_from_top',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'Level from top',
+    'options': dict({
+      'sensor': dict({
+        'suggested_display_precision': 2,
+      }),
+    }),
+    'original_device_class': <SensorDeviceClass.DISTANCE: 'distance'>,
+    'original_icon': None,
+    'original_name': 'Level from top',
+    'platform': 'aqvify',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'level_from_top',
+    'unique_id': 'test_account_id_DeviceKey_2_level_from_top',
+    'unit_of_measurement': <UnitOfLength.METERS: 'm'>,
+  })
+# ---
+# name: test_sensor_snapshot[sensor.device_2_level_from_top-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'device_class': 'distance',
+      'friendly_name': 'Device 2 Level from top',
+      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+      'unit_of_measurement': <UnitOfLength.METERS: 'm'>,
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.device_2_level_from_top',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '-0.136786005',
   })
 # ---
 # name: test_sensor_snapshot[sensor.device_2_outflow-entry]
@@ -637,64 +753,6 @@
     'state': '8.36433457791729',
   })
 # ---
-# name: test_sensor_snapshot[sensor.device_2_stored_volume-entry]
-  EntityRegistryEntrySnapshot({
-    'aliases': list([
-      None,
-    ]),
-    'area_id': None,
-    'capabilities': dict({
-      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
-    }),
-    'config_entry_id': <ANY>,
-    'config_subentry_id': <ANY>,
-    'device_class': None,
-    'device_id': <ANY>,
-    'disabled_by': None,
-    'domain': 'sensor',
-    'entity_category': None,
-    'entity_id': 'sensor.device_2_stored_volume',
-    'has_entity_name': True,
-    'hidden_by': None,
-    'icon': None,
-    'id': <ANY>,
-    'labels': set({
-    }),
-    'name': None,
-    'object_id_base': 'Stored volume',
-    'options': dict({
-      'sensor': dict({
-        'suggested_display_precision': 0,
-      }),
-    }),
-    'original_device_class': <SensorDeviceClass.VOLUME_STORAGE: 'volume_storage'>,
-    'original_icon': None,
-    'original_name': 'Stored volume',
-    'platform': 'aqvify',
-    'previous_unique_id': None,
-    'suggested_object_id': None,
-    'supported_features': 0,
-    'translation_key': 'stored_volume',
-    'unique_id': 'test_account_id_DeviceKey_2_stored_volume',
-    'unit_of_measurement': <UnitOfVolume.LITERS: 'L'>,
-  })
-# ---
-# name: test_sensor_snapshot[sensor.device_2_stored_volume-state]
-  StateSnapshot({
-    'attributes': ReadOnlyDict({
-      'device_class': 'volume_storage',
-      'friendly_name': 'Device 2 Stored volume',
-      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
-      'unit_of_measurement': <UnitOfVolume.LITERS: 'L'>,
-    }),
-    'context': <ANY>,
-    'entity_id': 'sensor.device_2_stored_volume',
-    'last_changed': <ANY>,
-    'last_reported': <ANY>,
-    'last_updated': <ANY>,
-    'state': '345.0',
-  })
-# ---
 # name: test_sensor_snapshot[sensor.device_2_temperature-entry]
   EntityRegistryEntrySnapshot({
     'aliases': list([
@@ -751,63 +809,5 @@
     'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': '12.3',
-  })
-# ---
-# name: test_sensor_snapshot[sensor.device_2_water_level-entry]
-  EntityRegistryEntrySnapshot({
-    'aliases': list([
-      None,
-    ]),
-    'area_id': None,
-    'capabilities': dict({
-      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
-    }),
-    'config_entry_id': <ANY>,
-    'config_subentry_id': <ANY>,
-    'device_class': None,
-    'device_id': <ANY>,
-    'disabled_by': None,
-    'domain': 'sensor',
-    'entity_category': None,
-    'entity_id': 'sensor.device_2_water_level',
-    'has_entity_name': True,
-    'hidden_by': None,
-    'icon': None,
-    'id': <ANY>,
-    'labels': set({
-    }),
-    'name': None,
-    'object_id_base': 'Water level',
-    'options': dict({
-      'sensor': dict({
-        'suggested_display_precision': 2,
-      }),
-    }),
-    'original_device_class': <SensorDeviceClass.DISTANCE: 'distance'>,
-    'original_icon': None,
-    'original_name': 'Water level',
-    'platform': 'aqvify',
-    'previous_unique_id': None,
-    'suggested_object_id': None,
-    'supported_features': 0,
-    'translation_key': 'water_level',
-    'unique_id': 'test_account_id_DeviceKey_2_water_level',
-    'unit_of_measurement': <UnitOfLength.METERS: 'm'>,
-  })
-# ---
-# name: test_sensor_snapshot[sensor.device_2_water_level-state]
-  StateSnapshot({
-    'attributes': ReadOnlyDict({
-      'device_class': 'distance',
-      'friendly_name': 'Device 2 Water level',
-      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
-      'unit_of_measurement': <UnitOfLength.METERS: 'm'>,
-    }),
-    'context': <ANY>,
-    'entity_id': 'sensor.device_2_water_level',
-    'last_changed': <ANY>,
-    'last_reported': <ANY>,
-    'last_updated': <ANY>,
-    'state': '-0.136786005',
   })
 # ---
