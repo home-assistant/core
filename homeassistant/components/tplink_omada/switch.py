@@ -125,10 +125,27 @@ async def async_setup_entry(
     if gateway_coordinator:
         vpn_coordinator = controller.vpn_policies_coordinator
         gateway = next(iter(gateway_coordinator.data.values()))
-        async_add_entities(
-            TpLinkOmadaVpnSwitch(vpn_coordinator, gateway, policy)
-            for policy in vpn_coordinator.data.values()
+        known_policy_ids: set[str] = set()
+
+        @callback
+        def _async_add_vpn_entities() -> None:
+            new_policies = [
+                policy
+                for policy_id, policy in vpn_coordinator.data.items()
+                if policy_id not in known_policy_ids
+            ]
+            if not new_policies:
+                return
+            known_policy_ids.update(policy.policy_id for policy in new_policies)
+            async_add_entities(
+                TpLinkOmadaVpnSwitch(vpn_coordinator, gateway, policy)
+                for policy in new_policies
+            )
+
+        config_entry.async_on_unload(
+            vpn_coordinator.async_add_listener(_async_add_vpn_entities)
         )
+        _async_add_vpn_entities()
 
 
 def _get_switch_port_base_name(port: OmadaSwitchPortDetails) -> str:

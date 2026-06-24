@@ -453,6 +453,35 @@ async def test_vpn_switch_toggle(
     assert entity and entity.state == expected_state
 
 
+async def test_vpn_switch_added_dynamically(
+    hass: HomeAssistant,
+    mock_omada_site_client: MagicMock,
+    init_integration: MockConfigEntry,
+) -> None:
+    """Test that a new VPN policy discovered after setup creates a new switch entity."""
+    new_entity_id = "switch.test_router_new_policy"
+    assert hass.states.get(new_entity_id) is None
+
+    mock_omada_site_client.get_vpn_policies.return_value = [
+        *_build_vpn_policies(server_enabled=True, site_to_site_enabled=False),
+        OmadaVpnPolicy(
+            OmadaVpnCategory.SERVER,
+            {
+                "id": "vpn-new-1",
+                "name": "New Policy",
+                "status": True,
+                "vpnType": 3,
+            },
+        ),
+    ]
+    async_fire_time_changed(hass, utcnow() + POLL_INTERVAL)
+    await hass.async_block_till_done()
+
+    entity = hass.states.get(new_entity_id)
+    assert entity is not None
+    assert entity.state == "on"
+
+
 async def test_vpn_switch_unavailable_when_policy_removed(
     hass: HomeAssistant,
     mock_omada_site_client: MagicMock,
