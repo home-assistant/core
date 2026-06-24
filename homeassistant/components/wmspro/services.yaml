@@ -18,13 +18,13 @@ move_cover:
           mode: slider
           unit_of_measurement: "%"
     tilt_position:
-      required: false
+      required: true
       example: 0
       default: 0
       selector:
         number:
           translation_key: "tilt_position"
-          min: -127
-          max: 127
+          min: 0
+          max: 100
           mode: slider
-          unit_of_measurement: "°"
+          unit_of_measurement: "%"

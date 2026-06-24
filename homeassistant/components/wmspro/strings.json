@@ -57,7 +57,7 @@
           "name": "Position"
         },
         "tilt_position": {
-          "description": "The tilt position to move the cover to, as angle (-127 to 127).",
+          "description": "The tilt position to move the cover to, in percentage (0-100).",
           "name": "Tilt Position"
         }
       },
