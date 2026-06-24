@@ -65,7 +65,7 @@
     'attributes': ReadOnlyDict({
       'device_class': 'energy',
       'friendly_name': 'Energy Site Battery charged',
-      'last_reset': '2023-06-01T01:00:00-07:00',
+      <SensorEntityStateAttribute.LAST_RESET: 'last_reset'>: '2023-06-01T01:00:00-07:00',
       <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.TOTAL: 'total'>,
       'unit_of_measurement': <UnitOfEnergy.KILO_WATT_HOUR: 'kWh'>,
     }),
@@ -143,7 +143,7 @@
     'attributes': ReadOnlyDict({
       'device_class': 'energy',
       'friendly_name': 'Energy Site Battery discharged',
-      'last_reset': '2023-06-01T01:00:00-07:00',
+      <SensorEntityStateAttribute.LAST_RESET: 'last_reset'>: '2023-06-01T01:00:00-07:00',
       <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.TOTAL: 'total'>,
       'unit_of_measurement': <UnitOfEnergy.KILO_WATT_HOUR: 'kWh'>,
     }),
@@ -221,7 +221,7 @@
     'attributes': ReadOnlyDict({
       'device_class': 'energy',
       'friendly_name': 'Energy Site Battery exported',
-      'last_reset': '2023-06-01T01:00:00-07:00',
+      <SensorEntityStateAttribute.LAST_RESET: 'last_reset'>: '2023-06-01T01:00:00-07:00',
       <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.TOTAL: 'total'>,
       'unit_of_measurement': <UnitOfEnergy.KILO_WATT_HOUR: 'kWh'>,
     }),
@@ -299,7 +299,7 @@
     'attributes': ReadOnlyDict({
       'device_class': 'energy',
       'friendly_name': 'Energy Site Battery imported from generator',
-      'last_reset': '2023-06-01T01:00:00-07:00',
+      <SensorEntityStateAttribute.LAST_RESET: 'last_reset'>: '2023-06-01T01:00:00-07:00',
       <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.TOTAL: 'total'>,
       'unit_of_measurement': <UnitOfEnergy.KILO_WATT_HOUR: 'kWh'>,
     }),
@@ -377,7 +377,7 @@
     'attributes': ReadOnlyDict({
       'device_class': 'energy',
       'friendly_name': 'Energy Site Battery imported from grid',
-      'last_reset': '2023-06-01T01:00:00-07:00',
+      <SensorEntityStateAttribute.LAST_RESET: 'last_reset'>: '2023-06-01T01:00:00-07:00',
       <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.TOTAL: 'total'>,
       'unit_of_measurement': <UnitOfEnergy.KILO_WATT_HOUR: 'kWh'>,
     }),
@@ -455,7 +455,7 @@
     'attributes': ReadOnlyDict({
       'device_class': 'energy',
       'friendly_name': 'Energy Site Battery imported from solar',
-      'last_reset': '2023-06-01T01:00:00-07:00',
+      <SensorEntityStateAttribute.LAST_RESET: 'last_reset'>: '2023-06-01T01:00:00-07:00',
       <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.TOTAL: 'total'>,
       'unit_of_measurement': <UnitOfEnergy.KILO_WATT_HOUR: 'kWh'>,
     }),
@@ -610,7 +610,7 @@
     'attributes': ReadOnlyDict({
       'device_class': 'energy',
       'friendly_name': 'Energy Site Consumer imported from battery',
-      'last_reset': '2023-06-01T01:00:00-07:00',
+      <SensorEntityStateAttribute.LAST_RESET: 'last_reset'>: '2023-06-01T01:00:00-07:00',
       <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.TOTAL: 'total'>,
       'unit_of_measurement': <UnitOfEnergy.KILO_WATT_HOUR: 'kWh'>,
     }),
@@ -688,7 +688,7 @@
     'attributes': ReadOnlyDict({
       'device_class': 'energy',
       'friendly_name': 'Energy Site Consumer imported from generator',
-      'last_reset': '2023-06-01T01:00:00-07:00',
+      <SensorEntityStateAttribute.LAST_RESET: 'last_reset'>: '2023-06-01T01:00:00-07:00',
       <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.TOTAL: 'total'>,
       'unit_of_measurement': <UnitOfEnergy.KILO_WATT_HOUR: 'kWh'>,
     }),
@@ -766,7 +766,7 @@
     'attributes': ReadOnlyDict({
       'device_class': 'energy',
       'friendly_name': 'Energy Site Consumer imported from grid',
-      'last_reset': '2023-06-01T01:00:00-07:00',
+      <SensorEntityStateAttribute.LAST_RESET: 'last_reset'>: '2023-06-01T01:00:00-07:00',
       <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.TOTAL: 'total'>,
       'unit_of_measurement': <UnitOfEnergy.KILO_WATT_HOUR: 'kWh'>,
     }),
@@ -844,7 +844,7 @@
     'attributes': ReadOnlyDict({
       'device_class': 'energy',
       'friendly_name': 'Energy Site Consumer imported from solar',
-      'last_reset': '2023-06-01T01:00:00-07:00',
+      <SensorEntityStateAttribute.LAST_RESET: 'last_reset'>: '2023-06-01T01:00:00-07:00',
       <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.TOTAL: 'total'>,
       'unit_of_measurement': <UnitOfEnergy.KILO_WATT_HOUR: 'kWh'>,
     }),
@@ -999,7 +999,7 @@
     'attributes': ReadOnlyDict({
       'device_class': 'energy',
       'friendly_name': 'Energy Site Generator exported',
-      'last_reset': '2023-06-01T01:00:00-07:00',
+      <SensorEntityStateAttribute.LAST_RESET: 'last_reset'>: '2023-06-01T01:00:00-07:00',
       <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.TOTAL: 'total'>,
       'unit_of_measurement': <UnitOfEnergy.KILO_WATT_HOUR: 'kWh'>,
     }),
@@ -1154,7 +1154,7 @@
     'attributes': ReadOnlyDict({
       'device_class': 'energy',
       'friendly_name': 'Energy Site Grid exported',
-      'last_reset': '2023-06-01T01:00:00-07:00',
+      <SensorEntityStateAttribute.LAST_RESET: 'last_reset'>: '2023-06-01T01:00:00-07:00',
       <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.TOTAL: 'total'>,
       'unit_of_measurement': <UnitOfEnergy.KILO_WATT_HOUR: 'kWh'>,
     }),
@@ -1232,7 +1232,7 @@
     'attributes': ReadOnlyDict({
       'device_class': 'energy',
       'friendly_name': 'Energy Site Grid exported from battery',
-      'last_reset': '2023-06-01T01:00:00-07:00',
+      <SensorEntityStateAttribute.LAST_RESET: 'last_reset'>: '2023-06-01T01:00:00-07:00',
       <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.TOTAL: 'total'>,
       'unit_of_measurement': <UnitOfEnergy.KILO_WATT_HOUR: 'kWh'>,
     }),
@@ -1310,7 +1310,7 @@
     'attributes': ReadOnlyDict({
       'device_class': 'energy',
       'friendly_name': 'Energy Site Grid exported from generator',
-      'last_reset': '2023-06-01T01:00:00-07:00',
+      <SensorEntityStateAttribute.LAST_RESET: 'last_reset'>: '2023-06-01T01:00:00-07:00',
       <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.TOTAL: 'total'>,
       'unit_of_measurement': <UnitOfEnergy.KILO_WATT_HOUR: 'kWh'>,
     }),
@@ -1388,7 +1388,7 @@
     'attributes': ReadOnlyDict({
       'device_class': 'energy',
       'friendly_name': 'Energy Site Grid exported from solar',
-      'last_reset': '2023-06-01T01:00:00-07:00',
+      <SensorEntityStateAttribute.LAST_RESET: 'last_reset'>: '2023-06-01T01:00:00-07:00',
       <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.TOTAL: 'total'>,
       'unit_of_measurement': <UnitOfEnergy.KILO_WATT_HOUR: 'kWh'>,
     }),
@@ -1466,7 +1466,7 @@
     'attributes': ReadOnlyDict({
       'device_class': 'energy',
       'friendly_name': 'Energy Site Grid imported',
-      'last_reset': '2023-06-01T01:00:00-07:00',
+      <SensorEntityStateAttribute.LAST_RESET: 'last_reset'>: '2023-06-01T01:00:00-07:00',
       <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.TOTAL: 'total'>,
       'unit_of_measurement': <UnitOfEnergy.KILO_WATT_HOUR: 'kWh'>,
     }),
@@ -1621,7 +1621,7 @@
     'attributes': ReadOnlyDict({
       'device_class': 'energy',
       'friendly_name': 'Energy Site Grid services exported',
-      'last_reset': '2023-06-01T01:00:00-07:00',
+      <SensorEntityStateAttribute.LAST_RESET: 'last_reset'>: '2023-06-01T01:00:00-07:00',
       <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.TOTAL: 'total'>,
       'unit_of_measurement': <UnitOfEnergy.KILO_WATT_HOUR: 'kWh'>,
     }),
@@ -1699,7 +1699,7 @@
     'attributes': ReadOnlyDict({
       'device_class': 'energy',
       'friendly_name': 'Energy Site Grid services imported',
-      'last_reset': '2023-06-01T01:00:00-07:00',
+      <SensorEntityStateAttribute.LAST_RESET: 'last_reset'>: '2023-06-01T01:00:00-07:00',
       <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.TOTAL: 'total'>,
       'unit_of_measurement': <UnitOfEnergy.KILO_WATT_HOUR: 'kWh'>,
     }),
@@ -1941,7 +1941,7 @@
     'attributes': ReadOnlyDict({
       'device_class': 'energy',
       'friendly_name': 'Energy Site Home usage',
-      'last_reset': '2023-06-01T01:00:00-07:00',
+      <SensorEntityStateAttribute.LAST_RESET: 'last_reset'>: '2023-06-01T01:00:00-07:00',
       <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.TOTAL: 'total'>,
       'unit_of_measurement': <UnitOfEnergy.KILO_WATT_HOUR: 'kWh'>,
     }),
@@ -2170,7 +2170,7 @@
     'attributes': ReadOnlyDict({
       'device_class': 'energy',
       'friendly_name': 'Energy Site Solar exported',
-      'last_reset': '2023-06-01T01:00:00-07:00',
+      <SensorEntityStateAttribute.LAST_RESET: 'last_reset'>: '2023-06-01T01:00:00-07:00',
       <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.TOTAL: 'total'>,
       'unit_of_measurement': <UnitOfEnergy.KILO_WATT_HOUR: 'kWh'>,
     }),
@@ -2248,7 +2248,7 @@
     'attributes': ReadOnlyDict({
       'device_class': 'energy',
       'friendly_name': 'Energy Site Solar generated',
-      'last_reset': '2023-06-01T01:00:00-07:00',
+      <SensorEntityStateAttribute.LAST_RESET: 'last_reset'>: '2023-06-01T01:00:00-07:00',
       <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.TOTAL: 'total'>,
       'unit_of_measurement': <UnitOfEnergy.KILO_WATT_HOUR: 'kWh'>,
     }),
