@@ -108,7 +108,6 @@ RULE_URL = (
 INTEGRATIONS_WITHOUT_QUALITY_SCALE_FILE = [
     "abode",
     "accuweather",
-    "acer_projector",
     "acmeda",
     "actiontec",
     "adax",
@@ -1059,7 +1058,6 @@ INTEGRATIONS_WITHOUT_QUALITY_SCALE_FILE = [
 INTEGRATIONS_WITHOUT_SCALE = [
     "abode",
     "accuweather",
-    "acer_projector",
     "acmeda",
     "actiontec",
     "adax",
