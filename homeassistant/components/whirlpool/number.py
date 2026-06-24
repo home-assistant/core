@@ -1,5 +1,7 @@
 """Number platform for the Whirlpool Appliances integration."""
 
+from typing import override
+
 from whirlpool.oven import Cavity as OvenCavity, CookMode, Oven
 
 from homeassistant.components.number import NumberDeviceClass, NumberEntity
@@ -50,11 +52,13 @@ class WhirlpoolOvenTargetTemperature(WhirlpoolOvenEntity, NumberEntity):
             appliance, cavity, "oven_target_temperature", "-target_temperature"
         )
 
+    @override
     @property
     def native_value(self) -> float | None:
         """Return the current target temperature."""
         return self._appliance.get_target_temp(self.cavity)
 
+    @override
     async def async_set_native_value(self, value: float) -> None:
         """Set a new target temperature, keeping the current cook mode."""
         mode = self._appliance.get_cook_mode(self.cavity)
