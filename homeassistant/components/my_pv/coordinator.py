@@ -58,10 +58,8 @@ class MyPVCoordinator(DataUpdateCoordinator[None]):
         super().__init__(
             hass,
             _LOGGER,
-            # Name of the data. For logging purposes.
             name=DOMAIN,
             config_entry=config_entry,
-            # Polling interval. Will only be polled if there are subscribers.
             update_interval=timedelta(seconds=5),
             always_update=True,
         )

@@ -37,7 +37,6 @@ async def async_setup_entry(hass: HomeAssistant, entry: MyPVConfigEntry) -> bool
     coordinator = MyPVCoordinator(hass, entry, device)
 
     try:
-        # Fetch initial data so we have data when entities subscribe
         await coordinator.async_config_entry_first_refresh()
 
         entry.runtime_data = coordinator

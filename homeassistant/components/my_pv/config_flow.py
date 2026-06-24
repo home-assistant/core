@@ -56,7 +56,6 @@ class MyPVConfigFlow(ConfigFlow, domain=DOMAIN):
         serial_number = discovery_info.properties.get("serialno")
         if serial_number:
             await self.async_set_unique_id(serial_number)
-            # Update host ip address when device is already configured and abort.
             self._abort_if_unique_id_configured(
                 updates={CONF_HOST: discovery_info.ip_address}
             )
@@ -94,7 +93,6 @@ class MyPVConfigFlow(ConfigFlow, domain=DOMAIN):
 
         password_needed = False
 
-        # Check if we can connect to the device
         device = await MyPVLocalDevice(self._host)
         try:
             if not await device.connect():
@@ -108,7 +106,6 @@ class MyPVConfigFlow(ConfigFlow, domain=DOMAIN):
 
         if device.serial_number:
             await self.async_set_unique_id(device.serial_number)
-            # Update host ip address when device is already configured and abort.
             self._abort_if_unique_id_configured(updates={CONF_HOST: self._host})
 
         self._device_model = device.model
@@ -147,7 +144,6 @@ class MyPVConfigFlow(ConfigFlow, domain=DOMAIN):
             host = user_input[CONF_HOST]
             password_needed = False
 
-            # Check if we can connect to the device
             device = await MyPVLocalDevice(host)
             try:
                 if not await device.connect():
@@ -174,7 +170,6 @@ class MyPVConfigFlow(ConfigFlow, domain=DOMAIN):
                 }
                 return self.async_create_entry(title=title, data=data)
 
-        # Combine user input with schema.
         data_schema = self.add_suggested_values_to_schema(HOST_SCHEMA, user_input or {})
 
         return self.async_show_form(
@@ -193,7 +188,6 @@ class MyPVConfigFlow(ConfigFlow, domain=DOMAIN):
             host = self._host
             password = user_input[CONF_PASSWORD]
 
-            # Check if we can connect to the device
             device = await MyPVLocalDevice(host, password)
             try:
                 if not await device.connect():
@@ -216,7 +210,6 @@ class MyPVConfigFlow(ConfigFlow, domain=DOMAIN):
                 }
                 return self.async_create_entry(title=title, data=data)
 
-        # Combine user input with schema.
         data_schema = self.add_suggested_values_to_schema(AUTH_SCHEMA, user_input or {})
 
         self.context.update(
