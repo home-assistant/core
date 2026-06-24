@@ -70,6 +70,7 @@ class RepairsFlow(
 
         return result
 
+    @callback
     def _async_set_next_flow_if_valid(
         self,
         result: RepairsFlowResult,
