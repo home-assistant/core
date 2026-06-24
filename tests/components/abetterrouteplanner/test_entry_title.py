@@ -4,9 +4,6 @@ The initial-add path titles the entry per a JWT-claims preference chain:
 ``name`` (non-empty string) → ``email`` (non-empty string) → bare
 ``self.flow_impl.name``. The empty-string fall-through case is the
 explicit empty-name guard.
-
-The reauth path must NEVER clobber a user-renamed entry's title — the
-"don't clobber" semantic preserves user overrides.
 """
 
 import base64
@@ -23,7 +20,6 @@ from homeassistant.setup import async_setup_component
 
 from .conftest import MOCK_VEHICLE_ID, USER_SUB, complete_oauth_callback
 
-from tests.common import MockConfigEntry
 from tests.test_util.aiohttp import AiohttpClientMocker
 from tests.typing import ClientSessionGenerator
 
@@ -170,54 +166,3 @@ async def test_malformed_jwt_aborts_oauth_error(
     assert result["type"] is FlowResultType.ABORT
     assert result["reason"] == "oauth_error"
     assert len(hass.config_entries.async_entries(DOMAIN)) == 0
-
-
-# ---------------------------------------------------------------------------
-# Reauth must not clobber a user-renamed entry's title
-# ---------------------------------------------------------------------------
-
-
-@pytest.mark.usefixtures("current_request_with_host", "mock_setup_entry")
-async def test_reauth_does_not_retitle_existing_entry(
-    hass: HomeAssistant,
-    hass_client_no_auth: ClientSessionGenerator,
-    aioclient_mock: AiohttpClientMocker,
-    config_entry: MockConfigEntry,
-) -> None:
-    """Reauth completes successfully without rewriting ``entry.title``.
-
-    Mirrors the ``device.name_by_user`` guard: an integration-side
-    rename must NEVER overwrite a user override.  The entry's title is
-    initialised to ``"My ABRP"`` (a user rename) and the reauth issues a
-    fresh id_token with ``name="Different Name"`` — the completed reauth
-    must leave ``entry.title`` exactly as the user set it.
-
-    ``async_oauth_create_entry`` -> reauth branch goes through
-    ``async_update_reload_and_abort(..., data_updates=data)`` which
-    never touches ``title``. If a future patch adds
-    ``async_update_entry(title=...)`` on the reauth path, this test
-    fails loudly.
-    """
-    config_entry.add_to_hass(hass)
-    hass.config_entries.async_update_entry(config_entry, title="My ABRP")
-    assert config_entry.title == "My ABRP"
-
-    result = await config_entry.start_reauth_flow(hass)
-    assert result["type"] is FlowResultType.FORM
-    assert result["step_id"] == "reauth_confirm"
-
-    result = await hass.config_entries.flow.async_configure(result["flow_id"], {})
-    await complete_oauth_callback(hass, hass_client_no_auth, result["flow_id"])
-
-    _queue_token_post(
-        aioclient_mock,
-        _build_id_token_with_payload(
-            {"sub": USER_SUB, "name": "Different Name", "email": "diff@e.com"}
-        ),
-    )
-
-    result = await hass.config_entries.flow.async_configure(result["flow_id"])
-
-    assert result["type"] is FlowResultType.ABORT
-    assert result["reason"] == "reauth_successful"
-    assert config_entry.title == "My ABRP"

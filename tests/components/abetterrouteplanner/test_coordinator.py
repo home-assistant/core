@@ -218,7 +218,7 @@ async def test_garage_auth_error_raises_config_entry_auth_failed(
     """An ``AbrpAuthError`` from the garage fetch maps to ``ConfigEntryAuthFailed``.
 
     A revoked/rotated refresh token surfaces from the auth wrapper as
-    ``AbrpAuthError``; the coordinator converts it so HA starts reauth.
+    ``AbrpAuthError``; the coordinator converts it so HA surfaces the failure.
     """
     mock_abrp_client.side_effect = AbrpAuthError("invalid session")
 

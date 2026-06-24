@@ -16,7 +16,7 @@ from homeassistant.components.abetterrouteplanner.const import (
     DOMAIN,
     OAUTH2_TOKEN,
 )
-from homeassistant.config_entries import SOURCE_REAUTH, SOURCE_USER, ConfigEntryState
+from homeassistant.config_entries import SOURCE_USER, ConfigEntryState
 from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
 from homeassistant.helpers import config_entry_oauth2_flow
@@ -118,7 +118,7 @@ async def test_setup_token_refresh_auth_failure(
     config_entry: MockConfigEntry,
     aioclient_mock: AiohttpClientMocker,
 ) -> None:
-    """A 4xx from the token endpoint surfaces as SETUP_ERROR + reauth flow."""
+    """A 4xx from the token endpoint surfaces as SETUP_ERROR (no reauth flow)."""
     config_entry.add_to_hass(hass)
 
     aioclient_mock.post(OAUTH2_TOKEN, status=HTTPStatus.UNAUTHORIZED)
@@ -127,11 +127,7 @@ async def test_setup_token_refresh_auth_failure(
     await hass.async_block_till_done()
 
     assert config_entry.state is ConfigEntryState.SETUP_ERROR
-
-    flows = hass.config_entries.flow.async_progress()
-    assert len(flows) == 1
-    assert flows[0]["context"]["source"] == SOURCE_REAUTH
-    assert flows[0]["context"]["entry_id"] == config_entry.entry_id
+    assert not hass.config_entries.flow.async_progress()
 
 
 @pytest.mark.parametrize(
@@ -239,56 +235,6 @@ async def test_full_flow_end_to_end(
     assert unloaded_state is ConfigEntryState.NOT_LOADED
 
 
-@pytest.mark.usefixtures("current_request_with_host", "mock_abrp_client")
-async def test_reauth_end_to_end(
-    hass: HomeAssistant,
-    hass_client_no_auth: ClientSessionGenerator,
-    aioclient_mock: AiohttpClientMocker,
-    config_entry: MockConfigEntry,
-) -> None:
-    """End-to-end reauth: real async_setup_entry runs on reload after reauth.
-
-    The reauth path is sticky on the existing (empty) selection, so no stream
-    is spawned and ``fake_stream`` is unnecessary.
-    """
-    config_entry.add_to_hass(hass)
-
-    assert await hass.config_entries.async_setup(config_entry.entry_id)
-    await hass.async_block_till_done()
-    assert config_entry.state is ConfigEntryState.LOADED
-
-    result = await config_entry.start_reauth_flow(hass)
-    assert result["type"] is FlowResultType.FORM
-    assert result["step_id"] == "reauth_confirm"
-
-    result = await hass.config_entries.flow.async_configure(result["flow_id"], {})
-    await complete_oauth_callback(hass, hass_client_no_auth, result["flow_id"])
-
-    aioclient_mock.post(
-        OAUTH2_TOKEN,
-        json={
-            "access_token": "updated-access-token",
-            "refresh_token": "updated-refresh-token",
-            "token_type": "Bearer",
-            "expires_in": 3600,
-            "id_token": build_id_token(USER_SUB),
-        },
-    )
-
-    result = await hass.config_entries.flow.async_configure(result["flow_id"])
-
-    assert result["type"] is FlowResultType.ABORT
-    assert result["reason"] == "reauth_successful"
-
-    await hass.async_block_till_done()
-
-    entries = hass.config_entries.async_entries(DOMAIN)
-    assert len(entries) == 1
-    entry = entries[0]
-    assert entry.state is ConfigEntryState.LOADED
-    assert entry.data["token"]["access_token"] == "updated-access-token"
-
-
 @pytest.mark.usefixtures("current_request_with_host", "mock_abrp_client", "fake_stream")
 async def test_full_flow_stale_token_refresh_unauthorized(
     hass: HomeAssistant,
@@ -300,8 +246,8 @@ async def test_full_flow_stale_token_refresh_unauthorized(
     The initial ``authorization_code`` token exchange succeeds but returns
     ``expires_in: -1`` so the access token is immediately stale. During
     ``async_setup_entry`` the OAuth2 session refreshes the token, and that
-    refresh POST returns 401. The entry must end up in ``SETUP_ERROR`` and a
-    reauth flow for the entry must be in progress.
+    refresh POST returns 401. The entry must end up in ``SETUP_ERROR`` with no
+    reauth flow in progress.
     """
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": SOURCE_USER}
@@ -367,24 +313,21 @@ async def test_full_flow_stale_token_refresh_unauthorized(
     ]
     assert len(token_calls) == 2
 
-    flows = hass.config_entries.flow.async_progress()
-    assert len(flows) == 1
-    assert flows[0]["context"]["source"] == SOURCE_REAUTH
-    assert flows[0]["context"]["entry_id"] == entry.entry_id
+    assert not hass.config_entries.flow.async_progress()
 
 
-async def test_first_refresh_auth_error_starts_reauth(
+async def test_first_refresh_auth_error_setup_error(
     hass: HomeAssistant,
     config_entry: MockConfigEntry,
     mock_abrp_client: AsyncMock,
 ) -> None:
-    """A coordinator first-refresh ``AbrpAuthError`` triggers reauth.
+    """A coordinator first-refresh ``AbrpAuthError`` surfaces as ``SETUP_ERROR``.
 
     The OAuth session is valid (no token-refresh failure) but the ABRP API
     rejects the access token (e.g. ABRP-side revocation). The garage
     coordinator's ``async_get_vehicles`` raises ``AbrpAuthError`` and the
     integration must surface this as ``ConfigEntryAuthFailed`` so HA puts the
-    entry in ``SETUP_ERROR`` and starts a reauth flow.
+    entry in ``SETUP_ERROR``.
     """
     config_entry.add_to_hass(hass)
     mock_abrp_client.side_effect = AbrpAuthError("invalid session")
@@ -393,11 +336,7 @@ async def test_first_refresh_auth_error_starts_reauth(
     await hass.async_block_till_done()
 
     assert config_entry.state is ConfigEntryState.SETUP_ERROR
-
-    flows = hass.config_entries.flow.async_progress()
-    assert len(flows) == 1
-    assert flows[0]["context"]["source"] == SOURCE_REAUTH
-    assert flows[0]["context"]["entry_id"] == config_entry.entry_id
+    assert not hass.config_entries.flow.async_progress()
 
 
 async def test_first_refresh_api_error_setup_retry(
@@ -407,8 +346,8 @@ async def test_first_refresh_api_error_setup_retry(
 ) -> None:
     """A coordinator first-refresh ``AbrpApiError`` surfaces as ``SETUP_RETRY``.
 
-    Transient API/transport failures should not consume the user's reauth
-    quota; the integration retries on HA's standard backoff instead.
+    Transient API/transport failures should surface as a retry, not an
+    auth-error state; the integration retries on HA's standard backoff instead.
     """
     config_entry.add_to_hass(hass)
     mock_abrp_client.side_effect = AbrpApiError("backend overloaded")

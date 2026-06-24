@@ -196,13 +196,12 @@ class AbrpVehiclesCoordinator(TimestampDataUpdateCoordinator[list[GarageVehicle]
         * a transient API / transport / timeout failure, or
         * an ``AbrpAuthError``.
 
-        Auth errors are NOT propagated to reauth from here: the garage fetch
-        above already maps auth failure to :class:`ConfigEntryAuthFailed`, and
-        the telemetry stream is the authoritative reauth trigger; surfacing it
-        from here too would race two reauth flows. Each failure logs at DEBUG —
-        this is per-vehicle, so a global outage would emit one line per
-        vehicle; DEBUG keeps that quiet (consistent with
-        :meth:`AbrpTelemetryCoordinator.async_seed`).
+        Auth errors are NOT escalated from here: the garage fetch above is the
+        single authoritative auth-failure signal (it maps auth failure to
+        :class:`ConfigEntryAuthFailed`), so surfacing it again here would be
+        redundant. Each failure logs at DEBUG — this is per-vehicle, so a
+        global outage would emit one line per vehicle; DEBUG keeps that quiet
+        (consistent with :meth:`AbrpTelemetryCoordinator.async_seed`).
         """
         results = await asyncio.gather(
             *(
@@ -400,7 +399,6 @@ class AbrpTelemetryCoordinator(TimestampDataUpdateCoordinator[dict[int, Telemetr
 
         * once-per-transition INFO logging (don't spam — log only on a state
           change versus the last recorded event);
-        * ``AUTH_FAILED`` → trigger reauth via ``async_start_reauth``;
         * the in-memory triage fields retained for the future diagnostics PR.
         """
         previous = self.last_connection_event
@@ -420,12 +418,9 @@ class AbrpTelemetryCoordinator(TimestampDataUpdateCoordinator[dict[int, Telemetr
                 )
             elif event.state is ConnectionState.AUTH_FAILED:
                 _LOGGER.warning(
-                    "ABRP telemetry stream auth failed (%s); triggering reauth",
+                    "ABRP telemetry stream auth failed (%s)",
                     event.reason or "no reason given",
                 )
-
-        if event.state is ConnectionState.AUTH_FAILED:
-            self.config_entry.async_start_reauth(self.hass)
 
     async def async_seed(self, client: AbrpClient, vehicle_ids: Iterable[int]) -> None:
         """Best-effort seed of the per-vehicle map via one-shot telemetry.
@@ -438,10 +433,10 @@ class AbrpTelemetryCoordinator(TimestampDataUpdateCoordinator[dict[int, Telemetr
 
         Results apply through the same :meth:`_apply_metrics` path as
         :meth:`on_update` so seed and stream share one assignment code path.
-        Auth errors are NOT propagated to reauth from here — the stream
-        reaches the same failure and triggers reauth via
-        :meth:`on_connection_change`; surfacing it from both sites would race
-        two reauth flows.
+        Auth errors are NOT escalated from here — the garage coordinator is the
+        authoritative auth-failure signal (it raises
+        :class:`ConfigEntryAuthFailed`); surfacing it here too would be
+        redundant.
         """
         ids = list(vehicle_ids)
         if not ids:
@@ -453,8 +448,8 @@ class AbrpTelemetryCoordinator(TimestampDataUpdateCoordinator[dict[int, Telemetr
         for vehicle_id, result in zip(ids, results, strict=True):
             if isinstance(result, AbrpAuthError):
                 # DEBUG, not WARNING: a globally revoked token would emit one
-                # of these per vehicle (N warnings for N vehicles). The
-                # stream's single AUTH_FAILED event is the real reauth signal.
+                # of these per vehicle (N warnings for N vehicles). The garage
+                # coordinator is the authoritative auth-failure signal.
                 _LOGGER.debug(
                     "Telemetry seed for vehicle %d rejected (%s); stream will retry",
                     vehicle_id,

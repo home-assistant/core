@@ -13,9 +13,7 @@
       "oauth_failed": "[%key:common::config_flow::abort::oauth2_failed%]",
       "oauth_timeout": "[%key:common::config_flow::abort::oauth2_timeout%]",
       "oauth_unauthorized": "[%key:common::config_flow::abort::oauth2_unauthorized%]",
-      "reauth_successful": "[%key:common::config_flow::abort::reauth_successful%]",
-      "user_rejected_authorize": "[%key:common::config_flow::abort::oauth2_user_rejected_authorize%]",
-      "wrong_account": "The authenticated account does not match the configured account."
+      "user_rejected_authorize": "[%key:common::config_flow::abort::oauth2_user_rejected_authorize%]"
     },
     "create_entry": {
       "default": "[%key:common::config_flow::create_entry::authenticated%]"
@@ -33,10 +31,6 @@
         },
         "description": "Choose which of your A Better Routeplanner vehicles you'd like to manage in Home Assistant.",
         "title": "Pick vehicles"
-      },
-      "reauth_confirm": {
-        "description": "The A Better Routeplanner integration needs to re-authenticate your account",
-        "title": "[%key:common::config_flow::title::reauth%]"
       }
     }
   },

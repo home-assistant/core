@@ -14,8 +14,9 @@ refresh token — becomes terminal ``AbrpAuthError``; everything else (5xx,
 generic ``ClientError``, timeouts) propagates unchanged so the library retries.
 
 Deliberately, this does NOT raise ``ConfigEntryAuthFailed`` — that exception is
-inert inside the library's background task. Reauth is triggered elsewhere (the
-coordinator's ``on_connection_change`` on ``AUTH_FAILED``).
+inert inside the library's background task. The garage coordinator's
+``_async_update_data`` is the site that surfaces auth failure to HA as
+``ConfigEntryAuthFailed``.
 """
 
 from http import HTTPStatus

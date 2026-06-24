@@ -9,7 +9,7 @@ the stream hands it:
 * provider stickiness on omission;
 * ``last_reported_at`` stamped at RECEIPT time (not the wire ``time``);
 * first-appearance ``signal_new_metric`` dispatch (presence);
-* ``AUTH_FAILED`` → reauth (and the no-op connection states);
+* ``AUTH_FAILED`` → warning log (and the no-op connection states);
 * once-per-transition connection logging;
 * ``async_seed`` per-vehicle failure tolerance.
 
@@ -38,7 +38,6 @@ from homeassistant.components.abetterrouteplanner.const import signal_new_metric
 from homeassistant.components.abetterrouteplanner.coordinator import (
     AbrpTelemetryCoordinator,
 )
-from homeassistant.config_entries import SOURCE_REAUTH
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
 
@@ -54,9 +53,9 @@ def telemetry_coordinator_fixture(
 ) -> AbrpTelemetryCoordinator:
     """A thin telemetry coordinator bound to a real (added) config entry.
 
-    The entry is added to hass so ``config_entry.async_start_reauth`` and
-    ``async_dispatcher_send`` (entry-scoped signal) operate against a real
-    entry. The coordinator is constructed directly — the same object the
+    The entry is added to hass so ``async_dispatcher_send`` (entry-scoped
+    signal) operates against a real entry. The coordinator is constructed
+    directly — the same object the
     integration builds — and driven via its ``on_update`` /
     ``on_connection_change`` / ``async_seed`` callbacks.
     """
@@ -241,39 +240,44 @@ async def test_mark_metric_seen_suppresses_dispatch(
         unsub()
 
 
-# ---------- 4. AUTH_FAILED → reauth ----------------------------------------
+# ---------- 4. AUTH_FAILED logging -----------------------------------------
 
 
-async def test_auth_failed_connection_event_starts_reauth(
+async def test_auth_failed_connection_event_logs_warning(
     hass: HomeAssistant,
     telemetry_coordinator: AbrpTelemetryCoordinator,
+    caplog: pytest.LogCaptureFixture,
 ) -> None:
-    """An ``AUTH_FAILED`` connection event starts a reauth flow.
+    """An ``AUTH_FAILED`` connection event logs a warning and starts no flow.
 
-    The stream owns auth-failure detection; the coordinator's connection
-    callback is the single site that converts it into HA's reauth pipeline.
+    Reauth is split into a follow-up, so the connection callback only logs the
+    auth failure. The garage coordinator is the authoritative auth-failure
+    signal, so AUTH_FAILED must not itself start any config flow.
     """
     coordinator = telemetry_coordinator
 
-    coordinator.on_connection_change(
-        ConnectionEvent(ConnectionState.AUTH_FAILED, "401")
-    )
-    await hass.async_block_till_done()
+    with caplog.at_level(
+        logging.WARNING,
+        logger="homeassistant.components.abetterrouteplanner.coordinator",
+    ):
+        coordinator.on_connection_change(
+            ConnectionEvent(ConnectionState.AUTH_FAILED, "401")
+        )
+        await hass.async_block_till_done()
 
-    flows = hass.config_entries.flow.async_progress()
-    assert len(flows) == 1
-    assert flows[0]["context"]["source"] == SOURCE_REAUTH
+    assert "auth failed" in caplog.text.lower()
+    assert not hass.config_entries.flow.async_progress()
 
 
-async def test_disconnected_does_not_reauth_and_connected_bumps_count(
+async def test_disconnected_only_logs_and_connected_bumps_count(
     hass: HomeAssistant,
     telemetry_coordinator: AbrpTelemetryCoordinator,
 ) -> None:
-    """DISCONNECTED only logs (no reauth); CONNECTED bumps ``connect_count``.
+    """DISCONNECTED only logs; CONNECTED bumps ``connect_count``.
 
     Availability is value-based and deliberately ignores connection state —
     the ABRP server closes idle streams as steady-state, so a DISCONNECTED
-    event must never start a reauth flow. CONNECTED increments the in-memory
+    event must never start a config flow. CONNECTED increments the in-memory
     triage counter.
     """
     coordinator = telemetry_coordinator
@@ -362,8 +366,8 @@ async def test_async_seed_swallows_abrp_errors_for_one_vehicle(
 
     ``async_get_current_telemetry`` raising for one vehicle (auth or api) is
     logged-and-skipped — that vid is absent from ``data`` while the healthy
-    vehicle is applied. Auth failures are NOT propagated to reauth from the
-    seed path (the stream owns that signal).
+    vehicle is applied. Auth failures are NOT escalated from the seed path (the
+    garage coordinator is the authoritative auth-failure signal).
     """
     coordinator = telemetry_coordinator
 

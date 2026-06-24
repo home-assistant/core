@@ -1,7 +1,6 @@
 """Config flow for the A Better Routeplanner integration."""
 
 import base64
-from collections.abc import Mapping
 import json
 import logging
 from typing import Any, cast
@@ -9,7 +8,7 @@ from typing import Any, cast
 from aioabrp import AbrpApiError, AbrpAuthError, AbrpClient, AbrpVehicle, StaticAuth
 import voluptuous as vol
 
-from homeassistant.config_entries import SOURCE_REAUTH, ConfigFlowResult
+from homeassistant.config_entries import ConfigFlowResult
 from homeassistant.helpers import config_entry_oauth2_flow
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 from homeassistant.helpers.selector import (
@@ -40,32 +39,6 @@ class AbetterrouteplannerFlowHandler(
         """Return logger."""
         return logging.getLogger(__name__)
 
-    @property
-    def extra_authorize_data(self) -> dict[str, Any]:
-        """Prefill the ABRP login form via ``login_hint`` on reauth.
-
-        On reauth we know which email previously authorized this entry
-        (carried in the id_token), so we hand it back to the IdP via
-        ``login_hint`` so the login form pre-fills. Falls through to the
-        default empty dict for any flow without a usable id_token, so a
-        legacy entry, a malformed token, or a missing claim degrades to
-        "no prefill" rather than blocking reauth.
-        """
-        if self.source != SOURCE_REAUTH:
-            return {}
-        token = self._get_reauth_entry().data.get("token", {})
-        id_token = token.get("id_token")
-        if not id_token:
-            return {}
-        try:
-            payload = _decode_jwt_payload(id_token)
-            email = payload["email"]
-        except ValueError, IndexError, KeyError, TypeError:
-            return {}
-        if not isinstance(email, str) or not email:
-            return {}
-        return {"login_hint": email}
-
     async def async_step_user(
         self, user_input: dict[str, Any] | None = None
     ) -> ConfigFlowResult:
@@ -83,35 +56,17 @@ class AbetterrouteplannerFlowHandler(
             )
         return await super().async_step_user(user_input)
 
-    async def async_step_reauth(
-        self, entry_data: Mapping[str, Any]
-    ) -> ConfigFlowResult:
-        """Perform reauth upon an API authentication error."""
-        return await self.async_step_reauth_confirm()
-
-    async def async_step_reauth_confirm(
-        self, user_input: dict[str, Any] | None = None
-    ) -> ConfigFlowResult:
-        """Dialog that informs the user that reauth is required."""
-        if user_input is None:
-            return self.async_show_form(step_id="reauth_confirm")
-        return await self.async_step_user()
-
     async def async_oauth_create_entry(self, data: dict[str, Any]) -> ConfigFlowResult:
         """Handle a successful OAuth2 authorization.
 
-        On the initial-add path: fetch the user's garage, stash it, and hand
-        off to ``async_step_pick_vehicles`` so the user can pick which
-        vehicles to track.
-
-        On the reauth path: no picker; the existing selection is sticky and
-        we just refresh the stored token. ``data_updates=data`` is used so
-        the existing ``vehicle_ids`` are preserved across the reauth.
+        Fetch the user's garage, stash it, and hand off to
+        ``async_step_pick_vehicles`` so the user can pick which vehicles to
+        track.
         """
-        # The IdP issues id_token via the authorization_code grant used by
-        # both initial-add and reauth (the scope is ``oidc``). A missing
-        # id_token here means the IdP misbehaved; abort safely rather than
-        # silently accept a token that we can't bind to a verified account.
+        # The IdP issues id_token via the authorization_code grant (the scope
+        # is ``oidc``). A missing id_token here means the IdP misbehaved; abort
+        # safely rather than silently accept a token that we can't bind to a
+        # verified account.
         id_token = data["token"].get("id_token")
         if id_token is None:
             return self.async_abort(reason="oauth_error")
@@ -122,12 +77,6 @@ class AbetterrouteplannerFlowHandler(
             return self.async_abort(reason="oauth_error")
         self._payload = payload
         await self.async_set_unique_id(sub)
-
-        if self.source == SOURCE_REAUTH:
-            self._abort_if_unique_id_mismatch(reason="wrong_account")
-            return self.async_update_reload_and_abort(
-                self._get_reauth_entry(), data_updates=data
-            )
 
         self._abort_if_unique_id_configured()
 
