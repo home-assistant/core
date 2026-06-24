@@ -557,9 +557,6 @@ arris-tg2492lg==2.2.0
 # homeassistant.components.arwn
 arwn-client==0.2.1
 
-# homeassistant.components.ampio
-asmog==0.0.6
-
 # homeassistant.components.asuswrt
 asusrouter==1.21.3
 
@@ -2337,7 +2334,7 @@ pyliebherrhomeapi==0.4.1
 pylitejet==0.6.3
 
 # homeassistant.components.litterrobot
-pylitterbot==2025.4.0
+pylitterbot==2025.5.0
 
 # homeassistant.components.lutron_caseta
 pylutron-caseta==0.28.0
@@ -2970,9 +2967,6 @@ satel-integra==1.3.1
 # homeassistant.components.screenlogic
 screenlogicpy==0.10.2
 
-# homeassistant.components.scsgate
-scsgate==0.1.0
-
 # homeassistant.components.backup
 securetar==2026.4.1
 
@@ -3007,7 +3001,6 @@ sentence-stream==1.3.0
 # homeassistant.components.sentry
 sentry-sdk==2.48.0
 
-# homeassistant.components.acer_projector
 # homeassistant.components.serial
 # homeassistant.components.usb
 serialx==1.8.2
