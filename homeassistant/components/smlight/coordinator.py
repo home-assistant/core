@@ -3,7 +3,7 @@
 from abc import abstractmethod
 from collections.abc import Callable, Coroutine
 from dataclasses import dataclass
-from typing import Any
+from typing import Any, override
 
 from pysmlight import Api2, Info, Sensors
 from pysmlight.const import Settings, SettingsProp
@@ -71,6 +71,7 @@ class SmBaseDataUpdateCoordinator[_DataT](DataUpdateCoordinator[_DataT]):
         self.unique_id: str | None = None
         self.legacy_api: int = 0
 
+    @override
     async def _async_setup(self) -> None:
         """Authenticate if needed during initial setup."""
         if await self.client.check_auth_needed():
@@ -104,6 +105,7 @@ class SmBaseDataUpdateCoordinator[_DataT](DataUpdateCoordinator[_DataT]):
                 translation_key="unsupported_firmware",
             )
 
+    @override
     async def _async_update_data(self) -> _DataT:
         try:
             return await self._internal_update_data()
@@ -159,6 +161,7 @@ class SmDataUpdateCoordinator(SmBaseDataUpdateCoordinator[SmData]):
         self.data.sensors.ambilight = AmbilightPayload(**changes)
         self.async_set_updated_data(self.data)
 
+    @override
     async def _internal_update_data(self) -> SmData:
         """Fetch sensor data from the SMLIGHT device."""
         sensors = Sensors()
@@ -184,6 +187,7 @@ class SmFirmwareUpdateCoordinator(SmBaseDataUpdateCoordinator[SmFwData]):
         # only one update can run at a time (core or zibgee)
         self.in_progress = False
 
+    @override
     async def _internal_update_data(self) -> SmFwData:
         """Fetch data from the SMLIGHT device."""
         info = await self.client.get_info()

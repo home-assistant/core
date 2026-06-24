@@ -1,5 +1,7 @@
 """Support for Nanoleaf buttons."""
 
+from typing import override
+
 from homeassistant.components.button import ButtonDeviceClass, ButtonEntity
 from homeassistant.const import EntityCategory
 from homeassistant.core import HomeAssistant
@@ -29,6 +31,7 @@ class NanoleafIdentifyButton(NanoleafEntity, ButtonEntity):
         super().__init__(coordinator)
         self._attr_unique_id = f"{self._nanoleaf.serial_no}_identify"
 
+    @override
     async def async_press(self) -> None:
         """Identify the Nanoleaf."""
         await self._nanoleaf.identify()

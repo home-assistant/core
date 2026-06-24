@@ -1,7 +1,7 @@
 """Config flow for the Duck DNS integration."""
 
 import logging
-from typing import Any
+from typing import Any, override
 
 import voluptuous as vol
 
@@ -34,6 +34,7 @@ STEP_RECONFIGURE_DATA_SCHEMA = vol.Schema({vol.Required(CONF_ACCESS_TOKEN): str}
 class DuckDnsConfigFlow(ConfigFlow, domain=DOMAIN):
     """Handle a config flow for Duck DNS."""
 
+    @override
     async def async_step_user(
         self, user_input: dict[str, Any] | None = None
     ) -> ConfigFlowResult:

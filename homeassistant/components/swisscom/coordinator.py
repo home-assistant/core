@@ -2,6 +2,7 @@
 
 from datetime import timedelta
 import logging
+from typing import override
 
 from swisscom_internet_box import (
     Device,
@@ -47,6 +48,7 @@ class SwisscomDataUpdateCoordinator(DataUpdateCoordinator[dict[str, Device]]):
             entry.data[CONF_PASSWORD],
         )
 
+    @override
     async def _async_update_data(self) -> dict[str, Device]:
         """Fetch device data from the box."""
         try:

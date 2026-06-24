@@ -1,7 +1,7 @@
 """Config Flow for PlayStation 4."""
 
 from collections import OrderedDict
-from typing import Any
+from typing import Any, override
 
 from pyps4_2ndscreen.errors import CredentialTimeout
 from pyps4_2ndscreen.helpers import Helper
@@ -58,6 +58,7 @@ class PlayStation4FlowHandler(ConfigFlow, domain=DOMAIN):
         self.location: location_util.LocationInfo | None = None
         self.device_list: list[str] = []
 
+    @override
     async def async_step_user(
         self, user_input: dict[str, Any] | None = None
     ) -> ConfigFlowResult:

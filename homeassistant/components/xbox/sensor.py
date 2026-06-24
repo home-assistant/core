@@ -4,7 +4,7 @@ from collections.abc import Callable
 from dataclasses import dataclass
 from datetime import UTC, datetime
 from enum import StrEnum
-from typing import TYPE_CHECKING, Any
+from typing import TYPE_CHECKING, Any, override
 
 from pythonxbox.api.provider.people.models import Person
 from pythonxbox.api.provider.smartglass.models import SmartglassConsole, StorageDevice
@@ -334,6 +334,7 @@ class XboxSensorEntity(XboxBaseEntity, SensorEntity):
     entity_description: XboxSensorEntityDescription
 
     @property
+    @override
     def native_value(self) -> StateType | datetime:
         """Return the state of the requested attribute."""
         return self.entity_description.value_fn(self.data, self.title_info)
@@ -392,6 +393,7 @@ class XboxStorageDeviceSensorEntity(
         )
 
     @property
+    @override
     def native_value(self) -> StateType:
         """Return the state of the requested attribute."""
 

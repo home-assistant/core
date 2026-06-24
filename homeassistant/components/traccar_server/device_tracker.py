@@ -1,6 +1,6 @@
 """Support for Traccar server device tracking."""
 
-from typing import Any
+from typing import Any, override
 
 from homeassistant.components.device_tracker import TrackerEntity
 from homeassistant.core import HomeAssistant
@@ -31,6 +31,7 @@ class TraccarServerDeviceTracker(TraccarServerEntity, TrackerEntity):
     _attr_name = None
 
     @property
+    @override
     def extra_state_attributes(self) -> dict[str, Any]:
         """Return device specific attributes."""
         return {
@@ -41,16 +42,19 @@ class TraccarServerDeviceTracker(TraccarServerEntity, TrackerEntity):
         }
 
     @property
+    @override
     def latitude(self) -> float:
         """Return latitude value of the device."""
         return self.traccar_position["latitude"]
 
     @property
+    @override
     def longitude(self) -> float:
         """Return longitude value of the device."""
         return self.traccar_position["longitude"]
 
     @property
+    @override
     def location_accuracy(self) -> float:
         """Return the gps accuracy of the device."""
         return self.traccar_position["accuracy"]

@@ -48,6 +48,9 @@
       "frost_protection": {
         "name": "Frost protection"
       },
+      "holiday_mode": {
+        "name": "Holiday mode"
+      },
       "overheat_protection": {
         "name": "Overheat protection"
       },
@@ -105,6 +108,14 @@
       },
       "tank_water_temperature": {
         "name": "Tank water temperature"
+      }
+    },
+    "switch": {
+      "frost_protection": {
+        "name": "Frost protection"
+      },
+      "overheat_protection": {
+        "name": "Overheat protection"
       }
     }
   },

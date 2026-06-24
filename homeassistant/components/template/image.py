@@ -1,7 +1,7 @@
 """Support for image which integrates with other components."""
 
 import logging
-from typing import Any
+from typing import Any, override
 
 import voluptuous as vol
 
@@ -135,6 +135,7 @@ class StateImageEntity(TemplateEntity, AbstractTemplateImage):
         AbstractTemplateImage.__init__(self, hass, config)
 
     @property
+    @override
     def entity_picture(self) -> str | None:
         """Return entity picture."""
         if self._has_picture_template:
@@ -159,6 +160,7 @@ class TriggerImageEntity(TriggerEntity, AbstractTemplateImage):
         AbstractTemplateImage.__init__(self, hass, config)
 
     @property
+    @override
     def entity_picture(self) -> str | None:
         """Return entity picture."""
         if self._has_picture_template:
