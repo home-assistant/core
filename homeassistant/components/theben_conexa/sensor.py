@@ -5,6 +5,7 @@ import logging
 from homeassistant.components.sensor import (
     SensorDeviceClass,
     SensorEntity,
+    SensorEntityDescription,
     SensorStateClass,
 )
 from homeassistant.const import UnitOfEnergy
@@ -17,6 +18,24 @@ from .entity import ConexaSMGWEntity
 
 _LOGGER = logging.getLogger(__name__)
 
+# So far the Conexa 3.0 provides only total power in and out.
+KNOWN_OBIS_CODES: dict[str, SensorEntityDescription] = {
+    OBIS_IN: SensorEntityDescription(
+        key=OBIS_IN,
+        translation_key="power_consumed",
+        native_unit_of_measurement=UnitOfEnergy.WATT_HOUR,
+        device_class=SensorDeviceClass.ENERGY,
+        state_class=SensorStateClass.TOTAL_INCREASING,
+    ),
+    OBIS_OUT: SensorEntityDescription(
+        key=OBIS_OUT,
+        translation_key="power_supplied",
+        native_unit_of_measurement=UnitOfEnergy.WATT_HOUR,
+        device_class=SensorDeviceClass.ENERGY,
+        state_class=SensorStateClass.TOTAL_INCREASING,
+    ),
+}
+
 
 async def async_setup_entry(
     hass: HomeAssistant,
@@ -24,13 +43,20 @@ async def async_setup_entry(
     async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up the sensor platform."""
-    sensors = []
-    for key in entry.runtime_data.data:
-        translation_key = TotalInOutSensor.derive_translation_key(key)
-        if translation_key:
-            sensors.append(TotalInOutSensor(key, translation_key, entry.runtime_data))
+    sensors: list[TotalInOutSensor] = []
+
+    for obis_code in entry.runtime_data.data:
+        if obis_code in KNOWN_OBIS_CODES:
+            sensors.append(
+                TotalInOutSensor(
+                    description=KNOWN_OBIS_CODES[obis_code],
+                    coordinator=entry.runtime_data,
+                )
+            )
         else:
-            _LOGGER.warning("Skipping unsupported Conexa SMGW key %s during setup", key)
+            _LOGGER.warning(
+                "Skipping unsupported Conexa SMGW key %s during setup", obis_code
+            )
 
     async_add_entities(sensors)
 
@@ -38,39 +64,22 @@ async def async_setup_entry(
 class TotalInOutSensor(ConexaSMGWEntity, SensorEntity):
     """Represents total Meter readings."""
 
-    _attr_native_unit_of_measurement = UnitOfEnergy.WATT_HOUR
-    _attr_device_class = SensorDeviceClass.ENERGY
-    _attr_state_class = SensorStateClass.TOTAL_INCREASING
-
-    @classmethod
-    def derive_translation_key(cls, key: str) -> str | None:
-        """So far the Conexa 3.0 provides only total power in and out.
-
-        But this might change in the future so we check the key
-        """
-        if OBIS_IN in key:
-            # This is the total power consumed channel, which has the OBIS code 1-0:1.8.0
-            return "power_consumed"
-        if OBIS_OUT in key:
-            # This is the total power supplied channel, which has the OBIS code 1-0:2.8.0
-            return "power_supplied"
-        return None
-
     def __init__(
-        self, key: str, translation_key: str, coordinator: SmgwSensorCoordinator
+        self,
+        description: SensorEntityDescription,
+        coordinator: SmgwSensorCoordinator,
     ) -> None:
         """Initialize the Sensor."""
         super().__init__(coordinator)
 
-        self._attr_translation_key = translation_key
-        self._key = key
-        self.native_value = coordinator.data[key].value
+        self.entity_description = description
+        self._key = description.key
         # As far as I know the Conexa 3.0 returns always Wh but there is the possibility that it returns Joules
-        if coordinator.data[key].unit.upper() == "J":
-            self.native_unit_of_measurement = UnitOfEnergy.JOULE
-        self._attr_unique_id = f"{coordinator.gateway_info.smgwID}-{key}"
+        if coordinator.data[self._key].unit.upper() == "J":
+            self._attr_native_unit_of_measurement = UnitOfEnergy.JOULE
+        self._attr_unique_id = f"{coordinator.gateway_info.smgwID}-{self._key}"
 
-    def _handle_coordinator_update(self) -> None:
-        """Handle updated data from the coordinator."""
-        self.native_value = self.coordinator.data[self._key].value
-        self.async_write_ha_state()
+    @property
+    def native_value(self) -> str:
+        """Return the current sensor value."""
+        return self.coordinator.data[self._key].value
