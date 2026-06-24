@@ -888,7 +888,7 @@
     ]),
     'area_id': None,
     'capabilities': dict({
-      'group_entities': list([
+      <EntityCapabilityAttribute.GROUP_ENTITIES: 'group_entities'>: list([
         'light.wled_rgb_light',
         'light.wled_rgb_light_segment_1',
       ]),

@@ -2,10 +2,10 @@
 # name: test_config_flow_preview_success[missing_calibration_factor]
   dict({
     'attributes': dict({
-      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'humidity',
-      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Mold Indicator',
+      'device_class': 'humidity',
+      'friendly_name': 'Mold Indicator',
       'state_class': 'measurement',
-      <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: '%',
+      'unit_of_measurement': '%',
     }),
     'state': 'unavailable',
   })
@@ -13,10 +13,10 @@
 # name: test_config_flow_preview_success[missing_humidity_entity]
   dict({
     'attributes': dict({
-      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'humidity',
-      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Mold Indicator',
+      'device_class': 'humidity',
+      'friendly_name': 'Mold Indicator',
       'state_class': 'measurement',
-      <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: '%',
+      'unit_of_measurement': '%',
     }),
     'state': 'unavailable',
   })
@@ -24,12 +24,12 @@
 # name: test_config_flow_preview_success[success]
   dict({
     'attributes': dict({
-      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'humidity',
+      'device_class': 'humidity',
       'dewpoint': 12.01,
       'estimated_critical_temp': 19.5,
-      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Mold Indicator',
+      'friendly_name': 'Mold Indicator',
       'state_class': 'measurement',
-      <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: '%',
+      'unit_of_measurement': '%',
     }),
     'state': '61',
   })
@@ -37,12 +37,12 @@
 # name: test_options_flow_preview
   dict({
     'attributes': dict({
-      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'humidity',
+      'device_class': 'humidity',
       'dewpoint': 12.01,
       'estimated_critical_temp': 19.5,
-      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Mold Indicator',
+      'friendly_name': 'Mold Indicator',
       'state_class': 'measurement',
-      <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: '%',
+      'unit_of_measurement': '%',
     }),
     'state': '61',
   })

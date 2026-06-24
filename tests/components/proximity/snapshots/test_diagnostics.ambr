@@ -48,7 +48,7 @@
       'tracked_states': dict({
         'device_tracker.test1': dict({
           'attributes': dict({
-            <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'test1',
+            'friendly_name': 'test1',
             'latitude': '**REDACTED**',
             'longitude': '**REDACTED**',
           }),
@@ -58,7 +58,7 @@
         }),
         'device_tracker.test2': dict({
           'attributes': dict({
-            <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'test2',
+            'friendly_name': 'test2',
             'latitude': '**REDACTED**',
             'longitude': '**REDACTED**',
           }),
@@ -68,7 +68,7 @@
         }),
         'device_tracker.test3': dict({
           'attributes': dict({
-            <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'test3',
+            'friendly_name': 'test3',
             'latitude': '**REDACTED**',
             'location_name': '**REDACTED**',
             'longitude': '**REDACTED**',

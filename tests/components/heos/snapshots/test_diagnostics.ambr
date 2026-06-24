@@ -307,8 +307,8 @@
         }),
         'state': dict({
           'attributes': dict({
-            <EntityStateAttribute.ENTITY_PICTURE: 'entity_picture'>: 'http://',
-            <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Test Player',
+            'entity_picture': 'http://',
+            'friendly_name': 'Test Player',
             'group_members': list([
               'media_player.test_player',
               'media_player.test_player_2',
@@ -332,7 +332,7 @@
               'HEOS Drive - Line In 1',
               'Speaker - Line In 1',
             ]),
-            <EntityStateAttribute.SUPPORTED_FEATURES: 'supported_features'>: 3079741,
+            'supported_features': 3079741,
             'volume_level': 0.25,
           }),
           'context': dict({

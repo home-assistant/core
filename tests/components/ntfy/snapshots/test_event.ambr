@@ -56,7 +56,7 @@
       ]),
       'expires': HAFakeDatetime(2025, 3, 29, 5, 58, 46, tzinfo=datetime.timezone.utc),
       <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'mytopic',
-      <EntityStateAttribute.ICON: 'icon'>: 'https://example.com/icon.png',
+      'icon': 'https://example.com/icon.png',
       'id': 'h6Y2hKA5sy0U',
       'message': 'Hello',
       'priority': 3,
