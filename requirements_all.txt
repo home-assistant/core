@@ -608,9 +608,6 @@ av==17.0.1
 # homeassistant.components.avea
 avea==1.8.0
 
-# homeassistant.components.avion
-# avion==0.10
-
 # homeassistant.components.axis
 axis==72
 
