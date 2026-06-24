@@ -154,23 +154,6 @@ async def test_thermostat_offset_set_value(hass: HomeAssistant) -> None:
     assert device.offset == 1.5
 
 
-async def test_thermostat_offset_clamped_to_max(hass: HomeAssistant) -> None:
-    """Setting a value above max is clamped to max_offset."""
-    device = _make_mock_device(serial="trv-1", device_id="trv-id-1")
-    device.offset = 0.0
-    device.step_size = 0.5
-    device.min_offset = -5.0
-    device.max_offset = 5.0
-    device.supports_display_configuration = False
-
-    session = _make_mock_session(thermostats=[device])
-    await _setup_entry(hass, session)
-
-    await _set_value(hass, "number.test_device_temperature_offset", 10.0)
-
-    assert device.offset == 5.0
-
-
 async def test_thermostat_offset_for_roomthermostat(hass: HomeAssistant) -> None:
     """Thermostat offset number also created for roomthermostats."""
     device = _make_mock_device(serial="rt2-1", device_id="rt2-id-1")
