@@ -2,7 +2,7 @@
 
 from dataclasses import dataclass
 import logging
-from typing import Any, cast
+from typing import Any, cast, override
 
 from midealocal.const import DeviceType
 from midealocal.devices.ac import DeviceAttributes as ACAttributes, MideaACDevice
@@ -188,6 +188,7 @@ class MideaClimate(MideaEntity, ClimateEntity):
         return float(value)
 
     @property
+    @override
     def hvac_mode(self) -> HVACMode | None:
         """Midea Climate hvac mode."""
         if self._device.get_attribute("power"):
@@ -197,16 +198,19 @@ class MideaClimate(MideaEntity, ClimateEntity):
         return None
 
     @property
+    @override
     def target_temperature(self) -> float | None:
         """Midea Climate target temperature."""
         return self._float_attribute("target_temperature")
 
     @property
+    @override
     def current_temperature(self) -> float | None:
         """Midea Climate current temperature."""
         return self._float_attribute("indoor_temperature")
 
     @property
+    @override
     def preset_mode(self) -> str | None:
         """Midea Climate preset mode."""
         for attr, preset in _ATTR_TO_PRESET.items():
@@ -215,14 +219,17 @@ class MideaClimate(MideaEntity, ClimateEntity):
 
         return None
 
+    @override
     def turn_on(self, **kwargs: Any) -> None:
         """Midea Climate turn on."""
         self._device.set_attribute(attr="power", value=True)
 
+    @override
     def turn_off(self, **kwargs: Any) -> None:
         """Midea Climate turn off."""
         self._device.set_attribute(attr="power", value=False)
 
+    @override
     def set_temperature(self, **kwargs: Any) -> None:
         """Midea Climate set temperature."""
         if ATTR_TEMPERATURE not in kwargs:
@@ -239,6 +246,7 @@ class MideaClimate(MideaEntity, ClimateEntity):
                 zone=self._zone,
             )
 
+    @override
     def set_hvac_mode(self, hvac_mode: HVACMode) -> None:
         """Midea Climate set hvac mode."""
         if hvac_mode == HVACMode.OFF:
@@ -249,6 +257,7 @@ class MideaClimate(MideaEntity, ClimateEntity):
                 value=self.hvac_modes.index(hvac_mode),
             )
 
+    @override
     def set_preset_mode(self, preset_mode: str) -> None:
         """Midea Climate set preset mode."""
         old_mode = self.preset_mode
@@ -326,6 +335,7 @@ class MideaACClimate(MideaClimate):
         )
 
     @property
+    @override
     def fan_mode(self) -> str | None:
         """Midea AC Climate fan mode."""
         fan_speed = self._device.get_attribute(ACAttributes.fan_speed)
@@ -337,6 +347,7 @@ class MideaACClimate(MideaClimate):
         return FAN_SILENT
 
     @property
+    @override
     def swing_mode(self) -> str | None:
         """Midea AC Climate swing mode."""
         vertical = bool(self._device.get_attribute(ACAttributes.swing_vertical))
@@ -344,6 +355,7 @@ class MideaACClimate(MideaClimate):
         return _SWING_STATE_MAP.get((vertical, horizontal))
 
     @property
+    @override
     def current_humidity(self) -> float | None:
         """Return the current indoor humidity, or None if unavailable."""
         raw = self._device.get_attribute(ACAttributes.indoor_humidity)
@@ -358,11 +370,13 @@ class MideaACClimate(MideaClimate):
         """Midea AC Climate outdoor temperature."""
         return self._float_attribute(ACAttributes.outdoor_temperature)
 
+    @override
     def set_fan_mode(self, fan_mode: str) -> None:
         """Midea AC Climate set fan mode."""
         fan_speed = self._fan_speeds[fan_mode]
         self._device.set_attribute(attr=ACAttributes.fan_speed, value=fan_speed)
 
+    @override
     def set_swing_mode(self, swing_mode: str) -> None:
         """Midea AC Climate set swing mode."""
         swing_vertical, swing_horizontal = _SWING_MODE_MAP.get(
@@ -391,11 +405,13 @@ class MideaCCClimate(MideaClimate):
     _attr_preset_modes = [PRESET_NONE, PRESET_SLEEP, PRESET_ECO]
 
     @property
+    @override
     def fan_modes(self) -> list[str] | None:
         """Midea CC Climate fan modes."""
         return self._device.fan_modes
 
     @property
+    @override
     def fan_mode(self) -> str | None:
         """Midea CC Climate fan mode."""
         fan_mode = self._device.get_attribute(CCAttributes.fan_speed)
@@ -404,11 +420,13 @@ class MideaCCClimate(MideaClimate):
         return fan_mode
 
     @property
+    @override
     def target_temperature_step(self) -> float | None:
         """Midea CC Climate target temperature step."""
         return self._float_attribute(CCAttributes.temperature_precision)
 
     @property
+    @override
     def swing_mode(self) -> str | None:
         """Midea CC Climate swing mode."""
         swing = self._device.get_attribute(CCAttributes.swing)
@@ -418,10 +436,12 @@ class MideaCCClimate(MideaClimate):
             SWING_ON if swing else SWING_OFF,
         )
 
+    @override
     def set_fan_mode(self, fan_mode: str) -> None:
         """Midea CC Climate set fan mode."""
         self._device.set_attribute(attr=CCAttributes.fan_speed, value=fan_mode)
 
+    @override
     def set_swing_mode(self, swing_mode: str) -> None:
         """Midea CC Climate set swing mode."""
         self._device.set_attribute(
@@ -446,6 +466,7 @@ class MideaCFClimate(MideaClimate):
     _attr_supported_features = FEATURES_TARGET_AND_POWER
 
     @property
+    @override
     def min_temp(self) -> float:
         """Midea CF Climate min temperature."""
         min_temperature = self._float_attribute(CFAttributes.min_temperature)
@@ -454,6 +475,7 @@ class MideaCFClimate(MideaClimate):
         return min_temperature
 
     @property
+    @override
     def max_temp(self) -> float:
         """Midea CF Climate max temperature."""
         max_temperature = self._float_attribute(CFAttributes.max_temperature)
@@ -462,16 +484,19 @@ class MideaCFClimate(MideaClimate):
         return max_temperature
 
     @property
+    @override
     def target_temperature_low(self) -> float:
         """Midea CF Climate target temperature."""
         return self.min_temp
 
     @property
+    @override
     def target_temperature_high(self) -> float:
         """Midea CF Climate target temperature high."""
         return self.max_temp
 
     @property
+    @override
     def current_temperature(self) -> float | None:
         """Midea CF Climate current temperature."""
         return self._float_attribute(CFAttributes.current_temperature)
@@ -522,6 +547,7 @@ class MideaC3Climate(MideaClimate):
     _attr_supported_features = FEATURES_TARGET_AND_POWER
 
     @property
+    @override
     def target_temperature_step(self) -> float:
         """Midea C3 Climate target temperature step."""
         zone_temp_type = self._device.get_attribute(C3Attributes.zone_temp_type)
@@ -532,34 +558,41 @@ class MideaC3Climate(MideaClimate):
         )
 
     @property
+    @override
     def min_temp(self) -> float:
         """Midea C3 Climate min temperature."""
         return self._temperature(minimum=True)[self._zone]
 
     @property
+    @override
     def max_temp(self) -> float:
         """Midea C3 Climate max temperature."""
         return self._temperature(minimum=False)[self._zone]
 
     @property
+    @override
     def target_temperature_low(self) -> float:
         """Midea C3 Climate target temperature low."""
         return self._temperature(minimum=True)[self._zone]
 
     @property
+    @override
     def target_temperature_high(self) -> float:
         """Midea C3 Climate target temperature high."""
         return self._temperature(minimum=False)[self._zone]
 
+    @override
     def turn_on(self, **kwargs: Any) -> None:
         """Midea C3 Climate turn on."""
         self._device.set_attribute(attr=self._power_attr, value=True)
 
+    @override
     def turn_off(self, **kwargs: Any) -> None:
         """Midea C3 Climate turn off."""
         self._device.set_attribute(attr=self._power_attr, value=False)
 
     @property
+    @override
     def hvac_mode(self) -> HVACMode | None:
         """Midea C3 Climate hvac mode."""
         mode = self._device.get_attribute(C3Attributes.mode)
@@ -572,6 +605,7 @@ class MideaC3Climate(MideaClimate):
         return None
 
     @property
+    @override
     def target_temperature(self) -> float | None:
         """Midea C3 Climate target temperature."""
         target_temperature = self._device.get_attribute(C3Attributes.target_temperature)
@@ -583,6 +617,7 @@ class MideaC3Climate(MideaClimate):
         return float(target_temperature[self._zone])
 
     @property
+    @override
     def current_temperature(self) -> float | None:
         """Midea C3 Climate current temperature."""
         current_temperature = self._device.get_attribute(C3Attributes.temp_tw_in)
@@ -593,6 +628,7 @@ class MideaC3Climate(MideaClimate):
             return None
         return float(current_temperature[self._zone])
 
+    @override
     def set_hvac_mode(self, hvac_mode: HVACMode) -> None:
         """Midea C3 Climate set hvac mode."""
         if hvac_mode == HVACMode.OFF:
@@ -629,6 +665,7 @@ class MideaFBClimate(MideaClimate):
         self._attr_preset_modes: list[str] = self._device.modes
 
     @property
+    @override
     def preset_mode(self) -> str | None:
         """Midea FB Climate preset mode."""
         preset_mode = self._device.get_attribute(attr=FBAttributes.mode)
@@ -637,6 +674,7 @@ class MideaFBClimate(MideaClimate):
         return preset_mode
 
     @property
+    @override
     def hvac_mode(self) -> HVACMode | None:
         """Midea FB Climate hvac mode."""
         hvac_mode = self._device.get_attribute(attr=FBAttributes.power)
@@ -645,10 +683,12 @@ class MideaFBClimate(MideaClimate):
         return HVACMode.HEAT if hvac_mode else HVACMode.OFF
 
     @property
+    @override
     def current_temperature(self) -> float | None:
         """Midea FB Climate current temperature."""
         return self._float_attribute(FBAttributes.current_temperature)
 
+    @override
     def set_hvac_mode(self, hvac_mode: HVACMode) -> None:
         """Midea FB Climate set hvac mode."""
         if hvac_mode == HVACMode.OFF:
@@ -656,6 +696,7 @@ class MideaFBClimate(MideaClimate):
         else:
             self.turn_on()
 
+    @override
     def set_preset_mode(self, preset_mode: str) -> None:
         """Midea FB Climate set preset mode."""
         self._device.set_attribute(attr=FBAttributes.mode, value=preset_mode)

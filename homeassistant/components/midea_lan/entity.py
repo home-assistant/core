@@ -1,7 +1,7 @@
 """Base entity for Midea Lan."""
 
 import logging
-from typing import Any
+from typing import Any, override
 
 from midealocal.device import MideaDevice
 
@@ -29,10 +29,12 @@ class MideaEntity(Entity):
         self._unique_id = f"{self._device.device_id}_{entity_key}"
         self._device_name = self._device.name
 
+    @override
     async def async_added_to_hass(self) -> None:
         """Register update callback when entity is added."""
         self._device.register_update(self.update_state)
 
+    @override
     async def async_will_remove_from_hass(self) -> None:
         """Unregister update callback when entity is removed."""
         self._device.unregister_update(self.update_state)
@@ -43,6 +45,7 @@ class MideaEntity(Entity):
         return self._device
 
     @property
+    @override
     def device_info(self) -> DeviceInfo:
         """Return device info."""
         return DeviceInfo(
@@ -55,16 +58,19 @@ class MideaEntity(Entity):
         )
 
     @property
+    @override
     def unique_id(self) -> str:
         """Return entity unique id."""
         return self._unique_id
 
     @property
+    @override
     def should_poll(self) -> bool:
         """Return False as the integration does not poll."""
         return False
 
     @property
+    @override
     def available(self) -> bool:
         """Return entity availability."""
         return bool(self._device.available)

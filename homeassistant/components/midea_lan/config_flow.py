@@ -1,6 +1,6 @@
 """Config flow for Midea LAN."""
 
-from typing import Any
+from typing import Any, override
 
 from aiohttp import ClientSession
 from midealocal.cloud import (
@@ -99,6 +99,7 @@ class MideaLanConfigFlow(ConfigFlow, domain=DOMAIN):
                 return True
         return False
 
+    @override
     async def async_step_user(
         self,
         user_input: dict[str, Any] | None = None,
@@ -217,6 +218,7 @@ class MideaLanConfigFlow(ConfigFlow, domain=DOMAIN):
             errors={"base": error} if error else None,
         )
 
+    @override
     async def async_step_discovery(
         self,
         discovery_info: dict[str, Any] | None = None,
