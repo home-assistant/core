@@ -58,7 +58,7 @@ async def async_setup_entry(
 
 
 class MyPVWaterHeater(MyPVDataEntity, WaterHeaterEntity):
-    """Base my-PV WaterHeater."""
+    """my-PV water heater."""
 
     _attr_name = None
     _attr_operation_list = [STATE_OFF, STATE_ELECTRIC]
