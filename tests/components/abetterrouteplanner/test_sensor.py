@@ -497,7 +497,6 @@ def _lookup_sensor_entity_id(
 # ``dict.get(raw.vehicle_model)`` misses, current longest-prefix match
 # resolves correctly.
 _PREFIX_MATCH_VEHICLE_MODEL = "rivian:r1s:25:c3-53g:dual:perf"
-_PREFIX_MATCH_DEVICE_MODEL = "Rivian R1S 2025 Dual Motor"
 
 
 @pytest.mark.usefixtures("entity_registry_enabled_by_default", "fake_stream")
@@ -509,24 +508,24 @@ async def test_device_info_model_uses_display_endpoint(
 ) -> None:
     """``DeviceInfo.model`` reflects the composed display string.
 
-    The display endpoint resolves the vehicle's typecode to manufacturer /
-    model / year / trim; ``_compose_device_model`` composes
-    ``"{manufacturer} {model} {year} {title}"`` and the result lands on the
-    per-vehicle device's ``DeviceInfo.model`` slot.
+    The display endpoint resolves the vehicle's typecode to its display
+    metadata; the integration lands that display's ``display_name`` on the
+    per-vehicle device's ``DeviceInfo.model`` slot. The composition itself is
+    the library's concern, so this pins the wiring against the display's own
+    ``display_name`` rather than a hardcoded composed literal.
     """
+    display = build_vehicle_model_display(
+        manufacturer="Rivian",
+        model="R1S",
+        years="2025",
+        title="Dual Motor",
+        start_year=2025,
+        end_year=None,
+    )
     mock_abrp_client.return_value = [
         _make_vehicle(vehicle_model=_PREFIX_MATCH_VEHICLE_MODEL)
     ]
-    mock_abrp_client.display_responses[_PREFIX_MATCH_VEHICLE_MODEL] = (
-        build_vehicle_model_display(
-            manufacturer="Rivian",
-            model="R1S",
-            years="2025",
-            title="Dual Motor",
-            start_year=2025,
-            end_year=None,
-        )
-    )
+    mock_abrp_client.display_responses[_PREFIX_MATCH_VEHICLE_MODEL] = display
 
     await _setup_integration(hass, config_entry_with_vehicles)
 
@@ -534,7 +533,7 @@ async def test_device_info_model_uses_display_endpoint(
         identifiers={(DOMAIN, _scope(config_entry_with_vehicles, MOCK_VEHICLE_ID))}
     )
     assert device is not None
-    assert device.model == _PREFIX_MATCH_DEVICE_MODEL
+    assert device.model == display.display_name
 
 
 @pytest.mark.usefixtures("entity_registry_enabled_by_default", "fake_stream")

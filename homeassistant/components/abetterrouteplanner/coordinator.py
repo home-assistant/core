@@ -6,10 +6,11 @@ Two coordinators back the integration:
   every :data:`SCAN_INTERVAL` via :meth:`aioabrp.AbrpClient.async_get_vehicles`
   and resolves each vehicle's device-card strings by calling
   :meth:`aioabrp.AbrpClient.async_get_vehicle_model_display` per typecode
-  (HA-side device-card composition — see :mod:`.device_info`). The garage
-  rarely changes — vehicles are added or removed manually in the ABRP web
-  app — so a 10-minute interval keeps the rate-limit footprint negligible
-  while still picking up additions/removals within one HA dashboard reload.
+  (the composed label comes from
+  :attr:`aioabrp.VehicleModelDisplay.display_name`). The garage rarely
+  changes — vehicles are added or removed manually in the ABRP web app — so a
+  10-minute interval keeps the rate-limit footprint negligible while still
+  picking up additions/removals within one HA dashboard reload.
 * :class:`AbrpTelemetryCoordinator` is a thin push-mode coordinator. The
   :class:`aioabrp.TelemetryStream` (built in ``__init__``) drives state in
   through :meth:`AbrpTelemetryCoordinator.on_update` /
@@ -50,7 +51,6 @@ from homeassistant.util import dt as dt_util
 
 from .auth import AbetterrouteplannerAuth
 from .const import ABRP_APP_KEY, DOMAIN, signal_new_metric
-from .device_info import ComposedDeviceInfo, compose_device_info
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -83,30 +83,29 @@ type AbetterrouteplannerConfigEntry = ConfigEntry[AbrpData]
 
 @dataclass(frozen=True, slots=True)
 class GarageVehicle:
-    """One garage vehicle joined with its composed HA device-card fields.
+    """One garage vehicle joined with its resolved device-card display.
 
     The :class:`aioabrp.AbrpVehicle` returned by the library carries only the
     raw identity fields (``vehicle_id`` / ``name`` / ``vehicle_model`` /
-    ``paint``) and no composed ``device_model`` / ``device_manufacturer``
-    columns. This carrier holds the raw vehicle alongside the
-    :class:`.device_info.ComposedDeviceInfo` produced by joining its typecode
-    against the v2 catalog.
+    ``paint``). This carrier holds it alongside the per-typecode
+    :class:`aioabrp.VehicleModelDisplay` resolved against the v2 catalog
+    (``None`` when the display fetch failed or the typecode is unknown).
 
     Identity attributes (``vehicle_id`` / ``name`` / ``vehicle_model``) and the
-    composed ``device_model`` / ``device_manufacturer`` are re-exported as
+    device-card ``device_model`` / ``device_manufacturer`` are re-exported as
     read-only properties so call sites in ``__init__`` / ``sensor`` keep
     reading ``item.vehicle_id`` / ``item.device_model`` etc. unchanged.
 
     ``frozen=True`` gives value equality, which is load-bearing: the polling
     garage coordinator is a ``TimestampDataUpdateCoordinator`` that suppresses
     listener fires when a poll returns ``previous_data == self.data``. Both
-    ``AbrpVehicle`` and ``ComposedDeviceInfo`` are frozen value-equal
+    ``AbrpVehicle`` and ``VehicleModelDisplay`` are frozen value-equal
     dataclasses, so an unchanged garage compares equal and does not spuriously
     re-fire the device-metadata propagation listener on every 10-min poll.
     """
 
     vehicle: AbrpVehicle
-    composed: ComposedDeviceInfo
+    display: VehicleModelDisplay | None
 
     @property
     def vehicle_id(self) -> int:
@@ -125,13 +124,13 @@ class GarageVehicle:
 
     @property
     def device_model(self) -> str | None:
-        """Return the composed device-card model, if resolved."""
-        return self.composed.device_model
+        """Return the composed device-card model, if display metadata resolved."""
+        return self.display.display_name if self.display is not None else None
 
     @property
     def device_manufacturer(self) -> str | None:
-        """Return the composed device-card manufacturer, if resolved."""
-        return self.composed.device_manufacturer
+        """Return the device-card manufacturer, if display metadata resolved."""
+        return self.display.manufacturer if self.display is not None else None
 
 
 class AbrpVehiclesCoordinator(TimestampDataUpdateCoordinator[list[GarageVehicle]]):
@@ -171,8 +170,9 @@ class AbrpVehiclesCoordinator(TimestampDataUpdateCoordinator[list[GarageVehicle]
 
         Per-typecode display metadata is fetched fresh for every vehicle on
         every poll (no cache, by design). A per-vehicle display failure
-        degrades only that vehicle to the raw-typecode fallback (see
-        :func:`.device_info.compose_device_info`) and never fails the refresh.
+        degrades only that vehicle to the raw-typecode fallback (the device
+        card reads ``None`` for the composed model/manufacturer) and never
+        fails the refresh.
         """
         try:
             raw_vehicles = await self._client.async_get_vehicles()
@@ -189,7 +189,7 @@ class AbrpVehiclesCoordinator(TimestampDataUpdateCoordinator[list[GarageVehicle]
 
         displays = await self._async_fetch_displays(raw_vehicles)
         return [
-            GarageVehicle(raw, compose_device_info(display))
+            GarageVehicle(raw, display)
             for raw, display in zip(raw_vehicles, displays, strict=True)
         ]
 

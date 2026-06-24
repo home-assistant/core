@@ -60,8 +60,8 @@ def build_vehicle_model_display(
 ) -> VehicleModelDisplay:
     """Build a typed VehicleModelDisplay for device-enrichment tests.
 
-    Default fields compose (per ``device_info._compose_device_model``) to
-    ``"Rivian R2 2026 Standard Long Range RWD"`` — the same string the old
+    Default fields compose (via ``aioabrp.VehicleModelDisplay.display_name``)
+    to ``"Rivian R2 2026 Standard Long Range RWD"`` — the same string the old
     ``build_catalog_entry`` produced — so device-model assertions are
     unchanged.
     """

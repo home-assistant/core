@@ -4,8 +4,8 @@ Each selected vehicle's device is anchored in
 :func:`homeassistant.components.abetterrouteplanner.async_setup_entry`
 at setup time. The catalog's display metadata (e.g.
 ``"Rivian R2 2026 RWD"``) surfaces via :attr:`DeviceInfo.model` on the
-device card, computed by :func:`device_info.compose_device_info` from
-the v2 catalog at coordinator-refresh time.
+device card, composed by :attr:`aioabrp.VehicleModelDisplay.display_name`
+from the v2 catalog at coordinator-refresh time.
 
 ``AbrpTelemetrySensor`` exposes the numeric metrics (soc / power /
 voltage / etc.) backed by the SSE telemetry coordinator. Entities are

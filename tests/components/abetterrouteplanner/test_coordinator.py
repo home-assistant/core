@@ -96,32 +96,6 @@ async def test_refresh_builds_garage_vehicle_list(
     assert first.device_manufacturer is None
 
 
-# ---------- display endpoint enrichment ------------------------------------
-
-
-async def test_refresh_enriches_device_fields_from_display(
-    garage_coordinator: AbrpVehiclesCoordinator,
-    mock_abrp_client: AsyncMock,
-) -> None:
-    """A display hit composes ``device_model`` / ``device_manufacturer``.
-
-    With a display fixture for the typecode, the composed manufacturer/model
-    surface on the carrier rather than the raw-typecode fallback.
-    """
-    mock_abrp_client.display_responses[MOCK_VEHICLE_MODEL] = (
-        build_vehicle_model_display()
-    )
-
-    await garage_coordinator.async_refresh()
-
-    assert garage_coordinator.last_update_success
-    first = garage_coordinator.data[0]
-    assert first.device_manufacturer == "Rivian"
-    # Composed per ``_compose_device_model``: "{mfr} {model}" + " {year}" +
-    # " {title}".
-    assert first.device_model == "Rivian R2 2026 Standard Long Range RWD"
-
-
 # ---------- per-vehicle display fetch (no cache) ---------------------------
 
 
