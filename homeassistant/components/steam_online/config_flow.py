@@ -6,7 +6,11 @@ from typing import Any, override
 import steam.api
 import voluptuous as vol
 
-from homeassistant.config_entries import ConfigFlow, ConfigFlowResult, OptionsFlow
+from homeassistant.config_entries import (
+    ConfigFlow,
+    ConfigFlowResult,
+    OptionsFlowWithReload,
+)
 from homeassistant.const import CONF_API_KEY, Platform
 from homeassistant.core import callback
 from homeassistant.helpers import config_validation as cv, entity_registry as er
@@ -130,7 +134,7 @@ def _batch_ids(ids: list[str]) -> Iterator[list[str]]:
         yield ids[i : i + MAX_IDS_TO_REQUEST]
 
 
-class SteamOptionsFlowHandler(OptionsFlow):
+class SteamOptionsFlowHandler(OptionsFlowWithReload):
     """Handle Steam client options."""
 
     def __init__(self, entry: SteamConfigEntry) -> None:
@@ -157,7 +161,6 @@ class SteamOptionsFlowHandler(OptionsFlow):
                     if _id in user_input[CONF_ACCOUNTS]
                 }
             }
-            await self.hass.config_entries.async_reload(self.config_entry.entry_id)
             return self.async_create_entry(title="", data=channel_data)
         error = None
         try:

@@ -213,7 +213,7 @@ async def test_options_flow(
     assert result["data"] == CONF_OPTIONS_2
 
 
-@pytest.mark.usefixtures("mock_setup_entry", "steam_api")
+@pytest.mark.usefixtures("steam_api")
 async def test_options_flow_deselect(
     hass: HomeAssistant,
     entity_registry: er.EntityRegistry,
