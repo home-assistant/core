@@ -88,8 +88,7 @@ async def _setup_integration(
     MUST also request the ``fake_stream`` fixture: a real
     :class:`aioabrp.TelemetryStream` would otherwise be constructed and try to
     open an SSE connection. ``fake_stream`` patches the stream class with a
-    synchronous test double AND collapses the pre-warm window to ``0``, so no
-    additional ``PREWARM_WINDOW_SECONDS`` patch is needed here.
+    synchronous test double, so setup returns without opening a connection.
     """
     assert await async_setup_component(hass, "auth", {})
     assert await async_setup_component(hass, DOMAIN, {})
@@ -741,7 +740,7 @@ async def test_diagnostic_telemetry_sensors_moved_out_of_diagnostic(
 ) -> None:
     """Four telemetry sensors no longer carry ``EntityCategory.DIAGNOSTIC``.
 
-    Voltage, Calibrated Ref Cons, Battery Capacity, and State of Health
+    Voltage, calibrated ref cons, battery capacity, and state of health
     move from the device card's diagnostic drawer into the main sensor
     bucket. ``entity_category`` is a registry-options field; assert via
     ``entity_registry.async_get(...).entity_category``, not via
@@ -771,12 +770,12 @@ async def test_calibrated_ref_cons_renamed_to_short_form(
     entity_registry: er.EntityRegistry,
     fake_stream: Any,
 ) -> None:
-    """The Calibrated Ref Cons sensor's friendly name translates to the short form.
+    """The calibrated ref cons sensor's friendly name translates to the short form.
 
     The device card width is dominated by the longest sensor name; the
-    full ``Calibrated Reference Consumption`` wraps or truncates on
+    full ``Calibrated reference consumption`` wraps or truncates on
     narrow viewports. The translation string shortens to
-    ``Calibrated Ref Cons``. Asserted via the registry's
+    ``Calibrated ref cons``. Asserted via the registry's
     ``original_name`` — the resolved translation at registration time,
     independent of friendly-name composition with the device prefix.
     """
@@ -795,7 +794,7 @@ async def test_calibrated_ref_cons_renamed_to_short_form(
     assert entity_id is not None
     entry = entity_registry.async_get(entity_id)
     assert entry is not None
-    assert entry.original_name == "Calibrated Ref Cons"
+    assert entry.original_name == "Calibrated ref cons"
 
 
 # ---- Device anchor at setup + Type Code sensor absence -------------------
@@ -1098,9 +1097,8 @@ async def _charging_restart_setup(
     translation_key) so the eager-from-registry probe re-creates the entity
     BEFORE the first wake frame, and wires the recorder restore cache.
 
-    The TelemetryStream is faked by the ``fake_stream`` fixture (which also
-    collapses the pre-warm window to ``0``), so this helper drives a real
-    ``async_setup`` without opening an SSE connection.
+    The TelemetryStream is faked by the ``fake_stream`` fixture, so this helper
+    drives a real ``async_setup`` without opening an SSE connection.
     """
     hass.set_state(CoreState.not_running)
     if restored_states is not None:

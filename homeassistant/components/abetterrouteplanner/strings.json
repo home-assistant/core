@@ -37,13 +37,13 @@
   "entity": {
     "sensor": {
       "battery_capacity": {
-        "name": "Battery Capacity"
+        "name": "Battery capacity"
       },
       "battery_temperature": {
         "name": "Battery temperature"
       },
       "calibrated_ref_cons": {
-        "name": "Calibrated Ref Cons"
+        "name": "Calibrated ref cons"
       },
       "charging_state": {
         "name": "Charging state",
@@ -71,7 +71,7 @@
         "name": "SoE"
       },
       "soh": {
-        "name": "State of Health"
+        "name": "State of health"
       },
       "voltage": {
         "name": "Voltage"

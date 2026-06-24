@@ -21,7 +21,7 @@
     'labels': set({
     }),
     'name': None,
-    'object_id_base': 'Battery Capacity',
+    'object_id_base': 'Battery capacity',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 1,
@@ -32,7 +32,7 @@
     }),
     'original_device_class': <SensorDeviceClass.ENERGY_STORAGE: 'energy_storage'>,
     'original_icon': None,
-    'original_name': 'Battery Capacity',
+    'original_name': 'Battery capacity',
     'platform': 'abetterrouteplanner',
     'previous_unique_id': None,
     'suggested_object_id': None,
@@ -46,7 +46,7 @@
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'device_class': 'energy_storage',
-      'friendly_name': 'Rivian R2 2027 Standard Long Range Battery Capacity',
+      'friendly_name': 'Rivian R2 2027 Standard Long Range Battery capacity',
       'last_reported_at': HAFakeDatetime(2026, 5, 24, 12, 0, tzinfo=datetime.timezone.utc),
       'unit_of_measurement': <UnitOfEnergy.KILO_WATT_HOUR: 'kWh'>,
     }),
@@ -141,7 +141,7 @@
     'labels': set({
     }),
     'name': None,
-    'object_id_base': 'Calibrated Ref Cons',
+    'object_id_base': 'Calibrated ref cons',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 1,
@@ -149,7 +149,7 @@
     }),
     'original_device_class': <SensorDeviceClass.ENERGY_DISTANCE: 'energy_distance'>,
     'original_icon': None,
-    'original_name': 'Calibrated Ref Cons',
+    'original_name': 'Calibrated ref cons',
     'platform': 'abetterrouteplanner',
     'previous_unique_id': None,
     'suggested_object_id': None,
@@ -163,7 +163,7 @@
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'device_class': 'energy_distance',
-      'friendly_name': 'Rivian R2 2027 Standard Long Range Calibrated Ref Cons',
+      'friendly_name': 'Rivian R2 2027 Standard Long Range Calibrated ref cons',
       'last_reported_at': HAFakeDatetime(2026, 5, 24, 12, 0, tzinfo=datetime.timezone.utc),
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
       'unit_of_measurement': <UnitOfEnergyDistance.WATT_HOUR_PER_KM: 'Wh/km'>,
@@ -571,7 +571,7 @@
     'labels': set({
     }),
     'name': None,
-    'object_id_base': 'State of Health',
+    'object_id_base': 'State of health',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 1,
@@ -579,7 +579,7 @@
     }),
     'original_device_class': None,
     'original_icon': None,
-    'original_name': 'State of Health',
+    'original_name': 'State of health',
     'platform': 'abetterrouteplanner',
     'previous_unique_id': None,
     'suggested_object_id': None,
@@ -592,7 +592,7 @@
 # name: test_telemetry_sensors_snapshot[sensor.rivian_r2_2027_standard_long_range_state_of_health-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'Rivian R2 2027 Standard Long Range State of Health',
+      'friendly_name': 'Rivian R2 2027 Standard Long Range State of health',
       'last_reported_at': HAFakeDatetime(2026, 5, 24, 12, 0, tzinfo=datetime.timezone.utc),
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
       'unit_of_measurement': '%',

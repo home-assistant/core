@@ -30,20 +30,16 @@ live-wins contract:
 
 The seed path is driven by ``mock_abrp_client.seed_responses``; the live
 path is driven by ``fake_stream.fire_frame`` (a synchronous double for the
-real ``TelemetryStream`` that also collapses the setup pre-warm sleep to 0).
-The coordinator stamps ``last_reported_at`` with ``dt_util.utcnow()`` at the
-moment a frame is applied (RECEIPT time, NOT the wire ``MetricValue.time``),
-so tests that need a deterministic stamp wrap ``fire_frame`` in
-``freeze_time`` — the stamp then equals the frozen instant.
+real ``TelemetryStream``). The coordinator stamps ``last_reported_at`` with
+``dt_util.utcnow()`` at the moment a frame is applied (RECEIPT time, NOT the
+wire ``MetricValue.time``), so tests that need a deterministic stamp wrap
+``fire_frame`` in ``freeze_time`` — the stamp then equals the frozen instant.
 
-Wire-frame parsing, frame merge / monotonicity, and the pre-warm-window
-consumer timing are now library-owned (covered by aioabrp's own tests), so
-the legacy ``test_last_reported_at_stamps_per_frame_not_per_merged_state``
-keeps only its HA-side claim (``_apply_metrics`` stamps per metric IN the
-batch, not per merged-state) and the legacy
-``test_frame_during_prewarm_stamps_attrs_for_eager_created_entity`` is
-dropped — the pre-warm window is collapsed to 0 by ``fake_stream`` and the
-SSE-consumer pre-queue it relied on no longer exists.
+Wire-frame parsing and frame merge / monotonicity are now library-owned
+(covered by aioabrp's own tests), so the legacy
+``test_last_reported_at_stamps_per_frame_not_per_merged_state`` keeps only its
+HA-side claim (``_apply_metrics`` stamps per metric IN the batch, not per
+merged-state).
 """
 
 from datetime import UTC, datetime
@@ -164,9 +160,8 @@ async def _restart_setup(
     3. ``entry.add_to_hass`` + optional entity-registry pre-seeding so
        the eager-from-registry branch finds prior entries.
     4. The ``fake_stream`` fixture (a required usefixtures on every caller)
-       patches ``TelemetryStream`` with a synchronous double AND collapses
-       ``PREWARM_WINDOW_SECONDS`` to ``0``, so setup completes without a real
-       SSE consumer or wall-clock wait.
+       patches ``TelemetryStream`` with a synchronous double, so setup
+       completes without a real SSE consumer.
     5. ``EVENT_HOMEASSISTANT_STARTED`` fired at the end so any post-start
        hooks settle before assertions run.
     """

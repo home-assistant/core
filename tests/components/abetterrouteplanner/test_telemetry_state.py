@@ -216,7 +216,7 @@ async def test_mark_metric_seen_suppresses_dispatch(
     """``mark_metric_seen`` pre-marks a pair so the next frame does not dispatch.
 
     The sensor platform calls ``mark_metric_seen`` for entities it creates
-    during the post-pre-warm inspection so the dispatcher does not double-fire
+    during the setup-time seed inspection so the dispatcher does not double-fire
     when the next frame carries the same metric.
     """
     coordinator = telemetry_coordinator

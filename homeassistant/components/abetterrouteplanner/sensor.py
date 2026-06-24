@@ -10,7 +10,7 @@ the v2 catalog at coordinator-refresh time.
 ``AbrpTelemetrySensor`` exposes the numeric metrics (soc / power /
 voltage / etc.) backed by the SSE telemetry coordinator. Entities are
 created lazily: at setup time the platform inspects the coordinator's
-seeded + pre-warmed snapshot and only creates entities for metrics that
+seeded snapshot and only creates entities for metrics that
 carry a non-None value. Metrics that arrive later are picked up via a
 dispatcher signal fired along the push path
 ``aioabrp.TelemetryStream → AbrpTelemetryCoordinator.on_update``.
@@ -79,32 +79,12 @@ CHARGING_STATE_OPTIONS: dict[ChargingState, str] = {
 def _is_clean_provider_str(value: object) -> bool:
     """Return True iff ``value`` is a non-empty, unpadded string.
 
-    Single REJECT-ONLY contract for the provider-rejection guard. Used at
-    the sensor ``async_added_to_hass`` restore guard. An upstream that
-    pads its enum strings is a wire-shape regression we want loud, not
-    silently normalised — so the guard rejects padding rather than
-    stripping.
-
-    **ASCII-whitespace contract.** The
-    ``value == value.strip()`` check uses :meth:`str.strip` with no
-    argument, which only strips characters for which
-    ``str.isspace()`` returns True. Several Unicode characters
-    commonly used as padding — ``U+200B`` (ZWS), ``U+200C`` (ZWNJ),
-    ``U+200D`` (ZWJ), ``U+FEFF`` (BOM) — return False from
-    ``isspace()`` and therefore survive both this guard and
-    ``.strip()``: a ``"\u200bDERIVED"`` value would slip through as
-    "clean". That gap is intentional. ABRP's ``Provider`` enum is
-    closed and ASCII-only (see ``~/abrp/abrp/spec/api/common/tlm.yaml``);
-    a Unicode-whitespace-padded provider value would be an upstream
-    regression we want surfaced as a downstream mismatch / loud
-    failure of the matching ``Provider`` literal, not silently
-    sanitised at the boundary. ``NBSP`` (``U+00A0``) and other
-    in-``isspace`` Unicode whitespace at edges behave differently:
-    ``.strip()`` removes them, so ``value != value.strip()`` and the
-    guard REJECTS them. That asymmetry vs. ZWS-family codepoints is
-    also acceptable given the closed-ASCII contract — both shapes
-    (slip-through-then-mismatch-downstream for ZWS-family, loud-
-    rejection-at-boundary for NBSP-family) surface upstream regressions.
+    Provider enum values are closed and ASCII-only, so the guard rejects
+    padded input rather than stripping it — a padded value is an upstream
+    wire-shape regression we want surfaced, not silently normalised. Note
+    ``str.strip()`` only handles ``isspace()`` whitespace, so ZWS-family
+    padding (``U+200B/200C/200D/FEFF``) survives and intentionally mismatches
+    the ``Provider`` literal downstream rather than being sanitised here.
     """
     return isinstance(value, str) and bool(value) and value == value.strip()
 
@@ -483,10 +463,10 @@ async def async_setup_entry(
         suppress dispatches for this ``(vehicle_id, metric)`` — the
         next non-None frame re-fires and reaches this listener again.
 
-        ``signal_new_metric`` is shared across every platform that registers
-        a presence predicate (sensor + device_tracker today), so a
-        ``metric`` outside ``SENSORS_BY_METRIC`` is some other platform's
-        dispatch — silently ignore it.
+        ``signal_new_metric`` is a shared dispatcher that any platform may
+        register a presence predicate on (only the sensor platform does today;
+        device_tracker is planned), so a ``metric`` outside
+        ``SENSORS_BY_METRIC`` is some other platform's dispatch — ignore it.
         """
         if metric not in SENSORS_BY_METRIC:
             return

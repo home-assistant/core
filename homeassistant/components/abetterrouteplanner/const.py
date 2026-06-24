@@ -25,14 +25,6 @@ ABRP_APP_KEY = "97b4bb90-b8f5-413b-9f28-09789a3777ed"
 # boundary, not in the dataclass.
 CONF_VEHICLE_IDS = "vehicle_ids"
 
-# Wall-clock cap for the SSE pre-warm window between spawning the long-lived
-# telemetry consumer and forwarding the sensor platform. The JSON seed snapshot
-# can lag the live stream (e.g. ``power`` is mid-charge, present on SSE but
-# null in the cached JSON), so we give the consumer a brief window to merge
-# any in-flight frames before the platform decides which metric entities to
-# create. Bounded so a slow / empty stream never holds setup hostage.
-PREWARM_WINDOW_SECONDS = 0.5
-
 
 def signal_new_metric(entry_id: str) -> str:
     """Return the dispatcher signal name for first-time metric arrivals.

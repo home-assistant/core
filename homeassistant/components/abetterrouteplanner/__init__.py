@@ -1,6 +1,5 @@
 """The A Better Routeplanner integration."""
 
-import asyncio
 from http import HTTPStatus
 
 from aioabrp import AbrpClient, TelemetryStream
@@ -18,7 +17,7 @@ from homeassistant.helpers.aiohttp_client import async_get_clientsession
 from homeassistant.helpers.typing import ConfigType
 
 from .auth import AbetterrouteplannerAuth
-from .const import ABRP_APP_KEY, CONF_VEHICLE_IDS, DOMAIN, PREWARM_WINDOW_SECONDS
+from .const import ABRP_APP_KEY, CONF_VEHICLE_IDS, DOMAIN
 from .coordinator import (
     AbetterrouteplannerConfigEntry,
     AbrpData,
@@ -163,14 +162,9 @@ async def async_setup_entry(
     ]
 
     # Seed the telemetry coordinator BEFORE starting the stream so the cached
-    # snapshot is the baseline the stream merges into; then give the consumer
-    # a brief pre-warm window before forwarding to the sensor platform. The
-    # seeded snapshot can lag the live stream (e.g. a vehicle is charging right
-    # now → ``power`` is non-null on SSE but null in the seed), so the window
-    # lets in-flight frames merge into ``coordinator.data`` before the platform
-    # inspects it to decide which metric entities to create. The wait is
-    # capped: a slow / empty stream falls through to the dispatcher path, which
-    # covers any post-setup first-arrival.
+    # snapshot is the baseline the stream merges into. Metrics that only arrive
+    # later (null in the seed, non-null on a later SSE frame) are created via the
+    # ``signal_new_metric`` dispatcher path, so setup need not wait for them.
     stream: TelemetryStream | None = None
     if vehicle_ids:
         # Poll one-shot only for vehicles we have never created sensors for
@@ -191,7 +185,6 @@ async def async_setup_entry(
             name=entry.title,
         )
         await stream.start()
-        await asyncio.sleep(PREWARM_WINDOW_SECONDS)
 
     entry.runtime_data = AbrpData(
         session=session,

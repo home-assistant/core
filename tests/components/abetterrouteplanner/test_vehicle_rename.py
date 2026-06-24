@@ -16,9 +16,9 @@ Changes are driven entirely through the garage coordinator: each test
 reassigns ``mock_abrp_client.return_value`` (the patched
 ``AbrpClient.async_get_vehicles``) to a fresh ``list[AbrpVehicle]``, then
 triggers ``garage_coordinator.async_refresh()`` to fire the listener. The
-``fake_stream`` fixture collapses the setup pre-warm sleep to 0, so setup
-returns immediately without a real SSE consumer and these tests need neither
-``freezer`` nor any ``asyncio.sleep`` patching.
+``fake_stream`` fixture replaces the real SSE consumer with a synchronous
+double, so setup returns immediately and these tests need no ``freezer`` or
+``asyncio.sleep`` patching.
 """
 
 from typing import Any
@@ -54,9 +54,8 @@ async def _setup_integration(
 ) -> MockConfigEntry:
     """Register the integration's OAuth implementation and set up the entry.
 
-    The ``fake_stream`` fixture patches both ``TelemetryStream`` (with a
-    synchronous double) and ``PREWARM_WINDOW_SECONDS`` to ``0``, so setup
-    returns immediately without a real SSE consumer or wall-clock wait.
+    The ``fake_stream`` fixture patches ``TelemetryStream`` with a synchronous
+    double, so setup returns immediately without a real SSE consumer.
     """
     assert await async_setup_component(hass, "auth", {})
     assert await async_setup_component(hass, DOMAIN, {})

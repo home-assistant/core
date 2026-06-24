@@ -21,10 +21,11 @@ covered by the library's own tests, not here.
 
 The seed path is driven by ``mock_abrp_client.seed_responses``; the stream path
 is driven by ``fake_stream.fire_frame`` (a synchronous double for the real
-``TelemetryStream`` that also collapses the setup pre-warm sleep to 0).
+``TelemetryStream``).
 """
 
 from typing import Any
+from unittest.mock import AsyncMock
 
 from aioabrp import Telemetry
 import pytest
@@ -53,11 +54,10 @@ VOLTAGE_ENTITY_ID_2 = "sensor.rivian_r1s_2024_quad_max_voltage"
 
 
 async def _lazy_setup(hass: HomeAssistant, entry: MockConfigEntry) -> None:
-    """Set up the integration (the ``fake_stream`` fixture collapses pre-warm).
+    """Set up the integration with the synchronous ``fake_stream`` double.
 
-    The ``fake_stream`` fixture patches both ``TelemetryStream`` (with a
-    synchronous double) and ``PREWARM_WINDOW_SECONDS`` to ``0``, so setup
-    returns immediately without a real SSE consumer or wall-clock wait.
+    The ``fake_stream`` fixture patches ``TelemetryStream`` with a synchronous
+    double, so setup returns immediately without a real SSE consumer.
     """
     assert await async_setup_component(hass, "auth", {})
     assert await async_setup_component(hass, DOMAIN, {})
@@ -90,7 +90,7 @@ async def test_seed_only_soc_creates_only_soc_entity(
     hass: HomeAssistant,
     config_entry_with_vehicles: MockConfigEntry,
     entity_registry: er.EntityRegistry,
-    mock_abrp_client: Any,
+    mock_abrp_client: AsyncMock,
 ) -> None:
     """The seed returns soc only; the stream delivers nothing.
 
@@ -121,7 +121,7 @@ async def test_stream_only_metric_creates_entity(
     hass: HomeAssistant,
     config_entry_with_vehicles: MockConfigEntry,
     entity_registry: er.EntityRegistry,
-    mock_abrp_client: Any,
+    mock_abrp_client: AsyncMock,
     fake_stream: Any,
 ) -> None:
     """The seed is empty; a power frame arrives over the stream.
@@ -157,7 +157,7 @@ async def test_post_setup_dispatcher_creates_entity(
     hass: HomeAssistant,
     config_entry_with_vehicles: MockConfigEntry,
     entity_registry: er.EntityRegistry,
-    mock_abrp_client: Any,
+    mock_abrp_client: AsyncMock,
     fake_stream: Any,
 ) -> None:
     """The seed is empty; voltage arrives only after setup completes.
@@ -207,7 +207,7 @@ async def test_dispatcher_idempotent_on_repeated_frames(
     hass: HomeAssistant,
     config_entry_with_vehicles: MockConfigEntry,
     entity_registry: er.EntityRegistry,
-    mock_abrp_client: Any,
+    mock_abrp_client: AsyncMock,
     fake_stream: Any,
 ) -> None:
     """Two consecutive non-null power frames must create exactly one power entity.
@@ -269,7 +269,7 @@ async def test_multi_vehicle_entity_isolation(
     hass: HomeAssistant,
     token_entry: dict[str, Any],
     entity_registry: er.EntityRegistry,
-    mock_abrp_client: Any,
+    mock_abrp_client: AsyncMock,
     fake_stream: Any,
     active_vehicle_id: int,
     expected_entity_id: str,
@@ -318,7 +318,7 @@ async def test_absent_metric_entities_not_created(
     hass: HomeAssistant,
     config_entry_with_vehicles: MockConfigEntry,
     entity_registry: er.EntityRegistry,
-    mock_abrp_client: Any,
+    mock_abrp_client: AsyncMock,
 ) -> None:
     """An empty seed with no stream frames must produce zero telemetry entities.
 
@@ -345,7 +345,7 @@ async def test_soe_sensor_lazy_creates_on_first_frame(
     hass: HomeAssistant,
     config_entry_with_vehicles: MockConfigEntry,
     entity_registry: er.EntityRegistry,
-    mock_abrp_client: Any,
+    mock_abrp_client: AsyncMock,
     fake_stream: Any,
 ) -> None:
     """An ``soe`` frame lazy-creates the SoE sensor; native Wh, display kWh.
@@ -379,7 +379,7 @@ async def test_odometer_sensor_lazy_creates_on_first_frame(
     hass: HomeAssistant,
     config_entry_with_vehicles: MockConfigEntry,
     entity_registry: er.EntityRegistry,
-    mock_abrp_client: Any,
+    mock_abrp_client: AsyncMock,
     fake_stream: Any,
 ) -> None:
     """An ``odometer`` frame lazy-creates the odometer sensor; native m, display km.
@@ -428,7 +428,7 @@ async def test_calibrated_ref_cons_sensor_lazy_creates_on_first_frame(
     hass: HomeAssistant,
     config_entry_with_vehicles: MockConfigEntry,
     entity_registry: er.EntityRegistry,
-    mock_abrp_client: Any,
+    mock_abrp_client: AsyncMock,
     fake_stream: Any,
 ) -> None:
     """A ``calibrated_ref_cons`` frame lazy-creates the ref-consumption sensor.
@@ -476,7 +476,7 @@ async def test_battery_capacity_sensor_lazy_creates_static(
     hass: HomeAssistant,
     config_entry_with_vehicles: MockConfigEntry,
     entity_registry: er.EntityRegistry,
-    mock_abrp_client: Any,
+    mock_abrp_client: AsyncMock,
     fake_stream: Any,
 ) -> None:
     """A ``battery_capacity`` frame lazy-creates the capacity sensor as STATIC.
@@ -524,7 +524,7 @@ async def test_soh_sensor_lazy_creates_on_first_frame(
     hass: HomeAssistant,
     config_entry_with_vehicles: MockConfigEntry,
     entity_registry: er.EntityRegistry,
-    mock_abrp_client: Any,
+    mock_abrp_client: AsyncMock,
     fake_stream: Any,
 ) -> None:
     """A ``soh`` frame lazy-creates the State-of-Health sensor (percent).
@@ -567,7 +567,7 @@ async def test_battery_temperature_sensor_stays_primary_category(
     hass: HomeAssistant,
     config_entry_with_vehicles: MockConfigEntry,
     entity_registry: er.EntityRegistry,
-    mock_abrp_client: Any,
+    mock_abrp_client: AsyncMock,
     fake_stream: Any,
 ) -> None:
     """Battery Temperature stays primary (``entity_category is None``).
@@ -608,7 +608,7 @@ async def test_soh_above_100_percent_surfaces_uncapped(
     hass: HomeAssistant,
     config_entry_with_vehicles: MockConfigEntry,
     entity_registry: er.EntityRegistry,
-    mock_abrp_client: Any,
+    mock_abrp_client: AsyncMock,
     fake_stream: Any,
 ) -> None:
     """A post-recalibration SoH overshoot (> 100%) surfaces uncapped.
@@ -637,7 +637,7 @@ async def test_battery_capacity_recalibration_jump_updates_state(
     hass: HomeAssistant,
     config_entry_with_vehicles: MockConfigEntry,
     entity_registry: er.EntityRegistry,
-    mock_abrp_client: Any,
+    mock_abrp_client: AsyncMock,
     fake_stream: Any,
 ) -> None:
     """A capacity recalibration jump is reflected in ``state.state``.
@@ -677,7 +677,7 @@ async def test_new_sensor_multi_vehicle_isolation(
     hass: HomeAssistant,
     token_entry: dict[str, Any],
     entity_registry: er.EntityRegistry,
-    mock_abrp_client: Any,
+    mock_abrp_client: AsyncMock,
     fake_stream: Any,
 ) -> None:
     """A metric frame for vehicle A must not create the entity on vehicle B.

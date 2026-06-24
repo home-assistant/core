@@ -15,14 +15,15 @@ from unittest.mock import AsyncMock, MagicMock, patch
 from aioabrp import AbrpApiError, AbrpAuthError
 import pytest
 
+from homeassistant.components.abetterrouteplanner.const import DOMAIN
 from homeassistant.components.abetterrouteplanner.coordinator import (
     AbrpVehiclesCoordinator,
     GarageVehicle,
 )
+from homeassistant.config_entries import ConfigEntryState
 from homeassistant.core import HomeAssistant
-from homeassistant.exceptions import ConfigEntryAuthFailed
 from homeassistant.helpers.config_entry_oauth2_flow import OAuth2Session
-from homeassistant.helpers.update_coordinator import UpdateFailed
+from homeassistant.setup import async_setup_component
 
 from .conftest import (
     MOCK_VEHICLE_ID,
@@ -211,30 +212,52 @@ async def test_unexpected_display_error_degrades_and_warns(
 # ---------- garage error mapping -------------------------------------------
 
 
-async def test_garage_auth_error_raises_config_entry_auth_failed(
-    garage_coordinator: AbrpVehiclesCoordinator,
+async def _setup_failure(hass: HomeAssistant, entry: MockConfigEntry) -> None:
+    """Register the OAuth implementation and attempt setup, expecting failure.
+
+    Drives the public config-entry setup path so the garage coordinator's
+    first refresh runs and its error mapping is observed via ``entry.state``.
+    """
+    assert await async_setup_component(hass, "auth", {})
+    assert await async_setup_component(hass, DOMAIN, {})
+    entry.add_to_hass(hass)
+    assert not await hass.config_entries.async_setup(entry.entry_id)
+    await hass.async_block_till_done()
+
+
+async def test_garage_auth_error_fails_setup(
+    hass: HomeAssistant,
+    config_entry: MockConfigEntry,
     mock_abrp_client: AsyncMock,
 ) -> None:
-    """An ``AbrpAuthError`` from the garage fetch maps to ``ConfigEntryAuthFailed``.
+    """An ``AbrpAuthError`` from the garage fetch puts the entry in ``SETUP_ERROR``.
 
     A revoked/rotated refresh token surfaces from the auth wrapper as
-    ``AbrpAuthError``; the coordinator converts it so HA surfaces the failure.
+    ``AbrpAuthError``; the coordinator converts it to ``ConfigEntryAuthFailed``
+    so setup fails into ``SETUP_ERROR`` (reauth-eligible) rather than retrying.
     """
     mock_abrp_client.side_effect = AbrpAuthError("invalid session")
 
-    with pytest.raises(ConfigEntryAuthFailed):
-        await garage_coordinator._async_update_data()
+    await _setup_failure(hass, config_entry)
+
+    assert config_entry.state is ConfigEntryState.SETUP_ERROR
 
 
-async def test_garage_api_error_raises_update_failed(
-    garage_coordinator: AbrpVehiclesCoordinator,
+async def test_garage_api_error_retries_setup(
+    hass: HomeAssistant,
+    config_entry: MockConfigEntry,
     mock_abrp_client: AsyncMock,
 ) -> None:
-    """An ``AbrpApiError`` from the garage fetch maps to ``UpdateFailed``."""
+    """An ``AbrpApiError`` from the garage fetch puts the entry in ``SETUP_RETRY``.
+
+    A transient backend failure maps to ``ConfigEntryNotReady``, so HA schedules
+    a retry rather than treating it as an auth problem.
+    """
     mock_abrp_client.side_effect = AbrpApiError("backend overloaded")
 
-    with pytest.raises(UpdateFailed):
-        await garage_coordinator._async_update_data()
+    await _setup_failure(hass, config_entry)
+
+    assert config_entry.state is ConfigEntryState.SETUP_RETRY
 
 
 # ---------- GarageVehicle value-equality (poll-notify suppression) ---------
@@ -246,14 +269,17 @@ async def test_garage_vehicle_value_equality_suppresses_listener_fires(
 ) -> None:
     """Two refreshes over an unchanged garage produce value-equal carriers.
 
-    ``TimestampDataUpdateCoordinator`` suppresses listener fires when a poll
-    returns ``previous_data == self.data``. Without value-equality on
+    ``TimestampDataUpdateCoordinator`` compares ``previous_data == self.data``
+    to decide whether to re-fire listeners. Without value-equality on
     ``GarageVehicle`` (a ``__slots__`` class) the comparison would fall back to
     identity and spuriously re-fire stale-device / auto-add / rename listeners
-    on every 10-min poll. The two polls must compare equal element-wise.
+    on every 10-min poll. Two refreshes over an unchanged garage must yield
+    element-wise-equal carriers that are nonetheless distinct objects.
     """
-    first = await garage_coordinator._async_update_data()
-    second = await garage_coordinator._async_update_data()
+    await garage_coordinator.async_refresh()
+    first = garage_coordinator.data
+    await garage_coordinator.async_refresh()
+    second = garage_coordinator.data
 
     assert first == second
     # Distinct object identities — equality is by value, not identity.

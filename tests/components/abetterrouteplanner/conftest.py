@@ -344,8 +344,7 @@ def fake_stream() -> Generator[_StreamDriver]:
 
     Captures the constructor-injected on_update / on_connection_change
     callbacks and exposes fire_frame / fire_connection so tests drive
-    push telemetry deterministically without a real SSE consumer. Also
-    collapses the setup pre-warm sleep to 0 so setup doesn't block 0.5s.
+    push telemetry deterministically without a real SSE consumer.
 
     The fake stream class is defined inside the fixture so each test gets a
     fresh class with its own ``instances`` list — no cross-test leakage.
@@ -394,14 +393,8 @@ def fake_stream() -> Generator[_StreamDriver]:
             """Awaitable no-op that records the stop call."""
             self.stopped = True
 
-    with (
-        patch(
-            "homeassistant.components.abetterrouteplanner.TelemetryStream",
-            _FakeTelemetryStream,
-        ),
-        patch(
-            "homeassistant.components.abetterrouteplanner.PREWARM_WINDOW_SECONDS",
-            0,
-        ),
+    with patch(
+        "homeassistant.components.abetterrouteplanner.TelemetryStream",
+        _FakeTelemetryStream,
     ):
         yield _StreamDriver(_FakeTelemetryStream)

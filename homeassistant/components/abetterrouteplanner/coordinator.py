@@ -331,7 +331,7 @@ class AbrpTelemetryCoordinator(TimestampDataUpdateCoordinator[dict[int, Telemetr
         """Record a ``(vehicle_id, Metric)`` pair as already-emitted.
 
         Called by the sensor platform for every entity it creates during the
-        post-pre-warm inspection so the dispatcher does not double-fire when
+        setup-time seed inspection so the dispatcher does not double-fire when
         the next frame carries the same metric.
         """
         self._presence_seen.add((vehicle_id, metric))
