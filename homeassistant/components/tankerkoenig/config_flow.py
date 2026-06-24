@@ -8,6 +8,8 @@ from aiotankerkoenig import (
     Sort,
     Station,
     Tankerkoenig,
+    TankerkoenigConnectionError,
+    TankerkoenigError,
     TankerkoenigInvalidKeyError,
 )
 import voluptuous as vol
@@ -55,6 +57,18 @@ async def async_get_nearby_stations(
     )
 
 
+def _api_error_key(err: TankerkoenigError) -> str:
+    """Return the config flow error key for an API error."""
+    if isinstance(err, TankerkoenigConnectionError):
+        return "cannot_connect"
+
+    # aiotankerkoenig only classifies some API key errors as invalid keys.
+    if isinstance(err, TankerkoenigInvalidKeyError) or "key" in str(err).lower():
+        return "invalid_auth"
+
+    return "cannot_connect"
+
+
 class FlowHandler(ConfigFlow, domain=DOMAIN):
     """Handle a config flow."""
 
@@ -94,10 +108,13 @@ class FlowHandler(ConfigFlow, domain=DOMAIN):
         )
         try:
             stations = await async_get_nearby_stations(tankerkoenig, user_input)
-        except TankerkoenigInvalidKeyError:
-            return self._show_form_user(
-                user_input, errors={CONF_API_KEY: "invalid_auth"}
-            )
+        except TankerkoenigError as err:
+            error_key = _api_error_key(err)
+            if error_key == "invalid_auth":
+                return self._show_form_user(
+                    user_input, errors={CONF_API_KEY: error_key}
+                )
+            return self._show_form_user(user_input, errors={"base": error_key})
 
         # no stations found
         if len(stations) == 0:
@@ -153,8 +170,11 @@ class FlowHandler(ConfigFlow, domain=DOMAIN):
         )
         try:
             await async_get_nearby_stations(tankerkoenig, user_input)
-        except TankerkoenigInvalidKeyError:
-            return self._show_form_reauth(user_input, {CONF_API_KEY: "invalid_auth"})
+        except TankerkoenigError as err:
+            error_key = _api_error_key(err)
+            if error_key == "invalid_auth":
+                return self._show_form_reauth(user_input, {CONF_API_KEY: error_key})
+            return self._show_form_reauth(user_input, {"base": error_key})
 
         return self.async_update_reload_and_abort(reauth_entry, data=user_input)
 
@@ -260,8 +280,10 @@ class OptionsFlowHandler(OptionsFlowWithReload):
             stations = await async_get_nearby_stations(
                 tankerkoenig, self.config_entry.data
             )
-        except TankerkoenigInvalidKeyError:
-            return self.async_show_form(step_id="init", errors={"base": "invalid_auth"})
+        except TankerkoenigError as err:
+            return self.async_show_form(
+                step_id="init", errors={"base": _api_error_key(err)}
+            )
 
         if stations:
             for station in stations:
