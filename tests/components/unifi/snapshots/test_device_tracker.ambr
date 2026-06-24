@@ -6,7 +6,7 @@
     ]),
     'area_id': None,
     'capabilities': dict({
-      'tracking_type': <TrackingType.CONNECTION: 'connection'>,
+      <DeviceTrackerEntityCapabilityAttribute.TRACKING_TYPE: 'tracking_type'>: <TrackingType.CONNECTION: 'connection'>,
     }),
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -45,10 +45,10 @@
       'in_zones': list([
         'zone.home',
       ]),
-      'ip': '10.0.1.1',
-      'mac': '00:00:00:00:01:01',
-      'source_type': <SourceType.ROUTER: 'router'>,
-      'tracking_type': <TrackingType.CONNECTION: 'connection'>,
+      <DeviceTrackerEntityStateAttribute.IP: 'ip'>: '10.0.1.1',
+      <DeviceTrackerEntityStateAttribute.MAC: 'mac'>: '00:00:00:00:01:01',
+      <DeviceTrackerEntityStateAttribute.SOURCE_TYPE: 'source_type'>: <SourceType.ROUTER: 'router'>,
+      <DeviceTrackerEntityCapabilityAttribute.TRACKING_TYPE: 'tracking_type'>: <TrackingType.CONNECTION: 'connection'>,
     }),
     'context': <ANY>,
     'entity_id': 'device_tracker.switch_1',
@@ -65,7 +65,7 @@
     ]),
     'area_id': None,
     'capabilities': dict({
-      'tracking_type': <TrackingType.CONNECTION: 'connection'>,
+      <DeviceTrackerEntityCapabilityAttribute.TRACKING_TYPE: 'tracking_type'>: <TrackingType.CONNECTION: 'connection'>,
     }),
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -101,12 +101,12 @@
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'friendly_name': 'Device 1 wd_client_1',
-      'host_name': 'wd_client_1',
+      <DeviceTrackerEntityStateAttribute.HOST_NAME: 'host_name'>: 'wd_client_1',
       'in_zones': list([
       ]),
-      'mac': '00:00:00:00:00:02',
-      'source_type': <SourceType.ROUTER: 'router'>,
-      'tracking_type': <TrackingType.CONNECTION: 'connection'>,
+      <DeviceTrackerEntityStateAttribute.MAC: 'mac'>: '00:00:00:00:00:02',
+      <DeviceTrackerEntityStateAttribute.SOURCE_TYPE: 'source_type'>: <SourceType.ROUTER: 'router'>,
+      <DeviceTrackerEntityCapabilityAttribute.TRACKING_TYPE: 'tracking_type'>: <TrackingType.CONNECTION: 'connection'>,
     }),
     'context': <ANY>,
     'entity_id': 'device_tracker.wd_client_1',
@@ -123,7 +123,7 @@
     ]),
     'area_id': None,
     'capabilities': dict({
-      'tracking_type': <TrackingType.CONNECTION: 'connection'>,
+      <DeviceTrackerEntityCapabilityAttribute.TRACKING_TYPE: 'tracking_type'>: <TrackingType.CONNECTION: 'connection'>,
     }),
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -159,13 +159,13 @@
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'friendly_name': 'Device 0 ws_client_1',
-      'host_name': 'ws_client_1',
+      <DeviceTrackerEntityStateAttribute.HOST_NAME: 'host_name'>: 'ws_client_1',
       'in_zones': list([
       ]),
-      'ip': '10.0.0.1',
-      'mac': '00:00:00:00:00:01',
-      'source_type': <SourceType.ROUTER: 'router'>,
-      'tracking_type': <TrackingType.CONNECTION: 'connection'>,
+      <DeviceTrackerEntityStateAttribute.IP: 'ip'>: '10.0.0.1',
+      <DeviceTrackerEntityStateAttribute.MAC: 'mac'>: '00:00:00:00:00:01',
+      <DeviceTrackerEntityStateAttribute.SOURCE_TYPE: 'source_type'>: <SourceType.ROUTER: 'router'>,
+      <DeviceTrackerEntityCapabilityAttribute.TRACKING_TYPE: 'tracking_type'>: <TrackingType.CONNECTION: 'connection'>,
     }),
     'context': <ANY>,
     'entity_id': 'device_tracker.ws_client_1',
