@@ -571,6 +571,51 @@ def _mock_stale_restore_cache(hass: HomeAssistant) -> None:
     )
 
 
+async def test_trigger_restore_does_not_clobber_rendered_attributes(
+    hass: HomeAssistant,
+) -> None:
+    """A trigger that already fired must win over restored state.
+
+    Regression test for the race where the trigger fires (populating the
+    coordinator) before the entity is added to hass. ``_process_data`` renders
+    fresh attributes which restore would otherwise overwrite with stale values.
+    """
+    entity = _make_trigger_event_entity(hass)
+    # Simulate the trigger having already fired before the entity is added.
+    entity.coordinator._execute_update({})
+    assert entity.coordinator.data is not None
+
+    _mock_stale_restore_cache(hass)
+
+    await entity.async_added_to_hass()
+    await hass.async_block_till_done()
+
+    # The freshly rendered values must win over the stale restored ones.
+    assert entity.name == "fresh_name"
+    assert entity.icon == "mdi:fresh"
+    assert entity.entity_picture == "/local/fresh.png"
+    assert entity.extra_state_attributes == {"attr": "fresh_attr"}
+
+
+async def test_trigger_restores_when_not_yet_triggered(
+    hass: HomeAssistant,
+) -> None:
+    """When the trigger has not fired, restored attributes are applied."""
+    entity = _make_trigger_event_entity(hass)
+    assert entity.coordinator.data is None
+
+    _mock_stale_restore_cache(hass)
+
+    await entity.async_added_to_hass()
+    await hass.async_block_till_done()
+
+    # No fresh data yet, so the restored values are surfaced.
+    assert entity.name == "stale_name"
+    assert entity.icon == "mdi:stale"
+    assert entity.entity_picture == "/local/stale.png"
+    assert entity.extra_state_attributes == {"attr": "stale_attr"}
+
+
 @pytest.mark.parametrize(
     (
         "count",
