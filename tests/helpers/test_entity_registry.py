@@ -2619,6 +2619,71 @@ async def test_restore_states(
     assert hass.states.get("light.all_info_set") is None
 
 
+@pytest.mark.parametrize(
+    ("original_name", "entity_name", "device_name_by_user", "expected_friendly_name"),
+    [
+        pytest.param(
+            None, None, None, "Pedestal Fan", id="primary_entity_uses_device_name"
+        ),
+        pytest.param(
+            "Temperature",
+            None,
+            None,
+            "Pedestal Fan Temperature",
+            id="entity_name_prefixed_with_device_name",
+        ),
+        pytest.param(
+            "Pedestal Fan", "Angle", None, "Angle", id="user_rename_replaces_full_name"
+        ),
+        pytest.param(
+            None, None, "Living Room Fan", "Living Room Fan", id="device_rename_applied"
+        ),
+    ],
+)
+async def test_restore_state_uses_device_name(
+    hass: HomeAssistant,
+    entity_registry: er.EntityRegistry,
+    device_registry: dr.DeviceRegistry,
+    original_name: str | None,
+    entity_name: str | None,
+    device_name_by_user: str | None,
+    expected_friendly_name: str,
+) -> None:
+    """Test the restored state friendly name is composed like the live state."""
+    hass.set_state(CoreState.not_running)
+
+    config_entry = MockConfigEntry(domain="fan")
+    config_entry.add_to_hass(hass)
+    device_entry = device_registry.async_get_or_create(
+        config_entry_id=config_entry.entry_id,
+        connections={(dr.CONNECTION_NETWORK_MAC, "12:34:56:AB:CD:EF")},
+        name="Pedestal Fan",
+    )
+    device_registry.async_update_device(
+        device_entry.id, name_by_user=device_name_by_user
+    )
+
+    entry = entity_registry.async_get_or_create(
+        "fan",
+        "demo",
+        "1234",
+        suggested_object_id="test",
+        config_entry=config_entry,
+        device_id=device_entry.id,
+        has_entity_name=True,
+        original_name=original_name,
+    )
+    entity_registry.async_update_entity(entry.entity_id, name=entity_name)
+
+    hass.bus.async_fire(EVENT_HOMEASSISTANT_START, {})
+    await hass.async_block_till_done()
+
+    state = hass.states.get("fan.test")
+    assert state is not None
+    assert state.state == STATE_UNAVAILABLE
+    assert state.attributes["friendly_name"] == expected_friendly_name
+
+
 async def test_remove_device_removes_entities(
     hass: HomeAssistant,
     entity_registry: er.EntityRegistry,

@@ -442,8 +442,8 @@ class RegistryEntry:
         if icon is not None:
             attrs[ATTR_ICON] = icon
 
-        name = self.name or self.original_name
-        if name is not None:
+        name = async_get_full_entity_name(hass, self)
+        if name:
             attrs[ATTR_FRIENDLY_NAME] = name
 
         if self.supported_features is not None:
