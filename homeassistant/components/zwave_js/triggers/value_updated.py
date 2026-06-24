@@ -2,7 +2,7 @@
 
 from collections.abc import Callable
 import functools
-from typing import Any
+from typing import Any, override
 
 import voluptuous as vol
 from zwave_js_server.const import CommandClass
@@ -207,6 +207,7 @@ class ValueUpdatedTrigger(Trigger):
     _options: dict[str, Any]
 
     @classmethod
+    @override
     async def async_validate_complete_config(
         cls, hass: HomeAssistant, complete_config: ConfigType
     ) -> ConfigType:
@@ -217,6 +218,7 @@ class ValueUpdatedTrigger(Trigger):
         return await super().async_validate_complete_config(hass, complete_config)
 
     @classmethod
+    @override
     async def async_validate_config(
         cls, hass: HomeAssistant, config: ConfigType
     ) -> ConfigType:
@@ -229,6 +231,7 @@ class ValueUpdatedTrigger(Trigger):
         assert config.options is not None
         self._options = config.options
 
+    @override
     async def async_attach_runner(
         self,
         run_action: TriggerActionRunner,

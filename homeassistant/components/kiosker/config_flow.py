@@ -2,7 +2,7 @@
 
 from collections.abc import Mapping
 import logging
-from typing import Any
+from typing import Any, override
 
 from kiosker import (
     AuthenticationError,
@@ -103,6 +103,7 @@ class KioskerConfigFlow(ConfigFlow, domain=DOMAIN):
         self._discovered_version: str | None = None
         self._discovered_ssl: bool | None = None
 
+    @override
     async def async_step_user(
         self, user_input: dict[str, Any] | None = None
     ) -> ConfigFlowResult:

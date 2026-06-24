@@ -39,8 +39,8 @@
 # name: test_all_entities[binary_sensor.yardian_smart_sprinkler_freeze_prevent-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'device_class': 'problem',
-      'friendly_name': 'Yardian Smart Sprinkler Freeze prevent',
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'problem',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Yardian Smart Sprinkler Freeze prevent',
     }),
     'context': <ANY>,
     'entity_id': 'binary_sensor.yardian_smart_sprinkler_freeze_prevent',
@@ -90,14 +90,14 @@
 # name: test_all_entities[binary_sensor.yardian_smart_sprinkler_standby-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'Yardian Smart Sprinkler Standby',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Yardian Smart Sprinkler Standby',
     }),
     'context': <ANY>,
     'entity_id': 'binary_sensor.yardian_smart_sprinkler_standby',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
-    'state': 'on',
+    'state': 'off',
   })
 # ---
 # name: test_all_entities[binary_sensor.yardian_smart_sprinkler_watering_running-entry]
@@ -140,8 +140,8 @@
 # name: test_all_entities[binary_sensor.yardian_smart_sprinkler_watering_running-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'device_class': 'running',
-      'friendly_name': 'Yardian Smart Sprinkler Watering running',
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'running',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Yardian Smart Sprinkler Watering running',
     }),
     'context': <ANY>,
     'entity_id': 'binary_sensor.yardian_smart_sprinkler_watering_running',
@@ -191,7 +191,7 @@
 # name: test_all_entities[binary_sensor.zone_1-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'Zone 1',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Zone 1',
     }),
     'context': <ANY>,
     'entity_id': 'binary_sensor.zone_1',
@@ -241,7 +241,7 @@
 # name: test_all_entities[binary_sensor.zone_2-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'Zone 2',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Zone 2',
     }),
     'context': <ANY>,
     'entity_id': 'binary_sensor.zone_2',

@@ -3,6 +3,7 @@
 from dataclasses import dataclass
 from datetime import timedelta
 import logging
+from typing import override
 import xml.etree.ElementTree as ET
 
 from env_canada import ECAirQuality, ECMap, ECWeather, ECWeatherUpdateFailed, ec_exc
@@ -59,6 +60,7 @@ class ECDataUpdateCoordinator[DataT: ECDataType](DataUpdateCoordinator[DataT]):
             configuration_url="https://weather.gc.ca/",
         )
 
+    @override
     async def _async_update_data(self) -> DataT:
         """Fetch data from EC."""
         try:

@@ -1,6 +1,6 @@
 """Platform for Lunatone sensor integration."""
 
-from typing import Final
+from typing import Final, override
 
 from lunatone_rest_api_client import Sensor
 from lunatone_rest_api_client.models import SensorAddressType, SensorType
@@ -147,11 +147,13 @@ class LunatoneSensor(
         return self.coordinator.data[self._sensor_id]
 
     @property
+    @override
     def available(self) -> bool:
         """Return True if entity is available."""
         return super().available and self._sensor_id in self.coordinator.data
 
     @property
+    @override
     def native_value(self) -> float | None:
         """Return the measurement value of the sensor."""
         return self.sensor.data.value
