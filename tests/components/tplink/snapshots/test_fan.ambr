@@ -6,7 +6,7 @@
     ]),
     'area_id': None,
     'capabilities': dict({
-      'preset_modes': None,
+      <FanEntityCapabilityAttribute.PRESET_MODES: 'preset_modes'>: None,
     }),
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -42,10 +42,10 @@
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'friendly_name': 'my_device',
-      'percentage': None,
-      'percentage_step': 25.0,
-      'preset_mode': None,
-      'preset_modes': None,
+      <FanEntityStateAttribute.PERCENTAGE: 'percentage'>: None,
+      <FanEntityStateAttribute.PERCENTAGE_STEP: 'percentage_step'>: 25.0,
+      <FanEntityStateAttribute.PRESET_MODE: 'preset_mode'>: None,
+      <FanEntityCapabilityAttribute.PRESET_MODES: 'preset_modes'>: None,
       'supported_features': <FanEntityFeature: 49>,
     }),
     'context': <ANY>,
@@ -63,7 +63,7 @@
     ]),
     'area_id': None,
     'capabilities': dict({
-      'preset_modes': None,
+      <FanEntityCapabilityAttribute.PRESET_MODES: 'preset_modes'>: None,
     }),
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -99,10 +99,10 @@
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'friendly_name': 'my_device my_fan_0',
-      'percentage': None,
-      'percentage_step': 25.0,
-      'preset_mode': None,
-      'preset_modes': None,
+      <FanEntityStateAttribute.PERCENTAGE: 'percentage'>: None,
+      <FanEntityStateAttribute.PERCENTAGE_STEP: 'percentage_step'>: 25.0,
+      <FanEntityStateAttribute.PRESET_MODE: 'preset_mode'>: None,
+      <FanEntityCapabilityAttribute.PRESET_MODES: 'preset_modes'>: None,
       'supported_features': <FanEntityFeature: 49>,
     }),
     'context': <ANY>,
@@ -120,7 +120,7 @@
     ]),
     'area_id': None,
     'capabilities': dict({
-      'preset_modes': None,
+      <FanEntityCapabilityAttribute.PRESET_MODES: 'preset_modes'>: None,
     }),
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -156,10 +156,10 @@
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'friendly_name': 'my_device my_fan_1',
-      'percentage': None,
-      'percentage_step': 25.0,
-      'preset_mode': None,
-      'preset_modes': None,
+      <FanEntityStateAttribute.PERCENTAGE: 'percentage'>: None,
+      <FanEntityStateAttribute.PERCENTAGE_STEP: 'percentage_step'>: 25.0,
+      <FanEntityStateAttribute.PRESET_MODE: 'preset_mode'>: None,
+      <FanEntityCapabilityAttribute.PRESET_MODES: 'preset_modes'>: None,
       'supported_features': <FanEntityFeature: 49>,
     }),
     'context': <ANY>,
