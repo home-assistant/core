@@ -2,7 +2,7 @@
 
 from collections.abc import Awaitable, Callable
 from dataclasses import dataclass
-from typing import Any
+from typing import Any, override
 
 from demetriek import LaMetricDevice
 
@@ -83,6 +83,7 @@ class LaMetricButtonEntity(LaMetricEntity, ButtonEntity):
         self._attr_unique_id = f"{coordinator.data.serial_number}-{description.key}"
 
     @lametric_exception_handler
+    @override
     async def async_press(self) -> None:
         """Send out a command to LaMetric."""
         await self.entity_description.press_fn(self.coordinator.lametric)

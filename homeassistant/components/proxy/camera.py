@@ -4,6 +4,7 @@ import asyncio
 from datetime import timedelta
 import io
 import logging
+from typing import override
 
 from PIL import Image
 import voluptuous as vol
@@ -239,6 +240,7 @@ class ProxyCamera(Camera):
         self._last_image = None
         self._mode = config.get(CONF_MODE)
 
+    @override
     def camera_image(
         self, width: int | None = None, height: int | None = None
     ) -> bytes | None:
@@ -247,6 +249,7 @@ class ProxyCamera(Camera):
             self.async_camera_image(), self.hass.loop
         ).result()
 
+    @override
     async def async_camera_image(
         self, width: int | None = None, height: int | None = None
     ) -> bytes | None:
@@ -276,6 +279,7 @@ class ProxyCamera(Camera):
             self._last_image = image_bytes
         return image_bytes
 
+    @override
     async def handle_async_mjpeg_stream(self, request):
         """Generate an HTTP MJPEG stream from camera images."""
         if not self._stream_opts:
@@ -288,6 +292,7 @@ class ProxyCamera(Camera):
         )
 
     @property
+    @override
     def name(self):
         """Return the name of this camera."""
         return self._name

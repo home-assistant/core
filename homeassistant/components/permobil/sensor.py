@@ -3,7 +3,7 @@
 from collections.abc import Callable
 from dataclasses import dataclass
 import logging
-from typing import Any
+from typing import Any, override
 
 from mypermobil import (
     BATTERY_AMPERE_HOURS_LEFT,
@@ -146,7 +146,8 @@ SENSOR_DESCRIPTIONS: tuple[PermobilSensorEntityDescription, ...] = (
         state_class=SensorStateClass.TOTAL_INCREASING,
     ),
     PermobilSensorEntityDescription(
-        # Largest number of adjustemnts in a single 24h period, monotonically increasing, never resets
+        # Largest number of adjustments in a single 24h period,
+        # monotonically increasing, never resets
         value_fn=lambda data: data.records[RECORDS_SEATING[0]],
         available_fn=lambda data: RECORDS_SEATING[0] in data.records,
         key="record_adjustments",
@@ -155,7 +156,8 @@ SENSOR_DESCRIPTIONS: tuple[PermobilSensorEntityDescription, ...] = (
         state_class=SensorStateClass.TOTAL_INCREASING,
     ),
     PermobilSensorEntityDescription(
-        # Record of largest distance travelled in a day, monotonically increasing, never resets
+        # Record of largest distance travelled in a day,
+        # monotonically increasing, never resets
         value_fn=lambda data: data.records[RECORDS_DISTANCE[0]],
         available_fn=lambda data: RECORDS_DISTANCE[0] in data.records,
         key="record_distance",
@@ -196,6 +198,7 @@ class PermobilSensor(PermobilEntity, SensorEntity):
     entity_description: PermobilSensorEntityDescription
 
     @property
+    @override
     def native_unit_of_measurement(self) -> str | None:
         """Return the unit of measurement of the sensor."""
         if self.entity_description.key == "record_distance":
@@ -205,6 +208,7 @@ class PermobilSensor(PermobilEntity, SensorEntity):
         return self.entity_description.native_unit_of_measurement
 
     @property
+    @override
     def available(self) -> bool:
         """Return True if the sensor has value."""
         return super().available and self.entity_description.available_fn(
@@ -212,6 +216,7 @@ class PermobilSensor(PermobilEntity, SensorEntity):
         )
 
     @property
+    @override
     def native_value(self) -> float | int:
         """Return the value of the sensor."""
         return self.entity_description.value_fn(self.coordinator.data)

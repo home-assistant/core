@@ -2,7 +2,7 @@
 
 from collections.abc import Mapping
 import logging
-from typing import Any
+from typing import Any, override
 
 from pyrisco import CannotConnectError, RiscoCloud, RiscoLocal, UnauthorizedError
 import voluptuous as vol
@@ -121,12 +121,14 @@ class RiscoConfigFlow(ConfigFlow, domain=DOMAIN):
 
     @staticmethod
     @callback
+    @override
     def async_get_options_flow(
         config_entry: RiscoConfigEntry,
     ) -> RiscoOptionsFlowHandler:
         """Define the config flow to handle options."""
         return RiscoOptionsFlowHandler(config_entry)
 
+    @override
     async def async_step_user(
         self, user_input: dict[str, Any] | None = None
     ) -> ConfigFlowResult:
@@ -232,8 +234,9 @@ class RiscoOptionsFlowHandler(OptionsFlow):
                 vol.Required(CONF_MORE_OPTIONS): section(
                     vol.Schema(
                         {
-                            # Polling interval is user-configurable, which is no longer allowed
-                            # pylint: disable-next=hass-config-flow-polling-field
+                            # Polling interval is user-configurable,
+                            # which is no longer allowed
+                            # pylint: disable-next=home-assistant-config-flow-polling-field
                             vol.Required(
                                 CONF_SCAN_INTERVAL,
                                 default=self._data[CONF_SCAN_INTERVAL],

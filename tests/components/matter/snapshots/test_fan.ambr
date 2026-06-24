@@ -6,7 +6,7 @@
     ]),
     'area_id': None,
     'capabilities': dict({
-      'preset_modes': list([
+      <FanEntityCapabilityAttribute.PRESET_MODES: 'preset_modes'>: list([
         'low',
         'medium',
         'high',
@@ -47,10 +47,10 @@
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'friendly_name': 'Longan link HVAC',
-      'percentage': 0,
-      'percentage_step': 1.0,
-      'preset_mode': None,
-      'preset_modes': list([
+      <FanEntityStateAttribute.PERCENTAGE: 'percentage'>: 0,
+      <FanEntityStateAttribute.PERCENTAGE_STEP: 'percentage_step'>: 1.0,
+      <FanEntityStateAttribute.PRESET_MODE: 'preset_mode'>: None,
+      <FanEntityCapabilityAttribute.PRESET_MODES: 'preset_modes'>: list([
         'low',
         'medium',
         'high',
@@ -73,7 +73,7 @@
     ]),
     'area_id': None,
     'capabilities': dict({
-      'preset_modes': list([
+      <FanEntityCapabilityAttribute.PRESET_MODES: 'preset_modes'>: list([
         'low',
         'medium',
         'high',
@@ -115,13 +115,13 @@
 # name: test_fans[mock_air_purifier][fan.mock_air_purifier-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'direction': 'forward',
+      <FanEntityStateAttribute.DIRECTION: 'direction'>: 'forward',
       'friendly_name': 'Mock Air Purifier',
-      'oscillating': False,
-      'percentage': None,
-      'percentage_step': 10.0,
-      'preset_mode': 'auto',
-      'preset_modes': list([
+      <FanEntityStateAttribute.OSCILLATING: 'oscillating'>: False,
+      <FanEntityStateAttribute.PERCENTAGE: 'percentage'>: None,
+      <FanEntityStateAttribute.PERCENTAGE_STEP: 'percentage_step'>: 10.0,
+      <FanEntityStateAttribute.PRESET_MODE: 'preset_mode'>: 'auto',
+      <FanEntityCapabilityAttribute.PRESET_MODES: 'preset_modes'>: list([
         'low',
         'medium',
         'high',
@@ -146,7 +146,7 @@
     ]),
     'area_id': None,
     'capabilities': dict({
-      'preset_modes': list([
+      <FanEntityCapabilityAttribute.PRESET_MODES: 'preset_modes'>: list([
         'low',
         'medium',
         'high',
@@ -186,10 +186,10 @@
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'friendly_name': 'Mock Extractor hood',
-      'percentage': 0,
-      'percentage_step': 1.0,
-      'preset_mode': None,
-      'preset_modes': list([
+      <FanEntityStateAttribute.PERCENTAGE: 'percentage'>: 0,
+      <FanEntityStateAttribute.PERCENTAGE_STEP: 'percentage_step'>: 1.0,
+      <FanEntityStateAttribute.PRESET_MODE: 'preset_mode'>: None,
+      <FanEntityCapabilityAttribute.PRESET_MODES: 'preset_modes'>: list([
         'low',
         'medium',
         'high',
@@ -211,7 +211,7 @@
     ]),
     'area_id': None,
     'capabilities': dict({
-      'preset_modes': list([
+      <FanEntityCapabilityAttribute.PRESET_MODES: 'preset_modes'>: list([
         'low',
         'medium',
         'high',
@@ -254,10 +254,10 @@
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'friendly_name': 'Mocked Fan Switch',
-      'percentage': 0,
-      'percentage_step': 33.333333333333336,
-      'preset_mode': None,
-      'preset_modes': list([
+      <FanEntityStateAttribute.PERCENTAGE: 'percentage'>: 0,
+      <FanEntityStateAttribute.PERCENTAGE_STEP: 'percentage_step'>: 33.333333333333336,
+      <FanEntityStateAttribute.PRESET_MODE: 'preset_mode'>: None,
+      <FanEntityCapabilityAttribute.PRESET_MODES: 'preset_modes'>: list([
         'low',
         'medium',
         'high',
@@ -282,7 +282,7 @@
     ]),
     'area_id': None,
     'capabilities': dict({
-      'preset_modes': list([
+      <FanEntityCapabilityAttribute.PRESET_MODES: 'preset_modes'>: list([
         'low',
         'medium',
         'high',
@@ -324,10 +324,10 @@
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'friendly_name': 'Room AirConditioner',
-      'percentage': 0,
-      'percentage_step': 33.333333333333336,
-      'preset_mode': None,
-      'preset_modes': list([
+      <FanEntityStateAttribute.PERCENTAGE: 'percentage'>: 0,
+      <FanEntityStateAttribute.PERCENTAGE_STEP: 'percentage_step'>: 33.333333333333336,
+      <FanEntityStateAttribute.PRESET_MODE: 'preset_mode'>: None,
+      <FanEntityCapabilityAttribute.PRESET_MODES: 'preset_modes'>: list([
         'low',
         'medium',
         'high',
@@ -351,7 +351,7 @@
     ]),
     'area_id': None,
     'capabilities': dict({
-      'preset_modes': list([
+      <FanEntityCapabilityAttribute.PRESET_MODES: 'preset_modes'>: list([
         'low',
         'medium',
         'high',
@@ -393,13 +393,13 @@
 # name: test_fans[silabs_fan][fan.sl_fan-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'direction': 'forward',
+      <FanEntityStateAttribute.DIRECTION: 'direction'>: 'forward',
       'friendly_name': 'SL_Fan',
-      'oscillating': False,
-      'percentage': 30,
-      'percentage_step': 10.0,
-      'preset_mode': 'low',
-      'preset_modes': list([
+      <FanEntityStateAttribute.OSCILLATING: 'oscillating'>: False,
+      <FanEntityStateAttribute.PERCENTAGE: 'percentage'>: 30,
+      <FanEntityStateAttribute.PERCENTAGE_STEP: 'percentage_step'>: 10.0,
+      <FanEntityStateAttribute.PRESET_MODE: 'preset_mode'>: 'low',
+      <FanEntityCapabilityAttribute.PRESET_MODES: 'preset_modes'>: list([
         'low',
         'medium',
         'high',
@@ -424,7 +424,7 @@
     ]),
     'area_id': None,
     'capabilities': dict({
-      'preset_modes': list([
+      <FanEntityCapabilityAttribute.PRESET_MODES: 'preset_modes'>: list([
         'low',
         'medium',
         'high',
@@ -464,10 +464,10 @@
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'friendly_name': 'SL-RangeHood',
-      'percentage': 0,
-      'percentage_step': 1.0,
-      'preset_mode': None,
-      'preset_modes': list([
+      <FanEntityStateAttribute.PERCENTAGE: 'percentage'>: 0,
+      <FanEntityStateAttribute.PERCENTAGE_STEP: 'percentage_step'>: 1.0,
+      <FanEntityStateAttribute.PRESET_MODE: 'preset_mode'>: None,
+      <FanEntityCapabilityAttribute.PRESET_MODES: 'preset_modes'>: list([
         'low',
         'medium',
         'high',

@@ -192,7 +192,8 @@ from unittest.mock import call, patch
 
 import pytest
 
-from homeassistant.components import light, mqtt
+from homeassistant.components import light
+from homeassistant.components.mqtt.const import DOMAIN
 from homeassistant.components.mqtt.light.schema_basic import (
     CONF_BRIGHTNESS_COMMAND_TOPIC,
     CONF_COLOR_TEMP_COMMAND_TOPIC,
@@ -246,13 +247,11 @@ from tests.components.light import common
 from tests.typing import MqttMockHAClientGenerator, MqttMockPahoClient
 
 DEFAULT_CONFIG = {
-    mqtt.DOMAIN: {light.DOMAIN: {"name": "test", "command_topic": "test-topic"}}
+    DOMAIN: {light.DOMAIN: {"name": "test", "command_topic": "test-topic"}}
 }
 
 
-@pytest.mark.parametrize(
-    "hass_config", [{mqtt.DOMAIN: {light.DOMAIN: {"name": "test"}}}]
-)
+@pytest.mark.parametrize("hass_config", [{DOMAIN: {light.DOMAIN: {"name": "test"}}}])
 async def test_fail_setup_if_no_command_topic(
     hass: HomeAssistant,
     mqtt_mock_entry: MqttMockHAClientGenerator,
@@ -267,7 +266,7 @@ async def test_fail_setup_if_no_command_topic(
     "hass_config",
     [
         {
-            mqtt.DOMAIN: {
+            DOMAIN: {
                 light.DOMAIN: {
                     "name": "test",
                     "state_topic": "test_light_rgb/status",
@@ -421,7 +420,7 @@ async def test_no_min_max_kelvin(
     "hass_config",
     [
         {
-            mqtt.DOMAIN: {
+            DOMAIN: {
                 light.DOMAIN: {
                     "name": "test",
                     "state_topic": "test_light_rgb/status",
@@ -548,15 +547,23 @@ async def test_controlling_state_via_topic(
     [
         (
             {
-                mqtt.DOMAIN: {
+                DOMAIN: {
                     light.DOMAIN: {
                         "name": "test",
                         "state_topic": "test_light_color_temp/status",
                         "command_topic": "test_light_color_temp/set",
-                        "brightness_state_topic": "test_light_color_temp/brightness/status",
-                        "brightness_command_topic": "test_light_color_temp/brightness/set",
-                        "color_temp_state_topic": "test_light_color_temp/color_temp/status",
-                        "color_temp_command_topic": "test_light_color_temp/color_temp/set",
+                        "brightness_state_topic": (
+                            "test_light_color_temp/brightness/status"
+                        ),
+                        "brightness_command_topic": (
+                            "test_light_color_temp/brightness/set"
+                        ),
+                        "color_temp_state_topic": (
+                            "test_light_color_temp/color_temp/status"
+                        ),
+                        "color_temp_command_topic": (
+                            "test_light_color_temp/color_temp/set"
+                        ),
                         "color_temp_kelvin": False,
                     }
                 }
@@ -566,15 +573,23 @@ async def test_controlling_state_via_topic(
         ),
         (
             {
-                mqtt.DOMAIN: {
+                DOMAIN: {
                     light.DOMAIN: {
                         "name": "test",
                         "state_topic": "test_light_color_temp/status",
                         "command_topic": "test_light_color_temp/set",
-                        "brightness_state_topic": "test_light_color_temp/brightness/status",
-                        "brightness_command_topic": "test_light_color_temp/brightness/set",
-                        "color_temp_state_topic": "test_light_color_temp/color_temp/status",
-                        "color_temp_command_topic": "test_light_color_temp/color_temp/set",
+                        "brightness_state_topic": (
+                            "test_light_color_temp/brightness/status"
+                        ),
+                        "brightness_command_topic": (
+                            "test_light_color_temp/brightness/set"
+                        ),
+                        "color_temp_state_topic": (
+                            "test_light_color_temp/color_temp/status"
+                        ),
+                        "color_temp_command_topic": (
+                            "test_light_color_temp/color_temp/set"
+                        ),
                         "color_temp_kelvin": True,
                     }
                 }
@@ -787,7 +802,7 @@ async def test_received_rgbx_values_set_state_optimistic(
     "hass_config",
     [
         {
-            mqtt.DOMAIN: {
+            DOMAIN: {
                 light.DOMAIN: {
                     "name": "test",
                     "state_topic": "test_light_rgb/status",
@@ -919,7 +934,7 @@ async def test_invalid_state_via_topic(
     "hass_config",
     [
         {
-            mqtt.DOMAIN: {
+            DOMAIN: {
                 light.DOMAIN: {
                     "name": "test",
                     "state_topic": "test_scale/status",
@@ -969,7 +984,7 @@ async def test_brightness_controlling_scale(
     "hass_config",
     [
         {
-            mqtt.DOMAIN: {
+            DOMAIN: {
                 light.DOMAIN: {
                     "name": "test",
                     "state_topic": "test_scale_rgb/status",
@@ -1043,7 +1058,7 @@ async def test_brightness_from_rgb_controlling_scale(
     "hass_config",
     [
         {
-            mqtt.DOMAIN: {
+            DOMAIN: {
                 light.DOMAIN: {
                     "name": "test",
                     "state_topic": "test_light_rgb/status",
@@ -1163,7 +1178,7 @@ async def test_controlling_state_via_topic_with_templates(
     "hass_config",
     [
         {
-            mqtt.DOMAIN: {
+            DOMAIN: {
                 light.DOMAIN: {
                     "name": "test",
                     "command_topic": "test_light_rgb/set",
@@ -1429,7 +1444,7 @@ async def test_sending_mqtt_commands_and_optimistic(
     "hass_config",
     [
         {
-            mqtt.DOMAIN: {
+            DOMAIN: {
                 light.DOMAIN: {
                     "name": "test",
                     "command_topic": "test_light_rgb/set",
@@ -1478,7 +1493,7 @@ async def test_sending_mqtt_rgb_command_with_template(
     "hass_config",
     [
         {
-            mqtt.DOMAIN: {
+            DOMAIN: {
                 light.DOMAIN: {
                     "name": "test",
                     "command_topic": "test_light_rgb/set",
@@ -1527,7 +1542,7 @@ async def test_sending_mqtt_rgbw_command_with_template(
     "hass_config",
     [
         {
-            mqtt.DOMAIN: {
+            DOMAIN: {
                 light.DOMAIN: {
                     "name": "test",
                     "command_topic": "test_light_rgb/set",
@@ -1577,12 +1592,16 @@ async def test_sending_mqtt_rgbww_command_with_template(
     [
         (
             {
-                mqtt.DOMAIN: {
+                DOMAIN: {
                     light.DOMAIN: {
                         "name": "test",
                         "command_topic": "test_light_color_temp/set",
-                        "color_temp_command_topic": "test_light_color_temp/color_temp/set",
-                        "color_temp_command_template": "{{ (1000 / value) | round(0) }}",
+                        "color_temp_command_topic": (
+                            "test_light_color_temp/color_temp/set"
+                        ),
+                        "color_temp_command_template": (
+                            "{{ (1000 / value) | round(0) }}"
+                        ),
                         "color_temp_kelvin": False,
                         "payload_on": "on",
                         "payload_off": "off",
@@ -1594,11 +1613,13 @@ async def test_sending_mqtt_rgbww_command_with_template(
         ),
         (
             {
-                mqtt.DOMAIN: {
+                DOMAIN: {
                     light.DOMAIN: {
                         "name": "test",
                         "command_topic": "test_light_color_temp/set",
-                        "color_temp_command_topic": "test_light_color_temp/color_temp/set",
+                        "color_temp_command_topic": (
+                            "test_light_color_temp/color_temp/set"
+                        ),
                         "color_temp_command_template": "{{ (0.5 * value) | round(0) }}",
                         "color_temp_kelvin": True,
                         "payload_on": "on",
@@ -1652,7 +1673,7 @@ async def test_sending_mqtt_color_temp_command_with_template(
     "hass_config",
     [
         {
-            mqtt.DOMAIN: {
+            DOMAIN: {
                 light.DOMAIN: {
                     "name": "test",
                     "command_topic": "test_light/set",
@@ -1696,7 +1717,7 @@ async def test_on_command_first(
     "hass_config",
     [
         {
-            mqtt.DOMAIN: {
+            DOMAIN: {
                 light.DOMAIN: {
                     "name": "test",
                     "command_topic": "test_light/set",
@@ -1739,7 +1760,7 @@ async def test_on_command_last(
     "hass_config",
     [
         {
-            mqtt.DOMAIN: {
+            DOMAIN: {
                 light.DOMAIN: {
                     "name": "test",
                     "command_topic": "test_light/set",
@@ -1804,7 +1825,7 @@ async def test_on_command_brightness(
     "hass_config",
     [
         {
-            mqtt.DOMAIN: {
+            DOMAIN: {
                 light.DOMAIN: {
                     "name": "test",
                     "command_topic": "test_light/set",
@@ -1886,7 +1907,7 @@ async def test_on_command_brightness_scaled(
     "hass_config",
     [
         {
-            mqtt.DOMAIN: {
+            DOMAIN: {
                 light.DOMAIN: {
                     "name": "test",
                     "command_topic": "test_light/set",
@@ -1988,7 +2009,7 @@ async def test_on_command_rgb(
     "hass_config",
     [
         {
-            mqtt.DOMAIN: {
+            DOMAIN: {
                 light.DOMAIN: {
                     "name": "test",
                     "command_topic": "test_light/set",
@@ -2104,7 +2125,7 @@ async def test_on_command_rgbw(
     "hass_config",
     [
         {
-            mqtt.DOMAIN: {
+            DOMAIN: {
                 light.DOMAIN: {
                     "name": "test",
                     "command_topic": "test_light/set",
@@ -2224,7 +2245,7 @@ async def test_on_command_rgbww(
     "hass_config",
     [
         {
-            mqtt.DOMAIN: {
+            DOMAIN: {
                 light.DOMAIN: {
                     "name": "test",
                     "command_topic": "test_light/set",
@@ -2271,12 +2292,14 @@ async def test_on_command_rgb_template(
     "hass_config",
     [
         {
-            mqtt.DOMAIN: {
+            DOMAIN: {
                 light.DOMAIN: {
                     "name": "test",
                     "command_topic": "test_light/set",
                     "rgbw_command_topic": "test_light/rgbw",
-                    "rgbw_command_template": "{{ red }}/{{ green }}/{{ blue }}/{{ white }}",
+                    "rgbw_command_template": (
+                        "{{ red }}/{{ green }}/{{ blue }}/{{ white }}"
+                    ),
                 }
             }
         }
@@ -2321,7 +2344,7 @@ async def test_on_command_rgbw_template(
     "hass_config",
     [
         {
-            mqtt.DOMAIN: {
+            DOMAIN: {
                 light.DOMAIN: {
                     "name": "test",
                     "command_topic": "test_light/set",
@@ -2373,7 +2396,7 @@ async def test_on_command_rgbww_template(
     "hass_config",
     [
         {
-            mqtt.DOMAIN: {
+            DOMAIN: {
                 light.DOMAIN: {
                     "name": "test",
                     "command_topic": "tasmota_B94927/cmnd/POWER",
@@ -2385,10 +2408,14 @@ async def test_on_command_rgbww_template(
                     "on_command_type": "brightness",
                     "brightness_value_template": "{{ value_json.Dimmer }}",
                     "rgb_command_topic": "tasmota_B94927/cmnd/Color2",
-                    "rgb_value_template": "{{value_json.Color.split(',')[0:3]|join(',')}}",
+                    "rgb_value_template": (
+                        "{{value_json.Color.split(',')[0:3]|join(',')}}"
+                    ),
                     "white_command_topic": "tasmota_B94927/cmnd/White",
                     "white_scale": 100,
-                    "color_mode_value_template": "{% if value_json.White %} white {% else %} rgb {% endif %}",
+                    "color_mode_value_template": (
+                        "{% if value_json.White %} white {% else %} rgb {% endif %}"
+                    ),
                     "qos": "0",
                 }
             }
@@ -2481,7 +2508,7 @@ async def test_on_command_white(
     "hass_config",
     [
         {
-            mqtt.DOMAIN: {
+            DOMAIN: {
                 light.DOMAIN: {
                     "name": "test",
                     "state_topic": "test_light_rgb/status",
@@ -2636,7 +2663,7 @@ async def test_explicit_color_mode(
     "hass_config",
     [
         {
-            mqtt.DOMAIN: {
+            DOMAIN: {
                 light.DOMAIN: {
                     "name": "test",
                     "state_topic": "test_light_rgb/status",
@@ -2724,7 +2751,7 @@ async def test_explicit_color_mode_templated(
     "hass_config",
     [
         {
-            mqtt.DOMAIN: {
+            DOMAIN: {
                 light.DOMAIN: {
                     "name": "test",
                     "state_topic": "tasmota_B94927/tele/STATE",
@@ -2797,7 +2824,7 @@ async def test_white_state_update(
     "hass_config",
     [
         {
-            mqtt.DOMAIN: {
+            DOMAIN: {
                 light.DOMAIN: {
                     "name": "test",
                     "command_topic": "test_light/set",
@@ -2948,7 +2975,7 @@ async def test_discovery_update_attr(
     "hass_config",
     [
         {
-            mqtt.DOMAIN: {
+            DOMAIN: {
                 light.DOMAIN: [
                     {
                         "name": "Test 1",
@@ -3058,7 +3085,11 @@ async def test_discovery_update_light_topic_and_template(
             [
                 (
                     "test_light_rgb/state1",
-                    '{"state1":{"state":"ON", "brightness":100, "ct":123, "white":100, "fx":"cycle"}}',
+                    (
+                        '{"state1":{"state":"ON",'
+                        ' "brightness":100, "ct":123,'
+                        ' "white":100, "fx":"cycle"}}'
+                    ),
                 )
             ],
             "on",
@@ -3109,7 +3140,11 @@ async def test_discovery_update_light_topic_and_template(
             [
                 (
                     "test_light_rgb/state2",
-                    '{"state2":{"state":"ON", "brightness":50, "ct":200, "white":50, "fx":"loop"}}',
+                    (
+                        '{"state2":{"state":"ON",'
+                        ' "brightness":50, "ct":200,'
+                        ' "white":50, "fx":"loop"}}'
+                    ),
                 )
             ],
             "on",
@@ -3123,15 +3158,27 @@ async def test_discovery_update_light_topic_and_template(
             [
                 (
                     "test_light_rgb/state1",
-                    '{"state1":{"state":"ON", "brightness":100, "ct":123, "fx":"cycle"}}',
+                    (
+                        '{"state1":{"state":"ON",'
+                        ' "brightness":100, "ct":123,'
+                        ' "fx":"cycle"}}'
+                    ),
                 ),
                 (
                     "test_light_rgb/state1",
-                    '{"state2":{"state":"ON", "brightness":100, "ct":123, "fx":"cycle"}}',
+                    (
+                        '{"state2":{"state":"ON",'
+                        ' "brightness":100, "ct":123,'
+                        ' "fx":"cycle"}}'
+                    ),
                 ),
                 (
                     "test_light_rgb/state2",
-                    '{"state1":{"state":"ON", "brightness":100, "ct":123, "fx":"cycle"}}',
+                    (
+                        '{"state1":{"state":"ON",'
+                        ' "brightness":100, "ct":123,'
+                        ' "fx":"cycle"}}'
+                    ),
                 ),
             ],
             "on",
@@ -3316,7 +3363,11 @@ async def test_discovery_update_light_template(
             [
                 (
                     "test_light_rgb/state1",
-                    '{"state1":{"state":"ON", "brightness":100, "ct":123, "white":100, "fx":"cycle"}}',
+                    (
+                        '{"state1":{"state":"ON",'
+                        ' "brightness":100, "ct":123,'
+                        ' "white":100, "fx":"cycle"}}'
+                    ),
                 )
             ],
             "on",
@@ -3367,7 +3418,11 @@ async def test_discovery_update_light_template(
             [
                 (
                     "test_light_rgb/state1",
-                    '{"state2":{"state":"ON", "brightness":50, "ct":200, "white":50, "fx":"loop"}}',
+                    (
+                        '{"state2":{"state":"ON",'
+                        ' "brightness":50, "ct":200,'
+                        ' "white":50, "fx":"loop"}}'
+                    ),
                 )
             ],
             "on",
@@ -3381,7 +3436,11 @@ async def test_discovery_update_light_template(
             [
                 (
                     "test_light_rgb/state1",
-                    '{"state1":{"state":"ON", "brightness":100, "ct":123, "fx":"cycle"}}',
+                    (
+                        '{"state1":{"state":"ON",'
+                        ' "brightness":100, "ct":123,'
+                        ' "fx":"cycle"}}'
+                    ),
                 ),
             ],
             "on",
@@ -3576,7 +3635,7 @@ async def test_entity_debug_info_message(
     "hass_config",
     [
         {
-            mqtt.DOMAIN: {
+            DOMAIN: {
                 light.DOMAIN: {
                     "name": "test",
                     "command_topic": "test_max_mireds/set",
@@ -3700,9 +3759,9 @@ async def test_publishing_with_custom_encoding(
     domain = light.DOMAIN
     config: dict[str, Any] = copy.deepcopy(DEFAULT_CONFIG)
     if topic == "effect_command_topic":
-        config[mqtt.DOMAIN][domain]["effect_list"] = ["random", "color_loop"]
+        config[DOMAIN][domain]["effect_list"] = ["random", "color_loop"]
     elif topic == "white_command_topic":
-        config[mqtt.DOMAIN][domain]["rgb_command_topic"] = "some-cmd-topic"
+        config[DOMAIN][domain]["rgb_command_topic"] = "some-cmd-topic"
 
     await help_test_publishing_with_custom_encoding(
         hass,
@@ -3787,7 +3846,7 @@ async def test_encoding_subscribable_topics(
     init_payload: tuple[str, str] | None,
 ) -> None:
     """Test handling of incoming encoded payload."""
-    config: dict[str, Any] = copy.deepcopy(DEFAULT_CONFIG[mqtt.DOMAIN][light.DOMAIN])
+    config: dict[str, Any] = copy.deepcopy(DEFAULT_CONFIG[DOMAIN][light.DOMAIN])
     config[CONF_EFFECT_COMMAND_TOPIC] = "light/CONF_EFFECT_COMMAND_TOPIC"
     config[CONF_RGB_COMMAND_TOPIC] = "light/CONF_RGB_COMMAND_TOPIC"
     config[CONF_BRIGHTNESS_COMMAND_TOPIC] = "light/CONF_BRIGHTNESS_COMMAND_TOPIC"
@@ -3828,7 +3887,7 @@ async def test_encoding_subscribable_topics_brightness(
     init_payload: tuple[str, str] | None,
 ) -> None:
     """Test handling of incoming encoded payload for a brightness only light."""
-    config = copy.deepcopy(DEFAULT_CONFIG[mqtt.DOMAIN][light.DOMAIN])
+    config = copy.deepcopy(DEFAULT_CONFIG[DOMAIN][light.DOMAIN])
     config[CONF_BRIGHTNESS_COMMAND_TOPIC] = "light/CONF_BRIGHTNESS_COMMAND_TOPIC"
 
     await help_test_encoding_subscribable_topics(
@@ -3848,7 +3907,7 @@ async def test_encoding_subscribable_topics_brightness(
     "hass_config",
     [
         {
-            mqtt.DOMAIN: {
+            DOMAIN: {
                 light.DOMAIN: {
                     "name": "test",
                     "command_topic": "test_light_brightness/set",
@@ -3902,7 +3961,7 @@ async def test_sending_mqtt_brightness_command_with_template(
     "hass_config",
     [
         {
-            mqtt.DOMAIN: {
+            DOMAIN: {
                 light.DOMAIN: {
                     "name": "test",
                     "command_topic": "test_light_brightness/set",
@@ -3957,12 +4016,14 @@ async def test_sending_mqtt_effect_command_with_template(
     "hass_config",
     [
         {
-            mqtt.DOMAIN: {
+            DOMAIN: {
                 light.DOMAIN: {
                     "name": "test",
                     "command_topic": "test_light_hs/set",
                     "hs_command_topic": "test_light_hs/hs_color/set",
-                    "hs_command_template": '{"hue": {{ hue | int }}, "sat": {{ sat | int}}}',
+                    "hs_command_template": (
+                        '{"hue": {{ hue | int }}, "sat": {{ sat | int}}}'
+                    ),
                     "qos": 0,
                 }
             }
@@ -4003,7 +4064,7 @@ async def test_sending_mqtt_hs_command_with_template(
     "hass_config",
     [
         {
-            mqtt.DOMAIN: {
+            DOMAIN: {
                 light.DOMAIN: {
                     "name": "test",
                     "command_topic": "test_light_xy/set",
@@ -4157,6 +4218,6 @@ async def test_value_template_fails(
     await mqtt_mock_entry()
     async_fire_mqtt_message(hass, "test-topic", '{"some_var": null }')
     assert (
-        "TypeError: unsupported operand type(s) for *: 'NoneType' and 'int' rendering template"
-        in caplog.text
+        "TypeError: unsupported operand type(s) for *:"
+        " 'NoneType' and 'int' rendering template" in caplog.text
     )

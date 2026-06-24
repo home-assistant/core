@@ -20,8 +20,10 @@ TRIGGERS: dict[str, type[Trigger]] = {
     "changed": make_entity_numerical_state_changed_with_unit_trigger(
         POWER_DOMAIN_SPECS, UnitOfPower.WATT, PowerConverter
     ),
-    "crossed_threshold": make_entity_numerical_state_crossed_threshold_with_unit_trigger(
-        POWER_DOMAIN_SPECS, UnitOfPower.WATT, PowerConverter
+    "crossed_threshold": (
+        make_entity_numerical_state_crossed_threshold_with_unit_trigger(
+            POWER_DOMAIN_SPECS, UnitOfPower.WATT, PowerConverter
+        )
     ),
 }
 

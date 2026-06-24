@@ -98,6 +98,7 @@ def setup(hass: HomeAssistant, config: ConfigType) -> bool:
 
         try:
             pilight_client.send_code(message_data)
+        # pylint: disable-next=home-assistant-action-swallowed-exception
         except OSError:
             _LOGGER.error("Pilight send failed for %s", str(message_data))
 

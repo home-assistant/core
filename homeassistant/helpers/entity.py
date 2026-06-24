@@ -15,7 +15,16 @@ import sys
 import threading
 import time
 from types import FunctionType
-from typing import TYPE_CHECKING, Any, Final, Literal, NotRequired, TypedDict, final
+from typing import (
+    TYPE_CHECKING,
+    Any,
+    Final,
+    Literal,
+    NotRequired,
+    TypedDict,
+    final,
+    override,
+)
 
 from propcache.api import cached_property
 import voluptuous as vol
@@ -76,7 +85,7 @@ DATA_ENTITY_SOURCE = "entity_info"
 
 # Used when converting float states to string: limit precision according to machine
 # epsilon to make the string representation readable
-FLOAT_PRECISION = abs(int(math.floor(math.log10(abs(sys.float_info.epsilon))))) - 1
+FLOAT_PRECISION = abs(math.floor(math.log10(abs(sys.float_info.epsilon)))) - 1
 
 # How many times per hour we allow capabilities to be updated before logging a warning
 CAPABILITIES_UPDATE_LIMIT = 100
@@ -373,7 +382,8 @@ class CachedProperties(type):
             attr_name = f"_attr_{property_name}"
             private_attr_name = f"__attr_{property_name}"
             # Check if an _attr_ class attribute exits and move it to __attr_. We check
-            # __dict__ here because we don't care about _attr_ class attributes in parents.
+            # __dict__ here because we don't care about _attr_ class
+            # attributes in parents.
             if attr_name in cls.__dict__:
                 attr = getattr(cls, attr_name)
                 if isinstance(attr, (FunctionType, property)):
@@ -388,7 +398,8 @@ class CachedProperties(type):
                     else:
 
                         def wrapped_annotate(format: Format) -> dict[str, Any]:
-                            # Note: to avoid complicating things, we only support FORWARDREF
+                            # Note: to avoid complicating things,
+                            # we only support FORWARDREF
                             return annotations
 
                         cls.__annotate__ = wrapped_annotate
@@ -412,8 +423,9 @@ class CachedProperties(type):
                 if property_name in seen_props:
                     continue
                 attr_name = f"_attr_{property_name}"
-                # Check if an _attr_ class attribute exits. We check __dict__ here because
-                # we don't care about _attr_ class attributes in parents.
+                # Check if an _attr_ class attribute exists.
+                # We check __dict__ here because we don't care
+                # about _attr_ class attributes in parents.
                 if (attr_name) not in cls.__dict__:
                     continue
                 wrap_attr(cls, property_name)
@@ -588,6 +600,7 @@ class Entity(
     _attr_unique_id: str | None = None
     _attr_unit_of_measurement: str | None
 
+    @override
     def __init_subclass__(cls, **kwargs: Any) -> None:
         """Initialize an Entity subclass."""
         super().__init_subclass__(**kwargs)
@@ -731,7 +744,8 @@ class Entity(
                 return device_class_name
             return description_name
 
-        # The entity has no name set by _attr_name, translation_key or entity_description
+        # The entity has no name set by _attr_name, translation_key
+        # or entity_description
         # Check if the entity should be named by its device class
         if self._default_to_device_class_name():
             return device_class_name
@@ -1184,8 +1198,9 @@ class Entity(
                     self._disabled_reported = True
                     _LOGGER.warning(
                         (
-                            "Entity %s is incorrectly being triggered for updates while it"
-                            " is disabled. This is a bug in the %s integration"
+                            "Entity %s is incorrectly being triggered"
+                            " for updates while it is disabled."
+                            " This is a bug in the %s integration"
                         ),
                         self.entity_id,
                         self.platform.platform_name,
@@ -1204,8 +1219,9 @@ class Entity(
         time_now = timer()
 
         if entry := self.registry_entry:
-            # Make sure capabilities and other data in the entity registry are up to date.
-            # Capabilities include capability attributes, device class and supported features.
+            # Make sure capabilities and other data in the entity
+            # registry are up to date. Capabilities include capability
+            # attributes, device class and supported features.
             supported_features = supported_features or 0
             if (
                 capabilities != entry.capabilities
@@ -1678,6 +1694,7 @@ class Entity(
         ):
             self.async_on_remove(self._async_unsubscribe_device_updates)
 
+    @override
     def __repr__(self) -> str:
         """Return the representation.
 
@@ -1726,6 +1743,7 @@ class ToggleEntity(
 
     @property
     @final
+    @override
     def state(self) -> Literal["on", "off"] | None:
         """Return the state."""
         if (is_on := self.is_on) is None:

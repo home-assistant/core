@@ -3,7 +3,7 @@
 from collections.abc import Iterable
 from dataclasses import dataclass
 import logging
-from typing import TYPE_CHECKING, Any
+from typing import TYPE_CHECKING, Any, override
 
 from miio import AirQualityMonitor, Device as MiioDevice, DeviceException
 from miio.gateway.gateway import (
@@ -674,15 +674,17 @@ VACUUM_SENSORS = {
         entity_registry_enabled_default=False,
         entity_category=EntityCategory.DIAGNOSTIC,
     ),
-    f"clean_history_{ATTR_CLEAN_HISTORY_DUST_COLLECTION_COUNT}": XiaomiMiioSensorDescription(
-        native_unit_of_measurement="",
-        icon="mdi:counter",
-        state_class=SensorStateClass.TOTAL_INCREASING,
-        key=ATTR_CLEAN_HISTORY_DUST_COLLECTION_COUNT,
-        parent_key=VacuumCoordinatorDataAttributes.clean_history_status,
-        translation_key=ATTR_CLEAN_HISTORY_DUST_COLLECTION_COUNT,
-        entity_registry_enabled_default=False,
-        entity_category=EntityCategory.DIAGNOSTIC,
+    f"clean_history_{ATTR_CLEAN_HISTORY_DUST_COLLECTION_COUNT}": (
+        XiaomiMiioSensorDescription(
+            native_unit_of_measurement="",
+            icon="mdi:counter",
+            state_class=SensorStateClass.TOTAL_INCREASING,
+            key=ATTR_CLEAN_HISTORY_DUST_COLLECTION_COUNT,
+            parent_key=VacuumCoordinatorDataAttributes.clean_history_status,
+            translation_key=ATTR_CLEAN_HISTORY_DUST_COLLECTION_COUNT,
+            entity_registry_enabled_default=False,
+            entity_category=EntityCategory.DIAGNOSTIC,
+        )
     ),
     f"consumable_{ATTR_CONSUMABLE_STATUS_MAIN_BRUSH_LEFT}": XiaomiMiioSensorDescription(
         native_unit_of_measurement=UnitOfTime.SECONDS,
@@ -711,14 +713,16 @@ VACUUM_SENSORS = {
         translation_key=ATTR_CONSUMABLE_STATUS_FILTER_LEFT,
         entity_category=EntityCategory.DIAGNOSTIC,
     ),
-    f"consumable_{ATTR_CONSUMABLE_STATUS_SENSOR_DIRTY_LEFT}": XiaomiMiioSensorDescription(
-        native_unit_of_measurement=UnitOfTime.SECONDS,
-        icon="mdi:eye-outline",
-        device_class=SensorDeviceClass.DURATION,
-        key=ATTR_CONSUMABLE_STATUS_SENSOR_DIRTY_LEFT,
-        parent_key=VacuumCoordinatorDataAttributes.consumable_status,
-        translation_key=ATTR_CONSUMABLE_STATUS_SENSOR_DIRTY_LEFT,
-        entity_category=EntityCategory.DIAGNOSTIC,
+    f"consumable_{ATTR_CONSUMABLE_STATUS_SENSOR_DIRTY_LEFT}": (
+        XiaomiMiioSensorDescription(
+            native_unit_of_measurement=UnitOfTime.SECONDS,
+            icon="mdi:eye-outline",
+            device_class=SensorDeviceClass.DURATION,
+            key=ATTR_CONSUMABLE_STATUS_SENSOR_DIRTY_LEFT,
+            parent_key=VacuumCoordinatorDataAttributes.consumable_status,
+            translation_key=ATTR_CONSUMABLE_STATUS_SENSOR_DIRTY_LEFT,
+            entity_category=EntityCategory.DIAGNOSTIC,
+        )
     ),
 }
 
@@ -885,6 +889,7 @@ class XiaomiGenericSensor(
         }
 
     @callback
+    @override
     def _handle_coordinator_update(self):
         """Fetch state from the device."""
         native_value = self._determine_native_value()
@@ -990,6 +995,7 @@ class XiaomiGatewaySensor(XiaomiGatewayDevice, SensorEntity):
         self.entity_description = description
 
     @property
+    @override
     def native_value(self):
         """Return the state of the sensor."""
         return self._sub_device.status[self.entity_description.key]

@@ -5,6 +5,7 @@ import logging
 from secrets import token_hex
 import shutil
 from tempfile import mkdtemp
+from typing import override
 
 from aiohttp import BasicAuth, ClientSession, UnixConnector
 from aiohttp.client_exceptions import ClientConnectionError, ServerConnectionError
@@ -74,7 +75,7 @@ _AUTH = "auth"
 
 
 def _validate_auth(config: dict) -> dict:
-    """Validate that username and password are only set when a URL is configured or when debug UI is enabled."""
+    """Validate username/password only when URL is configured or debug UI enabled."""
     auth_exists = CONF_USERNAME in config
     debug_ui_enabled = config.get(CONF_DEBUG_UI, False)
 
@@ -83,7 +84,8 @@ def _validate_auth(config: dict) -> dict:
 
     if auth_exists and CONF_URL not in config and not debug_ui_enabled:
         raise vol.Invalid(
-            "Username and password can only be set when a URL is configured or debug_ui is true"
+            "Username and password can only be set when a URL is"
+            " configured or debug_ui is true"
         )
 
     return config
@@ -278,6 +280,7 @@ class WebRTCProvider(CameraWebRTCProvider):
         self._supported_schemes: set[str] = set()
 
     @property
+    @override
     def domain(self) -> str:
         """Return the integration domain of the provider."""
         return DOMAIN
@@ -287,10 +290,12 @@ class WebRTCProvider(CameraWebRTCProvider):
         self._supported_schemes = await self._rest_client.schemes.list()
 
     @callback
+    @override
     def async_is_supported(self, stream_source: str) -> bool:
         """Return if this provider is supports the Camera as source."""
         return stream_source.partition(":")[0] in self._supported_schemes
 
+    @override
     async def async_handle_async_webrtc_offer(
         self,
         camera: Camera,
@@ -327,6 +332,7 @@ class WebRTCProvider(CameraWebRTCProvider):
         config = camera.async_get_webrtc_client_configuration()
         await ws_client.send(WebRTCOffer(offer_sdp, config.configuration.ice_servers))
 
+    @override
     async def async_on_webrtc_candidate(
         self, session_id: str, candidate: RTCIceCandidateInit
     ) -> None:
@@ -338,11 +344,13 @@ class WebRTCProvider(CameraWebRTCProvider):
             _LOGGER.debug("Unknown session %s. Ignoring candidate", session_id)
 
     @callback
+    @override
     def async_close_session(self, session_id: str) -> None:
         """Close the session."""
         ws_client = self._sessions.pop(session_id)
         self._hass.async_create_task(ws_client.close())
 
+    @override
     async def async_get_image(
         self,
         camera: Camera,
@@ -363,7 +371,8 @@ class WebRTCProvider(CameraWebRTCProvider):
 
         if camera.platform.platform_name == "generic":
             # This is a workaround to use ffmpeg for generic cameras
-            # A proper fix will be added in the future together with supporting multiple streams per camera
+            # A proper fix will be added in the future together
+            # with supporting multiple streams per camera
             stream_source = "ffmpeg:" + stream_source
 
         if not self.async_is_supported(stream_source):
@@ -407,7 +416,8 @@ class WebRTCProvider(CameraWebRTCProvider):
                 [
                     stream_source,
                     # We are setting any ffmpeg rtsp related logs to debug
-                    # Connection problems to the camera will be logged by the first stream
+                    # Connection problems to the camera will be
+                    # logged by the first stream
                     # Therefore setting it to debug will not hide any important logs
                     f"ffmpeg:{identifier}#audio=opus#query=log_level=debug",
                 ],

@@ -2,7 +2,7 @@
 
 from collections.abc import Callable
 from dataclasses import dataclass
-from typing import Any, cast
+from typing import Any, cast, override
 
 from pyoverkiz.enums import OverkizCommand, OverkizCommandParam, OverkizState
 from pyoverkiz.enums.ui import UIWidget
@@ -73,8 +73,12 @@ def _state_tsk_alarm_controller(
 
 MAP_CORE_ACTIVE_ZONES: dict[str, AlarmControlPanelState] = {
     OverkizCommandParam.A: AlarmControlPanelState.ARMED_HOME,
-    f"{OverkizCommandParam.A},{OverkizCommandParam.B}": AlarmControlPanelState.ARMED_NIGHT,
-    f"{OverkizCommandParam.A},{OverkizCommandParam.B},{OverkizCommandParam.C}": AlarmControlPanelState.ARMED_AWAY,
+    f"{OverkizCommandParam.A},{OverkizCommandParam.B}": (
+        AlarmControlPanelState.ARMED_NIGHT
+    ),
+    (
+        f"{OverkizCommandParam.A},{OverkizCommandParam.B},{OverkizCommandParam.C}"
+    ): AlarmControlPanelState.ARMED_AWAY,
 }
 
 
@@ -84,8 +88,10 @@ def _state_stateful_alarm_controller(
     """Return the state of the device."""
     if state := cast(str, select_state(OverkizState.CORE_ACTIVE_ZONES)):
         # The Stateful Alarm Controller has 3 zones with the following options:
-        # (A, B, C, A,B, B,C, A,C, A,B,C). Since it is not possible to map this to AlarmControlPanel entity,
-        # only the most important zones are mapped, other zones can only be disarmed.
+        # (A, B, C, A,B, B,C, A,C, A,B,C). Since it is not
+        # possible to map this to AlarmControlPanel entity, only
+        # the most important zones are mapped, other zones can
+        # only be disarmed.
         if state in MAP_CORE_ACTIVE_ZONES:
             return MAP_CORE_ACTIVE_ZONES[state]
 
@@ -138,7 +144,7 @@ ALARM_DESCRIPTIONS: list[OverkizAlarmDescription] = [
     # Disabled by default since all Overkiz hubs have this
     # virtual device, but only a few users actually use this.
     OverkizAlarmDescription(
-        key=UIWidget.TSKALARM_CONTROLLER,
+        key=UIWidget.TSK_ALARM_CONTROLLER,
         entity_registry_enabled_default=False,
         supported_features=(
             AlarmControlPanelEntityFeature.ARM_AWAY
@@ -244,10 +250,12 @@ class OverkizAlarmControlPanel(OverkizDescriptiveEntity, AlarmControlPanelEntity
         self._attr_supported_features = self.entity_description.supported_features
 
     @property
+    @override
     def alarm_state(self) -> AlarmControlPanelState:
         """Return the state of the device."""
-        return self.entity_description.fn_state(self.executor.select_state)
+        return self.entity_description.fn_state(self.device.states.get_value)
 
+    @override
     async def async_alarm_disarm(self, code: str | None = None) -> None:
         """Send disarm command."""
         assert self.entity_description.alarm_disarm
@@ -256,6 +264,7 @@ class OverkizAlarmControlPanel(OverkizDescriptiveEntity, AlarmControlPanelEntity
             self.entity_description.alarm_disarm_args,
         )
 
+    @override
     async def async_alarm_arm_home(self, code: str | None = None) -> None:
         """Send arm home command."""
         assert self.entity_description.alarm_arm_home
@@ -264,6 +273,7 @@ class OverkizAlarmControlPanel(OverkizDescriptiveEntity, AlarmControlPanelEntity
             self.entity_description.alarm_arm_home_args,
         )
 
+    @override
     async def async_alarm_arm_night(self, code: str | None = None) -> None:
         """Send arm night command."""
         assert self.entity_description.alarm_arm_night
@@ -272,6 +282,7 @@ class OverkizAlarmControlPanel(OverkizDescriptiveEntity, AlarmControlPanelEntity
             self.entity_description.alarm_arm_night_args,
         )
 
+    @override
     async def async_alarm_arm_away(self, code: str | None = None) -> None:
         """Send arm away command."""
         assert self.entity_description.alarm_arm_away
@@ -280,6 +291,7 @@ class OverkizAlarmControlPanel(OverkizDescriptiveEntity, AlarmControlPanelEntity
             self.entity_description.alarm_arm_away_args,
         )
 
+    @override
     async def async_alarm_trigger(self, code: str | None = None) -> None:
         """Send alarm trigger command."""
         assert self.entity_description.alarm_trigger

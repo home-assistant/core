@@ -39,7 +39,7 @@
 # name: test_lock_snapshot[lock.test_lock-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'changed_by': 'unknown-5',
+      <LockEntityStateAttribute.CHANGED_BY: 'changed_by'>: 'unknown-5',
       'friendly_name': 'Test Lock',
       'supported_features': <LockEntityFeature: 0>,
     }),

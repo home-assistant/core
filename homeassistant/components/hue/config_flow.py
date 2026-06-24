@@ -2,7 +2,7 @@
 
 import asyncio
 import logging
-from typing import Any
+from typing import Any, override
 
 import aiohttp
 from aiohue import LinkButtonNotPressed, create_app_key
@@ -51,6 +51,7 @@ class HueFlowHandler(ConfigFlow, domain=DOMAIN):
 
     @staticmethod
     @callback
+    @override
     def async_get_options_flow(
         config_entry: HueConfigEntry,
     ) -> HueV1OptionsFlowHandler | HueV2OptionsFlowHandler:
@@ -64,6 +65,7 @@ class HueFlowHandler(ConfigFlow, domain=DOMAIN):
         self.bridge: DiscoveredHueBridge | None = None
         self.discovered_bridges: dict[str, DiscoveredHueBridge] | None = None
 
+    @override
     async def async_step_user(
         self, user_input: dict[str, Any] | None = None
     ) -> ConfigFlowResult:
@@ -79,8 +81,10 @@ class HueFlowHandler(ConfigFlow, domain=DOMAIN):
             bridge = await discover_bridge(
                 host,
                 websession=aiohttp_client.async_get_clientsession(
-                    # NOTE: we disable SSL verification for now due to the fact that the (BSB003)
-                    # Hue bridge uses a certificate from a on-bridge root authority.
+                    # NOTE: we disable SSL verification for now
+                    # due to the fact that the (BSB003) Hue bridge
+                    # uses a certificate from a on-bridge root
+                    # authority.
                     # We need to specifically handle this case in a follow-up update.
                     self.hass,
                     verify_ssl=False,
@@ -223,6 +227,7 @@ class HueFlowHandler(ConfigFlow, domain=DOMAIN):
             },
         )
 
+    @override
     async def async_step_zeroconf(
         self, discovery_info: ZeroconfServiceInfo
     ) -> ConfigFlowResult:
@@ -259,6 +264,7 @@ class HueFlowHandler(ConfigFlow, domain=DOMAIN):
 
         return await self.async_step_link()
 
+    @override
     async def async_step_homekit(
         self, discovery_info: ZeroconfServiceInfo
     ) -> ConfigFlowResult:
@@ -335,7 +341,8 @@ class HueFlowHandler(ConfigFlow, domain=DOMAIN):
                     bridge_device.id,
                     # overwrite identifiers with new bridge id
                     new_identifiers={(DOMAIN, bridge.id)},
-                    # overwrite mac addresses with empty set to drop the old (incorrect) addresses
+                    # overwrite mac addresses with empty set to drop
+                    # the old (incorrect) addresses
                     # this will be auto corrected once the integration is loaded
                     new_connections=set(),
                 )

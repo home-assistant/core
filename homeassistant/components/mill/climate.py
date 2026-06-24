@@ -1,6 +1,6 @@
 """Support for mill wifi-enabled home heaters."""
 
-from typing import Any
+from typing import Any, override
 
 import mill
 from mill_local import OperationMode
@@ -75,6 +75,7 @@ async def async_setup_entry(
             room_name, sleep_temp, comfort_temp, away_temp
         )
 
+    # pylint: disable-next=home-assistant-service-registered-in-setup-entry
     hass.services.async_register(
         DOMAIN, SERVICE_SET_ROOM_TEMP, set_room_temp, schema=SET_ROOM_TEMP_SCHEMA
     )
@@ -102,6 +103,7 @@ class MillHeater(MillBaseEntity, ClimateEntity):
         self._attr_unique_id = device.device_id
         super().__init__(coordinator, device)
 
+    @override
     async def async_set_temperature(self, **kwargs: Any) -> None:
         """Set new target temperature and optionally HVAC mode."""
         if (temperature := kwargs.get(ATTR_TEMPERATURE)) is None:
@@ -114,6 +116,7 @@ class MillHeater(MillBaseEntity, ClimateEntity):
         else:
             await self.coordinator.async_request_refresh()
 
+    @override
     async def async_set_hvac_mode(self, hvac_mode: HVACMode) -> None:
         """Set new target hvac mode."""
         if hvac_mode == HVACMode.HEAT:
@@ -127,6 +130,7 @@ class MillHeater(MillBaseEntity, ClimateEntity):
         await self.coordinator.async_request_refresh()
 
     @callback
+    @override
     def _update_attr(self, device: mill.Heater) -> None:
         self._available = device.available
         self._attr_extra_state_attributes = {
@@ -182,6 +186,7 @@ class LocalMillHeater(CoordinatorEntity[MillDataUpdateCoordinator], ClimateEntit
 
         self._update_attr()
 
+    @override
     async def async_set_temperature(self, **kwargs: Any) -> None:
         """Set new target temperature and optionally HVAC mode."""
         if (temperature := kwargs.get(ATTR_TEMPERATURE)) is None:
@@ -194,17 +199,20 @@ class LocalMillHeater(CoordinatorEntity[MillDataUpdateCoordinator], ClimateEntit
         else:
             await self.coordinator.async_request_refresh()
 
+    @override
     async def async_set_hvac_mode(self, hvac_mode: HVACMode) -> None:
         """Set new target hvac mode."""
+        conn = self.coordinator.mill_data_connection
         if hvac_mode == HVACMode.HEAT:
-            await self.coordinator.mill_data_connection.set_operation_mode_control_individually()
+            await conn.set_operation_mode_control_individually()
         elif hvac_mode == HVACMode.OFF:
-            await self.coordinator.mill_data_connection.set_operation_mode_off()
+            await conn.set_operation_mode_off()
         elif hvac_mode == HVACMode.AUTO:
-            await self.coordinator.mill_data_connection.set_operation_mode_weekly_program()
+            await conn.set_operation_mode_weekly_program()
         await self.coordinator.async_request_refresh()
 
     @callback
+    @override
     def _handle_coordinator_update(self) -> None:
         """Handle updated data from the coordinator."""
         self._update_attr()

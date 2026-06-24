@@ -2,7 +2,7 @@
 
 from datetime import date, datetime, timedelta
 import logging
-from typing import Any
+from typing import Any, override
 import uuid
 
 from todoist_api_python.api_async import TodoistAPIAsync
@@ -351,6 +351,7 @@ def async_register_services(  # noqa: C901
 
         _LOGGER.debug("Created Todoist task: %s", call.data[CONTENT])
 
+    # pylint: disable-next=home-assistant-service-registered-in-setup-entry
     hass.services.async_register(
         DOMAIN, SERVICE_NEW_TASK, handle_new_task, schema=NEW_TASK_SERVICE_SCHEMA
     )
@@ -385,26 +386,31 @@ class TodoistProjectEntity(CoordinatorEntity[TodoistCoordinator], CalendarEntity
         )
 
     @callback
+    @override
     def _handle_coordinator_update(self) -> None:
         """Handle updated data from the coordinator."""
         self.data.update()
         super()._handle_coordinator_update()
 
     @property
+    @override
     def event(self) -> CalendarEvent | None:
         """Return the next upcoming event."""
         return self.data.calendar_event
 
     @property
+    @override
     def name(self) -> str:
         """Return the name of the entity."""
         return self._name
 
+    @override
     async def async_update(self) -> None:
         """Update all Todoist Calendars."""
         await super().async_update()
         self.data.update()
 
+    @override
     async def async_get_events(
         self,
         hass: HomeAssistant,
@@ -415,6 +421,7 @@ class TodoistProjectEntity(CoordinatorEntity[TodoistCoordinator], CalendarEntity
         return await self.data.async_get_events(start_date, end_date)
 
     @property
+    @override
     def extra_state_attributes(self) -> dict[str, Any] | None:
         """Return the device state attributes."""
         if self.data.event is None:

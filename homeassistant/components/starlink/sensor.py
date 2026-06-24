@@ -3,7 +3,7 @@
 from collections.abc import Callable
 from dataclasses import dataclass
 from datetime import datetime, timedelta
-from typing import TYPE_CHECKING
+from typing import TYPE_CHECKING, override
 
 from homeassistant.components.sensor import (
     RestoreSensor,
@@ -58,17 +58,19 @@ class StarlinkSensorEntity(StarlinkEntity, SensorEntity):
     entity_description: StarlinkSensorEntityDescription
 
     @property
+    @override
     def native_value(self) -> StateType | datetime:
         """Calculate the sensor value from the entity description."""
         return self.entity_description.value_fn(self.coordinator.data)
 
 
 class StarlinkAccumulationSensor(StarlinkSensorEntity, RestoreSensor):
-    """A StarlinkAccumulationSensor for Starlink devices. Handles creating unique IDs."""
+    """A StarlinkAccumulationSensor for Starlink devices."""
 
     _attr_native_value: int | float = 0
 
     @property
+    @override
     def native_value(self) -> int | float:
         """Calculate new value from current value and the entity description."""
         new_value = super().native_value
@@ -77,6 +79,7 @@ class StarlinkAccumulationSensor(StarlinkSensorEntity, RestoreSensor):
         self._attr_native_value += new_value
         return self._attr_native_value
 
+    @override
     async def async_added_to_hass(self) -> None:
         """When entity is added to hass."""
         await super().async_added_to_hass()

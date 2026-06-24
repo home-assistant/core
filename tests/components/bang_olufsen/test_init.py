@@ -39,7 +39,8 @@ async def test_setup_entry(
     assert device.name == TEST_FRIENDLY_NAME
     assert device.model == TEST_MODEL_BALANCE
 
-    # Ensure that the connection has been checked WebSocket connection has been initialized
+    # Ensure that the connection has been checked
+    # WebSocket connection has been initialized
     assert mock_mozart_client.check_device_connection.call_count == 1
     assert mock_mozart_client.close_api_client.call_count == 0
     assert mock_mozart_client.connect_notifications.call_count == 1

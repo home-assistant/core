@@ -1,15 +1,17 @@
 """Provides triggers for humidifiers."""
 
+from typing import override
+
 import voluptuous as vol
 
-from homeassistant.const import ATTR_MODE, CONF_OPTIONS, STATE_OFF, STATE_ON
+from homeassistant.const import ATTR_MODE, CONF_MODE, CONF_OPTIONS, STATE_OFF, STATE_ON
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.automation import DomainSpec
 from homeassistant.helpers.entity import get_supported_features
 from homeassistant.helpers.trigger import (
-    ENTITY_STATE_TRIGGER_SCHEMA_FIRST_LAST,
+    ENTITY_STATE_TRIGGER_SCHEMA_WITH_BEHAVIOR,
     EntityTargetStateTriggerBase,
     Trigger,
     TriggerConfig,
@@ -18,9 +20,7 @@ from homeassistant.helpers.trigger import (
 
 from .const import ATTR_ACTION, DOMAIN, HumidifierAction, HumidifierEntityFeature
 
-CONF_MODE = "mode"
-
-MODE_CHANGED_TRIGGER_SCHEMA = ENTITY_STATE_TRIGGER_SCHEMA_FIRST_LAST.extend(
+MODE_CHANGED_TRIGGER_SCHEMA = ENTITY_STATE_TRIGGER_SCHEMA_WITH_BEHAVIOR.extend(
     {
         vol.Required(CONF_OPTIONS): {
             vol.Required(CONF_MODE): vol.All(cv.ensure_list, vol.Length(min=1), [str]),
@@ -48,6 +48,7 @@ class ModeChangedTrigger(EntityTargetStateTriggerBase):
         super().__init__(hass, config)
         self._to_states = set(self._options[CONF_MODE])
 
+    @override
     def entity_filter(self, entities: set[str]) -> set[str]:
         """Filter entities of this domain."""
         entities = super().entity_filter(entities)

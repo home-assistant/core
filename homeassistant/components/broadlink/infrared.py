@@ -1,6 +1,6 @@
 """Infrared platform for Broadlink remotes."""
 
-from typing import TYPE_CHECKING
+from typing import TYPE_CHECKING, override
 
 from broadlink.exceptions import BroadlinkException
 from broadlink.remote import pulses_to_data as _bl_pulses_to_data
@@ -38,7 +38,7 @@ async def async_setup_entry(
 ) -> None:
     """Set up Broadlink infrared entity."""
     # Uses legacy hass.data[DOMAIN] pattern
-    # pylint: disable-next=hass-use-runtime-data
+    # pylint: disable-next=home-assistant-use-runtime-data
     device = hass.data[DOMAIN].devices[config_entry.entry_id]
     async_add_entities([BroadlinkInfraredEntity(device)])
 
@@ -54,6 +54,7 @@ class BroadlinkInfraredEntity(BroadlinkEntity, InfraredEmitterEntity):
         super().__init__(device)
         self._attr_unique_id = f"{device.unique_id}-emitter"
 
+    @override
     async def async_send_command(self, command: InfraredCommand) -> None:
         """Send an IR command via the Broadlink device."""
         packet = _timings_to_broadlink_packet(command.get_raw_timings())

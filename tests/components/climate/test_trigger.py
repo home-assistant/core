@@ -25,10 +25,9 @@ from homeassistant.helpers.trigger import async_validate_trigger_config
 
 from tests.components.common import (
     TriggerStateDescription,
-    assert_trigger_behavior_any,
+    assert_trigger_behavior_all,
+    assert_trigger_behavior_each,
     assert_trigger_behavior_first,
-    assert_trigger_behavior_last,
-    assert_trigger_gated_by_labs_flag,
     assert_trigger_options_supported,
     other_states,
     parametrize_numerical_attribute_changed_trigger_states,
@@ -45,28 +44,6 @@ async def target_climates(hass: HomeAssistant) -> dict[str, list[str]]:
     return await target_entities(hass, "climate")
 
 
-@pytest.mark.parametrize(
-    "trigger_key",
-    [
-        "climate.hvac_mode_changed",
-        "climate.target_humidity_changed",
-        "climate.target_humidity_crossed_threshold",
-        "climate.target_temperature_changed",
-        "climate.target_temperature_crossed_threshold",
-        "climate.turned_off",
-        "climate.turned_on",
-        "climate.started_cooling",
-        "climate.started_drying",
-        "climate.started_heating",
-    ],
-)
-async def test_climate_triggers_gated_by_labs_flag(
-    hass: HomeAssistant, caplog: pytest.LogCaptureFixture, trigger_key: str
-) -> None:
-    """Test the climate triggers are gated by the labs flag."""
-    await assert_trigger_gated_by_labs_flag(hass, caplog, trigger_key)
-
-
 _CHANGED_THRESHOLD = {"threshold": {"type": "any"}}
 _HUMIDITY_CROSSED_THRESHOLD = {"threshold": {"type": "above", "value": {"number": 50}}}
 _TEMPERATURE_CROSSED_THRESHOLD = {
@@ -77,7 +54,6 @@ _TEMPERATURE_CROSSED_THRESHOLD = {
 }
 
 
-@pytest.mark.usefixtures("enable_labs_preview_features")
 @pytest.mark.parametrize(
     ("trigger_key", "base_options", "supports_behavior", "supports_duration"),
     [
@@ -120,7 +96,6 @@ async def test_climate_trigger_options_validation(
     )
 
 
-@pytest.mark.usefixtures("enable_labs_preview_features")
 @pytest.mark.parametrize(
     ("trigger", "trigger_options", "expected_result"),
     [
@@ -176,7 +151,6 @@ async def test_climate_trigger_validation(
         )
 
 
-@pytest.mark.usefixtures("enable_labs_preview_features")
 @pytest.mark.parametrize(
     ("trigger_target_config", "entity_id", "entities_in_target"),
     parametrize_target_entities("climate"),
@@ -211,7 +185,7 @@ async def test_climate_trigger_validation(
         ),
     ],
 )
-async def test_climate_state_trigger_behavior_any(
+async def test_climate_state_trigger_behavior_each(
     hass: HomeAssistant,
     target_climates: dict[str, list[str]],
     trigger_target_config: dict,
@@ -221,8 +195,8 @@ async def test_climate_state_trigger_behavior_any(
     trigger_options: dict[str, Any],
     states: list[TriggerStateDescription],
 ) -> None:
-    """Test that the climate state trigger fires when any climate state changes to a specific state."""
-    await assert_trigger_behavior_any(
+    """Test climate trigger fires on any state change."""
+    await assert_trigger_behavior_each(
         hass,
         target_entities=target_climates,
         trigger_target_config=trigger_target_config,
@@ -234,7 +208,6 @@ async def test_climate_state_trigger_behavior_any(
     )
 
 
-@pytest.mark.usefixtures("enable_labs_preview_features")
 @pytest.mark.parametrize(
     ("trigger_target_config", "entity_id", "entities_in_target"),
     parametrize_target_entities("climate"),
@@ -285,7 +258,7 @@ async def test_climate_state_trigger_behavior_any(
         ),
     ],
 )
-async def test_climate_state_attribute_trigger_behavior_any(
+async def test_climate_state_attribute_trigger_behavior_each(
     hass: HomeAssistant,
     target_climates: dict[str, list[str]],
     trigger_target_config: dict,
@@ -295,8 +268,8 @@ async def test_climate_state_attribute_trigger_behavior_any(
     trigger_options: dict[str, Any],
     states: list[TriggerStateDescription],
 ) -> None:
-    """Test that the climate state trigger fires when any climate state changes to a specific state."""
-    await assert_trigger_behavior_any(
+    """Test climate attribute trigger fires on any change."""
+    await assert_trigger_behavior_each(
         hass,
         target_entities=target_climates,
         trigger_target_config=trigger_target_config,
@@ -308,7 +281,6 @@ async def test_climate_state_attribute_trigger_behavior_any(
     )
 
 
-@pytest.mark.usefixtures("enable_labs_preview_features")
 @pytest.mark.parametrize(
     ("trigger_target_config", "entity_id", "entities_in_target"),
     parametrize_target_entities("climate"),
@@ -353,7 +325,7 @@ async def test_climate_state_trigger_behavior_first(
     trigger_options: dict[str, Any],
     states: list[TriggerStateDescription],
 ) -> None:
-    """Test that the climate state trigger fires when the first climate changes to a specific state."""
+    """Test climate trigger fires on first state change."""
     await assert_trigger_behavior_first(
         hass,
         target_entities=target_climates,
@@ -366,7 +338,6 @@ async def test_climate_state_trigger_behavior_first(
     )
 
 
-@pytest.mark.usefixtures("enable_labs_preview_features")
 @pytest.mark.parametrize(
     ("trigger_target_config", "entity_id", "entities_in_target"),
     parametrize_target_entities("climate"),
@@ -414,7 +385,7 @@ async def test_climate_state_attribute_trigger_behavior_first(
     trigger_options: dict[str, Any],
     states: list[tuple[tuple[str, dict], int]],
 ) -> None:
-    """Test that the climate state trigger fires when the first climate state changes to a specific state."""
+    """Test climate attribute trigger fires on first change."""
     await assert_trigger_behavior_first(
         hass,
         target_entities=target_climates,
@@ -427,7 +398,6 @@ async def test_climate_state_attribute_trigger_behavior_first(
     )
 
 
-@pytest.mark.usefixtures("enable_labs_preview_features")
 @pytest.mark.parametrize(
     ("trigger_target_config", "entity_id", "entities_in_target"),
     parametrize_target_entities("climate"),
@@ -462,7 +432,7 @@ async def test_climate_state_attribute_trigger_behavior_first(
         ),
     ],
 )
-async def test_climate_state_trigger_behavior_last(
+async def test_climate_state_trigger_behavior_all(
     hass: HomeAssistant,
     target_climates: dict[str, list[str]],
     trigger_target_config: dict,
@@ -472,8 +442,8 @@ async def test_climate_state_trigger_behavior_last(
     trigger_options: dict[str, Any],
     states: list[TriggerStateDescription],
 ) -> None:
-    """Test that the climate state trigger fires when the last climate changes to a specific state."""
-    await assert_trigger_behavior_last(
+    """Test climate trigger fires when all climate entities have changed state."""
+    await assert_trigger_behavior_all(
         hass,
         target_entities=target_climates,
         trigger_target_config=trigger_target_config,
@@ -485,7 +455,6 @@ async def test_climate_state_trigger_behavior_last(
     )
 
 
-@pytest.mark.usefixtures("enable_labs_preview_features")
 @pytest.mark.parametrize(
     ("trigger_target_config", "entity_id", "entities_in_target"),
     parametrize_target_entities("climate"),
@@ -523,7 +492,7 @@ async def test_climate_state_trigger_behavior_last(
         ),
     ],
 )
-async def test_climate_state_attribute_trigger_behavior_last(
+async def test_climate_state_attribute_trigger_behavior_all(
     hass: HomeAssistant,
     target_climates: dict[str, list[str]],
     trigger_target_config: dict,
@@ -533,8 +502,8 @@ async def test_climate_state_attribute_trigger_behavior_last(
     trigger_options: dict[str, Any],
     states: list[tuple[tuple[str, dict], int]],
 ) -> None:
-    """Test that the climate state trigger fires when the last climate state changes to a specific state."""
-    await assert_trigger_behavior_last(
+    """Test climate attribute trigger fires when all climate entities have changed."""
+    await assert_trigger_behavior_all(
         hass,
         target_entities=target_climates,
         trigger_target_config=trigger_target_config,

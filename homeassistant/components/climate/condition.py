@@ -1,6 +1,6 @@
 """Provides conditions for climates."""
 
-from typing import TYPE_CHECKING
+from typing import TYPE_CHECKING, override
 
 import voluptuous as vol
 
@@ -47,6 +47,7 @@ class ClimateHVACModeCondition(EntityConditionBase):
             assert config.options is not None
         self._hvac_modes: set[str] = set(config.options[CONF_HVAC_MODE])
 
+    @override
     def is_valid_state(self, entity_state: State) -> bool:
         """Check if the state matches any of the expected HVAC modes."""
         return entity_state.state in self._hvac_modes
@@ -59,6 +60,7 @@ class ClimateTargetTemperatureCondition(EntityNumericalConditionWithUnitBase):
     _domain_specs = {DOMAIN: DomainSpec(value_source=ATTR_TEMPERATURE)}
     _unit_converter = TemperatureConverter
 
+    @override
     def _should_include(self, state: State) -> bool:
         """Skip climate entities that do not expose a target temperature."""
         return (
@@ -66,6 +68,7 @@ class ClimateTargetTemperatureCondition(EntityNumericalConditionWithUnitBase):
             and state.attributes.get(ATTR_TEMPERATURE) is not None
         )
 
+    @override
     def _get_entity_unit(self, entity_state: State) -> str | None:
         """Get the temperature unit of a climate entity from its state."""
         # Climate entities convert temperatures to the system unit via show_temp
@@ -78,6 +81,7 @@ class ClimateTargetHumidityCondition(EntityNumericalConditionBase):
     _domain_specs = {DOMAIN: DomainSpec(value_source=ATTR_HUMIDITY)}
     _valid_unit = "%"
 
+    @override
     def _should_include(self, state: State) -> bool:
         """Skip climate entities that do not expose a target humidity."""
         return (
@@ -109,8 +113,8 @@ CONDITIONS: dict[str, type[Condition]] = {
     "is_heating": make_entity_state_condition(
         {DOMAIN: DomainSpec(value_source=ATTR_HVAC_ACTION)}, HVACAction.HEATING
     ),
-    "target_humidity": ClimateTargetHumidityCondition,
-    "target_temperature": ClimateTargetTemperatureCondition,
+    "is_target_humidity": ClimateTargetHumidityCondition,
+    "is_target_temperature": ClimateTargetTemperatureCondition,
 }
 
 

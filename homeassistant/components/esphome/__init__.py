@@ -181,13 +181,15 @@ async def _async_clear_dynamic_encryption_key(
         # Clear the encryption key on the device by passing an empty key
         if not await cli.noise_encryption_set_key(b""):
             _LOGGER.debug(
-                "Could not clear dynamic encryption key for ESPHome device %s: Device rejected key removal",
+                "Could not clear dynamic encryption key for"
+                " ESPHome device %s: Device rejected key removal",
                 entry.unique_id,
             )
             return
     except APIConnectionError as exc:
         _LOGGER.debug(
-            "Could not connect to ESPHome device %s to clear dynamic encryption key: %s",
+            "Could not connect to ESPHome device %s to clear"
+            " dynamic encryption key: %s",
             entry.unique_id,
             exc,
         )

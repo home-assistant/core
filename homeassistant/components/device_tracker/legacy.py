@@ -6,7 +6,7 @@ from datetime import datetime, timedelta
 import hashlib
 import logging
 from types import ModuleType
-from typing import Any, Final, Protocol, final
+from typing import Any, Final, Protocol, final, override
 
 import attr
 from propcache.api import cached_property
@@ -37,10 +37,9 @@ from homeassistant.const import (
 )
 from homeassistant.core import Event, HomeAssistant, ServiceCall, callback
 from homeassistant.exceptions import HomeAssistantError
-from homeassistant.helpers import (
-    config_validation as cv,
-    discovery,
-    entity_registry as er,
+from homeassistant.helpers import config_validation as cv, entity_registry as er
+from homeassistant.helpers.entity_platform import (
+    async_create_platform_config_not_supported_issue,
 )
 from homeassistant.helpers.event import (
     async_track_time_interval,
@@ -204,40 +203,7 @@ def see(
     hass.services.call(DOMAIN, SERVICE_SEE, data)
 
 
-@callback
-def async_setup_integration(hass: HomeAssistant, config: ConfigType) -> None:
-    """Set up the legacy integration."""
-    # The tracker is loaded in the _async_setup_integration task so
-    # we create a future to avoid waiting on it here so that only
-    # async_platform_discovered will have to wait in the rare event
-    # a custom component still uses the legacy device tracker discovery.
-    tracker_future: asyncio.Future[DeviceTracker] = hass.loop.create_future()
-
-    async def async_platform_discovered(
-        p_type: str, info: dict[str, Any] | None
-    ) -> None:
-        """Load a platform."""
-        platform = await async_create_platform_type(hass, config, p_type, {})
-
-        if platform is None or platform.type != PLATFORM_TYPE_LEGACY:
-            return
-
-        tracker = await tracker_future
-        await platform.async_setup_legacy(hass, tracker, info)
-
-    discovery.async_listen_platform(hass, DOMAIN, async_platform_discovered)
-    #
-    # Legacy and platforms load in a non-awaited tracked task
-    # to ensure device tracker setup can continue and config
-    # entry integrations are not waiting for legacy device
-    # tracker platforms to be set up.
-    #
-    hass.async_create_task(
-        _async_setup_integration(hass, config, tracker_future), eager_start=True
-    )
-
-
-async def _async_setup_integration(
+async def async_setup_integration(
     hass: HomeAssistant,
     config: ConfigType,
     tracker_future: asyncio.Future[DeviceTracker],
@@ -416,8 +382,8 @@ async def async_extract_config(
         if platform.type == PLATFORM_TYPE_LEGACY:
             legacy.append(platform)
         else:
-            raise ValueError(
-                f"Unable to determine type for {platform.name}: {platform.type}"
+            async_create_platform_config_not_supported_issue(
+                hass, platform.name, DOMAIN
             )
 
     return legacy
@@ -852,22 +818,26 @@ class Device(RestoreEntity):
         self._attributes: dict[str, Any] = {}
 
     @property
+    @override
     def name(self) -> str:
         """Return the name of the entity."""
         return self.config_name or self.host_name or self.dev_id or DEVICE_DEFAULT_NAME
 
     @property
+    @override
     def state(self) -> str:
         """Return the state of the device."""
         return self._state
 
     @property
+    @override
     def entity_picture(self) -> str | None:
         """Return the picture of the device."""
         return self.config_picture
 
     @final
     @property
+    @override
     def state_attributes(self) -> dict[str, StateType]:
         """Return the device state attributes."""
         attributes: dict[str, StateType] = {ATTR_SOURCE_TYPE: self.source_type}
@@ -883,11 +853,13 @@ class Device(RestoreEntity):
         return attributes
 
     @property
+    @override
     def extra_state_attributes(self) -> dict[str, Any]:
         """Return device state attributes."""
         return self._attributes
 
     @property
+    @override
     def icon(self) -> str | None:
         """Return device icon."""
         return self._icon
@@ -969,6 +941,7 @@ class Device(RestoreEntity):
             self._state = STATE_HOME
             self.last_update_home = True
 
+    @override
     async def async_added_to_hass(self) -> None:
         """Add an entity."""
         await super().async_added_to_hass()

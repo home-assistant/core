@@ -156,7 +156,7 @@ async def test_form_homekit_and_dhcp(
     assert result3["type"] is FlowResultType.ABORT
 
 
-@pytest.mark.usefixtures("mock_hunterdouglas_hub")
+@pytest.mark.usefixtures("mock_hunterdouglas_hub", "mock_setup_entry")
 @pytest.mark.parametrize(
     ("homekit_source", "homekit_discovery", "api_version"), HOMEKIT_DATA
 )
@@ -165,7 +165,6 @@ async def test_form_homekit_and_dhcp(
 )
 async def test_discovered_by_homekit_and_dhcp(
     hass: HomeAssistant,
-    mock_setup_entry: MagicMock,
     homekit_source: str,
     homekit_discovery: ZeroconfServiceInfo,
     api_version: int,

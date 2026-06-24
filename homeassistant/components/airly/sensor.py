@@ -2,7 +2,7 @@
 
 from collections.abc import Callable
 from dataclasses import dataclass
-from typing import Any
+from typing import Any, override
 
 from homeassistant.components.sensor import (
     SensorDeviceClass,
@@ -184,7 +184,8 @@ async def async_setup_entry(
         (
             AirlySensor(coordinator, name, description)
             for description in SENSOR_TYPES
-            # When we use the nearest method, we are not sure which sensors are available
+            # When we use the nearest method, we are not sure
+            # which sensors are available
             if coordinator.data.get(description.key)
         ),
         False,
@@ -223,6 +224,7 @@ class AirlySensor(CoordinatorEntity[AirlyDataUpdateCoordinator], SensorEntity):
         self.entity_description = description
 
     @callback
+    @override
     def _handle_coordinator_update(self) -> None:
         """Handle updated data from the coordinator."""
         self._attr_native_value = self.coordinator.data[self.entity_description.key]

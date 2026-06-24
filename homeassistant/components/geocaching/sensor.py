@@ -3,7 +3,7 @@
 from collections.abc import Callable
 from dataclasses import dataclass
 import datetime
-from typing import cast
+from typing import cast, override
 
 from geocachingapi.models import GeocachingCache, GeocachingStatus
 
@@ -115,7 +115,9 @@ async def async_setup_entry(
 
 
 # Base class for a cache entity.
-# Sets the device, ID and translation settings to correctly group the entity to the correct cache device and give it the correct name.
+# Sets the device, ID and translation settings to correctly
+# group the entity to the correct cache device and give it
+# the correct name.
 class GeoEntityBaseCache(GeocachingCacheEntity, SensorEntity):
     """Base class for cache entities."""
 
@@ -130,7 +132,8 @@ class GeoEntityBaseCache(GeocachingCacheEntity, SensorEntity):
 
         self._attr_unique_id = f"{cache.reference_code}_{key}"
 
-        # The translation key determines the name of the entity as this is the lookup for the `strings.json` file.
+        # The translation key determines the name of the entity
+        # as this is the lookup for the `strings.json` file.
         self._attr_translation_key = f"cache_{key}"
 
 
@@ -150,6 +153,7 @@ class GeoEntityCacheSensorEntity(GeoEntityBaseCache, SensorEntity):
         self.entity_description = description
 
     @property
+    @override
     def native_value(self) -> StateType | datetime.date:
         """Return the state of the sensor."""
         return self.entity_description.value_fn(self.cache)
@@ -181,6 +185,7 @@ class GeocachingProfileSensor(GeocachingBaseEntity, SensorEntity):
         )
 
     @property
+    @override
     def native_value(self) -> str | int | None:
         """Return the state of the sensor."""
         return self.entity_description.value_fn(self.coordinator.data)

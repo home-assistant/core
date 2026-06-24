@@ -3,6 +3,7 @@
 import datetime as dt
 from datetime import timedelta
 import logging
+from typing import override
 
 import pyomie.main as pyomie
 from pyomie.model import OMIEResults, SpotData
@@ -39,6 +40,7 @@ class OMIECoordinator(DataUpdateCoordinator[OMIEResults[SpotData]]):
         )
         self._client_session = async_get_clientsession(hass)
 
+    @override
     async def _async_update_data(self) -> OMIEResults[SpotData]:
         """Update OMIE data, fetching the current CET day."""
         cet_today = dt_util.now().astimezone(CET).date()
@@ -63,7 +65,7 @@ class OMIECoordinator(DataUpdateCoordinator[OMIEResults[SpotData]]):
 
 
 def calc_update_interval(now: dt.datetime) -> dt.timedelta:
-    """Calculate the update_interval needed to trigger at the next 15-minute boundary."""
+    """Calculate the update_interval for the next 15-min boundary."""
     current_quarter = current_quarter_hour_cet(now)
     next_quarter = current_quarter + dt.timedelta(minutes=15)
 

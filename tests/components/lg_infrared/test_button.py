@@ -9,9 +9,9 @@ from homeassistant.const import ATTR_ENTITY_ID, Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import device_registry as dr, entity_registry as er
 
-from .utils import check_availability_follows_ir_entity
-
 from tests.common import MockConfigEntry, snapshot_platform
+from tests.components.common import assert_availability_follows_source_entity
+from tests.components.infrared import EMITTER_ENTITY_ID
 from tests.components.infrared.common import MockInfraredEmitterEntity
 
 
@@ -47,6 +47,7 @@ async def test_entities(
 @pytest.mark.parametrize(
     ("entity_id", "expected_code"),
     [
+        ("button.lg_tv_power", LGTVCode.POWER),
         ("button.lg_tv_power_on", LGTVCode.POWER_ON),
         ("button.lg_tv_power_off", LGTVCode.POWER_OFF),
         ("button.lg_tv_hdmi_1", LGTVCode.HDMI_1),
@@ -102,4 +103,4 @@ async def test_button_availability_follows_ir_entity(
 ) -> None:
     """Test button becomes unavailable when IR entity is unavailable."""
     entity_id = "button.lg_tv_power_on"
-    await check_availability_follows_ir_entity(hass, entity_id)
+    await assert_availability_follows_source_entity(hass, entity_id, EMITTER_ENTITY_ID)

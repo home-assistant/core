@@ -2,7 +2,7 @@
 
 from collections.abc import Callable, Coroutine
 from dataclasses import dataclass
-from typing import Any
+from typing import Any, override
 
 from pyairobotrest.exceptions import (
     AirobotConnectionError,
@@ -79,10 +79,12 @@ class AirobotButton(AirobotEntity, ButtonEntity):
         self.entity_description = description
         self._attr_unique_id = f"{coordinator.data.status.device_id}_{description.key}"
 
+    @override
     async def async_press(self) -> None:
         """Handle the button press."""
         try:
             await self.entity_description.press_fn(self.coordinator)
+        # pylint: disable-next=home-assistant-action-swallowed-exception
         except AirobotConnectionError, AirobotTimeoutError:
             # Connection errors during reboot are expected as device restarts
             pass

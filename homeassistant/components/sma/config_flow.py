@@ -2,7 +2,7 @@
 
 from collections.abc import Mapping
 import logging
-from typing import Any
+from typing import Any, override
 
 import attrs
 from pysma import (
@@ -40,14 +40,17 @@ async def validate_input(
     data: dict[str, Any] | None = None,
 ) -> dict[str, Any]:
     """Validate the user input allows us to connect."""
-    session = async_get_clientsession(hass, verify_ssl=user_input[CONF_VERIFY_SSL])
-
     protocol = "https" if user_input[CONF_SSL] else "http"
     host = data[CONF_HOST] if data is not None else user_input[CONF_HOST]
-    url = URL.build(scheme=protocol, host=host)
+    url = str(URL.build(scheme=protocol, host=host))
 
     sma = SMAWebConnect(
-        session, str(url), user_input[CONF_PASSWORD], group=user_input[CONF_GROUP]
+        session=async_get_clientsession(hass, verify_ssl=user_input[CONF_VERIFY_SSL]),
+        url=url,
+        **{
+            CONF_PASSWORD: user_input[CONF_PASSWORD],
+            CONF_GROUP: user_input[CONF_GROUP],
+        },
     )
 
     # new_session raises SmaAuthenticationException on failure
@@ -106,6 +109,7 @@ class SmaConfigFlow(ConfigFlow, domain=DOMAIN):
 
         return errors, device_info
 
+    @override
     async def async_step_user(
         self, user_input: dict[str, Any] | None = None
     ) -> ConfigFlowResult:
@@ -223,6 +227,7 @@ class SmaConfigFlow(ConfigFlow, domain=DOMAIN):
             errors=errors,
         )
 
+    @override
     async def async_step_dhcp(
         self, discovery_info: DhcpServiceInfo
     ) -> ConfigFlowResult:
@@ -255,7 +260,8 @@ class SmaConfigFlow(ConfigFlow, domain=DOMAIN):
                 entry, data_updates={CONF_MAC: self._data[CONF_MAC]}
             )
 
-        # Finally, check if the hostname (which represents the SMA serial number) is unique
+        # Finally, check if the hostname
+        # (which represents the SMA serial number) is unique
         serial_number = discovery_info.hostname.lower()
         # Example hostname: sma12345678-01
         # Remove 'sma' prefix and strip everything after the dash (including the dash)

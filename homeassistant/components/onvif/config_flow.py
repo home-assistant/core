@@ -3,7 +3,7 @@
 from collections.abc import Mapping
 import logging
 from pprint import pformat
-from typing import Any
+from typing import Any, override
 from urllib.parse import urlparse
 
 from onvif.util import is_auth_error, stringify_onvif_error
@@ -111,6 +111,7 @@ class OnvifFlowHandler(ConfigFlow, domain=DOMAIN):
 
     @staticmethod
     @callback
+    @override
     def async_get_options_flow(
         config_entry: ConfigEntry,
     ) -> OnvifOptionsFlowHandler:
@@ -123,6 +124,7 @@ class OnvifFlowHandler(ConfigFlow, domain=DOMAIN):
         self.devices: list[dict[str, Any]] = []
         self.onvif_config: dict[str, Any] = {}
 
+    @override
     async def async_step_user(
         self, user_input: dict[str, Any] | None = None
     ) -> ConfigFlowResult:
@@ -175,6 +177,7 @@ class OnvifFlowHandler(ConfigFlow, domain=DOMAIN):
             description_placeholders=description_placeholders,
         )
 
+    @override
     async def async_step_dhcp(
         self, discovery_info: DhcpServiceInfo
     ) -> ConfigFlowResult:
@@ -276,7 +279,7 @@ class OnvifFlowHandler(ConfigFlow, domain=DOMAIN):
             data_schema=vol.Schema(
                 {
                     # Name field is no longer allowed in config flow schemas
-                    # pylint: disable-next=hass-config-flow-name-field
+                    # pylint: disable-next=home-assistant-config-flow-name-field
                     vol.Required(CONF_NAME, default=conf(CONF_NAME)): str,
                     vol.Required(CONF_HOST, default=conf(CONF_HOST)): str,
                     vol.Required(CONF_PORT, default=conf(CONF_PORT, DEFAULT_PORT)): int,

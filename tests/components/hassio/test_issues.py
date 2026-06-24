@@ -59,7 +59,7 @@ def mock_resolution_info(
     suggestions_by_issue: dict[UUID, list[Suggestion]] | None = None,
     suggestion_result: SupervisorError | None = None,
 ) -> None:
-    """Mock resolution/info endpoint with unsupported/unhealthy reasons and/or issues."""
+    """Mock resolution/info endpoint with unsupported/unhealthy reasons."""
     supervisor_client.resolution.info.return_value = ResolutionInfo(
         unsupported=unsupported or [],
         unhealthy=unhealthy or [],
@@ -150,7 +150,7 @@ async def test_unhealthy_issues(
         supervisor_client, unhealthy=[UnhealthyReason.DOCKER, UnhealthyReason.SETUP]
     )
 
-    result = await async_setup_component(hass, "hassio", {})
+    result = await async_setup_component(hass, DOMAIN, {})
     assert result
 
     client = await hass_ws_client(hass)
@@ -171,10 +171,10 @@ async def test_unhealthy_reasons(
     hass_ws_client: WebSocketGenerator,
     unhealthy_reason: UnhealthyReason,
 ) -> None:
-    """Test all unhealthy reasons in client library are properly made into repairs with a translation."""
+    """Test all unhealthy reasons in client library are made into repairs."""
     mock_resolution_info(supervisor_client, unhealthy=[unhealthy_reason])
 
-    result = await async_setup_component(hass, "hassio", {})
+    result = await async_setup_component(hass, DOMAIN, {})
     assert result
 
     client = await hass_ws_client(hass)
@@ -200,7 +200,7 @@ async def test_unsupported_issues(
         unsupported=[UnsupportedReason.CONNECTIVITY_CHECK, UnsupportedReason.OS],
     )
 
-    result = await async_setup_component(hass, "hassio", {})
+    result = await async_setup_component(hass, DOMAIN, {})
     assert result
 
     client = await hass_ws_client(hass)
@@ -226,10 +226,10 @@ async def test_unsupported_reasons(
     hass_ws_client: WebSocketGenerator,
     unsupported_reason: UnsupportedReason,
 ) -> None:
-    """Test all unsupported reasons in client library are properly made into repairs with a translation."""
+    """Test all unsupported reasons in client library are made into repairs."""
     mock_resolution_info(supervisor_client, unsupported=[unsupported_reason])
 
-    result = await async_setup_component(hass, "hassio", {})
+    result = await async_setup_component(hass, DOMAIN, {})
     assert result
 
     client = await hass_ws_client(hass)
@@ -252,7 +252,7 @@ async def test_unhealthy_issues_add_remove(
     """Test unhealthy issues added and removed from dispatches."""
     mock_resolution_info(supervisor_client)
 
-    result = await async_setup_component(hass, "hassio", {})
+    result = await async_setup_component(hass, DOMAIN, {})
     assert result
 
     client = await hass_supervisor_ws_client()
@@ -309,7 +309,7 @@ async def test_unsupported_issues_add_remove(
     """Test unsupported issues added and removed from dispatches."""
     mock_resolution_info(supervisor_client)
 
-    result = await async_setup_component(hass, "hassio", {})
+    result = await async_setup_component(hass, DOMAIN, {})
     assert result
 
     client = await hass_supervisor_ws_client()
@@ -389,7 +389,7 @@ async def test_reset_issues_supervisor_restart(
         },
     )
 
-    result = await async_setup_component(hass, "hassio", {})
+    result = await async_setup_component(hass, DOMAIN, {})
     assert result
 
     client = await hass_supervisor_ws_client()
@@ -443,7 +443,7 @@ async def test_no_reset_issues_supervisor_update_found(
         unsupported=[UnsupportedReason.OS],
     )
 
-    result = await async_setup_component(hass, "hassio", {})
+    result = await async_setup_component(hass, DOMAIN, {})
     assert result
 
     client = await hass_supervisor_ws_client()
@@ -488,7 +488,7 @@ async def test_reasons_added_and_removed(
         unhealthy=[UnhealthyReason.DOCKER],
     )
 
-    result = await async_setup_component(hass, "hassio", {})
+    result = await async_setup_component(hass, DOMAIN, {})
     assert result
 
     client = await hass_supervisor_ws_client()
@@ -543,7 +543,7 @@ async def test_ignored_unsupported_skipped(
         unhealthy=[UnhealthyReason.PRIVILEGED],
     )
 
-    result = await async_setup_component(hass, "hassio", {})
+    result = await async_setup_component(hass, DOMAIN, {})
     assert result
 
     client = await hass_ws_client(hass)
@@ -561,14 +561,14 @@ async def test_new_unsupported_unhealthy_reason(
     supervisor_client: AsyncMock,
     hass_ws_client: WebSocketGenerator,
 ) -> None:
-    """New unsupported/unhealthy reasons result in a generic repair until next core update."""
+    """New unsupported/unhealthy reasons result in a generic repair."""
     mock_resolution_info(
         supervisor_client,
         unsupported=["fake_unsupported"],
         unhealthy=["fake_unhealthy"],
     )
 
-    result = await async_setup_component(hass, "hassio", {})
+    result = await async_setup_component(hass, DOMAIN, {})
     assert result
 
     client = await hass_ws_client(hass)
@@ -649,7 +649,7 @@ async def test_supervisor_issues(
         },
     )
 
-    result = await async_setup_component(hass, "hassio", {})
+    result = await async_setup_component(hass, DOMAIN, {})
     assert result
 
     client = await hass_ws_client(hass)
@@ -716,7 +716,7 @@ async def test_supervisor_issues_initial_failure(
     ]
 
     with patch("homeassistant.components.hassio.issues.REQUEST_REFRESH_DELAY", new=0.1):
-        result = await async_setup_component(hass, "hassio", {})
+        result = await async_setup_component(hass, DOMAIN, {})
         await hass.async_block_till_done()
         assert result
 
@@ -744,7 +744,7 @@ async def test_supervisor_issues_add_remove(
     """Test supervisor issues added and removed from dispatches."""
     mock_resolution_info(supervisor_client)
 
-    result = await async_setup_component(hass, "hassio", {})
+    result = await async_setup_component(hass, DOMAIN, {})
     assert result
 
     client = await hass_supervisor_ws_client()
@@ -835,7 +835,7 @@ async def test_supervisor_issues_suggestions_fail(
     )
     resolution_suggestions_for_issue.side_effect = SupervisorTimeoutError
 
-    result = await async_setup_component(hass, "hassio", {})
+    result = await async_setup_component(hass, DOMAIN, {})
     assert result
 
     client = await hass_ws_client(hass)
@@ -855,7 +855,7 @@ async def test_supervisor_remove_missing_issue_without_error(
     """Test HA skips message to remove issue that it didn't know about (sync issue)."""
     mock_resolution_info(supervisor_client)
 
-    result = await async_setup_component(hass, "hassio", {})
+    result = await async_setup_component(hass, DOMAIN, {})
     assert result
 
     client = await hass_supervisor_ws_client()
@@ -891,7 +891,7 @@ async def test_system_is_not_ready(
         "System is not ready with state: setup"
     )
 
-    assert await async_setup_component(hass, "hassio", {})
+    assert await async_setup_component(hass, DOMAIN, {})
     assert "Failed to update supervisor issues" in caplog.text
 
 
@@ -907,7 +907,7 @@ async def test_supervisor_issues_detached_addon_missing(
     """Test supervisor issue for detached addon due to missing repository."""
     mock_resolution_info(supervisor_client)
 
-    result = await async_setup_component(hass, "hassio", {})
+    result = await async_setup_component(hass, DOMAIN, {})
     assert result
 
     client = await hass_supervisor_ws_client()
@@ -958,7 +958,7 @@ async def test_supervisor_issues_ntp_sync_failed(
     """Test supervisor issue for NTP sync failed."""
     mock_resolution_info(supervisor_client)
 
-    result = await async_setup_component(hass, "hassio", {})
+    result = await async_setup_component(hass, DOMAIN, {})
     assert result
 
     client = await hass_supervisor_ws_client()
@@ -1013,7 +1013,7 @@ async def test_supervisor_issues_disk_lifetime(
     """Test supervisor issue for disk lifetime nearly exceeded."""
     mock_resolution_info(supervisor_client)
 
-    result = await async_setup_component(hass, "hassio", {})
+    result = await async_setup_component(hass, DOMAIN, {})
     assert result
 
     client = await hass_supervisor_ws_client()
@@ -1060,7 +1060,7 @@ async def test_supervisor_issues_free_space(
     """Test supervisor issue for too little free space remaining."""
     mock_resolution_info(supervisor_client)
 
-    result = await async_setup_component(hass, "hassio", {})
+    result = await async_setup_component(hass, DOMAIN, {})
     assert result
 
     client = await hass_supervisor_ws_client()
@@ -1114,7 +1114,7 @@ async def test_supervisor_issues_addon_pwned(
     """Test supervisor issue for pwned secret in an addon."""
     mock_resolution_info(supervisor_client)
 
-    result = await async_setup_component(hass, "hassio", {})
+    result = await async_setup_component(hass, DOMAIN, {})
     assert result
 
     client = await hass_supervisor_ws_client()
@@ -1170,7 +1170,7 @@ async def test_supervisor_issues_unload_disconnects_listener(
     the listener — preventing listener accumulation on config-entry reload.
     """
     mock_resolution_info(supervisor_client)
-    result = await async_setup_component(hass, "hassio", {})
+    result = await async_setup_component(hass, DOMAIN, {})
     assert result
 
     # Get config entry

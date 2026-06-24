@@ -2,6 +2,7 @@
 
 from copy import copy
 import logging
+from typing import override
 
 from homeassistant.components.sensor import (
     SensorDeviceClass,
@@ -286,10 +287,7 @@ SENSOR_DESCRIPTIONS: dict[str, SensorEntityDescription] = {
     ),
 }
 
-DEFAULT_SENSOR_DESCRIPTION = SensorEntityDescription(
-    key="",
-    entity_registry_enabled_default=True,
-)
+DEFAULT_SENSOR_DESCRIPTION = SensorEntityDescription(key="")
 
 
 def setup_platform(
@@ -327,6 +325,7 @@ class HMSensor(HMDevice, SensorEntity):
     """Representation of a HomeMatic sensor."""
 
     @property
+    @override
     def native_value(self):
         """Return the state of the sensor."""
         # Does a cast exist for this class?
@@ -337,6 +336,7 @@ class HMSensor(HMDevice, SensorEntity):
         # No cast, return original value
         return self._hm_get_state()
 
+    @override
     def _init_data_struct(self) -> None:
         """Generate a data dictionary (self._data) from metadata."""
         if self._state:

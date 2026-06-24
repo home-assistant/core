@@ -3,7 +3,7 @@
 from collections.abc import Callable
 from dataclasses import dataclass
 from datetime import datetime
-from typing import Final
+from typing import Final, override
 
 from aioamazondevices.const.schedules import (
     NOTIFICATION_ALARM,
@@ -29,8 +29,7 @@ from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from homeassistant.helpers.typing import StateType
 
-from .const import CATEGORY_NOTIFICATIONS, CATEGORY_SENSORS
-from .coordinator import AmazonConfigEntry
+from .coordinator import AmazonConfigEntry, AmazonDevicesCoordinator
 from .entity import AmazonEntity
 from .utils import async_remove_unsupported_notification_sensors
 
@@ -38,30 +37,44 @@ from .utils import async_remove_unsupported_notification_sensors
 PARALLEL_UPDATES = 0
 
 
+type ValueFn = Callable[
+    [AmazonDevice, str, AmazonDevicesCoordinator], StateType | datetime
+]
+
+
 @dataclass(frozen=True, kw_only=True)
-class AmazonSensorEntityDescription(SensorEntityDescription):
-    """Amazon Devices sensor entity description."""
+class AmazonBaseEntityDescription(SensorEntityDescription):
+    """Shared Amazon Devices entity description."""
 
     native_unit_of_measurement_fn: Callable[[AmazonDevice, str], str] | None = None
+    is_available_fn: Callable[[AmazonDevice, str], bool] = lambda device, key: (
+        device.online
+    )
+    value_fn: ValueFn
+
+
+@dataclass(frozen=True, kw_only=True)
+class AmazonSensorEntityDescription(AmazonBaseEntityDescription):
+    """Amazon Devices sensor entity description."""
+
     is_available_fn: Callable[[AmazonDevice, str], bool] = lambda device, key: (
         device.online
         and (sensor := device.sensors.get(key)) is not None
         and sensor.error is False
     )
-    category: str = CATEGORY_SENSORS
+    value_fn: ValueFn = lambda device, key, _: device.sensors[key].value
 
 
 @dataclass(frozen=True, kw_only=True)
-class AmazonNotificationEntityDescription(SensorEntityDescription):
+class AmazonNotificationEntityDescription(AmazonBaseEntityDescription):
     """Amazon Devices notification entity description."""
 
-    native_unit_of_measurement_fn: Callable[[AmazonDevice, str], str] | None = None
     is_available_fn: Callable[[AmazonDevice, str], bool] = lambda device, key: (
         device.online
         and (notification := device.notifications.get(key)) is not None
         and notification.next_occurrence is not None
     )
-    category: str = CATEGORY_NOTIFICATIONS
+    value_fn: ValueFn = lambda device, key, _: device.notifications[key].next_occurrence
 
 
 SENSORS: Final = (
@@ -181,6 +194,7 @@ class AmazonSensorEntity(AmazonEntity, SensorEntity):
     )
 
     @property
+    @override
     def native_unit_of_measurement(self) -> str | None:
         """Return the unit of measurement of the sensor."""
         if self.entity_description.native_unit_of_measurement_fn:
@@ -191,15 +205,17 @@ class AmazonSensorEntity(AmazonEntity, SensorEntity):
         return super().native_unit_of_measurement
 
     @property
+    @override
     def native_value(self) -> StateType | datetime:
         """Return the state of the sensor."""
-        # Sensors
-        if self.entity_description.category == CATEGORY_SENSORS:
-            return self.device.sensors[self.entity_description.key].value
-        # Notifications
-        return self.device.notifications[self.entity_description.key].next_occurrence
+        return self.entity_description.value_fn(
+            self.device,
+            self.entity_description.key,
+            self.coordinator,
+        )
 
     @property
+    @override
     def available(self) -> bool:
         """Return if entity is available."""
         return (

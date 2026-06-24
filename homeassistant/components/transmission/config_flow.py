@@ -1,7 +1,7 @@
 """Config flow for Transmission Bittorrent Client."""
 
 from collections.abc import Mapping
-from typing import Any
+from typing import Any, override
 
 from transmission_rpc.error import (
     TransmissionAuthError,
@@ -63,12 +63,14 @@ class TransmissionFlowHandler(ConfigFlow, domain=DOMAIN):
 
     @staticmethod
     @callback
+    @override
     def async_get_options_flow(
         config_entry: ConfigEntry,
     ) -> TransmissionOptionsFlowHandler:
         """Get the options flow for this handler."""
         return TransmissionOptionsFlowHandler()
 
+    @override
     async def async_step_user(
         self, user_input: dict[str, Any] | None = None
     ) -> ConfigFlowResult:

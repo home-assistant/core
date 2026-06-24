@@ -4,7 +4,7 @@ import asyncio
 from collections.abc import Mapping
 from dataclasses import dataclass
 import logging
-from typing import Any
+from typing import Any, override
 
 from pyairobotrest import AirobotClient
 from pyairobotrest.exceptions import (
@@ -90,6 +90,7 @@ class AirobotConfigFlow(BaseConfigFlow, domain=DOMAIN):
         self._discovered_mac: str | None = None
         self._discovered_device_id: str | None = None
 
+    @override
     async def async_step_dhcp(
         self, discovery_info: DhcpServiceInfo
     ) -> ConfigFlowResult:
@@ -154,6 +155,7 @@ class AirobotConfigFlow(BaseConfigFlow, domain=DOMAIN):
             errors=errors,
         )
 
+    @override
     async def async_step_user(
         self, user_input: dict[str, Any] | None = None
     ) -> ConfigFlowResult:

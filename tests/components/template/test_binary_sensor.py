@@ -63,7 +63,6 @@ TEST_AVAILABILITY_ENTITY_ID = "binary_sensor.test_availability"
 
 TEST_BINARY_SENSOR = TemplatePlatformSetup(
     binary_sensor.DOMAIN,
-    "sensors",
     "test_binary_sensor",
     make_test_trigger(
         TEST_STATE_ENTITY_ID,
@@ -232,19 +231,6 @@ async def test_setup_config_entry(
 async def test_setup_invalid_sensors(hass: HomeAssistant, count: int) -> None:
     """Test setup with no sensors."""
     assert len(hass.states.async_entity_ids("binary_sensor")) == count
-
-
-@pytest.mark.parametrize(
-    ("count", "state_template", "style", "extra_config"),
-    [(1, "{{ states('sensor.test_state') }}", ConfigurationStyle.LEGACY, {})],
-)
-@pytest.mark.usefixtures("setup_binary_sensor")
-async def test_legacy_template_creates_warning(
-    hass: HomeAssistant, caplog_setup_text
-) -> None:
-    """Test legacy YAML configuration logs a warning."""
-    assert len(hass.states.async_all("binary_sensor")) == 0
-    assert "entities can only be configured under template:" in caplog_setup_text
 
 
 @pytest.mark.parametrize(
@@ -1186,7 +1172,7 @@ async def test_trigger_with_negative_time_periods(
 async def test_trigger_template_delay_with_multiple_triggers(
     hass: HomeAssistant, delay_state: str, freezer: FrozenDateTimeFactory
 ) -> None:
-    """Test trigger based binary sensor with multiple triggers occurring during the delay."""
+    """Test trigger based binary sensor with multiple triggers during delay."""
     for _ in range(10):
         # State should still be unknown
         state = hass.states.get(TEST_BINARY_SENSOR.entity_id)

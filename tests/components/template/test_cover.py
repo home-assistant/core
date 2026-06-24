@@ -53,7 +53,6 @@ TEST_AVAILABILITY_ENTITY = "binary_sensor.availability"
 
 TEST_COVER = TemplatePlatformSetup(
     cover.DOMAIN,
-    "covers",
     "test_template_cover",
     make_test_trigger(
         TEST_STATE_ENTITY_ID,
@@ -159,26 +158,6 @@ async def setup_empty_action(
         count,
         {"open_cover": [], "close_cover": [], script: []},
     )
-
-
-@pytest.mark.parametrize(
-    ("count", "state_template", "style", "config"),
-    [
-        (
-            1,
-            "{{ states('sensor.test_state') }}",
-            ConfigurationStyle.LEGACY,
-            COVER_ACTIONS,
-        )
-    ],
-)
-@pytest.mark.usefixtures("setup_state_cover")
-async def test_legacy_template_creates_warning(
-    hass: HomeAssistant, caplog_setup_text
-) -> None:
-    """Test legacy YAML configuration logs a warning."""
-    assert len(hass.states.async_all("cover")) == 0
-    assert "entities can only be configured under template:" in caplog_setup_text
 
 
 @pytest.mark.parametrize(
@@ -524,22 +503,26 @@ async def test_position_out_of_bounds(hass: HomeAssistant) -> None:
         (
             ConfigurationStyle.MODERN,
             {},
-            "Invalid config for 'template': must contain at least one of open_cover, set_cover_position.",
+            "Invalid config for 'template': must contain at least one"
+            " of open_cover, set_cover_position.",
         ),
         (
             ConfigurationStyle.MODERN,
             OPEN_COVER,
-            "Invalid config for 'template': some but not all values in the same group of inclusion 'open_or_close'",
+            "Invalid config for 'template': some but not all values"
+            " in the same group of inclusion 'open_or_close'",
         ),
         (
             ConfigurationStyle.TRIGGER,
             {},
-            "Invalid config for 'template': must contain at least one of open_cover, set_cover_position.",
+            "Invalid config for 'template': must contain at least one"
+            " of open_cover, set_cover_position.",
         ),
         (
             ConfigurationStyle.TRIGGER,
             OPEN_COVER,
-            "Invalid config for 'template': some but not all values in the same group of inclusion 'open_or_close'",
+            "Invalid config for 'template': some but not all values"
+            " in the same group of inclusion 'open_or_close'",
         ),
     ],
 )
@@ -740,7 +723,10 @@ async def test_set_position_optimistic(
             ConfigurationStyle.TRIGGER,
             {
                 **SET_COVER_POSITION,
-                "picture": "{{ 'foo.png' if is_state('sensor.test_state', 'open') else 'bar.png' }}",
+                "picture": (
+                    "{{ 'foo.png' if is_state('sensor.test_state',"
+                    " 'open') else 'bar.png' }}"
+                ),
             },
         ),
     ],
@@ -1013,7 +999,11 @@ async def test_state_gets_lowercased(hass: HomeAssistant) -> None:
         (
             1,
             "{{ states.sensor.test_state.state }}",
-            "mdi:window-shutter{{ '-open' if is_state('cover.test_template_cover', 'open') else '' }}",
+            (
+                "mdi:window-shutter{{ '-open'"
+                " if is_state('cover.test_template_cover', 'open')"
+                " else '' }}"
+            ),
         )
     ],
 )

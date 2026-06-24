@@ -2,7 +2,7 @@
 
 import functools
 import logging
-from typing import Any
+from typing import Any, override
 
 from zha.exceptions import ZHAException
 from zigpy.application import ControllerApplication
@@ -73,7 +73,7 @@ async def async_setup_entry(
     config_entry.async_on_unload(unsub)
 
 
-class ZHAFirmwareUpdateCoordinator(DataUpdateCoordinator[None]):  # pylint: disable=hass-enforce-class-module
+class ZHAFirmwareUpdateCoordinator(DataUpdateCoordinator[None]):  # pylint: disable=home-assistant-enforce-class-module
     """Firmware update coordinator that broadcasts updates network-wide."""
 
     def __init__(
@@ -121,11 +121,13 @@ class ZHAFirmwareUpdateEntity(
         CoordinatorEntity.__init__(self, zha_data.update_coordinator)
 
     @property
+    @override
     def installed_version(self) -> str | None:
         """Version installed and in use."""
         return self.entity_data.entity.installed_version
 
     @property
+    @override
     def in_progress(self) -> bool | None:
         """Update installation progress.
 
@@ -134,6 +136,7 @@ class ZHAFirmwareUpdateEntity(
         return self.entity_data.entity.in_progress
 
     @property
+    @override
     def update_percentage(self) -> int | float | None:
         """Update installation progress.
 
@@ -144,11 +147,13 @@ class ZHAFirmwareUpdateEntity(
         return self.entity_data.entity.update_percentage
 
     @property
+    @override
     def latest_version(self) -> str | None:
         """Latest version available for install."""
         return self.entity_data.entity.latest_version
 
     @property
+    @override
     def release_summary(self) -> str | None:
         """Summary of the release notes or changelog.
 
@@ -157,6 +162,7 @@ class ZHAFirmwareUpdateEntity(
         """
         return self.entity_data.entity.release_summary
 
+    @override
     async def async_release_notes(self) -> str | None:
         """Return full release notes.
 
@@ -176,12 +182,14 @@ class ZHAFirmwareUpdateEntity(
         return f"{header}\n\n{self.entity_data.entity.release_notes or ''}"
 
     @property
+    @override
     def release_url(self) -> str | None:
         """URL to the full release notes of the latest version available."""
         return self.entity_data.entity.release_url
 
     # We explicitly convert ZHA exceptions to HA exceptions here so there is no need to
-    # use the `@convert_zha_error_to_ha_error` decorator.
+    # use the `@convert_zha_error_to_ha_error()` decorator.
+    @override
     async def async_install(
         self, version: str | None, backup: bool, **kwargs: Any
     ) -> None:
@@ -193,6 +201,7 @@ class ZHAFirmwareUpdateEntity(
         finally:
             self.async_write_ha_state()
 
+    @override
     async def async_update(self) -> None:
         """Update the entity."""
         await CoordinatorEntity.async_update(self)

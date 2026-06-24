@@ -6,18 +6,21 @@ rules:
   appropriate-polling: done
   brands: done
   common-modules: done
-  config-flow-test-coverage:
-    status: done
-    comment: >
-      Tests driven to terminal CREATE_ENTRY or ABORT in PR #170141.
+  config-flow-test-coverage: done
   config-flow: done
   dependency-transparency: done
   docs-actions:
     status: exempt
     comment: Integration does not register custom actions.
+  docs-conditions:
+    status: exempt
+    comment: This integration does not have any conditions.
   docs-high-level-description: done
   docs-installation-instructions: done
   docs-removal-instructions: done
+  docs-triggers:
+    status: exempt
+    comment: This integration does not have any triggers.
   entity-event-setup: done
   entity-unique-id: done
   has-entity-name: done
@@ -27,12 +30,7 @@ rules:
   unique-config-entry: done
 
   # Silver
-  action-exceptions:
-    status: todo
-    comment: >
-      Entity actions (climate set_hvac_mode/set_preset_mode/set_temperature,
-      select select_option) currently raise unwrapped exceptions; will wrap
-      in HomeAssistantError with translation keys.
+  action-exceptions: done
   config-entry-unloading: done
   docs-configuration-parameters: done
   docs-installation-parameters: done
@@ -56,7 +54,7 @@ rules:
       Model name "Nobø Ecohub" under review for rename to "Nobø Hub".
   diagnostics: todo
   discovery: done
-  discovery-update-info: todo
+  discovery-update-info: done
   docs-data-update: todo
   docs-examples: todo
   docs-known-limitations: todo

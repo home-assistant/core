@@ -3,7 +3,7 @@
 from collections.abc import Callable
 from dataclasses import dataclass
 import logging
-from typing import Any, Final
+from typing import Any, Final, override
 
 from homeassistant.components.button import (
     ButtonDeviceClass,
@@ -184,19 +184,26 @@ class FritzButton(ButtonEntity):
             name=device_friendly_name,
         )
 
+    @override
     async def async_press(self) -> None:
         """Triggers Fritz!Box service."""
         if self.entity_description.key == "cleanup":
             _LOGGER.warning(
-                "The 'cleanup' button is deprecated and will be removed in Home Assistant Core 2026.11.0. "
-                "Please update your automations and dashboards to remove any usage of this button. "
-                "The action is now performed automatically at each data refresh",
+                "The 'cleanup' button is deprecated and will"
+                " be removed in Home Assistant Core"
+                " 2026.11.0. Please update your automations"
+                " and dashboards to remove any usage of"
+                " this button. The action is now performed"
+                " automatically at each data refresh",
             )
         elif self.entity_description.key == "firmware_update":
             _LOGGER.warning(
-                "The 'firmware update' button is deprecated and will be removed in Home Assistant Core "
-                "2026.11.0. It has been superseded by an update entity. Please update your automations "
-                "and dashboards to remove any usage of this button",
+                "The 'firmware update' button is deprecated"
+                " and will be removed in Home Assistant"
+                " Core 2026.11.0. It has been superseded"
+                " by an update entity. Please update your"
+                " automations and dashboards to remove"
+                " any usage of this button",
             )
         await self.entity_description.press_action(self.avm_wrapper)
 
@@ -210,9 +217,6 @@ def _async_wol_buttons_list(
     _LOGGER.debug("Setting up %s buttons", BUTTON_TYPE_WOL)
 
     new_wols: list[FritzBoxWOLButton] = []
-
-    if avm_wrapper.unique_id not in data_fritz.wol_buttons:
-        data_fritz.wol_buttons[avm_wrapper.unique_id] = set()
 
     for mac, device in avm_wrapper.devices.items():
         if _is_tracked(mac, data_fritz.wol_buttons.values()):
@@ -245,6 +249,7 @@ class FritzBoxWOLButton(FritzDeviceBase, ButtonEntity):
         self._attr_unique_id = f"{self._mac}_wake_on_lan"
         self._is_available = True
 
+    @override
     async def async_press(self) -> None:
         """Press the button."""
         if self.mac_address:

@@ -5,6 +5,7 @@ from unittest.mock import AsyncMock
 
 from actron_neo_api import ActronAirAuthError
 from actron_neo_api.models.auth import ActronAirUserInfo
+import pytest
 
 from homeassistant import config_entries
 from homeassistant.components.actron_air.const import DOMAIN
@@ -15,8 +16,9 @@ from homeassistant.data_entry_flow import FlowResultType
 from tests.common import MockConfigEntry
 
 
+@pytest.mark.usefixtures("mock_setup_entry")
 async def test_user_flow_oauth2_success(
-    hass: HomeAssistant, mock_actron_api: AsyncMock, mock_setup_entry: AsyncMock
+    hass: HomeAssistant, mock_actron_api: AsyncMock
 ) -> None:
     """Test successful OAuth2 device code flow."""
     # Start the config flow
@@ -90,8 +92,9 @@ async def test_user_flow_oauth2_error(hass: HomeAssistant, mock_actron_api) -> N
     assert result["reason"] == "oauth2_error"
 
 
+@pytest.mark.usefixtures("mock_setup_entry")
 async def test_user_flow_token_polling_error(
-    hass: HomeAssistant, mock_actron_api, mock_setup_entry: AsyncMock
+    hass: HomeAssistant, mock_actron_api
 ) -> None:
     """Test OAuth2 flow with error during token polling."""
     # Override the default mock to raise an error during token polling
@@ -151,7 +154,10 @@ async def test_user_flow_token_polling_error(
 async def test_user_flow_duplicate_account(
     hass: HomeAssistant, mock_actron_api: AsyncMock, mock_config_entry: MockConfigEntry
 ) -> None:
-    """Test duplicate account handling - should abort when same account is already configured."""
+    """Test duplicate account handling.
+
+    Should abort when same account is already configured.
+    """
     # Create an existing config entry for the same user account
     mock_config_entry.add_to_hass(hass)
 
@@ -179,11 +185,9 @@ async def test_user_flow_duplicate_account(
     assert result["reason"] == "already_configured"
 
 
+@pytest.mark.usefixtures("mock_setup_entry")
 async def test_reauth_flow_success(
-    hass: HomeAssistant,
-    mock_actron_api: AsyncMock,
-    mock_config_entry: MockConfigEntry,
-    mock_setup_entry: AsyncMock,
+    hass: HomeAssistant, mock_actron_api: AsyncMock, mock_config_entry: MockConfigEntry
 ) -> None:
     """Test successful reauthentication flow."""
     # Create an existing config entry
@@ -257,8 +261,9 @@ async def test_reauth_flow_wrong_account(
     assert result["reason"] == "wrong_account"
 
 
+@pytest.mark.usefixtures("mock_setup_entry")
 async def test_user_flow_timeout(
-    hass: HomeAssistant, mock_actron_api: AsyncMock, mock_setup_entry: AsyncMock
+    hass: HomeAssistant, mock_actron_api: AsyncMock
 ) -> None:
     """Test OAuth2 flow when login task raises a non-CannotConnect exception."""
 
@@ -313,8 +318,9 @@ async def test_user_flow_timeout(
     assert result["title"] == "test@example.com"
 
 
+@pytest.mark.usefixtures("mock_setup_entry")
 async def test_finish_login_auth_error(
-    hass: HomeAssistant, mock_actron_api: AsyncMock, mock_setup_entry: AsyncMock
+    hass: HomeAssistant, mock_actron_api: AsyncMock
 ) -> None:
     """Test finish_login step when get_user_info raises ActronAirAuthError."""
     # Start the config flow
@@ -338,11 +344,9 @@ async def test_finish_login_auth_error(
     assert result["reason"] == "oauth2_error"
 
 
+@pytest.mark.usefixtures("mock_setup_entry")
 async def test_reconfigure_flow_success(
-    hass: HomeAssistant,
-    mock_actron_api: AsyncMock,
-    mock_config_entry: MockConfigEntry,
-    mock_setup_entry: AsyncMock,
+    hass: HomeAssistant, mock_actron_api: AsyncMock, mock_config_entry: MockConfigEntry
 ) -> None:
     """Test successful reconfiguration flow."""
     mock_config_entry.add_to_hass(hass)

@@ -3,7 +3,7 @@
 from collections.abc import Mapping
 import functools
 import logging
-from typing import Any
+from typing import Any, override
 
 from homeassistant.components.sensor import (
     SensorDeviceClass,
@@ -94,7 +94,7 @@ async def async_setup_entry(
     config_entry.async_on_unload(unsub)
 
 
-# pylint: disable-next=hass-invalid-inheritance # needs fixing
+# pylint: disable-next=home-assistant-invalid-inheritance # needs fixing
 class Sensor(ZHAEntity, SensorEntity):
     """ZHA sensor."""
 
@@ -142,11 +142,13 @@ class Sensor(ZHAEntity, SensorEntity):
             )
 
     @property
+    @override
     def native_value(self) -> StateType:
         """Return the state of the entity."""
         return self.entity_data.entity.native_value
 
     @property
+    @override
     def extra_state_attributes(self) -> Mapping[str, Any] | None:
         """Return entity specific state attributes."""
         entity = self.entity_data.entity

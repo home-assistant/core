@@ -101,6 +101,9 @@
     "auth_failed": {
       "message": "Authentication failed, please reauthenticate with Mastodon."
     },
+    "failed_to_connect": {
+      "message": "Failed to connect."
+    },
     "idempotency_key_too_short": {
       "message": "Idempotency key must be at least 4 characters long."
     },
@@ -130,6 +133,9 @@
     },
     "unable_to_upload_image": {
       "message": "Unable to upload image {media_path}."
+    },
+    "update_failed": {
+      "message": "Update failed."
     }
   },
   "selector": {
@@ -276,6 +282,14 @@
         "config_entry_id": {
           "description": "Select the Mastodon account to update the profile of.",
           "name": "[%key:component::mastodon::services::post::fields::config_entry_id::name%]"
+        },
+        "delete_avatar": {
+          "description": "Permanently removes your current profile picture.",
+          "name": "Delete profile picture"
+        },
+        "delete_header": {
+          "description": "Permanently removes your current header picture.",
+          "name": "Delete header picture"
         },
         "discoverable": {
           "description": "Whether your profile should be discoverable. Public posts and the profile may be featured or recommended across Mastodon.",

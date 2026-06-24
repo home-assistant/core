@@ -58,11 +58,11 @@ async def test_lru_increases_with_many_entities(hass: HomeAssistant) -> None:
     async_fire_time_changed(hass, dt_util.utcnow() + timedelta(minutes=10))
     await hass.async_block_till_done()
 
-    assert template_states.CACHED_TEMPLATE_LRU.get_size() == int(
-        round(mock_entity_count * template_states.ENTITY_COUNT_GROWTH_FACTOR)
+    assert template_states.CACHED_TEMPLATE_LRU.get_size() == round(
+        mock_entity_count * template_states.ENTITY_COUNT_GROWTH_FACTOR
     )
-    assert template_states.CACHED_TEMPLATE_NO_COLLECT_LRU.get_size() == int(
-        round(mock_entity_count * template_states.ENTITY_COUNT_GROWTH_FACTOR)
+    assert template_states.CACHED_TEMPLATE_NO_COLLECT_LRU.get_size() == round(
+        mock_entity_count * template_states.ENTITY_COUNT_GROWTH_FACTOR
     )
 
     await hass.async_stop()
@@ -73,11 +73,11 @@ async def test_lru_increases_with_many_entities(hass: HomeAssistant) -> None:
     async_fire_time_changed(hass, dt_util.utcnow() + timedelta(minutes=20))
     await hass.async_block_till_done()
 
-    assert template_states.CACHED_TEMPLATE_LRU.get_size() == int(
-        round(mock_entity_count * template_states.ENTITY_COUNT_GROWTH_FACTOR)
+    assert template_states.CACHED_TEMPLATE_LRU.get_size() == round(
+        mock_entity_count * template_states.ENTITY_COUNT_GROWTH_FACTOR
     )
-    assert template_states.CACHED_TEMPLATE_NO_COLLECT_LRU.get_size() == int(
-        round(mock_entity_count * template_states.ENTITY_COUNT_GROWTH_FACTOR)
+    assert template_states.CACHED_TEMPLATE_NO_COLLECT_LRU.get_size() == round(
+        mock_entity_count * template_states.ENTITY_COUNT_GROWTH_FACTOR
     )
 
 
@@ -159,7 +159,9 @@ async def test_unavailable_states(hass: HomeAssistant) -> None:
         hass,
         (
             "{{ states | selectattr('state', 'in', ['unavailable','unknown','none']) "
-            "| sort(attribute='entity_id') | map(attribute='entity_id') | list | join(', ') }}"
+            "| sort(attribute='entity_id')"
+            " | map(attribute='entity_id')"
+            " | list | join(', ') }}"
         ),
     )
     assert result == "light.none, light.unavailable, light.unknown"

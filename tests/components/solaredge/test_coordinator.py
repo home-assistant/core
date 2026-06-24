@@ -140,7 +140,8 @@ async def _trigger_and_wait_for_refresh(
     """Trigger a coordinator refresh and wait for it to complete."""
     # The coordinator refresh runs in the background.
     # To reliably assert the result, we need to wait for the refresh to complete.
-    # We patch the coordinator's update method to signal completion via an asyncio.Event.
+    # We patch the coordinator's update method to signal completion
+    # via an asyncio.Event.
     refresh_done = asyncio.Event()
     original_update = coordinator._async_update_data
 
@@ -332,7 +333,7 @@ async def test_modules_coordinator_subsequent_run_with_gap(
     freezer: FrozenDateTimeFactory,
     mock_solar_edge_web: AsyncMock,
 ) -> None:
-    """Test the coordinator correctly updates statistics on subsequent runs with a gap in data."""
+    """Test the coordinator updates statistics with a gap in data."""
     mock_solar_edge_web.async_get_equipment.return_value = {
         1001: {"displayName": "1.1"},
     }

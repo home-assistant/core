@@ -1,6 +1,7 @@
 """An entity class for mobile_app."""
 
 import logging
+from typing import override
 
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import (
@@ -61,6 +62,7 @@ class MobileAppEntity(RestoreEntity):
         self._attr_entity_category = config.get(ATTR_SENSOR_ENTITY_CATEGORY)
         self._attr_available = config.get(ATTR_SENSOR_STATE) != STATE_UNAVAILABLE
 
+    @override
     async def async_added_to_hass(self) -> None:
         """Register callbacks."""
         self.async_on_remove(
@@ -83,7 +85,8 @@ class MobileAppEntity(RestoreEntity):
         """Restore previous state."""
         config = self._config
 
-        # Only restore state if we don't have one already, since it can be set by a pending update
+        # Only restore state if we don't have one already,
+        # since it can be set by a pending update
         if config[ATTR_SENSOR_STATE] in (None, STATE_UNKNOWN):
             config[ATTR_SENSOR_STATE] = last_state.state
             config[ATTR_SENSOR_ATTRIBUTES] = {
@@ -94,6 +97,7 @@ class MobileAppEntity(RestoreEntity):
                 config[ATTR_SENSOR_ICON] = last_state.attributes[ATTR_ICON]
 
     @property
+    @override
     def device_info(self) -> DeviceInfo:
         """Return device registry information for this entity."""
         return device_info(self._registration)
@@ -109,7 +113,7 @@ class MobileAppEntity(RestoreEntity):
         """Restore any pending update for this entity."""
         entity_type = self._config[ATTR_SENSOR_TYPE]
         # Uses legacy hass.data[DOMAIN] pattern
-        # pylint: disable-next=hass-use-runtime-data
+        # pylint: disable-next=home-assistant-use-runtime-data
         pending_updates = self.hass.data[DOMAIN][DATA_PENDING_UPDATES][entity_type]
         if update := pending_updates.pop(self._attr_unique_id, None):
             _LOGGER.debug(

@@ -7,6 +7,7 @@ from dataclasses import dataclass
 from datetime import timedelta
 import logging
 import time
+from typing import override
 
 from pyportainer import (
     DockerContainerState,
@@ -130,6 +131,7 @@ class PortainerBaseCoordinator[_DataT](DataUpdateCoordinator[_DataT]):
             Callable[[list[tuple[PortainerCoordinatorData, PortainerVolumeData]]], None]
         ] = []
 
+    @override
     async def _async_setup(self) -> None:
         """Set up the Portainer Data Update Coordinator."""
         try:
@@ -157,6 +159,7 @@ class PortainerBaseCoordinator[_DataT](DataUpdateCoordinator[_DataT]):
     async def update_data(self) -> _DataT:
         """Update coordinator data."""
 
+    @override
     async def _async_update_data(self) -> _DataT:
         """Fetch per coordinator specific data."""
         try:
@@ -203,6 +206,7 @@ class PortainerCoordinator(
             tuple[int, str], tuple[float, DockerInspect, LocalImageInformation]
         ] = {}
 
+    @override
     async def update_data(self) -> dict[int, PortainerCoordinatorData]:
         """Fetch data from Portainer API."""
         _LOGGER.debug(
@@ -513,6 +517,7 @@ class PortainerDockerDiskSpaceCoordinator(
     config_entry: PortainerConfigEntry
     _update_interval = DEFAULT_DF_SCAN_INTERVAL
 
+    @override
     async def update_data(self) -> dict[int, DockerSystemDF]:
         """Fetch Docker disk space data independently from Portainer API."""
         endpoints = await self.portainer.get_endpoints()

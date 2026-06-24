@@ -58,7 +58,7 @@
     ]),
     'area_id': None,
     'capabilities': dict({
-      'preset_modes': list([
+      <FanEntityCapabilityAttribute.PRESET_MODES: 'preset_modes'>: list([
         'sleep',
       ]),
     }),
@@ -96,8 +96,8 @@
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'friendly_name': 'Bree',
-      'preset_mode': None,
-      'preset_modes': list([
+      <FanEntityStateAttribute.PRESET_MODE: 'preset_mode'>: None,
+      <FanEntityCapabilityAttribute.PRESET_MODES: 'preset_modes'>: list([
         'sleep',
       ]),
       'supported_features': <FanEntityFeature: 56>,
@@ -117,7 +117,7 @@
     ]),
     'area_id': None,
     'capabilities': dict({
-      'preset_modes': None,
+      <FanEntityCapabilityAttribute.PRESET_MODES: 'preset_modes'>: None,
     }),
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -152,12 +152,12 @@
 # name: test_platform_setup_and_discovery[fan.ceiling_fan_light_v2-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'direction': 'forward',
+      <FanEntityStateAttribute.DIRECTION: 'direction'>: 'forward',
       'friendly_name': 'ceiling fan/Light v2',
-      'percentage': 21,
-      'percentage_step': 1.0,
-      'preset_mode': None,
-      'preset_modes': None,
+      <FanEntityStateAttribute.PERCENTAGE: 'percentage'>: 21,
+      <FanEntityStateAttribute.PERCENTAGE_STEP: 'percentage_step'>: 1.0,
+      <FanEntityStateAttribute.PRESET_MODE: 'preset_mode'>: None,
+      <FanEntityCapabilityAttribute.PRESET_MODES: 'preset_modes'>: None,
       'supported_features': <FanEntityFeature: 53>,
     }),
     'context': <ANY>,
@@ -175,7 +175,7 @@
     ]),
     'area_id': None,
     'capabilities': dict({
-      'preset_modes': list([
+      <FanEntityCapabilityAttribute.PRESET_MODES: 'preset_modes'>: list([
         'normal',
         'sleep',
         'nature',
@@ -214,12 +214,12 @@
 # name: test_platform_setup_and_discovery[fan.ceiling_fan_with_light-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'direction': 'reverse',
+      <FanEntityStateAttribute.DIRECTION: 'direction'>: 'reverse',
       'friendly_name': 'Ceiling Fan With Light',
-      'percentage': None,
-      'percentage_step': 16.666666666666668,
-      'preset_mode': 'normal',
-      'preset_modes': list([
+      <FanEntityStateAttribute.PERCENTAGE: 'percentage'>: None,
+      <FanEntityStateAttribute.PERCENTAGE_STEP: 'percentage_step'>: 16.666666666666668,
+      <FanEntityStateAttribute.PRESET_MODE: 'preset_mode'>: 'normal',
+      <FanEntityCapabilityAttribute.PRESET_MODES: 'preset_modes'>: list([
         'normal',
         'sleep',
         'nature',
@@ -241,7 +241,7 @@
     ]),
     'area_id': None,
     'capabilities': dict({
-      'preset_modes': None,
+      <FanEntityCapabilityAttribute.PRESET_MODES: 'preset_modes'>: None,
     }),
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -277,10 +277,10 @@
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'friendly_name': 'D825A I',
-      'percentage': 100,
-      'percentage_step': 25.0,
-      'preset_mode': None,
-      'preset_modes': None,
+      <FanEntityStateAttribute.PERCENTAGE: 'percentage'>: 100,
+      <FanEntityStateAttribute.PERCENTAGE_STEP: 'percentage_step'>: 25.0,
+      <FanEntityStateAttribute.PRESET_MODE: 'preset_mode'>: None,
+      <FanEntityCapabilityAttribute.PRESET_MODES: 'preset_modes'>: None,
       'supported_features': <FanEntityFeature: 49>,
     }),
     'context': <ANY>,
@@ -298,7 +298,7 @@
     ]),
     'area_id': None,
     'capabilities': dict({
-      'preset_modes': None,
+      <FanEntityCapabilityAttribute.PRESET_MODES: 'preset_modes'>: None,
     }),
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -334,7 +334,7 @@
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'friendly_name': 'Dehumidifer',
-      'preset_modes': None,
+      <FanEntityCapabilityAttribute.PRESET_MODES: 'preset_modes'>: None,
       'supported_features': <FanEntityFeature: 49>,
     }),
     'context': <ANY>,
@@ -404,7 +404,7 @@
     ]),
     'area_id': None,
     'capabilities': dict({
-      'preset_modes': None,
+      <FanEntityCapabilityAttribute.PRESET_MODES: 'preset_modes'>: None,
     }),
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -440,10 +440,10 @@
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'friendly_name': 'Déshumidificateur Silencieux OmniDry 20L avec Mode Linge',
-      'percentage': 50,
-      'percentage_step': 50.0,
-      'preset_mode': None,
-      'preset_modes': None,
+      <FanEntityStateAttribute.PERCENTAGE: 'percentage'>: 50,
+      <FanEntityStateAttribute.PERCENTAGE_STEP: 'percentage_step'>: 50.0,
+      <FanEntityStateAttribute.PRESET_MODE: 'preset_mode'>: None,
+      <FanEntityCapabilityAttribute.PRESET_MODES: 'preset_modes'>: None,
       'supported_features': <FanEntityFeature: 49>,
     }),
     'context': <ANY>,
@@ -461,7 +461,7 @@
     ]),
     'area_id': None,
     'capabilities': dict({
-      'preset_modes': None,
+      <FanEntityCapabilityAttribute.PRESET_MODES: 'preset_modes'>: None,
     }),
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -497,10 +497,10 @@
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'friendly_name': 'HL400',
-      'percentage': None,
-      'percentage_step': 33.333333333333336,
-      'preset_mode': None,
-      'preset_modes': None,
+      <FanEntityStateAttribute.PERCENTAGE: 'percentage'>: None,
+      <FanEntityStateAttribute.PERCENTAGE_STEP: 'percentage_step'>: 33.333333333333336,
+      <FanEntityStateAttribute.PRESET_MODE: 'preset_mode'>: None,
+      <FanEntityCapabilityAttribute.PRESET_MODES: 'preset_modes'>: None,
       'supported_features': <FanEntityFeature: 49>,
     }),
     'context': <ANY>,
@@ -570,7 +570,7 @@
     ]),
     'area_id': None,
     'capabilities': dict({
-      'preset_modes': list([
+      <FanEntityCapabilityAttribute.PRESET_MODES: 'preset_modes'>: list([
         'manual',
         'auto',
         'sleep',
@@ -610,8 +610,8 @@
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'friendly_name': 'Kalado Air Purifier',
-      'preset_mode': 'auto',
-      'preset_modes': list([
+      <FanEntityStateAttribute.PRESET_MODE: 'preset_mode'>: 'auto',
+      <FanEntityCapabilityAttribute.PRESET_MODES: 'preset_modes'>: list([
         'manual',
         'auto',
         'sleep',
@@ -633,7 +633,7 @@
     ]),
     'area_id': None,
     'capabilities': dict({
-      'preset_modes': None,
+      <FanEntityCapabilityAttribute.PRESET_MODES: 'preset_modes'>: None,
     }),
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -669,10 +669,10 @@
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'friendly_name': 'Living room dehumidifier',
-      'percentage': 100,
-      'percentage_step': 50.0,
-      'preset_mode': None,
-      'preset_modes': None,
+      <FanEntityStateAttribute.PERCENTAGE: 'percentage'>: 100,
+      <FanEntityStateAttribute.PERCENTAGE_STEP: 'percentage_step'>: 50.0,
+      <FanEntityStateAttribute.PRESET_MODE: 'preset_mode'>: None,
+      <FanEntityCapabilityAttribute.PRESET_MODES: 'preset_modes'>: None,
       'supported_features': <FanEntityFeature: 49>,
     }),
     'context': <ANY>,
@@ -690,7 +690,7 @@
     ]),
     'area_id': None,
     'capabilities': dict({
-      'preset_modes': list([
+      <FanEntityCapabilityAttribute.PRESET_MODES: 'preset_modes'>: list([
         'ordinary',
         'nature',
         'sleep',
@@ -730,11 +730,11 @@
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'friendly_name': 'Tower Fan CA-407G Smart',
-      'oscillating': True,
-      'percentage': 37,
-      'percentage_step': 1.0,
-      'preset_mode': 'ordinary',
-      'preset_modes': list([
+      <FanEntityStateAttribute.OSCILLATING: 'oscillating'>: True,
+      <FanEntityStateAttribute.PERCENTAGE: 'percentage'>: 37,
+      <FanEntityStateAttribute.PERCENTAGE_STEP: 'percentage_step'>: 1.0,
+      <FanEntityStateAttribute.PRESET_MODE: 'preset_mode'>: 'ordinary',
+      <FanEntityCapabilityAttribute.PRESET_MODES: 'preset_modes'>: list([
         'ordinary',
         'nature',
         'sleep',

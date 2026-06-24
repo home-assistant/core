@@ -155,7 +155,8 @@ async def async_setup_entry(hass: HomeAssistant, entry: Control4ConfigEntry) -> 
                 config[CONF_HOST],
             )
             raise ConfigEntryNotReady(
-                f"Timeout getting UI configuration from Control4 controller at {config[CONF_HOST]}"
+                "Timeout getting UI configuration from"
+                f" Control4 controller at {config[CONF_HOST]}"
             ) from err
 
         ui_configuration = json.loads(ui_config_raw)

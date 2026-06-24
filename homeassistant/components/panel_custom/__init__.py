@@ -89,7 +89,8 @@ async def async_register_panel(
     config: ConfigType | None = None,
     # If your panel should only be shown to admin users
     require_admin: bool = False,
-    # If your panel is used to configure an integration, needs the domain of the integration
+    # If your panel is used to configure an integration,
+    # needs the domain of the integration
     config_panel_domain: str | None = None,
 ) -> None:
     """Register a new custom panel."""

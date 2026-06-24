@@ -1,6 +1,6 @@
 """Support for switches which integrates with other components."""
 
-from typing import TYPE_CHECKING, Any
+from typing import TYPE_CHECKING, Any, override
 
 import voluptuous as vol
 
@@ -125,8 +125,11 @@ class AbstractTemplateSwitch(AbstractTemplateEntity, SwitchEntity, RestoreEntity
     _optimistic_entity = True
     _state_option = CONF_STATE
 
-    # The super init is not called because TemplateEntity and TriggerEntity will call AbstractTemplateEntity.__init__.
-    # This ensures that the __init__ on AbstractTemplateEntity is not called twice.
+    # The super init is not called because TemplateEntity
+    # and TriggerEntity will call
+    # AbstractTemplateEntity.__init__. This ensures that
+    # the __init__ on AbstractTemplateEntity is not
+    # called twice.
     def __init__(self, name: str, config: dict[str, Any]) -> None:  # pylint: disable=super-init-not-called
         """Initialize the features."""
 
@@ -141,6 +144,7 @@ class AbstractTemplateSwitch(AbstractTemplateEntity, SwitchEntity, RestoreEntity
         if (off_action := config.get(CONF_TURN_OFF)) is not None:
             self.add_script(CONF_TURN_OFF, off_action, name, DOMAIN)
 
+    @override
     async def async_turn_on(self, **kwargs: Any) -> None:
         """Fire the on action."""
         if on_script := self._action_scripts.get(CONF_TURN_ON):
@@ -149,6 +153,7 @@ class AbstractTemplateSwitch(AbstractTemplateEntity, SwitchEntity, RestoreEntity
             self._attr_is_on = True
             self.async_write_ha_state()
 
+    @override
     async def async_turn_off(self, **kwargs: Any) -> None:
         """Fire the off action."""
         if off_script := self._action_scripts.get(CONF_TURN_OFF):
@@ -176,6 +181,7 @@ class StateSwitchEntity(TemplateEntity, AbstractTemplateSwitch):
             assert name is not None
         AbstractTemplateSwitch.__init__(self, name, config)
 
+    @override
     async def async_added_to_hass(self) -> None:
         """Register callbacks."""
         if CONF_STATE not in self._templates:
@@ -202,6 +208,7 @@ class TriggerSwitchEntity(TriggerEntity, AbstractTemplateSwitch):
         name = self._rendered.get(CONF_NAME, DEFAULT_NAME)
         AbstractTemplateSwitch.__init__(self, name, config)
 
+    @override
     async def async_added_to_hass(self) -> None:
         """Restore last state."""
         await super().async_added_to_hass()

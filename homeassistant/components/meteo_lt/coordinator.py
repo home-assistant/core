@@ -1,6 +1,7 @@
 """DataUpdateCoordinator for Meteo.lt integration."""
 
 import logging
+from typing import override
 
 import aiohttp
 from meteo_lt import Forecast as MeteoLtForecast, MeteoLtAPI
@@ -37,6 +38,7 @@ class MeteoLtUpdateCoordinator(DataUpdateCoordinator[MeteoLtForecast]):
             config_entry=config_entry,
         )
 
+    @override
     async def _async_update_data(self) -> MeteoLtForecast:
         """Fetch data from Meteo.lt API."""
         try:
@@ -53,7 +55,8 @@ class MeteoLtUpdateCoordinator(DataUpdateCoordinator[MeteoLtForecast]):
         # Check if forecast data is available
         if not forecast.forecast_timestamps:
             raise UpdateFailed(
-                f"No forecast data available for {self.place_code} - API returned empty timestamps"
+                f"No forecast data available for {self.place_code}"
+                " - API returned empty timestamps"
             )
 
         return forecast

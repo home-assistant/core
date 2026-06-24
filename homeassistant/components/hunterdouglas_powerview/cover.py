@@ -5,7 +5,7 @@ from dataclasses import replace
 from datetime import datetime, timedelta
 import logging
 from math import ceil
-from typing import Any
+from typing import Any, override
 
 from aiopvapi.helpers.constants import (
     ATTR_NAME,
@@ -114,6 +114,7 @@ class PowerViewShadeBase(ShadeEntity, CoverEntity):
         self._forced_resync: Callable[[], None] | None = None
 
     @property
+    @override
     def assumed_state(self) -> bool:
         """If the device is hard wired we are polling state.
 
@@ -124,6 +125,7 @@ class PowerViewShadeBase(ShadeEntity, CoverEntity):
         return not self._is_hard_wired
 
     @property
+    @override
     def should_poll(self) -> bool:
         """Only poll if the device is hard wired.
 
@@ -134,16 +136,25 @@ class PowerViewShadeBase(ShadeEntity, CoverEntity):
         return self._is_hard_wired
 
     @property
+    @override
+    def available(self) -> bool:
+        """Return True if shade position data is available."""
+        return super().available and self.positions.primary is not None
+
+    @property
+    @override
     def extra_state_attributes(self) -> dict[str, str]:
         """Return the state attributes."""
         return {STATE_ATTRIBUTE_ROOM_NAME: self._room_name}
 
     @property
+    @override
     def is_closed(self) -> bool:
         """Return if the cover is closed."""
         return self.positions.primary <= CLOSED_POSITION
 
     @property
+    @override
     def current_cover_position(self) -> int:
         """Return the current position of cover."""
         return self.positions.primary
@@ -163,6 +174,7 @@ class PowerViewShadeBase(ShadeEntity, CoverEntity):
         """Return the close position and required additional positions."""
         return replace(self._shade.close_position, velocity=self.positions.velocity)
 
+    @override
     async def async_close_cover(self, **kwargs: Any) -> None:
         """Close the cover."""
         self._async_schedule_update_for_transition(self.transition_steps)
@@ -171,6 +183,7 @@ class PowerViewShadeBase(ShadeEntity, CoverEntity):
         self._attr_is_closing = True
         self.async_write_ha_state()
 
+    @override
     async def async_open_cover(self, **kwargs: Any) -> None:
         """Open the cover."""
         self._async_schedule_update_for_transition(100 - self.transition_steps)
@@ -179,6 +192,7 @@ class PowerViewShadeBase(ShadeEntity, CoverEntity):
         self._attr_is_closing = False
         self.async_write_ha_state()
 
+    @override
     async def async_stop_cover(self, **kwargs: Any) -> None:
         """Stop the cover."""
         self._async_cancel_scheduled_transition_update()
@@ -191,6 +205,7 @@ class PowerViewShadeBase(ShadeEntity, CoverEntity):
         # no override required in base
         return target_hass_position
 
+    @override
     async def async_set_cover_position(self, **kwargs: Any) -> None:
         """Move the shade to a specific position."""
         await self._async_set_cover_position(kwargs[ATTR_POSITION])
@@ -286,13 +301,15 @@ class PowerViewShadeBase(ShadeEntity, CoverEntity):
         await self.async_update()
         self.async_write_ha_state()
 
-    # pylint: disable-next=hass-missing-super-call
+    @override
+    # pylint: disable-next=home-assistant-missing-super-call
     async def async_added_to_hass(self) -> None:
         """When entity is added to hass."""
         self.async_on_remove(
             self.coordinator.async_add_listener(self._async_update_shade_from_group)
         )
 
+    @override
     async def async_will_remove_from_hass(self) -> None:
         """Cancel any pending refreshes."""
         self._async_cancel_scheduled_transition_update()
@@ -311,6 +328,7 @@ class PowerViewShadeBase(ShadeEntity, CoverEntity):
         self.data.update_from_group_data(self._shade.id)
         self.async_write_ha_state()
 
+    @override
     async def async_update(self) -> None:
         """Refresh shade position."""
         if self._update_in_progress:
@@ -357,11 +375,13 @@ class PowerViewShadeWithTiltBase(PowerViewShadeBase):
         self._max_tilt = self._shade.shade_limits.tilt_max
 
     @property
+    @override
     def current_cover_tilt_position(self) -> int:
         """Return the current cover tile position."""
         return self.positions.tilt
 
     @property
+    @override
     def transition_steps(self) -> int:
         """Return the steps to make a move."""
         return self.positions.primary + self.positions.tilt
@@ -378,18 +398,21 @@ class PowerViewShadeWithTiltBase(PowerViewShadeBase):
             self._shade.close_position_tilt, velocity=self.positions.velocity
         )
 
+    @override
     async def async_close_cover_tilt(self, **kwargs: Any) -> None:
         """Close the cover tilt."""
         self._async_schedule_update_for_transition(self.transition_steps)
         await self._async_execute_move(self.close_tilt_position)
         self.async_write_ha_state()
 
+    @override
     async def async_open_cover_tilt(self, **kwargs: Any) -> None:
         """Open the cover tilt."""
         self._async_schedule_update_for_transition(100 - self.transition_steps)
         await self._async_execute_move(self.open_tilt_position)
         self.async_write_ha_state()
 
+    @override
     async def async_set_cover_tilt_position(self, **kwargs: Any) -> None:
         """Move the tilt to a specific position."""
         await self._async_set_cover_tilt_position(kwargs[ATTR_TILT_POSITION])
@@ -406,6 +429,7 @@ class PowerViewShadeWithTiltBase(PowerViewShadeBase):
         self.async_write_ha_state()
 
     @callback
+    @override
     def _get_shade_move(self, target_hass_position: int) -> ShadePosition:
         """Return a ShadePosition."""
         return ShadePosition(
@@ -421,6 +445,7 @@ class PowerViewShadeWithTiltBase(PowerViewShadeBase):
             velocity=self.positions.velocity,
         )
 
+    @override
     async def async_stop_cover_tilt(self, **kwargs: Any) -> None:
         """Stop the cover tilting."""
         await self.async_stop_cover()
@@ -438,21 +463,25 @@ class PowerViewShadeWithTiltOnClosed(PowerViewShadeWithTiltBase):
     _attr_name = None
 
     @property
+    @override
     def open_position(self) -> ShadePosition:
         """Return the open position and required additional positions."""
         return replace(self._shade.open_position, velocity=self.positions.velocity)
 
     @property
+    @override
     def close_position(self) -> ShadePosition:
         """Return the close position and required additional positions."""
         return replace(self._shade.close_position, velocity=self.positions.velocity)
 
     @property
+    @override
     def open_tilt_position(self) -> ShadePosition:
         """Return the open tilt position and required additional positions."""
         return replace(self._shade.open_position_tilt, velocity=self.positions.velocity)
 
     @property
+    @override
     def close_tilt_position(self) -> ShadePosition:
         """Return the close tilt position and required additional positions."""
         return replace(
@@ -470,6 +499,7 @@ class PowerViewShadeWithTiltAnywhere(PowerViewShadeWithTiltBase):
     """
 
     @callback
+    @override
     def _get_shade_move(self, target_hass_position: int) -> ShadePosition:
         """Return a ShadePosition."""
         return ShadePosition(
@@ -479,6 +509,7 @@ class PowerViewShadeWithTiltAnywhere(PowerViewShadeWithTiltBase):
         )
 
     @callback
+    @override
     def _get_shade_tilt(self, target_hass_tilt_position: int) -> ShadePosition:
         """Return a ShadePosition."""
         return ShadePosition(
@@ -516,26 +547,36 @@ class PowerViewShadeTiltOnly(PowerViewShadeWithTiltBase):
         self._max_tilt = self._shade.shade_limits.tilt_max
 
     @property
+    @override
     def current_cover_position(self) -> int:
         """Return the current position of cover."""
         # allows using parent class with no other alterations
         return CLOSED_POSITION
 
     @property
+    @override
     def transition_steps(self) -> int:
         """Return the steps to make a move."""
         return self.positions.tilt
 
     @property
+    @override
     def is_closed(self) -> bool:
         """Return if the cover is closed."""
         return self.positions.tilt <= CLOSED_POSITION
+
+    @property
+    @override
+    def available(self) -> bool:
+        """Return True if shade position data is available."""
+        return super().available and self.positions.tilt is not None
 
 
 class PowerViewShadeTopDown(PowerViewShadeBase):
     """Representation of a shade that lowers from the roof to the floor.
 
-    These shades are inverted where MAX_POSITION equates to closed and MIN_POSITION is open
+    These shades are inverted where MAX_POSITION equates to closed
+    and MIN_POSITION is open
     API Class: ShadeTopDown
 
     Type 6 - Top Down
@@ -544,16 +585,19 @@ class PowerViewShadeTopDown(PowerViewShadeBase):
     _attr_name = None
 
     @property
+    @override
     def current_cover_position(self) -> int:
         """Return the current position of cover."""
         # inverted positioning
         return MAX_POSITION - self.positions.primary
 
+    @override
     async def async_set_cover_position(self, **kwargs: Any) -> None:
         """Move the shade to a specific position."""
         await self._async_set_cover_position(MAX_POSITION - kwargs[ATTR_POSITION])
 
     @property
+    @override
     def is_closed(self) -> bool:
         """Return if the cover is closed."""
         return (MAX_POSITION - self.positions.primary) <= CLOSED_POSITION
@@ -568,6 +612,7 @@ class PowerViewShadeDualRailBase(PowerViewShadeBase):
     """
 
     @property
+    @override
     def transition_steps(self) -> int:
         """Return the steps to make a move."""
         return self.positions.primary + self.positions.secondary
@@ -596,11 +641,13 @@ class PowerViewShadeTDBUBottom(PowerViewShadeDualRailBase):
         self._attr_unique_id = f"{self._attr_unique_id}_bottom"
 
     @callback
+    @override
     def _clamp_cover_limit(self, target_hass_position: int) -> int:
         """Don't allow a cover to go into an impossbile position."""
         return min(target_hass_position, (MAX_POSITION - self.positions.secondary))
 
     @callback
+    @override
     def _get_shade_move(self, target_hass_position: int) -> ShadePosition:
         """Return a ShadePosition."""
         return ShadePosition(
@@ -633,6 +680,7 @@ class PowerViewShadeTDBUTop(PowerViewShadeDualRailBase):
         self._attr_unique_id = f"{self._attr_unique_id}_top"
 
     @property
+    @override
     def should_poll(self) -> bool:
         """Certain shades create multiple entities.
 
@@ -642,18 +690,21 @@ class PowerViewShadeTDBUTop(PowerViewShadeDualRailBase):
         return False
 
     @property
+    @override
     def is_closed(self) -> bool:
         """Return if the cover is closed."""
         # top shade needs to check other motor
         return self.positions.secondary <= CLOSED_POSITION
 
     @property
+    @override
     def current_cover_position(self) -> int:
         """Return the current position of cover."""
         # these need to be inverted to report state correctly in HA
         return self.positions.secondary
 
     @property
+    @override
     def open_position(self) -> ShadePosition:
         """Return the open position and required additional positions."""
         # these shades share a class in parent API
@@ -665,11 +716,13 @@ class PowerViewShadeTDBUTop(PowerViewShadeDualRailBase):
         )
 
     @callback
+    @override
     def _clamp_cover_limit(self, target_hass_position: int) -> int:
         """Don't allow a cover to go into an impossbile position."""
         return min(target_hass_position, (MAX_POSITION - self.positions.primary))
 
     @callback
+    @override
     def _get_shade_move(self, target_hass_position: int) -> ShadePosition:
         """Return a ShadePosition."""
         return ShadePosition(
@@ -686,6 +739,7 @@ class PowerViewShadeDualOverlappedBase(PowerViewShadeBase):
     """
 
     @property
+    @override
     def transition_steps(self) -> int:
         """Return the steps to make a move."""
         # poskind 1 represents the second half of the shade in hass
@@ -699,6 +753,7 @@ class PowerViewShadeDualOverlappedBase(PowerViewShadeBase):
         return ceil(primary + secondary)
 
     @property
+    @override
     def open_position(self) -> ShadePosition:
         """Return the open position and required additional positions."""
         return ShadePosition(
@@ -707,6 +762,7 @@ class PowerViewShadeDualOverlappedBase(PowerViewShadeBase):
         )
 
     @property
+    @override
     def close_position(self) -> ShadePosition:
         """Return the open position and required additional positions."""
         return ShadePosition(
@@ -741,12 +797,14 @@ class PowerViewShadeDualOverlappedCombined(PowerViewShadeDualOverlappedBase):
         self._attr_unique_id = f"{self._attr_unique_id}_combined"
 
     @property
+    @override
     def is_closed(self) -> bool:
         """Return if the cover is closed."""
         # if rear shade is down it is closed
         return self.positions.secondary <= CLOSED_POSITION
 
     @property
+    @override
     def current_cover_position(self) -> int:
         """Return the current position of cover."""
         # if front is open return that (other positions are impossible)
@@ -758,6 +816,7 @@ class PowerViewShadeDualOverlappedCombined(PowerViewShadeDualOverlappedBase):
         return ceil(position)
 
     @callback
+    @override
     def _get_shade_move(self, target_hass_position: int) -> ShadePosition:
         """Return a ShadePosition."""
         # 0 - 50 represents the rear blockut shade
@@ -807,6 +866,7 @@ class PowerViewShadeDualOverlappedFront(PowerViewShadeDualOverlappedBase):
         self._attr_unique_id = f"{self._attr_unique_id}_front"
 
     @property
+    @override
     def should_poll(self) -> bool:
         """Certain shades create multiple entities.
 
@@ -816,6 +876,7 @@ class PowerViewShadeDualOverlappedFront(PowerViewShadeDualOverlappedBase):
         return False
 
     @callback
+    @override
     def _get_shade_move(self, target_hass_position: int) -> ShadePosition:
         """Return a ShadePosition."""
         return ShadePosition(
@@ -824,6 +885,7 @@ class PowerViewShadeDualOverlappedFront(PowerViewShadeDualOverlappedBase):
         )
 
     @property
+    @override
     def close_position(self) -> ShadePosition:
         """Return the close position and required additional positions."""
         return ShadePosition(
@@ -863,6 +925,7 @@ class PowerViewShadeDualOverlappedRear(PowerViewShadeDualOverlappedBase):
         self._attr_unique_id = f"{self._attr_unique_id}_rear"
 
     @property
+    @override
     def should_poll(self) -> bool:
         """Certain shades create multiple entities.
 
@@ -872,17 +935,20 @@ class PowerViewShadeDualOverlappedRear(PowerViewShadeDualOverlappedBase):
         return False
 
     @property
+    @override
     def is_closed(self) -> bool:
         """Return if the cover is closed."""
         # if rear shade is down it is closed
         return self.positions.secondary <= CLOSED_POSITION
 
     @property
+    @override
     def current_cover_position(self) -> int:
         """Return the current position of cover."""
         return self.positions.secondary
 
     @callback
+    @override
     def _get_shade_move(self, target_hass_position: int) -> ShadePosition:
         """Return a ShadePosition."""
         return ShadePosition(
@@ -891,6 +957,7 @@ class PowerViewShadeDualOverlappedRear(PowerViewShadeDualOverlappedBase):
         )
 
     @property
+    @override
     def open_position(self) -> ShadePosition:
         """Return the open position and required additional positions."""
         return ShadePosition(
@@ -911,11 +978,13 @@ class PowerViewShadeDualOverlappedCombinedTilt(
     Sibling Class: PowerViewShadeDualOverlappedFront, PowerViewShadeDualOverlappedRear
     API Class: ShadeDualOverlappedTilt90 + ShadeDualOverlappedTilt180
 
-    Type 9 - Duolite with 90° Tilt (front bottom up shade that also tilts plus a rear opaque (non-tilting) shade)
+    Type 9 - Duolite with 90° Tilt (front bottom up shade that also
+    tilts plus a rear opaque (non-tilting) shade)
     Type 10 - Duolite with 180° Tilt
     """
 
     @property
+    @override
     def transition_steps(self) -> int:
         """Return the steps to make a move."""
         # poskind 1 represents the second half of the shade in hass

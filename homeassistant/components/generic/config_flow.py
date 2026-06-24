@@ -7,7 +7,7 @@ from datetime import datetime
 from errno import EHOSTUNREACH, EIO
 import io
 import logging
-from typing import Any, cast
+from typing import Any, cast, override
 
 from aiohttp import web
 from httpx import HTTPStatusError, RequestError, TimeoutException
@@ -332,12 +332,14 @@ class GenericIPCamConfigFlow(ConfigFlow, domain=DOMAIN):
         self.title = ""
 
     @staticmethod
+    @override
     def async_get_options_flow(
         config_entry: ConfigEntry,
     ) -> GenericOptionsFlowHandler:
         """Get the options flow for this handler."""
         return GenericOptionsFlowHandler()
 
+    @override
     async def async_step_user(
         self, user_input: dict[str, Any] | None = None
     ) -> ConfigFlowResult:
@@ -345,7 +347,8 @@ class GenericIPCamConfigFlow(ConfigFlow, domain=DOMAIN):
         errors = {}
         hass = self.hass
         if user_input:
-            # Secondary validation because serialised vol can't seem to handle this complexity:
+            # Secondary validation because serialised vol can't
+            # seem to handle this complexity:
             if not user_input.get(CONF_STILL_IMAGE_URL) and not user_input.get(
                 CONF_STREAM_SOURCE
             ):
@@ -407,6 +410,7 @@ class GenericIPCamConfigFlow(ConfigFlow, domain=DOMAIN):
         )
 
     @staticmethod
+    @override
     async def async_setup_preview(hass: HomeAssistant) -> None:
         """Set up preview WS API."""
         websocket_api.async_register_command(hass, ws_start_preview)
@@ -429,7 +433,8 @@ class GenericOptionsFlowHandler(OptionsFlow):
         hass = self.hass
 
         if user_input:
-            # Secondary validation because serialised vol can't seem to handle this complexity:
+            # Secondary validation because serialised vol can't
+            # seem to handle this complexity:
             if not user_input.get(CONF_STILL_IMAGE_URL) and not user_input.get(
                 CONF_STREAM_SOURCE
             ):
@@ -500,6 +505,7 @@ class GenericOptionsFlowHandler(OptionsFlow):
         )
 
     @staticmethod
+    @override
     async def async_setup_preview(hass: HomeAssistant) -> None:
         """Set up preview WS API."""
         websocket_api.async_register_command(hass, ws_start_preview)
@@ -580,7 +586,10 @@ async def ws_start_preview(
     ha_stream_url = None
 
     if user_input.get(CONF_STILL_IMAGE_URL):
-        ha_still_url = f"/api/generic/preview_flow_image/{msg['flow_id']}?t={datetime.now().isoformat()}"
+        ha_still_url = (
+            "/api/generic/preview_flow_image"
+            f"/{msg['flow_id']}?t={datetime.now().isoformat()}"  # pylint: disable=home-assistant-enforce-naive-now
+        )
         _LOGGER.debug("Got preview still URL: %s", ha_still_url)
 
     if ha_stream := flow.preview_stream:

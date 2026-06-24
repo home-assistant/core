@@ -595,8 +595,8 @@ class OpenAIBaseLLMEntity(Entity):
                     )
                 )
 
-                if "reasoning" not in model_args:
-                    # Reasoning models handle this correctly with just a prompt
+                if not model_args["model"].startswith("o"):
+                    # o-series models handle this correctly with just a prompt
                     remove_citations = True
 
             tools.append(web_search)
@@ -665,15 +665,13 @@ class OpenAIBaseLLMEntity(Entity):
             try:
                 stream = await client.responses.create(**model_args)
 
+                content_stream = chat_log.async_add_delta_content_stream(
+                    self.entity_id,
+                    _transform_stream(chat_log, stream, remove_citations),
+                )
                 messages.extend(
                     _convert_content_to_param(
-                        [
-                            content
-                            async for content in chat_log.async_add_delta_content_stream(
-                                self.entity_id,
-                                _transform_stream(chat_log, stream, remove_citations),
-                            )
-                        ]
+                        [content async for content in content_stream]
                     )
                 )
             except openai.RateLimitError as err:
@@ -682,7 +680,8 @@ class OpenAIBaseLLMEntity(Entity):
                     and "resource unavailable" in (err.message or "").lower()
                 ):
                     LOGGER.info(
-                        "Flex tier is not available at the moment, continuing with default tier"
+                        "Flex tier is not available at the moment,"
+                        " continuing with default tier"
                     )
                     model_args["service_tier"] = "default"
                     continue

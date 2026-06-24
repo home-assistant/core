@@ -54,7 +54,7 @@ async def test_rssi_sensor(
         await async_setup_component(hass, lifx.DOMAIN, {lifx.DOMAIN: {}})
         await hass.async_block_till_done()
 
-    entity_id = "sensor.my_bulb_rssi"
+    entity_id = "sensor.my_group_my_bulb_rssi"
     assert not hass.states.get(entity_id)
 
     entry = entity_registry.entities.get(entity_id)
@@ -109,7 +109,7 @@ async def test_rssi_sensor_old_firmware(
         await async_setup_component(hass, lifx.DOMAIN, {lifx.DOMAIN: {}})
         await hass.async_block_till_done()
 
-    entity_id = "sensor.my_bulb_rssi"
+    entity_id = "sensor.my_group_my_bulb_rssi"
 
     entry = entity_registry.entities.get(entity_id)
     assert entry

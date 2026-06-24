@@ -2,7 +2,7 @@
 
 from collections.abc import Mapping
 import logging
-from typing import Any
+from typing import Any, override
 
 from librehardwaremonitor_api import (
     LibreHardwareMonitorClient,
@@ -62,6 +62,7 @@ class LibreHardwareMonitorConfigFlow(ConfigFlow, domain=DOMAIN):
         self._host: str | None = None
         self._port: int | None = None
 
+    @override
     async def async_step_user(
         self, user_input: dict[str, Any] | None = None
     ) -> ConfigFlowResult:
@@ -84,7 +85,11 @@ class LibreHardwareMonitorConfigFlow(ConfigFlow, domain=DOMAIN):
                 errors["base"] = "no_devices"
             else:
                 return self.async_create_entry(
-                    title=f"{computer_name} ({user_input[CONF_HOST]}:{user_input[CONF_PORT]})",
+                    title=(
+                        f"{computer_name}"
+                        f" ({user_input[CONF_HOST]}"
+                        f":{user_input[CONF_PORT]})"
+                    ),
                     data=user_input,
                 )
 
@@ -132,7 +137,8 @@ class LibreHardwareMonitorConfigFlow(ConfigFlow, domain=DOMAIN):
                         entry=reauth_entry,  # type: ignore[arg-type]
                         data_updates=user_input,
                     )
-                # the initial connection was unauthorized, now we can create the config entry
+                # the initial connection was unauthorized,
+                # now we can create the config entry
                 return self.async_create_entry(
                     title=f"{computer_name} ({self._host}:{self._port})",
                     data=data,

@@ -1,7 +1,7 @@
 """Config flow for NZBGet."""
 
 import logging
-from typing import Any
+from typing import Any, override
 
 import voluptuous as vol
 
@@ -52,6 +52,7 @@ class NZBGetConfigFlow(ConfigFlow, domain=DOMAIN):
 
     VERSION = 1
 
+    @override
     async def async_step_user(
         self, user_input: dict[str, Any] | None = None
     ) -> ConfigFlowResult:
@@ -81,7 +82,7 @@ class NZBGetConfigFlow(ConfigFlow, domain=DOMAIN):
             {
                 vol.Required(CONF_HOST): str,
                 # Name field is no longer allowed in config flow schemas
-                # pylint: disable-next=hass-config-flow-name-field
+                # pylint: disable-next=home-assistant-config-flow-name-field
                 vol.Optional(CONF_NAME, default=DEFAULT_NAME): str,
                 vol.Optional(CONF_USERNAME): str,
                 vol.Optional(CONF_PASSWORD): str,

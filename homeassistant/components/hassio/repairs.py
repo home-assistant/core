@@ -2,7 +2,7 @@
 
 from collections.abc import Callable, Coroutine
 from types import MethodType
-from typing import Any
+from typing import Any, override
 
 from aiohasupervisor import SupervisorError
 from aiohasupervisor.models import ContextType
@@ -125,7 +125,10 @@ class SupervisorIssueRepairFlow(RepairsFlow):
     async def _async_step_apply_suggestion(
         self, suggestion: Suggestion, confirmed: bool = False
     ) -> RepairsFlowResult:
-        """Handle applying a suggestion as a flow step. Optionally request confirmation."""
+        """Handle applying a suggestion as a flow step.
+
+        Optionally request confirmation.
+        """
         if not confirmed and suggestion.key in SUGGESTION_CONFIRMATION_REQUIRED:
             return self._async_form_for_suggestion(suggestion)
 
@@ -160,6 +163,7 @@ class DockerConfigIssueRepairFlow(SupervisorIssueRepairFlow):
     """Handler for docker config issue fixing flow."""
 
     @property
+    @override
     def description_placeholders(self) -> dict[str, str] | None:
         """Get description placeholders for steps."""
         placeholders = {PLACEHOLDER_KEY_COMPONENTS: ""}
@@ -194,6 +198,7 @@ class AddonIssueRepairFlow(SupervisorIssueRepairFlow):
     """Handler for addon issue fixing flows."""
 
     @property
+    @override
     def description_placeholders(self) -> dict[str, str] | None:
         """Get description placeholders for steps."""
         placeholders: dict[str, str] = super().description_placeholders or {}
@@ -212,6 +217,7 @@ class DeprecatedAddonIssueRepairFlow(AddonIssueRepairFlow):
     """Handler for deprecated addon issue fixing flows."""
 
     @property
+    @override
     def description_placeholders(self) -> dict[str, str] | None:
         """Get description placeholders for steps."""
         placeholders: dict[str, str] = super().description_placeholders or {}

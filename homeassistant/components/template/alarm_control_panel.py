@@ -2,7 +2,7 @@
 
 from enum import Enum
 import logging
-from typing import TYPE_CHECKING, Any
+from typing import TYPE_CHECKING, Any, override
 
 import voluptuous as vol
 
@@ -172,7 +172,8 @@ class AbstractTemplateAlarmControlPanel(
     _optimistic_entity = True
     _state_option = CONF_STATE
 
-    # The super init is not called because TemplateEntity calls AbstractTemplateEntity.__init__.
+    # The super init is not called because
+    # TemplateEntity calls AbstractTemplateEntity.__init__.
     def __init__(self, name: str) -> None:  # pylint: disable=super-init-not-called
         """Setup the templates and scripts."""
 
@@ -226,6 +227,7 @@ class AbstractTemplateAlarmControlPanel(
             self._attr_alarm_state = state
             self.async_write_ha_state()
 
+    @override
     async def async_alarm_arm_away(self, code: str | None = None) -> None:
         """Arm the panel to Away."""
         await self._async_alarm_arm(
@@ -234,6 +236,7 @@ class AbstractTemplateAlarmControlPanel(
             code=code,
         )
 
+    @override
     async def async_alarm_arm_home(self, code: str | None = None) -> None:
         """Arm the panel to Home."""
         await self._async_alarm_arm(
@@ -242,6 +245,7 @@ class AbstractTemplateAlarmControlPanel(
             code=code,
         )
 
+    @override
     async def async_alarm_arm_night(self, code: str | None = None) -> None:
         """Arm the panel to Night."""
         await self._async_alarm_arm(
@@ -250,6 +254,7 @@ class AbstractTemplateAlarmControlPanel(
             code=code,
         )
 
+    @override
     async def async_alarm_arm_vacation(self, code: str | None = None) -> None:
         """Arm the panel to Vacation."""
         await self._async_alarm_arm(
@@ -258,6 +263,7 @@ class AbstractTemplateAlarmControlPanel(
             code=code,
         )
 
+    @override
     async def async_alarm_arm_custom_bypass(self, code: str | None = None) -> None:
         """Arm the panel to Custom Bypass."""
         await self._async_alarm_arm(
@@ -266,6 +272,7 @@ class AbstractTemplateAlarmControlPanel(
             code=code,
         )
 
+    @override
     async def async_alarm_disarm(self, code: str | None = None) -> None:
         """Disarm the panel."""
         await self._async_alarm_arm(
@@ -274,6 +281,7 @@ class AbstractTemplateAlarmControlPanel(
             code=code,
         )
 
+    @override
     async def async_alarm_trigger(self, code: str | None = None) -> None:
         """Trigger the panel."""
         await self._async_alarm_arm(
@@ -302,6 +310,7 @@ class StateAlarmControlPanelEntity(TemplateEntity, AbstractTemplateAlarmControlP
 
         AbstractTemplateAlarmControlPanel.__init__(self, name)
 
+    @override
     async def async_added_to_hass(self) -> None:
         """Restore last state."""
         await super().async_added_to_hass()
@@ -324,6 +333,7 @@ class TriggerAlarmControlPanelEntity(TriggerEntity, AbstractTemplateAlarmControl
         self._attr_name = name = self._rendered.get(CONF_NAME, DEFAULT_NAME)
         AbstractTemplateAlarmControlPanel.__init__(self, name)
 
+    @override
     async def async_added_to_hass(self) -> None:
         """Restore last state."""
         await super().async_added_to_hass()

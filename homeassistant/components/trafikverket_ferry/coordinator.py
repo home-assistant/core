@@ -2,7 +2,7 @@
 
 from datetime import date, datetime, time, timedelta
 import logging
-from typing import TYPE_CHECKING, Any
+from typing import TYPE_CHECKING, Any, override
 
 from pytrafikverket import TrafikverketFerry
 from pytrafikverket.exceptions import InvalidAuthentication, NoFerryFound
@@ -34,7 +34,7 @@ def next_weekday(fromdate: date, weekday: int) -> date:
 
 def next_departuredate(departure: list[str]) -> date:
     """Calculate the next departuredate from an array input of short days."""
-    today_date = date.today()
+    today_date = dt_util.now().date()
     today_weekday = date.weekday(today_date)
     if WEEKDAYS[today_weekday] in departure:
         return today_date
@@ -67,6 +67,7 @@ class TVDataUpdateCoordinator(DataUpdateCoordinator):
         self._time: time | None = dt_util.parse_time(config_entry.data[CONF_TIME])
         self._weekdays: list[str] = config_entry.data[CONF_WEEKDAY]
 
+    @override
     async def _async_update_data(self) -> dict[str, Any]:
         """Fetch data from Trafikverket."""
 

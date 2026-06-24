@@ -5,7 +5,7 @@ from dataclasses import dataclass
 from datetime import datetime, timedelta
 from functools import partial
 import logging
-from typing import Any, Self
+from typing import Any, Self, override
 
 import voluptuous as vol
 
@@ -130,8 +130,11 @@ class AbstractTemplateBinarySensor(
     _entity_id_format = ENTITY_ID_FORMAT
     _state_option = CONF_STATE
 
-    # The super init is not called because TemplateEntity and TriggerEntity will call AbstractTemplateEntity.__init__.
-    # This ensures that the __init__ on AbstractTemplateEntity is not called twice.
+    # The super init is not called because TemplateEntity
+    # and TriggerEntity will call
+    # AbstractTemplateEntity.__init__. This ensures that
+    # the __init__ on AbstractTemplateEntity is not
+    # called twice.
     def __init__(self, config: dict[str, Any]) -> None:  # pylint: disable=super-init-not-called
         """Initialize the features."""
 
@@ -178,6 +181,7 @@ class StateBinarySensorEntity(TemplateEntity, AbstractTemplateBinarySensor):
         TemplateEntity.__init__(self, hass, config, unique_id)
         AbstractTemplateBinarySensor.__init__(self, config)
 
+    @override
     async def async_added_to_hass(self) -> None:
         """Restore state."""
         if (
@@ -194,6 +198,7 @@ class StateBinarySensorEntity(TemplateEntity, AbstractTemplateBinarySensor):
         await super().async_added_to_hass()
 
     @callback
+    @override
     def _update_state(self, result):
         super()._update_state(result)
 
@@ -258,6 +263,7 @@ class TriggerBinarySensorEntity(TriggerEntity, AbstractTemplateBinarySensor):
             self._to_render_simple.append(CONF_AUTO_OFF)
             self._parse_result.add(CONF_AUTO_OFF)
 
+    @override
     async def async_added_to_hass(self) -> None:
         """Restore last state."""
         await super().async_added_to_hass()
@@ -297,6 +303,7 @@ class TriggerBinarySensorEntity(TriggerEntity, AbstractTemplateBinarySensor):
             self._auto_off_time = None
 
     @callback
+    @override
     def _update_state(self, result):
         state: bool | None = None
         if result is not None:
@@ -368,6 +375,7 @@ class TriggerBinarySensorEntity(TriggerEntity, AbstractTemplateBinarySensor):
         auto_off_time = dt_util.utcnow() + auto_off_delay
         self._set_auto_off(auto_off_time)
 
+    @override
     def _render_availability_template(self, variables):
         available = super()._render_availability_template(variables)
         if not available:
@@ -389,6 +397,7 @@ class TriggerBinarySensorEntity(TriggerEntity, AbstractTemplateBinarySensor):
         )
 
     @property
+    @override
     def extra_restore_state_data(self) -> AutoOffExtraStoredData:
         """Return specific state data to be restored."""
         return AutoOffExtraStoredData(self._auto_off_time)
@@ -408,6 +417,7 @@ class AutoOffExtraStoredData(ExtraStoredData):
 
     auto_off_time: datetime | None
 
+    @override
     def as_dict(self) -> dict[str, Any]:
         """Return a dict representation of additional data."""
         auto_off_time: datetime | dict[str, str] | None = self.auto_off_time

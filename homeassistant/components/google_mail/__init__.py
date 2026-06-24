@@ -53,7 +53,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: GoogleMailConfigEntry) -
             DOMAIN,
             {DATA_AUTH: auth, CONF_NAME: entry.title},
             # Uses legacy hass.data[DOMAIN] pattern
-            # pylint: disable-next=hass-use-runtime-data
+            # pylint: disable-next=home-assistant-use-runtime-data
             hass.data[DOMAIN][DATA_HASS_CONFIG],
         )
     )

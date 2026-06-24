@@ -1,5 +1,7 @@
 """Base class for Portainer entities."""
 
+from typing import override
+
 from yarl import URL
 
 from homeassistant.const import CONF_URL
@@ -59,9 +61,13 @@ class PortainerEndpointEntity(PortainerCoordinatorEntity):
             name=device_info.endpoint.name,
             entry_type=DeviceEntryType.SERVICE,
         )
-        self._attr_unique_id = f"{coordinator.config_entry.entry_id}_{device_info.id}_{entity_description.key}"
+        self._attr_unique_id = (
+            f"{coordinator.config_entry.entry_id}"
+            f"_{device_info.id}_{entity_description.key}"
+        )
 
     @property
+    @override
     def available(self) -> bool:
         """Return if the device is available."""
         return super().available and self.device_id in self.coordinator.data
@@ -115,9 +121,13 @@ class PortainerContainerEntity(PortainerCoordinatorEntity):
             translation_key=None if self.device_name else "unknown_container",
             entry_type=DeviceEntryType.SERVICE,
         )
-        self._attr_unique_id = f"{coordinator.config_entry.entry_id}_{self.device_name}_{entity_description.key}"
+        self._attr_unique_id = (
+            f"{coordinator.config_entry.entry_id}"
+            f"_{self.device_name}_{entity_description.key}"
+        )
 
     @property
+    @override
     def available(self) -> bool:
         """Return if the device is available."""
         return (
@@ -169,9 +179,13 @@ class PortainerStackEntity(PortainerCoordinatorEntity):
                 f"{coordinator.config_entry.entry_id}_{self.endpoint_id}",
             ),
         )
-        self._attr_unique_id = f"{coordinator.config_entry.entry_id}_{self.stack_id}_{entity_description.key}"
+        self._attr_unique_id = (
+            f"{coordinator.config_entry.entry_id}"
+            f"_{self.stack_id}_{entity_description.key}"
+        )
 
     @property
+    @override
     def available(self) -> bool:
         """Return if the stack is available."""
         return (
@@ -189,7 +203,10 @@ class PortainerStackEntity(PortainerCoordinatorEntity):
 class PortainerDockerSystemDiskSpaceEndpointEntity(
     PortainerDockerDiskSpaceCoordinatorEntity
 ):
-    """Base class for endpoint entities backed by the docker system disk space coordinator."""
+    """Base class for endpoint entities.
+
+    Backed by the docker system disk space coordinator.
+    """
 
     def __init__(
         self,
@@ -213,9 +230,14 @@ class PortainerDockerSystemDiskSpaceEndpointEntity(
             model="Endpoint",
             name=device_info.endpoint.name,
         )
-        self._attr_unique_id = f"{coordinator.config_entry.entry_id}_{device_info.endpoint.id}_{entity_description.key}"
+        self._attr_unique_id = (
+            f"{coordinator.config_entry.entry_id}"
+            f"_{device_info.endpoint.id}"
+            f"_{entity_description.key}"
+        )
 
     @property
+    @override
     def available(self) -> bool:
         """Return if the device is available."""
         return (
@@ -261,9 +283,14 @@ class PortainerVolumeEntity(PortainerCoordinatorEntity):
                 f"{coordinator.config_entry.entry_id}_{self.endpoint_id}",
             ),
         )
-        self._attr_unique_id = f"{coordinator.config_entry.entry_id}_{self.endpoint_id}_volume_{self.volume_name}_{entity_description.key}"
+        self._attr_unique_id = (
+            f"{coordinator.config_entry.entry_id}"
+            f"_{self.endpoint_id}_volume"
+            f"_{self.volume_name}_{entity_description.key}"
+        )
 
     @property
+    @override
     def available(self) -> bool:
         """Return if the volume is available."""
         return (

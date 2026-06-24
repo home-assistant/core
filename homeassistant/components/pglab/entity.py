@@ -1,5 +1,7 @@
 """Entity for PG LAB Electronics."""
 
+from typing import override
+
 from pypglab.device import Device as PyPGLabDevice
 from pypglab.entity import Entity as PyPGLabEntity
 
@@ -40,6 +42,7 @@ class PGLabBaseEntity(Entity):
             connections={(CONNECTION_NETWORK_MAC, pglab_device.mac)},
         )
 
+    @override
     async def async_added_to_hass(self) -> None:
         """Update the device discovery info."""
 
@@ -72,8 +75,12 @@ class PGLabEntity(PGLabBaseEntity):
         self._id = pglab_entity.id
         self._entity: PyPGLabEntity = pglab_entity
 
+    @override
     async def async_added_to_hass(self) -> None:
-        """Subscribe pypglab entity to be updated from mqtt when pypglab entity internal state change."""
+        """Subscribe pypglab entity to MQTT updates.
+
+        Triggered when pypglab entity internal state changes.
+        """
 
         # set the callback to be called when pypglab entity state is changed
         self._entity.set_on_state_callback(self.state_updated)
@@ -82,6 +89,7 @@ class PGLabEntity(PGLabBaseEntity):
         await self._entity.subscribe_topics()
         await super().async_added_to_hass()
 
+    @override
     async def async_will_remove_from_hass(self) -> None:
         """Unsubscribe when removed."""
 

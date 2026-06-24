@@ -197,7 +197,8 @@ class HassIOIngress(HomeAssistantView):
             # otherwise aiohttp < 3.9.0 may generate an invalid "0\r\n\r\n" chunk
             # This also avoids setting content_type for empty responses.
             if must_be_empty_body(request.method, result.status):
-                # If upstream contains content-type, preserve it (e.g. for HEAD requests)
+                # If upstream contains content-type, preserve it
+                # (e.g. for HEAD requests)
                 # Note: This still is omitting content-length. We can't simply forward
                 # the upstream length since the proxy might change the body length
                 # (e.g. due to compression).

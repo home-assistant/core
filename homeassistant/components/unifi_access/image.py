@@ -1,19 +1,19 @@
 """Image platform for the UniFi Access integration."""
 
 from datetime import UTC, datetime
-import logging
+from typing import override
 
 from unifi_access_api import Door, UnifiAccessError
 
 from homeassistant.components.image import ImageEntity
 from homeassistant.const import CONF_VERIFY_SSL
 from homeassistant.core import HomeAssistant, callback
+from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
+from .const import DOMAIN
 from .coordinator import UnifiAccessConfigEntry, UnifiAccessCoordinator
 from .entity import UnifiAccessEntity
-
-_LOGGER = logging.getLogger(__name__)
 
 PARALLEL_UPDATES = 0
 
@@ -70,19 +70,21 @@ class UnifiAccessDoorImageEntity(UnifiAccessEntity, ImageEntity):
                 thumbnail.door_thumbnail_last_update, tz=UTC
             )
 
+    @override
     async def async_image(self) -> bytes | None:
         """Return the door thumbnail image bytes."""
         if thumbnail := self.coordinator.data.door_thumbnails.get(self._door_id):
             try:
                 return await self.coordinator.client.get_thumbnail(thumbnail.url)
+            # pylint: disable-next=home-assistant-action-swallowed-exception
             except UnifiAccessError as err:
-                _LOGGER.warning(
-                    "Failed to fetch thumbnail for door %s: %s",
-                    self._door_id,
-                    err,
-                )
+                raise HomeAssistantError(
+                    translation_domain=DOMAIN,
+                    translation_key="fetch_thumbnail_failed",
+                ) from err
         return None
 
+    @override
     def _handle_coordinator_update(self) -> None:
         """Handle updated data from the coordinator."""
         if thumbnail := self.coordinator.data.door_thumbnails.get(self._door_id):

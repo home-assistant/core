@@ -5,6 +5,7 @@ from collections.abc import Callable
 from dataclasses import dataclass
 from datetime import date, datetime
 from decimal import Decimal
+from typing import override
 
 from weatherflow4py.models.rest.observation import Observation
 from weatherflow4py.models.ws.websocket_response import (
@@ -19,13 +20,19 @@ from homeassistant.components.sensor import (
     SensorStateClass,
 )
 from homeassistant.const import (
+    LIGHT_LUX,
+    PERCENTAGE,
+    UV_INDEX,
     EntityCategory,
+    UnitOfIrradiance,
     UnitOfLength,
+    UnitOfMass,
     UnitOfPrecipitationDepth,
     UnitOfPressure,
     UnitOfSpeed,
     UnitOfTemperature,
     UnitOfTime,
+    UnitOfVolume,
 )
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
@@ -147,7 +154,43 @@ WF_SENSORS: tuple[WeatherFlowCloudSensorEntityDescription, ...] = (
         state_class=SensorStateClass.MEASUREMENT,
         suggested_display_precision=5,
         value_fn=lambda data: data.air_density,
-        native_unit_of_measurement="kg/m³",
+        native_unit_of_measurement=f"{UnitOfMass.KILOGRAMS}/{UnitOfVolume.CUBIC_METERS}",
+    ),
+    WeatherFlowCloudSensorEntityDescription(
+        key="relative_humidity",
+        translation_key="relative_humidity",
+        device_class=SensorDeviceClass.HUMIDITY,
+        state_class=SensorStateClass.MEASUREMENT,
+        suggested_display_precision=0,
+        value_fn=lambda data: data.relative_humidity,
+        native_unit_of_measurement=PERCENTAGE,
+    ),
+    # Light Sensors
+    WeatherFlowCloudSensorEntityDescription(
+        key="brightness",
+        translation_key="illuminance",
+        device_class=SensorDeviceClass.ILLUMINANCE,
+        state_class=SensorStateClass.MEASUREMENT,
+        suggested_display_precision=0,
+        value_fn=lambda data: data.brightness,
+        native_unit_of_measurement=LIGHT_LUX,
+    ),
+    WeatherFlowCloudSensorEntityDescription(
+        key="uv",
+        translation_key="uv_index",
+        state_class=SensorStateClass.MEASUREMENT,
+        suggested_display_precision=2,
+        value_fn=lambda data: data.uv,
+        native_unit_of_measurement=UV_INDEX,
+    ),
+    WeatherFlowCloudSensorEntityDescription(
+        key="solar_radiation",
+        translation_key="solar_radiation",
+        device_class=SensorDeviceClass.IRRADIANCE,
+        state_class=SensorStateClass.MEASUREMENT,
+        suggested_display_precision=0,
+        value_fn=lambda data: data.solar_radiation,
+        native_unit_of_measurement=UnitOfIrradiance.WATTS_PER_SQUARE_METER,
     ),
     # Temp Sensors
     WeatherFlowCloudSensorEntityDescription(
@@ -434,6 +477,7 @@ class WeatherFlowSensorBase(WeatherFlowCloudEntity, SensorEntity, ABC):
         return f"{self.station_id}_{self.entity_description.key}"
 
     @property
+    @override
     def available(self) -> bool:
         """Get if available."""
 
@@ -456,6 +500,7 @@ class WeatherFlowWebsocketSensorObservation(WeatherFlowSensorBase):
     entity_description: WeatherFlowCloudSensorEntityDescriptionWebsocketObservation
 
     @property
+    @override
     def native_value(self) -> StateType | date | datetime | Decimal:
         """Return the native value."""
         data = self.coordinator.data[self.station_id][self.device_id]
@@ -468,6 +513,7 @@ class WeatherFlowWebsocketSensorWind(WeatherFlowSensorBase):
     entity_description: WeatherFlowCloudSensorEntityDescriptionWebsocketWind
 
     @property
+    @override
     def native_value(self) -> StateType | datetime:
         """Return the native value."""
 
@@ -494,11 +540,13 @@ class WeatherFlowCloudSensorREST(WeatherFlowSensorBase):
         return observations[0]
 
     @property
+    @override
     def available(self) -> bool:
         """Get if available."""
         return super().available and self._observation is not None
 
     @property
+    @override
     def native_value(self) -> StateType | datetime:
         """Return the native value."""
         if (observation := self._observation) is None:

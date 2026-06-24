@@ -1,7 +1,7 @@
 """Device tracker platform that adds support for OwnTracks over MQTT."""
-# pylint: disable=hass-use-runtime-data  # Uses legacy hass.data[DOMAIN] pattern
+# pylint: disable=home-assistant-use-runtime-data  # Uses legacy hass.data[DOMAIN] pattern
 
-from typing import Any
+from typing import Any, override
 
 from homeassistant.components.device_tracker import (
     ATTR_SOURCE_TYPE,
@@ -92,26 +92,31 @@ class OwnTracksEntity(TrackerEntity, RestoreEntity):
         self.entity_id = f"{DEVICE_TRACKER_DOMAIN}.{dev_id}"
 
     @property
+    @override
     def unique_id(self) -> str:
         """Return the unique ID."""
         return self._dev_id
 
     @property
+    @override
     def battery_level(self) -> int | None:
         """Return the battery level of the device."""
         return self._data.get("battery")
 
     @property
+    @override
     def extra_state_attributes(self) -> dict[str, Any] | None:
         """Return device specific attributes."""
         return self._data.get("attributes")
 
     @property
+    @override
     def location_accuracy(self) -> float:
         """Return the gps accuracy of the device."""
         return self._data.get("gps_accuracy", 0)
 
     @property
+    @override
     def latitude(self) -> float | None:
         """Return latitude value of the device."""
         # Check with "get" instead of "in" because value can be None
@@ -121,6 +126,7 @@ class OwnTracksEntity(TrackerEntity, RestoreEntity):
         return None
 
     @property
+    @override
     def longitude(self) -> float | None:
         """Return longitude value of the device."""
         # Check with "get" instead of "in" because value can be None
@@ -130,16 +136,19 @@ class OwnTracksEntity(TrackerEntity, RestoreEntity):
         return None
 
     @property
+    @override
     def location_name(self) -> str | None:
         """Return a location name for the current location of the device."""
         return self._data.get("location_name")
 
     @property
+    @override
     def source_type(self) -> SourceType:
         """Return the source type, eg gps or router, of the device."""
         return self._data.get("source_type", SourceType.GPS)
 
     @property
+    @override
     def device_info(self) -> DeviceInfo:
         """Return the device info."""
         device_info = DeviceInfo(identifiers={(DOMAIN, self._dev_id)})
@@ -147,6 +156,7 @@ class OwnTracksEntity(TrackerEntity, RestoreEntity):
             device_info["name"] = self._data["host_name"]
         return device_info
 
+    @override
     async def async_added_to_hass(self) -> None:
         """Call when entity about to be added to Home Assistant."""
         await super().async_added_to_hass()
