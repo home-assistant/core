@@ -67,7 +67,7 @@ async def test_step_user(hass: HomeAssistant) -> None:
         )
 
     assert result["type"] is FlowResultType.CREATE_ENTRY
-    assert result["title"] == "my-PV AC ELWA 2"
+    assert result["title"] == "my-PV AC ELWA 2 0000000000"
     assert result["data"] == {
         CONF_HOST: "127.0.0.1",
     }
@@ -151,7 +151,7 @@ async def test_step_auth(hass: HomeAssistant) -> None:
         )
 
     assert result["type"] is FlowResultType.CREATE_ENTRY
-    assert result["title"] == "my-PV AC ELWA 2"
+    assert result["title"] == "my-PV AC ELWA 2 0000000000"
     assert result["data"] == {
         CONF_HOST: "127.0.0.1",
         CONF_PASSWORD: "test-password",
@@ -242,7 +242,7 @@ async def test_step_dhcp(hass: HomeAssistant) -> None:
         result = await hass.config_entries.flow.async_configure(result["flow_id"], {})
 
     assert result["type"] is FlowResultType.CREATE_ENTRY
-    assert result["title"] == "my-PV AC ELWA 2"
+    assert result["title"] == "my-PV AC ELWA 2 0000000000"
     assert result["data"] == {
         CONF_HOST: "127.0.0.1",
     }
@@ -310,7 +310,7 @@ async def test_step_dhcp_auth(hass: HomeAssistant) -> None:
         )
 
     assert result["type"] is FlowResultType.CREATE_ENTRY
-    assert result["title"] == "my-PV AC ELWA 2"
+    assert result["title"] == "my-PV AC ELWA 2 0000000000"
     assert result["data"] == {
         CONF_HOST: "127.0.0.1",
         CONF_PASSWORD: "test-password",
@@ -394,7 +394,7 @@ async def test_step_zeroconf(hass: HomeAssistant) -> None:
         )
 
     assert result["type"] is FlowResultType.CREATE_ENTRY
-    assert result["title"] == "my-PV AC ELWA 2"
+    assert result["title"] == "my-PV AC ELWA 2 0000000000"
     assert result["data"] == {
         CONF_HOST: "127.0.0.1",
         CONF_PASSWORD: "test-password",

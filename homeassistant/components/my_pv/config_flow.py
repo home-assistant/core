@@ -42,6 +42,7 @@ class MyPVConfigFlow(ConfigFlow, domain=DOMAIN):
 
     _host: str
     _device_model: str
+    _device_serial_number: str
 
     @override
     async def async_step_zeroconf(
@@ -84,12 +85,11 @@ class MyPVConfigFlow(ConfigFlow, domain=DOMAIN):
     ) -> ConfigFlowResult:
         """Handle discovery confirmation."""
         if user_input is not None:
+            title = f"my-PV {self._device_model} {self._device_serial_number[6:]}"
             data = {
                 CONF_HOST: self._host,
             }
-            return self.async_create_entry(
-                title=f"my-PV {self._device_model}", data=data
-            )
+            return self.async_create_entry(title=title, data=data)
 
         password_needed = False
 
@@ -105,6 +105,7 @@ class MyPVConfigFlow(ConfigFlow, domain=DOMAIN):
             await device.disconnect()
 
         if device.serial_number:
+            self._device_serial_number = device.serial_number
             await self.async_set_unique_id(device.serial_number)
             self._abort_if_unique_id_configured(updates={CONF_HOST: self._host})
 
@@ -164,7 +165,7 @@ class MyPVConfigFlow(ConfigFlow, domain=DOMAIN):
                 await self.async_set_unique_id(device.serial_number)
                 self._abort_if_unique_id_configured()
 
-                title = f"my-PV {device.model}"
+                title = f"my-PV {device.model} {device.serial_number[6:]}"
                 data = {
                     CONF_HOST: host,
                 }
@@ -203,7 +204,7 @@ class MyPVConfigFlow(ConfigFlow, domain=DOMAIN):
                 await self.async_set_unique_id(device.serial_number)
                 self._abort_if_unique_id_configured()
 
-                title = f"my-PV {device.model}"
+                title = f"my-PV {device.model} {device.serial_number[6:]}"
                 data = {
                     CONF_HOST: host,
                     CONF_PASSWORD: password,
