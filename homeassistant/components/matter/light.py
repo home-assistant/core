@@ -107,7 +107,6 @@ class MatterLight(MatterEntity, LightEntity):
     _supports_color = False
     _supports_color_temperature = False
     _transitions_disabled = False
-    _off_with_transition = False
     _off_brightness: int | None = None
     _platform_translation_key = "light"
     _attr_min_color_temp_kelvin = DEFAULT_MIN_KELVIN
@@ -314,11 +313,7 @@ class MatterLight(MatterEntity, LightEntity):
         if self._transitions_disabled:
             transition = 0
 
-        if (
-            brightness is None
-            and self._off_with_transition
-            and self._off_brightness is not None
-        ):
+        if brightness is None and self._off_brightness is not None:
             # The light was turned off with a transition, which left it at the
             # minimum level. Restore the brightness it had before being turned off.
             brightness = self._off_brightness
@@ -351,15 +346,18 @@ class MatterLight(MatterEntity, LightEntity):
         if transition > 0 and self._supports_brightness:
             # Per the Matter spec, moving to the minimum level turns the
             # light off, so this fades the light down and then turns it off.
-            level_control = self._endpoint.get_cluster(clusters.LevelControl)
-            assert level_control is not None
+            min_level = (
+                self.get_matter_attribute_value(
+                    clusters.LevelControl.Attributes.MinLevel
+                )
+                or 1
+            )
             # Remember the brightness so the next plain turn_on can restore it
             # instead of coming back at the minimum level we faded down to.
-            self._off_with_transition = True
             self._off_brightness = self._attr_brightness
             await self.send_device_command(
                 clusters.LevelControl.Commands.MoveToLevelWithOnOff(
-                    level=level_control.minLevel or 1,
+                    level=min_level,
                     # transition in matter is measured in tenths of a second
                     transitionTime=int(transition * 10),
                 )
@@ -456,7 +454,6 @@ class MatterLight(MatterEntity, LightEntity):
         if self._attr_is_on and not previously_on:
             # The light was turned on (possibly by another fabric), so any cached
             # brightness from a previous "off with transition" is no longer valid.
-            self._off_with_transition = False
             self._off_brightness = None
 
         if self._supports_brightness:
