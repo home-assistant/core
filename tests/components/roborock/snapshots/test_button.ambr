@@ -39,7 +39,7 @@
 # name: test_buttons[button.roborock_q10_s5_empty_dustbin-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'Roborock Q10 S5+ Empty dustbin',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Roborock Q10 S5+ Empty dustbin',
     }),
     'context': <ANY>,
     'entity_id': 'button.roborock_q10_s5_empty_dustbin',
@@ -89,7 +89,7 @@
 # name: test_buttons[button.roborock_s7_2_dock_reset_cleaning_brush_consumable-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'Roborock S7 2 Dock Reset cleaning brush consumable',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Roborock S7 2 Dock Reset cleaning brush consumable',
     }),
     'context': <ANY>,
     'entity_id': 'button.roborock_s7_2_dock_reset_cleaning_brush_consumable',
@@ -139,7 +139,7 @@
 # name: test_buttons[button.roborock_s7_2_dock_reset_strainer_consumable-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'Roborock S7 2 Dock Reset strainer consumable',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Roborock S7 2 Dock Reset strainer consumable',
     }),
     'context': <ANY>,
     'entity_id': 'button.roborock_s7_2_dock_reset_strainer_consumable',
@@ -189,7 +189,7 @@
 # name: test_buttons[button.roborock_s7_2_reset_air_filter_consumable-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'Roborock S7 2 Reset air filter consumable',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Roborock S7 2 Reset air filter consumable',
     }),
     'context': <ANY>,
     'entity_id': 'button.roborock_s7_2_reset_air_filter_consumable',
@@ -239,7 +239,7 @@
 # name: test_buttons[button.roborock_s7_2_reset_main_brush_consumable-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'Roborock S7 2 Reset main brush consumable',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Roborock S7 2 Reset main brush consumable',
     }),
     'context': <ANY>,
     'entity_id': 'button.roborock_s7_2_reset_main_brush_consumable',
@@ -289,7 +289,7 @@
 # name: test_buttons[button.roborock_s7_2_reset_sensor_consumable-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'Roborock S7 2 Reset sensor consumable',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Roborock S7 2 Reset sensor consumable',
     }),
     'context': <ANY>,
     'entity_id': 'button.roborock_s7_2_reset_sensor_consumable',
@@ -339,7 +339,7 @@
 # name: test_buttons[button.roborock_s7_2_reset_side_brush_consumable-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'Roborock S7 2 Reset side brush consumable',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Roborock S7 2 Reset side brush consumable',
     }),
     'context': <ANY>,
     'entity_id': 'button.roborock_s7_2_reset_side_brush_consumable',
@@ -389,7 +389,7 @@
 # name: test_buttons[button.roborock_s7_2_sc1-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'Roborock S7 2 sc1',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Roborock S7 2 sc1',
     }),
     'context': <ANY>,
     'entity_id': 'button.roborock_s7_2_sc1',
@@ -439,7 +439,7 @@
 # name: test_buttons[button.roborock_s7_2_sc2-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'Roborock S7 2 sc2',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Roborock S7 2 sc2',
     }),
     'context': <ANY>,
     'entity_id': 'button.roborock_s7_2_sc2',
@@ -489,7 +489,7 @@
 # name: test_buttons[button.roborock_s7_maxv_dock_reset_cleaning_brush_consumable-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'Roborock S7 MaxV Dock Reset cleaning brush consumable',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Roborock S7 MaxV Dock Reset cleaning brush consumable',
     }),
     'context': <ANY>,
     'entity_id': 'button.roborock_s7_maxv_dock_reset_cleaning_brush_consumable',
@@ -539,7 +539,7 @@
 # name: test_buttons[button.roborock_s7_maxv_dock_reset_strainer_consumable-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'Roborock S7 MaxV Dock Reset strainer consumable',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Roborock S7 MaxV Dock Reset strainer consumable',
     }),
     'context': <ANY>,
     'entity_id': 'button.roborock_s7_maxv_dock_reset_strainer_consumable',
@@ -589,7 +589,7 @@
 # name: test_buttons[button.roborock_s7_maxv_reset_air_filter_consumable-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'Roborock S7 MaxV Reset air filter consumable',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Roborock S7 MaxV Reset air filter consumable',
     }),
     'context': <ANY>,
     'entity_id': 'button.roborock_s7_maxv_reset_air_filter_consumable',
@@ -639,7 +639,7 @@
 # name: test_buttons[button.roborock_s7_maxv_reset_main_brush_consumable-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'Roborock S7 MaxV Reset main brush consumable',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Roborock S7 MaxV Reset main brush consumable',
     }),
     'context': <ANY>,
     'entity_id': 'button.roborock_s7_maxv_reset_main_brush_consumable',
@@ -689,7 +689,7 @@
 # name: test_buttons[button.roborock_s7_maxv_reset_sensor_consumable-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'Roborock S7 MaxV Reset sensor consumable',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Roborock S7 MaxV Reset sensor consumable',
     }),
     'context': <ANY>,
     'entity_id': 'button.roborock_s7_maxv_reset_sensor_consumable',
@@ -739,7 +739,7 @@
 # name: test_buttons[button.roborock_s7_maxv_reset_side_brush_consumable-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'Roborock S7 MaxV Reset side brush consumable',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Roborock S7 MaxV Reset side brush consumable',
     }),
     'context': <ANY>,
     'entity_id': 'button.roborock_s7_maxv_reset_side_brush_consumable',
@@ -789,7 +789,7 @@
 # name: test_buttons[button.roborock_s7_maxv_sc1-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'Roborock S7 MaxV sc1',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Roborock S7 MaxV sc1',
     }),
     'context': <ANY>,
     'entity_id': 'button.roborock_s7_maxv_sc1',
@@ -839,7 +839,7 @@
 # name: test_buttons[button.roborock_s7_maxv_sc2-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'Roborock S7 MaxV sc2',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Roborock S7 MaxV sc2',
     }),
     'context': <ANY>,
     'entity_id': 'button.roborock_s7_maxv_sc2',
@@ -889,7 +889,7 @@
 # name: test_buttons[button.zeo_one_pause-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'Zeo One Pause',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Zeo One Pause',
     }),
     'context': <ANY>,
     'entity_id': 'button.zeo_one_pause',
@@ -939,7 +939,7 @@
 # name: test_buttons[button.zeo_one_shut_down-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'Zeo One Shut down',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Zeo One Shut down',
     }),
     'context': <ANY>,
     'entity_id': 'button.zeo_one_shut_down',
@@ -989,7 +989,7 @@
 # name: test_buttons[button.zeo_one_start-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'Zeo One Start',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Zeo One Start',
     }),
     'context': <ANY>,
     'entity_id': 'button.zeo_one_start',

@@ -39,8 +39,8 @@
 # name: test_sensors[sensor.gs012345_brewing_start_time-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'device_class': 'timestamp',
-      'friendly_name': 'GS012345 Brewing start time',
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'timestamp',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'GS012345 Brewing start time',
     }),
     'context': <ANY>,
     'entity_id': 'sensor.gs012345_brewing_start_time',
@@ -90,8 +90,8 @@
 # name: test_sensors[sensor.gs012345_coffee_boiler_ready_time-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'device_class': 'timestamp',
-      'friendly_name': 'GS012345 Coffee boiler ready time',
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'timestamp',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'GS012345 Coffee boiler ready time',
     }),
     'context': <ANY>,
     'entity_id': 'sensor.gs012345_coffee_boiler_ready_time',
@@ -141,8 +141,8 @@
 # name: test_sensors[sensor.gs012345_last_cleaning_time-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'device_class': 'timestamp',
-      'friendly_name': 'GS012345 Last cleaning time',
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'timestamp',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'GS012345 Last cleaning time',
     }),
     'context': <ANY>,
     'entity_id': 'sensor.gs012345_last_cleaning_time',
@@ -192,8 +192,8 @@
 # name: test_sensors[sensor.gs012345_steam_boiler_ready_time-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'device_class': 'timestamp',
-      'friendly_name': 'GS012345 Steam boiler ready time',
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'timestamp',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'GS012345 Steam boiler ready time',
     }),
     'context': <ANY>,
     'entity_id': 'sensor.gs012345_steam_boiler_ready_time',
@@ -245,9 +245,9 @@
 # name: test_sensors[sensor.gs012345_total_coffees_made-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'GS012345 Total coffees made',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'GS012345 Total coffees made',
       <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
-      'unit_of_measurement': 'coffees',
+      <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: 'coffees',
     }),
     'context': <ANY>,
     'entity_id': 'sensor.gs012345_total_coffees_made',
@@ -299,9 +299,9 @@
 # name: test_sensors[sensor.gs012345_total_flushes_done-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'GS012345 Total flushes done',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'GS012345 Total flushes done',
       <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
-      'unit_of_measurement': 'flushes',
+      <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: 'flushes',
     }),
     'context': <ANY>,
     'entity_id': 'sensor.gs012345_total_flushes_done',

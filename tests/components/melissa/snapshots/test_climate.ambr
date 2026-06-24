@@ -11,7 +11,7 @@
         'medium',
         'low',
       ]),
-      'friendly_name': 'Melissa 12345678',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Melissa 12345678',
       <ClimateEntityCapabilityAttribute.HVAC_MODES: 'hvac_modes'>: list([
         <HVACMode.HEAT: 'heat'>,
         <HVACMode.COOL: 'cool'>,
@@ -21,7 +21,7 @@
       ]),
       <ClimateEntityCapabilityAttribute.MAX_TEMP: 'max_temp'>: 30,
       <ClimateEntityCapabilityAttribute.MIN_TEMP: 'min_temp'>: 16,
-      'supported_features': <ClimateEntityFeature: 393>,
+      <EntityStateAttribute.SUPPORTED_FEATURES: 'supported_features'>: <ClimateEntityFeature: 393>,
       <ClimateEntityCapabilityAttribute.TARGET_TEMP_STEP: 'target_temp_step'>: 1,
       <ClimateEntityStateAttribute.TEMPERATURE: 'temperature'>: 16,
     }),

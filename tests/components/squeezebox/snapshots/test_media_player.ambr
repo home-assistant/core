@@ -40,7 +40,7 @@
 # name: test_entity_registry[media_player.test_player-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'Test Player',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Test Player',
       <MediaPlayerEntityStateAttribute.GROUP_MEMBERS: 'group_members'>: list([
       ]),
       <MediaPlayerEntityStateAttribute.MEDIA_VOLUME_MUTED: 'is_volume_muted'>: True,
@@ -50,7 +50,7 @@
       }),
       <MediaPlayerEntityStateAttribute.MEDIA_REPEAT: 'repeat'>: <RepeatMode.OFF: 'off'>,
       <MediaPlayerEntityStateAttribute.MEDIA_SHUFFLE: 'shuffle'>: False,
-      'supported_features': <MediaPlayerEntityFeature: 8320959>,
+      <EntityStateAttribute.SUPPORTED_FEATURES: 'supported_features'>: <MediaPlayerEntityFeature: 8320959>,
       <MediaPlayerEntityStateAttribute.MEDIA_VOLUME_LEVEL: 'volume_level'>: 0.01,
     }),
     'context': <ANY>,

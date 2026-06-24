@@ -39,8 +39,8 @@
 # name: test_all_entities[switch.heat_pump_frost_protection-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'device_class': 'switch',
-      'friendly_name': 'Heat Pump Frost protection',
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'switch',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Heat Pump Frost protection',
     }),
     'context': <ANY>,
     'entity_id': 'switch.heat_pump_frost_protection',
@@ -90,8 +90,8 @@
 # name: test_all_entities[switch.heat_pump_overheat_protection-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'device_class': 'switch',
-      'friendly_name': 'Heat Pump Overheat protection',
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'switch',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Heat Pump Overheat protection',
     }),
     'context': <ANY>,
     'entity_id': 'switch.heat_pump_overheat_protection',
@@ -141,8 +141,8 @@
 # name: test_all_entities[switch.living_room_ac_frost_protection-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'device_class': 'switch',
-      'friendly_name': 'Living Room AC Frost protection',
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'switch',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Living Room AC Frost protection',
     }),
     'context': <ANY>,
     'entity_id': 'switch.living_room_ac_frost_protection',
@@ -192,8 +192,8 @@
 # name: test_all_entities[switch.living_room_ac_overheat_protection-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'device_class': 'switch',
-      'friendly_name': 'Living Room AC Overheat protection',
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'switch',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Living Room AC Overheat protection',
     }),
     'context': <ANY>,
     'entity_id': 'switch.living_room_ac_overheat_protection',

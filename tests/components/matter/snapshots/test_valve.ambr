@@ -39,10 +39,10 @@
 # name: test_valves[mock_valve][mock_valve][valve.mock_valve-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'device_class': 'water',
-      'friendly_name': 'Mock Valve',
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'water',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Mock Valve',
       <ValveEntityStateAttribute.IS_CLOSED: 'is_closed'>: True,
-      'supported_features': <ValveEntityFeature: 3>,
+      <EntityStateAttribute.SUPPORTED_FEATURES: 'supported_features'>: <ValveEntityFeature: 3>,
     }),
     'context': <ANY>,
     'entity_id': 'valve.mock_valve',

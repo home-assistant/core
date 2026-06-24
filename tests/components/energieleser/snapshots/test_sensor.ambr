@@ -44,10 +44,10 @@
 # name: test_gasleser_sensors[sensor.gas_8530321017_gas_flow_rate-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'device_class': 'volume_flow_rate',
-      'friendly_name': 'GAS_8530321017 Gas flow rate',
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'volume_flow_rate',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'GAS_8530321017 Gas flow rate',
       <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
-      'unit_of_measurement': <UnitOfVolumeFlowRate.CUBIC_METERS_PER_HOUR: 'm³/h'>,
+      <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: <UnitOfVolumeFlowRate.CUBIC_METERS_PER_HOUR: 'm³/h'>,
     }),
     'context': <ANY>,
     'entity_id': 'sensor.gas_8530321017_gas_flow_rate',
@@ -99,7 +99,7 @@
 # name: test_gasleser_sensors[sensor.gas_8530321017_pulse_count-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'GAS_8530321017 Pulse count',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'GAS_8530321017 Pulse count',
       <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
     }),
     'context': <ANY>,
@@ -152,10 +152,10 @@
 # name: test_gasleser_sensors[sensor.gas_8530321017_signal_strength-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'device_class': 'signal_strength',
-      'friendly_name': 'GAS_8530321017 Signal strength',
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'signal_strength',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'GAS_8530321017 Signal strength',
       <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
-      'unit_of_measurement': 'dBm',
+      <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: 'dBm',
     }),
     'context': <ANY>,
     'entity_id': 'sensor.gas_8530321017_signal_strength',
@@ -210,10 +210,10 @@
 # name: test_gasleser_sensors[sensor.gas_8530321017_total_gas-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'device_class': 'gas',
-      'friendly_name': 'GAS_8530321017 Total gas',
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'gas',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'GAS_8530321017 Total gas',
       <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
-      'unit_of_measurement': <UnitOfVolume.CUBIC_METERS: 'm³'>,
+      <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: <UnitOfVolume.CUBIC_METERS: 'm³'>,
     }),
     'context': <ANY>,
     'entity_id': 'sensor.gas_8530321017_total_gas',
@@ -268,10 +268,10 @@
 # name: test_stromleser_sensors[sensor.strom_one_8529546829_active_power-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'device_class': 'power',
-      'friendly_name': 'STROM_ONE_8529546829 Active power',
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'power',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'STROM_ONE_8529546829 Active power',
       <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
-      'unit_of_measurement': 'W',
+      <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: 'W',
     }),
     'context': <ANY>,
     'entity_id': 'sensor.strom_one_8529546829_active_power',
@@ -326,10 +326,10 @@
 # name: test_stromleser_sensors[sensor.strom_one_8529546829_exported_energy-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'device_class': 'energy',
-      'friendly_name': 'STROM_ONE_8529546829 Exported energy',
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'energy',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'STROM_ONE_8529546829 Exported energy',
       <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
-      'unit_of_measurement': 'Wh',
+      <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: 'Wh',
     }),
     'context': <ANY>,
     'entity_id': 'sensor.strom_one_8529546829_exported_energy',
@@ -384,10 +384,10 @@
 # name: test_stromleser_sensors[sensor.strom_one_8529546829_imported_energy-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'device_class': 'energy',
-      'friendly_name': 'STROM_ONE_8529546829 Imported energy',
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'energy',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'STROM_ONE_8529546829 Imported energy',
       <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
-      'unit_of_measurement': 'Wh',
+      <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: 'Wh',
     }),
     'context': <ANY>,
     'entity_id': 'sensor.strom_one_8529546829_imported_energy',
@@ -442,10 +442,10 @@
 # name: test_stromleser_sensors[sensor.strom_one_8529546829_phase_1_power-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'device_class': 'power',
-      'friendly_name': 'STROM_ONE_8529546829 Phase 1 power',
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'power',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'STROM_ONE_8529546829 Phase 1 power',
       <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
-      'unit_of_measurement': 'W',
+      <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: 'W',
     }),
     'context': <ANY>,
     'entity_id': 'sensor.strom_one_8529546829_phase_1_power',
@@ -500,10 +500,10 @@
 # name: test_stromleser_sensors[sensor.strom_one_8529546829_phase_2_power-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'device_class': 'power',
-      'friendly_name': 'STROM_ONE_8529546829 Phase 2 power',
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'power',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'STROM_ONE_8529546829 Phase 2 power',
       <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
-      'unit_of_measurement': 'W',
+      <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: 'W',
     }),
     'context': <ANY>,
     'entity_id': 'sensor.strom_one_8529546829_phase_2_power',
@@ -558,10 +558,10 @@
 # name: test_stromleser_sensors[sensor.strom_one_8529546829_phase_3_power-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'device_class': 'power',
-      'friendly_name': 'STROM_ONE_8529546829 Phase 3 power',
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'power',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'STROM_ONE_8529546829 Phase 3 power',
       <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
-      'unit_of_measurement': 'W',
+      <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: 'W',
     }),
     'context': <ANY>,
     'entity_id': 'sensor.strom_one_8529546829_phase_3_power',
@@ -613,10 +613,10 @@
 # name: test_stromleser_sensors[sensor.strom_one_8529546829_signal_strength-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'device_class': 'signal_strength',
-      'friendly_name': 'STROM_ONE_8529546829 Signal strength',
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'signal_strength',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'STROM_ONE_8529546829 Signal strength',
       <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
-      'unit_of_measurement': 'dBm',
+      <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: 'dBm',
     }),
     'context': <ANY>,
     'entity_id': 'sensor.strom_one_8529546829_signal_strength',
@@ -671,10 +671,10 @@
 # name: test_waermeleser_sensors[sensor.heat_0000000001_energy_tariff_1-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'device_class': 'energy',
-      'friendly_name': 'HEAT_0000000001 Energy tariff 1',
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'energy',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'HEAT_0000000001 Energy tariff 1',
       <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
-      'unit_of_measurement': <UnitOfEnergy.MEGA_WATT_HOUR: 'MWh'>,
+      <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: <UnitOfEnergy.MEGA_WATT_HOUR: 'MWh'>,
     }),
     'context': <ANY>,
     'entity_id': 'sensor.heat_0000000001_energy_tariff_1',
@@ -729,10 +729,10 @@
 # name: test_waermeleser_sensors[sensor.heat_0000000001_energy_tariff_2-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'device_class': 'energy',
-      'friendly_name': 'HEAT_0000000001 Energy tariff 2',
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'energy',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'HEAT_0000000001 Energy tariff 2',
       <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
-      'unit_of_measurement': <UnitOfEnergy.MEGA_WATT_HOUR: 'MWh'>,
+      <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: <UnitOfEnergy.MEGA_WATT_HOUR: 'MWh'>,
     }),
     'context': <ANY>,
     'entity_id': 'sensor.heat_0000000001_energy_tariff_2',
@@ -787,10 +787,10 @@
 # name: test_waermeleser_sensors[sensor.heat_0000000001_energy_tariff_3-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'device_class': 'energy',
-      'friendly_name': 'HEAT_0000000001 Energy tariff 3',
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'energy',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'HEAT_0000000001 Energy tariff 3',
       <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
-      'unit_of_measurement': <UnitOfEnergy.MEGA_WATT_HOUR: 'MWh'>,
+      <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: <UnitOfEnergy.MEGA_WATT_HOUR: 'MWh'>,
     }),
     'context': <ANY>,
     'entity_id': 'sensor.heat_0000000001_energy_tariff_3',
@@ -845,10 +845,10 @@
 # name: test_waermeleser_sensors[sensor.heat_0000000001_flow_temperature-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'device_class': 'temperature',
-      'friendly_name': 'HEAT_0000000001 Flow temperature',
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'temperature',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'HEAT_0000000001 Flow temperature',
       <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
-      'unit_of_measurement': <UnitOfTemperature.CELSIUS: '°C'>,
+      <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: <UnitOfTemperature.CELSIUS: '°C'>,
     }),
     'context': <ANY>,
     'entity_id': 'sensor.heat_0000000001_flow_temperature',
@@ -903,10 +903,10 @@
 # name: test_waermeleser_sensors[sensor.heat_0000000001_power-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'device_class': 'power',
-      'friendly_name': 'HEAT_0000000001 Power',
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'power',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'HEAT_0000000001 Power',
       <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
-      'unit_of_measurement': <UnitOfPower.KILO_WATT: 'kW'>,
+      <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: <UnitOfPower.KILO_WATT: 'kW'>,
     }),
     'context': <ANY>,
     'entity_id': 'sensor.heat_0000000001_power',
@@ -961,10 +961,10 @@
 # name: test_waermeleser_sensors[sensor.heat_0000000001_return_temperature-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'device_class': 'temperature',
-      'friendly_name': 'HEAT_0000000001 Return temperature',
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'temperature',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'HEAT_0000000001 Return temperature',
       <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
-      'unit_of_measurement': <UnitOfTemperature.CELSIUS: '°C'>,
+      <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: <UnitOfTemperature.CELSIUS: '°C'>,
     }),
     'context': <ANY>,
     'entity_id': 'sensor.heat_0000000001_return_temperature',
@@ -1016,10 +1016,10 @@
 # name: test_waermeleser_sensors[sensor.heat_0000000001_signal_strength-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'device_class': 'signal_strength',
-      'friendly_name': 'HEAT_0000000001 Signal strength',
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'signal_strength',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'HEAT_0000000001 Signal strength',
       <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
-      'unit_of_measurement': 'dBm',
+      <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: 'dBm',
     }),
     'context': <ANY>,
     'entity_id': 'sensor.heat_0000000001_signal_strength',
@@ -1074,10 +1074,10 @@
 # name: test_waermeleser_sensors[sensor.heat_0000000001_temperature_delta-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'device_class': 'temperature_delta',
-      'friendly_name': 'HEAT_0000000001 Temperature delta',
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'temperature_delta',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'HEAT_0000000001 Temperature delta',
       <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
-      'unit_of_measurement': <UnitOfTemperature.KELVIN: 'K'>,
+      <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: <UnitOfTemperature.KELVIN: 'K'>,
     }),
     'context': <ANY>,
     'entity_id': 'sensor.heat_0000000001_temperature_delta',
@@ -1132,10 +1132,10 @@
 # name: test_waermeleser_sensors[sensor.heat_0000000001_total_volume-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'device_class': 'volume',
-      'friendly_name': 'HEAT_0000000001 Total volume',
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'volume',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'HEAT_0000000001 Total volume',
       <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
-      'unit_of_measurement': <UnitOfVolume.CUBIC_METERS: 'm³'>,
+      <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: <UnitOfVolume.CUBIC_METERS: 'm³'>,
     }),
     'context': <ANY>,
     'entity_id': 'sensor.heat_0000000001_total_volume',
@@ -1190,10 +1190,10 @@
 # name: test_waermeleser_sensors[sensor.heat_0000000001_volume_flow-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'device_class': 'volume_flow_rate',
-      'friendly_name': 'HEAT_0000000001 Volume flow',
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'volume_flow_rate',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'HEAT_0000000001 Volume flow',
       <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
-      'unit_of_measurement': <UnitOfVolumeFlowRate.LITERS_PER_HOUR: 'L/h'>,
+      <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: <UnitOfVolumeFlowRate.LITERS_PER_HOUR: 'L/h'>,
     }),
     'context': <ANY>,
     'entity_id': 'sensor.heat_0000000001_volume_flow',
@@ -1245,10 +1245,10 @@
 # name: test_wasserleser_sensors[sensor.wasser_0499632826_signal_strength-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'device_class': 'signal_strength',
-      'friendly_name': 'WASSER_0499632826 Signal strength',
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'signal_strength',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'WASSER_0499632826 Signal strength',
       <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
-      'unit_of_measurement': 'dBm',
+      <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: 'dBm',
     }),
     'context': <ANY>,
     'entity_id': 'sensor.wasser_0499632826_signal_strength',
@@ -1303,10 +1303,10 @@
 # name: test_wasserleser_sensors[sensor.wasser_0499632826_total_water-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'device_class': 'water',
-      'friendly_name': 'WASSER_0499632826 Total water',
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'water',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'WASSER_0499632826 Total water',
       <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
-      'unit_of_measurement': <UnitOfVolume.CUBIC_METERS: 'm³'>,
+      <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: <UnitOfVolume.CUBIC_METERS: 'm³'>,
     }),
     'context': <ANY>,
     'entity_id': 'sensor.wasser_0499632826_total_water',
@@ -1361,10 +1361,10 @@
 # name: test_wasserleser_sensors[sensor.wasser_0499632826_volume_flow_rate-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'device_class': 'volume_flow_rate',
-      'friendly_name': 'WASSER_0499632826 Volume flow rate',
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'volume_flow_rate',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'WASSER_0499632826 Volume flow rate',
       <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
-      'unit_of_measurement': <UnitOfVolumeFlowRate.CUBIC_METERS_PER_HOUR: 'm³/h'>,
+      <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: <UnitOfVolumeFlowRate.CUBIC_METERS_PER_HOUR: 'm³/h'>,
     }),
     'context': <ANY>,
     'entity_id': 'sensor.wasser_0499632826_volume_flow_rate',
@@ -1419,10 +1419,10 @@
 # name: test_wasserleser_sensors[sensor.wasser_0499632826_water_flow_rate-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'device_class': 'volume_flow_rate',
-      'friendly_name': 'WASSER_0499632826 Water flow rate',
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'volume_flow_rate',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'WASSER_0499632826 Water flow rate',
       <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
-      'unit_of_measurement': <UnitOfVolumeFlowRate.LITERS_PER_HOUR: 'L/h'>,
+      <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: <UnitOfVolumeFlowRate.LITERS_PER_HOUR: 'L/h'>,
     }),
     'context': <ANY>,
     'entity_id': 'sensor.wasser_0499632826_water_flow_rate',
@@ -1477,10 +1477,10 @@
 # name: test_wasserleser_sensors[sensor.wasser_0499632826_water_today-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'device_class': 'water',
-      'friendly_name': 'WASSER_0499632826 Water today',
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'water',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'WASSER_0499632826 Water today',
       <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
-      'unit_of_measurement': <UnitOfVolume.CUBIC_METERS: 'm³'>,
+      <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: <UnitOfVolume.CUBIC_METERS: 'm³'>,
     }),
     'context': <ANY>,
     'entity_id': 'sensor.wasser_0499632826_water_today',

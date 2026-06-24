@@ -39,8 +39,8 @@
 # name: test_device[cury_gen4][binary_sensor.test_name_cloud-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'device_class': 'connectivity',
-      'friendly_name': 'Test name Cloud',
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'connectivity',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Test name Cloud',
     }),
     'context': <ANY>,
     'entity_id': 'binary_sensor.test_name_cloud',
@@ -90,8 +90,8 @@
 # name: test_device[cury_gen4][binary_sensor.test_name_restart_required-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'device_class': 'problem',
-      'friendly_name': 'Test name Restart required',
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'problem',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Test name Restart required',
     }),
     'context': <ANY>,
     'entity_id': 'binary_sensor.test_name_restart_required',
@@ -141,8 +141,8 @@
 # name: test_device[cury_gen4][binary_sensor.test_name_rotation-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'device_class': 'problem',
-      'friendly_name': 'Test name Rotation',
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'problem',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Test name Rotation',
     }),
     'context': <ANY>,
     'entity_id': 'binary_sensor.test_name_rotation',
@@ -192,8 +192,8 @@
 # name: test_device[cury_gen4][binary_sensor.test_name_tilt-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'device_class': 'problem',
-      'friendly_name': 'Test name Tilt',
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'problem',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Test name Tilt',
     }),
     'context': <ANY>,
     'entity_id': 'binary_sensor.test_name_tilt',
@@ -243,8 +243,8 @@
 # name: test_device[cury_gen4][button.test_name_restart-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'device_class': 'restart',
-      'friendly_name': 'Test name Restart',
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'restart',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Test name Restart',
     }),
     'context': <ANY>,
     'entity_id': 'button.test_name_restart',
@@ -299,12 +299,12 @@
 # name: test_device[cury_gen4][number.test_name_left_slot_intensity-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'Test name Left slot intensity',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Test name Left slot intensity',
       <NumberEntityCapabilityAttribute.MAX: 'max'>: 100,
       <NumberEntityCapabilityAttribute.MIN: 'min'>: 0,
       <NumberEntityCapabilityAttribute.MODE: 'mode'>: <NumberMode.SLIDER: 'slider'>,
       <NumberEntityCapabilityAttribute.STEP: 'step'>: 1,
-      'unit_of_measurement': '%',
+      <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: '%',
     }),
     'context': <ANY>,
     'entity_id': 'number.test_name_left_slot_intensity',
@@ -359,12 +359,12 @@
 # name: test_device[cury_gen4][number.test_name_right_slot_intensity-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'Test name Right slot intensity',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Test name Right slot intensity',
       <NumberEntityCapabilityAttribute.MAX: 'max'>: 100,
       <NumberEntityCapabilityAttribute.MIN: 'min'>: 0,
       <NumberEntityCapabilityAttribute.MODE: 'mode'>: <NumberMode.SLIDER: 'slider'>,
       <NumberEntityCapabilityAttribute.STEP: 'step'>: 1,
-      'unit_of_measurement': '%',
+      <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: '%',
     }),
     'context': <ANY>,
     'entity_id': 'number.test_name_right_slot_intensity',
@@ -424,7 +424,7 @@
 # name: test_device[cury_gen4][select.test_name_mode-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'Test name Mode',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Test name Mode',
       <SelectEntityCapabilityAttribute.OPTIONS: 'options'>: list([
         'hall',
         'bedroom',
@@ -485,9 +485,9 @@
 # name: test_device[cury_gen4][sensor.test_name_left_slot_level-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'Test name Left slot level',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Test name Left slot level',
       <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
-      'unit_of_measurement': '%',
+      <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: '%',
     }),
     'context': <ANY>,
     'entity_id': 'sensor.test_name_left_slot_level',
@@ -537,7 +537,7 @@
 # name: test_device[cury_gen4][sensor.test_name_left_slot_vial-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'Test name Left slot vial',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Test name Left slot vial',
     }),
     'context': <ANY>,
     'entity_id': 'sensor.test_name_left_slot_vial',
@@ -589,9 +589,9 @@
 # name: test_device[cury_gen4][sensor.test_name_right_slot_level-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'Test name Right slot level',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Test name Right slot level',
       <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
-      'unit_of_measurement': '%',
+      <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: '%',
     }),
     'context': <ANY>,
     'entity_id': 'sensor.test_name_right_slot_level',
@@ -641,7 +641,7 @@
 # name: test_device[cury_gen4][sensor.test_name_right_slot_vial-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'Test name Right slot vial',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Test name Right slot vial',
     }),
     'context': <ANY>,
     'entity_id': 'sensor.test_name_right_slot_vial',
@@ -693,10 +693,10 @@
 # name: test_device[cury_gen4][sensor.test_name_signal_strength-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'device_class': 'signal_strength',
-      'friendly_name': 'Test name Signal strength',
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'signal_strength',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Test name Signal strength',
       <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
-      'unit_of_measurement': 'dBm',
+      <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: 'dBm',
     }),
     'context': <ANY>,
     'entity_id': 'sensor.test_name_signal_strength',
@@ -746,8 +746,8 @@
 # name: test_device[cury_gen4][sensor.test_name_uptime-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'device_class': 'uptime',
-      'friendly_name': 'Test name Uptime',
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'uptime',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Test name Uptime',
     }),
     'context': <ANY>,
     'entity_id': 'sensor.test_name_uptime',
@@ -797,7 +797,7 @@
 # name: test_device[cury_gen4][switch.test_name_away_mode-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'Test name Away mode',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Test name Away mode',
     }),
     'context': <ANY>,
     'entity_id': 'switch.test_name_away_mode',
@@ -847,7 +847,7 @@
 # name: test_device[cury_gen4][switch.test_name_left_slot-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'Test name Left slot',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Test name Left slot',
     }),
     'context': <ANY>,
     'entity_id': 'switch.test_name_left_slot',
@@ -897,7 +897,7 @@
 # name: test_device[cury_gen4][switch.test_name_left_slot_boost-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'Test name Left slot boost',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Test name Left slot boost',
     }),
     'context': <ANY>,
     'entity_id': 'switch.test_name_left_slot_boost',
@@ -947,7 +947,7 @@
 # name: test_device[cury_gen4][switch.test_name_right_slot-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'Test name Right slot',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Test name Right slot',
     }),
     'context': <ANY>,
     'entity_id': 'switch.test_name_right_slot',
@@ -997,7 +997,7 @@
 # name: test_device[cury_gen4][switch.test_name_right_slot_boost-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'Test name Right slot boost',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Test name Right slot boost',
     }),
     'context': <ANY>,
     'entity_id': 'switch.test_name_right_slot_boost',
@@ -1048,17 +1048,17 @@
   StateSnapshot({
     'attributes': ReadOnlyDict({
       <UpdateEntityStateAttribute.AUTO_UPDATE: 'auto_update'>: False,
-      'device_class': 'firmware',
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'firmware',
       <UpdateEntityStateAttribute.DISPLAY_PRECISION: 'display_precision'>: 0,
-      'entity_picture': '/api/brands/integration/shelly/icon.png',
-      'friendly_name': 'Test name Beta firmware',
+      <EntityStateAttribute.ENTITY_PICTURE: 'entity_picture'>: '/api/brands/integration/shelly/icon.png',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Test name Beta firmware',
       <UpdateEntityStateAttribute.IN_PROGRESS: 'in_progress'>: False,
       <UpdateEntityStateAttribute.INSTALLED_VERSION: 'installed_version'>: '1.8.99-dev144746',
       <UpdateEntityStateAttribute.LATEST_VERSION: 'latest_version'>: '1.8.99-dev144746',
       <UpdateEntityStateAttribute.RELEASE_SUMMARY: 'release_summary'>: None,
       <UpdateEntityStateAttribute.RELEASE_URL: 'release_url'>: 'https://shelly-api-docs.shelly.cloud/gen2/changelog/#unreleased',
       <UpdateEntityStateAttribute.SKIPPED_VERSION: 'skipped_version'>: None,
-      'supported_features': <UpdateEntityFeature: 5>,
+      <EntityStateAttribute.SUPPORTED_FEATURES: 'supported_features'>: <UpdateEntityFeature: 5>,
       <UpdateEntityStateAttribute.TITLE: 'title'>: None,
       <UpdateEntityStateAttribute.UPDATE_PERCENTAGE: 'update_percentage'>: None,
     }),
@@ -1111,17 +1111,17 @@
   StateSnapshot({
     'attributes': ReadOnlyDict({
       <UpdateEntityStateAttribute.AUTO_UPDATE: 'auto_update'>: False,
-      'device_class': 'firmware',
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'firmware',
       <UpdateEntityStateAttribute.DISPLAY_PRECISION: 'display_precision'>: 0,
-      'entity_picture': '/api/brands/integration/shelly/icon.png',
-      'friendly_name': 'Test name Firmware',
+      <EntityStateAttribute.ENTITY_PICTURE: 'entity_picture'>: '/api/brands/integration/shelly/icon.png',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Test name Firmware',
       <UpdateEntityStateAttribute.IN_PROGRESS: 'in_progress'>: False,
       <UpdateEntityStateAttribute.INSTALLED_VERSION: 'installed_version'>: '1.8.99-dev144746',
       <UpdateEntityStateAttribute.LATEST_VERSION: 'latest_version'>: '1.8.99-dev144746',
       <UpdateEntityStateAttribute.RELEASE_SUMMARY: 'release_summary'>: None,
       <UpdateEntityStateAttribute.RELEASE_URL: 'release_url'>: 'https://shelly-api-docs.shelly.cloud/gen2/changelog/',
       <UpdateEntityStateAttribute.SKIPPED_VERSION: 'skipped_version'>: None,
-      'supported_features': <UpdateEntityFeature: 5>,
+      <EntityStateAttribute.SUPPORTED_FEATURES: 'supported_features'>: <UpdateEntityFeature: 5>,
       <UpdateEntityStateAttribute.TITLE: 'title'>: None,
       <UpdateEntityStateAttribute.UPDATE_PERCENTAGE: 'update_percentage'>: None,
     }),
@@ -1173,8 +1173,8 @@
 # name: test_device[duo_bulb_gen3][binary_sensor.test_name_cloud-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'device_class': 'connectivity',
-      'friendly_name': 'Test name Cloud',
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'connectivity',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Test name Cloud',
     }),
     'context': <ANY>,
     'entity_id': 'binary_sensor.test_name_cloud',
@@ -1224,8 +1224,8 @@
 # name: test_device[duo_bulb_gen3][binary_sensor.test_name_restart_required-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'device_class': 'problem',
-      'friendly_name': 'Test name Restart required',
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'problem',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Test name Restart required',
     }),
     'context': <ANY>,
     'entity_id': 'binary_sensor.test_name_restart_required',
@@ -1275,8 +1275,8 @@
 # name: test_device[duo_bulb_gen3][button.test_name_restart-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'device_class': 'restart',
-      'friendly_name': 'Test name Restart',
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'restart',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Test name Restart',
     }),
     'context': <ANY>,
     'entity_id': 'button.test_name_restart',
@@ -1335,7 +1335,7 @@
       <LightEntityStateAttribute.BRIGHTNESS: 'brightness'>: None,
       <LightEntityStateAttribute.COLOR_MODE: 'color_mode'>: None,
       <LightEntityStateAttribute.COLOR_TEMP_KELVIN: 'color_temp_kelvin'>: None,
-      'friendly_name': 'Test name Living room lamp',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Test name Living room lamp',
       <LightEntityStateAttribute.HS_COLOR: 'hs_color'>: None,
       <LightEntityCapabilityAttribute.MAX_COLOR_TEMP_KELVIN: 'max_color_temp_kelvin'>: 6500,
       <LightEntityCapabilityAttribute.MIN_COLOR_TEMP_KELVIN: 'min_color_temp_kelvin'>: 2700,
@@ -1343,7 +1343,7 @@
       <LightEntityCapabilityAttribute.SUPPORTED_COLOR_MODES: 'supported_color_modes'>: list([
         <ColorMode.COLOR_TEMP: 'color_temp'>,
       ]),
-      'supported_features': <LightEntityFeature: 32>,
+      <EntityStateAttribute.SUPPORTED_FEATURES: 'supported_features'>: <LightEntityFeature: 32>,
       <LightEntityStateAttribute.XY_COLOR: 'xy_color'>: None,
     }),
     'context': <ANY>,
@@ -1402,10 +1402,10 @@
 # name: test_device[duo_bulb_gen3][sensor.test_name_living_room_lamp_energy-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'device_class': 'energy',
-      'friendly_name': 'Test name Living room lamp energy',
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'energy',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Test name Living room lamp energy',
       <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
-      'unit_of_measurement': <UnitOfEnergy.KILO_WATT_HOUR: 'kWh'>,
+      <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: <UnitOfEnergy.KILO_WATT_HOUR: 'kWh'>,
     }),
     'context': <ANY>,
     'entity_id': 'sensor.test_name_living_room_lamp_energy',
@@ -1460,10 +1460,10 @@
 # name: test_device[duo_bulb_gen3][sensor.test_name_living_room_lamp_power-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'device_class': 'power',
-      'friendly_name': 'Test name Living room lamp power',
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'power',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Test name Living room lamp power',
       <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
-      'unit_of_measurement': <UnitOfPower.WATT: 'W'>,
+      <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: <UnitOfPower.WATT: 'W'>,
     }),
     'context': <ANY>,
     'entity_id': 'sensor.test_name_living_room_lamp_power',
@@ -1515,10 +1515,10 @@
 # name: test_device[duo_bulb_gen3][sensor.test_name_signal_strength-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'device_class': 'signal_strength',
-      'friendly_name': 'Test name Signal strength',
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'signal_strength',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Test name Signal strength',
       <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
-      'unit_of_measurement': 'dBm',
+      <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: 'dBm',
     }),
     'context': <ANY>,
     'entity_id': 'sensor.test_name_signal_strength',
@@ -1568,8 +1568,8 @@
 # name: test_device[duo_bulb_gen3][sensor.test_name_uptime-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'device_class': 'uptime',
-      'friendly_name': 'Test name Uptime',
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'uptime',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Test name Uptime',
     }),
     'context': <ANY>,
     'entity_id': 'sensor.test_name_uptime',
@@ -1620,17 +1620,17 @@
   StateSnapshot({
     'attributes': ReadOnlyDict({
       <UpdateEntityStateAttribute.AUTO_UPDATE: 'auto_update'>: False,
-      'device_class': 'firmware',
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'firmware',
       <UpdateEntityStateAttribute.DISPLAY_PRECISION: 'display_precision'>: 0,
-      'entity_picture': '/api/brands/integration/shelly/icon.png',
-      'friendly_name': 'Test name Beta firmware',
+      <EntityStateAttribute.ENTITY_PICTURE: 'entity_picture'>: '/api/brands/integration/shelly/icon.png',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Test name Beta firmware',
       <UpdateEntityStateAttribute.IN_PROGRESS: 'in_progress'>: False,
       <UpdateEntityStateAttribute.INSTALLED_VERSION: 'installed_version'>: '1.8.99-dev144333',
       <UpdateEntityStateAttribute.LATEST_VERSION: 'latest_version'>: '1.8.99-dev144333',
       <UpdateEntityStateAttribute.RELEASE_SUMMARY: 'release_summary'>: None,
       <UpdateEntityStateAttribute.RELEASE_URL: 'release_url'>: 'https://shelly-api-docs.shelly.cloud/gen2/changelog/#unreleased',
       <UpdateEntityStateAttribute.SKIPPED_VERSION: 'skipped_version'>: None,
-      'supported_features': <UpdateEntityFeature: 5>,
+      <EntityStateAttribute.SUPPORTED_FEATURES: 'supported_features'>: <UpdateEntityFeature: 5>,
       <UpdateEntityStateAttribute.TITLE: 'title'>: None,
       <UpdateEntityStateAttribute.UPDATE_PERCENTAGE: 'update_percentage'>: None,
     }),
@@ -1683,17 +1683,17 @@
   StateSnapshot({
     'attributes': ReadOnlyDict({
       <UpdateEntityStateAttribute.AUTO_UPDATE: 'auto_update'>: False,
-      'device_class': 'firmware',
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'firmware',
       <UpdateEntityStateAttribute.DISPLAY_PRECISION: 'display_precision'>: 0,
-      'entity_picture': '/api/brands/integration/shelly/icon.png',
-      'friendly_name': 'Test name Firmware',
+      <EntityStateAttribute.ENTITY_PICTURE: 'entity_picture'>: '/api/brands/integration/shelly/icon.png',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Test name Firmware',
       <UpdateEntityStateAttribute.IN_PROGRESS: 'in_progress'>: False,
       <UpdateEntityStateAttribute.INSTALLED_VERSION: 'installed_version'>: '1.8.99-dev144333',
       <UpdateEntityStateAttribute.LATEST_VERSION: 'latest_version'>: '1.8.99-dev144333',
       <UpdateEntityStateAttribute.RELEASE_SUMMARY: 'release_summary'>: None,
       <UpdateEntityStateAttribute.RELEASE_URL: 'release_url'>: 'https://shelly-api-docs.shelly.cloud/gen2/changelog/',
       <UpdateEntityStateAttribute.SKIPPED_VERSION: 'skipped_version'>: None,
-      'supported_features': <UpdateEntityFeature: 5>,
+      <EntityStateAttribute.SUPPORTED_FEATURES: 'supported_features'>: <UpdateEntityFeature: 5>,
       <UpdateEntityStateAttribute.TITLE: 'title'>: None,
       <UpdateEntityStateAttribute.UPDATE_PERCENTAGE: 'update_percentage'>: None,
     }),
@@ -1745,8 +1745,8 @@
 # name: test_device[power_strip_gen4][binary_sensor.switch_1_name_overcurrent-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'device_class': 'problem',
-      'friendly_name': 'Switch 1 name Overcurrent',
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'problem',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Switch 1 name Overcurrent',
     }),
     'context': <ANY>,
     'entity_id': 'binary_sensor.switch_1_name_overcurrent',
@@ -1796,8 +1796,8 @@
 # name: test_device[power_strip_gen4][binary_sensor.switch_1_name_overheating-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'device_class': 'problem',
-      'friendly_name': 'Switch 1 name Overheating',
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'problem',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Switch 1 name Overheating',
     }),
     'context': <ANY>,
     'entity_id': 'binary_sensor.switch_1_name_overheating',
@@ -1847,8 +1847,8 @@
 # name: test_device[power_strip_gen4][binary_sensor.switch_1_name_overpowering-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'device_class': 'problem',
-      'friendly_name': 'Switch 1 name Overpowering',
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'problem',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Switch 1 name Overpowering',
     }),
     'context': <ANY>,
     'entity_id': 'binary_sensor.switch_1_name_overpowering',
@@ -1898,8 +1898,8 @@
 # name: test_device[power_strip_gen4][binary_sensor.switch_1_name_overvoltage-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'device_class': 'problem',
-      'friendly_name': 'Switch 1 name Overvoltage',
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'problem',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Switch 1 name Overvoltage',
     }),
     'context': <ANY>,
     'entity_id': 'binary_sensor.switch_1_name_overvoltage',
@@ -1949,8 +1949,8 @@
 # name: test_device[power_strip_gen4][binary_sensor.switch_3_name_overcurrent-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'device_class': 'problem',
-      'friendly_name': 'Switch 3 name Overcurrent',
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'problem',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Switch 3 name Overcurrent',
     }),
     'context': <ANY>,
     'entity_id': 'binary_sensor.switch_3_name_overcurrent',
@@ -2000,8 +2000,8 @@
 # name: test_device[power_strip_gen4][binary_sensor.switch_3_name_overheating-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'device_class': 'problem',
-      'friendly_name': 'Switch 3 name Overheating',
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'problem',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Switch 3 name Overheating',
     }),
     'context': <ANY>,
     'entity_id': 'binary_sensor.switch_3_name_overheating',
@@ -2051,8 +2051,8 @@
 # name: test_device[power_strip_gen4][binary_sensor.switch_3_name_overpowering-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'device_class': 'problem',
-      'friendly_name': 'Switch 3 name Overpowering',
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'problem',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Switch 3 name Overpowering',
     }),
     'context': <ANY>,
     'entity_id': 'binary_sensor.switch_3_name_overpowering',
@@ -2102,8 +2102,8 @@
 # name: test_device[power_strip_gen4][binary_sensor.switch_3_name_overvoltage-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'device_class': 'problem',
-      'friendly_name': 'Switch 3 name Overvoltage',
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'problem',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Switch 3 name Overvoltage',
     }),
     'context': <ANY>,
     'entity_id': 'binary_sensor.switch_3_name_overvoltage',
@@ -2153,8 +2153,8 @@
 # name: test_device[power_strip_gen4][binary_sensor.test_name_cloud-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'device_class': 'connectivity',
-      'friendly_name': 'Test name Cloud',
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'connectivity',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Test name Cloud',
     }),
     'context': <ANY>,
     'entity_id': 'binary_sensor.test_name_cloud',
@@ -2204,8 +2204,8 @@
 # name: test_device[power_strip_gen4][binary_sensor.test_name_output_0_overcurrent-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'device_class': 'problem',
-      'friendly_name': 'Test name Output 0 Overcurrent',
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'problem',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Test name Output 0 Overcurrent',
     }),
     'context': <ANY>,
     'entity_id': 'binary_sensor.test_name_output_0_overcurrent',
@@ -2255,8 +2255,8 @@
 # name: test_device[power_strip_gen4][binary_sensor.test_name_output_0_overheating-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'device_class': 'problem',
-      'friendly_name': 'Test name Output 0 Overheating',
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'problem',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Test name Output 0 Overheating',
     }),
     'context': <ANY>,
     'entity_id': 'binary_sensor.test_name_output_0_overheating',
@@ -2306,8 +2306,8 @@
 # name: test_device[power_strip_gen4][binary_sensor.test_name_output_0_overpowering-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'device_class': 'problem',
-      'friendly_name': 'Test name Output 0 Overpowering',
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'problem',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Test name Output 0 Overpowering',
     }),
     'context': <ANY>,
     'entity_id': 'binary_sensor.test_name_output_0_overpowering',
@@ -2357,8 +2357,8 @@
 # name: test_device[power_strip_gen4][binary_sensor.test_name_output_0_overvoltage-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'device_class': 'problem',
-      'friendly_name': 'Test name Output 0 Overvoltage',
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'problem',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Test name Output 0 Overvoltage',
     }),
     'context': <ANY>,
     'entity_id': 'binary_sensor.test_name_output_0_overvoltage',
@@ -2408,8 +2408,8 @@
 # name: test_device[power_strip_gen4][binary_sensor.test_name_output_2_overcurrent-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'device_class': 'problem',
-      'friendly_name': 'Test name Output 2 Overcurrent',
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'problem',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Test name Output 2 Overcurrent',
     }),
     'context': <ANY>,
     'entity_id': 'binary_sensor.test_name_output_2_overcurrent',
@@ -2459,8 +2459,8 @@
 # name: test_device[power_strip_gen4][binary_sensor.test_name_output_2_overheating-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'device_class': 'problem',
-      'friendly_name': 'Test name Output 2 Overheating',
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'problem',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Test name Output 2 Overheating',
     }),
     'context': <ANY>,
     'entity_id': 'binary_sensor.test_name_output_2_overheating',
@@ -2510,8 +2510,8 @@
 # name: test_device[power_strip_gen4][binary_sensor.test_name_output_2_overpowering-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'device_class': 'problem',
-      'friendly_name': 'Test name Output 2 Overpowering',
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'problem',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Test name Output 2 Overpowering',
     }),
     'context': <ANY>,
     'entity_id': 'binary_sensor.test_name_output_2_overpowering',
@@ -2561,8 +2561,8 @@
 # name: test_device[power_strip_gen4][binary_sensor.test_name_output_2_overvoltage-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'device_class': 'problem',
-      'friendly_name': 'Test name Output 2 Overvoltage',
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'problem',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Test name Output 2 Overvoltage',
     }),
     'context': <ANY>,
     'entity_id': 'binary_sensor.test_name_output_2_overvoltage',
@@ -2612,8 +2612,8 @@
 # name: test_device[power_strip_gen4][binary_sensor.test_name_restart_required-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'device_class': 'problem',
-      'friendly_name': 'Test name Restart required',
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'problem',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Test name Restart required',
     }),
     'context': <ANY>,
     'entity_id': 'binary_sensor.test_name_restart_required',
@@ -2663,8 +2663,8 @@
 # name: test_device[power_strip_gen4][button.test_name_restart-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'device_class': 'restart',
-      'friendly_name': 'Test name Restart',
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'restart',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Test name Restart',
     }),
     'context': <ANY>,
     'entity_id': 'button.test_name_restart',
@@ -2719,11 +2719,11 @@
   StateSnapshot({
     'attributes': ReadOnlyDict({
       <LightEntityStateAttribute.COLOR_MODE: 'color_mode'>: None,
-      'friendly_name': 'Test name Output 2',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Test name Output 2',
       <LightEntityCapabilityAttribute.SUPPORTED_COLOR_MODES: 'supported_color_modes'>: list([
         <ColorMode.ONOFF: 'onoff'>,
       ]),
-      'supported_features': <LightEntityFeature: 0>,
+      <EntityStateAttribute.SUPPORTED_FEATURES: 'supported_features'>: <LightEntityFeature: 0>,
     }),
     'context': <ANY>,
     'entity_id': 'light.test_name_output_2',
@@ -2778,10 +2778,10 @@
 # name: test_device[power_strip_gen4][sensor.switch_1_name_current-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'device_class': 'current',
-      'friendly_name': 'Switch 1 name Current',
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'current',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Switch 1 name Current',
       <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
-      'unit_of_measurement': <UnitOfElectricCurrent.AMPERE: 'A'>,
+      <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: <UnitOfElectricCurrent.AMPERE: 'A'>,
     }),
     'context': <ANY>,
     'entity_id': 'sensor.switch_1_name_current',
@@ -2839,10 +2839,10 @@
 # name: test_device[power_strip_gen4][sensor.switch_1_name_energy-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'device_class': 'energy',
-      'friendly_name': 'Switch 1 name Energy',
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'energy',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Switch 1 name Energy',
       <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
-      'unit_of_measurement': <UnitOfEnergy.KILO_WATT_HOUR: 'kWh'>,
+      <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: <UnitOfEnergy.KILO_WATT_HOUR: 'kWh'>,
     }),
     'context': <ANY>,
     'entity_id': 'sensor.switch_1_name_energy',
@@ -2900,10 +2900,10 @@
 # name: test_device[power_strip_gen4][sensor.switch_1_name_energy_consumed-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'device_class': 'energy',
-      'friendly_name': 'Switch 1 name Energy consumed',
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'energy',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Switch 1 name Energy consumed',
       <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
-      'unit_of_measurement': <UnitOfEnergy.KILO_WATT_HOUR: 'kWh'>,
+      <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: <UnitOfEnergy.KILO_WATT_HOUR: 'kWh'>,
     }),
     'context': <ANY>,
     'entity_id': 'sensor.switch_1_name_energy_consumed',
@@ -2961,10 +2961,10 @@
 # name: test_device[power_strip_gen4][sensor.switch_1_name_energy_returned-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'device_class': 'energy',
-      'friendly_name': 'Switch 1 name Energy returned',
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'energy',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Switch 1 name Energy returned',
       <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
-      'unit_of_measurement': <UnitOfEnergy.KILO_WATT_HOUR: 'kWh'>,
+      <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: <UnitOfEnergy.KILO_WATT_HOUR: 'kWh'>,
     }),
     'context': <ANY>,
     'entity_id': 'sensor.switch_1_name_energy_returned',
@@ -3019,10 +3019,10 @@
 # name: test_device[power_strip_gen4][sensor.switch_1_name_frequency-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'device_class': 'frequency',
-      'friendly_name': 'Switch 1 name Frequency',
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'frequency',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Switch 1 name Frequency',
       <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
-      'unit_of_measurement': <UnitOfFrequency.HERTZ: 'Hz'>,
+      <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: <UnitOfFrequency.HERTZ: 'Hz'>,
     }),
     'context': <ANY>,
     'entity_id': 'sensor.switch_1_name_frequency',
@@ -3077,10 +3077,10 @@
 # name: test_device[power_strip_gen4][sensor.switch_1_name_power-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'device_class': 'power',
-      'friendly_name': 'Switch 1 name Power',
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'power',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Switch 1 name Power',
       <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
-      'unit_of_measurement': <UnitOfPower.WATT: 'W'>,
+      <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: <UnitOfPower.WATT: 'W'>,
     }),
     'context': <ANY>,
     'entity_id': 'sensor.switch_1_name_power',
@@ -3135,10 +3135,10 @@
 # name: test_device[power_strip_gen4][sensor.switch_1_name_voltage-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'device_class': 'voltage',
-      'friendly_name': 'Switch 1 name Voltage',
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'voltage',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Switch 1 name Voltage',
       <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
-      'unit_of_measurement': <UnitOfElectricPotential.VOLT: 'V'>,
+      <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: <UnitOfElectricPotential.VOLT: 'V'>,
     }),
     'context': <ANY>,
     'entity_id': 'sensor.switch_1_name_voltage',
@@ -3193,10 +3193,10 @@
 # name: test_device[power_strip_gen4][sensor.switch_3_name_current-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'device_class': 'current',
-      'friendly_name': 'Switch 3 name Current',
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'current',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Switch 3 name Current',
       <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
-      'unit_of_measurement': <UnitOfElectricCurrent.AMPERE: 'A'>,
+      <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: <UnitOfElectricCurrent.AMPERE: 'A'>,
     }),
     'context': <ANY>,
     'entity_id': 'sensor.switch_3_name_current',
@@ -3254,10 +3254,10 @@
 # name: test_device[power_strip_gen4][sensor.switch_3_name_energy-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'device_class': 'energy',
-      'friendly_name': 'Switch 3 name Energy',
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'energy',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Switch 3 name Energy',
       <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
-      'unit_of_measurement': <UnitOfEnergy.KILO_WATT_HOUR: 'kWh'>,
+      <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: <UnitOfEnergy.KILO_WATT_HOUR: 'kWh'>,
     }),
     'context': <ANY>,
     'entity_id': 'sensor.switch_3_name_energy',
@@ -3315,10 +3315,10 @@
 # name: test_device[power_strip_gen4][sensor.switch_3_name_energy_consumed-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'device_class': 'energy',
-      'friendly_name': 'Switch 3 name Energy consumed',
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'energy',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Switch 3 name Energy consumed',
       <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
-      'unit_of_measurement': <UnitOfEnergy.KILO_WATT_HOUR: 'kWh'>,
+      <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: <UnitOfEnergy.KILO_WATT_HOUR: 'kWh'>,
     }),
     'context': <ANY>,
     'entity_id': 'sensor.switch_3_name_energy_consumed',
@@ -3376,10 +3376,10 @@
 # name: test_device[power_strip_gen4][sensor.switch_3_name_energy_returned-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'device_class': 'energy',
-      'friendly_name': 'Switch 3 name Energy returned',
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'energy',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Switch 3 name Energy returned',
       <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
-      'unit_of_measurement': <UnitOfEnergy.KILO_WATT_HOUR: 'kWh'>,
+      <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: <UnitOfEnergy.KILO_WATT_HOUR: 'kWh'>,
     }),
     'context': <ANY>,
     'entity_id': 'sensor.switch_3_name_energy_returned',
@@ -3434,10 +3434,10 @@
 # name: test_device[power_strip_gen4][sensor.switch_3_name_frequency-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'device_class': 'frequency',
-      'friendly_name': 'Switch 3 name Frequency',
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'frequency',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Switch 3 name Frequency',
       <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
-      'unit_of_measurement': <UnitOfFrequency.HERTZ: 'Hz'>,
+      <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: <UnitOfFrequency.HERTZ: 'Hz'>,
     }),
     'context': <ANY>,
     'entity_id': 'sensor.switch_3_name_frequency',
@@ -3492,10 +3492,10 @@
 # name: test_device[power_strip_gen4][sensor.switch_3_name_power-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'device_class': 'power',
-      'friendly_name': 'Switch 3 name Power',
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'power',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Switch 3 name Power',
       <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
-      'unit_of_measurement': <UnitOfPower.WATT: 'W'>,
+      <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: <UnitOfPower.WATT: 'W'>,
     }),
     'context': <ANY>,
     'entity_id': 'sensor.switch_3_name_power',
@@ -3550,10 +3550,10 @@
 # name: test_device[power_strip_gen4][sensor.switch_3_name_voltage-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'device_class': 'voltage',
-      'friendly_name': 'Switch 3 name Voltage',
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'voltage',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Switch 3 name Voltage',
       <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
-      'unit_of_measurement': <UnitOfElectricPotential.VOLT: 'V'>,
+      <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: <UnitOfElectricPotential.VOLT: 'V'>,
     }),
     'context': <ANY>,
     'entity_id': 'sensor.switch_3_name_voltage',
@@ -3608,10 +3608,10 @@
 # name: test_device[power_strip_gen4][sensor.test_name_output_0_current-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'device_class': 'current',
-      'friendly_name': 'Test name Output 0 Current',
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'current',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Test name Output 0 Current',
       <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
-      'unit_of_measurement': <UnitOfElectricCurrent.AMPERE: 'A'>,
+      <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: <UnitOfElectricCurrent.AMPERE: 'A'>,
     }),
     'context': <ANY>,
     'entity_id': 'sensor.test_name_output_0_current',
@@ -3669,10 +3669,10 @@
 # name: test_device[power_strip_gen4][sensor.test_name_output_0_energy-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'device_class': 'energy',
-      'friendly_name': 'Test name Output 0 Energy',
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'energy',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Test name Output 0 Energy',
       <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
-      'unit_of_measurement': <UnitOfEnergy.KILO_WATT_HOUR: 'kWh'>,
+      <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: <UnitOfEnergy.KILO_WATT_HOUR: 'kWh'>,
     }),
     'context': <ANY>,
     'entity_id': 'sensor.test_name_output_0_energy',
@@ -3730,10 +3730,10 @@
 # name: test_device[power_strip_gen4][sensor.test_name_output_0_energy_consumed-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'device_class': 'energy',
-      'friendly_name': 'Test name Output 0 Energy consumed',
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'energy',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Test name Output 0 Energy consumed',
       <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
-      'unit_of_measurement': <UnitOfEnergy.KILO_WATT_HOUR: 'kWh'>,
+      <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: <UnitOfEnergy.KILO_WATT_HOUR: 'kWh'>,
     }),
     'context': <ANY>,
     'entity_id': 'sensor.test_name_output_0_energy_consumed',
@@ -3791,10 +3791,10 @@
 # name: test_device[power_strip_gen4][sensor.test_name_output_0_energy_returned-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'device_class': 'energy',
-      'friendly_name': 'Test name Output 0 Energy returned',
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'energy',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Test name Output 0 Energy returned',
       <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
-      'unit_of_measurement': <UnitOfEnergy.KILO_WATT_HOUR: 'kWh'>,
+      <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: <UnitOfEnergy.KILO_WATT_HOUR: 'kWh'>,
     }),
     'context': <ANY>,
     'entity_id': 'sensor.test_name_output_0_energy_returned',
@@ -3849,10 +3849,10 @@
 # name: test_device[power_strip_gen4][sensor.test_name_output_0_frequency-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'device_class': 'frequency',
-      'friendly_name': 'Test name Output 0 Frequency',
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'frequency',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Test name Output 0 Frequency',
       <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
-      'unit_of_measurement': <UnitOfFrequency.HERTZ: 'Hz'>,
+      <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: <UnitOfFrequency.HERTZ: 'Hz'>,
     }),
     'context': <ANY>,
     'entity_id': 'sensor.test_name_output_0_frequency',
@@ -3907,10 +3907,10 @@
 # name: test_device[power_strip_gen4][sensor.test_name_output_0_power-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'device_class': 'power',
-      'friendly_name': 'Test name Output 0 Power',
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'power',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Test name Output 0 Power',
       <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
-      'unit_of_measurement': <UnitOfPower.WATT: 'W'>,
+      <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: <UnitOfPower.WATT: 'W'>,
     }),
     'context': <ANY>,
     'entity_id': 'sensor.test_name_output_0_power',
@@ -3965,10 +3965,10 @@
 # name: test_device[power_strip_gen4][sensor.test_name_output_0_voltage-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'device_class': 'voltage',
-      'friendly_name': 'Test name Output 0 Voltage',
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'voltage',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Test name Output 0 Voltage',
       <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
-      'unit_of_measurement': <UnitOfElectricPotential.VOLT: 'V'>,
+      <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: <UnitOfElectricPotential.VOLT: 'V'>,
     }),
     'context': <ANY>,
     'entity_id': 'sensor.test_name_output_0_voltage',
@@ -4023,10 +4023,10 @@
 # name: test_device[power_strip_gen4][sensor.test_name_output_2_current-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'device_class': 'current',
-      'friendly_name': 'Test name Output 2 Current',
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'current',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Test name Output 2 Current',
       <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
-      'unit_of_measurement': <UnitOfElectricCurrent.AMPERE: 'A'>,
+      <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: <UnitOfElectricCurrent.AMPERE: 'A'>,
     }),
     'context': <ANY>,
     'entity_id': 'sensor.test_name_output_2_current',
@@ -4084,10 +4084,10 @@
 # name: test_device[power_strip_gen4][sensor.test_name_output_2_energy-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'device_class': 'energy',
-      'friendly_name': 'Test name Output 2 Energy',
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'energy',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Test name Output 2 Energy',
       <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
-      'unit_of_measurement': <UnitOfEnergy.KILO_WATT_HOUR: 'kWh'>,
+      <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: <UnitOfEnergy.KILO_WATT_HOUR: 'kWh'>,
     }),
     'context': <ANY>,
     'entity_id': 'sensor.test_name_output_2_energy',
@@ -4145,10 +4145,10 @@
 # name: test_device[power_strip_gen4][sensor.test_name_output_2_energy_consumed-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'device_class': 'energy',
-      'friendly_name': 'Test name Output 2 Energy consumed',
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'energy',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Test name Output 2 Energy consumed',
       <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
-      'unit_of_measurement': <UnitOfEnergy.KILO_WATT_HOUR: 'kWh'>,
+      <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: <UnitOfEnergy.KILO_WATT_HOUR: 'kWh'>,
     }),
     'context': <ANY>,
     'entity_id': 'sensor.test_name_output_2_energy_consumed',
@@ -4206,10 +4206,10 @@
 # name: test_device[power_strip_gen4][sensor.test_name_output_2_energy_returned-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'device_class': 'energy',
-      'friendly_name': 'Test name Output 2 Energy returned',
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'energy',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Test name Output 2 Energy returned',
       <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
-      'unit_of_measurement': <UnitOfEnergy.KILO_WATT_HOUR: 'kWh'>,
+      <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: <UnitOfEnergy.KILO_WATT_HOUR: 'kWh'>,
     }),
     'context': <ANY>,
     'entity_id': 'sensor.test_name_output_2_energy_returned',
@@ -4264,10 +4264,10 @@
 # name: test_device[power_strip_gen4][sensor.test_name_output_2_frequency-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'device_class': 'frequency',
-      'friendly_name': 'Test name Output 2 Frequency',
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'frequency',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Test name Output 2 Frequency',
       <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
-      'unit_of_measurement': <UnitOfFrequency.HERTZ: 'Hz'>,
+      <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: <UnitOfFrequency.HERTZ: 'Hz'>,
     }),
     'context': <ANY>,
     'entity_id': 'sensor.test_name_output_2_frequency',
@@ -4322,10 +4322,10 @@
 # name: test_device[power_strip_gen4][sensor.test_name_output_2_power-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'device_class': 'power',
-      'friendly_name': 'Test name Output 2 Power',
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'power',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Test name Output 2 Power',
       <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
-      'unit_of_measurement': <UnitOfPower.WATT: 'W'>,
+      <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: <UnitOfPower.WATT: 'W'>,
     }),
     'context': <ANY>,
     'entity_id': 'sensor.test_name_output_2_power',
@@ -4380,10 +4380,10 @@
 # name: test_device[power_strip_gen4][sensor.test_name_output_2_voltage-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'device_class': 'voltage',
-      'friendly_name': 'Test name Output 2 Voltage',
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'voltage',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Test name Output 2 Voltage',
       <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
-      'unit_of_measurement': <UnitOfElectricPotential.VOLT: 'V'>,
+      <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: <UnitOfElectricPotential.VOLT: 'V'>,
     }),
     'context': <ANY>,
     'entity_id': 'sensor.test_name_output_2_voltage',
@@ -4435,10 +4435,10 @@
 # name: test_device[power_strip_gen4][sensor.test_name_signal_strength-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'device_class': 'signal_strength',
-      'friendly_name': 'Test name Signal strength',
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'signal_strength',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Test name Signal strength',
       <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
-      'unit_of_measurement': 'dBm',
+      <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: 'dBm',
     }),
     'context': <ANY>,
     'entity_id': 'sensor.test_name_signal_strength',
@@ -4488,8 +4488,8 @@
 # name: test_device[power_strip_gen4][sensor.test_name_uptime-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'device_class': 'uptime',
-      'friendly_name': 'Test name Uptime',
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'uptime',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Test name Uptime',
     }),
     'context': <ANY>,
     'entity_id': 'sensor.test_name_uptime',
@@ -4539,7 +4539,7 @@
 # name: test_device[power_strip_gen4][switch.switch_1_name-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'Switch 1 name',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Switch 1 name',
     }),
     'context': <ANY>,
     'entity_id': 'switch.switch_1_name',
@@ -4589,7 +4589,7 @@
 # name: test_device[power_strip_gen4][switch.switch_3_name-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'Switch 3 name',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Switch 3 name',
     }),
     'context': <ANY>,
     'entity_id': 'switch.switch_3_name',
@@ -4639,7 +4639,7 @@
 # name: test_device[power_strip_gen4][switch.test_name_output_0-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'Test name Output 0',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Test name Output 0',
     }),
     'context': <ANY>,
     'entity_id': 'switch.test_name_output_0',
@@ -4690,17 +4690,17 @@
   StateSnapshot({
     'attributes': ReadOnlyDict({
       <UpdateEntityStateAttribute.AUTO_UPDATE: 'auto_update'>: False,
-      'device_class': 'firmware',
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'firmware',
       <UpdateEntityStateAttribute.DISPLAY_PRECISION: 'display_precision'>: 0,
-      'entity_picture': '/api/brands/integration/shelly/icon.png',
-      'friendly_name': 'Test name Beta firmware',
+      <EntityStateAttribute.ENTITY_PICTURE: 'entity_picture'>: '/api/brands/integration/shelly/icon.png',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Test name Beta firmware',
       <UpdateEntityStateAttribute.IN_PROGRESS: 'in_progress'>: False,
       <UpdateEntityStateAttribute.INSTALLED_VERSION: 'installed_version'>: '1.8.99-dev134818',
       <UpdateEntityStateAttribute.LATEST_VERSION: 'latest_version'>: '1.8.99-dev134818',
       <UpdateEntityStateAttribute.RELEASE_SUMMARY: 'release_summary'>: None,
       <UpdateEntityStateAttribute.RELEASE_URL: 'release_url'>: 'https://shelly-api-docs.shelly.cloud/gen2/changelog/#unreleased',
       <UpdateEntityStateAttribute.SKIPPED_VERSION: 'skipped_version'>: None,
-      'supported_features': <UpdateEntityFeature: 5>,
+      <EntityStateAttribute.SUPPORTED_FEATURES: 'supported_features'>: <UpdateEntityFeature: 5>,
       <UpdateEntityStateAttribute.TITLE: 'title'>: None,
       <UpdateEntityStateAttribute.UPDATE_PERCENTAGE: 'update_percentage'>: None,
     }),
@@ -4753,17 +4753,17 @@
   StateSnapshot({
     'attributes': ReadOnlyDict({
       <UpdateEntityStateAttribute.AUTO_UPDATE: 'auto_update'>: False,
-      'device_class': 'firmware',
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'firmware',
       <UpdateEntityStateAttribute.DISPLAY_PRECISION: 'display_precision'>: 0,
-      'entity_picture': '/api/brands/integration/shelly/icon.png',
-      'friendly_name': 'Test name Firmware',
+      <EntityStateAttribute.ENTITY_PICTURE: 'entity_picture'>: '/api/brands/integration/shelly/icon.png',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Test name Firmware',
       <UpdateEntityStateAttribute.IN_PROGRESS: 'in_progress'>: False,
       <UpdateEntityStateAttribute.INSTALLED_VERSION: 'installed_version'>: '1.8.99-dev134818',
       <UpdateEntityStateAttribute.LATEST_VERSION: 'latest_version'>: '1.8.99-dev134818',
       <UpdateEntityStateAttribute.RELEASE_SUMMARY: 'release_summary'>: None,
       <UpdateEntityStateAttribute.RELEASE_URL: 'release_url'>: 'https://shelly-api-docs.shelly.cloud/gen2/changelog/',
       <UpdateEntityStateAttribute.SKIPPED_VERSION: 'skipped_version'>: None,
-      'supported_features': <UpdateEntityFeature: 5>,
+      <EntityStateAttribute.SUPPORTED_FEATURES: 'supported_features'>: <UpdateEntityFeature: 5>,
       <UpdateEntityStateAttribute.TITLE: 'title'>: None,
       <UpdateEntityStateAttribute.UPDATE_PERCENTAGE: 'update_percentage'>: None,
     }),
@@ -4815,8 +4815,8 @@
 # name: test_device[presence_gen4][binary_sensor.test_name_cloud-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'device_class': 'connectivity',
-      'friendly_name': 'Test name Cloud',
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'connectivity',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Test name Cloud',
     }),
     'context': <ANY>,
     'entity_id': 'binary_sensor.test_name_cloud',
@@ -4866,8 +4866,8 @@
 # name: test_device[presence_gen4][binary_sensor.test_name_my_zone_occupancy-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'device_class': 'occupancy',
-      'friendly_name': 'Test name My zone occupancy',
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'occupancy',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Test name My zone occupancy',
     }),
     'context': <ANY>,
     'entity_id': 'binary_sensor.test_name_my_zone_occupancy',
@@ -4917,8 +4917,8 @@
 # name: test_device[presence_gen4][binary_sensor.test_name_new_zone_occupancy-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'device_class': 'occupancy',
-      'friendly_name': 'Test name New zone occupancy',
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'occupancy',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Test name New zone occupancy',
     }),
     'context': <ANY>,
     'entity_id': 'binary_sensor.test_name_new_zone_occupancy',
@@ -4968,8 +4968,8 @@
 # name: test_device[presence_gen4][binary_sensor.test_name_restart_required-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'device_class': 'problem',
-      'friendly_name': 'Test name Restart required',
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'problem',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Test name Restart required',
     }),
     'context': <ANY>,
     'entity_id': 'binary_sensor.test_name_restart_required',
@@ -5019,8 +5019,8 @@
 # name: test_device[presence_gen4][binary_sensor.test_name_room_occupancy-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'device_class': 'occupancy',
-      'friendly_name': 'Test name Room occupancy',
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'occupancy',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Test name Room occupancy',
     }),
     'context': <ANY>,
     'entity_id': 'binary_sensor.test_name_room_occupancy',
@@ -5070,8 +5070,8 @@
 # name: test_device[presence_gen4][button.test_name_restart-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'device_class': 'restart',
-      'friendly_name': 'Test name Restart',
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'restart',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Test name Restart',
     }),
     'context': <ANY>,
     'entity_id': 'button.test_name_restart',
@@ -5127,8 +5127,8 @@
 # name: test_device[presence_gen4][sensor.test_name_illuminance_level-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'device_class': 'enum',
-      'friendly_name': 'Test name Illuminance level',
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'enum',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Test name Illuminance level',
       <SensorEntityCapabilityAttribute.OPTIONS: 'options'>: list([
         'dark',
         'twilight',
@@ -5185,9 +5185,9 @@
 # name: test_device[presence_gen4][sensor.test_name_my_zone_detected_objects-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'Test name My zone detected objects',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Test name My zone detected objects',
       <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
-      'unit_of_measurement': 'objects',
+      <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: 'objects',
     }),
     'context': <ANY>,
     'entity_id': 'sensor.test_name_my_zone_detected_objects',
@@ -5239,9 +5239,9 @@
 # name: test_device[presence_gen4][sensor.test_name_new_zone_detected_objects-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'Test name New zone detected objects',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Test name New zone detected objects',
       <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
-      'unit_of_measurement': 'objects',
+      <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: 'objects',
     }),
     'context': <ANY>,
     'entity_id': 'sensor.test_name_new_zone_detected_objects',
@@ -5293,9 +5293,9 @@
 # name: test_device[presence_gen4][sensor.test_name_room_detected_objects-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'Test name Room detected objects',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Test name Room detected objects',
       <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
-      'unit_of_measurement': 'objects',
+      <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: 'objects',
     }),
     'context': <ANY>,
     'entity_id': 'sensor.test_name_room_detected_objects',
@@ -5347,10 +5347,10 @@
 # name: test_device[presence_gen4][sensor.test_name_signal_strength-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'device_class': 'signal_strength',
-      'friendly_name': 'Test name Signal strength',
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'signal_strength',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Test name Signal strength',
       <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
-      'unit_of_measurement': 'dBm',
+      <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: 'dBm',
     }),
     'context': <ANY>,
     'entity_id': 'sensor.test_name_signal_strength',
@@ -5400,8 +5400,8 @@
 # name: test_device[presence_gen4][sensor.test_name_uptime-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'device_class': 'uptime',
-      'friendly_name': 'Test name Uptime',
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'uptime',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Test name Uptime',
     }),
     'context': <ANY>,
     'entity_id': 'sensor.test_name_uptime',
@@ -5452,17 +5452,17 @@
   StateSnapshot({
     'attributes': ReadOnlyDict({
       <UpdateEntityStateAttribute.AUTO_UPDATE: 'auto_update'>: False,
-      'device_class': 'firmware',
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'firmware',
       <UpdateEntityStateAttribute.DISPLAY_PRECISION: 'display_precision'>: 0,
-      'entity_picture': '/api/brands/integration/shelly/icon.png',
-      'friendly_name': 'Test name Beta firmware',
+      <EntityStateAttribute.ENTITY_PICTURE: 'entity_picture'>: '/api/brands/integration/shelly/icon.png',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Test name Beta firmware',
       <UpdateEntityStateAttribute.IN_PROGRESS: 'in_progress'>: False,
       <UpdateEntityStateAttribute.INSTALLED_VERSION: 'installed_version'>: '1.8.99',
       <UpdateEntityStateAttribute.LATEST_VERSION: 'latest_version'>: '1.8.99',
       <UpdateEntityStateAttribute.RELEASE_SUMMARY: 'release_summary'>: None,
       <UpdateEntityStateAttribute.RELEASE_URL: 'release_url'>: 'https://shelly-api-docs.shelly.cloud/gen2/changelog/#unreleased',
       <UpdateEntityStateAttribute.SKIPPED_VERSION: 'skipped_version'>: None,
-      'supported_features': <UpdateEntityFeature: 5>,
+      <EntityStateAttribute.SUPPORTED_FEATURES: 'supported_features'>: <UpdateEntityFeature: 5>,
       <UpdateEntityStateAttribute.TITLE: 'title'>: None,
       <UpdateEntityStateAttribute.UPDATE_PERCENTAGE: 'update_percentage'>: None,
     }),
@@ -5515,17 +5515,17 @@
   StateSnapshot({
     'attributes': ReadOnlyDict({
       <UpdateEntityStateAttribute.AUTO_UPDATE: 'auto_update'>: False,
-      'device_class': 'firmware',
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'firmware',
       <UpdateEntityStateAttribute.DISPLAY_PRECISION: 'display_precision'>: 0,
-      'entity_picture': '/api/brands/integration/shelly/icon.png',
-      'friendly_name': 'Test name Firmware',
+      <EntityStateAttribute.ENTITY_PICTURE: 'entity_picture'>: '/api/brands/integration/shelly/icon.png',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Test name Firmware',
       <UpdateEntityStateAttribute.IN_PROGRESS: 'in_progress'>: False,
       <UpdateEntityStateAttribute.INSTALLED_VERSION: 'installed_version'>: '1.8.99',
       <UpdateEntityStateAttribute.LATEST_VERSION: 'latest_version'>: '1.8.99',
       <UpdateEntityStateAttribute.RELEASE_SUMMARY: 'release_summary'>: None,
       <UpdateEntityStateAttribute.RELEASE_URL: 'release_url'>: 'https://shelly-api-docs.shelly.cloud/gen2/changelog/',
       <UpdateEntityStateAttribute.SKIPPED_VERSION: 'skipped_version'>: None,
-      'supported_features': <UpdateEntityFeature: 5>,
+      <EntityStateAttribute.SUPPORTED_FEATURES: 'supported_features'>: <UpdateEntityFeature: 5>,
       <UpdateEntityStateAttribute.TITLE: 'title'>: None,
       <UpdateEntityStateAttribute.UPDATE_PERCENTAGE: 'update_percentage'>: None,
     }),
@@ -5577,8 +5577,8 @@
 # name: test_device[wall_display_xl][binary_sensor.test_name_cloud-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'device_class': 'connectivity',
-      'friendly_name': 'Test name Cloud',
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'connectivity',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Test name Cloud',
     }),
     'context': <ANY>,
     'entity_id': 'binary_sensor.test_name_cloud',
@@ -5628,8 +5628,8 @@
 # name: test_device[wall_display_xl][binary_sensor.test_name_external_power-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'device_class': 'power',
-      'friendly_name': 'Test name External power',
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'power',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Test name External power',
     }),
     'context': <ANY>,
     'entity_id': 'binary_sensor.test_name_external_power',
@@ -5679,8 +5679,8 @@
 # name: test_device[wall_display_xl][binary_sensor.test_name_input_2-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'device_class': 'power',
-      'friendly_name': 'Test name Input 2',
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'power',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Test name Input 2',
     }),
     'context': <ANY>,
     'entity_id': 'binary_sensor.test_name_input_2',
@@ -5730,8 +5730,8 @@
 # name: test_device[wall_display_xl][binary_sensor.test_name_restart_required-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'device_class': 'problem',
-      'friendly_name': 'Test name Restart required',
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'problem',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Test name Restart required',
     }),
     'context': <ANY>,
     'entity_id': 'binary_sensor.test_name_restart_required',
@@ -5781,8 +5781,8 @@
 # name: test_device[wall_display_xl][button.test_name_restart-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'device_class': 'restart',
-      'friendly_name': 'Test name Restart',
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'restart',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Test name Restart',
     }),
     'context': <ANY>,
     'entity_id': 'button.test_name_restart',
@@ -5832,7 +5832,7 @@
 # name: test_device[wall_display_xl][button.test_name_turn_off_the_screen-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'Test name Turn off the screen',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Test name Turn off the screen',
     }),
     'context': <ANY>,
     'entity_id': 'button.test_name_turn_off_the_screen',
@@ -5882,7 +5882,7 @@
 # name: test_device[wall_display_xl][button.test_name_turn_on_the_screen-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'Test name Turn on the screen',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Test name Turn on the screen',
     }),
     'context': <ANY>,
     'entity_id': 'button.test_name_turn_on_the_screen',
@@ -5933,7 +5933,7 @@
 # name: test_device[wall_display_xl][event.test_name_input_0-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'device_class': 'button',
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'button',
       <EventEntityStateAttribute.EVENT_TYPE: 'event_type'>: None,
       <EventEntityCapabilityAttribute.EVENT_TYPES: 'event_types'>: list([
         'btn_down',
@@ -5943,7 +5943,7 @@
         'single_push',
         'triple_push',
       ]),
-      'friendly_name': 'Test name Input 0',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Test name Input 0',
     }),
     'context': <ANY>,
     'entity_id': 'event.test_name_input_0',
@@ -5994,7 +5994,7 @@
 # name: test_device[wall_display_xl][event.test_name_input_3-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'device_class': 'button',
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'button',
       <EventEntityStateAttribute.EVENT_TYPE: 'event_type'>: None,
       <EventEntityCapabilityAttribute.EVENT_TYPES: 'event_types'>: list([
         'btn_down',
@@ -6004,7 +6004,7 @@
         'single_push',
         'triple_push',
       ]),
-      'friendly_name': 'Test name Input 3',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Test name Input 3',
     }),
     'context': <ANY>,
     'entity_id': 'event.test_name_input_3',
@@ -6055,7 +6055,7 @@
 # name: test_device[wall_display_xl][event.test_name_input_4-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'device_class': 'button',
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'button',
       <EventEntityStateAttribute.EVENT_TYPE: 'event_type'>: None,
       <EventEntityCapabilityAttribute.EVENT_TYPES: 'event_types'>: list([
         'btn_down',
@@ -6065,7 +6065,7 @@
         'single_push',
         'triple_push',
       ]),
-      'friendly_name': 'Test name Input 4',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Test name Input 4',
     }),
     'context': <ANY>,
     'entity_id': 'event.test_name_input_4',
@@ -6116,10 +6116,10 @@
 # name: test_device[wall_display_xl][media_player.test_name-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'device_class': 'speaker',
-      'friendly_name': 'Test name',
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'speaker',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Test name',
       <MediaPlayerEntityStateAttribute.MEDIA_CONTENT_TYPE: 'media_content_type'>: <MediaType.MUSIC: 'music'>,
-      'supported_features': <MediaPlayerEntityFeature: 152117>,
+      <EntityStateAttribute.SUPPORTED_FEATURES: 'supported_features'>: <MediaPlayerEntityFeature: 152117>,
       <MediaPlayerEntityStateAttribute.MEDIA_VOLUME_LEVEL: 'volume_level'>: 0.7,
     }),
     'context': <ANY>,
@@ -6172,10 +6172,10 @@
 # name: test_device[wall_display_xl][sensor.test_name_illuminance-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'device_class': 'illuminance',
-      'friendly_name': 'Test name Illuminance',
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'illuminance',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Test name Illuminance',
       <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
-      'unit_of_measurement': 'lx',
+      <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: 'lx',
     }),
     'context': <ANY>,
     'entity_id': 'sensor.test_name_illuminance',
@@ -6231,8 +6231,8 @@
 # name: test_device[wall_display_xl][sensor.test_name_illuminance_level-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'device_class': 'enum',
-      'friendly_name': 'Test name Illuminance level',
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'enum',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Test name Illuminance level',
       <SensorEntityCapabilityAttribute.OPTIONS: 'options'>: list([
         'dark',
         'twilight',
@@ -6289,10 +6289,10 @@
 # name: test_device[wall_display_xl][sensor.test_name_signal_strength-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'device_class': 'signal_strength',
-      'friendly_name': 'Test name Signal strength',
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'signal_strength',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Test name Signal strength',
       <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
-      'unit_of_measurement': 'dBm',
+      <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: 'dBm',
     }),
     'context': <ANY>,
     'entity_id': 'sensor.test_name_signal_strength',
@@ -6342,8 +6342,8 @@
 # name: test_device[wall_display_xl][sensor.test_name_uptime-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'device_class': 'uptime',
-      'friendly_name': 'Test name Uptime',
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'uptime',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Test name Uptime',
     }),
     'context': <ANY>,
     'entity_id': 'sensor.test_name_uptime',
@@ -6393,7 +6393,7 @@
 # name: test_device[wall_display_xl][switch.test_name-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'Test name',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Test name',
     }),
     'context': <ANY>,
     'entity_id': 'switch.test_name',
@@ -6444,17 +6444,17 @@
   StateSnapshot({
     'attributes': ReadOnlyDict({
       <UpdateEntityStateAttribute.AUTO_UPDATE: 'auto_update'>: False,
-      'device_class': 'firmware',
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'firmware',
       <UpdateEntityStateAttribute.DISPLAY_PRECISION: 'display_precision'>: 0,
-      'entity_picture': '/api/brands/integration/shelly/icon.png',
-      'friendly_name': 'Test name Beta firmware',
+      <EntityStateAttribute.ENTITY_PICTURE: 'entity_picture'>: '/api/brands/integration/shelly/icon.png',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Test name Beta firmware',
       <UpdateEntityStateAttribute.IN_PROGRESS: 'in_progress'>: False,
       <UpdateEntityStateAttribute.INSTALLED_VERSION: 'installed_version'>: '2.4.4',
       <UpdateEntityStateAttribute.LATEST_VERSION: 'latest_version'>: '2.4.4',
       <UpdateEntityStateAttribute.RELEASE_SUMMARY: 'release_summary'>: None,
       <UpdateEntityStateAttribute.RELEASE_URL: 'release_url'>: 'https://github.com/ShellyGroup/Wall-Display-Changelog',
       <UpdateEntityStateAttribute.SKIPPED_VERSION: 'skipped_version'>: None,
-      'supported_features': <UpdateEntityFeature: 5>,
+      <EntityStateAttribute.SUPPORTED_FEATURES: 'supported_features'>: <UpdateEntityFeature: 5>,
       <UpdateEntityStateAttribute.TITLE: 'title'>: None,
       <UpdateEntityStateAttribute.UPDATE_PERCENTAGE: 'update_percentage'>: None,
     }),
@@ -6507,17 +6507,17 @@
   StateSnapshot({
     'attributes': ReadOnlyDict({
       <UpdateEntityStateAttribute.AUTO_UPDATE: 'auto_update'>: False,
-      'device_class': 'firmware',
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'firmware',
       <UpdateEntityStateAttribute.DISPLAY_PRECISION: 'display_precision'>: 0,
-      'entity_picture': '/api/brands/integration/shelly/icon.png',
-      'friendly_name': 'Test name Firmware',
+      <EntityStateAttribute.ENTITY_PICTURE: 'entity_picture'>: '/api/brands/integration/shelly/icon.png',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Test name Firmware',
       <UpdateEntityStateAttribute.IN_PROGRESS: 'in_progress'>: False,
       <UpdateEntityStateAttribute.INSTALLED_VERSION: 'installed_version'>: '2.4.4',
       <UpdateEntityStateAttribute.LATEST_VERSION: 'latest_version'>: '2.4.4',
       <UpdateEntityStateAttribute.RELEASE_SUMMARY: 'release_summary'>: None,
       <UpdateEntityStateAttribute.RELEASE_URL: 'release_url'>: 'https://github.com/ShellyGroup/Wall-Display-Changelog',
       <UpdateEntityStateAttribute.SKIPPED_VERSION: 'skipped_version'>: None,
-      'supported_features': <UpdateEntityFeature: 5>,
+      <EntityStateAttribute.SUPPORTED_FEATURES: 'supported_features'>: <UpdateEntityFeature: 5>,
       <UpdateEntityStateAttribute.TITLE: 'title'>: None,
       <UpdateEntityStateAttribute.UPDATE_PERCENTAGE: 'update_percentage'>: None,
     }),
@@ -6569,8 +6569,8 @@
 # name: test_shelly_2pm_gen3_cover[binary_sensor.test_name_cloud-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'device_class': 'connectivity',
-      'friendly_name': 'Test name Cloud',
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'connectivity',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Test name Cloud',
     }),
     'context': <ANY>,
     'entity_id': 'binary_sensor.test_name_cloud',
@@ -6620,8 +6620,8 @@
 # name: test_shelly_2pm_gen3_cover[binary_sensor.test_name_input_0-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'device_class': 'power',
-      'friendly_name': 'Test name Input 0',
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'power',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Test name Input 0',
     }),
     'context': <ANY>,
     'entity_id': 'binary_sensor.test_name_input_0',
@@ -6671,8 +6671,8 @@
 # name: test_shelly_2pm_gen3_cover[binary_sensor.test_name_input_1-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'device_class': 'power',
-      'friendly_name': 'Test name Input 1',
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'power',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Test name Input 1',
     }),
     'context': <ANY>,
     'entity_id': 'binary_sensor.test_name_input_1',
@@ -6722,8 +6722,8 @@
 # name: test_shelly_2pm_gen3_cover[binary_sensor.test_name_overcurrent-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'device_class': 'problem',
-      'friendly_name': 'Test name Overcurrent',
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'problem',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Test name Overcurrent',
     }),
     'context': <ANY>,
     'entity_id': 'binary_sensor.test_name_overcurrent',
@@ -6773,8 +6773,8 @@
 # name: test_shelly_2pm_gen3_cover[binary_sensor.test_name_overheating-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'device_class': 'problem',
-      'friendly_name': 'Test name Overheating',
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'problem',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Test name Overheating',
     }),
     'context': <ANY>,
     'entity_id': 'binary_sensor.test_name_overheating',
@@ -6824,8 +6824,8 @@
 # name: test_shelly_2pm_gen3_cover[binary_sensor.test_name_overpowering-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'device_class': 'problem',
-      'friendly_name': 'Test name Overpowering',
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'problem',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Test name Overpowering',
     }),
     'context': <ANY>,
     'entity_id': 'binary_sensor.test_name_overpowering',
@@ -6875,8 +6875,8 @@
 # name: test_shelly_2pm_gen3_cover[binary_sensor.test_name_overvoltage-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'device_class': 'problem',
-      'friendly_name': 'Test name Overvoltage',
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'problem',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Test name Overvoltage',
     }),
     'context': <ANY>,
     'entity_id': 'binary_sensor.test_name_overvoltage',
@@ -6926,8 +6926,8 @@
 # name: test_shelly_2pm_gen3_cover[binary_sensor.test_name_restart_required-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'device_class': 'problem',
-      'friendly_name': 'Test name Restart required',
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'problem',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Test name Restart required',
     }),
     'context': <ANY>,
     'entity_id': 'binary_sensor.test_name_restart_required',
@@ -6977,8 +6977,8 @@
 # name: test_shelly_2pm_gen3_cover[button.test_name_restart-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'device_class': 'restart',
-      'friendly_name': 'Test name Restart',
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'restart',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Test name Restart',
     }),
     'context': <ANY>,
     'entity_id': 'button.test_name_restart',
@@ -7028,10 +7028,10 @@
 # name: test_shelly_2pm_gen3_cover[cover.test_name-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'device_class': 'shutter',
-      'friendly_name': 'Test name',
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'shutter',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Test name',
       <CoverEntityStateAttribute.IS_CLOSED: 'is_closed'>: False,
-      'supported_features': <CoverEntityFeature: 11>,
+      <EntityStateAttribute.SUPPORTED_FEATURES: 'supported_features'>: <CoverEntityFeature: 11>,
     }),
     'context': <ANY>,
     'entity_id': 'cover.test_name',
@@ -7086,10 +7086,10 @@
 # name: test_shelly_2pm_gen3_cover[sensor.test_name_current-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'device_class': 'current',
-      'friendly_name': 'Test name Current',
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'current',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Test name Current',
       <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
-      'unit_of_measurement': <UnitOfElectricCurrent.AMPERE: 'A'>,
+      <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: <UnitOfElectricCurrent.AMPERE: 'A'>,
     }),
     'context': <ANY>,
     'entity_id': 'sensor.test_name_current',
@@ -7147,10 +7147,10 @@
 # name: test_shelly_2pm_gen3_cover[sensor.test_name_energy-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'device_class': 'energy',
-      'friendly_name': 'Test name Energy',
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'energy',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Test name Energy',
       <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
-      'unit_of_measurement': <UnitOfEnergy.KILO_WATT_HOUR: 'kWh'>,
+      <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: <UnitOfEnergy.KILO_WATT_HOUR: 'kWh'>,
     }),
     'context': <ANY>,
     'entity_id': 'sensor.test_name_energy',
@@ -7205,10 +7205,10 @@
 # name: test_shelly_2pm_gen3_cover[sensor.test_name_frequency-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'device_class': 'frequency',
-      'friendly_name': 'Test name Frequency',
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'frequency',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Test name Frequency',
       <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
-      'unit_of_measurement': <UnitOfFrequency.HERTZ: 'Hz'>,
+      <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: <UnitOfFrequency.HERTZ: 'Hz'>,
     }),
     'context': <ANY>,
     'entity_id': 'sensor.test_name_frequency',
@@ -7263,10 +7263,10 @@
 # name: test_shelly_2pm_gen3_cover[sensor.test_name_power-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'device_class': 'power',
-      'friendly_name': 'Test name Power',
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'power',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Test name Power',
       <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
-      'unit_of_measurement': <UnitOfPower.WATT: 'W'>,
+      <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: <UnitOfPower.WATT: 'W'>,
     }),
     'context': <ANY>,
     'entity_id': 'sensor.test_name_power',
@@ -7318,10 +7318,10 @@
 # name: test_shelly_2pm_gen3_cover[sensor.test_name_signal_strength-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'device_class': 'signal_strength',
-      'friendly_name': 'Test name Signal strength',
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'signal_strength',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Test name Signal strength',
       <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
-      'unit_of_measurement': 'dBm',
+      <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: 'dBm',
     }),
     'context': <ANY>,
     'entity_id': 'sensor.test_name_signal_strength',
@@ -7376,10 +7376,10 @@
 # name: test_shelly_2pm_gen3_cover[sensor.test_name_temperature-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'device_class': 'temperature',
-      'friendly_name': 'Test name Temperature',
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'temperature',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Test name Temperature',
       <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
-      'unit_of_measurement': <UnitOfTemperature.CELSIUS: '°C'>,
+      <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: <UnitOfTemperature.CELSIUS: '°C'>,
     }),
     'context': <ANY>,
     'entity_id': 'sensor.test_name_temperature',
@@ -7429,8 +7429,8 @@
 # name: test_shelly_2pm_gen3_cover[sensor.test_name_uptime-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'device_class': 'uptime',
-      'friendly_name': 'Test name Uptime',
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'uptime',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Test name Uptime',
     }),
     'context': <ANY>,
     'entity_id': 'sensor.test_name_uptime',
@@ -7485,10 +7485,10 @@
 # name: test_shelly_2pm_gen3_cover[sensor.test_name_voltage-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'device_class': 'voltage',
-      'friendly_name': 'Test name Voltage',
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'voltage',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Test name Voltage',
       <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
-      'unit_of_measurement': <UnitOfElectricPotential.VOLT: 'V'>,
+      <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: <UnitOfElectricPotential.VOLT: 'V'>,
     }),
     'context': <ANY>,
     'entity_id': 'sensor.test_name_voltage',
@@ -7539,17 +7539,17 @@
   StateSnapshot({
     'attributes': ReadOnlyDict({
       <UpdateEntityStateAttribute.AUTO_UPDATE: 'auto_update'>: False,
-      'device_class': 'firmware',
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'firmware',
       <UpdateEntityStateAttribute.DISPLAY_PRECISION: 'display_precision'>: 0,
-      'entity_picture': '/api/brands/integration/shelly/icon.png',
-      'friendly_name': 'Test name Beta firmware',
+      <EntityStateAttribute.ENTITY_PICTURE: 'entity_picture'>: '/api/brands/integration/shelly/icon.png',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Test name Beta firmware',
       <UpdateEntityStateAttribute.IN_PROGRESS: 'in_progress'>: False,
       <UpdateEntityStateAttribute.INSTALLED_VERSION: 'installed_version'>: '1.6.1',
       <UpdateEntityStateAttribute.LATEST_VERSION: 'latest_version'>: '1.6.1',
       <UpdateEntityStateAttribute.RELEASE_SUMMARY: 'release_summary'>: None,
       <UpdateEntityStateAttribute.RELEASE_URL: 'release_url'>: 'https://shelly-api-docs.shelly.cloud/gen2/changelog/#unreleased',
       <UpdateEntityStateAttribute.SKIPPED_VERSION: 'skipped_version'>: None,
-      'supported_features': <UpdateEntityFeature: 5>,
+      <EntityStateAttribute.SUPPORTED_FEATURES: 'supported_features'>: <UpdateEntityFeature: 5>,
       <UpdateEntityStateAttribute.TITLE: 'title'>: None,
       <UpdateEntityStateAttribute.UPDATE_PERCENTAGE: 'update_percentage'>: None,
     }),
@@ -7602,17 +7602,17 @@
   StateSnapshot({
     'attributes': ReadOnlyDict({
       <UpdateEntityStateAttribute.AUTO_UPDATE: 'auto_update'>: False,
-      'device_class': 'firmware',
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'firmware',
       <UpdateEntityStateAttribute.DISPLAY_PRECISION: 'display_precision'>: 0,
-      'entity_picture': '/api/brands/integration/shelly/icon.png',
-      'friendly_name': 'Test name Firmware',
+      <EntityStateAttribute.ENTITY_PICTURE: 'entity_picture'>: '/api/brands/integration/shelly/icon.png',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Test name Firmware',
       <UpdateEntityStateAttribute.IN_PROGRESS: 'in_progress'>: False,
       <UpdateEntityStateAttribute.INSTALLED_VERSION: 'installed_version'>: '1.6.1',
       <UpdateEntityStateAttribute.LATEST_VERSION: 'latest_version'>: '1.6.1',
       <UpdateEntityStateAttribute.RELEASE_SUMMARY: 'release_summary'>: None,
       <UpdateEntityStateAttribute.RELEASE_URL: 'release_url'>: 'https://shelly-api-docs.shelly.cloud/gen2/changelog/',
       <UpdateEntityStateAttribute.SKIPPED_VERSION: 'skipped_version'>: None,
-      'supported_features': <UpdateEntityFeature: 5>,
+      <EntityStateAttribute.SUPPORTED_FEATURES: 'supported_features'>: <UpdateEntityFeature: 5>,
       <UpdateEntityStateAttribute.TITLE: 'title'>: None,
       <UpdateEntityStateAttribute.UPDATE_PERCENTAGE: 'update_percentage'>: None,
     }),
@@ -7664,8 +7664,8 @@
 # name: test_shelly_2pm_gen3_no_relay_names[binary_sensor.test_name_cloud-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'device_class': 'connectivity',
-      'friendly_name': 'Test name Cloud',
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'connectivity',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Test name Cloud',
     }),
     'context': <ANY>,
     'entity_id': 'binary_sensor.test_name_cloud',
@@ -7715,8 +7715,8 @@
 # name: test_shelly_2pm_gen3_no_relay_names[binary_sensor.test_name_input_0-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'device_class': 'power',
-      'friendly_name': 'Test name Input 0',
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'power',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Test name Input 0',
     }),
     'context': <ANY>,
     'entity_id': 'binary_sensor.test_name_input_0',
@@ -7766,8 +7766,8 @@
 # name: test_shelly_2pm_gen3_no_relay_names[binary_sensor.test_name_input_1-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'device_class': 'power',
-      'friendly_name': 'Test name Input 1',
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'power',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Test name Input 1',
     }),
     'context': <ANY>,
     'entity_id': 'binary_sensor.test_name_input_1',
@@ -7817,8 +7817,8 @@
 # name: test_shelly_2pm_gen3_no_relay_names[binary_sensor.test_name_output_0_overcurrent-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'device_class': 'problem',
-      'friendly_name': 'Test name Output 0 Overcurrent',
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'problem',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Test name Output 0 Overcurrent',
     }),
     'context': <ANY>,
     'entity_id': 'binary_sensor.test_name_output_0_overcurrent',
@@ -7868,8 +7868,8 @@
 # name: test_shelly_2pm_gen3_no_relay_names[binary_sensor.test_name_output_0_overheating-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'device_class': 'problem',
-      'friendly_name': 'Test name Output 0 Overheating',
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'problem',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Test name Output 0 Overheating',
     }),
     'context': <ANY>,
     'entity_id': 'binary_sensor.test_name_output_0_overheating',
@@ -7919,8 +7919,8 @@
 # name: test_shelly_2pm_gen3_no_relay_names[binary_sensor.test_name_output_0_overpowering-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'device_class': 'problem',
-      'friendly_name': 'Test name Output 0 Overpowering',
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'problem',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Test name Output 0 Overpowering',
     }),
     'context': <ANY>,
     'entity_id': 'binary_sensor.test_name_output_0_overpowering',
@@ -7970,8 +7970,8 @@
 # name: test_shelly_2pm_gen3_no_relay_names[binary_sensor.test_name_output_0_overvoltage-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'device_class': 'problem',
-      'friendly_name': 'Test name Output 0 Overvoltage',
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'problem',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Test name Output 0 Overvoltage',
     }),
     'context': <ANY>,
     'entity_id': 'binary_sensor.test_name_output_0_overvoltage',
@@ -8021,8 +8021,8 @@
 # name: test_shelly_2pm_gen3_no_relay_names[binary_sensor.test_name_output_1_overcurrent-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'device_class': 'problem',
-      'friendly_name': 'Test name Output 1 Overcurrent',
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'problem',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Test name Output 1 Overcurrent',
     }),
     'context': <ANY>,
     'entity_id': 'binary_sensor.test_name_output_1_overcurrent',
@@ -8072,8 +8072,8 @@
 # name: test_shelly_2pm_gen3_no_relay_names[binary_sensor.test_name_output_1_overheating-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'device_class': 'problem',
-      'friendly_name': 'Test name Output 1 Overheating',
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'problem',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Test name Output 1 Overheating',
     }),
     'context': <ANY>,
     'entity_id': 'binary_sensor.test_name_output_1_overheating',
@@ -8123,8 +8123,8 @@
 # name: test_shelly_2pm_gen3_no_relay_names[binary_sensor.test_name_output_1_overpowering-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'device_class': 'problem',
-      'friendly_name': 'Test name Output 1 Overpowering',
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'problem',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Test name Output 1 Overpowering',
     }),
     'context': <ANY>,
     'entity_id': 'binary_sensor.test_name_output_1_overpowering',
@@ -8174,8 +8174,8 @@
 # name: test_shelly_2pm_gen3_no_relay_names[binary_sensor.test_name_output_1_overvoltage-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'device_class': 'problem',
-      'friendly_name': 'Test name Output 1 Overvoltage',
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'problem',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Test name Output 1 Overvoltage',
     }),
     'context': <ANY>,
     'entity_id': 'binary_sensor.test_name_output_1_overvoltage',
@@ -8225,8 +8225,8 @@
 # name: test_shelly_2pm_gen3_no_relay_names[binary_sensor.test_name_restart_required-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'device_class': 'problem',
-      'friendly_name': 'Test name Restart required',
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'problem',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Test name Restart required',
     }),
     'context': <ANY>,
     'entity_id': 'binary_sensor.test_name_restart_required',
@@ -8276,8 +8276,8 @@
 # name: test_shelly_2pm_gen3_no_relay_names[button.test_name_restart-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'device_class': 'restart',
-      'friendly_name': 'Test name Restart',
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'restart',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Test name Restart',
     }),
     'context': <ANY>,
     'entity_id': 'button.test_name_restart',
@@ -8332,10 +8332,10 @@
 # name: test_shelly_2pm_gen3_no_relay_names[sensor.test_name_output_0_current-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'device_class': 'current',
-      'friendly_name': 'Test name Output 0 Current',
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'current',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Test name Output 0 Current',
       <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
-      'unit_of_measurement': <UnitOfElectricCurrent.AMPERE: 'A'>,
+      <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: <UnitOfElectricCurrent.AMPERE: 'A'>,
     }),
     'context': <ANY>,
     'entity_id': 'sensor.test_name_output_0_current',
@@ -8393,10 +8393,10 @@
 # name: test_shelly_2pm_gen3_no_relay_names[sensor.test_name_output_0_energy-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'device_class': 'energy',
-      'friendly_name': 'Test name Output 0 Energy',
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'energy',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Test name Output 0 Energy',
       <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
-      'unit_of_measurement': <UnitOfEnergy.KILO_WATT_HOUR: 'kWh'>,
+      <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: <UnitOfEnergy.KILO_WATT_HOUR: 'kWh'>,
     }),
     'context': <ANY>,
     'entity_id': 'sensor.test_name_output_0_energy',
@@ -8454,10 +8454,10 @@
 # name: test_shelly_2pm_gen3_no_relay_names[sensor.test_name_output_0_energy_consumed-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'device_class': 'energy',
-      'friendly_name': 'Test name Output 0 Energy consumed',
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'energy',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Test name Output 0 Energy consumed',
       <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
-      'unit_of_measurement': <UnitOfEnergy.KILO_WATT_HOUR: 'kWh'>,
+      <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: <UnitOfEnergy.KILO_WATT_HOUR: 'kWh'>,
     }),
     'context': <ANY>,
     'entity_id': 'sensor.test_name_output_0_energy_consumed',
@@ -8515,10 +8515,10 @@
 # name: test_shelly_2pm_gen3_no_relay_names[sensor.test_name_output_0_energy_returned-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'device_class': 'energy',
-      'friendly_name': 'Test name Output 0 Energy returned',
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'energy',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Test name Output 0 Energy returned',
       <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
-      'unit_of_measurement': <UnitOfEnergy.KILO_WATT_HOUR: 'kWh'>,
+      <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: <UnitOfEnergy.KILO_WATT_HOUR: 'kWh'>,
     }),
     'context': <ANY>,
     'entity_id': 'sensor.test_name_output_0_energy_returned',
@@ -8573,10 +8573,10 @@
 # name: test_shelly_2pm_gen3_no_relay_names[sensor.test_name_output_0_frequency-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'device_class': 'frequency',
-      'friendly_name': 'Test name Output 0 Frequency',
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'frequency',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Test name Output 0 Frequency',
       <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
-      'unit_of_measurement': <UnitOfFrequency.HERTZ: 'Hz'>,
+      <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: <UnitOfFrequency.HERTZ: 'Hz'>,
     }),
     'context': <ANY>,
     'entity_id': 'sensor.test_name_output_0_frequency',
@@ -8631,10 +8631,10 @@
 # name: test_shelly_2pm_gen3_no_relay_names[sensor.test_name_output_0_power-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'device_class': 'power',
-      'friendly_name': 'Test name Output 0 Power',
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'power',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Test name Output 0 Power',
       <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
-      'unit_of_measurement': <UnitOfPower.WATT: 'W'>,
+      <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: <UnitOfPower.WATT: 'W'>,
     }),
     'context': <ANY>,
     'entity_id': 'sensor.test_name_output_0_power',
@@ -8689,10 +8689,10 @@
 # name: test_shelly_2pm_gen3_no_relay_names[sensor.test_name_output_0_temperature-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'device_class': 'temperature',
-      'friendly_name': 'Test name Output 0 Temperature',
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'temperature',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Test name Output 0 Temperature',
       <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
-      'unit_of_measurement': <UnitOfTemperature.CELSIUS: '°C'>,
+      <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: <UnitOfTemperature.CELSIUS: '°C'>,
     }),
     'context': <ANY>,
     'entity_id': 'sensor.test_name_output_0_temperature',
@@ -8747,10 +8747,10 @@
 # name: test_shelly_2pm_gen3_no_relay_names[sensor.test_name_output_0_voltage-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'device_class': 'voltage',
-      'friendly_name': 'Test name Output 0 Voltage',
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'voltage',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Test name Output 0 Voltage',
       <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
-      'unit_of_measurement': <UnitOfElectricPotential.VOLT: 'V'>,
+      <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: <UnitOfElectricPotential.VOLT: 'V'>,
     }),
     'context': <ANY>,
     'entity_id': 'sensor.test_name_output_0_voltage',
@@ -8805,10 +8805,10 @@
 # name: test_shelly_2pm_gen3_no_relay_names[sensor.test_name_output_1_current-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'device_class': 'current',
-      'friendly_name': 'Test name Output 1 Current',
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'current',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Test name Output 1 Current',
       <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
-      'unit_of_measurement': <UnitOfElectricCurrent.AMPERE: 'A'>,
+      <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: <UnitOfElectricCurrent.AMPERE: 'A'>,
     }),
     'context': <ANY>,
     'entity_id': 'sensor.test_name_output_1_current',
@@ -8866,10 +8866,10 @@
 # name: test_shelly_2pm_gen3_no_relay_names[sensor.test_name_output_1_energy-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'device_class': 'energy',
-      'friendly_name': 'Test name Output 1 Energy',
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'energy',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Test name Output 1 Energy',
       <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
-      'unit_of_measurement': <UnitOfEnergy.KILO_WATT_HOUR: 'kWh'>,
+      <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: <UnitOfEnergy.KILO_WATT_HOUR: 'kWh'>,
     }),
     'context': <ANY>,
     'entity_id': 'sensor.test_name_output_1_energy',
@@ -8927,10 +8927,10 @@
 # name: test_shelly_2pm_gen3_no_relay_names[sensor.test_name_output_1_energy_consumed-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'device_class': 'energy',
-      'friendly_name': 'Test name Output 1 Energy consumed',
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'energy',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Test name Output 1 Energy consumed',
       <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
-      'unit_of_measurement': <UnitOfEnergy.KILO_WATT_HOUR: 'kWh'>,
+      <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: <UnitOfEnergy.KILO_WATT_HOUR: 'kWh'>,
     }),
     'context': <ANY>,
     'entity_id': 'sensor.test_name_output_1_energy_consumed',
@@ -8988,10 +8988,10 @@
 # name: test_shelly_2pm_gen3_no_relay_names[sensor.test_name_output_1_energy_returned-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'device_class': 'energy',
-      'friendly_name': 'Test name Output 1 Energy returned',
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'energy',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Test name Output 1 Energy returned',
       <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
-      'unit_of_measurement': <UnitOfEnergy.KILO_WATT_HOUR: 'kWh'>,
+      <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: <UnitOfEnergy.KILO_WATT_HOUR: 'kWh'>,
     }),
     'context': <ANY>,
     'entity_id': 'sensor.test_name_output_1_energy_returned',
@@ -9046,10 +9046,10 @@
 # name: test_shelly_2pm_gen3_no_relay_names[sensor.test_name_output_1_frequency-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'device_class': 'frequency',
-      'friendly_name': 'Test name Output 1 Frequency',
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'frequency',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Test name Output 1 Frequency',
       <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
-      'unit_of_measurement': <UnitOfFrequency.HERTZ: 'Hz'>,
+      <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: <UnitOfFrequency.HERTZ: 'Hz'>,
     }),
     'context': <ANY>,
     'entity_id': 'sensor.test_name_output_1_frequency',
@@ -9104,10 +9104,10 @@
 # name: test_shelly_2pm_gen3_no_relay_names[sensor.test_name_output_1_power-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'device_class': 'power',
-      'friendly_name': 'Test name Output 1 Power',
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'power',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Test name Output 1 Power',
       <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
-      'unit_of_measurement': <UnitOfPower.WATT: 'W'>,
+      <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: <UnitOfPower.WATT: 'W'>,
     }),
     'context': <ANY>,
     'entity_id': 'sensor.test_name_output_1_power',
@@ -9162,10 +9162,10 @@
 # name: test_shelly_2pm_gen3_no_relay_names[sensor.test_name_output_1_temperature-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'device_class': 'temperature',
-      'friendly_name': 'Test name Output 1 Temperature',
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'temperature',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Test name Output 1 Temperature',
       <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
-      'unit_of_measurement': <UnitOfTemperature.CELSIUS: '°C'>,
+      <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: <UnitOfTemperature.CELSIUS: '°C'>,
     }),
     'context': <ANY>,
     'entity_id': 'sensor.test_name_output_1_temperature',
@@ -9220,10 +9220,10 @@
 # name: test_shelly_2pm_gen3_no_relay_names[sensor.test_name_output_1_voltage-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'device_class': 'voltage',
-      'friendly_name': 'Test name Output 1 Voltage',
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'voltage',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Test name Output 1 Voltage',
       <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
-      'unit_of_measurement': <UnitOfElectricPotential.VOLT: 'V'>,
+      <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: <UnitOfElectricPotential.VOLT: 'V'>,
     }),
     'context': <ANY>,
     'entity_id': 'sensor.test_name_output_1_voltage',
@@ -9275,10 +9275,10 @@
 # name: test_shelly_2pm_gen3_no_relay_names[sensor.test_name_signal_strength-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'device_class': 'signal_strength',
-      'friendly_name': 'Test name Signal strength',
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'signal_strength',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Test name Signal strength',
       <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
-      'unit_of_measurement': 'dBm',
+      <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: 'dBm',
     }),
     'context': <ANY>,
     'entity_id': 'sensor.test_name_signal_strength',
@@ -9328,8 +9328,8 @@
 # name: test_shelly_2pm_gen3_no_relay_names[sensor.test_name_uptime-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'device_class': 'uptime',
-      'friendly_name': 'Test name Uptime',
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'uptime',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Test name Uptime',
     }),
     'context': <ANY>,
     'entity_id': 'sensor.test_name_uptime',
@@ -9379,7 +9379,7 @@
 # name: test_shelly_2pm_gen3_no_relay_names[switch.test_name_output_0-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'Test name Output 0',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Test name Output 0',
     }),
     'context': <ANY>,
     'entity_id': 'switch.test_name_output_0',
@@ -9429,7 +9429,7 @@
 # name: test_shelly_2pm_gen3_no_relay_names[switch.test_name_output_1-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'Test name Output 1',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Test name Output 1',
     }),
     'context': <ANY>,
     'entity_id': 'switch.test_name_output_1',
@@ -9480,17 +9480,17 @@
   StateSnapshot({
     'attributes': ReadOnlyDict({
       <UpdateEntityStateAttribute.AUTO_UPDATE: 'auto_update'>: False,
-      'device_class': 'firmware',
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'firmware',
       <UpdateEntityStateAttribute.DISPLAY_PRECISION: 'display_precision'>: 0,
-      'entity_picture': '/api/brands/integration/shelly/icon.png',
-      'friendly_name': 'Test name Beta firmware',
+      <EntityStateAttribute.ENTITY_PICTURE: 'entity_picture'>: '/api/brands/integration/shelly/icon.png',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Test name Beta firmware',
       <UpdateEntityStateAttribute.IN_PROGRESS: 'in_progress'>: False,
       <UpdateEntityStateAttribute.INSTALLED_VERSION: 'installed_version'>: '1.6.1',
       <UpdateEntityStateAttribute.LATEST_VERSION: 'latest_version'>: '1.6.1',
       <UpdateEntityStateAttribute.RELEASE_SUMMARY: 'release_summary'>: None,
       <UpdateEntityStateAttribute.RELEASE_URL: 'release_url'>: 'https://shelly-api-docs.shelly.cloud/gen2/changelog/#unreleased',
       <UpdateEntityStateAttribute.SKIPPED_VERSION: 'skipped_version'>: None,
-      'supported_features': <UpdateEntityFeature: 5>,
+      <EntityStateAttribute.SUPPORTED_FEATURES: 'supported_features'>: <UpdateEntityFeature: 5>,
       <UpdateEntityStateAttribute.TITLE: 'title'>: None,
       <UpdateEntityStateAttribute.UPDATE_PERCENTAGE: 'update_percentage'>: None,
     }),
@@ -9543,17 +9543,17 @@
   StateSnapshot({
     'attributes': ReadOnlyDict({
       <UpdateEntityStateAttribute.AUTO_UPDATE: 'auto_update'>: False,
-      'device_class': 'firmware',
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'firmware',
       <UpdateEntityStateAttribute.DISPLAY_PRECISION: 'display_precision'>: 0,
-      'entity_picture': '/api/brands/integration/shelly/icon.png',
-      'friendly_name': 'Test name Firmware',
+      <EntityStateAttribute.ENTITY_PICTURE: 'entity_picture'>: '/api/brands/integration/shelly/icon.png',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Test name Firmware',
       <UpdateEntityStateAttribute.IN_PROGRESS: 'in_progress'>: False,
       <UpdateEntityStateAttribute.INSTALLED_VERSION: 'installed_version'>: '1.6.1',
       <UpdateEntityStateAttribute.LATEST_VERSION: 'latest_version'>: '1.6.1',
       <UpdateEntityStateAttribute.RELEASE_SUMMARY: 'release_summary'>: None,
       <UpdateEntityStateAttribute.RELEASE_URL: 'release_url'>: 'https://shelly-api-docs.shelly.cloud/gen2/changelog/',
       <UpdateEntityStateAttribute.SKIPPED_VERSION: 'skipped_version'>: None,
-      'supported_features': <UpdateEntityFeature: 5>,
+      <EntityStateAttribute.SUPPORTED_FEATURES: 'supported_features'>: <UpdateEntityFeature: 5>,
       <UpdateEntityStateAttribute.TITLE: 'title'>: None,
       <UpdateEntityStateAttribute.UPDATE_PERCENTAGE: 'update_percentage'>: None,
     }),
@@ -9605,8 +9605,8 @@
 # name: test_shelly_pro_3em[binary_sensor.test_name_cloud-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'device_class': 'connectivity',
-      'friendly_name': 'Test name Cloud',
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'connectivity',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Test name Cloud',
     }),
     'context': <ANY>,
     'entity_id': 'binary_sensor.test_name_cloud',
@@ -9656,8 +9656,8 @@
 # name: test_shelly_pro_3em[binary_sensor.test_name_restart_required-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'device_class': 'problem',
-      'friendly_name': 'Test name Restart required',
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'problem',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Test name Restart required',
     }),
     'context': <ANY>,
     'entity_id': 'binary_sensor.test_name_restart_required',
@@ -9707,8 +9707,8 @@
 # name: test_shelly_pro_3em[button.test_name_restart-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'device_class': 'restart',
-      'friendly_name': 'Test name Restart',
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'restart',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Test name Restart',
     }),
     'context': <ANY>,
     'entity_id': 'button.test_name_restart',
@@ -9763,10 +9763,10 @@
 # name: test_shelly_pro_3em[sensor.test_name_apparent_power-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'device_class': 'apparent_power',
-      'friendly_name': 'Test name Apparent power',
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'apparent_power',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Test name Apparent power',
       <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
-      'unit_of_measurement': <UnitOfApparentPower.VOLT_AMPERE: 'VA'>,
+      <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: <UnitOfApparentPower.VOLT_AMPERE: 'VA'>,
     }),
     'context': <ANY>,
     'entity_id': 'sensor.test_name_apparent_power',
@@ -9821,10 +9821,10 @@
 # name: test_shelly_pro_3em[sensor.test_name_current-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'device_class': 'current',
-      'friendly_name': 'Test name Current',
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'current',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Test name Current',
       <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
-      'unit_of_measurement': <UnitOfElectricCurrent.AMPERE: 'A'>,
+      <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: <UnitOfElectricCurrent.AMPERE: 'A'>,
     }),
     'context': <ANY>,
     'entity_id': 'sensor.test_name_current',
@@ -9882,10 +9882,10 @@
 # name: test_shelly_pro_3em[sensor.test_name_energy-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'device_class': 'energy',
-      'friendly_name': 'Test name Energy',
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'energy',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Test name Energy',
       <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
-      'unit_of_measurement': <UnitOfEnergy.KILO_WATT_HOUR: 'kWh'>,
+      <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: <UnitOfEnergy.KILO_WATT_HOUR: 'kWh'>,
     }),
     'context': <ANY>,
     'entity_id': 'sensor.test_name_energy',
@@ -9943,10 +9943,10 @@
 # name: test_shelly_pro_3em[sensor.test_name_energy_returned-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'device_class': 'energy',
-      'friendly_name': 'Test name Energy returned',
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'energy',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Test name Energy returned',
       <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
-      'unit_of_measurement': <UnitOfEnergy.KILO_WATT_HOUR: 'kWh'>,
+      <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: <UnitOfEnergy.KILO_WATT_HOUR: 'kWh'>,
     }),
     'context': <ANY>,
     'entity_id': 'sensor.test_name_energy_returned',
@@ -10001,10 +10001,10 @@
 # name: test_shelly_pro_3em[sensor.test_name_neutral_current-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'device_class': 'current',
-      'friendly_name': 'Test name Neutral current',
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'current',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Test name Neutral current',
       <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
-      'unit_of_measurement': <UnitOfElectricCurrent.AMPERE: 'A'>,
+      <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: <UnitOfElectricCurrent.AMPERE: 'A'>,
     }),
     'context': <ANY>,
     'entity_id': 'sensor.test_name_neutral_current',
@@ -10059,10 +10059,10 @@
 # name: test_shelly_pro_3em[sensor.test_name_phase_a_apparent_power-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'device_class': 'apparent_power',
-      'friendly_name': 'Test name Phase A Apparent power',
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'apparent_power',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Test name Phase A Apparent power',
       <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
-      'unit_of_measurement': <UnitOfApparentPower.VOLT_AMPERE: 'VA'>,
+      <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: <UnitOfApparentPower.VOLT_AMPERE: 'VA'>,
     }),
     'context': <ANY>,
     'entity_id': 'sensor.test_name_phase_a_apparent_power',
@@ -10117,10 +10117,10 @@
 # name: test_shelly_pro_3em[sensor.test_name_phase_a_current-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'device_class': 'current',
-      'friendly_name': 'Test name Phase A Current',
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'current',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Test name Phase A Current',
       <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
-      'unit_of_measurement': <UnitOfElectricCurrent.AMPERE: 'A'>,
+      <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: <UnitOfElectricCurrent.AMPERE: 'A'>,
     }),
     'context': <ANY>,
     'entity_id': 'sensor.test_name_phase_a_current',
@@ -10178,10 +10178,10 @@
 # name: test_shelly_pro_3em[sensor.test_name_phase_a_energy-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'device_class': 'energy',
-      'friendly_name': 'Test name Phase A Energy',
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'energy',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Test name Phase A Energy',
       <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
-      'unit_of_measurement': <UnitOfEnergy.KILO_WATT_HOUR: 'kWh'>,
+      <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: <UnitOfEnergy.KILO_WATT_HOUR: 'kWh'>,
     }),
     'context': <ANY>,
     'entity_id': 'sensor.test_name_phase_a_energy',
@@ -10239,10 +10239,10 @@
 # name: test_shelly_pro_3em[sensor.test_name_phase_a_energy_returned-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'device_class': 'energy',
-      'friendly_name': 'Test name Phase A Energy returned',
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'energy',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Test name Phase A Energy returned',
       <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
-      'unit_of_measurement': <UnitOfEnergy.KILO_WATT_HOUR: 'kWh'>,
+      <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: <UnitOfEnergy.KILO_WATT_HOUR: 'kWh'>,
     }),
     'context': <ANY>,
     'entity_id': 'sensor.test_name_phase_a_energy_returned',
@@ -10297,10 +10297,10 @@
 # name: test_shelly_pro_3em[sensor.test_name_phase_a_frequency-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'device_class': 'frequency',
-      'friendly_name': 'Test name Phase A Frequency',
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'frequency',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Test name Phase A Frequency',
       <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
-      'unit_of_measurement': <UnitOfFrequency.HERTZ: 'Hz'>,
+      <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: <UnitOfFrequency.HERTZ: 'Hz'>,
     }),
     'context': <ANY>,
     'entity_id': 'sensor.test_name_phase_a_frequency',
@@ -10355,10 +10355,10 @@
 # name: test_shelly_pro_3em[sensor.test_name_phase_a_power-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'device_class': 'power',
-      'friendly_name': 'Test name Phase A Power',
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'power',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Test name Phase A Power',
       <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
-      'unit_of_measurement': <UnitOfPower.WATT: 'W'>,
+      <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: <UnitOfPower.WATT: 'W'>,
     }),
     'context': <ANY>,
     'entity_id': 'sensor.test_name_phase_a_power',
@@ -10410,8 +10410,8 @@
 # name: test_shelly_pro_3em[sensor.test_name_phase_a_power_factor-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'device_class': 'power_factor',
-      'friendly_name': 'Test name Phase A Power factor',
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'power_factor',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Test name Phase A Power factor',
       <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
     'context': <ANY>,
@@ -10467,10 +10467,10 @@
 # name: test_shelly_pro_3em[sensor.test_name_phase_a_voltage-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'device_class': 'voltage',
-      'friendly_name': 'Test name Phase A Voltage',
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'voltage',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Test name Phase A Voltage',
       <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
-      'unit_of_measurement': <UnitOfElectricPotential.VOLT: 'V'>,
+      <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: <UnitOfElectricPotential.VOLT: 'V'>,
     }),
     'context': <ANY>,
     'entity_id': 'sensor.test_name_phase_a_voltage',
@@ -10525,10 +10525,10 @@
 # name: test_shelly_pro_3em[sensor.test_name_phase_b_apparent_power-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'device_class': 'apparent_power',
-      'friendly_name': 'Test name Phase B Apparent power',
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'apparent_power',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Test name Phase B Apparent power',
       <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
-      'unit_of_measurement': <UnitOfApparentPower.VOLT_AMPERE: 'VA'>,
+      <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: <UnitOfApparentPower.VOLT_AMPERE: 'VA'>,
     }),
     'context': <ANY>,
     'entity_id': 'sensor.test_name_phase_b_apparent_power',
@@ -10583,10 +10583,10 @@
 # name: test_shelly_pro_3em[sensor.test_name_phase_b_current-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'device_class': 'current',
-      'friendly_name': 'Test name Phase B Current',
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'current',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Test name Phase B Current',
       <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
-      'unit_of_measurement': <UnitOfElectricCurrent.AMPERE: 'A'>,
+      <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: <UnitOfElectricCurrent.AMPERE: 'A'>,
     }),
     'context': <ANY>,
     'entity_id': 'sensor.test_name_phase_b_current',
@@ -10644,10 +10644,10 @@
 # name: test_shelly_pro_3em[sensor.test_name_phase_b_energy-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'device_class': 'energy',
-      'friendly_name': 'Test name Phase B Energy',
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'energy',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Test name Phase B Energy',
       <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
-      'unit_of_measurement': <UnitOfEnergy.KILO_WATT_HOUR: 'kWh'>,
+      <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: <UnitOfEnergy.KILO_WATT_HOUR: 'kWh'>,
     }),
     'context': <ANY>,
     'entity_id': 'sensor.test_name_phase_b_energy',
@@ -10705,10 +10705,10 @@
 # name: test_shelly_pro_3em[sensor.test_name_phase_b_energy_returned-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'device_class': 'energy',
-      'friendly_name': 'Test name Phase B Energy returned',
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'energy',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Test name Phase B Energy returned',
       <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
-      'unit_of_measurement': <UnitOfEnergy.KILO_WATT_HOUR: 'kWh'>,
+      <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: <UnitOfEnergy.KILO_WATT_HOUR: 'kWh'>,
     }),
     'context': <ANY>,
     'entity_id': 'sensor.test_name_phase_b_energy_returned',
@@ -10763,10 +10763,10 @@
 # name: test_shelly_pro_3em[sensor.test_name_phase_b_frequency-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'device_class': 'frequency',
-      'friendly_name': 'Test name Phase B Frequency',
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'frequency',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Test name Phase B Frequency',
       <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
-      'unit_of_measurement': <UnitOfFrequency.HERTZ: 'Hz'>,
+      <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: <UnitOfFrequency.HERTZ: 'Hz'>,
     }),
     'context': <ANY>,
     'entity_id': 'sensor.test_name_phase_b_frequency',
@@ -10821,10 +10821,10 @@
 # name: test_shelly_pro_3em[sensor.test_name_phase_b_power-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'device_class': 'power',
-      'friendly_name': 'Test name Phase B Power',
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'power',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Test name Phase B Power',
       <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
-      'unit_of_measurement': <UnitOfPower.WATT: 'W'>,
+      <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: <UnitOfPower.WATT: 'W'>,
     }),
     'context': <ANY>,
     'entity_id': 'sensor.test_name_phase_b_power',
@@ -10876,8 +10876,8 @@
 # name: test_shelly_pro_3em[sensor.test_name_phase_b_power_factor-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'device_class': 'power_factor',
-      'friendly_name': 'Test name Phase B Power factor',
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'power_factor',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Test name Phase B Power factor',
       <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
     'context': <ANY>,
@@ -10933,10 +10933,10 @@
 # name: test_shelly_pro_3em[sensor.test_name_phase_b_voltage-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'device_class': 'voltage',
-      'friendly_name': 'Test name Phase B Voltage',
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'voltage',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Test name Phase B Voltage',
       <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
-      'unit_of_measurement': <UnitOfElectricPotential.VOLT: 'V'>,
+      <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: <UnitOfElectricPotential.VOLT: 'V'>,
     }),
     'context': <ANY>,
     'entity_id': 'sensor.test_name_phase_b_voltage',
@@ -10991,10 +10991,10 @@
 # name: test_shelly_pro_3em[sensor.test_name_phase_c_apparent_power-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'device_class': 'apparent_power',
-      'friendly_name': 'Test name Phase C Apparent power',
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'apparent_power',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Test name Phase C Apparent power',
       <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
-      'unit_of_measurement': <UnitOfApparentPower.VOLT_AMPERE: 'VA'>,
+      <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: <UnitOfApparentPower.VOLT_AMPERE: 'VA'>,
     }),
     'context': <ANY>,
     'entity_id': 'sensor.test_name_phase_c_apparent_power',
@@ -11049,10 +11049,10 @@
 # name: test_shelly_pro_3em[sensor.test_name_phase_c_current-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'device_class': 'current',
-      'friendly_name': 'Test name Phase C Current',
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'current',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Test name Phase C Current',
       <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
-      'unit_of_measurement': <UnitOfElectricCurrent.AMPERE: 'A'>,
+      <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: <UnitOfElectricCurrent.AMPERE: 'A'>,
     }),
     'context': <ANY>,
     'entity_id': 'sensor.test_name_phase_c_current',
@@ -11110,10 +11110,10 @@
 # name: test_shelly_pro_3em[sensor.test_name_phase_c_energy-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'device_class': 'energy',
-      'friendly_name': 'Test name Phase C Energy',
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'energy',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Test name Phase C Energy',
       <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
-      'unit_of_measurement': <UnitOfEnergy.KILO_WATT_HOUR: 'kWh'>,
+      <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: <UnitOfEnergy.KILO_WATT_HOUR: 'kWh'>,
     }),
     'context': <ANY>,
     'entity_id': 'sensor.test_name_phase_c_energy',
@@ -11171,10 +11171,10 @@
 # name: test_shelly_pro_3em[sensor.test_name_phase_c_energy_returned-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'device_class': 'energy',
-      'friendly_name': 'Test name Phase C Energy returned',
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'energy',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Test name Phase C Energy returned',
       <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
-      'unit_of_measurement': <UnitOfEnergy.KILO_WATT_HOUR: 'kWh'>,
+      <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: <UnitOfEnergy.KILO_WATT_HOUR: 'kWh'>,
     }),
     'context': <ANY>,
     'entity_id': 'sensor.test_name_phase_c_energy_returned',
@@ -11229,10 +11229,10 @@
 # name: test_shelly_pro_3em[sensor.test_name_phase_c_frequency-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'device_class': 'frequency',
-      'friendly_name': 'Test name Phase C Frequency',
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'frequency',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Test name Phase C Frequency',
       <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
-      'unit_of_measurement': <UnitOfFrequency.HERTZ: 'Hz'>,
+      <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: <UnitOfFrequency.HERTZ: 'Hz'>,
     }),
     'context': <ANY>,
     'entity_id': 'sensor.test_name_phase_c_frequency',
@@ -11287,10 +11287,10 @@
 # name: test_shelly_pro_3em[sensor.test_name_phase_c_power-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'device_class': 'power',
-      'friendly_name': 'Test name Phase C Power',
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'power',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Test name Phase C Power',
       <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
-      'unit_of_measurement': <UnitOfPower.WATT: 'W'>,
+      <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: <UnitOfPower.WATT: 'W'>,
     }),
     'context': <ANY>,
     'entity_id': 'sensor.test_name_phase_c_power',
@@ -11342,8 +11342,8 @@
 # name: test_shelly_pro_3em[sensor.test_name_phase_c_power_factor-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'device_class': 'power_factor',
-      'friendly_name': 'Test name Phase C Power factor',
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'power_factor',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Test name Phase C Power factor',
       <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
     'context': <ANY>,
@@ -11399,10 +11399,10 @@
 # name: test_shelly_pro_3em[sensor.test_name_phase_c_voltage-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'device_class': 'voltage',
-      'friendly_name': 'Test name Phase C Voltage',
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'voltage',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Test name Phase C Voltage',
       <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
-      'unit_of_measurement': <UnitOfElectricPotential.VOLT: 'V'>,
+      <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: <UnitOfElectricPotential.VOLT: 'V'>,
     }),
     'context': <ANY>,
     'entity_id': 'sensor.test_name_phase_c_voltage',
@@ -11457,10 +11457,10 @@
 # name: test_shelly_pro_3em[sensor.test_name_power-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'device_class': 'power',
-      'friendly_name': 'Test name Power',
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'power',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Test name Power',
       <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
-      'unit_of_measurement': <UnitOfPower.WATT: 'W'>,
+      <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: <UnitOfPower.WATT: 'W'>,
     }),
     'context': <ANY>,
     'entity_id': 'sensor.test_name_power',
@@ -11512,10 +11512,10 @@
 # name: test_shelly_pro_3em[sensor.test_name_signal_strength-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'device_class': 'signal_strength',
-      'friendly_name': 'Test name Signal strength',
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'signal_strength',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Test name Signal strength',
       <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
-      'unit_of_measurement': 'dBm',
+      <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: 'dBm',
     }),
     'context': <ANY>,
     'entity_id': 'sensor.test_name_signal_strength',
@@ -11570,10 +11570,10 @@
 # name: test_shelly_pro_3em[sensor.test_name_temperature-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'device_class': 'temperature',
-      'friendly_name': 'Test name Temperature',
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'temperature',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Test name Temperature',
       <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
-      'unit_of_measurement': <UnitOfTemperature.CELSIUS: '°C'>,
+      <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: <UnitOfTemperature.CELSIUS: '°C'>,
     }),
     'context': <ANY>,
     'entity_id': 'sensor.test_name_temperature',
@@ -11623,8 +11623,8 @@
 # name: test_shelly_pro_3em[sensor.test_name_uptime-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'device_class': 'uptime',
-      'friendly_name': 'Test name Uptime',
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'uptime',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Test name Uptime',
     }),
     'context': <ANY>,
     'entity_id': 'sensor.test_name_uptime',
@@ -11675,17 +11675,17 @@
   StateSnapshot({
     'attributes': ReadOnlyDict({
       <UpdateEntityStateAttribute.AUTO_UPDATE: 'auto_update'>: False,
-      'device_class': 'firmware',
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'firmware',
       <UpdateEntityStateAttribute.DISPLAY_PRECISION: 'display_precision'>: 0,
-      'entity_picture': '/api/brands/integration/shelly/icon.png',
-      'friendly_name': 'Test name Beta firmware',
+      <EntityStateAttribute.ENTITY_PICTURE: 'entity_picture'>: '/api/brands/integration/shelly/icon.png',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Test name Beta firmware',
       <UpdateEntityStateAttribute.IN_PROGRESS: 'in_progress'>: False,
       <UpdateEntityStateAttribute.INSTALLED_VERSION: 'installed_version'>: '1.6.1',
       <UpdateEntityStateAttribute.LATEST_VERSION: 'latest_version'>: '1.6.1',
       <UpdateEntityStateAttribute.RELEASE_SUMMARY: 'release_summary'>: None,
       <UpdateEntityStateAttribute.RELEASE_URL: 'release_url'>: 'https://shelly-api-docs.shelly.cloud/gen2/changelog/#unreleased',
       <UpdateEntityStateAttribute.SKIPPED_VERSION: 'skipped_version'>: None,
-      'supported_features': <UpdateEntityFeature: 5>,
+      <EntityStateAttribute.SUPPORTED_FEATURES: 'supported_features'>: <UpdateEntityFeature: 5>,
       <UpdateEntityStateAttribute.TITLE: 'title'>: None,
       <UpdateEntityStateAttribute.UPDATE_PERCENTAGE: 'update_percentage'>: None,
     }),
@@ -11738,17 +11738,17 @@
   StateSnapshot({
     'attributes': ReadOnlyDict({
       <UpdateEntityStateAttribute.AUTO_UPDATE: 'auto_update'>: False,
-      'device_class': 'firmware',
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'firmware',
       <UpdateEntityStateAttribute.DISPLAY_PRECISION: 'display_precision'>: 0,
-      'entity_picture': '/api/brands/integration/shelly/icon.png',
-      'friendly_name': 'Test name Firmware',
+      <EntityStateAttribute.ENTITY_PICTURE: 'entity_picture'>: '/api/brands/integration/shelly/icon.png',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Test name Firmware',
       <UpdateEntityStateAttribute.IN_PROGRESS: 'in_progress'>: False,
       <UpdateEntityStateAttribute.INSTALLED_VERSION: 'installed_version'>: '1.6.1',
       <UpdateEntityStateAttribute.LATEST_VERSION: 'latest_version'>: '1.6.1',
       <UpdateEntityStateAttribute.RELEASE_SUMMARY: 'release_summary'>: None,
       <UpdateEntityStateAttribute.RELEASE_URL: 'release_url'>: 'https://shelly-api-docs.shelly.cloud/gen2/changelog/',
       <UpdateEntityStateAttribute.SKIPPED_VERSION: 'skipped_version'>: None,
-      'supported_features': <UpdateEntityFeature: 5>,
+      <EntityStateAttribute.SUPPORTED_FEATURES: 'supported_features'>: <UpdateEntityFeature: 5>,
       <UpdateEntityStateAttribute.TITLE: 'title'>: None,
       <UpdateEntityStateAttribute.UPDATE_PERCENTAGE: 'update_percentage'>: None,
     }),

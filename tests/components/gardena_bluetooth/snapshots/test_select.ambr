@@ -47,7 +47,7 @@
 # name: test_setup[aqua_contour][select.mock_title_active_position-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'Mock Title Active position',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Mock Title Active position',
       <SelectEntityCapabilityAttribute.OPTIONS: 'options'>: list([
         'position_1',
         'position_2',
@@ -111,7 +111,7 @@
 # name: test_setup[aqua_contour][select.mock_title_operation_mode-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'Mock Title Operation mode',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Mock Title Operation mode',
       <SelectEntityCapabilityAttribute.OPTIONS: 'options'>: list([
         'active',
         'manual_mode',
@@ -178,7 +178,7 @@
 # name: test_setup[aqua_contour][select.mock_title_watering-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'Mock Title Watering',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Mock Title Watering',
       <SelectEntityCapabilityAttribute.OPTIONS: 'options'>: list([
         'preview',
         'setup_mode',
