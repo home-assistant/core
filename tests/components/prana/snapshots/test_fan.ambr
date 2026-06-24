@@ -6,7 +6,7 @@
     ]),
     'area_id': None,
     'capabilities': dict({
-      'preset_modes': list([
+      <FanEntityCapabilityAttribute.PRESET_MODES: 'preset_modes'>: list([
         'night',
         'boost',
       ]),
@@ -45,10 +45,10 @@
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'friendly_name': 'PRANA RECUPERATOR Extract fan',
-      'percentage': 10,
-      'percentage_step': 10.0,
-      'preset_mode': None,
-      'preset_modes': list([
+      <FanEntityStateAttribute.PERCENTAGE: 'percentage'>: 10,
+      <FanEntityStateAttribute.PERCENTAGE_STEP: 'percentage_step'>: 10.0,
+      <FanEntityStateAttribute.PRESET_MODE: 'preset_mode'>: None,
+      <FanEntityCapabilityAttribute.PRESET_MODES: 'preset_modes'>: list([
         'night',
         'boost',
       ]),
@@ -69,7 +69,7 @@
     ]),
     'area_id': None,
     'capabilities': dict({
-      'preset_modes': list([
+      <FanEntityCapabilityAttribute.PRESET_MODES: 'preset_modes'>: list([
         'night',
         'boost',
       ]),
@@ -108,10 +108,10 @@
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'friendly_name': 'PRANA RECUPERATOR Supply fan',
-      'percentage': 10,
-      'percentage_step': 10.0,
-      'preset_mode': None,
-      'preset_modes': list([
+      <FanEntityStateAttribute.PERCENTAGE: 'percentage'>: 10,
+      <FanEntityStateAttribute.PERCENTAGE_STEP: 'percentage_step'>: 10.0,
+      <FanEntityStateAttribute.PRESET_MODE: 'preset_mode'>: None,
+      <FanEntityCapabilityAttribute.PRESET_MODES: 'preset_modes'>: list([
         'night',
         'boost',
       ]),
