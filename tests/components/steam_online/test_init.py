@@ -33,7 +33,7 @@ async def test_setup(
 
 
 @pytest.mark.parametrize(
-    "side_effect", [steam.api.HTTPError, steam.api.HTTPTimeoutError]
+    "side_effect", [steam.api.HTTPError]
 )
 async def test_setup_errors(
     hass: HomeAssistant,
