@@ -2,12 +2,12 @@
 # name: test_static_attributes[dehumidifier]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'current_humidity': 50,
+      <HumidifierEntityStateAttribute.CURRENT_HUMIDITY: 'current_humidity'>: 50,
       'device_class': 'dehumidifier',
       'friendly_name': 'device1 Dehumidifier',
-      'humidity': 30,
-      'max_humidity': 55,
-      'min_humidity': 15,
+      <HumidifierEntityStateAttribute.HUMIDITY: 'humidity'>: 30,
+      <HumidifierEntityCapabilityAttribute.MAX_HUMIDITY: 'max_humidity'>: 55,
+      <HumidifierEntityCapabilityAttribute.MIN_HUMIDITY: 'min_humidity'>: 15,
       'supported_features': <HumidifierEntityFeature: 0>,
     }),
     'context': <ANY>,
@@ -21,12 +21,12 @@
 # name: test_static_attributes[humidifier]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'current_humidity': 50,
+      <HumidifierEntityStateAttribute.CURRENT_HUMIDITY: 'current_humidity'>: 50,
       'device_class': 'humidifier',
       'friendly_name': 'device1 Humidifier',
-      'humidity': 20,
-      'max_humidity': 60,
-      'min_humidity': 10,
+      <HumidifierEntityStateAttribute.HUMIDITY: 'humidity'>: 20,
+      <HumidifierEntityCapabilityAttribute.MAX_HUMIDITY: 'max_humidity'>: 60,
+      <HumidifierEntityCapabilityAttribute.MIN_HUMIDITY: 'min_humidity'>: 10,
       'supported_features': <HumidifierEntityFeature: 0>,
     }),
     'context': <ANY>,
