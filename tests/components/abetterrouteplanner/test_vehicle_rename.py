@@ -8,8 +8,9 @@ and reconciles three fields against the anchor formula: ``name``
 (``vehicle.name or vehicle.vehicle_model``, skipped when the user owns the
 label via ``name_by_user``), plus the integration-owned ``model``
 (``vehicle.device_model or vehicle.vehicle_model``) and ``manufacturer``
-(``vehicle.device_manufacturer or "A Better Routeplanner"``). Each field is
-written only when it differs, so an unchanged poll is a no-op.
+(``vehicle.device_manufacturer``, left unset when the make can't be
+resolved). Each field is written only when it differs, so an unchanged poll
+is a no-op.
 
 Changes are driven entirely through the garage coordinator: each test
 reassigns ``mock_abrp_client.return_value`` (the patched
@@ -373,7 +374,7 @@ async def test_display_recovery_updates_device_model_without_reload(
 
     No config-entry reload is required. Mirrors the real ABRP
     feature-plan-entitlement-lag case: the display endpoint 404s during
-    setup so the device card falls back to the raw typecode (and the default
+    setup so the device card falls back to the raw typecode (and an unset
     manufacturer), then the endpoint recovers on the next poll.
     ``_propagate_device_metadata`` pushes the composed model/manufacturer into
     the registry on that same poll. The user-facing name is unaffected.
@@ -387,9 +388,9 @@ async def test_display_recovery_updates_device_model_without_reload(
     scope = _device_scope(config_entry_with_vehicles, MOCK_VEHICLE_ID)
     device = device_registry.async_get_device(identifiers={(DOMAIN, scope)})
     assert device is not None
-    # Setup hit the 404 → raw-typecode + default-manufacturer fallback.
+    # Setup hit the 404 → raw-typecode + unset manufacturer.
     assert device.model == MOCK_VEHICLE_MODEL
-    assert device.manufacturer == "A Better Routeplanner"
+    assert device.manufacturer is None
 
     # Next poll: display recovers → model/manufacturer propagate in place.
     mock_abrp_client.display_responses[MOCK_VEHICLE_MODEL] = (

@@ -26,7 +26,7 @@ class ComposedDeviceInfo:
     Both fields are ``None`` when no display metadata is available (the
     per-typecode display fetch failed or 404'd for an unknown typecode); the
     device card then falls back to the raw ``vehicle_model`` typecode (Model)
-    and the integration name (Manufacturer) at the setup layer.
+    and leaves Manufacturer unset at the setup layer.
     """
 
     device_model: str | None
@@ -65,8 +65,7 @@ def compose_device_info(
     composed ``device_model`` and the ``device_manufacturer``. Display absent
     (``None`` — the fetch failed or the typecode is unknown to ABRP): both
     stay ``None`` and the device card falls back to the raw ``vehicle_model``
-    typecode (Model) and the integration name (Manufacturer) at the setup
-    layer.
+    typecode (Model) and leaves Manufacturer unset at the setup layer.
 
     No typecode-string parsing fallback. Skip-on-miss beats best-effort
     synthesis — a derived "RIVIAN" from a raw typecode reads worse than the

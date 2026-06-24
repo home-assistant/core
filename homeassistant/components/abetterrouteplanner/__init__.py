@@ -28,11 +28,6 @@ CONFIG_SCHEMA = cv.config_entry_only_config_schema(DOMAIN)
 
 PLATFORMS: list[Platform] = [Platform.SENSOR]
 
-# Device-card manufacturer fallback when the catalog can't resolve a make.
-# Used by BOTH the setup-time anchor and the on-refresh metadata propagation;
-# they must agree or the propagation would rewrite the field on every poll.
-_DEFAULT_MANUFACTURER = "A Better Routeplanner"
-
 
 @dataclass(frozen=True, slots=True)
 class AbrpData:
@@ -121,7 +116,7 @@ async def async_setup_entry(
         device_registry.async_get_or_create(
             config_entry_id=entry.entry_id,
             identifiers={(DOMAIN, scope)},
-            manufacturer=vehicle.device_manufacturer or _DEFAULT_MANUFACTURER,
+            manufacturer=vehicle.device_manufacturer,
             model=vehicle.device_model or vehicle.vehicle_model,
             name=vehicle.name or vehicle.vehicle_model,
             configuration_url=(
@@ -143,8 +138,8 @@ async def async_setup_entry(
           display fetch each poll. They are integration-owned (no
           user-override concept), so they always track the anchor formula:
           on a display hit they carry the composed model + manufacturer, and
-          on a display miss/failure they fall back to the raw typecode / the
-          default manufacturer for that poll, recomposing when the fetch next
+          on a display miss/failure ``model`` falls back to the raw typecode
+          and ``manufacturer`` is left unset, recomposing when the fetch next
           succeeds.
 
         Each field is compared before writing so an unchanged poll is a no-op.
@@ -166,12 +161,9 @@ async def async_setup_entry(
             candidate_model = vehicle.device_model or vehicle.vehicle_model
             if device.model != candidate_model:
                 model = candidate_model
-            manufacturer: str | UndefinedType = UNDEFINED
-            candidate_manufacturer = (
-                vehicle.device_manufacturer or _DEFAULT_MANUFACTURER
-            )
-            if device.manufacturer != candidate_manufacturer:
-                manufacturer = candidate_manufacturer
+            manufacturer: str | None | UndefinedType = UNDEFINED
+            if device.manufacturer != vehicle.device_manufacturer:
+                manufacturer = vehicle.device_manufacturer
             if (
                 name is not UNDEFINED
                 or model is not UNDEFINED

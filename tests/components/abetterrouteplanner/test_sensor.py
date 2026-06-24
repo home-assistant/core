@@ -647,17 +647,17 @@ async def test_device_info_manufacturer_uses_display_make(
 @pytest.mark.usefixtures(
     "entity_registry_enabled_by_default", "mock_abrp_client", "fake_stream"
 )
-async def test_device_info_manufacturer_falls_back_to_integration_name_on_display_miss(
+async def test_device_info_manufacturer_unset_on_display_miss(
     hass: HomeAssistant,
     config_entry_with_vehicles: MockConfigEntry,
     device_registry: dr.DeviceRegistry,
 ) -> None:
-    """``DeviceInfo.manufacturer`` falls back to the integration name on display miss.
+    """``DeviceInfo.manufacturer`` stays unset on display miss.
 
     The default ``mock_abrp_client`` fixture 404s the display endpoint for
     every typecode → ``vehicle.device_manufacturer`` stays ``None`` →
-    ``DeviceInfo.manufacturer`` falls back to the integration's user-visible
-    name. The device card's Manufacturer field is never blank.
+    ``DeviceInfo.manufacturer`` is left unset rather than guessed. A blank
+    Manufacturer field is preferable to an incorrect make.
     """
     await _setup_integration(hass, config_entry_with_vehicles)
 
@@ -665,7 +665,7 @@ async def test_device_info_manufacturer_falls_back_to_integration_name_on_displa
         identifiers={(DOMAIN, _scope(config_entry_with_vehicles, MOCK_VEHICLE_ID))}
     )
     assert device is not None
-    assert device.manufacturer == "A Better Routeplanner"
+    assert device.manufacturer is None
 
 
 @pytest.mark.usefixtures(
