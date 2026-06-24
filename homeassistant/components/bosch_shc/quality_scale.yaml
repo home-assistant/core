@@ -1,0 +1,134 @@
+rules:
+  # Bronze
+  action-setup:
+    status: exempt
+    comment: Integration does not provide custom actions.
+  appropriate-polling: done
+  brands: done
+  common-modules: done
+  config-flow: done
+  config-flow-test-coverage: done
+  dependency-transparency: done
+  docs-actions:
+    status: exempt
+    comment: Integration does not provide custom actions.
+  docs-conditions:
+    status: exempt
+    comment: Integration does not provide device conditions.
+  docs-high-level-description: done
+  docs-installation-instructions: done
+  docs-removal-instructions: done
+  docs-triggers:
+    status: exempt
+    comment: Integration does not provide device triggers.
+  entity-event-setup: done
+  entity-unique-id: done
+  has-entity-name: done
+  runtime-data: done
+  test-before-configure: done
+  test-before-setup: done
+  unique-config-entry: done
+
+  # Silver
+  action-exceptions:
+    status: exempt
+    comment: Integration does not provide custom actions.
+  config-entry-unloading: done
+  docs-configuration-parameters:
+    status: exempt
+    comment: Integration does not provide additional configuration options.
+  docs-installation-parameters: done
+  entity-unavailable: done
+  integration-owner: done
+  log-when-unavailable:
+    status: todo
+    comment: >
+      Entities do not log when the device becomes unavailable. To be addressed
+      in a follow-up.
+  parallel-updates:
+    status: todo
+    comment: >
+      Parallel updates not yet configured. The library is synchronous;
+      this will be addressed together with the async migration.
+  reauthentication-flow: done
+  test-coverage: done
+
+  # Gold
+  devices: done
+  diagnostics:
+    status: todo
+    comment: Diagnostics platform not yet implemented.
+  discovery: done
+  discovery-update-info:
+    status: todo
+    comment: >
+      Discovery does not currently update the host/IP in the config entry
+      when the controller changes address.
+  docs-data-update:
+    status: todo
+    comment: Documentation does not yet describe the data update mechanism.
+  docs-examples:
+    status: todo
+    comment: No automation examples in the documentation yet.
+  docs-known-limitations:
+    status: todo
+    comment: Known limitations not yet documented.
+  docs-supported-devices:
+    status: todo
+    comment: Supported device list not yet in documentation.
+  docs-supported-functions:
+    status: todo
+    comment: Supported functions not yet documented.
+  docs-troubleshooting:
+    status: todo
+    comment: Troubleshooting section not yet in documentation.
+  docs-use-cases:
+    status: todo
+    comment: Use cases not yet documented.
+  dynamic-devices:
+    status: todo
+    comment: >
+      Devices added after setup are not yet dynamically registered without
+      a restart.
+  entity-category:
+    status: todo
+    comment: >
+      Entity categories (diagnostic/config) not yet assigned. To be addressed
+      in a follow-up.
+  entity-device-class:
+    status: todo
+    comment: >
+      Not all entities use the most specific device class. To be addressed
+      in a follow-up.
+  entity-disabled-by-default:
+    status: todo
+    comment: >
+      Less-used entities are not yet disabled by default. To be addressed
+      in a follow-up.
+  entity-translations: done
+  exception-translations:
+    status: todo
+    comment: Exceptions are not yet translated.
+  icon-translations: done
+  reconfiguration-flow:
+    status: todo
+    comment: Reconfiguration flow not yet implemented.
+  repair-issues:
+    status: exempt
+    comment: Integration does not use repair issues.
+  stale-devices:
+    status: todo
+    comment: Stale devices are not yet automatically removed.
+
+  # Platinum
+  async-dependency:
+    status: todo
+    comment: >
+      The boschshcpy library is synchronous. An async migration is planned
+      but not yet complete.
+  inject-websession:
+    status: todo
+    comment: Depends on async-dependency being completed first.
+  strict-typing:
+    status: todo
+    comment: Strict typing not yet enforced.
