@@ -10,6 +10,7 @@ import voluptuous as vol
 from homeassistant.components.notify import (
     ATTR_DATA,
     ATTR_MESSAGE,
+    ATTR_TARGET,
     ATTR_TITLE,
     DOMAIN as NOTIFY_DOMAIN,
     PLATFORM_SCHEMA as NOTIFY_PLATFORM_SCHEMA,
@@ -35,6 +36,7 @@ from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 from .entity import GroupEntity
 
 CONF_SERVICES = "services"
+_SERVICE_DATA_KEYS = {ATTR_DATA, ATTR_MESSAGE, ATTR_TARGET, ATTR_TITLE}
 
 
 def _backward_compat_schema(value: Any | None) -> Any:
@@ -84,6 +86,28 @@ def add_defaults(
     return input_data
 
 
+def _normalize_default_data(default_data: Mapping[str, Any]) -> dict[str, Any]:
+    """Move notify data defaults into the notify data payload."""
+    service_defaults: dict[str, Any] = {}
+    data_defaults: dict[str, Any] = {}
+
+    for key, val in default_data.items():
+        if key in _SERVICE_DATA_KEYS:
+            service_defaults[key] = val
+        else:
+            data_defaults[key] = val
+
+    if data_defaults:
+        if (configured_data := service_defaults.get(ATTR_DATA)) is not None:
+            service_defaults[ATTR_DATA] = add_defaults(
+                deepcopy(configured_data), data_defaults
+            )
+        else:
+            service_defaults[ATTR_DATA] = data_defaults
+
+    return service_defaults
+
+
 async def async_get_service(
     hass: HomeAssistant,
     config: ConfigType,
@@ -111,7 +135,7 @@ class GroupNotifyPlatform(BaseNotificationService):
         for entity in self.entities:
             sending_payload = deepcopy(payload.copy())
             if (default_data := entity.get(ATTR_DATA)) is not None:
-                add_defaults(sending_payload, default_data)
+                add_defaults(sending_payload, _normalize_default_data(default_data))
             tasks.append(
                 asyncio.create_task(
                     self.hass.services.async_call(
