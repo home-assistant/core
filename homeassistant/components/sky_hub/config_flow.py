@@ -1,6 +1,6 @@
 """Config flow for the Sky Hub integration."""
 
-from typing import Any
+from typing import Any, override
 
 import aiohttp
 from pyskyqhub.skyq_hub import SkyQHub
@@ -28,6 +28,7 @@ class SkyHubConfigFlow(ConfigFlow, domain=DOMAIN):
         except aiohttp.ClientError, TimeoutError:
             return False
 
+    @override
     async def async_step_user(
         self, user_input: dict[str, Any] | None = None
     ) -> ConfigFlowResult:

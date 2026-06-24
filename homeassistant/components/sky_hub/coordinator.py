@@ -2,6 +2,7 @@
 
 from datetime import timedelta
 import logging
+from typing import override
 
 import aiohttp
 from pyskyqhub.skyq_hub import SkyQHub
@@ -38,6 +39,7 @@ class SkyHubDataUpdateCoordinator(DataUpdateCoordinator[dict[str, str]]):
             update_interval=UPDATE_INTERVAL,
         )
 
+    @override
     async def _async_update_data(self) -> dict[str, str]:
         """Fetch the connected devices from the Sky Hub, keyed by MAC address."""
         try:

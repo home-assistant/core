@@ -1,5 +1,7 @@
 """Support for Sky Hub device tracking using a coordinator."""
 
+from typing import override
+
 import voluptuous as vol
 
 from homeassistant.components.device_tracker import (
@@ -103,16 +105,19 @@ class SkyHubScannerEntity(
         self._attr_name = coordinator.data.get(mac) or mac
 
     @property
+    @override
     def is_connected(self) -> bool:
         """Return true if the device is connected to the Sky Hub."""
         return self._mac in self.coordinator.data
 
     @property
+    @override
     def mac_address(self) -> str:
         """Return the MAC address of the device."""
         return self._mac
 
     @property
+    @override
     def hostname(self) -> str | None:
         """Return the hostname of the device."""
         return self.coordinator.data.get(self._mac)
