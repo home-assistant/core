@@ -12,11 +12,10 @@ DEFAULT_NAME: Final = "Sun"
 # astral uses for sunrise/sunset (atmospheric refraction plus the sun's radius).
 ELEVATION_HORIZON: Final = -0.833
 
-# Depression angle (degrees below the horizon) of the sun at each twilight
-# boundary, sourced from the astral library so the values stay in sync with it.
-DEPRESSION_CIVIL: Final[float] = astral.Depression.CIVIL.value
-DEPRESSION_NAUTICAL: Final[float] = astral.Depression.NAUTICAL.value
-DEPRESSION_ASTRONOMICAL: Final[float] = astral.Depression.ASTRONOMICAL.value
+# Sun elevation, in degrees, at each twilight boundary
+ELEVATION_CIVIL: Final[float] = -astral.Depression.CIVIL.value
+ELEVATION_NAUTICAL: Final[float] = -astral.Depression.NAUTICAL.value
+ELEVATION_ASTRONOMICAL: Final[float] = -astral.Depression.ASTRONOMICAL.value
 
 SIGNAL_POSITION_CHANGED = f"{DOMAIN}_position_changed"
 SIGNAL_EVENTS_CHANGED = f"{DOMAIN}_events_changed"

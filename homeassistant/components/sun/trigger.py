@@ -47,10 +47,10 @@ from homeassistant.helpers.typing import ConfigType
 from homeassistant.util import dt as dt_util
 
 from .const import (
-    DEPRESSION_ASTRONOMICAL,
-    DEPRESSION_CIVIL,
-    DEPRESSION_NAUTICAL,
     DOMAIN,
+    ELEVATION_ASTRONOMICAL,
+    ELEVATION_CIVIL,
+    ELEVATION_NAUTICAL,
     STATE_ATTR_ELEVATION,
 )
 
@@ -64,11 +64,11 @@ _TWILIGHT_CIVIL = "civil"
 _TWILIGHT_NAUTICAL = "nautical"
 _TWILIGHT_ASTRONOMICAL = "astronomical"
 
-# Sun depression below the horizon for each twilight phase.
-_TWILIGHT_DEPRESSIONS = {
-    _TWILIGHT_CIVIL: DEPRESSION_CIVIL,
-    _TWILIGHT_NAUTICAL: DEPRESSION_NAUTICAL,
-    _TWILIGHT_ASTRONOMICAL: DEPRESSION_ASTRONOMICAL,
+# Sun elevation at each twilight boundary.
+_TWILIGHT_ELEVATIONS = {
+    _TWILIGHT_CIVIL: ELEVATION_CIVIL,
+    _TWILIGHT_NAUTICAL: ELEVATION_NAUTICAL,
+    _TWILIGHT_ASTRONOMICAL: ELEVATION_ASTRONOMICAL,
 }
 
 # The sun is a singleton, so the elevation triggers always target sun.sun
@@ -233,7 +233,7 @@ _DAWN_DUSK_TRIGGER_SCHEMA = vol.Schema(
     {
         vol.Required(CONF_OPTIONS, default=dict): {
             vol.Optional(CONF_TYPE, default=_TWILIGHT_CIVIL): vol.In(
-                _TWILIGHT_DEPRESSIONS
+                _TWILIGHT_ELEVATIONS
             ),
         }
     }
@@ -249,7 +249,7 @@ class SunDawnDuskTrigger(SunEventTrigger):
         """Initialize the trigger."""
         super().__init__(hass, config)
         self._twilight: str = self._options[CONF_TYPE]
-        self._depression = _TWILIGHT_DEPRESSIONS[self._twilight]
+        self._elevation = _TWILIGHT_ELEVATIONS[self._twilight]
 
     @override
     def _get_next_event(self, utc_point_in_time: datetime) -> datetime:
@@ -257,7 +257,9 @@ class SunDawnDuskTrigger(SunEventTrigger):
             get_astral_observer(self._hass),
             self._event,
             utc_point_in_time,
-            depression=self._depression,
+            # astral takes a depression (degrees below the horizon), i.e. the
+            # negated elevation.
+            depression=-self._elevation,
         )
 
     @override

@@ -41,11 +41,11 @@ from homeassistant.helpers.typing import ConfigType
 from homeassistant.util import dt as dt_util
 
 from .const import (
-    DEPRESSION_ASTRONOMICAL,
-    DEPRESSION_CIVIL,
-    DEPRESSION_NAUTICAL,
     DOMAIN,
+    ELEVATION_ASTRONOMICAL,
+    ELEVATION_CIVIL,
     ELEVATION_HORIZON,
+    ELEVATION_NAUTICAL,
     STATE_ATTR_ELEVATION,
 )
 
@@ -273,7 +273,7 @@ class _NightCondition(_SunStateCondition):
     def _async_check(self, **kwargs: Unpack[ConditionCheckParams]) -> bool:
         """Check the condition."""
         elevation, _ = _solar_position(self._hass)
-        return elevation <= -DEPRESSION_ASTRONOMICAL
+        return elevation <= ELEVATION_ASTRONOMICAL
 
 
 TWILIGHT_ANY = "any"
@@ -281,13 +281,13 @@ TWILIGHT_CIVIL = "civil"
 TWILIGHT_NAUTICAL = "nautical"
 TWILIGHT_ASTRONOMICAL = "astronomical"
 
-# Elevation band (min, max) in degrees for each twilight type. The edges are
-# the horizon and the twilight depressions (as negative elevations).
+# Elevation band (min, max) in degrees for each twilight type, bounded by the
+# horizon and the twilight elevations.
 _TWILIGHT_BANDS = {
-    TWILIGHT_ANY: (-DEPRESSION_ASTRONOMICAL, ELEVATION_HORIZON),
-    TWILIGHT_CIVIL: (-DEPRESSION_CIVIL, ELEVATION_HORIZON),
-    TWILIGHT_NAUTICAL: (-DEPRESSION_NAUTICAL, -DEPRESSION_CIVIL),
-    TWILIGHT_ASTRONOMICAL: (-DEPRESSION_ASTRONOMICAL, -DEPRESSION_NAUTICAL),
+    TWILIGHT_ANY: (ELEVATION_ASTRONOMICAL, ELEVATION_HORIZON),
+    TWILIGHT_CIVIL: (ELEVATION_CIVIL, ELEVATION_HORIZON),
+    TWILIGHT_NAUTICAL: (ELEVATION_NAUTICAL, ELEVATION_CIVIL),
+    TWILIGHT_ASTRONOMICAL: (ELEVATION_ASTRONOMICAL, ELEVATION_NAUTICAL),
 }
 
 _TWILIGHT_CONDITION_SCHEMA = vol.Schema(
