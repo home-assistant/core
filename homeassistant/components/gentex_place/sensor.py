@@ -75,6 +75,7 @@ class PlaceAlarmSensorEntity(SensorEntity):
     """Sensor entity for a Place alarm status."""
 
     _attr_has_entity_name = True
+    _attr_should_poll = False
 
     entity_description: PlaceAlarmSensorEntityDescription
 
