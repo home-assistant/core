@@ -43,11 +43,11 @@
   StateSnapshot({
     'attributes': ReadOnlyDict({
       <HumidifierEntityStateAttribute.CURRENT_HUMIDITY: 'current_humidity'>: 61,
-      'device_class': 'dehumidifier',
-      'friendly_name': 'Arida Stavern ',
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'dehumidifier',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Arida Stavern ',
       <HumidifierEntityCapabilityAttribute.MAX_HUMIDITY: 'max_humidity'>: 100,
       <HumidifierEntityCapabilityAttribute.MIN_HUMIDITY: 'min_humidity'>: 0,
-      'supported_features': <HumidifierEntityFeature: 0>,
+      <EntityStateAttribute.SUPPORTED_FEATURES: 'supported_features'>: <HumidifierEntityFeature: 0>,
     }),
     'context': <ANY>,
     'entity_id': 'humidifier.arida_stavern',
@@ -101,11 +101,11 @@
   StateSnapshot({
     'attributes': ReadOnlyDict({
       <HumidifierEntityStateAttribute.CURRENT_HUMIDITY: 'current_humidity'>: 76,
-      'device_class': 'dehumidifier',
-      'friendly_name': 'D825A I',
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'dehumidifier',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'D825A I',
       <HumidifierEntityCapabilityAttribute.MAX_HUMIDITY: 'max_humidity'>: 100,
       <HumidifierEntityCapabilityAttribute.MIN_HUMIDITY: 'min_humidity'>: 0,
-      'supported_features': <HumidifierEntityFeature: 0>,
+      <EntityStateAttribute.SUPPORTED_FEATURES: 'supported_features'>: <HumidifierEntityFeature: 0>,
     }),
     'context': <ANY>,
     'entity_id': 'humidifier.d825a_i',
@@ -158,11 +158,11 @@
 # name: test_platform_setup_and_discovery[humidifier.dehumidifer-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'device_class': 'dehumidifier',
-      'friendly_name': 'Dehumidifer',
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'dehumidifier',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Dehumidifer',
       <HumidifierEntityCapabilityAttribute.MAX_HUMIDITY: 'max_humidity'>: 80,
       <HumidifierEntityCapabilityAttribute.MIN_HUMIDITY: 'min_humidity'>: 25,
-      'supported_features': <HumidifierEntityFeature: 0>,
+      <EntityStateAttribute.SUPPORTED_FEATURES: 'supported_features'>: <HumidifierEntityFeature: 0>,
     }),
     'context': <ANY>,
     'entity_id': 'humidifier.dehumidifer',
@@ -216,12 +216,12 @@
   StateSnapshot({
     'attributes': ReadOnlyDict({
       <HumidifierEntityStateAttribute.CURRENT_HUMIDITY: 'current_humidity'>: 47,
-      'device_class': 'dehumidifier',
-      'friendly_name': 'Dehumidifier',
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'dehumidifier',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Dehumidifier',
       <HumidifierEntityStateAttribute.HUMIDITY: 'humidity'>: 50,
       <HumidifierEntityCapabilityAttribute.MAX_HUMIDITY: 'max_humidity'>: 70,
       <HumidifierEntityCapabilityAttribute.MIN_HUMIDITY: 'min_humidity'>: 35,
-      'supported_features': <HumidifierEntityFeature: 0>,
+      <EntityStateAttribute.SUPPORTED_FEATURES: 'supported_features'>: <HumidifierEntityFeature: 0>,
     }),
     'context': <ANY>,
     'entity_id': 'humidifier.dehumidifier',
@@ -275,12 +275,12 @@
   StateSnapshot({
     'attributes': ReadOnlyDict({
       <HumidifierEntityStateAttribute.CURRENT_HUMIDITY: 'current_humidity'>: 72,
-      'device_class': 'dehumidifier',
-      'friendly_name': 'Déshumidificateur Silencieux OmniDry 20L avec Mode Linge',
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'dehumidifier',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Déshumidificateur Silencieux OmniDry 20L avec Mode Linge',
       <HumidifierEntityStateAttribute.HUMIDITY: 'humidity'>: 65,
       <HumidifierEntityCapabilityAttribute.MAX_HUMIDITY: 'max_humidity'>: 80,
       <HumidifierEntityCapabilityAttribute.MIN_HUMIDITY: 'min_humidity'>: 30,
-      'supported_features': <HumidifierEntityFeature: 0>,
+      <EntityStateAttribute.SUPPORTED_FEATURES: 'supported_features'>: <HumidifierEntityFeature: 0>,
     }),
     'context': <ANY>,
     'entity_id': 'humidifier.deshumidificateur_silencieux_omnidry_20l_avec_mode_linge',
@@ -333,11 +333,11 @@
 # name: test_platform_setup_and_discovery[humidifier.klarta_humea-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'device_class': 'humidifier',
-      'friendly_name': 'KLARTA HUMEA',
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'humidifier',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'KLARTA HUMEA',
       <HumidifierEntityCapabilityAttribute.MAX_HUMIDITY: 'max_humidity'>: 100,
       <HumidifierEntityCapabilityAttribute.MIN_HUMIDITY: 'min_humidity'>: 0,
-      'supported_features': <HumidifierEntityFeature: 0>,
+      <EntityStateAttribute.SUPPORTED_FEATURES: 'supported_features'>: <HumidifierEntityFeature: 0>,
     }),
     'context': <ANY>,
     'entity_id': 'humidifier.klarta_humea',
@@ -391,12 +391,12 @@
   StateSnapshot({
     'attributes': ReadOnlyDict({
       <HumidifierEntityStateAttribute.CURRENT_HUMIDITY: 'current_humidity'>: 48,
-      'device_class': 'dehumidifier',
-      'friendly_name': 'Living room dehumidifier',
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'dehumidifier',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Living room dehumidifier',
       <HumidifierEntityStateAttribute.HUMIDITY: 'humidity'>: 47,
       <HumidifierEntityCapabilityAttribute.MAX_HUMIDITY: 'max_humidity'>: 80,
       <HumidifierEntityCapabilityAttribute.MIN_HUMIDITY: 'min_humidity'>: 25,
-      'supported_features': <HumidifierEntityFeature: 0>,
+      <EntityStateAttribute.SUPPORTED_FEATURES: 'supported_features'>: <HumidifierEntityFeature: 0>,
     }),
     'context': <ANY>,
     'entity_id': 'humidifier.living_room_dehumidifier',

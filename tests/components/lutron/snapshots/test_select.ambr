@@ -46,7 +46,7 @@
 # name: test_led_select_setup[select.test_keypad_test_button_led-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'Test Keypad Test Button LED',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Test Keypad Test Button LED',
       <SelectEntityCapabilityAttribute.OPTIONS: 'options'>: list([
         'off',
         'on',

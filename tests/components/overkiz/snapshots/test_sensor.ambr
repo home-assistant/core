@@ -44,10 +44,10 @@
 # name: test_sensor_entities_snapshot[cloud_atlantic_cozytouch.json][sensor.my_home_patio_water_heating_bottom_tank_water_temperature-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'device_class': 'temperature',
-      'friendly_name': 'Patio Water Heating Bottom tank water temperature',
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'temperature',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Patio Water Heating Bottom tank water temperature',
       <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
-      'unit_of_measurement': <UnitOfTemperature.CELSIUS: '°C'>,
+      <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: <UnitOfTemperature.CELSIUS: '°C'>,
     }),
     'context': <ANY>,
     'entity_id': 'sensor.my_home_patio_water_heating_bottom_tank_water_temperature',
@@ -102,10 +102,10 @@
 # name: test_sensor_entities_snapshot[cloud_atlantic_cozytouch.json][sensor.my_home_patio_water_heating_control_water_target_temperature-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'device_class': 'temperature',
-      'friendly_name': 'Patio Water Heating Control water target temperature',
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'temperature',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Patio Water Heating Control water target temperature',
       <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
-      'unit_of_measurement': <UnitOfTemperature.CELSIUS: '°C'>,
+      <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: <UnitOfTemperature.CELSIUS: '°C'>,
     }),
     'context': <ANY>,
     'entity_id': 'sensor.my_home_patio_water_heating_control_water_target_temperature',
@@ -162,9 +162,9 @@
 # name: test_sensor_entities_snapshot[cloud_atlantic_cozytouch.json][sensor.my_home_patio_water_heating_discrete_rssi_level-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'device_class': 'enum',
-      'friendly_name': 'Patio Water Heating Discrete RSSI level',
-      'icon': 'mdi:wifi',
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'enum',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Patio Water Heating Discrete RSSI level',
+      <EntityStateAttribute.ICON: 'icon'>: 'mdi:wifi',
       <SensorEntityCapabilityAttribute.OPTIONS: 'options'>: list([
         'verylow',
         'low',
@@ -223,9 +223,9 @@
 # name: test_sensor_entities_snapshot[cloud_atlantic_cozytouch.json][sensor.my_home_patio_water_heating_electric_booster_operating_time-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'device_class': 'duration',
-      'friendly_name': 'Patio Water Heating Electric booster operating time',
-      'unit_of_measurement': <UnitOfTime.SECONDS: 's'>,
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'duration',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Patio Water Heating Electric booster operating time',
+      <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: <UnitOfTime.SECONDS: 's'>,
     }),
     'context': <ANY>,
     'entity_id': 'sensor.my_home_patio_water_heating_electric_booster_operating_time',
@@ -280,10 +280,10 @@
 # name: test_sensor_entities_snapshot[cloud_atlantic_cozytouch.json][sensor.my_home_patio_water_heating_electric_power_consumption-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'device_class': 'power',
-      'friendly_name': 'Patio Water Heating Electric power consumption',
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'power',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Patio Water Heating Electric power consumption',
       <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
-      'unit_of_measurement': <UnitOfPower.WATT: 'W'>,
+      <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: <UnitOfPower.WATT: 'W'>,
     }),
     'context': <ANY>,
     'entity_id': 'sensor.my_home_patio_water_heating_electric_power_consumption',
@@ -335,8 +335,8 @@
 # name: test_sensor_entities_snapshot[cloud_atlantic_cozytouch.json][sensor.my_home_patio_water_heating_expected_number_of_shower-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'Patio Water Heating Expected number of shower',
-      'icon': 'mdi:shower-head',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Patio Water Heating Expected number of shower',
+      <EntityStateAttribute.ICON: 'icon'>: 'mdi:shower-head',
       <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
     'context': <ANY>,
@@ -390,9 +390,9 @@
 # name: test_sensor_entities_snapshot[cloud_atlantic_cozytouch.json][sensor.my_home_patio_water_heating_heat_pump_operating_time-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'device_class': 'duration',
-      'friendly_name': 'Patio Water Heating Heat pump operating time',
-      'unit_of_measurement': <UnitOfTime.SECONDS: 's'>,
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'duration',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Patio Water Heating Heat pump operating time',
+      <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: <UnitOfTime.SECONDS: 's'>,
     }),
     'context': <ANY>,
     'entity_id': 'sensor.my_home_patio_water_heating_heat_pump_operating_time',
@@ -447,10 +447,10 @@
 # name: test_sensor_entities_snapshot[cloud_atlantic_cozytouch.json][sensor.my_home_patio_water_heating_heat_pump_power_consumption-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'device_class': 'power',
-      'friendly_name': 'Patio Water Heating Heat pump power consumption',
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'power',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Patio Water Heating Heat pump power consumption',
       <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
-      'unit_of_measurement': <UnitOfPower.WATT: 'W'>,
+      <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: <UnitOfPower.WATT: 'W'>,
     }),
     'context': <ANY>,
     'entity_id': 'sensor.my_home_patio_water_heating_heat_pump_power_consumption',
@@ -505,10 +505,10 @@
 # name: test_sensor_entities_snapshot[cloud_atlantic_cozytouch.json][sensor.my_home_patio_water_heating_middle_water_temperature-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'device_class': 'temperature',
-      'friendly_name': 'Patio Water Heating Middle water temperature',
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'temperature',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Patio Water Heating Middle water temperature',
       <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
-      'unit_of_measurement': <UnitOfTemperature.CELSIUS: '°C'>,
+      <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: <UnitOfTemperature.CELSIUS: '°C'>,
     }),
     'context': <ANY>,
     'entity_id': 'sensor.my_home_patio_water_heating_middle_water_temperature',
@@ -560,8 +560,8 @@
 # name: test_sensor_entities_snapshot[cloud_atlantic_cozytouch.json][sensor.my_home_patio_water_heating_number_of_shower_remaining-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'Patio Water Heating Number of shower remaining',
-      'icon': 'mdi:shower-head',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Patio Water Heating Number of shower remaining',
+      <EntityStateAttribute.ICON: 'icon'>: 'mdi:shower-head',
       <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
     'context': <ANY>,
@@ -617,10 +617,10 @@
 # name: test_sensor_entities_snapshot[cloud_atlantic_cozytouch.json][sensor.my_home_patio_water_heating_office_energy_meter_consumption_tariff_1-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'device_class': 'energy',
-      'friendly_name': 'Patio Water Heating Office Energy Meter Consumption tariff 1',
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'energy',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Patio Water Heating Office Energy Meter Consumption tariff 1',
       <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
-      'unit_of_measurement': <UnitOfEnergy.WATT_HOUR: 'Wh'>,
+      <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: <UnitOfEnergy.WATT_HOUR: 'Wh'>,
     }),
     'context': <ANY>,
     'entity_id': 'sensor.my_home_patio_water_heating_office_energy_meter_consumption_tariff_1',
@@ -675,10 +675,10 @@
 # name: test_sensor_entities_snapshot[cloud_atlantic_cozytouch.json][sensor.my_home_patio_water_heating_office_energy_meter_consumption_tariff_2-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'device_class': 'energy',
-      'friendly_name': 'Patio Water Heating Office Energy Meter Consumption tariff 2',
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'energy',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Patio Water Heating Office Energy Meter Consumption tariff 2',
       <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
-      'unit_of_measurement': <UnitOfEnergy.WATT_HOUR: 'Wh'>,
+      <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: <UnitOfEnergy.WATT_HOUR: 'Wh'>,
     }),
     'context': <ANY>,
     'entity_id': 'sensor.my_home_patio_water_heating_office_energy_meter_consumption_tariff_2',
@@ -733,10 +733,10 @@
 # name: test_sensor_entities_snapshot[cloud_atlantic_cozytouch.json][sensor.my_home_patio_water_heating_office_energy_meter_consumption_tariff_3-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'device_class': 'energy',
-      'friendly_name': 'Patio Water Heating Office Energy Meter Consumption tariff 3',
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'energy',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Patio Water Heating Office Energy Meter Consumption tariff 3',
       <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
-      'unit_of_measurement': <UnitOfEnergy.WATT_HOUR: 'Wh'>,
+      <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: <UnitOfEnergy.WATT_HOUR: 'Wh'>,
     }),
     'context': <ANY>,
     'entity_id': 'sensor.my_home_patio_water_heating_office_energy_meter_consumption_tariff_3',
@@ -791,10 +791,10 @@
 # name: test_sensor_entities_snapshot[cloud_atlantic_cozytouch.json][sensor.my_home_patio_water_heating_office_energy_meter_consumption_tariff_4-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'device_class': 'energy',
-      'friendly_name': 'Patio Water Heating Office Energy Meter Consumption tariff 4',
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'energy',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Patio Water Heating Office Energy Meter Consumption tariff 4',
       <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
-      'unit_of_measurement': <UnitOfEnergy.WATT_HOUR: 'Wh'>,
+      <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: <UnitOfEnergy.WATT_HOUR: 'Wh'>,
     }),
     'context': <ANY>,
     'entity_id': 'sensor.my_home_patio_water_heating_office_energy_meter_consumption_tariff_4',
@@ -849,10 +849,10 @@
 # name: test_sensor_entities_snapshot[cloud_atlantic_cozytouch.json][sensor.my_home_patio_water_heating_office_energy_meter_consumption_tariff_5-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'device_class': 'energy',
-      'friendly_name': 'Patio Water Heating Office Energy Meter Consumption tariff 5',
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'energy',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Patio Water Heating Office Energy Meter Consumption tariff 5',
       <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
-      'unit_of_measurement': <UnitOfEnergy.WATT_HOUR: 'Wh'>,
+      <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: <UnitOfEnergy.WATT_HOUR: 'Wh'>,
     }),
     'context': <ANY>,
     'entity_id': 'sensor.my_home_patio_water_heating_office_energy_meter_consumption_tariff_5',
@@ -907,10 +907,10 @@
 # name: test_sensor_entities_snapshot[cloud_atlantic_cozytouch.json][sensor.my_home_patio_water_heating_office_energy_meter_consumption_tariff_6-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'device_class': 'energy',
-      'friendly_name': 'Patio Water Heating Office Energy Meter Consumption tariff 6',
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'energy',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Patio Water Heating Office Energy Meter Consumption tariff 6',
       <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
-      'unit_of_measurement': <UnitOfEnergy.WATT_HOUR: 'Wh'>,
+      <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: <UnitOfEnergy.WATT_HOUR: 'Wh'>,
     }),
     'context': <ANY>,
     'entity_id': 'sensor.my_home_patio_water_heating_office_energy_meter_consumption_tariff_6',
@@ -965,10 +965,10 @@
 # name: test_sensor_entities_snapshot[cloud_atlantic_cozytouch.json][sensor.my_home_patio_water_heating_office_energy_meter_consumption_tariff_7-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'device_class': 'energy',
-      'friendly_name': 'Patio Water Heating Office Energy Meter Consumption tariff 7',
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'energy',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Patio Water Heating Office Energy Meter Consumption tariff 7',
       <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
-      'unit_of_measurement': <UnitOfEnergy.WATT_HOUR: 'Wh'>,
+      <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: <UnitOfEnergy.WATT_HOUR: 'Wh'>,
     }),
     'context': <ANY>,
     'entity_id': 'sensor.my_home_patio_water_heating_office_energy_meter_consumption_tariff_7',
@@ -1023,10 +1023,10 @@
 # name: test_sensor_entities_snapshot[cloud_atlantic_cozytouch.json][sensor.my_home_patio_water_heating_office_energy_meter_consumption_tariff_8-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'device_class': 'energy',
-      'friendly_name': 'Patio Water Heating Office Energy Meter Consumption tariff 8',
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'energy',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Patio Water Heating Office Energy Meter Consumption tariff 8',
       <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
-      'unit_of_measurement': <UnitOfEnergy.WATT_HOUR: 'Wh'>,
+      <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: <UnitOfEnergy.WATT_HOUR: 'Wh'>,
     }),
     'context': <ANY>,
     'entity_id': 'sensor.my_home_patio_water_heating_office_energy_meter_consumption_tariff_8',
@@ -1081,10 +1081,10 @@
 # name: test_sensor_entities_snapshot[cloud_atlantic_cozytouch.json][sensor.my_home_patio_water_heating_office_energy_meter_consumption_tariff_9-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'device_class': 'energy',
-      'friendly_name': 'Patio Water Heating Office Energy Meter Consumption tariff 9',
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'energy',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Patio Water Heating Office Energy Meter Consumption tariff 9',
       <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
-      'unit_of_measurement': <UnitOfEnergy.WATT_HOUR: 'Wh'>,
+      <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: <UnitOfEnergy.WATT_HOUR: 'Wh'>,
     }),
     'context': <ANY>,
     'entity_id': 'sensor.my_home_patio_water_heating_office_energy_meter_consumption_tariff_9',
@@ -1139,10 +1139,10 @@
 # name: test_sensor_entities_snapshot[cloud_atlantic_cozytouch.json][sensor.my_home_patio_water_heating_office_energy_meter_electric_energy_consumption-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'device_class': 'energy',
-      'friendly_name': 'Patio Water Heating Office Energy Meter Electric energy consumption',
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'energy',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Patio Water Heating Office Energy Meter Electric energy consumption',
       <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
-      'unit_of_measurement': <UnitOfEnergy.WATT_HOUR: 'Wh'>,
+      <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: <UnitOfEnergy.WATT_HOUR: 'Wh'>,
     }),
     'context': <ANY>,
     'entity_id': 'sensor.my_home_patio_water_heating_office_energy_meter_electric_energy_consumption',
@@ -1192,8 +1192,8 @@
 # name: test_sensor_entities_snapshot[cloud_atlantic_cozytouch.json][sensor.my_home_patio_water_heating_priority_lock_originator-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'Patio Water Heating Priority lock originator',
-      'icon': 'mdi:lock',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Patio Water Heating Priority lock originator',
+      <EntityStateAttribute.ICON: 'icon'>: 'mdi:lock',
     }),
     'context': <ANY>,
     'entity_id': 'sensor.my_home_patio_water_heating_priority_lock_originator',
@@ -1243,9 +1243,9 @@
 # name: test_sensor_entities_snapshot[cloud_atlantic_cozytouch.json][sensor.my_home_patio_water_heating_priority_lock_timer-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'Patio Water Heating Priority lock timer',
-      'icon': 'mdi:lock-clock',
-      'unit_of_measurement': <UnitOfTime.SECONDS: 's'>,
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Patio Water Heating Priority lock timer',
+      <EntityStateAttribute.ICON: 'icon'>: 'mdi:lock-clock',
+      <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: <UnitOfTime.SECONDS: 's'>,
     }),
     'context': <ANY>,
     'entity_id': 'sensor.my_home_patio_water_heating_priority_lock_timer',
@@ -1297,10 +1297,10 @@
 # name: test_sensor_entities_snapshot[cloud_atlantic_cozytouch.json][sensor.my_home_patio_water_heating_rssi_level-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'device_class': 'signal_strength',
-      'friendly_name': 'Patio Water Heating RSSI level',
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'signal_strength',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Patio Water Heating RSSI level',
       <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
-      'unit_of_measurement': 'dB',
+      <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: 'dB',
     }),
     'context': <ANY>,
     'entity_id': 'sensor.my_home_patio_water_heating_rssi_level',
@@ -1355,10 +1355,10 @@
 # name: test_sensor_entities_snapshot[cloud_atlantic_cozytouch.json][sensor.my_home_patio_water_heating_temperature-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'device_class': 'temperature',
-      'friendly_name': 'Patio Water Heating Temperature',
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'temperature',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Patio Water Heating Temperature',
       <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
-      'unit_of_measurement': <UnitOfTemperature.CELSIUS: '°C'>,
+      <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: <UnitOfTemperature.CELSIUS: '°C'>,
     }),
     'context': <ANY>,
     'entity_id': 'sensor.my_home_patio_water_heating_temperature',
@@ -1413,11 +1413,11 @@
 # name: test_sensor_entities_snapshot[cloud_atlantic_cozytouch.json][sensor.my_home_patio_water_heating_water_consumption-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'device_class': 'water',
-      'friendly_name': 'Patio Water Heating Water consumption',
-      'icon': 'mdi:water',
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'water',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Patio Water Heating Water consumption',
+      <EntityStateAttribute.ICON: 'icon'>: 'mdi:water',
       <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.TOTAL: 'total'>,
-      'unit_of_measurement': <UnitOfVolume.LITERS: 'L'>,
+      <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: <UnitOfVolume.LITERS: 'L'>,
     }),
     'context': <ANY>,
     'entity_id': 'sensor.my_home_patio_water_heating_water_consumption',
@@ -1472,11 +1472,11 @@
 # name: test_sensor_entities_snapshot[cloud_atlantic_cozytouch.json][sensor.my_home_patio_water_heating_water_volume_estimation_at_40_degc-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'device_class': 'volume_storage',
-      'friendly_name': 'Patio Water Heating Water volume estimation at 40 °C',
-      'icon': 'mdi:water',
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'volume_storage',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Patio Water Heating Water volume estimation at 40 °C',
+      <EntityStateAttribute.ICON: 'icon'>: 'mdi:water',
       <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
-      'unit_of_measurement': <UnitOfVolume.LITERS: 'L'>,
+      <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: <UnitOfVolume.LITERS: 'L'>,
     }),
     'context': <ANY>,
     'entity_id': 'sensor.my_home_patio_water_heating_water_volume_estimation_at_40_degc',
@@ -1533,9 +1533,9 @@
 # name: test_sensor_entities_snapshot[cloud_nexity_rail_din_europe.json][sensor.maple_residence_garage_ceiling_light_discrete_rssi_level-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'device_class': 'enum',
-      'friendly_name': 'Garage Ceiling Light Discrete RSSI level',
-      'icon': 'mdi:wifi',
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'enum',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Garage Ceiling Light Discrete RSSI level',
+      <EntityStateAttribute.ICON: 'icon'>: 'mdi:wifi',
       <SensorEntityCapabilityAttribute.OPTIONS: 'options'>: list([
         'verylow',
         'low',
@@ -1591,8 +1591,8 @@
 # name: test_sensor_entities_snapshot[cloud_nexity_rail_din_europe.json][sensor.maple_residence_garage_ceiling_light_priority_lock_originator-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'Garage Ceiling Light Priority lock originator',
-      'icon': 'mdi:lock',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Garage Ceiling Light Priority lock originator',
+      <EntityStateAttribute.ICON: 'icon'>: 'mdi:lock',
     }),
     'context': <ANY>,
     'entity_id': 'sensor.maple_residence_garage_ceiling_light_priority_lock_originator',
@@ -1642,9 +1642,9 @@
 # name: test_sensor_entities_snapshot[cloud_nexity_rail_din_europe.json][sensor.maple_residence_garage_ceiling_light_priority_lock_timer-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'Garage Ceiling Light Priority lock timer',
-      'icon': 'mdi:lock-clock',
-      'unit_of_measurement': <UnitOfTime.SECONDS: 's'>,
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Garage Ceiling Light Priority lock timer',
+      <EntityStateAttribute.ICON: 'icon'>: 'mdi:lock-clock',
+      <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: <UnitOfTime.SECONDS: 's'>,
     }),
     'context': <ANY>,
     'entity_id': 'sensor.maple_residence_garage_ceiling_light_priority_lock_timer',
@@ -1696,10 +1696,10 @@
 # name: test_sensor_entities_snapshot[cloud_nexity_rail_din_europe.json][sensor.maple_residence_garage_ceiling_light_rssi_level-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'device_class': 'signal_strength',
-      'friendly_name': 'Garage Ceiling Light RSSI level',
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'signal_strength',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Garage Ceiling Light RSSI level',
       <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
-      'unit_of_measurement': 'dB',
+      <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: 'dB',
     }),
     'context': <ANY>,
     'entity_id': 'sensor.maple_residence_garage_ceiling_light_rssi_level',
@@ -1756,9 +1756,9 @@
 # name: test_sensor_entities_snapshot[cloud_nexity_rail_din_europe.json][sensor.maple_residence_garden_radiator_bathroom_temperature_sensor_discrete_rssi_level-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'device_class': 'enum',
-      'friendly_name': 'Garden Radiator Bathroom Temperature Sensor Discrete RSSI level',
-      'icon': 'mdi:wifi',
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'enum',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Garden Radiator Bathroom Temperature Sensor Discrete RSSI level',
+      <EntityStateAttribute.ICON: 'icon'>: 'mdi:wifi',
       <SensorEntityCapabilityAttribute.OPTIONS: 'options'>: list([
         'verylow',
         'low',
@@ -1816,10 +1816,10 @@
 # name: test_sensor_entities_snapshot[cloud_nexity_rail_din_europe.json][sensor.maple_residence_garden_radiator_bathroom_temperature_sensor_rssi_level-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'device_class': 'signal_strength',
-      'friendly_name': 'Garden Radiator Bathroom Temperature Sensor RSSI level',
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'signal_strength',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Garden Radiator Bathroom Temperature Sensor RSSI level',
       <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
-      'unit_of_measurement': 'dB',
+      <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: 'dB',
     }),
     'context': <ANY>,
     'entity_id': 'sensor.maple_residence_garden_radiator_bathroom_temperature_sensor_rssi_level',
@@ -1876,8 +1876,8 @@
 # name: test_sensor_entities_snapshot[cloud_nexity_rail_din_europe.json][sensor.maple_residence_garden_radiator_bathroom_temperature_sensor_sensor_defect-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'device_class': 'enum',
-      'friendly_name': 'Garden Radiator Bathroom Temperature Sensor Sensor defect',
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'enum',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Garden Radiator Bathroom Temperature Sensor Sensor defect',
       <SensorEntityCapabilityAttribute.OPTIONS: 'options'>: list([
         'dead',
         'low_battery',
@@ -1938,10 +1938,10 @@
 # name: test_sensor_entities_snapshot[cloud_nexity_rail_din_europe.json][sensor.maple_residence_garden_radiator_bathroom_temperature_sensor_temperature-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'device_class': 'temperature',
-      'friendly_name': 'Garden Radiator Bathroom Temperature Sensor Temperature',
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'temperature',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Garden Radiator Bathroom Temperature Sensor Temperature',
       <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
-      'unit_of_measurement': <UnitOfTemperature.CELSIUS: '°C'>,
+      <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: <UnitOfTemperature.CELSIUS: '°C'>,
     }),
     'context': <ANY>,
     'entity_id': 'sensor.maple_residence_garden_radiator_bathroom_temperature_sensor_temperature',
@@ -1993,10 +1993,10 @@
 # name: test_sensor_entities_snapshot[cloud_nexity_rail_din_europe.json][sensor.maple_residence_garden_radiator_battery_level-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'device_class': 'battery',
-      'friendly_name': 'Garden Radiator Battery level',
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'battery',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Garden Radiator Battery level',
       <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
-      'unit_of_measurement': '%',
+      <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: '%',
     }),
     'context': <ANY>,
     'entity_id': 'sensor.maple_residence_garden_radiator_battery_level',
@@ -2053,9 +2053,9 @@
 # name: test_sensor_entities_snapshot[cloud_nexity_rail_din_europe.json][sensor.maple_residence_garden_radiator_discrete_rssi_level-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'device_class': 'enum',
-      'friendly_name': 'Garden Radiator Discrete RSSI level',
-      'icon': 'mdi:wifi',
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'enum',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Garden Radiator Discrete RSSI level',
+      <EntityStateAttribute.ICON: 'icon'>: 'mdi:wifi',
       <SensorEntityCapabilityAttribute.OPTIONS: 'options'>: list([
         'verylow',
         'low',
@@ -2113,10 +2113,10 @@
 # name: test_sensor_entities_snapshot[cloud_nexity_rail_din_europe.json][sensor.maple_residence_garden_radiator_rssi_level-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'device_class': 'signal_strength',
-      'friendly_name': 'Garden Radiator RSSI level',
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'signal_strength',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Garden Radiator RSSI level',
       <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
-      'unit_of_measurement': 'dB',
+      <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: 'dB',
     }),
     'context': <ANY>,
     'entity_id': 'sensor.maple_residence_garden_radiator_rssi_level',
@@ -2173,8 +2173,8 @@
 # name: test_sensor_entities_snapshot[cloud_nexity_rail_din_europe.json][sensor.maple_residence_garden_radiator_sensor_defect-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'device_class': 'enum',
-      'friendly_name': 'Garden Radiator Sensor defect',
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'enum',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Garden Radiator Sensor defect',
       <SensorEntityCapabilityAttribute.OPTIONS: 'options'>: list([
         'dead',
         'low_battery',
@@ -2237,9 +2237,9 @@
 # name: test_sensor_entities_snapshot[cloud_nexity_rail_din_europe.json][sensor.maple_residence_hallway_shutter_discrete_rssi_level-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'device_class': 'enum',
-      'friendly_name': 'Hallway Shutter Discrete RSSI level',
-      'icon': 'mdi:wifi',
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'enum',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Hallway Shutter Discrete RSSI level',
+      <EntityStateAttribute.ICON: 'icon'>: 'mdi:wifi',
       <SensorEntityCapabilityAttribute.OPTIONS: 'options'>: list([
         'verylow',
         'low',
@@ -2295,8 +2295,8 @@
 # name: test_sensor_entities_snapshot[cloud_nexity_rail_din_europe.json][sensor.maple_residence_hallway_shutter_priority_lock_originator-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'Hallway Shutter Priority lock originator',
-      'icon': 'mdi:lock',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Hallway Shutter Priority lock originator',
+      <EntityStateAttribute.ICON: 'icon'>: 'mdi:lock',
     }),
     'context': <ANY>,
     'entity_id': 'sensor.maple_residence_hallway_shutter_priority_lock_originator',
@@ -2346,9 +2346,9 @@
 # name: test_sensor_entities_snapshot[cloud_nexity_rail_din_europe.json][sensor.maple_residence_hallway_shutter_priority_lock_timer-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'Hallway Shutter Priority lock timer',
-      'icon': 'mdi:lock-clock',
-      'unit_of_measurement': <UnitOfTime.SECONDS: 's'>,
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Hallway Shutter Priority lock timer',
+      <EntityStateAttribute.ICON: 'icon'>: 'mdi:lock-clock',
+      <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: <UnitOfTime.SECONDS: 's'>,
     }),
     'context': <ANY>,
     'entity_id': 'sensor.maple_residence_hallway_shutter_priority_lock_timer',
@@ -2400,10 +2400,10 @@
 # name: test_sensor_entities_snapshot[cloud_nexity_rail_din_europe.json][sensor.maple_residence_hallway_shutter_rssi_level-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'device_class': 'signal_strength',
-      'friendly_name': 'Hallway Shutter RSSI level',
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'signal_strength',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Hallway Shutter RSSI level',
       <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
-      'unit_of_measurement': 'dB',
+      <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: 'dB',
     }),
     'context': <ANY>,
     'entity_id': 'sensor.maple_residence_hallway_shutter_rssi_level',
@@ -2453,8 +2453,8 @@
 # name: test_sensor_entities_snapshot[cloud_nexity_rail_din_europe.json][sensor.maple_residence_hallway_shutter_target_closure-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'Hallway Shutter Target closure',
-      'unit_of_measurement': '%',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Hallway Shutter Target closure',
+      <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: '%',
     }),
     'context': <ANY>,
     'entity_id': 'sensor.maple_residence_hallway_shutter_target_closure',
@@ -2511,9 +2511,9 @@
 # name: test_sensor_entities_snapshot[cloud_nexity_rail_din_europe.json][sensor.maple_residence_living_room_air_inlet_discrete_rssi_level-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'device_class': 'enum',
-      'friendly_name': 'Living Room Air Inlet Discrete RSSI level',
-      'icon': 'mdi:wifi',
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'enum',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Living Room Air Inlet Discrete RSSI level',
+      <EntityStateAttribute.ICON: 'icon'>: 'mdi:wifi',
       <SensorEntityCapabilityAttribute.OPTIONS: 'options'>: list([
         'verylow',
         'low',
@@ -2569,9 +2569,9 @@
 # name: test_sensor_entities_snapshot[cloud_nexity_rail_din_europe.json][sensor.maple_residence_living_room_air_inlet_priority_lock_timer-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'Living Room Air Inlet Priority lock timer',
-      'icon': 'mdi:lock-clock',
-      'unit_of_measurement': <UnitOfTime.SECONDS: 's'>,
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Living Room Air Inlet Priority lock timer',
+      <EntityStateAttribute.ICON: 'icon'>: 'mdi:lock-clock',
+      <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: <UnitOfTime.SECONDS: 's'>,
     }),
     'context': <ANY>,
     'entity_id': 'sensor.maple_residence_living_room_air_inlet_priority_lock_timer',
@@ -2623,10 +2623,10 @@
 # name: test_sensor_entities_snapshot[cloud_nexity_rail_din_europe.json][sensor.maple_residence_living_room_air_inlet_rssi_level-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'device_class': 'signal_strength',
-      'friendly_name': 'Living Room Air Inlet RSSI level',
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'signal_strength',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Living Room Air Inlet RSSI level',
       <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
-      'unit_of_measurement': 'dB',
+      <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: 'dB',
     }),
     'context': <ANY>,
     'entity_id': 'sensor.maple_residence_living_room_air_inlet_rssi_level',
@@ -2683,9 +2683,9 @@
 # name: test_sensor_entities_snapshot[cloud_nexity_rail_din_europe.json][sensor.maple_residence_living_room_air_outlet_discrete_rssi_level-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'device_class': 'enum',
-      'friendly_name': 'Living Room Air Outlet Discrete RSSI level',
-      'icon': 'mdi:wifi',
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'enum',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Living Room Air Outlet Discrete RSSI level',
+      <EntityStateAttribute.ICON: 'icon'>: 'mdi:wifi',
       <SensorEntityCapabilityAttribute.OPTIONS: 'options'>: list([
         'verylow',
         'low',
@@ -2741,9 +2741,9 @@
 # name: test_sensor_entities_snapshot[cloud_nexity_rail_din_europe.json][sensor.maple_residence_living_room_air_outlet_priority_lock_timer-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'Living Room Air Outlet Priority lock timer',
-      'icon': 'mdi:lock-clock',
-      'unit_of_measurement': <UnitOfTime.SECONDS: 's'>,
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Living Room Air Outlet Priority lock timer',
+      <EntityStateAttribute.ICON: 'icon'>: 'mdi:lock-clock',
+      <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: <UnitOfTime.SECONDS: 's'>,
     }),
     'context': <ANY>,
     'entity_id': 'sensor.maple_residence_living_room_air_outlet_priority_lock_timer',
@@ -2795,10 +2795,10 @@
 # name: test_sensor_entities_snapshot[cloud_nexity_rail_din_europe.json][sensor.maple_residence_living_room_air_outlet_rssi_level-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'device_class': 'signal_strength',
-      'friendly_name': 'Living Room Air Outlet RSSI level',
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'signal_strength',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Living Room Air Outlet RSSI level',
       <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
-      'unit_of_measurement': 'dB',
+      <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: 'dB',
     }),
     'context': <ANY>,
     'entity_id': 'sensor.maple_residence_living_room_air_outlet_rssi_level',
@@ -2855,9 +2855,9 @@
 # name: test_sensor_entities_snapshot[cloud_nexity_rail_din_europe.json][sensor.maple_residence_living_room_air_transfer_discrete_rssi_level-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'device_class': 'enum',
-      'friendly_name': 'Living Room Air Transfer Discrete RSSI level',
-      'icon': 'mdi:wifi',
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'enum',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Living Room Air Transfer Discrete RSSI level',
+      <EntityStateAttribute.ICON: 'icon'>: 'mdi:wifi',
       <SensorEntityCapabilityAttribute.OPTIONS: 'options'>: list([
         'verylow',
         'low',
@@ -2913,9 +2913,9 @@
 # name: test_sensor_entities_snapshot[cloud_nexity_rail_din_europe.json][sensor.maple_residence_living_room_air_transfer_priority_lock_timer-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'Living Room Air Transfer Priority lock timer',
-      'icon': 'mdi:lock-clock',
-      'unit_of_measurement': <UnitOfTime.SECONDS: 's'>,
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Living Room Air Transfer Priority lock timer',
+      <EntityStateAttribute.ICON: 'icon'>: 'mdi:lock-clock',
+      <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: <UnitOfTime.SECONDS: 's'>,
     }),
     'context': <ANY>,
     'entity_id': 'sensor.maple_residence_living_room_air_transfer_priority_lock_timer',
@@ -2967,10 +2967,10 @@
 # name: test_sensor_entities_snapshot[cloud_nexity_rail_din_europe.json][sensor.maple_residence_living_room_air_transfer_rssi_level-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'device_class': 'signal_strength',
-      'friendly_name': 'Living Room Air Transfer RSSI level',
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'signal_strength',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Living Room Air Transfer RSSI level',
       <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
-      'unit_of_measurement': 'dB',
+      <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: 'dB',
     }),
     'context': <ANY>,
     'entity_id': 'sensor.maple_residence_living_room_air_transfer_rssi_level',
@@ -3022,10 +3022,10 @@
 # name: test_sensor_entities_snapshot[cloud_nexity_rail_din_europe.json][sensor.maple_residence_living_room_radiator_battery_level-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'device_class': 'battery',
-      'friendly_name': 'Living Room Radiator Battery level',
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'battery',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Living Room Radiator Battery level',
       <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
-      'unit_of_measurement': '%',
+      <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: '%',
     }),
     'context': <ANY>,
     'entity_id': 'sensor.maple_residence_living_room_radiator_battery_level',
@@ -3082,9 +3082,9 @@
 # name: test_sensor_entities_snapshot[cloud_nexity_rail_din_europe.json][sensor.maple_residence_living_room_radiator_discrete_rssi_level-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'device_class': 'enum',
-      'friendly_name': 'Living Room Radiator Discrete RSSI level',
-      'icon': 'mdi:wifi',
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'enum',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Living Room Radiator Discrete RSSI level',
+      <EntityStateAttribute.ICON: 'icon'>: 'mdi:wifi',
       <SensorEntityCapabilityAttribute.OPTIONS: 'options'>: list([
         'verylow',
         'low',
@@ -3142,10 +3142,10 @@
 # name: test_sensor_entities_snapshot[cloud_nexity_rail_din_europe.json][sensor.maple_residence_living_room_radiator_rssi_level-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'device_class': 'signal_strength',
-      'friendly_name': 'Living Room Radiator RSSI level',
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'signal_strength',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Living Room Radiator RSSI level',
       <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
-      'unit_of_measurement': 'dB',
+      <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: 'dB',
     }),
     'context': <ANY>,
     'entity_id': 'sensor.maple_residence_living_room_radiator_rssi_level',
@@ -3202,8 +3202,8 @@
 # name: test_sensor_entities_snapshot[cloud_nexity_rail_din_europe.json][sensor.maple_residence_living_room_radiator_sensor_defect-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'device_class': 'enum',
-      'friendly_name': 'Living Room Radiator Sensor defect',
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'enum',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Living Room Radiator Sensor defect',
       <SensorEntityCapabilityAttribute.OPTIONS: 'options'>: list([
         'dead',
         'low_battery',
@@ -3266,9 +3266,9 @@
 # name: test_sensor_entities_snapshot[cloud_nexity_rail_din_europe.json][sensor.maple_residence_living_room_radiator_study_temp_probe_discrete_rssi_level-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'device_class': 'enum',
-      'friendly_name': 'Living Room Radiator Study Temp Probe Discrete RSSI level',
-      'icon': 'mdi:wifi',
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'enum',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Living Room Radiator Study Temp Probe Discrete RSSI level',
+      <EntityStateAttribute.ICON: 'icon'>: 'mdi:wifi',
       <SensorEntityCapabilityAttribute.OPTIONS: 'options'>: list([
         'verylow',
         'low',
@@ -3326,10 +3326,10 @@
 # name: test_sensor_entities_snapshot[cloud_nexity_rail_din_europe.json][sensor.maple_residence_living_room_radiator_study_temp_probe_rssi_level-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'device_class': 'signal_strength',
-      'friendly_name': 'Living Room Radiator Study Temp Probe RSSI level',
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'signal_strength',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Living Room Radiator Study Temp Probe RSSI level',
       <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
-      'unit_of_measurement': 'dB',
+      <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: 'dB',
     }),
     'context': <ANY>,
     'entity_id': 'sensor.maple_residence_living_room_radiator_study_temp_probe_rssi_level',
@@ -3386,8 +3386,8 @@
 # name: test_sensor_entities_snapshot[cloud_nexity_rail_din_europe.json][sensor.maple_residence_living_room_radiator_study_temp_probe_sensor_defect-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'device_class': 'enum',
-      'friendly_name': 'Living Room Radiator Study Temp Probe Sensor defect',
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'enum',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Living Room Radiator Study Temp Probe Sensor defect',
       <SensorEntityCapabilityAttribute.OPTIONS: 'options'>: list([
         'dead',
         'low_battery',
@@ -3448,10 +3448,10 @@
 # name: test_sensor_entities_snapshot[cloud_nexity_rail_din_europe.json][sensor.maple_residence_living_room_radiator_study_temp_probe_temperature-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'device_class': 'temperature',
-      'friendly_name': 'Living Room Radiator Study Temp Probe Temperature',
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'temperature',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Living Room Radiator Study Temp Probe Temperature',
       <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
-      'unit_of_measurement': <UnitOfTemperature.CELSIUS: '°C'>,
+      <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: <UnitOfTemperature.CELSIUS: '°C'>,
     }),
     'context': <ANY>,
     'entity_id': 'sensor.maple_residence_living_room_radiator_study_temp_probe_temperature',
@@ -3508,9 +3508,9 @@
 # name: test_sensor_entities_snapshot[cloud_nexity_rail_din_europe.json][sensor.maple_residence_living_room_smoke_detector_discrete_rssi_level-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'device_class': 'enum',
-      'friendly_name': 'Living Room Smoke Detector Discrete RSSI level',
-      'icon': 'mdi:wifi',
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'enum',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Living Room Smoke Detector Discrete RSSI level',
+      <EntityStateAttribute.ICON: 'icon'>: 'mdi:wifi',
       <SensorEntityCapabilityAttribute.OPTIONS: 'options'>: list([
         'verylow',
         'low',
@@ -3571,9 +3571,9 @@
 # name: test_sensor_entities_snapshot[cloud_nexity_rail_din_europe.json][sensor.maple_residence_living_room_smoke_detector_radio_battery-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'device_class': 'enum',
-      'friendly_name': 'Living Room Smoke Detector Radio battery',
-      'icon': 'mdi:battery',
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'enum',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Living Room Smoke Detector Radio battery',
+      <EntityStateAttribute.ICON: 'icon'>: 'mdi:battery',
       <SensorEntityCapabilityAttribute.OPTIONS: 'options'>: list([
         'low',
         'normal',
@@ -3629,10 +3629,10 @@
 # name: test_sensor_entities_snapshot[cloud_nexity_rail_din_europe.json][sensor.maple_residence_living_room_smoke_detector_rssi_level-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'device_class': 'signal_strength',
-      'friendly_name': 'Living Room Smoke Detector RSSI level',
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'signal_strength',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Living Room Smoke Detector RSSI level',
       <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
-      'unit_of_measurement': 'dB',
+      <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: 'dB',
     }),
     'context': <ANY>,
     'entity_id': 'sensor.maple_residence_living_room_smoke_detector_rssi_level',
@@ -3688,9 +3688,9 @@
 # name: test_sensor_entities_snapshot[cloud_nexity_rail_din_europe.json][sensor.maple_residence_living_room_smoke_detector_sensor_battery-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'device_class': 'enum',
-      'friendly_name': 'Living Room Smoke Detector Sensor battery',
-      'icon': 'mdi:battery',
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'enum',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Living Room Smoke Detector Sensor battery',
+      <EntityStateAttribute.ICON: 'icon'>: 'mdi:battery',
       <SensorEntityCapabilityAttribute.OPTIONS: 'options'>: list([
         'absence',
         'low',
@@ -3752,8 +3752,8 @@
 # name: test_sensor_entities_snapshot[cloud_nexity_rail_din_europe.json][sensor.maple_residence_living_room_smoke_detector_sensor_defect-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'device_class': 'enum',
-      'friendly_name': 'Living Room Smoke Detector Sensor defect',
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'enum',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Living Room Smoke Detector Sensor defect',
       <SensorEntityCapabilityAttribute.OPTIONS: 'options'>: list([
         'dead',
         'low_battery',
@@ -3814,9 +3814,9 @@
 # name: test_sensor_entities_snapshot[cloud_nexity_rail_din_europe.json][sensor.maple_residence_living_room_smoke_detector_sensor_room-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'device_class': 'enum',
-      'friendly_name': 'Living Room Smoke Detector Sensor room',
-      'icon': 'mdi:spray-bottle',
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'enum',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Living Room Smoke Detector Sensor room',
+      <EntityStateAttribute.ICON: 'icon'>: 'mdi:spray-bottle',
       <SensorEntityCapabilityAttribute.OPTIONS: 'options'>: list([
         'clean',
         'dirty',
@@ -3877,9 +3877,9 @@
 # name: test_sensor_entities_snapshot[cloud_nexity_rail_din_europe.json][sensor.maple_residence_nursery_shutter_discrete_rssi_level-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'device_class': 'enum',
-      'friendly_name': 'Nursery Shutter Discrete RSSI level',
-      'icon': 'mdi:wifi',
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'enum',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Nursery Shutter Discrete RSSI level',
+      <EntityStateAttribute.ICON: 'icon'>: 'mdi:wifi',
       <SensorEntityCapabilityAttribute.OPTIONS: 'options'>: list([
         'verylow',
         'low',
@@ -3935,8 +3935,8 @@
 # name: test_sensor_entities_snapshot[cloud_nexity_rail_din_europe.json][sensor.maple_residence_nursery_shutter_priority_lock_originator-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'Nursery Shutter Priority lock originator',
-      'icon': 'mdi:lock',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Nursery Shutter Priority lock originator',
+      <EntityStateAttribute.ICON: 'icon'>: 'mdi:lock',
     }),
     'context': <ANY>,
     'entity_id': 'sensor.maple_residence_nursery_shutter_priority_lock_originator',
@@ -3986,9 +3986,9 @@
 # name: test_sensor_entities_snapshot[cloud_nexity_rail_din_europe.json][sensor.maple_residence_nursery_shutter_priority_lock_timer-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'Nursery Shutter Priority lock timer',
-      'icon': 'mdi:lock-clock',
-      'unit_of_measurement': <UnitOfTime.SECONDS: 's'>,
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Nursery Shutter Priority lock timer',
+      <EntityStateAttribute.ICON: 'icon'>: 'mdi:lock-clock',
+      <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: <UnitOfTime.SECONDS: 's'>,
     }),
     'context': <ANY>,
     'entity_id': 'sensor.maple_residence_nursery_shutter_priority_lock_timer',
@@ -4040,10 +4040,10 @@
 # name: test_sensor_entities_snapshot[cloud_nexity_rail_din_europe.json][sensor.maple_residence_nursery_shutter_rssi_level-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'device_class': 'signal_strength',
-      'friendly_name': 'Nursery Shutter RSSI level',
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'signal_strength',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Nursery Shutter RSSI level',
       <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
-      'unit_of_measurement': 'dB',
+      <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: 'dB',
     }),
     'context': <ANY>,
     'entity_id': 'sensor.maple_residence_nursery_shutter_rssi_level',
@@ -4093,8 +4093,8 @@
 # name: test_sensor_entities_snapshot[cloud_nexity_rail_din_europe.json][sensor.maple_residence_nursery_shutter_target_closure-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'Nursery Shutter Target closure',
-      'unit_of_measurement': '%',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Nursery Shutter Target closure',
+      <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: '%',
     }),
     'context': <ANY>,
     'entity_id': 'sensor.maple_residence_nursery_shutter_target_closure',
@@ -4151,9 +4151,9 @@
 # name: test_sensor_entities_snapshot[cloud_nexity_rail_din_europe.json][sensor.maple_residence_office_shutter_discrete_rssi_level-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'device_class': 'enum',
-      'friendly_name': 'Office Shutter Discrete RSSI level',
-      'icon': 'mdi:wifi',
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'enum',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Office Shutter Discrete RSSI level',
+      <EntityStateAttribute.ICON: 'icon'>: 'mdi:wifi',
       <SensorEntityCapabilityAttribute.OPTIONS: 'options'>: list([
         'verylow',
         'low',
@@ -4209,8 +4209,8 @@
 # name: test_sensor_entities_snapshot[cloud_nexity_rail_din_europe.json][sensor.maple_residence_office_shutter_priority_lock_originator-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'Office Shutter Priority lock originator',
-      'icon': 'mdi:lock',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Office Shutter Priority lock originator',
+      <EntityStateAttribute.ICON: 'icon'>: 'mdi:lock',
     }),
     'context': <ANY>,
     'entity_id': 'sensor.maple_residence_office_shutter_priority_lock_originator',
@@ -4260,9 +4260,9 @@
 # name: test_sensor_entities_snapshot[cloud_nexity_rail_din_europe.json][sensor.maple_residence_office_shutter_priority_lock_timer-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'Office Shutter Priority lock timer',
-      'icon': 'mdi:lock-clock',
-      'unit_of_measurement': <UnitOfTime.SECONDS: 's'>,
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Office Shutter Priority lock timer',
+      <EntityStateAttribute.ICON: 'icon'>: 'mdi:lock-clock',
+      <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: <UnitOfTime.SECONDS: 's'>,
     }),
     'context': <ANY>,
     'entity_id': 'sensor.maple_residence_office_shutter_priority_lock_timer',
@@ -4314,10 +4314,10 @@
 # name: test_sensor_entities_snapshot[cloud_nexity_rail_din_europe.json][sensor.maple_residence_office_shutter_rssi_level-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'device_class': 'signal_strength',
-      'friendly_name': 'Office Shutter RSSI level',
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'signal_strength',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Office Shutter RSSI level',
       <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
-      'unit_of_measurement': 'dB',
+      <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: 'dB',
     }),
     'context': <ANY>,
     'entity_id': 'sensor.maple_residence_office_shutter_rssi_level',
@@ -4367,8 +4367,8 @@
 # name: test_sensor_entities_snapshot[cloud_nexity_rail_din_europe.json][sensor.maple_residence_office_shutter_target_closure-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'Office Shutter Target closure',
-      'unit_of_measurement': '%',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Office Shutter Target closure',
+      <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: '%',
     }),
     'context': <ANY>,
     'entity_id': 'sensor.maple_residence_office_shutter_target_closure',
@@ -4425,9 +4425,9 @@
 # name: test_sensor_entities_snapshot[cloud_nexity_rail_din_europe.json][sensor.maple_residence_study_ceiling_light_discrete_rssi_level-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'device_class': 'enum',
-      'friendly_name': 'Study Ceiling Light Discrete RSSI level',
-      'icon': 'mdi:wifi',
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'enum',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Study Ceiling Light Discrete RSSI level',
+      <EntityStateAttribute.ICON: 'icon'>: 'mdi:wifi',
       <SensorEntityCapabilityAttribute.OPTIONS: 'options'>: list([
         'verylow',
         'low',
@@ -4483,8 +4483,8 @@
 # name: test_sensor_entities_snapshot[cloud_nexity_rail_din_europe.json][sensor.maple_residence_study_ceiling_light_priority_lock_originator-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'Study Ceiling Light Priority lock originator',
-      'icon': 'mdi:lock',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Study Ceiling Light Priority lock originator',
+      <EntityStateAttribute.ICON: 'icon'>: 'mdi:lock',
     }),
     'context': <ANY>,
     'entity_id': 'sensor.maple_residence_study_ceiling_light_priority_lock_originator',
@@ -4534,9 +4534,9 @@
 # name: test_sensor_entities_snapshot[cloud_nexity_rail_din_europe.json][sensor.maple_residence_study_ceiling_light_priority_lock_timer-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'Study Ceiling Light Priority lock timer',
-      'icon': 'mdi:lock-clock',
-      'unit_of_measurement': <UnitOfTime.SECONDS: 's'>,
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Study Ceiling Light Priority lock timer',
+      <EntityStateAttribute.ICON: 'icon'>: 'mdi:lock-clock',
+      <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: <UnitOfTime.SECONDS: 's'>,
     }),
     'context': <ANY>,
     'entity_id': 'sensor.maple_residence_study_ceiling_light_priority_lock_timer',
@@ -4588,10 +4588,10 @@
 # name: test_sensor_entities_snapshot[cloud_nexity_rail_din_europe.json][sensor.maple_residence_study_ceiling_light_rssi_level-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'device_class': 'signal_strength',
-      'friendly_name': 'Study Ceiling Light RSSI level',
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'signal_strength',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Study Ceiling Light RSSI level',
       <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
-      'unit_of_measurement': 'dB',
+      <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: 'dB',
     }),
     'context': <ANY>,
     'entity_id': 'sensor.maple_residence_study_ceiling_light_rssi_level',
@@ -4643,10 +4643,10 @@
 # name: test_sensor_entities_snapshot[cloud_nexity_rail_din_europe.json][sensor.maple_residence_study_radiator_battery_level-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'device_class': 'battery',
-      'friendly_name': 'Study Radiator Battery level',
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'battery',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Study Radiator Battery level',
       <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
-      'unit_of_measurement': '%',
+      <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: '%',
     }),
     'context': <ANY>,
     'entity_id': 'sensor.maple_residence_study_radiator_battery_level',
@@ -4703,9 +4703,9 @@
 # name: test_sensor_entities_snapshot[cloud_nexity_rail_din_europe.json][sensor.maple_residence_study_radiator_discrete_rssi_level-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'device_class': 'enum',
-      'friendly_name': 'Study Radiator Discrete RSSI level',
-      'icon': 'mdi:wifi',
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'enum',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Study Radiator Discrete RSSI level',
+      <EntityStateAttribute.ICON: 'icon'>: 'mdi:wifi',
       <SensorEntityCapabilityAttribute.OPTIONS: 'options'>: list([
         'verylow',
         'low',
@@ -4768,9 +4768,9 @@
 # name: test_sensor_entities_snapshot[cloud_nexity_rail_din_europe.json][sensor.maple_residence_study_radiator_nursery_temp_probe_discrete_rssi_level-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'device_class': 'enum',
-      'friendly_name': 'Study Radiator Nursery Temp Probe Discrete RSSI level',
-      'icon': 'mdi:wifi',
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'enum',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Study Radiator Nursery Temp Probe Discrete RSSI level',
+      <EntityStateAttribute.ICON: 'icon'>: 'mdi:wifi',
       <SensorEntityCapabilityAttribute.OPTIONS: 'options'>: list([
         'verylow',
         'low',
@@ -4828,10 +4828,10 @@
 # name: test_sensor_entities_snapshot[cloud_nexity_rail_din_europe.json][sensor.maple_residence_study_radiator_nursery_temp_probe_rssi_level-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'device_class': 'signal_strength',
-      'friendly_name': 'Study Radiator Nursery Temp Probe RSSI level',
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'signal_strength',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Study Radiator Nursery Temp Probe RSSI level',
       <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
-      'unit_of_measurement': 'dB',
+      <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: 'dB',
     }),
     'context': <ANY>,
     'entity_id': 'sensor.maple_residence_study_radiator_nursery_temp_probe_rssi_level',
@@ -4888,8 +4888,8 @@
 # name: test_sensor_entities_snapshot[cloud_nexity_rail_din_europe.json][sensor.maple_residence_study_radiator_nursery_temp_probe_sensor_defect-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'device_class': 'enum',
-      'friendly_name': 'Study Radiator Nursery Temp Probe Sensor defect',
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'enum',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Study Radiator Nursery Temp Probe Sensor defect',
       <SensorEntityCapabilityAttribute.OPTIONS: 'options'>: list([
         'dead',
         'low_battery',
@@ -4950,10 +4950,10 @@
 # name: test_sensor_entities_snapshot[cloud_nexity_rail_din_europe.json][sensor.maple_residence_study_radiator_nursery_temp_probe_temperature-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'device_class': 'temperature',
-      'friendly_name': 'Study Radiator Nursery Temp Probe Temperature',
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'temperature',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Study Radiator Nursery Temp Probe Temperature',
       <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
-      'unit_of_measurement': <UnitOfTemperature.CELSIUS: '°C'>,
+      <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: <UnitOfTemperature.CELSIUS: '°C'>,
     }),
     'context': <ANY>,
     'entity_id': 'sensor.maple_residence_study_radiator_nursery_temp_probe_temperature',
@@ -5005,10 +5005,10 @@
 # name: test_sensor_entities_snapshot[cloud_nexity_rail_din_europe.json][sensor.maple_residence_study_radiator_rssi_level-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'device_class': 'signal_strength',
-      'friendly_name': 'Study Radiator RSSI level',
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'signal_strength',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Study Radiator RSSI level',
       <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
-      'unit_of_measurement': 'dB',
+      <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: 'dB',
     }),
     'context': <ANY>,
     'entity_id': 'sensor.maple_residence_study_radiator_rssi_level',
@@ -5065,8 +5065,8 @@
 # name: test_sensor_entities_snapshot[cloud_nexity_rail_din_europe.json][sensor.maple_residence_study_radiator_sensor_defect-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'device_class': 'enum',
-      'friendly_name': 'Study Radiator Sensor defect',
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'enum',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Study Radiator Sensor defect',
       <SensorEntityCapabilityAttribute.OPTIONS: 'options'>: list([
         'dead',
         'low_battery',
@@ -5129,9 +5129,9 @@
 # name: test_sensor_entities_snapshot[cloud_nexity_rail_din_europe.json][sensor.maple_residence_terrace_ceiling_light_discrete_rssi_level-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'device_class': 'enum',
-      'friendly_name': 'Terrace Ceiling Light Discrete RSSI level',
-      'icon': 'mdi:wifi',
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'enum',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Terrace Ceiling Light Discrete RSSI level',
+      <EntityStateAttribute.ICON: 'icon'>: 'mdi:wifi',
       <SensorEntityCapabilityAttribute.OPTIONS: 'options'>: list([
         'verylow',
         'low',
@@ -5187,8 +5187,8 @@
 # name: test_sensor_entities_snapshot[cloud_nexity_rail_din_europe.json][sensor.maple_residence_terrace_ceiling_light_priority_lock_originator-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'Terrace Ceiling Light Priority lock originator',
-      'icon': 'mdi:lock',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Terrace Ceiling Light Priority lock originator',
+      <EntityStateAttribute.ICON: 'icon'>: 'mdi:lock',
     }),
     'context': <ANY>,
     'entity_id': 'sensor.maple_residence_terrace_ceiling_light_priority_lock_originator',
@@ -5238,9 +5238,9 @@
 # name: test_sensor_entities_snapshot[cloud_nexity_rail_din_europe.json][sensor.maple_residence_terrace_ceiling_light_priority_lock_timer-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'Terrace Ceiling Light Priority lock timer',
-      'icon': 'mdi:lock-clock',
-      'unit_of_measurement': <UnitOfTime.SECONDS: 's'>,
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Terrace Ceiling Light Priority lock timer',
+      <EntityStateAttribute.ICON: 'icon'>: 'mdi:lock-clock',
+      <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: <UnitOfTime.SECONDS: 's'>,
     }),
     'context': <ANY>,
     'entity_id': 'sensor.maple_residence_terrace_ceiling_light_priority_lock_timer',
@@ -5292,10 +5292,10 @@
 # name: test_sensor_entities_snapshot[cloud_nexity_rail_din_europe.json][sensor.maple_residence_terrace_ceiling_light_rssi_level-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'device_class': 'signal_strength',
-      'friendly_name': 'Terrace Ceiling Light RSSI level',
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'signal_strength',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Terrace Ceiling Light RSSI level',
       <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
-      'unit_of_measurement': 'dB',
+      <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: 'dB',
     }),
     'context': <ANY>,
     'entity_id': 'sensor.maple_residence_terrace_ceiling_light_rssi_level',
@@ -5353,9 +5353,9 @@
 # name: test_sensor_entities_snapshot[cloud_nexity_rail_din_europe.json][sensor.maple_residence_terrace_radiator_battery-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'device_class': 'enum',
-      'friendly_name': 'Terrace Radiator Battery',
-      'icon': 'mdi:battery',
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'enum',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Terrace Radiator Battery',
+      <EntityStateAttribute.ICON: 'icon'>: 'mdi:battery',
       <SensorEntityCapabilityAttribute.OPTIONS: 'options'>: list([
         'full',
         'normal',
@@ -5417,10 +5417,10 @@
 # name: test_sensor_entities_snapshot[cloud_nexity_rail_din_europe.json][sensor.maple_residence_terrace_radiator_garage_temp_probe_temperature-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'device_class': 'temperature',
-      'friendly_name': 'Terrace Radiator Garage Temp Probe Temperature',
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'temperature',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Terrace Radiator Garage Temp Probe Temperature',
       <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
-      'unit_of_measurement': <UnitOfTemperature.CELSIUS: '°C'>,
+      <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: <UnitOfTemperature.CELSIUS: '°C'>,
     }),
     'context': <ANY>,
     'entity_id': 'sensor.maple_residence_terrace_radiator_garage_temp_probe_temperature',
@@ -5470,9 +5470,9 @@
 # name: test_sensor_entities_snapshot[cloud_somfy_tahoma_switch_europe.json][sensor.tahoma_switch_homekit_setup_code-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'assumed_state': True,
-      'friendly_name': 'TaHoma Switch HomeKit setup code',
-      'icon': 'mdi:shield-home',
+      <EntityStateAttribute.ASSUMED_STATE: 'assumed_state'>: True,
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'TaHoma Switch HomeKit setup code',
+      <EntityStateAttribute.ICON: 'icon'>: 'mdi:shield-home',
     }),
     'context': <ANY>,
     'entity_id': 'sensor.tahoma_switch_homekit_setup_code',
@@ -5524,10 +5524,10 @@
 # name: test_sensor_entities_snapshot[local_somfy_tahoma_switch_europe_3.json][sensor.attic_heater_battery_level-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'device_class': 'battery',
-      'friendly_name': 'Attic Heater Battery level',
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'battery',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Attic Heater Battery level',
       <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
-      'unit_of_measurement': '%',
+      <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: '%',
     }),
     'context': <ANY>,
     'entity_id': 'sensor.attic_heater_battery_level',
@@ -5584,9 +5584,9 @@
 # name: test_sensor_entities_snapshot[local_somfy_tahoma_switch_europe_3.json][sensor.attic_heater_discrete_rssi_level-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'device_class': 'enum',
-      'friendly_name': 'Attic Heater Discrete RSSI level',
-      'icon': 'mdi:wifi',
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'enum',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Attic Heater Discrete RSSI level',
+      <EntityStateAttribute.ICON: 'icon'>: 'mdi:wifi',
       <SensorEntityCapabilityAttribute.OPTIONS: 'options'>: list([
         'verylow',
         'low',
@@ -5649,9 +5649,9 @@
 # name: test_sensor_entities_snapshot[local_somfy_tahoma_switch_europe_3.json][sensor.attic_heater_hallway_temperature_sensor_discrete_rssi_level-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'device_class': 'enum',
-      'friendly_name': 'Attic Heater Hallway Temperature Sensor Discrete RSSI level',
-      'icon': 'mdi:wifi',
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'enum',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Attic Heater Hallway Temperature Sensor Discrete RSSI level',
+      <EntityStateAttribute.ICON: 'icon'>: 'mdi:wifi',
       <SensorEntityCapabilityAttribute.OPTIONS: 'options'>: list([
         'verylow',
         'low',
@@ -5709,10 +5709,10 @@
 # name: test_sensor_entities_snapshot[local_somfy_tahoma_switch_europe_3.json][sensor.attic_heater_hallway_temperature_sensor_rssi_level-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'device_class': 'signal_strength',
-      'friendly_name': 'Attic Heater Hallway Temperature Sensor RSSI level',
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'signal_strength',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Attic Heater Hallway Temperature Sensor RSSI level',
       <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
-      'unit_of_measurement': 'dB',
+      <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: 'dB',
     }),
     'context': <ANY>,
     'entity_id': 'sensor.attic_heater_hallway_temperature_sensor_rssi_level',
@@ -5769,8 +5769,8 @@
 # name: test_sensor_entities_snapshot[local_somfy_tahoma_switch_europe_3.json][sensor.attic_heater_hallway_temperature_sensor_sensor_defect-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'device_class': 'enum',
-      'friendly_name': 'Attic Heater Hallway Temperature Sensor Sensor defect',
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'enum',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Attic Heater Hallway Temperature Sensor Sensor defect',
       <SensorEntityCapabilityAttribute.OPTIONS: 'options'>: list([
         'dead',
         'low_battery',
@@ -5831,10 +5831,10 @@
 # name: test_sensor_entities_snapshot[local_somfy_tahoma_switch_europe_3.json][sensor.attic_heater_hallway_temperature_sensor_temperature-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'device_class': 'temperature',
-      'friendly_name': 'Attic Heater Hallway Temperature Sensor Temperature',
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'temperature',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Attic Heater Hallway Temperature Sensor Temperature',
       <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
-      'unit_of_measurement': <UnitOfTemperature.CELSIUS: '°C'>,
+      <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: <UnitOfTemperature.CELSIUS: '°C'>,
     }),
     'context': <ANY>,
     'entity_id': 'sensor.attic_heater_hallway_temperature_sensor_temperature',
@@ -5886,10 +5886,10 @@
 # name: test_sensor_entities_snapshot[local_somfy_tahoma_switch_europe_3.json][sensor.attic_heater_rssi_level-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'device_class': 'signal_strength',
-      'friendly_name': 'Attic Heater RSSI level',
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'signal_strength',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Attic Heater RSSI level',
       <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
-      'unit_of_measurement': 'dB',
+      <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: 'dB',
     }),
     'context': <ANY>,
     'entity_id': 'sensor.attic_heater_rssi_level',
@@ -5946,8 +5946,8 @@
 # name: test_sensor_entities_snapshot[local_somfy_tahoma_switch_europe_3.json][sensor.attic_heater_sensor_defect-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'device_class': 'enum',
-      'friendly_name': 'Attic Heater Sensor defect',
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'enum',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Attic Heater Sensor defect',
       <SensorEntityCapabilityAttribute.OPTIONS: 'options'>: list([
         'dead',
         'low_battery',
@@ -6010,9 +6010,9 @@
 # name: test_sensor_entities_snapshot[local_somfy_tahoma_switch_europe_3.json][sensor.conservatory_screen_discrete_rssi_level-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'device_class': 'enum',
-      'friendly_name': 'Conservatory Screen Discrete RSSI level',
-      'icon': 'mdi:wifi',
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'enum',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Conservatory Screen Discrete RSSI level',
+      <EntityStateAttribute.ICON: 'icon'>: 'mdi:wifi',
       <SensorEntityCapabilityAttribute.OPTIONS: 'options'>: list([
         'verylow',
         'low',
@@ -6070,10 +6070,10 @@
 # name: test_sensor_entities_snapshot[local_somfy_tahoma_switch_europe_3.json][sensor.conservatory_screen_rssi_level-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'device_class': 'signal_strength',
-      'friendly_name': 'Conservatory Screen RSSI level',
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'signal_strength',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Conservatory Screen RSSI level',
       <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
-      'unit_of_measurement': 'dB',
+      <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: 'dB',
     }),
     'context': <ANY>,
     'entity_id': 'sensor.conservatory_screen_rssi_level',
@@ -6123,8 +6123,8 @@
 # name: test_sensor_entities_snapshot[local_somfy_tahoma_switch_europe_3.json][sensor.conservatory_screen_target_closure-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'Conservatory Screen Target closure',
-      'unit_of_measurement': '%',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Conservatory Screen Target closure',
+      <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: '%',
     }),
     'context': <ANY>,
     'entity_id': 'sensor.conservatory_screen_target_closure',
@@ -6176,10 +6176,10 @@
 # name: test_sensor_entities_snapshot[local_somfy_tahoma_switch_europe_3.json][sensor.dining_room_thermostat_battery_level-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'device_class': 'battery',
-      'friendly_name': 'Dining Room Thermostat Battery level',
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'battery',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Dining Room Thermostat Battery level',
       <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
-      'unit_of_measurement': '%',
+      <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: '%',
     }),
     'context': <ANY>,
     'entity_id': 'sensor.dining_room_thermostat_battery_level',
@@ -6236,9 +6236,9 @@
 # name: test_sensor_entities_snapshot[local_somfy_tahoma_switch_europe_3.json][sensor.dining_room_thermostat_discrete_rssi_level-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'device_class': 'enum',
-      'friendly_name': 'Dining Room Thermostat Discrete RSSI level',
-      'icon': 'mdi:wifi',
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'enum',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Dining Room Thermostat Discrete RSSI level',
+      <EntityStateAttribute.ICON: 'icon'>: 'mdi:wifi',
       <SensorEntityCapabilityAttribute.OPTIONS: 'options'>: list([
         'verylow',
         'low',
@@ -6296,10 +6296,10 @@
 # name: test_sensor_entities_snapshot[local_somfy_tahoma_switch_europe_3.json][sensor.dining_room_thermostat_rssi_level-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'device_class': 'signal_strength',
-      'friendly_name': 'Dining Room Thermostat RSSI level',
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'signal_strength',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Dining Room Thermostat RSSI level',
       <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
-      'unit_of_measurement': 'dB',
+      <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: 'dB',
     }),
     'context': <ANY>,
     'entity_id': 'sensor.dining_room_thermostat_rssi_level',
@@ -6356,8 +6356,8 @@
 # name: test_sensor_entities_snapshot[local_somfy_tahoma_switch_europe_3.json][sensor.dining_room_thermostat_sensor_defect-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'device_class': 'enum',
-      'friendly_name': 'Dining Room Thermostat Sensor defect',
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'enum',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Dining Room Thermostat Sensor defect',
       <SensorEntityCapabilityAttribute.OPTIONS: 'options'>: list([
         'dead',
         'low_battery',
@@ -6420,9 +6420,9 @@
 # name: test_sensor_entities_snapshot[local_somfy_tahoma_switch_europe_3.json][sensor.dining_room_wall_light_discrete_rssi_level-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'device_class': 'enum',
-      'friendly_name': 'Dining Room Wall Light Discrete RSSI level',
-      'icon': 'mdi:wifi',
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'enum',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Dining Room Wall Light Discrete RSSI level',
+      <EntityStateAttribute.ICON: 'icon'>: 'mdi:wifi',
       <SensorEntityCapabilityAttribute.OPTIONS: 'options'>: list([
         'verylow',
         'low',
@@ -6480,10 +6480,10 @@
 # name: test_sensor_entities_snapshot[local_somfy_tahoma_switch_europe_3.json][sensor.dining_room_wall_light_rssi_level-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'device_class': 'signal_strength',
-      'friendly_name': 'Dining Room Wall Light RSSI level',
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'signal_strength',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Dining Room Wall Light RSSI level',
       <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
-      'unit_of_measurement': 'dB',
+      <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: 'dB',
     }),
     'context': <ANY>,
     'entity_id': 'sensor.dining_room_wall_light_rssi_level',
@@ -6540,9 +6540,9 @@
 # name: test_sensor_entities_snapshot[local_somfy_tahoma_switch_europe_3.json][sensor.garage_radiator_bathroom_temp_probe_discrete_rssi_level-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'device_class': 'enum',
-      'friendly_name': 'Garage Radiator Bathroom Temp Probe Discrete RSSI level',
-      'icon': 'mdi:wifi',
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'enum',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Garage Radiator Bathroom Temp Probe Discrete RSSI level',
+      <EntityStateAttribute.ICON: 'icon'>: 'mdi:wifi',
       <SensorEntityCapabilityAttribute.OPTIONS: 'options'>: list([
         'verylow',
         'low',
@@ -6600,10 +6600,10 @@
 # name: test_sensor_entities_snapshot[local_somfy_tahoma_switch_europe_3.json][sensor.garage_radiator_bathroom_temp_probe_rssi_level-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'device_class': 'signal_strength',
-      'friendly_name': 'Garage Radiator Bathroom Temp Probe RSSI level',
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'signal_strength',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Garage Radiator Bathroom Temp Probe RSSI level',
       <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
-      'unit_of_measurement': 'dB',
+      <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: 'dB',
     }),
     'context': <ANY>,
     'entity_id': 'sensor.garage_radiator_bathroom_temp_probe_rssi_level',
@@ -6660,8 +6660,8 @@
 # name: test_sensor_entities_snapshot[local_somfy_tahoma_switch_europe_3.json][sensor.garage_radiator_bathroom_temp_probe_sensor_defect-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'device_class': 'enum',
-      'friendly_name': 'Garage Radiator Bathroom Temp Probe Sensor defect',
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'enum',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Garage Radiator Bathroom Temp Probe Sensor defect',
       <SensorEntityCapabilityAttribute.OPTIONS: 'options'>: list([
         'dead',
         'low_battery',
@@ -6722,10 +6722,10 @@
 # name: test_sensor_entities_snapshot[local_somfy_tahoma_switch_europe_3.json][sensor.garage_radiator_bathroom_temp_probe_temperature-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'device_class': 'temperature',
-      'friendly_name': 'Garage Radiator Bathroom Temp Probe Temperature',
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'temperature',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Garage Radiator Bathroom Temp Probe Temperature',
       <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
-      'unit_of_measurement': <UnitOfTemperature.CELSIUS: '°C'>,
+      <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: <UnitOfTemperature.CELSIUS: '°C'>,
     }),
     'context': <ANY>,
     'entity_id': 'sensor.garage_radiator_bathroom_temp_probe_temperature',
@@ -6777,10 +6777,10 @@
 # name: test_sensor_entities_snapshot[local_somfy_tahoma_switch_europe_3.json][sensor.garage_radiator_battery_level-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'device_class': 'battery',
-      'friendly_name': 'Garage Radiator Battery level',
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'battery',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Garage Radiator Battery level',
       <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
-      'unit_of_measurement': '%',
+      <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: '%',
     }),
     'context': <ANY>,
     'entity_id': 'sensor.garage_radiator_battery_level',
@@ -6837,9 +6837,9 @@
 # name: test_sensor_entities_snapshot[local_somfy_tahoma_switch_europe_3.json][sensor.garage_radiator_discrete_rssi_level-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'device_class': 'enum',
-      'friendly_name': 'Garage Radiator Discrete RSSI level',
-      'icon': 'mdi:wifi',
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'enum',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Garage Radiator Discrete RSSI level',
+      <EntityStateAttribute.ICON: 'icon'>: 'mdi:wifi',
       <SensorEntityCapabilityAttribute.OPTIONS: 'options'>: list([
         'verylow',
         'low',
@@ -6897,10 +6897,10 @@
 # name: test_sensor_entities_snapshot[local_somfy_tahoma_switch_europe_3.json][sensor.garage_radiator_rssi_level-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'device_class': 'signal_strength',
-      'friendly_name': 'Garage Radiator RSSI level',
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'signal_strength',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Garage Radiator RSSI level',
       <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
-      'unit_of_measurement': 'dB',
+      <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: 'dB',
     }),
     'context': <ANY>,
     'entity_id': 'sensor.garage_radiator_rssi_level',
@@ -6957,8 +6957,8 @@
 # name: test_sensor_entities_snapshot[local_somfy_tahoma_switch_europe_3.json][sensor.garage_radiator_sensor_defect-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'device_class': 'enum',
-      'friendly_name': 'Garage Radiator Sensor defect',
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'enum',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Garage Radiator Sensor defect',
       <SensorEntityCapabilityAttribute.OPTIONS: 'options'>: list([
         'dead',
         'low_battery',
@@ -7021,9 +7021,9 @@
 # name: test_sensor_entities_snapshot[local_somfy_tahoma_switch_europe_3.json][sensor.garage_thermostat_bathroom_temperature_sensor_discrete_rssi_level-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'device_class': 'enum',
-      'friendly_name': 'Garage Thermostat Bathroom Temperature Sensor Discrete RSSI level',
-      'icon': 'mdi:wifi',
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'enum',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Garage Thermostat Bathroom Temperature Sensor Discrete RSSI level',
+      <EntityStateAttribute.ICON: 'icon'>: 'mdi:wifi',
       <SensorEntityCapabilityAttribute.OPTIONS: 'options'>: list([
         'verylow',
         'low',
@@ -7081,10 +7081,10 @@
 # name: test_sensor_entities_snapshot[local_somfy_tahoma_switch_europe_3.json][sensor.garage_thermostat_bathroom_temperature_sensor_rssi_level-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'device_class': 'signal_strength',
-      'friendly_name': 'Garage Thermostat Bathroom Temperature Sensor RSSI level',
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'signal_strength',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Garage Thermostat Bathroom Temperature Sensor RSSI level',
       <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
-      'unit_of_measurement': 'dB',
+      <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: 'dB',
     }),
     'context': <ANY>,
     'entity_id': 'sensor.garage_thermostat_bathroom_temperature_sensor_rssi_level',
@@ -7141,8 +7141,8 @@
 # name: test_sensor_entities_snapshot[local_somfy_tahoma_switch_europe_3.json][sensor.garage_thermostat_bathroom_temperature_sensor_sensor_defect-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'device_class': 'enum',
-      'friendly_name': 'Garage Thermostat Bathroom Temperature Sensor Sensor defect',
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'enum',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Garage Thermostat Bathroom Temperature Sensor Sensor defect',
       <SensorEntityCapabilityAttribute.OPTIONS: 'options'>: list([
         'dead',
         'low_battery',
@@ -7203,10 +7203,10 @@
 # name: test_sensor_entities_snapshot[local_somfy_tahoma_switch_europe_3.json][sensor.garage_thermostat_bathroom_temperature_sensor_temperature-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'device_class': 'temperature',
-      'friendly_name': 'Garage Thermostat Bathroom Temperature Sensor Temperature',
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'temperature',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Garage Thermostat Bathroom Temperature Sensor Temperature',
       <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
-      'unit_of_measurement': <UnitOfTemperature.CELSIUS: '°C'>,
+      <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: <UnitOfTemperature.CELSIUS: '°C'>,
     }),
     'context': <ANY>,
     'entity_id': 'sensor.garage_thermostat_bathroom_temperature_sensor_temperature',
@@ -7258,10 +7258,10 @@
 # name: test_sensor_entities_snapshot[local_somfy_tahoma_switch_europe_3.json][sensor.garage_thermostat_battery_level-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'device_class': 'battery',
-      'friendly_name': 'Garage Thermostat Battery level',
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'battery',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Garage Thermostat Battery level',
       <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
-      'unit_of_measurement': '%',
+      <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: '%',
     }),
     'context': <ANY>,
     'entity_id': 'sensor.garage_thermostat_battery_level',
@@ -7318,9 +7318,9 @@
 # name: test_sensor_entities_snapshot[local_somfy_tahoma_switch_europe_3.json][sensor.garage_thermostat_discrete_rssi_level-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'device_class': 'enum',
-      'friendly_name': 'Garage Thermostat Discrete RSSI level',
-      'icon': 'mdi:wifi',
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'enum',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Garage Thermostat Discrete RSSI level',
+      <EntityStateAttribute.ICON: 'icon'>: 'mdi:wifi',
       <SensorEntityCapabilityAttribute.OPTIONS: 'options'>: list([
         'verylow',
         'low',
@@ -7378,10 +7378,10 @@
 # name: test_sensor_entities_snapshot[local_somfy_tahoma_switch_europe_3.json][sensor.garage_thermostat_rssi_level-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'device_class': 'signal_strength',
-      'friendly_name': 'Garage Thermostat RSSI level',
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'signal_strength',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Garage Thermostat RSSI level',
       <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
-      'unit_of_measurement': 'dB',
+      <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: 'dB',
     }),
     'context': <ANY>,
     'entity_id': 'sensor.garage_thermostat_rssi_level',
@@ -7438,8 +7438,8 @@
 # name: test_sensor_entities_snapshot[local_somfy_tahoma_switch_europe_3.json][sensor.garage_thermostat_sensor_defect-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'device_class': 'enum',
-      'friendly_name': 'Garage Thermostat Sensor defect',
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'enum',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Garage Thermostat Sensor defect',
       <SensorEntityCapabilityAttribute.OPTIONS: 'options'>: list([
         'dead',
         'low_battery',
@@ -7497,10 +7497,10 @@
 # name: test_sensor_entities_snapshot[local_somfy_tahoma_switch_europe_3.json][sensor.garden_radiator_battery_level-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'device_class': 'battery',
-      'friendly_name': 'Garden Radiator Battery level',
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'battery',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Garden Radiator Battery level',
       <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
-      'unit_of_measurement': '%',
+      <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: '%',
     }),
     'context': <ANY>,
     'entity_id': 'sensor.garden_radiator_battery_level',
@@ -7557,9 +7557,9 @@
 # name: test_sensor_entities_snapshot[local_somfy_tahoma_switch_europe_3.json][sensor.garden_radiator_discrete_rssi_level-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'device_class': 'enum',
-      'friendly_name': 'Garden Radiator Discrete RSSI level',
-      'icon': 'mdi:wifi',
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'enum',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Garden Radiator Discrete RSSI level',
+      <EntityStateAttribute.ICON: 'icon'>: 'mdi:wifi',
       <SensorEntityCapabilityAttribute.OPTIONS: 'options'>: list([
         'verylow',
         'low',
@@ -7622,9 +7622,9 @@
 # name: test_sensor_entities_snapshot[local_somfy_tahoma_switch_europe_3.json][sensor.garden_radiator_garage_temp_probe_discrete_rssi_level-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'device_class': 'enum',
-      'friendly_name': 'Garden Radiator Garage Temp Probe Discrete RSSI level',
-      'icon': 'mdi:wifi',
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'enum',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Garden Radiator Garage Temp Probe Discrete RSSI level',
+      <EntityStateAttribute.ICON: 'icon'>: 'mdi:wifi',
       <SensorEntityCapabilityAttribute.OPTIONS: 'options'>: list([
         'verylow',
         'low',
@@ -7682,10 +7682,10 @@
 # name: test_sensor_entities_snapshot[local_somfy_tahoma_switch_europe_3.json][sensor.garden_radiator_garage_temp_probe_rssi_level-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'device_class': 'signal_strength',
-      'friendly_name': 'Garden Radiator Garage Temp Probe RSSI level',
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'signal_strength',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Garden Radiator Garage Temp Probe RSSI level',
       <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
-      'unit_of_measurement': 'dB',
+      <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: 'dB',
     }),
     'context': <ANY>,
     'entity_id': 'sensor.garden_radiator_garage_temp_probe_rssi_level',
@@ -7742,8 +7742,8 @@
 # name: test_sensor_entities_snapshot[local_somfy_tahoma_switch_europe_3.json][sensor.garden_radiator_garage_temp_probe_sensor_defect-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'device_class': 'enum',
-      'friendly_name': 'Garden Radiator Garage Temp Probe Sensor defect',
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'enum',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Garden Radiator Garage Temp Probe Sensor defect',
       <SensorEntityCapabilityAttribute.OPTIONS: 'options'>: list([
         'dead',
         'low_battery',
@@ -7804,10 +7804,10 @@
 # name: test_sensor_entities_snapshot[local_somfy_tahoma_switch_europe_3.json][sensor.garden_radiator_garage_temp_probe_temperature-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'device_class': 'temperature',
-      'friendly_name': 'Garden Radiator Garage Temp Probe Temperature',
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'temperature',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Garden Radiator Garage Temp Probe Temperature',
       <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
-      'unit_of_measurement': <UnitOfTemperature.CELSIUS: '°C'>,
+      <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: <UnitOfTemperature.CELSIUS: '°C'>,
     }),
     'context': <ANY>,
     'entity_id': 'sensor.garden_radiator_garage_temp_probe_temperature',
@@ -7859,10 +7859,10 @@
 # name: test_sensor_entities_snapshot[local_somfy_tahoma_switch_europe_3.json][sensor.garden_radiator_rssi_level-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'device_class': 'signal_strength',
-      'friendly_name': 'Garden Radiator RSSI level',
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'signal_strength',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Garden Radiator RSSI level',
       <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
-      'unit_of_measurement': 'dB',
+      <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: 'dB',
     }),
     'context': <ANY>,
     'entity_id': 'sensor.garden_radiator_rssi_level',
@@ -7919,8 +7919,8 @@
 # name: test_sensor_entities_snapshot[local_somfy_tahoma_switch_europe_3.json][sensor.garden_radiator_sensor_defect-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'device_class': 'enum',
-      'friendly_name': 'Garden Radiator Sensor defect',
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'enum',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Garden Radiator Sensor defect',
       <SensorEntityCapabilityAttribute.OPTIONS: 'options'>: list([
         'dead',
         'low_battery',
@@ -7983,9 +7983,9 @@
 # name: test_sensor_entities_snapshot[local_somfy_tahoma_switch_europe_3.json][sensor.garden_temp_probe_discrete_rssi_level-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'device_class': 'enum',
-      'friendly_name': 'Dining Room Thermostat Garden Temp Probe Discrete RSSI level',
-      'icon': 'mdi:wifi',
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'enum',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Dining Room Thermostat Garden Temp Probe Discrete RSSI level',
+      <EntityStateAttribute.ICON: 'icon'>: 'mdi:wifi',
       <SensorEntityCapabilityAttribute.OPTIONS: 'options'>: list([
         'verylow',
         'low',
@@ -8043,10 +8043,10 @@
 # name: test_sensor_entities_snapshot[local_somfy_tahoma_switch_europe_3.json][sensor.garden_temp_probe_rssi_level-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'device_class': 'signal_strength',
-      'friendly_name': 'Dining Room Thermostat Garden Temp Probe RSSI level',
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'signal_strength',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Dining Room Thermostat Garden Temp Probe RSSI level',
       <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
-      'unit_of_measurement': 'dB',
+      <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: 'dB',
     }),
     'context': <ANY>,
     'entity_id': 'sensor.garden_temp_probe_rssi_level',
@@ -8103,8 +8103,8 @@
 # name: test_sensor_entities_snapshot[local_somfy_tahoma_switch_europe_3.json][sensor.garden_temp_probe_sensor_defect-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'device_class': 'enum',
-      'friendly_name': 'Dining Room Thermostat Garden Temp Probe Sensor defect',
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'enum',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Dining Room Thermostat Garden Temp Probe Sensor defect',
       <SensorEntityCapabilityAttribute.OPTIONS: 'options'>: list([
         'dead',
         'low_battery',
@@ -8165,10 +8165,10 @@
 # name: test_sensor_entities_snapshot[local_somfy_tahoma_switch_europe_3.json][sensor.garden_temp_probe_temperature-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'device_class': 'temperature',
-      'friendly_name': 'Dining Room Thermostat Garden Temp Probe Temperature',
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'temperature',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Dining Room Thermostat Garden Temp Probe Temperature',
       <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
-      'unit_of_measurement': <UnitOfTemperature.CELSIUS: '°C'>,
+      <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: <UnitOfTemperature.CELSIUS: '°C'>,
     }),
     'context': <ANY>,
     'entity_id': 'sensor.garden_temp_probe_temperature',
@@ -8225,9 +8225,9 @@
 # name: test_sensor_entities_snapshot[local_somfy_tahoma_switch_europe_3.json][sensor.garden_temperature_sensor_discrete_rssi_level-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'device_class': 'enum',
-      'friendly_name': 'Patio Thermostat Garden Temperature Sensor Discrete RSSI level',
-      'icon': 'mdi:wifi',
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'enum',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Patio Thermostat Garden Temperature Sensor Discrete RSSI level',
+      <EntityStateAttribute.ICON: 'icon'>: 'mdi:wifi',
       <SensorEntityCapabilityAttribute.OPTIONS: 'options'>: list([
         'verylow',
         'low',
@@ -8285,10 +8285,10 @@
 # name: test_sensor_entities_snapshot[local_somfy_tahoma_switch_europe_3.json][sensor.garden_temperature_sensor_rssi_level-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'device_class': 'signal_strength',
-      'friendly_name': 'Patio Thermostat Garden Temperature Sensor RSSI level',
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'signal_strength',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Patio Thermostat Garden Temperature Sensor RSSI level',
       <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
-      'unit_of_measurement': 'dB',
+      <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: 'dB',
     }),
     'context': <ANY>,
     'entity_id': 'sensor.garden_temperature_sensor_rssi_level',
@@ -8345,8 +8345,8 @@
 # name: test_sensor_entities_snapshot[local_somfy_tahoma_switch_europe_3.json][sensor.garden_temperature_sensor_sensor_defect-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'device_class': 'enum',
-      'friendly_name': 'Patio Thermostat Garden Temperature Sensor Sensor defect',
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'enum',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Patio Thermostat Garden Temperature Sensor Sensor defect',
       <SensorEntityCapabilityAttribute.OPTIONS: 'options'>: list([
         'dead',
         'low_battery',
@@ -8407,10 +8407,10 @@
 # name: test_sensor_entities_snapshot[local_somfy_tahoma_switch_europe_3.json][sensor.garden_temperature_sensor_temperature-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'device_class': 'temperature',
-      'friendly_name': 'Patio Thermostat Garden Temperature Sensor Temperature',
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'temperature',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Patio Thermostat Garden Temperature Sensor Temperature',
       <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
-      'unit_of_measurement': <UnitOfTemperature.CELSIUS: '°C'>,
+      <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: <UnitOfTemperature.CELSIUS: '°C'>,
     }),
     'context': <ANY>,
     'entity_id': 'sensor.garden_temperature_sensor_temperature',
@@ -8467,9 +8467,9 @@
 # name: test_sensor_entities_snapshot[local_somfy_tahoma_switch_europe_3.json][sensor.guest_room_ceiling_light_discrete_rssi_level-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'device_class': 'enum',
-      'friendly_name': 'Guest Room Ceiling Light Discrete RSSI level',
-      'icon': 'mdi:wifi',
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'enum',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Guest Room Ceiling Light Discrete RSSI level',
+      <EntityStateAttribute.ICON: 'icon'>: 'mdi:wifi',
       <SensorEntityCapabilityAttribute.OPTIONS: 'options'>: list([
         'verylow',
         'low',
@@ -8527,10 +8527,10 @@
 # name: test_sensor_entities_snapshot[local_somfy_tahoma_switch_europe_3.json][sensor.guest_room_ceiling_light_rssi_level-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'device_class': 'signal_strength',
-      'friendly_name': 'Guest Room Ceiling Light RSSI level',
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'signal_strength',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Guest Room Ceiling Light RSSI level',
       <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
-      'unit_of_measurement': 'dB',
+      <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: 'dB',
     }),
     'context': <ANY>,
     'entity_id': 'sensor.guest_room_ceiling_light_rssi_level',
@@ -8582,10 +8582,10 @@
 # name: test_sensor_entities_snapshot[local_somfy_tahoma_switch_europe_3.json][sensor.hallway_radiator_battery_level-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'device_class': 'battery',
-      'friendly_name': 'Hallway Radiator Battery level',
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'battery',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Hallway Radiator Battery level',
       <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
-      'unit_of_measurement': '%',
+      <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: '%',
     }),
     'context': <ANY>,
     'entity_id': 'sensor.hallway_radiator_battery_level',
@@ -8642,9 +8642,9 @@
 # name: test_sensor_entities_snapshot[local_somfy_tahoma_switch_europe_3.json][sensor.hallway_radiator_discrete_rssi_level-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'device_class': 'enum',
-      'friendly_name': 'Hallway Radiator Discrete RSSI level',
-      'icon': 'mdi:wifi',
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'enum',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Hallway Radiator Discrete RSSI level',
+      <EntityStateAttribute.ICON: 'icon'>: 'mdi:wifi',
       <SensorEntityCapabilityAttribute.OPTIONS: 'options'>: list([
         'verylow',
         'low',
@@ -8702,10 +8702,10 @@
 # name: test_sensor_entities_snapshot[local_somfy_tahoma_switch_europe_3.json][sensor.hallway_radiator_rssi_level-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'device_class': 'signal_strength',
-      'friendly_name': 'Hallway Radiator RSSI level',
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'signal_strength',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Hallway Radiator RSSI level',
       <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
-      'unit_of_measurement': 'dB',
+      <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: 'dB',
     }),
     'context': <ANY>,
     'entity_id': 'sensor.hallway_radiator_rssi_level',
@@ -8762,8 +8762,8 @@
 # name: test_sensor_entities_snapshot[local_somfy_tahoma_switch_europe_3.json][sensor.hallway_radiator_sensor_defect-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'device_class': 'enum',
-      'friendly_name': 'Hallway Radiator Sensor defect',
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'enum',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Hallway Radiator Sensor defect',
       <SensorEntityCapabilityAttribute.OPTIONS: 'options'>: list([
         'dead',
         'low_battery',
@@ -8826,9 +8826,9 @@
 # name: test_sensor_entities_snapshot[local_somfy_tahoma_switch_europe_3.json][sensor.hallway_radiator_terrace_temp_probe_discrete_rssi_level-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'device_class': 'enum',
-      'friendly_name': 'Hallway Radiator Terrace Temp Probe Discrete RSSI level',
-      'icon': 'mdi:wifi',
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'enum',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Hallway Radiator Terrace Temp Probe Discrete RSSI level',
+      <EntityStateAttribute.ICON: 'icon'>: 'mdi:wifi',
       <SensorEntityCapabilityAttribute.OPTIONS: 'options'>: list([
         'verylow',
         'low',
@@ -8886,10 +8886,10 @@
 # name: test_sensor_entities_snapshot[local_somfy_tahoma_switch_europe_3.json][sensor.hallway_radiator_terrace_temp_probe_rssi_level-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'device_class': 'signal_strength',
-      'friendly_name': 'Hallway Radiator Terrace Temp Probe RSSI level',
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'signal_strength',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Hallway Radiator Terrace Temp Probe RSSI level',
       <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
-      'unit_of_measurement': 'dB',
+      <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: 'dB',
     }),
     'context': <ANY>,
     'entity_id': 'sensor.hallway_radiator_terrace_temp_probe_rssi_level',
@@ -8946,8 +8946,8 @@
 # name: test_sensor_entities_snapshot[local_somfy_tahoma_switch_europe_3.json][sensor.hallway_radiator_terrace_temp_probe_sensor_defect-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'device_class': 'enum',
-      'friendly_name': 'Hallway Radiator Terrace Temp Probe Sensor defect',
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'enum',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Hallway Radiator Terrace Temp Probe Sensor defect',
       <SensorEntityCapabilityAttribute.OPTIONS: 'options'>: list([
         'dead',
         'low_battery',
@@ -9008,10 +9008,10 @@
 # name: test_sensor_entities_snapshot[local_somfy_tahoma_switch_europe_3.json][sensor.hallway_radiator_terrace_temp_probe_temperature-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'device_class': 'temperature',
-      'friendly_name': 'Hallway Radiator Terrace Temp Probe Temperature',
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'temperature',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Hallway Radiator Terrace Temp Probe Temperature',
       <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
-      'unit_of_measurement': <UnitOfTemperature.CELSIUS: '°C'>,
+      <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: <UnitOfTemperature.CELSIUS: '°C'>,
     }),
     'context': <ANY>,
     'entity_id': 'sensor.hallway_radiator_terrace_temp_probe_temperature',
@@ -9068,9 +9068,9 @@
 # name: test_sensor_entities_snapshot[local_somfy_tahoma_switch_europe_3.json][sensor.kitchen_ceiling_light_discrete_rssi_level-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'device_class': 'enum',
-      'friendly_name': 'Kitchen Ceiling Light Discrete RSSI level',
-      'icon': 'mdi:wifi',
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'enum',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Kitchen Ceiling Light Discrete RSSI level',
+      <EntityStateAttribute.ICON: 'icon'>: 'mdi:wifi',
       <SensorEntityCapabilityAttribute.OPTIONS: 'options'>: list([
         'verylow',
         'low',
@@ -9128,10 +9128,10 @@
 # name: test_sensor_entities_snapshot[local_somfy_tahoma_switch_europe_3.json][sensor.kitchen_ceiling_light_rssi_level-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'device_class': 'signal_strength',
-      'friendly_name': 'Kitchen Ceiling Light RSSI level',
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'signal_strength',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Kitchen Ceiling Light RSSI level',
       <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
-      'unit_of_measurement': 'dB',
+      <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: 'dB',
     }),
     'context': <ANY>,
     'entity_id': 'sensor.kitchen_ceiling_light_rssi_level',
@@ -9188,9 +9188,9 @@
 # name: test_sensor_entities_snapshot[local_somfy_tahoma_switch_europe_3.json][sensor.kitchen_temp_probe_discrete_rssi_level-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'device_class': 'enum',
-      'friendly_name': 'Living Room Thermostat Kitchen Temp Probe Discrete RSSI level',
-      'icon': 'mdi:wifi',
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'enum',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Living Room Thermostat Kitchen Temp Probe Discrete RSSI level',
+      <EntityStateAttribute.ICON: 'icon'>: 'mdi:wifi',
       <SensorEntityCapabilityAttribute.OPTIONS: 'options'>: list([
         'verylow',
         'low',
@@ -9248,10 +9248,10 @@
 # name: test_sensor_entities_snapshot[local_somfy_tahoma_switch_europe_3.json][sensor.kitchen_temp_probe_rssi_level-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'device_class': 'signal_strength',
-      'friendly_name': 'Living Room Thermostat Kitchen Temp Probe RSSI level',
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'signal_strength',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Living Room Thermostat Kitchen Temp Probe RSSI level',
       <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
-      'unit_of_measurement': 'dB',
+      <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: 'dB',
     }),
     'context': <ANY>,
     'entity_id': 'sensor.kitchen_temp_probe_rssi_level',
@@ -9308,8 +9308,8 @@
 # name: test_sensor_entities_snapshot[local_somfy_tahoma_switch_europe_3.json][sensor.kitchen_temp_probe_sensor_defect-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'device_class': 'enum',
-      'friendly_name': 'Living Room Thermostat Kitchen Temp Probe Sensor defect',
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'enum',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Living Room Thermostat Kitchen Temp Probe Sensor defect',
       <SensorEntityCapabilityAttribute.OPTIONS: 'options'>: list([
         'dead',
         'low_battery',
@@ -9370,10 +9370,10 @@
 # name: test_sensor_entities_snapshot[local_somfy_tahoma_switch_europe_3.json][sensor.kitchen_temp_probe_temperature-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'device_class': 'temperature',
-      'friendly_name': 'Living Room Thermostat Kitchen Temp Probe Temperature',
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'temperature',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Living Room Thermostat Kitchen Temp Probe Temperature',
       <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
-      'unit_of_measurement': <UnitOfTemperature.CELSIUS: '°C'>,
+      <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: <UnitOfTemperature.CELSIUS: '°C'>,
     }),
     'context': <ANY>,
     'entity_id': 'sensor.kitchen_temp_probe_temperature',
@@ -9430,9 +9430,9 @@
 # name: test_sensor_entities_snapshot[local_somfy_tahoma_switch_europe_3.json][sensor.library_screen_discrete_rssi_level-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'device_class': 'enum',
-      'friendly_name': 'Library Screen Discrete RSSI level',
-      'icon': 'mdi:wifi',
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'enum',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Library Screen Discrete RSSI level',
+      <EntityStateAttribute.ICON: 'icon'>: 'mdi:wifi',
       <SensorEntityCapabilityAttribute.OPTIONS: 'options'>: list([
         'verylow',
         'low',
@@ -9490,10 +9490,10 @@
 # name: test_sensor_entities_snapshot[local_somfy_tahoma_switch_europe_3.json][sensor.library_screen_rssi_level-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'device_class': 'signal_strength',
-      'friendly_name': 'Library Screen RSSI level',
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'signal_strength',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Library Screen RSSI level',
       <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
-      'unit_of_measurement': 'dB',
+      <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: 'dB',
     }),
     'context': <ANY>,
     'entity_id': 'sensor.library_screen_rssi_level',
@@ -9543,8 +9543,8 @@
 # name: test_sensor_entities_snapshot[local_somfy_tahoma_switch_europe_3.json][sensor.library_screen_target_closure-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'Library Screen Target closure',
-      'unit_of_measurement': '%',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Library Screen Target closure',
+      <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: '%',
     }),
     'context': <ANY>,
     'entity_id': 'sensor.library_screen_target_closure',
@@ -9601,9 +9601,9 @@
 # name: test_sensor_entities_snapshot[local_somfy_tahoma_switch_europe_3.json][sensor.living_room_ceiling_light_discrete_rssi_level-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'device_class': 'enum',
-      'friendly_name': 'Living Room Ceiling Light Discrete RSSI level',
-      'icon': 'mdi:wifi',
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'enum',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Living Room Ceiling Light Discrete RSSI level',
+      <EntityStateAttribute.ICON: 'icon'>: 'mdi:wifi',
       <SensorEntityCapabilityAttribute.OPTIONS: 'options'>: list([
         'verylow',
         'low',
@@ -9661,10 +9661,10 @@
 # name: test_sensor_entities_snapshot[local_somfy_tahoma_switch_europe_3.json][sensor.living_room_ceiling_light_rssi_level-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'device_class': 'signal_strength',
-      'friendly_name': 'Living Room Ceiling Light RSSI level',
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'signal_strength',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Living Room Ceiling Light RSSI level',
       <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
-      'unit_of_measurement': 'dB',
+      <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: 'dB',
     }),
     'context': <ANY>,
     'entity_id': 'sensor.living_room_ceiling_light_rssi_level',
@@ -9716,10 +9716,10 @@
 # name: test_sensor_entities_snapshot[local_somfy_tahoma_switch_europe_3.json][sensor.living_room_thermostat_battery_level-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'device_class': 'battery',
-      'friendly_name': 'Living Room Thermostat Battery level',
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'battery',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Living Room Thermostat Battery level',
       <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
-      'unit_of_measurement': '%',
+      <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: '%',
     }),
     'context': <ANY>,
     'entity_id': 'sensor.living_room_thermostat_battery_level',
@@ -9776,9 +9776,9 @@
 # name: test_sensor_entities_snapshot[local_somfy_tahoma_switch_europe_3.json][sensor.living_room_thermostat_discrete_rssi_level-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'device_class': 'enum',
-      'friendly_name': 'Living Room Thermostat Discrete RSSI level',
-      'icon': 'mdi:wifi',
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'enum',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Living Room Thermostat Discrete RSSI level',
+      <EntityStateAttribute.ICON: 'icon'>: 'mdi:wifi',
       <SensorEntityCapabilityAttribute.OPTIONS: 'options'>: list([
         'verylow',
         'low',
@@ -9836,10 +9836,10 @@
 # name: test_sensor_entities_snapshot[local_somfy_tahoma_switch_europe_3.json][sensor.living_room_thermostat_rssi_level-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'device_class': 'signal_strength',
-      'friendly_name': 'Living Room Thermostat RSSI level',
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'signal_strength',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Living Room Thermostat RSSI level',
       <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
-      'unit_of_measurement': 'dB',
+      <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: 'dB',
     }),
     'context': <ANY>,
     'entity_id': 'sensor.living_room_thermostat_rssi_level',
@@ -9896,8 +9896,8 @@
 # name: test_sensor_entities_snapshot[local_somfy_tahoma_switch_europe_3.json][sensor.living_room_thermostat_sensor_defect-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'device_class': 'enum',
-      'friendly_name': 'Living Room Thermostat Sensor defect',
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'enum',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Living Room Thermostat Sensor defect',
       <SensorEntityCapabilityAttribute.OPTIONS: 'options'>: list([
         'dead',
         'low_battery',
@@ -9955,10 +9955,10 @@
 # name: test_sensor_entities_snapshot[local_somfy_tahoma_switch_europe_3.json][sensor.patio_thermostat_battery_level-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'device_class': 'battery',
-      'friendly_name': 'Patio Thermostat Battery level',
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'battery',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Patio Thermostat Battery level',
       <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
-      'unit_of_measurement': '%',
+      <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: '%',
     }),
     'context': <ANY>,
     'entity_id': 'sensor.patio_thermostat_battery_level',
@@ -10015,9 +10015,9 @@
 # name: test_sensor_entities_snapshot[local_somfy_tahoma_switch_europe_3.json][sensor.patio_thermostat_discrete_rssi_level-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'device_class': 'enum',
-      'friendly_name': 'Patio Thermostat Discrete RSSI level',
-      'icon': 'mdi:wifi',
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'enum',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Patio Thermostat Discrete RSSI level',
+      <EntityStateAttribute.ICON: 'icon'>: 'mdi:wifi',
       <SensorEntityCapabilityAttribute.OPTIONS: 'options'>: list([
         'verylow',
         'low',
@@ -10075,10 +10075,10 @@
 # name: test_sensor_entities_snapshot[local_somfy_tahoma_switch_europe_3.json][sensor.patio_thermostat_rssi_level-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'device_class': 'signal_strength',
-      'friendly_name': 'Patio Thermostat RSSI level',
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'signal_strength',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Patio Thermostat RSSI level',
       <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
-      'unit_of_measurement': 'dB',
+      <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: 'dB',
     }),
     'context': <ANY>,
     'entity_id': 'sensor.patio_thermostat_rssi_level',
@@ -10135,8 +10135,8 @@
 # name: test_sensor_entities_snapshot[local_somfy_tahoma_switch_europe_3.json][sensor.patio_thermostat_sensor_defect-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'device_class': 'enum',
-      'friendly_name': 'Patio Thermostat Sensor defect',
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'enum',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Patio Thermostat Sensor defect',
       <SensorEntityCapabilityAttribute.OPTIONS: 'options'>: list([
         'dead',
         'low_battery',
@@ -10199,9 +10199,9 @@
 # name: test_sensor_entities_snapshot[local_somfy_tahoma_switch_europe_3.json][sensor.patio_window_discrete_rssi_level-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'device_class': 'enum',
-      'friendly_name': 'Patio Window Discrete RSSI level',
-      'icon': 'mdi:wifi',
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'enum',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Patio Window Discrete RSSI level',
+      <EntityStateAttribute.ICON: 'icon'>: 'mdi:wifi',
       <SensorEntityCapabilityAttribute.OPTIONS: 'options'>: list([
         'verylow',
         'low',
@@ -10259,10 +10259,10 @@
 # name: test_sensor_entities_snapshot[local_somfy_tahoma_switch_europe_3.json][sensor.patio_window_rssi_level-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'device_class': 'signal_strength',
-      'friendly_name': 'Patio Window RSSI level',
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'signal_strength',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Patio Window RSSI level',
       <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
-      'unit_of_measurement': 'dB',
+      <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: 'dB',
     }),
     'context': <ANY>,
     'entity_id': 'sensor.patio_window_rssi_level',
@@ -10319,9 +10319,9 @@
 # name: test_sensor_entities_snapshot[local_somfy_tahoma_switch_europe_3.json][sensor.sunroom_shades_discrete_rssi_level-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'device_class': 'enum',
-      'friendly_name': 'Sunroom Shades Discrete RSSI level',
-      'icon': 'mdi:wifi',
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'enum',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Sunroom Shades Discrete RSSI level',
+      <EntityStateAttribute.ICON: 'icon'>: 'mdi:wifi',
       <SensorEntityCapabilityAttribute.OPTIONS: 'options'>: list([
         'verylow',
         'low',
@@ -10379,10 +10379,10 @@
 # name: test_sensor_entities_snapshot[local_somfy_tahoma_switch_europe_3.json][sensor.sunroom_shades_rssi_level-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'device_class': 'signal_strength',
-      'friendly_name': 'Sunroom Shades RSSI level',
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'signal_strength',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Sunroom Shades RSSI level',
       <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
-      'unit_of_measurement': 'dB',
+      <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: 'dB',
     }),
     'context': <ANY>,
     'entity_id': 'sensor.sunroom_shades_rssi_level',
@@ -10439,9 +10439,9 @@
 # name: test_sensor_entities_snapshot[local_somfy_tahoma_switch_europe_3.json][sensor.terrace_awning_discrete_rssi_level-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'device_class': 'enum',
-      'friendly_name': 'Terrace Awning Discrete RSSI level',
-      'icon': 'mdi:wifi',
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'enum',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Terrace Awning Discrete RSSI level',
+      <EntityStateAttribute.ICON: 'icon'>: 'mdi:wifi',
       <SensorEntityCapabilityAttribute.OPTIONS: 'options'>: list([
         'verylow',
         'low',
@@ -10499,10 +10499,10 @@
 # name: test_sensor_entities_snapshot[local_somfy_tahoma_switch_europe_3.json][sensor.terrace_awning_rssi_level-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'device_class': 'signal_strength',
-      'friendly_name': 'Terrace Awning RSSI level',
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'signal_strength',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Terrace Awning RSSI level',
       <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
-      'unit_of_measurement': 'dB',
+      <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: 'dB',
     }),
     'context': <ANY>,
     'entity_id': 'sensor.terrace_awning_rssi_level',
@@ -10552,8 +10552,8 @@
 # name: test_sensor_entities_snapshot[local_somfy_tahoma_switch_europe_3.json][sensor.terrace_awning_target_closure-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'Terrace Awning Target closure',
-      'unit_of_measurement': '%',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Terrace Awning Target closure',
+      <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: '%',
     }),
     'context': <ANY>,
     'entity_id': 'sensor.terrace_awning_target_closure',

@@ -149,7 +149,7 @@
         'yellow',
         'unknown',
       ]),
-      'friendly_name': 'LG TV Received command',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'LG TV Received command',
     }),
     'context': <ANY>,
     'entity_id': 'event.lg_tv_received_command',

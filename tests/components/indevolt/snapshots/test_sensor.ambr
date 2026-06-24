@@ -44,10 +44,10 @@
 # name: test_sensor[1][sensor.bk1600_ac_input_power-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'device_class': 'power',
-      'friendly_name': 'BK1600 AC input power',
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'power',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'BK1600 AC input power',
       <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
-      'unit_of_measurement': <UnitOfPower.WATT: 'W'>,
+      <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: <UnitOfPower.WATT: 'W'>,
     }),
     'context': <ANY>,
     'entity_id': 'sensor.bk1600_ac_input_power',
@@ -102,10 +102,10 @@
 # name: test_sensor[1][sensor.bk1600_ac_output_power-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'device_class': 'power',
-      'friendly_name': 'BK1600 AC output power',
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'power',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'BK1600 AC output power',
       <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
-      'unit_of_measurement': <UnitOfPower.WATT: 'W'>,
+      <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: <UnitOfPower.WATT: 'W'>,
     }),
     'context': <ANY>,
     'entity_id': 'sensor.bk1600_ac_output_power',
@@ -161,8 +161,8 @@
 # name: test_sensor[1][sensor.bk1600_battery_charge_discharge_state-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'device_class': 'enum',
-      'friendly_name': 'BK1600 Battery charge/discharge state',
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'enum',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'BK1600 Battery charge/discharge state',
       <SensorEntityCapabilityAttribute.OPTIONS: 'options'>: list([
         'charging',
         'discharging',
@@ -222,10 +222,10 @@
 # name: test_sensor[1][sensor.bk1600_battery_daily_charging_energy-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'device_class': 'energy',
-      'friendly_name': 'BK1600 Battery daily charging energy',
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'energy',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'BK1600 Battery daily charging energy',
       <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
-      'unit_of_measurement': <UnitOfEnergy.KILO_WATT_HOUR: 'kWh'>,
+      <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: <UnitOfEnergy.KILO_WATT_HOUR: 'kWh'>,
     }),
     'context': <ANY>,
     'entity_id': 'sensor.bk1600_battery_daily_charging_energy',
@@ -280,10 +280,10 @@
 # name: test_sensor[1][sensor.bk1600_battery_daily_discharging_energy-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'device_class': 'energy',
-      'friendly_name': 'BK1600 Battery daily discharging energy',
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'energy',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'BK1600 Battery daily discharging energy',
       <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
-      'unit_of_measurement': <UnitOfEnergy.KILO_WATT_HOUR: 'kWh'>,
+      <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: <UnitOfEnergy.KILO_WATT_HOUR: 'kWh'>,
     }),
     'context': <ANY>,
     'entity_id': 'sensor.bk1600_battery_daily_discharging_energy',
@@ -338,10 +338,10 @@
 # name: test_sensor[1][sensor.bk1600_battery_pack_1_temperature-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'device_class': 'temperature',
-      'friendly_name': 'BK1600 Battery pack 1 temperature',
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'temperature',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'BK1600 Battery pack 1 temperature',
       <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
-      'unit_of_measurement': <UnitOfTemperature.CELSIUS: '°C'>,
+      <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: <UnitOfTemperature.CELSIUS: '°C'>,
     }),
     'context': <ANY>,
     'entity_id': 'sensor.bk1600_battery_pack_1_temperature',
@@ -396,10 +396,10 @@
 # name: test_sensor[1][sensor.bk1600_battery_pack_2_temperature-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'device_class': 'temperature',
-      'friendly_name': 'BK1600 Battery pack 2 temperature',
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'temperature',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'BK1600 Battery pack 2 temperature',
       <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
-      'unit_of_measurement': <UnitOfTemperature.CELSIUS: '°C'>,
+      <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: <UnitOfTemperature.CELSIUS: '°C'>,
     }),
     'context': <ANY>,
     'entity_id': 'sensor.bk1600_battery_pack_2_temperature',
@@ -454,10 +454,10 @@
 # name: test_sensor[1][sensor.bk1600_battery_pack_3_temperature-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'device_class': 'temperature',
-      'friendly_name': 'BK1600 Battery pack 3 temperature',
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'temperature',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'BK1600 Battery pack 3 temperature',
       <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
-      'unit_of_measurement': <UnitOfTemperature.CELSIUS: '°C'>,
+      <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: <UnitOfTemperature.CELSIUS: '°C'>,
     }),
     'context': <ANY>,
     'entity_id': 'sensor.bk1600_battery_pack_3_temperature',
@@ -512,10 +512,10 @@
 # name: test_sensor[1][sensor.bk1600_battery_power-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'device_class': 'power',
-      'friendly_name': 'BK1600 Battery power',
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'power',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'BK1600 Battery power',
       <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
-      'unit_of_measurement': <UnitOfPower.WATT: 'W'>,
+      <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: <UnitOfPower.WATT: 'W'>,
     }),
     'context': <ANY>,
     'entity_id': 'sensor.bk1600_battery_power',
@@ -567,10 +567,10 @@
 # name: test_sensor[1][sensor.bk1600_battery_soc-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'device_class': 'battery',
-      'friendly_name': 'BK1600 Battery SOC',
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'battery',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'BK1600 Battery SOC',
       <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
-      'unit_of_measurement': '%',
+      <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: '%',
     }),
     'context': <ANY>,
     'entity_id': 'sensor.bk1600_battery_soc',
@@ -625,10 +625,10 @@
 # name: test_sensor[1][sensor.bk1600_battery_total_charging_energy-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'device_class': 'energy',
-      'friendly_name': 'BK1600 Battery total charging energy',
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'energy',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'BK1600 Battery total charging energy',
       <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
-      'unit_of_measurement': <UnitOfEnergy.KILO_WATT_HOUR: 'kWh'>,
+      <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: <UnitOfEnergy.KILO_WATT_HOUR: 'kWh'>,
     }),
     'context': <ANY>,
     'entity_id': 'sensor.bk1600_battery_total_charging_energy',
@@ -683,10 +683,10 @@
 # name: test_sensor[1][sensor.bk1600_battery_total_discharging_energy-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'device_class': 'energy',
-      'friendly_name': 'BK1600 Battery total discharging energy',
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'energy',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'BK1600 Battery total discharging energy',
       <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
-      'unit_of_measurement': <UnitOfEnergy.KILO_WATT_HOUR: 'kWh'>,
+      <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: <UnitOfEnergy.KILO_WATT_HOUR: 'kWh'>,
     }),
     'context': <ANY>,
     'entity_id': 'sensor.bk1600_battery_total_discharging_energy',
@@ -741,10 +741,10 @@
 # name: test_sensor[1][sensor.bk1600_bypass_input_energy-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'device_class': 'energy',
-      'friendly_name': 'BK1600 Bypass input energy',
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'energy',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'BK1600 Bypass input energy',
       <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
-      'unit_of_measurement': <UnitOfEnergy.WATT_HOUR: 'Wh'>,
+      <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: <UnitOfEnergy.WATT_HOUR: 'Wh'>,
     }),
     'context': <ANY>,
     'entity_id': 'sensor.bk1600_bypass_input_energy',
@@ -799,10 +799,10 @@
 # name: test_sensor[1][sensor.bk1600_bypass_power-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'device_class': 'power',
-      'friendly_name': 'BK1600 Bypass power',
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'power',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'BK1600 Bypass power',
       <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
-      'unit_of_measurement': <UnitOfPower.WATT: 'W'>,
+      <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: <UnitOfPower.WATT: 'W'>,
     }),
     'context': <ANY>,
     'entity_id': 'sensor.bk1600_bypass_power',
@@ -860,10 +860,10 @@
 # name: test_sensor[1][sensor.bk1600_cumulative_production-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'device_class': 'energy',
-      'friendly_name': 'BK1600 Cumulative production',
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'energy',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'BK1600 Cumulative production',
       <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
-      'unit_of_measurement': <UnitOfEnergy.KILO_WATT_HOUR: 'kWh'>,
+      <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: <UnitOfEnergy.KILO_WATT_HOUR: 'kWh'>,
     }),
     'context': <ANY>,
     'entity_id': 'sensor.bk1600_cumulative_production',
@@ -918,10 +918,10 @@
 # name: test_sensor[1][sensor.bk1600_daily_production-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'device_class': 'energy',
-      'friendly_name': 'BK1600 Daily production',
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'energy',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'BK1600 Daily production',
       <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
-      'unit_of_measurement': <UnitOfEnergy.KILO_WATT_HOUR: 'kWh'>,
+      <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: <UnitOfEnergy.KILO_WATT_HOUR: 'kWh'>,
     }),
     'context': <ANY>,
     'entity_id': 'sensor.bk1600_daily_production',
@@ -976,10 +976,10 @@
 # name: test_sensor[1][sensor.bk1600_dc_input_current_1-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'device_class': 'current',
-      'friendly_name': 'BK1600 DC input current 1',
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'current',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'BK1600 DC input current 1',
       <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
-      'unit_of_measurement': <UnitOfElectricCurrent.AMPERE: 'A'>,
+      <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: <UnitOfElectricCurrent.AMPERE: 'A'>,
     }),
     'context': <ANY>,
     'entity_id': 'sensor.bk1600_dc_input_current_1',
@@ -1034,10 +1034,10 @@
 # name: test_sensor[1][sensor.bk1600_dc_input_current_2-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'device_class': 'current',
-      'friendly_name': 'BK1600 DC input current 2',
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'current',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'BK1600 DC input current 2',
       <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
-      'unit_of_measurement': <UnitOfElectricCurrent.AMPERE: 'A'>,
+      <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: <UnitOfElectricCurrent.AMPERE: 'A'>,
     }),
     'context': <ANY>,
     'entity_id': 'sensor.bk1600_dc_input_current_2',
@@ -1092,10 +1092,10 @@
 # name: test_sensor[1][sensor.bk1600_dc_input_power_1-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'device_class': 'power',
-      'friendly_name': 'BK1600 DC input power 1',
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'power',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'BK1600 DC input power 1',
       <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
-      'unit_of_measurement': <UnitOfPower.WATT: 'W'>,
+      <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: <UnitOfPower.WATT: 'W'>,
     }),
     'context': <ANY>,
     'entity_id': 'sensor.bk1600_dc_input_power_1',
@@ -1150,10 +1150,10 @@
 # name: test_sensor[1][sensor.bk1600_dc_input_power_2-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'device_class': 'power',
-      'friendly_name': 'BK1600 DC input power 2',
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'power',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'BK1600 DC input power 2',
       <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
-      'unit_of_measurement': <UnitOfPower.WATT: 'W'>,
+      <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: <UnitOfPower.WATT: 'W'>,
     }),
     'context': <ANY>,
     'entity_id': 'sensor.bk1600_dc_input_power_2',
@@ -1208,10 +1208,10 @@
 # name: test_sensor[1][sensor.bk1600_dc_input_voltage_1-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'device_class': 'voltage',
-      'friendly_name': 'BK1600 DC input voltage 1',
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'voltage',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'BK1600 DC input voltage 1',
       <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
-      'unit_of_measurement': <UnitOfElectricPotential.VOLT: 'V'>,
+      <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: <UnitOfElectricPotential.VOLT: 'V'>,
     }),
     'context': <ANY>,
     'entity_id': 'sensor.bk1600_dc_input_voltage_1',
@@ -1266,10 +1266,10 @@
 # name: test_sensor[1][sensor.bk1600_dc_input_voltage_2-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'device_class': 'voltage',
-      'friendly_name': 'BK1600 DC input voltage 2',
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'voltage',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'BK1600 DC input voltage 2',
       <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
-      'unit_of_measurement': <UnitOfElectricPotential.VOLT: 'V'>,
+      <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: <UnitOfElectricPotential.VOLT: 'V'>,
     }),
     'context': <ANY>,
     'entity_id': 'sensor.bk1600_dc_input_voltage_2',
@@ -1324,10 +1324,10 @@
 # name: test_sensor[1][sensor.bk1600_dc_output_power-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'device_class': 'power',
-      'friendly_name': 'BK1600 DC output power',
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'power',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'BK1600 DC output power',
       <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
-      'unit_of_measurement': <UnitOfPower.WATT: 'W'>,
+      <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: <UnitOfPower.WATT: 'W'>,
     }),
     'context': <ANY>,
     'entity_id': 'sensor.bk1600_dc_output_power',
@@ -1383,8 +1383,8 @@
 # name: test_sensor[1][sensor.bk1600_device_mode-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'device_class': 'enum',
-      'friendly_name': 'BK1600 Device mode',
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'enum',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'BK1600 Device mode',
       <SensorEntityCapabilityAttribute.OPTIONS: 'options'>: list([
         'main',
         'standalone',
@@ -1439,8 +1439,8 @@
 # name: test_sensor[1][sensor.bk1600_discharge_limit-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'BK1600 Discharge limit',
-      'unit_of_measurement': '%',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'BK1600 Discharge limit',
+      <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: '%',
     }),
     'context': <ANY>,
     'entity_id': 'sensor.bk1600_discharge_limit',
@@ -1497,8 +1497,8 @@
 # name: test_sensor[1][sensor.bk1600_energy_mode-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'device_class': 'enum',
-      'friendly_name': 'BK1600 Energy mode',
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'enum',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'BK1600 Energy mode',
       <SensorEntityCapabilityAttribute.OPTIONS: 'options'>: list([
         'charge_discharge_schedule',
         'outdoor_portable',
@@ -1559,10 +1559,10 @@
 # name: test_sensor[1][sensor.bk1600_inverter_temperature-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'device_class': 'temperature',
-      'friendly_name': 'BK1600 Inverter temperature',
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'temperature',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'BK1600 Inverter temperature',
       <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
-      'unit_of_measurement': <UnitOfTemperature.CELSIUS: '°C'>,
+      <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: <UnitOfTemperature.CELSIUS: '°C'>,
     }),
     'context': <ANY>,
     'entity_id': 'sensor.bk1600_inverter_temperature',
@@ -1617,10 +1617,10 @@
 # name: test_sensor[1][sensor.bk1600_meter_power-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'device_class': 'power',
-      'friendly_name': 'BK1600 Meter power',
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'power',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'BK1600 Meter power',
       <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
-      'unit_of_measurement': <UnitOfPower.WATT: 'W'>,
+      <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: <UnitOfPower.WATT: 'W'>,
     }),
     'context': <ANY>,
     'entity_id': 'sensor.bk1600_meter_power',
@@ -1675,10 +1675,10 @@
 # name: test_sensor[1][sensor.bk1600_mos_temperature_charge-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'device_class': 'temperature',
-      'friendly_name': 'BK1600 MOS temperature charge',
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'temperature',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'BK1600 MOS temperature charge',
       <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
-      'unit_of_measurement': <UnitOfTemperature.CELSIUS: '°C'>,
+      <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: <UnitOfTemperature.CELSIUS: '°C'>,
     }),
     'context': <ANY>,
     'entity_id': 'sensor.bk1600_mos_temperature_charge',
@@ -1733,10 +1733,10 @@
 # name: test_sensor[1][sensor.bk1600_mos_temperature_discharge-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'device_class': 'temperature',
-      'friendly_name': 'BK1600 MOS temperature discharge',
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'temperature',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'BK1600 MOS temperature discharge',
       <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
-      'unit_of_measurement': <UnitOfTemperature.CELSIUS: '°C'>,
+      <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: <UnitOfTemperature.CELSIUS: '°C'>,
     }),
     'context': <ANY>,
     'entity_id': 'sensor.bk1600_mos_temperature_discharge',
@@ -1791,10 +1791,10 @@
 # name: test_sensor[1][sensor.bk1600_off_grid_output_energy-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'device_class': 'energy',
-      'friendly_name': 'BK1600 Off-grid output energy',
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'energy',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'BK1600 Off-grid output energy',
       <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
-      'unit_of_measurement': <UnitOfEnergy.KILO_WATT_HOUR: 'kWh'>,
+      <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: <UnitOfEnergy.KILO_WATT_HOUR: 'kWh'>,
     }),
     'context': <ANY>,
     'entity_id': 'sensor.bk1600_off_grid_output_energy',
@@ -1847,9 +1847,9 @@
 # name: test_sensor[1][sensor.bk1600_rated_capacity-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'device_class': 'energy',
-      'friendly_name': 'BK1600 Rated capacity',
-      'unit_of_measurement': <UnitOfEnergy.KILO_WATT_HOUR: 'kWh'>,
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'energy',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'BK1600 Rated capacity',
+      <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: <UnitOfEnergy.KILO_WATT_HOUR: 'kWh'>,
     }),
     'context': <ANY>,
     'entity_id': 'sensor.bk1600_rated_capacity',
@@ -1905,8 +1905,8 @@
 # name: test_sensor[1][sensor.bk1600_real_time_mode-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'device_class': 'enum',
-      'friendly_name': 'BK1600 Real-time mode',
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'enum',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'BK1600 Real-time mode',
       <SensorEntityCapabilityAttribute.OPTIONS: 'options'>: list([
         'charging',
         'discharging',
@@ -1966,10 +1966,10 @@
 # name: test_sensor[1][sensor.bk1600_real_time_power_limit-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'device_class': 'power',
-      'friendly_name': 'BK1600 Real-time power limit',
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'power',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'BK1600 Real-time power limit',
       <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
-      'unit_of_measurement': <UnitOfPower.WATT: 'W'>,
+      <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: <UnitOfPower.WATT: 'W'>,
     }),
     'context': <ANY>,
     'entity_id': 'sensor.bk1600_real_time_power_limit',
@@ -2019,8 +2019,8 @@
 # name: test_sensor[1][sensor.bk1600_real_time_target_soc-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'BK1600 Real-time target SOC',
-      'unit_of_measurement': '%',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'BK1600 Real-time target SOC',
+      <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: '%',
     }),
     'context': <ANY>,
     'entity_id': 'sensor.bk1600_real_time_target_soc',
@@ -2075,10 +2075,10 @@
 # name: test_sensor[1][sensor.bk1600_total_ac_input_energy-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'device_class': 'energy',
-      'friendly_name': 'BK1600 Total AC input energy',
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'energy',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'BK1600 Total AC input energy',
       <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
-      'unit_of_measurement': <UnitOfEnergy.KILO_WATT_HOUR: 'kWh'>,
+      <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: <UnitOfEnergy.KILO_WATT_HOUR: 'kWh'>,
     }),
     'context': <ANY>,
     'entity_id': 'sensor.bk1600_total_ac_input_energy',
@@ -2133,10 +2133,10 @@
 # name: test_sensor[1][sensor.bk1600_total_ac_output_energy-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'device_class': 'energy',
-      'friendly_name': 'BK1600 Total AC output energy',
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'energy',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'BK1600 Total AC output energy',
       <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
-      'unit_of_measurement': <UnitOfEnergy.KILO_WATT_HOUR: 'kWh'>,
+      <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: <UnitOfEnergy.KILO_WATT_HOUR: 'kWh'>,
     }),
     'context': <ANY>,
     'entity_id': 'sensor.bk1600_total_ac_output_energy',
@@ -2191,10 +2191,10 @@
 # name: test_sensor[2][sensor.cms_sf2000_ac_input_power-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'device_class': 'power',
-      'friendly_name': 'CMS-SF2000 AC input power',
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'power',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'CMS-SF2000 AC input power',
       <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
-      'unit_of_measurement': <UnitOfPower.WATT: 'W'>,
+      <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: <UnitOfPower.WATT: 'W'>,
     }),
     'context': <ANY>,
     'entity_id': 'sensor.cms_sf2000_ac_input_power',
@@ -2249,10 +2249,10 @@
 # name: test_sensor[2][sensor.cms_sf2000_ac_output_power-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'device_class': 'power',
-      'friendly_name': 'CMS-SF2000 AC output power',
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'power',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'CMS-SF2000 AC output power',
       <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
-      'unit_of_measurement': <UnitOfPower.WATT: 'W'>,
+      <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: <UnitOfPower.WATT: 'W'>,
     }),
     'context': <ANY>,
     'entity_id': 'sensor.cms_sf2000_ac_output_power',
@@ -2308,8 +2308,8 @@
 # name: test_sensor[2][sensor.cms_sf2000_battery_charge_discharge_state-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'device_class': 'enum',
-      'friendly_name': 'CMS-SF2000 Battery charge/discharge state',
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'enum',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'CMS-SF2000 Battery charge/discharge state',
       <SensorEntityCapabilityAttribute.OPTIONS: 'options'>: list([
         'charging',
         'discharging',
@@ -2369,10 +2369,10 @@
 # name: test_sensor[2][sensor.cms_sf2000_battery_daily_charging_energy-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'device_class': 'energy',
-      'friendly_name': 'CMS-SF2000 Battery daily charging energy',
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'energy',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'CMS-SF2000 Battery daily charging energy',
       <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
-      'unit_of_measurement': <UnitOfEnergy.KILO_WATT_HOUR: 'kWh'>,
+      <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: <UnitOfEnergy.KILO_WATT_HOUR: 'kWh'>,
     }),
     'context': <ANY>,
     'entity_id': 'sensor.cms_sf2000_battery_daily_charging_energy',
@@ -2427,10 +2427,10 @@
 # name: test_sensor[2][sensor.cms_sf2000_battery_daily_discharging_energy-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'device_class': 'energy',
-      'friendly_name': 'CMS-SF2000 Battery daily discharging energy',
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'energy',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'CMS-SF2000 Battery daily discharging energy',
       <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
-      'unit_of_measurement': <UnitOfEnergy.KILO_WATT_HOUR: 'kWh'>,
+      <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: <UnitOfEnergy.KILO_WATT_HOUR: 'kWh'>,
     }),
     'context': <ANY>,
     'entity_id': 'sensor.cms_sf2000_battery_daily_discharging_energy',
@@ -2485,10 +2485,10 @@
 # name: test_sensor[2][sensor.cms_sf2000_battery_pack_1_current-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'device_class': 'current',
-      'friendly_name': 'CMS-SF2000 Battery pack 1 current',
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'current',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'CMS-SF2000 Battery pack 1 current',
       <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
-      'unit_of_measurement': <UnitOfElectricCurrent.AMPERE: 'A'>,
+      <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: <UnitOfElectricCurrent.AMPERE: 'A'>,
     }),
     'context': <ANY>,
     'entity_id': 'sensor.cms_sf2000_battery_pack_1_current',
@@ -2540,7 +2540,7 @@
 # name: test_sensor[2][sensor.cms_sf2000_battery_pack_1_cycle_count-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'CMS-SF2000 Battery pack 1 cycle count',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'CMS-SF2000 Battery pack 1 cycle count',
       <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
     }),
     'context': <ANY>,
@@ -2596,10 +2596,10 @@
 # name: test_sensor[2][sensor.cms_sf2000_battery_pack_1_mos_temperature-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'device_class': 'temperature',
-      'friendly_name': 'CMS-SF2000 Battery pack 1 MOS temperature',
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'temperature',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'CMS-SF2000 Battery pack 1 MOS temperature',
       <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
-      'unit_of_measurement': <UnitOfTemperature.CELSIUS: '°C'>,
+      <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: <UnitOfTemperature.CELSIUS: '°C'>,
     }),
     'context': <ANY>,
     'entity_id': 'sensor.cms_sf2000_battery_pack_1_mos_temperature',
@@ -2649,7 +2649,7 @@
 # name: test_sensor[2][sensor.cms_sf2000_battery_pack_1_sn-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'CMS-SF2000 Battery pack 1 SN',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'CMS-SF2000 Battery pack 1 SN',
     }),
     'context': <ANY>,
     'entity_id': 'sensor.cms_sf2000_battery_pack_1_sn',
@@ -2701,10 +2701,10 @@
 # name: test_sensor[2][sensor.cms_sf2000_battery_pack_1_soc-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'device_class': 'battery',
-      'friendly_name': 'CMS-SF2000 Battery pack 1 SOC',
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'battery',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'CMS-SF2000 Battery pack 1 SOC',
       <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
-      'unit_of_measurement': '%',
+      <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: '%',
     }),
     'context': <ANY>,
     'entity_id': 'sensor.cms_sf2000_battery_pack_1_soc',
@@ -2759,10 +2759,10 @@
 # name: test_sensor[2][sensor.cms_sf2000_battery_pack_1_temperature-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'device_class': 'temperature',
-      'friendly_name': 'CMS-SF2000 Battery pack 1 temperature',
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'temperature',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'CMS-SF2000 Battery pack 1 temperature',
       <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
-      'unit_of_measurement': <UnitOfTemperature.CELSIUS: '°C'>,
+      <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: <UnitOfTemperature.CELSIUS: '°C'>,
     }),
     'context': <ANY>,
     'entity_id': 'sensor.cms_sf2000_battery_pack_1_temperature',
@@ -2817,10 +2817,10 @@
 # name: test_sensor[2][sensor.cms_sf2000_battery_pack_1_voltage-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'device_class': 'voltage',
-      'friendly_name': 'CMS-SF2000 Battery pack 1 voltage',
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'voltage',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'CMS-SF2000 Battery pack 1 voltage',
       <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
-      'unit_of_measurement': <UnitOfElectricPotential.VOLT: 'V'>,
+      <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: <UnitOfElectricPotential.VOLT: 'V'>,
     }),
     'context': <ANY>,
     'entity_id': 'sensor.cms_sf2000_battery_pack_1_voltage',
@@ -2875,10 +2875,10 @@
 # name: test_sensor[2][sensor.cms_sf2000_battery_pack_2_current-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'device_class': 'current',
-      'friendly_name': 'CMS-SF2000 Battery pack 2 current',
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'current',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'CMS-SF2000 Battery pack 2 current',
       <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
-      'unit_of_measurement': <UnitOfElectricCurrent.AMPERE: 'A'>,
+      <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: <UnitOfElectricCurrent.AMPERE: 'A'>,
     }),
     'context': <ANY>,
     'entity_id': 'sensor.cms_sf2000_battery_pack_2_current',
@@ -2930,7 +2930,7 @@
 # name: test_sensor[2][sensor.cms_sf2000_battery_pack_2_cycle_count-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'CMS-SF2000 Battery pack 2 cycle count',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'CMS-SF2000 Battery pack 2 cycle count',
       <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
     }),
     'context': <ANY>,
@@ -2986,10 +2986,10 @@
 # name: test_sensor[2][sensor.cms_sf2000_battery_pack_2_mos_temperature-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'device_class': 'temperature',
-      'friendly_name': 'CMS-SF2000 Battery pack 2 MOS temperature',
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'temperature',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'CMS-SF2000 Battery pack 2 MOS temperature',
       <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
-      'unit_of_measurement': <UnitOfTemperature.CELSIUS: '°C'>,
+      <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: <UnitOfTemperature.CELSIUS: '°C'>,
     }),
     'context': <ANY>,
     'entity_id': 'sensor.cms_sf2000_battery_pack_2_mos_temperature',
@@ -3039,7 +3039,7 @@
 # name: test_sensor[2][sensor.cms_sf2000_battery_pack_2_sn-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'CMS-SF2000 Battery pack 2 SN',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'CMS-SF2000 Battery pack 2 SN',
     }),
     'context': <ANY>,
     'entity_id': 'sensor.cms_sf2000_battery_pack_2_sn',
@@ -3091,10 +3091,10 @@
 # name: test_sensor[2][sensor.cms_sf2000_battery_pack_2_soc-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'device_class': 'battery',
-      'friendly_name': 'CMS-SF2000 Battery pack 2 SOC',
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'battery',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'CMS-SF2000 Battery pack 2 SOC',
       <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
-      'unit_of_measurement': '%',
+      <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: '%',
     }),
     'context': <ANY>,
     'entity_id': 'sensor.cms_sf2000_battery_pack_2_soc',
@@ -3149,10 +3149,10 @@
 # name: test_sensor[2][sensor.cms_sf2000_battery_pack_2_temperature-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'device_class': 'temperature',
-      'friendly_name': 'CMS-SF2000 Battery pack 2 temperature',
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'temperature',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'CMS-SF2000 Battery pack 2 temperature',
       <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
-      'unit_of_measurement': <UnitOfTemperature.CELSIUS: '°C'>,
+      <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: <UnitOfTemperature.CELSIUS: '°C'>,
     }),
     'context': <ANY>,
     'entity_id': 'sensor.cms_sf2000_battery_pack_2_temperature',
@@ -3207,10 +3207,10 @@
 # name: test_sensor[2][sensor.cms_sf2000_battery_pack_2_voltage-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'device_class': 'voltage',
-      'friendly_name': 'CMS-SF2000 Battery pack 2 voltage',
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'voltage',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'CMS-SF2000 Battery pack 2 voltage',
       <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
-      'unit_of_measurement': <UnitOfElectricPotential.VOLT: 'V'>,
+      <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: <UnitOfElectricPotential.VOLT: 'V'>,
     }),
     'context': <ANY>,
     'entity_id': 'sensor.cms_sf2000_battery_pack_2_voltage',
@@ -3265,10 +3265,10 @@
 # name: test_sensor[2][sensor.cms_sf2000_battery_pack_3_current-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'device_class': 'current',
-      'friendly_name': 'CMS-SF2000 Battery pack 3 current',
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'current',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'CMS-SF2000 Battery pack 3 current',
       <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
-      'unit_of_measurement': <UnitOfElectricCurrent.AMPERE: 'A'>,
+      <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: <UnitOfElectricCurrent.AMPERE: 'A'>,
     }),
     'context': <ANY>,
     'entity_id': 'sensor.cms_sf2000_battery_pack_3_current',
@@ -3320,7 +3320,7 @@
 # name: test_sensor[2][sensor.cms_sf2000_battery_pack_3_cycle_count-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'CMS-SF2000 Battery pack 3 cycle count',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'CMS-SF2000 Battery pack 3 cycle count',
       <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
     }),
     'context': <ANY>,
@@ -3376,10 +3376,10 @@
 # name: test_sensor[2][sensor.cms_sf2000_battery_pack_3_mos_temperature-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'device_class': 'temperature',
-      'friendly_name': 'CMS-SF2000 Battery pack 3 MOS temperature',
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'temperature',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'CMS-SF2000 Battery pack 3 MOS temperature',
       <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
-      'unit_of_measurement': <UnitOfTemperature.CELSIUS: '°C'>,
+      <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: <UnitOfTemperature.CELSIUS: '°C'>,
     }),
     'context': <ANY>,
     'entity_id': 'sensor.cms_sf2000_battery_pack_3_mos_temperature',
@@ -3429,7 +3429,7 @@
 # name: test_sensor[2][sensor.cms_sf2000_battery_pack_3_sn-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'CMS-SF2000 Battery pack 3 SN',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'CMS-SF2000 Battery pack 3 SN',
     }),
     'context': <ANY>,
     'entity_id': 'sensor.cms_sf2000_battery_pack_3_sn',
@@ -3481,10 +3481,10 @@
 # name: test_sensor[2][sensor.cms_sf2000_battery_pack_3_soc-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'device_class': 'battery',
-      'friendly_name': 'CMS-SF2000 Battery pack 3 SOC',
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'battery',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'CMS-SF2000 Battery pack 3 SOC',
       <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
-      'unit_of_measurement': '%',
+      <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: '%',
     }),
     'context': <ANY>,
     'entity_id': 'sensor.cms_sf2000_battery_pack_3_soc',
@@ -3539,10 +3539,10 @@
 # name: test_sensor[2][sensor.cms_sf2000_battery_pack_3_temperature-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'device_class': 'temperature',
-      'friendly_name': 'CMS-SF2000 Battery pack 3 temperature',
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'temperature',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'CMS-SF2000 Battery pack 3 temperature',
       <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
-      'unit_of_measurement': <UnitOfTemperature.CELSIUS: '°C'>,
+      <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: <UnitOfTemperature.CELSIUS: '°C'>,
     }),
     'context': <ANY>,
     'entity_id': 'sensor.cms_sf2000_battery_pack_3_temperature',
@@ -3597,10 +3597,10 @@
 # name: test_sensor[2][sensor.cms_sf2000_battery_pack_3_voltage-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'device_class': 'voltage',
-      'friendly_name': 'CMS-SF2000 Battery pack 3 voltage',
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'voltage',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'CMS-SF2000 Battery pack 3 voltage',
       <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
-      'unit_of_measurement': <UnitOfElectricPotential.VOLT: 'V'>,
+      <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: <UnitOfElectricPotential.VOLT: 'V'>,
     }),
     'context': <ANY>,
     'entity_id': 'sensor.cms_sf2000_battery_pack_3_voltage',
@@ -3655,10 +3655,10 @@
 # name: test_sensor[2][sensor.cms_sf2000_battery_pack_4_current-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'device_class': 'current',
-      'friendly_name': 'CMS-SF2000 Battery pack 4 current',
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'current',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'CMS-SF2000 Battery pack 4 current',
       <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
-      'unit_of_measurement': <UnitOfElectricCurrent.AMPERE: 'A'>,
+      <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: <UnitOfElectricCurrent.AMPERE: 'A'>,
     }),
     'context': <ANY>,
     'entity_id': 'sensor.cms_sf2000_battery_pack_4_current',
@@ -3710,7 +3710,7 @@
 # name: test_sensor[2][sensor.cms_sf2000_battery_pack_4_cycle_count-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'CMS-SF2000 Battery pack 4 cycle count',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'CMS-SF2000 Battery pack 4 cycle count',
       <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
     }),
     'context': <ANY>,
@@ -3766,10 +3766,10 @@
 # name: test_sensor[2][sensor.cms_sf2000_battery_pack_4_mos_temperature-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'device_class': 'temperature',
-      'friendly_name': 'CMS-SF2000 Battery pack 4 MOS temperature',
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'temperature',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'CMS-SF2000 Battery pack 4 MOS temperature',
       <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
-      'unit_of_measurement': <UnitOfTemperature.CELSIUS: '°C'>,
+      <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: <UnitOfTemperature.CELSIUS: '°C'>,
     }),
     'context': <ANY>,
     'entity_id': 'sensor.cms_sf2000_battery_pack_4_mos_temperature',
@@ -3819,7 +3819,7 @@
 # name: test_sensor[2][sensor.cms_sf2000_battery_pack_4_sn-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'CMS-SF2000 Battery pack 4 SN',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'CMS-SF2000 Battery pack 4 SN',
     }),
     'context': <ANY>,
     'entity_id': 'sensor.cms_sf2000_battery_pack_4_sn',
@@ -3871,10 +3871,10 @@
 # name: test_sensor[2][sensor.cms_sf2000_battery_pack_4_soc-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'device_class': 'battery',
-      'friendly_name': 'CMS-SF2000 Battery pack 4 SOC',
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'battery',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'CMS-SF2000 Battery pack 4 SOC',
       <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
-      'unit_of_measurement': '%',
+      <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: '%',
     }),
     'context': <ANY>,
     'entity_id': 'sensor.cms_sf2000_battery_pack_4_soc',
@@ -3929,10 +3929,10 @@
 # name: test_sensor[2][sensor.cms_sf2000_battery_pack_4_temperature-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'device_class': 'temperature',
-      'friendly_name': 'CMS-SF2000 Battery pack 4 temperature',
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'temperature',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'CMS-SF2000 Battery pack 4 temperature',
       <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
-      'unit_of_measurement': <UnitOfTemperature.CELSIUS: '°C'>,
+      <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: <UnitOfTemperature.CELSIUS: '°C'>,
     }),
     'context': <ANY>,
     'entity_id': 'sensor.cms_sf2000_battery_pack_4_temperature',
@@ -3987,10 +3987,10 @@
 # name: test_sensor[2][sensor.cms_sf2000_battery_pack_4_voltage-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'device_class': 'voltage',
-      'friendly_name': 'CMS-SF2000 Battery pack 4 voltage',
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'voltage',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'CMS-SF2000 Battery pack 4 voltage',
       <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
-      'unit_of_measurement': <UnitOfElectricPotential.VOLT: 'V'>,
+      <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: <UnitOfElectricPotential.VOLT: 'V'>,
     }),
     'context': <ANY>,
     'entity_id': 'sensor.cms_sf2000_battery_pack_4_voltage',
@@ -4045,10 +4045,10 @@
 # name: test_sensor[2][sensor.cms_sf2000_battery_pack_5_current-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'device_class': 'current',
-      'friendly_name': 'CMS-SF2000 Battery pack 5 current',
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'current',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'CMS-SF2000 Battery pack 5 current',
       <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
-      'unit_of_measurement': <UnitOfElectricCurrent.AMPERE: 'A'>,
+      <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: <UnitOfElectricCurrent.AMPERE: 'A'>,
     }),
     'context': <ANY>,
     'entity_id': 'sensor.cms_sf2000_battery_pack_5_current',
@@ -4100,7 +4100,7 @@
 # name: test_sensor[2][sensor.cms_sf2000_battery_pack_5_cycle_count-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'CMS-SF2000 Battery pack 5 cycle count',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'CMS-SF2000 Battery pack 5 cycle count',
       <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
     }),
     'context': <ANY>,
@@ -4156,10 +4156,10 @@
 # name: test_sensor[2][sensor.cms_sf2000_battery_pack_5_mos_temperature-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'device_class': 'temperature',
-      'friendly_name': 'CMS-SF2000 Battery pack 5 MOS temperature',
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'temperature',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'CMS-SF2000 Battery pack 5 MOS temperature',
       <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
-      'unit_of_measurement': <UnitOfTemperature.CELSIUS: '°C'>,
+      <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: <UnitOfTemperature.CELSIUS: '°C'>,
     }),
     'context': <ANY>,
     'entity_id': 'sensor.cms_sf2000_battery_pack_5_mos_temperature',
@@ -4209,7 +4209,7 @@
 # name: test_sensor[2][sensor.cms_sf2000_battery_pack_5_sn-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'CMS-SF2000 Battery pack 5 SN',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'CMS-SF2000 Battery pack 5 SN',
     }),
     'context': <ANY>,
     'entity_id': 'sensor.cms_sf2000_battery_pack_5_sn',
@@ -4261,10 +4261,10 @@
 # name: test_sensor[2][sensor.cms_sf2000_battery_pack_5_soc-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'device_class': 'battery',
-      'friendly_name': 'CMS-SF2000 Battery pack 5 SOC',
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'battery',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'CMS-SF2000 Battery pack 5 SOC',
       <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
-      'unit_of_measurement': '%',
+      <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: '%',
     }),
     'context': <ANY>,
     'entity_id': 'sensor.cms_sf2000_battery_pack_5_soc',
@@ -4319,10 +4319,10 @@
 # name: test_sensor[2][sensor.cms_sf2000_battery_pack_5_temperature-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'device_class': 'temperature',
-      'friendly_name': 'CMS-SF2000 Battery pack 5 temperature',
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'temperature',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'CMS-SF2000 Battery pack 5 temperature',
       <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
-      'unit_of_measurement': <UnitOfTemperature.CELSIUS: '°C'>,
+      <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: <UnitOfTemperature.CELSIUS: '°C'>,
     }),
     'context': <ANY>,
     'entity_id': 'sensor.cms_sf2000_battery_pack_5_temperature',
@@ -4377,10 +4377,10 @@
 # name: test_sensor[2][sensor.cms_sf2000_battery_pack_5_voltage-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'device_class': 'voltage',
-      'friendly_name': 'CMS-SF2000 Battery pack 5 voltage',
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'voltage',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'CMS-SF2000 Battery pack 5 voltage',
       <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
-      'unit_of_measurement': <UnitOfElectricPotential.VOLT: 'V'>,
+      <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: <UnitOfElectricPotential.VOLT: 'V'>,
     }),
     'context': <ANY>,
     'entity_id': 'sensor.cms_sf2000_battery_pack_5_voltage',
@@ -4435,10 +4435,10 @@
 # name: test_sensor[2][sensor.cms_sf2000_battery_power-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'device_class': 'power',
-      'friendly_name': 'CMS-SF2000 Battery power',
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'power',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'CMS-SF2000 Battery power',
       <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
-      'unit_of_measurement': <UnitOfPower.WATT: 'W'>,
+      <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: <UnitOfPower.WATT: 'W'>,
     }),
     'context': <ANY>,
     'entity_id': 'sensor.cms_sf2000_battery_power',
@@ -4490,10 +4490,10 @@
 # name: test_sensor[2][sensor.cms_sf2000_battery_soc-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'device_class': 'battery',
-      'friendly_name': 'CMS-SF2000 Battery SOC',
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'battery',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'CMS-SF2000 Battery SOC',
       <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
-      'unit_of_measurement': '%',
+      <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: '%',
     }),
     'context': <ANY>,
     'entity_id': 'sensor.cms_sf2000_battery_soc',
@@ -4548,10 +4548,10 @@
 # name: test_sensor[2][sensor.cms_sf2000_battery_total_charging_energy-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'device_class': 'energy',
-      'friendly_name': 'CMS-SF2000 Battery total charging energy',
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'energy',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'CMS-SF2000 Battery total charging energy',
       <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
-      'unit_of_measurement': <UnitOfEnergy.KILO_WATT_HOUR: 'kWh'>,
+      <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: <UnitOfEnergy.KILO_WATT_HOUR: 'kWh'>,
     }),
     'context': <ANY>,
     'entity_id': 'sensor.cms_sf2000_battery_total_charging_energy',
@@ -4606,10 +4606,10 @@
 # name: test_sensor[2][sensor.cms_sf2000_battery_total_discharging_energy-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'device_class': 'energy',
-      'friendly_name': 'CMS-SF2000 Battery total discharging energy',
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'energy',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'CMS-SF2000 Battery total discharging energy',
       <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
-      'unit_of_measurement': <UnitOfEnergy.KILO_WATT_HOUR: 'kWh'>,
+      <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: <UnitOfEnergy.KILO_WATT_HOUR: 'kWh'>,
     }),
     'context': <ANY>,
     'entity_id': 'sensor.cms_sf2000_battery_total_discharging_energy',
@@ -4664,10 +4664,10 @@
 # name: test_sensor[2][sensor.cms_sf2000_bypass_input_energy-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'device_class': 'energy',
-      'friendly_name': 'CMS-SF2000 Bypass input energy',
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'energy',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'CMS-SF2000 Bypass input energy',
       <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
-      'unit_of_measurement': <UnitOfEnergy.WATT_HOUR: 'Wh'>,
+      <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: <UnitOfEnergy.WATT_HOUR: 'Wh'>,
     }),
     'context': <ANY>,
     'entity_id': 'sensor.cms_sf2000_bypass_input_energy',
@@ -4722,10 +4722,10 @@
 # name: test_sensor[2][sensor.cms_sf2000_bypass_power-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'device_class': 'power',
-      'friendly_name': 'CMS-SF2000 Bypass power',
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'power',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'CMS-SF2000 Bypass power',
       <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
-      'unit_of_measurement': <UnitOfPower.WATT: 'W'>,
+      <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: <UnitOfPower.WATT: 'W'>,
     }),
     'context': <ANY>,
     'entity_id': 'sensor.cms_sf2000_bypass_power',
@@ -4783,10 +4783,10 @@
 # name: test_sensor[2][sensor.cms_sf2000_cumulative_production-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'device_class': 'energy',
-      'friendly_name': 'CMS-SF2000 Cumulative production',
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'energy',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'CMS-SF2000 Cumulative production',
       <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
-      'unit_of_measurement': <UnitOfEnergy.KILO_WATT_HOUR: 'kWh'>,
+      <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: <UnitOfEnergy.KILO_WATT_HOUR: 'kWh'>,
     }),
     'context': <ANY>,
     'entity_id': 'sensor.cms_sf2000_cumulative_production',
@@ -4841,10 +4841,10 @@
 # name: test_sensor[2][sensor.cms_sf2000_daily_production-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'device_class': 'energy',
-      'friendly_name': 'CMS-SF2000 Daily production',
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'energy',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'CMS-SF2000 Daily production',
       <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
-      'unit_of_measurement': <UnitOfEnergy.KILO_WATT_HOUR: 'kWh'>,
+      <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: <UnitOfEnergy.KILO_WATT_HOUR: 'kWh'>,
     }),
     'context': <ANY>,
     'entity_id': 'sensor.cms_sf2000_daily_production',
@@ -4899,10 +4899,10 @@
 # name: test_sensor[2][sensor.cms_sf2000_dc_input_current_1-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'device_class': 'current',
-      'friendly_name': 'CMS-SF2000 DC input current 1',
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'current',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'CMS-SF2000 DC input current 1',
       <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
-      'unit_of_measurement': <UnitOfElectricCurrent.AMPERE: 'A'>,
+      <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: <UnitOfElectricCurrent.AMPERE: 'A'>,
     }),
     'context': <ANY>,
     'entity_id': 'sensor.cms_sf2000_dc_input_current_1',
@@ -4957,10 +4957,10 @@
 # name: test_sensor[2][sensor.cms_sf2000_dc_input_current_2-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'device_class': 'current',
-      'friendly_name': 'CMS-SF2000 DC input current 2',
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'current',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'CMS-SF2000 DC input current 2',
       <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
-      'unit_of_measurement': <UnitOfElectricCurrent.AMPERE: 'A'>,
+      <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: <UnitOfElectricCurrent.AMPERE: 'A'>,
     }),
     'context': <ANY>,
     'entity_id': 'sensor.cms_sf2000_dc_input_current_2',
@@ -5015,10 +5015,10 @@
 # name: test_sensor[2][sensor.cms_sf2000_dc_input_current_3-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'device_class': 'current',
-      'friendly_name': 'CMS-SF2000 DC input current 3',
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'current',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'CMS-SF2000 DC input current 3',
       <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
-      'unit_of_measurement': <UnitOfElectricCurrent.AMPERE: 'A'>,
+      <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: <UnitOfElectricCurrent.AMPERE: 'A'>,
     }),
     'context': <ANY>,
     'entity_id': 'sensor.cms_sf2000_dc_input_current_3',
@@ -5073,10 +5073,10 @@
 # name: test_sensor[2][sensor.cms_sf2000_dc_input_current_4-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'device_class': 'current',
-      'friendly_name': 'CMS-SF2000 DC input current 4',
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'current',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'CMS-SF2000 DC input current 4',
       <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
-      'unit_of_measurement': <UnitOfElectricCurrent.AMPERE: 'A'>,
+      <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: <UnitOfElectricCurrent.AMPERE: 'A'>,
     }),
     'context': <ANY>,
     'entity_id': 'sensor.cms_sf2000_dc_input_current_4',
@@ -5131,10 +5131,10 @@
 # name: test_sensor[2][sensor.cms_sf2000_dc_input_power_1-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'device_class': 'power',
-      'friendly_name': 'CMS-SF2000 DC input power 1',
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'power',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'CMS-SF2000 DC input power 1',
       <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
-      'unit_of_measurement': <UnitOfPower.WATT: 'W'>,
+      <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: <UnitOfPower.WATT: 'W'>,
     }),
     'context': <ANY>,
     'entity_id': 'sensor.cms_sf2000_dc_input_power_1',
@@ -5189,10 +5189,10 @@
 # name: test_sensor[2][sensor.cms_sf2000_dc_input_power_2-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'device_class': 'power',
-      'friendly_name': 'CMS-SF2000 DC input power 2',
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'power',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'CMS-SF2000 DC input power 2',
       <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
-      'unit_of_measurement': <UnitOfPower.WATT: 'W'>,
+      <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: <UnitOfPower.WATT: 'W'>,
     }),
     'context': <ANY>,
     'entity_id': 'sensor.cms_sf2000_dc_input_power_2',
@@ -5247,10 +5247,10 @@
 # name: test_sensor[2][sensor.cms_sf2000_dc_input_power_3-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'device_class': 'power',
-      'friendly_name': 'CMS-SF2000 DC input power 3',
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'power',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'CMS-SF2000 DC input power 3',
       <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
-      'unit_of_measurement': <UnitOfPower.WATT: 'W'>,
+      <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: <UnitOfPower.WATT: 'W'>,
     }),
     'context': <ANY>,
     'entity_id': 'sensor.cms_sf2000_dc_input_power_3',
@@ -5305,10 +5305,10 @@
 # name: test_sensor[2][sensor.cms_sf2000_dc_input_power_4-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'device_class': 'power',
-      'friendly_name': 'CMS-SF2000 DC input power 4',
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'power',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'CMS-SF2000 DC input power 4',
       <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
-      'unit_of_measurement': <UnitOfPower.WATT: 'W'>,
+      <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: <UnitOfPower.WATT: 'W'>,
     }),
     'context': <ANY>,
     'entity_id': 'sensor.cms_sf2000_dc_input_power_4',
@@ -5363,10 +5363,10 @@
 # name: test_sensor[2][sensor.cms_sf2000_dc_input_voltage_1-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'device_class': 'voltage',
-      'friendly_name': 'CMS-SF2000 DC input voltage 1',
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'voltage',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'CMS-SF2000 DC input voltage 1',
       <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
-      'unit_of_measurement': <UnitOfElectricPotential.VOLT: 'V'>,
+      <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: <UnitOfElectricPotential.VOLT: 'V'>,
     }),
     'context': <ANY>,
     'entity_id': 'sensor.cms_sf2000_dc_input_voltage_1',
@@ -5421,10 +5421,10 @@
 # name: test_sensor[2][sensor.cms_sf2000_dc_input_voltage_2-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'device_class': 'voltage',
-      'friendly_name': 'CMS-SF2000 DC input voltage 2',
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'voltage',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'CMS-SF2000 DC input voltage 2',
       <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
-      'unit_of_measurement': <UnitOfElectricPotential.VOLT: 'V'>,
+      <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: <UnitOfElectricPotential.VOLT: 'V'>,
     }),
     'context': <ANY>,
     'entity_id': 'sensor.cms_sf2000_dc_input_voltage_2',
@@ -5479,10 +5479,10 @@
 # name: test_sensor[2][sensor.cms_sf2000_dc_input_voltage_3-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'device_class': 'voltage',
-      'friendly_name': 'CMS-SF2000 DC input voltage 3',
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'voltage',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'CMS-SF2000 DC input voltage 3',
       <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
-      'unit_of_measurement': <UnitOfElectricPotential.VOLT: 'V'>,
+      <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: <UnitOfElectricPotential.VOLT: 'V'>,
     }),
     'context': <ANY>,
     'entity_id': 'sensor.cms_sf2000_dc_input_voltage_3',
@@ -5537,10 +5537,10 @@
 # name: test_sensor[2][sensor.cms_sf2000_dc_input_voltage_4-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'device_class': 'voltage',
-      'friendly_name': 'CMS-SF2000 DC input voltage 4',
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'voltage',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'CMS-SF2000 DC input voltage 4',
       <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
-      'unit_of_measurement': <UnitOfElectricPotential.VOLT: 'V'>,
+      <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: <UnitOfElectricPotential.VOLT: 'V'>,
     }),
     'context': <ANY>,
     'entity_id': 'sensor.cms_sf2000_dc_input_voltage_4',
@@ -5595,10 +5595,10 @@
 # name: test_sensor[2][sensor.cms_sf2000_dc_output_power-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'device_class': 'power',
-      'friendly_name': 'CMS-SF2000 DC output power',
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'power',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'CMS-SF2000 DC output power',
       <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
-      'unit_of_measurement': <UnitOfPower.WATT: 'W'>,
+      <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: <UnitOfPower.WATT: 'W'>,
     }),
     'context': <ANY>,
     'entity_id': 'sensor.cms_sf2000_dc_output_power',
@@ -5654,8 +5654,8 @@
 # name: test_sensor[2][sensor.cms_sf2000_device_mode-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'device_class': 'enum',
-      'friendly_name': 'CMS-SF2000 Device mode',
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'enum',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'CMS-SF2000 Device mode',
       <SensorEntityCapabilityAttribute.OPTIONS: 'options'>: list([
         'main',
         'standalone',
@@ -5717,8 +5717,8 @@
 # name: test_sensor[2][sensor.cms_sf2000_energy_mode-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'device_class': 'enum',
-      'friendly_name': 'CMS-SF2000 Energy mode',
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'enum',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'CMS-SF2000 Energy mode',
       <SensorEntityCapabilityAttribute.OPTIONS: 'options'>: list([
         'charge_discharge_schedule',
         'outdoor_portable',
@@ -5776,7 +5776,7 @@
 # name: test_sensor[2][sensor.cms_sf2000_equivalent_full_cycles-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'CMS-SF2000 Equivalent full cycles',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'CMS-SF2000 Equivalent full cycles',
       <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
     }),
     'context': <ANY>,
@@ -5832,10 +5832,10 @@
 # name: test_sensor[2][sensor.cms_sf2000_grid_frequency-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'device_class': 'frequency',
-      'friendly_name': 'CMS-SF2000 Grid frequency',
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'frequency',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'CMS-SF2000 Grid frequency',
       <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
-      'unit_of_measurement': <UnitOfFrequency.HERTZ: 'Hz'>,
+      <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: <UnitOfFrequency.HERTZ: 'Hz'>,
     }),
     'context': <ANY>,
     'entity_id': 'sensor.cms_sf2000_grid_frequency',
@@ -5890,10 +5890,10 @@
 # name: test_sensor[2][sensor.cms_sf2000_grid_voltage-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'device_class': 'voltage',
-      'friendly_name': 'CMS-SF2000 Grid voltage',
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'voltage',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'CMS-SF2000 Grid voltage',
       <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
-      'unit_of_measurement': <UnitOfElectricPotential.VOLT: 'V'>,
+      <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: <UnitOfElectricPotential.VOLT: 'V'>,
     }),
     'context': <ANY>,
     'entity_id': 'sensor.cms_sf2000_grid_voltage',
@@ -5948,10 +5948,10 @@
 # name: test_sensor[2][sensor.cms_sf2000_main_current-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'device_class': 'current',
-      'friendly_name': 'CMS-SF2000 Main current',
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'current',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'CMS-SF2000 Main current',
       <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
-      'unit_of_measurement': <UnitOfElectricCurrent.AMPERE: 'A'>,
+      <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: <UnitOfElectricCurrent.AMPERE: 'A'>,
     }),
     'context': <ANY>,
     'entity_id': 'sensor.cms_sf2000_main_current',
@@ -6003,7 +6003,7 @@
 # name: test_sensor[2][sensor.cms_sf2000_main_cycle_count-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'CMS-SF2000 Main cycle count',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'CMS-SF2000 Main cycle count',
       <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
     }),
     'context': <ANY>,
@@ -6059,10 +6059,10 @@
 # name: test_sensor[2][sensor.cms_sf2000_main_mos_temperature-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'device_class': 'temperature',
-      'friendly_name': 'CMS-SF2000 Main MOS temperature',
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'temperature',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'CMS-SF2000 Main MOS temperature',
       <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
-      'unit_of_measurement': <UnitOfTemperature.CELSIUS: '°C'>,
+      <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: <UnitOfTemperature.CELSIUS: '°C'>,
     }),
     'context': <ANY>,
     'entity_id': 'sensor.cms_sf2000_main_mos_temperature',
@@ -6112,7 +6112,7 @@
 # name: test_sensor[2][sensor.cms_sf2000_main_serial_number-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'CMS-SF2000 Main serial number',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'CMS-SF2000 Main serial number',
     }),
     'context': <ANY>,
     'entity_id': 'sensor.cms_sf2000_main_serial_number',
@@ -6164,10 +6164,10 @@
 # name: test_sensor[2][sensor.cms_sf2000_main_soc-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'device_class': 'battery',
-      'friendly_name': 'CMS-SF2000 Main SOC',
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'battery',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'CMS-SF2000 Main SOC',
       <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
-      'unit_of_measurement': '%',
+      <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: '%',
     }),
     'context': <ANY>,
     'entity_id': 'sensor.cms_sf2000_main_soc',
@@ -6222,10 +6222,10 @@
 # name: test_sensor[2][sensor.cms_sf2000_main_temperature-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'device_class': 'temperature',
-      'friendly_name': 'CMS-SF2000 Main temperature',
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'temperature',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'CMS-SF2000 Main temperature',
       <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
-      'unit_of_measurement': <UnitOfTemperature.CELSIUS: '°C'>,
+      <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: <UnitOfTemperature.CELSIUS: '°C'>,
     }),
     'context': <ANY>,
     'entity_id': 'sensor.cms_sf2000_main_temperature',
@@ -6280,10 +6280,10 @@
 # name: test_sensor[2][sensor.cms_sf2000_main_voltage-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'device_class': 'voltage',
-      'friendly_name': 'CMS-SF2000 Main voltage',
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'voltage',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'CMS-SF2000 Main voltage',
       <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
-      'unit_of_measurement': <UnitOfElectricPotential.VOLT: 'V'>,
+      <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: <UnitOfElectricPotential.VOLT: 'V'>,
     }),
     'context': <ANY>,
     'entity_id': 'sensor.cms_sf2000_main_voltage',
@@ -6338,10 +6338,10 @@
 # name: test_sensor[2][sensor.cms_sf2000_meter_power-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'device_class': 'power',
-      'friendly_name': 'CMS-SF2000 Meter power',
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'power',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'CMS-SF2000 Meter power',
       <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
-      'unit_of_measurement': <UnitOfPower.WATT: 'W'>,
+      <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: <UnitOfPower.WATT: 'W'>,
     }),
     'context': <ANY>,
     'entity_id': 'sensor.cms_sf2000_meter_power',
@@ -6396,10 +6396,10 @@
 # name: test_sensor[2][sensor.cms_sf2000_off_grid_output_energy-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'device_class': 'energy',
-      'friendly_name': 'CMS-SF2000 Off-grid output energy',
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'energy',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'CMS-SF2000 Off-grid output energy',
       <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
-      'unit_of_measurement': <UnitOfEnergy.KILO_WATT_HOUR: 'kWh'>,
+      <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: <UnitOfEnergy.KILO_WATT_HOUR: 'kWh'>,
     }),
     'context': <ANY>,
     'entity_id': 'sensor.cms_sf2000_off_grid_output_energy',
@@ -6452,9 +6452,9 @@
 # name: test_sensor[2][sensor.cms_sf2000_rated_capacity-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'device_class': 'energy',
-      'friendly_name': 'CMS-SF2000 Rated capacity',
-      'unit_of_measurement': <UnitOfEnergy.KILO_WATT_HOUR: 'kWh'>,
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'energy',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'CMS-SF2000 Rated capacity',
+      <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: <UnitOfEnergy.KILO_WATT_HOUR: 'kWh'>,
     }),
     'context': <ANY>,
     'entity_id': 'sensor.cms_sf2000_rated_capacity',
@@ -6510,8 +6510,8 @@
 # name: test_sensor[2][sensor.cms_sf2000_real_time_mode-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'device_class': 'enum',
-      'friendly_name': 'CMS-SF2000 Real-time mode',
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'enum',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'CMS-SF2000 Real-time mode',
       <SensorEntityCapabilityAttribute.OPTIONS: 'options'>: list([
         'charging',
         'discharging',
@@ -6571,10 +6571,10 @@
 # name: test_sensor[2][sensor.cms_sf2000_real_time_power_limit-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'device_class': 'power',
-      'friendly_name': 'CMS-SF2000 Real-time power limit',
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'power',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'CMS-SF2000 Real-time power limit',
       <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
-      'unit_of_measurement': <UnitOfPower.WATT: 'W'>,
+      <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: <UnitOfPower.WATT: 'W'>,
     }),
     'context': <ANY>,
     'entity_id': 'sensor.cms_sf2000_real_time_power_limit',
@@ -6624,8 +6624,8 @@
 # name: test_sensor[2][sensor.cms_sf2000_real_time_target_soc-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'CMS-SF2000 Real-time target SOC',
-      'unit_of_measurement': '%',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'CMS-SF2000 Real-time target SOC',
+      <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: '%',
     }),
     'context': <ANY>,
     'entity_id': 'sensor.cms_sf2000_real_time_target_soc',
@@ -6680,10 +6680,10 @@
 # name: test_sensor[2][sensor.cms_sf2000_total_ac_input_energy-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'device_class': 'energy',
-      'friendly_name': 'CMS-SF2000 Total AC input energy',
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'energy',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'CMS-SF2000 Total AC input energy',
       <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
-      'unit_of_measurement': <UnitOfEnergy.KILO_WATT_HOUR: 'kWh'>,
+      <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: <UnitOfEnergy.KILO_WATT_HOUR: 'kWh'>,
     }),
     'context': <ANY>,
     'entity_id': 'sensor.cms_sf2000_total_ac_input_energy',
@@ -6738,10 +6738,10 @@
 # name: test_sensor[2][sensor.cms_sf2000_total_ac_output_energy-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'device_class': 'energy',
-      'friendly_name': 'CMS-SF2000 Total AC output energy',
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'energy',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'CMS-SF2000 Total AC output energy',
       <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
-      'unit_of_measurement': <UnitOfEnergy.KILO_WATT_HOUR: 'kWh'>,
+      <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: <UnitOfEnergy.KILO_WATT_HOUR: 'kWh'>,
     }),
     'context': <ANY>,
     'entity_id': 'sensor.cms_sf2000_total_ac_output_energy',
@@ -6796,10 +6796,10 @@
 # name: test_sensor[2][sensor.cms_sf2000_transformer_temperature-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'device_class': 'temperature',
-      'friendly_name': 'CMS-SF2000 Transformer temperature',
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'temperature',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'CMS-SF2000 Transformer temperature',
       <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
-      'unit_of_measurement': <UnitOfTemperature.CELSIUS: '°C'>,
+      <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: <UnitOfTemperature.CELSIUS: '°C'>,
     }),
     'context': <ANY>,
     'entity_id': 'sensor.cms_sf2000_transformer_temperature',

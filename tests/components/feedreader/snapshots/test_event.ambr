@@ -7,7 +7,7 @@
     <EventEntityCapabilityAttribute.EVENT_TYPES: 'event_types'>: list([
       'feedreader',
     ]),
-    'friendly_name': 'Mock Title',
+    <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Mock Title',
     'link': 'http://example.org/2003/12/13/atom03',
     'title': 'Título',
   })
@@ -20,7 +20,7 @@
     <EventEntityCapabilityAttribute.EVENT_TYPES: 'event_types'>: list([
       'feedreader',
     ]),
-    'friendly_name': 'Mock Title',
+    <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Mock Title',
     'link': 'http://www.example.com/link/1',
     'title': 'Título 1',
   })

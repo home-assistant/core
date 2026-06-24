@@ -39,7 +39,7 @@
 # name: test_switch_entities[switch.unifi_access_evacuation-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'UniFi Access Evacuation',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'UniFi Access Evacuation',
     }),
     'context': <ANY>,
     'entity_id': 'switch.unifi_access_evacuation',
@@ -89,7 +89,7 @@
 # name: test_switch_entities[switch.unifi_access_lockdown-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'UniFi Access Lockdown',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'UniFi Access Lockdown',
     }),
     'context': <ANY>,
     'entity_id': 'switch.unifi_access_lockdown',

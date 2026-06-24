@@ -52,7 +52,7 @@
   StateSnapshot({
     'attributes': ReadOnlyDict({
       <ClimateEntityStateAttribute.CURRENT_TEMPERATURE: 'current_temperature'>: 18.0,
-      'friendly_name': 'fake_name',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'fake_name',
       <ClimateEntityCapabilityAttribute.HVAC_MODES: 'hvac_modes'>: list([
         <HVACMode.HEAT: 'heat'>,
         <HVACMode.OFF: 'off'>,
@@ -65,7 +65,7 @@
         'comfort',
         'boost',
       ]),
-      'supported_features': <ClimateEntityFeature: 401>,
+      <EntityStateAttribute.SUPPORTED_FEATURES: 'supported_features'>: <ClimateEntityFeature: 401>,
       <ClimateEntityStateAttribute.TEMPERATURE: 'temperature'>: 19.5,
     }),
     'context': <ANY>,

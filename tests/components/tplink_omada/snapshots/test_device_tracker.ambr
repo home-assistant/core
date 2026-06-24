@@ -2,7 +2,7 @@
 # name: test_device_scanner_created
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'Banana',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Banana',
       <ScannerEntityStateAttribute.HOST_NAME: 'host_name'>: 'testhost',
       <DeviceTrackerEntityStateAttribute.IN_ZONES: 'in_zones'>: list([
         'zone.home',
@@ -23,7 +23,7 @@
 # name: test_device_scanner_update_to_away_nulls_properties
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'Banana',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Banana',
       <DeviceTrackerEntityStateAttribute.IN_ZONES: 'in_zones'>: list([
       ]),
       <ScannerEntityStateAttribute.MAC: 'mac'>: '2C-71-FF-ED-34-83',

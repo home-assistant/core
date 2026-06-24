@@ -53,7 +53,7 @@
   StateSnapshot({
     'attributes': ReadOnlyDict({
       <ClimateEntityStateAttribute.CURRENT_TEMPERATURE: 'current_temperature'>: 21.1,
-      'friendly_name': 'Büro',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Büro',
       <ClimateEntityStateAttribute.HVAC_ACTION: 'hvac_action'>: <HVACAction.HEATING: 'heating'>,
       <ClimateEntityCapabilityAttribute.HVAC_MODES: 'hvac_modes'>: list([
         <HVACMode.HEAT: 'heat'>,
@@ -67,7 +67,7 @@
         'day',
         'night',
       ]),
-      'supported_features': <ClimateEntityFeature: 17>,
+      <EntityStateAttribute.SUPPORTED_FEATURES: 'supported_features'>: <ClimateEntityFeature: 17>,
       <ClimateEntityCapabilityAttribute.TARGET_TEMP_STEP: 'target_temp_step'>: 0.2,
       <ClimateEntityStateAttribute.TEMPERATURE: 'temperature'>: 21.0,
     }),

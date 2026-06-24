@@ -41,9 +41,9 @@
 # name: test_all_entities[device_tracker.device_1-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'Device 1',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Device 1',
       <TrackerEntityStateAttribute.GPS_ACCURACY: 'gps_accuracy'>: 0,
-      'icon': 'mdi:map-marker',
+      <EntityStateAttribute.ICON: 'icon'>: 'mdi:map-marker',
       <DeviceTrackerEntityStateAttribute.IN_ZONES: 'in_zones'>: list([
       ]),
       <TrackerEntityStateAttribute.LATITUDE: 'latitude'>: 52.0,

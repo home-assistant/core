@@ -41,7 +41,7 @@
 # name: test_device_tracker_entities[device_tracker.nrgkick_test_gps_tracker-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'NRGkick Test GPS tracker',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'NRGkick Test GPS tracker',
       <TrackerEntityStateAttribute.GPS_ACCURACY: 'gps_accuracy'>: 1.5,
       <DeviceTrackerEntityStateAttribute.IN_ZONES: 'in_zones'>: list([
       ]),

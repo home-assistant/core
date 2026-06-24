@@ -61,7 +61,7 @@
         'high',
         'auto',
       ]),
-      'friendly_name': 'living room',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'living room',
       <ClimateEntityCapabilityAttribute.HVAC_MODES: 'hvac_modes'>: list([
         <HVACMode.HEAT: 'heat'>,
         <HVACMode.COOL: 'cool'>,
@@ -69,7 +69,7 @@
       ]),
       <ClimateEntityCapabilityAttribute.MAX_TEMP: 'max_temp'>: 30.0,
       <ClimateEntityCapabilityAttribute.MIN_TEMP: 'min_temp'>: 16.0,
-      'supported_features': <ClimateEntityFeature: 425>,
+      <EntityStateAttribute.SUPPORTED_FEATURES: 'supported_features'>: <ClimateEntityFeature: 425>,
       <ClimateEntityCapabilityAttribute.SWING_MODES: 'swing_modes'>: list([
         'on',
         'off',
@@ -148,7 +148,7 @@
         'high',
         'auto',
       ]),
-      'friendly_name': 'living room',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'living room',
       <ClimateEntityCapabilityAttribute.HVAC_MODES: 'hvac_modes'>: list([
         <HVACMode.HEAT: 'heat'>,
         <HVACMode.COOL: 'cool'>,
@@ -156,7 +156,7 @@
       ]),
       <ClimateEntityCapabilityAttribute.MAX_TEMP: 'max_temp'>: 30.0,
       <ClimateEntityCapabilityAttribute.MIN_TEMP: 'min_temp'>: 16.0,
-      'supported_features': <ClimateEntityFeature: 425>,
+      <EntityStateAttribute.SUPPORTED_FEATURES: 'supported_features'>: <ClimateEntityFeature: 425>,
       <ClimateEntityStateAttribute.SWING_MODE: 'swing_mode'>: 'off',
       <ClimateEntityCapabilityAttribute.SWING_MODES: 'swing_modes'>: list([
         'on',

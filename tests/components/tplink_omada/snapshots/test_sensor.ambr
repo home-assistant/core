@@ -41,9 +41,9 @@
 # name: test_entities[sensor.test_poe_switch_cpu_usage-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'Test PoE Switch CPU usage',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Test PoE Switch CPU usage',
       <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
-      'unit_of_measurement': '%',
+      <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: '%',
     }),
     'context': <ANY>,
     'entity_id': 'sensor.test_poe_switch_cpu_usage',
@@ -103,8 +103,8 @@
 # name: test_entities[sensor.test_poe_switch_device_status-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'device_class': 'enum',
-      'friendly_name': 'Test PoE Switch Device status',
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'enum',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Test PoE Switch Device status',
       <SensorEntityCapabilityAttribute.OPTIONS: 'options'>: list([
         'disconnected',
         'connected',
@@ -165,9 +165,9 @@
 # name: test_entities[sensor.test_poe_switch_memory_usage-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'Test PoE Switch Memory usage',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Test PoE Switch Memory usage',
       <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
-      'unit_of_measurement': '%',
+      <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: '%',
     }),
     'context': <ANY>,
     'entity_id': 'sensor.test_poe_switch_memory_usage',
@@ -219,9 +219,9 @@
 # name: test_entities[sensor.test_router_cpu_usage-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'Test Router CPU usage',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Test Router CPU usage',
       <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
-      'unit_of_measurement': '%',
+      <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: '%',
     }),
     'context': <ANY>,
     'entity_id': 'sensor.test_router_cpu_usage',
@@ -281,8 +281,8 @@
 # name: test_entities[sensor.test_router_device_status-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'device_class': 'enum',
-      'friendly_name': 'Test Router Device status',
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'enum',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Test Router Device status',
       <SensorEntityCapabilityAttribute.OPTIONS: 'options'>: list([
         'disconnected',
         'connected',
@@ -343,9 +343,9 @@
 # name: test_entities[sensor.test_router_memory_usage-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'Test Router Memory usage',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Test Router Memory usage',
       <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
-      'unit_of_measurement': '%',
+      <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: '%',
     }),
     'context': <ANY>,
     'entity_id': 'sensor.test_router_memory_usage',

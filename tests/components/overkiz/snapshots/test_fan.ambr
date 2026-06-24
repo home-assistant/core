@@ -41,12 +41,12 @@
 # name: test_fan_entities_snapshot[fan.maple_residence_living_room_air_inlet-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'Living Room Air Inlet',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Living Room Air Inlet',
       <FanEntityStateAttribute.PERCENTAGE: 'percentage'>: 40,
       <FanEntityStateAttribute.PERCENTAGE_STEP: 'percentage_step'>: 1.0,
       <FanEntityStateAttribute.PRESET_MODE: 'preset_mode'>: None,
       <FanEntityCapabilityAttribute.PRESET_MODES: 'preset_modes'>: None,
-      'supported_features': <FanEntityFeature: 49>,
+      <EntityStateAttribute.SUPPORTED_FEATURES: 'supported_features'>: <FanEntityFeature: 49>,
     }),
     'context': <ANY>,
     'entity_id': 'fan.maple_residence_living_room_air_inlet',
@@ -98,12 +98,12 @@
 # name: test_fan_entities_snapshot[fan.maple_residence_living_room_air_outlet-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'Living Room Air Outlet',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Living Room Air Outlet',
       <FanEntityStateAttribute.PERCENTAGE: 'percentage'>: 0,
       <FanEntityStateAttribute.PERCENTAGE_STEP: 'percentage_step'>: 1.0,
       <FanEntityStateAttribute.PRESET_MODE: 'preset_mode'>: None,
       <FanEntityCapabilityAttribute.PRESET_MODES: 'preset_modes'>: None,
-      'supported_features': <FanEntityFeature: 49>,
+      <EntityStateAttribute.SUPPORTED_FEATURES: 'supported_features'>: <FanEntityFeature: 49>,
     }),
     'context': <ANY>,
     'entity_id': 'fan.maple_residence_living_room_air_outlet',
@@ -155,12 +155,12 @@
 # name: test_fan_entities_snapshot[fan.maple_residence_living_room_air_transfer-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'Living Room Air Transfer',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Living Room Air Transfer',
       <FanEntityStateAttribute.PERCENTAGE: 'percentage'>: 75,
       <FanEntityStateAttribute.PERCENTAGE_STEP: 'percentage_step'>: 1.0,
       <FanEntityStateAttribute.PRESET_MODE: 'preset_mode'>: None,
       <FanEntityCapabilityAttribute.PRESET_MODES: 'preset_modes'>: None,
-      'supported_features': <FanEntityFeature: 49>,
+      <EntityStateAttribute.SUPPORTED_FEATURES: 'supported_features'>: <FanEntityFeature: 49>,
     }),
     'context': <ANY>,
     'entity_id': 'fan.maple_residence_living_room_air_transfer',

@@ -2,10 +2,10 @@
 # name: test_connected_state
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'device_class': 'battery',
-      'friendly_name': 'Mock Title Sensor battery',
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'battery',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Mock Title Sensor battery',
       <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
-      'unit_of_measurement': '%',
+      <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: '%',
     }),
     'context': <ANY>,
     'entity_id': 'sensor.mock_title_sensor_battery',
@@ -18,10 +18,10 @@
 # name: test_connected_state.1
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'device_class': 'battery',
-      'friendly_name': 'Mock Title Sensor battery',
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'battery',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Mock Title Sensor battery',
       <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
-      'unit_of_measurement': '%',
+      <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: '%',
     }),
     'context': <ANY>,
     'entity_id': 'sensor.mock_title_sensor_battery',
@@ -73,10 +73,10 @@
 # name: test_sensors[aqua_contour][sensor.mock_title_battery-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'device_class': 'battery',
-      'friendly_name': 'Mock Title Battery',
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'battery',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Mock Title Battery',
       <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
-      'unit_of_measurement': '%',
+      <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: '%',
     }),
     'context': <ANY>,
     'entity_id': 'sensor.mock_title_battery',
@@ -128,9 +128,9 @@
 # name: test_sensors[aqua_contour][sensor.mock_title_current_distance-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'Mock Title Current distance',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Mock Title Current distance',
       <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
-      'unit_of_measurement': '%',
+      <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: '%',
     }),
     'context': <ANY>,
     'entity_id': 'sensor.mock_title_current_distance',
@@ -185,10 +185,10 @@
 # name: test_sensors[aqua_contour][sensor.mock_title_current_flow-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'device_class': 'volume_flow_rate',
-      'friendly_name': 'Mock Title Current flow',
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'volume_flow_rate',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Mock Title Current flow',
       <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
-      'unit_of_measurement': <UnitOfVolumeFlowRate.LITERS_PER_MINUTE: 'L/min'>,
+      <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: <UnitOfVolumeFlowRate.LITERS_PER_MINUTE: 'L/min'>,
     }),
     'context': <ANY>,
     'entity_id': 'sensor.mock_title_current_flow',
@@ -240,9 +240,9 @@
 # name: test_sensors[aqua_contour][sensor.mock_title_current_sector-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'Mock Title Current sector',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Mock Title Current sector',
       <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT_ANGLE: 'measurement_angle'>,
-      'unit_of_measurement': '°',
+      <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: '°',
     }),
     'context': <ANY>,
     'entity_id': 'sensor.mock_title_current_sector',
@@ -303,8 +303,8 @@
 # name: test_sensors[aqua_contour][sensor.mock_title_error-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'device_class': 'enum',
-      'friendly_name': 'Mock Title Error',
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'enum',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Mock Title Error',
       <SensorEntityCapabilityAttribute.OPTIONS: 'options'>: list([
         'no_error',
         'no_water',
@@ -364,8 +364,8 @@
 # name: test_sensors[aqua_contour][sensor.mock_title_error_timestamp-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'device_class': 'timestamp',
-      'friendly_name': 'Mock Title Error timestamp',
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'timestamp',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Mock Title Error timestamp',
     }),
     'context': <ANY>,
     'entity_id': 'sensor.mock_title_error_timestamp',
@@ -420,10 +420,10 @@
 # name: test_sensors[aqua_contour][sensor.mock_title_overall_flow-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'device_class': 'water',
-      'friendly_name': 'Mock Title Overall flow',
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'water',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Mock Title Overall flow',
       <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
-      'unit_of_measurement': <UnitOfVolume.LITERS: 'L'>,
+      <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: <UnitOfVolume.LITERS: 'L'>,
     }),
     'context': <ANY>,
     'entity_id': 'sensor.mock_title_overall_flow',
@@ -473,8 +473,8 @@
 # name: test_sensors[aqua_contour][sensor.mock_title_watering_finished-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'device_class': 'timestamp',
-      'friendly_name': 'Mock Title Watering finished',
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'timestamp',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Mock Title Watering finished',
     }),
     'context': <ANY>,
     'entity_id': 'sensor.mock_title_watering_finished',
@@ -526,10 +526,10 @@
 # name: test_sensors[timer][sensor.mock_title_battery-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'device_class': 'battery',
-      'friendly_name': 'Mock Title Battery',
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'battery',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Mock Title Battery',
       <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
-      'unit_of_measurement': '%',
+      <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: '%',
     }),
     'context': <ANY>,
     'entity_id': 'sensor.mock_title_battery',
@@ -579,8 +579,8 @@
 # name: test_sensors[timer][sensor.mock_title_valve_closing-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'device_class': 'timestamp',
-      'friendly_name': 'Mock Title Valve closing',
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'timestamp',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Mock Title Valve closing',
     }),
     'context': <ANY>,
     'entity_id': 'sensor.mock_title_valve_closing',
@@ -593,10 +593,10 @@
 # name: test_setup[standard_sensor]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'device_class': 'battery',
-      'friendly_name': 'Mock Title Battery',
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'battery',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Mock Title Battery',
       <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
-      'unit_of_measurement': '%',
+      <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: '%',
     }),
     'context': <ANY>,
     'entity_id': 'sensor.mock_title_battery',
@@ -609,10 +609,10 @@
 # name: test_setup[standard_sensor].1
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'device_class': 'battery',
-      'friendly_name': 'Mock Title Battery',
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'battery',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Mock Title Battery',
       <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
-      'unit_of_measurement': '%',
+      <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: '%',
     }),
     'context': <ANY>,
     'entity_id': 'sensor.mock_title_battery',
@@ -625,8 +625,8 @@
 # name: test_setup[valve_sensor]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'device_class': 'timestamp',
-      'friendly_name': 'Mock Title Valve closing',
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'timestamp',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Mock Title Valve closing',
     }),
     'context': <ANY>,
     'entity_id': 'sensor.mock_title_valve_closing',
@@ -639,8 +639,8 @@
 # name: test_setup[valve_sensor].1
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'device_class': 'timestamp',
-      'friendly_name': 'Mock Title Valve closing',
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'timestamp',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Mock Title Valve closing',
     }),
     'context': <ANY>,
     'entity_id': 'sensor.mock_title_valve_closing',
@@ -653,8 +653,8 @@
 # name: test_setup[valve_sensor].2
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'device_class': 'timestamp',
-      'friendly_name': 'Mock Title Valve closing',
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'timestamp',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Mock Title Valve closing',
     }),
     'context': <ANY>,
     'entity_id': 'sensor.mock_title_valve_closing',

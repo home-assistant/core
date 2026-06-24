@@ -45,9 +45,9 @@
 # name: test_entities[sensor.stookwijzer_advice_code-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'attribution': 'Data provided by atlasleefomgeving.nl',
-      'device_class': 'enum',
-      'friendly_name': 'Stookwijzer Advice code',
+      <EntityStateAttribute.ATTRIBUTION: 'attribution'>: 'Data provided by atlasleefomgeving.nl',
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'enum',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Stookwijzer Advice code',
       <SensorEntityCapabilityAttribute.OPTIONS: 'options'>: list([
         'code_yellow',
         'code_orange',
@@ -104,9 +104,9 @@
 # name: test_entities[sensor.stookwijzer_air_quality_index-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'attribution': 'Data provided by atlasleefomgeving.nl',
-      'device_class': 'aqi',
-      'friendly_name': 'Stookwijzer Air quality index',
+      <EntityStateAttribute.ATTRIBUTION: 'attribution'>: 'Data provided by atlasleefomgeving.nl',
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'aqi',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Stookwijzer Air quality index',
       <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
     'context': <ANY>,
@@ -165,11 +165,11 @@
 # name: test_entities[sensor.stookwijzer_wind_speed-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'attribution': 'Data provided by atlasleefomgeving.nl',
-      'device_class': 'wind_speed',
-      'friendly_name': 'Stookwijzer Wind speed',
+      <EntityStateAttribute.ATTRIBUTION: 'attribution'>: 'Data provided by atlasleefomgeving.nl',
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'wind_speed',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Stookwijzer Wind speed',
       <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
-      'unit_of_measurement': <UnitOfSpeed.BEAUFORT: 'Beaufort'>,
+      <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: <UnitOfSpeed.BEAUFORT: 'Beaufort'>,
     }),
     'context': <ANY>,
     'entity_id': 'sensor.stookwijzer_wind_speed',

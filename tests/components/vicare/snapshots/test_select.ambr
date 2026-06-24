@@ -45,7 +45,7 @@
 # name: test_all_entities[select.model0_dhw_operating_mode-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'model0 DHW operating mode',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'model0 DHW operating mode',
       <SelectEntityCapabilityAttribute.OPTIONS: 'options'>: list([
         'efficient_with_min_comfort',
         'efficient',

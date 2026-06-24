@@ -49,7 +49,7 @@
   StateSnapshot({
     'attributes': ReadOnlyDict({
       <ClimateEntityStateAttribute.CURRENT_TEMPERATURE: 'current_temperature'>: 30,
-      'friendly_name': 'Test Cabin overheat protection',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Test Cabin overheat protection',
       <ClimateEntityCapabilityAttribute.HVAC_MODES: 'hvac_modes'>: list([
         <HVACMode.OFF: 'off'>,
         <HVACMode.COOL: 'cool'>,
@@ -57,7 +57,7 @@
       ]),
       <ClimateEntityCapabilityAttribute.MAX_TEMP: 'max_temp'>: 40,
       <ClimateEntityCapabilityAttribute.MIN_TEMP: 'min_temp'>: 30,
-      'supported_features': <ClimateEntityFeature: 385>,
+      <EntityStateAttribute.SUPPORTED_FEATURES: 'supported_features'>: <ClimateEntityFeature: 385>,
       <ClimateEntityCapabilityAttribute.TARGET_TEMP_STEP: 'target_temp_step'>: 5,
       <ClimateEntityStateAttribute.TEMPERATURE: 'temperature'>: 40,
     }),
@@ -132,7 +132,7 @@
         'off',
         'bioweapon',
       ]),
-      'friendly_name': 'Test Climate',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Test Climate',
       <ClimateEntityCapabilityAttribute.HVAC_MODES: 'hvac_modes'>: list([
         <HVACMode.HEAT_COOL: 'heat_cool'>,
         <HVACMode.OFF: 'off'>,
@@ -146,7 +146,7 @@
         'dog',
         'camp',
       ]),
-      'supported_features': <ClimateEntityFeature: 409>,
+      <EntityStateAttribute.SUPPORTED_FEATURES: 'supported_features'>: <ClimateEntityFeature: 409>,
       <ClimateEntityStateAttribute.TEMPERATURE: 'temperature'>: 22.0,
     }),
     'context': <ANY>,
@@ -207,7 +207,7 @@
   StateSnapshot({
     'attributes': ReadOnlyDict({
       <ClimateEntityStateAttribute.CURRENT_TEMPERATURE: 'current_temperature'>: 30,
-      'friendly_name': 'Test Cabin overheat protection',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Test Cabin overheat protection',
       <ClimateEntityCapabilityAttribute.HVAC_MODES: 'hvac_modes'>: list([
         <HVACMode.OFF: 'off'>,
         <HVACMode.COOL: 'cool'>,
@@ -215,7 +215,7 @@
       ]),
       <ClimateEntityCapabilityAttribute.MAX_TEMP: 'max_temp'>: 40,
       <ClimateEntityCapabilityAttribute.MIN_TEMP: 'min_temp'>: 30,
-      'supported_features': <ClimateEntityFeature: 384>,
+      <EntityStateAttribute.SUPPORTED_FEATURES: 'supported_features'>: <ClimateEntityFeature: 384>,
       <ClimateEntityCapabilityAttribute.TARGET_TEMP_STEP: 'target_temp_step'>: 5,
     }),
     'context': <ANY>,
@@ -289,7 +289,7 @@
         'off',
         'bioweapon',
       ]),
-      'friendly_name': 'Test Climate',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Test Climate',
       <ClimateEntityCapabilityAttribute.HVAC_MODES: 'hvac_modes'>: list([
         <HVACMode.HEAT_COOL: 'heat_cool'>,
         <HVACMode.OFF: 'off'>,
@@ -303,7 +303,7 @@
         'dog',
         'camp',
       ]),
-      'supported_features': <ClimateEntityFeature: 409>,
+      <EntityStateAttribute.SUPPORTED_FEATURES: 'supported_features'>: <ClimateEntityFeature: 409>,
       <ClimateEntityStateAttribute.TEMPERATURE: 'temperature'>: 22.0,
     }),
     'context': <ANY>,
@@ -411,7 +411,7 @@
   StateSnapshot({
     'attributes': ReadOnlyDict({
       <ClimateEntityStateAttribute.CURRENT_TEMPERATURE: 'current_temperature'>: None,
-      'friendly_name': 'Test Cabin overheat protection',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Test Cabin overheat protection',
       <ClimateEntityCapabilityAttribute.HVAC_MODES: 'hvac_modes'>: list([
         <HVACMode.OFF: 'off'>,
         <HVACMode.COOL: 'cool'>,
@@ -419,7 +419,7 @@
       ]),
       <ClimateEntityCapabilityAttribute.MAX_TEMP: 'max_temp'>: 40,
       <ClimateEntityCapabilityAttribute.MIN_TEMP: 'min_temp'>: 30,
-      'supported_features': <ClimateEntityFeature: 384>,
+      <EntityStateAttribute.SUPPORTED_FEATURES: 'supported_features'>: <ClimateEntityFeature: 384>,
       <ClimateEntityCapabilityAttribute.TARGET_TEMP_STEP: 'target_temp_step'>: 5,
     }),
     'context': <ANY>,
@@ -434,7 +434,7 @@
   StateSnapshot({
     'attributes': ReadOnlyDict({
       <ClimateEntityStateAttribute.CURRENT_TEMPERATURE: 'current_temperature'>: 26.0,
-      'friendly_name': 'Test Climate',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Test Climate',
       <ClimateEntityCapabilityAttribute.HVAC_MODES: 'hvac_modes'>: list([
         <HVACMode.HEAT_COOL: 'heat_cool'>,
         <HVACMode.OFF: 'off'>,
@@ -448,7 +448,7 @@
         'dog',
         'camp',
       ]),
-      'supported_features': <ClimateEntityFeature: 401>,
+      <EntityStateAttribute.SUPPORTED_FEATURES: 'supported_features'>: <ClimateEntityFeature: 401>,
       <ClimateEntityStateAttribute.TEMPERATURE: 'temperature'>: 21.0,
     }),
     'context': <ANY>,
@@ -463,7 +463,7 @@
   StateSnapshot({
     'attributes': ReadOnlyDict({
       <ClimateEntityStateAttribute.CURRENT_TEMPERATURE: 'current_temperature'>: 26.0,
-      'friendly_name': 'Test Climate',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Test Climate',
       <ClimateEntityCapabilityAttribute.HVAC_MODES: 'hvac_modes'>: list([
         <HVACMode.HEAT_COOL: 'heat_cool'>,
         <HVACMode.OFF: 'off'>,
@@ -477,7 +477,7 @@
         'dog',
         'camp',
       ]),
-      'supported_features': <ClimateEntityFeature: 401>,
+      <EntityStateAttribute.SUPPORTED_FEATURES: 'supported_features'>: <ClimateEntityFeature: 401>,
       <ClimateEntityStateAttribute.TEMPERATURE: 'temperature'>: 21.0,
     }),
     'context': <ANY>,

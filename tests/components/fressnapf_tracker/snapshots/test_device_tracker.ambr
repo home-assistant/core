@@ -41,8 +41,8 @@
 # name: test_state_entity_device_snapshots[device_tracker.fluffy-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'entity_picture': 'http://res.cloudinary.com/iot-venture/image/upload/v1717594357/kyaqq7nfitrdvaoakb8s.jpg',
-      'friendly_name': 'Fluffy',
+      <EntityStateAttribute.ENTITY_PICTURE: 'entity_picture'>: 'http://res.cloudinary.com/iot-venture/image/upload/v1717594357/kyaqq7nfitrdvaoakb8s.jpg',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Fluffy',
       <TrackerEntityStateAttribute.GPS_ACCURACY: 'gps_accuracy'>: 10.0,
       <DeviceTrackerEntityStateAttribute.IN_ZONES: 'in_zones'>: list([
       ]),

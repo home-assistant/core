@@ -44,8 +44,8 @@
 # name: test_states[number.downstairs_volume-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'attribution': 'Data provided by Ring.com',
-      'friendly_name': 'Downstairs Volume',
+      <EntityStateAttribute.ATTRIBUTION: 'attribution'>: 'Data provided by Ring.com',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Downstairs Volume',
       <NumberEntityCapabilityAttribute.MAX: 'max'>: 11,
       <NumberEntityCapabilityAttribute.MIN: 'min'>: 0,
       <NumberEntityCapabilityAttribute.MODE: 'mode'>: <NumberMode.SLIDER: 'slider'>,
@@ -104,8 +104,8 @@
 # name: test_states[number.front_door_volume-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'attribution': 'Data provided by Ring.com',
-      'friendly_name': 'Front Door Volume',
+      <EntityStateAttribute.ATTRIBUTION: 'attribution'>: 'Data provided by Ring.com',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Front Door Volume',
       <NumberEntityCapabilityAttribute.MAX: 'max'>: 11,
       <NumberEntityCapabilityAttribute.MIN: 'min'>: 0,
       <NumberEntityCapabilityAttribute.MODE: 'mode'>: <NumberMode.SLIDER: 'slider'>,
@@ -164,8 +164,8 @@
 # name: test_states[number.front_volume-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'attribution': 'Data provided by Ring.com',
-      'friendly_name': 'Front Volume',
+      <EntityStateAttribute.ATTRIBUTION: 'attribution'>: 'Data provided by Ring.com',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Front Volume',
       <NumberEntityCapabilityAttribute.MAX: 'max'>: 11,
       <NumberEntityCapabilityAttribute.MIN: 'min'>: 0,
       <NumberEntityCapabilityAttribute.MODE: 'mode'>: <NumberMode.SLIDER: 'slider'>,
@@ -224,8 +224,8 @@
 # name: test_states[number.ingress_doorbell_volume-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'attribution': 'Data provided by Ring.com',
-      'friendly_name': 'Ingress Doorbell volume',
+      <EntityStateAttribute.ATTRIBUTION: 'attribution'>: 'Data provided by Ring.com',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Ingress Doorbell volume',
       <NumberEntityCapabilityAttribute.MAX: 'max'>: 8,
       <NumberEntityCapabilityAttribute.MIN: 'min'>: 0,
       <NumberEntityCapabilityAttribute.MODE: 'mode'>: <NumberMode.SLIDER: 'slider'>,
@@ -284,8 +284,8 @@
 # name: test_states[number.ingress_mic_volume-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'attribution': 'Data provided by Ring.com',
-      'friendly_name': 'Ingress Mic volume',
+      <EntityStateAttribute.ATTRIBUTION: 'attribution'>: 'Data provided by Ring.com',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Ingress Mic volume',
       <NumberEntityCapabilityAttribute.MAX: 'max'>: 11,
       <NumberEntityCapabilityAttribute.MIN: 'min'>: 0,
       <NumberEntityCapabilityAttribute.MODE: 'mode'>: <NumberMode.SLIDER: 'slider'>,
@@ -344,8 +344,8 @@
 # name: test_states[number.ingress_voice_volume-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'attribution': 'Data provided by Ring.com',
-      'friendly_name': 'Ingress Voice volume',
+      <EntityStateAttribute.ATTRIBUTION: 'attribution'>: 'Data provided by Ring.com',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Ingress Voice volume',
       <NumberEntityCapabilityAttribute.MAX: 'max'>: 11,
       <NumberEntityCapabilityAttribute.MIN: 'min'>: 0,
       <NumberEntityCapabilityAttribute.MODE: 'mode'>: <NumberMode.SLIDER: 'slider'>,
@@ -404,8 +404,8 @@
 # name: test_states[number.internal_volume-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'attribution': 'Data provided by Ring.com',
-      'friendly_name': 'Internal Volume',
+      <EntityStateAttribute.ATTRIBUTION: 'attribution'>: 'Data provided by Ring.com',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Internal Volume',
       <NumberEntityCapabilityAttribute.MAX: 'max'>: 11,
       <NumberEntityCapabilityAttribute.MIN: 'min'>: 0,
       <NumberEntityCapabilityAttribute.MODE: 'mode'>: <NumberMode.SLIDER: 'slider'>,

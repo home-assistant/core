@@ -39,7 +39,7 @@
 # name: test_scene_entities_snapshot[scenarios/cozytouch.json][scene.label_1-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'Label 1',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Label 1',
     }),
     'context': <ANY>,
     'entity_id': 'scene.label_1',
@@ -89,7 +89,7 @@
 # name: test_scene_entities_snapshot[scenarios/cozytouch.json][scene.label_2-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'Label 2',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Label 2',
     }),
     'context': <ANY>,
     'entity_id': 'scene.label_2',
@@ -139,7 +139,7 @@
 # name: test_scene_entities_snapshot[scenarios/tahoma_switch.json][scene.i_m_arriving-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': "I'm arriving",
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: "I'm arriving",
     }),
     'context': <ANY>,
     'entity_id': 'scene.i_m_arriving',

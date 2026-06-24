@@ -49,7 +49,7 @@
   StateSnapshot({
     'attributes': ReadOnlyDict({
       <WaterHeaterStateAttribute.CURRENT_TEMPERATURE: 'current_temperature'>: 50.0,
-      'friendly_name': 'R 900',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'R 900',
       <WaterHeaterCapabilityAttribute.MAX_TEMP: 'max_temp'>: 70.0,
       <WaterHeaterCapabilityAttribute.MIN_TEMP: 'min_temp'>: 0.0,
       <WaterHeaterCapabilityAttribute.OPERATION_LIST: 'operation_list'>: list([
@@ -58,7 +58,7 @@
         'eco',
       ]),
       <WaterHeaterStateAttribute.OPERATION_MODE: 'operation_mode'>: 'performance',
-      'supported_features': <WaterHeaterEntityFeature: 11>,
+      <EntityStateAttribute.SUPPORTED_FEATURES: 'supported_features'>: <WaterHeaterEntityFeature: 11>,
       <WaterHeaterStateAttribute.TARGET_TEMP_HIGH: 'target_temp_high'>: None,
       <WaterHeaterStateAttribute.TARGET_TEMP_LOW: 'target_temp_low'>: None,
       <WaterHeaterCapabilityAttribute.TARGET_TEMP_STEP: 'target_temp_step'>: 1,

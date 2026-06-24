@@ -44,7 +44,7 @@
 # name: test_setup[aqua_contour][text.mock_title_contour_1-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'Mock Title Contour 1',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Mock Title Contour 1',
       <TextEntityCapabilityAttribute.MAX: 'max'>: 20,
       <TextEntityCapabilityAttribute.MIN: 'min'>: 0,
       <TextEntityCapabilityAttribute.MODE: 'mode'>: <TextMode.TEXT: 'text'>,
@@ -103,7 +103,7 @@
 # name: test_setup[aqua_contour][text.mock_title_contour_2-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'Mock Title Contour 2',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Mock Title Contour 2',
       <TextEntityCapabilityAttribute.MAX: 'max'>: 20,
       <TextEntityCapabilityAttribute.MIN: 'min'>: 0,
       <TextEntityCapabilityAttribute.MODE: 'mode'>: <TextMode.TEXT: 'text'>,
@@ -162,7 +162,7 @@
 # name: test_setup[aqua_contour][text.mock_title_contour_3-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'Mock Title Contour 3',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Mock Title Contour 3',
       <TextEntityCapabilityAttribute.MAX: 'max'>: 20,
       <TextEntityCapabilityAttribute.MIN: 'min'>: 0,
       <TextEntityCapabilityAttribute.MODE: 'mode'>: <TextMode.TEXT: 'text'>,
@@ -221,7 +221,7 @@
 # name: test_setup[aqua_contour][text.mock_title_contour_4-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'Mock Title Contour 4',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Mock Title Contour 4',
       <TextEntityCapabilityAttribute.MAX: 'max'>: 20,
       <TextEntityCapabilityAttribute.MIN: 'min'>: 0,
       <TextEntityCapabilityAttribute.MODE: 'mode'>: <TextMode.TEXT: 'text'>,
@@ -280,7 +280,7 @@
 # name: test_setup[aqua_contour][text.mock_title_contour_5-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'Mock Title Contour 5',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Mock Title Contour 5',
       <TextEntityCapabilityAttribute.MAX: 'max'>: 20,
       <TextEntityCapabilityAttribute.MIN: 'min'>: 0,
       <TextEntityCapabilityAttribute.MODE: 'mode'>: <TextMode.TEXT: 'text'>,
@@ -339,7 +339,7 @@
 # name: test_setup[aqua_contour][text.mock_title_position_1-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'Mock Title Position 1',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Mock Title Position 1',
       <TextEntityCapabilityAttribute.MAX: 'max'>: 20,
       <TextEntityCapabilityAttribute.MIN: 'min'>: 0,
       <TextEntityCapabilityAttribute.MODE: 'mode'>: <TextMode.TEXT: 'text'>,
@@ -398,7 +398,7 @@
 # name: test_setup[aqua_contour][text.mock_title_position_2-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'Mock Title Position 2',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Mock Title Position 2',
       <TextEntityCapabilityAttribute.MAX: 'max'>: 20,
       <TextEntityCapabilityAttribute.MIN: 'min'>: 0,
       <TextEntityCapabilityAttribute.MODE: 'mode'>: <TextMode.TEXT: 'text'>,
@@ -457,7 +457,7 @@
 # name: test_setup[aqua_contour][text.mock_title_position_3-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'Mock Title Position 3',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Mock Title Position 3',
       <TextEntityCapabilityAttribute.MAX: 'max'>: 20,
       <TextEntityCapabilityAttribute.MIN: 'min'>: 0,
       <TextEntityCapabilityAttribute.MODE: 'mode'>: <TextMode.TEXT: 'text'>,
@@ -516,7 +516,7 @@
 # name: test_setup[aqua_contour][text.mock_title_position_4-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'Mock Title Position 4',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Mock Title Position 4',
       <TextEntityCapabilityAttribute.MAX: 'max'>: 20,
       <TextEntityCapabilityAttribute.MIN: 'min'>: 0,
       <TextEntityCapabilityAttribute.MODE: 'mode'>: <TextMode.TEXT: 'text'>,
@@ -575,7 +575,7 @@
 # name: test_setup[aqua_contour][text.mock_title_position_5-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'Mock Title Position 5',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Mock Title Position 5',
       <TextEntityCapabilityAttribute.MAX: 'max'>: 20,
       <TextEntityCapabilityAttribute.MIN: 'min'>: 0,
       <TextEntityCapabilityAttribute.MODE: 'mode'>: <TextMode.TEXT: 'text'>,

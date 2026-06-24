@@ -44,7 +44,7 @@
 # name: test_selects[aqara_thermostat_w500][select.floor_heating_thermostat_temperature_display_mode-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'Floor Heating Thermostat Temperature display mode',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Floor Heating Thermostat Temperature display mode',
       <SelectEntityCapabilityAttribute.OPTIONS: 'options'>: list([
         'Celsius',
         'Fahrenheit',
@@ -103,7 +103,7 @@
 # name: test_selects[aqara_u200][select.aqara_smart_lock_u200_operating_mode-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'Aqara Smart Lock U200 Operating mode',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Aqara Smart Lock U200 Operating mode',
       <SelectEntityCapabilityAttribute.OPTIONS: 'options'>: list([
         'normal',
         'no_remote_lock_unlock',
@@ -163,7 +163,7 @@
 # name: test_selects[color_temperature_light][select.mock_color_temperature_light_lighting-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'Mock Color Temperature Light Lighting',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Mock Color Temperature Light Lighting',
       <SelectEntityCapabilityAttribute.OPTIONS: 'options'>: list([
         'Dark',
         'Medium',
@@ -225,7 +225,7 @@
 # name: test_selects[color_temperature_light][select.mock_color_temperature_light_power_on_behavior-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'Mock Color Temperature Light Power-on behavior',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Mock Color Temperature Light Power-on behavior',
       <SelectEntityCapabilityAttribute.OPTIONS: 'options'>: list([
         'on',
         'off',
@@ -287,7 +287,7 @@
 # name: test_selects[ecovacs_deebot][select.ecodeebot_clean_mode-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'ecodeebot Clean mode',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'ecodeebot Clean mode',
       <SelectEntityCapabilityAttribute.OPTIONS: 'options'>: list([
         'Vacuum & Mop',
         'Vacuum-Only',
@@ -353,7 +353,7 @@
 # name: test_selects[eufy_vacuum_omni_e28][select.2bavs_ab6031x_44pe_clean_mode-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': '2BAVS-AB6031X-44PE Clean mode',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: '2BAVS-AB6031X-44PE Clean mode',
       <SelectEntityCapabilityAttribute.OPTIONS: 'options'>: list([
         'Auto Mop & Vacuum',
         'Auto Vacuum',
@@ -420,7 +420,7 @@
 # name: test_selects[eve_energy_20ecn4101][select.eve_energy_20ecn4101_power_on_behavior_bottom-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'Eve Energy 20ECN4101 Power-on behavior (bottom)',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Eve Energy 20ECN4101 Power-on behavior (bottom)',
       <SelectEntityCapabilityAttribute.OPTIONS: 'options'>: list([
         'on',
         'off',
@@ -483,7 +483,7 @@
 # name: test_selects[eve_energy_20ecn4101][select.eve_energy_20ecn4101_power_on_behavior_top-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'Eve Energy 20ECN4101 Power-on behavior (top)',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Eve Energy 20ECN4101 Power-on behavior (top)',
       <SelectEntityCapabilityAttribute.OPTIONS: 'options'>: list([
         'on',
         'off',
@@ -546,7 +546,7 @@
 # name: test_selects[eve_energy_plug][select.eve_energy_plug_power_on_behavior-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'Eve Energy Plug Power-on behavior',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Eve Energy Plug Power-on behavior',
       <SelectEntityCapabilityAttribute.OPTIONS: 'options'>: list([
         'on',
         'off',
@@ -609,7 +609,7 @@
 # name: test_selects[eve_energy_plug_patched][select.eve_energy_plug_patched_power_on_behavior-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'Eve Energy Plug Patched Power-on behavior',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Eve Energy Plug Patched Power-on behavior',
       <SelectEntityCapabilityAttribute.OPTIONS: 'options'>: list([
         'on',
         'off',
@@ -670,7 +670,7 @@
 # name: test_selects[eve_thermo_v4][select.eve_thermo_20ebp1701_temperature_display_mode-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'Eve Thermo 20EBP1701 Temperature display mode',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Eve Thermo 20EBP1701 Temperature display mode',
       <SelectEntityCapabilityAttribute.OPTIONS: 'options'>: list([
         'Celsius',
         'Fahrenheit',
@@ -729,7 +729,7 @@
 # name: test_selects[eve_thermo_v5][select.eve_thermo_20ecd1701_temperature_display_mode-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'Eve Thermo 20ECD1701 Temperature display mode',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Eve Thermo 20ECD1701 Temperature display mode',
       <SelectEntityCapabilityAttribute.OPTIONS: 'options'>: list([
         'Celsius',
         'Fahrenheit',
@@ -789,7 +789,7 @@
 # name: test_selects[extended_color_light][select.mock_extended_color_light_lighting-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'Mock Extended Color Light Lighting',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Mock Extended Color Light Lighting',
       <SelectEntityCapabilityAttribute.OPTIONS: 'options'>: list([
         'Dark',
         'Medium',
@@ -851,7 +851,7 @@
 # name: test_selects[extended_color_light][select.mock_extended_color_light_power_on_behavior-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'Mock Extended Color Light Power-on behavior',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Mock Extended Color Light Power-on behavior',
       <SelectEntityCapabilityAttribute.OPTIONS: 'options'>: list([
         'on',
         'off',
@@ -918,7 +918,7 @@
 # name: test_selects[inovelli_vtm30][select.white_series_onoff_switch_button_press_delay-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'White Series OnOff Switch Button Press Delay',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'White Series OnOff Switch Button Press Delay',
       <SelectEntityCapabilityAttribute.OPTIONS: 'options'>: list([
         'No Delay',
         '300ms',
@@ -996,7 +996,7 @@
 # name: test_selects[inovelli_vtm30][select.white_series_onoff_switch_dimming_speed-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'White Series OnOff Switch Dimming Speed',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'White Series OnOff Switch Dimming Speed',
       <SelectEntityCapabilityAttribute.OPTIONS: 'options'>: list([
         'Instant',
         '500ms',
@@ -1079,7 +1079,7 @@
 # name: test_selects[inovelli_vtm30][select.white_series_onoff_switch_led_color-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'White Series OnOff Switch LED Color',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'White Series OnOff Switch LED Color',
       <SelectEntityCapabilityAttribute.OPTIONS: 'options'>: list([
         'Red',
         'Orange',
@@ -1164,7 +1164,7 @@
 # name: test_selects[inovelli_vtm30][select.white_series_onoff_switch_led_effect-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'White Series OnOff Switch LED Effect',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'White Series OnOff Switch LED Effect',
       <SelectEntityCapabilityAttribute.OPTIONS: 'options'>: list([
         'Solid',
         'Fast Blink',
@@ -1238,7 +1238,7 @@
 # name: test_selects[inovelli_vtm30][select.white_series_onoff_switch_local_protection-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'White Series OnOff Switch Local Protection',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'White Series OnOff Switch Local Protection',
       <SelectEntityCapabilityAttribute.OPTIONS: 'options'>: list([
         'Local Protection Disable',
         'Local Protection Enable',
@@ -1297,7 +1297,7 @@
 # name: test_selects[inovelli_vtm30][select.white_series_onoff_switch_local_timer-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'White Series OnOff Switch Local Timer',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'White Series OnOff Switch Local Timer',
       <SelectEntityCapabilityAttribute.OPTIONS: 'options'>: list([
         'Local Timer Disable',
         'Local Timer Enable',
@@ -1358,7 +1358,7 @@
 # name: test_selects[inovelli_vtm30][select.white_series_onoff_switch_power_on_behavior_load_control-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'White Series OnOff Switch Power-on behavior (Load Control)',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'White Series OnOff Switch Power-on behavior (Load Control)',
       <SelectEntityCapabilityAttribute.OPTIONS: 'options'>: list([
         'on',
         'off',
@@ -1421,7 +1421,7 @@
 # name: test_selects[inovelli_vtm30][select.white_series_onoff_switch_power_on_behavior_rgb_indicator-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'White Series OnOff Switch Power-on behavior (RGB Indicator)',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'White Series OnOff Switch Power-on behavior (RGB Indicator)',
       <SelectEntityCapabilityAttribute.OPTIONS: 'options'>: list([
         'on',
         'off',
@@ -1482,7 +1482,7 @@
 # name: test_selects[inovelli_vtm30][select.white_series_onoff_switch_smart_bulb_mode-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'White Series OnOff Switch Smart Bulb Mode',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'White Series OnOff Switch Smart Bulb Mode',
       <SelectEntityCapabilityAttribute.OPTIONS: 'options'>: list([
         'Smart Bulb Disable',
         'Smart Bulb Enable',
@@ -1543,7 +1543,7 @@
 # name: test_selects[inovelli_vtm30][select.white_series_onoff_switch_switch_mode-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'White Series OnOff Switch Switch Mode',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'White Series OnOff Switch Switch Mode',
       <SelectEntityCapabilityAttribute.OPTIONS: 'options'>: list([
         'On/Off+Single',
         'On/Off+AUX',
@@ -1604,7 +1604,7 @@
 # name: test_selects[inovelli_vtm31][select.inovelli_dimming_edge-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'Inovelli Dimming Edge',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Inovelli Dimming Edge',
       <SelectEntityCapabilityAttribute.OPTIONS: 'options'>: list([
         'Leading',
         'Trailing',
@@ -1676,7 +1676,7 @@
 # name: test_selects[inovelli_vtm31][select.inovelli_dimming_speed-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'Inovelli Dimming Speed',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Inovelli Dimming Speed',
       <SelectEntityCapabilityAttribute.OPTIONS: 'options'>: list([
         'Instant',
         '500ms',
@@ -1759,7 +1759,7 @@
 # name: test_selects[inovelli_vtm31][select.inovelli_led_color-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'Inovelli LED Color',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Inovelli LED Color',
       <SelectEntityCapabilityAttribute.OPTIONS: 'options'>: list([
         'Red',
         'Orange',
@@ -1831,7 +1831,7 @@
 # name: test_selects[inovelli_vtm31][select.inovelli_power_on_behavior_1-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'Inovelli Power-on behavior (1)',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Inovelli Power-on behavior (1)',
       <SelectEntityCapabilityAttribute.OPTIONS: 'options'>: list([
         'on',
         'off',
@@ -1894,7 +1894,7 @@
 # name: test_selects[inovelli_vtm31][select.inovelli_power_on_behavior_6-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'Inovelli Power-on behavior (6)',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Inovelli Power-on behavior (6)',
       <SelectEntityCapabilityAttribute.OPTIONS: 'options'>: list([
         'on',
         'off',
@@ -1955,7 +1955,7 @@
 # name: test_selects[inovelli_vtm31][select.inovelli_relay-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'Inovelli Relay',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Inovelli Relay',
       <SelectEntityCapabilityAttribute.OPTIONS: 'options'>: list([
         'Relay Click Enable',
         'Relay Click Disable',
@@ -2014,7 +2014,7 @@
 # name: test_selects[inovelli_vtm31][select.inovelli_smart_bulb_mode-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'Inovelli Smart Bulb Mode',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Inovelli Smart Bulb Mode',
       <SelectEntityCapabilityAttribute.OPTIONS: 'options'>: list([
         'Smart Bulb Disable',
         'Smart Bulb Enable',
@@ -2078,7 +2078,7 @@
 # name: test_selects[inovelli_vtm31][select.inovelli_switch_mode-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'Inovelli Switch Mode',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Inovelli Switch Mode',
       <SelectEntityCapabilityAttribute.OPTIONS: 'options'>: list([
         'OnOff+Single',
         'OnOff+Dumb',
@@ -2142,7 +2142,7 @@
 # name: test_selects[longan_link_thermostat][select.longan_link_hvac_temperature_display_mode-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'Longan link HVAC Temperature display mode',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Longan link HVAC Temperature display mode',
       <SelectEntityCapabilityAttribute.OPTIONS: 'options'>: list([
         'Celsius',
         'Fahrenheit',
@@ -2202,7 +2202,7 @@
 # name: test_selects[mock_cooktop][select.mock_cooktop_temperature_level-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'Mock Cooktop Temperature level',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Mock Cooktop Temperature level',
       <SelectEntityCapabilityAttribute.OPTIONS: 'options'>: list([
         'Low',
         'Medium',
@@ -2273,7 +2273,7 @@
 # name: test_selects[mock_dimmable_light][select.mock_dimmable_light_led_color-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'Mock Dimmable Light LED Color',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Mock Dimmable Light LED Color',
       <SelectEntityCapabilityAttribute.OPTIONS: 'options'>: list([
         'Red',
         'Orange',
@@ -2345,7 +2345,7 @@
 # name: test_selects[mock_dimmable_light][select.mock_dimmable_light_power_on_behavior-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'Mock Dimmable Light Power-on behavior',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Mock Dimmable Light Power-on behavior',
       <SelectEntityCapabilityAttribute.OPTIONS: 'options'>: list([
         'on',
         'off',
@@ -2408,7 +2408,7 @@
 # name: test_selects[mock_dimmable_plugin_unit][select.dimmable_plugin_unit_power_on_behavior-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'Dimmable Plugin Unit Power-on behavior',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Dimmable Plugin Unit Power-on behavior',
       <SelectEntityCapabilityAttribute.OPTIONS: 'options'>: list([
         'on',
         'off',
@@ -2469,7 +2469,7 @@
 # name: test_selects[mock_door_lock][select.mock_door_lock_operating_mode-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'Mock Door Lock Operating mode',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Mock Door Lock Operating mode',
       <SelectEntityCapabilityAttribute.OPTIONS: 'options'>: list([
         'normal',
         'no_remote_lock_unlock',
@@ -2530,7 +2530,7 @@
 # name: test_selects[mock_door_lock][select.mock_door_lock_power_on_behavior-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'Mock Door Lock Power-on behavior',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Mock Door Lock Power-on behavior',
       <SelectEntityCapabilityAttribute.OPTIONS: 'options'>: list([
         'on',
         'off',
@@ -2593,7 +2593,7 @@
 # name: test_selects[mock_door_lock][select.mock_door_lock_sound_volume-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'Mock Door Lock Sound volume',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Mock Door Lock Sound volume',
       <SelectEntityCapabilityAttribute.OPTIONS: 'options'>: list([
         'silent',
         'low',
@@ -2654,7 +2654,7 @@
 # name: test_selects[mock_door_lock_with_unbolt][select.mock_door_lock_with_unbolt_operating_mode-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'Mock Door Lock with unbolt Operating mode',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Mock Door Lock with unbolt Operating mode',
       <SelectEntityCapabilityAttribute.OPTIONS: 'options'>: list([
         'normal',
         'no_remote_lock_unlock',
@@ -2715,7 +2715,7 @@
 # name: test_selects[mock_door_lock_with_unbolt][select.mock_door_lock_with_unbolt_power_on_behavior-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'Mock Door Lock with unbolt Power-on behavior',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Mock Door Lock with unbolt Power-on behavior',
       <SelectEntityCapabilityAttribute.OPTIONS: 'options'>: list([
         'on',
         'off',
@@ -2778,7 +2778,7 @@
 # name: test_selects[mock_door_lock_with_unbolt][select.mock_door_lock_with_unbolt_sound_volume-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'Mock Door Lock with unbolt Sound volume',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Mock Door Lock with unbolt Sound volume',
       <SelectEntityCapabilityAttribute.OPTIONS: 'options'>: list([
         'silent',
         'low',
@@ -2840,7 +2840,7 @@
 # name: test_selects[mock_laundry_dryer][select.mock_laundrydryer_temperature_level-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'Mock Laundrydryer Temperature level',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Mock Laundrydryer Temperature level',
       <SelectEntityCapabilityAttribute.OPTIONS: 'options'>: list([
         'Low',
         'Medium',
@@ -2900,7 +2900,7 @@
 # name: test_selects[mock_lock][select.mock_lock_operating_mode-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'Mock Lock Operating mode',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Mock Lock Operating mode',
       <SelectEntityCapabilityAttribute.OPTIONS: 'options'>: list([
         'normal',
         'no_remote_lock_unlock',
@@ -2961,7 +2961,7 @@
 # name: test_selects[mock_lock][select.mock_lock_sound_volume-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'Mock Lock Sound volume',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Mock Lock Sound volume',
       <SelectEntityCapabilityAttribute.OPTIONS: 'options'>: list([
         'silent',
         'low',
@@ -3030,7 +3030,7 @@
 # name: test_selects[mock_microwave_oven][select.mock_microwave_oven_power_level_w-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'Mock Microwave Oven Power level (W)',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Mock Microwave Oven Power level (W)',
       <SelectEntityCapabilityAttribute.OPTIONS: 'options'>: list([
         '100',
         '200',
@@ -3099,7 +3099,7 @@
 # name: test_selects[mock_mounted_dimmable_load_control_fixture][select.mock_mounted_dimmable_load_control_power_on_behavior-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'Mock Mounted dimmable load control Power-on behavior',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Mock Mounted dimmable load control Power-on behavior',
       <SelectEntityCapabilityAttribute.OPTIONS: 'options'>: list([
         'on',
         'off',
@@ -3162,7 +3162,7 @@
 # name: test_selects[mock_on_off_plugin_unit][select.mock_onoffpluginunit_power_on_behavior-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'Mock OnOffPluginUnit Power-on behavior',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Mock OnOffPluginUnit Power-on behavior',
       <SelectEntityCapabilityAttribute.OPTIONS: 'options'>: list([
         'on',
         'off',
@@ -3225,7 +3225,7 @@
 # name: test_selects[mock_onoff_light][select.mock_onoff_light_power_on_behavior-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'Mock OnOff Light Power-on behavior',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Mock OnOff Light Power-on behavior',
       <SelectEntityCapabilityAttribute.OPTIONS: 'options'>: list([
         'on',
         'off',
@@ -3288,7 +3288,7 @@
 # name: test_selects[mock_onoff_light_alt_name][select.mock_onoff_light_power_on_behavior_2-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'Mock OnOff Light Power-on behavior',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Mock OnOff Light Power-on behavior',
       <SelectEntityCapabilityAttribute.OPTIONS: 'options'>: list([
         'on',
         'off',
@@ -3351,7 +3351,7 @@
 # name: test_selects[mock_onoff_light_no_name][select.mock_light_power_on_behavior-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'Mock Light Power-on behavior',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Mock Light Power-on behavior',
       <SelectEntityCapabilityAttribute.OPTIONS: 'options'>: list([
         'on',
         'off',
@@ -3419,7 +3419,7 @@
 # name: test_selects[mock_oven][select.mock_oven_mode-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'Mock Oven Mode',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Mock Oven Mode',
       <SelectEntityCapabilityAttribute.OPTIONS: 'options'>: list([
         'Bake',
         'Convection',
@@ -3486,7 +3486,7 @@
 # name: test_selects[mock_oven][select.mock_oven_temperature_level-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'Mock Oven Temperature level',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Mock Oven Temperature level',
       <SelectEntityCapabilityAttribute.OPTIONS: 'options'>: list([
         'Low',
         'Medium',
@@ -3548,7 +3548,7 @@
 # name: test_selects[mock_pump][select.mock_pump_mode-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'Mock Pump mode',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Mock Pump mode',
       <SelectEntityCapabilityAttribute.OPTIONS: 'options'>: list([
         'normal',
         'minimum',
@@ -3611,7 +3611,7 @@
 # name: test_selects[mock_switch_unit][select.mock_switchunit_power_on_behavior-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'Mock SwitchUnit Power-on behavior',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Mock SwitchUnit Power-on behavior',
       <SelectEntityCapabilityAttribute.OPTIONS: 'options'>: list([
         'on',
         'off',
@@ -3672,7 +3672,7 @@
 # name: test_selects[mock_thermostat][select.mock_thermostat_temperature_display_mode-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'Mock Thermostat Temperature display mode',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Mock Thermostat Temperature display mode',
       <SelectEntityCapabilityAttribute.OPTIONS: 'options'>: list([
         'Celsius',
         'Fahrenheit',
@@ -3734,7 +3734,7 @@
 # name: test_selects[mock_vacuum_cleaner][select.mock_vacuum_clean_mode-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'Mock Vacuum Clean mode',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Mock Vacuum Clean mode',
       <SelectEntityCapabilityAttribute.OPTIONS: 'options'>: list([
         'Quick',
         'Auto',
@@ -3798,7 +3798,7 @@
 # name: test_selects[onoff_light_with_levelcontrol_present][select.d215s_power_on_behavior-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'D215S Power-on behavior',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'D215S Power-on behavior',
       <SelectEntityCapabilityAttribute.OPTIONS: 'options'>: list([
         'on',
         'off',
@@ -3866,7 +3866,7 @@
 # name: test_selects[roborock_saros_10][select.robotic_vacuum_cleaner_clean_mode-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'Robotic Vacuum Cleaner Clean mode',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Robotic Vacuum Cleaner Clean mode',
       <SelectEntityCapabilityAttribute.OPTIONS: 'options'>: list([
         'Quiet, Vacuum Only',
         'Auto, Vacuum Only',
@@ -3933,7 +3933,7 @@
 # name: test_selects[secuyou_smart_lock][select.secuyou_smart_lock_operating_mode-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'Secuyou Smart Lock Operating mode',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Secuyou Smart Lock Operating mode',
       <SelectEntityCapabilityAttribute.OPTIONS: 'options'>: list([
         'normal',
         'privacy',
@@ -3996,7 +3996,7 @@
 # name: test_selects[silabs_evse_charging][select.evse_energy_management_mode-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'evse Energy management mode',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'evse Energy management mode',
       <SelectEntityCapabilityAttribute.OPTIONS: 'options'>: list([
         'No energy management (forecast only)',
         'Device optimizes (no local or grid control)',
@@ -4060,7 +4060,7 @@
 # name: test_selects[silabs_evse_charging][select.evse_mode-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'evse Mode',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'evse Mode',
       <SelectEntityCapabilityAttribute.OPTIONS: 'options'>: list([
         'Manual',
         'Auto-scheduled',
@@ -4121,7 +4121,7 @@
 # name: test_selects[silabs_laundrywasher][select.laundrywasher_number_of_rinses-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'LaundryWasher Number of rinses',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'LaundryWasher Number of rinses',
       <SelectEntityCapabilityAttribute.OPTIONS: 'options'>: list([
         'off',
         'normal',
@@ -4182,7 +4182,7 @@
 # name: test_selects[silabs_laundrywasher][select.laundrywasher_spin_speed-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'LaundryWasher Spin speed',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'LaundryWasher Spin speed',
       <SelectEntityCapabilityAttribute.OPTIONS: 'options'>: list([
         'Off',
         'Low',
@@ -4244,7 +4244,7 @@
 # name: test_selects[silabs_laundrywasher][select.laundrywasher_temperature_level-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'LaundryWasher Temperature level',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'LaundryWasher Temperature level',
       <SelectEntityCapabilityAttribute.OPTIONS: 'options'>: list([
         'Cold',
         'Colors',
@@ -4306,7 +4306,7 @@
 # name: test_selects[silabs_range_hood][select.sl_rangehood_power_on_behavior-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'SL-RangeHood Power-on behavior',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'SL-RangeHood Power-on behavior',
       <SelectEntityCapabilityAttribute.OPTIONS: 'options'>: list([
         'on',
         'off',
@@ -4368,7 +4368,7 @@
 # name: test_selects[silabs_refrigerator][select.refrigerator_mode-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'Refrigerator Mode',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Refrigerator Mode',
       <SelectEntityCapabilityAttribute.OPTIONS: 'options'>: list([
         'Normal',
         'Rapid Cool',
@@ -4431,7 +4431,7 @@
 # name: test_selects[silabs_water_heater][select.water_heater_energy_management_mode-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'Water Heater Energy management mode',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Water Heater Energy management mode',
       <SelectEntityCapabilityAttribute.OPTIONS: 'options'>: list([
         'No energy management (forecast only)',
         'Device optimizes (no local or grid control)',
@@ -4496,7 +4496,7 @@
 # name: test_selects[switchbot_k11_plus][select.k11_clean_mode-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'K11+ Clean mode',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'K11+ Clean mode',
       <SelectEntityCapabilityAttribute.OPTIONS: 'options'>: list([
         'Quick',
         'Auto',
@@ -4560,7 +4560,7 @@
 # name: test_selects[yandex_smart_socket][select.yndx_00540_power_on_behavior-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'YNDX-00540 Power-on behavior',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'YNDX-00540 Power-on behavior',
       <SelectEntityCapabilityAttribute.OPTIONS: 'options'>: list([
         'on',
         'off',

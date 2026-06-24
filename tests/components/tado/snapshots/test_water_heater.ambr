@@ -48,7 +48,7 @@
   StateSnapshot({
     'attributes': ReadOnlyDict({
       <WaterHeaterStateAttribute.CURRENT_TEMPERATURE: 'current_temperature'>: None,
-      'friendly_name': 'Second Water Heater',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Second Water Heater',
       <WaterHeaterCapabilityAttribute.MAX_TEMP: 'max_temp'>: 31.0,
       <WaterHeaterCapabilityAttribute.MIN_TEMP: 'min_temp'>: 16.0,
       <WaterHeaterCapabilityAttribute.OPERATION_LIST: 'operation_list'>: list([
@@ -57,7 +57,7 @@
         'off',
       ]),
       <WaterHeaterStateAttribute.OPERATION_MODE: 'operation_mode'>: 'heat',
-      'supported_features': <WaterHeaterEntityFeature: 3>,
+      <EntityStateAttribute.SUPPORTED_FEATURES: 'supported_features'>: <WaterHeaterEntityFeature: 3>,
       <WaterHeaterStateAttribute.TARGET_TEMP_HIGH: 'target_temp_high'>: None,
       <WaterHeaterStateAttribute.TARGET_TEMP_LOW: 'target_temp_low'>: None,
       <WaterHeaterStateAttribute.TEMPERATURE: 'temperature'>: 30.0,
@@ -119,7 +119,7 @@
   StateSnapshot({
     'attributes': ReadOnlyDict({
       <WaterHeaterStateAttribute.CURRENT_TEMPERATURE: 'current_temperature'>: None,
-      'friendly_name': 'Water Heater',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Water Heater',
       <WaterHeaterCapabilityAttribute.MAX_TEMP: 'max_temp'>: 31.0,
       <WaterHeaterCapabilityAttribute.MIN_TEMP: 'min_temp'>: 16.0,
       <WaterHeaterCapabilityAttribute.OPERATION_LIST: 'operation_list'>: list([
@@ -128,7 +128,7 @@
         'off',
       ]),
       <WaterHeaterStateAttribute.OPERATION_MODE: 'operation_mode'>: 'auto',
-      'supported_features': <WaterHeaterEntityFeature: 3>,
+      <EntityStateAttribute.SUPPORTED_FEATURES: 'supported_features'>: <WaterHeaterEntityFeature: 3>,
       <WaterHeaterStateAttribute.TARGET_TEMP_HIGH: 'target_temp_high'>: None,
       <WaterHeaterStateAttribute.TARGET_TEMP_LOW: 'target_temp_low'>: None,
       <WaterHeaterStateAttribute.TEMPERATURE: 'temperature'>: 65.0,

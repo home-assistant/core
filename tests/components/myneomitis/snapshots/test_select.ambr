@@ -52,7 +52,7 @@
 # name: test_entities[select.pilote_device-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'Pilote Device',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Pilote Device',
       <SelectEntityCapabilityAttribute.OPTIONS: 'options'>: list([
         'comfort',
         'eco',
@@ -120,7 +120,7 @@
 # name: test_entities[select.relais_device-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'Relais Device',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Relais Device',
       <SelectEntityCapabilityAttribute.OPTIONS: 'options'>: list([
         'on',
         'off',
@@ -180,7 +180,7 @@
 # name: test_entities[select.ufh_device-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'UFH Device',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'UFH Device',
       <SelectEntityCapabilityAttribute.OPTIONS: 'options'>: list([
         'heating',
         'cooling',

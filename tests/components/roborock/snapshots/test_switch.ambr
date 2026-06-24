@@ -39,7 +39,7 @@
 # name: test_switches[switch.roborock_s7_2_do_not_disturb-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'Roborock S7 2 Do not disturb',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Roborock S7 2 Do not disturb',
     }),
     'context': <ANY>,
     'entity_id': 'switch.roborock_s7_2_do_not_disturb',
@@ -89,7 +89,7 @@
 # name: test_switches[switch.roborock_s7_2_dock_child_lock-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'Roborock S7 2 Dock Child lock',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Roborock S7 2 Dock Child lock',
     }),
     'context': <ANY>,
     'entity_id': 'switch.roborock_s7_2_dock_child_lock',
@@ -139,7 +139,7 @@
 # name: test_switches[switch.roborock_s7_2_dock_status_indicator_light-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'Roborock S7 2 Dock Status indicator light',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Roborock S7 2 Dock Status indicator light',
     }),
     'context': <ANY>,
     'entity_id': 'switch.roborock_s7_2_dock_status_indicator_light',
@@ -189,7 +189,7 @@
 # name: test_switches[switch.roborock_s7_2_off_peak_charging-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'Roborock S7 2 Off-peak charging',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Roborock S7 2 Off-peak charging',
     }),
     'context': <ANY>,
     'entity_id': 'switch.roborock_s7_2_off_peak_charging',
@@ -239,7 +239,7 @@
 # name: test_switches[switch.roborock_s7_maxv_do_not_disturb-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'Roborock S7 MaxV Do not disturb',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Roborock S7 MaxV Do not disturb',
     }),
     'context': <ANY>,
     'entity_id': 'switch.roborock_s7_maxv_do_not_disturb',
@@ -289,7 +289,7 @@
 # name: test_switches[switch.roborock_s7_maxv_dock_child_lock-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'Roborock S7 MaxV Dock Child lock',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Roborock S7 MaxV Dock Child lock',
     }),
     'context': <ANY>,
     'entity_id': 'switch.roborock_s7_maxv_dock_child_lock',
@@ -339,7 +339,7 @@
 # name: test_switches[switch.roborock_s7_maxv_dock_status_indicator_light-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'Roborock S7 MaxV Dock Status indicator light',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Roborock S7 MaxV Dock Status indicator light',
     }),
     'context': <ANY>,
     'entity_id': 'switch.roborock_s7_maxv_dock_status_indicator_light',
@@ -389,7 +389,7 @@
 # name: test_switches[switch.roborock_s7_maxv_off_peak_charging-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'Roborock S7 MaxV Off-peak charging',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Roborock S7 MaxV Off-peak charging',
     }),
     'context': <ANY>,
     'entity_id': 'switch.roborock_s7_maxv_off_peak_charging',
@@ -439,7 +439,7 @@
 # name: test_switches[switch.zeo_one_sound_setting-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'Zeo One Sound setting',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Zeo One Sound setting',
     }),
     'context': <ANY>,
     'entity_id': 'switch.zeo_one_sound_setting',

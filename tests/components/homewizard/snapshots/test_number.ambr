@@ -2,12 +2,12 @@
 # name: test_number_entities[HWE-SKT-11]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'Device Status light brightness',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Device Status light brightness',
       <NumberEntityCapabilityAttribute.MAX: 'max'>: 100.0,
       <NumberEntityCapabilityAttribute.MIN: 'min'>: 0.0,
       <NumberEntityCapabilityAttribute.MODE: 'mode'>: <NumberMode.AUTO: 'auto'>,
       <NumberEntityCapabilityAttribute.STEP: 'step'>: 1.0,
-      'unit_of_measurement': '%',
+      <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: '%',
     }),
     'context': <ANY>,
     'entity_id': 'number.device_status_light_brightness',
@@ -97,12 +97,12 @@
 # name: test_number_entities[HWE-SKT-21]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'Device Status light brightness',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Device Status light brightness',
       <NumberEntityCapabilityAttribute.MAX: 'max'>: 100.0,
       <NumberEntityCapabilityAttribute.MIN: 'min'>: 0.0,
       <NumberEntityCapabilityAttribute.MODE: 'mode'>: <NumberMode.AUTO: 'auto'>,
       <NumberEntityCapabilityAttribute.STEP: 'step'>: 1.0,
-      'unit_of_measurement': '%',
+      <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: '%',
     }),
     'context': <ANY>,
     'entity_id': 'number.device_status_light_brightness',

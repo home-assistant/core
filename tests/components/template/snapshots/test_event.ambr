@@ -8,7 +8,7 @@
         'double',
         'hold',
       ]),
-      'friendly_name': 'template_event',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'template_event',
     }),
     'context': <ANY>,
     'entity_id': 'event.template_event',

@@ -66,7 +66,7 @@
         'medium',
         'high',
       ]),
-      'friendly_name': 'Saunum Leil',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Saunum Leil',
       <ClimateEntityStateAttribute.HVAC_ACTION: 'hvac_action'>: <HVACAction.OFF: 'off'>,
       <ClimateEntityCapabilityAttribute.HVAC_MODES: 'hvac_modes'>: list([
         <HVACMode.OFF: 'off'>,
@@ -80,7 +80,7 @@
         'type_2',
         'type_3',
       ]),
-      'supported_features': <ClimateEntityFeature: 25>,
+      <EntityStateAttribute.SUPPORTED_FEATURES: 'supported_features'>: <ClimateEntityFeature: 25>,
       <ClimateEntityCapabilityAttribute.TARGET_TEMP_STEP: 'target_temp_step'>: 1.0,
       <ClimateEntityStateAttribute.TEMPERATURE: 'temperature'>: 80,
     }),

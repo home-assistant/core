@@ -2,8 +2,8 @@
 # name: test_update_attached_to_router
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'device_class': 'plug',
-      'friendly_name': 'Mock Title Connected to router',
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'plug',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Mock Title Connected to router',
     }),
     'context': <ANY>,
     'entity_id': 'binary_sensor.mock_title_connected_to_router',

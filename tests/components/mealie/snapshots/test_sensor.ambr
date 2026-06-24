@@ -41,9 +41,9 @@
 # name: test_entities[sensor.mealie_categories-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'Mealie Categories',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Mealie Categories',
       <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.TOTAL: 'total'>,
-      'unit_of_measurement': 'categories',
+      <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: 'categories',
     }),
     'context': <ANY>,
     'entity_id': 'sensor.mealie_categories',
@@ -95,9 +95,9 @@
 # name: test_entities[sensor.mealie_recipes-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'Mealie Recipes',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Mealie Recipes',
       <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.TOTAL: 'total'>,
-      'unit_of_measurement': 'recipes',
+      <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: 'recipes',
     }),
     'context': <ANY>,
     'entity_id': 'sensor.mealie_recipes',
@@ -149,9 +149,9 @@
 # name: test_entities[sensor.mealie_tags-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'Mealie Tags',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Mealie Tags',
       <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.TOTAL: 'total'>,
-      'unit_of_measurement': 'tags',
+      <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: 'tags',
     }),
     'context': <ANY>,
     'entity_id': 'sensor.mealie_tags',
@@ -203,9 +203,9 @@
 # name: test_entities[sensor.mealie_tools-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'Mealie Tools',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Mealie Tools',
       <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.TOTAL: 'total'>,
-      'unit_of_measurement': 'tools',
+      <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: 'tools',
     }),
     'context': <ANY>,
     'entity_id': 'sensor.mealie_tools',
@@ -257,9 +257,9 @@
 # name: test_entities[sensor.mealie_users-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'Mealie Users',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Mealie Users',
       <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.TOTAL: 'total'>,
-      'unit_of_measurement': 'users',
+      <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: 'users',
     }),
     'context': <ANY>,
     'entity_id': 'sensor.mealie_users',

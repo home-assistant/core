@@ -39,7 +39,7 @@
 # name: test_sensors[sensor.ohme_home_pro_charge_slots-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'Ohme Home Pro Charge slots',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Ohme Home Pro Charge slots',
     }),
     'context': <ANY>,
     'entity_id': 'sensor.ohme_home_pro_charge_slots',
@@ -94,10 +94,10 @@
 # name: test_sensors[sensor.ohme_home_pro_current-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'device_class': 'current',
-      'friendly_name': 'Ohme Home Pro Current',
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'current',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Ohme Home Pro Current',
       <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
-      'unit_of_measurement': <UnitOfElectricCurrent.AMPERE: 'A'>,
+      <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: <UnitOfElectricCurrent.AMPERE: 'A'>,
     }),
     'context': <ANY>,
     'entity_id': 'sensor.ohme_home_pro_current',
@@ -155,10 +155,10 @@
 # name: test_sensors[sensor.ohme_home_pro_energy-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'device_class': 'energy',
-      'friendly_name': 'Ohme Home Pro Energy',
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'energy',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Ohme Home Pro Energy',
       <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
-      'unit_of_measurement': <UnitOfEnergy.KILO_WATT_HOUR: 'kWh'>,
+      <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: <UnitOfEnergy.KILO_WATT_HOUR: 'kWh'>,
     }),
     'context': <ANY>,
     'entity_id': 'sensor.ohme_home_pro_energy',
@@ -216,10 +216,10 @@
 # name: test_sensors[sensor.ohme_home_pro_power-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'device_class': 'power',
-      'friendly_name': 'Ohme Home Pro Power',
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'power',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Ohme Home Pro Power',
       <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
-      'unit_of_measurement': <UnitOfPower.KILO_WATT: 'kW'>,
+      <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: <UnitOfPower.KILO_WATT: 'kW'>,
     }),
     'context': <ANY>,
     'entity_id': 'sensor.ohme_home_pro_power',
@@ -278,8 +278,8 @@
 # name: test_sensors[sensor.ohme_home_pro_status-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'device_class': 'enum',
-      'friendly_name': 'Ohme Home Pro Status',
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'enum',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Ohme Home Pro Status',
       <SensorEntityCapabilityAttribute.OPTIONS: 'options'>: list([
         'unplugged',
         'pending_approval',
@@ -342,10 +342,10 @@
 # name: test_sensors[sensor.ohme_home_pro_vehicle_battery-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'device_class': 'battery',
-      'friendly_name': 'Ohme Home Pro Vehicle battery',
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'battery',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Ohme Home Pro Vehicle battery',
       <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
-      'unit_of_measurement': '%',
+      <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: '%',
     }),
     'context': <ANY>,
     'entity_id': 'sensor.ohme_home_pro_vehicle_battery',
@@ -400,10 +400,10 @@
 # name: test_sensors[sensor.ohme_home_pro_voltage-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'device_class': 'voltage',
-      'friendly_name': 'Ohme Home Pro Voltage',
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'voltage',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Ohme Home Pro Voltage',
       <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
-      'unit_of_measurement': <UnitOfElectricPotential.VOLT: 'V'>,
+      <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: <UnitOfElectricPotential.VOLT: 'V'>,
     }),
     'context': <ANY>,
     'entity_id': 'sensor.ohme_home_pro_voltage',

@@ -47,7 +47,7 @@
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'device_file': '/28.111111111111/tempres',
-      'friendly_name': '28.111111111111 Temperature resolution',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: '28.111111111111 Temperature resolution',
       <SelectEntityCapabilityAttribute.OPTIONS: 'options'>: list([
         '9',
         '10',

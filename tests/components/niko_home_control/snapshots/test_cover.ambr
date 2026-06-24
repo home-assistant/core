@@ -39,9 +39,9 @@
 # name: test_cover[cover.room_cover-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'cover',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'cover',
       <CoverEntityStateAttribute.IS_CLOSED: 'is_closed'>: False,
-      'supported_features': <CoverEntityFeature: 11>,
+      <EntityStateAttribute.SUPPORTED_FEATURES: 'supported_features'>: <CoverEntityFeature: 11>,
     }),
     'context': <ANY>,
     'entity_id': 'cover.room_cover',

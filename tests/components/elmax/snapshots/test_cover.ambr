@@ -40,9 +40,9 @@
   StateSnapshot({
     'attributes': ReadOnlyDict({
       <CoverEntityStateAttribute.CURRENT_POSITION: 'current_position'>: 0,
-      'friendly_name': 'Direct Panel https://1.1.1.1:443/api/v2 ESPAN.DOM.01',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Direct Panel https://1.1.1.1:443/api/v2 ESPAN.DOM.01',
       <CoverEntityStateAttribute.IS_CLOSED: 'is_closed'>: True,
-      'supported_features': <CoverEntityFeature: 11>,
+      <EntityStateAttribute.SUPPORTED_FEATURES: 'supported_features'>: <CoverEntityFeature: 11>,
     }),
     'context': <ANY>,
     'entity_id': 'cover.direct_panel_https_1_1_1_1_443_api_v2_espan_dom_01',

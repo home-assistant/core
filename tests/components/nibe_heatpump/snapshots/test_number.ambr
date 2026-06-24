@@ -2,12 +2,12 @@
 # name: test_set_value_same
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'F1155 Room sensor setpoint S1',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'F1155 Room sensor setpoint S1',
       <NumberEntityCapabilityAttribute.MAX: 'max'>: 30.0,
       <NumberEntityCapabilityAttribute.MIN: 'min'>: 5.0,
       <NumberEntityCapabilityAttribute.MODE: 'mode'>: <NumberMode.BOX: 'box'>,
       <NumberEntityCapabilityAttribute.STEP: 'step'>: 0.1,
-      'unit_of_measurement': '°C',
+      <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: '°C',
     }),
     'context': <ANY>,
     'entity_id': 'number.room_sensor_setpoint_s1_47398',
@@ -20,7 +20,7 @@
 # name: test_update[Model.F1155-47011-number.heat_offset_s1_47011--10]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'F1155 Heat Offset S1',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'F1155 Heat Offset S1',
       <NumberEntityCapabilityAttribute.MAX: 'max'>: 10.0,
       <NumberEntityCapabilityAttribute.MIN: 'min'>: -10.0,
       <NumberEntityCapabilityAttribute.MODE: 'mode'>: <NumberMode.BOX: 'box'>,
@@ -37,7 +37,7 @@
 # name: test_update[Model.F1155-47011-number.heat_offset_s1_47011-10]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'F1155 Heat Offset S1',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'F1155 Heat Offset S1',
       <NumberEntityCapabilityAttribute.MAX: 'max'>: 10.0,
       <NumberEntityCapabilityAttribute.MIN: 'min'>: -10.0,
       <NumberEntityCapabilityAttribute.MODE: 'mode'>: <NumberMode.BOX: 'box'>,
@@ -57,12 +57,12 @@
 # name: test_update[Model.F750-47062-number.hw_charge_offset_47062--10]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'F750 HW charge offset',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'F750 HW charge offset',
       <NumberEntityCapabilityAttribute.MAX: 'max'>: 12.7,
       <NumberEntityCapabilityAttribute.MIN: 'min'>: -12.8,
       <NumberEntityCapabilityAttribute.MODE: 'mode'>: <NumberMode.BOX: 'box'>,
       <NumberEntityCapabilityAttribute.STEP: 'step'>: 0.1,
-      'unit_of_measurement': '°C',
+      <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: '°C',
     }),
     'context': <ANY>,
     'entity_id': 'number.hw_charge_offset_47062',
@@ -75,12 +75,12 @@
 # name: test_update[Model.F750-47062-number.hw_charge_offset_47062-10]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'F750 HW charge offset',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'F750 HW charge offset',
       <NumberEntityCapabilityAttribute.MAX: 'max'>: 12.7,
       <NumberEntityCapabilityAttribute.MIN: 'min'>: -12.8,
       <NumberEntityCapabilityAttribute.MODE: 'mode'>: <NumberMode.BOX: 'box'>,
       <NumberEntityCapabilityAttribute.STEP: 'step'>: 0.1,
-      'unit_of_measurement': '°C',
+      <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: '°C',
     }),
     'context': <ANY>,
     'entity_id': 'number.hw_charge_offset_47062',
@@ -93,12 +93,12 @@
 # name: test_update[Model.F750-47062-number.hw_charge_offset_47062-None]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'F750 HW charge offset',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'F750 HW charge offset',
       <NumberEntityCapabilityAttribute.MAX: 'max'>: 12.7,
       <NumberEntityCapabilityAttribute.MIN: 'min'>: -12.8,
       <NumberEntityCapabilityAttribute.MODE: 'mode'>: <NumberMode.BOX: 'box'>,
       <NumberEntityCapabilityAttribute.STEP: 'step'>: 0.1,
-      'unit_of_measurement': '°C',
+      <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: '°C',
     }),
     'context': <ANY>,
     'entity_id': 'number.hw_charge_offset_47062',
@@ -111,7 +111,7 @@
 # name: test_update[Model.S320-40031-number.heating_offset_climate_system_1_40031--10]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'S320 Heating offset climate system 1',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'S320 Heating offset climate system 1',
       <NumberEntityCapabilityAttribute.MAX: 'max'>: 10.0,
       <NumberEntityCapabilityAttribute.MIN: 'min'>: -10.0,
       <NumberEntityCapabilityAttribute.MODE: 'mode'>: <NumberMode.BOX: 'box'>,
@@ -128,7 +128,7 @@
 # name: test_update[Model.S320-40031-number.heating_offset_climate_system_1_40031-10]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'S320 Heating offset climate system 1',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'S320 Heating offset climate system 1',
       <NumberEntityCapabilityAttribute.MAX: 'max'>: 10.0,
       <NumberEntityCapabilityAttribute.MIN: 'min'>: -10.0,
       <NumberEntityCapabilityAttribute.MODE: 'mode'>: <NumberMode.BOX: 'box'>,
@@ -145,7 +145,7 @@
 # name: test_update[Model.S320-40031-number.heating_offset_climate_system_1_40031-None]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'S320 Heating offset climate system 1',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'S320 Heating offset climate system 1',
       <NumberEntityCapabilityAttribute.MAX: 'max'>: 10.0,
       <NumberEntityCapabilityAttribute.MIN: 'min'>: -10.0,
       <NumberEntityCapabilityAttribute.MODE: 'mode'>: <NumberMode.BOX: 'box'>,

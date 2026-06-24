@@ -39,7 +39,7 @@
 # name: test_button[1][button.bk1600_enable_standby_mode-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'BK1600 Enable standby mode',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'BK1600 Enable standby mode',
     }),
     'context': <ANY>,
     'entity_id': 'button.bk1600_enable_standby_mode',
@@ -89,7 +89,7 @@
 # name: test_button[2][button.cms_sf2000_enable_standby_mode-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'CMS-SF2000 Enable standby mode',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'CMS-SF2000 Enable standby mode',
     }),
     'context': <ANY>,
     'entity_id': 'button.cms_sf2000_enable_standby_mode',

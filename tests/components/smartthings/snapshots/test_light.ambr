@@ -48,7 +48,7 @@
       <LightEntityStateAttribute.BRIGHTNESS: 'brightness'>: None,
       <LightEntityStateAttribute.COLOR_MODE: 'color_mode'>: None,
       <LightEntityStateAttribute.COLOR_TEMP_KELVIN: 'color_temp_kelvin'>: None,
-      'friendly_name': 'Kitchen Light 5',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Kitchen Light 5',
       <LightEntityStateAttribute.HS_COLOR: 'hs_color'>: None,
       <LightEntityCapabilityAttribute.MAX_COLOR_TEMP_KELVIN: 'max_color_temp_kelvin'>: 9000,
       <LightEntityCapabilityAttribute.MIN_COLOR_TEMP_KELVIN: 'min_color_temp_kelvin'>: 2000,
@@ -56,7 +56,7 @@
       <LightEntityCapabilityAttribute.SUPPORTED_COLOR_MODES: 'supported_color_modes'>: list([
         <ColorMode.COLOR_TEMP: 'color_temp'>,
       ]),
-      'supported_features': <LightEntityFeature: 32>,
+      <EntityStateAttribute.SUPPORTED_FEATURES: 'supported_features'>: <LightEntityFeature: 32>,
       <LightEntityStateAttribute.XY_COLOR: 'xy_color'>: None,
     }),
     'context': <ANY>,
@@ -113,11 +113,11 @@
     'attributes': ReadOnlyDict({
       <LightEntityStateAttribute.BRIGHTNESS: 'brightness'>: None,
       <LightEntityStateAttribute.COLOR_MODE: 'color_mode'>: None,
-      'friendly_name': 'Dimmer Debian',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Dimmer Debian',
       <LightEntityCapabilityAttribute.SUPPORTED_COLOR_MODES: 'supported_color_modes'>: list([
         <ColorMode.BRIGHTNESS: 'brightness'>,
       ]),
-      'supported_features': <LightEntityFeature: 32>,
+      <EntityStateAttribute.SUPPORTED_FEATURES: 'supported_features'>: <LightEntityFeature: 32>,
     }),
     'context': <ANY>,
     'entity_id': 'light.theater_dimmer_debian',
@@ -173,11 +173,11 @@
     'attributes': ReadOnlyDict({
       <LightEntityStateAttribute.BRIGHTNESS: 'brightness'>: 127,
       <LightEntityStateAttribute.COLOR_MODE: 'color_mode'>: <ColorMode.BRIGHTNESS: 'brightness'>,
-      'friendly_name': 'Range hood Light',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Range hood Light',
       <LightEntityCapabilityAttribute.SUPPORTED_COLOR_MODES: 'supported_color_modes'>: list([
         <ColorMode.BRIGHTNESS: 'brightness'>,
       ]),
-      'supported_features': <LightEntityFeature: 0>,
+      <EntityStateAttribute.SUPPORTED_FEATURES: 'supported_features'>: <LightEntityFeature: 0>,
     }),
     'context': <ANY>,
     'entity_id': 'light.range_hood_light',
@@ -233,11 +233,11 @@
     'attributes': ReadOnlyDict({
       <LightEntityStateAttribute.BRIGHTNESS: 'brightness'>: None,
       <LightEntityStateAttribute.COLOR_MODE: 'color_mode'>: None,
-      'friendly_name': 'Microwave Light',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Microwave Light',
       <LightEntityCapabilityAttribute.SUPPORTED_COLOR_MODES: 'supported_color_modes'>: list([
         <ColorMode.BRIGHTNESS: 'brightness'>,
       ]),
-      'supported_features': <LightEntityFeature: 0>,
+      <EntityStateAttribute.SUPPORTED_FEATURES: 'supported_features'>: <LightEntityFeature: 0>,
     }),
     'context': <ANY>,
     'entity_id': 'light.theater_microwave_light',
@@ -292,11 +292,11 @@
   StateSnapshot({
     'attributes': ReadOnlyDict({
       <LightEntityStateAttribute.COLOR_MODE: 'color_mode'>: <ColorMode.ONOFF: 'onoff'>,
-      'friendly_name': 'Oven Light',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Oven Light',
       <LightEntityCapabilityAttribute.SUPPORTED_COLOR_MODES: 'supported_color_modes'>: list([
         <ColorMode.ONOFF: 'onoff'>,
       ]),
-      'supported_features': <LightEntityFeature: 0>,
+      <EntityStateAttribute.SUPPORTED_FEATURES: 'supported_features'>: <LightEntityFeature: 0>,
     }),
     'context': <ANY>,
     'entity_id': 'light.oven_light',
@@ -351,11 +351,11 @@
   StateSnapshot({
     'attributes': ReadOnlyDict({
       <LightEntityStateAttribute.COLOR_MODE: 'color_mode'>: None,
-      'friendly_name': 'Kitchen oven Light',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Kitchen oven Light',
       <LightEntityCapabilityAttribute.SUPPORTED_COLOR_MODES: 'supported_color_modes'>: list([
         <ColorMode.ONOFF: 'onoff'>,
       ]),
-      'supported_features': <LightEntityFeature: 0>,
+      <EntityStateAttribute.SUPPORTED_FEATURES: 'supported_features'>: <LightEntityFeature: 0>,
     }),
     'context': <ANY>,
     'entity_id': 'light.kitchen_oven_light',
@@ -410,11 +410,11 @@
   StateSnapshot({
     'attributes': ReadOnlyDict({
       <LightEntityStateAttribute.COLOR_MODE: 'color_mode'>: <ColorMode.ONOFF: 'onoff'>,
-      'friendly_name': 'Vulcan Light',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Vulcan Light',
       <LightEntityCapabilityAttribute.SUPPORTED_COLOR_MODES: 'supported_color_modes'>: list([
         <ColorMode.ONOFF: 'onoff'>,
       ]),
-      'supported_features': <LightEntityFeature: 0>,
+      <EntityStateAttribute.SUPPORTED_FEATURES: 'supported_features'>: <LightEntityFeature: 0>,
     }),
     'context': <ANY>,
     'entity_id': 'light.vulcan_light',
@@ -469,11 +469,11 @@
   StateSnapshot({
     'attributes': ReadOnlyDict({
       <LightEntityStateAttribute.COLOR_MODE: 'color_mode'>: None,
-      'friendly_name': 'Four Light',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Four Light',
       <LightEntityCapabilityAttribute.SUPPORTED_COLOR_MODES: 'supported_color_modes'>: list([
         <ColorMode.ONOFF: 'onoff'>,
       ]),
-      'supported_features': <LightEntityFeature: 0>,
+      <EntityStateAttribute.SUPPORTED_FEATURES: 'supported_features'>: <LightEntityFeature: 0>,
     }),
     'context': <ANY>,
     'entity_id': 'light.four_light',
@@ -528,11 +528,11 @@
   StateSnapshot({
     'attributes': ReadOnlyDict({
       <LightEntityStateAttribute.COLOR_MODE: 'color_mode'>: <ColorMode.ONOFF: 'onoff'>,
-      'friendly_name': 'Four Light',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Four Light',
       <LightEntityCapabilityAttribute.SUPPORTED_COLOR_MODES: 'supported_color_modes'>: list([
         <ColorMode.ONOFF: 'onoff'>,
       ]),
-      'supported_features': <LightEntityFeature: 0>,
+      <EntityStateAttribute.SUPPORTED_FEATURES: 'supported_features'>: <LightEntityFeature: 0>,
     }),
     'context': <ANY>,
     'entity_id': 'light.four_light_2',
@@ -588,11 +588,11 @@
     'attributes': ReadOnlyDict({
       <LightEntityStateAttribute.BRIGHTNESS: 'brightness'>: None,
       <LightEntityStateAttribute.COLOR_MODE: 'color_mode'>: None,
-      'friendly_name': 'Dimmer entré 1 1',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Dimmer entré 1 1',
       <LightEntityCapabilityAttribute.SUPPORTED_COLOR_MODES: 'supported_color_modes'>: list([
         <ColorMode.BRIGHTNESS: 'brightness'>,
       ]),
-      'supported_features': <LightEntityFeature: 32>,
+      <EntityStateAttribute.SUPPORTED_FEATURES: 'supported_features'>: <LightEntityFeature: 32>,
     }),
     'context': <ANY>,
     'entity_id': 'light.dimmer_entre_1_1',
@@ -648,11 +648,11 @@
     'attributes': ReadOnlyDict({
       <LightEntityStateAttribute.BRIGHTNESS: 'brightness'>: None,
       <LightEntityStateAttribute.COLOR_MODE: 'color_mode'>: None,
-      'friendly_name': 'Basement Exit Light',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Basement Exit Light',
       <LightEntityCapabilityAttribute.SUPPORTED_COLOR_MODES: 'supported_color_modes'>: list([
         <ColorMode.BRIGHTNESS: 'brightness'>,
       ]),
-      'supported_features': <LightEntityFeature: 32>,
+      <EntityStateAttribute.SUPPORTED_FEATURES: 'supported_features'>: <LightEntityFeature: 32>,
     }),
     'context': <ANY>,
     'entity_id': 'light.theater_basement_exit_light',
@@ -711,7 +711,7 @@
       <LightEntityStateAttribute.BRIGHTNESS: 'brightness'>: 178,
       <LightEntityStateAttribute.COLOR_MODE: 'color_mode'>: <ColorMode.COLOR_TEMP: 'color_temp'>,
       <LightEntityStateAttribute.COLOR_TEMP_KELVIN: 'color_temp_kelvin'>: 3000,
-      'friendly_name': 'Bathroom spot',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Bathroom spot',
       <LightEntityStateAttribute.HS_COLOR: 'hs_color'>: tuple(
         27.825,
         56.895,
@@ -726,7 +726,7 @@
       <LightEntityCapabilityAttribute.SUPPORTED_COLOR_MODES: 'supported_color_modes'>: list([
         <ColorMode.COLOR_TEMP: 'color_temp'>,
       ]),
-      'supported_features': <LightEntityFeature: 32>,
+      <EntityStateAttribute.SUPPORTED_FEATURES: 'supported_features'>: <LightEntityFeature: 32>,
       <LightEntityStateAttribute.XY_COLOR: 'xy_color'>: tuple(
         0.496,
         0.383,
@@ -790,7 +790,7 @@
       <LightEntityStateAttribute.BRIGHTNESS: 'brightness'>: None,
       <LightEntityStateAttribute.COLOR_MODE: 'color_mode'>: None,
       <LightEntityStateAttribute.COLOR_TEMP_KELVIN: 'color_temp_kelvin'>: None,
-      'friendly_name': 'Standing light',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Standing light',
       <LightEntityStateAttribute.HS_COLOR: 'hs_color'>: None,
       <LightEntityCapabilityAttribute.MAX_COLOR_TEMP_KELVIN: 'max_color_temp_kelvin'>: 9000,
       <LightEntityCapabilityAttribute.MIN_COLOR_TEMP_KELVIN: 'min_color_temp_kelvin'>: 2000,
@@ -799,7 +799,7 @@
         <ColorMode.COLOR_TEMP: 'color_temp'>,
         <ColorMode.HS: 'hs'>,
       ]),
-      'supported_features': <LightEntityFeature: 32>,
+      <EntityStateAttribute.SUPPORTED_FEATURES: 'supported_features'>: <LightEntityFeature: 32>,
       <LightEntityStateAttribute.XY_COLOR: 'xy_color'>: None,
     }),
     'context': <ANY>,
@@ -856,11 +856,11 @@
     'attributes': ReadOnlyDict({
       <LightEntityStateAttribute.BRIGHTNESS: 'brightness'>: 102,
       <LightEntityStateAttribute.COLOR_MODE: 'color_mode'>: <ColorMode.BRIGHTNESS: 'brightness'>,
-      'friendly_name': 'IKEA Plug Powermeter',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'IKEA Plug Powermeter',
       <LightEntityCapabilityAttribute.SUPPORTED_COLOR_MODES: 'supported_color_modes'>: list([
         <ColorMode.BRIGHTNESS: 'brightness'>,
       ]),
-      'supported_features': <LightEntityFeature: 32>,
+      <EntityStateAttribute.SUPPORTED_FEATURES: 'supported_features'>: <LightEntityFeature: 32>,
     }),
     'context': <ANY>,
     'entity_id': 'light.ikea_plug_powermeter',

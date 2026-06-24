@@ -40,10 +40,10 @@
 # name: test_all_entities[da_rvc_map_01011][media_player.robot_vacuum-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'Robot Vacuum',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Robot Vacuum',
       <MediaPlayerEntityStateAttribute.MEDIA_VOLUME_MUTED: 'is_volume_muted'>: False,
       <MediaPlayerEntityStateAttribute.MEDIA_REPEAT: 'repeat'>: <RepeatMode.ALL: 'all'>,
-      'supported_features': <MediaPlayerEntityFeature: 284045>,
+      <EntityStateAttribute.SUPPORTED_FEATURES: 'supported_features'>: <MediaPlayerEntityFeature: 284045>,
       <MediaPlayerEntityStateAttribute.MEDIA_VOLUME_LEVEL: 'volume_level'>: 0.2,
     }),
     'context': <ANY>,
@@ -102,8 +102,8 @@
 # name: test_all_entities[hw_q80r_soundbar][media_player.soundbar-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'device_class': 'speaker',
-      'friendly_name': 'Soundbar',
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'speaker',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Soundbar',
       <MediaPlayerEntityStateAttribute.MEDIA_VOLUME_MUTED: 'is_volume_muted'>: False,
       <MediaPlayerEntityStateAttribute.MEDIA_ARTIST: 'media_artist'>: 'Rick Astley',
       <MediaPlayerEntityStateAttribute.MEDIA_TITLE: 'media_title'>: 'Never Gonna Give You Up',
@@ -115,7 +115,7 @@
         'hdmi2',
         'digital',
       ]),
-      'supported_features': <MediaPlayerEntityFeature: 23949>,
+      <EntityStateAttribute.SUPPORTED_FEATURES: 'supported_features'>: <MediaPlayerEntityFeature: 23949>,
       <MediaPlayerEntityStateAttribute.MEDIA_VOLUME_LEVEL: 'volume_level'>: 0.01,
     }),
     'context': <ANY>,
@@ -167,12 +167,12 @@
 # name: test_all_entities[im_speaker_ai_0001][media_player.galaxy_home_mini-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'device_class': 'speaker',
-      'friendly_name': 'Galaxy Home Mini',
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'speaker',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Galaxy Home Mini',
       <MediaPlayerEntityStateAttribute.MEDIA_VOLUME_MUTED: 'is_volume_muted'>: False,
       <MediaPlayerEntityStateAttribute.MEDIA_REPEAT: 'repeat'>: <RepeatMode.OFF: 'off'>,
       <MediaPlayerEntityStateAttribute.MEDIA_SHUFFLE: 'shuffle'>: False,
-      'supported_features': <MediaPlayerEntityFeature: 318477>,
+      <EntityStateAttribute.SUPPORTED_FEATURES: 'supported_features'>: <MediaPlayerEntityFeature: 318477>,
       <MediaPlayerEntityStateAttribute.MEDIA_VOLUME_LEVEL: 'volume_level'>: 0.52,
     }),
     'context': <ANY>,
@@ -224,12 +224,12 @@
 # name: test_all_entities[sonos_player][media_player.theater_elliots_rum-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'device_class': 'speaker',
-      'friendly_name': 'Elliots Rum',
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'speaker',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Elliots Rum',
       <MediaPlayerEntityStateAttribute.MEDIA_VOLUME_MUTED: 'is_volume_muted'>: False,
       <MediaPlayerEntityStateAttribute.MEDIA_ARTIST: 'media_artist'>: 'David Guetta',
       <MediaPlayerEntityStateAttribute.MEDIA_TITLE: 'media_title'>: 'Forever Young',
-      'supported_features': <MediaPlayerEntityFeature: 21517>,
+      <EntityStateAttribute.SUPPORTED_FEATURES: 'supported_features'>: <MediaPlayerEntityFeature: 21517>,
       <MediaPlayerEntityStateAttribute.MEDIA_VOLUME_LEVEL: 'volume_level'>: 0.15,
     }),
     'context': <ANY>,
@@ -281,13 +281,13 @@
 # name: test_all_entities[vd_network_audio_002s][media_player.theater_soundbar_living-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'device_class': 'speaker',
-      'friendly_name': 'Soundbar Living',
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'speaker',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Soundbar Living',
       <MediaPlayerEntityStateAttribute.MEDIA_VOLUME_MUTED: 'is_volume_muted'>: False,
       <MediaPlayerEntityStateAttribute.MEDIA_ARTIST: 'media_artist'>: '',
       <MediaPlayerEntityStateAttribute.MEDIA_TITLE: 'media_title'>: '',
       <MediaPlayerEntityStateAttribute.INPUT_SOURCE: 'source'>: 'hdmi1',
-      'supported_features': <MediaPlayerEntityFeature: 21901>,
+      <EntityStateAttribute.SUPPORTED_FEATURES: 'supported_features'>: <MediaPlayerEntityFeature: 21901>,
       <MediaPlayerEntityStateAttribute.MEDIA_VOLUME_LEVEL: 'volume_level'>: 0.17,
     }),
     'context': <ANY>,
@@ -339,9 +339,9 @@
 # name: test_all_entities[vd_network_audio_003s][media_player.soundbar_1-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'device_class': 'speaker',
-      'friendly_name': 'Soundbar 1',
-      'supported_features': <MediaPlayerEntityFeature: 1420>,
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'speaker',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Soundbar 1',
+      <EntityStateAttribute.SUPPORTED_FEATURES: 'supported_features'>: <MediaPlayerEntityFeature: 1420>,
     }),
     'context': <ANY>,
     'entity_id': 'media_player.soundbar_1',
@@ -398,8 +398,8 @@
 # name: test_all_entities[vd_stv_2017_k][media_player.theater_tv_samsung_8_series_49-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'device_class': 'tv',
-      'friendly_name': '[TV] Samsung 8 Series (49)',
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'tv',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: '[TV] Samsung 8 Series (49)',
       <MediaPlayerEntityStateAttribute.MEDIA_VOLUME_MUTED: 'is_volume_muted'>: True,
       <MediaPlayerEntityStateAttribute.INPUT_SOURCE: 'source'>: 'hdmi1',
       <MediaPlayerEntityCapabilityAttribute.INPUT_SOURCE_LIST: 'source_list'>: list([
@@ -408,7 +408,7 @@
         'hdmi2',
         'hdmi3',
       ]),
-      'supported_features': <MediaPlayerEntityFeature: 23997>,
+      <EntityStateAttribute.SUPPORTED_FEATURES: 'supported_features'>: <MediaPlayerEntityFeature: 23997>,
       <MediaPlayerEntityStateAttribute.MEDIA_VOLUME_LEVEL: 'volume_level'>: 0.13,
     }),
     'context': <ANY>,

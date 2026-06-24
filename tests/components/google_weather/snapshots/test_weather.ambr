@@ -164,15 +164,15 @@
   StateSnapshot({
     'attributes': ReadOnlyDict({
       <WeatherEntityStateAttribute.APPARENT_TEMPERATURE: 'apparent_temperature'>: 13.1,
-      'attribution': 'Data from Google Weather',
+      <EntityStateAttribute.ATTRIBUTION: 'attribution'>: 'Data from Google Weather',
       <WeatherEntityStateAttribute.CLOUD_COVERAGE: 'cloud_coverage'>: 0.0,
       <WeatherEntityStateAttribute.DEW_POINT: 'dew_point'>: 1.1,
-      'friendly_name': 'Home',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Home',
       <WeatherEntityStateAttribute.HUMIDITY: 'humidity'>: 42,
       <WeatherEntityStateAttribute.PRECIPITATION_UNIT: 'precipitation_unit'>: <UnitOfPrecipitationDepth.MILLIMETERS: 'mm'>,
       <WeatherEntityStateAttribute.PRESSURE: 'pressure'>: 1019.16,
       <WeatherEntityStateAttribute.PRESSURE_UNIT: 'pressure_unit'>: <UnitOfPressure.HPA: 'hPa'>,
-      'supported_features': <WeatherEntityFeature: 7>,
+      <EntityStateAttribute.SUPPORTED_FEATURES: 'supported_features'>: <WeatherEntityFeature: 7>,
       <WeatherEntityStateAttribute.TEMPERATURE: 'temperature'>: 13.7,
       <WeatherEntityStateAttribute.TEMPERATURE_UNIT: 'temperature_unit'>: <UnitOfTemperature.CELSIUS: '°C'>,
       <WeatherEntityStateAttribute.UV_INDEX: 'uv_index'>: 1.0,

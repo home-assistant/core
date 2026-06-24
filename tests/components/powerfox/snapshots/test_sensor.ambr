@@ -42,9 +42,9 @@
 # name: test_all_sensors[sensor.gasopti_avg_gas_hourly_consumption_today-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'device_class': 'gas',
-      'friendly_name': 'Gasopti Avg gas hourly consumption - today',
-      'unit_of_measurement': <UnitOfVolume.CUBIC_METERS: 'm³'>,
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'gas',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Gasopti Avg gas hourly consumption - today',
+      <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: <UnitOfVolume.CUBIC_METERS: 'm³'>,
     }),
     'context': <ANY>,
     'entity_id': 'sensor.gasopti_avg_gas_hourly_consumption_today',
@@ -97,9 +97,9 @@
 # name: test_all_sensors[sensor.gasopti_avg_gas_hourly_energy_today-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'device_class': 'energy',
-      'friendly_name': 'Gasopti Avg gas hourly energy - today',
-      'unit_of_measurement': <UnitOfEnergy.KILO_WATT_HOUR: 'kWh'>,
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'energy',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Gasopti Avg gas hourly energy - today',
+      <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: <UnitOfEnergy.KILO_WATT_HOUR: 'kWh'>,
     }),
     'context': <ANY>,
     'entity_id': 'sensor.gasopti_avg_gas_hourly_energy_today',
@@ -152,9 +152,9 @@
 # name: test_all_sensors[sensor.gasopti_gas_consumption_energy_this_hour-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'device_class': 'energy',
-      'friendly_name': 'Gasopti Gas consumption energy - this hour',
-      'unit_of_measurement': <UnitOfEnergy.KILO_WATT_HOUR: 'kWh'>,
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'energy',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Gasopti Gas consumption energy - this hour',
+      <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: <UnitOfEnergy.KILO_WATT_HOUR: 'kWh'>,
     }),
     'context': <ANY>,
     'entity_id': 'sensor.gasopti_gas_consumption_energy_this_hour',
@@ -209,10 +209,10 @@
 # name: test_all_sensors[sensor.gasopti_gas_consumption_energy_today-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'device_class': 'energy',
-      'friendly_name': 'Gasopti Gas consumption energy - today',
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'energy',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Gasopti Gas consumption energy - today',
       <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
-      'unit_of_measurement': <UnitOfEnergy.KILO_WATT_HOUR: 'kWh'>,
+      <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: <UnitOfEnergy.KILO_WATT_HOUR: 'kWh'>,
     }),
     'context': <ANY>,
     'entity_id': 'sensor.gasopti_gas_consumption_energy_today',
@@ -265,9 +265,9 @@
 # name: test_all_sensors[sensor.gasopti_gas_consumption_this_hour-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'device_class': 'gas',
-      'friendly_name': 'Gasopti Gas consumption - this hour',
-      'unit_of_measurement': <UnitOfVolume.CUBIC_METERS: 'm³'>,
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'gas',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Gasopti Gas consumption - this hour',
+      <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: <UnitOfVolume.CUBIC_METERS: 'm³'>,
     }),
     'context': <ANY>,
     'entity_id': 'sensor.gasopti_gas_consumption_this_hour',
@@ -322,10 +322,10 @@
 # name: test_all_sensors[sensor.gasopti_gas_consumption_today-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'device_class': 'gas',
-      'friendly_name': 'Gasopti Gas consumption - today',
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'gas',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Gasopti Gas consumption - today',
       <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
-      'unit_of_measurement': <UnitOfVolume.CUBIC_METERS: 'm³'>,
+      <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: <UnitOfVolume.CUBIC_METERS: 'm³'>,
     }),
     'context': <ANY>,
     'entity_id': 'sensor.gasopti_gas_consumption_today',
@@ -380,10 +380,10 @@
 # name: test_all_sensors[sensor.gasopti_gas_cost_today-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'device_class': 'monetary',
-      'friendly_name': 'Gasopti Gas cost - today',
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'monetary',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Gasopti Gas cost - today',
       <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.TOTAL: 'total'>,
-      'unit_of_measurement': '€',
+      <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: '€',
     }),
     'context': <ANY>,
     'entity_id': 'sensor.gasopti_gas_cost_today',
@@ -436,9 +436,9 @@
 # name: test_all_sensors[sensor.gasopti_max_gas_hourly_consumption_today-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'device_class': 'gas',
-      'friendly_name': 'Gasopti Max gas hourly consumption - today',
-      'unit_of_measurement': <UnitOfVolume.CUBIC_METERS: 'm³'>,
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'gas',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Gasopti Max gas hourly consumption - today',
+      <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: <UnitOfVolume.CUBIC_METERS: 'm³'>,
     }),
     'context': <ANY>,
     'entity_id': 'sensor.gasopti_max_gas_hourly_consumption_today',
@@ -491,9 +491,9 @@
 # name: test_all_sensors[sensor.gasopti_max_gas_hourly_cost_today-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'device_class': 'monetary',
-      'friendly_name': 'Gasopti Max gas hourly cost - today',
-      'unit_of_measurement': '€',
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'monetary',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Gasopti Max gas hourly cost - today',
+      <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: '€',
     }),
     'context': <ANY>,
     'entity_id': 'sensor.gasopti_max_gas_hourly_cost_today',
@@ -546,9 +546,9 @@
 # name: test_all_sensors[sensor.gasopti_max_gas_hourly_energy_today-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'device_class': 'energy',
-      'friendly_name': 'Gasopti Max gas hourly energy - today',
-      'unit_of_measurement': <UnitOfEnergy.KILO_WATT_HOUR: 'kWh'>,
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'energy',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Gasopti Max gas hourly energy - today',
+      <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: <UnitOfEnergy.KILO_WATT_HOUR: 'kWh'>,
     }),
     'context': <ANY>,
     'entity_id': 'sensor.gasopti_max_gas_hourly_energy_today',
@@ -601,9 +601,9 @@
 # name: test_all_sensors[sensor.gasopti_min_gas_hourly_consumption_today-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'device_class': 'gas',
-      'friendly_name': 'Gasopti Min gas hourly consumption - today',
-      'unit_of_measurement': <UnitOfVolume.CUBIC_METERS: 'm³'>,
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'gas',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Gasopti Min gas hourly consumption - today',
+      <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: <UnitOfVolume.CUBIC_METERS: 'm³'>,
     }),
     'context': <ANY>,
     'entity_id': 'sensor.gasopti_min_gas_hourly_consumption_today',
@@ -656,9 +656,9 @@
 # name: test_all_sensors[sensor.gasopti_min_gas_hourly_energy_today-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'device_class': 'energy',
-      'friendly_name': 'Gasopti Min gas hourly energy - today',
-      'unit_of_measurement': <UnitOfEnergy.KILO_WATT_HOUR: 'kWh'>,
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'energy',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Gasopti Min gas hourly energy - today',
+      <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: <UnitOfEnergy.KILO_WATT_HOUR: 'kWh'>,
     }),
     'context': <ANY>,
     'entity_id': 'sensor.gasopti_min_gas_hourly_energy_today',
@@ -711,9 +711,9 @@
 # name: test_all_sensors[sensor.heatopti_delta_energy-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'device_class': 'energy',
-      'friendly_name': 'Heatopti Delta energy',
-      'unit_of_measurement': <UnitOfEnergy.KILO_WATT_HOUR: 'kWh'>,
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'energy',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Heatopti Delta energy',
+      <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: <UnitOfEnergy.KILO_WATT_HOUR: 'kWh'>,
     }),
     'context': <ANY>,
     'entity_id': 'sensor.heatopti_delta_energy',
@@ -766,9 +766,9 @@
 # name: test_all_sensors[sensor.heatopti_delta_volume-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'device_class': 'water',
-      'friendly_name': 'Heatopti Delta volume',
-      'unit_of_measurement': <UnitOfVolume.CUBIC_METERS: 'm³'>,
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'water',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Heatopti Delta volume',
+      <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: <UnitOfVolume.CUBIC_METERS: 'm³'>,
     }),
     'context': <ANY>,
     'entity_id': 'sensor.heatopti_delta_volume',
@@ -823,10 +823,10 @@
 # name: test_all_sensors[sensor.heatopti_total_energy-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'device_class': 'energy',
-      'friendly_name': 'Heatopti Total energy',
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'energy',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Heatopti Total energy',
       <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
-      'unit_of_measurement': <UnitOfEnergy.KILO_WATT_HOUR: 'kWh'>,
+      <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: <UnitOfEnergy.KILO_WATT_HOUR: 'kWh'>,
     }),
     'context': <ANY>,
     'entity_id': 'sensor.heatopti_total_energy',
@@ -881,10 +881,10 @@
 # name: test_all_sensors[sensor.heatopti_total_volume-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'device_class': 'water',
-      'friendly_name': 'Heatopti Total volume',
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'water',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Heatopti Total volume',
       <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
-      'unit_of_measurement': <UnitOfVolume.CUBIC_METERS: 'm³'>,
+      <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: <UnitOfVolume.CUBIC_METERS: 'm³'>,
     }),
     'context': <ANY>,
     'entity_id': 'sensor.heatopti_total_volume',
@@ -939,10 +939,10 @@
 # name: test_all_sensors[sensor.poweropti_energy_return-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'device_class': 'energy',
-      'friendly_name': 'Poweropti Energy return',
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'energy',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Poweropti Energy return',
       <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
-      'unit_of_measurement': <UnitOfEnergy.KILO_WATT_HOUR: 'kWh'>,
+      <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: <UnitOfEnergy.KILO_WATT_HOUR: 'kWh'>,
     }),
     'context': <ANY>,
     'entity_id': 'sensor.poweropti_energy_return',
@@ -997,10 +997,10 @@
 # name: test_all_sensors[sensor.poweropti_energy_usage-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'device_class': 'energy',
-      'friendly_name': 'Poweropti Energy usage',
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'energy',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Poweropti Energy usage',
       <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
-      'unit_of_measurement': <UnitOfEnergy.KILO_WATT_HOUR: 'kWh'>,
+      <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: <UnitOfEnergy.KILO_WATT_HOUR: 'kWh'>,
     }),
     'context': <ANY>,
     'entity_id': 'sensor.poweropti_energy_usage',
@@ -1055,10 +1055,10 @@
 # name: test_all_sensors[sensor.poweropti_energy_usage_high_tariff-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'device_class': 'energy',
-      'friendly_name': 'Poweropti Energy usage high tariff',
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'energy',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Poweropti Energy usage high tariff',
       <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
-      'unit_of_measurement': <UnitOfEnergy.KILO_WATT_HOUR: 'kWh'>,
+      <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: <UnitOfEnergy.KILO_WATT_HOUR: 'kWh'>,
     }),
     'context': <ANY>,
     'entity_id': 'sensor.poweropti_energy_usage_high_tariff',
@@ -1113,10 +1113,10 @@
 # name: test_all_sensors[sensor.poweropti_energy_usage_low_tariff-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'device_class': 'energy',
-      'friendly_name': 'Poweropti Energy usage low tariff',
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'energy',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Poweropti Energy usage low tariff',
       <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
-      'unit_of_measurement': <UnitOfEnergy.KILO_WATT_HOUR: 'kWh'>,
+      <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: <UnitOfEnergy.KILO_WATT_HOUR: 'kWh'>,
     }),
     'context': <ANY>,
     'entity_id': 'sensor.poweropti_energy_usage_low_tariff',
@@ -1171,10 +1171,10 @@
 # name: test_all_sensors[sensor.poweropti_power-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'device_class': 'power',
-      'friendly_name': 'Poweropti Power',
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'power',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Poweropti Power',
       <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
-      'unit_of_measurement': <UnitOfPower.WATT: 'W'>,
+      <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: <UnitOfPower.WATT: 'W'>,
     }),
     'context': <ANY>,
     'entity_id': 'sensor.poweropti_power',
@@ -1229,10 +1229,10 @@
 # name: test_all_sensors[sensor.wateropti_cold_water-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'device_class': 'water',
-      'friendly_name': 'Wateropti Cold water',
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'water',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Wateropti Cold water',
       <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
-      'unit_of_measurement': <UnitOfVolume.CUBIC_METERS: 'm³'>,
+      <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: <UnitOfVolume.CUBIC_METERS: 'm³'>,
     }),
     'context': <ANY>,
     'entity_id': 'sensor.wateropti_cold_water',
@@ -1287,10 +1287,10 @@
 # name: test_all_sensors[sensor.wateropti_warm_water-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'device_class': 'water',
-      'friendly_name': 'Wateropti Warm water',
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'water',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Wateropti Warm water',
       <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
-      'unit_of_measurement': <UnitOfVolume.CUBIC_METERS: 'm³'>,
+      <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: <UnitOfVolume.CUBIC_METERS: 'm³'>,
     }),
     'context': <ANY>,
     'entity_id': 'sensor.wateropti_warm_water',
