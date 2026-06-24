@@ -15,6 +15,7 @@ from pytest_unordered import unordered
 import voluptuous as vol
 
 from homeassistant.components import automation
+from homeassistant.components.device_automation import DEVICE_TRIGGER_BASE_SCHEMA
 from homeassistant.components.sun import DOMAIN as SUN_DOMAIN
 from homeassistant.components.system_health import DOMAIN as SYSTEM_HEALTH_DOMAIN
 from homeassistant.components.tag import DOMAIN as TAG_DOMAIN
@@ -37,6 +38,7 @@ from homeassistant.const import (
 )
 from homeassistant.core import (
     CALLBACK_TYPE,
+    DOMAIN as HOMEASSISTANT_DOMAIN,
     Context,
     Event,
     EventStateChangedData,
@@ -48,7 +50,9 @@ from homeassistant.core import (
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import (
     config_validation as cv,
+    device_registry as dr,
     entity_registry as er,
+    issue_registry as ir,
     label_registry as lr,
     trigger,
 )
@@ -74,6 +78,7 @@ from homeassistant.helpers.trigger import (
     Trigger,
     TriggerActionRunner,
     TriggerConfig,
+    TriggerNotTriggeredReporter,
     _async_get_trigger_platform,
     async_initialize_triggers,
     async_validate_trigger_config,
@@ -90,13 +95,13 @@ from homeassistant.util.unit_conversion import TemperatureConverter
 from homeassistant.util.yaml.loader import parse_yaml
 
 from tests.common import (
+    MockConfigEntry,
     MockModule,
     MockPlatform,
     async_fire_time_changed,
     mock_integration,
     mock_platform,
 )
-from tests.typing import WebSocketGenerator
 
 
 async def _call_in_order(funcs: list[Callable[[], Any]], *, reverse: bool) -> list[Any]:
@@ -156,7 +161,9 @@ class _MockTrigger(Trigger):
         self._options = config.options or {}
 
     async def async_attach_runner(
-        self, run_action: TriggerActionRunner
+        self,
+        run_action: TriggerActionRunner,
+        did_not_trigger: TriggerNotTriggeredReporter | None = None,
     ) -> CALLBACK_TYPE:
         """Attach the trigger to a bus event."""
         raw_template = self._options.get("option_template")
@@ -809,7 +816,9 @@ async def test_platform_multiple_triggers(
         """Mock trigger 1."""
 
         async def async_attach_runner(
-            self, run_action: TriggerActionRunner
+            self,
+            run_action: TriggerActionRunner,
+            did_not_trigger: TriggerNotTriggeredReporter | None = None,
         ) -> CALLBACK_TYPE:
             """Attach a trigger."""
             run_action({"extra": "test_trigger_1"}, "trigger 1 desc")
@@ -818,7 +827,9 @@ async def test_platform_multiple_triggers(
         """Mock trigger 2."""
 
         async def async_attach_runner(
-            self, run_action: TriggerActionRunner
+            self,
+            run_action: TriggerActionRunner,
+            did_not_trigger: TriggerNotTriggeredReporter | None = None,
         ) -> CALLBACK_TYPE:
             """Attach a trigger."""
             run_action({"extra": "test_trigger_2"}, "trigger 2 desc")
@@ -968,7 +979,9 @@ async def test_get_trigger_platform_registers_triggers(
         """Mock trigger."""
 
         async def async_attach_runner(
-            self, run_action: TriggerActionRunner
+            self,
+            run_action: TriggerActionRunner,
+            did_not_trigger: TriggerNotTriggeredReporter | None = None,
         ) -> CALLBACK_TYPE:
             return lambda: None
 
@@ -1002,6 +1015,20 @@ async def test_get_trigger_platform_registers_triggers(
     await _async_get_trigger_platform(hass, "test.trig_a")
     await _async_get_trigger_platform(hass, "test.trig_b")
     assert len(subscriber_events) == 1
+
+
+# Trigger keys the sun integration registers besides the legacy ``sun`` trigger.
+# These tests mock sun/triggers.yaml, so the modern triggers have no description.
+_MODERN_SUN_TRIGGERS = (
+    "sun.dawn",
+    "sun.dusk",
+    "sun.elevation_changed",
+    "sun.elevation_crossed_threshold",
+    "sun.solar_midnight",
+    "sun.solar_noon",
+    "sun.sunrise",
+    "sun.sunset",
+)
 
 
 @pytest.mark.parametrize(
@@ -1040,7 +1067,6 @@ async def test_get_trigger_platform_registers_triggers(
 )
 async def test_async_get_all_descriptions(
     hass: HomeAssistant,
-    hass_ws_client: WebSocketGenerator,
     sun_trigger_descriptions: str,
 ) -> None:
     """Test async_get_all_descriptions."""
@@ -1056,8 +1082,6 @@ async def test_async_get_all_descriptions(
             entity:
               domain: text
         """
-
-    ws_client = await hass_ws_client(hass)
 
     assert await async_setup_component(hass, SUN_DOMAIN, {})
     assert await async_setup_component(hass, SYSTEM_HEALTH_DOMAIN, {})
@@ -1111,7 +1135,9 @@ async def test_async_get_all_descriptions(
                 },
                 "offset": {"selector": {"time": {}}},
             }
-        }
+        },
+        # The modern sun triggers have no entry in the mocked triggers.yaml.
+        **dict.fromkeys(_MODERN_SUN_TRIGGERS),
     }
 
     assert descriptions == expected_descriptions
@@ -1163,38 +1189,6 @@ async def test_async_get_all_descriptions(
     ):
         new_descriptions = await trigger.async_get_all_descriptions(hass)
     assert new_descriptions is not descriptions
-    # No text triggers added, they are gated by the automation.new_triggers_conditions
-    # labs flag
-    assert new_descriptions == expected_descriptions
-
-    # Verify the cache returns the same object
-    assert await trigger.async_get_all_descriptions(hass) is new_descriptions
-
-    # Enable the new_triggers_conditions flag and verify text triggers are loaded
-    assert await async_setup_component(hass, "labs", {})
-
-    await ws_client.send_json_auto_id(
-        {
-            "type": "labs/update",
-            "domain": "automation",
-            "preview_feature": "new_triggers_conditions",
-            "enabled": True,
-        }
-    )
-
-    msg = await ws_client.receive_json()
-    assert msg["success"]
-    await hass.async_block_till_done()
-
-    with (
-        patch(
-            "annotatedyaml.loader.load_yaml",
-            side_effect=_load_yaml,
-        ),
-        patch.object(Integration, "has_triggers", return_value=True),
-    ):
-        new_descriptions = await trigger.async_get_all_descriptions(hass)
-    assert new_descriptions is not descriptions
     # The text triggers should now be present
     assert new_descriptions == expected_descriptions | {
         "text.changed": {
@@ -1210,37 +1204,6 @@ async def test_async_get_all_descriptions(
             },
         },
     }
-
-    # Verify the cache returns the same object
-    assert await trigger.async_get_all_descriptions(hass) is new_descriptions
-
-    # Disable the new_triggers_conditions flag and verify text triggers are removed
-    assert await async_setup_component(hass, "labs", {})
-
-    await ws_client.send_json_auto_id(
-        {
-            "type": "labs/update",
-            "domain": "automation",
-            "preview_feature": "new_triggers_conditions",
-            "enabled": False,
-        }
-    )
-
-    msg = await ws_client.receive_json()
-    assert msg["success"]
-    await hass.async_block_till_done()
-
-    with (
-        patch(
-            "annotatedyaml.loader.load_yaml",
-            side_effect=_load_yaml,
-        ),
-        patch.object(Integration, "has_triggers", return_value=True),
-    ):
-        new_descriptions = await trigger.async_get_all_descriptions(hass)
-    assert new_descriptions is not descriptions
-    # The text triggers should no longer be present
-    assert new_descriptions == expected_descriptions
 
     # Verify the cache returns the same object
     assert await trigger.async_get_all_descriptions(hass) is new_descriptions
@@ -1283,7 +1246,7 @@ async def test_async_get_all_descriptions_with_yaml_error(
     ):
         descriptions = await trigger.async_get_all_descriptions(hass)
 
-    assert descriptions == {SUN_DOMAIN: None}
+    assert descriptions == {SUN_DOMAIN: None, **dict.fromkeys(_MODERN_SUN_TRIGGERS)}
 
     assert expected_message in caplog.text
 
@@ -1316,7 +1279,7 @@ async def test_async_get_all_descriptions_with_bad_description(
     ):
         descriptions = await trigger.async_get_all_descriptions(hass)
 
-    assert descriptions == {SUN_DOMAIN: None}
+    assert descriptions == {SUN_DOMAIN: None, **dict.fromkeys(_MODERN_SUN_TRIGGERS)}
 
     assert (
         "Unable to parse triggers.yaml for the sun integration: "
@@ -1376,82 +1339,10 @@ async def test_subscribe_triggers(
     trigger.async_subscribe_platform_events(hass, good_subscriber)
 
     assert await async_setup_component(hass, "sun", {})
-    assert trigger_events == [{"sun"}]
+    assert trigger_events == [{"sun", *_MODERN_SUN_TRIGGERS}]
     assert "Error while notifying trigger platform listener" in caplog.text
 
     await hass.data["entity_components"][SUN_DOMAIN]._async_reset()
-
-
-@patch("annotatedyaml.loader.load_yaml")
-@patch.object(Integration, "has_triggers", return_value=True)
-@pytest.mark.parametrize(
-    ("new_triggers_conditions_enabled", "expected_events"),
-    [
-        (
-            True,
-            [
-                {
-                    "light.brightness_changed",
-                    "light.brightness_crossed_threshold",
-                    "light.turned_off",
-                    "light.turned_on",
-                }
-            ],
-        ),
-        (False, []),
-    ],
-)
-async def test_subscribe_triggers_experimental_triggers(
-    mock_has_triggers: Mock,
-    mock_load_yaml: Mock,
-    hass: HomeAssistant,
-    hass_ws_client: WebSocketGenerator,
-    caplog: pytest.LogCaptureFixture,
-    new_triggers_conditions_enabled: bool,
-    expected_events: list[set[str]],
-) -> None:
-    """Test async_subscribe_platform_events skips disabled triggers."""
-    # Return empty triggers.yaml for light integration, the actual trigger descriptions
-    # are irrelevant for this test
-    light_trigger_descriptions = ""
-
-    def _load_yaml(fname, secrets=None):
-        if fname.endswith("light/triggers.yaml"):
-            trigger_descriptions = light_trigger_descriptions
-        else:
-            raise FileNotFoundError
-        with io.StringIO(trigger_descriptions) as file:
-            return parse_yaml(file)
-
-    mock_load_yaml.side_effect = _load_yaml
-
-    trigger_events = []
-
-    async def good_subscriber(new_triggers: set[str]):
-        """Simulate a working subscriber."""
-        trigger_events.append(new_triggers)
-
-    ws_client = await hass_ws_client(hass)
-
-    assert await async_setup_component(hass, "labs", {})
-    await ws_client.send_json_auto_id(
-        {
-            "type": "labs/update",
-            "domain": "automation",
-            "preview_feature": "new_triggers_conditions",
-            "enabled": new_triggers_conditions_enabled,
-        }
-    )
-
-    msg = await ws_client.receive_json()
-    assert msg["success"]
-    await hass.async_block_till_done()
-
-    trigger.async_subscribe_platform_events(hass, good_subscriber)
-
-    assert await async_setup_component(hass, "light", {})
-    await hass.async_block_till_done()
-    assert trigger_events == expected_events
 
 
 @patch("annotatedyaml.loader.load_yaml")
@@ -1464,7 +1355,6 @@ async def test_subscribe_triggers_no_triggers(
     mock_has_triggers: Mock,
     mock_load_yaml: Mock,
     hass: HomeAssistant,
-    hass_ws_client: WebSocketGenerator,
     caplog: pytest.LogCaptureFixture,
 ) -> None:
     """Test async_subscribe_platform_events skips platforms without triggers."""
@@ -1487,22 +1377,6 @@ async def test_subscribe_triggers_no_triggers(
     async def good_subscriber(new_triggers: set[str]):
         """Simulate a working subscriber."""
         trigger_events.append(new_triggers)
-
-    ws_client = await hass_ws_client(hass)
-
-    assert await async_setup_component(hass, "labs", {})
-    await ws_client.send_json_auto_id(
-        {
-            "type": "labs/update",
-            "domain": "automation",
-            "preview_feature": "new_triggers_conditions",
-            "enabled": True,
-        }
-    )
-
-    msg = await ws_client.receive_json()
-    assert msg["success"]
-    await hass.async_block_till_done()
 
     trigger.async_subscribe_platform_events(hass, good_subscriber)
 
@@ -5504,6 +5378,34 @@ async def test_entity_trigger_duration_cancelled_on_invalid_state(
     unsub()
 
 
+@pytest.fixture
+def mock_test_modern_trigger(hass: HomeAssistant) -> None:
+    """Register a mock 'test' integration and trigger platform exposing 'test.modern'."""
+
+    class MockModernTrigger(Trigger):
+        """Mock modern trigger that accepts any options/target."""
+
+        @classmethod
+        async def async_validate_config(
+            cls, hass: HomeAssistant, config: ConfigType
+        ) -> ConfigType:
+            return config
+
+        async def async_attach_runner(
+            self, run_action: TriggerActionRunner
+        ) -> CALLBACK_TYPE:
+            return lambda: None
+
+    async def async_get_triggers(
+        hass: HomeAssistant,
+    ) -> dict[str, type[Trigger]]:
+        return {"modern": MockModernTrigger}
+
+    mock_integration(hass, MockModule("test"))
+    mock_platform(hass, "test.trigger", Mock(async_get_triggers=async_get_triggers))
+
+
+@pytest.mark.usefixtures("mock_test_modern_trigger")
 @pytest.mark.parametrize(
     ("trigger_conf", "expected"),
     [
@@ -5513,7 +5415,7 @@ async def test_entity_trigger_duration_cancelled_on_invalid_state(
             id="state",
         ),
         pytest.param(
-            {"platform": "numeric_state", "entity_id": ["sensor.a"]},
+            {"platform": "numeric_state", "entity_id": ["sensor.a"], "above": 5},
             ["sensor.a"],
             id="numeric_state",
         ),
@@ -5553,28 +5455,33 @@ async def test_entity_trigger_duration_cancelled_on_invalid_state(
             id="zone-left-modern",
         ),
         pytest.param(
-            {"platform": "geo_location", "zone": "zone.home"},
+            {"platform": "geo_location", "zone": "zone.home", "source": "test"},
             ["zone.home"],
             id="geo_location",
         ),
         pytest.param(
-            {"platform": "sun"},
+            {"platform": "sun", "event": "sunrise"},
             ["sun.sun"],
             id="sun",
         ),
         pytest.param(
-            {"platform": "event", "event_data": {"entity_id": "sensor.x"}},
+            {
+                "platform": "event",
+                "event_type": "test_event",
+                "event_data": {"entity_id": "sensor.x"},
+            },
             ["sensor.x"],
             id="event-with-entity-id",
         ),
         pytest.param(
-            {"platform": "event"},
+            {"platform": "event", "event_type": "test_event"},
             [],
             id="event-without-entity-id",
         ),
         pytest.param(
             {
                 "platform": "event",
+                "event_type": "test_event",
                 "event_data": {"entity_id": "not-a-valid-entity-id"},
             },
             [],
@@ -5583,6 +5490,7 @@ async def test_entity_trigger_duration_cancelled_on_invalid_state(
         pytest.param(
             {
                 "platform": "event",
+                "event_type": "test_event",
                 "event_data": {"entity_id": ["sensor.x", "sensor.y"]},
             },
             [],
@@ -5613,38 +5521,89 @@ async def test_entity_trigger_duration_cancelled_on_invalid_state(
         ),
     ],
 )
-def test_async_extract_entities(
-    trigger_conf: dict[str, Any], expected: list[str]
+async def test_async_extract_entities(
+    hass: HomeAssistant,
+    trigger_conf: dict[str, Any],
+    expected: list[str],
 ) -> None:
     """Test extracting entities from various trigger config shapes."""
+    [trigger_conf] = await trigger.async_validate_trigger_config(hass, [trigger_conf])
     assert trigger.async_extract_entities(trigger_conf) == expected
+
+
+_MOCK_DEVICE_ID = "_mock_device_id_"
+
+
+@pytest.fixture
+async def mock_device_automation(hass: HomeAssistant) -> str:
+    """Register a mock 'test' integration, device_trigger platform, and device.
+
+    Returns the device id, which tests substitute for _MOCK_DEVICE_ID in their
+    parametrized configs so the device platform branch can validate properly.
+    """
+    mock_integration(hass, MockModule("test"))
+    mock_platform(
+        hass,
+        "test.device_trigger",
+        Mock(
+            TRIGGER_SCHEMA=DEVICE_TRIGGER_BASE_SCHEMA.extend({}, extra=vol.ALLOW_EXTRA)
+        ),
+    )
+    config_entry = MockConfigEntry(domain="test")
+    config_entry.add_to_hass(hass)
+    device = dr.async_get(hass).async_get_or_create(
+        config_entry_id=config_entry.entry_id,
+        identifiers={("test", "test")},
+    )
+    return device.id
+
+
+def _substitute(obj: Any, placeholder: str, value: str) -> Any:
+    """Recursively replace `placeholder` with `value` inside lists/dicts."""
+    if isinstance(obj, dict):
+        return {k: _substitute(v, placeholder, value) for k, v in obj.items()}
+    if isinstance(obj, list):
+        return [_substitute(v, placeholder, value) for v in obj]
+    return value if obj == placeholder else obj
 
 
 @pytest.mark.parametrize(
     ("trigger_conf", "expected"),
     [
         pytest.param(
-            {"platform": "device", "device_id": "abc123"},
-            ["abc123"],
+            {
+                "platform": "device",
+                "device_id": _MOCK_DEVICE_ID,
+                "domain": "test",
+            },
+            [_MOCK_DEVICE_ID],
             id="device",
         ),
         pytest.param(
-            {"platform": "event", "event_data": {"device_id": "abc123"}},
+            {
+                "platform": "event",
+                "event_type": "test_event",
+                "event_data": {"device_id": "abc123"},
+            },
             ["abc123"],
             id="event-with-device-id",
         ),
         pytest.param(
-            {"platform": "event"},
+            {"platform": "event", "event_type": "test_event"},
             [],
             id="event-without-device-id",
         ),
         pytest.param(
-            {"platform": "tag", "device_id": ["abc123", "def456"]},
+            {
+                "platform": "tag",
+                "tag_id": "mytag",
+                "device_id": ["abc123", "def456"],
+            },
             ["abc123", "def456"],
             id="tag-with-device-id",
         ),
         pytest.param(
-            {"platform": "tag"},
+            {"platform": "tag", "tag_id": "mytag"},
             [],
             id="tag-without-device-id",
         ),
@@ -5668,10 +5627,17 @@ def test_async_extract_entities(
         ),
     ],
 )
-def test_async_extract_devices(
-    trigger_conf: dict[str, Any], expected: list[str]
+async def test_async_extract_devices(
+    hass: HomeAssistant,
+    mock_test_modern_trigger: None,
+    mock_device_automation: str,
+    trigger_conf: dict[str, Any],
+    expected: list[str],
 ) -> None:
     """Test extracting devices from various trigger config shapes."""
+    trigger_conf = _substitute(trigger_conf, _MOCK_DEVICE_ID, mock_device_automation)
+    expected = _substitute(expected, _MOCK_DEVICE_ID, mock_device_automation)
+    [trigger_conf] = await trigger.async_validate_trigger_config(hass, [trigger_conf])
     assert trigger.async_extract_devices(trigger_conf) == expected
 
 
@@ -5697,6 +5663,52 @@ def test_entity_state_trigger_schema_behavior_backwards_compatible(
     }
     validated = ENTITY_STATE_TRIGGER_SCHEMA_WITH_BEHAVIOR(config)
     assert validated[CONF_OPTIONS][ATTR_BEHAVIOR] == expected
+
+
+@pytest.mark.parametrize(
+    ("behavior", "expected"),
+    [
+        ("any", BEHAVIOR_EACH),
+        ("last", BEHAVIOR_ALL),
+    ],
+)
+async def test_entity_state_trigger_legacy_behavior_creates_repair_issue(
+    issue_registry: ir.IssueRegistry,
+    behavior: str,
+    expected: str,
+) -> None:
+    """Test a repair issue is raised when a legacy behavior value is used."""
+    config = {
+        CONF_TARGET: {CONF_ENTITY_ID: "test.entity"},
+        CONF_OPTIONS: {ATTR_BEHAVIOR: behavior},
+    }
+    validated = ENTITY_STATE_TRIGGER_SCHEMA_WITH_BEHAVIOR(config)
+    assert validated[CONF_OPTIONS][ATTR_BEHAVIOR] == expected
+
+    issue = issue_registry.async_get_issue(
+        HOMEASSISTANT_DOMAIN, f"deprecated_trigger_behavior_{behavior}"
+    )
+    assert issue is not None
+    assert issue.translation_key == "deprecated_trigger_behavior"
+    assert issue.translation_placeholders == {
+        "deprecated_behavior": behavior,
+        "new_behavior": expected,
+    }
+
+
+@pytest.mark.parametrize("behavior", [BEHAVIOR_EACH, BEHAVIOR_FIRST, BEHAVIOR_ALL])
+async def test_entity_state_trigger_new_behavior_no_repair_issue(
+    issue_registry: ir.IssueRegistry,
+    behavior: str,
+) -> None:
+    """Test no repair issue is raised when a current behavior value is used."""
+    config = {
+        CONF_TARGET: {CONF_ENTITY_ID: "test.entity"},
+        CONF_OPTIONS: {ATTR_BEHAVIOR: behavior},
+    }
+    ENTITY_STATE_TRIGGER_SCHEMA_WITH_BEHAVIOR(config)
+
+    assert not issue_registry.issues
 
 
 def test_entity_state_trigger_schema_behavior_default() -> None:

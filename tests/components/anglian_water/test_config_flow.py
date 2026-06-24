@@ -3,6 +3,7 @@
 from unittest.mock import AsyncMock
 
 from pyanglianwater.exceptions import (
+    ConsentRequiredError,
     InvalidAccountIdError,
     SelfAssertedError,
     SmartMeterUnavailableError,
@@ -140,7 +141,11 @@ async def test_already_configured(
 
 @pytest.mark.parametrize(
     ("exception_type", "expected_error"),
-    [(SelfAssertedError, "invalid_auth"), (ValueError, "unknown")],
+    [
+        (SelfAssertedError, "invalid_auth"),
+        (ValueError, "unknown"),
+        (ConsentRequiredError, "invalid_auth"),
+    ],
 )
 async def test_auth_recover_exception(
     hass: HomeAssistant,

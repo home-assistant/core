@@ -6,7 +6,7 @@
     ]),
     'area_id': None,
     'capabilities': dict({
-      'preset_modes': list([
+      <FanEntityCapabilityAttribute.PRESET_MODES: 'preset_modes'>: list([
         'auto',
       ]),
     }),
@@ -44,10 +44,10 @@
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'friendly_name': 'Living',
-      'percentage': None,
-      'percentage_step': 33.333333333333336,
-      'preset_mode': 'auto',
-      'preset_modes': list([
+      <FanEntityStateAttribute.PERCENTAGE: 'percentage'>: None,
+      <FanEntityStateAttribute.PERCENTAGE_STEP: 'percentage_step'>: 33.333333333333336,
+      <FanEntityStateAttribute.PRESET_MODE: 'preset_mode'>: 'auto',
+      <FanEntityCapabilityAttribute.PRESET_MODES: 'preset_modes'>: list([
         'auto',
       ]),
       'supported_features': <FanEntityFeature: 9>,

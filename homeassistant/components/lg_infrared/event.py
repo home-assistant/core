@@ -1,6 +1,7 @@
 """Event platform for LG IR integration."""
 
 import logging
+from typing import override
 
 from infrared_protocols.codes.lg.tv import LG_ADDRESS, LGTVCode
 from infrared_protocols.commands.nec import NECCommand
@@ -103,6 +104,7 @@ class LgIrReceivedCommandEvent(LgIrEntity, InfraredReceiverConsumerEntity, Event
         self._infrared_receiver_entity_id = receiver_entity_id
 
     @callback
+    @override
     def _handle_signal(self, signal: InfraredReceivedSignal) -> None:
         """Handle a received IR signal."""
         nec_command = NECCommand.from_raw_timings(signal.timings)

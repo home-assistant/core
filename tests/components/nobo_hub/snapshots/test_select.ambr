@@ -6,7 +6,7 @@
     ]),
     'area_id': None,
     'capabilities': dict({
-      'options': list([
+      <SelectEntityCapabilityAttribute.OPTIONS: 'options'>: list([
         'Default',
       ]),
     }),
@@ -44,7 +44,7 @@
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'friendly_name': 'Living room Week profile',
-      'options': list([
+      <SelectEntityCapabilityAttribute.OPTIONS: 'options'>: list([
         'Default',
       ]),
     }),
@@ -63,7 +63,7 @@
     ]),
     'area_id': None,
     'capabilities': dict({
-      'options': list([
+      <SelectEntityCapabilityAttribute.OPTIONS: 'options'>: list([
         'none',
         'away',
         'comfort',
@@ -105,7 +105,7 @@
     'attributes': ReadOnlyDict({
       'device_class': 'nobo_hub__override',
       'friendly_name': 'My Eco Hub Global override',
-      'options': list([
+      <SelectEntityCapabilityAttribute.OPTIONS: 'options'>: list([
         'none',
         'away',
         'comfort',

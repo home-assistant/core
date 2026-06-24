@@ -21,7 +21,7 @@
       'attribution': 'Data provided by Trafikverket',
       'device_class': 'enum',
       'friendly_name': 'Stockholm C to Uppsala C Departure state',
-      'options': list([
+      <SensorEntityCapabilityAttribute.OPTIONS: 'options'>: list([
         'on_time',
         'delayed',
         'canceled',
@@ -153,7 +153,7 @@
       'attribution': 'Data provided by Trafikverket',
       'device_class': 'enum',
       'friendly_name': 'Stockholm C to Uppsala C Departure state',
-      'options': list([
+      <SensorEntityCapabilityAttribute.OPTIONS: 'options'>: list([
         'on_time',
         'delayed',
         'canceled',

@@ -62,6 +62,14 @@
         "name": "Vehicle connected"
       }
     },
+    "button": {
+      "restart": {
+        "name": "Restart"
+      },
+      "restart_wifi": {
+        "name": "Restart Wi-Fi"
+      }
+    },
     "number": {
       "charge_rate": {
         "name": "Charge rate"

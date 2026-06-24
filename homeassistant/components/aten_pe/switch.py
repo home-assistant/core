@@ -1,7 +1,7 @@
 """The ATEN PE switch component."""
 
 import logging
-from typing import Any
+from typing import Any, override
 
 from atenpdu import AtenPE, AtenPEError
 import voluptuous as vol
@@ -98,11 +98,13 @@ class AtenSwitch(SwitchEntity):
         self._attr_unique_id = f"{mac}-{outlet}"
         self._attr_name = name or f"Outlet {outlet}"
 
+    @override
     async def async_turn_on(self, **kwargs: Any) -> None:
         """Turn the switch on."""
         await self._device.setOutletStatus(self._outlet, "on")
         self._attr_is_on = True
 
+    @override
     async def async_turn_off(self, **kwargs: Any) -> None:
         """Turn the switch off."""
         await self._device.setOutletStatus(self._outlet, "off")

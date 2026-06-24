@@ -741,7 +741,7 @@
     'attributes': ReadOnlyDict({
       'device_class': 'enum',
       'friendly_name': 'home-assistant.io Status',
-      'options': list([
+      <SensorEntityCapabilityAttribute.OPTIONS: 'options'>: list([
         'add_period',
         'auto_renew_period',
         'inactive',
@@ -782,7 +782,7 @@
     ]),
     'area_id': None,
     'capabilities': dict({
-      'options': list([
+      <SensorEntityCapabilityAttribute.OPTIONS: 'options'>: list([
         'add_period',
         'auto_renew_period',
         'inactive',

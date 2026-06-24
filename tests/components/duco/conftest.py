@@ -5,13 +5,18 @@ from typing import Any
 from unittest.mock import AsyncMock, patch
 
 from duco_connectivity import (
+    ActionItem,
+    ActionValueType,
     ApiEndpointInfo,
     ApiInfo,
     BoardInfo,
     DiagComponent,
+    KnownActionName,
     LanInfo,
     Node,
+    NodeActionItemList,
     NodeGeneralInfo,
+    NodeListActionItemList,
     NodeMotorStateInfo,
     NodeSensorInfo,
     NodeVentilationInfo,
@@ -164,6 +169,36 @@ def mock_nodes() -> list[Node]:
 
 
 @pytest.fixture
+def mock_node_actions() -> NodeListActionItemList:
+    """Return node actions for supported ventilation control nodes."""
+    return NodeListActionItemList(
+        nodes=[
+            NodeActionItemList(
+                node_id=1,
+                actions=[
+                    ActionItem(
+                        action=KnownActionName.SET_VENTILATION_STATE,
+                        val_type=ActionValueType.ENUM,
+                        enum_values=[
+                            "AUTO",
+                            "CNT1",
+                            "CNT2",
+                            "CNT3",
+                            "MAN1",
+                            "MAN2",
+                            "MAN3",
+                        ],
+                    )
+                ],
+            ),
+            NodeActionItemList(node_id=2, actions=[]),
+            NodeActionItemList(node_id=50, actions=[]),
+            NodeActionItemList(node_id=113, actions=[]),
+        ]
+    )
+
+
+@pytest.fixture
 def mock_sensor_nodes(mock_nodes: list[Node]) -> list[Node]:
     """Return sensor test nodes including VLV examples."""
     return [*mock_nodes, *load_nodes_fixture("sensor_nodes.json")]
@@ -183,6 +218,7 @@ def mock_duco_client(
     mock_board_info: BoardInfo,
     mock_lan_info: LanInfo,
     mock_nodes: list[Node],
+    mock_node_actions: NodeListActionItemList,
 ) -> Generator[AsyncMock]:
     """Return a mocked DucoClient used by both the integration and config flow."""
     with (
@@ -200,6 +236,8 @@ def mock_duco_client(
         client.async_get_board_info.return_value = mock_board_info
         client.async_get_lan_info.return_value = mock_lan_info
         client.async_get_nodes.return_value = mock_nodes
+        client.async_get_node_actions.return_value = mock_node_actions
+        client.async_get_time_filter_remaining.return_value = 180
         client.async_get_diagnostics.return_value = [
             DiagComponent(component="Ventilation", status="Ok")
         ]

@@ -6,7 +6,7 @@
     ]),
     'area_id': None,
     'capabilities': dict({
-      'options': list([
+      <SelectEntityCapabilityAttribute.OPTIONS: 'options'>: list([
         'off',
         'on',
         'max_ice',
@@ -46,7 +46,7 @@
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'friendly_name': 'Test Fridge Bottom zone IceMaker',
-      'options': list([
+      <SelectEntityCapabilityAttribute.OPTIONS: 'options'>: list([
         'off',
         'on',
         'max_ice',
@@ -67,7 +67,7 @@
     ]),
     'area_id': None,
     'capabilities': dict({
-      'options': list([
+      <SelectEntityCapabilityAttribute.OPTIONS: 'options'>: list([
         'zero_zero',
         'zero_minus_two',
         'minus_two_minus_two',
@@ -108,7 +108,7 @@
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'friendly_name': 'Test Fridge Top zone BioFresh-Plus',
-      'options': list([
+      <SelectEntityCapabilityAttribute.OPTIONS: 'options'>: list([
         'zero_zero',
         'zero_minus_two',
         'minus_two_minus_two',
@@ -130,7 +130,7 @@
     ]),
     'area_id': None,
     'capabilities': dict({
-      'options': list([
+      <SelectEntityCapabilityAttribute.OPTIONS: 'options'>: list([
         'off',
         'low',
         'medium',
@@ -171,7 +171,7 @@
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'friendly_name': 'Test Fridge Top zone HydroBreeze',
-      'options': list([
+      <SelectEntityCapabilityAttribute.OPTIONS: 'options'>: list([
         'off',
         'low',
         'medium',
@@ -193,7 +193,7 @@
     ]),
     'area_id': None,
     'capabilities': dict({
-      'options': list([
+      <SelectEntityCapabilityAttribute.OPTIONS: 'options'>: list([
         'off',
         'low',
         'medium',
@@ -234,7 +234,7 @@
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'friendly_name': 'Single Zone Fridge HydroBreeze',
-      'options': list([
+      <SelectEntityCapabilityAttribute.OPTIONS: 'options'>: list([
         'off',
         'low',
         'medium',
@@ -256,7 +256,7 @@
     ]),
     'area_id': None,
     'capabilities': dict({
-      'options': list([
+      <SelectEntityCapabilityAttribute.OPTIONS: 'options'>: list([
         'off',
         'on',
       ]),
@@ -295,7 +295,7 @@
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'friendly_name': 'Single Zone Fridge IceMaker',
-      'options': list([
+      <SelectEntityCapabilityAttribute.OPTIONS: 'options'>: list([
         'off',
         'on',
       ]),

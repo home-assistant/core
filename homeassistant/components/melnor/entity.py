@@ -1,6 +1,7 @@
 """Melnor integration models."""
 
 from collections.abc import Callable
+from typing import override
 
 from melnor_bluetooth.device import Device, Valve
 
@@ -37,12 +38,14 @@ class MelnorBluetoothEntity(CoordinatorEntity[MelnorDataUpdateCoordinator]):
         )
 
     @callback
+    @override
     def _handle_coordinator_update(self) -> None:
         """Handle updated data from the coordinator."""
         self._device = self.coordinator.data
         self.async_write_ha_state()
 
     @property
+    @override
     def available(self) -> bool:
         """Return True if entity is available."""
         return self._device.is_connected

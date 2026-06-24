@@ -110,22 +110,22 @@ class IcloudAccount:
                 with_family=self._with_family,
             )
 
-            if self.api.requires_2fa:
-                # Trigger a new log in to ensure the user enters the 2FA code again.
-                raise PyiCloudFailedLoginException("2FA Required")  # noqa: TRY301
-
         except PyiCloudFailedLoginException:
             self.api = None
-            # Login failed which means credentials need to be updated.
+            # Login failed which means credentials/2fa need to be updated.
             _LOGGER.error(
                 (
-                    "Your password for '%s' is no longer working; Go to the "
+                    "Your iCloud account for '%s' is no longer working; Go to the "
                     "Integrations menu and click on Configure on the discovered Apple "
                     "iCloud card to login again"
                 ),
                 self._config_entry.data[CONF_USERNAME],
             )
 
+            self._require_reauth()
+            return
+
+        if self.api.requires_2fa:
             self._require_reauth()
             return
 

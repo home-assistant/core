@@ -6,7 +6,7 @@
     ]),
     'area_id': None,
     'capabilities': dict({
-      'source_list': list([
+      <MediaPlayerEntityCapabilityAttribute.INPUT_SOURCE_LIST: 'source_list'>: list([
         'cd',
         'coax',
         'network',
@@ -52,7 +52,7 @@
       'assumed_state': True,
       'device_class': 'receiver',
       'friendly_name': 'Marantz PM6006 Integrated Amplifier',
-      'source_list': list([
+      <MediaPlayerEntityCapabilityAttribute.INPUT_SOURCE_LIST: 'source_list'>: list([
         'cd',
         'coax',
         'network',

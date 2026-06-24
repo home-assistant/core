@@ -6,7 +6,7 @@
     ]),
     'area_id': None,
     'capabilities': dict({
-      'event_types': list([
+      <EventEntityCapabilityAttribute.EVENT_TYPES: 'event_types'>: list([
         'triggered',
       ]),
     }),
@@ -43,8 +43,8 @@
 # name: test_all_entities[event.echo_test_voice_event-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'event_type': None,
-      'event_types': list([
+      <EventEntityStateAttribute.EVENT_TYPE: 'event_type'>: None,
+      <EventEntityCapabilityAttribute.EVENT_TYPES: 'event_types'>: list([
         'triggered',
       ]),
       'friendly_name': 'Echo Test Voice event',
@@ -59,8 +59,8 @@
 # ---
 # name: test_history_event_is_fired
   ReadOnlyDict({
-    'event_type': 'triggered',
-    'event_types': list([
+    <EventEntityStateAttribute.EVENT_TYPE: 'event_type'>: 'triggered',
+    <EventEntityCapabilityAttribute.EVENT_TYPES: 'event_types'>: list([
       'triggered',
     ]),
     'friendly_name': 'Echo Test Voice event',
