@@ -7,6 +7,7 @@ from typing import TYPE_CHECKING, Any, Final, NamedTuple, cast, final
 from propcache.api import cached_property
 from sqlalchemy.engine.row import Row
 
+from homeassistant.components.recorder.db_schema import StateAttributes
 from homeassistant.components.recorder.filters import Filters
 from homeassistant.components.recorder.models import (
     bytes_to_ulid_or_none,
@@ -15,7 +16,7 @@ from homeassistant.components.recorder.models import (
     uuid_hex_to_bytes_or_none,
 )
 from homeassistant.const import ATTR_ICON, EVENT_STATE_CHANGED
-from homeassistant.core import Context, Event, State, callback
+from homeassistant.core import Context, Event, EventStateChangedData, State, callback
 from homeassistant.util.event_type import EventType
 from homeassistant.util.json import json_loads
 from homeassistant.util.ulid import ulid_to_bytes
@@ -106,10 +107,11 @@ CONTEXT_PARENT_ID_BIN_POS: Final = 6
 STATE_POS: Final = 7
 ENTITY_ID_POS: Final = 8
 ICON_POS: Final = 9
-CONTEXT_ONLY_POS: Final = 10
+ATTRIBUTES_POS: Final = 10
+CONTEXT_ONLY_POS: Final = 11
 # - For EventAsRow, additional fields are:
-DATA_POS: Final = 11
-CONTEXT_POS: Final = 12
+DATA_POS: Final = 12
+CONTEXT_POS: Final = 13
 
 
 @final  # Final to allow direct checking of the type instead of using isinstance
@@ -129,6 +131,7 @@ class EventAsRow(NamedTuple):
     state: str | None
     entity_id: str | None
     icon: str | None
+    attributes: bytes | str | None
     context_only: bool | None
 
     # Additional fields for EventAsRow
@@ -152,6 +155,7 @@ def async_event_to_row(event: Event) -> EventAsRow:
             state=None,
             entity_id=None,
             icon=None,
+            attributes=None,
             context_only=None,
             data=event.data,
             context=context,
@@ -159,6 +163,7 @@ def async_event_to_row(event: Event) -> EventAsRow:
     # States are prefiltered so we never get states
     # that are missing new_state or old_state
     # since the logbook does not show these
+    state_changed_event = cast("Event[EventStateChangedData]", event)
     new_state: State = event.data["new_state"]
     # Use the event's context rather than the state's context because
     # State.expire() replaces the context with a copy that loses
@@ -175,6 +180,9 @@ def async_event_to_row(event: Event) -> EventAsRow:
         state=new_state.state,
         entity_id=new_state.entity_id,
         icon=new_state.attributes.get(ATTR_ICON),
+        attributes=StateAttributes.shared_attrs_bytes_from_event(
+            state_changed_event, None
+        ),
         context_only=None,
         data=event.data,
         context=context,
