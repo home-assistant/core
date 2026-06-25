@@ -9,14 +9,21 @@ from fishaudio.exceptions import ServerError
 import pytest
 
 from homeassistant.components import tts
-from homeassistant.components.fish_audio.const import CONF_BACKEND, DOMAIN
+from homeassistant.components.fish_audio.const import (
+    CONF_BACKEND,
+    CONF_LATENCY,
+    CONF_SPEED,
+    CONF_VOICE_ID,
+    DEFAULT_SPEED,
+    DOMAIN,
+)
 from homeassistant.components.media_player import (
     ATTR_MEDIA_CONTENT_ID,
     DOMAIN as MP_DOMAIN,
     SERVICE_PLAY_MEDIA,
 )
 from homeassistant.config_entries import ConfigSubentryData
-from homeassistant.const import ATTR_ENTITY_ID
+from homeassistant.const import ATTR_ENTITY_ID, CONF_API_KEY
 from homeassistant.core import HomeAssistant, ServiceCall
 from homeassistant.core_config import async_process_ha_core_config
 from homeassistant.exceptions import HomeAssistantError, ServiceValidationError
@@ -174,6 +181,81 @@ async def test_tts_supported_languages(
         "es",
         "ko",
     ]
+
+
+@pytest.mark.parametrize(
+    ("options", "expected_speed"),
+    [
+        pytest.param({}, DEFAULT_SPEED, id="default"),
+        pytest.param({CONF_SPEED: 1.5}, 1.5, id="per_call_faster"),
+        pytest.param({CONF_SPEED: 0.75}, 0.75, id="per_call_slower"),
+    ],
+)
+async def test_tts_speed_option(
+    hass: HomeAssistant,
+    mock_fishaudio_client: AsyncMock,
+    mock_config_entry: MockConfigEntry,
+    options: dict[str, float],
+    expected_speed: float,
+) -> None:
+    """Test the speech speed per-call option is forwarded to the client."""
+    mock_config_entry.add_to_hass(hass)
+    await hass.config_entries.async_setup(mock_config_entry.entry_id)
+    await hass.async_block_till_done()
+
+    entity = hass.data[tts.DOMAIN].get_entity("tts.test_voice_test_voice")
+    assert entity is not None
+
+    await entity.async_get_tts_audio(
+        message="Hello world",
+        language="en",
+        options=options,
+    )
+
+    assert mock_fishaudio_client.tts.convert.call_args.kwargs["speed"] == expected_speed
+
+
+async def test_tts_speed_from_subentry(
+    hass: HomeAssistant,
+    mock_fishaudio_client: AsyncMock,
+) -> None:
+    """Test the configured per-voice speed is used without a per-call option.
+
+    This is the Assist pipeline path, which does not pass per-call options.
+    """
+    entry = MockConfigEntry(
+        domain=DOMAIN,
+        data={CONF_API_KEY: "test-api-key"},
+        unique_id="test_user",
+        subentries_data=[
+            ConfigSubentryData(
+                data={
+                    CONF_VOICE_ID: "voice-123",
+                    CONF_BACKEND: "s1",
+                    CONF_LATENCY: "balanced",
+                    CONF_SPEED: 1.25,
+                },
+                subentry_type="tts",
+                title="Test Voice",
+                subentry_id="test-subentry-id",
+                unique_id="voice-123-s1",
+            )
+        ],
+    )
+    entry.add_to_hass(hass)
+    await hass.config_entries.async_setup(entry.entry_id)
+    await hass.async_block_till_done()
+
+    entity = hass.data[tts.DOMAIN].get_entity("tts.test_voice_test_voice")
+    assert entity is not None
+
+    await entity.async_get_tts_audio(
+        message="Hello world",
+        language="en",
+        options={},
+    )
+
+    assert mock_fishaudio_client.tts.convert.call_args.kwargs["speed"] == 1.25
 
 
 # Service-level integration tests

@@ -16,7 +16,9 @@ from . import FishAudioConfigEntry
 from .const import (
     CONF_BACKEND,
     CONF_LATENCY,
+    CONF_SPEED,
     CONF_VOICE_ID,
+    DEFAULT_SPEED,
     DOMAIN,
     TTS_SUPPORTED_LANGUAGES,
 )
@@ -50,7 +52,7 @@ class FishAudioTTSEntity(TextToSpeechEntity):
     """Fish Audio TTS entity."""
 
     _attr_has_entity_name = True
-    _attr_supported_options = [CONF_VOICE_ID, CONF_BACKEND, CONF_LATENCY]
+    _attr_supported_options = [CONF_VOICE_ID, CONF_BACKEND, CONF_LATENCY, CONF_SPEED]
 
     def __init__(self, entry: FishAudioConfigEntry, sub_entry: ConfigSubentry) -> None:
         """Initialize the TTS entity."""
@@ -97,6 +99,9 @@ class FishAudioTTSEntity(TextToSpeechEntity):
         latency = options.get(
             CONF_LATENCY, self.sub_entry.data.get(CONF_LATENCY, "balanced")
         )
+        speed = options.get(
+            CONF_SPEED, self.sub_entry.data.get(CONF_SPEED, DEFAULT_SPEED)
+        )
 
         if voice_id is None:
             raise ServiceValidationError("Voice ID not configured")
@@ -108,6 +113,7 @@ class FishAudioTTSEntity(TextToSpeechEntity):
                 text=message,
                 reference_id=voice_id,
                 latency=latency,
+                speed=speed,
                 model=backend,
                 format="mp3",
             )
