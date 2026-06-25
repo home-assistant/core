@@ -3,11 +3,19 @@ rules:
   action-setup:
     status: exempt
     comment: |
-      This integration does not provide additional actions.
+      Conditions are inherited from the infrared dependency.
   appropriate-polling:
     status: exempt
     comment: |
       This integration does not poll.
+  docs-conditions:
+    status: exempt
+    comment: |
+      Conditions are inherited from the infrared dependency.
+  docs-triggers:
+    status: exempt
+    comment: |
+      Triggers are inherited from the infrared dependency.
   brands: done
   common-modules: done
   config-flow-test-coverage: done
@@ -16,7 +24,7 @@ rules:
   docs-actions:
     status: exempt
     comment: |
-      This integration does not provide additional actions.
+      Triggers are inherited from the infrared dependency.
   docs-high-level-description: done
   docs-installation-instructions: done
   docs-removal-instructions: done
