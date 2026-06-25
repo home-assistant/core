@@ -971,12 +971,12 @@ class IndevoltSensorEntity(IndevoltEntity, SensorEntity):
                 return False
 
         # Check whether the battery is not in the required charge/discharge state
-        if self.entity_description.charge_discharge_state is not None:
-            charge_state = self.coordinator.data.get(
-                IndevoltBattery.CHARGE_DISCHARGE_STATE
-            )
-            if charge_state != self.entity_description.charge_discharge_state:
-                return False
+        if (
+            self.entity_description.charge_discharge_state is not None
+            and self.coordinator.data.get(IndevoltBattery.CHARGE_DISCHARGE_STATE)
+            != self.entity_description.charge_discharge_state
+        ):
+            return False
 
         # Check whether inverter is reporting 0 degrees with heater not active (thus reporting to indicate "idle")
         # Pending fix by Indevolt: https://discord.com/channels/1417471269942591571/1510277757689659522
