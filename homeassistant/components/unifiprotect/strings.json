@@ -385,7 +385,9 @@
         "state": {
           "auto": "Auto",
           "auto_filter_only": "Auto (filter only, no LEDs)",
-          "custom": "Auto (custom lux)",
+          "custom": "Custom (IR filter + LEDs)",
+          "custom_filter_only": "Custom (IR filter only)",
+          "manual": "Manual",
           "off": "Always disable",
           "on": "Always enable"
         }
