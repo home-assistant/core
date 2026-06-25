@@ -13,10 +13,12 @@ from homeassistant.components.adguard.const import (
     SERVICE_ENABLE_URL,
     SERVICE_REFRESH,
     SERVICE_REMOVE_URL,
-    SERVICE_URL_ENABLED,
+    SERVICE_GET_URL_ENABLED,
 )
 from homeassistant.const import Platform
 from homeassistant.core import HomeAssistant
+from homeassistant.exceptions import ServiceValidationError
+from tests.common import MockConfigEntry
 
 pytestmark = pytest.mark.usefixtures("init_integration")
 
@@ -39,7 +41,7 @@ async def test_service_registration(
     assert SERVICE_ENABLE_URL in services
     assert SERVICE_REFRESH in services
     assert SERVICE_REMOVE_URL in services
-    assert SERVICE_URL_ENABLED in services
+    assert SERVICE_GET_URL_ENABLED in services
 
 
 @pytest.mark.parametrize(
@@ -119,10 +121,53 @@ async def test_url_enabled_response(
 
     result = await hass.services.async_call(
         DOMAIN,
-        SERVICE_URL_ENABLED,
+        SERVICE_GET_URL_ENABLED,
         service_call_data,
         blocking=True,
         return_response=True,
     )
 
     assert result == expected_service_response_data
+
+
+async def test_url_enabled_invalid_device_id(
+    hass: HomeAssistant,
+) -> None:
+    """Test the adguard url_enabled service response with invalid device_id."""
+    service_call_data = {"device_id": "invalid-id", "url": "https://example.com/1.txt"}
+
+    with pytest.raises(ServiceValidationError) as excinfo:
+        await hass.services.async_call(
+            DOMAIN,
+            SERVICE_GET_URL_ENABLED,
+            service_call_data,
+            blocking=True,
+            return_response=True,
+        )
+
+    assert excinfo.value.translation_key == "invalid_device_id"
+
+
+async def test_url_enabled_config_entry_not_loaded(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    mock_device_id: str,
+) -> None:
+    """Test the adguard url_enabled service with unloaded config entry."""
+    await hass.config_entries.async_unload(mock_config_entry.entry_id)
+
+    service_call_data = {
+        "device_id": mock_device_id,
+        "url": "https://example.com/1.txt",
+    }
+
+    with pytest.raises(ServiceValidationError) as excinfo:
+        await hass.services.async_call(
+            DOMAIN,
+            SERVICE_GET_URL_ENABLED,
+            service_call_data,
+            blocking=True,
+            return_response=True,
+        )
+
+    assert excinfo.value.translation_key == "config_entry_not_loaded"

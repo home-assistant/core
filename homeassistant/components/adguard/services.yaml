@@ -35,7 +35,7 @@ disable_url:
       selector:
         text:
 
-url_enabled:
+get_url_enabled:
   fields:
     device_id:
       required: true

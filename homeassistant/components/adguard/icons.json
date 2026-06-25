@@ -81,7 +81,7 @@
     "remove_url": {
       "service": "mdi:link-off"
     },
-    "url_enabled": {
+    "get_url_enabled": {
       "service": "mdi:web-check"
     }
   }

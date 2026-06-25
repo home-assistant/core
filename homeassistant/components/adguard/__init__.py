@@ -5,7 +5,7 @@ from dataclasses import dataclass
 from adguardhome import AdGuardHome, AdGuardHomeConnectionError
 import voluptuous as vol
 
-from homeassistant.config_entries import ConfigEntry, ConfigEntryState
+from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import (
     ATTR_DEVICE_ID,
     CONF_HOST,
@@ -37,7 +37,7 @@ from .const import (
     SERVICE_ENABLE_URL,
     SERVICE_REFRESH,
     SERVICE_REMOVE_URL,
-    SERVICE_URL_ENABLED,
+    SERVICE_GET_URL_ENABLED,
 )
 
 SERVICE_URL_SCHEMA = vol.Schema({vol.Required(CONF_URL): vol.Any(cv.url, cv.path)})
@@ -89,10 +89,10 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
         entries = _get_adguard_config_entries(hass)
         return [entry.runtime_data.client for entry in entries]
 
-    def _get_adguard_device_instances(
+    def _get_adguard_device_instance(
         hass: HomeAssistant, device_id: str
     ) -> AdGuardHome:
-        """Get the AdGuardHome instances for a device."""
+        """Get the AdGuardHome instance for a device."""
         device_registry = dr.async_get(hass)
         device_entry = device_registry.async_get(device_id)
         if device_entry is None:
@@ -106,7 +106,6 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
                 entry
                 for entry in _get_adguard_config_entries(hass)
                 if entry.entry_id in device_entry.config_entries
-                and entry.state is ConfigEntryState.LOADED
             ),
             None,
         )
@@ -135,7 +134,7 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
 
     async def url_enabled(call: ServiceCall) -> ServiceResponse:
         """Service call to check if a filter subscription is enabled in AdGuard Home."""
-        adguard = _get_adguard_device_instances(
+        adguard = _get_adguard_device_instance(
             call.hass, device_id=call.data[ATTR_DEVICE_ID]
         )
         return {
@@ -175,7 +174,7 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     )
     hass.services.async_register(
         DOMAIN,
-        SERVICE_URL_ENABLED,
+        SERVICE_GET_URL_ENABLED,
         url_enabled,
         schema=SERVICE_URL_ENABLED_SCHEMA,
         supports_response=SupportsResponse.ONLY,
