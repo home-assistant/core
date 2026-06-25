@@ -1,5 +1,8 @@
 """Common fixtures for the my-PV tests."""
 
+from collections.abc import Generator
+from unittest.mock import AsyncMock, patch
+
 import pytest
 
 from homeassistant.components.my_pv.const import DOMAIN
@@ -20,3 +23,13 @@ def mock_config_entry() -> MockConfigEntry:
         },
         unique_id="1601500000000000",
     )
+
+
+@pytest.fixture
+def mock_setup_entry() -> Generator[AsyncMock]:
+    """Prevent running the real integration setup during tests."""
+    with patch(
+        "homeassistant.components.myneomitis.async_setup_entry",
+        return_value=True,
+    ) as mock_setup:
+        yield mock_setup

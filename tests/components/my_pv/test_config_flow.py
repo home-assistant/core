@@ -4,6 +4,7 @@ from ipaddress import ip_address
 from unittest.mock import patch
 
 from my_pv.exceptions import MyPVAuthenticationError
+import pytest
 
 from homeassistant import config_entries
 from homeassistant.components.my_pv.const import DOMAIN
@@ -32,6 +33,7 @@ ZEROCONF_DISCOVERY = ZeroconfServiceInfo(
 )
 
 
+@pytest.mark.usefixtures("mock_setup_entry")
 async def test_step_user(hass: HomeAssistant) -> None:
     """Test if we get the local setup form."""
     result = await hass.config_entries.flow.async_init(
@@ -135,6 +137,7 @@ async def test_step_user_cannot_connect(hass: HomeAssistant) -> None:
     assert result["errors"]["base"] == "cannot_connect"
 
 
+@pytest.mark.usefixtures("mock_setup_entry")
 async def test_step_auth(hass: HomeAssistant) -> None:
     """Test we get the authentication form."""
     result = await hass.config_entries.flow.async_init(
@@ -245,6 +248,7 @@ async def test_step_auth_cannot_connect(hass: HomeAssistant) -> None:
     assert result["errors"]["base"] == "cannot_connect"
 
 
+@pytest.mark.usefixtures("mock_setup_entry")
 async def test_step_dhcp(hass: HomeAssistant) -> None:
     """Test for DHCP discovery that does not require a password."""
 
@@ -340,6 +344,7 @@ async def test_step_dhcp_cannot_connect(hass: HomeAssistant) -> None:
     assert result["reason"] == "cannot_connect"
 
 
+@pytest.mark.usefixtures("mock_setup_entry")
 async def test_step_dhcp_auth(hass: HomeAssistant) -> None:
     """Test for DHCP discovery that requires a password."""
 
@@ -436,6 +441,7 @@ async def test_step_dhcp_auth_wrong_password(hass: HomeAssistant) -> None:
     assert result["errors"]["password"] == "invalid_password"
 
 
+@pytest.mark.usefixtures("mock_setup_entry")
 async def test_step_zeroconf(hass: HomeAssistant) -> None:
     """Test for Zeroconf discovery that requires a password."""
 
