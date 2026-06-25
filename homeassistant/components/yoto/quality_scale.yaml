@@ -55,6 +55,7 @@ rules:
   discovery-update-info:
     status: exempt
     comment: Cloud connection; DHCP discovery only triggers setup, no network address is persisted to update.
+  discovery: done
   docs-data-update: done
   docs-examples: done
   docs-known-limitations: done
@@ -62,7 +63,7 @@ rules:
   docs-supported-functions: done
   docs-troubleshooting: done
   docs-use-cases: done
-  dynamic-devices: todo
+  dynamic-devices: done
   entity-category: done
   entity-device-class: done
   entity-disabled-by-default:
@@ -77,7 +78,7 @@ rules:
   repair-issues:
     status: exempt
     comment: Auth failures go through the reauth flow; other errors are transient and retried by the coordinator.
-  stale-devices: todo
+  stale-devices: done
 
   # Platinum
   async-dependency: done
