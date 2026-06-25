@@ -14,7 +14,7 @@ from homeassistant.components.bluetooth import (
 from homeassistant.const import CONF_HOST
 from homeassistant.core import CALLBACK_TYPE, HomeAssistant, callback
 
-from .const import DOMAIN
+from .const import DOMAIN, SLZB_BLE_SERVER_PORT
 from .coordinator import SmConfigEntry
 
 _LOGGER = logging.getLogger(__name__)
@@ -113,7 +113,7 @@ def async_connect_scanner(
         scanner_id=entry.unique_id,
         name=entry.title,
         esp32_ip=entry.data[CONF_HOST],
-        esp32_port=5050,
+        esp32_port=SLZB_BLE_SERVER_PORT,
     )
     unload_callbacks = [
         async_register_scanner(
