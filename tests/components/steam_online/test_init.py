@@ -103,7 +103,6 @@ async def test_device_info(
 @pytest.mark.usefixtures("steam_api")
 async def test_migrate_entry(
     hass: HomeAssistant,
-    config_entry: MockConfigEntry,
     entity_registry: er.EntityRegistry,
 ) -> None:
     """Test entry migration."""
