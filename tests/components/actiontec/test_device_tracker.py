@@ -2,6 +2,8 @@
 
 from unittest.mock import AsyncMock, MagicMock
 
+import pytest
+
 from homeassistant.components.actiontec.const import DOMAIN
 from homeassistant.components.actiontec.device_tracker import async_setup_scanner
 from homeassistant.components.actiontec.model import Device
@@ -18,12 +20,12 @@ from .conftest import MOCK_CONFIG, MOCK_DEVICES, MOCK_HOST
 from tests.common import MockConfigEntry
 
 
+@pytest.mark.usefixtures("entity_registry_enabled_by_default")
 async def test_entities_created(
     hass: HomeAssistant,
     mock_config_entry: MockConfigEntry,
     mock_get_actiontec_data: MagicMock,
     entity_registry: EntityRegistry,
-    entity_registry_enabled_by_default: None,
 ) -> None:
     """Test device tracker entities are created from the coordinator data."""
     mock_config_entry.add_to_hass(hass)
