@@ -15,6 +15,7 @@ from uiprotect.data import (
     LinkStation,
     ModelType,
     MountType,
+    OnOffState,
     ProtectAdoptableDeviceModel,
     Sensor,
     SmartDetectObjectType,
@@ -48,7 +49,6 @@ from .entity import (
 _KEY_DOOR = "door"
 PARALLEL_UPDATES = 0
 
-# Zones below ``AlarmHubInputStatus.ALARM`` are wiring problems, not triggers.
 _ALARM_HUB_INPUT_DEVICE_CLASS: dict[AlarmHubInputType, BinarySensorDeviceClass] = {
     AlarmHubInputType.MOTION: BinarySensorDeviceClass.MOTION,
     AlarmHubInputType.ENTRY: BinarySensorDeviceClass.OPENING,
@@ -822,7 +822,11 @@ class ProtectAlarmHubZoneBinarySensor(BaseAlarmHubEntity, BinarySensorEntity):
     def _async_update_attrs(self, hub: LinkStation) -> None:
         super()._async_update_attrs(hub)
         zone = hub.alarm_hub_inputs.get(self._input_id)
-        if zone is None:
+        # An unreadable zone (gone, or status UNKNOWN) is unavailable rather than
+        # reported as a definite "not triggered". The wiring-fault statuses
+        # (FAULT/SHORT/CUT) are known non-triggered states, so they read off here;
+        # surfacing them as a trouble indicator is left to a follow-up.
+        if zone is None or zone.status is AlarmHubInputStatus.UNKNOWN:
             self._attr_available = False
             return
         self._attr_is_on = zone.status is AlarmHubInputStatus.ALARM
@@ -843,7 +847,7 @@ def _async_alarm_hub_entities(data: ProtectData) -> list[BaseAlarmHubEntity]:
         entities += [
             ProtectAlarmHubZoneBinarySensor(data, hub, input_id)
             for input_id, zone in hub.alarm_hub_inputs.items()
-            if zone.input_type is not None
+            if zone.enable is OnOffState.ON and zone.input_type is not None
         ]
     return entities
 

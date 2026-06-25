@@ -183,6 +183,32 @@ async def test_alarm_hub_zone_triggered_state(
     assert state.state == "on"
 
 
+async def test_alarm_hub_zone_unknown_status_unavailable(
+    hass: HomeAssistant,
+    ufp_with_alarm_hub: MockUFPFixture,
+    alarm_hub: LinkStation,
+) -> None:
+    """A zone with an unreadable (UNKNOWN) status is unavailable, not 'off'."""
+    alarm_hub.alarm_hub["input"]["24"]["status"] = "unknown"
+    await init_entry(hass, ufp_with_alarm_hub, [])
+
+    state = hass.states.get("binary_sensor.alarm_hub_hallway")
+    assert state is not None
+    assert state.state == STATE_UNAVAILABLE
+
+
+async def test_alarm_hub_disabled_zone_not_created(
+    hass: HomeAssistant,
+    ufp_with_alarm_hub: MockUFPFixture,
+    alarm_hub: LinkStation,
+) -> None:
+    """A disabled input is not surfaced as a zone entity."""
+    alarm_hub.alarm_hub["input"]["24"]["enable"] = "off"
+    await init_entry(hass, ufp_with_alarm_hub, [])
+
+    assert hass.states.get("binary_sensor.alarm_hub_hallway") is None
+
+
 async def test_alarm_hub_in_diagnostics(
     hass: HomeAssistant,
     ufp_with_alarm_hub: MockUFPFixture,
