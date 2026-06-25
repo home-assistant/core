@@ -165,8 +165,6 @@ class MeteoLtWeatherEntity(CoordinatorEntity[MeteoLtUpdateCoordinator], WeatherE
     def condition(self) -> str | None:
         """Return the current condition."""
         cc = self.coordinator.data.current_conditions
-        if cc is None:
-            return None
         return self._map_condition(cc.condition_code, cc.datetime)
 
     def _convert_forecast_data(

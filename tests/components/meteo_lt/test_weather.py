@@ -1,14 +1,13 @@
 """Test Meteo.lt weather entity."""
 
 from collections.abc import Generator
-from unittest.mock import AsyncMock, MagicMock, patch
+from unittest.mock import AsyncMock, patch
 
 from meteo_lt import Forecast
 import pytest
 from syrupy.assertion import SnapshotAssertion
 
 from homeassistant.components.meteo_lt.const import DOMAIN
-from homeassistant.components.meteo_lt.weather import MeteoLtWeatherEntity
 from homeassistant.components.weather import (
     ATTR_CONDITION_CLEAR_NIGHT,
     ATTR_CONDITION_CLOUDY,
@@ -114,17 +113,6 @@ async def test_condition_unknown_maps_to_exceptional(
     state = hass.states.get("weather.vilnius")
     assert state is not None
     assert state.state == ATTR_CONDITION_EXCEPTIONAL
-
-
-async def test_condition_none_without_current_conditions() -> None:
-    """Test that condition is None when no current conditions are available."""
-    coordinator = MagicMock()
-    coordinator.place_code = "vilnius"
-    coordinator.data.current_conditions = None
-
-    entity = MeteoLtWeatherEntity(coordinator)
-
-    assert entity.condition is None
 
 
 @pytest.mark.freeze_time("2025-09-25 10:00:00")
