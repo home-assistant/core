@@ -141,6 +141,16 @@
         }
       },
       "name": "Remove URL"
+    },
+    "url_enabled": {
+      "description": "Checks if a filter subscription is enabled in AdGuard Home.",
+      "fields": {
+        "url": {
+          "description": "The filter subscription URL to check.",
+          "name": "[%key:common::config_flow::data::url%]"
+        }
+      },
+      "name": "URL Enabled"
     }
   }
 }

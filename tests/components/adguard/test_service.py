@@ -13,6 +13,7 @@ from homeassistant.components.adguard.const import (
     SERVICE_ENABLE_URL,
     SERVICE_REFRESH,
     SERVICE_REMOVE_URL,
+    SERVICE_URL_ENABLED,
 )
 from homeassistant.const import Platform
 from homeassistant.core import HomeAssistant
@@ -32,12 +33,13 @@ async def test_service_registration(
     """Test the adguard services be registered."""
     services = hass.services.async_services_for_domain(DOMAIN)
 
-    assert len(services) == 5
+    assert len(services) == 6
     assert SERVICE_ADD_URL in services
     assert SERVICE_DISABLE_URL in services
     assert SERVICE_ENABLE_URL in services
     assert SERVICE_REFRESH in services
     assert SERVICE_REMOVE_URL in services
+    assert SERVICE_URL_ENABLED in services
 
 
 @pytest.mark.parametrize(
@@ -67,6 +69,11 @@ async def test_service_registration(
             SERVICE_REMOVE_URL,
             {"url": "https://example.com/1.txt"},
             lambda mock: mock.filtering.remove_url.assert_called_once(),
+        ),
+        (
+            SERVICE_URL_ENABLED,
+            {"url": "https://example.com/1.txt"},
+            lambda mock: mock.filtering.url_enabled.assert_called_once(),
         ),
     ],
 )
