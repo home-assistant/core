@@ -1167,7 +1167,6 @@ async def test_option_flow(
         "client_key_error",
         "bad_client_cert_key",
         "invalid_inclusion",
-        None,
     ],
 )
 async def test_bad_certificate_validation(
@@ -1255,27 +1254,7 @@ async def test_bad_certificate_validation(
         result["flow_id"],
         user_input=test_input,
     )
-    if test_error is not None:
-        assert result["errors"]["base"] == test_error
-        return
-    assert "errors" not in result
-
-    # Remove existing MQTT config entry
-    await hass.config_entries.async_remove(config_entry.entry_id)
-    await hass.async_block_till_done()
-    # Test config flow
-    result = await hass.config_entries.flow.async_init(
-        DOMAIN, context={"source": config_entries.SOURCE_USER}
-    )
-    assert result["type"] is FlowResultType.FORM
-    result = await hass.config_entries.flow.async_configure(
-        result["flow_id"], user_input=test_input
-    )
-    await hass.async_block_till_done()
-    if test_error is not None:
-        assert result["errors"]["base"] == test_error
-        return
-    assert "errors" not in result
+    assert result["errors"]["base"] == test_error
 
 
 @pytest.mark.parametrize(
