@@ -116,7 +116,6 @@ class OsramIrLight(OsramIrEmitterEntity, LightEntity):
 
     _attr_assumed_state = True
     _attr_color_mode = ColorMode.HS
-    _attr_effect = EFFECT_OFF
     _attr_effect_list = EFFECT_LIST
     _attr_hs_color = (0.0, 0.0)
     _attr_name = None
@@ -145,9 +144,7 @@ class OsramIrLight(OsramIrEmitterEntity, LightEntity):
         self._brightness_level = BRIGHTNESS_LEVELS
         self._attr_brightness = 255
         self._attr_is_on = False
-
-        # Restore white mode if an effect is disabled before another static
-        # color has been selected.
+        self._attr_effect = EFFECT_OFF
         self._last_static_color_code = OsramLightCode.WHITE
         self._last_static_hs_color = (0.0, 0.0)
 
@@ -166,9 +163,8 @@ class OsramIrLight(OsramIrEmitterEntity, LightEntity):
                 self._async_receiver_state_changed,
             )
         )
-        self.async_on_remove(self._async_unsubscribe_receiver)
-
         self._async_update_receiver_subscription()
+        self.async_on_remove(self._async_unsubscribe_receiver)
 
     @override
     async def async_turn_on(self, **kwargs: Any) -> None:
@@ -182,7 +178,7 @@ class OsramIrLight(OsramIrEmitterEntity, LightEntity):
         if not self._attr_is_on:
             await self._async_send_code(
                 OsramLightCode.ON,
-                full_frame_count=5,
+                repeat_count=5,
             )
 
         if (effect := kwargs.get(ATTR_EFFECT)) is not None:
@@ -201,10 +197,10 @@ class OsramIrLight(OsramIrEmitterEntity, LightEntity):
         """Turn off the light."""
         await self._async_send_code(
             OsramLightCode.OFF,
-            full_frame_count=5,
+            repeat_count=5,
         )
 
-        self._apply_off_state()
+        self._update_off_state()
         self.async_write_ha_state()
 
     async def _async_set_hs_color(
@@ -224,10 +220,10 @@ class OsramIrLight(OsramIrEmitterEntity, LightEntity):
 
         await self._async_send_code(
             code,
-            full_frame_count=5,
+            repeat_count=5,
         )
 
-        self._apply_static_color_state(code, reported_hs_color)
+        self._update_static_color_state(code, reported_hs_color)
 
     async def _async_set_brightness(self, brightness: int) -> None:
         """Move the bulb to the nearest assumed brightness level."""
@@ -253,7 +249,7 @@ class OsramIrLight(OsramIrEmitterEntity, LightEntity):
         # Each complete frame represents one press of the physical button.
         await self._async_send_code(
             code,
-            full_frame_count=abs(level_difference),
+            repeat_count=abs(level_difference),
         )
 
         self._set_brightness_level(target_level)
@@ -263,10 +259,10 @@ class OsramIrLight(OsramIrEmitterEntity, LightEntity):
         if effect == EFFECT_OFF:
             await self._async_send_code(
                 self._last_static_color_code,
-                full_frame_count=5,
+                repeat_count=5,
             )
 
-            self._apply_static_color_state(
+            self._update_static_color_state(
                 self._last_static_color_code,
                 self._last_static_hs_color,
             )
@@ -280,7 +276,7 @@ class OsramIrLight(OsramIrEmitterEntity, LightEntity):
             ) from err
 
         await self._async_send_code(code)
-        self._apply_effect_state(effect)
+        self._update_effect_state(effect)
 
     @callback
     def _async_receiver_state_changed(
@@ -363,7 +359,7 @@ class OsramIrLight(OsramIrEmitterEntity, LightEntity):
     def _apply_received_code(self, code: OsramLightCode) -> None:
         """Apply a received infrared command without transmitting anything."""
         if code is OsramLightCode.OFF:
-            self._apply_off_state()
+            self._update_off_state()
             return
 
         # Every other recognized command requires the bulb to be powered on.
@@ -373,14 +369,14 @@ class OsramIrLight(OsramIrEmitterEntity, LightEntity):
             return
 
         if code is OsramLightCode.WHITE:
-            self._apply_static_color_state(
+            self._update_static_color_state(
                 OsramLightCode.WHITE,
                 (0.0, 0.0),
             )
             return
 
         if (hue := CODE_TO_HUE.get(code)) is not None:
-            self._apply_static_color_state(
+            self._update_static_color_state(
                 code,
                 (float(hue), 100.0),
             )
@@ -395,7 +391,7 @@ class OsramIrLight(OsramIrEmitterEntity, LightEntity):
             return
 
         if (effect := CODE_TO_EFFECT.get(code)) is not None:
-            self._apply_effect_state(effect)
+            self._update_effect_state(effect)
             return
 
         if code is OsramLightCode.MODE:
@@ -404,14 +400,14 @@ class OsramIrLight(OsramIrEmitterEntity, LightEntity):
             return
 
     @callback
-    def _apply_off_state(self) -> None:
+    def _update_off_state(self) -> None:
         """Update the local state after an off command."""
         self._attr_is_on = False
         self._attr_effect = EFFECT_OFF
         self._attr_color_mode = ColorMode.HS
 
     @callback
-    def _apply_static_color_state(
+    def _update_static_color_state(
         self,
         code: OsramLightCode,
         hs_color: tuple[float, float],
@@ -425,7 +421,7 @@ class OsramIrLight(OsramIrEmitterEntity, LightEntity):
         self._last_static_hs_color = hs_color
 
     @callback
-    def _apply_effect_state(self, effect: str) -> None:
+    def _update_effect_state(self, effect: str) -> None:
         """Update the local state after selecting an effect."""
         self._attr_is_on = True
         self._attr_effect = effect

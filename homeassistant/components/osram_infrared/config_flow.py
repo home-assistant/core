@@ -19,7 +19,7 @@ from .const import CONF_IR_EMITTER_ENTITY_ID, CONF_IR_RECEIVER_ENTITY_ID, DOMAIN
 class OsramIrConfigFlow(ConfigFlow, domain=DOMAIN):
     """Handle a config flow for OSRAM Infrared."""
 
-    VERSION = 2
+    VERSION = 1
 
     @override
     async def async_step_user(

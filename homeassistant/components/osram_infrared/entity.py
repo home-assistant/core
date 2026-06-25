@@ -46,10 +46,10 @@ class OsramIrEmitterEntity(OsramIrEntity, InfraredEmitterConsumerEntity):
         self,
         code: OsramLightCode,
         *,
-        full_frame_count: int = 1,
+        repeat_count: int = 1,
     ) -> None:
         """Send an OSRAM command one or more times as complete NEC frames."""
-        for frame_index in range(full_frame_count):
+        for frame_index in range(repeat_count):
             if frame_index:
                 await sleep(FULL_FRAME_REPEAT_DELAY)
 
