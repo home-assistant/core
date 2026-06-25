@@ -107,7 +107,7 @@ class HassConfigFlowMenuOptionsChecker(BaseChecker):
     name = "home_assistant_config_flow_menu_options"
     priority = -1
     msgs = {
-        "W7432": (
+        "W7430": (
             "Config flow menu option '%s' has no matching `async_step_%s` "
             "method on the flow",
             "home-assistant-config-flow-menu-missing-step",

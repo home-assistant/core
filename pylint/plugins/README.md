@@ -98,7 +98,7 @@ Every check has a code following the
 | `W7406` | [`home-assistant-unique-id-ip-based`](#w7406-home-assistant-unique-id-ip-based) | Unique ID should not be based on IP/hostname |
 | `W7407` | [`home-assistant-config-flow-polling-field`](#w7407-home-assistant-config-flow-polling-field) | Config flow should not include polling interval fields |
 | `W7408` | [`home-assistant-config-flow-name-field`](#w7408-home-assistant-config-flow-name-field) | Config flow should not include name fields |
-| `W7432` | [`home-assistant-config-flow-menu-missing-step`](#w7432-home-assistant-config-flow-menu-missing-step) | `async_show_menu` option has no matching `async_step_*` method |
+| `W7430` | [`home-assistant-config-flow-menu-missing-step`](#w7430-home-assistant-config-flow-menu-missing-step) | `async_show_menu` option has no matching `async_step_*` method |
 | `R7402` | [`home-assistant-unused-test-fixture-argument`](#r7402-home-assistant-unused-test-fixture-argument) | Unused test function argument should use `@pytest.mark.usefixtures` |
 | `C7415` | [`home-assistant-domain-argument`](#c7415-home-assistant-domain-argument) | Domain argument in tests should be a domain constant or variable |
 | `W7418` | [`home-assistant-tests-direct-async-setup-entry`](#w7418-home-assistant-tests-direct-async-setup-entry) | Tests should not call an integration's `async_setup_entry` directly |
@@ -372,7 +372,7 @@ strings, or a literal dict keyed by the step ids. Dynamic forms
 (comprehensions, unresolved variables) and flows with an unresolvable base
 class are skipped to avoid false positives.
 
-### `W7432`: `home-assistant-config-flow-menu-missing-step`
+### `W7430`: `home-assistant-config-flow-menu-missing-step`
 
 A `menu_options` entry does not match any `async_step_*` method defined on
 the flow class or its ancestors.
