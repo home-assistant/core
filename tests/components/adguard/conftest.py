@@ -24,6 +24,7 @@ from homeassistant.const import (
     Platform,
 )
 from homeassistant.core import HomeAssistant
+from homeassistant.helpers import device_registry as dr
 
 from tests.common import MockConfigEntry
 
@@ -117,3 +118,15 @@ async def init_integration(
         await hass.async_block_till_done()
 
     return mock_config_entry
+
+
+@pytest.fixture
+def mock_device_id(
+    device_registry: dr.DeviceRegistry, init_integration: MockConfigEntry
+) -> str:
+    """Generate a mock device ID for testing."""
+    device = device_registry.async_get_or_create(
+        config_entry_id=init_integration.entry_id,
+        identifiers={(DOMAIN, "127.0.0.1:3000/control")},
+    )
+    return device.id

@@ -70,11 +70,6 @@ async def test_service_registration(
             {"url": "https://example.com/1.txt"},
             lambda mock: mock.filtering.remove_url.assert_called_once(),
         ),
-        (
-            SERVICE_URL_ENABLED,
-            {"url": "https://example.com/1.txt"},
-            lambda mock: mock.filtering.url_enabled.assert_called_once(),
-        ),
     ],
 )
 async def test_service(
@@ -93,3 +88,41 @@ async def test_service(
     )
 
     call_assertion(mock_adguard)
+
+
+@pytest.mark.parametrize(
+    ("call_data", "adguard_response", "expected_service_response_data"),
+    [
+        (
+            {"url": "https://example.com/1.txt"},
+            True,
+            {"enabled": True},
+        ),
+        (
+            {"url": "https://example.com/1.txt"},
+            False,
+            {"enabled": False},
+        ),
+    ],
+)
+async def test_url_enabled_response(
+    hass: HomeAssistant,
+    mock_adguard: AsyncMock,
+    mock_device_id: str,
+    call_data: dict,
+    adguard_response: bool,
+    expected_service_response_data: Any,
+) -> None:
+    """Test the adguard url_enabled service response."""
+    service_call_data = {"device_id": mock_device_id} | call_data
+    mock_adguard.filtering.url_enabled.return_value = adguard_response
+
+    result = await hass.services.async_call(
+        DOMAIN,
+        SERVICE_URL_ENABLED,
+        service_call_data,
+        blocking=True,
+        return_response=True,
+    )
+
+    assert result == expected_service_response_data

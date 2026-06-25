@@ -37,6 +37,11 @@ disable_url:
 
 url_enabled:
   fields:
+    device_id:
+      required: true
+      selector:
+        device:
+          integration: adguard
     url:
       required: true
       example: https://www.example.com/filter/1.txt
