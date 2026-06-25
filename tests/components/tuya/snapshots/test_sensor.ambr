@@ -1044,7 +1044,7 @@
     'object_id_base': 'Carbon dioxide',
     'options': dict({
       'sensor.private': dict({
-        'suggested_unit_of_measurement': 'ppm',
+        'suggested_unit_of_measurement': <UnitOfRatio.PARTS_PER_MILLION: 'ppm'>,
       }),
     }),
     'original_device_class': <SensorDeviceClass.CO2: 'carbon_dioxide'>,
@@ -1056,7 +1056,7 @@
     'supported_features': 0,
     'translation_key': 'carbon_dioxide',
     'unique_id': 'tuya.iks13mcaiyie3rryjb2occo2_value',
-    'unit_of_measurement': 'ppm',
+    'unit_of_measurement': <UnitOfRatio.PARTS_PER_MILLION: 'ppm'>,
   })
 # ---
 # name: test_platform_setup_and_discovery[sensor.aqi_carbon_dioxide-state]
@@ -1266,7 +1266,7 @@
     'object_id_base': 'PM2.5',
     'options': dict({
       'sensor.private': dict({
-        'suggested_unit_of_measurement': 'μg/m³',
+        'suggested_unit_of_measurement': <UnitOfDensity.MICROGRAMS_PER_CUBIC_METER: 'μg/m³'>,
       }),
     }),
     'original_device_class': <SensorDeviceClass.PM25: 'pm25'>,
@@ -1278,7 +1278,7 @@
     'supported_features': 0,
     'translation_key': 'pm25',
     'unique_id': 'tuya.iks13mcaiyie3rryjb2ocpm25_value',
-    'unit_of_measurement': 'μg/m³',
+    'unit_of_measurement': <UnitOfDensity.MICROGRAMS_PER_CUBIC_METER: 'μg/m³'>,
   })
 # ---
 # name: test_platform_setup_and_discovery[sensor.aqi_pm2_5-state]
@@ -5985,7 +5985,7 @@
     'supported_features': 0,
     'translation_key': 'battery',
     'unique_id': 'tuya.bFFsO8HimyAJGIj7scmbattery',
-    'unit_of_measurement': '%',
+    'unit_of_measurement': <UnitOfRatio.PERCENTAGE: '%'>,
   })
 # ---
 # name: test_platform_setup_and_discovery[sensor.door_garage_battery-state]
@@ -5994,7 +5994,7 @@
       <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'battery',
       <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Door Garage  Battery',
       <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
-      <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: '%',
+      <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: <UnitOfRatio.PERCENTAGE: '%'>,
     }),
     'context': <ANY>,
     'entity_id': 'sensor.door_garage_battery',
@@ -12304,7 +12304,7 @@
     'object_id_base': 'PM2.5',
     'options': dict({
       'sensor.private': dict({
-        'suggested_unit_of_measurement': 'μg/m³',
+        'suggested_unit_of_measurement': <UnitOfDensity.MICROGRAMS_PER_CUBIC_METER: 'μg/m³'>,
       }),
     }),
     'original_device_class': <SensorDeviceClass.PM25: 'pm25'>,
@@ -12316,7 +12316,7 @@
     'supported_features': 0,
     'translation_key': 'pm25',
     'unique_id': 'tuya.yo2karkjuhzztxsfjkpm25',
-    'unit_of_measurement': 'μg/m³',
+    'unit_of_measurement': <UnitOfDensity.MICROGRAMS_PER_CUBIC_METER: 'μg/m³'>,
   })
 # ---
 # name: test_platform_setup_and_discovery[sensor.kalado_air_purifier_pm2_5-state]
@@ -15899,7 +15899,7 @@
     'supported_features': 0,
     'translation_key': 'battery',
     'unique_id': 'tuya.s3zzjdcfripbattery_percentage',
-    'unit_of_measurement': '%',
+    'unit_of_measurement': <UnitOfRatio.PERCENTAGE: '%'>,
   })
 # ---
 # name: test_platform_setup_and_discovery[sensor.motion_sensor_lidl_zigbee_battery-state]
@@ -15908,7 +15908,7 @@
       <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'battery',
       <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Motion sensor lidl zigbee Battery',
       <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
-      <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: '%',
+      <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: <UnitOfRatio.PERCENTAGE: '%'>,
     }),
     'context': <ANY>,
     'entity_id': 'sensor.motion_sensor_lidl_zigbee_battery',
@@ -16062,7 +16062,7 @@
     'object_id_base': 'Carbon dioxide',
     'options': dict({
       'sensor.private': dict({
-        'suggested_unit_of_measurement': 'ppm',
+        'suggested_unit_of_measurement': <UnitOfRatio.PARTS_PER_MILLION: 'ppm'>,
       }),
     }),
     'original_device_class': <SensorDeviceClass.CO2: 'carbon_dioxide'>,
@@ -16074,7 +16074,7 @@
     'supported_features': 0,
     'translation_key': 'carbon_dioxide',
     'unique_id': 'tuya.rzt2knqamsxjp8f9ycjjhco2_value',
-    'unit_of_measurement': 'ppm',
+    'unit_of_measurement': <UnitOfRatio.PARTS_PER_MILLION: 'ppm'>,
   })
 # ---
 # name: test_platform_setup_and_discovery[sensor.mt15_mt29_carbon_dioxide-state]
@@ -18843,7 +18843,7 @@
     'object_id_base': 'Carbon dioxide',
     'options': dict({
       'sensor.private': dict({
-        'suggested_unit_of_measurement': 'ppm',
+        'suggested_unit_of_measurement': <UnitOfRatio.PARTS_PER_MILLION: 'ppm'>,
       }),
     }),
     'original_device_class': <SensorDeviceClass.CO2: 'carbon_dioxide'>,
@@ -18855,7 +18855,7 @@
     'supported_features': 0,
     'translation_key': 'carbon_dioxide',
     'unique_id': 'tuya.cvowstbid97lokayjb2occo2_value',
-    'unit_of_measurement': 'ppm',
+    'unit_of_measurement': <UnitOfRatio.PARTS_PER_MILLION: 'ppm'>,
   })
 # ---
 # name: test_platform_setup_and_discovery[sensor.pth_9cw_32_carbon_dioxide-state]
@@ -19624,7 +19624,7 @@
     'supported_features': 0,
     'translation_key': 'battery',
     'unique_id': 'tuya.gm0whbftkwbattery_percentage',
-    'unit_of_measurement': '%',
+    'unit_of_measurement': <UnitOfRatio.PERCENTAGE: '%'>,
   })
 # ---
 # name: test_platform_setup_and_discovery[sensor.salon_battery-state]
@@ -19633,7 +19633,7 @@
       <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'battery',
       <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Salon Battery',
       <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
-      <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: '%',
+      <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: <UnitOfRatio.PERCENTAGE: '%'>,
     }),
     'context': <ANY>,
     'entity_id': 'sensor.salon_battery',
@@ -20694,7 +20694,7 @@
     'object_id_base': 'Carbon monoxide',
     'options': dict({
       'sensor.private': dict({
-        'suggested_unit_of_measurement': 'ppm',
+        'suggested_unit_of_measurement': <UnitOfRatio.PARTS_PER_MILLION: 'ppm'>,
       }),
     }),
     'original_device_class': <SensorDeviceClass.CO: 'carbon_monoxide'>,
@@ -20706,7 +20706,7 @@
     'supported_features': 0,
     'translation_key': 'carbon_monoxide',
     'unique_id': 'tuya.swhtzki3qrz5ydchjbocco_value',
-    'unit_of_measurement': 'ppm',
+    'unit_of_measurement': <UnitOfRatio.PARTS_PER_MILLION: 'ppm'>,
   })
 # ---
 # name: test_platform_setup_and_discovery[sensor.smogo_carbon_monoxide-state]
@@ -20715,7 +20715,7 @@
       <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'carbon_monoxide',
       <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Smogo Carbon monoxide',
       <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
-      <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: 'ppm',
+      <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: <UnitOfRatio.PARTS_PER_MILLION: 'ppm'>,
     }),
     'context': <ANY>,
     'entity_id': 'sensor.smogo_carbon_monoxide',
