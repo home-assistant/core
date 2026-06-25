@@ -107,9 +107,9 @@ def sun(
         condition_trace_set_result(False, message="no sunset today")
         return False
 
-    # Special case: before sunrise OR after sunset
-    # This will handle the very rare case in the polar region when the sun rises/sets
-    # but does not set/rise.
+    # "before: sunrise" combined with "after: sunset" describes the dark period
+    # around midnight, so it is evaluated as an OR (true before sunrise or after
+    # sunset) rather than the usual AND of the two bounds.
     if before == SUN_EVENT_SUNRISE and after == SUN_EVENT_SUNSET:
         wanted_time_before = cast(datetime, sunrise) + before_offset
         condition_trace_update_result(wanted_time_before=wanted_time_before)
