@@ -13,7 +13,7 @@
           'medium high',
           'high',
         ]),
-        'friendly_name': 'fake-device-1',
+        <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'fake-device-1',
         <ClimateEntityCapabilityAttribute.HVAC_MODES: 'hvac_modes'>: list([
           <HVACMode.AUTO: 'auto'>,
           <HVACMode.COOL: 'cool'>,
@@ -32,7 +32,7 @@
           'none',
           'sleep',
         ]),
-        'supported_features': <ClimateEntityFeature: 441>,
+        <EntityStateAttribute.SUPPORTED_FEATURES: 'supported_features'>: <ClimateEntityFeature: 441>,
         <ClimateEntityStateAttribute.SWING_MODE: 'swing_mode'>: 'off',
         <ClimateEntityCapabilityAttribute.SWING_MODES: 'swing_modes'>: list([
           'off',

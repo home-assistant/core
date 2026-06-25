@@ -45,7 +45,7 @@
 # name: test_select[select.energy_site_allow_export-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'Energy Site Allow export',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Energy Site Allow export',
       <SelectEntityCapabilityAttribute.OPTIONS: 'options'>: list([
         <EnergyExportMode.NEVER: 'never'>,
         <EnergyExportMode.BATTERY_OK: 'battery_ok'>,
@@ -106,7 +106,7 @@
 # name: test_select[select.energy_site_operation_mode-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'Energy Site Operation mode',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Energy Site Operation mode',
       <SelectEntityCapabilityAttribute.OPTIONS: 'options'>: list([
         <EnergyOperationMode.AUTONOMOUS: 'autonomous'>,
         <EnergyOperationMode.BACKUP: 'backup'>,
@@ -168,7 +168,7 @@
 # name: test_select[select.test_seat_heater_front_left-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'Test Seat heater front left',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Test Seat heater front left',
       <SelectEntityCapabilityAttribute.OPTIONS: 'options'>: list([
         'off',
         'low',
@@ -231,7 +231,7 @@
 # name: test_select[select.test_seat_heater_front_right-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'Test Seat heater front right',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Test Seat heater front right',
       <SelectEntityCapabilityAttribute.OPTIONS: 'options'>: list([
         'off',
         'low',
@@ -294,7 +294,7 @@
 # name: test_select[select.test_seat_heater_rear_center-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'Test Seat heater rear center',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Test Seat heater rear center',
       <SelectEntityCapabilityAttribute.OPTIONS: 'options'>: list([
         'off',
         'low',
@@ -357,7 +357,7 @@
 # name: test_select[select.test_seat_heater_rear_left-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'Test Seat heater rear left',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Test Seat heater rear left',
       <SelectEntityCapabilityAttribute.OPTIONS: 'options'>: list([
         'off',
         'low',
@@ -420,7 +420,7 @@
 # name: test_select[select.test_seat_heater_rear_right-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'Test Seat heater rear right',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Test Seat heater rear right',
       <SelectEntityCapabilityAttribute.OPTIONS: 'options'>: list([
         'off',
         'low',
@@ -482,7 +482,7 @@
 # name: test_select[select.test_steering_wheel_heater-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'Test Steering wheel heater',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Test Steering wheel heater',
       <SelectEntityCapabilityAttribute.OPTIONS: 'options'>: list([
         'off',
         'low',
