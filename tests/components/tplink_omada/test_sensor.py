@@ -18,7 +18,7 @@ from homeassistant.components.tplink_omada.coordinator import POLL_DEVICES
 from homeassistant.config_entries import ConfigEntryDisabler, ConfigEntryState
 from homeassistant.const import STATE_UNAVAILABLE
 from homeassistant.core import HomeAssistant, State
-from homeassistant.helpers import entity_registry as er
+from homeassistant.helpers import device_registry as dr, entity_registry as er
 
 from tests.common import (
     MockConfigEntry,
@@ -60,6 +60,7 @@ async def test_entities(
 @pytest.mark.usefixtures("mock_omada_client")
 async def test_controller_entities_created_once_per_controller(
     hass: HomeAssistant,
+    device_registry: dr.DeviceRegistry,
     entity_registry: er.EntityRegistry,
     mock_config_entry: MockConfigEntry,
 ) -> None:
@@ -92,22 +93,22 @@ async def test_controller_entities_created_once_per_controller(
     assert second_entry.state is ConfigEntryState.LOADED
     assert disabled_entry.state is ConfigEntryState.NOT_LOADED
 
-    controller_entity_ids = sorted(
-        state.entity_id
-        for state in hass.states.async_all(SENSOR_DOMAIN)
-        if state.entity_id.startswith("sensor.omada_controller")
+    device_entry = device_registry.async_get_device(
+        identifiers={(DOMAIN, "2b8ebfe7af51afa2f58844e1f9ba0c04")}
     )
-    assert controller_entity_ids == [
-        "sensor.omada_controller_api_version",
-        "sensor.omada_controller_device_status",
-        "sensor.omada_controller_version",
-    ]
+    assert device_entry is not None
+    assert device_entry.config_entries == {
+        mock_config_entry.entry_id,
+        second_entry.entry_id,
+    }
 
-    for unique_id in (
+    expected_unique_ids = {
         "2b8ebfe7af51afa2f58844e1f9ba0c04_api_version",
         "2b8ebfe7af51afa2f58844e1f9ba0c04_device_status",
         "2b8ebfe7af51afa2f58844e1f9ba0c04_version",
-    ):
+    }
+
+    for unique_id in expected_unique_ids:
         entity_id = entity_registry.async_get_entity_id(
             SENSOR_DOMAIN, DOMAIN, unique_id
         )

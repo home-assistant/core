@@ -78,6 +78,8 @@ async def async_setup_entry(
     controller_info_coordinator = controller.controller_info_coordinator
     devices_coordinator = controller.devices_coordinator
 
+    _register_controller_device(hass, config_entry, controller_info_coordinator.data)
+
     if _config_entry_owns_controller_entities(hass, config_entry):
         async_add_entities(
             [
@@ -119,6 +121,22 @@ class OmadaControllerSensorEntityDescription(SensorEntityDescription):
     update_func: Callable[[OmadaControllerInfo], StateType]
     extra_attributes_func: Callable[[OmadaControllerInfo], dict[str, StateType]] = (
         lambda _: {}
+    )
+
+
+def _register_controller_device(
+    hass: HomeAssistant,
+    config_entry: OmadaConfigEntry,
+    controller_info: OmadaControllerInfo,
+) -> None:
+    """Register the controller device with the site config entry."""
+    dr.async_get(hass).async_get_or_create(
+        config_entry_id=config_entry.entry_id,
+        identifiers={(DOMAIN, controller_info.omadac_id)},
+        manufacturer="TP-Link",
+        model="Omada Controller",
+        name="Omada Controller",
+        sw_version=controller_info.controller_version,
     )
 
 
