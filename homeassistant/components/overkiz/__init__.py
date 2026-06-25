@@ -360,4 +360,5 @@ async def create_rexel_client(
             gateway_id=entry.data[CONF_GATEWAY_ID],
         ),
         session=async_create_clientsession(hass),
+        settings=OverkizClientSettings(default_rts_command_duration=0),
     )
