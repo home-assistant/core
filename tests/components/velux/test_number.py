@@ -52,9 +52,6 @@ async def test_number_setup(
     )
 
 
-# --- Exterior heating intensity entity tests ---
-
-
 async def test_heating_entity_number_device_association(
     hass: HomeAssistant,
     mock_exterior_heating: AsyncMock,
@@ -133,9 +130,6 @@ async def test_set_invalid_value_fails(
         )
 
     mock_exterior_heating.set_intensity.assert_not_awaited()
-
-
-# --- Limitation entity tests ---
 
 
 # helpers for limitation entity IDs
