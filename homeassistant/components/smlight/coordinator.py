@@ -56,6 +56,11 @@ class SmFwData:
 type SmConfigEntry = ConfigEntry[SmlightData]
 
 
+def sw_version_from_info(info: Info) -> str:
+    """Format software and Zigbee version from SMLIGHT Info."""
+    return f"core: {info.sw_version} / zigbee: {info.zb_version}"
+
+
 class SmBaseDataUpdateCoordinator[_DataT](DataUpdateCoordinator[_DataT]):
     """Base Coordinator for SMLIGHT."""
 
@@ -108,7 +113,7 @@ class SmBaseDataUpdateCoordinator[_DataT](DataUpdateCoordinator[_DataT]):
             manufacturer=ATTR_MANUFACTURER,
             model=info.model,
             name=self.config_entry.title,
-            sw_version=f"core: {info.sw_version} / zigbee: {info.zb_version}",
+            sw_version=sw_version_from_info(info),
         )
         self.device_id = device.id
 

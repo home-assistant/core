@@ -8,7 +8,7 @@ from homeassistant.helpers.device_registry import (
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
 from .const import ATTR_MANUFACTURER
-from .coordinator import SmBaseDataUpdateCoordinator
+from .coordinator import SmBaseDataUpdateCoordinator, sw_version_from_info
 
 
 class SmEntity(CoordinatorEntity[SmBaseDataUpdateCoordinator]):
@@ -19,14 +19,12 @@ class SmEntity(CoordinatorEntity[SmBaseDataUpdateCoordinator]):
     def __init__(self, coordinator: SmBaseDataUpdateCoordinator) -> None:
         """Initialize entity with device."""
         super().__init__(coordinator)
-        mac = format_mac(coordinator.data.info.MAC)
+        info = coordinator.data.info
+        mac = format_mac(info.MAC)
         self._attr_device_info = DeviceInfo(
             configuration_url=f"http://{coordinator.client.host}",
             connections={(CONNECTION_NETWORK_MAC, mac)},
             manufacturer=ATTR_MANUFACTURER,
-            model=coordinator.data.info.model,
-            sw_version=(
-                f"core: {coordinator.data.info.sw_version}"
-                f" / zigbee: {coordinator.data.info.zb_version}"
-            ),
+            model=info.model,
+            sw_version=sw_version_from_info(info),
         )
