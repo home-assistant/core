@@ -1,0 +1,9 @@
+{
+  "domain": "timer_list",
+  "name": "Timer list",
+  "codeowners": ["@home-assistant/core", "@synesthesiam"],
+  "dependencies": ["websocket_api"],
+  "documentation": "https://www.home-assistant.io/integrations/timer_list",
+  "integration_type": "entity",
+  "quality_scale": "internal"
+}

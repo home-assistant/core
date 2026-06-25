@@ -1031,6 +1031,8 @@ CLAUDE.md @home-assistant/core
 /tests/components/local_calendar/ @allenporter
 /homeassistant/components/local_ip/ @issacg
 /tests/components/local_ip/ @issacg
+/homeassistant/components/local_timer_list/ @home-assistant/core @synesthesiam
+/tests/components/local_timer_list/ @home-assistant/core @synesthesiam
 /homeassistant/components/local_todo/ @allenporter
 /tests/components/local_todo/ @allenporter
 /homeassistant/components/lock/ @home-assistant/core
@@ -1832,6 +1834,8 @@ CLAUDE.md @home-assistant/core
 /tests/components/time/ @home-assistant/core
 /homeassistant/components/time_date/ @fabaff
 /tests/components/time_date/ @fabaff
+/homeassistant/components/timer_list/ @home-assistant/core @synesthesiam
+/tests/components/timer_list/ @home-assistant/core @synesthesiam
 /homeassistant/components/tmb/ @alemuro
 /homeassistant/components/todo/ @home-assistant/core
 /tests/components/todo/ @home-assistant/core

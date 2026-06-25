@@ -1,0 +1,53 @@
+{
+  "entity_component": {
+    "_": {
+      "default": "mdi:timer-outline"
+    }
+  },
+  "services": {
+    "add_time": {
+      "service": "mdi:timer-plus-outline"
+    },
+    "cancel_all_timers": {
+      "service": "mdi:timer-cancel-outline"
+    },
+    "cancel_timer": {
+      "service": "mdi:timer-cancel-outline"
+    },
+    "clear_finished_timers": {
+      "service": "mdi:timer-remove-outline"
+    },
+    "get_timers": {
+      "service": "mdi:timer-outline"
+    },
+    "pause_timer": {
+      "service": "mdi:timer-pause-outline"
+    },
+    "remove_time": {
+      "service": "mdi:timer-minus-outline"
+    },
+    "remove_timer": {
+      "service": "mdi:timer-remove-outline"
+    },
+    "start_timer": {
+      "service": "mdi:timer-plus-outline"
+    },
+    "unpause_timer": {
+      "service": "mdi:timer-play-outline"
+    }
+  },
+  "triggers": {
+    "timer_cancelled": {
+      "trigger": "mdi:timer-cancel-outline"
+    },
+    "timer_finished": {
+      "trigger": "mdi:timer-check-outline"
+    },
+    "timer_started": {
+      "trigger": "mdi:timer-play-outline"
+    },
+    "timer_updated": {
+      "trigger": "mdi:timer-edit-outline"
+    }
+  }
+}
