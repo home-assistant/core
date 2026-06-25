@@ -744,7 +744,8 @@ class AutomationEntity(BaseAutomationEntity, RestoreEntity):
                     return None
                 except Exception as err:
                     self._logger.exception(
-                        "While checking conditions of automation %s", self.entity_id
+                        "Unexpected error while checking conditions of automation %s",
+                        self.entity_id,
                     )
                     automation_trace.set_error(err)
                     return None
@@ -808,7 +809,9 @@ class AutomationEntity(BaseAutomationEntity, RestoreEntity):
                 )
                 automation_trace.set_error(err)
             except Exception as err:
-                self._logger.exception("While executing automation %s", self.entity_id)
+                self._logger.exception(
+                    "Unexpected error while executing automation %s", self.entity_id
+                )
                 automation_trace.set_error(err)
 
             return None

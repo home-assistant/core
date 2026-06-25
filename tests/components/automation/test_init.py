@@ -1946,7 +1946,7 @@ async def test_automation_with_error_in_script_2(
         ),
         (
             ValueError("unexpected"),
-            "While executing automation automation.hello",
+            "Unexpected error while executing automation automation.hello",
             True,
         ),
     ],
@@ -2015,7 +2015,7 @@ async def test_automation_with_error_in_action_script(
         ),
         (
             ValueError("unexpected"),
-            "While checking conditions of automation automation.hello",
+            "Unexpected error while checking conditions of automation automation.hello",
             True,
         ),
     ],
