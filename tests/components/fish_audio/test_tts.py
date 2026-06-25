@@ -249,6 +249,9 @@ async def test_tts_speed_from_subentry(
     entity = hass.data[tts.DOMAIN].get_entity("tts.test_voice_test_voice")
     assert entity is not None
 
+    # The configured speed is exposed as a default option so it is part of the cache key.
+    assert entity.default_options == {CONF_SPEED: 1.25}
+
     await entity.async_get_tts_audio(
         message="Hello world",
         language="en",
@@ -256,6 +259,31 @@ async def test_tts_speed_from_subentry(
     )
 
     assert mock_fishaudio_client.tts.convert.call_args.kwargs["speed"] == 1.25
+
+
+@pytest.mark.parametrize("speed", [0.1, 5.0])
+async def test_tts_speed_out_of_range(
+    hass: HomeAssistant,
+    mock_fishaudio_client: AsyncMock,
+    mock_config_entry: MockConfigEntry,
+    speed: float,
+) -> None:
+    """Test an out-of-range per-call speed raises a validation error."""
+    mock_config_entry.add_to_hass(hass)
+    await hass.config_entries.async_setup(mock_config_entry.entry_id)
+    await hass.async_block_till_done()
+
+    entity = hass.data[tts.DOMAIN].get_entity("tts.test_voice_test_voice")
+    assert entity is not None
+
+    with pytest.raises(ServiceValidationError):
+        await entity.async_get_tts_audio(
+            message="Hello world",
+            language="en",
+            options={CONF_SPEED: speed},
+        )
+
+    mock_fishaudio_client.tts.convert.assert_not_called()
 
 
 # Service-level integration tests

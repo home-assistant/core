@@ -20,6 +20,8 @@ from .const import (
     CONF_VOICE_ID,
     DEFAULT_SPEED,
     DOMAIN,
+    MAX_SPEED,
+    MIN_SPEED,
     TTS_SUPPORTED_LANGUAGES,
 )
 from .error import UnexpectedError
@@ -59,6 +61,10 @@ class FishAudioTTSEntity(TextToSpeechEntity):
         self.client = entry.runtime_data
         self.sub_entry = sub_entry
         self._attr_unique_id = sub_entry.subentry_id
+        # Configured speed must be a default option so it is part of the TTS cache key.
+        self._attr_default_options = {
+            CONF_SPEED: sub_entry.data.get(CONF_SPEED, DEFAULT_SPEED)
+        }
         title = sub_entry.title
         backend = sub_entry.data[CONF_BACKEND]
         self._attr_name = title
@@ -107,6 +113,10 @@ class FishAudioTTSEntity(TextToSpeechEntity):
             raise ServiceValidationError("Voice ID not configured")
         if backend is None:
             raise ServiceValidationError("Backend model not configured")
+        if not MIN_SPEED <= speed <= MAX_SPEED:
+            raise ServiceValidationError(
+                f"Speed must be between {MIN_SPEED} and {MAX_SPEED}"
+            )
 
         try:
             audio = await self.client.tts.convert(
