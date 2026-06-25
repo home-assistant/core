@@ -134,8 +134,8 @@ def async_handle_credits(
         accounting is not None
         and accounting["quota_fraction_used"] < CREDITS_QUOTA_FRACTION_THRESHOLD
     )
-    if quota_available or credits["balance"] > CREDITS_BALANCE_THRESHOLD:
-        ir.async_delete_issue(hass, DOMAIN, insufficient_credits_issue_id(entry))
+    if quota_available or credits.get("balance", 0) > CREDITS_BALANCE_THRESHOLD:
+        ir.async_delete_issue(hass, DOMAIN, INSUFFICIENT_CREDITS_ISSUE)
 
 
 @callback
