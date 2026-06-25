@@ -35,9 +35,9 @@ from .const import (
     SERVICE_ADD_URL,
     SERVICE_DISABLE_URL,
     SERVICE_ENABLE_URL,
+    SERVICE_GET_URL_ENABLED,
     SERVICE_REFRESH,
     SERVICE_REMOVE_URL,
-    SERVICE_GET_URL_ENABLED,
 )
 
 SERVICE_URL_SCHEMA = vol.Schema({vol.Required(CONF_URL): vol.Any(cv.url, cv.path)})

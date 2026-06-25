@@ -11,13 +11,14 @@ from homeassistant.components.adguard.const import (
     SERVICE_ADD_URL,
     SERVICE_DISABLE_URL,
     SERVICE_ENABLE_URL,
+    SERVICE_GET_URL_ENABLED,
     SERVICE_REFRESH,
     SERVICE_REMOVE_URL,
-    SERVICE_GET_URL_ENABLED,
 )
 from homeassistant.const import Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ServiceValidationError
+
 from tests.common import MockConfigEntry
 
 pytestmark = pytest.mark.usefixtures("init_integration")
