@@ -55,13 +55,14 @@ async def test_set_cover_position_and_tilt_service_is_registered(
     ],
     indirect=["mock_hub_configuration", "mock_hub_status"],
 )
-@pytest.mark.usefixtures("mock_action_call", "mock_action_list_call")
 async def test_set_cover_position_and_tilt_service_executes(
     hass: HomeAssistant,
     mock_config_entry: MockConfigEntry,
     mock_hub_ping: AsyncMock,
     mock_hub_configuration: AsyncMock,
     mock_hub_status: AsyncMock,
+    mock_action_call: AsyncMock,
+    mock_action_list_call: AsyncMock,
     entity_id: str,
 ) -> None:
     """Test set_cover_position_and_tilt updates position and tilt in one action call."""
@@ -79,7 +80,9 @@ async def test_set_cover_position_and_tilt_service_executes(
         "wmspro.destination.Destination.refresh",
         return_value=True,
     ):
-        before = len(mock_hub_status.mock_calls)
+        before_status = len(mock_hub_status.mock_calls)
+        before_action = len(mock_action_call.mock_calls)
+        before_action_list = len(mock_action_list_call.mock_calls)
 
         await hass.services.async_call(
             DOMAIN,
@@ -97,7 +100,9 @@ async def test_set_cover_position_and_tilt_service_executes(
         assert entity.state == STATE_OPEN
         assert entity.attributes[ATTR_CURRENT_POSITION] == 30
         assert entity.attributes[ATTR_CURRENT_TILT_POSITION] == 80
-        assert len(mock_hub_status.mock_calls) == before
+        assert len(mock_hub_status.mock_calls) == before_status
+        assert len(mock_action_call.mock_calls) == before_action + 2
+        assert len(mock_action_list_call.mock_calls) == before_action_list + 1
 
 
 @pytest.mark.parametrize(
