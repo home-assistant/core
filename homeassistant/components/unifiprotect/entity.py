@@ -576,7 +576,16 @@ class BaseAlarmHubEntity(Entity):
     @callback
     def _async_update_attrs(self, hub: LinkStation) -> None:
         """Update cached attributes from the alarm hub object."""
-        self._attr_available = self.data.last_update_success
+        # The alarm hub is public-only, so availability tracks the public
+        # websocket health and the hub's own state (CONNECTED only), mirroring
+        # the migrated public entities. A hub missing from the public bootstrap
+        # reads as unavailable.
+        current_hub = self._alarm_hub
+        self._attr_available = (
+            self.data.last_public_update_success
+            and current_hub is not None
+            and current_hub.state is DeviceState.CONNECTED
+        )
 
     @callback
     def _async_updated(self, hub: LinkStation) -> None:

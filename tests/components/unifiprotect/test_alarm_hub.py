@@ -5,7 +5,9 @@ from unittest.mock import Mock
 import pytest
 from syrupy.assertion import SnapshotAssertion
 from uiprotect.data import LinkStation, PublicBootstrap
+from uiprotect.websocket import WebsocketState
 
+from homeassistant.const import STATE_UNAVAILABLE
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import device_registry as dr, entity_registry as er
 
@@ -224,6 +226,34 @@ async def test_alarm_hub_device_and_entities(
         assert hass.states.get(entry.entity_id) == snapshot(
             name=f"{entry.entity_id}-state"
         )
+
+
+async def test_alarm_hub_availability_follows_public_ws(
+    hass: HomeAssistant,
+    ufp_with_alarm_hub: MockUFPFixture,
+) -> None:
+    """Availability tracks the public websocket health, not the private one."""
+    await init_entry(hass, ufp_with_alarm_hub, [])
+
+    entity_id = "sensor.alarm_hub_battery_voltage"
+    assert hass.states.get(entity_id).state != STATE_UNAVAILABLE
+
+    # Private connection drops: the public-only alarm hub stays available.
+    assert ufp_with_alarm_hub.ws_state_subscription is not None
+    ufp_with_alarm_hub.ws_state_subscription(WebsocketState.DISCONNECTED)
+    await hass.async_block_till_done()
+    assert hass.states.get(entity_id).state != STATE_UNAVAILABLE
+
+    # Public connection drops: now the alarm hub is unavailable.
+    assert ufp_with_alarm_hub.devices_ws_state_subscription is not None
+    ufp_with_alarm_hub.devices_ws_state_subscription(WebsocketState.DISCONNECTED)
+    await hass.async_block_till_done()
+    assert hass.states.get(entity_id).state == STATE_UNAVAILABLE
+
+    # Public connection restored while the private one is still down: available.
+    ufp_with_alarm_hub.devices_ws_state_subscription(WebsocketState.CONNECTED)
+    await hass.async_block_till_done()
+    assert hass.states.get(entity_id).state != STATE_UNAVAILABLE
 
 
 async def test_alarm_hub_disconnected_battery(
