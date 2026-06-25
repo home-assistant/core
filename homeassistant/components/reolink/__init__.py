@@ -286,7 +286,10 @@ async def register_callbacks(
         return async_camera_wake
 
     host.api.baichuan.register_callback(
-        "privacy_mode_change", async_privacy_mode_change, 623
+        "privacy_mode_change_623", async_privacy_mode_change, 623
+    )
+    host.api.baichuan.register_callback(
+        "privacy_mode_change_574", async_privacy_mode_change, 574
     )
     for channel in host.api.channels:
         if host.api.supported(channel, "battery"):
