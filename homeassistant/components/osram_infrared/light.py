@@ -11,7 +11,6 @@ from homeassistant.components.infrared import (
     async_subscribe_receiver,
 )
 from homeassistant.components.light import (
-    ATTR_BRIGHTNESS,
     ATTR_EFFECT,
     ATTR_HS_COLOR,
     EFFECT_OFF,
@@ -31,7 +30,6 @@ from homeassistant.core import (
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from homeassistant.helpers.event import async_track_state_change_event
-from homeassistant.util.color import brightness_to_value, value_to_brightness
 
 from .const import CONF_IR_EMITTER_ENTITY_ID, CONF_IR_RECEIVER_ENTITY_ID
 from .entity import OsramIrEmitterEntity
@@ -39,9 +37,6 @@ from .entity import OsramIrEmitterEntity
 _LOGGER = logging.getLogger(__name__)
 
 PARALLEL_UPDATES = 1
-
-BRIGHTNESS_LEVELS = 5
-BRIGHTNESS_SCALE = (1, BRIGHTNESS_LEVELS)
 
 # Use the dedicated white command for colors with low saturation.
 WHITE_SATURATION_THRESHOLD = 45.0
@@ -71,14 +66,10 @@ CODE_TO_HUE: Final[dict[OsramLightCode, int]] = {
     code: hue for hue, code in HUE_TO_CODE.items()
 }
 
-EFFECT_FLASH = "flash"
-EFFECT_STROBE = "strobe"
-EFFECT_SMOOTH = "smooth"
-
 EFFECT_TO_CODE: Final[dict[str, OsramLightCode]] = {
-    EFFECT_FLASH: OsramLightCode.FLASH,
-    EFFECT_STROBE: OsramLightCode.STROBE,
-    EFFECT_SMOOTH: OsramLightCode.SMOOTH,
+    "flash": OsramLightCode.FLASH,
+    "strobe": OsramLightCode.STROBE,
+    "smooth": OsramLightCode.SMOOTH,
 }
 
 CODE_TO_EFFECT: Final[dict[OsramLightCode, str]] = {
@@ -141,8 +132,6 @@ class OsramIrLight(OsramIrEmitterEntity, LightEntity):
         # The bulb does not provide direct state feedback. Track an assumed
         # state based on commands sent by this entity or received from a
         # configured infrared receiver.
-        self._brightness_level = BRIGHTNESS_LEVELS
-        self._attr_brightness = 255
         self._attr_is_on = False
         self._attr_effect = EFFECT_OFF
         self._last_static_color_code = OsramLightCode.WHITE
@@ -168,13 +157,7 @@ class OsramIrLight(OsramIrEmitterEntity, LightEntity):
 
     @override
     async def async_turn_on(self, **kwargs: Any) -> None:
-        """Turn on the light and apply optional effect, color, and brightness."""
-        brightness = kwargs.get(ATTR_BRIGHTNESS)
-
-        if brightness == 0:
-            await self.async_turn_off()
-            return
-
+        """Turn on the light and apply optional effect and  color."""
         if not self._attr_is_on:
             await self._async_send_code(
                 OsramLightCode.ON,
@@ -185,9 +168,6 @@ class OsramIrLight(OsramIrEmitterEntity, LightEntity):
             await self._async_set_effect(effect)
         elif (hs_color := kwargs.get(ATTR_HS_COLOR)) is not None:
             await self._async_set_hs_color(hs_color)
-
-        if brightness is not None:
-            await self._async_set_brightness(brightness)
 
         self._attr_is_on = True
         self.async_write_ha_state()
@@ -224,35 +204,6 @@ class OsramIrLight(OsramIrEmitterEntity, LightEntity):
         )
 
         self._update_static_color_state(code, reported_hs_color)
-
-    async def _async_set_brightness(self, brightness: int) -> None:
-        """Move the bulb to the nearest assumed brightness level."""
-        target_level = round(
-            brightness_to_value(
-                BRIGHTNESS_SCALE,
-                brightness,
-            )
-        )
-        target_level = min(max(target_level, 1), BRIGHTNESS_LEVELS)
-
-        level_difference = target_level - self._brightness_level
-
-        if not level_difference:
-            return
-
-        code = (
-            OsramLightCode.BRIGHTNESS_UP
-            if level_difference > 0
-            else OsramLightCode.BRIGHTNESS_DOWN
-        )
-
-        # Each complete frame represents one press of the physical button.
-        await self._async_send_code(
-            code,
-            repeat_count=abs(level_difference),
-        )
-
-        self._set_brightness_level(target_level)
 
     async def _async_set_effect(self, effect: str) -> None:
         """Start or stop a native OSRAM effect."""
@@ -382,14 +333,6 @@ class OsramIrLight(OsramIrEmitterEntity, LightEntity):
             )
             return
 
-        if code is OsramLightCode.BRIGHTNESS_UP:
-            self._set_brightness_level(self._brightness_level + 1)
-            return
-
-        if code is OsramLightCode.BRIGHTNESS_DOWN:
-            self._set_brightness_level(self._brightness_level - 1)
-            return
-
         if (effect := CODE_TO_EFFECT.get(code)) is not None:
             self._update_effect_state(effect)
             return
@@ -425,15 +368,6 @@ class OsramIrLight(OsramIrEmitterEntity, LightEntity):
         """Update the local state after selecting an effect."""
         self._attr_is_on = True
         self._attr_effect = effect
-
-    @callback
-    def _set_brightness_level(self, level: int) -> None:
-        """Set and report the bounded assumed brightness level."""
-        self._brightness_level = min(max(level, 1), BRIGHTNESS_LEVELS)
-        self._attr_brightness = value_to_brightness(
-            BRIGHTNESS_SCALE,
-            self._brightness_level,
-        )
 
 
 def _snap_hue(hue: float) -> int:
