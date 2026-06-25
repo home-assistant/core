@@ -242,7 +242,7 @@ class VeluxOpenPositionLimitNumber(VeluxPositionLimitNumber):
     _limitation_kind = "open"
 
     def _sibling_value(self) -> float | None:
-        """Return the sibling open limit value, or None if unknown."""
+        """Return the sibling close limit value, or None if unknown."""
         return (
             100 - self.coordinator.data.limitation_max.position_percent
             if self.coordinator.data
