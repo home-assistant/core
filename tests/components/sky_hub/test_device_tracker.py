@@ -80,19 +80,18 @@ async def test_legacy_platform_creates_issue_on_cannot_connect(
 
 
 @pytest.mark.parametrize(
-    ("return_value", "side_effect"),
-    [(None, None), (None, aiohttp.ClientError)],
+    "side_effect",
+    [None, aiohttp.ClientError],
     ids=["returns_none", "raises_client_error"],
 )
 async def test_setup_entry_retries_when_hub_unavailable(
     hass: HomeAssistant,
     mock_config_entry: MockConfigEntry,
     mock_skyqhub: MagicMock,
-    return_value: None,
     side_effect: type[Exception] | None,
 ) -> None:
     """Test the config entry retries when the hub returns no data or errors."""
-    mock_skyqhub.return_value.async_get_skyhub_data.return_value = return_value
+    mock_skyqhub.return_value.async_get_skyhub_data.return_value = None
     mock_skyqhub.return_value.async_get_skyhub_data.side_effect = side_effect
     mock_config_entry.add_to_hass(hass)
 
