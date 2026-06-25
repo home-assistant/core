@@ -1,5 +1,7 @@
 """Select platform for Qube Heat Pump."""
 
+from typing import override
+
 from homeassistant.components.select import SelectEntity
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
@@ -41,15 +43,18 @@ class QubeSGReadySelect(QubeEntity, SelectEntity):
         self._attr_unique_id = f"{entry.entry_id}-sg_ready_mode"
 
     @property
+    @override
     def available(self) -> bool:
         """Return if entity is available."""
         return super().available and self.coordinator.data.sg_ready_mode is not None
 
     @property
+    @override
     def current_option(self) -> str | None:
         """Return the current SG Ready mode."""
         return self.coordinator.data.sg_ready_mode
 
+    @override
     async def async_select_option(self, option: str) -> None:
         """Set the SG Ready mode."""
         try:

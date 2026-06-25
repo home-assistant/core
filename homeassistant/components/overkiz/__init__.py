@@ -5,6 +5,7 @@ from dataclasses import dataclass
 from typing import cast
 
 from aiohttp import ClientError
+from pyoverkiz.action_queue import ActionQueueSettings
 from pyoverkiz.auth.credentials import (
     LocalTokenCredentials,
     RexelTokenCredentials,
@@ -317,7 +318,9 @@ def create_local_client(
         credentials=LocalTokenCredentials(token),
         session=session,
         verify_ssl=verify_ssl,
-        settings=OverkizClientSettings(default_rts_command_duration=0),
+        settings=OverkizClientSettings(
+            action_queue=ActionQueueSettings(), default_rts_command_duration=0
+        ),
     )
 
 
@@ -333,7 +336,9 @@ def create_cloud_client(
         server=server,
         credentials=UsernamePasswordCredentials(username, password),
         session=session,
-        settings=OverkizClientSettings(default_rts_command_duration=0),
+        settings=OverkizClientSettings(
+            action_queue=ActionQueueSettings(), default_rts_command_duration=0
+        ),
     )
 
 
@@ -360,5 +365,7 @@ async def create_rexel_client(
             gateway_id=entry.data[CONF_GATEWAY_ID],
         ),
         session=async_create_clientsession(hass),
-        settings=OverkizClientSettings(default_rts_command_duration=0),
+        settings=OverkizClientSettings(
+            action_queue=ActionQueueSettings(), default_rts_command_duration=0
+        ),
     )

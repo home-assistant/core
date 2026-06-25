@@ -991,7 +991,7 @@
           "label": "[%key:component::knx::config_panel::entities::create::_::knx::respond_to_read::label%]"
         },
         "section_advanced_options": {
-          "title": "Advanced options"
+          "title": "Additional settings"
         },
         "show_raw_values": "Show raw values",
         "title": "Add exposure",

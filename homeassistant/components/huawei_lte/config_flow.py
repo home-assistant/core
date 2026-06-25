@@ -245,11 +245,14 @@ class HuaweiLteConfigFlow(ConfigFlow, domain=DOMAIN):
             )
         assert conn
 
+        def _get_info_and_disconnect() -> tuple[dict, dict]:
+            result = get_device_info(conn)
+            self._disconnect(conn)
+            return result
+
         info, wlan_settings = await self.hass.async_add_executor_job(
-            get_device_info, conn
+            _get_info_and_disconnect
         )
-        # pylint: disable-next=home-assistant-sequential-executor-jobs
-        await self.hass.async_add_executor_job(self._disconnect, conn)
 
         user_input.update(
             {
