@@ -54,7 +54,7 @@ async def test_flow_user(
 @pytest.mark.parametrize(
     ("side_effect", "error_msg"),
     [
-        (steam.api.HTTPTimeoutError, "timeout"),
+        (steam.api.HTTPTimeoutError, "cannot_connect"),
         (steam.api.HTTPError, "cannot_connect"),
         (steam.api.HTTPError("403"), "invalid_auth"),
         (ValueError, "unknown"),
@@ -146,7 +146,7 @@ async def test_flow_reauth(
 @pytest.mark.parametrize(
     ("side_effect", "error_msg"),
     [
-        (steam.api.HTTPTimeoutError, "timeout"),
+        (steam.api.HTTPTimeoutError, "cannot_connect"),
         (steam.api.HTTPError, "cannot_connect"),
         (steam.api.HTTPError("403"), "invalid_auth"),
         (ValueError, "unknown"),
@@ -313,7 +313,7 @@ async def test_flow_reconfigure(
 @pytest.mark.parametrize(
     ("side_effect", "error_msg"),
     [
-        (steam.api.HTTPTimeoutError, "timeout"),
+        (steam.api.HTTPTimeoutError, "cannot_connect"),
         (steam.api.HTTPError, "cannot_connect"),
         (steam.api.HTTPError("403"), "invalid_auth"),
         (ValueError, "unknown"),
