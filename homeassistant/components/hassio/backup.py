@@ -58,12 +58,8 @@ from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from homeassistant.util import dt as dt_util
 from homeassistant.util.enum import try_parse_enum
 
-from .const import (
-    DEFAULT_UPDATE_OPTIONS,
-    DOMAIN,
-    EVENT_SUPERVISOR_EVENT,
-    OPTION_ADD_ON_BACKUP_RETAIN_COPIES,
-)
+from .config_entry import async_get_hassio_entry, async_get_update_options
+from .const import DOMAIN, EVENT_SUPERVISOR_EVENT, OPTION_ADD_ON_BACKUP_RETAIN_COPIES
 from .handler import get_supervisor_client
 
 MOUNT_JOBS = ("mount_manager_create_mount", "mount_manager_remove_mount")
@@ -829,16 +825,9 @@ async def backup_addon_before_update(
         backups: dict[str, ManagerBackup],
     ) -> dict[str, ManagerBackup]:
         """Return oldest backups more numerous than copies to delete."""
-        entries = hass.config_entries.async_entries(
-            DOMAIN, include_ignore=False, include_disabled=False
-        )
-        entry = entries[0] if entries else None
-        retain_copies = DEFAULT_UPDATE_OPTIONS[OPTION_ADD_ON_BACKUP_RETAIN_COPIES]
-        if entry is not None:
-            retain_copies = entry.options.get(
-                OPTION_ADD_ON_BACKUP_RETAIN_COPIES,
-                retain_copies,
-            )
+        retain_copies = async_get_update_options(hass, async_get_hassio_entry(hass))[
+            OPTION_ADD_ON_BACKUP_RETAIN_COPIES
+        ]
         return dict(
             sorted(
                 backups.items(),

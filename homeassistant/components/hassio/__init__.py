@@ -51,15 +51,21 @@ from . import (  # noqa: F401
 from .addon_manager import AddonError, AddonInfo, AddonManager, AddonState
 from .addon_panel import async_setup_addon_panel
 from .auth import async_setup_auth_view
+from .config import HassioConfigStore, StoredHassioConfig
+from .config_entry import async_get_hassio_entry
 from .const import (
     ADDONS_COORDINATOR,
     DATA_COMPONENT,
     DATA_HASSIO_HOST,
     DATA_HASSIO_SUPERVISOR_USER,
+    DATA_HASSIO_UPDATE_OPTIONS,
     DATA_KEY_SUPERVISOR_ISSUES,
     DOMAIN,
     ENTRY_DATA_USER,
     MAIN_COORDINATOR,
+    OPTION_ADD_ON_BACKUP_BEFORE_UPDATE,
+    OPTION_ADD_ON_BACKUP_RETAIN_COPIES,
+    OPTION_CORE_BACKUP_BEFORE_UPDATE,
     STATS_COORDINATOR,
 )
 from .coordinator import (
@@ -163,13 +169,18 @@ def hostname_from_addon_slug(addon_slug: str) -> str:
 
 
 async def _async_get_or_create_supervisor_user(
-    hass: HomeAssistant, entry: ConfigEntry | None
+    hass: HomeAssistant,
+    entry: ConfigEntry | None,
+    legacy_user_id: str | None = None,
 ) -> User:
     """Get or create the Supervisor system user."""
     user: User | None = None
 
     if entry is not None and (entry_user_id := entry.data.get(ENTRY_DATA_USER)):
         user = await hass.auth.async_get_user(entry_user_id)
+
+    if user is None and legacy_user_id is not None:
+        user = await hass.auth.async_get_user(legacy_user_id)
 
     if user is None:
         user = await hass.auth.async_create_system_user(
@@ -190,6 +201,34 @@ async def _async_get_or_create_supervisor_user(
         await hass.auth.async_update_user(user, name=HASSIO_USER_NAME)
 
     return user
+
+
+@callback
+def _async_migrate_legacy_options(
+    entry: ConfigEntry, legacy_data: StoredHassioConfig
+) -> dict[str, bool | int]:
+    """Merge legacy update options into entry options without overriding existing values."""
+    if not (legacy_update_config := legacy_data.get("update_config")):
+        return {}
+
+    option_updates: dict[str, bool | int] = {}
+
+    if OPTION_ADD_ON_BACKUP_BEFORE_UPDATE not in entry.options:
+        option_updates[OPTION_ADD_ON_BACKUP_BEFORE_UPDATE] = legacy_update_config[
+            "add_on_backup_before_update"
+        ]
+
+    if OPTION_ADD_ON_BACKUP_RETAIN_COPIES not in entry.options:
+        option_updates[OPTION_ADD_ON_BACKUP_RETAIN_COPIES] = legacy_update_config[
+            "add_on_backup_retain_copies"
+        ]
+
+    if OPTION_CORE_BACKUP_BEFORE_UPDATE not in entry.options:
+        option_updates[OPTION_CORE_BACKUP_BEFORE_UPDATE] = legacy_update_config[
+            "core_backup_before_update"
+        ]
+
+    return option_updates
 
 
 @callback
@@ -263,14 +302,46 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     hass.data[DATA_COMPONENT] = HassIO(hass.loop, websession, host)
     hass.data[DATA_HASSIO_HOST] = host
 
-    entry = None
-    if entries := hass.config_entries.async_entries(
-        DOMAIN, include_ignore=False, include_disabled=False
-    ):
-        entry = entries[0]
+    legacy_store = HassioConfigStore(hass)
+    legacy_data = await legacy_store.async_load()
+
+    entry = async_get_hassio_entry(hass)
+
+    legacy_user_id: str | None = None
+    if legacy_data is not None:
+        legacy_user_id = legacy_data.get("hassio_user")
+
+        if entry is not None:
+            data_updates: dict[str, str] = {}
+            if ENTRY_DATA_USER not in entry.data and legacy_user_id is not None:
+                data_updates[ENTRY_DATA_USER] = legacy_user_id
+
+            option_updates = _async_migrate_legacy_options(entry, legacy_data)
+
+            if data_updates or option_updates:
+                hass.config_entries.async_update_entry(
+                    entry,
+                    data={**entry.data, **data_updates},
+                    options={**entry.options, **option_updates},
+                )
+
+            await legacy_store.async_remove()
+        elif legacy_update_config := legacy_data.get("update_config"):
+            options: dict[str, bool | int] = {
+                OPTION_ADD_ON_BACKUP_BEFORE_UPDATE: legacy_update_config[
+                    "add_on_backup_before_update"
+                ],
+                OPTION_ADD_ON_BACKUP_RETAIN_COPIES: legacy_update_config[
+                    "add_on_backup_retain_copies"
+                ],
+                OPTION_CORE_BACKUP_BEFORE_UPDATE: legacy_update_config[
+                    "core_backup_before_update"
+                ],
+            }
+            hass.data[DATA_HASSIO_UPDATE_OPTIONS] = options
 
     hass.data[DATA_HASSIO_SUPERVISOR_USER] = await _async_get_or_create_supervisor_user(
-        hass, entry
+        hass, entry, legacy_user_id
     )
 
     async_load_websocket_api(hass)

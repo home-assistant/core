@@ -57,6 +57,9 @@ from homeassistant.components.hassio.const import (
     DATA_KEY_SUPERVISOR_ISSUES,
     ENTRY_DATA_USER,
     HASSIO_MAIN_UPDATE_INTERVAL,
+    OPTION_ADD_ON_BACKUP_BEFORE_UPDATE,
+    OPTION_ADD_ON_BACKUP_RETAIN_COPIES,
+    OPTION_CORE_BACKUP_BEFORE_UPDATE,
     REQUEST_REFRESH_DELAY,
 )
 from homeassistant.components.homeassistant import (
@@ -414,6 +417,51 @@ async def test_setup_api_existing_hassio_user(
         await hass.async_block_till_done()
 
     assert result
+    assert len(supervisor_client.mock_calls) == 16
+    supervisor_client.homeassistant.set_options.assert_called_once_with(
+        HomeAssistantOptions(ssl=False, port=8123, refresh_token=token.token)
+    )
+
+
+async def test_setup_migrates_legacy_hassio_store_to_config_entry(
+    hass: HomeAssistant,
+    hass_storage: dict[str, Any],
+    supervisor_client: AsyncMock,
+) -> None:
+    """Test setup migrates legacy hassio store user/options into config entry."""
+    user = await hass.auth.async_create_system_user("Hass.io test")
+    token = await hass.auth.async_create_refresh_token(user)
+
+    config_entry = MockConfigEntry(domain=DOMAIN, data={}, options={}, unique_id=DOMAIN)
+    config_entry.add_to_hass(hass)
+
+    hass_storage[DOMAIN] = {
+        "version": 1,
+        "minor_version": 1,
+        "key": DOMAIN,
+        "data": {
+            "hassio_user": user.id,
+            "update_config": {
+                "add_on_backup_before_update": True,
+                "add_on_backup_retain_copies": 2,
+                "core_backup_before_update": True,
+            },
+        },
+    }
+
+    with patch.dict(os.environ, MOCK_ENVIRON):
+        result = await async_setup_component(hass, DOMAIN, {"http": {}, "hassio": {}})
+        await hass.async_block_till_done()
+
+    assert result
+    assert DOMAIN not in hass_storage
+
+    entry = hass.config_entries.async_entries(DOMAIN, include_ignore=False)[0]
+    assert entry.data[ENTRY_DATA_USER] == user.id
+    assert entry.options[OPTION_ADD_ON_BACKUP_BEFORE_UPDATE] is True
+    assert entry.options[OPTION_ADD_ON_BACKUP_RETAIN_COPIES] == 2
+    assert entry.options[OPTION_CORE_BACKUP_BEFORE_UPDATE] is True
+
     assert len(supervisor_client.mock_calls) == 16
     supervisor_client.homeassistant.set_options.assert_called_once_with(
         HomeAssistantOptions(ssl=False, port=8123, refresh_token=token.token)
