@@ -1,6 +1,6 @@
 """DataUpdateCoordinator for the National Grid US integration."""
 
-from dataclasses import dataclass, field
+from dataclasses import dataclass
 from datetime import date, timedelta
 import logging
 from typing import override
@@ -50,10 +50,10 @@ class MeterData:
 class NationalGridCoordinatorData:
     """Data returned by the coordinator."""
 
-    accounts: dict[str, BillingAccount] = field(default_factory=dict)
-    meters: dict[str, MeterData] = field(default_factory=dict)
-    usages: dict[str, list[EnergyUsage]] = field(default_factory=dict)
-    costs: dict[str, list[EnergyUsageCost]] = field(default_factory=dict)
+    accounts: dict[str, BillingAccount]
+    meters: dict[str, MeterData]
+    usages: dict[str, list[EnergyUsage]]
+    costs: dict[str, list[EnergyUsageCost]]
 
 
 class NationalGridDataUpdateCoordinator(
@@ -89,13 +89,12 @@ class NationalGridDataUpdateCoordinator(
     async def _async_update_data(self) -> NationalGridCoordinatorData:
         """Fetch data from the API."""
         account_id: str = self.config_entry.data[CONF_ACCOUNT_ID]
-        data = NationalGridCoordinatorData()
 
         today = dt_util.utcnow().date()
         from_month = (today.year - 1) * 100 + today.month
 
         try:
-            await self._fetch_account_data(account_id, today, from_month, data)
+            data = await self._fetch_account_data(account_id, today, from_month)
         except InvalidAuthError as err:
             raise ConfigEntryAuthFailed(err) from err
         except (CannotConnectError, RetryExhaustedError, NationalGridError) as err:
@@ -111,44 +110,50 @@ class NationalGridDataUpdateCoordinator(
         account_id: str,
         today: date,
         from_month: int,
-        data: NationalGridCoordinatorData,
-    ) -> None:
+    ) -> NationalGridCoordinatorData:
         """Fetch data for a single account."""
         billing_account = await self.api.get_billing_account(account_id)
-        data.accounts[account_id] = billing_account
 
+        meters: dict[str, MeterData] = {}
         for meter in billing_account["meter"]["nodes"]:
             service_point = str(meter["servicePointNumber"])
             # Accounts may reuse the same service point number, so key by a
             # composite of account_id and service point to avoid collisions.
             meter_key = f"{account_id}_{service_point}"
-            data.meters[meter_key] = MeterData(
+            meters[meter_key] = MeterData(
                 meter=meter,
                 account_id=account_id,
                 billing_account=billing_account,
             )
 
         try:
-            data.usages[account_id] = await self.api.get_energy_usages(
+            usages = await self.api.get_energy_usages(
                 account_number=account_id, from_month=from_month
             )
         except (CannotConnectError, RetryExhaustedError, NationalGridError) as err:
             _LOGGER.debug("Could not fetch usages for account %s: %s", account_id, err)
-            data.usages[account_id] = []
+            usages = []
 
         try:
             region = billing_account["region"]
             if region:
-                data.costs[account_id] = await self.api.get_energy_usage_costs(
+                costs = await self.api.get_energy_usage_costs(
                     account_number=account_id,
                     query_date=today,
                     company_code=region,
                 )
             else:
-                data.costs[account_id] = []
+                costs = []
         except (CannotConnectError, RetryExhaustedError, NationalGridError) as err:
             _LOGGER.debug("Could not fetch costs for account %s: %s", account_id, err)
-            data.costs[account_id] = []
+            costs = []
+
+        return NationalGridCoordinatorData(
+            accounts={account_id: billing_account},
+            meters=meters,
+            usages={account_id: usages},
+            costs={account_id: costs},
+        )
 
     def _cache_computed_values(self, data: NationalGridCoordinatorData) -> None:
         """Pre-compute latest usage and cost for each meter."""
