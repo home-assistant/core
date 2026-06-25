@@ -40,7 +40,10 @@ class MyPVDataEntity(CoordinatorEntity[MyPVCoordinator]):
     @property
     def available(self) -> bool:
         """Return if entity is available."""
-        if not self.coordinator.connected or self.coordinator.device.is_on is None:
+        if (
+            not self.coordinator.device.connected
+            or self.coordinator.device.is_on is None
+        ):
             return False
         try:
             if self.coordinator.get_data_value(self.entity_description.key) is None:

@@ -4,7 +4,7 @@ from collections.abc import Callable, Coroutine
 from datetime import timedelta
 import functools
 import logging
-from typing import Any, override
+from typing import Any, Final, override
 
 from my_pv import MyPVDevice
 from my_pv.exceptions import MyPVAuthenticationError, MyPVConnectionError
@@ -25,7 +25,7 @@ def _my_pv_connection[T](
 ) -> Callable[..., Coroutine[Any, Any, T]]:
     @functools.wraps(func)
     async def wrapper(self, *args: Any, **kwargs: Any) -> T:
-        if not self._device.connected and not await self._device.connect():
+        if not self.device.connected and not await self.device.connect():
             raise HomeAssistantError(
                 translation_domain=DOMAIN,
                 translation_key="cannot_connect",
@@ -39,7 +39,7 @@ def _my_pv_connection[T](
             raise HomeAssistantError(
                 translation_domain=DOMAIN,
                 translation_key="device_unavailable",
-                translation_placeholders={"uri": self._device.uri},
+                translation_placeholders={"uri": self.device.uri},
             ) from exc
 
     return wrapper
@@ -69,7 +69,7 @@ class MyPVCoordinator(DataUpdateCoordinator[None]):
             always_update=True,
         )
 
-        self._device = device
+        self.device: Final[MyPVDevice] = device
 
         identifiers = {
             (DOMAIN, device.serial_number),
@@ -81,7 +81,7 @@ class MyPVCoordinator(DataUpdateCoordinator[None]):
 
         name = f"my-PV {device.model}"
 
-        self._device_info = DeviceInfo(
+        self.device_info: Final[DeviceInfo] = DeviceInfo(
             configuration_url=device.setup_uri,
             connections=connections,
             identifiers=identifiers,
@@ -93,69 +93,54 @@ class MyPVCoordinator(DataUpdateCoordinator[None]):
             hw_version=device.hardware_version,
         )
 
-    @property
-    def device(self) -> MyPVDevice:
-        """The my-PV device."""
-        return self._device
-
-    @property
-    def device_info(self) -> DeviceInfo:
-        """The Device info."""
-        return self._device_info
-
-    @property
-    def connected(self) -> bool:
-        """If the device is connected or not."""
-        return self._device.connected
-
     async def async_disconnect(self) -> bool:
         """Disconnect from my-PV.
 
         To be called when coordinator is unloaded, e.g. when device is removed or HA is shutdown.
         """
-        return await self._device.disconnect()
+        return await self.device.disconnect()
 
     @override
     async def _async_update_data(self) -> None:
         """Fetch data from API endpoint."""
-        if not self._device.connected and not await self._device.connect():
+        if not self.device.connected and not await self.device.connect():
             raise UpdateFailed(
                 translation_domain=DOMAIN,
                 translation_key="cannot_connect",
             )
 
         try:
-            await self._device.fetch_data()
+            await self.device.fetch_data()
         except MyPVAuthenticationError as exc:
             raise ConfigEntryAuthFailed from exc
         except MyPVConnectionError as exc:
             raise UpdateFailed(
                 translation_domain=DOMAIN,
                 translation_key="device_unavailable",
-                translation_placeholders={"uri": self._device.uri},
+                translation_placeholders={"uri": self.device.uri},
             ) from exc
 
     @_my_pv_connection
     async def set_target_temperature(self, temperature: float) -> bool:
         """Set target temperature."""
-        result = await self._device.set_target_temperature(temperature)
+        result = await self.device.set_target_temperature(temperature)
         self.async_update_listeners()
         return result
 
     def get_data_value(self, key: str) -> bool | float | int | str | None:
         """Get the data value for the given key."""
-        return self._device.get_data_value(key)
+        return self.device.get_data_value(key)
 
     @_my_pv_connection
     async def turn_on(self) -> bool:
         """Turn on the device."""
-        result = await self._device.turn_on()
+        result = await self.device.turn_on()
         self.async_update_listeners()
         return result
 
     @_my_pv_connection
     async def turn_off(self) -> bool:
         """Turn off the device."""
-        result = await self._device.turn_off()
+        result = await self.device.turn_off()
         self.async_update_listeners()
         return result
