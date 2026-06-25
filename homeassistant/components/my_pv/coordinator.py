@@ -45,13 +45,18 @@ def _my_pv_connection[T](
     return wrapper
 
 
+type MyPVConfigEntry = ConfigEntry[MyPVCoordinator]
+
+
 class MyPVCoordinator(DataUpdateCoordinator[None]):
     """my-PV Data Update Coordinator."""
+
+    config_entry: MyPVConfigEntry
 
     def __init__(
         self,
         hass: HomeAssistant,
-        config_entry: ConfigEntry,
+        config_entry: MyPVConfigEntry,
         device: MyPVDevice,
     ) -> None:
         """Initialize my-PV Data Update Coordinator."""
@@ -154,6 +159,3 @@ class MyPVCoordinator(DataUpdateCoordinator[None]):
         result = await self._device.turn_off()
         self.async_update_listeners()
         return result
-
-
-type MyPVConfigEntry = ConfigEntry[MyPVCoordinator]
