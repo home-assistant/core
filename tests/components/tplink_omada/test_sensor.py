@@ -1,6 +1,6 @@
 """Tests for TP-Link Omada sensor entities."""
 
-from datetime import timedelta
+from datetime import UTC, datetime, timedelta
 from unittest.mock import MagicMock, patch
 
 from freezegun.api import FrozenDateTimeFactory
@@ -15,7 +15,7 @@ from homeassistant.components.sensor import DOMAIN as SENSOR_DOMAIN
 from homeassistant.components.tplink_omada.config_flow import CONF_SITE
 from homeassistant.components.tplink_omada.const import DOMAIN
 from homeassistant.components.tplink_omada.coordinator import POLL_DEVICES
-from homeassistant.config_entries import ConfigEntryState
+from homeassistant.config_entries import ConfigEntryDisabler, ConfigEntryState
 from homeassistant.const import STATE_UNAVAILABLE
 from homeassistant.core import HomeAssistant, State
 from homeassistant.helpers import entity_registry as er
@@ -71,7 +71,17 @@ async def test_controller_entities_created_once_per_controller(
         unique_id="12345_Second",
         version=2,
     )
+    disabled_entry = MockConfigEntry(
+        title="Test Omada Controller (Disabled)",
+        domain=DOMAIN,
+        data={**mock_config_entry.data, CONF_SITE: "Disabled"},
+        unique_id="12345_Disabled",
+        version=2,
+        disabled_by=ConfigEntryDisabler.USER,
+        created_at=datetime(2024, 1, 1, tzinfo=UTC),
+    )
 
+    disabled_entry.add_to_hass(hass)
     mock_config_entry.add_to_hass(hass)
     second_entry.add_to_hass(hass)
 
@@ -80,6 +90,7 @@ async def test_controller_entities_created_once_per_controller(
         await hass.async_block_till_done()
 
     assert second_entry.state is ConfigEntryState.LOADED
+    assert disabled_entry.state is ConfigEntryState.NOT_LOADED
 
     controller_entity_ids = sorted(
         state.entity_id

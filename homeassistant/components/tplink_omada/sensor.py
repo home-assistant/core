@@ -144,7 +144,9 @@ def _config_entry_owns_controller_entities(
     controller_unique_id = _config_entry_controller_unique_id(config_entry)
     controller_entries = [
         entry
-        for entry in hass.config_entries.async_entries(DOMAIN)
+        for entry in hass.config_entries.async_entries(
+            DOMAIN, include_ignore=False, include_disabled=False
+        )
         if _config_entry_controller_unique_id(entry) == controller_unique_id
     ]
 
