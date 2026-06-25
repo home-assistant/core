@@ -69,7 +69,7 @@ async def test_fan_mode_service_calls(
     service_data: dict,
     expected_value: str,
 ) -> None:
-    """Test fan_mode service calls post the correct speed values."""
+    """Test fan_mode service calls send the correct fan mode values."""
     with patch("homeassistant.components.lg_thinq.PLATFORMS", [Platform.CLIMATE]):
         await setup_integration(hass, mock_config_entry)
 
