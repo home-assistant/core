@@ -1,0 +1,13 @@
+{
+  "config": {
+    "step": {
+      "user": {
+        "data": {
+          "timer_list_name": "Name"
+        },
+        "description": "Choose a name for the new timer list. The entity ID is derived from this name.",
+        "submit": "Create"
+      }
+    }
+  }
+}

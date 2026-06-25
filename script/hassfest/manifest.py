@@ -125,6 +125,7 @@ NO_IOT_CLASS = [
     "tag",
     "temperature",
     "timer",
+    "timer_list",
     "trace",
     "vibration",
     "web_rtc",
