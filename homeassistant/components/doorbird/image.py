@@ -26,8 +26,6 @@ from .const import DOMAIN
 from .entity import DoorBirdEntity
 from .models import DoorBirdConfigEntry, DoorBirdData
 
-_TIMEOUT = 15
-
 
 @dataclass(frozen=True, kw_only=True)
 class DoorBirdImageEntityDescription(ImageEntityDescription):
@@ -97,9 +95,9 @@ class DoorBirdLastEventImage(ImageEntity, DoorBirdEntity):
         if self._cached_image:
             return self._cached_image.content
         try:
-            image_bytes = await self._door_station.device.get_image(
-                self._image_url, timeout=_TIMEOUT
-            )
+            # No explicit timeout here — the image framework wraps async_image() in its
+            # own asyncio.timeout(IMAGE_TIMEOUT) and raises HTTP 500 on expiry.
+            image_bytes = await self._door_station.device.get_image(self._image_url)
         except aiohttp.ClientError as error:
             raise HomeAssistantError(
                 f"Error getting image from DoorBird: {error}"
