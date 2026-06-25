@@ -164,6 +164,9 @@ Read the JSON directly for the full schema. Key fields:
   - `{{CHECK_DETAIL:<pkg>:<kind>}}` → `<icon> <one-line explanation>`
     (the bullet's `- **<label>**:` prefix is already rendered; replace
     only the placeholder).
+  - `{{SUMMARY}}` → the single top-of-comment summary line, present only
+    when at least one check needed resolving. Fill it **after** resolving
+    every check, based on the final cell verdicts (see Step 3).
 
 Do not modify other content in `rendered_comment`, do not re-evaluate
 deterministic checks, do not add or remove packages. If `needs_agent`
@@ -191,6 +194,13 @@ Replace every placeholder with the resolved value and emit
 `rendered_comment` via `add_comment`. Preserve the leading
 `<!-- requirements-check -->` marker. The PR target is already wired;
 do not pass `item_number`.
+
+If a `{{SUMMARY}}` placeholder is present, replace it last, once every
+`{{CHECK_CELL:…}}` is resolved:
+- `All requirements checks passed. ✅` — when every check cell across all
+  packages is `✅` or `☑️` (treat `—`/skipped as not a problem).
+- `⚠️ Some checks require attention — see the details below.` — when any
+  cell is `⚠️` or `❌`.
 
 ## Check instructions
 

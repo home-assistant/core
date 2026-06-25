@@ -20,6 +20,7 @@ from homeassistant.helpers.trigger import (
     Trigger,
     TriggerActionRunner,
     TriggerConfig,
+    TriggerNotTriggeredReporter,
     make_entity_target_state_trigger,
 )
 from homeassistant.helpers.typing import ConfigType
@@ -66,7 +67,9 @@ class TimeRemainingTrigger(Trigger):
 
     @override
     async def async_attach_runner(
-        self, run_action: TriggerActionRunner
+        self,
+        run_action: TriggerActionRunner,
+        did_not_trigger: TriggerNotTriggeredReporter | None = None,
     ) -> CALLBACK_TYPE:
         """Attach the trigger to an action runner."""
         scheduled: dict[str, CALLBACK_TYPE] = {}
@@ -177,7 +180,7 @@ TRIGGERS: dict[str, type[Trigger]] = {
     "started": make_entity_target_state_trigger(
         {DOMAIN: DomainSpec(value_source=ATTR_LAST_TRANSITION)}, "started"
     ),
-    "time_remaining": TimeRemainingTrigger,
+    "remaining_time_reached": TimeRemainingTrigger,
 }
 
 

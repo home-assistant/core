@@ -1,5 +1,6 @@
 """Mail (SMTP) notification service."""
 
+from contextlib import suppress
 from email.mime.multipart import MIMEMultipart
 from email.mime.text import MIMEText
 import email.utils
@@ -13,7 +14,7 @@ from smtplib import (
 )
 from socket import gaierror
 from ssl import SSLContext
-from typing import TYPE_CHECKING, Any
+from typing import TYPE_CHECKING, Any, override
 
 import voluptuous as vol
 
@@ -41,7 +42,7 @@ from homeassistant.const import (
 )
 from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
-from homeassistant.exceptions import HomeAssistantError
+from homeassistant.exceptions import ConfigEntryAuthFailed, HomeAssistantError
 from homeassistant.helpers import config_validation as cv, entity_registry as er
 from homeassistant.helpers.device_registry import DeviceEntryType, DeviceInfo
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
@@ -183,6 +184,7 @@ class MailNotifyEntity(NotifyEntity):
         )
         self._attr_name = subentry.title
 
+    @override
     def send_message(self, message: str, title: str | None = None) -> None:
         """Send an email message via notify.send_message action."""
 
@@ -208,7 +210,7 @@ class MailNotifyEntity(NotifyEntity):
             try:
                 client = self._client.connect()
             except SMTPAuthenticationError as e:
-                raise HomeAssistantError(
+                raise ConfigEntryAuthFailed(
                     translation_domain=DOMAIN,
                     translation_key="authentication_error",
                 ) from e
@@ -236,7 +238,8 @@ class MailNotifyEntity(NotifyEntity):
                         translation_key="send_mail_connection_error",
                     ) from e
             finally:
-                client.quit()
+                with suppress(SMTPException):
+                    client.quit()
 
 
 class MailNotificationService(SmtpClient, BaseNotificationService):
@@ -262,6 +265,7 @@ class MailNotificationService(SmtpClient, BaseNotificationService):
             ssl_context=ssl_context,
         )
 
+    @override
     def send_message(self, message: str, **kwargs: Any) -> None:
         """Build and send a message to a user.
 
@@ -316,10 +320,13 @@ class MailNotificationService(SmtpClient, BaseNotificationService):
                 _LOGGER.warning(
                     "SMTPServerDisconnected sending mail: retrying connection"
                 )
-                mail.quit()
+                with suppress(SMTPException):
+                    mail.quit()
                 mail = self.connect()
             except SMTPException:
                 _LOGGER.warning("SMTPException sending mail: retrying connection")
-                mail.quit()
+                with suppress(SMTPException):
+                    mail.quit()
                 mail = self.connect()
-        mail.quit()
+        with suppress(SMTPException):
+            mail.quit()

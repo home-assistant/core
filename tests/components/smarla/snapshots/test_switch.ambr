@@ -39,8 +39,8 @@
 # name: test_entities[switch.smarla-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'device_class': 'switch',
-      'friendly_name': 'Smarla',
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'switch',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Smarla',
     }),
     'context': <ANY>,
     'entity_id': 'switch.smarla',
@@ -90,8 +90,8 @@
 # name: test_entities[switch.smarla_smart_mode-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'device_class': 'switch',
-      'friendly_name': 'Smarla Smart Mode',
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'switch',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Smarla Smart Mode',
     }),
     'context': <ANY>,
     'entity_id': 'switch.smarla_smart_mode',

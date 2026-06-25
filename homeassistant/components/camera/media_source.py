@@ -1,6 +1,7 @@
 """Expose cameras as media sources."""
 
 import asyncio
+from typing import override
 
 from homeassistant.components.media_player import BrowseError, MediaClass
 from homeassistant.components.media_source import (
@@ -54,6 +55,7 @@ class CameraMediaSource(MediaSource):
         super().__init__(DOMAIN)
         self.hass = hass
 
+    @override
     async def async_resolve_media(self, item: MediaSourceItem) -> PlayMedia:
         """Resolve media to a url."""
         component = self.hass.data[DATA_COMPONENT]
@@ -82,6 +84,7 @@ class CameraMediaSource(MediaSource):
 
         return PlayMedia(url, FORMAT_CONTENT_TYPE[HLS_PROVIDER])
 
+    @override
     async def async_browse_media(
         self,
         item: MediaSourceItem,

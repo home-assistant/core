@@ -2,6 +2,7 @@
 
 from dataclasses import dataclass, field
 from enum import IntEnum
+from typing import override
 
 from gardena_bluetooth.const import (
     AquaContour,
@@ -97,6 +98,7 @@ class GardenaBluetoothSelectEntity(GardenaBluetoothDescriptorEntity, SelectEntit
     entity_description: GardenaBluetoothSelectEntityDescription
 
     @property
+    @override
     def current_option(self) -> str | None:
         """Return the selected entity option to represent the entity state."""
         char = self.entity_description.char
@@ -105,6 +107,7 @@ class GardenaBluetoothSelectEntity(GardenaBluetoothDescriptorEntity, SelectEntit
             return None
         return self.entity_description.number_to_option.get(value)
 
+    @override
     async def async_select_option(self, option: str) -> None:
         """Change the selected option."""
         char = self.entity_description.char

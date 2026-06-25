@@ -1,7 +1,7 @@
 """Sensor platform for Indevolt integration."""
 
 from dataclasses import dataclass, field
-from typing import Final, cast
+from typing import Final, cast, override
 
 from indevolt_api import (
     IndevoltBattery,
@@ -938,6 +938,7 @@ class IndevoltSensorEntity(IndevoltEntity, SensorEntity):
             self._attr_options = sorted(set(description.state_mapping.values()))
 
     @property
+    @override
     def available(self) -> bool:
         """Return False for sensors in a non-applicable state."""
 
@@ -960,6 +961,7 @@ class IndevoltSensorEntity(IndevoltEntity, SensorEntity):
         return super().available
 
     @property
+    @override
     def native_value(self) -> str | int | float | None:
         """Return the current value of the sensor in its native unit."""
         raw_value = self.coordinator.data.get(self.entity_description.key)

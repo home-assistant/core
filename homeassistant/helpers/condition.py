@@ -154,9 +154,6 @@ INPUT_ENTITY_ID = re.compile(
 CONDITION_DESCRIPTION_CACHE: HassKey[dict[str, dict[str, Any] | None]] = HassKey(
     "condition_description_cache"
 )
-CONDITION_DISABLED_CONDITIONS: HassKey[set[str]] = HassKey(
-    "condition_disabled_conditions"
-)
 CONDITION_PLATFORM_SUBSCRIPTIONS: HassKey[
     list[Callable[[set[str]], Coroutine[Any, Any, None]]]
 ] = HassKey("condition_platform_subscriptions")
@@ -198,28 +195,10 @@ _CONDITIONS_DESCRIPTION_SCHEMA = vol.Schema(
 
 async def async_setup(hass: HomeAssistant) -> None:
     """Set up the condition helper."""
-    from homeassistant.components import automation, labs  # noqa: PLC0415
-
     hass.data[CONDITION_DESCRIPTION_CACHE] = {}
-    hass.data[CONDITION_DISABLED_CONDITIONS] = set()
     hass.data[CONDITION_PLATFORM_SUBSCRIPTIONS] = []
     hass.data[CONDITIONS] = {}
     hass.data[_DATA_HISTORY_PRIMING_MANAGER] = _HistoryPrimingManager(hass)
-
-    async def new_triggers_conditions_listener(
-        _event_data: labs.EventLabsUpdatedData,
-    ) -> None:
-        """Handle new_triggers_conditions flag change."""
-        # Invalidate the cache
-        hass.data[CONDITION_DESCRIPTION_CACHE] = {}
-        hass.data[CONDITION_DISABLED_CONDITIONS] = set()
-
-    labs.async_subscribe_preview_feature(
-        hass,
-        automation.DOMAIN,
-        automation.NEW_TRIGGERS_CONDITIONS_FEATURE_FLAG,
-        new_triggers_conditions_listener,
-    )
 
     await async_process_integration_platforms(
         hass, "condition", _register_condition_platform, wait_for_platforms=True
@@ -246,11 +225,9 @@ async def _register_condition_platform(
 ) -> None:
     """Register a condition platform and notify listeners.
 
-    If the condition platform does not provide any conditions, or it is disabled,
+    If the condition platform does not provide any conditions,
     listeners will not be notified.
     """
-    from homeassistant.components import automation  # noqa: PLC0415
-
     new_conditions: set[str] = set()
     conditions = hass.data[CONDITIONS]
 
@@ -275,10 +252,6 @@ async def _register_condition_platform(
             "Integration %s does not provide condition support, skipping",
             integration_domain,
         )
-        return
-
-    if automation.is_disabled_experimental_condition(hass, integration_domain):
-        _LOGGER.debug("Conditions for integration %s are disabled", integration_domain)
         return
 
     # We don't use gather here because gather adds additional overhead
@@ -391,6 +364,7 @@ class LegacyConditionChecker(ConditionChecker):
         super().__init__(hass)
         self._checker = checker
 
+    @override
     def _async_check(self, variables: TemplateVarsType = None, **kwargs: Any) -> bool:
         return self._checker(self._hass, variables)
 
@@ -398,6 +372,7 @@ class LegacyConditionChecker(ConditionChecker):
 class DisabledConditionChecker(ConditionChecker):
     """Condition checker for disabled conditions."""
 
+    @override
     def _async_check(self, **kwargs: Unpack[ConditionCheckParams]) -> None:
         return None
 
@@ -410,6 +385,7 @@ class CompoundConditionChecker(ConditionChecker):
         super().__init__(hass)
         self._conditions = conditions
 
+    @override
     def _async_unload(self) -> None:
         """Clean up child conditions."""
         for condition in self._conditions:
@@ -877,6 +853,7 @@ class EntityConditionBase(Condition):
             for state in states
         )
 
+    @override
     def _async_check(self, **kwargs: Unpack[ConditionCheckParams]) -> bool:
         """Test state condition."""
         targeted_entities = async_extract_referenced_entity_ids(
@@ -904,6 +881,7 @@ class EntityStateConditionBase(EntityConditionBase):
     _states: set[str | bool]
 
     @property
+    @override
     def _needs_duration_tracking(self) -> bool:
         """Single-state conditions with no attribute tracking can use last_changed."""
         if len(self._states) != 1:
@@ -919,6 +897,7 @@ class EntityStateConditionBase(EntityConditionBase):
             return entity_state.state
         return entity_state.attributes.get(domain_spec.value_source)
 
+    @override
     def is_valid_state(self, entity_state: State) -> bool:
         """Check if the state matches the expected state(s)."""
         return self._get_tracked_value(entity_state) in self._states
@@ -1034,6 +1013,7 @@ class EntityNumericalConditionBase(EntityConditionBase):
             return entity_state.state
         return entity_state.attributes.get(domain_spec.value_source)
 
+    @override
     def is_valid_state(self, entity_state: State) -> bool:
         """Check if the state is within the specified range."""
         try:
@@ -1107,6 +1087,7 @@ class EntityNumericalConditionWithUnitBase(EntityNumericalConditionBase):
     _base_unit: str | None  # Base unit for the tracked value
     _unit_converter: type[BaseUnitConverter]
 
+    @override
     def __init_subclass__(cls, **kwargs: Any) -> None:
         """Create a schema."""
         super().__init_subclass__(**kwargs)
@@ -1116,6 +1097,7 @@ class EntityNumericalConditionWithUnitBase(EntityNumericalConditionBase):
         """Get the unit of an entity from its state."""
         return entity_state.attributes.get(ATTR_UNIT_OF_MEASUREMENT)
 
+    @override
     def _get_threshold_value(self, threshold: ThresholdConfig | None) -> float | None:
         """Get threshold value from float or entity state."""
         if threshold is None:
@@ -1146,6 +1128,7 @@ class EntityNumericalConditionWithUnitBase(EntityNumericalConditionBase):
             # Unit conversion failed (i.e. incompatible units), treat as invalid number
             return None
 
+    @override
     def _get_tracked_value(self, entity_state: State) -> Any:
         """Get the tracked numerical value from a state."""
         domain_spec = self._domain_specs[entity_state.domain]
@@ -1297,20 +1280,11 @@ def trace_condition_function(
 async def _async_get_condition_platform(
     hass: HomeAssistant, condition_key: str
 ) -> tuple[str, ConditionProtocol | None]:
-    from homeassistant.components import automation  # noqa: PLC0415
-
     platform_and_sub_type = condition_key.split(".")
     platform: str | None = platform_and_sub_type[0]
     platform = _PLATFORM_ALIASES.get(platform, platform)
     if platform is None:
         return "", None
-
-    if automation.is_disabled_experimental_condition(hass, platform):
-        raise vol.Invalid(
-            f"Condition '{condition_key}' requires the experimental 'New triggers and "
-            "conditions' feature to be enabled in Home Assistant Labs settings "
-            f"(feature flag: '{automation.NEW_TRIGGERS_CONDITIONS_FEATURE_FLAG}')"
-        )
 
     try:
         integration = await async_get_integration(hass, platform)
@@ -1408,6 +1382,7 @@ class AndConditionChecker(CompoundConditionChecker):
     """Condition checker for 'and' compound conditions."""
 
     @callback
+    @override
     def _async_check(self, **kwargs: Unpack[ConditionCheckParams]) -> bool:
         """Test and condition."""
         errors = []
@@ -1442,6 +1417,7 @@ class OrConditionChecker(CompoundConditionChecker):
     """Condition checker for 'or' compound conditions."""
 
     @callback
+    @override
     def _async_check(self, **kwargs: Unpack[ConditionCheckParams]) -> bool:
         """Test or condition."""
         errors = []
@@ -1476,6 +1452,7 @@ class NotConditionChecker(CompoundConditionChecker):
     """Condition checker for 'not' compound conditions."""
 
     @callback
+    @override
     def _async_check(self, **kwargs: Unpack[ConditionCheckParams]) -> bool:
         """Test not condition."""
         errors = []
@@ -2267,8 +2244,6 @@ async def async_get_all_descriptions(
     hass: HomeAssistant,
 ) -> dict[str, dict[str, Any] | None]:
     """Return descriptions (i.e. user documentation) for all conditions."""
-    from homeassistant.components import automation  # noqa: PLC0415
-
     descriptions_cache = hass.data[CONDITION_DESCRIPTION_CACHE]
 
     conditions = hass.data[CONDITIONS]
@@ -2277,12 +2252,7 @@ async def async_get_all_descriptions(
     all_conditions = set(conditions)
     previous_all_conditions = set(descriptions_cache)
     # If the conditions are the same, we can return the cache
-
-    # mypy complains: Invalid index type "HassKey[set[str]]" for "HassDict"
-    if (
-        previous_all_conditions | hass.data[CONDITION_DISABLED_CONDITIONS]  # type: ignore[index]
-        == all_conditions
-    ):
+    if previous_all_conditions == all_conditions:
         return descriptions_cache
 
     # Files we loaded for missing descriptions
@@ -2322,10 +2292,6 @@ async def async_get_all_descriptions(
     new_descriptions_cache = descriptions_cache.copy()
     for missing_condition in missing_conditions:
         domain = conditions[missing_condition]
-        if automation.is_disabled_experimental_condition(hass, domain):
-            hass.data[CONDITION_DISABLED_CONDITIONS].add(missing_condition)
-            continue
-
         if (
             yaml_description := new_conditions_descriptions.get(domain, {}).get(
                 missing_condition

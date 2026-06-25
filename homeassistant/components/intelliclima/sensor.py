@@ -2,6 +2,7 @@
 
 from collections.abc import Callable
 from dataclasses import dataclass
+from typing import override
 
 from pyintelliclima.intelliclima_types import IntelliClimaECO
 
@@ -96,6 +97,7 @@ class IntelliClimaSensor(IntelliClimaECOEntity, SensorEntity):
         self._attr_unique_id = f"{device.id}_{description.key}"
 
     @property
+    @override
     def native_value(self) -> int | float | str | None:
         """Use this to get the correct value."""
         return self.entity_description.value_fn(self._device_data)

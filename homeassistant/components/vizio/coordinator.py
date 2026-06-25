@@ -3,7 +3,7 @@
 from dataclasses import dataclass
 from datetime import timedelta
 import logging
-from typing import TYPE_CHECKING, Any
+from typing import TYPE_CHECKING, Any, override
 
 from pyvizio import VizioAsync
 from pyvizio.api.apps import AppConfig
@@ -80,6 +80,7 @@ class VizioDeviceCoordinator(DataUpdateCoordinator[VizioDeviceData]):
         )
         self.device = device
 
+    @override
     async def _async_setup(self) -> None:
         """Fetch device info and update device registry."""
         model = await self.device.get_model_name(log_api_exception=False)
@@ -98,6 +99,7 @@ class VizioDeviceCoordinator(DataUpdateCoordinator[VizioDeviceData]):
             sw_version=version,
         )
 
+    @override
     async def _async_update_data(self) -> VizioDeviceData:
         """Fetch all device data."""
         is_on = await self.device.get_power_state(log_api_exception=False)
@@ -170,6 +172,7 @@ class VizioAppsDataUpdateCoordinator(DataUpdateCoordinator[list[dict[str, Any]]]
         await self.async_register_shutdown()
         self.data = await self.store.async_load() or APPS
 
+    @override
     async def _async_update_data(self) -> list[dict[str, Any]]:
         """Update data via library."""
         if data := await gen_apps_list_from_url(

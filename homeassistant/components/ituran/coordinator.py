@@ -1,6 +1,7 @@
 """Coordinator for Ituran."""
 
 import logging
+from typing import override
 
 from pyituran import Ituran, Vehicle
 from pyituran.exceptions import IturanApiError, IturanAuthError
@@ -44,6 +45,7 @@ class IturanDataUpdateCoordinator(DataUpdateCoordinator[dict[str, Vehicle]]):
             entry.data[CONF_MOBILE_ID],
         )
 
+    @override
     async def _async_update_data(self) -> dict[str, Vehicle]:
         """Fetch data from Ituran."""
 

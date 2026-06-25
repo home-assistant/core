@@ -375,20 +375,83 @@ async def test_relay_switch_availability_follows_websocket_state(
 
     assert hass.states.get(SWITCH_ENTITY_ID).state == STATE_ON  # type: ignore[union-attr]
 
-    assert ufp.ws_state_subscription is not None
-    ufp.ws_state_subscription(WebsocketState.DISCONNECTED)
+    assert ufp.devices_ws_state_subscription is not None
+    ufp.devices_ws_state_subscription(WebsocketState.DISCONNECTED)
     await hass.async_block_till_done()
 
     state = hass.states.get(SWITCH_ENTITY_ID)
     assert state is not None
     assert state.state == STATE_UNAVAILABLE
 
-    ufp.ws_state_subscription(WebsocketState.CONNECTED)
+    ufp.devices_ws_state_subscription(WebsocketState.CONNECTED)
     await hass.async_block_till_done()
 
     state = hass.states.get(SWITCH_ENTITY_ID)
     assert state is not None
     assert state.state == STATE_ON
+
+
+async def test_relay_switch_availability_decoupled_from_private_websocket(
+    hass: HomeAssistant,
+    ufp_with_relay: tuple[MockUFPFixture, Mock],
+) -> None:
+    """Relay availability follows the public WS only: private loss is a no-op."""
+    ufp, relay = ufp_with_relay
+    relay.outputs[0].state = RelayOutputState.ON
+    await init_entry(hass, ufp, [])
+    assert hass.states.get(SWITCH_ENTITY_ID).state == STATE_ON  # type: ignore[union-attr]
+
+    # A private WS loss does not affect the relay.
+    assert ufp.ws_state_subscription is not None
+    ufp.ws_state_subscription(WebsocketState.DISCONNECTED)
+    await hass.async_block_till_done()
+    state = hass.states.get(SWITCH_ENTITY_ID)
+    assert state is not None
+    assert state.state == STATE_ON
+
+    # The public WS loss does flip it unavailable.
+    ufp.devices_ws_state_subscription(WebsocketState.DISCONNECTED)
+    await hass.async_block_till_done()
+    state = hass.states.get(SWITCH_ENTITY_ID)
+    assert state is not None
+    assert state.state == STATE_UNAVAILABLE
+
+
+async def test_relay_ws_update_without_subscription_is_ignored(
+    hass: HomeAssistant,
+    ufp: MockUFPFixture,
+) -> None:
+    """A public relay WS update for an unsubscribed relay is a no-op."""
+    await init_entry(hass, ufp, [])
+    assert ufp.devices_ws_subscription is not None
+
+    mock_msg = Mock()
+    mock_msg.new_obj = _make_relay()
+    ufp.devices_ws_subscription(mock_msg)
+    await hass.async_block_till_done()
+
+    assert hass.states.get(SWITCH_ENTITY_ID) is None
+
+
+async def test_public_ws_state_change_without_public_bootstrap(
+    hass: HomeAssistant,
+    ufp: MockUFPFixture,
+) -> None:
+    """Public WS state changes flip the flag but no-op without a bootstrap."""
+    await init_entry(hass, ufp, [])
+    data = ufp.entry.runtime_data
+    assert data.last_public_update_success is True
+    assert ufp.devices_ws_state_subscription is not None
+
+    # No public bootstrap -> re-signal step returns early.
+    ufp.devices_ws_state_subscription(WebsocketState.DISCONNECTED)
+    await hass.async_block_till_done()
+    assert data.last_public_update_success is False
+
+    # Same state again -> handler early-returns.
+    ufp.devices_ws_state_subscription(WebsocketState.DISCONNECTED)
+    await hass.async_block_till_done()
+    assert data.last_public_update_success is False
 
 
 async def test_relay_public_ws_message_with_none_new_obj(

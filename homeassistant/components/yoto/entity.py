@@ -1,6 +1,6 @@
 """Base entity for the Yoto integration."""
 
-from typing import Any
+from typing import Any, override
 
 from yoto_api import YotoError, YotoPlayer
 
@@ -44,6 +44,7 @@ class YotoEntity(CoordinatorEntity[YotoDataUpdateCoordinator]):
         return self.coordinator.data[self._player_id]
 
     @property
+    @override
     def available(self) -> bool:
         """Return if the entity is available."""
         return super().available and self._player_id in self.coordinator.data
@@ -53,6 +54,7 @@ class YotoPlayerEntity(YotoEntity):
     """Base class for entities reflecting live player state over MQTT."""
 
     @property
+    @override
     def available(self) -> bool:
         """Return if the entity is available."""
         return super().available and bool(self.player.is_online)

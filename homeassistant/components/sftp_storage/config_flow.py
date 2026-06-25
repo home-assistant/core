@@ -3,7 +3,7 @@
 from contextlib import suppress
 from pathlib import Path
 import shutil
-from typing import Any, cast
+from typing import Any, cast, override
 
 from asyncssh import KeyImportError, SSHClientConnectionOptions, connect
 from asyncssh.misc import PermissionDenied
@@ -101,6 +101,7 @@ class SFTPFlowHandler(ConfigFlow, domain=DOMAIN):
 
         return user_input
 
+    @override
     async def async_step_user(
         self,
         user_input: dict[str, Any] | None = None,

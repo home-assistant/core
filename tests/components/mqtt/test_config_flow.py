@@ -625,9 +625,7 @@ async def test_hassio_confirm(
     assert result["description_placeholders"] == {"addon": "Mosquitto Mqtt Broker"}
 
     mock_try_connection_success.reset_mock()
-    result = await hass.config_entries.flow.async_configure(
-        result["flow_id"], {"discovery": True}
-    )
+    result = await hass.config_entries.flow.async_configure(result["flow_id"], {})
 
     assert result["type"] is FlowResultType.CREATE_ENTRY
     assert result["result"].data == {
@@ -636,7 +634,6 @@ async def test_hassio_confirm(
         "port": 1883,
         "username": "mock-user",
         "password": "mock-pass",
-        "discovery": True,
     }
     # Check we tried the connection
     assert len(mock_try_connection_success.mock_calls)
@@ -673,9 +670,7 @@ async def test_hassio_cannot_connect(
     assert result["description_placeholders"] == {"addon": "Mock Addon"}
 
     mock_try_connection_time_out.reset_mock()
-    result = await hass.config_entries.flow.async_configure(
-        result["flow_id"], {"discovery": True}
-    )
+    result = await hass.config_entries.flow.async_configure(result["flow_id"], {})
 
     assert result["type"] is FlowResultType.FORM
     assert result["errors"]["base"] == "cannot_connect"
@@ -732,7 +727,6 @@ async def test_addon_flow_with_supervisor_addon_running(
         "port": 1883,
         "username": "mock-user",
         "password": "mock-pass",
-        "discovery": True,
     }
     # Check we tried the connection
     assert len(mock_try_connection_success.mock_calls)
@@ -800,7 +794,6 @@ async def test_addon_flow_with_supervisor_addon_installed(
         "port": 1883,
         "username": "mock-user",
         "password": "mock-pass",
-        "discovery": True,
     }
     # Check we tried the connection
     assert len(mock_try_connection_success.mock_calls)
@@ -1040,7 +1033,6 @@ async def test_addon_flow_with_supervisor_addon_not_installed(
         "port": 1883,
         "username": "mock-user",
         "password": "mock-pass",
-        "discovery": True,
     }
     # Check we tried the connection
     assert len(mock_try_connection_success.mock_calls)

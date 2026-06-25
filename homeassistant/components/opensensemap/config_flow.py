@@ -1,6 +1,6 @@
 """Config flow for the openSenseMap integration."""
 
-from typing import Any
+from typing import Any, override
 
 from opensensemap_api import OpenSenseMap
 from opensensemap_api.exceptions import OpenSenseMapError
@@ -41,6 +41,7 @@ class OpenSenseMapConfigFlow(ConfigFlow, domain=DOMAIN):
             raise InvalidStation
         return api.data["name"]
 
+    @override
     async def async_step_user(
         self, user_input: dict[str, Any] | None = None
     ) -> ConfigFlowResult:

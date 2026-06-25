@@ -22,7 +22,7 @@ awesomeversion==25.8.0
 bcrypt==5.0.0
 bleak-retry-connector==4.6.1
 bleak==3.0.2
-bluetooth-adapters==2.3.0
+bluetooth-adapters==2.4.0
 bluetooth-auto-recovery==1.6.4
 bluetooth-data-tools==1.29.18
 cached-ipaddress==1.1.2
@@ -30,17 +30,17 @@ certifi>=2021.5.30
 ciso8601==2.3.3
 cronsim==2.7
 cryptography==48.0.1
-dbus-fast==5.0.16
+dbus-fast==5.0.22
 file-read-backwards==2.0.0
 fnv-hash-fast==2.0.3
 go2rtc-client==0.4.0
 ha-ffmpeg==3.2.2
-habluetooth==6.8.3
+habluetooth==6.25.1
 hass-nabucasa==2.2.0
 hassil==3.8.0
 home-assistant-bluetooth==2.0.0
-home-assistant-frontend==20260527.6
-home-assistant-intents==2026.6.1
+home-assistant-frontend==20260624.0
+home-assistant-intents==2026.6.24
 httpx==0.28.1
 ifaddr==0.2.0
 Jinja2==3.1.6
@@ -64,7 +64,7 @@ PyYAML==6.0.3
 requests==2.34.2
 securetar==2026.4.1
 serialx==1.8.2
-SQLAlchemy==2.0.50
+SQLAlchemy==2.0.51
 standard-aifc==3.13.0
 standard-telnetlib==3.13.0
 typing-extensions>=4.15.0,<5.0
@@ -76,7 +76,7 @@ voluptuous-serialize==2.7.0
 voluptuous==0.15.2
 webrtc-models==0.3.0
 yarl==1.24.2
-zeroconf==0.149.16
+zeroconf==0.150.0
 
 # Constrain pycryptodome to avoid vulnerability
 # see https://github.com/home-assistant/core/pull/16238
@@ -223,7 +223,7 @@ num2words==0.5.14
 # pymodbus does not follow SemVer, and it keeps getting
 # downgraded or upgraded by custom components
 # This ensures all use the same version
-pymodbus==3.11.2
+pymodbus==3.13.1
 
 # Pin pytest-rerunfailures to prevent accidental breaks
 pytest-rerunfailures==16.0.1
