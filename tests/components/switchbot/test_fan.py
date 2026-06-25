@@ -26,12 +26,20 @@ from . import (
     AIR_PURIFIER_TABLE_US_SERVICE_INFO,
     AIR_PURIFIER_US_SERVICE_INFO,
     CIRCULATOR_FAN_SERVICE_INFO,
+    STANDING_FAN_SERVICE_INFO,
 )
 
 from tests.common import MockConfigEntry
 from tests.components.bluetooth import inject_bluetooth_service_info
 
 
+@pytest.mark.parametrize(
+    ("service_info", "sensor_type"),
+    [
+        (CIRCULATOR_FAN_SERVICE_INFO, "circulator_fan"),
+        (STANDING_FAN_SERVICE_INFO, "standing_fan"),
+    ],
+)
 @pytest.mark.parametrize(
     (
         "service",
@@ -66,17 +74,19 @@ from tests.components.bluetooth import inject_bluetooth_service_info
         ),
     ],
 )
-async def test_circulator_fan_controlling(
+async def test_fan_controlling(
     hass: HomeAssistant,
     mock_entry_factory: Callable[[str], MockConfigEntry],
+    service_info: BluetoothServiceInfoBleak,
+    sensor_type: str,
     service: str,
     service_data: dict,
     mock_method: str,
 ) -> None:
-    """Test controlling the circulator fan with different services."""
-    inject_bluetooth_service_info(hass, CIRCULATOR_FAN_SERVICE_INFO)
+    """Test controlling fans with different services."""
+    inject_bluetooth_service_info(hass, service_info)
 
-    entry = mock_entry_factory(sensor_type="circulator_fan")
+    entry = mock_entry_factory(sensor_type=sensor_type)
     entity_id = "fan.test_name"
     entry.add_to_hass(hass)
 
