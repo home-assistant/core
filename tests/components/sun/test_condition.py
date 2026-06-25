@@ -88,7 +88,7 @@ async def assert_automation_condition_trace(hass_ws_client, automation_id, expec
 async def assert_automation_condition_trace_error(
     hass_ws_client, automation_id, expected
 ):
-    """Test the result of automation condition."""
+    """Test the error of automation condition."""
     condition_trace = await _get_automation_condition_trace(
         hass_ws_client, automation_id
     )
