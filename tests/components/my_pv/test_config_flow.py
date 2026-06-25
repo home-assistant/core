@@ -13,6 +13,8 @@ from homeassistant.data_entry_flow import FlowResultType
 from homeassistant.helpers.service_info.dhcp import DhcpServiceInfo
 from homeassistant.helpers.service_info.zeroconf import ZeroconfServiceInfo
 
+from tests.common import MockConfigEntry
+
 DHCP_DISCOVERY = DhcpServiceInfo(
     "127.0.0.1",
     macaddress="986d35cabcde",
@@ -69,6 +71,42 @@ async def test_step_user(hass: HomeAssistant) -> None:
     assert result["result"].unique_id == "1601500000000000"
 
 
+async def test_step_user_already_configured(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+) -> None:
+    """Test for user configuration that is already configured."""
+    mock_config_entry.add_to_hass(hass)
+
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN, context={"source": config_entries.SOURCE_USER}
+    )
+
+    assert result["type"] is FlowResultType.FORM
+    assert result["step_id"] == "user"
+    assert not result["errors"]
+
+    with (
+        patch(
+            "homeassistant.components.my_pv.MyPVLocalDevice.connect",
+            return_value=True,
+        ),
+        patch(
+            "homeassistant.components.my_pv.MyPVLocalDevice.serial_number",
+            "1601500000000000",
+        ),
+    ):
+        result = await hass.config_entries.flow.async_configure(
+            result["flow_id"],
+            {
+                CONF_HOST: "127.0.0.1",
+            },
+        )
+
+    assert result["type"] is FlowResultType.ABORT
+    assert result["reason"] == "already_configured"
+
+
 async def test_step_user_cannot_connect(hass: HomeAssistant) -> None:
     """Test if we get the local setup form with error if we can not connect to device."""
     result = await hass.config_entries.flow.async_init(
@@ -111,6 +149,10 @@ async def test_step_auth(hass: HomeAssistant) -> None:
         patch(
             "homeassistant.components.my_pv.MyPVLocalDevice.connect",
             side_effect=MyPVAuthenticationError(),
+        ),
+        patch(
+            "homeassistant.components.my_pv.MyPVLocalDevice.serial_number",
+            "1601500000000000",
         ),
     ):
         result = await hass.config_entries.flow.async_configure(
@@ -168,6 +210,10 @@ async def test_step_auth_cannot_connect(hass: HomeAssistant) -> None:
         patch(
             "homeassistant.components.my_pv.MyPVLocalDevice.connect",
             side_effect=MyPVAuthenticationError(),
+        ),
+        patch(
+            "homeassistant.components.my_pv.MyPVLocalDevice.serial_number",
+            "1601500000000000",
         ),
     ):
         result = await hass.config_entries.flow.async_configure(
@@ -244,6 +290,35 @@ async def test_step_dhcp(hass: HomeAssistant) -> None:
     assert result["result"].unique_id == "1601500000000000"
 
 
+async def test_step_dhcp_already_configured(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+) -> None:
+    """Test for DHCP discovery that is already configured."""
+    mock_config_entry.add_to_hass(hass)
+
+    with (
+        patch(
+            "homeassistant.components.my_pv.MyPVLocalDevice.connect",
+            side_effect=MyPVAuthenticationError(),
+        ),
+        patch(
+            "homeassistant.components.my_pv.MyPVLocalDevice.serial_number",
+            "1601500000000000",
+        ),
+    ):
+        result = await hass.config_entries.flow.async_init(
+            DOMAIN,
+            context={
+                "source": config_entries.SOURCE_DHCP,
+            },
+            data=DHCP_DISCOVERY,
+        )
+
+    assert result["type"] is FlowResultType.ABORT
+    assert result["reason"] == "already_configured"
+
+
 async def test_step_dhcp_cannot_connect(hass: HomeAssistant) -> None:
     """Test for DHCP discovery that can not connect."""
 
@@ -272,6 +347,10 @@ async def test_step_dhcp_auth(hass: HomeAssistant) -> None:
         patch(
             "homeassistant.components.my_pv.MyPVLocalDevice.connect",
             side_effect=MyPVAuthenticationError(),
+        ),
+        patch(
+            "homeassistant.components.my_pv.MyPVLocalDevice.serial_number",
+            "1601500000000000",
         ),
     ):
         result = await hass.config_entries.flow.async_init(
@@ -321,6 +400,10 @@ async def test_step_dhcp_auth_wrong_password(hass: HomeAssistant) -> None:
             "homeassistant.components.my_pv.MyPVLocalDevice.connect",
             side_effect=MyPVAuthenticationError(),
         ),
+        patch(
+            "homeassistant.components.my_pv.MyPVLocalDevice.serial_number",
+            "1601500000000000",
+        ),
     ):
         result = await hass.config_entries.flow.async_init(
             DOMAIN,
@@ -339,6 +422,10 @@ async def test_step_dhcp_auth_wrong_password(hass: HomeAssistant) -> None:
             "homeassistant.components.my_pv.MyPVLocalDevice.connect",
             side_effect=MyPVAuthenticationError(),
         ),
+        patch(
+            "homeassistant.components.my_pv.MyPVLocalDevice.serial_number",
+            "1601500000000000",
+        ),
     ):
         result = await hass.config_entries.flow.async_configure(
             result["flow_id"], {CONF_PASSWORD: "wrong-password"}
@@ -356,6 +443,10 @@ async def test_step_zeroconf(hass: HomeAssistant) -> None:
         patch(
             "homeassistant.components.my_pv.MyPVLocalDevice.connect",
             side_effect=MyPVAuthenticationError(),
+        ),
+        patch(
+            "homeassistant.components.my_pv.MyPVLocalDevice.serial_number",
+            "1601500000000000",
         ),
     ):
         result = await hass.config_entries.flow.async_init(
@@ -397,6 +488,35 @@ async def test_step_zeroconf(hass: HomeAssistant) -> None:
     assert result["result"].unique_id == "1601500000000000"
 
 
+async def test_step_zeroconf_already_configured(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+) -> None:
+    """Test for Zeroconf discovery that is already configured."""
+    mock_config_entry.add_to_hass(hass)
+
+    with (
+        patch(
+            "homeassistant.components.my_pv.MyPVLocalDevice.connect",
+            side_effect=MyPVAuthenticationError(),
+        ),
+        patch(
+            "homeassistant.components.my_pv.MyPVLocalDevice.serial_number",
+            "1601500000000000",
+        ),
+    ):
+        result = await hass.config_entries.flow.async_init(
+            DOMAIN,
+            context={
+                "source": config_entries.SOURCE_ZEROCONF,
+            },
+            data=ZEROCONF_DISCOVERY,
+        )
+
+    assert result["type"] is FlowResultType.ABORT
+    assert result["reason"] == "already_configured"
+
+
 async def test_step_zeroconf_cannot_connect(hass: HomeAssistant) -> None:
     """Test for Zeroconf discovery that can not connect."""
 
@@ -426,6 +546,10 @@ async def test_step_zeroconf_wrong_password(hass: HomeAssistant) -> None:
             "homeassistant.components.my_pv.MyPVLocalDevice.connect",
             side_effect=MyPVAuthenticationError(),
         ),
+        patch(
+            "homeassistant.components.my_pv.MyPVLocalDevice.serial_number",
+            "1601500000000000",
+        ),
     ):
         result = await hass.config_entries.flow.async_init(
             DOMAIN,
@@ -443,6 +567,10 @@ async def test_step_zeroconf_wrong_password(hass: HomeAssistant) -> None:
         patch(
             "homeassistant.components.my_pv.MyPVLocalDevice.connect",
             side_effect=MyPVAuthenticationError(),
+        ),
+        patch(
+            "homeassistant.components.my_pv.MyPVLocalDevice.serial_number",
+            "1601500000000000",
         ),
     ):
         result = await hass.config_entries.flow.async_configure(
