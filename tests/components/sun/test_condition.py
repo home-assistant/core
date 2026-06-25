@@ -1328,10 +1328,10 @@ async def test_if_action_no_sun_event_in_polar_regions(
         hass.bus.async_fire("test_event")
         await hass.async_block_till_done()
         assert len(service_calls) == 0
-    await assert_automation_condition_trace_error(
+    await assert_automation_condition_trace(
         hass_ws_client,
         "sun",
-        "'NoneType' object has no attribute 'tzinfo'",
+        {"result": False, "message": f"no {event} today"},
     )
 
 
