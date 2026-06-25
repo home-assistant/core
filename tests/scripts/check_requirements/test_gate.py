@@ -115,25 +115,21 @@ def test_extract_prior_sha_round_trips_rendered_comment() -> None:
 # ---------------------------------------------------------------------------
 
 
-def test_fetch_marker_comment_bodies_filters_marker(
+def test_fetch_marker_comment_bodies_returns_all_bot_comments(
     install_github: InstallGithub,
 ) -> None:
-    """Only marker comments from the bot are returned, in API order."""
+    """Every bot comment body is returned in API order; the marker is not filtered on."""
     install_github(
         comments=[
-            _comment(None),  # marker comment, no SHA recorded yet
+            _comment(None),  # no SHA recorded yet
             _comment(_PRIOR),
             SimpleNamespace(
                 body="chatter", user=SimpleNamespace(login="github-actions[bot]")
             ),
-            SimpleNamespace(
-                body=None, user=SimpleNamespace(login="github-actions[bot]")
-            ),
         ]
     )
     bodies = fetch_marker_comment_bodies(7, _REPO, _TOKEN)
-    assert len(bodies) == 2
-    assert _PRIOR in bodies[1]
+    assert bodies == [_body(None), _body(_PRIOR), "chatter"]
 
 
 @pytest.mark.parametrize(

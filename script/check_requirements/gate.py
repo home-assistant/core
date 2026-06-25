@@ -16,7 +16,7 @@ from github import Auth, Github, GithubException
 from github.IssueComment import IssueComment
 
 from .diff import is_tracked
-from .render import COMMIT_PATH, MARKER
+from .render import COMMIT_PATH
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -49,11 +49,7 @@ def fetch_marker_comment_bodies(pr_number: int, repo: str, token: str) -> list[s
     """Return the trusted requirements-check comment bodies, oldest-first."""
     try:
         comments = _client(token).get_repo(repo).get_issue(pr_number).get_comments()
-        return [
-            comment.body
-            for comment in comments
-            if _is_trusted_author(comment) and MARKER in (comment.body or "")
-        ]
+        return [comment.body for comment in comments if _is_trusted_author(comment)]
     except GithubException as err:
         _LOGGER.warning("Could not read comments for PR #%s: %s", pr_number, err)
         return []
