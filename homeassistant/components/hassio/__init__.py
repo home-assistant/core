@@ -51,15 +51,14 @@ from . import (  # noqa: F401
 from .addon_manager import AddonError, AddonInfo, AddonManager, AddonState
 from .addon_panel import async_setup_addon_panel
 from .auth import async_setup_auth_view
-from .config import HassioConfig
 from .const import (
     ADDONS_COORDINATOR,
     DATA_COMPONENT,
-    DATA_CONFIG_STORE,
     DATA_HASSIO_HOST,
     DATA_HASSIO_SUPERVISOR_USER,
     DATA_KEY_SUPERVISOR_ISSUES,
     DOMAIN,
+    ENTRY_DATA_USER,
     MAIN_COORDINATOR,
     STATS_COORDINATOR,
 )
@@ -163,6 +162,36 @@ def hostname_from_addon_slug(addon_slug: str) -> str:
     return addon_slug.replace("_", "-")
 
 
+async def _async_get_or_create_supervisor_user(
+    hass: HomeAssistant, entry: ConfigEntry | None
+) -> User:
+    """Get or create the Supervisor system user."""
+    user: User | None = None
+
+    if entry is not None and (entry_user_id := entry.data.get(ENTRY_DATA_USER)):
+        user = await hass.auth.async_get_user(entry_user_id)
+
+    if user is None:
+        user = await hass.auth.async_create_system_user(
+            HASSIO_USER_NAME, group_ids=[GROUP_ID_ADMIN]
+        )
+        if entry is not None:
+            hass.config_entries.async_update_entry(
+                entry,
+                data={**entry.data, ENTRY_DATA_USER: user.id},
+            )
+
+    # Migrate old Hass.io users to be admin.
+    if not user.is_admin:
+        await hass.auth.async_update_user(user, group_ids=[GROUP_ID_ADMIN])
+
+    # Migrate old name
+    if user.name == "Hass.io":
+        await hass.auth.async_update_user(user, name=HASSIO_USER_NAME)
+
+    return user
+
+
 @callback
 def _check_deprecated_setup(hass: HomeAssistant) -> None:
     """Create issues for deprecated installation types and architectures."""
@@ -234,32 +263,15 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     hass.data[DATA_COMPONENT] = HassIO(hass.loop, websession, host)
     hass.data[DATA_HASSIO_HOST] = host
 
-    # Load the store
-    config_store = HassioConfig(hass)
-    await config_store.load()
-    hass.data[DATA_CONFIG_STORE] = config_store
+    entry = None
+    if entries := hass.config_entries.async_entries(
+        DOMAIN, include_ignore=False, include_disabled=False
+    ):
+        entry = entries[0]
 
-    # Cache the Supervisor user. Create one if necessary
-    user: User | None = None
-    if (hassio_user := config_store.data.hassio_user) is not None:
-        user = await hass.auth.async_get_user(hassio_user)
-        if user:
-            # Migrate old Hass.io users to be admin.
-            if not user.is_admin:
-                await hass.auth.async_update_user(user, group_ids=[GROUP_ID_ADMIN])
-
-            # Migrate old name
-            if user.name == "Hass.io":
-                await hass.auth.async_update_user(user, name=HASSIO_USER_NAME)
-
-    if user is None:
-        user = await hass.auth.async_create_system_user(
-            HASSIO_USER_NAME, group_ids=[GROUP_ID_ADMIN]
-        )
-        config_store.update(hassio_user=user.id)
-
-    assert user is not None
-    hass.data[DATA_HASSIO_SUPERVISOR_USER] = user
+    hass.data[DATA_HASSIO_SUPERVISOR_USER] = await _async_get_or_create_supervisor_user(
+        hass, entry
+    )
 
     async_load_websocket_api(hass)
     hass.http.register_view(HassIOView(host, websession))
@@ -270,14 +282,26 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     async_setup_addon_panel(hass)
     frontend.async_register_built_in_panel(hass, "app")
 
-    discovery_flow.async_create_flow(
-        hass, DOMAIN, context={"source": SOURCE_SYSTEM}, data={}
-    )
+    if entry is None:
+        discovery_flow.async_create_flow(
+            hass, DOMAIN, context={"source": SOURCE_SYSTEM}, data={}
+        )
     return True
 
 
 async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Set up a config entry."""
+    if (user := hass.data.get(DATA_HASSIO_SUPERVISOR_USER)) is not None:
+        if entry.data.get(ENTRY_DATA_USER) != user.id:
+            hass.config_entries.async_update_entry(
+                entry,
+                data={**entry.data, ENTRY_DATA_USER: user.id},
+            )
+    else:
+        user = await _async_get_or_create_supervisor_user(hass, entry)
+
+    hass.data[DATA_HASSIO_SUPERVISOR_USER] = user
+
     supervisor_client = get_supervisor_client(hass)
 
     try:
@@ -311,7 +335,6 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
             )
 
     # Get or create a refresh token for the Supervisor user
-    user = hass.data[DATA_HASSIO_SUPERVISOR_USER]
     if user.refresh_tokens:
         refresh_token = list(user.refresh_tokens.values())[0]
     else:
