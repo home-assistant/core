@@ -810,9 +810,12 @@ class ProtectAlarmHubZoneBinarySensor(BaseAlarmHubEntity, BinarySensorEntity):
             device_class=device_class,
         )
         super().__init__(data, hub, description)
-        # The zone name comes from the device, so set it directly rather than
-        # via a translation key.
-        self._attr_name = zone.name or f"Zone {input_id}"
+        if zone.name:
+            # Device-provided names take precedence over the translated default.
+            self._attr_name = zone.name
+        else:
+            self._attr_translation_key = "alarm_hub_zone"
+            self._attr_translation_placeholders = {"zone": str(input_id)}
 
     @callback
     @override

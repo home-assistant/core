@@ -102,6 +102,9 @@
       "alarm_hub_tamper": {
         "name": "Tamper"
       },
+      "alarm_hub_zone": {
+        "name": "Zone {zone}"
+      },
       "alarm_sound_detection": {
         "name": "Alarm sound detection"
       },
