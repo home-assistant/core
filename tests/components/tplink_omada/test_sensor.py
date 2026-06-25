@@ -11,6 +11,8 @@ from tplink_omada_client.definitions import DeviceStatus, DeviceStatusCategory
 from tplink_omada_client.devices import OmadaListDevice
 from tplink_omada_client.exceptions import OmadaClientException
 
+from homeassistant.components.sensor import DOMAIN as SENSOR_DOMAIN
+from homeassistant.components.tplink_omada.config_flow import CONF_SITE
 from homeassistant.components.tplink_omada.const import DOMAIN
 from homeassistant.components.tplink_omada.coordinator import POLL_DEVICES
 from homeassistant.const import STATE_UNAVAILABLE
@@ -52,6 +54,54 @@ async def test_entities(
 ) -> None:
     """Test the creation of the TP-Link Omada sensor entities."""
     await snapshot_platform(hass, entity_registry, snapshot, init_integration.entry_id)
+
+
+async def test_controller_entities_created_once_per_controller(
+    hass: HomeAssistant,
+    entity_registry: er.EntityRegistry,
+    mock_config_entry: MockConfigEntry,
+    mock_omada_client: MagicMock,
+) -> None:
+    """Test controller entities are only created for one site config entry."""
+    second_entry = MockConfigEntry(
+        title="Test Omada Controller (Second)",
+        domain=DOMAIN,
+        data={**mock_config_entry.data, CONF_SITE: "Second"},
+        unique_id="12345_Second",
+        version=2,
+    )
+
+    mock_config_entry.add_to_hass(hass)
+    second_entry.add_to_hass(hass)
+
+    with patch("homeassistant.components.tplink_omada.PLATFORMS", ["sensor"]):
+        assert await hass.config_entries.async_setup(mock_config_entry.entry_id)
+        assert await hass.config_entries.async_setup(second_entry.entry_id)
+        await hass.async_block_till_done()
+
+    controller_entity_ids = sorted(
+        state.entity_id
+        for state in hass.states.async_all(SENSOR_DOMAIN)
+        if state.entity_id.startswith("sensor.omada_controller")
+    )
+    assert controller_entity_ids == [
+        "sensor.omada_controller_api_version",
+        "sensor.omada_controller_device_status",
+        "sensor.omada_controller_version",
+    ]
+
+    for unique_id in (
+        "2b8ebfe7af51afa2f58844e1f9ba0c04_api_version",
+        "2b8ebfe7af51afa2f58844e1f9ba0c04_device_status",
+        "2b8ebfe7af51afa2f58844e1f9ba0c04_version",
+    ):
+        entity_id = entity_registry.async_get_entity_id(
+            SENSOR_DOMAIN, DOMAIN, unique_id
+        )
+        assert entity_id is not None
+        entity_entry = entity_registry.async_get(entity_id)
+        assert entity_entry is not None
+        assert entity_entry.config_entry_id == mock_config_entry.entry_id
 
 
 async def test_device_specific_status(

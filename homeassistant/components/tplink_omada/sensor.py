@@ -14,6 +14,7 @@ from homeassistant.components.sensor import (
     SensorEntityDescription,
     SensorStateClass,
 )
+from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import PERCENTAGE, EntityCategory
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import device_registry as dr
@@ -22,6 +23,7 @@ from homeassistant.helpers.typing import StateType
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
 from . import OmadaConfigEntry
+from .config_flow import CONF_SITE
 from .const import DOMAIN, OmadaDeviceStatus
 from .coordinator import OmadaControllerInfoCoordinator, OmadaDevicesCoordinator
 from .entity import OmadaDeviceEntity
@@ -76,12 +78,13 @@ async def async_setup_entry(
     controller_info_coordinator = controller.controller_info_coordinator
     devices_coordinator = controller.devices_coordinator
 
-    async_add_entities(
-        [
-            OmadaControllerSensor(controller_info_coordinator, desc)
-            for desc in OMADA_CONTROLLER_SENSORS
-        ]
-    )
+    if _config_entry_owns_controller_entities(hass, config_entry):
+        async_add_entities(
+            [
+                OmadaControllerSensor(controller_info_coordinator, desc)
+                for desc in OMADA_CONTROLLER_SENSORS
+            ]
+        )
 
     async def _create_device_sensor_entities(
         device: OmadaListDevice,
@@ -116,6 +119,40 @@ class OmadaControllerSensorEntityDescription(SensorEntityDescription):
     update_func: Callable[[OmadaControllerInfo], StateType]
     extra_attributes_func: Callable[[OmadaControllerInfo], dict[str, StateType]] = (
         lambda _: {}
+    )
+
+
+def _config_entry_controller_unique_id(config_entry: ConfigEntry) -> str | None:
+    """Return the controller-level unique ID for a site config entry."""
+    unique_id = config_entry.unique_id
+    site_id = config_entry.data.get(CONF_SITE)
+
+    if unique_id is None or not isinstance(site_id, str):
+        return unique_id
+
+    site_suffix = f"_{site_id}"
+    if unique_id.endswith(site_suffix):
+        return unique_id[: -len(site_suffix)]
+
+    return unique_id
+
+
+def _config_entry_owns_controller_entities(
+    hass: HomeAssistant, config_entry: OmadaConfigEntry
+) -> bool:
+    """Return if this site entry should add the controller-level entities."""
+    controller_unique_id = _config_entry_controller_unique_id(config_entry)
+    controller_entries = [
+        entry
+        for entry in hass.config_entries.async_entries(DOMAIN)
+        if _config_entry_controller_unique_id(entry) == controller_unique_id
+    ]
+
+    return (
+        config_entry.entry_id
+        == min(
+            controller_entries, key=lambda entry: (entry.created_at, entry.entry_id)
+        ).entry_id
     )
 
 
@@ -206,10 +243,7 @@ class OmadaControllerSensor(
         """Initialize the controller sensor."""
         super().__init__(coordinator)
         self.entity_description = entity_description
-        config_entry_unique_id = (
-            coordinator.config_entry.unique_id or coordinator.config_entry.entry_id
-        )
-        self._attr_unique_id = f"{config_entry_unique_id}_{entity_description.key}"
+        self._attr_unique_id = f"{coordinator.data.omadac_id}_{entity_description.key}"
 
     @property
     @override
