@@ -38,7 +38,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: MyPVConfigEntry) -> bool
 
     try:
         await coordinator.async_config_entry_first_refresh()
-    except ConfigEntryNotReady:
+    except ConfigEntryNotReady, ConfigEntryAuthFailed:
         await coordinator.async_disconnect()
         raise
 
