@@ -310,7 +310,8 @@ class RoborockSwitchQ10(RoborockCoordinatedEntityB01Q10, SwitchEntity):
         except RoborockException as err:
             raise HomeAssistantError(
                 translation_domain=DOMAIN,
-                translation_key="update_options_failed",
+                translation_key="command_failed",
+                translation_placeholders={"command": self.entity_description.key},
             ) from err
 
     @override
@@ -321,7 +322,8 @@ class RoborockSwitchQ10(RoborockCoordinatedEntityB01Q10, SwitchEntity):
         except RoborockException as err:
             raise HomeAssistantError(
                 translation_domain=DOMAIN,
-                translation_key="update_options_failed",
+                translation_key="command_failed",
+                translation_placeholders={"command": self.entity_description.key},
             ) from err
 
     @property
