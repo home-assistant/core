@@ -1357,14 +1357,6 @@ def _register_alarm_services(hass: HomeAssistant, zha_gateway: Gateway) -> None:
         alarm_entity = _get_alarm_control_panel(zha_device)
         await alarm_entity.async_start_exit_delay(duration, arm_mode=arm_mode)
 
-        # Notify keypad with arm response (ZCL armRsp after panelStatusChanged)
-        arm_notification_map = {
-            "away": IasAce.ArmNotification.All_Zones_Armed,
-            "home": IasAce.ArmNotification.Only_Day_Home_Zones_Armed,
-            "night": IasAce.ArmNotification.Only_Night_Sleep_Zones_Armed,
-        }
-        await alarm_entity.async_send_arm_notification(arm_notification_map[arm_mode])
-
         _LOGGER.debug(
             "Exit delay set on %s for %d seconds (mode: %s)",
             str(ieee),
