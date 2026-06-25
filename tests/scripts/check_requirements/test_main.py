@@ -50,12 +50,10 @@ def test_main_writes_artifact(
     monkeypatch: pytest.MonkeyPatch,
     capsys: pytest.CaptureFixture[str],
 ) -> None:
-    """When the gate runs the checks, the CLI writes the artifact and skip=false."""
+    """When the gate runs the checks, the CLI writes a non-skipped artifact."""
     diff_file = tmp_path / "diff.patch"
     _write_bump_diff(diff_file)
     output_file = tmp_path / "results.json"
-    github_output = tmp_path / "gh_output"
-    monkeypatch.setenv("GITHUB_OUTPUT", str(github_output))
     monkeypatch.setattr(
         main_mod, "_resolve_skip", lambda pr, sha: GateDecision(False, "running checks")
     )
@@ -76,6 +74,7 @@ def test_main_writes_artifact(
     assert exit_code == 0
 
     payload = json.loads(output_file.read_text(encoding="utf-8"))
+    assert payload["skip_aw"] is False
     assert payload["pr_number"] == 42
     assert payload["head_sha"] == _SHA
     assert payload["packages"][0]["name"] == "pkg"
@@ -83,20 +82,17 @@ def test_main_writes_artifact(
         f"https://github.com/home-assistant/core/commit/{_SHA}"
         in payload["rendered_comment"]
     )
-    assert "skip=false" in github_output.read_text(encoding="utf-8")
     assert "check_requirements: 1 package change(s)" in capsys.readouterr().err
 
 
-def test_main_skips_and_writes_no_artifact(
+def test_main_skips_but_still_writes_artifact(
     tmp_path: Path,
     monkeypatch: pytest.MonkeyPatch,
 ) -> None:
-    """When the gate decides to skip, no checks run and no artifact is written."""
+    """When the gate skips, no checks run but a skip-flagged artifact is written."""
     diff_file = tmp_path / "diff.patch"
     _write_bump_diff(diff_file)
     output_file = tmp_path / "results.json"
-    github_output = tmp_path / "gh_output"
-    monkeypatch.setenv("GITHUB_OUTPUT", str(github_output))
     monkeypatch.setattr(
         main_mod, "_resolve_skip", lambda pr, sha: GateDecision(True, "nothing changed")
     )
@@ -120,8 +116,16 @@ def test_main_skips_and_writes_no_artifact(
         ]
     )
     assert exit_code == 0
-    assert not output_file.exists()
-    assert "skip=true" in github_output.read_text(encoding="utf-8")
+    payload = json.loads(output_file.read_text(encoding="utf-8"))
+    assert payload == {
+        "version": 1,
+        "pr_number": 42,
+        "skip_aw": True,
+        "head_sha": _SHA,
+        "needs_agent": False,
+        "packages": [],
+        "rendered_comment": "",
+    }
 
 
 def test_resolve_skip_without_credentials_runs(monkeypatch: pytest.MonkeyPatch) -> None:

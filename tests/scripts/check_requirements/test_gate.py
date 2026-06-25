@@ -13,6 +13,8 @@ from script.check_requirements.gate import (
     extract_prior_sha,
     fetch_marker_comment_bodies,
 )
+from script.check_requirements.models import CheckRunResult
+from script.check_requirements.render import render_comment
 
 _REPO = "home-assistant/core"
 _TOKEN = "test-token"
@@ -100,6 +102,12 @@ def test_extract_prior_sha(bodies: list[str], expected: str | None) -> None:
 def test_extract_prior_sha_normalizes_case() -> None:
     """An upper-case SHA in a link is returned lower-cased."""
     assert extract_prior_sha([_body(_PRIOR.upper())]) == _PRIOR
+
+
+def test_extract_prior_sha_round_trips_rendered_comment() -> None:
+    """The gate reads back exactly the SHA the renderer wrote, keeping them in sync."""
+    body = render_comment(CheckRunResult(pr_number=1, head_sha=_HEAD))
+    assert extract_prior_sha([body]) == _HEAD
 
 
 # ---------------------------------------------------------------------------

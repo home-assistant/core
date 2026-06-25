@@ -3,14 +3,8 @@
 The deterministic stage re-runs on every `synchronize` where the PR touches a
 tracked requirement file, even when the latest push changed only unrelated
 files. This module answers "did a tracked requirement file actually change
-since we last commented?" so the stage can skip the PyPI work and the artifact
-upload — which in turn lets the agentic stage no-op (it only runs when an
-artifact is present).
-
-The prior commit is recovered from the most recent `<!-- requirements-check -->`
-comment (the SHA embedded in its "Checked at commit" link) and compared against
-the head commit that triggered the run, mirroring the diff the agentic stage
-used to compute for itself.
+since we last commented?" so the stage can skip the PyPI work and flag the
+uploaded artifact as skipped, telling the agentic stage to no-op.
 """
 
 from dataclasses import dataclass
@@ -22,18 +16,13 @@ from github import Auth, Github, GithubException
 from github.IssueComment import IssueComment
 
 from .diff import is_tracked
-from .render import MARKER
+from .render import COMMIT_PATH, MARKER
 
 _LOGGER = logging.getLogger(__name__)
 
-# The "Checked at commit [`abc1234`](.../commit/<40-hex>)." link rendered by
+# The "Checked at commit [`abc1234`](...COMMIT_PATH<40-hex>)." link rendered by
 # render._intro is the only place the head SHA is recorded in the comment.
-_COMMIT_SHA_RE = re.compile(r"/commit/([0-9a-f]{40})", re.IGNORECASE)
-# The skip decision is driven by the SHA recorded in the comment, so only the
-# bot that actually posts that comment is trusted. Anyone — including a fork PR
-# author — can post a `<!-- requirements-check -->` comment on a public PR, and
-# honouring it would let them suppress their own dependency checks. The agentic
-# stage posts via the Actions GITHUB_TOKEN, so the author is github-actions[bot].
+_COMMIT_SHA_RE = re.compile(re.escape(COMMIT_PATH) + r"([0-9a-f]{40})", re.IGNORECASE)
 _TRUSTED_AUTHOR = "github-actions[bot]"
 
 

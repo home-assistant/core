@@ -24,9 +24,10 @@ safe-outputs:
     - prepare
 jobs:
   prepare:
-    # The deterministic stage uploads no artifact when no tracked requirement
-    # file changed since the last comment; its absence is our cue to skip the
-    # (token-spending) agent. When present, recover the PR number to comment on.
+    # The deterministic stage always uploads an artifact; its `skip_aw` flag is
+    # true when no tracked requirement file changed since the last comment,
+    # which is our cue to skip the (token-spending) agent. Recover the PR number
+    # to comment on either way.
     if: github.event.workflow_run.conclusion == 'success'
     runs-on: ubuntu-latest
     permissions:
@@ -38,7 +39,6 @@ jobs:
     steps:
       - name: Download deterministic-results artifact
         id: download
-        continue-on-error: true
         uses: actions/download-artifact@3e5f45b2cfb9172054b4087a40e8e0b5a5461e7c # v8.0.1
         with:
           name: check-requirements-deterministic
@@ -48,13 +48,8 @@ jobs:
       - name: Resolve skip and PR number from the artifact
         id: prepare
         run: |
-          if [ ! -f /tmp/deterministic/results.json ]; then
-            echo "No deterministic artifact; the deterministic stage gated this run. Skipping the agent."
-            echo "skip=true" >> "${GITHUB_OUTPUT}"
-          else
-            PR=$(jq -r '.pr_number' /tmp/deterministic/results.json)
-            echo "pr_number=${PR}" >> "${GITHUB_OUTPUT}"
-          fi
+          echo "skip=$(jq -r '.skip_aw' /tmp/deterministic/results.json)" >> "${GITHUB_OUTPUT}"
+          echo "pr_number=$(jq -r '.pr_number' /tmp/deterministic/results.json)" >> "${GITHUB_OUTPUT}"
 concurrency:
   group: ${{ github.workflow }}-${{ github.event.workflow_run.id }}
   cancel-in-progress: true
