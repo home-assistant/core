@@ -26,6 +26,7 @@ from .const import (
     BSH_OPERATION_STATE_PAUSE,
     BSH_OPERATION_STATE_RUN,
     UNIT_MAP,
+    UnitOfRatio,
 )
 from .coordinator import HomeConnectApplianceCoordinator, HomeConnectConfigEntry
 from .entity import HomeConnectEntity, constraint_fetcher
