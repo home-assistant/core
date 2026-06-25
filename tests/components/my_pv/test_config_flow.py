@@ -22,16 +22,11 @@ DHCP_DISCOVERY = DhcpServiceInfo(
 ZEROCONF_DISCOVERY = ZeroconfServiceInfo(
     ip_address=ip_address("127.0.0.1"),
     ip_addresses=[ip_address("127.0.0.1")],
-    hostname="mypv_986d35cabcde.local.",
-    name="_mypv._mypv._tcp.local.",
-    port=80,
+    hostname="my-pv-ac-elwa-2-1601500000000000.local.",
+    name="my-pv-ac-elwa-2-1601500000000000._mypv._tcp.local.",
+    port=443,
     type="_mypv._tcp.local.",
-    properties={
-        "vendor": "my-PV",
-        "fw_ver": "3.0.8",
-        "serialno": "1601500000000000",
-        "model": "AC ELWA 2",
-    },
+    properties={"": None},
 )
 
 
