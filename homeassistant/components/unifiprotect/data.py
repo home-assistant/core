@@ -230,19 +230,23 @@ class ProtectData:
 
         DEVICES_WS_SUBSCRIBED_MODELS is an empty set, which the API client treats
         as "all models", so messages are not pre-filtered. NVR messages signal the
-        private NVR so alarm entities pick up the new arm state. Relay and Siren
-        messages dispatch the merged object by mac so relay-output and siren
-        entities refresh. Any other public device is dispatched generically by mac
-        to entities whose description was migrated to the public path via
-        ``ufp_public_value`` (such as battery and battery_low); the NVR/Relay/Siren
-        returns above intentionally short-circuit that generic path.
+        private NVR so alarm entities pick up the new arm state. Relay, Siren and
+        LinkStation (alarm hub) messages dispatch the merged object by mac so the
+        relay-output, siren and alarm-hub entities refresh. Any other public device
+        is dispatched generically by mac to entities whose description was migrated
+        to the public path via ``ufp_public_value`` (such as battery and
+        battery_low); the NVR/Relay/Siren/LinkStation returns above intentionally
+        short-circuit that generic path.
         """
         new_obj = message.new_obj
         if new_obj is None:
             # Delete event: notify subscribers so entities can be marked unavailable.
             old_obj = message.old_obj
-            if old_obj is not None and old_obj.model is ModelType.SIREN:
-                self._async_signal_siren_update(cast(Siren, old_obj))
+            if old_obj is not None:
+                if old_obj.model is ModelType.SIREN:
+                    self._async_signal_siren_update(cast(Siren, old_obj))
+                elif old_obj.model is ModelType.LINK_STATION:
+                    self._async_signal_alarm_hub_update(cast(LinkStation, old_obj))
             return
         if new_obj.model is ModelType.NVR:
             self._async_signal_device_update(self.api.bootstrap.nvr)
@@ -252,6 +256,9 @@ class ProtectData:
             return
         if new_obj.model is ModelType.SIREN:
             self._async_signal_siren_update(cast(Siren, new_obj))
+            return
+        if new_obj.model is ModelType.LINK_STATION:
+            self._async_signal_alarm_hub_update(cast(LinkStation, new_obj))
             return
         # Generic public-device dispatch (e.g. sensor) keyed by mac, for
         # descriptions migrated to the public path via ``ufp_public_value``.

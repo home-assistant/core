@@ -256,6 +256,56 @@ async def test_alarm_hub_availability_follows_public_ws(
     assert hass.states.get(entity_id).state != STATE_UNAVAILABLE
 
 
+async def test_alarm_hub_state_updates_from_public_ws(
+    hass: HomeAssistant,
+    ufp_with_alarm_hub: MockUFPFixture,
+    alarm_hub: LinkStation,
+) -> None:
+    """A public devices WS update for the hub refreshes its entities."""
+    await init_entry(hass, ufp_with_alarm_hub, [])
+
+    entity_id = "binary_sensor.alarm_hub_hallway"
+    assert hass.states.get(entity_id).state == "off"
+
+    # Trigger the Hallway motion zone (input 24) on the cached hub object.
+    alarm_hub.alarm_hub["input"]["24"]["status"] = "alarm"
+
+    mock_msg = Mock()
+    mock_msg.changed_data = {}
+    mock_msg.old_obj = alarm_hub
+    mock_msg.new_obj = alarm_hub
+    assert ufp_with_alarm_hub.devices_ws_subscription is not None
+    ufp_with_alarm_hub.devices_ws_subscription(mock_msg)
+    await hass.async_block_till_done()
+
+    assert hass.states.get(entity_id).state == "on"
+
+
+async def test_alarm_hub_becomes_unavailable_when_removed(
+    hass: HomeAssistant,
+    ufp_with_alarm_hub: MockUFPFixture,
+    alarm_hub: LinkStation,
+) -> None:
+    """A delete WS frame (new_obj=None) marks the hub's entities unavailable."""
+    await init_entry(hass, ufp_with_alarm_hub, [])
+
+    entity_id = "sensor.alarm_hub_battery_voltage"
+    assert hass.states.get(entity_id).state != STATE_UNAVAILABLE
+
+    # Drop the hub from the public bootstrap, then send a delete frame.
+    ufp_with_alarm_hub.api.public_bootstrap.alarm_hubs = {}
+
+    mock_msg = Mock()
+    mock_msg.changed_data = {}
+    mock_msg.old_obj = alarm_hub
+    mock_msg.new_obj = None
+    assert ufp_with_alarm_hub.devices_ws_subscription is not None
+    ufp_with_alarm_hub.devices_ws_subscription(mock_msg)
+    await hass.async_block_till_done()
+
+    assert hass.states.get(entity_id).state == STATE_UNAVAILABLE
+
+
 async def test_alarm_hub_disconnected_battery(
     hass: HomeAssistant,
     ufp_with_alarm_hub: MockUFPFixture,
