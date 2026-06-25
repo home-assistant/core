@@ -1,7 +1,7 @@
 """Config flow for the National Grid US integration."""
 
 import logging
-from typing import Any
+from typing import Any, override
 
 from py_nationalgrid import NationalGridClient, NationalGridConfig, create_cookie_jar
 from py_nationalgrid.exceptions import (
@@ -33,6 +33,7 @@ class NationalGridUSConfigFlow(ConfigFlow, domain=DOMAIN):
         self._password: str | None = None
         self._accounts: list[dict[str, str]] = []
 
+    @override
     async def async_step_user(
         self, user_input: dict[str, Any] | None = None
     ) -> ConfigFlowResult:

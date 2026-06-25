@@ -2,6 +2,7 @@
 
 from collections.abc import Callable
 from dataclasses import dataclass
+from typing import override
 
 from homeassistant.components.sensor import (
     SensorDeviceClass,
@@ -14,7 +15,6 @@ from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from homeassistant.helpers.typing import StateType
 
-from .const import DOMAIN
 from .coordinator import (
     MeterData,
     NationalGridConfigEntry,
@@ -108,7 +108,7 @@ class NationalGridSensor(NationalGridEntity, SensorEntity):
         """Initialize the sensor."""
         super().__init__(coordinator, meter_key)
         self.entity_description = entity_description
-        self._attr_unique_id = f"{DOMAIN}_{meter_key}_{entity_description.key}"
+        self._attr_unique_id = f"{meter_key}_{entity_description.key}"
         if entity_description.unit_fn:
             self._attr_native_unit_of_measurement = entity_description.unit_fn(
                 meter_data
@@ -117,6 +117,7 @@ class NationalGridSensor(NationalGridEntity, SensorEntity):
             self._attr_device_class = entity_description.device_class_fn(meter_data)
 
     @property
+    @override
     def native_value(self) -> StateType:
         """Return the sensor value."""
         meter_data = self.coordinator.data.meters.get(self._meter_key)
