@@ -5,7 +5,12 @@ from typing import Any, final, override
 
 from homeassistant.helpers.entity import Entity, EntityDescription
 
-from .const import ValveDeviceClass, ValveEntityFeature, ValveState
+from .const import (
+    ValveDeviceClass,
+    ValveEntityFeature,
+    ValveEntityStateAttribute,
+    ValveState,
+)
 
 ATTR_CURRENT_POSITION = "current_position"
 ATTR_IS_CLOSED = "is_closed"
@@ -90,12 +95,12 @@ class ValveEntity(Entity):
 
         if self.reports_position:
             if (current_valve_position := self.current_valve_position) is None:
-                data[ATTR_IS_CLOSED] = None
+                data[ValveEntityStateAttribute.IS_CLOSED] = None
             else:
-                data[ATTR_IS_CLOSED] = current_valve_position == 0
-            data[ATTR_CURRENT_POSITION] = current_valve_position
+                data[ValveEntityStateAttribute.IS_CLOSED] = current_valve_position == 0
+            data[ValveEntityStateAttribute.CURRENT_POSITION] = current_valve_position
         else:
-            data[ATTR_IS_CLOSED] = self.is_closed
+            data[ValveEntityStateAttribute.IS_CLOSED] = self.is_closed
 
         return data
 
