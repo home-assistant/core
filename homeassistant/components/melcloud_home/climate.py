@@ -200,6 +200,42 @@ class ATAClimateEntity(MelCloudHomeATAUnitEntity, ClimateEntity):
 
     @property
     @override
+    def min_temp(self) -> float:
+        """Return the minimum temperature based on the current HVAC mode."""
+        capabilities = self.unit.capabilities
+        if capabilities is not None:
+            hvac_mode = self.hvac_mode
+            if hvac_mode in (HVACMode.COOL, HVACMode.DRY):
+                if capabilities.min_temp_cool is not None:
+                    return capabilities.min_temp_cool
+            elif hvac_mode == HVACMode.AUTO:
+                if capabilities.min_temp_auto is not None:
+                    return capabilities.min_temp_auto
+            elif hvac_mode == HVACMode.HEAT:
+                if capabilities.min_temp_heat is not None:
+                    return capabilities.min_temp_heat
+        return super().min_temp
+
+    @property
+    @override
+    def max_temp(self) -> float:
+        """Return the maximum temperature based on the current HVAC mode."""
+        capabilities = self.unit.capabilities
+        if capabilities is not None:
+            hvac_mode = self.hvac_mode
+            if hvac_mode in (HVACMode.COOL, HVACMode.DRY):
+                if capabilities.max_temp_cool is not None:
+                    return capabilities.max_temp_cool
+            elif hvac_mode == HVACMode.AUTO:
+                if capabilities.max_temp_auto is not None:
+                    return capabilities.max_temp_auto
+            elif hvac_mode == HVACMode.HEAT:
+                if capabilities.max_temp_heat is not None:
+                    return capabilities.max_temp_heat
+        return super().max_temp
+
+    @property
+    @override
     def hvac_mode(self) -> HVACMode:
         """Return the current HVAC mode."""
         return (
@@ -337,6 +373,36 @@ class ATWZoneClimateEntity(MelCloudHomeATWZoneEntity, ClimateEntity):
             if self.zone_number == 1
             else self.unit.set_temperature_zone2
         )
+
+    @property
+    @override
+    def min_temp(self) -> float:
+        """Return the minimum zone temperature."""
+        capabilities = self.unit.capabilities
+        if capabilities is not None:
+            value = (
+                capabilities.min_set_temperature_zone1
+                if self.zone_number == 1
+                else capabilities.min_set_temperature_zone2
+            )
+            if value is not None:
+                return value
+        return super().min_temp
+
+    @property
+    @override
+    def max_temp(self) -> float:
+        """Return the maximum zone temperature."""
+        capabilities = self.unit.capabilities
+        if capabilities is not None:
+            value = (
+                capabilities.max_set_temperature_zone1
+                if self.zone_number == 1
+                else capabilities.max_set_temperature_zone2
+            )
+            if value is not None:
+                return value
+        return super().max_temp
 
     @property
     @override
