@@ -78,8 +78,8 @@ async def test_controller_entities_created_once_per_controller(
         unique_id="12345_Disabled",
         version=2,
         disabled_by=ConfigEntryDisabler.USER,
-        created_at=datetime(2024, 1, 1, tzinfo=UTC),
     )
+    object.__setattr__(disabled_entry, "created_at", datetime(2024, 1, 1, tzinfo=UTC))
 
     disabled_entry.add_to_hass(hass)
     mock_config_entry.add_to_hass(hass)
