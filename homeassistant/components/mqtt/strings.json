@@ -45,7 +45,7 @@
             "data": {
               "certificate": "Upload custom CA certificate file",
               "client_cert": "Upload client certificate file",
-              "client_id": "Client ID (leave empty to randomly generated one)",
+              "client_id": "Client ID (leave empty for a randomly generated one)",
               "client_key": "Upload private key file",
               "client_key_password": "[%key:common::config_flow::data::password%]",
               "keepalive": "The time between sending keep alive messages",
