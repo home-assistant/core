@@ -52,9 +52,10 @@ from homeassistant.components.hassio import (
     get_supervisor_stats,
     hostname_from_addon_slug,
 )
-from homeassistant.components.hassio.config import STORAGE_KEY
 from homeassistant.components.hassio.const import (
+    DATA_HASSIO_SUPERVISOR_USER,
     DATA_KEY_SUPERVISOR_ISSUES,
+    ENTRY_DATA_USER,
     HASSIO_MAIN_UPDATE_INTERVAL,
     REQUEST_REFRESH_DELAY,
 )
@@ -329,13 +330,10 @@ async def test_setup_api_push_api_data_server_host(
 
 
 async def test_setup_api_push_api_data_default(
-    hass: HomeAssistant, hass_storage: dict[str, Any], supervisor_client: AsyncMock
+    hass: HomeAssistant, supervisor_client: AsyncMock
 ) -> None:
     """Test setup with API push default data."""
-    with (
-        patch.dict(os.environ, MOCK_ENVIRON),
-        patch("homeassistant.components.hassio.config.STORE_DELAY_SAVE", 0),
-    ):
+    with patch.dict(os.environ, MOCK_ENVIRON):
         result = await async_setup_component(hass, DOMAIN, {"http": {}, "hassio": {}})
         await hass.async_block_till_done()
 
@@ -347,10 +345,7 @@ async def test_setup_api_push_api_data_default(
     refresh_token = (
         supervisor_client.homeassistant.set_options.mock_calls[0].args[0].refresh_token
     )
-    hassio_user = await hass.auth.async_get_user(
-        hass_storage[STORAGE_KEY]["data"]["hassio_user"]
-    )
-    assert hassio_user is not None
+    hassio_user = hass.data[DATA_HASSIO_SUPERVISOR_USER]
     assert hassio_user.system_generated
     assert len(hassio_user.groups) == 1
     assert hassio_user.groups[0].id == GROUP_ID_ADMIN
@@ -362,20 +357,18 @@ async def test_setup_api_push_api_data_default(
         pytest.fail("refresh token not found")
 
 
-async def test_setup_adds_admin_group_to_user(
-    hass: HomeAssistant, hass_storage: dict[str, Any]
-) -> None:
-    """Test setup with API push default data."""
-    # Create user without admin
+async def test_setup_adds_admin_group_to_user(hass: HomeAssistant) -> None:
+    """Test setup migrates the configured user to admin."""
     user = await hass.auth.async_create_system_user("Hass.io")
     assert not user.is_admin
     await hass.auth.async_create_refresh_token(user)
 
-    hass_storage[STORAGE_KEY] = {
-        "data": {"hassio_user": user.id},
-        "key": STORAGE_KEY,
-        "version": 1,
-    }
+    config_entry = MockConfigEntry(
+        domain=DOMAIN,
+        data={ENTRY_DATA_USER: user.id},
+        unique_id=DOMAIN,
+    )
+    config_entry.add_to_hass(hass)
 
     with patch.dict(os.environ, MOCK_ENVIRON):
         result = await async_setup_component(hass, DOMAIN, {"http": {}, "hassio": {}})
@@ -384,19 +377,17 @@ async def test_setup_adds_admin_group_to_user(
     assert user.is_admin
 
 
-async def test_setup_migrate_user_name(
-    hass: HomeAssistant, hass_storage: dict[str, Any]
-) -> None:
-    """Test setup with migrating the user name."""
-    # Create user with old name
+async def test_setup_migrate_user_name(hass: HomeAssistant) -> None:
+    """Test setup migrates the configured user name."""
     user = await hass.auth.async_create_system_user("Hass.io")
     await hass.auth.async_create_refresh_token(user)
 
-    hass_storage[STORAGE_KEY] = {
-        "data": {"hassio_user": user.id},
-        "key": STORAGE_KEY,
-        "version": 1,
-    }
+    config_entry = MockConfigEntry(
+        domain=DOMAIN,
+        data={ENTRY_DATA_USER: user.id},
+        unique_id=DOMAIN,
+    )
+    config_entry.add_to_hass(hass)
 
     with patch.dict(os.environ, MOCK_ENVIRON):
         result = await async_setup_component(hass, DOMAIN, {"http": {}, "hassio": {}})
@@ -406,12 +397,18 @@ async def test_setup_migrate_user_name(
 
 
 async def test_setup_api_existing_hassio_user(
-    hass: HomeAssistant, hass_storage: dict[str, Any], supervisor_client: AsyncMock
+    hass: HomeAssistant, supervisor_client: AsyncMock
 ) -> None:
-    """Test setup with API push default data."""
+    """Test setup uses the user from config entry data."""
     user = await hass.auth.async_create_system_user("Hass.io test")
     token = await hass.auth.async_create_refresh_token(user)
-    hass_storage[STORAGE_KEY] = {"version": 1, "data": {"hassio_user": user.id}}
+    config_entry = MockConfigEntry(
+        domain=DOMAIN,
+        data={ENTRY_DATA_USER: user.id},
+        unique_id=DOMAIN,
+    )
+    config_entry.add_to_hass(hass)
+
     with patch.dict(os.environ, MOCK_ENVIRON):
         result = await async_setup_component(hass, DOMAIN, {"http": {}, "hassio": {}})
         await hass.async_block_till_done()
