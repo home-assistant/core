@@ -74,8 +74,8 @@ class SmBleScanner(BaseHaRemoteScanner):
             return
         await self._client.start()
 
-    @override
     @callback
+    @override
     def async_setup(self) -> CALLBACK_TYPE:
         """Set up the SLZB Bluetooth scanner."""
         cancel_watchdog = super().async_setup()
