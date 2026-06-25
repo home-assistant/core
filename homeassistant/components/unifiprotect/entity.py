@@ -584,6 +584,7 @@ class BaseAlarmHubEntity(Entity):
         self._async_update_attrs(hub)
         self.async_write_ha_state()
 
+    @override
     async def async_added_to_hass(self) -> None:
         """Subscribe to public WS updates dispatched by ProtectData."""
         await super().async_added_to_hass()

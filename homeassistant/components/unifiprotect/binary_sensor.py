@@ -787,6 +787,7 @@ class ProtectAlarmHubBinarySensor(BaseAlarmHubEntity, BinarySensorEntity):
     entity_description: ProtectAlarmHubBinaryEntityDescription
 
     @callback
+    @override
     def _async_update_attrs(self, hub: LinkStation) -> None:
         super()._async_update_attrs(hub)
         self._attr_is_on = self.entity_description.value_fn(hub)
@@ -814,6 +815,7 @@ class ProtectAlarmHubZoneBinarySensor(BaseAlarmHubEntity, BinarySensorEntity):
         self._attr_name = zone.name or f"Zone {input_id}"
 
     @callback
+    @override
     def _async_update_attrs(self, hub: LinkStation) -> None:
         super()._async_update_attrs(hub)
         zone = hub.alarm_hub_inputs.get(self._input_id)

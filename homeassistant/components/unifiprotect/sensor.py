@@ -616,6 +616,7 @@ class ProtectAlarmHubSensor(BaseAlarmHubEntity, SensorEntity):
     entity_description: ProtectAlarmHubSensorEntityDescription
 
     @callback
+    @override
     def _async_update_attrs(self, hub: LinkStation) -> None:
         super()._async_update_attrs(hub)
         self._attr_native_value = self.entity_description.value_fn(hub)
