@@ -99,6 +99,7 @@ async def test_bluetooth_not_started_for_classic_device(
     mock_ble_client.assert_not_called()
 
 
+@pytest.mark.usefixtures("enable_bluetooth")
 async def test_bluetooth_start_client_none(hass: HomeAssistant) -> None:
     """Test start client when _client is None."""
     scanner = SmBleScanner(
