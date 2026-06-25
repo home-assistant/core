@@ -1,11 +1,11 @@
 """Data update coordinator for the Steam integration."""
 
-from collections import OrderedDict
 from dataclasses import dataclass
 from datetime import timedelta
 import logging
 from typing import override
 
+from cachetools import TTLCache
 import steam.api
 
 from homeassistant.config_entries import ConfigEntry
@@ -65,17 +65,9 @@ class SteamDataUpdateCoordinator(DataUpdateCoordinator[dict[str, PlayerData]]):
             name=DOMAIN,
             update_interval=timedelta(seconds=30),
         )
-        self.game_icons: OrderedDict[str, str | None] = OrderedDict()
-
-    def cache_game_icon(self, game_id: str, icon_url: str | None) -> None:
-        """Store a game icon in the cache."""
-
-        max_size = len(self.config_entry.options[CONF_ACCOUNTS])
-
-        while len(self.game_icons) >= max_size:
-            self.game_icons.popitem(last=False)
-
-        self.game_icons[game_id] = icon_url
+        self.game_icons: TTLCache = TTLCache(
+            maxsize=10000, ttl=timedelta(hours=24).total_seconds()
+        )
 
     @override
     async def _async_setup(self) -> None:
@@ -105,19 +97,19 @@ class SteamDataUpdateCoordinator(DataUpdateCoordinator[dict[str, PlayerData]]):
         for player in players.values():
             if player.gameid and player.gameid not in self.game_icons:
                 games = self.player_interface.GetOwnedGames(
-                    steamid=player.steamid, include_appinfo=1
+                    steamid=player.steamid,
+                    include_appinfo=1,
+                    include_played_free_games=True,
                 )["response"].get("games", [])
-                self.cache_game_icon(
-                    player.gameid,
-                    next(
-                        (
-                            game["img_icon_url"]
-                            for game in games
-                            if str(game["appid"]) == player.gameid
-                        ),
-                        None,
+                self.game_icons[player.gameid] = next(
+                    (
+                        game["img_icon_url"]
+                        for game in games
+                        if str(game["appid"]) == player.gameid
                     ),
+                    None,
                 )
+
         return players
 
     @override
