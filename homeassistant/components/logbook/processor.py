@@ -281,8 +281,6 @@ def _exposed_state_attributes(
     row: Row | EventAsRow, attr_cache: dict[str, dict[str, Any]]
 ) -> dict[str, Any]:
     """Return the allowlisted state attributes for a state change row."""
-    # Live rows carry the state's attributes directly; db rows carry the
-    # recorded shared_attrs source that has to be decoded.
     attributes: Mapping[str, Any] | None
     if type(row) is EventAsRow:
         attributes = row[ATTRIBUTES_POS]
