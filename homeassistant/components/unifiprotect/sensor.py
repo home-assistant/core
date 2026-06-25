@@ -37,7 +37,6 @@ from homeassistant.const import (
 )
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
-from homeassistant.util import dt as dt_util
 
 from .data import ProtectData, ProtectDeviceType, UFPConfigEntry
 from .entity import (
@@ -588,9 +587,7 @@ def _alarm_hub_battery_voltage(hub: LinkStation) -> float | None:
 
 def _alarm_hub_last_event(hub: LinkStation) -> datetime | None:
     """Return the last-event timestamp, if reported."""
-    if hub.last_event is None:
-        return None
-    return dt_util.utc_from_timestamp(hub.last_event / 1000)
+    return hub.last_event
 
 
 ALARM_HUB_SENSORS: tuple[ProtectAlarmHubSensorEntityDescription, ...] = (

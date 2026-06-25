@@ -2,9 +2,9 @@
 # name: test_alarm_hub_device_and_entities[binary_sensor.alarm_hub_24_hour_tamper-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'attribution': 'Powered by UniFi Protect Server',
-      'device_class': 'safety',
-      'friendly_name': 'Alarm Hub 24 Hour Tamper',
+      <EntityStateAttribute.ATTRIBUTION: 'attribution'>: 'Powered by UniFi Protect Server',
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'safety',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Alarm Hub 24 Hour Tamper',
     }),
     'context': <ANY>,
     'entity_id': 'binary_sensor.alarm_hub_24_hour_tamper',
@@ -54,9 +54,9 @@
 # name: test_alarm_hub_device_and_entities[binary_sensor.alarm_hub_battery-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'attribution': 'Powered by UniFi Protect Server',
-      'device_class': 'battery',
-      'friendly_name': 'Alarm Hub Battery',
+      <EntityStateAttribute.ATTRIBUTION: 'attribution'>: 'Powered by UniFi Protect Server',
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'battery',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Alarm Hub Battery',
     }),
     'context': <ANY>,
     'entity_id': 'binary_sensor.alarm_hub_battery',
@@ -106,9 +106,9 @@
 # name: test_alarm_hub_device_and_entities[binary_sensor.alarm_hub_hallway-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'attribution': 'Powered by UniFi Protect Server',
-      'device_class': 'motion',
-      'friendly_name': 'Alarm Hub Hallway',
+      <EntityStateAttribute.ATTRIBUTION: 'attribution'>: 'Powered by UniFi Protect Server',
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'motion',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Alarm Hub Hallway',
     }),
     'context': <ANY>,
     'entity_id': 'binary_sensor.alarm_hub_hallway',
@@ -158,9 +158,9 @@
 # name: test_alarm_hub_device_and_entities[binary_sensor.alarm_hub_motion_a-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'attribution': 'Powered by UniFi Protect Server',
-      'device_class': 'motion',
-      'friendly_name': 'Alarm Hub Motion A',
+      <EntityStateAttribute.ATTRIBUTION: 'attribution'>: 'Powered by UniFi Protect Server',
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'motion',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Alarm Hub Motion A',
     }),
     'context': <ANY>,
     'entity_id': 'binary_sensor.alarm_hub_motion_a',
@@ -210,9 +210,9 @@
 # name: test_alarm_hub_device_and_entities[binary_sensor.alarm_hub_motion_b-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'attribution': 'Powered by UniFi Protect Server',
-      'device_class': 'motion',
-      'friendly_name': 'Alarm Hub Motion B',
+      <EntityStateAttribute.ATTRIBUTION: 'attribution'>: 'Powered by UniFi Protect Server',
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'motion',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Alarm Hub Motion B',
     }),
     'context': <ANY>,
     'entity_id': 'binary_sensor.alarm_hub_motion_b',
@@ -262,9 +262,9 @@
 # name: test_alarm_hub_device_and_entities[binary_sensor.alarm_hub_tamper-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'attribution': 'Powered by UniFi Protect Server',
-      'device_class': 'tamper',
-      'friendly_name': 'Alarm Hub Tamper',
+      <EntityStateAttribute.ATTRIBUTION: 'attribution'>: 'Powered by UniFi Protect Server',
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'tamper',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Alarm Hub Tamper',
     }),
     'context': <ANY>,
     'entity_id': 'binary_sensor.alarm_hub_tamper',
@@ -314,9 +314,9 @@
 # name: test_alarm_hub_device_and_entities[binary_sensor.alarm_hub_zone_18-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'attribution': 'Powered by UniFi Protect Server',
-      'device_class': 'motion',
-      'friendly_name': 'Alarm Hub Zone 18',
+      <EntityStateAttribute.ATTRIBUTION: 'attribution'>: 'Powered by UniFi Protect Server',
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'motion',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Alarm Hub Zone 18',
     }),
     'context': <ANY>,
     'entity_id': 'binary_sensor.alarm_hub_zone_18',
@@ -366,9 +366,9 @@
 # name: test_alarm_hub_device_and_entities[binary_sensor.alarm_hub_zone_23-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'attribution': 'Powered by UniFi Protect Server',
-      'device_class': 'motion',
-      'friendly_name': 'Alarm Hub Zone 23',
+      <EntityStateAttribute.ATTRIBUTION: 'attribution'>: 'Powered by UniFi Protect Server',
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'motion',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Alarm Hub Zone 23',
     }),
     'context': <ANY>,
     'entity_id': 'binary_sensor.alarm_hub_zone_23',
@@ -418,9 +418,9 @@
 # name: test_alarm_hub_device_and_entities[binary_sensor.alarm_hub_zone_25-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'attribution': 'Powered by UniFi Protect Server',
-      'device_class': 'opening',
-      'friendly_name': 'Alarm Hub Zone 25',
+      <EntityStateAttribute.ATTRIBUTION: 'attribution'>: 'Powered by UniFi Protect Server',
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'opening',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Alarm Hub Zone 25',
     }),
     'context': <ANY>,
     'entity_id': 'binary_sensor.alarm_hub_zone_25',
@@ -470,9 +470,9 @@
 # name: test_alarm_hub_device_and_entities[binary_sensor.alarm_hub_zone_26-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'attribution': 'Powered by UniFi Protect Server',
-      'device_class': 'motion',
-      'friendly_name': 'Alarm Hub Zone 26',
+      <EntityStateAttribute.ATTRIBUTION: 'attribution'>: 'Powered by UniFi Protect Server',
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'motion',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Alarm Hub Zone 26',
     }),
     'context': <ANY>,
     'entity_id': 'binary_sensor.alarm_hub_zone_26',
@@ -522,9 +522,9 @@
 # name: test_alarm_hub_device_and_entities[binary_sensor.alarm_hub_zone_27-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'attribution': 'Powered by UniFi Protect Server',
-      'device_class': 'motion',
-      'friendly_name': 'Alarm Hub Zone 27',
+      <EntityStateAttribute.ATTRIBUTION: 'attribution'>: 'Powered by UniFi Protect Server',
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'motion',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Alarm Hub Zone 27',
     }),
     'context': <ANY>,
     'entity_id': 'binary_sensor.alarm_hub_zone_27',
@@ -609,11 +609,11 @@
 # name: test_alarm_hub_device_and_entities[sensor.alarm_hub_battery_voltage-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'attribution': 'Powered by UniFi Protect Server',
-      'device_class': 'voltage',
-      'friendly_name': 'Alarm Hub Battery voltage',
-      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
-      'unit_of_measurement': <UnitOfElectricPotential.VOLT: 'V'>,
+      <EntityStateAttribute.ATTRIBUTION: 'attribution'>: 'Powered by UniFi Protect Server',
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'voltage',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Alarm Hub Battery voltage',
+      <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
+      <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: <UnitOfElectricPotential.VOLT: 'V'>,
     }),
     'context': <ANY>,
     'entity_id': 'sensor.alarm_hub_battery_voltage',
@@ -630,7 +630,7 @@
     ]),
     'area_id': None,
     'capabilities': dict({
-      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+      <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -668,9 +668,9 @@
 # name: test_alarm_hub_device_and_entities[sensor.alarm_hub_last_event-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'attribution': 'Powered by UniFi Protect Server',
-      'device_class': 'timestamp',
-      'friendly_name': 'Alarm Hub Last event',
+      <EntityStateAttribute.ATTRIBUTION: 'attribution'>: 'Powered by UniFi Protect Server',
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'timestamp',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Alarm Hub Last event',
     }),
     'context': <ANY>,
     'entity_id': 'sensor.alarm_hub_last_event',
