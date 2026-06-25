@@ -2,6 +2,7 @@
 
 import asyncio
 import logging
+from typing import override
 
 from bluetooth_data_tools import monotonic_time_coarse as MONOTONIC_TIME
 from pysmlight import BleProxyClient
@@ -84,6 +85,7 @@ class SmBleScanner(BaseHaRemoteScanner):
                 err,
             )
 
+    @override
     @callback
     def async_setup(self) -> CALLBACK_TYPE:
         """Set up the SLZB Bluetooth scanner."""
