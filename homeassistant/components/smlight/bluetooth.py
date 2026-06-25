@@ -4,11 +4,11 @@ import asyncio
 import logging
 from typing import override
 
-from bluetooth_data_tools import monotonic_time_coarse as MONOTONIC_TIME
 from pysmlight import BleProxyClient
 from pysmlight.exceptions import SmlightConnectionError
 
 from homeassistant.components.bluetooth import (
+    MONOTONIC_TIME,
     BaseHaRemoteScanner,
     BluetoothScanningMode,
     async_register_scanner,
