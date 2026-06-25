@@ -11,6 +11,7 @@ from homeassistant.components import calendar, todo
 from homeassistant.components.homeassistant.exposed_entities import async_expose_entity
 from homeassistant.components.intent import async_register_timer_handler
 from homeassistant.components.script import ScriptConfig
+from homeassistant.const import EntityStateAttribute
 from homeassistant.core import Context, HomeAssistant, State, SupportsResponse
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import (
@@ -479,7 +480,12 @@ async def test_assist_api_prompt(
     hass.states.async_set(
         entry1.entity_id,
         "on",
-        {"friendly_name": "Kitchen", "temperature": Decimal("0.9"), "humidity": 65},
+        {
+            "friendly_name": "Kitchen",
+            "temperature": Decimal("0.9"),
+            "humidity": 65,
+            EntityStateAttribute.UNIT_OF_MEASUREMENT: "°C",
+        },
     )
     hass.states.async_set(entry2.entity_id, "on", {"friendly_name": "Living Room"})
 
@@ -636,6 +642,7 @@ Live Context: An overview of the areas and the devices in this smart home:
   attributes:
     temperature: '0.9'
     humidity: '65'
+    unit_of_measurement: °C
 - names: Living Room
   domain: light
   state: 'on'

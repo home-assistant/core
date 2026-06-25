@@ -32,7 +32,7 @@
     'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': <SteamSensor.ACCOUNT: 'account'>,
-    'unique_id': 'sensor.steam_12345678901234567',
+    'unique_id': '12345678901234567_account',
     'unit_of_measurement': None,
   })
 # ---

@@ -16,7 +16,7 @@ from homeassistant.components.sensor import (
     SensorStateClass,
     StateType,
 )
-from homeassistant.const import PERCENTAGE, UnitOfInformation
+from homeassistant.const import UnitOfInformation, UnitOfRatio
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
@@ -122,7 +122,7 @@ CONTAINER_SENSORS: tuple[PortainerContainerSensorEntityDescription, ...] = (
             and data.stats.memory_stats.usage > 0
             else 0.0
         ),
-        native_unit_of_measurement=PERCENTAGE,
+        native_unit_of_measurement=UnitOfRatio.PERCENTAGE,
         entity_category=EntityCategory.DIAGNOSTIC,
         suggested_display_precision=2,
         state_class=SensorStateClass.MEASUREMENT,
@@ -151,7 +151,7 @@ CONTAINER_SENSORS: tuple[PortainerContainerSensorEntityDescription, ...] = (
             and data.stats.cpu_stats.online_cpus > 0
             else 0.0
         ),
-        native_unit_of_measurement=PERCENTAGE,
+        native_unit_of_measurement=UnitOfRatio.PERCENTAGE,
         entity_category=EntityCategory.DIAGNOSTIC,
         suggested_display_precision=2,
         state_class=SensorStateClass.MEASUREMENT,
