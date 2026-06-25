@@ -1,7 +1,5 @@
 """Test the TFA.me integration: test of coordinator.py."""
 
-# For test run: "pytest ./tests/components/tfa_me/ --cov=homeassistant.components.tfa_me --cov-report term-missing -vv"
-
 from unittest.mock import patch
 
 import pytest

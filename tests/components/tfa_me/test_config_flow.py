@@ -1,7 +1,5 @@
 """Test the TFA.me integration: test of config_flow.py."""
 
-# For test run: "pytest ./tests/components/tfa_me/ --cov=homeassistant.components.tfa_me --cov-report term-missing -vv"
-
 from __future__ import annotations
 
 from collections.abc import Mapping

@@ -1,8 +1,5 @@
 """Test the TFA.me integration: test of sensor.py."""
 
-# For test run: "pytest ./tests/components/tfa_me/ --cov=homeassistant.components.tfa_me --cov-report term-missing -vv"
-# For snapshot: "pytest tests/components/tfa_me/test_sensor.py --snapshot-update"
-
 from unittest.mock import patch
 
 from freezegun.api import FrozenDateTimeFactory

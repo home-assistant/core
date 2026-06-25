@@ -1,7 +1,5 @@
 """Tests for TFA.me: test of __init__.py."""
 
-# For test run: "pytest ./tests/components/tfa_me/ --cov=homeassistant.components.tfa_me --cov-report term-missing -vv"
-
 from unittest.mock import patch
 
 from homeassistant.core import HomeAssistant

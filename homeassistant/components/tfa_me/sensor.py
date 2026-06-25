@@ -20,7 +20,7 @@ from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 from homeassistant.util import dt as dt_util
 
-from .const import DEVICE_MAPPING, DOMAIN, TIMEOUT_FOR_5_MIN, TIMEOUT_MAPPING
+from .const import DOMAIN, TIMEOUT_FOR_5_MIN, TIMEOUT_MAPPING
 from .coordinator import TFAmeConfigEntry, TFAmeUpdateCoordinator
 from .helper import resolve_tfa_host
 
@@ -276,7 +276,7 @@ class TFAmeSensorEntity(CoordinatorEntity[TFAmeUpdateCoordinator], SensorEntity)
                 identifiers={(DOMAIN, ids_str)},
                 name=self.format_string_tfa_id(self.sensor_id, self.gateway_id),
                 manufacturer="TFA/Dostmann",
-                model=self.format_string_tfa_type(sensor_id),
+                model=self.coordinator.get_device_description(sensor_id),
             )
 
             self.measure_name = self.uid.removeprefix("sensor.").split("_", 2)[2]
@@ -356,26 +356,16 @@ class TFAmeSensorEntity(CoordinatorEntity[TFAmeUpdateCoordinator], SensorEntity)
         # Update state in HA
         super()._handle_coordinator_update()
 
-    def format_string_tfa_id(self, s: str, gw_id: str):
-        """String helper for station & sensor names, convert string 'xxxxxxxxx' into 'TFA.me XXX-XXX-XXX'."""
+    def format_string_tfa_id(self, serial: str, gateway_id: str) -> str:
+        """Format a TFA.me serial number including the gateway ID."""
         return (
-            f"TFA.me {s[:3].upper()}-{s[3:6].upper()}-{s[6:].upper()} ({gw_id.upper()})"
+            f"TFA.me {serial[:3].upper()}-{serial[3:6].upper()}-"
+            f"{serial[6:].upper()} ({gateway_id.upper()})"
         )
 
-    def format_string_tfa_id_only(self, s: str):
-        """String helper for station & sensor names, convert string 'xxxxxxxxx' into 'XXX-XXX-XXX'."""
-        return f"{s[:3].upper()}-{s[3:6].upper()}-{s[6:].upper()}"
-
-    def format_string_tfa_type(self, s: str):
-        """String helper for sensor & station types, convert serial string 'xxxxxxxxx' into 'Sensor/Station type XX'."""
-
-        type_id: str = (s[:2]).upper()
-        info_str: str = "?"
-        try:
-            info_str = DEVICE_MAPPING[type_id]
-        except KeyError:
-            info_str = "?"
-        return info_str
+    def format_string_tfa_id_only(self, serial: str) -> str:
+        """Format a TFA.me serial number."""
+        return f"{serial[:3].upper()}-{serial[3:6].upper()}-{serial[6:].upper()}"
 
     @property
     @override

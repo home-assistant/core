@@ -1,7 +1,5 @@
 """TFA.me station integration: config_flow.py."""
 
-# For test run: "pytest ./tests/components/tfa_me/ --cov=homeassistant.components.tfa_me --cov-report term-missing -vv"
-
 import logging
 from typing import Any, override
 

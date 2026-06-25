@@ -97,3 +97,7 @@ class TFAmeUpdateCoordinator(DataUpdateCoordinator[TFAmeCoordinatorData]):
             return TFAmeCoordinatorData(
                 entities=filtered_list, gateway_id=gateway_id, gateway_sw=gateway_sw
             )
+
+    def get_device_description(self, serial: str) -> str:
+        """Return the TFA.me device description for a serial number."""
+        return self._client.get_device_description(serial)
