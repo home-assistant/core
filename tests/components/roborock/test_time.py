@@ -9,9 +9,10 @@ import roborock
 from roborock.data import DnDTimer, RoborockBaseTimer, ValleyElectricityTimer
 
 from homeassistant.components.time import SERVICE_SET_VALUE
-from homeassistant.const import Platform
+from homeassistant.const import STATE_UNKNOWN, Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
+from homeassistant.helpers.entity_component import async_update_entity
 
 from .conftest import FakeDevice
 
@@ -127,3 +128,50 @@ async def test_update_failure(
             target={"entity_id": entity_id},
         )
     assert fake_vacuum.v1_properties.dnd.set_dnd_timer.call_count == 1
+
+
+@pytest.mark.usefixtures("entity_registry_enabled_by_default")
+@pytest.mark.parametrize(
+    ("entity_id", "trait", "missing_attribute"),
+    [
+        (
+            "time.roborock_s7_maxv_do_not_disturb_begin",
+            lambda x: x.v1_properties.dnd,
+            "start_hour",
+        ),
+        (
+            "time.roborock_s7_maxv_do_not_disturb_begin",
+            lambda x: x.v1_properties.dnd,
+            "start_minute",
+        ),
+        (
+            "time.roborock_s7_maxv_do_not_disturb_end",
+            lambda x: x.v1_properties.dnd,
+            "end_hour",
+        ),
+        (
+            "time.roborock_s7_maxv_off_peak_start",
+            lambda x: x.v1_properties.valley_electricity_timer,
+            "start_minute",
+        ),
+    ],
+)
+async def test_missing_value(
+    hass: HomeAssistant,
+    setup_entry: MockConfigEntry,
+    fake_vacuum: FakeDevice,
+    entity_id: str,
+    trait: Callable[[FakeDevice], Any],
+    missing_attribute: str,
+) -> None:
+    """Test that a missing time component reports as unknown instead of raising."""
+    state = hass.states.get(entity_id)
+    assert state is not None
+    assert state.state != STATE_UNKNOWN
+
+    setattr(trait(fake_vacuum), missing_attribute, None)
+    await async_update_entity(hass, entity_id)
+
+    state = hass.states.get(entity_id)
+    assert state is not None
+    assert state.state == STATE_UNKNOWN
