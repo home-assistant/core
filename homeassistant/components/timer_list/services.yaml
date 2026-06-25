@@ -1,0 +1,131 @@
+start_timer:
+  target:
+    entity:
+      domain: timer_list
+      supported_features:
+        - timer_list.TimerListEntityFeature.START_TIMER
+  fields:
+    name:
+      example: "Pasta"
+      selector:
+        text:
+    duration:
+      required: true
+      example: "00:05:00"
+      selector:
+        duration:
+    finish_action:
+      default: remove
+      selector:
+        select:
+          translation_key: finish_action
+          options:
+            - remove
+            - archive
+            - restart
+pause_timer:
+  target:
+    entity:
+      domain: timer_list
+      supported_features:
+        - timer_list.TimerListEntityFeature.PAUSE_TIMER
+  fields:
+    timer_id:
+      required: true
+      example: "01HZ8ABCDEF0123456789ABCDE"
+      selector:
+        text:
+unpause_timer:
+  target:
+    entity:
+      domain: timer_list
+      supported_features:
+        - timer_list.TimerListEntityFeature.PAUSE_TIMER
+  fields:
+    timer_id:
+      required: true
+      example: "01HZ8ABCDEF0123456789ABCDE"
+      selector:
+        text:
+cancel_timer:
+  target:
+    entity:
+      domain: timer_list
+      supported_features:
+        - timer_list.TimerListEntityFeature.CANCEL_TIMER
+  fields:
+    timer_id:
+      required: true
+      example: "01HZ8ABCDEF0123456789ABCDE"
+      selector:
+        text:
+cancel_all_timers:
+  target:
+    entity:
+      domain: timer_list
+      supported_features:
+        - timer_list.TimerListEntityFeature.CANCEL_TIMER
+add_time:
+  target:
+    entity:
+      domain: timer_list
+      supported_features:
+        - timer_list.TimerListEntityFeature.ADD_TIME
+  fields:
+    timer_id:
+      required: true
+      example: "01HZ8ABCDEF0123456789ABCDE"
+      selector:
+        text:
+    duration:
+      required: true
+      example: "00:01:00"
+      selector:
+        duration:
+remove_time:
+  target:
+    entity:
+      domain: timer_list
+      supported_features:
+        - timer_list.TimerListEntityFeature.ADD_TIME
+  fields:
+    timer_id:
+      required: true
+      example: "01HZ8ABCDEF0123456789ABCDE"
+      selector:
+        text:
+    duration:
+      required: true
+      example: "00:01:00"
+      selector:
+        duration:
+remove_timer:
+  target:
+    entity:
+      domain: timer_list
+  fields:
+    timer_id:
+      required: true
+      example: "01HZ8ABCDEF0123456789ABCDE"
+      selector:
+        text:
+clear_finished_timers:
+  target:
+    entity:
+      domain: timer_list
+get_timers:
+  target:
+    entity:
+      domain: timer_list
+  fields:
+    status:
+      example: "active"
+      selector:
+        select:
+          translation_key: status
+          multiple: true
+          options:
+            - active
+            - paused
+            - finished
+            - cancelled

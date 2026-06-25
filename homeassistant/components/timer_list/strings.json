@@ -1,0 +1,154 @@
+{
+  "entity_component": {
+    "_": {
+      "name": "[%key:component::timer_list::title%]"
+    }
+  },
+  "exceptions": {
+    "timer_not_found": {
+      "message": "Unable to find timer with id: {timer_id}"
+    }
+  },
+  "selector": {
+    "finish_action": {
+      "options": {
+        "archive": "Archive",
+        "remove": "Remove",
+        "restart": "Restart"
+      }
+    },
+    "status": {
+      "options": {
+        "active": "Active",
+        "cancelled": "Cancelled",
+        "finished": "Finished",
+        "paused": "Paused"
+      }
+    }
+  },
+  "services": {
+    "add_time": {
+      "description": "Adds time to a timer.",
+      "fields": {
+        "duration": {
+          "description": "How much time to add to the timer.",
+          "name": "Duration"
+        },
+        "timer_id": {
+          "description": "The id of the timer to add time to.",
+          "name": "Timer ID"
+        }
+      },
+      "name": "Add time"
+    },
+    "cancel_all_timers": {
+      "description": "Cancels every active and paused timer on a timer list.",
+      "name": "Cancel all timers"
+    },
+    "cancel_timer": {
+      "description": "Cancels a timer.",
+      "fields": {
+        "timer_id": {
+          "description": "The id of the timer to cancel.",
+          "name": "Timer ID"
+        }
+      },
+      "name": "Cancel timer"
+    },
+    "clear_finished_timers": {
+      "description": "Removes all finished and cancelled timers from a timer list.",
+      "name": "Clear finished timers"
+    },
+    "get_timers": {
+      "description": "Gets the timers on a timer list.",
+      "fields": {
+        "status": {
+          "description": "Only return timers with the specified statuses.",
+          "name": "Status"
+        }
+      },
+      "name": "Get timers"
+    },
+    "pause_timer": {
+      "description": "Pauses an active timer.",
+      "fields": {
+        "timer_id": {
+          "description": "The id of the timer to pause.",
+          "name": "Timer ID"
+        }
+      },
+      "name": "Pause timer"
+    },
+    "remove_time": {
+      "description": "Removes time from a timer.",
+      "fields": {
+        "duration": {
+          "description": "How much time to remove from the timer.",
+          "name": "Duration"
+        },
+        "timer_id": {
+          "description": "The id of the timer to remove time from.",
+          "name": "Timer ID"
+        }
+      },
+      "name": "Remove time"
+    },
+    "remove_timer": {
+      "description": "Removes a timer from a timer list.",
+      "fields": {
+        "timer_id": {
+          "description": "The id of the timer to remove.",
+          "name": "Timer ID"
+        }
+      },
+      "name": "Remove timer"
+    },
+    "start_timer": {
+      "description": "Creates and starts a new timer on a timer list.",
+      "fields": {
+        "duration": {
+          "description": "How long the timer should run for.",
+          "name": "Duration"
+        },
+        "finish_action": {
+          "description": "What happens to the timer once it finishes.",
+          "name": "Finish action"
+        },
+        "name": {
+          "description": "Optional name for the timer.",
+          "name": "Name"
+        }
+      },
+      "name": "Start timer"
+    },
+    "unpause_timer": {
+      "description": "Resumes a paused timer.",
+      "fields": {
+        "timer_id": {
+          "description": "The id of the timer to resume.",
+          "name": "Timer ID"
+        }
+      },
+      "name": "Resume timer"
+    }
+  },
+  "title": "Timer list",
+  "triggers": {
+    "timer_cancelled": {
+      "description": "Triggers when a timer is cancelled on a timer list.",
+      "name": "Timer cancelled"
+    },
+    "timer_finished": {
+      "description": "Triggers when a timer finishes on a timer list.",
+      "name": "Timer finished"
+    },
+    "timer_started": {
+      "description": "Triggers when a timer is started on a timer list.",
+      "name": "Timer started"
+    },
+    "timer_updated": {
+      "description": "Triggers when a timer is paused, resumed, or has time added or removed.",
+      "name": "Timer updated"
+    }
+  }
+}
