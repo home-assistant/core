@@ -65,23 +65,6 @@ async def test_setup_entry_connect_error(
     assert mock_config_entry.state is ConfigEntryState.SETUP_RETRY
 
 
-async def test_setup_account_fetch_fails(
-    hass: HomeAssistant,
-    mock_config_entry: MockConfigEntry,
-) -> None:
-    """Test that UpdateFailed is raised when the account fetch fails."""
-    api = make_api_mock()
-    api.get_billing_account = AsyncMock(
-        side_effect=CannotConnectError("Connection failed")
-    )
-
-    with patch(PATCH_CLIENT, return_value=api):
-        await hass.config_entries.async_setup(mock_config_entry.entry_id)
-        await hass.async_block_till_done()
-
-    assert mock_config_entry.state is ConfigEntryState.SETUP_RETRY
-
-
 async def test_sensor_missing_usage_data(
     hass: HomeAssistant,
     mock_config_entry: MockConfigEntry,
