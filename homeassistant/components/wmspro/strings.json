@@ -57,7 +57,7 @@
           "name": "Position"
         },
         "tilt_position": {
-          "description": "Target tilt position. 0 means closed, 100 means fully open.",
+          "description": "Target tilt position.",
           "name": "Tilt position"
         }
       },
