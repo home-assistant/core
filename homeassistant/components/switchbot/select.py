@@ -2,6 +2,7 @@
 
 from datetime import timedelta
 import logging
+from typing import override
 
 import switchbot
 from switchbot import SwitchbotOperationError
@@ -51,6 +52,7 @@ class SwitchBotMeterProCO2TimeFormatSelect(SwitchbotEntity, SelectEntity):
         self._attr_unique_id = f"{coordinator.base_unique_id}_time_format"
 
     @exception_handler
+    @override
     async def async_select_option(self, option: str) -> None:
         """Change the time display format."""
         _LOGGER.debug("Setting time format to %s for %s", option, self._address)
@@ -59,6 +61,7 @@ class SwitchBotMeterProCO2TimeFormatSelect(SwitchbotEntity, SelectEntity):
         self._attr_current_option = option
         self.async_write_ha_state()
 
+    @override
     async def async_update(self) -> None:
         """Fetch the latest time format from the device."""
         try:

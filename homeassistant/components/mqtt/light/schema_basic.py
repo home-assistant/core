@@ -2,7 +2,7 @@
 
 from collections.abc import Callable
 import logging
-from typing import Any, cast
+from typing import Any, cast, override
 
 import voluptuous as vol
 
@@ -254,10 +254,12 @@ class MqttLight(MqttEntity, LightEntity, RestoreEntity):
     _optimistic_xy_color: bool
 
     @staticmethod
+    @override
     def config_schema() -> VolSchemaType:
         """Return the config schema."""
         return DISCOVERY_SCHEMA_BASIC
 
+    @override
     def _setup_from_config(self, config: ConfigType) -> None:
         """(Re)Setup the entity."""
         self._color_temp_kelvin = config[CONF_COLOR_TEMP_KELVIN]
@@ -577,6 +579,7 @@ class MqttLight(MqttEntity, LightEntity, RestoreEntity):
         self._attr_xy_color = cast(tuple[float, float], xy_color)
 
     @callback
+    @override
     def _prepare_subscribe_topics(self) -> None:
         """(Re)Subscribe to topics."""
         self.add_subscription(CONF_STATE_TOPIC, self._state_received, {"_attr_is_on"})
@@ -620,6 +623,7 @@ class MqttLight(MqttEntity, LightEntity, RestoreEntity):
             {"_attr_color_mode", "_attr_xy_color"},
         )
 
+    @override
     async def _subscribe_topics(self) -> None:
         """(Re)Subscribe to topics."""
         subscription.async_subscribe_topics_internal(self.hass, self._sub_state)
@@ -649,6 +653,7 @@ class MqttLight(MqttEntity, LightEntity, RestoreEntity):
         restore_state(ATTR_XY_COLOR)
         restore_state(ATTR_HS_COLOR, ATTR_XY_COLOR)
 
+    @override
     async def async_turn_on(self, **kwargs: Any) -> None:  # noqa: C901
         """Turn the device on.
 
@@ -868,6 +873,7 @@ class MqttLight(MqttEntity, LightEntity, RestoreEntity):
         if should_update:
             self.async_write_ha_state()
 
+    @override
     async def async_turn_off(self, **kwargs: Any) -> None:
         """Turn the device off.
 

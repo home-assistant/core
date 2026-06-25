@@ -2,7 +2,7 @@
 
 from dataclasses import dataclass
 from datetime import timedelta
-from typing import Final, cast
+from typing import Final, cast, override
 
 from aioshelly.block_device import Block
 from aioshelly.const import RPC_GENERATIONS
@@ -113,6 +113,7 @@ class RpcSensor(ShellyRpcAttributeEntity, SensorEntity):
             self.configure_translation_attributes()
 
     @property
+    @override
     def native_value(self) -> StateType:
         """Return value of sensor."""
         attribute_value = self.attribute_value
@@ -133,6 +134,7 @@ class RpcEnergyConsumedSensor(RpcSensor):
     """Represent a RPC energy consumed sensor."""
 
     @property
+    @override
     def native_value(self) -> StateType:
         """Return value of sensor."""
         total_energy = self.status["aenergy"]["total"]
@@ -150,6 +152,7 @@ class RpcPresenceSensor(RpcSensor):
     """Represent a RPC presence sensor."""
 
     @property
+    @override
     def available(self) -> bool:
         """Available."""
         available = super().available
@@ -1817,6 +1820,7 @@ class BlockSensor(ShellyBlockAttributeEntity, SensorEntity):
         self._attr_native_unit_of_measurement = description.native_unit_of_measurement
 
     @property
+    @override
     def native_value(self) -> StateType:
         """Return value of sensor."""
         return self.attribute_value
@@ -1828,6 +1832,7 @@ class RestSensor(ShellyRestAttributeEntity, SensorEntity):
     entity_description: RestSensorDescription
 
     @property
+    @override
     def native_value(self) -> StateType:
         """Return value of sensor."""
         return self.attribute_value
@@ -1850,12 +1855,14 @@ class BlockSleepingSensor(ShellySleepingBlockAttributeEntity, RestoreSensor):
         super().__init__(coordinator, block, attribute, description, entry)
         self.restored_data: SensorExtraStoredData | None = None
 
+    @override
     async def async_added_to_hass(self) -> None:
         """Handle entity which will be added."""
         await super().async_added_to_hass()
         self.restored_data = await self.async_get_last_sensor_data()
 
     @property
+    @override
     def native_value(self) -> StateType:
         """Return value of sensor."""
         if self.block is not None:
@@ -1867,6 +1874,7 @@ class BlockSleepingSensor(ShellySleepingBlockAttributeEntity, RestoreSensor):
         return cast(StateType, self.restored_data.native_value)
 
     @property
+    @override
     def native_unit_of_measurement(self) -> str | None:
         """Return the unit of measurement of the sensor, if any."""
         if self.block is not None:
@@ -1898,12 +1906,14 @@ class RpcSleepingSensor(ShellySleepingRpcAttributeEntity, RestoreSensor):
         if coordinator.device.initialized:
             self.configure_translation_attributes()
 
+    @override
     async def async_added_to_hass(self) -> None:
         """Handle entity which will be added."""
         await super().async_added_to_hass()
         self.restored_data = await self.async_get_last_sensor_data()
 
     @property
+    @override
     def native_value(self) -> StateType:
         """Return value of sensor."""
         if self.coordinator.device.initialized:
@@ -1915,6 +1925,7 @@ class RpcSleepingSensor(ShellySleepingRpcAttributeEntity, RestoreSensor):
         return cast(StateType, self.restored_data.native_value)
 
     @property
+    @override
     def native_unit_of_measurement(self) -> str | None:
         """Return the unit of measurement of the sensor, if any."""
         return self.entity_description.native_unit_of_measurement

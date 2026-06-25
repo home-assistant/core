@@ -24,7 +24,6 @@ from tests.components.common import (
     assert_trigger_behavior_all,
     assert_trigger_behavior_each,
     assert_trigger_behavior_first,
-    assert_trigger_gated_by_labs_flag,
     assert_trigger_options_supported,
     parametrize_numerical_state_value_changed_trigger_states,
     parametrize_numerical_state_value_crossed_threshold_trigger_states,
@@ -52,50 +51,6 @@ async def target_sensors(hass: HomeAssistant) -> dict[str, list[str]]:
     return await target_entities(hass, "sensor")
 
 
-@pytest.mark.parametrize(
-    "trigger_key",
-    [
-        "air_quality.gas_detected",
-        "air_quality.gas_cleared",
-        "air_quality.co_detected",
-        "air_quality.co_cleared",
-        "air_quality.smoke_detected",
-        "air_quality.smoke_cleared",
-        "air_quality.co_changed",
-        "air_quality.co_crossed_threshold",
-        "air_quality.co2_changed",
-        "air_quality.co2_crossed_threshold",
-        "air_quality.pm1_changed",
-        "air_quality.pm1_crossed_threshold",
-        "air_quality.pm25_changed",
-        "air_quality.pm25_crossed_threshold",
-        "air_quality.pm4_changed",
-        "air_quality.pm4_crossed_threshold",
-        "air_quality.pm10_changed",
-        "air_quality.pm10_crossed_threshold",
-        "air_quality.ozone_changed",
-        "air_quality.ozone_crossed_threshold",
-        "air_quality.voc_changed",
-        "air_quality.voc_crossed_threshold",
-        "air_quality.voc_ratio_changed",
-        "air_quality.voc_ratio_crossed_threshold",
-        "air_quality.no_changed",
-        "air_quality.no_crossed_threshold",
-        "air_quality.no2_changed",
-        "air_quality.no2_crossed_threshold",
-        "air_quality.n2o_changed",
-        "air_quality.n2o_crossed_threshold",
-        "air_quality.so2_changed",
-        "air_quality.so2_crossed_threshold",
-    ],
-)
-async def test_air_quality_triggers_gated_by_labs_flag(
-    hass: HomeAssistant, caplog: pytest.LogCaptureFixture, trigger_key: str
-) -> None:
-    """Test the air quality triggers are gated by the labs flag."""
-    await assert_trigger_gated_by_labs_flag(hass, caplog, trigger_key)
-
-
 _CHANGED_THRESHOLD = {"threshold": {"type": "any"}}
 _PLAIN_CROSSED_THRESHOLD = {"threshold": {"type": "above", "value": {"number": 50}}}
 _PPB_CROSSED_THRESHOLD = {
@@ -118,7 +73,6 @@ _UGM3_CROSSED_THRESHOLD = {
 }
 
 
-@pytest.mark.usefixtures("enable_labs_preview_features")
 @pytest.mark.parametrize(
     ("trigger_key", "base_options", "supports_behavior", "supports_duration"),
     [
@@ -173,7 +127,6 @@ async def test_air_quality_trigger_options_validation(
     )
 
 
-@pytest.mark.usefixtures("enable_labs_preview_features")
 @pytest.mark.parametrize(
     ("trigger_target_config", "entity_id", "entities_in_target"),
     parametrize_target_entities("binary_sensor"),
@@ -255,7 +208,6 @@ async def test_air_quality_trigger_binary_sensor_behavior_each(
     )
 
 
-@pytest.mark.usefixtures("enable_labs_preview_features")
 @pytest.mark.parametrize(
     ("trigger_target_config", "entity_id", "entities_in_target"),
     parametrize_target_entities("binary_sensor"),
@@ -334,7 +286,6 @@ async def test_air_quality_trigger_binary_sensor_behavior_first(
     )
 
 
-@pytest.mark.usefixtures("enable_labs_preview_features")
 @pytest.mark.parametrize(
     ("trigger_target_config", "entity_id", "entities_in_target"),
     parametrize_target_entities("binary_sensor"),
@@ -413,7 +364,6 @@ async def test_air_quality_trigger_binary_sensor_behavior_all(
     )
 
 
-@pytest.mark.usefixtures("enable_labs_preview_features")
 @pytest.mark.parametrize(
     ("trigger_target_config", "entity_id", "entities_in_target"),
     parametrize_target_entities("sensor"),
@@ -593,7 +543,6 @@ async def test_air_quality_trigger_sensor_behavior_each(
     )
 
 
-@pytest.mark.usefixtures("enable_labs_preview_features")
 @pytest.mark.parametrize(
     ("trigger_target_config", "entity_id", "entities_in_target"),
     parametrize_target_entities("sensor"),
@@ -704,7 +653,6 @@ async def test_air_quality_trigger_sensor_crossed_threshold_behavior_first(
     )
 
 
-@pytest.mark.usefixtures("enable_labs_preview_features")
 @pytest.mark.parametrize(
     ("trigger_target_config", "entity_id", "entities_in_target"),
     parametrize_target_entities("sensor"),
@@ -815,7 +763,6 @@ async def test_air_quality_trigger_sensor_crossed_threshold_behavior_all(
     )
 
 
-@pytest.mark.usefixtures("enable_labs_preview_features")
 async def test_air_quality_trigger_unit_conversion_co_ppm_to_ugm3(
     hass: HomeAssistant,
 ) -> None:

@@ -5,6 +5,7 @@ from collections.abc import Generator
 from unittest.mock import AsyncMock, MagicMock, patch
 
 from aiogithubapi import (
+    GitHubAuthenticatedUserModel,
     GitHubLoginDeviceModel,
     GitHubLoginOauthModel,
     GitHubRateLimitModel,
@@ -155,5 +156,10 @@ def github_client(hass: HomeAssistant) -> Generator[AsyncMock]:
         graphql_mock = AsyncMock()
         graphql_mock.data = load_json_object_fixture("graphql.json", DOMAIN)
         client.graphql.return_value = graphql_mock
+        user_response_mock = MagicMock()
+        user_response_mock.data = GitHubAuthenticatedUserModel(
+            load_json_object_fixture("user.json", DOMAIN)
+        )
+        client.user.get = AsyncMock(return_value=user_response_mock)
         client.repos.events.subscribe = AsyncMock()
         yield client

@@ -9,7 +9,7 @@ from uuid import uuid4
 from aiohasupervisor.models import Job, JobsInfo
 import pytest
 
-from homeassistant.components.hassio.const import MAIN_COORDINATOR
+from homeassistant.components.hassio.const import DOMAIN, MAIN_COORDINATOR
 from homeassistant.components.hassio.coordinator import HassioMainDataUpdateCoordinator
 from homeassistant.components.hassio.jobs import JobSubscription
 from homeassistant.core import HomeAssistant, callback
@@ -41,7 +41,7 @@ async def test_job_manager_setup(hass: HomeAssistant, jobs_info: AsyncMock) -> N
                 stage=None,
                 done=False,
                 errors=[],
-                created=datetime.now(),
+                created=datetime.now(),  # pylint: disable=home-assistant-enforce-naive-now
                 extra=None,
                 child_jobs=[
                     Job(
@@ -52,7 +52,7 @@ async def test_job_manager_setup(hass: HomeAssistant, jobs_info: AsyncMock) -> N
                         stage=None,
                         done=False,
                         errors=[],
-                        created=datetime.now(),
+                        created=datetime.now(),  # pylint: disable=home-assistant-enforce-naive-now
                         extra=None,
                         child_jobs=[],
                     )
@@ -61,7 +61,7 @@ async def test_job_manager_setup(hass: HomeAssistant, jobs_info: AsyncMock) -> N
         ],
     )
 
-    result = await async_setup_component(hass, "hassio", {})
+    result = await async_setup_component(hass, DOMAIN, {})
     assert result
     jobs_info.assert_called_once()
 
@@ -76,7 +76,7 @@ async def test_disconnect_on_config_entry_reload(
     hass: HomeAssistant, jobs_info: AsyncMock
 ) -> None:
     """Test dispatcher subscription disconnects on config entry reload."""
-    result = await async_setup_component(hass, "hassio", {})
+    result = await async_setup_component(hass, DOMAIN, {})
     assert result
     jobs_info.assert_called_once()
 
@@ -94,7 +94,7 @@ async def test_job_manager_ws_updates(
     hass_supervisor_ws_client: WebSocketGenerator,
 ) -> None:
     """Test job updates sync from Supervisor WS messages."""
-    result = await async_setup_component(hass, "hassio", {})
+    result = await async_setup_component(hass, DOMAIN, {})
     assert result
     jobs_info.assert_called_once()
 
@@ -131,7 +131,7 @@ async def test_job_manager_ws_updates(
                     "stage": None,
                     "done": False,
                     "errors": [],
-                    "created": (created := datetime.now().isoformat()),
+                    "created": (created := datetime.now().isoformat()),  # pylint: disable=home-assistant-enforce-naive-now
                     "extra": None,
                 },
             },
@@ -295,14 +295,14 @@ async def test_job_manager_reload_on_supervisor_restart(
                 stage=None,
                 done=False,
                 errors=[],
-                created=datetime.now(),
+                created=datetime.now(),  # pylint: disable=home-assistant-enforce-naive-now
                 extra=None,
                 child_jobs=[],
             )
         ],
     )
 
-    result = await async_setup_component(hass, "hassio", {})
+    result = await async_setup_component(hass, DOMAIN, {})
     assert result
     jobs_info.assert_called_once()
 

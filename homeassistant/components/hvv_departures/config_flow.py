@@ -1,7 +1,7 @@
 """Config flow for HVV integration."""
 
 import logging
-from typing import Any
+from typing import Any, override
 
 from aiohttp import ClientConnectorError
 from pygti.auth import GTI_DEFAULT_HOST
@@ -57,6 +57,7 @@ class HVVDeparturesConfigFlow(ConfigFlow, domain=DOMAIN):
         """Initialize component."""
         self.stations: dict[str, Any] = {}
 
+    @override
     async def async_step_user(
         self, user_input: dict[str, Any] | None = None
     ) -> ConfigFlowResult:
@@ -143,6 +144,7 @@ class HVVDeparturesConfigFlow(ConfigFlow, domain=DOMAIN):
 
     @staticmethod
     @callback
+    @override
     def async_get_options_flow(
         config_entry: HVVConfigEntry,
     ) -> OptionsFlowHandler:

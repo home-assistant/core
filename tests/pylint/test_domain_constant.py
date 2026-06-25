@@ -124,6 +124,18 @@ hass.config_entries.flow.async_init(handler=DOMAIN)
         ),
         pytest.param(
             """
+hass.states.async_entity_ids(DOMAIN)
+""",
+            id="async_entity_ids",
+        ),
+        pytest.param(
+            """
+hass.states.async_entity_ids((DOMAIN, SENSOR_DOMAIN))
+""",
+            id="async_entity_ids_tuple",
+        ),
+        pytest.param(
+            """
 some_other_function(hass, "other", {})
 """,
             id="unrelated_function",
@@ -133,6 +145,72 @@ some_other_function(hass, "other", {})
 hass.services.unrelated("other")
 """,
             id="unrelated_method",
+        ),
+        pytest.param(
+            """
+async_setup_component(hass, OTHER, {})
+""",
+            id="name_not_domain",
+        ),
+        pytest.param(
+            """
+async_setup_component(hass, sensor.OTHER, {})
+""",
+            id="attribute_not_domain",
+        ),
+        pytest.param(
+            """
+async_setup_component(hass, 5, {})
+""",
+            id="non_string_constant",
+        ),
+        pytest.param(
+            """
+async_mock_service(hass, OTHER, "service")
+""",
+            id="async_mock_service_other",
+        ),
+        pytest.param(
+            """
+MockConfigEntry(domain=OTHER)
+""",
+            id="mock_config_entry_kwarg_other",
+        ),
+        pytest.param(
+            """
+hass.services.async_call(OTHER, "service")
+""",
+            id="services_async_call_other",
+        ),
+        pytest.param(
+            """
+hass.services.call(OTHER, "service")
+""",
+            id="services_call_other",
+        ),
+        pytest.param(
+            """
+hass.config_entries.flow.async_init(OTHER)
+""",
+            id="flow_async_init_positional_other",
+        ),
+        pytest.param(
+            """
+hass.config_entries.flow.async_init(handler=OTHER)
+""",
+            id="flow_async_init_kwarg_other",
+        ),
+        pytest.param(
+            """
+hass.states.async_entity_ids(OTHER)
+""",
+            id="async_entity_ids_other",
+        ),
+        pytest.param(
+            """
+hass.states.async_entity_ids((DOMAIN, OTHER))
+""",
+            id="async_entity_ids_tuple_other",
         ),
     ],
 )
@@ -155,66 +233,17 @@ def test_no_warning(
     [
         pytest.param(
             """
-async_setup_component(hass, OTHER, {})
+async_setup_component(hass, Platform.Something, {})
 """,
-            ("OTHER", "async_setup_component"),
-            id="name_not_domain",
+            ("Platform.Something", "async_setup_component"),
+            id="attribute_platform",
         ),
         pytest.param(
             """
-async_setup_component(hass, sensor.OTHER, {})
+hass.states.async_entity_ids((Platform.SENSOR, DOMAIN))
 """,
-            ("sensor.OTHER", "async_setup_component"),
-            id="attribute_not_domain",
-        ),
-        pytest.param(
-            """
-async_setup_component(hass, 5, {})
-""",
-            ("5", "async_setup_component"),
-            id="non_string_constant",
-        ),
-        pytest.param(
-            """
-async_mock_service(hass, OTHER, "service")
-""",
-            ("OTHER", "async_mock_service"),
-            id="async_mock_service",
-        ),
-        pytest.param(
-            """
-MockConfigEntry(domain=OTHER)
-""",
-            ("OTHER", "MockConfigEntry"),
-            id="mock_config_entry_kwarg",
-        ),
-        pytest.param(
-            """
-hass.services.async_call(OTHER, "service")
-""",
-            ("OTHER", "hass.services.async_call"),
-            id="services_async_call",
-        ),
-        pytest.param(
-            """
-hass.services.call(OTHER, "service")
-""",
-            ("OTHER", "hass.services.call"),
-            id="services_call",
-        ),
-        pytest.param(
-            """
-hass.config_entries.flow.async_init(OTHER)
-""",
-            ("OTHER", "hass.config_entries.flow.async_init"),
-            id="flow_async_init_positional",
-        ),
-        pytest.param(
-            """
-hass.config_entries.flow.async_init(handler=OTHER)
-""",
-            ("OTHER", "hass.config_entries.flow.async_init"),
-            id="flow_async_init_kwarg",
+            ("(Platform.SENSOR, DOMAIN)", "hass.states.async_entity_ids"),
+            id="attribute_platform_tuple",
         ),
     ],
 )

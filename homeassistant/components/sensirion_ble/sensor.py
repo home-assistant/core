@@ -1,5 +1,7 @@
 """Support for Sensirion sensors."""
 
+from typing import override
+
 from sensor_state_data import (
     DeviceKey,
     SensorDescription,
@@ -126,6 +128,7 @@ class SensirionBluetoothSensorEntity(
     """Representation of a Sensirion BLE sensor."""
 
     @property
+    @override
     def native_value(self) -> int | float | None:
         """Return the native value."""
         return self.processor.entity_data.get(self.entity_key)

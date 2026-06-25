@@ -21,6 +21,6 @@
   "quality_scale": "silver",
   "requirements": [
     "python-roborock==5.21.0",
-    "vacuum-map-parser-roborock==0.1.4"
+    "vacuum-map-parser-roborock==0.1.5"
   ]
 }

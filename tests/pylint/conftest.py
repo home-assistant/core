@@ -17,6 +17,8 @@ from pylint_home_assistant.checkers.greek_micro_char import (
     HassEnforceGreekMicroCharChecker,
 )
 from pylint_home_assistant.checkers.imports import HassImportsFormatChecker
+from pylint_home_assistant.checkers.naive_now import HassEnforceNaiveNowChecker
+from pylint_home_assistant.checkers.now import HassEnforceNowChecker
 from pylint_home_assistant.checkers.runtime_data import HassEnforceRuntimeDataChecker
 from pylint_home_assistant.checkers.sorted_platforms import (
     HassEnforceSortedPlatformsChecker,
@@ -131,9 +133,25 @@ def enforce_greek_micro_char_checker_fixture(linter: UnittestLinter) -> BaseChec
     return enforce_greek_micro_char_checker
 
 
+@pytest.fixture(name="enforce_now_checker")
+def enforce_now_checker_fixture(linter: UnittestLinter) -> BaseChecker:
+    """Fixture to provide a now checker."""
+    enforce_now_checker = HassEnforceNowChecker(linter)
+    enforce_now_checker.module = "homeassistant.components.pylint_test"
+    return enforce_now_checker
+
+
 @pytest.fixture(name="enforce_utcnow_checker")
 def enforce_utcnow_checker_fixture(linter: UnittestLinter) -> BaseChecker:
     """Fixture to provide a utcnow checker."""
     enforce_utcnow_checker = HassEnforceUtcnowChecker(linter)
     enforce_utcnow_checker.module = "homeassistant.components.pylint_test"
     return enforce_utcnow_checker
+
+
+@pytest.fixture(name="enforce_naive_now_checker")
+def enforce_naive_now_checker_fixture(linter: UnittestLinter) -> BaseChecker:
+    """Fixture to provide a naive_now checker."""
+    enforce_naive_now_checker = HassEnforceNaiveNowChecker(linter)
+    enforce_naive_now_checker.module = "homeassistant.components.pylint_test"
+    return enforce_naive_now_checker
