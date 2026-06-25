@@ -2,10 +2,11 @@
 
 import asyncio
 from collections import defaultdict
-from collections.abc import Awaitable
-from dataclasses import dataclass
+from collections.abc import Awaitable, Callable
+from dataclasses import dataclass, replace
 import logging
 from typing import TYPE_CHECKING, Any, cast, override
+from uuid import UUID
 
 from aiohasupervisor import SupervisorError, SupervisorNotFoundError
 from aiohasupervisor.models import (
@@ -17,6 +18,7 @@ from aiohasupervisor.models import (
     HostInfo,
     InstalledAddon,
     InstalledAddonComplete,
+    Job,
     NetworkInfo,
     NFSMountResponse,
     OSInfo,
@@ -29,7 +31,12 @@ from aiohasupervisor.models import (
 
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import ATTR_MANUFACTURER
-from homeassistant.core import CALLBACK_TYPE, HomeAssistant, callback
+from homeassistant.core import (
+    CALLBACK_TYPE,
+    HomeAssistant,
+    callback,
+    is_callback_check_partial,
+)
 from homeassistant.helpers import device_registry as dr
 from homeassistant.helpers.debounce import Debouncer
 from homeassistant.helpers.device_registry import DeviceInfo
@@ -59,6 +66,7 @@ from .const import (
     DATA_SUPERVISOR_INFO,
     DATA_SUPERVISOR_STATS,
     DOMAIN,
+    EVENT_JOB,
     EVENT_SUPERVISOR_EVENT,
     EVENT_SUPERVISOR_UPDATE,
     HASSIO_ADDON_UPDATE_INTERVAL,
@@ -67,17 +75,207 @@ from .const import (
     REQUEST_REFRESH_DELAY,
     STARTUP_COMPLETE,
     SUPERVISOR_CONTAINER,
+    SUPERVISOR_JOBS_UPDATE_INTERVAL,
     UPDATE_KEY_SUPERVISOR,
     SupervisorEntityModel,
 )
 from .exceptions import HassioNotReadyError
 from .handler import get_supervisor_client
-from .jobs import SupervisorJobs
 
 if TYPE_CHECKING:
     from .issues import SupervisorIssues
 
 _LOGGER = logging.getLogger(__name__)
+
+
+@dataclass(slots=True, frozen=True)
+class JobSubscription:
+    """Subscribe for updates on jobs which match filters.
+
+    UUID is preferred match but only available in cases of a background API that
+    returns the UUID before taking the action. Others are used to match jobs only
+    if UUID is omitted. Either name or UUID is required to be able to match.
+
+    event_callback must be safe annotated as a homeassistant.core.callback
+    and safe to call in the event loop.
+    """
+
+    event_callback: Callable[[Job], None]
+    uuid: str | None = None
+    name: str | None = None
+    reference: str | None = None
+
+    def __post_init__(self) -> None:
+        """Validate at least one filter option is present."""
+        if not self.name and not self.uuid:
+            raise ValueError("Either name or uuid must be provided!")
+        if not is_callback_check_partial(self.event_callback):
+            raise ValueError("event_callback must be a homeassistant.core.callback!")
+
+    def matches(self, job: Job) -> bool:
+        """Return true if job matches subscription filters."""
+        if self.uuid:
+            return job.uuid == self.uuid
+        return job.name == self.name and self.reference in (None, job.reference)
+
+
+class SupervisorJobsCoordinator(DataUpdateCoordinator[dict[UUID, Job]]):
+    """Manage access to Supervisor jobs."""
+
+    config_entry: ConfigEntry
+
+    def __init__(self, hass: HomeAssistant, config_entry: ConfigEntry) -> None:
+        """Initialize object."""
+        super().__init__(
+            hass,
+            _LOGGER,
+            config_entry=config_entry,
+            name="SupervisorJobsCoordinator",
+            update_interval=SUPERVISOR_JOBS_UPDATE_INTERVAL,
+            # We don't want an immediate refresh since we want to avoid
+            # hammering the Supervisor API on startup
+            request_refresh_debouncer=Debouncer(
+                hass, _LOGGER, cooldown=REQUEST_REFRESH_DELAY, immediate=False
+            ),
+        )
+        self._supervisor_client = get_supervisor_client(hass)
+        self._subscriptions: set[JobSubscription] = set()
+        self._dispatcher_disconnect: Callable[[], None] | None = None
+        self._noop_listener_disconnect: Callable[[], None] | None = None
+
+    @property
+    def current_jobs(self) -> list[Job]:
+        """Return current jobs."""
+        return list(self.data.values()) if self.data is not None else []
+
+    @staticmethod
+    def _build_jobs(jobs: list[Job]) -> dict[UUID, Job]:
+        """Flatten jobs and child jobs into a UUID keyed cache."""
+        job_queue: list[Job] = jobs.copy()
+        cached_jobs: dict[UUID, Job] = {}
+
+        while job_queue:
+            job = job_queue.pop(0)
+            job_queue.extend(job.child_jobs)
+            cached_jobs[job.uuid] = replace(job, child_jobs=[])
+
+        return cached_jobs
+
+    async def _async_update_data(self) -> dict[UUID, Job]:
+        """Fetch data from Supervisor."""
+        job_data = await self._supervisor_client.jobs.info()
+        return self._build_jobs(job_data.jobs)
+
+    def _process_job_change(self, job: Job) -> None:
+        """Process a job change by triggering callbacks on subscribers."""
+        for sub in self._subscriptions:
+            if sub.matches(job):
+                sub.event_callback(job)
+
+    def _process_job_deltas(
+        self,
+        previous_jobs: dict[UUID, Job],
+        current_jobs: dict[UUID, Job],
+    ) -> None:
+        """Notify subscribers about changes between two job caches."""
+        for job in current_jobs.values():
+            if (previous_job := previous_jobs.get(job.uuid)) is not None and (
+                previous_job == job
+            ):
+                continue
+            self._process_job_change(job)
+
+        for uuid, job in previous_jobs.items():
+            if uuid not in current_jobs and job.done is False:
+                self._process_job_change(replace(job, done=True))
+
+    def subscribe(self, subscription: JobSubscription) -> CALLBACK_TYPE:
+        """Subscribe to updates for job. Return callback is used to unsubscribe.
+
+        If any jobs match the subscription at the time this is called, runs the
+        callback on them.
+        """
+        self._subscriptions.add(subscription)
+
+        # Connect a stub listener to start the update interval polling on first subscriber
+        if self._noop_listener_disconnect is None:
+            self._noop_listener_disconnect = self.async_add_listener(lambda: None)
+
+        # Run the callback on each existing match
+        # We catch all errors to prevent an error in one from stopping the others
+        for match in [job for job in self.current_jobs if subscription.matches(job)]:
+            try:
+                subscription.event_callback(match)
+            except Exception as err:  # noqa: BLE001
+                _LOGGER.error(
+                    "Error encountered processing Supervisor Job (%s %s %s) - %s",
+                    match.name,
+                    match.reference,
+                    match.uuid,
+                    err,
+                )
+
+        def _unsubscribe() -> None:
+            self._subscriptions.discard(subscription)
+
+            # Stop polling if there are no more subscribers
+            if not self._subscriptions and self._noop_listener_disconnect is not None:
+                self._noop_listener_disconnect()
+                self._noop_listener_disconnect = None
+
+        return _unsubscribe
+
+    @callback
+    def _async_refresh_finished(self) -> None:
+        """Register to receive Supervisor events after the first successful refresh."""
+        if self.last_update_success and self._dispatcher_disconnect is None:
+            self._dispatcher_disconnect = async_dispatcher_connect(
+                self.hass, EVENT_SUPERVISOR_EVENT, self._supervisor_events_to_jobs
+            )
+
+    async def _async_refresh(
+        self,
+        log_failures: bool = True,
+        raise_on_auth_failed: bool = False,
+        scheduled: bool = False,
+        raise_on_entry_error: bool = False,
+    ) -> None:
+        """Refresh data and notify subscribers about cache changes."""
+        previous_jobs = self.data or {}
+        await super()._async_refresh(
+            log_failures, raise_on_auth_failed, scheduled, raise_on_entry_error
+        )
+        if self.last_update_success and self.data is not None:
+            self._process_job_deltas(previous_jobs, self.data)
+
+    async def async_shutdown(self) -> None:
+        """Shut down the coordinator."""
+        await super().async_shutdown()
+        if self._dispatcher_disconnect:
+            self._dispatcher_disconnect()
+            self._dispatcher_disconnect = None
+
+    @callback
+    def _supervisor_events_to_jobs(self, event: dict[str, Any]) -> None:
+        """Update job data cache from supervisor events."""
+        if ATTR_WS_EVENT not in event:
+            return
+
+        if (
+            event[ATTR_WS_EVENT] == EVENT_SUPERVISOR_UPDATE
+            and event.get(ATTR_UPDATE_KEY) == UPDATE_KEY_SUPERVISOR
+            and event.get(ATTR_DATA, {}).get(ATTR_STARTUP) == STARTUP_COMPLETE
+        ):
+            self.config_entry.async_create_task(self.hass, self.async_request_refresh())
+
+        elif event[ATTR_WS_EVENT] == EVENT_JOB:
+            job = Job.from_dict(event[ATTR_DATA] | {"child_jobs": []})
+            previous_jobs = self.data or {}
+            updated_jobs = {**previous_jobs, job.uuid: job}
+            if job.done:
+                updated_jobs.pop(job.uuid, None)
+            self.async_set_updated_data(updated_jobs)
+            self._process_job_change(job)
 
 
 @dataclass
@@ -591,7 +789,6 @@ class HassioAddOnDataUpdateCoordinator(DataUpdateCoordinator[HassioAddonData]):
         hass: HomeAssistant,
         config_entry: ConfigEntry,
         dev_reg: dr.DeviceRegistry,
-        jobs: SupervisorJobs,
     ) -> None:
         """Initialize coordinator."""
         super().__init__(
@@ -610,7 +807,6 @@ class HassioAddOnDataUpdateCoordinator(DataUpdateCoordinator[HassioAddonData]):
         self.dev_reg = dev_reg
         self._addon_info_subscriptions: defaultdict[str, set[str]] = defaultdict(set)
         self.supervisor_client = get_supervisor_client(hass)
-        self.jobs = jobs
 
     @override
     async def _async_update_data(self) -> HassioAddonData:
@@ -800,7 +996,6 @@ class HassioMainDataUpdateCoordinator(DataUpdateCoordinator[HassioMainData]):
         self.dev_reg = dev_reg
         self.is_hass_os = False
         self.supervisor_client = get_supervisor_client(hass)
-        self.jobs = SupervisorJobs(hass)
         self._dispatcher_disconnect = async_dispatcher_connect(
             hass, EVENT_SUPERVISOR_EVENT, self._supervisor_event
         )
@@ -854,7 +1049,6 @@ class HassioMainDataUpdateCoordinator(DataUpdateCoordinator[HassioMainData]):
                 ),
             )
             mounts_info = await client.mounts.info()
-            await self.jobs.refresh_data(is_first_update)
         except SupervisorError as err:
             raise UpdateFailed(f"Error on Supervisor API: {err}") from err
 
@@ -951,4 +1145,3 @@ class HassioMainDataUpdateCoordinator(DataUpdateCoordinator[HassioMainData]):
         """Shut down and clean up when config entry unloaded."""
         await super().async_shutdown()
         self._dispatcher_disconnect()
-        self.jobs.unload()

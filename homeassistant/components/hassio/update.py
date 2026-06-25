@@ -17,15 +17,19 @@ from homeassistant.core import HomeAssistant, callback
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
-from .const import ADDONS_COORDINATOR, ATTR_VERSION_LATEST, MAIN_COORDINATOR
-from .coordinator import AddonData
+from .const import (
+    ADDONS_COORDINATOR,
+    ATTR_VERSION_LATEST,
+    JOBS_COORDINATOR,
+    MAIN_COORDINATOR,
+)
+from .coordinator import AddonData, JobSubscription
 from .entity import (
     HassioAddonEntity,
     HassioCoreEntity,
     HassioOSEntity,
     HassioSupervisorEntity,
 )
-from .jobs import JobSubscription
 from .update_helper import update_addon, update_core, update_os
 
 ENTITY_DESCRIPTION = UpdateEntityDescription(
@@ -216,7 +220,7 @@ class SupervisorAddonUpdateEntity(HassioAddonEntity, UpdateEntity):
         """Subscribe to progress updates."""
         await super().async_added_to_hass()
         self.async_on_remove(
-            self.coordinator.jobs.subscribe(
+            self.hass.data[JOBS_COORDINATOR].subscribe(
                 JobSubscription(
                     self._update_job_changed,
                     name="addon_manager_update",
@@ -388,7 +392,7 @@ class SupervisorSupervisorUpdateEntity(HassioSupervisorEntity, UpdateEntity):
         """Subscribe to progress updates."""
         await super().async_added_to_hass()
         self.async_on_remove(
-            self.coordinator.jobs.subscribe(
+            self.hass.data[JOBS_COORDINATOR].subscribe(
                 JobSubscription(self._update_job_changed, name="supervisor_update")
             )
         )
@@ -458,7 +462,7 @@ class SupervisorCoreUpdateEntity(HassioCoreEntity, UpdateEntity):
         """Subscribe to progress updates."""
         await super().async_added_to_hass()
         self.async_on_remove(
-            self.coordinator.jobs.subscribe(
+            self.hass.data[JOBS_COORDINATOR].subscribe(
                 JobSubscription(
                     self._update_job_changed, name="home_assistant_core_update"
                 )
