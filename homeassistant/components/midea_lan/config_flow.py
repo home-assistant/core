@@ -5,8 +5,8 @@ from typing import Any, override
 from aiohttp import ClientSession
 from midealocal.cloud import (
     PRESET_ACCOUNT_DATA,
-    SUPPORTED_CLOUDS,
     MideaCloud,
+    get_default_cloud,
     get_midea_cloud,
 )
 from midealocal.const import DeviceType, ProtocolVersion
@@ -34,12 +34,7 @@ from homeassistant.helpers.selector import SelectSelector, SelectSelectorConfig
 from .const import _LOGGER, CONF_ACCOUNT, CONF_KEY, CONF_SERVER, CONF_SUBTYPE, DOMAIN
 from .device_catalog import MIDEA_DEVICE_NAMES
 
-# Select default cloud without relying on unstable list indexing.
-DEFAULT_CLOUD: str = (
-    "MSmartHome"
-    if "MSmartHome" in SUPPORTED_CLOUDS
-    else next(iter(SUPPORTED_CLOUDS), "")
-)
+DEFAULT_CLOUD: str = get_default_cloud()
 
 SKIP_LOGIN_OPTION = "skip_login_option"
 
@@ -108,7 +103,7 @@ class MideaLanConfigFlow(ConfigFlow, domain=DOMAIN):
         """Start a user flow."""
         return self.async_show_menu(
             step_id="user",
-            menu_options=["discovery", "manually", "list", "cache"],
+            menu_options=["discovery", "manually", "list"],
             description_placeholders={"error": error} if error else None,
         )
 
@@ -193,6 +188,9 @@ class MideaLanConfigFlow(ConfigFlow, domain=DOMAIN):
         error: str | None = None,
     ) -> ConfigFlowResult:
         """List all devices and show device info in web UI."""
+        if user_input is not None:
+            return await self.async_step_user()
+
         # get all devices list
         all_devices = await self.hass.async_add_executor_job(discover)
         # available devices exist
