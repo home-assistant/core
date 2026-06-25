@@ -31,12 +31,6 @@ from zha.application.const import (
     CLUSTER_COMMANDS_SERVER,
     CLUSTER_TYPE_IN,
     CLUSTER_TYPE_OUT,
-    WARNING_DEVICE_MODE_EMERGENCY,
-    WARNING_DEVICE_SOUND_HIGH,
-    WARNING_DEVICE_SQUAWK_MODE_ARMED,
-    WARNING_DEVICE_STROBE_HIGH,
-    WARNING_DEVICE_STROBE_YES,
-    ZHA_CLUSTER_HANDLER_MSG,
     ZHA_GW_MSG,
 )
 from zha.application.gateway import Gateway
@@ -47,7 +41,14 @@ from zha.application.helpers import (
     qr_to_install_code,
 )
 from zha.application.platforms.alarm_control_panel import AlarmControlPanel
-from zha.application.platforms.siren import BaseSiren
+from zha.application.platforms.siren import (
+    BaseSiren,
+    SirenLevel,
+    SquawkMode,
+    Strobe,
+    StrobeLevel,
+    WarningMode,
+)
 from zha.zigbee.device import Device
 from zha.zigbee.group import GroupMemberReference
 import zigpy.backups
@@ -84,6 +85,7 @@ from .const import (
     GROUP_IDS,
     GROUP_NAME,
     MFG_CLUSTER_ID_START,
+    SIGNAL_DEVICE_RECONFIGURE_EVENT,
     ZHA_ALARM_OPTIONS,
     ZHA_OPTIONS,
 )
@@ -188,13 +190,13 @@ SERVICE_SCHEMAS: dict[str, VolSchemaType] = {
         {
             vol.Required(ATTR_IEEE): IEEE_SCHEMA,
             vol.Optional(
-                ATTR_WARNING_DEVICE_MODE, default=WARNING_DEVICE_SQUAWK_MODE_ARMED
+                ATTR_WARNING_DEVICE_MODE, default=SquawkMode.Armed
             ): cv.positive_int,
             vol.Optional(
-                ATTR_WARNING_DEVICE_STROBE, default=WARNING_DEVICE_STROBE_YES
+                ATTR_WARNING_DEVICE_STROBE, default=Strobe.Strobe
             ): cv.positive_int,
             vol.Optional(
-                ATTR_LEVEL, default=WARNING_DEVICE_SOUND_HIGH
+                ATTR_LEVEL, default=SirenLevel.High_level_sound
             ): cv.positive_int,
         }
     ),
@@ -202,20 +204,21 @@ SERVICE_SCHEMAS: dict[str, VolSchemaType] = {
         {
             vol.Required(ATTR_IEEE): IEEE_SCHEMA,
             vol.Optional(
-                ATTR_WARNING_DEVICE_MODE, default=WARNING_DEVICE_MODE_EMERGENCY
+                ATTR_WARNING_DEVICE_MODE, default=WarningMode.Emergency
             ): cv.positive_int,
             vol.Optional(
-                ATTR_WARNING_DEVICE_STROBE, default=WARNING_DEVICE_STROBE_YES
+                ATTR_WARNING_DEVICE_STROBE, default=Strobe.Strobe
             ): cv.positive_int,
             vol.Optional(
-                ATTR_LEVEL, default=WARNING_DEVICE_SOUND_HIGH
+                ATTR_LEVEL, default=SirenLevel.High_level_sound
             ): cv.positive_int,
             vol.Optional(ATTR_WARNING_DEVICE_DURATION, default=5): cv.positive_int,
             vol.Optional(
                 ATTR_WARNING_DEVICE_STROBE_DUTY_CYCLE, default=0x00
             ): cv.positive_int,
             vol.Optional(
-                ATTR_WARNING_DEVICE_STROBE_INTENSITY, default=WARNING_DEVICE_STROBE_HIGH
+                ATTR_WARNING_DEVICE_STROBE_INTENSITY,
+                default=StrobeLevel.High_level_strobe,
             ): cv.positive_int,
         }
     ),
@@ -657,17 +660,24 @@ async def websocket_remove_group_members(
 async def websocket_reconfigure_node(
     hass: HomeAssistant, connection: ActiveConnection, msg: dict[str, Any]
 ) -> None:
-    """Reconfigure a ZHA nodes entities by its ieee address."""
+    """Reconfigure a ZHA node by its ieee address with a prior re-interview."""
     zha_gateway = get_zha_gateway(hass)
     ieee: EUI64 = msg[ATTR_IEEE]
-    device: Device | None = zha_gateway.get_device(ieee)
+
+    if zha_gateway.get_device(ieee) is None:
+        connection.send_message(
+            websocket_api.error_message(
+                msg[ID], websocket_api.ERR_NOT_FOUND, "ZHA Device not found"
+            )
+        )
+        return
 
     async def forward_messages(data):
         """Forward events to websocket."""
         connection.send_message(websocket_api.event_message(msg["id"], data))
 
     remove_dispatcher_function = async_dispatcher_connect(
-        hass, ZHA_CLUSTER_HANDLER_MSG, forward_messages
+        hass, SIGNAL_DEVICE_RECONFIGURE_EVENT, forward_messages
     )
 
     @callback
@@ -677,9 +687,8 @@ async def websocket_reconfigure_node(
 
     connection.subscriptions[msg["id"]] = async_cleanup
 
-    _LOGGER.debug("Reconfiguring node with ieee_address: %s", ieee)
-    assert device
-    hass.async_create_task(device.async_configure())
+    _LOGGER.debug("Re-interview node with ieee_address: %s", ieee)
+    hass.async_create_task(zha_gateway.async_reinterview_device(ieee))
 
 
 @websocket_api.require_admin
