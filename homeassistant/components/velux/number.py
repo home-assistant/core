@@ -109,6 +109,7 @@ class VeluxPositionLimitNumber(
         self._attr_translation_key = f"{self._limitation_kind}_position_limitation"
         self._attr_device_info = velux_device_info(node, config_entry_id)
 
+    @override
     async def async_added_to_hass(self) -> None:
         """Request an immediate refresh when the entity is first added."""
         await super().async_added_to_hass()
@@ -215,16 +216,19 @@ class VeluxClosedPositionLimitNumber(VeluxPositionLimitNumber):
         sibling_value = self._sibling_value()
         return sibling_value if sibling_value is not None else 100
 
+    @override
     def _get_pyvlx_limit(self) -> Position | None:
         """Get the pyvlx max limit backing the HA closed position limit."""
         return self.coordinator.data.limitation_max if self.coordinator.data else None
 
+    @override
     def _updated_pyvlx_limits(
         self, updated_position: Position, current_min: Position, current_max: Position
     ) -> tuple[Position, Position]:
         """Update pyvlx max and preserve pyvlx min for HA closed limit changes."""
         return current_min, updated_position
 
+    @override
     def _overlaps(self, value: float) -> bool:
         """Check if the closed limit would overlap the open limit."""
         sibling_value = self._sibling_value()
@@ -252,16 +256,19 @@ class VeluxOpenPositionLimitNumber(VeluxPositionLimitNumber):
         sibling_value = self._sibling_value()
         return sibling_value if sibling_value is not None else 0
 
+    @override
     def _get_pyvlx_limit(self) -> Position | None:
         """Get the pyvlx min limit backing the HA open position limit."""
         return self.coordinator.data.limitation_min if self.coordinator.data else None
 
+    @override
     def _updated_pyvlx_limits(
         self, updated_position: Position, current_min: Position, current_max: Position
     ) -> tuple[Position, Position]:
         """Update pyvlx min and preserve pyvlx max for HA open limit changes."""
         return updated_position, current_max
 
+    @override
     def _overlaps(self, value: float) -> bool:
         """Check if the open limit would overlap the closed limit."""
         sibling_value = self._sibling_value()
