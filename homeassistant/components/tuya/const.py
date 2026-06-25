@@ -6,8 +6,6 @@ import logging
 
 from homeassistant.components.sensor import SensorDeviceClass
 from homeassistant.const import (
-    CONCENTRATION_MILLIGRAMS_PER_CUBIC_METER,
-    CONCENTRATION_PARTS_PER_BILLION,
     LIGHT_LUX,
     SIGNAL_STRENGTH_DECIBELS,
     SIGNAL_STRENGTH_DECIBELS_MILLIWATT,
@@ -1038,7 +1036,7 @@ UNITS = (
         },
     ),
     UnitOfMeasurement(
-        unit=CONCENTRATION_PARTS_PER_BILLION,
+        unit=UnitOfRatio.PARTS_PER_BILLION,
         device_classes={
             SensorDeviceClass.CO,
             SensorDeviceClass.CO2,
@@ -1102,7 +1100,7 @@ UNITS = (
         },
     ),
     UnitOfMeasurement(
-        unit=CONCENTRATION_MILLIGRAMS_PER_CUBIC_METER,
+        unit=UnitOfDensity.MILLIGRAMS_PER_CUBIC_METER,
         aliases={"mg/m3"},
         device_classes={
             SensorDeviceClass.NITROGEN_DIOXIDE,

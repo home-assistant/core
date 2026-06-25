@@ -1391,7 +1391,7 @@
     'supported_features': 0,
     'translation_key': 'voc',
     'unique_id': 'tuya.iks13mcaiyie3rryjb2ocvoc_value',
-    'unit_of_measurement': 'mg/m³',
+    'unit_of_measurement': <UnitOfDensity.MILLIGRAMS_PER_CUBIC_METER: 'mg/m³'>,
   })
 # ---
 # name: test_platform_setup_and_discovery[sensor.aqi_volatile_organic_compounds-state]
@@ -1400,7 +1400,7 @@
       <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'volatile_organic_compounds',
       <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'AQI Volatile organic compounds',
       <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
-      <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: 'mg/m³',
+      <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: <UnitOfDensity.MILLIGRAMS_PER_CUBIC_METER: 'mg/m³'>,
     }),
     'context': <ANY>,
     'entity_id': 'sensor.aqi_volatile_organic_compounds',
