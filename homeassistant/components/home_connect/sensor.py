@@ -13,7 +13,7 @@ from homeassistant.components.sensor import (
     SensorEntityDescription,
     SensorStateClass,
 )
-from homeassistant.const import PERCENTAGE, EntityCategory, UnitOfVolume
+from homeassistant.const import EntityCategory, UnitOfRatio, UnitOfVolume
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from homeassistant.util import dt as dt_util, slugify
@@ -67,7 +67,7 @@ BSH_PROGRAM_SENSORS = (
     ),
     HomeConnectSensorEntityDescription(
         key=EventKey.BSH_COMMON_OPTION_PROGRAM_PROGRESS,
-        native_unit_of_measurement=PERCENTAGE,
+        native_unit_of_measurement=UnitOfRatio.PERCENTAGE,
         translation_key="program_progress",
         appliance_types=APPLIANCES_WITH_PROGRAMS,
     ),
@@ -158,6 +158,7 @@ SENSORS = (
     HomeConnectSensorEntityDescription(
         key=StatusKey.BSH_COMMON_BATTERY_LEVEL,
         device_class=SensorDeviceClass.BATTERY,
+        native_unit_of_measurement=UnitOfRatio.PERCENTAGE,
     ),
     HomeConnectSensorEntityDescription(
         key=StatusKey.BSH_COMMON_VIDEO_CAMERA_STATE,
