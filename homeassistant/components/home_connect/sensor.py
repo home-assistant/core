@@ -67,7 +67,7 @@ BSH_PROGRAM_SENSORS = (
     ),
     HomeConnectSensorEntityDescription(
         key=EventKey.BSH_COMMON_OPTION_PROGRAM_PROGRESS,
-        native_unit_of_measurement=PERCENTAGE,
+        native_unit_of_measurement=UnitOfRatio.PERCENTAGE,
         translation_key="program_progress",
         appliance_types=APPLIANCES_WITH_PROGRAMS,
     ),
