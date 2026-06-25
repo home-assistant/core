@@ -50,4 +50,4 @@ class MyPVDataEntity(CoordinatorEntity[MyPVCoordinator]):
         except MyPVNotSupportedError:
             return False
 
-        return self.coordinator.last_update_success
+        return super().available
