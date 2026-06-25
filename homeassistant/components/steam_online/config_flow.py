@@ -41,6 +41,8 @@ def validate_input(user_input: dict[str, str]) -> dict[str, str | int]:
 class SteamFlowHandler(ConfigFlow, domain=DOMAIN):
     """Handle a config flow for Steam."""
 
+    VERSION = 2
+
     @staticmethod
     @callback
     @override
@@ -150,7 +152,7 @@ class SteamOptionsFlowHandler(OptionsFlowWithReload):
             for _id in self.options[CONF_ACCOUNTS]:
                 if _id not in user_input[CONF_ACCOUNTS] and (
                     entity_id := er.async_get(self.hass).async_get_entity_id(
-                        Platform.SENSOR, DOMAIN, f"sensor.steam_{_id}"
+                        Platform.SENSOR, DOMAIN, f"{_id}_account"
                     )
                 ):
                     er.async_get(self.hass).async_remove(entity_id)
