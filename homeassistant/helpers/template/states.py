@@ -344,7 +344,7 @@ class TemplateStateBase(State):
     def attributes(self) -> ReadOnlyDict[str, Any]:  # type: ignore[override]
         """Wrap State.attributes."""
         self._collect_state()
-        return self._state.attributes
+        return ReadOnlyDict({str(k): v for k, v in self._state.attributes.items()})
 
     @property
     @override

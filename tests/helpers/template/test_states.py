@@ -1,6 +1,7 @@
 """Test state wrapper classes and helpers for Home Assistant templates."""
 
 from datetime import timedelta
+from enum import StrEnum
 
 import pytest
 
@@ -15,6 +16,13 @@ from homeassistant.util import dt as dt_util
 from .helpers import render
 
 from tests.common import async_fire_time_changed
+
+
+class TemplateAttributeEnum(StrEnum):
+    """Class to test attributes as enums."""
+
+    ITEM1 = "item1"
+    ITEM2 = "item2"
 
 
 async def test_template_states_blocks_setitem(hass: HomeAssistant) -> None:
@@ -143,6 +151,20 @@ async def test_state_attributes(hass: HomeAssistant) -> None:
 
     with pytest.raises(TemplateError):
         render(hass, "{{ states.sensor.test.invalid_prop.xx }}")
+
+
+async def test_state_attributes_enums_return_strings(hass: HomeAssistant) -> None:
+    """Test state.attributes keys are strings, not enums."""
+
+    hass.states.async_set(
+        "sensor.test",
+        "23",
+        {TemplateAttributeEnum.ITEM1: 4, TemplateAttributeEnum.ITEM2: 5, "item3": 6},
+    )
+
+    result = render(hass, "{{ states.sensor.test.attributes }}")
+    assert isinstance(result, dict)
+    assert result == {"item1": 4, "item2": 5, "item3": 6}
 
 
 async def test_unavailable_states(hass: HomeAssistant) -> None:
