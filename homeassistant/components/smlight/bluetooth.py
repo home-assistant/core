@@ -1,6 +1,5 @@
 """Bluetooth proxy for SLZB devices."""
 
-import logging
 from typing import override
 
 from pysmlight import BleProxyClient
@@ -16,8 +15,6 @@ from homeassistant.core import CALLBACK_TYPE, HomeAssistant, callback
 
 from .const import DOMAIN, SLZB_BLE_SERVER_PORT
 from .coordinator import SmConfigEntry
-
-_LOGGER = logging.getLogger(__name__)
 
 
 class SmBleScanner(BaseHaRemoteScanner):

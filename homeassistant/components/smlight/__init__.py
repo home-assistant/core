@@ -4,17 +4,18 @@ from pysmlight import Api2
 
 from homeassistant.const import CONF_HOST, Platform
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers import config_validation as cv
+from homeassistant.helpers import config_validation as cv, device_registry as dr
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 from homeassistant.helpers.typing import ConfigType
 
 from .bluetooth import async_connect_scanner
-from .const import DOMAIN
+from .const import ATTR_MANUFACTURER, DOMAIN
 from .coordinator import (
     SmConfigEntry,
     SmDataUpdateCoordinator,
     SmFirmwareUpdateCoordinator,
     SmlightData,
+    sw_version_from_info,
 )
 from .services import async_setup_services
 
@@ -47,12 +48,27 @@ async def async_setup_entry(hass: HomeAssistant, entry: SmConfigEntry) -> bool:
     await data_coordinator.async_config_entry_first_refresh()
     await firmware_coordinator.async_config_entry_first_refresh()
 
-    if data_coordinator.data.info.legacy_api < 2:
+    info = data_coordinator.data.info
+
+    unique_id = data_coordinator.unique_id
+    assert unique_id is not None
+
+    device_registry = dr.async_get(hass)
+    device = device_registry.async_get_or_create(
+        config_entry_id=entry.entry_id,
+        connections={(dr.CONNECTION_NETWORK_MAC, unique_id)},
+        manufacturer=ATTR_MANUFACTURER,
+        model=info.model,
+        name=entry.title,
+        sw_version=sw_version_from_info(info),
+    )
+    data_coordinator.device_id = device.id
+
+    if info.legacy_api < 2:
         entry.async_create_background_task(
             hass, client.sse.client(), "smlight-sse-client"
         )
 
-    info = data_coordinator.data.info
     if info.u_device:
         entry.async_on_unload(
             async_connect_scanner(hass, entry, info.model, data_coordinator.device_id)
