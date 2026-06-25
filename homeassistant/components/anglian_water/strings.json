@@ -68,7 +68,7 @@
   },
   "issues": {
     "consent_required": {
-      "description": "The terms and conditions for account {account_number} have been updated. Please visit and login to your Anglian Water account to accept the new terms and conditions.\n\nThis issue will automatically resolve once the new conditions have been accepted and on the next refresh cycle.",
+      "description": "The terms and conditions for account {account_number} have been updated. Please visit and log in to your Anglian Water account to accept the new terms and conditions.\n\nThis issue will automatically resolve once the new conditions have been accepted and on the next refresh cycle.",
       "title": "Anglian Water terms and conditions updated"
     }
   }
