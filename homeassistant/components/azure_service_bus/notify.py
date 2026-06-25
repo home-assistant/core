@@ -2,7 +2,7 @@
 
 import json
 import logging
-from typing import Any
+from typing import Any, override
 
 from azure.servicebus import ServiceBusMessage
 from azure.servicebus.aio import ServiceBusClient, ServiceBusSender
@@ -91,6 +91,7 @@ class ServiceBusNotificationService(BaseNotificationService):
         """Initialize the service."""
         self._client = client
 
+    @override
     async def async_send_message(self, message: str, **kwargs: Any) -> None:
         """Send a message."""
         dto = {ATTR_ASB_MESSAGE: message}

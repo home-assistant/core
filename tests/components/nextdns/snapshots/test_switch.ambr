@@ -39,7 +39,7 @@
 # name: test_switch[switch.fake_profile_ai_driven_threat_detection-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'Fake Profile AI-Driven threat detection',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Fake Profile AI-Driven threat detection',
     }),
     'context': <ANY>,
     'entity_id': 'switch.fake_profile_ai_driven_threat_detection',
@@ -89,7 +89,7 @@
 # name: test_switch[switch.fake_profile_allow_affiliate_tracking_links-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'Fake Profile Allow affiliate & tracking links',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Fake Profile Allow affiliate & tracking links',
     }),
     'context': <ANY>,
     'entity_id': 'switch.fake_profile_allow_affiliate_tracking_links',
@@ -139,7 +139,7 @@
 # name: test_switch[switch.fake_profile_anonymized_edns_client_subnet-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'Fake Profile Anonymized EDNS client subnet',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Fake Profile Anonymized EDNS client subnet',
     }),
     'context': <ANY>,
     'entity_id': 'switch.fake_profile_anonymized_edns_client_subnet',
@@ -189,7 +189,7 @@
 # name: test_switch[switch.fake_profile_block_9gag-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'Fake Profile Block 9GAG',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Fake Profile Block 9GAG',
     }),
     'context': <ANY>,
     'entity_id': 'switch.fake_profile_block_9gag',
@@ -239,7 +239,7 @@
 # name: test_switch[switch.fake_profile_block_amazon-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'Fake Profile Block Amazon',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Fake Profile Block Amazon',
     }),
     'context': <ANY>,
     'entity_id': 'switch.fake_profile_block_amazon',
@@ -289,7 +289,7 @@
 # name: test_switch[switch.fake_profile_block_bereal-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'Fake Profile Block BeReal',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Fake Profile Block BeReal',
     }),
     'context': <ANY>,
     'entity_id': 'switch.fake_profile_block_bereal',
@@ -339,7 +339,7 @@
 # name: test_switch[switch.fake_profile_block_blizzard-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'Fake Profile Block Blizzard',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Fake Profile Block Blizzard',
     }),
     'context': <ANY>,
     'entity_id': 'switch.fake_profile_block_blizzard',
@@ -389,7 +389,7 @@
 # name: test_switch[switch.fake_profile_block_bypass_methods-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'Fake Profile Block bypass methods',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Fake Profile Block bypass methods',
     }),
     'context': <ANY>,
     'entity_id': 'switch.fake_profile_block_bypass_methods',
@@ -439,7 +439,7 @@
 # name: test_switch[switch.fake_profile_block_chatgpt-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'Fake Profile Block ChatGPT',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Fake Profile Block ChatGPT',
     }),
     'context': <ANY>,
     'entity_id': 'switch.fake_profile_block_chatgpt',
@@ -489,7 +489,7 @@
 # name: test_switch[switch.fake_profile_block_child_sexual_abuse_material-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'Fake Profile Block child sexual abuse material',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Fake Profile Block child sexual abuse material',
     }),
     'context': <ANY>,
     'entity_id': 'switch.fake_profile_block_child_sexual_abuse_material',
@@ -539,7 +539,7 @@
 # name: test_switch[switch.fake_profile_block_dailymotion-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'Fake Profile Block Dailymotion',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Fake Profile Block Dailymotion',
     }),
     'context': <ANY>,
     'entity_id': 'switch.fake_profile_block_dailymotion',
@@ -589,7 +589,7 @@
 # name: test_switch[switch.fake_profile_block_dating-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'Fake Profile Block dating',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Fake Profile Block dating',
     }),
     'context': <ANY>,
     'entity_id': 'switch.fake_profile_block_dating',
@@ -639,7 +639,7 @@
 # name: test_switch[switch.fake_profile_block_discord-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'Fake Profile Block Discord',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Fake Profile Block Discord',
     }),
     'context': <ANY>,
     'entity_id': 'switch.fake_profile_block_discord',
@@ -689,7 +689,7 @@
 # name: test_switch[switch.fake_profile_block_disguised_third_party_trackers-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'Fake Profile Block disguised third-party trackers',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Fake Profile Block disguised third-party trackers',
     }),
     'context': <ANY>,
     'entity_id': 'switch.fake_profile_block_disguised_third_party_trackers',
@@ -739,7 +739,7 @@
 # name: test_switch[switch.fake_profile_block_disney_plus-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'Fake Profile Block Disney Plus',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Fake Profile Block Disney Plus',
     }),
     'context': <ANY>,
     'entity_id': 'switch.fake_profile_block_disney_plus',
@@ -789,7 +789,7 @@
 # name: test_switch[switch.fake_profile_block_dynamic_dns_hostnames-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'Fake Profile Block dynamic DNS hostnames',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Fake Profile Block dynamic DNS hostnames',
     }),
     'context': <ANY>,
     'entity_id': 'switch.fake_profile_block_dynamic_dns_hostnames',
@@ -839,7 +839,7 @@
 # name: test_switch[switch.fake_profile_block_ebay-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'Fake Profile Block eBay',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Fake Profile Block eBay',
     }),
     'context': <ANY>,
     'entity_id': 'switch.fake_profile_block_ebay',
@@ -889,7 +889,7 @@
 # name: test_switch[switch.fake_profile_block_facebook-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'Fake Profile Block Facebook',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Fake Profile Block Facebook',
     }),
     'context': <ANY>,
     'entity_id': 'switch.fake_profile_block_facebook',
@@ -939,7 +939,7 @@
 # name: test_switch[switch.fake_profile_block_fortnite-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'Fake Profile Block Fortnite',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Fake Profile Block Fortnite',
     }),
     'context': <ANY>,
     'entity_id': 'switch.fake_profile_block_fortnite',
@@ -989,7 +989,7 @@
 # name: test_switch[switch.fake_profile_block_gambling-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'Fake Profile Block gambling',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Fake Profile Block gambling',
     }),
     'context': <ANY>,
     'entity_id': 'switch.fake_profile_block_gambling',
@@ -1039,7 +1039,7 @@
 # name: test_switch[switch.fake_profile_block_google_chat-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'Fake Profile Block Google Chat',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Fake Profile Block Google Chat',
     }),
     'context': <ANY>,
     'entity_id': 'switch.fake_profile_block_google_chat',
@@ -1089,7 +1089,7 @@
 # name: test_switch[switch.fake_profile_block_hbo_max-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'Fake Profile Block HBO Max',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Fake Profile Block HBO Max',
     }),
     'context': <ANY>,
     'entity_id': 'switch.fake_profile_block_hbo_max',
@@ -1139,7 +1139,7 @@
 # name: test_switch[switch.fake_profile_block_hulu-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'Fake Profile Block Hulu',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Fake Profile Block Hulu',
     }),
     'context': <ANY>,
     'entity_id': 'switch.fake_profile_block_hulu',
@@ -1189,7 +1189,7 @@
 # name: test_switch[switch.fake_profile_block_imgur-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'Fake Profile Block Imgur',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Fake Profile Block Imgur',
     }),
     'context': <ANY>,
     'entity_id': 'switch.fake_profile_block_imgur',
@@ -1239,7 +1239,7 @@
 # name: test_switch[switch.fake_profile_block_instagram-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'Fake Profile Block Instagram',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Fake Profile Block Instagram',
     }),
     'context': <ANY>,
     'entity_id': 'switch.fake_profile_block_instagram',
@@ -1289,7 +1289,7 @@
 # name: test_switch[switch.fake_profile_block_league_of_legends-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'Fake Profile Block League of Legends',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Fake Profile Block League of Legends',
     }),
     'context': <ANY>,
     'entity_id': 'switch.fake_profile_block_league_of_legends',
@@ -1339,7 +1339,7 @@
 # name: test_switch[switch.fake_profile_block_mastodon-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'Fake Profile Block Mastodon',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Fake Profile Block Mastodon',
     }),
     'context': <ANY>,
     'entity_id': 'switch.fake_profile_block_mastodon',
@@ -1389,7 +1389,7 @@
 # name: test_switch[switch.fake_profile_block_messenger-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'Fake Profile Block Messenger',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Fake Profile Block Messenger',
     }),
     'context': <ANY>,
     'entity_id': 'switch.fake_profile_block_messenger',
@@ -1439,7 +1439,7 @@
 # name: test_switch[switch.fake_profile_block_minecraft-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'Fake Profile Block Minecraft',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Fake Profile Block Minecraft',
     }),
     'context': <ANY>,
     'entity_id': 'switch.fake_profile_block_minecraft',
@@ -1489,7 +1489,7 @@
 # name: test_switch[switch.fake_profile_block_netflix-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'Fake Profile Block Netflix',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Fake Profile Block Netflix',
     }),
     'context': <ANY>,
     'entity_id': 'switch.fake_profile_block_netflix',
@@ -1539,7 +1539,7 @@
 # name: test_switch[switch.fake_profile_block_newly_registered_domains-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'Fake Profile Block newly registered domains',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Fake Profile Block newly registered domains',
     }),
     'context': <ANY>,
     'entity_id': 'switch.fake_profile_block_newly_registered_domains',
@@ -1589,7 +1589,7 @@
 # name: test_switch[switch.fake_profile_block_online_gaming-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'Fake Profile Block online gaming',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Fake Profile Block online gaming',
     }),
     'context': <ANY>,
     'entity_id': 'switch.fake_profile_block_online_gaming',
@@ -1639,7 +1639,7 @@
 # name: test_switch[switch.fake_profile_block_page-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'Fake Profile Block page',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Fake Profile Block page',
     }),
     'context': <ANY>,
     'entity_id': 'switch.fake_profile_block_page',
@@ -1689,7 +1689,7 @@
 # name: test_switch[switch.fake_profile_block_parked_domains-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'Fake Profile Block parked domains',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Fake Profile Block parked domains',
     }),
     'context': <ANY>,
     'entity_id': 'switch.fake_profile_block_parked_domains',
@@ -1739,7 +1739,7 @@
 # name: test_switch[switch.fake_profile_block_pinterest-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'Fake Profile Block Pinterest',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Fake Profile Block Pinterest',
     }),
     'context': <ANY>,
     'entity_id': 'switch.fake_profile_block_pinterest',
@@ -1789,7 +1789,7 @@
 # name: test_switch[switch.fake_profile_block_piracy-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'Fake Profile Block piracy',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Fake Profile Block piracy',
     }),
     'context': <ANY>,
     'entity_id': 'switch.fake_profile_block_piracy',
@@ -1839,7 +1839,7 @@
 # name: test_switch[switch.fake_profile_block_playstation_network-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'Fake Profile Block PlayStation Network',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Fake Profile Block PlayStation Network',
     }),
     'context': <ANY>,
     'entity_id': 'switch.fake_profile_block_playstation_network',
@@ -1889,7 +1889,7 @@
 # name: test_switch[switch.fake_profile_block_porn-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'Fake Profile Block porn',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Fake Profile Block porn',
     }),
     'context': <ANY>,
     'entity_id': 'switch.fake_profile_block_porn',
@@ -1939,7 +1939,7 @@
 # name: test_switch[switch.fake_profile_block_prime_video-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'Fake Profile Block Prime Video',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Fake Profile Block Prime Video',
     }),
     'context': <ANY>,
     'entity_id': 'switch.fake_profile_block_prime_video',
@@ -1989,7 +1989,7 @@
 # name: test_switch[switch.fake_profile_block_reddit-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'Fake Profile Block Reddit',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Fake Profile Block Reddit',
     }),
     'context': <ANY>,
     'entity_id': 'switch.fake_profile_block_reddit',
@@ -2039,7 +2039,7 @@
 # name: test_switch[switch.fake_profile_block_roblox-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'Fake Profile Block Roblox',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Fake Profile Block Roblox',
     }),
     'context': <ANY>,
     'entity_id': 'switch.fake_profile_block_roblox',
@@ -2089,7 +2089,7 @@
 # name: test_switch[switch.fake_profile_block_signal-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'Fake Profile Block Signal',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Fake Profile Block Signal',
     }),
     'context': <ANY>,
     'entity_id': 'switch.fake_profile_block_signal',
@@ -2139,7 +2139,7 @@
 # name: test_switch[switch.fake_profile_block_skype-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'Fake Profile Block Skype',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Fake Profile Block Skype',
     }),
     'context': <ANY>,
     'entity_id': 'switch.fake_profile_block_skype',
@@ -2189,7 +2189,7 @@
 # name: test_switch[switch.fake_profile_block_snapchat-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'Fake Profile Block Snapchat',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Fake Profile Block Snapchat',
     }),
     'context': <ANY>,
     'entity_id': 'switch.fake_profile_block_snapchat',
@@ -2239,7 +2239,7 @@
 # name: test_switch[switch.fake_profile_block_social_networks-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'Fake Profile Block social networks',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Fake Profile Block social networks',
     }),
     'context': <ANY>,
     'entity_id': 'switch.fake_profile_block_social_networks',
@@ -2289,7 +2289,7 @@
 # name: test_switch[switch.fake_profile_block_spotify-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'Fake Profile Block Spotify',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Fake Profile Block Spotify',
     }),
     'context': <ANY>,
     'entity_id': 'switch.fake_profile_block_spotify',
@@ -2339,7 +2339,7 @@
 # name: test_switch[switch.fake_profile_block_steam-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'Fake Profile Block Steam',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Fake Profile Block Steam',
     }),
     'context': <ANY>,
     'entity_id': 'switch.fake_profile_block_steam',
@@ -2389,7 +2389,7 @@
 # name: test_switch[switch.fake_profile_block_telegram-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'Fake Profile Block Telegram',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Fake Profile Block Telegram',
     }),
     'context': <ANY>,
     'entity_id': 'switch.fake_profile_block_telegram',
@@ -2439,7 +2439,7 @@
 # name: test_switch[switch.fake_profile_block_tiktok-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'Fake Profile Block TikTok',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Fake Profile Block TikTok',
     }),
     'context': <ANY>,
     'entity_id': 'switch.fake_profile_block_tiktok',
@@ -2489,7 +2489,7 @@
 # name: test_switch[switch.fake_profile_block_tinder-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'Fake Profile Block Tinder',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Fake Profile Block Tinder',
     }),
     'context': <ANY>,
     'entity_id': 'switch.fake_profile_block_tinder',
@@ -2539,7 +2539,7 @@
 # name: test_switch[switch.fake_profile_block_tumblr-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'Fake Profile Block Tumblr',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Fake Profile Block Tumblr',
     }),
     'context': <ANY>,
     'entity_id': 'switch.fake_profile_block_tumblr',
@@ -2589,7 +2589,7 @@
 # name: test_switch[switch.fake_profile_block_twitch-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'Fake Profile Block Twitch',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Fake Profile Block Twitch',
     }),
     'context': <ANY>,
     'entity_id': 'switch.fake_profile_block_twitch',
@@ -2639,7 +2639,7 @@
 # name: test_switch[switch.fake_profile_block_video_streaming-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'Fake Profile Block video streaming',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Fake Profile Block video streaming',
     }),
     'context': <ANY>,
     'entity_id': 'switch.fake_profile_block_video_streaming',
@@ -2689,7 +2689,7 @@
 # name: test_switch[switch.fake_profile_block_vimeo-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'Fake Profile Block Vimeo',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Fake Profile Block Vimeo',
     }),
     'context': <ANY>,
     'entity_id': 'switch.fake_profile_block_vimeo',
@@ -2739,7 +2739,7 @@
 # name: test_switch[switch.fake_profile_block_vk-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'Fake Profile Block VK',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Fake Profile Block VK',
     }),
     'context': <ANY>,
     'entity_id': 'switch.fake_profile_block_vk',
@@ -2789,7 +2789,7 @@
 # name: test_switch[switch.fake_profile_block_whatsapp-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'Fake Profile Block WhatsApp',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Fake Profile Block WhatsApp',
     }),
     'context': <ANY>,
     'entity_id': 'switch.fake_profile_block_whatsapp',
@@ -2839,7 +2839,7 @@
 # name: test_switch[switch.fake_profile_block_x_formerly_twitter-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'Fake Profile Block X (formerly Twitter)',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Fake Profile Block X (formerly Twitter)',
     }),
     'context': <ANY>,
     'entity_id': 'switch.fake_profile_block_x_formerly_twitter',
@@ -2889,7 +2889,7 @@
 # name: test_switch[switch.fake_profile_block_xbox_network-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'Fake Profile Block Xbox Network',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Fake Profile Block Xbox Network',
     }),
     'context': <ANY>,
     'entity_id': 'switch.fake_profile_block_xbox_network',
@@ -2939,7 +2939,7 @@
 # name: test_switch[switch.fake_profile_block_youtube-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'Fake Profile Block YouTube',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Fake Profile Block YouTube',
     }),
     'context': <ANY>,
     'entity_id': 'switch.fake_profile_block_youtube',
@@ -2989,7 +2989,7 @@
 # name: test_switch[switch.fake_profile_block_zoom-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'Fake Profile Block Zoom',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Fake Profile Block Zoom',
     }),
     'context': <ANY>,
     'entity_id': 'switch.fake_profile_block_zoom',
@@ -3039,7 +3039,7 @@
 # name: test_switch[switch.fake_profile_bypass_age_verification-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'Fake Profile Bypass age verification',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Fake Profile Bypass age verification',
     }),
     'context': <ANY>,
     'entity_id': 'switch.fake_profile_bypass_age_verification',
@@ -3089,7 +3089,7 @@
 # name: test_switch[switch.fake_profile_cache_boost-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'Fake Profile Cache boost',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Fake Profile Cache boost',
     }),
     'context': <ANY>,
     'entity_id': 'switch.fake_profile_cache_boost',
@@ -3139,7 +3139,7 @@
 # name: test_switch[switch.fake_profile_cname_flattening-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'Fake Profile CNAME flattening',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Fake Profile CNAME flattening',
     }),
     'context': <ANY>,
     'entity_id': 'switch.fake_profile_cname_flattening',
@@ -3189,7 +3189,7 @@
 # name: test_switch[switch.fake_profile_cryptojacking_protection-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'Fake Profile Cryptojacking protection',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Fake Profile Cryptojacking protection',
     }),
     'context': <ANY>,
     'entity_id': 'switch.fake_profile_cryptojacking_protection',
@@ -3239,7 +3239,7 @@
 # name: test_switch[switch.fake_profile_dns_rebinding_protection-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'Fake Profile DNS rebinding protection',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Fake Profile DNS rebinding protection',
     }),
     'context': <ANY>,
     'entity_id': 'switch.fake_profile_dns_rebinding_protection',
@@ -3289,7 +3289,7 @@
 # name: test_switch[switch.fake_profile_domain_generation_algorithms_protection-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'Fake Profile Domain generation algorithms protection',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Fake Profile Domain generation algorithms protection',
     }),
     'context': <ANY>,
     'entity_id': 'switch.fake_profile_domain_generation_algorithms_protection',
@@ -3339,7 +3339,7 @@
 # name: test_switch[switch.fake_profile_force_safesearch-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'Fake Profile Force SafeSearch',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Fake Profile Force SafeSearch',
     }),
     'context': <ANY>,
     'entity_id': 'switch.fake_profile_force_safesearch',
@@ -3389,7 +3389,7 @@
 # name: test_switch[switch.fake_profile_force_youtube_restricted_mode-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'Fake Profile Force YouTube restricted mode',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Fake Profile Force YouTube restricted mode',
     }),
     'context': <ANY>,
     'entity_id': 'switch.fake_profile_force_youtube_restricted_mode',
@@ -3439,7 +3439,7 @@
 # name: test_switch[switch.fake_profile_google_safe_browsing-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'Fake Profile Google safe browsing',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Fake Profile Google safe browsing',
     }),
     'context': <ANY>,
     'entity_id': 'switch.fake_profile_google_safe_browsing',
@@ -3489,7 +3489,7 @@
 # name: test_switch[switch.fake_profile_idn_homograph_attacks_protection-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'Fake Profile IDN homograph attacks protection',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Fake Profile IDN homograph attacks protection',
     }),
     'context': <ANY>,
     'entity_id': 'switch.fake_profile_idn_homograph_attacks_protection',
@@ -3539,7 +3539,7 @@
 # name: test_switch[switch.fake_profile_logs-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'Fake Profile Logs',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Fake Profile Logs',
     }),
     'context': <ANY>,
     'entity_id': 'switch.fake_profile_logs',
@@ -3589,7 +3589,7 @@
 # name: test_switch[switch.fake_profile_threat_intelligence_feeds-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'Fake Profile Threat intelligence feeds',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Fake Profile Threat intelligence feeds',
     }),
     'context': <ANY>,
     'entity_id': 'switch.fake_profile_threat_intelligence_feeds',
@@ -3639,7 +3639,7 @@
 # name: test_switch[switch.fake_profile_typosquatting_protection-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'Fake Profile Typosquatting protection',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Fake Profile Typosquatting protection',
     }),
     'context': <ANY>,
     'entity_id': 'switch.fake_profile_typosquatting_protection',
@@ -3689,7 +3689,7 @@
 # name: test_switch[switch.fake_profile_web3-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'Fake Profile Web3',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Fake Profile Web3',
     }),
     'context': <ANY>,
     'entity_id': 'switch.fake_profile_web3',

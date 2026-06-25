@@ -1,7 +1,7 @@
 """Mycroft AI notification platform."""
 
 import logging
-from typing import Any
+from typing import Any, override
 
 from mycroftapi import MycroftAPI
 
@@ -30,6 +30,7 @@ class MycroftNotificationService(BaseNotificationService):
         """Initialize the service."""
         self.mycroft_ip = mycroft_ip
 
+    @override
     def send_message(self, message: str = "", **kwargs: Any) -> None:
         """Send a message mycroft to speak on instance."""
 

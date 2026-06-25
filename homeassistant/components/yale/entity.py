@@ -1,6 +1,7 @@
 """Base class for Yale entity."""
 
 from abc import abstractmethod
+from typing import override
 
 from yalexs.activity import Activity, ActivityType
 from yalexs.doorbell import Doorbell, DoorbellDetail
@@ -72,6 +73,7 @@ class YaleEntity(Entity):
     def _update_from_data(self) -> None:
         """Update the entity state from the data object."""
 
+    @override
     async def async_added_to_hass(self) -> None:
         """Subscribe to updates."""
         self.async_on_remove(

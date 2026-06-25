@@ -2,7 +2,7 @@
 
 from abc import ABC, abstractmethod
 import logging
-from typing import Any, Final, TypedDict
+from typing import Any, Final, TypedDict, override
 
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_PLATFORM, Platform
@@ -54,6 +54,7 @@ class PlatformControllerBase(ABC):
 class _KNXConfigStoreStorage(Store[KNXConfigStoreModel]):
     """Storage handler for KNXConfigStore."""
 
+    @override
     async def _async_migrate_func(
         self, old_major_version: int, old_minor_version: int, old_data: dict[str, Any]
     ) -> dict[str, Any]:

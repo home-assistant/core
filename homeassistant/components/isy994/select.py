@@ -1,6 +1,6 @@
 """Support for ISY select entities."""
 
-from typing import cast
+from typing import cast, override
 
 from pyisy.constants import (
     ATTR_ACTION,
@@ -112,6 +112,7 @@ class ISYRampRateSelectEntity(ISYAuxControlEntity, SelectEntity):
     """Representation of a ISY/IoX Aux Control Ramp Rate Select entity."""
 
     @property
+    @override
     def current_option(self) -> str | None:
         """Return the selected entity option to represent the entity state."""
         node_prop: NodeProperty = self._node.aux_properties[self._control]
@@ -120,6 +121,7 @@ class ISYRampRateSelectEntity(ISYAuxControlEntity, SelectEntity):
 
         return RAMP_RATE_OPTIONS[int(node_prop.value)]
 
+    @override
     async def async_select_option(self, option: str) -> None:
         """Change the selected option."""
 
@@ -130,6 +132,7 @@ class ISYAuxControlIndexSelectEntity(ISYAuxControlEntity, SelectEntity):
     """Representation of a ISY/IoX Aux Control Index Select entity."""
 
     @property
+    @override
     def current_option(self) -> str | None:
         """Return the selected entity option to represent the entity state."""
         node_prop: NodeProperty = self._node.aux_properties[self._control]
@@ -140,6 +143,7 @@ class ISYAuxControlIndexSelectEntity(ISYAuxControlEntity, SelectEntity):
             return cast(str, options_dict.get(node_prop.value, node_prop.value))
         return cast(str, node_prop.formatted)
 
+    @override
     async def async_select_option(self, option: str) -> None:
         """Change the selected option."""
         node_prop: NodeProperty = self._node.aux_properties[self._control]
@@ -167,6 +171,7 @@ class ISYBacklightSelectEntity(ISYAuxControlEntity, SelectEntity, RestoreEntity)
         self._memory_change_handler: EventListener | None = None
         self._attr_current_option = None
 
+    @override
     async def async_added_to_hass(self) -> None:
         """Load the last known state when added to hass."""
         await super().async_added_to_hass()
@@ -196,6 +201,7 @@ class ISYBacklightSelectEntity(ISYAuxControlEntity, SelectEntity, RestoreEntity)
         self._attr_current_option = option
         self.async_write_ha_state()
 
+    @override
     async def async_select_option(self, option: str) -> None:
         """Change the selected option."""
 

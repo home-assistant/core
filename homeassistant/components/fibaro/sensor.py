@@ -1,6 +1,7 @@
 """Support for Fibaro sensors."""
 
 from contextlib import suppress
+from typing import override
 
 from pyfibaro.fibaro_device import DeviceModel
 
@@ -156,6 +157,7 @@ class FibaroSensor(FibaroEntity, SensorEntity):
                     fibaro_device.unit, fibaro_device.unit
                 )
 
+    @override
     def update(self) -> None:
         """Update the state."""
         super().update()
@@ -181,6 +183,7 @@ class FibaroAdditionalSensor(FibaroEntity, SensorEntity):
         self._attr_name = f"{fibaro_device.friendly_name} {entity_description.name}"
         self._attr_unique_id = f"{fibaro_device.unique_id_str}_{entity_description.key}"
 
+    @override
     def update(self) -> None:
         """Update the state."""
         super().update()

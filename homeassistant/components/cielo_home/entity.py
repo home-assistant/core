@@ -1,5 +1,7 @@
 """Base entity for Cielo integration."""
 
+from typing import override
+
 from cieloconnectapi.device import CieloDeviceAPI
 from cieloconnectapi.model import CieloDevice
 
@@ -27,6 +29,7 @@ class CieloBaseEntity(CoordinatorEntity[CieloDataUpdateCoordinator]):
             coordinator.client, coordinator.data.parsed[device_id]
         )
 
+    @override
     def _handle_coordinator_update(self) -> None:
         """Handle updated data from the coordinator."""
         if (dev := self.device_data) is not None:
@@ -39,6 +42,7 @@ class CieloBaseEntity(CoordinatorEntity[CieloDataUpdateCoordinator]):
         return self.coordinator.data.parsed.get(self._device_id)
 
     @property
+    @override
     def available(self) -> bool:
         """Return if the device is available and online."""
         if not (super().available and self._device_id in self.coordinator.data.parsed):

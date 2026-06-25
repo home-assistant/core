@@ -1,6 +1,6 @@
 """Support for Nexia Automations."""
 
-from typing import Any
+from typing import Any, override
 
 from nexia.automation import NexiaAutomation
 
@@ -47,6 +47,7 @@ class NexiaAutomationScene(NexiaEntity, Scene):
         self._automation = automation
         self._attr_extra_state_attributes = {ATTR_DESCRIPTION: automation.description}
 
+    @override
     async def async_activate(self, **kwargs: Any) -> None:
         """Activate an automation scene."""
         await self._automation.activate()

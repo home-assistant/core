@@ -1,6 +1,6 @@
 """Support for switching devices via Pilight to on and off."""
 
-from typing import Any
+from typing import Any, override
 
 import voluptuous as vol
 
@@ -60,10 +60,12 @@ class PilightLight(PilightBaseDevice, LightEntity):
         self._dimlevel_max: int = config[CONF_DIMLEVEL_MAX]
 
     @property
+    @override
     def brightness(self) -> int | None:
         """Return the brightness."""
         return self._brightness
 
+    @override
     def turn_on(self, **kwargs: Any) -> None:
         """Turn the switch on by calling pilight.send service with on code."""
         # Update brightness only if provided as an argument.

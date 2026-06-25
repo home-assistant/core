@@ -94,6 +94,11 @@ BLUETOOTH: Final[list[dict[str, bool | str | int | list[int]]]] = [
         "local_name": "Jar*",
     },
     {
+        "connectable": False,
+        "domain": "chef_iq",
+        "manufacturer_id": 1485,
+    },
+    {
         "domain": "dormakaba_dkey",
         "service_uuid": "e7a60000-6639-429f-94fd-86de8ea26897",
     },

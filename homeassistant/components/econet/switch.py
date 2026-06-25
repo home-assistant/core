@@ -1,7 +1,7 @@
 """Support for using switch with ecoNet thermostats."""
 
 import logging
-from typing import Any
+from typing import Any, override
 
 from pyeconet.equipment import EquipmentType
 from pyeconet.equipment.thermostat import Thermostat, ThermostatOperationMode
@@ -41,15 +41,18 @@ class EcoNetSwitchAuxHeatOnly(EcoNetEntity[Thermostat], SwitchEntity):
             f"{thermostat.device_id}_{thermostat.device_name}_auxheat"
         )
 
+    @override
     def turn_on(self, **kwargs: Any) -> None:
         """Set the hvacMode to auxHeatOnly."""
         self._econet.set_mode(ThermostatOperationMode.EMERGENCY_HEAT)
 
+    @override
     def turn_off(self, **kwargs: Any) -> None:
         """Set the hvacMode back to the prior setting."""
         self._econet.set_mode(ThermostatOperationMode.HEATING)
 
     @property
+    @override
     def is_on(self) -> bool:
         """Return true if auxHeatOnly mode is active."""
         return self._econet.mode == ThermostatOperationMode.EMERGENCY_HEAT

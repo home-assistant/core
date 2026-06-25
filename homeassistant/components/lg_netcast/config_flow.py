@@ -2,7 +2,7 @@
 
 import contextlib
 from datetime import datetime, timedelta
-from typing import TYPE_CHECKING, Any
+from typing import TYPE_CHECKING, Any, override
 
 from pylgnetcast import AccessTokenError, LgNetCastClient, SessionIdError
 import voluptuous as vol
@@ -45,6 +45,7 @@ class LGNetCast(config_entries.ConfigFlow, domain=DOMAIN):
         access_token = self.device_config.get(CONF_ACCESS_TOKEN)
         self.client = LgNetCastClient(host, access_token)
 
+    @override
     async def async_step_user(
         self, user_input: dict[str, Any] | None = None
     ) -> ConfigFlowResult:
@@ -145,6 +146,7 @@ class LGNetCast(config_entries.ConfigFlow, domain=DOMAIN):
             )
 
     @callback
+    @override
     def async_remove(self):
         """Terminate Access token display if flow is removed."""
         self.async_stop_display_access_token()

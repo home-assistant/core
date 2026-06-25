@@ -2,7 +2,7 @@
 
 import logging
 import ssl
-from typing import Any
+from typing import Any, override
 from xml.parsers.expat import ExpatError
 
 import voluptuous as vol
@@ -141,6 +141,7 @@ class RestSensor(ManualTriggerSensorEntity, RestEntity):
         self._attr_extra_state_attributes = {}
 
     @property
+    @override
     def available(self) -> bool:
         """Return if entity is available."""
         available1 = RestEntity.available.fget(self)  # type: ignore[attr-defined]
@@ -148,10 +149,12 @@ class RestSensor(ManualTriggerSensorEntity, RestEntity):
         return bool(available1 and available2)
 
     @property
+    @override
     def extra_state_attributes(self) -> dict[str, Any]:
         """Return extra attributes."""
         return dict(self._attr_extra_state_attributes)
 
+    @override
     def _update_from_rest_data(self) -> None:
         """Update state from the rest data."""
         try:

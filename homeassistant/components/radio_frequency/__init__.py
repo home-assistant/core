@@ -11,15 +11,16 @@ from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import config_validation as cv, entity_registry as er
 from homeassistant.helpers.entity_component import EntityComponent
 from homeassistant.helpers.typing import ConfigType
-from homeassistant.util.hass_dict import HassKey
 
-from .const import DOMAIN
+from . import websocket_api
+from .const import DATA_COMPONENT, DOMAIN
 from .entity import (
     RadioFrequencyTransmitterEntity,
     RadioFrequencyTransmitterEntityDescription,
 )
 
 __all__ = [
+    "DATA_COMPONENT",
     "DOMAIN",
     "ModulationType",
     "RadioFrequencyTransmitterEntity",
@@ -30,9 +31,6 @@ __all__ = [
 
 _LOGGER = logging.getLogger(__name__)
 
-DATA_COMPONENT: HassKey[EntityComponent[RadioFrequencyTransmitterEntity]] = HassKey(
-    DOMAIN
-)
 ENTITY_ID_FORMAT = DOMAIN + ".{}"
 PLATFORM_SCHEMA = cv.PLATFORM_SCHEMA
 PLATFORM_SCHEMA_BASE = cv.PLATFORM_SCHEMA_BASE
@@ -45,6 +43,8 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
         RadioFrequencyTransmitterEntity
     ](_LOGGER, DOMAIN, hass, SCAN_INTERVAL)
     await component.async_setup(config)
+
+    websocket_api.async_setup(hass)
 
     return True
 

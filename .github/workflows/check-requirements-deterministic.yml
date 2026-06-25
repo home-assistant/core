@@ -8,15 +8,11 @@ name: Check requirements (deterministic)
 
 # yamllint disable-line rule:truthy
 on:
-  # Auto-trigger on PRs that touch tracked requirement files is disabled
-  # for now while we iterate — testing the workflow_run handoff to the
-  # agentic stage is hard with an auto-trigger. Re-enable once the chain
-  # has been validated end-to-end.
-  # pull_request:
-  #   types: [opened, synchronize, reopened]
-  #   paths:
-  #     - "**/requirements*.txt"
-  #     - "homeassistant/package_constraints.txt"
+  pull_request:
+    types: [opened, synchronize, reopened]
+    paths:
+      - "requirements*.txt"
+      - "homeassistant/package_constraints.txt"
   workflow_dispatch:
     inputs:
       pull_request_number:
@@ -40,7 +36,7 @@ jobs:
     timeout-minutes: 10
     steps:
       - name: Check out code from GitHub
-        uses: actions/checkout@df4cb1c069e1874edd31b4311f1884172cec0e10 # v6.0.3
+        uses: actions/checkout@9c091bb21b7c1c1d1991bb908d89e4e9dddfe3e0 # v7.0.0
         with:
           persist-credentials: false
       - name: Set up Python

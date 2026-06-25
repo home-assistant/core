@@ -1,6 +1,6 @@
 """Support for LG webOS TV notification service."""
 
-from typing import Any
+from typing import Any, override
 
 from aiowebostv import WebOsClient
 
@@ -41,6 +41,7 @@ class LgWebOSNotificationService(BaseNotificationService):
         """Initialize the service."""
         self._entry = entry
 
+    @override
     async def async_send_message(self, message: str = "", **kwargs: Any) -> None:
         """Send a message to the tv."""
         client: WebOsClient = self._entry.runtime_data
