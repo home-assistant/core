@@ -107,8 +107,8 @@ async def test_alexa_unique_id_migration(
     )
 
     entity = entity_registry.async_get_or_create(
-        DOMAIN,
         SWITCH_DOMAIN,
+        DOMAIN,
         unique_id=f"{TEST_DEVICE_1_SN}-do_not_disturb",
         device_id=device.id,
         config_entry=mock_config_entry,
@@ -145,8 +145,8 @@ async def test_alexa_dnd_group_removal(
     )
 
     entity = entity_registry.async_get_or_create(
-        DOMAIN,
         SWITCH_DOMAIN,
+        DOMAIN,
         unique_id=f"{TEST_DEVICE_1_SN}-do_not_disturb",
         device_id=device.id,
         config_entry=mock_config_entry,
@@ -184,8 +184,8 @@ async def test_alexa_unsupported_notification_sensor_removal(
     )
 
     entity = entity_registry.async_get_or_create(
-        DOMAIN,
         SENSOR_DOMAIN,
+        DOMAIN,
         unique_id=f"{TEST_DEVICE_1_SN}-Timer",
         device_id=device.id,
         config_entry=mock_config_entry,
