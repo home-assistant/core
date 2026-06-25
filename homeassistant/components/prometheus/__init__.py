@@ -578,16 +578,19 @@ class PrometheusMetrics:
             value = None
         return value
 
-    @staticmethod
     def _labels(
+        self,
         state: State,
         extra_labels: dict[str, str] | None = None,
     ) -> dict[str, Any]:
         if extra_labels is None:
             extra_labels = {}
+
+        area_id = self._find_area_id(state.entity_id)
         labels = {
             "entity": state.entity_id,
             "domain": state.domain,
+            "area": area_id or "",
             "friendly_name": state.attributes.get(ATTR_FRIENDLY_NAME),
         }
         if not labels.keys().isdisjoint(extra_labels.keys()):

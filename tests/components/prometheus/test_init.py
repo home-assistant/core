@@ -551,6 +551,7 @@ async def test_setup_enumeration(
         domain="sensor",
         friendly_name="Outside Temperature",
         entity="sensor.outside_temperature",
+        area="",
     ).withValue(state).assert_in_metrics(body)
 
 
@@ -571,6 +572,7 @@ async def test_view_empty_namespace(
         domain="sensor",
         friendly_name="Radio Energy",
         entity="sensor.radio_energy",
+        area="",
     ).withValue(1).assert_in_metrics(body)
 
     EntityMetric(
@@ -578,6 +580,7 @@ async def test_view_empty_namespace(
         domain="sensor",
         friendly_name="Radio Energy",
         entity="sensor.radio_energy",
+        area="",
     ).withValue(86400.0).assert_in_metrics(body)
 
 
@@ -598,6 +601,7 @@ async def test_view_default_namespace(
         domain="sensor",
         friendly_name="Outside Temperature",
         entity="sensor.outside_temperature",
+        area="",
     ).withValue(15.6).assert_in_metrics(body)
 
 
@@ -613,6 +617,7 @@ async def test_sensor_unit(
         domain="sensor",
         friendly_name="Television Energy",
         entity="sensor.television_energy",
+        area="",
     ).withValue(74.0).assert_in_metrics(body)
 
     EntityMetric(
@@ -620,6 +625,7 @@ async def test_sensor_unit(
         domain="sensor",
         friendly_name="Electricity price",
         entity="sensor.electricity_price",
+        area="",
     ).withValue(0.123).assert_in_metrics(body)
 
     EntityMetric(
@@ -627,6 +633,7 @@ async def test_sensor_unit(
         domain="sensor",
         friendly_name="Wind Direction",
         entity="sensor.wind_direction",
+        area="",
     ).withValue(25.0).assert_in_metrics(body)
 
     EntityMetric(
@@ -634,6 +641,7 @@ async def test_sensor_unit(
         domain="sensor",
         friendly_name="SPS30 PM <1µm Weight concentration",
         entity="sensor.sps30_pm_1um_weight_concentration",
+        area="",
     ).withValue(3.7069).assert_in_metrics(body)
 
 
@@ -649,6 +657,7 @@ async def test_sensor_without_unit(
         domain="sensor",
         friendly_name="Trend Gradient",
         entity="sensor.trend_gradient",
+        area="",
     ).withValue(0.002).assert_in_metrics(body)
 
     EntityMetric(
@@ -656,6 +665,7 @@ async def test_sensor_without_unit(
         domain="sensor",
         friendly_name="Text",
         entity="sensor.text",
+        area="",
     ).assert_not_in_metrics(body)
 
     EntityMetric(
@@ -663,6 +673,7 @@ async def test_sensor_without_unit(
         domain="sensor",
         friendly_name="Text Unit",
         entity="sensor.text_unit",
+        area="",
     ).assert_not_in_metrics(body)
 
 
@@ -678,6 +689,7 @@ async def test_sensor_device_class(
         domain="sensor",
         friendly_name="Fahrenheit",
         entity="sensor.fahrenheit",
+        area="",
     ).withValue(10.0).assert_in_metrics(body)
 
     EntityMetric(
@@ -685,6 +697,7 @@ async def test_sensor_device_class(
         domain="sensor",
         friendly_name="Outside Temperature",
         entity="sensor.outside_temperature",
+        area="",
     ).withValue(15.6).assert_in_metrics(body)
 
     EntityMetric(
@@ -692,6 +705,7 @@ async def test_sensor_device_class(
         domain="sensor",
         friendly_name="Outside Humidity",
         entity="sensor.outside_humidity",
+        area="",
     ).withValue(54.0).assert_in_metrics(body)
 
     EntityMetric(
@@ -699,6 +713,7 @@ async def test_sensor_device_class(
         domain="sensor",
         friendly_name="Radio Energy",
         entity="sensor.radio_energy",
+        area="",
     ).withValue(14.0).assert_in_metrics(body)
 
     EntityMetric(
@@ -706,6 +721,7 @@ async def test_sensor_device_class(
         domain="sensor",
         friendly_name="Timestamp",
         entity="sensor.timestamp",
+        area="",
     ).withValue(1.691445808136036e09).assert_in_metrics(body)
 
 
@@ -721,6 +737,7 @@ async def test_input_number(
         domain="input_number",
         friendly_name="Threshold",
         entity="input_number.threshold",
+        area="",
     ).withValue(5.2).assert_in_metrics(body)
 
     EntityMetric(
@@ -728,6 +745,7 @@ async def test_input_number(
         domain="input_number",
         friendly_name="None",
         entity="input_number.brightness",
+        area="",
     ).withValue(60.0).assert_in_metrics(body)
 
     EntityMetric(
@@ -735,6 +753,7 @@ async def test_input_number(
         domain="input_number",
         friendly_name="Target temperature",
         entity="input_number.target_temperature",
+        area="",
     ).withValue(22.7).assert_in_metrics(body)
 
     EntityMetric(
@@ -742,6 +761,7 @@ async def test_input_number(
         domain="input_number",
         friendly_name="Converted temperature",
         entity="input_number.converted_temperature",
+        area="",
     ).withValue(100).assert_in_metrics(body)
 
 
@@ -757,6 +777,7 @@ async def test_number(
         domain="number",
         friendly_name="Threshold",
         entity="number.threshold",
+        area="",
     ).withValue(5.2).assert_in_metrics(body)
 
     EntityMetric(
@@ -764,6 +785,7 @@ async def test_number(
         domain="number",
         friendly_name="None",
         entity="number.brightness",
+        area="",
     ).withValue(60.0).assert_in_metrics(body)
 
     EntityMetric(
@@ -771,6 +793,7 @@ async def test_number(
         domain="number",
         friendly_name="Target temperature",
         entity="number.target_temperature",
+        area="",
     ).withValue(22.7).assert_in_metrics(body)
 
 
@@ -786,6 +809,7 @@ async def test_battery(
         domain="sensor",
         friendly_name="Outside Temperature",
         entity="sensor.outside_temperature",
+        area="",
     ).withValue(12.0).assert_in_metrics(body)
 
 
@@ -802,6 +826,7 @@ async def test_climate(
         domain="climate",
         friendly_name="HeatPump",
         entity="climate.heatpump",
+        area="",
     ).withValue(25.0).assert_in_metrics(body)
 
     EntityMetric(
@@ -809,6 +834,7 @@ async def test_climate(
         domain="climate",
         friendly_name="HeatPump",
         entity="climate.heatpump",
+        area="",
     ).withValue(20.0).assert_in_metrics(body)
 
     EntityMetric(
@@ -816,6 +842,7 @@ async def test_climate(
         domain="climate",
         friendly_name="Ecobee",
         entity="climate.ecobee",
+        area="",
     ).withValue(21.0).assert_in_metrics(body)
 
     EntityMetric(
@@ -823,6 +850,7 @@ async def test_climate(
         domain="climate",
         friendly_name="Ecobee",
         entity="climate.ecobee",
+        area="",
     ).withValue(24.0).assert_in_metrics(body)
 
     EntityMetric(
@@ -830,6 +858,7 @@ async def test_climate(
         domain="climate",
         friendly_name="Fritz!DECT",
         entity="climate.fritzdect",
+        area="",
     ).withValue(0.0).assert_in_metrics(body)
 
     EntityMetric(
@@ -837,6 +866,7 @@ async def test_climate(
         domain="climate",
         friendly_name="Ecobee",
         entity="climate.ecobee",
+        area="",
         mode="away",
     ).withValue(1).assert_in_metrics(body)
 
@@ -845,6 +875,7 @@ async def test_climate(
         domain="climate",
         friendly_name="Ecobee",
         entity="climate.ecobee",
+        area="",
         mode="auto",
     ).withValue(1).assert_in_metrics(body)
 
@@ -875,6 +906,7 @@ async def test_climate_mode(
         domain="climate",
         friendly_name="Ecobee",
         entity="climate.ecobee",
+        area="",
         mode="heat",
     ).withValue(1).assert_in_metrics(body)
 
@@ -883,6 +915,7 @@ async def test_climate_mode(
         domain="climate",
         friendly_name="Ecobee",
         entity="climate.ecobee",
+        area="",
         mode="cool",
     ).withValue(0.0).assert_in_metrics(body)
 
@@ -900,6 +933,7 @@ async def test_humidifier(
         domain="humidifier",
         friendly_name="Humidifier",
         entity="humidifier.humidifier",
+        area="",
     ).withValue(68.0).assert_in_metrics(body)
 
     EntityMetric(
@@ -907,6 +941,7 @@ async def test_humidifier(
         domain="humidifier",
         friendly_name="Dehumidifier",
         entity="humidifier.dehumidifier",
+        area="",
     ).withValue(1).assert_in_metrics(body)
 
     EntityMetric(
@@ -914,6 +949,7 @@ async def test_humidifier(
         domain="humidifier",
         friendly_name="Hygrostat",
         entity="humidifier.hygrostat",
+        area="",
         mode="home",
     ).withValue(1).assert_in_metrics(body)
 
@@ -922,6 +958,7 @@ async def test_humidifier(
         domain="humidifier",
         friendly_name="Hygrostat",
         entity="humidifier.hygrostat",
+        area="",
         mode="eco",
     ).withValue(0.0).assert_in_metrics(body)
 
@@ -940,6 +977,7 @@ async def test_water_heater(
         domain="water_heater",
         friendly_name="Geyser",
         entity="water_heater.geyser",
+        area="",
     ).withValue(55.0).assert_in_metrics(body)
 
     EntityMetric(
@@ -947,6 +985,7 @@ async def test_water_heater(
         domain="water_heater",
         friendly_name="Geyser",
         entity="water_heater.geyser",
+        area="",
     ).withValue(60.0).assert_in_metrics(body)
 
     EntityMetric(
@@ -954,6 +993,7 @@ async def test_water_heater(
         domain="water_heater",
         friendly_name="Geyser",
         entity="water_heater.geyser",
+        area="",
     ).withValue(50.0).assert_in_metrics(body)
 
     EntityMetric(
@@ -961,6 +1001,7 @@ async def test_water_heater(
         domain="water_heater",
         friendly_name="Geyser",
         entity="water_heater.geyser",
+        area="",
     ).withValue(65.0).assert_in_metrics(body)
 
     EntityMetric(
@@ -968,6 +1009,7 @@ async def test_water_heater(
         domain="water_heater",
         friendly_name="Geyser",
         entity="water_heater.geyser",
+        area="",
     ).withValue(40.0).assert_in_metrics(body)
 
     EntityMetric(
@@ -975,6 +1017,7 @@ async def test_water_heater(
         domain="water_heater",
         friendly_name="Geyser",
         entity="water_heater.geyser",
+        area="",
     ).withValue(70.0).assert_in_metrics(body)
 
     # Operation mode enum
@@ -983,6 +1026,7 @@ async def test_water_heater(
         domain="water_heater",
         friendly_name="Geyser",
         entity="water_heater.geyser",
+        area="",
         mode="eco",
     ).withValue(1).assert_in_metrics(body)
 
@@ -992,6 +1036,7 @@ async def test_water_heater(
         domain="water_heater",
         friendly_name="Geyser",
         entity="water_heater.geyser",
+        area="",
     ).withValue(1).assert_in_metrics(body)
 
 
@@ -1008,6 +1053,7 @@ async def test_attributes(
         domain="switch",
         friendly_name="Boolean",
         entity="switch.boolean",
+        area="",
     ).withValue(1).assert_in_metrics(body)
 
     EntityMetric(
@@ -1015,6 +1061,7 @@ async def test_attributes(
         domain="switch",
         friendly_name="Boolean",
         entity="switch.boolean",
+        area="",
     ).withValue(1).assert_in_metrics(body)
 
     EntityMetric(
@@ -1022,6 +1069,7 @@ async def test_attributes(
         domain="switch",
         friendly_name="Number",
         entity="switch.number",
+        area="",
     ).withValue(0.0).assert_in_metrics(body)
 
     EntityMetric(
@@ -1029,6 +1077,7 @@ async def test_attributes(
         domain="switch",
         friendly_name="Number",
         entity="switch.number",
+        area="",
     ).withValue(10.2).assert_in_metrics(body)
 
 
@@ -1044,6 +1093,7 @@ async def test_binary_sensor(
         domain="binary_sensor",
         friendly_name="Door",
         entity="binary_sensor.door",
+        area="",
     ).withValue(1).assert_in_metrics(body)
 
     EntityMetric(
@@ -1051,6 +1101,7 @@ async def test_binary_sensor(
         domain="binary_sensor",
         friendly_name="Window",
         entity="binary_sensor.window",
+        area="",
     ).withValue(0.0).assert_in_metrics(body)
 
 
@@ -1066,6 +1117,7 @@ async def test_input_boolean(
         domain="input_boolean",
         friendly_name="Test",
         entity="input_boolean.test",
+        area="",
     ).withValue(1).assert_in_metrics(body)
 
     EntityMetric(
@@ -1073,6 +1125,7 @@ async def test_input_boolean(
         domain="input_boolean",
         friendly_name="Helper",
         entity="input_boolean.helper",
+        area="",
     ).withValue(0.0).assert_in_metrics(body)
 
 
@@ -1088,6 +1141,7 @@ async def test_light(
         domain="light",
         friendly_name="Desk",
         entity="light.desk",
+        area="",
     ).withValue(100.0).assert_in_metrics(body)
 
     EntityMetric(
@@ -1095,6 +1149,7 @@ async def test_light(
         domain="light",
         friendly_name="Wall",
         entity="light.wall",
+        area="",
     ).withValue(0.0).assert_in_metrics(body)
 
     EntityMetric(
@@ -1102,6 +1157,7 @@ async def test_light(
         domain="light",
         friendly_name="TV",
         entity="light.tv",
+        area="",
     ).withValue(100.0).assert_in_metrics(body)
 
     EntityMetric(
@@ -1109,6 +1165,7 @@ async def test_light(
         domain="light",
         friendly_name="PC",
         entity="light.pc",
+        area="",
     ).withValue(70.58823529411765).assert_in_metrics(body)
 
     EntityMetric(
@@ -1116,6 +1173,7 @@ async def test_light(
         domain="light",
         friendly_name="Hallway",
         entity="light.hallway",
+        area="",
     ).withValue(100.0).assert_in_metrics(body)
 
 
@@ -1131,6 +1189,7 @@ async def test_lock(
         domain="lock",
         friendly_name="Front Door",
         entity="lock.front_door",
+        area="",
     ).withValue(1).assert_in_metrics(body)
 
     EntityMetric(
@@ -1138,6 +1197,7 @@ async def test_lock(
         domain="lock",
         friendly_name="Kitchen Door",
         entity="lock.kitchen_door",
+        area="",
     ).withValue(0.0).assert_in_metrics(body)
 
 
@@ -1153,6 +1213,7 @@ async def test_fan(
         domain="fan",
         friendly_name="Fan 1",
         entity="fan.fan_1",
+        area="",
     ).withValue(1).assert_in_metrics(body)
 
     EntityMetric(
@@ -1160,6 +1221,7 @@ async def test_fan(
         domain="fan",
         friendly_name="Fan 1",
         entity="fan.fan_1",
+        area="",
     ).withValue(33.0).assert_in_metrics(body)
 
     EntityMetric(
@@ -1167,6 +1229,7 @@ async def test_fan(
         domain="fan",
         friendly_name="Fan 1",
         entity="fan.fan_1",
+        area="",
     ).withValue(1).assert_in_metrics(body)
 
     EntityMetric(
@@ -1174,6 +1237,7 @@ async def test_fan(
         domain="fan",
         friendly_name="Fan 1",
         entity="fan.fan_1",
+        area="",
     ).withValue(0.0).assert_in_metrics(body)
 
     EntityMetric(
@@ -1181,6 +1245,7 @@ async def test_fan(
         domain="fan",
         friendly_name="Fan 1",
         entity="fan.fan_1",
+        area="",
         mode="LO",
     ).withValue(1).assert_in_metrics(body)
 
@@ -1189,6 +1254,7 @@ async def test_fan(
         domain="fan",
         friendly_name="Reverse Fan",
         entity="fan.fan_2",
+        area="",
     ).withValue(1).assert_in_metrics(body)
 
 
@@ -1205,6 +1271,7 @@ async def test_alarm_control_panel(
         domain="alarm_control_panel",
         friendly_name="Alarm Control Panel 1",
         entity="alarm_control_panel.alarm_control_panel_1",
+        area="",
         state="armed_away",
     ).withValue(1).assert_in_metrics(body)
 
@@ -1213,6 +1280,7 @@ async def test_alarm_control_panel(
         domain="alarm_control_panel",
         friendly_name="Alarm Control Panel 1",
         entity="alarm_control_panel.alarm_control_panel_1",
+        area="",
         state="disarmed",
     ).withValue(0.0).assert_in_metrics(body)
 
@@ -1221,6 +1289,7 @@ async def test_alarm_control_panel(
         domain="alarm_control_panel",
         friendly_name="Alarm Control Panel 2",
         entity="alarm_control_panel.alarm_control_panel_2",
+        area="",
         state="armed_home",
     ).withValue(1).assert_in_metrics(body)
 
@@ -1229,6 +1298,7 @@ async def test_alarm_control_panel(
         domain="alarm_control_panel",
         friendly_name="Alarm Control Panel 2",
         entity="alarm_control_panel.alarm_control_panel_2",
+        area="",
         state="armed_away",
     ).withValue(0.0).assert_in_metrics(body)
 
@@ -1248,6 +1318,7 @@ async def test_cover(
             domain="cover",
             friendly_name=cover_entities[testcover].original_name,
             entity=cover_entities[testcover].entity_id,
+            area="",
             state="open",
         ).withValue(
             1.0 if cover_entities[testcover].unique_id in open_covers else 0.0
@@ -1258,6 +1329,7 @@ async def test_cover(
             domain="cover",
             friendly_name=cover_entities[testcover].original_name,
             entity=cover_entities[testcover].entity_id,
+            area="",
             state="closed",
         ).withValue(
             1.0 if cover_entities[testcover].unique_id == "cover_closed" else 0.0
@@ -1268,6 +1340,7 @@ async def test_cover(
             domain="cover",
             friendly_name=cover_entities[testcover].original_name,
             entity=cover_entities[testcover].entity_id,
+            area="",
             state="opening",
         ).withValue(
             1.0 if cover_entities[testcover].unique_id == "cover_opening" else 0.0
@@ -1278,6 +1351,7 @@ async def test_cover(
             domain="cover",
             friendly_name=cover_entities[testcover].original_name,
             entity=cover_entities[testcover].entity_id,
+            area="",
             state="closing",
         ).withValue(
             1.0 if cover_entities[testcover].unique_id == "cover_closing" else 0.0
@@ -1288,6 +1362,7 @@ async def test_cover(
                 metric_name="cover_position",
                 domain="cover",
                 friendly_name=cover_entities[testcover].original_name,
+                area="",
                 entity=cover_entities[testcover].entity_id,
             ).withValue(50.0).assert_in_metrics(body)
 
@@ -1296,6 +1371,7 @@ async def test_cover(
                 metric_name="cover_tilt_position",
                 domain="cover",
                 friendly_name=cover_entities[testcover].original_name,
+                area="",
                 entity=cover_entities[testcover].entity_id,
             ).withValue(50.0).assert_in_metrics(body)
 
@@ -1312,6 +1388,7 @@ async def test_device_tracker(
         domain="device_tracker",
         friendly_name="Phone",
         entity="device_tracker.phone",
+        area="",
     ).withValue(1).assert_in_metrics(body)
 
     EntityMetric(
@@ -1319,6 +1396,7 @@ async def test_device_tracker(
         domain="device_tracker",
         friendly_name="Watch",
         entity="device_tracker.watch",
+        area="",
     ).withValue(0.0).assert_in_metrics(body)
 
 
@@ -1334,12 +1412,14 @@ async def test_person(
         domain="person",
         friendly_name="Bob",
         entity="person.bob",
+        area="",
     ).withValue(1).assert_in_metrics(body)
     EntityMetric(
         metric_name="person_state",
         domain="person",
         friendly_name="Alice",
         entity="person.alice",
+        area="",
     ).withValue(0.0).assert_in_metrics(body)
 
 
@@ -1357,6 +1437,7 @@ async def test_geo_location(
         friendly_name="Earthquake",
         entity="geo_location.earthquake",
         source="usgs_earthquakes",
+        area="",
     ).withValue(25500.0).assert_in_metrics(body)
 
     EntityMetric(
@@ -1365,6 +1446,7 @@ async def test_geo_location(
         friendly_name="Earthquake",
         entity="geo_location.earthquake",
         source="usgs_earthquakes",
+        area="",
     ).withValue(34.05).assert_in_metrics(body)
 
     EntityMetric(
@@ -1373,6 +1455,7 @@ async def test_geo_location(
         friendly_name="Earthquake",
         entity="geo_location.earthquake",
         source="usgs_earthquakes",
+        area="",
     ).withValue(-118.25).assert_in_metrics(body)
 
 
@@ -1388,6 +1471,7 @@ async def test_counter(
         domain="counter",
         friendly_name="None",
         entity="counter.counter",
+        area="",
     ).withValue(2.0).assert_in_metrics(body)
 
 
@@ -1403,12 +1487,14 @@ async def test_update(
         domain="update",
         friendly_name="Firmware",
         entity="update.firmware",
+        area="",
     ).withValue(1).assert_in_metrics(body)
     EntityMetric(
         metric_name="update_state",
         domain="update",
         friendly_name="Addon",
         entity="update.addon",
+        area="",
     ).withValue(0.0).assert_in_metrics(body)
 
 
@@ -1429,6 +1515,7 @@ async def test_renaming_entity_name(
         domain="sensor",
         friendly_name="Outside Temperature",
         entity="sensor.outside_temperature",
+        area="",
     ).withValue(15.6).assert_in_metrics(body)
 
     EntityMetric(
@@ -1436,6 +1523,7 @@ async def test_renaming_entity_name(
         domain="sensor",
         friendly_name="Outside Temperature",
         entity="sensor.outside_temperature",
+        area="",
     ).withValue(1).assert_in_metrics(body)
 
     EntityMetric(
@@ -1443,6 +1531,7 @@ async def test_renaming_entity_name(
         domain="sensor",
         friendly_name="Outside Humidity",
         entity="sensor.outside_humidity",
+        area="",
     ).withValue(54.0).assert_in_metrics(body)
 
     EntityMetric(
@@ -1450,6 +1539,7 @@ async def test_renaming_entity_name(
         domain="sensor",
         friendly_name="Outside Humidity",
         entity="sensor.outside_humidity",
+        area="",
     ).withValue(1).assert_in_metrics(body)
 
     EntityMetric(
@@ -1458,6 +1548,7 @@ async def test_renaming_entity_name(
         friendly_name="HeatPump",
         entity="climate.heatpump",
         action="heating",
+        area="",
     ).withValue(1).assert_in_metrics(body)
 
     EntityMetric(
@@ -1466,6 +1557,7 @@ async def test_renaming_entity_name(
         friendly_name="HeatPump",
         entity="climate.heatpump",
         action="cooling",
+        area="",
     ).withValue(0.0).assert_in_metrics(body)
 
     assert "sensor.outside_temperature" in entity_registry.entities
@@ -1509,6 +1601,7 @@ async def test_renaming_entity_name(
         domain="sensor",
         friendly_name="Outside Temperature Renamed",
         entity="sensor.outside_temperature",
+        area="",
     ).withValue(15.6).assert_in_metrics(body)
 
     EntityMetric(
@@ -1516,6 +1609,7 @@ async def test_renaming_entity_name(
         domain="sensor",
         friendly_name="Outside Temperature Renamed",
         entity="sensor.outside_temperature",
+        area="",
     ).withValue(1).assert_in_metrics(body)
 
     EntityMetric(
@@ -1524,6 +1618,7 @@ async def test_renaming_entity_name(
         friendly_name="HeatPump Renamed",
         entity="climate.heatpump",
         action="heating",
+        area="",
     ).withValue(1).assert_in_metrics(body)
 
     EntityMetric(
@@ -1532,6 +1627,7 @@ async def test_renaming_entity_name(
         friendly_name="HeatPump Renamed",
         entity="climate.heatpump",
         action="cooling",
+        area="",
     ).withValue(0.0).assert_in_metrics(body)
 
     # Keep other sensors
@@ -1540,6 +1636,7 @@ async def test_renaming_entity_name(
         domain="sensor",
         friendly_name="Outside Humidity",
         entity="sensor.outside_humidity",
+        area="",
     ).withValue(54.0).assert_in_metrics(body)
 
     EntityMetric(
@@ -1547,6 +1644,7 @@ async def test_renaming_entity_name(
         domain="sensor",
         friendly_name="Outside Humidity",
         entity="sensor.outside_humidity",
+        area="",
     ).withValue(1).assert_in_metrics(body)
 
 
@@ -1567,6 +1665,7 @@ async def test_renaming_entity_id(
         domain="sensor",
         friendly_name="Outside Temperature",
         entity="sensor.outside_temperature",
+        area="",
     ).withValue(15.6).assert_in_metrics(body)
 
     EntityMetric(
@@ -1574,6 +1673,7 @@ async def test_renaming_entity_id(
         domain="sensor",
         friendly_name="Outside Temperature",
         entity="sensor.outside_temperature",
+        area="",
     ).withValue(1).assert_in_metrics(body)
 
     EntityMetric(
@@ -1581,6 +1681,7 @@ async def test_renaming_entity_id(
         domain="sensor",
         friendly_name="Outside Humidity",
         entity="sensor.outside_humidity",
+        area="",
     ).withValue(54.0).assert_in_metrics(body)
 
     EntityMetric(
@@ -1588,6 +1689,7 @@ async def test_renaming_entity_id(
         domain="sensor",
         friendly_name="Outside Humidity",
         entity="sensor.outside_humidity",
+        area="",
     ).withValue(1).assert_in_metrics(body)
 
     assert "sensor.outside_temperature" in entity_registry.entities
@@ -1613,6 +1715,7 @@ async def test_renaming_entity_id(
         domain="sensor",
         friendly_name="Outside Temperature",
         entity="sensor.outside_temperature_renamed",
+        area="",
     ).withValue(15.6).assert_in_metrics(body)
 
     EntityMetric(
@@ -1620,6 +1723,7 @@ async def test_renaming_entity_id(
         domain="sensor",
         friendly_name="Outside Temperature",
         entity="sensor.outside_temperature_renamed",
+        area="",
     ).withValue(1).assert_in_metrics(body)
 
     # Keep other sensors
@@ -1628,12 +1732,14 @@ async def test_renaming_entity_id(
         domain="sensor",
         friendly_name="Outside Humidity",
         entity="sensor.outside_humidity",
+        area="",
     ).withValue(54.0).assert_in_metrics(body)
     EntityMetric(
         metric_name="entity_available",
         domain="sensor",
         friendly_name="Outside Humidity",
         entity="sensor.outside_humidity",
+        area="",
     ).withValue(1).assert_in_metrics(body)
 
 
@@ -1654,6 +1760,7 @@ async def test_deleting_entity(
         domain="sensor",
         friendly_name="Outside Temperature",
         entity="sensor.outside_temperature",
+        area="",
     ).withValue(15.6).assert_in_metrics(body)
 
     EntityMetric(
@@ -1661,6 +1768,7 @@ async def test_deleting_entity(
         domain="sensor",
         friendly_name="Outside Temperature",
         entity="sensor.outside_temperature",
+        area="",
     ).withValue(1).assert_in_metrics(body)
 
     EntityMetric(
@@ -1668,6 +1776,7 @@ async def test_deleting_entity(
         domain="sensor",
         friendly_name="Outside Humidity",
         entity="sensor.outside_humidity",
+        area="",
     ).withValue(54.0).assert_in_metrics(body)
 
     EntityMetric(
@@ -1675,6 +1784,7 @@ async def test_deleting_entity(
         domain="sensor",
         friendly_name="Outside Humidity",
         entity="sensor.outside_humidity",
+        area="",
     ).withValue(1).assert_in_metrics(body)
 
     EntityMetric(
@@ -1683,6 +1793,7 @@ async def test_deleting_entity(
         friendly_name="HeatPump",
         entity="climate.heatpump",
         action="heating",
+        area="",
     ).withValue(1).assert_in_metrics(body)
 
     EntityMetric(
@@ -1691,6 +1802,7 @@ async def test_deleting_entity(
         friendly_name="HeatPump",
         entity="climate.heatpump",
         action="cooling",
+        area="",
     ).withValue(0.0).assert_in_metrics(body)
 
     assert "sensor.outside_temperature" in entity_registry.entities
@@ -1714,6 +1826,7 @@ async def test_deleting_entity(
         domain="sensor",
         friendly_name="Outside Humidity",
         entity="sensor.outside_humidity",
+        area="",
     ).withValue(54.0).assert_in_metrics(body)
 
     EntityMetric(
@@ -1721,6 +1834,7 @@ async def test_deleting_entity(
         domain="sensor",
         friendly_name="Outside Humidity",
         entity="sensor.outside_humidity",
+        area="",
     ).withValue(1).assert_in_metrics(body)
 
 
@@ -1743,6 +1857,7 @@ async def test_disabling_entity(
         domain="sensor",
         friendly_name="Outside Temperature",
         entity="sensor.outside_temperature",
+        area="",
     ).withValue(15.6).assert_in_metrics(body)
 
     EntityMetric(
@@ -1750,6 +1865,7 @@ async def test_disabling_entity(
         domain="sensor",
         friendly_name="Outside Temperature",
         entity="sensor.outside_temperature",
+        area="",
     ).withValue(1).assert_in_metrics(body)
 
     EntityMetric(
@@ -1757,6 +1873,7 @@ async def test_disabling_entity(
         domain="sensor",
         friendly_name="Outside Temperature",
         entity="sensor.outside_temperature",
+        area="",
     ).assert_in_metrics(body)
 
     EntityMetric(
@@ -1764,6 +1881,7 @@ async def test_disabling_entity(
         domain="sensor",
         friendly_name="Outside Humidity",
         entity="sensor.outside_humidity",
+        area="",
     ).withValue(54.0).assert_in_metrics(body)
 
     EntityMetric(
@@ -1771,6 +1889,7 @@ async def test_disabling_entity(
         domain="sensor",
         friendly_name="Outside Humidity",
         entity="sensor.outside_humidity",
+        area="",
     ).withValue(1).assert_in_metrics(body)
 
     EntityMetric(
@@ -1779,6 +1898,7 @@ async def test_disabling_entity(
         friendly_name="HeatPump",
         entity="climate.heatpump",
         action="heating",
+        area="",
     ).withValue(1).assert_in_metrics(body)
 
     EntityMetric(
@@ -1787,6 +1907,7 @@ async def test_disabling_entity(
         friendly_name="HeatPump",
         entity="climate.heatpump",
         action="cooling",
+        area="",
     ).withValue(0.0).assert_in_metrics(body)
 
     assert "sensor.outside_temperature" in entity_registry.entities
@@ -1816,6 +1937,7 @@ async def test_disabling_entity(
         domain="sensor",
         friendly_name="Outside Humidity",
         entity="sensor.outside_humidity",
+        area="",
     ).withValue(54.0).assert_in_metrics(body)
 
     EntityMetric(
@@ -1823,6 +1945,7 @@ async def test_disabling_entity(
         domain="sensor",
         friendly_name="Outside Humidity",
         entity="sensor.outside_humidity",
+        area="",
     ).withValue(1).assert_in_metrics(body)
 
 
@@ -1846,6 +1969,7 @@ async def test_entity_becomes_unavailable(
         domain="sensor",
         friendly_name="Outside Temperature",
         entity="sensor.outside_temperature",
+        area="",
     ).withValue(15.6).assert_in_metrics(body)
 
     EntityMetric(
@@ -1853,6 +1977,7 @@ async def test_entity_becomes_unavailable(
         domain="sensor",
         friendly_name="Outside Temperature",
         entity="sensor.outside_temperature",
+        area="",
     ).withValue(1).assert_in_metrics(body)
 
     EntityMetric(
@@ -1860,6 +1985,7 @@ async def test_entity_becomes_unavailable(
         domain="sensor",
         friendly_name="Outside Temperature",
         entity="sensor.outside_temperature",
+        area="",
     ).withValue(1).assert_in_metrics(body)
 
     EntityMetric(
@@ -1867,6 +1993,7 @@ async def test_entity_becomes_unavailable(
         domain="sensor",
         friendly_name="Outside Temperature",
         entity="sensor.outside_temperature",
+        area="",
     ).assert_in_metrics(body)
 
     EntityMetric(
@@ -1874,6 +2001,7 @@ async def test_entity_becomes_unavailable(
         domain="sensor",
         friendly_name="Outside Temperature",
         entity="sensor.outside_temperature",
+        area="",
     ).withValue(12.0).assert_in_metrics(body)
 
     EntityMetric(
@@ -1881,6 +2009,7 @@ async def test_entity_becomes_unavailable(
         domain="sensor",
         friendly_name="Outside Humidity",
         entity="sensor.outside_humidity",
+        area="",
     ).withValue(54.0).assert_in_metrics(body)
 
     EntityMetric(
@@ -1888,6 +2017,7 @@ async def test_entity_becomes_unavailable(
         domain="sensor",
         friendly_name="Outside Humidity",
         entity="sensor.outside_humidity",
+        area="",
     ).withValue(1).assert_in_metrics(body)
 
     EntityMetric(
@@ -1895,6 +2025,7 @@ async def test_entity_becomes_unavailable(
         domain="sensor",
         friendly_name="Outside Humidity",
         entity="sensor.outside_humidity",
+        area="",
     ).withValue(1).assert_in_metrics(body)
 
     # Make sensor_1 unavailable/unknown.
@@ -1912,6 +2043,7 @@ async def test_entity_becomes_unavailable(
         domain="sensor",
         friendly_name="Outside Temperature",
         entity="sensor.outside_temperature",
+        area="",
     ).assert_not_in_metrics(body)
 
     EntityMetric(
@@ -1919,6 +2051,7 @@ async def test_entity_becomes_unavailable(
         domain="sensor",
         friendly_name="Outside Temperature",
         entity="sensor.outside_temperature",
+        area="",
     ).assert_not_in_metrics(body)
 
     EntityMetric(
@@ -1926,6 +2059,7 @@ async def test_entity_becomes_unavailable(
         domain="sensor",
         friendly_name="Outside Temperature",
         entity="sensor.outside_temperature",
+        area="",
     ).withValue(2.0).assert_in_metrics(body)
 
     EntityMetric(
@@ -1933,6 +2067,7 @@ async def test_entity_becomes_unavailable(
         domain="sensor",
         friendly_name="Outside Temperature",
         entity="sensor.outside_temperature",
+        area="",
     ).withValue(0.0).assert_in_metrics(body)
 
     EntityMetric(
@@ -1940,6 +2075,7 @@ async def test_entity_becomes_unavailable(
         domain="sensor",
         friendly_name="Outside Temperature",
         entity="sensor.outside_temperature",
+        area="",
     ).assert_in_metrics(body)
 
     # The other sensor should be unchanged.
@@ -1948,6 +2084,7 @@ async def test_entity_becomes_unavailable(
         domain="sensor",
         friendly_name="Outside Humidity",
         entity="sensor.outside_humidity",
+        area="",
     ).withValue(54.0).assert_in_metrics(body)
 
     EntityMetric(
@@ -1955,6 +2092,7 @@ async def test_entity_becomes_unavailable(
         domain="sensor",
         friendly_name="Outside Humidity",
         entity="sensor.outside_humidity",
+        area="",
     ).withValue(1).assert_in_metrics(body)
 
     EntityMetric(
@@ -1962,6 +2100,7 @@ async def test_entity_becomes_unavailable(
         domain="sensor",
         friendly_name="Outside Humidity",
         entity="sensor.outside_humidity",
+        area="",
     ).withValue(1).assert_in_metrics(body)
 
     # Bring sensor_1 back and check that it returned.
@@ -1975,6 +2114,7 @@ async def test_entity_becomes_unavailable(
         domain="sensor",
         friendly_name="Outside Temperature",
         entity="sensor.outside_temperature",
+        area="",
     ).withValue(201.0).assert_in_metrics(body)
 
     EntityMetric(
@@ -1982,6 +2122,7 @@ async def test_entity_becomes_unavailable(
         domain="sensor",
         friendly_name="Outside Temperature",
         entity="sensor.outside_temperature",
+        area="",
     ).withValue(12.0).assert_in_metrics(body)
 
     EntityMetric(
@@ -1989,6 +2130,7 @@ async def test_entity_becomes_unavailable(
         domain="sensor",
         friendly_name="Outside Temperature",
         entity="sensor.outside_temperature",
+        area="",
     ).withValue(3.0).assert_in_metrics(body)
 
     EntityMetric(
@@ -1996,6 +2138,7 @@ async def test_entity_becomes_unavailable(
         domain="sensor",
         friendly_name="Outside Temperature",
         entity="sensor.outside_temperature",
+        area="",
     ).withValue(1).assert_in_metrics(body)
 
 
