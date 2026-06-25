@@ -47,7 +47,7 @@
   StateSnapshot({
     'attributes': ReadOnlyDict({
       <ClimateEntityStateAttribute.CURRENT_TEMPERATURE: 'current_temperature'>: 18.4,
-      'friendly_name': 'Test room 1',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Test room 1',
       <ClimateEntityStateAttribute.HVAC_ACTION: 'hvac_action'>: <HVACAction.HEATING: 'heating'>,
       <ClimateEntityCapabilityAttribute.HVAC_MODES: 'hvac_modes'>: list([
         <HVACMode.HEAT: 'heat'>,
@@ -55,7 +55,7 @@
       ]),
       <ClimateEntityCapabilityAttribute.MAX_TEMP: 'max_temp'>: 35,
       <ClimateEntityCapabilityAttribute.MIN_TEMP: 'min_temp'>: 5,
-      'supported_features': <ClimateEntityFeature: 1>,
+      <EntityStateAttribute.SUPPORTED_FEATURES: 'supported_features'>: <ClimateEntityFeature: 1>,
       <ClimateEntityStateAttribute.TEMPERATURE: 'temperature'>: 19.0,
     }),
     'context': <ANY>,
@@ -114,7 +114,7 @@
   StateSnapshot({
     'attributes': ReadOnlyDict({
       <ClimateEntityStateAttribute.CURRENT_TEMPERATURE: 'current_temperature'>: 9.3,
-      'friendly_name': 'Test room 2',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Test room 2',
       <ClimateEntityStateAttribute.HVAC_ACTION: 'hvac_action'>: <HVACAction.IDLE: 'idle'>,
       <ClimateEntityCapabilityAttribute.HVAC_MODES: 'hvac_modes'>: list([
         <HVACMode.HEAT: 'heat'>,
@@ -122,7 +122,7 @@
       ]),
       <ClimateEntityCapabilityAttribute.MAX_TEMP: 'max_temp'>: 35,
       <ClimateEntityCapabilityAttribute.MIN_TEMP: 'min_temp'>: 5,
-      'supported_features': <ClimateEntityFeature: 1>,
+      <EntityStateAttribute.SUPPORTED_FEATURES: 'supported_features'>: <ClimateEntityFeature: 1>,
       <ClimateEntityStateAttribute.TEMPERATURE: 'temperature'>: 6.0,
     }),
     'context': <ANY>,

@@ -12,6 +12,7 @@ from uiprotect.data import (
     DeviceState,
     Event,
     EventType,
+    Light,
     ModelType,
     MountType,
     ProtectAdoptableDeviceModel,
@@ -22,6 +23,8 @@ from uiprotect.data import (
 )
 from uiprotect.data.bootstrap import ProtectDeviceRef
 from uiprotect.data.public_devices import (
+    PublicLight,
+    PublicLightDeviceSettings,
     PublicSensor,
     PublicSensorMotionSettingsRead,
     PublicWirelessBatteryStatus,
@@ -266,6 +269,37 @@ def make_public_sensor(
     return public
 
 
+def make_public_light(
+    light: Light,
+    *,
+    state: DeviceState | None = None,
+    pir_duration_ms: int | None = None,
+) -> Mock:
+    """Build a public-API light for the migrated PIR auto-shutoff duration number.
+
+    ``light_device_settings`` mirrors the private fixture (the public API reports
+    ``pir_duration`` in milliseconds); ``pir_duration_ms`` overrides it so a test
+    can assert a value the private object would not produce.
+    """
+    lds = light.light_device_settings
+    public = Mock(spec=PublicLight)
+    public.id = light.id
+    public.mac = light.mac
+    public.model = ModelType.LIGHT
+    public.state = DeviceState[light.state.name] if state is None else state
+    public.light_device_settings = PublicLightDeviceSettings(
+        is_indicator_enabled=lds.is_indicator_enabled,
+        led_level=lds.led_level,
+        pir_duration=(
+            round(lds.pir_duration.total_seconds() * 1000)
+            if pir_duration_ms is None
+            else pir_duration_ms
+        ),
+        pir_sensitivity=lds.pir_sensitivity,
+    )
+    return public
+
+
 def setup_public_sensor(ufp: MockUFPFixture) -> None:
     """Expose private sensors over the public API via a real ``PublicBootstrap``.
 
@@ -287,6 +321,33 @@ def setup_public_sensor(ufp: MockUFPFixture) -> None:
             and (private := ufp.api.bootstrap.sensors.get(obj_id)) is not None
         ):
             public_bootstrap.sensors[obj_id] = make_public_sensor(private)
+        return public_bootstrap.get(model, obj_id)
+
+    pb.get = _get
+    ufp.api.has_public_bootstrap = True
+    ufp.api.public_bootstrap = pb
+
+
+def setup_public_light(ufp: MockUFPFixture) -> None:
+    """Expose private lights over the public API via a real ``PublicBootstrap``.
+
+    Mirrors ``setup_public_sensor`` for ``ModelType.LIGHT`` so the migrated
+    FloodLight duration number reads from the public object.
+    """
+    public_bootstrap = PublicBootstrap()
+    pb = Mock(spec=PublicBootstrap)
+    pb.lights = public_bootstrap.lights
+    pb.relays = {}
+    pb.sirens = {}
+    pb.arm_mode = None
+    pb.arm_profiles = {}
+
+    def _get(model: ModelType, obj_id: str) -> ProtectModelWithId | None:
+        if (
+            model is ModelType.LIGHT
+            and (private := ufp.api.bootstrap.lights.get(obj_id)) is not None
+        ):
+            public_bootstrap.lights[obj_id] = make_public_light(private)
         return public_bootstrap.get(model, obj_id)
 
     pb.get = _get

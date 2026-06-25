@@ -44,10 +44,10 @@
 # name: test_sensor_entities[sensor.test_ghost_arr-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'device_class': 'monetary',
-      'friendly_name': 'Test Ghost ARR',
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'monetary',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Test Ghost ARR',
       <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.TOTAL: 'total'>,
-      'unit_of_measurement': 'USD',
+      <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: 'USD',
     }),
     'context': <ANY>,
     'entity_id': 'sensor.test_ghost_arr',
@@ -99,7 +99,7 @@
 # name: test_sensor_entities[sensor.test_ghost_comped_members-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'Test Ghost Comped members',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Test Ghost Comped members',
       <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.TOTAL: 'total'>,
     }),
     'context': <ANY>,
@@ -152,7 +152,7 @@
 # name: test_sensor_entities[sensor.test_ghost_draft_posts-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'Test Ghost Draft posts',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Test Ghost Draft posts',
       <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.TOTAL: 'total'>,
     }),
     'context': <ANY>,
@@ -205,7 +205,7 @@
 # name: test_sensor_entities[sensor.test_ghost_free_members-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'Test Ghost Free members',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Test Ghost Free members',
       <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.TOTAL: 'total'>,
     }),
     'context': <ANY>,
@@ -258,7 +258,7 @@
 # name: test_sensor_entities[sensor.test_ghost_gift_members-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'Test Ghost Gift members',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Test Ghost Gift members',
       <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.TOTAL: 'total'>,
     }),
     'context': <ANY>,
@@ -309,7 +309,7 @@
 # name: test_sensor_entities[sensor.test_ghost_latest_email-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'Test Ghost Latest email',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Test Ghost Latest email',
     }),
     'context': <ANY>,
     'entity_id': 'sensor.test_ghost_latest_email',
@@ -359,8 +359,8 @@
 # name: test_sensor_entities[sensor.test_ghost_latest_email_click_rate-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'Test Ghost Latest email click rate',
-      'unit_of_measurement': '%',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Test Ghost Latest email click rate',
+      <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: '%',
     }),
     'context': <ANY>,
     'entity_id': 'sensor.test_ghost_latest_email_click_rate',
@@ -412,7 +412,7 @@
 # name: test_sensor_entities[sensor.test_ghost_latest_email_clicked-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'Test Ghost Latest email clicked',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Test Ghost Latest email clicked',
       <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.TOTAL: 'total'>,
     }),
     'context': <ANY>,
@@ -463,8 +463,8 @@
 # name: test_sensor_entities[sensor.test_ghost_latest_email_open_rate-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'Test Ghost Latest email open rate',
-      'unit_of_measurement': '%',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Test Ghost Latest email open rate',
+      <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: '%',
     }),
     'context': <ANY>,
     'entity_id': 'sensor.test_ghost_latest_email_open_rate',
@@ -516,7 +516,7 @@
 # name: test_sensor_entities[sensor.test_ghost_latest_email_opened-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'Test Ghost Latest email opened',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Test Ghost Latest email opened',
       <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.TOTAL: 'total'>,
     }),
     'context': <ANY>,
@@ -569,7 +569,7 @@
 # name: test_sensor_entities[sensor.test_ghost_latest_email_sent-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'Test Ghost Latest email sent',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Test Ghost Latest email sent',
       <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.TOTAL: 'total'>,
     }),
     'context': <ANY>,
@@ -620,7 +620,7 @@
 # name: test_sensor_entities[sensor.test_ghost_latest_post-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'Test Ghost Latest post',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Test Ghost Latest post',
     }),
     'context': <ANY>,
     'entity_id': 'sensor.test_ghost_latest_post',
@@ -675,10 +675,10 @@
 # name: test_sensor_entities[sensor.test_ghost_mrr-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'device_class': 'monetary',
-      'friendly_name': 'Test Ghost MRR',
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'monetary',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Test Ghost MRR',
       <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.TOTAL: 'total'>,
-      'unit_of_measurement': 'USD',
+      <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: 'USD',
     }),
     'context': <ANY>,
     'entity_id': 'sensor.test_ghost_mrr',
@@ -730,7 +730,7 @@
 # name: test_sensor_entities[sensor.test_ghost_paid_members-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'Test Ghost Paid members',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Test Ghost Paid members',
       <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.TOTAL: 'total'>,
     }),
     'context': <ANY>,
@@ -783,7 +783,7 @@
 # name: test_sensor_entities[sensor.test_ghost_published_posts-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'Test Ghost Published posts',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Test Ghost Published posts',
       <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.TOTAL: 'total'>,
     }),
     'context': <ANY>,
@@ -836,7 +836,7 @@
 # name: test_sensor_entities[sensor.test_ghost_scheduled_posts-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'Test Ghost Scheduled posts',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Test Ghost Scheduled posts',
       <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.TOTAL: 'total'>,
     }),
     'context': <ANY>,
@@ -889,9 +889,9 @@
 # name: test_sensor_entities[sensor.test_ghost_socialweb_followers-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'Test Ghost SocialWeb followers',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Test Ghost SocialWeb followers',
       <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.TOTAL: 'total'>,
-      'unit_of_measurement': 'followers',
+      <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: 'followers',
     }),
     'context': <ANY>,
     'entity_id': 'sensor.test_ghost_socialweb_followers',
@@ -943,9 +943,9 @@
 # name: test_sensor_entities[sensor.test_ghost_socialweb_following-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'Test Ghost SocialWeb following',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Test Ghost SocialWeb following',
       <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.TOTAL: 'total'>,
-      'unit_of_measurement': 'accounts',
+      <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: 'accounts',
     }),
     'context': <ANY>,
     'entity_id': 'sensor.test_ghost_socialweb_following',
@@ -997,9 +997,9 @@
 # name: test_sensor_entities[sensor.test_ghost_total_comments-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'Test Ghost Total comments',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Test Ghost Total comments',
       <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.TOTAL: 'total'>,
-      'unit_of_measurement': 'comments',
+      <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: 'comments',
     }),
     'context': <ANY>,
     'entity_id': 'sensor.test_ghost_total_comments',
@@ -1051,7 +1051,7 @@
 # name: test_sensor_entities[sensor.test_ghost_total_members-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'Test Ghost Total members',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Test Ghost Total members',
       <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.TOTAL: 'total'>,
     }),
     'context': <ANY>,
@@ -1104,7 +1104,7 @@
 # name: test_sensor_entities[sensor.test_ghost_weekly_subscribers-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'Test Ghost Weekly subscribers',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Test Ghost Weekly subscribers',
       <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.TOTAL: 'total'>,
     }),
     'context': <ANY>,

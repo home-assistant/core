@@ -46,7 +46,7 @@
   StateSnapshot({
     'attributes': ReadOnlyDict({
       <ClimateEntityStateAttribute.CURRENT_TEMPERATURE: 'current_temperature'>: 21.4,
-      'friendly_name': 'Thermostat 1',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Thermostat 1',
       <ClimateEntityStateAttribute.HVAC_ACTION: 'hvac_action'>: <HVACAction.IDLE: 'idle'>,
       <ClimateEntityCapabilityAttribute.HVAC_MODES: 'hvac_modes'>: list([
         <HVACMode.HEAT: 'heat'>,
@@ -58,7 +58,7 @@
         'room_temp': 21.42,
         'setpoint': 18.0,
       }),
-      'supported_features': <ClimateEntityFeature: 1>,
+      <EntityStateAttribute.SUPPORTED_FEATURES: 'supported_features'>: <ClimateEntityFeature: 1>,
       <ClimateEntityStateAttribute.TEMPERATURE: 'temperature'>: 18.0,
     }),
     'context': <ANY>,
@@ -116,7 +116,7 @@
   StateSnapshot({
     'attributes': ReadOnlyDict({
       <ClimateEntityStateAttribute.CURRENT_TEMPERATURE: 'current_temperature'>: 21.4,
-      'friendly_name': 'Thermostat 1',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Thermostat 1',
       <ClimateEntityStateAttribute.HVAC_ACTION: 'hvac_action'>: <HVACAction.IDLE: 'idle'>,
       <ClimateEntityCapabilityAttribute.HVAC_MODES: 'hvac_modes'>: list([
         <HVACMode.HEAT: 'heat'>,
@@ -128,7 +128,7 @@
         'room_temp': 21.42,
         'setpoint': 18.0,
       }),
-      'supported_features': <ClimateEntityFeature: 1>,
+      <EntityStateAttribute.SUPPORTED_FEATURES: 'supported_features'>: <ClimateEntityFeature: 1>,
       <ClimateEntityStateAttribute.TEMPERATURE: 'temperature'>: 18.0,
     }),
     'context': <ANY>,
@@ -186,7 +186,7 @@
   StateSnapshot({
     'attributes': ReadOnlyDict({
       <ClimateEntityStateAttribute.CURRENT_TEMPERATURE: 'current_temperature'>: 21.4,
-      'friendly_name': 'Thermostat 1',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Thermostat 1',
       <ClimateEntityStateAttribute.HVAC_ACTION: 'hvac_action'>: <HVACAction.IDLE: 'idle'>,
       <ClimateEntityCapabilityAttribute.HVAC_MODES: 'hvac_modes'>: list([
         <HVACMode.HEAT: 'heat'>,
@@ -198,7 +198,7 @@
         'room_temp': 21.42,
         'setpoint': 18.0,
       }),
-      'supported_features': <ClimateEntityFeature: 1>,
+      <EntityStateAttribute.SUPPORTED_FEATURES: 'supported_features'>: <ClimateEntityFeature: 1>,
       <ClimateEntityStateAttribute.TEMPERATURE: 'temperature'>: 19.0,
     }),
     'context': <ANY>,
@@ -256,7 +256,7 @@
   StateSnapshot({
     'attributes': ReadOnlyDict({
       <ClimateEntityStateAttribute.CURRENT_TEMPERATURE: 'current_temperature'>: 21.4,
-      'friendly_name': 'Thermostat 1',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Thermostat 1',
       <ClimateEntityStateAttribute.HVAC_ACTION: 'hvac_action'>: <HVACAction.IDLE: 'idle'>,
       <ClimateEntityCapabilityAttribute.HVAC_MODES: 'hvac_modes'>: list([
         <HVACMode.HEAT: 'heat'>,
@@ -268,7 +268,7 @@
         'room_temp': 21.42,
         'setpoint': 18.0,
       }),
-      'supported_features': <ClimateEntityFeature: 1>,
+      <EntityStateAttribute.SUPPORTED_FEATURES: 'supported_features'>: <ClimateEntityFeature: 1>,
       <ClimateEntityStateAttribute.TEMPERATURE: 'temperature'>: 18.0,
     }),
     'context': <ANY>,

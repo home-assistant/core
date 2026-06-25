@@ -44,12 +44,12 @@
 # name: test_number_entities[5xu9h3][number.goat_g1_cut_direction:state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'Goat G1 Cut direction',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Goat G1 Cut direction',
       <NumberEntityCapabilityAttribute.MAX: 'max'>: 180,
       <NumberEntityCapabilityAttribute.MIN: 'min'>: 0,
       <NumberEntityCapabilityAttribute.MODE: 'mode'>: <NumberMode.AUTO: 'auto'>,
       <NumberEntityCapabilityAttribute.STEP: 'step'>: 1.0,
-      'unit_of_measurement': '°',
+      <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: '°',
     }),
     'context': <ANY>,
     'entity_id': 'number.goat_g1_cut_direction',
@@ -104,7 +104,7 @@
 # name: test_number_entities[5xu9h3][number.goat_g1_volume:state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'Goat G1 Volume',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Goat G1 Volume',
       <NumberEntityCapabilityAttribute.MAX: 'max'>: 11,
       <NumberEntityCapabilityAttribute.MIN: 'min'>: 0,
       <NumberEntityCapabilityAttribute.MODE: 'mode'>: <NumberMode.AUTO: 'auto'>,
@@ -163,7 +163,7 @@
 # name: test_number_entities[n0vyif][number.x8_pro_omni_clean_count:state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'X8 PRO OMNI Clean count',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'X8 PRO OMNI Clean count',
       <NumberEntityCapabilityAttribute.MAX: 'max'>: 4,
       <NumberEntityCapabilityAttribute.MIN: 'min'>: 1,
       <NumberEntityCapabilityAttribute.MODE: 'mode'>: <NumberMode.BOX: 'box'>,
@@ -222,7 +222,7 @@
 # name: test_number_entities[n0vyif][number.x8_pro_omni_volume:state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'X8 PRO OMNI Volume',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'X8 PRO OMNI Volume',
       <NumberEntityCapabilityAttribute.MAX: 'max'>: 11,
       <NumberEntityCapabilityAttribute.MIN: 'min'>: 0,
       <NumberEntityCapabilityAttribute.MODE: 'mode'>: <NumberMode.AUTO: 'auto'>,
@@ -281,7 +281,7 @@
 # name: test_number_entities[n0vyif][number.x8_pro_omni_water_flow_level:state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'X8 PRO OMNI Water flow level',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'X8 PRO OMNI Water flow level',
       <NumberEntityCapabilityAttribute.MAX: 'max'>: 50,
       <NumberEntityCapabilityAttribute.MIN: 'min'>: 0,
       <NumberEntityCapabilityAttribute.MODE: 'mode'>: <NumberMode.BOX: 'box'>,
@@ -340,7 +340,7 @@
 # name: test_number_entities[yna5x1][number.ozmo_950_volume:state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'Ozmo 950 Volume',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Ozmo 950 Volume',
       <NumberEntityCapabilityAttribute.MAX: 'max'>: 11,
       <NumberEntityCapabilityAttribute.MIN: 'min'>: 0,
       <NumberEntityCapabilityAttribute.MODE: 'mode'>: <NumberMode.AUTO: 'auto'>,

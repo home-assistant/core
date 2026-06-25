@@ -2741,6 +2741,18 @@ async def test_or_condition_with_disabled_condition(hass: HomeAssistant) -> None
     )
 
 
+_MODERN_SUN_CONDITIONS = (
+    "sun.elevation",
+    "sun.is_ascending",
+    "sun.is_descending",
+    "sun.is_evening_twilight",
+    "sun.is_morning_twilight",
+    "sun.is_night",
+    "sun.is_set",
+    "sun.is_up",
+)
+
+
 @pytest.mark.parametrize(
     "sun_condition_descriptions",
     [
@@ -2883,7 +2895,9 @@ async def test_async_get_all_descriptions(
                 },
                 "before_offset": {"selector": {"time": {}}},
             }
-        }
+        },
+        # The modern sun conditions have no entry in the mocked conditions.yaml.
+        **dict.fromkeys(_MODERN_SUN_CONDITIONS),
     }
     assert descriptions == expected_descriptions
 
@@ -3023,7 +3037,7 @@ async def test_async_get_all_descriptions_with_yaml_error(
     ):
         descriptions = await condition.async_get_all_descriptions(hass)
 
-    assert descriptions == {SUN_DOMAIN: None}
+    assert descriptions == {SUN_DOMAIN: None, **dict.fromkeys(_MODERN_SUN_CONDITIONS)}
 
     assert expected_message in caplog.text
 
@@ -3056,7 +3070,7 @@ async def test_async_get_all_descriptions_with_bad_description(
     ):
         descriptions = await condition.async_get_all_descriptions(hass)
 
-    assert descriptions == {"sun": None}
+    assert descriptions == {"sun": None, **dict.fromkeys(_MODERN_SUN_CONDITIONS)}
 
     assert (
         "Unable to parse conditions.yaml for the sun integration: "
@@ -3119,7 +3133,7 @@ async def test_subscribe_conditions(
 
     assert await async_setup_component(hass, "sun", {})
 
-    assert condition_events == [{"sun"}]
+    assert condition_events == [{"sun", *_MODERN_SUN_CONDITIONS}]
     assert "Error while notifying condition platform listener" in caplog.text
 
     await hass.data["entity_components"][SUN_DOMAIN]._async_reset()

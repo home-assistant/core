@@ -41,7 +41,7 @@
 # name: test_all_entities[sensor.kiosker_a98be1ce_ambient_light-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'Kiosker A98BE1CE Ambient light',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Kiosker A98BE1CE Ambient light',
       <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
     'context': <ANY>,
@@ -94,10 +94,10 @@
 # name: test_all_entities[sensor.kiosker_a98be1ce_battery-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'device_class': 'battery',
-      'friendly_name': 'Kiosker A98BE1CE Battery',
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'battery',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Kiosker A98BE1CE Battery',
       <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
-      'unit_of_measurement': '%',
+      <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: '%',
     }),
     'context': <ANY>,
     'entity_id': 'sensor.kiosker_a98be1ce_battery',
@@ -147,7 +147,7 @@
 # name: test_all_entities[sensor.kiosker_a98be1ce_blackout_background_color-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'Kiosker A98BE1CE Blackout background color',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Kiosker A98BE1CE Blackout background color',
     }),
     'context': <ANY>,
     'entity_id': 'sensor.kiosker_a98be1ce_blackout_background_color',
@@ -197,7 +197,7 @@
 # name: test_all_entities[sensor.kiosker_a98be1ce_blackout_button_background_color-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'Kiosker A98BE1CE Blackout button background color',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Kiosker A98BE1CE Blackout button background color',
     }),
     'context': <ANY>,
     'entity_id': 'sensor.kiosker_a98be1ce_blackout_button_background_color',
@@ -247,7 +247,7 @@
 # name: test_all_entities[sensor.kiosker_a98be1ce_blackout_button_foreground_color-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'Kiosker A98BE1CE Blackout button foreground color',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Kiosker A98BE1CE Blackout button foreground color',
     }),
     'context': <ANY>,
     'entity_id': 'sensor.kiosker_a98be1ce_blackout_button_foreground_color',
@@ -297,7 +297,7 @@
 # name: test_all_entities[sensor.kiosker_a98be1ce_blackout_button_text-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'Kiosker A98BE1CE Blackout button text',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Kiosker A98BE1CE Blackout button text',
     }),
     'context': <ANY>,
     'entity_id': 'sensor.kiosker_a98be1ce_blackout_button_text',
@@ -347,8 +347,8 @@
 # name: test_all_entities[sensor.kiosker_a98be1ce_blackout_expiry-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'device_class': 'timestamp',
-      'friendly_name': 'Kiosker A98BE1CE Blackout expiry',
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'timestamp',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Kiosker A98BE1CE Blackout expiry',
     }),
     'context': <ANY>,
     'entity_id': 'sensor.kiosker_a98be1ce_blackout_expiry',
@@ -398,7 +398,7 @@
 # name: test_all_entities[sensor.kiosker_a98be1ce_blackout_foreground_color-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'Kiosker A98BE1CE Blackout foreground color',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Kiosker A98BE1CE Blackout foreground color',
     }),
     'context': <ANY>,
     'entity_id': 'sensor.kiosker_a98be1ce_blackout_foreground_color',
@@ -448,7 +448,7 @@
 # name: test_all_entities[sensor.kiosker_a98be1ce_blackout_icon-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'Kiosker A98BE1CE Blackout icon',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Kiosker A98BE1CE Blackout icon',
     }),
     'context': <ANY>,
     'entity_id': 'sensor.kiosker_a98be1ce_blackout_icon',
@@ -498,7 +498,7 @@
 # name: test_all_entities[sensor.kiosker_a98be1ce_blackout_sound-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'Kiosker A98BE1CE Blackout sound',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Kiosker A98BE1CE Blackout sound',
     }),
     'context': <ANY>,
     'entity_id': 'sensor.kiosker_a98be1ce_blackout_sound',
@@ -548,7 +548,7 @@
 # name: test_all_entities[sensor.kiosker_a98be1ce_blackout_text-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'Kiosker A98BE1CE Blackout text',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Kiosker A98BE1CE Blackout text',
     }),
     'context': <ANY>,
     'entity_id': 'sensor.kiosker_a98be1ce_blackout_text',
@@ -598,8 +598,8 @@
 # name: test_all_entities[sensor.kiosker_a98be1ce_last_interaction-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'device_class': 'timestamp',
-      'friendly_name': 'Kiosker A98BE1CE Last interaction',
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'timestamp',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Kiosker A98BE1CE Last interaction',
     }),
     'context': <ANY>,
     'entity_id': 'sensor.kiosker_a98be1ce_last_interaction',
@@ -649,8 +649,8 @@
 # name: test_all_entities[sensor.kiosker_a98be1ce_last_motion-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'device_class': 'timestamp',
-      'friendly_name': 'Kiosker A98BE1CE Last motion',
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'timestamp',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Kiosker A98BE1CE Last motion',
     }),
     'context': <ANY>,
     'entity_id': 'sensor.kiosker_a98be1ce_last_motion',

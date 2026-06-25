@@ -44,12 +44,12 @@
 # name: test_number_snapshot[number.test_number_button_brightness_active-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'Test Number Button brightness (active)',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Test Number Button brightness (active)',
       <NumberEntityCapabilityAttribute.MAX: 'max'>: 100,
       <NumberEntityCapabilityAttribute.MIN: 'min'>: 0,
       <NumberEntityCapabilityAttribute.MODE: 'mode'>: <NumberMode.AUTO: 'auto'>,
       <NumberEntityCapabilityAttribute.STEP: 'step'>: 1.0,
-      'unit_of_measurement': '%',
+      <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: '%',
     }),
     'context': <ANY>,
     'entity_id': 'number.test_number_button_brightness_active',
@@ -104,12 +104,12 @@
 # name: test_number_snapshot[number.test_number_button_brightness_dimmed-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'Test Number Button brightness (dimmed)',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Test Number Button brightness (dimmed)',
       <NumberEntityCapabilityAttribute.MAX: 'max'>: 100,
       <NumberEntityCapabilityAttribute.MIN: 'min'>: 0,
       <NumberEntityCapabilityAttribute.MODE: 'mode'>: <NumberMode.AUTO: 'auto'>,
       <NumberEntityCapabilityAttribute.STEP: 'step'>: 1.0,
-      'unit_of_measurement': '%',
+      <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: '%',
     }),
     'context': <ANY>,
     'entity_id': 'number.test_number_button_brightness_dimmed',
@@ -164,12 +164,12 @@
 # name: test_number_snapshot[number.test_number_display_brightness_active-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'Test Number Display brightness (active)',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Test Number Display brightness (active)',
       <NumberEntityCapabilityAttribute.MAX: 'max'>: 100,
       <NumberEntityCapabilityAttribute.MIN: 'min'>: 0,
       <NumberEntityCapabilityAttribute.MODE: 'mode'>: <NumberMode.AUTO: 'auto'>,
       <NumberEntityCapabilityAttribute.STEP: 'step'>: 1.0,
-      'unit_of_measurement': '%',
+      <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: '%',
     }),
     'context': <ANY>,
     'entity_id': 'number.test_number_display_brightness_active',
@@ -224,12 +224,12 @@
 # name: test_number_snapshot[number.test_number_display_brightness_dimmed-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'Test Number Display brightness (dimmed)',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Test Number Display brightness (dimmed)',
       <NumberEntityCapabilityAttribute.MAX: 'max'>: 100,
       <NumberEntityCapabilityAttribute.MIN: 'min'>: 0,
       <NumberEntityCapabilityAttribute.MODE: 'mode'>: <NumberMode.AUTO: 'auto'>,
       <NumberEntityCapabilityAttribute.STEP: 'step'>: 1.0,
-      'unit_of_measurement': '%',
+      <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: '%',
     }),
     'context': <ANY>,
     'entity_id': 'number.test_number_display_brightness_dimmed',
@@ -284,13 +284,13 @@
 # name: test_number_snapshot[number.test_number_down_movement_duration-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'device_class': 'duration',
-      'friendly_name': 'Test Number Down-movement duration',
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'duration',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Test Number Down-movement duration',
       <NumberEntityCapabilityAttribute.MAX: 'max'>: 240,
       <NumberEntityCapabilityAttribute.MIN: 'min'>: 4,
       <NumberEntityCapabilityAttribute.MODE: 'mode'>: <NumberMode.AUTO: 'auto'>,
       <NumberEntityCapabilityAttribute.STEP: 'step'>: 1.0,
-      'unit_of_measurement': <UnitOfTime.SECONDS: 's'>,
+      <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: <UnitOfTime.SECONDS: 's'>,
     }),
     'context': <ANY>,
     'entity_id': 'number.test_number_down_movement_duration',
@@ -345,12 +345,12 @@
 # name: test_number_snapshot[number.test_number_down_position-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'Test Number Down position',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Test Number Down position',
       <NumberEntityCapabilityAttribute.MAX: 'max'>: 100,
       <NumberEntityCapabilityAttribute.MIN: 'min'>: 0,
       <NumberEntityCapabilityAttribute.MODE: 'mode'>: <NumberMode.AUTO: 'auto'>,
       <NumberEntityCapabilityAttribute.STEP: 'step'>: 0.5,
-      'unit_of_measurement': '%',
+      <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: '%',
     }),
     'context': <ANY>,
     'entity_id': 'number.test_number_down_position',
@@ -405,12 +405,12 @@
 # name: test_number_snapshot[number.test_number_down_slat_position-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'Test Number Down slat position',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Test Number Down slat position',
       <NumberEntityCapabilityAttribute.MAX: 'max'>: 75,
       <NumberEntityCapabilityAttribute.MIN: 'min'>: -75,
       <NumberEntityCapabilityAttribute.MODE: 'mode'>: <NumberMode.AUTO: 'auto'>,
       <NumberEntityCapabilityAttribute.STEP: 'step'>: 1.0,
-      'unit_of_measurement': '°',
+      <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: '°',
     }),
     'context': <ANY>,
     'entity_id': 'number.test_number_down_slat_position',
@@ -465,7 +465,7 @@
 # name: test_number_snapshot[number.test_number_end_position-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'Test Number End position',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Test Number End position',
       <NumberEntityCapabilityAttribute.MAX: 'max'>: 130,
       <NumberEntityCapabilityAttribute.MIN: 'min'>: 0,
       <NumberEntityCapabilityAttribute.MODE: 'mode'>: <NumberMode.AUTO: 'auto'>,
@@ -524,12 +524,12 @@
 # name: test_number_snapshot[number.test_number_external_temperature_offset-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'Test Number External temperature offset',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Test Number External temperature offset',
       <NumberEntityCapabilityAttribute.MAX: 'max'>: 6,
       <NumberEntityCapabilityAttribute.MIN: 'min'>: -6,
       <NumberEntityCapabilityAttribute.MODE: 'mode'>: <NumberMode.AUTO: 'auto'>,
       <NumberEntityCapabilityAttribute.STEP: 'step'>: 0.1,
-      'unit_of_measurement': <UnitOfTemperature.CELSIUS: '°C'>,
+      <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: <UnitOfTemperature.CELSIUS: '°C'>,
     }),
     'context': <ANY>,
     'entity_id': 'number.test_number_external_temperature_offset',
@@ -584,12 +584,12 @@
 # name: test_number_snapshot[number.test_number_floor_temperature_offset-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'Test Number Floor temperature offset',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Test Number Floor temperature offset',
       <NumberEntityCapabilityAttribute.MAX: 'max'>: 6,
       <NumberEntityCapabilityAttribute.MIN: 'min'>: -6,
       <NumberEntityCapabilityAttribute.MODE: 'mode'>: <NumberMode.AUTO: 'auto'>,
       <NumberEntityCapabilityAttribute.STEP: 'step'>: 0.1,
-      'unit_of_measurement': <UnitOfTemperature.CELSIUS: '°C'>,
+      <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: <UnitOfTemperature.CELSIUS: '°C'>,
     }),
     'context': <ANY>,
     'entity_id': 'number.test_number_floor_temperature_offset',
@@ -644,12 +644,12 @@
 # name: test_number_snapshot[number.test_number_maximum_slat_angle-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'Test Number Maximum slat angle',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Test Number Maximum slat angle',
       <NumberEntityCapabilityAttribute.MAX: 'max'>: 127,
       <NumberEntityCapabilityAttribute.MIN: 'min'>: -127,
       <NumberEntityCapabilityAttribute.MODE: 'mode'>: <NumberMode.AUTO: 'auto'>,
       <NumberEntityCapabilityAttribute.STEP: 'step'>: 1.0,
-      'unit_of_measurement': '°',
+      <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: '°',
     }),
     'context': <ANY>,
     'entity_id': 'number.test_number_maximum_slat_angle',
@@ -704,12 +704,12 @@
 # name: test_number_snapshot[number.test_number_minimum_slat_angle-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'Test Number Minimum slat angle',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Test Number Minimum slat angle',
       <NumberEntityCapabilityAttribute.MAX: 'max'>: 127,
       <NumberEntityCapabilityAttribute.MIN: 'min'>: -127,
       <NumberEntityCapabilityAttribute.MODE: 'mode'>: <NumberMode.AUTO: 'auto'>,
       <NumberEntityCapabilityAttribute.STEP: 'step'>: 1.0,
-      'unit_of_measurement': '°',
+      <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: '°',
     }),
     'context': <ANY>,
     'entity_id': 'number.test_number_minimum_slat_angle',
@@ -764,13 +764,13 @@
 # name: test_number_snapshot[number.test_number_motion_alarm_delay-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'device_class': 'duration',
-      'friendly_name': 'Test Number Motion alarm delay',
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'duration',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Test Number Motion alarm delay',
       <NumberEntityCapabilityAttribute.MAX: 'max'>: 15300,
       <NumberEntityCapabilityAttribute.MIN: 'min'>: 1,
       <NumberEntityCapabilityAttribute.MODE: 'mode'>: <NumberMode.AUTO: 'auto'>,
       <NumberEntityCapabilityAttribute.STEP: 'step'>: 1.0,
-      'unit_of_measurement': <UnitOfTime.SECONDS: 's'>,
+      <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: <UnitOfTime.SECONDS: 's'>,
     }),
     'context': <ANY>,
     'entity_id': 'number.test_number_motion_alarm_delay',
@@ -825,13 +825,13 @@
 # name: test_number_snapshot[number.test_number_polling_interval-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'device_class': 'duration',
-      'friendly_name': 'Test Number Polling interval',
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'duration',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Test Number Polling interval',
       <NumberEntityCapabilityAttribute.MAX: 'max'>: 45,
       <NumberEntityCapabilityAttribute.MIN: 'min'>: 5,
       <NumberEntityCapabilityAttribute.MODE: 'mode'>: <NumberMode.AUTO: 'auto'>,
       <NumberEntityCapabilityAttribute.STEP: 'step'>: 5.0,
-      'unit_of_measurement': <UnitOfTime.MINUTES: 'min'>,
+      <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: <UnitOfTime.MINUTES: 'min'>,
     }),
     'context': <ANY>,
     'entity_id': 'number.test_number_polling_interval',
@@ -886,7 +886,7 @@
 # name: test_number_snapshot[number.test_number_slat_steps-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'Test Number Slat steps',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Test Number Slat steps',
       <NumberEntityCapabilityAttribute.MAX: 'max'>: 20,
       <NumberEntityCapabilityAttribute.MIN: 'min'>: 1,
       <NumberEntityCapabilityAttribute.MODE: 'mode'>: <NumberMode.AUTO: 'auto'>,
@@ -945,13 +945,13 @@
 # name: test_number_snapshot[number.test_number_slat_turn_duration-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'device_class': 'duration',
-      'friendly_name': 'Test Number Slat turn duration',
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'duration',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Test Number Slat turn duration',
       <NumberEntityCapabilityAttribute.MAX: 'max'>: 24,
       <NumberEntityCapabilityAttribute.MIN: 'min'>: 0,
       <NumberEntityCapabilityAttribute.MODE: 'mode'>: <NumberMode.AUTO: 'auto'>,
       <NumberEntityCapabilityAttribute.STEP: 'step'>: 0.1,
-      'unit_of_measurement': <UnitOfTime.SECONDS: 's'>,
+      <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: <UnitOfTime.SECONDS: 's'>,
     }),
     'context': <ANY>,
     'entity_id': 'number.test_number_slat_turn_duration',
@@ -1006,12 +1006,12 @@
 # name: test_number_snapshot[number.test_number_temperature_offset-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'Test Number Temperature offset',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Test Number Temperature offset',
       <NumberEntityCapabilityAttribute.MAX: 'max'>: 128,
       <NumberEntityCapabilityAttribute.MIN: 'min'>: -5,
       <NumberEntityCapabilityAttribute.MODE: 'mode'>: <NumberMode.AUTO: 'auto'>,
       <NumberEntityCapabilityAttribute.STEP: 'step'>: 0.1,
-      'unit_of_measurement': <UnitOfTemperature.CELSIUS: '°C'>,
+      <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: <UnitOfTemperature.CELSIUS: '°C'>,
     }),
     'context': <ANY>,
     'entity_id': 'number.test_number_temperature_offset',
@@ -1066,13 +1066,13 @@
 # name: test_number_snapshot[number.test_number_temperature_report_interval-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'device_class': 'duration',
-      'friendly_name': 'Test Number Temperature report interval',
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'duration',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Test Number Temperature report interval',
       <NumberEntityCapabilityAttribute.MAX: 'max'>: 32767,
       <NumberEntityCapabilityAttribute.MIN: 'min'>: 0,
       <NumberEntityCapabilityAttribute.MODE: 'mode'>: <NumberMode.AUTO: 'auto'>,
       <NumberEntityCapabilityAttribute.STEP: 'step'>: 1.0,
-      'unit_of_measurement': <UnitOfTime.SECONDS: 's'>,
+      <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: <UnitOfTime.SECONDS: 's'>,
     }),
     'context': <ANY>,
     'entity_id': 'number.test_number_temperature_report_interval',
@@ -1127,13 +1127,13 @@
 # name: test_number_snapshot[number.test_number_threshold_for_wind_trigger-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'device_class': 'wind_speed',
-      'friendly_name': 'Test Number Threshold for wind trigger',
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'wind_speed',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Test Number Threshold for wind trigger',
       <NumberEntityCapabilityAttribute.MAX: 'max'>: 22.5,
       <NumberEntityCapabilityAttribute.MIN: 'min'>: 0,
       <NumberEntityCapabilityAttribute.MODE: 'mode'>: <NumberMode.AUTO: 'auto'>,
       <NumberEntityCapabilityAttribute.STEP: 'step'>: 2.5,
-      'unit_of_measurement': <UnitOfSpeed.METERS_PER_SECOND: 'm/s'>,
+      <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: <UnitOfSpeed.METERS_PER_SECOND: 'm/s'>,
     }),
     'context': <ANY>,
     'entity_id': 'number.test_number_threshold_for_wind_trigger',
@@ -1188,13 +1188,13 @@
 # name: test_number_snapshot[number.test_number_up_movement_duration-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'device_class': 'duration',
-      'friendly_name': 'Test Number Up-movement duration',
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'duration',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Test Number Up-movement duration',
       <NumberEntityCapabilityAttribute.MAX: 'max'>: 240,
       <NumberEntityCapabilityAttribute.MIN: 'min'>: 4,
       <NumberEntityCapabilityAttribute.MODE: 'mode'>: <NumberMode.AUTO: 'auto'>,
       <NumberEntityCapabilityAttribute.STEP: 'step'>: 1.0,
-      'unit_of_measurement': <UnitOfTime.SECONDS: 's'>,
+      <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: <UnitOfTime.SECONDS: 's'>,
     }),
     'context': <ANY>,
     'entity_id': 'number.test_number_up_movement_duration',
@@ -1249,13 +1249,13 @@
 # name: test_number_snapshot[number.test_number_wake_up_interval-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'device_class': 'duration',
-      'friendly_name': 'Test Number Wake-up interval',
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'duration',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Test Number Wake-up interval',
       <NumberEntityCapabilityAttribute.MAX: 'max'>: 7200,
       <NumberEntityCapabilityAttribute.MIN: 'min'>: 30,
       <NumberEntityCapabilityAttribute.MODE: 'mode'>: <NumberMode.AUTO: 'auto'>,
       <NumberEntityCapabilityAttribute.STEP: 'step'>: 30.0,
-      'unit_of_measurement': <UnitOfTime.MINUTES: 'min'>,
+      <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: <UnitOfTime.MINUTES: 'min'>,
     }),
     'context': <ANY>,
     'entity_id': 'number.test_number_wake_up_interval',
@@ -1310,7 +1310,7 @@
 # name: test_number_snapshot[number.test_number_window_open_sensibility-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'Test Number Window open sensibility',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Test Number Window open sensibility',
       <NumberEntityCapabilityAttribute.MAX: 'max'>: 3,
       <NumberEntityCapabilityAttribute.MIN: 'min'>: 0,
       <NumberEntityCapabilityAttribute.MODE: 'mode'>: <NumberMode.AUTO: 'auto'>,

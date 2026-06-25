@@ -47,13 +47,13 @@
   StateSnapshot({
     'attributes': ReadOnlyDict({
       <ClimateEntityStateAttribute.CURRENT_TEMPERATURE: 'current_temperature'>: None,
-      'friendly_name': 'Bedroom',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Bedroom',
       <ClimateEntityCapabilityAttribute.HVAC_MODES: 'hvac_modes'>: list([
         <HVACMode.OFF: 'off'>,
       ]),
       <ClimateEntityCapabilityAttribute.MAX_TEMP: 'max_temp'>: 1,
       <ClimateEntityCapabilityAttribute.MIN_TEMP: 'min_temp'>: 0,
-      'supported_features': <ClimateEntityFeature: 384>,
+      <EntityStateAttribute.SUPPORTED_FEATURES: 'supported_features'>: <ClimateEntityFeature: 384>,
       <ClimateEntityCapabilityAttribute.TARGET_TEMP_STEP: 'target_temp_step'>: 1,
     }),
     'context': <ANY>,
@@ -139,7 +139,7 @@
         'low',
         'medium',
       ]),
-      'friendly_name': 'Hallway',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Hallway',
       <ClimateEntityCapabilityAttribute.HVAC_MODES: 'hvac_modes'>: list([
         <HVACMode.COOL: 'cool'>,
         <HVACMode.HEAT: 'heat'>,
@@ -150,7 +150,7 @@
       ]),
       <ClimateEntityCapabilityAttribute.MAX_TEMP: 'max_temp'>: 20,
       <ClimateEntityCapabilityAttribute.MIN_TEMP: 'min_temp'>: 10,
-      'supported_features': <ClimateEntityFeature: 937>,
+      <EntityStateAttribute.SUPPORTED_FEATURES: 'supported_features'>: <ClimateEntityFeature: 937>,
       <ClimateEntityStateAttribute.SWING_HORIZONTAL_MODE: 'swing_horizontal_mode'>: 'stopped',
       <ClimateEntityCapabilityAttribute.SWING_HORIZONTAL_MODES: 'swing_horizontal_modes'>: list([
         'stopped',
@@ -232,14 +232,14 @@
         'low',
         'high',
       ]),
-      'friendly_name': 'Kitchen',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Kitchen',
       <ClimateEntityCapabilityAttribute.HVAC_MODES: 'hvac_modes'>: list([
         <HVACMode.FAN_ONLY: 'fan_only'>,
         <HVACMode.OFF: 'off'>,
       ]),
       <ClimateEntityCapabilityAttribute.MAX_TEMP: 'max_temp'>: 1,
       <ClimateEntityCapabilityAttribute.MIN_TEMP: 'min_temp'>: 0,
-      'supported_features': <ClimateEntityFeature: 392>,
+      <EntityStateAttribute.SUPPORTED_FEATURES: 'supported_features'>: <ClimateEntityFeature: 392>,
       <ClimateEntityCapabilityAttribute.TARGET_TEMP_STEP: 'target_temp_step'>: 1,
     }),
     'context': <ANY>,
