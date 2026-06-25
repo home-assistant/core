@@ -5,6 +5,7 @@ from dataclasses import dataclass
 import logging
 from typing import Any, override
 
+from roborock.devices.traits.b01 import Q10PropertiesApi
 from roborock.devices.traits.v1 import PropertiesApi
 from roborock.devices.traits.v1.common import RoborockSwitchBase
 from roborock.exceptions import RoborockException
@@ -19,12 +20,17 @@ from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
 from .const import DOMAIN
 from .coordinator import (
+    RoborockB01Q10UpdateCoordinator,
     RoborockConfigEntry,
     RoborockCoordinatorType,
     RoborockDataUpdateCoordinator,
     RoborockDataUpdateCoordinatorA01,
 )
-from .entity import RoborockCoordinatedEntityA01, RoborockEntityV1
+from .entity import (
+    RoborockCoordinatedEntityA01,
+    RoborockCoordinatedEntityB01Q10,
+    RoborockEntityV1,
+)
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -79,6 +85,13 @@ class RoborockSwitchDescriptionA01(SwitchEntityDescription):
     data_protocol: RoborockDyadDataProtocol | RoborockZeoProtocol
 
 
+@dataclass(frozen=True, kw_only=True)
+class RoborockSwitchDescriptionQ10(SwitchEntityDescription):
+    """Class to describe a Roborock Q10 switch entity."""
+
+    trait: Callable[[Q10PropertiesApi], RoborockSwitchBase | None]
+
+
 A01_SWITCH_DESCRIPTIONS: list[RoborockSwitchDescriptionA01] = [
     RoborockSwitchDescriptionA01(
         key="sound_setting",
@@ -86,6 +99,16 @@ A01_SWITCH_DESCRIPTIONS: list[RoborockSwitchDescriptionA01] = [
         translation_key="sound_setting",
         entity_category=EntityCategory.CONFIG,
     ),
+]
+
+
+Q10_SWITCH_DESCRIPTIONS: list[RoborockSwitchDescriptionQ10] = [
+    RoborockSwitchDescriptionQ10(
+        key="do_not_disturb",
+        translation_key="dnd_switch",
+        entity_category=EntityCategory.CONFIG,
+        trait=lambda traits: getattr(traits, "do_not_disturb", None),
+    )
 ]
 
 
@@ -122,6 +145,16 @@ async def async_setup_entry(
                 )
                 for description in A01_SWITCH_DESCRIPTIONS
                 if description.data_protocol in coordinator.request_protocols
+            )
+        elif isinstance(coordinator, RoborockB01Q10UpdateCoordinator):
+            entities.extend(
+                RoborockSwitchQ10(
+                    coordinator,
+                    description,
+                    trait,
+                )
+                for description in Q10_SWITCH_DESCRIPTIONS
+                if (trait := description.trait(coordinator.api)) is not None
             )
         async_add_entities(entities)
 
@@ -241,3 +274,60 @@ class RoborockSwitchA01(RoborockCoordinatedEntityA01, SwitchEntity):
         if status is None:
             return None
         return bool(status)
+
+
+class RoborockSwitchQ10(RoborockCoordinatedEntityB01Q10, SwitchEntity):
+    """A class to toggle a setting on a Roborock Q10 device."""
+
+    entity_description: RoborockSwitchDescriptionQ10
+    coordinator: RoborockB01Q10UpdateCoordinator
+
+    def __init__(
+        self,
+        coordinator: RoborockB01Q10UpdateCoordinator,
+        description: RoborockSwitchDescriptionQ10,
+        trait: RoborockSwitchBase,
+    ) -> None:
+        """Initialize the entity."""
+        self.entity_description = description
+        self._trait = trait
+        super().__init__(f"{description.key}_{coordinator.duid_slug}", coordinator)
+
+    @override
+    async def async_added_to_hass(self) -> None:
+        """Register a trait listener for push-based state updates."""
+        await super().async_added_to_hass()
+        if hasattr(self._trait, "add_update_listener"):
+            self.async_on_remove(
+                self._trait.add_update_listener(self.async_write_ha_state)
+            )
+
+    @override
+    async def async_turn_off(self, **kwargs: Any) -> None:
+        """Turn off the switch."""
+        try:
+            await self._trait.disable()
+        except RoborockException as err:
+            raise HomeAssistantError(
+                translation_domain=DOMAIN,
+                translation_key="command_failed",
+                translation_placeholders={"command": self.entity_description.key},
+            ) from err
+
+    @override
+    async def async_turn_on(self, **kwargs: Any) -> None:
+        """Turn on the switch."""
+        try:
+            await self._trait.enable()
+        except RoborockException as err:
+            raise HomeAssistantError(
+                translation_domain=DOMAIN,
+                translation_key="command_failed",
+                translation_placeholders={"command": self.entity_description.key},
+            ) from err
+
+    @property
+    @override
+    def is_on(self) -> bool | None:
+        """Return True if entity is on."""
+        return self._trait.is_on

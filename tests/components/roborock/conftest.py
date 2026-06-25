@@ -180,11 +180,27 @@ def create_b01_q10_trait() -> Mock:
     for attr_name, value in vars(status_data).items():
         if not attr_name.startswith("_"):
             setattr(status, attr_name, value)
+    status.not_disturb = True
     q10_trait.status = status
 
     q10_trait.vacuum = AsyncMock()
     q10_trait.command = AsyncMock()
     q10_trait.refresh = AsyncMock()
+    q10_trait.do_not_disturb = AsyncMock()
+    q10_trait.do_not_disturb.is_on = True
+    q10_trait.do_not_disturb.enable = AsyncMock(
+        side_effect=lambda: (
+            setattr(q10_trait.do_not_disturb, "is_on", True),
+            setattr(q10_trait.status, "not_disturb", True),
+        )
+    )
+    q10_trait.do_not_disturb.disable = AsyncMock(
+        side_effect=lambda: (
+            setattr(q10_trait.do_not_disturb, "is_on", False),
+            setattr(q10_trait.status, "not_disturb", False),
+        )
+    )
+    q10_trait.do_not_disturb.add_update_listener = Mock(return_value=Mock())
     return q10_trait
 
 
