@@ -144,9 +144,7 @@ class VodafoneStationRouter(DataUpdateCoordinator[UpdateCoordinatorDataType]):
                 translation_placeholders={"error": repr(err)},
             ) from err
         except (
-            exceptions.CannotConnect,
-            exceptions.AlreadyLogged,
-            exceptions.GenericLoginError,
+            exceptions.VodafoneError,
             JSONDecodeError,
         ) as err:
             if isinstance(err, JSONDecodeError):
