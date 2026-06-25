@@ -1,6 +1,6 @@
 """Light platform for Honeywell String Lights."""
 
-from typing import Any
+from typing import Any, override
 
 from rf_protocols.codes.honeywell.string_lights import CODES
 
@@ -35,18 +35,21 @@ class HoneywellStringLight(HoneywellStringLightsEntity, LightEntity, RestoreEnti
     _attr_name = None
     _attr_should_poll = False
 
+    @override
     async def async_added_to_hass(self) -> None:
         """Restore last known state."""
         await super().async_added_to_hass()
         if (last_state := await self.async_get_last_state()) is not None:
             self._attr_is_on = last_state.state == STATE_ON
 
+    @override
     async def async_turn_on(self, **kwargs: Any) -> None:
         """Turn on the light."""
         await self._async_send_command("turn_on")
         self._attr_is_on = True
         self.async_write_ha_state()
 
+    @override
     async def async_turn_off(self, **kwargs: Any) -> None:
         """Turn off the light."""
         await self._async_send_command("turn_off")

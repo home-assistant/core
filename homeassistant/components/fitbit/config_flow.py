@@ -2,7 +2,7 @@
 
 from collections.abc import Mapping
 import logging
-from typing import Any
+from typing import Any, override
 
 from homeassistant.config_entries import SOURCE_REAUTH, ConfigFlowResult
 from homeassistant.const import CONF_TOKEN
@@ -23,11 +23,13 @@ class OAuth2FlowHandler(
     DOMAIN = DOMAIN
 
     @property
+    @override
     def logger(self) -> logging.Logger:
         """Return logger."""
         return logging.getLogger(__name__)
 
     @property
+    @override
     def extra_authorize_data(self) -> dict[str, str]:
         """Extra data that needs to be appended to the authorize url."""
         return {
@@ -49,6 +51,7 @@ class OAuth2FlowHandler(
             return self.async_show_form(step_id="reauth_confirm")
         return await self.async_step_user()
 
+    @override
     async def async_step_creation(
         self, user_input: dict[str, Any] | None = None
     ) -> ConfigFlowResult:
@@ -67,6 +70,7 @@ class OAuth2FlowHandler(
             _LOGGER.error("Failed to create Fitbit credentials: %s", err)
             return self.async_abort(reason="cannot_connect")
 
+    @override
     async def async_oauth_create_entry(self, data: dict[str, Any]) -> ConfigFlowResult:
         """Create an entry for the flow, or update existing entry."""
 

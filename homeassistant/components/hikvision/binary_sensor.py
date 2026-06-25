@@ -1,7 +1,7 @@
 """Support for Hikvision event stream events represented as binary sensors."""
 
 import logging
-from typing import Any
+from typing import Any, override
 
 import voluptuous as vol
 
@@ -293,16 +293,19 @@ class HikvisionBinarySensor(HikvisionEntity, BinarySensorEntity):
         return self._camera.fetch_attributes(self._sensor_type, self._channel)
 
     @property
+    @override
     def is_on(self) -> bool:
         """Return true if sensor is on."""
         return self._get_sensor_attributes()[0]
 
     @property
+    @override
     def extra_state_attributes(self) -> dict[str, Any]:
         """Return the state attributes."""
         attrs = self._get_sensor_attributes()
         return {ATTR_LAST_TRIP_TIME: attrs[3]}
 
+    @override
     async def async_added_to_hass(self) -> None:
         """Register callback when entity is added."""
         await super().async_added_to_hass()

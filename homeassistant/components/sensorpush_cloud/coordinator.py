@@ -1,5 +1,7 @@
 """Coordinator for the SensorPush Cloud integration."""
 
+from typing import override
+
 from sensorpush_ha import (
     SensorPushCloudApi,
     SensorPushCloudData,
@@ -35,6 +37,7 @@ class SensorPushCloudCoordinator(DataUpdateCoordinator[dict[str, SensorPushCloud
         api = SensorPushCloudApi(email, password, clientsession)
         self.helper = SensorPushCloudHelper(api)
 
+    @override
     async def _async_update_data(self) -> dict[str, SensorPushCloudData]:
         """Fetch data from API endpoints."""
         try:

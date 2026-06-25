@@ -1,5 +1,7 @@
 """Media player platform for Teslemetry integration."""
 
+from typing import override
+
 from tesla_fleet_api.const import Scope
 from tesla_fleet_api.teslemetry import Vehicle
 
@@ -64,6 +66,7 @@ class TeslemetryMediaEntity(TeslemetryRootEntity, MediaPlayerEntity):
     _attr_device_class = MediaPlayerDeviceClass.SPEAKER
     _attr_volume_step = VOLUME_STEP
 
+    @override
     async def async_set_volume_level(self, volume: float) -> None:
         """Set volume level, range 0..1."""
         self.raise_for_scope(Scope.VEHICLE_CMDS)
@@ -74,6 +77,7 @@ class TeslemetryMediaEntity(TeslemetryRootEntity, MediaPlayerEntity):
         self._attr_volume_level = volume
         self.async_write_ha_state()
 
+    @override
     async def async_media_play(self) -> None:
         """Send play command."""
         if self.state != MediaPlayerState.PLAYING:
@@ -85,6 +89,7 @@ class TeslemetryMediaEntity(TeslemetryRootEntity, MediaPlayerEntity):
             self._attr_state = MediaPlayerState.PLAYING
             self.async_write_ha_state()
 
+    @override
     async def async_media_pause(self) -> None:
         """Send pause command."""
 
@@ -97,6 +102,7 @@ class TeslemetryMediaEntity(TeslemetryRootEntity, MediaPlayerEntity):
             self._attr_state = MediaPlayerState.PAUSED
             self.async_write_ha_state()
 
+    @override
     async def async_media_next_track(self) -> None:
         """Send next track command."""
 
@@ -105,6 +111,7 @@ class TeslemetryMediaEntity(TeslemetryRootEntity, MediaPlayerEntity):
             self.hass, self.config_entry, self.api.media_next_track()
         )
 
+    @override
     async def async_media_previous_track(self) -> None:
         """Send previous track command."""
 
@@ -138,6 +145,7 @@ class TeslemetryVehiclePollingMediaEntity(
         if not self.scoped:
             self._attr_supported_features = MediaPlayerEntityFeature(0)
 
+    @override
     def _async_update_attrs(self) -> None:
         """Update entity attributes."""
         state = self.get("vehicle_state_media_info_media_playback_status")
@@ -192,6 +200,7 @@ class TeslemetryStreamingMediaEntity(
         if not self.scoped:
             self._attr_supported_features = MediaPlayerEntityFeature(0)
 
+    @override
     async def async_added_to_hass(self) -> None:
         """Call when entity is added to hass."""
 

@@ -2,7 +2,7 @@
 
 from collections.abc import Mapping
 import logging
-from typing import TYPE_CHECKING, Any, Literal
+from typing import TYPE_CHECKING, Any, Literal, override
 
 from openai import OpenAIError
 from propcache.api import cached_property
@@ -145,11 +145,13 @@ class OpenAITTSEntity(TextToSpeechEntity, OpenAIBaseLLMEntity):
         self._attr_name = subentry.title
 
     @callback
+    @override
     def async_get_supported_voices(self, language: str) -> list[Voice]:
         """Return a list of supported voices for a language."""
         return self._supported_voices
 
     @cached_property
+    @override
     def default_options(self) -> Mapping[str, Any]:
         """Return a mapping with the default options."""
         return {
@@ -157,6 +159,7 @@ class OpenAITTSEntity(TextToSpeechEntity, OpenAIBaseLLMEntity):
             ATTR_PREFERRED_FORMAT: "mp3",
         }
 
+    @override
     async def async_get_tts_audio(
         self, message: str, language: str, options: dict[str, Any]
     ) -> TtsAudioType:

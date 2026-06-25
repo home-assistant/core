@@ -9,7 +9,7 @@ from io import SEEK_END, BytesIO
 import logging
 import math
 from threading import Event
-from typing import Any, Self, cast
+from typing import Any, Self, cast, override
 
 import av
 import av.audio
@@ -442,10 +442,12 @@ class PeekIterator(Iterator[av.Packet]):
         # A pointer to either _iterator or _buffer
         self._next = self._iterator.__next__
 
+    @override
     def __iter__(self) -> Self:
         """Return an iterator."""
         return self
 
+    @override
     def __next__(self) -> av.Packet:
         """Return and consume the next item available."""
         return self._next()

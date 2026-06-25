@@ -1,7 +1,7 @@
 """Teslemetry parent entity class."""
 
 from abc import abstractmethod
-from typing import TYPE_CHECKING, Any
+from typing import TYPE_CHECKING, Any, override
 
 from tesla_fleet_api.const import Scope
 from tesla_fleet_api.teslemetry import EnergySite, Vehicle
@@ -69,6 +69,7 @@ class TeslemetryPollingEntity(
         self._async_update_attrs()
 
     @property
+    @override
     def available(self) -> bool:
         """Return if sensor is available."""
         return self.coordinator.last_update_success and self._attr_available
@@ -93,6 +94,7 @@ class TeslemetryPollingEntity(
         """Return if the value is a literal None."""
         return self.get(self.key, False) is None
 
+    @override
     def _handle_coordinator_update(self) -> None:
         """Handle updated data from the coordinator."""
         self._async_update_attrs()
@@ -130,6 +132,7 @@ class TeslemetryVehiclePollingEntity(TeslemetryPollingEntity):
         super().__init__(data.coordinator, key)
 
     @property
+    @override
     def _value(self) -> Any | None:
         """Return a specific value from coordinator data."""
         return self.coordinator.data.get(self.key)
@@ -234,6 +237,7 @@ class TeslemetryWallConnectorEntity(TeslemetryPollingEntity):
         super().__init__(data.live_coordinator, key)
 
     @property
+    @override
     def _value(self) -> StateType:
         """Return a specific wall connector value from coordinator data."""
         value: StateType = (

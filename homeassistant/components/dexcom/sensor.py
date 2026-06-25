@@ -1,5 +1,7 @@
 """Support for Dexcom sensors."""
 
+from typing import override
+
 from homeassistant.components.sensor import SensorDeviceClass, SensorEntity
 from homeassistant.const import CONF_USERNAME, UnitOfBloodGlucoseConcentration
 from homeassistant.core import HomeAssistant
@@ -77,6 +79,7 @@ class DexcomGlucoseValueSensor(DexcomSensorEntity):
         super().__init__(coordinator, username, entry_id, "value")
 
     @property
+    @override
     def native_value(self):
         """Return the state of the sensor."""
         if self.coordinator.data:
@@ -98,6 +101,7 @@ class DexcomGlucoseTrendSensor(DexcomSensorEntity):
         super().__init__(coordinator, username, entry_id, "trend")
 
     @property
+    @override
     def native_value(self) -> str | None:
         """Return the state of the sensor."""
         if self.coordinator.data:
@@ -105,6 +109,7 @@ class DexcomGlucoseTrendSensor(DexcomSensorEntity):
         return None
 
     @property
+    @override
     def available(self) -> bool:
         """Return if entity is available."""
         return super().available and (

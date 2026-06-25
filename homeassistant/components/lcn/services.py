@@ -1,6 +1,7 @@
 """Service calls related dependencies for LCN component."""
 
 from enum import StrEnum, auto
+from typing import override
 
 import pypck
 from pypck.device import DeviceConnection
@@ -111,6 +112,7 @@ class OutputAbs(LcnServiceCall):
         }
     )
 
+    @override
     async def async_call_service(self, service: ServiceCall) -> None:
         """Execute service call."""
         output = pypck.lcn_defs.OutputPort[service.data[CONF_OUTPUT]]
@@ -135,6 +137,7 @@ class OutputRel(LcnServiceCall):
         }
     )
 
+    @override
     async def async_call_service(self, service: ServiceCall) -> None:
         """Execute service call."""
         output = pypck.lcn_defs.OutputPort[service.data[CONF_OUTPUT]]
@@ -156,6 +159,7 @@ class OutputToggle(LcnServiceCall):
         }
     )
 
+    @override
     async def async_call_service(self, service: ServiceCall) -> None:
         """Execute service call."""
         output = pypck.lcn_defs.OutputPort[service.data[CONF_OUTPUT]]
@@ -172,6 +176,7 @@ class Relays(LcnServiceCall):
 
     schema = LcnServiceCall.schema.extend({vol.Required(CONF_STATE): is_states_string})
 
+    @override
     async def async_call_service(self, service: ServiceCall) -> None:
         """Execute service call."""
         states = [
@@ -193,6 +198,7 @@ class Led(LcnServiceCall):
         }
     )
 
+    @override
     async def async_call_service(self, service: ServiceCall) -> None:
         """Execute service call."""
         led = pypck.lcn_defs.LedPort[service.data[CONF_LED]]
@@ -221,6 +227,7 @@ class VarAbs(LcnServiceCall):
         }
     )
 
+    @override
     async def async_call_service(self, service: ServiceCall) -> None:
         """Execute service call."""
         var = pypck.lcn_defs.Var[service.data[CONF_VARIABLE]]
@@ -238,6 +245,7 @@ class VarReset(LcnServiceCall):
         {vol.Required(CONF_VARIABLE): vol.All(vol.Upper, vol.In(VARIABLES + SETPOINTS))}
     )
 
+    @override
     async def async_call_service(self, service: ServiceCall) -> None:
         """Execute service call."""
         var = pypck.lcn_defs.Var[service.data[CONF_VARIABLE]]
@@ -264,6 +272,7 @@ class VarRel(LcnServiceCall):
         }
     )
 
+    @override
     async def async_call_service(self, service: ServiceCall) -> None:
         """Execute service call."""
         var = pypck.lcn_defs.Var[service.data[CONF_VARIABLE]]
@@ -285,6 +294,7 @@ class LockRegulator(LcnServiceCall):
         }
     )
 
+    @override
     async def async_call_service(self, service: ServiceCall) -> None:
         """Execute service call."""
         setpoint = pypck.lcn_defs.Var[service.data[CONF_SETPOINT]]
@@ -313,6 +323,7 @@ class SendKeys(LcnServiceCall):
         }
     )
 
+    @override
     async def async_call_service(self, service: ServiceCall) -> None:
         """Execute service call."""
         device_connection = self.get_device_connection(service)
@@ -358,6 +369,7 @@ class LockKeys(LcnServiceCall):
         }
     )
 
+    @override
     async def async_call_service(self, service: ServiceCall) -> None:
         """Execute service call."""
         device_connection = self.get_device_connection(service)
@@ -392,6 +404,7 @@ class DynText(LcnServiceCall):
         }
     )
 
+    @override
     async def async_call_service(self, service: ServiceCall) -> None:
         """Execute service call."""
         row_id = service.data[CONF_ROW] - 1
@@ -406,6 +419,7 @@ class Pck(LcnServiceCall):
 
     schema = LcnServiceCall.schema.extend({vol.Required(CONF_PCK): str})
 
+    @override
     async def async_call_service(self, service: ServiceCall) -> None:
         """Execute service call."""
         pck = service.data[CONF_PCK]
