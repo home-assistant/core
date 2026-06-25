@@ -71,10 +71,10 @@ def compare_changed_files(
     """Return filenames changed between two commits, or None if unavailable."""
     try:
         comparison = _client(token).get_repo(repo).compare(base, head)
+        return [changed.filename for changed in comparison.files]
     except GithubException as err:
         _LOGGER.warning("Could not compare %s...%s: %s", base, head, err)
         return None
-    return [changed.filename for changed in comparison.files]
 
 
 def decide_skip(pr_number: int, head_sha: str, repo: str, token: str) -> GateDecision:

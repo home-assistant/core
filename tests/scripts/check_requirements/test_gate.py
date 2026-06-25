@@ -76,11 +76,6 @@ def install_github(monkeypatch: pytest.MonkeyPatch) -> InstallGithub:
     return _install
 
 
-# ---------------------------------------------------------------------------
-# extract_prior_sha
-# ---------------------------------------------------------------------------
-
-
 @pytest.mark.parametrize(
     ("bodies", "expected"),
     [
@@ -108,11 +103,6 @@ def test_extract_prior_sha_round_trips_rendered_comment() -> None:
     """The gate reads back exactly the SHA the renderer wrote, keeping them in sync."""
     body = render_comment(CheckRunResult(pr_number=1, head_sha=_HEAD))
     assert extract_prior_sha([body]) == _HEAD
-
-
-# ---------------------------------------------------------------------------
-# fetch_marker_comment_bodies
-# ---------------------------------------------------------------------------
 
 
 def test_fetch_marker_comment_bodies_returns_all_bot_comments(
@@ -155,11 +145,6 @@ def test_fetch_marker_comment_bodies_handles_api_error(
     """A GitHub API error yields no bodies (fails open) instead of raising."""
     install_github(comments_exc=GithubException(500, {}, {}))
     assert fetch_marker_comment_bodies(7, _REPO, _TOKEN) == []
-
-
-# ---------------------------------------------------------------------------
-# decide_skip
-# ---------------------------------------------------------------------------
 
 
 def test_decide_skip_no_head_sha(install_github: InstallGithub) -> None:
