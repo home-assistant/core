@@ -4105,18 +4105,18 @@ class FlowHandler(ConfigFlow, domain=DOMAIN):
         self.start_task: asyncio.Task | None = None
         self.last_uploaded = {}
 
+    @override
     @classmethod
     @callback
-    @override
     def async_get_supported_subentry_types(
         cls, config_entry: ConfigEntry
     ) -> dict[str, type[ConfigSubentryFlow]]:
         """Return subentries supported by this handler."""
         return {CONF_DEVICE: MQTTSubentryFlowHandler}
 
+    @override
     @staticmethod
     @callback
-    @override
     def async_get_options_flow(
         config_entry: ConfigEntry,
     ) -> MQTTOptionsFlowHandler:
@@ -4367,31 +4367,35 @@ class FlowHandler(ConfigFlow, domain=DOMAIN):
     def async_get_entry_defaults(self) -> dict[str, Any]:
         """Load the default settings from the entry."""
         data = self._get_reconfigure_entry().data
-        advanced_schema_settings: dict[str, Any] = {
-            key: data[key] for key in OTHER_SETTINGS_SCHEMA.schema if key in data
+        other_settings: dict[str, Any] = {
+            key.schema: data[key.schema]
+            for key in OTHER_SETTINGS_SCHEMA.schema
+            if key in data
         }
-        advanced_schema_settings[SET_CLIENT_CERT] = (
-            CONF_CLIENT_CERT in advanced_schema_settings
-        ) and (CONF_CLIENT_KEY in advanced_schema_settings)
-        advanced_schema_settings.pop(CONF_CLIENT_CERT, None)
-        advanced_schema_settings.pop(CONF_CLIENT_KEY, None)
-        conf_cert = advanced_schema_settings.pop(CONF_CERTIFICATE, None)
-        advanced_schema_settings[SET_CA_CERT] = (
+        other_settings[SET_CLIENT_CERT] = (CONF_CLIENT_CERT in other_settings) and (
+            CONF_CLIENT_KEY in other_settings
+        )
+        other_settings.pop(CONF_CLIENT_CERT, None)
+        other_settings.pop(CONF_CLIENT_KEY, None)
+        conf_cert = other_settings.pop(CONF_CERTIFICATE, None)
+        other_settings[SET_CA_CERT] = (
             "auto"
             if conf_cert == "auto"
             else "custom"
             if conf_cert is not None
             else "off"
         )
-        if CONF_WS_HEADERS in advanced_schema_settings:
-            advanced_schema_settings[CONF_WS_HEADERS] = json_dumps(
-                advanced_schema_settings.pop(CONF_WS_HEADERS)
+        if CONF_WS_HEADERS in other_settings:
+            other_settings[CONF_WS_HEADERS] = json_dumps(
+                other_settings.pop(CONF_WS_HEADERS)
             )
 
         settings: dict[str, Any] = {
-            key: data[key] for key in CONFIG_DATAFLOW_SCHEMA.schema if key in data
+            key.schema: data[key.schema]
+            for key in CONFIG_DATAFLOW_SCHEMA.schema
+            if key in data
         }
-        settings[OTHER_SETTINGS] = advanced_schema_settings
+        settings[OTHER_SETTINGS] = other_settings
         if CONF_PASSWORD in settings:
             # Hide entry password
             settings[CONF_PASSWORD] = PWD_NOT_CHANGED
