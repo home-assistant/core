@@ -47,12 +47,11 @@ def model_alias(model_id: str) -> str:
 class AnthropicCoordinator(DataUpdateCoordinator[list[anthropic.types.ModelInfo]]):
     """Coordinator using different intervals after success and failure."""
 
-    _config_entry: AnthropicConfigEntry
+    config_entry: AnthropicConfigEntry
     _client: anthropic.AsyncAnthropic | None = None
 
     def __init__(self, hass: HomeAssistant, config_entry: AnthropicConfigEntry) -> None:
         """Initialize the coordinator."""
-        self._config_entry = config_entry
         super().__init__(
             hass,
             LOGGER,
@@ -73,7 +72,7 @@ class AnthropicCoordinator(DataUpdateCoordinator[list[anthropic.types.ModelInfo]
     async def async_setup(self) -> None:
         """Set up the coordinator."""
         self._client = await async_create_client(
-            self.hass, self._config_entry.data[CONF_API_KEY]
+            self.hass, self.config_entry.data[CONF_API_KEY]
         )
 
     @callback
