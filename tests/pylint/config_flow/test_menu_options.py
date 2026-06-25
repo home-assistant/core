@@ -53,6 +53,23 @@ CONFIG_FLOW_MODULE = "homeassistant.components.test.config_flow"
         ),
         pytest.param(
             """
+    _MENU_OPTIONS = ["local", "cloud"]
+
+    class TestFlow:
+        async def async_step_user(self, user_input=None):
+            return self.async_show_menu(menu_options=_MENU_OPTIONS)
+
+        async def async_step_local(self, user_input=None):
+            pass
+
+        async def async_step_cloud(self, user_input=None):
+            pass
+    """,
+            CONFIG_FLOW_MODULE,
+            id="inferred_constant_all_present",
+        ),
+        pytest.param(
+            """
     class TestFlow:
         async def async_step_init(self, user_input=None):
             return self.async_show_menu(
@@ -174,6 +191,20 @@ def test_menu_options_inherited_step(
     """,
             ["cloud"],
             id="dict_missing_one",
+        ),
+        pytest.param(
+            """
+    _MENU_OPTIONS = ["local", "cloud"]
+
+    class TestFlow:
+        async def async_step_user(self, user_input=None):
+            return self.async_show_menu(menu_options=_MENU_OPTIONS)
+
+        async def async_step_local(self, user_input=None):
+            pass
+    """,
+            ["cloud"],
+            id="inferred_constant_missing_one",
         ),
     ],
 )
