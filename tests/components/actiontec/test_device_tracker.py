@@ -5,7 +5,9 @@ from unittest.mock import AsyncMock, MagicMock
 from homeassistant.components.actiontec.const import DOMAIN
 from homeassistant.components.actiontec.device_tracker import async_setup_scanner
 from homeassistant.components.actiontec.model import Device
+from homeassistant.components.device_tracker.const import ScannerEntityStateAttribute
 from homeassistant.config_entries import SOURCE_IMPORT, ConfigEntryState
+from homeassistant.const import STATE_HOME, STATE_NOT_HOME
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_registry import EntityRegistry
 from homeassistant.helpers.issue_registry import IssueRegistry
@@ -21,6 +23,7 @@ async def test_entities_created(
     mock_config_entry: MockConfigEntry,
     mock_get_actiontec_data: MagicMock,
     entity_registry: EntityRegistry,
+    entity_registry_enabled_by_default: None,
 ) -> None:
     """Test device tracker entities are created from the coordinator data."""
     mock_config_entry.add_to_hass(hass)
@@ -38,6 +41,28 @@ async def test_entities_created(
     entity_ids = {entry.entity_id for entry in entries}
     assert any(eid.startswith("device_tracker.192_168_1_10") for eid in entity_ids)
     assert any(eid.startswith("device_tracker.192_168_1_11") for eid in entity_ids)
+
+    entries_by_mac = {entry.unique_id: entry for entry in entries}
+    assert entries_by_mac.keys() == {
+        "AA:BB:CC:DD:EE:FF",
+        "11:22:33:44:55:66",
+    }
+
+    state = hass.states.get(entries_by_mac["AA:BB:CC:DD:EE:FF"].entity_id)
+    assert state is not None
+    assert state.state == STATE_HOME
+    assert state.attributes[ScannerEntityStateAttribute.IP] == "192.168.1.10"
+    assert state.attributes[ScannerEntityStateAttribute.MAC] == "AA:BB:CC:DD:EE:FF"
+
+    mock_get_actiontec_data.return_value = [MOCK_DEVICES[1]]
+    await mock_config_entry.runtime_data.async_request_refresh()
+    await hass.async_block_till_done()
+
+    state = hass.states.get(entries_by_mac["AA:BB:CC:DD:EE:FF"].entity_id)
+    assert state is not None
+    assert state.state == STATE_NOT_HOME
+    assert ScannerEntityStateAttribute.IP not in state.attributes
+    assert state.attributes[ScannerEntityStateAttribute.MAC] == "AA:BB:CC:DD:EE:FF"
 
 
 async def test_legacy_platform_imports_config_entry(

@@ -1,6 +1,8 @@
 """Tests for the Actiontec config flow."""
 
-from unittest.mock import AsyncMock, MagicMock
+from unittest.mock import MagicMock
+
+import pytest
 
 from homeassistant.components.actiontec.const import DOMAIN
 from homeassistant.config_entries import SOURCE_IMPORT, SOURCE_USER
@@ -12,10 +14,9 @@ from .conftest import MOCK_CONFIG, MOCK_HOST
 from tests.common import MockConfigEntry
 
 
+@pytest.mark.usefixtures("mock_setup_entry", "mock_get_actiontec_data")
 async def test_user_flow_success(
     hass: HomeAssistant,
-    mock_setup_entry: AsyncMock,
-    mock_get_actiontec_data: MagicMock,
 ) -> None:
     """Test a successful user config flow."""
     result = await hass.config_entries.flow.async_init(
@@ -31,9 +32,9 @@ async def test_user_flow_success(
     assert result["data"] == MOCK_CONFIG
 
 
+@pytest.mark.usefixtures("mock_setup_entry")
 async def test_user_flow_cannot_connect(
     hass: HomeAssistant,
-    mock_setup_entry: AsyncMock,
     mock_get_actiontec_data: MagicMock,
 ) -> None:
     """Test the user flow shows an error on connection failure."""
@@ -49,10 +50,9 @@ async def test_user_flow_cannot_connect(
     assert result["errors"] == {"base": "cannot_connect"}
 
 
+@pytest.mark.usefixtures("mock_setup_entry", "mock_get_actiontec_data")
 async def test_user_flow_already_configured(
     hass: HomeAssistant,
-    mock_setup_entry: AsyncMock,
-    mock_get_actiontec_data: MagicMock,
     mock_config_entry: MockConfigEntry,
 ) -> None:
     """Test the user flow aborts when the host is already configured."""
@@ -68,10 +68,9 @@ async def test_user_flow_already_configured(
     assert result["reason"] == "already_configured"
 
 
+@pytest.mark.usefixtures("mock_setup_entry", "mock_get_actiontec_data")
 async def test_import_flow(
     hass: HomeAssistant,
-    mock_setup_entry: AsyncMock,
-    mock_get_actiontec_data: MagicMock,
 ) -> None:
     """Test a successful import flow."""
     result = await hass.config_entries.flow.async_init(
@@ -82,10 +81,9 @@ async def test_import_flow(
     assert result["data"] == MOCK_CONFIG
 
 
+@pytest.mark.usefixtures("mock_setup_entry", "mock_get_actiontec_data")
 async def test_import_flow_already_configured(
     hass: HomeAssistant,
-    mock_setup_entry: AsyncMock,
-    mock_get_actiontec_data: MagicMock,
     mock_config_entry: MockConfigEntry,
 ) -> None:
     """Test the import flow aborts when already configured."""
@@ -98,9 +96,9 @@ async def test_import_flow_already_configured(
     assert result["reason"] == "already_configured"
 
 
+@pytest.mark.usefixtures("mock_setup_entry")
 async def test_import_flow_cannot_connect(
     hass: HomeAssistant,
-    mock_setup_entry: AsyncMock,
     mock_get_actiontec_data: MagicMock,
 ) -> None:
     """Test the import flow aborts on connection failure."""
