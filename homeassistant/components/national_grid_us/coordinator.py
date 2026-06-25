@@ -3,6 +3,7 @@
 from dataclasses import dataclass, field
 from datetime import date, timedelta
 import logging
+from typing import override
 
 from py_nationalgrid import NationalGridClient, NationalGridConfig, create_cookie_jar
 from py_nationalgrid.exceptions import (
@@ -84,17 +85,9 @@ class NationalGridDataUpdateCoordinator(
             session=session,
         )
 
+    @override
     async def _async_update_data(self) -> NationalGridCoordinatorData:
         """Fetch data from the API."""
-        try:
-            return await self._fetch_all_data()
-        except InvalidAuthError as err:
-            raise ConfigEntryAuthFailed(err) from err
-        except (CannotConnectError, RetryExhaustedError, NationalGridError) as err:
-            raise UpdateFailed(err) from err
-
-    async def _fetch_all_data(self) -> NationalGridCoordinatorData:
-        """Fetch all data from the API."""
         account_id: str = self.config_entry.data[CONF_ACCOUNT_ID]
         data = NationalGridCoordinatorData()
 
@@ -103,11 +96,9 @@ class NationalGridDataUpdateCoordinator(
 
         try:
             await self._fetch_account_data(account_id, today, from_month, data)
-        except (
-            CannotConnectError,
-            RetryExhaustedError,
-            NationalGridError,
-        ) as err:
+        except InvalidAuthError as err:
+            raise ConfigEntryAuthFailed(err) from err
+        except (CannotConnectError, RetryExhaustedError, NationalGridError) as err:
             raise UpdateFailed(
                 f"Failed to fetch data for account {account_id}: {err}"
             ) from err
