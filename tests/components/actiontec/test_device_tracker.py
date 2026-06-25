@@ -67,8 +67,9 @@ async def test_entities_created(
     assert state.attributes[ScannerEntityStateAttribute.MAC] == "AA:BB:CC:DD:EE:FF"
 
 
+@pytest.mark.usefixtures("mock_get_actiontec_data")
 async def test_legacy_platform_imports_config_entry(
-    hass: HomeAssistant, mock_get_actiontec_data: MagicMock
+    hass: HomeAssistant,
 ) -> None:
     """Test the legacy device_tracker platform imports a config entry."""
     assert await async_setup_component(
