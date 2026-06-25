@@ -72,10 +72,7 @@ rules:
     comment: |
       Entities do not require different icons.
   reconfiguration-flow: todo
-  repair-issues:
-    status: exempt
-    comment: |
-      Read-only integration and no repairs are possible.
+  repair-issues: done
   stale-devices: todo
   # Platinum
   async-dependency: done
