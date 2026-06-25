@@ -18,7 +18,14 @@ from homeassistant.helpers.typing import ConfigType
 from homeassistant.util import dt as dt_util
 from homeassistant.util.hass_dict import HassKey
 
-from .const import ATTR_EVENT_TYPE, ATTR_EVENT_TYPES, DOMAIN, DoorbellEventType
+from .const import (
+    ATTR_EVENT_TYPE,
+    ATTR_EVENT_TYPES,
+    DOMAIN,
+    DoorbellEventType,
+    EventEntityCapabilityAttribute,
+    EventEntityStateAttribute,
+)
 
 _LOGGER = logging.getLogger(__name__)
 DATA_COMPONENT: HassKey[EntityComponent[EventEntity]] = HassKey(DOMAIN)
@@ -110,7 +117,9 @@ CACHED_PROPERTIES_WITH_ATTR_ = {
 class EventEntity(RestoreEntity, cached_properties=CACHED_PROPERTIES_WITH_ATTR_):
     """Representation of an Event entity."""
 
-    _entity_component_unrecorded_attributes = frozenset({ATTR_EVENT_TYPES})
+    _entity_component_unrecorded_attributes = frozenset(
+        {EventEntityCapabilityAttribute.EVENT_TYPES}
+    )
 
     entity_description: EventEntityDescription
     _attr_device_class: EventDeviceClass | None
@@ -168,7 +177,7 @@ class EventEntity(RestoreEntity, cached_properties=CACHED_PROPERTIES_WITH_ATTR_)
     def capability_attributes(self) -> dict[str, list[str]]:
         """Return capability attributes."""
         return {
-            ATTR_EVENT_TYPES: self.event_types,
+            EventEntityCapabilityAttribute.EVENT_TYPES: self.event_types,
         }
 
     @property
@@ -185,7 +194,9 @@ class EventEntity(RestoreEntity, cached_properties=CACHED_PROPERTIES_WITH_ATTR_)
     @override
     def state_attributes(self) -> dict[str, Any]:
         """Return the state attributes."""
-        attributes = {ATTR_EVENT_TYPE: self.__last_event_type}
+        attributes: dict[str, Any] = {
+            EventEntityStateAttribute.EVENT_TYPE: self.__last_event_type
+        }
         if last_event_attributes := self.__last_event_attributes:
             attributes |= last_event_attributes
         return attributes

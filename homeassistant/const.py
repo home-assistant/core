@@ -21,7 +21,7 @@ if TYPE_CHECKING:
 
 APPLICATION_NAME: Final = "HomeAssistant"
 MAJOR_VERSION: Final = 2026
-MINOR_VERSION: Final = 7
+MINOR_VERSION: Final = 8
 PATCH_VERSION: Final = "0.dev0"
 __short_version__: Final = f"{MAJOR_VERSION}.{MINOR_VERSION}"
 __version__: Final = f"{__short_version__}.{PATCH_VERSION}"
@@ -455,6 +455,26 @@ ATTR_TEMPERATURE: Final = "temperature"
 ATTR_PERSONS: Final = "persons"
 
 
+class EntityCapabilityAttribute(StrEnum):
+    """Capability attributes shared by all entities."""
+
+    GROUP_ENTITIES = "group_entities"
+
+
+class EntityStateAttribute(StrEnum):
+    """State attributes shared by all entities."""
+
+    ASSUMED_STATE = "assumed_state"
+    ATTRIBUTION = "attribution"
+    DEVICE_CLASS = "device_class"
+    ENTITY_PICTURE = "entity_picture"
+    FRIENDLY_NAME = "friendly_name"
+    ICON = "icon"
+    RESTORED = "restored"
+    SUPPORTED_FEATURES = "supported_features"
+    UNIT_OF_MEASUREMENT = "unit_of_measurement"
+
+
 # #### UNITS OF MEASUREMENT ####
 # Apparent power units
 class UnitOfApparentPower(StrEnum):
@@ -708,9 +728,6 @@ LIGHT_LUX: Final = "lx"
 # UV Index units
 UV_INDEX: Final = "UV index"
 
-# Percentage units
-PERCENTAGE: Final = "%"
-
 # Rotational speed units
 REVOLUTIONS_PER_MINUTE: Final = "rpm"
 
@@ -772,6 +789,14 @@ class UnitOfDensity(StrEnum):
     MICROGRAMS_PER_CUBIC_FOOT = "μg/ft³"
 
 
+class UnitOfRatio(StrEnum):
+    """Ratio units."""
+
+    PARTS_PER_MILLION = "ppm"
+    PARTS_PER_BILLION = "ppb"
+    PERCENTAGE = "%"
+
+
 # Concentration units
 CONCENTRATION_GRAMS_PER_CUBIC_METER: Final = UnitOfDensity.GRAMS_PER_CUBIC_METER.value
 CONCENTRATION_MILLIGRAMS_PER_CUBIC_METER: Final = (
@@ -786,8 +811,9 @@ CONCENTRATION_MICROGRAMS_PER_CUBIC_FOOT: Final = (
 _DEPRECATED_CONCENTRATION_PARTS_PER_CUBIC_METER = DeprecatedConstant(
     "p/m³", "p/m³", "2027.7"
 )
-CONCENTRATION_PARTS_PER_MILLION: Final = "ppm"
-CONCENTRATION_PARTS_PER_BILLION: Final = "ppb"
+CONCENTRATION_PARTS_PER_MILLION: Final = UnitOfRatio.PARTS_PER_MILLION.value
+CONCENTRATION_PARTS_PER_BILLION: Final = UnitOfRatio.PARTS_PER_BILLION.value
+PERCENTAGE: Final = UnitOfRatio.PERCENTAGE.value
 
 
 class UnitOfBloodGlucoseConcentration(StrEnum):
