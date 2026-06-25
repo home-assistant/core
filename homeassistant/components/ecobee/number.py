@@ -3,6 +3,7 @@
 from collections.abc import Awaitable, Callable
 from dataclasses import dataclass
 import logging
+from typing import override
 
 from homeassistant.components.number import (
     NumberDeviceClass,
@@ -114,6 +115,7 @@ class EcobeeVentilatorMinTime(EcobeeBaseEntity, NumberEntity):
             self.entity_description.ecobee_setting_key
         ]
 
+    @override
     def set_native_value(self, value: float) -> None:
         """Set new ventilator Min On Time value."""
         self.entity_description.set_fn(self.data, self.thermostat_index, int(value))
@@ -163,6 +165,7 @@ class EcobeeCompressorMinTemp(EcobeeBaseEntity, NumberEntity):
             (self.thermostat["settings"]["compressorProtectionMinTemp"]) / 10
         )
 
+    @override
     def set_native_value(self, value: float) -> None:
         """Set new compressor minimum temperature."""
         self.data.ecobee.set_aux_cutover_threshold(self.thermostat_index, value)
@@ -197,6 +200,7 @@ class EcobeeFanMinOnTime(EcobeeBaseEntity, NumberEntity):
             await self.data.update()
         self._attr_native_value = self.thermostat["settings"]["fanMinOnTime"]
 
+    @override
     def set_native_value(self, value: float) -> None:
         """Set new fan minimum on time value."""
         step = self._attr_native_step

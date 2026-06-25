@@ -575,8 +575,11 @@
         "name": "Consumer imported from solar"
       },
       "credit_balance": {
-        "name": "Teslemetry credits",
+        "name": "Teslemetry command credits",
         "unit_of_measurement": "credits"
+      },
+      "credit_quota": {
+        "name": "Teslemetry command quota used"
       },
       "cruise_follow_distance": {
         "name": "Cruise follow distance"
@@ -1174,7 +1177,7 @@
       "message": "Token data malformed, try reauthenticating"
     },
     "update_failed": {
-      "message": "Error fetching data from Teslemetry API"
+      "message": "Error fetching data from Teslemetry API: {message}"
     },
     "update_failed_invalid_data": {
       "message": "Received invalid data from API"
@@ -1184,6 +1187,36 @@
     },
     "wake_up_timeout": {
       "message": "Timed out trying to wake up vehicle"
+    }
+  },
+  "issues": {
+    "key": {
+      "fix_flow": {
+        "error": {
+          "not_resolved": "The virtual key still appears to be unpaired. Please complete the pairing at {link}, then try again."
+        },
+        "step": {
+          "confirm": {
+            "description": "Home Assistant cannot send commands to {vehicle} because the Teslemetry virtual key is not paired with the vehicle. Until it is paired, commands such as locking, climate control and charging will not work.\n\n1. Open {link}.\n2. Follow the prompts to add the virtual key to {vehicle}.\n3. Select **Submit** below to re-check.",
+            "title": "[%key:component::teslemetry::issues::key::title%]"
+          }
+        }
+      },
+      "title": "Pair the virtual key for {vehicle}"
+    },
+    "streaming_toggle": {
+      "fix_flow": {
+        "error": {
+          "not_resolved": "Data streaming still appears to be disabled. Please enable \"Allow Third-Party App Data Streaming\" in the vehicle's Safety settings, then try again."
+        },
+        "step": {
+          "confirm": {
+            "description": "Home Assistant cannot receive streaming data from {vehicle} because the \"Allow Third-Party App Data Streaming\" toggle is disabled. This option is only available on older Model S and Model X vehicles with Intel-based computers.\n\n1. In {vehicle}, open Controls > Safety.\n2. Enable **Allow Third-Party App Data Streaming**.\n3. Select **Submit** below to re-check.",
+            "title": "[%key:component::teslemetry::issues::streaming_toggle::title%]"
+          }
+        }
+      },
+      "title": "Enable data streaming for {vehicle}"
     }
   },
   "selector": {

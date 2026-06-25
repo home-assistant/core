@@ -2,6 +2,7 @@
 
 from collections.abc import Callable
 from dataclasses import dataclass
+from typing import override
 
 from google_weather_api import CurrentConditionsResponse
 
@@ -226,6 +227,7 @@ class GoogleWeatherSensor(
         self.entity_description = description
 
     @property
+    @override
     def native_value(self) -> str | int | float | None:
         """Return the state."""
         return self.entity_description.value_fn(self.coordinator.data)
