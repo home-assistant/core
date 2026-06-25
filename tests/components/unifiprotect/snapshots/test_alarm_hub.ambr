@@ -155,22 +155,22 @@
     'unit_of_measurement': None,
   })
 # ---
-# name: test_alarm_hub_device_and_entities[binary_sensor.alarm_hub_motion_a-state]
+# name: test_alarm_hub_device_and_entities[binary_sensor.alarm_hub_kitchen_smoke-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       <EntityStateAttribute.ATTRIBUTION: 'attribution'>: 'Powered by UniFi Protect Server',
-      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'motion',
-      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Alarm Hub Motion A',
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'smoke',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Alarm Hub Kitchen Smoke',
     }),
     'context': <ANY>,
-    'entity_id': 'binary_sensor.alarm_hub_motion_a',
+    'entity_id': 'binary_sensor.alarm_hub_kitchen_smoke',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
-    'state': 'off',
+    'state': 'on',
   })
 # ---
-# name: test_alarm_hub_device_and_entities[binary_sensor.alarm_hub_motion_a]
+# name: test_alarm_hub_device_and_entities[binary_sensor.alarm_hub_kitchen_smoke]
   EntityRegistryEntrySnapshot({
     'aliases': list([
       None,
@@ -184,7 +184,7 @@
     'disabled_by': None,
     'domain': 'binary_sensor',
     'entity_category': None,
-    'entity_id': 'binary_sensor.alarm_hub_motion_a',
+    'entity_id': 'binary_sensor.alarm_hub_kitchen_smoke',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -192,37 +192,37 @@
     'labels': set({
     }),
     'name': None,
-    'object_id_base': 'Motion A',
+    'object_id_base': 'Kitchen Smoke',
     'options': dict({
     }),
-    'original_device_class': <BinarySensorDeviceClass.MOTION: 'motion'>,
+    'original_device_class': <BinarySensorDeviceClass.SMOKE: 'smoke'>,
     'original_icon': None,
-    'original_name': 'Motion A',
+    'original_name': 'Kitchen Smoke',
     'platform': 'unifiprotect',
     'previous_unique_id': None,
     'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': None,
-    'unique_id': 'AABBCCDDEEFF_input_28',
+    'unique_id': 'AABBCCDDEEFF_input_4',
     'unit_of_measurement': None,
   })
 # ---
-# name: test_alarm_hub_device_and_entities[binary_sensor.alarm_hub_motion_b-state]
+# name: test_alarm_hub_device_and_entities[binary_sensor.alarm_hub_living_room_window-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       <EntityStateAttribute.ATTRIBUTION: 'attribution'>: 'Powered by UniFi Protect Server',
-      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'motion',
-      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Alarm Hub Motion B',
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'sound',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Alarm Hub Living Room Window',
     }),
     'context': <ANY>,
-    'entity_id': 'binary_sensor.alarm_hub_motion_b',
+    'entity_id': 'binary_sensor.alarm_hub_living_room_window',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': 'off',
   })
 # ---
-# name: test_alarm_hub_device_and_entities[binary_sensor.alarm_hub_motion_b]
+# name: test_alarm_hub_device_and_entities[binary_sensor.alarm_hub_living_room_window]
   EntityRegistryEntrySnapshot({
     'aliases': list([
       None,
@@ -236,7 +236,7 @@
     'disabled_by': None,
     'domain': 'binary_sensor',
     'entity_category': None,
-    'entity_id': 'binary_sensor.alarm_hub_motion_b',
+    'entity_id': 'binary_sensor.alarm_hub_living_room_window',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -244,18 +244,18 @@
     'labels': set({
     }),
     'name': None,
-    'object_id_base': 'Motion B',
+    'object_id_base': 'Living Room Window',
     'options': dict({
     }),
-    'original_device_class': <BinarySensorDeviceClass.MOTION: 'motion'>,
+    'original_device_class': <BinarySensorDeviceClass.SOUND: 'sound'>,
     'original_icon': None,
-    'original_name': 'Motion B',
+    'original_name': 'Living Room Window',
     'platform': 'unifiprotect',
     'previous_unique_id': None,
     'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': None,
-    'unique_id': 'AABBCCDDEEFF_input_29',
+    'unique_id': 'AABBCCDDEEFF_input_8',
     'unit_of_measurement': None,
   })
 # ---
@@ -311,110 +311,6 @@
     'unit_of_measurement': None,
   })
 # ---
-# name: test_alarm_hub_device_and_entities[binary_sensor.alarm_hub_zone_18-state]
-  StateSnapshot({
-    'attributes': ReadOnlyDict({
-      <EntityStateAttribute.ATTRIBUTION: 'attribution'>: 'Powered by UniFi Protect Server',
-      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'motion',
-      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Alarm Hub Zone 18',
-    }),
-    'context': <ANY>,
-    'entity_id': 'binary_sensor.alarm_hub_zone_18',
-    'last_changed': <ANY>,
-    'last_reported': <ANY>,
-    'last_updated': <ANY>,
-    'state': 'off',
-  })
-# ---
-# name: test_alarm_hub_device_and_entities[binary_sensor.alarm_hub_zone_18]
-  EntityRegistryEntrySnapshot({
-    'aliases': list([
-      None,
-    ]),
-    'area_id': None,
-    'capabilities': None,
-    'config_entry_id': <ANY>,
-    'config_subentry_id': <ANY>,
-    'device_class': None,
-    'device_id': <ANY>,
-    'disabled_by': None,
-    'domain': 'binary_sensor',
-    'entity_category': None,
-    'entity_id': 'binary_sensor.alarm_hub_zone_18',
-    'has_entity_name': True,
-    'hidden_by': None,
-    'icon': None,
-    'id': <ANY>,
-    'labels': set({
-    }),
-    'name': None,
-    'object_id_base': 'Zone 18',
-    'options': dict({
-    }),
-    'original_device_class': <BinarySensorDeviceClass.MOTION: 'motion'>,
-    'original_icon': None,
-    'original_name': 'Zone 18',
-    'platform': 'unifiprotect',
-    'previous_unique_id': None,
-    'suggested_object_id': None,
-    'supported_features': 0,
-    'translation_key': None,
-    'unique_id': 'AABBCCDDEEFF_input_18',
-    'unit_of_measurement': None,
-  })
-# ---
-# name: test_alarm_hub_device_and_entities[binary_sensor.alarm_hub_zone_23-state]
-  StateSnapshot({
-    'attributes': ReadOnlyDict({
-      <EntityStateAttribute.ATTRIBUTION: 'attribution'>: 'Powered by UniFi Protect Server',
-      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'motion',
-      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Alarm Hub Zone 23',
-    }),
-    'context': <ANY>,
-    'entity_id': 'binary_sensor.alarm_hub_zone_23',
-    'last_changed': <ANY>,
-    'last_reported': <ANY>,
-    'last_updated': <ANY>,
-    'state': 'off',
-  })
-# ---
-# name: test_alarm_hub_device_and_entities[binary_sensor.alarm_hub_zone_23]
-  EntityRegistryEntrySnapshot({
-    'aliases': list([
-      None,
-    ]),
-    'area_id': None,
-    'capabilities': None,
-    'config_entry_id': <ANY>,
-    'config_subentry_id': <ANY>,
-    'device_class': None,
-    'device_id': <ANY>,
-    'disabled_by': None,
-    'domain': 'binary_sensor',
-    'entity_category': None,
-    'entity_id': 'binary_sensor.alarm_hub_zone_23',
-    'has_entity_name': True,
-    'hidden_by': None,
-    'icon': None,
-    'id': <ANY>,
-    'labels': set({
-    }),
-    'name': None,
-    'object_id_base': 'Zone 23',
-    'options': dict({
-    }),
-    'original_device_class': <BinarySensorDeviceClass.MOTION: 'motion'>,
-    'original_icon': None,
-    'original_name': 'Zone 23',
-    'platform': 'unifiprotect',
-    'previous_unique_id': None,
-    'suggested_object_id': None,
-    'supported_features': 0,
-    'translation_key': None,
-    'unique_id': 'AABBCCDDEEFF_input_23',
-    'unit_of_measurement': None,
-  })
-# ---
 # name: test_alarm_hub_device_and_entities[binary_sensor.alarm_hub_zone_25-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
@@ -464,110 +360,6 @@
     'supported_features': 0,
     'translation_key': None,
     'unique_id': 'AABBCCDDEEFF_input_25',
-    'unit_of_measurement': None,
-  })
-# ---
-# name: test_alarm_hub_device_and_entities[binary_sensor.alarm_hub_zone_26-state]
-  StateSnapshot({
-    'attributes': ReadOnlyDict({
-      <EntityStateAttribute.ATTRIBUTION: 'attribution'>: 'Powered by UniFi Protect Server',
-      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'motion',
-      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Alarm Hub Zone 26',
-    }),
-    'context': <ANY>,
-    'entity_id': 'binary_sensor.alarm_hub_zone_26',
-    'last_changed': <ANY>,
-    'last_reported': <ANY>,
-    'last_updated': <ANY>,
-    'state': 'off',
-  })
-# ---
-# name: test_alarm_hub_device_and_entities[binary_sensor.alarm_hub_zone_26]
-  EntityRegistryEntrySnapshot({
-    'aliases': list([
-      None,
-    ]),
-    'area_id': None,
-    'capabilities': None,
-    'config_entry_id': <ANY>,
-    'config_subentry_id': <ANY>,
-    'device_class': None,
-    'device_id': <ANY>,
-    'disabled_by': None,
-    'domain': 'binary_sensor',
-    'entity_category': None,
-    'entity_id': 'binary_sensor.alarm_hub_zone_26',
-    'has_entity_name': True,
-    'hidden_by': None,
-    'icon': None,
-    'id': <ANY>,
-    'labels': set({
-    }),
-    'name': None,
-    'object_id_base': 'Zone 26',
-    'options': dict({
-    }),
-    'original_device_class': <BinarySensorDeviceClass.MOTION: 'motion'>,
-    'original_icon': None,
-    'original_name': 'Zone 26',
-    'platform': 'unifiprotect',
-    'previous_unique_id': None,
-    'suggested_object_id': None,
-    'supported_features': 0,
-    'translation_key': None,
-    'unique_id': 'AABBCCDDEEFF_input_26',
-    'unit_of_measurement': None,
-  })
-# ---
-# name: test_alarm_hub_device_and_entities[binary_sensor.alarm_hub_zone_27-state]
-  StateSnapshot({
-    'attributes': ReadOnlyDict({
-      <EntityStateAttribute.ATTRIBUTION: 'attribution'>: 'Powered by UniFi Protect Server',
-      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'motion',
-      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Alarm Hub Zone 27',
-    }),
-    'context': <ANY>,
-    'entity_id': 'binary_sensor.alarm_hub_zone_27',
-    'last_changed': <ANY>,
-    'last_reported': <ANY>,
-    'last_updated': <ANY>,
-    'state': 'off',
-  })
-# ---
-# name: test_alarm_hub_device_and_entities[binary_sensor.alarm_hub_zone_27]
-  EntityRegistryEntrySnapshot({
-    'aliases': list([
-      None,
-    ]),
-    'area_id': None,
-    'capabilities': None,
-    'config_entry_id': <ANY>,
-    'config_subentry_id': <ANY>,
-    'device_class': None,
-    'device_id': <ANY>,
-    'disabled_by': None,
-    'domain': 'binary_sensor',
-    'entity_category': None,
-    'entity_id': 'binary_sensor.alarm_hub_zone_27',
-    'has_entity_name': True,
-    'hidden_by': None,
-    'icon': None,
-    'id': <ANY>,
-    'labels': set({
-    }),
-    'name': None,
-    'object_id_base': 'Zone 27',
-    'options': dict({
-    }),
-    'original_device_class': <BinarySensorDeviceClass.MOTION: 'motion'>,
-    'original_icon': None,
-    'original_name': 'Zone 27',
-    'platform': 'unifiprotect',
-    'previous_unique_id': None,
-    'suggested_object_id': None,
-    'supported_features': 0,
-    'translation_key': None,
-    'unique_id': 'AABBCCDDEEFF_input_27',
     'unit_of_measurement': None,
   })
 # ---
