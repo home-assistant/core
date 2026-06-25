@@ -1,0 +1,12 @@
+{
+  "domain": "cyclus_nv",
+  "name": "Cyclus NV",
+  "codeowners": ["@joostlek"],
+  "config_flow": true,
+  "documentation": "https://www.home-assistant.io/integrations/cyclus_nv",
+  "integration_type": "service",
+  "iot_class": "cloud_polling",
+  "loggers": ["cyclus"],
+  "quality_scale": "bronze",
+  "requirements": ["python-cyclus==0.1.0"]
+}

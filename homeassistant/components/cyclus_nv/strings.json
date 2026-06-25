@@ -1,0 +1,28 @@
+{
+  "config": {
+    "abort": {
+      "already_configured": "[%key:common::config_flow::abort::already_configured_location%]"
+    },
+    "error": {
+      "cannot_connect": "[%key:common::config_flow::error::cannot_connect%]"
+    },
+    "step": {
+      "user": {
+        "data": {
+          "house_number": "House number",
+          "zipcode": "Zip code"
+        },
+        "data_description": {
+          "house_number": "The house number of the address",
+          "zipcode": "The zip code of the address, for example 1234AB"
+        },
+        "description": "Set up Cyclus NV to get waste collection information for your address."
+      }
+    }
+  },
+  "exceptions": {
+    "cannot_connect": {
+      "message": "An error occurred while communicating with the Cyclus NV service."
+    }
+  }
+}

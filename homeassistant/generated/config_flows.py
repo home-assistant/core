@@ -143,6 +143,7 @@ FLOWS = {
         "coolmaster",
         "cpuspeed",
         "crownstone",
+        "cyclus_nv",
         "cync",
         "daikin",
         "data_grand_lyon",
