@@ -15,6 +15,7 @@ from homeassistant.components.sensor import DOMAIN as SENSOR_DOMAIN
 from homeassistant.components.tplink_omada.config_flow import CONF_SITE
 from homeassistant.components.tplink_omada.const import DOMAIN
 from homeassistant.components.tplink_omada.coordinator import POLL_DEVICES
+from homeassistant.config_entries import ConfigEntryState
 from homeassistant.const import STATE_UNAVAILABLE
 from homeassistant.core import HomeAssistant, State
 from homeassistant.helpers import entity_registry as er
@@ -56,11 +57,11 @@ async def test_entities(
     await snapshot_platform(hass, entity_registry, snapshot, init_integration.entry_id)
 
 
+@pytest.mark.usefixtures("mock_omada_client")
 async def test_controller_entities_created_once_per_controller(
     hass: HomeAssistant,
     entity_registry: er.EntityRegistry,
     mock_config_entry: MockConfigEntry,
-    mock_omada_client: MagicMock,
 ) -> None:
     """Test controller entities are only created for one site config entry."""
     second_entry = MockConfigEntry(
@@ -76,8 +77,9 @@ async def test_controller_entities_created_once_per_controller(
 
     with patch("homeassistant.components.tplink_omada.PLATFORMS", ["sensor"]):
         assert await hass.config_entries.async_setup(mock_config_entry.entry_id)
-        assert await hass.config_entries.async_setup(second_entry.entry_id)
         await hass.async_block_till_done()
+
+    assert second_entry.state is ConfigEntryState.LOADED
 
     controller_entity_ids = sorted(
         state.entity_id
