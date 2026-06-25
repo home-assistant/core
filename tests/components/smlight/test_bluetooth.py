@@ -3,7 +3,6 @@
 from typing import Any
 from unittest.mock import ANY, AsyncMock, MagicMock, patch
 
-from pysmlight.exceptions import SmlightConnectionError
 import pytest
 
 from homeassistant.components.smlight.bluetooth import SmBleScanner
@@ -83,22 +82,6 @@ async def test_bluetooth_packet_forwarding(
                 details={"address_type": 1},
                 advertisement_monotonic_time=123.45,
             )
-
-
-@pytest.mark.usefixtures("mock_ultima_client")
-async def test_bluetooth_connection_failure(
-    hass: HomeAssistant,
-    mock_config_entry: MockConfigEntry,
-    mock_ble_client: MagicMock,
-) -> None:
-    """Test SMLIGHT Bluetooth connection failure during setup."""
-    mock_config_entry.add_to_hass(hass)
-    mock_ble_client.return_value.start.side_effect = SmlightConnectionError("Timeout")
-
-    await hass.config_entries.async_setup(mock_config_entry.entry_id)
-    await hass.async_block_till_done()
-
-    assert mock_config_entry.state is ConfigEntryState.LOADED
 
 
 @pytest.mark.usefixtures("mock_smlight_client")

@@ -1,11 +1,9 @@
 """Bluetooth proxy for SLZB devices."""
 
-import asyncio
 import logging
 from typing import override
 
 from pysmlight import BleProxyClient
-from pysmlight.exceptions import SmlightConnectionError
 
 from homeassistant.components.bluetooth import (
     MONOTONIC_TIME,
@@ -27,7 +25,6 @@ class SmBleScanner(BaseHaRemoteScanner):
 
     __slots__ = (
         "_client",
-        "_start_task",
         "esp32_ip",
         "esp32_port",
         "hass",
@@ -54,7 +51,6 @@ class SmBleScanner(BaseHaRemoteScanner):
         self.esp32_ip = esp32_ip
         self.esp32_port = esp32_port
         self._client: BleProxyClient | None = None
-        self._start_task: asyncio.Task[None] | None = None
 
     @callback
     def _handle_raw_advertisement(
@@ -73,17 +69,10 @@ class SmBleScanner(BaseHaRemoteScanner):
         )
 
     async def _async_start_client(self) -> None:
-        """Start the BLE proxy client safely."""
+        """Start the BLE proxy client."""
         if self._client is None:
             return
-        try:
-            await self._client.start()
-        except SmlightConnectionError as err:
-            _LOGGER.error(
-                "Failed to start SLZB BLE proxy client (%s): %s",
-                self.source,
-                err,
-            )
+        await self._client.start()
 
     @override
     @callback
