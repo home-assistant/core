@@ -1,6 +1,5 @@
 """Creates Water Heater entities for the my-PV Home Assistant integration."""
 
-import logging
 from typing import Any, override
 
 from homeassistant.components.water_heater import (
@@ -17,8 +16,6 @@ from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from .const import DOMAIN
 from .coordinator import MyPVConfigEntry, MyPVCoordinator
 from .entity import MyPVDataEntity
-
-_LOGGER = logging.getLogger(__name__)
 
 
 async def async_setup_entry(
@@ -125,8 +122,6 @@ class MyPVWaterHeater(MyPVDataEntity, WaterHeaterEntity):
     @override
     async def async_turn_on(self, **kwargs: Any) -> None:
         """Turn the water heater on."""
-        _LOGGER.debug("Turning on %s", self.name)
-
         if not await self.coordinator.turn_on():
             raise HomeAssistantError(
                 translation_domain=DOMAIN, translation_key="unknown_error"
@@ -135,8 +130,6 @@ class MyPVWaterHeater(MyPVDataEntity, WaterHeaterEntity):
     @override
     async def async_turn_off(self, **kwargs: Any) -> None:
         """Turn the water heater off."""
-        _LOGGER.debug("Turning off %s", self.name)
-
         if not await self.coordinator.turn_off():
             raise HomeAssistantError(
                 translation_domain=DOMAIN, translation_key="unknown_error"
