@@ -5,7 +5,6 @@ from unittest.mock import AsyncMock, patch
 import pytest
 
 from homeassistant.components.national_grid_us.const import CONF_ACCOUNT_ID, DOMAIN
-from homeassistant.config_entries import ConfigEntryState
 from homeassistant.const import CONF_PASSWORD, CONF_USERNAME
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import device_registry as dr
@@ -152,10 +151,10 @@ async def test_shared_service_point_across_accounts_no_collision(
         api.get_billing_account = AsyncMock(side_effect=mock_billing_account)
         return api
 
+    # Setting up one entry sets up the integration, which loads every config
+    # entry for the domain, so both accounts are configured in one call.
     with patch(PATCH_CLIENT, side_effect=lambda **kwargs: make_account_api()):
-        for entry in entries:
-            if entry.state is ConfigEntryState.NOT_LOADED:
-                await hass.config_entries.async_setup(entry.entry_id)
+        await hass.config_entries.async_setup(entries[0].entry_id)
         await hass.async_block_till_done()
 
     device_registry = dr.async_get(hass)
