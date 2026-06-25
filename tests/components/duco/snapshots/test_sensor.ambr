@@ -35,7 +35,7 @@
     'supported_features': 0,
     'translation_key': None,
     'unique_id': 'aa:bb:cc:dd:ee:ff_113_humidity',
-    'unit_of_measurement': '%',
+    'unit_of_measurement': <UnitOfRatio.PERCENTAGE: '%'>,
   })
 # ---
 # name: test_sensor_entities_state[sensor.bathroom_rh_humidity-state]
@@ -44,7 +44,7 @@
       <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'humidity',
       <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Bathroom RH Humidity',
       <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
-      <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: '%',
+      <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: <UnitOfRatio.PERCENTAGE: '%'>,
     }),
     'context': <ANY>,
     'entity_id': 'sensor.bathroom_rh_humidity',
@@ -90,7 +90,7 @@
     'supported_features': 0,
     'translation_key': 'iaq_rh',
     'unique_id': 'aa:bb:cc:dd:ee:ff_113_iaq_rh',
-    'unit_of_measurement': '%',
+    'unit_of_measurement': <UnitOfRatio.PERCENTAGE: '%'>,
   })
 # ---
 # name: test_sensor_entities_state[sensor.bathroom_rh_humidity_air_quality_index-state]
@@ -98,7 +98,7 @@
     'attributes': ReadOnlyDict({
       <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Bathroom RH Humidity air quality index',
       <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
-      <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: '%',
+      <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: <UnitOfRatio.PERCENTAGE: '%'>,
     }),
     'context': <ANY>,
     'entity_id': 'sensor.bathroom_rh_humidity_air_quality_index',
@@ -144,7 +144,7 @@
     'supported_features': 0,
     'translation_key': None,
     'unique_id': 'aa:bb:cc:dd:ee:ff_60_humidity',
-    'unit_of_measurement': '%',
+    'unit_of_measurement': <UnitOfRatio.PERCENTAGE: '%'>,
   })
 # ---
 # name: test_sensor_entities_state[sensor.bedroom_valve_humidity-state]
@@ -153,7 +153,7 @@
       <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'humidity',
       <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Bedroom valve Humidity',
       <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
-      <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: '%',
+      <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: <UnitOfRatio.PERCENTAGE: '%'>,
     }),
     'context': <ANY>,
     'entity_id': 'sensor.bedroom_valve_humidity',
@@ -199,7 +199,7 @@
     'supported_features': 0,
     'translation_key': 'iaq_rh',
     'unique_id': 'aa:bb:cc:dd:ee:ff_60_iaq_rh',
-    'unit_of_measurement': '%',
+    'unit_of_measurement': <UnitOfRatio.PERCENTAGE: '%'>,
   })
 # ---
 # name: test_sensor_entities_state[sensor.bedroom_valve_humidity_air_quality_index-state]
@@ -207,7 +207,7 @@
     'attributes': ReadOnlyDict({
       <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Bedroom valve Humidity air quality index',
       <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
-      <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: '%',
+      <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: <UnitOfRatio.PERCENTAGE: '%'>,
     }),
     'context': <ANY>,
     'entity_id': 'sensor.bedroom_valve_humidity_air_quality_index',
@@ -453,7 +453,7 @@
     'supported_features': 0,
     'translation_key': None,
     'unique_id': 'aa:bb:cc:dd:ee:ff_61_co2',
-    'unit_of_measurement': 'ppm',
+    'unit_of_measurement': <UnitOfRatio.PARTS_PER_MILLION: 'ppm'>,
   })
 # ---
 # name: test_sensor_entities_state[sensor.hall_valve_carbon_dioxide-state]
@@ -462,7 +462,7 @@
       <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'carbon_dioxide',
       <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Hall valve Carbon dioxide',
       <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
-      <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: 'ppm',
+      <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: <UnitOfRatio.PARTS_PER_MILLION: 'ppm'>,
     }),
     'context': <ANY>,
     'entity_id': 'sensor.hall_valve_carbon_dioxide',
@@ -508,7 +508,7 @@
     'supported_features': 0,
     'translation_key': 'iaq_co2',
     'unique_id': 'aa:bb:cc:dd:ee:ff_61_iaq_co2',
-    'unit_of_measurement': '%',
+    'unit_of_measurement': <UnitOfRatio.PERCENTAGE: '%'>,
   })
 # ---
 # name: test_sensor_entities_state[sensor.hall_valve_co2_air_quality_index-state]
@@ -516,7 +516,7 @@
     'attributes': ReadOnlyDict({
       <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Hall valve CO2 air quality index',
       <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
-      <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: '%',
+      <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: <UnitOfRatio.PERCENTAGE: '%'>,
     }),
     'context': <ANY>,
     'entity_id': 'sensor.hall_valve_co2_air_quality_index',
@@ -762,7 +762,7 @@
     'supported_features': 0,
     'translation_key': None,
     'unique_id': 'aa:bb:cc:dd:ee:ff_50_humidity',
-    'unit_of_measurement': '%',
+    'unit_of_measurement': <UnitOfRatio.PERCENTAGE: '%'>,
   })
 # ---
 # name: test_sensor_entities_state[sensor.kitchen_rh_humidity-state]
@@ -771,7 +771,7 @@
       <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'humidity',
       <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Kitchen RH Humidity',
       <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
-      <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: '%',
+      <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: <UnitOfRatio.PERCENTAGE: '%'>,
     }),
     'context': <ANY>,
     'entity_id': 'sensor.kitchen_rh_humidity',
@@ -817,7 +817,7 @@
     'supported_features': 0,
     'translation_key': 'iaq_rh',
     'unique_id': 'aa:bb:cc:dd:ee:ff_50_iaq_rh',
-    'unit_of_measurement': '%',
+    'unit_of_measurement': <UnitOfRatio.PERCENTAGE: '%'>,
   })
 # ---
 # name: test_sensor_entities_state[sensor.kitchen_rh_humidity_air_quality_index-state]
@@ -825,7 +825,7 @@
     'attributes': ReadOnlyDict({
       <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Kitchen RH Humidity air quality index',
       <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
-      <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: '%',
+      <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: <UnitOfRatio.PERCENTAGE: '%'>,
     }),
     'context': <ANY>,
     'entity_id': 'sensor.kitchen_rh_humidity_air_quality_index',
@@ -1035,7 +1035,7 @@
     'supported_features': 0,
     'translation_key': 'target_flow_level',
     'unique_id': 'aa:bb:cc:dd:ee:ff_1_target_flow_level',
-    'unit_of_measurement': '%',
+    'unit_of_measurement': <UnitOfRatio.PERCENTAGE: '%'>,
   })
 # ---
 # name: test_sensor_entities_state[sensor.living_target_flow_level-state]
@@ -1043,7 +1043,7 @@
     'attributes': ReadOnlyDict({
       <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Living Target flow level',
       <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
-      <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: '%',
+      <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: <UnitOfRatio.PERCENTAGE: '%'>,
     }),
     'context': <ANY>,
     'entity_id': 'sensor.living_target_flow_level',
@@ -1181,7 +1181,7 @@
     'supported_features': 0,
     'translation_key': None,
     'unique_id': 'aa:bb:cc:dd:ee:ff_2_co2',
-    'unit_of_measurement': 'ppm',
+    'unit_of_measurement': <UnitOfRatio.PARTS_PER_MILLION: 'ppm'>,
   })
 # ---
 # name: test_sensor_entities_state[sensor.office_co2_carbon_dioxide-state]
@@ -1190,7 +1190,7 @@
       <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'carbon_dioxide',
       <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Office CO2 Carbon dioxide',
       <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
-      <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: 'ppm',
+      <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: <UnitOfRatio.PARTS_PER_MILLION: 'ppm'>,
     }),
     'context': <ANY>,
     'entity_id': 'sensor.office_co2_carbon_dioxide',
@@ -1236,7 +1236,7 @@
     'supported_features': 0,
     'translation_key': 'iaq_co2',
     'unique_id': 'aa:bb:cc:dd:ee:ff_2_iaq_co2',
-    'unit_of_measurement': '%',
+    'unit_of_measurement': <UnitOfRatio.PERCENTAGE: '%'>,
   })
 # ---
 # name: test_sensor_entities_state[sensor.office_co2_co2_air_quality_index-state]
@@ -1244,7 +1244,7 @@
     'attributes': ReadOnlyDict({
       <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Office CO2 CO2 air quality index',
       <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
-      <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: '%',
+      <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: <UnitOfRatio.PERCENTAGE: '%'>,
     }),
     'context': <ANY>,
     'entity_id': 'sensor.office_co2_co2_air_quality_index',
@@ -1290,7 +1290,7 @@
     'supported_features': 0,
     'translation_key': None,
     'unique_id': 'aa:bb:cc:dd:ee:ff_62_co2',
-    'unit_of_measurement': 'ppm',
+    'unit_of_measurement': <UnitOfRatio.PARTS_PER_MILLION: 'ppm'>,
   })
 # ---
 # name: test_sensor_entities_state[sensor.study_valve_carbon_dioxide-state]
@@ -1299,7 +1299,7 @@
       <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'carbon_dioxide',
       <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Study valve Carbon dioxide',
       <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
-      <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: 'ppm',
+      <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: <UnitOfRatio.PARTS_PER_MILLION: 'ppm'>,
     }),
     'context': <ANY>,
     'entity_id': 'sensor.study_valve_carbon_dioxide',
@@ -1345,7 +1345,7 @@
     'supported_features': 0,
     'translation_key': 'iaq_co2',
     'unique_id': 'aa:bb:cc:dd:ee:ff_62_iaq_co2',
-    'unit_of_measurement': '%',
+    'unit_of_measurement': <UnitOfRatio.PERCENTAGE: '%'>,
   })
 # ---
 # name: test_sensor_entities_state[sensor.study_valve_co2_air_quality_index-state]
@@ -1353,7 +1353,7 @@
     'attributes': ReadOnlyDict({
       <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Study valve CO2 air quality index',
       <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
-      <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: '%',
+      <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: <UnitOfRatio.PERCENTAGE: '%'>,
     }),
     'context': <ANY>,
     'entity_id': 'sensor.study_valve_co2_air_quality_index',
@@ -1399,7 +1399,7 @@
     'supported_features': 0,
     'translation_key': None,
     'unique_id': 'aa:bb:cc:dd:ee:ff_62_humidity',
-    'unit_of_measurement': '%',
+    'unit_of_measurement': <UnitOfRatio.PERCENTAGE: '%'>,
   })
 # ---
 # name: test_sensor_entities_state[sensor.study_valve_humidity-state]
@@ -1408,7 +1408,7 @@
       <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'humidity',
       <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Study valve Humidity',
       <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
-      <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: '%',
+      <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: <UnitOfRatio.PERCENTAGE: '%'>,
     }),
     'context': <ANY>,
     'entity_id': 'sensor.study_valve_humidity',
@@ -1454,7 +1454,7 @@
     'supported_features': 0,
     'translation_key': 'iaq_rh',
     'unique_id': 'aa:bb:cc:dd:ee:ff_62_iaq_rh',
-    'unit_of_measurement': '%',
+    'unit_of_measurement': <UnitOfRatio.PERCENTAGE: '%'>,
   })
 # ---
 # name: test_sensor_entities_state[sensor.study_valve_humidity_air_quality_index-state]
@@ -1462,7 +1462,7 @@
     'attributes': ReadOnlyDict({
       <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Study valve Humidity air quality index',
       <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
-      <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: '%',
+      <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: <UnitOfRatio.PERCENTAGE: '%'>,
     }),
     'context': <ANY>,
     'entity_id': 'sensor.study_valve_humidity_air_quality_index',
