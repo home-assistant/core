@@ -1,6 +1,6 @@
 """Event parser and human readable log generator."""
 
-from collections.abc import Callable, Collection, Generator, Sequence
+from collections.abc import Callable, Collection, Generator, Mapping, Sequence
 from dataclasses import dataclass, field
 from datetime import datetime as dt
 import logging
@@ -277,6 +277,26 @@ class EventProcessor:
         )
 
 
+def _exposed_state_attributes(
+    row: Row | EventAsRow, attr_cache: dict[str, dict[str, Any]]
+) -> dict[str, Any]:
+    """Return the allowlisted state attributes for a state change row."""
+    # Live rows carry the state's attributes directly; db rows carry the
+    # recorded shared_attrs source that has to be decoded.
+    attributes: Mapping[str, Any] | None
+    if type(row) is EventAsRow:
+        attributes = row[ATTRIBUTES_POS]
+    else:
+        attributes = decode_attributes_from_source(row[ATTRIBUTES_POS], attr_cache)
+    if not attributes:
+        return {}
+    return {
+        name: attributes[name]
+        for name in EXPOSED_STATE_ATTRIBUTES
+        if name in attributes
+    }
+
+
 def _humanify(
     hass: HomeAssistant,
     rows: Generator[EventAsRow] | Sequence[Row] | Result,
@@ -343,13 +363,8 @@ def _humanify(
                 data[LOGBOOK_ENTRY_NAME] = entity_name_cache_get(entity_id)
             if icon := row[ICON_POS]:
                 data[LOGBOOK_ENTRY_ICON] = icon
-            attributes = decode_attributes_from_source(row[ATTRIBUTES_POS], attr_cache)
-            if state_attributes := {
-                name: attributes[name]
-                for name in EXPOSED_STATE_ATTRIBUTES
-                if name in attributes
-            }:
-                data[LOGBOOK_ENTRY_ATTRIBUTES] = state_attributes
+            if exposed := _exposed_state_attributes(row, attr_cache):
+                data[LOGBOOK_ENTRY_ATTRIBUTES] = exposed
 
         elif event_type in external_events:
             domain, describe_event = external_events[event_type]

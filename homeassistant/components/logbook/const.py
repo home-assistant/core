@@ -1,7 +1,7 @@
 """Event parser and human readable log generator."""
 
 from homeassistant.components.automation import EVENT_AUTOMATION_TRIGGERED
-from homeassistant.components.event import ATTR_EVENT_TYPE
+from homeassistant.components.event import EventEntityStateAttribute
 from homeassistant.components.script import EVENT_SCRIPT_STARTED
 from homeassistant.components.sensor import DOMAIN as SENSOR_DOMAIN
 from homeassistant.const import EVENT_CALL_SERVICE, EVENT_LOGBOOK_ENTRY
@@ -44,7 +44,7 @@ LOGBOOK_ENTRY_ATTRIBUTES = "attributes"
 LOGBOOK_ENTRY_WHEN = "when"
 
 # State attributes surfaced in logbook entries; extend as needed.
-EXPOSED_STATE_ATTRIBUTES = {ATTR_EVENT_TYPE}
+EXPOSED_STATE_ATTRIBUTES = {EventEntityStateAttribute.EVENT_TYPE}
 
 # Automation events that can affect an entity_id or device_id
 AUTOMATION_EVENTS = {EVENT_AUTOMATION_TRIGGERED, EVENT_SCRIPT_STARTED}
