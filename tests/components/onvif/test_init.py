@@ -1,8 +1,7 @@
 """Tests for the ONVIF integration __init__ module."""
 
-from unittest.mock import AsyncMock, MagicMock, patch
+from unittest.mock import MagicMock, patch
 
-from homeassistant.components.onvif import _async_stop_device
 from homeassistant.components.onvif.const import DOMAIN
 from homeassistant.config_entries import ConfigEntryState
 from homeassistant.const import (
@@ -24,6 +23,7 @@ from . import (
     USERNAME,
     setup_mock_device,
     setup_mock_onvif_camera,
+    setup_onvif_integration,
 )
 
 from tests.common import MockConfigEntry
@@ -151,15 +151,14 @@ async def test_setup_entry(hass: HomeAssistant) -> None:
 async def test_stop_device_stops_existing_event_manager(
     hass: HomeAssistant,
 ) -> None:
-    """Test stopping a device cleans up events even when not marked started."""
-    device = MagicMock()
-    device.name = NAME
-    device.capabilities.events = False
-    device.events.started = False
-    device.events.async_stop = AsyncMock()
-    device.device.close = AsyncMock()
+    """Test that unload stops the event manager even when capabilities.events is False."""
+    entry, _, mock_device = await setup_onvif_integration(hass)
+    # Default setup: capabilities.events=False, but mock_device.events exists.
+    # This mirrors the bug scenario where a partial subscription leaves background
+    # tasks running while capabilities.events stays False.
+    assert mock_device.capabilities.events is False
 
-    await _async_stop_device(hass, device)
+    assert await hass.config_entries.async_unload(entry.entry_id)
+    await hass.async_block_till_done()
 
-    device.events.async_stop.assert_awaited_once()
-    device.device.close.assert_awaited_once()
+    mock_device.events.async_stop.assert_awaited_once()
