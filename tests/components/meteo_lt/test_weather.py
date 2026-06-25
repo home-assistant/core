@@ -1,14 +1,18 @@
 """Test Meteo.lt weather entity."""
 
 from collections.abc import Generator
-from unittest.mock import patch
+from unittest.mock import AsyncMock, MagicMock, patch
 
+from meteo_lt import Forecast
 import pytest
 from syrupy.assertion import SnapshotAssertion
 
+from homeassistant.components.meteo_lt.const import DOMAIN
+from homeassistant.components.meteo_lt.weather import MeteoLtWeatherEntity
 from homeassistant.components.weather import (
     ATTR_CONDITION_CLEAR_NIGHT,
     ATTR_CONDITION_CLOUDY,
+    ATTR_CONDITION_EXCEPTIONAL,
     ATTR_CONDITION_PARTLYCLOUDY,
     ATTR_CONDITION_RAINY,
     ATTR_CONDITION_SUNNY,
@@ -17,7 +21,11 @@ from homeassistant.const import Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import entity_registry as er
 
-from tests.common import MockConfigEntry, snapshot_platform
+from tests.common import (
+    MockConfigEntry,
+    async_load_json_object_fixture,
+    snapshot_platform,
+)
 
 
 @pytest.fixture(autouse=True)
@@ -78,6 +86,45 @@ async def test_condition_clear_maps_day_night(
     state = hass.states.get("weather.vilnius")
     assert state is not None
     assert state.state == expected_condition
+
+
+@pytest.mark.freeze_time("2025-09-25 10:00:00")
+@pytest.mark.parametrize(
+    "condition_code",
+    [None, "not-a-real-condition"],
+    ids=["missing", "unknown"],
+)
+async def test_condition_unknown_maps_to_exceptional(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    mock_meteo_lt_api: AsyncMock,
+    condition_code: str | None,
+) -> None:
+    """Test that a missing or unmapped condition code maps to exceptional."""
+    forecast_data = await async_load_json_object_fixture(hass, "forecast.json", DOMAIN)
+    forecast_data["forecastTimestamps"][0]["conditionCode"] = condition_code
+    mock_meteo_lt_api.get_forecast.side_effect = lambda *args, **kwargs: (
+        Forecast.from_dict(forecast_data)
+    )
+
+    mock_config_entry.add_to_hass(hass)
+    await hass.config_entries.async_setup(mock_config_entry.entry_id)
+    await hass.async_block_till_done()
+
+    state = hass.states.get("weather.vilnius")
+    assert state is not None
+    assert state.state == ATTR_CONDITION_EXCEPTIONAL
+
+
+async def test_condition_none_without_current_conditions() -> None:
+    """Test that condition is None when no current conditions are available."""
+    coordinator = MagicMock()
+    coordinator.place_code = "vilnius"
+    coordinator.data.current_conditions = None
+
+    entity = MeteoLtWeatherEntity(coordinator)
+
+    assert entity.condition is None
 
 
 @pytest.mark.freeze_time("2025-09-25 10:00:00")
