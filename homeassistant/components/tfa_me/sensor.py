@@ -36,12 +36,12 @@ class TFAmeSensorEntityDescription(SensorEntityDescription):
 
 
 def _calc_rain_last_hour(entity: TFAmeSensorEntity, data: dict[str, Any]) -> float:
-    """Get rainfall of the last hour and optional handle a reset."""
+    """Get rainfall of the last hour and optionally handle a reset."""
     return round(entity.rain_history.get_rain_amount(), 1)
 
 
 def _calc_rain_last_24h(entity: TFAmeSensorEntity, data: dict[str, Any]) -> float:
-    """Get rainfall of the last 24 hours and optional handle a reset."""
+    """Get rainfall of the last 24 hours and optionally handle a reset."""
     return round(entity.rain_history_24.get_rain_amount(), 1)
 
 
@@ -418,7 +418,7 @@ class TFAmeSensorEntity(CoordinatorEntity[TFAmeUpdateCoordinator], SensorEntity)
             "measurement_timestamp": measurement_timestamp,
         }
 
-    def get_timeout(self, sensor_id: str):
+    def get_timeout(self, sensor_id: str) -> int:
         """Return the timeout time for a station or sensor."""
 
         try:

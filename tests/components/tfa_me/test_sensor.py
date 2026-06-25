@@ -172,3 +172,50 @@ async def test_invalid_measurement_value_returns_unknown(
 
     assert temperature_state is not None
     assert temperature_state.state == STATE_UNKNOWN
+
+
+async def test_stale_sensor_value_returns_unknown(
+    hass: HomeAssistant,
+    freezer: FrozenDateTimeFactory,
+    tfa_me_config_entry: MockConfigEntry,
+) -> None:
+    """Test stale sensor values are reported as unknown."""
+    payload = {
+        "gateway_id": "05B3E4E44",
+        "sensors": [
+            {
+                "sensor_id": "a4481290f",
+                "name": "A4481290F",
+                "timestamp": "2025-11-26T15:10:42Z",
+                "ts": "1764169842",
+                "measurements": {
+                    "temperature": {"value": "15.1", "unit": "°C"},
+                },
+            },
+        ],
+    }
+
+    # A4 uses the 1-minute timeout class: 150 seconds.
+    # Move well beyond that timestamp.
+    freezer.move_to("2025-11-26 15:20:00+00:00")
+
+    with patch(
+        "homeassistant.components.tfa_me.coordinator.TFAmeClient.async_get_sensors",
+        new=AsyncMock(return_value=payload),
+    ):
+        assert await hass.config_entries.async_setup(tfa_me_config_entry.entry_id)
+        await hass.async_block_till_done()
+
+    entity_registry = er.async_get(hass)
+
+    temperature_state = None
+    for entity_id in hass.states.async_entity_ids("sensor"):
+        registry_entry = entity_registry.async_get(entity_id)
+        if registry_entry is not None and registry_entry.unique_id.endswith(
+            "_temperature"
+        ):
+            temperature_state = hass.states.get(entity_id)
+            break
+
+    assert temperature_state is not None
+    assert temperature_state.state == "unknown"

@@ -3,7 +3,6 @@
 from __future__ import annotations
 
 from collections.abc import Mapping
-import contextlib
 from unittest.mock import patch
 
 import pytest
@@ -82,13 +81,6 @@ async def test_show_form(hass: HomeAssistant) -> None:
             "unknown",
         ),
         (
-            None,
-            None,
-            {CONF_IP_ADDRESS: "NotIP"},
-            CONF_IP_ADDRESS,
-            "invalid_ip_host",
-        ),
-        (
             "homeassistant.components.tfa_me.config_flow.TFAmeUniqueID.get_identifier",
             {"side_effect": Exception("connection error")},
             {CONF_IP_ADDRESS: "192.168.1.10"},
@@ -102,7 +94,6 @@ async def test_show_form(hass: HomeAssistant) -> None:
         "http_invalid_response",
         "json_invalid_response",
         "unknown",
-        "invalid_ip_host",
         "generic_exception",
     ],
 )
@@ -115,10 +106,7 @@ async def test_config_flow_errors_recover(
     expected_error: str,
 ) -> None:
     """Test config flow error handling and recovery."""
-    if patch_target is not None:
-        manager = patch(patch_target, **dict(patch_kwargs or {}))
-    else:
-        manager = contextlib.nullcontext()
+    manager = patch(patch_target, **dict(patch_kwargs or {}))
 
     with manager:
         result = await hass.config_entries.flow.async_init(
@@ -172,3 +160,17 @@ async def test_config_flow_duplicate_entry_aborts(
 
     assert result["type"] is data_entry_flow.FlowResultType.ABORT
     assert result["reason"] == "already_configured"
+
+
+async def test_config_flow_invalid_ip_host(
+    hass: HomeAssistant,
+) -> None:
+    """Test config flow rejects invalid host."""
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN,
+        context={"source": config_entries.SOURCE_USER},
+        data={CONF_IP_ADDRESS: "NotIP"},
+    )
+
+    assert result["type"] is data_entry_flow.FlowResultType.FORM
+    assert result["errors"] == {CONF_IP_ADDRESS: "invalid_ip_host"}
