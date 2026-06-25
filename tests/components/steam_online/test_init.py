@@ -126,6 +126,8 @@ async def test_migrate_entry(
         original_name=ACCOUNT_NAME_1,
     )
 
+    assert sensor.unique_id == f"sensor.steam_{ACCOUNT_1}"
+
     await hass.config_entries.async_setup(config_entry.entry_id)
     await hass.async_block_till_done()
 
