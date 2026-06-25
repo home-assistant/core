@@ -12,6 +12,7 @@ on:
     types: [opened, synchronize, reopened]
     paths:
       - "requirements*.txt"
+      - "**/requirements*.txt"
       - "homeassistant/package_constraints.txt"
   workflow_dispatch:
     inputs:
@@ -58,6 +59,7 @@ jobs:
           echo "head_sha=${HEAD_SHA}" >> "${GITHUB_OUTPUT}"
       - name: Run deterministic checks
         env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           PR_NUMBER: ${{ inputs.pull_request_number || github.event.pull_request.number }}
           HEAD_SHA: ${{ steps.pr.outputs.head_sha }}
         run: |
