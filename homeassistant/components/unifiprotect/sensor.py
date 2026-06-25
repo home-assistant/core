@@ -9,6 +9,7 @@ from typing import Any, override
 
 from uiprotect.data import (
     NVR,
+    AlarmHubConnectionState,
     Camera,
     Light,
     LinkStation,
@@ -579,8 +580,14 @@ class ProtectAlarmHubSensorEntityDescription(SensorEntityDescription):
 
 
 def _alarm_hub_battery_voltage(hub: LinkStation) -> float | None:
-    """Return the backup-battery voltage, if reported."""
-    if (battery := hub.alarm_hub_battery) is None:
+    """Return the backup-battery voltage, or None when no battery is connected.
+
+    A disconnected, removed or fully flat backup battery all report
+    ``connection: disconnected`` with ``voltage: 0``; reading unknown rather
+    than 0.0 V avoids implying a real measurement when there is no usable cell.
+    """
+    battery = hub.alarm_hub_battery
+    if battery is None or battery.connection is not AlarmHubConnectionState.CONNECTED:
         return None
     return battery.voltage
 

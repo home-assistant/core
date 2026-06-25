@@ -311,17 +311,23 @@ async def test_alarm_hub_disconnected_battery(
     ufp_with_alarm_hub: MockUFPFixture,
     alarm_hub: LinkStation,
 ) -> None:
-    """A disconnected backup battery (sparse payload) degrades gracefully."""
+    """A disconnected backup battery degrades gracefully.
+
+    Real hardware reports a disconnected, removed or fully flat backup battery
+    identically: ``connection: disconnected`` with ``voltage: 0`` and no
+    ``batteryStatus``. The battery is an optional add-on, so this is also the
+    steady state for a hub with no battery fitted and must not read as a problem.
+    """
     assert alarm_hub.alarm_hub is not None
-    alarm_hub.alarm_hub["battery"] = {"connection": "disconnected"}
+    alarm_hub.alarm_hub["battery"] = {"connection": "disconnected", "voltage": 0}
     await init_entry(hass, ufp_with_alarm_hub, [])
 
-    # Battery problem sensor is not "on" when the status is unknown/absent.
+    # An absent batteryStatus must not read as a problem (optional battery).
     battery = hass.states.get("binary_sensor.alarm_hub_battery")
     assert battery is not None
     assert battery.state == "off"
 
-    # Voltage is unknown rather than raising.
+    # Voltage reads unknown rather than a misleading 0.0 V.
     voltage = hass.states.get("sensor.alarm_hub_battery_voltage")
     assert voltage is not None
     assert voltage.state == "unknown"
