@@ -3,7 +3,7 @@
 from collections.abc import Callable
 from dataclasses import dataclass
 import logging
-from typing import Any, override
+from typing import Any, cast, override
 
 from roborock.devices.traits.b01 import Q10PropertiesApi
 from roborock.devices.traits.v1 import PropertiesApi
@@ -107,7 +107,7 @@ Q10_SWITCH_DESCRIPTIONS: list[RoborockSwitchDescriptionQ10] = [
         key="do_not_disturb",
         translation_key="dnd_switch",
         entity_category=EntityCategory.CONFIG,
-        trait=lambda traits: getattr(traits, "do_not_disturb", None),
+        trait=lambda traits: cast(Any, traits).do_not_disturb,
     )
 ]
 
