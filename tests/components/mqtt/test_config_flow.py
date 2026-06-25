@@ -1133,7 +1133,7 @@ async def test_option_flow(
     assert yaml_mock.await_count
 
 
-@pytest.mark.usefixtures("mock_ca_cert")
+@pytest.mark.usefixtures("mock_ca_cert", "mock_try_connection_success")
 @pytest.mark.parametrize(
     ("mock_ca_cert", "mock_client_cert", "mock_client_key", "client_key_password"),
     [
@@ -1172,7 +1172,6 @@ async def test_option_flow(
 async def test_bad_certificate_validation(
     hass: HomeAssistant,
     mqtt_mock_entry: MqttMockHAClientGenerator,
-    mock_try_connection_success: MqttMockPahoClient,
     mock_ssl_context: dict[str, MagicMock],
     mock_process_uploaded_file: MagicMock,
     test_error: str | None,
@@ -2354,7 +2353,7 @@ async def test_change_websockets_transport_to_tcp(
     }
 
 
-@pytest.mark.usefixtures("mock_ssl_context")
+@pytest.mark.usefixtures("mock_ssl_context", "mock_process_uploaded_file")
 @pytest.mark.parametrize(
     "mqtt_config_entry_data",
     [
@@ -2437,7 +2436,9 @@ async def test_reconfigure_flow_form(
     await hass.async_block_till_done(wait_background_tasks=True)
 
 
-@pytest.mark.usefixtures("mock_ssl_context", "mock_process_uploaded_file")
+@pytest.mark.usefixtures(
+    "mock_try_connection", "mock_ssl_context", "mock_process_uploaded_file"
+)
 @pytest.mark.parametrize(
     "mqtt_config_entry_data",
     [
@@ -2455,7 +2456,6 @@ async def test_reconfigure_flow_form(
 )
 async def test_reconfigure_no_changed_password(
     hass: HomeAssistant,
-    mock_try_connection: MagicMock,
     mqtt_mock_entry: MqttMockHAClientGenerator,
 ) -> None:
     """Test reconfigure flow."""
