@@ -29,7 +29,7 @@ def mock_config_entry() -> MockConfigEntry:
 def mock_setup_entry() -> Generator[AsyncMock]:
     """Prevent running the real integration setup during tests."""
     with patch(
-        "homeassistant.components.myneomitis.async_setup_entry",
+        "homeassistant.components.my_pv.async_setup_entry",
         return_value=True,
     ) as mock_setup:
         yield mock_setup
