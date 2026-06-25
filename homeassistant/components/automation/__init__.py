@@ -731,17 +731,32 @@ class AutomationEntity(BaseAutomationEntity, RestoreEntity):
             trace_element = TraceElement(variables, trigger_path)
             trace_append_element(trace_element)
 
-            if (
-                not skip_condition
-                and self._condition is not None
-                and not self._condition.async_check(variables=variables)
-            ):
-                self._logger.debug(
-                    "Conditions not met, aborting automation. Condition summary: %s",
-                    trace_get(clear=False),
-                )
-                script_execution_set("failed_conditions")
-                return None
+            if not skip_condition and self._condition is not None:
+                try:
+                    conditions_pass = self._condition.async_check(variables=variables)
+                except (vol.Invalid, HomeAssistantError) as err:
+                    self._logger.error(
+                        "Error while checking conditions of automation %s: %s",
+                        self.entity_id,
+                        err,
+                    )
+                    automation_trace.set_error(err)
+                    return None
+                except Exception as err:
+                    self._logger.exception(
+                        "Unexpected error while checking conditions of automation %s",
+                        self.entity_id,
+                    )
+                    automation_trace.set_error(err)
+                    return None
+
+                if not conditions_pass:
+                    self._logger.debug(
+                        "Conditions not met, aborting automation. Condition summary: %s",
+                        trace_get(clear=False),
+                    )
+                    script_execution_set("failed_conditions")
+                    return None
 
             self.async_set_context(trigger_context)
             event_data = {
@@ -794,7 +809,9 @@ class AutomationEntity(BaseAutomationEntity, RestoreEntity):
                 )
                 automation_trace.set_error(err)
             except Exception as err:
-                self._logger.exception("While executing automation %s", self.entity_id)
+                self._logger.exception(
+                    "Unexpected error while executing automation %s", self.entity_id
+                )
                 automation_trace.set_error(err)
 
             return None
