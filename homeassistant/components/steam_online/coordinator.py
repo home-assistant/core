@@ -3,6 +3,7 @@
 from dataclasses import dataclass
 from datetime import timedelta
 import logging
+import time
 from typing import override
 
 from cachetools import TTLCache
@@ -66,7 +67,7 @@ class SteamDataUpdateCoordinator(DataUpdateCoordinator[dict[str, PlayerData]]):
             update_interval=timedelta(seconds=30),
         )
         self.game_icons: TTLCache = TTLCache(
-            maxsize=10000, ttl=timedelta(hours=24).total_seconds()
+            maxsize=10000, ttl=timedelta(hours=24).total_seconds(), timer=time.monotonic
         )
 
     @override
