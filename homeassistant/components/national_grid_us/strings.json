@@ -2,8 +2,7 @@
   "config": {
     "abort": {
       "already_configured": "[%key:common::config_flow::abort::already_configured_account%]",
-      "no_accounts_found": "Login succeeded but no National Grid accounts were found on this profile.",
-      "reauth_successful": "[%key:common::config_flow::abort::reauth_successful%]"
+      "no_accounts_found": "Login succeeded but no National Grid accounts were found on this profile."
     },
     "error": {
       "cannot_connect": "[%key:common::config_flow::error::cannot_connect%]",
@@ -11,15 +10,6 @@
       "unknown": "[%key:common::config_flow::error::unknown%]"
     },
     "step": {
-      "reauth_confirm": {
-        "data": {
-          "password": "[%key:common::config_flow::data::password%]"
-        },
-        "data_description": {
-          "password": "[%key:component::national_grid_us::config::step::user::data_description::password%]"
-        },
-        "description": "Please re-enter the password for {username}."
-      },
       "select_account": {
         "data": {
           "account_id": "Billing account"

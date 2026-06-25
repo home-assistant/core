@@ -1,6 +1,5 @@
 """Config flow for the National Grid US integration."""
 
-from collections.abc import Mapping
 import logging
 from typing import Any
 
@@ -109,53 +108,6 @@ class NationalGridUSConfigFlow(ConfigFlow, domain=DOMAIN):
         return self.async_show_form(
             step_id="select_account",
             data_schema=self._get_account_selection_schema(),
-        )
-
-    async def async_step_reauth(
-        self, entry_data: Mapping[str, Any]
-    ) -> ConfigFlowResult:
-        """Handle re-authentication."""
-        self._username = entry_data.get(CONF_USERNAME)
-        return await self.async_step_reauth_confirm()
-
-    async def async_step_reauth_confirm(
-        self, user_input: dict[str, Any] | None = None
-    ) -> ConfigFlowResult:
-        """Handle re-authentication confirmation."""
-        errors: dict[str, str] = {}
-        if user_input is not None:
-            username = self._get_reauth_entry().data[CONF_USERNAME]
-            try:
-                await self._fetch_accounts(username, user_input[CONF_PASSWORD])
-            except InvalidAuthError:
-                errors["base"] = "invalid_auth"
-            except CannotConnectError:
-                errors["base"] = "cannot_connect"
-            except NationalGridError:
-                _LOGGER.exception("Unexpected error during reauth")
-                errors["base"] = "unknown"
-            else:
-                return self.async_update_reload_and_abort(
-                    self._get_reauth_entry(),
-                    data={
-                        **self._get_reauth_entry().data,
-                        CONF_PASSWORD: user_input[CONF_PASSWORD],
-                    },
-                )
-
-        return self.async_show_form(
-            step_id="reauth_confirm",
-            data_schema=vol.Schema(
-                {
-                    vol.Required(CONF_PASSWORD): selector.TextSelector(
-                        selector.TextSelectorConfig(
-                            type=selector.TextSelectorType.PASSWORD,
-                        ),
-                    ),
-                },
-            ),
-            errors=errors,
-            description_placeholders={CONF_USERNAME: self._username or ""},
         )
 
     async def _async_create_account_entry(self, account_id: str) -> ConfigFlowResult:

@@ -256,36 +256,6 @@ async def test_user_step_skips_already_configured_account(
     assert result["data"][CONF_ACCOUNT_ID] == MOCK_ACCOUNT_ID_2
 
 
-async def test_reauth_flow(hass: HomeAssistant) -> None:
-    """Test the reauthentication flow."""
-    entry = MockConfigEntry(
-        domain=DOMAIN,
-        title=MOCK_ACCOUNT_ID,
-        data={
-            CONF_USERNAME: MOCK_USERNAME,
-            CONF_PASSWORD: "old_password",
-            CONF_ACCOUNT_ID: MOCK_ACCOUNT_ID,
-        },
-        unique_id=MOCK_ACCOUNT_ID,
-    )
-    entry.add_to_hass(hass)
-
-    client = _mock_client([{"billingAccountId": MOCK_ACCOUNT_ID}])
-    with patch(PATCH_CLIENT, return_value=client):
-        result = await entry.start_reauth_flow(hass)
-        assert result["type"] is FlowResultType.FORM
-        assert result["step_id"] == "reauth_confirm"
-
-        result = await hass.config_entries.flow.async_configure(
-            result["flow_id"],
-            user_input={CONF_PASSWORD: "new_password"},
-        )
-
-    assert result["type"] is FlowResultType.ABORT
-    assert result["reason"] == "reauth_successful"
-    assert entry.data[CONF_PASSWORD] == "new_password"
-
-
 async def test_already_configured(hass: HomeAssistant) -> None:
     """Test that a login exposing only configured accounts aborts."""
     entry = MockConfigEntry(
@@ -310,53 +280,3 @@ async def test_already_configured(hass: HomeAssistant) -> None:
 
     assert result["type"] is FlowResultType.ABORT
     assert result["reason"] == "already_configured"
-
-
-@pytest.mark.parametrize(
-    ("side_effect", "expected_error"),
-    [
-        (InvalidAuthError("Bad creds"), "invalid_auth"),
-        (CannotConnectError("Timeout"), "cannot_connect"),
-        (NationalGridError("Something broke"), "unknown"),
-    ],
-)
-async def test_reauth_errors(
-    hass: HomeAssistant, side_effect: Exception, expected_error: str
-) -> None:
-    """Test reauth shows an error and then recovers on a valid retry."""
-    entry = MockConfigEntry(
-        domain=DOMAIN,
-        title=MOCK_ACCOUNT_ID,
-        data={
-            CONF_USERNAME: MOCK_USERNAME,
-            CONF_PASSWORD: "old_password",
-            CONF_ACCOUNT_ID: MOCK_ACCOUNT_ID,
-        },
-        unique_id=MOCK_ACCOUNT_ID,
-    )
-    entry.add_to_hass(hass)
-
-    client = _mock_client([{"billingAccountId": MOCK_ACCOUNT_ID}])
-    client.get_linked_accounts = AsyncMock(side_effect=side_effect)
-    with patch(PATCH_CLIENT, return_value=client):
-        result = await entry.start_reauth_flow(hass)
-        result = await hass.config_entries.flow.async_configure(
-            result["flow_id"],
-            user_input={CONF_PASSWORD: "new_password"},
-        )
-
-        assert result["type"] is FlowResultType.FORM
-        assert result["errors"]["base"] == expected_error
-
-        # The error clears and a valid retry updates the entry.
-        client.get_linked_accounts = AsyncMock(
-            return_value=[{"billingAccountId": MOCK_ACCOUNT_ID}]
-        )
-        result = await hass.config_entries.flow.async_configure(
-            result["flow_id"],
-            user_input={CONF_PASSWORD: "new_password"},
-        )
-
-    assert result["type"] is FlowResultType.ABORT
-    assert result["reason"] == "reauth_successful"
-    assert entry.data[CONF_PASSWORD] == "new_password"
