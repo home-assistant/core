@@ -874,4 +874,8 @@ async def async_setup_entry(
     entities += _async_event_entities(data)
     entities += _async_nvr_entities(data)
     async_add_entities(entities)
+    # Alarm hubs come from the public bootstrap, which has no runtime-adopt
+    # signal (async_subscribe_adopt fires only for private-WS adoptable
+    # devices), so they are enumerated once and need a config-entry reload to
+    # pick up new hubs, like the siren and relay platforms.
     async_add_entities(_async_alarm_hub_entities(data))
