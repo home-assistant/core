@@ -36,8 +36,8 @@ class MyPVDataEntity(CoordinatorEntity[MyPVCoordinator]):
 
         self._handle_coordinator_update()
 
-    @override
     @property
+    @override
     def available(self) -> bool:
         """Return if entity is available."""
         if (

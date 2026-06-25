@@ -86,20 +86,20 @@ class MyPVWaterHeater(MyPVDataEntity, WaterHeaterEntity):
         self._attr_min_temp = min_temp
         self._attr_max_temp = max_temp
 
-    @override
     @property
+    @override
     def current_operation(self) -> str | None:
         """Return current operation."""
         return STATE_ELECTRIC if self.coordinator.device.is_on else STATE_OFF
 
-    @override
     @property
+    @override
     def current_temperature(self) -> float | None:
         """Return the current temperature."""
         return self.coordinator.device.current_temperature
 
-    @override
     @property
+    @override
     def target_temperature(self) -> float | None:
         """Return the temperature we try to reach."""
         return self.coordinator.device.target_temperature
