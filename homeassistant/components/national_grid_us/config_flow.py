@@ -17,9 +17,8 @@ from homeassistant.config_entries import ConfigFlow, ConfigFlowResult
 from homeassistant.const import CONF_PASSWORD, CONF_USERNAME
 from homeassistant.helpers import selector
 from homeassistant.helpers.aiohttp_client import async_create_clientsession
-from homeassistant.util import slugify
 
-from .const import CONF_SELECTED_ACCOUNTS, DOMAIN
+from .const import CONF_ACCOUNT_ID, DOMAIN
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -59,21 +58,24 @@ class NationalGridUSConfigFlow(ConfigFlow, domain=DOMAIN):
                 if not self._accounts:
                     _LOGGER.error("Login succeeded but no accounts returned")
                     return self.async_abort(reason="no_accounts_found")
-                await self.async_set_unique_id(slugify(self._username))
-                self._abort_if_unique_id_configured()
 
+                # Drop accounts that already have a config entry so each
+                # billing account maps to exactly one entry.
+                configured = self._async_current_ids()
+                available = [
+                    account
+                    for account in self._accounts
+                    if account["billingAccountId"] not in configured
+                ]
+                if not available:
+                    return self.async_abort(reason="already_configured")
+
+                self._accounts = available
                 if len(self._accounts) == 1:
-                    return self.async_create_entry(
-                        title=self._username or "",
-                        data={
-                            CONF_USERNAME: self._username,
-                            CONF_PASSWORD: self._password,
-                            CONF_SELECTED_ACCOUNTS: [
-                                self._accounts[0]["billingAccountId"]
-                            ],
-                        },
+                    return await self._async_create_account_entry(
+                        self._accounts[0]["billingAccountId"]
                     )
-                return await self.async_step_select_accounts()
+                return await self.async_step_select_account()
 
         return self.async_show_form(
             step_id="user",
@@ -97,29 +99,15 @@ class NationalGridUSConfigFlow(ConfigFlow, domain=DOMAIN):
             errors=errors,
         )
 
-    async def async_step_select_accounts(
+    async def async_step_select_account(
         self, user_input: dict[str, Any] | None = None
     ) -> ConfigFlowResult:
         """Handle the account selection step."""
         if user_input is not None:
-            selected = user_input.get(CONF_SELECTED_ACCOUNTS, [])
-            if not selected:
-                return self.async_show_form(
-                    step_id="select_accounts",
-                    data_schema=self._get_account_selection_schema(),
-                    errors={"base": "no_accounts_selected"},
-                )
-            return self.async_create_entry(
-                title=self._username or "",
-                data={
-                    CONF_USERNAME: self._username,
-                    CONF_PASSWORD: self._password,
-                    CONF_SELECTED_ACCOUNTS: selected,
-                },
-            )
+            return await self._async_create_account_entry(user_input[CONF_ACCOUNT_ID])
 
         return self.async_show_form(
-            step_id="select_accounts",
+            step_id="select_account",
             data_schema=self._get_account_selection_schema(),
         )
 
@@ -170,6 +158,28 @@ class NationalGridUSConfigFlow(ConfigFlow, domain=DOMAIN):
             description_placeholders={CONF_USERNAME: self._username or ""},
         )
 
+    async def _async_create_account_entry(self, account_id: str) -> ConfigFlowResult:
+        """Create a config entry for a single billing account."""
+        await self.async_set_unique_id(account_id)
+        self._abort_if_unique_id_configured()
+        return self.async_create_entry(
+            title=self._account_title(account_id),
+            data={
+                CONF_USERNAME: self._username,
+                CONF_PASSWORD: self._password,
+                CONF_ACCOUNT_ID: account_id,
+            },
+        )
+
+    def _account_title(self, account_id: str) -> str:
+        """Build a human-readable title for an account entry."""
+        for account in self._accounts:
+            if account["billingAccountId"] == account_id:
+                if address := account.get("service_address"):
+                    return f"{account_id} ({address})"
+                break
+        return account_id
+
     def _get_account_selection_schema(self) -> vol.Schema:
         """Get the schema for account selection."""
         options: list[selector.SelectOptionDict] = []
@@ -185,10 +195,9 @@ class NationalGridUSConfigFlow(ConfigFlow, domain=DOMAIN):
             )
         return vol.Schema(
             {
-                vol.Required(CONF_SELECTED_ACCOUNTS): selector.SelectSelector(
+                vol.Required(CONF_ACCOUNT_ID): selector.SelectSelector(
                     selector.SelectSelectorConfig(
                         options=options,
-                        multiple=True,
                         mode=selector.SelectSelectorMode.LIST,
                     ),
                 ),

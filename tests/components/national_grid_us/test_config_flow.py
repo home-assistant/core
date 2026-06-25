@@ -9,10 +9,7 @@ from py_nationalgrid.exceptions import (
 )
 import pytest
 
-from homeassistant.components.national_grid_us.const import (
-    CONF_SELECTED_ACCOUNTS,
-    DOMAIN,
-)
+from homeassistant.components.national_grid_us.const import CONF_ACCOUNT_ID, DOMAIN
 from homeassistant.config_entries import SOURCE_USER
 from homeassistant.const import CONF_PASSWORD, CONF_USERNAME
 from homeassistant.core import HomeAssistant
@@ -54,7 +51,7 @@ async def test_user_step_shows_form(hass: HomeAssistant) -> None:
 
 
 async def test_user_step_single_account(hass: HomeAssistant) -> None:
-    """Test user step with a single account creates entry directly."""
+    """Test user step with a single account creates the entry directly."""
     client = _mock_client([{"billingAccountId": MOCK_ACCOUNT_ID}])
     with patch(PATCH_CLIENT, return_value=client):
         result = await hass.config_entries.flow.async_init(
@@ -64,14 +61,17 @@ async def test_user_step_single_account(hass: HomeAssistant) -> None:
         )
 
     assert result["type"] is FlowResultType.CREATE_ENTRY
-    assert result["title"] == MOCK_USERNAME
-    assert result["data"][CONF_USERNAME] == MOCK_USERNAME
-    assert result["data"][CONF_PASSWORD] == MOCK_PASSWORD
-    assert result["data"][CONF_SELECTED_ACCOUNTS] == [MOCK_ACCOUNT_ID]
+    assert result["title"] == f"{MOCK_ACCOUNT_ID} (123 Main St, NY)"
+    assert result["data"] == {
+        CONF_USERNAME: MOCK_USERNAME,
+        CONF_PASSWORD: MOCK_PASSWORD,
+        CONF_ACCOUNT_ID: MOCK_ACCOUNT_ID,
+    }
+    assert result["result"].unique_id == MOCK_ACCOUNT_ID
 
 
 async def test_user_step_multiple_accounts(hass: HomeAssistant) -> None:
-    """Test user step with multiple accounts moves to select_accounts."""
+    """Test user step with multiple accounts moves to select_account."""
     client = _mock_client(
         [
             {"billingAccountId": MOCK_ACCOUNT_ID},
@@ -86,7 +86,7 @@ async def test_user_step_multiple_accounts(hass: HomeAssistant) -> None:
         )
 
     assert result["type"] is FlowResultType.FORM
-    assert result["step_id"] == "select_accounts"
+    assert result["step_id"] == "select_account"
 
 
 @pytest.mark.parametrize(
@@ -123,7 +123,7 @@ async def test_user_step_errors(
         )
 
     assert result["type"] is FlowResultType.CREATE_ENTRY
-    assert result["data"][CONF_SELECTED_ACCOUNTS] == [MOCK_ACCOUNT_ID]
+    assert result["data"][CONF_ACCOUNT_ID] == MOCK_ACCOUNT_ID
 
 
 async def test_user_step_no_accounts_aborts(hass: HomeAssistant) -> None:
@@ -147,7 +147,7 @@ def _select_labels(result: dict) -> list[str]:
     return [option["label"] for option in select.config["options"]]
 
 
-async def test_select_accounts_labels_include_service_address(
+async def test_select_account_labels_include_service_address(
     hass: HomeAssistant,
 ) -> None:
     """Test account selection labels are enriched with the service address."""
@@ -171,7 +171,7 @@ async def test_select_accounts_labels_include_service_address(
     ]
 
 
-async def test_select_accounts_labels_fallback_when_address_unavailable(
+async def test_select_account_labels_fallback_when_address_unavailable(
     hass: HomeAssistant,
 ) -> None:
     """Test labels fall back to the account ID when the address lookup fails."""
@@ -195,8 +195,8 @@ async def test_select_accounts_labels_fallback_when_address_unavailable(
     ]
 
 
-async def test_select_accounts_step(hass: HomeAssistant) -> None:
-    """Test selecting accounts creates entry."""
+async def test_select_account_step(hass: HomeAssistant) -> None:
+    """Test selecting an account creates a single entry for that account."""
     client = _mock_client(
         [
             {"billingAccountId": MOCK_ACCOUNT_ID},
@@ -211,15 +211,34 @@ async def test_select_accounts_step(hass: HomeAssistant) -> None:
         )
         result = await hass.config_entries.flow.async_configure(
             result["flow_id"],
-            user_input={CONF_SELECTED_ACCOUNTS: [MOCK_ACCOUNT_ID]},
+            user_input={CONF_ACCOUNT_ID: MOCK_ACCOUNT_ID_2},
         )
 
     assert result["type"] is FlowResultType.CREATE_ENTRY
-    assert result["data"][CONF_SELECTED_ACCOUNTS] == [MOCK_ACCOUNT_ID]
+    assert result["data"][CONF_ACCOUNT_ID] == MOCK_ACCOUNT_ID_2
+    assert result["result"].unique_id == MOCK_ACCOUNT_ID_2
 
 
-async def test_select_accounts_none_selected(hass: HomeAssistant) -> None:
-    """Test selecting no accounts shows error."""
+async def test_user_step_skips_already_configured_account(
+    hass: HomeAssistant,
+) -> None:
+    """Test an already-configured account is filtered out of the selection.
+
+    With one account already set up, a login that exposes that account plus a
+    new one should create the new account's entry directly without prompting.
+    """
+    existing = MockConfigEntry(
+        domain=DOMAIN,
+        title=MOCK_ACCOUNT_ID,
+        data={
+            CONF_USERNAME: MOCK_USERNAME,
+            CONF_PASSWORD: MOCK_PASSWORD,
+            CONF_ACCOUNT_ID: MOCK_ACCOUNT_ID,
+        },
+        unique_id=MOCK_ACCOUNT_ID,
+    )
+    existing.add_to_hass(hass)
+
     client = _mock_client(
         [
             {"billingAccountId": MOCK_ACCOUNT_ID},
@@ -232,26 +251,22 @@ async def test_select_accounts_none_selected(hass: HomeAssistant) -> None:
             context={"source": SOURCE_USER},
             data={CONF_USERNAME: MOCK_USERNAME, CONF_PASSWORD: MOCK_PASSWORD},
         )
-        result = await hass.config_entries.flow.async_configure(
-            result["flow_id"],
-            user_input={CONF_SELECTED_ACCOUNTS: []},
-        )
 
-    assert result["type"] is FlowResultType.FORM
-    assert result["errors"]["base"] == "no_accounts_selected"
+    assert result["type"] is FlowResultType.CREATE_ENTRY
+    assert result["data"][CONF_ACCOUNT_ID] == MOCK_ACCOUNT_ID_2
 
 
 async def test_reauth_flow(hass: HomeAssistant) -> None:
     """Test the reauthentication flow."""
     entry = MockConfigEntry(
         domain=DOMAIN,
-        title=MOCK_USERNAME,
+        title=MOCK_ACCOUNT_ID,
         data={
             CONF_USERNAME: MOCK_USERNAME,
             CONF_PASSWORD: "old_password",
-            CONF_SELECTED_ACCOUNTS: [MOCK_ACCOUNT_ID],
+            CONF_ACCOUNT_ID: MOCK_ACCOUNT_ID,
         },
-        unique_id="testuser_example_com",
+        unique_id=MOCK_ACCOUNT_ID,
     )
     entry.add_to_hass(hass)
 
@@ -272,16 +287,16 @@ async def test_reauth_flow(hass: HomeAssistant) -> None:
 
 
 async def test_already_configured(hass: HomeAssistant) -> None:
-    """Test that duplicate unique_id aborts."""
+    """Test that a login exposing only configured accounts aborts."""
     entry = MockConfigEntry(
         domain=DOMAIN,
-        title=MOCK_USERNAME,
+        title=MOCK_ACCOUNT_ID,
         data={
             CONF_USERNAME: MOCK_USERNAME,
             CONF_PASSWORD: MOCK_PASSWORD,
-            CONF_SELECTED_ACCOUNTS: [MOCK_ACCOUNT_ID],
+            CONF_ACCOUNT_ID: MOCK_ACCOUNT_ID,
         },
-        unique_id="testuser_example_com",
+        unique_id=MOCK_ACCOUNT_ID,
     )
     entry.add_to_hass(hass)
 
@@ -311,13 +326,13 @@ async def test_reauth_errors(
     """Test reauth shows an error and then recovers on a valid retry."""
     entry = MockConfigEntry(
         domain=DOMAIN,
-        title=MOCK_USERNAME,
+        title=MOCK_ACCOUNT_ID,
         data={
             CONF_USERNAME: MOCK_USERNAME,
             CONF_PASSWORD: "old_password",
-            CONF_SELECTED_ACCOUNTS: [MOCK_ACCOUNT_ID],
+            CONF_ACCOUNT_ID: MOCK_ACCOUNT_ID,
         },
-        unique_id="testuser_example_com",
+        unique_id=MOCK_ACCOUNT_ID,
     )
     entry.add_to_hass(hass)
 

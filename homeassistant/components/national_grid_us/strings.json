@@ -8,7 +8,6 @@
     "error": {
       "cannot_connect": "[%key:common::config_flow::error::cannot_connect%]",
       "invalid_auth": "[%key:common::config_flow::error::invalid_auth%]",
-      "no_accounts_selected": "Please select at least one account.",
       "unknown": "[%key:common::config_flow::error::unknown%]"
     },
     "step": {
@@ -21,14 +20,14 @@
         },
         "description": "Please re-enter the password for {username}."
       },
-      "select_accounts": {
+      "select_account": {
         "data": {
-          "selected_accounts": "Billing accounts"
+          "account_id": "Billing account"
         },
         "data_description": {
-          "selected_accounts": "The billing accounts to monitor."
+          "account_id": "The billing account to monitor. Add the integration again to monitor additional accounts."
         },
-        "description": "Select which billing accounts to monitor."
+        "description": "Select which billing account to monitor."
       },
       "user": {
         "data": {

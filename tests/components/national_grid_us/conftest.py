@@ -5,10 +5,7 @@ from unittest.mock import AsyncMock, patch
 
 import pytest
 
-from homeassistant.components.national_grid_us.const import (
-    CONF_SELECTED_ACCOUNTS,
-    DOMAIN,
-)
+from homeassistant.components.national_grid_us.const import CONF_ACCOUNT_ID, DOMAIN
 from homeassistant.const import CONF_PASSWORD, CONF_USERNAME
 from homeassistant.core import HomeAssistant
 
@@ -33,13 +30,13 @@ def mock_config_entry(hass: HomeAssistant) -> MockConfigEntry:
     """Return a mock config entry."""
     config_entry = MockConfigEntry(
         domain=DOMAIN,
-        title=MOCK_USERNAME,
+        title=MOCK_ACCOUNT_ID,
         data={
             CONF_USERNAME: MOCK_USERNAME,
             CONF_PASSWORD: MOCK_PASSWORD,
-            CONF_SELECTED_ACCOUNTS: [MOCK_ACCOUNT_ID],
+            CONF_ACCOUNT_ID: MOCK_ACCOUNT_ID,
         },
-        unique_id="testuser_example_com",
+        unique_id=MOCK_ACCOUNT_ID,
     )
     config_entry.add_to_hass(hass)
     return config_entry

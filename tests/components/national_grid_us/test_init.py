@@ -65,11 +65,11 @@ async def test_setup_entry_connect_error(
     assert mock_config_entry.state is ConfigEntryState.SETUP_RETRY
 
 
-async def test_setup_all_accounts_fail(
+async def test_setup_account_fetch_fails(
     hass: HomeAssistant,
     mock_config_entry: MockConfigEntry,
 ) -> None:
-    """Test that UpdateFailed is raised when all accounts fail."""
+    """Test that UpdateFailed is raised when the account fetch fails."""
     api = make_api_mock()
     api.get_billing_account = AsyncMock(
         side_effect=CannotConnectError("Connection failed")

@@ -4,10 +4,8 @@ from unittest.mock import AsyncMock, patch
 
 import pytest
 
-from homeassistant.components.national_grid_us.const import (
-    CONF_SELECTED_ACCOUNTS,
-    DOMAIN,
-)
+from homeassistant.components.national_grid_us.const import CONF_ACCOUNT_ID, DOMAIN
+from homeassistant.config_entries import ConfigEntryState
 from homeassistant.const import CONF_PASSWORD, CONF_USERNAME
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import device_registry as dr
@@ -129,27 +127,35 @@ async def test_shared_service_point_across_accounts_no_collision(
 ) -> None:
     """Test meters sharing a service point across accounts do not collide.
 
-    Two selected accounts can expose the same service point number. Meters
-    must be keyed by account_id + service point so neither meter overwrites
-    the other and both produce distinct devices and sensors.
+    Two accounts (now two separate config entries) can expose the same
+    service point number. Meter devices are keyed by account_id + service
+    point so neither overwrites the other and both produce distinct devices
+    and sensors.
     """
-    config_entry = MockConfigEntry(
-        domain=DOMAIN,
-        title=MOCK_USERNAME,
-        data={
-            CONF_USERNAME: MOCK_USERNAME,
-            CONF_PASSWORD: MOCK_PASSWORD,
-            CONF_SELECTED_ACCOUNTS: [MOCK_ACCOUNT_ID, MOCK_ACCOUNT_ID_2],
-        },
-        unique_id="testuser_example_com",
-    )
-    config_entry.add_to_hass(hass)
+    entries = []
+    for account_id in (MOCK_ACCOUNT_ID, MOCK_ACCOUNT_ID_2):
+        entry = MockConfigEntry(
+            domain=DOMAIN,
+            title=account_id,
+            data={
+                CONF_USERNAME: MOCK_USERNAME,
+                CONF_PASSWORD: MOCK_PASSWORD,
+                CONF_ACCOUNT_ID: account_id,
+            },
+            unique_id=account_id,
+        )
+        entry.add_to_hass(hass)
+        entries.append(entry)
 
-    api = make_api_mock()
-    api.get_billing_account = AsyncMock(side_effect=mock_billing_account)
+    def make_account_api() -> AsyncMock:
+        api = make_api_mock()
+        api.get_billing_account = AsyncMock(side_effect=mock_billing_account)
+        return api
 
-    with patch(PATCH_CLIENT, return_value=api):
-        await hass.config_entries.async_setup(config_entry.entry_id)
+    with patch(PATCH_CLIENT, side_effect=lambda **kwargs: make_account_api()):
+        for entry in entries:
+            if entry.state is ConfigEntryState.NOT_LOADED:
+                await hass.config_entries.async_setup(entry.entry_id)
         await hass.async_block_till_done()
 
     device_registry = dr.async_get(hass)

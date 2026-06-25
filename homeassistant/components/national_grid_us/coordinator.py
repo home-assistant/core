@@ -21,7 +21,7 @@ from homeassistant.helpers.aiohttp_client import async_create_clientsession
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
 from homeassistant.util import dt as dt_util
 
-from .const import CONF_SELECTED_ACCOUNTS, DOMAIN
+from .const import CONF_ACCOUNT_ID, DOMAIN
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -95,30 +95,22 @@ class NationalGridDataUpdateCoordinator(
 
     async def _fetch_all_data(self) -> NationalGridCoordinatorData:
         """Fetch all data from the API."""
-        selected_accounts: list[str] = self.config_entry.data[CONF_SELECTED_ACCOUNTS]
+        account_id: str = self.config_entry.data[CONF_ACCOUNT_ID]
         data = NationalGridCoordinatorData()
 
         today = dt_util.utcnow().date()
         from_month = (today.year - 1) * 100 + today.month
 
-        errors: list[Exception] = []
-        for account_id in selected_accounts:
-            try:
-                await self._fetch_account_data(account_id, today, from_month, data)
-            except (
-                CannotConnectError,
-                RetryExhaustedError,
-                NationalGridError,
-            ) as err:
-                _LOGGER.warning(
-                    "Error fetching data for account %s: %s", account_id, err
-                )
-                errors.append(err)
-
-        if errors and not data.meters:
+        try:
+            await self._fetch_account_data(account_id, today, from_month, data)
+        except (
+            CannotConnectError,
+            RetryExhaustedError,
+            NationalGridError,
+        ) as err:
             raise UpdateFailed(
-                f"Failed to fetch data for all accounts: {errors[0]}"
-            ) from errors[0]
+                f"Failed to fetch data for account {account_id}: {err}"
+            ) from err
 
         self._cache_computed_values(data)
         return data
