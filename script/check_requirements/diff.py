@@ -17,6 +17,7 @@ from .models import PackageChange
 # of truth for pinned package changes.
 TRACKED_PATTERNS = (
     "requirements*.txt",
+    "**/requirements*.txt",
     "homeassistant/package_constraints.txt",
 )
 
