@@ -35,7 +35,7 @@ class RoborockNumberDescription(NumberEntityDescription):
     trait: Callable[[PropertiesApi], Any | None]
     """Function to determine if number entity is supported by the device."""
 
-    get_value: Callable[[Any], float]
+    get_value: Callable[[Any], float | None]
     """Function to get the value from the trait."""
 
     set_value: Callable[[Any, float], Coroutine[Any, Any, None]]
@@ -51,7 +51,9 @@ NUMBER_DESCRIPTIONS: list[RoborockNumberDescription] = [
         native_unit_of_measurement=PERCENTAGE,
         entity_category=EntityCategory.CONFIG,
         trait=lambda api: api.sound_volume,
-        get_value=lambda trait: float(trait.volume),
+        get_value=lambda trait: (
+            float(trait.volume) if trait.volume is not None else None
+        ),
         set_value=lambda trait, value: trait.set_volume(int(value)),
     )
 ]
