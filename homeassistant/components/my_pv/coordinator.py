@@ -103,13 +103,13 @@ class MyPVCoordinator(DataUpdateCoordinator[None]):
     @override
     async def _async_update_data(self) -> None:
         """Fetch data from API endpoint."""
-        if not self.device.connected and not await self.device.connect():
-            raise UpdateFailed(
-                translation_domain=DOMAIN,
-                translation_key="cannot_connect",
-            )
-
         try:
+            if not self.device.connected and not await self.device.connect():
+                raise UpdateFailed(
+                    translation_domain=DOMAIN,
+                    translation_key="cannot_connect",
+                )
+
             await self.device.fetch_data()
         except MyPVAuthenticationError as exc:
             raise ConfigEntryAuthFailed from exc
