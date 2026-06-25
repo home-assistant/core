@@ -18,6 +18,7 @@ from homeassistant.helpers.dispatcher import (
     async_dispatcher_send,
 )
 
+from .config_entry import async_get_hassio_entry, async_get_update_options
 from .const import (
     ADDONS_COORDINATOR,
     ATTR_DATA,
@@ -30,12 +31,7 @@ from .const import (
     ATTR_VERSION,
     ATTR_WS_EVENT,
     DATA_COMPONENT,
-    DEFAULT_UPDATE_OPTIONS,
-    DOMAIN,
     EVENT_SUPERVISOR_EVENT,
-    OPTION_ADD_ON_BACKUP_BEFORE_UPDATE,
-    OPTION_ADD_ON_BACKUP_RETAIN_COPIES,
-    OPTION_CORE_BACKUP_BEFORE_UPDATE,
     WS_ID,
     WS_TYPE,
     WS_TYPE_API,
@@ -68,37 +64,6 @@ WS_NO_ADMIN_ENDPOINTS = re.compile(
 STORE_RELOAD_ENDPOINT = "/store/reload"
 
 _LOGGER: logging.Logger = logging.getLogger(__package__)
-
-
-@callback
-def _async_get_hassio_entry(hass: HomeAssistant):
-    """Return the active hassio config entry if it exists."""
-    entries = hass.config_entries.async_entries(
-        DOMAIN, include_ignore=False, include_disabled=False
-    )
-    return entries[0] if entries else None
-
-
-@callback
-def _async_get_update_options(hass: HomeAssistant) -> dict[str, bool | int]:
-    """Return hassio update config with defaults."""
-    if (entry := _async_get_hassio_entry(hass)) is None:
-        return dict(DEFAULT_UPDATE_OPTIONS)
-
-    return {
-        OPTION_ADD_ON_BACKUP_BEFORE_UPDATE: entry.options.get(
-            OPTION_ADD_ON_BACKUP_BEFORE_UPDATE,
-            DEFAULT_UPDATE_OPTIONS[OPTION_ADD_ON_BACKUP_BEFORE_UPDATE],
-        ),
-        OPTION_ADD_ON_BACKUP_RETAIN_COPIES: entry.options.get(
-            OPTION_ADD_ON_BACKUP_RETAIN_COPIES,
-            DEFAULT_UPDATE_OPTIONS[OPTION_ADD_ON_BACKUP_RETAIN_COPIES],
-        ),
-        OPTION_CORE_BACKUP_BEFORE_UPDATE: entry.options.get(
-            OPTION_CORE_BACKUP_BEFORE_UPDATE,
-            DEFAULT_UPDATE_OPTIONS[OPTION_CORE_BACKUP_BEFORE_UPDATE],
-        ),
-    }
 
 
 @callback
@@ -273,7 +238,7 @@ def websocket_update_config_info(
     msg: dict[str, Any],
 ) -> None:
     """Send the stored backup config."""
-    connection.send_result(msg["id"], _async_get_update_options(hass))
+    connection.send_result(msg["id"], async_get_update_options(hass))
 
 
 @callback
@@ -292,7 +257,7 @@ def websocket_update_config_update(
     msg: dict[str, Any],
 ) -> None:
     """Update the stored backup config."""
-    entry = _async_get_hassio_entry(hass)
+    entry = async_get_hassio_entry(hass)
     if entry is None:
         connection.send_error(
             msg["id"],
@@ -307,7 +272,7 @@ def websocket_update_config_update(
     hass.config_entries.async_update_entry(
         entry,
         options={
-            **_async_get_update_options(hass),
+            **async_get_update_options(hass, entry),
             **changes,
         },
     )
