@@ -1,7 +1,5 @@
 """Web socket API for Zigbee Home Automation devices."""
 
-from __future__ import annotations
-
 import asyncio
 import logging
 from typing import TYPE_CHECKING, Any, Literal, NamedTuple, cast
@@ -1365,7 +1363,7 @@ def _register_alarm_services(hass: HomeAssistant, zha_gateway: Gateway) -> None:
             "home": IasAce.ArmNotification.Only_Day_Home_Zones_Armed,
             "night": IasAce.ArmNotification.Only_Night_Sleep_Zones_Armed,
         }
-        await alarm_entity._cluster.arm_response(arm_notification_map[arm_mode])
+        await alarm_entity.async_send_arm_notification(arm_notification_map[arm_mode])
 
         _LOGGER.debug(
             "Exit delay set on %s for %d seconds (mode: %s)",
