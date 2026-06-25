@@ -8,6 +8,7 @@ from datetime import datetime, timedelta
 import logging
 import threading
 from typing import Any, override
+import uuid
 
 import aiohttp
 from amcrest import AmcrestError, ApiWrapper, LoginError
@@ -400,22 +401,24 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
         if serial_number is None:
             try:
                 raw_sn = (await api.async_serial_number).strip()
-                if not raw_sn:
-                    _LOGGER.error(
-                        "Camera %s returned an empty serial number during initial setup",
+                if raw_sn:
+                    serial_number = raw_sn
+                else:
+                    _LOGGER.warning(
+                        "Camera %s returned an empty serial number, generating a stable ID",
                         name,
                     )
-                    continue
-                serial_number = raw_sn
-                serial_numbers[name] = serial_number
-                store_updated = True
+                    serial_number = str(uuid.uuid4())
             except AmcrestError:
-                _LOGGER.error(
-                    "Could not get serial number from %s camera during initial setup. "
-                    "Ensure the camera is reachable",
+                _LOGGER.warning(
+                    "Could not reach %s camera during initial setup, "
+                    "generating a stable ID; the integration will recover "
+                    "when the camera comes online",
                     name,
                 )
-                continue
+                serial_number = str(uuid.uuid4())
+            serial_numbers[name] = serial_number
+            store_updated = True
 
         hass.data[DATA_AMCREST][DEVICES][name] = AmcrestDevice(
             api,
