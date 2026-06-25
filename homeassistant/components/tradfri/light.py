@@ -1,9 +1,7 @@
 """Support for IKEA Tradfri lights."""
 
-from __future__ import annotations
-
 from collections.abc import Callable
-from typing import Any, cast
+from typing import Any, cast, override
 
 from pytradfri.command import Command
 
@@ -96,11 +94,13 @@ class TradfriLight(TradfriBaseEntity, LightEntity):
                 )
             )
 
+    @override
     def _refresh(self) -> None:
         """Refresh the device."""
         self._device_data = self.coordinator.data.light_control.lights[0]
 
     @property
+    @override
     def is_on(self) -> bool:
         """Return true if light is on."""
         if not self._device_data:
@@ -108,6 +108,7 @@ class TradfriLight(TradfriBaseEntity, LightEntity):
         return cast(bool, self._device_data.state)
 
     @property
+    @override
     def color_mode(self) -> ColorMode:
         """Return the color mode of the light."""
         if self._fixed_color_mode:
@@ -117,6 +118,7 @@ class TradfriLight(TradfriBaseEntity, LightEntity):
         return ColorMode.COLOR_TEMP
 
     @property
+    @override
     def brightness(self) -> int | None:
         """Return the brightness of the light."""
         if not self._device_data:
@@ -124,6 +126,7 @@ class TradfriLight(TradfriBaseEntity, LightEntity):
         return cast(int, self._device_data.dimmer)
 
     @property
+    @override
     def color_temp_kelvin(self) -> int | None:
         """Return the color temperature value in Kelvin."""
         if not self._device_data or not (color_temp := self._device_data.color_temp):
@@ -131,6 +134,7 @@ class TradfriLight(TradfriBaseEntity, LightEntity):
         return color_util.color_temperature_mired_to_kelvin(color_temp)
 
     @property
+    @override
     def hs_color(self) -> tuple[float, float] | None:
         """HS color of the light."""
         if not self._device_control or not self._device_data:
@@ -143,6 +147,7 @@ class TradfriLight(TradfriBaseEntity, LightEntity):
                 return hue, sat
         return None
 
+    @override
     async def async_turn_off(self, **kwargs: Any) -> None:
         """Instruct the light to turn off."""
         # This allows transitioning to off, but resets the brightness
@@ -161,6 +166,7 @@ class TradfriLight(TradfriBaseEntity, LightEntity):
         else:
             await self._api(self._device_control.set_state(False))
 
+    @override
     async def async_turn_on(self, **kwargs: Any) -> None:
         """Instruct the light to turn on."""
         if not self._device_control:

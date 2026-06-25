@@ -1,6 +1,6 @@
 """Pushbullet platform for sensor component."""
 
-from __future__ import annotations
+from typing import override
 
 from homeassistant.components.sensor import SensorEntity, SensorEntityDescription
 from homeassistant.const import CONF_NAME, MAX_LENGTH_STATE_STATE
@@ -117,7 +117,8 @@ class PushBulletNotificationSensor(SensorEntity):
         """
         try:
             value = self.pb_provider.data[self.entity_description.key]
-            # Truncate state value to MAX_LENGTH_STATE_STATE while preserving full content in attributes
+            # Truncate state value to MAX_LENGTH_STATE_STATE
+            # while preserving full content in attributes
             if isinstance(value, str) and len(value) > MAX_LENGTH_STATE_STATE:
                 self._attr_native_value = value[: MAX_LENGTH_STATE_STATE - 3] + "..."
             else:
@@ -127,6 +128,7 @@ class PushBulletNotificationSensor(SensorEntity):
             pass
         self.async_write_ha_state()
 
+    @override
     async def async_added_to_hass(self) -> None:
         """Register callbacks."""
         self.async_on_remove(

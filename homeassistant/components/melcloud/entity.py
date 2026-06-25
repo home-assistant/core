@@ -1,6 +1,6 @@
 """Base entity for MELCloud integration."""
 
-from __future__ import annotations
+from typing import override
 
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
@@ -13,6 +13,7 @@ class MelCloudEntity(CoordinatorEntity[MelCloudDeviceUpdateCoordinator]):
     _attr_has_entity_name = True
 
     @property
+    @override
     def available(self) -> bool:
         """Return True if entity is available."""
         return super().available and self.coordinator.device_available

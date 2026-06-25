@@ -1,8 +1,6 @@
 """Support for LiteJet lights."""
 
-from __future__ import annotations
-
-from typing import Any
+from typing import Any, override
 
 from pylitejet import LiteJet, LiteJetError
 
@@ -68,12 +66,14 @@ class LiteJetLight(LightEntity):
             via_device=(DOMAIN, f"{config_entry.entry_id}_mcp"),
         )
 
+    @override
     async def async_added_to_hass(self) -> None:
         """Run when this Entity has been added to HA."""
         self._lj.on_load_activated(self._index, self._on_load_changed)
         self._lj.on_load_deactivated(self._index, self._on_load_changed)
         self._lj.on_connected_changed(self._on_connected_changed)
 
+    @override
     async def async_will_remove_from_hass(self) -> None:
         """Entity being removed from hass."""
         self._lj.unsubscribe(self._on_load_changed)
@@ -87,6 +87,7 @@ class LiteJetLight(LightEntity):
         """Handle connected changes."""
         self.schedule_update_ha_state(True)
 
+    @override
     async def async_turn_on(self, **kwargs: Any) -> None:
         """Turn on the light."""
 
@@ -111,6 +112,7 @@ class LiteJetLight(LightEntity):
         except LiteJetError as exc:
             raise HomeAssistantError from exc
 
+    @override
     async def async_turn_off(self, **kwargs: Any) -> None:
         """Turn off the light."""
         if ATTR_TRANSITION in kwargs:

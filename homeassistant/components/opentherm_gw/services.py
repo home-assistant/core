@@ -1,7 +1,5 @@
 """Support for OpenTherm Gateway devices."""
 
-from __future__ import annotations
-
 from datetime import date, datetime
 from typing import TYPE_CHECKING
 
@@ -18,6 +16,7 @@ from homeassistant.const import (
 from homeassistant.core import HomeAssistant, ServiceCall, callback
 from homeassistant.exceptions import ServiceValidationError
 from homeassistant.helpers import config_validation as cv
+import homeassistant.util.dt as dt_util
 
 from .const import (
     ATTR_CH_OVRD,
@@ -75,7 +74,9 @@ def async_setup_services(hass: HomeAssistant) -> None:
         {
             vol.Required(ATTR_GW_ID): vol.All(cv.string),
             vol.Optional(ATTR_DATE, default=date.today): cv.date,
-            vol.Optional(ATTR_TIME, default=lambda: datetime.now().time()): cv.time,
+            vol.Optional(
+                ATTR_TIME, default=lambda: dt_util.naive_now().time()
+            ): cv.time,
         }
     )
     service_set_control_setpoint_schema = vol.Schema(

@@ -1,10 +1,8 @@
 """Button entity platform for Tailwind."""
 
-from __future__ import annotations
-
 from collections.abc import Awaitable, Callable
 from dataclasses import dataclass
-from typing import Any
+from typing import Any, override
 
 from gotailwind import Tailwind, TailwindError
 
@@ -62,6 +60,7 @@ class TailwindButtonEntity(TailwindEntity, ButtonEntity):
 
     entity_description: TailwindButtonEntityDescription
 
+    @override
     async def async_press(self) -> None:
         """Trigger button press on the Tailwind device."""
         try:

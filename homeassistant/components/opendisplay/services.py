@@ -1,7 +1,5 @@
 """Service registration for the OpenDisplay integration."""
 
-from __future__ import annotations
-
 import asyncio
 from collections.abc import Callable
 import contextlib
@@ -24,7 +22,11 @@ from opendisplay import (
 from PIL import Image as PILImage, ImageOps
 import voluptuous as vol
 
-from homeassistant.components.bluetooth import async_ble_device_from_address
+from homeassistant.components.bluetooth import (
+    BluetoothReachabilityIntent,
+    async_address_reachability_diagnostics,
+    async_ble_device_from_address,
+)
 from homeassistant.components.http.auth import async_sign_path
 from homeassistant.components.media_source import async_resolve_media
 from homeassistant.config_entries import ConfigEntryState
@@ -51,7 +53,7 @@ ATTR_TONE_COMPRESSION = "tone_compression"
 
 
 def _str_to_int_enum(enum_class: type[IntEnum]) -> Callable[[str], Any]:
-    """Return a validator that converts a lowercase enum name string to an enum member."""
+    """Convert a lowercase enum name string to an enum member."""
     members = {m.name.lower(): m for m in enum_class}
 
     def validate(value: str) -> IntEnum:
@@ -110,7 +112,7 @@ def _get_entry_for_device(call: ServiceCall) -> OpenDisplayConfigEntry:
     if entry is None or entry.state is not ConfigEntryState.LOADED:
         raise ServiceValidationError(
             translation_domain=DOMAIN,
-            translation_key="device_not_found",
+            translation_key="config_entry_not_found",
             translation_placeholders={"address": mac_address},
         )
 
@@ -173,12 +175,20 @@ async def _async_upload_image(call: ServiceCall) -> None:
         raise HomeAssistantError(
             translation_domain=DOMAIN,
             translation_key="device_not_found",
-            translation_placeholders={"address": address},
+            translation_placeholders={
+                "address": address,
+                "reason": async_address_reachability_diagnostics(
+                    call.hass,
+                    address.upper(),
+                    BluetoothReachabilityIntent.CONNECTION,
+                ),
+            },
         )
 
     current = asyncio.current_task()
     if (prev := entry.runtime_data.upload_task) is not None and not prev.done():
         prev.cancel()
+        # pylint: disable-next=home-assistant-action-swallowed-exception
         with contextlib.suppress(asyncio.CancelledError):
             await prev
     entry.runtime_data.upload_task = current
@@ -219,7 +229,7 @@ async def _async_upload_image(call: ServiceCall) -> None:
                 pil_image,
                 refresh_mode=refresh_mode,
                 dither_mode=dither_mode,
-                tone_compression=tone_compression,
+                tone=tone_compression,
                 fit=fit_mode,
                 rotate=rotation,
             )

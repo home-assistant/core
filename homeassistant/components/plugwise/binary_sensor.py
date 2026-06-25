@@ -1,10 +1,8 @@
 """Plugwise Binary Sensor component for Home Assistant."""
 
-from __future__ import annotations
-
 from collections.abc import Mapping
 from dataclasses import dataclass
-from typing import Any
+from typing import Any, override
 
 from plugwise.constants import BinarySensorType
 
@@ -125,11 +123,13 @@ class PlugwiseBinarySensorEntity(PlugwiseEntity, BinarySensorEntity):
         self._attr_unique_id = f"{device_id}-{description.key}"
 
     @property
+    @override
     def is_on(self) -> bool:
         """Return true if the binary sensor is on."""
         return self.device["binary_sensors"][self.entity_description.key]
 
     @property
+    @override
     def extra_state_attributes(self) -> Mapping[str, Any] | None:
         """Return entity specific state attributes."""
         if self.entity_description.key != "plugwise_notification":

@@ -1,6 +1,6 @@
 """Data Update coordinator for ZAMG weather data."""
 
-from __future__ import annotations
+from typing import override
 
 from zamg import ZamgData as ZamgDevice
 from zamg.exceptions import ZamgError, ZamgNoDataError
@@ -39,6 +39,7 @@ class ZamgDataUpdateCoordinator(DataUpdateCoordinator[ZamgDevice]):
             update_interval=MIN_TIME_BETWEEN_UPDATES,
         )
 
+    @override
     async def _async_update_data(self) -> ZamgDevice:
         """Fetch data from ZAMG api."""
         try:

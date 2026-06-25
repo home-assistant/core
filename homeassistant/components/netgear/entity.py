@@ -1,9 +1,7 @@
 """Represent the Netgear router and its devices."""
 
-from __future__ import annotations
-
 from abc import abstractmethod
-from typing import Any
+from typing import Any, override
 
 from homeassistant.const import CONF_HOST
 from homeassistant.core import callback
@@ -56,6 +54,7 @@ class NetgearDeviceEntity(CoordinatorEntity[NetgearTrackerCoordinator]):
         """Update the Netgear device."""
 
     @callback
+    @override
     def _handle_coordinator_update(self) -> None:
         """Handle updated data from the coordinator."""
         self.async_update_device()
@@ -103,6 +102,7 @@ class NetgearRouterCoordinatorEntity[T: NetgearDataCoordinator[Any]](
         """Update the Netgear device."""
 
     @callback
+    @override
     def _handle_coordinator_update(self) -> None:
         """Handle updated data from the coordinator."""
         self.async_update_device()

@@ -1,0 +1,75 @@
+name: Check requirements (deterministic)
+
+# Stage 1 of the Check requirements pipeline.
+#
+# Runs the deterministic Python checks and uploads the structured
+# results as an artifact. Stage 2 (the agentic workflow defined in
+# `check-requirements.md`) consumes the artifact on completion.
+
+# yamllint disable-line rule:truthy
+on:
+  pull_request:
+    types: [opened, synchronize, reopened]
+    paths:
+      - "requirements*.txt"
+      - "homeassistant/package_constraints.txt"
+  workflow_dispatch:
+    inputs:
+      pull_request_number:
+        description: "Pull request number to (re-)check"
+        required: true
+        type: number
+
+permissions: {}
+
+concurrency:
+  group: ${{ github.workflow }}-${{ inputs.pull_request_number || github.event.pull_request.number }}
+  cancel-in-progress: true
+
+jobs:
+  deterministic:
+    name: Run deterministic requirement checks
+    runs-on: ubuntu-24.04
+    permissions:
+      contents: read
+      pull-requests: read # To fetch the PR diff via gh CLI
+    timeout-minutes: 10
+    steps:
+      - name: Check out code from GitHub
+        uses: actions/checkout@9c091bb21b7c1c1d1991bb908d89e4e9dddfe3e0 # v7.0.0
+        with:
+          persist-credentials: false
+      - name: Set up Python
+        uses: actions/setup-python@a309ff8b426b58ec0e2a45f0f869d46889d02405 # v6.2.0
+        with:
+          python-version-file: ".python-version"
+          check-latest: true
+      - name: Install script dependencies
+        run: pip install -r script/check_requirements/requirements.txt
+      - name: Collect PR diff and head SHA
+        id: pr
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          PR_NUMBER: ${{ inputs.pull_request_number || github.event.pull_request.number }}
+        run: |
+          mkdir -p deterministic
+          gh pr diff "${PR_NUMBER}" > deterministic/pr.diff
+          HEAD_SHA=$(gh pr view "${PR_NUMBER}" --json headRefOid --jq '.headRefOid')
+          echo "head_sha=${HEAD_SHA}" >> "${GITHUB_OUTPUT}"
+      - name: Run deterministic checks
+        env:
+          PR_NUMBER: ${{ inputs.pull_request_number || github.event.pull_request.number }}
+          HEAD_SHA: ${{ steps.pr.outputs.head_sha }}
+        run: |
+          python -m script.check_requirements \
+            --pr-number "${PR_NUMBER}" \
+            --head-sha "${HEAD_SHA}" \
+            --diff deterministic/pr.diff \
+            --output deterministic/results.json
+      - name: Upload deterministic-results artifact
+        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
+        with:
+          name: check-requirements-deterministic
+          path: deterministic/results.json
+          if-no-files-found: error
+          retention-days: 7

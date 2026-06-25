@@ -5,5 +5,6 @@ from datetime import timedelta
 from homeassistant.const import Platform
 
 DOMAIN = "duco"
-PLATFORMS = [Platform.FAN, Platform.SENSOR]
-SCAN_INTERVAL = timedelta(seconds=30)
+PLATFORMS = [Platform.FAN, Platform.SELECT, Platform.SENSOR]
+SCAN_INTERVAL = timedelta(seconds=10)
+BOX_NODE_ID = 1

@@ -1,10 +1,8 @@
 """Support for humidifier entities."""
 
-from __future__ import annotations
-
 from dataclasses import dataclass
 import logging
-from typing import Any
+from typing import Any, override
 
 from thinqconnect import DeviceType
 from thinqconnect.devices.const import Property as ThinQProperty
@@ -104,6 +102,7 @@ class ThinQHumidifierEntity(ThinQEntity, HumidifierEntity):
             self.data.step if self.data.step is not None else 1
         )
 
+    @override
     def _update_status(self) -> None:
         """Update status itself."""
         super()._update_status()
@@ -137,6 +136,7 @@ class ThinQHumidifierEntity(ThinQEntity, HumidifierEntity):
             self.is_on,
         )
 
+    @override
     async def async_set_mode(self, mode: str) -> None:
         """Set new target preset mode."""
         _LOGGER.debug(
@@ -149,6 +149,7 @@ class ThinQHumidifierEntity(ThinQEntity, HumidifierEntity):
             self.coordinator.api.post(self.entity_description.mode_key, mode)
         )
 
+    @override
     async def async_set_humidity(self, humidity: int) -> None:
         """Set new target humidity."""
         _target_humidity = round(humidity / (self.target_humidity_step or 1)) * (
@@ -168,6 +169,7 @@ class ThinQHumidifierEntity(ThinQEntity, HumidifierEntity):
             self.coordinator.api.post(self.property_id, _target_humidity)
         )
 
+    @override
     async def async_turn_on(self, **kwargs: Any) -> None:
         """Turn the entity on."""
         if self.is_on:
@@ -181,6 +183,7 @@ class ThinQHumidifierEntity(ThinQEntity, HumidifierEntity):
             self.coordinator.api.async_turn_on(self.entity_description.operation_key)
         )
 
+    @override
     async def async_turn_off(self, **kwargs: Any) -> None:
         """Turn the entity off."""
         if not self.is_on:

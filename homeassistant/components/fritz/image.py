@@ -1,9 +1,8 @@
 """FRITZ image integration."""
 
-from __future__ import annotations
-
 from io import BytesIO
 import logging
+from typing import override
 
 from requests.exceptions import RequestException
 
@@ -78,7 +77,6 @@ class FritzGuestWifiQRImage(FritzBoxBaseEntity, ImageEntity):
 
     _attr_content_type = "image/png"
     _attr_entity_category = EntityCategory.DIAGNOSTIC
-    _attr_has_entity_name = True
     _attr_should_poll = True
 
     def __init__(
@@ -105,6 +103,7 @@ class FritzGuestWifiQRImage(FritzBoxBaseEntity, ImageEntity):
 
         return qr_bytes
 
+    @override
     async def async_added_to_hass(self) -> None:
         """Fetch and set initial data and state."""
         self._current_qr_bytes = await self.hass.async_add_executor_job(
@@ -129,6 +128,7 @@ class FritzGuestWifiQRImage(FritzBoxBaseEntity, ImageEntity):
             self._current_qr_bytes = qr_bytes
             self.async_write_ha_state()
 
+    @override
     async def async_image(self) -> bytes | None:
         """Return bytes of image."""
         return self._current_qr_bytes

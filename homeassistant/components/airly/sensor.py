@@ -1,10 +1,8 @@
 """Support for the Airly sensor service."""
 
-from __future__ import annotations
-
 from collections.abc import Callable
 from dataclasses import dataclass
-from typing import Any
+from typing import Any, override
 
 from homeassistant.components.sensor import (
     SensorDeviceClass,
@@ -127,7 +125,7 @@ SENSOR_TYPES: tuple[AirlySensorEntityDescription, ...] = (
     ),
     AirlySensorEntityDescription(
         key=ATTR_API_CO,
-        translation_key="co",
+        device_class=SensorDeviceClass.CO,
         native_unit_of_measurement=CONCENTRATION_MICROGRAMS_PER_CUBIC_METER,
         state_class=SensorStateClass.MEASUREMENT,
         suggested_display_precision=0,
@@ -178,7 +176,7 @@ async def async_setup_entry(
     async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up Airly sensor entities based on a config entry."""
-    name = entry.data[CONF_NAME]
+    name = entry.data.get(CONF_NAME) or entry.title
 
     coordinator = entry.runtime_data
 
@@ -186,7 +184,8 @@ async def async_setup_entry(
         (
             AirlySensor(coordinator, name, description)
             for description in SENSOR_TYPES
-            # When we use the nearest method, we are not sure which sensors are available
+            # When we use the nearest method, we are not sure
+            # which sensors are available
             if coordinator.data.get(description.key)
         ),
         False,
@@ -225,6 +224,7 @@ class AirlySensor(CoordinatorEntity[AirlyDataUpdateCoordinator], SensorEntity):
         self.entity_description = description
 
     @callback
+    @override
     def _handle_coordinator_update(self) -> None:
         """Handle updated data from the coordinator."""
         self._attr_native_value = self.coordinator.data[self.entity_description.key]

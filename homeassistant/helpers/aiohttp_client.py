@@ -1,7 +1,5 @@
 """Helper for aiohttp webclient stuff."""
 
-from __future__ import annotations
-
 import asyncio
 from collections.abc import Awaitable, Callable, Sequence
 from contextlib import suppress
@@ -11,7 +9,7 @@ import socket
 from ssl import SSLContext
 import sys
 from types import MappingProxyType
-from typing import TYPE_CHECKING, Any, Self
+from typing import TYPE_CHECKING, Any, Self, override
 
 import aiohttp
 from aiohttp import ClientMiddlewareType, hdrs, web
@@ -170,6 +168,7 @@ class HassAsyncDNSResolver(AsyncDualMDNSResolver):
         """Close the resolver."""
         await super().close()
 
+    @override
     async def close(self) -> None:
         """Close the resolver."""
 
@@ -177,6 +176,7 @@ class HassAsyncDNSResolver(AsyncDualMDNSResolver):
 class HassClientResponse(aiohttp.ClientResponse):
     """aiohttp.ClientResponse with a json method that uses json_loads by default."""
 
+    @override
     async def json(
         self,
         *args: Any,

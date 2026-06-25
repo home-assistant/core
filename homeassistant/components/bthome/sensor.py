@@ -1,8 +1,6 @@
 """Support for BTHome sensors."""
 
-from __future__ import annotations
-
-from typing import cast
+from typing import cast, override
 
 from bthome_ble import SensorDeviceClass as BTHomeSensorDeviceClass, SensorUpdate, Units
 from bthome_ble.const import (
@@ -194,6 +192,12 @@ SENSOR_DESCRIPTIONS = {
         native_unit_of_measurement=LIGHT_LUX,
         state_class=SensorStateClass.MEASUREMENT,
     ),
+    # Light level (-)
+    (BTHomeExtendedSensorDeviceClass.LIGHT_LEVEL, None): SensorEntityDescription(
+        key=str(BTHomeExtendedSensorDeviceClass.LIGHT_LEVEL),
+        state_class=SensorStateClass.MEASUREMENT,
+        translation_key="light_level",
+    ),
     # Mass sensor (kg)
     (BTHomeSensorDeviceClass.MASS, Units.MASS_KILOGRAMS): SensorEntityDescription(
         key=f"{BTHomeSensorDeviceClass.MASS}_{Units.MASS_KILOGRAMS}",
@@ -288,6 +292,12 @@ SENSOR_DESCRIPTIONS = {
         native_unit_of_measurement=REVOLUTIONS_PER_MINUTE,
         state_class=SensorStateClass.MEASUREMENT,
         translation_key="rotational_speed",
+    ),
+    # Settings revision (-)
+    (BTHomeExtendedSensorDeviceClass.SETTINGS_REVISION, None): SensorEntityDescription(
+        key=str(BTHomeExtendedSensorDeviceClass.SETTINGS_REVISION),
+        entity_category=EntityCategory.DIAGNOSTIC,
+        translation_key="settings_revision",
     ),
     # Signal Strength (RSSI) (dB)
     (
@@ -466,11 +476,13 @@ class BTHomeBluetoothSensorEntity(
     """Representation of a BTHome BLE sensor."""
 
     @property
+    @override
     def native_value(self) -> int | float | None:
         """Return the native value."""
         return self.processor.entity_data.get(self.entity_key)
 
     @property
+    @override
     def available(self) -> bool:
         """Return True if entity is available."""
         return self.processor.coordinator.sleepy_device or super().available

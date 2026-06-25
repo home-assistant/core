@@ -1,9 +1,8 @@
 """Configure number in a device through MQTT topic."""
 
-from __future__ import annotations
-
 from collections.abc import Callable
 import logging
+from typing import override
 
 import voluptuous as vol
 
@@ -141,10 +140,12 @@ class MqttNumber(MqttEntity, RestoreNumber):
     _value_template: Callable[[ReceivePayloadType], ReceivePayloadType]
 
     @staticmethod
+    @override
     def config_schema() -> VolSchemaType:
         """Return the config schema."""
         return DISCOVERY_SCHEMA
 
+    @override
     def _setup_from_config(self, config: ConfigType) -> None:
         """(Re)Setup the entity."""
         self._config = config
@@ -199,6 +200,7 @@ class MqttNumber(MqttEntity, RestoreNumber):
         self._attr_native_value = num_value
 
     @callback
+    @override
     def _prepare_subscribe_topics(self) -> None:
         """(Re)Subscribe to topics."""
         if not self.add_subscription(
@@ -208,6 +210,7 @@ class MqttNumber(MqttEntity, RestoreNumber):
             self._attr_assumed_state = True
             return
 
+    @override
     async def _subscribe_topics(self) -> None:
         """(Re)Subscribe to topics."""
         subscription.async_subscribe_topics_internal(self.hass, self._sub_state)
@@ -217,6 +220,7 @@ class MqttNumber(MqttEntity, RestoreNumber):
         ):
             self._attr_native_value = last_number_data.native_value
 
+    @override
     async def async_set_native_value(self, value: float) -> None:
         """Update the current value."""
         current_number = value

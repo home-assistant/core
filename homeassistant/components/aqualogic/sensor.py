@@ -1,8 +1,7 @@
 """Support for AquaLogic sensors."""
 
-from __future__ import annotations
-
 from dataclasses import dataclass
+from typing import override
 
 import voluptuous as vol
 
@@ -148,6 +147,7 @@ class AquaLogicSensor(SensorEntity):
         self._processor = processor
         self._attr_name = f"AquaLogic {description.name}"
 
+    @override
     async def async_added_to_hass(self) -> None:
         """Register callbacks."""
         self.async_on_remove(

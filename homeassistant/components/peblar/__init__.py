@@ -1,7 +1,5 @@
 """Integration for Peblar EV chargers."""
 
-from __future__ import annotations
-
 import asyncio
 
 from aiohttp import CookieJar
@@ -50,10 +48,12 @@ async def async_setup_entry(hass: HomeAssistant, entry: PeblarConfigEntry) -> bo
         system_information = await peblar.system_information()
         api = await peblar.rest_api(enable=True, access_mode=AccessMode.READ_WRITE)
     except PeblarConnectionError as err:
+        # pylint: disable-next=home-assistant-exception-not-translated
         raise ConfigEntryNotReady("Could not connect to Peblar charger") from err
     except PeblarAuthenticationError as err:
         raise ConfigEntryAuthFailed from err
     except PeblarError as err:
+        # pylint: disable-next=home-assistant-exception-not-translated
         raise ConfigEntryNotReady(
             "Unknown error occurred while connecting to Peblar charger"
         ) from err

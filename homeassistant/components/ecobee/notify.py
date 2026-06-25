@@ -1,6 +1,6 @@
 """Support for Ecobee Send Message service."""
 
-from __future__ import annotations
+from typing import override
 
 from homeassistant.components.notify import NotifyEntity
 from homeassistant.core import HomeAssistant
@@ -26,7 +26,6 @@ class EcobeeNotifyEntity(EcobeeBaseEntity, NotifyEntity):
     """Implement the notification entity for the Ecobee thermostat."""
 
     _attr_name = None
-    _attr_has_entity_name = True
 
     def __init__(self, data: EcobeeData, thermostat_index: int) -> None:
         """Initialize the thermostat."""
@@ -35,6 +34,7 @@ class EcobeeNotifyEntity(EcobeeBaseEntity, NotifyEntity):
             f"{self.thermostat['identifier']}_notify_{thermostat_index}"
         )
 
+    @override
     def send_message(self, message: str, title: str | None = None) -> None:
         """Send a message."""
         self.data.ecobee.send_message(self.thermostat_index, message)

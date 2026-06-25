@@ -1,10 +1,9 @@
 """Module for SIA Binary Sensors."""
 
-from __future__ import annotations
-
 from collections.abc import Iterable
 from dataclasses import dataclass
 import logging
+from typing import override
 
 from pysiaalarm import SIAEvent
 
@@ -116,6 +115,7 @@ class SIABinarySensor(SIABaseEntity, BinarySensorEntity):
 
     entity_description: SIABinarySensorEntityDescription
 
+    @override
     def handle_last_state(self, last_state: State | None) -> None:
         """Handle the last state."""
         if last_state is not None and last_state.state is not None:
@@ -126,6 +126,7 @@ class SIABinarySensor(SIABaseEntity, BinarySensorEntity):
             elif last_state.state == STATE_UNAVAILABLE:
                 self._attr_available = False
 
+    @override
     def update_state(self, sia_event: SIAEvent) -> bool:
         """Update the state of the binary sensor.
 
@@ -145,6 +146,7 @@ class SIABinarySensorConnectivity(SIABinarySensor):
     """Class for Connectivity Sensor."""
 
     @callback
+    @override
     def async_post_interval_update(self, _) -> None:
         """Update state after a ping interval. Overwritten from sia entity base."""
         self._attr_is_on = False

@@ -1,9 +1,7 @@
 """UniFi Network data update coordinator."""
 
-from __future__ import annotations
-
 from datetime import timedelta
-from typing import TYPE_CHECKING
+from typing import TYPE_CHECKING, override
 
 from aiounifi.interfaces.api_handlers import APIHandler
 
@@ -40,6 +38,7 @@ class UnifiDataUpdateCoordinator[HandlerT: APIHandler](DataUpdateCoordinator[Non
         """Return the aiounifi handler managed by this coordinator."""
         return self._handler
 
+    @override
     async def _async_update_data(self) -> None:
         """Update data from the API handler."""
         await self._handler.update()

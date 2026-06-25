@@ -1,14 +1,12 @@
 """Support to select a date and/or a time."""
 
-from __future__ import annotations
-
 import datetime as py_datetime
 import logging
-from typing import Any, Self
+from typing import Any, Self, override
 
 import voluptuous as vol
 
-from homeassistant.const import (
+from homeassistant.const import (  # noqa: F401
     ATTR_DATE,
     ATTR_EDITABLE,
     ATTR_TIME,
@@ -25,6 +23,11 @@ import homeassistant.helpers.service
 from homeassistant.helpers.storage import Store
 from homeassistant.helpers.typing import ConfigType, VolDictType
 from homeassistant.util import dt as dt_util
+
+from .const import (
+    InputDatetimeEntityCapabilityAttribute,
+    InputDatetimeEntityStateAttribute,
+)
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -100,7 +103,7 @@ def parse_initial_datetime(conf: dict[str, Any]) -> py_datetime.datetime:
         raise vol.Invalid(f"Initial value '{initial}' can't be parsed as a date")
 
     if (time := dt_util.parse_time(initial)) is not None:
-        return py_datetime.datetime.combine(py_datetime.date.today(), time)
+        return py_datetime.datetime.combine(dt_util.now().date(), time)
     raise vol.Invalid(f"Initial value '{initial}' can't be parsed as a time")
 
 
@@ -197,15 +200,18 @@ class DateTimeStorageCollection(collection.DictStorageCollection):
 
     CREATE_UPDATE_SCHEMA = vol.Schema(vol.All(STORAGE_FIELDS, has_date_or_time))
 
+    @override
     async def _process_create_data(self, data: dict) -> dict:
         """Validate the config is valid."""
         return self.CREATE_UPDATE_SCHEMA(data)
 
     @callback
+    @override
     def _get_suggested_id(self, info: dict) -> str:
         """Suggest an ID based on the config."""
         return info[CONF_NAME]
 
+    @override
     async def _update_data(self, item: dict, update_data: dict) -> dict:
         """Return a new updated data object."""
         update_data = self.CREATE_UPDATE_SCHEMA(update_data)
@@ -215,7 +221,13 @@ class DateTimeStorageCollection(collection.DictStorageCollection):
 class InputDatetime(collection.CollectionEntity, RestoreEntity):
     """Representation of a datetime input."""
 
-    _unrecorded_attributes = frozenset({ATTR_EDITABLE, CONF_HAS_DATE, CONF_HAS_TIME})
+    _unrecorded_attributes = frozenset(
+        {
+            InputDatetimeEntityStateAttribute.EDITABLE,
+            InputDatetimeEntityCapabilityAttribute.HAS_DATE,
+            InputDatetimeEntityCapabilityAttribute.HAS_TIME,
+        }
+    )
 
     _attr_should_poll = False
     editable: bool
@@ -241,6 +253,7 @@ class InputDatetime(collection.CollectionEntity, RestoreEntity):
             )
 
     @classmethod
+    @override
     def from_storage(cls, config: ConfigType) -> Self:
         """Return entity instance initialized from storage."""
         input_dt = cls(config)
@@ -248,6 +261,7 @@ class InputDatetime(collection.CollectionEntity, RestoreEntity):
         return input_dt
 
     @classmethod
+    @override
     def from_yaml(cls, config: ConfigType) -> Self:
         """Return entity instance initialized from yaml."""
         input_dt = cls(config)
@@ -255,6 +269,7 @@ class InputDatetime(collection.CollectionEntity, RestoreEntity):
         input_dt.editable = False
         return input_dt
 
+    @override
     async def async_added_to_hass(self):
         """Run when entity about to be added."""
         await super().async_added_to_hass()
@@ -263,7 +278,7 @@ class InputDatetime(collection.CollectionEntity, RestoreEntity):
         if self.state is not None:
             return
 
-        default_value = py_datetime.datetime.today().strftime(f"{FMT_DATE} 00:00:00")
+        default_value = dt_util.now().strftime(f"{FMT_DATE} 00:00:00")
 
         # Priority 2: Old state
         if (old_state := await self.async_get_last_state()) is None:
@@ -286,15 +301,14 @@ class InputDatetime(collection.CollectionEntity, RestoreEntity):
         elif (time := dt_util.parse_time(old_state.state)) is None:
             current_datetime = dt_util.parse_datetime(default_value)
         else:
-            current_datetime = py_datetime.datetime.combine(
-                py_datetime.date.today(), time
-            )
+            current_datetime = py_datetime.datetime.combine(dt_util.now().date(), time)
 
         self._current_datetime = current_datetime.replace(
             tzinfo=dt_util.get_default_time_zone()
         )
 
     @property
+    @override
     def name(self):
         """Return the name of the select input."""
         return self._config.get(CONF_NAME)
@@ -310,11 +324,13 @@ class InputDatetime(collection.CollectionEntity, RestoreEntity):
         return self._config[CONF_HAS_TIME]
 
     @property
+    @override
     def icon(self) -> str | None:
         """Return the icon to be used for this entity."""
         return self._config.get(CONF_ICON)
 
     @property
+    @override
     def state(self):
         """Return the state of the component."""
         if self._current_datetime is None:
@@ -329,35 +345,43 @@ class InputDatetime(collection.CollectionEntity, RestoreEntity):
         return self._current_datetime.strftime(FMT_TIME)
 
     @property
+    @override
     def capability_attributes(self) -> dict[str, Any]:
         """Return the capability attributes."""
         return {
-            CONF_HAS_DATE: self.has_date,
-            CONF_HAS_TIME: self.has_time,
+            InputDatetimeEntityCapabilityAttribute.HAS_DATE: self.has_date,
+            InputDatetimeEntityCapabilityAttribute.HAS_TIME: self.has_time,
         }
 
     @property
+    @override
     def extra_state_attributes(self) -> dict[str, Any]:
         """Return the state attributes."""
         attrs: dict[str, Any] = {
-            ATTR_EDITABLE: self.editable,
+            InputDatetimeEntityStateAttribute.EDITABLE: self.editable,
         }
 
         if self._current_datetime is None:
             return attrs
 
         if self.has_date and self._current_datetime is not None:
-            attrs["year"] = self._current_datetime.year
-            attrs["month"] = self._current_datetime.month
-            attrs["day"] = self._current_datetime.day
+            attrs[InputDatetimeEntityStateAttribute.YEAR] = self._current_datetime.year
+            attrs[InputDatetimeEntityStateAttribute.MONTH] = (
+                self._current_datetime.month
+            )
+            attrs[InputDatetimeEntityStateAttribute.DAY] = self._current_datetime.day
 
         if self.has_time and self._current_datetime is not None:
-            attrs["hour"] = self._current_datetime.hour
-            attrs["minute"] = self._current_datetime.minute
-            attrs["second"] = self._current_datetime.second
+            attrs[InputDatetimeEntityStateAttribute.HOUR] = self._current_datetime.hour
+            attrs[InputDatetimeEntityStateAttribute.MINUTE] = (
+                self._current_datetime.minute
+            )
+            attrs[InputDatetimeEntityStateAttribute.SECOND] = (
+                self._current_datetime.second
+            )
 
         if not self.has_date:
-            attrs["timestamp"] = (
+            attrs[InputDatetimeEntityStateAttribute.TIMESTAMP] = (
                 self._current_datetime.hour * 3600
                 + self._current_datetime.minute * 60
                 + self._current_datetime.second
@@ -365,16 +389,21 @@ class InputDatetime(collection.CollectionEntity, RestoreEntity):
 
         elif not self.has_time:
             extended = py_datetime.datetime.combine(
-                self._current_datetime, py_datetime.time(0, 0)
+                self._current_datetime,
+                py_datetime.time(0, 0),
+                dt_util.get_default_time_zone(),
             )
-            attrs["timestamp"] = extended.timestamp()
+            attrs[InputDatetimeEntityStateAttribute.TIMESTAMP] = extended.timestamp()
 
         else:
-            attrs["timestamp"] = self._current_datetime.timestamp()
+            attrs[InputDatetimeEntityStateAttribute.TIMESTAMP] = (
+                self._current_datetime.timestamp()
+            )
 
         return attrs
 
     @property
+    @override
     def unique_id(self) -> str | None:
         """Return unique id of the entity."""
         return self._config[CONF_ID]
@@ -409,6 +438,7 @@ class InputDatetime(collection.CollectionEntity, RestoreEntity):
         )
         self.async_write_ha_state()
 
+    @override
     async def async_update_config(self, config: ConfigType) -> None:
         """Handle when the config is updated."""
         self._config = config

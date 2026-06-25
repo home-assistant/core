@@ -1,9 +1,8 @@
 """Support for FFmpeg."""
 
-from __future__ import annotations
-
 import asyncio
 import re
+from typing import override
 
 from haffmpeg.core import HAFFmpeg
 from haffmpeg.tools import IMAGE_JPEG, FFVersion, ImageFrame
@@ -142,7 +141,7 @@ class FFmpegManager:
         return CONTENT_TYPE_MULTIPART.format("ffserver")
 
 
-class FFmpegBase[_HAFFmpegT: HAFFmpeg](Entity):  # pylint: disable=hass-enforce-class-module
+class FFmpegBase[_HAFFmpegT: HAFFmpeg](Entity):  # pylint: disable=home-assistant-enforce-class-module
     """Interface object for FFmpeg."""
 
     _attr_should_poll = False
@@ -152,6 +151,7 @@ class FFmpegBase[_HAFFmpegT: HAFFmpeg](Entity):  # pylint: disable=hass-enforce-
         self.ffmpeg = ffmpeg
         self.initial_state = initial_state
 
+    @override
     async def async_added_to_hass(self) -> None:
         """Register dispatcher & events.
 
@@ -177,6 +177,7 @@ class FFmpegBase[_HAFFmpegT: HAFFmpeg](Entity):  # pylint: disable=hass-enforce-
         self._async_register_events()
 
     @property
+    @override
     def available(self) -> bool:
         """Return True if entity is available."""
         return self.ffmpeg.is_running

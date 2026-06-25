@@ -1,12 +1,10 @@
 """Weather data coordinator for the AEMET OpenData service."""
 
-from __future__ import annotations
-
 from asyncio import timeout
 from dataclasses import dataclass
 from datetime import timedelta
 import logging
-from typing import Any, Final, cast
+from typing import Any, Final, cast, override
 
 from aemet_opendata.const import (
     AOD_CONDITION,
@@ -62,6 +60,7 @@ class WeatherUpdateCoordinator(DataUpdateCoordinator):
             update_interval=WEATHER_UPDATE_INTERVAL,
         )
 
+    @override
     async def _async_update_data(self) -> dict[str, Any]:
         """Update coordinator data."""
         async with timeout(API_TIMEOUT):

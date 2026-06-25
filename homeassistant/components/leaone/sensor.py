@@ -1,6 +1,6 @@
 """Support for Leaone sensors."""
 
-from __future__ import annotations
+from typing import override
 
 from leaone_ble import DeviceClass as LeaoneSensorDeviceClass, SensorUpdate, Units
 
@@ -129,11 +129,13 @@ class LeaoneBluetoothSensorEntity(
     """Representation of a Leaone sensor."""
 
     @property
+    @override
     def native_value(self) -> int | float | None:
         """Return the native value."""
         return self.processor.entity_data.get(self.entity_key)
 
     @property
+    @override
     def available(self) -> bool:
         """Return True if entity is available.
 
@@ -146,6 +148,7 @@ class LeaoneBluetoothSensorEntity(
         return True
 
     @property
+    @override
     def assumed_state(self) -> bool:
         """Return True if the device is no longer broadcasting."""
         return not self.processor.available

@@ -1,7 +1,5 @@
 """Tests for the EARN-E P1 Meter sensor platform."""
 
-from __future__ import annotations
-
 from unittest.mock import MagicMock
 
 import pytest

@@ -1,9 +1,8 @@
 """Support for the NextDNS service."""
 
-from __future__ import annotations
-
 from collections.abc import Callable
 from dataclasses import dataclass
+from typing import override
 
 from nextdns import (
     AnalyticsDnssec,
@@ -304,6 +303,7 @@ class NextDnsSensor[CoordinatorDataT: NextDnsData](
     entity_description: NextDnsSensorEntityDescription[CoordinatorDataT]
 
     @property
+    @override
     def native_value(self) -> StateType:
         """Return the state of the sensor."""
         return self.entity_description.value(self.coordinator.data)

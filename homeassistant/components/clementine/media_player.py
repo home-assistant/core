@@ -1,9 +1,8 @@
 """Support for Clementine Music Player as media player."""
 
-from __future__ import annotations
-
 from datetime import timedelta
 import time
+from typing import override
 
 from clementineremote import ClementineRemote
 import voluptuous as vol
@@ -110,6 +109,7 @@ class ClementineDevice(MediaPlayerEntity):
             self._attr_state = MediaPlayerState.OFF
             raise
 
+    @override
     def select_source(self, source: str) -> None:
         """Select input source."""
         client = self._client
@@ -117,6 +117,7 @@ class ClementineDevice(MediaPlayerEntity):
         if len(sources) == 1:
             client.change_song(sources[0]["id"], 0)
 
+    @override
     async def async_get_media_image(self) -> tuple[bytes | None, str | None]:
         """Fetch media image of current playing image."""
         if self._client.current_track:
@@ -125,10 +126,12 @@ class ClementineDevice(MediaPlayerEntity):
 
         return None, None
 
+    @override
     def mute_volume(self, mute: bool) -> None:
         """Send mute command."""
         self._client.set_volume(0)
 
+    @override
     def set_volume_level(self, volume: float) -> None:
         """Set volume level."""
         self._client.set_volume(int(100 * volume))
@@ -140,20 +143,24 @@ class ClementineDevice(MediaPlayerEntity):
         else:
             self.media_play()
 
+    @override
     def media_play(self) -> None:
         """Send play command."""
         self._attr_state = MediaPlayerState.PLAYING
         self._client.play()
 
+    @override
     def media_pause(self) -> None:
         """Send media pause command to media player."""
         self._attr_state = MediaPlayerState.PAUSED
         self._client.pause()
 
+    @override
     def media_next_track(self) -> None:
         """Send next track command."""
         self._client.next()
 
+    @override
     def media_previous_track(self) -> None:
         """Send the previous track command."""
         self._client.previous()

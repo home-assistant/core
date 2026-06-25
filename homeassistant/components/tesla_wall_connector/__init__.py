@@ -1,7 +1,5 @@
 """The Tesla Wall Connector integration."""
 
-from __future__ import annotations
-
 from tesla_wall_connector import WallConnector
 from tesla_wall_connector.exceptions import WallConnectorError
 
