@@ -36,13 +36,17 @@ def mock_bluetooth_scanner() -> Generator[MagicMock]:
 
 
 @pytest.fixture(autouse=True)
-def mock_ble_client() -> Generator[MagicMock]:
-    """Mock ble client."""
+def mock_connect_scanner() -> Generator[MagicMock]:
+    """Mock bleak_smlight connect_scanner."""
     with patch(
-        "homeassistant.components.smlight.bluetooth.BleProxyClient"
-    ) as mock_client:
-        mock_client.return_value.start = AsyncMock()
-        yield mock_client
+        "homeassistant.components.smlight.bluetooth.connect_scanner"
+    ) as mock_connect:
+        client_data = MagicMock()
+        client_data.scanner = MagicMock()
+        client_data.client = MagicMock()
+        client_data.client.start = AsyncMock()
+        mock_connect.return_value = client_data
+        yield mock_connect
 
 
 @pytest.fixture
