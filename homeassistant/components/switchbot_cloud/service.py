@@ -9,7 +9,11 @@ from homeassistant.core import HomeAssistant, ServiceCall
 from homeassistant.exceptions import ServiceValidationError
 from homeassistant.helpers import config_validation as cv, device_registry as dr
 
-from .const import AI_ART_FRAME_UPLOAD_IMAGE_SERVICE, DOMAIN
+from .const import (
+    AI_ART_FRAME_UPLOAD_IMAGE_SERVICE,
+    DISABLE_DEVICE_WEBHOOK_SERVICE,
+    DOMAIN,
+)
 
 _LOGGER = getLogger(__name__)
 
@@ -21,6 +25,10 @@ UPLOAD_IMAGE_SCHEMA = vol.Schema(
         ),
         vol.Required("image_url"): cv.url,
     }
+)
+
+DISABLE_WEBHOOK_SCHEMA = vol.Schema(
+    {vol.Required("device_id"): vol.All(cv.ensure_list, [cv.string], vol.Length(min=1))}
 )
 
 
@@ -54,6 +62,10 @@ async def handle_upload_image(call: ServiceCall) -> None:
             raise ServiceValidationError("No valid MAC address obtained.")
 
 
+async def handle_disable_device_webhook(call: ServiceCall) -> None:
+    """Handle disable device webhook."""
+
+
 def async_register_services(hass: HomeAssistant) -> None:
     """Async register services."""
     hass.services.async_register(
@@ -61,4 +73,11 @@ def async_register_services(hass: HomeAssistant) -> None:
         AI_ART_FRAME_UPLOAD_IMAGE_SERVICE,
         handle_upload_image,
         schema=UPLOAD_IMAGE_SCHEMA,
+    )
+
+    hass.services.async_register(
+        DOMAIN,
+        DISABLE_DEVICE_WEBHOOK_SERVICE,
+        handle_disable_device_webhook,
+        schema=DISABLE_WEBHOOK_SCHEMA,
     )

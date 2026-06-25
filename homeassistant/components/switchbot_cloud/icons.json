@@ -72,6 +72,9 @@
     }
   },
   "services": {
+    "disable_device_webhook": {
+      "service": "mdi:webhook"
+    },
     "upload_art_frame_image": {
       "service": "mdi:cloud-upload-outline"
     }

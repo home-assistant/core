@@ -11,3 +11,12 @@ upload_art_frame_image:
       required: true
       selector:
         text:
+
+disable_device_webhook:
+  fields:
+    device_id:
+      required: true
+      selector:
+        device:
+          integration: switchbot_cloud
+          multiple: true
