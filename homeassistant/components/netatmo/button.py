@@ -1,6 +1,7 @@
 """Support for Netatmo/Bubendorff button."""
 
 import logging
+from typing import override
 
 from pyatmo import modules as NaModules
 
@@ -63,10 +64,12 @@ class NetatmoCoverPreferredPositionButton(NetatmoModuleEntity, ButtonEntity):
         )
 
     @callback
+    @override
     def async_update_callback(self) -> None:
         """Update the entity's state."""
         # No state to update for button
 
+    @override
     async def async_press(self) -> None:
         """Handle button press to move the cover to a preferred position."""
         _LOGGER.debug("Moving %s to a preferred position", self.device.entity_id)

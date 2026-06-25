@@ -1,7 +1,7 @@
 """Config flow to configure the Meteoclimatic integration."""
 
 import logging
-from typing import Any
+from typing import Any, override
 
 from meteoclimatic import MeteoclimaticClient
 from meteoclimatic.exceptions import MeteoclimaticError, StationNotFound
@@ -36,6 +36,7 @@ class MeteoclimaticFlowHandler(ConfigFlow, domain=DOMAIN):
             errors=errors or {},
         )
 
+    @override
     async def async_step_user(
         self, user_input: dict[str, Any] | None = None
     ) -> ConfigFlowResult:

@@ -6,10 +6,10 @@
     ]),
     'area_id': None,
     'capabilities': dict({
-      'max': 32,
-      'min': 8,
-      'mode': <NumberMode.BOX: 'box'>,
-      'step': 1,
+      <NumberEntityCapabilityAttribute.MAX: 'max'>: 32,
+      <NumberEntityCapabilityAttribute.MIN: 'min'>: 8,
+      <NumberEntityCapabilityAttribute.MODE: 'mode'>: <NumberMode.BOX: 'box'>,
+      <NumberEntityCapabilityAttribute.STEP: 'step'>: 1,
     }),
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -44,12 +44,12 @@
 # name: test_numbers[number.technove_station_maximum_current-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'device_class': 'current',
-      'friendly_name': 'TechnoVE Station Maximum current',
-      'max': 32,
-      'min': 8,
-      'mode': <NumberMode.BOX: 'box'>,
-      'step': 1,
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'current',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'TechnoVE Station Maximum current',
+      <NumberEntityCapabilityAttribute.MAX: 'max'>: 32,
+      <NumberEntityCapabilityAttribute.MIN: 'min'>: 8,
+      <NumberEntityCapabilityAttribute.MODE: 'mode'>: <NumberMode.BOX: 'box'>,
+      <NumberEntityCapabilityAttribute.STEP: 'step'>: 1,
     }),
     'context': <ANY>,
     'entity_id': 'number.technove_station_maximum_current',

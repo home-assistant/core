@@ -2,7 +2,7 @@
 
 from dataclasses import dataclass
 from enum import IntEnum
-from typing import Any
+from typing import Any, override
 
 from chip.clusters import Objects as clusters
 from matter_server.client.models import device_types
@@ -229,6 +229,7 @@ class MatterClimate(MatterEntity, ClimateEntity):
         self._preset_name_by_handle: dict[bytes | None, str] = {}
         super().__init__(*args, **kwargs)
 
+    @override
     async def async_set_temperature(self, **kwargs: Any) -> None:
         """Set new target temperature."""
         target_hvac_mode: HVACMode | None = kwargs.get(ATTR_HVAC_MODE)
@@ -273,6 +274,7 @@ class MatterClimate(MatterEntity, ClimateEntity):
                     matter_attribute=clusters.Thermostat.Attributes.OccupiedCoolingSetpoint,
                 )
 
+    @override
     async def async_set_preset_mode(self, preset_mode: str) -> None:
         """Set new preset mode."""
         preset_handle = self._preset_handle_by_name[preset_mode]
@@ -301,6 +303,7 @@ class MatterClimate(MatterEntity, ClimateEntity):
         )
         self._endpoint.set_attribute_value(active_preset_path, preset_handle)
 
+    @override
     async def async_set_hvac_mode(self, hvac_mode: HVACMode) -> None:
         """Set new target hvac mode."""
 
@@ -322,6 +325,7 @@ class MatterClimate(MatterEntity, ClimateEntity):
         self._update_from_device()
 
     @callback
+    @override
     def _update_from_device(self) -> None:
         """Update from device."""
         self._calculate_features()

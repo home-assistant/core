@@ -15,7 +15,7 @@
       selector:
         duration:
 
-docked: *trigger_common
+returned_to_dock: *trigger_common
 errored: *trigger_common
 paused_mowing: *trigger_common
 started_mowing: *trigger_common

@@ -2,7 +2,7 @@
 
 from collections.abc import Callable
 from dataclasses import dataclass
-from typing import Any
+from typing import Any, override
 
 from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
@@ -37,6 +37,7 @@ class WallConnectorEntity(CoordinatorEntity[WallConnectorCoordinator]):
         super().__init__(wall_connector_data.update_coordinator)
 
     @property
+    @override
     def device_info(self) -> DeviceInfo:
         """Return information about the device."""
         return DeviceInfo(

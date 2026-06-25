@@ -3,7 +3,7 @@
 from abc import abstractmethod
 from collections.abc import Callable, Mapping
 from dataclasses import dataclass
-from typing import TYPE_CHECKING
+from typing import TYPE_CHECKING, override
 
 import aiounifi
 from aiounifi.interfaces.api_handlers import (
@@ -163,6 +163,7 @@ class UnifiEntity[HandlerT: APIHandler, ItemT: ApiItem](Entity):
             )
         self.async_initiate_state()
 
+    @override
     async def async_added_to_hass(self) -> None:
         """Register callbacks."""
         description = self.entity_description

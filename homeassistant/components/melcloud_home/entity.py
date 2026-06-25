@@ -1,6 +1,7 @@
 """Base entities for MELCloud Home."""
 
 from abc import abstractmethod
+from typing import override
 
 from aiomelcloudhome import ATAUnit, ATWUnit
 
@@ -36,6 +37,7 @@ class MelCloudHomeUnitEntity[_UnitT: (ATAUnit, ATWUnit)](MelCloudHomeEntity):
         """Return the coordinator's units dict keyed by id."""
 
     @property
+    @override
     def available(self) -> bool:
         """Return if the entity is available."""
         return super().available and self._unit_id in self._units_dict()
@@ -49,6 +51,7 @@ class MelCloudHomeUnitEntity[_UnitT: (ATAUnit, ATWUnit)](MelCloudHomeEntity):
 class MelCloudHomeATAUnitEntity(MelCloudHomeUnitEntity[ATAUnit]):
     """Base entity for a MELCloud Home Air-to-Air unit."""
 
+    @override
     def _units_dict(self) -> dict[str, ATAUnit]:
         """Return ATA units dict from coordinator."""
         return self.coordinator.ata_units
@@ -57,6 +60,7 @@ class MelCloudHomeATAUnitEntity(MelCloudHomeUnitEntity[ATAUnit]):
 class MelCloudHomeATWUnitEntity(MelCloudHomeUnitEntity[ATWUnit]):
     """Base entity for a MELCloud Home Air-to-Water unit."""
 
+    @override
     def _units_dict(self) -> dict[str, ATWUnit]:
         """Return ATW units dict from coordinator."""
         return self.coordinator.atw_units

@@ -39,8 +39,8 @@
 # name: test_notify_platform[notify.test_user_party_chat-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'test-user Party chat',
-      'supported_features': <NotifyEntityFeature: 0>,
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'test-user Party chat',
+      <EntityStateAttribute.SUPPORTED_FEATURES: 'supported_features'>: <NotifyEntityFeature: 0>,
     }),
     'context': <ANY>,
     'entity_id': 'notify.test_user_party_chat',
@@ -90,8 +90,8 @@
 # name: test_notify_platform[notify.test_user_private_message_test_partymember_displayname-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'test-user Private message: test-partymember-displayname',
-      'supported_features': <NotifyEntityFeature: 0>,
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'test-user Private message: test-partymember-displayname',
+      <EntityStateAttribute.SUPPORTED_FEATURES: 'supported_features'>: <NotifyEntityFeature: 0>,
     }),
     'context': <ANY>,
     'entity_id': 'notify.test_user_private_message_test_partymember_displayname',
