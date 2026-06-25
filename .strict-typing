@@ -43,7 +43,6 @@ homeassistant.components
 homeassistant.components.abode.*
 homeassistant.components.acaia.*
 homeassistant.components.accuweather.*
-homeassistant.components.acer_projector.*
 homeassistant.components.acmeda.*
 homeassistant.components.actiontec.*
 homeassistant.components.actron_air.*
@@ -77,7 +76,6 @@ homeassistant.components.amberelectric.*
 homeassistant.components.ambient_network.*
 homeassistant.components.ambient_station.*
 homeassistant.components.amcrest.*
-homeassistant.components.ampio.*
 homeassistant.components.analytics.*
 homeassistant.components.analytics_insights.*
 homeassistant.components.android_ip_webcam.*

@@ -48,6 +48,7 @@ class WolfLinkCoordinator(DataUpdateCoordinator[dict[int, tuple[int, str]]]):
         self._system_share_id = device.system_share_id
         self._refetch_parameters = False
 
+    @override
     async def _async_setup(self) -> None:
         """Fetch parameters once during initial setup."""
         try:

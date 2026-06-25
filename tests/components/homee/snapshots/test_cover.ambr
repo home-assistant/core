@@ -39,10 +39,10 @@
 # name: test_cover_snapshot[cover.no_position-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'device_class': 'shutter',
-      'friendly_name': 'No Position',
-      'is_closed': True,
-      'supported_features': <CoverEntityFeature: 11>,
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'shutter',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'No Position',
+      <CoverEntityStateAttribute.IS_CLOSED: 'is_closed'>: True,
+      <EntityStateAttribute.SUPPORTED_FEATURES: 'supported_features'>: <CoverEntityFeature: 11>,
     }),
     'context': <ANY>,
     'entity_id': 'cover.no_position',
@@ -92,12 +92,12 @@
 # name: test_cover_snapshot[cover.shutter_with_position_and_slats-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'current_position': 100,
-      'current_tilt_position': 100,
-      'device_class': 'shutter',
-      'friendly_name': 'Shutter with position and slats',
-      'is_closed': False,
-      'supported_features': <CoverEntityFeature: 143>,
+      <CoverEntityStateAttribute.CURRENT_POSITION: 'current_position'>: 100,
+      <CoverEntityStateAttribute.CURRENT_TILT_POSITION: 'current_tilt_position'>: 100,
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'shutter',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Shutter with position and slats',
+      <CoverEntityStateAttribute.IS_CLOSED: 'is_closed'>: False,
+      <EntityStateAttribute.SUPPORTED_FEATURES: 'supported_features'>: <CoverEntityFeature: 143>,
     }),
     'context': <ANY>,
     'entity_id': 'cover.shutter_with_position_and_slats',
@@ -147,11 +147,11 @@
 # name: test_cover_snapshot[cover.slats_position-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'current_tilt_position': 65,
-      'device_class': 'shutter',
-      'friendly_name': 'Slats & Position',
-      'is_closed': False,
-      'supported_features': <CoverEntityFeature: 240>,
+      <CoverEntityStateAttribute.CURRENT_TILT_POSITION: 'current_tilt_position'>: 65,
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'shutter',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Slats & Position',
+      <CoverEntityStateAttribute.IS_CLOSED: 'is_closed'>: False,
+      <EntityStateAttribute.SUPPORTED_FEATURES: 'supported_features'>: <CoverEntityFeature: 240>,
     }),
     'context': <ANY>,
     'entity_id': 'cover.slats_position',
