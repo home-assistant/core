@@ -40,9 +40,7 @@ class MyPVDataEntity(CoordinatorEntity[MyPVCoordinator]):
     @property
     def available(self) -> bool:
         """Return if entity is available."""
-        if not self.coordinator.connected:
-            return False
-        if self.coordinator.device.is_on is None:
+        if not self.coordinator.connected or self.coordinator.device.is_on is None:
             return False
         try:
             if self.coordinator.get_data_value(self.entity_description.key) is None:
@@ -50,4 +48,4 @@ class MyPVDataEntity(CoordinatorEntity[MyPVCoordinator]):
         except MyPVNotSupportedError:
             return False
 
-        return self.coordinator.last_update_success
+        return super().available
