@@ -182,6 +182,26 @@ async def test_oven_cook_mode_select_from_idle(
     )
 
 
+async def test_oven_cook_mode_select_standby(
+    hass: HomeAssistant,
+    oven_cook_mode_entity: tuple[str, str, whirlpool.oven.Cavity],
+    request: pytest.FixtureRequest,
+) -> None:
+    """Test selecting standby stops the cook instead of starting one."""
+    entity_id, mock_fixture, cavity = oven_cook_mode_entity
+    mock = request.getfixturevalue(mock_fixture)
+    await init_integration(hass)
+
+    await hass.services.async_call(
+        SELECT_DOMAIN,
+        SERVICE_SELECT_OPTION,
+        {ATTR_ENTITY_ID: entity_id, ATTR_OPTION: "standby"},
+        blocking=True,
+    )
+    mock.stop_cook.assert_called_once_with(cavity)
+    mock.set_cook.assert_not_called()
+
+
 async def test_oven_cook_mode_select_value_error(
     hass: HomeAssistant,
     oven_cook_mode_entity: tuple[str, str, whirlpool.oven.Cavity],

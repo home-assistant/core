@@ -129,17 +129,22 @@ class WhirlpoolOvenCookModeSelect(WhirlpoolOvenEntity, SelectEntity):
     @override
     async def async_select_option(self, option: str) -> None:
         """Set the cook mode, keeping the current/last target temperature."""
-        target = self._appliance.get_target_temp(self.cavity)
-        if target is None:
-            target = DEFAULT_OVEN_TEMP
+        mode = OPTION_TO_OVEN_COOK_MODE[option]
         try:
-            WhirlpoolOvenCookModeSelect._check_service_request(
-                await self._appliance.set_cook(
+            if mode == CookMode.Standby:
+                # Standby is the idle state: the oven reaches it by cancelling
+                # the current cook, not by starting a "standby" cook.
+                result = await self._appliance.stop_cook(self.cavity)
+            else:
+                target = self._appliance.get_target_temp(self.cavity)
+                if target is None:
+                    target = DEFAULT_OVEN_TEMP
+                result = await self._appliance.set_cook(
                     target_temp=target,
-                    mode=OPTION_TO_OVEN_COOK_MODE[option],
+                    mode=mode,
                     cavity=self.cavity,
                 )
-            )
+            WhirlpoolOvenCookModeSelect._check_service_request(result)
         except ValueError as err:
             raise ServiceValidationError(
                 translation_domain=DOMAIN,
