@@ -25,13 +25,13 @@ def _my_pv_connection[T](
 ) -> Callable[..., Coroutine[Any, Any, T]]:
     @functools.wraps(func)
     async def wrapper(self, *args: Any, **kwargs: Any) -> T:
-        if not self.device.connected and not await self.device.connect():
-            raise HomeAssistantError(
-                translation_domain=DOMAIN,
-                translation_key="cannot_connect",
-            )
-
         try:
+            if not self.device.connected and not await self.device.connect():
+                raise HomeAssistantError(
+                    translation_domain=DOMAIN,
+                    translation_key="cannot_connect",
+                )
+
             return await func(self, *args, **kwargs)
         except MyPVAuthenticationError as exc:
             raise ConfigEntryAuthFailed from exc
