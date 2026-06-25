@@ -411,7 +411,7 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
                 store_updated = True
             except AmcrestError:
                 _LOGGER.error(
-                    "Could not get serial number from %s camera during initial setup"
+                    "Could not get serial number from %s camera during initial setup. "
                     "Ensure the camera is reachable",
                     name,
                 )
