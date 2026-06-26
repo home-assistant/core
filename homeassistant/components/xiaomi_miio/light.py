@@ -12,11 +12,11 @@ from miio import (
     Ceil,
     Device as MiioDevice,
     DeviceException,
+    DeviceException as GatewayException,
     PhilipsBulb,
     PhilipsEyecare,
     PhilipsMoonlight,
 )
-from miio import DeviceException as GatewayException
 from miio.integrations.lumi.gateway.devices.light import LightBulb
 from miio.integrations.lumi.gateway.gateway import (
     GATEWAY_MODEL_AC_V1,

@@ -7,10 +7,13 @@ import math
 from typing import Any, override
 
 from miio import Device as MiioDevice
-from miio.integrations.zhimi.fan.fan import MoveDirection as FanMoveDirection
-from miio.integrations.dmaker.fan.fan_miot import OperationMode as FanOperationMode
 from miio.integrations.dmaker.airfresh.airfresh_t2017 import (
     OperationMode as AirfreshOperationModeT2017,
+)
+from miio.integrations.dmaker.fan.fan import FanStatusP5
+from miio.integrations.dmaker.fan.fan_miot import (
+    FanStatusMiot,
+    OperationMode as FanOperationMode,
 )
 from miio.integrations.zhimi.airpurifier.airfresh import (
     OperationMode as AirfreshOperationMode,
@@ -21,8 +24,7 @@ from miio.integrations.zhimi.airpurifier.airpurifier import (
 from miio.integrations.zhimi.airpurifier.airpurifier_miot import (
     OperationMode as AirpurifierMiotOperationMode,
 )
-from miio.integrations.dmaker.fan.fan import FanStatusP5
-from miio.integrations.dmaker.fan.fan_miot import FanStatusMiot
+from miio.integrations.zhimi.fan.fan import MoveDirection as FanMoveDirection
 from miio.integrations.zhimi.fan.zhimi_miot import (
     OperationModeFanZA5 as FanZA5OperationMode,
 )
