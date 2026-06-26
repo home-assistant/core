@@ -11,6 +11,7 @@ from homeassistant.components.number import (
     ATTR_VALUE,
     DOMAIN as NUMBER_DOMAIN,
     SERVICE_SET_VALUE,
+    NumberEntity,
 )
 from homeassistant.components.velux.const import DOMAIN
 from homeassistant.const import STATE_UNAVAILABLE, STATE_UNKNOWN, Platform
@@ -143,6 +144,13 @@ def open_limit_entity_id(mock: AsyncMock) -> str:
     return f"number.{mock.name.lower().replace(' ', '_')}_open_position_limit"
 
 
+def get_limit_number_entity(hass: HomeAssistant, entity_id: str) -> NumberEntity:
+    """Return loaded number entity for an entity ID."""
+    entity = hass.data[NUMBER_DOMAIN].get_entity(entity_id)
+    assert entity is not None
+    return entity
+
+
 async def test_limitation_entity_number_device_association(
     hass: HomeAssistant,
     mock_window: AsyncMock,
@@ -249,9 +257,7 @@ async def test_set_limitation_refreshes_before_first_write(
     mock_window: AsyncMock,
 ) -> None:
     """Setting a limitation refreshes the coordinator if data is not loaded yet."""
-    entity_component = hass.data[NUMBER_DOMAIN]
-    entity = entity_component.get_entity(closed_limit_entity_id(mock_window))
-    assert entity is not None
+    entity = get_limit_number_entity(hass, closed_limit_entity_id(mock_window))
 
     coordinator = mock_config_entry.runtime_data.limitation_coordinators[
         mock_window.node_id
@@ -279,9 +285,7 @@ async def test_set_limitation_fails_when_refresh_has_no_data(
     mock_window: AsyncMock,
 ) -> None:
     """Setting a limitation fails cleanly if a refresh cannot populate data."""
-    entity_component = hass.data[NUMBER_DOMAIN]
-    entity = entity_component.get_entity(closed_limit_entity_id(mock_window))
-    assert entity is not None
+    entity = get_limit_number_entity(hass, closed_limit_entity_id(mock_window))
 
     coordinator = mock_config_entry.runtime_data.limitation_coordinators[
         mock_window.node_id
@@ -323,23 +327,23 @@ async def test_set_max_limitation(
 @pytest.mark.usefixtures("entity_registry_enabled_by_default")
 async def test_min_limitation_overlap_rejected(
     hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
     mock_window: AsyncMock,
-    freezer: FrozenDateTimeFactory,
 ) -> None:
-    """Setting min > current max raises ServiceValidationError."""
-    # HA maximum opening is at 60%, set HA minimum opening to 80% -> overlap
-    mock_window.get_limitation_min.return_value = MagicMock(
-        position_percent=40
-    )  # HA: 60
-    await update_polled_entities(hass, freezer)
+    """Overlap is rejected by integration validation after on-demand refresh."""
+    entity = get_limit_number_entity(hass, closed_limit_entity_id(mock_window))
 
-    with pytest.raises(ServiceValidationError):
-        await hass.services.async_call(
-            NUMBER_DOMAIN,
-            SERVICE_SET_VALUE,
-            {ATTR_VALUE: 80, "entity_id": closed_limit_entity_id(mock_window)},
-            blocking=True,
-        )
+    coordinator = mock_config_entry.runtime_data.limitation_coordinators[
+        mock_window.node_id
+    ]
+    coordinator.data = None
+    # Refreshed HA maximum opening becomes 60, so setting HA minimum opening to 80 overlaps.
+    mock_window.get_limitation_min.return_value = MagicMock(position_percent=40)
+
+    with pytest.raises(ServiceValidationError) as err:
+        await entity.async_set_native_value(80)
+
+    assert err.value.translation_key == "limitation_overlap"
     mock_window.set_position_limitations.assert_not_awaited()
 
 
@@ -347,23 +351,23 @@ async def test_min_limitation_overlap_rejected(
 @pytest.mark.usefixtures("entity_registry_enabled_by_default")
 async def test_max_limitation_overlap_rejected(
     hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
     mock_window: AsyncMock,
-    freezer: FrozenDateTimeFactory,
 ) -> None:
-    """Setting max < current min raises ServiceValidationError."""
-    # HA minimum opening is at 50%, set HA maximum opening to 30% -> overlap
-    mock_window.get_limitation_max.return_value = MagicMock(
-        position_percent=50
-    )  # HA: 50
-    await update_polled_entities(hass, freezer)
+    """Overlap is rejected by integration validation after on-demand refresh."""
+    entity = get_limit_number_entity(hass, open_limit_entity_id(mock_window))
 
-    with pytest.raises(ServiceValidationError):
-        await hass.services.async_call(
-            NUMBER_DOMAIN,
-            SERVICE_SET_VALUE,
-            {ATTR_VALUE: 30, "entity_id": open_limit_entity_id(mock_window)},
-            blocking=True,
-        )
+    coordinator = mock_config_entry.runtime_data.limitation_coordinators[
+        mock_window.node_id
+    ]
+    coordinator.data = None
+    # Refreshed HA minimum opening becomes 50, so setting HA maximum opening to 30 overlaps.
+    mock_window.get_limitation_max.return_value = MagicMock(position_percent=50)
+
+    with pytest.raises(ServiceValidationError) as err:
+        await entity.async_set_native_value(30)
+
+    assert err.value.translation_key == "limitation_overlap"
     mock_window.set_position_limitations.assert_not_awaited()
 
 
