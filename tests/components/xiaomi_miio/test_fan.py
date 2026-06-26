@@ -55,7 +55,8 @@ _MODEL_INFORMATION = {
                 "mode": 0,
                 "swing_mode": False,
                 "fan_speed": 100,
-            }
+            },
+            "dmaker.fan.p18",
         ),
     },
 }
