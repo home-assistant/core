@@ -15,7 +15,6 @@ from .entity import HypontechPlantEntity
 PLANT_STATUS_BINARY_SENSOR_DESCRIPTION = BinarySensorEntityDescription(
     key="status",
     device_class=BinarySensorDeviceClass.CONNECTIVITY,
-    has_entity_name=True,
 )
 
 
