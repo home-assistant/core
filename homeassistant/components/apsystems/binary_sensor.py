@@ -119,6 +119,7 @@ class ApSystemsConnectionBinarySensor(
         self._attr_unique_id = f"{data.device_id}_inverter_connection_status"
 
     @property
+    @override
     def is_on(self) -> bool:
         """Return true if the inverter is connected."""
         return self.coordinator.inverter_connected
