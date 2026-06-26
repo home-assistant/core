@@ -27,7 +27,7 @@ pytest-asyncio==1.4.0
 pytest-aiohttp==1.1.1
 pytest-cov==7.1.0
 pytest-freezer==0.4.9
-pytest-github-actions-annotate-failures==0.4.0
+pytest-github-actions-annotate-failures==0.4.1
 pytest-socket==0.8.0
 pytest-sugar==1.1.1
 pytest-timeout==2.4.0
