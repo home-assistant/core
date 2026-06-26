@@ -1,5 +1,5 @@
 # serializer version: 1
-# name: test_climate_entity[climate.lwz-entry]
+# name: test_climate_entity[climate.stiebel_eltron_lwz-entry]
   EntityRegistryEntrySnapshot({
     'aliases': list([
       None,
@@ -31,7 +31,7 @@
     'disabled_by': None,
     'domain': 'climate',
     'entity_category': None,
-    'entity_id': 'climate.lwz',
+    'entity_id': 'climate.stiebel_eltron_lwz',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -54,13 +54,13 @@
     'unit_of_measurement': None,
   })
 # ---
-# name: test_climate_entity[climate.lwz-state]
+# name: test_climate_entity[climate.stiebel_eltron_lwz-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       <ClimateEntityStateAttribute.CURRENT_HUMIDITY: 'current_humidity'>: 45.0,
       <ClimateEntityStateAttribute.CURRENT_TEMPERATURE: 'current_temperature'>: 21.0,
       'filter_alarm': False,
-      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'LWZ',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Stiebel Eltron LWZ',
       <ClimateEntityCapabilityAttribute.HVAC_MODES: 'hvac_modes'>: list([
         <HVACMode.AUTO: 'auto'>,
         <HVACMode.OFF: 'off'>,
@@ -83,7 +83,7 @@
       <ClimateEntityStateAttribute.TEMPERATURE: 'temperature'>: 22.5,
     }),
     'context': <ANY>,
-    'entity_id': 'climate.lwz',
+    'entity_id': 'climate.stiebel_eltron_lwz',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,

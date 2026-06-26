@@ -35,7 +35,7 @@ class StiebelEltronDataCoordinator(DataUpdateCoordinator[None]):
         super().__init__(
             hass,
             _LOGGER,
-            name=model.name,
+            name=f"Stiebel Eltron {model.name}",
             config_entry=entry,
             update_interval=timedelta(seconds=DEFAULT_SCAN_INTERVAL),
             # The coordinator holds no data of its own (the API client caches
