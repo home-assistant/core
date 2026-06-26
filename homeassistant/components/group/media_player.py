@@ -1,10 +1,8 @@
 """Platform allowing several media players to be grouped into one media player."""
 
-from __future__ import annotations
-
 from collections.abc import Callable, Mapping
 from contextlib import suppress
-from typing import Any
+from typing import Any, override
 
 import voluptuous as vol
 
@@ -252,6 +250,7 @@ class MediaPlayerGroup(MediaPlayerEntity):
             self.hass, self._entities, async_state_changed_listener
         )
 
+    @override
     async def async_added_to_hass(self) -> None:
         """Register listeners."""
         for entity_id in self._entities:
@@ -264,15 +263,18 @@ class MediaPlayerGroup(MediaPlayerEntity):
         self.async_write_ha_state()
 
     @property
+    @override
     def name(self) -> str:
         """Return the name of the entity."""
         return self._name
 
     @property
+    @override
     def extra_state_attributes(self) -> Mapping[str, Any]:
         """Return the state attributes for the media group."""
         return {ATTR_ENTITY_ID: self._entities}
 
+    @override
     async def async_clear_playlist(self) -> None:
         """Clear players playlist."""
         data = {ATTR_ENTITY_ID: self._features[KEY_CLEAR_PLAYLIST]}
@@ -283,6 +285,7 @@ class MediaPlayerGroup(MediaPlayerEntity):
             context=self._context,
         )
 
+    @override
     async def async_media_next_track(self) -> None:
         """Send next track command."""
         data = {ATTR_ENTITY_ID: self._features[KEY_TRACKS]}
@@ -293,6 +296,7 @@ class MediaPlayerGroup(MediaPlayerEntity):
             context=self._context,
         )
 
+    @override
     async def async_media_pause(self) -> None:
         """Send pause command."""
         data = {ATTR_ENTITY_ID: self._features[KEY_PAUSE_PLAY_STOP]}
@@ -303,6 +307,7 @@ class MediaPlayerGroup(MediaPlayerEntity):
             context=self._context,
         )
 
+    @override
     async def async_media_play(self) -> None:
         """Send play command."""
         data = {ATTR_ENTITY_ID: self._features[KEY_PAUSE_PLAY_STOP]}
@@ -313,6 +318,7 @@ class MediaPlayerGroup(MediaPlayerEntity):
             context=self._context,
         )
 
+    @override
     async def async_media_previous_track(self) -> None:
         """Send previous track command."""
         data = {ATTR_ENTITY_ID: self._features[KEY_TRACKS]}
@@ -323,6 +329,7 @@ class MediaPlayerGroup(MediaPlayerEntity):
             context=self._context,
         )
 
+    @override
     async def async_media_seek(self, position: float) -> None:
         """Send seek command."""
         data = {
@@ -336,6 +343,7 @@ class MediaPlayerGroup(MediaPlayerEntity):
             context=self._context,
         )
 
+    @override
     async def async_media_stop(self) -> None:
         """Send stop command."""
         data = {ATTR_ENTITY_ID: self._features[KEY_PAUSE_PLAY_STOP]}
@@ -346,6 +354,7 @@ class MediaPlayerGroup(MediaPlayerEntity):
             context=self._context,
         )
 
+    @override
     async def async_mute_volume(self, mute: bool) -> None:
         """Mute the volume."""
         data = {
@@ -359,6 +368,7 @@ class MediaPlayerGroup(MediaPlayerEntity):
             context=self._context,
         )
 
+    @override
     async def async_play_media(
         self, media_type: MediaType | str, media_id: str, **kwargs: Any
     ) -> None:
@@ -377,6 +387,7 @@ class MediaPlayerGroup(MediaPlayerEntity):
             context=self._context,
         )
 
+    @override
     async def async_set_shuffle(self, shuffle: bool) -> None:
         """Enable/disable shuffle mode."""
         data = {
@@ -390,6 +401,7 @@ class MediaPlayerGroup(MediaPlayerEntity):
             context=self._context,
         )
 
+    @override
     async def async_turn_on(self) -> None:
         """Forward the turn_on command to all media in the media group."""
         data = {ATTR_ENTITY_ID: self._features[KEY_ON_OFF]}
@@ -400,6 +412,7 @@ class MediaPlayerGroup(MediaPlayerEntity):
             context=self._context,
         )
 
+    @override
     async def async_set_volume_level(self, volume: float) -> None:
         """Set volume level(s)."""
         data = {
@@ -413,6 +426,7 @@ class MediaPlayerGroup(MediaPlayerEntity):
             context=self._context,
         )
 
+    @override
     async def async_turn_off(self) -> None:
         """Forward the turn_off command to all media in the media group."""
         data = {ATTR_ENTITY_ID: self._features[KEY_ON_OFF]}
@@ -423,6 +437,7 @@ class MediaPlayerGroup(MediaPlayerEntity):
             context=self._context,
         )
 
+    @override
     async def async_volume_up(self) -> None:
         """Turn volume up for media player(s)."""
         for entity in self._features[KEY_VOLUME]:
@@ -430,6 +445,7 @@ class MediaPlayerGroup(MediaPlayerEntity):
             if volume_level < 1:
                 await self.async_set_volume_level(min(1, volume_level + 0.1))
 
+    @override
     async def async_volume_down(self) -> None:
         """Turn volume down for media player(s)."""
         for entity in self._features[KEY_VOLUME]:

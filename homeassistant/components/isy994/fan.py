@@ -1,9 +1,7 @@
 """Support for ISY fans."""
 
-from __future__ import annotations
-
 import math
-from typing import Any
+from typing import Any, override
 
 from pyisy.constants import ISY_VALUE_UNKNOWN, PROTO_INSTEON
 
@@ -55,6 +53,7 @@ class ISYFanEntity(ISYNodeEntity, FanEntity):
     )
 
     @property
+    @override
     def percentage(self) -> int | None:
         """Return the current speed percentage."""
         if self._node.status == ISY_VALUE_UNKNOWN:
@@ -62,6 +61,7 @@ class ISYFanEntity(ISYNodeEntity, FanEntity):
         return ranged_value_to_percentage(SPEED_RANGE, self._node.status)
 
     @property
+    @override
     def speed_count(self) -> int:
         """Return the number of speeds the fan supports."""
         if self._node.protocol == PROTO_INSTEON:
@@ -69,12 +69,14 @@ class ISYFanEntity(ISYNodeEntity, FanEntity):
         return int_states_in_range(SPEED_RANGE)
 
     @property
+    @override
     def is_on(self) -> bool | None:
         """Get if the fan is on."""
         if self._node.status == ISY_VALUE_UNKNOWN:
             return None
         return bool(self._node.status != 0)
 
+    @override
     async def async_set_percentage(self, percentage: int) -> None:
         """Set node to speed percentage for the ISY fan device."""
         if percentage == 0:
@@ -85,6 +87,7 @@ class ISYFanEntity(ISYNodeEntity, FanEntity):
 
         await self._node.turn_on(val=isy_speed)
 
+    @override
     async def async_turn_on(
         self,
         percentage: int | None = None,
@@ -94,6 +97,7 @@ class ISYFanEntity(ISYNodeEntity, FanEntity):
         """Send the turn on command to the ISY fan device."""
         await self.async_set_percentage(percentage or 67)
 
+    @override
     async def async_turn_off(self, **kwargs: Any) -> None:
         """Send the turn off command to the ISY fan device."""
         await self._node.turn_off()
@@ -103,6 +107,7 @@ class ISYFanProgramEntity(ISYProgramEntity, FanEntity):
     """Representation of an ISY fan program."""
 
     @property
+    @override
     def percentage(self) -> int | None:
         """Return the current speed percentage."""
         if self._node.status == ISY_VALUE_UNKNOWN:
@@ -110,20 +115,24 @@ class ISYFanProgramEntity(ISYProgramEntity, FanEntity):
         return ranged_value_to_percentage(SPEED_RANGE, self._node.status)
 
     @property
+    @override
     def speed_count(self) -> int:
         """Return the number of speeds the fan supports."""
         return int_states_in_range(SPEED_RANGE)
 
     @property
+    @override
     def is_on(self) -> bool:
         """Get if the fan is on."""
         return bool(self._node.status != 0)
 
+    @override
     async def async_turn_off(self, **kwargs: Any) -> None:
         """Send the turn on command to ISY fan program."""
         if not await self._actions.run_then():
             _LOGGER.error("Unable to turn off the fan")
 
+    @override
     async def async_turn_on(
         self,
         percentage: int | None = None,

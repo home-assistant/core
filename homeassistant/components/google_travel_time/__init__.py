@@ -57,7 +57,9 @@ async def async_migrate_entry(hass: HomeAssistant, config_entry: ConfigEntry) ->
                     )
                 except ValueError:
                     _LOGGER.error(
-                        "Invalid time format found while migrating: %s. The old config never worked. Reset to default (empty)",
+                        "Invalid time format found while migrating: %s."
+                        " The old config never worked."
+                        " Reset to default (empty)",
                         options[CONF_TIME],
                     )
                     options[CONF_TIME] = None

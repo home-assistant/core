@@ -1,10 +1,8 @@
 """Support for the AirNow sensor service."""
 
-from __future__ import annotations
-
 from collections.abc import Callable
 from dataclasses import dataclass
-from typing import Any
+from typing import Any, override
 
 from dateutil import parser
 
@@ -77,7 +75,9 @@ def aqi_extra_attrs(data: dict[str, Any]) -> dict[str, Any]:
         ATTR_DESCR: data[ATTR_API_AQI_DESCRIPTION],
         ATTR_LEVEL: data[ATTR_API_AQI_LEVEL],
         ATTR_TIME: parser.parse(
-            f"{data[ATTR_API_REPORT_DATE]} {data[ATTR_API_REPORT_HOUR]}:00 {data[ATTR_API_REPORT_TZ]}",
+            f"{data[ATTR_API_REPORT_DATE]} "
+            f"{data[ATTR_API_REPORT_HOUR]}:00 "
+            f"{data[ATTR_API_REPORT_TZ]}",
             tzinfos=US_TZ_OFFSETS,
         ).isoformat(),
     }
@@ -168,11 +168,13 @@ class AirNowSensor(CoordinatorEntity[AirNowDataUpdateCoordinator], SensorEntity)
         )
 
     @property
+    @override
     def native_value(self) -> StateType:
         """Return the state."""
         return self.entity_description.value_fn(self.coordinator.data)
 
     @property
+    @override
     def extra_state_attributes(self) -> dict[str, str] | None:
         """Return the state attributes."""
         if self.entity_description.extra_state_attributes_fn:

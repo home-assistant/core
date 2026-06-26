@@ -1,10 +1,9 @@
 """Tests for the Duco fan platform."""
 
-from __future__ import annotations
+import logging
+from unittest.mock import AsyncMock
 
-from unittest.mock import AsyncMock, patch
-
-from duco.exceptions import DucoConnectionError, DucoError
+from duco_connectivity import DucoConnectionError, DucoError, DucoRateLimitError
 from freezegun.api import FrozenDateTimeFactory
 import pytest
 from syrupy.assertion import SnapshotAssertion
@@ -22,6 +21,8 @@ from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import entity_registry as er
 
+from . import setup_platform_integration
+
 from tests.common import MockConfigEntry, async_fire_time_changed, snapshot_platform
 
 _FAN_ENTITY = "fan.living"
@@ -34,11 +35,7 @@ async def init_integration(
     mock_duco_client: AsyncMock,
 ) -> MockConfigEntry:
     """Set up only the fan platform for testing."""
-    mock_config_entry.add_to_hass(hass)
-    with patch("homeassistant.components.duco.PLATFORMS", [Platform.FAN]):
-        await hass.config_entries.async_setup(mock_config_entry.entry_id)
-        await hass.async_block_till_done()
-    return mock_config_entry
+    return await setup_platform_integration(hass, mock_config_entry, [Platform.FAN])
 
 
 @pytest.mark.usefixtures("init_integration")
@@ -87,24 +84,54 @@ async def test_fan_set_state(
 
 @pytest.mark.usefixtures("init_integration")
 @pytest.mark.parametrize(
-    "exception",
-    [DucoConnectionError("Connection refused"), DucoError("Unexpected error")],
+    ("exception", "match"),
+    [
+        (DucoConnectionError("Connection refused"), "Failed to set ventilation state"),
+        (DucoError("Unexpected error"), "Failed to set ventilation state"),
+        (DucoRateLimitError(), "daily write limit"),
+    ],
 )
 async def test_fan_set_state_error(
     hass: HomeAssistant,
     mock_duco_client: AsyncMock,
     exception: Exception,
+    match: str,
 ) -> None:
     """Test that a HomeAssistantError is raised on API failure."""
     mock_duco_client.async_set_ventilation_state = AsyncMock(side_effect=exception)
 
-    with pytest.raises(HomeAssistantError, match="Failed to set ventilation state"):
+    with pytest.raises(HomeAssistantError, match=match):
         await hass.services.async_call(
             FAN_DOMAIN,
             SERVICE_SET_PERCENTAGE,
             {ATTR_ENTITY_ID: _FAN_ENTITY, ATTR_PERCENTAGE: 100},
             blocking=True,
         )
+
+
+@pytest.mark.usefixtures("init_integration")
+async def test_fan_set_state_rate_limit_logs_warning(
+    hass: HomeAssistant,
+    mock_duco_client: AsyncMock,
+    caplog: pytest.LogCaptureFixture,
+) -> None:
+    """Test that a warning is logged when the write rate limit is exceeded."""
+    mock_duco_client.async_set_ventilation_state = AsyncMock(
+        side_effect=DucoRateLimitError()
+    )
+
+    with (
+        pytest.raises(HomeAssistantError),
+        caplog.at_level(logging.WARNING, logger="homeassistant.components.duco.fan"),
+    ):
+        await hass.services.async_call(
+            FAN_DOMAIN,
+            SERVICE_SET_PERCENTAGE,
+            {ATTR_ENTITY_ID: _FAN_ENTITY, ATTR_PERCENTAGE: 100},
+            blocking=True,
+        )
+
+    assert "write rate limit exceeded" in caplog.text
 
 
 @pytest.mark.usefixtures("init_integration")

@@ -1,9 +1,7 @@
 """Support to keep track of user controlled booleans for within automation."""
 
-from __future__ import annotations
-
 import logging
-from typing import Any, Self
+from typing import Any, Self, override
 
 import voluptuous as vol
 
@@ -65,15 +63,18 @@ class InputBooleanStorageCollection(collection.DictStorageCollection):
 
     CREATE_UPDATE_SCHEMA = vol.Schema(STORAGE_FIELDS)
 
+    @override
     async def _process_create_data(self, data: dict) -> dict:
         """Validate the config is valid."""
         return self.CREATE_UPDATE_SCHEMA(data)
 
     @callback
+    @override
     def _get_suggested_id(self, info: dict) -> str:
         """Suggest an ID based on the config."""
         return info[CONF_NAME]
 
+    @override
     async def _update_data(self, item: dict, update_data: dict) -> dict:
         """Return a new updated data object."""
         update_data = self.CREATE_UPDATE_SCHEMA(update_data)
@@ -157,6 +158,7 @@ class InputBoolean(collection.CollectionEntity, ToggleEntity, RestoreEntity):
         self._attr_unique_id = config[CONF_ID]
 
     @classmethod
+    @override
     def from_storage(cls, config: ConfigType) -> Self:
         """Return entity instance initialized from storage."""
         input_bool = cls(config)
@@ -164,6 +166,7 @@ class InputBoolean(collection.CollectionEntity, ToggleEntity, RestoreEntity):
         return input_bool
 
     @classmethod
+    @override
     def from_yaml(cls, config: ConfigType) -> Self:
         """Return entity instance initialized from yaml."""
         input_bool = cls(config)
@@ -172,20 +175,24 @@ class InputBoolean(collection.CollectionEntity, ToggleEntity, RestoreEntity):
         return input_bool
 
     @property
+    @override
     def name(self) -> str | None:
         """Return name of the boolean input."""
         return self._config.get(CONF_NAME)
 
     @property
+    @override
     def icon(self) -> str | None:
         """Return the icon to be used for this entity."""
         return self._config.get(CONF_ICON)
 
     @property
+    @override
     def extra_state_attributes(self) -> dict[str, bool]:
         """Return the state attributes of the entity."""
         return {ATTR_EDITABLE: self.editable}
 
+    @override
     async def async_added_to_hass(self) -> None:
         """Call when entity about to be added to hass."""
         # Don't restore if we got an initial value.
@@ -196,16 +203,19 @@ class InputBoolean(collection.CollectionEntity, ToggleEntity, RestoreEntity):
         state = await self.async_get_last_state()
         self._attr_is_on = state is not None and state.state == STATE_ON
 
+    @override
     async def async_turn_on(self, **kwargs: Any) -> None:
         """Turn the entity on."""
         self._attr_is_on = True
         self.async_write_ha_state()
 
+    @override
     async def async_turn_off(self, **kwargs: Any) -> None:
         """Turn the entity off."""
         self._attr_is_on = False
         self.async_write_ha_state()
 
+    @override
     async def async_update_config(self, config: ConfigType) -> None:
         """Handle when the config is updated."""
         self._config = config

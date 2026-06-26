@@ -1,11 +1,9 @@
 """Config flow for Vizio."""
 
-from __future__ import annotations
-
 import copy
 import logging
 import socket
-from typing import Any
+from typing import Any, override
 
 from pyvizio import VizioAsync, async_guess_device_type
 from pyvizio.const import APP_HOME, APPS
@@ -61,6 +59,8 @@ def _get_config_schema(input_dict: dict[str, Any] | None = None) -> vol.Schema:
 
     return vol.Schema(
         {
+            # Name field is no longer allowed in config flow schemas
+            # pylint: disable-next=home-assistant-config-flow-name-field
             vol.Required(
                 CONF_NAME, default=input_dict.get(CONF_NAME, DEFAULT_NAME)
             ): str,
@@ -182,6 +182,7 @@ class VizioConfigFlow(ConfigFlow, domain=DOMAIN):
 
     @staticmethod
     @callback
+    @override
     def async_get_options_flow(
         config_entry: VizioConfigEntry,
     ) -> VizioOptionsConfigFlow:
@@ -208,6 +209,7 @@ class VizioConfigFlow(ConfigFlow, domain=DOMAIN):
 
         return self.async_create_entry(title=input_dict[CONF_NAME], data=input_dict)
 
+    @override
     async def async_step_user(
         self, user_input: dict[str, Any] | None = None
     ) -> ConfigFlowResult:
@@ -264,6 +266,7 @@ class VizioConfigFlow(ConfigFlow, domain=DOMAIN):
         schema = self._user_schema or _get_config_schema()
         return self.async_show_form(step_id="user", data_schema=schema, errors=errors)
 
+    @override
     async def async_step_zeroconf(
         self, discovery_info: ZeroconfServiceInfo
     ) -> ConfigFlowResult:

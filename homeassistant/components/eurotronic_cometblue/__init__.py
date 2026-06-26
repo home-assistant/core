@@ -1,7 +1,5 @@
 """Comet Blue Bluetooth integration."""
 
-from __future__ import annotations
-
 from bleak.exc import BleakError
 from eurotronic_cometblue_ha import AsyncCometBlue
 
@@ -18,6 +16,7 @@ from .coordinator import CometBlueConfigEntry, CometBlueDataUpdateCoordinator
 PLATFORMS: list[Platform] = [
     Platform.BUTTON,
     Platform.CLIMATE,
+    Platform.NUMBER,
     Platform.SENSOR,
 ]
 
@@ -58,6 +57,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: CometBlueConfigEntry) ->
     device_registry.async_get_or_create(
         config_entry_id=entry.entry_id,
         identifiers={(DOMAIN, address)},
+        connections={(dr.CONNECTION_BLUETOOTH, address)},
         name=f"{ble_device_info['model']} {cometblue_device.device.address}",
         manufacturer=ble_device_info["manufacturer"],
         model=ble_device_info["model"],

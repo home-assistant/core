@@ -1,9 +1,7 @@
 """Sensor platform for motionEye."""
 
-from __future__ import annotations
-
 from collections.abc import Mapping
-from typing import Any
+from typing import Any, override
 
 from motioneye_client.client import MotionEyeClient
 from motioneye_client.const import KEY_ACTIONS
@@ -72,11 +70,13 @@ class MotionEyeActionSensor(MotionEyeEntity, SensorEntity):
         )
 
     @property
+    @override
     def native_value(self) -> StateType:
         """Return the value reported by the sensor."""
         return len(self._camera.get(KEY_ACTIONS, [])) if self._camera else 0
 
     @property
+    @override
     def extra_state_attributes(self) -> dict[str, Any] | None:
         """Add actions as attribute."""
         if actions := (self._camera.get(KEY_ACTIONS) if self._camera else None):
@@ -84,6 +84,7 @@ class MotionEyeActionSensor(MotionEyeEntity, SensorEntity):
         return None
 
     @callback
+    @override
     def _handle_coordinator_update(self) -> None:
         """Handle updated data from the coordinator."""
         self._camera = get_camera_from_cameras(self._camera_id, self.coordinator.data)

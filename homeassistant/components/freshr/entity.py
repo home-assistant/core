@@ -1,7 +1,5 @@
 """Base entity for the Fresh-r integration."""
 
-from __future__ import annotations
-
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
 from .coordinator import FreshrReadingsCoordinator

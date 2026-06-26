@@ -1,7 +1,5 @@
 """HTTP views to interact with the entity registry."""
 
-from __future__ import annotations
-
 import logging
 from typing import Any
 

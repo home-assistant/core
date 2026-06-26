@@ -2,7 +2,7 @@
 
 from collections.abc import Callable, Coroutine
 from functools import wraps
-from typing import Any, Concatenate
+from typing import Any, Concatenate, override
 
 from actron_neo_api import ActronAirAPIError, ActronAirZone
 
@@ -24,7 +24,7 @@ def actron_air_command[_EntityT: ActronAirEntity, **_P](
     """
 
     @wraps(func)
-    async def wrapper(self: _EntityT, *args: _P.args, **kwargs: _P.kwargs) -> None:
+    async def wrapper(self: _EntityT, /, *args: _P.args, **kwargs: _P.kwargs) -> None:
         """Wrap API calls with exception handling."""
         try:
             await func(self, *args, **kwargs)
@@ -50,6 +50,7 @@ class ActronAirEntity(CoordinatorEntity[ActronAirSystemCoordinator]):
         self._serial_number = coordinator.serial_number
 
     @property
+    @override
     def available(self) -> bool:
         """Return True if entity is available."""
         return not self.coordinator.is_device_stale()

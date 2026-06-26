@@ -1,7 +1,5 @@
 """Test Tuya Alarm Control Panel platform."""
 
-from __future__ import annotations
-
 from typing import Any
 from unittest.mock import patch
 
@@ -35,6 +33,7 @@ def platform_autouse():
         yield
 
 
+@pytest.mark.usefixtures("no_quirk")
 async def test_platform_setup_and_discovery(
     hass: HomeAssistant,
     mock_manager: Manager,
@@ -130,7 +129,10 @@ async def test_service(
                 "master_mode": "home",
                 "master_state": "alarm",
                 # "Sensor Low Battery Test Sensor" in UTF-16BE
-                "alarm_msg": "AFMAZQBuAHMAbwByACAATABvAHcAIABCAGEAdAB0AGUAcgB5ACAAVABlAHMAdAAgAFMAZQBuAHMAbwBy",
+                "alarm_msg": (
+                    "AFMAZQBuAHMAbwByACAATABvAHcAIABCAGEAdAB0"
+                    "AGUAcgB5ACAAVABlAHMAdAAgAFMAZQBuAHMAbwBy"
+                ),
             },
             AlarmControlPanelState.ARMED_HOME,
         ),

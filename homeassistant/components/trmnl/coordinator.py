@@ -1,8 +1,7 @@
 """Define an object to manage fetching TRMNL data."""
 
-from __future__ import annotations
-
 from datetime import timedelta
+from typing import override
 
 from trmnl import TRMNLClient
 from trmnl.exceptions import TRMNLAuthenticationError, TRMNLError
@@ -40,6 +39,7 @@ class TRMNLCoordinator(DataUpdateCoordinator[dict[int, Device]]):
             session=async_get_clientsession(hass),
         )
 
+    @override
     async def _async_update_data(self) -> dict[int, Device]:
         """Fetch data from TRMNL."""
         try:

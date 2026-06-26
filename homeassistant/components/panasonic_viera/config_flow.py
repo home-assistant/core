@@ -2,7 +2,7 @@
 
 from functools import partial
 import logging
-from typing import Any
+from typing import Any, override
 from urllib.error import URLError
 
 from panasonic_viera import TV_TYPE_ENCRYPTED, RemoteControl, SOAPError
@@ -44,6 +44,7 @@ class PanasonicVieraConfigFlow(ConfigFlow, domain=DOMAIN):
 
         self._remote: RemoteControl | None = None
 
+    @override
     async def async_step_user(
         self, user_input: dict[str, Any] | None = None
     ) -> ConfigFlowResult:
@@ -93,6 +94,8 @@ class PanasonicVieraConfigFlow(ConfigFlow, domain=DOMAIN):
                         if self._data[CONF_HOST] is not None
                         else "",
                     ): str,
+                    # Name field is no longer allowed in config flow schemas
+                    # pylint: disable-next=home-assistant-config-flow-name-field
                     vol.Optional(
                         CONF_NAME,
                         default=self._data[CONF_NAME]
@@ -168,5 +171,7 @@ class PanasonicVieraConfigFlow(ConfigFlow, domain=DOMAIN):
         self._data[CONF_PORT] = self._data.get(CONF_PORT, DEFAULT_PORT)
         self._data[CONF_ON_ACTION] = self._data.get(CONF_ON_ACTION)
 
+        # Uses the host/IP value from CONF_HOST as unique ID, which is no longer allowed
+        # pylint: disable-next=home-assistant-unique-id-ip-based
         await self.async_set_unique_id(self._data[CONF_HOST])
         self._abort_if_unique_id_configured()

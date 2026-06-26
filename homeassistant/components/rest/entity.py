@@ -1,9 +1,7 @@
 """The base entity for the rest component."""
 
-from __future__ import annotations
-
 from abc import abstractmethod
-from typing import Any
+from typing import Any, override
 
 from homeassistant.core import callback
 from homeassistant.helpers.entity import Entity
@@ -31,12 +29,14 @@ class RestEntity(Entity):
         self._attr_force_update = force_update
 
     @property
+    @override
     def available(self) -> bool:
         """Return the availability of this sensor."""
         if self._coordinator and not self._coordinator.last_update_success:
             return False
         return self.rest.data is not None
 
+    @override
     async def async_added_to_hass(self) -> None:
         """When entity is added to hass."""
         await super().async_added_to_hass()

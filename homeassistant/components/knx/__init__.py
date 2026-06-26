@@ -1,8 +1,7 @@
 """The KNX integration."""
 
-from __future__ import annotations
-
 import contextlib
+import logging
 from pathlib import Path
 from typing import Final
 
@@ -19,11 +18,20 @@ from homeassistant.helpers.storage import STORAGE_DIR
 from homeassistant.helpers.typing import ConfigType
 
 from .const import (
+    CONF_KNX_DEFAULT_RATE_LIMIT,
+    CONF_KNX_DEFAULT_STATE_UPDATER,
     CONF_KNX_EXPOSE,
     CONF_KNX_KNXKEY_FILENAME,
+    CONF_KNX_RATE_LIMIT,
+    CONF_KNX_STATE_UPDATER,
+    CONF_KNX_TELEGRAM_DB_LOAD_HOURS,
+    CONF_KNX_TELEGRAM_DB_RETENTION_DAYS,
     DATA_HASS_CONFIG,
     DOMAIN,
     KNX_MODULE_KEY,
+    KNX_TELEGRAM_DB_PATH_SQLITE,
+    KNX_TELEGRAM_DB_RETENTION_DEFAULT,
+    KNX_TELEGRAM_LOAD_HOURS_DEFAULT,
     SUPPORTED_PLATFORMS_UI,
     SUPPORTED_PLATFORMS_YAML,
 )
@@ -53,10 +61,11 @@ from .schema import (
 )
 from .services import async_setup_services
 from .storage.config_store import STORAGE_KEY as CONFIG_STORAGE_KEY
-from .telegrams import STORAGE_KEY as TELEGRAMS_STORAGE_KEY
 from .websocket import register_panel
 
 _KNX_YAML_CONFIG: Final = "knx_yaml_config"
+
+_LOGGER = logging.getLogger(__name__)
 
 CONFIG_SCHEMA = vol.Schema(
     {
@@ -137,13 +146,56 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     await hass.config_entries.async_forward_entry_setups(
         entry,
         {
-            Platform.SENSOR,  # always forward sensor for system entities (telegram counter, etc.)
-            *SUPPORTED_PLATFORMS_UI,  # forward all platforms that support UI entity management
-            *configured_platforms_yaml,  # forward yaml-only managed platforms on demand,
+            # always forward sensor for system entities
+            # (telegram counter, etc.)
+            Platform.SENSOR,
+            # forward all platforms that support UI entity
+            # management
+            *SUPPORTED_PLATFORMS_UI,
+            # forward yaml-only managed platforms on demand
+            *configured_platforms_yaml,
         },
     )
 
     await register_panel(hass)
+    return True
+
+
+async def async_migrate_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
+    """Migrate old entry."""
+    _LOGGER.debug("Migrating from version %s", entry.version)
+
+    if entry.version > 2:
+        # Don't migrate from future version
+        return False
+
+    if entry.version == 1:
+        new_data = {**entry.data}
+        new_options = {**entry.options}
+        new_data.pop("telegram_log_size", None)
+
+        for key in (
+            CONF_KNX_STATE_UPDATER,
+            CONF_KNX_RATE_LIMIT,
+            CONF_KNX_TELEGRAM_DB_LOAD_HOURS,
+            CONF_KNX_TELEGRAM_DB_RETENTION_DAYS,
+        ):
+            if key in new_data:
+                new_options[key] = new_data.pop(key)
+
+        new_options.setdefault(
+            CONF_KNX_TELEGRAM_DB_RETENTION_DAYS, KNX_TELEGRAM_DB_RETENTION_DEFAULT
+        )
+        new_options.setdefault(
+            CONF_KNX_TELEGRAM_DB_LOAD_HOURS, KNX_TELEGRAM_LOAD_HOURS_DEFAULT
+        )
+        new_options.setdefault(CONF_KNX_STATE_UPDATER, CONF_KNX_DEFAULT_STATE_UPDATER)
+        new_options.setdefault(CONF_KNX_RATE_LIMIT, CONF_KNX_DEFAULT_RATE_LIMIT)
+
+        hass.config_entries.async_update_entry(
+            entry, data=new_data, options=new_options, version=2
+        )
+        _LOGGER.info("Migration to version 2 successful")
 
     return True
 
@@ -170,9 +222,14 @@ async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     unload_ok = await hass.config_entries.async_unload_platforms(
         entry,
         {
-            Platform.SENSOR,  # always unload system entities (telegram counter, etc.)
-            *SUPPORTED_PLATFORMS_UI,  # unload all platforms that support UI entity management
-            *configured_platforms_yaml,  # unload yaml-only managed platforms if configured,
+            # always unload system entities
+            # (telegram counter, etc.)
+            Platform.SENSOR,
+            # unload all platforms that support UI entity
+            # management
+            *SUPPORTED_PLATFORMS_UI,
+            # unload yaml-only managed platforms if configured
+            *configured_platforms_yaml,
         },
     )
     if unload_ok:
@@ -195,7 +252,12 @@ async def async_remove_entry(hass: HomeAssistant, entry: ConfigEntry) -> None:
         with contextlib.suppress(FileNotFoundError):
             (storage_dir / PROJECT_STORAGE_KEY).unlink()
         with contextlib.suppress(FileNotFoundError):
-            (storage_dir / TELEGRAMS_STORAGE_KEY).unlink()
+            (storage_dir / KNX_TELEGRAM_DB_PATH_SQLITE).unlink()
+        with contextlib.suppress(FileNotFoundError):
+            (storage_dir / f"{KNX_TELEGRAM_DB_PATH_SQLITE}-wal").unlink()
+        with contextlib.suppress(FileNotFoundError):
+            (storage_dir / f"{KNX_TELEGRAM_DB_PATH_SQLITE}-shm").unlink()
+
         with contextlib.suppress(FileNotFoundError, OSError):
             (storage_dir / DOMAIN).rmdir()
 

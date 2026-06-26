@@ -1,7 +1,5 @@
 """Services for Advantage Air integration."""
 
-from __future__ import annotations
-
 import voluptuous as vol
 
 from homeassistant.components.sensor import DOMAIN as SENSOR_DOMAIN

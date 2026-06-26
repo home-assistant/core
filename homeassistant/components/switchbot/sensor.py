@@ -1,13 +1,11 @@
 """Support for SwitchBot sensors."""
 
-from __future__ import annotations
-
 from collections.abc import Callable
 from dataclasses import dataclass
+from typing import override
 
 import switchbot
-from switchbot import HumidifierWaterLevel, SwitchbotModel
-from switchbot.const.air_purifier import AirQualityLevel
+from switchbot import AirQualityLevel, HumidifierWaterLevel, SwitchbotModel
 
 from homeassistant.components.bluetooth import async_last_service_info
 from homeassistant.components.sensor import (
@@ -17,6 +15,7 @@ from homeassistant.components.sensor import (
     SensorStateClass,
 )
 from homeassistant.const import (
+    CONCENTRATION_MICROGRAMS_PER_CUBIC_METER,
     CONCENTRATION_PARTS_PER_MILLION,
     LIGHT_LUX,
     PERCENTAGE,
@@ -32,7 +31,7 @@ from homeassistant.core import HomeAssistant
 from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
-from .const import DOMAIN
+from .const import AIRPURIFIER_PM25_MODELS, DOMAIN
 from .coordinator import SwitchbotConfigEntry, SwitchbotDataUpdateCoordinator
 from .entity import SwitchbotEntity
 
@@ -150,6 +149,12 @@ SENSOR_TYPES: dict[str, SwitchBotSensorEntityDescription] = {
             ">=60%": "high",
         }.get(str(v)),
     ),
+    "pm25": SwitchBotSensorEntityDescription(
+        key="pm25",
+        native_unit_of_measurement=CONCENTRATION_MICROGRAMS_PER_CUBIC_METER,
+        state_class=SensorStateClass.MEASUREMENT,
+        device_class=SensorDeviceClass.PM25,
+    ),
 }
 
 
@@ -184,10 +189,14 @@ async def async_setup_entry(
         if "battery" in parsed_data:
             sensor_entities.append(SwitchBotSensor(coordinator, "battery"))
     else:
+        sensors: set[str] = {sensor for sensor in parsed_data if sensor in SENSOR_TYPES}
+        if (
+            isinstance(coordinator.device, switchbot.SwitchbotAirPurifier)
+            and coordinator.model in AIRPURIFIER_PM25_MODELS
+        ):
+            sensors.add("pm25")
         sensor_entities.extend(
-            SwitchBotSensor(coordinator, sensor)
-            for sensor in parsed_data
-            if sensor in SENSOR_TYPES
+            SwitchBotSensor(coordinator, sensor) for sensor in sensors
         )
     sensor_entities.append(SwitchbotRSSISensor(coordinator, "rssi"))
     async_add_entities(sensor_entities)
@@ -224,6 +233,7 @@ class SwitchBotSensor(SwitchbotEntity, SensorEntity):
             self._attr_unique_id = f"{coordinator.base_unique_id}-{sensor}"
 
     @property
+    @override
     def native_value(self) -> str | int | None:
         """Return the state of the sensor."""
         return self.entity_description.value_fn(self.parsed_data.get(self._sensor))
@@ -233,6 +243,7 @@ class SwitchbotRSSISensor(SwitchBotSensor):
     """Representation of a Switchbot RSSI sensor."""
 
     @property
+    @override
     def native_value(self) -> str | int | None:
         """Return the state of the sensor."""
         # Switchbot supports both connectable and non-connectable devices

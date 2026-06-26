@@ -1,9 +1,7 @@
 """Support for TPLink vacuum."""
 
-from __future__ import annotations
-
 from dataclasses import dataclass
-from typing import Any
+from typing import Any, override
 
 from kasa import Device, Module
 from kasa.smart.modules.clean import Clean, Status
@@ -126,34 +124,41 @@ class TPLinkVacuumEntity(CoordinatedTPLinkModuleEntity, StateVacuumEntity):
             self._attr_fan_speed_list = [c.lower() for c in fanspeed_feat.choices]
 
     @async_refresh_after
+    @override
     async def async_start(self) -> None:
         """Start cleaning."""
         await self._vacuum_module.start()
 
     @async_refresh_after
+    @override
     async def async_pause(self) -> None:
         """Pause cleaning."""
         await self._vacuum_module.pause()
 
     @async_refresh_after
+    @override
     async def async_return_to_base(self, **kwargs: Any) -> None:
         """Return home."""
         await self._vacuum_module.return_home()
 
     @async_refresh_after
+    @override
     async def async_set_fan_speed(self, fan_speed: str, **kwargs: Any) -> None:
         """Set fan speed."""
         await self._vacuum_module.set_fan_speed_preset(fan_speed.capitalize())
 
+    @override
     async def async_locate(self, **kwargs: Any) -> None:
         """Locate the device."""
         await self._speaker_module.locate()
 
     @property
+    @override
     def battery_level(self) -> int | None:
         """Return battery level."""
         return self._vacuum_module.battery
 
+    @override
     def _async_update_attrs(self) -> bool:
         """Update the entity's attributes."""
         self._attr_activity = STATUS_TO_ACTIVITY.get(self._vacuum_module.status)

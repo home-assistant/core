@@ -1,7 +1,5 @@
 """Offer API to configure Home Assistant auth."""
 
-from __future__ import annotations
-
 from typing import Any
 
 import voluptuous as vol
@@ -10,32 +8,19 @@ from homeassistant.auth.models import User
 from homeassistant.components import websocket_api
 from homeassistant.core import HomeAssistant, callback
 
-WS_TYPE_LIST = "config/auth/list"
-SCHEMA_WS_LIST = websocket_api.BASE_COMMAND_MESSAGE_SCHEMA.extend(
-    {vol.Required("type"): WS_TYPE_LIST}
-)
-
-WS_TYPE_DELETE = "config/auth/delete"
-SCHEMA_WS_DELETE = websocket_api.BASE_COMMAND_MESSAGE_SCHEMA.extend(
-    {vol.Required("type"): WS_TYPE_DELETE, vol.Required("user_id"): str}
-)
-
 
 @callback
 def async_setup(hass: HomeAssistant) -> bool:
     """Enable the Home Assistant views."""
-    websocket_api.async_register_command(
-        hass, WS_TYPE_LIST, websocket_list, SCHEMA_WS_LIST
-    )
-    websocket_api.async_register_command(
-        hass, WS_TYPE_DELETE, websocket_delete, SCHEMA_WS_DELETE
-    )
+    websocket_api.async_register_command(hass, websocket_list)
+    websocket_api.async_register_command(hass, websocket_delete)
     websocket_api.async_register_command(hass, websocket_create)
     websocket_api.async_register_command(hass, websocket_update)
     return True
 
 
 @websocket_api.require_admin
+@websocket_api.websocket_command({vol.Required("type"): "config/auth/list"})
 @websocket_api.async_response
 async def websocket_list(
     hass: HomeAssistant,
@@ -49,6 +34,9 @@ async def websocket_list(
 
 
 @websocket_api.require_admin
+@websocket_api.websocket_command(
+    {vol.Required("type"): "config/auth/delete", vol.Required("user_id"): str}
+)
 @websocket_api.async_response
 async def websocket_delete(
     hass: HomeAssistant,

@@ -1,11 +1,9 @@
 """Component providing support for Reolink select entities."""
 
-from __future__ import annotations
-
 from collections.abc import Callable
 from dataclasses import dataclass
 import logging
-from typing import Any
+from typing import Any, override
 
 from reolink_aio.api import (
     BinningModeEnum,
@@ -472,6 +470,7 @@ class ReolinkSelectEntity(ReolinkChannelCoordinatorEntity, SelectEntity):
             self._attr_options = entity_description.get_options
 
     @property
+    @override
     def current_option(self) -> str | None:
         """Return the current option."""
         if self.entity_description.value is None:
@@ -489,6 +488,7 @@ class ReolinkSelectEntity(ReolinkChannelCoordinatorEntity, SelectEntity):
         return option
 
     @raise_translated_error
+    @override
     async def async_select_option(self, option: str) -> None:
         """Change the selected option."""
         await self.entity_description.method(self._host.api, self._channel, option)
@@ -511,11 +511,13 @@ class ReolinkHostSelectEntity(ReolinkHostCoordinatorEntity, SelectEntity):
         self._attr_options = entity_description.get_options(self._host.api)
 
     @property
+    @override
     def current_option(self) -> str | None:
         """Return the current option."""
         return self.entity_description.value(self._host.api)
 
     @raise_translated_error
+    @override
     async def async_select_option(self, option: str) -> None:
         """Change the selected option."""
         await self.entity_description.method(self._host.api, option)
@@ -539,11 +541,13 @@ class ReolinkChimeSelectEntity(ReolinkChimeCoordinatorEntity, SelectEntity):
         self._attr_options = entity_description.get_options
 
     @property
+    @override
     def current_option(self) -> str | None:
         """Return the current option."""
         return self.entity_description.value(self._chime)
 
     @raise_translated_error
+    @override
     async def async_select_option(self, option: str) -> None:
         """Change the selected option."""
         await self.entity_description.method(self._chime, option)
@@ -567,11 +571,13 @@ class ReolinkHostChimeSelectEntity(ReolinkHostChimeCoordinatorEntity, SelectEnti
         self._attr_options = entity_description.get_options
 
     @property
+    @override
     def current_option(self) -> str | None:
         """Return the current option."""
         return self.entity_description.value(self._chime)
 
     @raise_translated_error
+    @override
     async def async_select_option(self, option: str) -> None:
         """Change the selected option."""
         await self.entity_description.method(self._chime, option)

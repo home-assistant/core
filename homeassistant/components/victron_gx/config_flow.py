@@ -1,10 +1,8 @@
 """Config flow for the Victron GX integration."""
 
-from __future__ import annotations
-
 from collections.abc import Mapping
 import logging
-from typing import Any
+from typing import Any, override
 from urllib.parse import urlparse
 
 from victron_mqtt import AuthenticationError, CannotConnectError, Hub as VictronVenusHub
@@ -13,6 +11,7 @@ import voluptuous as vol
 from homeassistant.config_entries import ConfigFlow, ConfigFlowResult
 from homeassistant.const import (
     CONF_HOST,
+    CONF_MODEL,
     CONF_PASSWORD,
     CONF_PORT,
     CONF_SSL,
@@ -22,7 +21,7 @@ from homeassistant.helpers import selector
 from homeassistant.helpers.redact import async_redact_data
 from homeassistant.helpers.service_info.ssdp import SsdpServiceInfo
 
-from .const import CONF_INSTALLATION_ID, CONF_MODEL, CONF_SERIAL, DOMAIN
+from .const import CONF_INSTALLATION_ID, CONF_SERIAL, DOMAIN
 
 DEFAULT_HOST = "venus.local"
 DEFAULT_PORT = 1883
@@ -112,6 +111,7 @@ class VictronGXConfigFlow(ConfigFlow, domain=DOMAIN):
         self.friendly_name: str | None = None
         self.model_name: str | None = None
 
+    @override
     async def async_step_user(
         self, user_input: dict[str, Any] | None = None
     ) -> ConfigFlowResult:
@@ -162,6 +162,7 @@ class VictronGXConfigFlow(ConfigFlow, domain=DOMAIN):
             errors=errors,
         )
 
+    @override
     async def async_step_ssdp(
         self, discovery_info: SsdpServiceInfo
     ) -> ConfigFlowResult:
@@ -282,6 +283,60 @@ class VictronGXConfigFlow(ConfigFlow, domain=DOMAIN):
             ),
             errors=errors,
             description_placeholders={CONF_HOST: self.hostname},
+        )
+
+    async def async_step_reconfigure(
+        self, user_input: dict[str, Any] | None = None
+    ) -> ConfigFlowResult:
+        """Handle reconfiguration of a Victron GX device."""
+        errors: dict[str, str] = {}
+        reconfigure_entry = self._get_reconfigure_entry()
+
+        if user_input is not None:
+            data = {
+                **reconfigure_entry.data,
+                **user_input,
+            }
+            if CONF_USERNAME in user_input:
+                data[CONF_USERNAME] = user_input[CONF_USERNAME] or None
+            if CONF_PASSWORD in user_input:
+                data[CONF_PASSWORD] = user_input[CONF_PASSWORD] or None
+            try:
+                installation_id = await validate_input(data)
+            except AuthenticationError:
+                errors["base"] = "invalid_auth"
+            except CannotConnectError:
+                errors["base"] = "cannot_connect"
+            except Exception:
+                _LOGGER.exception("Unexpected error during reconfiguration")
+                errors["base"] = "unknown"
+            else:
+                await self.async_set_unique_id(installation_id)
+                self._abort_if_unique_id_mismatch(reason="different_device")
+                return self.async_update_reload_and_abort(
+                    reconfigure_entry,
+                    title=ENTRY_TITLE_FORMAT.format(
+                        installation_id=installation_id,
+                        host=user_input[CONF_HOST],
+                        port=user_input[CONF_PORT],
+                    ),
+                    data_updates=data,
+                )
+
+        suggested_values = {
+            CONF_HOST: reconfigure_entry.data[CONF_HOST],
+            CONF_PORT: reconfigure_entry.data[CONF_PORT],
+            CONF_USERNAME: reconfigure_entry.data.get(CONF_USERNAME),
+            CONF_SSL: reconfigure_entry.data.get(CONF_SSL, False),
+        }
+        if user_input is not None:
+            suggested_values.update(user_input)
+        return self.async_show_form(
+            step_id="reconfigure",
+            data_schema=self.add_suggested_values_to_schema(
+                STEP_USER_DATA_SCHEMA, suggested_values
+            ),
+            errors=errors,
         )
 
     async def async_step_reauth(self, _: Mapping[str, Any]) -> ConfigFlowResult:

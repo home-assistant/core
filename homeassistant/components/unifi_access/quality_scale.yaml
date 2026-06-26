@@ -1,8 +1,6 @@
 rules:
   # Bronze
-  action-setup:
-    status: exempt
-    comment: Integration does not register custom actions.
+  action-setup: done
   appropriate-polling:
     status: exempt
     comment: Integration uses WebSocket push updates, no polling.
@@ -11,12 +9,16 @@ rules:
   config-flow-test-coverage: done
   config-flow: done
   dependency-transparency: done
-  docs-actions:
+  docs-actions: done
+  docs-conditions:
     status: exempt
-    comment: Integration does not register custom actions.
+    comment: This integration does not have any conditions.
   docs-high-level-description: done
   docs-installation-instructions: done
   docs-removal-instructions: done
+  docs-triggers:
+    status: exempt
+    comment: This integration does not have any triggers.
   entity-event-setup: done
   entity-unique-id: done
   has-entity-name: done

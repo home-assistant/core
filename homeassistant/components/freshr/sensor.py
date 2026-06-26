@@ -1,9 +1,8 @@
 """Sensor platform for the Fresh-r integration."""
 
-from __future__ import annotations
-
 from collections.abc import Callable
 from dataclasses import dataclass
+from typing import override
 
 from pyfreshr.models import DeviceReadings, DeviceType
 
@@ -152,6 +151,7 @@ class FreshrSensor(FreshrEntity, SensorEntity):
         self._attr_unique_id = f"{coordinator.device_id}_{description.key}"
 
     @property
+    @override
     def native_value(self) -> StateType:
         """Return the value from coordinator data."""
         return self.entity_description.value_fn(self.coordinator.data)

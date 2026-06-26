@@ -109,6 +109,7 @@ async def test_agents_get_backup(
     )
     response = await client.receive_json()
     assert response["success"]
+    # pylint: disable-next=home-assistant-test-non-deterministic
     if response["result"]["backup"]:
         assert response["result"]["backup"]["backup_id"] == TEST_BACKUP.backup_id
 
@@ -901,7 +902,10 @@ async def test_metadata_downloads_are_sequential(
     hass_ws_client: WebSocketGenerator,
     mock_config_entry: MockConfigEntry,
 ) -> None:
-    """Test that metadata downloads are processed sequentially to avoid exhausting executor pool."""
+    """Test metadata downloads are processed sequentially.
+
+    This avoids exhausting the executor pool.
+    """
     current_concurrent = 0
     max_concurrent = 0
     lock = threading.Lock()

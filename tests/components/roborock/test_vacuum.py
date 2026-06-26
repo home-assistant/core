@@ -143,6 +143,29 @@ async def test_commands(
 
 
 @pytest.mark.parametrize(
+    "entity_id",
+    [
+        ENTITY_ID,
+        Q7_ENTITY_ID,
+        Q10_ENTITY_ID,
+    ],
+)
+async def test_set_fan_speed_invalid(
+    hass: HomeAssistant,
+    setup_entry: MockConfigEntry,
+    entity_id: str,
+) -> None:
+    """Test calling set_fan_speed with an invalid mode."""
+    with pytest.raises(ServiceValidationError, match="Invalid fan speed: some-mode"):
+        await hass.services.async_call(
+            VACUUM_DOMAIN,
+            SERVICE_SET_FAN_SPEED,
+            {ATTR_ENTITY_ID: entity_id, "fan_speed": "some-mode"},
+            blocking=True,
+        )
+
+
+@pytest.mark.parametrize(
     ("in_cleaning_int", "in_returning_int", "expected_command"),
     [
         (0, 1, RoborockCommand.APP_CHARGE),
@@ -299,7 +322,7 @@ async def test_get_current_position(
     snapshot: SnapshotAssertion,
     fake_vacuum: FakeDevice,
 ) -> None:
-    """Test that the service for getting the current position outputs the correct coordinates."""
+    """Test get current position outputs the correct coordinates."""
     fake_vacuum.v1_properties.map_content.map_data.vacuum_position = Point(x=123, y=456)
 
     response = await hass.services.async_call(
@@ -322,7 +345,7 @@ async def test_get_current_position_no_map_data(
     setup_entry: MockConfigEntry,
     fake_vacuum: FakeDevice,
 ) -> None:
-    """Test that the service for getting the current position handles no map data error."""
+    """Test get current position handles no map data error."""
     fake_vacuum.v1_properties.map_content.map_data = None
 
     with (
@@ -344,7 +367,7 @@ async def test_get_current_position_no_robot_position(
     setup_entry: MockConfigEntry,
     fake_vacuum: FakeDevice,
 ) -> None:
-    """Test that the service for getting the current position handles no robot position error."""
+    """Test get current position handles no robot position error."""
     fake_vacuum.v1_properties.map_content.map_data.vacuum_position = None
 
     with (
@@ -506,12 +529,13 @@ async def test_clean_segments_mixed_maps(
     entity_registry: er.EntityRegistry,
     vacuum_command: Mock,
 ) -> None:
-    """Test that clean_area service cleans only current-map segments when given segments from multiple maps."""
+    """Test clean_area only cleans current-map segments."""
     entity_registry.async_update_entity_options(
         ENTITY_ID,
         VACUUM_DOMAIN,
         {
-            # area_1 maps to segments from both maps; only map 1 (Downstairs) is current.
+            # area_1 maps to segments from both maps; only map 1
+            # (Downstairs) is current.
             "area_mapping": {"area_1": ["0_16", "1_17"]},
             "last_seen_segments": [
                 {"id": "0_16", "name": "Example room 1", "group": "Upstairs"},
@@ -527,7 +551,8 @@ async def test_clean_segments_mixed_maps(
         blocking=True,
     )
 
-    # Only the segment from the current map (map 1) is cleaned; segment from map 0 is ignored.
+    # Only the segment from the current map (map 1) is cleaned;
+    # segment from map 0 is ignored.
     assert vacuum_command.send.call_count == 1
     assert vacuum_command.send.call_args == call(
         RoborockCommand.APP_SEGMENT_CLEAN,
@@ -541,7 +566,7 @@ async def test_segments_changed_issue(
     entity_registry: er.EntityRegistry,
     fake_vacuum: FakeDevice,
 ) -> None:
-    """Test that a repair issue is created when segments change after area mapping is configured."""
+    """Test repair issue created when segments change after mapping."""
     entity_entry = entity_registry.async_get(ENTITY_ID)
     assert entity_entry is not None
     entity_registry.async_update_entity_options(
@@ -878,25 +903,6 @@ async def test_q10_set_fan_speed_command(
     )
     assert q10_vacuum_api.vacuum.set_fan_level.call_count == 1
     assert q10_vacuum_api.vacuum.set_fan_level.call_args[0] == (YXFanLevel.QUIET,)
-
-
-async def test_q10_set_invalid_fan_speed(
-    hass: HomeAssistant,
-    setup_entry: MockConfigEntry,
-    q10_vacuum_api: Mock,
-) -> None:
-    """Test that setting an invalid fan speed raises an error."""
-    vacuum = hass.states.get(Q10_ENTITY_ID)
-    assert vacuum
-
-    with pytest.raises(ServiceValidationError):
-        await hass.services.async_call(
-            VACUUM_DOMAIN,
-            SERVICE_SET_FAN_SPEED,
-            {ATTR_ENTITY_ID: Q10_ENTITY_ID, "fan_speed": "invalid_speed"},
-            blocking=True,
-        )
-    assert q10_vacuum_api.vacuum.set_fan_level.call_count == 0
 
 
 @pytest.mark.parametrize(

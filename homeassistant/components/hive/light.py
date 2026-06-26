@@ -1,9 +1,7 @@
 """Support for Hive light devices."""
 
-from __future__ import annotations
-
 from datetime import timedelta
-from typing import Any
+from typing import Any, override
 
 from apyhiveapi import Hive
 
@@ -14,12 +12,12 @@ from homeassistant.components.light import (
     ColorMode,
     LightEntity,
 )
+from homeassistant.const import ATTR_MODE
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from homeassistant.util import color as color_util
 
 from . import HiveConfigEntry, refresh_system
-from .const import ATTR_MODE
 from .entity import HiveEntity
 
 PARALLEL_UPDATES = 0
@@ -60,6 +58,7 @@ class HiveDeviceLight(HiveEntity, LightEntity):
             self._attr_color_mode = ColorMode.UNKNOWN
 
     @refresh_system
+    @override
     async def async_turn_on(self, **kwargs: Any) -> None:
         """Instruct the light to turn on."""
         new_brightness = None
@@ -84,6 +83,7 @@ class HiveDeviceLight(HiveEntity, LightEntity):
         )
 
     @refresh_system
+    @override
     async def async_turn_off(self, **kwargs: Any) -> None:
         """Instruct the light to turn off."""
         await self.hive.light.turnOff(self.device)

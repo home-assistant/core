@@ -1,10 +1,8 @@
 """Sensor for Suez Water Consumption data."""
 
-from __future__ import annotations
-
 from collections.abc import Callable
 from dataclasses import asdict, dataclass
-from typing import Any
+from typing import Any, override
 
 from pysuez.const import ATTRIBUTION
 
@@ -88,6 +86,7 @@ class SuezWaterSensor(CoordinatorEntity[SuezWaterCoordinator], SensorEntity):
         self.entity_description = entity_description
 
     @property
+    @override
     def available(self) -> bool:
         """Return if entity is available."""
         return (
@@ -96,11 +95,13 @@ class SuezWaterSensor(CoordinatorEntity[SuezWaterCoordinator], SensorEntity):
         )
 
     @property
+    @override
     def native_value(self) -> float | str | None:
         """Return the state of the sensor."""
         return self.entity_description.value_fn(self.coordinator.data)
 
     @property
+    @override
     def extra_state_attributes(self) -> dict[str, Any] | None:
         """Return extra state of the sensor."""
         return self.entity_description.attr_fn(self.coordinator.data)

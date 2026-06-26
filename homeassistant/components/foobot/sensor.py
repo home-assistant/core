@@ -1,10 +1,8 @@
 """Support for the Foobot indoor air quality monitor."""
 
-from __future__ import annotations
-
 from datetime import timedelta
 import logging
-from typing import Any
+from typing import Any, override
 
 import aiohttp
 from foobot_async import FoobotClient
@@ -147,6 +145,7 @@ class FoobotSensor(SensorEntity):
         self._attr_unique_id = f"{device['uuid']}_{description.key}"
 
     @property
+    @override
     def native_value(self) -> float | None:
         """Return the state of the device."""
         return self.foobot_data.data.get(self.entity_description.key)

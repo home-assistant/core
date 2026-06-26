@@ -59,9 +59,7 @@ async def test_sensor_setup(
     assert entity_registry.async_get(
         f"{SENSOR_DOMAIN}.{device_name}_plc_uplink_phy_rate_{PLCNET.devices[2].user_device_name}"
     ).disabled
-    assert entity_registry.async_get(
-        f"{SENSOR_DOMAIN}.{device_name}_last_restart_of_the_device"
-    ).disabled
+    assert entity_registry.async_get(f"{SENSOR_DOMAIN}.{device_name}_uptime").disabled
 
 
 @pytest.mark.parametrize(
@@ -86,10 +84,10 @@ async def test_sensor_setup(
             "1",
         ),
         (
-            "last_restart_of_the_device",
+            "uptime",
             "async_uptime",
             SHORT_UPDATE_INTERVAL,
-            "2023-01-13T11:58:50+00:00",
+            "2023-01-13T11:58:20+00:00",
         ),
     ],
 )
@@ -145,11 +143,17 @@ async def test_update_plc_phyrates(
     freezer: FrozenDateTimeFactory,
     snapshot: SnapshotAssertion,
 ) -> None:
-    """Test state change of plc_downlink_phyrate and plc_uplink_phyrate sensor devices."""
+    """Test state change of plc_downlink_phyrate and plc_uplink_phyrate sensors."""
     entry = configure_integration(hass)
     device_name = entry.title.replace(" ", "_").lower()
-    entity_id_downlink = f"{SENSOR_DOMAIN}.{device_name}_plc_downlink_phy_rate_{PLCNET.devices[1].user_device_name}"
-    entity_id_uplink = f"{SENSOR_DOMAIN}.{device_name}_plc_uplink_phy_rate_{PLCNET.devices[1].user_device_name}"
+    entity_id_downlink = (
+        f"{SENSOR_DOMAIN}.{device_name}_plc_downlink_phy_rate_"
+        f"{PLCNET.devices[1].user_device_name}"
+    )
+    entity_id_uplink = (
+        f"{SENSOR_DOMAIN}.{device_name}_plc_uplink_phy_rate_"
+        f"{PLCNET.devices[1].user_device_name}"
+    )
     await hass.config_entries.async_setup(entry.entry_id)
     await hass.async_block_till_done()
 
@@ -192,7 +196,7 @@ async def test_update_plc_phyrates(
 async def test_update_last_update_auth_failed(
     hass: HomeAssistant, mock_device: MockDevice
 ) -> None:
-    """Test getting the last update state with wrong password triggers the reauth flow."""
+    """Test getting last update state with wrong password triggers reauth flow."""
     entry = configure_integration(hass)
     mock_device.device.async_uptime.side_effect = DevicePasswordProtected
 

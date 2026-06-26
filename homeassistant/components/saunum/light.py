@@ -1,8 +1,6 @@
 """Light platform for Saunum Leil Sauna Control Unit."""
 
-from __future__ import annotations
-
-from typing import TYPE_CHECKING, Any
+from typing import TYPE_CHECKING, Any, override
 
 from pysaunum import SaunumException
 
@@ -45,10 +43,12 @@ class LeilSaunaLight(LeilSaunaEntity, LightEntity):
         self._attr_unique_id = f"{coordinator.config_entry.entry_id}_light"
 
     @property
+    @override
     def is_on(self) -> bool | None:
         """Return True if light is on."""
         return self.coordinator.data.light_on
 
+    @override
     async def async_turn_on(self, **kwargs: Any) -> None:
         """Turn the light on."""
         try:
@@ -61,6 +61,7 @@ class LeilSaunaLight(LeilSaunaEntity, LightEntity):
 
         await self.coordinator.async_request_refresh()
 
+    @override
     async def async_turn_off(self, **kwargs: Any) -> None:
         """Turn the light off."""
         try:

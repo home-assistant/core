@@ -1,7 +1,5 @@
 """The Search integration."""
 
-from __future__ import annotations
-
 from collections import defaultdict
 from collections.abc import Iterable
 from enum import StrEnum
@@ -137,7 +135,8 @@ class Searcher:
         # Scripts referencing this area
         self._add(ItemType.SCRIPT, script.scripts_with_area(self.hass, area_id))
 
-        # Entity in this area, will extend this with the entities of the devices in this area
+        # Entity in this area, will extend this with
+        # the entities of the devices in this area
         entity_entries = er.async_entries_for_area(self._entity_registry, area_id)
 
         # Devices in this area
@@ -306,29 +305,6 @@ class Searcher:
             ItemType.AUTOMATION,
             automation.automations_with_device(self.hass, device_id),
         )
-
-        # Automations referencing labels assigned to this device
-        for label_id in device_entry.labels:
-            self._add(
-                ItemType.AUTOMATION,
-                automation.automations_with_label(self.hass, label_id),
-            )
-
-        if device_entry.area_id:
-            # Automations referencing this device via its area
-            self._add(
-                ItemType.AUTOMATION,
-                automation.automations_with_area(self.hass, device_entry.area_id),
-            )
-            # Automations referencing this device via its areas floor
-            if area_entry := self._area_registry.async_get_area(device_entry.area_id):
-                if area_entry.floor_id:
-                    self._add(
-                        ItemType.AUTOMATION,
-                        automation.automations_with_floor(
-                            self.hass, area_entry.floor_id
-                        ),
-                    )
 
         # Scripts referencing this device
         self._add(ItemType.SCRIPT, script.scripts_with_device(self.hass, device_id))

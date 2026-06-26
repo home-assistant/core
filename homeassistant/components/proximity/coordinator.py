@@ -3,7 +3,7 @@
 from collections import defaultdict
 from dataclasses import dataclass
 import logging
-from typing import cast
+from typing import cast, override
 
 from homeassistant.components.zone import DOMAIN as ZONE_DOMAIN
 from homeassistant.config_entries import ConfigEntry
@@ -171,7 +171,8 @@ class ProximityDataUpdateCoordinator(DataUpdateCoordinator[ProximityData]):
             longitude,
         )
 
-        # it is ensured, that distance can't be None, since zones must have lat/lon coordinates
+        # it is ensured, that distance can't be None,
+        # since zones must have lat/lon coordinates
         assert distance_to_centre is not None
 
         zone_radius: float = zone.attributes["radius"]
@@ -218,7 +219,8 @@ class ProximityDataUpdateCoordinator(DataUpdateCoordinator[ProximityData]):
             new_longitude,
         )
 
-        # it is ensured, that distance can't be None, since zones must have lat/lon coordinates
+        # it is ensured, that distance can't be None,
+        # since zones must have lat/lon coordinates
         assert old_distance is not None
         assert new_distance is not None
         distance_travelled = round(new_distance - old_distance, 1)
@@ -231,6 +233,7 @@ class ProximityDataUpdateCoordinator(DataUpdateCoordinator[ProximityData]):
 
         return "stationary"
 
+    @override
     async def _async_update_data(self) -> ProximityData:
         """Calculate Proximity data."""
         if (zone_state := self.hass.states.get(self.proximity_zone_id)) is None:

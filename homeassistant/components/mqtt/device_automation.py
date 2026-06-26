@@ -1,7 +1,5 @@
 """Provides device automations for MQTT."""
 
-from __future__ import annotations
-
 import functools
 
 import voluptuous as vol

@@ -1,8 +1,7 @@
 """Demo image platform."""
 
-from __future__ import annotations
-
 from pathlib import Path
+from typing import override
 
 from homeassistant.components.image import ImageEntity
 from homeassistant.config_entries import ConfigEntry
@@ -62,10 +61,12 @@ class DemoImage(ImageEntity):
         self._attr_unique_id = unique_id
         self._image_filename = image
 
+    @override
     async def async_added_to_hass(self):
         """Set the update time."""
         self._attr_image_last_updated = dt_util.utcnow()
 
+    @override
     async def async_image(self) -> bytes | None:
         """Return bytes of image."""
         image_path = Path(__file__).parent / self._image_filename

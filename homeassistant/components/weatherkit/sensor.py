@@ -1,20 +1,21 @@
 """WeatherKit sensors."""
 
+from typing import override
+
 from homeassistant.components.sensor import (
     SensorDeviceClass,
     SensorEntity,
     SensorEntityDescription,
     SensorStateClass,
 )
-from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import UnitOfVolumetricFlux
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from homeassistant.helpers.typing import StateType
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
-from .const import ATTR_CURRENT_WEATHER, DOMAIN
-from .coordinator import WeatherKitDataUpdateCoordinator
+from .const import ATTR_CURRENT_WEATHER
+from .coordinator import WeatherKitConfigEntry, WeatherKitDataUpdateCoordinator
 from .entity import WeatherKitEntity
 
 SENSORS = (
@@ -35,13 +36,11 @@ SENSORS = (
 
 async def async_setup_entry(
     hass: HomeAssistant,
-    config_entry: ConfigEntry,
+    config_entry: WeatherKitConfigEntry,
     async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Add sensor entities from a config_entry."""
-    coordinator: WeatherKitDataUpdateCoordinator = hass.data[DOMAIN][
-        config_entry.entry_id
-    ]
+    coordinator = config_entry.runtime_data
 
     async_add_entities(
         WeatherKitSensor(coordinator, description) for description in SENSORS
@@ -66,6 +65,7 @@ class WeatherKitSensor(
         self.entity_description = entity_description
 
     @property
+    @override
     def native_value(self) -> StateType:
         """Return native value from coordinator current weather."""
         return self.coordinator.data[ATTR_CURRENT_WEATHER][self.entity_description.key]

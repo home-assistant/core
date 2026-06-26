@@ -1,7 +1,5 @@
 """The Knocki integration."""
 
-from __future__ import annotations
-
 from knocki import Event, EventType, KnockiClient
 
 from homeassistant.const import CONF_TOKEN, Platform

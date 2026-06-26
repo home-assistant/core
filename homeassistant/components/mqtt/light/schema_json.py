@@ -1,10 +1,8 @@
 """Support for MQTT JSON lights."""
 
-from __future__ import annotations
-
 from contextlib import suppress
 import logging
-from typing import TYPE_CHECKING, Any, cast
+from typing import TYPE_CHECKING, Any, cast, override
 
 import voluptuous as vol
 
@@ -151,10 +149,12 @@ class MqttLightJson(MqttEntity, LightEntity, RestoreEntity):
     _optimistic: bool
 
     @staticmethod
+    @override
     def config_schema() -> VolSchemaType:
         """Return the config schema."""
         return DISCOVERY_SCHEMA_JSON
 
+    @override
     def _setup_from_config(self, config: ConfigType) -> None:
         """(Re)Setup the entity."""
         self._color_temp_kelvin = config[CONF_COLOR_TEMP_KELVIN]
@@ -307,6 +307,7 @@ class MqttLightJson(MqttEntity, LightEntity, RestoreEntity):
                 self._attr_effect = cast(str, values["effect"])
 
     @callback
+    @override
     def _prepare_subscribe_topics(self) -> None:
         """(Re)Subscribe to topics."""
         self.add_subscription(
@@ -326,6 +327,7 @@ class MqttLightJson(MqttEntity, LightEntity, RestoreEntity):
             },
         )
 
+    @override
     async def _subscribe_topics(self) -> None:
         """(Re)Subscribe to topics."""
         subscription.async_subscribe_topics_internal(self.hass, self._sub_state)
@@ -337,8 +339,8 @@ class MqttLightJson(MqttEntity, LightEntity, RestoreEntity):
             self._attr_brightness = last_attributes.get(
                 ATTR_BRIGHTNESS, self.brightness
             )
-            self._attr_color_mode = last_attributes.get(
-                ATTR_COLOR_MODE, self.color_mode
+            self._attr_color_mode = (
+                last_attributes.get(ATTR_COLOR_MODE) or self.color_mode
             )
             self._attr_color_temp_kelvin = last_attributes.get(
                 ATTR_COLOR_TEMP_KELVIN, self.color_temp_kelvin
@@ -384,6 +386,7 @@ class MqttLightJson(MqttEntity, LightEntity, RestoreEntity):
             and color_mode in self.supported_color_modes
         )
 
+    @override
     async def async_turn_on(self, **kwargs: Any) -> None:
         """Turn the device on.
 
@@ -506,6 +509,7 @@ class MqttLightJson(MqttEntity, LightEntity, RestoreEntity):
         if should_update:
             self.async_write_ha_state()
 
+    @override
     async def async_turn_off(self, **kwargs: Any) -> None:
         """Turn the device off.
 

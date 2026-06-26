@@ -1,10 +1,8 @@
 """Support for Lektrico charging station sensors."""
 
-from __future__ import annotations
-
 from collections.abc import Callable
 from dataclasses import dataclass
-from typing import Any
+from typing import Any, override
 
 from lektricowifi import Device
 
@@ -331,6 +329,7 @@ class LektricoSensor(LektricoEntity, SensorEntity):
         self._attr_unique_id = f"{coordinator.serial_number}_{description.key}"
 
     @property
+    @override
     def native_value(self) -> StateType:
         """Return the state of the sensor."""
         return self.entity_description.value_fn(self.coordinator.data)

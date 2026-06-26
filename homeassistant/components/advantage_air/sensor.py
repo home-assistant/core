@@ -1,9 +1,7 @@
 """Sensor platform for Advantage Air integration."""
 
-from __future__ import annotations
-
 from decimal import Decimal
-from typing import Any
+from typing import Any, override
 
 from homeassistant.components.sensor import (
     SensorDeviceClass,
@@ -69,11 +67,13 @@ class AdvantageAirTimeTo(AdvantageAirAcEntity, SensorEntity):
         self._attr_unique_id += f"-timeto{action}"
 
     @property
+    @override
     def native_value(self) -> Decimal:
         """Return the current value."""
         return self._ac[self._time_key]
 
     @property
+    @override
     def icon(self) -> str:
         """Return a representative icon of the timer."""
         if self._ac[self._time_key] > 0:
@@ -102,6 +102,7 @@ class AdvantageAirZoneVent(AdvantageAirZoneEntity, SensorEntity):
         self._attr_unique_id += "-vent"
 
     @property
+    @override
     def native_value(self) -> Decimal:
         """Return the current value of the air vent."""
         if self._zone["state"] == ADVANTAGE_AIR_STATE_OPEN:
@@ -109,6 +110,7 @@ class AdvantageAirZoneVent(AdvantageAirZoneEntity, SensorEntity):
         return Decimal(0)
 
     @property
+    @override
     def icon(self) -> str:
         """Return a representative icon."""
         if self._zone["state"] == ADVANTAGE_AIR_STATE_OPEN:
@@ -132,11 +134,13 @@ class AdvantageAirZoneSignal(AdvantageAirZoneEntity, SensorEntity):
         self._attr_unique_id += "-signal"
 
     @property
+    @override
     def native_value(self) -> Decimal:
         """Return the current value of the wireless signal."""
         return self._zone["rssi"]
 
     @property
+    @override
     def icon(self) -> str:
         """Return a representative icon."""
         if self._zone["rssi"] >= 80:
@@ -168,6 +172,7 @@ class AdvantageAirZoneTemp(AdvantageAirZoneEntity, SensorEntity):
         self._attr_unique_id += "-temp"
 
     @property
+    @override
     def native_value(self) -> Decimal:
         """Return the current value of the measured temperature."""
         return self._zone["measuredTemp"]

@@ -1,7 +1,5 @@
 """The OpenRGB integration."""
 
-from __future__ import annotations
-
 from homeassistant.const import CONF_NAME, Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import device_registry as dr
