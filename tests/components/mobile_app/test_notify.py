@@ -1092,6 +1092,7 @@ async def test_notify_live_activity_duplicate_start_buffered(
                 "push_token": "FCM_TOKEN",
                 "push_url": push_url,
                 "start_live_activity_token": "PUSH_TO_START_HEX_TOKEN",
+                "live_activity_start_failsafe": 21600,
             },
             "app_id": "io.robbie.HomeAssistant",
             "app_name": "Home Assistant",
@@ -1273,6 +1274,7 @@ async def test_notify_live_activity_clear_releases_start_guard(
                 "push_token": "FCM_TOKEN",
                 "push_url": push_url,
                 "start_live_activity_token": "PUSH_TO_START_HEX_TOKEN",
+                "live_activity_start_failsafe": 21600,
             },
             "app_id": "io.robbie.HomeAssistant",
             "app_name": "Home Assistant",
@@ -1336,90 +1338,6 @@ async def test_notify_live_activity_clear_releases_start_guard(
     )
     assert len(aioclient_mock.mock_calls) == 3
     assert aioclient_mock.mock_calls[2][2]["data"] == {
-        "live_update": True,
-        "tag": "laundry",
-        "event": "start",
-    }
-
-
-async def test_notify_live_activity_start_resent_after_failsafe(
-    hass: HomeAssistant,
-    aioclient_mock: AiohttpClientMocker,
-    hass_admin_user: MockUser,
-    freezer: FrozenDateTimeFactory,
-) -> None:
-    """Test a new start is allowed once the failsafe elapses without a token.
-
-    Covers a start that silently failed: starts stay suppressed for any realistic offline
-    period, then the failsafe lifts the suppression so the activity can recover.
-    """
-    push_url = "https://mobile-push.home-assistant.dev/push"
-    now = dt_util.naive_now() + timedelta(hours=24)
-    iso_time = now.strftime("%Y-%m-%dT%H:%M:%SZ")
-
-    aioclient_mock.post(
-        push_url,
-        json={
-            "rateLimits": {
-                "successful": 1,
-                "errors": 0,
-                "maximum": 150,
-                "resetsAt": iso_time,
-            }
-        },
-    )
-
-    entry = MockConfigEntry(
-        data={
-            "app_data": {
-                "push_token": "FCM_TOKEN",
-                "push_url": push_url,
-                "start_live_activity_token": "PUSH_TO_START_HEX_TOKEN",
-            },
-            "app_id": "io.robbie.HomeAssistant",
-            "app_name": "Home Assistant",
-            "app_version": "2024.1",
-            "device_id": "ios-device-1",
-            "device_name": "iPhone",
-            "manufacturer": "Apple",
-            "model": "iPhone 15",
-            "os_name": "iOS",
-            "os_version": "17.2",
-            "supports_encryption": False,
-            "user_id": hass_admin_user.id,
-            "webhook_id": "ios-webhook-1",
-        },
-        domain=DOMAIN,
-        source="registration",
-        title="iPhone entry",
-        version=1,
-    )
-    entry.add_to_hass(hass)
-    await async_setup_component(hass, DOMAIN, {DOMAIN: {}})
-    await hass.async_block_till_done()
-
-    start_data = {
-        "message": "Laundry running",
-        "target": ["ios-webhook-1"],
-        "data": {"live_update": True, "tag": "laundry"},
-    }
-
-    await hass.services.async_call(
-        "notify", "mobile_app_iphone", start_data, blocking=True
-    )
-    # A second start while still pending is suppressed.
-    await hass.services.async_call(
-        "notify", "mobile_app_iphone", start_data, blocking=True
-    )
-    assert len(aioclient_mock.mock_calls) == 1
-
-    # After the failsafe elapses with no token reported, a fresh start is allowed.
-    freezer.tick(timedelta(hours=6, minutes=1))
-    await hass.services.async_call(
-        "notify", "mobile_app_iphone", start_data, blocking=True
-    )
-    assert len(aioclient_mock.mock_calls) == 2
-    assert aioclient_mock.mock_calls[1][2]["data"] == {
         "live_update": True,
         "tag": "laundry",
         "event": "start",
@@ -1535,6 +1453,7 @@ async def test_notify_live_activity_clear_discards_buffered_update(
                 "push_token": "FCM_TOKEN",
                 "push_url": push_url,
                 "start_live_activity_token": "PUSH_TO_START_HEX_TOKEN",
+                "live_activity_start_failsafe": 21600,
             },
             "app_id": "io.robbie.HomeAssistant",
             "app_name": "Home Assistant",
@@ -1590,6 +1509,78 @@ async def test_notify_live_activity_clear_discards_buffered_update(
     )
 
     # The clear discards the buffered update; it is never flushed.
+    assert hass.data[DOMAIN][DATA_LIVE_ACTIVITY_PENDING_UPDATES] == {}
+
+
+async def test_notify_live_activity_without_failsafe_does_not_suppress(
+    hass: HomeAssistant,
+    aioclient_mock: AiohttpClientMocker,
+    hass_admin_user: MockUser,
+) -> None:
+    """Test starts are not suppressed for a device that reports no failsafe.
+
+    De-duplication is opt-in: a client that predates ``live_activity_start_failsafe`` keeps its
+    previous behavior, so a rollout does not change it before its app is updated.
+    """
+    push_url = "https://mobile-push.home-assistant.dev/push"
+    now = dt_util.naive_now() + timedelta(hours=24)
+    iso_time = now.strftime("%Y-%m-%dT%H:%M:%SZ")
+
+    aioclient_mock.post(
+        push_url,
+        json={
+            "rateLimits": {
+                "successful": 1,
+                "errors": 0,
+                "maximum": 150,
+                "resetsAt": iso_time,
+            }
+        },
+    )
+
+    entry = MockConfigEntry(
+        data={
+            "app_data": {
+                "push_token": "FCM_TOKEN",
+                "push_url": push_url,
+                "start_live_activity_token": "PUSH_TO_START_HEX_TOKEN",
+            },
+            "app_id": "io.robbie.HomeAssistant",
+            "app_name": "Home Assistant",
+            "app_version": "2024.1",
+            "device_id": "ios-device-1",
+            "device_name": "iPhone",
+            "manufacturer": "Apple",
+            "model": "iPhone 15",
+            "os_name": "iOS",
+            "os_version": "17.2",
+            "supports_encryption": False,
+            "user_id": hass_admin_user.id,
+            "webhook_id": "ios-webhook-1",
+        },
+        domain=DOMAIN,
+        source="registration",
+        title="iPhone entry",
+        version=1,
+    )
+    entry.add_to_hass(hass)
+    await async_setup_component(hass, DOMAIN, {DOMAIN: {}})
+    await hass.async_block_till_done()
+
+    for progress in (10, 90):
+        await hass.services.async_call(
+            "notify",
+            "mobile_app_iphone",
+            {
+                "message": "Laundry running",
+                "target": ["ios-webhook-1"],
+                "data": {"live_update": True, "tag": "laundry", "progress": progress},
+            },
+            blocking=True,
+        )
+
+    # No device failsafe → no suppression: both starts go out and nothing is buffered.
+    assert len(aioclient_mock.mock_calls) == 2
     assert hass.data[DOMAIN][DATA_LIVE_ACTIVITY_PENDING_UPDATES] == {}
 
 

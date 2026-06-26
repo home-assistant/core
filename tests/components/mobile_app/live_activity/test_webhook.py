@@ -58,6 +58,50 @@ async def test_webhook_update_live_activity_token(
     }
 
 
+async def test_webhook_ignores_out_of_order_older_token(
+    hass: HomeAssistant,
+    create_registrations: tuple[dict[str, Any], dict[str, Any]],
+    webhook_client: TestClient,
+    freezer: FrozenDateTimeFactory,
+) -> None:
+    """Test a stale token delivered out of order does not overwrite a newer one."""
+    freezer.move_to("2026-01-01 00:00:00+00:00")
+    webhook_id = create_registrations[1]["webhook_id"]
+    newer_expires_at = dt_util.utcnow().timestamp() + 3600
+
+    # The newer token (later expiry) arrives first.
+    await webhook_client.post(
+        f"/api/webhook/{webhook_id}",
+        json={
+            "type": "live_activity_token",
+            "data": {
+                "tag": "washer_cycle",
+                "push_token": "b" * 64,
+                "expires_at": newer_expires_at,
+            },
+        },
+    )
+
+    # A stale token for the same tag (earlier expiry) is delivered late and must be ignored.
+    await webhook_client.post(
+        f"/api/webhook/{webhook_id}",
+        json={
+            "type": "live_activity_token",
+            "data": {
+                "tag": "washer_cycle",
+                "push_token": "a" * 64,
+                "expires_at": dt_util.utcnow().timestamp() + 60,
+            },
+        },
+    )
+
+    assert hass.data[DOMAIN][DATA_LIVE_ACTIVITY_TOKENS] == {
+        webhook_id: {
+            "washer_cycle": {"token": "b" * 64, "expires_at": newer_expires_at},
+        },
+    }
+
+
 async def test_webhook_live_activity_token_schedules_cleanup(
     hass: HomeAssistant,
     create_registrations: tuple[dict[str, Any], dict[str, Any]],
@@ -280,6 +324,7 @@ async def test_webhook_token_flushes_buffered_update(
                 "push_token": "FCM_TOKEN",
                 "push_url": push_url,
                 "start_live_activity_token": "PUSH_TO_START_HEX_TOKEN",
+                "live_activity_start_failsafe": 21600,
             },
             "app_id": "io.robbie.HomeAssistant",
             "app_name": "Home Assistant",

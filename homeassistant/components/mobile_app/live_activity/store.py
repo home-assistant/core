@@ -22,10 +22,9 @@ from ..const import (
 )
 from ..helpers import savable_state
 
-# Used only when the device reports no value of its own. A failsafe, not a debounce: it bounds
-# the wait so a silently-failed start (no token ever reported) is not suppressed forever, and
-# must exceed realistic offline periods (e.g. a flight) so starts don't pile up before a reconnect.
-DEFAULT_START_FAILSAFE = timedelta(hours=6)
+# Fallback when the device reports no failsafe of its own. Zero disables suppression, so a client
+# that predates the failsafe field keeps its previous behavior until it ships the value.
+DEFAULT_START_FAILSAFE = timedelta(seconds=0)
 
 
 @callback
@@ -37,10 +36,16 @@ def store_live_activity_token(
     expires_at: float,
 ) -> None:
     """Store a per-activity push token and start cleanup when needed."""
+    device_tokens = hass.data[DOMAIN][DATA_LIVE_ACTIVITY_TOKENS].setdefault(
+        webhook_id, {}
+    )
+    existing = device_tokens.get(activity_tag)
+    if existing is not None and existing[ATTR_LIVE_ACTIVITY_EXPIRES_AT] > expires_at:
+        # Reports can be delivered out of order; a later expiry means a newer token, so keep it.
+        return
     # The token arriving acknowledges the start, so updates can now route to it.
     clear_start_pending(hass, webhook_id, activity_tag)
-    live_activity_tokens = hass.data[DOMAIN][DATA_LIVE_ACTIVITY_TOKENS]
-    live_activity_tokens.setdefault(webhook_id, {})[activity_tag] = {
+    device_tokens[activity_tag] = {
         ATTR_TOKEN: token,
         ATTR_LIVE_ACTIVITY_EXPIRES_AT: expires_at,
     }
