@@ -75,6 +75,15 @@ class WhirlpoolOvenEntity(WhirlpoolEntity):
 
     _appliance: Oven
 
+    @staticmethod
+    def cavity_suffix(oven: Oven, cavity: OvenCavity) -> str:
+        """Return the unique-id and translation-key suffix for an oven cavity."""
+        if oven.get_oven_cavity_exists(
+            OvenCavity.Upper
+        ) and oven.get_oven_cavity_exists(OvenCavity.Lower):
+            return "_upper" if cavity == OvenCavity.Upper else "_lower"
+        return ""
+
     def __init__(
         self,
         appliance: Oven,
@@ -84,14 +93,7 @@ class WhirlpoolOvenEntity(WhirlpoolEntity):
     ) -> None:
         """Initialize the entity."""
         self.cavity = cavity
-        cavity_suffix = ""
-        if appliance.get_oven_cavity_exists(
-            OvenCavity.Upper
-        ) and appliance.get_oven_cavity_exists(OvenCavity.Lower):
-            if cavity == OvenCavity.Upper:
-                cavity_suffix = "_upper"
-            elif cavity == OvenCavity.Lower:
-                cavity_suffix = "_lower"
+        cavity_suffix = self.cavity_suffix(appliance, cavity)
         super().__init__(
             appliance, unique_id_suffix=f"{unique_id_suffix}{cavity_suffix}"
         )
