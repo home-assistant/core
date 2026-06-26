@@ -34,7 +34,7 @@ from tests.components.climate.common import (
     async_set_temperature,
 )
 
-CLIMATE_ENTITY_ID = "climate.stiebel_eltron_lwz"
+CLIMATE_ENTITY_ID = "climate.lwz"
 
 
 async def _setup_integration(
