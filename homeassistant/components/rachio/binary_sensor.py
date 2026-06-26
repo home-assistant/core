@@ -3,7 +3,7 @@
 from collections.abc import Callable
 from dataclasses import dataclass
 import logging
-from typing import Any
+from typing import Any, override
 
 from homeassistant.components.binary_sensor import (
     BinarySensorDeviceClass,
@@ -173,6 +173,7 @@ class RachioControllerBinarySensor(RachioDevice, BinarySensorEntity):
 
         self.async_write_ha_state()
 
+    @override
     async def async_added_to_hass(self) -> None:
         """Subscribe to updates."""
         self._attr_is_on = self.entity_description.is_on(self._controller)
@@ -204,6 +205,7 @@ class RachioHoseTimerBinarySensor(RachioHoseTimerEntity, BinarySensorEntity):
         self._update_attr()
 
     @callback
+    @override
     def _update_attr(self) -> None:
         """Handle updated coordinator data."""
         self._attr_is_on = self.entity_description.value_fn(self)

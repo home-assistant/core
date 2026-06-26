@@ -2,7 +2,7 @@
 
 from collections.abc import Awaitable, Callable, Coroutine
 from functools import wraps
-from typing import Any, Concatenate
+from typing import Any, Concatenate, override
 
 from velbusaio.channels import Channel as VelbusChannel
 from velbusaio.properties import Property as VelbusProperty
@@ -59,10 +59,12 @@ class VelbusEntity(Entity):
             return self._module_address
         return f"{self._module_address}-{self._channel.get_channel_number()}"
 
+    @override
     async def async_added_to_hass(self) -> None:
         """Add listener for state changes."""
         self._channel.on_status_update(self._on_update)
 
+    @override
     async def async_will_remove_from_hass(self) -> None:
         """Remove listener for state changes."""
         self._channel.remove_on_status_update(self._on_update)
@@ -72,6 +74,7 @@ class VelbusEntity(Entity):
         self.async_write_ha_state()
 
     @property
+    @override
     def available(self) -> bool:
         """Return if entity is available."""
         return self._channel.is_connected()

@@ -2,7 +2,7 @@
 
 from collections.abc import Mapping
 import logging
-from typing import TYPE_CHECKING, Any
+from typing import TYPE_CHECKING, Any, override
 
 import aiohttp
 from renault_api.const import AVAILABLE_LOCALES
@@ -39,6 +39,7 @@ class RenaultFlowHandler(ConfigFlow, domain=DOMAIN):
         """Initialize the Renault config flow."""
         self.renault_config: dict[str, Any] = {}
 
+    @override
     async def async_step_user(
         self, user_input: dict[str, Any] | None = None
     ) -> ConfigFlowResult:

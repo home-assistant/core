@@ -2,7 +2,7 @@
 
 from collections.abc import Mapping
 import logging
-from typing import Any
+from typing import Any, override
 
 from pylutron import Output
 
@@ -51,24 +51,29 @@ class LutronCover(LutronDevice, CoverEntity):
     _lutron_device: Output
     _attr_name = None
 
+    @override
     def close_cover(self, **kwargs: Any) -> None:
         """Close the cover."""
         self._lutron_device.level = 0
 
+    @override
     def open_cover(self, **kwargs: Any) -> None:
         """Open the cover."""
         self._lutron_device.level = 100
 
+    @override
     def set_cover_position(self, **kwargs: Any) -> None:
         """Move the shade to a specific position."""
         if ATTR_POSITION in kwargs:
             position = kwargs[ATTR_POSITION]
             self._lutron_device.level = position
 
+    @override
     def _request_state(self) -> None:
         """Request the state from the device."""
         _ = self._lutron_device.level
 
+    @override
     def _update_attrs(self) -> None:
         """Update the state attributes."""
         level = self._lutron_device.last_level()
@@ -77,6 +82,7 @@ class LutronCover(LutronDevice, CoverEntity):
         _LOGGER.debug("Lutron ID: %d updated to %f", self._lutron_device.id, level)
 
     @property
+    @override
     def extra_state_attributes(self) -> Mapping[str, Any] | None:
         """Return the state attributes."""
         return {"lutron_integration_id": self._lutron_device.id}

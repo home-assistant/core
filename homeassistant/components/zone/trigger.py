@@ -1,7 +1,7 @@
 """Offer zone automation rules."""
 
 import logging
-from typing import TYPE_CHECKING, Any, cast
+from typing import TYPE_CHECKING, Any, cast, override
 
 import voluptuous as vol
 
@@ -39,6 +39,7 @@ from homeassistant.helpers.trigger import (
     Trigger,
     TriggerActionRunner,
     TriggerConfig,
+    TriggerNotTriggeredReporter,
 )
 from homeassistant.helpers.typing import ConfigType
 
@@ -98,6 +99,7 @@ class LegacyZoneTrigger(Trigger):
     """Legacy zone trigger (platform: zone)."""
 
     @classmethod
+    @override
     async def async_validate_complete_config(
         cls, hass: HomeAssistant, complete_config: ConfigType
     ) -> ConfigType:
@@ -108,6 +110,7 @@ class LegacyZoneTrigger(Trigger):
         return await super().async_validate_complete_config(hass, complete_config)
 
     @classmethod
+    @override
     async def async_validate_config(
         cls, hass: HomeAssistant, config: ConfigType
     ) -> ConfigType:
@@ -126,8 +129,11 @@ class LegacyZoneTrigger(Trigger):
             assert config.options is not None
         self._options = config.options
 
+    @override
     async def async_attach_runner(
-        self, run_action: TriggerActionRunner
+        self,
+        run_action: TriggerActionRunner,
+        did_not_trigger: TriggerNotTriggeredReporter | None = None,
     ) -> CALLBACK_TYPE:
         """Listen for state changes based on configuration."""
         entity_id: list[str] = self._options[CONF_ENTITY_ID]
@@ -199,10 +205,12 @@ class ZoneTriggerBase(EntityTriggerBase):
 class EnteredZoneTrigger(ZoneTriggerBase):
     """Trigger when an entity enters the selected zone."""
 
+    @override
     def is_valid_transition(self, from_state: State, to_state: State) -> bool:
         """Check that the entity was not already in the selected zone."""
         return not self._in_target_zone(from_state)
 
+    @override
     def is_valid_state(self, state: State) -> bool:
         """Check that the entity is now in the selected zone."""
         return self._in_target_zone(state)
@@ -211,10 +219,12 @@ class EnteredZoneTrigger(ZoneTriggerBase):
 class LeftZoneTrigger(ZoneTriggerBase):
     """Trigger when an entity leaves the selected zone."""
 
+    @override
     def is_valid_transition(self, from_state: State, to_state: State) -> bool:
         """Check that the entity was previously in the selected zone."""
         return self._in_target_zone(from_state)
 
+    @override
     def is_valid_state(self, state: State) -> bool:
         """Check that the entity is no longer in the selected zone."""
         return not self._in_target_zone(state)
@@ -237,6 +247,7 @@ class _ZoneOccupancyTriggerBase(EntityTriggerBase):
     _schema = _OCCUPANCY_TRIGGER_SCHEMA
 
     @classmethod
+    @override
     async def async_validate_config(
         cls, hass: HomeAssistant, config: ConfigType
     ) -> ConfigType:
@@ -267,10 +278,12 @@ class _ZoneOccupancyTriggerBase(EntityTriggerBase):
 class OccupancyDetectedTrigger(_ZoneOccupancyTriggerBase):
     """Trigger when a zone transitions to an occupied state."""
 
+    @override
     def is_valid_state(self, state: State) -> bool:
         """Check that the zone is occupied."""
         return self._is_occupied(state)
 
+    @override
     def is_valid_transition(self, from_state: State, to_state: State) -> bool:
         """Check that the zone was previously not occupied."""
         return not self._is_occupied(from_state)
@@ -279,10 +292,12 @@ class OccupancyDetectedTrigger(_ZoneOccupancyTriggerBase):
 class OccupancyClearedTrigger(_ZoneOccupancyTriggerBase):
     """Trigger when a zone transitions from occupied to unoccupied."""
 
+    @override
     def is_valid_state(self, state: State) -> bool:
         """Check that the zone is empty (count == 0)."""
         return self._occupancy_count(state) == 0
 
+    @override
     def is_valid_transition(self, from_state: State, to_state: State) -> bool:
         """Check that the zone was previously occupied."""
         return self._is_occupied(from_state)

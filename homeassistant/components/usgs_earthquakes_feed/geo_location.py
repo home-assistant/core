@@ -3,7 +3,7 @@
 from collections.abc import Callable
 from datetime import datetime, timedelta
 import logging
-from typing import Any
+from typing import Any, override
 
 from aio_geojson_usgs_earthquakes import UsgsEarthquakeHazardsProgramFeedManager
 from aio_geojson_usgs_earthquakes.feed_entry import (
@@ -221,6 +221,7 @@ class UsgsEarthquakesEvent(GeolocationEvent):
         self._remove_signal_delete: Callable[[], None]
         self._remove_signal_update: Callable[[], None]
 
+    @override
     async def async_added_to_hass(self) -> None:
         """Call when entity is added to hass."""
         self._remove_signal_delete = async_dispatcher_connect(
@@ -271,6 +272,7 @@ class UsgsEarthquakesEvent(GeolocationEvent):
         self._alert = feed_entry.alert
 
     @property
+    @override
     def extra_state_attributes(self) -> dict[str, Any]:
         """Return the device state attributes."""
         return {

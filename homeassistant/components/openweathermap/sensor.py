@@ -1,5 +1,7 @@
 """Support for the OpenWeatherMap (OWM) service."""
 
+from typing import override
+
 from homeassistant.components.sensor import (
     SensorDeviceClass,
     SensorEntity,
@@ -278,10 +280,12 @@ class AbstractOpenWeatherMapSensor(SensorEntity):
         )
 
     @property
+    @override
     def available(self) -> bool:
         """Return True if entity is available."""
         return self._coordinator.last_update_success
 
+    @override
     async def async_added_to_hass(self) -> None:
         """Connect to dispatcher listening for entity data notifications."""
         self.async_on_remove(
@@ -297,6 +301,7 @@ class OpenWeatherMapSensor(AbstractOpenWeatherMapSensor):
     """Implementation of an OpenWeatherMap sensor."""
 
     @property
+    @override
     def native_value(self) -> StateType:
         """Return the state of the device."""
         return self._coordinator.data[ATTR_API_CURRENT].get(self.entity_description.key)

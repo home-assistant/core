@@ -3,7 +3,7 @@
 import asyncio
 from datetime import date, datetime, timedelta
 import logging
-from typing import Any
+from typing import Any, override
 
 from ical.calendar import Calendar
 from ical.calendar_stream import IcsCalendarStream
@@ -79,10 +79,12 @@ class LocalCalendarEntity(CalendarEntity):
         self._attr_unique_id = unique_id
 
     @property
+    @override
     def event(self) -> CalendarEvent | None:
         """Return the next upcoming event."""
         return self._event
 
+    @override
     async def async_get_events(
         self, hass: HomeAssistant, start_date: datetime, end_date: datetime
     ) -> list[CalendarEvent]:
@@ -114,6 +116,7 @@ class LocalCalendarEntity(CalendarEntity):
         content = IcsCalendarStream.calendar_to_ics(self._calendar)
         await self._store.async_store(content)
 
+    @override
     async def async_create_event(self, **kwargs: Any) -> None:
         """Add a new event to calendar."""
         event = _parse_event(kwargs)
@@ -123,6 +126,7 @@ class LocalCalendarEntity(CalendarEntity):
             await self._async_store()
         await self.async_update_ha_state(force_refresh=True)
 
+    @override
     async def async_delete_event(
         self,
         uid: str,
@@ -145,6 +149,7 @@ class LocalCalendarEntity(CalendarEntity):
             await self._async_store()
         await self.async_update_ha_state(force_refresh=True)
 
+    @override
     async def async_update_event(
         self,
         uid: str,

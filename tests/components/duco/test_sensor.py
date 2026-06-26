@@ -26,6 +26,8 @@ from . import setup_platform_integration
 
 from tests.common import MockConfigEntry, async_fire_time_changed, snapshot_platform
 
+FILTER_REMAINING_ENTITY_ID = "sensor.living_filter_remaining"
+
 
 @pytest.fixture
 async def init_integration(
@@ -139,24 +141,89 @@ async def test_lan_info_failures_keep_node_entities_available(
     assert state.state == "-60"
 
 
+async def test_time_filter_remaining_missing_skips_sensor_creation(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    mock_duco_client: AsyncMock,
+    mock_sensor_nodes: list[Node],
+    freezer: FrozenDateTimeFactory,
+) -> None:
+    """Test the filter timer sensor is not created when unsupported."""
+    mock_duco_client.async_get_nodes.return_value = mock_sensor_nodes
+
+    mock_duco_client.async_get_time_filter_remaining = AsyncMock(
+        side_effect=[None, 180]
+    )
+
+    await setup_platform_integration(hass, mock_config_entry, [Platform.SENSOR])
+
+    assert hass.states.get(FILTER_REMAINING_ENTITY_ID) is None
+
+    freezer.tick(SCAN_INTERVAL)
+    async_fire_time_changed(hass)
+    await hass.async_block_till_done(wait_background_tasks=True)
+
+    assert hass.states.get(FILTER_REMAINING_ENTITY_ID) is None
+
+
+async def test_time_filter_remaining_transient_failure_recovers_sensor_creation(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    mock_duco_client: AsyncMock,
+    mock_sensor_nodes: list[Node],
+    freezer: FrozenDateTimeFactory,
+) -> None:
+    """Test the filter timer sensor is added once a transient startup failure recovers."""
+    mock_duco_client.async_get_nodes.return_value = mock_sensor_nodes
+    mock_duco_client.async_get_time_filter_remaining = AsyncMock(
+        side_effect=[DucoError("heat recovery info error"), 180]
+    )
+
+    await setup_platform_integration(hass, mock_config_entry, [Platform.SENSOR])
+
+    assert hass.states.get(FILTER_REMAINING_ENTITY_ID) is None
+
+    freezer.tick(SCAN_INTERVAL)
+    async_fire_time_changed(hass)
+    await hass.async_block_till_done(wait_background_tasks=True)
+
+    state = hass.states.get(FILTER_REMAINING_ENTITY_ID)
+    assert state is not None
+    assert state.state == "180"
+
+
 @pytest.mark.parametrize(
-    ("node_id", "expected_entity_id", "expected_state"),
+    (
+        "node_id",
+        "expected_entity_id",
+        "expected_state",
+        "expected_disabled_entity_id",
+    ),
     [
         (
             200,
             "sensor.new_rh_sensor_humidity",
             "55.0",
+            "sensor.new_rh_sensor_humidity_air_quality_index",
         ),
         (
             201,
             "sensor.new_valve_carbon_dioxide",
             "575",
+            "sensor.new_valve_co2_air_quality_index",
+        ),
+        (
+            202,
+            "sensor.new_box_co2_sensor_carbon_dioxide",
+            "421",
+            "sensor.new_box_co2_sensor_co2_air_quality_index",
         ),
     ],
 )
 @pytest.mark.usefixtures("init_integration")
 async def test_new_node_added_dynamically(
     hass: HomeAssistant,
+    entity_registry: er.EntityRegistry,
     mock_duco_client: AsyncMock,
     mock_sensor_nodes: list[Node],
     dynamic_sensor_nodes: dict[int, Node],
@@ -164,6 +231,7 @@ async def test_new_node_added_dynamically(
     node_id: int,
     expected_entity_id: str,
     expected_state: str,
+    expected_disabled_entity_id: str,
 ) -> None:
     """Test a new node appearing in coordinator data creates entities automatically."""
     assert hass.states.get(expected_entity_id) is None
@@ -178,6 +246,10 @@ async def test_new_node_added_dynamically(
     state = hass.states.get(expected_entity_id)
     assert state is not None
     assert state.state == expected_state
+
+    entry = entity_registry.async_get(expected_disabled_entity_id)
+    assert entry is not None
+    assert entry.disabled_by == er.RegistryEntryDisabler.INTEGRATION
 
 
 @pytest.mark.usefixtures("init_integration")

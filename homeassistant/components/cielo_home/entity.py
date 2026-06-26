@@ -1,13 +1,11 @@
 """Base entity for Cielo integration."""
 
+from typing import override
+
 from cieloconnectapi.device import CieloDeviceAPI
 from cieloconnectapi.model import CieloDevice
 
-from homeassistant.helpers.device_registry import (
-    CONNECTION_NETWORK_MAC,
-    DeviceInfo,
-    format_mac,
-)
+from homeassistant.helpers.device_registry import CONNECTION_NETWORK_MAC, DeviceInfo
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
 from .const import DOMAIN
@@ -31,6 +29,7 @@ class CieloBaseEntity(CoordinatorEntity[CieloDataUpdateCoordinator]):
             coordinator.client, coordinator.data.parsed[device_id]
         )
 
+    @override
     def _handle_coordinator_update(self) -> None:
         """Handle updated data from the coordinator."""
         if (dev := self.device_data) is not None:
@@ -43,6 +42,7 @@ class CieloBaseEntity(CoordinatorEntity[CieloDataUpdateCoordinator]):
         return self.coordinator.data.parsed.get(self._device_id)
 
     @property
+    @override
     def available(self) -> bool:
         """Return if the device is available and online."""
         if not (super().available and self._device_id in self.coordinator.data.parsed):
@@ -69,7 +69,7 @@ class CieloDeviceEntity(CieloBaseEntity):
         self._attr_device_info = DeviceInfo(
             identifiers={(DOMAIN, device.id)},
             name=device.name,
-            connections={(CONNECTION_NETWORK_MAC, format_mac(device.mac_address))},
+            connections={(CONNECTION_NETWORK_MAC, device.mac_address)},
             manufacturer="Cielo",
             configuration_url="https://home.cielowigle.com/",
             suggested_area=device.name,

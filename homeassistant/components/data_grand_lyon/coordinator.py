@@ -2,6 +2,7 @@
 
 from dataclasses import dataclass
 from datetime import timedelta
+from typing import override
 
 from aiohttp import ClientError, ClientResponseError
 from data_grand_lyon_ha import (
@@ -61,6 +62,7 @@ class DataGrandLyonTclCoordinator(DataUpdateCoordinator[dict[str, list[TclPassag
             update_interval=timedelta(minutes=5),
         )
 
+    @override
     async def _async_update_data(self) -> dict[str, list[TclPassage]]:
         """Fetch data for all monitored stops."""
         stop_subentries = list(
@@ -127,6 +129,7 @@ class DataGrandLyonVelovCoordinator(DataUpdateCoordinator[dict[str, VelovStation
             update_interval=timedelta(minutes=5),
         )
 
+    @override
     async def _async_update_data(self) -> dict[str, VelovStation]:
         """Fetch data for all monitored Vélo'v stations."""
         velov_subentries = list(
