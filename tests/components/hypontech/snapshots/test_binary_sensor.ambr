@@ -1,5 +1,5 @@
 # serializer version: 1
-# name: test_binary_sensors[binary_sensor.balcon_status-entry]
+# name: test_binary_sensors[binary_sensor.balcon_connectivity-entry]
   EntityRegistryEntrySnapshot({
     'aliases': list([
       None,
@@ -13,7 +13,7 @@
     'disabled_by': None,
     'domain': 'binary_sensor',
     'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
-    'entity_id': 'binary_sensor.balcon_status',
+    'entity_id': 'binary_sensor.balcon_connectivity',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -21,36 +21,36 @@
     'labels': set({
     }),
     'name': None,
-    'object_id_base': 'Status',
+    'object_id_base': 'Connectivity',
     'options': dict({
     }),
     'original_device_class': <BinarySensorDeviceClass.CONNECTIVITY: 'connectivity'>,
     'original_icon': None,
-    'original_name': 'Status',
+    'original_name': 'Connectivity',
     'platform': 'hypontech',
     'previous_unique_id': None,
     'suggested_object_id': None,
     'supported_features': 0,
-    'translation_key': 'status',
+    'translation_key': None,
     'unique_id': '1123456789123456789_status',
     'unit_of_measurement': None,
   })
 # ---
-# name: test_binary_sensors[binary_sensor.balcon_status-state]
+# name: test_binary_sensors[binary_sensor.balcon_connectivity-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'device_class': 'connectivity',
-      'friendly_name': 'Balcon Status',
+      'friendly_name': 'Balcon Connectivity',
     }),
     'context': <ANY>,
-    'entity_id': 'binary_sensor.balcon_status',
+    'entity_id': 'binary_sensor.balcon_connectivity',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': 'off',
   })
 # ---
-# name: test_binary_sensors[binary_sensor.rooftop_status-entry]
+# name: test_binary_sensors[binary_sensor.rooftop_connectivity-entry]
   EntityRegistryEntrySnapshot({
     'aliases': list([
       None,
@@ -64,7 +64,7 @@
     'disabled_by': None,
     'domain': 'binary_sensor',
     'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
-    'entity_id': 'binary_sensor.rooftop_status',
+    'entity_id': 'binary_sensor.rooftop_connectivity',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -72,29 +72,29 @@
     'labels': set({
     }),
     'name': None,
-    'object_id_base': 'Status',
+    'object_id_base': 'Connectivity',
     'options': dict({
     }),
     'original_device_class': <BinarySensorDeviceClass.CONNECTIVITY: 'connectivity'>,
     'original_icon': None,
-    'original_name': 'Status',
+    'original_name': 'Connectivity',
     'platform': 'hypontech',
     'previous_unique_id': None,
     'suggested_object_id': None,
     'supported_features': 0,
-    'translation_key': 'status',
+    'translation_key': None,
     'unique_id': '3123456789123456789_status',
     'unit_of_measurement': None,
   })
 # ---
-# name: test_binary_sensors[binary_sensor.rooftop_status-state]
+# name: test_binary_sensors[binary_sensor.rooftop_connectivity-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'device_class': 'connectivity',
-      'friendly_name': 'Rooftop Status',
+      'friendly_name': 'Rooftop Connectivity',
     }),
     'context': <ANY>,
-    'entity_id': 'binary_sensor.rooftop_status',
+    'entity_id': 'binary_sensor.rooftop_connectivity',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,

@@ -3,6 +3,7 @@
 from homeassistant.components.binary_sensor import (
     BinarySensorDeviceClass,
     BinarySensorEntity,
+    BinarySensorEntityDescription,
 )
 from homeassistant.const import EntityCategory
 from homeassistant.core import HomeAssistant
@@ -10,6 +11,12 @@ from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
 from .coordinator import HypontechConfigEntry, HypontechDataCoordinator
 from .entity import HypontechPlantEntity
+
+PLANT_STATUS_BINARY_SENSOR_DESCRIPTION = BinarySensorEntityDescription(
+    key="status",
+    device_class=BinarySensorDeviceClass.CONNECTIVITY,
+    has_entity_name=True,
+)
 
 
 async def async_setup_entry(
@@ -28,9 +35,8 @@ async def async_setup_entry(
 class HypontechPlantStatusBinarySensor(HypontechPlantEntity, BinarySensorEntity):
     """Class describing Hypontech plant status binary sensor entity."""
 
-    _attr_device_class = BinarySensorDeviceClass.CONNECTIVITY
+    entity_description: BinarySensorEntityDescription
     _attr_entity_category = EntityCategory.DIAGNOSTIC
-    _attr_translation_key = "status"
 
     def __init__(
         self,
@@ -39,7 +45,8 @@ class HypontechPlantStatusBinarySensor(HypontechPlantEntity, BinarySensorEntity)
     ) -> None:
         """Initialize the binary sensor."""
         super().__init__(coordinator, plant_id)
-        self._attr_unique_id = f"{plant_id}_status"
+        self.entity_description = PLANT_STATUS_BINARY_SENSOR_DESCRIPTION
+        self._attr_unique_id = f"{plant_id}_{self.entity_description.key}"
 
     @property
     def is_on(self) -> bool | None:
