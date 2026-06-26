@@ -30,6 +30,13 @@ _LOGGER = logging.getLogger(__name__)
 PARALLEL_UPDATES = 0
 
 
+def _build_time(hour: int | None, minute: int | None) -> datetime.time | None:
+    """Build a time, returning None when either component is missing."""
+    if hour is None or minute is None:
+        return None
+    return datetime.time(hour=hour, minute=minute)
+
+
 @dataclass(frozen=True, kw_only=True)
 class RoborockTimeDescription(TimeEntityDescription):
     """Class to describe a Roborock time entity."""
@@ -37,7 +44,7 @@ class RoborockTimeDescription(TimeEntityDescription):
     trait: Callable[[Any], Any | None]
     """Function to determine if time entity is supported by the device."""
 
-    get_value: Callable[[Any], datetime.time]
+    get_value: Callable[[Any], datetime.time | None]
     """Function to get the value from the trait."""
 
     update_value: Callable[[Any, datetime.time], Coroutine[Any, Any, None]]
@@ -58,9 +65,7 @@ TIME_DESCRIPTIONS: list[RoborockTimeDescription] = [
                 end_minute=trait.end_minute,
             )
         ),
-        get_value=lambda trait: datetime.time(
-            hour=trait.start_hour, minute=trait.start_minute
-        ),
+        get_value=lambda trait: _build_time(trait.start_hour, trait.start_minute),
         entity_category=EntityCategory.CONFIG,
     ),
     RoborockTimeDescription(
@@ -76,9 +81,7 @@ TIME_DESCRIPTIONS: list[RoborockTimeDescription] = [
                 end_minute=desired_time.minute,
             )
         ),
-        get_value=lambda trait: datetime.time(
-            hour=trait.end_hour, minute=trait.end_minute
-        ),
+        get_value=lambda trait: _build_time(trait.end_hour, trait.end_minute),
         entity_category=EntityCategory.CONFIG,
     ),
     RoborockTimeDescription(
@@ -94,9 +97,7 @@ TIME_DESCRIPTIONS: list[RoborockTimeDescription] = [
                 end_minute=trait.end_minute,
             )
         ),
-        get_value=lambda trait: datetime.time(
-            hour=trait.start_hour, minute=trait.start_minute
-        ),
+        get_value=lambda trait: _build_time(trait.start_hour, trait.start_minute),
         entity_category=EntityCategory.CONFIG,
         entity_registry_enabled_default=False,
     ),
@@ -113,9 +114,7 @@ TIME_DESCRIPTIONS: list[RoborockTimeDescription] = [
                 end_minute=desired_time.minute,
             )
         ),
-        get_value=lambda trait: datetime.time(
-            hour=trait.end_hour, minute=trait.end_minute
-        ),
+        get_value=lambda trait: _build_time(trait.end_hour, trait.end_minute),
         entity_category=EntityCategory.CONFIG,
         entity_registry_enabled_default=False,
     ),
