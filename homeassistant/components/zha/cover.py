@@ -60,10 +60,8 @@ class ZhaCover(ZHAEntity, CoverEntity):
         """Initialize the ZHA cover."""
         super().__init__(entity_data)
 
-        if self.entity_data.entity.info_object.device_class is not None:
-            self._attr_device_class = CoverDeviceClass(
-                self.entity_data.entity.info_object.device_class
-            )
+        if self._zha_state.device_class is not None:
+            self._attr_device_class = CoverDeviceClass(self._zha_state.device_class)
 
     @staticmethod
     def _convert_supported_features(
@@ -95,38 +93,38 @@ class ZhaCover(ZHAEntity, CoverEntity):
     @override
     def supported_features(self) -> CoverEntityFeature:
         """Return the supported features."""
-        zha_features: ZHACoverEntityFeature = self.entity_data.entity.supported_features
+        zha_features: ZHACoverEntityFeature = self._zha_state.supported_features
         return self._convert_supported_features(zha_features)
 
     @property
     @override
     def is_closed(self) -> bool | None:
         """Return True if the cover is closed."""
-        return self.entity_data.entity.is_closed
+        return self._zha_state.is_closed
 
     @property
     @override
     def is_opening(self) -> bool:
         """Return if the cover is opening or not."""
-        return self.entity_data.entity.is_opening
+        return self._zha_state.is_opening
 
     @property
     @override
     def is_closing(self) -> bool:
         """Return if the cover is closing or not."""
-        return self.entity_data.entity.is_closing
+        return self._zha_state.is_closing
 
     @property
     @override
     def current_cover_position(self) -> int | None:
         """Return the current position of ZHA cover."""
-        return self.entity_data.entity.current_cover_position
+        return self._zha_state.current_position
 
     @property
     @override
     def current_cover_tilt_position(self) -> int | None:
         """Return the current tilt position of the cover."""
-        return self.entity_data.entity.current_cover_tilt_position
+        return self._zha_state.current_tilt_position
 
     @convert_zha_error_to_ha_error()
     @override

@@ -51,13 +51,13 @@ class ZHAEnumSelectEntity(ZHAEntity, SelectEntity):
     def __init__(self, entity_data: EntityData, **kwargs: Any) -> None:
         """Initialize the ZHA select entity."""
         super().__init__(entity_data, **kwargs)
-        self._attr_options = self.entity_data.entity.info_object.options
+        self._attr_options = self._zha_state.options
 
     @property
     @override
     def current_option(self) -> str | None:
         """Return the selected entity option to represent the entity state."""
-        return self.entity_data.entity.current_option
+        return self._zha_state.current_option
 
     @convert_zha_error_to_ha_error()
     @override

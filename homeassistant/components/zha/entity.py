@@ -47,12 +47,13 @@ class ZHAEntity(LogMixin, RestoreEntity, Entity):
         super().__init__(*args, **kwargs)
         self.entity_data: EntityData = entity_data
         self._unsubs: list[Callable[[], None]] = []
+        self._zha_state = self.entity_data.entity.state
 
         if self.entity_data.entity.icon is not None:
             # Only custom quirks will realistically set an icon
             self._attr_icon = self.entity_data.entity.icon
 
-        meta = self.entity_data.entity.info_object
+        meta = self._zha_state
         self._attr_unique_id = meta.unique_id
 
         if self.entity_data.is_group_entity:
@@ -60,7 +61,7 @@ class ZHAEntity(LogMixin, RestoreEntity, Entity):
             assert group_proxy is not None
             platform = self.entity_data.entity.PLATFORM
             unique_ids = [
-                entity.info_object.unique_id
+                entity.identifiers.unique_id
                 for member in group_proxy.group.members
                 for entity in member.associated_entities
                 if platform == entity.PLATFORM
@@ -91,7 +92,7 @@ class ZHAEntity(LogMixin, RestoreEntity, Entity):
         If a device class is set but no translation key,
         the device class name is used.
         """
-        meta = self.entity_data.entity.info_object
+        meta = self._zha_state
         if meta.primary:
             self._attr_name = None
             return super().name
@@ -120,7 +121,7 @@ class ZHAEntity(LogMixin, RestoreEntity, Entity):
     @override
     def available(self) -> bool:
         """Return entity availability."""
-        return self.entity_data.entity.available
+        return self._zha_state.available
 
     @property
     @override
@@ -148,6 +149,7 @@ class ZHAEntity(LogMixin, RestoreEntity, Entity):
     def _handle_entity_events(self, event: Any) -> None:
         """Entity state changed."""
         self.debug("Handling event from entity: %s", event)
+        self._zha_state = self.entity_data.entity.state
         self.async_write_ha_state()
 
     @override
@@ -191,6 +193,7 @@ class ZHAEntity(LogMixin, RestoreEntity, Entity):
             return
 
         self.restore_external_state_attributes(state)
+        self._zha_state = self.entity_data.entity.state
 
     @callback
     def restore_external_state_attributes(self, state: State) -> None:

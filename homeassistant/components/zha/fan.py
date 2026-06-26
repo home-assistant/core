@@ -50,7 +50,7 @@ class ZhaFan(FanEntity, ZHAEntity):
         """Initialize the ZHA fan."""
         super().__init__(entity_data)
         features = FanEntityFeature(0)
-        zha_features: ZHAFanEntityFeature = self.entity_data.entity.supported_features
+        zha_features: ZHAFanEntityFeature = self._zha_state.supported_features
 
         if ZHAFanEntityFeature.DIRECTION in zha_features:
             features |= FanEntityFeature.DIRECTION
@@ -71,29 +71,29 @@ class ZhaFan(FanEntity, ZHAEntity):
     @override
     def preset_mode(self) -> str | None:
         """Return the current preset mode."""
-        return self.entity_data.entity.preset_mode
+        return self._zha_state.preset_mode
 
     @property
     @override
     def preset_modes(self) -> list[str]:
         """Return the available preset modes."""
-        return self.entity_data.entity.preset_modes
+        return self._zha_state.preset_modes
 
     @property
     def default_on_percentage(self) -> int:
         """Return the default on percentage."""
-        return self.entity_data.entity.default_on_percentage
+        return self._zha_state.default_on_percentage
 
     @property
     def speed_range(self) -> tuple[int, int]:
         """Return the range of speeds the fan supports. Off is not included."""
-        return self.entity_data.entity.speed_range
+        return self._zha_state.speed_range
 
     @property
     @override
     def speed_count(self) -> int:
         """Return the number of speeds the fan supports."""
-        return self.entity_data.entity.speed_count
+        return self._zha_state.speed_count
 
     @convert_zha_error_to_ha_error()
     @override
@@ -134,4 +134,4 @@ class ZhaFan(FanEntity, ZHAEntity):
     @override
     def percentage(self) -> int | None:
         """Return the current speed percentage."""
-        return self.entity_data.entity.percentage
+        return self._zha_state.percentage

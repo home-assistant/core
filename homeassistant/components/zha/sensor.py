@@ -5,6 +5,8 @@ import functools
 import logging
 from typing import Any, override
 
+from zha.application.platforms.sensor import ElectricalMeasurementState
+
 from homeassistant.components.sensor import (
     SensorDeviceClass,
     SensorEntity,
@@ -103,14 +105,14 @@ class Sensor(ZHAEntity, SensorEntity):
         super().__init__(entity_data, **kwargs)
         entity = self.entity_data.entity
 
-        if entity.device_class is not None:
-            self._attr_device_class = SensorDeviceClass(entity.device_class)
+        if self._zha_state.device_class is not None:
+            self._attr_device_class = SensorDeviceClass(self._zha_state.device_class)
 
-        if entity.state_class is not None:
-            self._attr_state_class = SensorStateClass(entity.state_class)
+        if self._zha_state.state_class is not None:
+            self._attr_state_class = SensorStateClass(self._zha_state.state_class)
 
-        if hasattr(entity.info_object, "unit") and entity.info_object.unit is not None:
-            self._attr_native_unit_of_measurement = entity.info_object.unit
+        if hasattr(self._zha_state, "unit") and self._zha_state.unit is not None:
+            self._attr_native_unit_of_measurement = self._zha_state.unit
 
         if (
             hasattr(entity, "entity_description")
@@ -136,35 +138,46 @@ class Sensor(ZHAEntity, SensorEntity):
                     entity_description.device_class.value
                 )
 
-        if entity.info_object.suggested_display_precision is not None:
+        if self._zha_state.suggested_display_precision is not None:
             self._attr_suggested_display_precision = (
-                entity.info_object.suggested_display_precision
+                self._zha_state.suggested_display_precision
             )
 
     @property
     @override
     def native_value(self) -> StateType:
         """Return the state of the entity."""
-        return self.entity_data.entity.native_value
+        return self._zha_state.native_value
 
     @property
     @override
     def extra_state_attributes(self) -> Mapping[str, Any] | None:
         """Return entity specific state attributes."""
         entity = self.entity_data.entity
-        if entity.extra_state_attribute_names is None:
+        if self._zha_state.extra_state_attribute_names is None:
             return None
 
-        if not entity.extra_state_attribute_names <= _EXTRA_STATE_ATTRIBUTES:
+        if not self._zha_state.extra_state_attribute_names <= _EXTRA_STATE_ATTRIBUTES:
             _LOGGER.warning(
                 "Unexpected extra state attributes found for sensor %s: %s",
                 entity,
-                entity.extra_state_attribute_names - _EXTRA_STATE_ATTRIBUTES,
+                self._zha_state.extra_state_attribute_names - _EXTRA_STATE_ATTRIBUTES,
             )
+
+        max_attribute_name: str | None = None
+        max_value: float | int | None = None
+
+        if isinstance(self._zha_state, ElectricalMeasurementState):
+            max_attribute_name = self._zha_state.max_attribute_name
+            max_value = self._zha_state.max_value
 
         return exclude_none_values(
             {
-                name: entity.state.get(name)
-                for name in entity.extra_state_attribute_names
+                name: (
+                    max_value
+                    if name == max_attribute_name
+                    else getattr(self._zha_state, name)
+                )
+                for name in self._zha_state.extra_state_attribute_names
             }
         )

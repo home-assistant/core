@@ -124,7 +124,7 @@ class ZHAFirmwareUpdateEntity(
     @override
     def installed_version(self) -> str | None:
         """Version installed and in use."""
-        return self.entity_data.entity.installed_version
+        return self._zha_state.installed_version
 
     @property
     @override
@@ -133,7 +133,7 @@ class ZHAFirmwareUpdateEntity(
 
         Should return a boolean (True if in progress, False if not).
         """
-        return self.entity_data.entity.in_progress
+        return self._zha_state.in_progress
 
     @property
     @override
@@ -144,13 +144,13 @@ class ZHAFirmwareUpdateEntity(
 
         Can either return a number to indicate the progress from 0 to 100% or None.
         """
-        return self.entity_data.entity.update_percentage
+        return self._zha_state.update_percentage
 
     @property
     @override
     def latest_version(self) -> str | None:
         """Latest version available for install."""
-        return self.entity_data.entity.latest_version
+        return self._zha_state.latest_version
 
     @property
     @override
@@ -160,7 +160,7 @@ class ZHAFirmwareUpdateEntity(
         This is not suitable for long changelogs, but merely suitable
         for a short excerpt update description of max 255 characters.
         """
-        return self.entity_data.entity.release_summary
+        return self._zha_state.release_summary
 
     @override
     async def async_release_notes(self) -> str | None:
@@ -179,13 +179,13 @@ class ZHAFirmwareUpdateEntity(
                 "</ha-alert>"
             )
 
-        return f"{header}\n\n{self.entity_data.entity.release_notes or ''}"
+        return f"{header}\n\n{self._zha_state.release_notes or ''}"
 
     @property
     @override
     def release_url(self) -> str | None:
         """URL to the full release notes of the latest version available."""
-        return self.entity_data.entity.release_url
+        return self._zha_state.release_url
 
     # We explicitly convert ZHA exceptions to HA exceptions here so there is no need to
     # use the `@convert_zha_error_to_ha_error()` decorator.

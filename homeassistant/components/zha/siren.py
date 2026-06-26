@@ -67,7 +67,7 @@ class ZHASiren(ZHAEntity, SirenEntity):
         super().__init__(entity_data, **kwargs)
 
         features: SirenEntityFeature = SirenEntityFeature(0)
-        zha_features: ZHASirenEntityFeature = self.entity_data.entity.supported_features
+        zha_features: ZHASirenEntityFeature = self._zha_state.supported_features
 
         if ZHASirenEntityFeature.TURN_ON in zha_features:
             features |= SirenEntityFeature.TURN_ON
@@ -86,7 +86,7 @@ class ZHASiren(ZHAEntity, SirenEntity):
     @override
     def is_on(self) -> bool:
         """Return True if entity is on."""
-        return self.entity_data.entity.is_on
+        return self._zha_state.is_on
 
     @convert_zha_error_to_ha_error()
     @override

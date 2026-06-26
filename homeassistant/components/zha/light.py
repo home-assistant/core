@@ -81,7 +81,7 @@ class Light(LightEntity, ZHAEntity):
         super().__init__(entity_data)
         color_modes: set[ColorMode] = set()
         has_brightness = False
-        for color_mode in self.entity_data.entity.supported_color_modes:
+        for color_mode in self._zha_state.supported_color_modes:
             if color_mode == ZhaColorMode.BRIGHTNESS:
                 has_brightness = True
             if color_mode not in (ZhaColorMode.BRIGHTNESS, ZhaColorMode.ONOFF):
@@ -96,7 +96,7 @@ class Light(LightEntity, ZHAEntity):
             self._attr_supported_color_modes = color_modes
 
         features = LightEntityFeature(0)
-        zha_features: ZhaLightEntityFeature = self.entity_data.entity.supported_features
+        zha_features: ZhaLightEntityFeature = self._zha_state.supported_features
 
         if ZhaLightEntityFeature.EFFECT in zha_features:
             features |= LightEntityFeature.EFFECT
@@ -111,45 +111,41 @@ class Light(LightEntity, ZHAEntity):
     @override
     def extra_state_attributes(self) -> Mapping[str, Any] | None:
         """Return entity specific state attributes."""
-        state = self.entity_data.entity.state
+        state = self._zha_state
         return {
-            "off_with_transition": state.get("off_with_transition"),
-            "off_brightness": state.get("off_brightness"),
+            "off_with_transition": state.off_with_transition,
+            "off_brightness": state.off_brightness,
         }
 
     @property
     @override
     def is_on(self) -> bool:
         """Return true if entity is on."""
-        return self.entity_data.entity.is_on
+        return self._zha_state.on
 
     @property
     @override
     def brightness(self) -> int:
         """Return the brightness of this light."""
-        return self.entity_data.entity.brightness
+        return self._zha_state.brightness
 
     @property
     @override
     def max_color_temp_kelvin(self) -> int:
         """Return the coldest color_temp_kelvin that this light supports."""
-        return color_util.color_temperature_mired_to_kelvin(
-            self.entity_data.entity.min_mireds
-        )
+        return color_util.color_temperature_mired_to_kelvin(self._zha_state.min_mireds)
 
     @property
     @override
     def min_color_temp_kelvin(self) -> int:
         """Return the warmest color_temp_kelvin that this light supports."""
-        return color_util.color_temperature_mired_to_kelvin(
-            self.entity_data.entity.max_mireds
-        )
+        return color_util.color_temperature_mired_to_kelvin(self._zha_state.max_mireds)
 
     @property
     @override
     def xy_color(self) -> tuple[float, float] | None:
         """Return the xy color value [float, float]."""
-        return self.entity_data.entity.xy_color
+        return self._zha_state.xy_color
 
     @property
     @override
@@ -157,7 +153,7 @@ class Light(LightEntity, ZHAEntity):
         """Return the color temperature value in Kelvin."""
         return (
             color_util.color_temperature_mired_to_kelvin(mireds)
-            if (mireds := self.entity_data.entity.color_temp)
+            if (mireds := self._zha_state.color_temp)
             else None
         )
 
@@ -165,21 +161,21 @@ class Light(LightEntity, ZHAEntity):
     @override
     def color_mode(self) -> ColorMode:
         """Return the color mode."""
-        if self.entity_data.entity.color_mode is None:
+        if self._zha_state.color_mode is None:
             return ColorMode.UNKNOWN
-        return ZHA_TO_HA_COLOR_MODE[self.entity_data.entity.color_mode]
+        return ZHA_TO_HA_COLOR_MODE[self._zha_state.color_mode]
 
     @property
     @override
     def effect_list(self) -> list[str] | None:
         """Return the list of supported effects."""
-        return self.entity_data.entity.effect_list
+        return self._zha_state.effect_list
 
     @property
     @override
     def effect(self) -> str | None:
         """Return the current effect."""
-        return self.entity_data.entity.effect
+        return self._zha_state.effect
 
     @convert_zha_error_to_ha_error()
     @override

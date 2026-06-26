@@ -80,7 +80,7 @@ class ZHAAlarmControlPanel(ZHAEntity, AlarmControlPanelEntity):
     @override
     def code_arm_required(self) -> bool:
         """Whether the code is required for arm actions."""
-        return self.entity_data.entity.code_arm_required
+        return self._zha_state.code_arm_required
 
     @convert_zha_error_to_ha_error()
     @override
@@ -121,4 +121,4 @@ class ZHAAlarmControlPanel(ZHAEntity, AlarmControlPanelEntity):
     @override
     def alarm_state(self) -> AlarmControlPanelState | None:
         """Return the state of the entity."""
-        return ZHA_STATE_TO_ALARM_STATE_MAP.get(self.entity_data.entity.alarm_state)
+        return ZHA_STATE_TO_ALARM_STATE_MAP.get(self._zha_state.alarm_state)
