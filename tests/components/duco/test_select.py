@@ -13,6 +13,7 @@ from duco_connectivity import (
     Node,
     NodeActionItemList,
     NodeListActionItemList,
+    NodeType,
     VentilationState,
 )
 import pytest
@@ -121,16 +122,33 @@ async def test_select_entity_created_with_dynamic_options(
     assert hass.states.get(_UNSUPPORTED_SELECT_ENTITY) is None
 
 
+@pytest.mark.parametrize(
+    "valve_node_type",
+    [
+        pytest.param(NodeType.EAV, id="eav"),
+        pytest.param(NodeType.EAVRH, id="eavrh"),
+        pytest.param(NodeType.EAVVOC, id="eavvoc"),
+        pytest.param(NodeType.EAVCO2, id="eavco2"),
+    ],
+)
 async def test_select_creates_entities_for_controllable_valve_nodes(
     hass: HomeAssistant,
     mock_config_entry: MockConfigEntry,
     mock_duco_client: AsyncMock,
     mock_sensor_nodes: list[Node],
+    valve_node_type: NodeType,
 ) -> None:
     """Test select discovery includes valve nodes when they advertise control."""
-    mock_duco_client.async_get_nodes.return_value = mock_sensor_nodes
+    mock_nodes = [
+        replace(
+            mock_sensor_nodes[0],
+            general=replace(mock_sensor_nodes[0].general, node_type=valve_node_type),
+        ),
+        *mock_sensor_nodes[1:],
+    ]
+    mock_duco_client.async_get_nodes.return_value = mock_nodes
     mock_duco_client.async_get_node_actions.return_value = _build_multi_node_actions(
-        [node.node_id for node in mock_sensor_nodes],
+        [node.node_id for node in mock_nodes],
         options=["AUTO", "CNT1", "CNT2", "CNT3", "MAN1", "MAN2", "MAN3"],
     )
 

@@ -34,6 +34,10 @@ SUPPORTED_SELECT_NODE_TYPES = {
     NodeType.VLVVOC,
     NodeType.VLVCO2,
     NodeType.VLVCO2RH,
+    NodeType.EAV,
+    NodeType.EAVRH,
+    NodeType.EAVVOC,
+    NodeType.EAVCO2,
 }
 
 
