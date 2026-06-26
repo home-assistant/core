@@ -80,10 +80,7 @@ class SteamSensorEntity(SteamEntity, SensorEntity):
         description: SteamSensorEntityDescription,
     ) -> None:
         """Initialize the sensor."""
-        super().__init__(coordinator)
-        self._steamid = steamid
-        self.entity_description = description
-        self._attr_unique_id = f"sensor.steam_{steamid}"
+        super().__init__(coordinator, steamid, description)
         self._attr_name = self.entity_description.name_fn(coordinator.data[steamid])
 
     @property

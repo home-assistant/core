@@ -39,7 +39,7 @@
 # name: test_buttons[button][button.clou_duo_sync_clock-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'Clou Duo Sync clock',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Clou Duo Sync clock',
     }),
     'context': <ANY>,
     'entity_id': 'button.clou_duo_sync_clock',

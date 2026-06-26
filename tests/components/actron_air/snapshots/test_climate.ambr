@@ -51,7 +51,7 @@
     'attributes': ReadOnlyDict({
       <ClimateEntityStateAttribute.CURRENT_HUMIDITY: 'current_humidity'>: 50.0,
       <ClimateEntityStateAttribute.CURRENT_TEMPERATURE: 'current_temperature'>: 22.0,
-      'friendly_name': 'Living Room',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Living Room',
       <ClimateEntityCapabilityAttribute.HVAC_MODES: 'hvac_modes'>: list([
         <HVACMode.COOL: 'cool'>,
         <HVACMode.HEAT: 'heat'>,
@@ -61,7 +61,7 @@
       ]),
       <ClimateEntityCapabilityAttribute.MAX_TEMP: 'max_temp'>: 30,
       <ClimateEntityCapabilityAttribute.MIN_TEMP: 'min_temp'>: 16,
-      'supported_features': <ClimateEntityFeature: 385>,
+      <EntityStateAttribute.SUPPORTED_FEATURES: 'supported_features'>: <ClimateEntityFeature: 385>,
       <ClimateEntityStateAttribute.TEMPERATURE: 'temperature'>: 24.0,
     }),
     'context': <ANY>,
@@ -137,7 +137,7 @@
         'medium',
         'high',
       ]),
-      'friendly_name': 'Test System',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Test System',
       <ClimateEntityCapabilityAttribute.HVAC_MODES: 'hvac_modes'>: list([
         <HVACMode.COOL: 'cool'>,
         <HVACMode.HEAT: 'heat'>,
@@ -147,7 +147,7 @@
       ]),
       <ClimateEntityCapabilityAttribute.MAX_TEMP: 'max_temp'>: 30.0,
       <ClimateEntityCapabilityAttribute.MIN_TEMP: 'min_temp'>: 16.0,
-      'supported_features': <ClimateEntityFeature: 393>,
+      <EntityStateAttribute.SUPPORTED_FEATURES: 'supported_features'>: <ClimateEntityFeature: 393>,
       <ClimateEntityStateAttribute.TEMPERATURE: 'temperature'>: 24.0,
     }),
     'context': <ANY>,
