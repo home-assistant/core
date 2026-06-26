@@ -30,13 +30,6 @@ _LOGGER = logging.getLogger(__name__)
 PARALLEL_UPDATES = 0
 
 
-def _build_time(hour: int | None, minute: int | None) -> datetime.time | None:
-    """Build a time, returning None when either component is missing."""
-    if hour is None or minute is None:
-        return None
-    return datetime.time(hour=hour, minute=minute)
-
-
 @dataclass(frozen=True, kw_only=True)
 class RoborockTimeDescription(TimeEntityDescription):
     """Class to describe a Roborock time entity."""
@@ -65,7 +58,7 @@ TIME_DESCRIPTIONS: list[RoborockTimeDescription] = [
                 end_minute=trait.end_minute,
             )
         ),
-        get_value=lambda trait: _build_time(trait.start_hour, trait.start_minute),
+        get_value=lambda trait: trait.start_time,
         entity_category=EntityCategory.CONFIG,
     ),
     RoborockTimeDescription(
@@ -81,7 +74,7 @@ TIME_DESCRIPTIONS: list[RoborockTimeDescription] = [
                 end_minute=desired_time.minute,
             )
         ),
-        get_value=lambda trait: _build_time(trait.end_hour, trait.end_minute),
+        get_value=lambda trait: trait.end_time,
         entity_category=EntityCategory.CONFIG,
     ),
     RoborockTimeDescription(
@@ -97,7 +90,7 @@ TIME_DESCRIPTIONS: list[RoborockTimeDescription] = [
                 end_minute=trait.end_minute,
             )
         ),
-        get_value=lambda trait: _build_time(trait.start_hour, trait.start_minute),
+        get_value=lambda trait: trait.start_time,
         entity_category=EntityCategory.CONFIG,
         entity_registry_enabled_default=False,
     ),
@@ -114,7 +107,7 @@ TIME_DESCRIPTIONS: list[RoborockTimeDescription] = [
                 end_minute=desired_time.minute,
             )
         ),
-        get_value=lambda trait: _build_time(trait.end_hour, trait.end_minute),
+        get_value=lambda trait: trait.end_time,
         entity_category=EntityCategory.CONFIG,
         entity_registry_enabled_default=False,
     ),
