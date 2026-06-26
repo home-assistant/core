@@ -1,4 +1,66 @@
 {
+  "config": {
+    "abort": {
+      "already_configured": "[%key:common::config_flow::abort::already_configured_device%]",
+      "reconfigure_successful": "[%key:common::config_flow::abort::reconfigure_successful%]"
+    },
+    "error": {
+      "cannot_connect": "[%key:common::config_flow::error::cannot_connect%]",
+      "unknown": "[%key:common::config_flow::error::unknown%]"
+    },
+    "step": {
+      "reconfigure": {
+        "data": {
+          "failsafe": "[%key:component::keba::config::step::user::data::failsafe%]",
+          "failsafe_fallback": "[%key:component::keba::config::step::user::data::failsafe_fallback%]",
+          "failsafe_persist": "[%key:component::keba::config::step::user::data::failsafe_persist%]",
+          "failsafe_timeout": "[%key:component::keba::config::step::user::data::failsafe_timeout%]",
+          "host": "[%key:common::config_flow::data::host%]",
+          "rfid": "[%key:component::keba::config::step::user::data::rfid%]"
+        },
+        "data_description": {
+          "failsafe": "[%key:component::keba::config::step::user::data_description::failsafe%]",
+          "failsafe_fallback": "[%key:component::keba::config::step::user::data_description::failsafe_fallback%]",
+          "failsafe_persist": "[%key:component::keba::config::step::user::data_description::failsafe_persist%]",
+          "failsafe_timeout": "[%key:component::keba::config::step::user::data_description::failsafe_timeout%]",
+          "host": "[%key:component::keba::config::step::user::data_description::host%]",
+          "rfid": "[%key:component::keba::config::step::user::data_description::rfid%]"
+        }
+      },
+      "user": {
+        "data": {
+          "failsafe": "Enable failsafe mode",
+          "failsafe_fallback": "Failsafe fallback current (A)",
+          "failsafe_persist": "Persist failsafe after reboot",
+          "failsafe_timeout": "Failsafe timeout (s)",
+          "host": "[%key:common::config_flow::data::host%]",
+          "rfid": "RFID tag"
+        },
+        "data_description": {
+          "failsafe": "If enabled, the charging station switches to failsafe mode when it loses contact with Home Assistant.",
+          "failsafe_fallback": "Charging current (A) used in failsafe mode.",
+          "failsafe_persist": "Set to 1 to keep failsafe settings after a reboot of the charging station.",
+          "failsafe_timeout": "Seconds without a 'Set current' action before the failsafe triggers.",
+          "host": "Hostname or IP address of the KEBA charging station.",
+          "rfid": "RFID tag used for authorization (authorize/deauthorize actions)."
+        }
+      }
+    }
+  },
+  "issues": {
+    "deprecated_service_disable": {
+      "description": "The `keba.disable` service is deprecated. Use the **Charging Enabled** switch entity instead.\n\nPlease update your automations and scripts to use `switch.turn_off` targeting the KEBA Charging Enabled entity.",
+      "title": "Deprecated service: keba.disable"
+    },
+    "deprecated_service_enable": {
+      "description": "The `keba.enable` service is deprecated. Use the **Charging Enabled** switch entity instead.\n\nPlease update your automations and scripts to use `switch.turn_on` targeting the KEBA Charging Enabled entity.",
+      "title": "Deprecated service: keba.enable"
+    },
+    "deprecated_yaml": {
+      "description": "The KEBA charging station integration has been set up via your `configuration.yaml`. This is deprecated and will no longer work in a future release.\n\nYour configuration has been imported automatically. Please remove the `keba:` section from your `configuration.yaml` and restart Home Assistant to fix this issue.",
+      "title": "KEBA YAML configuration is deprecated"
+    }
+  },
   "services": {
     "authorize": {
       "description": "Authorizes a charging process with the predefined RFID tag of the configuration file.",
@@ -58,5 +120,6 @@
       },
       "name": "Set failsafe"
     }
-  }
+  },
+  "title": "KEBA Charging Station"
 }

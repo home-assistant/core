@@ -1,0 +1,125 @@
+{
+    "title": "KEBA Ladestation",
+    "config": {
+        "abort": {
+            "already_configured": "Gerät ist bereits konfiguriert",
+            "reconfigure_successful": "Konfiguration wurde erfolgreich aktualisiert"
+        },
+        "error": {
+            "cannot_connect": "Verbindung fehlgeschlagen",
+            "unknown": "Unerwarteter Fehler"
+        },
+        "step": {
+            "reconfigure": {
+                "data": {
+                    "failsafe": "Failsafe-Modus aktivieren",
+                    "failsafe_fallback": "Failsafe-Rückfallstrom (A)",
+                    "failsafe_persist": "Failsafe-Einstellungen nach Neustart beibehalten",
+                    "failsafe_timeout": "Failsafe-Timeout (s)",
+                    "host": "Host",
+                    "rfid": "RFID-Tag"
+                },
+                "data_description": {
+                    "failsafe": "Wenn aktiviert, wechselt die Ladestation in den Failsafe-Modus, wenn die Verbindung zu Home Assistant unterbrochen wird.",
+                    "failsafe_fallback": "Ladestrom (A), der im Failsafe-Modus verwendet wird.",
+                    "failsafe_persist": "Auf 1 setzen, damit die Failsafe-Einstellungen einen Neustart der Ladestation überstehen.",
+                    "failsafe_timeout": "Sekunden ohne 'Strom setzen'-Aktion, bevor der Failsafe ausgelöst wird.",
+                    "host": "Hostname oder IP-Adresse der KEBA-Ladestation.",
+                    "rfid": "RFID-Tag für die Autorisierung (Autorisierungs-/Deautorisierungsaktionen)."
+                }
+            },
+            "user": {
+                "data": {
+                    "failsafe": "Failsafe-Modus aktivieren",
+                    "failsafe_fallback": "Failsafe-Rückfallstrom (A)",
+                    "failsafe_persist": "Failsafe-Einstellungen nach Neustart beibehalten",
+                    "failsafe_timeout": "Failsafe-Timeout (s)",
+                    "host": "Host",
+                    "rfid": "RFID-Tag"
+                },
+                "data_description": {
+                    "host": "Hostname oder IP-Adresse der KEBA-Ladestation.",
+                    "failsafe": "Wenn aktiviert, wechselt die Ladestation in den Failsafe-Modus, wenn die Verbindung zu Home Assistant unterbrochen wird.",
+                    "failsafe_fallback": "Ladestrom (A), der im Failsafe-Modus verwendet wird.",
+                    "failsafe_persist": "Auf 1 setzen, damit die Failsafe-Einstellungen einen Neustart der Ladestation überstehen.",
+                    "failsafe_timeout": "Sekunden ohne 'Strom setzen'-Aktion, bevor der Failsafe ausgelöst wird.",
+                    "rfid": "RFID-Tag für die Autorisierung (Autorisierungs-/Deautorisierungsaktionen)."
+                }
+            }
+        }
+    },
+    "issues": {
+        "deprecated_yaml": {
+            "description": "Die KEBA-Ladestation-Integration wurde über die `configuration.yaml` eingerichtet. Dies ist veraltet und wird in einer zukünftigen Version nicht mehr unterstützt.\n\nDeine Konfiguration wurde automatisch importiert. Bitte entferne den Abschnitt `keba:` aus deiner `configuration.yaml` und starte Home Assistant neu, um dieses Problem zu beheben.",
+            "title": "KEBA YAML-Konfiguration ist veraltet"
+        },
+        "deprecated_service_enable": {
+            "description": "Der Dienst `keba.enable` ist veraltet. Verwende stattdessen die **Charging Enabled**-Schalter-Entität.\n\nBitte aktualisiere deine Automationen und Skripte, um `switch.turn_on` für die KEBA Charging Enabled-Entität zu verwenden.",
+            "title": "Veralteter Dienst: keba.enable"
+        },
+        "deprecated_service_disable": {
+            "description": "Der Dienst `keba.disable` ist veraltet. Verwende stattdessen die **Charging Enabled**-Schalter-Entität.\n\nBitte aktualisiere deine Automationen und Skripte, um `switch.turn_off` für die KEBA Charging Enabled-Entität zu verwenden.",
+            "title": "Veralteter Dienst: keba.disable"
+        }
+    },
+    "services": {
+        "authorize": {
+            "description": "Autorisiert einen Ladevorgang mit dem vordefinierten RFID-Tag aus der Konfiguration.",
+            "name": "Autorisieren"
+        },
+        "deauthorize": {
+            "description": "Deautorisiert den laufenden Ladevorgang mit dem vordefinierten RFID-Tag aus der Konfiguration.",
+            "name": "Deautorisieren"
+        },
+        "disable": {
+            "description": "Stoppt den Ladevorgang, wenn die Ladestation autorisiert ist.",
+            "name": "Deaktivieren"
+        },
+        "enable": {
+            "description": "Startet einen Ladevorgang, wenn die Ladestation autorisiert ist.",
+            "name": "Aktivieren"
+        },
+        "request_data": {
+            "description": "Fordert neue Daten von der Ladestation an.",
+            "name": "Daten anfordern"
+        },
+        "set_current": {
+            "description": "Setzt den maximalen Strom für Ladevorgänge.",
+            "fields": {
+                "current": {
+                    "description": "Der maximale Strom für den Ladevorgang. Der Wert hängt von den DIP-Schaltereinstellungen und dem verwendeten Kabel der Ladestation ab.",
+                    "name": "Strom"
+                }
+            },
+            "name": "Strom setzen"
+        },
+        "set_energy": {
+            "description": "Setzt das Energieziel, nach dessen Erreichen der Ladevorgang stoppt.",
+            "fields": {
+                "energy": {
+                    "description": "Das Energieziel zum Stoppen des Ladevorgangs. Ein Wert von 0 deaktiviert das Limit.",
+                    "name": "Energie"
+                }
+            },
+            "name": "Energie setzen"
+        },
+        "set_failsafe": {
+            "description": "Setzt den Failsafe-Modus der Ladestation. Wenn alle Parameter 0 sind, wird der Failsafe-Modus deaktiviert.",
+            "fields": {
+                "failsafe_fallback": {
+                    "description": "Rückfallstrom, der nach Ablauf des Timeouts gesetzt wird.",
+                    "name": "Failsafe-Rückfallstrom"
+                },
+                "failsafe_persist": {
+                    "description": "Bei 0 wird der Failsafe nach einem Neustart der Ladestation deaktiviert. Bei 1 bleibt der Failsafe nach einem Neustart aktiv.",
+                    "name": "Failsafe beibehalten"
+                },
+                "failsafe_timeout": {
+                    "description": "Timeout, nach dem der Failsafe-Modus ausgelöst wird, wenn die Aktion 'Strom setzen' in dieser Zeit nicht ausgeführt wurde.",
+                    "name": "Failsafe-Timeout"
+                }
+            },
+            "name": "Failsafe setzen"
+        }
+    }
+}

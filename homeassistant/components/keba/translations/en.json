@@ -1,0 +1,125 @@
+{
+    "title": "KEBA Charging Station",
+    "config": {
+        "abort": {
+            "already_configured": "Device is already configured",
+            "reconfigure_successful": "Re-configuration was successful"
+        },
+        "error": {
+            "cannot_connect": "Failed to connect",
+            "unknown": "Unexpected error"
+        },
+        "step": {
+            "reconfigure": {
+                "data": {
+                    "failsafe": "Enable failsafe mode",
+                    "failsafe_fallback": "Failsafe fallback current (A)",
+                    "failsafe_persist": "Persist failsafe after reboot",
+                    "failsafe_timeout": "Failsafe timeout (s)",
+                    "host": "Host",
+                    "rfid": "RFID tag"
+                },
+                "data_description": {
+                    "failsafe": "If enabled, the charging station switches to failsafe mode when it loses contact with Home Assistant.",
+                    "failsafe_fallback": "Charging current (A) used in failsafe mode.",
+                    "failsafe_persist": "Set to 1 to keep failsafe settings after a reboot of the charging station.",
+                    "failsafe_timeout": "Seconds without a 'Set current' action before the failsafe triggers.",
+                    "host": "Hostname or IP address of the KEBA charging station.",
+                    "rfid": "RFID tag used for authorization (authorize/deauthorize actions)."
+                }
+            },
+            "user": {
+                "data": {
+                    "failsafe": "Enable failsafe mode",
+                    "failsafe_fallback": "Failsafe fallback current (A)",
+                    "failsafe_persist": "Persist failsafe after reboot",
+                    "failsafe_timeout": "Failsafe timeout (s)",
+                    "host": "Host",
+                    "rfid": "RFID tag"
+                },
+                "data_description": {
+                    "host": "Hostname or IP address of the KEBA charging station.",
+                    "failsafe": "If enabled, the charging station switches to failsafe mode when it loses contact with Home Assistant.",
+                    "failsafe_fallback": "Charging current (A) used in failsafe mode.",
+                    "failsafe_persist": "Set to 1 to keep failsafe settings after a reboot of the charging station.",
+                    "failsafe_timeout": "Seconds without a 'Set current' action before the failsafe triggers.",
+                    "rfid": "RFID tag used for authorization (authorize/deauthorize actions)."
+                }
+            }
+        }
+    },
+    "issues": {
+        "deprecated_yaml": {
+            "description": "The KEBA charging station integration has been set up via your `configuration.yaml`. This is deprecated and will no longer work in a future release.\n\nYour configuration has been imported automatically. Please remove the `keba:` section from your `configuration.yaml` and restart Home Assistant to fix this issue.",
+            "title": "KEBA YAML configuration is deprecated"
+        },
+        "deprecated_service_enable": {
+            "description": "The `keba.enable` service is deprecated. Use the **Charging Enabled** switch entity instead.\n\nPlease update your automations and scripts to use `switch.turn_on` targeting the KEBA Charging Enabled entity.",
+            "title": "Deprecated service: keba.enable"
+        },
+        "deprecated_service_disable": {
+            "description": "The `keba.disable` service is deprecated. Use the **Charging Enabled** switch entity instead.\n\nPlease update your automations and scripts to use `switch.turn_off` targeting the KEBA Charging Enabled entity.",
+            "title": "Deprecated service: keba.disable"
+        }
+    },
+    "services": {
+        "authorize": {
+            "description": "Authorizes a charging process with the predefined RFID tag of the configuration file.",
+            "name": "Authorize"
+        },
+        "deauthorize": {
+            "description": "Deauthorizes the running charging process with the predefined RFID tag of the configuration file.",
+            "name": "Deauthorize"
+        },
+        "disable": {
+            "description": "Stops the charging process if charging station is authorized.",
+            "name": "Disable"
+        },
+        "enable": {
+            "description": "Starts a charging process if charging station is authorized.",
+            "name": "Enable"
+        },
+        "request_data": {
+            "description": "Requests new data from the charging station.",
+            "name": "Request data"
+        },
+        "set_current": {
+            "description": "Sets the maximum current for charging processes.",
+            "fields": {
+                "current": {
+                    "description": "The maximum current used for the charging process. The value is depending on the DIP-switch settings and the used cable of the charging station.",
+                    "name": "Current"
+                }
+            },
+            "name": "Set current"
+        },
+        "set_energy": {
+            "description": "Sets the energy target after which the charging process stops.",
+            "fields": {
+                "energy": {
+                    "description": "The energy target to stop charging. Setting 0 disables the limit.",
+                    "name": "Energy"
+                }
+            },
+            "name": "Set energy"
+        },
+        "set_failsafe": {
+            "description": "Sets the failsafe mode of the charging station. If all parameters are 0, the failsafe mode will be disabled.",
+            "fields": {
+                "failsafe_fallback": {
+                    "description": "Fallback current to be set after timeout.",
+                    "name": "Failsafe fallback"
+                },
+                "failsafe_persist": {
+                    "description": "If set to 0, the failsafe option will be disabled after a charging station reboot. If set to 1, the failsafe option will survive a reboot.",
+                    "name": "Failsafe persist"
+                },
+                "failsafe_timeout": {
+                    "description": "Timeout after which the failsafe mode is triggered if the 'Set current' action was not run during this time.",
+                    "name": "Failsafe timeout"
+                }
+            },
+            "name": "Set failsafe"
+        }
+    }
+}

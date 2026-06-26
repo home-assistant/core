@@ -497,7 +497,6 @@ INTEGRATIONS_WITHOUT_QUALITY_SCALE_FILE = [
     "kaiterra",
     "kaleidescape",
     "kankun",
-    "keba",
     "keenetic_ndms2",
     "kef",
     "kegtron",

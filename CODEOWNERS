@@ -940,6 +940,7 @@ CLAUDE.md @home-assistant/core
 /homeassistant/components/kaleidescape/ @SteveEasley
 /tests/components/kaleidescape/ @SteveEasley
 /homeassistant/components/keba/ @dannerph
+/tests/components/keba/ @dannerph
 /homeassistant/components/keenetic_ndms2/ @foxel
 /tests/components/keenetic_ndms2/ @foxel
 /homeassistant/components/kef/ @basnijholt
