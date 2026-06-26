@@ -81,7 +81,7 @@
         'standby_mode',
         'water_too_hot',
       ]),
-      'friendly_name': 'FakeSpa Fault',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'FakeSpa Fault',
     }),
     'context': <ANY>,
     'entity_id': 'event.fakespa_fault',

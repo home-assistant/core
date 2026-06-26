@@ -2,7 +2,7 @@
 # name: test_setup_config_entry
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'template_device_tracker',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'template_device_tracker',
       <TrackerEntityStateAttribute.GPS_ACCURACY: 'gps_accuracy'>: 10.0,
       <DeviceTrackerEntityStateAttribute.IN_ZONES: 'in_zones'>: list([
       ]),

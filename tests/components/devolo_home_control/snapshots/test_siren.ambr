@@ -5,8 +5,8 @@
       <SirenEntityCapabilityAttribute.AVAILABLE_TONES: 'available_tones'>: list([
         0,
       ]),
-      'friendly_name': 'Test',
-      'supported_features': <SirenEntityFeature: 7>,
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Test',
+      <EntityStateAttribute.SUPPORTED_FEATURES: 'supported_features'>: <SirenEntityFeature: 7>,
     }),
     'context': <ANY>,
     'entity_id': 'siren.test_test',
@@ -63,8 +63,8 @@
       <SirenEntityCapabilityAttribute.AVAILABLE_TONES: 'available_tones'>: list([
         0,
       ]),
-      'friendly_name': 'Test',
-      'supported_features': <SirenEntityFeature: 7>,
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Test',
+      <EntityStateAttribute.SUPPORTED_FEATURES: 'supported_features'>: <SirenEntityFeature: 7>,
     }),
     'context': <ANY>,
     'entity_id': 'siren.test_test',
@@ -121,8 +121,8 @@
       <SirenEntityCapabilityAttribute.AVAILABLE_TONES: 'available_tones'>: list([
         0,
       ]),
-      'friendly_name': 'Test',
-      'supported_features': <SirenEntityFeature: 7>,
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Test',
+      <EntityStateAttribute.SUPPORTED_FEATURES: 'supported_features'>: <SirenEntityFeature: 7>,
     }),
     'context': <ANY>,
     'entity_id': 'siren.test_test',

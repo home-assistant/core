@@ -41,7 +41,7 @@
 # name: test_all_entities[device_tracker.landevice1-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'LanDevice1',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'LanDevice1',
       <ScannerEntityStateAttribute.HOST_NAME: 'host_name'>: 'LanDevice1',
       <DeviceTrackerEntityStateAttribute.IN_ZONES: 'in_zones'>: list([
       ]),
@@ -100,7 +100,7 @@
 # name: test_all_entities[device_tracker.wifidevice0-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'WifiDevice0',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'WifiDevice0',
       <ScannerEntityStateAttribute.HOST_NAME: 'host_name'>: 'WifiDevice0',
       <DeviceTrackerEntityStateAttribute.IN_ZONES: 'in_zones'>: list([
         'zone.home',

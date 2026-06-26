@@ -49,7 +49,7 @@
         'input_event',
         'script_start',
       ]),
-      'friendly_name': 'Test name test_script.js',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Test name test_script.js',
     }),
     'context': <ANY>,
     'entity_id': 'event.test_name_test_script_js',

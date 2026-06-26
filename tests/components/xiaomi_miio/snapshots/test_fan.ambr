@@ -45,7 +45,7 @@
   StateSnapshot({
     'attributes': ReadOnlyDict({
       <FanEntityStateAttribute.DIRECTION: 'direction'>: None,
-      'friendly_name': 'test_fan',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'test_fan',
       <FanEntityStateAttribute.OSCILLATING: 'oscillating'>: None,
       <FanEntityStateAttribute.PERCENTAGE: 'percentage'>: None,
       <FanEntityStateAttribute.PERCENTAGE_STEP: 'percentage_step'>: 1.0,
@@ -54,7 +54,7 @@
         'Normal',
         'Nature',
       ]),
-      'supported_features': <FanEntityFeature: 63>,
+      <EntityStateAttribute.SUPPORTED_FEATURES: 'supported_features'>: <FanEntityFeature: 63>,
     }),
     'context': <ANY>,
     'entity_id': 'fan.test_fan',
@@ -110,7 +110,7 @@
   StateSnapshot({
     'attributes': ReadOnlyDict({
       <FanEntityStateAttribute.DIRECTION: 'direction'>: None,
-      'friendly_name': 'test_fan',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'test_fan',
       <FanEntityStateAttribute.OSCILLATING: 'oscillating'>: False,
       <FanEntityStateAttribute.PERCENTAGE: 'percentage'>: None,
       <FanEntityStateAttribute.PERCENTAGE_STEP: 'percentage_step'>: 1.0,
@@ -119,7 +119,7 @@
         'Normal',
         'Nature',
       ]),
-      'supported_features': <FanEntityFeature: 63>,
+      <EntityStateAttribute.SUPPORTED_FEATURES: 'supported_features'>: <FanEntityFeature: 63>,
     }),
     'context': <ANY>,
     'entity_id': 'fan.test_fan',

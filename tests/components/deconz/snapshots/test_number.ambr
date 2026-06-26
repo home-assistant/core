@@ -44,7 +44,7 @@
 # name: test_number_entities[sensor_payload0-expected0][number.presence_sensor_delay-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'Presence sensor Delay',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Presence sensor Delay',
       <NumberEntityCapabilityAttribute.MAX: 'max'>: 65535,
       <NumberEntityCapabilityAttribute.MIN: 'min'>: 0,
       <NumberEntityCapabilityAttribute.MODE: 'mode'>: <NumberMode.AUTO: 'auto'>,
@@ -103,7 +103,7 @@
 # name: test_number_entities[sensor_payload1-expected1][number.presence_sensor_duration-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'Presence sensor Duration',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Presence sensor Duration',
       <NumberEntityCapabilityAttribute.MAX: 'max'>: 65535,
       <NumberEntityCapabilityAttribute.MIN: 'min'>: 0,
       <NumberEntityCapabilityAttribute.MODE: 'mode'>: <NumberMode.AUTO: 'auto'>,

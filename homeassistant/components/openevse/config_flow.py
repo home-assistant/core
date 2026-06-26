@@ -15,16 +15,29 @@ from homeassistant.const import (
     CONF_PASSWORD,
     CONF_USERNAME,
 )
-from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
+from homeassistant.helpers.selector import (
+    TextSelector,
+    TextSelectorConfig,
+    TextSelectorType,
+)
 from homeassistant.helpers.service_info import zeroconf
 
 from .const import CONF_SERIAL, DOMAIN
 
-USER_SCHEMA = vol.Schema({vol.Required(CONF_HOST): cv.string})
+USER_SCHEMA = vol.Schema({vol.Required(CONF_HOST): TextSelector()})
 
 AUTH_SCHEMA = vol.Schema(
-    {vol.Required(CONF_USERNAME): cv.string, vol.Required(CONF_PASSWORD): cv.string}
+    {
+        vol.Required(CONF_USERNAME): TextSelector(
+            TextSelectorConfig(autocomplete="username")
+        ),
+        vol.Required(CONF_PASSWORD): TextSelector(
+            TextSelectorConfig(
+                type=TextSelectorType.PASSWORD, autocomplete="current-password"
+            )
+        ),
+    }
 )
 
 

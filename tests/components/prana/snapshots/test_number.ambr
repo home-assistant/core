@@ -44,7 +44,7 @@
 # name: test_numbers[number.prana_recuperator_display_brightness-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'PRANA RECUPERATOR Display brightness',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'PRANA RECUPERATOR Display brightness',
       <NumberEntityCapabilityAttribute.MAX: 'max'>: 6,
       <NumberEntityCapabilityAttribute.MIN: 'min'>: 0,
       <NumberEntityCapabilityAttribute.MODE: 'mode'>: <NumberMode.SLIDER: 'slider'>,

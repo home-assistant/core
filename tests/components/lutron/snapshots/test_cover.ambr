@@ -40,10 +40,10 @@
   StateSnapshot({
     'attributes': ReadOnlyDict({
       <CoverEntityStateAttribute.CURRENT_POSITION: 'current_position'>: 0,
-      'friendly_name': 'Test Cover',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Test Cover',
       <CoverEntityStateAttribute.IS_CLOSED: 'is_closed'>: True,
       'lutron_integration_id': 3,
-      'supported_features': <CoverEntityFeature: 7>,
+      <EntityStateAttribute.SUPPORTED_FEATURES: 'supported_features'>: <CoverEntityFeature: 7>,
     }),
     'context': <ANY>,
     'entity_id': 'cover.test_area_test_cover',
