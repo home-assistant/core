@@ -264,15 +264,15 @@ class ProtectData:
     ) -> None:
         """Dispatch a public events websocket event to its subscribers.
 
-        Only the start of an event is dispatched, routed to the subscribers that
-        registered for this device and event type; an entity that cares about a
-        sub-type (e.g. a smart-detect object type) filters further itself. The
-        device is resolved by ``device_id`` (the stable cross-API join key), not
-        the public ``device_mac``, so the key comes from the same store the
-        entities derive ``self.device.mac`` from and matches without assuming
-        both mac strings are byte-identical.
+        Each non-eviction change is dispatched — a detection type may surface at
+        the event start, on a later update, or only as it ends — routed to the
+        subscribers registered for this device and event type; entities fire each
+        ``(event, type)`` once. The device is resolved by ``device_id`` (the
+        stable cross-API join key), not the public ``device_mac``, so the key
+        comes from the same store the entities derive ``self.device.mac`` from and
+        matches without assuming both mac strings are byte-identical.
         """
-        if change is not EventChange.STARTED:
+        if change is EventChange.REMOVED:
             return
         device = self.api.bootstrap.get_device_from_id(event.device_id)
         if device is None or not (

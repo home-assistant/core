@@ -19,14 +19,18 @@ from uiprotect.data import (
     ProtectModelWithId,
     PublicBootstrap,
     Sensor,
+    SmartDetectAudioType,
+    SmartDetectObjectType,
     WSSubscriptionMessage,
 )
 from uiprotect.data.bootstrap import ProtectDeviceRef
 from uiprotect.data.public_devices import (
+    PublicCamera,
     PublicLight,
     PublicLightDeviceSettings,
     PublicSensor,
     PublicSensorMotionSettingsRead,
+    PublicSmartDetectSettings,
     PublicWirelessBatteryStatus,
     PublicWirelessConnectionState,
 )
@@ -348,6 +352,92 @@ def setup_public_light(ufp: MockUFPFixture) -> None:
             and (private := ufp.api.bootstrap.lights.get(obj_id)) is not None
         ):
             public_bootstrap.lights[obj_id] = make_public_light(private)
+        return public_bootstrap.get(model, obj_id)
+
+    pb.get = _get
+    ufp.api.has_public_bootstrap = True
+    ufp.api.public_bootstrap = pb
+
+
+_ALL_OBJECT_TYPES = [t for t in SmartDetectObjectType if t.audio_type is None]
+_ALL_AUDIO_TYPES = list(SmartDetectAudioType)
+
+
+def make_public_camera(
+    camera: Camera,
+    *,
+    state: DeviceState | None = None,
+    is_motion_detected: bool = False,
+    is_smart_currently_detected: bool = False,
+    is_person_currently_detected: bool = False,
+    is_vehicle_currently_detected: bool = False,
+    is_animal_currently_detected: bool = False,
+    is_audio_currently_detected: bool = False,
+    is_smoke_currently_detected: bool = False,
+    is_cmonx_currently_detected: bool = False,
+    is_siren_currently_detected: bool = False,
+    is_baby_cry_currently_detected: bool = False,
+    is_speaking_currently_detected: bool = False,
+    is_bark_currently_detected: bool = False,
+    is_car_alarm_currently_detected: bool = False,
+    is_car_horn_currently_detected: bool = False,
+    is_glass_break_currently_detected: bool = False,
+    object_types: list[SmartDetectObjectType] | None = None,
+    audio_types: list[SmartDetectAudioType] | None = None,
+) -> Mock:
+    """Build a public-API camera carrying the migrated detection-state booleans.
+
+    The ``is_*`` flags back the migrated ``ufp_public_value`` paths; the
+    ``smart_detect_settings`` types back the per-type ``ufp_public_enabled_fn``
+    gates (default: all types enabled, so the entity is available).
+    """
+    public = Mock(spec=PublicCamera)
+    public.id = camera.id
+    public.mac = camera.mac
+    public.model = ModelType.CAMERA
+    public.state = DeviceState[camera.state.name] if state is None else state
+    public.is_motion_detected = is_motion_detected
+    public.is_smart_currently_detected = is_smart_currently_detected
+    public.is_person_currently_detected = is_person_currently_detected
+    public.is_vehicle_currently_detected = is_vehicle_currently_detected
+    public.is_animal_currently_detected = is_animal_currently_detected
+    public.is_audio_currently_detected = is_audio_currently_detected
+    public.is_smoke_currently_detected = is_smoke_currently_detected
+    public.is_cmonx_currently_detected = is_cmonx_currently_detected
+    public.is_siren_currently_detected = is_siren_currently_detected
+    public.is_baby_cry_currently_detected = is_baby_cry_currently_detected
+    public.is_speaking_currently_detected = is_speaking_currently_detected
+    public.is_bark_currently_detected = is_bark_currently_detected
+    public.is_car_alarm_currently_detected = is_car_alarm_currently_detected
+    public.is_car_horn_currently_detected = is_car_horn_currently_detected
+    public.is_glass_break_currently_detected = is_glass_break_currently_detected
+    public.smart_detect_settings = PublicSmartDetectSettings(
+        object_types=_ALL_OBJECT_TYPES if object_types is None else object_types,
+        audio_types=_ALL_AUDIO_TYPES if audio_types is None else audio_types,
+    )
+    return public
+
+
+def setup_public_camera(ufp: MockUFPFixture) -> None:
+    """Expose private cameras over the public API via a real ``PublicBootstrap``.
+
+    Mirrors ``setup_public_sensor`` for ``ModelType.CAMERA`` so the migrated
+    detection binary sensors read sustained state from the public object.
+    """
+    public_bootstrap = PublicBootstrap()
+    pb = Mock(spec=PublicBootstrap)
+    pb.cameras = public_bootstrap.cameras
+    pb.relays = {}
+    pb.sirens = {}
+    pb.arm_mode = None
+    pb.arm_profiles = {}
+
+    def _get(model: ModelType, obj_id: str) -> ProtectModelWithId | None:
+        if (
+            model is ModelType.CAMERA
+            and (private := ufp.api.bootstrap.cameras.get(obj_id)) is not None
+        ):
+            public_bootstrap.cameras[obj_id] = make_public_camera(private)
         return public_bootstrap.get(model, obj_id)
 
     pb.get = _get

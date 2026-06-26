@@ -13,6 +13,7 @@ AUTH_RETRIES = 2
 
 ATTR_EVENT_SCORE = "event_score"
 ATTR_EVENT_ID = "event_id"
+ATTR_SMART_DETECT_TYPES = "smart_detect_types"
 ATTR_WIDTH = "width"
 ATTR_HEIGHT = "height"
 ATTR_FPS = "fps"
