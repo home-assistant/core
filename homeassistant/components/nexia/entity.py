@@ -56,7 +56,7 @@ class NexiaThermostatEntity(NexiaEntity):
         thermostat_id = thermostat.thermostat_id
         self._attr_device_info = DeviceInfo(
             configuration_url=self.coordinator.nexia_home.root_url,
-            identifiers={(DOMAIN, thermostat_id)},
+            identifiers={(DOMAIN, thermostat_id)},  # type: ignore[arg-type] # until fix issue #139773
             manufacturer=MANUFACTURER,
             model=thermostat.get_model(),
             name=thermostat.get_name(),
@@ -110,10 +110,10 @@ class NexiaThermostatZoneEntity(NexiaThermostatEntity):
         if TYPE_CHECKING:
             assert self._attr_device_info is not None
         self._attr_device_info |= {
-            ATTR_IDENTIFIERS: {(DOMAIN, zone.zone_id)},
+            ATTR_IDENTIFIERS: {(DOMAIN, zone.zone_id)},  # type: ignore[arg-type] # until fix issue #139773
             ATTR_NAME: zone_name,
             ATTR_SUGGESTED_AREA: zone_name,
-            ATTR_VIA_DEVICE: (DOMAIN, zone.thermostat.thermostat_id),
+            ATTR_VIA_DEVICE: (DOMAIN, zone.thermostat.thermostat_id),  # type: ignore[typeddict-item] # until fix issue #139773
         }
         self._zone_signal = f"{SIGNAL_ZONE_UPDATE}-{zone.zone_id}"
 
