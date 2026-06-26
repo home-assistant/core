@@ -278,6 +278,16 @@
           }
         }
       },
+      "face": {
+        "name": "Face",
+        "state_attributes": {
+          "event_type": {
+            "state": {
+              "detected": "Detected"
+            }
+          }
+        }
+      },
       "fingerprint": {
         "name": "Fingerprint",
         "state_attributes": {

@@ -20,6 +20,7 @@ from homeassistant.helpers.event import async_call_at
 from . import Bootstrap
 from .const import (
     ATTR_EVENT_ID,
+    EVENT_TYPE_FACE_DETECTED,
     EVENT_TYPE_FINGERPRINT_IDENTIFIED,
     EVENT_TYPE_FINGERPRINT_NOT_IDENTIFIED,
     EVENT_TYPE_NFC_SCANNED,
@@ -184,19 +185,28 @@ class ProtectDeviceFingerprintEventEntity(
             self.async_write_ha_state()
 
 
-class ProtectDeviceVehicleEventEntity(
+class ProtectDeviceSmartDetectThumbnailEventEntity(
     EventEntityMixin, ProtectDeviceEntity, EventEntity
 ):
-    """A UniFi Protect vehicle detection event entity.
+    """Base for smart-detect event entities that resolve a name from thumbnails.
 
-    Vehicle detection events use a delayed firing mechanism to allow time for
-    the best thumbnail (with license plate recognition data) to arrive. The
-    timer is extended each time new thumbnails arrive for the same event. If
-    a new event arrives while a timer is pending, the old event fires immediately
-    with its stored thumbnails, then a new timer starts for the new event.
+    Some smart-detect object types carry a recognized name on a thumbnail that
+    arrives slightly after the initial detection (the license plate for
+    vehicles, the recognized person for faces). A delayed firing mechanism
+    allows time for the best thumbnail to arrive; the timer is extended each
+    time new thumbnails arrive for the same event. If a new event arrives while
+    a timer is pending, the old event fires immediately with its stored
+    thumbnails, then a new timer starts for the new event.
+
+    Subclasses set ``_smart_detect_object_type`` (the thumbnail ``type`` to
+    match), ``_event_type`` (the fired event state) and ``_detected_name_key``
+    (the event-data key for the recognized name).
     """
 
     entity_description: ProtectEventEntityDescription
+    _smart_detect_object_type: str
+    _event_type: str
+    _detected_name_key: str
     _thumbnail_timer_cancel: CALLBACK_TYPE | None = None
     _latest_event_id: str | None = None
     _latest_thumbnails: list[EventDetectedThumbnail] | None = None
@@ -231,20 +241,20 @@ class ProtectDeviceVehicleEventEntity(
             return
 
         if self._latest_event_id:
-            self._fire_vehicle_event(self._latest_event_id, self._latest_thumbnails)
+            self._fire_event(self._latest_event_id, self._latest_thumbnails)
 
-    @staticmethod
-    def _get_vehicle_thumbnails(event: Event) -> list[EventDetectedThumbnail]:
-        """Get vehicle thumbnails from event."""
+    def _get_thumbnails(self, event: Event) -> list[EventDetectedThumbnail]:
+        """Get thumbnails of this entity's object type from the event."""
         if event.metadata and event.metadata.detected_thumbnails:
             return [
-                t for t in event.metadata.detected_thumbnails if t.type == "vehicle"
+                t
+                for t in event.metadata.detected_thumbnails
+                if t.type == self._smart_detect_object_type
             ]
         return []
 
-    @staticmethod
     def _build_event_data(
-        event_id: str, thumbnails: list[EventDetectedThumbnail]
+        self, event_id: str, thumbnails: list[EventDetectedThumbnail]
     ) -> dict[str, Any]:
         """Build event data dictionary from thumbnails."""
         event_data: dict[str, Any] = {
@@ -262,11 +272,12 @@ class ProtectDeviceVehicleEventEntity(
         if thumbnail.clock_best_wall is not None:
             event_data["clock_best_wall"] = thumbnail.clock_best_wall.isoformat()
 
-        # License plate from group.matched_name (UFP 6.0+) or name field (older)
+        # Recognized name from group.matched_name (UFP 6.0+) or name field
+        # (older): the license plate for vehicles, the person for faces.
         if thumbnail.group and thumbnail.group.matched_name:
-            event_data["license_plate"] = thumbnail.group.matched_name
+            event_data[self._detected_name_key] = thumbnail.group.matched_name
         elif thumbnail.name:
-            event_data["license_plate"] = thumbnail.name
+            event_data[self._detected_name_key] = thumbnail.name
 
         # Add all thumbnail attributes as dict
         if thumbnail.attributes:
@@ -275,10 +286,10 @@ class ProtectDeviceVehicleEventEntity(
         return event_data
 
     @callback
-    def _fire_vehicle_event(
+    def _fire_event(
         self, event_id: str, thumbnails: list[EventDetectedThumbnail] | None = None
     ) -> None:
-        """Fire the vehicle detection event with best available thumbnail.
+        """Fire the detection event with the best available thumbnail.
 
         Args:
             event_id: The event ID to include in the fired event data.
@@ -290,7 +301,7 @@ class ProtectDeviceVehicleEventEntity(
             event = self.entity_description.get_event_obj(self.device)
             if not event or event.id != event_id:
                 return
-            thumbnails = self._get_vehicle_thumbnails(event)
+            thumbnails = self._get_thumbnails(event)
 
         if not thumbnails:
             return
@@ -305,7 +316,7 @@ class ProtectDeviceVehicleEventEntity(
         self._fired_event_id = event_id
         self._fired_event_data = event_data
 
-        self._trigger_event(EVENT_TYPE_VEHICLE_DETECTED, event_data)
+        self._trigger_event(self._event_type, event_data)
         self.async_write_ha_state()
 
     @callback
@@ -327,11 +338,11 @@ class ProtectDeviceVehicleEventEntity(
             self._event = event
             self._event_end = event.end if event else None
 
-        # Process vehicle detection events with thumbnails
+        # Process detection events with thumbnails
         if (
             event
             and event.type is EventType.SMART_DETECT
-            and (thumbnails := self._get_vehicle_thumbnails(event))
+            and (thumbnails := self._get_thumbnails(event))
         ):
             # Skip if same event with same data (no changes)
             if (
@@ -345,7 +356,7 @@ class ProtectDeviceVehicleEventEntity(
             # Fire the old event immediately since it has completed
             if self._latest_event_id and self._latest_event_id != event.id:
                 # Only fire if we haven't already (shouldn't happen, but defensive)
-                self._fire_vehicle_event(self._latest_event_id, self._latest_thumbnails)
+                self._fire_event(self._latest_event_id, self._latest_thumbnails)
                 self._cancel_thumbnail_timer()
 
             # Store event data and extend/start the timer
@@ -358,6 +369,26 @@ class ProtectDeviceVehicleEventEntity(
             # Only schedule if no timer running; existing timer will re-arm
             if self._thumbnail_timer_cancel is None:
                 self._async_set_thumbnail_timer()
+
+
+class ProtectDeviceVehicleEventEntity(ProtectDeviceSmartDetectThumbnailEventEntity):
+    """A UniFi Protect vehicle (license-plate) detection event entity."""
+
+    _smart_detect_object_type = "vehicle"
+    _event_type = EVENT_TYPE_VEHICLE_DETECTED
+    _detected_name_key = "license_plate"
+
+
+class ProtectDeviceFaceEventEntity(ProtectDeviceSmartDetectThumbnailEventEntity):
+    """A UniFi Protect face (recognized-person) detection event entity.
+
+    Fires when a recognized face is detected, carrying the enrolled person's
+    name (from the Protect AI Key face recognition) under ``detected_person``.
+    """
+
+    _smart_detect_object_type = "face"
+    _event_type = EVENT_TYPE_FACE_DETECTED
+    _detected_name_key = "detected_person"
 
 
 class ProtectDeviceSmartDetectEventEntity(
@@ -438,6 +469,14 @@ EVENT_DESCRIPTIONS: tuple[ProtectEventEntityDescription, ...] = (
         ufp_obj_type=SmartDetectObjectType.PACKAGE,
         event_types=[EVENT_TYPE_PACKAGE_DETECTED],
         entity_class=ProtectDeviceSmartDetectEventEntity,
+    ),
+    ProtectEventEntityDescription(
+        key="face",
+        translation_key="face",
+        ufp_required_field="feature_flags.has_smart_detect",
+        ufp_event_obj="last_smart_detect_event",
+        event_types=[EVENT_TYPE_FACE_DETECTED],
+        entity_class=ProtectDeviceFaceEventEntity,
     ),
 )
 

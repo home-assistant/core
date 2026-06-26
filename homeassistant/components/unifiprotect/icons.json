@@ -178,6 +178,9 @@
       "doorbell": {
         "default": "mdi:doorbell-video"
       },
+      "face": {
+        "default": "mdi:face-recognition"
+      },
       "fingerprint": {
         "default": "mdi:fingerprint"
       },

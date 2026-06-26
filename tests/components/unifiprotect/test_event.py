@@ -56,11 +56,11 @@ async def test_camera_remove(
 
     ufp.api.bootstrap.nvr.system_info.ustorage = None
     await init_entry(hass, ufp, [doorbell, unadopted_camera])
-    assert_entity_counts(hass, Platform.EVENT, 5, 5)
+    assert_entity_counts(hass, Platform.EVENT, 6, 6)
     await remove_entities(hass, ufp, [doorbell, unadopted_camera])
     assert_entity_counts(hass, Platform.EVENT, 0, 0)
     await adopt_devices(hass, ufp, [doorbell, unadopted_camera])
-    assert_entity_counts(hass, Platform.EVENT, 5, 5)
+    assert_entity_counts(hass, Platform.EVENT, 6, 6)
 
 
 async def test_doorbell_ring(
@@ -84,7 +84,7 @@ async def test_doorbell_ring(
     )
 
     await init_entry(hass, ufp, [doorbell, unadopted_camera])
-    assert_entity_counts(hass, Platform.EVENT, 5, 5)
+    assert_entity_counts(hass, Platform.EVENT, 6, 6)
     events: list[HAEvent] = []
 
     @callback
@@ -172,7 +172,7 @@ async def test_package_detected(
     )
 
     await init_entry(hass, ufp, [doorbell, unadopted_camera])
-    assert_entity_counts(hass, Platform.EVENT, 5, 5)
+    assert_entity_counts(hass, Platform.EVENT, 6, 6)
     events: list[HAEvent] = []
 
     @callback
@@ -313,7 +313,7 @@ async def test_doorbell_nfc_scanned(
     """Test a doorbell NFC scanned event."""
 
     await init_entry(hass, ufp, [doorbell, unadopted_camera])
-    assert_entity_counts(hass, Platform.EVENT, 5, 5)
+    assert_entity_counts(hass, Platform.EVENT, 6, 6)
     events: list[HAEvent] = []
 
     @callback
@@ -388,7 +388,7 @@ async def test_doorbell_nfc_scanned_ulpusr_deactivated(
     """Test a doorbell NFC scanned event."""
 
     await init_entry(hass, ufp, [doorbell, unadopted_camera])
-    assert_entity_counts(hass, Platform.EVENT, 5, 5)
+    assert_entity_counts(hass, Platform.EVENT, 6, 6)
     events: list[HAEvent] = []
 
     @callback
@@ -464,7 +464,7 @@ async def test_doorbell_nfc_scanned_no_ulpusr(
     """Test a doorbell NFC scanned event."""
 
     await init_entry(hass, ufp, [doorbell, unadopted_camera])
-    assert_entity_counts(hass, Platform.EVENT, 5, 5)
+    assert_entity_counts(hass, Platform.EVENT, 6, 6)
     events: list[HAEvent] = []
 
     @callback
@@ -532,7 +532,7 @@ async def test_doorbell_nfc_scanned_no_keyring(
     """Test a doorbell NFC scanned event."""
 
     await init_entry(hass, ufp, [doorbell, unadopted_camera])
-    assert_entity_counts(hass, Platform.EVENT, 5, 5)
+    assert_entity_counts(hass, Platform.EVENT, 6, 6)
     events: list[HAEvent] = []
 
     @callback
@@ -593,7 +593,7 @@ async def test_doorbell_fingerprint_identified(
     """Test a doorbell fingerprint identified event."""
 
     await init_entry(hass, ufp, [doorbell, unadopted_camera])
-    assert_entity_counts(hass, Platform.EVENT, 5, 5)
+    assert_entity_counts(hass, Platform.EVENT, 6, 6)
     events: list[HAEvent] = []
 
     @callback
@@ -661,7 +661,7 @@ async def test_doorbell_fingerprint_identified_user_deactivated(
     """Test a doorbell fingerprint identified event."""
 
     await init_entry(hass, ufp, [doorbell, unadopted_camera])
-    assert_entity_counts(hass, Platform.EVENT, 5, 5)
+    assert_entity_counts(hass, Platform.EVENT, 6, 6)
     events: list[HAEvent] = []
 
     @callback
@@ -730,7 +730,7 @@ async def test_doorbell_fingerprint_identified_no_user(
     """Test a doorbell fingerprint identified event."""
 
     await init_entry(hass, ufp, [doorbell, unadopted_camera])
-    assert_entity_counts(hass, Platform.EVENT, 5, 5)
+    assert_entity_counts(hass, Platform.EVENT, 6, 6)
     events: list[HAEvent] = []
 
     @callback
@@ -791,7 +791,7 @@ async def test_doorbell_fingerprint_not_identified(
     """Test a doorbell fingerprint identified event."""
 
     await init_entry(hass, ufp, [doorbell, unadopted_camera])
-    assert_entity_counts(hass, Platform.EVENT, 5, 5)
+    assert_entity_counts(hass, Platform.EVENT, 6, 6)
     events: list[HAEvent] = []
 
     @callback
@@ -849,7 +849,7 @@ async def test_vehicle_detection_basic(
     """Test basic vehicle detection event with thumbnails."""
 
     await init_entry(hass, ufp, [doorbell, unadopted_camera])
-    assert_entity_counts(hass, Platform.EVENT, 5, 5)
+    assert_entity_counts(hass, Platform.EVENT, 6, 6)
     events: list[HAEvent] = []
 
     @callback
@@ -913,6 +913,156 @@ async def test_vehicle_detection_basic(
     unsub()
 
 
+async def test_face_detection_basic(
+    hass: HomeAssistant,
+    ufp: MockUFPFixture,
+    doorbell: Camera,
+    unadopted_camera: Camera,
+    fixed_now: datetime,
+) -> None:
+    """Test a face detection event with no recognized person."""
+
+    await init_entry(hass, ufp, [doorbell, unadopted_camera])
+    assert_entity_counts(hass, Platform.EVENT, 6, 6)
+    events: list[HAEvent] = []
+
+    @callback
+    def _capture_event(event: HAEvent) -> None:
+        events.append(event)
+
+    _, entity_id = await ids_from_device_description(
+        hass, Platform.EVENT, doorbell, EVENT_DESCRIPTIONS[5]
+    )
+
+    unsub = async_track_state_change_event(hass, entity_id, _capture_event)
+
+    event = Event(
+        model=ModelType.EVENT,
+        id="test_face_event_id",
+        type=EventType.SMART_DETECT,
+        start=fixed_now - timedelta(seconds=1),
+        end=None,
+        score=100,
+        smart_detect_types=[],
+        smart_detect_event_ids=[],
+        camera_id=doorbell.id,
+        api=ufp.api,
+        metadata={
+            "detected_thumbnails": [
+                {
+                    "type": "face",
+                    "confidence": 88,
+                    "clock_best_wall": fixed_now,
+                    "cropped_id": "test_thumb_id",
+                }
+            ]
+        },
+    )
+
+    new_camera = doorbell.model_copy()
+    new_camera.last_smart_detect_event_id = "test_face_event_id"
+    ufp.api.bootstrap.cameras = {new_camera.id: new_camera}
+    ufp.api.bootstrap.events = {event.id: event}
+
+    mock_msg = Mock()
+    mock_msg.changed_data = {}
+    mock_msg.new_obj = event
+    ufp.ws_msg(mock_msg)
+
+    # Wait for the timer
+    await asyncio.sleep(TEST_VEHICLE_EVENT_DELAY * 2)
+    await hass.async_block_till_done()
+
+    # Should have received a face detection event with no recognized person
+    assert len(events) == 1
+    state = events[0].data["new_state"]
+    assert state
+    assert state.attributes[ATTR_ATTRIBUTION] == DEFAULT_ATTRIBUTION
+    assert state.attributes[ATTR_EVENT_ID] == "test_face_event_id"
+    assert state.attributes["confidence"] == 88
+    assert "clock_best_wall" in state.attributes
+    assert "detected_person" not in state.attributes
+
+    unsub()
+
+
+async def test_face_detection_with_recognized_person(
+    hass: HomeAssistant,
+    ufp: MockUFPFixture,
+    doorbell: Camera,
+    unadopted_camera: Camera,
+    fixed_now: datetime,
+) -> None:
+    """Test a face detection event with a recognized person (UFP 6.0+ format)."""
+
+    await init_entry(hass, ufp, [doorbell, unadopted_camera])
+    assert_entity_counts(hass, Platform.EVENT, 6, 6)
+    events: list[HAEvent] = []
+
+    @callback
+    def _capture_event(event: HAEvent) -> None:
+        events.append(event)
+
+    _, entity_id = await ids_from_device_description(
+        hass, Platform.EVENT, doorbell, EVENT_DESCRIPTIONS[5]
+    )
+
+    unsub = async_track_state_change_event(hass, entity_id, _capture_event)
+
+    # Face thumbnail with the recognized person in group.matched_name (UFP 6.0+)
+    event = Event(
+        model=ModelType.EVENT,
+        id="test_face_person_event_id",
+        type=EventType.SMART_DETECT,
+        start=fixed_now - timedelta(seconds=1),
+        end=None,
+        score=100,
+        smart_detect_types=[],
+        smart_detect_event_ids=[],
+        camera_id=doorbell.id,
+        api=ufp.api,
+        metadata={
+            "detected_thumbnails": [
+                {
+                    "type": "face",
+                    "confidence": 97,
+                    "clock_best_wall": fixed_now,
+                    "cropped_id": "test_thumb_id",
+                    "group": {
+                        "id": "face_group_1",
+                        "matched_name": "Nate",
+                        "confidence": 96,
+                    },
+                }
+            ]
+        },
+    )
+
+    new_camera = doorbell.model_copy()
+    new_camera.last_smart_detect_event_id = "test_face_person_event_id"
+    ufp.api.bootstrap.cameras = {new_camera.id: new_camera}
+    ufp.api.bootstrap.events = {event.id: event}
+
+    mock_msg = Mock()
+    mock_msg.changed_data = {}
+    mock_msg.new_obj = event
+    ufp.ws_msg(mock_msg)
+
+    # Wait for the timer
+    await asyncio.sleep(TEST_VEHICLE_EVENT_DELAY * 2)
+    await hass.async_block_till_done()
+
+    # Should have received a face detection event with the recognized person
+    assert len(events) == 1
+    state = events[0].data["new_state"]
+    assert state
+    assert state.attributes[ATTR_EVENT_ID] == "test_face_person_event_id"
+    assert state.attributes["confidence"] == 97
+    assert state.attributes["detected_person"] == "Nate"
+
+    unsub()
+
+
 async def test_vehicle_detection_with_lpr_ufp6(
     hass: HomeAssistant,
     ufp: MockUFPFixture,
@@ -923,7 +1073,7 @@ async def test_vehicle_detection_with_lpr_ufp6(
     """Test vehicle detection with license plate recognition (UFP 6.0+ format)."""
 
     await init_entry(hass, ufp, [doorbell, unadopted_camera])
-    assert_entity_counts(hass, Platform.EVENT, 5, 5)
+    assert_entity_counts(hass, Platform.EVENT, 6, 6)
     events: list[HAEvent] = []
 
     @callback
@@ -1007,7 +1157,7 @@ async def test_vehicle_detection_with_lpr_legacy(
     """Test vehicle detection with license plate recognition (legacy format)."""
 
     await init_entry(hass, ufp, [doorbell, unadopted_camera])
-    assert_entity_counts(hass, Platform.EVENT, 5, 5)
+    assert_entity_counts(hass, Platform.EVENT, 6, 6)
     events: list[HAEvent] = []
 
     @callback
@@ -1080,7 +1230,7 @@ async def test_vehicle_detection_multiple_thumbnails(
     """Test vehicle detection with multiple thumbnails - should pick best LPR."""
 
     await init_entry(hass, ufp, [doorbell, unadopted_camera])
-    assert_entity_counts(hass, Platform.EVENT, 5, 5)
+    assert_entity_counts(hass, Platform.EVENT, 6, 6)
     events: list[HAEvent] = []
 
     @callback
@@ -1181,7 +1331,7 @@ async def test_vehicle_detection_no_thumbnails(
     """Test vehicle detection event without thumbnails - should not fire."""
 
     await init_entry(hass, ufp, [doorbell, unadopted_camera])
-    assert_entity_counts(hass, Platform.EVENT, 5, 5)
+    assert_entity_counts(hass, Platform.EVENT, 6, 6)
     events: list[HAEvent] = []
 
     @callback
@@ -1239,7 +1389,7 @@ async def test_vehicle_detection_timer_reset_on_new_thumbnail(
     """Test that timer resets when new thumbnails arrive for same event."""
 
     await init_entry(hass, ufp, [doorbell, unadopted_camera])
-    assert_entity_counts(hass, Platform.EVENT, 5, 5)
+    assert_entity_counts(hass, Platform.EVENT, 6, 6)
     events: list[HAEvent] = []
 
     @callback
@@ -1350,7 +1500,7 @@ async def test_vehicle_detection_new_event_cancels_timer(
     """Test that new event cancels timer for previous event."""
 
     await init_entry(hass, ufp, [doorbell, unadopted_camera])
-    assert_entity_counts(hass, Platform.EVENT, 5, 5)
+    assert_entity_counts(hass, Platform.EVENT, 6, 6)
     events: list[HAEvent] = []
 
     @callback
@@ -1477,7 +1627,7 @@ async def test_vehicle_detection_timer_cleanup_on_remove(
     """Test that pending timer is cancelled when entity is removed."""
 
     await init_entry(hass, ufp, [doorbell, unadopted_camera])
-    assert_entity_counts(hass, Platform.EVENT, 5, 5)
+    assert_entity_counts(hass, Platform.EVENT, 6, 6)
 
     _, entity_id = await ids_from_device_description(
         hass, Platform.EVENT, doorbell, EVENT_DESCRIPTIONS[3]
@@ -1542,7 +1692,7 @@ async def test_vehicle_detection_refire_on_lpr_data(
     """Test that event refires when LPR data arrives after initial detection."""
 
     await init_entry(hass, ufp, [doorbell, unadopted_camera])
-    assert_entity_counts(hass, Platform.EVENT, 5, 5)
+    assert_entity_counts(hass, Platform.EVENT, 6, 6)
     events: list[HAEvent] = []
 
     @callback
@@ -1653,7 +1803,7 @@ async def test_vehicle_detection_no_refire_same_data(
     """Test that event does NOT refire when same data arrives again."""
 
     await init_entry(hass, ufp, [doorbell, unadopted_camera])
-    assert_entity_counts(hass, Platform.EVENT, 5, 5)
+    assert_entity_counts(hass, Platform.EVENT, 6, 6)
     events: list[HAEvent] = []
 
     @callback
