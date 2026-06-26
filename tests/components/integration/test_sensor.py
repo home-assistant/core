@@ -792,7 +792,7 @@ async def test_device_class_user(
     device_class: SensorDeviceClass | None,
     expected_class: SensorDeviceClass | None,
 ) -> None:
-    """Test integration sensor state."""
+    """Test the user-supplied device class hint is applied based on unit and state class compatibility."""
     config = {
         "sensor": {
             "platform": "integration",
