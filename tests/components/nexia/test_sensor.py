@@ -188,28 +188,28 @@ async def test_room_iq_sensors(
     state = hass.states.get("sensor.zone3_zone3_roomiq_battery")
     assert state is None
 
-    state = hass.states.get("sensor.upstairs_upstairs_roomiq_roomiq_temperature")
+    state = hass.states.get("sensor.upstairs_upstairs_roomiq_temperature")
     assert state is not None
     assert state.state == "22.5"
     assert state.attributes["device_class"] == SensorDeviceClass.TEMPERATURE
-    assert state.attributes["friendly_name"] == "Upstairs RoomIQ RoomIQ temperature"
+    assert state.attributes["friendly_name"] == "Upstairs RoomIQ temperature"
     assert state.attributes["unit_of_measurement"] == UnitOfTemperature.CELSIUS
 
-    state = hass.states.get("sensor.upstairs_upstairs_roomiq_roomiq_humidity")
+    state = hass.states.get("sensor.upstairs_upstairs_roomiq_humidity")
     assert state is not None
     assert state.state == "45"
     assert state.attributes["device_class"] == SensorDeviceClass.HUMIDITY
-    assert state.attributes["friendly_name"] == "Upstairs RoomIQ RoomIQ humidity"
+    assert state.attributes["friendly_name"] == "Upstairs RoomIQ humidity"
     assert state.attributes["unit_of_measurement"] == PERCENTAGE
 
-    state = hass.states.get("sensor.upstairs_upstairs_roomiq_roomiq_battery")
+    state = hass.states.get("sensor.upstairs_upstairs_roomiq_battery")
     assert state is not None
     assert state.state == "93"
     assert state.attributes["device_class"] == SensorDeviceClass.BATTERY
-    assert state.attributes["friendly_name"] == "Upstairs RoomIQ RoomIQ battery"
+    assert state.attributes["friendly_name"] == "Upstairs RoomIQ battery"
     assert state.attributes["unit_of_measurement"] == PERCENTAGE
 
-    state = hass.states.get("sensor.downstairs_downstairs_roomiq_roomiq_temperature")
+    state = hass.states.get("sensor.downstairs_downstairs_roomiq_temperature")
     assert state is not None
     assert state.state == "unavailable"
 

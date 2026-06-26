@@ -161,8 +161,7 @@ class NexiaRoomIQEntity(NexiaThermostatZoneEntity):
         if sensor.has_online:
             dev_info = DeviceInfo(
                 identifiers={(DOMAIN, str(sensor.id))},
-                translation_key="room_iq_sensor",
-                translation_placeholders={"sensor_name": sensor.name},
+                name=sensor.name,
                 suggested_area=sensor.name,
                 via_device=(DOMAIN, zone.zone_id),  # type: ignore[typeddict-item] # until fix issue #139773
             )

@@ -18,11 +18,6 @@
       }
     }
   },
-  "device": {
-    "room_iq_sensor": {
-      "name": "{sensor_name} RoomIQ"
-    }
-  },
   "entity": {
     "binary_sensor": {
       "blower_active": {
