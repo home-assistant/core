@@ -56,7 +56,6 @@ class _MockAmcrestAPI:
             raise self._raise_on[attr]
         return value
 
-    # ── Async properties ─────────────────────────────────────────────────────
     # Each returns a fresh coroutine so multiple awaits work correctly.
 
     @property
@@ -114,8 +113,6 @@ class _MockAmcrestAPI:
             return self._value_or_raise("day_night_color", self.day_night_color)
 
         return _()
-
-    # ── Async methods ─────────────────────────────────────────────────────────
 
     async def async_privacy_config(self) -> str:
         if "privacy_config" in self._raise_on:
