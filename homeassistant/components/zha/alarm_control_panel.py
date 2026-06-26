@@ -121,4 +121,4 @@ class ZHAAlarmControlPanel(ZHAEntity, AlarmControlPanelEntity):
     @override
     def alarm_state(self) -> AlarmControlPanelState | None:
         """Return the state of the entity."""
-        return ZHA_STATE_TO_ALARM_STATE_MAP.get(self.entity_data.entity.state["state"])
+        return ZHA_STATE_TO_ALARM_STATE_MAP.get(self.entity_data.entity.alarm_state)

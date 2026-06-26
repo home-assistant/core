@@ -8,6 +8,7 @@ from collections.abc import Mapping
 import functools
 from typing import Any, override
 
+from zha.application.platforms.climate import ThermostatState
 from zha.application.platforms.climate.const import (
     ClimateEntityFeature as ZHAClimateEntityFeature,
     HVACAction as ZHAHVACAction,
@@ -130,16 +131,19 @@ class Thermostat(ZHAEntity, ClimateEntity):
         """Return entity specific state attributes."""
         state = self.entity_data.entity.state
 
+        if not isinstance(state, ThermostatState):
+            return None
+
         return exclude_none_values(
             {
-                "occupancy": state.get("occupancy"),
-                "occupied_cooling_setpoint": state.get("occupied_cooling_setpoint"),
-                "occupied_heating_setpoint": state.get("occupied_heating_setpoint"),
-                "pi_cooling_demand": state.get("pi_cooling_demand"),
-                "pi_heating_demand": state.get("pi_heating_demand"),
-                "system_mode": state.get("system_mode"),
-                "unoccupied_cooling_setpoint": state.get("unoccupied_cooling_setpoint"),
-                "unoccupied_heating_setpoint": state.get("unoccupied_heating_setpoint"),
+                "occupancy": state.occupancy,
+                "occupied_cooling_setpoint": state.occupied_cooling_setpoint,
+                "occupied_heating_setpoint": state.occupied_heating_setpoint,
+                "pi_cooling_demand": state.pi_cooling_demand,
+                "pi_heating_demand": state.pi_heating_demand,
+                "system_mode": state.system_mode,
+                "unoccupied_cooling_setpoint": state.unoccupied_cooling_setpoint,
+                "unoccupied_heating_setpoint": state.unoccupied_heating_setpoint,
             }
         )
 
