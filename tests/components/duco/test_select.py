@@ -125,6 +125,8 @@ async def test_select_entity_created_with_dynamic_options(
 @pytest.mark.parametrize(
     "valve_node_type",
     [
+        pytest.param(NodeType.VLV, id="vlv"),
+        pytest.param(NodeType.VLVVOC, id="vlvvoc"),
         pytest.param(NodeType.EAV, id="eav"),
         pytest.param(NodeType.EAVRH, id="eavrh"),
         pytest.param(NodeType.EAVVOC, id="eavvoc"),
