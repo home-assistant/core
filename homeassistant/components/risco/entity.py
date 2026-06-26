@@ -102,11 +102,6 @@ class RiscoCloudZoneEntity(RiscoZoneEntity, RiscoCloudEntity):
         self._zone = alarm.zones[self._zone_id]
         self.async_write_ha_state()
 
-    @override
-    async def async_added_to_hass(self) -> None:
-        """Subscribe to updates."""
-        await super().async_added_to_hass()
-
 
 class RiscoLocalZoneEntity(RiscoZoneEntity):
     """Risco local zone entity base class."""
