@@ -245,15 +245,17 @@ class DeviceFilterSelectorConfig(TypedDict, total=False):
     model_id: str
 
 
-ENTITY_SELECTOR_FILTER_CONFIG_SCHEMA = ENTITY_FILTER_SELECTOR_CONFIG_SCHEMA.extend(
-    {
-        # Filter on properties of the device the entity belongs to
-        vol.Optional("device"): DEVICE_FILTER_SELECTOR_CONFIG_SCHEMA,
-    }
+ENTITY_WITH_DEVICE_FILTER_SELECTOR_CONFIG_SCHEMA = (
+    ENTITY_FILTER_SELECTOR_CONFIG_SCHEMA.extend(
+        {
+            # Filter on properties of the device the entity belongs to
+            vol.Optional("device"): DEVICE_FILTER_SELECTOR_CONFIG_SCHEMA,
+        }
+    )
 )
 
 
-class EntitySelectorFilterConfig(EntityFilterSelectorConfig, total=False):
+class EntityWithDeviceFilterSelectorConfig(EntityFilterSelectorConfig, total=False):
     """Class to represent an entity selector filter config.
 
     Adds device filtering on top of the shared entity filter, only used by
@@ -1003,7 +1005,10 @@ class EntitySelectorConfig(
     include_entities: list[str]
     multiple: bool
     reorder: bool
-    filter: EntitySelectorFilterConfig | list[EntitySelectorFilterConfig]
+    filter: (
+        EntityWithDeviceFilterSelectorConfig
+        | list[EntityWithDeviceFilterSelectorConfig]
+    )
 
 
 @SELECTORS.register("entity")
@@ -1022,7 +1027,7 @@ class EntitySelector(Selector[EntitySelectorConfig]):
                 vol.Optional("reorder", default=False): cv.boolean,
                 vol.Optional("filter"): vol.All(
                     cv.ensure_list,
-                    [ENTITY_SELECTOR_FILTER_CONFIG_SCHEMA],
+                    [ENTITY_WITH_DEVICE_FILTER_SELECTOR_CONFIG_SCHEMA],
                 ),
             }
         ),
