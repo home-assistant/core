@@ -66,11 +66,11 @@ async def test_sensor_platform_no_sensors_on_config_error(
 
 
 @pytest.mark.parametrize(
-    "event",
+    "event_fixture",
     [
-        load_json_object_fixture("folder_summary_event.json", DOMAIN),
-        load_json_object_fixture("state_changed_event.json", DOMAIN),
-        load_json_object_fixture("folder_paused_event.json", DOMAIN),
+        "folder_summary_event.json",
+        "state_changed_event.json",
+        "folder_paused_event.json",
     ],
 )
 async def test_folder_sensor_updates_on_event(
@@ -79,13 +79,19 @@ async def test_folder_sensor_updates_on_event(
     mock_syncthing_client: MagicMock,
     entity_registry: er.EntityRegistry,
     snapshot: SnapshotAssertion,
-    event: dict[str, Any],
+    event_fixture: str,
 ) -> None:
-    """Test folder sensor updates when receiving different event."""
+    """Test folder sensor updates when receiving different events."""
+
+    event: dict[str, Any] = await hass.async_add_executor_job(
+        load_json_object_fixture, event_fixture, DOMAIN
+    )
+    event_processed = asyncio.Event()
 
     async def mock_listen():
         """Mock events.listen that yields the test event then blocks."""
         yield event
+        event_processed.set()
         await asyncio.Event().wait()
 
     mock_syncthing_client.events.listen = mock_listen
@@ -97,6 +103,9 @@ async def test_folder_sensor_updates_on_event(
     ) as mock_class:
         mock_class.return_value = mock_syncthing_client
         assert await hass.config_entries.async_setup(entry.entry_id)
+
+    async with asyncio.timeout(5):
+        await event_processed.wait()
 
     await hass.async_block_till_done()
     await snapshot_platform(hass, entity_registry, snapshot, entry.entry_id)
