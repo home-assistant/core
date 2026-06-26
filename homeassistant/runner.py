@@ -279,6 +279,13 @@ def _enable_posix_spawn() -> None:
 
 def run(runtime_config: RuntimeConfig) -> int:
     """Run Home Assistant."""
+    # Set environment variables to prevent multithreading conflicts with OpenBLAS
+    # See https://github.com/home-assistant/core/issues/174359
+    os.environ["OPENBLAS_NUM_THREADS"] = "1"
+    os.environ["MKL_NUM_THREADS"] = "1"
+    os.environ["NUMEXPR_NUM_THREADS"] = "1"
+    os.environ["OMP_NUM_THREADS"] = "1"
+
     _enable_posix_spawn()
     set_open_file_descriptor_limit()
     asyncio.set_event_loop_policy(HassEventLoopPolicy(runtime_config.debug))  # type: ignore[deprecated]
