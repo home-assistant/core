@@ -440,7 +440,7 @@ class IntegrationSensor(RestoreSensor):
             try:
                 source_device_class = SensorDeviceClass(source_device_class_raw)
             except ValueError:
-                # If the source device class is invalid string, do not use it.
+                # If the source device class is an invalid string, do not use it.
                 source_device_class = None
 
         # Only update device class if unit of measurement or source device class change,

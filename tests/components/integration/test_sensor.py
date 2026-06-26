@@ -782,6 +782,14 @@ async def test_units(hass: HomeAssistant) -> None:
             SensorDeviceClass.MONETARY,
             SensorDeviceClass.MONETARY,
         ),
+        # Cope with invalid device class in the source sensor. Should result in no inferred device class
+        (
+            "sensor.bad_sensor_class",
+            UnitOfPower.KILO_WATT,
+            "NotADeviceClass",
+            None,
+            None,
+        ),
     ],
 )
 async def test_device_class_user(
