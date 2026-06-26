@@ -2,6 +2,7 @@
 
 import asyncio
 from collections.abc import Callable
+import dataclasses
 from functools import partial
 import logging
 from typing import Any, override
@@ -149,7 +150,7 @@ class ZHAEntity(LogMixin, RestoreEntity, Entity):
     def _handle_entity_events(self, event: Any) -> None:
         """Entity state changed."""
         self.debug("Handling event from entity: %s", event)
-        self._zha_state = self.entity_data.entity.state
+        self._zha_state = dataclasses.replace(self._zha_state, **event.state_diff)
         self.async_write_ha_state()
 
     @override
