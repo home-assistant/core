@@ -6,6 +6,7 @@ from homeassistant.helpers import issue_registry as ir
 
 DOMAIN = "permobil"
 
+
 async def async_setup_entry(hass: HomeAssistant, _: ConfigEntry) -> bool:
     """Set up config entry."""
     ir.async_create_issue(
