@@ -39,7 +39,7 @@
 # name: test_all_entities[button.fake_email_gmail_com_test_routine-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'fake_email@gmail.com Test Routine',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'fake_email@gmail.com Test Routine',
     }),
     'context': <ANY>,
     'entity_id': 'button.fake_email_gmail_com_test_routine',

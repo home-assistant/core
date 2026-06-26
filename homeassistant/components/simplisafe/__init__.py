@@ -228,7 +228,7 @@ def _async_get_system_for_service_call(
         if (
             (entry := hass.config_entries.async_get_entry(entry_id)) is None
             or entry.domain != DOMAIN
-            or entry.state != ConfigEntryState.LOADED
+            or entry.state is not ConfigEntryState.LOADED
         ):
             continue
         return entry.runtime_data.systems[system_id]
@@ -247,7 +247,7 @@ def _async_register_base_station(
         config_entry_id=entry.entry_id,
         identifiers={(DOMAIN, str(system.system_id))},
         manufacturer="SimpliSafe",
-        model=system.version,
+        model=str(system.version),
         name=system.address,
     )
 

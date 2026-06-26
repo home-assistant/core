@@ -3,7 +3,7 @@
 from collections.abc import Mapping
 import json
 import logging
-from typing import Any
+from typing import Any, override
 
 import openai
 import voluptuous as vol
@@ -25,6 +25,7 @@ from homeassistant.const import (
     CONF_API_KEY,
     CONF_LLM_HASS_API,
     CONF_NAME,
+    CONF_PROMPT,
 )
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers import llm
@@ -48,7 +49,6 @@ from .const import (
     CONF_CODE_INTERPRETER,
     CONF_IMAGE_MODEL,
     CONF_MAX_TOKENS,
-    CONF_PROMPT,
     CONF_REASONING_EFFORT,
     CONF_REASONING_SUMMARY,
     CONF_RECOMMENDED,
@@ -127,6 +127,7 @@ class OpenAIConfigFlow(ConfigFlow, domain=DOMAIN):
     VERSION = 2
     MINOR_VERSION = 7
 
+    @override
     async def async_step_user(
         self, user_input: dict[str, Any] | None = None
     ) -> ConfigFlowResult:
@@ -211,6 +212,7 @@ class OpenAIConfigFlow(ConfigFlow, domain=DOMAIN):
 
     @classmethod
     @callback
+    @override
     def async_get_supported_subentry_types(
         cls, config_entry: ConfigEntry
     ) -> dict[str, type[ConfigSubentryFlow]]:
@@ -255,7 +257,7 @@ class OpenAISubentryFlowHandler(ConfigSubentryFlow):
     ) -> SubentryFlowResult:
         """Manage initial options."""
         # abort if entry is not loaded
-        if self._get_entry().state != ConfigEntryState.LOADED:
+        if self._get_entry().state is not ConfigEntryState.LOADED:
             return self.async_abort(reason="entry_not_loaded")
 
         options = self.options
@@ -710,7 +712,7 @@ class OpenAISubentrySTTFlowHandler(ConfigSubentryFlow):
     ) -> SubentryFlowResult:
         """Manage initial options."""
         # abort if entry is not loaded
-        if self._get_entry().state != ConfigEntryState.LOADED:
+        if self._get_entry().state is not ConfigEntryState.LOADED:
             return self.async_abort(reason="entry_not_loaded")
 
         options = self.options
@@ -799,7 +801,7 @@ class OpenAISubentryTTSFlowHandler(ConfigSubentryFlow):
     ) -> SubentryFlowResult:
         """Manage initial options."""
         # abort if entry is not loaded
-        if self._get_entry().state != ConfigEntryState.LOADED:
+        if self._get_entry().state is not ConfigEntryState.LOADED:
             return self.async_abort(reason="entry_not_loaded")
 
         options = self.options

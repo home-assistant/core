@@ -1,5 +1,7 @@
 """Support for Snoo Events."""
 
+from typing import override
+
 from homeassistant.components.event import EventEntity, EventEntityDescription
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
@@ -50,6 +52,7 @@ class SnooEvent(SnooDescriptionEntity, EventEntity):
         )
         self.async_write_ha_state()
 
+    @override
     async def async_added_to_hass(self) -> None:
         """Add Event."""
         await super().async_added_to_hass()
@@ -58,6 +61,7 @@ class SnooEvent(SnooDescriptionEntity, EventEntity):
             # Otherwise, it will update when the coordinator gets data.
             self._async_handle_event()
 
+    @override
     def _handle_coordinator_update(self) -> None:
         self._async_handle_event()
         return super()._handle_coordinator_update()

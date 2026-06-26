@@ -71,7 +71,7 @@ from tests.common import MockConfigEntry, async_fire_time_changed
 from tests.typing import WebSocketGenerator
 
 MAIN_ENTITY_ID = f"{MP_DOMAIN}.my_roku_3"
-TV_ENTITY_ID = f"{MP_DOMAIN}.58_onn_roku_tv"
+TV_ENTITY_ID = f"{MP_DOMAIN}.living_room_58_onn_roku_tv"
 
 
 async def test_setup(
@@ -810,7 +810,8 @@ async def test_media_browse_internal(
     client = await hass_ws_client(hass)
 
     with patch(
-        "homeassistant.helpers.network._get_request_host", return_value="example.local"
+        "homeassistant.helpers.network._get_request_host_port",
+        return_value=("example.local", 8123),
     ):
         await client.send_json(
             {

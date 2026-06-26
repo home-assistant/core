@@ -366,7 +366,7 @@ def _merge_serialized_report(report: SnapshotReport, json_data: dict[str, Any]) 
     for key, selected_item in json_data["_selected_items"].items():
         if key in report.selected_items:
             status = ItemStatus(selected_item)
-            if status != ItemStatus.NOT_RUN:
+            if status is not ItemStatus.NOT_RUN:
                 report.selected_items[key] = status
         else:
             report.selected_items[key] = ItemStatus(selected_item)

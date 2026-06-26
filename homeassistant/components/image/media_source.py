@@ -1,6 +1,6 @@
 """Expose images as media sources."""
 
-from typing import cast
+from typing import cast, override
 
 from homeassistant.components.media_player import BrowseError, MediaClass
 from homeassistant.components.media_source import (
@@ -31,6 +31,7 @@ class ImageMediaSource(MediaSource):
         super().__init__(DOMAIN)
         self.hass = hass
 
+    @override
     async def async_resolve_media(self, item: MediaSourceItem) -> PlayMedia:
         """Resolve media to a url."""
         image = self.hass.data[DATA_COMPONENT].get_entity(item.identifier)
@@ -42,6 +43,7 @@ class ImageMediaSource(MediaSource):
             f"/api/image_proxy_stream/{image.entity_id}", image.content_type
         )
 
+    @override
     async def async_browse_media(
         self,
         item: MediaSourceItem,

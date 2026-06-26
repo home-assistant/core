@@ -2,7 +2,7 @@
 
 from collections.abc import Mapping
 import logging
-from typing import Any
+from typing import Any, override
 
 from aiohttp.client_exceptions import ClientConnectorError
 from nettigo_air_monitor import (
@@ -48,6 +48,7 @@ class NAMFlowHandler(ConfigFlow, domain=DOMAIN):
     host: str
     auth_enabled: bool = False
 
+    @override
     async def async_step_user(
         self, user_input: dict[str, Any] | None = None
     ) -> ConfigFlowResult:
@@ -112,6 +113,7 @@ class NAMFlowHandler(ConfigFlow, domain=DOMAIN):
             step_id="credentials", data_schema=AUTH_SCHEMA, errors=errors
         )
 
+    @override
     async def async_step_zeroconf(
         self, discovery_info: ZeroconfServiceInfo
     ) -> ConfigFlowResult:

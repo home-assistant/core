@@ -3,7 +3,7 @@
 from collections.abc import Mapping
 import json
 import logging
-from typing import TYPE_CHECKING, Any, cast
+from typing import TYPE_CHECKING, Any, cast, override
 
 import anthropic
 import voluptuous as vol
@@ -24,10 +24,10 @@ from homeassistant.const import (
     CONF_API_KEY,
     CONF_LLM_HASS_API,
     CONF_NAME,
+    CONF_PROMPT,
 )
 from homeassistant.core import HomeAssistant, callback
-from homeassistant.helpers import llm
-import homeassistant.helpers.config_validation as cv
+from homeassistant.helpers import config_validation as cv, llm
 from homeassistant.helpers.httpx_client import get_async_client
 from homeassistant.helpers.selector import (
     NumberSelector,
@@ -44,12 +44,13 @@ from .const import (
     CONF_CHAT_MODEL,
     CONF_CODE_EXECUTION,
     CONF_MAX_TOKENS,
-    CONF_PROMPT,
     CONF_PROMPT_CACHING,
     CONF_RECOMMENDED,
     CONF_THINKING_BUDGET,
     CONF_THINKING_EFFORT,
     CONF_TOOL_SEARCH,
+    CONF_WEB_FETCH,
+    CONF_WEB_FETCH_MAX_USES,
     CONF_WEB_SEARCH,
     CONF_WEB_SEARCH_CITY,
     CONF_WEB_SEARCH_COUNTRY,
@@ -106,6 +107,7 @@ class AnthropicConfigFlow(ConfigFlow, domain=DOMAIN):
     VERSION = 2
     MINOR_VERSION = 4
 
+    @override
     async def async_step_user(
         self, user_input: dict[str, Any] | None = None
     ) -> ConfigFlowResult:
@@ -182,6 +184,7 @@ class AnthropicConfigFlow(ConfigFlow, domain=DOMAIN):
 
     @classmethod
     @callback
+    @override
     def async_get_supported_subentry_types(
         cls, config_entry: AnthropicConfigEntry
     ) -> dict[str, type[ConfigSubentryFlow]]:
@@ -225,7 +228,7 @@ class ConversationSubentryFlowHandler(ConfigSubentryFlow):
     ) -> SubentryFlowResult:
         """Set initial options."""
         # abort if entry is not loaded
-        if self._get_entry().state != ConfigEntryState.LOADED:
+        if self._get_entry().state is not ConfigEntryState.LOADED:
             return self.async_abort(reason="entry_not_loaded")
 
         hass_apis: list[SelectOptionDict] = [
@@ -452,11 +455,19 @@ class ConversationSubentryFlowHandler(ConfigSubentryFlow):
                 vol.Optional(
                     CONF_WEB_SEARCH_MAX_USES,
                     default=DEFAULT[CONF_WEB_SEARCH_MAX_USES],
-                ): int,
+                ): cv.positive_int,
                 vol.Optional(
                     CONF_WEB_SEARCH_USER_LOCATION,
                     default=DEFAULT[CONF_WEB_SEARCH_USER_LOCATION],
                 ): bool,
+                vol.Optional(
+                    CONF_WEB_FETCH,
+                    default=DEFAULT[CONF_WEB_FETCH],
+                ): bool,
+                vol.Optional(
+                    CONF_WEB_FETCH_MAX_USES,
+                    default=DEFAULT[CONF_WEB_FETCH_MAX_USES],
+                ): cv.positive_int,
             }
         )
 

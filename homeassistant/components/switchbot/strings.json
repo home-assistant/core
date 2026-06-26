@@ -99,9 +99,18 @@
       },
       "door_unlocked_alarm": {
         "name": "Unlocked alarm"
+      },
+      "half_lock_calibration": {
+        "name": "Half-lock calibration"
+      },
+      "half_locked": {
+        "name": "Half locked"
       }
     },
     "button": {
+      "half_lock": {
+        "name": "Half lock"
+      },
       "light_sensor": {
         "name": "Light sensor"
       },
@@ -347,6 +356,12 @@
       "child_lock": {
         "name": "Child lock"
       },
+      "horizontal_oscillation": {
+        "name": "Horizontal oscillation"
+      },
+      "vertical_oscillation": {
+        "name": "Vertical oscillation"
+      },
       "wireless_charging": {
         "name": "Wireless charging"
       }
@@ -375,7 +390,7 @@
       "message": "The device ID {device_id} does not belong to SwitchBot integration."
     },
     "device_not_found_error": {
-      "message": "Could not find Switchbot {sensor_type} with address {address}"
+      "message": "Could not find Switchbot {sensor_type} with address {address}: {reason}"
     },
     "device_without_config_entry": {
       "message": "The device ID {device_id} is not associated with a config entry."

@@ -10,35 +10,35 @@ import pytest
 
 from homeassistant.const import STATE_UNAVAILABLE
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers import entity_registry as er
 
 from . import spot_price_fetcher
 
 from tests.common import MockConfigEntry, async_fire_time_changed
 
 
+@freeze_time("2024-01-15T14:01:00Z")
 async def test_sensor_setup(
     hass: HomeAssistant,
     mock_config_entry: MockConfigEntry,
     mock_pyomie: MagicMock,
-    entity_registry: er.EntityRegistry,
+    mock_omie_results_jan15: OMIEResults,
 ) -> None:
     """Test sensor platform setup."""
+    mock_pyomie.spot_price.side_effect = spot_price_fetcher(
+        {
+            "2024-01-15": mock_omie_results_jan15,
+        }
+    )
+
     mock_config_entry.add_to_hass(hass)
 
     assert await hass.config_entries.async_setup(mock_config_entry.entry_id)
     await hass.async_block_till_done()
 
-    entities = er.async_entries_for_config_entry(
-        entity_registry, mock_config_entry.entry_id
-    )
-
-    # Should have 2 sensors (PT and ES)
-    assert len(entities) == 2
-
-    unique_ids = {entity.unique_id for entity in entities}
-    expected_ids = {"pt_spot_price", "es_spot_price"}
-    assert unique_ids == expected_ids
+    assert (pt_state := hass.states.get("sensor.omie_portugal_spot_price"))
+    assert (es_state := hass.states.get("sensor.omie_spain_spot_price"))
+    assert pt_state.state == "351151500.0"
+    assert es_state.state == "34151500.0"
 
 
 @pytest.mark.usefixtures("hass_lisbon")

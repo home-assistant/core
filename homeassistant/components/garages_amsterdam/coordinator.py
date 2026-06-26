@@ -1,5 +1,7 @@
 """Coordinator for the Garages Amsterdam integration."""
 
+from typing import override
+
 from odp_amsterdam import Garage, ODPAmsterdam, VehicleType
 
 from homeassistant.config_entries import ConfigEntry
@@ -32,6 +34,7 @@ class GaragesAmsterdamDataUpdateCoordinator(DataUpdateCoordinator[dict[str, Gara
         )
         self.client = client
 
+    @override
     async def _async_update_data(self) -> dict[str, Garage]:
         return {
             garage.garage_name: garage

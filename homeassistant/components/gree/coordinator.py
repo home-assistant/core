@@ -4,7 +4,7 @@ import copy
 from dataclasses import dataclass
 from datetime import datetime, timedelta
 import logging
-from typing import Any
+from typing import Any, override
 
 from greeclimate.device import Device, DeviceInfo
 from greeclimate.discovery import Discovery, Listener
@@ -71,6 +71,7 @@ class DeviceDataUpdateCoordinator(DataUpdateCoordinator[dict[str, Any]]):
         self._last_response_time = utcnow()
         self.async_set_updated_data(self.device.raw_properties)
 
+    @override
     async def _async_update_data(self) -> dict[str, Any]:
         """Update the state of the device."""
         _LOGGER.debug(

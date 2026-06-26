@@ -4,7 +4,7 @@ from collections.abc import Callable
 from dataclasses import dataclass, field
 from datetime import timedelta
 import logging
-from typing import Any
+from typing import Any, override
 
 from proxmoxer import AuthenticationError, ProxmoxAPI
 from proxmoxer.core import ResourceException
@@ -16,6 +16,7 @@ from homeassistant.const import (
     CONF_HOST,
     CONF_PASSWORD,
     CONF_PORT,
+    CONF_TOKEN,
     CONF_USERNAME,
     CONF_VERIFY_SSL,
 )
@@ -26,9 +27,9 @@ from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, Upda
 from .common import sanitize_config_entry
 from .const import (
     CONF_NODE,
-    CONF_TOKEN,
     CONF_TOKEN_ID,
     CONF_TOKEN_SECRET,
+    DEFAULT_TIMEOUT,
     DEFAULT_VERIFY_SSL,
     DOMAIN,
     NODE_ONLINE,
@@ -99,6 +100,7 @@ class ProxmoxCoordinator(DataUpdateCoordinator[dict[str, ProxmoxNodeData]]):
             Callable[[list[tuple[ProxmoxNodeData, dict[str, Any]]]], None]
         ] = []
 
+    @override
     async def _async_setup(self) -> None:
         """Set up the coordinator."""
         try:
@@ -144,6 +146,7 @@ class ProxmoxCoordinator(DataUpdateCoordinator[dict[str, ProxmoxNodeData]]):
                 translation_placeholders={"error": repr(err)},
             ) from err
 
+    @override
     async def _async_update_data(self) -> dict[str, ProxmoxNodeData]:
         """Fetch data from Proxmox VE API."""
 
@@ -217,6 +220,7 @@ class ProxmoxCoordinator(DataUpdateCoordinator[dict[str, ProxmoxNodeData]]):
             port=data[CONF_PORT],
             user=data[CONF_USERNAME],
             verify_ssl=data.get(CONF_VERIFY_SSL, DEFAULT_VERIFY_SSL),
+            timeout=DEFAULT_TIMEOUT,
             **auth_kwargs,
         )
 

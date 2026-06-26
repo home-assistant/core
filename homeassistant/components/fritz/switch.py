@@ -1,7 +1,7 @@
 """Switches for AVM Fritz!Box functions."""
 
 import logging
-from typing import Any
+from typing import Any, override
 
 from homeassistant.components.network import async_get_source_ip
 from homeassistant.components.switch import SwitchEntity, SwitchEntityDescription
@@ -333,6 +333,7 @@ class FritzBoxBaseCoordinatorSwitch(CoordinatorEntity[AvmWrapper], SwitchEntity)
         self._attr_unique_id = f"{avm_wrapper.unique_id}-{description.key}"
 
     @property
+    @override
     def device_info(self) -> DeviceInfo:
         """Return the device information."""
         return DeviceInfo(
@@ -351,6 +352,7 @@ class FritzBoxBaseCoordinatorSwitch(CoordinatorEntity[AvmWrapper], SwitchEntity)
         raise NotImplementedError
 
     @property
+    @override
     def available(self) -> bool:
         """Return availability based on data availability."""
         return super().available and bool(self.data)
@@ -359,10 +361,12 @@ class FritzBoxBaseCoordinatorSwitch(CoordinatorEntity[AvmWrapper], SwitchEntity)
         """Handle switch state change request."""
         raise NotImplementedError
 
+    @override
     async def async_turn_on(self, **kwargs: Any) -> None:
         """Turn on switch."""
         await self._async_handle_turn_on_off(turn_on=True)
 
+    @override
     async def async_turn_off(self, **kwargs: Any) -> None:
         """Turn off switch."""
         await self._async_handle_turn_on_off(turn_on=False)
@@ -380,54 +384,30 @@ class FritzBoxBaseSwitch(FritzBoxBaseEntity, SwitchEntity):
         """Init Fritzbox base switch."""
         super().__init__(avm_wrapper, device_friendly_name)
 
-        self._description = switch_info["description"]
-        self._friendly_name = switch_info["friendly_name"]
-        self._icon = switch_info["icon"]
+        description = switch_info["description"]
+
         self._type = switch_info["type"]
         self._update = switch_info["callback_update"]
         self._switch = switch_info["callback_switch"]
+
+        self._attr_icon = switch_info["icon"]
         self._attr_is_on = switch_info["init_state"]
-
-        self._name = f"{self._friendly_name} {self._description}"
-        self._unique_id = f"{self._avm_wrapper.unique_id}-{slugify(self._description)}"
-
-        self._attributes: dict[str, str | None] = {}
-        self._is_available = True
-
-    @property
-    def name(self) -> str:
-        """Return name."""
-        return self._name
-
-    @property
-    def icon(self) -> str:
-        """Return icon."""
-        return self._icon
-
-    @property
-    def unique_id(self) -> str:
-        """Return unique id."""
-        return self._unique_id
-
-    @property
-    def available(self) -> bool:
-        """Return availability."""
-        return self._is_available
-
-    @property
-    def extra_state_attributes(self) -> dict[str, str | None]:
-        """Return device attributes."""
-        return self._attributes
+        self._attr_name = description
+        self._attr_unique_id = f"{self._avm_wrapper.unique_id}-{slugify(description)}"
+        self._attr_extra_state_attributes: dict[str, Any | None] = {}
+        self._attr_available = True
 
     async def async_update(self) -> None:
         """Update data."""
         _LOGGER.debug("Updating '%s' (%s) switch state", self.name, self._type)
         await self._update()
 
+    @override
     async def async_turn_on(self, **kwargs: Any) -> None:
         """Turn on switch."""
         await self._async_handle_turn_on_off(turn_on=True)
 
+    @override
     async def async_turn_off(self, **kwargs: Any) -> None:
         """Turn off switch."""
         await self._async_handle_turn_on_off(turn_on=False)
@@ -451,9 +431,6 @@ class FritzBoxPortSwitch(FritzBoxBaseSwitch):
         connection_type: str,
     ) -> None:
         """Init Fritzbox port switch."""
-        self._avm_wrapper = avm_wrapper
-
-        self._attributes = {}
         self.connection_type = connection_type
         # dict in the format as it comes from fritzconnection,
         # eg: {"NewRemoteHost": "0.0.0.0", "NewExternalPort": 22, ...}
@@ -463,7 +440,6 @@ class FritzBoxPortSwitch(FritzBoxBaseSwitch):
 
         switch_info = SwitchInfo(
             description=f"Port forward {port_name}",
-            friendly_name=device_friendly_name,
             icon="mdi:check-network",
             type=SWITCH_TYPE_PORTFORWARD,
             callback_update=self._async_fetch_update,
@@ -482,11 +458,11 @@ class FritzBoxPortSwitch(FritzBoxBaseSwitch):
             "Specific %s response: %s", SWITCH_TYPE_PORTFORWARD, self.port_mapping
         )
         if not self.port_mapping:
-            self._is_available = False
+            self._attr_available = False
             return
 
         self._attr_is_on = self.port_mapping["NewEnabled"] is True
-        self._is_available = True
+        self._attr_available = True
 
         attributes_dict = {
             "NewInternalClient": "internal_ip",
@@ -497,7 +473,7 @@ class FritzBoxPortSwitch(FritzBoxBaseSwitch):
         }
 
         for key, attr in attributes_dict.items():
-            self._attributes[attr] = self.port_mapping[key]
+            self._attr_extra_state_attributes[attr] = self.port_mapping[key]
 
     async def _async_switch_on_off_executor(self, turn_on: bool) -> None:
         self.port_mapping["NewEnabled"] = "1" if turn_on else "0"
@@ -527,11 +503,13 @@ class FritzBoxDeflectionSwitch(FritzBoxBaseCoordinatorSwitch):
         super().__init__(avm_wrapper, device_friendly_name, description)
 
     @property
+    @override
     def data(self) -> dict[str, Any]:
         """Return call deflection data."""
         return self.coordinator.data["call_deflections"].get(self.deflection_id, {})
 
     @property
+    @override
     def extra_state_attributes(self) -> dict[str, str]:
         """Return device attributes."""
         return {
@@ -544,10 +522,12 @@ class FritzBoxDeflectionSwitch(FritzBoxBaseCoordinatorSwitch):
         }
 
     @property
+    @override
     def is_on(self) -> bool | None:
         """Switch status."""
         return self.data.get("Enable") == "1"
 
+    @override
     async def _async_handle_turn_on_off(self, turn_on: bool) -> None:
         """Handle deflection switch."""
         await self.coordinator.async_set_deflection_enable(self.deflection_id, turn_on)
@@ -572,6 +552,7 @@ class FritzBoxProfileSwitch(FritzBoxBaseCoordinatorSwitch):
         self._attr_unique_id = f"{self._mac}_internet_access"
 
     @property
+    @override
     def device_info(self) -> DeviceInfo:
         """Return the device information."""
         return DeviceInfo(
@@ -584,6 +565,7 @@ class FritzBoxProfileSwitch(FritzBoxBaseCoordinatorSwitch):
         return self.coordinator.devices[self._mac]
 
     @property
+    @override
     def available(self) -> bool:
         """Return availability of the switch."""
         if self._device.wan_access is None:
@@ -591,10 +573,12 @@ class FritzBoxProfileSwitch(FritzBoxBaseCoordinatorSwitch):
         return self.coordinator.last_update_success
 
     @property
+    @override
     def is_on(self) -> bool | None:
         """Switch status."""
         return self._device.wan_access
 
+    @override
     async def _async_handle_turn_on_off(self, turn_on: bool) -> None:
         """Handle switch state change request."""
         await self.coordinator.async_set_allow_wan_access(
@@ -615,10 +599,8 @@ class FritzBoxWifiSwitch(FritzBoxBaseSwitch):
         network_data: dict[str, Any],
     ) -> None:
         """Init Fritz Wifi switch."""
-        self._avm_wrapper = avm_wrapper
         self._wifi_info = network_data
 
-        self._attributes = {}
         self._attr_entity_category = EntityCategory.CONFIG
         self._attr_entity_registry_enabled_default = (
             avm_wrapper.mesh_role is not MeshRoles.SLAVE
@@ -630,14 +612,13 @@ class FritzBoxWifiSwitch(FritzBoxBaseSwitch):
 
         switch_info = SwitchInfo(
             description=description,
-            friendly_name=device_friendly_name,
             icon="mdi:wifi",
             type=SWITCH_TYPE_WIFINETWORK,
             callback_update=self._async_fetch_update,
             callback_switch=self._async_switch_on_off_executor,
             init_state=network_data["NewEnable"],
         )
-        super().__init__(self._avm_wrapper, device_friendly_name, switch_info)
+        super().__init__(avm_wrapper, device_friendly_name, switch_info)
 
     async def _async_fetch_update(self) -> None:
         """Fetch updates."""
@@ -650,16 +631,16 @@ class FritzBoxWifiSwitch(FritzBoxBaseSwitch):
         )
 
         if not wifi_info:
-            self._is_available = False
+            self._attr_available = False
             return
 
         self._attr_is_on = wifi_info["NewEnable"] is True
-        self._is_available = True
+        self._attr_available = True
 
         std = wifi_info["NewStandard"]
-        self._attributes["standard"] = std or None
-        self._attributes["bssid"] = wifi_info["NewBSSID"]
-        self._attributes["mac_address_control"] = wifi_info[
+        self._attr_extra_state_attributes["standard"] = std or None
+        self._attr_extra_state_attributes["bssid"] = wifi_info["NewBSSID"]
+        self._attr_extra_state_attributes["mac_address_control"] = wifi_info[
             "NewMACAddressControlEnabled"
         ]
         self._wifi_info = wifi_info

@@ -3,7 +3,7 @@
 from collections.abc import Callable
 from dataclasses import dataclass, field
 from enum import IntEnum
-from typing import TYPE_CHECKING, cast
+from typing import TYPE_CHECKING, cast, override
 
 from zwave_js_server.const import CommandClass
 from zwave_js_server.const.command_class.lock import DOOR_STATUS_PROPERTY
@@ -703,6 +703,7 @@ class ZWaveBooleanBinarySensor(ZWaveBaseEntity, BinarySensorEntity):
             self.entity_description = description
 
     @property
+    @override
     def is_on(self) -> bool | None:
         """Return if the sensor is on or off."""
         if self.info.primary_value.value is None:
@@ -734,6 +735,7 @@ class ZWaveNotificationBinarySensor(ZWaveBaseEntity, BinarySensorEntity):
         self._attr_unique_id = f"{self._attr_unique_id}.{self.state_key}"
 
     @property
+    @override
     def is_on(self) -> bool | None:
         """Return if the sensor is on or off."""
         if self.info.primary_value.value is None:
@@ -772,6 +774,7 @@ class ZWaveLegacyDoorStateBinarySensor(ZWaveBaseEntity, BinarySensorEntity):
         )
 
     @property
+    @override
     def is_on(self) -> bool | None:
         """Return if the sensor is on or off."""
         value = self.info.node.values.get(self._opening_state_value_id)
@@ -808,6 +811,7 @@ class ZWaveOpeningStateBinarySensor(ZWaveBaseEntity, BinarySensorEntity):
         )
 
     @callback
+    @override
     def should_rediscover_on_metadata_update(self) -> bool:
         """Check if metadata states require adding the Tilt entity."""
         return (
@@ -821,6 +825,7 @@ class ZWaveOpeningStateBinarySensor(ZWaveBaseEntity, BinarySensorEntity):
             and self.entity_description.state_key == OpeningState.OPEN
         )
 
+    @override
     async def _async_remove_and_rediscover(self, value: ZwaveValue) -> None:
         """Trigger re-discovery while preserving the main Opening state entity."""
         assert self.device_entry is not None
@@ -840,6 +845,7 @@ class ZWaveOpeningStateBinarySensor(ZWaveBaseEntity, BinarySensorEntity):
         node_events.async_on_value_added(value_updates_disc_info, value)
 
     @property
+    @override
     def is_on(self) -> bool | None:
         """Return if the sensor is on or off."""
         value = self.info.primary_value.value
@@ -869,6 +875,7 @@ class ZWavePropertyBinarySensor(ZWaveBaseEntity, BinarySensorEntity):
         self._attr_name = self.generate_name(include_value_name=True)
 
     @property
+    @override
     def is_on(self) -> bool | None:
         """Return if the sensor is on or off."""
         if self.info.primary_value.value is None:
