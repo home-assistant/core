@@ -3,7 +3,7 @@
 from collections.abc import Callable
 from dataclasses import dataclass
 import logging
-from typing import Any, cast, override
+from typing import Any, Protocol, cast, override
 
 from roborock.devices.traits.b01 import Q10PropertiesApi
 from roborock.devices.traits.v1 import PropertiesApi
@@ -89,7 +89,30 @@ class RoborockSwitchDescriptionA01(SwitchEntityDescription):
 class RoborockSwitchDescriptionQ10(SwitchEntityDescription):
     """Class to describe a Roborock Q10 switch entity."""
 
-    trait: Callable[[Q10PropertiesApi], RoborockSwitchBase | None]
+    trait: Callable[[Q10PropertiesApi], Q10SwitchTrait | None]
+
+
+class Q10SwitchTrait(Protocol):
+    """Protocol for Q10 switch traits supporting push updates."""
+
+    @property
+    def is_on(self) -> bool | None:
+        """Return the current switch state."""
+
+    async def enable(self) -> None:
+        """Enable the switch trait."""
+
+    async def disable(self) -> None:
+        """Disable the switch trait."""
+
+    def add_update_listener(self, listener: Callable[[], None]) -> Callable[[], None]:
+        """Register a callback invoked when trait state changes."""
+
+
+class Q10DoNotDisturbApi(Protocol):
+    """Subset of Q10 properties used by switch entities."""
+
+    do_not_disturb: Q10SwitchTrait
 
 
 A01_SWITCH_DESCRIPTIONS: list[RoborockSwitchDescriptionA01] = [
@@ -107,7 +130,7 @@ Q10_SWITCH_DESCRIPTIONS: list[RoborockSwitchDescriptionQ10] = [
         key="do_not_disturb",
         translation_key="dnd_switch",
         entity_category=EntityCategory.CONFIG,
-        trait=lambda traits: cast(Any, traits).do_not_disturb,
+        trait=lambda traits: cast(Q10DoNotDisturbApi, traits).do_not_disturb,
     )
 ]
 
@@ -132,10 +155,11 @@ async def async_setup_entry(
                     f"{description.key}_{coordinator.duid_slug}",
                     coordinator,
                     description,
-                    trait,
+                    v1_trait,
                 )
                 for description in SWITCH_DESCRIPTIONS
-                if (trait := description.trait(coordinator.properties_api)) is not None
+                if (v1_trait := description.trait(coordinator.properties_api))
+                is not None
             )
         elif isinstance(coordinator, RoborockDataUpdateCoordinatorA01):
             entities.extend(
@@ -151,10 +175,10 @@ async def async_setup_entry(
                 RoborockSwitchQ10(
                     coordinator,
                     description,
-                    trait,
+                    q10_trait,
                 )
                 for description in Q10_SWITCH_DESCRIPTIONS
-                if (trait := description.trait(coordinator.api)) is not None
+                if (q10_trait := description.trait(coordinator.api)) is not None
             )
         async_add_entities(entities)
 
@@ -286,7 +310,7 @@ class RoborockSwitchQ10(RoborockCoordinatedEntityB01Q10, SwitchEntity):
         self,
         coordinator: RoborockB01Q10UpdateCoordinator,
         description: RoborockSwitchDescriptionQ10,
-        trait: RoborockSwitchBase,
+        trait: Q10SwitchTrait,
     ) -> None:
         """Initialize the entity."""
         self.entity_description = description
@@ -297,10 +321,7 @@ class RoborockSwitchQ10(RoborockCoordinatedEntityB01Q10, SwitchEntity):
     async def async_added_to_hass(self) -> None:
         """Register a trait listener for push-based state updates."""
         await super().async_added_to_hass()
-        if hasattr(self._trait, "add_update_listener"):
-            self.async_on_remove(
-                self._trait.add_update_listener(self.async_write_ha_state)
-            )
+        self.async_on_remove(self._trait.add_update_listener(self.async_write_ha_state))
 
     @override
     async def async_turn_off(self, **kwargs: Any) -> None:
