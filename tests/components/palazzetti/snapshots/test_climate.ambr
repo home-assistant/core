@@ -67,7 +67,7 @@
         'high',
         'auto',
       ]),
-      'friendly_name': 'Stove',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Stove',
       <ClimateEntityStateAttribute.HVAC_ACTION: 'hvac_action'>: <HVACAction.HEATING: 'heating'>,
       <ClimateEntityCapabilityAttribute.HVAC_MODES: 'hvac_modes'>: list([
         <HVACMode.HEAT: 'heat'>,
@@ -75,7 +75,7 @@
       ]),
       <ClimateEntityCapabilityAttribute.MAX_TEMP: 'max_temp'>: 50,
       <ClimateEntityCapabilityAttribute.MIN_TEMP: 'min_temp'>: 5,
-      'supported_features': <ClimateEntityFeature: 393>,
+      <EntityStateAttribute.SUPPORTED_FEATURES: 'supported_features'>: <ClimateEntityFeature: 393>,
       <ClimateEntityCapabilityAttribute.TARGET_TEMP_STEP: 'target_temp_step'>: 1.0,
       <ClimateEntityStateAttribute.TEMPERATURE: 'temperature'>: 21,
     }),

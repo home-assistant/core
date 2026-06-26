@@ -48,7 +48,7 @@
 # name: test_entities[event.overseerr_last_media_event-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'entity_picture': 'https://image.tmdb.org/t/p/w600_and_h900_bestv2/something.jpg',
+      <EntityStateAttribute.ENTITY_PICTURE: 'entity_picture'>: 'https://image.tmdb.org/t/p/w600_and_h900_bestv2/something.jpg',
       <EventEntityStateAttribute.EVENT_TYPE: 'event_type'>: 'auto_approved',
       <EventEntityCapabilityAttribute.EVENT_TYPES: 'event_types'>: list([
         'pending',
@@ -58,7 +58,7 @@
         'declined',
         'auto_approved',
       ]),
-      'friendly_name': 'Overseerr Last media event',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Overseerr Last media event',
       'media': dict({
         'media_type': 'movie',
         'status': 'pending',

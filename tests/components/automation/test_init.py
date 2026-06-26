@@ -7,6 +7,7 @@ from typing import Any
 from unittest.mock import ANY, Mock, patch
 
 import pytest
+import voluptuous as vol
 
 from homeassistant.components import automation, input_boolean, script
 from homeassistant.components.automation import (
@@ -1928,6 +1929,187 @@ async def test_automation_with_error_in_script_2(
     hass.bus.async_fire("test_event")
     await hass.async_block_till_done()
     assert "string value is None" in caplog.text
+
+
+@pytest.mark.parametrize(
+    ("side_effect", "expected_error", "expect_traceback"),
+    [
+        (
+            HomeAssistantError("boom"),
+            "Error while executing automation automation.hello: boom",
+            False,
+        ),
+        (
+            vol.Invalid("not valid"),
+            "Error while executing automation automation.hello: not valid",
+            False,
+        ),
+        (
+            ValueError("unexpected"),
+            "Unexpected error while executing automation automation.hello",
+            True,
+        ),
+    ],
+    ids=["home_assistant_error", "voluptuous_invalid", "unexpected_exception"],
+)
+async def test_automation_with_error_in_action_script(
+    hass: HomeAssistant,
+    calls: list[ServiceCall],
+    caplog: pytest.LogCaptureFixture,
+    hass_ws_client: WebSocketGenerator,
+    side_effect: Exception,
+    expected_error: str,
+    expect_traceback: bool,
+) -> None:
+    """Test errors raised while running the action script are handled and traced."""
+    assert await async_setup_component(
+        hass,
+        automation.DOMAIN,
+        {
+            automation.DOMAIN: {
+                "id": "hello",
+                "alias": "hello",
+                "trigger": {"platform": "event", "event_type": "test_event"},
+                "action": {"action": "test.automation"},
+            }
+        },
+    )
+
+    with patch(
+        "homeassistant.helpers.script.Script.async_run",
+        side_effect=side_effect,
+    ):
+        hass.bus.async_fire("test_event")
+        await hass.async_block_till_done()
+
+    assert len(calls) == 0
+    assert expected_error in caplog.text
+    # A HomeAssistantError/voluptuous error is logged without a traceback, an
+    # unexpected error is logged with a traceback.
+    assert ("Traceback" in caplog.text) is expect_traceback
+
+    # The error is recorded on the automation trace.
+    client = await hass_ws_client()
+    await client.send_json_auto_id(
+        {"type": "trace/list", "domain": "automation", "item_id": "hello"}
+    )
+    response = await client.receive_json()
+    assert response["success"]
+    traces = response["result"]
+    assert len(traces) == 1
+    assert traces[0]["error"] == str(side_effect)
+
+
+@pytest.mark.parametrize(
+    ("side_effect", "expected_error", "expect_traceback"),
+    [
+        (
+            HomeAssistantError("boom"),
+            "Error while checking conditions of automation automation.hello: boom",
+            False,
+        ),
+        (
+            vol.Invalid("not valid"),
+            "Error while checking conditions of automation automation.hello: not valid",
+            False,
+        ),
+        (
+            ValueError("unexpected"),
+            "Unexpected error while checking conditions of automation automation.hello",
+            True,
+        ),
+    ],
+    ids=["home_assistant_error", "voluptuous_invalid", "unexpected_exception"],
+)
+async def test_automation_with_error_in_condition(
+    hass: HomeAssistant,
+    calls: list[ServiceCall],
+    caplog: pytest.LogCaptureFixture,
+    hass_ws_client: WebSocketGenerator,
+    side_effect: Exception,
+    expected_error: str,
+    expect_traceback: bool,
+) -> None:
+    """Test errors raised while checking conditions are handled and traced."""
+    assert await async_setup_component(
+        hass,
+        automation.DOMAIN,
+        {
+            automation.DOMAIN: {
+                "id": "hello",
+                "alias": "hello",
+                "trigger": {"platform": "event", "event_type": "test_event"},
+                "condition": {
+                    "condition": "state",
+                    "entity_id": "test.entity",
+                    "state": "on",
+                },
+                "action": {"action": "test.automation"},
+            }
+        },
+    )
+
+    with patch(
+        "homeassistant.helpers.condition.ConditionsChecker.async_check",
+        side_effect=side_effect,
+    ):
+        hass.bus.async_fire("test_event")
+        await hass.async_block_till_done()
+
+    # The action must not run when the condition check raises.
+    assert len(calls) == 0
+    assert expected_error in caplog.text
+    # A HomeAssistantError/voluptuous error is logged without a traceback, an
+    # unexpected error is logged with a traceback.
+    assert ("Traceback" in caplog.text) is expect_traceback
+
+    # The error is recorded on the automation trace.
+    client = await hass_ws_client()
+    await client.send_json_auto_id(
+        {"type": "trace/list", "domain": "automation", "item_id": "hello"}
+    )
+    response = await client.receive_json()
+    assert response["success"]
+    traces = response["result"]
+    assert len(traces) == 1
+    assert traces[0]["error"] == str(side_effect)
+
+
+async def test_automation_with_error_in_condition_continues_after_recovery(
+    hass: HomeAssistant,
+    calls: list[ServiceCall],
+) -> None:
+    """Test the automation still runs once the condition stops raising."""
+    assert await async_setup_component(
+        hass,
+        automation.DOMAIN,
+        {
+            automation.DOMAIN: {
+                "alias": "hello",
+                "trigger": {"platform": "event", "event_type": "test_event"},
+                "condition": {
+                    "condition": "state",
+                    "entity_id": "test.entity",
+                    "state": "on",
+                },
+                "action": {"action": "test.automation"},
+            }
+        },
+    )
+    hass.states.async_set("test.entity", "on")
+
+    with patch(
+        "homeassistant.helpers.condition.ConditionsChecker.async_check",
+        side_effect=HomeAssistantError("boom"),
+    ):
+        hass.bus.async_fire("test_event")
+        await hass.async_block_till_done()
+    assert len(calls) == 0
+
+    # Without the error, the condition passes and the action runs.
+    hass.bus.async_fire("test_event")
+    await hass.async_block_till_done()
+    assert len(calls) == 1
 
 
 async def test_automation_restore_last_triggered_with_initial_state(

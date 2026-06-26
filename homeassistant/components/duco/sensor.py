@@ -15,10 +15,9 @@ from homeassistant.components.sensor import (
     SensorStateClass,
 )
 from homeassistant.const import (
-    CONCENTRATION_PARTS_PER_MILLION,
-    PERCENTAGE,
     SIGNAL_STRENGTH_DECIBELS_MILLIWATT,
     EntityCategory,
+    UnitOfRatio,
     UnitOfTime,
 )
 from homeassistant.core import HomeAssistant, callback
@@ -72,7 +71,7 @@ SENSOR_DESCRIPTIONS: tuple[DucoSensorEntityDescription, ...] = (
         key="target_flow_level",
         translation_key="target_flow_level",
         state_class=SensorStateClass.MEASUREMENT,
-        native_unit_of_measurement=PERCENTAGE,
+        native_unit_of_measurement=UnitOfRatio.PERCENTAGE,
         suggested_display_precision=0,
         value_fn=lambda node: (
             node.ventilation.flow_lvl_tgt if node.ventilation else None
@@ -96,7 +95,7 @@ SENSOR_DESCRIPTIONS: tuple[DucoSensorEntityDescription, ...] = (
         key="co2",
         device_class=SensorDeviceClass.CO2,
         state_class=SensorStateClass.MEASUREMENT,
-        native_unit_of_measurement=CONCENTRATION_PARTS_PER_MILLION,
+        native_unit_of_measurement=UnitOfRatio.PARTS_PER_MILLION,
         value_fn=lambda node: node.sensor.co2 if node.sensor else None,
         node_types=(
             NodeType.BSCO2,
@@ -108,7 +107,7 @@ SENSOR_DESCRIPTIONS: tuple[DucoSensorEntityDescription, ...] = (
     DucoSensorEntityDescription(
         key="iaq_co2",
         translation_key="iaq_co2",
-        native_unit_of_measurement=PERCENTAGE,
+        native_unit_of_measurement=UnitOfRatio.PERCENTAGE,
         state_class=SensorStateClass.MEASUREMENT,
         entity_registry_enabled_default=False,
         value_fn=lambda node: node.sensor.iaq_co2 if node.sensor else None,
@@ -123,14 +122,14 @@ SENSOR_DESCRIPTIONS: tuple[DucoSensorEntityDescription, ...] = (
         key="humidity",
         device_class=SensorDeviceClass.HUMIDITY,
         state_class=SensorStateClass.MEASUREMENT,
-        native_unit_of_measurement=PERCENTAGE,
+        native_unit_of_measurement=UnitOfRatio.PERCENTAGE,
         value_fn=lambda node: node.sensor.rh if node.sensor else None,
         node_types=(NodeType.BSRH, NodeType.UCRH, NodeType.VLVRH, NodeType.VLVCO2RH),
     ),
     DucoSensorEntityDescription(
         key="iaq_rh",
         translation_key="iaq_rh",
-        native_unit_of_measurement=PERCENTAGE,
+        native_unit_of_measurement=UnitOfRatio.PERCENTAGE,
         state_class=SensorStateClass.MEASUREMENT,
         entity_registry_enabled_default=False,
         value_fn=lambda node: node.sensor.iaq_rh if node.sensor else None,

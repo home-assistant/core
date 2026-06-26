@@ -653,12 +653,6 @@
       "config_flow": true,
       "iot_class": "cloud_polling"
     },
-    "avion": {
-      "name": "Avi-on",
-      "integration_type": "hub",
-      "config_flow": false,
-      "iot_class": "assumed_state"
-    },
     "avosdim": {
       "name": "Avosdim",
       "integration_type": "virtual",
@@ -731,12 +725,6 @@
     },
     "bbox": {
       "name": "Bbox",
-      "integration_type": "hub",
-      "config_flow": false,
-      "iot_class": "local_polling"
-    },
-    "beewi_smartclim": {
-      "name": "BeeWi SmartClim BLE sensor",
       "integration_type": "hub",
       "config_flow": false,
       "iot_class": "local_polling"
@@ -4599,12 +4587,6 @@
       "config_flow": false,
       "iot_class": "cloud_polling"
     },
-    "mycroft": {
-      "name": "Mycroft",
-      "integration_type": "hub",
-      "config_flow": false,
-      "iot_class": "local_push"
-    },
     "myneomitis": {
       "name": "MyNeomitis",
       "integration_type": "hub",
@@ -7218,12 +7200,6 @@
       "integration_type": "device",
       "config_flow": true,
       "iot_class": "local_push"
-    },
-    "thermoworks_smoke": {
-      "name": "ThermoWorks Smoke",
-      "integration_type": "hub",
-      "config_flow": false,
-      "iot_class": "cloud_polling"
     },
     "thethingsnetwork": {
       "name": "The Things Network",

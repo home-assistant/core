@@ -21,7 +21,7 @@ if TYPE_CHECKING:
 
 APPLICATION_NAME: Final = "HomeAssistant"
 MAJOR_VERSION: Final = 2026
-MINOR_VERSION: Final = 7
+MINOR_VERSION: Final = 8
 PATCH_VERSION: Final = "0.dev0"
 __short_version__: Final = f"{MAJOR_VERSION}.{MINOR_VERSION}"
 __version__: Final = f"{__short_version__}.{PATCH_VERSION}"
@@ -453,6 +453,26 @@ ATTR_TEMPERATURE: Final = "temperature"
 
 # Persons attribute
 ATTR_PERSONS: Final = "persons"
+
+
+class EntityCapabilityAttribute(StrEnum):
+    """Capability attributes shared by all entities."""
+
+    GROUP_ENTITIES = "group_entities"
+
+
+class EntityStateAttribute(StrEnum):
+    """State attributes shared by all entities."""
+
+    ASSUMED_STATE = "assumed_state"
+    ATTRIBUTION = "attribution"
+    DEVICE_CLASS = "device_class"
+    ENTITY_PICTURE = "entity_picture"
+    FRIENDLY_NAME = "friendly_name"
+    ICON = "icon"
+    RESTORED = "restored"
+    SUPPORTED_FEATURES = "supported_features"
+    UNIT_OF_MEASUREMENT = "unit_of_measurement"
 
 
 # #### UNITS OF MEASUREMENT ####

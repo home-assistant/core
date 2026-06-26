@@ -230,7 +230,6 @@ CLAUDE.md @home-assistant/core
 /tests/components/battery/ @home-assistant/core
 /homeassistant/components/bayesian/ @HarvsG
 /tests/components/bayesian/ @HarvsG
-/homeassistant/components/beewi_smartclim/ @alemuro
 /homeassistant/components/binary_sensor/ @home-assistant/core
 /tests/components/binary_sensor/ @home-assistant/core
 /homeassistant/components/bizkaibus/ @UgaitzEtxebarria
@@ -791,8 +790,8 @@ CLAUDE.md @home-assistant/core
 /tests/components/html5/ @alexyao2015 @tr4nt0r
 /homeassistant/components/http/ @home-assistant/core
 /tests/components/http/ @home-assistant/core
-/homeassistant/components/huawei_lte/ @scop @fphammerle
-/tests/components/huawei_lte/ @scop @fphammerle
+/homeassistant/components/huawei_lte/ @fphammerle
+/tests/components/huawei_lte/ @fphammerle
 /homeassistant/components/hue/ @marcelveldt
 /tests/components/hue/ @marcelveldt
 /homeassistant/components/hue_ble/ @flip-dots
@@ -1603,8 +1602,8 @@ CLAUDE.md @home-assistant/core
 /tests/components/sensorpush/ @bdraco
 /homeassistant/components/sensorpush_cloud/ @sstallion
 /tests/components/sensorpush_cloud/ @sstallion
-/homeassistant/components/sensoterra/ @markruys
-/tests/components/sensoterra/ @markruys
+/homeassistant/components/sensoterra/ @SanderBakkumCuriousInc @curious-florian @markruys
+/tests/components/sensoterra/ @SanderBakkumCuriousInc @curious-florian @markruys
 /homeassistant/components/sentry/ @dcramer @frenck
 /tests/components/sentry/ @dcramer @frenck
 /homeassistant/components/senz/ @milanmeu

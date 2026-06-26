@@ -39,7 +39,7 @@ on:
 env:
   CACHE_VERSION: 3
   MYPY_CACHE_VERSION: 1
-  HA_SHORT_VERSION: "2026.7"
+  HA_SHORT_VERSION: "2026.8"
   ADDITIONAL_PYTHON_VERSIONS: "[]"
   # 10.3 is the oldest supported version
   # - 10.3.32 is the version currently shipped with Synology (as of 17 Feb 2022)

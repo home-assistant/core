@@ -46,7 +46,7 @@
 # name: test_state[True][select.basement_my_water_heater_hot_water_plus_level-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'My water heater Hot Water+ level',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'My water heater Hot Water+ level',
       <SelectEntityCapabilityAttribute.OPTIONS: 'options'>: list([
         'off',
         'level1',

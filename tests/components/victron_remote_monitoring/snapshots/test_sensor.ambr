@@ -47,10 +47,10 @@
 # name: test_sensors_snapshot[sensor.victron_remote_monitoring_estimated_energy_consumption_current_hour-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'device_class': 'energy',
-      'friendly_name': 'Victron Remote Monitoring Estimated energy consumption - Current hour',
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'energy',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Victron Remote Monitoring Estimated energy consumption - Current hour',
       <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.TOTAL: 'total'>,
-      'unit_of_measurement': <UnitOfEnergy.KILO_WATT_HOUR: 'kWh'>,
+      <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: <UnitOfEnergy.KILO_WATT_HOUR: 'kWh'>,
     }),
     'context': <ANY>,
     'entity_id': 'sensor.victron_remote_monitoring_estimated_energy_consumption_current_hour',
@@ -108,10 +108,10 @@
 # name: test_sensors_snapshot[sensor.victron_remote_monitoring_estimated_energy_consumption_next_hour-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'device_class': 'energy',
-      'friendly_name': 'Victron Remote Monitoring Estimated energy consumption - Next hour',
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'energy',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Victron Remote Monitoring Estimated energy consumption - Next hour',
       <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.TOTAL: 'total'>,
-      'unit_of_measurement': <UnitOfEnergy.KILO_WATT_HOUR: 'kWh'>,
+      <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: <UnitOfEnergy.KILO_WATT_HOUR: 'kWh'>,
     }),
     'context': <ANY>,
     'entity_id': 'sensor.victron_remote_monitoring_estimated_energy_consumption_next_hour',
@@ -169,10 +169,10 @@
 # name: test_sensors_snapshot[sensor.victron_remote_monitoring_estimated_energy_consumption_today-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'device_class': 'energy',
-      'friendly_name': 'Victron Remote Monitoring Estimated energy consumption - Today',
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'energy',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Victron Remote Monitoring Estimated energy consumption - Today',
       <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.TOTAL: 'total'>,
-      'unit_of_measurement': <UnitOfEnergy.KILO_WATT_HOUR: 'kWh'>,
+      <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: <UnitOfEnergy.KILO_WATT_HOUR: 'kWh'>,
     }),
     'context': <ANY>,
     'entity_id': 'sensor.victron_remote_monitoring_estimated_energy_consumption_today',
@@ -230,10 +230,10 @@
 # name: test_sensors_snapshot[sensor.victron_remote_monitoring_estimated_energy_consumption_today_remaining-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'device_class': 'energy',
-      'friendly_name': 'Victron Remote Monitoring Estimated energy consumption - Today remaining',
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'energy',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Victron Remote Monitoring Estimated energy consumption - Today remaining',
       <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.TOTAL: 'total'>,
-      'unit_of_measurement': <UnitOfEnergy.KILO_WATT_HOUR: 'kWh'>,
+      <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: <UnitOfEnergy.KILO_WATT_HOUR: 'kWh'>,
     }),
     'context': <ANY>,
     'entity_id': 'sensor.victron_remote_monitoring_estimated_energy_consumption_today_remaining',
@@ -291,10 +291,10 @@
 # name: test_sensors_snapshot[sensor.victron_remote_monitoring_estimated_energy_consumption_tomorrow-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'device_class': 'energy',
-      'friendly_name': 'Victron Remote Monitoring Estimated energy consumption - Tomorrow',
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'energy',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Victron Remote Monitoring Estimated energy consumption - Tomorrow',
       <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.TOTAL: 'total'>,
-      'unit_of_measurement': <UnitOfEnergy.KILO_WATT_HOUR: 'kWh'>,
+      <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: <UnitOfEnergy.KILO_WATT_HOUR: 'kWh'>,
     }),
     'context': <ANY>,
     'entity_id': 'sensor.victron_remote_monitoring_estimated_energy_consumption_tomorrow',
@@ -352,10 +352,10 @@
 # name: test_sensors_snapshot[sensor.victron_remote_monitoring_estimated_energy_consumption_yesterday-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'device_class': 'energy',
-      'friendly_name': 'Victron Remote Monitoring Estimated energy consumption - Yesterday',
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'energy',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Victron Remote Monitoring Estimated energy consumption - Yesterday',
       <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.TOTAL: 'total'>,
-      'unit_of_measurement': <UnitOfEnergy.KILO_WATT_HOUR: 'kWh'>,
+      <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: <UnitOfEnergy.KILO_WATT_HOUR: 'kWh'>,
     }),
     'context': <ANY>,
     'entity_id': 'sensor.victron_remote_monitoring_estimated_energy_consumption_yesterday',
@@ -413,10 +413,10 @@
 # name: test_sensors_snapshot[sensor.victron_remote_monitoring_estimated_energy_production_current_hour-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'device_class': 'energy',
-      'friendly_name': 'Victron Remote Monitoring Estimated energy production - Current hour',
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'energy',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Victron Remote Monitoring Estimated energy production - Current hour',
       <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.TOTAL: 'total'>,
-      'unit_of_measurement': <UnitOfEnergy.KILO_WATT_HOUR: 'kWh'>,
+      <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: <UnitOfEnergy.KILO_WATT_HOUR: 'kWh'>,
     }),
     'context': <ANY>,
     'entity_id': 'sensor.victron_remote_monitoring_estimated_energy_production_current_hour',
@@ -474,10 +474,10 @@
 # name: test_sensors_snapshot[sensor.victron_remote_monitoring_estimated_energy_production_next_hour-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'device_class': 'energy',
-      'friendly_name': 'Victron Remote Monitoring Estimated energy production - Next hour',
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'energy',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Victron Remote Monitoring Estimated energy production - Next hour',
       <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.TOTAL: 'total'>,
-      'unit_of_measurement': <UnitOfEnergy.KILO_WATT_HOUR: 'kWh'>,
+      <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: <UnitOfEnergy.KILO_WATT_HOUR: 'kWh'>,
     }),
     'context': <ANY>,
     'entity_id': 'sensor.victron_remote_monitoring_estimated_energy_production_next_hour',
@@ -535,10 +535,10 @@
 # name: test_sensors_snapshot[sensor.victron_remote_monitoring_estimated_energy_production_today-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'device_class': 'energy',
-      'friendly_name': 'Victron Remote Monitoring Estimated energy production - Today',
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'energy',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Victron Remote Monitoring Estimated energy production - Today',
       <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.TOTAL: 'total'>,
-      'unit_of_measurement': <UnitOfEnergy.KILO_WATT_HOUR: 'kWh'>,
+      <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: <UnitOfEnergy.KILO_WATT_HOUR: 'kWh'>,
     }),
     'context': <ANY>,
     'entity_id': 'sensor.victron_remote_monitoring_estimated_energy_production_today',
@@ -596,10 +596,10 @@
 # name: test_sensors_snapshot[sensor.victron_remote_monitoring_estimated_energy_production_today_remaining-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'device_class': 'energy',
-      'friendly_name': 'Victron Remote Monitoring Estimated energy production - Today remaining',
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'energy',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Victron Remote Monitoring Estimated energy production - Today remaining',
       <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.TOTAL: 'total'>,
-      'unit_of_measurement': <UnitOfEnergy.KILO_WATT_HOUR: 'kWh'>,
+      <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: <UnitOfEnergy.KILO_WATT_HOUR: 'kWh'>,
     }),
     'context': <ANY>,
     'entity_id': 'sensor.victron_remote_monitoring_estimated_energy_production_today_remaining',
@@ -657,10 +657,10 @@
 # name: test_sensors_snapshot[sensor.victron_remote_monitoring_estimated_energy_production_tomorrow-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'device_class': 'energy',
-      'friendly_name': 'Victron Remote Monitoring Estimated energy production - Tomorrow',
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'energy',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Victron Remote Monitoring Estimated energy production - Tomorrow',
       <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.TOTAL: 'total'>,
-      'unit_of_measurement': <UnitOfEnergy.KILO_WATT_HOUR: 'kWh'>,
+      <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: <UnitOfEnergy.KILO_WATT_HOUR: 'kWh'>,
     }),
     'context': <ANY>,
     'entity_id': 'sensor.victron_remote_monitoring_estimated_energy_production_tomorrow',
@@ -718,10 +718,10 @@
 # name: test_sensors_snapshot[sensor.victron_remote_monitoring_estimated_energy_production_yesterday-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'device_class': 'energy',
-      'friendly_name': 'Victron Remote Monitoring Estimated energy production - Yesterday',
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'energy',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Victron Remote Monitoring Estimated energy production - Yesterday',
       <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.TOTAL: 'total'>,
-      'unit_of_measurement': <UnitOfEnergy.KILO_WATT_HOUR: 'kWh'>,
+      <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: <UnitOfEnergy.KILO_WATT_HOUR: 'kWh'>,
     }),
     'context': <ANY>,
     'entity_id': 'sensor.victron_remote_monitoring_estimated_energy_production_yesterday',
@@ -771,8 +771,8 @@
 # name: test_sensors_snapshot[sensor.victron_remote_monitoring_highest_consumption_peak_time_today-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'device_class': 'timestamp',
-      'friendly_name': 'Victron Remote Monitoring Highest consumption peak time - Today',
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'timestamp',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Victron Remote Monitoring Highest consumption peak time - Today',
     }),
     'context': <ANY>,
     'entity_id': 'sensor.victron_remote_monitoring_highest_consumption_peak_time_today',
@@ -822,8 +822,8 @@
 # name: test_sensors_snapshot[sensor.victron_remote_monitoring_highest_consumption_peak_time_tomorrow-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'device_class': 'timestamp',
-      'friendly_name': 'Victron Remote Monitoring Highest consumption peak time - Tomorrow',
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'timestamp',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Victron Remote Monitoring Highest consumption peak time - Tomorrow',
     }),
     'context': <ANY>,
     'entity_id': 'sensor.victron_remote_monitoring_highest_consumption_peak_time_tomorrow',
@@ -873,8 +873,8 @@
 # name: test_sensors_snapshot[sensor.victron_remote_monitoring_highest_consumption_peak_time_yesterday-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'device_class': 'timestamp',
-      'friendly_name': 'Victron Remote Monitoring Highest consumption peak time - Yesterday',
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'timestamp',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Victron Remote Monitoring Highest consumption peak time - Yesterday',
     }),
     'context': <ANY>,
     'entity_id': 'sensor.victron_remote_monitoring_highest_consumption_peak_time_yesterday',
@@ -924,8 +924,8 @@
 # name: test_sensors_snapshot[sensor.victron_remote_monitoring_highest_peak_time_today-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'device_class': 'timestamp',
-      'friendly_name': 'Victron Remote Monitoring Highest peak time - Today',
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'timestamp',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Victron Remote Monitoring Highest peak time - Today',
     }),
     'context': <ANY>,
     'entity_id': 'sensor.victron_remote_monitoring_highest_peak_time_today',
@@ -975,8 +975,8 @@
 # name: test_sensors_snapshot[sensor.victron_remote_monitoring_highest_peak_time_tomorrow-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'device_class': 'timestamp',
-      'friendly_name': 'Victron Remote Monitoring Highest peak time - Tomorrow',
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'timestamp',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Victron Remote Monitoring Highest peak time - Tomorrow',
     }),
     'context': <ANY>,
     'entity_id': 'sensor.victron_remote_monitoring_highest_peak_time_tomorrow',
@@ -1026,8 +1026,8 @@
 # name: test_sensors_snapshot[sensor.victron_remote_monitoring_highest_peak_time_yesterday-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'device_class': 'timestamp',
-      'friendly_name': 'Victron Remote Monitoring Highest peak time - Yesterday',
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'timestamp',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Victron Remote Monitoring Highest peak time - Yesterday',
     }),
     'context': <ANY>,
     'entity_id': 'sensor.victron_remote_monitoring_highest_peak_time_yesterday',
