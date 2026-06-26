@@ -21,7 +21,7 @@ def create_mock_sensor(
     sensor_id: int,
     name: str,
     weight: float = 1.0,
-    temperature=72.5,
+    temperature: float = 72.5,
     humidity: int = 45,
     connected: bool | None = None,
     battery_level: int | None = None,
