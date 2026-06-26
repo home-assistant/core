@@ -4587,12 +4587,6 @@
       "config_flow": false,
       "iot_class": "cloud_polling"
     },
-    "mycroft": {
-      "name": "Mycroft",
-      "integration_type": "hub",
-      "config_flow": false,
-      "iot_class": "local_push"
-    },
     "myneomitis": {
       "name": "MyNeomitis",
       "integration_type": "hub",
@@ -7206,12 +7200,6 @@
       "integration_type": "device",
       "config_flow": true,
       "iot_class": "local_push"
-    },
-    "thermoworks_smoke": {
-      "name": "ThermoWorks Smoke",
-      "integration_type": "hub",
-      "config_flow": false,
-      "iot_class": "cloud_polling"
     },
     "thethingsnetwork": {
       "name": "The Things Network",
