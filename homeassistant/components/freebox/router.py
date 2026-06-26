@@ -258,6 +258,7 @@ class FreeboxRouter:
             else:
                 self.home_granted = False
                 _LOGGER.warning("Home access is not granted")
+            return
 
         new_device = False
         for home_node in home_nodes:
