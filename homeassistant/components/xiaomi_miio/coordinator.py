@@ -4,7 +4,7 @@ from datetime import timedelta
 import logging
 from typing import override
 
-from miio import DeviceException as GatewayException
+from miio import DeviceException
 from miio.integrations.lumi.gateway.devices import SubDevice
 
 from homeassistant.core import HomeAssistant
@@ -45,7 +45,7 @@ class GatewayDeviceCoordinator(DataUpdateCoordinator[None]):
         """Fetch data from the subdevice."""
         try:
             await self.hass.async_add_executor_job(self.sub_device.update)
-        except GatewayException as ex:
+        except DeviceException as ex:
             raise UpdateFailed(
                 f"Error fetching data from subdevice {self.sub_device.sid}: {ex}"
             ) from ex
