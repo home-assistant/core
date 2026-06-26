@@ -28,10 +28,12 @@ from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
 
 from . import setup_platform_integration
+from .conftest import load_nodes_fixture
 
 from tests.common import MockConfigEntry
 
 _SELECT_ENTITY = "select.living_ventilation_state"
+_VALVE_SELECT_ENTITY = "select.bedroom_valve_ventilation_state"
 _UNSUPPORTED_SELECT_ENTITY = "select.office_co2_ventilation_state"
 
 
@@ -120,20 +122,36 @@ async def test_select_entity_created_with_dynamic_options(
     assert hass.states.get(_UNSUPPORTED_SELECT_ENTITY) is None
 
 
-async def test_select_ignores_non_box_nodes_even_when_actions_exist(
+async def test_select_creates_entities_for_controllable_valve_nodes(
     hass: HomeAssistant,
     mock_config_entry: MockConfigEntry,
     mock_duco_client: AsyncMock,
 ) -> None:
-    """Test select discovery ignores non-box nodes that expose the same action."""
+    """Test select discovery includes valve nodes when they advertise control."""
+    mock_nodes = [
+        *load_nodes_fixture("nodes.json"),
+        *load_nodes_fixture("sensor_nodes.json"),
+    ]
+    mock_duco_client.async_get_nodes.return_value = mock_nodes
     mock_duco_client.async_get_node_actions.return_value = _build_multi_node_actions(
-        [1, 2, 50, 113],
+        [node.node_id for node in mock_nodes],
         options=["AUTO", "CNT1", "CNT2", "CNT3", "MAN1", "MAN2", "MAN3"],
     )
 
     await setup_platform_integration(hass, mock_config_entry, [Platform.SELECT])
 
     assert hass.states.get(_SELECT_ENTITY) is not None
+    valve_state = hass.states.get(_VALVE_SELECT_ENTITY)
+    assert valve_state is not None
+    assert valve_state.attributes[ATTR_OPTIONS] == [
+        "AUTO",
+        "CNT1",
+        "CNT2",
+        "CNT3",
+        "MAN1",
+        "MAN2",
+        "MAN3",
+    ]
     assert hass.states.get(_UNSUPPORTED_SELECT_ENTITY) is None
 
 
