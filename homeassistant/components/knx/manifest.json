@@ -11,9 +11,10 @@
   "loggers": ["xknx", "xknxproject"],
   "quality_scale": "platinum",
   "requirements": [
-    "xknx==3.15.0",
-    "xknxproject==3.8.2",
-    "knx-frontend==2026.3.28.223133"
+    "xknx==3.16.0",
+    "xknxproject==3.9.0",
+    "knx-frontend==2026.6.23.203726",
+    "knx-telegram-store[sqlite]==0.3.2"
   ],
   "single_config_entry": true
 }

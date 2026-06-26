@@ -1,10 +1,8 @@
 """DataUpdateCoordinator for London underground integration."""
 
-from __future__ import annotations
-
 import asyncio
 import logging
-from typing import cast
+from typing import cast, override
 
 from london_tube_status import TubeData
 
@@ -38,6 +36,7 @@ class LondonTubeCoordinator(DataUpdateCoordinator[dict[str, dict[str, str]]]):
         )
         self._data = data
 
+    @override
     async def _async_update_data(self) -> dict[str, dict[str, str]]:
         async with asyncio.timeout(10):
             await self._data.update()

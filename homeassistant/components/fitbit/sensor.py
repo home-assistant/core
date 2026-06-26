@@ -1,12 +1,10 @@
 """Support for the Fitbit API."""
 
-from __future__ import annotations
-
 from collections.abc import Callable
 from dataclasses import dataclass
 import datetime
 import logging
-from typing import Any, Final, cast
+from typing import Any, Final, cast, override
 
 from fitbit_web_api.models.device import Device
 
@@ -25,6 +23,7 @@ from homeassistant.const import (
     UnitOfVolume,
 )
 from homeassistant.core import HomeAssistant, callback
+from homeassistant.exceptions import ConfigEntryNotReady
 from homeassistant.helpers.device_registry import DeviceEntryType, DeviceInfo
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from homeassistant.helpers.icon import icon_for_battery_level
@@ -510,14 +509,12 @@ FITBIT_RESOURCE_BATTERY = FitbitSensorEntityDescription(
     icon="mdi:battery",
     scope=FitbitScope.DEVICE,
     entity_category=EntityCategory.DIAGNOSTIC,
-    has_entity_name=True,
 )
 FITBIT_RESOURCE_BATTERY_LEVEL = FitbitSensorEntityDescription(
     key="devices/battery_level",
     translation_key="battery_level",
     scope=FitbitScope.DEVICE,
     entity_category=EntityCategory.DIAGNOSTIC,
-    has_entity_name=True,
     device_class=SensorDeviceClass.BATTERY,
     native_unit_of_measurement=PERCENTAGE,
 )
@@ -536,6 +533,8 @@ async def async_setup_entry(
     # These are run serially to reuse the cached user profile, not gathered
     # to avoid two racing requests.
     user_profile = await api.async_get_user_profile()
+    if user_profile.encoded_id is None:
+        raise ConfigEntryNotReady("Could not get user profile")
     unit_system = await api.async_get_unit_system()
 
     fitbit_config = config_from_entry_data(entry.data)
@@ -639,6 +638,7 @@ class FitbitSensor(SensorEntity):
             self._attr_available = True
             self._attr_native_value = self.entity_description.value_fn(result)
 
+    @override
     async def async_added_to_hass(self) -> None:
         """When entity is added to hass."""
         await super().async_added_to_hass()
@@ -653,6 +653,7 @@ class FitbitBatterySensor(CoordinatorEntity[FitbitDeviceCoordinator], SensorEnti
 
     entity_description: FitbitSensorEntityDescription
     _attr_attribution = ATTRIBUTION
+    _attr_has_entity_name = True
 
     def __init__(
         self,
@@ -677,6 +678,7 @@ class FitbitBatterySensor(CoordinatorEntity[FitbitDeviceCoordinator], SensorEnti
             self._attr_entity_registry_enabled_default = True
 
     @property
+    @override
     def icon(self) -> str | None:
         """Icon to use in the frontend, if any."""
         if self.device.battery is not None and (
@@ -686,6 +688,7 @@ class FitbitBatterySensor(CoordinatorEntity[FitbitDeviceCoordinator], SensorEnti
         return self.entity_description.icon
 
     @property
+    @override
     def extra_state_attributes(self) -> dict[str, str | None]:
         """Return the state attributes."""
         return {
@@ -693,12 +696,14 @@ class FitbitBatterySensor(CoordinatorEntity[FitbitDeviceCoordinator], SensorEnti
             "type": self.device.type.lower() if self.device.type is not None else None,
         }
 
+    @override
     async def async_added_to_hass(self) -> None:
         """When entity is added to hass update state from existing coordinator data."""
         await super().async_added_to_hass()
         self._handle_coordinator_update()
 
     @callback
+    @override
     def _handle_coordinator_update(self) -> None:
         """Handle updated data from the coordinator."""
         self.device = self.coordinator.data[cast(str, self.device.id)]
@@ -712,6 +717,7 @@ class FitbitBatteryLevelSensor(
     """Implementation of a Fitbit battery level sensor."""
 
     entity_description: FitbitSensorEntityDescription
+    _attr_has_entity_name = True
     _attr_attribution = ATTRIBUTION
 
     def __init__(
@@ -732,12 +738,14 @@ class FitbitBatteryLevelSensor(
             model=device.device_version,
         )
 
+    @override
     async def async_added_to_hass(self) -> None:
         """When entity is added to hass update state from existing coordinator data."""
         await super().async_added_to_hass()
         self._handle_coordinator_update()
 
     @callback
+    @override
     def _handle_coordinator_update(self) -> None:
         """Handle updated data from the coordinator."""
         self.device = self.coordinator.data[cast(str, self.device.id)]

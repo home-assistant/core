@@ -1,21 +1,26 @@
 """Diagnostics support for Thread networks.
 
-When triaging Matter and HomeKit issues you often need to check for problems with the Thread network.
+When triaging Matter and HomeKit issues you often need to
+check for problems with the Thread network.
 
 This report helps spot and rule out:
 
 * Is the users border router visible at all?
-* Is the border router actually announcing any routes? The user could have a network boundary like
-  VLANs or WiFi isolation that is blocking the RA packets.
-* Alternatively, if user isn't on HAOS they could have accept_ra_rt_info_max_plen set incorrectly.
-* Are there any bogus routes that could be interfering. If routes don't expire they can build up.
-  When you have 10 routes and only 2 border routers something has gone wrong.
+* Is the border router actually announcing any routes?
+  The user could have a network boundary like VLANs or
+  WiFi isolation that is blocking the RA packets.
+* Alternatively, if user isn't on HAOS they could have
+  accept_ra_rt_info_max_plen set incorrectly.
+* Are there any bogus routes that could be interfering.
+  If routes don't expire they can build up. When you have
+  10 routes and only 2 border routers something has gone
+  wrong.
 
-This does not do any connectivity checks. So user could have all their border routers visible, but
-some of their thread accessories can't be pinged, but it's still a thread problem.
+This does not do any connectivity checks. So user could
+have all their border routers visible, but some of their
+thread accessories can't be pinged, but it's still a
+thread problem.
 """
-
-from __future__ import annotations
 
 from ipaddress import IPv6Address
 from typing import TYPE_CHECKING, Any, TypedDict
@@ -75,7 +80,8 @@ def _get_possible_thread_routes(
 ) -> tuple[dict[str, dict[str, Route]], dict[str, set[str]]]:
     # Build a list of possible thread routes
     # Right now, this is ipv6 /64's that have a gateway
-    # We cross reference with zerconf data to confirm which via's are known border routers
+    # We cross reference with zeroconf data to confirm
+    # which via's are known border routers
     routes: dict[str, dict[str, Route]] = {}
     reverse_routes: dict[str, set[str]] = {}
 
@@ -148,13 +154,17 @@ async def async_get_config_entry_diagnostics(
             },
         )
         if mlp_item := record.dataset.get(MeshcopTLVType.MESHLOCALPREFIX):
-            # We know that it is indeed a /64 mesh-local IPv6 NETWORK because Thread spec;
-            # However, the "prefixes" field contains no /XX (prefix length) in their entries ATM,
-            # so we use an IPv6Address in order to get a "prefixes" entry with no prefix length.
+            # We know that it is indeed a /64 mesh-local
+            # IPv6 NETWORK because Thread spec;
+            # However, the "prefixes" field contains no /XX
+            # (prefix length) in their entries ATM, so we
+            # use an IPv6Address in order to get a "prefixes"
+            # entry with no prefix length.
             prefix_address = IPv6Address(mlp_item.data.ljust(16, b"\x00"))
             network["prefixes"].add(str(prefix_address))
 
-    # Find all routes currently act that might be thread related, so we can match them to
+    # Find all routes currently active that might be
+    # thread related, so we can match them to
     # border routers as we process the zeroconf data.
     #
     # Also find all neighbours

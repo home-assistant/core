@@ -1,7 +1,7 @@
 """AirTouch 5 component to control AirTouch 5 Climate Devices."""
 
 import logging
-from typing import Any
+from typing import Any, override
 
 from airtouch5py.airtouch5_simple_client import Airtouch5SimpleClient
 from airtouch5py.packets.ac_ability import AcAbility
@@ -178,7 +178,8 @@ class Airtouch5AC(Airtouch5ClimateEntity):
         if ability.supports_fan_speed_intelligent_auto:
             self._attr_fan_modes.append(FAN_INTELLIGENT_AUTO)
 
-        # We can have different setpoints for heat cool, we expose the lowest low and highest high
+        # We can have different setpoints for heat cool,
+        # we expose the lowest low and highest high
         self._attr_min_temp = min(
             ability.min_cool_set_point, ability.min_heat_set_point
         )
@@ -201,12 +202,14 @@ class Airtouch5AC(Airtouch5ClimateEntity):
         self._attr_fan_mode = AC_FAN_SPEED_TO_FAN_SPEED[status.ac_fan_speed]
         self.async_write_ha_state()
 
+    @override
     async def async_added_to_hass(self) -> None:
         """Add data updated listener after this object has been initialized."""
         await super().async_added_to_hass()
         self._client.ac_status_callbacks.append(self._async_update_attrs)
         self._async_update_attrs(self._client.latest_ac_status)
 
+    @override
     async def async_will_remove_from_hass(self) -> None:
         """Remove data updated listener after this object has been initialized."""
         await super().async_will_remove_from_hass()
@@ -232,6 +235,7 @@ class Airtouch5AC(Airtouch5ClimateEntity):
         packet = self._client.data_packet_factory.ac_control([control])
         await self._client.send_packet(packet)
 
+    @override
     async def async_set_hvac_mode(self, hvac_mode: HVACMode) -> None:
         """Set new operation mode."""
         set_power_setting: SetPowerSetting
@@ -248,6 +252,7 @@ class Airtouch5AC(Airtouch5ClimateEntity):
 
         await self._control(power=set_power_setting, ac_mode=set_ac_mode)
 
+    @override
     async def async_set_fan_mode(self, fan_mode: str) -> None:
         """Set new fan mode."""
         if fan_mode not in FAN_MODE_TO_SET_AC_FAN_SPEED:
@@ -255,6 +260,7 @@ class Airtouch5AC(Airtouch5ClimateEntity):
         fan_speed = FAN_MODE_TO_SET_AC_FAN_SPEED[fan_mode]
         await self._control(fan=fan_speed)
 
+    @override
     async def async_set_temperature(self, **kwargs: Any) -> None:
         """Set new target temperatures."""
         if (temp := kwargs.get(ATTR_TEMPERATURE)) is None:
@@ -290,7 +296,8 @@ class Airtouch5Zone(Airtouch5ClimateEntity):
             manufacturer="Polyaire",
             model="AirTouch 5",
         )
-        # We can have different setpoints for heat and cool, we expose the lowest low and highest high
+        # We can have different setpoints for heat and cool,
+        # we expose the lowest low and highest high
         self._attr_min_temp = min(ac.min_cool_set_point, ac.min_heat_set_point)
         self._attr_max_temp = max(ac.max_cool_set_point, ac.max_heat_set_point)
 
@@ -316,12 +323,14 @@ class Airtouch5Zone(Airtouch5ClimateEntity):
 
         self.async_write_ha_state()
 
+    @override
     async def async_added_to_hass(self) -> None:
         """Add data updated listener after this object has been initialized."""
         await super().async_added_to_hass()
         self._client.zone_status_callbacks.append(self._async_update_attrs)
         self._async_update_attrs(self._client.latest_zone_status)
 
+    @override
     async def async_will_remove_from_hass(self) -> None:
         """Remove data updated listener after this object has been initialized."""
         await super().async_will_remove_from_hass()
@@ -338,6 +347,7 @@ class Airtouch5Zone(Airtouch5ClimateEntity):
         packet = self._client.data_packet_factory.zone_control([control])
         await self._client.send_packet(packet)
 
+    @override
     async def async_set_hvac_mode(self, hvac_mode: HVACMode) -> None:
         """Set new operation mode."""
         power: ZoneSettingPower
@@ -351,6 +361,7 @@ class Airtouch5Zone(Airtouch5ClimateEntity):
 
         await self._control(power=power)
 
+    @override
     async def async_set_preset_mode(self, preset_mode: str) -> None:
         """Enable or disable Turbo. Done this way as we can't have a turbo HVACMode."""
         power: ZoneSettingPower
@@ -361,6 +372,7 @@ class Airtouch5Zone(Airtouch5ClimateEntity):
 
         await self._control(power=power)
 
+    @override
     async def async_set_temperature(self, **kwargs: Any) -> None:
         """Set new target temperatures."""
 
@@ -373,10 +385,12 @@ class Airtouch5Zone(Airtouch5ClimateEntity):
             value=float(temp),
         )
 
+    @override
     async def async_turn_on(self) -> None:
         """Turn the zone on."""
         await self.async_set_hvac_mode(HVACMode.FAN_ONLY)
 
+    @override
     async def async_turn_off(self) -> None:
         """Turn the zone off."""
         await self.async_set_hvac_mode(HVACMode.OFF)

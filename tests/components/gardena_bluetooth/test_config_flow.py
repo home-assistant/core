@@ -1,5 +1,6 @@
 """Test the Gardena Bluetooth config flow."""
 
+import asyncio
 from unittest.mock import Mock
 
 from gardena_bluetooth.exceptions import CharacteristicNotFound
@@ -14,6 +15,7 @@ from homeassistant.data_entry_flow import FlowResultType
 
 from . import (
     MISSING_MANUFACTURER_DATA_SERVICE_INFO,
+    MISSING_PRODUCT_SERVICE_INFO,
     MISSING_SERVICE_SERVICE_INFO,
     UNSUPPORTED_GROUP_SERVICE_INFO,
     WATER_TIMER_SERVICE_INFO,
@@ -23,13 +25,10 @@ from . import (
 from tests.common import MockConfigEntry
 from tests.components.bluetooth import inject_bluetooth_service_info
 
-pytestmark = pytest.mark.usefixtures("mock_setup_entry")
+pytestmark = pytest.mark.usefixtures("mock_setup_entry", "constant_advertisements")
 
 
-async def test_user_selection(
-    hass: HomeAssistant,
-    snapshot: SnapshotAssertion,
-) -> None:
+async def test_user_selection(hass: HomeAssistant, snapshot: SnapshotAssertion) -> None:
     """Test we can select a device."""
 
     inject_bluetooth_service_info(hass, WATER_TIMER_SERVICE_INFO)
@@ -116,11 +115,11 @@ async def test_failed_connect(
     assert result == snapshot
 
 
-async def test_no_devices(
+async def test_no_valid_devices(
     hass: HomeAssistant,
     snapshot: SnapshotAssertion,
 ) -> None:
-    """Test missing device."""
+    """Test no valid candidates."""
 
     inject_bluetooth_service_info(hass, MISSING_MANUFACTURER_DATA_SERVICE_INFO)
     inject_bluetooth_service_info(hass, MISSING_SERVICE_SERVICE_INFO)
@@ -129,7 +128,39 @@ async def test_no_devices(
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": config_entries.SOURCE_USER}
     )
-    assert result == snapshot
+    assert result.get("type") == "abort"
+    assert result.get("reason") == "no_devices_found"
+
+
+async def test_timeout_manufacturer_data(
+    hass: HomeAssistant,
+) -> None:
+    """Test the flow aborts with no_devices_found.
+
+    Specifically when manufacturer data times out and only partial info
+    is available.
+    """
+
+    inject_bluetooth_service_info(hass, MISSING_PRODUCT_SERVICE_INFO)
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN, context={"source": config_entries.SOURCE_USER}
+    )
+
+    assert result.get("type") == "abort"
+    assert result.get("reason") == "no_devices_found"
+
+
+async def test_no_devices_at_all(
+    hass: HomeAssistant,
+    snapshot: SnapshotAssertion,
+) -> None:
+    """Test missing device."""
+
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN, context={"source": config_entries.SOURCE_USER}
+    )
+    assert result.get("type") == "abort"
+    assert result.get("reason") == "no_devices_found"
 
 
 async def test_bluetooth(
@@ -167,3 +198,26 @@ async def test_bluetooth_invalid(
         data=UNSUPPORTED_GROUP_SERVICE_INFO,
     )
     assert result == snapshot
+
+
+async def test_already_configured_discovery(
+    hass: HomeAssistant, get_product_event: asyncio.Event
+) -> None:
+    """Ensure we can't add the same device twice."""
+
+    entry = MockConfigEntry(
+        domain=DOMAIN,
+        unique_id=WATER_TIMER_SERVICE_INFO.address,
+    )
+    entry.source = config_entries.SOURCE_USER
+    entry.add_to_hass(hass)
+
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN,
+        context={"source": config_entries.SOURCE_BLUETOOTH},
+        data=WATER_TIMER_SERVICE_INFO,
+    )
+
+    assert get_product_event.is_set() is False
+    assert result.get("type") is FlowResultType.ABORT
+    assert result.get("reason") == "already_configured"

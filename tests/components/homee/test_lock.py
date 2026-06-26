@@ -9,6 +9,7 @@ from syrupy.assertion import SnapshotAssertion
 from homeassistant.components.lock import (
     DOMAIN as LOCK_DOMAIN,
     SERVICE_LOCK,
+    SERVICE_OPEN,
     SERVICE_UNLOCK,
     LockState,
 )
@@ -29,10 +30,13 @@ async def platforms() -> AsyncGenerator[None]:
 
 
 async def setup_lock(
-    hass: HomeAssistant, mock_config_entry: MockConfigEntry, mock_homee: MagicMock
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    mock_homee: MagicMock,
+    fixture: str = "lock.json",
 ) -> None:
     """Setups the integration lock tests."""
-    mock_homee.nodes = [build_mock_node("lock.json")]
+    mock_homee.nodes = [build_mock_node(fixture)]
     mock_homee.get_node_by_id.return_value = mock_homee.nodes[0]
     await setup_integration(hass, mock_config_entry)
 
@@ -58,8 +62,40 @@ async def test_lock_services(
         LOCK_DOMAIN,
         service,
         {ATTR_ENTITY_ID: "lock.test_lock"},
+        blocking=True,
     )
     mock_homee.set_value.assert_called_once_with(1, 1, target_value)
+
+
+@pytest.mark.parametrize(
+    ("fixture", "open_value"),
+    [
+        ("lock_with_open.json", 2.0),
+        ("lock_with_unlatch.json", -1.0),
+    ],
+)
+async def test_lock_open_service(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    mock_homee: MagicMock,
+    fixture: str,
+    open_value: float,
+) -> None:
+    """Test the open service on locks that support momentary unlatch.
+
+    Different homee-compatible devices encode the unlatch command
+    differently — a positive extension (value 2) or a signed range
+    where -1 is unlatch (e.g. the Hörmann SmartKey).
+    """
+    await setup_lock(hass, mock_config_entry, mock_homee, fixture)
+
+    await hass.services.async_call(
+        LOCK_DOMAIN,
+        SERVICE_OPEN,
+        {ATTR_ENTITY_ID: "lock.test_lock"},
+        blocking=True,
+    )
+    mock_homee.set_value.assert_called_once_with(1, 1, open_value)
 
 
 @pytest.mark.parametrize(
@@ -85,6 +121,44 @@ async def test_lock_state(
     attribute = mock_homee.nodes[0].attributes[0]
     attribute.target_value = target_value
     attribute.current_value = current_value
+    await setup_integration(hass, mock_config_entry)
+
+    assert hass.states.get("lock.test_lock").state == expected
+
+
+@pytest.mark.parametrize(
+    ("fixture", "open_value"),
+    [
+        ("lock_with_open.json", 2.0),
+        ("lock_with_unlatch.json", -1.0),
+    ],
+)
+@pytest.mark.parametrize(
+    ("target_offset", "current_offset", "expected"),
+    [
+        ("open", "open", LockState.OPEN),
+        ("open", 0.0, LockState.OPENING),
+        ("open", 1.0, LockState.OPENING),
+        (1.0, "open", LockState.LOCKING),
+        (0.0, "open", LockState.UNLOCKING),
+    ],
+)
+async def test_lock_state_with_open(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    mock_homee: MagicMock,
+    fixture: str,
+    open_value: float,
+    target_offset: float | str,
+    current_offset: float | str,
+    expected: LockState,
+) -> None:
+    """Test lock state transitions that involve the open value."""
+    mock_homee.nodes = [build_mock_node(fixture)]
+    mock_homee.get_node_by_id.return_value = mock_homee.nodes[0]
+    attribute = mock_homee.nodes[0].attributes[0]
+    attribute.target_value = open_value if target_offset == "open" else target_offset
+    attribute.current_value = open_value if current_offset == "open" else current_offset
     await setup_integration(hass, mock_config_entry)
 
     assert hass.states.get("lock.test_lock").state == expected

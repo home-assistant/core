@@ -1,9 +1,7 @@
 """Config flow for SMLIGHT Zigbee integration."""
 
-from __future__ import annotations
-
 from collections.abc import Mapping
-from typing import Any
+from typing import Any, override
 
 from pysmlight import Api2
 from pysmlight.const import Devices
@@ -40,6 +38,7 @@ class SmlightConfigFlow(ConfigFlow, domain=DOMAIN):
     _device_name: str
     client: Api2
 
+    @override
     async def async_step_user(
         self, user_input: dict[str, Any] | None = None
     ) -> ConfigFlowResult:
@@ -93,6 +92,7 @@ class SmlightConfigFlow(ConfigFlow, domain=DOMAIN):
             step_id="auth", data_schema=STEP_AUTH_DATA_SCHEMA, errors=errors
         )
 
+    @override
     async def async_step_zeroconf(
         self, discovery_info: ZeroconfServiceInfo
     ) -> ConfigFlowResult:
@@ -184,6 +184,7 @@ class SmlightConfigFlow(ConfigFlow, domain=DOMAIN):
             errors=errors,
         )
 
+    @override
     async def async_step_dhcp(
         self, discovery_info: DhcpServiceInfo
     ) -> ConfigFlowResult:

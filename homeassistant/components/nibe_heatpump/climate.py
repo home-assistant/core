@@ -1,9 +1,7 @@
 """The Nibe Heat Pump climate."""
 
-from __future__ import annotations
-
 from datetime import date
-from typing import Any
+from typing import Any, override
 
 from nibe.coil import Coil
 from nibe.coil_groups import (
@@ -129,6 +127,7 @@ class NibeClimateEntity(CoordinatorEntity[CoilCoordinator], ClimateEntity):
             self._attr_temperature_unit = self._coil_current.unit
 
     @callback
+    @override
     def _handle_coordinator_update(self) -> None:
         def _get_value(coil: Coil) -> int | str | float | date | None:
             return self.coordinator.get_coil_value(coil)
@@ -185,6 +184,7 @@ class NibeClimateEntity(CoordinatorEntity[CoilCoordinator], ClimateEntity):
         self.async_write_ha_state()
 
     @property
+    @override
     def available(self) -> bool:
         """Return if entity is available."""
         coordinator = self.coordinator
@@ -201,6 +201,7 @@ class NibeClimateEntity(CoordinatorEntity[CoilCoordinator], ClimateEntity):
 
         return False
 
+    @override
     async def async_set_temperature(self, **kwargs: Any) -> None:
         """Set target temperatures."""
         coordinator = self.coordinator
@@ -236,6 +237,7 @@ class NibeClimateEntity(CoordinatorEntity[CoilCoordinator], ClimateEntity):
         ):
             await coordinator.async_write_coil(self._coil_setpoint_cool, temperature)
 
+    @override
     async def async_set_hvac_mode(self, hvac_mode: HVACMode) -> None:
         """Set new target hvac mode."""
         coordinator = self.coordinator

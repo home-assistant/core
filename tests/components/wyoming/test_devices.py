@@ -1,7 +1,5 @@
 """Test Wyoming devices."""
 
-from __future__ import annotations
-
 from homeassistant.components.assist_pipeline import OPTION_PREFERRED
 from homeassistant.components.wyoming import DOMAIN
 from homeassistant.components.wyoming.devices import SatelliteDevice

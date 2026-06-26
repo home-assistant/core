@@ -1,0 +1,31 @@
+{
+  "version": 2,
+  "minor_version": 4,
+  "key": "knx/config_store.json",
+  "data": {
+    "entities": {},
+    "expose": {
+      "cover.test": {
+        "options": [
+          {
+            "ga": {
+              "write": "1/1/1",
+              "dpt": "1.001"
+            }
+          },
+          {
+            "ga": {
+              "write": "2/2/2",
+              "dpt": "5.001"
+            },
+            "attribute": "current_position",
+            "value_template": "{{ 100 - value }}",
+            "cooldown": 5.0
+          }
+        ],
+        "notes": "Invert cover position for KNX uses 0: open"
+      }
+    },
+    "time_server": {}
+  }
+}

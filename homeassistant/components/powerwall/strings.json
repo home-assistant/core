@@ -142,6 +142,20 @@
       "load_instant_voltage": {
         "name": "Load voltage"
       },
+      "max_charge_power": {
+        "name": "Max charge power"
+      },
+      "max_discharge_power": {
+        "name": "Max discharge power"
+      },
+      "operation_mode": {
+        "name": "Operation mode",
+        "state": {
+          "autonomous": "Autonomous",
+          "backup": "Backup",
+          "self_consumption": "Self-consumption"
+        }
+      },
       "site_export": {
         "name": "Site export"
       },

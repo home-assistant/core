@@ -1,9 +1,7 @@
 """Adds config flow for SQL integration."""
 
-from __future__ import annotations
-
 import logging
-from typing import Any
+from typing import Any, override
 
 import sqlalchemy
 from sqlalchemy.engine import Engine, Result
@@ -86,6 +84,8 @@ OPTIONS_SCHEMA: vol.Schema = vol.Schema(
 
 CONFIG_SCHEMA: vol.Schema = vol.Schema(
     {
+        # Approved exemption: user names the SQL query sensor
+        # pylint: disable-next=home-assistant-config-flow-name-field
         vol.Required(CONF_NAME, default="Select SQL Query"): selector.TextSelector(),
         vol.Optional(CONF_DB_URL): selector.TextSelector(),
     }
@@ -170,12 +170,14 @@ class SQLConfigFlow(ConfigFlow, domain=DOMAIN):
 
     @staticmethod
     @callback
+    @override
     def async_get_options_flow(
         config_entry: ConfigEntry,
     ) -> SQLOptionsFlowHandler:
         """Get the options flow for this handler."""
         return SQLOptionsFlowHandler()
 
+    @override
     async def async_step_user(
         self, user_input: dict[str, Any] | None = None
     ) -> ConfigFlowResult:

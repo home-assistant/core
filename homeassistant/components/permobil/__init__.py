@@ -1,7 +1,5 @@
 """The MyPermobil integration."""
 
-from __future__ import annotations
-
 import logging
 
 from mypermobil import MyPermobil, MyPermobilClientException

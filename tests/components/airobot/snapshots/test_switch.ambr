@@ -39,7 +39,7 @@
 # name: test_switches[switch.test_thermostat_actuator_exercise_disabled-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'Test Thermostat Actuator exercise disabled',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Test Thermostat Actuator exercise disabled',
     }),
     'context': <ANY>,
     'entity_id': 'switch.test_thermostat_actuator_exercise_disabled',
@@ -89,7 +89,7 @@
 # name: test_switches[switch.test_thermostat_child_lock-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'Test Thermostat Child lock',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Test Thermostat Child lock',
     }),
     'context': <ANY>,
     'entity_id': 'switch.test_thermostat_child_lock',

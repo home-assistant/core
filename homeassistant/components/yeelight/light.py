@@ -1,11 +1,9 @@
 """Light platform support for yeelight."""
 
-from __future__ import annotations
-
 from collections.abc import Callable, Coroutine
 import logging
 import math
-from typing import Any, Concatenate
+from typing import Any, Concatenate, override
 
 import voluptuous as vol
 import yeelight
@@ -39,7 +37,7 @@ from homeassistant.helpers.event import async_call_later
 from homeassistant.helpers.typing import VolDictType
 from homeassistant.util import color as color_util
 
-from . import YEELIGHT_FLOW_TRANSITION_SCHEMA
+from . import YEELIGHT_FLOW_TRANSITION_SCHEMA, YeelightConfigEntry
 from .const import (
     ACTION_RECOVER,
     ATTR_ACTION,
@@ -51,11 +49,8 @@ from .const import (
     CONF_NIGHTLIGHT_SWITCH,
     CONF_SAVE_ON_CHANGE,
     CONF_TRANSITION,
-    DATA_CONFIG_ENTRIES,
-    DATA_CUSTOM_EFFECTS,
-    DATA_DEVICE,
+    DATA_CUSTOM_EFFECTS_KEY,
     DATA_UPDATED,
-    DOMAIN,
     MODELS_WITH_DELAYED_ON_TRANSITION,
     POWER_STATE_CHANGE_TIME,
 )
@@ -220,7 +215,9 @@ def _transitions_config_parser(transitions):
 
 
 @callback
-def _parse_custom_effects(effects_config) -> dict[str, dict[str, Any]]:
+def _parse_custom_effects(
+    effects_config: list[dict[str, Any]],
+) -> dict[str, dict[str, Any]]:
     effects = {}
     for config in effects_config:
         params = config[CONF_FLOW_PARAMS]
@@ -278,13 +275,13 @@ def _async_cmd[_YeelightBaseLightT: YeelightBaseLight, **_P, _R](
 
 async def async_setup_entry(
     hass: HomeAssistant,
-    config_entry: ConfigEntry,
+    config_entry: YeelightConfigEntry,
     async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up Yeelight from a config entry."""
-    custom_effects = _parse_custom_effects(hass.data[DOMAIN][DATA_CUSTOM_EFFECTS])
+    custom_effects = _parse_custom_effects(hass.data[DATA_CUSTOM_EFFECTS_KEY])
 
-    device = hass.data[DOMAIN][DATA_CONFIG_ENTRIES][config_entry.entry_id][DATA_DEVICE]
+    device = config_entry.runtime_data
     _LOGGER.debug("Adding %s", device.name)
 
     nl_switch_light = device.config.get(CONF_NIGHTLIGHT_SWITCH)
@@ -462,6 +459,7 @@ class YeelightBaseLight(YeelightEntity, LightEntity):
             self._async_cancel_pending_state_check()
         self.async_write_ha_state()
 
+    @override
     async def async_added_to_hass(self) -> None:
         """Handle entity which will be added."""
         self.async_on_remove(
@@ -474,11 +472,13 @@ class YeelightBaseLight(YeelightEntity, LightEntity):
         await super().async_added_to_hass()
 
     @property
+    @override
     def effect_list(self) -> list[str]:
         """Return the list of supported effects."""
         return self._predefined_effects + self.custom_effects_names
 
     @property
+    @override
     def color_temp_kelvin(self) -> int | None:
         """Return the color temperature value in Kelvin."""
         if temp_in_k := self._get_property("ct"):
@@ -486,11 +486,13 @@ class YeelightBaseLight(YeelightEntity, LightEntity):
         return self._color_temp
 
     @property
+    @override
     def is_on(self) -> bool:
         """Return true if device is on."""
         return self._get_property(self._power_property) == "on"
 
     @property
+    @override
     def brightness(self) -> int:
         """Return the brightness of this light between 1..255."""
         # Always use "bright" as property name in music mode
@@ -518,6 +520,7 @@ class YeelightBaseLight(YeelightEntity, LightEntity):
         return self._light_type
 
     @property
+    @override
     def hs_color(self) -> tuple[float, float] | None:
         """Return the color property."""
         hue = self._get_property("hue")
@@ -528,6 +531,7 @@ class YeelightBaseLight(YeelightEntity, LightEntity):
         return (int(hue), int(sat))
 
     @property
+    @override
     def rgb_color(self) -> tuple[int, int, int] | None:
         """Return the color property."""
         if (rgb := self._get_property("rgb")) is None:
@@ -541,6 +545,7 @@ class YeelightBaseLight(YeelightEntity, LightEntity):
         return (red, green, blue)
 
     @property
+    @override
     def effect(self) -> str | None:
         """Return the current effect."""
         return self._effect if self.device.is_color_flow_enabled else None
@@ -573,6 +578,7 @@ class YeelightBaseLight(YeelightEntity, LightEntity):
         return YEELIGHT_MONO_EFFECT_LIST
 
     @property
+    @override
     def extra_state_attributes(self) -> dict[str, Any]:
         """Return the device specific state attributes."""
         attributes = {
@@ -590,6 +596,7 @@ class YeelightBaseLight(YeelightEntity, LightEntity):
         """Return yeelight device."""
         return self._device
 
+    @override
     async def async_update(self) -> None:
         """Update light properties."""
         await self.device.async_update(True)
@@ -598,6 +605,7 @@ class YeelightBaseLight(YeelightEntity, LightEntity):
         """Set the music mode on or off."""
         try:
             await self._async_set_music_mode(music_mode)
+        # pylint: disable-next=home-assistant-action-swallowed-exception
         except AssertionError as ex:
             _LOGGER.error("Unable to turn on music mode, consider disabling it: %s", ex)
 
@@ -778,6 +786,7 @@ class YeelightBaseLight(YeelightEntity, LightEntity):
             power_mode=self._turn_on_power_mode,
         )
 
+    @override
     async def async_turn_on(self, **kwargs: Any) -> None:
         """Turn the bulb on."""
         brightness = kwargs.get(ATTR_BRIGHTNESS)
@@ -840,6 +849,7 @@ class YeelightBaseLight(YeelightEntity, LightEntity):
         """Turn off with a given transition duration wrapped with _async_cmd."""
         await self._bulb.async_turn_off(duration=duration, light_type=self.light_type)
 
+    @override
     async def async_turn_off(self, **kwargs: Any) -> None:
         """Turn off."""
         if not self.is_on:
@@ -885,6 +895,7 @@ class YeelightColorLightSupport(YeelightBaseLight):
     _attr_supported_color_modes = {ColorMode.COLOR_TEMP, ColorMode.HS, ColorMode.RGB}
 
     @property
+    @override
     def color_mode(self) -> ColorMode:
         """Return the color mode."""
         color_mode = int(self._get_property("color_mode"))
@@ -898,6 +909,7 @@ class YeelightColorLightSupport(YeelightBaseLight):
         return ColorMode.UNKNOWN
 
     @property
+    @override
     def _predefined_effects(self) -> list[str]:
         return YEELIGHT_COLOR_EFFECT_LIST
 
@@ -910,6 +922,7 @@ class YeelightWhiteTempLightSupport(YeelightBaseLight):
     _attr_supported_color_modes = {ColorMode.COLOR_TEMP}
 
     @property
+    @override
     def _predefined_effects(self) -> list[str]:
         return YEELIGHT_TEMP_ONLY_EFFECT_LIST
 
@@ -926,6 +939,7 @@ class YeelightWithoutNightlightSwitchMixIn(YeelightBaseLight):
     """A mix-in for yeelights without a nightlight switch."""
 
     @property
+    @override
     def _brightness_property(self) -> str:
         # If the nightlight is not active, we do not
         # want to "current_brightness" since it will check
@@ -935,6 +949,7 @@ class YeelightWithoutNightlightSwitchMixIn(YeelightBaseLight):
         return super()._brightness_property
 
     @property
+    @override
     def color_temp_kelvin(self) -> int | None:
         """Return the color temperature value in Kelvin."""
         if self.device.is_nightlight_enabled:
@@ -968,6 +983,7 @@ class YeelightColorLightWithNightlightSwitch(
     _attr_name = None
 
     @property
+    @override
     def is_on(self) -> bool:
         """Return true if device is on."""
         return super().is_on and not self.device.is_nightlight_enabled
@@ -992,6 +1008,7 @@ class YeelightWithNightLight(
     _attr_name = None
 
     @property
+    @override
     def is_on(self) -> bool:
         """Return true if device is on."""
         return super().is_on and not self.device.is_nightlight_enabled
@@ -1005,25 +1022,30 @@ class YeelightNightLightMode(YeelightBaseLight):
     _attr_translation_key = "nightlight"
 
     @property
+    @override
     def unique_id(self) -> str:
         """Return a unique ID."""
         unique = super().unique_id
         return f"{unique}-nightlight"
 
     @property
+    @override
     def is_on(self) -> bool:
         """Return true if device is on."""
         return super().is_on and self.device.is_nightlight_enabled
 
     @property
+    @override
     def _brightness_property(self) -> str:
         return "nl_br"
 
     @property
+    @override
     def _turn_on_power_mode(self) -> PowerMode:
         return PowerMode.MOONLIGHT
 
     @property
+    @override
     def supported_features(self) -> LightEntityFeature:
         """Flag no supported features."""
         return LightEntityFeature(0)
@@ -1033,6 +1055,7 @@ class YeelightNightLightModeWithAmbientSupport(YeelightNightLightMode):
     """Representation of a Yeelight, with ambient support, when in nightlight mode."""
 
     @property
+    @override
     def _power_property(self) -> str:
         return "main_power"
 
@@ -1056,6 +1079,7 @@ class YeelightWithAmbientWithoutNightlight(YeelightWhiteTempWithoutNightlightSwi
     _attr_name = None
 
     @property
+    @override
     def _power_property(self) -> str:
         return "main_power"
 
@@ -1069,6 +1093,7 @@ class YeelightWithAmbientAndNightlight(YeelightWithNightLight):
     _attr_name = None
 
     @property
+    @override
     def _power_property(self) -> str:
         return "main_power"
 
@@ -1089,15 +1114,18 @@ class YeelightAmbientLight(YeelightColorLightWithoutNightlightSwitch):
         self._light_type = LightType.Ambient
 
     @property
+    @override
     def unique_id(self) -> str:
         """Return a unique ID."""
         unique = super().unique_id
         return f"{unique}-ambilight"
 
     @property
+    @override
     def _brightness_property(self) -> str:
         return "bright"
 
+    @override
     def _get_property(self, prop: str, default=None):
         if not (bg_prop := self.PROPERTIES_MAPPING.get(prop)):
             bg_prop = f"bg_{prop}"

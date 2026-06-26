@@ -1,10 +1,8 @@
 """Platform to control a Renson ventilation unit."""
 
-from __future__ import annotations
-
 import logging
 import math
-from typing import Any
+from typing import Any, override
 
 from renson_endura_delta.field_enum import (
     BREEZE_LEVEL_FIELD,
@@ -16,7 +14,6 @@ from renson_endura_delta.renson import Level, RensonVentilation
 import voluptuous as vol
 
 from homeassistant.components.fan import FanEntity, FanEntityFeature
-from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers import config_validation as cv, entity_platform
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
@@ -27,8 +24,7 @@ from homeassistant.util.percentage import (
 )
 from homeassistant.util.scaling import int_states_in_range
 
-from .const import DOMAIN
-from .coordinator import RensonCoordinator
+from .coordinator import RensonConfigEntry, RensonCoordinator
 from .entity import RensonEntity
 
 _LOGGER = logging.getLogger(__name__)
@@ -84,15 +80,13 @@ SPEED_RANGE: tuple[float, float] = (1, 4)
 
 async def async_setup_entry(
     hass: HomeAssistant,
-    config_entry: ConfigEntry,
+    config_entry: RensonConfigEntry,
     async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up the Renson fan platform."""
 
-    api: RensonVentilation = hass.data[DOMAIN][config_entry.entry_id].api
-    coordinator: RensonCoordinator = hass.data[DOMAIN][
-        config_entry.entry_id
-    ].coordinator
+    api = config_entry.runtime_data.api
+    coordinator = config_entry.runtime_data.coordinator
 
     async_add_entities([RensonFan(api, coordinator)])
 
@@ -133,6 +127,7 @@ class RensonFan(RensonEntity, FanEntity):
         self._attr_speed_count = int_states_in_range(SPEED_RANGE)
 
     @callback
+    @override
     def _handle_coordinator_update(self) -> None:
         """Handle updated data from the coordinator."""
         level = self.api.parse_value(
@@ -161,6 +156,7 @@ class RensonFan(RensonEntity, FanEntity):
 
         super()._handle_coordinator_update()
 
+    @override
     async def async_turn_on(
         self,
         percentage: int | None = None,
@@ -173,10 +169,12 @@ class RensonFan(RensonEntity, FanEntity):
 
         await self.async_set_percentage(percentage)
 
+    @override
     async def async_turn_off(self, **kwargs: Any) -> None:
         """Turn off the fan (to away)."""
         await self.async_set_percentage(0)
 
+    @override
     async def async_set_percentage(self, percentage: int) -> None:
         """Set fan speed percentage."""
         _LOGGER.debug("Changing fan speed percentage to %s", percentage)

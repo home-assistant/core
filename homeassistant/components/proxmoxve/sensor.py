@@ -1,11 +1,9 @@
 """Sensor platform for Proxmox VE integration."""
 
-from __future__ import annotations
-
 from collections.abc import Callable
 from dataclasses import dataclass
 from datetime import datetime
-from typing import Any
+from typing import Any, override
 
 from homeassistant.components.sensor import (
     EntityCategory,
@@ -426,7 +424,11 @@ STORAGE_SENSORS: tuple[ProxmoxStorageSensorEntityDescription, ...] = (
     ProxmoxStorageSensorEntityDescription(
         key="storage_used_percentage",
         translation_key="storage_used_percentage",
-        value_fn=lambda data: round(data["used_fraction"] * 100, 1),
+        value_fn=lambda data: (
+            round(value * 100, 1)
+            if (value := data.get("used_fraction")) is not None
+            else None
+        ),
         native_unit_of_measurement=PERCENTAGE,
         entity_category=EntityCategory.DIAGNOSTIC,
         state_class=SensorStateClass.MEASUREMENT,
@@ -526,6 +528,7 @@ class ProxmoxNodeSensor(ProxmoxNodeEntity, SensorEntity):
     entity_description: ProxmoxNodeSensorEntityDescription
 
     @property
+    @override
     def native_value(self) -> StateType | datetime:
         """Return the native value of the sensor."""
         return self.entity_description.value_fn(self.coordinator.data[self.device_name])
@@ -537,6 +540,7 @@ class ProxmoxVMSensor(ProxmoxVMEntity, SensorEntity):
     entity_description: ProxmoxVMSensorEntityDescription
 
     @property
+    @override
     def native_value(self) -> StateType:
         """Return the native value of the sensor."""
         return self.entity_description.value_fn(self.vm_data)
@@ -548,6 +552,7 @@ class ProxmoxContainerSensor(ProxmoxContainerEntity, SensorEntity):
     entity_description: ProxmoxContainerSensorEntityDescription
 
     @property
+    @override
     def native_value(self) -> StateType:
         """Return the native value of the sensor."""
         return self.entity_description.value_fn(self.container_data)
@@ -559,6 +564,7 @@ class ProxmoxStorageSensor(ProxmoxStorageEntity, SensorEntity):
     entity_description: ProxmoxStorageSensorEntityDescription
 
     @property
+    @override
     def native_value(self) -> StateType:
         """Return the native value of the sensor."""
         return self.entity_description.value_fn(self.storage_data)

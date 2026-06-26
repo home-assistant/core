@@ -1,9 +1,7 @@
 """Platform for the opengarage.io sensor component."""
 
-from __future__ import annotations
-
 import logging
-from typing import cast
+from typing import cast, override
 
 from homeassistant.components.sensor import (
     SensorDeviceClass,
@@ -78,6 +76,7 @@ class OpenGarageSensor(OpenGarageEntity, SensorEntity):
     """Representation of a OpenGarage sensor."""
 
     @callback
+    @override
     def _update_attr(self) -> None:
         """Handle updated data from the coordinator."""
         self._attr_native_value = self.coordinator.data.get(self.entity_description.key)

@@ -1,9 +1,7 @@
 """Component that will help set the Microsoft face detect processing."""
 
-from __future__ import annotations
-
 import logging
-from typing import TYPE_CHECKING
+from typing import TYPE_CHECKING, override
 
 import voluptuous as vol
 
@@ -89,6 +87,7 @@ class MicrosoftFaceDetectEntity(ImageProcessingFaceEntity):
         else:
             self._attr_name = f"MicrosoftFace {split_entity_id(camera_entity)[1]}"
 
+    @override
     async def async_process_image(self, image: bytes) -> None:
         """Process image.
 

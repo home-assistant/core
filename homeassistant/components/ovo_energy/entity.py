@@ -1,6 +1,6 @@
 """Support for OVO Energy."""
 
-from __future__ import annotations
+from typing import override
 
 from homeassistant.helpers.device_registry import DeviceEntryType, DeviceInfo
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
@@ -19,6 +19,7 @@ class OVOEnergyDeviceEntity(OVOEnergyEntity):
     """Defines a OVO Energy device entity."""
 
     @property
+    @override
     def device_info(self) -> DeviceInfo:
         """Return device information about this OVO Energy instance."""
         return DeviceInfo(

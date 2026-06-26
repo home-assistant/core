@@ -1,12 +1,11 @@
 """Coordinator for transmission integration."""
 
-from __future__ import annotations
-
 from collections.abc import Callable
 from dataclasses import dataclass
 from datetime import timedelta
 from functools import partial
 import logging
+from typing import override
 
 import transmission_rpc
 from transmission_rpc.session import SessionStats
@@ -65,7 +64,6 @@ class TransmissionDataUpdateCoordinator(DataUpdateCoordinator[SessionStats]):
         self.api = api
         self.host = entry.data[CONF_HOST]
         self._session: transmission_rpc.Session | None = None
-        self.port_forwarding: bool | None = None
         self._all_torrents: list[transmission_rpc.Torrent] = []
         self._completed_torrents: list[transmission_rpc.Torrent] = []
         self._started_torrents: list[transmission_rpc.Torrent] = []
@@ -106,6 +104,7 @@ class TransmissionDataUpdateCoordinator(DataUpdateCoordinator[SessionStats]):
         for listener in list(self._event_listeners.values()):
             listener(event)
 
+    @override
     async def _async_update_data(self) -> SessionStats:
         """Update transmission data."""
         data = await self.hass.async_add_executor_job(self.update)
@@ -122,7 +121,6 @@ class TransmissionDataUpdateCoordinator(DataUpdateCoordinator[SessionStats]):
             data = self.api.session_stats()
             self.torrents = self.api.get_torrents()
             self._session = self.api.get_session()
-            self.port_forwarding = self.api.port_test()
         except transmission_rpc.TransmissionError as err:
             raise UpdateFailed("Unable to connect to Transmission client") from err
 

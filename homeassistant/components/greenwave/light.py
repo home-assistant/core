@@ -1,11 +1,9 @@
 """Support for Greenwave Reality (TCP Connected) lights."""
 
-from __future__ import annotations
-
 from datetime import timedelta
 import logging
 import os
-from typing import Any
+from typing import Any, override
 
 import greenwavereality as greenwave
 import voluptuous as vol
@@ -81,12 +79,14 @@ class GreenwaveLight(LightEntity):
         self._token = token
         self._gatewaydata = gatewaydata
 
+    @override
     def turn_on(self, **kwargs: Any) -> None:
         """Instruct the light to turn on."""
         temp_brightness = int((kwargs.get(ATTR_BRIGHTNESS, 255) / 255) * 100)
         greenwave.set_brightness(self._host, self._did, temp_brightness, self._token)
         greenwave.turn_on(self._host, self._did, self._token)
 
+    @override
     def turn_off(self, **kwargs: Any) -> None:
         """Instruct the light to turn off."""
         greenwave.turn_off(self._host, self._did, self._token)
