@@ -96,6 +96,7 @@ class ImouSwitch(ImouEntity, SwitchEntity):
             self._attr_device_class = device_class
 
     @property
+    @override
     def is_on(self) -> bool | None:
         """Return True if the switch is on."""
         return self.device.switches[self._entity_type][PARAM_STATE]
