@@ -58,7 +58,6 @@ from .const import (
     DATA_COMPONENT,
     DATA_HASSIO_HOST,
     DATA_HASSIO_SUPERVISOR_USER,
-    DATA_HASSIO_UPDATE_OPTIONS,
     DATA_KEY_SUPERVISOR_ISSUES,
     DOMAIN,
     ENTRY_DATA_USER,
@@ -311,35 +310,6 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     if legacy_data is not None:
         legacy_user_id = legacy_data.get("hassio_user")
 
-        if entry is not None:
-            data_updates: dict[str, str] = {}
-            if ENTRY_DATA_USER not in entry.data and legacy_user_id is not None:
-                data_updates[ENTRY_DATA_USER] = legacy_user_id
-
-            option_updates = _async_migrate_legacy_options(entry, legacy_data)
-
-            if data_updates or option_updates:
-                hass.config_entries.async_update_entry(
-                    entry,
-                    data={**entry.data, **data_updates},
-                    options={**entry.options, **option_updates},
-                )
-
-            await legacy_store.async_remove()
-        elif legacy_update_config := legacy_data.get("update_config"):
-            options: dict[str, bool | int] = {
-                OPTION_ADD_ON_BACKUP_BEFORE_UPDATE: legacy_update_config[
-                    "add_on_backup_before_update"
-                ],
-                OPTION_ADD_ON_BACKUP_RETAIN_COPIES: legacy_update_config[
-                    "add_on_backup_retain_copies"
-                ],
-                OPTION_CORE_BACKUP_BEFORE_UPDATE: legacy_update_config[
-                    "core_backup_before_update"
-                ],
-            }
-            hass.data[DATA_HASSIO_UPDATE_OPTIONS] = options
-
     hass.data[DATA_HASSIO_SUPERVISOR_USER] = await _async_get_or_create_supervisor_user(
         hass, entry, legacy_user_id
     )
@@ -362,6 +332,20 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
 
 async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Set up a config entry."""
+    # Deprecated in 2026.8: remove this legacy store migration path after the
+    # deprecation window for .storage/hassio has elapsed.
+    legacy_store = HassioConfigStore(hass)
+    if (legacy_data := await legacy_store.async_load()) is not None:
+        option_updates = _async_migrate_legacy_options(entry, legacy_data)
+
+        if option_updates:
+            hass.config_entries.async_update_entry(
+                entry,
+                options={**entry.options, **option_updates},
+            )
+
+        await legacy_store.async_remove()
+
     if (user := hass.data.get(DATA_HASSIO_SUPERVISOR_USER)) is not None:
         if entry.data.get(ENTRY_DATA_USER) != user.id:
             hass.config_entries.async_update_entry(

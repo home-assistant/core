@@ -145,9 +145,6 @@ DATA_KEY_SUPERVISOR_ISSUES: HassKey[SupervisorIssues] = HassKey("supervisor_issu
 DATA_KEY_MOUNTS = "mounts"
 DATA_HASSIO_HOST: HassKey[str] = HassKey("hassio_host")
 DATA_HASSIO_SUPERVISOR_USER: HassKey[User] = HassKey("hassio_supervisor_user")
-DATA_HASSIO_UPDATE_OPTIONS: HassKey[dict[str, bool | int]] = HassKey(
-    "hassio_update_options"
-)
 
 ENTRY_DATA_USER = "user"
 
