@@ -169,12 +169,6 @@ ENTITY_FILTER_SELECTOR_CONFIG_SCHEMA = vol.Schema(
         ],
         # Unit of measurement of the entity
         vol.Optional(CONF_UNIT_OF_MEASUREMENT): vol.All(cv.ensure_list, [str]),
-        # Manufacturer of device
-        vol.Optional("manufacturer"): str,
-        # Model of device
-        vol.Optional("model"): str,
-        # Model ID of device
-        vol.Optional("model_id"): str,
     }
 )
 
@@ -212,9 +206,6 @@ class EntityFilterSelectorConfig(TypedDict, total=False):
     device_class: str | list[str]
     supported_features: list[str]
     unit_of_measurement: str | list[str]
-    manufacturer: str
-    model: str
-    model_id: str
 
 
 DEVICE_FILTER_SELECTOR_CONFIG_SCHEMA = vol.Schema(
@@ -252,6 +243,24 @@ class DeviceFilterSelectorConfig(TypedDict, total=False):
     manufacturer: str
     model: str
     model_id: str
+
+
+ENTITY_SELECTOR_FILTER_CONFIG_SCHEMA = ENTITY_FILTER_SELECTOR_CONFIG_SCHEMA.extend(
+    {
+        # Filter on properties of the device the entity belongs to
+        vol.Optional("device"): DEVICE_FILTER_SELECTOR_CONFIG_SCHEMA,
+    }
+)
+
+
+class EntitySelectorFilterConfig(EntityFilterSelectorConfig, total=False):
+    """Class to represent an entity selector filter config.
+
+    Adds device filtering on top of the shared entity filter, only used by
+    the entity selector.
+    """
+
+    device: DeviceFilterSelectorConfig
 
 
 class ActionSelectorConfig(BaseSelectorConfig):
@@ -994,7 +1003,7 @@ class EntitySelectorConfig(
     include_entities: list[str]
     multiple: bool
     reorder: bool
-    filter: EntityFilterSelectorConfig | list[EntityFilterSelectorConfig]
+    filter: EntitySelectorFilterConfig | list[EntitySelectorFilterConfig]
 
 
 @SELECTORS.register("entity")
@@ -1013,7 +1022,7 @@ class EntitySelector(Selector[EntitySelectorConfig]):
                 vol.Optional("reorder", default=False): cv.boolean,
                 vol.Optional("filter"): vol.All(
                     cv.ensure_list,
-                    [ENTITY_FILTER_SELECTOR_CONFIG_SCHEMA],
+                    [ENTITY_SELECTOR_FILTER_CONFIG_SCHEMA],
                 ),
             }
         ),
