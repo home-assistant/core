@@ -1,7 +1,7 @@
 """Global fixtures for Roborock integration."""
 
 import asyncio
-from collections.abc import Generator
+from collections.abc import Callable, Generator
 from copy import deepcopy
 import logging
 import pathlib
@@ -521,15 +521,42 @@ def device_manager_fixture(
     return device_manager
 
 
+class MockDeviceManagerContext:
+    """Context for mock device manager."""
+
+    ready_callback: Callable[[RoborockDevice], None] | None = None
+    initial_devices: list[RoborockDevice] | None = None
+
+
+@pytest.fixture(name="device_manager_context")
+def device_manager_context_fixture(
+    fake_devices: list[FakeDevice],
+) -> MockDeviceManagerContext:
+    """Fixture to provide device manager context."""
+    context = MockDeviceManagerContext()
+    context.initial_devices = fake_devices
+    return context
+
+
 @pytest.fixture(name="fake_create_device_manager", autouse=True)
 def fake_create_device_manager_fixture(
     device_manager: AsyncMock,
-) -> None:
+    device_manager_context: MockDeviceManagerContext,
+) -> Generator[None]:
     """Fixture to create a fake device manager."""
+
+    async def _fake_create_device_manager(*args: Any, **kwargs: Any) -> AsyncMock:
+        ready_callback = kwargs.get("ready_callback")
+        assert ready_callback
+        device_manager_context.ready_callback = ready_callback
+        for device in device_manager_context.initial_devices:
+            ready_callback(device)
+        return device_manager
+
     with patch(
         "homeassistant.components.roborock.create_device_manager",
-    ) as mock_create_device_manager:
-        mock_create_device_manager.return_value = device_manager
+        side_effect=_fake_create_device_manager,
+    ):
         yield
 
 

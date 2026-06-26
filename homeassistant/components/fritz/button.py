@@ -3,7 +3,7 @@
 from collections.abc import Callable
 from dataclasses import dataclass
 import logging
-from typing import Any, Final
+from typing import Any, Final, override
 
 from homeassistant.components.button import (
     ButtonDeviceClass,
@@ -184,6 +184,7 @@ class FritzButton(ButtonEntity):
             name=device_friendly_name,
         )
 
+    @override
     async def async_press(self) -> None:
         """Triggers Fritz!Box service."""
         if self.entity_description.key == "cleanup":
@@ -248,6 +249,7 @@ class FritzBoxWOLButton(FritzDeviceBase, ButtonEntity):
         self._attr_unique_id = f"{self._mac}_wake_on_lan"
         self._is_available = True
 
+    @override
     async def async_press(self) -> None:
         """Press the button."""
         if self.mac_address:

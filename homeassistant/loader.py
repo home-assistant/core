@@ -15,7 +15,16 @@ import pathlib
 import sys
 import time
 from types import ModuleType
-from typing import TYPE_CHECKING, Any, Literal, Protocol, TypedDict, cast, final
+from typing import (
+    TYPE_CHECKING,
+    Any,
+    Literal,
+    Protocol,
+    TypedDict,
+    cast,
+    final,
+    override,
+)
 
 from awesomeversion import (
     AwesomeVersion,
@@ -1311,6 +1320,7 @@ class Integration:
         """
         return importlib.import_module(f"{self.pkg_path}.{platform_name}")
 
+    @override
     def __repr__(self) -> str:
         """Text representation of class."""
         return f"<Integration {self.domain}: {self.pkg_path}>"
@@ -1460,9 +1470,11 @@ class _ResolveDependenciesCacheProtocol(Protocol):
 class _ResolveDependenciesCache(_ResolveDependenciesCacheProtocol):
     """Cache for resolve_integrations_dependencies."""
 
+    @override
     def get(self, itg: Integration) -> set[str] | Exception | None:
         return itg._all_dependencies  # noqa: SLF001
 
+    @override
     def __setitem__(
         self, itg: Integration, all_dependencies: set[str] | Exception
     ) -> None:

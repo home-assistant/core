@@ -3,7 +3,7 @@
 from collections.abc import Callable
 from dataclasses import dataclass
 from datetime import datetime
-from typing import Final
+from typing import Final, override
 
 from aioamazondevices.const.schedules import (
     NOTIFICATION_ALARM,
@@ -194,6 +194,7 @@ class AmazonSensorEntity(AmazonEntity, SensorEntity):
     )
 
     @property
+    @override
     def native_unit_of_measurement(self) -> str | None:
         """Return the unit of measurement of the sensor."""
         if self.entity_description.native_unit_of_measurement_fn:
@@ -204,6 +205,7 @@ class AmazonSensorEntity(AmazonEntity, SensorEntity):
         return super().native_unit_of_measurement
 
     @property
+    @override
     def native_value(self) -> StateType | datetime:
         """Return the state of the sensor."""
         return self.entity_description.value_fn(
@@ -213,6 +215,7 @@ class AmazonSensorEntity(AmazonEntity, SensorEntity):
         )
 
     @property
+    @override
     def available(self) -> bool:
         """Return if entity is available."""
         return (

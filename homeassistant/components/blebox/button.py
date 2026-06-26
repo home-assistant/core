@@ -1,5 +1,7 @@
 """BleBox button entities implementation."""
 
+from typing import override
+
 import blebox_uniapi.button
 
 from homeassistant.components.button import ButtonEntity, ButtonEntityDescription
@@ -59,6 +61,7 @@ class BleBoxButtonEntity(BleBoxEntity[blebox_uniapi.button.Button], ButtonEntity
         return _DEFAULT_BUTTON
 
     @blebox_command
+    @override
     async def async_press(self) -> None:
         """Handle the button press."""
         await self._feature.set()

@@ -1,6 +1,7 @@
 """Support for Bosch Alarm Panel binary sensors."""
 
 from dataclasses import dataclass
+from typing import override
 
 from bosch_alarm_mode2 import Panel
 from bosch_alarm_mode2.const import ALARM_PANEL_FAULTS
@@ -169,6 +170,7 @@ class PanelFaultsSensor(BoschAlarmEntity, BinarySensorEntity):
         self._attr_unique_id = f"{unique_id}_fault_{entity_description.key}"
 
     @property
+    @override
     def is_on(self) -> bool:
         """Return if this fault has occurred."""
         return self._fault_type in self.panel.panel_faults_ids
@@ -190,6 +192,7 @@ class AreaReadyToArmSensor(BoschAlarmAreaEntity, BinarySensorEntity):
         self._attr_unique_id = f"{self._area_unique_id}_ready_to_arm_{arm_type}"
 
     @property
+    @override
     def is_on(self) -> bool:
         """Return if this panel is ready to arm."""
         if self._arm_type == "away":
@@ -210,6 +213,7 @@ class PointSensor(BoschAlarmPointEntity, BinarySensorEntity):
         self._attr_unique_id = self._point_unique_id
 
     @property
+    @override
     def is_on(self) -> bool:
         """Return if this point sensor is on."""
         return self._point.is_open()

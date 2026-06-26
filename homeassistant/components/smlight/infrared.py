@@ -1,5 +1,7 @@
 """Infrared platform for SLZB-Ultima."""
 
+from typing import override
+
 from pysmlight.exceptions import SmlightError
 from pysmlight.models import IRPayload
 
@@ -37,6 +39,7 @@ class SmInfraredEntity(SmEntity, InfraredEmitterEntity):
         super().__init__(coordinator)
         self._attr_unique_id = f"{coordinator.unique_id}-infrared-emitter"
 
+    @override
     async def async_send_command(self, command: InfraredCommand) -> None:
         """Send an IR command."""
         # pysmlight's IRPayload.from_raw_timings expects positive durations,

@@ -18,11 +18,7 @@ from homeassistant.util.yaml import parse_yaml
 from .common import MOCK_NOTIFY_SUBENTRY_DATA_MULTI, async_fire_mqtt_message
 
 from tests.common import MockConfigEntry, async_capture_events
-from tests.components.repairs import (
-    async_process_repairs_platforms,
-    process_repair_fix_flow,
-    start_repair_fix_flow,
-)
+from tests.components.repairs import process_repair_fix_flow, start_repair_fix_flow
 from tests.conftest import ClientSessionGenerator
 from tests.typing import MqttMockHAClientGenerator
 
@@ -148,7 +144,6 @@ async def test_subentry_reconfigure_export_settings(
     repair_issue = issue_registry.async_get_issue(DOMAIN, issue_id)
     assert repair_issue.translation_key == translation_key
 
-    await async_process_repairs_platforms(hass)
     client = await hass_client()
 
     data = await start_repair_fix_flow(client, DOMAIN, issue_id)

@@ -1,7 +1,7 @@
 """Config flow for Medcom BlE integration."""
 
 import logging
-from typing import Any
+from typing import Any, override
 
 from bleak import BleakError
 from bluetooth_data_tools import human_readable_name
@@ -47,6 +47,7 @@ class InspectorBLEConfigFlow(ConfigFlow, domain=DOMAIN):
 
         return await inspector.update_device(ble_device)
 
+    @override
     async def async_step_bluetooth(
         self, discovery_info: BluetoothServiceInfo
     ) -> ConfigFlowResult:
@@ -81,6 +82,7 @@ class InspectorBLEConfigFlow(ConfigFlow, domain=DOMAIN):
 
         return await self.async_step_check_connection()
 
+    @override
     async def async_step_user(
         self, user_input: dict[str, Any] | None = None
     ) -> ConfigFlowResult:

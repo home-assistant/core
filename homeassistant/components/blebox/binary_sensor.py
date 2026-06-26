@@ -1,5 +1,7 @@
 """BleBox binary sensor entities."""
 
+from typing import override
+
 from blebox_uniapi.binary_sensor import BinarySensor as BinarySensorFeature
 
 from homeassistant.components.binary_sensor import (
@@ -63,6 +65,7 @@ class BleBoxBinarySensorEntity(BleBoxEntity[BinarySensorFeature], BinarySensorEn
             self._attr_name = feature.name
 
     @property
+    @override
     def is_on(self) -> bool:
         """Return the state."""
         return self._feature.state

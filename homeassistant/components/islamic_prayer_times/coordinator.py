@@ -2,7 +2,7 @@
 
 from datetime import date, datetime, timedelta
 import logging
-from typing import Any, cast
+from typing import Any, cast, override
 
 from prayer_times_calculator_offline import PrayerTimesCalculator
 
@@ -112,6 +112,7 @@ class IslamicPrayerDataUpdateCoordinator(DataUpdateCoordinator[dict[str, datetim
         """Request update from coordinator."""
         await self.async_request_refresh()
 
+    @override
     async def _async_update_data(self) -> dict[str, datetime]:
         """Update sensors with new prayer times.
 

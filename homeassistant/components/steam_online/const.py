@@ -14,7 +14,7 @@ LOGGER = logging.getLogger(__package__)
 
 PLACEHOLDERS = {
     "api_key_url": "https://steamcommunity.com/dev/apikey",
-    "account_id_url": "https://steamid.io",
+    "account_id_url": "https://store.steampowered.com/account/",
 }
 
 STATE_OFFLINE = "offline"
