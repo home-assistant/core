@@ -5,11 +5,7 @@ from dataclasses import dataclass
 import logging
 from typing import TYPE_CHECKING, Any, override
 
-from miio import (
-    AirQualityMonitor,
-    Device as MiioDevice,
-    DeviceException,
-)
+from miio import AirQualityMonitor, Device as MiioDevice, DeviceException
 from miio.integrations.lumi.gateway.gateway import (
     GATEWAY_MODEL_AC_V1,
     GATEWAY_MODEL_AC_V2,
