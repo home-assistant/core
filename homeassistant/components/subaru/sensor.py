@@ -16,7 +16,13 @@ from homeassistant.components.sensor import (
     SensorStateClass,
 )
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import PERCENTAGE, UnitOfLength, UnitOfPressure, UnitOfVolume
+from homeassistant.const import (
+    PERCENTAGE,
+    EntityCategory,
+    UnitOfLength,
+    UnitOfPressure,
+    UnitOfVolume,
+)
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers import entity_registry as er
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
@@ -88,6 +94,53 @@ def _recommended_tire_pressure(
     return getter
 
 
+# Snake-case maps for the categorical sensors. The Subaru API is undocumented;
+# these are the values we have hard evidence for (subarulink/const.py +
+# observed in test fixtures + observed in real-world debug diagnostics).
+# Values returned by the live API that are not in these maps fall through to
+# `unknown` on the ENUM sensor — the disabled-by-default `*_raw` companion
+# sensor captures the upstream string verbatim so users can report new values
+# without us having to release a stub sensor that maps to `unknown`.
+VEHICLE_STATE_OPTIONS = {
+    "IGNITION_OFF": "ignition_off",
+    "IGNITION_ON": "ignition_on",
+}
+EV_CHARGER_STATE_OPTIONS = {
+    "CHARGING": "charging",
+    "CHARGING_STOPPED": "charging_stopped",
+}
+EV_CHARGE_MODE_OPTIONS = {
+    "EV_MODE": "ev_mode",
+}
+
+
+def _enum_value_fn(
+    api_key: str, options: dict[str, str]
+) -> Callable[[dict[str, Any]], StateType | date | datetime | Decimal]:
+    """Return a getter that maps a raw vehicle_status string to a snake_case option."""
+
+    def getter(data: dict[str, Any]) -> StateType | date | datetime | Decimal:
+        raw = (data.get(VEHICLE_STATUS) or {}).get(api_key)
+        if raw is None:
+            return None
+        # Unmapped values return None → entity state becomes `unknown`; the
+        # companion `_raw` sensor surfaces what the API actually said.
+        return options.get(raw)
+
+    return getter
+
+
+def _raw_value_fn(
+    api_key: str,
+) -> Callable[[dict[str, Any]], StateType | date | datetime | Decimal]:
+    """Return a getter that returns the raw vehicle_status string verbatim."""
+
+    def getter(data: dict[str, Any]) -> StateType | date | datetime | Decimal:
+        return (data.get(VEHICLE_STATUS) or {}).get(api_key)
+
+    return getter
+
+
 # Sensor available for Gen1 or Gen2 vehicles
 SAFETY_SENSORS = [
     SubaruSensorEntityDescription(
@@ -142,13 +195,22 @@ API_GEN_2_SENSORS = [
         native_unit_of_measurement=UnitOfPressure.PSI,
         state_class=SensorStateClass.MEASUREMENT,
     ),
-    # No SensorDeviceClass.ENUM: subarulink/const.py only documents IGNITION_ON
-    # and IGNITION_OFF for this field, but the live API also returns other
-    # values (engine-running, moving, transport mode). Committing to an
-    # incomplete `options` list would silently mark live values as invalid.
+    # ENUM with the values we have evidence for; unknown values fall through
+    # to `unknown` and the companion `vehicle_state_raw` sensor (disabled by
+    # default below) captures the unmapped string for diagnostics.
     SubaruSensorEntityDescription(
         key=API_KEY_VEHICLE_STATE_TYPE,
         translation_key="vehicle_state",
+        device_class=SensorDeviceClass.ENUM,
+        options=sorted(VEHICLE_STATE_OPTIONS.values()),
+        value_fn=_enum_value_fn(API_KEY_VEHICLE_STATE_TYPE, VEHICLE_STATE_OPTIONS),
+    ),
+    SubaruSensorEntityDescription(
+        key="vehicle_state_raw",
+        translation_key="vehicle_state_raw",
+        entity_category=EntityCategory.DIAGNOSTIC,
+        entity_registry_enabled_default=False,
+        value_fn=_raw_value_fn(API_KEY_VEHICLE_STATE_TYPE),
     ),
     # Recommended tire pressure is a static reference value from the
     # manufacturer (sourced from vehicle_health.RECOMMENDED_TIRE_PRESSURE),
@@ -201,18 +263,39 @@ EV_SENSORS = [
         translation_key="ev_time_to_full_charge",
         device_class=SensorDeviceClass.TIMESTAMP,
     ),
-    # No SensorDeviceClass.ENUM for the next two: subarulink does not document
-    # the option sets for these fields. Live values observed so far include
-    # CHARGING / CHARGING_STOPPED / FINISHED for the charger state and
-    # EV_MODE for the charge mode, but the API likely returns more. See
-    # VEHICLE_STATE comment above for the same rationale.
+    # ENUM with the values we have evidence for; companion `_raw` sensors
+    # (disabled by default below) surface unmapped strings for diagnostics.
     SubaruSensorEntityDescription(
         key=API_KEY_EV_CHARGER_STATE_TYPE,
         translation_key="ev_charger_state",
+        device_class=SensorDeviceClass.ENUM,
+        options=sorted(EV_CHARGER_STATE_OPTIONS.values()),
+        value_fn=_enum_value_fn(
+            API_KEY_EV_CHARGER_STATE_TYPE, EV_CHARGER_STATE_OPTIONS
+        ),
+    ),
+    SubaruSensorEntityDescription(
+        key="ev_charger_state_raw",
+        translation_key="ev_charger_state_raw",
+        entity_category=EntityCategory.DIAGNOSTIC,
+        entity_registry_enabled_default=False,
+        value_fn=_raw_value_fn(API_KEY_EV_CHARGER_STATE_TYPE),
     ),
     SubaruSensorEntityDescription(
         key=API_KEY_EV_STATE_OF_CHARGE_MODE,
         translation_key="ev_charge_mode",
+        device_class=SensorDeviceClass.ENUM,
+        options=sorted(EV_CHARGE_MODE_OPTIONS.values()),
+        value_fn=_enum_value_fn(
+            API_KEY_EV_STATE_OF_CHARGE_MODE, EV_CHARGE_MODE_OPTIONS
+        ),
+    ),
+    SubaruSensorEntityDescription(
+        key="ev_charge_mode_raw",
+        translation_key="ev_charge_mode_raw",
+        entity_category=EntityCategory.DIAGNOSTIC,
+        entity_registry_enabled_default=False,
+        value_fn=_raw_value_fn(API_KEY_EV_STATE_OF_CHARGE_MODE),
     ),
 ]
 

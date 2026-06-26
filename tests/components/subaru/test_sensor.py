@@ -137,6 +137,10 @@ def _assert_data(hass: HomeAssistant, expected_state: dict[str, Any]) -> None:
     expected_states = {}
     entity_registry = er.async_get(hass)
     for item in sensor_list:
+        # Disabled-by-default sensors (e.g. the *_raw diagnostic companions)
+        # aren't loaded into the state machine, so there's nothing to assert.
+        if not item.entity_registry_enabled_default:
+            continue
         entity = entity_registry.async_get_entity_id(
             SENSOR_DOMAIN, DOMAIN, f"{TEST_VIN_2_EV}_{item.key}"
         )
