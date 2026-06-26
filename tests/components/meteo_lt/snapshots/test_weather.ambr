@@ -40,14 +40,14 @@
   StateSnapshot({
     'attributes': ReadOnlyDict({
       <WeatherEntityStateAttribute.APPARENT_TEMPERATURE: 'apparent_temperature'>: 10.9,
-      'attribution': 'Data provided by Lithuanian Hydrometeorological Service (LHMT)',
+      <EntityStateAttribute.ATTRIBUTION: 'attribution'>: 'Data provided by Lithuanian Hydrometeorological Service (LHMT)',
       <WeatherEntityStateAttribute.CLOUD_COVERAGE: 'cloud_coverage'>: 1,
-      'friendly_name': 'Vilnius',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Vilnius',
       <WeatherEntityStateAttribute.HUMIDITY: 'humidity'>: 71,
       <WeatherEntityStateAttribute.PRECIPITATION_UNIT: 'precipitation_unit'>: <UnitOfPrecipitationDepth.MILLIMETERS: 'mm'>,
       <WeatherEntityStateAttribute.PRESSURE: 'pressure'>: 1033.0,
       <WeatherEntityStateAttribute.PRESSURE_UNIT: 'pressure_unit'>: <UnitOfPressure.HPA: 'hPa'>,
-      'supported_features': <WeatherEntityFeature: 3>,
+      <EntityStateAttribute.SUPPORTED_FEATURES: 'supported_features'>: <WeatherEntityFeature: 3>,
       <WeatherEntityStateAttribute.TEMPERATURE: 'temperature'>: 10.9,
       <WeatherEntityStateAttribute.TEMPERATURE_UNIT: 'temperature_unit'>: <UnitOfTemperature.CELSIUS: '°C'>,
       <WeatherEntityStateAttribute.VISIBILITY_UNIT: 'visibility_unit'>: <UnitOfLength.KILOMETERS: 'km'>,

@@ -12,8 +12,8 @@
 # name: test_entity_attributes
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'device_class': 'tv',
-      'friendly_name': 'LG webOS TV MODEL',
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'tv',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'LG webOS TV MODEL',
       <MediaPlayerEntityStateAttribute.MEDIA_VOLUME_MUTED: 'is_volume_muted'>: False,
       <MediaPlayerEntityStateAttribute.MEDIA_CONTENT_TYPE: 'media_content_type'>: <MediaType.CHANNEL: 'channel'>,
       <MediaPlayerEntityStateAttribute.MEDIA_TITLE: 'media_title'>: 'Channel 1',
@@ -24,7 +24,7 @@
         'Input02',
         'Live TV',
       ]),
-      'supported_features': <MediaPlayerEntityFeature: 24381>,
+      <EntityStateAttribute.SUPPORTED_FEATURES: 'supported_features'>: <MediaPlayerEntityFeature: 24381>,
       <MediaPlayerEntityStateAttribute.MEDIA_VOLUME_LEVEL: 'volume_level'>: 0.37,
     }),
     'context': <ANY>,

@@ -44,10 +44,10 @@
 # name: test_sensor_snapshots[sensor.energy-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'device_class': 'energy',
-      'friendly_name': 'Energy',
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'energy',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Energy',
       <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
-      'unit_of_measurement': <UnitOfEnergy.KILO_WATT_HOUR: 'kWh'>,
+      <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: <UnitOfEnergy.KILO_WATT_HOUR: 'kWh'>,
     }),
     'context': <ANY>,
     'entity_id': 'sensor.energy',
@@ -97,7 +97,7 @@
 # name: test_sensor_snapshots[sensor.energy_energy_device_communication_errors-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'Energy Energy Device Communication Errors',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Energy Energy Device Communication Errors',
     }),
     'context': <ANY>,
     'entity_id': 'sensor.energy_energy_device_communication_errors',
@@ -152,10 +152,10 @@
 # name: test_sensor_snapshots[sensor.flow_aux_list-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'device_class': 'power',
-      'friendly_name': 'Flow Aux List',
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'power',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Flow Aux List',
       <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
-      'unit_of_measurement': <UnitOfPower.WATT: 'W'>,
+      <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: <UnitOfPower.WATT: 'W'>,
     }),
     'context': <ANY>,
     'entity_id': 'sensor.flow_aux_list',
@@ -205,7 +205,7 @@
 # name: test_sensor_snapshots[sensor.flow_aux_list_flow_aux_list_device_communication_errors-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'Flow Aux List Flow Aux List Device Communication Errors',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Flow Aux List Flow Aux List Device Communication Errors',
     }),
     'context': <ANY>,
     'entity_id': 'sensor.flow_aux_list_flow_aux_list_device_communication_errors',
@@ -255,8 +255,8 @@
 # name: test_sensor_snapshots[sensor.flow_aux_list_flow_aux_list_flow-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'Flow Aux List Flow Aux List Flow',
-      'unit_of_measurement': 'gal/s',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Flow Aux List Flow Aux List Flow',
+      <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: 'gal/s',
     }),
     'context': <ANY>,
     'entity_id': 'sensor.flow_aux_list_flow_aux_list_flow',
@@ -311,10 +311,10 @@
 # name: test_sensor_snapshots[sensor.flow_rate_gph-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'device_class': 'volume_flow_rate',
-      'friendly_name': 'Flow Rate GPH',
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'volume_flow_rate',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Flow Rate GPH',
       <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
-      'unit_of_measurement': <UnitOfVolumeFlowRate.GALLONS_PER_HOUR: 'gal/h'>,
+      <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: <UnitOfVolumeFlowRate.GALLONS_PER_HOUR: 'gal/h'>,
     }),
     'context': <ANY>,
     'entity_id': 'sensor.flow_rate_gph',
@@ -364,7 +364,7 @@
 # name: test_sensor_snapshots[sensor.flow_rate_gph_flow_rate_gph_device_communication_errors-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'Flow Rate GPH Flow Rate GPH Device Communication Errors',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Flow Rate GPH Flow Rate GPH Device Communication Errors',
     }),
     'context': <ANY>,
     'entity_id': 'sensor.flow_rate_gph_flow_rate_gph_device_communication_errors',
@@ -419,10 +419,10 @@
 # name: test_sensor_snapshots[sensor.flow_rate_gpm-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'device_class': 'volume_flow_rate',
-      'friendly_name': 'Flow Rate GPM',
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'volume_flow_rate',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Flow Rate GPM',
       <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
-      'unit_of_measurement': <UnitOfVolumeFlowRate.GALLONS_PER_MINUTE: 'gal/min'>,
+      <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: <UnitOfVolumeFlowRate.GALLONS_PER_MINUTE: 'gal/min'>,
     }),
     'context': <ANY>,
     'entity_id': 'sensor.flow_rate_gpm',
@@ -472,7 +472,7 @@
 # name: test_sensor_snapshots[sensor.flow_rate_gpm_flow_rate_gpm_device_communication_errors-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'Flow Rate GPM Flow Rate GPM Device Communication Errors',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Flow Rate GPM Flow Rate GPM Device Communication Errors',
     }),
     'context': <ANY>,
     'entity_id': 'sensor.flow_rate_gpm_flow_rate_gpm_device_communication_errors',
@@ -522,8 +522,8 @@
 # name: test_sensor_snapshots[sensor.flow_rate_gps-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'Flow Rate GPS',
-      'unit_of_measurement': 'gal/s',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Flow Rate GPS',
+      <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: 'gal/s',
     }),
     'context': <ANY>,
     'entity_id': 'sensor.flow_rate_gps',
@@ -573,7 +573,7 @@
 # name: test_sensor_snapshots[sensor.flow_rate_gps_flow_rate_gps_device_communication_errors-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'Flow Rate GPS Flow Rate GPS Device Communication Errors',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Flow Rate GPS Flow Rate GPS Device Communication Errors',
     }),
     'context': <ANY>,
     'entity_id': 'sensor.flow_rate_gps_flow_rate_gps_device_communication_errors',
@@ -623,8 +623,8 @@
 # name: test_sensor_snapshots[sensor.flow_rate_gps_list-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'Flow Rate GPS List',
-      'unit_of_measurement': 'gal/s',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Flow Rate GPS List',
+      <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: 'gal/s',
     }),
     'context': <ANY>,
     'entity_id': 'sensor.flow_rate_gps_list',
@@ -674,7 +674,7 @@
 # name: test_sensor_snapshots[sensor.flow_rate_gps_list_flow_rate_gps_list_device_communication_errors-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'Flow Rate GPS List Flow Rate GPS List Device Communication Errors',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Flow Rate GPS List Flow Rate GPS List Device Communication Errors',
     }),
     'context': <ANY>,
     'entity_id': 'sensor.flow_rate_gps_list_flow_rate_gps_list_device_communication_errors',
@@ -729,10 +729,10 @@
 # name: test_sensor_snapshots[sensor.flow_rate_lph-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'device_class': 'volume_flow_rate',
-      'friendly_name': 'Flow Rate LPH',
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'volume_flow_rate',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Flow Rate LPH',
       <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
-      'unit_of_measurement': <UnitOfVolumeFlowRate.LITERS_PER_HOUR: 'L/h'>,
+      <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: <UnitOfVolumeFlowRate.LITERS_PER_HOUR: 'L/h'>,
     }),
     'context': <ANY>,
     'entity_id': 'sensor.flow_rate_lph',
@@ -782,7 +782,7 @@
 # name: test_sensor_snapshots[sensor.flow_rate_lph_flow_rate_lph_device_communication_errors-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'Flow Rate LPH Flow Rate LPH Device Communication Errors',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Flow Rate LPH Flow Rate LPH Device Communication Errors',
     }),
     'context': <ANY>,
     'entity_id': 'sensor.flow_rate_lph_flow_rate_lph_device_communication_errors',
@@ -837,10 +837,10 @@
 # name: test_sensor_snapshots[sensor.power_node-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'device_class': 'power',
-      'friendly_name': 'Power Node',
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'power',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Power Node',
       <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
-      'unit_of_measurement': <UnitOfPower.WATT: 'W'>,
+      <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: <UnitOfPower.WATT: 'W'>,
     }),
     'context': <ANY>,
     'entity_id': 'sensor.power_node',
@@ -890,7 +890,7 @@
 # name: test_sensor_snapshots[sensor.power_node_power_node_device_communication_errors-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'Power Node Power Node Device Communication Errors',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Power Node Power Node Device Communication Errors',
     }),
     'context': <ANY>,
     'entity_id': 'sensor.power_node_power_node_device_communication_errors',
@@ -945,10 +945,10 @@
 # name: test_sensor_snapshots[sensor.power_node_power_node_power-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'device_class': 'power',
-      'friendly_name': 'Power Node Power Node Power',
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'power',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Power Node Power Node Power',
       <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
-      'unit_of_measurement': <UnitOfPower.WATT: 'W'>,
+      <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: <UnitOfPower.WATT: 'W'>,
     }),
     'context': <ANY>,
     'entity_id': 'sensor.power_node_power_node_power',
@@ -1003,10 +1003,10 @@
 # name: test_sensor_snapshots[sensor.power_node_power_node_total_energy_used-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'device_class': 'energy',
-      'friendly_name': 'Power Node Power Node Total Energy Used',
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'energy',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Power Node Power Node Total Energy Used',
       <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
-      'unit_of_measurement': <UnitOfEnergy.KILO_WATT_HOUR: 'kWh'>,
+      <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: <UnitOfEnergy.KILO_WATT_HOUR: 'kWh'>,
     }),
     'context': <ANY>,
     'entity_id': 'sensor.power_node_power_node_total_energy_used',
@@ -1064,10 +1064,10 @@
 # name: test_sensor_snapshots[sensor.rain_rate-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'device_class': 'precipitation_intensity',
-      'friendly_name': 'Rain Rate',
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'precipitation_intensity',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Rain Rate',
       <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
-      'unit_of_measurement': <UnitOfVolumetricFlux.MILLIMETERS_PER_HOUR: 'mm/h'>,
+      <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: <UnitOfVolumetricFlux.MILLIMETERS_PER_HOUR: 'mm/h'>,
     }),
     'context': <ANY>,
     'entity_id': 'sensor.rain_rate',
@@ -1117,7 +1117,7 @@
 # name: test_sensor_snapshots[sensor.rain_rate_rain_rate_device_communication_errors-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'Rain Rate Rain Rate Device Communication Errors',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Rain Rate Rain Rate Device Communication Errors',
     }),
     'context': <ANY>,
     'entity_id': 'sensor.rain_rate_rain_rate_device_communication_errors',
@@ -1172,10 +1172,10 @@
 # name: test_sensor_snapshots[sensor.temperature-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'device_class': 'temperature',
-      'friendly_name': 'Temperature',
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'temperature',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Temperature',
       <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
-      'unit_of_measurement': <UnitOfTemperature.CELSIUS: '°C'>,
+      <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: <UnitOfTemperature.CELSIUS: '°C'>,
     }),
     'context': <ANY>,
     'entity_id': 'sensor.temperature',
@@ -1225,7 +1225,7 @@
 # name: test_sensor_snapshots[sensor.temperature_temperature_device_communication_errors-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'Temperature Temperature Device Communication Errors',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Temperature Temperature Device Communication Errors',
     }),
     'context': <ANY>,
     'entity_id': 'sensor.temperature_temperature_device_communication_errors',
@@ -1283,10 +1283,10 @@
 # name: test_sensor_snapshots[sensor.water_meter-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'device_class': 'water',
-      'friendly_name': 'Water Meter',
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'water',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Water Meter',
       <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
-      'unit_of_measurement': <UnitOfVolume.LITERS: 'L'>,
+      <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: <UnitOfVolume.LITERS: 'L'>,
     }),
     'context': <ANY>,
     'entity_id': 'sensor.water_meter',
@@ -1336,7 +1336,7 @@
 # name: test_sensor_snapshots[sensor.water_meter_water_meter_device_communication_errors-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'Water Meter Water Meter Device Communication Errors',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Water Meter Water Meter Device Communication Errors',
     }),
     'context': <ANY>,
     'entity_id': 'sensor.water_meter_water_meter_device_communication_errors',

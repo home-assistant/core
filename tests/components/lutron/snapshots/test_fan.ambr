@@ -41,12 +41,12 @@
 # name: test_fan_setup[fan.test_area_test_fan-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'Test Fan',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Test Fan',
       <FanEntityStateAttribute.PERCENTAGE: 'percentage'>: 0,
       <FanEntityStateAttribute.PERCENTAGE_STEP: 'percentage_step'>: 33.333333333333336,
       <FanEntityStateAttribute.PRESET_MODE: 'preset_mode'>: None,
       <FanEntityCapabilityAttribute.PRESET_MODES: 'preset_modes'>: None,
-      'supported_features': <FanEntityFeature: 49>,
+      <EntityStateAttribute.SUPPORTED_FEATURES: 'supported_features'>: <FanEntityFeature: 49>,
     }),
     'context': <ANY>,
     'entity_id': 'fan.test_area_test_fan',

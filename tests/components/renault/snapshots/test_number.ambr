@@ -44,13 +44,13 @@
 # name: test_number_empty[zoe_40][number.reg_zoe_40_minimum_charge_level-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'device_class': 'battery',
-      'friendly_name': 'REG-ZOE-40 Minimum charge level',
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'battery',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'REG-ZOE-40 Minimum charge level',
       <NumberEntityCapabilityAttribute.MAX: 'max'>: 45,
       <NumberEntityCapabilityAttribute.MIN: 'min'>: 15,
       <NumberEntityCapabilityAttribute.MODE: 'mode'>: <NumberMode.SLIDER: 'slider'>,
       <NumberEntityCapabilityAttribute.STEP: 'step'>: 5,
-      'unit_of_measurement': '%',
+      <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: '%',
     }),
     'context': <ANY>,
     'entity_id': 'number.reg_zoe_40_minimum_charge_level',
@@ -105,13 +105,13 @@
 # name: test_number_empty[zoe_40][number.reg_zoe_40_target_charge_level-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'device_class': 'battery',
-      'friendly_name': 'REG-ZOE-40 Target charge level',
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'battery',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'REG-ZOE-40 Target charge level',
       <NumberEntityCapabilityAttribute.MAX: 'max'>: 100,
       <NumberEntityCapabilityAttribute.MIN: 'min'>: 55,
       <NumberEntityCapabilityAttribute.MODE: 'mode'>: <NumberMode.SLIDER: 'slider'>,
       <NumberEntityCapabilityAttribute.STEP: 'step'>: 5,
-      'unit_of_measurement': '%',
+      <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: '%',
     }),
     'context': <ANY>,
     'entity_id': 'number.reg_zoe_40_target_charge_level',
@@ -166,13 +166,13 @@
 # name: test_number_errors[zoe_40][number.reg_zoe_40_minimum_charge_level-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'device_class': 'battery',
-      'friendly_name': 'REG-ZOE-40 Minimum charge level',
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'battery',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'REG-ZOE-40 Minimum charge level',
       <NumberEntityCapabilityAttribute.MAX: 'max'>: 45,
       <NumberEntityCapabilityAttribute.MIN: 'min'>: 15,
       <NumberEntityCapabilityAttribute.MODE: 'mode'>: <NumberMode.SLIDER: 'slider'>,
       <NumberEntityCapabilityAttribute.STEP: 'step'>: 5,
-      'unit_of_measurement': '%',
+      <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: '%',
     }),
     'context': <ANY>,
     'entity_id': 'number.reg_zoe_40_minimum_charge_level',
@@ -227,13 +227,13 @@
 # name: test_number_errors[zoe_40][number.reg_zoe_40_target_charge_level-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'device_class': 'battery',
-      'friendly_name': 'REG-ZOE-40 Target charge level',
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'battery',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'REG-ZOE-40 Target charge level',
       <NumberEntityCapabilityAttribute.MAX: 'max'>: 100,
       <NumberEntityCapabilityAttribute.MIN: 'min'>: 55,
       <NumberEntityCapabilityAttribute.MODE: 'mode'>: <NumberMode.SLIDER: 'slider'>,
       <NumberEntityCapabilityAttribute.STEP: 'step'>: 5,
-      'unit_of_measurement': '%',
+      <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: '%',
     }),
     'context': <ANY>,
     'entity_id': 'number.reg_zoe_40_target_charge_level',
@@ -288,13 +288,13 @@
 # name: test_numbers[zoe_40][number.reg_zoe_40_minimum_charge_level-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'device_class': 'battery',
-      'friendly_name': 'REG-ZOE-40 Minimum charge level',
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'battery',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'REG-ZOE-40 Minimum charge level',
       <NumberEntityCapabilityAttribute.MAX: 'max'>: 45,
       <NumberEntityCapabilityAttribute.MIN: 'min'>: 15,
       <NumberEntityCapabilityAttribute.MODE: 'mode'>: <NumberMode.SLIDER: 'slider'>,
       <NumberEntityCapabilityAttribute.STEP: 'step'>: 5,
-      'unit_of_measurement': '%',
+      <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: '%',
     }),
     'context': <ANY>,
     'entity_id': 'number.reg_zoe_40_minimum_charge_level',
@@ -349,13 +349,13 @@
 # name: test_numbers[zoe_40][number.reg_zoe_40_target_charge_level-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'device_class': 'battery',
-      'friendly_name': 'REG-ZOE-40 Target charge level',
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'battery',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'REG-ZOE-40 Target charge level',
       <NumberEntityCapabilityAttribute.MAX: 'max'>: 100,
       <NumberEntityCapabilityAttribute.MIN: 'min'>: 55,
       <NumberEntityCapabilityAttribute.MODE: 'mode'>: <NumberMode.SLIDER: 'slider'>,
       <NumberEntityCapabilityAttribute.STEP: 'step'>: 5,
-      'unit_of_measurement': '%',
+      <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: '%',
     }),
     'context': <ANY>,
     'entity_id': 'number.reg_zoe_40_target_charge_level',

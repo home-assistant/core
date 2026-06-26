@@ -44,7 +44,7 @@
 # name: test_select[load_platforms0][select.hallway_hallway_light-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'Hallway Light',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Hallway Light',
       <SelectEntityCapabilityAttribute.OPTIONS: 'options'>: list([
         'on',
         'off',
@@ -104,7 +104,7 @@
 # name: test_select[load_platforms0][select.kitchen_kitchen_light-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'Kitchen Light',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Kitchen Light',
       <SelectEntityCapabilityAttribute.OPTIONS: 'options'>: list([
         'on',
         'dim',

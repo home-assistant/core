@@ -48,9 +48,9 @@
 # name: test_sensor[sensor.home_air_quality_index-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'attribution': 'Data provided by GIOŚ',
-      'device_class': 'enum',
-      'friendly_name': 'Home Air quality index',
+      <EntityStateAttribute.ATTRIBUTION: 'attribution'>: 'Data provided by GIOŚ',
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'enum',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Home Air quality index',
       <SensorEntityCapabilityAttribute.OPTIONS: 'options'>: list([
         'very_bad',
         'bad',
@@ -113,10 +113,10 @@
 # name: test_sensor[sensor.home_benzene-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'attribution': 'Data provided by GIOŚ',
-      'friendly_name': 'Home Benzene',
+      <EntityStateAttribute.ATTRIBUTION: 'attribution'>: 'Data provided by GIOŚ',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Home Benzene',
       <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
-      'unit_of_measurement': 'μg/m³',
+      <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: 'μg/m³',
     }),
     'context': <ANY>,
     'entity_id': 'sensor.home_benzene',
@@ -171,11 +171,11 @@
 # name: test_sensor[sensor.home_carbon_monoxide-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'attribution': 'Data provided by GIOŚ',
-      'device_class': 'carbon_monoxide',
-      'friendly_name': 'Home Carbon monoxide',
+      <EntityStateAttribute.ATTRIBUTION: 'attribution'>: 'Data provided by GIOŚ',
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'carbon_monoxide',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Home Carbon monoxide',
       <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
-      'unit_of_measurement': 'μg/m³',
+      <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: 'μg/m³',
     }),
     'context': <ANY>,
     'entity_id': 'sensor.home_carbon_monoxide',
@@ -230,11 +230,11 @@
 # name: test_sensor[sensor.home_nitrogen_dioxide-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'attribution': 'Data provided by GIOŚ',
-      'device_class': 'nitrogen_dioxide',
-      'friendly_name': 'Home Nitrogen dioxide',
+      <EntityStateAttribute.ATTRIBUTION: 'attribution'>: 'Data provided by GIOŚ',
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'nitrogen_dioxide',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Home Nitrogen dioxide',
       <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
-      'unit_of_measurement': 'μg/m³',
+      <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: 'μg/m³',
     }),
     'context': <ANY>,
     'entity_id': 'sensor.home_nitrogen_dioxide',
@@ -293,9 +293,9 @@
 # name: test_sensor[sensor.home_nitrogen_dioxide_index-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'attribution': 'Data provided by GIOŚ',
-      'device_class': 'enum',
-      'friendly_name': 'Home Nitrogen dioxide index',
+      <EntityStateAttribute.ATTRIBUTION: 'attribution'>: 'Data provided by GIOŚ',
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'enum',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Home Nitrogen dioxide index',
       <SensorEntityCapabilityAttribute.OPTIONS: 'options'>: list([
         'very_bad',
         'bad',
@@ -358,11 +358,11 @@
 # name: test_sensor[sensor.home_nitrogen_monoxide-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'attribution': 'Data provided by GIOŚ',
-      'device_class': 'nitrogen_monoxide',
-      'friendly_name': 'Home Nitrogen monoxide',
+      <EntityStateAttribute.ATTRIBUTION: 'attribution'>: 'Data provided by GIOŚ',
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'nitrogen_monoxide',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Home Nitrogen monoxide',
       <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
-      'unit_of_measurement': 'μg/m³',
+      <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: 'μg/m³',
     }),
     'context': <ANY>,
     'entity_id': 'sensor.home_nitrogen_monoxide',
@@ -417,10 +417,10 @@
 # name: test_sensor[sensor.home_nitrogen_oxides-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'attribution': 'Data provided by GIOŚ',
-      'friendly_name': 'Home Nitrogen oxides',
+      <EntityStateAttribute.ATTRIBUTION: 'attribution'>: 'Data provided by GIOŚ',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Home Nitrogen oxides',
       <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
-      'unit_of_measurement': 'μg/m³',
+      <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: 'μg/m³',
     }),
     'context': <ANY>,
     'entity_id': 'sensor.home_nitrogen_oxides',
@@ -475,11 +475,11 @@
 # name: test_sensor[sensor.home_ozone-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'attribution': 'Data provided by GIOŚ',
-      'device_class': 'ozone',
-      'friendly_name': 'Home Ozone',
+      <EntityStateAttribute.ATTRIBUTION: 'attribution'>: 'Data provided by GIOŚ',
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'ozone',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Home Ozone',
       <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
-      'unit_of_measurement': 'μg/m³',
+      <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: 'μg/m³',
     }),
     'context': <ANY>,
     'entity_id': 'sensor.home_ozone',
@@ -538,9 +538,9 @@
 # name: test_sensor[sensor.home_ozone_index-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'attribution': 'Data provided by GIOŚ',
-      'device_class': 'enum',
-      'friendly_name': 'Home Ozone index',
+      <EntityStateAttribute.ATTRIBUTION: 'attribution'>: 'Data provided by GIOŚ',
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'enum',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Home Ozone index',
       <SensorEntityCapabilityAttribute.OPTIONS: 'options'>: list([
         'very_bad',
         'bad',
@@ -603,11 +603,11 @@
 # name: test_sensor[sensor.home_pm10-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'attribution': 'Data provided by GIOŚ',
-      'device_class': 'pm10',
-      'friendly_name': 'Home PM10',
+      <EntityStateAttribute.ATTRIBUTION: 'attribution'>: 'Data provided by GIOŚ',
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'pm10',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Home PM10',
       <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
-      'unit_of_measurement': 'μg/m³',
+      <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: 'μg/m³',
     }),
     'context': <ANY>,
     'entity_id': 'sensor.home_pm10',
@@ -666,9 +666,9 @@
 # name: test_sensor[sensor.home_pm10_index-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'attribution': 'Data provided by GIOŚ',
-      'device_class': 'enum',
-      'friendly_name': 'Home PM10 index',
+      <EntityStateAttribute.ATTRIBUTION: 'attribution'>: 'Data provided by GIOŚ',
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'enum',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Home PM10 index',
       <SensorEntityCapabilityAttribute.OPTIONS: 'options'>: list([
         'very_bad',
         'bad',
@@ -731,11 +731,11 @@
 # name: test_sensor[sensor.home_pm2_5-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'attribution': 'Data provided by GIOŚ',
-      'device_class': 'pm25',
-      'friendly_name': 'Home PM2.5',
+      <EntityStateAttribute.ATTRIBUTION: 'attribution'>: 'Data provided by GIOŚ',
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'pm25',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Home PM2.5',
       <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
-      'unit_of_measurement': 'μg/m³',
+      <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: 'μg/m³',
     }),
     'context': <ANY>,
     'entity_id': 'sensor.home_pm2_5',
@@ -794,9 +794,9 @@
 # name: test_sensor[sensor.home_pm2_5_index-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'attribution': 'Data provided by GIOŚ',
-      'device_class': 'enum',
-      'friendly_name': 'Home PM2.5 index',
+      <EntityStateAttribute.ATTRIBUTION: 'attribution'>: 'Data provided by GIOŚ',
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'enum',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Home PM2.5 index',
       <SensorEntityCapabilityAttribute.OPTIONS: 'options'>: list([
         'very_bad',
         'bad',
@@ -859,11 +859,11 @@
 # name: test_sensor[sensor.home_sulphur_dioxide-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'attribution': 'Data provided by GIOŚ',
-      'device_class': 'sulphur_dioxide',
-      'friendly_name': 'Home Sulphur dioxide',
+      <EntityStateAttribute.ATTRIBUTION: 'attribution'>: 'Data provided by GIOŚ',
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'sulphur_dioxide',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Home Sulphur dioxide',
       <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
-      'unit_of_measurement': 'μg/m³',
+      <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: 'μg/m³',
     }),
     'context': <ANY>,
     'entity_id': 'sensor.home_sulphur_dioxide',
@@ -922,9 +922,9 @@
 # name: test_sensor[sensor.home_sulphur_dioxide_index-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'attribution': 'Data provided by GIOŚ',
-      'device_class': 'enum',
-      'friendly_name': 'Home Sulphur dioxide index',
+      <EntityStateAttribute.ATTRIBUTION: 'attribution'>: 'Data provided by GIOŚ',
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'enum',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Home Sulphur dioxide index',
       <SensorEntityCapabilityAttribute.OPTIONS: 'options'>: list([
         'very_bad',
         'bad',

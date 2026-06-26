@@ -61,7 +61,7 @@
         'on',
         'circulate',
       ]),
-      'friendly_name': 'Test Controller Residential Thermostat V2',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Test Controller Residential Thermostat V2',
       <ClimateEntityStateAttribute.HVAC_ACTION: 'hvac_action'>: <HVACAction.OFF: 'off'>,
       <ClimateEntityCapabilityAttribute.HVAC_MODES: 'hvac_modes'>: list([
         <HVACMode.OFF: 'off'>,
@@ -71,7 +71,7 @@
       ]),
       <ClimateEntityCapabilityAttribute.MAX_TEMP: 'max_temp'>: 95,
       <ClimateEntityCapabilityAttribute.MIN_TEMP: 'min_temp'>: 45,
-      'supported_features': <ClimateEntityFeature: 395>,
+      <EntityStateAttribute.SUPPORTED_FEATURES: 'supported_features'>: <ClimateEntityFeature: 395>,
       <ClimateEntityStateAttribute.TARGET_TEMP_HIGH: 'target_temp_high'>: None,
       <ClimateEntityStateAttribute.TARGET_TEMP_LOW: 'target_temp_low'>: None,
       <ClimateEntityStateAttribute.TEMPERATURE: 'temperature'>: 68,

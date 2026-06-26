@@ -44,14 +44,14 @@
   StateSnapshot({
     'attributes': ReadOnlyDict({
       <FanEntityStateAttribute.DIRECTION: 'direction'>: 'forward',
-      'friendly_name': 'Mock Title',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Mock Title',
       <FanEntityStateAttribute.PERCENTAGE: 'percentage'>: 16,
       <FanEntityStateAttribute.PERCENTAGE_STEP: 'percentage_step'>: 16.666666666666668,
       <FanEntityStateAttribute.PRESET_MODE: 'preset_mode'>: None,
       <FanEntityCapabilityAttribute.PRESET_MODES: 'preset_modes'>: list([
         'breeze',
       ]),
-      'supported_features': <FanEntityFeature: 61>,
+      <EntityStateAttribute.SUPPORTED_FEATURES: 'supported_features'>: <FanEntityFeature: 61>,
     }),
     'context': <ANY>,
     'entity_id': 'fan.mock_title',
@@ -106,14 +106,14 @@
   StateSnapshot({
     'attributes': ReadOnlyDict({
       <FanEntityStateAttribute.DIRECTION: 'direction'>: 'forward',
-      'friendly_name': 'Mock Title',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Mock Title',
       <FanEntityStateAttribute.PERCENTAGE: 'percentage'>: 16,
       <FanEntityStateAttribute.PERCENTAGE_STEP: 'percentage_step'>: 16.666666666666668,
       <FanEntityStateAttribute.PRESET_MODE: 'preset_mode'>: None,
       <FanEntityCapabilityAttribute.PRESET_MODES: 'preset_modes'>: list([
         'breeze',
       ]),
-      'supported_features': <FanEntityFeature: 61>,
+      <EntityStateAttribute.SUPPORTED_FEATURES: 'supported_features'>: <FanEntityFeature: 61>,
     }),
     'context': <ANY>,
     'entity_id': 'fan.mock_title',

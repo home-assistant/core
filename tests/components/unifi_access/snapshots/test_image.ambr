@@ -40,8 +40,8 @@
   StateSnapshot({
     'attributes': ReadOnlyDict({
       <ImageEntityStateAttribute.ACCESS_TOKEN: 'access_token'>: '1',
-      'entity_picture': '/api/image_proxy/image.front_door_thumbnail?token=1',
-      'friendly_name': 'Front Door Thumbnail',
+      <EntityStateAttribute.ENTITY_PICTURE: 'entity_picture'>: '/api/image_proxy/image.front_door_thumbnail?token=1',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Front Door Thumbnail',
     }),
     'context': <ANY>,
     'entity_id': 'image.front_door_thumbnail',

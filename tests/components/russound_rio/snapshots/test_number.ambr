@@ -44,7 +44,7 @@
 # name: test_all_entities[number.backyard_backyard_balance-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'Backyard Balance',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Backyard Balance',
       <NumberEntityCapabilityAttribute.MAX: 'max'>: 10,
       <NumberEntityCapabilityAttribute.MIN: 'min'>: -10,
       <NumberEntityCapabilityAttribute.MODE: 'mode'>: <NumberMode.AUTO: 'auto'>,
@@ -103,7 +103,7 @@
 # name: test_all_entities[number.backyard_backyard_bass-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'Backyard Bass',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Backyard Bass',
       <NumberEntityCapabilityAttribute.MAX: 'max'>: 10,
       <NumberEntityCapabilityAttribute.MIN: 'min'>: -10,
       <NumberEntityCapabilityAttribute.MODE: 'mode'>: <NumberMode.AUTO: 'auto'>,
@@ -162,7 +162,7 @@
 # name: test_all_entities[number.backyard_backyard_treble-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'Backyard Treble',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Backyard Treble',
       <NumberEntityCapabilityAttribute.MAX: 'max'>: 10,
       <NumberEntityCapabilityAttribute.MIN: 'min'>: -10,
       <NumberEntityCapabilityAttribute.MODE: 'mode'>: <NumberMode.AUTO: 'auto'>,
@@ -221,7 +221,7 @@
 # name: test_all_entities[number.backyard_backyard_turn_on_volume-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'Backyard Turn-on volume',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Backyard Turn-on volume',
       <NumberEntityCapabilityAttribute.MAX: 'max'>: 100,
       <NumberEntityCapabilityAttribute.MIN: 'min'>: 0,
       <NumberEntityCapabilityAttribute.MODE: 'mode'>: <NumberMode.AUTO: 'auto'>,
@@ -280,7 +280,7 @@
 # name: test_all_entities[number.bedroom_bedroom_balance-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'Bedroom Balance',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Bedroom Balance',
       <NumberEntityCapabilityAttribute.MAX: 'max'>: 10,
       <NumberEntityCapabilityAttribute.MIN: 'min'>: -10,
       <NumberEntityCapabilityAttribute.MODE: 'mode'>: <NumberMode.AUTO: 'auto'>,
@@ -339,7 +339,7 @@
 # name: test_all_entities[number.bedroom_bedroom_bass-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'Bedroom Bass',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Bedroom Bass',
       <NumberEntityCapabilityAttribute.MAX: 'max'>: 10,
       <NumberEntityCapabilityAttribute.MIN: 'min'>: -10,
       <NumberEntityCapabilityAttribute.MODE: 'mode'>: <NumberMode.AUTO: 'auto'>,
@@ -398,7 +398,7 @@
 # name: test_all_entities[number.bedroom_bedroom_treble-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'Bedroom Treble',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Bedroom Treble',
       <NumberEntityCapabilityAttribute.MAX: 'max'>: 10,
       <NumberEntityCapabilityAttribute.MIN: 'min'>: -10,
       <NumberEntityCapabilityAttribute.MODE: 'mode'>: <NumberMode.AUTO: 'auto'>,
@@ -457,7 +457,7 @@
 # name: test_all_entities[number.bedroom_bedroom_turn_on_volume-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'Bedroom Turn-on volume',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Bedroom Turn-on volume',
       <NumberEntityCapabilityAttribute.MAX: 'max'>: 100,
       <NumberEntityCapabilityAttribute.MIN: 'min'>: 0,
       <NumberEntityCapabilityAttribute.MODE: 'mode'>: <NumberMode.AUTO: 'auto'>,
@@ -516,7 +516,7 @@
 # name: test_all_entities[number.kitchen_balance-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'Kitchen Balance',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Kitchen Balance',
       <NumberEntityCapabilityAttribute.MAX: 'max'>: 10,
       <NumberEntityCapabilityAttribute.MIN: 'min'>: -10,
       <NumberEntityCapabilityAttribute.MODE: 'mode'>: <NumberMode.AUTO: 'auto'>,
@@ -575,7 +575,7 @@
 # name: test_all_entities[number.kitchen_bass-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'Kitchen Bass',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Kitchen Bass',
       <NumberEntityCapabilityAttribute.MAX: 'max'>: 10,
       <NumberEntityCapabilityAttribute.MIN: 'min'>: -10,
       <NumberEntityCapabilityAttribute.MODE: 'mode'>: <NumberMode.AUTO: 'auto'>,
@@ -634,7 +634,7 @@
 # name: test_all_entities[number.kitchen_treble-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'Kitchen Treble',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Kitchen Treble',
       <NumberEntityCapabilityAttribute.MAX: 'max'>: 10,
       <NumberEntityCapabilityAttribute.MIN: 'min'>: -10,
       <NumberEntityCapabilityAttribute.MODE: 'mode'>: <NumberMode.AUTO: 'auto'>,
@@ -693,7 +693,7 @@
 # name: test_all_entities[number.kitchen_turn_on_volume-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'Kitchen Turn-on volume',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Kitchen Turn-on volume',
       <NumberEntityCapabilityAttribute.MAX: 'max'>: 100,
       <NumberEntityCapabilityAttribute.MIN: 'min'>: 0,
       <NumberEntityCapabilityAttribute.MODE: 'mode'>: <NumberMode.AUTO: 'auto'>,
@@ -752,7 +752,7 @@
 # name: test_all_entities[number.living_room_living_room_balance-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'Living Room Balance',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Living Room Balance',
       <NumberEntityCapabilityAttribute.MAX: 'max'>: 10,
       <NumberEntityCapabilityAttribute.MIN: 'min'>: -10,
       <NumberEntityCapabilityAttribute.MODE: 'mode'>: <NumberMode.AUTO: 'auto'>,
@@ -811,7 +811,7 @@
 # name: test_all_entities[number.living_room_living_room_bass-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'Living Room Bass',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Living Room Bass',
       <NumberEntityCapabilityAttribute.MAX: 'max'>: 10,
       <NumberEntityCapabilityAttribute.MIN: 'min'>: -10,
       <NumberEntityCapabilityAttribute.MODE: 'mode'>: <NumberMode.AUTO: 'auto'>,
@@ -870,7 +870,7 @@
 # name: test_all_entities[number.living_room_living_room_treble-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'Living Room Treble',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Living Room Treble',
       <NumberEntityCapabilityAttribute.MAX: 'max'>: 10,
       <NumberEntityCapabilityAttribute.MIN: 'min'>: -10,
       <NumberEntityCapabilityAttribute.MODE: 'mode'>: <NumberMode.AUTO: 'auto'>,
@@ -929,7 +929,7 @@
 # name: test_all_entities[number.living_room_living_room_turn_on_volume-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'Living Room Turn-on volume',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Living Room Turn-on volume',
       <NumberEntityCapabilityAttribute.MAX: 'max'>: 100,
       <NumberEntityCapabilityAttribute.MIN: 'min'>: 0,
       <NumberEntityCapabilityAttribute.MODE: 'mode'>: <NumberMode.AUTO: 'auto'>,

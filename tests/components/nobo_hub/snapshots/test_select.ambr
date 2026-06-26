@@ -43,7 +43,7 @@
 # name: test_select_entities[select.living_room_living_room_week_profile-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'Living room Week profile',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Living room Week profile',
       <SelectEntityCapabilityAttribute.OPTIONS: 'options'>: list([
         'Default',
       ]),
@@ -103,8 +103,8 @@
 # name: test_select_entities[select.my_eco_hub_global_override-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'device_class': 'nobo_hub__override',
-      'friendly_name': 'My Eco Hub Global override',
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'nobo_hub__override',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'My Eco Hub Global override',
       <SelectEntityCapabilityAttribute.OPTIONS: 'options'>: list([
         'none',
         'away',

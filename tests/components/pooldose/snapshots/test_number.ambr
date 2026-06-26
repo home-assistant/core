@@ -44,13 +44,13 @@
 # name: test_all_numbers[number.pool_device_chlorine_dosing_off_time-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'device_class': 'duration',
-      'friendly_name': 'Pool Device Chlorine dosing off-time',
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'duration',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Pool Device Chlorine dosing off-time',
       <NumberEntityCapabilityAttribute.MAX: 'max'>: 360,
       <NumberEntityCapabilityAttribute.MIN: 'min'>: 1,
       <NumberEntityCapabilityAttribute.MODE: 'mode'>: <NumberMode.AUTO: 'auto'>,
       <NumberEntityCapabilityAttribute.STEP: 'step'>: 1,
-      'unit_of_measurement': <UnitOfTime.SECONDS: 's'>,
+      <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: <UnitOfTime.SECONDS: 's'>,
     }),
     'context': <ANY>,
     'entity_id': 'number.pool_device_chlorine_dosing_off_time',
@@ -105,12 +105,12 @@
 # name: test_all_numbers[number.pool_device_chlorine_overfeed_alarm_lower_limit-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'Pool Device Chlorine overfeed alarm lower limit',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Pool Device Chlorine overfeed alarm lower limit',
       <NumberEntityCapabilityAttribute.MAX: 'max'>: 10,
       <NumberEntityCapabilityAttribute.MIN: 'min'>: 0,
       <NumberEntityCapabilityAttribute.MODE: 'mode'>: <NumberMode.AUTO: 'auto'>,
       <NumberEntityCapabilityAttribute.STEP: 'step'>: 0.1,
-      'unit_of_measurement': 'ppm',
+      <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: 'ppm',
     }),
     'context': <ANY>,
     'entity_id': 'number.pool_device_chlorine_overfeed_alarm_lower_limit',
@@ -165,12 +165,12 @@
 # name: test_all_numbers[number.pool_device_chlorine_overfeed_alarm_upper_limit-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'Pool Device Chlorine overfeed alarm upper limit',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Pool Device Chlorine overfeed alarm upper limit',
       <NumberEntityCapabilityAttribute.MAX: 'max'>: 10,
       <NumberEntityCapabilityAttribute.MIN: 'min'>: 0,
       <NumberEntityCapabilityAttribute.MODE: 'mode'>: <NumberMode.AUTO: 'auto'>,
       <NumberEntityCapabilityAttribute.STEP: 'step'>: 0.1,
-      'unit_of_measurement': 'ppm',
+      <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: 'ppm',
     }),
     'context': <ANY>,
     'entity_id': 'number.pool_device_chlorine_overfeed_alarm_upper_limit',
@@ -225,12 +225,12 @@
 # name: test_all_numbers[number.pool_device_chlorine_target-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'Pool Device Chlorine target',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Pool Device Chlorine target',
       <NumberEntityCapabilityAttribute.MAX: 'max'>: 65535,
       <NumberEntityCapabilityAttribute.MIN: 'min'>: 0,
       <NumberEntityCapabilityAttribute.MODE: 'mode'>: <NumberMode.AUTO: 'auto'>,
       <NumberEntityCapabilityAttribute.STEP: 'step'>: 0.01,
-      'unit_of_measurement': 'ppm',
+      <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: 'ppm',
     }),
     'context': <ANY>,
     'entity_id': 'number.pool_device_chlorine_target',
@@ -285,13 +285,13 @@
 # name: test_all_numbers[number.pool_device_flow_delay_timer-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'device_class': 'duration',
-      'friendly_name': 'Pool Device Flow delay timer',
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'duration',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Pool Device Flow delay timer',
       <NumberEntityCapabilityAttribute.MAX: 'max'>: 3600,
       <NumberEntityCapabilityAttribute.MIN: 'min'>: 0,
       <NumberEntityCapabilityAttribute.MODE: 'mode'>: <NumberMode.AUTO: 'auto'>,
       <NumberEntityCapabilityAttribute.STEP: 'step'>: 1,
-      'unit_of_measurement': <UnitOfTime.SECONDS: 's'>,
+      <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: <UnitOfTime.SECONDS: 's'>,
     }),
     'context': <ANY>,
     'entity_id': 'number.pool_device_flow_delay_timer',
@@ -346,13 +346,13 @@
 # name: test_all_numbers[number.pool_device_orp_dosing_off_time-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'device_class': 'duration',
-      'friendly_name': 'Pool Device ORP dosing off-time',
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'duration',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Pool Device ORP dosing off-time',
       <NumberEntityCapabilityAttribute.MAX: 'max'>: 360,
       <NumberEntityCapabilityAttribute.MIN: 'min'>: 1,
       <NumberEntityCapabilityAttribute.MODE: 'mode'>: <NumberMode.AUTO: 'auto'>,
       <NumberEntityCapabilityAttribute.STEP: 'step'>: 1,
-      'unit_of_measurement': <UnitOfTime.SECONDS: 's'>,
+      <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: <UnitOfTime.SECONDS: 's'>,
     }),
     'context': <ANY>,
     'entity_id': 'number.pool_device_orp_dosing_off_time',
@@ -407,13 +407,13 @@
 # name: test_all_numbers[number.pool_device_orp_overfeed_alarm_lower_limit-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'device_class': 'voltage',
-      'friendly_name': 'Pool Device ORP overfeed alarm lower limit',
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'voltage',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Pool Device ORP overfeed alarm lower limit',
       <NumberEntityCapabilityAttribute.MAX: 'max'>: 1000,
       <NumberEntityCapabilityAttribute.MIN: 'min'>: 0,
       <NumberEntityCapabilityAttribute.MODE: 'mode'>: <NumberMode.AUTO: 'auto'>,
       <NumberEntityCapabilityAttribute.STEP: 'step'>: 1,
-      'unit_of_measurement': <UnitOfElectricPotential.MILLIVOLT: 'mV'>,
+      <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: <UnitOfElectricPotential.MILLIVOLT: 'mV'>,
     }),
     'context': <ANY>,
     'entity_id': 'number.pool_device_orp_overfeed_alarm_lower_limit',
@@ -468,13 +468,13 @@
 # name: test_all_numbers[number.pool_device_orp_overfeed_alarm_upper_limit-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'device_class': 'voltage',
-      'friendly_name': 'Pool Device ORP overfeed alarm upper limit',
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'voltage',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Pool Device ORP overfeed alarm upper limit',
       <NumberEntityCapabilityAttribute.MAX: 'max'>: 1000,
       <NumberEntityCapabilityAttribute.MIN: 'min'>: 0,
       <NumberEntityCapabilityAttribute.MODE: 'mode'>: <NumberMode.AUTO: 'auto'>,
       <NumberEntityCapabilityAttribute.STEP: 'step'>: 1,
-      'unit_of_measurement': <UnitOfElectricPotential.MILLIVOLT: 'mV'>,
+      <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: <UnitOfElectricPotential.MILLIVOLT: 'mV'>,
     }),
     'context': <ANY>,
     'entity_id': 'number.pool_device_orp_overfeed_alarm_upper_limit',
@@ -529,13 +529,13 @@
 # name: test_all_numbers[number.pool_device_orp_target-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'device_class': 'voltage',
-      'friendly_name': 'Pool Device ORP target',
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'voltage',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Pool Device ORP target',
       <NumberEntityCapabilityAttribute.MAX: 'max'>: 850,
       <NumberEntityCapabilityAttribute.MIN: 'min'>: 400,
       <NumberEntityCapabilityAttribute.MODE: 'mode'>: <NumberMode.AUTO: 'auto'>,
       <NumberEntityCapabilityAttribute.STEP: 'step'>: 1,
-      'unit_of_measurement': <UnitOfElectricPotential.MILLIVOLT: 'mV'>,
+      <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: <UnitOfElectricPotential.MILLIVOLT: 'mV'>,
     }),
     'context': <ANY>,
     'entity_id': 'number.pool_device_orp_target',
@@ -590,13 +590,13 @@
 # name: test_all_numbers[number.pool_device_ph_dosing_off_time-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'device_class': 'duration',
-      'friendly_name': 'Pool Device pH dosing off-time',
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'duration',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Pool Device pH dosing off-time',
       <NumberEntityCapabilityAttribute.MAX: 'max'>: 360,
       <NumberEntityCapabilityAttribute.MIN: 'min'>: 1,
       <NumberEntityCapabilityAttribute.MODE: 'mode'>: <NumberMode.AUTO: 'auto'>,
       <NumberEntityCapabilityAttribute.STEP: 'step'>: 1,
-      'unit_of_measurement': <UnitOfTime.SECONDS: 's'>,
+      <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: <UnitOfTime.SECONDS: 's'>,
     }),
     'context': <ANY>,
     'entity_id': 'number.pool_device_ph_dosing_off_time',
@@ -651,8 +651,8 @@
 # name: test_all_numbers[number.pool_device_ph_overfeed_alarm_lower_limit-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'device_class': 'ph',
-      'friendly_name': 'Pool Device pH overfeed alarm lower limit',
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'ph',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Pool Device pH overfeed alarm lower limit',
       <NumberEntityCapabilityAttribute.MAX: 'max'>: 14,
       <NumberEntityCapabilityAttribute.MIN: 'min'>: 0,
       <NumberEntityCapabilityAttribute.MODE: 'mode'>: <NumberMode.AUTO: 'auto'>,
@@ -711,8 +711,8 @@
 # name: test_all_numbers[number.pool_device_ph_overfeed_alarm_upper_limit-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'device_class': 'ph',
-      'friendly_name': 'Pool Device pH overfeed alarm upper limit',
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'ph',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Pool Device pH overfeed alarm upper limit',
       <NumberEntityCapabilityAttribute.MAX: 'max'>: 14,
       <NumberEntityCapabilityAttribute.MIN: 'min'>: 0,
       <NumberEntityCapabilityAttribute.MODE: 'mode'>: <NumberMode.AUTO: 'auto'>,
@@ -771,8 +771,8 @@
 # name: test_all_numbers[number.pool_device_ph_target-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'device_class': 'ph',
-      'friendly_name': 'Pool Device pH target',
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'ph',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Pool Device pH target',
       <NumberEntityCapabilityAttribute.MAX: 'max'>: 8,
       <NumberEntityCapabilityAttribute.MIN: 'min'>: 6,
       <NumberEntityCapabilityAttribute.MODE: 'mode'>: <NumberMode.AUTO: 'auto'>,
@@ -831,13 +831,13 @@
 # name: test_all_numbers[number.pool_device_power_on_delay_timer-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'device_class': 'duration',
-      'friendly_name': 'Pool Device Power-on delay timer',
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'duration',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Pool Device Power-on delay timer',
       <NumberEntityCapabilityAttribute.MAX: 'max'>: 5400,
       <NumberEntityCapabilityAttribute.MIN: 'min'>: 0,
       <NumberEntityCapabilityAttribute.MODE: 'mode'>: <NumberMode.AUTO: 'auto'>,
       <NumberEntityCapabilityAttribute.STEP: 'step'>: 1,
-      'unit_of_measurement': <UnitOfTime.SECONDS: 's'>,
+      <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: <UnitOfTime.SECONDS: 's'>,
     }),
     'context': <ANY>,
     'entity_id': 'number.pool_device_power_on_delay_timer',

@@ -41,11 +41,11 @@
 # name: test_sensor[sensor.electricity_maps_co2_intensity].1
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'attribution': 'Data provided by Electricity Maps',
+      <EntityStateAttribute.ATTRIBUTION: 'attribution'>: 'Data provided by Electricity Maps',
       'country_code': 'FR',
-      'friendly_name': 'Electricity Maps CO2 intensity',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Electricity Maps CO2 intensity',
       <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
-      'unit_of_measurement': 'gCO2eq/kWh',
+      <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: 'gCO2eq/kWh',
     }),
     'context': <ANY>,
     'entity_id': 'sensor.electricity_maps_co2_intensity',
@@ -97,11 +97,11 @@
 # name: test_sensor[sensor.electricity_maps_grid_fossil_fuel_percentage].1
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'attribution': 'Data provided by Electricity Maps',
+      <EntityStateAttribute.ATTRIBUTION: 'attribution'>: 'Data provided by Electricity Maps',
       'country_code': 'FR',
-      'friendly_name': 'Electricity Maps Grid fossil fuel percentage',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Electricity Maps Grid fossil fuel percentage',
       <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
-      'unit_of_measurement': '%',
+      <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: '%',
     }),
     'context': <ANY>,
     'entity_id': 'sensor.electricity_maps_grid_fossil_fuel_percentage',
