@@ -40,7 +40,7 @@
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'errors': 0,
-      'friendly_name': 'Syncthing (http://127.0.0.1:8384) YZXABCD test-folder Test Folder',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Syncthing (http://127.0.0.1:8384) YZXABCD test-folder Test Folder',
       'global_bytes': 1000000,
       'global_deleted': 0,
       'global_directories': 10,
@@ -117,7 +117,7 @@
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'errors': 0,
-      'friendly_name': 'Syncthing (http://127.0.0.1:8384) YZXABCD test-folder Test Folder',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Syncthing (http://127.0.0.1:8384) YZXABCD test-folder Test Folder',
       'global_bytes': 1000000,
       'global_deleted': 0,
       'global_directories': 10,
@@ -194,7 +194,7 @@
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'errors': 0,
-      'friendly_name': 'Syncthing (http://127.0.0.1:8384) YZXABCD test-folder Test Folder',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Syncthing (http://127.0.0.1:8384) YZXABCD test-folder Test Folder',
       'global_bytes': 1000000,
       'global_deleted': 0,
       'global_directories': 10,
@@ -271,7 +271,7 @@
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'errors': 0,
-      'friendly_name': 'Syncthing (http://127.0.0.1:8384) YZXABCD test-folder Test Folder',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Syncthing (http://127.0.0.1:8384) YZXABCD test-folder Test Folder',
       'global_bytes': 1000000,
       'global_deleted': 0,
       'global_directories': 10,
