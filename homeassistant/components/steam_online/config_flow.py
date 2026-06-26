@@ -8,6 +8,7 @@ import voluptuous as vol
 
 from homeassistant.config_entries import (
     SOURCE_REAUTH,
+    SOURCE_RECONFIGURE,
     ConfigFlow,
     ConfigFlowResult,
     OptionsFlowWithReload,
@@ -131,7 +132,9 @@ class SteamFlowHandler(ConfigFlow, domain=DOMAIN):
                     entry, data_updates=user_input
                 )
         return self.async_show_form(
-            step_id="reauth_confirm" if self.source == SOURCE_REAUTH else "reconfigure",
+            step_id=(
+                "reauth_confirm" if self.source == SOURCE_REAUTH else SOURCE_RECONFIGURE
+            ),
             data_schema=self.add_suggested_values_to_schema(
                 data_schema=STEP_REAUTH_DATA_SCHEMA, suggested_values=user_input
             ),
