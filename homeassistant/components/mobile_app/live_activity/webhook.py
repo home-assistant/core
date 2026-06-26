@@ -11,10 +11,20 @@ from homeassistant.const import CONF_WEBHOOK_ID
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import config_validation as cv
 
-from ..const import ATTR_LIVE_ACTIVITY_EXPIRES_AT, ATTR_PUSH_TOKEN, ATTR_TAG
+from ..const import (
+    ATTR_LIVE_ACTIVITY_EXPIRES_AT,
+    ATTR_PUSH_TOKEN,
+    ATTR_TAG,
+    DATA_NOTIFY,
+    DOMAIN,
+)
 from ..helpers import empty_okay_response
 from ..webhook import WEBHOOK_COMMANDS, validate_schema
-from .store import remove_live_activity_token, store_live_activity_token
+from .store import (
+    pop_pending_update,
+    remove_live_activity_token,
+    store_live_activity_token,
+)
 
 
 @WEBHOOK_COMMANDS.register("live_activity_token")
@@ -28,14 +38,21 @@ from .store import remove_live_activity_token, store_live_activity_token
 async def webhook_update_live_activity_token(
     hass: HomeAssistant, config_entry: ConfigEntry, data: dict[str, Any]
 ) -> Response:
-    """Store a Live Activity APNs token sent by the iOS app."""
+    """Store a Live Activity push token sent by the app, flushing any buffered update."""
+    webhook_id = config_entry.data[CONF_WEBHOOK_ID]
+    tag = data[ATTR_TAG]
+    # Read the buffer before storing the token, which clears the pending state.
+    buffered = pop_pending_update(hass, webhook_id, tag)
     store_live_activity_token(
         hass,
-        config_entry.data[CONF_WEBHOOK_ID],
-        data[ATTR_TAG],
+        webhook_id,
+        tag,
         data[ATTR_PUSH_TOKEN],
         data[ATTR_LIVE_ACTIVITY_EXPIRES_AT],
     )
+    if buffered is not None and (service := hass.data[DOMAIN].get(DATA_NOTIFY)):
+        # The token is now stored, so this resolves to an update.
+        await service.async_send_remote_message_target(config_entry, buffered)
     return empty_okay_response()
 
 

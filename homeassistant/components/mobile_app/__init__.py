@@ -47,6 +47,8 @@ from .const import (
     DATA_DELETED_IDS,
     DATA_DEVICES,
     DATA_LIVE_ACTIVITY_CLEANUP_CANCEL,
+    DATA_LIVE_ACTIVITY_PENDING_STARTS,
+    DATA_LIVE_ACTIVITY_PENDING_UPDATES,
     DATA_LIVE_ACTIVITY_TOKENS,
     DATA_PENDING_UPDATES,
     DATA_PUSH_CHANNEL,
@@ -89,6 +91,8 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
         DATA_DELETED_IDS: app_config.get(DATA_DELETED_IDS, []),
         DATA_DEVICES: {},
         DATA_LIVE_ACTIVITY_TOKENS: app_config[DATA_LIVE_ACTIVITY_TOKENS],
+        DATA_LIVE_ACTIVITY_PENDING_STARTS: {},
+        DATA_LIVE_ACTIVITY_PENDING_UPDATES: {},
         DATA_LIVE_ACTIVITY_CLEANUP_CANCEL: None,
         DATA_PUSH_CHANNEL: {},
         DATA_STORE: store,
@@ -254,6 +258,8 @@ async def async_remove_entry(hass: HomeAssistant, entry: ConfigEntry) -> None:
     webhook_id = entry.data[CONF_WEBHOOK_ID]
     hass.data[DOMAIN][DATA_DELETED_IDS].append(webhook_id)
     hass.data[DOMAIN][DATA_LIVE_ACTIVITY_TOKENS].pop(webhook_id, None)
+    hass.data[DOMAIN][DATA_LIVE_ACTIVITY_PENDING_STARTS].pop(webhook_id, None)
+    hass.data[DOMAIN][DATA_LIVE_ACTIVITY_PENDING_UPDATES].pop(webhook_id, None)
     store = hass.data[DOMAIN][DATA_STORE]
     await store.async_save(savable_state(hass))
 

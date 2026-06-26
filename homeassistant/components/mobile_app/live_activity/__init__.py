@@ -3,6 +3,7 @@
 
 from collections.abc import Mapping
 from dataclasses import dataclass
+from datetime import timedelta
 from enum import StrEnum
 from functools import partial
 from typing import Any
@@ -15,6 +16,7 @@ from ..const import (
     ATTR_APP_DATA,
     ATTR_LIVE_ACTIVITY_EVENT,
     ATTR_LIVE_ACTIVITY_EXPIRES_AT,
+    ATTR_LIVE_ACTIVITY_START_FAILSAFE,
     ATTR_LIVE_ACTIVITY_TOKEN,
     ATTR_LIVE_UPDATE,
     ATTR_START_LIVE_ACTIVITY_TOKEN,
@@ -28,7 +30,14 @@ from ..const import (
 
 # Imported so the webhook command registrations in the submodule run on import.
 from . import webhook  # noqa: F401
-from .store import remove_live_activity_token
+from .store import (
+    DEFAULT_START_FAILSAFE,
+    buffer_pending_update,
+    clear_start_pending,
+    is_start_pending,
+    mark_start_pending,
+    remove_live_activity_token,
+)
 
 
 class LiveActivityEvent(StrEnum):
@@ -50,21 +59,39 @@ class LiveActivityPush:
 
 def prepare_live_activity_remote_push(
     hass: HomeAssistant, registration: Mapping[str, Any], data: dict[str, Any]
-) -> tuple[dict[str, Any], CALLBACK_TYPE | None]:
+) -> tuple[dict[str, Any] | None, CALLBACK_TYPE | None]:
     """Return remote notification data and an optional on-success callback.
 
-    Applies any Live Activity routing, the callback, when set, runs after a
-    successful send.
+    Applies any Live Activity routing; the callback, when set, runs after a
+    successful send. Returns ``None`` data when the push should be dropped.
     """
     if not (resolved := resolve_live_activity_push(hass, registration, data)):
         return data, None
+
+    webhook_id = registration[ATTR_WEBHOOK_ID]
+
+    if resolved.event is LiveActivityEvent.START:
+        # Token not reported yet, so an update has nothing to target. Send one start, then
+        # buffer the latest update (flushed once the token arrives) instead of starting again.
+        failsafe_seconds = registration[ATTR_APP_DATA].get(
+            ATTR_LIVE_ACTIVITY_START_FAILSAFE
+        )
+        failsafe = (
+            timedelta(seconds=failsafe_seconds)
+            if failsafe_seconds
+            else DEFAULT_START_FAILSAFE
+        )
+        if is_start_pending(hass, webhook_id, resolved.tag, failsafe):
+            buffer_pending_update(hass, webhook_id, resolved.tag, data)
+            return None, None
+        mark_start_pending(hass, webhook_id, resolved.tag)
 
     success_callback: CALLBACK_TYPE | None = None
     if resolved.event is LiveActivityEvent.END:
         success_callback = partial(
             remove_live_activity_token,
             hass,
-            registration[ATTR_WEBHOOK_ID],
+            webhook_id,
             resolved.tag,
         )
 
@@ -99,6 +126,8 @@ def resolve_live_activity_push(
     )
 
     if data.get(ATTR_MESSAGE) == CLEAR_NOTIFICATION:
+        # Clearing ends the cycle; release the start guard even if no token was ever reported.
+        clear_start_pending(hass, webhook_id, tag)
         if stored_token_valid:
             return LiveActivityPush(stored[ATTR_TOKEN], LiveActivityEvent.END, tag)
         return None

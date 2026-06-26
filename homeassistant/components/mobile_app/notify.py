@@ -220,7 +220,7 @@ class MobileAppNotificationService(BaseNotificationService):
             if target in local_push_channels:
                 local_push_channels[target].async_send_notification(
                     data,
-                    partial(self._async_send_remote_message_target, entry),
+                    partial(self.async_send_remote_message_target, entry),
                 )
                 async_dispatcher_send(self.hass, SIGNAL_RECORD_NOTIFICATION, target)
                 continue
@@ -230,7 +230,7 @@ class MobileAppNotificationService(BaseNotificationService):
                 failed_targets.append(target)
                 continue
 
-            await self._async_send_remote_message_target(entry, data)
+            await self.async_send_remote_message_target(entry, data)
             async_dispatcher_send(self.hass, SIGNAL_RECORD_NOTIFICATION, target)
 
         if failed_targets:
@@ -240,15 +240,19 @@ class MobileAppNotificationService(BaseNotificationService):
                 " not connected to local push notifications"
             )
 
-    async def _async_send_remote_message_target(
+    async def async_send_remote_message_target(
         self, entry: ConfigEntry, data: dict[str, Any]
     ) -> None:
         """Send a message to a target."""
         on_success_callback: CALLBACK_TYPE | None = None
         if entry.data[ATTR_MANUFACTURER] == MANUFACTURER_APPLE:
-            data, on_success_callback = prepare_live_activity_remote_push(
+            prepared, on_success_callback = prepare_live_activity_remote_push(
                 self.hass, entry.data, data
             )
+            if prepared is None:
+                # The push was suppressed upstream; nothing to send.
+                return
+            data = prepared
         try:
             await _send_message(async_get_clientsession(self.hass), entry, data)
         except HomeAssistantError as e:

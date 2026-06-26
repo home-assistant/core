@@ -21,6 +21,8 @@ DATA_DELETED_IDS = "deleted_ids"
 DATA_DEVICES = "devices"
 
 DATA_LIVE_ACTIVITY_TOKENS = "live_activity_tokens"
+DATA_LIVE_ACTIVITY_PENDING_STARTS = "live_activity_pending_starts"
+DATA_LIVE_ACTIVITY_PENDING_UPDATES = "live_activity_pending_updates"
 DATA_LIVE_ACTIVITY_CLEANUP_CANCEL = "live_activity_cleanup_cancel"
 DATA_STORE = "store"
 DATA_NOTIFY = "notify"
@@ -47,6 +49,8 @@ ATTR_SUPPORTS_ENCRYPTION = "supports_encryption"
 
 ATTR_LIVE_UPDATE = "live_update"
 ATTR_START_LIVE_ACTIVITY_TOKEN = "start_live_activity_token"
+# Seconds the device asks Core to wait for the per-activity token before allowing a new start.
+ATTR_LIVE_ACTIVITY_START_FAILSAFE = "live_activity_start_failsafe"
 ATTR_LIVE_ACTIVITY_TOKEN = "live_activity_token"
 ATTR_LIVE_ACTIVITY_EVENT = "event"
 ATTR_LIVE_ACTIVITY_EXPIRES_AT = "expires_at"
@@ -111,6 +115,7 @@ SCHEMA_APP_DATA = vol.Schema(
         # push notifications.
         vol.Optional(ATTR_PUSH_WEBSOCKET_CHANNEL): cv.boolean,
         vol.Optional(ATTR_START_LIVE_ACTIVITY_TOKEN): cv.string,
+        vol.Optional(ATTR_LIVE_ACTIVITY_START_FAILSAFE): cv.positive_float,
     },
     extra=vol.ALLOW_EXTRA,
 )

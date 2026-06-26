@@ -7,11 +7,16 @@ from typing import Any
 from aiohttp.test_utils import TestClient
 from freezegun.api import FrozenDateTimeFactory
 
-from homeassistant.components.mobile_app.const import DATA_LIVE_ACTIVITY_TOKENS, DOMAIN
+from homeassistant.components.mobile_app.const import (
+    DATA_LIVE_ACTIVITY_PENDING_UPDATES,
+    DATA_LIVE_ACTIVITY_TOKENS,
+    DOMAIN,
+)
 from homeassistant.core import HomeAssistant
 from homeassistant.util import dt as dt_util
 
-from tests.common import async_fire_time_changed
+from tests.common import MockConfigEntry, MockUser, async_fire_time_changed
+from tests.test_util.aiohttp import AiohttpClientMocker
 
 
 async def test_webhook_update_live_activity_token(
@@ -244,3 +249,96 @@ async def test_webhook_live_activity_dismissed_nonexistent_tag(
 
     assert resp.status == HTTPStatus.OK
     assert hass.data[DOMAIN][DATA_LIVE_ACTIVITY_TOKENS] == {}
+
+
+async def test_webhook_token_flushes_buffered_update(
+    hass: HomeAssistant,
+    aioclient_mock: AiohttpClientMocker,
+    hass_admin_user: MockUser,
+    webhook_client: TestClient,
+) -> None:
+    """Test reporting the token flushes the buffered latest update as an update."""
+    push_url = "https://mobile-push.home-assistant.dev/push"
+    now = dt_util.naive_now() + timedelta(hours=24)
+    iso_time = now.strftime("%Y-%m-%dT%H:%M:%SZ")
+
+    aioclient_mock.post(
+        push_url,
+        json={
+            "rateLimits": {
+                "successful": 1,
+                "errors": 0,
+                "maximum": 150,
+                "resetsAt": iso_time,
+            }
+        },
+    )
+
+    entry = MockConfigEntry(
+        data={
+            "app_data": {
+                "push_token": "FCM_TOKEN",
+                "push_url": push_url,
+                "start_live_activity_token": "PUSH_TO_START_HEX_TOKEN",
+            },
+            "app_id": "io.robbie.HomeAssistant",
+            "app_name": "Home Assistant",
+            "app_version": "2024.1",
+            "device_id": "ios-device-1",
+            "device_name": "iPhone",
+            "manufacturer": "Apple",
+            "model": "iPhone 15",
+            "os_name": "iOS",
+            "os_version": "17.2",
+            "supports_encryption": False,
+            "user_id": hass_admin_user.id,
+            "webhook_id": "ios-webhook-1",
+        },
+        domain=DOMAIN,
+        source="registration",
+        title="iPhone entry",
+        version=1,
+    )
+    entry.add_to_hass(hass)
+    assert await hass.config_entries.async_setup(entry.entry_id)
+    await hass.async_block_till_done()
+
+    # Start, then a fresher update that is buffered while no token is known.
+    for progress in (10, 90):
+        await hass.services.async_call(
+            "notify",
+            "mobile_app_iphone",
+            {
+                "message": "Laundry running",
+                "target": ["ios-webhook-1"],
+                "data": {"live_update": True, "tag": "laundry", "progress": progress},
+            },
+            blocking=True,
+        )
+    assert len(aioclient_mock.mock_calls) == 1
+
+    expires_at = dt_util.utcnow().timestamp() + 3600
+    resp = await webhook_client.post(
+        "/api/webhook/ios-webhook-1",
+        json={
+            "type": "live_activity_token",
+            "data": {
+                "tag": "laundry",
+                "push_token": "PER_ACTIVITY_TOKEN",
+                "expires_at": expires_at,
+            },
+        },
+    )
+    assert resp.status == HTTPStatus.OK
+    await hass.async_block_till_done()
+
+    assert len(aioclient_mock.mock_calls) == 2
+    flushed = aioclient_mock.mock_calls[1][2]
+    assert flushed["live_activity_token"] == "PER_ACTIVITY_TOKEN"
+    assert flushed["data"] == {
+        "live_update": True,
+        "tag": "laundry",
+        "progress": 90,
+        "event": "update",
+    }
+    assert hass.data[DOMAIN][DATA_LIVE_ACTIVITY_PENDING_UPDATES] == {}
