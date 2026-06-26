@@ -3,13 +3,13 @@
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'band': '5 GHz',
-      'friendly_name': '00:00:5E:00:53:01',
-      'in_zones': list([
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: '00:00:5E:00:53:01',
+      <DeviceTrackerEntityStateAttribute.IN_ZONES: 'in_zones'>: list([
         'zone.home',
       ]),
-      'mac': '00:00:5E:00:53:01',
-      'source_type': <SourceType.ROUTER: 'router'>,
-      'tracking_type': <TrackingType.CONNECTION: 'connection'>,
+      <ScannerEntityStateAttribute.MAC: 'mac'>: '00:00:5E:00:53:01',
+      <DeviceTrackerEntityStateAttribute.SOURCE_TYPE: 'source_type'>: <SourceType.ROUTER: 'router'>,
+      <DeviceTrackerEntityCapabilityAttribute.TRACKING_TYPE: 'tracking_type'>: <TrackingType.CONNECTION: 'connection'>,
       'wifi': 'Main',
     }),
     'context': <ANY>,

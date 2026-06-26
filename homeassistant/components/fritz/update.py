@@ -2,7 +2,7 @@
 
 from dataclasses import dataclass
 import logging
-from typing import Any
+from typing import Any, override
 
 from homeassistant.components.update import (
     UpdateEntity,
@@ -61,11 +61,13 @@ class FritzBoxUpdateEntity(FritzBoxBaseCoordinatorEntity, UpdateEntity):
         super().__init__(avm_wrapper, device_friendly_name, description)
 
     @property
+    @override
     def installed_version(self) -> str | None:
         """Version currently in use."""
         return self.coordinator.current_firmware
 
     @property
+    @override
     def latest_version(self) -> str | None:
         """Latest version available for install."""
         if self.coordinator.update_available:
@@ -73,10 +75,12 @@ class FritzBoxUpdateEntity(FritzBoxBaseCoordinatorEntity, UpdateEntity):
         return self.coordinator.current_firmware
 
     @property
+    @override
     def release_url(self) -> str | None:
         """URL to the full release notes of the latest version available."""
         return self.coordinator.release_url
 
+    @override
     async def async_install(
         self, version: str | None, backup: bool, **kwargs: Any
     ) -> None:

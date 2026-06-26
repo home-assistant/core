@@ -62,10 +62,14 @@ async def async_setup_entry(hass: HomeAssistant, entry: VeraConfigEntry) -> bool
     controller = veraApi.VeraController(base_url, subscription_registry)
 
     try:
-        all_devices = await hass.async_add_executor_job(controller.get_devices)
 
-        # pylint: disable-next=home-assistant-sequential-executor-jobs
-        all_scenes = await hass.async_add_executor_job(controller.get_scenes)
+        def _get_devices_and_scenes():
+            """Get devices and scenes from the Vera controller."""
+            return controller.get_devices(), controller.get_scenes()
+
+        all_devices, all_scenes = await hass.async_add_executor_job(
+            _get_devices_and_scenes
+        )
     except RequestException as exception:
         # There was a network related error connecting to the Vera controller.
         _LOGGER.exception("Error communicating with Vera API")

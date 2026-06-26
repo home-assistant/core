@@ -2,7 +2,7 @@
 
 from collections.abc import Callable
 from datetime import timedelta
-from typing import Any
+from typing import Any, override
 
 from pysnooz.api import UnknownSnoozState
 from pysnooz.commands import (
@@ -99,6 +99,7 @@ class SnoozFan(FanEntity, RestoreEntity):
 
         self.async_write_ha_state()
 
+    @override
     async def async_added_to_hass(self) -> None:
         """Restore state and subscribe to device events."""
         await super().async_added_to_hass()
@@ -117,20 +118,24 @@ class SnoozFan(FanEntity, RestoreEntity):
         return self._device.subscribe_to_state_change(self._async_write_state_changed)
 
     @property
+    @override
     def percentage(self) -> int | None:
         """Volume level of the device."""
         return self._percentage if self.assumed_state else self._device.state.volume
 
     @property
+    @override
     def is_on(self) -> bool | None:
         """Power state of the device."""
         return self._is_on if self.assumed_state else self._device.state.on
 
     @property
+    @override
     def assumed_state(self) -> bool:
         """Return True if unable to access real state of the entity."""
         return not self._device.is_connected or self._device.state is UnknownSnoozState
 
+    @override
     async def async_turn_on(
         self,
         percentage: int | None = None,
@@ -140,10 +145,12 @@ class SnoozFan(FanEntity, RestoreEntity):
         """Turn on the device."""
         await self._async_execute_command(turn_on(percentage))
 
+    @override
     async def async_turn_off(self, **kwargs: Any) -> None:
         """Turn off the device."""
         await self._async_execute_command(turn_off())
 
+    @override
     async def async_set_percentage(self, percentage: int) -> None:
         """Set the volume of the device. A value of 0 will turn off the device."""
         await self._async_execute_command(

@@ -5,7 +5,7 @@ from dataclasses import dataclass, field
 from datetime import datetime
 import logging
 import math
-from typing import cast
+from typing import cast, override
 
 from homeassistant.components.zone import DOMAIN as ZONE_DOMAIN
 from homeassistant.config_entries import ConfigEntry
@@ -310,6 +310,7 @@ class ProximityDataUpdateCoordinator(DataUpdateCoordinator[ProximityData]):
 
     # -- Shutdown ---------------------------------------------------------------
 
+    @override
     async def async_shutdown(self) -> None:
         """Cancel the decay timer and shut down the coordinator."""
         self._cancel_decay_timer()
@@ -504,6 +505,7 @@ class ProximityDataUpdateCoordinator(DataUpdateCoordinator[ProximityData]):
 
     # -- Core update ------------------------------------------------------------
 
+    @override
     async def _async_update_data(self) -> ProximityData:
         """Recalculate proximity data for every tracked entity.
 

@@ -88,8 +88,8 @@
 # name: test_devices_creaction_ok[state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'device_class': 'switch',
-      'friendly_name': '[TEST] Light switch 0 (TEST_SERIAL_0)',
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'switch',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: '[TEST] Light switch 0 (TEST_SERIAL_0)',
     }),
     'context': <ANY>,
     'entity_id': 'switch.test_light_switch_0_test_serial_0',

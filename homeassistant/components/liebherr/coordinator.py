@@ -2,6 +2,7 @@
 
 from dataclasses import dataclass, field
 import logging
+from typing import override
 
 from pyliebherrhomeapi import (
     DeviceState,
@@ -53,6 +54,7 @@ class LiebherrCoordinator(DataUpdateCoordinator[DeviceState]):
         self.client = client
         self.device_id = device_id
 
+    @override
     async def _async_setup(self) -> None:
         """Set up the coordinator by validating device access."""
         try:
@@ -66,6 +68,7 @@ class LiebherrCoordinator(DataUpdateCoordinator[DeviceState]):
                 f"Failed to connect to device {self.device_id}: {err}"
             ) from err
 
+    @override
     async def _async_update_data(self) -> DeviceState:
         """Fetch data from API for this device."""
         try:

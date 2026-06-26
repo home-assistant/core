@@ -4,7 +4,7 @@ from abc import ABC, abstractmethod
 from collections.abc import Awaitable, Callable, Coroutine
 import functools
 import logging
-from typing import Any, NamedTuple
+from typing import Any, NamedTuple, override
 
 from aioasuswrt.asuswrt import AsusWrt as AsusWrtLegacy
 from aiohttp import ClientSession
@@ -233,10 +233,12 @@ class AsusWrtLegacyBridge(AsusWrtBridge):
         )
 
     @property
+    @override
     def is_connected(self) -> bool:
         """Get connected status."""
         return self._api.is_connected
 
+    @override
     async def async_connect(self) -> None:
         """Connect to the device."""
         await self._api.connection.async_connect()
@@ -249,10 +251,12 @@ class AsusWrtLegacyBridge(AsusWrtBridge):
         if self._model is None:
             await self._get_model()
 
+    @override
     async def async_disconnect(self) -> None:
         """Disconnect to the device."""
         await self._api.async_disconnect()
 
+    @override
     async def async_get_connected_devices(self) -> dict[str, WrtDevice]:
         """Get list of connected devices."""
         api_devices = await self._api.async_get_connected_devices()
@@ -294,6 +298,7 @@ class AsusWrtLegacyBridge(AsusWrtBridge):
         if model and "model" in model:
             self._model = model["model"]
 
+    @override
     async def async_get_available_sensors(self) -> dict[str, dict[str, Any]]:
         """Return a dictionary of available sensors for this bridge."""
         sensors_temperatures = await self._get_available_temperature_sensors()
@@ -378,10 +383,12 @@ class AsusWrtHttpBridge(AsusWrtBridge):
         }
 
     @property
+    @override
     def is_connected(self) -> bool:
         """Get connected status."""
         return self._api.connected
 
+    @override
     async def async_connect(self) -> None:
         """Connect to the device."""
         await self._api.async_connect()
@@ -398,6 +405,7 @@ class AsusWrtHttpBridge(AsusWrtBridge):
         self._model_id = _identity.product_id
         self._serial_number = _identity.serial
 
+    @override
     async def async_disconnect(self) -> None:
         """Disconnect to the device."""
         await self._api.async_disconnect()
@@ -439,6 +447,7 @@ class AsusWrtHttpBridge(AsusWrtBridge):
             )
         return sensors
 
+    @override
     async def async_get_connected_devices(self) -> dict[str, WrtDevice]:
         """Get list of connected devices."""
         api_devices: dict[str, AsusClient] = await self._api.async_get_data(
@@ -455,6 +464,7 @@ class AsusWrtHttpBridge(AsusWrtBridge):
             and dev.state is ConnectionState.CONNECTED
         }
 
+    @override
     async def async_get_available_sensors(self) -> dict[str, dict[str, Any]]:
         """Return a dictionary of available sensors for this bridge."""
         return {

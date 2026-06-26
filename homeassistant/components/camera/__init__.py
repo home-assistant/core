@@ -12,7 +12,7 @@ import logging
 import os
 from random import SystemRandom
 import time
-from typing import Any, Final, final
+from typing import Any, Final, final, override
 
 from aiohttp import hdrs, web
 import attr
@@ -68,6 +68,7 @@ from .const import (
     PREF_ORIENTATION,
     PREF_PRELOAD_STREAM,
     SERVICE_RECORD,
+    CameraEntityStateAttribute,
     CameraState,
     StreamType,
 )
@@ -421,7 +422,7 @@ class Camera(Entity, cached_properties=CACHED_PROPERTIES_WITH_ATTR_):
     """The base class for camera entities."""
 
     _entity_component_unrecorded_attributes = frozenset(
-        {"access_token", "entity_picture"}
+        {CameraEntityStateAttribute.ACCESS_TOKEN, "entity_picture"}
     )
 
     # Entity Properties
@@ -456,6 +457,7 @@ class Camera(Entity, cached_properties=CACHED_PROPERTIES_WITH_ATTR_):
         )
 
     @cached_property
+    @override
     def entity_picture(self) -> str:
         """Return a link to the camera feed as entity picture."""
         if self._attr_entity_picture is not None:
@@ -468,6 +470,7 @@ class Camera(Entity, cached_properties=CACHED_PROPERTIES_WITH_ATTR_):
         return False
 
     @cached_property
+    @override
     def supported_features(self) -> CameraEntityFeature:
         """Flag supported features."""
         return self._attr_supported_features
@@ -503,6 +506,7 @@ class Camera(Entity, cached_properties=CACHED_PROPERTIES_WITH_ATTR_):
         return self._attr_frame_interval
 
     @property
+    @override
     def available(self) -> bool:
         """Return True if entity is available."""
         if (stream := self.stream) and not stream.available:
@@ -597,6 +601,7 @@ class Camera(Entity, cached_properties=CACHED_PROPERTIES_WITH_ATTR_):
 
     @property
     @final
+    @override
     def state(self) -> str:
         """Return the camera state."""
         if self.is_recording:
@@ -644,18 +649,23 @@ class Camera(Entity, cached_properties=CACHED_PROPERTIES_WITH_ATTR_):
 
     @final
     @property
-    def state_attributes(self) -> dict[str, str | None]:
+    @override
+    def state_attributes(self) -> dict[str, str | bool | None]:
         """Return the camera state attributes."""
-        attrs = {"access_token": self.access_tokens[-1]}
+        attrs: dict[str, str | bool | None] = {
+            CameraEntityStateAttribute.ACCESS_TOKEN: self.access_tokens[-1]
+        }
 
         if model := self.model:
-            attrs["model_name"] = model
+            attrs[CameraEntityStateAttribute.MODEL_NAME] = model
 
         if brand := self.brand:
-            attrs["brand"] = brand
+            attrs[CameraEntityStateAttribute.BRAND] = brand
 
         if motion_detection_enabled := self.motion_detection_enabled:
-            attrs["motion_detection"] = motion_detection_enabled
+            attrs[CameraEntityStateAttribute.MOTION_DETECTION] = (
+                motion_detection_enabled
+            )
 
         return attrs
 
@@ -665,6 +675,7 @@ class Camera(Entity, cached_properties=CACHED_PROPERTIES_WITH_ATTR_):
         self.access_tokens.append(hex(_RND.getrandbits(256))[2:])
         self.__dict__.pop("entity_picture", None)
 
+    @override
     async def async_internal_added_to_hass(self) -> None:
         """Run when entity about to be added to hass."""
         await super().async_internal_added_to_hass()
@@ -759,6 +770,7 @@ class Camera(Entity, cached_properties=CACHED_PROPERTIES_WITH_ATTR_):
         return CameraCapabilities(frontend_stream_types)
 
     @callback
+    @override
     def _async_write_ha_state(self) -> None:
         """Write the state to the state machine.
 
@@ -823,6 +835,7 @@ class CameraImageView(CameraView):
     url = "/api/camera_proxy/{entity_id}"
     name = "api:camera:image"
 
+    @override
     async def handle(self, request: web.Request, camera: Camera) -> web.Response:
         """Serve camera image."""
         width = request.query.get("width")
@@ -846,6 +859,7 @@ class CameraMjpegStream(CameraView):
     url = "/api/camera_proxy_stream/{entity_id}"
     name = "api:camera:stream"
 
+    @override
     async def handle(self, request: web.Request, camera: Camera) -> web.StreamResponse:
         """Serve camera stream, possibly with interval."""
         if (interval_str := request.query.get("interval")) is None:
@@ -991,6 +1005,7 @@ class _TemplateCameraEntity:
         self._report_issue()
         return getattr(self._camera, name)
 
+    @override
     def __str__(self) -> str:
         """Forward to the camera entity."""
         self._report_issue()
