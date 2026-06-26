@@ -1,9 +1,9 @@
 """Data update coordinator for the Steam integration."""
 
+import logging
 from dataclasses import dataclass
 from datetime import timedelta
-import logging
-from typing import override
+from typing import TYPE_CHECKING, override
 
 import steam.api
 
@@ -13,7 +13,7 @@ from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ConfigEntryAuthFailed
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
 
-from .const import CONF_ACCOUNTS, DOMAIN
+from .const import DOMAIN, SUBENTRY_TYPE_FRIEND
 
 type SteamConfigEntry = ConfigEntry[SteamDataUpdateCoordinator]
 
@@ -76,8 +76,16 @@ class SteamDataUpdateCoordinator(DataUpdateCoordinator[dict[str, PlayerData]]):
 
     def _update(self) -> dict[str, PlayerData]:
         """Fetch data from API endpoint."""
-        accounts = self.config_entry.options[CONF_ACCOUNTS]
-        _ids = list(accounts)
+        if TYPE_CHECKING:
+            assert self.config_entry.unique_id
+        _ids = [self.config_entry.unique_id]
+        _ids.extend(
+            subentry.unique_id
+            for subentry in self.config_entry.get_subentries_of_type(
+                SUBENTRY_TYPE_FRIEND
+            )
+            if subentry.unique_id
+        )
 
         response = self.user_interface.GetPlayerSummaries(steamids=_ids)
         players = {
