@@ -10,8 +10,6 @@ from miio import (
     Device as MiioDevice,
     DeviceException,
 )
-
-GatewayException = DeviceException
 from miio.integrations.lumi.gateway.gateway import (
     GATEWAY_MODEL_AC_V1,
     GATEWAY_MODEL_AC_V2,
@@ -1027,7 +1025,7 @@ class XiaomiGatewayIlluminanceSensor(SensorEntity):
                 self._gateway.get_illumination
             )
             self._attr_available = True
-        except GatewayException as ex:
+        except DeviceException as ex:
             if self._attr_available:
                 self._attr_available = False
                 _LOGGER.error(
