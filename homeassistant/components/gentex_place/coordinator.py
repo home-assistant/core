@@ -112,6 +112,7 @@ class PlaceCoordinator(DataUpdateCoordinator[dict[str, PlaceDeviceShadow]]):
     def _stop_mqtt(self) -> None:
         """Stop the MQTT loop (runs in executor)."""
         self.mqtt_client.disconnect()
+        self.mqtt_client.loop_stop()
 
     @staticmethod
     def _thing_name_from_topic(topic: str) -> str | None:
