@@ -813,23 +813,8 @@ async def test_device_class_user(
     assert await async_setup_component(hass, "sensor", config)
 
     entity_id = config["sensor"]["source"]
-    # This replicates the current sequence when HA starts up in a real runtime
-    # by updating the base sensor state before the base sensor's units
-    # or state have been correctly populated.  Those interim updates
-    # include states of None and Unknown
-    hass.states.async_set(entity_id, STATE_UNKNOWN, {})
-    await hass.async_block_till_done()
-    hass.states.async_set(
-        entity_id, 100, {"device_class": None, "unit_of_measurement": None}
-    )
-    await hass.async_block_till_done()
-    hass.states.async_set(
-        entity_id, 200, {"device_class": None, "unit_of_measurement": None}
-    )
-    await hass.async_block_till_done()
 
-    state = hass.states.get("sensor.integration")
-    assert "device_class" not in state.attributes
+    await _setup_device_class_test(hass, entity_id)
 
     hass.states.async_set(entity_id, 300, source_config, force_update=True)
     await hass.async_block_till_done()
@@ -856,23 +841,8 @@ async def test_device_class(hass: HomeAssistant, method) -> None:
     assert await async_setup_component(hass, "sensor", config)
 
     entity_id = config["sensor"]["source"]
-    # This replicates the current sequence when HA starts up in a real runtime
-    # by updating the base sensor state before the base sensor's units
-    # or state have been correctly populated.  Those interim updates
-    # include states of None and Unknown
-    hass.states.async_set(entity_id, STATE_UNKNOWN, {})
-    await hass.async_block_till_done()
-    hass.states.async_set(
-        entity_id, 100, {"device_class": None, "unit_of_measurement": None}
-    )
-    await hass.async_block_till_done()
-    hass.states.async_set(
-        entity_id, 200, {"device_class": None, "unit_of_measurement": None}
-    )
-    await hass.async_block_till_done()
 
-    state = hass.states.get("sensor.integration")
-    assert "device_class" not in state.attributes
+    await _setup_device_class_test(hass, entity_id)
 
     hass.states.async_set(
         entity_id,
@@ -1029,6 +999,26 @@ async def _setup_integral_sensor(
         hass, "sensor", _integral_sensor_config(max_sub_interval=max_sub_interval)
     )
     await hass.async_block_till_done()
+
+
+async def _setup_device_class_test(hass: HomeAssistant, entity_id: str) -> None:
+    # This replicates the current sequence when HA starts up in a real runtime
+    # by updating the base sensor state before the base sensor's units
+    # or state have been correctly populated.  Those interim updates
+    # include states of None and Unknown
+    hass.states.async_set(entity_id, STATE_UNKNOWN, {})
+    await hass.async_block_till_done()
+    hass.states.async_set(
+        entity_id, 100, {"device_class": None, "unit_of_measurement": None}
+    )
+    await hass.async_block_till_done()
+    hass.states.async_set(
+        entity_id, 200, {"device_class": None, "unit_of_measurement": None}
+    )
+    await hass.async_block_till_done()
+
+    state = hass.states.get("sensor.integration")
+    assert "device_class" not in state.attributes
 
 
 async def _update_source_sensor(hass: HomeAssistant, value: int | str) -> None:
