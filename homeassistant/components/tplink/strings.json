@@ -1,16 +1,4 @@
 {
-  "options": {
-    "step": {
-      "init": {
-        "data": {
-          "update_interval": "Update interval (seconds)"
-        },
-        "data_description": {
-          "update_interval": "How often to poll this device, in seconds. The default is 5 seconds. Lower values make automations react faster to physical changes at the cost of more network traffic to the device."
-        }
-      }
-    }
-  },
   "config": {
     "abort": {
       "already_configured": "[%key:common::config_flow::abort::already_configured_device%]",
@@ -413,6 +401,18 @@
     "deprecated_entity": {
       "description": "We detected that entity `{entity}` is being used in `{info}`\n\nWe have created a new `{new_platform}` entity and you should migrate `{info}` to use this new entity.\n\nWhen you are done migrating `{info}` and are ready to have the deprecated `{entity}` entity removed, disable the entity and restart Home Assistant.",
       "title": "Detected deprecated {platform} entity usage"
+    }
+  },
+  "options": {
+    "step": {
+      "init": {
+        "data": {
+          "update_interval": "Update interval (seconds)"
+        },
+        "data_description": {
+          "update_interval": "How often to poll this device, in seconds. The default is 5 seconds. Lower values make automations react faster to physical changes at the cost of more network traffic to the device."
+        }
+      }
     }
   },
   "services": {

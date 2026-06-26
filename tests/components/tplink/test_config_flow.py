@@ -36,7 +36,7 @@ from homeassistant.const import (
     CONF_USERNAME,
 )
 from homeassistant.core import HomeAssistant
-from homeassistant.data_entry_flow import FlowResultType
+from homeassistant.data_entry_flow import FlowResultType, InvalidData
 from homeassistant.helpers.service_info.dhcp import DhcpServiceInfo
 
 from . import _mocked_device, _patch_connect, _patch_discovery, _patch_single_discovery
@@ -2514,11 +2514,8 @@ async def test_options_flow_invalid_interval(
     options_form = await hass.config_entries.options.async_init(
         mock_config_entry.entry_id
     )
-    result = await hass.config_entries.options.async_configure(
-        options_form["flow_id"],
-        user_input={CONF_UPDATE_INTERVAL: 0.01},
-    )
-
-    assert result["type"] is FlowResultType.FORM
-    assert result["step_id"] == "init"
-    assert result["errors"] == {"update_interval": "number_range"}
+    with pytest.raises(InvalidData):
+        await hass.config_entries.options.async_configure(
+            options_form["flow_id"],
+            user_input={CONF_UPDATE_INTERVAL: 0.01},
+        )

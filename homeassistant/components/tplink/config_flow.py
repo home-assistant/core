@@ -49,6 +49,7 @@ from . import (
     mac_alias,
     set_credentials,
 )
+from .coordinator import TPLinkConfigEntry
 from .const import (
     CONF_AES_KEYS,
     CONF_CAMERA_CREDENTIALS,
@@ -98,8 +99,9 @@ class TPLinkConfigFlow(ConfigFlow, domain=DOMAIN):
 
     @staticmethod
     @callback
+    @override
     def async_get_options_flow(
-        config_entry: ConfigEntry,
+        config_entry: TPLinkConfigEntry,
     ) -> TPLinkOptionsFlowHandler:
         """Return the options flow handler."""
         return TPLinkOptionsFlowHandler()
@@ -892,6 +894,8 @@ class TPLinkOptionsFlowHandler(OptionsFlowWithReload):
             step_id="init",
             data_schema=vol.Schema(
                 {
+                    # Polling interval is user-configurable for faster automation response.
+                    # pylint: disable-next=home-assistant-config-flow-polling-field
                     vol.Optional(
                         CONF_UPDATE_INTERVAL,
                         default=self.config_entry.options.get(
