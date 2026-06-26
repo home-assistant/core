@@ -836,7 +836,7 @@ async def test_camera_image_with_attribute_change(
     camera_id: str,
     camera_entity: str,
 ) -> None:
-    """Test camera image (snapshot)."""
+    """Test camera image state and snapshot fetching as monitoring and power status change."""
     fake_post_hits = 0
     FAKE_IMG = b"\xff\xd8\xff\xdb" + b"0" * 100 + b"\xff\xd9"
     # Repeatedly used variables for the test and initial value from fixture
