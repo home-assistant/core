@@ -258,16 +258,6 @@ class OsramIrLightWithReceiver(OsramIrLight, InfraredReceiverConsumerEntity):
         self._infrared_receiver_entity_id = receiver_entity_id
         self._remove_signal_subscription: CALLBACK_TYPE | None = None
 
-        self._attr_is_on = False
-        self._attr_effect = EFFECT_OFF
-        self._last_static_color_code = OsramLightCode.WHITE
-        self._last_static_hs_color = (0.0, 0.0)
-
-    @override
-    async def async_added_to_hass(self) -> None:
-        """Subscribe to signals from the configured infrared receiver."""
-        await super().async_added_to_hass()
-
     @override
     @callback
     def _handle_signal(self, signal: InfraredReceivedSignal) -> None:

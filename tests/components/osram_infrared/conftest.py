@@ -32,6 +32,17 @@ def mock_config_entry() -> MockConfigEntry:
         domain=DOMAIN,
         entry_id="01JTEST0000000000000000000",
         title="OSRAM light via Test IR emitter",
+        data={CONF_IR_EMITTER_ENTITY_ID: MOCK_INFRARED_EMITTER_ENTITY_ID},
+    )
+
+
+@pytest.fixture
+def mock_config_entry_with_receiver() -> MockConfigEntry:
+    """Return a mock OSRAM infrared config entry."""
+    return MockConfigEntry(
+        domain=DOMAIN,
+        entry_id="01JTEST0000000000000000000",
+        title="OSRAM light via Test IR emitter",
         data={
             CONF_IR_EMITTER_ENTITY_ID: MOCK_INFRARED_EMITTER_ENTITY_ID,
             CONF_IR_RECEIVER_ENTITY_ID: MOCK_INFRARED_RECEIVER_ENTITY_ID,
@@ -65,7 +76,6 @@ async def init_integration(
     hass: HomeAssistant,
     mock_config_entry: MockConfigEntry,
     mock_infrared_emitter_entity: MockInfraredEmitterEntity,
-    mock_infrared_receiver_entity: MockInfraredReceiverEntity,
     mock_osram_light_code_to_command: None,
     platforms: list[Platform],
 ) -> MockConfigEntry:
@@ -74,6 +84,25 @@ async def init_integration(
 
     with patch("homeassistant.components.osram_infrared.PLATFORMS", platforms):
         await hass.config_entries.async_setup(mock_config_entry.entry_id)
+        await hass.async_block_till_done()
+
+    return mock_config_entry
+
+
+@pytest.fixture
+async def init_integration_with_receiver(
+    hass: HomeAssistant,
+    mock_config_entry_with_receiver: MockConfigEntry,
+    mock_infrared_emitter_entity: MockInfraredEmitterEntity,
+    mock_infrared_receiver_entity: MockInfraredReceiverEntity,
+    mock_osram_light_code_to_command: None,
+    platforms: list[Platform],
+) -> MockConfigEntry:
+    """Set up the OSRAM Infrared integration for testing."""
+    mock_config_entry_with_receiver.add_to_hass(hass)
+
+    with patch("homeassistant.components.osram_infrared.PLATFORMS", platforms):
+        await hass.config_entries.async_setup(mock_config_entry_with_receiver.entry_id)
         await hass.async_block_till_done()
 
     return mock_config_entry
