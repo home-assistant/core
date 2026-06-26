@@ -111,7 +111,7 @@
           "name": "Devices"
         }
       },
-      "name": "Disable Switchbot Cloud webhook"
+      "name": "Disable SwitchBot Cloud webhook"
     },
     "upload_art_frame_image": {
       "description": "Upload web images to the device.",

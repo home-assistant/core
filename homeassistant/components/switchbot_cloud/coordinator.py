@@ -63,6 +63,7 @@ class SwitchBotCoordinator(DataUpdateCoordinator[Status]):
     def disable_webhook(self) -> None:
         """Disable webhook."""
         self._manageable_by_webhook = False
+        self.update_interval = DEFAULT_SCAN_INTERVAL
 
     @override
     async def _async_update_data(self) -> Status:

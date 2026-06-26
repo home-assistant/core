@@ -3,7 +3,7 @@
 from unittest.mock import AsyncMock, MagicMock, patch
 
 import pytest
-from switchbot_api import SwitchBotAPI
+from switchbot_api import Device, SwitchBotAPI
 import voluptuous as vol
 
 from homeassistant.components.switchbot_cloud import SwitchbotDevices
@@ -18,7 +18,7 @@ from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ServiceValidationError
 from homeassistant.helpers import device_registry as dr
 
-from . import AI_ART_FRAME_DEVICE, METER_INFO, configure_integration
+from . import AI_ART_FRAME_DEVICE, configure_integration
 
 
 async def _setup(
@@ -152,8 +152,13 @@ async def test_disable_webhook_success(
         model="Meter",
     )
 
-    mock_device_info = METER_INFO
-    mock_device_info.device_id = "AABBCCDDEEFF"
+    mock_device_info = Device(
+        version="V1.0",
+        deviceId="AABBCCDDEEFF",
+        deviceName="meter-1",
+        deviceType="Meter",
+        hubDeviceId="test-hub-id",
+    )
 
     mock_coord = MagicMock()
     mock_coord.disable_webhook.return_value = None
