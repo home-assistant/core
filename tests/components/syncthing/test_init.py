@@ -1,6 +1,5 @@
 """Tests for the syncthing integration setup and client."""
 
-import asyncio
 from unittest.mock import MagicMock, patch
 
 from aiosyncthing.exceptions import SyncthingError
@@ -40,7 +39,6 @@ async def test_syncthing_client_reconnect_on_error(
         if call_count == 1:
             raise SyncthingError("Connection lost")
         while True:
-            await asyncio.sleep(0.1)
             yield await hass.async_add_executor_job(
                 load_json_object_fixture, "state_changed_event.json", DOMAIN
             )
