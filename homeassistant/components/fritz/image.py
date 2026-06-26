@@ -7,13 +7,13 @@ from typing import override
 from requests.exceptions import RequestException
 
 from homeassistant.components.image import ImageEntity
-from homeassistant.const import EntityCategory
+from homeassistant.const import EntityCategory, Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import entity_registry as er
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from homeassistant.util import dt as dt_util, slugify
 
-from .const import DOMAIN, Platform
+from .const import DOMAIN
 from .coordinator import AvmWrapper, FritzConfigEntry
 from .entity import FritzBoxBaseEntity
 
