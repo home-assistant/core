@@ -796,7 +796,7 @@ async def test_device_class_user(
     hass: HomeAssistant,
     source_sensor: str,
     source_unit: str,
-    source_class: SensorDeviceClass | None,
+    source_class: SensorDeviceClass | str | None,
     device_class: SensorDeviceClass | None,
     expected_class: SensorDeviceClass | None,
 ) -> None:
