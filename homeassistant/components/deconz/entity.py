@@ -1,5 +1,7 @@
 """Base class for deCONZ devices."""
 
+from typing import override
+
 from pydeconz.models.deconz_device import DeconzDevice as PydeconzDevice
 from pydeconz.models.group import Group as PydeconzGroup
 from pydeconz.models.light import LightBase as PydeconzLightBase
@@ -95,6 +97,7 @@ class DeconzDevice[_DeviceT: _DeviceType](DeconzBase[_DeviceT], Entity):
         if self._update_keys is not None:
             self._update_keys |= {"reachable"}
 
+    @override
     async def async_added_to_hass(self) -> None:
         """Subscribe to device events."""
         self._device.register_callback(self.async_update_callback)
@@ -107,6 +110,7 @@ class DeconzDevice[_DeviceT: _DeviceType](DeconzBase[_DeviceT], Entity):
             )
         )
 
+    @override
     async def async_will_remove_from_hass(self) -> None:
         """Disconnect device object when removed."""
         self._device.remove_callback(self.async_update_callback)
@@ -132,6 +136,7 @@ class DeconzDevice[_DeviceT: _DeviceType](DeconzBase[_DeviceT], Entity):
         self.async_write_ha_state()
 
     @property
+    @override
     def available(self) -> bool:
         """Return True if device is available."""
         if isinstance(self._device, PydeconzScene):
@@ -166,11 +171,13 @@ class DeconzSceneMixin(DeconzDevice[PydeconzScene]):
         return f"{self.hub.bridgeid}-{self.deconz_group.deconz_id}"
 
     @property
+    @override
     def unique_id(self) -> str:
         """Return a unique identifier for this scene."""
         return self.get_device_identifier()
 
     @property
+    @override
     def device_info(self) -> DeviceInfo:
         """Return a device description for device registry."""
         return DeviceInfo(

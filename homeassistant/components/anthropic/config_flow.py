@@ -3,7 +3,7 @@
 from collections.abc import Mapping
 import json
 import logging
-from typing import TYPE_CHECKING, Any, cast
+from typing import TYPE_CHECKING, Any, cast, override
 
 import anthropic
 import voluptuous as vol
@@ -107,6 +107,7 @@ class AnthropicConfigFlow(ConfigFlow, domain=DOMAIN):
     VERSION = 2
     MINOR_VERSION = 4
 
+    @override
     async def async_step_user(
         self, user_input: dict[str, Any] | None = None
     ) -> ConfigFlowResult:
@@ -183,6 +184,7 @@ class AnthropicConfigFlow(ConfigFlow, domain=DOMAIN):
 
     @classmethod
     @callback
+    @override
     def async_get_supported_subentry_types(
         cls, config_entry: AnthropicConfigEntry
     ) -> dict[str, type[ConfigSubentryFlow]]:

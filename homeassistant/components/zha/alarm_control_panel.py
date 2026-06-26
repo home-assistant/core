@@ -1,6 +1,7 @@
 """Alarm control panels on Zigbee Home Automation networks."""
 
 import functools
+from typing import override
 
 from zha.application.platforms.alarm_control_panel.const import (
     AlarmState as ZHAAlarmState,
@@ -76,41 +77,48 @@ class ZHAAlarmControlPanel(ZHAEntity, AlarmControlPanelEntity):
     )
 
     @property
+    @override
     def code_arm_required(self) -> bool:
         """Whether the code is required for arm actions."""
         return self.entity_data.entity.code_arm_required
 
     @convert_zha_error_to_ha_error()
+    @override
     async def async_alarm_disarm(self, code: str | None = None) -> None:
         """Send disarm command."""
         await self.entity_data.entity.async_alarm_disarm(code)
         self.async_write_ha_state()
 
     @convert_zha_error_to_ha_error()
+    @override
     async def async_alarm_arm_home(self, code: str | None = None) -> None:
         """Send arm home command."""
         await self.entity_data.entity.async_alarm_arm_home(code)
         self.async_write_ha_state()
 
     @convert_zha_error_to_ha_error()
+    @override
     async def async_alarm_arm_away(self, code: str | None = None) -> None:
         """Send arm away command."""
         await self.entity_data.entity.async_alarm_arm_away(code)
         self.async_write_ha_state()
 
     @convert_zha_error_to_ha_error()
+    @override
     async def async_alarm_arm_night(self, code: str | None = None) -> None:
         """Send arm night command."""
         await self.entity_data.entity.async_alarm_arm_night(code)
         self.async_write_ha_state()
 
     @convert_zha_error_to_ha_error()
+    @override
     async def async_alarm_trigger(self, code: str | None = None) -> None:
         """Send alarm trigger command."""
         await self.entity_data.entity.async_alarm_trigger(code)
         self.async_write_ha_state()
 
     @property
+    @override
     def alarm_state(self) -> AlarmControlPanelState | None:
         """Return the state of the entity."""
         return ZHA_STATE_TO_ALARM_STATE_MAP.get(self.entity_data.entity.state["state"])

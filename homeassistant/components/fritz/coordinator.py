@@ -7,7 +7,7 @@ from datetime import datetime, timedelta
 from functools import partial
 import logging
 import re
-from typing import Any, TypedDict, cast
+from typing import Any, TypedDict, cast, override
 from xml.etree.ElementTree import ParseError
 
 from fritzconnection import FritzConnection
@@ -307,6 +307,7 @@ class FritzBoxTools(DataUpdateCoordinator[UpdateCoordinatorDataType]):
                 )
         return entity_states
 
+    @override
     async def _async_update_data(self) -> UpdateCoordinatorDataType:
         """Update FritzboxTools data."""
         entity_data: UpdateCoordinatorDataType = {

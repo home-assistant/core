@@ -2,6 +2,7 @@
 
 from collections.abc import Callable
 from dataclasses import dataclass
+from typing import override
 
 from uhooapi import Device
 
@@ -185,16 +186,19 @@ class UhooSensorEntity(CoordinatorEntity[UhooDataUpdateCoordinator], SensorEntit
         return self.coordinator.data[self._serial_number]
 
     @property
+    @override
     def available(self) -> bool:
         """Return if entity is available."""
         return super().available and self._serial_number in self.coordinator.data
 
     @property
+    @override
     def native_value(self) -> StateType:
         """State of the sensor."""
         return self.entity_description.value_fn(self.device)
 
     @property
+    @override
     def native_unit_of_measurement(self) -> str | None:
         """Return unit of measurement."""
         if self.entity_description.key == API_TEMP:

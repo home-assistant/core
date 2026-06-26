@@ -1,6 +1,7 @@
 """DataUpdateCoordinator for the Helty Flow integration."""
 
 import logging
+from typing import override
 
 from pyhelty import HeltyClient, HeltyConnectionError, HeltyData, HeltyError
 
@@ -36,6 +37,7 @@ class HeltyDataUpdateCoordinator(DataUpdateCoordinator[HeltyData]):
         )
         self.client = client
 
+    @override
     async def _async_update_data(self) -> HeltyData:
         try:
             return await self.client.async_get_data()

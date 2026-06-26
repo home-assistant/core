@@ -39,10 +39,10 @@
 # name: test_legacy_sensors[123][sensor.e1234567890000000003_battery:state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'device_class': 'battery',
-      'friendly_name': 'E1234567890000000003 Battery',
-      'icon': 'mdi:battery-unknown',
-      'unit_of_measurement': '%',
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'battery',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'E1234567890000000003 Battery',
+      <EntityStateAttribute.ICON: 'icon'>: 'mdi:battery-unknown',
+      <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: '%',
     }),
     'context': <ANY>,
     'entity_id': 'sensor.e1234567890000000003_battery',
@@ -92,8 +92,8 @@
 # name: test_legacy_sensors[123][sensor.e1234567890000000003_filter_lifespan:state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'E1234567890000000003 Filter lifespan',
-      'unit_of_measurement': '%',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'E1234567890000000003 Filter lifespan',
+      <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: '%',
     }),
     'context': <ANY>,
     'entity_id': 'sensor.e1234567890000000003_filter_lifespan',
@@ -143,8 +143,8 @@
 # name: test_legacy_sensors[123][sensor.e1234567890000000003_main_brush_lifespan:state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'E1234567890000000003 Main brush lifespan',
-      'unit_of_measurement': '%',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'E1234567890000000003 Main brush lifespan',
+      <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: '%',
     }),
     'context': <ANY>,
     'entity_id': 'sensor.e1234567890000000003_main_brush_lifespan',
@@ -194,8 +194,8 @@
 # name: test_legacy_sensors[123][sensor.e1234567890000000003_side_brush_lifespan:state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'E1234567890000000003 Side brush lifespan',
-      'unit_of_measurement': '%',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'E1234567890000000003 Side brush lifespan',
+      <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: '%',
     }),
     'context': <ANY>,
     'entity_id': 'sensor.e1234567890000000003_side_brush_lifespan',
@@ -259,9 +259,9 @@
 # name: test_sensors[5xu9h3][sensor.goat_g1_area_cleaned:state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'device_class': 'area',
-      'friendly_name': 'Goat G1 Area cleaned',
-      'unit_of_measurement': <UnitOfArea.SQUARE_METERS: 'm²'>,
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'area',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Goat G1 Area cleaned',
+      <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: <UnitOfArea.SQUARE_METERS: 'm²'>,
     }),
     'context': <ANY>,
     'entity_id': 'sensor.goat_g1_area_cleaned',
@@ -311,9 +311,9 @@
 # name: test_sensors[5xu9h3][sensor.goat_g1_battery:state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'device_class': 'battery',
-      'friendly_name': 'Goat G1 Battery',
-      'unit_of_measurement': '%',
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'battery',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Goat G1 Battery',
+      <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: '%',
     }),
     'context': <ANY>,
     'entity_id': 'sensor.goat_g1_battery',
@@ -363,8 +363,8 @@
 # name: test_sensors[5xu9h3][sensor.goat_g1_blade_lifespan:state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'Goat G1 Blade lifespan',
-      'unit_of_measurement': '%',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Goat G1 Blade lifespan',
+      <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: '%',
     }),
     'context': <ANY>,
     'entity_id': 'sensor.goat_g1_blade_lifespan',
@@ -420,9 +420,9 @@
 # name: test_sensors[5xu9h3][sensor.goat_g1_cleaning_duration:state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'device_class': 'duration',
-      'friendly_name': 'Goat G1 Cleaning duration',
-      'unit_of_measurement': <UnitOfTime.MINUTES: 'min'>,
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'duration',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Goat G1 Cleaning duration',
+      <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: <UnitOfTime.MINUTES: 'min'>,
     }),
     'context': <ANY>,
     'entity_id': 'sensor.goat_g1_cleaning_duration',
@@ -473,7 +473,7 @@
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'description': 'NoError: Robot is operational',
-      'friendly_name': 'Goat G1 Error',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Goat G1 Error',
     }),
     'context': <ANY>,
     'entity_id': 'sensor.goat_g1_error',
@@ -523,7 +523,7 @@
 # name: test_sensors[5xu9h3][sensor.goat_g1_ip_address:state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'Goat G1 IP address',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Goat G1 IP address',
     }),
     'context': <ANY>,
     'entity_id': 'sensor.goat_g1_ip_address',
@@ -573,8 +573,8 @@
 # name: test_sensors[5xu9h3][sensor.goat_g1_lens_brush_lifespan:state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'Goat G1 Lens brush lifespan',
-      'unit_of_measurement': '%',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Goat G1 Lens brush lifespan',
+      <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: '%',
     }),
     'context': <ANY>,
     'entity_id': 'sensor.goat_g1_lens_brush_lifespan',
@@ -591,7 +591,7 @@
     ]),
     'area_id': None,
     'capabilities': dict({
-      'state_class': <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
+      <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
     }),
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -629,10 +629,10 @@
 # name: test_sensors[5xu9h3][sensor.goat_g1_total_area_cleaned:state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'device_class': 'area',
-      'friendly_name': 'Goat G1 Total area cleaned',
-      'state_class': <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
-      'unit_of_measurement': <UnitOfArea.SQUARE_METERS: 'm²'>,
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'area',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Goat G1 Total area cleaned',
+      <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
+      <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: <UnitOfArea.SQUARE_METERS: 'm²'>,
     }),
     'context': <ANY>,
     'entity_id': 'sensor.goat_g1_total_area_cleaned',
@@ -649,7 +649,7 @@
     ]),
     'area_id': None,
     'capabilities': dict({
-      'state_class': <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
+      <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
     }),
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -690,10 +690,10 @@
 # name: test_sensors[5xu9h3][sensor.goat_g1_total_cleaning_duration:state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'device_class': 'duration',
-      'friendly_name': 'Goat G1 Total cleaning duration',
-      'state_class': <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
-      'unit_of_measurement': <UnitOfTime.HOURS: 'h'>,
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'duration',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Goat G1 Total cleaning duration',
+      <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
+      <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: <UnitOfTime.HOURS: 'h'>,
     }),
     'context': <ANY>,
     'entity_id': 'sensor.goat_g1_total_cleaning_duration',
@@ -710,7 +710,7 @@
     ]),
     'area_id': None,
     'capabilities': dict({
-      'state_class': <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
+      <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
     }),
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -745,8 +745,8 @@
 # name: test_sensors[5xu9h3][sensor.goat_g1_total_cleanings:state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'Goat G1 Total cleanings',
-      'state_class': <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Goat G1 Total cleanings',
+      <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
     }),
     'context': <ANY>,
     'entity_id': 'sensor.goat_g1_total_cleanings',
@@ -796,7 +796,7 @@
 # name: test_sensors[5xu9h3][sensor.goat_g1_wi_fi_rssi:state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'Goat G1 Wi-Fi RSSI',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Goat G1 Wi-Fi RSSI',
     }),
     'context': <ANY>,
     'entity_id': 'sensor.goat_g1_wi_fi_rssi',
@@ -846,7 +846,7 @@
 # name: test_sensors[5xu9h3][sensor.goat_g1_wi_fi_ssid:state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'Goat G1 Wi-Fi SSID',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Goat G1 Wi-Fi SSID',
     }),
     'context': <ANY>,
     'entity_id': 'sensor.goat_g1_wi_fi_ssid',
@@ -902,9 +902,9 @@
 # name: test_sensors[qhe2o2][sensor.dusty_area_cleaned:state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'device_class': 'area',
-      'friendly_name': 'Dusty Area cleaned',
-      'unit_of_measurement': <UnitOfArea.SQUARE_METERS: 'm²'>,
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'area',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Dusty Area cleaned',
+      <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: <UnitOfArea.SQUARE_METERS: 'm²'>,
     }),
     'context': <ANY>,
     'entity_id': 'sensor.dusty_area_cleaned',
@@ -954,9 +954,9 @@
 # name: test_sensors[qhe2o2][sensor.dusty_battery:state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'device_class': 'battery',
-      'friendly_name': 'Dusty Battery',
-      'unit_of_measurement': '%',
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'battery',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Dusty Battery',
+      <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: '%',
     }),
     'context': <ANY>,
     'entity_id': 'sensor.dusty_battery',
@@ -1012,9 +1012,9 @@
 # name: test_sensors[qhe2o2][sensor.dusty_cleaning_duration:state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'device_class': 'duration',
-      'friendly_name': 'Dusty Cleaning duration',
-      'unit_of_measurement': <UnitOfTime.MINUTES: 'min'>,
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'duration',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Dusty Cleaning duration',
+      <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: <UnitOfTime.MINUTES: 'min'>,
     }),
     'context': <ANY>,
     'entity_id': 'sensor.dusty_cleaning_duration',
@@ -1065,7 +1065,7 @@
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'description': 'NoError: Robot is operational',
-      'friendly_name': 'Dusty Error',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Dusty Error',
     }),
     'context': <ANY>,
     'entity_id': 'sensor.dusty_error',
@@ -1115,8 +1115,8 @@
 # name: test_sensors[qhe2o2][sensor.dusty_filter_lifespan:state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'Dusty Filter lifespan',
-      'unit_of_measurement': '%',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Dusty Filter lifespan',
+      <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: '%',
     }),
     'context': <ANY>,
     'entity_id': 'sensor.dusty_filter_lifespan',
@@ -1166,7 +1166,7 @@
 # name: test_sensors[qhe2o2][sensor.dusty_ip_address:state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'Dusty IP address',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Dusty IP address',
     }),
     'context': <ANY>,
     'entity_id': 'sensor.dusty_ip_address',
@@ -1216,8 +1216,8 @@
 # name: test_sensors[qhe2o2][sensor.dusty_main_brush_lifespan:state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'Dusty Main brush lifespan',
-      'unit_of_measurement': '%',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Dusty Main brush lifespan',
+      <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: '%',
     }),
     'context': <ANY>,
     'entity_id': 'sensor.dusty_main_brush_lifespan',
@@ -1267,8 +1267,8 @@
 # name: test_sensors[qhe2o2][sensor.dusty_round_mop_lifespan:state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'Dusty Round mop lifespan',
-      'unit_of_measurement': '%',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Dusty Round mop lifespan',
+      <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: '%',
     }),
     'context': <ANY>,
     'entity_id': 'sensor.dusty_round_mop_lifespan',
@@ -1318,8 +1318,8 @@
 # name: test_sensors[qhe2o2][sensor.dusty_side_brush_lifespan:state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'Dusty Side brush lifespan',
-      'unit_of_measurement': '%',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Dusty Side brush lifespan',
+      <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: '%',
     }),
     'context': <ANY>,
     'entity_id': 'sensor.dusty_side_brush_lifespan',
@@ -1336,7 +1336,7 @@
     ]),
     'area_id': None,
     'capabilities': dict({
-      'options': list([
+      <SensorEntityCapabilityAttribute.OPTIONS: 'options'>: list([
         'idle',
         'emptying_dustbin',
         'washing_mop',
@@ -1376,9 +1376,9 @@
 # name: test_sensors[qhe2o2][sensor.dusty_station_state:state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'device_class': 'enum',
-      'friendly_name': 'Dusty Station state',
-      'options': list([
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'enum',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Dusty Station state',
+      <SensorEntityCapabilityAttribute.OPTIONS: 'options'>: list([
         'idle',
         'emptying_dustbin',
         'washing_mop',
@@ -1400,7 +1400,7 @@
     ]),
     'area_id': None,
     'capabilities': dict({
-      'state_class': <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
+      <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
     }),
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -1438,10 +1438,10 @@
 # name: test_sensors[qhe2o2][sensor.dusty_total_area_cleaned:state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'device_class': 'area',
-      'friendly_name': 'Dusty Total area cleaned',
-      'state_class': <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
-      'unit_of_measurement': <UnitOfArea.SQUARE_METERS: 'm²'>,
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'area',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Dusty Total area cleaned',
+      <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
+      <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: <UnitOfArea.SQUARE_METERS: 'm²'>,
     }),
     'context': <ANY>,
     'entity_id': 'sensor.dusty_total_area_cleaned',
@@ -1458,7 +1458,7 @@
     ]),
     'area_id': None,
     'capabilities': dict({
-      'state_class': <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
+      <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
     }),
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -1499,10 +1499,10 @@
 # name: test_sensors[qhe2o2][sensor.dusty_total_cleaning_duration:state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'device_class': 'duration',
-      'friendly_name': 'Dusty Total cleaning duration',
-      'state_class': <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
-      'unit_of_measurement': <UnitOfTime.HOURS: 'h'>,
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'duration',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Dusty Total cleaning duration',
+      <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
+      <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: <UnitOfTime.HOURS: 'h'>,
     }),
     'context': <ANY>,
     'entity_id': 'sensor.dusty_total_cleaning_duration',
@@ -1519,7 +1519,7 @@
     ]),
     'area_id': None,
     'capabilities': dict({
-      'state_class': <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
+      <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
     }),
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -1554,8 +1554,8 @@
 # name: test_sensors[qhe2o2][sensor.dusty_total_cleanings:state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'Dusty Total cleanings',
-      'state_class': <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Dusty Total cleanings',
+      <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
     }),
     'context': <ANY>,
     'entity_id': 'sensor.dusty_total_cleanings',
@@ -1605,8 +1605,8 @@
 # name: test_sensors[qhe2o2][sensor.dusty_unit_care_lifespan:state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'Dusty Unit care lifespan',
-      'unit_of_measurement': '%',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Dusty Unit care lifespan',
+      <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: '%',
     }),
     'context': <ANY>,
     'entity_id': 'sensor.dusty_unit_care_lifespan',
@@ -1656,7 +1656,7 @@
 # name: test_sensors[qhe2o2][sensor.dusty_wi_fi_rssi:state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'Dusty Wi-Fi RSSI',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Dusty Wi-Fi RSSI',
     }),
     'context': <ANY>,
     'entity_id': 'sensor.dusty_wi_fi_rssi',
@@ -1706,7 +1706,7 @@
 # name: test_sensors[qhe2o2][sensor.dusty_wi_fi_ssid:state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'Dusty Wi-Fi SSID',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Dusty Wi-Fi SSID',
     }),
     'context': <ANY>,
     'entity_id': 'sensor.dusty_wi_fi_ssid',
@@ -1762,9 +1762,9 @@
 # name: test_sensors[yna5x1][sensor.ozmo_950_area_cleaned:state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'device_class': 'area',
-      'friendly_name': 'Ozmo 950 Area cleaned',
-      'unit_of_measurement': <UnitOfArea.SQUARE_METERS: 'm²'>,
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'area',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Ozmo 950 Area cleaned',
+      <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: <UnitOfArea.SQUARE_METERS: 'm²'>,
     }),
     'context': <ANY>,
     'entity_id': 'sensor.ozmo_950_area_cleaned',
@@ -1814,9 +1814,9 @@
 # name: test_sensors[yna5x1][sensor.ozmo_950_battery:state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'device_class': 'battery',
-      'friendly_name': 'Ozmo 950 Battery',
-      'unit_of_measurement': '%',
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'battery',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Ozmo 950 Battery',
+      <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: '%',
     }),
     'context': <ANY>,
     'entity_id': 'sensor.ozmo_950_battery',
@@ -1872,9 +1872,9 @@
 # name: test_sensors[yna5x1][sensor.ozmo_950_cleaning_duration:state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'device_class': 'duration',
-      'friendly_name': 'Ozmo 950 Cleaning duration',
-      'unit_of_measurement': <UnitOfTime.MINUTES: 'min'>,
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'duration',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Ozmo 950 Cleaning duration',
+      <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: <UnitOfTime.MINUTES: 'min'>,
     }),
     'context': <ANY>,
     'entity_id': 'sensor.ozmo_950_cleaning_duration',
@@ -1925,7 +1925,7 @@
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'description': 'NoError: Robot is operational',
-      'friendly_name': 'Ozmo 950 Error',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Ozmo 950 Error',
     }),
     'context': <ANY>,
     'entity_id': 'sensor.ozmo_950_error',
@@ -1975,8 +1975,8 @@
 # name: test_sensors[yna5x1][sensor.ozmo_950_filter_lifespan:state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'Ozmo 950 Filter lifespan',
-      'unit_of_measurement': '%',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Ozmo 950 Filter lifespan',
+      <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: '%',
     }),
     'context': <ANY>,
     'entity_id': 'sensor.ozmo_950_filter_lifespan',
@@ -2026,7 +2026,7 @@
 # name: test_sensors[yna5x1][sensor.ozmo_950_ip_address:state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'Ozmo 950 IP address',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Ozmo 950 IP address',
     }),
     'context': <ANY>,
     'entity_id': 'sensor.ozmo_950_ip_address',
@@ -2076,8 +2076,8 @@
 # name: test_sensors[yna5x1][sensor.ozmo_950_main_brush_lifespan:state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'Ozmo 950 Main brush lifespan',
-      'unit_of_measurement': '%',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Ozmo 950 Main brush lifespan',
+      <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: '%',
     }),
     'context': <ANY>,
     'entity_id': 'sensor.ozmo_950_main_brush_lifespan',
@@ -2127,8 +2127,8 @@
 # name: test_sensors[yna5x1][sensor.ozmo_950_side_brush_lifespan:state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'Ozmo 950 Side brush lifespan',
-      'unit_of_measurement': '%',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Ozmo 950 Side brush lifespan',
+      <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: '%',
     }),
     'context': <ANY>,
     'entity_id': 'sensor.ozmo_950_side_brush_lifespan',
@@ -2145,7 +2145,7 @@
     ]),
     'area_id': None,
     'capabilities': dict({
-      'state_class': <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
+      <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
     }),
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -2183,10 +2183,10 @@
 # name: test_sensors[yna5x1][sensor.ozmo_950_total_area_cleaned:state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'device_class': 'area',
-      'friendly_name': 'Ozmo 950 Total area cleaned',
-      'state_class': <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
-      'unit_of_measurement': <UnitOfArea.SQUARE_METERS: 'm²'>,
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'area',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Ozmo 950 Total area cleaned',
+      <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
+      <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: <UnitOfArea.SQUARE_METERS: 'm²'>,
     }),
     'context': <ANY>,
     'entity_id': 'sensor.ozmo_950_total_area_cleaned',
@@ -2203,7 +2203,7 @@
     ]),
     'area_id': None,
     'capabilities': dict({
-      'state_class': <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
+      <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
     }),
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -2244,10 +2244,10 @@
 # name: test_sensors[yna5x1][sensor.ozmo_950_total_cleaning_duration:state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'device_class': 'duration',
-      'friendly_name': 'Ozmo 950 Total cleaning duration',
-      'state_class': <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
-      'unit_of_measurement': <UnitOfTime.HOURS: 'h'>,
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'duration',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Ozmo 950 Total cleaning duration',
+      <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
+      <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: <UnitOfTime.HOURS: 'h'>,
     }),
     'context': <ANY>,
     'entity_id': 'sensor.ozmo_950_total_cleaning_duration',
@@ -2264,7 +2264,7 @@
     ]),
     'area_id': None,
     'capabilities': dict({
-      'state_class': <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
+      <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
     }),
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -2299,8 +2299,8 @@
 # name: test_sensors[yna5x1][sensor.ozmo_950_total_cleanings:state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'Ozmo 950 Total cleanings',
-      'state_class': <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Ozmo 950 Total cleanings',
+      <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
     }),
     'context': <ANY>,
     'entity_id': 'sensor.ozmo_950_total_cleanings',
@@ -2350,7 +2350,7 @@
 # name: test_sensors[yna5x1][sensor.ozmo_950_wi_fi_rssi:state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'Ozmo 950 Wi-Fi RSSI',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Ozmo 950 Wi-Fi RSSI',
     }),
     'context': <ANY>,
     'entity_id': 'sensor.ozmo_950_wi_fi_rssi',
@@ -2400,7 +2400,7 @@
 # name: test_sensors[yna5x1][sensor.ozmo_950_wi_fi_ssid:state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'Ozmo 950 Wi-Fi SSID',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Ozmo 950 Wi-Fi SSID',
     }),
     'context': <ANY>,
     'entity_id': 'sensor.ozmo_950_wi_fi_ssid',

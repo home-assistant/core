@@ -1,7 +1,7 @@
 """Config flow for Monoprice 6-Zone Amplifier integration."""
 
 import logging
-from typing import Any
+from typing import Any, override
 
 from pymonoprice import get_monoprice
 from serial import SerialException
@@ -80,6 +80,7 @@ class MonoPriceConfigFlow(ConfigFlow, domain=DOMAIN):
 
     VERSION = 1
 
+    @override
     async def async_step_user(
         self, user_input: dict[str, Any] | None = None
     ) -> ConfigFlowResult:
@@ -102,6 +103,7 @@ class MonoPriceConfigFlow(ConfigFlow, domain=DOMAIN):
 
     @staticmethod
     @callback
+    @override
     def async_get_options_flow(
         config_entry: ConfigEntry,
     ) -> MonopriceOptionsFlowHandler:

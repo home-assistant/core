@@ -2,6 +2,7 @@
 
 from collections.abc import Callable
 from dataclasses import dataclass
+from typing import override
 
 from homeassistant.components.sensor import (
     SensorDeviceClass,
@@ -151,6 +152,7 @@ class OpenSenseMapSensor(CoordinatorEntity[OpenSenseMapCoordinator], SensorEntit
         )
 
     @property
+    @override
     def native_value(self) -> float | str | None:
         """Return the latest value reported by the station."""
         return self.entity_description.value_fn(self.coordinator.data).value

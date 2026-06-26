@@ -2,7 +2,7 @@
 
 from collections.abc import Mapping
 import logging
-from typing import Any
+from typing import Any, override
 
 from aiomelcloudhome import MELCloudHome, MelCloudHomeAuth
 from aiomelcloudhome.exceptions import (
@@ -69,6 +69,7 @@ class MelCloudHomeConfigFlow(ConfigFlow, domain=DOMAIN):
 
         return errors, user_id
 
+    @override
     async def async_step_user(
         self, user_input: dict[str, Any] | None = None
     ) -> ConfigFlowResult:

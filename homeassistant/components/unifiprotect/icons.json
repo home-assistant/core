@@ -123,9 +123,6 @@
       "overlay_show_nerd_mode": {
         "default": "mdi:fullscreen"
       },
-      "package_detected": {
-        "default": "mdi:package-variant-closed"
-      },
       "person_detected": {
         "default": "mdi:walk"
       },
@@ -186,6 +183,9 @@
       },
       "nfc": {
         "default": "mdi:nfc"
+      },
+      "package": {
+        "default": "mdi:package-variant-closed"
       },
       "vehicle": {
         "default": "mdi:car"

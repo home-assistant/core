@@ -1,6 +1,6 @@
 """Support for Overkiz lights."""
 
-from typing import Any, cast
+from typing import Any, cast, override
 
 from pyoverkiz.enums import OverkizCommand, OverkizCommandParam, OverkizState
 
@@ -53,6 +53,7 @@ class OverkizLight(OverkizEntity, LightEntity):
         self._attr_supported_color_modes = {self._attr_color_mode}
 
     @property
+    @override
     def is_on(self) -> bool:
         """Return true if light is on."""
         return (
@@ -61,6 +62,7 @@ class OverkizLight(OverkizEntity, LightEntity):
         )
 
     @property
+    @override
     def rgb_color(self) -> tuple[int, int, int] | None:
         """Return the rgb color value [int, int, int] (0-255)."""
         red = self.device.states.get_value(OverkizState.CORE_RED_COLOR_INTENSITY)
@@ -73,6 +75,7 @@ class OverkizLight(OverkizEntity, LightEntity):
         return (cast(int, red), cast(int, green), cast(int, blue))
 
     @property
+    @override
     def brightness(self) -> int | None:
         """Return the brightness of this light (0-255)."""
         value = self.device.states.get_value(OverkizState.CORE_LIGHT_INTENSITY)
@@ -81,6 +84,7 @@ class OverkizLight(OverkizEntity, LightEntity):
 
         return None
 
+    @override
     async def async_turn_on(self, **kwargs: Any) -> None:
         """Turn the light on."""
         rgb_color = kwargs.get(ATTR_RGB_COLOR)
@@ -101,6 +105,7 @@ class OverkizLight(OverkizEntity, LightEntity):
 
         await self.executor.async_execute_command(OverkizCommand.ON)
 
+    @override
     async def async_turn_off(self, **kwargs: Any) -> None:
         """Turn the light off."""
         await self.executor.async_execute_command(OverkizCommand.OFF)
