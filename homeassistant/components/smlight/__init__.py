@@ -69,7 +69,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: SmConfigEntry) -> bool:
             hass, client.sse.client(), "smlight-sse-client"
         )
 
-    if info.u_device:
+    if info.ble is not None and info.ble.proxy_enabled:
         entry.async_on_unload(
             async_connect_scanner(hass, entry, info.model, data_coordinator.device_id)
         )

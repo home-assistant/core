@@ -4,6 +4,7 @@ from collections.abc import AsyncGenerator, Generator
 from unittest.mock import AsyncMock, MagicMock, patch
 
 from pysmlight.exceptions import SmlightAuthError
+from pysmlight.models import BleFeatures
 from pysmlight.sse import sseClient
 from pysmlight.web import ActionWrapper, CmdWrapper, Firmware, Info, Sensors
 import pytest
@@ -150,6 +151,7 @@ def mock_smlight_client(request: pytest.FixtureRequest) -> Generator[MagicMock]:
 MOCK_ULTIMA = Info(
     MAC="AA:BB:CC:DD:EE:FF",
     model="SLZB-Ultima3",
+    ble=BleFeatures(ble_enabled=True, proxy_enabled=True),
 )
 
 
