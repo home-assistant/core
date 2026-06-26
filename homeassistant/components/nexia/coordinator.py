@@ -40,4 +40,6 @@ class NexiaDataUpdateCoordinator(DataUpdateCoordinator[dict[str, Any]]):
     @override
     async def _async_update_data(self) -> dict[str, Any]:
         """Fetch data from API endpoint."""
-        return await self.nexia_home.update()
+        update_data = await self.nexia_home.update()  # can return None
+
+        return update_data or {}
