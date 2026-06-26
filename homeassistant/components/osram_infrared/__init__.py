@@ -1,7 +1,5 @@
 """The OSRAM infrared integration."""
 
-import logging
-
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import Platform
 from homeassistant.core import HomeAssistant
@@ -9,8 +7,6 @@ from homeassistant.core import HomeAssistant
 PLATFORMS: list[Platform] = [
     Platform.LIGHT,
 ]
-
-_LOGGER = logging.getLogger(__name__)
 
 
 async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
