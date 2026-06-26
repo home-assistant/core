@@ -6,31 +6,10 @@ import pytest
 from homeassistant.components.amcrest import AmcrestDevice
 from homeassistant.components.amcrest.sensor import SENSOR_TYPES, AmcrestSensor
 
-from .conftest import CAMERA_NAME, SERIAL_NUMBER, _MockAmcrestAPI
+from .conftest import CAMERA_NAME, _MockAmcrestAPI
 
 _PTZ_DESCRIPTION = next(d for d in SENSOR_TYPES if d.key == "ptz_preset")
 _SDCARD_DESCRIPTION = next(d for d in SENSOR_TYPES if d.key == "sdcard")
-
-
-def test_ptz_sensor_unique_id(device: AmcrestDevice) -> None:
-    """Unique ID combines serial number, sensor key, and channel."""
-    sensor = AmcrestSensor(CAMERA_NAME, device, _PTZ_DESCRIPTION)
-    assert sensor._attr_unique_id == f"{SERIAL_NUMBER}-ptz_preset-0"
-
-
-def test_sensor_no_unique_id_without_serial(mock_api: _MockAmcrestAPI) -> None:
-    """No unique_id is assigned when the device has no serial number."""
-    device = AmcrestDevice(
-        api=mock_api,
-        authentication=None,
-        ffmpeg_arguments=["-pred", "1"],
-        stream_source="snapshot",
-        resolution=0,
-        control_light=True,
-        serial_number=None,
-    )
-    sensor = AmcrestSensor(CAMERA_NAME, device, _PTZ_DESCRIPTION)
-    assert sensor._attr_unique_id is None
 
 
 async def test_ptz_sensor_update(

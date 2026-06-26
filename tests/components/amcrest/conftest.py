@@ -9,6 +9,18 @@ from homeassistant.components.amcrest import AmcrestDevice
 CAMERA_NAME = "Test Camera"
 SERIAL_NUMBER = "SN-TEST-12345"
 
+# Minimal YAML config for integration-level tests; produces the default camera
+# name "Amcrest Camera" via the amcrest config schema.
+CAMERA_CONFIG = {
+    "amcrest": [
+        {
+            "host": "192.168.1.100",
+            "username": "admin",
+            "password": "password",
+        }
+    ]
+}
+
 
 class _MockAmcrestAPI:
     """Test double for AmcrestChecker.

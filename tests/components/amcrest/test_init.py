@@ -10,15 +10,7 @@ from homeassistant.components.amcrest.const import DATA_AMCREST, DEVICES
 from homeassistant.core import HomeAssistant
 from homeassistant.setup import async_setup_component
 
-CAMERA_CONFIG = {
-    "amcrest": [
-        {
-            "host": "192.168.1.100",
-            "username": "admin",
-            "password": "password",
-        }
-    ]
-}
+from .conftest import CAMERA_CONFIG
 
 _UUID_RE = re.compile(r"^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$")
 

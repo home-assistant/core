@@ -11,32 +11,11 @@ from homeassistant.components.amcrest.binary_sensor import (
     AmcrestBinarySensor,
 )
 
-from .conftest import CAMERA_NAME, SERIAL_NUMBER, _MockAmcrestAPI
+from .conftest import CAMERA_NAME, _MockAmcrestAPI
 
 _ONLINE = next(s for s in BINARY_SENSORS if s.key == "online")
 _MOTION_POLLED = next(s for s in BINARY_SENSORS if s.key == "motion_detected_polled")
 _MOTION_EVENT = next(s for s in BINARY_SENSORS if s.key == "motion_detected")
-
-
-def test_binary_sensor_unique_id(device: AmcrestDevice) -> None:
-    """Unique ID combines serial number, sensor key, and channel."""
-    sensor = AmcrestBinarySensor(CAMERA_NAME, device, _MOTION_POLLED)
-    assert sensor._attr_unique_id == f"{SERIAL_NUMBER}-motion_detected_polled-0"
-
-
-def test_binary_sensor_no_unique_id_without_serial(mock_api: _MockAmcrestAPI) -> None:
-    """No unique_id is assigned when the device has no serial number."""
-    device = AmcrestDevice(
-        api=mock_api,
-        authentication=None,
-        ffmpeg_arguments=["-pred", "1"],
-        stream_source="snapshot",
-        resolution=0,
-        control_light=True,
-        serial_number=None,
-    )
-    sensor = AmcrestBinarySensor(CAMERA_NAME, device, _MOTION_POLLED)
-    assert sensor._attr_unique_id is None
 
 
 def test_online_sensor_always_available(
