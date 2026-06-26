@@ -10,29 +10,32 @@ from homeassistant.core import HomeAssistant, callback
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
-from .const import PARAM_HEADER_DETECT, PARAM_STATE, imou_device_identifier
+from .const import (
+    PARAM_AB_ALARM_SOUND,
+    PARAM_AUDIO_ENCODE_CONTROL,
+    PARAM_CLOSE_CAMERA,
+    PARAM_HEADER_DETECT,
+    PARAM_LIGHT,
+    PARAM_MOTION_DETECT,
+    PARAM_PLUG_SWITCH,
+    PARAM_STATE,
+    PARAM_WHITE_LIGHT,
+    imou_device_identifier,
+)
 from .coordinator import ImouConfigEntry, ImouDataUpdateCoordinator
 from .entity import ImouEntity
 
 PARALLEL_UPDATES = 0
 
-PARAM_MOTION_DETECT = "motion_detect"
-PARAM_WHITE_LIGHT = "white_light"
-PARAM_CLOSE_CAMERA = "close_camera"
-PARAM_AB_ALARM_SOUND = "ab_alarm_sound"
-PARAM_AUDIO_ENCODE_CONTROL = "audio_encode_control"
-PARAM_LIGHT = "light"
-PARAM_PLUG_SWITCH = "switch"
-
 SWITCH_TYPES = (
-    PARAM_MOTION_DETECT,
-    PARAM_HEADER_DETECT,
-    PARAM_WHITE_LIGHT,
-    PARAM_CLOSE_CAMERA,
     PARAM_AB_ALARM_SOUND,
     PARAM_AUDIO_ENCODE_CONTROL,
+    PARAM_CLOSE_CAMERA,
+    PARAM_HEADER_DETECT,
     PARAM_LIGHT,
+    PARAM_MOTION_DETECT,
     PARAM_PLUG_SWITCH,
+    PARAM_WHITE_LIGHT,
 )
 
 SWITCH_DEVICE_CLASS: dict[str, SwitchDeviceClass] = {

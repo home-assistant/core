@@ -11,14 +11,12 @@ from homeassistant.components.imou.const import (
     CONF_API_URL,
     CONF_APP_ID,
     CONF_APP_SECRET,
-    PARAM_STATE,
-    PARAM_STATUS,
-)
-from homeassistant.components.imou.switch import (
     PARAM_HEADER_DETECT,
     PARAM_LIGHT,
     PARAM_MOTION_DETECT,
     PARAM_PLUG_SWITCH,
+    PARAM_STATE,
+    PARAM_STATUS,
 )
 
 TEST_APP_ID = "test_app_id"

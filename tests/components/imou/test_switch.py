@@ -8,12 +8,13 @@ from pyimouapi.ha_device import DeviceStatus, ImouHaDevice
 import pytest
 from syrupy.assertion import SnapshotAssertion
 
-from homeassistant.components.imou.const import PARAM_STATE, PARAM_STATUS
-from homeassistant.components.imou.coordinator import SCAN_INTERVAL
-from homeassistant.components.imou.switch import (
+from homeassistant.components.imou.const import (
     PARAM_HEADER_DETECT,
     PARAM_MOTION_DETECT,
+    PARAM_STATE,
+    PARAM_STATUS,
 )
+from homeassistant.components.imou.coordinator import SCAN_INTERVAL
 from homeassistant.components.switch import DOMAIN as SWITCH_DOMAIN
 from homeassistant.const import (
     ATTR_ENTITY_ID,
