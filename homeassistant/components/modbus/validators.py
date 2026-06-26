@@ -239,10 +239,15 @@ def nan_validator(value: Any) -> int:
 
 def duplicate_fan_mode_validator(config: dict[str, Any]) -> dict:
     """Control modbus climate fan mode values for duplicates."""
-    fan_modes: set[int] = set()
+    read_fan_modes: set[int] = set()
+    write_fan_modes: set[int] = set()
     errors = []
     for key, value in config[CONF_FAN_MODE_VALUES].items():
-        if value in fan_modes:
+        if isinstance(value, list):
+            read_value, write_value = value
+        else:
+            read_value = write_value = value
+        if read_value in read_fan_modes or write_value in write_fan_modes:
             warn = (
                 f"Modbus fan mode {key} has a duplicate value"
                 f" {value}, not loaded, values must be unique!"
@@ -250,7 +255,8 @@ def duplicate_fan_mode_validator(config: dict[str, Any]) -> dict:
             _LOGGER.warning(warn)
             errors.append(key)
         else:
-            fan_modes.add(value)
+            read_fan_modes.add(read_value)
+            write_fan_modes.add(write_value)
 
     for key in reversed(errors):
         del config[CONF_FAN_MODE_VALUES][key]

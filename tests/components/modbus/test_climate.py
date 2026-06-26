@@ -1124,6 +1124,31 @@ async def test_service_climate_action_update(
             FAN_TOP,
             [0x03],
         ),
+        (
+            {
+                CONF_CLIMATES: [
+                    {
+                        CONF_NAME: TEST_ENTITY_NAME,
+                        CONF_TARGET_TEMP: 117,
+                        CONF_ADDRESS: 117,
+                        CONF_SLAVE: 10,
+                        CONF_SCAN_INTERVAL: 0,
+                        CONF_DATA_TYPE: DataType.INT32,
+                        CONF_FAN_MODE_REGISTER: {
+                            CONF_ADDRESS: [118],
+                            CONF_FAN_MODE_VALUES: {
+                                CONF_FAN_MODE_LOW: 0,
+                                CONF_FAN_MODE_MEDIUM: 1,
+                                CONF_FAN_MODE_HIGH: 2,
+                                CONF_FAN_MODE_TOP: [3, 4],
+                            },
+                        },
+                    },
+                ]
+            },
+            FAN_TOP,
+            [0x03],
+        ),
     ],
 )
 async def test_service_climate_fan_update(
@@ -1531,6 +1556,29 @@ async def test_service_set_hvac_mode(
                             CONF_FAN_MODE_VALUES: {
                                 CONF_FAN_MODE_ON: 1,
                                 CONF_FAN_MODE_OFF: 2,
+                            },
+                        },
+                    }
+                ]
+            },
+        ),
+        (
+            FAN_TOP,
+            [0x04],
+            {
+                CONF_CLIMATES: [
+                    {
+                        CONF_NAME: TEST_ENTITY_NAME,
+                        CONF_TARGET_TEMP: 117,
+                        CONF_ADDRESS: 117,
+                        CONF_SLAVE: 10,
+                        CONF_FAN_MODE_REGISTER: {
+                            CONF_ADDRESS: 118,
+                            CONF_FAN_MODE_VALUES: {
+                                CONF_FAN_MODE_LOW: 0,
+                                CONF_FAN_MODE_MEDIUM: 1,
+                                CONF_FAN_MODE_HIGH: 2,
+                                CONF_FAN_MODE_TOP: [3, 4],
                             },
                         },
                     }
