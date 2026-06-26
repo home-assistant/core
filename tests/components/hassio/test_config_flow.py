@@ -6,7 +6,6 @@ from homeassistant.auth.const import GROUP_ID_ADMIN
 from homeassistant.components.hassio import DOMAIN
 from homeassistant.components.hassio.const import (
     DATA_HASSIO_SUPERVISOR_USER,
-    DATA_HASSIO_UPDATE_OPTIONS,
     DEFAULT_UPDATE_OPTIONS,
     ENTRY_DATA_USER,
 )
@@ -82,25 +81,3 @@ async def test_config_flow_without_bootstrap_user(hass: HomeAssistant) -> None:
     assert result["type"] is FlowResultType.CREATE_ENTRY
     assert result["data"] == {}
     assert result["options"] == DEFAULT_UPDATE_OPTIONS
-
-
-async def test_config_flow_uses_bootstrap_update_options(hass: HomeAssistant) -> None:
-    """Test config flow prefers migrated update options from setup bootstrap."""
-    legacy_options = {
-        "add_on_backup_before_update": True,
-        "add_on_backup_retain_copies": 3,
-        "core_backup_before_update": True,
-    }
-    hass.data[DATA_HASSIO_UPDATE_OPTIONS] = legacy_options
-
-    with (
-        patch("homeassistant.components.hassio.async_setup", return_value=True),
-        patch("homeassistant.components.hassio.async_setup_entry", return_value=True),
-    ):
-        result = await hass.config_entries.flow.async_init(
-            DOMAIN, context={"source": "system"}
-        )
-
-    assert result["type"] is FlowResultType.CREATE_ENTRY
-    assert result["data"] == {}
-    assert result["options"] == legacy_options

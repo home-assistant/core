@@ -7,7 +7,6 @@ from homeassistant.const import HASSIO_USER_NAME
 
 from .const import (
     DATA_HASSIO_SUPERVISOR_USER,
-    DATA_HASSIO_UPDATE_OPTIONS,
     DEFAULT_UPDATE_OPTIONS,
     DOMAIN,
     ENTRY_DATA_USER,
@@ -27,10 +26,8 @@ class HassIoConfigFlow(ConfigFlow, domain=DOMAIN):
         if (user := self.hass.data.get(DATA_HASSIO_SUPERVISOR_USER)) is not None:
             data[ENTRY_DATA_USER] = user.id
 
-        options = self.hass.data.get(DATA_HASSIO_UPDATE_OPTIONS, DEFAULT_UPDATE_OPTIONS)
-
         return self.async_create_entry(
             title=HASSIO_USER_NAME,
             data=data,
-            options=options,
+            options=DEFAULT_UPDATE_OPTIONS,
         )

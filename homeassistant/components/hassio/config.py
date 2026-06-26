@@ -1,4 +1,7 @@
-"""Legacy hassio storage helpers for migration."""
+"""Legacy hassio storage helpers for migration.
+
+Deprecated in 2026.8; keep only for one-way migration into config entries.
+"""
 
 from typing import Required, TypedDict
 
@@ -28,7 +31,7 @@ class StoredHassioConfig(TypedDict, total=False):
 
 
 class HassioConfigStore:
-    """Load/remove the legacy hassio store."""
+    """Load/remove the legacy hassio store (deprecated in 2026.8)."""
 
     def __init__(self, hass: HomeAssistant) -> None:
         """Initialize the legacy hassio config store."""
