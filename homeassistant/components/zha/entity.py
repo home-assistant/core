@@ -8,6 +8,7 @@ import logging
 from typing import Any, override
 
 from propcache.api import cached_property
+from zha.application.platforms import EntityStateChangedEvent
 from zha.mixins import LogMixin
 
 from homeassistant.const import (
@@ -147,8 +148,8 @@ class ZHAEntity(LogMixin, RestoreEntity, Entity):
         return device_info
 
     @callback
-    def _handle_entity_events(self, event: Any) -> None:
-        """Entity state changed."""
+    def _handle_zha_entity_state_changed(self, event: EntityStateChangedEvent) -> None:
+        """Handle a state change reported by the ZHA library entity."""
         self.debug("Handling event from entity: %s", event)
         self._zha_state = dataclasses.replace(self._zha_state, **event.state_diff)
         self.async_write_ha_state()
@@ -158,7 +159,9 @@ class ZHAEntity(LogMixin, RestoreEntity, Entity):
         """Run when about to be added to hass."""
         self.remove_future = self.hass.loop.create_future()
         self._unsubs.append(
-            self.entity_data.entity.on_all_events(self._handle_entity_events)
+            self.entity_data.entity.on_event(
+                EntityStateChangedEvent.event, self._handle_zha_entity_state_changed
+            )
         )
         remove_signal = (
             f"{SIGNAL_REMOVE_ENTITIES}_group_{self.entity_data.group_proxy.group.group_id}"
@@ -225,7 +228,8 @@ class ZHAEntity(LogMixin, RestoreEntity, Entity):
         """Log a message."""
         if not _LOGGER.isEnabledFor(level):
             # Avoid building the prefixed message and args tuple for disabled
-            # levels; this runs for every entity event via _handle_entity_events.
+            # levels; this runs for every entity event via
+            # _handle_zha_entity_state_changed.
             return
         msg = f"%s: {msg}"
         args = (self.entity_id, *args)
