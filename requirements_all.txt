@@ -1179,9 +1179,6 @@ greeneye_monitor==3.0.3
 # homeassistant.components.green_planet_energy
 greenplanet-energy-api==0.1.10
 
-# homeassistant.components.greenwave
-greenwavereality==0.5.1
-
 # homeassistant.components.pure_energie
 gridnet==5.0.1
 
