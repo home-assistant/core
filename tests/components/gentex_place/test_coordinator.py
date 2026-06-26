@@ -26,7 +26,7 @@ async def test_mqtt_shadow_update(
     await setup_integration(hass, mock_config_entry)
 
     coordinator = mock_config_entry.runtime_data
-    assert coordinator.shadows["thing-001"].co_alarm_status is AlarmStatus.IDLE
+    assert coordinator.data["thing-001"].co_alarm_status is AlarmStatus.IDLE
 
     payload = json.dumps(
         {"state": {"reported": {"coAlarmStatus": 3, "smokeAlarmStatus": 2}}}
@@ -38,10 +38,10 @@ async def test_mqtt_shadow_update(
     )
     await hass.async_block_till_done()
 
-    assert coordinator.shadows["thing-001"].co_alarm_status is AlarmStatus.ALARM
-    assert coordinator.shadows["thing-001"].smoke_alarm_status is AlarmStatus.PRE_ALARM
+    assert coordinator.data["thing-001"].co_alarm_status is AlarmStatus.ALARM
+    assert coordinator.data["thing-001"].smoke_alarm_status is AlarmStatus.PRE_ALARM
     # Unchanged field preserved
-    assert coordinator.shadows["thing-001"].heat_alarm_status is AlarmStatus.IDLE
+    assert coordinator.data["thing-001"].heat_alarm_status is AlarmStatus.IDLE
 
 
 @pytest.mark.usefixtures("aioclient_mock_fixture")
@@ -56,7 +56,7 @@ async def test_mqtt_shadow_merge_preserves_existing(
     await setup_integration(hass, mock_config_entry)
 
     coordinator = mock_config_entry.runtime_data
-    assert coordinator.shadows["thing-001"].temperature_c == 22.5
+    assert coordinator.data["thing-001"].temperature_c == 22.5
 
     # Send update with only alarm — temperature should be preserved
     payload = json.dumps({"state": {"reported": {"coAlarmStatus": 4}}}).encode()
@@ -67,10 +67,8 @@ async def test_mqtt_shadow_merge_preserves_existing(
     )
     await hass.async_block_till_done()
 
-    assert (
-        coordinator.shadows["thing-001"].co_alarm_status is AlarmStatus.CRITICAL_ALARM
-    )
-    assert coordinator.shadows["thing-001"].temperature_c == 22.5
+    assert coordinator.data["thing-001"].co_alarm_status is AlarmStatus.CRITICAL_ALARM
+    assert coordinator.data["thing-001"].temperature_c == 22.5
 
 
 @pytest.mark.usefixtures("aioclient_mock_fixture")
@@ -85,7 +83,7 @@ async def test_mqtt_shadow_new_device(
     await setup_integration(hass, mock_config_entry)
 
     coordinator = mock_config_entry.runtime_data
-    assert "thing-999" not in coordinator.shadows
+    assert "thing-999" not in coordinator.data
 
     payload = json.dumps(
         {"state": {"reported": {"coAlarmStatus": 1, "temperatureC": 18.0}}}
@@ -97,9 +95,9 @@ async def test_mqtt_shadow_new_device(
     )
     await hass.async_block_till_done()
 
-    assert "thing-999" in coordinator.shadows
-    assert coordinator.shadows["thing-999"].co_alarm_status is AlarmStatus.TEST
-    assert coordinator.shadows["thing-999"].temperature_c == 18.0
+    assert "thing-999" in coordinator.data
+    assert coordinator.data["thing-999"].co_alarm_status is AlarmStatus.TEST
+    assert coordinator.data["thing-999"].temperature_c == 18.0
 
 
 @pytest.mark.usefixtures("aioclient_mock_fixture")
@@ -114,7 +112,7 @@ async def test_mqtt_non_shadow_message_ignored(
     await setup_integration(hass, mock_config_entry)
 
     coordinator = mock_config_entry.runtime_data
-    original_co = coordinator.shadows["thing-001"].co_alarm_status
+    original_co = coordinator.data["thing-001"].co_alarm_status
 
     # Send a non-shadow message (no state.reported)
     payload = json.dumps({"connectivity": {"connected": True}}).encode()
@@ -125,7 +123,7 @@ async def test_mqtt_non_shadow_message_ignored(
     )
     await hass.async_block_till_done()
 
-    assert coordinator.shadows["thing-001"].co_alarm_status is original_co
+    assert coordinator.data["thing-001"].co_alarm_status is original_co
 
 
 @pytest.mark.usefixtures("aioclient_mock_fixture")
@@ -227,7 +225,7 @@ async def test_mqtt_malformed_topic_ignored(
     await setup_integration(hass, mock_config_entry)
 
     coordinator = mock_config_entry.runtime_data
-    original_shadows = dict(coordinator.shadows)
+    original_shadows = dict(coordinator.data)
 
     payload = json.dumps({"state": {"reported": {"coAlarmStatus": 3}}}).encode()
     # Malformed topic — not enough segments to extract thing_name
@@ -238,4 +236,4 @@ async def test_mqtt_malformed_topic_ignored(
     )
     await hass.async_block_till_done()
 
-    assert coordinator.shadows == original_shadows
+    assert coordinator.data == original_shadows

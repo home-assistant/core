@@ -47,8 +47,8 @@ async def test_setup_seeds_shadow_from_discover(
     await setup_integration(hass, mock_config_entry)
 
     coordinator = mock_config_entry.runtime_data
-    assert "thing-001" in coordinator.shadows
-    shadow = coordinator.shadows["thing-001"]
+    assert "thing-001" in coordinator.data
+    shadow = coordinator.data["thing-001"]
     assert shadow.co_alarm_status.value == 0
     assert shadow.heat_alarm_status.value == 0
     assert shadow.smoke_alarm_status.value == 0
