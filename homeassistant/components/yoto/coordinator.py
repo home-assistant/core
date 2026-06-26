@@ -1,6 +1,7 @@
 """Coordinator for the Yoto integration."""
 
 from datetime import datetime
+from typing import override
 
 import aiohttp
 from yoto_api import AuthenticationError, Token, YotoClient, YotoError, YotoPlayer
@@ -14,6 +15,7 @@ from homeassistant.exceptions import (
     OAuth2TokenRequestError,
     OAuth2TokenRequestReauthError,
 )
+from homeassistant.helpers import device_registry as dr
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 from homeassistant.helpers.config_entry_oauth2_flow import OAuth2Session
 from homeassistant.helpers.event import async_track_time_interval
@@ -46,6 +48,7 @@ class YotoDataUpdateCoordinator(DataUpdateCoordinator[dict[str, YotoPlayer]]):
         )
         self._session = session
         self.client = YotoClient(session=async_get_clientsession(hass))
+        self._subscribed_players: set[str] = set()
         self._sync_token()
 
     def _sync_token(self) -> None:
@@ -58,6 +61,7 @@ class YotoDataUpdateCoordinator(DataUpdateCoordinator[dict[str, YotoPlayer]]):
             valid_until=dt_util.utc_from_timestamp(token["expires_at"]),
         )
 
+    @override
     async def _async_setup(self) -> None:
         """Set up the coordinator."""
         try:
@@ -87,6 +91,8 @@ class YotoDataUpdateCoordinator(DataUpdateCoordinator[dict[str, YotoPlayer]]):
                 translation_placeholders={"error": str(err)},
             ) from err
 
+        self._subscribed_players = set(self.client.players)
+
         # The MQTT data/status topic is not pushed spontaneously; the firmware
         # only emits it in response to a command/status/request publish.
         self.config_entry.async_on_unload(
@@ -95,6 +101,7 @@ class YotoDataUpdateCoordinator(DataUpdateCoordinator[dict[str, YotoPlayer]]):
             )
         )
 
+    @override
     async def _async_update_data(self) -> dict[str, YotoPlayer]:
         """Fetch fresh data from the Yoto cloud."""
         try:
@@ -127,7 +134,36 @@ class YotoDataUpdateCoordinator(DataUpdateCoordinator[dict[str, YotoPlayer]]):
                 translation_placeholders={"error": str(err)},
             ) from err
 
+        await self._async_sync_subscriptions()
+        self._remove_stale_devices()
         return self.client.players
+
+    async def _async_sync_subscriptions(self) -> None:
+        """Subscribe new players to MQTT events and unsubscribe removed ones."""
+        current = set(self.client.players)
+        try:
+            for device_id in current - self._subscribed_players:
+                await self.client.subscribe_player_events(device_id)
+            for device_id in self._subscribed_players - current:
+                await self.client.unsubscribe_player_events(device_id)
+        except YotoError as err:
+            _LOGGER.warning("Could not update Yoto event subscriptions: %s", err)
+            return
+        self._subscribed_players = current
+
+    def _remove_stale_devices(self) -> None:
+        """Drop devices for players no longer returned by the account."""
+        device_registry = dr.async_get(self.hass)
+        for device in dr.async_entries_for_config_entry(
+            device_registry, self.config_entry.entry_id
+        ):
+            player_id = next(
+                (ident[1] for ident in device.identifiers if ident[0] == DOMAIN), None
+            )
+            if player_id is not None and player_id not in self.client.players:
+                device_registry.async_update_device(
+                    device.id, remove_config_entry_id=self.config_entry.entry_id
+                )
 
     async def _async_load_library(self) -> None:
         """Load the card library and groups; failures only affect browsing."""
@@ -151,6 +187,7 @@ class YotoDataUpdateCoordinator(DataUpdateCoordinator[dict[str, YotoPlayer]]):
         """Handle a real-time update pushed by the Yoto MQTT broker."""
         self.async_set_updated_data(self.client.players)
 
+    @override
     async def async_shutdown(self) -> None:
         """Shut down the coordinator."""
         await self.client.disconnect_events()

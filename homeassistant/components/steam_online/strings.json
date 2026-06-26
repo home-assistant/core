@@ -6,21 +6,55 @@
     },
     "error": {
       "cannot_connect": "[%key:common::config_flow::error::cannot_connect%]",
-      "invalid_account": "Invalid account ID",
+      "invalid_account": "Invalid Steam ID",
       "invalid_auth": "[%key:common::config_flow::error::invalid_auth%]",
       "unknown": "[%key:common::config_flow::error::unknown%]"
     },
     "step": {
       "reauth_confirm": {
-        "description": "The Steam integration needs to be manually re-authenticated\n\nYou can find your key here: {api_key_url}",
+        "data": {
+          "api_key": "[%key:component::steam_online::config::step::user::data::api_key%]"
+        },
+        "data_description": {
+          "api_key": "[%key:component::steam_online::config::step::user::data_description::api_key%]"
+        },
+        "description": "The Steam integration requires re-authentication.\n\nYou can find your Steam Web API key [**here**]({api_key_url}).",
         "title": "[%key:common::config_flow::title::reauth%]"
       },
       "user": {
         "data": {
-          "account": "Steam account ID",
-          "api_key": "[%key:common::config_flow::data::api_key%]"
+          "account": "Steam ID",
+          "api_key": "Web API key"
         },
-        "description": "Use {account_id_url} to find your Steam account ID (labeled \"steamID64\")"
+        "data_description": {
+          "account": "Your Steam account ID (SteamID64)",
+          "api_key": "Your Steam Web API key"
+        },
+        "description": "Before continuing, obtain a Steam Web API key and your Steam ID. Create an API key [**here**]({api_key_url}). To locate your Steam ID (SteamID64), sign in to Steam and open [**Account Details**]({account_id_url})."
+      }
+    }
+  },
+  "entity": {
+    "sensor": {
+      "account": {
+        "state": {
+          "away": "Away",
+          "busy": "Busy",
+          "looking_to_play": "Looking to play",
+          "looking_to_trade": "Looking to trade",
+          "offline": "Offline",
+          "online": "Online",
+          "snooze": "Snooze"
+        },
+        "state_attributes": {
+          "game": { "name": "Game" },
+          "game_icon": { "name": "Game icon" },
+          "game_id": { "name": "Game ID" },
+          "game_image_header": { "name": "Game header image" },
+          "game_image_main": { "name": "Game image" },
+          "last_online": { "name": "Last online" },
+          "level": { "name": "Level" }
+        }
       }
     }
   },

@@ -39,8 +39,8 @@
 # name: test_binary_sensor[load_platforms0][binary_sensor.bedroom_bedroom_filter_clean_required-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'device_class': 'problem',
-      'friendly_name': 'Bedroom Filter clean required',
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'problem',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Bedroom Filter clean required',
     }),
     'context': <ANY>,
     'entity_id': 'binary_sensor.bedroom_bedroom_filter_clean_required',
@@ -90,8 +90,8 @@
 # name: test_binary_sensor[load_platforms0][binary_sensor.bedroom_bedroom_pure_boost_linked_with_ac-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'device_class': 'connectivity',
-      'friendly_name': 'Bedroom Pure Boost linked with AC',
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'connectivity',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Bedroom Pure Boost linked with AC',
     }),
     'context': <ANY>,
     'entity_id': 'binary_sensor.bedroom_bedroom_pure_boost_linked_with_ac',
@@ -141,8 +141,8 @@
 # name: test_binary_sensor[load_platforms0][binary_sensor.bedroom_bedroom_pure_boost_linked_with_indoor_air_quality-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'device_class': 'connectivity',
-      'friendly_name': 'Bedroom Pure Boost linked with indoor air quality',
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'connectivity',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Bedroom Pure Boost linked with indoor air quality',
     }),
     'context': <ANY>,
     'entity_id': 'binary_sensor.bedroom_bedroom_pure_boost_linked_with_indoor_air_quality',
@@ -192,8 +192,8 @@
 # name: test_binary_sensor[load_platforms0][binary_sensor.bedroom_bedroom_pure_boost_linked_with_outdoor_air_quality-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'device_class': 'connectivity',
-      'friendly_name': 'Bedroom Pure Boost linked with outdoor air quality',
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'connectivity',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Bedroom Pure Boost linked with outdoor air quality',
     }),
     'context': <ANY>,
     'entity_id': 'binary_sensor.bedroom_bedroom_pure_boost_linked_with_outdoor_air_quality',
@@ -243,8 +243,8 @@
 # name: test_binary_sensor[load_platforms0][binary_sensor.bedroom_bedroom_pure_boost_linked_with_presence-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'device_class': 'connectivity',
-      'friendly_name': 'Bedroom Pure Boost linked with presence',
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'connectivity',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Bedroom Pure Boost linked with presence',
     }),
     'context': <ANY>,
     'entity_id': 'binary_sensor.bedroom_bedroom_pure_boost_linked_with_presence',
@@ -294,8 +294,8 @@
 # name: test_binary_sensor[load_platforms0][binary_sensor.hallway_hallway_filter_clean_required-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'device_class': 'problem',
-      'friendly_name': 'Hallway Filter clean required',
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'problem',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Hallway Filter clean required',
     }),
     'context': <ANY>,
     'entity_id': 'binary_sensor.hallway_hallway_filter_clean_required',
@@ -345,8 +345,8 @@
 # name: test_binary_sensor[load_platforms0][binary_sensor.hallway_hallway_room_occupied-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'device_class': 'motion',
-      'friendly_name': 'Hallway Room occupied',
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'motion',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Hallway Room occupied',
     }),
     'context': <ANY>,
     'entity_id': 'binary_sensor.hallway_hallway_room_occupied',
@@ -396,8 +396,8 @@
 # name: test_binary_sensor[load_platforms0][binary_sensor.hallway_motion_sensor_connectivity-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'device_class': 'connectivity',
-      'friendly_name': 'Hallway Motion Sensor Connectivity',
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'connectivity',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Hallway Motion Sensor Connectivity',
     }),
     'context': <ANY>,
     'entity_id': 'binary_sensor.hallway_motion_sensor_connectivity',
@@ -447,7 +447,7 @@
 # name: test_binary_sensor[load_platforms0][binary_sensor.hallway_motion_sensor_main_sensor-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'Hallway Motion Sensor Main sensor',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Hallway Motion Sensor Main sensor',
     }),
     'context': <ANY>,
     'entity_id': 'binary_sensor.hallway_motion_sensor_main_sensor',
@@ -497,8 +497,8 @@
 # name: test_binary_sensor[load_platforms0][binary_sensor.hallway_motion_sensor_motion-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'device_class': 'motion',
-      'friendly_name': 'Hallway Motion Sensor Motion',
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'motion',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Hallway Motion Sensor Motion',
     }),
     'context': <ANY>,
     'entity_id': 'binary_sensor.hallway_motion_sensor_motion',
@@ -548,8 +548,8 @@
 # name: test_binary_sensor[load_platforms0][binary_sensor.kitchen_kitchen_filter_clean_required-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'device_class': 'problem',
-      'friendly_name': 'Kitchen Filter clean required',
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'problem',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Kitchen Filter clean required',
     }),
     'context': <ANY>,
     'entity_id': 'binary_sensor.kitchen_kitchen_filter_clean_required',
@@ -599,8 +599,8 @@
 # name: test_binary_sensor[load_platforms0][binary_sensor.kitchen_kitchen_pure_boost_linked_with_ac-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'device_class': 'connectivity',
-      'friendly_name': 'Kitchen Pure Boost linked with AC',
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'connectivity',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Kitchen Pure Boost linked with AC',
     }),
     'context': <ANY>,
     'entity_id': 'binary_sensor.kitchen_kitchen_pure_boost_linked_with_ac',
@@ -650,8 +650,8 @@
 # name: test_binary_sensor[load_platforms0][binary_sensor.kitchen_kitchen_pure_boost_linked_with_indoor_air_quality-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'device_class': 'connectivity',
-      'friendly_name': 'Kitchen Pure Boost linked with indoor air quality',
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'connectivity',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Kitchen Pure Boost linked with indoor air quality',
     }),
     'context': <ANY>,
     'entity_id': 'binary_sensor.kitchen_kitchen_pure_boost_linked_with_indoor_air_quality',
@@ -701,8 +701,8 @@
 # name: test_binary_sensor[load_platforms0][binary_sensor.kitchen_kitchen_pure_boost_linked_with_outdoor_air_quality-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'device_class': 'connectivity',
-      'friendly_name': 'Kitchen Pure Boost linked with outdoor air quality',
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'connectivity',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Kitchen Pure Boost linked with outdoor air quality',
     }),
     'context': <ANY>,
     'entity_id': 'binary_sensor.kitchen_kitchen_pure_boost_linked_with_outdoor_air_quality',
@@ -752,8 +752,8 @@
 # name: test_binary_sensor[load_platforms0][binary_sensor.kitchen_kitchen_pure_boost_linked_with_presence-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'device_class': 'connectivity',
-      'friendly_name': 'Kitchen Pure Boost linked with presence',
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'connectivity',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Kitchen Pure Boost linked with presence',
     }),
     'context': <ANY>,
     'entity_id': 'binary_sensor.kitchen_kitchen_pure_boost_linked_with_presence',

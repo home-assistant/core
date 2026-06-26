@@ -29,7 +29,7 @@
               "resolver_ipv6": "Resolver used for the IPv6 lookup."
             },
             "description": "Optionally change resolvers and ports.",
-            "name": "Advanced options"
+            "name": "Additional options"
           }
         }
       }

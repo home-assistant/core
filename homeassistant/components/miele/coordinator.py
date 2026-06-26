@@ -4,6 +4,7 @@ from collections.abc import Callable
 from dataclasses import dataclass
 from datetime import timedelta
 import logging
+from typing import override
 
 from aiohttp import ClientResponseError
 from pymiele import (
@@ -74,6 +75,7 @@ class MieleDataUpdateCoordinator(DataUpdateCoordinator[MieleCoordinatorData]):
         )
         self.api = api
 
+    @override
     async def _async_update_data(self) -> MieleCoordinatorData:
         """Fetch data from the Miele API."""
         devices_json = await self.api.get_devices()
@@ -150,6 +152,7 @@ class MieleAuxDataUpdateCoordinator(DataUpdateCoordinator[MieleAuxCoordinatorDat
         )
         self.api = api
 
+    @override
     async def _async_update_data(self) -> MieleAuxCoordinatorData:
         """Fetch data from the Miele API."""
         filling_levels_json = await self.api.get_filling_levels()

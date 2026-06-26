@@ -39,9 +39,9 @@
 # name: test_entity[binary_sensor.baby_bedroom_connectivity-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'attribution': 'Data provided by Netatmo',
-      'device_class': 'connectivity',
-      'friendly_name': 'Baby Bedroom Connectivity',
+      <EntityStateAttribute.ATTRIBUTION: 'attribution'>: 'Data provided by Netatmo',
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'connectivity',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Baby Bedroom Connectivity',
       'latitude': 13.377726,
       'longitude': 52.516263,
     }),
@@ -93,9 +93,9 @@
 # name: test_entity[binary_sensor.bedroom_connectivity-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'attribution': 'Data provided by Netatmo',
-      'device_class': 'connectivity',
-      'friendly_name': 'Bedroom Connectivity',
+      <EntityStateAttribute.ATTRIBUTION: 'attribution'>: 'Data provided by Netatmo',
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'connectivity',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Bedroom Connectivity',
       'latitude': 13.377726,
       'longitude': 52.516263,
     }),
@@ -147,9 +147,9 @@
 # name: test_entity[binary_sensor.kitchen_connectivity-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'attribution': 'Data provided by Netatmo',
-      'device_class': 'connectivity',
-      'friendly_name': 'Kitchen Connectivity',
+      <EntityStateAttribute.ATTRIBUTION: 'attribution'>: 'Data provided by Netatmo',
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'connectivity',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Kitchen Connectivity',
       'latitude': 13.377726,
       'longitude': 52.516263,
     }),
@@ -201,9 +201,9 @@
 # name: test_entity[binary_sensor.livingroom_connectivity-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'attribution': 'Data provided by Netatmo',
-      'device_class': 'connectivity',
-      'friendly_name': 'Livingroom Connectivity',
+      <EntityStateAttribute.ATTRIBUTION: 'attribution'>: 'Data provided by Netatmo',
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'connectivity',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Livingroom Connectivity',
       'latitude': 13.377726,
       'longitude': 52.516263,
     }),
@@ -255,9 +255,9 @@
 # name: test_entity[binary_sensor.parents_bedroom_connectivity-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'attribution': 'Data provided by Netatmo',
-      'device_class': 'connectivity',
-      'friendly_name': 'Parents Bedroom Connectivity',
+      <EntityStateAttribute.ATTRIBUTION: 'attribution'>: 'Data provided by Netatmo',
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'connectivity',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Parents Bedroom Connectivity',
       'latitude': 13.377726,
       'longitude': 52.516263,
     }),
@@ -309,9 +309,9 @@
 # name: test_entity[binary_sensor.villa_bathroom_connectivity-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'attribution': 'Data provided by Netatmo',
-      'device_class': 'connectivity',
-      'friendly_name': 'Villa Bathroom Connectivity',
+      <EntityStateAttribute.ATTRIBUTION: 'attribution'>: 'Data provided by Netatmo',
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'connectivity',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Villa Bathroom Connectivity',
     }),
     'context': <ANY>,
     'entity_id': 'binary_sensor.villa_bathroom_connectivity',
@@ -361,9 +361,9 @@
 # name: test_entity[binary_sensor.villa_bedroom_connectivity-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'attribution': 'Data provided by Netatmo',
-      'device_class': 'connectivity',
-      'friendly_name': 'Villa Bedroom Connectivity',
+      <EntityStateAttribute.ATTRIBUTION: 'attribution'>: 'Data provided by Netatmo',
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'connectivity',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Villa Bedroom Connectivity',
     }),
     'context': <ANY>,
     'entity_id': 'binary_sensor.villa_bedroom_connectivity',
@@ -413,9 +413,9 @@
 # name: test_entity[binary_sensor.villa_connectivity-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'attribution': 'Data provided by Netatmo',
-      'device_class': 'connectivity',
-      'friendly_name': 'Villa Connectivity',
+      <EntityStateAttribute.ATTRIBUTION: 'attribution'>: 'Data provided by Netatmo',
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'connectivity',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Villa Connectivity',
       'latitude': 46.123456,
       'longitude': 6.1234567,
     }),
@@ -467,9 +467,9 @@
 # name: test_entity[binary_sensor.villa_garden_connectivity-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'attribution': 'Data provided by Netatmo',
-      'device_class': 'connectivity',
-      'friendly_name': 'Villa Garden Connectivity',
+      <EntityStateAttribute.ATTRIBUTION: 'attribution'>: 'Data provided by Netatmo',
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'connectivity',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Villa Garden Connectivity',
     }),
     'context': <ANY>,
     'entity_id': 'binary_sensor.villa_garden_connectivity',
@@ -519,9 +519,9 @@
 # name: test_entity[binary_sensor.villa_outdoor_connectivity-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'attribution': 'Data provided by Netatmo',
-      'device_class': 'connectivity',
-      'friendly_name': 'Villa Outdoor Connectivity',
+      <EntityStateAttribute.ATTRIBUTION: 'attribution'>: 'Data provided by Netatmo',
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'connectivity',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Villa Outdoor Connectivity',
     }),
     'context': <ANY>,
     'entity_id': 'binary_sensor.villa_outdoor_connectivity',
@@ -571,9 +571,9 @@
 # name: test_entity[binary_sensor.villa_rain_connectivity-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'attribution': 'Data provided by Netatmo',
-      'device_class': 'connectivity',
-      'friendly_name': 'Villa Rain Connectivity',
+      <EntityStateAttribute.ATTRIBUTION: 'attribution'>: 'Data provided by Netatmo',
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'connectivity',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Villa Rain Connectivity',
     }),
     'context': <ANY>,
     'entity_id': 'binary_sensor.villa_rain_connectivity',
@@ -623,9 +623,9 @@
 # name: test_entity[binary_sensor.window_hall_connectivity-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'attribution': 'Data provided by Netatmo',
-      'device_class': 'connectivity',
-      'friendly_name': 'Window Hall Connectivity',
+      <EntityStateAttribute.ATTRIBUTION: 'attribution'>: 'Data provided by Netatmo',
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'connectivity',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Window Hall Connectivity',
     }),
     'context': <ANY>,
     'entity_id': 'binary_sensor.window_hall_connectivity',
@@ -675,9 +675,9 @@
 # name: test_entity[binary_sensor.window_hall_window-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'attribution': 'Data provided by Netatmo',
-      'device_class': 'window',
-      'friendly_name': 'Window Hall Window',
+      <EntityStateAttribute.ATTRIBUTION: 'attribution'>: 'Data provided by Netatmo',
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'window',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Window Hall Window',
     }),
     'context': <ANY>,
     'entity_id': 'binary_sensor.window_hall_window',

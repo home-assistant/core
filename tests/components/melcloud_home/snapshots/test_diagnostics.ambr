@@ -54,6 +54,7 @@
                 'max': 12.0,
                 'min': 10.0,
               }),
+              'holiday_mode': None,
               'id': '**REDACTED**',
               'in_standby_mode': False,
               'is_in_error': False,
@@ -150,8 +151,14 @@
                 'min_set_temperature_zone2': None,
               }),
               'forced_hot_water_mode': False,
-              'frost_protection': None,
+              'frost_protection': dict({
+                'active': False,
+                'enabled': False,
+                'max': 8.0,
+                'min': 5.0,
+              }),
               'has_zone2': False,
+              'holiday_mode': None,
               'id': '**REDACTED**',
               'in_standby_mode': False,
               'is_in_error': False,
@@ -159,7 +166,12 @@
               'operation_mode': 'HeatZones',
               'operation_mode_zone1': 'HeatRoomTemperature',
               'operation_mode_zone2': 'HeatRoomTemperature',
-              'overheat_protection': None,
+              'overheat_protection': dict({
+                'active': False,
+                'enabled': True,
+                'max': 42.0,
+                'min': 40.0,
+              }),
               'power': True,
               'raw_settings': list([
                 dict({
