@@ -153,9 +153,8 @@ async def test_stop_device_stops_existing_event_manager(
 ) -> None:
     """Test that unload stops the event manager even when capabilities.events is False."""
     entry, _, mock_device = await setup_onvif_integration(hass)
-    # Default setup: capabilities.events=False, but mock_device.events exists.
-    # This mirrors the bug scenario where a partial subscription leaves background
-    # tasks running while capabilities.events stays False.
+    # Mirrors the bug where a partial subscription leaves the event manager
+    # running while capabilities.events stays False.
     assert mock_device.capabilities.events is False
 
     assert await hass.config_entries.async_unload(entry.entry_id)
