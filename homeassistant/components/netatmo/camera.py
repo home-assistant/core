@@ -247,11 +247,13 @@ class NetatmoCamera(NetatmoModuleEntity, Camera):
         return None
 
     @property
+    @override
     def is_on(self) -> bool:
         """Return whether monitoring is currently active."""
         return bool(self._monitoring)
 
     @property
+    @override
     def supported_features(self) -> CameraEntityFeature:
         """Return supported features."""
         supported_features = CameraEntityFeature.ON_OFF
@@ -315,6 +317,7 @@ class NetatmoCamera(NetatmoModuleEntity, Camera):
         ) as err:
             raise HomeAssistantError(f"Could not turn on camera: {err}") from err
 
+    @override
     async def stream_source(self) -> str | None:
         """Return the stream source."""
         # Return empty if camera not capable to provide a live stream.
