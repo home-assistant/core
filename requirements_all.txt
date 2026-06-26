@@ -287,6 +287,9 @@ aioharmony==1.0.8
 # homeassistant.components.hassio
 aiohasupervisor==0.5.0
 
+# homeassistant.components.hifiberry
+aiohifiberry==0.1.0
+
 # homeassistant.components.home_connect
 aiohomeconnect==0.38.0
 

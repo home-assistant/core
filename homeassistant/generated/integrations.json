@@ -2887,6 +2887,12 @@
       "integration_type": "virtual",
       "supported_by": "overkiz"
     },
+    "hifiberry": {
+      "name": "HiFiBerry",
+      "integration_type": "hub",
+      "config_flow": true,
+      "iot_class": "local_polling"
+    },
     "hikvision": {
       "name": "Hikvision",
       "integrations": {
