@@ -10,9 +10,10 @@ from homeassistant.components.sensor import (
     SensorEntity,
     SensorEntityDescription,
 )
-from homeassistant.core import HomeAssistant, callback
+from homeassistant.core import HomeAssistant
 from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
+from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
 from .const import DOMAIN, AlarmStatus
 from .coordinator import PlaceConfigEntry, PlaceCoordinator
@@ -71,7 +72,7 @@ async def async_setup_entry(
     async_add_entities(entities)
 
 
-class PlaceAlarmSensorEntity(SensorEntity):
+class PlaceAlarmSensorEntity(CoordinatorEntity[PlaceCoordinator], SensorEntity):
     """Sensor entity for a Place alarm status."""
 
     _attr_has_entity_name = True
@@ -86,7 +87,7 @@ class PlaceAlarmSensorEntity(SensorEntity):
         description: PlaceAlarmSensorEntityDescription,
     ) -> None:
         """Initialize the sensor."""
-        self.coordinator = coordinator
+        super().__init__(coordinator)
         self._thing_name: str = device.thing_name
         self._device_name: str = (
             device.location or device.device_name or device.device_id
@@ -104,18 +105,11 @@ class PlaceAlarmSensorEntity(SensorEntity):
     @property
     def native_value(self) -> str | None:
         """Return the current alarm status as a lowercase enum name."""
-        shadow = self.coordinator.shadows.get(self._thing_name)
+        shadow = (
+            self.coordinator.data.get(self._thing_name)
+            if self.coordinator.data
+            else None
+        )
         if shadow is None:
             return None
         return self.entity_description.value_fn(shadow).name.lower()
-
-    async def async_added_to_hass(self) -> None:
-        """Subscribe to coordinator updates."""
-        self.async_on_remove(
-            self.coordinator.async_add_listener(self._handle_coordinator_update)
-        )
-
-    @callback
-    def _handle_coordinator_update(self) -> None:
-        """Handle updated data from the coordinator."""
-        self.async_write_ha_state()

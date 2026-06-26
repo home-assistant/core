@@ -93,11 +93,8 @@ async def test_sensor_unknown_device_returns_unknown(
     await setup_integration(hass, mock_config_entry)
 
     coordinator = mock_config_entry.runtime_data
-    # Remove the shadow to simulate a missing device
-    del coordinator.shadows["thing-001"]
-
-    # Trigger a state write
-    coordinator._async_notify_listeners()
+    # Simulate the device disappearing from coordinator data
+    coordinator.async_set_updated_data({})
     await hass.async_block_till_done()
 
     state = hass.states.get("sensor.master_bedroom_co_alarm")
