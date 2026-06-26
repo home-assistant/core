@@ -18,7 +18,6 @@ from homeassistant.const import (
     LIGHT_LUX,
     EntityCategory,
     Platform,
-    UnitOfDensity,
     UnitOfPressure,
     UnitOfRatio,
     UnitOfSoundPressure,
