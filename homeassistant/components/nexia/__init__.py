@@ -64,7 +64,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: NexiaConfigEntry) -> boo
     await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
     if nexia_home.any_room_iq_monitors():
         # To avoid initially presenting stale data, manually refresh
-        await coordinator.async_refresh()
+        await coordinator.async_config_entry_first_refresh()
 
     return True
 
