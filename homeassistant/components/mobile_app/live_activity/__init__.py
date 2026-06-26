@@ -59,16 +59,18 @@ class LiveActivityPush:
 
 def prepare_live_activity_remote_push(
     hass: HomeAssistant, registration: Mapping[str, Any], data: dict[str, Any]
-) -> tuple[dict[str, Any] | None, CALLBACK_TYPE | None]:
-    """Return remote notification data and an optional on-success callback.
+) -> tuple[dict[str, Any] | None, CALLBACK_TYPE | None, CALLBACK_TYPE | None]:
+    """Return remote notification data and optional on-success/on-failure callbacks.
 
-    Applies any Live Activity routing; the callback, when set, runs after a
-    successful send. Returns ``None`` data when the push should be dropped.
+    Applies any Live Activity routing. The data is ``None`` when the push should be dropped;
+    a callback, when set, runs after the send succeeds or fails respectively.
     """
     if not (resolved := resolve_live_activity_push(hass, registration, data)):
-        return data, None
+        return data, None, None
 
     webhook_id = registration[ATTR_WEBHOOK_ID]
+    success_callback: CALLBACK_TYPE | None = None
+    failure_callback: CALLBACK_TYPE | None = None
 
     if resolved.event is LiveActivityEvent.START:
         # Token not reported yet, so an update has nothing to target. Send one start, then
@@ -83,16 +85,14 @@ def prepare_live_activity_remote_push(
         )
         if is_start_pending(hass, webhook_id, resolved.tag, failsafe):
             buffer_pending_update(hass, webhook_id, resolved.tag, data)
-            return None, None
+            return None, None, None
         mark_start_pending(hass, webhook_id, resolved.tag)
-
-    success_callback: CALLBACK_TYPE | None = None
-    if resolved.event is LiveActivityEvent.END:
+        # Mark eagerly so a concurrent start is suppressed, but roll back if the send fails so a
+        # failed start is retried on the next update instead of buffered until the failsafe.
+        failure_callback = partial(clear_start_pending, hass, webhook_id, resolved.tag)
+    elif resolved.event is LiveActivityEvent.END:
         success_callback = partial(
-            remove_live_activity_token,
-            hass,
-            webhook_id,
-            resolved.tag,
+            remove_live_activity_token, hass, webhook_id, resolved.tag
         )
 
     return (
@@ -105,6 +105,7 @@ def prepare_live_activity_remote_push(
             },
         },
         success_callback,
+        failure_callback,
     )
 
 

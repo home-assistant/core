@@ -245,9 +245,10 @@ class MobileAppNotificationService(BaseNotificationService):
     ) -> None:
         """Send a message to a target."""
         on_success_callback: CALLBACK_TYPE | None = None
+        on_failure_callback: CALLBACK_TYPE | None = None
         if entry.data[ATTR_MANUFACTURER] == MANUFACTURER_APPLE:
-            prepared, on_success_callback = prepare_live_activity_remote_push(
-                self.hass, entry.data, data
+            prepared, on_success_callback, on_failure_callback = (
+                prepare_live_activity_remote_push(self.hass, entry.data, data)
             )
             if prepared is None:
                 # The push was suppressed upstream; nothing to send.
@@ -260,6 +261,8 @@ class MobileAppNotificationService(BaseNotificationService):
                 _LOGGER.warning(str(e))
             else:
                 _LOGGER.error(str(e))
+            if on_failure_callback:
+                on_failure_callback()
         else:
             if on_success_callback:
                 on_success_callback()
