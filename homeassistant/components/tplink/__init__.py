@@ -50,8 +50,10 @@ from .const import (
     CONF_CREDENTIALS_HASH,
     CONF_DEVICE_CONFIG,
     CONF_LIVE_VIEW,
+    CONF_UPDATE_INTERVAL,
     CONF_USES_HTTP,
     CONNECT_TIMEOUT,
+    DEFAULT_UPDATE_INTERVAL,
     DISCOVERY_TIMEOUT,
     DOMAIN,
     PLATFORMS,
@@ -69,6 +71,13 @@ def create_async_tplink_clientsession(hass: HomeAssistant) -> ClientSession:
     return async_create_clientsession(
         hass, verify_ssl=False, cookie_jar=get_cookie_jar()
     )
+
+
+def _get_update_interval(entry: TPLinkConfigEntry) -> timedelta:
+    """Return the coordinator update interval for a config entry."""
+    if CONF_UPDATE_INTERVAL in entry.options:
+        return timedelta(seconds=entry.options[CONF_UPDATE_INTERVAL])
+    return timedelta(seconds=DEFAULT_UPDATE_INTERVAL)
 
 
 @callback
@@ -231,7 +240,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: TPLinkConfigEntry) -> bo
         )
 
     parent_coordinator = TPLinkDataUpdateCoordinator(
-        hass, device, timedelta(seconds=5), entry
+        hass, device, _get_update_interval(entry), entry
     )
 
     camera_creds: Credentials | None = None

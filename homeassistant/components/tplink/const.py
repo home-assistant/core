@@ -27,6 +27,11 @@ CONF_AES_KEYS: Final = "aes_keys"
 CONF_CAMERA_CREDENTIALS = "camera_credentials"
 CONF_LIVE_VIEW = "live_view"
 
+CONF_UPDATE_INTERVAL: Final = "update_interval"
+DEFAULT_UPDATE_INTERVAL: Final = 5
+MIN_UPDATE_INTERVAL: Final = 0.1
+MAX_UPDATE_INTERVAL: Final = 300
+
 CONF_CONFIG_ENTRY_MINOR_VERSION: Final = 5
 
 PLATFORMS: Final = [

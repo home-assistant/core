@@ -24,6 +24,7 @@ from homeassistant.config_entries import (
     ConfigEntryState,
     ConfigFlow,
     ConfigFlowResult,
+    OptionsFlowWithReload,
 )
 from homeassistant.const import (
     CONF_ALIAS,
@@ -55,9 +56,13 @@ from .const import (
     CONF_CONNECTION_PARAMETERS,
     CONF_CREDENTIALS_HASH,
     CONF_LIVE_VIEW,
+    CONF_UPDATE_INTERVAL,
     CONF_USES_HTTP,
     CONNECT_TIMEOUT,
+    DEFAULT_UPDATE_INTERVAL,
     DOMAIN,
+    MAX_UPDATE_INTERVAL,
+    MIN_UPDATE_INTERVAL,
 )
 
 _LOGGER = logging.getLogger(__name__)
@@ -90,6 +95,14 @@ class TPLinkConfigFlow(ConfigFlow, domain=DOMAIN):
         """Initialize the config flow."""
         self._discovered_devices: dict[str, Device] = {}
         self._discovered_device: Device | None = None
+
+    @staticmethod
+    @callback
+    def async_get_options_flow(
+        config_entry: ConfigEntry,
+    ) -> TPLinkOptionsFlowHandler:
+        """Return the options flow handler."""
+        return TPLinkOptionsFlowHandler()
 
     @override
     async def async_step_dhcp(
@@ -862,4 +875,32 @@ class TPLinkConfigFlow(ConfigFlow, domain=DOMAIN):
                 **placeholders,
                 CONF_MAC: reconfigure_entry.unique_id,
             },
+        )
+
+
+class TPLinkOptionsFlowHandler(OptionsFlowWithReload):
+    """Handle TP-Link options."""
+
+    async def async_step_init(
+        self, user_input: dict[str, Any] | None = None
+    ) -> ConfigFlowResult:
+        """Manage the polling interval option for this device."""
+        if user_input is not None:
+            return self.async_create_entry(data=user_input)
+
+        return self.async_show_form(
+            step_id="init",
+            data_schema=vol.Schema(
+                {
+                    vol.Optional(
+                        CONF_UPDATE_INTERVAL,
+                        default=self.config_entry.options.get(
+                            CONF_UPDATE_INTERVAL, DEFAULT_UPDATE_INTERVAL
+                        ),
+                    ): vol.All(
+                        vol.Coerce(float),
+                        vol.Range(min=MIN_UPDATE_INTERVAL, max=MAX_UPDATE_INTERVAL),
+                    ),
+                }
+            ),
         )

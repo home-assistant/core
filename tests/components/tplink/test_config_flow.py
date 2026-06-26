@@ -23,6 +23,7 @@ from homeassistant.components.tplink.const import (
     CONF_CREDENTIALS_HASH,
     CONF_DEVICE_CONFIG,
     CONF_LIVE_VIEW,
+    CONF_UPDATE_INTERVAL,
 )
 from homeassistant.config_entries import SOURCE_REAUTH, ConfigEntryState
 from homeassistant.const import (
@@ -2466,3 +2467,58 @@ async def test_reconfigure_camera(
         )
     assert result["type"] is FlowResultType.ABORT
     assert result["reason"] == "reconfigure_successful"
+
+
+async def test_options_flow(
+    hass: HomeAssistant, mock_config_entry: MockConfigEntry
+) -> None:
+    """Test the options flow."""
+    mock_config_entry.add_to_hass(hass)
+    result = await hass.config_entries.options.async_init(mock_config_entry.entry_id)
+
+    assert result["type"] is FlowResultType.FORM
+    assert result["step_id"] == "init"
+
+
+async def test_options_flow_create_entry(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    mock_connect: AsyncMock,
+    mock_discovery: AsyncMock,
+) -> None:
+    """Test creating an options entry reloads the config entry."""
+    mock_config_entry.add_to_hass(hass)
+    await hass.config_entries.async_setup(mock_config_entry.entry_id)
+    await hass.async_block_till_done()
+    assert mock_config_entry.state is ConfigEntryState.LOADED
+
+    options_form = await hass.config_entries.options.async_init(
+        mock_config_entry.entry_id
+    )
+    result = await hass.config_entries.options.async_configure(
+        options_form["flow_id"],
+        user_input={CONF_UPDATE_INTERVAL: 1},
+    )
+    await hass.async_block_till_done()
+
+    assert result["type"] is FlowResultType.CREATE_ENTRY
+    assert mock_config_entry.options == {CONF_UPDATE_INTERVAL: 1.0}
+    assert mock_config_entry.state is ConfigEntryState.LOADED
+
+
+async def test_options_flow_invalid_interval(
+    hass: HomeAssistant, mock_config_entry: MockConfigEntry
+) -> None:
+    """Test the options flow rejects invalid intervals."""
+    mock_config_entry.add_to_hass(hass)
+    options_form = await hass.config_entries.options.async_init(
+        mock_config_entry.entry_id
+    )
+    result = await hass.config_entries.options.async_configure(
+        options_form["flow_id"],
+        user_input={CONF_UPDATE_INTERVAL: 0.01},
+    )
+
+    assert result["type"] is FlowResultType.FORM
+    assert result["step_id"] == "init"
+    assert result["errors"] == {"update_interval": "number_range"}

@@ -1,4 +1,16 @@
 {
+  "options": {
+    "step": {
+      "init": {
+        "data": {
+          "update_interval": "Update interval (seconds)"
+        },
+        "data_description": {
+          "update_interval": "How often to poll this device, in seconds. The default is 5 seconds. Lower values make automations react faster to physical changes at the cost of more network traffic to the device."
+        }
+      }
+    }
+  },
   "config": {
     "abort": {
       "already_configured": "[%key:common::config_flow::abort::already_configured_device%]",

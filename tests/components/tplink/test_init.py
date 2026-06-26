@@ -24,6 +24,7 @@ from homeassistant.components.tplink.const import (
     CONF_CONNECTION_PARAMETERS,
     CONF_CREDENTIALS_HASH,
     CONF_DEVICE_CONFIG,
+    CONF_UPDATE_INTERVAL,
     DOMAIN,
 )
 from homeassistant.config_entries import SOURCE_REAUTH, ConfigEntryState
@@ -213,6 +214,46 @@ async def test_config_entry_device_config(
     await hass.config_entries.async_setup(mock_config_entry.entry_id)
     await hass.async_block_till_done()
     assert mock_config_entry.state is ConfigEntryState.LOADED
+
+
+async def test_default_update_interval(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    mock_connect: AsyncMock,
+    mock_discovery: AsyncMock,
+) -> None:
+    """Test the default coordinator update interval."""
+    mock_config_entry.add_to_hass(hass)
+    await hass.config_entries.async_setup(mock_config_entry.entry_id)
+    await hass.async_block_till_done()
+
+    entry = hass.config_entries.async_get_entry(mock_config_entry.entry_id)
+    assert entry is not None
+    assert entry.runtime_data.parent_coordinator.update_interval == timedelta(seconds=5)
+
+
+async def test_custom_update_interval(
+    hass: HomeAssistant,
+    mock_connect: AsyncMock,
+    mock_discovery: AsyncMock,
+) -> None:
+    """Test a custom coordinator update interval from options."""
+    mock_config_entry = MockConfigEntry(
+        title="TPLink",
+        domain=DOMAIN,
+        data={**CREATE_ENTRY_DATA_LEGACY},
+        unique_id=MAC_ADDRESS,
+        options={CONF_UPDATE_INTERVAL: 0.5},
+    )
+    mock_config_entry.add_to_hass(hass)
+    await hass.config_entries.async_setup(mock_config_entry.entry_id)
+    await hass.async_block_till_done()
+
+    entry = hass.config_entries.async_get_entry(mock_config_entry.entry_id)
+    assert entry is not None
+    assert entry.runtime_data.parent_coordinator.update_interval == timedelta(
+        seconds=0.5
+    )
 
 
 async def test_config_entry_with_stored_credentials(
