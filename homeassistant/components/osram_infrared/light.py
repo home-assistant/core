@@ -19,7 +19,7 @@ from homeassistant.components.light import (
     LightEntityFeature,
 )
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.core import CALLBACK_TYPE, HomeAssistant, callback
+from homeassistant.core import HomeAssistant, callback
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
@@ -256,7 +256,6 @@ class OsramIrLightWithReceiver(OsramIrLight, InfraredReceiverConsumerEntity):
         super().__init__(entry, emitter_entity_id)
 
         self._infrared_receiver_entity_id = receiver_entity_id
-        self._remove_signal_subscription: CALLBACK_TYPE | None = None
 
     @override
     @callback
