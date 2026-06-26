@@ -6,10 +6,12 @@ from unittest.mock import AsyncMock, create_autospec, patch
 
 from aiohttp import ClientSession
 from aiovodafone.api import VodafoneStationDevice
+from aiovodafone.exceptions import VodafoneError
 from freezegun.api import FrozenDateTimeFactory
 import pytest
 
 from homeassistant.components.vodafone_station.const import DOMAIN, SCAN_INTERVAL
+from homeassistant.config_entries import ConfigEntryState
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import device_registry as dr
 
@@ -103,3 +105,20 @@ async def test_coordinator_json_decode_error(
     mock_init_device_class.assert_called_once()
     assert mock_init_device_class.call_args.args[2] == mock_config_entry.data
     assert mock_init_device_class.call_args.args[3] == new_session
+
+
+async def test_coordinator_exceptions(
+    hass: HomeAssistant,
+    mock_vodafone_station_router: AsyncMock,
+    mock_config_entry: MockConfigEntry,
+) -> None:
+    """Test exception response handling."""
+    mock_vodafone_station_router.get_devices_data.side_effect = VodafoneError(
+        "Generic error"
+    )
+
+    mock_config_entry.add_to_hass(hass)
+    await hass.config_entries.async_setup(mock_config_entry.entry_id)
+    await hass.async_block_till_done()
+
+    assert mock_config_entry.state is ConfigEntryState.SETUP_RETRY
