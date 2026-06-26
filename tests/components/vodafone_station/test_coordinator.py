@@ -111,3 +111,5 @@ async def test_coordinator_exceptions(
         assert mock_config_entry.state is ConfigEntryState.SETUP_RETRY
         assert mock_init_device_class.call_count == expected_init_calls
         assert mock_async_client_session.await_count == expected_session_calls
+        assert mock_init_device_class.call_args.args[2] == mock_config_entry.data
+        assert mock_init_device_class.call_args.args[3] == new_session
