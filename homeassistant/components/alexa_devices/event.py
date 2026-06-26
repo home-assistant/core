@@ -1,8 +1,11 @@
 """Support for events."""
 
+from collections.abc import Callable
+from dataclasses import dataclass
 from typing import Final, override
 
 from aioamazondevices.const.devices import DEVICE_TYPE_AQM, SPEAKER_GROUP_FAMILY
+from aioamazondevices.structures import AmazonDevice
 
 from homeassistant.components.event import (
     DOMAIN as EVENT_DOMAIN,
@@ -20,10 +23,22 @@ from .utils import async_remove_entities
 # Coordinator is used to centralize the data updates
 PARALLEL_UPDATES = 0
 
+
+@dataclass(frozen=True, kw_only=True)
+class AmazonEventEntityDescription(EventEntityDescription):
+    """Alexa Devices event entity description."""
+
+    is_supported_fn: Callable[[AmazonDevice], bool] = lambda device: True
+
+
 EVENTS: Final = {
-    EventEntityDescription(
+    AmazonEventEntityDescription(
         key="voice_event",
         translation_key="voice_event",
+        is_supported_fn=lambda device: (
+            device.device_family != SPEAKER_GROUP_FAMILY
+            and device.device_type != DEVICE_TYPE_AQM
+        ),
     ),
 }
 
@@ -44,8 +59,9 @@ async def async_setup_entry(
         coordinator,
         EVENT_DOMAIN,
         "voice_event",
-        predicate=lambda d: (
-            d.device_family == SPEAKER_GROUP_FAMILY or d.device_type == DEVICE_TYPE_AQM
+        remove_fn=lambda device: (
+            device.device_family == SPEAKER_GROUP_FAMILY
+            or device.device_type == DEVICE_TYPE_AQM
         ),
     )
 
@@ -60,7 +76,7 @@ async def async_setup_entry(
                 AlexaVoiceEvent(coordinator, serial_num, event_desc)
                 for event_desc in EVENTS
                 for serial_num in new_devices
-                if coordinator.data[serial_num].device_family != SPEAKER_GROUP_FAMILY
+                if event_desc.is_supported_fn(coordinator.data[serial_num])
             )
 
     _check_device()

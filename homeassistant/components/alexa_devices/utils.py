@@ -44,13 +44,13 @@ async def async_remove_entities(
     coordinator: AmazonDevicesCoordinator,
     platform: str,
     key: str,
-    predicate: Callable[[AmazonDevice], bool],
+    remove_fn: Callable[[AmazonDevice], bool],
 ) -> None:
-    """Remove entities matching predicate from the registry."""
+    """Remove entities matching remove_fn from the registry."""
     entity_registry = er.async_get(hass)
 
     for serial_num, device in coordinator.data.items():
-        if not predicate(device):
+        if not remove_fn(device):
             continue
         unique_id = f"{serial_num}-{key}"
         entity_id = entity_registry.async_get_entity_id(platform, DOMAIN, unique_id)
