@@ -12,6 +12,7 @@ from .const import REQUIRED_PYTHON_VER, RESTART_EXIT_CODE, __version__
 
 FAULT_LOG_FILENAME = "home-assistant.log.fault"
 
+
 def validate_os() -> None:
     """Validate that Home Assistant is running in a supported operating system."""
     if not sys.platform.startswith(("darwin", "linux")):
