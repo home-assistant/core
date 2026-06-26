@@ -1,9 +1,10 @@
 """Test Roborock Time platform."""
 
 from collections.abc import Callable
-from datetime import time
+from datetime import time, timedelta
 from typing import Any
 
+from freezegun.api import FrozenDateTimeFactory
 import pytest
 import roborock
 from roborock.data import DnDTimer, RoborockBaseTimer, ValleyElectricityTimer
@@ -12,11 +13,10 @@ from homeassistant.components.time import SERVICE_SET_VALUE
 from homeassistant.const import STATE_UNKNOWN, Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
-from homeassistant.helpers.entity_component import async_update_entity
 
 from .conftest import FakeDevice
 
-from tests.common import MockConfigEntry
+from tests.common import MockConfigEntry, async_fire_time_changed
 
 
 @pytest.fixture
@@ -158,6 +158,7 @@ async def test_update_failure(
 )
 async def test_missing_value(
     hass: HomeAssistant,
+    freezer: FrozenDateTimeFactory,
     setup_entry: MockConfigEntry,
     fake_vacuum: FakeDevice,
     entity_id: str,
@@ -170,7 +171,9 @@ async def test_missing_value(
     assert state.state != STATE_UNKNOWN
 
     setattr(trait(fake_vacuum), missing_attribute, None)
-    await async_update_entity(hass, entity_id)
+    freezer.tick(timedelta(seconds=31))
+    async_fire_time_changed(hass)
+    await hass.async_block_till_done()
 
     state = hass.states.get(entity_id)
     assert state is not None
