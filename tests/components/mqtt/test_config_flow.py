@@ -1177,7 +1177,7 @@ async def test_bad_certificate_validation(
     test_error: str | None,
     client_key_password: str,
 ) -> None:
-    """Test bad certificate validation in config and reconfig flow."""
+    """Test bad certificate validation in the reconfigure flow."""
 
     def _side_effect_on_client_cert(data: bytes) -> MagicMock:
         """Raise on client cert only.
@@ -2194,8 +2194,8 @@ async def test_setup_with_certificates(
     assert result["type"] is FlowResultType.FORM
     mock_try_connection.return_value = False
 
-    # Flow raises an error with stale file id's
-    # This test is just for coverage purpose
+    # Flow raises an error with stale file IDs
+    # This test is just for coverage purposes
     with (
         patch(
             "homeassistant.components.mqtt.config_flow.process_uploaded_file",
