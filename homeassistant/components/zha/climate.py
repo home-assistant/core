@@ -27,7 +27,7 @@ from homeassistant.components.climate import (
 )
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import PRECISION_TENTHS, Platform, UnitOfTemperature
-from homeassistant.core import HomeAssistant, callback
+from homeassistant.core import HomeAssistant
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
@@ -94,8 +94,6 @@ class Thermostat(ZHAEntity, ClimateEntity):
         self._attr_hvac_modes = [
             ZHA_TO_HA_HVAC_MODE[mode] for mode in self._zha_state.hvac_modes
         ]
-        self._attr_hvac_mode = ZHA_TO_HA_HVAC_MODE.get(self._zha_state.hvac_mode)
-        self._attr_hvac_action = ZHA_TO_HA_HVAC_ACTION.get(self._zha_state.hvac_action)
 
         features: ClimateEntityFeature = ClimateEntityFeature(0)
         zha_features: ZHAClimateEntityFeature = self._zha_state.supported_features
@@ -201,14 +199,17 @@ class Thermostat(ZHAEntity, ClimateEntity):
         """Return the minimum temperature."""
         return self._zha_state.min_temp
 
-    @callback
+    @property
     @override
-    def _handle_entity_events(self, event: Any) -> None:
-        """Entity state changed."""
-        self._zha_state = self.entity_data.entity.state
-        self._attr_hvac_mode = ZHA_TO_HA_HVAC_MODE.get(self._zha_state.hvac_mode)
-        self._attr_hvac_action = ZHA_TO_HA_HVAC_ACTION.get(self._zha_state.hvac_action)
-        super()._handle_entity_events(event)
+    def hvac_mode(self) -> HVACMode | None:
+        """Return HVAC operation mode."""
+        return ZHA_TO_HA_HVAC_MODE.get(self._zha_state.hvac_mode)
+
+    @property
+    @override
+    def hvac_action(self) -> HVACAction | None:
+        """Return the current HVAC action."""
+        return ZHA_TO_HA_HVAC_ACTION.get(self._zha_state.hvac_action)
 
     @convert_zha_error_to_ha_error()
     @override
