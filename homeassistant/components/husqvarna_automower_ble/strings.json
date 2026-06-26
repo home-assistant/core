@@ -45,6 +45,9 @@
     }
   },
   "exceptions": {
+    "connection_failed": {
+      "message": "Unable to connect to device {address} due to {error}: {reason}"
+    },
     "pin_required": {
       "message": "PIN is required for {domain_name}"
     }

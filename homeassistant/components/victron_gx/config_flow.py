@@ -2,7 +2,7 @@
 
 from collections.abc import Mapping
 import logging
-from typing import Any
+from typing import Any, override
 from urllib.parse import urlparse
 
 from victron_mqtt import AuthenticationError, CannotConnectError, Hub as VictronVenusHub
@@ -11,6 +11,7 @@ import voluptuous as vol
 from homeassistant.config_entries import ConfigFlow, ConfigFlowResult
 from homeassistant.const import (
     CONF_HOST,
+    CONF_MODEL,
     CONF_PASSWORD,
     CONF_PORT,
     CONF_SSL,
@@ -20,7 +21,7 @@ from homeassistant.helpers import selector
 from homeassistant.helpers.redact import async_redact_data
 from homeassistant.helpers.service_info.ssdp import SsdpServiceInfo
 
-from .const import CONF_INSTALLATION_ID, CONF_MODEL, CONF_SERIAL, DOMAIN
+from .const import CONF_INSTALLATION_ID, CONF_SERIAL, DOMAIN
 
 DEFAULT_HOST = "venus.local"
 DEFAULT_PORT = 1883
@@ -110,6 +111,7 @@ class VictronGXConfigFlow(ConfigFlow, domain=DOMAIN):
         self.friendly_name: str | None = None
         self.model_name: str | None = None
 
+    @override
     async def async_step_user(
         self, user_input: dict[str, Any] | None = None
     ) -> ConfigFlowResult:
@@ -160,6 +162,7 @@ class VictronGXConfigFlow(ConfigFlow, domain=DOMAIN):
             errors=errors,
         )
 
+    @override
     async def async_step_ssdp(
         self, discovery_info: SsdpServiceInfo
     ) -> ConfigFlowResult:

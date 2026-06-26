@@ -3,7 +3,7 @@
 from collections.abc import Callable
 from dataclasses import dataclass
 import logging
-from typing import Generic, TypeVar
+from typing import override
 
 from airos.data import (
     AirOSDataBaseClass,
@@ -41,11 +41,11 @@ WIRELESS_ROLE_OPTIONS = [mode.value for mode in DerivedWirelessRole]
 
 PARALLEL_UPDATES = 0
 
-AirOSDataModel = TypeVar("AirOSDataModel", bound=AirOSDataBaseClass)
-
 
 @dataclass(frozen=True, kw_only=True)
-class AirOSSensorEntityDescription(SensorEntityDescription, Generic[AirOSDataModel]):
+class AirOSSensorEntityDescription[AirOSDataModel: AirOSDataBaseClass](
+    SensorEntityDescription
+):
     """Describe an AirOS sensor."""
 
     value_fn: Callable[[AirOSDataModel], StateType]
@@ -207,6 +207,7 @@ class AirOSSensor(AirOSEntity, SensorEntity):
         self._attr_unique_id = f"{coordinator.data.derived.mac}_{description.key}"
 
     @property
+    @override
     def native_value(self) -> StateType:
         """Return the state of the sensor."""
         return self.entity_description.value_fn(self.coordinator.data)

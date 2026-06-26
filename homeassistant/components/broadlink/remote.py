@@ -7,7 +7,7 @@ from collections.abc import Iterable
 from datetime import timedelta
 from itertools import product
 import logging
-from typing import Any
+from typing import Any, override
 
 from broadlink.exceptions import (
     AuthorizationError,
@@ -96,7 +96,7 @@ async def async_setup_entry(
 ) -> None:
     """Set up a Broadlink remote."""
     # Uses legacy hass.data[DOMAIN] pattern
-    # pylint: disable-next=hass-use-runtime-data
+    # pylint: disable-next=home-assistant-use-runtime-data
     device = hass.data[DOMAIN].devices[config_entry.entry_id]
     remote = BroadlinkRemote(
         device,
@@ -181,17 +181,20 @@ class BroadlinkRemote(BroadlinkEntity, RemoteEntity, RestoreEntity):
         """
         return self._flags
 
+    @override
     async def async_added_to_hass(self) -> None:
         """Call when the remote is added to hass."""
         state = await self.async_get_last_state()
         self._attr_is_on = state is None or state.state != STATE_OFF
         await super().async_added_to_hass()
 
+    @override
     async def async_turn_on(self, **kwargs: Any) -> None:
         """Turn on the remote."""
         self._attr_is_on = True
         self.async_write_ha_state()
 
+    @override
     async def async_turn_off(self, **kwargs: Any) -> None:
         """Turn off the remote."""
         self._attr_is_on = False
@@ -205,6 +208,7 @@ class BroadlinkRemote(BroadlinkEntity, RemoteEntity, RestoreEntity):
         self._flags.update(await self._flag_storage.async_load() or {})
         self._storage_loaded = True
 
+    @override
     async def async_send_command(self, command: Iterable[str], **kwargs: Any) -> None:
         """Send a list of commands to a device."""
         kwargs[ATTR_COMMAND] = command
@@ -251,6 +255,7 @@ class BroadlinkRemote(BroadlinkEntity, RemoteEntity, RestoreEntity):
 
             try:
                 await device.async_request(device.api.send_data, code)
+            # pylint: disable-next=home-assistant-action-swallowed-exception
             except (BroadlinkException, OSError) as err:
                 _LOGGER.error("Error during %s: %s", service, err)
                 break
@@ -262,6 +267,7 @@ class BroadlinkRemote(BroadlinkEntity, RemoteEntity, RestoreEntity):
         if at_least_one_sent:
             self._flag_storage.async_delay_save(self._get_flags, FLAG_SAVE_DELAY)
 
+    @override
     async def async_learn_command(self, **kwargs: Any) -> None:
         """Learn a list of commands from a remote."""
         kwargs = SERVICE_LEARN_SCHEMA(kwargs)
@@ -301,6 +307,7 @@ class BroadlinkRemote(BroadlinkEntity, RemoteEntity, RestoreEntity):
                     if toggle:
                         code = [code, await learn_command(command)]
 
+                # pylint: disable-next=home-assistant-action-swallowed-exception
                 except (AuthorizationError, NetworkTimeoutError, OSError) as err:
                     _LOGGER.error("Failed to learn '%s': %s", command, err)
                     break
@@ -429,6 +436,7 @@ class BroadlinkRemote(BroadlinkEntity, RemoteEntity, RestoreEntity):
                 self.hass, notification_id="learn_command"
             )
 
+    @override
     async def async_delete_command(self, **kwargs: Any) -> None:
         """Delete a list of commands from a remote."""
         kwargs = SERVICE_DELETE_SCHEMA(kwargs)

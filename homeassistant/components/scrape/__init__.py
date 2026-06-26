@@ -153,10 +153,6 @@ async def async_setup_entry(hass: HomeAssistant, entry: ScrapeConfigEntry) -> bo
 async def async_migrate_entry(hass: HomeAssistant, entry: ScrapeConfigEntry) -> bool:
     """Migrate old entry."""
 
-    if entry.version > 2:
-        # Don't migrate from future version
-        return False
-
     if entry.version == 1:
         old_to_new_sensor_id = {}
         for sensor_config in entry.options[SENSOR_DOMAIN]:
@@ -190,7 +186,8 @@ async def async_migrate_entry(hass: HomeAssistant, entry: ScrapeConfigEntry) -> 
                 unique_id=None,
             )
             _LOGGER.debug(
-                "Migrating sensor %s with unique id %s to sub config entry id %s, old data %s, new data %s",
+                "Migrating sensor %s with unique id %s to sub config"
+                " entry id %s, old data %s, new data %s",
                 title,
                 old_unique_id,
                 new_sub_entry.subentry_id,

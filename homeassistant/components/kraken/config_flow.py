@@ -1,6 +1,6 @@
 """Config flow for kraken integration."""
 
-from typing import Any
+from typing import Any, override
 
 import krakenex
 from pykrakenapi.pykrakenapi import KrakenAPI
@@ -23,12 +23,14 @@ class KrakenConfigFlow(ConfigFlow, domain=DOMAIN):
 
     @staticmethod
     @callback
+    @override
     def async_get_options_flow(
         config_entry: KrakenConfigEntry,
     ) -> KrakenOptionsFlowHandler:
         """Get the options flow for this handler."""
         return KrakenOptionsFlowHandler()
 
+    @override
     async def async_step_user(
         self, user_input: dict[str, Any] | None = None
     ) -> ConfigFlowResult:
@@ -60,7 +62,8 @@ class KrakenOptionsFlowHandler(OptionsFlow):
         )
         tradable_asset_pairs_for_multi_select = {v: v for v in tradable_asset_pairs}
 
-        # Ensure that a previously selected tracked asset pair is still available in multiselect
+        # Ensure that a previously selected tracked asset pair
+        # is still available in multiselect
         # even if it is not tradable anymore
         tracked_asset_pairs = self.config_entry.options.get(
             CONF_TRACKED_ASSET_PAIRS, []
@@ -74,7 +77,7 @@ class KrakenOptionsFlowHandler(OptionsFlow):
 
         options = {
             # Polling interval is user-configurable, which is no longer allowed
-            # pylint: disable-next=hass-config-flow-polling-field
+            # pylint: disable-next=home-assistant-config-flow-polling-field
             vol.Optional(
                 CONF_SCAN_INTERVAL,
                 default=self.config_entry.options.get(

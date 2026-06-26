@@ -8,7 +8,8 @@ from functools import partial
 import logging
 from typing import TYPE_CHECKING, Any, cast
 
-from uiprotect import ProtectApiClient
+from uiprotect import EventChange, ProtectApiClient, ProtectEvent
+from uiprotect.api import RTSPSStreams
 from uiprotect.data import (
     NVR,
     Camera,
@@ -17,6 +18,7 @@ from uiprotect.data import (
     ModelType,
     ProtectAdoptableDeviceModel,
     PTZPatrol,
+    PublicDeviceModel,
     Relay,
     Siren,
     WSSubscriptionMessage,
@@ -89,11 +91,18 @@ class ProtectData:
         self._siren_subscriptions: defaultdict[str, set[Callable[[Siren], None]]] = (
             defaultdict(set)
         )
+        self._public_event_subscriptions: defaultdict[
+            tuple[str, EventType], set[Callable[[ProtectEvent], None]]
+        ] = defaultdict(set)
+        self._public_subscriptions: defaultdict[
+            str, set[Callable[[PublicDeviceModel | None], None]]
+        ] = defaultdict(set)
         self._pending_camera_ids: set[str] = set()
         self._unsubs: list[CALLBACK_TYPE] = []
         self._auth_failures = 0
         self.auth_retries = 0
         self.last_update_success = False
+        self.last_public_update_success = False
         self.api = protect
         self.adopt_signal = _async_dispatch_id(entry, DISPATCH_ADOPT)
         self.add_signal = _async_dispatch_id(entry, DISPATCH_ADD)
@@ -110,6 +119,20 @@ class ProtectData:
     def max_events(self) -> int:
         """Max number of events to load at once."""
         return self._entry.options.get(CONF_MAX_MEDIA, DEFAULT_MAX_MEDIA)  # type: ignore[no-any-return]
+
+    def get_rtsps_streams(self, camera_id: str) -> RTSPSStreams | None:
+        """Return the library-owned public-API RTSPS streams for a camera.
+
+        The library primes ``PublicCamera.rtsps_streams`` during
+        ``update_public()`` and keeps it fresh (reconnect refresh + create/delete
+        write-through), so the integration reads it synchronously and stores
+        nothing itself.
+        """
+        api = self.api
+        if not api.has_public_bootstrap:
+            return None
+        camera = api.public_bootstrap.cameras.get(camera_id)
+        return camera.rtsps_streams if camera is not None else None
 
     @callback
     def async_subscribe_adopt(
@@ -162,6 +185,7 @@ class ProtectData:
     def async_setup(self) -> None:
         """Subscribe and do the refresh."""
         self.last_update_success = True
+        self.last_public_update_success = True
         self._async_update_change(True, force_update=True)
         api = self.api
         self._unsubs = [
@@ -176,7 +200,23 @@ class ProtectData:
             api.subscribe_devices_websocket(
                 self._async_process_public_devices_ws_message
             ),
+            api.subscribe_devices_websocket_state(self._async_public_ws_state_changed),
         ]
+
+    @callback
+    def async_subscribe_public_events(self) -> None:
+        """Subscribe to the public events websocket.
+
+        Must run *after* ``update_public()`` has primed the public bootstrap;
+        the setup flow guarantees this (a failed prime aborts setup), and
+        ``subscribe_events()`` raises otherwise. This is the source of truth for
+        the event entities driven off the public websocket: the doorbell ring,
+        and the smart-detect events (e.g. package) that the private API only
+        surfaces as the unhandled ``smartDetectObject`` model. uiprotect owns
+        websocket reconnection and keeps the callback attached, so this is a
+        one-shot.
+        """
+        self._unsubs.append(self.api.subscribe_events(self._async_process_public_event))
 
     @callback
     def _async_process_public_devices_ws_message(
@@ -184,12 +224,14 @@ class ProtectData:
     ) -> None:
         """Process a message from the public devices websocket.
 
-        The API client pre-filters messages to the model types listed in
-        DEVICES_WS_SUBSCRIBED_MODELS. NVR messages signal the private NVR so
-        alarm entities pick up the new arm state. Relay messages dispatch
-        the merged Relay object by mac so relay-output entities can refresh.
-        Siren messages dispatch the merged Siren object by mac so siren entities
-        can refresh.
+        DEVICES_WS_SUBSCRIBED_MODELS is an empty set, which the API client treats
+        as "all models", so messages are not pre-filtered. NVR messages signal the
+        private NVR so alarm entities pick up the new arm state. Relay and Siren
+        messages dispatch the merged object by mac so relay-output and siren
+        entities refresh. Any other public device is dispatched generically by mac
+        to entities whose description was migrated to the public path via
+        ``ufp_public_value`` (such as battery and battery_low); the NVR/Relay/Siren
+        returns above intentionally short-circuit that generic path.
         """
         new_obj = message.new_obj
         if new_obj is None:
@@ -202,20 +244,76 @@ class ProtectData:
             self._async_signal_device_update(self.api.bootstrap.nvr)
             return
         if new_obj.model is ModelType.RELAY:
-            relay = cast(Relay, new_obj)
-            mac = relay.mac
-            if subscriptions := self._relay_subscriptions.get(mac):
-                _LOGGER.debug("Updating relay: %s (%s)", relay.name, mac)
-                for update_callback in subscriptions:
-                    update_callback(relay)
+            self._async_signal_relay_update(cast(Relay, new_obj))
             return
         if new_obj.model is ModelType.SIREN:
             self._async_signal_siren_update(cast(Siren, new_obj))
+            return
+        # Generic public-device dispatch (e.g. sensor) keyed by mac, for
+        # descriptions migrated to the public path via ``ufp_public_value``.
+        if isinstance(new_obj, PublicDeviceModel) and (
+            public_subscriptions := self._public_subscriptions.get(new_obj.mac)
+        ):
+            _LOGGER.debug("Updating public device: %s (%s)", new_obj.id, new_obj.mac)
+            for update_callback in public_subscriptions:
+                update_callback(new_obj)
+
+    @callback
+    def _async_process_public_event(
+        self, event: ProtectEvent, change: EventChange
+    ) -> None:
+        """Dispatch a public events websocket event to its subscribers.
+
+        Only the start of an event is dispatched, routed to the subscribers that
+        registered for this device and event type; an entity that cares about a
+        sub-type (e.g. a smart-detect object type) filters further itself. The
+        device is resolved by ``device_id`` (the stable cross-API join key), not
+        the public ``device_mac``, so the key comes from the same store the
+        entities derive ``self.device.mac`` from and matches without assuming
+        both mac strings are byte-identical.
+        """
+        if change is not EventChange.STARTED:
+            return
+        device = self.api.bootstrap.get_device_from_id(event.device_id)
+        if device is None or not (
+            subscriptions := self._public_event_subscriptions.get(
+                (device.mac, event.type)
+            )
+        ):
+            return
+        for update_callback in subscriptions:
+            update_callback(event)
 
     @callback
     def _async_websocket_state_changed(self, state: WebsocketState) -> None:
         """Handle a change in the websocket state."""
         self._async_update_change(state is WebsocketState.CONNECTED)
+
+    @callback
+    def _async_public_ws_state_changed(self, state: WebsocketState) -> None:
+        """Handle a change in the public devices websocket state."""
+        success = state is WebsocketState.CONNECTED
+        if success == self.last_public_update_success:
+            return
+        self.last_public_update_success = success
+        self._async_process_public_updates()
+
+    @callback
+    def _async_process_public_updates(self) -> None:
+        """Re-signal public-API entities after a public websocket state change."""
+        api = self.api
+        if not api.has_public_bootstrap:
+            return
+        # The NVR alarm panel reads the public arm_mode, so refresh it too.
+        self._async_signal_device_update(api.bootstrap.nvr)
+        for relay in api.public_bootstrap.relays.values():
+            self._async_signal_relay_update(relay)
+        for siren in api.public_bootstrap.sirens.values():
+            self._async_signal_siren_update(siren)
+        # Migrated entities (e.g. battery) recompute from their cached object.
+        for subscriptions in self._public_subscriptions.values():
+            for update_callback in subscriptions:
+                update_callback(None)
 
     def _async_update_change(
         self,
@@ -321,7 +419,8 @@ class ProtectData:
             self._pending_camera_ids.remove(device.id)
             async_dispatcher_send(self._hass, self.channels_signal, device)
 
-        # trigger update for all Cameras with LCD screens when NVR Doorbell settings updates
+        # trigger update for all Cameras with LCD screens
+        # when NVR Doorbell settings updates
         if "doorbell_settings" in changed_data:
             _LOGGER.debug(
                 "Doorbell messages updated. Updating devices with LCD screens"
@@ -379,17 +478,14 @@ class ProtectData:
 
     @callback
     def _async_process_updates(self) -> None:
-        """Process update from the protect data."""
+        """Process an update from the private protect connection.
+
+        Public-API entities (relay/siren/alarm) are driven by the public
+        websocket via ``_async_process_public_updates``, not from here.
+        """
         self._async_signal_device_update(self.api.bootstrap.nvr)
         for device in self.get_by_types(DEVICES_THAT_ADOPT):
             self._async_signal_device_update(device)
-        if self.api.has_public_bootstrap:
-            for relay in self.api.public_bootstrap.relays.values():
-                if subscriptions := self._relay_subscriptions.get(relay.mac):
-                    for subscription_callback in subscriptions:
-                        subscription_callback(relay)
-            for siren in self.api.public_bootstrap.sirens.values():
-                self._async_signal_siren_update(siren)
 
     @callback
     def _async_poll(self, now: datetime) -> None:
@@ -453,6 +549,61 @@ class ProtectData:
             del self._siren_subscriptions[mac]
 
     @callback
+    def async_subscribe_public_event(
+        self,
+        mac: str,
+        event_type: EventType,
+        update_callback: Callable[[ProtectEvent], None],
+    ) -> CALLBACK_TYPE:
+        """Add a callback subscriber for public events of a type by device mac."""
+        key = (mac, event_type)
+        self._public_event_subscriptions[key].add(update_callback)
+        return partial(self._async_unsubscribe_public_event, key, update_callback)
+
+    @callback
+    def _async_unsubscribe_public_event(
+        self,
+        key: tuple[str, EventType],
+        update_callback: Callable[[ProtectEvent], None],
+    ) -> None:
+        """Remove a public event callback subscriber."""
+        self._public_event_subscriptions[key].remove(update_callback)
+        if not self._public_event_subscriptions[key]:
+            del self._public_event_subscriptions[key]
+
+    @callback
+    def async_subscribe_public(
+        self, mac: str, update_callback: Callable[[PublicDeviceModel | None], None]
+    ) -> CALLBACK_TYPE:
+        """Add a callback subscriber for public devices WS updates by mac."""
+        self._public_subscriptions[mac].add(update_callback)
+        return partial(self._async_unsubscribe_public, mac, update_callback)
+
+    @callback
+    def _async_unsubscribe_public(
+        self, mac: str, update_callback: Callable[[PublicDeviceModel | None], None]
+    ) -> None:
+        """Remove a public callback subscriber."""
+        self._public_subscriptions[mac].remove(update_callback)
+        if not self._public_subscriptions[mac]:
+            del self._public_subscriptions[mac]
+
+    @callback
+    def async_get_public_device(
+        self, device: ProtectDeviceType
+    ) -> PublicDeviceModel | None:
+        """Return the public-API object matching a device, if available."""
+        api = self.api
+        if not api.has_public_bootstrap or device.model is None:
+            return None
+        # Migrated entities target dedicated public device models, which all
+        # inherit from PublicDeviceModel (carrying mac/state).
+        return cast(
+            "PublicDeviceModel | None",
+            api.public_bootstrap.get(device.model, device.id),
+        )
+
+    @callback
     def _async_signal_device_update(self, device: ProtectDeviceType) -> None:
         """Call the callbacks for a device_id."""
         mac = device.mac
@@ -461,6 +612,16 @@ class ProtectData:
         _LOGGER.debug("Updating device: %s (%s)", device.name, mac)
         for update_callback in subscriptions:
             update_callback(device)
+
+    @callback
+    def _async_signal_relay_update(self, relay: Relay) -> None:
+        """Call the callbacks for a relay mac."""
+        mac = relay.mac
+        if not (subscriptions := self._relay_subscriptions.get(mac)):
+            return
+        _LOGGER.debug("Updating relay: %s (%s)", relay.name, mac)
+        for update_callback in subscriptions:
+            update_callback(relay)
 
     @callback
     def _async_signal_siren_update(self, siren: Siren) -> None:

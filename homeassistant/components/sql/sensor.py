@@ -1,14 +1,14 @@
 """Sensor from an SQL Query."""
 
 import logging
-from typing import Any
+from typing import Any, override
 
 from sqlalchemy.engine import Result
 from sqlalchemy.exc import SQLAlchemyError
 from sqlalchemy.orm import scoped_session
 
 from homeassistant.components.recorder import CONF_DB_URL, get_instance
-from homeassistant.components.sensor import CONF_STATE_CLASS
+from homeassistant.components.sensor import CONF_STATE_CLASS, DOMAIN as SENSOR_DOMAIN
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import (
     CONF_DEVICE_CLASS,
@@ -25,8 +25,8 @@ from homeassistant.helpers.device_registry import DeviceEntryType, DeviceInfo
 from homeassistant.helpers.entity_platform import (
     AddConfigEntryEntitiesCallback,
     AddEntitiesCallback,
+    async_create_platform_config_not_supported_issue,
 )
-from homeassistant.helpers.issue_registry import IssueSeverity, async_create_issue
 from homeassistant.helpers.template import Template
 from homeassistant.helpers.trigger_template_entity import (
     CONF_AVAILABILITY,
@@ -69,14 +69,13 @@ async def async_setup_platform(
 ) -> None:
     """Set up the SQL sensor from yaml."""
     if (conf := discovery_info) is None:
-        async_create_issue(
+        async_create_platform_config_not_supported_issue(
             hass,
             DOMAIN,
-            "sensor_platform_yaml_not_supported",
-            is_fixable=False,
-            severity=IssueSeverity.WARNING,
-            translation_key="platform_yaml_not_supported",
+            SENSOR_DOMAIN,
+            yaml_config_under_integration_supported=True,
             learn_more_url="https://www.home-assistant.io/integrations/sql/",
+            logger=_LOGGER,
         )
         return
 
@@ -235,18 +234,21 @@ class SQLSensor(ManualTriggerSensorEntity):
             )
 
     @property
+    @override
     def name(self) -> str | None:
         """Name of the entity."""
         if self.has_entity_name:
             return self._attr_name
         return self._rendered.get(CONF_NAME)
 
+    @override
     async def async_added_to_hass(self) -> None:
         """Call when entity about to be added to hass."""
         await super().async_added_to_hass()
         await self.async_update()
 
     @property
+    @override
     def extra_state_attributes(self) -> dict[str, Any] | None:
         """Return extra attributes."""
         return dict(self._attr_extra_state_attributes)

@@ -1,11 +1,36 @@
-"""Config flow for MyPermobil integration."""
+"""The MyPermobil integration."""
 
-from homeassistant.config_entries import ConfigFlow
+from homeassistant.config_entries import ConfigEntry
+from homeassistant.core import HomeAssistant
+from homeassistant.helpers import issue_registry as ir
 
-from . import DOMAIN
+DOMAIN = "permobil"
+
+async def async_setup_entry(hass: HomeAssistant, _: ConfigEntry) -> bool:
+    """Set up config entry."""
+    ir.async_create_issue(
+        hass,
+        DOMAIN,
+        DOMAIN,
+        is_fixable=False,
+        severity=ir.IssueSeverity.ERROR,
+        translation_key="integration_removed",
+        translation_placeholders={
+            "entries": "/config/integrations/integration/permobil"
+        },
+    )
+    return True
 
 
-class PermobilConfigFlow(ConfigFlow, domain=DOMAIN):
-    """Permobil integration config flow."""
+async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
+    """Unload a config entry."""
+    return True
 
-    VERSION = 1
+
+async def async_remove_entry(hass: HomeAssistant, entry: ConfigEntry) -> None:
+    """Remove a config entry."""
+    if not hass.config_entries.async_loaded_entries(DOMAIN):
+        ir.async_delete_issue(hass, DOMAIN, DOMAIN)
+        # Remove any remaining disabled or ignored entries
+        for _entry in hass.config_entries.async_entries(DOMAIN):
+            hass.async_create_task(hass.config_entries.async_remove(_entry.entry_id))

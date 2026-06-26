@@ -15,7 +15,16 @@ import pathlib
 import sys
 import time
 from types import ModuleType
-from typing import TYPE_CHECKING, Any, Literal, Protocol, TypedDict, cast, final
+from typing import (
+    TYPE_CHECKING,
+    Any,
+    Literal,
+    Protocol,
+    TypedDict,
+    cast,
+    final,
+    override,
+)
 
 from awesomeversion import (
     AwesomeVersion,
@@ -1172,8 +1181,9 @@ class Integration:
                             load_executor_platforms,
                             exc_info=ex,
                         )
-                        # If importing in the executor deadlocks because there is a circular
-                        # dependency, we fall back to the event loop.
+                        # If importing in the executor deadlocks
+                        # because there is a circular dependency,
+                        # we fall back to the event loop.
                         load_event_loop_platforms.extend(load_executor_platforms)
 
                 if load_event_loop_platforms:
@@ -1310,6 +1320,7 @@ class Integration:
         """
         return importlib.import_module(f"{self.pkg_path}.{platform_name}")
 
+    @override
     def __repr__(self) -> str:
         """Text representation of class."""
         return f"<Integration {self.domain}: {self.pkg_path}>"
@@ -1416,8 +1427,7 @@ async def async_get_integrations(
             future.set_result(integration)
 
     for domain in results:
-        if domain in needed:
-            del needed[domain]
+        needed.pop(domain, None)
 
     # Now the rest use resolve_from_root
     if needed:
@@ -1460,9 +1470,11 @@ class _ResolveDependenciesCacheProtocol(Protocol):
 class _ResolveDependenciesCache(_ResolveDependenciesCacheProtocol):
     """Cache for resolve_integrations_dependencies."""
 
+    @override
     def get(self, itg: Integration) -> set[str] | Exception | None:
         return itg._all_dependencies  # noqa: SLF001
 
+    @override
     def __setitem__(
         self, itg: Integration, all_dependencies: set[str] | Exception
     ) -> None:
@@ -1515,8 +1527,9 @@ async def _resolve_integrations_dependencies(
     possible_after_dependencies: set[str] | None | UndefinedType = UNDEFINED,
     ignore_exceptions: bool,
 ) -> dict[str, set[str]]:
-    """Resolve all dependencies, possibly including after_dependencies, for integrations.
+    """Resolve all dependencies for integrations.
 
+    Possibly includes after_dependencies.
     Detects circular dependencies and missing integrations.
     """
 

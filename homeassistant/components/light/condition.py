@@ -1,6 +1,6 @@
 """Provides conditions for lights."""
 
-from typing import Any
+from typing import Any, override
 
 from homeassistant.const import STATE_OFF, STATE_ON
 from homeassistant.core import HomeAssistant, State
@@ -14,7 +14,7 @@ from homeassistant.helpers.condition import (
 from . import ATTR_BRIGHTNESS
 from .const import DOMAIN
 
-BRIGHTNESS_DOMAIN_SPECS = {
+BRIGHTNESS_DOMAIN_SPECS: dict[str, DomainSpec] = {
     DOMAIN: DomainSpec(value_source=ATTR_BRIGHTNESS),
 }
 
@@ -25,8 +25,9 @@ class BrightnessCondition(EntityNumericalConditionBase):
     _domain_specs = BRIGHTNESS_DOMAIN_SPECS
     _valid_unit = "%"
 
+    @override
     def _get_tracked_value(self, entity_state: State) -> Any:
-        """Get the brightness value converted from uint8 (0-255) to percentage (0-100)."""
+        """Get brightness converted from uint8 (0-255) to percentage."""
         raw = super()._get_tracked_value(entity_state)
         if raw is None:
             return None

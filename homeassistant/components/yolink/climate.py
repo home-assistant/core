@@ -1,6 +1,6 @@
 """YoLink Thermostat."""
 
-from typing import Any
+from typing import Any, override
 
 from yolink.const import ATTR_DEVICE_THERMOSTAT
 from yolink.thermostat_request_builder import ThermostatRequestBuilder, ThermostatState
@@ -89,6 +89,7 @@ class YoLinkClimateEntity(YoLinkEntity, ClimateEntity):
         )
 
     @callback
+    @override
     def update_entity_state(self, state: dict[str, Any]) -> None:
         """Update HA Entity State."""
         normal_state = state.get("state")
@@ -107,6 +108,7 @@ class YoLinkClimateEntity(YoLinkEntity, ClimateEntity):
             )
         self.async_write_ha_state()
 
+    @override
     async def async_set_hvac_mode(self, hvac_mode: HVACMode) -> None:
         """Set new target hvac mode."""
         if (hvac_mode_id := HA_MODEL_2_YOLINK.get(hvac_mode)) is None:
@@ -118,6 +120,7 @@ class YoLinkClimateEntity(YoLinkEntity, ClimateEntity):
         )
         await self.coordinator.async_refresh()
 
+    @override
     async def async_set_fan_mode(self, fan_mode: str) -> None:
         """Set fan mode."""
         await self.call_device(
@@ -126,6 +129,7 @@ class YoLinkClimateEntity(YoLinkEntity, ClimateEntity):
         self._attr_fan_mode = fan_mode
         self.async_write_ha_state()
 
+    @override
     async def async_set_temperature(self, **kwargs: Any) -> None:
         """Set temperature."""
         target_temp_low = kwargs.get(ATTR_TARGET_TEMP_LOW)
@@ -146,6 +150,7 @@ class YoLinkClimateEntity(YoLinkEntity, ClimateEntity):
             self._attr_target_temperature_high = target_temp_high
         await self.coordinator.async_refresh()
 
+    @override
     async def async_set_preset_mode(self, preset_mode: str) -> None:
         """Set preset mode."""
         eco_params = "on" if preset_mode == PRESET_ECO else "off"

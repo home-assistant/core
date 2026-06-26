@@ -38,6 +38,8 @@ GENERAL_SETTINGS: Final[dict[str, str]] = {
     ),
     "show_error_codes": "true",
     "follow_imports": "normal",
+    "native_parser": "true",
+    "num_workers": "2",  # Use a conservative value here
     # "enable_incomplete_feature": ", ".join(
     #     []
     # ),
@@ -52,6 +54,7 @@ GENERAL_SETTINGS: Final[dict[str, str]] = {
     "enable_error_code": ", ".join(  # noqa: FLY002
         [
             "deprecated",
+            "explicit-override",
             "ignore-without-code",
             "redundant-self",
             "truthy-iterable",

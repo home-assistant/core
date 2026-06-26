@@ -1,7 +1,7 @@
 """Matter Fan platform support."""
 
 from dataclasses import dataclass
-from typing import TYPE_CHECKING, Any
+from typing import TYPE_CHECKING, Any, override
 
 from chip.clusters import Objects as clusters
 
@@ -64,6 +64,7 @@ class MatterFan(MatterEntity, FanEntity):
     _feature_map: int | None = None
     _platform_translation_key = "fan"
 
+    @override
     async def async_turn_on(
         self,
         percentage: int | None = None,
@@ -94,6 +95,7 @@ class MatterFan(MatterEntity, FanEntity):
             assert preset_mode is not None
         await self.async_set_preset_mode(preset_mode)
 
+    @override
     async def async_turn_off(self, **kwargs: Any) -> None:
         """Turn fan off."""
         # clear the wind setting if its currently set
@@ -104,6 +106,7 @@ class MatterFan(MatterEntity, FanEntity):
             matter_attribute=clusters.FanControl.Attributes.FanMode,
         )
 
+    @override
     async def async_set_percentage(self, percentage: int) -> None:
         """Set the speed of the fan, as a percentage."""
         await self.write_attribute(
@@ -111,6 +114,7 @@ class MatterFan(MatterEntity, FanEntity):
             matter_attribute=clusters.FanControl.Attributes.PercentSetting,
         )
 
+    @override
     async def async_set_preset_mode(self, preset_mode: str) -> None:
         """Set new preset mode."""
         # handle wind as preset
@@ -127,6 +131,7 @@ class MatterFan(MatterEntity, FanEntity):
             matter_attribute=clusters.FanControl.Attributes.FanMode,
         )
 
+    @override
     async def async_oscillate(self, oscillating: bool) -> None:
         """Oscillate the fan."""
         await self.write_attribute(
@@ -140,6 +145,7 @@ class MatterFan(MatterEntity, FanEntity):
             matter_attribute=clusters.FanControl.Attributes.RockSetting,
         )
 
+    @override
     async def async_set_direction(self, direction: str) -> None:
         """Set the direction of the fan."""
         await self.write_attribute(
@@ -165,13 +171,16 @@ class MatterFan(MatterEntity, FanEntity):
         )
 
     @callback
+    @override
     def _update_from_device(self) -> None:
         """Update from device."""
         self._calculate_features()
 
         if self.get_matter_attribute_value(clusters.OnOff.Attributes.OnOff) is False:
-            # special case: the appliance has a dedicated Power switch on the OnOff cluster
-            # if the mains power is off - treat it as if the fan mode is off
+            # special case: the appliance has a dedicated Power
+            # switch on the OnOff cluster
+            # if the mains power is off - treat it as if the
+            # fan mode is off
             self._attr_preset_mode = None
             self._attr_percentage = 0
             return

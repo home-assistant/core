@@ -2,6 +2,8 @@
 
 from unittest.mock import patch
 
+import pytest
+
 from homeassistant import config_entries
 from homeassistant.components.trend import async_setup_entry
 from homeassistant.components.trend.const import DOMAIN
@@ -11,7 +13,15 @@ from homeassistant.data_entry_flow import FlowResultType
 from tests.common import MockConfigEntry
 
 
-async def test_form(hass: HomeAssistant) -> None:
+@pytest.mark.parametrize(
+    ("name", "entity_id"),
+    [
+        ("CPU Temperature rising", "sensor.cpu_temp"),
+        ("People arrived rising", "counter.people"),
+    ],
+    ids=["sensor", "counter"],
+)
+async def test_form(hass: HomeAssistant, name: str, entity_id: str) -> None:
     """Test we get the form."""
 
     result = await hass.config_entries.flow.async_init(
@@ -22,7 +32,7 @@ async def test_form(hass: HomeAssistant) -> None:
 
     result = await hass.config_entries.flow.async_configure(
         result["flow_id"],
-        {"name": "CPU Temperature rising", "entity_id": "sensor.cpu_temp"},
+        {"name": name, "entity_id": entity_id},
     )
     await hass.async_block_till_done()
 
@@ -41,12 +51,12 @@ async def test_form(hass: HomeAssistant) -> None:
         await hass.async_block_till_done()
 
     assert result["type"] is FlowResultType.CREATE_ENTRY
-    assert result["title"] == "CPU Temperature rising"
+    assert result["title"] == name
     assert result["data"] == {}
     assert result["options"] == {
-        "entity_id": "sensor.cpu_temp",
+        "entity_id": entity_id,
         "invert": False,
-        "name": "CPU Temperature rising",
+        "name": name,
     }
 
 

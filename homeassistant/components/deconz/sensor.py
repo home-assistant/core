@@ -3,7 +3,7 @@
 from collections.abc import Callable
 from dataclasses import dataclass
 from datetime import datetime
-from typing import Generic, TypeVar
+from typing import Generic, TypeVar, override
 
 from pydeconz.interfaces.sensors import SensorResources
 from pydeconz.models.event import EventType
@@ -97,7 +97,7 @@ T = TypeVar(
 
 
 @dataclass(frozen=True, kw_only=True)
-class DeconzSensorDescription(SensorEntityDescription, Generic[T]):
+class DeconzSensorDescription(SensorEntityDescription, Generic[T]):  # noqa: UP046
     """Class describing deCONZ binary sensor entities."""
 
     instance_check: type[T] | None = None
@@ -415,11 +415,13 @@ class DeconzSensor(DeconzDevice[SensorResources], SensorEntity):
             self._update_keys.update({"on", "state"})
 
     @property
+    @override
     def native_value(self) -> StateType | datetime:
         """Return the state of the sensor."""
         return self.entity_description.value_fn(self._device)
 
     @property
+    @override
     def extra_state_attributes(self) -> dict[str, bool | float | int | str | None]:
         """Return the state attributes of the sensor."""
         attr: dict[str, bool | float | int | str | None] = {}

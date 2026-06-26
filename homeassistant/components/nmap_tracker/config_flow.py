@@ -2,7 +2,7 @@
 
 from ipaddress import ip_address, ip_network, summarize_address_range
 import re
-from typing import Any
+from typing import Any, override
 
 import voluptuous as vol
 
@@ -166,7 +166,7 @@ async def _async_build_schema_with_user_input(
         schema.update(
             {
                 # Approved exemption: nmap scan interval is user-configurable
-                # pylint: disable-next=hass-config-flow-polling-field
+                # pylint: disable-next=home-assistant-config-flow-polling-field
                 vol.Optional(
                     CONF_SCAN_INTERVAL,
                     default=user_input.get(CONF_SCAN_INTERVAL, TRACKER_SCAN_INTERVAL),
@@ -222,6 +222,7 @@ class NmapTrackerConfigFlow(ConfigFlow, domain=DOMAIN):
         """Initialize config flow."""
         self.options: dict[str, Any] = {}
 
+    @override
     async def async_step_user(
         self, user_input: dict[str, Any] | None = None
     ) -> ConfigFlowResult:
@@ -259,6 +260,7 @@ class NmapTrackerConfigFlow(ConfigFlow, domain=DOMAIN):
 
     @staticmethod
     @callback
+    @override
     def async_get_options_flow(
         config_entry: NmapTrackerConfigEntry,
     ) -> OptionsFlowHandler:

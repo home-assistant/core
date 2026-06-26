@@ -6,7 +6,7 @@
     ]),
     'area_id': None,
     'capabilities': dict({
-      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+      <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -44,10 +44,10 @@
 # name: test_all_entities[sensor.my_home_station_air_density-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'attribution': 'Weather data delivered by WeatherFlow/Tempest API',
-      'friendly_name': 'My Home Station Air density',
-      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
-      'unit_of_measurement': 'kg/m³',
+      <EntityStateAttribute.ATTRIBUTION: 'attribution'>: 'Weather data delivered by WeatherFlow/Tempest API',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'My Home Station Air density',
+      <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
+      <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: 'kg/m³',
     }),
     'context': <ANY>,
     'entity_id': 'sensor.my_home_station_air_density',
@@ -64,7 +64,7 @@
     ]),
     'area_id': None,
     'capabilities': dict({
-      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+      <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -102,11 +102,11 @@
 # name: test_all_entities[sensor.my_home_station_dew_point-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'attribution': 'Weather data delivered by WeatherFlow/Tempest API',
-      'device_class': 'temperature',
-      'friendly_name': 'My Home Station Dew point',
-      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
-      'unit_of_measurement': <UnitOfTemperature.CELSIUS: '°C'>,
+      <EntityStateAttribute.ATTRIBUTION: 'attribution'>: 'Weather data delivered by WeatherFlow/Tempest API',
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'temperature',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'My Home Station Dew point',
+      <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
+      <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: <UnitOfTemperature.CELSIUS: '°C'>,
     }),
     'context': <ANY>,
     'entity_id': 'sensor.my_home_station_dew_point',
@@ -123,7 +123,7 @@
     ]),
     'area_id': None,
     'capabilities': dict({
-      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+      <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -161,11 +161,11 @@
 # name: test_all_entities[sensor.my_home_station_feels_like-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'attribution': 'Weather data delivered by WeatherFlow/Tempest API',
-      'device_class': 'temperature',
-      'friendly_name': 'My Home Station Feels like',
-      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
-      'unit_of_measurement': <UnitOfTemperature.CELSIUS: '°C'>,
+      <EntityStateAttribute.ATTRIBUTION: 'attribution'>: 'Weather data delivered by WeatherFlow/Tempest API',
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'temperature',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'My Home Station Feels like',
+      <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
+      <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: <UnitOfTemperature.CELSIUS: '°C'>,
     }),
     'context': <ANY>,
     'entity_id': 'sensor.my_home_station_feels_like',
@@ -182,7 +182,7 @@
     ]),
     'area_id': None,
     'capabilities': dict({
-      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+      <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -220,11 +220,11 @@
 # name: test_all_entities[sensor.my_home_station_heat_index-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'attribution': 'Weather data delivered by WeatherFlow/Tempest API',
-      'device_class': 'temperature',
-      'friendly_name': 'My Home Station Heat index',
-      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
-      'unit_of_measurement': <UnitOfTemperature.CELSIUS: '°C'>,
+      <EntityStateAttribute.ATTRIBUTION: 'attribution'>: 'Weather data delivered by WeatherFlow/Tempest API',
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'temperature',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'My Home Station Heat index',
+      <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
+      <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: <UnitOfTemperature.CELSIUS: '°C'>,
     }),
     'context': <ANY>,
     'entity_id': 'sensor.my_home_station_heat_index',
@@ -234,6 +234,65 @@
     'state': '10.5',
   })
 # ---
+# name: test_all_entities[sensor.my_home_station_illuminance-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': list([
+      None,
+    ]),
+    'area_id': None,
+    'capabilities': dict({
+      <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': None,
+    'entity_id': 'sensor.my_home_station_illuminance',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'Illuminance',
+    'options': dict({
+      'sensor': dict({
+        'suggested_display_precision': 0,
+      }),
+    }),
+    'original_device_class': <SensorDeviceClass.ILLUMINANCE: 'illuminance'>,
+    'original_icon': None,
+    'original_name': 'Illuminance',
+    'platform': 'weatherflow_cloud',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'illuminance',
+    'unique_id': '24432_brightness',
+    'unit_of_measurement': 'lx',
+  })
+# ---
+# name: test_all_entities[sensor.my_home_station_illuminance-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      <EntityStateAttribute.ATTRIBUTION: 'attribution'>: 'Weather data delivered by WeatherFlow/Tempest API',
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'illuminance',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'My Home Station Illuminance',
+      <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
+      <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: 'lx',
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.my_home_station_illuminance',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '757',
+  })
+# ---
 # name: test_all_entities[sensor.my_home_station_lightning_count-entry]
   EntityRegistryEntrySnapshot({
     'aliases': list([
@@ -241,7 +300,7 @@
     ]),
     'area_id': None,
     'capabilities': dict({
-      'state_class': <SensorStateClass.TOTAL: 'total'>,
+      <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.TOTAL: 'total'>,
     }),
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -276,9 +335,9 @@
 # name: test_all_entities[sensor.my_home_station_lightning_count-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'attribution': 'Weather data delivered by WeatherFlow/Tempest API',
-      'friendly_name': 'My Home Station Lightning count',
-      'state_class': <SensorStateClass.TOTAL: 'total'>,
+      <EntityStateAttribute.ATTRIBUTION: 'attribution'>: 'Weather data delivered by WeatherFlow/Tempest API',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'My Home Station Lightning count',
+      <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.TOTAL: 'total'>,
     }),
     'context': <ANY>,
     'entity_id': 'sensor.my_home_station_lightning_count',
@@ -295,7 +354,7 @@
     ]),
     'area_id': None,
     'capabilities': dict({
-      'state_class': <SensorStateClass.TOTAL: 'total'>,
+      <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.TOTAL: 'total'>,
     }),
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -330,9 +389,9 @@
 # name: test_all_entities[sensor.my_home_station_lightning_count_last_1_hr-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'attribution': 'Weather data delivered by WeatherFlow/Tempest API',
-      'friendly_name': 'My Home Station Lightning count last 1 hr',
-      'state_class': <SensorStateClass.TOTAL: 'total'>,
+      <EntityStateAttribute.ATTRIBUTION: 'attribution'>: 'Weather data delivered by WeatherFlow/Tempest API',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'My Home Station Lightning count last 1 hr',
+      <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.TOTAL: 'total'>,
     }),
     'context': <ANY>,
     'entity_id': 'sensor.my_home_station_lightning_count_last_1_hr',
@@ -349,7 +408,7 @@
     ]),
     'area_id': None,
     'capabilities': dict({
-      'state_class': <SensorStateClass.TOTAL: 'total'>,
+      <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.TOTAL: 'total'>,
     }),
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -384,9 +443,9 @@
 # name: test_all_entities[sensor.my_home_station_lightning_count_last_3_hr-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'attribution': 'Weather data delivered by WeatherFlow/Tempest API',
-      'friendly_name': 'My Home Station Lightning count last 3 hr',
-      'state_class': <SensorStateClass.TOTAL: 'total'>,
+      <EntityStateAttribute.ATTRIBUTION: 'attribution'>: 'Weather data delivered by WeatherFlow/Tempest API',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'My Home Station Lightning count last 3 hr',
+      <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.TOTAL: 'total'>,
     }),
     'context': <ANY>,
     'entity_id': 'sensor.my_home_station_lightning_count_last_3_hr',
@@ -403,7 +462,7 @@
     ]),
     'area_id': None,
     'capabilities': dict({
-      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+      <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -441,11 +500,11 @@
 # name: test_all_entities[sensor.my_home_station_lightning_last_distance-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'attribution': 'Weather data delivered by WeatherFlow/Tempest API',
-      'device_class': 'distance',
-      'friendly_name': 'My Home Station Lightning last distance',
-      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
-      'unit_of_measurement': <UnitOfLength.KILOMETERS: 'km'>,
+      <EntityStateAttribute.ATTRIBUTION: 'attribution'>: 'Weather data delivered by WeatherFlow/Tempest API',
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'distance',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'My Home Station Lightning last distance',
+      <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
+      <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: <UnitOfLength.KILOMETERS: 'km'>,
     }),
     'context': <ANY>,
     'entity_id': 'sensor.my_home_station_lightning_last_distance',
@@ -495,9 +554,9 @@
 # name: test_all_entities[sensor.my_home_station_lightning_last_strike-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'attribution': 'Weather data delivered by WeatherFlow/Tempest API',
-      'device_class': 'timestamp',
-      'friendly_name': 'My Home Station Lightning last strike',
+      <EntityStateAttribute.ATTRIBUTION: 'attribution'>: 'Weather data delivered by WeatherFlow/Tempest API',
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'timestamp',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'My Home Station Lightning last strike',
     }),
     'context': <ANY>,
     'entity_id': 'sensor.my_home_station_lightning_last_strike',
@@ -514,7 +573,7 @@
     ]),
     'area_id': None,
     'capabilities': dict({
-      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+      <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -552,10 +611,10 @@
 # name: test_all_entities[sensor.my_home_station_nearcast_precipitation_duration_yesterday-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'attribution': 'Weather data delivered by WeatherFlow/Tempest API',
-      'friendly_name': 'My Home Station Nearcast precipitation duration yesterday',
-      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
-      'unit_of_measurement': <UnitOfTime.MINUTES: 'min'>,
+      <EntityStateAttribute.ATTRIBUTION: 'attribution'>: 'Weather data delivered by WeatherFlow/Tempest API',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'My Home Station Nearcast precipitation duration yesterday',
+      <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
+      <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: <UnitOfTime.MINUTES: 'min'>,
     }),
     'context': <ANY>,
     'entity_id': 'sensor.my_home_station_nearcast_precipitation_duration_yesterday',
@@ -572,7 +631,7 @@
     ]),
     'area_id': None,
     'capabilities': dict({
-      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+      <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -610,11 +669,11 @@
 # name: test_all_entities[sensor.my_home_station_nearcast_precipitation_today-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'attribution': 'Weather data delivered by WeatherFlow/Tempest API',
-      'device_class': 'precipitation',
-      'friendly_name': 'My Home Station Nearcast precipitation today',
-      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
-      'unit_of_measurement': <UnitOfPrecipitationDepth.MILLIMETERS: 'mm'>,
+      <EntityStateAttribute.ATTRIBUTION: 'attribution'>: 'Weather data delivered by WeatherFlow/Tempest API',
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'precipitation',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'My Home Station Nearcast precipitation today',
+      <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
+      <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: <UnitOfPrecipitationDepth.MILLIMETERS: 'mm'>,
     }),
     'context': <ANY>,
     'entity_id': 'sensor.my_home_station_nearcast_precipitation_today',
@@ -631,7 +690,7 @@
     ]),
     'area_id': None,
     'capabilities': dict({
-      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+      <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -669,11 +728,11 @@
 # name: test_all_entities[sensor.my_home_station_nearcast_precipitation_yesterday-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'attribution': 'Weather data delivered by WeatherFlow/Tempest API',
-      'device_class': 'precipitation',
-      'friendly_name': 'My Home Station Nearcast precipitation yesterday',
-      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
-      'unit_of_measurement': <UnitOfPrecipitationDepth.MILLIMETERS: 'mm'>,
+      <EntityStateAttribute.ATTRIBUTION: 'attribution'>: 'Weather data delivered by WeatherFlow/Tempest API',
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'precipitation',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'My Home Station Nearcast precipitation yesterday',
+      <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
+      <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: <UnitOfPrecipitationDepth.MILLIMETERS: 'mm'>,
     }),
     'context': <ANY>,
     'entity_id': 'sensor.my_home_station_nearcast_precipitation_yesterday',
@@ -690,7 +749,7 @@
     ]),
     'area_id': None,
     'capabilities': dict({
-      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+      <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -728,10 +787,10 @@
 # name: test_all_entities[sensor.my_home_station_precipitation_duration_today-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'attribution': 'Weather data delivered by WeatherFlow/Tempest API',
-      'friendly_name': 'My Home Station Precipitation duration today',
-      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
-      'unit_of_measurement': <UnitOfTime.MINUTES: 'min'>,
+      <EntityStateAttribute.ATTRIBUTION: 'attribution'>: 'Weather data delivered by WeatherFlow/Tempest API',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'My Home Station Precipitation duration today',
+      <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
+      <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: <UnitOfTime.MINUTES: 'min'>,
     }),
     'context': <ANY>,
     'entity_id': 'sensor.my_home_station_precipitation_duration_today',
@@ -748,7 +807,7 @@
     ]),
     'area_id': None,
     'capabilities': dict({
-      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+      <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -786,10 +845,10 @@
 # name: test_all_entities[sensor.my_home_station_precipitation_duration_yesterday-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'attribution': 'Weather data delivered by WeatherFlow/Tempest API',
-      'friendly_name': 'My Home Station Precipitation duration yesterday',
-      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
-      'unit_of_measurement': <UnitOfTime.MINUTES: 'min'>,
+      <EntityStateAttribute.ATTRIBUTION: 'attribution'>: 'Weather data delivered by WeatherFlow/Tempest API',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'My Home Station Precipitation duration yesterday',
+      <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
+      <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: <UnitOfTime.MINUTES: 'min'>,
     }),
     'context': <ANY>,
     'entity_id': 'sensor.my_home_station_precipitation_duration_yesterday',
@@ -806,7 +865,7 @@
     ]),
     'area_id': None,
     'capabilities': dict({
-      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+      <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -844,11 +903,11 @@
 # name: test_all_entities[sensor.my_home_station_precipitation_today-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'attribution': 'Weather data delivered by WeatherFlow/Tempest API',
-      'device_class': 'precipitation',
-      'friendly_name': 'My Home Station Precipitation today',
-      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
-      'unit_of_measurement': <UnitOfPrecipitationDepth.MILLIMETERS: 'mm'>,
+      <EntityStateAttribute.ATTRIBUTION: 'attribution'>: 'Weather data delivered by WeatherFlow/Tempest API',
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'precipitation',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'My Home Station Precipitation today',
+      <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
+      <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: <UnitOfPrecipitationDepth.MILLIMETERS: 'mm'>,
     }),
     'context': <ANY>,
     'entity_id': 'sensor.my_home_station_precipitation_today',
@@ -865,7 +924,7 @@
     ]),
     'area_id': None,
     'capabilities': dict({
-      'options': list([
+      <SensorEntityCapabilityAttribute.OPTIONS: 'options'>: list([
         'none',
         'rain',
         'snow',
@@ -909,10 +968,10 @@
 # name: test_all_entities[sensor.my_home_station_precipitation_type_yesterday-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'attribution': 'Weather data delivered by WeatherFlow/Tempest API',
-      'device_class': 'enum',
-      'friendly_name': 'My Home Station Precipitation type yesterday',
-      'options': list([
+      <EntityStateAttribute.ATTRIBUTION: 'attribution'>: 'Weather data delivered by WeatherFlow/Tempest API',
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'enum',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'My Home Station Precipitation type yesterday',
+      <SensorEntityCapabilityAttribute.OPTIONS: 'options'>: list([
         'none',
         'rain',
         'snow',
@@ -935,7 +994,7 @@
     ]),
     'area_id': None,
     'capabilities': dict({
-      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+      <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -973,11 +1032,11 @@
 # name: test_all_entities[sensor.my_home_station_precipitation_yesterday-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'attribution': 'Weather data delivered by WeatherFlow/Tempest API',
-      'device_class': 'precipitation',
-      'friendly_name': 'My Home Station Precipitation yesterday',
-      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
-      'unit_of_measurement': <UnitOfPrecipitationDepth.MILLIMETERS: 'mm'>,
+      <EntityStateAttribute.ATTRIBUTION: 'attribution'>: 'Weather data delivered by WeatherFlow/Tempest API',
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'precipitation',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'My Home Station Precipitation yesterday',
+      <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
+      <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: <UnitOfPrecipitationDepth.MILLIMETERS: 'mm'>,
     }),
     'context': <ANY>,
     'entity_id': 'sensor.my_home_station_precipitation_yesterday',
@@ -994,7 +1053,7 @@
     ]),
     'area_id': None,
     'capabilities': dict({
-      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+      <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -1035,11 +1094,11 @@
 # name: test_all_entities[sensor.my_home_station_pressure_barometric-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'attribution': 'Weather data delivered by WeatherFlow/Tempest API',
-      'device_class': 'atmospheric_pressure',
-      'friendly_name': 'My Home Station Pressure barometric',
-      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
-      'unit_of_measurement': <UnitOfPressure.HPA: 'hPa'>,
+      <EntityStateAttribute.ATTRIBUTION: 'attribution'>: 'Weather data delivered by WeatherFlow/Tempest API',
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'atmospheric_pressure',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'My Home Station Pressure barometric',
+      <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
+      <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: <UnitOfPressure.HPA: 'hPa'>,
     }),
     'context': <ANY>,
     'entity_id': 'sensor.my_home_station_pressure_barometric',
@@ -1056,7 +1115,7 @@
     ]),
     'area_id': None,
     'capabilities': dict({
-      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+      <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -1097,11 +1156,11 @@
 # name: test_all_entities[sensor.my_home_station_pressure_sea_level-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'attribution': 'Weather data delivered by WeatherFlow/Tempest API',
-      'device_class': 'atmospheric_pressure',
-      'friendly_name': 'My Home Station Pressure sea level',
-      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
-      'unit_of_measurement': <UnitOfPressure.HPA: 'hPa'>,
+      <EntityStateAttribute.ATTRIBUTION: 'attribution'>: 'Weather data delivered by WeatherFlow/Tempest API',
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'atmospheric_pressure',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'My Home Station Pressure sea level',
+      <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
+      <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: <UnitOfPressure.HPA: 'hPa'>,
     }),
     'context': <ANY>,
     'entity_id': 'sensor.my_home_station_pressure_sea_level',
@@ -1118,7 +1177,7 @@
     ]),
     'area_id': None,
     'capabilities': dict({
-      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+      <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -1156,11 +1215,11 @@
 # name: test_all_entities[sensor.my_home_station_rain_last_hour-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'attribution': 'Weather data delivered by WeatherFlow/Tempest API',
-      'device_class': 'precipitation',
-      'friendly_name': 'My Home Station Rain last hour',
-      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
-      'unit_of_measurement': <UnitOfPrecipitationDepth.MILLIMETERS: 'mm'>,
+      <EntityStateAttribute.ATTRIBUTION: 'attribution'>: 'Weather data delivered by WeatherFlow/Tempest API',
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'precipitation',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'My Home Station Rain last hour',
+      <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
+      <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: <UnitOfPrecipitationDepth.MILLIMETERS: 'mm'>,
     }),
     'context': <ANY>,
     'entity_id': 'sensor.my_home_station_rain_last_hour',
@@ -1170,6 +1229,124 @@
     'state': '0.0',
   })
 # ---
+# name: test_all_entities[sensor.my_home_station_relative_humidity-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': list([
+      None,
+    ]),
+    'area_id': None,
+    'capabilities': dict({
+      <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': None,
+    'entity_id': 'sensor.my_home_station_relative_humidity',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'Relative humidity',
+    'options': dict({
+      'sensor': dict({
+        'suggested_display_precision': 0,
+      }),
+    }),
+    'original_device_class': <SensorDeviceClass.HUMIDITY: 'humidity'>,
+    'original_icon': None,
+    'original_name': 'Relative humidity',
+    'platform': 'weatherflow_cloud',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'relative_humidity',
+    'unique_id': '24432_relative_humidity',
+    'unit_of_measurement': '%',
+  })
+# ---
+# name: test_all_entities[sensor.my_home_station_relative_humidity-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      <EntityStateAttribute.ATTRIBUTION: 'attribution'>: 'Weather data delivered by WeatherFlow/Tempest API',
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'humidity',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'My Home Station Relative humidity',
+      <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
+      <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: '%',
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.my_home_station_relative_humidity',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '22',
+  })
+# ---
+# name: test_all_entities[sensor.my_home_station_solar_radiation-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': list([
+      None,
+    ]),
+    'area_id': None,
+    'capabilities': dict({
+      <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': None,
+    'entity_id': 'sensor.my_home_station_solar_radiation',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'Solar radiation',
+    'options': dict({
+      'sensor': dict({
+        'suggested_display_precision': 0,
+      }),
+    }),
+    'original_device_class': <SensorDeviceClass.IRRADIANCE: 'irradiance'>,
+    'original_icon': None,
+    'original_name': 'Solar radiation',
+    'platform': 'weatherflow_cloud',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'solar_radiation',
+    'unique_id': '24432_solar_radiation',
+    'unit_of_measurement': <UnitOfIrradiance.WATTS_PER_SQUARE_METER: 'W/m²'>,
+  })
+# ---
+# name: test_all_entities[sensor.my_home_station_solar_radiation-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      <EntityStateAttribute.ATTRIBUTION: 'attribution'>: 'Weather data delivered by WeatherFlow/Tempest API',
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'irradiance',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'My Home Station Solar radiation',
+      <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
+      <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: <UnitOfIrradiance.WATTS_PER_SQUARE_METER: 'W/m²'>,
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.my_home_station_solar_radiation',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '6',
+  })
+# ---
 # name: test_all_entities[sensor.my_home_station_temperature-entry]
   EntityRegistryEntrySnapshot({
     'aliases': list([
@@ -1177,7 +1354,7 @@
     ]),
     'area_id': None,
     'capabilities': dict({
-      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+      <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -1215,11 +1392,11 @@
 # name: test_all_entities[sensor.my_home_station_temperature-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'attribution': 'Weather data delivered by WeatherFlow/Tempest API',
-      'device_class': 'temperature',
-      'friendly_name': 'My Home Station Temperature',
-      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
-      'unit_of_measurement': <UnitOfTemperature.CELSIUS: '°C'>,
+      <EntityStateAttribute.ATTRIBUTION: 'attribution'>: 'Weather data delivered by WeatherFlow/Tempest API',
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'temperature',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'My Home Station Temperature',
+      <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
+      <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: <UnitOfTemperature.CELSIUS: '°C'>,
     }),
     'context': <ANY>,
     'entity_id': 'sensor.my_home_station_temperature',
@@ -1229,6 +1406,64 @@
     'state': '10.5',
   })
 # ---
+# name: test_all_entities[sensor.my_home_station_uv_index-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': list([
+      None,
+    ]),
+    'area_id': None,
+    'capabilities': dict({
+      <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': None,
+    'entity_id': 'sensor.my_home_station_uv_index',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'UV index',
+    'options': dict({
+      'sensor': dict({
+        'suggested_display_precision': 2,
+      }),
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'UV index',
+    'platform': 'weatherflow_cloud',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'uv_index',
+    'unique_id': '24432_uv',
+    'unit_of_measurement': 'UV index',
+  })
+# ---
+# name: test_all_entities[sensor.my_home_station_uv_index-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      <EntityStateAttribute.ATTRIBUTION: 'attribution'>: 'Weather data delivered by WeatherFlow/Tempest API',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'My Home Station UV index',
+      <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
+      <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: 'UV index',
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.my_home_station_uv_index',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '0.03',
+  })
+# ---
 # name: test_all_entities[sensor.my_home_station_wet_bulb_globe_temperature-entry]
   EntityRegistryEntrySnapshot({
     'aliases': list([
@@ -1236,7 +1471,7 @@
     ]),
     'area_id': None,
     'capabilities': dict({
-      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+      <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -1274,11 +1509,11 @@
 # name: test_all_entities[sensor.my_home_station_wet_bulb_globe_temperature-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'attribution': 'Weather data delivered by WeatherFlow/Tempest API',
-      'device_class': 'temperature',
-      'friendly_name': 'My Home Station Wet bulb globe temperature',
-      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
-      'unit_of_measurement': <UnitOfTemperature.CELSIUS: '°C'>,
+      <EntityStateAttribute.ATTRIBUTION: 'attribution'>: 'Weather data delivered by WeatherFlow/Tempest API',
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'temperature',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'My Home Station Wet bulb globe temperature',
+      <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
+      <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: <UnitOfTemperature.CELSIUS: '°C'>,
     }),
     'context': <ANY>,
     'entity_id': 'sensor.my_home_station_wet_bulb_globe_temperature',
@@ -1295,7 +1530,7 @@
     ]),
     'area_id': None,
     'capabilities': dict({
-      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+      <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -1333,11 +1568,11 @@
 # name: test_all_entities[sensor.my_home_station_wet_bulb_temperature-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'attribution': 'Weather data delivered by WeatherFlow/Tempest API',
-      'device_class': 'temperature',
-      'friendly_name': 'My Home Station Wet bulb temperature',
-      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
-      'unit_of_measurement': <UnitOfTemperature.CELSIUS: '°C'>,
+      <EntityStateAttribute.ATTRIBUTION: 'attribution'>: 'Weather data delivered by WeatherFlow/Tempest API',
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'temperature',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'My Home Station Wet bulb temperature',
+      <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
+      <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: <UnitOfTemperature.CELSIUS: '°C'>,
     }),
     'context': <ANY>,
     'entity_id': 'sensor.my_home_station_wet_bulb_temperature',
@@ -1354,7 +1589,7 @@
     ]),
     'area_id': None,
     'capabilities': dict({
-      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+      <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -1392,11 +1627,11 @@
 # name: test_all_entities[sensor.my_home_station_wind_chill-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'attribution': 'Weather data delivered by WeatherFlow/Tempest API',
-      'device_class': 'temperature',
-      'friendly_name': 'My Home Station Wind chill',
-      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
-      'unit_of_measurement': <UnitOfTemperature.CELSIUS: '°C'>,
+      <EntityStateAttribute.ATTRIBUTION: 'attribution'>: 'Weather data delivered by WeatherFlow/Tempest API',
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'temperature',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'My Home Station Wind chill',
+      <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
+      <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: <UnitOfTemperature.CELSIUS: '°C'>,
     }),
     'context': <ANY>,
     'entity_id': 'sensor.my_home_station_wind_chill',
@@ -1446,10 +1681,10 @@
 # name: test_all_entities[sensor.my_home_station_wind_direction-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'attribution': 'Weather data delivered by WeatherFlow/Tempest API',
-      'device_class': 'wind_direction',
-      'friendly_name': 'My Home Station Wind direction',
-      'unit_of_measurement': '°',
+      <EntityStateAttribute.ATTRIBUTION: 'attribution'>: 'Weather data delivered by WeatherFlow/Tempest API',
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'wind_direction',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'My Home Station Wind direction',
+      <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: '°',
     }),
     'context': <ANY>,
     'entity_id': 'sensor.my_home_station_wind_direction',
@@ -1466,7 +1701,7 @@
     ]),
     'area_id': None,
     'capabilities': dict({
-      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+      <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -1507,11 +1742,11 @@
 # name: test_all_entities[sensor.my_home_station_wind_gust-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'attribution': 'Weather data delivered by WeatherFlow/Tempest API',
-      'device_class': 'wind_speed',
-      'friendly_name': 'My Home Station Wind gust',
-      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
-      'unit_of_measurement': <UnitOfSpeed.KILOMETERS_PER_HOUR: 'km/h'>,
+      <EntityStateAttribute.ATTRIBUTION: 'attribution'>: 'Weather data delivered by WeatherFlow/Tempest API',
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'wind_speed',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'My Home Station Wind gust',
+      <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
+      <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: <UnitOfSpeed.KILOMETERS_PER_HOUR: 'km/h'>,
     }),
     'context': <ANY>,
     'entity_id': 'sensor.my_home_station_wind_gust',
@@ -1528,7 +1763,7 @@
     ]),
     'area_id': None,
     'capabilities': dict({
-      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+      <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -1569,11 +1804,11 @@
 # name: test_all_entities[sensor.my_home_station_wind_lull-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'attribution': 'Weather data delivered by WeatherFlow/Tempest API',
-      'device_class': 'wind_speed',
-      'friendly_name': 'My Home Station Wind lull',
-      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
-      'unit_of_measurement': <UnitOfSpeed.KILOMETERS_PER_HOUR: 'km/h'>,
+      <EntityStateAttribute.ATTRIBUTION: 'attribution'>: 'Weather data delivered by WeatherFlow/Tempest API',
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'wind_speed',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'My Home Station Wind lull',
+      <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
+      <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: <UnitOfSpeed.KILOMETERS_PER_HOUR: 'km/h'>,
     }),
     'context': <ANY>,
     'entity_id': 'sensor.my_home_station_wind_lull',
@@ -1590,7 +1825,7 @@
     ]),
     'area_id': None,
     'capabilities': dict({
-      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+      <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -1628,10 +1863,10 @@
 # name: test_all_entities[sensor.my_home_station_wind_sample_interval-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'attribution': 'Weather data delivered by WeatherFlow/Tempest API',
-      'friendly_name': 'My Home Station Wind sample interval',
-      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
-      'unit_of_measurement': <UnitOfTime.SECONDS: 's'>,
+      <EntityStateAttribute.ATTRIBUTION: 'attribution'>: 'Weather data delivered by WeatherFlow/Tempest API',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'My Home Station Wind sample interval',
+      <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
+      <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: <UnitOfTime.SECONDS: 's'>,
     }),
     'context': <ANY>,
     'entity_id': 'sensor.my_home_station_wind_sample_interval',
@@ -1648,7 +1883,7 @@
     ]),
     'area_id': None,
     'capabilities': dict({
-      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+      <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -1689,11 +1924,11 @@
 # name: test_all_entities[sensor.my_home_station_wind_speed-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'attribution': 'Weather data delivered by WeatherFlow/Tempest API',
-      'device_class': 'wind_speed',
-      'friendly_name': 'My Home Station Wind speed',
-      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
-      'unit_of_measurement': <UnitOfSpeed.KILOMETERS_PER_HOUR: 'km/h'>,
+      <EntityStateAttribute.ATTRIBUTION: 'attribution'>: 'Weather data delivered by WeatherFlow/Tempest API',
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'wind_speed',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'My Home Station Wind speed',
+      <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
+      <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: <UnitOfSpeed.KILOMETERS_PER_HOUR: 'km/h'>,
     }),
     'context': <ANY>,
     'entity_id': 'sensor.my_home_station_wind_speed',
@@ -1710,7 +1945,7 @@
     ]),
     'area_id': None,
     'capabilities': dict({
-      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+      <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -1751,11 +1986,11 @@
 # name: test_all_entities[sensor.my_home_station_wind_speed_avg-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'attribution': 'Weather data delivered by WeatherFlow/Tempest API',
-      'device_class': 'wind_speed',
-      'friendly_name': 'My Home Station Wind speed (avg)',
-      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
-      'unit_of_measurement': <UnitOfSpeed.KILOMETERS_PER_HOUR: 'km/h'>,
+      <EntityStateAttribute.ATTRIBUTION: 'attribution'>: 'Weather data delivered by WeatherFlow/Tempest API',
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'wind_speed',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'My Home Station Wind speed (avg)',
+      <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
+      <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: <UnitOfSpeed.KILOMETERS_PER_HOUR: 'km/h'>,
     }),
     'context': <ANY>,
     'entity_id': 'sensor.my_home_station_wind_speed_avg',

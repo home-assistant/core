@@ -3,7 +3,7 @@
 from collections.abc import Callable, Mapping
 from dataclasses import dataclass
 from enum import IntEnum
-from typing import Any, cast
+from typing import Any, cast, override
 
 import voluptuous as vol
 from zwave_js_server.const import CommandClass, RssiError
@@ -116,8 +116,7 @@ from .discovery_data_template import (
     NumericSensorDataTemplate,
     NumericSensorDataTemplateData,
 )
-from .entity import NewZwaveDiscoveryInfo, ZWaveBaseEntity
-from .helpers import get_device_info, get_valueless_base_unique_id
+from .entity import NewZwaveDiscoveryInfo, ZWaveBaseEntity, ZWaveNodeBaseEntity
 from .migrate import async_migrate_statistics_sensors
 from .models import (
     NewZWaveDiscoverySchema,
@@ -559,7 +558,6 @@ ENTITY_DESCRIPTION_NODE_STATISTICS_LIST = [
         key="last_seen",
         translation_key="last_seen",
         device_class=SensorDeviceClass.TIMESTAMP,
-        entity_registry_enabled_default=False,
     ),
 ]
 
@@ -631,7 +629,8 @@ async def async_setup_entry(
                 )
             )
         elif info.platform_hint == "notification":
-            # prevent duplicate entities for values that are already represented as binary sensors
+            # prevent duplicate entities for values that are
+            # already represented as binary sensors
             if is_valid_notification_binary_sensor(info):
                 return
             entities.append(
@@ -758,6 +757,7 @@ class ZwaveSensor(ZWaveBaseEntity, SensorEntity):
             self._attr_name = self.generate_name(include_value_name=True)
 
     @property
+    @override
     def native_value(self) -> StateType:
         """Return state of the sensor."""
         key = str(self.info.primary_value.value)
@@ -766,6 +766,7 @@ class ZwaveSensor(ZWaveBaseEntity, SensorEntity):
         return str(self.info.primary_value.metadata.states[key])
 
     @property
+    @override
     def native_unit_of_measurement(self) -> str | None:
         """Return unit of measurement the value is expressed in."""
         if (unit := super().native_unit_of_measurement) is not None:
@@ -796,6 +797,7 @@ class ZWaveNumericSensor(ZwaveSensor):
             )
 
     @callback
+    @override
     def on_value_update(self) -> None:
         """Handle scale changes for this value on value updated event."""
         data = NumericSensorDataTemplate().resolve_data(self.info.primary_value)
@@ -803,6 +805,7 @@ class ZWaveNumericSensor(ZwaveSensor):
         self._attr_native_unit_of_measurement = data.unit_of_measurement
 
     @property
+    @override
     def native_value(self) -> float | None:
         """Return state of the sensor."""
         if self.info.primary_value.value is None:
@@ -851,6 +854,7 @@ class NewZWaveNumericSensor(ZWaveBaseEntity, SensorEntity):
         return scale_type
 
     @callback
+    @override
     def on_value_update(self) -> None:
         """Handle scale changes for this value on value updated event."""
         # TODO: Try to limit this to metadata updated event.  # pylint: disable=fixme
@@ -859,6 +863,7 @@ class NewZWaveNumericSensor(ZWaveBaseEntity, SensorEntity):
             self.hass.config_entries.async_schedule_reload(self.config_entry.entry_id)
 
     @property
+    @override
     def native_value(self) -> float | None:
         """Return state of the sensor."""
         if self.info.primary_value.value is None:
@@ -870,6 +875,7 @@ class ZWaveMeterSensor(ZWaveNumericSensor):
     """Representation of a Z-Wave Meter CC sensor."""
 
     @property
+    @override
     def extra_state_attributes(self) -> Mapping[str, int | str] | None:
         """Return extra state attributes."""
         meter_type = get_meter_type(self.info.primary_value)
@@ -910,6 +916,7 @@ class NewZWaveMeterSensor(NewZWaveNumericSensor):
     """Representation of a Z-Wave Meter CC sensor."""
 
     @property
+    @override
     def extra_state_attributes(self) -> Mapping[str, int | str] | None:
         """Return extra state attributes."""
         meter_type = get_meter_type(self.info.primary_value)
@@ -984,6 +991,7 @@ class ZWaveListSensor(ZwaveSensor):
             self._attr_options = list(info.primary_value.metadata.states.values())
 
     @callback
+    @override
     def should_rediscover_on_metadata_update(self) -> bool:
         """Check if metadata states have changed."""
         return list(self.info.primary_value.metadata.states.values()) != (
@@ -991,6 +999,7 @@ class ZWaveListSensor(ZwaveSensor):
         )
 
     @property
+    @override
     def extra_state_attributes(self) -> dict[str, str] | None:
         """Return the device specific state attributes."""
         if (value := self.info.primary_value.value) is None:
@@ -1025,6 +1034,7 @@ class ZWaveConfigParameterSensor(ZWaveListSensor):
         )
 
     @property
+    @override
     def extra_state_attributes(self) -> dict[str, str] | None:
         """Return the device specific state attributes."""
         if (value := self.info.primary_value.value) is None:
@@ -1033,36 +1043,19 @@ class ZWaveConfigParameterSensor(ZWaveListSensor):
         return {ATTR_VALUE: value}
 
 
-class ZWaveNodeStatusSensor(SensorEntity):
+class ZWaveNodeStatusSensor(ZWaveNodeBaseEntity, SensorEntity):
     """Representation of a node status sensor."""
 
-    _attr_should_poll = False
     _attr_entity_category = EntityCategory.DIAGNOSTIC
-    _attr_has_entity_name = True
     _attr_translation_key = "node_status"
 
     def __init__(
         self, config_entry: ZwaveJSConfigEntry, driver: Driver, node: ZwaveNode
     ) -> None:
         """Initialize a generic Z-Wave device entity."""
+        super().__init__(driver, node)
         self.config_entry = config_entry
-        self.node = node
-
-        # Entity class attributes
-        self._base_unique_id = get_valueless_base_unique_id(driver, node)
         self._attr_unique_id = f"{self._base_unique_id}.node_status"
-        # device may not be precreated in main handler yet
-        self._attr_device_info = get_device_info(driver, node)
-
-    async def async_poll_value(self, _: bool) -> None:
-        """Poll a value."""
-        # We log an error instead of raising an exception because this service call occurs
-        # in a separate task since it is called via the dispatcher and we don't want to
-        # raise the exception in that separate task because it is confusing to the user.
-        LOGGER.error(
-            "There is no value to refresh for this entity so the zwave_js.refresh_value"
-            " service won't work for it"
-        )
 
     @callback
     def _status_changed(self, _: dict) -> None:
@@ -1070,62 +1063,30 @@ class ZWaveNodeStatusSensor(SensorEntity):
         self._attr_native_value = self.node.status.name.lower()
         self.async_write_ha_state()
 
+    @override
     async def async_added_to_hass(self) -> None:
         """Call when entity is added."""
-        # Add value_changed callbacks.
+        await super().async_added_to_hass()
         for evt in ("wake up", "sleep", "dead", "alive"):
             self.async_on_remove(self.node.on(evt, self._status_changed))
-        self.async_on_remove(
-            async_dispatcher_connect(
-                self.hass,
-                f"{DOMAIN}_{self.unique_id}_poll_value",
-                self.async_poll_value,
-            )
-        )
-        # we don't listen for `remove_entity_on_ready_node` signal because this entity
-        # is created when the node is added which occurs before ready. It only needs to
-        # be removed if the node is removed from the network.
-        self.async_on_remove(
-            async_dispatcher_connect(
-                self.hass,
-                f"{DOMAIN}_{self._base_unique_id}_remove_entity",
-                self.async_remove,
-            )
-        )
         self._attr_native_value: str = self.node.status.name.lower()
         self.async_write_ha_state()
 
 
-class ZWaveControllerStatusSensor(SensorEntity):
+class ZWaveControllerStatusSensor(ZWaveNodeBaseEntity, SensorEntity):
     """Representation of a controller status sensor."""
 
-    _attr_should_poll = False
     _attr_entity_category = EntityCategory.DIAGNOSTIC
-    _attr_has_entity_name = True
     _attr_translation_key = "controller_status"
 
     def __init__(self, config_entry: ZwaveJSConfigEntry, driver: Driver) -> None:
         """Initialize a generic Z-Wave device entity."""
-        self.config_entry = config_entry
         self.controller = driver.controller
         node = self.controller.own_node
         assert node
-
-        # Entity class attributes
-        self._base_unique_id = get_valueless_base_unique_id(driver, node)
+        super().__init__(driver, node)
+        self.config_entry = config_entry
         self._attr_unique_id = f"{self._base_unique_id}.controller_status"
-        # device may not be precreated in main handler yet
-        self._attr_device_info = get_device_info(driver, node)
-
-    async def async_poll_value(self, _: bool) -> None:
-        """Poll a value."""
-        # We log an error instead of raising an exception because this service call occurs
-        # in a separate task since it is called via the dispatcher and we don't want to
-        # raise the exception in that separate task because it is confusing to the user.
-        LOGGER.error(
-            "There is no value to refresh for this entity so the zwave_js.refresh_value"
-            " service won't work for it"
-        )
 
     @callback
     def _status_changed(self, _: dict) -> None:
@@ -1133,36 +1094,19 @@ class ZWaveControllerStatusSensor(SensorEntity):
         self._attr_native_value = self.controller.status.name.lower()
         self.async_write_ha_state()
 
+    @override
     async def async_added_to_hass(self) -> None:
         """Call when entity is added."""
-        # Add value_changed callbacks.
+        await super().async_added_to_hass()
         self.async_on_remove(self.controller.on("status changed", self._status_changed))
-        self.async_on_remove(
-            async_dispatcher_connect(
-                self.hass,
-                f"{DOMAIN}_{self.unique_id}_poll_value",
-                self.async_poll_value,
-            )
-        )
-        # we don't listen for `remove_entity_on_ready_node` signal because this is not
-        # a regular node
-        self.async_on_remove(
-            async_dispatcher_connect(
-                self.hass,
-                f"{DOMAIN}_{self._base_unique_id}_remove_entity",
-                self.async_remove,
-            )
-        )
         self._attr_native_value: str = self.controller.status.name.lower()
 
 
-class ZWaveStatisticsSensor(SensorEntity):
+class ZWaveStatisticsSensor(ZWaveNodeBaseEntity, SensorEntity):
     """Representation of a node/controller statistics sensor."""
 
     entity_description: ZWaveJSStatisticsSensorEntityDescription
-    _attr_should_poll = False
     _attr_entity_category = EntityCategory.DIAGNOSTIC
-    _attr_has_entity_name = True
 
     def __init__(
         self,
@@ -1172,8 +1116,6 @@ class ZWaveStatisticsSensor(SensorEntity):
         description: ZWaveJSStatisticsSensorEntityDescription,
     ) -> None:
         """Initialize a Z-Wave statistics entity."""
-        self.entity_description = description
-        self.config_entry = config_entry
         self.statistics_src = statistics_src
         node = (
             statistics_src.own_node
@@ -1181,22 +1123,10 @@ class ZWaveStatisticsSensor(SensorEntity):
             else statistics_src
         )
         assert node
-
-        # Entity class attributes
-        self._base_unique_id = get_valueless_base_unique_id(driver, node)
+        super().__init__(driver, node)
+        self.entity_description = description
+        self.config_entry = config_entry
         self._attr_unique_id = f"{self._base_unique_id}.statistics_{description.key}"
-        # device may not be precreated in main handler yet
-        self._attr_device_info = get_device_info(driver, node)
-
-    async def async_poll_value(self, _: bool) -> None:
-        """Poll a value."""
-        # We log an error instead of raising an exception because this service call occurs
-        # in a separate task since it is called via the dispatcher and we don't want to
-        # raise the exception in that separate task because it is confusing to the user.
-        LOGGER.error(
-            "There is no value to refresh for this entity so the zwave_js.refresh_value"
-            " service won't work for it"
-        )
 
     @callback
     def _statistics_updated(self, event_data: dict) -> None:
@@ -1224,22 +1154,10 @@ class ZWaveStatisticsSensor(SensorEntity):
         # Reset available state.
         self._attr_available = True
 
+    @override
     async def async_added_to_hass(self) -> None:
         """Call when entity is added."""
-        self.async_on_remove(
-            async_dispatcher_connect(
-                self.hass,
-                f"{DOMAIN}_{self.unique_id}_poll_value",
-                self.async_poll_value,
-            )
-        )
-        self.async_on_remove(
-            async_dispatcher_connect(
-                self.hass,
-                f"{DOMAIN}_{self._base_unique_id}_remove_entity",
-                self.async_remove,
-            )
-        )
+        await super().async_added_to_hass()
         self.async_on_remove(
             self.statistics_src.on("statistics updated", self._statistics_updated)
         )

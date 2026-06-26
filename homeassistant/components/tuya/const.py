@@ -6,21 +6,18 @@ import logging
 
 from homeassistant.components.sensor import SensorDeviceClass
 from homeassistant.const import (
-    CONCENTRATION_MICROGRAMS_PER_CUBIC_METER,
-    CONCENTRATION_MILLIGRAMS_PER_CUBIC_METER,
-    CONCENTRATION_PARTS_PER_BILLION,
-    CONCENTRATION_PARTS_PER_MILLION,
     LIGHT_LUX,
-    PERCENTAGE,
     SIGNAL_STRENGTH_DECIBELS,
     SIGNAL_STRENGTH_DECIBELS_MILLIWATT,
     Platform,
     UnitOfConductivity,
+    UnitOfDensity,
     UnitOfElectricCurrent,
     UnitOfElectricPotential,
     UnitOfEnergy,
     UnitOfPower,
     UnitOfPressure,
+    UnitOfRatio,
     UnitOfTemperature,
     UnitOfVolume,
     UnitOfVolumetricFlux,
@@ -33,7 +30,6 @@ CONF_ENDPOINT = "endpoint"
 CONF_TERMINAL_ID = "terminal_id"
 CONF_TOKEN_INFO = "token_info"
 CONF_USER_CODE = "user_code"
-CONF_USERNAME = "username"
 
 TUYA_CLIENT_ID = "HA_3y9q4ak7g4ephrvke"
 TUYA_SCHEMA = "haauthorize"
@@ -658,6 +654,7 @@ class DPCode(StrEnum):
     COLOUR_DATA = "colour_data"  # Colored light mode
     COLOUR_DATA_HSV = "colour_data_hsv"  # Colored light mode
     COLOUR_DATA_V2 = "colour_data_v2"  # Colored light mode
+    COMPRESSOR_STRENGTH = "compressor_strength"
     CONCENTRATION_SET = "concentration_set"  # Concentration setting
     CONTROL = "control"
     CONTROL_2 = "control_2"
@@ -696,6 +693,7 @@ class DPCode(StrEnum):
     DEHUMIDITY_SET_VALUE = "dehumidify_set_value"
     DELAY_CLEAN_TIME = "delay_clean_time"
     DELAY_SET = "delay_set"
+    DEVICE_RESTART = "device_restart"
     DEW_POINT_TEMP = "dew_point_temp"
     DISINFECTION = "disinfection"
     DO_NOT_DISTURB = "do_not_disturb"
@@ -710,6 +708,7 @@ class DPCode(StrEnum):
     ELECTRICITY_LEFT = "electricity_left"
     EXCRETION_TIME_DAY = "excretion_time_day"
     EXCRETION_TIMES_DAY = "excretion_times_day"
+    EXT_TEMP = "ext_temp"
     FACTORY_RESET = "factory_reset"
     FAN_BEEP = "fan_beep"  # Sound
     FAN_COOL = "fan_cool"  # Cool wind
@@ -751,6 +750,10 @@ class DPCode(StrEnum):
     HUMIDITY_VALUE = "humidity_value"  # Humidity
     INSTALLATION_HEIGHT = "installation_height"
     INVERTER_OUTPUT_POWER = "inverter_output_power"
+    IPC_AUTO_SIREN = "ipc_auto_siren"
+    IPC_BRIGHT = "ipc_bright"
+    IPC_CONTRAST = "ipc_contrast"
+    IPC_SHARP = "ipc_sharp"
     IPC_WORK_MODE = "ipc_work_mode"
     LED_TYPE_1 = "led_type_1"
     LED_TYPE_2 = "led_type_2"
@@ -776,6 +779,7 @@ class DPCode(StrEnum):
     MINI_SET = "mini_set"
     MODE = "mode"  # Working mode / Mode
     MOODLIGHTING = "moodlighting"  # Mood light
+    MOTION_AREA_SWITCH = "motion_area_switch"  # Activity area
     MOTION_RECORD = "motion_record"
     MOTION_SENSITIVITY = "motion_sensitivity"
     MOTION_SWITCH = "motion_switch"  # Motion switch
@@ -905,8 +909,10 @@ class DPCode(StrEnum):
     TARGET_DIS_CLOSEST = "target_dis_closest"  # Closest target distance
     TDS_IN = "tds_in"  # Total dissolved solids
     TEMP = "temp"  # Temperature setting
+    TEMP_AROUND = "temp_around"  # Current around (outside) temperature
     TEMP_BOILING_C = "temp_boiling_c"
     TEMP_BOILING_F = "temp_boiling_f"
+    TEMP_COILER = "temp_coiler"  # Current coil temperature
     TEMP_CONTROLLER = "temp_controller"
     TEMP_CORRECTION = "temp_correction"
     TEMP_CURRENT = "temp_current"  # Current temperature in °C
@@ -927,12 +933,15 @@ class DPCode(StrEnum):
         "temp_current_external_f"  # Current external temperature in Fahrenheit
     )
     TEMP_CURRENT_F = "temp_current_f"  # Current temperature in °F
+    TEMP_EFFLUENT = "temp_effluent"  # Current flow temperature
     TEMP_INDOOR = "temp_indoor"  # Indoor temperature in °C
     TEMP_SET = "temp_set"  # Set the temperature in °C
     TEMP_SET_F = "temp_set_f"  # Set the temperature in °F
+    TEMP_SETTING_QUICK_C = "temp_setting_quick_c"
     TEMP_UNIT_CONVERT = "temp_unit_convert"  # Temperature unit switching
     TEMP_VALUE = "temp_value"  # Color temperature
     TEMP_VALUE_V2 = "temp_value_v2"
+    TEMP_VENTING = "temp_venting"  # Current heat plate temperature
     TEMPER_ALARM = "temper_alarm"  # Tamper alarm
     TIME_TOTAL = "time_total"
     TIME_USE = "time_use"  # Total seconds of irrigation
@@ -947,6 +956,7 @@ class DPCode(StrEnum):
     UP_DOWN = "up_down"
     UPPER_TEMP = "upper_temp"
     UPPER_TEMP_F = "upper_temp_f"
+    USE_TIME_ONE = "use_time_one"
     UV = "uv"  # UV sterilization
     UV_INDEX = "uv_index"
     UV_RUNTIME = "uv_runtime"  # UV runtime
@@ -979,7 +989,9 @@ class DPCode(StrEnum):
     WIRELESS_ELECTRICITY = "wireless_electricity"
     WORK_MODE = "work_mode"  # Working mode
     WORK_POWER = "work_power"
+    WORK_STATE = "work_state"
     WORK_STATE_E = "work_state_e"
+    WORK_TYPE = "work_type"
 
 
 @dataclass
@@ -1008,7 +1020,7 @@ UNITS = (
         },
     ),
     UnitOfMeasurement(
-        unit=PERCENTAGE,
+        unit=UnitOfRatio.PERCENTAGE,
         aliases={"pct", "percent", "% RH"},
         device_classes={
             SensorDeviceClass.BATTERY,
@@ -1017,14 +1029,14 @@ UNITS = (
         },
     ),
     UnitOfMeasurement(
-        unit=CONCENTRATION_PARTS_PER_MILLION,
+        unit=UnitOfRatio.PARTS_PER_MILLION,
         device_classes={
             SensorDeviceClass.CO,
             SensorDeviceClass.CO2,
         },
     ),
     UnitOfMeasurement(
-        unit=CONCENTRATION_PARTS_PER_BILLION,
+        unit=UnitOfRatio.PARTS_PER_BILLION,
         device_classes={
             SensorDeviceClass.CO,
             SensorDeviceClass.CO2,
@@ -1071,7 +1083,7 @@ UNITS = (
         device_classes={SensorDeviceClass.ILLUMINANCE},
     ),
     UnitOfMeasurement(
-        unit=CONCENTRATION_MICROGRAMS_PER_CUBIC_METER,
+        unit=UnitOfDensity.MICROGRAMS_PER_CUBIC_METER,
         # The μ-char has 2 unicode variants \u00b5 and \u03bc
         # The \u03bc variant (Greek Mu char) is recommended
         aliases={"ug/m3", "\u03bcg/m3", "\u00b5g/m3", "ug/m³"},
@@ -1088,7 +1100,7 @@ UNITS = (
         },
     ),
     UnitOfMeasurement(
-        unit=CONCENTRATION_MILLIGRAMS_PER_CUBIC_METER,
+        unit=UnitOfDensity.MILLIGRAMS_PER_CUBIC_METER,
         aliases={"mg/m3"},
         device_classes={
             SensorDeviceClass.NITROGEN_DIOXIDE,

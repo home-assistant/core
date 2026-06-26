@@ -2,7 +2,7 @@
 
 import functools
 import logging
-from typing import Any
+from typing import Any, override
 
 from zha.application.platforms.cover import Shade as ZhaShade
 from zha.application.platforms.cover.const import (
@@ -92,61 +92,72 @@ class ZhaCover(ZHAEntity, CoverEntity):
         return features
 
     @property
+    @override
     def supported_features(self) -> CoverEntityFeature:
         """Return the supported features."""
         zha_features: ZHACoverEntityFeature = self.entity_data.entity.supported_features
         return self._convert_supported_features(zha_features)
 
     @property
+    @override
     def is_closed(self) -> bool | None:
         """Return True if the cover is closed."""
         return self.entity_data.entity.is_closed
 
     @property
+    @override
     def is_opening(self) -> bool:
         """Return if the cover is opening or not."""
         return self.entity_data.entity.is_opening
 
     @property
+    @override
     def is_closing(self) -> bool:
         """Return if the cover is closing or not."""
         return self.entity_data.entity.is_closing
 
     @property
+    @override
     def current_cover_position(self) -> int | None:
         """Return the current position of ZHA cover."""
         return self.entity_data.entity.current_cover_position
 
     @property
+    @override
     def current_cover_tilt_position(self) -> int | None:
         """Return the current tilt position of the cover."""
         return self.entity_data.entity.current_cover_tilt_position
 
-    @convert_zha_error_to_ha_error
+    @convert_zha_error_to_ha_error()
+    @override
     async def async_open_cover(self, **kwargs: Any) -> None:
         """Open the cover."""
         await self.entity_data.entity.async_open_cover()
         self.async_write_ha_state()
 
-    @convert_zha_error_to_ha_error
+    @convert_zha_error_to_ha_error()
+    @override
     async def async_open_cover_tilt(self, **kwargs: Any) -> None:
         """Open the cover tilt."""
         await self.entity_data.entity.async_open_cover_tilt()
         self.async_write_ha_state()
 
-    @convert_zha_error_to_ha_error
+    @convert_zha_error_to_ha_error()
+    @override
     async def async_close_cover(self, **kwargs: Any) -> None:
         """Close the cover."""
         await self.entity_data.entity.async_close_cover()
         self.async_write_ha_state()
 
-    @convert_zha_error_to_ha_error
+    @convert_zha_error_to_ha_error()
+    @override
     async def async_close_cover_tilt(self, **kwargs: Any) -> None:
         """Close the cover tilt."""
         await self.entity_data.entity.async_close_cover_tilt()
         self.async_write_ha_state()
 
-    @convert_zha_error_to_ha_error
+    @convert_zha_error_to_ha_error()
+    @override
     async def async_set_cover_position(self, **kwargs: Any) -> None:
         """Move the cover to a specific position."""
         await self.entity_data.entity.async_set_cover_position(
@@ -154,7 +165,8 @@ class ZhaCover(ZHAEntity, CoverEntity):
         )
         self.async_write_ha_state()
 
-    @convert_zha_error_to_ha_error
+    @convert_zha_error_to_ha_error()
+    @override
     async def async_set_cover_tilt_position(self, **kwargs: Any) -> None:
         """Move the cover tilt to a specific position."""
         await self.entity_data.entity.async_set_cover_tilt_position(
@@ -162,19 +174,22 @@ class ZhaCover(ZHAEntity, CoverEntity):
         )
         self.async_write_ha_state()
 
-    @convert_zha_error_to_ha_error
+    @convert_zha_error_to_ha_error()
+    @override
     async def async_stop_cover(self, **kwargs: Any) -> None:
         """Stop the cover."""
         await self.entity_data.entity.async_stop_cover()
         self.async_write_ha_state()
 
-    @convert_zha_error_to_ha_error
+    @convert_zha_error_to_ha_error()
+    @override
     async def async_stop_cover_tilt(self, **kwargs: Any) -> None:
         """Stop the cover tilt."""
         await self.entity_data.entity.async_stop_cover_tilt()
         self.async_write_ha_state()
 
     @callback
+    @override
     def restore_external_state_attributes(self, state: State) -> None:
         """Restore entity state."""
 

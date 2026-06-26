@@ -1,6 +1,6 @@
 """BSBLAN platform to control a compatible Climate Device."""
 
-from typing import Any, Final
+from typing import Any, Final, override
 
 from bsblan import BSBLANError, State, get_hvac_action_category
 
@@ -111,6 +111,7 @@ class BSBLANClimate(BSBLanCircuitEntity, ClimateEntity):
         return self.coordinator.data.states[self._circuit]
 
     @property
+    @override
     def current_temperature(self) -> float | None:
         """Return the current temperature."""
         if (current_temp := self._circuit_state.current_temperature) is None:
@@ -118,6 +119,7 @@ class BSBLANClimate(BSBLanCircuitEntity, ClimateEntity):
         return current_temp.value
 
     @property
+    @override
     def target_temperature(self) -> float | None:
         """Return the temperature we try to reach."""
         if (target_temp := self._circuit_state.target_temperature) is None:
@@ -132,6 +134,7 @@ class BSBLANClimate(BSBLanCircuitEntity, ClimateEntity):
         return hvac_mode.value
 
     @property
+    @override
     def hvac_mode(self) -> HVACMode | None:
         """Return hvac operation ie. heat, cool mode."""
         if (hvac_mode_value := self._hvac_mode_value) is None:
@@ -139,6 +142,7 @@ class BSBLANClimate(BSBLanCircuitEntity, ClimateEntity):
         return BSBLAN_TO_HA_HVAC_MODE.get(hvac_mode_value)
 
     @property
+    @override
     def hvac_action(self) -> HVACAction | None:
         """Return the current running hvac action."""
         if (action := self._circuit_state.hvac_action) is None or action.value is None:
@@ -147,6 +151,7 @@ class BSBLANClimate(BSBLanCircuitEntity, ClimateEntity):
         return HVACAction(category.name.lower())
 
     @property
+    @override
     def preset_mode(self) -> str | None:
         """Return the current preset mode."""
         # BSB-LAN mode 2 is eco/reduced mode
@@ -154,14 +159,17 @@ class BSBLANClimate(BSBLanCircuitEntity, ClimateEntity):
             return PRESET_ECO
         return PRESET_NONE
 
+    @override
     async def async_set_hvac_mode(self, hvac_mode: HVACMode) -> None:
         """Set hvac mode."""
         await self.async_set_data(hvac_mode=hvac_mode)
 
+    @override
     async def async_set_preset_mode(self, preset_mode: str) -> None:
         """Set preset mode."""
         await self.async_set_data(preset_mode=preset_mode)
 
+    @override
     async def async_set_temperature(self, **kwargs: Any) -> None:
         """Set new target temperatures."""
         await self.async_set_data(**kwargs)
@@ -184,7 +192,6 @@ class BSBLANClimate(BSBLanCircuitEntity, ClimateEntity):
             await self.coordinator.client.thermostat(**data, circuit=self._circuit)
         except BSBLANError as err:
             raise HomeAssistantError(
-                "An error occurred while updating the BSBLAN device",
                 translation_domain=DOMAIN,
                 translation_key="set_data_error",
             ) from err

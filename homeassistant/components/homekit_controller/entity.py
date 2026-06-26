@@ -1,6 +1,6 @@
 """Homekit Controller entities."""
 
-from typing import Any
+from typing import Any, override
 
 from aiohomekit.model.characteristics import (
     EVENT_CHARACTERISTICS,
@@ -87,6 +87,7 @@ class HomeKitEntity(Entity):
         self._async_subscribe_chars()
         self.async_write_ha_state()
 
+    @override
     async def async_added_to_hass(self) -> None:
         """Entity added to hass."""
         self._async_subscribe_chars()
@@ -97,6 +98,7 @@ class HomeKitEntity(Entity):
             self._accessory.async_subscribe_availability(self._async_write_ha_state)
         )
 
+    @override
     async def async_will_remove_from_hass(self) -> None:
         """Prepare to be removed from hass."""
         self._async_unsubscribe_chars()
@@ -159,12 +161,13 @@ class HomeKitEntity(Entity):
 
         char_types = self.get_characteristic_types()
 
-        # Setup events and/or polling for characteristics directly attached to this entity
+        # Setup events and/or polling for characteristics
+        # directly attached to this entity
         for char in self.service.characteristics.filter(char_types=char_types):
             self._setup_characteristic(char)
 
-        # Setup events and/or polling for characteristics attached to sub-services of this
-        # entity (like an INPUT_SOURCE).
+        # Setup events and/or polling for characteristics attached
+        # to sub-services of this entity (like an INPUT_SOURCE).
         for service in self.accessory.services.filter(parent_service=self.service):
             for char in service.characteristics.filter(char_types=char_types):
                 self._setup_characteristic(char)
@@ -205,6 +208,7 @@ class HomeKitEntity(Entity):
         return None
 
     @property
+    @override
     def name(self) -> str | None:
         """Return the name of the device if any."""
         accessory_name = self.accessory.name
@@ -225,6 +229,7 @@ class HomeKitEntity(Entity):
         return accessory_name
 
     @property
+    @override
     def available(self) -> bool:
         """Return True if entity is available."""
         all_iids = self.all_iids
@@ -234,6 +239,7 @@ class HomeKitEntity(Entity):
         return self._accessory.available
 
     @property
+    @override
     def device_info(self) -> DeviceInfo:
         """Return the device info."""
         return self._accessory.device_info_for_accessory(self.accessory)
@@ -248,7 +254,7 @@ class HomeKitEntity(Entity):
 
 
 class AccessoryEntity(HomeKitEntity):
-    """A HomeKit entity that is related to an entire accessory rather than a specific service or characteristic."""
+    """A HomeKit entity related to an entire accessory."""
 
     def __init__(self, accessory: HKDevice, devinfo: ConfigType) -> None:
         """Initialise a generic HomeKit accessory."""
@@ -256,6 +262,7 @@ class AccessoryEntity(HomeKitEntity):
         self._attr_unique_id = f"{accessory.unique_id}_{self._aid}"
 
     @property
+    @override
     def old_unique_id(self) -> str:
         """Return the old ID of this device."""
         serial = self.accessory_info.value(CharacteristicsTypes.SERIAL_NUMBER)
@@ -263,10 +270,11 @@ class AccessoryEntity(HomeKitEntity):
 
 
 class BaseCharacteristicEntity(HomeKitEntity):
-    """A HomeKit entity that is related to an single characteristic rather than a whole service.
+    """A HomeKit entity related to a single characteristic.
 
-    This is typically used to expose additional sensor, binary_sensor or number entities that don't belong with
-    the service entity.
+    This is typically used to expose additional sensor,
+    binary_sensor or number entities that don't belong
+    with the service entity.
     """
 
     def __init__(
@@ -290,6 +298,7 @@ class BaseCharacteristicEntity(HomeKitEntity):
         return False
 
     @callback
+    @override
     def _async_config_changed(self) -> None:
         """Handle accessory discovery changes."""
         if (
@@ -300,10 +309,11 @@ class BaseCharacteristicEntity(HomeKitEntity):
 
 
 class CharacteristicEntity(BaseCharacteristicEntity):
-    """A HomeKit entity that is related to an single characteristic rather than a whole service.
+    """A HomeKit entity related to a single characteristic.
 
-    This is typically used to expose additional sensor, binary_sensor or number entities that don't belong with
-    the service entity.
+    This is typically used to expose additional sensor,
+    binary_sensor or number entities that don't belong
+    with the service entity.
     """
 
     def __init__(
@@ -316,7 +326,12 @@ class CharacteristicEntity(BaseCharacteristicEntity):
         )
 
     @property
+    @override
     def old_unique_id(self) -> str:
         """Return the old ID of this device."""
         serial = self.accessory_info.value(CharacteristicsTypes.SERIAL_NUMBER)
-        return f"homekit-{serial}-aid:{self._aid}-sid:{self._char.service.iid}-cid:{self._char.iid}"
+        return (
+            f"homekit-{serial}-aid:{self._aid}"
+            f"-sid:{self._char.service.iid}"
+            f"-cid:{self._char.iid}"
+        )

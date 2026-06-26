@@ -2,7 +2,7 @@
 
 import logging
 import time
-from typing import Any
+from typing import Any, override
 
 from webio_api import Output as NASwebOutput
 from webio_api.const import STATE_ENTITY_UNAVAILABLE, STATE_OUTPUT_OFF, STATE_OUTPUT_ON
@@ -96,18 +96,20 @@ class RelaySwitch(SwitchEntity, BaseCoordinatorEntity):
         self._attr_translation_key = OUTPUT_TRANSLATION_KEY
         self._attr_translation_placeholders = {"index": f"{nasweb_output.index:2d}"}
         self._attr_unique_id = (
-            f"{DOMAIN}.{self._output.webio_serial}.relay_switch.{self._output.index}"
+            f"{DOMAIN}.{self._output.webio_serial}.relay_switch.{self._output.index}"  # pylint: disable=home-assistant-entity-unique-id-redundant-domain
         )
         self._attr_device_info = DeviceInfo(
             identifiers={(DOMAIN, self._output.webio_serial)},
         )
 
+    @override
     async def async_added_to_hass(self) -> None:
         """When entity is added to hass."""
         await super().async_added_to_hass()
         self._handle_coordinator_update()
 
     @callback
+    @override
     def _handle_coordinator_update(self) -> None:
         """Handle updated data from the coordinator."""
         self._attr_is_on = NASWEB_STATE_TO_HA_STATE[self._output.state]
@@ -122,17 +124,21 @@ class RelaySwitch(SwitchEntity, BaseCoordinatorEntity):
             )
         self.async_write_ha_state()
 
+    @override
     async def async_update(self) -> None:
         """Update the entity.
 
         Only used by the generic entity update service.
-        Scheduling updates is not necessary, the coordinator takes care of updates via push notifications.
+        Scheduling updates is not necessary, the coordinator
+        takes care of updates via push notifications.
         """
 
+    @override
     async def async_turn_on(self, **kwargs: Any) -> None:
         """Turn On RelaySwitch."""
         await self._output.turn_on()
 
+    @override
     async def async_turn_off(self, **kwargs: Any) -> None:
         """Turn Off RelaySwitch."""
         await self._output.turn_off()

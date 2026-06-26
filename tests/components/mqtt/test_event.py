@@ -7,7 +7,8 @@ from unittest.mock import patch
 from freezegun.api import FrozenDateTimeFactory
 import pytest
 
-from homeassistant.components import event, mqtt
+from homeassistant.components import event
+from homeassistant.components.mqtt.const import DOMAIN
 from homeassistant.components.mqtt.event import MQTT_EVENT_ATTRIBUTES_BLOCKED
 from homeassistant.const import STATE_UNKNOWN
 from homeassistant.core import HomeAssistant
@@ -56,7 +57,7 @@ from tests.common import MockConfigEntry, async_fire_mqtt_message
 from tests.typing import MqttMockHAClientGenerator, MqttMockPahoClient
 
 DEFAULT_CONFIG = {
-    mqtt.DOMAIN: {
+    DOMAIN: {
         event.DOMAIN: {
             "name": "test",
             "state_topic": "test-topic",
@@ -186,12 +187,16 @@ async def test_setting_event_value_with_invalid_payload(
     "hass_config",
     [
         {
-            mqtt.DOMAIN: {
+            DOMAIN: {
                 event.DOMAIN: {
                     "name": "test",
                     "state_topic": "test-topic",
                     "event_types": ["press"],
-                    "value_template": '{"event_type": "press", "val": "{{ value_json.val | is_defined }}", "par": "{{ value_json.par }}"}',
+                    "value_template": (
+                        '{"event_type": "press",'
+                        ' "val": "{{ value_json.val | is_defined }}",'
+                        ' "par": "{{ value_json.par }}"}'
+                    ),
                 }
             }
         }
@@ -315,7 +320,7 @@ async def test_discovery_update_availability(
     "hass_config",
     [
         {
-            mqtt.DOMAIN: {
+            DOMAIN: {
                 event.DOMAIN: {
                     "name": "test",
                     "state_topic": "test-topic",
@@ -401,7 +406,7 @@ async def test_discovery_update_attr(
     "hass_config",
     [
         {
-            mqtt.DOMAIN: {
+            DOMAIN: {
                 event.DOMAIN: [
                     {
                         "name": "Test 1",
@@ -626,7 +631,7 @@ async def test_entity_category(
     "hass_config",
     [
         {
-            mqtt.DOMAIN: {
+            DOMAIN: {
                 event.DOMAIN: {
                     "name": "test",
                     "state_topic": "test-topic",
@@ -811,6 +816,6 @@ async def test_value_template_fails(
     await mqtt_mock_entry()
     async_fire_mqtt_message(hass, "test-topic", '{"some_var": null }')
     assert (
-        "TypeError: unsupported operand type(s) for *: 'NoneType' and 'int' rendering template"
-        in caplog.text
+        "TypeError: unsupported operand type(s) for *:"
+        " 'NoneType' and 'int' rendering template" in caplog.text
     )

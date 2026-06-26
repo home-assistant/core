@@ -33,7 +33,7 @@ from homeassistant.components.zwave_js.discovery_data_template import (
     DynamicCurrentTempClimateDataTemplate,
 )
 from homeassistant.components.zwave_js.helpers import get_device_id
-from homeassistant.config_entries import RELOAD_AFTER_UPDATE_DELAY
+from homeassistant.config_entries import RELOAD_AFTER_UPDATE_DELAY, ConfigEntryState
 from homeassistant.const import (
     ATTR_DEVICE_CLASS,
     ATTR_ENTITY_ID,
@@ -450,7 +450,7 @@ async def test_indicator_test(
 async def test_light_device_class_is_null(
     hass: HomeAssistant, client, light_device_class_is_null, integration
 ) -> None:
-    """Test that a Multilevel Switch CC value with a null device class is discovered as a light.
+    """Test Multilevel Switch CC with null device class is a light.
 
     Tied to #117121.
     """
@@ -664,6 +664,40 @@ async def test_nabu_casa_zwa2_legacy(
     assert state.attributes["friendly_name"] == "Home Assistant Connect ZWA-2 LED", (
         "The LED should have the correct friendly name"
     )
+
+
+@pytest.mark.parametrize("platforms", [[Platform.BINARY_SENSOR, Platform.LIGHT]])
+async def test_fibaro_fgms001_unknown_firmware_setup(
+    hass: HomeAssistant,
+    entity_registry: er.EntityRegistry,
+    device_registry: dr.DeviceRegistry,
+    client: MagicMock,
+    fibaro_fgms001_unknown_firmware: Node,
+    integration: MockConfigEntry,
+) -> None:
+    """Test setup completes when an FGMS001 node has no firmware version.
+
+    Regression test for a crash where comparing AwesomeVersion(None) to a
+    schema's firmware_version_range raised AwesomeVersionCompareException
+    and aborted setup of the whole config entry.
+    """
+    assert integration.state is ConfigEntryState.LOADED
+
+    device = device_registry.async_get_device(
+        identifiers={get_device_id(client.driver, fibaro_fgms001_unknown_firmware)}
+    )
+    assert device is not None
+
+    entries = er.async_entries_for_device(
+        entity_registry, device.id, include_disabled_entities=True
+    )
+    motion_entries = [
+        entry
+        for entry in entries
+        if entry.domain == BINARY_SENSOR_DOMAIN
+        and entry.original_device_class == BinarySensorDeviceClass.MOTION
+    ]
+    assert motion_entries == []
 
 
 @pytest.mark.parametrize("platforms", [[Platform.BINARY_SENSOR, Platform.LIGHT]])
