@@ -107,6 +107,26 @@ class EntityMovementState:
     direction: str | None = None
     in_ignored_zone: bool = False
 
+    def update_period(self) -> float:
+        """Return the mean update period (seconds) between samples, clamped between STALE_THRESHOLD_S_MIN and STALE_THRESHOLD_S_MAX.
+
+        Returns STALE_THRESHOLD_S_MAX if there are fewer than 2 samples.
+        """
+        if len(self.samples) < 2:
+            return STALE_THRESHOLD_S_MAX
+        # Allow for some jitter beyond the threshold.
+        return max(
+            min(
+                1.1
+                * (
+                    self.samples[-1].timestamp - self.samples[0].timestamp
+                ).total_seconds()
+                / (len(self.samples) - 1),
+                STALE_THRESHOLD_S_MAX,
+            ),
+            STALE_THRESHOLD_S_MIN,
+        )
+
 
 @dataclass
 class ProximityData:
@@ -217,12 +237,8 @@ class ProximityDataUpdateCoordinator(DataUpdateCoordinator[ProximityData]):
             if len(mov.samples) > 1:
                 latest = mov.samples[-1].timestamp
                 offset = max((now - latest).total_seconds(), 0)
-                # Allow for some jitter beyond the threshold.
                 stale_threshold_s = min(
-                    1.1
-                    * (latest - mov.samples[0].timestamp).total_seconds()
-                    / (len(mov.samples) - 1)
-                    - offset,
+                    mov.update_period() - offset,
                     stale_threshold_s,
                 )
         stale_threshold_s = max(stale_threshold_s, 0.0)
@@ -244,12 +260,6 @@ class ProximityDataUpdateCoordinator(DataUpdateCoordinator[ProximityData]):
         data = event.data
         entity_id: str = data["entity_id"]
         new_state = data["new_state"]
-
-        if entity_id == self.proximity_zone_id:
-            # Zone geometry changed; distances need to be recalculated but no
-            # new position sample is produced.
-            await self.async_refresh()
-            return
 
         if entity_id not in self.tracked_entities:
             return
@@ -339,20 +349,9 @@ class ProximityDataUpdateCoordinator(DataUpdateCoordinator[ProximityData]):
         if not mov.samples:
             return
         latest = mov.samples[-1].timestamp
-        # Allow for some jitter beyond the threshold.
-        stale_threshold_s = (
-            1.1
-            * (latest - mov.samples[0].timestamp).total_seconds()
-            / (len(mov.samples) - 1)
-            if len(mov.samples) > 1
-            else STALE_THRESHOLD_S_MAX
-        )
-        stale_threshold_s = min(
-            max(stale_threshold_s, STALE_THRESHOLD_S_MIN), STALE_THRESHOLD_S_MAX
-        )
         now = dt_util.utcnow()
         age = (now - latest).total_seconds()
-        if age >= stale_threshold_s:
+        if age >= mov.update_period():
             last = mov.samples[-1]
             mov.samples.append(
                 PositionSample(
@@ -511,19 +510,6 @@ class ProximityDataUpdateCoordinator(DataUpdateCoordinator[ProximityData]):
         Called on state-change events and on decay timer ticks.  At the end of
         each run, a new decay timer is scheduled if at least one entity still
         reports a non-zero speed (meaning its window has not yet fully decayed).
-
-        Key correctness properties
-        --------------------------
-        * Distance is always derived from raw GPS coordinates, never from
-          entity.state zone membership, preventing false zeros from stale
-          secondary trackers.
-        * A deep copy of entities_data is built from scratch each run; there is
-          no partial mutation of self.data before a potential exception, so
-          self.data stays fully consistent after each successful update.
-        * self._movement is the sole persistent store between runs. Its
-          EntityMovementState members may be updated incrementally during the
-          calculation; self.data is rebuilt from scratch and published
-          after a successful update.
         """
         zone_state = self.hass.states.get(self.proximity_zone_id)
         if zone_state is None:
