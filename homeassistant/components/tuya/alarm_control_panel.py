@@ -1,5 +1,6 @@
 """Support for Tuya Alarm."""
 
+from datetime import timedelta
 from typing import override
 
 from tuya_device_handlers.definition.alarm_control_panel import (
@@ -144,7 +145,9 @@ class TuyaAlarmEntity(TuyaEntity, AlarmControlPanelEntity):
         )
 
     @override
-    async def async_alarm_trigger(self, code: str | None = None) -> None:
+    async def async_alarm_trigger(
+        self, code: str | None = None, delay_time: timedelta | None = None
+    ) -> None:
         """Send SOS command."""
         await self._async_send_wrapper_updates(
             self._action_wrapper, TuyaAlarmControlPanelAction.TRIGGER

@@ -1,5 +1,6 @@
 """Support for Template alarm control panels."""
 
+from datetime import timedelta
 from enum import Enum
 import logging
 from typing import TYPE_CHECKING, Any, override
@@ -266,7 +267,9 @@ class AbstractTemplateAlarmControlPanel(
         )
 
     @override
-    async def async_alarm_trigger(self, code: str | None = None) -> None:
+    async def async_alarm_trigger(
+        self, code: str | None = None, delay_time: timedelta | None = None
+    ) -> None:
         """Trigger the panel."""
         await self._async_alarm_arm(
             AlarmControlPanelState.TRIGGERED,

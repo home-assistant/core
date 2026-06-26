@@ -4,6 +4,8 @@ All containing methods are legacy helpers that should not be used by new
 components. Instead call the service directly.
 """
 
+import datetime
+
 from homeassistant.components.alarm_control_panel import (
     DOMAIN,
     AlarmControlPanelEntity,
@@ -13,6 +15,7 @@ from homeassistant.components.alarm_control_panel import (
 from homeassistant.const import (
     ATTR_CODE,
     ATTR_ENTITY_ID,
+    CONF_DELAY_TIME,
     ENTITY_MATCH_ALL,
     SERVICE_ALARM_ARM_AWAY,
     SERVICE_ALARM_ARM_CUSTOM_BYPASS,
@@ -95,7 +98,10 @@ async def async_alarm_arm_vacation(
 
 
 async def async_alarm_trigger(
-    hass: HomeAssistant, code: str | None = None, entity_id: str = ENTITY_MATCH_ALL
+    hass: HomeAssistant,
+    code: str | None = None,
+    entity_id: str = ENTITY_MATCH_ALL,
+    delay_time: datetime.timedelta | None = None,
 ) -> None:
     """Send the alarm the command for disarm."""
     data = {}
@@ -103,6 +109,8 @@ async def async_alarm_trigger(
         data[ATTR_CODE] = code
     if entity_id:
         data[ATTR_ENTITY_ID] = entity_id
+    if delay_time is not None:
+        data[CONF_DELAY_TIME] = delay_time
 
     await hass.services.async_call(DOMAIN, SERVICE_ALARM_TRIGGER, data, blocking=True)
 
@@ -164,7 +172,7 @@ class MockAlarm(MockEntity, AlarmControlPanelEntity):
             self._attr_alarm_state = AlarmControlPanelState.DISARMED
             self.schedule_update_ha_state()
 
-    def alarm_trigger(self, code=None):
+    def alarm_trigger(self, code=None, delay_time=None):
         """Send alarm trigger command."""
         self._attr_alarm_state = AlarmControlPanelState.TRIGGERED
         self.schedule_update_ha_state()

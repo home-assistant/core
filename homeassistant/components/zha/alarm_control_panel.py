@@ -1,5 +1,6 @@
 """Alarm control panels on Zigbee Home Automation networks."""
 
+from datetime import timedelta
 import functools
 from typing import override
 
@@ -112,7 +113,9 @@ class ZHAAlarmControlPanel(ZHAEntity, AlarmControlPanelEntity):
 
     @convert_zha_error_to_ha_error()
     @override
-    async def async_alarm_trigger(self, code: str | None = None) -> None:
+    async def async_alarm_trigger(
+        self, code: str | None = None, delay_time: timedelta | None = None
+    ) -> None:
         """Send alarm trigger command."""
         await self.entity_data.entity.async_alarm_trigger(code)
         self.async_write_ha_state()

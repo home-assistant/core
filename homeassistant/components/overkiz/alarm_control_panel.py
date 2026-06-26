@@ -2,6 +2,7 @@
 
 from collections.abc import Callable
 from dataclasses import dataclass
+from datetime import timedelta
 from typing import Any, cast, override
 
 from pyoverkiz.enums import OverkizCommand, OverkizCommandParam, OverkizState
@@ -292,7 +293,9 @@ class OverkizAlarmControlPanel(OverkizDescriptiveEntity, AlarmControlPanelEntity
         )
 
     @override
-    async def async_alarm_trigger(self, code: str | None = None) -> None:
+    async def async_alarm_trigger(
+        self, code: str | None = None, delay_time: timedelta | None = None
+    ) -> None:
         """Send alarm trigger command."""
         assert self.entity_description.alarm_trigger
         await self.async_execute_command(

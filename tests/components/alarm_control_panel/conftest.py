@@ -1,6 +1,7 @@
 """Fixturs for Alarm Control Panel tests."""
 
 from collections.abc import AsyncGenerator, Generator
+import datetime
 from unittest.mock import MagicMock, patch
 
 import pytest
@@ -95,7 +96,9 @@ class MockAlarmControlPanel(AlarmControlPanelEntity):
         """Mock arm vacation calls."""
         self.calls_arm_vacation(code)
 
-    def alarm_trigger(self, code: str | None = None) -> None:
+    def alarm_trigger(
+        self, code: str | None = None, delay_time: datetime.timedelta | None = None
+    ) -> None:
         """Mock trigger calls."""
         self.calls_trigger(code)
 

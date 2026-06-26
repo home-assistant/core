@@ -1,5 +1,6 @@
 """Support for ESPHome Alarm Control Panel."""
 
+from datetime import timedelta
 from functools import partial
 from typing import override
 
@@ -175,7 +176,9 @@ class EsphomeAlarmControlPanel(
 
     @convert_api_error_ha_error
     @override
-    async def async_alarm_trigger(self, code: str | None = None) -> None:
+    async def async_alarm_trigger(
+        self, code: str | None = None, delay_time: timedelta | None = None
+    ) -> None:
         """Send alarm trigger command."""
         self._client.alarm_control_panel_command(
             self._key,

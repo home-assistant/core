@@ -1,5 +1,6 @@
 """Control a MQTT alarm."""
 
+from datetime import timedelta
 import logging
 from typing import override
 
@@ -275,7 +276,9 @@ class MqttAlarm(MqttEntity, alarm.AlarmControlPanelEntity):
         await self._publish(code, action)
 
     @override
-    async def async_alarm_trigger(self, code: str | None = None) -> None:
+    async def async_alarm_trigger(
+        self, code: str | None = None, delay_time: timedelta | None = None
+    ) -> None:
         """Send trigger command.
 
         This method is a coroutine.

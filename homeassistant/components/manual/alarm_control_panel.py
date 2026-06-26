@@ -240,6 +240,7 @@ class ManualAlarm(AlarmControlPanelEntity, RestoreEntity):
             state: config[state][CONF_DELAY_TIME]
             for state in SUPPORTED_PRETRIGGER_STATES
         }
+        self._overriden_delay_time: datetime.timedelta | None = None
         self._trigger_time_by_state: dict[AlarmControlPanelState, Any] = {
             state: config[state][CONF_TRIGGER_TIME]
             for state in SUPPORTED_PRETRIGGER_STATES
@@ -296,6 +297,9 @@ class ManualAlarm(AlarmControlPanelEntity, RestoreEntity):
 
     def _pending_time(self, state: AlarmControlPanelState) -> datetime.timedelta:
         """Get the pending time."""
+        if self._overriden_delay_time is not None:
+            return self._overriden_delay_time
+
         delay_time: datetime.timedelta = self._delay_time_by_state[self._previous_state]
         return delay_time
 
@@ -356,7 +360,9 @@ class ManualAlarm(AlarmControlPanelEntity, RestoreEntity):
         self._async_update_state(AlarmControlPanelState.ARMED_CUSTOM_BYPASS)
 
     @override
-    async def async_alarm_trigger(self, code: str | None = None) -> None:
+    async def async_alarm_trigger(
+        self, code: str | None = None, delay_time: datetime.timedelta | None = None
+    ) -> None:
         """Send alarm trigger command.
 
         No code needed, a trigger time of zero for the current state
@@ -364,6 +370,7 @@ class ManualAlarm(AlarmControlPanelEntity, RestoreEntity):
         """
         if not self._trigger_time_by_state[self._active_state]:
             return
+        self._overriden_delay_time = delay_time
         self._async_update_state(AlarmControlPanelState.TRIGGERED)
 
     def _async_update_state(self, state: AlarmControlPanelState) -> None:

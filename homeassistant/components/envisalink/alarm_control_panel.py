@@ -1,5 +1,6 @@
 """Support for Envisalink-based alarm control panels (Honeywell/DSC)."""
 
+from datetime import timedelta
 import logging
 from typing import Any, override
 
@@ -178,7 +179,9 @@ class EnvisalinkAlarm(EnvisalinkEntity, AlarmControlPanelEntity):
         self.hass.data[DATA_EVL].arm_away_partition(code, self._partition_number)
 
     @override
-    async def async_alarm_trigger(self, code: str | None = None) -> None:
+    async def async_alarm_trigger(
+        self, code: str | None = None, delay_time: timedelta | None = None
+    ) -> None:
         """Alarm trigger command. Will be used to trigger a panic alarm."""
         self.hass.data[DATA_EVL].panic_alarm(self._panic_type)
 

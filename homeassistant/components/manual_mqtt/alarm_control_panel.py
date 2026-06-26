@@ -393,7 +393,9 @@ class ManualMQTTAlarm(AlarmControlPanelEntity):
         self._async_update_state(AlarmControlPanelState.ARMED_CUSTOM_BYPASS)
 
     @override
-    async def async_alarm_trigger(self, code: str | None = None) -> None:
+    async def async_alarm_trigger(
+        self, code: str | None = None, delay_time: datetime.timedelta | None = None
+    ) -> None:
         """Send alarm trigger command.
 
         No code needed, a trigger time of zero for the current state

@@ -1,5 +1,6 @@
 """Test for the alarm control panel const module."""
 
+import datetime
 from typing import Any
 
 import pytest
@@ -11,6 +12,7 @@ from homeassistant.components.alarm_control_panel import (
 )
 from homeassistant.const import (
     ATTR_CODE,
+    CONF_DELAY_TIME,
     SERVICE_ALARM_ARM_AWAY,
     SERVICE_ALARM_ARM_CUSTOM_BYPASS,
     SERVICE_ALARM_ARM_HOME,
@@ -32,11 +34,14 @@ async def help_test_async_alarm_control_panel_service(
     entity_id: str,
     service: str,
     code: str | None | UndefinedType = UNDEFINED,
+    delay_time: datetime.timedelta | None | UndefinedType = UNDEFINED,
 ) -> None:
     """Help to lock a test lock."""
     data: dict[str, Any] = {"entity_id": entity_id}
     if code is not UNDEFINED:
         data[ATTR_CODE] = code
+    if delay_time is not UNDEFINED:
+        data[CONF_DELAY_TIME] = delay_time
 
     await hass.services.async_call(
         alarm_control_panel.DOMAIN, service, data, blocking=True

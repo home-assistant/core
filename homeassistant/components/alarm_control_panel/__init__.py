@@ -11,6 +11,7 @@ from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import (  # noqa: F401
     ATTR_CODE,
     ATTR_CODE_FORMAT,
+    CONF_DELAY_TIME,
     SERVICE_ALARM_ARM_AWAY,
     SERVICE_ALARM_ARM_CUSTOM_BYPASS,
     SERVICE_ALARM_ARM_HOME,
@@ -48,8 +49,20 @@ SCAN_INTERVAL: Final = timedelta(seconds=30)
 
 CONF_DEFAULT_CODE = "default_code"
 
-ALARM_SERVICE_SCHEMA: Final = make_entity_service_schema(
-    {vol.Optional(ATTR_CODE): cv.string}
+ALARM_SERVICE_STATE_SCHEMA: Final = make_entity_service_schema(
+    {
+        vol.Optional(ATTR_CODE): cv.string,
+    }
+)
+
+ALARM_SERVICE_TRIGGER_SCHEMA: Final = make_entity_service_schema(
+    {
+        vol.Optional(ATTR_CODE): cv.string,
+        vol.Optional(CONF_DELAY_TIME): vol.All(
+            cv.time_period,
+            cv.positive_timedelta,
+        ),
+    }
 )
 
 
@@ -66,42 +79,42 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
 
     component.async_register_entity_service(
         SERVICE_ALARM_DISARM,
-        ALARM_SERVICE_SCHEMA,
+        ALARM_SERVICE_STATE_SCHEMA,
         "async_handle_alarm_disarm",
     )
     component.async_register_entity_service(
         SERVICE_ALARM_ARM_HOME,
-        ALARM_SERVICE_SCHEMA,
+        ALARM_SERVICE_STATE_SCHEMA,
         "async_handle_alarm_arm_home",
         [AlarmControlPanelEntityFeature.ARM_HOME],
     )
     component.async_register_entity_service(
         SERVICE_ALARM_ARM_AWAY,
-        ALARM_SERVICE_SCHEMA,
+        ALARM_SERVICE_STATE_SCHEMA,
         "async_handle_alarm_arm_away",
         [AlarmControlPanelEntityFeature.ARM_AWAY],
     )
     component.async_register_entity_service(
         SERVICE_ALARM_ARM_NIGHT,
-        ALARM_SERVICE_SCHEMA,
+        ALARM_SERVICE_STATE_SCHEMA,
         "async_handle_alarm_arm_night",
         [AlarmControlPanelEntityFeature.ARM_NIGHT],
     )
     component.async_register_entity_service(
         SERVICE_ALARM_ARM_VACATION,
-        ALARM_SERVICE_SCHEMA,
+        ALARM_SERVICE_STATE_SCHEMA,
         "async_handle_alarm_arm_vacation",
         [AlarmControlPanelEntityFeature.ARM_VACATION],
     )
     component.async_register_entity_service(
         SERVICE_ALARM_ARM_CUSTOM_BYPASS,
-        ALARM_SERVICE_SCHEMA,
+        ALARM_SERVICE_STATE_SCHEMA,
         "async_handle_alarm_arm_custom_bypass",
         [AlarmControlPanelEntityFeature.ARM_CUSTOM_BYPASS],
     )
     component.async_register_entity_service(
         SERVICE_ALARM_TRIGGER,
-        ALARM_SERVICE_SCHEMA,
+        ALARM_SERVICE_TRIGGER_SCHEMA,
         "async_alarm_trigger",
         [AlarmControlPanelEntityFeature.TRIGGER],
     )
@@ -269,13 +282,17 @@ class AlarmControlPanelEntity(Entity, cached_properties=CACHED_PROPERTIES_WITH_A
         """Send arm vacation command."""
         await self.hass.async_add_executor_job(self.alarm_arm_vacation, code)
 
-    def alarm_trigger(self, code: str | None = None) -> None:
+    def alarm_trigger(
+        self, code: str | None = None, delay_time: timedelta | None = None
+    ) -> None:
         """Send alarm trigger command."""
         raise NotImplementedError
 
-    async def async_alarm_trigger(self, code: str | None = None) -> None:
+    async def async_alarm_trigger(
+        self, code: str | None = None, delay_time: timedelta | None = None
+    ) -> None:
         """Send alarm trigger command."""
-        await self.hass.async_add_executor_job(self.alarm_trigger, code)
+        await self.hass.async_add_executor_job(self.alarm_trigger, code, delay_time)
 
     @final
     async def async_handle_alarm_arm_custom_bypass(

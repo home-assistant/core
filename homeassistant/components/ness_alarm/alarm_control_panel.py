@@ -1,5 +1,6 @@
 """Support for Ness D8X/D16X alarm panel."""
 
+from datetime import timedelta
 import logging
 from typing import override
 
@@ -95,7 +96,9 @@ class NessAlarmPanel(AlarmControlPanelEntity):
         await self._client.arm_home(code)
 
     @override
-    async def async_alarm_trigger(self, code: str | None = None) -> None:
+    async def async_alarm_trigger(
+        self, code: str | None = None, delay_time: timedelta | None = None
+    ) -> None:
         """Send trigger/panic command."""
         await self._client.panic(code)
 

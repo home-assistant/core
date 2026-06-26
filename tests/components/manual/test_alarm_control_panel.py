@@ -425,6 +425,41 @@ async def test_trigger_with_delay(hass: HomeAssistant) -> None:
     assert state.state == AlarmControlPanelState.TRIGGERED
 
 
+async def test_trigger_with_overriden_delay(hass: HomeAssistant) -> None:
+    """Test trigger method and switch from pending to triggered when delay is forced."""
+    assert await async_setup_component(
+        hass,
+        alarm_control_panel.DOMAIN,
+        {
+            "alarm_control_panel": {
+                "platform": "manual",
+                "name": "test",
+                "code": CODE,
+                "delay_time": 10,
+                "arming_time": 0,
+                "disarm_after_trigger": False,
+            }
+        },
+    )
+    await hass.async_block_till_done()
+
+    entity_id = "alarm_control_panel.test"
+
+    assert hass.states.get(entity_id).state == AlarmControlPanelState.DISARMED
+
+    await common.async_alarm_arm_away(hass, CODE)
+
+    assert hass.states.get(entity_id).state == AlarmControlPanelState.ARMED_AWAY
+
+    await common.async_alarm_trigger(
+        hass, entity_id=entity_id, delay_time=timedelta(seconds=0)
+    )
+
+    state = hass.states.get(entity_id)
+    assert state.attributes["previous_state"] == AlarmControlPanelState.ARMED_AWAY
+    assert state.state == AlarmControlPanelState.TRIGGERED
+
+
 async def test_trigger_zero_trigger_time(hass: HomeAssistant) -> None:
     """Test disabled trigger."""
     assert await async_setup_component(

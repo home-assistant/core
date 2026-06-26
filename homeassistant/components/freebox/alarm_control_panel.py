@@ -1,5 +1,6 @@
 """Support for Freebox alarms."""
 
+from datetime import timedelta
 from typing import Any, override
 
 from homeassistant.components.alarm_control_panel import (
@@ -93,7 +94,9 @@ class FreeboxAlarm(FreeboxHomeEntity, AlarmControlPanelEntity):
         await self.set_home_endpoint_value(self._command_arm_home)
 
     @override
-    async def async_alarm_trigger(self, code: str | None = None) -> None:
+    async def async_alarm_trigger(
+        self, code: str | None = None, delay_time: timedelta | None = None
+    ) -> None:
         """Send alarm trigger command."""
         await self.set_home_endpoint_value(self._command_trigger)
 
