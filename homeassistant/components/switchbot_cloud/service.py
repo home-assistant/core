@@ -1,5 +1,6 @@
 """SwitchBot Cloud Custom Service."""
 
+from dataclasses import fields
 from logging import getLogger
 
 from switchbot_api import ArtFrameCommands
@@ -64,6 +65,39 @@ async def handle_upload_image(call: ServiceCall) -> None:
 
 async def handle_disable_device_webhook(call: ServiceCall) -> None:
     """Handle disable device webhook."""
+    hass = call.hass
+    device_ids = call.data.get("device_id", [])
+    dev_reg = dr.async_get(hass)
+
+    for ha_device_id in device_ids:
+        device = dev_reg.async_get(ha_device_id)
+        if device is None:
+            continue
+        device_mac = next(
+            (iid[1] for iid in device.identifiers if iid[0] == DOMAIN), None
+        )
+        if device_mac:
+            entry_id = next(iter(device.config_entries))
+            entry = hass.config_entries.async_get_entry(entry_id)
+            assert entry is not None
+            devices_data = entry.runtime_data.devices
+
+            for item in fields(devices_data):
+                device_data = getattr(devices_data, item.name)
+                disable_state = (
+                    len(
+                        [
+                            i[1].disable_webhook()
+                            for i in device_data
+                            if i[0].device_id == device_mac
+                        ]
+                    )
+                    > 0
+                )
+                if disable_state:
+                    break
+        else:
+            raise ServiceValidationError("No valid MAC address obtained.")
 
 
 def async_register_services(hass: HomeAssistant) -> None:
