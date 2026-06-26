@@ -147,7 +147,7 @@ class StiebelEltron(CoordinatorEntity[StiebelEltronDataCoordinator], ClimateEnti
     async def async_set_temperature(self, **kwargs: Any) -> None:
         """Set new target temperature."""
         if (target_temperature := kwargs.get(ATTR_TEMPERATURE)) is None:
-            raise ValueError("target temperature must be provided")
+            raise HomeAssistantError("target temperature must be provided")
         _LOGGER.debug("async_set_temperature: %s", target_temperature)
         try:
             await self.coordinator.api_client.set_target_temp(target_temperature)
