@@ -23,7 +23,7 @@ from tests.common import (
     async_load_json_array_fixture,
 )
 
-WATER_LEVEL_SENSOR = "sensor.device_1_water_level"
+WATER_LEVEL_SENSOR = "sensor.device_1_level_from_top"
 IN_FLOW_SENSOR = "sensor.device_1_inflow"
 EXPECTED_WATER_LEVEL = "-0.136786005"
 EXPECTED_IN_FLOW = "24.4735918930962"
@@ -133,7 +133,7 @@ async def test_autoremove_stale_devices(
     await hass.async_block_till_done()
 
     assert len(device_registry.devices) == 1
-    assert hass.states.get("sensor.device_2_water_level") is None
+    assert hass.states.get("sensor.device_2_level_from_top") is None
 
 
 async def test_devices_multiple_created_count(
@@ -147,7 +147,7 @@ async def test_devices_multiple_created_count(
     await setup_integration(hass, mock_config_entry)
 
     assert len(device_registry.devices) == 2
-    assert hass.states.get("sensor.device_3_water_level") is None
+    assert hass.states.get("sensor.device_3_level_from_top") is None
 
     mock_aqvify_client.async_get_devices.return_value = AqvifyDevices(
         await async_load_json_array_fixture(hass, "added_devices.json", DOMAIN)
@@ -158,7 +158,9 @@ async def test_devices_multiple_created_count(
     await hass.async_block_till_done()
 
     assert len(device_registry.devices) == 3
-    assert hass.states.get("sensor.device_3_water_level").state == EXPECTED_WATER_LEVEL
+    assert (
+        hass.states.get("sensor.device_3_level_from_top").state == EXPECTED_WATER_LEVEL
+    )
 
 
 @pytest.mark.parametrize(
