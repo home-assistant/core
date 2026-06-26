@@ -309,7 +309,8 @@ async def async_unload_entry(
 
     await host.stop()
 
-    host.api.baichuan.unregister_callback("privacy_mode_change")
+    host.api.baichuan.unregister_callback("privacy_mode_change_623")
+    host.api.baichuan.unregister_callback("privacy_mode_change_574")
     for channel in host.api.channels:
         if host.api.supported(channel, "battery"):
             host.api.baichuan.unregister_callback(f"camera_{channel}_wake")
