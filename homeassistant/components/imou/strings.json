@@ -51,29 +51,29 @@
       }
     },
     "switch": {
-      "motion_detect": {
-        "name": "Motion detect"
-      },
-      "header_detect": {
-        "name": "Human detect"
-      },
-      "white_light": {
-        "name": "White light"
-      },
-      "close_camera": {
-        "name": "Close camera"
-      },
       "ab_alarm_sound": {
         "name": "Abnormal sound alarm"
       },
       "audio_encode_control": {
         "name": "Audio encode control"
       },
+      "close_camera": {
+        "name": "Close camera"
+      },
+      "header_detect": {
+        "name": "Human detect"
+      },
       "light": {
         "name": "Light"
       },
+      "motion_detect": {
+        "name": "Motion detect"
+      },
       "switch": {
         "name": "Plug switch"
+      },
+      "white_light": {
+        "name": "White light"
       }
     }
   },

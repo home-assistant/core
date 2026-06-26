@@ -10,14 +10,13 @@ from homeassistant.core import HomeAssistant, callback
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
-from .const import PARAM_STATE, imou_device_identifier
+from .const import PARAM_HEADER_DETECT, PARAM_STATE, imou_device_identifier
 from .coordinator import ImouConfigEntry, ImouDataUpdateCoordinator
 from .entity import ImouEntity
 
 PARALLEL_UPDATES = 0
 
 PARAM_MOTION_DETECT = "motion_detect"
-PARAM_HEADER_DETECT = "header_detect"
 PARAM_WHITE_LIGHT = "white_light"
 PARAM_CLOSE_CAMERA = "close_camera"
 PARAM_AB_ALARM_SOUND = "ab_alarm_sound"

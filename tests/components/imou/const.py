@@ -14,6 +14,12 @@ from homeassistant.components.imou.const import (
     PARAM_STATE,
     PARAM_STATUS,
 )
+from homeassistant.components.imou.switch import (
+    PARAM_HEADER_DETECT,
+    PARAM_LIGHT,
+    PARAM_MOTION_DETECT,
+    PARAM_PLUG_SWITCH,
+)
 
 TEST_APP_ID = "test_app_id"
 TEST_APP_SECRET = "test_app_secret"
@@ -35,8 +41,10 @@ UNKNOWN_BUTTON_KEY = "legacy_unknown_button"
 UNKNOWN_SWITCH_KEY = "legacy_unknown_switch"
 
 DEFAULT_SWITCHES = {
-    "motion_detect": {PARAM_STATE: False},
-    "header_detect": {PARAM_STATE: True},
+    PARAM_MOTION_DETECT: {PARAM_STATE: False},
+    PARAM_HEADER_DETECT: {PARAM_STATE: True},
+    PARAM_LIGHT: {PARAM_STATE: False},
+    PARAM_PLUG_SWITCH: {PARAM_STATE: True},
 }
 
 
