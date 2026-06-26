@@ -9,8 +9,9 @@ from miio import (
     AirQualityMonitor,
     Device as MiioDevice,
     DeviceException,
-    DeviceException as GatewayException,
 )
+
+GatewayException = DeviceException
 from miio.integrations.lumi.gateway.gateway import (
     GATEWAY_MODEL_AC_V1,
     GATEWAY_MODEL_AC_V2,
