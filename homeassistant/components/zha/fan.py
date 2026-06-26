@@ -15,7 +15,6 @@ from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from .entity import ZHAEntity
 from .helpers import (
     SIGNAL_ADD_ENTITIES,
-    EntityData,
     async_add_entities as zha_async_add_entities,
     convert_zha_error_to_ha_error,
     get_zha_data,
@@ -46,9 +45,9 @@ class ZhaFan(FanEntity, ZHAEntity):
 
     _attr_translation_key: str = "fan"
 
-    def __init__(self, entity_data: EntityData) -> None:
-        """Initialize the ZHA fan."""
-        super().__init__(entity_data)
+    @override
+    def _update_capability_attrs(self) -> None:
+        """Re-derive capability attributes from the cached state."""
         features = FanEntityFeature(0)
         zha_features: ZHAFanEntityFeature = self._zha_state.supported_features
 

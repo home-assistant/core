@@ -89,12 +89,12 @@ class ZhaCover(ZHAEntity, CoverEntity):
 
         return features
 
-    @property
     @override
-    def supported_features(self) -> CoverEntityFeature:
-        """Return the supported features."""
-        zha_features: ZHACoverEntityFeature = self._zha_state.supported_features
-        return self._convert_supported_features(zha_features)
+    def _update_capability_attrs(self) -> None:
+        """Re-derive capability attributes from the cached state."""
+        self._attr_supported_features = self._convert_supported_features(
+            self._zha_state.supported_features
+        )
 
     @property
     @override

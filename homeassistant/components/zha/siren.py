@@ -24,7 +24,6 @@ from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from .entity import ZHAEntity
 from .helpers import (
     SIGNAL_ADD_ENTITIES,
-    EntityData,
     async_add_entities as zha_async_add_entities,
     convert_zha_error_to_ha_error,
     get_zha_data,
@@ -62,10 +61,9 @@ class ZHASiren(ZHAEntity, SirenEntity):
         WarningMode.Emergency_Panic: "Emergency Panic",
     }
 
-    def __init__(self, entity_data: EntityData, **kwargs: Any) -> None:
-        """Initialize the ZHA siren."""
-        super().__init__(entity_data, **kwargs)
-
+    @override
+    def _update_capability_attrs(self) -> None:
+        """Re-derive capability attributes from the cached state."""
         features: SirenEntityFeature = SirenEntityFeature(0)
         zha_features: ZHASirenEntityFeature = self._zha_state.supported_features
 

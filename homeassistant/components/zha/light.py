@@ -32,7 +32,6 @@ from homeassistant.util import color as color_util
 from .entity import ZHAEntity
 from .helpers import (
     SIGNAL_ADD_ENTITIES,
-    EntityData,
     async_add_entities as zha_async_add_entities,
     convert_zha_error_to_ha_error,
     get_zha_data,
@@ -76,27 +75,24 @@ async def async_setup_entry(
 class Light(LightEntity, ZHAEntity):
     """Representation of a ZHA or ZLL light."""
 
-    def __init__(self, entity_data: EntityData) -> None:
-        """Initialize the ZHA light."""
-        super().__init__(entity_data)
+    @override
+    def _update_capability_attrs(self) -> None:
+        """Re-derive capability attributes from the cached state."""
+        state = self._zha_state
+
         color_modes: set[ColorMode] = set()
         has_brightness = False
-        for color_mode in self._zha_state.supported_color_modes:
+        for color_mode in state.supported_color_modes:
             if color_mode == ZhaColorMode.BRIGHTNESS:
                 has_brightness = True
             if color_mode not in (ZhaColorMode.BRIGHTNESS, ZhaColorMode.ONOFF):
                 color_modes.add(ZHA_TO_HA_COLOR_MODE[color_mode])
-        if color_modes:
-            self._attr_supported_color_modes = color_modes
-        elif has_brightness:
-            color_modes.add(ColorMode.BRIGHTNESS)
-            self._attr_supported_color_modes = color_modes
-        else:
-            color_modes.add(ColorMode.ONOFF)
-            self._attr_supported_color_modes = color_modes
+        if not color_modes:
+            color_modes.add(ColorMode.BRIGHTNESS if has_brightness else ColorMode.ONOFF)
+        self._attr_supported_color_modes = color_modes
 
         features = LightEntityFeature(0)
-        zha_features: ZhaLightEntityFeature = self._zha_state.supported_features
+        zha_features: ZhaLightEntityFeature = state.supported_features
 
         if ZhaLightEntityFeature.EFFECT in zha_features:
             features |= LightEntityFeature.EFFECT
@@ -106,6 +102,14 @@ class Light(LightEntity, ZHAEntity):
             features |= LightEntityFeature.TRANSITION
 
         self._attr_supported_features = features
+
+        self._attr_max_color_temp_kelvin = color_util.color_temperature_mired_to_kelvin(
+            state.min_mireds
+        )
+        self._attr_min_color_temp_kelvin = color_util.color_temperature_mired_to_kelvin(
+            state.max_mireds
+        )
+        self._attr_effect_list = state.effect_list
 
     @property
     @override
@@ -131,18 +135,6 @@ class Light(LightEntity, ZHAEntity):
 
     @property
     @override
-    def max_color_temp_kelvin(self) -> int:
-        """Return the coldest color_temp_kelvin that this light supports."""
-        return color_util.color_temperature_mired_to_kelvin(self._zha_state.min_mireds)
-
-    @property
-    @override
-    def min_color_temp_kelvin(self) -> int:
-        """Return the warmest color_temp_kelvin that this light supports."""
-        return color_util.color_temperature_mired_to_kelvin(self._zha_state.max_mireds)
-
-    @property
-    @override
     def xy_color(self) -> tuple[float, float] | None:
         """Return the xy color value [float, float]."""
         return self._zha_state.xy_color
@@ -164,12 +156,6 @@ class Light(LightEntity, ZHAEntity):
         if self._zha_state.color_mode is None:
             return ColorMode.UNKNOWN
         return ZHA_TO_HA_COLOR_MODE[self._zha_state.color_mode]
-
-    @property
-    @override
-    def effect_list(self) -> list[str] | None:
-        """Return the list of supported effects."""
-        return self._zha_state.effect_list
 
     @property
     @override

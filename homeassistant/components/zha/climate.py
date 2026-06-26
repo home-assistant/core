@@ -34,7 +34,6 @@ from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from .entity import ZHAEntity
 from .helpers import (
     SIGNAL_ADD_ENTITIES,
-    EntityData,
     async_add_entities as zha_async_add_entities,
     convert_zha_error_to_ha_error,
     exclude_none_values,
@@ -88,15 +87,18 @@ class Thermostat(ZHAEntity, ClimateEntity):
     _attr_temperature_unit = UnitOfTemperature.CELSIUS
     _attr_translation_key: str = "thermostat"
 
-    def __init__(self, entity_data: EntityData, **kwargs: Any) -> None:
-        """Initialize the ZHA thermostat entity."""
-        super().__init__(entity_data, **kwargs)
-        self._attr_hvac_modes = [
-            ZHA_TO_HA_HVAC_MODE[mode] for mode in self._zha_state.hvac_modes
-        ]
+    @override
+    def _update_capability_attrs(self) -> None:
+        """Re-derive capability attributes from the cached state."""
+        state = self._zha_state
+        self._attr_hvac_modes = [ZHA_TO_HA_HVAC_MODE[mode] for mode in state.hvac_modes]
+        self._attr_fan_modes = state.fan_modes
+        self._attr_preset_modes = state.preset_modes
+        self._attr_min_temp = state.min_temp
+        self._attr_max_temp = state.max_temp
 
         features: ClimateEntityFeature = ClimateEntityFeature(0)
-        zha_features: ZHAClimateEntityFeature = self._zha_state.supported_features
+        zha_features: ZHAClimateEntityFeature = state.supported_features
 
         if ZHAClimateEntityFeature.TARGET_TEMPERATURE in zha_features:
             features |= ClimateEntityFeature.TARGET_TEMPERATURE
@@ -153,21 +155,9 @@ class Thermostat(ZHAEntity, ClimateEntity):
 
     @property
     @override
-    def fan_modes(self) -> list[str] | None:
-        """Return supported FAN modes."""
-        return self._zha_state.fan_modes
-
-    @property
-    @override
     def preset_mode(self) -> str:
         """Return current preset mode."""
         return self._zha_state.preset_mode
-
-    @property
-    @override
-    def preset_modes(self) -> list[str] | None:
-        """Return supported preset modes."""
-        return self._zha_state.preset_modes
 
     @property
     @override
@@ -186,18 +176,6 @@ class Thermostat(ZHAEntity, ClimateEntity):
     def target_temperature_low(self) -> float | None:
         """Return the lower bound temperature we try to reach."""
         return self._zha_state.target_temperature_low
-
-    @property
-    @override
-    def max_temp(self) -> float:
-        """Return the maximum temperature."""
-        return self._zha_state.max_temp
-
-    @property
-    @override
-    def min_temp(self) -> float:
-        """Return the minimum temperature."""
-        return self._zha_state.min_temp
 
     @property
     @override

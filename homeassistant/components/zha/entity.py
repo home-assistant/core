@@ -83,6 +83,8 @@ class ZHAEntity(LogMixin, RestoreEntity, Entity):
         if meta.translation_placeholders is not None:
             self._attr_translation_placeholders = meta.translation_placeholders
 
+        self._update_capability_attrs()
+
     @cached_property
     @override
     def name(self) -> str | UndefinedType | None:
@@ -147,11 +149,15 @@ class ZHAEntity(LogMixin, RestoreEntity, Entity):
             )
         return device_info
 
+    def _update_capability_attrs(self) -> None:
+        """Re-derive capability `_attr_*` attributes from the cached state."""
+
     @callback
     def _handle_zha_entity_state_changed(self, event: EntityStateChangedEvent) -> None:
         """Handle a state change reported by the ZHA library entity."""
         self.debug("Handling event from entity: %s", event)
         self._zha_state = dataclasses.replace(self._zha_state, **event.state_diff)
+        self._update_capability_attrs()
         self.async_write_ha_state()
 
     @override
