@@ -42,6 +42,7 @@ class RiscoCloudEntity(Entity):
         """Handle a state update from the cloud."""
         self.async_write_ha_state()
 
+    @override
     async def async_added_to_hass(self) -> None:
         """Subscribe to updates."""
         self.async_on_remove(
@@ -104,11 +105,13 @@ class RiscoCloudZoneEntity(RiscoZoneEntity, RiscoCloudEntity):
             **kwargs,
         )
 
+    @override
     @callback
     def _handle_update(self) -> None:
         self._zone = self._cloud_data.alarm.zones[self._zone_id]
         self.async_write_ha_state()
 
+    @override
     async def async_added_to_hass(self) -> None:
         """Subscribe to updates."""
         await super().async_added_to_hass()

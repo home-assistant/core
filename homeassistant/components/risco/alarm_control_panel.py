@@ -209,6 +209,7 @@ class RiscoCloudAlarm(RiscoAlarm, RiscoCloudEntity):
             manufacturer="Risco",
         )
 
+    @override
     @callback
     def _handle_update(self) -> None:
         self._partition = self._cloud_data.alarm.partitions[self._partition_id]
