@@ -1,16 +1,4 @@
-get_description:
-  target:
-    entity:
-      domain: binary_sensor
-      integration: nina
-
-get_affected_areas:
-  target:
-    entity:
-      domain: binary_sensor
-      integration: nina
-
-get_recommended_actions:
+get_details:
   target:
     entity:
       domain: binary_sensor
