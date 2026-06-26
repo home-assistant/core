@@ -1,7 +1,7 @@
 """Tests for the Yoto media player platform."""
 
 from typing import Any
-from unittest.mock import MagicMock
+from unittest.mock import MagicMock, patch
 
 from freezegun.api import FrozenDateTimeFactory
 import pytest
@@ -22,7 +22,7 @@ from homeassistant.components.media_player import (
     SERVICE_VOLUME_SET,
     MediaPlayerState,
 )
-from homeassistant.const import ATTR_ENTITY_ID, STATE_UNAVAILABLE
+from homeassistant.const import ATTR_ENTITY_ID, STATE_UNAVAILABLE, Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError, ServiceValidationError
 from homeassistant.helpers import entity_registry as er
@@ -68,7 +68,8 @@ async def test_entity_state(
 ) -> None:
     """Snapshot the media player entity state."""
     freezer.move_to("2026-05-08T12:00:00+00:00")
-    await setup_integration(hass, mock_config_entry)
+    with patch("homeassistant.components.yoto.PLATFORMS", [Platform.MEDIA_PLAYER]):
+        await setup_integration(hass, mock_config_entry)
     await snapshot_platform(hass, entity_registry, snapshot, mock_config_entry.entry_id)
 
 
@@ -145,7 +146,7 @@ async def test_state_unavailable_when_offline(
 ) -> None:
     """When the player reports offline the entity is unavailable."""
     player = next(iter(mock_yoto_client.players.values()))
-    player.status.is_online = False
+    player.is_online = False
 
     await setup_integration(hass, mock_config_entry)
 

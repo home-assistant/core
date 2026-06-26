@@ -2,7 +2,7 @@
 
 from datetime import timedelta
 import logging
-from typing import TYPE_CHECKING, Any
+from typing import TYPE_CHECKING, Any, override
 
 import pyenvertechevt800
 
@@ -39,6 +39,7 @@ class EnvertechEVT800Coordinator(DataUpdateCoordinator[dict[str, Any]]):
         self.client = client
         client.set_data_listener(self.async_set_updated_data)
 
+    @override
     async def _async_update_data(self) -> dict[str, Any]:
         """Fetch data from the device."""
         return self.client.data

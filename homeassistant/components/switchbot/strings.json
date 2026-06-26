@@ -356,6 +356,12 @@
       "child_lock": {
         "name": "Child lock"
       },
+      "horizontal_oscillation": {
+        "name": "Horizontal oscillation"
+      },
+      "vertical_oscillation": {
+        "name": "Vertical oscillation"
+      },
       "wireless_charging": {
         "name": "Wireless charging"
       }

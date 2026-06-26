@@ -625,9 +625,7 @@ async def test_hassio_confirm(
     assert result["description_placeholders"] == {"addon": "Mosquitto Mqtt Broker"}
 
     mock_try_connection_success.reset_mock()
-    result = await hass.config_entries.flow.async_configure(
-        result["flow_id"], {"discovery": True}
-    )
+    result = await hass.config_entries.flow.async_configure(result["flow_id"], {})
 
     assert result["type"] is FlowResultType.CREATE_ENTRY
     assert result["result"].data == {
@@ -636,7 +634,6 @@ async def test_hassio_confirm(
         "port": 1883,
         "username": "mock-user",
         "password": "mock-pass",
-        "discovery": True,
     }
     # Check we tried the connection
     assert len(mock_try_connection_success.mock_calls)
@@ -673,9 +670,7 @@ async def test_hassio_cannot_connect(
     assert result["description_placeholders"] == {"addon": "Mock Addon"}
 
     mock_try_connection_time_out.reset_mock()
-    result = await hass.config_entries.flow.async_configure(
-        result["flow_id"], {"discovery": True}
-    )
+    result = await hass.config_entries.flow.async_configure(result["flow_id"], {})
 
     assert result["type"] is FlowResultType.FORM
     assert result["errors"]["base"] == "cannot_connect"
@@ -732,7 +727,6 @@ async def test_addon_flow_with_supervisor_addon_running(
         "port": 1883,
         "username": "mock-user",
         "password": "mock-pass",
-        "discovery": True,
     }
     # Check we tried the connection
     assert len(mock_try_connection_success.mock_calls)
@@ -800,7 +794,6 @@ async def test_addon_flow_with_supervisor_addon_installed(
         "port": 1883,
         "username": "mock-user",
         "password": "mock-pass",
-        "discovery": True,
     }
     # Check we tried the connection
     assert len(mock_try_connection_success.mock_calls)
@@ -1040,7 +1033,6 @@ async def test_addon_flow_with_supervisor_addon_not_installed(
         "port": 1883,
         "username": "mock-user",
         "password": "mock-pass",
-        "discovery": True,
     }
     # Check we tried the connection
     assert len(mock_try_connection_success.mock_calls)
@@ -2586,8 +2578,8 @@ async def test_reconfigure_no_changed_password(
         "expected_minor_version",
     ),
     [
-        (1, 1, MOCK_ENTRY_DATA | MOCK_ENTRY_OPTIONS, {}, 1, 2),
-        (1, 2, MOCK_ENTRY_DATA, MOCK_ENTRY_OPTIONS, 1, 2),
+        (1, 1, MOCK_ENTRY_DATA | MOCK_ENTRY_OPTIONS, {}, 2, 1),
+        (1, 2, MOCK_ENTRY_DATA, MOCK_ENTRY_OPTIONS, 2, 1),
         (2, 1, MOCK_ENTRY_DATA, MOCK_ENTRY_OPTIONS, 2, 1),
     ],
 )
@@ -2621,46 +2613,6 @@ async def test_migrate_config_entry(
     )
     assert config_entry.version == expected_version
     assert config_entry.minor_version == expected_minor_version
-
-
-@pytest.mark.parametrize(
-    (
-        "version",
-        "minor_version",
-        "data",
-        "options",
-    ),
-    [
-        (2, 2, MOCK_ENTRY_DATA, MOCK_ENTRY_OPTIONS),
-        (3, 1, MOCK_ENTRY_DATA, MOCK_ENTRY_OPTIONS),
-    ],
-)
-@pytest.mark.usefixtures("mock_reload_after_entry_update")
-async def test_migrate_of_incompatible_config_entry(
-    hass: HomeAssistant,
-    mqtt_mock_entry: MqttMockHAClientGenerator,
-    version: int,
-    minor_version: int,
-    data: dict[str, Any],
-    options: dict[str, Any],
-) -> None:
-    """Test migrating a config entry."""
-    config_entry = hass.config_entries.async_entries(DOMAIN)[0]
-    # Mock an incompatible config entry version
-    hass.config_entries.async_update_entry(
-        config_entry,
-        data=data,
-        options=options,
-        version=version,
-        minor_version=minor_version,
-    )
-    await hass.async_block_till_done()
-
-    # Try to start MQTT with incompatible config entry
-    with pytest.raises(AssertionError):
-        await mqtt_mock_entry()
-
-    assert config_entry.state is config_entries.ConfigEntryState.MIGRATION_ERROR
 
 
 @pytest.mark.parametrize(
@@ -2794,7 +2746,7 @@ async def test_migrate_of_incompatible_config_entry(
             {
                 "state_topic": "test-topic",
                 "value_template": "{{ value_json.value }}",
-                "advanced_settings": {"expire_after": 1200, "off_delay": 5},
+                "other_settings": {"expire_after": 1200, "off_delay": 5},
             },
             (
                 (
@@ -3458,10 +3410,10 @@ async def test_migrate_of_incompatible_config_entry(
                 (
                     {
                         "command_topic": "test-topic",
-                        "advanced_settings": {"max_kelvin": 2000, "min_kelvin": 2000},
+                        "other_settings": {"max_kelvin": 2000, "min_kelvin": 2000},
                     },
                     {
-                        "advanced_settings": "max_below_min_kelvin",
+                        "other_settings": "max_below_min_kelvin",
                     },
                 ),
             ),
@@ -3740,7 +3692,7 @@ async def test_migrate_of_incompatible_config_entry(
             {
                 "state_topic": "test-topic",
                 "value_template": "{{ value_json.value }}",
-                "advanced_settings": {"expire_after": 30},
+                "other_settings": {"expire_after": 30},
             },
             (
                 (
@@ -3806,7 +3758,7 @@ async def test_migrate_of_incompatible_config_entry(
                 "available_tones": ["Happy hour", "Cooling alarm"],
                 "support_duration": True,
                 "support_volume_set": True,
-                "siren_advanced_settings": {
+                "siren_other_settings": {
                     "command_off_template": "{{ value }}",
                 },
             },
@@ -3867,7 +3819,7 @@ async def test_migrate_of_incompatible_config_entry(
                 "state_topic": "test-topic",
                 "value_template": "{{ value_json.value }}",
                 "retain": False,
-                "text_advanced_settings": {
+                "text_other_settings": {
                     "min": 0,
                     "max": 10,
                     "mode": "password",
@@ -3889,26 +3841,26 @@ async def test_migrate_of_incompatible_config_entry(
                 (
                     {
                         "command_topic": "test-topic",
-                        "text_advanced_settings": {
+                        "text_other_settings": {
                             "min": 20,
                             "max": 10,
                             "mode": "password",
                             "pattern": "^[a-z_]*$",
                         },
                     },
-                    {"text_advanced_settings": "max_below_min"},
+                    {"text_other_settings": "max_below_min"},
                 ),
                 (
                     {
                         "command_topic": "test-topic",
-                        "text_advanced_settings": {
+                        "text_other_settings": {
                             "min": 0,
                             "max": 10,
                             "mode": "password",
                             "pattern": "(",
                         },
                     },
-                    {"text_advanced_settings": "invalid_regular_expression"},
+                    {"text_other_settings": "invalid_regular_expression"},
                 ),
             ),
             "Milk notifier MOTD",
@@ -4801,7 +4753,7 @@ async def test_subentry_reconfigure_edit_entity_multi_entitites(
                 "device_class": "battery",
                 "state_class": "measurement",
                 "unit_of_measurement": "%",
-                "advanced_settings": {"suggested_display_precision": 1},
+                "other_settings": {"suggested_display_precision": 1},
             },
             {
                 "state_topic": "test-topic1-updated",
@@ -5265,21 +5217,21 @@ async def test_subentry_reconfigure_update_device_properties(
         "model_id": {"suggested_value": "mn002"},
         "manufacturer": {"suggested_value": "Milk Masters"},
         "configuration_url": {"suggested_value": "https://example.com"},
-        "advanced_settings": None,
+        "other_settings": None,
         "mqtt_settings": None,
     }
 
-    advanced_settings_key_descriptions = {
+    other_settings_key_descriptions = {
         key: key.description
         for key, value in result["data_schema"]
-        .schema["advanced_settings"]
+        .schema["other_settings"]
         .schema.schema.items()
     }
-    assert advanced_settings_key_descriptions == {
+    assert other_settings_key_descriptions == {
         "sw_version": {"suggested_value": "1.0"},
         "hw_version": {"suggested_value": "2.1 rev a"},
     }
-    assert result["data_schema"].schema["advanced_settings"].options == {
+    assert result["data_schema"].schema["other_settings"].options == {
         "collapsed": False
     }
 
@@ -5304,7 +5256,7 @@ async def test_subentry_reconfigure_update_device_properties(
         result["flow_id"],
         user_input={
             "name": "Beer notifier",
-            "advanced_settings": {"sw_version": "1.1"},
+            "other_settings": {"sw_version": "1.1"},
             "model": "Beer bottle XL",
             "model_id": "bn003",
             "manufacturer": "Beer Masters",

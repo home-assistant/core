@@ -11,6 +11,7 @@ from homeassistant.components import calendar, todo
 from homeassistant.components.homeassistant.exposed_entities import async_expose_entity
 from homeassistant.components.intent import async_register_timer_handler
 from homeassistant.components.script import ScriptConfig
+from homeassistant.const import EntityStateAttribute
 from homeassistant.core import Context, HomeAssistant, State, SupportsResponse
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import (
@@ -479,7 +480,12 @@ async def test_assist_api_prompt(
     hass.states.async_set(
         entry1.entity_id,
         "on",
-        {"friendly_name": "Kitchen", "temperature": Decimal("0.9"), "humidity": 65},
+        {
+            "friendly_name": "Kitchen",
+            "temperature": Decimal("0.9"),
+            "humidity": 65,
+            EntityStateAttribute.UNIT_OF_MEASUREMENT: "°C",
+        },
     )
     hass.states.async_set(entry2.entity_id, "on", {"friendly_name": "Living Room"})
 
@@ -636,6 +642,7 @@ Live Context: An overview of the areas and the devices in this smart home:
   attributes:
     temperature: '0.9'
     humidity: '65'
+    unit_of_measurement: °C
 - names: Living Room
   domain: light
   state: 'on'
@@ -891,6 +898,23 @@ async def test_get_live_context_tool_filter(
         original_name="Front Door",
         suggested_object_id="front_door",
     )
+    # Two entities sharing the same name in different areas
+    office_ac = entity_registry.async_get_or_create(
+        "climate",
+        "test",
+        "office_ac",
+        original_name="AC",
+        device_id=office_device.id,
+        suggested_object_id="office_ac",
+    )
+    kitchen_ac = entity_registry.async_get_or_create(
+        "climate",
+        "test",
+        "kitchen_ac",
+        original_name="AC",
+        device_id=kitchen_device.id,
+        suggested_object_id="kitchen_ac",
+    )
     entity_registry.async_update_entity(
         kitchen_light.entity_id, aliases=[er.COMPUTED_NAME, "Cooking Lamp"]
     )
@@ -900,6 +924,8 @@ async def test_get_live_context_tool_filter(
         kitchen_light.entity_id,
         office_switch.entity_id,
         front_door.entity_id,
+        office_ac.entity_id,
+        kitchen_ac.entity_id,
     ):
         async_expose_entity(hass, "conversation", entity_id, True)
 
@@ -907,6 +933,8 @@ async def test_get_live_context_tool_filter(
     hass.states.async_set(kitchen_light.entity_id, "off")
     hass.states.async_set(office_switch.entity_id, "on")
     hass.states.async_set(front_door.entity_id, "locked")
+    hass.states.async_set(office_ac.entity_id, "cool")
+    hass.states.async_set(kitchen_ac.entity_id, "heat")
 
     api = await llm.async_get_api(hass, "assist", llm_context)
 
@@ -1104,13 +1132,38 @@ async def test_get_live_context_tool_filter(
     result = await api.async_call_tool(
         llm.ToolInput(
             tool_name="GetLiveContext",
-            tool_args={"domain": "climate"},
+            tool_args={"domain": "fan"},
         )
     )
     assert result == {
         "success": False,
-        "error": "No exposed entities found in domain(s): climate",
+        "error": "No exposed entities found in domain(s): fan",
     }
+
+    # Entities sharing a name are all returned rather than failing as an
+    # ambiguous match, since this tool only returns context.
+    result = await api.async_call_tool(
+        llm.ToolInput(
+            tool_name="GetLiveContext",
+            tool_args={"name": "AC"},
+        )
+    )
+    assert result["success"] is True
+    assert result["result"].count("domain: climate") == 2
+    assert "Office" in result["result"]
+    assert "Kitchen" in result["result"]
+
+    # Combining a shared name with an area narrows to the single match
+    result = await api.async_call_tool(
+        llm.ToolInput(
+            tool_name="GetLiveContext",
+            tool_args={"name": "AC", "area": "Kitchen"},
+        )
+    )
+    assert result["success"] is True
+    assert result["result"].count("domain: climate") == 1
+    assert "Kitchen" in result["result"]
+    assert "Office" not in result["result"]
 
 
 async def test_script_tool(
@@ -1188,7 +1241,7 @@ async def test_script_tool(
     assert tool.name == "test_script"
     assert (
         tool.description
-        == "This is a test script. Aliases: ['script name', 'script alias']"
+        == "This is a test script. Aliases: ['script alias', 'script name']"
     )
     schema = {
         vol.Required("beer", description="Number of beers"): cv.string,
@@ -1203,7 +1256,7 @@ async def test_script_tool(
 
     assert hass.data[llm.ACTION_PARAMETERS_CACHE]["script"] == {
         "test_script": (
-            "This is a test script. Aliases: ['script name', 'script alias']",
+            "This is a test script. Aliases: ['script alias', 'script name']",
             vol.Schema(schema),
         ),
         "script_with_no_fields": (
@@ -1312,14 +1365,14 @@ async def test_script_tool(
     assert tool.name == "test_script"
     assert (
         tool.description
-        == "This is a new test script. Aliases: ['script name', 'script alias']"
+        == "This is a new test script. Aliases: ['script alias', 'script name']"
     )
     schema = {vol.Required("beer", description="Number of beers"): cv.string}
     assert tool.parameters.schema == schema
 
     assert hass.data[llm.ACTION_PARAMETERS_CACHE]["script"] == {
         "test_script": (
-            "This is a new test script. Aliases: ['script name', 'script alias']",
+            "This is a new test script. Aliases: ['script alias', 'script name']",
             vol.Schema(schema),
         ),
         "script_with_no_fields": (

@@ -1,6 +1,6 @@
 """Support for Home Assistant iOS app sensors."""
 
-from typing import Any
+from typing import Any, override
 
 from homeassistant.components.sensor import (
     SensorDeviceClass,
@@ -95,6 +95,7 @@ class IOSSensor(SensorEntity):
         self._attr_unique_id = f"{description.key}_{device_id}"
 
     @property
+    @override
     def device_info(self) -> DeviceInfo:
         """Return information about the device."""
         return DeviceInfo(
@@ -111,6 +112,7 @@ class IOSSensor(SensorEntity):
         )
 
     @property
+    @override
     def extra_state_attributes(self) -> dict[str, Any]:
         """Return the device state attributes."""
         device = self._device[ATTR_DEVICE]
@@ -124,6 +126,7 @@ class IOSSensor(SensorEntity):
         }
 
     @property
+    @override
     def icon(self) -> str:
         """Return the icon to use in the frontend, if any."""
         device_battery = self._device[ATTR_BATTERY]
@@ -155,6 +158,7 @@ class IOSSensor(SensorEntity):
         ]
         self.async_write_ha_state()
 
+    @override
     async def async_added_to_hass(self) -> None:
         """Handle addition to hass: register to dispatch."""
         self._attr_native_value = self._device[ATTR_BATTERY][

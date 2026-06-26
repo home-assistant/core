@@ -1,6 +1,7 @@
 """Support EZVIZ last motion image."""
 
 import logging
+from typing import override
 
 from propcache.api import cached_property
 from pyezvizapi.exceptions import PyEzvizError
@@ -62,10 +63,12 @@ class EzvizLastMotion(EzvizEntity, ImageEntity):
         )
 
     @cached_property
+    @override
     def available(self) -> bool:
         """Entity gets data from ezviz API so always available."""
         return True
 
+    @override
     async def _async_load_image_from_url(self, url: str) -> Image | None:
         """Load an image by url."""
         if response := await self._fetch_url(url):
@@ -90,6 +93,7 @@ class EzvizLastMotion(EzvizEntity, ImageEntity):
         return None
 
     @callback
+    @override
     def _handle_coordinator_update(self) -> None:
         """Handle updated data from the coordinator."""
         if (

@@ -319,6 +319,16 @@ async def test_reauth_flow_update_configuration(
     assert result["type"] is FlowResultType.FORM
     assert result["step_id"] == "user"
 
+    context = next(
+        flow["context"]
+        for flow in hass.config_entries.flow.async_progress()
+        if flow["flow_id"] == result["flow_id"]
+    )
+    assert context["title_placeholders"] == {
+        "host": config_entry.data[CONF_HOST],
+        "name": config_entry.title,
+    }
+
     with patch(
         "homeassistant.components.unifi.UnifiHub.available", new_callable=PropertyMock
     ) as ws_mock:
@@ -439,7 +449,9 @@ async def test_discover_unifi_negative(hass: HomeAssistant) -> None:
 INTEGRATION_DISCOVERY_INFO = {
     "source_ip": "10.0.0.1",
     "hw_addr": "e0:63:da:20:14:a9",
+    "name": "Dream Machine Pro",
     "hostname": "UniFi-Dream-Machine",
+    "product_name": "UDMPRO",
     "platform": "UCG-Ultra",
     "direct_connect_domain": "x.ui.direct",
 }
@@ -461,11 +473,52 @@ async def test_flow_integration_discovery(hass: HomeAssistant) -> None:
         for flow in hass.config_entries.flow.async_progress()
         if flow["flow_id"] == result["flow_id"]
     )
-    assert context["title_placeholders"] == {
-        "host": "x.ui.direct",
-        "site": "default",
-    }
     assert context["configuration_url"] == "https://x.ui.direct"
+
+
+@pytest.mark.parametrize(
+    ("extra_info", "expected_name"),
+    [
+        (
+            {
+                "name": "Dream Machine Pro",
+                "hostname": "UniFi-Dream-Machine",
+                "product_name": "UDMPRO",
+            },
+            "Dream Machine Pro",
+        ),
+        (
+            {"hostname": "UniFi-Dream-Machine", "product_name": "UDMPRO"},
+            "UniFi-Dream-Machine",
+        ),
+        ({"product_name": "UDMPRO"}, "UDMPRO"),
+        ({}, "UniFi Network"),
+    ],
+    ids=["name", "hostname", "product_name", "fallback"],
+)
+async def test_flow_integration_discovery_title(
+    hass: HomeAssistant, extra_info: dict[str, str], expected_name: str
+) -> None:
+    """Test discovery title priority: name, hostname, product_name, then fallback."""
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN,
+        context={"source": config_entries.SOURCE_INTEGRATION_DISCOVERY},
+        data={
+            "source_ip": "10.0.0.1",
+            "hw_addr": "e0:63:da:20:14:a9",
+            "direct_connect_domain": "x.ui.direct",
+            **extra_info,
+        },
+    )
+    context = next(
+        flow["context"]
+        for flow in hass.config_entries.flow.async_progress()
+        if flow["flow_id"] == result["flow_id"]
+    )
+    assert context["title_placeholders"] == {
+        "host": "10.0.0.1",
+        "name": expected_name,
+    }
 
 
 @pytest.mark.usefixtures("config_entry")
@@ -496,16 +549,6 @@ async def test_flow_integration_discovery_uses_direct_connect_domain(
     )
     assert result["type"] is FlowResultType.FORM
     assert result["step_id"] == "user"
-
-    context = next(
-        flow["context"]
-        for flow in hass.config_entries.flow.async_progress()
-        if flow["flow_id"] == result["flow_id"]
-    )
-    assert context["title_placeholders"] == {
-        "host": "x.ui.direct",
-        "site": "default",
-    }
 
     schema_defaults = {
         marker.schema: marker.default()
@@ -599,6 +642,6 @@ async def test_flow_integration_discovery_gets_form_with_ignored_entry(
         if flow["flow_id"] == result["flow_id"]
     )
     assert context["title_placeholders"] == {
-        "host": "x.ui.direct",
-        "site": "default",
+        "host": "10.0.0.1",
+        "name": "Dream Machine Pro",
     }

@@ -3,7 +3,7 @@
 from collections.abc import Callable
 from dataclasses import dataclass
 import logging
-from typing import Any
+from typing import Any, override
 
 from mypermobil import (
     BATTERY_AMPERE_HOURS_LEFT,
@@ -198,6 +198,7 @@ class PermobilSensor(PermobilEntity, SensorEntity):
     entity_description: PermobilSensorEntityDescription
 
     @property
+    @override
     def native_unit_of_measurement(self) -> str | None:
         """Return the unit of measurement of the sensor."""
         if self.entity_description.key == "record_distance":
@@ -207,6 +208,7 @@ class PermobilSensor(PermobilEntity, SensorEntity):
         return self.entity_description.native_unit_of_measurement
 
     @property
+    @override
     def available(self) -> bool:
         """Return True if the sensor has value."""
         return super().available and self.entity_description.available_fn(
@@ -214,6 +216,7 @@ class PermobilSensor(PermobilEntity, SensorEntity):
         )
 
     @property
+    @override
     def native_value(self) -> float | int:
         """Return the value of the sensor."""
         return self.entity_description.value_fn(self.coordinator.data)

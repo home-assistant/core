@@ -707,6 +707,15 @@
     }
   },
   "exceptions": {
+    "addon_not_installed": {
+      "message": "The Matter Server app is not installed yet."
+    },
+    "addon_not_ready": {
+      "message": "The Matter Server app is not ready yet."
+    },
+    "addon_not_running": {
+      "message": "The Matter Server app is not running yet."
+    },
     "credential_type_not_supported": {
       "message": "The lock does not support credential type `{credential_type}`."
     },
@@ -718,6 +727,10 @@
     }
   },
   "issues": {
+    "ipv6_disabled": {
+      "description": "Matter relies on IPv6 to communicate with some devices, but IPv6 is disabled on all of your connected network interfaces. Locally connected Wi-Fi and Ethernet devices may still work, but features such as using an external Thread border router need IPv6 enabled. Select \"Learn more\" to open the network settings.",
+      "title": "IPv6 is disabled but required by Matter"
+    },
     "server_version_version_too_new": {
       "description": "The version of the Matter Server you are currently running is too new for this version of Home Assistant. Please update Home Assistant or downgrade the Matter Server to an older version to fix this issue.",
       "title": "Older version of Matter Server needed"

@@ -4,6 +4,7 @@ from numato_gpio import NumatoGpioError
 import pytest
 
 from homeassistant.components import numato
+from homeassistant.components.numato import DOMAIN
 from homeassistant.core import HomeAssistant
 from homeassistant.setup import async_setup_component
 
@@ -19,7 +20,7 @@ async def test_setup_no_devices(
     without raising.
     """
     monkeypatch.setattr(numato_fixture, "discover", mockup_return)
-    assert await async_setup_component(hass, "numato", NUMATO_CFG)
+    assert await async_setup_component(hass, DOMAIN, NUMATO_CFG)
     assert len(numato_fixture.devices) == 0
 
 
@@ -31,7 +32,7 @@ async def test_fail_setup_raising_discovery(
     Setup shall return False.
     """
     monkeypatch.setattr(numato_fixture, "discover", mockup_raise)
-    assert not await async_setup_component(hass, "numato", NUMATO_CFG)
+    assert not await async_setup_component(hass, DOMAIN, NUMATO_CFG)
     await hass.async_block_till_done()
 
 
@@ -82,7 +83,7 @@ async def test_invalid_port_number(hass: HomeAssistant, numato_fixture, config) 
     port1_config = sensorports_cfg["1"]
     sensorports_cfg["one"] = port1_config
     del sensorports_cfg["1"]
-    assert not await async_setup_component(hass, "numato", config)
+    assert not await async_setup_component(hass, DOMAIN, config)
     await hass.async_block_till_done()
     assert not numato_fixture.devices
 
@@ -97,7 +98,7 @@ async def test_too_low_adc_port_number(
 
     sensorports_cfg = config["numato"]["devices"][0]["sensors"]["ports"]
     sensorports_cfg.update({0: {"name": "toolow"}})
-    assert not await async_setup_component(hass, "numato", config)
+    assert not await async_setup_component(hass, DOMAIN, config)
     assert not numato_fixture.devices
 
 
@@ -110,7 +111,7 @@ async def test_too_high_adc_port_number(
     """
     sensorports_cfg = config["numato"]["devices"][0]["sensors"]["ports"]
     sensorports_cfg.update({8: {"name": "toohigh"}})
-    assert not await async_setup_component(hass, "numato", config)
+    assert not await async_setup_component(hass, DOMAIN, config)
     assert not numato_fixture.devices
 
 
@@ -123,7 +124,7 @@ async def test_invalid_adc_range_value_type(
     """
     sensorports_cfg = config["numato"]["devices"][0]["sensors"]["ports"]
     sensorports_cfg["1"]["source_range"][0] = "zero"
-    assert not await async_setup_component(hass, "numato", config)
+    assert not await async_setup_component(hass, DOMAIN, config)
     assert not numato_fixture.devices
 
 
@@ -136,7 +137,7 @@ async def test_invalid_adc_source_range_length(
     """
     sensorports_cfg = config["numato"]["devices"][0]["sensors"]["ports"]
     sensorports_cfg["1"]["source_range"].append(42)
-    assert not await async_setup_component(hass, "numato", config)
+    assert not await async_setup_component(hass, DOMAIN, config)
     assert not numato_fixture.devices
 
 
@@ -149,7 +150,7 @@ async def test_invalid_adc_source_range_order(
     """
     sensorports_cfg = config["numato"]["devices"][0]["sensors"]["ports"]
     sensorports_cfg["1"]["source_range"] = [2, 1]
-    assert not await async_setup_component(hass, "numato", config)
+    assert not await async_setup_component(hass, DOMAIN, config)
     assert not numato_fixture.devices
 
 
@@ -162,7 +163,7 @@ async def test_invalid_adc_destination_range_value_type(
     """
     sensorports_cfg = config["numato"]["devices"][0]["sensors"]["ports"]
     sensorports_cfg["1"]["destination_range"][0] = "zero"
-    assert not await async_setup_component(hass, "numato", config)
+    assert not await async_setup_component(hass, DOMAIN, config)
     assert not numato_fixture.devices
 
 
@@ -175,7 +176,7 @@ async def test_invalid_adc_destination_range_length(
     """
     sensorports_cfg = config["numato"]["devices"][0]["sensors"]["ports"]
     sensorports_cfg["1"]["destination_range"].append(42)
-    assert not await async_setup_component(hass, "numato", config)
+    assert not await async_setup_component(hass, DOMAIN, config)
     assert not numato_fixture.devices
 
 
@@ -188,5 +189,5 @@ async def test_invalid_adc_destination_range_order(
     """
     sensorports_cfg = config["numato"]["devices"][0]["sensors"]["ports"]
     sensorports_cfg["1"]["destination_range"] = [2, 1]
-    assert not await async_setup_component(hass, "numato", config)
+    assert not await async_setup_component(hass, DOMAIN, config)
     assert not numato_fixture.devices

@@ -82,7 +82,7 @@ async def test_notify_leaving_zone(
     ):
         assert await async_setup_component(
             hass,
-            "automation",
+            DOMAIN,
             {
                 "automation": {
                     "use_blueprint": {
@@ -160,7 +160,7 @@ async def test_motion_light(hass: HomeAssistant) -> None:
     ):
         assert await async_setup_component(
             hass,
-            "automation",
+            DOMAIN,
             {
                 "automation": {
                     "use_blueprint": {

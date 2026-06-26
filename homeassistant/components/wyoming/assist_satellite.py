@@ -2,10 +2,11 @@
 
 import asyncio
 from collections.abc import AsyncGenerator
+import contextlib
 import io
 import logging
 import time
-from typing import Any, Final
+from typing import Any, Final, override
 import wave
 
 from wyoming.asr import Transcribe, Transcript
@@ -134,16 +135,19 @@ class WyomingAssistSatellite(WyomingSatelliteEntity, AssistSatelliteEntity):
         self._is_tts_streaming: bool = False
 
     @property
+    @override
     def pipeline_entity_id(self) -> str | None:
         """Return the entity ID of the pipeline to use for the next conversation."""
         return self.device.get_pipeline_entity_id(self.hass)
 
     @property
+    @override
     def vad_sensitivity_entity_id(self) -> str | None:
         """Return the VAD sensitivity entity ID for next conversation."""
         return self.device.get_vad_sensitivity_entity_id(self.hass)
 
     @property
+    @override
     def tts_options(self) -> dict[str, Any] | None:
         """Options passed for text-to-speech."""
         return {
@@ -153,29 +157,34 @@ class WyomingAssistSatellite(WyomingSatelliteEntity, AssistSatelliteEntity):
             tts.ATTR_PREFERRED_SAMPLE_BYTES: SAMPLE_WIDTH,
         }
 
+    @override
     async def async_added_to_hass(self) -> None:
         """Run when entity about to be added to hass."""
         await super().async_added_to_hass()
         self.start_satellite()
 
+    @override
     async def async_will_remove_from_hass(self) -> None:
         """Run when entity will be removed from hass."""
         await super().async_will_remove_from_hass()
         self.stop_satellite()
 
     @callback
+    @override
     def async_get_configuration(
         self,
     ) -> AssistSatelliteConfiguration:
         """Get the current satellite configuration."""
         raise NotImplementedError
 
+    @override
     async def async_set_configuration(
         self, config: AssistSatelliteConfiguration
     ) -> None:
         """Set the current satellite configuration."""
         raise NotImplementedError
 
+    @override
     def on_pipeline_event(self, event: PipelineEvent) -> None:
         """Set state based on pipeline stage."""
         if event.type == assist_pipeline.PipelineEventType.RUN_END:
@@ -319,6 +328,7 @@ class WyomingAssistSatellite(WyomingSatelliteEntity, AssistSatelliteEntity):
                     f"{self.entity_id} {event.type}",
                 )
 
+    @override
     async def async_announce(self, announcement: AssistSatelliteAnnouncement) -> None:
         """Announce media on the satellite.
 
@@ -348,6 +358,8 @@ class WyomingAssistSatellite(WyomingSatelliteEntity, AssistSatelliteEntity):
             # Use ffmpeg to convert to raw PCM audio with the appropriate format
             proc = await asyncio.create_subprocess_exec(
                 self._ffmpeg_manager.binary,
+                "-protocol_whitelist",
+                "http,https,file,tcp,tls",
                 "-i",
                 announcement.media_id,
                 "-f",
@@ -405,10 +417,8 @@ class WyomingAssistSatellite(WyomingSatelliteEntity, AssistSatelliteEntity):
         # Stop existing pipeline
         self._audio_queue.put_nowait(None)
 
-        # Tell satellite to stop running
-        self._send_pause()
-
-        # Stop task loop
+        # Stop task loop. The satellite is paused and disconnected in run()'s
+        # teardown so the pause is reliably sent before the socket is closed.
         self.is_running = False
 
         # Unblock waiting for unmuted
@@ -463,6 +473,17 @@ class WyomingAssistSatellite(WyomingSatelliteEntity, AssistSatelliteEntity):
 
             # Ensure sensor is off (before stop)
             self.device.set_is_active(False)
+
+            # Pause the satellite, then close the connection. The pause is sent
+            # and flushed before disconnecting so the satellite reliably sees
+            # it. Without an explicit disconnect the socket is only released
+            # when the client is garbage collected, which leaves satellites
+            # that allow a single connection unable to reconnect when
+            # re-enabled.
+            if self._client is not None:
+                with contextlib.suppress(ConnectionError, OSError):
+                    await self._client.write_event(PauseSatellite().event())
+            await self._disconnect()
 
             await self.on_stopped()
 
@@ -626,9 +647,27 @@ class WyomingAssistSatellite(WyomingSatelliteEntity, AssistSatelliteEntity):
                     # Satellite requested pipeline run
                     run_pipeline = RunPipeline.from_event(client_event)
                     self._run_pipeline_once(run_pipeline, wake_word_phrase)
-                elif (
-                    AudioChunk.is_type(client_event.type) and self._is_pipeline_running
+                elif AudioChunk.is_type(client_event.type) and (
+                    self._is_pipeline_running or (wake_word_phrase is not None)
                 ):
+                    if not self._is_pipeline_running:
+                        # Some satellites report a local wake word detection and
+                        # then start streaming audio without sending a
+                        # RunPipeline event. Start a pipeline so the audio isn't
+                        # silently dropped. Begin at ASR since the wake word was
+                        # already detected on the satellite.
+                        _LOGGER.debug(
+                            "Received audio after detection without RunPipeline; "
+                            "starting a pipeline automatically"
+                        )
+                        self._run_pipeline_once(
+                            RunPipeline(
+                                start_stage=PipelineStage.ASR,
+                                end_stage=PipelineStage.TTS,
+                            ),
+                            wake_word_phrase,
+                        )
+
                     # Microphone audio
                     chunk = AudioChunk.from_event(client_event)
                     chunk = self._chunk_converter.convert(chunk)
