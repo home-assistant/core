@@ -1,7 +1,7 @@
 """Support for Freebox base features."""
 
 import logging
-from typing import Any
+from typing import Any, override
 
 from homeassistant.helpers import device_registry as dr
 from homeassistant.helpers.device_registry import DeviceInfo
@@ -104,6 +104,7 @@ class FreeboxHomeEntity(Entity):
             return None
         return node["id"]
 
+    @override
     async def async_added_to_hass(self) -> None:
         """Register state update callback."""
         self.async_on_remove(

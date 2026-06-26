@@ -38,8 +38,8 @@
 # name: test_setup_and_update.1
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'device_class': 'connectivity',
-      'friendly_name': '10.10.10.10',
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'connectivity',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: '10.10.10.10',
     }),
     'context': <ANY>,
     'entity_id': 'binary_sensor.10_10_10_10',
@@ -52,8 +52,8 @@
 # name: test_setup_and_update.2
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'device_class': 'connectivity',
-      'friendly_name': '10.10.10.10',
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'connectivity',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: '10.10.10.10',
     }),
     'context': <ANY>,
     'entity_id': 'binary_sensor.10_10_10_10',

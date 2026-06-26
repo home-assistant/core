@@ -39,8 +39,8 @@
 # name: test_binary_entities[binary_sensor.test_model_indoor_unit_auxiliary_water_pump-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'device_class': 'running',
-      'friendly_name': 'Test Model Indoor unit auxiliary water pump',
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'running',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Test Model Indoor unit auxiliary water pump',
     }),
     'context': <ANY>,
     'entity_id': 'binary_sensor.test_model_indoor_unit_auxiliary_water_pump',
@@ -90,8 +90,8 @@
 # name: test_binary_entities[binary_sensor.test_model_indoor_unit_electric_heater-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'device_class': 'running',
-      'friendly_name': 'Test Model Indoor unit electric heater',
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'running',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Test Model Indoor unit electric heater',
     }),
     'context': <ANY>,
     'entity_id': 'binary_sensor.test_model_indoor_unit_electric_heater',
@@ -141,7 +141,7 @@
 # name: test_binary_entities[binary_sensor.test_model_indoor_unit_gas_boiler_heating_allowed-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'Test Model Indoor unit gas boiler heating allowed',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Test Model Indoor unit gas boiler heating allowed',
     }),
     'context': <ANY>,
     'entity_id': 'binary_sensor.test_model_indoor_unit_gas_boiler_heating_allowed',
@@ -191,8 +191,8 @@
 # name: test_binary_entities[binary_sensor.test_model_indoor_unit_water_pump-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'device_class': 'running',
-      'friendly_name': 'Test Model Indoor unit water pump',
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'running',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Test Model Indoor unit water pump',
     }),
     'context': <ANY>,
     'entity_id': 'binary_sensor.test_model_indoor_unit_water_pump',

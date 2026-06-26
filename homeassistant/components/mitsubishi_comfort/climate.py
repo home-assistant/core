@@ -1,7 +1,7 @@
 """Climate entity for Mitsubishi Comfort integration."""
 
 import logging
-from typing import Any, NoReturn
+from typing import Any, NoReturn, override
 
 from mitsubishi_comfort import FanSpeed, IndoorUnit, Mode, VaneDirection
 
@@ -94,6 +94,7 @@ class MitsubishiComfortClimate(MitsubishiComfortEntity, ClimateEntity):
         self._attr_unique_id = self._device.serial
         self._optimistic: dict[str, Any] = {}
 
+    @override
     def _handle_coordinator_update(self) -> None:
         """Clear optimistic state when real data arrives from device."""
         self._optimistic.clear()
@@ -104,12 +105,14 @@ class MitsubishiComfortClimate(MitsubishiComfortEntity, ClimateEntity):
         return self._optimistic.get(_OPT_MODE, self._device.status.mode)
 
     @property
+    @override
     def hvac_mode(self) -> HVACMode | None:
         """Return the current HVAC mode."""
         mode = self._effective_mode
         return _MODE_TO_HVAC.get(mode) if mode else None
 
     @property
+    @override
     def hvac_action(self) -> HVACAction | None:
         """Return the current HVAC action."""
         mode = self._effective_mode
@@ -118,6 +121,7 @@ class MitsubishiComfortClimate(MitsubishiComfortEntity, ClimateEntity):
         return _MODE_TO_ACTION.get(mode) if mode else None
 
     @property
+    @override
     def hvac_modes(self) -> list[HVACMode]:
         """Return the list of available HVAC modes."""
         return [
@@ -127,16 +131,19 @@ class MitsubishiComfortClimate(MitsubishiComfortEntity, ClimateEntity):
         ]
 
     @property
+    @override
     def current_temperature(self) -> float | None:
         """Return the current temperature."""
         return self._device.status.room_temperature
 
     @property
+    @override
     def current_humidity(self) -> float | None:
         """Return the current humidity."""
         return self._device.status.current_humidity
 
     @property
+    @override
     def target_temperature(self) -> float | None:
         """Return the target temperature."""
         mode = self._effective_mode
@@ -151,6 +158,7 @@ class MitsubishiComfortClimate(MitsubishiComfortEntity, ClimateEntity):
         return None
 
     @property
+    @override
     def target_temperature_high(self) -> float | None:
         """Return the upper bound target temperature."""
         if self._effective_mode in ("auto", "autoCool", "autoHeat"):
@@ -160,6 +168,7 @@ class MitsubishiComfortClimate(MitsubishiComfortEntity, ClimateEntity):
         return None
 
     @property
+    @override
     def target_temperature_low(self) -> float | None:
         """Return the lower bound target temperature."""
         if self._effective_mode in ("auto", "autoCool", "autoHeat"):
@@ -169,16 +178,19 @@ class MitsubishiComfortClimate(MitsubishiComfortEntity, ClimateEntity):
         return None
 
     @property
+    @override
     def fan_mode(self) -> str | None:
         """Return the current fan mode."""
         return self._optimistic.get(_OPT_FAN_SPEED, self._device.status.fan_speed)
 
     @property
+    @override
     def fan_modes(self) -> list[str]:
         """Return the list of available fan modes."""
         return [s.value for s in self._device.supported_fan_speeds]
 
     @property
+    @override
     def swing_mode(self) -> str | None:
         """Return the current swing mode."""
         return self._optimistic.get(
@@ -186,11 +198,13 @@ class MitsubishiComfortClimate(MitsubishiComfortEntity, ClimateEntity):
         )
 
     @property
+    @override
     def swing_modes(self) -> list[str]:
         """Return the list of available swing modes."""
         return [d.value for d in self._device.supported_vane_directions]
 
     @property
+    @override
     def min_temp(self) -> float:
         """Return the minimum temperature."""
         if self._effective_mode in ("heat", "autoHeat"):
@@ -201,6 +215,7 @@ class MitsubishiComfortClimate(MitsubishiComfortEntity, ClimateEntity):
         return super().min_temp
 
     @property
+    @override
     def max_temp(self) -> float:
         """Return the maximum temperature."""
         if self._effective_mode in ("heat", "autoHeat"):
@@ -211,6 +226,7 @@ class MitsubishiComfortClimate(MitsubishiComfortEntity, ClimateEntity):
         return super().max_temp
 
     @property
+    @override
     def supported_features(self) -> ClimateEntityFeature:
         """Return the list of supported features."""
         features = (
@@ -232,6 +248,7 @@ class MitsubishiComfortClimate(MitsubishiComfortEntity, ClimateEntity):
             translation_placeholders={"device_name": self._device.name},
         )
 
+    @override
     async def async_set_hvac_mode(self, hvac_mode: HVACMode) -> None:
         """Set the HVAC mode."""
         lib_mode = _HVAC_TO_MODE.get(hvac_mode)
@@ -244,6 +261,7 @@ class MitsubishiComfortClimate(MitsubishiComfortEntity, ClimateEntity):
         self._optimistic[_OPT_MODE] = result.value
         self.async_write_ha_state()
 
+    @override
     async def async_set_temperature(self, **kwargs: Any) -> None:
         """Set the target temperature."""
         mode = self._effective_mode
@@ -295,6 +313,7 @@ class MitsubishiComfortClimate(MitsubishiComfortEntity, ClimateEntity):
         if failed:
             self._command_failed("set_temperature_failed")
 
+    @override
     async def async_set_fan_mode(self, fan_mode: str) -> None:
         """Set the fan mode."""
         speed = _FAN_SPEED_MAP.get(fan_mode)
@@ -307,6 +326,7 @@ class MitsubishiComfortClimate(MitsubishiComfortEntity, ClimateEntity):
         self._optimistic[_OPT_FAN_SPEED] = result.value
         self.async_write_ha_state()
 
+    @override
     async def async_set_swing_mode(self, swing_mode: str) -> None:
         """Set the swing mode."""
         direction = _VANE_DIR_MAP.get(swing_mode)
@@ -319,6 +339,7 @@ class MitsubishiComfortClimate(MitsubishiComfortEntity, ClimateEntity):
         self._optimistic[_OPT_VANE_DIRECTION] = result.value
         self.async_write_ha_state()
 
+    @override
     async def async_turn_off(self) -> None:
         """Turn the entity off."""
         await self.async_set_hvac_mode(HVACMode.OFF)

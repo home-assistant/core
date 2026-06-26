@@ -2,7 +2,7 @@
 
 from collections.abc import Callable, Coroutine
 from dataclasses import dataclass
-from typing import Any
+from typing import Any, override
 
 from technove import MIN_CURRENT, TechnoVE
 
@@ -86,16 +86,19 @@ class TechnoVENumberEntity(TechnoVEEntity, NumberEntity):
         super().__init__(coordinator, description.key)
 
     @property
+    @override
     def native_max_value(self) -> float:
         """Return the max value of the TechnoVE number entity."""
         return self.entity_description.native_max_value_fn(self.coordinator.data)
 
     @property
+    @override
     def native_value(self) -> float:
         """Return the native value of the TechnoVE number entity."""
         return self.entity_description.native_value_fn(self.coordinator.data)
 
     @technove_exception_handler
+    @override
     async def async_set_native_value(self, value: float) -> None:
         """Set the value for the TechnoVE number entity."""
         await self.entity_description.set_value_fn(self.coordinator, value)

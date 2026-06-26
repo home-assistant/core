@@ -74,14 +74,14 @@ async def test_async_set_temperature(
     await hass.services.async_call(
         CLIMATE_DOMAIN,
         SERVICE_SET_TEMPERATURE,
-        {ATTR_ENTITY_ID: entity_id, ATTR_TEMPERATURE: 22.0},
+        {ATTR_ENTITY_ID: entity_id, ATTR_TEMPERATURE: 22.5},
         blocking=True,
     )
 
     mock_ouman_client.set_endpoint_value.assert_called_once_with(
-        L1RoomSensor.ROOM_TEMPERATURE_SETPOINT_USER, 22
+        L1RoomSensor.ROOM_TEMPERATURE_SETPOINT_USER, 22.5
     )
-    assert hass.states.get(entity_id).attributes["temperature"] == 22.0
+    assert hass.states.get(entity_id).attributes["temperature"] == 22.5
 
 
 @pytest.mark.parametrize("init_integration", [Platform.CLIMATE], indirect=True)

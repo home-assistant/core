@@ -1,6 +1,6 @@
 """The nexia integration base entity."""
 
-from typing import TYPE_CHECKING
+from typing import TYPE_CHECKING, override
 
 from nexia.thermostat import NexiaThermostat
 from nexia.zone import NexiaThermostatZone
@@ -64,6 +64,7 @@ class NexiaThermostatEntity(NexiaEntity):
         )
         self._thermostat_signal = f"{SIGNAL_THERMOSTAT_UPDATE}-{thermostat_id}"
 
+    @override
     async def async_added_to_hass(self) -> None:
         """Listen for signals for services."""
         await super().async_added_to_hass()
@@ -87,6 +88,7 @@ class NexiaThermostatEntity(NexiaEntity):
         async_dispatcher_send(self.hass, self._thermostat_signal)
 
     @property
+    @override
     def available(self) -> bool:
         """Return True if thermostat is available and data is available."""
         return super().available and self._thermostat.is_online
@@ -115,6 +117,7 @@ class NexiaThermostatZoneEntity(NexiaThermostatEntity):
         }
         self._zone_signal = f"{SIGNAL_ZONE_UPDATE}-{zone.zone_id}"
 
+    @override
     async def async_added_to_hass(self) -> None:
         """Listen for signals for services."""
         await super().async_added_to_hass()
