@@ -84,17 +84,12 @@ async def handle_disable_device_webhook(call: ServiceCall) -> None:
 
             for item in fields(devices_data):
                 device_data = getattr(devices_data, item.name)
-                disable_state = (
-                    len(
-                        [
-                            i[1].disable_webhook()
-                            for i in device_data
-                            if i[0].device_id == device_mac
-                        ]
-                    )
-                    > 0
-                )
-                if disable_state:
+                matched = False
+                for switchbot_device, coordinator in device_data:
+                    if switchbot_device.device_id == device_mac:
+                        coordinator.disable_webhook()
+                        matched = True
+                if matched:
                     break
         else:
             raise ServiceValidationError("No valid MAC address obtained.")
