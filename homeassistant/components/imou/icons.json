@@ -13,6 +13,29 @@
       "ptz_up": {
         "default": "mdi:arrow-up-bold"
       }
+    },
+    "switch": {
+      "motion_detect": {
+        "default": "mdi:motion-sensor"
+      },
+      "header_detect": {
+        "default": "mdi:run"
+      },
+      "white_light": {
+        "default": "mdi:light-flood-down"
+      },
+      "close_camera": {
+        "default": "mdi:camera-off"
+      },
+      "ab_alarm_sound": {
+        "default": "mdi:home-sound-in"
+      },
+      "audio_encode_control": {
+        "default": "mdi:audio-input-rca"
+      },
+      "light": {
+        "default": "mdi:lightbulb-on"
+      }
     }
   }
 }

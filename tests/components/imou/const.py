@@ -32,6 +32,12 @@ CONFIG_ENTRY_DATA = {
 }
 
 UNKNOWN_BUTTON_KEY = "legacy_unknown_button"
+UNKNOWN_SWITCH_KEY = "legacy_unknown_switch"
+
+DEFAULT_SWITCHES = {
+    "motion_detect": {PARAM_STATE: False},
+    "header_detect": {PARAM_STATE: True},
+}
 
 
 def create_online_device(
