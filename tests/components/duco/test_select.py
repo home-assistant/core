@@ -28,7 +28,6 @@ from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
 
 from . import setup_platform_integration
-from .conftest import load_nodes_fixture
 
 from tests.common import MockConfigEntry
 
@@ -126,15 +125,12 @@ async def test_select_creates_entities_for_controllable_valve_nodes(
     hass: HomeAssistant,
     mock_config_entry: MockConfigEntry,
     mock_duco_client: AsyncMock,
+    mock_sensor_nodes: list[Node],
 ) -> None:
     """Test select discovery includes valve nodes when they advertise control."""
-    mock_nodes = [
-        *load_nodes_fixture("nodes.json"),
-        *load_nodes_fixture("sensor_nodes.json"),
-    ]
-    mock_duco_client.async_get_nodes.return_value = mock_nodes
+    mock_duco_client.async_get_nodes.return_value = mock_sensor_nodes
     mock_duco_client.async_get_node_actions.return_value = _build_multi_node_actions(
-        [node.node_id for node in mock_nodes],
+        [node.node_id for node in mock_sensor_nodes],
         options=["AUTO", "CNT1", "CNT2", "CNT3", "MAN1", "MAN2", "MAN3"],
     )
 
