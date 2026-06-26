@@ -558,7 +558,7 @@ async def test_migrate_to_new_unique_id(
 
         entity_registry.async_get_or_create(
             disabled_by=None,
-            domain=SWITCH_DOMAIN,
+            domain=Platform.SWITCH,
             platform=DOMAIN,
             unique_id=old_unique_id,
             config_entry=entry,
