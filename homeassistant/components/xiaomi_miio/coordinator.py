@@ -4,8 +4,8 @@ from datetime import timedelta
 import logging
 from typing import override
 
-from miio.gateway.devices import SubDevice
-from miio.gateway.gateway import GatewayException
+from miio import DeviceException as GatewayException
+from miio.integrations.lumi.gateway.devices import SubDevice
 
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed

@@ -6,13 +6,13 @@ import logging
 from typing import TYPE_CHECKING, Any, override
 
 from miio import AirQualityMonitor, Device as MiioDevice, DeviceException
-from miio.gateway.gateway import (
+from miio import DeviceException as GatewayException
+from miio.integrations.lumi.gateway.gateway import (
     GATEWAY_MODEL_AC_V1,
     GATEWAY_MODEL_AC_V2,
     GATEWAY_MODEL_AC_V3,
     GATEWAY_MODEL_AQARA,
     GATEWAY_MODEL_EU,
-    GatewayException,
 )
 
 from homeassistant.components.sensor import (

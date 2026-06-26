@@ -4,7 +4,7 @@ from dataclasses import dataclass
 from typing import TYPE_CHECKING, Any, NamedTuple
 
 from miio import Device as MiioDevice
-from miio.gateway.gateway import Gateway
+from miio.integrations.lumi.gateway.gateway import Gateway
 import voluptuous as vol
 
 from homeassistant.config_entries import ConfigEntry

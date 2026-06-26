@@ -4,7 +4,7 @@ from dataclasses import dataclass
 from typing import Any, override
 
 from miio import Device as MiioDevice
-from miio.integrations.vacuum.roborock.vacuum import Consumable
+from miio.integrations.roborock.vacuum.vacuum import Consumable
 
 from homeassistant.components.button import (
     ButtonDeviceClass,

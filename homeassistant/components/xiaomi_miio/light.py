@@ -16,12 +16,12 @@ from miio import (
     PhilipsEyecare,
     PhilipsMoonlight,
 )
-from miio.gateway.devices.light import LightBulb
-from miio.gateway.gateway import (
+from miio import DeviceException as GatewayException
+from miio.integrations.lumi.gateway.devices.light import LightBulb
+from miio.integrations.lumi.gateway.gateway import (
     GATEWAY_MODEL_AC_V1,
     GATEWAY_MODEL_AC_V2,
     GATEWAY_MODEL_AC_V3,
-    GatewayException,
 )
 import voluptuous as vol
 
