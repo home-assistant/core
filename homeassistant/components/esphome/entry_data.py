@@ -303,7 +303,10 @@ class RuntimeEntryData:
                 infos_by_type[info_type].append(info)
                 # Migrate legacy unique ids to the version 3 format that fixes
                 # UTF-8 collisions. Skip when a version 3 id already exists so a
-                # downgrade then upgrade keeps the original entity.
+                # downgrade then upgrade keeps the original entity. When two
+                # legacy ids collided (the bug this fixes) only one registry
+                # entry exists for it, so the first iterated info claims it and
+                # the rest get fresh version 3 ids.
                 old_unique_id = build_device_unique_id(mac, info, version=1)
                 new_unique_id = build_device_unique_id(mac, info, version=3)
                 if (
