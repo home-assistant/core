@@ -1,6 +1,7 @@
 """Tankerkoenig sensor integration."""
 
 import logging
+from typing import override
 
 from aiotankerkoenig import GasType, Station
 
@@ -108,6 +109,7 @@ class FuelPriceSensor(TankerkoenigCoordinatorEntity, SensorEntity):
         self._attr_extra_state_attributes = attrs
 
     @property
+    @override
     def native_value(self) -> float | None:
         """Return the current price for the fuel type."""
         info = self.coordinator.data[self._station_id]

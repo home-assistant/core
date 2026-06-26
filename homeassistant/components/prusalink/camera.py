@@ -1,6 +1,7 @@
 """Camera entity for PrusaLink."""
 
 from dataclasses import dataclass
+from typing import override
 
 from pyprusalink.types import PrinterState
 
@@ -50,6 +51,7 @@ class PrusaLinkJobPreviewEntity(PrusaLinkEntity, Camera):
         Camera.__init__(self)
         self._attr_unique_id = f"{self.coordinator.config_entry.entry_id}_job_preview"
 
+    @override
     async def async_camera_image(
         self, width: int | None = None, height: int | None = None
     ) -> bytes | None:

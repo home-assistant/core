@@ -1,7 +1,7 @@
 """Support for ZHA sirens."""
 
 import functools
-from typing import Any
+from typing import Any, override
 
 from zha.application.platforms.siren import (
     SirenEntityFeature as ZHASirenEntityFeature,
@@ -83,11 +83,13 @@ class ZHASiren(ZHAEntity, SirenEntity):
         self._attr_supported_features = features
 
     @property
+    @override
     def is_on(self) -> bool:
         """Return True if entity is on."""
         return self.entity_data.entity.is_on
 
     @convert_zha_error_to_ha_error()
+    @override
     async def async_turn_on(self, **kwargs: Any) -> None:
         """Turn on siren."""
         await self.entity_data.entity.async_turn_on(
@@ -98,6 +100,7 @@ class ZHASiren(ZHAEntity, SirenEntity):
         self.async_write_ha_state()
 
     @convert_zha_error_to_ha_error()
+    @override
     async def async_turn_off(self, **kwargs: Any) -> None:
         """Turn off siren."""
         await self.entity_data.entity.async_turn_off()
