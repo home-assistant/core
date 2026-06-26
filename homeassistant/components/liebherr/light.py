@@ -1,12 +1,13 @@
 """Light platform for Liebherr integration."""
 
-from __future__ import annotations
-
 import math
-from typing import TYPE_CHECKING, Any
+from typing import TYPE_CHECKING, Any, override
 
 from pyliebherrhomeapi import PresentationLightControl
-from pyliebherrhomeapi.const import CONTROL_PRESENTATION_LIGHT
+from pyliebherrhomeapi.const import (
+    CONTROL_PRESENTATION_LIGHT,
+    DEFAULT_PRESENTATION_LIGHT_MAX_BRIGHTNESS,
+)
 
 from homeassistant.components.light import ATTR_BRIGHTNESS, ColorMode, LightEntity
 from homeassistant.core import HomeAssistant, callback
@@ -16,8 +17,6 @@ from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from .const import DOMAIN
 from .coordinator import LiebherrConfigEntry, LiebherrCoordinator
 from .entity import LiebherrEntity
-
-DEFAULT_MAX_BRIGHTNESS_LEVEL = 5
 
 PARALLEL_UPDATES = 1
 
@@ -79,11 +78,13 @@ class LiebherrPresentationLight(LiebherrEntity, LightEntity):
         return controls.get(CONTROL_PRESENTATION_LIGHT)
 
     @property
+    @override
     def available(self) -> bool:
         """Return if entity is available."""
         return super().available and self._light_control is not None
 
     @property
+    @override
     def is_on(self) -> bool | None:
         """Return true if the light is on."""
         control = self._light_control
@@ -94,6 +95,7 @@ class LiebherrPresentationLight(LiebherrEntity, LightEntity):
         return control.value > 0
 
     @property
+    @override
     def brightness(self) -> int | None:
         """Return the brightness of the light (0-255)."""
         control = self._light_control
@@ -103,12 +105,13 @@ class LiebherrPresentationLight(LiebherrEntity, LightEntity):
             return None
         return math.ceil(control.value * 255 / control.max)
 
+    @override
     async def async_turn_on(self, **kwargs: Any) -> None:
         """Turn the light on."""
         control = self._light_control
         if TYPE_CHECKING:
             assert control is not None
-        max_level = control.max or DEFAULT_MAX_BRIGHTNESS_LEVEL
+        max_level = control.max or DEFAULT_PRESENTATION_LIGHT_MAX_BRIGHTNESS
 
         if ATTR_BRIGHTNESS in kwargs:
             target = max(1, round(kwargs[ATTR_BRIGHTNESS] * max_level / 255))
@@ -122,6 +125,7 @@ class LiebherrPresentationLight(LiebherrEntity, LightEntity):
             )
         )
 
+    @override
     async def async_turn_off(self, **kwargs: Any) -> None:
         """Turn the light off."""
         await self._async_send_command(

@@ -1,11 +1,9 @@
 """Sensor component that handles additional Tomorrowio data for your location."""
 
-from __future__ import annotations
-
 from abc import abstractmethod
 from collections.abc import Callable
 from dataclasses import dataclass
-from typing import Any
+from typing import Any, override
 
 from pytomorrowio.const import (
     HealthConcernType,
@@ -331,6 +329,8 @@ async def async_setup_entry(
     async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up a config entry."""
+    # Uses legacy hass.data[DOMAIN] pattern
+    # pylint: disable-next=home-assistant-use-runtime-data
     coordinator = hass.data[DOMAIN][config_entry.data[CONF_API_KEY]]
     entities = [
         TomorrowioSensorEntity(hass, config_entry, coordinator, 4, description)
@@ -378,6 +378,7 @@ class BaseTomorrowioSensorEntity(TomorrowioEntity, SensorEntity):
         """Return the raw state."""
 
     @property
+    @override
     def native_value(self) -> str | int | float | None:
         """Return the state."""
         state = self._state
@@ -409,6 +410,7 @@ class TomorrowioSensorEntity(BaseTomorrowioSensorEntity):
     """Sensor entity that talks to Tomorrow.io v4 API to retrieve non-weather data."""
 
     @property
+    @override
     def _state(self) -> int | float | None:
         """Return the raw state."""
         val = self._get_current_property(self.entity_description.attribute)

@@ -1,13 +1,11 @@
 """Local Media Source Implementation."""
 
-from __future__ import annotations
-
 import io
 import logging
 import mimetypes
 from pathlib import Path
 import shutil
-from typing import Any, Protocol, cast
+from typing import Any, Protocol, cast, override
 
 from aiohttp import web
 from aiohttp.web_request import FileField
@@ -152,6 +150,7 @@ class LocalSource(MediaSource):
 
         return f"{target_folder.media_source_id}/{uploaded_file.filename}"
 
+    @override
     async def async_resolve_media(self, item: MediaSourceItem) -> PlayMedia:
         """Resolve media to a url."""
         source_dir_id, location = self.async_parse_identifier(item)
@@ -160,6 +159,7 @@ class LocalSource(MediaSource):
         assert isinstance(mime_type, str)
         return PlayMedia(f"{self.url_prefix}/{item.identifier}", mime_type, path=path)
 
+    @override
     async def async_browse_media(self, item: MediaSourceItem) -> BrowseMediaSource:
         """Return media."""
         if item.identifier:
@@ -314,7 +314,7 @@ class LocalMediaView(http.HomeAssistantView):
 
     async def head(
         self, request: web.Request, source_dir_id: str, location: str
-    ) -> None:
+    ) -> web.Response:
         """Handle a HEAD request.
 
         This is sent by some DLNA renderers, like Samsung ones, prior to sending
@@ -322,7 +322,9 @@ class LocalMediaView(http.HomeAssistantView):
 
         Check whether the location exists or not.
         """
-        await self._validate_media_path(source_dir_id, location)
+        media_path = await self._validate_media_path(source_dir_id, location)
+        mime_type, _ = mimetypes.guess_type(str(media_path))
+        return web.Response(content_type=mime_type)
 
     async def get(
         self, request: web.Request, source_dir_id: str, location: str

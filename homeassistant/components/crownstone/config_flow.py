@@ -1,17 +1,13 @@
 """Flow handler for Crownstone."""
 
-from __future__ import annotations
-
 from collections.abc import Callable
-from typing import Any
+from typing import Any, override
 
 from crownstone_cloud import CrownstoneCloud
 from crownstone_cloud.exceptions import (
     CrownstoneAuthenticationError,
     CrownstoneUnknownError,
 )
-import serial.tools.list_ports
-from serial.tools.list_ports_common import ListPortInfo
 import voluptuous as vol
 
 from homeassistant.components import usb
@@ -61,9 +57,11 @@ class BaseCrownstoneFlowHandler(ConfigEntryBaseFlow):
         self, user_input: dict[str, Any] | None = None
     ) -> ConfigFlowResult:
         """Set up a Crownstone USB dongle."""
-        list_of_ports = await self.hass.async_add_executor_job(
-            serial.tools.list_ports.comports
-        )
+        list_of_ports = [
+            p
+            for p in await usb.async_scan_serial_ports(self.hass)
+            if isinstance(p, usb.USBDevice)
+        ]
         if self.flow_type == CONFIG_FLOW:
             ports_as_string = list_ports_as_str(list_of_ports)
         else:
@@ -82,10 +80,8 @@ class BaseCrownstoneFlowHandler(ConfigEntryBaseFlow):
                 else:
                     index = ports_as_string.index(selection) - 1
 
-                selected_port: ListPortInfo = list_of_ports[index]
-                self.usb_path = await self.hass.async_add_executor_job(
-                    usb.get_serial_by_id, selected_port.device
-                )
+                selected_port = list_of_ports[index]
+                self.usb_path = selected_port.device
                 return await self.async_step_usb_sphere_config()
 
         return self.async_show_form(
@@ -139,6 +135,7 @@ class CrownstoneConfigFlowHandler(BaseCrownstoneFlowHandler, ConfigFlow, domain=
 
     @staticmethod
     @callback
+    @override
     def async_get_options_flow(
         config_entry: CrownstoneConfigEntry,
     ) -> CrownstoneOptionsFlowHandler:
@@ -150,6 +147,7 @@ class CrownstoneConfigFlowHandler(BaseCrownstoneFlowHandler, ConfigFlow, domain=
         super().__init__(CONFIG_FLOW, self.async_create_new_entry)
         self.login_info: dict[str, Any] = {}
 
+    @override
     async def async_step_user(
         self, user_input: dict[str, Any] | None = None
     ) -> ConfigFlowResult:

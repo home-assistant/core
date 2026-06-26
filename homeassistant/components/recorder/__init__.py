@@ -1,7 +1,5 @@
 """Support for recording details."""
 
-from __future__ import annotations
-
 import logging
 from typing import Any
 
@@ -25,7 +23,6 @@ from homeassistant.helpers.integration_platform import (
 )
 from homeassistant.helpers.recorder import DATA_INSTANCE
 from homeassistant.helpers.typing import ConfigType
-from homeassistant.loader import bind_hass
 from homeassistant.util.event_type import EventType
 
 # Pre-import backup to avoid it being imported
@@ -33,6 +30,7 @@ from homeassistant.util.event_type import EventType
 # startup
 from . import (
     backup,  # noqa: F401
+    entity_options,
     entity_registry,
     websocket_api,
 )
@@ -45,6 +43,7 @@ from .const import (  # noqa: F401
     SupportedDialect,
 )
 from .core import Recorder
+from .entity_options import is_entity_recorded  # noqa: F401
 from .services import async_setup_services
 from .tasks import AddRecorderPlatformTask
 from .util import get_instance
@@ -128,16 +127,6 @@ CONFIG_SCHEMA = vol.Schema(
 )
 
 
-@bind_hass
-def is_entity_recorded(hass: HomeAssistant, entity_id: str) -> bool:
-    """Check if an entity is being recorded.
-
-    Async friendly.
-    """
-    instance = get_instance(hass)
-    return instance.entity_filter is None or instance.entity_filter(entity_id)
-
-
 async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     """Set up the recorder."""
     conf = config[DOMAIN]
@@ -171,6 +160,7 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     )
     get_instance.cache_clear()
     entity_registry.async_setup(hass)
+    entity_options.async_setup(hass)
     instance.async_initialize()
     instance.async_register()
     instance.start()

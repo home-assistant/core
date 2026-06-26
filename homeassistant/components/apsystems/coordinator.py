@@ -1,9 +1,8 @@
 """The coordinator for APsystems local API integration."""
 
-from __future__ import annotations
-
 from dataclasses import dataclass
 from datetime import timedelta
+from typing import override
 
 from aiohttp import ClientConnectionError
 from APsystemsEZ1 import (
@@ -68,6 +67,7 @@ class ApSystemsDataCoordinator(DataUpdateCoordinator[ApSystemsSensorData]):
         self.battery_system = False
         self.inverter_connected = False
 
+    @override
     async def _async_setup(self) -> None:
         try:
             await self._fetch_device_info()
@@ -100,6 +100,7 @@ class ApSystemsDataCoordinator(DataUpdateCoordinator[ApSystemsSensorData]):
             )
             registry.async_update_device(device_entry.id, sw_version=sw_version)
 
+    @override
     async def _async_update_data(self) -> ApSystemsSensorData:
         try:
             # Fetch device info if it wasn't available during setup

@@ -1,8 +1,7 @@
 """Support for Ecobee sensors."""
 
-from __future__ import annotations
-
 from dataclasses import dataclass
+from typing import override
 
 from pyecobee.const import ECOBEE_STATE_CALIBRATING, ECOBEE_STATE_UNKNOWN
 
@@ -112,6 +111,7 @@ class EcobeeSensor(SensorEntity):
         self._state = None
 
     @property
+    @override
     def unique_id(self) -> str | None:
         """Return a unique identifier for this sensor."""
         for sensor in self.data.ecobee.get_remote_sensors(self.index):
@@ -123,6 +123,7 @@ class EcobeeSensor(SensorEntity):
         return None
 
     @property
+    @override
     def device_info(self) -> DeviceInfo | None:
         """Return device information for this sensor."""
         identifier = None
@@ -155,12 +156,14 @@ class EcobeeSensor(SensorEntity):
         return None
 
     @property
+    @override
     def available(self) -> bool:
         """Return true if device is available."""
         thermostat = self.data.ecobee.get_thermostat(self.index)
         return thermostat["runtime"]["connected"]
 
     @property
+    @override
     def native_value(self):
         """Return the state of the sensor."""
         if self._state in (

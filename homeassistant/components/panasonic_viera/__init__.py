@@ -121,7 +121,11 @@ async def async_unload_entry(
 
 
 class Remote:
-    """The Remote class. It stores the TV properties and the remote control connection itself."""
+    """The Remote class.
+
+    It stores the TV properties and the remote control
+    connection itself.
+    """
 
     def __init__(
         self,

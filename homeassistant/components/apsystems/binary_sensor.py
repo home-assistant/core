@@ -1,9 +1,8 @@
 """The read-only binary sensors for APsystems local API integration."""
 
-from __future__ import annotations
-
 from collections.abc import Callable
 from dataclasses import dataclass
+from typing import override
 
 from APsystemsEZ1 import ReturnAlarmInfo
 
@@ -98,6 +97,7 @@ class ApSystemsBinarySensorWithDescription(
         self._attr_unique_id = f"{data.device_id}_{entity_description.key}"
 
     @property
+    @override
     def is_on(self) -> bool | None:
         """Return value of sensor."""
         return self.entity_description.is_on(self.coordinator.data.alarm_info)

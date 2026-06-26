@@ -1,11 +1,9 @@
 """Support for Roborock switch."""
 
-from __future__ import annotations
-
 from collections.abc import Callable
 from dataclasses import dataclass
 import logging
-from typing import Any
+from typing import Any, override
 
 from roborock.devices.traits.v1 import PropertiesApi
 from roborock.devices.traits.v1.common import RoborockSwitchBase
@@ -14,13 +12,15 @@ from roborock.roborock_message import RoborockDyadDataProtocol, RoborockZeoProto
 
 from homeassistant.components.switch import SwitchEntity, SwitchEntityDescription
 from homeassistant.const import EntityCategory
-from homeassistant.core import HomeAssistant
+from homeassistant.core import HomeAssistant, callback
 from homeassistant.exceptions import HomeAssistantError
+from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
 from .const import DOMAIN
 from .coordinator import (
     RoborockConfigEntry,
+    RoborockCoordinatorType,
     RoborockDataUpdateCoordinator,
     RoborockDataUpdateCoordinatorA01,
 )
@@ -95,35 +95,50 @@ async def async_setup_entry(
     async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up Roborock switch platform."""
-    # V1 switches - using trait pattern from HEAD
-    async_add_entities(
-        [
-            RoborockSwitch(
-                f"{description.key}_{coordinator.duid_slug}",
-                coordinator,
-                description,
-                trait,
-            )
-            for coordinator in config_entry.runtime_data.v1
-            for description in SWITCH_DESCRIPTIONS
-            if (trait := description.trait(coordinator.properties_api)) is not None
-        ]
-    )
+    coordinators = config_entry.runtime_data
 
-    # A01 switches
-    async_add_entities(
-        RoborockSwitchA01(
-            coordinator,
-            description,
+    @callback
+    def async_add_coordinator_entities(
+        coordinator: RoborockCoordinatorType,
+    ) -> None:
+        """Add entities for a specific coordinator."""
+        entities: list[SwitchEntity] = []
+        if isinstance(coordinator, RoborockDataUpdateCoordinator):
+            entities.extend(
+                RoborockSwitch(
+                    f"{description.key}_{coordinator.duid_slug}",
+                    coordinator,
+                    description,
+                    trait,
+                )
+                for description in SWITCH_DESCRIPTIONS
+                if (trait := description.trait(coordinator.properties_api)) is not None
+            )
+        elif isinstance(coordinator, RoborockDataUpdateCoordinatorA01):
+            entities.extend(
+                RoborockSwitchA01(
+                    coordinator,
+                    description,
+                )
+                for description in A01_SWITCH_DESCRIPTIONS
+                if description.data_protocol in coordinator.request_protocols
+            )
+        async_add_entities(entities)
+
+    for coordinator in coordinators.values():
+        async_add_coordinator_entities(coordinator)
+
+    config_entry.async_on_unload(
+        async_dispatcher_connect(
+            hass,
+            f"roborock_coordinator_added_{config_entry.entry_id}",
+            async_add_coordinator_entities,
         )
-        for coordinator in config_entry.runtime_data.a01
-        for description in A01_SWITCH_DESCRIPTIONS
-        if description.data_protocol in coordinator.request_protocols
     )
 
 
 class RoborockSwitch(RoborockEntityV1, SwitchEntity):
-    """A class to let you turn functionality on Roborock devices on and off that does need a coordinator."""
+    """A class to toggle Roborock device functionality with a coordinator."""
 
     entity_description: RoborockSwitchDescription
 
@@ -147,6 +162,7 @@ class RoborockSwitch(RoborockEntityV1, SwitchEntity):
         )
         self._trait = trait
 
+    @override
     async def async_turn_off(self, **kwargs: Any) -> None:
         """Turn off the switch."""
         try:
@@ -157,6 +173,7 @@ class RoborockSwitch(RoborockEntityV1, SwitchEntity):
                 translation_key="update_options_failed",
             ) from err
 
+    @override
     async def async_turn_on(self, **kwargs: Any) -> None:
         """Turn on the switch."""
         try:
@@ -168,6 +185,7 @@ class RoborockSwitch(RoborockEntityV1, SwitchEntity):
             ) from err
 
     @property
+    @override
     def is_on(self) -> bool | None:
         """Return True if entity is on."""
         return self._trait.is_on
@@ -187,6 +205,7 @@ class RoborockSwitchA01(RoborockCoordinatedEntityA01, SwitchEntity):
         self.entity_description = description
         super().__init__(f"{description.key}_{coordinator.duid_slug}", coordinator)
 
+    @override
     async def async_turn_off(self, **kwargs: Any) -> None:
         """Turn off the switch."""
         try:
@@ -200,6 +219,7 @@ class RoborockSwitchA01(RoborockCoordinatedEntityA01, SwitchEntity):
                 translation_key="update_options_failed",
             ) from err
 
+    @override
     async def async_turn_on(self, **kwargs: Any) -> None:
         """Turn on the switch."""
         try:
@@ -214,6 +234,7 @@ class RoborockSwitchA01(RoborockCoordinatedEntityA01, SwitchEntity):
             ) from err
 
     @property
+    @override
     def is_on(self) -> bool | None:
         """Return True if entity is on."""
         status = self.coordinator.data.get(self.entity_description.data_protocol)

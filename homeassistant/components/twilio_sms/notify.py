@@ -1,9 +1,7 @@
 """Twilio SMS platform for notify component."""
 
-from __future__ import annotations
-
 import logging
-from typing import Any
+from typing import Any, override
 
 import voluptuous as vol
 
@@ -57,6 +55,7 @@ class TwilioSMSNotificationService(BaseNotificationService):
         self.client = twilio_client
         self.from_number = from_number
 
+    @override
     def send_message(self, message: str = "", **kwargs: Any) -> None:
         """Send SMS to specified target user cell."""
         targets = kwargs.get(ATTR_TARGET)

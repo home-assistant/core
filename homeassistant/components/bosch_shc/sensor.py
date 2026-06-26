@@ -1,10 +1,8 @@
 """Platform for sensor integration."""
 
-from __future__ import annotations
-
 from collections.abc import Callable
 from dataclasses import dataclass
-from typing import Any
+from typing import Any, override
 
 from boschshcpy.device import SHCDevice
 
@@ -217,11 +215,13 @@ class SHCSensor(SHCEntity, SensorEntity):
         self._attr_unique_id = f"{device.serial}_{entity_description.key}"
 
     @property
+    @override
     def native_value(self) -> StateType:
         """Return the state of the sensor."""
         return self.entity_description.value_fn(self._device)
 
     @property
+    @override
     def extra_state_attributes(self) -> dict[str, Any] | None:
         """Return the state attributes."""
         if self.entity_description.attributes_fn is not None:

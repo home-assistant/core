@@ -12,11 +12,9 @@ from homeassistant.components.counter import (
 )
 from homeassistant.const import ATTR_ENTITY_ID
 from homeassistant.core import HomeAssistant, callback
-from homeassistant.loader import bind_hass
 
 
 @callback
-@bind_hass
 def async_increment(hass: HomeAssistant, entity_id: str) -> None:
     """Increment a counter."""
     hass.async_create_task(
@@ -25,7 +23,6 @@ def async_increment(hass: HomeAssistant, entity_id: str) -> None:
 
 
 @callback
-@bind_hass
 def async_decrement(hass: HomeAssistant, entity_id: str) -> None:
     """Decrement a counter."""
     hass.async_create_task(
@@ -34,7 +31,6 @@ def async_decrement(hass: HomeAssistant, entity_id: str) -> None:
 
 
 @callback
-@bind_hass
 def async_reset(hass: HomeAssistant, entity_id: str) -> None:
     """Reset a counter."""
     hass.async_create_task(

@@ -1,8 +1,6 @@
 """Base entities for HTML5 integration."""
 
-from __future__ import annotations
-
-from typing import NotRequired, TypedDict
+from typing import NotRequired, TypedDict, override
 
 from aiohttp import ClientSession
 
@@ -68,6 +66,7 @@ class HTML5Entity(Entity):
         )
 
     @property
+    @override
     def available(self) -> bool:
         """Return True if entity is available."""
         return super().available and self.target in self.registrations

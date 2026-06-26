@@ -1,10 +1,8 @@
 """Binary sensor platform for Saunum Leil Sauna Control Unit integration."""
 
-from __future__ import annotations
-
 from collections.abc import Callable
 from dataclasses import dataclass
-from typing import TYPE_CHECKING
+from typing import TYPE_CHECKING, override
 
 from pysaunum import SaunumData
 
@@ -115,6 +113,7 @@ class LeilSaunaBinarySensorEntity(LeilSaunaEntity, BinarySensorEntity):
         self.entity_description = description
 
     @property
+    @override
     def is_on(self) -> bool | None:
         """Return the state of the binary sensor."""
         return self.entity_description.value_fn(self.coordinator.data)

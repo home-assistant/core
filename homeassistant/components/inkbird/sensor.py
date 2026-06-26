@@ -1,6 +1,6 @@
 """Support for inkbird ble sensors."""
 
-from __future__ import annotations
+from typing import override
 
 from inkbird_ble import DeviceClass, DeviceKey, SensorUpdate, Units
 
@@ -119,7 +119,9 @@ async def async_setup_entry(
             INKBIRDBluetoothSensorEntity, async_add_entities
         )
     )
-    entry.async_on_unload(entry.runtime_data.async_register_processor(processor))
+    entry.async_on_unload(
+        entry.runtime_data.async_register_processor(processor, SensorEntityDescription)
+    )
 
 
 class INKBIRDBluetoothSensorEntity(
@@ -131,6 +133,7 @@ class INKBIRDBluetoothSensorEntity(
     """Representation of a inkbird ble sensor."""
 
     @property
+    @override
     def native_value(self) -> int | float | None:
         """Return the native value."""
         return self.processor.entity_data.get(self.entity_key)

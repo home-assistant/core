@@ -2,7 +2,9 @@
 
 from unittest.mock import patch
 
-from homeassistant.components.gardena_bluetooth.const import DOMAIN
+from gardena_bluetooth.parse import ManufacturerData
+
+from homeassistant.components.gardena_bluetooth.const import CONF_PRODUCT_TYPE, DOMAIN
 from homeassistant.const import CONF_ADDRESS, Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.service_info.bluetooth import BluetoothServiceInfo
@@ -44,6 +46,16 @@ AQUA_CONTOUR_SERVICE_INFO = BluetoothServiceInfo(
     source="local",
 )
 
+MISSING_PRODUCT_SERVICE_INFO = BluetoothServiceInfo(
+    name="Missing Product Info",
+    address="00000000-0000-0000-0000-000000000000",
+    rssi=-63,
+    service_data={},
+    manufacturer_data={1062: b"\x05\x04\xf1b\xc1\x03"},
+    service_uuids=["98bd0001-0b0e-421a-84e5-ddbf75dc6de4"],
+    source="local",
+)
+
 MISSING_SERVICE_SERVICE_INFO = BluetoothServiceInfo(
     name="Missing Service Info",
     address="00000000-0000-0000-0001-000000000000",
@@ -81,10 +93,13 @@ UNSUPPORTED_GROUP_SERVICE_INFO = BluetoothServiceInfo(
 
 def get_config_entry(service_info: BluetoothServiceInfo) -> MockConfigEntry:
     """Construct a config entry for a given discovery."""
+    mfg_bytes = service_info.manufacturer_data.get(ManufacturerData.company, b"")
+    product_type = ManufacturerData.decode(mfg_bytes).product_type
     return MockConfigEntry(
         domain=DOMAIN,
-        data={CONF_ADDRESS: service_info.address},
+        data={CONF_ADDRESS: service_info.address, CONF_PRODUCT_TYPE: product_type.name},
         unique_id=service_info.address,
+        minor_version=2,
     )
 
 

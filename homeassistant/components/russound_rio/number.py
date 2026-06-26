@@ -2,8 +2,9 @@
 
 from collections.abc import Awaitable, Callable
 from dataclasses import dataclass
+from typing import override
 
-from aiorussound.rio import Controller, ZoneControlSurface
+from aiorussound.rio.client import Controller, ZoneControlSurface
 
 from homeassistant.components.number import NumberEntity, NumberEntityDescription
 from homeassistant.const import EntityCategory
@@ -102,11 +103,13 @@ class RussoundNumberEntity(RussoundBaseEntity, NumberEntity):
         )
 
     @property
+    @override
     def native_value(self) -> float:
         """Return the native value of the entity."""
         return float(self.entity_description.value_fn(self._zone))
 
     @command
+    @override
     async def async_set_native_value(self, value: float) -> None:
         """Set the value."""
         await self.entity_description.set_value_fn(self._zone, value)

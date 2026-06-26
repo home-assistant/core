@@ -1,13 +1,11 @@
 """Coordinator for the xbox integration."""
 
-from __future__ import annotations
-
 from abc import abstractmethod
 from dataclasses import dataclass, field
 from datetime import datetime, timedelta
 from http import HTTPStatus
 import logging
-from typing import ClassVar
+from typing import ClassVar, override
 
 from httpx import HTTPStatusError, RequestError, TimeoutException
 from pythonxbox.api.client import XboxLiveClient
@@ -84,6 +82,7 @@ class XboxBaseCoordinator[_DataT](DataUpdateCoordinator[_DataT]):
     async def update_data(self) -> _DataT:
         """Update coordinator data."""
 
+    @override
     async def _async_update_data(self) -> _DataT:
         """Fetch console data."""
 
@@ -108,6 +107,7 @@ class XboxConsolesCoordinator(XboxBaseCoordinator[dict[str, SmartglassConsole]])
     config_entry: XboxConfigEntry
     _update_interval = timedelta(minutes=10)
 
+    @override
     async def update_data(self) -> dict[str, SmartglassConsole]:
         """Fetch console data."""
 
@@ -153,6 +153,7 @@ class XboxConsoleStatusCoordinator(XboxBaseCoordinator[dict[str, ConsoleData]]):
 
         self.consoles: dict[str, SmartglassConsole] | None = consoles
 
+    @override
     async def update_data(self) -> dict[str, ConsoleData]:
         """Fetch console data."""
 
@@ -210,6 +211,7 @@ class XboxPresenceCoordinator(XboxBaseCoordinator[XboxData]):
     _update_interval = timedelta(seconds=30)
     title_data: ClassVar[dict[str, Title]] = {}
 
+    @override
     async def update_data(self) -> XboxData:
         """Fetch presence data."""
 
@@ -258,8 +260,10 @@ class XboxPresenceCoordinator(XboxBaseCoordinator[XboxData]):
     def last_seen_timestamp(self, person: Person) -> datetime | None:
         """Returns the most recent of two timestamps."""
 
-        # The Xbox API constantly fluctuates the "last seen" timestamp between two close values,
-        # causing unnecessary updates. We only accept the most recent one as valild to prevent this.
+        # The Xbox API constantly fluctuates the "last seen"
+        # timestamp between two close values, causing
+        # unnecessary updates. We only accept the most
+        # recent one as valid to prevent this.
 
         prev_dt = (
             prev_data.last_seen_date_time_utc

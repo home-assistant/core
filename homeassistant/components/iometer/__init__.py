@@ -1,7 +1,5 @@
 """The IOmeter integration."""
 
-from __future__ import annotations
-
 from iometer import IOmeterClient, IOmeterConnectionError
 
 from homeassistant.config_entries import ConfigEntry

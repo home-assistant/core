@@ -1,17 +1,21 @@
 """The Mikrotik router class."""
 
-from __future__ import annotations
-
 from datetime import timedelta
 import logging
 import ssl
-from typing import Any
+from typing import Any, override
 
 import librouteros
 from librouteros.login import plain as login_plain, token as login_token
 
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import CONF_HOST, CONF_PASSWORD, CONF_USERNAME, CONF_VERIFY_SSL
+from homeassistant.const import (
+    ATTR_MODEL,
+    CONF_HOST,
+    CONF_PASSWORD,
+    CONF_USERNAME,
+    CONF_VERIFY_SSL,
+)
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ConfigEntryAuthFailed
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
@@ -19,7 +23,6 @@ from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, Upda
 from .const import (
     ARP,
     ATTR_FIRMWARE,
-    ATTR_MODEL,
     ATTR_SERIAL_NUMBER,
     CAPSMAN,
     CONF_ARP_PING,
@@ -305,6 +308,7 @@ class MikrotikDataUpdateCoordinator(DataUpdateCoordinator[None]):
         """Represent Mikrotik data object."""
         return self._mk_data
 
+    @override
     async def _async_update_data(self) -> None:
         """Update Mikrotik devices information."""
         await self.hass.async_add_executor_job(self._mk_data.update_devices)

@@ -165,6 +165,7 @@ async def websocket_set_wake_words(
         vol.Required("entity_id"): cv.entity_domain(DOMAIN),
     }
 )
+@websocket_api.require_admin
 @websocket_api.async_response
 async def websocket_test_connection(
     hass: HomeAssistant,

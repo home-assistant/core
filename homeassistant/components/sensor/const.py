@@ -1,7 +1,5 @@
 """Constants for sensor."""
 
-from __future__ import annotations
-
 from enum import StrEnum
 from typing import Final
 
@@ -60,6 +58,7 @@ from homeassistant.util.unit_conversion import (
     ElectricPotentialConverter,
     EnergyConverter,
     EnergyDistanceConverter,
+    FrequencyConverter,
     InformationConverter,
     MassConverter,
     MassVolumeConcentrationConverter,
@@ -88,6 +87,19 @@ ATTR_STATE_CLASS: Final = "state_class"
 ATTR_OPTIONS: Final = "options"
 
 
+class SensorEntityCapabilityAttribute(StrEnum):
+    """Capability attributes for sensor entities."""
+
+    STATE_CLASS = "state_class"
+    OPTIONS = "options"
+
+
+class SensorEntityStateAttribute(StrEnum):
+    """State attributes for sensor entities."""
+
+    LAST_RESET = "last_reset"
+
+
 class SensorDeviceClass(StrEnum):
     """Device class for sensors."""
 
@@ -110,6 +122,20 @@ class SensorDeviceClass(StrEnum):
 
     TIMESTAMP = "timestamp"
     """Timestamp.
+
+    Unit of measurement: `None`
+
+    ISO8601 format: https://en.wikipedia.org/wiki/ISO_8601
+    """
+
+    UPTIME = "uptime"
+    """Uptime.
+
+    Represents the point in time when a device or service last restarted.
+
+    Small drift between updates is automatically suppressed in
+    `SensorEntity.state` to avoid unnecessary state changes caused by clock
+    jitter.
 
     Unit of measurement: `None`
 
@@ -162,7 +188,8 @@ class SensorDeviceClass(StrEnum):
     CO = "carbon_monoxide"
     """Carbon Monoxide gas concentration.
 
-    Unit of measurement: `ppb` (parts per billion), `ppm` (parts per million), `mg/m³`, `μg/m³`
+    Unit of measurement: `ppb` (parts per billion),
+    `ppm` (parts per million), `mg/m³`, `μg/m³`
     """
 
     CO2 = "carbon_dioxide"
@@ -180,7 +207,7 @@ class SensorDeviceClass(StrEnum):
     CURRENT = "current"
     """Current.
 
-    Unit of measurement: `A`, `mA`
+    Unit of measurement: `A`, `mA`, `μA`
     """
 
     DATA_RATE = "data_rate"
@@ -214,16 +241,20 @@ class SensorDeviceClass(StrEnum):
 
     Use this device class for sensors measuring energy consumption, for example
     electric energy consumption.
-    Unit of measurement: `J`, `kJ`, `MJ`, `GJ`, `mWh`, `Wh`, `kWh`, `MWh`, `GWh`, `TWh`, `cal`, `kcal`, `Mcal`, `Gcal`
+    Unit of measurement: `J`, `kJ`, `MJ`, `GJ`, `mWh`,
+    `Wh`, `kWh`, `MWh`, `GWh`, `TWh`, `cal`, `kcal`,
+    `Mcal`, `Gcal`
     """
 
     ENERGY_DISTANCE = "energy_distance"
     """Energy distance.
 
-    Use this device class for sensors measuring energy by distance, for example the amount
-    of electric energy consumed by an electric car.
+    Use this device class for sensors measuring energy by
+    distance, for example the amount of electric energy
+    consumed by an electric car.
 
-    Unit of measurement: `kWh/100km`, `Wh/km`, `mi/kWh`, `km/kWh`
+    Unit of measurement: `kWh/100km`, `Wh/km`,
+    `mi/kWh`, `km/kWh`
     """
 
     ENERGY_STORAGE = "energy_storage"
@@ -232,7 +263,9 @@ class SensorDeviceClass(StrEnum):
     Use this device class for sensors measuring stored energy, for example the amount
     of electric energy currently stored in a battery or the capacity of a battery.
 
-    Unit of measurement: `J`, `kJ`, `MJ`, `GJ`, `mWh`, `Wh`, `kWh`, `MWh`, `GWh`, `TWh`, `cal`, `kcal`, `Mcal`, `Gcal`
+    Unit of measurement: `J`, `kJ`, `MJ`, `GJ`, `mWh`,
+    `Wh`, `kWh`, `MWh`, `GWh`, `TWh`, `cal`, `kcal`,
+    `Mcal`, `Gcal`
     """
 
     FREQUENCY = "frequency"
@@ -451,8 +484,10 @@ class SensorDeviceClass(StrEnum):
 
     Unit of measurement: `VOLUME_*` units
     - SI / metric: `mL`, `L`, `m³`
-    - USCS / imperial: `ft³`, `CCF`, `MCF`, `fl. oz.`, `gal` (warning: volumes expressed in
-    USCS/imperial units are currently assumed to be US volumes)
+    - USCS / imperial: `ft³`, `CCF`, `MCF`,
+    `fl. oz.`, `gal` (warning: volumes expressed in
+    USCS/imperial units are currently assumed to be
+    US volumes)
     """
 
     VOLUME_STORAGE = "volume_storage"
@@ -463,8 +498,10 @@ class SensorDeviceClass(StrEnum):
 
     Unit of measurement: `VOLUME_*` units
     - SI / metric: `mL`, `L`, `m³`
-    - USCS / imperial: `ft³`, `CCF`, `MCF`, `fl. oz.`, `gal` (warning: volumes expressed in
-    USCS/imperial units are currently assumed to be US volumes)
+    - USCS / imperial: `ft³`, `CCF`, `MCF`,
+    `fl. oz.`, `gal` (warning: volumes expressed in
+    USCS/imperial units are currently assumed to be
+    US volumes)
     """
 
     VOLUME_FLOW_RATE = "volume_flow_rate"
@@ -515,6 +552,7 @@ NON_NUMERIC_DEVICE_CLASSES = {
     SensorDeviceClass.DATE,
     SensorDeviceClass.ENUM,
     SensorDeviceClass.TIMESTAMP,
+    SensorDeviceClass.UPTIME,
 }
 
 DEVICE_CLASSES_SCHEMA: Final = vol.All(vol.Lower, vol.Coerce(SensorDeviceClass))
@@ -531,7 +569,10 @@ class SensorStateClass(StrEnum):
     """The state represents a measurement in present time."""
 
     MEASUREMENT_ANGLE = "measurement_angle"
-    """The state represents a angle measurement in present time. Currently only degrees are supported."""
+    """The state represents an angle measurement in present time.
+
+    Currently only degrees are supported.
+    """
 
     TOTAL = "total"
     """The state represents a total amount.
@@ -565,6 +606,7 @@ UNIT_CONVERTERS: dict[SensorDeviceClass | str | None, type[BaseUnitConverter]] =
     SensorDeviceClass.ENERGY: EnergyConverter,
     SensorDeviceClass.ENERGY_DISTANCE: EnergyDistanceConverter,
     SensorDeviceClass.ENERGY_STORAGE: EnergyConverter,
+    SensorDeviceClass.FREQUENCY: FrequencyConverter,
     SensorDeviceClass.GAS: VolumeConverter,
     SensorDeviceClass.NITROGEN_DIOXIDE: NitrogenDioxideConcentrationConverter,
     SensorDeviceClass.NITROGEN_MONOXIDE: NitrogenMonoxideConcentrationConverter,
@@ -814,6 +856,7 @@ DEVICE_CLASS_STATE_CLASSES: dict[SensorDeviceClass, set[SensorStateClass]] = {
     SensorDeviceClass.TEMPERATURE: {SensorStateClass.MEASUREMENT},
     SensorDeviceClass.TEMPERATURE_DELTA: {SensorStateClass.MEASUREMENT},
     SensorDeviceClass.TIMESTAMP: set(),
+    SensorDeviceClass.UPTIME: set(),
     SensorDeviceClass.VOLATILE_ORGANIC_COMPOUNDS: {SensorStateClass.MEASUREMENT},
     SensorDeviceClass.VOLATILE_ORGANIC_COMPOUNDS_PARTS: {SensorStateClass.MEASUREMENT},
     SensorDeviceClass.VOLTAGE: {SensorStateClass.MEASUREMENT},

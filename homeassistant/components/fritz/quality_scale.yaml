@@ -8,9 +8,15 @@ rules:
   config-flow: done
   dependency-transparency: done
   docs-actions: done
+  docs-conditions:
+    status: exempt
+    comment: This integration does not have any conditions.
   docs-high-level-description: done
   docs-installation-instructions: done
   docs-removal-instructions: done
+  docs-triggers:
+    status: exempt
+    comment: This integration does not have any triggers.
   entity-event-setup: done
   entity-unique-id: done
   has-entity-name: done
@@ -56,9 +62,7 @@ rules:
   repair-issues:
     status: exempt
     comment: no known use cases for repair issues or flows, yet
-  stale-devices:
-    status: todo
-    comment: automate the current cleanup process and deprecate the corresponding button
+  stale-devices: done
 
   # Platinum
   async-dependency:

@@ -1,7 +1,5 @@
 """The Brands integration."""
 
-from __future__ import annotations
-
 from collections import deque
 from http import HTTPStatus
 import logging
@@ -43,7 +41,7 @@ CONFIG_SCHEMA = cv.empty_config_schema(DOMAIN)
 
 async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     """Set up the Brands integration."""
-    access_tokens: deque[str] = deque([], 2)
+    access_tokens: deque[str] = deque(maxlen=2)
     access_tokens.append(hex(_RND.getrandbits(256))[2:])
     hass.data[DOMAIN] = access_tokens
 
@@ -125,7 +123,14 @@ class _BrandsBaseView(HomeAssistantView):
         )
         if not authenticated:
             if hdrs.AUTHORIZATION in request.headers:
+                # A failed request that carried an Authorization header is a real
+                # Bearer auth attempt — return 401 and let the ban middleware count
+                # it as a wrong login.
                 raise web.HTTPUnauthorized
+            # No Authorization header: most likely a benign signed-URL / query-
+            # token request whose token has expired (e.g. a browser tab left
+            # open that re-fetches resources later). Return 403 so it doesn't
+            # register as a wrong login and ban the user's own IP.
             raise web.HTTPForbidden
 
     async def _serve_from_custom_integration(

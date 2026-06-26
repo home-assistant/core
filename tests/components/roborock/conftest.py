@@ -1,13 +1,13 @@
 """Global fixtures for Roborock integration."""
 
 import asyncio
-from collections.abc import Generator
+from collections.abc import Callable, Generator
 from copy import deepcopy
 import logging
 import pathlib
 import tempfile
 from typing import Any
-from unittest.mock import AsyncMock, Mock, PropertyMock, patch
+from unittest.mock import AsyncMock, MagicMock, Mock, PropertyMock, patch
 
 import pytest
 from roborock import (
@@ -41,6 +41,7 @@ from roborock.devices.traits.v1.clean_summary import CleanSummaryTrait
 from roborock.devices.traits.v1.command import CommandTrait
 from roborock.devices.traits.v1.common import V1TraitMixin
 from roborock.devices.traits.v1.consumeable import ConsumableTrait
+from roborock.devices.traits.v1.device_features import DeviceFeaturesTrait
 from roborock.devices.traits.v1.do_not_disturb import DoNotDisturbTrait
 from roborock.devices.traits.v1.dust_collection_mode import DustCollectionModeTrait
 from roborock.devices.traits.v1.home import HomeTrait
@@ -159,6 +160,7 @@ def create_b01_q7_trait() -> Mock:
     b01_trait.find_me = AsyncMock()
     b01_trait.set_fan_speed = AsyncMock()
     b01_trait.set_mode = AsyncMock()
+    b01_trait.set_clean_path_preference = AsyncMock()
     b01_trait.set_water_level = AsyncMock()
     b01_trait.send = AsyncMock()
     return b01_trait
@@ -278,11 +280,11 @@ def make_dnd_timer(dataclass_template: RoborockBase) -> AsyncMock:
     )
 
     async def set_dnd_timer(timer: DnDTimer) -> None:
-        setattr(dnd_trait, "start_hour", timer.start_hour)
-        setattr(dnd_trait, "start_minute", timer.start_minute)
-        setattr(dnd_trait, "end_hour", timer.end_hour)
-        setattr(dnd_trait, "end_minute", timer.end_minute)
-        setattr(dnd_trait, "enabled", timer.enabled)
+        dnd_trait.start_hour = timer.start_hour
+        dnd_trait.start_minute = timer.start_minute
+        dnd_trait.end_hour = timer.end_hour
+        dnd_trait.end_minute = timer.end_minute
+        dnd_trait.enabled = timer.enabled
 
     dnd_trait.set_dnd_timer = AsyncMock()
     dnd_trait.set_dnd_timer.side_effect = set_dnd_timer
@@ -297,11 +299,11 @@ def make_valley_electric_timer(dataclass_template: RoborockBase) -> AsyncMock:
     )
 
     async def set_timer(timer: ValleyElectricityTimer) -> None:
-        setattr(valley_electric_timer_trait, "start_hour", timer.start_hour)
-        setattr(valley_electric_timer_trait, "start_minute", timer.start_minute)
-        setattr(valley_electric_timer_trait, "end_hour", timer.end_hour)
-        setattr(valley_electric_timer_trait, "end_minute", timer.end_minute)
-        setattr(valley_electric_timer_trait, "enabled", timer.enabled)
+        valley_electric_timer_trait.start_hour = timer.start_hour
+        valley_electric_timer_trait.start_minute = timer.start_minute
+        valley_electric_timer_trait.end_hour = timer.end_hour
+        valley_electric_timer_trait.end_minute = timer.end_minute
+        valley_electric_timer_trait.enabled = timer.enabled
 
     valley_electric_timer_trait.set_timer = AsyncMock()
     valley_electric_timer_trait.set_timer.side_effect = set_timer
@@ -343,6 +345,18 @@ def make_home_trait(
     return home_trait
 
 
+def make_device_features() -> Mock:
+    """Create fake device features."""
+    device_features = MagicMock(spec=DeviceFeaturesTrait)
+    device_features.is_supported_drying = True
+    device_features.is_support_water_mode = True
+    device_features.is_clean_fluid_delivery_supported = True
+    device_features.is_support_clean_estimate = True
+    device_features.is_clean_route_setting_supported = True
+    device_features.is_field_supported.return_value = True
+    return device_features
+
+
 def create_v1_properties(network_info: NetworkInfo) -> AsyncMock:
     """Create v1 properties for each fake device."""
     v1_properties = AsyncMock(spec=PropertiesApi)
@@ -350,6 +364,7 @@ def create_v1_properties(network_info: NetworkInfo) -> AsyncMock:
         trait_spec=StatusTrait,
         dataclass_template=STATUS,
     )
+    v1_properties.device_features = make_device_features()
     _fan_speed_mapping = {m.code: m.value for m in VacuumModes}
     _water_mode_mapping = {m.code: m.value for m in WaterModes}
     _mop_route_mapping = {m.code: m.value for m in CleanRoutes}
@@ -436,9 +451,9 @@ def fake_devices_fixture() -> list[FakeDevice]:
                 NETWORK_INFO_BY_DEVICE[device_data.duid]
             )
         elif device_data.pv == "A01":
-            if device_product_data.category == RoborockCategory.WET_DRY_VAC:
+            if device_product_data.category is RoborockCategory.WET_DRY_VAC:
                 fake_device.dyad = create_dyad_trait()
-            elif device_product_data.category == RoborockCategory.WASHING_MACHINE:
+            elif device_product_data.category is RoborockCategory.WASHING_MACHINE:
                 fake_device.zeo = create_zeo_trait()
             else:
                 raise ValueError("Unknown A01 category in test HOME_DATA")
@@ -506,15 +521,42 @@ def device_manager_fixture(
     return device_manager
 
 
+class MockDeviceManagerContext:
+    """Context for mock device manager."""
+
+    ready_callback: Callable[[RoborockDevice], None] | None = None
+    initial_devices: list[RoborockDevice] | None = None
+
+
+@pytest.fixture(name="device_manager_context")
+def device_manager_context_fixture(
+    fake_devices: list[FakeDevice],
+) -> MockDeviceManagerContext:
+    """Fixture to provide device manager context."""
+    context = MockDeviceManagerContext()
+    context.initial_devices = fake_devices
+    return context
+
+
 @pytest.fixture(name="fake_create_device_manager", autouse=True)
 def fake_create_device_manager_fixture(
     device_manager: AsyncMock,
-) -> None:
+    device_manager_context: MockDeviceManagerContext,
+) -> Generator[None]:
     """Fixture to create a fake device manager."""
+
+    async def _fake_create_device_manager(*args: Any, **kwargs: Any) -> AsyncMock:
+        ready_callback = kwargs.get("ready_callback")
+        assert ready_callback
+        device_manager_context.ready_callback = ready_callback
+        for device in device_manager_context.initial_devices:
+            ready_callback(device)
+        return device_manager
+
     with patch(
         "homeassistant.components.roborock.create_device_manager",
-    ) as mock_create_device_manager:
-        mock_create_device_manager.return_value = device_manager
+        side_effect=_fake_create_device_manager,
+    ):
         yield
 
 

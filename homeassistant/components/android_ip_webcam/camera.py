@@ -1,6 +1,6 @@
 """Support for Android IP Webcam Cameras."""
 
-from __future__ import annotations
+from typing import override
 
 from homeassistant.components.camera import CameraEntityFeature
 from homeassistant.components.mjpeg import MjpegCamera, filter_urllib3_logging
@@ -50,6 +50,7 @@ class IPWebcamCamera(MjpegCamera):
         )
         self._coordinator = coordinator
 
+    @override
     async def stream_source(self) -> str:
         """Get the stream source for the Android IP camera."""
         return self._coordinator.cam.get_rtsp_url(
