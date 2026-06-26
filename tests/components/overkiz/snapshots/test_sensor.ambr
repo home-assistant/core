@@ -1987,7 +1987,7 @@
     'supported_features': 0,
     'translation_key': None,
     'unique_id': 'io://1234-5678-1698/15702199#1-core:BatteryLevelState',
-    'unit_of_measurement': '%',
+    'unit_of_measurement': <UnitOfRatio.PERCENTAGE: '%'>,
   })
 # ---
 # name: test_sensor_entities_snapshot[cloud_nexity_rail_din_europe.json][sensor.maple_residence_garden_radiator_battery_level-state]
@@ -1996,7 +1996,7 @@
       <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'battery',
       <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Garden Radiator Battery level',
       <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
-      <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: '%',
+      <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: <UnitOfRatio.PERCENTAGE: '%'>,
     }),
     'context': <ANY>,
     'entity_id': 'sensor.maple_residence_garden_radiator_battery_level',
@@ -2447,14 +2447,14 @@
     'supported_features': 0,
     'translation_key': None,
     'unique_id': 'io://1234-5678-1698/4080031-core:TargetClosureState',
-    'unit_of_measurement': '%',
+    'unit_of_measurement': <UnitOfRatio.PERCENTAGE: '%'>,
   })
 # ---
 # name: test_sensor_entities_snapshot[cloud_nexity_rail_din_europe.json][sensor.maple_residence_hallway_shutter_target_closure-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Hallway Shutter Target closure',
-      <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: '%',
+      <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: <UnitOfRatio.PERCENTAGE: '%'>,
     }),
     'context': <ANY>,
     'entity_id': 'sensor.maple_residence_hallway_shutter_target_closure',
@@ -3016,7 +3016,7 @@
     'supported_features': 0,
     'translation_key': None,
     'unique_id': 'io://1234-5678-1698/9253412#1-core:BatteryLevelState',
-    'unit_of_measurement': '%',
+    'unit_of_measurement': <UnitOfRatio.PERCENTAGE: '%'>,
   })
 # ---
 # name: test_sensor_entities_snapshot[cloud_nexity_rail_din_europe.json][sensor.maple_residence_living_room_radiator_battery_level-state]
@@ -3025,7 +3025,7 @@
       <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'battery',
       <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Living Room Radiator Battery level',
       <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
-      <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: '%',
+      <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: <UnitOfRatio.PERCENTAGE: '%'>,
     }),
     'context': <ANY>,
     'entity_id': 'sensor.maple_residence_living_room_radiator_battery_level',
@@ -4087,14 +4087,14 @@
     'supported_features': 0,
     'translation_key': None,
     'unique_id': 'io://1234-5678-1698/141613-core:TargetClosureState',
-    'unit_of_measurement': '%',
+    'unit_of_measurement': <UnitOfRatio.PERCENTAGE: '%'>,
   })
 # ---
 # name: test_sensor_entities_snapshot[cloud_nexity_rail_din_europe.json][sensor.maple_residence_nursery_shutter_target_closure-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Nursery Shutter Target closure',
-      <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: '%',
+      <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: <UnitOfRatio.PERCENTAGE: '%'>,
     }),
     'context': <ANY>,
     'entity_id': 'sensor.maple_residence_nursery_shutter_target_closure',
@@ -4361,14 +4361,14 @@
     'supported_features': 0,
     'translation_key': None,
     'unique_id': 'io://1234-5678-1698/9740264-core:TargetClosureState',
-    'unit_of_measurement': '%',
+    'unit_of_measurement': <UnitOfRatio.PERCENTAGE: '%'>,
   })
 # ---
 # name: test_sensor_entities_snapshot[cloud_nexity_rail_din_europe.json][sensor.maple_residence_office_shutter_target_closure-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Office Shutter Target closure',
-      <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: '%',
+      <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: <UnitOfRatio.PERCENTAGE: '%'>,
     }),
     'context': <ANY>,
     'entity_id': 'sensor.maple_residence_office_shutter_target_closure',
@@ -4637,7 +4637,7 @@
     'supported_features': 0,
     'translation_key': None,
     'unique_id': 'io://1234-5678-1698/9187218#1-core:BatteryLevelState',
-    'unit_of_measurement': '%',
+    'unit_of_measurement': <UnitOfRatio.PERCENTAGE: '%'>,
   })
 # ---
 # name: test_sensor_entities_snapshot[cloud_nexity_rail_din_europe.json][sensor.maple_residence_study_radiator_battery_level-state]
@@ -4646,7 +4646,7 @@
       <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'battery',
       <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Study Radiator Battery level',
       <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
-      <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: '%',
+      <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: <UnitOfRatio.PERCENTAGE: '%'>,
     }),
     'context': <ANY>,
     'entity_id': 'sensor.maple_residence_study_radiator_battery_level',
@@ -5518,7 +5518,7 @@
     'supported_features': 0,
     'translation_key': None,
     'unique_id': 'io://1234-5678--9373/6360455#1-core:BatteryLevelState',
-    'unit_of_measurement': '%',
+    'unit_of_measurement': <UnitOfRatio.PERCENTAGE: '%'>,
   })
 # ---
 # name: test_sensor_entities_snapshot[local_somfy_tahoma_switch_europe_3.json][sensor.attic_heater_battery_level-state]
@@ -5527,7 +5527,7 @@
       <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'battery',
       <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Attic Heater Battery level',
       <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
-      <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: '%',
+      <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: <UnitOfRatio.PERCENTAGE: '%'>,
     }),
     'context': <ANY>,
     'entity_id': 'sensor.attic_heater_battery_level',
@@ -6117,14 +6117,14 @@
     'supported_features': 0,
     'translation_key': None,
     'unique_id': 'io://1234-5678--9373/3868695-core:TargetClosureState',
-    'unit_of_measurement': '%',
+    'unit_of_measurement': <UnitOfRatio.PERCENTAGE: '%'>,
   })
 # ---
 # name: test_sensor_entities_snapshot[local_somfy_tahoma_switch_europe_3.json][sensor.conservatory_screen_target_closure-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Conservatory Screen Target closure',
-      <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: '%',
+      <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: <UnitOfRatio.PERCENTAGE: '%'>,
     }),
     'context': <ANY>,
     'entity_id': 'sensor.conservatory_screen_target_closure',
@@ -6170,7 +6170,7 @@
     'supported_features': 0,
     'translation_key': None,
     'unique_id': 'io://1234-5678--9373/10832611#1-core:BatteryLevelState',
-    'unit_of_measurement': '%',
+    'unit_of_measurement': <UnitOfRatio.PERCENTAGE: '%'>,
   })
 # ---
 # name: test_sensor_entities_snapshot[local_somfy_tahoma_switch_europe_3.json][sensor.dining_room_thermostat_battery_level-state]
@@ -6179,7 +6179,7 @@
       <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'battery',
       <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Dining Room Thermostat Battery level',
       <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
-      <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: '%',
+      <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: <UnitOfRatio.PERCENTAGE: '%'>,
     }),
     'context': <ANY>,
     'entity_id': 'sensor.dining_room_thermostat_battery_level',
@@ -6771,7 +6771,7 @@
     'supported_features': 0,
     'translation_key': None,
     'unique_id': 'io://1234-5678--9373/3000744#1-core:BatteryLevelState',
-    'unit_of_measurement': '%',
+    'unit_of_measurement': <UnitOfRatio.PERCENTAGE: '%'>,
   })
 # ---
 # name: test_sensor_entities_snapshot[local_somfy_tahoma_switch_europe_3.json][sensor.garage_radiator_battery_level-state]
@@ -6780,7 +6780,7 @@
       <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'battery',
       <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Garage Radiator Battery level',
       <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
-      <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: '%',
+      <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: <UnitOfRatio.PERCENTAGE: '%'>,
     }),
     'context': <ANY>,
     'entity_id': 'sensor.garage_radiator_battery_level',
@@ -7252,7 +7252,7 @@
     'supported_features': 0,
     'translation_key': None,
     'unique_id': 'io://1234-5678--9373/10074960#1-core:BatteryLevelState',
-    'unit_of_measurement': '%',
+    'unit_of_measurement': <UnitOfRatio.PERCENTAGE: '%'>,
   })
 # ---
 # name: test_sensor_entities_snapshot[local_somfy_tahoma_switch_europe_3.json][sensor.garage_thermostat_battery_level-state]
@@ -7261,7 +7261,7 @@
       <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'battery',
       <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Garage Thermostat Battery level',
       <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
-      <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: '%',
+      <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: <UnitOfRatio.PERCENTAGE: '%'>,
     }),
     'context': <ANY>,
     'entity_id': 'sensor.garage_thermostat_battery_level',
@@ -7491,7 +7491,7 @@
     'supported_features': 0,
     'translation_key': None,
     'unique_id': 'io://1234-5678--9373/13876191#1-core:BatteryLevelState',
-    'unit_of_measurement': '%',
+    'unit_of_measurement': <UnitOfRatio.PERCENTAGE: '%'>,
   })
 # ---
 # name: test_sensor_entities_snapshot[local_somfy_tahoma_switch_europe_3.json][sensor.garden_radiator_battery_level-state]
@@ -7500,7 +7500,7 @@
       <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'battery',
       <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Garden Radiator Battery level',
       <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
-      <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: '%',
+      <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: <UnitOfRatio.PERCENTAGE: '%'>,
     }),
     'context': <ANY>,
     'entity_id': 'sensor.garden_radiator_battery_level',
@@ -8576,7 +8576,7 @@
     'supported_features': 0,
     'translation_key': None,
     'unique_id': 'io://1234-5678--9373/13659989#1-core:BatteryLevelState',
-    'unit_of_measurement': '%',
+    'unit_of_measurement': <UnitOfRatio.PERCENTAGE: '%'>,
   })
 # ---
 # name: test_sensor_entities_snapshot[local_somfy_tahoma_switch_europe_3.json][sensor.hallway_radiator_battery_level-state]
@@ -8585,7 +8585,7 @@
       <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'battery',
       <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Hallway Radiator Battery level',
       <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
-      <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: '%',
+      <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: <UnitOfRatio.PERCENTAGE: '%'>,
     }),
     'context': <ANY>,
     'entity_id': 'sensor.hallway_radiator_battery_level',
@@ -9537,14 +9537,14 @@
     'supported_features': 0,
     'translation_key': None,
     'unique_id': 'io://1234-5678--9373/3904805-core:TargetClosureState',
-    'unit_of_measurement': '%',
+    'unit_of_measurement': <UnitOfRatio.PERCENTAGE: '%'>,
   })
 # ---
 # name: test_sensor_entities_snapshot[local_somfy_tahoma_switch_europe_3.json][sensor.library_screen_target_closure-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Library Screen Target closure',
-      <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: '%',
+      <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: <UnitOfRatio.PERCENTAGE: '%'>,
     }),
     'context': <ANY>,
     'entity_id': 'sensor.library_screen_target_closure',
@@ -9710,7 +9710,7 @@
     'supported_features': 0,
     'translation_key': None,
     'unique_id': 'io://1234-5678--9373/9749990#1-core:BatteryLevelState',
-    'unit_of_measurement': '%',
+    'unit_of_measurement': <UnitOfRatio.PERCENTAGE: '%'>,
   })
 # ---
 # name: test_sensor_entities_snapshot[local_somfy_tahoma_switch_europe_3.json][sensor.living_room_thermostat_battery_level-state]
@@ -9719,7 +9719,7 @@
       <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'battery',
       <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Living Room Thermostat Battery level',
       <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
-      <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: '%',
+      <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: <UnitOfRatio.PERCENTAGE: '%'>,
     }),
     'context': <ANY>,
     'entity_id': 'sensor.living_room_thermostat_battery_level',
@@ -9949,7 +9949,7 @@
     'supported_features': 0,
     'translation_key': None,
     'unique_id': 'io://1234-5678--9373/1292684#1-core:BatteryLevelState',
-    'unit_of_measurement': '%',
+    'unit_of_measurement': <UnitOfRatio.PERCENTAGE: '%'>,
   })
 # ---
 # name: test_sensor_entities_snapshot[local_somfy_tahoma_switch_europe_3.json][sensor.patio_thermostat_battery_level-state]
@@ -9958,7 +9958,7 @@
       <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'battery',
       <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Patio Thermostat Battery level',
       <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
-      <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: '%',
+      <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: <UnitOfRatio.PERCENTAGE: '%'>,
     }),
     'context': <ANY>,
     'entity_id': 'sensor.patio_thermostat_battery_level',
@@ -10546,14 +10546,14 @@
     'supported_features': 0,
     'translation_key': None,
     'unique_id': 'io://1234-5678--9373/5632438-core:TargetClosureState',
-    'unit_of_measurement': '%',
+    'unit_of_measurement': <UnitOfRatio.PERCENTAGE: '%'>,
   })
 # ---
 # name: test_sensor_entities_snapshot[local_somfy_tahoma_switch_europe_3.json][sensor.terrace_awning_target_closure-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Terrace Awning Target closure',
-      <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: '%',
+      <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: <UnitOfRatio.PERCENTAGE: '%'>,
     }),
     'context': <ANY>,
     'entity_id': 'sensor.terrace_awning_target_closure',
