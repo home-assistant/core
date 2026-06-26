@@ -105,4 +105,4 @@ async def init_integration_with_receiver(
         await hass.config_entries.async_setup(mock_config_entry_with_receiver.entry_id)
         await hass.async_block_till_done()
 
-    return mock_config_entry
+    return mock_config_entry_with_receiver

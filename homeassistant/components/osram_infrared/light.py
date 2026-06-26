@@ -129,7 +129,7 @@ class OsramIrLight(OsramIrEmitterEntity, LightEntity):
 
     @override
     async def async_turn_on(self, **kwargs: Any) -> None:
-        """Turn on the light and apply optional effect and  color."""
+        """Turn on the light and apply optional effect and color."""
         if not self._attr_is_on:
             await self._async_send_code(
                 OsramLightCode.ON,
