@@ -38,9 +38,7 @@ class RiscoCloudSwitch(RiscoCloudZoneEntity, SwitchEntity):
     _attr_entity_category = EntityCategory.CONFIG
     _attr_translation_key = "bypassed"
 
-    def __init__(
-        self, cloud_data: CloudData, zone_id: int, zone: Zone
-    ) -> None:
+    def __init__(self, cloud_data: CloudData, zone_id: int, zone: Zone) -> None:
         """Init the zone."""
         super().__init__(
             cloud_data=cloud_data,

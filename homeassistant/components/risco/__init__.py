@@ -64,7 +64,6 @@ def zone_update_signal(zone_id: int) -> str:
     return f"risco_zone_update_{zone_id}"
 
 
-
 async def async_setup_entry(hass: HomeAssistant, entry: RiscoConfigEntry) -> bool:
     """Set up Risco from a config entry."""
     if is_local(entry):

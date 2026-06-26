@@ -105,9 +105,7 @@ class RiscoCloudBinarySensor(RiscoCloudZoneEntity, BinarySensorEntity):
     _attr_device_class = BinarySensorDeviceClass.MOTION
     _attr_name = None
 
-    def __init__(
-        self, cloud_data: CloudData, zone_id: int, zone: CloudZone
-    ) -> None:
+    def __init__(self, cloud_data: CloudData, zone_id: int, zone: CloudZone) -> None:
         """Init the zone."""
         super().__init__(
             cloud_data=cloud_data,

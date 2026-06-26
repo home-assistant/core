@@ -11,12 +11,7 @@ from homeassistant.components.alarm_control_panel import (
     AlarmControlPanelEntityFeature,
     AlarmControlPanelState,
 )
-from unittest.mock import MagicMock
-
-from homeassistant.components.risco import (
-    CannotConnectError,
-    UnauthorizedError,
-)
+from homeassistant.components.risco import CannotConnectError, UnauthorizedError
 from homeassistant.components.risco.const import DOMAIN
 from homeassistant.const import (
     SERVICE_ALARM_ARM_AWAY,

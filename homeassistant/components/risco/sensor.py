@@ -52,9 +52,7 @@ async def async_setup_entry(
         RiscoSensor(cloud_data, category_id, [], name)
         for category_id, name in CATEGORIES.items()
     ]
-    sensors.append(
-        RiscoSensor(cloud_data, None, CATEGORIES.keys(), "Other")
-    )
+    sensors.append(RiscoSensor(cloud_data, None, CATEGORIES.keys(), "Other"))
     async_add_entities(sensors)
 
 

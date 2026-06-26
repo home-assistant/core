@@ -165,9 +165,7 @@ def mock_cloud_login() -> AsyncMock:
 @pytest.fixture
 def mock_cloud_state_handler() -> MagicMock:
     """Fixture to capture state handler callbacks registered with the library."""
-    with patch(
-        "homeassistant.components.risco.RiscoCloud.add_state_handler"
-    ) as mock:
+    with patch("homeassistant.components.risco.RiscoCloud.add_state_handler") as mock:
         mock.return_value = MagicMock()
         yield mock
 
@@ -175,9 +173,7 @@ def mock_cloud_state_handler() -> MagicMock:
 @pytest.fixture
 def mock_cloud_event_handler() -> MagicMock:
     """Fixture to capture event handler callbacks registered with the library."""
-    with patch(
-        "homeassistant.components.risco.RiscoCloud.add_event_handler"
-    ) as mock:
+    with patch("homeassistant.components.risco.RiscoCloud.add_event_handler") as mock:
         mock.return_value = MagicMock()
         yield mock
 

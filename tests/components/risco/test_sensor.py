@@ -4,10 +4,7 @@ from unittest.mock import MagicMock, PropertyMock, patch
 
 import pytest
 
-from homeassistant.components.risco import (
-    CannotConnectError,
-    UnauthorizedError,
-)
+from homeassistant.components.risco import CannotConnectError, UnauthorizedError
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import entity_registry as er
 from homeassistant.util import dt as dt_util

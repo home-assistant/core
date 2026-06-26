@@ -6,12 +6,7 @@ from unittest.mock import MagicMock, PropertyMock, patch
 
 import pytest
 
-from unittest.mock import MagicMock
-
-from homeassistant.components.risco import (
-    CannotConnectError,
-    UnauthorizedError,
-)
+from homeassistant.components.risco import CannotConnectError, UnauthorizedError
 from homeassistant.components.risco.const import DOMAIN
 from homeassistant.const import STATE_OFF, STATE_ON
 from homeassistant.core import HomeAssistant
@@ -97,16 +92,40 @@ async def test_cloud_states(
 ) -> None:
     """Test the various alarm states."""
     await _check_cloud_state(
-        hass, mock_cloud_state_handler, cloud_alarm_mock, two_zone_cloud, True, FIRST_ENTITY_ID, 0
+        hass,
+        mock_cloud_state_handler,
+        cloud_alarm_mock,
+        two_zone_cloud,
+        True,
+        FIRST_ENTITY_ID,
+        0,
     )
     await _check_cloud_state(
-        hass, mock_cloud_state_handler, cloud_alarm_mock, two_zone_cloud, False, FIRST_ENTITY_ID, 0
+        hass,
+        mock_cloud_state_handler,
+        cloud_alarm_mock,
+        two_zone_cloud,
+        False,
+        FIRST_ENTITY_ID,
+        0,
     )
     await _check_cloud_state(
-        hass, mock_cloud_state_handler, cloud_alarm_mock, two_zone_cloud, True, SECOND_ENTITY_ID, 1
+        hass,
+        mock_cloud_state_handler,
+        cloud_alarm_mock,
+        two_zone_cloud,
+        True,
+        SECOND_ENTITY_ID,
+        1,
     )
     await _check_cloud_state(
-        hass, mock_cloud_state_handler, cloud_alarm_mock, two_zone_cloud, False, SECOND_ENTITY_ID, 1
+        hass,
+        mock_cloud_state_handler,
+        cloud_alarm_mock,
+        two_zone_cloud,
+        False,
+        SECOND_ENTITY_ID,
+        1,
     )
 
 
