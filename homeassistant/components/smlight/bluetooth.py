@@ -5,7 +5,10 @@ from functools import partial
 from bleak_smlight import SLZB_BLE_SERVER_PORT, connect_scanner
 from pysmlight import BleProxyClient
 
-from homeassistant.components.bluetooth import async_register_scanner
+from homeassistant.components.bluetooth import (
+    BluetoothScanningMode,
+    async_register_scanner,
+)
 from homeassistant.const import CONF_HOST
 from homeassistant.core import CALLBACK_TYPE, HomeAssistant, callback
 
@@ -40,6 +43,8 @@ def async_connect_scanner(
         host=entry.data[CONF_HOST],
         port=SLZB_BLE_SERVER_PORT,
     )
+
+    client_data.scanner.async_set_scanning_mode(BluetoothScanningMode.AUTO)
 
     hass.async_create_background_task(
         client_data.client.start(), f"smlight-ble-proxy-client-{entry.unique_id}"
