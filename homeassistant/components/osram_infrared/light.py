@@ -80,8 +80,7 @@ async def async_setup_entry(
     async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up an OSRAM infrared light from a config entry."""
-    if not (emitter_entity_id := entry.data.get(CONF_IR_EMITTER_ENTITY_ID)):
-        return
+    emitter_entity_id = entry.data[CONF_IR_EMITTER_ENTITY_ID]
     if receiver_entity_id := entry.data.get(CONF_IR_RECEIVER_ENTITY_ID):
         async_add_entities(
             [
