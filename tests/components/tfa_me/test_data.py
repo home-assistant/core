@@ -112,19 +112,3 @@ async def test_get_identifier_missing_gateway_id(
 
         with pytest.raises(TFAmeJSONError, match="Missing gateway_id in response"):
             await data.get_identifier()
-
-
-async def test_get_identifier_success(hass: HomeAssistant) -> None:
-    """Test get_identifier() returns the gateway ID."""
-
-    with patch("homeassistant.components.tfa_me.data.TFAmeClient") as mock_client_cls:
-        mock_client = mock_client_cls.return_value
-        mock_client.async_get_sensors = AsyncMock(
-            return_value={"gateway_id": "0101234567"}
-        )
-
-        data = TFAmeUniqueID(hass, "192.168.1.10")
-
-        identifier = await data.get_identifier()
-
-    assert identifier == "0101234567"

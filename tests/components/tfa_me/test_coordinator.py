@@ -34,7 +34,7 @@ def _fake_sensor_payload() -> dict:
                 "ts": now,
                 "measurements": {
                     "rssi": {"value": "221", "unit": "/255"},
-                    "lowbatt": {"value": "0", "unit": "No"},
+                    "lowbatt": {"value": "0", "unit": ""},
                     "wind_direction": {"value": "8", "unit": ""},
                     "wind_speed": {"value": "0.0", "unit": "m/s"},
                     "wind_gust": {"value": "0.0", "unit": "m/s"},
@@ -47,7 +47,7 @@ def _fake_sensor_payload() -> dict:
                 "ts": now,
                 "measurements": {
                     "rssi": {"value": "216", "unit": "/255"},
-                    "lowbatt": {"value": "0", "unit": "No"},
+                    "lowbatt": {"value": "0", "unit": ""},
                     "rain": {"value": "29.2", "unit": "mm"},
                 },
             },
@@ -88,13 +88,13 @@ async def test_update_data_with_ip(
 )
 async def test_async_update_data_exceptions(
     hass: HomeAssistant,
-    tfa_me_options_flow_mock_entry: ConfigEntry,
+    tfa_me_mock_entry: ConfigEntry,
     exc: TFAmeException,
 ) -> None:
     """Test that coordinator maps client exceptions to UpdateFailed."""
     coordinator = TFAmeUpdateCoordinator(
         hass=hass,
-        config_entry=tfa_me_options_flow_mock_entry,
+        config_entry=tfa_me_mock_entry,
     )
 
     with (

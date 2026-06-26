@@ -10,7 +10,7 @@ from tests.common import MockConfigEntry
 
 
 @pytest.fixture
-def tfa_me_options_flow_mock_entry(hass: HomeAssistant) -> MockConfigEntry:
+def tfa_me_mock_entry(hass: HomeAssistant) -> MockConfigEntry:
     """Create default mock config entry."""
     return MockConfigEntry(
         domain=DOMAIN,
@@ -47,7 +47,7 @@ FAKE_JSON = {
             "ts": "1764169886",
             "measurements": {
                 "rssi": {"value": "218", "unit": "/255"},
-                "lowbatt": {"value": "0", "unit": "No"},
+                "lowbatt": {"value": "0", "unit": ""},
                 "wind_direction": {"value": "8", "unit": ""},
                 "wind_speed": {"value": "0.0", "unit": "m/s"},
                 "wind_gust": {"value": "0.0", "unit": "m/s"},
@@ -60,7 +60,7 @@ FAKE_JSON = {
             "ts": "1764169842",
             "measurements": {
                 "rssi": {"value": "174", "unit": "/255"},
-                "lowbatt": {"value": "0", "unit": "No"},
+                "lowbatt": {"value": "0", "unit": ""},
                 "temperature": {"value": "15.1", "unit": "°C"},
                 "humidity": {"value": "56", "unit": "%"},
                 "temperature_probe": {"value": "15.1", "unit": "°C"},
@@ -85,7 +85,7 @@ FAKE_JSON = {
             "ts": "1764169823",
             "measurements": {
                 "rssi": {"value": "218", "unit": "/255"},
-                "lowbatt": {"value": "0", "unit": "No"},
+                "lowbatt": {"value": "0", "unit": ""},
                 "wind_direction": {"value": "8", "unit": ""},
                 "wind_speed": {"value": "0.0", "unit": "m/s"},
                 "wind_gust": {"value": "0.0", "unit": "m/s"},
