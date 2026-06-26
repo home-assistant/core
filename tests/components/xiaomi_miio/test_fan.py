@@ -3,8 +3,8 @@
 from collections.abc import Generator
 from unittest.mock import MagicMock, Mock, patch
 
-from miio.integrations.fan.dmaker.fan import FanStatusP5
-from miio.integrations.fan.dmaker.fan_miot import FanStatusMiot
+from miio.integrations.dmaker.fan.fan import FanStatusP5
+from miio.integrations.dmaker.fan.fan_miot import FanStatusMiot
 import pytest
 from syrupy.assertion import SnapshotAssertion
 
