@@ -11,8 +11,6 @@ from pyrisco import (
     RiscoLocal,
     UnauthorizedError,
 )
-from pyrisco.cloud.alarm import Alarm
-from pyrisco.cloud.event import Event
 from pyrisco.common import Partition, System, Zone
 
 from homeassistant.config_entries import ConfigEntry
@@ -65,15 +63,6 @@ def zone_update_signal(zone_id: int) -> str:
     """Return a signal for the dispatch of a zone update."""
     return f"risco_zone_update_{zone_id}"
 
-
-def cloud_update_signal(entry_id: str) -> str:
-    """Return a signal for the dispatch of a cloud state update."""
-    return f"risco_cloud_update_{entry_id}"
-
-
-def cloud_event_signal(entry_id: str) -> str:
-    """Return a signal for the dispatch of a cloud event update."""
-    return f"risco_cloud_event_{entry_id}"
 
 
 async def async_setup_entry(hass: HomeAssistant, entry: RiscoConfigEntry) -> bool:
@@ -182,14 +171,6 @@ async def _async_setup_cloud_entry(
 
     cloud_data = CloudData(system=risco, alarm=alarm)
 
-    async def _state(new_alarm: Alarm) -> None:
-        cloud_data.alarm = new_alarm
-        async_dispatcher_send(hass, cloud_update_signal(entry.entry_id))
-
-    async def _events(new_events: list[Event]) -> None:
-        cloud_data.events = new_events
-        async_dispatcher_send(hass, cloud_event_signal(entry.entry_id))
-
     async def _error(error: Exception) -> None:
         if isinstance(error, MaxRetriesError):
             _LOGGER.error(
@@ -204,8 +185,6 @@ async def _async_setup_cloud_entry(
                 exc_info=(type(error), error, error.__traceback__),
             )
 
-    remove_state_handler = risco.add_state_handler(_state)
-    remove_event_handler = risco.add_event_handler(_events)
     remove_error_handler = risco.add_error_handler(_error)
     try:
         await risco.subscribe_states()
@@ -214,8 +193,6 @@ async def _async_setup_cloud_entry(
         raise ConfigEntryNotReady from error
 
     entry.async_on_unload(risco.close)
-    entry.async_on_unload(remove_state_handler)
-    entry.async_on_unload(remove_event_handler)
     entry.async_on_unload(remove_error_handler)
 
     entry.async_on_unload(entry.add_update_listener(_update_listener))

@@ -151,22 +151,21 @@ async def test_cloud_sse_max_retries_triggers_reload(
     two_zone_cloud: dict[int, Any],
     mock_cloud_error_handler: MagicMock,
     setup_risco_cloud: MockConfigEntry,
+    mock_cloud_login: AsyncMock,
     caplog: pytest.LogCaptureFixture,
 ) -> None:
     """Test that MaxRetriesError triggers an integration reload."""
     assert mock_cloud_error_handler.called
     callback = mock_cloud_error_handler.call_args.args[0]
 
-    cloud_data = setup_risco_cloud.runtime_data.cloud_data
-    login_mock = cast(AsyncMock, cloud_data.system.login)
-    assert login_mock.call_count == 1
+    assert mock_cloud_login.call_count == 1
 
     caplog.set_level(logging.ERROR, logger="homeassistant.components.risco")
     await callback(MaxRetriesError(Exception("connection failed")))
     await hass.async_block_till_done()
 
     assert "exhausted retries" in caplog.text
-    assert login_mock.call_count == 2
+    assert mock_cloud_login.call_count == 2
 
 
 async def test_cloud_sse_transient_error_does_not_reload(
@@ -174,19 +173,18 @@ async def test_cloud_sse_transient_error_does_not_reload(
     two_zone_cloud: dict[int, Any],
     mock_cloud_error_handler: MagicMock,
     setup_risco_cloud: MockConfigEntry,
+    mock_cloud_login: AsyncMock,
     caplog: pytest.LogCaptureFixture,
 ) -> None:
     """Test that transient SSE errors only log a warning and don't reload."""
     assert mock_cloud_error_handler.called
     callback = mock_cloud_error_handler.call_args.args[0]
 
-    cloud_data = setup_risco_cloud.runtime_data.cloud_data
-    login_mock = cast(AsyncMock, cloud_data.system.login)
-    assert login_mock.call_count == 1
+    assert mock_cloud_login.call_count == 1
 
     caplog.set_level(logging.WARNING, logger="homeassistant.components.risco")
     await callback(Exception("transient network error"))
     await hass.async_block_till_done()
 
     assert "reconnecting automatically" in caplog.text
-    assert login_mock.call_count == 1  # no reload
+    assert mock_cloud_login.call_count == 1  # no reload

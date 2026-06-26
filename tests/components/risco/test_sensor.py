@@ -7,11 +7,9 @@ import pytest
 from homeassistant.components.risco import (
     CannotConnectError,
     UnauthorizedError,
-    cloud_event_signal,
 )
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import entity_registry as er
-from homeassistant.helpers.dispatcher import async_dispatcher_send
 from homeassistant.util import dt as dt_util
 
 ENTITY_IDS = {
@@ -170,14 +168,14 @@ async def test_cloud_setup(
     hass: HomeAssistant,
     entity_registry: er.EntityRegistry,
     setup_risco_cloud,
+    mock_cloud_event_handler: MagicMock,
 ) -> None:
     """Test entity setup and SSE event push."""
     for entity_id in ENTITY_IDS.values():
         assert entity_registry.async_is_registered(entity_id)
 
-    cloud_data = setup_risco_cloud.runtime_data.cloud_data
-    cloud_data.events = TEST_EVENTS
-    async_dispatcher_send(hass, cloud_event_signal(setup_risco_cloud.entry_id))
+    for call in mock_cloud_event_handler.call_args_list:
+        await call.args[0](TEST_EVENTS)
     await hass.async_block_till_done()
 
     for category, entity_id in ENTITY_IDS.items():

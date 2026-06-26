@@ -6,16 +6,16 @@ from unittest.mock import MagicMock, PropertyMock, patch
 
 import pytest
 
+from unittest.mock import MagicMock
+
 from homeassistant.components.risco import (
     CannotConnectError,
     UnauthorizedError,
-    cloud_update_signal,
 )
 from homeassistant.components.risco.const import DOMAIN
 from homeassistant.const import STATE_OFF, STATE_ON
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import device_registry as dr, entity_registry as er
-from homeassistant.helpers.dispatcher import async_dispatcher_send
 
 from .util import TEST_SITE_NAME, TEST_SITE_UUID, system_mock
 
@@ -67,7 +67,8 @@ async def test_cloud_setup(
 
 async def _check_cloud_state(
     hass: HomeAssistant,
-    setup_risco_cloud: Any,
+    state_handler_mock: MagicMock,
+    alarm_mock: MagicMock,
     zones: dict[int, Any],
     triggered: bool,
     entity_id: str,
@@ -78,7 +79,8 @@ async def _check_cloud_state(
         "triggered",
         new_callable=PropertyMock(return_value=triggered),
     ):
-        async_dispatcher_send(hass, cloud_update_signal(setup_risco_cloud.entry_id))
+        for call in state_handler_mock.call_args_list:
+            await call.args[0](alarm_mock)
         await hass.async_block_till_done()
 
         expected_triggered = STATE_ON if triggered else STATE_OFF
@@ -87,20 +89,24 @@ async def _check_cloud_state(
 
 
 async def test_cloud_states(
-    hass: HomeAssistant, two_zone_cloud, setup_risco_cloud
+    hass: HomeAssistant,
+    two_zone_cloud,
+    setup_risco_cloud,
+    mock_cloud_state_handler: MagicMock,
+    cloud_alarm_mock: MagicMock,
 ) -> None:
     """Test the various alarm states."""
     await _check_cloud_state(
-        hass, setup_risco_cloud, two_zone_cloud, True, FIRST_ENTITY_ID, 0
+        hass, mock_cloud_state_handler, cloud_alarm_mock, two_zone_cloud, True, FIRST_ENTITY_ID, 0
     )
     await _check_cloud_state(
-        hass, setup_risco_cloud, two_zone_cloud, False, FIRST_ENTITY_ID, 0
+        hass, mock_cloud_state_handler, cloud_alarm_mock, two_zone_cloud, False, FIRST_ENTITY_ID, 0
     )
     await _check_cloud_state(
-        hass, setup_risco_cloud, two_zone_cloud, True, SECOND_ENTITY_ID, 1
+        hass, mock_cloud_state_handler, cloud_alarm_mock, two_zone_cloud, True, SECOND_ENTITY_ID, 1
     )
     await _check_cloud_state(
-        hass, setup_risco_cloud, two_zone_cloud, False, SECOND_ENTITY_ID, 1
+        hass, mock_cloud_state_handler, cloud_alarm_mock, two_zone_cloud, False, SECOND_ENTITY_ID, 1
     )
 
 

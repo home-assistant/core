@@ -11,10 +11,11 @@ from homeassistant.components.alarm_control_panel import (
     AlarmControlPanelEntityFeature,
     AlarmControlPanelState,
 )
+from unittest.mock import MagicMock
+
 from homeassistant.components.risco import (
     CannotConnectError,
     UnauthorizedError,
-    cloud_update_signal,
 )
 from homeassistant.components.risco.const import DOMAIN
 from homeassistant.const import (
@@ -28,7 +29,6 @@ from homeassistant.const import (
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import device_registry as dr, entity_registry as er
-from homeassistant.helpers.dispatcher import async_dispatcher_send
 
 from .util import TEST_SITE_UUID
 
@@ -89,10 +89,15 @@ def _partition_mock():
 
 
 @pytest.fixture
-def two_part_cloud_alarm():
+def cloud_alarm_mock() -> MagicMock:
+    """Fixture to provide the cloud alarm mock for state handler callbacks."""
+    return MagicMock()
+
+
+@pytest.fixture
+def two_part_cloud_alarm(cloud_alarm_mock: MagicMock):
     """Fixture to mock alarm with two partitions."""
     partition_mocks = {0: _partition_mock(), 1: _partition_mock()}
-    alarm_mock = MagicMock()
     with (
         patch.object(
             partition_mocks[0], "id", new_callable=PropertyMock(return_value=0)
@@ -101,13 +106,13 @@ def two_part_cloud_alarm():
             partition_mocks[1], "id", new_callable=PropertyMock(return_value=1)
         ),
         patch.object(
-            alarm_mock,
+            cloud_alarm_mock,
             "partitions",
             new_callable=PropertyMock(return_value=partition_mocks),
         ),
         patch(
             "homeassistant.components.risco.RiscoCloud.get_state",
-            return_value=alarm_mock,
+            return_value=cloud_alarm_mock,
         ),
     ):
         yield partition_mocks
@@ -182,7 +187,8 @@ async def test_cloud_setup(
 
 async def _check_cloud_state(
     hass: HomeAssistant,
-    setup_risco_cloud: Any,
+    state_handler_mock: MagicMock,
+    alarm_mock: MagicMock,
     partitions: dict[int, Any],
     property: str,
     state: str,
@@ -190,7 +196,8 @@ async def _check_cloud_state(
     partition_id: int,
 ) -> None:
     with patch.object(partitions[partition_id], property, return_value=True):
-        async_dispatcher_send(hass, cloud_update_signal(setup_risco_cloud.entry_id))
+        for call in state_handler_mock.call_args_list:
+            await call.args[0](alarm_mock)
         await hass.async_block_till_done()
 
         assert hass.states.get(entity_id).state == state
@@ -198,7 +205,11 @@ async def _check_cloud_state(
 
 @pytest.mark.parametrize("options", [CUSTOM_MAPPING_OPTIONS])
 async def test_cloud_states(
-    hass: HomeAssistant, two_part_cloud_alarm, setup_risco_cloud
+    hass: HomeAssistant,
+    two_part_cloud_alarm,
+    setup_risco_cloud,
+    mock_cloud_state_handler: MagicMock,
+    cloud_alarm_mock: MagicMock,
 ) -> None:
     """Test the various alarm states."""
     assert hass.states.get(FIRST_CLOUD_ENTITY_ID).state == STATE_UNKNOWN
@@ -208,7 +219,8 @@ async def test_cloud_states(
     }.items():
         await _check_cloud_state(
             hass,
-            setup_risco_cloud,
+            mock_cloud_state_handler,
+            cloud_alarm_mock,
             two_part_cloud_alarm,
             "triggered",
             AlarmControlPanelState.TRIGGERED,
@@ -217,7 +229,8 @@ async def test_cloud_states(
         )
         await _check_cloud_state(
             hass,
-            setup_risco_cloud,
+            mock_cloud_state_handler,
+            cloud_alarm_mock,
             two_part_cloud_alarm,
             "arming",
             AlarmControlPanelState.ARMING,
@@ -226,7 +239,8 @@ async def test_cloud_states(
         )
         await _check_cloud_state(
             hass,
-            setup_risco_cloud,
+            mock_cloud_state_handler,
+            cloud_alarm_mock,
             two_part_cloud_alarm,
             "armed",
             AlarmControlPanelState.ARMED_AWAY,
@@ -235,7 +249,8 @@ async def test_cloud_states(
         )
         await _check_cloud_state(
             hass,
-            setup_risco_cloud,
+            mock_cloud_state_handler,
+            cloud_alarm_mock,
             two_part_cloud_alarm,
             "partially_armed",
             AlarmControlPanelState.ARMED_HOME,
@@ -244,7 +259,8 @@ async def test_cloud_states(
         )
         await _check_cloud_state(
             hass,
-            setup_risco_cloud,
+            mock_cloud_state_handler,
+            cloud_alarm_mock,
             two_part_cloud_alarm,
             "disarmed",
             AlarmControlPanelState.DISARMED,
@@ -260,7 +276,8 @@ async def test_cloud_states(
         ):
             await _check_cloud_state(
                 hass,
-                setup_risco_cloud,
+                mock_cloud_state_handler,
+                cloud_alarm_mock,
                 two_part_cloud_alarm,
                 "partially_armed",
                 AlarmControlPanelState.ARMED_NIGHT,

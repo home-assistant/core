@@ -6,7 +6,6 @@ from typing import Any
 
 from pyrisco import RiscoCloud, RiscoLocal
 from pyrisco.cloud.alarm import Alarm
-from pyrisco.cloud.event import Event
 
 from homeassistant.config_entries import ConfigEntry
 
@@ -27,7 +26,6 @@ class CloudData:
 
     system: RiscoCloud
     alarm: Alarm
-    events: list[Event] = field(default_factory=list)
 
 
 @dataclass

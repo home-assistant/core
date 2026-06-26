@@ -94,7 +94,7 @@ async def async_setup_entry(
         async_add_entities(chain(system_entities, zone_entities))
     elif cloud_data := risco_data.cloud_data:
         async_add_entities(
-            RiscoCloudBinarySensor(cloud_data, config_entry.entry_id, zone_id, zone)
+            RiscoCloudBinarySensor(cloud_data, zone_id, zone)
             for zone_id, zone in cloud_data.alarm.zones.items()
         )
 
@@ -106,12 +106,11 @@ class RiscoCloudBinarySensor(RiscoCloudZoneEntity, BinarySensorEntity):
     _attr_name = None
 
     def __init__(
-        self, cloud_data: CloudData, entry_id: str, zone_id: int, zone: CloudZone
+        self, cloud_data: CloudData, zone_id: int, zone: CloudZone
     ) -> None:
         """Init the zone."""
         super().__init__(
             cloud_data=cloud_data,
-            entry_id=entry_id,
             suffix="",
             zone_id=zone_id,
             zone=zone,

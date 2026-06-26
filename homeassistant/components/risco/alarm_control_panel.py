@@ -4,6 +4,7 @@ from collections.abc import Callable
 import logging
 from typing import Any, override
 
+from pyrisco.cloud.alarm import Alarm
 from pyrisco.common import Partition
 from pyrisco.local.partition import Partition as LocalPartition
 
@@ -14,12 +15,10 @@ from homeassistant.components.alarm_control_panel import (
     CodeFormat,
 )
 from homeassistant.const import CONF_PIN
-from homeassistant.core import HomeAssistant, callback
+from homeassistant.core import HomeAssistant
 from homeassistant.helpers.device_registry import DeviceInfo
-from homeassistant.helpers.dispatcher import async_dispatcher_send
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
-from . import cloud_update_signal
 from .const import (
     CONF_CODE_ARM_REQUIRED,
     CONF_CODE_DISARM_REQUIRED,
@@ -70,7 +69,6 @@ async def async_setup_entry(
         async_add_entities(
             RiscoCloudAlarm(
                 cloud_data,
-                config_entry.entry_id,
                 partition_id,
                 config_entry.data[CONF_PIN],
                 options,
@@ -188,7 +186,6 @@ class RiscoCloudAlarm(RiscoAlarm, RiscoCloudEntity):
     def __init__(
         self,
         cloud_data: CloudData,
-        entry_id: str,
         partition_id: int,
         code: str,
         options: dict[str, Any],
@@ -196,7 +193,6 @@ class RiscoCloudAlarm(RiscoAlarm, RiscoCloudEntity):
         """Init the partition."""
         super().__init__(
             cloud_data=cloud_data,
-            entry_id=entry_id,
             partition_id=partition_id,
             partition=cloud_data.alarm.partitions[partition_id],
             code=code,
@@ -210,16 +206,16 @@ class RiscoCloudAlarm(RiscoAlarm, RiscoCloudEntity):
         )
 
     @override
-    @callback
-    def _handle_update(self) -> None:
-        self._partition = self._cloud_data.alarm.partitions[self._partition_id]
+    async def _handle_update(self, alarm: Alarm) -> None:
+        self._partition = alarm.partitions[self._partition_id]
         self.async_write_ha_state()
 
     @override
     async def _call_alarm_method(self, method: str, *args: Any) -> None:
         alarm = await getattr(self._risco, method)(self._partition_id, *args)
+        self._partition = alarm.partitions[self._partition_id]
         self._cloud_data.alarm = alarm
-        async_dispatcher_send(self.hass, cloud_update_signal(self._entry_id))
+        self.async_write_ha_state()
 
 
 class RiscoLocalAlarm(RiscoAlarm):

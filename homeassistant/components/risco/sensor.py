@@ -8,13 +8,11 @@ from pyrisco.cloud.event import Event
 
 from homeassistant.components.binary_sensor import DOMAIN as BS_DOMAIN
 from homeassistant.components.sensor import SensorDeviceClass, SensorEntity
-from homeassistant.core import HomeAssistant, callback
+from homeassistant.core import HomeAssistant
 from homeassistant.helpers import entity_registry as er
-from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from homeassistant.util import dt as dt_util
 
-from . import cloud_event_signal
 from .const import DOMAIN
 from .entity import zone_unique_id
 from .models import CloudData, RiscoConfigEntry
@@ -51,11 +49,11 @@ async def async_setup_entry(
         return
 
     sensors = [
-        RiscoSensor(cloud_data, config_entry.entry_id, category_id, [], name)
+        RiscoSensor(cloud_data, category_id, [], name)
         for category_id, name in CATEGORIES.items()
     ]
     sensors.append(
-        RiscoSensor(cloud_data, config_entry.entry_id, None, CATEGORIES.keys(), "Other")
+        RiscoSensor(cloud_data, None, CATEGORIES.keys(), "Other")
     )
     async_add_entities(sensors)
 
@@ -69,14 +67,12 @@ class RiscoSensor(SensorEntity):
     def __init__(
         self,
         cloud_data: CloudData,
-        entry_id: str,
         category_id: int | None,
         excludes: Collection[int],
         name: str,
     ) -> None:
         """Initialize sensor."""
         self._cloud_data = cloud_data
-        self._entry_id = entry_id
         self._event: Event | None = None
         self._category_id = category_id
         self._excludes = excludes
@@ -90,14 +86,11 @@ class RiscoSensor(SensorEntity):
         """Subscribe to event updates."""
         self._entity_registry = er.async_get(self.hass)
         self.async_on_remove(
-            async_dispatcher_connect(
-                self.hass, cloud_event_signal(self._entry_id), self._handle_events
-            )
+            self._cloud_data.system.add_event_handler(self._handle_events)
         )
 
-    @callback
-    def _handle_events(self) -> None:
-        for event in self._cloud_data.events:  # newest first
+    async def _handle_events(self, events: list[Event]) -> None:
+        for event in events:  # newest first
             if event.category_id in self._excludes:
                 continue
             if self._category_id is not None and event.category_id != self._category_id:
