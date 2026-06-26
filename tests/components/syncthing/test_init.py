@@ -1,17 +1,20 @@
 """Tests for the syncthing integration setup and client."""
 
+import asyncio
 from unittest.mock import MagicMock, patch
 
 from aiosyncthing.exceptions import SyncthingError
 from freezegun.api import FrozenDateTimeFactory
+import pytest
 
 from homeassistant.components.syncthing.const import (
     DOMAIN,
+    EVENTS,
     RECONNECT_INTERVAL,
     SERVER_AVAILABLE,
     SERVER_UNAVAILABLE,
 )
-from homeassistant.core import HomeAssistant
+from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers import dispatcher
 
 from . import SERVER_ID
@@ -87,3 +90,54 @@ async def test_syncthing_client_reconnect_on_error(
 
         assert await hass.config_entries.async_unload(entry.entry_id)
         await hass.async_block_till_done()
+
+
+@pytest.mark.parametrize(
+    "event_fixture",
+    [
+        "folder_summary_event.json",
+        "state_changed_event.json",
+        "folder_paused_event.json",
+    ],
+)
+async def test_client_dispatches_event(
+    hass: HomeAssistant,
+    entry: MockConfigEntry,
+    mock_syncthing_client: MagicMock,
+    event_fixture: str,
+) -> None:
+    """Test SyncthingClient dispatches the expected signal for syncthing events."""
+    event = await hass.async_add_executor_job(
+        load_json_object_fixture, event_fixture, DOMAIN
+    )
+
+    async def mock_listen():
+        yield event
+        await asyncio.Event().wait()
+
+    mock_syncthing_client.events.listen = mock_listen
+    mock_syncthing_client.events.last_seen_id = 10
+
+    folder = event["data"].get("folder") or event["data"]["id"]
+    signal = f"{EVENTS[event['type']]}-{SERVER_ID}-{folder}"
+
+    received = asyncio.Event()
+    captured: list[dict] = []
+
+    @callback
+    def handler(received_event: dict) -> None:
+        captured.append(received_event)
+        received.set()
+
+    dispatcher.async_dispatcher_connect(hass, signal, handler)
+    with patch(
+        "homeassistant.components.syncthing.aiosyncthing.Syncthing",
+        autospec=True,
+    ) as mock_class:
+        mock_class.return_value = mock_syncthing_client
+        assert await hass.config_entries.async_setup(entry.entry_id)
+
+    async with asyncio.timeout(5):
+        await received.wait()
+
+    assert captured == [event]

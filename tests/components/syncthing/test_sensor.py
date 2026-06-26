@@ -1,8 +1,6 @@
 """Tests for the syncthing sensor platform."""
 
-import asyncio
 from datetime import timedelta
-from typing import Any
 from unittest.mock import AsyncMock, MagicMock, patch
 
 from aiosyncthing.exceptions import SyncthingError
@@ -11,6 +9,7 @@ from syrupy.assertion import SnapshotAssertion
 
 from homeassistant.components.syncthing.const import (
     DOMAIN,
+    EVENTS,
     SCAN_INTERVAL,
     SERVER_AVAILABLE,
     SERVER_UNAVAILABLE,
@@ -76,42 +75,22 @@ async def test_sensor_platform_no_sensors_on_config_error(
 async def test_folder_sensor_updates_on_event(
     hass: HomeAssistant,
     entry: MockConfigEntry,
-    mock_syncthing_client: MagicMock,
+    mock_syncthing: MagicMock,
     entity_registry: er.EntityRegistry,
     snapshot: SnapshotAssertion,
     event_fixture: str,
 ) -> None:
     """Test folder sensor updates when receiving different events."""
-
-    event: dict[str, Any] = await hass.async_add_executor_job(
+    event = await hass.async_add_executor_job(
         load_json_object_fixture, event_fixture, DOMAIN
     )
-    event_processed = asyncio.Event()
 
-    async def mock_listen():
-        """Mock events.listen that yields the test event then blocks."""
-        yield event
-        event_processed.set()
-        await asyncio.Event().wait()
+    folder = event["data"].get("folder") or event["data"]["id"]
+    signal = f"{EVENTS[event['type']]}-{SERVER_ID}-{folder}"
 
-    mock_syncthing_client.events.listen = mock_listen
-    mock_syncthing_client.events.last_seen_id = 10
-
-    with patch(
-        "homeassistant.components.syncthing.aiosyncthing.Syncthing",
-        autospec=True,
-    ) as mock_class:
-        mock_class.return_value = mock_syncthing_client
-        assert await hass.config_entries.async_setup(entry.entry_id)
-
-    async with asyncio.timeout(5):
-        await event_processed.wait()
-
+    dispatcher.async_dispatcher_send(hass, signal, event)
     await hass.async_block_till_done()
     await snapshot_platform(hass, entity_registry, snapshot, entry.entry_id)
-
-    await hass.config_entries.async_unload(entry.entry_id)
-    await hass.async_block_till_done()
 
 
 async def test_folder_sensor_unavailable_on_server_unavailable(
