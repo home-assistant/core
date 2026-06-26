@@ -108,7 +108,9 @@ async def async_setup_entry(hass: HomeAssistant, entry: ONVIFConfigEntry) -> boo
 
 async def _async_stop_device(hass: HomeAssistant, device: ONVIFDevice) -> None:
     """Stop the ONVIF device."""
-    if (events := device.events) is not None:
+    # getattr is intentional: this callback is registered on AsyncExitStack before
+    # async_initialize runs, so it can fire during setup failure before self.events exists.
+    if (events := getattr(device, "events", None)) is not None:
         try:
             await events.async_stop()
         except TimeoutError, ONVIFError, Fault, aiohttp.ClientError, TransportError:

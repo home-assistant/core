@@ -61,7 +61,6 @@ class ONVIFDevice:
         self.info: DeviceInfo = DeviceInfo()
         self.capabilities: Capabilities = Capabilities()
         self.onvif_capabilities: dict[str, Any] | None = None
-        self.events: EventManager | None = None
         self.profiles: list[Profile] = []
         self.max_resolution: int = 0
         self.platforms: list[Platform] = []
