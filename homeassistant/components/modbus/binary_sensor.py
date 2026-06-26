@@ -2,7 +2,12 @@
 
 from typing import Any, override
 
-from homeassistant.components.binary_sensor import BinarySensorEntity
+import voluptuous as vol
+
+from homeassistant.components.binary_sensor import (
+    DEVICE_CLASSES_SCHEMA as BINARY_SENSOR_DEVICE_CLASSES_SCHEMA,
+    BinarySensorEntity,
+)
 from homeassistant.const import (
     CONF_BINARY_SENSORS,
     CONF_DEVICE_CLASS,
@@ -11,6 +16,7 @@ from homeassistant.const import (
     STATE_ON,
 )
 from homeassistant.core import HomeAssistant, callback
+from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.restore_state import RestoreEntity
 from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
@@ -19,16 +25,35 @@ from homeassistant.helpers.update_coordinator import (
     DataUpdateCoordinator,
 )
 
-from . import get_hub
 from .const import (
     _LOGGER,
     CALL_TYPE_COIL,
     CALL_TYPE_DISCRETE,
+    CALL_TYPE_REGISTER_HOLDING,
+    CALL_TYPE_REGISTER_INPUT,
+    CONF_INPUT_TYPE,
     CONF_SLAVE_COUNT,
     CONF_VIRTUAL_COUNT,
 )
 from .entity import ModbusBaseEntity
-from .modbus import ModbusHub
+from .modbus import ModbusHub, get_hub
+from .validators import BASE_COMPONENT_SCHEMA
+
+BINARY_SENSOR_SCHEMA = BASE_COMPONENT_SCHEMA.extend(
+    {
+        vol.Optional(CONF_DEVICE_CLASS): BINARY_SENSOR_DEVICE_CLASSES_SCHEMA,
+        vol.Optional(CONF_INPUT_TYPE, default=CALL_TYPE_COIL): vol.In(
+            [
+                CALL_TYPE_COIL,
+                CALL_TYPE_DISCRETE,
+                CALL_TYPE_REGISTER_HOLDING,
+                CALL_TYPE_REGISTER_INPUT,
+            ]
+        ),
+        vol.Exclusive(CONF_VIRTUAL_COUNT, "vir_bin_count"): cv.positive_int,
+        vol.Exclusive(CONF_SLAVE_COUNT, "vir_bin_count"): cv.positive_int,
+    }
+)
 
 PARALLEL_UPDATES = 1
 

@@ -8,10 +8,12 @@ from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 
-from . import get_hub
 from .const import CONF_FANS
 from .entity import ModbusToggleEntity
-from .modbus import ModbusHub
+from .modbus import ModbusHub, get_hub
+from .validators import BASE_SWITCH_SCHEMA
+
+FAN_SCHEMA = BASE_SWITCH_SCHEMA.extend({})
 
 PARALLEL_UPDATES = 1
 

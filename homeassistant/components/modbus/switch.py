@@ -2,14 +2,26 @@
 
 from typing import Any, override
 
-from homeassistant.components.switch import SwitchEntity
-from homeassistant.const import CONF_NAME, CONF_SWITCHES
+import voluptuous as vol
+
+from homeassistant.components.switch import (
+    DEVICE_CLASSES_SCHEMA as SWITCH_DEVICE_CLASSES_SCHEMA,
+    SwitchEntity,
+)
+from homeassistant.const import CONF_DEVICE_CLASS, CONF_NAME, CONF_SWITCHES
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 
-from . import get_hub
 from .entity import ModbusToggleEntity
+from .modbus import get_hub
+from .validators import BASE_SWITCH_SCHEMA
+
+SWITCH_SCHEMA = BASE_SWITCH_SCHEMA.extend(
+    {
+        vol.Optional(CONF_DEVICE_CLASS): SWITCH_DEVICE_CLASSES_SCHEMA,
+    }
+)
 
 PARALLEL_UPDATES = 1
 

@@ -10,26 +10,43 @@ import voluptuous as vol
 from homeassistant.components.climate import HVACMode
 from homeassistant.const import (
     CONF_ADDRESS,
+    CONF_COMMAND_OFF,
+    CONF_COMMAND_ON,
     CONF_COUNT,
+    CONF_DELAY,
     CONF_HOST,
     CONF_NAME,
     CONF_OFFSET,
     CONF_PORT,
     CONF_SCAN_INTERVAL,
+    CONF_SLAVE,
     CONF_STRUCTURE,
     CONF_TIMEOUT,
     CONF_TYPE,
+    CONF_UNIQUE_ID,
 )
 from homeassistant.core import HomeAssistant
+from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.issue_registry import IssueSeverity, async_create_issue
 
 from .const import (
+    CALL_TYPE_COIL,
+    CALL_TYPE_DISCRETE,
+    CALL_TYPE_REGISTER_HOLDING,
+    CALL_TYPE_REGISTER_INPUT,
+    CALL_TYPE_X_COILS,
+    CALL_TYPE_X_REGISTER_HOLDINGS,
     CONF_CURRENT_TEMP_OFFSET,
     CONF_CURRENT_TEMP_SCALE,
     CONF_DATA_TYPE,
+    CONF_DEVICE_ADDRESS,
     CONF_FAN_MODE_VALUES,
+    CONF_INPUT_TYPE,
+    CONF_PRECISION,
     CONF_SCALE,
     CONF_SLAVE_COUNT,
+    CONF_STATE_OFF,
+    CONF_STATE_ON,
     CONF_SWAP,
     CONF_SWAP_BYTE,
     CONF_SWAP_WORD,
@@ -37,7 +54,9 @@ from .const import (
     CONF_SWING_MODE_VALUES,
     CONF_TARGET_TEMP_OFFSET,
     CONF_TARGET_TEMP_SCALE,
+    CONF_VERIFY,
     CONF_VIRTUAL_COUNT,
+    CONF_WRITE_TYPE,
     DEFAULT_HUB,
     DEFAULT_OFFSET,
     DEFAULT_SCALE,
@@ -479,3 +498,99 @@ def check_config(hass: HomeAssistant, config: dict) -> dict:
             )
         hub_inx += 1
     return config
+
+
+BASE_SCHEMA = vol.Schema({vol.Optional(CONF_NAME, default=DEFAULT_HUB): cv.string})
+
+
+BASE_COMPONENT_SCHEMA = vol.Schema(
+    {
+        vol.Required(CONF_NAME): cv.string,
+        vol.Required(CONF_ADDRESS): cv.positive_int,
+        vol.Exclusive(CONF_DEVICE_ADDRESS, "slave_addr"): cv.positive_int,
+        vol.Exclusive(CONF_SLAVE, "slave_addr"): cv.positive_int,
+        vol.Optional(
+            CONF_SCAN_INTERVAL, default=DEFAULT_SCAN_INTERVAL
+        ): cv.positive_int,
+        vol.Optional(CONF_UNIQUE_ID): cv.string,
+    }
+)
+
+
+BASE_STRUCT_SCHEMA = BASE_COMPONENT_SCHEMA.extend(
+    {
+        vol.Optional(CONF_INPUT_TYPE, default=CALL_TYPE_REGISTER_HOLDING): vol.In(
+            [
+                CALL_TYPE_REGISTER_HOLDING,
+                CALL_TYPE_REGISTER_INPUT,
+            ]
+        ),
+        vol.Optional(CONF_COUNT): cv.positive_int,
+        vol.Optional(CONF_DATA_TYPE, default=DataType.INT16): vol.In(
+            [
+                DataType.INT16,
+                DataType.INT32,
+                DataType.INT64,
+                DataType.UINT16,
+                DataType.UINT32,
+                DataType.UINT64,
+                DataType.FLOAT16,
+                DataType.FLOAT32,
+                DataType.FLOAT64,
+                DataType.STRING,
+                DataType.CUSTOM,
+            ]
+        ),
+        vol.Optional(CONF_STRUCTURE): cv.string,
+        vol.Optional(CONF_SCALE): vol.All(
+            vol.Coerce(float), lambda v: not_zero_value(v, "Scale cannot be zero.")
+        ),
+        vol.Optional(CONF_OFFSET): vol.Coerce(float),
+        vol.Optional(CONF_PRECISION): cv.positive_int,
+        vol.Optional(
+            CONF_SWAP,
+        ): vol.In(
+            [
+                CONF_SWAP_BYTE,
+                CONF_SWAP_WORD,
+                CONF_SWAP_WORD_BYTE,
+            ]
+        ),
+    }
+)
+
+
+BASE_SWITCH_SCHEMA = BASE_COMPONENT_SCHEMA.extend(
+    {
+        vol.Optional(CONF_WRITE_TYPE, default=CALL_TYPE_REGISTER_HOLDING): vol.In(
+            [
+                CALL_TYPE_REGISTER_HOLDING,
+                CALL_TYPE_COIL,
+                CALL_TYPE_X_COILS,
+                CALL_TYPE_X_REGISTER_HOLDINGS,
+            ]
+        ),
+        vol.Optional(CONF_COMMAND_OFF, default=0x00): cv.positive_int,
+        vol.Optional(CONF_COMMAND_ON, default=0x01): cv.positive_int,
+        vol.Optional(CONF_VERIFY): vol.Maybe(
+            {
+                vol.Optional(CONF_ADDRESS): cv.positive_int,
+                vol.Optional(CONF_INPUT_TYPE): vol.In(
+                    [
+                        CALL_TYPE_REGISTER_HOLDING,
+                        CALL_TYPE_DISCRETE,
+                        CALL_TYPE_REGISTER_INPUT,
+                        CALL_TYPE_COIL,
+                        CALL_TYPE_X_COILS,
+                        CALL_TYPE_X_REGISTER_HOLDINGS,
+                    ]
+                ),
+                vol.Optional(CONF_STATE_OFF): vol.All(
+                    cv.ensure_list, [cv.positive_int]
+                ),
+                vol.Optional(CONF_STATE_ON): vol.All(cv.ensure_list, [cv.positive_int]),
+                vol.Optional(CONF_DELAY, default=0): cv.positive_int,
+            }
+        ),
+    }
+)

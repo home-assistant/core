@@ -2,8 +2,12 @@
 
 from typing import Any, override
 
+import voluptuous as vol
+
 from homeassistant.components.sensor import (
     CONF_STATE_CLASS,
+    DEVICE_CLASSES_SCHEMA as SENSOR_DEVICE_CLASSES_SCHEMA,
+    STATE_CLASSES_SCHEMA as SENSOR_STATE_CLASSES_SCHEMA,
     RestoreSensor,
     SensorEntity,
 )
@@ -16,6 +20,7 @@ from homeassistant.const import (
     CONF_UNIT_OF_MEASUREMENT,
 )
 from homeassistant.core import HomeAssistant, callback
+from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 from homeassistant.helpers.update_coordinator import (
@@ -23,17 +28,37 @@ from homeassistant.helpers.update_coordinator import (
     DataUpdateCoordinator,
 )
 
-from . import get_hub
 from .const import (
     _LOGGER,
+    CONF_MAX_VALUE,
+    CONF_MIN_VALUE,
+    CONF_NAN_VALUE,
     CONF_SCALE,
     CONF_SLAVE_COUNT,
     CONF_VIRTUAL_COUNT,
+    CONF_ZERO_SUPPRESS,
     DEFAULT_OFFSET,
     DEFAULT_SCALE,
 )
 from .entity import ModbusStructEntity
-from .modbus import ModbusHub
+from .modbus import ModbusHub, get_hub
+from .validators import BASE_STRUCT_SCHEMA, nan_validator
+
+SENSOR_SCHEMA = vol.All(
+    BASE_STRUCT_SCHEMA.extend(
+        {
+            vol.Optional(CONF_DEVICE_CLASS): SENSOR_DEVICE_CLASSES_SCHEMA,
+            vol.Optional(CONF_STATE_CLASS): SENSOR_STATE_CLASSES_SCHEMA,
+            vol.Optional(CONF_UNIT_OF_MEASUREMENT): cv.string,
+            vol.Exclusive(CONF_VIRTUAL_COUNT, "vir_sen_count"): cv.positive_int,
+            vol.Exclusive(CONF_SLAVE_COUNT, "vir_sen_count"): cv.positive_int,
+            vol.Optional(CONF_MIN_VALUE): vol.Coerce(float),
+            vol.Optional(CONF_MAX_VALUE): vol.Coerce(float),
+            vol.Optional(CONF_NAN_VALUE): nan_validator,
+            vol.Optional(CONF_ZERO_SUPPRESS): cv.positive_float,
+        }
+    ),
+)
 
 PARALLEL_UPDATES = 1
 

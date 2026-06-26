@@ -69,6 +69,12 @@ from .validators import check_config
 
 DATA_MODBUS_HUBS: HassKey[dict[str, ModbusHub]] = HassKey(DOMAIN)
 
+
+def get_hub(hass: HomeAssistant, name: str) -> ModbusHub:
+    """Return modbus hub with name."""
+    return hass.data[DATA_MODBUS_HUBS][name]
+
+
 PRIMARY_RECONNECT_DELAY = 60
 
 ConfEntry = namedtuple("ConfEntry", "call_type attr func_name value_attr_name")  # noqa: PYI024

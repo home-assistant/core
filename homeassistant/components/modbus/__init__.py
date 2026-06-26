@@ -10,15 +10,15 @@ from homeassistant.helpers.service import async_register_admin_service
 from homeassistant.helpers.typing import ConfigType
 
 from .const import DOMAIN
-from .modbus import DATA_MODBUS_HUBS, ModbusHub, async_modbus_setup
+from .modbus import (
+    DATA_MODBUS_HUBS,
+    ModbusHub as ModbusHub,
+    async_modbus_setup,
+    get_hub as get_hub,
+)
 from .schemas import CONFIG_SCHEMA  # noqa: F401
 
 _LOGGER = logging.getLogger(__name__)
-
-
-def get_hub(hass: HomeAssistant, name: str) -> ModbusHub:
-    """Return modbus hub with name."""
-    return hass.data[DATA_MODBUS_HUBS][name]
 
 
 async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:

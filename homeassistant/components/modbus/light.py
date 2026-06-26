@@ -2,6 +2,8 @@
 
 from typing import Any, override
 
+import voluptuous as vol
+
 from homeassistant.components.light import (
     ATTR_BRIGHTNESS,
     ATTR_COLOR_TEMP_KELVIN,
@@ -10,10 +12,10 @@ from homeassistant.components.light import (
 )
 from homeassistant.const import CONF_LIGHTS, CONF_NAME
 from homeassistant.core import HomeAssistant
+from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 
-from . import get_hub
 from .const import (
     CALL_TYPE_REGISTER_HOLDING,
     CALL_TYPE_WRITE_REGISTER,
@@ -29,7 +31,17 @@ from .const import (
     LIGHT_MODBUS_SCALE_MIN,
 )
 from .entity import ModbusToggleEntity
-from .modbus import ModbusHub
+from .modbus import ModbusHub, get_hub
+from .validators import BASE_SWITCH_SCHEMA
+
+LIGHT_SCHEMA = BASE_SWITCH_SCHEMA.extend(
+    {
+        vol.Optional(CONF_BRIGHTNESS_REGISTER): cv.positive_int,
+        vol.Optional(CONF_COLOR_TEMP_REGISTER): cv.positive_int,
+        vol.Optional(CONF_MIN_TEMP): cv.positive_int,
+        vol.Optional(CONF_MAX_TEMP): cv.positive_int,
+    }
+)
 
 PARALLEL_UPDATES = 1
 
