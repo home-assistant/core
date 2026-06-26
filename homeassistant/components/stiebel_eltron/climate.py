@@ -17,8 +17,6 @@ from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
 from . import StiebelEltronConfigEntry
 
-DEPENDENCIES = ["stiebel_eltron"]
-
 _LOGGER = logging.getLogger(__name__)
 
 PRESET_DAY = "day"
