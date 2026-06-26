@@ -301,7 +301,7 @@ NUMBER_ENTITIES = (
     ReolinkNumberEntityDescription(
         key="ai_face_sensititvity",
         cmd_key="GetAiAlarm",
-        cmd_id=[342],
+        cmd_id=342,
         translation_key="ai_face_sensitivity",
         entity_category=EntityCategory.CONFIG,
         native_step=1,
@@ -316,7 +316,7 @@ NUMBER_ENTITIES = (
     ReolinkNumberEntityDescription(
         key="ai_person_sensititvity",
         cmd_key="GetAiAlarm",
-        cmd_id=[342],
+        cmd_id=342,
         translation_key="ai_person_sensitivity",
         entity_category=EntityCategory.CONFIG,
         native_step=1,
@@ -331,7 +331,7 @@ NUMBER_ENTITIES = (
     ReolinkNumberEntityDescription(
         key="ai_vehicle_sensititvity",
         cmd_key="GetAiAlarm",
-        cmd_id=[342],
+        cmd_id=342,
         translation_key="ai_vehicle_sensitivity",
         entity_category=EntityCategory.CONFIG,
         native_step=1,
@@ -346,7 +346,7 @@ NUMBER_ENTITIES = (
     ReolinkNumberEntityDescription(
         key="ai_non_motor_vehicle_sensitivity",
         cmd_key="GetAiAlarm",
-        cmd_id=[342],
+        cmd_id=342,
         translation_key="ai_non_motor_vehicle_sensitivity",
         entity_category=EntityCategory.CONFIG,
         native_step=1,
@@ -364,7 +364,7 @@ NUMBER_ENTITIES = (
     ReolinkNumberEntityDescription(
         key="ai_package_sensititvity",
         cmd_key="GetAiAlarm",
-        cmd_id=[342],
+        cmd_id=342,
         translation_key="ai_package_sensitivity",
         entity_category=EntityCategory.CONFIG,
         native_step=1,
@@ -379,7 +379,7 @@ NUMBER_ENTITIES = (
     ReolinkNumberEntityDescription(
         key="ai_pet_sensititvity",
         cmd_key="GetAiAlarm",
-        cmd_id=[342],
+        cmd_id=342,
         translation_key="ai_pet_sensitivity",
         entity_category=EntityCategory.CONFIG,
         native_step=1,
@@ -396,7 +396,7 @@ NUMBER_ENTITIES = (
     ReolinkNumberEntityDescription(
         key="ai_pet_sensititvity",
         cmd_key="GetAiAlarm",
-        cmd_id=[342],
+        cmd_id=342,
         translation_key="ai_animal_sensitivity",
         entity_category=EntityCategory.CONFIG,
         native_step=1,
@@ -423,7 +423,7 @@ NUMBER_ENTITIES = (
     ReolinkNumberEntityDescription(
         key="ai_face_delay",
         cmd_key="GetAiAlarm",
-        cmd_id=[342],
+        cmd_id=342,
         translation_key="ai_face_delay",
         entity_category=EntityCategory.CONFIG,
         device_class=NumberDeviceClass.DURATION,
@@ -441,7 +441,7 @@ NUMBER_ENTITIES = (
     ReolinkNumberEntityDescription(
         key="ai_person_delay",
         cmd_key="GetAiAlarm",
-        cmd_id=[342],
+        cmd_id=342,
         translation_key="ai_person_delay",
         entity_category=EntityCategory.CONFIG,
         device_class=NumberDeviceClass.DURATION,
@@ -459,7 +459,7 @@ NUMBER_ENTITIES = (
     ReolinkNumberEntityDescription(
         key="ai_non_motor_vehicle_delay",
         cmd_key="GetAiAlarm",
-        cmd_id=[342],
+        cmd_id=342,
         translation_key="ai_non_motor_vehicle_delay",
         entity_category=EntityCategory.CONFIG,
         device_class=NumberDeviceClass.DURATION,
@@ -479,7 +479,7 @@ NUMBER_ENTITIES = (
     ReolinkNumberEntityDescription(
         key="ai_vehicle_delay",
         cmd_key="GetAiAlarm",
-        cmd_id=[342],
+        cmd_id=342,
         translation_key="ai_vehicle_delay",
         entity_category=EntityCategory.CONFIG,
         device_class=NumberDeviceClass.DURATION,
@@ -497,7 +497,7 @@ NUMBER_ENTITIES = (
     ReolinkNumberEntityDescription(
         key="ai_package_delay",
         cmd_key="GetAiAlarm",
-        cmd_id=[342],
+        cmd_id=342,
         translation_key="ai_package_delay",
         entity_category=EntityCategory.CONFIG,
         device_class=NumberDeviceClass.DURATION,
@@ -515,7 +515,7 @@ NUMBER_ENTITIES = (
     ReolinkNumberEntityDescription(
         key="ai_pet_delay",
         cmd_key="GetAiAlarm",
-        cmd_id=[342],
+        cmd_id=342,
         translation_key="ai_pet_delay",
         entity_category=EntityCategory.CONFIG,
         device_class=NumberDeviceClass.DURATION,
@@ -535,7 +535,7 @@ NUMBER_ENTITIES = (
     ReolinkNumberEntityDescription(
         key="ai_pet_delay",
         cmd_key="GetAiAlarm",
-        cmd_id=[342],
+        cmd_id=342,
         translation_key="ai_animal_delay",
         entity_category=EntityCategory.CONFIG,
         device_class=NumberDeviceClass.DURATION,
