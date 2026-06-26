@@ -58,7 +58,7 @@ from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from homeassistant.util import dt as dt_util
 from homeassistant.util.enum import try_parse_enum
 
-from .config_entry import async_get_hassio_entry, async_get_update_options
+from .config_entry import async_get_update_options
 from .const import DOMAIN, EVENT_SUPERVISOR_EVENT, OPTION_ADD_ON_BACKUP_RETAIN_COPIES
 from .handler import get_supervisor_client
 
@@ -825,7 +825,7 @@ async def backup_addon_before_update(
         backups: dict[str, ManagerBackup],
     ) -> dict[str, ManagerBackup]:
         """Return oldest backups more numerous than copies to delete."""
-        retain_copies = async_get_update_options(hass, async_get_hassio_entry(hass))[
+        retain_copies = async_get_update_options(hass)[
             OPTION_ADD_ON_BACKUP_RETAIN_COPIES
         ]
         return dict(
