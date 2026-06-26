@@ -292,7 +292,7 @@ class NetatmoCamera(NetatmoModuleEntity, Camera):
             aiohttp.ClientConnectorError,
             NetatmoApiError,
         ) as err:
-            _LOGGER.debug("Could not turn off camera (%s)", err)
+            raise HomeAssistantError(f"Could not turn off camera {err}") from err
 
     @override
     async def async_turn_on(self) -> None:
@@ -313,7 +313,7 @@ class NetatmoCamera(NetatmoModuleEntity, Camera):
             aiohttp.ClientConnectorError,
             NetatmoApiError,
         ) as err:
-            _LOGGER.debug("Could not turn on camera (%s)", err)
+            raise HomeAssistantError(f"Could not turn on camera {err}") from err
 
     async def stream_source(self) -> str | None:
         """Return the stream source."""
