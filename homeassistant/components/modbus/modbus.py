@@ -14,6 +14,7 @@ from pymodbus.framer import FramerType
 from pymodbus.pdu import ModbusPDU
 import voluptuous as vol
 
+from homeassistant.config_entries import SOURCE_IMPORT
 from homeassistant.const import (
     ATTR_STATE,
     CONF_DELAY,
@@ -27,7 +28,6 @@ from homeassistant.const import (
 )
 from homeassistant.core import Event, HomeAssistant, ServiceCall
 from homeassistant.helpers import config_validation as cv
-from homeassistant.helpers.discovery import async_load_platform
 from homeassistant.helpers.dispatcher import async_dispatcher_send
 from homeassistant.helpers.typing import ConfigType
 from homeassistant.util.hass_dict import HassKey
@@ -55,7 +55,6 @@ from .const import (
     DEFAULT_HUB,
     DEVICE_ID,
     DOMAIN,
-    PLATFORMS,
     RTUOVERTCP,
     SERIAL,
     SERVICE_STOP,
@@ -141,35 +140,24 @@ async def async_modbus_setup(
         config[DOMAIN] = check_config(hass, config[DOMAIN])
         if not config[DOMAIN]:
             return False
-    if DATA_MODBUS_HUBS in hass.data and config[DOMAIN] == []:
-        hubs = hass.data[DATA_MODBUS_HUBS]
-        for hub in hubs.values():
-            if not await hub.async_setup():
-                return False
-        hub_collect = hass.data[DATA_MODBUS_HUBS]
-    else:
-        hass.data[DATA_MODBUS_HUBS] = hub_collect = {}
+
+    if DATA_MODBUS_HUBS not in hass.data:
+        hass.data[DATA_MODBUS_HUBS] = {}
 
     for conf_hub in config[DOMAIN]:
-        my_hub = ModbusHub(hass, conf_hub)
-        hub_collect[conf_hub[CONF_NAME]] = my_hub
-
-        # modbus needs to be activated before components are loaded
-        # to avoid a racing problem
-        if not await my_hub.async_setup():
-            return False
-
-        # load platforms
-        for component, conf_key in PLATFORMS:
-            if conf_key in conf_hub:
-                hass.async_create_task(
-                    async_load_platform(hass, component, DOMAIN, conf_hub, config)
-                )
+        hass.async_create_task(
+            hass.config_entries.flow.async_init(
+                DOMAIN,
+                context={"source": SOURCE_IMPORT},
+                data=conf_hub,
+            )
+        )
 
     async def async_stop_modbus(event: Event) -> None:
         """Stop Modbus service."""
-        for client in hub_collect.values():
-            await client.async_close()
+        async_dispatcher_send(hass, SIGNAL_STOP_ENTITY)
+        for hub in hass.data[DATA_MODBUS_HUBS].values():
+            await hub.async_close()
 
     hass.bus.async_listen_once(EVENT_HOMEASSISTANT_STOP, async_stop_modbus)
 
@@ -179,7 +167,7 @@ async def async_modbus_setup(
         """Return the details required to process the service call."""
         device_address = service.data.get(ATTR_SLAVE, service.data.get(ATTR_UNIT, 1))
         address = service.data[ATTR_ADDRESS]
-        hub = hub_collect[service.data[ATTR_HUB]]
+        hub = hass.data[DATA_MODBUS_HUBS][service.data[ATTR_HUB]]
         return (hub, device_address, address)
 
     async def async_write_register(service: ServiceCall) -> None:
@@ -235,7 +223,7 @@ async def async_modbus_setup(
     async def async_stop_hub(service: ServiceCall) -> None:
         """Stop Modbus hub."""
         async_dispatcher_send(hass, SIGNAL_STOP_ENTITY)
-        hub = hub_collect[service.data[ATTR_HUB]]
+        hub = hass.data[DATA_MODBUS_HUBS][service.data[ATTR_HUB]]
         await hub.async_close()
 
     hass.services.async_register(

@@ -8,6 +8,7 @@ from homeassistant.components.binary_sensor import (
     DEVICE_CLASSES_SCHEMA as BINARY_SENSOR_DEVICE_CLASSES_SCHEMA,
     BinarySensorEntity,
 )
+from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import (
     CONF_BINARY_SENSORS,
     CONF_DEVICE_CLASS,
@@ -17,9 +18,8 @@ from homeassistant.const import (
 )
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers import config_validation as cv
-from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from homeassistant.helpers.restore_state import RestoreEntity
-from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 from homeassistant.helpers.update_coordinator import (
     CoordinatorEntity,
     DataUpdateCoordinator,
@@ -58,20 +58,15 @@ BINARY_SENSOR_SCHEMA = BASE_COMPONENT_SCHEMA.extend(
 PARALLEL_UPDATES = 1
 
 
-async def async_setup_platform(
+async def async_setup_entry(
     hass: HomeAssistant,
-    config: ConfigType,
-    async_add_entities: AddEntitiesCallback,
-    discovery_info: DiscoveryInfoType | None = None,
+    config_entry: ConfigEntry,
+    async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
-    """Set up the Modbus binary sensors."""
-
-    if discovery_info is None:
-        return
-
+    """Set up Modbus binary sensors from a config entry."""
+    hub = get_hub(hass, config_entry.data[CONF_NAME])
     sensors: list[ModbusBinarySensor | SlaveSensor] = []
-    hub = get_hub(hass, discovery_info[CONF_NAME])
-    for entry in discovery_info[CONF_BINARY_SENSORS]:
+    for entry in config_entry.data.get(CONF_BINARY_SENSORS, []):
         slave_count = entry.get(CONF_SLAVE_COUNT, None) or entry.get(
             CONF_VIRTUAL_COUNT, 0
         )

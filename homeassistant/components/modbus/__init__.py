@@ -2,14 +2,14 @@
 
 import logging
 
-from homeassistant.const import SERVICE_RELOAD
+from homeassistant.config_entries import ConfigEntry
+from homeassistant.const import CONF_NAME, SERVICE_RELOAD
 from homeassistant.core import Event, HomeAssistant, ServiceCall
-from homeassistant.helpers.entity_platform import async_get_platforms
 from homeassistant.helpers.reload import async_integration_yaml_config
 from homeassistant.helpers.service import async_register_admin_service
 from homeassistant.helpers.typing import ConfigType
 
-from .const import DOMAIN
+from .const import DOMAIN, PLATFORM_LIST
 from .modbus import (
     DATA_MODBUS_HUBS,
     ModbusHub as ModbusHub,
@@ -28,23 +28,45 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
 
     async def _reload_config(call: Event | ServiceCall) -> None:
         """Reload Modbus."""
-        if DATA_MODBUS_HUBS not in hass.data:
-            _LOGGER.error("Modbus cannot reload, because it was never loaded")
-            return
-        hubs = hass.data[DATA_MODBUS_HUBS]
-        for hub in hubs.values():
-            await hub.async_close()
-        reset_platforms = async_get_platforms(hass, DOMAIN)
-        for reset_platform in reset_platforms:
-            _LOGGER.debug("Reload modbus resetting platform: %s", reset_platform.domain)
-            await reset_platform.async_reset()
         reload_config = await async_integration_yaml_config(hass, DOMAIN)
+
+        for entry in list(hass.config_entries.async_entries(DOMAIN)):
+            await hass.config_entries.async_remove(entry.entry_id)
+
         if not reload_config:
             _LOGGER.debug("Modbus not present anymore")
             return
+
         _LOGGER.debug("Modbus reloading")
         await async_modbus_setup(hass, reload_config)
 
     async_register_admin_service(hass, DOMAIN, SERVICE_RELOAD, _reload_config)
 
     return await async_modbus_setup(hass, config)
+
+
+async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
+    """Set up a Modbus hub from a config entry."""
+    hub = ModbusHub(hass, dict(entry.data))
+    name = entry.data[CONF_NAME]
+
+    if DATA_MODBUS_HUBS not in hass.data:
+        hass.data[DATA_MODBUS_HUBS] = {}
+    hass.data[DATA_MODBUS_HUBS][name] = hub
+
+    if not await hub.async_setup():
+        hass.data[DATA_MODBUS_HUBS].pop(name)
+        return False
+
+    await hass.config_entries.async_forward_entry_setups(entry, PLATFORM_LIST)
+    return True
+
+
+async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
+    """Unload a Modbus hub config entry."""
+    unload_ok = await hass.config_entries.async_unload_platforms(entry, PLATFORM_LIST)
+    if unload_ok:
+        name = entry.data[CONF_NAME]
+        hub = hass.data[DATA_MODBUS_HUBS].pop(name)
+        await hub.async_close()
+    return unload_ok

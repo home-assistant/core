@@ -1138,11 +1138,11 @@ async def test_pymodbus_constructor_fail(
     ) as mock_pb:
         caplog.set_level(logging.ERROR)
         mock_pb.side_effect = ModbusException("test no class")
-        assert await async_setup_component(hass, DOMAIN, config) is False
+        assert await async_setup_component(hass, DOMAIN, config) is True
         await hass.async_block_till_done()
         message = f"Pymodbus: {TEST_MODBUS_NAME}: Modbus Error: test"
-        assert caplog.messages[0].startswith(message)
-        assert caplog.records[0].levelname == "ERROR"
+        assert any(m.startswith(message) for m in caplog.messages)
+        assert any(r.levelname == "ERROR" for r in caplog.records)
         assert mock_pb.called
 
 

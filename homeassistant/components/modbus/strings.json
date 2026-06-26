@@ -1,4 +1,13 @@
 {
+  "config": {
+    "abort": {
+      "already_configured": "[%key:common::config_flow::abort::already_configured_device%]",
+      "not_supported": "Modbus cannot be set up from the UI. Configure it in configuration.yaml."
+    },
+    "step": {
+      "user": {}
+    }
+  },
   "issues": {
     "duplicate_entity_entry": {
       "description": "An address can only be associated with one entity. Please correct the entry in your configuration.yaml file and restart Home Assistant to fix this issue.",
