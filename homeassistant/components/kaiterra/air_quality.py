@@ -1,6 +1,6 @@
 """Support for Kaiterra Air Quality Sensors."""
 
-from typing import Any
+from typing import Any, override
 
 from homeassistant.components.air_quality import AirQualityEntity
 from homeassistant.const import CONF_DEVICE_ID, CONF_NAME
@@ -54,16 +54,19 @@ class KaiterraAirQuality(AirQualityEntity):
         return self._api.data.get(self._device_id, {})
 
     @property
+    @override
     def available(self):
         """Return the availability of the sensor."""
         return self._api.data.get(self._device_id) is not None
 
     @property
+    @override
     def name(self):
         """Return the name of the sensor."""
         return self._name
 
     @property
+    @override
     def air_quality_index(self):
         """Return the Air Quality Index (AQI)."""
         return self._data("aqi")
@@ -79,16 +82,19 @@ class KaiterraAirQuality(AirQualityEntity):
         return self._data("aqi_pollutant")
 
     @property
+    @override
     def particulate_matter_2_5(self):
         """Return the particulate matter 2.5 level."""
         return self._data("rpm25c")
 
     @property
+    @override
     def particulate_matter_10(self):
         """Return the particulate matter 10 level."""
         return self._data("rpm10c")
 
     @property
+    @override
     def carbon_dioxide(self):
         """Return the CO2 (carbon dioxide) level."""
         return self._data("rco2")
@@ -99,11 +105,13 @@ class KaiterraAirQuality(AirQualityEntity):
         return self._data("rtvoc")
 
     @property
+    @override
     def unique_id(self):
         """Return the sensor's unique id."""
         return f"{self._device_id}_air_quality"
 
     @property
+    @override
     def extra_state_attributes(self) -> dict[str, Any]:
         """Return the device state attributes."""
         return {
@@ -116,6 +124,7 @@ class KaiterraAirQuality(AirQualityEntity):
             if value is not None
         }
 
+    @override
     async def async_added_to_hass(self):
         """Register callback."""
         self.async_on_remove(

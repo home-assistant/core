@@ -1,6 +1,7 @@
 """Support for fetching WiFi associations through SNMP."""
 
 import logging
+from typing import override
 
 from homeassistant.components.device_tracker import (
     DOMAIN as DEVICE_TRACKER_DOMAIN,
@@ -123,12 +124,14 @@ class SnmpTrackerEntity(CoordinatorEntity[SnmpUpdateCoordinator], ScannerEntity)
         self._attr_ip_address = coordinator.data.get(mac) if coordinator.data else None
 
     @property
+    @override
     def is_connected(self) -> bool:
         """Return True if this MAC was seen in the latest scan."""
         if not self.coordinator.data:
             return False
         return self._attr_mac_address in self.coordinator.data
 
+    @override
     @callback
     def _handle_coordinator_update(self) -> None:
         """Update attribute so base class can use it."""
@@ -141,6 +144,7 @@ class SnmpTrackerEntity(CoordinatorEntity[SnmpUpdateCoordinator], ScannerEntity)
         super()._handle_coordinator_update()
 
     @property
+    @override
     def entity_registry_enabled_default(self) -> bool:
         """Return if entity is enabled by default."""
         return (

@@ -1,6 +1,7 @@
 """Select platform for the Duco integration."""
 
 import logging
+from typing import override
 
 from duco_connectivity import (
     ActionItem,
@@ -25,6 +26,19 @@ from .entity import DucoEntity
 _LOGGER = logging.getLogger(__name__)
 
 PARALLEL_UPDATES = 1
+
+SUPPORTED_SELECT_NODE_TYPES = {
+    NodeType.BOX,
+    NodeType.VLV,
+    NodeType.VLVRH,
+    NodeType.VLVVOC,
+    NodeType.VLVCO2,
+    NodeType.VLVCO2RH,
+    NodeType.EAV,
+    NodeType.EAVRH,
+    NodeType.EAVVOC,
+    NodeType.EAVCO2,
+}
 
 
 def _get_ventilation_options(action: ActionItem) -> tuple[str, ...] | None:
@@ -70,7 +84,9 @@ async def async_setup_entry(
             if node.node_id in known_nodes:
                 continue
 
-            if node.general.node_type is not NodeType.BOX:
+            # Duco advertises SetVentilationState broadly, so keep the select
+            # limited to the box and known valve node families.
+            if node.general.node_type not in SUPPORTED_SELECT_NODE_TYPES:
                 continue
 
             options = options_by_node.get(node.node_id)
@@ -106,6 +122,7 @@ class DucoVentilationStateSelect(DucoEntity, SelectEntity):
         self._attr_options = list(options)
 
     @property
+    @override
     def current_option(self) -> str | None:
         """Return the current ventilation state when it is selectable."""
         if (ventilation := self._node.ventilation) is None:
@@ -120,6 +137,7 @@ class DucoVentilationStateSelect(DucoEntity, SelectEntity):
 
         return state
 
+    @override
     async def async_select_option(self, option: str) -> None:
         """Set a new ventilation state on the node."""
         try:

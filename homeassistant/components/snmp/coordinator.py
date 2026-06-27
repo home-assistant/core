@@ -2,6 +2,7 @@
 
 import binascii
 import logging
+from typing import override
 
 from pysnmp.error import PySnmpError
 from pysnmp.hlapi.v3arch.asyncio import (
@@ -147,6 +148,7 @@ class SnmpUpdateCoordinator(DataUpdateCoordinator[dict[str, str | None]]):
                 "SNMP Server"  # Set generic name to avoid continuous re-fetching
             )
 
+    @override
     async def _async_update_data(self) -> dict[str, str | None]:
         """Fetch the current list of MAC addresses via an SNMP Walk."""
         if self.model is None:

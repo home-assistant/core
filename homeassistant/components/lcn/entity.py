@@ -1,6 +1,7 @@
 """LCN parent entity class."""
 
 from collections.abc import Callable
+from typing import override
 
 from pypck.device import DeviceConnection
 
@@ -47,6 +48,7 @@ class LcnEntity(Entity):
         )
 
     @property
+    @override
     def unique_id(self) -> str:
         """Return a unique ID."""
         return generate_unique_id(
@@ -58,10 +60,12 @@ class LcnEntity(Entity):
         )
 
     @property
+    @override
     def should_poll(self) -> bool:
         """Groups may not poll for a status."""
         return not self.device_connection.is_group
 
+    @override
     async def async_added_to_hass(self) -> None:
         """Run when entity about to be added to hass."""
         self.device_connection = get_device_connection(
@@ -76,12 +80,14 @@ class LcnEntity(Entity):
 
         self.schedule_update_ha_state(force_refresh=True)
 
+    @override
     async def async_will_remove_from_hass(self) -> None:
         """Run when entity will be removed from hass."""
         if self._unregister_for_inputs is not None:
             self._unregister_for_inputs()
 
     @property
+    @override
     def name(self) -> str:
         """Return the name of the device."""
         return self._name

@@ -1,7 +1,7 @@
 """Config flow for Verisure integration."""
 
 from collections.abc import Mapping
-from typing import Any
+from typing import Any, override
 
 from verisure import (
     Error as VerisureError,
@@ -38,12 +38,14 @@ class VerisureConfigFlowHandler(ConfigFlow, domain=DOMAIN):
 
     @staticmethod
     @callback
+    @override
     def async_get_options_flow(
         config_entry: VerisureConfigEntry,
     ) -> VerisureOptionsFlowHandler:
         """Get the options flow for this handler."""
         return VerisureOptionsFlowHandler()
 
+    @override
     async def async_step_user(
         self, user_input: dict[str, Any] | None = None
     ) -> ConfigFlowResult:

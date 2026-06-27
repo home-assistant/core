@@ -1,5 +1,7 @@
 """Provides triggers for lights."""
 
+from typing import override
+
 from homeassistant.const import STATE_OFF, STATE_ON
 from homeassistant.core import HomeAssistant, State
 from homeassistant.helpers.automation import DomainSpec
@@ -14,7 +16,7 @@ from homeassistant.helpers.trigger import (
 from . import ATTR_BRIGHTNESS
 from .const import DOMAIN
 
-BRIGHTNESS_DOMAIN_SPECS = {
+BRIGHTNESS_DOMAIN_SPECS: dict[str, DomainSpec] = {
     DOMAIN: DomainSpec(value_source=ATTR_BRIGHTNESS),
 }
 
@@ -25,6 +27,7 @@ class BrightnessTriggerMixin(EntityNumericalStateTriggerBase):
     _domain_specs = BRIGHTNESS_DOMAIN_SPECS
     _valid_unit = "%"
 
+    @override
     def _get_tracked_value(self, state: State) -> float | None:
         """Get tracked brightness as a percentage."""
         value = super()._get_tracked_value(state)

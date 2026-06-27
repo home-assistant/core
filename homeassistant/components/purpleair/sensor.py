@@ -2,6 +2,7 @@
 
 from collections.abc import Callable
 from dataclasses import dataclass
+from typing import override
 
 from aiopurpleair.models.sensors import SensorModel
 
@@ -191,6 +192,7 @@ class PurpleAirSensorEntity(PurpleAirEntity, SensorEntity):
         self.entity_description = description
 
     @property
+    @override
     def native_value(self) -> float | str | None:
         """Return the sensor value."""
         return self.entity_description.value_fn(self.sensor_data)

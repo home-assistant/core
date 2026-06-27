@@ -1,6 +1,7 @@
 """DataUpdateCoordinator for WeatherKit integration."""
 
 from datetime import datetime, timedelta
+from typing import override
 
 from apple_weatherkit import DataSetType
 from apple_weatherkit.client import WeatherKitApiClient, WeatherKitApiClientError
@@ -64,6 +65,7 @@ class WeatherKitDataUpdateCoordinator(DataUpdateCoordinator):
 
         LOGGER.debug("Supported data sets: %s", self.supported_data_sets)
 
+    @override
     async def _async_update_data(self):
         """Update the current weather and forecasts."""
         try:

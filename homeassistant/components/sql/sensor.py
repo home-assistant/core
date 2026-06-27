@@ -1,7 +1,7 @@
 """Sensor from an SQL Query."""
 
 import logging
-from typing import Any
+from typing import Any, override
 
 from sqlalchemy.engine import Result
 from sqlalchemy.exc import SQLAlchemyError
@@ -234,18 +234,21 @@ class SQLSensor(ManualTriggerSensorEntity):
             )
 
     @property
+    @override
     def name(self) -> str | None:
         """Name of the entity."""
         if self.has_entity_name:
             return self._attr_name
         return self._rendered.get(CONF_NAME)
 
+    @override
     async def async_added_to_hass(self) -> None:
         """Call when entity about to be added to hass."""
         await super().async_added_to_hass()
         await self.async_update()
 
     @property
+    @override
     def extra_state_attributes(self) -> dict[str, Any] | None:
         """Return extra attributes."""
         return dict(self._attr_extra_state_attributes)

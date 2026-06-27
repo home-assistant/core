@@ -1,7 +1,7 @@
 """The Coordinator for EnergyZero."""
 
 from datetime import timedelta
-from typing import NamedTuple
+from typing import NamedTuple, override
 
 from energyzero import (
     Electricity,
@@ -47,6 +47,7 @@ class EnergyZeroDataUpdateCoordinator(DataUpdateCoordinator[EnergyZeroData]):
 
         self.energyzero = EnergyZero(session=async_get_clientsession(hass))
 
+    @override
     async def _async_update_data(self) -> EnergyZeroData:
         """Fetch data from EnergyZero."""
         today = dt_util.now().date()

@@ -2,7 +2,7 @@
 
 from collections.abc import Mapping
 import logging
-from typing import Any
+from typing import Any, override
 
 import voluptuous as vol
 
@@ -52,6 +52,7 @@ class JellyfinConfigFlow(ConfigFlow, domain=DOMAIN):
         """Initialize the Jellyfin config flow."""
         self.client_device_id: str | None = None
 
+    @override
     async def async_step_user(
         self, user_input: dict[str, Any] | None = None
     ) -> ConfigFlowResult:
@@ -138,6 +139,7 @@ class JellyfinConfigFlow(ConfigFlow, domain=DOMAIN):
 
     @staticmethod
     @callback
+    @override
     def async_get_options_flow(
         config_entry: JellyfinConfigEntry,
     ) -> OptionsFlowHandler:

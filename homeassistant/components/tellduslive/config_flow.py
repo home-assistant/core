@@ -3,7 +3,7 @@
 import asyncio
 import logging
 import os
-from typing import Any
+from typing import Any, override
 
 from tellduslive import Session, supports_local_api
 import voluptuous as vol
@@ -52,6 +52,7 @@ class FlowHandler(ConfigFlow, domain=DOMAIN):
         )
         return self._session.authorize_url
 
+    @override
     async def async_step_user(
         self, user_input: dict[str, Any] | None = None
     ) -> ConfigFlowResult:
@@ -117,6 +118,7 @@ class FlowHandler(ConfigFlow, domain=DOMAIN):
             },
         )
 
+    @override
     async def async_step_discovery(
         self,
         discovery_info: list[str],  # type: ignore[override]

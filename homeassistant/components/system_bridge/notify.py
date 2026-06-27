@@ -1,7 +1,7 @@
 """Support for System Bridge notification service."""
 
 import logging
-from typing import Any
+from typing import Any, override
 
 from systembridgeconnector.exceptions import ConnectionClosedException
 from systembridgeconnector.models.notification import Notification
@@ -52,6 +52,7 @@ class SystemBridgeNotifyEntity(SystemBridgeEntity, NotifyEntity):
     _attr_supported_features = NotifyEntityFeature.TITLE
     _attr_name = None
 
+    @override
     async def async_send_message(self, message: str, title: str | None = None) -> None:
         """Send a message via notify.send_message action."""
         notification = Notification(
@@ -98,6 +99,7 @@ class SystemBridgeNotificationService(BaseNotificationService):
         """Initialize the service."""
         self._coordinator: SystemBridgeDataUpdateCoordinator = coordinator
 
+    @override
     async def async_send_message(
         self,
         message: str = "",

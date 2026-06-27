@@ -3,7 +3,7 @@
 from collections.abc import Iterable
 from dataclasses import dataclass
 import logging
-from typing import TYPE_CHECKING, Any
+from typing import TYPE_CHECKING, Any, override
 
 from miio import AirQualityMonitor, Device as MiioDevice, DeviceException
 from miio.gateway.gateway import (
@@ -889,6 +889,7 @@ class XiaomiGenericSensor(
         }
 
     @callback
+    @override
     def _handle_coordinator_update(self):
         """Fetch state from the device."""
         native_value = self._determine_native_value()
@@ -994,6 +995,7 @@ class XiaomiGatewaySensor(XiaomiGatewayDevice, SensorEntity):
         self.entity_description = description
 
     @property
+    @override
     def native_value(self):
         """Return the state of the sensor."""
         return self._sub_device.status[self.entity_description.key]
