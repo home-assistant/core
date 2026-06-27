@@ -7,7 +7,7 @@ from aioamazondevices.const.schedules import (
     NOTIFICATION_TIMER,
 )
 
-from homeassistant.components.sensor import DOMAIN as SENSOR_DOMAIN
+from homeassistant.const import Platform
 from homeassistant.core import HomeAssistant
 import homeassistant.helpers.entity_registry as er
 
@@ -70,7 +70,7 @@ async def async_remove_unsupported_notification_sensors(
         ):
             unique_id = f"{serial_num}-{notification_key}"
             entity_id = entity_registry.async_get_entity_id(
-                SENSOR_DOMAIN, DOMAIN, unique_id=unique_id
+                Platform.SENSOR, DOMAIN, unique_id=unique_id
             )
             is_unsupported = not coordinator.data[serial_num].notifications_supported
 

@@ -4,7 +4,7 @@ import logging
 from typing import Any, override
 
 from pymonoprice import get_monoprice
-from serial import SerialException
+from serialx import SerialException
 import voluptuous as vol
 
 from homeassistant.config_entries import (

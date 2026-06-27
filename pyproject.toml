@@ -77,7 +77,7 @@ dependencies = [
   "uv==0.11.21",
   "voluptuous==0.15.2",
   "voluptuous-serialize==2.7.0",
-  "voluptuous-openapi==0.3.0",
+  "voluptuous-openapi==0.4.1",
   "yarl==1.24.2",
   "webrtc-models==0.3.0",
   "zeroconf==0.150.0",
