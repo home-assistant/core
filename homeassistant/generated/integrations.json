@@ -4263,24 +4263,6 @@
           "iot_class": "cloud_polling",
           "name": "Azure Storage"
         },
-        "microsoft_face_detect": {
-          "integration_type": "hub",
-          "config_flow": false,
-          "iot_class": "cloud_push",
-          "name": "Microsoft Face Detect"
-        },
-        "microsoft_face_identify": {
-          "integration_type": "hub",
-          "config_flow": false,
-          "iot_class": "cloud_push",
-          "name": "Microsoft Face Identify"
-        },
-        "microsoft_face": {
-          "integration_type": "hub",
-          "config_flow": false,
-          "iot_class": "cloud_push",
-          "name": "Microsoft Face"
-        },
         "microsoft": {
           "integration_type": "hub",
           "config_flow": false,
