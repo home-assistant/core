@@ -425,7 +425,7 @@ async def test_trigger_with_delay(hass: HomeAssistant) -> None:
     assert state.state == AlarmControlPanelState.TRIGGERED
 
 
-async def test_trigger_with_overriden_delay(hass: HomeAssistant) -> None:
+async def test_trigger_with_overridden_delay(hass: HomeAssistant) -> None:
     """Test trigger method and switch from pending to triggered when delay is forced."""
     assert await async_setup_component(
         hass,
