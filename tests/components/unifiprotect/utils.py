@@ -305,7 +305,7 @@ def make_public_camera(
     camera: Camera,
     *,
     state: DeviceState | None = None,
-    mic_volume: int = 100,
+    mic_volume: int | None = None,
 ) -> Mock:
     """Build a public-API camera for the migrated microphone volume number.
 
@@ -318,7 +318,7 @@ def make_public_camera(
     public.mac = camera.mac
     public.model = ModelType.CAMERA
     public.state = DeviceState[camera.state.name] if state is None else state
-    public.mic_volume = mic_volume
+    public.mic_volume = camera.mic_volume if mic_volume is None else mic_volume
     return public
 
 
