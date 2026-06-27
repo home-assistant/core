@@ -74,7 +74,7 @@
     'supported_features': 0,
     'translation_key': None,
     'unique_id': '56789_humidity',
-    'unit_of_measurement': '%',
+    'unit_of_measurement': <UnitOfRatio.PERCENTAGE: '%'>,
   })
 # ---
 # name: test_all_sensor_entities[sensor.test_vmc_humidity-state]
@@ -83,7 +83,7 @@
       <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'humidity',
       <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Test VMC Humidity',
       <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
-      <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: '%',
+      <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: <UnitOfRatio.PERCENTAGE: '%'>,
     }),
     'context': <ANY>,
     'entity_id': 'sensor.test_vmc_humidity',
@@ -187,7 +187,7 @@
     'supported_features': 0,
     'translation_key': None,
     'unique_id': '56789_voc',
-    'unit_of_measurement': 'ppm',
+    'unit_of_measurement': <UnitOfRatio.PARTS_PER_MILLION: 'ppm'>,
   })
 # ---
 # name: test_all_sensor_entities[sensor.test_vmc_volatile_organic_compounds_parts-state]
@@ -196,7 +196,7 @@
       <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'volatile_organic_compounds_parts',
       <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Test VMC Volatile organic compounds parts',
       <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
-      <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: 'ppm',
+      <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: <UnitOfRatio.PARTS_PER_MILLION: 'ppm'>,
     }),
     'context': <ANY>,
     'entity_id': 'sensor.test_vmc_volatile_organic_compounds_parts',
