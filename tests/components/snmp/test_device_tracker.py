@@ -8,7 +8,7 @@ from pysnmp.proto.rfc1902 import OctetString
 import pytest
 
 from homeassistant.components.device_tracker import DOMAIN as DEVICE_TRACKER_DOMAIN
-from homeassistant.components.snmp.const import CONF_IMPORTED_BY, DOMAIN
+from homeassistant.components.snmp.const import DOMAIN
 from homeassistant.components.snmp.device_tracker import (
     SnmpTrackerEntity,
     async_setup_scanner,
@@ -75,7 +75,6 @@ async def test_device_tracker_setup_with_legacy_state(
             "host": "192.168.1.1",
             "baseoid": "1.3.6.1.2.1.4.22.1.6",
             "community": "public",
-            CONF_IMPORTED_BY: "device_tracker",
         },
     )
     entry.add_to_hass(hass)
@@ -160,7 +159,6 @@ async def test_device_tracker_update(
             "host": "192.168.1.1",
             "baseoid": "1.3.6.1.2.1.4.22.1.6",
             "community": "public",
-            CONF_IMPORTED_BY: "device_tracker",
         },
     )
     entry.add_to_hass(hass)
@@ -273,7 +271,6 @@ async def test_device_tracker_name_resolves_to_mac_address(
             "host": "192.168.1.1",
             "baseoid": "1.3.6.1.2.1.4.22.1.6",
             "community": "public",
-            CONF_IMPORTED_BY: "device_tracker",
         },
     )
     entry.add_to_hass(hass)

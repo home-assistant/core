@@ -14,7 +14,7 @@ from homeassistant.components.snmp.config_flow import (
     InvalidAuth,
     validate_input,
 )
-from homeassistant.components.snmp.const import CONF_IMPORTED_BY, DOMAIN
+from homeassistant.components.snmp.const import DOMAIN
 from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
 
@@ -184,7 +184,6 @@ async def test_import_flow_success(hass: HomeAssistant) -> None:
     assert result["data"] == {
         "host": "192.168.1.1",
         "baseoid": "1.3.6.1.4.1.2021.10.1.3.1",
-        CONF_IMPORTED_BY: "device_tracker",
     }
     assert len(mock_setup.mock_calls) == 1
 

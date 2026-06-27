@@ -20,7 +20,6 @@ from .const import (
     CONF_BASEOID,
     CONF_COMMUNITY,
     CONF_CONTEXT_NAME,
-    CONF_IMPORTED_BY,
     CONF_PRIV_KEY,
     CONF_PRIV_PROTOCOL,
     CONF_VERSION,
@@ -250,8 +249,6 @@ class SnmpConfigFlow(ConfigFlow, domain=DOMAIN):
             CONF_PRIV_PROTOCOL,
         }
         clean_data = {k: v for k, v in user_input.items() if k in allowed_keys}
-        # Track that this config entry was imported from YAML device_tracker
-        clean_data[CONF_IMPORTED_BY] = "device_tracker"
 
         return self.async_create_entry(title=clean_data[CONF_HOST], data=clean_data)
 
