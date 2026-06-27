@@ -77,6 +77,7 @@ NODE_BUTTONS: tuple[ProxmoxNodeButtonNodeEntityDescription, ...] = (
             node
         ).status.post(command="shutdown"),
         entity_category=EntityCategory.CONFIG,
+        entity_registry_enabled_default=False,
     ),
     ProxmoxNodeButtonNodeEntityDescription(
         key="start_all",
