@@ -2,6 +2,7 @@
 
 from collections.abc import Awaitable, Callable
 from dataclasses import dataclass
+from typing import override
 
 from zinvolt import ZinvoltClient
 
@@ -117,6 +118,7 @@ class ZinvoltBatteryStateNumber(ZinvoltEntity, NumberEntity):
         )
 
     @property
+    @override
     def native_max_value(self) -> float:
         """Return the native maximum value."""
         if self.entity_description.max_fn is None:
@@ -124,10 +126,12 @@ class ZinvoltBatteryStateNumber(ZinvoltEntity, NumberEntity):
         return self.entity_description.max_fn(self.coordinator.data)
 
     @property
+    @override
     def native_value(self) -> float:
         """Return the state of the sensor."""
         return self.entity_description.value_fn(self.coordinator.data)
 
+    @override
     async def async_set_native_value(self, value: float) -> None:
         """Set the state of the sensor."""
         await self.entity_description.set_value_fn(

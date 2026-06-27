@@ -39,7 +39,7 @@
 # name: test_switch_snapshot[switch.homeegrams_test_hg_1-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'Homeegrams Test HG 1',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Homeegrams Test HG 1',
     }),
     'context': <ANY>,
     'entity_id': 'switch.homeegrams_test_hg_1',
@@ -89,7 +89,7 @@
 # name: test_switch_snapshot[switch.homeegrams_test_hg_2-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'Homeegrams Test HG 2',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Homeegrams Test HG 2',
     }),
     'context': <ANY>,
     'entity_id': 'switch.homeegrams_test_hg_2',
@@ -139,8 +139,8 @@
 # name: test_switch_snapshot[switch.test_switch_child_lock-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'device_class': 'switch',
-      'friendly_name': 'Test Switch Child lock',
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'switch',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Test Switch Child lock',
     }),
     'context': <ANY>,
     'entity_id': 'switch.test_switch_child_lock',
@@ -190,8 +190,8 @@
 # name: test_switch_snapshot[switch.test_switch_manual_operation-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'device_class': 'switch',
-      'friendly_name': 'Test Switch Manual operation',
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'switch',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Test Switch Manual operation',
     }),
     'context': <ANY>,
     'entity_id': 'switch.test_switch_manual_operation',
@@ -241,8 +241,8 @@
 # name: test_switch_snapshot[switch.test_switch_switch_1-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'device_class': 'outlet',
-      'friendly_name': 'Test Switch Switch 1',
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'outlet',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Test Switch Switch 1',
     }),
     'context': <ANY>,
     'entity_id': 'switch.test_switch_switch_1',
@@ -292,8 +292,8 @@
 # name: test_switch_snapshot[switch.test_switch_switch_2-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'device_class': 'outlet',
-      'friendly_name': 'Test Switch Switch 2',
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'outlet',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Test Switch Switch 2',
     }),
     'context': <ANY>,
     'entity_id': 'switch.test_switch_switch_2',
@@ -343,8 +343,8 @@
 # name: test_switch_snapshot[switch.test_switch_watchdog-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'device_class': 'switch',
-      'friendly_name': 'Test Switch Watchdog',
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'switch',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Test Switch Watchdog',
     }),
     'context': <ANY>,
     'entity_id': 'switch.test_switch_watchdog',

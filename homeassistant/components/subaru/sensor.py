@@ -5,7 +5,7 @@ from dataclasses import dataclass
 from datetime import date, datetime
 from decimal import Decimal
 import logging
-from typing import Any
+from typing import Any, override
 
 import subarulink.const as sc
 
@@ -361,6 +361,7 @@ class SubaruSensor(CoordinatorEntity[SubaruDataUpdateCoordinator], SensorEntity)
         self._attr_unique_id = f"{self.vin}_{description.key}"
 
     @property
+    @override
     def native_value(self) -> StateType | date | datetime | Decimal:
         """Return the state of the sensor."""
         vehicle_data = self.coordinator.data[self.vin]
@@ -382,6 +383,7 @@ class SubaruSensor(CoordinatorEntity[SubaruDataUpdateCoordinator], SensorEntity)
         return current_value
 
     @property
+    @override
     def native_unit_of_measurement(self) -> str | None:
         """Return the unit_of_measurement of the device."""
         if (
@@ -392,6 +394,7 @@ class SubaruSensor(CoordinatorEntity[SubaruDataUpdateCoordinator], SensorEntity)
         return self.entity_description.native_unit_of_measurement
 
     @property
+    @override
     def available(self) -> bool:
         """Return if entity is available."""
         last_update_success = super().available

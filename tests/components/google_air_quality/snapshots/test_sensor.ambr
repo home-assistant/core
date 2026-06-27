@@ -6,7 +6,7 @@
     ]),
     'area_id': None,
     'capabilities': dict({
-      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+      <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -41,10 +41,10 @@
 # name: test_sensor_snapshot[air_quality_data.json-mock_config_entry][sensor.home_ammonia-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'attribution': 'Data provided by Google Air Quality',
-      'friendly_name': 'Home Ammonia',
-      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
-      'unit_of_measurement': 'ppb',
+      <EntityStateAttribute.ATTRIBUTION: 'attribution'>: 'Data provided by Google Air Quality',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Home Ammonia',
+      <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
+      <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: 'ppb',
     }),
     'context': <ANY>,
     'entity_id': 'sensor.home_ammonia',
@@ -61,7 +61,7 @@
     ]),
     'area_id': None,
     'capabilities': dict({
-      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+      <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -96,10 +96,10 @@
 # name: test_sensor_snapshot[air_quality_data.json-mock_config_entry][sensor.home_benzene-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'attribution': 'Data provided by Google Air Quality',
-      'friendly_name': 'Home Benzene',
-      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
-      'unit_of_measurement': 'μg/m³',
+      <EntityStateAttribute.ATTRIBUTION: 'attribution'>: 'Data provided by Google Air Quality',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Home Benzene',
+      <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
+      <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: 'μg/m³',
     }),
     'context': <ANY>,
     'entity_id': 'sensor.home_benzene',
@@ -116,7 +116,7 @@
     ]),
     'area_id': None,
     'capabilities': dict({
-      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+      <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -154,11 +154,11 @@
 # name: test_sensor_snapshot[air_quality_data.json-mock_config_entry][sensor.home_carbon_monoxide-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'attribution': 'Data provided by Google Air Quality',
-      'device_class': 'carbon_monoxide',
-      'friendly_name': 'Home Carbon monoxide',
-      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
-      'unit_of_measurement': 'ppm',
+      <EntityStateAttribute.ATTRIBUTION: 'attribution'>: 'Data provided by Google Air Quality',
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'carbon_monoxide',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Home Carbon monoxide',
+      <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
+      <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: 'ppm',
     }),
     'context': <ANY>,
     'entity_id': 'sensor.home_carbon_monoxide',
@@ -175,7 +175,7 @@
     ]),
     'area_id': None,
     'capabilities': dict({
-      'options': list([
+      <SensorEntityCapabilityAttribute.OPTIONS: 'options'>: list([
         'very_good_air_quality',
         'good_air_quality',
         'moderate_air_quality',
@@ -216,10 +216,10 @@
 # name: test_sensor_snapshot[air_quality_data.json-mock_config_entry][sensor.home_lqi_de_category-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'attribution': 'Data provided by Google Air Quality',
-      'device_class': 'enum',
-      'friendly_name': 'Home LQI (DE) category',
-      'options': list([
+      <EntityStateAttribute.ATTRIBUTION: 'attribution'>: 'Data provided by Google Air Quality',
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'enum',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Home LQI (DE) category',
+      <SensorEntityCapabilityAttribute.OPTIONS: 'options'>: list([
         'very_good_air_quality',
         'good_air_quality',
         'moderate_air_quality',
@@ -242,7 +242,7 @@
     ]),
     'area_id': None,
     'capabilities': dict({
-      'options': list([
+      <SensorEntityCapabilityAttribute.OPTIONS: 'options'>: list([
         'no2',
         'o3',
         'pm25',
@@ -282,10 +282,10 @@
 # name: test_sensor_snapshot[air_quality_data.json-mock_config_entry][sensor.home_lqi_de_dominant_pollutant-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'attribution': 'Data provided by Google Air Quality',
-      'device_class': 'enum',
-      'friendly_name': 'Home LQI (DE) dominant pollutant',
-      'options': list([
+      <EntityStateAttribute.ATTRIBUTION: 'attribution'>: 'Data provided by Google Air Quality',
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'enum',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Home LQI (DE) dominant pollutant',
+      <SensorEntityCapabilityAttribute.OPTIONS: 'options'>: list([
         'no2',
         'o3',
         'pm25',
@@ -307,7 +307,7 @@
     ]),
     'area_id': None,
     'capabilities': dict({
-      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+      <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -342,11 +342,11 @@
 # name: test_sensor_snapshot[air_quality_data.json-mock_config_entry][sensor.home_nitrogen_dioxide-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'attribution': 'Data provided by Google Air Quality',
-      'device_class': 'nitrogen_dioxide',
-      'friendly_name': 'Home Nitrogen dioxide',
-      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
-      'unit_of_measurement': 'ppb',
+      <EntityStateAttribute.ATTRIBUTION: 'attribution'>: 'Data provided by Google Air Quality',
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'nitrogen_dioxide',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Home Nitrogen dioxide',
+      <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
+      <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: 'ppb',
     }),
     'context': <ANY>,
     'entity_id': 'sensor.home_nitrogen_dioxide',
@@ -363,7 +363,7 @@
     ]),
     'area_id': None,
     'capabilities': dict({
-      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+      <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -398,11 +398,11 @@
 # name: test_sensor_snapshot[air_quality_data.json-mock_config_entry][sensor.home_nitrogen_monoxide-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'attribution': 'Data provided by Google Air Quality',
-      'device_class': 'nitrogen_monoxide',
-      'friendly_name': 'Home Nitrogen monoxide',
-      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
-      'unit_of_measurement': 'ppb',
+      <EntityStateAttribute.ATTRIBUTION: 'attribution'>: 'Data provided by Google Air Quality',
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'nitrogen_monoxide',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Home Nitrogen monoxide',
+      <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
+      <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: 'ppb',
     }),
     'context': <ANY>,
     'entity_id': 'sensor.home_nitrogen_monoxide',
@@ -419,7 +419,7 @@
     ]),
     'area_id': None,
     'capabilities': dict({
-      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+      <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -454,10 +454,10 @@
 # name: test_sensor_snapshot[air_quality_data.json-mock_config_entry][sensor.home_non_methane_hydrocarbons-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'attribution': 'Data provided by Google Air Quality',
-      'friendly_name': 'Home Non-methane hydrocarbons',
-      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
-      'unit_of_measurement': 'ppb',
+      <EntityStateAttribute.ATTRIBUTION: 'attribution'>: 'Data provided by Google Air Quality',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Home Non-methane hydrocarbons',
+      <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
+      <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: 'ppb',
     }),
     'context': <ANY>,
     'entity_id': 'sensor.home_non_methane_hydrocarbons',
@@ -474,7 +474,7 @@
     ]),
     'area_id': None,
     'capabilities': dict({
-      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+      <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -509,11 +509,11 @@
 # name: test_sensor_snapshot[air_quality_data.json-mock_config_entry][sensor.home_ozone-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'attribution': 'Data provided by Google Air Quality',
-      'device_class': 'ozone',
-      'friendly_name': 'Home Ozone',
-      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
-      'unit_of_measurement': 'ppb',
+      <EntityStateAttribute.ATTRIBUTION: 'attribution'>: 'Data provided by Google Air Quality',
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'ozone',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Home Ozone',
+      <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
+      <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: 'ppb',
     }),
     'context': <ANY>,
     'entity_id': 'sensor.home_ozone',
@@ -530,7 +530,7 @@
     ]),
     'area_id': None,
     'capabilities': dict({
-      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+      <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -565,11 +565,11 @@
 # name: test_sensor_snapshot[air_quality_data.json-mock_config_entry][sensor.home_pm10-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'attribution': 'Data provided by Google Air Quality',
-      'device_class': 'pm10',
-      'friendly_name': 'Home PM10',
-      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
-      'unit_of_measurement': 'μg/m³',
+      <EntityStateAttribute.ATTRIBUTION: 'attribution'>: 'Data provided by Google Air Quality',
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'pm10',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Home PM10',
+      <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
+      <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: 'μg/m³',
     }),
     'context': <ANY>,
     'entity_id': 'sensor.home_pm10',
@@ -586,7 +586,7 @@
     ]),
     'area_id': None,
     'capabilities': dict({
-      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+      <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -621,11 +621,11 @@
 # name: test_sensor_snapshot[air_quality_data.json-mock_config_entry][sensor.home_pm2_5-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'attribution': 'Data provided by Google Air Quality',
-      'device_class': 'pm25',
-      'friendly_name': 'Home PM2.5',
-      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
-      'unit_of_measurement': 'μg/m³',
+      <EntityStateAttribute.ATTRIBUTION: 'attribution'>: 'Data provided by Google Air Quality',
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'pm25',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Home PM2.5',
+      <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
+      <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: 'μg/m³',
     }),
     'context': <ANY>,
     'entity_id': 'sensor.home_pm2_5',
@@ -642,7 +642,7 @@
     ]),
     'area_id': None,
     'capabilities': dict({
-      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+      <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -677,11 +677,11 @@
 # name: test_sensor_snapshot[air_quality_data.json-mock_config_entry][sensor.home_sulphur_dioxide-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'attribution': 'Data provided by Google Air Quality',
-      'device_class': 'sulphur_dioxide',
-      'friendly_name': 'Home Sulphur dioxide',
-      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
-      'unit_of_measurement': 'ppb',
+      <EntityStateAttribute.ATTRIBUTION: 'attribution'>: 'Data provided by Google Air Quality',
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'sulphur_dioxide',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Home Sulphur dioxide',
+      <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
+      <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: 'ppb',
     }),
     'context': <ANY>,
     'entity_id': 'sensor.home_sulphur_dioxide',
@@ -698,7 +698,7 @@
     ]),
     'area_id': None,
     'capabilities': dict({
-      'options': list([
+      <SensorEntityCapabilityAttribute.OPTIONS: 'options'>: list([
         'excellent_air_quality',
         'good_air_quality',
         'moderate_air_quality',
@@ -739,10 +739,10 @@
 # name: test_sensor_snapshot[air_quality_data.json-mock_config_entry][sensor.home_uaqi_category-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'attribution': 'Data provided by Google Air Quality',
-      'device_class': 'enum',
-      'friendly_name': 'Home UAQI category',
-      'options': list([
+      <EntityStateAttribute.ATTRIBUTION: 'attribution'>: 'Data provided by Google Air Quality',
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'enum',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Home UAQI category',
+      <SensorEntityCapabilityAttribute.OPTIONS: 'options'>: list([
         'excellent_air_quality',
         'good_air_quality',
         'moderate_air_quality',
@@ -765,7 +765,7 @@
     ]),
     'area_id': None,
     'capabilities': dict({
-      'options': list([
+      <SensorEntityCapabilityAttribute.OPTIONS: 'options'>: list([
         'co',
         'no2',
         'o3',
@@ -807,10 +807,10 @@
 # name: test_sensor_snapshot[air_quality_data.json-mock_config_entry][sensor.home_uaqi_dominant_pollutant-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'attribution': 'Data provided by Google Air Quality',
-      'device_class': 'enum',
-      'friendly_name': 'Home UAQI dominant pollutant',
-      'options': list([
+      <EntityStateAttribute.ATTRIBUTION: 'attribution'>: 'Data provided by Google Air Quality',
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'enum',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Home UAQI dominant pollutant',
+      <SensorEntityCapabilityAttribute.OPTIONS: 'options'>: list([
         'co',
         'no2',
         'o3',
@@ -834,7 +834,7 @@
     ]),
     'area_id': None,
     'capabilities': dict({
-      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+      <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -869,10 +869,10 @@
 # name: test_sensor_snapshot[air_quality_data.json-mock_config_entry][sensor.home_universal_air_quality_index-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'attribution': 'Data provided by Google Air Quality',
-      'device_class': 'aqi',
-      'friendly_name': 'Home Universal Air Quality Index',
-      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+      <EntityStateAttribute.ATTRIBUTION: 'attribution'>: 'Data provided by Google Air Quality',
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'aqi',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Home Universal Air Quality Index',
+      <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
     'context': <ANY>,
     'entity_id': 'sensor.home_universal_air_quality_index',
@@ -889,7 +889,7 @@
     ]),
     'area_id': None,
     'capabilities': dict({
-      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+      <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -927,11 +927,11 @@
 # name: test_sensor_snapshot[air_quality_data_custom_laqi.json-mock_config_entry_with_custom_laqi][sensor.home_carbon_monoxide-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'attribution': 'Data provided by Google Air Quality',
-      'device_class': 'carbon_monoxide',
-      'friendly_name': 'Home Carbon monoxide',
-      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
-      'unit_of_measurement': 'ppm',
+      <EntityStateAttribute.ATTRIBUTION: 'attribution'>: 'Data provided by Google Air Quality',
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'carbon_monoxide',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Home Carbon monoxide',
+      <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
+      <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: 'ppm',
     }),
     'context': <ANY>,
     'entity_id': 'sensor.home_carbon_monoxide',
@@ -948,7 +948,7 @@
     ]),
     'area_id': None,
     'capabilities': dict({
-      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+      <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -983,10 +983,10 @@
 # name: test_sensor_snapshot[air_quality_data_custom_laqi.json-mock_config_entry_with_custom_laqi][sensor.home_luqx_de_aqi-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'attribution': 'Data provided by Google Air Quality',
-      'device_class': 'aqi',
-      'friendly_name': 'Home LuQx (DE) AQI',
-      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+      <EntityStateAttribute.ATTRIBUTION: 'attribution'>: 'Data provided by Google Air Quality',
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'aqi',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Home LuQx (DE) AQI',
+      <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
     'context': <ANY>,
     'entity_id': 'sensor.home_luqx_de_aqi',
@@ -1003,7 +1003,7 @@
     ]),
     'area_id': None,
     'capabilities': dict({
-      'options': list([
+      <SensorEntityCapabilityAttribute.OPTIONS: 'options'>: list([
         'very_good_air_quality',
         'good_air_quality',
         'satisfactory_air_quality',
@@ -1045,10 +1045,10 @@
 # name: test_sensor_snapshot[air_quality_data_custom_laqi.json-mock_config_entry_with_custom_laqi][sensor.home_luqx_de_category-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'attribution': 'Data provided by Google Air Quality',
-      'device_class': 'enum',
-      'friendly_name': 'Home LuQx (DE) category',
-      'options': list([
+      <EntityStateAttribute.ATTRIBUTION: 'attribution'>: 'Data provided by Google Air Quality',
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'enum',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Home LuQx (DE) category',
+      <SensorEntityCapabilityAttribute.OPTIONS: 'options'>: list([
         'very_good_air_quality',
         'good_air_quality',
         'satisfactory_air_quality',
@@ -1072,7 +1072,7 @@
     ]),
     'area_id': None,
     'capabilities': dict({
-      'options': list([
+      <SensorEntityCapabilityAttribute.OPTIONS: 'options'>: list([
         'no2',
         'so2',
         'co',
@@ -1113,10 +1113,10 @@
 # name: test_sensor_snapshot[air_quality_data_custom_laqi.json-mock_config_entry_with_custom_laqi][sensor.home_luqx_de_dominant_pollutant-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'attribution': 'Data provided by Google Air Quality',
-      'device_class': 'enum',
-      'friendly_name': 'Home LuQx (DE) dominant pollutant',
-      'options': list([
+      <EntityStateAttribute.ATTRIBUTION: 'attribution'>: 'Data provided by Google Air Quality',
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'enum',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Home LuQx (DE) dominant pollutant',
+      <SensorEntityCapabilityAttribute.OPTIONS: 'options'>: list([
         'no2',
         'so2',
         'co',
@@ -1139,7 +1139,7 @@
     ]),
     'area_id': None,
     'capabilities': dict({
-      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+      <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -1174,11 +1174,11 @@
 # name: test_sensor_snapshot[air_quality_data_custom_laqi.json-mock_config_entry_with_custom_laqi][sensor.home_nitrogen_dioxide-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'attribution': 'Data provided by Google Air Quality',
-      'device_class': 'nitrogen_dioxide',
-      'friendly_name': 'Home Nitrogen dioxide',
-      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
-      'unit_of_measurement': 'ppb',
+      <EntityStateAttribute.ATTRIBUTION: 'attribution'>: 'Data provided by Google Air Quality',
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'nitrogen_dioxide',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Home Nitrogen dioxide',
+      <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
+      <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: 'ppb',
     }),
     'context': <ANY>,
     'entity_id': 'sensor.home_nitrogen_dioxide',
@@ -1195,7 +1195,7 @@
     ]),
     'area_id': None,
     'capabilities': dict({
-      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+      <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -1230,11 +1230,11 @@
 # name: test_sensor_snapshot[air_quality_data_custom_laqi.json-mock_config_entry_with_custom_laqi][sensor.home_ozone-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'attribution': 'Data provided by Google Air Quality',
-      'device_class': 'ozone',
-      'friendly_name': 'Home Ozone',
-      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
-      'unit_of_measurement': 'ppb',
+      <EntityStateAttribute.ATTRIBUTION: 'attribution'>: 'Data provided by Google Air Quality',
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'ozone',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Home Ozone',
+      <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
+      <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: 'ppb',
     }),
     'context': <ANY>,
     'entity_id': 'sensor.home_ozone',
@@ -1251,7 +1251,7 @@
     ]),
     'area_id': None,
     'capabilities': dict({
-      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+      <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -1286,11 +1286,11 @@
 # name: test_sensor_snapshot[air_quality_data_custom_laqi.json-mock_config_entry_with_custom_laqi][sensor.home_pm10-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'attribution': 'Data provided by Google Air Quality',
-      'device_class': 'pm10',
-      'friendly_name': 'Home PM10',
-      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
-      'unit_of_measurement': 'μg/m³',
+      <EntityStateAttribute.ATTRIBUTION: 'attribution'>: 'Data provided by Google Air Quality',
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'pm10',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Home PM10',
+      <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
+      <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: 'μg/m³',
     }),
     'context': <ANY>,
     'entity_id': 'sensor.home_pm10',
@@ -1307,7 +1307,7 @@
     ]),
     'area_id': None,
     'capabilities': dict({
-      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+      <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -1342,11 +1342,11 @@
 # name: test_sensor_snapshot[air_quality_data_custom_laqi.json-mock_config_entry_with_custom_laqi][sensor.home_pm2_5-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'attribution': 'Data provided by Google Air Quality',
-      'device_class': 'pm25',
-      'friendly_name': 'Home PM2.5',
-      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
-      'unit_of_measurement': 'μg/m³',
+      <EntityStateAttribute.ATTRIBUTION: 'attribution'>: 'Data provided by Google Air Quality',
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'pm25',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Home PM2.5',
+      <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
+      <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: 'μg/m³',
     }),
     'context': <ANY>,
     'entity_id': 'sensor.home_pm2_5',
@@ -1363,7 +1363,7 @@
     ]),
     'area_id': None,
     'capabilities': dict({
-      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+      <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -1398,11 +1398,11 @@
 # name: test_sensor_snapshot[air_quality_data_custom_laqi.json-mock_config_entry_with_custom_laqi][sensor.home_sulphur_dioxide-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'attribution': 'Data provided by Google Air Quality',
-      'device_class': 'sulphur_dioxide',
-      'friendly_name': 'Home Sulphur dioxide',
-      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
-      'unit_of_measurement': 'ppb',
+      <EntityStateAttribute.ATTRIBUTION: 'attribution'>: 'Data provided by Google Air Quality',
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'sulphur_dioxide',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Home Sulphur dioxide',
+      <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
+      <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: 'ppb',
     }),
     'context': <ANY>,
     'entity_id': 'sensor.home_sulphur_dioxide',
@@ -1419,7 +1419,7 @@
     ]),
     'area_id': None,
     'capabilities': dict({
-      'options': list([
+      <SensorEntityCapabilityAttribute.OPTIONS: 'options'>: list([
         'excellent_air_quality',
         'good_air_quality',
         'moderate_air_quality',
@@ -1460,10 +1460,10 @@
 # name: test_sensor_snapshot[air_quality_data_custom_laqi.json-mock_config_entry_with_custom_laqi][sensor.home_uaqi_category-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'attribution': 'Data provided by Google Air Quality',
-      'device_class': 'enum',
-      'friendly_name': 'Home UAQI category',
-      'options': list([
+      <EntityStateAttribute.ATTRIBUTION: 'attribution'>: 'Data provided by Google Air Quality',
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'enum',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Home UAQI category',
+      <SensorEntityCapabilityAttribute.OPTIONS: 'options'>: list([
         'excellent_air_quality',
         'good_air_quality',
         'moderate_air_quality',
@@ -1486,7 +1486,7 @@
     ]),
     'area_id': None,
     'capabilities': dict({
-      'options': list([
+      <SensorEntityCapabilityAttribute.OPTIONS: 'options'>: list([
         'co',
         'no2',
         'o3',
@@ -1528,10 +1528,10 @@
 # name: test_sensor_snapshot[air_quality_data_custom_laqi.json-mock_config_entry_with_custom_laqi][sensor.home_uaqi_dominant_pollutant-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'attribution': 'Data provided by Google Air Quality',
-      'device_class': 'enum',
-      'friendly_name': 'Home UAQI dominant pollutant',
-      'options': list([
+      <EntityStateAttribute.ATTRIBUTION: 'attribution'>: 'Data provided by Google Air Quality',
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'enum',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Home UAQI dominant pollutant',
+      <SensorEntityCapabilityAttribute.OPTIONS: 'options'>: list([
         'co',
         'no2',
         'o3',
@@ -1555,7 +1555,7 @@
     ]),
     'area_id': None,
     'capabilities': dict({
-      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+      <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -1590,10 +1590,10 @@
 # name: test_sensor_snapshot[air_quality_data_custom_laqi.json-mock_config_entry_with_custom_laqi][sensor.home_universal_air_quality_index-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'attribution': 'Data provided by Google Air Quality',
-      'device_class': 'aqi',
-      'friendly_name': 'Home Universal Air Quality Index',
-      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+      <EntityStateAttribute.ATTRIBUTION: 'attribution'>: 'Data provided by Google Air Quality',
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'aqi',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Home Universal Air Quality Index',
+      <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
     'context': <ANY>,
     'entity_id': 'sensor.home_universal_air_quality_index',

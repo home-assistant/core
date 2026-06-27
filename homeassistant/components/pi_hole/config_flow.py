@@ -2,7 +2,7 @@
 
 from collections.abc import Mapping
 import logging
-from typing import Any
+from typing import Any, override
 
 from hole.exceptions import HoleError
 import voluptuous as vol
@@ -39,6 +39,7 @@ class PiHoleFlowHandler(ConfigFlow, domain=DOMAIN):
         """Initialize the config flow."""
         self._config: dict = {}
 
+    @override
     async def async_step_user(
         self, user_input: dict[str, Any] | None = None
     ) -> ConfigFlowResult:

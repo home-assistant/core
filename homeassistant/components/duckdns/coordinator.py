@@ -2,6 +2,7 @@
 
 from datetime import timedelta
 import logging
+from typing import override
 
 from aiohttp import ClientError
 
@@ -46,6 +47,7 @@ class DuckDnsUpdateCoordinator(DataUpdateCoordinator[None]):
         self.session = async_get_clientsession(hass)
         self.failed = 0
 
+    @override
     async def _async_update_data(self) -> None:
         """Update Duck DNS."""
 

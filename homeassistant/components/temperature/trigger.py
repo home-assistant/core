@@ -1,5 +1,7 @@
 """Provides triggers for temperature."""
 
+from typing import override
+
 from homeassistant.components.climate import (
     ATTR_CURRENT_TEMPERATURE as CLIMATE_ATTR_CURRENT_TEMPERATURE,
     DOMAIN as CLIMATE_DOMAIN,
@@ -25,7 +27,7 @@ from homeassistant.helpers.trigger import (
 )
 from homeassistant.util.unit_conversion import TemperatureConverter
 
-TEMPERATURE_DOMAIN_SPECS = {
+TEMPERATURE_DOMAIN_SPECS: dict[str, DomainSpec] = {
     CLIMATE_DOMAIN: DomainSpec(
         value_source=CLIMATE_ATTR_CURRENT_TEMPERATURE,
     ),
@@ -46,6 +48,7 @@ class _TemperatureTriggerMixin(EntityNumericalStateTriggerWithUnitBase):
     _domain_specs = TEMPERATURE_DOMAIN_SPECS
     _unit_converter = TemperatureConverter
 
+    @override
     def _should_include(self, state: State) -> bool:
         """Skip attribute-source entities that lack the temperature attribute.
 
@@ -63,6 +66,7 @@ class _TemperatureTriggerMixin(EntityNumericalStateTriggerWithUnitBase):
             return True
         return state.attributes.get(domain_spec.value_source) is not None
 
+    @override
     def _get_entity_unit(self, state: State) -> str | None:
         """Get the temperature unit of an entity from its state."""
         if state.domain == SENSOR_DOMAIN:
