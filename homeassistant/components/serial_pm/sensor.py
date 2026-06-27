@@ -10,7 +10,7 @@ from homeassistant.components.sensor import (
     PLATFORM_SCHEMA as SENSOR_PLATFORM_SCHEMA,
     SensorEntity,
 )
-from homeassistant.const import CONCENTRATION_MICROGRAMS_PER_CUBIC_METER, CONF_NAME
+from homeassistant.const import CONF_NAME, UnitOfDensity
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
@@ -94,7 +94,7 @@ class ParticulateMatterSensor(SensorEntity):
     @override
     def native_unit_of_measurement(self):
         """Return the unit of measurement of this entity, if any."""
-        return CONCENTRATION_MICROGRAMS_PER_CUBIC_METER
+        return UnitOfDensity
 
     def update(self) -> None:
         """Read from sensor and update the state."""
