@@ -590,12 +590,6 @@
       "config_flow": true,
       "iot_class": "local_polling"
     },
-    "aten_pe": {
-      "name": "ATEN Rack PDU",
-      "integration_type": "hub",
-      "config_flow": false,
-      "iot_class": "local_polling"
-    },
     "atlanticcityelectric": {
       "name": "Atlantic City Electric",
       "integration_type": "virtual",
@@ -1487,12 +1481,6 @@
       "name": "Dormakaba dKey",
       "integration_type": "device",
       "config_flow": true,
-      "iot_class": "local_polling"
-    },
-    "dovado": {
-      "name": "Dovado",
-      "integration_type": "hub",
-      "config_flow": false,
       "iot_class": "local_polling"
     },
     "downloader": {
@@ -2730,12 +2718,6 @@
       "config_flow": false,
       "iot_class": "local_push"
     },
-    "greenwave": {
-      "name": "Greenwave Reality",
-      "integration_type": "hub",
-      "config_flow": false,
-      "iot_class": "local_polling"
-    },
     "growatt_server": {
       "integration_type": "hub",
       "config_flow": true,
@@ -3947,12 +3929,6 @@
       "config_flow": true,
       "iot_class": "local_push"
     },
-    "logentries": {
-      "name": "Logentries",
-      "integration_type": "hub",
-      "config_flow": false,
-      "iot_class": "cloud_push"
-    },
     "logitech": {
       "name": "Logitech",
       "integrations": {
@@ -4586,12 +4562,6 @@
       "integration_type": "hub",
       "config_flow": false,
       "iot_class": "cloud_polling"
-    },
-    "mycroft": {
-      "name": "Mycroft",
-      "integration_type": "hub",
-      "config_flow": false,
-      "iot_class": "local_push"
     },
     "myneomitis": {
       "name": "MyNeomitis",
@@ -7206,12 +7176,6 @@
       "integration_type": "device",
       "config_flow": true,
       "iot_class": "local_push"
-    },
-    "thermoworks_smoke": {
-      "name": "ThermoWorks Smoke",
-      "integration_type": "hub",
-      "config_flow": false,
-      "iot_class": "cloud_polling"
     },
     "thethingsnetwork": {
       "name": "The Things Network",

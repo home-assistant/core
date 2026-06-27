@@ -21,7 +21,7 @@ if TYPE_CHECKING:
 
 APPLICATION_NAME: Final = "HomeAssistant"
 MAJOR_VERSION: Final = 2026
-MINOR_VERSION: Final = 7
+MINOR_VERSION: Final = 8
 PATCH_VERSION: Final = "0.dev0"
 __short_version__: Final = f"{MAJOR_VERSION}.{MINOR_VERSION}"
 __version__: Final = f"{__short_version__}.{PATCH_VERSION}"
@@ -1031,8 +1031,9 @@ SIGNAL_BOOTSTRAP_INTEGRATIONS: SignalType[dict[str, float]] = SignalType(
 )
 
 
-# hass.data key for logging information.
+# hass.data keys for logging information.
 KEY_DATA_LOGGING: HassKey[str] = HassKey("logging")
+KEY_DATA_LOGGING_DISABLED_REASON: HassKey[str] = HassKey("logging_disabled_reason")
 
 
 # Date/Time formats
