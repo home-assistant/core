@@ -2,6 +2,8 @@
 
 import dataclasses
 
+import voluptuous as vol
+
 from pyvlx import OpeningDevice, PyVLX, PyVLXException, Window
 from pyvlx.const import Velocity
 
@@ -23,6 +25,7 @@ from homeassistant.helpers.typing import ConfigType
 
 from .const import DOMAIN, LOGGER, PLATFORMS, PYVLX_FROM_CONFIG_FLOW, VELOCITY_MAP
 from .coordinator import VeluxLimitationCoordinator
+from .entity import velux_unique_id
 
 
 @dataclasses.dataclass
@@ -48,13 +51,14 @@ def _apply_velocity(hass: HomeAssistant, device_id: str, velocity: Velocity) -> 
     for identifier in device.identifiers:
         if identifier[0] != DOMAIN:
             continue
-        node_serial = identifier[1]
+        node_identifier = identifier[1]
         for entry in hass.config_entries.async_entries(DOMAIN):
             if entry.state is not ConfigEntryState.LOADED:
                 continue
             for node in entry.runtime_data.pyvlx.nodes:
-                if node.serial_number == node_serial and isinstance(
-                    node, OpeningDevice
+                if (
+                    velux_unique_id(node, entry.entry_id) == node_identifier
+                    and isinstance(node, OpeningDevice)
                 ):
                     if velocity == Velocity.DEFAULT:
                         node.use_default_velocity = False
@@ -73,12 +77,8 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
 
     async def async_set_velocity(service_call: ServiceCall) -> None:
         """Set velocity for Velux opening devices."""
-        velocity_str: str = service_call.data["velocity"]
-        velocity = VELOCITY_MAP[velocity_str]
-        device_ids = service_call.data.get("device_id", [])
-
-        if isinstance(device_ids, str):
-            device_ids = [device_ids]
+        velocity = VELOCITY_MAP[service_call.data["velocity"]]
+        device_ids: list[str] = service_call.data["device_id"]
 
         missing = [
             device_id
@@ -92,7 +92,17 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
                 translation_placeholders={"device_id": ", ".join(missing)},
             )
 
-    hass.services.async_register(DOMAIN, "set_velocity", async_set_velocity)
+    hass.services.async_register(
+        DOMAIN,
+        "set_velocity",
+        async_set_velocity,
+        schema=vol.Schema(
+            {
+                vol.Required("device_id"): vol.All(cv.ensure_list, [cv.string]),
+                vol.Required("velocity"): vol.In(list(VELOCITY_MAP)),
+            }
+        ),
+    )
 
     return True
 
