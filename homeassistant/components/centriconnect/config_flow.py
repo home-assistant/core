@@ -1,7 +1,7 @@
 """Config flow for the CentriConnect/MyPropane API integration."""
 
 import logging
-from typing import Any
+from typing import Any, override
 
 from aiocentriconnect import CentriConnect
 from aiocentriconnect.exceptions import (
@@ -58,6 +58,7 @@ class CentriConnectConfigFlow(ConfigFlow, domain=DOMAIN):
 
     VERSION = 1
 
+    @override
     async def async_step_user(
         self, user_input: dict[str, Any] | None = None
     ) -> ConfigFlowResult:

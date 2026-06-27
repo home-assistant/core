@@ -372,3 +372,41 @@ async def test_new_container_creates_entity(
         )
         > initial_count
     )
+
+
+async def test_stale_devices_removed(
+    hass: HomeAssistant,
+    mock_proxmox_client: MagicMock,
+    mock_config_entry: MockConfigEntry,
+    device_registry: dr.DeviceRegistry,
+) -> None:
+    """Test that devices are removed when their resource disappears."""
+    await setup_integration(hass, mock_config_entry)
+    assert mock_config_entry.state is ConfigEntryState.LOADED
+
+    entry_id = mock_config_entry.entry_id
+    assert device_registry.async_get_device(
+        identifiers={(DOMAIN, f"{entry_id}_vm_100")}
+    )
+    assert device_registry.async_get_device(
+        identifiers={(DOMAIN, f"{entry_id}_vm_101")}
+    )
+
+    # VM 100 is gone, VM 101 remains
+    mock_proxmox_client._node_mock.qemu.get.return_value = [
+        vm
+        for vm in await async_load_json_array_fixture(hass, "nodes/qemu.json", DOMAIN)
+        if vm["vmid"] != 100
+    ]
+
+    coordinator = mock_config_entry.runtime_data
+    await coordinator.async_refresh()
+    await hass.async_block_till_done()
+
+    assert (
+        device_registry.async_get_device(identifiers={(DOMAIN, f"{entry_id}_vm_100")})
+        is None
+    )
+    assert device_registry.async_get_device(
+        identifiers={(DOMAIN, f"{entry_id}_vm_101")}
+    )

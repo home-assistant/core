@@ -39,10 +39,10 @@
 # name: test_binary_sensors[binary_sensor.car_power-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'attribution': 'Data provided by Sense.com',
-      'device_class': 'power',
-      'friendly_name': 'Car Power',
-      'icon': 'mdi:car-electric',
+      <EntityStateAttribute.ATTRIBUTION: 'attribution'>: 'Data provided by Sense.com',
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'power',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Car Power',
+      <EntityStateAttribute.ICON: 'icon'>: 'mdi:car-electric',
     }),
     'context': <ANY>,
     'entity_id': 'binary_sensor.car_power',
@@ -92,10 +92,10 @@
 # name: test_binary_sensors[binary_sensor.oven_power-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'attribution': 'Data provided by Sense.com',
-      'device_class': 'power',
-      'friendly_name': 'Oven Power',
-      'icon': 'mdi:stove',
+      <EntityStateAttribute.ATTRIBUTION: 'attribution'>: 'Data provided by Sense.com',
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'power',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Oven Power',
+      <EntityStateAttribute.ICON: 'icon'>: 'mdi:stove',
     }),
     'context': <ANY>,
     'entity_id': 'binary_sensor.oven_power',

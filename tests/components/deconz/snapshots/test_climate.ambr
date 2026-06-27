@@ -6,7 +6,7 @@
     ]),
     'area_id': None,
     'capabilities': dict({
-      'fan_modes': list([
+      <ClimateEntityCapabilityAttribute.FAN_MODES: 'fan_modes'>: list([
         'smart',
         'auto',
         'high',
@@ -15,14 +15,14 @@
         'on',
         'off',
       ]),
-      'hvac_modes': list([
+      <ClimateEntityCapabilityAttribute.HVAC_MODES: 'hvac_modes'>: list([
         <HVACMode.HEAT: 'heat'>,
         <HVACMode.OFF: 'off'>,
         <HVACMode.AUTO: 'auto'>,
         <HVACMode.COOL: 'cool'>,
       ]),
-      'max_temp': 35,
-      'min_temp': 7,
+      <ClimateEntityCapabilityAttribute.MAX_TEMP: 'max_temp'>: 35,
+      <ClimateEntityCapabilityAttribute.MIN_TEMP: 'min_temp'>: 7,
     }),
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -57,9 +57,9 @@
 # name: test_climate_device_with_cooling_support[sensor_payload0][climate.zen_01-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'current_temperature': 23.2,
-      'fan_mode': 'off',
-      'fan_modes': list([
+      <ClimateEntityStateAttribute.CURRENT_TEMPERATURE: 'current_temperature'>: 23.2,
+      <ClimateEntityStateAttribute.FAN_MODE: 'fan_mode'>: 'off',
+      <ClimateEntityCapabilityAttribute.FAN_MODES: 'fan_modes'>: list([
         'smart',
         'auto',
         'high',
@@ -68,19 +68,19 @@
         'on',
         'off',
       ]),
-      'friendly_name': 'Zen-01',
-      'hvac_action': <HVACAction.IDLE: 'idle'>,
-      'hvac_modes': list([
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Zen-01',
+      <ClimateEntityStateAttribute.HVAC_ACTION: 'hvac_action'>: <HVACAction.IDLE: 'idle'>,
+      <ClimateEntityCapabilityAttribute.HVAC_MODES: 'hvac_modes'>: list([
         <HVACMode.HEAT: 'heat'>,
         <HVACMode.OFF: 'off'>,
         <HVACMode.AUTO: 'auto'>,
         <HVACMode.COOL: 'cool'>,
       ]),
-      'max_temp': 35,
-      'min_temp': 7,
+      <ClimateEntityCapabilityAttribute.MAX_TEMP: 'max_temp'>: 35,
+      <ClimateEntityCapabilityAttribute.MIN_TEMP: 'min_temp'>: 7,
       'offset': 0,
-      'supported_features': <ClimateEntityFeature: 393>,
-      'temperature': 22.2,
+      <EntityStateAttribute.SUPPORTED_FEATURES: 'supported_features'>: <ClimateEntityFeature: 393>,
+      <ClimateEntityStateAttribute.TEMPERATURE: 'temperature'>: 22.2,
     }),
     'context': <ANY>,
     'entity_id': 'climate.zen_01',
@@ -97,7 +97,7 @@
     ]),
     'area_id': None,
     'capabilities': dict({
-      'fan_modes': list([
+      <ClimateEntityCapabilityAttribute.FAN_MODES: 'fan_modes'>: list([
         'smart',
         'auto',
         'high',
@@ -106,14 +106,14 @@
         'on',
         'off',
       ]),
-      'hvac_modes': list([
+      <ClimateEntityCapabilityAttribute.HVAC_MODES: 'hvac_modes'>: list([
         <HVACMode.HEAT: 'heat'>,
         <HVACMode.OFF: 'off'>,
         <HVACMode.AUTO: 'auto'>,
         <HVACMode.COOL: 'cool'>,
       ]),
-      'max_temp': 35,
-      'min_temp': 7,
+      <ClimateEntityCapabilityAttribute.MAX_TEMP: 'max_temp'>: 35,
+      <ClimateEntityCapabilityAttribute.MIN_TEMP: 'min_temp'>: 7,
     }),
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -148,9 +148,9 @@
 # name: test_climate_device_with_fan_support[sensor_payload0][climate.zen_01-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'current_temperature': 23.2,
-      'fan_mode': 'auto',
-      'fan_modes': list([
+      <ClimateEntityStateAttribute.CURRENT_TEMPERATURE: 'current_temperature'>: 23.2,
+      <ClimateEntityStateAttribute.FAN_MODE: 'fan_mode'>: 'auto',
+      <ClimateEntityCapabilityAttribute.FAN_MODES: 'fan_modes'>: list([
         'smart',
         'auto',
         'high',
@@ -159,19 +159,19 @@
         'on',
         'off',
       ]),
-      'friendly_name': 'Zen-01',
-      'hvac_action': <HVACAction.IDLE: 'idle'>,
-      'hvac_modes': list([
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Zen-01',
+      <ClimateEntityStateAttribute.HVAC_ACTION: 'hvac_action'>: <HVACAction.IDLE: 'idle'>,
+      <ClimateEntityCapabilityAttribute.HVAC_MODES: 'hvac_modes'>: list([
         <HVACMode.HEAT: 'heat'>,
         <HVACMode.OFF: 'off'>,
         <HVACMode.AUTO: 'auto'>,
         <HVACMode.COOL: 'cool'>,
       ]),
-      'max_temp': 35,
-      'min_temp': 7,
+      <ClimateEntityCapabilityAttribute.MAX_TEMP: 'max_temp'>: 35,
+      <ClimateEntityCapabilityAttribute.MIN_TEMP: 'min_temp'>: 7,
       'offset': 0,
-      'supported_features': <ClimateEntityFeature: 393>,
-      'temperature': 22.2,
+      <EntityStateAttribute.SUPPORTED_FEATURES: 'supported_features'>: <ClimateEntityFeature: 393>,
+      <ClimateEntityStateAttribute.TEMPERATURE: 'temperature'>: 22.2,
     }),
     'context': <ANY>,
     'entity_id': 'climate.zen_01',
@@ -188,7 +188,7 @@
     ]),
     'area_id': None,
     'capabilities': dict({
-      'fan_modes': list([
+      <ClimateEntityCapabilityAttribute.FAN_MODES: 'fan_modes'>: list([
         'smart',
         'auto',
         'high',
@@ -197,15 +197,15 @@
         'on',
         'off',
       ]),
-      'hvac_modes': list([
+      <ClimateEntityCapabilityAttribute.HVAC_MODES: 'hvac_modes'>: list([
         <HVACMode.HEAT: 'heat'>,
         <HVACMode.OFF: 'off'>,
         <HVACMode.AUTO: 'auto'>,
         <HVACMode.COOL: 'cool'>,
       ]),
-      'max_temp': 35,
-      'min_temp': 7,
-      'preset_modes': list([
+      <ClimateEntityCapabilityAttribute.MAX_TEMP: 'max_temp'>: 35,
+      <ClimateEntityCapabilityAttribute.MIN_TEMP: 'min_temp'>: 7,
+      <ClimateEntityCapabilityAttribute.PRESET_MODES: 'preset_modes'>: list([
         'auto',
         'boost',
         'comfort',
@@ -248,9 +248,9 @@
 # name: test_climate_device_with_preset[sensor_payload0][climate.zen_01-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'current_temperature': 23.2,
-      'fan_mode': 'off',
-      'fan_modes': list([
+      <ClimateEntityStateAttribute.CURRENT_TEMPERATURE: 'current_temperature'>: 23.2,
+      <ClimateEntityStateAttribute.FAN_MODE: 'fan_mode'>: 'off',
+      <ClimateEntityCapabilityAttribute.FAN_MODES: 'fan_modes'>: list([
         'smart',
         'auto',
         'high',
@@ -259,19 +259,19 @@
         'on',
         'off',
       ]),
-      'friendly_name': 'Zen-01',
-      'hvac_action': <HVACAction.IDLE: 'idle'>,
-      'hvac_modes': list([
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Zen-01',
+      <ClimateEntityStateAttribute.HVAC_ACTION: 'hvac_action'>: <HVACAction.IDLE: 'idle'>,
+      <ClimateEntityCapabilityAttribute.HVAC_MODES: 'hvac_modes'>: list([
         <HVACMode.HEAT: 'heat'>,
         <HVACMode.OFF: 'off'>,
         <HVACMode.AUTO: 'auto'>,
         <HVACMode.COOL: 'cool'>,
       ]),
-      'max_temp': 35,
-      'min_temp': 7,
+      <ClimateEntityCapabilityAttribute.MAX_TEMP: 'max_temp'>: 35,
+      <ClimateEntityCapabilityAttribute.MIN_TEMP: 'min_temp'>: 7,
       'offset': 0,
-      'preset_mode': 'auto',
-      'preset_modes': list([
+      <ClimateEntityStateAttribute.PRESET_MODE: 'preset_mode'>: 'auto',
+      <ClimateEntityCapabilityAttribute.PRESET_MODES: 'preset_modes'>: list([
         'auto',
         'boost',
         'comfort',
@@ -280,8 +280,8 @@
         'holiday',
         'manual',
       ]),
-      'supported_features': <ClimateEntityFeature: 409>,
-      'temperature': 22.2,
+      <EntityStateAttribute.SUPPORTED_FEATURES: 'supported_features'>: <ClimateEntityFeature: 409>,
+      <ClimateEntityStateAttribute.TEMPERATURE: 'temperature'>: 22.2,
     }),
     'context': <ANY>,
     'entity_id': 'climate.zen_01',
@@ -298,13 +298,13 @@
     ]),
     'area_id': None,
     'capabilities': dict({
-      'hvac_modes': list([
+      <ClimateEntityCapabilityAttribute.HVAC_MODES: 'hvac_modes'>: list([
         <HVACMode.HEAT: 'heat'>,
         <HVACMode.OFF: 'off'>,
         <HVACMode.AUTO: 'auto'>,
       ]),
-      'max_temp': 35,
-      'min_temp': 7,
+      <ClimateEntityCapabilityAttribute.MAX_TEMP: 'max_temp'>: 35,
+      <ClimateEntityCapabilityAttribute.MIN_TEMP: 'min_temp'>: 7,
     }),
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -339,19 +339,19 @@
 # name: test_climate_device_without_cooling_support[sensor_payload0][climate.thermostat-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'current_temperature': 22.6,
-      'friendly_name': 'Thermostat',
-      'hvac_action': <HVACAction.HEATING: 'heating'>,
-      'hvac_modes': list([
+      <ClimateEntityStateAttribute.CURRENT_TEMPERATURE: 'current_temperature'>: 22.6,
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Thermostat',
+      <ClimateEntityStateAttribute.HVAC_ACTION: 'hvac_action'>: <HVACAction.HEATING: 'heating'>,
+      <ClimateEntityCapabilityAttribute.HVAC_MODES: 'hvac_modes'>: list([
         <HVACMode.HEAT: 'heat'>,
         <HVACMode.OFF: 'off'>,
         <HVACMode.AUTO: 'auto'>,
       ]),
-      'max_temp': 35,
-      'min_temp': 7,
+      <ClimateEntityCapabilityAttribute.MAX_TEMP: 'max_temp'>: 35,
+      <ClimateEntityCapabilityAttribute.MIN_TEMP: 'min_temp'>: 7,
       'offset': 10,
-      'supported_features': <ClimateEntityFeature: 385>,
-      'temperature': 22.0,
+      <EntityStateAttribute.SUPPORTED_FEATURES: 'supported_features'>: <ClimateEntityFeature: 385>,
+      <ClimateEntityStateAttribute.TEMPERATURE: 'temperature'>: 22.0,
       'valve': 30,
     }),
     'context': <ANY>,
@@ -369,12 +369,12 @@
     ]),
     'area_id': None,
     'capabilities': dict({
-      'hvac_modes': list([
+      <ClimateEntityCapabilityAttribute.HVAC_MODES: 'hvac_modes'>: list([
         <HVACMode.HEAT: 'heat'>,
         <HVACMode.OFF: 'off'>,
       ]),
-      'max_temp': 35,
-      'min_temp': 7,
+      <ClimateEntityCapabilityAttribute.MAX_TEMP: 'max_temp'>: 35,
+      <ClimateEntityCapabilityAttribute.MIN_TEMP: 'min_temp'>: 7,
     }),
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -409,17 +409,17 @@
 # name: test_clip_climate_device[config_entry_options0-sensor_payload0][climate.clip_thermostat-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'current_temperature': 22.6,
-      'friendly_name': 'CLIP thermostat',
-      'hvac_action': <HVACAction.HEATING: 'heating'>,
-      'hvac_modes': list([
+      <ClimateEntityStateAttribute.CURRENT_TEMPERATURE: 'current_temperature'>: 22.6,
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'CLIP thermostat',
+      <ClimateEntityStateAttribute.HVAC_ACTION: 'hvac_action'>: <HVACAction.HEATING: 'heating'>,
+      <ClimateEntityCapabilityAttribute.HVAC_MODES: 'hvac_modes'>: list([
         <HVACMode.HEAT: 'heat'>,
         <HVACMode.OFF: 'off'>,
       ]),
-      'max_temp': 35,
-      'min_temp': 7,
-      'supported_features': <ClimateEntityFeature: 385>,
-      'temperature': None,
+      <ClimateEntityCapabilityAttribute.MAX_TEMP: 'max_temp'>: 35,
+      <ClimateEntityCapabilityAttribute.MIN_TEMP: 'min_temp'>: 7,
+      <EntityStateAttribute.SUPPORTED_FEATURES: 'supported_features'>: <ClimateEntityFeature: 385>,
+      <ClimateEntityStateAttribute.TEMPERATURE: 'temperature'>: None,
       'valve': 30,
     }),
     'context': <ANY>,
@@ -437,13 +437,13 @@
     ]),
     'area_id': None,
     'capabilities': dict({
-      'hvac_modes': list([
+      <ClimateEntityCapabilityAttribute.HVAC_MODES: 'hvac_modes'>: list([
         <HVACMode.HEAT: 'heat'>,
         <HVACMode.OFF: 'off'>,
         <HVACMode.AUTO: 'auto'>,
       ]),
-      'max_temp': 35,
-      'min_temp': 7,
+      <ClimateEntityCapabilityAttribute.MAX_TEMP: 'max_temp'>: 35,
+      <ClimateEntityCapabilityAttribute.MIN_TEMP: 'min_temp'>: 7,
     }),
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -478,19 +478,19 @@
 # name: test_clip_climate_device[config_entry_options0-sensor_payload0][climate.thermostat-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'current_temperature': 22.6,
-      'friendly_name': 'Thermostat',
-      'hvac_action': <HVACAction.HEATING: 'heating'>,
-      'hvac_modes': list([
+      <ClimateEntityStateAttribute.CURRENT_TEMPERATURE: 'current_temperature'>: 22.6,
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Thermostat',
+      <ClimateEntityStateAttribute.HVAC_ACTION: 'hvac_action'>: <HVACAction.HEATING: 'heating'>,
+      <ClimateEntityCapabilityAttribute.HVAC_MODES: 'hvac_modes'>: list([
         <HVACMode.HEAT: 'heat'>,
         <HVACMode.OFF: 'off'>,
         <HVACMode.AUTO: 'auto'>,
       ]),
-      'max_temp': 35,
-      'min_temp': 7,
+      <ClimateEntityCapabilityAttribute.MAX_TEMP: 'max_temp'>: 35,
+      <ClimateEntityCapabilityAttribute.MIN_TEMP: 'min_temp'>: 7,
       'offset': 10,
-      'supported_features': <ClimateEntityFeature: 385>,
-      'temperature': 22.0,
+      <EntityStateAttribute.SUPPORTED_FEATURES: 'supported_features'>: <ClimateEntityFeature: 385>,
+      <ClimateEntityStateAttribute.TEMPERATURE: 'temperature'>: 22.0,
       'valve': 30,
     }),
     'context': <ANY>,
@@ -508,12 +508,12 @@
     ]),
     'area_id': None,
     'capabilities': dict({
-      'hvac_modes': list([
+      <ClimateEntityCapabilityAttribute.HVAC_MODES: 'hvac_modes'>: list([
         <HVACMode.HEAT: 'heat'>,
         <HVACMode.OFF: 'off'>,
       ]),
-      'max_temp': 35,
-      'min_temp': 7,
+      <ClimateEntityCapabilityAttribute.MAX_TEMP: 'max_temp'>: 35,
+      <ClimateEntityCapabilityAttribute.MIN_TEMP: 'min_temp'>: 7,
     }),
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -548,19 +548,19 @@
 # name: test_simple_climate_device[sensor_payload0][climate.thermostat-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'current_temperature': 21.0,
-      'friendly_name': 'thermostat',
-      'hvac_action': <HVACAction.HEATING: 'heating'>,
-      'hvac_modes': list([
+      <ClimateEntityStateAttribute.CURRENT_TEMPERATURE: 'current_temperature'>: 21.0,
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'thermostat',
+      <ClimateEntityStateAttribute.HVAC_ACTION: 'hvac_action'>: <HVACAction.HEATING: 'heating'>,
+      <ClimateEntityCapabilityAttribute.HVAC_MODES: 'hvac_modes'>: list([
         <HVACMode.HEAT: 'heat'>,
         <HVACMode.OFF: 'off'>,
       ]),
       'locked': True,
-      'max_temp': 35,
-      'min_temp': 7,
+      <ClimateEntityCapabilityAttribute.MAX_TEMP: 'max_temp'>: 35,
+      <ClimateEntityCapabilityAttribute.MIN_TEMP: 'min_temp'>: 7,
       'offset': 0,
-      'supported_features': <ClimateEntityFeature: 385>,
-      'temperature': 21.0,
+      <EntityStateAttribute.SUPPORTED_FEATURES: 'supported_features'>: <ClimateEntityFeature: 385>,
+      <ClimateEntityStateAttribute.TEMPERATURE: 'temperature'>: 21.0,
       'valve': 24,
     }),
     'context': <ANY>,

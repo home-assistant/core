@@ -7,7 +7,7 @@ import enum
 import logging
 import os
 import pathlib
-from typing import TYPE_CHECKING, Any, Final
+from typing import TYPE_CHECKING, Any, Final, override
 from urllib.parse import urlparse
 
 import voluptuous as vol
@@ -50,6 +50,7 @@ from .const import (
     CONF_URL,
     CONF_USERNAME,
     EVENT_CORE_CONFIG_UPDATE,
+    KEY_DATA_LOGGING_DISABLED_REASON,
     LEGACY_CONF_WHITELIST_EXTERNAL_DIRS,
     UnitOfLength,
     __version__,
@@ -248,7 +249,7 @@ def _validate_currency(data: Any) -> Any:
 
 
 def validate_stun_or_turn_url(value: Any) -> str:
-    """Validate an URL."""
+    """Validate a URL."""
     url_in = str(value)
     url = urlparse(url_in)
 
@@ -448,7 +449,7 @@ async def async_process_ha_core_config(hass: HomeAssistant, config: dict) -> Non
             set(config[LEGACY_CONF_WHITELIST_EXTERNAL_DIRS])
         )
 
-    # Init whitelist external URL list – make sure to add / to every URL that doesn't
+    # Init whitelist external URL list - make sure to add / to every URL that doesn't
     # already have it so that we can properly test "path ownership"
     if CONF_ALLOWLIST_EXTERNAL_URLS in config:
         hac.allowlist_external_urls.update(
@@ -504,6 +505,7 @@ class _ComponentSet(set[str]):
         self._top_level_components = top_level_components
         self._all_components = all_components
 
+    @override
     def add(self, value: str) -> None:
         """Add a component to the store."""
         if "." not in value:
@@ -515,6 +517,7 @@ class _ComponentSet(set[str]):
                 self._all_components.add(platform)
         return super().add(value)
 
+    @override
     def remove(self, value: str) -> None:
         """Remove a component from the store."""
         if "." in value:
@@ -522,6 +525,7 @@ class _ComponentSet(set[str]):
         self._top_level_components.remove(value)
         return super().remove(value)
 
+    @override
     def discard(self, value: object) -> None:
         """Remove a component from the store."""
         raise NotImplementedError("_ComponentSet does not support discard, use remove")
@@ -695,6 +699,11 @@ class Config:
             "language": self.language,
             "latitude": self.latitude,
             "location_name": self.location_name,
+            "logging": {
+                "log_file_disabled_reason": self.hass.data.get(
+                    KEY_DATA_LOGGING_DISABLED_REASON
+                ),
+            },
             "longitude": self.longitude,
             "radius": self.radius,
             "recovery_mode": self.recovery_mode,
@@ -841,6 +850,7 @@ class Config:
             )
             self._original_unit_system: str | None = None  # from old store 1.1
 
+        @override
         async def _async_migrate_func(
             self,
             old_major_version: int,
@@ -893,6 +903,7 @@ class Config:
                 raise NotImplementedError
             return data
 
+        @override
         async def async_save(self, data: dict[str, Any]) -> None:
             if self._original_unit_system:
                 data["unit_system"] = self._original_unit_system

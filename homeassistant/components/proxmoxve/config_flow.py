@@ -2,7 +2,7 @@
 
 from collections.abc import Mapping
 import logging
-from typing import Any
+from typing import Any, override
 
 from proxmoxer import AuthenticationError, ProxmoxAPI
 from proxmoxer.core import ResourceException
@@ -25,6 +25,9 @@ from homeassistant.helpers.selector import (
     SelectSelector,
     SelectSelectorConfig,
     SelectSelectorMode,
+    TextSelector,
+    TextSelectorConfig,
+    TextSelectorType,
 )
 
 from .common import sanitize_config_entry
@@ -41,6 +44,7 @@ from .const import (
     CONF_VMS,
     DEFAULT_PORT,
     DEFAULT_REALM,
+    DEFAULT_TIMEOUT,
     DEFAULT_VERIFY_SSL,
     DOMAIN,
     NODE_ONLINE,
@@ -57,7 +61,9 @@ BASE_SCHEMA = vol.Schema(
             )
         ),
         vol.Required(CONF_HOST): cv.string,
-        vol.Required(CONF_USERNAME): cv.string,
+        vol.Required(CONF_USERNAME): TextSelector(
+            TextSelectorConfig(type=TextSelectorType.TEXT, autocomplete="username")
+        ),
         vol.Required(CONF_PORT, default=DEFAULT_PORT): cv.port,
         vol.Required(CONF_TOKEN, default=False): cv.boolean,
         vol.Optional(CONF_VERIFY_SSL, default=DEFAULT_VERIFY_SSL): cv.boolean,
@@ -66,7 +72,12 @@ BASE_SCHEMA = vol.Schema(
 
 PASSWORD_SCHEMA = vol.Schema(
     {
-        vol.Required(CONF_PASSWORD): cv.string,
+        vol.Required(CONF_PASSWORD): TextSelector(
+            TextSelectorConfig(
+                type=TextSelectorType.PASSWORD,
+                autocomplete="current-password",
+            )
+        ),
     }
 )
 TOKEN_SCHEMA = vol.Schema(
@@ -94,6 +105,7 @@ def _get_nodes_data(data: dict[str, Any]) -> list[dict[str, Any]]:
             port=data[CONF_PORT],
             user=data[CONF_USERNAME],
             verify_ssl=data.get(CONF_VERIFY_SSL, DEFAULT_VERIFY_SSL),
+            timeout=DEFAULT_TIMEOUT,
             **auth_kwargs,
         )
     except AuthenticationError as err:
@@ -123,7 +135,9 @@ def _get_nodes_data(data: dict[str, Any]) -> list[dict[str, Any]]:
         raise ProxmoxConnectionError from err
 
     if not nodes:
-        raise ProxmoxNoNodesFound("No nodes found")
+        raise ProxmoxNoNodesFound(
+            translation_domain=DOMAIN, translation_key="no_nodes_found"
+        )
 
     nodes_data: list[dict[str, Any]] = []
     for node in nodes:
@@ -163,6 +177,7 @@ class ProxmoxveConfigFlow(ConfigFlow, domain=DOMAIN):
     _data: dict[str, Any] = {}
     _entry: ConfigEntry
 
+    @override
     async def async_step_user(
         self, user_input: dict[str, Any] | None = None
     ) -> ConfigFlowResult:
