@@ -1586,7 +1586,7 @@ micloud==0.5
 microBeesPy==0.3.5
 
 # homeassistant.components.midea_lan
-midea-local==6.9.0
+midea-local==6.10.0
 
 # homeassistant.components.mill
 mill-local==0.5.0
