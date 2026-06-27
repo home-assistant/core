@@ -95,7 +95,7 @@ class HiFiBerryConfigFlow(ConfigFlow, domain=DOMAIN):
         self, discovery_info: ZeroconfServiceInfo
     ) -> ConfigFlowResult:
         """Handle zeroconf discovery."""
-        self._host = discovery_info.host.rstrip(".")
+        self._host = discovery_info.hostname.rstrip(".")
         self._port = DEFAULT_PORT
 
         await self._set_unique_id_and_abort()
