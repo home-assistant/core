@@ -18,7 +18,6 @@ from uiprotect.data import (
     ProtectAdoptableDeviceModel,
     ProtectModelWithId,
     PublicBootstrap,
-    PublicHdrMode,
     Sensor,
     SmartDetectAudioType,
     SmartDetectObjectType,
@@ -317,8 +316,6 @@ def make_public_camera(
     osd_date: bool = False,
     osd_logo: bool = False,
     osd_debug: bool = False,
-    mic_volume: int = 100,
-    hdr_type: PublicHdrMode | None = None,
     video_mode: VideoMode | None = None,
     object_types: list[SmartDetectObjectType] | None = None,
     audio_types: list[SmartDetectAudioType] | None = None,
@@ -341,8 +338,6 @@ def make_public_camera(
         is_logo_enabled=osd_logo,
         is_debug_enabled=osd_debug,
     )
-    public.mic_volume = mic_volume
-    public.hdr_type = hdr_type
     public.video_mode = video_mode
     public.smart_detect_settings = PublicSmartDetectSettings(
         object_types=object_types or [],
