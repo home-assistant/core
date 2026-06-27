@@ -1,5 +1,6 @@
 """Service calls for the Tesla Fleet integration."""
 
+from tesla_fleet_api.const import Scope
 import voluptuous as vol
 
 from homeassistant.config_entries import ConfigEntry, ConfigEntryState
@@ -85,6 +86,11 @@ def async_setup_services(hass: HomeAssistant) -> None:
         device = async_get_device_for_service_call(hass, call)
         config = async_get_config_for_device(hass, device)
         site = async_get_energy_site_for_entry(hass, device, config)
+        if Scope.ENERGY_CMDS not in config.runtime_data.scopes:
+            raise ServiceValidationError(
+                translation_domain=DOMAIN,
+                translation_key="missing_scope_energy_cmds",
+            )
 
         tou_settings = call.data[ATTR_TOU_SETTINGS]
         # Unwrap tariff_content_v2 if user included it, since the SDK adds

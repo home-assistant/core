@@ -133,3 +133,32 @@ async def test_time_of_use_entry_not_loaded(
             blocking=True,
         )
     assert exc_info.value.translation_key == "entry_not_loaded"
+
+
+async def test_time_of_use_missing_scope(
+    hass: HomeAssistant,
+    readonly_config_entry: MockConfigEntry,
+    entity_registry: er.EntityRegistry,
+) -> None:
+    """Test the service rejects an entry without the energy commands scope."""
+    await setup_platform(hass, readonly_config_entry)
+
+    energy_device = entity_registry.async_get("sensor.energy_site_grid_power").device_id
+
+    with (
+        patch(
+            "tesla_fleet_api.tesla.EnergySite.time_of_use_settings"
+        ) as set_time_of_use,
+        pytest.raises(ServiceValidationError) as exc_info,
+    ):
+        await hass.services.async_call(
+            DOMAIN,
+            SERVICE_TIME_OF_USE,
+            {
+                CONF_DEVICE_ID: energy_device,
+                ATTR_TOU_SETTINGS: {},
+            },
+            blocking=True,
+        )
+    assert exc_info.value.translation_key == "missing_scope_energy_cmds"
+    set_time_of_use.assert_not_called()
