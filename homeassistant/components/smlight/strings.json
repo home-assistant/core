@@ -5,7 +5,9 @@
       "cannot_connect": "[%key:common::config_flow::error::cannot_connect%]",
       "reauth_failed": "[%key:common::config_flow::error::invalid_auth%]",
       "reauth_successful": "[%key:common::config_flow::abort::reauth_successful%]",
-      "unsupported_device": "This device is not yet supported by the SMLIGHT integration"
+      "reconfigure_successful": "[%key:common::config_flow::abort::reconfigure_successful%]",
+      "unsupported_device": "This device is not yet supported by the SMLIGHT integration",
+      "wrong_device": "The configured device is not the same found at this IP address."
     },
     "error": {
       "cannot_connect": "[%key:common::config_flow::error::cannot_connect%]",
@@ -39,12 +41,22 @@
         "description": "Please enter the correct username and password",
         "title": "[%key:common::config_flow::title::reauth%]"
       },
+      "reconfigure": {
+        "data": {
+          "host": "[%key:common::config_flow::data::host%]"
+        },
+        "data_description": {
+          "host": "The hostname or IP address of the SMLIGHT SLZB device"
+        },
+        "description": "Please enter the new hostname or IP address of the SMLIGHT device.",
+        "title": "Reconfigure SMLIGHT device"
+      },
       "user": {
         "data": {
           "host": "[%key:common::config_flow::data::host%]"
         },
         "data_description": {
-          "host": "The hostname or IP address of the SMLIGHT SLZB-06x device"
+          "host": "The hostname or IP address of the SMLIGHT SLZB device"
         },
         "description": "Set up SMLIGHT Zigbee integration"
       }
