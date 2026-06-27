@@ -1,7 +1,7 @@
 """Config flow for SNMP."""
 
 import logging
-from typing import Any
+from typing import Any, override
 
 from pysnmp.error import PySnmpError
 from pysnmp.hlapi.v3arch.asyncio import ObjectIdentity, get_cmd
@@ -11,8 +11,8 @@ import voluptuous as vol
 
 from homeassistant.config_entries import ConfigFlow, ConfigFlowResult
 from homeassistant.const import CONF_HOST, CONF_PORT, CONF_USERNAME
-from homeassistant.core import HomeAssistant
-from homeassistant.helpers import config_validation as cv
+from homeassistant.core import DOMAIN as HOMEASSISTANT_DOMAIN, HomeAssistant
+from homeassistant.helpers import config_validation as cv, issue_registry as ir
 
 from .const import (
     CONF_AUTH_KEY,
@@ -162,6 +162,7 @@ class SnmpConfigFlow(ConfigFlow, domain=DOMAIN):
     MINOR_VERSION = 1
     _user_data: dict[str, Any]
 
+    @override
     async def async_step_user(
         self, user_input: dict[str, Any] | None = None
     ) -> ConfigFlowResult:
@@ -249,6 +250,21 @@ class SnmpConfigFlow(ConfigFlow, domain=DOMAIN):
             CONF_PRIV_PROTOCOL,
         }
         clean_data = {k: v for k, v in user_input.items() if k in allowed_keys}
+
+        ir.async_create_issue(
+            self.hass,
+            HOMEASSISTANT_DOMAIN,
+            f"deprecated_yaml_{DOMAIN}",
+            breaks_in_ha_version="2026.12.0",
+            is_fixable=False,
+            issue_domain=DOMAIN,
+            severity=ir.IssueSeverity.WARNING,
+            translation_key="deprecated_yaml",
+            translation_placeholders={
+                "domain": DOMAIN,
+                "integration_title": "SNMP",
+            },
+        )
 
         return self.async_create_entry(title=clean_data[CONF_HOST], data=clean_data)
 
