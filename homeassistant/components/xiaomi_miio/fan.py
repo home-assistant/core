@@ -10,10 +10,14 @@ from miio import Device as MiioDevice
 from miio.integrations.dmaker.airfresh.airfresh_t2017 import (
     OperationMode as AirfreshOperationModeT2017,
 )
-from miio.integrations.dmaker.fan.fan import FanStatusP5
+from miio.integrations.dmaker.fan.fan import (
+    FanStatusP5,
+    OperationMode as FanP5OperationMode,
+)
 from miio.integrations.dmaker.fan.fan_miot import (
     FanStatusMiot,
     OperationMode as FanOperationMode,
+    OperationModeMiot as FanMiotOperationMode,
 )
 from miio.integrations.zhimi.airpurifier.airfresh import (
     OperationMode as AirfreshOperationMode,
@@ -1142,7 +1146,7 @@ class XiaomiFanP5(XiaomiGenericFan):
     @override
     def operation_mode_class(self):
         """Hold operation mode class."""
-        return FanOperationMode
+        return FanP5OperationMode
 
     @callback
     @override
@@ -1197,6 +1201,12 @@ class XiaomiFanMiot(XiaomiGenericFan):
     def operation_mode_class(self) -> type[FanOperationMode]:
         """Hold operation mode class."""
         return FanOperationMode
+
+    @property
+    @override
+    def preset_modes(self) -> list[str]:
+        """Get the list of available preset modes."""
+        return [mode.name for mode in FanMiotOperationMode]
 
     @callback
     @override
