@@ -136,7 +136,7 @@
     'object_id_base': 'Carbon monoxide',
     'options': dict({
       'sensor.private': dict({
-        'suggested_unit_of_measurement': 'ppm',
+        'suggested_unit_of_measurement': <UnitOfRatio.PARTS_PER_MILLION: 'ppm'>,
       }),
     }),
     'original_device_class': <SensorDeviceClass.CO: 'carbon_monoxide'>,
@@ -148,7 +148,7 @@
     'supported_features': 0,
     'translation_key': None,
     'unique_id': 'co_10.1_20.1',
-    'unit_of_measurement': 'ppm',
+    'unit_of_measurement': <UnitOfRatio.PARTS_PER_MILLION: 'ppm'>,
   })
 # ---
 # name: test_sensor_snapshot[air_quality_data.json-mock_config_entry][sensor.home_carbon_monoxide-state]
@@ -158,7 +158,7 @@
       <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'carbon_monoxide',
       <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Home Carbon monoxide',
       <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
-      <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: 'ppm',
+      <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: <UnitOfRatio.PARTS_PER_MILLION: 'ppm'>,
     }),
     'context': <ANY>,
     'entity_id': 'sensor.home_carbon_monoxide',
@@ -909,7 +909,7 @@
     'object_id_base': 'Carbon monoxide',
     'options': dict({
       'sensor.private': dict({
-        'suggested_unit_of_measurement': 'ppm',
+        'suggested_unit_of_measurement': <UnitOfRatio.PARTS_PER_MILLION: 'ppm'>,
       }),
     }),
     'original_device_class': <SensorDeviceClass.CO: 'carbon_monoxide'>,
@@ -921,7 +921,7 @@
     'supported_features': 0,
     'translation_key': None,
     'unique_id': 'co_10.1_20.1',
-    'unit_of_measurement': 'ppm',
+    'unit_of_measurement': <UnitOfRatio.PARTS_PER_MILLION: 'ppm'>,
   })
 # ---
 # name: test_sensor_snapshot[air_quality_data_custom_laqi.json-mock_config_entry_with_custom_laqi][sensor.home_carbon_monoxide-state]
@@ -931,7 +931,7 @@
       <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'carbon_monoxide',
       <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Home Carbon monoxide',
       <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
-      <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: 'ppm',
+      <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: <UnitOfRatio.PARTS_PER_MILLION: 'ppm'>,
     }),
     'context': <ANY>,
     'entity_id': 'sensor.home_carbon_monoxide',
