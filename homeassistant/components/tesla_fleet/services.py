@@ -1,10 +1,8 @@
 """Service calls for the Tesla Fleet integration."""
 
-import logging
-
 import voluptuous as vol
 
-from homeassistant.config_entries import ConfigEntry
+from homeassistant.config_entries import ConfigEntry, ConfigEntryState
 from homeassistant.const import CONF_DEVICE_ID
 from homeassistant.core import HomeAssistant, ServiceCall, callback
 from homeassistant.exceptions import HomeAssistantError, ServiceValidationError
@@ -13,8 +11,6 @@ from homeassistant.helpers import config_validation as cv, device_registry as dr
 from .const import DOMAIN
 from .helpers import handle_command
 from .models import TeslaFleetEnergyData
-
-_LOGGER = logging.getLogger(__name__)
 
 # Attributes
 ATTR_TOU_SETTINGS = "tou_settings"
@@ -43,24 +39,34 @@ def async_get_config_for_device(
     hass: HomeAssistant, device_entry: dr.DeviceEntry
 ) -> ConfigEntry:
     """Get the config entry related to a device entry."""
-    config_entry: ConfigEntry
     for entry_id in device_entry.config_entries:
-        if entry := hass.config_entries.async_get_entry(entry_id):
-            if entry.domain == DOMAIN:
-                config_entry = entry
-    return config_entry
+        entry = hass.config_entries.async_get_known_entry(entry_id)
+        if entry.domain == DOMAIN:
+            if entry.state is not ConfigEntryState.LOADED:
+                raise ServiceValidationError(
+                    translation_domain=DOMAIN,
+                    translation_key="entry_not_loaded",
+                )
+            return entry
+    raise ServiceValidationError(
+        translation_domain=DOMAIN,
+        translation_key="invalid_device",
+        translation_placeholders={"device_id": device_entry.id},
+    )
 
 
 def async_get_energy_site_for_entry(
     hass: HomeAssistant, device: dr.DeviceEntry, config: ConfigEntry
 ) -> TeslaFleetEnergyData:
     """Get the energy site data for a config entry."""
-    energy_data: TeslaFleetEnergyData
-    assert device.serial_number is not None
     for energysite in config.runtime_data.energysites:
         if str(energysite.id) == device.serial_number:
-            energy_data = energysite
-    return energy_data
+            return energysite
+    raise ServiceValidationError(
+        translation_domain=DOMAIN,
+        translation_key="invalid_device",
+        translation_placeholders={"device_id": device.id},
+    )
 
 
 @callback
@@ -87,11 +93,11 @@ def async_setup_services(hass: HomeAssistant) -> None:
             tou_settings = tou_settings["tariff_content_v2"]
 
         resp = await handle_command(site.api.time_of_use_settings(tou_settings))
-        if "error" in resp:
+        if error := resp.get("error"):
             raise HomeAssistantError(
                 translation_domain=DOMAIN,
                 translation_key="command_error",
-                translation_placeholders={"error": resp["error"]},
+                translation_placeholders={"error": error},
             )
 
     hass.services.async_register(

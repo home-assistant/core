@@ -644,6 +644,9 @@
     },
     "invalid_device": {
       "message": "Invalid device ID: {device_id}"
+    },
+    "entry_not_loaded": {
+      "message": "The Tesla Fleet integration is not loaded for this device."
     }
   },
   "services": {
