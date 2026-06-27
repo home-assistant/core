@@ -47,7 +47,10 @@ from .utils import (
     assert_entity_counts,
     ids_from_device_description,
     init_entry,
+    make_public_camera,
+    public_device_ws_message,
     remove_entities,
+    setup_public_camera,
 )
 
 
@@ -159,6 +162,7 @@ async def test_select_setup_camera_all(
 ) -> None:
     """Test select entity setup for camera devices (all features)."""
 
+    setup_public_camera(ufp)
     await init_entry(hass, ufp, [doorbell])
     assert_entity_counts(hass, Platform.SELECT, 5, 5)
 
@@ -185,6 +189,32 @@ async def test_select_setup_camera_all(
         assert state.attributes[ATTR_ATTRIBUTION] == DEFAULT_ATTRIBUTION
 
 
+async def test_select_camera_hdr_mode_public_update(
+    hass: HomeAssistant, ufp: MockUFPFixture, doorbell: Camera
+) -> None:
+    """Test the HDR mode select reads updates from the public devices WS."""
+
+    setup_public_camera(ufp)
+    await init_entry(hass, ufp, [doorbell])
+
+    description = next(d for d in CAMERA_SELECTS if d.key == "hdr_mode")
+    _, entity_id = await ids_from_device_description(
+        hass, Platform.SELECT, doorbell, description
+    )
+
+    state = hass.states.get(entity_id)
+    assert state
+    assert state.state == "off"
+
+    public = make_public_camera(doorbell, hdr_type=PublicHdrMode.AUTO)
+    ufp.devices_ws_subscription(public_device_ws_message(public))
+    await hass.async_block_till_done()
+
+    state = hass.states.get(entity_id)
+    assert state
+    assert state.state == "auto"
+
+
 async def test_select_setup_camera_none(
     hass: HomeAssistant,
     entity_registry: er.EntityRegistry,
@@ -193,6 +223,7 @@ async def test_select_setup_camera_none(
 ) -> None:
     """Test select entity setup for camera devices (no features)."""
 
+    setup_public_camera(ufp)
     await init_entry(hass, ufp, [camera])
     assert_entity_counts(hass, Platform.SELECT, 2, 2)
 
@@ -559,6 +590,7 @@ async def test_select_set_option_camera_hdr_mode(
 ) -> None:
     """Test HDR mode select calls public API with mapped value."""
 
+    setup_public_camera(ufp)
     await init_entry(hass, ufp, [doorbell])
     assert_entity_counts(hass, Platform.SELECT, 5, 5)
 
