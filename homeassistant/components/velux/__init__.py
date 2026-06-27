@@ -40,12 +40,18 @@ type VeluxConfigEntry = ConfigEntry[VeluxData]
 CONFIG_SCHEMA = cv.config_entry_only_config_schema(DOMAIN)
 
 
-def _apply_velocity(hass: HomeAssistant, device_id: str, velocity: Velocity) -> bool:
-    """Apply velocity to a device's node. Returns True if the device was found."""
+def _find_opening_device_node(
+    hass: HomeAssistant, device_id: str
+) -> OpeningDevice | None:
+    """Find the OpeningDevice node for a device registry ID.
+
+    Returns the node if found, or None if the device doesn't exist or isn't
+    an opening device.
+    """
     device_registry = dr.async_get(hass)
     device = device_registry.async_get(device_id)
     if device is None:
-        return False
+        return None
 
     for identifier in device.identifiers:
         if identifier[0] != DOMAIN:
@@ -58,16 +64,20 @@ def _apply_velocity(hass: HomeAssistant, device_id: str, velocity: Velocity) -> 
                 if velux_unique_id(
                     node, entry.entry_id
                 ) == node_identifier and isinstance(node, OpeningDevice):
-                    if velocity == Velocity.DEFAULT:
-                        node.use_default_velocity = False
-                        node.default_velocity = Velocity.DEFAULT
-                    else:
-                        node.use_default_velocity = True
-                        node.default_velocity = velocity
-                    return True
+                    return node
         break
 
-    return False
+    return None
+
+
+def _set_node_velocity(node: OpeningDevice, velocity: Velocity) -> None:
+    """Apply velocity setting to a node."""
+    if velocity == Velocity.DEFAULT:
+        node.use_default_velocity = False
+        node.default_velocity = Velocity.DEFAULT
+    else:
+        node.use_default_velocity = True
+        node.default_velocity = velocity
 
 
 async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
@@ -78,17 +88,21 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
         velocity = VELOCITY_MAP[service_call.data["velocity"]]
         device_ids: list[str] = service_call.data["device_id"]
 
-        missing = [
-            device_id
+        # Resolve all devices first so the operation is atomic
+        nodes: list[tuple[str, OpeningDevice | None]] = [
+            (device_id, _find_opening_device_node(hass, device_id))
             for device_id in device_ids
-            if not _apply_velocity(hass, device_id, velocity)
         ]
+        missing = [device_id for device_id, node in nodes if node is None]
         if missing:
             raise ServiceValidationError(
                 translation_domain=DOMAIN,
                 translation_key="device_not_found",
                 translation_placeholders={"device_id": ", ".join(missing)},
             )
+
+        for _, node in nodes:
+            _set_node_velocity(node, velocity)
 
     hass.services.async_register(
         DOMAIN,
