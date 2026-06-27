@@ -2,10 +2,9 @@
 
 import dataclasses
 
-import voluptuous as vol
-
 from pyvlx import OpeningDevice, PyVLX, PyVLXException, Window
 from pyvlx.const import Velocity
+import voluptuous as vol
 
 from homeassistant.config_entries import ConfigEntry, ConfigEntryState
 from homeassistant.const import (
@@ -56,10 +55,9 @@ def _apply_velocity(hass: HomeAssistant, device_id: str, velocity: Velocity) -> 
             if entry.state is not ConfigEntryState.LOADED:
                 continue
             for node in entry.runtime_data.pyvlx.nodes:
-                if (
-                    velux_unique_id(node, entry.entry_id) == node_identifier
-                    and isinstance(node, OpeningDevice)
-                ):
+                if velux_unique_id(
+                    node, entry.entry_id
+                ) == node_identifier and isinstance(node, OpeningDevice):
                     if velocity == Velocity.DEFAULT:
                         node.use_default_velocity = False
                         node.default_velocity = Velocity.DEFAULT
