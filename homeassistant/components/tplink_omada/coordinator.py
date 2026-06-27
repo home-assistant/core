@@ -8,6 +8,7 @@ from typing import TYPE_CHECKING, NamedTuple, override
 from tplink_omada_client import (
     OmadaClient,
     OmadaControllerInfo,
+    OmadaControllerUpdateInfo,
     OmadaSiteClient,
     OmadaSwitchPortDetails,
 )
@@ -62,6 +63,39 @@ class OmadaControllerInfoCoordinator(DataUpdateCoordinator[OmadaControllerInfo])
         try:
             async with asyncio.timeout(10):
                 return await self.omada_client.get_controller_info()
+        except OmadaClientException as err:
+            raise UpdateFailed(f"Error communicating with API: {err}") from err
+
+
+class OmadaControllerUpdateCoordinator(
+    DataUpdateCoordinator[OmadaControllerUpdateInfo]
+):
+    """Coordinator for synchronizing Omada controller update information."""
+
+    config_entry: OmadaConfigEntry
+
+    def __init__(
+        self,
+        hass: HomeAssistant,
+        config_entry: OmadaConfigEntry,
+        omada_client: OmadaClient,
+    ) -> None:
+        """Initialize the controller update coordinator."""
+        super().__init__(
+            hass,
+            _LOGGER,
+            config_entry=config_entry,
+            name="Omada API Data - Controller Updates",
+            update_interval=timedelta(seconds=POLL_DEVICES),
+        )
+        self.omada_client = omada_client
+
+    @override
+    async def _async_update_data(self) -> OmadaControllerUpdateInfo:
+        """Fetch controller update information from the API endpoint."""
+        try:
+            async with asyncio.timeout(10):
+                return await self.omada_client.check_firmware_updates()
         except OmadaClientException as err:
             raise UpdateFailed(f"Error communicating with API: {err}") from err
 

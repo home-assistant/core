@@ -14,6 +14,7 @@ if TYPE_CHECKING:
 from .coordinator import (
     OmadaClientsCoordinator,
     OmadaControllerInfoCoordinator,
+    OmadaControllerUpdateCoordinator,
     OmadaDevicesCoordinator,
     OmadaGatewayCoordinator,
     OmadaSwitchPortCoordinator,
@@ -39,6 +40,9 @@ class OmadaSiteController:
 
         self._switch_port_coordinators: dict[str, OmadaSwitchPortCoordinator] = {}
         self._controller_info_coordinator = OmadaControllerInfoCoordinator(
+            hass, config_entry, omada_controller_client
+        )
+        self._controller_update_coordinator = OmadaControllerUpdateCoordinator(
             hass, config_entry, omada_controller_client
         )
         self._devices_coordinator = OmadaDevicesCoordinator(
@@ -116,6 +120,11 @@ class OmadaSiteController:
     def controller_info_coordinator(self) -> OmadaControllerInfoCoordinator:
         """Gets the coordinator for controller information."""
         return self._controller_info_coordinator
+
+    @property
+    def controller_update_coordinator(self) -> OmadaControllerUpdateCoordinator:
+        """Gets the coordinator for controller update information."""
+        return self._controller_update_coordinator
 
     def get_switch_port_coordinator(
         self, switch: OmadaSwitch
