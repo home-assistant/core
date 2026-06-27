@@ -105,9 +105,11 @@ def _async_setup_tracker(
 
     @callback
     def _handle_state_change(event: Event[EventStateChangedData]) -> None:
-        # Skip the None->state bootstrap (entity just added / HA starting) so a
-        # restart doesn't fire a burst of pushes for every tracked entity.
-        if event.data["old_state"] is None:
+        # Ignore changes fired while HA is still starting so a restart does not
+        # push for every tracked entity as it is restored. Once running, every
+        # change - including an entity first appearing (old_state is None) -
+        # should refresh the subscribed surface.
+        if not hass.is_running:
             return
         _async_schedule_push(hass, webhook_id, sub_id)
 
