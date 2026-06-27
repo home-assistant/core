@@ -136,10 +136,13 @@ async def test_apply_optimistic_suppresses_stale_push(
     await hass.async_block_till_done()
 
     coordinator = next(iter(mock_config_entry.runtime_data.coordinators.values()))
+    on_data = mock_vistapool_client.subscribe_pool_resilient.call_args.args[1]
+
     coordinator.apply_optimistic("light.status", 1)
     assert coordinator.data["light"]["status"] == 1
 
-    coordinator._apply_remote_data({"light": {"status": 0}})
+    on_data({"light": {"status": 0}})
+    await hass.async_block_till_done()
 
     assert coordinator.data["light"]["status"] == 1
 
@@ -149,18 +152,24 @@ async def test_apply_optimistic_accepts_confirming_push(
     mock_config_entry: MockConfigEntry,
     mock_vistapool_client: AsyncMock,
 ) -> None:
-    """Test a confirming Firestore push clears the pending optimistic entry."""
+    """Test a confirming push lets the protection expire so later disagreements stick."""
     mock_vistapool_client.fetch_pool_data.return_value = {"light": {"status": 0}}
     mock_config_entry.add_to_hass(hass)
     assert await hass.config_entries.async_setup(mock_config_entry.entry_id)
     await hass.async_block_till_done()
 
     coordinator = next(iter(mock_config_entry.runtime_data.coordinators.values()))
-    coordinator.apply_optimistic("light.status", 1)
-    coordinator._apply_remote_data({"light": {"status": "1"}})
+    on_data = mock_vistapool_client.subscribe_pool_resilient.call_args.args[1]
 
+    coordinator.apply_optimistic("light.status", 1)
+    on_data({"light": {"status": "1"}})
+    await hass.async_block_till_done()
     assert coordinator.data["light"]["status"] == "1"
-    assert "light.status" not in coordinator._pending_optimistic
+
+    # Protection should have lifted; a later push (real off command) must stick.
+    on_data({"light": {"status": 0}})
+    await hass.async_block_till_done()
+    assert coordinator.data["light"]["status"] == 0
 
 
 async def test_apply_optimistic_yields_to_push_after_ttl(
@@ -175,16 +184,18 @@ async def test_apply_optimistic_yields_to_push_after_ttl(
     await hass.async_block_till_done()
 
     coordinator = next(iter(mock_config_entry.runtime_data.coordinators.values()))
+    on_data = mock_vistapool_client.subscribe_pool_resilient.call_args.args[1]
+
     with patch.object(
         vp_coordinator.time,
         "monotonic",
         side_effect=[100.0, 100.0 + vp_coordinator.OPTIMISTIC_TTL_SECONDS + 1.0],
     ):
         coordinator.apply_optimistic("light.status", 1)
-        coordinator._apply_remote_data({"light": {"status": 0}})
+        on_data({"light": {"status": 0}})
+        await hass.async_block_till_done()
 
     assert coordinator.data["light"]["status"] == 0
-    assert "light.status" not in coordinator._pending_optimistic
 
 
 async def test_unload_entry(
