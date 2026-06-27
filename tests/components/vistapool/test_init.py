@@ -2,10 +2,11 @@
 
 from __future__ import annotations
 
-from unittest.mock import AsyncMock, MagicMock
+from unittest.mock import AsyncMock, MagicMock, patch
 
 from aioaquarite import AquariteError, AuthenticationError
 
+from homeassistant.components.vistapool import coordinator as vp_coordinator
 from homeassistant.config_entries import ConfigEntryState
 from homeassistant.core import HomeAssistant
 
@@ -121,6 +122,69 @@ async def test_apply_optimistic_creates_missing_intermediate_dicts(
 
     assert coordinator.data["filtration"]["intel"]["temp"] == 27
     assert coordinator.data["existing"] == {"nested": {"key": 1}}
+
+
+async def test_apply_optimistic_suppresses_stale_push(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    mock_vistapool_client: AsyncMock,
+) -> None:
+    """Test a Firestore push that disagrees within the TTL is overlaid with the optimistic value."""
+    mock_vistapool_client.fetch_pool_data.return_value = {"light": {"status": 0}}
+    mock_config_entry.add_to_hass(hass)
+    assert await hass.config_entries.async_setup(mock_config_entry.entry_id)
+    await hass.async_block_till_done()
+
+    coordinator = next(iter(mock_config_entry.runtime_data.coordinators.values()))
+    coordinator.apply_optimistic("light.status", 1)
+    assert coordinator.data["light"]["status"] == 1
+
+    coordinator._apply_remote_data({"light": {"status": 0}})
+
+    assert coordinator.data["light"]["status"] == 1
+
+
+async def test_apply_optimistic_accepts_confirming_push(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    mock_vistapool_client: AsyncMock,
+) -> None:
+    """Test a confirming Firestore push clears the pending optimistic entry."""
+    mock_vistapool_client.fetch_pool_data.return_value = {"light": {"status": 0}}
+    mock_config_entry.add_to_hass(hass)
+    assert await hass.config_entries.async_setup(mock_config_entry.entry_id)
+    await hass.async_block_till_done()
+
+    coordinator = next(iter(mock_config_entry.runtime_data.coordinators.values()))
+    coordinator.apply_optimistic("light.status", 1)
+    coordinator._apply_remote_data({"light": {"status": "1"}})
+
+    assert coordinator.data["light"]["status"] == "1"
+    assert "light.status" not in coordinator._pending_optimistic
+
+
+async def test_apply_optimistic_yields_to_push_after_ttl(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    mock_vistapool_client: AsyncMock,
+) -> None:
+    """Test a disagreeing Firestore push after the TTL window overrides the optimistic value."""
+    mock_vistapool_client.fetch_pool_data.return_value = {"light": {"status": 0}}
+    mock_config_entry.add_to_hass(hass)
+    assert await hass.config_entries.async_setup(mock_config_entry.entry_id)
+    await hass.async_block_till_done()
+
+    coordinator = next(iter(mock_config_entry.runtime_data.coordinators.values()))
+    with patch.object(
+        vp_coordinator.time,
+        "monotonic",
+        side_effect=[100.0, 100.0 + vp_coordinator.OPTIMISTIC_TTL_SECONDS + 1.0],
+    ):
+        coordinator.apply_optimistic("light.status", 1)
+        coordinator._apply_remote_data({"light": {"status": 0}})
+
+    assert coordinator.data["light"]["status"] == 0
+    assert "light.status" not in coordinator._pending_optimistic
 
 
 async def test_unload_entry(

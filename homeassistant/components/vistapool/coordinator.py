@@ -1,6 +1,7 @@
 """Data coordinator for the Vistapool integration."""
 
 import logging
+import time
 from typing import TYPE_CHECKING, Any, override
 
 from aioaquarite import (
@@ -19,6 +20,8 @@ if TYPE_CHECKING:
     from . import VistapoolConfigEntry
 
 _LOGGER = logging.getLogger(__name__)
+
+OPTIMISTIC_TTL_SECONDS = 10.0
 
 
 class VistapoolDataUpdateCoordinator(DataUpdateCoordinator[dict[str, Any]]):
@@ -41,6 +44,7 @@ class VistapoolDataUpdateCoordinator(DataUpdateCoordinator[dict[str, Any]]):
         self.pool_id: str = pool_id
         self.pool_name: str = pool_name
         self.subscription: ResilientPoolSubscription | None = None
+        self._pending_optimistic: dict[str, tuple[Any, float]] = {}
 
         super().__init__(
             hass,
@@ -66,7 +70,7 @@ class VistapoolDataUpdateCoordinator(DataUpdateCoordinator[dict[str, Any]]):
 
         def _on_data(data: dict[str, Any]) -> None:
             """Callback from the Firestore thread; push data to the HA loop."""
-            self.hass.loop.call_soon_threadsafe(self.async_set_updated_data, data)
+            self.hass.loop.call_soon_threadsafe(self._apply_remote_data, data)
 
         self.subscription = await self.api.subscribe_pool_resilient(
             self.pool_id, _on_data
@@ -85,20 +89,43 @@ class VistapoolDataUpdateCoordinator(DataUpdateCoordinator[dict[str, Any]]):
         return AquariteClient.get_value(self.data, path, default)
 
     def apply_optimistic(self, value_path: str, value: Any) -> None:
-        """Reflect a just-written value before the Firestore push round-trips.
-
-        Hayward's cloud takes several seconds to acknowledge a write back
-        through Firestore, which would make the UI feel laggy. Writing into
-        coordinator.data after a successful REST call gives entities instant
-        feedback; the next snapshot from Firestore overwrites it harmlessly.
-        """
-        keys = value_path.split(".")
-        target: dict[str, Any] = self.data
-        for key in keys[:-1]:
-            child = target.get(key)
-            if not isinstance(child, dict):
-                child = {}
-                target[key] = child
-            target = child
-        target[keys[-1]] = value
+        """Reflect a just-written value and protect it from stale Firestore pushes."""
+        self._pending_optimistic[value_path] = (value, time.monotonic())
+        _set_path(self.data, value_path, value)
         self.async_set_updated_data(self.data)
+
+    def _apply_remote_data(self, data: dict[str, Any]) -> None:
+        """Apply a Firestore push, preserving unconfirmed optimistic writes."""
+        now = time.monotonic()
+        for path, (value, written_at) in list(self._pending_optimistic.items()):
+            remote_value = AquariteClient.get_value(data, path)
+            if _values_agree(remote_value, value):
+                del self._pending_optimistic[path]
+            elif now - written_at >= OPTIMISTIC_TTL_SECONDS:
+                del self._pending_optimistic[path]
+            else:
+                _set_path(data, path, value)
+        self.async_set_updated_data(data)
+
+
+def _set_path(data: dict[str, Any], value_path: str, value: Any) -> None:
+    """Write value into data at a dot-notation path, creating dicts as needed."""
+    keys = value_path.split(".")
+    target: dict[str, Any] = data
+    for key in keys[:-1]:
+        child = target.get(key)
+        if not isinstance(child, dict):
+            child = {}
+            target[key] = child
+        target = child
+    target[keys[-1]] = value
+
+
+def _values_agree(remote: Any, optimistic: Any) -> bool:
+    """Compare values tolerantly: Firestore can return int/str/bool variants."""
+    if remote == optimistic:
+        return True
+    try:
+        return float(remote) == float(optimistic)
+    except (TypeError, ValueError):
+        return False
