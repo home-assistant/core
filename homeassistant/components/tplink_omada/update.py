@@ -240,7 +240,6 @@ class OmadaDeviceUpdate(
         | UpdateEntityFeature.RELEASE_NOTES
     )
     _attr_device_class = UpdateDeviceClass.FIRMWARE
-    _attr_name = "Firmware"
 
     def __init__(
         self,
