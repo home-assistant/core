@@ -1,12 +1,11 @@
 """Matter Button platform."""
 
-from __future__ import annotations
-
 from collections.abc import Callable
 from dataclasses import dataclass
-from typing import TYPE_CHECKING, Any
+from typing import TYPE_CHECKING, Any, override
 
 from chip.clusters import Objects as clusters
+from matter_server.common.custom_clusters import HeimanCluster
 
 from homeassistant.components.button import (
     ButtonDeviceClass,
@@ -44,6 +43,7 @@ class MatterCommandButton(MatterEntity, ButtonEntity):
 
     entity_description: MatterButtonEntityDescription
 
+    @override
     async def async_press(self) -> None:
         """Handle the button press leveraging a Matter command."""
         if TYPE_CHECKING:
@@ -167,5 +167,16 @@ DISCOVERY_SCHEMAS = [
         ),
         value_contains=clusters.WaterHeaterManagement.Commands.CancelBoost.command_id,
         allow_multi=True,  # Also used in water_heater
+    ),
+    MatterDiscoverySchema(
+        platform=Platform.BUTTON,
+        entity_description=MatterButtonEntityDescription(
+            key="HeimanSmokeCoAlarmTemporaryMuteRequest",
+            translation_key="temporary_mute_request",
+            command=HeimanCluster.Commands.MutingSensor,
+        ),
+        entity_class=MatterCommandButton,
+        required_attributes=(HeimanCluster.Attributes.AcceptedCommandList,),
+        value_contains=HeimanCluster.Commands.MutingSensor.command_id,
     ),
 ]

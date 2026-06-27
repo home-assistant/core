@@ -1,9 +1,7 @@
 """Config flow for Airtouch 5 integration."""
 
-from __future__ import annotations
-
 import logging
-from typing import Any
+from typing import Any, override
 
 from airtouch5py.airtouch5_simple_client import Airtouch5SimpleClient
 import voluptuous as vol
@@ -23,6 +21,7 @@ class AirTouch5ConfigFlow(ConfigFlow, domain=DOMAIN):
 
     VERSION = 1
 
+    @override
     async def async_step_user(
         self, user_input: dict[str, Any] | None = None
     ) -> ConfigFlowResult:
@@ -36,8 +35,9 @@ class AirTouch5ConfigFlow(ConfigFlow, domain=DOMAIN):
                 _LOGGER.exception("Unexpected exception")
                 errors = {"base": "cannot_connect"}
             else:
-                # Uses the host/IP value from CONF_HOST as unique ID, which is no longer allowed
-                # pylint: disable-next=hass-unique-id-ip-based
+                # Uses the host/IP value from CONF_HOST as unique ID,
+                # which is no longer allowed
+                # pylint: disable-next=home-assistant-unique-id-ip-based
                 await self.async_set_unique_id(user_input[CONF_HOST])
                 self._abort_if_unique_id_configured()
                 return self.async_create_entry(

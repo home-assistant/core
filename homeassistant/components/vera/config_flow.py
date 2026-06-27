@@ -1,11 +1,9 @@
 """Config flow for Vera."""
 
-from __future__ import annotations
-
 from collections.abc import Mapping
 import logging
 import re
-from typing import Any
+from typing import Any, override
 
 import pyvera as pv
 from requests.exceptions import RequestException
@@ -100,10 +98,12 @@ class VeraFlowHandler(ConfigFlow, domain=DOMAIN):
 
     @staticmethod
     @callback
+    @override
     def async_get_options_flow(config_entry: VeraConfigEntry) -> OptionsFlowHandler:
         """Get the options flow."""
         return OptionsFlowHandler()
 
+    @override
     async def async_step_user(
         self, user_input: dict[str, Any] | None = None
     ) -> ConfigFlowResult:

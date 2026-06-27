@@ -1,7 +1,5 @@
 """SlimProto Player integration."""
 
-from __future__ import annotations
-
 from aioslimproto.server import SlimServer
 
 from homeassistant.config_entries import ConfigEntry

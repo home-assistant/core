@@ -1,12 +1,10 @@
 """Green Planet Energy sensor platform."""
 
-from __future__ import annotations
-
 from collections.abc import Callable
 from dataclasses import dataclass
 from datetime import datetime, timedelta
 import logging
-from typing import Any
+from typing import Any, override
 
 from greenplanet_energy_api import GreenPlanetEnergyAPI
 
@@ -39,7 +37,7 @@ class GreenPlanetEnergySensorEntityDescription(SensorEntityDescription):
 def _get_lowest_price_day_time(
     api: GreenPlanetEnergyAPI, data: dict[str, Any]
 ) -> datetime | None:
-    """Return timestamp of the lowest-priced day hour (06:00–18:00)."""
+    """Return timestamp of the lowest-priced day hour (06:00-18:00)."""
     now = dt_util.now()
     now_h = now.hour
     hour = api.get_lowest_price_day_with_hour(data, now_h)[1]
@@ -184,6 +182,7 @@ class GreenPlanetEnergySensor(
         )
 
     @property
+    @override
     def native_value(self) -> float | datetime | None:
         """Return the state of the sensor."""
         return self.entity_description.value_fn(

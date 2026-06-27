@@ -259,6 +259,11 @@
       }
     }
   },
+  "exceptions": {
+    "invalid_username": {
+      "message": "The username {username} does not exist. Available usernames are {available_usernames}."
+    }
+  },
   "issues": {
     "invalid_server_version": {
       "description": "Check if there are updates available for the Music Assistant server and/or integration.",
@@ -360,7 +365,12 @@
           "name": "Search"
         }
       },
-      "name": "Get library items"
+      "name": "Get library items",
+      "sections": {
+        "pagination": {
+          "name": "Pagination"
+        }
+      }
     },
     "get_queue": {
       "description": "Retrieves the details of the currently active queue of a Music Assistant player.",
@@ -414,6 +424,10 @@
         "radio_mode": {
           "description": "Enable radio mode to auto-generate a playlist based on the selection.",
           "name": "Enable radio mode"
+        },
+        "username": {
+          "description": "Music Assistant username used for the play media request. This affects the playlog entry and will also take provider filters of a media item into account, if they are configured.",
+          "name": "Username"
         }
       },
       "name": "Play media"
@@ -450,7 +464,12 @@
           "name": "Search name"
         }
       },
-      "name": "Search Music Assistant"
+      "name": "Search Music Assistant",
+      "sections": {
+        "search_options": {
+          "name": "Search options"
+        }
+      }
     },
     "transfer_queue": {
       "description": "Transfers a player's queue to another player.",

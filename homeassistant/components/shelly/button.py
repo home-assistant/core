@@ -1,11 +1,9 @@
 """Button for Shelly."""
 
-from __future__ import annotations
-
 from collections.abc import Callable
 from dataclasses import dataclass
 from functools import partial
-from typing import TYPE_CHECKING, Any, Final
+from typing import TYPE_CHECKING, Any, Final, override
 
 from aioshelly.const import BLU_TRV_IDENTIFIER, MODEL_BLU_GATEWAY_G3, RPC_GENERATIONS
 from aioshelly.exceptions import DeviceConnectionError, InvalidAuthError, RpcCallError
@@ -282,6 +280,7 @@ class ShellyBaseButton(
 
         self.entity_description = description
 
+    @override
     async def async_press(self) -> None:
         """Triggers the Shelly button press service."""
         try:
@@ -332,6 +331,7 @@ class ShellyButton(ShellyBaseButton):
         else:
             self._attr_device_info = get_entity_rpc_device_info(coordinator)
 
+    @override
     async def _press_method(self) -> None:
         """Press method."""
         method = getattr(self.coordinator.device, self.entity_description.press_action)
@@ -368,6 +368,7 @@ class ShellyBluTrvButton(ShellyRpcAttributeEntity, ButtonEntity):
         )
 
     @rpc_call
+    @override
     async def async_press(self) -> None:
         """Triggers the Shelly button press service."""
         await self.coordinator.device.trigger_blu_trv_calibration(self._id)
@@ -380,6 +381,7 @@ class RpcVirtualButton(ShellyRpcAttributeEntity, ButtonEntity):
     _id: int
 
     @rpc_call
+    @override
     async def async_press(self) -> None:
         """Triggers the Shelly button press service."""
         if TYPE_CHECKING:
@@ -394,6 +396,7 @@ class RpcSleepingSmokeMuteButton(ShellySleepingRpcAttributeEntity, ButtonEntity)
     entity_description: RpcButtonDescription
 
     @rpc_call
+    @override
     async def async_press(self) -> None:
         """Triggers the Shelly button press service."""
         if TYPE_CHECKING:
@@ -402,6 +405,7 @@ class RpcSleepingSmokeMuteButton(ShellySleepingRpcAttributeEntity, ButtonEntity)
         await self.coordinator.device.smoke_mute_alarm(get_rpc_key_id(self.key))
 
     @property
+    @override
     def available(self) -> bool:
         """Available."""
         available = super().available

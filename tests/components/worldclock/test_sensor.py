@@ -4,8 +4,8 @@ from datetime import tzinfo
 
 import pytest
 
-from homeassistant.components.worldclock.const import CONF_TIME_FORMAT, DEFAULT_NAME
-from homeassistant.const import CONF_NAME, CONF_TIME_ZONE
+from homeassistant.components.worldclock.const import CONF_TIME_FORMAT
+from homeassistant.const import CONF_TIME_ZONE
 from homeassistant.core import HomeAssistant
 from homeassistant.util import dt as dt_util
 
@@ -23,7 +23,7 @@ async def test_time_from_config_entry(
 ) -> None:
     """Test the time at a different location."""
 
-    state = hass.states.get("sensor.worldclock_sensor")
+    state = hass.states.get("sensor.america_new_york")
     assert state is not None
 
     assert state.state == dt_util.now(time_zone=time_zone).strftime("%H:%M")
@@ -33,7 +33,6 @@ async def test_time_from_config_entry(
     "get_config",
     [
         {
-            CONF_NAME: DEFAULT_NAME,
             CONF_TIME_ZONE: "America/New_York",
             CONF_TIME_FORMAT: "%a, %b %d, %Y %I:%M %p",
         }
@@ -44,7 +43,7 @@ async def test_time_format(
 ) -> None:
     """Test time_format setting."""
 
-    state = hass.states.get("sensor.worldclock_sensor")
+    state = hass.states.get("sensor.america_new_york")
     assert state is not None
 
     assert state.state == dt_util.now(time_zone=time_zone).strftime(

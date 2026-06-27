@@ -1,11 +1,9 @@
 """Support for MQTT date platform."""
 
-from __future__ import annotations
-
 from collections.abc import Callable
 import datetime
 import logging
-from typing import Any
+from typing import Any, override
 
 from dateutil.parser import ParserError, parse
 import voluptuous as vol
@@ -90,10 +88,12 @@ class MqttDateEntity(MqttEntity, DateEntity):
     _value_template: Callable[[ReceivePayloadType], ReceivePayloadType]
 
     @staticmethod
+    @override
     def config_schema() -> VolSchemaType:
         """Return the config schema."""
         return DISCOVERY_SCHEMA
 
+    @override
     def _setup_from_config(self, config: ConfigType) -> None:
         """(Re)Setup the entity."""
         self._command_template = MqttCommandTemplate(
@@ -135,6 +135,7 @@ class MqttDateEntity(MqttEntity, DateEntity):
             self._attr_native_value = value.date()
 
     @callback
+    @override
     def _prepare_subscribe_topics(self) -> None:
         """(Re)Subscribe to topics."""
         self.add_subscription(
@@ -143,10 +144,12 @@ class MqttDateEntity(MqttEntity, DateEntity):
             {"_attr_native_value"},
         )
 
+    @override
     async def _subscribe_topics(self) -> None:
         """(Re)Subscribe to topics."""
         subscription.async_subscribe_topics_internal(self.hass, self._sub_state)
 
+    @override
     async def async_set_value(self, value: datetime.date) -> None:
         """Change the date."""
         payload = self._command_template(value.isoformat(), {"value": value})

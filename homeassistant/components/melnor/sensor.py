@@ -1,11 +1,9 @@
 """Sensor support for Melnor Bluetooth water timer."""
 
-from __future__ import annotations
-
 from collections.abc import Callable
 from dataclasses import dataclass
 from datetime import datetime
-from typing import Any
+from typing import Any, override
 
 from melnor_bluetooth.device import Device, Valve
 
@@ -148,6 +146,7 @@ class MelnorSensorEntity(MelnorBluetoothEntity, SensorEntity):
         self.entity_description = entity_description
 
     @property
+    @override
     def native_value(self) -> StateType:
         """Return the sensor value."""
         return self.entity_description.state_fn(self._device)
@@ -168,6 +167,7 @@ class MelnorZoneSensorEntity(MelnorZoneEntity, SensorEntity):
         super().__init__(coordinator, entity_description, valve)
 
     @property
+    @override
     def native_value(self) -> StateType:
         """Return the sensor value."""
         return self.entity_description.state_fn(self._valve)

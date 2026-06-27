@@ -1,12 +1,10 @@
 """Data Update Coordinator for Proxmox VE integration."""
 
-from __future__ import annotations
-
 from collections.abc import Callable
 from dataclasses import dataclass, field
 from datetime import timedelta
 import logging
-from typing import Any
+from typing import Any, override
 
 from proxmoxer import AuthenticationError, ProxmoxAPI
 from proxmoxer.core import ResourceException
@@ -18,19 +16,21 @@ from homeassistant.const import (
     CONF_HOST,
     CONF_PASSWORD,
     CONF_PORT,
+    CONF_TOKEN,
     CONF_USERNAME,
     CONF_VERIFY_SSL,
 )
-from homeassistant.core import HomeAssistant
+from homeassistant.core import HomeAssistant, callback
 from homeassistant.exceptions import ConfigEntryAuthFailed, ConfigEntryError
+from homeassistant.helpers import device_registry as dr
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
 
 from .common import sanitize_config_entry
 from .const import (
     CONF_NODE,
-    CONF_TOKEN,
     CONF_TOKEN_ID,
     CONF_TOKEN_SECRET,
+    DEFAULT_TIMEOUT,
     DEFAULT_VERIFY_SSL,
     DOMAIN,
     NODE_ONLINE,
@@ -101,6 +101,7 @@ class ProxmoxCoordinator(DataUpdateCoordinator[dict[str, ProxmoxNodeData]]):
             Callable[[list[tuple[ProxmoxNodeData, dict[str, Any]]]], None]
         ] = []
 
+    @override
     async def _async_setup(self) -> None:
         """Set up the coordinator."""
         try:
@@ -146,6 +147,7 @@ class ProxmoxCoordinator(DataUpdateCoordinator[dict[str, ProxmoxNodeData]]):
                 translation_placeholders={"error": repr(err)},
             ) from err
 
+    @override
     async def _async_update_data(self) -> dict[str, ProxmoxNodeData]:
         """Fetch data from Proxmox VE API."""
 
@@ -200,7 +202,7 @@ class ProxmoxCoordinator(DataUpdateCoordinator[dict[str, ProxmoxNodeData]]):
     def _init_proxmox(self) -> None:
         """Initialize ProxmoxAPI instance."""
         data = sanitize_config_entry(self.config_entry.data)
-        auth_kwargs = {
+        auth_kwargs: dict[str, Any] = {
             "password": data.get(CONF_PASSWORD),
         }
         if data.get(CONF_TOKEN):
@@ -219,6 +221,7 @@ class ProxmoxCoordinator(DataUpdateCoordinator[dict[str, ProxmoxNodeData]]):
             port=data[CONF_PORT],
             user=data[CONF_USERNAME],
             verify_ssl=data.get(CONF_VERIFY_SSL, DEFAULT_VERIFY_SSL),
+            timeout=DEFAULT_TIMEOUT,
             **auth_kwargs,
         )
 
@@ -328,6 +331,41 @@ class ProxmoxCoordinator(DataUpdateCoordinator[dict[str, ProxmoxNodeData]]):
             ]
             for storages_callback in self.new_storages_callbacks:
                 storages_callback(new_storage_data)
+
+        self._async_remove_stale_devices(data)
+
+    @callback
+    def _async_remove_stale_devices(self, data: dict[str, ProxmoxNodeData]) -> None:
+        """Remove devices for nodes/VMs/containers/storages no longer present."""
+        valid_identifiers: set[str] = set()
+        for node_data in data.values():
+            valid_identifiers.add(
+                f"{self.config_entry.entry_id}_node_{node_data.node['id']}"
+            )
+            valid_identifiers.update(
+                f"{self.config_entry.entry_id}_vm_{vmid}" for vmid in node_data.vms
+            )
+            valid_identifiers.update(
+                f"{self.config_entry.entry_id}_container_{vmid}"
+                for vmid in node_data.containers
+            )
+            valid_identifiers.update(
+                f"{self.config_entry.entry_id}_storage_{storage}"
+                for storage in node_data.storages
+            )
+
+        registry = dr.async_get(self.hass)
+        for device in dr.async_entries_for_config_entry(
+            registry, self.config_entry.entry_id
+        ):
+            if not any(
+                identifier[0] == DOMAIN and identifier[1] in valid_identifiers
+                for identifier in device.identifiers
+            ):
+                _LOGGER.debug("Removing stale device: %s", device.identifiers)
+                registry.async_update_device(
+                    device.id, remove_config_entry_id=self.config_entry.entry_id
+                )
 
 
 class ProxmoxSetupError(Exception):

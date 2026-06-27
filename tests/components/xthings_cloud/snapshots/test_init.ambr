@@ -1,0 +1,187 @@
+# serializer version: 1
+# name: test_devices[XT-LT050]
+  DeviceRegistryEntrySnapshot({
+    'area_id': None,
+    'config_entries': <ANY>,
+    'config_entries_subentries': <ANY>,
+    'configuration_url': None,
+    'connections': set({
+    }),
+    'disabled_by': None,
+    'entry_type': None,
+    'hw_version': None,
+    'id': <ANY>,
+    'identifiers': set({
+      tuple(
+        'xthings_cloud',
+        'dev_light_003',
+      ),
+    }),
+    'labels': set({
+    }),
+    'manufacturer': 'Xthings',
+    'model': 'XT-LT050',
+    'model_id': None,
+    'name': 'Porch Light',
+    'name_by_user': None,
+    'primary_config_entry': <ANY>,
+    'serial_number': None,
+    'sw_version': '1.0.0',
+    'via_device_id': None,
+  })
+# ---
+# name: test_devices[XT-LT100]
+  DeviceRegistryEntrySnapshot({
+    'area_id': None,
+    'config_entries': <ANY>,
+    'config_entries_subentries': <ANY>,
+    'configuration_url': None,
+    'connections': set({
+    }),
+    'disabled_by': None,
+    'entry_type': None,
+    'hw_version': None,
+    'id': <ANY>,
+    'identifiers': set({
+      tuple(
+        'xthings_cloud',
+        'dev_light_002',
+      ),
+    }),
+    'labels': set({
+    }),
+    'manufacturer': 'Xthings',
+    'model': 'XT-LT100',
+    'model_id': None,
+    'name': 'Hallway Light',
+    'name_by_user': None,
+    'primary_config_entry': <ANY>,
+    'serial_number': None,
+    'sw_version': '1.0.0',
+    'via_device_id': None,
+  })
+# ---
+# name: test_devices[XT-LT200]
+  DeviceRegistryEntrySnapshot({
+    'area_id': None,
+    'config_entries': <ANY>,
+    'config_entries_subentries': <ANY>,
+    'configuration_url': None,
+    'connections': set({
+    }),
+    'disabled_by': None,
+    'entry_type': None,
+    'hw_version': None,
+    'id': <ANY>,
+    'identifiers': set({
+      tuple(
+        'xthings_cloud',
+        'dev_light_001',
+      ),
+    }),
+    'labels': set({
+    }),
+    'manufacturer': 'Xthings',
+    'model': 'XT-LT200',
+    'model_id': None,
+    'name': 'Bedroom Light',
+    'name_by_user': None,
+    'primary_config_entry': <ANY>,
+    'serial_number': None,
+    'sw_version': '2.0.1',
+    'via_device_id': None,
+  })
+# ---
+# name: test_devices[XT-PL50]
+  DeviceRegistryEntrySnapshot({
+    'area_id': None,
+    'config_entries': <ANY>,
+    'config_entries_subentries': <ANY>,
+    'configuration_url': None,
+    'connections': set({
+    }),
+    'disabled_by': None,
+    'entry_type': None,
+    'hw_version': None,
+    'id': <ANY>,
+    'identifiers': set({
+      tuple(
+        'xthings_cloud',
+        'dev_plug_001',
+      ),
+    }),
+    'labels': set({
+    }),
+    'manufacturer': 'Xthings',
+    'model': 'XT-PL50',
+    'model_id': None,
+    'name': 'Smart Plug 50',
+    'name_by_user': None,
+    'primary_config_entry': <ANY>,
+    'serial_number': None,
+    'sw_version': '1.0.0',
+    'via_device_id': None,
+  })
+# ---
+# name: test_devices[XT-PL100]
+  DeviceRegistryEntrySnapshot({
+    'area_id': None,
+    'config_entries': <ANY>,
+    'config_entries_subentries': <ANY>,
+    'configuration_url': None,
+    'connections': set({
+    }),
+    'disabled_by': None,
+    'entry_type': None,
+    'hw_version': None,
+    'id': <ANY>,
+    'identifiers': set({
+      tuple(
+        'xthings_cloud',
+        'dev_plug_002',
+      ),
+    }),
+    'labels': set({
+    }),
+    'manufacturer': 'Xthings',
+    'model': 'XT-PL100',
+    'model_id': None,
+    'name': 'Smart Plug 100',
+    'name_by_user': None,
+    'primary_config_entry': <ANY>,
+    'serial_number': None,
+    'sw_version': '1.0.0',
+    'via_device_id': None,
+  })
+# ---
+# name: test_devices[XT-LK50]
+  DeviceRegistryEntrySnapshot({
+    'area_id': None,
+    'config_entries': <ANY>,
+    'config_entries_subentries': <ANY>,
+    'configuration_url': None,
+    'connections': set({
+    }),
+    'disabled_by': None,
+    'entry_type': None,
+    'hw_version': None,
+    'id': <ANY>,
+    'identifiers': set({
+      tuple(
+        'xthings_cloud',
+        'dev_lock_001',
+      ),
+    }),
+    'labels': set({
+    }),
+    'manufacturer': 'Xthings',
+    'model': 'XT-LK50',
+    'model_id': None,
+    'name': 'Front Door Lock',
+    'name_by_user': None,
+    'primary_config_entry': <ANY>,
+    'serial_number': None,
+    'sw_version': '1.0.0',
+    'via_device_id': None,
+  })
+# ---

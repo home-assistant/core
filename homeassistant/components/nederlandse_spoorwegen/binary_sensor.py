@@ -1,11 +1,10 @@
 """Support for Nederlandse Spoorwegen public transport."""
 
-from __future__ import annotations
-
 from collections.abc import Callable
 from dataclasses import dataclass
 from datetime import datetime
 import logging
+from typing import override
 
 from ns_api import Trip
 
@@ -113,6 +112,7 @@ class NSBinarySensor(CoordinatorEntity[NSDataUpdateCoordinator], BinarySensorEnt
         )
 
     @property
+    @override
     def is_on(self) -> bool | None:
         """Return true if the binary sensor is on."""
         if not (trip := self.coordinator.data.first_trip):

@@ -4,6 +4,7 @@ from collections.abc import Callable
 from unittest.mock import AsyncMock, patch
 
 import pytest
+import switchbot
 
 from homeassistant.components.bluetooth import BluetoothServiceInfoBleak
 from homeassistant.components.switchbot.const import (
@@ -26,6 +27,7 @@ from . import (
     AIR_PURIFIER_US_SERVICE_INFO,
     HUBMINI_MATTER_SERVICE_INFO,
     LOCK_SERVICE_INFO,
+    STANDING_FAN_SERVICE_INFO,
     WOCURTAIN_SERVICE_INFO,
     WOMETERTHPC_SERVICE_INFO,
     WOSENSORTH_SERVICE_INFO,
@@ -41,7 +43,8 @@ from tests.components.bluetooth import inject_bluetooth_service_info
     [
         (
             ValueError("wrong model"),
-            "Switchbot device initialization failed because of incorrect configuration parameters: wrong model",
+            "Switchbot device initialization failed because of"
+            " incorrect configuration parameters: wrong model",
         ),
     ],
 )
@@ -279,7 +282,7 @@ async def test_migrate_deprecated_air_purifier_sensor_type(
     service_info: BluetoothServiceInfoBleak,
     expected_sensor_type: str,
 ) -> None:
-    """Test that deprecated air_purifier sensor types are migrated via BLE advertisement."""
+    """Test deprecated air_purifier types are migrated via BLE."""
     inject_bluetooth_service_info(hass, service_info)
 
     entry = MockConfigEntry(
@@ -305,7 +308,7 @@ async def test_migrate_deprecated_air_purifier_sensor_type(
 async def test_migrate_deprecated_air_purifier_sensor_type_device_not_in_range(
     hass: HomeAssistant,
 ) -> None:
-    """Test deprecated air_purifier type entry is not loaded when device is out of range."""
+    """Test deprecated air_purifier entry not loaded when out of range."""
     entry = MockConfigEntry(
         domain=DOMAIN,
         data={
@@ -326,3 +329,24 @@ async def test_migrate_deprecated_air_purifier_sensor_type_device_not_in_range(
     # sensor_type unchanged and entry not loaded; will retry when device advertises
     assert entry.data[CONF_SENSOR_TYPE] == DEPRECATED_SENSOR_TYPE_AIR_PURIFIER
     assert entry.state is ConfigEntryState.SETUP_RETRY
+
+
+async def test_standing_fan_setup(
+    hass: HomeAssistant,
+    mock_entry_factory: Callable[[str], MockConfigEntry],
+) -> None:
+    """Test the Standing Fan is recognized and set up."""
+    inject_bluetooth_service_info(hass, STANDING_FAN_SERVICE_INFO)
+
+    entry = mock_entry_factory(sensor_type="standing_fan")
+    entry.add_to_hass(hass)
+
+    with patch(
+        "homeassistant.components.switchbot.switchbot.SwitchbotStandingFan.get_basic_info",
+        new=AsyncMock(return_value=None),
+    ):
+        assert await hass.config_entries.async_setup(entry.entry_id)
+        await hass.async_block_till_done()
+
+    assert entry.state is ConfigEntryState.LOADED
+    assert isinstance(entry.runtime_data.device, switchbot.SwitchbotStandingFan)

@@ -1,8 +1,6 @@
 """Switch for Refoss."""
 
-from __future__ import annotations
-
-from typing import Any
+from typing import Any, override
 
 from refoss_ha.controller.toggle import ToggleXMix
 
@@ -59,20 +57,24 @@ class RefossSwitch(RefossEntity, SwitchEntity):
         self._attr_name = str(channel)
 
     @property
+    @override
     def is_on(self) -> bool | None:
         """Return true if switch is on."""
         return self.coordinator.device.is_on(channel=self.channel_id)
 
+    @override
     async def async_turn_on(self, **kwargs: Any) -> None:
         """Turn the switch on."""
         await self.coordinator.device.async_turn_on(self.channel_id)
         self.async_write_ha_state()
 
+    @override
     async def async_turn_off(self, **kwargs: Any) -> None:
         """Turn the switch off."""
         await self.coordinator.device.async_turn_off(self.channel_id)
         self.async_write_ha_state()
 
+    @override
     async def async_toggle(self, **kwargs: Any) -> None:
         """Toggle the switch."""
         await self.coordinator.device.async_toggle(channel=self.channel_id)

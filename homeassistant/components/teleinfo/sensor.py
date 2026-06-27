@@ -1,9 +1,8 @@
 """Sensor platform for the Teleinfo integration."""
 
-from __future__ import annotations
-
 from collections.abc import Callable
 from dataclasses import dataclass
+from typing import override
 
 from homeassistant.components.sensor import (
     SensorDeviceClass,
@@ -232,6 +231,7 @@ class TeleinfoSensor(CoordinatorEntity[TeleinfoCoordinator], SensorEntity):
         )
 
     @property
+    @override
     def available(self) -> bool:
         """Return True if the required label is present in the frame."""
         return (
@@ -239,6 +239,7 @@ class TeleinfoSensor(CoordinatorEntity[TeleinfoCoordinator], SensorEntity):
         )
 
     @property
+    @override
     def native_value(self) -> StateType:
         """Return the state of the sensor."""
         data = self.coordinator.data[self.entity_description.key]

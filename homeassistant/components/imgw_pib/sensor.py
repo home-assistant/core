@@ -1,10 +1,8 @@
 """IMGW-PIB sensor platform."""
 
-from __future__ import annotations
-
 from collections.abc import Callable
 from dataclasses import dataclass
-from typing import Any
+from typing import Any, override
 
 from imgw_pib.const import HYDROLOGICAL_ALERTS_MAP, NO_ALERT
 from imgw_pib.model import HydrologicalData
@@ -100,6 +98,33 @@ SENSOR_TYPES: tuple[ImgwPibSensorEntityDescription, ...] = (
         suggested_display_precision=1,
         value=lambda data: data.water_temperature.value,
     ),
+    ImgwPibSensorEntityDescription(
+        key="submerged_vegetation_cover",
+        translation_key="submerged_vegetation_cover",
+        native_unit_of_measurement=PERCENTAGE,
+        state_class=SensorStateClass.MEASUREMENT,
+        value=lambda data: data.submerged_vegetation_cover.value,
+        suggested_display_precision=0,
+        entity_registry_enabled_default=False,
+    ),
+    ImgwPibSensorEntityDescription(
+        key="floating_vegetation_cover",
+        translation_key="floating_vegetation_cover",
+        native_unit_of_measurement=PERCENTAGE,
+        state_class=SensorStateClass.MEASUREMENT,
+        value=lambda data: data.floating_vegetation_cover.value,
+        suggested_display_precision=0,
+        entity_registry_enabled_default=False,
+    ),
+    ImgwPibSensorEntityDescription(
+        key="emergent_vegetation_cover",
+        translation_key="emergent_vegetation_cover",
+        native_unit_of_measurement=PERCENTAGE,
+        state_class=SensorStateClass.MEASUREMENT,
+        value=lambda data: data.emergent_vegetation_cover.value,
+        suggested_display_precision=0,
+        entity_registry_enabled_default=False,
+    ),
 )
 
 
@@ -120,9 +145,7 @@ async def async_setup_entry(
             entity_reg.async_remove(entity_id)
 
     async_add_entities(
-        ImgwPibSensorEntity(coordinator, description)
-        for description in SENSOR_TYPES
-        if getattr(coordinator.data, description.key).value is not None
+        ImgwPibSensorEntity(coordinator, description) for description in SENSOR_TYPES
     )
 
 
@@ -143,11 +166,13 @@ class ImgwPibSensorEntity(ImgwPibEntity, SensorEntity):
         self.entity_description = description
 
     @property
+    @override
     def native_value(self) -> StateType:
         """Return the value reported by the sensor."""
         return self.entity_description.value(self.coordinator.data)
 
     @property
+    @override
     def extra_state_attributes(self) -> dict[str, Any] | None:
         """Return the state attributes."""
         if self.entity_description.attrs:

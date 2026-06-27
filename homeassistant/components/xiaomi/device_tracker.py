@@ -1,9 +1,8 @@
 """Support for Xiaomi Mi routers."""
 
-from __future__ import annotations
-
 from http import HTTPStatus
 import logging
+from typing import override
 
 import requests
 import voluptuous as vol
@@ -54,11 +53,13 @@ class XiaomiDeviceScanner(DeviceScanner):
         self.mac2name = None
         self.success_init = self.token is not None
 
+    @override
     def scan_devices(self):
         """Scan for new devices and return a list with found device IDs."""
         self._update_info()
         return self.last_results
 
+    @override
     def get_device_name(self, device):
         """Return the name of the given device or None if we don't know."""
         if self.mac2name is None:

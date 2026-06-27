@@ -1,10 +1,8 @@
 """Support for TPLink switch entities."""
 
-from __future__ import annotations
-
 from dataclasses import dataclass
 import logging
-from typing import Any, cast
+from typing import Any, cast, override
 
 from kasa import Feature
 
@@ -119,16 +117,19 @@ class TPLinkSwitch(CoordinatedTPLinkFeatureEntity, SwitchEntity):
     entity_description: TPLinkSwitchEntityDescription
 
     @async_refresh_after
+    @override
     async def async_turn_on(self, **kwargs: Any) -> None:
         """Turn the switch on."""
         await self._feature.set_value(True)
 
     @async_refresh_after
+    @override
     async def async_turn_off(self, **kwargs: Any) -> None:
         """Turn the switch off."""
         await self._feature.set_value(False)
 
     @callback
+    @override
     def _async_update_attrs(self) -> bool:
         """Update the entity's attributes."""
         self._attr_is_on = cast(bool | None, self._feature.value)

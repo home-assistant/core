@@ -15,7 +15,6 @@ from tests.components.common import (
     ConditionStateDescription,
     assert_condition_behavior_all,
     assert_condition_behavior_any,
-    assert_condition_gated_by_labs_flag,
     assert_condition_options_supported,
     other_states,
     parametrize_condition_states_all,
@@ -27,34 +26,14 @@ from tests.components.common import (
 
 @pytest.fixture
 async def target_alarm_control_panels(hass: HomeAssistant) -> dict[str, list[str]]:
-    """Create multiple alarm_control_panel entities associated with different targets."""
+    """Create alarm_control_panel entities for different targets."""
     return await target_entities(hass, "alarm_control_panel")
 
 
 @pytest.mark.parametrize(
-    "condition",
-    [
-        "alarm_control_panel.is_armed",
-        "alarm_control_panel.is_armed_away",
-        "alarm_control_panel.is_armed_home",
-        "alarm_control_panel.is_armed_night",
-        "alarm_control_panel.is_armed_vacation",
-        "alarm_control_panel.is_disarmed",
-        "alarm_control_panel.is_triggered",
-    ],
-)
-async def test_alarm_control_panel_conditions_gated_by_labs_flag(
-    hass: HomeAssistant, caplog: pytest.LogCaptureFixture, condition: str
-) -> None:
-    """Test the alarm_control_panel conditions are gated by the labs flag."""
-    await assert_condition_gated_by_labs_flag(hass, caplog, condition)
-
-
-@pytest.mark.usefixtures("enable_labs_preview_features")
-@pytest.mark.parametrize(
     ("condition_key", "base_options", "supports_behavior", "supports_duration"),
     [
-        ("alarm_control_panel.is_armed", {}, True, False),
+        ("alarm_control_panel.is_armed", {}, True, True),
         ("alarm_control_panel.is_armed_away", {}, True, True),
         ("alarm_control_panel.is_armed_home", {}, True, True),
         ("alarm_control_panel.is_armed_night", {}, True, True),
@@ -80,7 +59,6 @@ async def test_alarm_control_panel_condition_options_validation(
     )
 
 
-@pytest.mark.usefixtures("enable_labs_preview_features")
 @pytest.mark.parametrize(
     ("condition_target_config", "entity_id", "entities_in_target"),
     parametrize_target_entities("alarm_control_panel"),
@@ -172,7 +150,6 @@ async def test_alarm_control_panel_state_condition_behavior_any(
     )
 
 
-@pytest.mark.usefixtures("enable_labs_preview_features")
 @pytest.mark.parametrize(
     ("condition_target_config", "entity_id", "entities_in_target"),
     parametrize_target_entities("alarm_control_panel"),

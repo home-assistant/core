@@ -1,8 +1,7 @@
 """Coordinator for the Arve integration."""
 
-from __future__ import annotations
-
 from datetime import timedelta
+from typing import override
 
 from asyncarve import (
     Arve,
@@ -46,6 +45,7 @@ class ArveCoordinator(DataUpdateCoordinator[ArveSensProData]):
             session=async_get_clientsession(hass),
         )
 
+    @override
     async def _async_update_data(self) -> dict[str, ArveDeviceInfo]:
         """Fetch data from API endpoint."""
         try:

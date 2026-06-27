@@ -1,7 +1,5 @@
 """Services for Amcrest IP cameras."""
 
-from __future__ import annotations
-
 import voluptuous as vol
 
 from homeassistant.components.camera import DOMAIN as CAMERA_DOMAIN

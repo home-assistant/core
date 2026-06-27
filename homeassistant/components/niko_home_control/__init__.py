@@ -1,7 +1,5 @@
 """The Niko home control integration."""
 
-from __future__ import annotations
-
 from nhc.controller import NHCController
 
 from homeassistant.config_entries import ConfigEntry

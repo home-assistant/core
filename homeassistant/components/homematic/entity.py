@@ -1,11 +1,9 @@
 """Homematic base entity."""
 
-from __future__ import annotations
-
 from abc import abstractmethod
 from datetime import timedelta
 import logging
-from typing import Any
+from typing import Any, override
 
 from pyhomematic import HMConnection
 from pyhomematic.devicetypes.generic import HMGeneric
@@ -65,11 +63,13 @@ class HMDevice(Entity):
         if self._state:
             self._state = self._state.upper()
 
+    @override
     async def async_added_to_hass(self) -> None:
         """Load data init callbacks."""
         self._subscribe_homematic_events()
 
     @property
+    @override
     def extra_state_attributes(self) -> dict[str, Any]:
         """Return device specific state attributes."""
         # Static attributes
@@ -144,7 +144,8 @@ class HMDevice(Entity):
                         channel = channels[0]
                     else:
                         channel = self._channel
-                    # Remember the channel for this attribute to ignore invalid events later
+                    # Remember the channel for this attribute to
+                    # ignore invalid events later
                     self._channel_map[node] = str(channel)
 
         _LOGGER.debug("Channel map for %s: %s", self._address, str(self._channel_map))
@@ -217,21 +218,25 @@ class HMHub(Entity):
         self.hass.add_job(self._update_variables, None)
 
     @property
+    @override
     def name(self) -> str:
         """Return the name of the device."""
         return self._name
 
     @property
+    @override
     def state(self) -> int | None:
         """Return the state of the entity."""
         return self._state
 
     @property
+    @override
     def extra_state_attributes(self) -> dict[str, Any]:
         """Return the state attributes."""
         return self._variables.copy()
 
     @property
+    @override
     def icon(self) -> str:
         """Return the icon to use in the frontend, if any."""
         return "mdi:gradient-vertical"

@@ -1,10 +1,8 @@
 """Config flow to configure roomba component."""
 
-from __future__ import annotations
-
 import asyncio
 from functools import partial
-from typing import Any
+from typing import Any, override
 
 from roombapy import RoombaFactory, RoombaInfo
 from roombapy.discovery import RoombaDiscovery
@@ -85,12 +83,14 @@ class RoombaConfigFlow(ConfigFlow, domain=DOMAIN):
 
     @staticmethod
     @callback
+    @override
     def async_get_options_flow(
         config_entry: RoombaConfigEntry,
     ) -> RoombaOptionsFlowHandler:
         """Get the options flow for this handler."""
         return RoombaOptionsFlowHandler()
 
+    @override
     async def async_step_zeroconf(
         self, discovery_info: ZeroconfServiceInfo
     ) -> ConfigFlowResult:
@@ -99,6 +99,7 @@ class RoombaConfigFlow(ConfigFlow, domain=DOMAIN):
             discovery_info.host, discovery_info.hostname.lower().removesuffix(".local.")
         )
 
+    @override
     async def async_step_dhcp(
         self, discovery_info: DhcpServiceInfo
     ) -> ConfigFlowResult:
@@ -148,6 +149,7 @@ class RoombaConfigFlow(ConfigFlow, domain=DOMAIN):
         self._abort_if_unique_id_configured()
         return await self.async_step_link()
 
+    @override
     async def async_step_user(
         self, user_input: dict[str, Any] | None = None
     ) -> ConfigFlowResult:

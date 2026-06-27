@@ -1,10 +1,8 @@
 """Support for MQTT Template lights."""
 
-from __future__ import annotations
-
 from collections.abc import Callable
 import logging
-from typing import Any
+from typing import Any, override
 
 import voluptuous as vol
 
@@ -134,10 +132,12 @@ class MqttLightTemplate(MqttEntity, LightEntity, RestoreEntity):
     _topics: dict[str, str | None]
 
     @staticmethod
+    @override
     def config_schema() -> VolSchemaType:
         """Return the config schema."""
         return DISCOVERY_SCHEMA_TEMPLATE
 
+    @override
     def _setup_from_config(self, config: ConfigType) -> None:
         """(Re)Setup the entity."""
         self._color_temp_kelvin = config[CONF_COLOR_TEMP_KELVIN]
@@ -337,6 +337,7 @@ class MqttLightTemplate(MqttEntity, LightEntity, RestoreEntity):
                 )
 
     @callback
+    @override
     def _prepare_subscribe_topics(self) -> None:
         """(Re)Subscribe to topics."""
         self.add_subscription(
@@ -352,6 +353,7 @@ class MqttLightTemplate(MqttEntity, LightEntity, RestoreEntity):
             },
         )
 
+    @override
     async def _subscribe_topics(self) -> None:
         """(Re)Subscribe to topics."""
         subscription.async_subscribe_topics_internal(self.hass, self._sub_state)
@@ -371,6 +373,7 @@ class MqttLightTemplate(MqttEntity, LightEntity, RestoreEntity):
             if last_state.attributes.get(ATTR_EFFECT):
                 self._attr_effect = last_state.attributes.get(ATTR_EFFECT)
 
+    @override
     async def async_turn_on(self, **kwargs: Any) -> None:
         """Turn the entity on.
 
@@ -446,6 +449,7 @@ class MqttLightTemplate(MqttEntity, LightEntity, RestoreEntity):
         if self._optimistic:
             self.async_write_ha_state()
 
+    @override
     async def async_turn_off(self, **kwargs: Any) -> None:
         """Turn the entity off.
 

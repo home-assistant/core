@@ -1,8 +1,6 @@
 """Representation of a doorlock."""
 
-from __future__ import annotations
-
-from typing import Any
+from typing import Any, override
 
 from zwave_me_ws import ZWaveMeData
 
@@ -41,14 +39,17 @@ class ZWaveMeLock(ZWaveMeEntity, LockEntity):
     """Representation of a ZWaveMe lock."""
 
     @property
+    @override
     def is_locked(self) -> bool:
         """Return the state of the lock."""
         return self.device.level == "close"
 
+    @override
     def unlock(self, **kwargs: Any) -> None:
         """Send command to unlock the lock."""
         self.controller.zwave_api.send_command(self.device.id, "open")
 
+    @override
     def lock(self, **kwargs: Any) -> None:
         """Send command to lock the lock."""
         self.controller.zwave_api.send_command(self.device.id, "close")

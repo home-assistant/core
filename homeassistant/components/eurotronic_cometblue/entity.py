@@ -1,5 +1,7 @@
 """Coordinator entity base class for CometBlue."""
 
+from typing import override
+
 from homeassistant.components import bluetooth
 from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
@@ -23,11 +25,17 @@ class CometBlueBluetoothEntity(CoordinatorEntity[CometBlueDataUpdateCoordinator]
         )
 
     @property
+    @override
     def available(self) -> bool:
         """Return if entity is available."""
-        # As long the device is currently connectable via Bluetooth it is available, even if the last update failed.
-        # This is because Bluetooth connectivity can be intermittent and a failed update doesn't necessarily mean the device is unavailable.
-        # The BluetoothManager will check every 300s (same interval as DataUpdateCoordinator) if the device is still present and connectable.
+        # As long the device is currently connectable via
+        # Bluetooth it is available, even if the last update
+        # failed. This is because Bluetooth connectivity can be
+        # intermittent and a failed update doesn't necessarily
+        # mean the device is unavailable. The BluetoothManager
+        # will check every 300s (same interval as
+        # DataUpdateCoordinator) if the device is still present
+        # and connectable.
         return bluetooth.async_address_present(
             self.hass, address=self.coordinator.address, connectable=True
         )

@@ -1,10 +1,8 @@
 """Binary Sensor platform for Teslemetry integration."""
 
-from __future__ import annotations
-
 from collections.abc import Callable
 from dataclasses import dataclass
-from typing import cast
+from typing import cast, override
 
 from teslemetry_stream.vehicle import TeslemetryStreamVehicle
 
@@ -602,6 +600,7 @@ class TeslemetryVehiclePollingBinarySensorEntity(
         self.entity_description = description
         super().__init__(data, description.key)
 
+    @override
     def _async_update_attrs(self) -> None:
         """Update the attributes of the binary sensor."""
 
@@ -627,6 +626,7 @@ class TeslemetryVehicleStreamingBinarySensorEntity(
         self.entity_description = description
         super().__init__(data, description.key)
 
+    @override
     async def async_added_to_hass(self) -> None:
         """Handle entity which will be added."""
         await super().async_added_to_hass()
@@ -663,6 +663,7 @@ class TeslemetryEnergyLiveBinarySensorEntity(
         self.entity_description = description
         super().__init__(data, description.key)
 
+    @override
     def _async_update_attrs(self) -> None:
         """Update the attributes of the binary sensor."""
         self._attr_is_on = self.entity_description.polling_value_fn(self._value)
@@ -684,6 +685,7 @@ class TeslemetryEnergyInfoBinarySensorEntity(
         self.entity_description = description
         super().__init__(data, description.key)
 
+    @override
     def _async_update_attrs(self) -> None:
         """Update the attributes of the binary sensor."""
         self._attr_is_on = self.entity_description.polling_value_fn(self._value)

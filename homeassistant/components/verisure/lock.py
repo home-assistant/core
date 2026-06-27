@@ -1,9 +1,7 @@
 """Support for Verisure locks."""
 
-from __future__ import annotations
-
 import asyncio
-from typing import Any
+from typing import Any, override
 
 from verisure import Error as VerisureError
 
@@ -74,6 +72,7 @@ class VerisureDoorlock(CoordinatorEntity[VerisureDataUpdateCoordinator], LockEnt
         self._changed_method: str | None = None
 
     @property
+    @override
     def device_info(self) -> DeviceInfo:
         """Return device information about this entity."""
         area = self.coordinator.data["locks"][self.serial_number]["device"]["area"]
@@ -87,6 +86,7 @@ class VerisureDoorlock(CoordinatorEntity[VerisureDataUpdateCoordinator], LockEnt
         )
 
     @property
+    @override
     def available(self) -> bool:
         """Return True if entity is available."""
         return (
@@ -94,6 +94,7 @@ class VerisureDoorlock(CoordinatorEntity[VerisureDataUpdateCoordinator], LockEnt
         )
 
     @property
+    @override
     def code_format(self) -> str:
         """Return the configured code format."""
         digits = self.coordinator.config_entry.options.get(
@@ -102,16 +103,19 @@ class VerisureDoorlock(CoordinatorEntity[VerisureDataUpdateCoordinator], LockEnt
         return f"^\\d{{{digits}}}$"
 
     @property
+    @override
     def extra_state_attributes(self) -> dict[str, str | None]:
         """Return the state attributes."""
         return {"method": self._changed_method}
 
+    @override
     async def async_unlock(self, **kwargs: Any) -> None:
         """Send unlock command."""
         code = kwargs.get(ATTR_CODE)
         if code:
             await self.async_set_lock_state(code, LockState.UNLOCKED)
 
+    @override
     async def async_lock(self, **kwargs: Any) -> None:
         """Send lock command."""
         code = kwargs.get(ATTR_CODE)
@@ -187,11 +191,13 @@ class VerisureDoorlock(CoordinatorEntity[VerisureDataUpdateCoordinator], LockEnt
         self._changed_method = lock_data["lockMethod"]
 
     @callback
+    @override
     def _handle_coordinator_update(self) -> None:
         """Handle updated data from the coordinator."""
         self._update_lock_attributes()
         super()._handle_coordinator_update()
 
+    @override
     async def async_added_to_hass(self) -> None:
         """When entity is added to hass."""
         await super().async_added_to_hass()

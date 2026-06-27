@@ -1,7 +1,5 @@
 """Refoss integration."""
 
-from __future__ import annotations
-
 from refoss_ha.device import DeviceInfo
 from refoss_ha.device_manager import async_build_base_device
 from refoss_ha.discovery import Discovery, Listener

@@ -8,6 +8,7 @@ from unittest.mock import Mock, patch
 from freezegun import freeze_time
 import pytest
 
+from homeassistant.components.usage_prediction import DOMAIN
 from homeassistant.components.usage_prediction.models import EntityUsagePredictions
 from homeassistant.core import HomeAssistant
 from homeassistant.setup import async_setup_component
@@ -42,7 +43,7 @@ async def test_common_control(
     mock_predict_common_control: Mock,
 ) -> None:
     """Test usage_prediction common control WebSocket command."""
-    assert await async_setup_component(hass, "usage_prediction", {})
+    assert await async_setup_component(hass, DOMAIN, {})
 
     client = await hass_ws_client(hass)
 
@@ -69,7 +70,7 @@ async def test_caching_behavior(
     mock_predict_common_control: Mock,
 ) -> None:
     """Test that results are cached for 24 hours."""
-    assert await async_setup_component(hass, "usage_prediction", {})
+    assert await async_setup_component(hass, DOMAIN, {})
 
     client = await hass_ws_client(hass)
 

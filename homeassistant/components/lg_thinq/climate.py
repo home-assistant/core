@@ -1,10 +1,8 @@
 """Support for climate entities."""
 
-from __future__ import annotations
-
 import asyncio
 import logging
-from typing import Any
+from typing import Any, override
 
 from thinqconnect import DeviceType
 from thinqconnect.integration import ExtendedProperty
@@ -152,6 +150,7 @@ class ThinQClimateEntity(ThinQEntity, ClimateEntity):
             self._attr_swing_horizontal_modes = [SWING_ON, SWING_OFF]
             self._attr_supported_features |= ClimateEntityFeature.SWING_HORIZONTAL_MODE
 
+    @override
     def _update_status(self) -> None:
         """Update status itself."""
         super()._update_status()
@@ -216,6 +215,7 @@ class ThinQClimateEntity(ThinQEntity, ClimateEntity):
             self.target_temperature_step,
         )
 
+    @override
     async def async_turn_on(self) -> None:
         """Turn the entity on."""
         _LOGGER.debug(
@@ -223,6 +223,7 @@ class ThinQClimateEntity(ThinQEntity, ClimateEntity):
         )
         await self.async_call_api(self.coordinator.api.async_turn_on(self.property_id))
 
+    @override
     async def async_turn_off(self) -> None:
         """Turn the entity off."""
         _LOGGER.debug(
@@ -230,6 +231,7 @@ class ThinQClimateEntity(ThinQEntity, ClimateEntity):
         )
         await self.async_call_api(self.coordinator.api.async_turn_off(self.property_id))
 
+    @override
     async def async_set_hvac_mode(self, hvac_mode: HVACMode) -> None:
         """Set new target hvac mode."""
         if hvac_mode == HVACMode.OFF:
@@ -256,6 +258,7 @@ class ThinQClimateEntity(ThinQEntity, ClimateEntity):
             )
         )
 
+    @override
     async def async_set_preset_mode(self, preset_mode: str) -> None:
         """Set new preset mode."""
         _LOGGER.debug(
@@ -270,6 +273,7 @@ class ThinQClimateEntity(ThinQEntity, ClimateEntity):
             self.coordinator.api.async_set_hvac_mode(self.property_id, preset_mode)
         )
 
+    @override
     async def async_set_fan_mode(self, fan_mode: str) -> None:
         """Set new target fan mode."""
         _LOGGER.debug(
@@ -285,6 +289,7 @@ class ThinQClimateEntity(ThinQEntity, ClimateEntity):
             )
         )
 
+    @override
     async def async_set_swing_mode(self, swing_mode: str) -> None:
         """Set new swing mode."""
         _LOGGER.debug(
@@ -299,6 +304,7 @@ class ThinQClimateEntity(ThinQEntity, ClimateEntity):
             )
         )
 
+    @override
     async def async_set_swing_horizontal_mode(self, swing_horizontal_mode: str) -> None:
         """Set new swing horizontal mode."""
         _LOGGER.debug(
@@ -313,6 +319,7 @@ class ThinQClimateEntity(ThinQEntity, ClimateEntity):
             )
         )
 
+    @override
     async def async_set_temperature(self, **kwargs: Any) -> None:
         """Set new target temperature."""
         if hvac_mode := kwargs.get(ATTR_HVAC_MODE):

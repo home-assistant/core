@@ -7,6 +7,7 @@ from typing import Any
 
 from aiohasupervisor import SupervisorClient, SupervisorError
 from aiohasupervisor.models import (
+    Folder,
     FullBackupOptions,
     FullRestoreOptions,
     PartialBackupOptions,
@@ -14,19 +15,19 @@ from aiohasupervisor.models import (
 )
 import voluptuous as vol
 
-from homeassistant.const import ATTR_DEVICE_ID, ATTR_NAME
+from homeassistant.const import ATTR_DEVICE_ID, ATTR_LOCATION, ATTR_NAME
 from homeassistant.core import (
     HomeAssistant,
     ServiceCall,
     ServiceResponse,
     SupportsResponse,
-    async_get_hass_or_none,
     callback,
 )
 from homeassistant.exceptions import HomeAssistantError, ServiceValidationError
 from homeassistant.helpers import (
     config_validation as cv,
     device_registry as dr,
+    issue_registry as ir,
     selector,
 )
 from homeassistant.helpers.service import async_register_admin_service
@@ -42,14 +43,15 @@ from .const import (
     ATTR_HOMEASSISTANT,
     ATTR_HOMEASSISTANT_EXCLUDE_DATABASE,
     ATTR_INPUT,
-    ATTR_LOCATION,
     ATTR_PASSWORD,
     ATTR_SLUG,
     DOMAIN,
+    ISSUE_KEY_LEGACY_HOMEASSISTANT_FOLDER,
     MAIN_COORDINATOR,
     SupervisorEntityModel,
 )
-from .coordinator import HassioMainDataUpdateCoordinator, get_addons_info
+from .coordinator import HassioMainDataUpdateCoordinator
+from .handler import get_supervisor_client
 
 SERVICE_ADDON_START = "addon_start"
 SERVICE_ADDON_STOP = "addon_stop"
@@ -70,26 +72,53 @@ SERVICE_MOUNT_RELOAD = "mount_reload"
 
 VALID_ADDON_SLUG = vol.Match(re.compile(r"^[-_.A-Za-z0-9]+$"))
 
+# Legacy alias used by the Supervisor API for the homeassistant flag, kept
+# for backwards compatibility with existing automations.
+LEGACY_FOLDER_HOMEASSISTANT = "homeassistant"
 
-def valid_addon(value: Any) -> str:
-    """Validate value is a valid addon slug."""
-    value = VALID_ADDON_SLUG(value)
-    hass = async_get_hass_or_none()
 
-    if hass and (addons := get_addons_info(hass)) is not None and value not in addons:
-        raise vol.Invalid("Not a valid app slug")
-    return value
+def _normalize_partial_options_data(
+    hass: HomeAssistant, data: dict[str, Any]
+) -> dict[str, Any]:
+    """Map legacy aliases used by both partial backup and partial restore handlers."""
+    if ATTR_APPS in data:
+        data[ATTR_ADDONS] = data.pop(ATTR_APPS)
+    if ATTR_FOLDERS in data:
+        folders: set[Any] = set(data[ATTR_FOLDERS])
+        if LEGACY_FOLDER_HOMEASSISTANT in folders:
+            folders.discard(LEGACY_FOLDER_HOMEASSISTANT)
+            if data.get(ATTR_HOMEASSISTANT) is False:
+                raise ServiceValidationError(
+                    f"{ATTR_HOMEASSISTANT}=False conflicts with the legacy "
+                    f"{LEGACY_FOLDER_HOMEASSISTANT!r} entry in {ATTR_FOLDERS}"
+                )
+            data[ATTR_HOMEASSISTANT] = True
+            ir.async_create_issue(
+                hass,
+                DOMAIN,
+                ISSUE_KEY_LEGACY_HOMEASSISTANT_FOLDER,
+                breaks_in_ha_version="2026.12.0",
+                is_fixable=True,
+                is_persistent=True,
+                severity=ir.IssueSeverity.WARNING,
+                translation_key=ISSUE_KEY_LEGACY_HOMEASSISTANT_FOLDER,
+            )
+        if folders:
+            data[ATTR_FOLDERS] = folders
+        else:
+            data.pop(ATTR_FOLDERS)
+    return data
 
 
 SCHEMA_NO_DATA = vol.Schema({})
 
-SCHEMA_ADDON = vol.Schema({vol.Required(ATTR_ADDON): valid_addon})
+SCHEMA_ADDON = vol.Schema({vol.Required(ATTR_ADDON): VALID_ADDON_SLUG})
 
 SCHEMA_ADDON_STDIN = SCHEMA_ADDON.extend(
     {vol.Required(ATTR_INPUT): vol.Any(dict, cv.string)}
 )
 
-SCHEMA_APP = vol.Schema({vol.Required(ATTR_APP): valid_addon})
+SCHEMA_APP = vol.Schema({vol.Required(ATTR_APP): VALID_ADDON_SLUG})
 
 SCHEMA_APP_STDIN = SCHEMA_APP.extend(
     {vol.Required(ATTR_INPUT): vol.Any(dict, cv.string)}
@@ -113,7 +142,10 @@ SCHEMA_BACKUP_PARTIAL = SCHEMA_BACKUP_FULL.extend(
     {
         vol.Optional(ATTR_HOMEASSISTANT): cv.boolean,
         vol.Optional(ATTR_FOLDERS): vol.All(
-            cv.ensure_list, [cv.string], vol.Unique(), vol.Coerce(set)
+            cv.ensure_list,
+            [vol.Any(LEGACY_FOLDER_HOMEASSISTANT, vol.Coerce(Folder))],
+            vol.Unique(),
+            vol.Coerce(set),
         ),
         vol.Exclusive(ATTR_APPS, "apps_or_addons"): vol.All(
             cv.ensure_list, [VALID_ADDON_SLUG], vol.Unique(), vol.Coerce(set)
@@ -136,7 +168,10 @@ SCHEMA_RESTORE_PARTIAL = SCHEMA_RESTORE_FULL.extend(
     {
         vol.Optional(ATTR_HOMEASSISTANT): cv.boolean,
         vol.Optional(ATTR_FOLDERS): vol.All(
-            cv.ensure_list, [cv.string], vol.Unique(), vol.Coerce(set)
+            cv.ensure_list,
+            [vol.Any(LEGACY_FOLDER_HOMEASSISTANT, vol.Coerce(Folder))],
+            vol.Unique(),
+            vol.Coerce(set),
         ),
         vol.Exclusive(ATTR_APPS, "apps_or_addons"): vol.All(
             cv.ensure_list, [VALID_ADDON_SLUG], vol.Unique(), vol.Coerce(set)
@@ -163,10 +198,9 @@ SCHEMA_MOUNT_RELOAD = vol.Schema(
 
 
 @callback
-def async_setup_services(
-    hass: HomeAssistant, supervisor_client: SupervisorClient
-) -> None:
+def async_setup_services(hass: HomeAssistant) -> None:
     """Register the Supervisor services."""
+    supervisor_client = get_supervisor_client(hass)
     async_register_app_services(hass, supervisor_client)
     async_register_host_services(hass, supervisor_client)
     async_register_backup_restore_services(hass, supervisor_client)
@@ -262,7 +296,8 @@ def async_register_app_services(
         addon_slug = service.data[ATTR_ADDON]
         data: dict | str = service.data[ATTR_INPUT]
 
-        # See explanation for why we make strings into json in async_app_stdin_service_handler
+        # See explanation for why we make strings into json
+        # in async_app_stdin_service_handler
         data = json.dumps(data)
         payload = data.encode(encoding="utf-8")
 
@@ -343,9 +378,7 @@ def async_register_backup_restore_services(
         service: ServiceCall,
     ) -> ServiceResponse:
         """Handler for create partial backup service. Returns the new backup's ID."""
-        data = service.data.copy()
-        if ATTR_APPS in data:
-            data[ATTR_ADDONS] = data.pop(ATTR_APPS)
+        data = _normalize_partial_options_data(hass, service.data.copy())
         options = PartialBackupOptions(**data)
 
         try:
@@ -392,8 +425,7 @@ def async_register_backup_restore_services(
         """Handler for partial restore service."""
         data = service.data.copy()
         backup_slug = data.pop(ATTR_SLUG)
-        if ATTR_APPS in data:
-            data[ATTR_ADDONS] = data.pop(ATTR_APPS)
+        data = _normalize_partial_options_data(hass, data)
         options = PartialRestoreOptions(**data)
 
         try:

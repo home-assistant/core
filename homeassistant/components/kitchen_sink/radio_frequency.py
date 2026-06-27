@@ -1,6 +1,6 @@
 """Demo platform that offers a fake radio frequency entity."""
 
-from __future__ import annotations
+from typing import override
 
 from rf_protocols import RadioFrequencyCommand
 
@@ -54,10 +54,12 @@ class DemoRadioFrequency(RadioFrequencyTransmitterEntity):
         self._attr_name = entity_name
 
     @property
+    @override
     def supported_frequency_ranges(self) -> list[tuple[int, int]]:
         """Return supported frequency ranges."""
         return [(300_000_000, 928_000_000)]
 
+    @override
     async def async_send_command(self, command: RadioFrequencyCommand) -> None:
         """Send an RF command."""
         persistent_notification.async_create(

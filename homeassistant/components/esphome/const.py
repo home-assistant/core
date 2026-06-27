@@ -1,11 +1,10 @@
 """ESPHome constants."""
 
-from __future__ import annotations
-
 from typing import TYPE_CHECKING, Final
 
 from awesomeversion import AwesomeVersion
 
+from homeassistant.components.bluetooth import BluetoothScanningMode
 from homeassistant.util.hass_dict import HassKey
 
 if TYPE_CHECKING:
@@ -20,13 +19,15 @@ CONF_SUBSCRIBE_LOGS = "subscribe_logs"
 CONF_DEVICE_NAME = "device_name"
 CONF_NOISE_PSK = "noise_psk"
 CONF_BLUETOOTH_MAC_ADDRESS = "bluetooth_mac_address"
+CONF_BLUETOOTH_SCANNING_MODE = "bluetooth_scanning_mode"
 
 DEFAULT_ALLOW_SERVICE_CALLS = True
 DEFAULT_NEW_CONFIG_ALLOW_ALLOW_SERVICE_CALLS = False
+DEFAULT_BLUETOOTH_SCANNING_MODE = BluetoothScanningMode.AUTO.value
 
 DEFAULT_PORT: Final = 6053
 
-STABLE_BLE_VERSION_STR = "2025.11.0"
+STABLE_BLE_VERSION_STR = "2026.5.1"
 STABLE_BLE_VERSION = AwesomeVersion(STABLE_BLE_VERSION_STR)
 PROJECT_URLS = {
     "esphome.bluetooth-proxy": "https://esphome.github.io/bluetooth-proxies/",

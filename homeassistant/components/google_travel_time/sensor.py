@@ -1,10 +1,8 @@
 """Support for Google travel time sensors."""
 
-from __future__ import annotations
-
 import datetime
 import logging
-from typing import Any
+from typing import Any, override
 
 from google.api_core.client_options import ClientOptions
 from google.api_core.exceptions import GoogleAPIError, PermissionDenied
@@ -124,6 +122,7 @@ class GoogleTravelTimeSensor(SensorEntity):
         self._resolved_origin: str | None = None
         self._resolved_destination: str | None = None
 
+    @override
     async def async_added_to_hass(self) -> None:
         """Handle when entity is added."""
         if self.hass.state is not CoreState.running:
@@ -134,6 +133,7 @@ class GoogleTravelTimeSensor(SensorEntity):
             await self.first_update()
 
     @property
+    @override
     def native_value(self) -> float | None:
         """Return the state of the sensor."""
         if self._route is None:
@@ -142,6 +142,7 @@ class GoogleTravelTimeSensor(SensorEntity):
         return self._route.duration.seconds
 
     @property
+    @override
     def extra_state_attributes(self) -> dict[str, Any] | None:
         """Return the state attributes."""
         if self._route is None:

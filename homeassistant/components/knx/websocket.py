@@ -1,14 +1,14 @@
 """KNX Websocket API."""
 
-from __future__ import annotations
-
 from collections.abc import Awaitable, Callable
 from contextlib import ExitStack
+from datetime import timedelta
 from functools import wraps
 import inspect
 from typing import TYPE_CHECKING, Any, Final, overload
 
 import knx_frontend as knx_panel
+from knx_telegram_store import KnxTelegramStoreException, TelegramQuery
 import voluptuous as vol
 from xknx.telegram import Telegram
 from xknxproject.exceptions import XknxProjectException
@@ -18,12 +18,20 @@ from homeassistant.components.frontend import async_panel_exists
 from homeassistant.components.http import StaticPathConfig
 from homeassistant.const import CONF_ENTITY_ID, CONF_PLATFORM, Platform
 from homeassistant.core import HomeAssistant, callback
-from homeassistant.helpers import device_registry as dr
+from homeassistant.helpers import config_validation as cv, device_registry as dr
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from homeassistant.helpers.typing import UNDEFINED
+from homeassistant.util import dt as dt_util
 from homeassistant.util.ulid import ulid_now
 
-from .const import DOMAIN, KNX_MODULE_KEY, SUPPORTED_PLATFORMS_UI
+from .const import (
+    CONF_KNX_TELEGRAM_DB_LOAD_HOURS,
+    DOMAIN,
+    KNX_MODULE_KEY,
+    SIGNAL_KNX_DATA_SECURE_ISSUE_TELEGRAM,
+    SIGNAL_KNX_TELEGRAM,
+    SUPPORTED_PLATFORMS_UI,
+)
 from .dpt import get_supported_dpts
 from .storage.config_store import ConfigStoreException
 from .storage.const import CONF_DATA
@@ -39,11 +47,7 @@ from .storage.entity_store_validation import (
 from .storage.expose_controller import validate_expose_data
 from .storage.serialize import get_serialized_schema
 from .storage.time_server import validate_time_server_data
-from .telegrams import (
-    SIGNAL_KNX_DATA_SECURE_ISSUE_TELEGRAM,
-    SIGNAL_KNX_TELEGRAM,
-    TelegramDict,
-)
+from .telegrams import TelegramDict
 
 if TYPE_CHECKING:
     from .knx_module import KNXModule
@@ -58,6 +62,7 @@ async def register_panel(hass: HomeAssistant) -> None:
     websocket_api.async_register_command(hass, ws_project_file_remove)
     websocket_api.async_register_command(hass, ws_group_monitor_info)
     websocket_api.async_register_command(hass, ws_group_telegrams)
+    websocket_api.async_register_command(hass, ws_query_telegrams)
     websocket_api.async_register_command(hass, ws_subscribe_telegram)
     websocket_api.async_register_command(hass, ws_get_knx_project)
     websocket_api.async_register_command(hass, ws_validate_entity)
@@ -194,6 +199,15 @@ def ws_get_base_data(
         "version": knx.xknx.version,
         "connected": knx.xknx.connection_manager.connected.is_set(),
         "current_address": str(knx.xknx.current_address),
+        "telegram_backend": (
+            "sqlite" if knx.telegrams.store is not None else "unknown"
+        ),
+        "telegram_retention": knx.telegrams.store.retention_days
+        if knx.telegrams.store is not None
+        else None,
+        "telegram_max_count": knx.telegrams.store.max_telegrams
+        if knx.telegrams.store is not None
+        else None,
     }
 
     connection.send_result(
@@ -287,21 +301,44 @@ async def ws_project_file_remove(
         vol.Required("type"): "knx/group_monitor_info",
     }
 )
+@websocket_api.async_response
 @provide_knx
-@callback
-def ws_group_monitor_info(
+async def ws_group_monitor_info(
     hass: HomeAssistant,
     knx: KNXModule,
     connection: websocket_api.ActiveConnection,
     msg: dict,
 ) -> None:
     """Handle get info command of group monitor."""
-    recent_telegrams = [*knx.telegrams.recent_telegrams]
+    load_hours = knx.entry.options[CONF_KNX_TELEGRAM_DB_LOAD_HOURS]
+    start_time = dt_util.now() - timedelta(hours=load_hours)
+
+    query = TelegramQuery(start_time=start_time, order_descending=True)
+    if knx.telegrams.store is None:
+        connection.send_error(
+            msg["id"],
+            websocket_api.const.ERR_HOME_ASSISTANT_ERROR,
+            "Telegram storage backend not initialized. "
+            "Check logs/Repairs for initialization errors.",
+        )
+        return
+    try:
+        result = await knx.telegrams.store.query(query, flush_first=True)
+    except KnxTelegramStoreException as err:
+        connection.send_error(
+            msg["id"],
+            websocket_api.const.ERR_HOME_ASSISTANT_ERROR,
+            f"Database error: {err}",
+        )
+        return
+
     connection.send_result(
         msg["id"],
         {
             "project_loaded": knx.project.loaded,
-            "recent_telegrams": recent_telegrams,
+            "recent_telegrams": [
+                knx.telegrams.model_to_dict(t) for t in result.telegrams
+            ],
         },
     )
 
@@ -324,6 +361,80 @@ def ws_group_telegrams(
     connection.send_result(
         msg["id"],
         knx.telegrams.last_ga_telegrams,
+    )
+
+
+@websocket_api.require_admin
+@websocket_api.websocket_command(
+    {
+        vol.Required("type"): "knx/query_telegrams",
+        vol.Optional("sources"): [str],
+        vol.Optional("destinations"): [str],
+        vol.Optional("telegram_types"): [str],
+        vol.Optional("directions"): [str],
+        vol.Optional("dpt_mains"): [vol.Coerce(int)],
+        vol.Optional("start_time"): cv.datetime,
+        vol.Optional("end_time"): cv.datetime,
+        vol.Optional("delta_before_ms"): vol.All(vol.Coerce(int), vol.Range(min=0)),
+        vol.Optional("delta_after_ms"): vol.All(vol.Coerce(int), vol.Range(min=0)),
+        vol.Optional("limit"): vol.All(vol.Coerce(int), vol.Range(min=1, max=100_000)),
+        vol.Optional("offset"): vol.All(vol.Coerce(int), vol.Range(min=0)),
+        vol.Optional("order_descending"): bool,
+    }
+)
+@websocket_api.async_response
+@provide_knx
+async def ws_query_telegrams(
+    hass: HomeAssistant,
+    knx: KNXModule,
+    connection: websocket_api.ActiveConnection,
+    msg: dict,
+) -> None:
+    """Handle query telegrams command."""
+    start_time = msg.get("start_time")
+    if start_time is None:
+        load_hours = knx.entry.options[CONF_KNX_TELEGRAM_DB_LOAD_HOURS]
+        start_time = dt_util.now() - timedelta(hours=load_hours)
+
+    query = TelegramQuery(
+        sources=msg.get("sources", []),
+        destinations=msg.get("destinations", []),
+        telegram_types=msg.get("telegram_types", []),
+        directions=msg.get("directions", []),
+        dpt_mains=msg.get("dpt_mains", []),
+        start_time=start_time,
+        end_time=msg.get("end_time"),
+        delta_before_ms=msg.get("delta_before_ms", 0),
+        delta_after_ms=msg.get("delta_after_ms", 0),
+        limit=msg.get("limit", 100_000),
+        offset=msg.get("offset", 0),
+        order_descending=msg.get("order_descending", True),
+    )
+    if knx.telegrams.store is None:
+        connection.send_error(
+            msg["id"],
+            websocket_api.const.ERR_HOME_ASSISTANT_ERROR,
+            "Telegram storage backend not initialized. "
+            "Check logs/Repairs for initialization errors.",
+        )
+        return
+    try:
+        result = await knx.telegrams.store.query(query, flush_first=True)
+    except KnxTelegramStoreException as err:
+        connection.send_error(
+            msg["id"],
+            websocket_api.const.ERR_HOME_ASSISTANT_ERROR,
+            f"Database error: {err}",
+        )
+        return
+
+    connection.send_result(
+        msg["id"],
+        {
+            "telegrams": [knx.telegrams.model_to_dict(t) for t in result.telegrams],
+            "total_count": result.total_count,
+            "limit_reached": result.limit_reached,
+        },
     )
 
 

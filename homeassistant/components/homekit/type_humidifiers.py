@@ -1,7 +1,7 @@
 """Class to hold all thermostat accessories."""
 
 import logging
-from typing import Any
+from typing import Any, override
 
 from pyhap.const import CATEGORY_HUMIDIFIER
 from pyhap.util import callback as pyhap_callback
@@ -179,6 +179,7 @@ class HumidifierDehumidifier(HomeAccessory):
 
     @callback
     @pyhap_callback  # type: ignore[untyped-decorator]
+    @override
     def run(self) -> None:
         """Handle accessory driver started event.
 
@@ -267,8 +268,9 @@ class HumidifierDehumidifier(HomeAccessory):
 
             if (humidity < min_humidity) or (humidity > max_humidity):
                 humidity = min(max_humidity, max(min_humidity, humidity))
-                # Update the HomeKit value to the clamped humidity, so the user will get a visual feedback that they
-                # cannot not set to a value below/above the min/max.
+                # Update the HomeKit value to the clamped humidity,
+                # so the user will get visual feedback that they
+                # cannot set to a value below/above the min/max.
                 self.char_target_humidity.set_value(humidity)
 
             self.async_call_service(
@@ -285,14 +287,15 @@ class HumidifierDehumidifier(HomeAccessory):
         """Return min and max humidity range."""
         attributes = state.attributes
         min_humidity = max(
-            int(round(attributes.get(ATTR_MIN_HUMIDITY, DEFAULT_MIN_HUMIDITY))), 0
+            round(attributes.get(ATTR_MIN_HUMIDITY, DEFAULT_MIN_HUMIDITY)), 0
         )
         max_humidity = min(
-            int(round(attributes.get(ATTR_MAX_HUMIDITY, DEFAULT_MAX_HUMIDITY))), 100
+            round(attributes.get(ATTR_MAX_HUMIDITY, DEFAULT_MAX_HUMIDITY)), 100
         )
         return min_humidity, max_humidity
 
     @callback
+    @override
     def async_update_state(self, new_state: State) -> None:
         """Update state without rechecking the device features."""
         is_active = new_state.state == STATE_ON

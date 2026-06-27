@@ -1,15 +1,14 @@
 """Test the DNS IP config flow."""
 
-from __future__ import annotations
-
 from unittest.mock import patch
 
 from aiodns.error import DNSError
 import pytest
 
 from homeassistant import config_entries
-from homeassistant.components.dnsip.config_flow import DATA_SCHEMA, DATA_SCHEMA_ADV
+from homeassistant.components.dnsip.config_flow import DATA_SCHEMA
 from homeassistant.components.dnsip.const import (
+    CONF_ADVANCED_OPTIONS,
     CONF_HOSTNAME,
     CONF_IPV4,
     CONF_IPV6,
@@ -51,9 +50,7 @@ async def test_form(hass: HomeAssistant) -> None:
     ):
         result2 = await hass.config_entries.flow.async_configure(
             result["flow_id"],
-            {
-                CONF_HOSTNAME: "home-assistant.io",
-            },
+            {CONF_HOSTNAME: "home-assistant.io", CONF_ADVANCED_OPTIONS: {}},
         )
         await hass.async_block_till_done()
 
@@ -74,15 +71,15 @@ async def test_form(hass: HomeAssistant) -> None:
     assert len(mock_setup_entry.mock_calls) == 1
 
 
-async def test_form_adv(hass: HomeAssistant) -> None:
-    """Test we get the form with advanced options on."""
+async def test_form_with_advanced_options(hass: HomeAssistant) -> None:
+    """Test we can submit the form with custom resolver and port options."""
 
     result = await hass.config_entries.flow.async_init(
         DOMAIN,
-        context={"source": config_entries.SOURCE_USER, "show_advanced_options": True},
+        context={"source": config_entries.SOURCE_USER},
     )
 
-    assert result["data_schema"] == DATA_SCHEMA_ADV
+    assert result["data_schema"] == DATA_SCHEMA
 
     with (
         patch(
@@ -98,10 +95,12 @@ async def test_form_adv(hass: HomeAssistant) -> None:
             result["flow_id"],
             {
                 CONF_HOSTNAME: "home-assistant.io",
-                CONF_RESOLVER: "8.8.8.8",
-                CONF_RESOLVER_IPV6: "2620:119:53::53",
-                CONF_PORT: 53,
-                CONF_PORT_IPV6: 53,
+                CONF_ADVANCED_OPTIONS: {
+                    CONF_RESOLVER: "8.8.8.8",
+                    CONF_RESOLVER_IPV6: "2620:119:53::53",
+                    CONF_PORT: 53,
+                    CONF_PORT_IPV6: 53,
+                },
             },
         )
         await hass.async_block_till_done()
@@ -137,6 +136,7 @@ async def test_form_error(hass: HomeAssistant) -> None:
             result["flow_id"],
             {
                 CONF_HOSTNAME: "home-assistant.io",
+                CONF_ADVANCED_OPTIONS: {},
             },
         )
         await hass.async_block_till_done()
@@ -185,6 +185,7 @@ async def test_flow_already_exist(hass: HomeAssistant) -> None:
             result["flow_id"],
             {
                 CONF_HOSTNAME: "home-assistant.io",
+                CONF_ADVANCED_OPTIONS: {},
             },
         )
         await hass.async_block_till_done()

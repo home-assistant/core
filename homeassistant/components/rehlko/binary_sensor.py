@@ -1,9 +1,8 @@
 """Binary sensor platform for Rehlko integration."""
 
-from __future__ import annotations
-
 from dataclasses import dataclass
 import logging
+from typing import override
 
 from homeassistant.components.binary_sensor import (
     BinarySensorDeviceClass,
@@ -117,6 +116,7 @@ class RehlkoBinarySensorEntity(RehlkoEntity, BinarySensorEntity):
     entity_description: RehlkoBinarySensorEntityDescription
 
     @property
+    @override
     def is_on(self) -> bool | None:
         """Return the state of the binary sensor."""
         if self._rehlko_value == self.entity_description.on_value:
@@ -162,6 +162,7 @@ class RehlkoLoadshedBinarySensorEntity(RehlkoEntity, BinarySensorEntity):
         self._attr_translation_placeholders = {"display_name": display_name}
 
     @property
+    @override
     def is_on(self) -> bool | None:
         """Return the state of the binary sensor."""
         if not (loadshed_data := self.coordinator.data.get("loadShed")) or not (

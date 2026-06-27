@@ -1,8 +1,6 @@
 """Support for Sensor.Community sensors."""
 
-from __future__ import annotations
-
-from typing import cast
+from typing import cast, override
 
 from homeassistant.components.sensor import (
     SensorDeviceClass,
@@ -130,6 +128,7 @@ class SensorCommunitySensor(CoordinatorEntity, SensorEntity):
             ]
 
     @property
+    @override
     def native_value(self) -> float | None:
         """Return the state of the device."""
         if (

@@ -1,7 +1,5 @@
 """Common vera code."""
 
-from __future__ import annotations
-
 from collections import defaultdict
 from datetime import datetime
 from typing import NamedTuple
@@ -62,7 +60,8 @@ class SubscriptionRegistry(pv.AbstractSubscriptionRegistry):
         delay = 1
 
         # Long poll for changes. The downstream API instructs the endpoint to wait a
-        # a minimum of 200ms before returning data and a maximum of 9s before timing out.
+        # a minimum of 200ms before returning data and a
+        # maximum of 9s before timing out.
         if not self.poll_server_once():
             # If an error was encountered, wait a bit longer before trying again.
             delay = 60

@@ -1,9 +1,7 @@
 """Class to hold all switch accessories."""
 
-from __future__ import annotations
-
 import logging
-from typing import Any, Final, NamedTuple
+from typing import Any, Final, NamedTuple, override
 
 from pyhap.characteristic import Characteristic
 from pyhap.const import (
@@ -146,6 +144,7 @@ class Outlet(HomeAccessory):
         self.async_call_service(SWITCH_DOMAIN, service, params)
 
     @callback
+    @override
     def async_update_state(self, new_state: State) -> None:
         """Update switch state after state changed."""
         current_state = new_state.state == STATE_ON
@@ -207,6 +206,7 @@ class Switch(HomeAccessory):
             async_call_later(self.hass, ACTIVATE_ONLY_RESET_SECONDS, self.reset_switch)
 
     @callback
+    @override
     def async_update_state(self, new_state: State) -> None:
         """Update switch state after state changed."""
         self.activate_only = self.is_activate(new_state)
@@ -225,6 +225,7 @@ class Switch(HomeAccessory):
 class Vacuum(Switch):
     """Generate a Switch accessory."""
 
+    @override
     def set_state(self, value: bool) -> None:
         """Move switch state to value if call came from HomeKit."""
         _LOGGER.debug("%s: Set switch state to %s", self.entity_id, value)
@@ -245,6 +246,7 @@ class Vacuum(Switch):
         )
 
     @callback
+    @override
     def async_update_state(self, new_state: State) -> None:
         """Update switch state after state changed."""
         current_state = new_state.state in (VacuumActivity.CLEANING, STATE_ON)
@@ -256,6 +258,7 @@ class Vacuum(Switch):
 class LawnMower(Switch):
     """Generate a Switch accessory."""
 
+    @override
     def set_state(self, value: bool) -> None:
         """Move switch state to value if call came from HomeKit."""
         _LOGGER.debug("%s: Set switch state to %s", self.entity_id, value)
@@ -268,6 +271,7 @@ class LawnMower(Switch):
         )
 
     @callback
+    @override
     def async_update_state(self, new_state: State) -> None:
         """Update switch state after state changed."""
         current_state = new_state.state in (LawnMowerActivity.MOWING, STATE_ON)
@@ -351,9 +355,13 @@ class ValveBase(HomeAccessory):
                 CHAR_REMAINING_DURATION,
                 getter_callback=self.get_remaining_duration,
                 properties={
-                    # Default remaining time maxValue to 48 hours if not set via linked default duration.
-                    # pyhap truncates the remaining time to maxValue of the characteristic (pyhap default is 1 hour).
-                    # This can potentially show a remaining duration that is lower than the actual remaining duration.
+                    # Default remaining time maxValue to 48 hours
+                    # if not set via linked default duration.
+                    # pyhap truncates the remaining time to
+                    # maxValue of the characteristic (pyhap
+                    # default is 1 hour). This can potentially
+                    # show a remaining duration that is lower
+                    # than the actual remaining duration.
                     PROP_MAX_VALUE: self._get_linked_duration_property(
                         INPUT_NUMBER_CONF_MAX, VALVE_REMAINING_TIME_MAX_DEFAULT
                     ),
@@ -373,6 +381,7 @@ class ValveBase(HomeAccessory):
         self.async_call_service(self.domain, service, params)
 
     @callback
+    @override
     def async_update_state(self, new_state: State) -> None:
         """Update switch state after state changed."""
         current_state = 1 if new_state.state in self.open_states else 0
@@ -544,6 +553,7 @@ class SelectSwitch(HomeAccessory):
         self.async_call_service(self.domain, SERVICE_SELECT_OPTION, params)
 
     @callback
+    @override
     def async_update_state(self, new_state: State) -> None:
         """Update switch state after state changed."""
         current_option = cleanup_name_for_homekit(new_state.state)

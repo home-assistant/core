@@ -1,7 +1,5 @@
 """Test the Dropbox config flow."""
 
-from __future__ import annotations
-
 from types import SimpleNamespace
 from unittest.mock import AsyncMock
 
@@ -128,6 +126,54 @@ async def test_already_configured(
 
     assert result["type"] is FlowResultType.ABORT
     assert result["reason"] == "already_configured"
+
+
+@pytest.mark.usefixtures("current_request_with_host")
+@pytest.mark.parametrize(
+    ("token", "expected_step"),
+    [
+        (
+            {
+                "access_token": "mock-access-token",
+                "expires_at": 9_999_999_999,
+                "scope": " ".join(OAUTH2_SCOPES),
+            },
+            "reauth_confirm",
+        ),
+        (
+            {
+                "access_token": "mock-access-token",
+                "refresh_token": "mock-refresh-token",
+                "expires_at": 9_999_999_999,
+                "scope": "account_info.read files.content.read files.content.write",
+            },
+            "reauth_permissions",
+        ),
+    ],
+    ids=["missing_refresh_token", "missing_scope"],
+)
+async def test_reauth_confirm_step(
+    hass: HomeAssistant,
+    mock_config_entry,
+    token: dict[str, object],
+    expected_step: str,
+) -> None:
+    """Test reauth shows the correct confirmation step for the broken token."""
+
+    mock_config_entry.add_to_hass(hass)
+    hass.config_entries.async_update_entry(
+        mock_config_entry, data={**mock_config_entry.data, "token": token}
+    )
+
+    result = await mock_config_entry.start_reauth_flow(hass)
+
+    assert result["type"] is FlowResultType.FORM
+    assert result["step_id"] == expected_step
+
+    result = await hass.config_entries.flow.async_configure(result["flow_id"], {})
+
+    assert result["type"] is FlowResultType.EXTERNAL_STEP
+    assert result["step_id"] == "auth"
 
 
 @pytest.mark.usefixtures("current_request_with_host")

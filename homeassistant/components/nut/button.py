@@ -1,8 +1,7 @@
 """Provides a switch for switchable NUT outlets."""
 
-from __future__ import annotations
-
 import logging
+from typing import override
 
 from homeassistant.components.button import (
     ButtonDeviceClass,
@@ -46,7 +45,6 @@ async def async_setup_entry(
                 translation_key="outlet_number_load_cycle",
                 translation_placeholders={"outlet_name": outlet_name},
                 device_class=ButtonDeviceClass.RESTART,
-                entity_registry_enabled_default=True,
             ),
         }
 
@@ -60,6 +58,7 @@ async def async_setup_entry(
 class NUTButton(NUTBaseEntity, ButtonEntity):
     """Representation of a button entity for NUT."""
 
+    @override
     async def async_press(self) -> None:
         """Press the button."""
         name_list = self.entity_description.key.split(".")

@@ -6,6 +6,7 @@ DOMAIN = "broadlink"
 
 DOMAINS_AND_TYPES = {
     Platform.CLIMATE: {"HYS"},
+    Platform.INFRARED: {"RM4MINI", "RM4PRO", "RMMINI", "RMMINIB", "RMPRO"},
     Platform.LIGHT: {"LB1", "LB2"},
     Platform.RADIO_FREQUENCY: {"RM4PRO", "RMPRO"},
     Platform.REMOTE: {"RM4MINI", "RM4PRO", "RMMINI", "RMMINIB", "RMPRO"},

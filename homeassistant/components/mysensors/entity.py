@@ -1,11 +1,9 @@
 """Handle MySensors devices."""
-# pylint: disable=hass-use-runtime-data  # Uses legacy hass.data[DOMAIN] pattern
-
-from __future__ import annotations
+# pylint: disable=home-assistant-use-runtime-data  # Uses legacy hass.data[DOMAIN] pattern
 
 from abc import abstractmethod
 import logging
-from typing import Any
+from typing import Any, override
 
 from mysensors import BaseAsyncGateway, Sensor
 from mysensors.sensor import ChildSensor
@@ -86,6 +84,7 @@ class MySensorNodeEntity(Entity):
         return f"{self.sketch_name} {self.node_id}"
 
     @property
+    @override
     def device_info(self) -> DeviceInfo:
         """Return the device info."""
         return DeviceInfo(
@@ -96,6 +95,7 @@ class MySensorNodeEntity(Entity):
         )
 
     @property
+    @override
     def extra_state_attributes(self) -> dict[str, Any]:
         """Return device specific attributes."""
         node = self.gateway.sensors[self.node_id]
@@ -123,6 +123,7 @@ class MySensorNodeEntity(Entity):
 
         await self._debouncer.async_call()
 
+    @override
     async def async_added_to_hass(self) -> None:
         """Register update callback."""
         self.async_on_remove(
@@ -181,11 +182,13 @@ class MySensorsChildEntity(MySensorNodeEntity):
         return self._node.children[self.child_id]
 
     @property
+    @override
     def unique_id(self) -> str:
         """Return a unique ID for use in home assistant."""
         return f"{self.gateway_id}-{self.node_id}-{self.child_id}-{self.value_type}"
 
     @property
+    @override
     def name(self) -> str:
         """Return the name of this entity."""
         child = self._child
@@ -194,6 +197,7 @@ class MySensorsChildEntity(MySensorNodeEntity):
             return str(child.description)
         return f"{self.node_name} {self.child_id}"
 
+    @override
     async def async_will_remove_from_hass(self) -> None:
         """Remove this entity from home assistant."""
         for platform in PLATFORM_TYPES:
@@ -205,11 +209,13 @@ class MySensorsChildEntity(MySensorNodeEntity):
                     _LOGGER.debug("Deleted %s from platform %s", self.dev_id, platform)
 
     @property
+    @override
     def available(self) -> bool:
         """Return true if entity is available."""
         return self.value_type in self._values
 
     @property
+    @override
     def extra_state_attributes(self) -> dict[str, Any]:
         """Return entity and device specific state attributes."""
         attr = super().extra_state_attributes
@@ -255,11 +261,13 @@ class MySensorsChildEntity(MySensorNodeEntity):
                 self._values[value_type] = value
 
     @callback
+    @override
     def _async_update_callback(self) -> None:
         """Update the entity."""
         self._async_update()
         self.async_write_ha_state()
 
+    @override
     async def async_added_to_hass(self) -> None:
         """Register update callback."""
         await super().async_added_to_hass()

@@ -1,7 +1,7 @@
 """Support for Subaru door locks."""
 
 import logging
-from typing import Any
+from typing import Any, override
 
 import voluptuous as vol
 
@@ -53,7 +53,9 @@ async def async_setup_entry(
 class SubaruLock(LockEntity):
     """Representation of a Subaru door lock.
 
-    Note that the Subaru API currently does not support returning the status of the locks. Lock status is always unknown.
+    Note that the Subaru API currently does not support
+    returning the status of the locks. Lock status is
+    always unknown.
     """
 
     _attr_has_entity_name = True
@@ -68,6 +70,7 @@ class SubaruLock(LockEntity):
         self._attr_unique_id = f"{vin}_door_locks"
         self._attr_device_info = get_device_info(vehicle_info)
 
+    @override
     async def async_lock(self, **kwargs: Any) -> None:
         """Send the lock command."""
         _LOGGER.debug("Locking doors for: %s", self.car_name)
@@ -77,6 +80,7 @@ class SubaruLock(LockEntity):
             self.vehicle_info,
         )
 
+    @override
     async def async_unlock(self, **kwargs: Any) -> None:
         """Send the unlock command."""
         _LOGGER.debug("Unlocking doors for: %s", self.car_name)

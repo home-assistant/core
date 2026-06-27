@@ -1,11 +1,9 @@
 """Support for Renault sensors."""
 
-from __future__ import annotations
-
 from collections.abc import Callable
 from dataclasses import dataclass
 from datetime import datetime
-from typing import Any
+from typing import Any, override
 
 from renault_api.kamereon.models import (
     KamereonVehicleBatteryStatusData,
@@ -83,6 +81,7 @@ class RenaultSensor[T: KamereonVehicleDataAttributes](
     entity_description: RenaultSensorEntityDescription[T]
 
     @property
+    @override
     def native_value(self) -> StateType | datetime:
         """Return the state of this entity."""
         return self.entity_description.value_lambda(self)
@@ -147,6 +146,10 @@ SENSOR_TYPES: tuple[RenaultSensorEntityDescription[Any], ...] = (
             "waiting_for_current_charge",
             "energy_flap_opened",
             "charge_in_progress",
+            "v2l_connected",
+            "v2g_charging_normal",
+            "v2g_charging_waiting",
+            "v2g_discharging",
             "charge_error",
             "unavailable",
         ],
@@ -318,6 +321,7 @@ SENSOR_TYPES: tuple[RenaultSensorEntityDescription[Any], ...] = (
         options=[
             "always",
             "delayed",
+            "delegated",
             "scheduled",
         ],
         value_lambda=_get_charging_settings_mode_formatted,

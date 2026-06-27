@@ -1,7 +1,5 @@
 """Tests for the Tuya component."""
 
-from __future__ import annotations
-
 import pathlib
 from typing import Any
 from unittest.mock import MagicMock, patch
@@ -45,7 +43,7 @@ class TuyaNotificationHelper:
         updated_status_properties: list[str] | None,
         dp_timestamps: dict[str, int] | None,
     ) -> None:
-        """Trigger dispatcher_send for device update and wait for entity tasks to complete."""
+        """Trigger dispatcher_send for device update and wait for tasks."""
         for listener in self.manager.device_listeners:
             listener.update_device(device, updated_status_properties, dp_timestamps)
         await self.hass.async_block_till_done()
@@ -121,7 +119,7 @@ async def create_device(hass: HomeAssistant, mock_device_code: str) -> CustomerD
     if device.update_time:
         device.update_time = int(dt_util.as_timestamp(device.update_time))
     device.support_local = details.get("support_local")
-    device.local_strategy = details.get("local_strategy")
+    device.local_strategy = details.get("local_strategy") or {}
     device.mqtt_connected = details.get("mqtt_connected")
 
     device.function = {

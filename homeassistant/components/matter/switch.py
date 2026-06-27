@@ -1,10 +1,8 @@
 """Matter switches."""
 
-from __future__ import annotations
-
 from collections.abc import Callable
 from dataclasses import dataclass
-from typing import Any
+from typing import Any, override
 
 from chip.clusters import Objects as clusters
 from chip.clusters.Objects import ClusterCommand, NullValue
@@ -66,15 +64,18 @@ class MatterSwitch(MatterEntity, SwitchEntity):
             else clusters.OnOff.Commands.Off()
         )
 
+    @override
     async def async_turn_on(self, **kwargs: Any) -> None:
         """Turn switch on."""
         await self.send_device_command(self._get_command_for_value(True))
 
+    @override
     async def async_turn_off(self, **kwargs: Any) -> None:
         """Turn switch off."""
         await self.send_device_command(self._get_command_for_value(False))
 
     @callback
+    @override
     def _update_from_device(self) -> None:
         """Update from device."""
         value = self.get_matter_attribute_value(self._entity_info.primary_attribute)
@@ -90,6 +91,7 @@ class MatterGenericCommandSwitch(MatterSwitch):
 
     _platform_translation_key = "switch"
 
+    @override
     async def async_turn_on(self, **kwargs: Any) -> None:
         """Turn switch on."""
         if self.entity_description.on_command:
@@ -99,6 +101,7 @@ class MatterGenericCommandSwitch(MatterSwitch):
                 self.entity_description.command_timeout,
             )
 
+    @override
     async def async_turn_off(self, **kwargs: Any) -> None:
         """Turn switch off."""
         if self.entity_description.off_command:
@@ -108,6 +111,7 @@ class MatterGenericCommandSwitch(MatterSwitch):
             )
 
     @callback
+    @override
     def _update_from_device(self) -> None:
         """Update from device."""
         value = self.get_matter_attribute_value(self._entity_info.primary_attribute)
@@ -115,6 +119,7 @@ class MatterGenericCommandSwitch(MatterSwitch):
             value = value_convert(value)
         self._attr_is_on = value
 
+    @override
     async def send_device_command(
         self,
         command: ClusterCommand,
@@ -158,15 +163,18 @@ class MatterNumericSwitch(MatterSwitch):
             send_value = value_convert(value)
         await self.write_attribute(value=send_value)
 
+    @override
     async def async_turn_on(self, **kwargs: Any) -> None:
         """Turn switch on."""
         await self._async_set_native_value(True)
 
+    @override
     async def async_turn_off(self, **kwargs: Any) -> None:
         """Turn switch off."""
         await self._async_set_native_value(False)
 
     @callback
+    @override
     def _update_from_device(self) -> None:
         """Update from device."""
         value = self.get_matter_attribute_value(self._entity_info.primary_attribute)
@@ -315,5 +323,15 @@ DISCOVERY_SCHEMAS = [
         ),
         value_contains=clusters.EnergyEvse.Commands.EnableCharging.command_id,
         allow_multi=True,
+    ),
+    MatterDiscoverySchema(
+        platform=Platform.SWITCH,
+        entity_description=MatterNumericSwitchEntityDescription(
+            key="EveChildLock",
+            entity_category=EntityCategory.CONFIG,
+            translation_key="child_lock",
+        ),
+        entity_class=MatterNumericSwitch,
+        required_attributes=(clusters.EveCluster.Attributes.ChildLock,),
     ),
 ]

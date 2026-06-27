@@ -1,8 +1,7 @@
 """Tests for the Honeywell String Lights light platform."""
 
-from __future__ import annotations
+from rf_protocols.codes.honeywell.string_lights import CODES
 
-from homeassistant.components.honeywell_string_lights.light import COMMANDS
 from homeassistant.components.light import (
     DOMAIN as LIGHT_DOMAIN,
     SERVICE_TURN_OFF,
@@ -51,7 +50,7 @@ async def test_turn_on_off_sends_commands(
     assert state.context is context
     assert len(mock_rf_entity.send_command_calls) == 1
     command = mock_rf_entity.send_command_calls[0]
-    assert command.command is COMMANDS.load_command("turn_on")
+    assert command.command is CODES.load_command("turn_on")
     assert command.context is context
 
     await hass.services.async_call(
@@ -68,7 +67,7 @@ async def test_turn_on_off_sends_commands(
     assert state.context is context
     assert len(mock_rf_entity.send_command_calls) == 2
     command = mock_rf_entity.send_command_calls[1]
-    assert command.command is COMMANDS.load_command("turn_off")
+    assert command.command is CODES.load_command("turn_off")
     assert command.context is context
 
 

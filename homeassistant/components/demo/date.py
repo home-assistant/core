@@ -1,8 +1,7 @@
 """Demo platform that offers a fake Date entity."""
 
-from __future__ import annotations
-
 from datetime import date
+from typing import override
 
 from homeassistant.components.date import DateEntity
 from homeassistant.config_entries import ConfigEntry
@@ -57,6 +56,7 @@ class DemoDate(DateEntity):
             identifiers={(DOMAIN, unique_id)}, name=device_name
         )
 
+    @override
     async def async_set_value(self, value: date) -> None:
         """Update the date."""
         self._attr_native_value = value

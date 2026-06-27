@@ -4,8 +4,6 @@ Central point to load entities for the different platforms.
 Make sure expected clients are available for platforms.
 """
 
-from __future__ import annotations
-
 import asyncio
 from collections.abc import Callable, Coroutine, Sequence
 from datetime import timedelta

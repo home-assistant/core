@@ -6,6 +6,7 @@ from typing import Any
 from unittest.mock import MagicMock
 
 import growattServer
+from growattServer import GrowattV1ApiErrorCode
 import pytest
 import requests
 import voluptuous as vol
@@ -17,19 +18,17 @@ from homeassistant.components.growatt_server.const import (
     AUTH_PASSWORD,
     CONF_AUTH_TYPE,
     CONF_PLANT_ID,
-    CONF_REGION,
     DEFAULT_URL,
     DOMAIN,
     ERROR_CANNOT_CONNECT,
     ERROR_INVALID_AUTH,
     LOGIN_INVALID_AUTH_CODE,
     SERVER_URLS_NAMES,
-    V1_API_ERROR_NO_PRIVILEGE,
-    V1_API_ERROR_RATE_LIMITED,
 )
 from homeassistant.const import (
     CONF_NAME,
     CONF_PASSWORD,
+    CONF_REGION,
     CONF_TOKEN,
     CONF_URL,
     CONF_USERNAME,
@@ -141,8 +140,9 @@ async def test_auth_form_display(
         assert field in result["data_schema"].schema
 
 
+@pytest.mark.usefixtures("mock_setup_entry")
 async def test_password_auth_incorrect_login(
-    hass: HomeAssistant, mock_growatt_classic_api, mock_setup_entry
+    hass: HomeAssistant, mock_growatt_classic_api
 ) -> None:
     """Test password authentication with incorrect credentials, then recovery."""
     # Simulate incorrect login
@@ -183,8 +183,9 @@ async def test_password_auth_incorrect_login(
     assert result["data"][CONF_AUTH_TYPE] == AUTH_PASSWORD
 
 
+@pytest.mark.usefixtures("mock_setup_entry")
 async def test_password_auth_account_locked(
-    hass: HomeAssistant, mock_growatt_classic_api: MagicMock, mock_setup_entry: None
+    hass: HomeAssistant, mock_growatt_classic_api: MagicMock
 ) -> None:
     """Test password authentication when account is locked out."""
     mock_growatt_classic_api.login.return_value = {
@@ -265,8 +266,9 @@ async def test_token_auth_no_plants(hass: HomeAssistant, mock_growatt_v1_api) ->
     assert result["reason"] == ABORT_NO_PLANTS
 
 
+@pytest.mark.usefixtures("mock_setup_entry")
 async def test_password_auth_single_plant(
-    hass: HomeAssistant, mock_growatt_classic_api, mock_setup_entry
+    hass: HomeAssistant, mock_growatt_classic_api
 ) -> None:
     """Test password authentication with single plant."""
     # Repatch plant_list with full plant data for config flow
@@ -294,8 +296,9 @@ async def test_password_auth_single_plant(
     assert result["result"].unique_id == "123456"
 
 
+@pytest.mark.usefixtures("mock_setup_entry")
 async def test_password_auth_multiple_plants(
-    hass: HomeAssistant, mock_growatt_classic_api, mock_setup_entry
+    hass: HomeAssistant, mock_growatt_classic_api
 ) -> None:
     """Test password authentication with multiple plants."""
     # Repatch plant_list with multiple plants
@@ -351,16 +354,13 @@ async def test_password_auth_multiple_plants(
 @pytest.mark.parametrize(
     ("error_code", "expected_error"),
     [
-        (V1_API_ERROR_NO_PRIVILEGE, ERROR_INVALID_AUTH),
-        (V1_API_ERROR_RATE_LIMITED, ERROR_CANNOT_CONNECT),
+        (GrowattV1ApiErrorCode.NO_PRIVILEGE, ERROR_INVALID_AUTH),
+        (GrowattV1ApiErrorCode.RATE_LIMITED, ERROR_CANNOT_CONNECT),
     ],
 )
+@pytest.mark.usefixtures("mock_setup_entry")
 async def test_token_auth_api_error(
-    hass: HomeAssistant,
-    mock_growatt_v1_api,
-    mock_setup_entry,
-    error_code: int,
-    expected_error: str,
+    hass: HomeAssistant, mock_growatt_v1_api, error_code: int, expected_error: str
 ) -> None:
     """Test token authentication with V1 API error maps to correct error type."""
     result = await hass.config_entries.flow.async_init(
@@ -371,8 +371,9 @@ async def test_token_auth_api_error(
         result["flow_id"], {"next_step_id": "token_auth"}
     )
 
-    error = growattServer.GrowattV1ApiError("API error")
-    error.error_code = error_code
+    error = growattServer.GrowattV1ApiError(
+        message="API error", error_code=error_code, error_msg="API error"
+    )
     mock_growatt_v1_api.plant_list.side_effect = error
 
     result = await hass.config_entries.flow.async_configure(
@@ -397,8 +398,9 @@ async def test_token_auth_api_error(
     assert result["data"][CONF_AUTH_TYPE] == AUTH_API_TOKEN
 
 
+@pytest.mark.usefixtures("mock_setup_entry")
 async def test_token_auth_connection_error(
-    hass: HomeAssistant, mock_growatt_v1_api, mock_setup_entry
+    hass: HomeAssistant, mock_growatt_v1_api
 ) -> None:
     """Test token authentication with network error, then recovery."""
 
@@ -437,8 +439,9 @@ async def test_token_auth_connection_error(
     assert result["data"][CONF_AUTH_TYPE] == AUTH_API_TOKEN
 
 
+@pytest.mark.usefixtures("mock_setup_entry")
 async def test_token_auth_invalid_response(
-    hass: HomeAssistant, mock_growatt_v1_api, mock_setup_entry
+    hass: HomeAssistant, mock_growatt_v1_api
 ) -> None:
     """Test token authentication with invalid response format, then recovery."""
 
@@ -474,8 +477,9 @@ async def test_token_auth_invalid_response(
     assert result["data"][CONF_AUTH_TYPE] == AUTH_API_TOKEN
 
 
+@pytest.mark.usefixtures("mock_setup_entry")
 async def test_token_auth_single_plant(
-    hass: HomeAssistant, mock_growatt_v1_api, mock_setup_entry
+    hass: HomeAssistant, mock_growatt_v1_api
 ) -> None:
     """Test token authentication with single plant."""
     # Repatch plant_list with full plant data for config flow
@@ -502,8 +506,9 @@ async def test_token_auth_single_plant(
     assert result["result"].unique_id == "123456"
 
 
+@pytest.mark.usefixtures("mock_setup_entry")
 async def test_token_auth_multiple_plants(
-    hass: HomeAssistant, mock_growatt_v1_api, mock_setup_entry
+    hass: HomeAssistant, mock_growatt_v1_api
 ) -> None:
     """Test token authentication with multiple plants."""
     # Repatch plant_list with multiple plants
@@ -597,8 +602,9 @@ async def test_token_auth_existing_plant_configured(
     assert result["reason"] == "already_configured"
 
 
+@pytest.mark.usefixtures("mock_setup_entry")
 async def test_password_auth_connection_error(
-    hass: HomeAssistant, mock_growatt_classic_api, mock_setup_entry
+    hass: HomeAssistant, mock_growatt_classic_api
 ) -> None:
     """Test password authentication with connection error, then recovery."""
     # Simulate connection error on first attempt
@@ -639,8 +645,9 @@ async def test_password_auth_connection_error(
     assert result["data"][CONF_AUTH_TYPE] == AUTH_PASSWORD
 
 
+@pytest.mark.usefixtures("mock_setup_entry")
 async def test_password_auth_invalid_response(
-    hass: HomeAssistant, mock_growatt_classic_api, mock_setup_entry
+    hass: HomeAssistant, mock_growatt_classic_api
 ) -> None:
     """Test password authentication with invalid response format, then recovery."""
     result = await hass.config_entries.flow.async_init(
@@ -679,8 +686,9 @@ async def test_password_auth_invalid_response(
     assert result["data"][CONF_AUTH_TYPE] == AUTH_PASSWORD
 
 
+@pytest.mark.usefixtures("mock_setup_entry")
 async def test_password_auth_plant_list_error(
-    hass: HomeAssistant, mock_growatt_classic_api, mock_setup_entry
+    hass: HomeAssistant, mock_growatt_classic_api
 ) -> None:
     """Test password authentication with plant list connection error."""
     result = await hass.config_entries.flow.async_init(
@@ -706,8 +714,9 @@ async def test_password_auth_plant_list_error(
     assert result["reason"] == ERROR_CANNOT_CONNECT
 
 
+@pytest.mark.usefixtures("mock_setup_entry")
 async def test_password_auth_plant_list_invalid_format(
-    hass: HomeAssistant, mock_growatt_classic_api, mock_setup_entry
+    hass: HomeAssistant, mock_growatt_classic_api
 ) -> None:
     """Test password authentication with invalid plant list format."""
     result = await hass.config_entries.flow.async_init(
@@ -760,7 +769,7 @@ async def test_reauth_password_success(
     user_input: dict[str, str],
     expected_region: str,
 ) -> None:
-    """Test successful reauthentication with password auth for default and non-default regions."""
+    """Test successful reauthentication with password auth."""
     entry = MockConfigEntry(
         domain=DOMAIN,
         data={
@@ -882,9 +891,11 @@ async def test_reauth_token_success(
 
 
 def _make_no_privilege_error() -> growattServer.GrowattV1ApiError:
-    error = growattServer.GrowattV1ApiError("No privilege access")
-    error.error_code = V1_API_ERROR_NO_PRIVILEGE
-    return error
+    return growattServer.GrowattV1ApiError(
+        message="No privilege access",
+        error_code=growattServer.GrowattV1ApiErrorCode.NO_PRIVILEGE,
+        error_msg="No privilege access",
+    )
 
 
 @pytest.mark.parametrize(
@@ -934,7 +945,7 @@ async def test_reauth_token_non_auth_api_error(
     mock_growatt_v1_api: MagicMock,
     mock_config_entry: MockConfigEntry,
 ) -> None:
-    """Test reauth token with non-auth V1 API error (e.g. rate limit) shows cannot_connect."""
+    """Test reauth token with non-auth V1 API error."""
     mock_config_entry.add_to_hass(hass)
 
     result = await mock_config_entry.start_reauth_flow(hass)
@@ -942,8 +953,11 @@ async def test_reauth_token_non_auth_api_error(
     assert result["type"] is FlowResultType.FORM
     assert result["step_id"] == "reauth_confirm"
 
-    error = growattServer.GrowattV1ApiError("Rate limit exceeded")
-    error.error_code = V1_API_ERROR_RATE_LIMITED
+    error = growattServer.GrowattV1ApiError(
+        message="Rate limit exceeded",
+        error_code=growattServer.GrowattV1ApiErrorCode.RATE_LIMITED,
+        error_msg="Rate limit exceeded",
+    )
     mock_growatt_v1_api.plant_list.side_effect = error
     result = await hass.config_entries.flow.async_configure(
         result["flow_id"], FIXTURE_USER_INPUT_TOKEN
@@ -1063,7 +1077,7 @@ async def test_reauth_token_exception(
     mock_growatt_v1_api: MagicMock,
     mock_config_entry: MockConfigEntry,
 ) -> None:
-    """Test reauth token flow with unexpected exception from plant_list, then recovery."""
+    """Test reauth token flow with unexpected exception, then recovery."""
     mock_config_entry.add_to_hass(hass)
     result = await mock_config_entry.start_reauth_flow(hass)
 
@@ -1144,7 +1158,7 @@ async def test_reconfigure_password_success(
     user_input: dict[str, str],
     expected_region: str,
 ) -> None:
-    """Test successful reconfiguration with password auth for default and non-default regions."""
+    """Test successful reconfiguration with password auth."""
     entry = MockConfigEntry(
         domain=DOMAIN,
         data={
@@ -1308,7 +1322,7 @@ async def test_reconfigure_token_error_then_recovery(
 
 
 async def test_reconfigure_unknown_auth_type(hass: HomeAssistant) -> None:
-    """Test reconfigure aborts immediately when the config entry has an unknown auth type."""
+    """Test reconfigure aborts with unknown auth type."""
     entry = MockConfigEntry(
         domain=DOMAIN,
         data={

@@ -1,11 +1,9 @@
 """Support for WLED switches."""
 
-from __future__ import annotations
-
 from collections.abc import Awaitable, Callable
 from dataclasses import dataclass
 from functools import partial
-from typing import Any
+from typing import Any, override
 
 from wled import WLED
 
@@ -90,6 +88,7 @@ class WLEDNightlightSwitch(WLEDEntity, SwitchEntity):
         self._attr_unique_id = f"{coordinator.data.info.mac_address}_nightlight"
 
     @property
+    @override
     def extra_state_attributes(self) -> dict[str, Any] | None:
         """Return the state attributes of the entity."""
         state = self.coordinator.data.state
@@ -99,16 +98,19 @@ class WLEDNightlightSwitch(WLEDEntity, SwitchEntity):
         }
 
     @property
+    @override
     def is_on(self) -> bool:
         """Return the state of the switch."""
         return bool(self.coordinator.data.state.nightlight.on)
 
     @wled_exception_handler
+    @override
     async def async_turn_off(self, **kwargs: Any) -> None:
         """Turn off the WLED nightlight switch."""
         await self.coordinator.wled.nightlight(on=False)
 
     @wled_exception_handler
+    @override
     async def async_turn_on(self, **kwargs: Any) -> None:
         """Turn on the WLED nightlight switch."""
         await self.coordinator.wled.nightlight(on=True)
@@ -126,21 +128,25 @@ class WLEDSyncSendSwitch(WLEDEntity, SwitchEntity):
         self._attr_unique_id = f"{coordinator.data.info.mac_address}_sync_send"
 
     @property
+    @override
     def extra_state_attributes(self) -> dict[str, Any] | None:
         """Return the state attributes of the entity."""
         return {ATTR_UDP_PORT: self.coordinator.data.info.udp_port}
 
     @property
+    @override
     def is_on(self) -> bool:
         """Return the state of the switch."""
         return bool(self.coordinator.data.state.sync.send)
 
     @wled_exception_handler
+    @override
     async def async_turn_off(self, **kwargs: Any) -> None:
         """Turn off the WLED sync send switch."""
         await self.coordinator.wled.sync(send=False)
 
     @wled_exception_handler
+    @override
     async def async_turn_on(self, **kwargs: Any) -> None:
         """Turn on the WLED sync send switch."""
         await self.coordinator.wled.sync(send=True)
@@ -158,21 +164,25 @@ class WLEDSyncReceiveSwitch(WLEDEntity, SwitchEntity):
         self._attr_unique_id = f"{coordinator.data.info.mac_address}_sync_receive"
 
     @property
+    @override
     def extra_state_attributes(self) -> dict[str, Any] | None:
         """Return the state attributes of the entity."""
         return {ATTR_UDP_PORT: self.coordinator.data.info.udp_port}
 
     @property
+    @override
     def is_on(self) -> bool:
         """Return the state of the switch."""
         return bool(self.coordinator.data.state.sync.receive)
 
     @wled_exception_handler
+    @override
     async def async_turn_off(self, **kwargs: Any) -> None:
         """Turn off the WLED sync receive switch."""
         await self.coordinator.wled.sync(receive=False)
 
     @wled_exception_handler
+    @override
     async def async_turn_on(self, **kwargs: Any) -> None:
         """Turn on the WLED sync receive switch."""
         await self.coordinator.wled.sync(receive=True)
@@ -209,6 +219,7 @@ class WLEDSegmentSwitch(WLEDEntity, SwitchEntity):
         )
 
     @property
+    @override
     def available(self) -> bool:
         """Return True if entity is available."""
         return (
@@ -216,6 +227,7 @@ class WLEDSegmentSwitch(WLEDEntity, SwitchEntity):
         )
 
     @property
+    @override
     def is_on(self) -> bool:
         """Return the state of the switch."""
         segment = self.coordinator.data.state.segments[self._segment]
@@ -230,11 +242,13 @@ class WLEDSegmentSwitch(WLEDEntity, SwitchEntity):
         )
 
     @wled_exception_handler
+    @override
     async def async_turn_on(self, **kwargs: Any) -> None:
         """Turn on the WLED segment switch."""
         await self._async_set_state(True)
 
     @wled_exception_handler
+    @override
     async def async_turn_off(self, **kwargs: Any) -> None:
         """Turn off the WLED segment switch."""
         await self._async_set_state(False)
@@ -247,16 +261,10 @@ def async_update_segments(
     async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Update segments."""
-    segment_ids = {
-        segment.segment_id
-        for segment in coordinator.data.state.segments.values()
-        if segment.segment_id is not None
-    }
-
     new_entities: list[WLEDSegmentSwitch] = []
 
     # Process new segments, add them to Home Assistant
-    for segment_id in segment_ids - current_ids:
+    for segment_id in coordinator.segment_ids - current_ids:
         current_ids.add(segment_id)
         new_entities.extend(
             WLEDSegmentSwitch(

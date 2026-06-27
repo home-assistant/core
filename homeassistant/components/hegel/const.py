@@ -3,7 +3,6 @@
 DOMAIN = "hegel"
 DEFAULT_PORT = 50001
 
-CONF_MODEL = "model"
 CONF_MAX_VOLUME = "max_volume"  # 1.0 means amp's internal max
 
 HEARTBEAT_TIMEOUT_MINUTES = 3

@@ -1,14 +1,18 @@
 """Support for Tuya buttons."""
 
-from __future__ import annotations
+from typing import override
 
 from tuya_device_handlers.definition.button import (
-    TuyaButtonDefinition,
+    ButtonDefinition,
     get_default_definition,
 )
 from tuya_sharing import CustomerDevice, Manager
 
-from homeassistant.components.button import ButtonEntity, ButtonEntityDescription
+from homeassistant.components.button import (
+    ButtonDeviceClass,
+    ButtonEntity,
+    ButtonEntityDescription,
+)
 from homeassistant.const import EntityCategory
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
@@ -65,6 +69,13 @@ BUTTONS: dict[DeviceCategory, tuple[ButtonEntityDescription, ...]] = {
             entity_category=EntityCategory.CONFIG,
         ),
     ),
+    DeviceCategory.SP: (
+        ButtonEntityDescription(
+            key=DPCode.DEVICE_RESTART,
+            device_class=ButtonDeviceClass.RESTART,
+            entity_category=EntityCategory.CONFIG,
+        ),
+    ),
 }
 
 
@@ -106,12 +117,13 @@ class TuyaButtonEntity(TuyaEntity, ButtonEntity):
         device: CustomerDevice,
         device_manager: Manager,
         description: ButtonEntityDescription,
-        definition: TuyaButtonDefinition,
+        definition: ButtonDefinition,
     ) -> None:
         """Init Tuya button."""
         super().__init__(device, device_manager, description)
         self._dpcode_wrapper = definition.button_wrapper
 
+    @override
     async def async_press(self) -> None:
         """Press the button."""
         await self._async_send_wrapper_updates(self._dpcode_wrapper, True)

@@ -1,7 +1,5 @@
 """Constants for the Shelly integration."""
 
-from __future__ import annotations
-
 from enum import StrEnum
 from logging import Logger, getLogger
 import re
@@ -239,6 +237,7 @@ class BLEScannerMode(StrEnum):
     DISABLED = "disabled"
     ACTIVE = "active"
     PASSIVE = "passive"
+    AUTO = "auto"
 
 
 BLE_SCANNER_MIN_FIRMWARE = "1.5.1"
@@ -345,3 +344,5 @@ TRV_CHANNEL = 0
 
 ATTR_KEY = "key"
 ATTR_VALUE = "value"
+
+DRIVER_MISSING_ERROR = "Sensor driver missing from firmware"

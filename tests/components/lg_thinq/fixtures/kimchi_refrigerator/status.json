@@ -1,0 +1,12 @@
+{
+  "temperature": [
+    {
+      "locationName": "TOP",
+      "targetTemperature": 6
+    },
+    {
+      "locationName": "MIDDLE",
+      "targetTemperature": "KIMCHI"
+    }
+  ]
+}

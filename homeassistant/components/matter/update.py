@@ -1,10 +1,8 @@
 """Matter update."""
 
-from __future__ import annotations
-
 from dataclasses import dataclass
 from datetime import datetime, timedelta
-from typing import Any
+from typing import Any, override
 
 from chip.clusters import Objects as clusters
 from matter_server.common.errors import UpdateCheckError, UpdateError
@@ -40,6 +38,7 @@ class MatterUpdateExtraStoredData(ExtraStoredData):
 
     software_update: MatterSoftwareVersion | None = None
 
+    @override
     def as_dict(self) -> dict[str, Any]:
         """Return a dict representation of the extra data."""
         return {
@@ -89,6 +88,7 @@ class MatterUpdate(MatterEntity, UpdateEntity):
     )
 
     @callback
+    @override
     def _update_from_device(self) -> None:
         """Update from device."""
 
@@ -161,6 +161,7 @@ class MatterUpdate(MatterEntity, UpdateEntity):
         except UpdateCheckError as err:
             raise HomeAssistantError(f"Error finding applicable update: {err}") from err
 
+    @override
     async def async_release_notes(self) -> str | None:
         """Return full release notes.
 
@@ -175,21 +176,29 @@ class MatterUpdate(MatterEntity, UpdateEntity):
         release_notes = ""
 
         # insert extra heavy warning case the update is not from the main net
-        if self._software_update.update_source != UpdateSource.MAIN_NET_DCL:
+        if self._software_update.update_source is not UpdateSource.MAIN_NET_DCL:
             release_notes += (
                 "\n\n<ha-alert alert-type='warning'>"
-                f"Update provided by {self._software_update.update_source.value}. "
-                "Installing this update is at your own risk and you may run into unexpected "
-                "problems such as the need to re-add and factory reset your device.</ha-alert>\n\n"
+                "Update provided by "
+                f"{self._software_update.update_source.value}. "
+                "Installing this update is at your own risk "
+                "and you may run into unexpected "
+                "problems such as the need to re-add and "
+                "factory reset your device.</ha-alert>\n\n"
             )
         return release_notes + (
-            "\n\n<ha-alert alert-type='info'>The update process can take a while, "
-            "especially for battery powered devices. Please be patient and wait until the update "
-            "process is fully completed. Do not remove power from the device while it's updating. "
-            "The device may restart during the update process and be unavailable for several minutes."
+            "\n\n<ha-alert alert-type='info'>"
+            "The update process can take a while, "
+            "especially for battery powered devices. "
+            "Please be patient and wait until the update "
+            "process is fully completed. Do not remove power "
+            "from the device while it's updating. "
+            "The device may restart during the update process "
+            "and be unavailable for several minutes."
             "</ha-alert>\n\n"
         )
 
+    @override
     async def async_added_to_hass(self) -> None:
         """Call when the entity is added to hass."""
         await super().async_added_to_hass()
@@ -208,11 +217,13 @@ class MatterUpdate(MatterEntity, UpdateEntity):
             await self.async_update()
 
     @property
+    @override
     def extra_restore_state_data(self) -> MatterUpdateExtraStoredData:
         """Return Matter specific state data to be restored."""
         return MatterUpdateExtraStoredData(self._software_update)
 
     @property
+    @override
     def entity_picture(self) -> str | None:
         """Return the entity picture to use in the frontend.
 
@@ -221,6 +232,7 @@ class MatterUpdate(MatterEntity, UpdateEntity):
         """
         return None
 
+    @override
     async def async_install(
         self, version: str | None, backup: bool, **kwargs: Any
     ) -> None:
@@ -271,6 +283,7 @@ class MatterUpdate(MatterEntity, UpdateEntity):
         """Request update."""
         await self.async_update()
 
+    @override
     async def async_will_remove_from_hass(self) -> None:
         """Entity removed."""
         await super().async_will_remove_from_hass()

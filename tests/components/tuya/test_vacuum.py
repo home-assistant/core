@@ -1,7 +1,5 @@
 """Test Tuya vacuum platform."""
 
-from __future__ import annotations
-
 from typing import Any
 from unittest.mock import patch
 
@@ -35,6 +33,7 @@ def platform_autouse():
         yield
 
 
+@pytest.mark.usefixtures("no_quirk")
 async def test_platform_setup_and_discovery(
     hass: HomeAssistant,
     mock_manager: Manager,
@@ -100,7 +99,7 @@ async def test_platform_setup_and_discovery(
             "vacuum.v20",
             SERVICE_PAUSE,
             {},
-            {"code": "power_go", "value": False},
+            {"code": "pause", "value": True},
         ),
     ],
 )

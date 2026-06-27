@@ -4,9 +4,8 @@ Sensor.Community was previously called Luftdaten, hence the domain differs from
 the integration name.
 """
 
-from __future__ import annotations
-
 import logging
+from typing import override
 
 from luftdaten import Luftdaten
 from luftdaten.exceptions import LuftdatenConnectionError, LuftdatenError
@@ -43,6 +42,7 @@ class LuftdatenDataUpdateCoordinator(DataUpdateCoordinator[dict[str, float | int
         )
         self._sensor_community = sensor_community
 
+    @override
     async def _async_update_data(self) -> dict[str, float | int]:
         """Update sensor/binary sensor data."""
         try:

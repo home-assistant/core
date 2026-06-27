@@ -1,10 +1,8 @@
 """Calendar platform for a Epic Games Store."""
 
-from __future__ import annotations
-
 from collections import namedtuple
 from datetime import datetime
-from typing import Any
+from typing import Any, override
 
 from homeassistant.components.calendar import CalendarEntity, CalendarEvent
 from homeassistant.core import HomeAssistant
@@ -57,12 +55,14 @@ class EGSCalendar(CoordinatorEntity[EGSCalendarUpdateCoordinator], CalendarEntit
         )
 
     @property
+    @override
     def event(self) -> CalendarEvent | None:
         """Return the next upcoming event."""
         if event := self.coordinator.data[self._cal_type]:
             return _get_calendar_event(event[0])
         return None
 
+    @override
     async def async_get_events(
         self, hass: HomeAssistant, start_date: datetime, end_date: datetime
     ) -> list[CalendarEvent]:

@@ -4,7 +4,7 @@ import asyncio
 from collections.abc import Awaitable, Callable
 from dataclasses import dataclass
 import logging
-from typing import Any
+from typing import Any, override
 
 from roborock import B01Props, CleanTypeMapping
 from roborock.data import (
@@ -32,8 +32,9 @@ from roborock.roborock_typing import RoborockCommand
 
 from homeassistant.components.select import SelectEntity, SelectEntityDescription
 from homeassistant.const import EntityCategory
-from homeassistant.core import HomeAssistant
+from homeassistant.core import HomeAssistant, callback
 from homeassistant.exceptions import HomeAssistantError, ServiceValidationError
+from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
 from .const import DOMAIN, MAP_SLEEP
@@ -41,8 +42,10 @@ from .coordinator import (
     RoborockB01Q7UpdateCoordinator,
     RoborockB01Q10UpdateCoordinator,
     RoborockConfigEntry,
+    RoborockCoordinatorType,
     RoborockDataUpdateCoordinator,
     RoborockDataUpdateCoordinatorA01,
+    RoborockWashingMachineUpdateCoordinator,
 )
 from .entity import (
     RoborockCoordinatedEntityA01,
@@ -67,7 +70,7 @@ class RoborockSelectDescription(SelectEntityDescription):
     """Function to get the current value of the select entity."""
 
     options_lambda: Callable[[PropertiesApi], list[str] | None]
-    """Function to get all options of the select entity or returns None if not supported."""
+    """Get all options or return None if not supported."""
 
     parameter_lambda: Callable[[str, PropertiesApi], list[int]]
     """Function to get the parameters for the api command."""
@@ -87,7 +90,7 @@ class RoborockB01SelectDescription(SelectEntityDescription):
     """Function to get the current value of the select entity."""
 
     options_lambda: Callable[[Q7PropertiesApi], list[str] | None]
-    """Function to get all options of the select entity or returns None if not supported."""
+    """Get all options or return None if not supported."""
 
 
 @dataclass(frozen=True, kw_only=True)
@@ -250,39 +253,58 @@ async def async_setup_entry(
     async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up Roborock select platform."""
+    coordinators = config_entry.runtime_data
 
-    async_add_entities(
-        RoborockSelectEntity(coordinator, description, options)
-        for coordinator in config_entry.runtime_data.v1
-        for description in SELECT_DESCRIPTIONS
-        if (
-            (options := description.options_lambda(coordinator.properties_api))
-            is not None
+    @callback
+    def async_add_coordinator_entities(
+        coordinator: RoborockCoordinatorType,
+    ) -> None:
+        """Add entities for a specific coordinator."""
+        entities: list[SelectEntity] = []
+        if isinstance(coordinator, RoborockDataUpdateCoordinator):
+            entities.extend(
+                RoborockSelectEntity(coordinator, description, options)
+                for description in SELECT_DESCRIPTIONS
+                if (options := description.options_lambda(coordinator.properties_api))
+                is not None
+            )
+            if (
+                coordinator.properties_api.home is not None
+                and coordinator.properties_api.maps is not None
+            ):
+                entities.append(
+                    RoborockCurrentMapSelectEntity(
+                        f"selected_map_{coordinator.duid_slug}",
+                        coordinator,
+                        coordinator.properties_api.home,
+                        coordinator.properties_api.maps,
+                    )
+                )
+        elif isinstance(coordinator, RoborockB01Q7UpdateCoordinator):
+            entities.extend(
+                RoborockB01SelectEntity(coordinator, description, options)
+                for description in B01_SELECT_DESCRIPTIONS
+                if (options := description.options_lambda(coordinator.api)) is not None
+            )
+        elif isinstance(coordinator, RoborockWashingMachineUpdateCoordinator):
+            entities.extend(
+                RoborockSelectEntityA01(coordinator, description)
+                for description in A01_SELECT_DESCRIPTIONS
+                if description.data_protocol in coordinator.request_protocols
+            )
+        elif isinstance(coordinator, RoborockB01Q10UpdateCoordinator):
+            entities.append(RoborockQ10CleanModeSelectEntity(coordinator))
+        async_add_entities(entities)
+
+    for coordinator in coordinators.values():
+        async_add_coordinator_entities(coordinator)
+
+    config_entry.async_on_unload(
+        async_dispatcher_connect(
+            hass,
+            f"roborock_coordinator_added_{config_entry.entry_id}",
+            async_add_coordinator_entities,
         )
-    )
-    async_add_entities(
-        RoborockCurrentMapSelectEntity(
-            f"selected_map_{coordinator.duid_slug}", coordinator, home_trait, map_trait
-        )
-        for coordinator in config_entry.runtime_data.v1
-        if (home_trait := coordinator.properties_api.home) is not None
-        if (map_trait := coordinator.properties_api.maps) is not None
-    )
-    async_add_entities(
-        RoborockB01SelectEntity(coordinator, description, options)
-        for coordinator in config_entry.runtime_data.b01_q7
-        for description in B01_SELECT_DESCRIPTIONS
-        if (options := description.options_lambda(coordinator.api)) is not None
-    )
-    async_add_entities(
-        RoborockSelectEntityA01(coordinator, description)
-        for coordinator in config_entry.runtime_data.a01
-        for description in A01_SELECT_DESCRIPTIONS
-        if description.data_protocol in coordinator.request_protocols
-    )
-    async_add_entities(
-        RoborockQ10CleanModeSelectEntity(coordinator)
-        for coordinator in config_entry.runtime_data.b01_q10
     )
 
 
@@ -305,6 +327,7 @@ class RoborockB01SelectEntity(RoborockCoordinatedEntityB01Q7, SelectEntity):
         )
         self._attr_options = options
 
+    @override
     async def async_select_option(self, option: str) -> None:
         """Set the option."""
         try:
@@ -320,13 +343,14 @@ class RoborockB01SelectEntity(RoborockCoordinatedEntityB01Q7, SelectEntity):
         await self.coordinator.async_refresh()
 
     @property
+    @override
     def current_option(self) -> str | None:
         """Return the current option."""
         return self.entity_description.value_fn(self.coordinator.data)
 
 
 class RoborockSelectEntity(RoborockCoordinatedEntityV1, SelectEntity):
-    """A class to let you set options on a Roborock vacuum where the potential options are fixed."""
+    """A class to set options on a Roborock vacuum with fixed options."""
 
     entity_description: RoborockSelectDescription
 
@@ -345,6 +369,7 @@ class RoborockSelectEntity(RoborockCoordinatedEntityV1, SelectEntity):
         )
         self._attr_options = options
 
+    @override
     async def async_select_option(self, option: str) -> None:
         """Set the option."""
         await self.send(
@@ -355,6 +380,7 @@ class RoborockSelectEntity(RoborockCoordinatedEntityV1, SelectEntity):
         )
 
     @property
+    @override
     def current_option(self) -> str | None:
         """Get the current status of the select entity from device props."""
         return self.entity_description.value_fn(self.coordinator.properties_api)
@@ -386,6 +412,7 @@ class RoborockCurrentMapSelectEntity(RoborockCoordinatedEntityV1, SelectEntity):
             for map_id, map_ in (self._home_trait.home_map_info or {}).items()
         }
 
+    @override
     async def async_select_option(self, option: str) -> None:
         """Set the option."""
         for map_id, map_name in self._available_map_names.items():
@@ -413,11 +440,13 @@ class RoborockCurrentMapSelectEntity(RoborockCoordinatedEntityV1, SelectEntity):
                 break
 
     @property
+    @override
     def options(self) -> list[str]:
         """Gets all of the names of rooms that we are currently aware of."""
         return list(self._available_map_names.values())
 
     @property
+    @override
     def current_option(self) -> str | None:
         """Get the current status of the select entity from device_status."""
         if current_map_info := self._home_trait.current_map_data:
@@ -443,6 +472,7 @@ class RoborockSelectEntityA01(RoborockCoordinatedEntityA01, SelectEntity):
         )
         self._attr_options = list(entity_description.enum_class.keys())
 
+    @override
     async def async_select_option(self, option: str) -> None:
         """Set the option."""
         # Get the protocol value for the selected option
@@ -470,6 +500,7 @@ class RoborockSelectEntityA01(RoborockCoordinatedEntityA01, SelectEntity):
         await self.coordinator.async_request_refresh()
 
     @property
+    @override
     def current_option(self) -> str | None:
         """Get the current status of the select entity from coordinator data."""
         if self.entity_description.data_protocol not in self.coordinator.data:
@@ -503,6 +534,7 @@ class RoborockQ10CleanModeSelectEntity(RoborockCoordinatedEntityB01Q10, SelectEn
             coordinator,
         )
 
+    @override
     async def async_added_to_hass(self) -> None:
         """Register trait listener for push-based status updates."""
         await super().async_added_to_hass()
@@ -511,11 +543,13 @@ class RoborockQ10CleanModeSelectEntity(RoborockCoordinatedEntityB01Q10, SelectEn
         )
 
     @property
+    @override
     def options(self) -> list[str]:
         """Return available cleaning modes."""
         return [mode.value for mode in YXCleanType if mode != YXCleanType.UNKNOWN]
 
     @property
+    @override
     def current_option(self) -> str | None:
         """Get the current cleaning mode."""
         clean_mode = self.coordinator.api.status.clean_mode
@@ -523,6 +557,7 @@ class RoborockQ10CleanModeSelectEntity(RoborockCoordinatedEntityB01Q10, SelectEn
             return None
         return clean_mode.value
 
+    @override
     async def async_select_option(self, option: str) -> None:
         """Set the cleaning mode."""
         try:

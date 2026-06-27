@@ -1,7 +1,5 @@
 """The Nibe Heat Pump integration."""
 
-from __future__ import annotations
-
 from nibe.connection import Connection
 from nibe.connection.modbus import Modbus
 from nibe.connection.nibegw import NibeGW, ProductInfo

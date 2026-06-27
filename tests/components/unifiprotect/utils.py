@@ -1,23 +1,35 @@
 """Test helpers for UniFi Protect."""
 
-from __future__ import annotations
-
 from collections.abc import Callable, Sequence
 from dataclasses import dataclass
 from datetime import timedelta
 from unittest.mock import Mock
 
-from uiprotect import ProtectApiClient
+from uiprotect import EventChange, ProtectApiClient, ProtectEvent
 from uiprotect.data import (
     Bootstrap,
     Camera,
+    DeviceState,
     Event,
     EventType,
+    Light,
     ModelType,
+    MountType,
     ProtectAdoptableDeviceModel,
+    ProtectModelWithId,
+    PublicBootstrap,
+    Sensor,
     WSSubscriptionMessage,
 )
 from uiprotect.data.bootstrap import ProtectDeviceRef
+from uiprotect.data.public_devices import (
+    PublicLight,
+    PublicLightDeviceSettings,
+    PublicSensor,
+    PublicSensorMotionSettingsRead,
+    PublicWirelessBatteryStatus,
+    PublicWirelessConnectionState,
+)
 from uiprotect.test_util.anonymize import random_hex
 from uiprotect.websocket import WebsocketState
 
@@ -39,12 +51,20 @@ class MockUFPFixture:
     ws_subscription: Callable[[WSSubscriptionMessage], None] | None = None
     ws_state_subscription: Callable[[WebsocketState], None] | None = None
     devices_ws_subscription: Callable[[WSSubscriptionMessage], None] | None = None
+    events_subscription: Callable[[ProtectEvent, EventChange], None] | None = None
+    devices_ws_state_subscription: Callable[[WebsocketState], None] | None = None
 
     def ws_msg(self, msg: WSSubscriptionMessage) -> None:
         """Emit WS message for testing."""
 
         if self.ws_subscription is not None:
             self.ws_subscription(msg)
+
+    def events_msg(self, event: ProtectEvent, change: EventChange) -> None:
+        """Emit a public-API events websocket message for testing."""
+
+        if self.events_subscription is not None:
+            self.events_subscription(event, change)
 
 
 def reset_objects(bootstrap: Bootstrap):
@@ -55,7 +75,6 @@ def reset_objects(bootstrap: Bootstrap):
     bootstrap.sensors = {}
     bootstrap.viewers = {}
     bootstrap.events = {}
-    bootstrap.doorlocks = {}
     bootstrap.chimes = {}
 
 
@@ -128,7 +147,7 @@ async def ids_from_device_description(
     device: ProtectAdoptableDeviceModel,
     description: EntityDescription,
 ) -> tuple[str, str]:
-    """Return expected unique_id and entity_id using real Home Assistant translation logic."""
+    """Return expected unique_id and entity_id using HA translation logic."""
 
     entity_name = normalize_name(device.display_name)
 
@@ -204,6 +223,145 @@ async def init_entry(
 
     await hass.config_entries.async_setup(ufp.entry.entry_id)
     await hass.async_block_till_done()
+
+
+def make_public_sensor(
+    sensor: Sensor,
+    *,
+    percentage: int | None = None,
+    is_low: bool | None = None,
+    state: DeviceState | None = None,
+    is_motion_detected: bool | None = None,
+    motion_enabled: bool | None = None,
+    mount_type: MountType | None = None,
+) -> Mock:
+    """Build a public-API sensor mirroring a private sensor's migrated fields.
+
+    Real ``wireless_connection_state`` / ``motion_settings`` models back the
+    migrated value paths so a wrong ``ufp_public_value`` path fails the test;
+    identifiers come from the (synthetic) private sensor fixture, never from real
+    capture data. Each ``*`` override lets a test diverge from the private value.
+    """
+    public = Mock(spec=PublicSensor)
+    public.id = sensor.id
+    public.mac = sensor.mac
+    public.model = ModelType.SENSOR
+    public.state = DeviceState[sensor.state.name] if state is None else state
+    public.mount_type = sensor.mount_type if mount_type is None else mount_type
+    public.is_motion_detected = (
+        sensor.is_motion_detected if is_motion_detected is None else is_motion_detected
+    )
+    public.motion_settings = PublicSensorMotionSettingsRead(
+        is_enabled=(
+            sensor.motion_settings.is_enabled
+            if motion_enabled is None
+            else motion_enabled
+        )
+    )
+    public.wireless_connection_state = PublicWirelessConnectionState(
+        battery_status=PublicWirelessBatteryStatus(
+            percentage=(
+                sensor.battery_status.percentage if percentage is None else percentage
+            ),
+            is_low=sensor.battery_status.is_low if is_low is None else is_low,
+        )
+    )
+    return public
+
+
+def make_public_light(
+    light: Light,
+    *,
+    state: DeviceState | None = None,
+    pir_duration_ms: int | None = None,
+) -> Mock:
+    """Build a public-API light for the migrated PIR auto-shutoff duration number.
+
+    ``light_device_settings`` mirrors the private fixture (the public API reports
+    ``pir_duration`` in milliseconds); ``pir_duration_ms`` overrides it so a test
+    can assert a value the private object would not produce.
+    """
+    lds = light.light_device_settings
+    public = Mock(spec=PublicLight)
+    public.id = light.id
+    public.mac = light.mac
+    public.model = ModelType.LIGHT
+    public.state = DeviceState[light.state.name] if state is None else state
+    public.light_device_settings = PublicLightDeviceSettings(
+        is_indicator_enabled=lds.is_indicator_enabled,
+        led_level=lds.led_level,
+        pir_duration=(
+            round(lds.pir_duration.total_seconds() * 1000)
+            if pir_duration_ms is None
+            else pir_duration_ms
+        ),
+        pir_sensitivity=lds.pir_sensitivity,
+    )
+    return public
+
+
+def setup_public_sensor(ufp: MockUFPFixture) -> None:
+    """Expose private sensors over the public API via a real ``PublicBootstrap``.
+
+    Lookups go through the real ``PublicBootstrap.get``; the mirror resolves
+    against the private bootstrap at call time, so it is robust to ``init_entry``
+    regenerating device ids.
+    """
+    public_bootstrap = PublicBootstrap()
+    pb = Mock(spec=PublicBootstrap)
+    pb.sensors = public_bootstrap.sensors
+    pb.relays = {}
+    pb.sirens = {}
+    pb.arm_mode = None
+    pb.arm_profiles = {}
+
+    def _get(model: ModelType, obj_id: str) -> ProtectModelWithId | None:
+        if (
+            model is ModelType.SENSOR
+            and (private := ufp.api.bootstrap.sensors.get(obj_id)) is not None
+        ):
+            public_bootstrap.sensors[obj_id] = make_public_sensor(private)
+        return public_bootstrap.get(model, obj_id)
+
+    pb.get = _get
+    ufp.api.has_public_bootstrap = True
+    ufp.api.public_bootstrap = pb
+
+
+def setup_public_light(ufp: MockUFPFixture) -> None:
+    """Expose private lights over the public API via a real ``PublicBootstrap``.
+
+    Mirrors ``setup_public_sensor`` for ``ModelType.LIGHT`` so the migrated
+    FloodLight duration number reads from the public object.
+    """
+    public_bootstrap = PublicBootstrap()
+    pb = Mock(spec=PublicBootstrap)
+    pb.lights = public_bootstrap.lights
+    pb.relays = {}
+    pb.sirens = {}
+    pb.arm_mode = None
+    pb.arm_profiles = {}
+
+    def _get(model: ModelType, obj_id: str) -> ProtectModelWithId | None:
+        if (
+            model is ModelType.LIGHT
+            and (private := ufp.api.bootstrap.lights.get(obj_id)) is not None
+        ):
+            public_bootstrap.lights[obj_id] = make_public_light(private)
+        return public_bootstrap.get(model, obj_id)
+
+    pb.get = _get
+    ufp.api.has_public_bootstrap = True
+    ufp.api.public_bootstrap = pb
+
+
+def public_device_ws_message(public_obj: Mock) -> Mock:
+    """Build a public devices WS message carrying a public object."""
+    msg = Mock()
+    msg.changed_data = {}
+    msg.old_obj = None
+    msg.new_obj = public_obj
+    return msg
 
 
 async def remove_entities(

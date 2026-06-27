@@ -1,7 +1,5 @@
 """The Google Photos integration."""
 
-from __future__ import annotations
-
 from aiohttp import ClientError, ClientResponseError
 from google_photos_library_api.api import GooglePhotosLibraryApi
 
