@@ -84,26 +84,19 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     """Set up the Velux component."""
 
     async def async_set_velocity(service_call: ServiceCall) -> None:
-        """Set velocity for Velux opening devices."""
+        """Set velocity for a Velux opening device."""
         velocity = VELOCITY_MAP[service_call.data["velocity"]]
-        device_ids: list[str] = service_call.data["device_id"]
+        device_id: str = service_call.data["device_id"]
 
-        # Resolve all devices first so the operation is atomic
-        resolved: dict[str, OpeningDevice | None] = {
-            device_id: _find_opening_device_node(hass, device_id)
-            for device_id in device_ids
-        }
-        missing = [device_id for device_id, node in resolved.items() if node is None]
-        if missing:
+        node = _find_opening_device_node(hass, device_id)
+        if node is None:
             raise ServiceValidationError(
                 translation_domain=DOMAIN,
                 translation_key="device_not_found",
-                translation_placeholders={"device_id": ", ".join(missing)},
+                translation_placeholders={"device_id": device_id},
             )
 
-        for node in resolved.values():
-            assert node is not None  # validated above
-            _set_node_velocity(node, velocity)
+        _set_node_velocity(node, velocity)
 
     hass.services.async_register(
         DOMAIN,
@@ -111,7 +104,7 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
         async_set_velocity,
         schema=vol.Schema(
             {
-                vol.Required("device_id"): vol.All(cv.ensure_list, [cv.string]),
+                vol.Required("device_id"): cv.string,
                 vol.Required("velocity"): vol.In(list(VELOCITY_MAP)),
             }
         ),

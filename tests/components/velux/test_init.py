@@ -181,7 +181,7 @@ async def test_set_velocity_service(
     await hass.services.async_call(
         DOMAIN,
         "set_velocity",
-        {"device_id": [device.id], "velocity": "silent"},
+        {"device_id": device.id, "velocity": "silent"},
         blocking=True,
     )
 
@@ -191,7 +191,7 @@ async def test_set_velocity_service(
     await hass.services.async_call(
         DOMAIN,
         "set_velocity",
-        {"device_id": [device.id], "velocity": "default"},
+        {"device_id": device.id, "velocity": "default"},
         blocking=True,
     )
 
@@ -208,6 +208,6 @@ async def test_set_velocity_service_device_not_found(
         await hass.services.async_call(
             DOMAIN,
             "set_velocity",
-            {"device_id": ["nonexistent_device_id"], "velocity": "silent"},
+            {"device_id": "nonexistent_device_id", "velocity": "silent"},
             blocking=True,
         )
