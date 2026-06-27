@@ -39,8 +39,8 @@
 # name: test_cloud_all_sensors[switch.bedroom_socket-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'device_class': 'outlet',
-      'friendly_name': 'Bedroom Socket',
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'outlet',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Bedroom Socket',
       'status': dict({
         'mode': 'timer',
         'override': dict({
@@ -98,8 +98,8 @@
 # name: test_cloud_all_sensors[switch.kitchen_socket-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'device_class': 'outlet',
-      'friendly_name': 'Kitchen Socket',
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'outlet',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Kitchen Socket',
       'status': dict({
         'mode': 'timer',
         'override': dict({
@@ -157,8 +157,8 @@
 # name: test_cloud_all_sensors[switch.study_socket-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'device_class': 'outlet',
-      'friendly_name': 'Study Socket',
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'outlet',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Study Socket',
       'status': dict({
         'mode': 'off',
         'override': dict({

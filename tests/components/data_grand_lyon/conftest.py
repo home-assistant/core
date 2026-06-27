@@ -7,6 +7,7 @@ from unittest.mock import AsyncMock, patch
 from data_grand_lyon_ha import (
     TclPassage,
     TclPassageType,
+    TclStop,
     VelovAvailabilityLevel,
     VelovBikeStandAvailability,
     VelovStation,
@@ -50,6 +51,39 @@ MOCK_DEPARTURES = [
     ),
 ]
 
+MOCK_TCL_STOPS = [
+    TclStop(
+        id=100,
+        gid=1100,
+        adresse="Place Bellecour",  # codespell:ignore adresse
+        ascenseur=False,
+        commune="Lyon 2",
+        desserte=["C3", "27"],
+        escalator=False,
+        insee="69382",
+        last_update=datetime(2026, 4, 10, 0, 0),
+        lat=45.757,
+        lon=4.832,
+        nom="Bellecour",
+        pmr=True,
+    ),
+    TclStop(
+        id=200,
+        gid=1200,
+        adresse="Cours Lafayette",  # codespell:ignore adresse
+        ascenseur=True,
+        commune="Lyon 3",
+        desserte=["C3", "T1"],
+        escalator=True,
+        insee="69383",
+        last_update=datetime(2026, 4, 10, 0, 0),
+        lat=45.763,
+        lon=4.846,
+        nom="Part-Dieu",
+        pmr=True,
+    ),
+]
+
 MOCK_VELOV_STATION = VelovStation(
     number=1001,
     name="Place Bellecour",
@@ -74,6 +108,34 @@ MOCK_VELOV_STATION = VelovStation(
         capacity=20,
     ),
 )
+
+MOCK_VELOV_STATIONS = [
+    MOCK_VELOV_STATION,
+    VelovStation(
+        number=2002,
+        name="Hôtel de Ville",
+        address="",
+        commune="",
+        status=VelovStationStatus.OPEN,
+        availability=VelovAvailabilityLevel.GREEN,
+        lat=45.767,
+        lng=4.835,
+        bike_stands=15,
+        available_bikes=10,
+        available_bike_stands=5,
+        banking=True,
+        last_update=datetime(2026, 4, 10, 14, 0),
+        total_stands=VelovBikeStandAvailability(
+            bikes=10,
+            electrical_bikes=3,
+            electrical_internal_battery_bikes=2,
+            electrical_removable_battery_bikes=1,
+            mechanical_bikes=7,
+            stands=5,
+            capacity=15,
+        ),
+    ),
+]
 
 
 @pytest.fixture
@@ -141,11 +203,19 @@ def mock_velov_config_entry(
 
 @pytest.fixture
 def mock_tcl_client() -> Generator[AsyncMock]:
-    """Mock DataGrandLyonClient for coordinator."""
-    with patch(
-        "homeassistant.components.data_grand_lyon.DataGrandLyonClient", autospec=True
-    ) as mock_cls:
+    """Mock DataGrandLyonClient for coordinator and config flow."""
+    with (
+        patch(
+            "homeassistant.components.data_grand_lyon.DataGrandLyonClient",
+            autospec=True,
+        ) as mock_cls,
+        patch(
+            "homeassistant.components.data_grand_lyon.config_flow.DataGrandLyonClient",
+            new=mock_cls,
+        ),
+    ):
         client = mock_cls.return_value
         client.get_tcl_passages.return_value = MOCK_DEPARTURES
-        client.get_velov_stations.return_value = [MOCK_VELOV_STATION]
+        client.get_tcl_stops.return_value = MOCK_TCL_STOPS
+        client.get_velov_stations.return_value = MOCK_VELOV_STATIONS
         yield client

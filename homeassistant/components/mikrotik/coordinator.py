@@ -3,7 +3,7 @@
 from datetime import timedelta
 import logging
 import ssl
-from typing import Any
+from typing import Any, override
 
 import librouteros
 from librouteros.login import plain as login_plain, token as login_token
@@ -308,6 +308,7 @@ class MikrotikDataUpdateCoordinator(DataUpdateCoordinator[None]):
         """Represent Mikrotik data object."""
         return self._mk_data
 
+    @override
     async def _async_update_data(self) -> None:
         """Update Mikrotik devices information."""
         await self.hass.async_add_executor_job(self._mk_data.update_devices)

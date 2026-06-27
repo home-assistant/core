@@ -245,6 +245,33 @@ async def test_invalid_device_url(
     mock_setup_entry.assert_called_once()
 
 
+async def test_user_already_configured_without_unique_id(
+    hass: HomeAssistant,
+) -> None:
+    """Test manual setup aborts when an entry with the same endpoint already exists."""
+    entry = MockConfigEntry(
+        domain=DOMAIN,
+        unique_id=None,
+        data={CONF_WEBFSAPI_URL: "http://1.1.1.1:80/webfsapi", CONF_PIN: DEFAULT_PIN},
+    )
+    entry.add_to_hass(hass)
+
+    with patch(
+        "homeassistant.components.frontier_silicon.config_flow.AFSAPI.get_radio_id",
+        side_effect=FSNotImplementedError,
+    ):
+        result = await hass.config_entries.flow.async_init(
+            DOMAIN, context={"source": config_entries.SOURCE_USER}
+        )
+        result2 = await hass.config_entries.flow.async_configure(
+            result["flow_id"],
+            {CONF_HOST: "1.1.1.1", CONF_PORT: 80},
+        )
+
+    assert result2["type"] is FlowResultType.ABORT
+    assert result2["reason"] == "already_configured"
+
+
 @pytest.mark.parametrize(
     ("radio_id_return_value", "radio_id_side_effect"),
     [("mock_radio_id", None), (None, FSNotImplementedError)],

@@ -39,9 +39,9 @@
 # name: test_valid_config[sensor.mock_title_departure-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'attribution': 'Data provided by Israel rail.',
-      'device_class': 'timestamp',
-      'friendly_name': 'Mock Title Departure',
+      <EntityStateAttribute.ATTRIBUTION: 'attribution'>: 'Data provided by Israel rail.',
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'timestamp',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Mock Title Departure',
     }),
     'context': <ANY>,
     'entity_id': 'sensor.mock_title_departure',
@@ -91,9 +91,9 @@
 # name: test_valid_config[sensor.mock_title_departure_1-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'attribution': 'Data provided by Israel rail.',
-      'device_class': 'timestamp',
-      'friendly_name': 'Mock Title Departure +1',
+      <EntityStateAttribute.ATTRIBUTION: 'attribution'>: 'Data provided by Israel rail.',
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'timestamp',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Mock Title Departure +1',
     }),
     'context': <ANY>,
     'entity_id': 'sensor.mock_title_departure_1',
@@ -143,9 +143,9 @@
 # name: test_valid_config[sensor.mock_title_departure_2-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'attribution': 'Data provided by Israel rail.',
-      'device_class': 'timestamp',
-      'friendly_name': 'Mock Title Departure +2',
+      <EntityStateAttribute.ATTRIBUTION: 'attribution'>: 'Data provided by Israel rail.',
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'timestamp',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Mock Title Departure +2',
     }),
     'context': <ANY>,
     'entity_id': 'sensor.mock_title_departure_2',
@@ -162,7 +162,7 @@
     ]),
     'area_id': None,
     'capabilities': dict({
-      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+      <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -200,11 +200,11 @@
 # name: test_valid_config[sensor.mock_title_departure_delay-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'attribution': 'Data provided by Israel rail.',
-      'device_class': 'duration',
-      'friendly_name': 'Mock Title Departure delay',
-      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
-      'unit_of_measurement': <UnitOfTime.MINUTES: 'min'>,
+      <EntityStateAttribute.ATTRIBUTION: 'attribution'>: 'Data provided by Israel rail.',
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'duration',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Mock Title Departure delay',
+      <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
+      <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: <UnitOfTime.MINUTES: 'min'>,
     }),
     'context': <ANY>,
     'entity_id': 'sensor.mock_title_departure_delay',
@@ -221,7 +221,7 @@
     ]),
     'area_id': None,
     'capabilities': dict({
-      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+      <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -259,11 +259,11 @@
 # name: test_valid_config[sensor.mock_title_departure_delay_1-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'attribution': 'Data provided by Israel rail.',
-      'device_class': 'duration',
-      'friendly_name': 'Mock Title Departure delay +1',
-      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
-      'unit_of_measurement': <UnitOfTime.MINUTES: 'min'>,
+      <EntityStateAttribute.ATTRIBUTION: 'attribution'>: 'Data provided by Israel rail.',
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'duration',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Mock Title Departure delay +1',
+      <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
+      <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: <UnitOfTime.MINUTES: 'min'>,
     }),
     'context': <ANY>,
     'entity_id': 'sensor.mock_title_departure_delay_1',
@@ -280,7 +280,7 @@
     ]),
     'area_id': None,
     'capabilities': dict({
-      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+      <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -318,11 +318,11 @@
 # name: test_valid_config[sensor.mock_title_departure_delay_2-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'attribution': 'Data provided by Israel rail.',
-      'device_class': 'duration',
-      'friendly_name': 'Mock Title Departure delay +2',
-      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
-      'unit_of_measurement': <UnitOfTime.MINUTES: 'min'>,
+      <EntityStateAttribute.ATTRIBUTION: 'attribution'>: 'Data provided by Israel rail.',
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'duration',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Mock Title Departure delay +2',
+      <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
+      <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: <UnitOfTime.MINUTES: 'min'>,
     }),
     'context': <ANY>,
     'entity_id': 'sensor.mock_title_departure_delay_2',
@@ -372,8 +372,8 @@
 # name: test_valid_config[sensor.mock_title_platform-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'attribution': 'Data provided by Israel rail.',
-      'friendly_name': 'Mock Title Platform',
+      <EntityStateAttribute.ATTRIBUTION: 'attribution'>: 'Data provided by Israel rail.',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Mock Title Platform',
     }),
     'context': <ANY>,
     'entity_id': 'sensor.mock_title_platform',
@@ -423,8 +423,8 @@
 # name: test_valid_config[sensor.mock_title_platform_1-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'attribution': 'Data provided by Israel rail.',
-      'friendly_name': 'Mock Title Platform +1',
+      <EntityStateAttribute.ATTRIBUTION: 'attribution'>: 'Data provided by Israel rail.',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Mock Title Platform +1',
     }),
     'context': <ANY>,
     'entity_id': 'sensor.mock_title_platform_1',
@@ -474,8 +474,8 @@
 # name: test_valid_config[sensor.mock_title_platform_2-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'attribution': 'Data provided by Israel rail.',
-      'friendly_name': 'Mock Title Platform +2',
+      <EntityStateAttribute.ATTRIBUTION: 'attribution'>: 'Data provided by Israel rail.',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Mock Title Platform +2',
     }),
     'context': <ANY>,
     'entity_id': 'sensor.mock_title_platform_2',
@@ -525,8 +525,8 @@
 # name: test_valid_config[sensor.mock_title_train_number-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'attribution': 'Data provided by Israel rail.',
-      'friendly_name': 'Mock Title Train number',
+      <EntityStateAttribute.ATTRIBUTION: 'attribution'>: 'Data provided by Israel rail.',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Mock Title Train number',
     }),
     'context': <ANY>,
     'entity_id': 'sensor.mock_title_train_number',
@@ -576,8 +576,8 @@
 # name: test_valid_config[sensor.mock_title_train_number_1-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'attribution': 'Data provided by Israel rail.',
-      'friendly_name': 'Mock Title Train number +1',
+      <EntityStateAttribute.ATTRIBUTION: 'attribution'>: 'Data provided by Israel rail.',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Mock Title Train number +1',
     }),
     'context': <ANY>,
     'entity_id': 'sensor.mock_title_train_number_1',
@@ -627,8 +627,8 @@
 # name: test_valid_config[sensor.mock_title_train_number_2-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'attribution': 'Data provided by Israel rail.',
-      'friendly_name': 'Mock Title Train number +2',
+      <EntityStateAttribute.ATTRIBUTION: 'attribution'>: 'Data provided by Israel rail.',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Mock Title Train number +2',
     }),
     'context': <ANY>,
     'entity_id': 'sensor.mock_title_train_number_2',
@@ -678,8 +678,8 @@
 # name: test_valid_config[sensor.mock_title_trains-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'attribution': 'Data provided by Israel rail.',
-      'friendly_name': 'Mock Title Trains',
+      <EntityStateAttribute.ATTRIBUTION: 'attribution'>: 'Data provided by Israel rail.',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Mock Title Trains',
     }),
     'context': <ANY>,
     'entity_id': 'sensor.mock_title_trains',
@@ -729,8 +729,8 @@
 # name: test_valid_config[sensor.mock_title_trains_1-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'attribution': 'Data provided by Israel rail.',
-      'friendly_name': 'Mock Title Trains +1',
+      <EntityStateAttribute.ATTRIBUTION: 'attribution'>: 'Data provided by Israel rail.',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Mock Title Trains +1',
     }),
     'context': <ANY>,
     'entity_id': 'sensor.mock_title_trains_1',
@@ -780,8 +780,8 @@
 # name: test_valid_config[sensor.mock_title_trains_2-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'attribution': 'Data provided by Israel rail.',
-      'friendly_name': 'Mock Title Trains +2',
+      <EntityStateAttribute.ATTRIBUTION: 'attribution'>: 'Data provided by Israel rail.',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Mock Title Trains +2',
     }),
     'context': <ANY>,
     'entity_id': 'sensor.mock_title_trains_2',

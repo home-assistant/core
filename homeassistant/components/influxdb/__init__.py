@@ -8,7 +8,7 @@ import math
 import queue
 import threading
 import time
-from typing import Any
+from typing import Any, override
 
 from influxdb import InfluxDBClient, exceptions
 from influxdb_client import InfluxDBClient as InfluxDBClientV2
@@ -423,7 +423,7 @@ def get_influx_connection(  # noqa: C901
     if CONF_HOST in conf:
         kwargs[CONF_HOST] = conf[CONF_HOST]
 
-    if (path := conf.get(CONF_PATH)) is not None:
+    if (path := conf.get(CONF_PATH)) is not None and path != "/":
         kwargs[CONF_PATH] = path
 
     if (port := conf.get(CONF_PORT)) is not None:
@@ -666,6 +666,7 @@ class InfluxThread(threading.Thread):
                         _LOGGER.error(err)
                     self.write_errors += len(json)
 
+    @override
     def run(self):
         """Process incoming events."""
         while not self._shutdown:

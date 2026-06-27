@@ -32,12 +32,13 @@ async def test_configure_with_discover(
     with patch(
         "homeassistant.components.nobo_hub.config_flow.nobo.async_discover_hubs",
         return_value=[("1.1.1.1", "123456789")],
-    ):
+    ) as mock_discover:
         result = await hass.config_entries.flow.async_init(
             DOMAIN, context={"source": config_entries.SOURCE_USER}
         )
         assert result["type"] is FlowResultType.FORM
         assert result["step_id"] == "user"
+    mock_discover.assert_awaited_once_with(autodiscover_wait=5.0)
 
     result = await hass.config_entries.flow.async_configure(
         result["flow_id"],
@@ -74,6 +75,106 @@ async def test_configure_with_discover(
     }
     mock_connect.assert_awaited_once_with("1.1.1.1", "123456789012")
     mock_setup_entry.assert_awaited_once()
+
+
+@pytest.mark.parametrize(
+    ("discovered", "expected_devices", "selected_device"),
+    [
+        # Same IP+prefix hidden; sibling with same prefix at a different IP shown.
+        (
+            [("1.1.1.1", "111111111"), ("2.2.2.2", "111111111")],
+            {"2.2.2.2", "manual"},
+            "2.2.2.2",
+        ),
+        # Same IP, different prefix → different hub (e.g. replacement), shown.
+        ([("1.1.1.1", "222222222")], {"1.1.1.1", "manual"}, "1.1.1.1"),
+    ],
+    ids=["sibling_different_ip", "replaced_hub"],
+)
+async def test_configure_filters_configured_hubs(
+    hass: HomeAssistant,
+    mock_setup_entry: AsyncMock,
+    discovered: list[tuple[str, str]],
+    expected_devices: set[str],
+    selected_device: str,
+) -> None:
+    """Configured (IP, prefix) pairs are hidden; the user can pick a remaining one."""
+    MockConfigEntry(
+        domain=DOMAIN,
+        unique_id="111111111012",
+        data={CONF_SERIAL: "111111111012", CONF_IP_ADDRESS: "1.1.1.1"},
+    ).add_to_hass(hass)
+
+    with patch("pynobo.nobo.async_discover_hubs", return_value=discovered):
+        result = await hass.config_entries.flow.async_init(
+            DOMAIN, context={"source": config_entries.SOURCE_USER}
+        )
+
+    assert result["type"] is FlowResultType.FORM
+    assert result["step_id"] == "user"
+    assert set(result["data_schema"].schema["device"].container) == expected_devices
+
+    result2 = await hass.config_entries.flow.async_configure(
+        result["flow_id"],
+        {"device": selected_device},
+    )
+    assert result2["type"] is FlowResultType.FORM
+    assert result2["step_id"] == "selected"
+
+    with (
+        patch("pynobo.nobo.async_connect_hub", return_value=True),
+        patch(
+            "pynobo.nobo.hub_info",
+            new_callable=PropertyMock,
+            create=True,
+            return_value={"name": "My Nobø Ecohub"},
+        ),
+    ):
+        result3 = await hass.config_entries.flow.async_configure(
+            result2["flow_id"],
+            {"serial_suffix": "999"},
+        )
+
+    assert result3["type"] is FlowResultType.CREATE_ENTRY
+
+
+async def test_configure_skips_user_step_when_all_configured(
+    hass: HomeAssistant,
+    mock_setup_entry: AsyncMock,
+) -> None:
+    """Flow falls through to manual when every discovered hub matches a configured pair."""
+    MockConfigEntry(
+        domain=DOMAIN,
+        unique_id="111111111012",
+        data={CONF_SERIAL: "111111111012", CONF_IP_ADDRESS: "1.1.1.1"},
+    ).add_to_hass(hass)
+
+    with patch(
+        "pynobo.nobo.async_discover_hubs",
+        return_value=[("1.1.1.1", "111111111")],
+    ):
+        result = await hass.config_entries.flow.async_init(
+            DOMAIN, context={"source": config_entries.SOURCE_USER}
+        )
+
+    assert result["type"] is FlowResultType.FORM
+    assert result["step_id"] == "manual"
+
+    with (
+        patch("pynobo.nobo.async_connect_hub", return_value=True),
+        patch(
+            "pynobo.nobo.hub_info",
+            new_callable=PropertyMock,
+            create=True,
+            return_value={"name": "My Nobø Ecohub"},
+        ),
+    ):
+        result2 = await hass.config_entries.flow.async_configure(
+            result["flow_id"],
+            {"serial": "999999999999", "ip_address": "9.9.9.9"},
+        )
+
+    assert result2["type"] is FlowResultType.CREATE_ENTRY
 
 
 async def test_configure_manual(
@@ -679,7 +780,7 @@ async def test_options_flow(
 ) -> None:
     """Test the options flow."""
     config_entry = MockConfigEntry(
-        domain="nobo_hub",
+        domain=DOMAIN,
         unique_id="123456789012",
         data={
             CONF_SERIAL: "123456789012",

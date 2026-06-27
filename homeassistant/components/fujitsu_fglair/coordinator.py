@@ -1,6 +1,7 @@
 """Coordinator for Fujitsu HVAC integration."""
 
 import logging
+from typing import override
 
 from ayla_iot_unofficial import AylaApi, AylaAuthError
 from ayla_iot_unofficial.fujitsu_hvac import FujitsuHVAC
@@ -35,12 +36,14 @@ class FGLairCoordinator(DataUpdateCoordinator[dict[str, FujitsuHVAC]]):
         )
         self.api = api
 
+    @override
     async def _async_setup(self) -> None:
         try:
             await self.api.async_sign_in()
         except AylaAuthError as e:
             raise ConfigEntryAuthFailed("Credentials expired for Ayla IoT API") from e
 
+    @override
     async def _async_update_data(self) -> dict[str, FujitsuHVAC]:
         """Fetch data from api endpoint."""
         listening_entities = set(self.async_contexts())

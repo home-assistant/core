@@ -6,7 +6,7 @@ import uuid
 import pytest
 from zwave_me_ws import ZWaveMeData
 
-from homeassistant.components.zwave_me.const import ZWaveMePlatform
+from homeassistant.components.zwave_me.const import DOMAIN, ZWaveMePlatform
 from homeassistant.const import CONF_TOKEN, CONF_URL
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import device_registry as dr
@@ -42,7 +42,7 @@ async def test_remove_stale_devices(
 
     config_entry = MockConfigEntry(
         unique_id=uuid.uuid4(),
-        domain="zwave_me",
+        domain=DOMAIN,
         data={CONF_TOKEN: "test_token", CONF_URL: "http://test_test"},
     )
     config_entry.add_to_hass(hass)

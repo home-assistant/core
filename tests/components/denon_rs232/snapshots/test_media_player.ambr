@@ -6,7 +6,7 @@
     ]),
     'area_id': None,
     'capabilities': dict({
-      'source_list': list([
+      <MediaPlayerEntityCapabilityAttribute.INPUT_SOURCE_LIST: 'source_list'>: list([
         'cd',
         'cdr_tape1',
         'dbs_sat',
@@ -53,11 +53,11 @@
 # name: test_entities_created[media_player.avr_3805-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'device_class': 'receiver',
-      'friendly_name': 'AVR-3805',
-      'is_volume_muted': False,
-      'source': 'cd',
-      'source_list': list([
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'receiver',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'AVR-3805',
+      <MediaPlayerEntityStateAttribute.MEDIA_VOLUME_MUTED: 'is_volume_muted'>: False,
+      <MediaPlayerEntityStateAttribute.INPUT_SOURCE: 'source'>: 'cd',
+      <MediaPlayerEntityCapabilityAttribute.INPUT_SOURCE_LIST: 'source_list'>: list([
         'cd',
         'cdr_tape1',
         'dbs_sat',
@@ -70,8 +70,8 @@
         'vcr_2',
         'vdp',
       ]),
-      'supported_features': <MediaPlayerEntityFeature: 3468>,
-      'volume_level': 0.5555555555555556,
+      <EntityStateAttribute.SUPPORTED_FEATURES: 'supported_features'>: <MediaPlayerEntityFeature: 3468>,
+      <MediaPlayerEntityStateAttribute.MEDIA_VOLUME_LEVEL: 'volume_level'>: 0.5555555555555556,
     }),
     'context': <ANY>,
     'entity_id': 'media_player.avr_3805',
@@ -88,7 +88,7 @@
     ]),
     'area_id': None,
     'capabilities': dict({
-      'source_list': list([
+      <MediaPlayerEntityCapabilityAttribute.INPUT_SOURCE_LIST: 'source_list'>: list([
         'cd',
         'cdr_tape1',
         'dbs_sat',
@@ -135,10 +135,10 @@
 # name: test_entities_created[media_player.avr_3805_zone_2-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'device_class': 'receiver',
-      'friendly_name': 'AVR-3805 Zone 2',
-      'source': 'tuner',
-      'source_list': list([
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'receiver',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'AVR-3805 Zone 2',
+      <MediaPlayerEntityStateAttribute.INPUT_SOURCE: 'source'>: 'tuner',
+      <MediaPlayerEntityCapabilityAttribute.INPUT_SOURCE_LIST: 'source_list'>: list([
         'cd',
         'cdr_tape1',
         'dbs_sat',
@@ -151,8 +151,8 @@
         'vcr_2',
         'vdp',
       ]),
-      'supported_features': <MediaPlayerEntityFeature: 3460>,
-      'volume_level': 0.6666666666666666,
+      <EntityStateAttribute.SUPPORTED_FEATURES: 'supported_features'>: <MediaPlayerEntityFeature: 3460>,
+      <MediaPlayerEntityStateAttribute.MEDIA_VOLUME_LEVEL: 'volume_level'>: 0.6666666666666666,
     }),
     'context': <ANY>,
     'entity_id': 'media_player.avr_3805_zone_2',
@@ -169,7 +169,7 @@
     ]),
     'area_id': None,
     'capabilities': dict({
-      'source_list': list([
+      <MediaPlayerEntityCapabilityAttribute.INPUT_SOURCE_LIST: 'source_list'>: list([
         'cd',
         'cdr_tape1',
         'dbs_sat',
@@ -216,9 +216,9 @@
 # name: test_entities_created[media_player.avr_3805_zone_3-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'device_class': 'receiver',
-      'friendly_name': 'AVR-3805 Zone 3',
-      'source_list': list([
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'receiver',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'AVR-3805 Zone 3',
+      <MediaPlayerEntityCapabilityAttribute.INPUT_SOURCE_LIST: 'source_list'>: list([
         'cd',
         'cdr_tape1',
         'dbs_sat',
@@ -231,7 +231,7 @@
         'vcr_2',
         'vdp',
       ]),
-      'supported_features': <MediaPlayerEntityFeature: 3460>,
+      <EntityStateAttribute.SUPPORTED_FEATURES: 'supported_features'>: <MediaPlayerEntityFeature: 3460>,
     }),
     'context': <ANY>,
     'entity_id': 'media_player.avr_3805_zone_3',

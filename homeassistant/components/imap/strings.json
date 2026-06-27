@@ -32,7 +32,7 @@
           "port": "[%key:common::config_flow::data::port%]",
           "search": "IMAP search",
           "server": "Server",
-          "ssl_cipher_list": "SSL cipher list (Advanced)",
+          "ssl_cipher_list": "SSL cipher list",
           "username": "[%key:common::config_flow::data::username%]",
           "verify_ssl": "[%key:common::config_flow::data::verify_ssl%]"
         },

@@ -5,6 +5,13 @@ from enum import IntFlag, StrEnum
 DOMAIN = "valve"
 
 
+class ValveEntityStateAttribute(StrEnum):
+    """State attributes for valve entities."""
+
+    IS_CLOSED = "is_closed"
+    CURRENT_POSITION = "current_position"
+
+
 class ValveDeviceClass(StrEnum):
     """Device class for valve."""
 

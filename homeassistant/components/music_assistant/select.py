@@ -1,6 +1,6 @@
 """Music Assistant select platform."""
 
-from typing import Final
+from typing import Final, override
 
 from music_assistant_client.client import MusicAssistantClient
 from music_assistant_models.player import PlayerOption, PlayerOptionType
@@ -110,6 +110,7 @@ class MusicAssistantPlayerConfigSelect(MusicAssistantPlayerOptionEntity, SelectE
         self._attr_options = list(self._option_translation_key_to_key_mapping.keys())
 
     @catch_musicassistant_error
+    @override
     async def async_select_option(self, option: str) -> None:
         """Select an option."""
         await self.mass.players.set_option(
@@ -118,6 +119,7 @@ class MusicAssistantPlayerConfigSelect(MusicAssistantPlayerOptionEntity, SelectE
             self._option_translation_key_to_key_mapping[option],
         )
 
+    @override
     def on_player_option_update(self, player_option: PlayerOption) -> None:
         """Update on player option update."""
         self._attr_current_option = (

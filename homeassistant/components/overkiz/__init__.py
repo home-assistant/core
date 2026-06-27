@@ -2,21 +2,33 @@
 
 from collections import defaultdict
 from dataclasses import dataclass
+from typing import cast
 
 from aiohttp import ClientError
-from pyoverkiz.client import OverkizClient
-from pyoverkiz.const import SUPPORTED_SERVERS
-from pyoverkiz.enums import APIType, OverkizState, UIClass, UIWidget
-from pyoverkiz.exceptions import (
-    BadCredentialsException,
-    MaintenanceException,
-    NotAuthenticatedException,
-    NotSuchTokenException,
-    TooManyRequestsException,
+from pyoverkiz.action_queue import ActionQueueSettings
+from pyoverkiz.auth.credentials import (
+    LocalTokenCredentials,
+    RexelTokenCredentials,
+    UsernamePasswordCredentials,
 )
-from pyoverkiz.models import Device, OverkizServer, Scenario
-from pyoverkiz.utils import generate_local_server
+from pyoverkiz.client import OverkizClient, OverkizClientSettings
+from pyoverkiz.const import REXEL_OAUTH_CLIENT_ID
+from pyoverkiz.enums import APIType, OverkizState, Server, UIClass, UIWidget
+from pyoverkiz.exceptions import (
+    BadCredentialsError,
+    MaintenanceError,
+    NoSuchTokenError,
+    NotAuthenticatedError,
+    ServiceUnavailableError,
+    TooManyRequestsError,
+)
+from pyoverkiz.models import Device, PersistedActionGroup
+from pyoverkiz.utils import create_local_server_config
 
+from homeassistant.components.application_credentials import (
+    ClientCredential,
+    async_import_client_credential,
+)
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import (
     CONF_HOST,
@@ -27,8 +39,14 @@ from homeassistant.const import (
     Platform,
 )
 from homeassistant.core import HomeAssistant, callback
-from homeassistant.exceptions import ConfigEntryAuthFailed, ConfigEntryNotReady
+from homeassistant.exceptions import (
+    ConfigEntryAuthFailed,
+    ConfigEntryNotReady,
+    OAuth2TokenRequestError,
+    OAuth2TokenRequestReauthError,
+)
 from homeassistant.helpers import (
+    config_entry_oauth2_flow,
     config_validation as cv,
     device_registry as dr,
     entity_registry as er,
@@ -38,6 +56,7 @@ from homeassistant.helpers.typing import ConfigType
 
 from .const import (
     CONF_API_TYPE,
+    CONF_GATEWAY_ID,
     CONF_HUB,
     DOMAIN,
     LOGGER,
@@ -58,7 +77,7 @@ class HomeAssistantOverkizData:
 
     coordinator: OverkizDataUpdateCoordinator
     platforms: defaultdict[Platform, list[Device]]
-    scenarios: list[Scenario]
+    scenarios: list[PersistedActionGroup]
 
 
 type OverkizDataConfigEntry = ConfigEntry[HomeAssistantOverkizData]
@@ -67,6 +86,14 @@ type OverkizDataConfigEntry = ConfigEntry[HomeAssistantOverkizData]
 async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     """Set up the Overkiz component."""
     async_setup_services(hass)
+
+    # Auto-import Rexel's fixed public OAuth2 client (PKCE, no secret).
+    await async_import_client_credential(
+        hass,
+        DOMAIN,
+        ClientCredential(REXEL_OAUTH_CLIENT_ID, "", name="Rexel"),
+    )
+
     return True
 
 
@@ -75,8 +102,12 @@ async def async_setup_entry(hass: HomeAssistant, entry: OverkizDataConfigEntry) 
     client: OverkizClient | None = None
     api_type = entry.data.get(CONF_API_TYPE, APIType.CLOUD)
 
+    # Rexel Cloud API (OAuth2)
+    if entry.data.get(CONF_HUB) == Server.REXEL:
+        client = await create_rexel_client(hass, entry)
+
     # Local API
-    if api_type == APIType.LOCAL:
+    elif api_type == APIType.LOCAL:
         client = create_local_client(
             hass,
             host=entry.data[CONF_HOST],
@@ -90,7 +121,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: OverkizDataConfigEntry) 
             hass,
             username=entry.data[CONF_USERNAME],
             password=entry.data[CONF_PASSWORD],
-            server=SUPPORTED_SERVERS[entry.data[CONF_HUB]],
+            server=entry.data[CONF_HUB],
         )
 
     try:
@@ -100,21 +131,26 @@ async def async_setup_entry(hass: HomeAssistant, entry: OverkizDataConfigEntry) 
         # Local API does expose scenarios, but they are not functional.
         # Tracked in https://github.com/Somfy-Developer/Somfy-TaHoma-Developer-Mode/issues/21
         if api_type == APIType.CLOUD:
-            scenarios = await client.get_scenarios()
+            scenarios = await client.get_action_groups()
         else:
             scenarios = []
     except (
-        BadCredentialsException,
-        NotSuchTokenException,
-        NotAuthenticatedException,
+        BadCredentialsError,
+        NoSuchTokenError,
+        NotAuthenticatedError,
+        OAuth2TokenRequestReauthError,
     ) as exception:
         raise ConfigEntryAuthFailed("Invalid authentication") from exception
-    except TooManyRequestsException as exception:
+    except TooManyRequestsError as exception:
         raise ConfigEntryNotReady("Too many requests, try again later") from exception
+    except OAuth2TokenRequestError as exception:
+        raise ConfigEntryNotReady("Failed to refresh OAuth2 token") from exception
     except (TimeoutError, ClientError) as exception:
         raise ConfigEntryNotReady("Failed to connect") from exception
-    except MaintenanceException as exception:
+    except MaintenanceError as exception:
         raise ConfigEntryNotReady("Server is down for maintenance") from exception
+    except ServiceUnavailableError as exception:
+        raise ConfigEntryNotReady("Server is unavailable") from exception
 
     coordinator = OverkizDataUpdateCoordinator(
         hass,
@@ -173,13 +209,13 @@ async def async_setup_entry(hass: HomeAssistant, entry: OverkizDataConfigEntry) 
             identifiers={(DOMAIN, gateway.id)},
             model=gateway.type.beautify_name if gateway.type else None,
             model_id=str(gateway.type),
-            manufacturer=client.server.manufacturer,
+            manufacturer=client.server_config.manufacturer,
             name=gateway.type.beautify_name if gateway.type else gateway.id,
             sw_version=gateway.connectivity.protocol_version,
             hw_version=f"{gateway.type}:{gateway.sub_type}"
             if gateway.type and gateway.sub_type
             else None,
-            configuration_url=client.server.configuration_url,
+            configuration_url=client.server_config.configuration_url,
         )
 
     await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
@@ -198,8 +234,6 @@ async def async_migrate_entry(
     hass: HomeAssistant, entry: OverkizDataConfigEntry
 ) -> bool:
     """Migrate old entry."""
-    if entry.version > 1:
-        return False
 
     if entry.version == 1 and entry.minor_version < 2:
         await _async_migrate_strenum_unique_ids(hass, entry)
@@ -213,6 +247,9 @@ async def _async_migrate_strenum_unique_ids(
 ) -> None:
     """Migrate entities to the StrEnum-style unique IDs."""
     entity_registry = er.async_get(hass)
+
+    # Map enum members renamed in pyoverkiz 2.0 to their current names.
+    renamed_enum_members = {"TSKALARM_CONTROLLER": "TSK_ALARM_CONTROLLER"}
 
     @callback
     def update_unique_id(entry: er.RegistryEntry) -> dict[str, str] | None:
@@ -229,6 +266,7 @@ async def _async_migrate_strenum_unique_ids(
             ("OverkizState", "UIWidget", "UIClass")
         ):
             state = key.split(".")[1]
+            state = renamed_enum_members.get(state, state)
             new_key = ""
 
             if key.startswith("UIClass"):
@@ -276,17 +314,18 @@ def create_local_client(
     session = async_create_clientsession(hass, verify_ssl=verify_ssl)
 
     return OverkizClient(
-        username="",
-        password="",
-        token=token,
+        server=create_local_server_config(host=host),
+        credentials=LocalTokenCredentials(token),
         session=session,
-        server=generate_local_server(host=host),
         verify_ssl=verify_ssl,
+        settings=OverkizClientSettings(
+            action_queue=ActionQueueSettings(), default_rts_command_duration=0
+        ),
     )
 
 
 def create_cloud_client(
-    hass: HomeAssistant, username: str, password: str, server: OverkizServer
+    hass: HomeAssistant, username: str, password: str, server: Server
 ) -> OverkizClient:
     """Create Overkiz cloud client."""
     # To allow users with multiple accounts/hubs, we create a
@@ -294,5 +333,39 @@ def create_cloud_client(
     session = async_create_clientsession(hass)
 
     return OverkizClient(
-        username=username, password=password, session=session, server=server
+        server=server,
+        credentials=UsernamePasswordCredentials(username, password),
+        session=session,
+        settings=OverkizClientSettings(
+            action_queue=ActionQueueSettings(), default_rts_command_duration=0
+        ),
+    )
+
+
+async def create_rexel_client(
+    hass: HomeAssistant, entry: OverkizDataConfigEntry
+) -> OverkizClient:
+    """Create Overkiz Rexel client backed by a Home Assistant OAuth2 session."""
+    implementation = (
+        await config_entry_oauth2_flow.async_get_config_entry_implementation(
+            hass, entry
+        )
+    )
+    oauth_session = config_entry_oauth2_flow.OAuth2Session(hass, entry, implementation)
+
+    async def async_get_token() -> str:
+        """Return a valid access token, refreshing and persisting as needed."""
+        await oauth_session.async_ensure_token_valid()
+        return cast(str, oauth_session.token["access_token"])
+
+    return OverkizClient(
+        server=Server.REXEL,
+        credentials=RexelTokenCredentials(
+            access_token_callback=async_get_token,
+            gateway_id=entry.data[CONF_GATEWAY_ID],
+        ),
+        session=async_create_clientsession(hass),
+        settings=OverkizClientSettings(
+            action_queue=ActionQueueSettings(), default_rts_command_duration=0
+        ),
     )
