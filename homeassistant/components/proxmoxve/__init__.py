@@ -21,11 +21,6 @@ from homeassistant.helpers import (
     entity_registry as er,
     issue_registry as ir,
 )
-from homeassistant.helpers.selector import (
-    TextSelector,
-    TextSelectorConfig,
-    TextSelectorType,
-)
 from homeassistant.helpers.typing import ConfigType
 
 from .const import (
@@ -62,17 +57,8 @@ CONFIG_SCHEMA = vol.Schema(
                 vol.Schema(
                     {
                         vol.Required(CONF_HOST): cv.string,
-                        vol.Required(CONF_USERNAME): TextSelector(
-                            TextSelectorConfig(
-                                type=TextSelectorType.TEXT, autocomplete="username"
-                            )
-                        ),
-                        vol.Optional(CONF_PASSWORD): TextSelector(
-                            TextSelectorConfig(
-                                type=TextSelectorType.PASSWORD,
-                                autocomplete="current-password",
-                            )
-                        ),
+                        vol.Required(CONF_USERNAME): cv.string,
+                        vol.Optional(CONF_PASSWORD): cv.string,
                         vol.Optional(CONF_PORT, default=DEFAULT_PORT): cv.port,
                         vol.Required(
                             CONF_AUTH_METHOD, default=DEFAULT_REALM
