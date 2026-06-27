@@ -433,6 +433,37 @@
     'via_device_id': None,
   })
 # ---
+# name: test_devices[copper_water_meter_v03]
+  DeviceRegistryEntrySnapshot({
+    'area_id': None,
+    'config_entries': <ANY>,
+    'config_entries_subentries': <ANY>,
+    'configuration_url': 'https://account.smartthings.com',
+    'connections': set({
+    }),
+    'disabled_by': None,
+    'entry_type': None,
+    'hw_version': None,
+    'id': <ANY>,
+    'identifiers': set({
+      tuple(
+        'smartthings',
+        '93337b49-7a89-41f6-80de-d6537d4438dc',
+      ),
+    }),
+    'labels': set({
+    }),
+    'manufacturer': 'CopperLabs',
+    'model': 'Virtual Indoor Water Meter',
+    'model_id': None,
+    'name': 'Indoor Water Meter',
+    'name_by_user': None,
+    'primary_config_entry': <ANY>,
+    'serial_number': None,
+    'sw_version': None,
+    'via_device_id': None,
+  })
+# ---
 # name: test_devices[da_ac_air_000001]
   DeviceRegistryEntrySnapshot({
     'area_id': None,
@@ -1790,6 +1821,37 @@
     'model': None,
     'model_id': None,
     'name': 'Fake fan',
+    'name_by_user': None,
+    'primary_config_entry': <ANY>,
+    'serial_number': None,
+    'sw_version': None,
+    'via_device_id': None,
+  })
+# ---
+# name: test_devices[fibaro_dimmer_2]
+  DeviceRegistryEntrySnapshot({
+    'area_id': None,
+    'config_entries': <ANY>,
+    'config_entries_subentries': <ANY>,
+    'configuration_url': 'https://account.smartthings.com',
+    'connections': set({
+    }),
+    'disabled_by': None,
+    'entry_type': None,
+    'hw_version': None,
+    'id': <ANY>,
+    'identifiers': set({
+      tuple(
+        'smartthings',
+        'df9f5405-f930-46aa-9693-14c570b35c83',
+      ),
+    }),
+    'labels': set({
+    }),
+    'manufacturer': None,
+    'model': None,
+    'model_id': None,
+    'name': 'Dimmer entré 1 1',
     'name_by_user': None,
     'primary_config_entry': <ANY>,
     'serial_number': None,

@@ -81,7 +81,8 @@ class JvcProjectorDataUpdateCoordinator(DataUpdateCoordinator[dict[str, str]]):
                 new_state = await self._get_device_state(commands)
                 break
             except JvcProjectorTimeoutError as err:
-                # Timeouts are expected when the projector loses signal and ignores commands for a brief time.
+                # Timeouts are expected when the projector
+                # loses signal and ignores commands briefly.
                 last_timeout = err
                 await asyncio.sleep(TIMEOUT_SLEEP)
         else:

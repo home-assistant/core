@@ -107,7 +107,7 @@ async def test_light_unique_id(
         await async_setup_component(hass, lifx.DOMAIN, {lifx.DOMAIN: {}})
         await hass.async_block_till_done()
 
-    entity_id = "light.my_bulb"
+    entity_id = "light.my_group_my_bulb"
     assert entity_registry.async_get(entity_id).unique_id == SERIAL
 
     device = device_registry.async_get_device(
@@ -135,7 +135,7 @@ async def test_light_unique_id_new_firmware(
         await async_setup_component(hass, lifx.DOMAIN, {lifx.DOMAIN: {}})
         await hass.async_block_till_done()
 
-    entity_id = "light.my_bulb"
+    entity_id = "light.my_group_my_bulb"
     assert entity_registry.async_get(entity_id).unique_id == SERIAL
     device = device_registry.async_get_device(
         connections={(dr.CONNECTION_NETWORK_MAC, MAC_ADDRESS)},
@@ -160,7 +160,7 @@ async def test_light_strip(hass: HomeAssistant) -> None:
         await async_setup_component(hass, lifx.DOMAIN, {lifx.DOMAIN: {}})
         await hass.async_block_till_done()
 
-    entity_id = "light.my_bulb"
+    entity_id = "light.my_group_my_bulb"
 
     state = hass.states.get(entity_id)
     assert state.state == "on"
@@ -460,7 +460,7 @@ async def test_extended_multizone_messages(hass: HomeAssistant) -> None:
         await async_setup_component(hass, lifx.DOMAIN, {lifx.DOMAIN: {}})
         await hass.async_block_till_done()
 
-    entity_id = "light.my_bulb"
+    entity_id = "light.my_group_my_bulb"
 
     state = hass.states.get(entity_id)
     assert state.state == "on"
@@ -697,7 +697,7 @@ async def test_matrix_flame_morph_effects(hass: HomeAssistant) -> None:
         await async_setup_component(hass, lifx.DOMAIN, {lifx.DOMAIN: {}})
         await hass.async_block_till_done()
 
-    entity_id = "light.my_bulb"
+    entity_id = "light.my_group_my_bulb"
 
     # FLAME effect test
     await hass.services.async_call(
@@ -851,7 +851,7 @@ async def test_sky_effect(hass: HomeAssistant) -> None:
         await async_setup_component(hass, lifx.DOMAIN, {lifx.DOMAIN: {}})
         await hass.async_block_till_done()
 
-    entity_id = "light.my_bulb"
+    entity_id = "light.my_group_my_bulb"
 
     # SKY effect test
     bulb.power_level = 0
@@ -983,7 +983,7 @@ async def test_lightstrip_move_effect(hass: HomeAssistant) -> None:
         await async_setup_component(hass, lifx.DOMAIN, {lifx.DOMAIN: {}})
         await hass.async_block_till_done()
 
-    entity_id = "light.my_bulb"
+    entity_id = "light.my_group_my_bulb"
 
     await hass.services.async_call(
         LIGHT_DOMAIN,
@@ -1081,7 +1081,7 @@ async def test_paint_theme_service(hass: HomeAssistant) -> None:
         await async_setup_component(hass, lifx.DOMAIN, {lifx.DOMAIN: {}})
         await hass.async_block_till_done()
 
-    entity_id = "light.my_bulb"
+    entity_id = "light.my_group_my_bulb"
 
     bulb.power_level = 0
     await hass.services.async_call(
@@ -1180,7 +1180,7 @@ async def test_color_light_with_temp(
         await async_setup_component(hass, lifx.DOMAIN, {lifx.DOMAIN: {}})
         await hass.async_block_till_done()
 
-    entity_id = "light.my_bulb"
+    entity_id = "light.my_group_my_bulb"
 
     state = hass.states.get(entity_id)
     assert state.state == "on"
@@ -1391,7 +1391,7 @@ async def test_white_bulb(hass: HomeAssistant) -> None:
         await async_setup_component(hass, lifx.DOMAIN, {lifx.DOMAIN: {}})
         await hass.async_block_till_done()
 
-    entity_id = "light.my_bulb"
+    entity_id = "light.my_group_my_bulb"
 
     state = hass.states.get(entity_id)
     assert state.state == "on"
@@ -1467,7 +1467,7 @@ async def test_config_zoned_light_strip_fails(
     )
     already_migrated_config_entry.add_to_hass(hass)
     light_strip = _mocked_light_strip()
-    entity_id = "light.my_bulb"
+    entity_id = "light.my_group_my_bulb"
 
     class MockFailingLifxCommand:
         """Mock a lifx command that fails on the 2nd try."""
@@ -1510,7 +1510,7 @@ async def test_legacy_zoned_light_strip(
     )
     already_migrated_config_entry.add_to_hass(hass)
     light_strip = _mocked_light_strip()
-    entity_id = "light.my_bulb"
+    entity_id = "light.my_group_my_bulb"
 
     class MockPopulateLifxZonesCommand:
         """Mock populating the number of zones."""
@@ -1563,7 +1563,7 @@ async def test_white_light_fails(
     )
     already_migrated_config_entry.add_to_hass(hass)
     bulb = _mocked_white_bulb()
-    entity_id = "light.my_bulb"
+    entity_id = "light.my_group_my_bulb"
 
     bulb.set_power = MockFailingLifxCommand(bulb)
 
@@ -1621,7 +1621,7 @@ async def test_brightness_bulb(hass: HomeAssistant) -> None:
         await async_setup_component(hass, lifx.DOMAIN, {lifx.DOMAIN: {}})
         await hass.async_block_till_done()
 
-    entity_id = "light.my_bulb"
+    entity_id = "light.my_group_my_bulb"
 
     state = hass.states.get(entity_id)
     assert state.state == "on"
@@ -1682,7 +1682,7 @@ async def test_transitions_brightness_only(hass: HomeAssistant) -> None:
         await async_setup_component(hass, lifx.DOMAIN, {lifx.DOMAIN: {}})
         await hass.async_block_till_done()
 
-    entity_id = "light.my_bulb"
+    entity_id = "light.my_group_my_bulb"
 
     state = hass.states.get(entity_id)
     assert state.state == "on"
@@ -1752,7 +1752,7 @@ async def test_transitions_color_bulb(hass: HomeAssistant) -> None:
         await async_setup_component(hass, lifx.DOMAIN, {lifx.DOMAIN: {}})
         await hass.async_block_till_done()
 
-    entity_id = "light.my_bulb"
+    entity_id = "light.my_group_my_bulb"
 
     state = hass.states.get(entity_id)
     assert state.state == "on"
@@ -1887,7 +1887,7 @@ async def test_lifx_set_state_brightness(hass: HomeAssistant) -> None:
         await async_setup_component(hass, lifx.DOMAIN, {lifx.DOMAIN: {}})
         await hass.async_block_till_done()
 
-    entity_id = "light.my_bulb"
+    entity_id = "light.my_group_my_bulb"
 
     # brightness_step should convert from 8 bit to 16 bit
     await hass.services.async_call(
@@ -1939,7 +1939,7 @@ async def test_lifx_set_state_color(hass: HomeAssistant) -> None:
         await async_setup_component(hass, lifx.DOMAIN, {lifx.DOMAIN: {}})
         await hass.async_block_till_done()
 
-    entity_id = "light.my_bulb"
+    entity_id = "light.my_group_my_bulb"
 
     # brightness should convert from 8 to 16 bits
     await hass.services.async_call(
@@ -2049,7 +2049,7 @@ async def test_lifx_set_state_kelvin(hass: HomeAssistant) -> None:
         await async_setup_component(hass, lifx.DOMAIN, {lifx.DOMAIN: {}})
         await hass.async_block_till_done()
 
-    entity_id = "light.my_bulb"
+    entity_id = "light.my_group_my_bulb"
 
     state = hass.states.get(entity_id)
     assert state.state == "on"
@@ -2094,7 +2094,7 @@ async def test_infrared_color_bulb(hass: HomeAssistant) -> None:
         await async_setup_component(hass, lifx.DOMAIN, {lifx.DOMAIN: {}})
         await hass.async_block_till_done()
 
-    entity_id = "light.my_bulb"
+    entity_id = "light.my_group_my_bulb"
 
     state = hass.states.get(entity_id)
     assert state.state == "on"
@@ -2137,7 +2137,7 @@ async def test_color_bulb_is_actually_off(hass: HomeAssistant) -> None:
         await async_setup_component(hass, lifx.DOMAIN, {lifx.DOMAIN: {}})
         await hass.async_block_till_done()
 
-    entity_id = "light.my_bulb"
+    entity_id = "light.my_group_my_bulb"
 
     state = hass.states.get(entity_id)
     assert state.state == "on"
@@ -2195,7 +2195,7 @@ async def test_clean_bulb(hass: HomeAssistant) -> None:
         await async_setup_component(hass, lifx.DOMAIN, {lifx.DOMAIN: {}})
         await hass.async_block_till_done()
 
-    entity_id = "light.my_bulb"
+    entity_id = "light.my_group_my_bulb"
     state = hass.states.get(entity_id)
     assert state.state == "off"
     await hass.services.async_call(
@@ -2234,7 +2234,7 @@ async def test_set_color_timeout_raises_home_assistant_error(
         await hass.services.async_call(
             LIGHT_DOMAIN,
             "turn_on",
-            {ATTR_ENTITY_ID: "light.my_bulb", ATTR_HS_COLOR: (10, 30)},
+            {ATTR_ENTITY_ID: "light.my_group_my_bulb", ATTR_HS_COLOR: (10, 30)},
             blocking=True,
         )
 
@@ -2255,7 +2255,7 @@ async def test_set_hev_cycle_state_fails_for_color_bulb(hass: HomeAssistant) -> 
         await async_setup_component(hass, lifx.DOMAIN, {lifx.DOMAIN: {}})
         await hass.async_block_till_done()
 
-    entity_id = "light.my_bulb"
+    entity_id = "light.my_group_my_bulb"
     state = hass.states.get(entity_id)
     assert state.state == "off"
 
@@ -2315,7 +2315,7 @@ async def test_light_strip_zones_not_populated_yet(hass: HomeAssistant) -> None:
         await async_setup_component(hass, lifx.DOMAIN, {lifx.DOMAIN: {}})
         await hass.async_block_till_done()
 
-    entity_id = "light.my_bulb"
+    entity_id = "light.my_group_my_bulb"
     # Make sure we at least try to fetch the first zone
     # to ensure we populate the zones from the 503 response
     assert len(bulb.get_color_zones.calls) == 3

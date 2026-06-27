@@ -46,7 +46,7 @@
     {
       "creationTime": 1527329167000,
       "lastUpdateTime": 1527329167000,
-      "label": "* *",
+      "label": "Garden Camera",
       "deviceURL": "camera://1234-1234-6233/00408cbef1e6",
       "shortcut": false,
       "controllableName": "camera:GenericCameraComponent",
@@ -80,7 +80,7 @@
     {
       "creationTime": 1606823644000,
       "lastUpdateTime": 1606823644000,
-      "label": "* (*)",
+      "label": "TaHoma (HomeKit)",
       "deviceURL": "homekit://1234-1234-6233/stack",
       "shortcut": false,
       "controllableName": "homekit:StackComponent",
@@ -103,12 +103,12 @@
         {
           "name": "homekit:SetupPayload",
           "type": 3,
-          "value": "*://*"
+          "value": "X-HM://0000000000000"
         },
         {
           "name": "homekit:SetupCode",
           "type": 3,
-          "value": "*"
+          "value": "012-34-567"
         }
       ],
       "available": true,
@@ -122,7 +122,7 @@
     {
       "creationTime": 1501224146000,
       "lastUpdateTime": 1501224146000,
-      "label": "*",
+      "label": "Alarm",
       "deviceURL": "internal://1234-1234-6233/alarm/0",
       "shortcut": false,
       "controllableName": "internal:TSKAlarmComponent",
@@ -229,7 +229,7 @@
         {
           "name": "core:NameState",
           "type": 3,
-          "value": "* *"
+          "value": "Home Alarm"
         },
         {
           "name": "internal:CurrentAlarmModeState",
@@ -263,7 +263,7 @@
     {
       "creationTime": 1501224054000,
       "lastUpdateTime": 1501224054000,
-      "label": "* *",
+      "label": "TaHoma V2",
       "deviceURL": "internal://1234-1234-6233/pod/0",
       "shortcut": false,
       "controllableName": "internal:PodV2Component",
@@ -362,7 +362,7 @@
         {
           "name": "core:NameState",
           "type": 3,
-          "value": "*"
+          "value": "TaHoma"
         },
         {
           "name": "internal:BatteryStatusState",
@@ -642,6 +642,76 @@
       "widget": "PositionableGarageDoor",
       "type": 1,
       "oid": "0df95043-359c-4b3d-9147-f49b2b35053c",
+      "uiClass": "GarageDoor"
+    },
+    {
+      "creationTime": 1521964729000,
+      "lastUpdateTime": 1521964729000,
+      "label": "Basement Garage Door",
+      "deviceURL": "io://1234-1234-6233/1166864",
+      "shortcut": false,
+      "controllableName": "io:GarageOpenerIOComponent",
+      "definition": {
+        "commands": [
+          {
+            "commandName": "close",
+            "nparams": 0
+          },
+          {
+            "commandName": "open",
+            "nparams": 0
+          },
+          {
+            "commandName": "setClosure",
+            "nparams": 1
+          },
+          {
+            "commandName": "stop",
+            "nparams": 0
+          }
+        ],
+        "states": [
+          {
+            "type": "ContinuousState",
+            "qualifiedName": "core:ClosureState"
+          },
+          {
+            "type": "DiscreteState",
+            "values": ["closed", "open", "unknown"],
+            "qualifiedName": "core:OpenClosedUnknownState"
+          }
+        ],
+        "widgetName": "PositionableGarageDoor",
+        "uiProfiles": [
+          "StatefulCloseableGarageOpener",
+          "StatefulCloseable",
+          "Closeable",
+          "OpenClose"
+        ],
+        "uiClass": "GarageDoor",
+        "qualifiedName": "io:GarageOpenerIOComponent",
+        "type": "ACTUATOR"
+      },
+      "states": [
+        {
+          "name": "core:OpenClosedUnknownState",
+          "type": 3,
+          "value": "unknown"
+        }
+      ],
+      "attributes": [
+        {
+          "name": "core:Manufacturer",
+          "type": 3,
+          "value": "Somfy"
+        }
+      ],
+      "available": true,
+      "enabled": true,
+      "placeOID": "bcbb34ef-2241-43a1-9c5b-523aa0563ec3",
+      "widget": "PositionableGarageDoor",
+      "type": 1,
+      "oid": "1df95043-359c-4b3d-9147-f49b2b35053d",
       "uiClass": "GarageDoor"
     },
     {
@@ -1947,7 +2017,7 @@
     {
       "creationTime": 1501224336000,
       "lastUpdateTime": 1501224336000,
-      "label": "* * *&*",
+      "label": "Pool Pump On&Off",
       "deviceURL": "io://1234-1234-6233/16168460",
       "shortcut": false,
       "controllableName": "io:OnOffIOComponent",
@@ -2100,7 +2170,7 @@
         {
           "name": "core:NameState",
           "type": 3,
-          "value": "* * *&*"
+          "value": "Pool Pump On&Off"
         },
         {
           "name": "core:PriorityLockTimerState",
@@ -2146,7 +2216,7 @@
     {
       "creationTime": 1600767469000,
       "lastUpdateTime": 1600767469000,
-      "label": "* (*)",
+      "label": "TaHoma (IO)",
       "deviceURL": "io://1234-1234-6233/1684749",
       "shortcut": false,
       "controllableName": "io:StackComponent",
@@ -2529,7 +2599,7 @@
     {
       "creationTime": 1624791003000,
       "lastUpdateTime": 1624791003000,
-      "label": "*",
+      "label": "Protexiom",
       "deviceURL": "io://1234-1234-6233/2155276",
       "shortcut": false,
       "controllableName": "io:AlarmIOComponent",
@@ -2685,7 +2755,7 @@
         {
           "name": "core:NameState",
           "type": 3,
-          "value": "*"
+          "value": "Protexiom"
         },
         {
           "name": "core:PriorityLockTimerState",
@@ -3307,7 +3377,7 @@
     {
       "creationTime": 1544643386000,
       "lastUpdateTime": 1544643386000,
-      "label": "* * *",
+      "label": "Garden Light Switch",
       "deviceURL": "io://1234-1234-6233/6852535",
       "shortcut": false,
       "controllableName": "io:OnOffIOComponent",
@@ -3460,7 +3530,7 @@
         {
           "name": "core:NameState",
           "type": 3,
-          "value": "* * *"
+          "value": "Garden Light Switch"
         },
         {
           "name": "core:PriorityLockTimerState",
@@ -4481,7 +4551,7 @@
     {
       "creationTime": 1576263695000,
       "lastUpdateTime": 1576263695000,
-      "label": "* *",
+      "label": "Patio Light",
       "deviceURL": "io://1234-1234-6233/9474368",
       "shortcut": false,
       "controllableName": "io:OnOffIOComponent",
@@ -4634,7 +4704,7 @@
         {
           "name": "core:NameState",
           "type": 3,
-          "value": "* *"
+          "value": "Patio Light"
         },
         {
           "name": "core:PriorityLockTimerState",
@@ -5010,7 +5080,7 @@
     {
       "creationTime": 1593517355000,
       "lastUpdateTime": 1593517355000,
-      "label": "* (*)",
+      "label": "Protect (Bridge)",
       "deviceURL": "ogp://1234-1234-6233/00000BE8",
       "shortcut": false,
       "controllableName": "ogp:Bridge",
@@ -5092,7 +5162,7 @@
     {
       "creationTime": 1593517357000,
       "lastUpdateTime": 1593517357000,
-      "label": "* * *",
+      "label": "Indoor Motion Sensor",
       "deviceURL": "ogp://1234-1234-6233/039575E9",
       "shortcut": false,
       "controllableName": "ogp:Bridge",
@@ -5133,7 +5203,7 @@
         {
           "name": "core:NameState",
           "type": 3,
-          "value": "* * *"
+          "value": "Indoor Motion Sensor"
         }
       ],
       "attributes": [
@@ -5176,7 +5246,7 @@
     {
       "creationTime": 1593517356000,
       "lastUpdateTime": 1593517356000,
-      "label": "* * *",
+      "label": "Outdoor Motion Sensor",
       "deviceURL": "ogp://1234-1234-6233/09E45393",
       "shortcut": false,
       "controllableName": "ogp:Bridge",
@@ -5217,7 +5287,7 @@
         {
           "name": "core:NameState",
           "type": 3,
-          "value": "* * *"
+          "value": "Outdoor Motion Sensor"
         }
       ],
       "attributes": [
@@ -5260,7 +5330,7 @@
     {
       "creationTime": 1501225111000,
       "lastUpdateTime": 1501225111000,
-      "label": "*é*é* *",
+      "label": "Télécommande Salon",
       "deviceURL": "rtds://1234-1234-6233/124768",
       "shortcut": false,
       "controllableName": "rtds:RTDSRemoteControllerComponent",
@@ -5332,7 +5402,7 @@
     {
       "creationTime": 1501225074000,
       "lastUpdateTime": 1501225074000,
-      "label": "*é*é* *",
+      "label": "Télécommande Bureau",
       "deviceURL": "rtds://1234-1234-6233/169771",
       "shortcut": false,
       "controllableName": "rtds:RTDSRemoteControllerComponent",
@@ -5404,7 +5474,7 @@
     {
       "creationTime": 1501224458000,
       "lastUpdateTime": 1501224458000,
-      "label": "*",
+      "label": "Hallway",
       "deviceURL": "rtds://1234-1234-6233/232949",
       "shortcut": false,
       "controllableName": "rtds:RTDSMotionSensor",
@@ -5455,7 +5525,7 @@
     {
       "creationTime": 1501224970000,
       "lastUpdateTime": 1501224970000,
-      "label": "É*",
+      "label": "Entrée",
       "deviceURL": "rtds://1234-1234-6233/246258",
       "shortcut": false,
       "controllableName": "rtds:RTDSMotionSensor",
@@ -5506,7 +5576,7 @@
     {
       "creationTime": 1501224664000,
       "lastUpdateTime": 1501224664000,
-      "label": "*",
+      "label": "Kitchen",
       "deviceURL": "rtds://1234-1234-6233/288316",
       "shortcut": false,
       "controllableName": "rtds:RTDSMotionSensor",
@@ -5557,7 +5627,7 @@
     {
       "creationTime": 1501224830000,
       "lastUpdateTime": 1501224830000,
-      "label": "*é*",
+      "label": "Fenêtre Garage",
       "deviceURL": "rtds://1234-1234-6233/394765",
       "shortcut": false,
       "controllableName": "rtds:RTDSContactSensor",
@@ -5607,7 +5677,7 @@
     {
       "creationTime": 1501224801000,
       "lastUpdateTime": 1501224801000,
-      "label": "*",
+      "label": "Porte",
       "deviceURL": "rtds://1234-1234-6233/394781",
       "shortcut": false,
       "controllableName": "rtds:RTDSContactSensor",
@@ -5657,7 +5727,7 @@
     {
       "creationTime": 1501225017000,
       "lastUpdateTime": 1501225017000,
-      "label": "*é* *",
+      "label": "Détecteur Fumée",
       "deviceURL": "rtds://1234-1234-6233/711548",
       "shortcut": false,
       "controllableName": "rtds:RTDSSmokeSensor",
@@ -5708,7 +5778,7 @@
     {
       "creationTime": 1546191792000,
       "lastUpdateTime": 1546191792000,
-      "label": "*",
+      "label": "Kitchen",
       "deviceURL": "upnpcontrol://1234-1234-6233/uuid:RINCON_7828CA300AD801400",
       "shortcut": false,
       "controllableName": "upnpcontrol:SonosPlayOneComponent",
@@ -5868,7 +5938,7 @@
     {
       "creationTime": 1526325424000,
       "lastUpdateTime": 1526325424000,
-      "label": "* *:*",
+      "label": "Living Room",
       "deviceURL": "upnpcontrol://1234-1234-6233/uuid:RINCON_7828CA3011E801400",
       "shortcut": false,
       "controllableName": "upnpcontrol:SonosPlayOneComponent",
@@ -6028,7 +6098,7 @@
     {
       "creationTime": 1546191792000,
       "lastUpdateTime": 1546191792000,
-      "label": "*",
+      "label": "Bedroom",
       "deviceURL": "upnpcontrol://1234-1234-6233/uuid:RINCON_7828CACED56E01400",
       "shortcut": false,
       "controllableName": "upnpcontrol:SonosOneComponent",
@@ -6188,7 +6258,7 @@
     {
       "creationTime": 1526325424000,
       "lastUpdateTime": 1526325424000,
-      "label": "*",
+      "label": "Lounge",
       "deviceURL": "upnpcontrol://1234-1234-6233/uuid:RINCON_949F3E479FC001400",
       "shortcut": false,
       "controllableName": "upnpcontrol:SonosSubComponent",
@@ -6348,7 +6418,7 @@
     {
       "creationTime": 1510775207000,
       "lastUpdateTime": 1510775207000,
-      "label": "*",
+      "label": "Studio",
       "deviceURL": "upnpcontrol://1234-1234-6233/uuid:RINCON_B8E9372FDA1201400",
       "shortcut": false,
       "controllableName": "upnpcontrol:SonosPlayFiveComponent",
@@ -6503,7 +6573,7 @@
     {
       "creationTime": 1530352152000,
       "lastUpdateTime": 1530352152000,
-      "label": "*",
+      "label": "Office",
       "deviceURL": "upnpcontrol://1234-1234-6233/uuid:RINCON_B8E93744C18001400",
       "shortcut": false,
       "controllableName": "upnpcontrol:SonosPlayBaseComponent",
@@ -6663,7 +6733,7 @@
     {
       "creationTime": 1510775207000,
       "lastUpdateTime": 1510775207000,
-      "label": "* * *",
+      "label": "Guest Room Speaker",
       "deviceURL": "upnpcontrol://1234-1234-6233/uuid:RINCON_B8E937BB9E2E01400",
       "shortcut": false,
       "controllableName": "upnpcontrol:SonosPlayOneComponent",
@@ -7370,6 +7440,1767 @@
       "widget": "DiscreteGateWithPedestrianPosition",
       "oid": "6ba9b1de-8037-41d7-9150-21f7d5f49a3f",
       "uiClass": "Gate"
+    },
+    {
+      "creationTime": 1434967095000,
+      "lastUpdateTime": 1434967095000,
+      "label": "RTS Gate",
+      "deviceURL": "rts://1234-1234-6233/16730717",
+      "shortcut": false,
+      "controllableName": "rts:GateOpenerRTS4TComponent",
+      "definition": {
+        "commands": [
+          {
+            "commandName": "cycle",
+            "nparams": 1
+          }
+        ],
+        "states": [],
+        "dataProperties": [],
+        "widgetName": "OpenCloseGate4T",
+        "uiProfiles": ["CyclicGateOpener", "Cyclic"],
+        "uiClass": "Gate",
+        "qualifiedName": "rts:GateOpenerRTS4TComponent",
+        "type": "ACTUATOR"
+      },
+      "states": [],
+      "attributes": [],
+      "available": true,
+      "enabled": true,
+      "placeOID": "bcbb34ef-2241-43a1-9c5b-523aa0563ec3",
+      "widget": "OpenCloseGate4T",
+      "type": 1,
+      "oid": "a1b2c3d4-e5f6-7890-abcd-ef1234567891",
+      "uiClass": "Gate"
+    },
+    {
+      "creationTime": 1676547436000,
+      "lastUpdateTime": 1676547436000,
+      "label": "RTS Garage Door 4T",
+      "deviceURL": "rts://1234-1234-6233/16721270",
+      "shortcut": false,
+      "controllableName": "rts:GarageDoor4TRTSComponent",
+      "definition": {
+        "commands": [
+          {
+            "commandName": "cycle",
+            "nparams": 1
+          }
+        ],
+        "states": [],
+        "dataProperties": [
+          {
+            "value": "0",
+            "qualifiedName": "core:identifyInterval"
+          }
+        ],
+        "widgetName": "UpDownGarageDoor4T",
+        "uiProfiles": ["CyclicGarageOpener", "Cyclic"],
+        "uiClass": "GarageDoor",
+        "qualifiedName": "rts:GarageDoor4TRTSComponent",
+        "type": "ACTUATOR"
+      },
+      "states": [],
+      "attributes": [],
+      "available": true,
+      "enabled": true,
+      "placeOID": "bcbb34ef-2241-43a1-9c5b-523aa0563ec3",
+      "widget": "UpDownGarageDoor4T",
+      "type": 1,
+      "oid": "a1b2c3d4-e5f6-7890-abcd-ef1234567892",
+      "uiClass": "GarageDoor"
+    },
+    {
+      "creationTime": 1654894302000,
+      "lastUpdateTime": 1654894302000,
+      "label": "Sliding Gate",
+      "deviceURL": "io://1234-1234-6233/16730051",
+      "shortcut": false,
+      "controllableName": "io:SlidingDiscreteGateOpenerIOComponent",
+      "definition": {
+        "commands": [
+          {
+            "commandName": "close",
+            "nparams": 0
+          },
+          {
+            "commandName": "identify",
+            "nparams": 0
+          },
+          {
+            "commandName": "open",
+            "nparams": 0
+          },
+          {
+            "commandName": "refreshPedestrianPosition",
+            "nparams": 0
+          },
+          {
+            "commandName": "setPedestrianPosition",
+            "nparams": 0
+          },
+          {
+            "commandName": "stop",
+            "nparams": 0
+          }
+        ],
+        "states": [
+          {
+            "type": "DiscreteState",
+            "values": ["good", "low", "normal", "verylow"],
+            "qualifiedName": "core:DiscreteRSSILevelState"
+          },
+          {
+            "type": "DataState",
+            "qualifiedName": "core:NameState"
+          },
+          {
+            "type": "DiscreteState",
+            "values": ["closed", "open", "pedestrian", "unknown"],
+            "qualifiedName": "core:OpenClosedPedestrianState"
+          },
+          {
+            "type": "ContinuousState",
+            "qualifiedName": "core:PedestrianPositionState"
+          },
+          {
+            "type": "ContinuousState",
+            "qualifiedName": "core:RSSILevelState"
+          },
+          {
+            "type": "DiscreteState",
+            "values": ["available", "unavailable"],
+            "qualifiedName": "core:StatusState"
+          }
+        ],
+        "dataProperties": [],
+        "widgetName": "SlidingDiscreteGateWithPedestrianPosition",
+        "uiProfiles": ["OpenCloseGateOpener", "OpenClose"],
+        "uiClass": "Gate",
+        "qualifiedName": "io:SlidingDiscreteGateOpenerIOComponent",
+        "type": "ACTUATOR"
+      },
+      "states": [
+        {
+          "name": "core:NameState",
+          "type": 3,
+          "value": "Sliding Gate"
+        },
+        {
+          "name": "core:StatusState",
+          "type": 3,
+          "value": "available"
+        },
+        {
+          "name": "core:DiscreteRSSILevelState",
+          "type": 3,
+          "value": "normal"
+        },
+        {
+          "name": "core:RSSILevelState",
+          "type": 2,
+          "value": 50.0
+        },
+        {
+          "name": "core:OpenClosedPedestrianState",
+          "type": 3,
+          "value": "closed"
+        },
+        {
+          "name": "core:PedestrianPositionState",
+          "type": 1,
+          "value": 50
+        }
+      ],
+      "attributes": [
+        {
+          "name": "core:Manufacturer",
+          "type": 3,
+          "value": "Somfy"
+        },
+        {
+          "name": "core:FirmwareRevision",
+          "type": 3,
+          "value": "5107456G05"
+        }
+      ],
+      "available": true,
+      "enabled": true,
+      "placeOID": "bcbb34ef-2241-43a1-9c5b-523aa0563ec3",
+      "widget": "SlidingDiscreteGateWithPedestrianPosition",
+      "type": 1,
+      "oid": "c1e2f3a4-b5d6-7890-abcd-ef1234567890",
+      "uiClass": "Gate"
+    },
+    {
+      "creationTime": 1521964729000,
+      "lastUpdateTime": 1521964729000,
+      "label": "Garage Door",
+      "deviceURL": "io://1234-1234-6233/16730050",
+      "shortcut": false,
+      "controllableName": "io:DynamicGarageDoorComponent",
+      "definition": {
+        "commands": [
+          {
+            "commandName": "close",
+            "nparams": 0
+          },
+          {
+            "commandName": "getName",
+            "nparams": 0
+          },
+          {
+            "commandName": "identify",
+            "nparams": 0
+          },
+          {
+            "commandName": "open",
+            "nparams": 0
+          },
+          {
+            "commandName": "stop",
+            "nparams": 0
+          }
+        ],
+        "states": [
+          {
+            "type": "DiscreteState",
+            "values": ["closed", "open"],
+            "qualifiedName": "core:OpenClosedState"
+          },
+          {
+            "type": "DiscreteState",
+            "values": ["available", "unavailable"],
+            "qualifiedName": "core:StatusState"
+          }
+        ],
+        "widgetName": "DynamicGarageDoor",
+        "uiProfiles": ["OpenClose"],
+        "uiClass": "GarageDoor",
+        "qualifiedName": "io:DynamicGarageDoorComponent",
+        "type": "ACTUATOR"
+      },
+      "states": [
+        {
+          "name": "core:OpenClosedState",
+          "type": 3,
+          "value": "closed"
+        },
+        {
+          "name": "core:StatusState",
+          "type": 3,
+          "value": "available"
+        }
+      ],
+      "attributes": [
+        {
+          "name": "core:Manufacturer",
+          "type": 3,
+          "value": "Somfy"
+        }
+      ],
+      "available": true,
+      "enabled": true,
+      "placeOID": "bcbb34ef-2241-43a1-9c5b-523aa0563ec3",
+      "widget": "DynamicGarageDoor",
+      "type": 1,
+      "oid": "a5d47351-52d0-4a4c-a52d-abcdef123456",
+      "uiClass": "GarageDoor"
+    },
+    {
+      "creationTime": 1521964729000,
+      "lastUpdateTime": 1521964729000,
+      "label": "OGP Garage Door",
+      "deviceURL": "ogp://1234-1234-6233/6632544",
+      "shortcut": false,
+      "controllableName": "ogp:GarageDoor",
+      "definition": {
+        "commands": [
+          {
+            "commandName": "close",
+            "nparams": 0
+          },
+          {
+            "commandName": "identify",
+            "nparams": 0
+          },
+          {
+            "commandName": "open",
+            "nparams": 0
+          },
+          {
+            "commandName": "stop",
+            "nparams": 0
+          }
+        ],
+        "states": [
+          {
+            "type": "DiscreteState",
+            "values": ["available", "unavailable"],
+            "qualifiedName": "core:AvailabilityState"
+          },
+          {
+            "type": "DiscreteState",
+            "values": ["closed", "open"],
+            "qualifiedName": "core:OpenClosedState"
+          },
+          {
+            "type": "DiscreteState",
+            "values": ["available", "unavailable"],
+            "qualifiedName": "core:StatusState"
+          }
+        ],
+        "widgetName": "DynamicGarageDoor",
+        "uiProfiles": ["StatefulOpenClose", "OpenClose"],
+        "uiClass": "GarageDoor",
+        "qualifiedName": "ogp:GarageDoor",
+        "type": "ACTUATOR"
+      },
+      "states": [
+        {
+          "name": "core:AvailabilityState",
+          "type": 3,
+          "value": "available"
+        },
+        {
+          "name": "core:StatusState",
+          "type": 3,
+          "value": "available"
+        },
+        {
+          "name": "core:OpenClosedState",
+          "type": 3,
+          "value": "closed"
+        }
+      ],
+      "attributes": [
+        {
+          "name": "core:Manufacturer",
+          "type": 3,
+          "value": "Somfy"
+        },
+        {
+          "name": "core:Technology",
+          "type": 3,
+          "value": "io2way"
+        }
+      ],
+      "available": true,
+      "enabled": true,
+      "placeOID": "bcbb34ef-2241-43a1-9c5b-523aa0563ec3",
+      "widget": "DynamicGarageDoor",
+      "type": 1,
+      "oid": "2492f7ae-3711-4160-9dae-e8910b708ce1",
+      "uiClass": "GarageDoor"
+    },
+    {
+      "creationTime": 1685039520000,
+      "lastUpdateTime": 1685039520000,
+      "label": "Cyclic Garage Door",
+      "deviceURL": "io://1234-1234-6233/6416929",
+      "shortcut": false,
+      "controllableName": "io:CyclicGarageOpenerIOComponent",
+      "definition": {
+        "commands": [
+          {
+            "commandName": "advancedRefresh",
+            "nparams": 2
+          },
+          {
+            "commandName": "cycle",
+            "nparams": 0
+          },
+          {
+            "commandName": "delayedStopIdentify",
+            "nparams": 1
+          },
+          {
+            "commandName": "getName",
+            "nparams": 0
+          },
+          {
+            "commandName": "identify",
+            "nparams": 0
+          },
+          {
+            "commandName": "setName",
+            "nparams": 1
+          },
+          {
+            "commandName": "startIdentify",
+            "nparams": 0
+          },
+          {
+            "commandName": "stopIdentify",
+            "nparams": 0
+          },
+          {
+            "commandName": "wink",
+            "nparams": 1
+          },
+          {
+            "commandName": "pairOneWayController",
+            "nparams": 2
+          },
+          {
+            "commandName": "setConfigState",
+            "nparams": 1
+          },
+          {
+            "commandName": "unpairAllOneWayControllers",
+            "nparams": 0
+          },
+          {
+            "commandName": "unpairOneWayController",
+            "nparams": 2
+          }
+        ],
+        "states": [
+          {
+            "type": "DiscreteState",
+            "values": ["good", "low", "normal", "verylow"],
+            "qualifiedName": "core:DiscreteRSSILevelState"
+          },
+          {
+            "type": "DataState",
+            "qualifiedName": "core:NameState"
+          },
+          {
+            "type": "ContinuousState",
+            "qualifiedName": "core:PriorityLockTimerState"
+          },
+          {
+            "type": "ContinuousState",
+            "qualifiedName": "core:RSSILevelState"
+          },
+          {
+            "type": "DiscreteState",
+            "values": ["available", "unavailable"],
+            "qualifiedName": "core:StatusState"
+          },
+          {
+            "type": "DiscreteState",
+            "values": [
+              "comfortLevel1",
+              "comfortLevel2",
+              "comfortLevel3",
+              "comfortLevel4",
+              "environmentProtection",
+              "humanProtection",
+              "userLevel1",
+              "userLevel2"
+            ],
+            "qualifiedName": "io:PriorityLockLevelState"
+          },
+          {
+            "type": "DiscreteState",
+            "values": [
+              "LSC",
+              "SAAC",
+              "SFC",
+              "UPS",
+              "externalGateway",
+              "localUser",
+              "myself",
+              "rain",
+              "security",
+              "temperature",
+              "timer",
+              "user",
+              "wind"
+            ],
+            "qualifiedName": "io:PriorityLockOriginatorState"
+          }
+        ],
+        "dataProperties": [
+          {
+            "value": "500",
+            "qualifiedName": "core:identifyInterval"
+          }
+        ],
+        "widgetName": "CyclicGarageDoor",
+        "uiProfiles": ["CyclicGarageOpener", "Cyclic"],
+        "uiClass": "GarageDoor",
+        "qualifiedName": "io:CyclicGarageOpenerIOComponent",
+        "type": "ACTUATOR"
+      },
+      "states": [
+        {
+          "name": "core:NameState",
+          "type": 3,
+          "value": "Cyclic Garage Door"
+        },
+        {
+          "name": "core:PriorityLockTimerState",
+          "type": 1,
+          "value": 0
+        },
+        {
+          "name": "core:StatusState",
+          "type": 3,
+          "value": "available"
+        },
+        {
+          "name": "core:DiscreteRSSILevelState",
+          "type": 3,
+          "value": "normal"
+        },
+        {
+          "name": "core:RSSILevelState",
+          "type": 2,
+          "value": 72.0
+        }
+      ],
+      "attributes": [
+        {
+          "name": "core:Manufacturer",
+          "type": 3,
+          "value": "Somfy"
+        },
+        {
+          "name": "core:FirmwareRevision",
+          "type": 3,
+          "value": "5127170A01"
+        }
+      ],
+      "available": true,
+      "enabled": true,
+      "placeOID": "bcbb34ef-2241-43a1-9c5b-523aa0563ec3",
+      "widget": "CyclicGarageDoor",
+      "type": 1,
+      "oid": "42a91c8c-2f55-4442-9af8-fa93862fbeff",
+      "uiClass": "GarageDoor"
+    },
+    {
+      "creationTime": 1711109596000,
+      "lastUpdateTime": 1711109596000,
+      "label": "Swinging Gate",
+      "deviceURL": "io://1234-1234-8983/1959462",
+      "shortcut": false,
+      "controllableName": "io:CyclicSwingingGateOpenerIOComponent",
+      "definition": {
+        "commands": [
+          {
+            "commandName": "addLockLevel",
+            "nparams": 2
+          },
+          {
+            "commandName": "advancedRefresh",
+            "nparams": 2
+          },
+          {
+            "commandName": "cycle",
+            "nparams": 0
+          },
+          {
+            "commandName": "delayedStopIdentify",
+            "nparams": 1
+          },
+          {
+            "commandName": "getName",
+            "nparams": 0
+          },
+          {
+            "commandName": "identify",
+            "nparams": 0
+          },
+          {
+            "commandName": "removeLockLevel",
+            "nparams": 1
+          },
+          {
+            "commandName": "resetLockLevels",
+            "nparams": 0
+          },
+          {
+            "commandName": "setName",
+            "nparams": 1
+          },
+          {
+            "commandName": "startIdentify",
+            "nparams": 0
+          },
+          {
+            "commandName": "stopIdentify",
+            "nparams": 0
+          },
+          {
+            "commandName": "wink",
+            "nparams": 1
+          },
+          {
+            "commandName": "pairOneWayController",
+            "nparams": 2
+          },
+          {
+            "commandName": "setConfigState",
+            "nparams": 1
+          },
+          {
+            "commandName": "unpairAllOneWayControllers",
+            "nparams": 0
+          },
+          {
+            "commandName": "unpairOneWayController",
+            "nparams": 2
+          }
+        ],
+        "states": [
+          {
+            "eventBased": true,
+            "type": "DataState",
+            "qualifiedName": "core:CommandLockLevelsState"
+          },
+          {
+            "type": "DiscreteState",
+            "values": ["good", "low", "normal", "verylow"],
+            "qualifiedName": "core:DiscreteRSSILevelState"
+          },
+          {
+            "type": "DataState",
+            "qualifiedName": "core:NameState"
+          },
+          {
+            "type": "ContinuousState",
+            "qualifiedName": "core:PriorityLockTimerState"
+          },
+          {
+            "type": "ContinuousState",
+            "qualifiedName": "core:RSSILevelState"
+          },
+          {
+            "type": "DiscreteState",
+            "values": ["available", "unavailable"],
+            "qualifiedName": "core:StatusState"
+          },
+          {
+            "type": "DiscreteState",
+            "values": [
+              "comfortLevel1",
+              "comfortLevel2",
+              "comfortLevel3",
+              "comfortLevel4",
+              "environmentProtection",
+              "humanProtection",
+              "userLevel1",
+              "userLevel2"
+            ],
+            "qualifiedName": "io:PriorityLockLevelState"
+          },
+          {
+            "type": "DiscreteState",
+            "values": [
+              "LSC",
+              "SAAC",
+              "SFC",
+              "UPS",
+              "externalGateway",
+              "localUser",
+              "myself",
+              "rain",
+              "security",
+              "temperature",
+              "timer",
+              "user",
+              "wind"
+            ],
+            "qualifiedName": "io:PriorityLockOriginatorState"
+          }
+        ],
+        "dataProperties": [
+          {
+            "value": "500",
+            "qualifiedName": "core:identifyInterval"
+          }
+        ],
+        "widgetName": "CyclicSwingingGateOpener",
+        "uiProfiles": ["CyclicGateOpener", "Cyclic"],
+        "uiClass": "Gate",
+        "qualifiedName": "io:CyclicSwingingGateOpenerIOComponent",
+        "type": "ACTUATOR"
+      },
+      "states": [
+        {
+          "name": "core:NameState",
+          "type": 3,
+          "value": "Swinging Gate"
+        },
+        {
+          "name": "core:PriorityLockTimerState",
+          "type": 1,
+          "value": 0
+        },
+        {
+          "name": "core:CommandLockLevelsState",
+          "type": 3,
+          "value": "[]",
+          "lastUpdateTime": 1742634864000
+        },
+        {
+          "name": "core:StatusState",
+          "type": 3,
+          "value": "available"
+        },
+        {
+          "name": "core:DiscreteRSSILevelState",
+          "type": 3,
+          "value": "low"
+        },
+        {
+          "name": "core:RSSILevelState",
+          "type": 2,
+          "value": 32.0
+        }
+      ],
+      "attributes": [
+        {
+          "name": "core:FirmwareRevision",
+          "type": 3,
+          "value": "5127170B02"
+        },
+        {
+          "name": "core:Manufacturer",
+          "type": 3,
+          "value": "Somfy"
+        }
+      ],
+      "available": true,
+      "enabled": true,
+      "placeOID": "bcbb34ef-2241-43a1-9c5b-523aa0563ec3",
+      "widget": "CyclicSwingingGateOpener",
+      "type": 1,
+      "oid": "83371762-4f7c-4e1b-846b-d5b7f8e9aa53",
+      "uiClass": "Gate"
+    },
+    {
+      "creationTime": 1521964729000,
+      "lastUpdateTime": 1521964729000,
+      "label": "Partial Garage Door",
+      "deviceURL": "io://1234-1234-6233/7433515",
+      "shortcut": false,
+      "controllableName": "io:DiscreteGarageOpenerWithPartialPositionIOComponent",
+      "definition": {
+        "commands": [
+          {
+            "commandName": "close",
+            "nparams": 0
+          },
+          {
+            "commandName": "open",
+            "nparams": 0
+          },
+          {
+            "commandName": "partialPosition",
+            "nparams": 0
+          },
+          {
+            "commandName": "stop",
+            "nparams": 0
+          }
+        ],
+        "states": [
+          {
+            "type": "DiscreteState",
+            "values": ["closed", "open", "partial"],
+            "qualifiedName": "core:OpenClosedPartialState"
+          },
+          {
+            "type": "DiscreteState",
+            "values": ["available", "unavailable"],
+            "qualifiedName": "core:StatusState"
+          }
+        ],
+        "widgetName": "PositionableGarageDoorWithPartialPosition",
+        "uiProfiles": ["OpenClose"],
+        "uiClass": "GarageDoor",
+        "qualifiedName": "io:DiscreteGarageOpenerWithPartialPositionIOComponent",
+        "type": "ACTUATOR"
+      },
+      "states": [
+        {
+          "name": "core:StatusState",
+          "type": 3,
+          "value": "available"
+        },
+        {
+          "name": "core:OpenClosedPartialState",
+          "type": 3,
+          "value": "closed"
+        }
+      ],
+      "attributes": [
+        {
+          "name": "core:Manufacturer",
+          "type": 3,
+          "value": "Somfy"
+        }
+      ],
+      "available": true,
+      "enabled": true,
+      "placeOID": "bcbb34ef-2241-43a1-9c5b-523aa0563ec3",
+      "widget": "PositionableGarageDoorWithPartialPosition",
+      "type": 1,
+      "oid": "f1a2b3c4-d5e6-7890-abcd-ef1234567890",
+      "uiClass": "GarageDoor"
+    },
+    {
+      "creationTime": 1660551260000,
+      "lastUpdateTime": 1660551260000,
+      "label": "OGP Gate",
+      "deviceURL": "ogp://1234-1234-6233/10410217",
+      "shortcut": false,
+      "controllableName": "ogp:Gate",
+      "definition": {
+        "commands": [
+          {
+            "commandName": "close",
+            "nparams": 0
+          },
+          {
+            "commandName": "identify",
+            "nparams": 0
+          },
+          {
+            "commandName": "open",
+            "nparams": 0
+          },
+          {
+            "commandName": "setName",
+            "nparams": 1
+          },
+          {
+            "commandName": "stop",
+            "nparams": 0
+          }
+        ],
+        "states": [
+          {
+            "type": "DiscreteState",
+            "values": ["available", "unavailable"],
+            "qualifiedName": "core:AvailabilityState"
+          },
+          {
+            "type": "DataState",
+            "qualifiedName": "core:NameState"
+          },
+          {
+            "type": "DiscreteState",
+            "values": ["closed", "open"],
+            "qualifiedName": "core:OpenClosedState"
+          },
+          {
+            "type": "DiscreteState",
+            "values": ["available", "unavailable"],
+            "qualifiedName": "core:StatusState"
+          }
+        ],
+        "dataProperties": [],
+        "widgetName": "DynamicGate",
+        "uiProfiles": ["StatefulOpenClose", "OpenClose"],
+        "uiClass": "Gate",
+        "qualifiedName": "ogp:Gate",
+        "type": "ACTUATOR"
+      },
+      "states": [
+        {
+          "name": "core:NameState",
+          "type": 3,
+          "value": "OGP Gate"
+        },
+        {
+          "name": "core:AvailabilityState",
+          "type": 3,
+          "value": "available"
+        },
+        {
+          "name": "core:StatusState",
+          "type": 3,
+          "value": "available"
+        },
+        {
+          "name": "core:OpenClosedState",
+          "type": 3,
+          "value": "open"
+        }
+      ],
+      "attributes": [
+        {
+          "name": "core:Technology",
+          "type": 3,
+          "value": "io2way"
+        },
+        {
+          "name": "core:Manufacturer",
+          "type": 3,
+          "value": "Somfy"
+        }
+      ],
+      "available": true,
+      "enabled": true,
+      "placeOID": "bcbb34ef-2241-43a1-9c5b-523aa0563ec3",
+      "type": 1,
+      "widget": "DynamicGate",
+      "oid": "a8d3e9f1-4b2c-4d5e-8f6a-1234567890ab",
+      "uiClass": "Gate"
+    },
+    {
+      "creationTime": 1722449164000,
+      "lastUpdateTime": 1722449164000,
+      "label": "Somfy Pergola",
+      "deviceURL": "ogp://1234-1234-6233/14356699",
+      "shortcut": false,
+      "controllableName": "ogp:Pergola",
+      "definition": {
+        "commands": [
+          {
+            "commandName": "close",
+            "nparams": 0
+          },
+          {
+            "commandName": "open",
+            "nparams": 0
+          },
+          {
+            "commandName": "setClosure",
+            "nparams": 1
+          },
+          {
+            "commandName": "stop",
+            "nparams": 0
+          }
+        ],
+        "states": [
+          {
+            "type": "DiscreteState",
+            "values": ["available", "unavailable"],
+            "qualifiedName": "core:AvailabilityState"
+          },
+          {
+            "type": "ContinuousState",
+            "qualifiedName": "core:ClosureState"
+          },
+          {
+            "type": "DiscreteState",
+            "values": ["closed", "open"],
+            "qualifiedName": "core:OpenClosedState"
+          },
+          {
+            "type": "DiscreteState",
+            "values": ["available", "unavailable"],
+            "qualifiedName": "core:StatusState"
+          }
+        ],
+        "dataProperties": [],
+        "widgetName": "DynamicPergola",
+        "uiProfiles": [
+          "StatefulCloseable",
+          "Closeable",
+          "StatefulOpenClose",
+          "OpenClose"
+        ],
+        "uiClass": "Pergola",
+        "qualifiedName": "ogp:Pergola",
+        "type": "ACTUATOR"
+      },
+      "states": [
+        {
+          "name": "core:AvailabilityState",
+          "type": 3,
+          "value": "available"
+        },
+        {
+          "name": "core:StatusState",
+          "type": 3,
+          "value": "available"
+        },
+        {
+          "name": "core:OpenClosedState",
+          "type": 3,
+          "value": "closed"
+        },
+        {
+          "name": "core:ClosureState",
+          "type": 1,
+          "value": 100
+        }
+      ],
+      "attributes": [
+        {
+          "name": "core:Manufacturer",
+          "type": 3,
+          "value": "Somfy"
+        }
+      ],
+      "available": true,
+      "enabled": true,
+      "placeOID": "bcbb34ef-2241-43a1-9c5b-523aa0563ec3",
+      "widget": "DynamicPergola",
+      "type": 1,
+      "oid": "60df5650-2d35-4fae-bfff-787521598e7f",
+      "uiClass": "Pergola"
+    },
+    {
+      "label": "Bioclimatic Pergola",
+      "deviceURL": "ogp://1234-1234-6233/10943109",
+      "shortcut": false,
+      "controllableName": "ogp:Pergola",
+      "creationTime": 1748079242000,
+      "lastUpdateTime": 1748079242000,
+      "definition": {
+        "commands": [
+          {
+            "commandName": "goToAlias",
+            "nparams": 1
+          },
+          {
+            "commandName": "identify",
+            "nparams": 0
+          },
+          {
+            "commandName": "saveAlias",
+            "nparams": 1
+          },
+          {
+            "commandName": "setName",
+            "nparams": 1
+          },
+          {
+            "commandName": "setOrientation",
+            "nparams": 1
+          },
+          {
+            "commandName": "setTilt",
+            "nparams": 1
+          },
+          {
+            "commandName": "stop",
+            "nparams": 0
+          }
+        ],
+        "states": [
+          {
+            "type": "DiscreteState",
+            "values": ["available", "unavailable"],
+            "qualifiedName": "core:AvailabilityState"
+          },
+          {
+            "type": "ContinuousState",
+            "qualifiedName": "core:SlateOrientationState"
+          },
+          {
+            "type": "DiscreteState",
+            "values": ["available", "unavailable"],
+            "qualifiedName": "core:StatusState"
+          },
+          {
+            "type": "ContinuousState",
+            "qualifiedName": "core:TiltState"
+          }
+        ],
+        "dataProperties": [],
+        "widgetName": "DynamicPergola",
+        "uiProfiles": ["Specific"],
+        "uiClass": "Pergola",
+        "qualifiedName": "ogp:Pergola",
+        "type": "ACTUATOR"
+      },
+      "states": [
+        {
+          "name": "core:AvailabilityState",
+          "type": 3,
+          "value": "available"
+        },
+        {
+          "name": "core:StatusState",
+          "type": 3,
+          "value": "available"
+        },
+        {
+          "name": "core:TiltState",
+          "type": 1,
+          "value": 89
+        },
+        {
+          "name": "core:SlateOrientationState",
+          "type": 1,
+          "value": 89
+        }
+      ],
+      "attributes": [
+        {
+          "name": "core:Manufacturer",
+          "type": 3,
+          "value": "Somfy"
+        }
+      ],
+      "available": true,
+      "enabled": true,
+      "placeOID": "bcbb34ef-2241-43a1-9c5b-523aa0563ec3",
+      "widget": "DynamicPergola",
+      "type": 1,
+      "oid": "21832602-8bce-4317-b785-68f72b2113f6",
+      "uiClass": "Pergola"
+    },
+    {
+      "creationTime": 1633183247000,
+      "lastUpdateTime": 1633183247000,
+      "label": "Pergola Awning",
+      "deviceURL": "io://1234-1234-6233/11447718",
+      "shortcut": false,
+      "controllableName": "io:PergolaRailGuidedAwningIOComponent",
+      "definition": {
+        "commands": [
+          {
+            "commandName": "deploy",
+            "nparams": 0
+          },
+          {
+            "commandName": "open",
+            "nparams": 0
+          },
+          {
+            "commandName": "setClosure",
+            "nparams": 1
+          },
+          {
+            "commandName": "setDeployment",
+            "nparams": 1
+          },
+          {
+            "commandName": "stop",
+            "nparams": 0
+          },
+          {
+            "commandName": "undeploy",
+            "nparams": 0
+          }
+        ],
+        "states": [
+          {
+            "type": "ContinuousState",
+            "qualifiedName": "core:DeploymentState"
+          },
+          {
+            "type": "DiscreteState",
+            "values": ["false", "true"],
+            "qualifiedName": "core:MovingState"
+          },
+          {
+            "type": "DiscreteState",
+            "values": ["closed", "open"],
+            "qualifiedName": "core:OpenClosedState"
+          },
+          {
+            "type": "DiscreteState",
+            "values": ["available", "unavailable"],
+            "qualifiedName": "core:StatusState"
+          },
+          {
+            "type": "ContinuousState",
+            "qualifiedName": "core:TargetClosureState"
+          }
+        ],
+        "dataProperties": [],
+        "widgetName": "PergolaHorizontalAwning",
+        "uiProfiles": [
+          "StatefulSlidingPergola",
+          "StatefulDeployable",
+          "Deployable",
+          "DeployUndeploy",
+          "StatefulOpenClose",
+          "OpenClose"
+        ],
+        "uiClass": "Pergola",
+        "qualifiedName": "io:PergolaRailGuidedAwningIOComponent",
+        "type": "ACTUATOR"
+      },
+      "states": [
+        {
+          "name": "core:StatusState",
+          "type": 3,
+          "value": "available"
+        },
+        {
+          "name": "core:DeploymentState",
+          "type": 1,
+          "value": 20
+        },
+        {
+          "name": "core:OpenClosedState",
+          "type": 3,
+          "value": "open"
+        },
+        {
+          "name": "core:TargetClosureState",
+          "type": 1,
+          "value": 20
+        },
+        {
+          "name": "core:MovingState",
+          "type": 6,
+          "value": false
+        }
+      ],
+      "attributes": [
+        {
+          "name": "core:Manufacturer",
+          "type": 3,
+          "value": "Somfy"
+        }
+      ],
+      "available": true,
+      "enabled": true,
+      "placeOID": "bcbb34ef-2241-43a1-9c5b-523aa0563ec3",
+      "widget": "PergolaHorizontalAwning",
+      "type": 1,
+      "oid": "71df5650-2d35-4fae-bfff-787521598e7f",
+      "uiClass": "Pergola"
+    },
+    {
+      "label": "Bedroom Venetian Blind",
+      "uiClass": "VenetianBlind",
+      "deviceURL": "ogp://1234-1234-6233/16730100",
+      "shortcut": false,
+      "controllableName": "ogp:VenetianBlind",
+      "creationTime": 1773580989000,
+      "lastUpdateTime": 1773580989000,
+      "definition": {
+        "commands": [
+          {
+            "commandName": "close",
+            "nparams": 0
+          },
+          {
+            "commandName": "goToAlias",
+            "nparams": 1
+          },
+          {
+            "commandName": "identify",
+            "nparams": 0
+          },
+          {
+            "commandName": "open",
+            "nparams": 0
+          },
+          {
+            "commandName": "saveAlias",
+            "nparams": 1
+          },
+          {
+            "commandName": "setClosure",
+            "nparams": 1
+          },
+          {
+            "commandName": "setName",
+            "nparams": 1
+          },
+          {
+            "commandName": "setOrientation",
+            "nparams": 1
+          },
+          {
+            "commandName": "setTilt",
+            "nparams": 1
+          },
+          {
+            "commandName": "stop",
+            "nparams": 0
+          }
+        ],
+        "states": [
+          {
+            "type": "DataState",
+            "qualifiedName": "core:ActivePartitionState"
+          },
+          {
+            "type": "DiscreteState",
+            "values": ["available", "unavailable"],
+            "qualifiedName": "core:AvailabilityState"
+          },
+          {
+            "type": "ContinuousState",
+            "qualifiedName": "core:ClosureState"
+          },
+          {
+            "eventBased": true,
+            "type": "DiscreteState",
+            "values": [
+              "accessLimitation",
+              "internal",
+              "obstacleProtection",
+              "transportBusy",
+              "deviceNoAnswer",
+              "cancelled",
+              "deprecated",
+              "interrupted",
+              "thermalProtection",
+              "maintenanceRequired",
+              "alreadyUpToDate",
+              "notSupported",
+              "hardwareError",
+              "accessDenied",
+              "updateError",
+              "resourceAlreadyExist"
+            ],
+            "qualifiedName": "core:ErrorEventState"
+          },
+          {
+            "type": "DataState",
+            "qualifiedName": "core:ErrorState"
+          },
+          {
+            "type": "DataState",
+            "qualifiedName": "core:ErrorsState"
+          },
+          {
+            "type": "DataState",
+            "qualifiedName": "core:FirmwareHashState"
+          },
+          {
+            "type": "DataState",
+            "qualifiedName": "core:FirmwareRevisionState"
+          },
+          {
+            "type": "DataState",
+            "qualifiedName": "core:NameState"
+          },
+          {
+            "type": "DataState",
+            "qualifiedName": "core:NewFirmwareAvailableState"
+          },
+          {
+            "type": "DiscreteState",
+            "values": ["closed", "open"],
+            "qualifiedName": "core:OpenClosedState"
+          },
+          {
+            "type": "DataState",
+            "qualifiedName": "core:ReachedAliasesState"
+          },
+          {
+            "type": "DataState",
+            "qualifiedName": "core:RemovableState"
+          },
+          {
+            "type": "ContinuousState",
+            "qualifiedName": "core:SignalQualityState"
+          },
+          {
+            "type": "ContinuousState",
+            "qualifiedName": "core:SlateOrientationState"
+          },
+          {
+            "type": "DiscreteState",
+            "values": ["available", "unavailable"],
+            "qualifiedName": "core:StatusState"
+          },
+          {
+            "type": "ContinuousState",
+            "qualifiedName": "core:TiltState"
+          }
+        ],
+        "dataProperties": [],
+        "widgetName": "DynamicVenetianBlind",
+        "uiProfiles": [
+          "StatefulOrientableShutter",
+          "StatefulOrientablePlusCloseable",
+          "OrientablePlusCloseable",
+          "StatefulOpenClose",
+          "OpenClose",
+          "StatefulCloseable",
+          "Closeable"
+        ],
+        "uiClass": "VenetianBlind",
+        "qualifiedName": "ogp:VenetianBlind",
+        "type": "ACTUATOR"
+      },
+      "states": [
+        {
+          "name": "core:NameState",
+          "type": 3,
+          "value": "Bedroom Venetian Blind"
+        },
+        {
+          "name": "core:AvailabilityState",
+          "type": 3,
+          "value": "available"
+        },
+        {
+          "name": "core:StatusState",
+          "type": 3,
+          "value": "available"
+        },
+        {
+          "name": "core:ErrorsState",
+          "type": 10,
+          "value": []
+        },
+        {
+          "name": "core:FirmwareRevisionState",
+          "type": 3,
+          "value": "5128194A13"
+        },
+        {
+          "name": "core:FirmwareHashState",
+          "type": 3,
+          "value": "5128194A13"
+        },
+        {
+          "name": "core:OpenClosedState",
+          "type": 3,
+          "value": "closed"
+        },
+        {
+          "name": "core:ClosureState",
+          "type": 1,
+          "value": 100
+        },
+        {
+          "name": "core:TiltState",
+          "type": 1,
+          "value": 38
+        },
+        {
+          "name": "core:SlateOrientationState",
+          "type": 1,
+          "value": 38
+        }
+      ],
+      "attributes": [
+        {
+          "name": "core:SubType",
+          "type": 3,
+          "value": "outdoor"
+        },
+        {
+          "name": "core:ManufacturerReference",
+          "type": 3,
+          "value": "venetianBlind"
+        },
+        {
+          "name": "core:Technology",
+          "type": 3,
+          "value": "io2way"
+        },
+        {
+          "name": "core:SupportedAliases",
+          "type": 10,
+          "value": [
+            {
+              "id": "6",
+              "type": "favorite1",
+              "features": ["tiltPosition", "openClosePosition"]
+            },
+            {
+              "id": "4",
+              "type": "favorite1",
+              "features": ["tiltPosition", "openClosePosition"]
+            },
+            {
+              "id": "1",
+              "type": "favorite1",
+              "features": ["openClosePosition"]
+            },
+            {
+              "id": "2",
+              "type": "favorite1",
+              "features": ["tiltPosition"]
+            },
+            {
+              "id": "3",
+              "type": "favorite1",
+              "features": ["openClosePosition", "tiltPosition"]
+            },
+            {
+              "id": "5",
+              "type": "favorite1",
+              "features": ["openClosePosition", "tiltPosition"]
+            }
+          ]
+        },
+        {
+          "name": "ogp:Features",
+          "type": 10,
+          "value": [
+            {
+              "name": "firmware",
+              "commandLess": true
+            },
+            {
+              "name": "openClosePosition"
+            },
+            {
+              "name": "tiltPosition"
+            },
+            {
+              "name": "openClose"
+            },
+            {
+              "name": "stop"
+            },
+            {
+              "name": "identification"
+            },
+            {
+              "name": "diagnosis"
+            },
+            {
+              "name": "alias"
+            }
+          ]
+        },
+        {
+          "name": "core:Manufacturer",
+          "type": 3,
+          "value": "Somfy"
+        }
+      ],
+      "available": true,
+      "enabled": true,
+      "placeOID": "972455eb-4f91-4095-bf42-55c234bb6238",
+      "oid": "aaaaaaaa-bbbb-cccc-dddd-ffffffffffff",
+      "widget": "DynamicVenetianBlind",
+      "type": 1
+    },
+    {
+      "states": [
+        {
+          "name": "core:DiscreteRSSILevelState",
+          "type": 3,
+          "value": "normal"
+        },
+        {
+          "name": "core:NameState",
+          "type": 3,
+          "value": "Pool House"
+        },
+        {
+          "name": "core:OnOffState",
+          "type": 3,
+          "value": "off"
+        },
+        {
+          "name": "core:PriorityLockTimerState",
+          "type": 1,
+          "value": 0
+        },
+        {
+          "name": "core:RSSILevelState",
+          "type": 2,
+          "value": 64.0
+        },
+        {
+          "name": "core:StatusState",
+          "type": 3,
+          "value": "available"
+        }
+      ],
+      "enabled": true,
+      "type": 1,
+      "synced": true,
+      "available": true,
+      "deviceURL": "io://1234-1234-6233/16580352",
+      "definition": {
+        "commands": [
+          {
+            "commandName": "delayedStopIdentify",
+            "nparams": 1
+          },
+          {
+            "commandName": "getName",
+            "nparams": 0
+          },
+          {
+            "commandName": "identify",
+            "nparams": 0
+          },
+          {
+            "commandName": "off",
+            "nparams": 0
+          },
+          {
+            "commandName": "on",
+            "nparams": 0
+          },
+          {
+            "commandName": "onWithTimer",
+            "nparams": 1
+          },
+          {
+            "commandName": "setName",
+            "nparams": 1
+          },
+          {
+            "commandName": "setOnOff",
+            "nparams": 1
+          },
+          {
+            "commandName": "startIdentify",
+            "nparams": 0
+          },
+          {
+            "commandName": "stopIdentify",
+            "nparams": 0
+          },
+          {
+            "commandName": "wink",
+            "nparams": 1
+          },
+          {
+            "commandName": "pairOneWayController",
+            "nparams": 2
+          },
+          {
+            "commandName": "unpairAllOneWayControllers",
+            "nparams": 0
+          },
+          {
+            "commandName": "unpairOneWayController",
+            "nparams": 2
+          }
+        ],
+        "states": [
+          {
+            "values": ["good", "low", "normal", "verylow"],
+            "type": "DiscreteState",
+            "qualifiedName": "core:DiscreteRSSILevelState"
+          },
+          {
+            "type": "DataState",
+            "qualifiedName": "core:NameState"
+          },
+          {
+            "values": ["off", "on"],
+            "type": "DiscreteState",
+            "qualifiedName": "core:OnOffState"
+          },
+          {
+            "type": "ContinuousState",
+            "qualifiedName": "core:PriorityLockTimerState"
+          },
+          {
+            "type": "ContinuousState",
+            "qualifiedName": "core:RSSILevelState"
+          },
+          {
+            "values": ["available", "unavailable"],
+            "type": "DiscreteState",
+            "qualifiedName": "core:StatusState"
+          },
+          {
+            "values": [
+              "comfortLevel1",
+              "comfortLevel2",
+              "comfortLevel3",
+              "comfortLevel4",
+              "environmentProtection",
+              "humanProtection",
+              "userLevel1",
+              "userLevel2"
+            ],
+            "type": "DiscreteState",
+            "qualifiedName": "io:PriorityLockLevelState"
+          },
+          {
+            "values": [
+              "LSC",
+              "SAAC",
+              "SFC",
+              "UPS",
+              "externalGateway",
+              "localUser",
+              "myself",
+              "rain",
+              "security",
+              "temperature",
+              "timer",
+              "user",
+              "wind"
+            ],
+            "type": "DiscreteState",
+            "qualifiedName": "io:PriorityLockOriginatorState"
+          }
+        ],
+        "dataProperties": [
+          {
+            "value": "500",
+            "qualifiedName": "core:identifyInterval"
+          }
+        ],
+        "widgetName": "SwimmingPool",
+        "uiClass": "SwimmingPool",
+        "qualifiedName": "io:SwimmingPoolIOComponent",
+        "type": "ACTUATOR"
+      },
+      "label": "Pool House",
+      "controllableName": "io:SwimmingPoolIOComponent",
+      "widget": "SwimmingPool",
+      "uiClass": "SwimmingPool",
+      "subsystemId": 0
+    },
+    {
+      "creationTime": 1558256403000,
+      "lastUpdateTime": 1558256403000,
+      "label": "External Siren",
+      "deviceURL": "rtds://1234-1234-6233/4065441",
+      "shortcut": false,
+      "controllableName": "rtd:OutdoorSirenRTDComponent",
+      "definition": {
+        "commands": [
+          {
+            "commandName": "bip",
+            "nparams": 0
+          },
+          {
+            "commandName": "flash",
+            "nparams": 0
+          },
+          {
+            "commandName": "off",
+            "nparams": 0
+          },
+          {
+            "commandName": "on",
+            "nparams": 0
+          },
+          {
+            "commandName": "pair",
+            "nparams": 0
+          },
+          {
+            "commandName": "ring",
+            "nparams": 0
+          },
+          {
+            "commandName": "setVolume",
+            "nparams": 1
+          },
+          {
+            "commandName": "fastBipSequence",
+            "nparams": 0
+          }
+        ],
+        "states": [],
+        "dataProperties": [],
+        "widgetName": "RTDOutdoorSiren",
+        "uiClass": "Siren",
+        "qualifiedName": "rtd:OutdoorSirenRTDComponent",
+        "type": "ACTUATOR"
+      },
+      "attributes": [
+        {
+          "name": "core:GroupId",
+          "type": 3,
+          "value": "1234-1234-6233"
+        }
+      ],
+      "available": true,
+      "enabled": true,
+      "placeOID": "91ba6fe7-704e-4ee3-ab7f-1cb7eb2549a4",
+      "widget": "RTDOutdoorSiren",
+      "type": 1,
+      "oid": "a7c3e8d1-5b92-4f1a-b8e6-9d2c4a7f3e01",
+      "uiClass": "Siren"
     }
   ],
   "zones": [],

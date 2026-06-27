@@ -102,9 +102,9 @@ async def scan_step(
 def correct_scanners_and_clients_in_library(enable_bluetooth: None) -> Generator[None]:
     """Make sure the correct scanners and clients are used in the library.
 
-    This is needed since home assistant overrides the bleak scanner and client with wrappers,
-    but does so after enable_bluetooth fixture is applied, which causes the library to
-    use the wrong classes.
+    This is needed since home assistant overrides the bleak scanner and
+    client with wrappers, but does so after enable_bluetooth fixture is
+    applied, which causes the library to use the wrong classes.
     """
     with (
         patch("gardena_bluetooth.scan.BleakScanner", new=bleak.BleakScanner),

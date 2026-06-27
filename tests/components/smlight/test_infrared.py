@@ -2,7 +2,7 @@
 
 from unittest.mock import MagicMock
 
-from infrared_protocols import Command
+from infrared_protocols.commands import Command
 from pysmlight.exceptions import SmlightError
 from pysmlight.models import IRPayload
 import pytest

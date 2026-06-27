@@ -1,0 +1,126 @@
+# serializer version: 1
+# name: test_config_entry_diagnostics
+  dict({
+    'config_entry': dict({
+      'data': dict({
+        'password': '**REDACTED**',
+        'username': '**REDACTED**',
+      }),
+      'disabled_by': None,
+      'discovery_keys': dict({
+      }),
+      'domain': 'data_grand_lyon',
+      'minor_version': 1,
+      'options': dict({
+      }),
+      'pref_disable_new_entities': False,
+      'pref_disable_polling': False,
+      'source': 'user',
+      'subentries': list([
+        dict({
+          'data': dict({
+            'line': 'C3',
+            'stop_id': 100,
+          }),
+          'subentry_type': 'stop',
+          'title': 'C3 - Stop 100',
+          'unique_id': 'C3_100',
+        }),
+      ]),
+      'title': 'Data Grand Lyon',
+      'unique_id': None,
+      'version': 1,
+    }),
+    'coordinator_data': dict({
+      'stops': dict({
+        'stop_1': list([
+          dict({
+            'course_theorique': 'A',
+            'delai_passage': '3 min',
+            'direction': 'Gare Part-Dieu',
+            'heure_passage': '2026-04-10T14:03:00',
+            'id': 100,
+            'id_tarret_destination': 0,
+            'ligne': 'C3',
+            'type': 'E',
+          }),
+          dict({
+            'course_theorique': 'B',
+            'delai_passage': '8 min',
+            'direction': 'Gare St-Paul',
+            'heure_passage': '2026-04-10T14:08:00',
+            'id': 100,
+            'id_tarret_destination': 0,
+            'ligne': 'C3',
+            'type': 'T',
+          }),
+        ]),
+      }),
+      'velov_stations': dict({
+      }),
+    }),
+  })
+# ---
+# name: test_config_entry_diagnostics_with_velov
+  dict({
+    'config_entry': dict({
+      'data': dict({
+        'password': '**REDACTED**',
+        'username': '**REDACTED**',
+      }),
+      'disabled_by': None,
+      'discovery_keys': dict({
+      }),
+      'domain': 'data_grand_lyon',
+      'minor_version': 1,
+      'options': dict({
+      }),
+      'pref_disable_new_entities': False,
+      'pref_disable_polling': False,
+      'source': 'user',
+      'subentries': list([
+        dict({
+          'data': dict({
+            'station_id': 1001,
+          }),
+          'subentry_type': 'velov_station',
+          'title': "Vélo'v 1001",
+          'unique_id': 'velov_1001',
+        }),
+      ]),
+      'title': 'Data Grand Lyon',
+      'unique_id': None,
+      'version': 1,
+    }),
+    'coordinator_data': dict({
+      'stops': dict({
+      }),
+      'velov_stations': dict({
+        'velov_1': dict({
+          'address': 'Place Bellecour',
+          'availability': 'Vert',
+          'available_bike_stands': 5,
+          'available_bikes': 15,
+          'banking': True,
+          'bike_stands': 20,
+          'commune': 'Lyon',
+          'last_update': '2026-04-10T14:00:00',
+          'lat': 45.757,
+          'lng': 4.832,
+          'name': 'Place Bellecour',
+          'number': 1001,
+          'status': 'OPEN',
+          'total_stands': dict({
+            'bikes': 15,
+            'capacity': 20,
+            'electrical_bikes': 5,
+            'electrical_internal_battery_bikes': 3,
+            'electrical_removable_battery_bikes': 2,
+            'mechanical_bikes': 10,
+            'stands': 5,
+          }),
+        }),
+      }),
+    }),
+  })
+# ---

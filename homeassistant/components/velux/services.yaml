@@ -1,7 +1,5 @@
 # Velux Integration services
 
-reboot_gateway:
-
 set_velocity:
   target:
     device:

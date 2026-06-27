@@ -28,7 +28,9 @@ async def test_create_doorbell(hass: HomeAssistant) -> None:
     doorbell_one = await _mock_doorbell_from_fixture(hass, "get_doorbell.json")
     await _create_august_with_devices(hass, [doorbell_one])
 
-    battery_state = hass.states.get("sensor.k98gidt45gul_name_battery")
+    battery_state = hass.states.get(
+        "sensor.k98gidt45gul_name_k98gidt45gul_name_battery"
+    )
     assert battery_state.state == "96"
     assert battery_state.attributes["unit_of_measurement"] == PERCENTAGE
 
@@ -40,11 +42,11 @@ async def test_create_doorbell_offline(
     doorbell_one = await _mock_doorbell_from_fixture(hass, "get_doorbell.offline.json")
     await _create_august_with_devices(hass, [doorbell_one])
 
-    battery_state = hass.states.get("sensor.tmt100_name_battery")
+    battery_state = hass.states.get("sensor.tmt100_name_tmt100_name_battery")
     assert battery_state.state == "81"
     assert battery_state.attributes["unit_of_measurement"] == PERCENTAGE
 
-    entry = entity_registry.async_get("sensor.tmt100_name_battery")
+    entry = entity_registry.async_get("sensor.tmt100_name_tmt100_name_battery")
     assert entry
     assert entry.unique_id == "tmt100_device_battery"
 
@@ -56,7 +58,7 @@ async def test_create_doorbell_hardwired(hass: HomeAssistant) -> None:
     )
     await _create_august_with_devices(hass, [doorbell_one])
 
-    assert hass.states.get("sensor.tmt100_name_battery") is None
+    assert hass.states.get("sensor.tmt100_name_tmt100_name_battery") is None
 
 
 async def test_create_lock_with_linked_keypad(
@@ -67,21 +69,23 @@ async def test_create_lock_with_linked_keypad(
     await _create_august_with_devices(hass, [lock_one])
 
     battery_state = hass.states.get(
-        "sensor.a6697750d607098bae8d6baa11ef8063_name_battery"
+        "sensor.a6697750d607098bae8d6baa11ef8063_name_a6697750d607098bae8d6baa11ef8063_name_battery"
     )
     assert battery_state.state == "88"
     assert battery_state.attributes["unit_of_measurement"] == PERCENTAGE
 
     entry = entity_registry.async_get(
-        "sensor.a6697750d607098bae8d6baa11ef8063_name_battery"
+        "sensor.a6697750d607098bae8d6baa11ef8063_name_a6697750d607098bae8d6baa11ef8063_name_battery"
     )
     assert entry
     assert entry.unique_id == "A6697750D607098BAE8D6BAA11EF8063_device_battery"
 
-    keypad_battery_state = hass.states.get("sensor.front_door_lock_keypad_battery")
+    keypad_battery_state = hass.states.get(
+        "sensor.front_front_door_lock_keypad_battery"
+    )
     assert keypad_battery_state.state == "62"
     assert keypad_battery_state.attributes[ATTR_UNIT_OF_MEASUREMENT] == PERCENTAGE
-    entry = entity_registry.async_get("sensor.front_door_lock_keypad_battery")
+    entry = entity_registry.async_get("sensor.front_front_door_lock_keypad_battery")
     assert entry
     assert entry.unique_id == "5bc65c24e6ef2a263e1450a8_linked_keypad_battery"
 
@@ -94,29 +98,33 @@ async def test_create_lock_with_low_battery_linked_keypad(
     await _create_august_with_devices(hass, [lock_one])
     states = hass.states
 
-    battery_state = states.get("sensor.a6697750d607098bae8d6baa11ef8063_name_battery")
+    battery_state = states.get(
+        "sensor.a6697750d607098bae8d6baa11ef8063_name_a6697750d607098bae8d6baa11ef8063_name_battery"
+    )
     assert battery_state.state == "88"
     assert battery_state.attributes["unit_of_measurement"] == PERCENTAGE
     entry = entity_registry.async_get(
-        "sensor.a6697750d607098bae8d6baa11ef8063_name_battery"
+        "sensor.a6697750d607098bae8d6baa11ef8063_name_a6697750d607098bae8d6baa11ef8063_name_battery"
     )
     assert entry
     assert entry.unique_id == "A6697750D607098BAE8D6BAA11EF8063_device_battery"
 
-    keypad_battery_state = states.get("sensor.front_door_lock_keypad_battery")
+    keypad_battery_state = states.get("sensor.front_front_door_lock_keypad_battery")
     assert keypad_battery_state.state == "10"
     assert keypad_battery_state.attributes[ATTR_UNIT_OF_MEASUREMENT] == PERCENTAGE
-    entry = entity_registry.async_get("sensor.front_door_lock_keypad_battery")
+    entry = entity_registry.async_get("sensor.front_front_door_lock_keypad_battery")
     assert entry
     assert entry.unique_id == "5bc65c24e6ef2a263e1450a8_linked_keypad_battery"
 
     # No activity means it will be unavailable until someone unlocks/locks it
     operator_entry = entity_registry.async_get(
-        "sensor.a6697750d607098bae8d6baa11ef8063_name_operator"
+        "sensor.a6697750d607098bae8d6baa11ef8063_name_a6697750d607098bae8d6baa11ef8063_name_operator"
     )
     assert operator_entry.unique_id == "A6697750D607098BAE8D6BAA11EF8063_lock_operator"
 
-    operator_state = states.get("sensor.a6697750d607098bae8d6baa11ef8063_name_operator")
+    operator_state = states.get(
+        "sensor.a6697750d607098bae8d6baa11ef8063_name_a6697750d607098bae8d6baa11ef8063_name_operator"
+    )
     assert operator_state.state == STATE_UNKNOWN
 
 
@@ -132,11 +140,13 @@ async def test_lock_operator_bluetooth(
     await _create_august_with_devices(hass, [lock_one], activities=activities)
 
     lock_operator_sensor = entity_registry.async_get(
-        "sensor.online_with_doorsense_name_operator"
+        "sensor.online_with_doorsense_name_online_with_doorsense_name_operator"
     )
     assert lock_operator_sensor
 
-    state = hass.states.get("sensor.online_with_doorsense_name_operator")
+    state = hass.states.get(
+        "sensor.online_with_doorsense_name_online_with_doorsense_name_operator"
+    )
     assert state.state == "Your favorite elven princess"
     assert state.attributes["manual"] is False
     assert state.attributes["tag"] is False
@@ -158,11 +168,13 @@ async def test_lock_operator_keypad(
     await _create_august_with_devices(hass, [lock_one], activities=activities)
 
     lock_operator_sensor = entity_registry.async_get(
-        "sensor.online_with_doorsense_name_operator"
+        "sensor.online_with_doorsense_name_online_with_doorsense_name_operator"
     )
     assert lock_operator_sensor
 
-    state = hass.states.get("sensor.online_with_doorsense_name_operator")
+    state = hass.states.get(
+        "sensor.online_with_doorsense_name_online_with_doorsense_name_operator"
+    )
     assert state.state == "Your favorite elven princess"
     assert state.attributes["manual"] is False
     assert state.attributes["tag"] is False
@@ -182,11 +194,13 @@ async def test_lock_operator_remote(
     await _create_august_with_devices(hass, [lock_one], activities=activities)
 
     lock_operator_sensor = entity_registry.async_get(
-        "sensor.online_with_doorsense_name_operator"
+        "sensor.online_with_doorsense_name_online_with_doorsense_name_operator"
     )
     assert lock_operator_sensor
 
-    state = hass.states.get("sensor.online_with_doorsense_name_operator")
+    state = hass.states.get(
+        "sensor.online_with_doorsense_name_online_with_doorsense_name_operator"
+    )
     assert state.state == "Your favorite elven princess"
     assert state.attributes["manual"] is False
     assert state.attributes["tag"] is False
@@ -208,10 +222,12 @@ async def test_lock_operator_manual(
     await _create_august_with_devices(hass, [lock_one], activities=activities)
 
     lock_operator_sensor = entity_registry.async_get(
-        "sensor.online_with_doorsense_name_operator"
+        "sensor.online_with_doorsense_name_online_with_doorsense_name_operator"
     )
     assert lock_operator_sensor
-    state = hass.states.get("sensor.online_with_doorsense_name_operator")
+    state = hass.states.get(
+        "sensor.online_with_doorsense_name_online_with_doorsense_name_operator"
+    )
     assert state.state == "Your favorite elven princess"
     assert state.attributes["manual"] is True
     assert state.attributes["tag"] is False
@@ -233,11 +249,13 @@ async def test_lock_operator_autorelock(
     await _create_august_with_devices(hass, [lock_one], activities=activities)
 
     lock_operator_sensor = entity_registry.async_get(
-        "sensor.online_with_doorsense_name_operator"
+        "sensor.online_with_doorsense_name_online_with_doorsense_name_operator"
     )
     assert lock_operator_sensor
 
-    state = hass.states.get("sensor.online_with_doorsense_name_operator")
+    state = hass.states.get(
+        "sensor.online_with_doorsense_name_online_with_doorsense_name_operator"
+    )
     assert state.state == "Auto Relock"
     assert state.attributes["manual"] is False
     assert state.attributes["tag"] is False
@@ -259,11 +277,13 @@ async def test_unlock_operator_manual(
     await _create_august_with_devices(hass, [lock_one], activities=activities)
 
     lock_operator_sensor = entity_registry.async_get(
-        "sensor.online_with_doorsense_name_operator"
+        "sensor.online_with_doorsense_name_online_with_doorsense_name_operator"
     )
     assert lock_operator_sensor
 
-    state = hass.states.get("sensor.online_with_doorsense_name_operator")
+    state = hass.states.get(
+        "sensor.online_with_doorsense_name_online_with_doorsense_name_operator"
+    )
     assert state.state == "Your favorite elven princess"
     assert state.attributes["manual"] is True
     assert state.attributes["tag"] is False
@@ -285,11 +305,13 @@ async def test_unlock_operator_tag(
     await _create_august_with_devices(hass, [lock_one], activities=activities)
 
     lock_operator_sensor = entity_registry.async_get(
-        "sensor.online_with_doorsense_name_operator"
+        "sensor.online_with_doorsense_name_online_with_doorsense_name_operator"
     )
     assert lock_operator_sensor
 
-    state = hass.states.get("sensor.online_with_doorsense_name_operator")
+    state = hass.states.get(
+        "sensor.online_with_doorsense_name_online_with_doorsense_name_operator"
+    )
     assert state.state == "Your favorite elven princess"
     assert state.attributes["manual"] is False
     assert state.attributes["tag"] is True
@@ -304,7 +326,7 @@ async def test_restored_state(
 ) -> None:
     """Test restored state."""
 
-    entity_id = "sensor.online_with_doorsense_name_operator"
+    entity_id = "sensor.online_with_doorsense_name_online_with_doorsense_name_operator"
     lock_one = await _mock_doorsense_enabled_august_lock_detail(hass)
 
     fake_state = ha.State(

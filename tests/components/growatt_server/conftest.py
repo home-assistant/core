@@ -33,7 +33,8 @@ def mock_growatt_v1_api():
     Methods mocked for MIN device coordinator refresh:
     - min_detail: Provides device state (e.g., acChargeEnable, chargePowerCommand)
     - min_settings: Provides settings (e.g. TOU periods)
-    - min_energy: Provides energy data (empty for switch/number tests, sensors need real data)
+    - min_energy: Provides energy data (empty for switch/number tests,
+      sensors need real data)
 
     Methods mocked for switch and number operations:
     - min_write_parameter: Called by switch/number entities to change settings
@@ -74,8 +75,8 @@ def mock_growatt_v1_api():
             "chargePowerCommand": 50,  # 50% charge power - read by number entity
             "wchargeSOCLowLimit": 10,  # 10% charge stop SOC - read by number entity
             "disChargePowerCommand": 80,  # 80% discharge power - read by number entity
-            "wdisChargeSOCLowLimit": 20,  # 20% discharge stop SOC (off-grid) - read by number entity
-            "onGridDischargeStopSOC": 15,  # 15% on-grid discharge stop SOC - read by number entity
+            "wdisChargeSOCLowLimit": 20,  # 20% discharge stop SOC (off-grid)
+            "onGridDischargeStopSOC": 15,  # 15% on-grid discharge stop SOC
         }
 
         # Called by MIN device coordinator during refresh
@@ -147,7 +148,8 @@ def mock_growatt_v1_api():
         mock_v1_api.min_write_parameter.return_value = None
 
         # Called by MIN time segment management services
-        # Note: Don't use autospec for this method as it needs to accept variable arguments
+        # Note: Don't use autospec for this method as it needs to
+        # accept variable arguments
         mock_v1_api.min_write_time_segment = Mock(
             return_value={
                 "error_code": 0,
@@ -425,9 +427,10 @@ async def init_integration(
 ) -> MockConfigEntry:
     """Set up the Growatt Server integration for testing (V1 API).
 
-    This combines mock_config_entry and mock_growatt_v1_api to provide a fully
-    initialized integration ready for testing. Use @pytest.mark.usefixtures("init_integration")
-    to automatically set up the integration before your test runs.
+    This combines mock_config_entry and mock_growatt_v1_api to provide a
+    fully initialized integration ready for testing.
+    Use @pytest.mark.usefixtures("init_integration") to automatically
+    set up the integration before your test runs.
 
     For Classic API tests, manually set up using mock_config_entry_classic and
     mock_growatt_classic_api instead.

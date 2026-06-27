@@ -15,6 +15,7 @@ from homeassistant.const import (
     CONF_HOST,
     CONF_PASSWORD,
     CONF_PORT,
+    CONF_TOKEN,
     CONF_USERNAME,
     CONF_VERIFY_SSL,
 )
@@ -35,7 +36,6 @@ from .const import (
     CONF_NODE,
     CONF_NODES,
     CONF_REALM,
-    CONF_TOKEN,
     CONF_TOKEN_ID,
     CONF_TOKEN_SECRET,
     CONF_VMS,
@@ -79,14 +79,14 @@ TOKEN_SCHEMA = vol.Schema(
 
 def _get_nodes_data(data: dict[str, Any]) -> list[dict[str, Any]]:
     """Validate the user input and fetch data (sync, for executor)."""
-    auth_kwargs = {
-        "password": data.get(CONF_PASSWORD),
-    }
-    if data.get(CONF_TOKEN):
-        auth_kwargs = {
+    auth_kwargs = (
+        {
             "token_name": data[CONF_TOKEN_ID],
             "token_value": data[CONF_TOKEN_SECRET],
         }
+        if data.get(CONF_TOKEN)
+        else {"password": data.get(CONF_PASSWORD)}
+    )
     data = sanitize_config_entry(data)
     try:
         client = ProxmoxAPI(
@@ -96,6 +96,19 @@ def _get_nodes_data(data: dict[str, Any]) -> list[dict[str, Any]]:
             verify_ssl=data.get(CONF_VERIFY_SSL, DEFAULT_VERIFY_SSL),
             **auth_kwargs,
         )
+    except AuthenticationError as err:
+        raise ProxmoxAuthenticationError from err
+    except SSLError as err:
+        raise ProxmoxSSLError from err
+    except ConnectTimeout as err:
+        raise ProxmoxConnectTimeout from err
+    except ResourceException as err:
+        _LOGGER.debug("Error during Proxmox client initialisation", exc_info=True)
+        raise ProxmoxInitFailed from err
+    except requests.exceptions.ConnectionError as err:
+        raise ProxmoxConnectionError from err
+
+    try:
         nodes = client.nodes.get()
     except AuthenticationError as err:
         raise ProxmoxAuthenticationError from err
@@ -104,9 +117,13 @@ def _get_nodes_data(data: dict[str, Any]) -> list[dict[str, Any]]:
     except ConnectTimeout as err:
         raise ProxmoxConnectTimeout from err
     except ResourceException as err:
+        _LOGGER.debug("Error fetching nodes", exc_info=True)
         raise ProxmoxNoNodesFound from err
     except requests.exceptions.ConnectionError as err:
         raise ProxmoxConnectionError from err
+
+    if not nodes:
+        raise ProxmoxNoNodesFound("No nodes found")
 
     nodes_data: list[dict[str, Any]] = []
     for node in nodes:
@@ -120,7 +137,10 @@ def _get_nodes_data(data: dict[str, Any]) -> list[dict[str, Any]]:
             vms = client.nodes(node["node"]).qemu.get()
             containers = client.nodes(node["node"]).lxc.get()
         except ResourceException as err:
-            raise ProxmoxNoNodesFound from err
+            _LOGGER.debug(
+                "Error fetching VMs/LXC for node %s", node["node"], exc_info=True
+            )
+            raise ProxmoxNoVMLXCFound from err
         except requests.exceptions.ConnectionError as err:
             raise ProxmoxConnectionError from err
 
@@ -303,8 +323,14 @@ class ProxmoxveConfigFlow(ConfigFlow, domain=DOMAIN):
         except ProxmoxSSLError as exc:
             errors["base"] = "ssl_error"
             err = exc
+        except ProxmoxInitFailed as exc:
+            errors["base"] = "api_error_no_details"
+            err = exc
         except ProxmoxNoNodesFound as exc:
             errors["base"] = "no_nodes_found"
+            err = exc
+        except ProxmoxNoVMLXCFound as exc:
+            errors["base"] = "no_vmlxc_found"
             err = exc
         except ProxmoxConnectionError as exc:
             errors["base"] = "cannot_connect"
@@ -373,6 +399,14 @@ class ProxmoxError(HomeAssistantError):
 
 class ProxmoxNoNodesFound(ProxmoxError):
     """Error to indicate no nodes found."""
+
+
+class ProxmoxNoVMLXCFound(ProxmoxError):
+    """Error to indicate no LXC or VM found."""
+
+
+class ProxmoxInitFailed(ProxmoxError):
+    """Error to indicate API initialisation failure."""
 
 
 class ProxmoxConnectTimeout(ProxmoxError):

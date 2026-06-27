@@ -289,7 +289,8 @@ def _async_setup_keypads(
         button_name = _get_button_name(keypad, bridge_button)
         keypad_lutron_device_id = keypad[LUTRON_KEYPAD_LUTRON_DEVICE_ID]
 
-        # Add button to parent keypad, and build keypad_buttons and keypad_button_names_to_leap
+        # Add button to parent keypad, and build
+        # keypad_buttons and keypad_button_names_to_leap
         keypad_buttons[button_lutron_device_id] = LutronButton(
             lutron_device_id=button_lutron_device_id,
             leap_button_number=leap_button_number,

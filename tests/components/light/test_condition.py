@@ -16,119 +16,14 @@ from tests.components.common import (
     assert_condition_options_supported,
     parametrize_condition_states_all,
     parametrize_condition_states_any,
+    parametrize_numerical_attribute_condition_above_below_all,
+    parametrize_numerical_attribute_condition_above_below_any,
     parametrize_target_entities,
     target_entities,
 )
 
-
-def parametrize_brightness_condition_states_any(
-    condition: str, state: str, attribute: str
-) -> list[tuple[str, dict[str, Any], list[ConditionStateDescription]]]:
-    """Parametrize above/below threshold test cases for brightness conditions.
-
-    Note: The brightness in the condition configuration is in percentage (0-100) scale,
-    the underlying attribute in the state is in uint8 (0-255) scale.
-    """
-    return [
-        *parametrize_condition_states_any(
-            condition=condition,
-            condition_options={"threshold": {"type": "above", "value": {"number": 10}}},
-            target_states=[
-                (state, {attribute: 128}),
-                (state, {attribute: 255}),
-            ],
-            other_states=[
-                (state, {attribute: 0}),
-                (state, {attribute: None}),
-            ],
-        ),
-        *parametrize_condition_states_any(
-            condition=condition,
-            condition_options={"threshold": {"type": "below", "value": {"number": 90}}},
-            target_states=[
-                (state, {attribute: 0}),
-                (state, {attribute: 128}),
-            ],
-            other_states=[
-                (state, {attribute: 255}),
-                (state, {attribute: None}),
-            ],
-        ),
-        *parametrize_condition_states_any(
-            condition=condition,
-            condition_options={
-                "threshold": {
-                    "type": "between",
-                    "value_min": {"number": 10},
-                    "value_max": {"number": 90},
-                }
-            },
-            target_states=[
-                (state, {attribute: 128}),
-                (state, {attribute: 153}),
-            ],
-            other_states=[
-                (state, {attribute: 0}),
-                (state, {attribute: 255}),
-                (state, {attribute: None}),
-            ],
-        ),
-    ]
-
-
-def parametrize_brightness_condition_states_all(
-    condition: str, state: str, attribute: str
-) -> list[tuple[str, dict[str, Any], list[ConditionStateDescription]]]:
-    """Parametrize above/below threshold test cases for brightness conditions with 'all' behavior.
-
-    Note: The brightness in the condition configuration is in percentage (0-100) scale,
-    the underlying attribute in the state is in uint8 (0-255) scale.
-    """
-    return [
-        *parametrize_condition_states_all(
-            condition=condition,
-            condition_options={"threshold": {"type": "above", "value": {"number": 10}}},
-            target_states=[
-                (state, {attribute: 128}),
-                (state, {attribute: 255}),
-            ],
-            other_states=[
-                (state, {attribute: 0}),
-                (state, {attribute: None}),
-            ],
-        ),
-        *parametrize_condition_states_all(
-            condition=condition,
-            condition_options={"threshold": {"type": "below", "value": {"number": 90}}},
-            target_states=[
-                (state, {attribute: 0}),
-                (state, {attribute: 128}),
-            ],
-            other_states=[
-                (state, {attribute: 255}),
-                (state, {attribute: None}),
-            ],
-        ),
-        *parametrize_condition_states_all(
-            condition=condition,
-            condition_options={
-                "threshold": {
-                    "type": "between",
-                    "value_min": {"number": 10},
-                    "value_max": {"number": 90},
-                }
-            },
-            target_states=[
-                (state, {attribute: 128}),
-                (state, {attribute: 153}),
-            ],
-            other_states=[
-                (state, {attribute: 0}),
-                (state, {attribute: 255}),
-                (state, {attribute: None}),
-            ],
-        ),
-    ]
+# Brightness is stored as a uint8 (0-255) but the threshold is in percent.
+_BRIGHTNESS_VALUE_SCALE = 255 / 100
 
 
 @pytest.fixture
@@ -152,12 +47,16 @@ async def test_light_conditions_gated_by_labs_flag(
     await assert_condition_gated_by_labs_flag(hass, caplog, condition)
 
 
+_BRIGHTNESS_THRESHOLD = {"threshold": {"type": "above", "value": {"number": 50}}}
+
+
 @pytest.mark.usefixtures("enable_labs_preview_features")
 @pytest.mark.parametrize(
     ("condition_key", "base_options", "supports_behavior", "supports_duration"),
     [
         ("light.is_off", {}, True, True),
         ("light.is_on", {}, True, True),
+        ("light.is_brightness", _BRIGHTNESS_THRESHOLD, True, True),
     ],
 )
 async def test_light_condition_options_validation(
@@ -275,8 +174,11 @@ async def test_light_state_condition_behavior_all(
 @pytest.mark.parametrize(
     ("condition", "condition_options", "states"),
     [
-        *parametrize_brightness_condition_states_any(
-            "light.is_brightness", STATE_ON, ATTR_BRIGHTNESS
+        *parametrize_numerical_attribute_condition_above_below_any(
+            "light.is_brightness",
+            STATE_ON,
+            ATTR_BRIGHTNESS,
+            attribute_value_scale=_BRIGHTNESS_VALUE_SCALE,
         ),
     ],
 )
@@ -311,8 +213,11 @@ async def test_light_brightness_condition_behavior_any(
 @pytest.mark.parametrize(
     ("condition", "condition_options", "states"),
     [
-        *parametrize_brightness_condition_states_all(
-            "light.is_brightness", STATE_ON, ATTR_BRIGHTNESS
+        *parametrize_numerical_attribute_condition_above_below_all(
+            "light.is_brightness",
+            STATE_ON,
+            ATTR_BRIGHTNESS,
+            attribute_value_scale=_BRIGHTNESS_VALUE_SCALE,
         ),
     ],
 )

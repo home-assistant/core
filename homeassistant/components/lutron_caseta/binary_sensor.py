@@ -3,7 +3,7 @@
 from datetime import timedelta
 from typing import Any
 
-from pylutron_caseta import OCCUPANCY_GROUP_OCCUPIED
+from pylutron_caseta import OCCUPANCY_GROUP_OCCUPIED, BridgeResponseError
 
 from homeassistant.components.binary_sensor import (
     BinarySensorDeviceClass,
@@ -80,7 +80,7 @@ class LutronOccupancySensor(LutronCasetaEntity, BinarySensorEntity):
         """Return the brightness of the light."""
         return self._device["status"] == OCCUPANCY_GROUP_OCCUPIED
 
-    # pylint: disable-next=hass-missing-super-call
+    # pylint: disable-next=home-assistant-missing-super-call
     async def async_added_to_hass(self) -> None:
         """Register callbacks."""
         self._smartbridge.add_occupancy_subscriber(
@@ -125,13 +125,17 @@ class LutronCasetaBatterySensor(LutronCasetaEntity, BinarySensorEntity):
         """Return the unique ID of the battery sensor."""
         return f"{super().unique_id}_battery"
 
-    # pylint: disable-next=hass-missing-super-call
+    # pylint: disable-next=home-assistant-missing-super-call
     async def async_added_to_hass(self) -> None:
         """Skip bridge subscriptions; the battery sensor is polled."""
 
     async def async_update(self) -> None:
         """Fetch the latest battery status from the bridge."""
-        status = await self._smartbridge.get_battery_status(self.device_id)
+        try:
+            status = await self._smartbridge.get_battery_status(self.device_id)
+        except BridgeResponseError:
+            self._attr_is_on = None
+            return
         normalized_status = status.strip().casefold() if status else None
         if normalized_status == BATTERY_STATUS_LOW:
             self._attr_is_on = True
