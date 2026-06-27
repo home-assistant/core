@@ -56,15 +56,18 @@ FUEL_CONSUMPTION_MILES_PER_GALLON = "mi/gal"
 L_PER_GAL = VolumeConverter.convert(1, UnitOfVolume.GALLONS, UnitOfVolume.LITERS)
 KM_PER_MI = DistanceConverter.convert(1, UnitOfLength.MILES, UnitOfLength.KILOMETERS)
 
-# Dict keys returned by subarulink controller.get_data() inside vehicle_status
-# / vehicle_health. The integration's own VEHICLE_STATUS / VEHICLE_HEALTH
-# constants are the section keys; the constants below are the field keys.
-API_KEY_VEHICLE_STATE_TYPE = "VEHICLE_STATE_TYPE"
-API_KEY_EV_CHARGER_STATE_TYPE = "EV_CHARGER_STATE_TYPE"
-API_KEY_EV_STATE_OF_CHARGE_MODE = "EV_STATE_OF_CHARGE_MODE"
-API_KEY_RECOMMENDED_TIRE_PRESSURE = "RECOMMENDED_TIRE_PRESSURE"
-API_KEY_FRONT_TIRES = "FRONT_TIRES"
-API_KEY_REAR_TIRES = "REAR_TIRES"
+# Field-key aliases for readability. Values come straight from
+# subarulink.const so we don't drift from the published contract the
+# library promises to keep stable across Subaru API changes. Other sensor
+# descriptions in this file already access subarulink field keys via
+# `sc.*` (sc.ODOMETER, sc.TIRE_PRESSURE_FL, etc.) — this section keeps
+# the same convention for the categorical and vehicle_health fields.
+API_KEY_VEHICLE_STATE_TYPE = sc.VEHICLE_STATE
+API_KEY_EV_CHARGER_STATE_TYPE = sc.EV_CHARGER_STATE_TYPE
+API_KEY_EV_STATE_OF_CHARGE_MODE = sc.EV_STATE_OF_CHARGE_MODE
+API_KEY_RECOMMENDED_TIRE_PRESSURE = sc.HEALTH_RECOMMENDED_TIRE_PRESSURE
+API_KEY_FRONT_TIRES = sc.HEALTH_RECOMMENDED_TIRE_PRESSURE_FRONT
+API_KEY_REAR_TIRES = sc.HEALTH_RECOMMENDED_TIRE_PRESSURE_REAR
 
 
 @dataclass(frozen=True, kw_only=True)
