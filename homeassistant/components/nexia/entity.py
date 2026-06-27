@@ -153,7 +153,7 @@ class NexiaRoomIQEntity(NexiaThermostatZoneEntity):
         coordinator: NexiaDataUpdateCoordinator,
         zone: NexiaThermostatZone,
         sensor: NexiaSensor,
-        unique_id: str,
+        key: str,
     ) -> None:
         """Initialize the entity."""
         # online sensors are separate devices
@@ -165,5 +165,6 @@ class NexiaRoomIQEntity(NexiaThermostatZoneEntity):
                 suggested_area=sensor.name,
                 via_device=(DOMAIN, zone.zone_id),  # type: ignore[typeddict-item] # until fix issue #139773
             )
-        super().__init__(coordinator, zone, unique_id, dev_info)
+        super().__init__(coordinator, zone, f"{sensor.id}-{key}", dev_info)
+        self._attr_translation_key = key
         self._sensor_id = sensor.id
