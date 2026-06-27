@@ -1,9 +1,11 @@
 """Support for Modbus."""
 
 import asyncio
-from collections import namedtuple
-from typing import Any
+from dataclasses import dataclass
+from typing import Any, cast
 
+from modbus_connection import ModbusConnection, ModbusError
+from modbus_connection.pymodbus import PymodbusConnection
 from pymodbus.client import (
     AsyncModbusSerialClient,
     AsyncModbusTcpClient,
@@ -11,7 +13,6 @@ from pymodbus.client import (
 )
 from pymodbus.exceptions import ModbusException
 from pymodbus.framer import FramerType
-from pymodbus.pdu import ModbusPDU
 import voluptuous as vol
 
 from homeassistant.const import (
@@ -53,7 +54,6 @@ from .const import (
     CONF_PARITY,
     CONF_STOPBITS,
     DEFAULT_HUB,
-    DEVICE_ID,
     DOMAIN,
     PLATFORMS,
     RTUOVERTCP,
@@ -71,58 +71,18 @@ DATA_MODBUS_HUBS: HassKey[dict[str, ModbusHub]] = HassKey(DOMAIN)
 
 PRIMARY_RECONNECT_DELAY = 60
 
-ConfEntry = namedtuple("ConfEntry", "call_type attr func_name value_attr_name")  # noqa: PYI024
-RunEntry = namedtuple("RunEntry", "attr func value_attr_name")  # noqa: PYI024
-PB_CALL = [
-    ConfEntry(
-        CALL_TYPE_COIL,
-        "bits",
-        "read_coils",
-        "count",
-    ),
-    ConfEntry(
-        CALL_TYPE_DISCRETE,
-        "bits",
-        "read_discrete_inputs",
-        "count",
-    ),
-    ConfEntry(
-        CALL_TYPE_REGISTER_HOLDING,
-        "registers",
-        "read_holding_registers",
-        "count",
-    ),
-    ConfEntry(
-        CALL_TYPE_REGISTER_INPUT,
-        "registers",
-        "read_input_registers",
-        "count",
-    ),
-    ConfEntry(
-        CALL_TYPE_WRITE_COIL,
-        "bits",
-        "write_coil",
-        "value",
-    ),
-    ConfEntry(
-        CALL_TYPE_WRITE_COILS,
-        "count",
-        "write_coils",
-        "values",
-    ),
-    ConfEntry(
-        CALL_TYPE_WRITE_REGISTER,
-        "registers",
-        "write_register",
-        "value",
-    ),
-    ConfEntry(
-        CALL_TYPE_WRITE_REGISTERS,
-        "count",
-        "write_registers",
-        "values",
-    ),
-]
+
+@dataclass
+class ModbusResult:
+    """Result of a Modbus read or write call.
+
+    Reads populate exactly one of ``bits`` (coils/discrete inputs) or
+    ``registers`` (holding/input registers); writes leave both unset and the
+    non-``None`` instance simply signals success.
+    """
+
+    bits: list[bool] | None = None
+    registers: list[int] | None = None
 
 
 async def async_modbus_setup(
@@ -242,7 +202,7 @@ async def async_modbus_setup(
 
 
 class ModbusHub:
-    """Thread safe wrapper class for pymodbus."""
+    """Thread safe wrapper class for modbus_connection."""
 
     def __init__(self, hass: HomeAssistant, client_config: dict[str, Any]) -> None:
         """Initialize the Modbus hub."""
@@ -251,13 +211,13 @@ class ModbusHub:
         self._client: (
             AsyncModbusSerialClient | AsyncModbusTcpClient | AsyncModbusUdpClient | None
         ) = None
+        self._connection: ModbusConnection | None = None
         self._lock = asyncio.Lock()
         self.event_connected = asyncio.Event()
         self.hass = hass
         self.name = client_config[CONF_NAME]
         self._config_type = client_config[CONF_TYPE]
         self.config_delay = client_config[CONF_DELAY]
-        self._pb_request: dict[str, RunEntry] = {}
         self._connect_task: asyncio.Task
         self._last_log_error: str = ""
         self._pb_class = {
@@ -337,12 +297,7 @@ class ModbusHub:
         except ModbusException as exception_error:
             self._log_error(str(exception_error))
             return False
-
-        for entry in PB_CALL:
-            func = getattr(self._client, entry.func_name)
-            self._pb_request[entry.call_type] = RunEntry(
-                entry.attr, func, entry.value_attr_name
-            )
+        self._connection = PymodbusConnection(self._client)
 
         self._connect_task = self.hass.async_create_background_task(
             self.async_pb_connect(), "modbus-connect"
@@ -368,46 +323,48 @@ class ModbusHub:
             except ModbusException as exception_error:
                 self._log_error(str(exception_error))
             self._client = None
+            self._connection = None
             _LOGGER.info(f"modbus {self.name} communication closed")
 
     async def low_level_pb_call(
         self, slave: int | None, address: int, value: int | list[int], use_call: str
-    ) -> ModbusPDU | None:
-        """Call sync. pymodbus."""
-        kwargs: dict[str, Any] = (
-            {DEVICE_ID: slave} if slave is not None else {DEVICE_ID: 1}
-        )
-        entry = self._pb_request[use_call]
-
-        if use_call in {"write_registers", "write_coils"}:
-            if not isinstance(value, list):
-                value = [value]
-
-        kwargs[entry.value_attr_name] = value
+    ) -> ModbusResult | None:
+        """Call modbus_connection, mapping errors onto a None result."""
+        unit = self._connection.for_unit(slave if slave is not None else 1)  # type: ignore[union-attr]
         try:
-            result: ModbusPDU = await entry.func(address, **kwargs)
-        except ModbusException as exception_error:
+            if use_call == CALL_TYPE_COIL:
+                return ModbusResult(
+                    bits=await unit.read_coils(address, cast(int, value))
+                )
+            if use_call == CALL_TYPE_DISCRETE:
+                return ModbusResult(
+                    bits=await unit.read_discrete_inputs(address, cast(int, value))
+                )
+            if use_call == CALL_TYPE_REGISTER_HOLDING:
+                return ModbusResult(
+                    registers=await unit.read_holding_registers(
+                        address, cast(int, value)
+                    )
+                )
+            if use_call == CALL_TYPE_REGISTER_INPUT:
+                return ModbusResult(
+                    registers=await unit.read_input_registers(address, cast(int, value))
+                )
+            if use_call == CALL_TYPE_WRITE_COIL:
+                await unit.write_coil(address, bool(value))
+            elif use_call == CALL_TYPE_WRITE_COILS:
+                values = value if isinstance(value, list) else [value]
+                await unit.write_coils(address, [bool(v) for v in values])
+            elif use_call == CALL_TYPE_WRITE_REGISTER:
+                await unit.write_register(address, cast(int, value))
+            elif use_call == CALL_TYPE_WRITE_REGISTERS:
+                values = value if isinstance(value, list) else [value]
+                await unit.write_registers(address, values)
+        except ModbusError as exception_error:
             error = f"Error: device: {slave} address: {address} -> {exception_error!s}"
             self._log_error(error)
             return None
-        if not result:
-            error = (
-                f"Error: device: {slave} address: {address} -> pymodbus returned None"
-            )
-            self._log_error(error)
-            return None
-        if not hasattr(result, entry.attr):
-            error = f"Error: device: {slave} address: {address} -> {result!s}"
-            self._log_error(error)
-            return None
-        if result.isError():
-            error = (
-                f"Error: device: {slave} address: {address}"
-                " -> pymodbus returned isError True"
-            )
-            self._log_error(error)
-            return None
-        return result
+        return ModbusResult()
 
     async def async_pb_call(
         self,
@@ -415,9 +372,9 @@ class ModbusHub:
         address: int,
         value: int | list[int],
         use_call: str,
-    ) -> ModbusPDU | None:
-        """Convert async to sync pymodbus call."""
-        if not self._client:
+    ) -> ModbusResult | None:
+        """Serialize a single Modbus request/response cycle."""
+        if not self._connection:
             return None
         async with self._lock:
             result = await self.low_level_pb_call(unit, address, value, use_call)

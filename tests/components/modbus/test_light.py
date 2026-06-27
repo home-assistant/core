@@ -415,7 +415,7 @@ async def test_color_temp_brightness_light(
     calls = mock_modbus_ha.write_register.call_args_list
     for expected_register, expected_value in expected_calls:
         assert any(
-            call.args[0] == expected_register and call.kwargs["value"] == expected_value
+            call.args[0] == expected_register and call.args[1] == expected_value
             for call in calls
         ), (
             f"Expected register {expected_register} with value"

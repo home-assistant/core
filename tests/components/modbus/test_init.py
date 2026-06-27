@@ -15,6 +15,7 @@ It uses binary_sensors/sensors to do black box testing of the read calls.
 
 from datetime import timedelta
 import logging
+from typing import Any
 from unittest import mock
 
 from freezegun.api import FrozenDateTimeFactory
@@ -907,6 +908,14 @@ DATA = "data"
 SERVICE = "service"
 
 
+def _set_pymodbus_return(mock_func: mock.AsyncMock, result: Any) -> None:
+    """Model a pymodbus call result: raise exceptions, return PDUs/values."""
+    if isinstance(result, Exception):
+        mock_func.side_effect = result
+    else:
+        mock_func.return_value = result
+
+
 @pytest.mark.parametrize(
     "do_config",
     [
@@ -989,13 +998,6 @@ async def test_pb_service_write(
         CALL_TYPE_WRITE_REGISTERS: mock_modbus_with_pymodbus.write_registers,
     }
 
-    value_arg_name = {
-        CALL_TYPE_WRITE_COIL: "value",
-        CALL_TYPE_WRITE_COILS: "values",
-        CALL_TYPE_WRITE_REGISTER: "value",
-        CALL_TYPE_WRITE_REGISTERS: "values",
-    }
-
     data = {
         ATTR_HUB: TEST_MODBUS_NAME,
         do_slave: 17,
@@ -1005,14 +1007,14 @@ async def test_pb_service_write(
     mock_modbus_with_pymodbus.reset_mock()
     caplog.clear()
     caplog.set_level(logging.DEBUG)
-    func_name[do_write[FUNC]].return_value = do_return[VALUE]
+    _set_pymodbus_return(func_name[do_write[FUNC]], do_return[VALUE])
     await hass.services.async_call(DOMAIN, do_write[SERVICE], data, blocking=True)
     assert func_name[do_write[FUNC]].called
-    assert func_name[do_write[FUNC]].call_args.args == (data[ATTR_ADDRESS],)
-    assert func_name[do_write[FUNC]].call_args.kwargs == {
-        DEVICE_ID: 17,
-        value_arg_name[do_write[FUNC]]: data[do_write[DATA]],
-    }
+    assert func_name[do_write[FUNC]].call_args.args == (
+        data[ATTR_ADDRESS],
+        data[do_write[DATA]],
+    )
+    assert func_name[do_write[FUNC]].call_args.kwargs == {DEVICE_ID: 17}
 
     if do_return[DATA]:
         assert any(message.startswith("Pymodbus:") for message in caplog.messages)
@@ -1541,11 +1543,6 @@ async def test_pb_service_write_no_slave(
         CALL_TYPE_WRITE_REGISTER: mock_modbus_with_pymodbus.write_register,
     }
 
-    value_arg_name = {
-        CALL_TYPE_WRITE_COIL: "value",
-        CALL_TYPE_WRITE_REGISTER: "value",
-    }
-
     data = {
         ATTR_HUB: TEST_MODBUS_NAME,
         ATTR_ADDRESS: 16,
@@ -1554,14 +1551,14 @@ async def test_pb_service_write_no_slave(
     mock_modbus_with_pymodbus.reset_mock()
     caplog.clear()
     caplog.set_level(logging.DEBUG)
-    func_name[do_write[FUNC]].return_value = do_return[VALUE]
+    _set_pymodbus_return(func_name[do_write[FUNC]], do_return[VALUE])
     await hass.services.async_call(DOMAIN, do_write[SERVICE], data, blocking=True)
     assert func_name[do_write[FUNC]].called
-    assert func_name[do_write[FUNC]].call_args.args == (data[ATTR_ADDRESS],)
-    assert func_name[do_write[FUNC]].call_args.kwargs == {
-        DEVICE_ID: 1,
-        value_arg_name[do_write[FUNC]]: data[do_write[DATA]],
-    }
+    assert func_name[do_write[FUNC]].call_args.args == (
+        data[ATTR_ADDRESS],
+        data[do_write[DATA]],
+    )
+    assert func_name[do_write[FUNC]].call_args.kwargs == {DEVICE_ID: 1}
 
     if do_return[DATA]:
         assert any(message.startswith("Pymodbus:") for message in caplog.messages)
