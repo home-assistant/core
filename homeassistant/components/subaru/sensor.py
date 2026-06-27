@@ -212,15 +212,19 @@ API_GEN_2_SENSORS = [
         entity_registry_enabled_default=False,
         value_fn=_raw_value_fn(API_KEY_VEHICLE_STATE_TYPE),
     ),
-    # Recommended tire pressure is a static reference value from the
-    # manufacturer (sourced from vehicle_health.RECOMMENDED_TIRE_PRESSURE),
-    # not a live measurement. Intentionally no state_class — there is
-    # nothing meaningful for the recorder to track over time.
+    # Recommended tire pressure is a static manufacturer reference value
+    # (sourced from vehicle_health.RECOMMENDED_TIRE_PRESSURE), not a live
+    # measurement. Intentionally no state_class — nothing meaningful for
+    # the recorder to track. Marked as a diagnostic and disabled by default
+    # so it doesn't add noise to the default dashboard; users who want to
+    # automate against actual-vs-recommended can enable it explicitly.
     SubaruSensorEntityDescription(
         key=KEY_RECOMMENDED_TIRE_PRESSURE_FRONT,
         translation_key=KEY_RECOMMENDED_TIRE_PRESSURE_FRONT,
         device_class=SensorDeviceClass.PRESSURE,
         native_unit_of_measurement=UnitOfPressure.PSI,
+        entity_category=EntityCategory.DIAGNOSTIC,
+        entity_registry_enabled_default=False,
         value_fn=_recommended_tire_pressure(API_KEY_FRONT_TIRES),
     ),
     SubaruSensorEntityDescription(
@@ -228,6 +232,8 @@ API_GEN_2_SENSORS = [
         translation_key=KEY_RECOMMENDED_TIRE_PRESSURE_REAR,
         device_class=SensorDeviceClass.PRESSURE,
         native_unit_of_measurement=UnitOfPressure.PSI,
+        entity_category=EntityCategory.DIAGNOSTIC,
+        entity_registry_enabled_default=False,
         value_fn=_recommended_tire_pressure(API_KEY_REAR_TIRES),
     ),
 ]
