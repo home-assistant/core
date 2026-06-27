@@ -5,6 +5,7 @@ import logging
 from typing import cast
 
 from xiaomi_ble import EncryptionScheme, SensorUpdate, XiaomiBluetoothDeviceData
+from xiaomi_ble.devices import S400_MODELS
 
 from homeassistant.components.bluetooth import (
     DOMAIN as BLUETOOTH_DOMAIN,
@@ -15,7 +16,7 @@ from homeassistant.components.bluetooth import (
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import Platform
 from homeassistant.core import CoreState, HomeAssistant
-from homeassistant.helpers import device_registry as dr
+from homeassistant.helpers import device_registry as dr, entity_registry as er
 from homeassistant.helpers.device_registry import CONNECTION_BLUETOOTH, DeviceRegistry
 from homeassistant.helpers.dispatcher import async_dispatcher_send
 
@@ -118,6 +119,65 @@ def format_discovered_event_class(address: str) -> str:
     return f"{DOMAIN}_discovered_event_class_{address}"
 
 
+def _async_migrate_s400_impedance_unique_ids(
+    hass: HomeAssistant,
+    entry: ConfigEntry,
+    device_registry: DeviceRegistry,
+) -> None:
+    """Migrate legacy S400 impedance unique_ids to match the corrected frequency mapping.
+
+    The xiaomi-ble library used to mislabel the two impedance measurements
+    reported by the Mi Body Composition Scale S400:
+
+    - "impedance" (legacy, generic) actually held the 50MHz (low frequency)
+      measurement.
+    - "impedance_low" actually held the 250MHz (high frequency) measurement.
+
+    The library was corrected so that:
+
+    - "impedance_low" now correctly holds the 50MHz (low frequency) value.
+    - "impedance_high" now correctly holds the 250MHz (high frequency) value.
+
+    The "impedance_low"/"impedance_high" keys are now emitted directly by
+    the library under their final, correct unique_ids, so they must not be
+    touched here. Only the obsolete legacy "impedance" entity (which the
+    library no longer emits for the S400) needs to be disabled, so it stops
+    lingering, unused, in the UI. We disable rather than remove it: removing
+    it outright can race with Home Assistant's own entity restoration at
+    startup, which would simply recreate it right after. This only applies
+    to the S400; other scales (V1/V2) never had this mislabeling and are
+    left untouched.
+    """
+    address = entry.unique_id
+    if address is None:
+        return
+
+    device_entry = device_registry.async_get_device(
+        identifiers={(BLUETOOTH_DOMAIN, address)}
+    )
+    _LOGGER.debug(
+        "S400 migration check: address=%s device_entry_found=%s model=%s",
+        address,
+        device_entry is not None,
+        device_entry.model if device_entry else None,
+    )
+    if device_entry is None or device_entry.model not in S400_MODELS:
+        return
+
+    entity_registry = er.async_get(hass)
+
+    legacy_unique_id = f"{address}-impedance"
+    if entity_id := entity_registry.async_get_entity_id(
+        Platform.SENSOR, DOMAIN, legacy_unique_id
+    ):
+        legacy_entry = entity_registry.entities[entity_id]
+        if legacy_entry.disabled_by is None:
+            _LOGGER.debug("S400 migration: disabling legacy entity %s", entity_id)
+            entity_registry.async_update_entity(
+                entity_id, disabled_by=er.RegistryEntryDisabler.INTEGRATION
+            )
+
+
 async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Set up Xiaomi BLE device from a config entry."""
     address = entry.unique_id
@@ -163,6 +223,9 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         return await data.async_poll(connectable_device)
 
     device_registry = dr.async_get(hass)
+
+    _async_migrate_s400_impedance_unique_ids(hass, entry, device_registry)
+
     coordinator = XiaomiActiveBluetoothProcessorCoordinator(
         hass,
         _LOGGER,
