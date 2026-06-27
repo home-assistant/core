@@ -246,7 +246,7 @@ class MatterEntity(Entity):
         # If we are a composed device subscribe to the parent's Reachable attribute
         if self._compose_parent is not None and self._compose_parent.has_attribute(
             None, clusters.BridgedDeviceBasicInformation.Attributes.Reachable
-        ):  
+        ):
             parent_reachable_attr_path = create_attribute_path(
                 self._compose_parent.endpoint_id,
                 clusters.BridgedDeviceBasicInformation.Attributes.Reachable.cluster_id,

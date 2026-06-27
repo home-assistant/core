@@ -220,8 +220,7 @@ async def trigger_subscription_callback(
         event_filter = sub.kwargs.get("event_filter")
         attribute_path_filter = sub.kwargs.get("attr_path_filter")
         if event_filter in (None, event) and (
-            attribute_path is None
-            or attribute_path_filter in (None, attribute_path)
+            attribute_path is None or attribute_path_filter in (None, attribute_path)
         ):
             callback(event, data)
     await hass.async_block_till_done()
