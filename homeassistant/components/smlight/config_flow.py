@@ -8,7 +8,12 @@ from pysmlight.const import Devices
 from pysmlight.exceptions import SmlightAuthError, SmlightConnectionError
 import voluptuous as vol
 
-from homeassistant.config_entries import SOURCE_USER, ConfigFlow, ConfigFlowResult
+from homeassistant.config_entries import (
+    SOURCE_RECONFIGURE,
+    SOURCE_USER,
+    ConfigFlow,
+    ConfigFlowResult,
+)
 from homeassistant.const import CONF_HOST, CONF_NAME, CONF_PASSWORD, CONF_USERNAME
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 from homeassistant.helpers.device_registry import format_mac
@@ -81,6 +86,17 @@ class SmlightConfigFlow(ConfigFlow, domain=DOMAIN):
 
                     if info.model not in Devices:
                         return self.async_abort(reason="unsupported_device")
+
+                    if self.source == SOURCE_RECONFIGURE:
+                        await self.async_set_unique_id(format_mac(info.MAC))
+                        self._abort_if_unique_id_mismatch(reason="wrong_device")
+                        return self.async_update_reload_and_abort(
+                            self._get_reconfigure_entry(),
+                            data_updates={
+                                CONF_HOST: self._host,
+                                **user_input,
+                            },
+                        )
 
                     return await self._async_complete_entry(user_input)
             except SmlightConnectionError:
@@ -181,6 +197,45 @@ class SmlightConfigFlow(ConfigFlow, domain=DOMAIN):
             step_id="reauth_confirm",
             data_schema=STEP_AUTH_DATA_SCHEMA,
             description_placeholders=self.context["title_placeholders"],
+            errors=errors,
+        )
+
+    async def async_step_reconfigure(
+        self, user_input: dict[str, Any] | None = None
+    ) -> ConfigFlowResult:
+        """Handle reconfiguration of SMLIGHT device."""
+        errors: dict[str, str] = {}
+        entry = self._get_reconfigure_entry()
+
+        if user_input is not None:
+            self._host = user_input[CONF_HOST]
+            self.client = Api2(self._host, session=async_get_clientsession(self.hass))
+
+            try:
+                check_input = {**entry.data, **user_input}
+                if not await self._async_check_auth_required(check_input):
+                    info = await self.client.get_info()
+
+                    if info.model not in Devices:
+                        return self.async_abort(reason="unsupported_device")
+
+                    await self.async_set_unique_id(format_mac(info.MAC))
+                    self._abort_if_unique_id_mismatch(reason="wrong_device")
+
+                    return self.async_update_reload_and_abort(
+                        entry,
+                        data_updates=user_input,
+                    )
+            except SmlightConnectionError:
+                errors["base"] = "cannot_connect"
+            except SmlightAuthError:
+                return await self.async_step_auth()
+
+        return self.async_show_form(
+            step_id="reconfigure",
+            data_schema=self.add_suggested_values_to_schema(
+                STEP_USER_DATA_SCHEMA, user_input or entry.data
+            ),
             errors=errors,
         )
 
