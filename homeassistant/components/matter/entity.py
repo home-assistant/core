@@ -109,6 +109,11 @@ class MatterEntity(Entity):
         self._unsubscribes: list[Callable] = []
         # for fast lookups we create a mapping to the attribute paths
         self._attributes_map: dict[type, str] = {}
+        # A report from an application attribute on a composed child endpoint is
+        # direct evidence that the endpoint is reachable. Some bridges keep the
+        # composed parent's Reachable attribute false while its children continue
+        # to report normally.
+        self._compose_parent_reachable_overridden = False
         # The server info is set when the client connects to the server.
         server_info = cast(ServerInfoMessage, self.matter_client.server_info)
         # create unique_id based on "Operational Instance Name" and endpoint/device type
@@ -200,7 +205,9 @@ class MatterEntity(Entity):
             sub_paths.append(attr_path)
             self._unsubscribes.append(
                 self.matter_client.subscribe_events(
-                    callback=self._on_matter_event,
+                    callback=functools.partial(
+                        self._on_matter_event, attribute_path=attr_path
+                    ),
                     event_filter=EventType.ATTRIBUTE_UPDATED,
                     node_filter=self._endpoint.node.node_id,
                     attr_path_filter=attr_path,
@@ -227,7 +234,10 @@ class MatterEntity(Entity):
                 sub_paths.append(reachable_attr_path)
                 self._unsubscribes.append(
                     self.matter_client.subscribe_events(
-                        callback=self._on_matter_event,
+                        callback=functools.partial(
+                            self._on_matter_event,
+                            attribute_path=parent_reachable_attr_path,
+                        ),
                         event_filter=EventType.ATTRIBUTE_UPDATED,
                         node_filter=self._endpoint.node.node_id,
                         attr_path_filter=reachable_attr_path,
@@ -294,7 +304,11 @@ class MatterEntity(Entity):
             )
             # assume unreachable only if there is an attribute present that
             # explicitly states reachable=false for the parent
-            if compose_parent_reachable is not None and not compose_parent_reachable:
+            if (
+                compose_parent_reachable is not None
+                and not compose_parent_reachable
+                and not self._compose_parent_reachable_overridden
+            ):
                 return False
         # check if our endpoint has a reachable attribute
         # absence of reachable attribute is assumed as reachable (non-bridged devices)
@@ -306,8 +320,30 @@ class MatterEntity(Entity):
         return bool(reachable)
 
     @callback
-    def _on_matter_event(self, event: EventType, data: Any = None) -> None:
+    def _on_matter_event(
+        self,
+        event: EventType,
+        data: Any = None,
+        *,
+        attribute_path: str | None = None,
+    ) -> None:
         """Call on update from the device."""
+        if self._compose_parent is not None:
+            if event == EventType.NODE_UPDATED and not self._endpoint.node.available:
+                # Require fresh endpoint evidence after the bridge reconnects.
+                self._compose_parent_reachable_overridden = False
+            elif event == EventType.ATTRIBUTE_UPDATED:
+                parent_reachable_path = create_attribute_path_from_attribute(
+                    endpoint_id=self._compose_parent.endpoint_id,
+                    attribute=clusters.BridgedDeviceBasicInformation.Attributes.Reachable,
+                )
+                if attribute_path == parent_reachable_path:
+                    # A new parent report supersedes earlier child activity.
+                    self._compose_parent_reachable_overridden = False
+                elif attribute_path in self._attributes_map.values():
+                    # A fresh application report from this child contradicts a
+                    # stale or incorrect Reachable=false on the composed parent.
+                    self._compose_parent_reachable_overridden = True
         self._attr_available = (
             self._endpoint.node.available and self._get_bridged_reachable()
         )

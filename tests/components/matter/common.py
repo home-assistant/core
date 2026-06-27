@@ -211,13 +211,18 @@ async def trigger_subscription_callback(
     client: MagicMock,
     event: EventType = EventType.ATTRIBUTE_UPDATED,
     data: Any = None,
+    attribute_path: str | None = None,
 ) -> None:
     """Trigger a subscription callback."""
     # trigger callback on all subscribers
     for sub in client.subscribe_events.call_args_list:
         callback = sub.kwargs["callback"]
         event_filter = sub.kwargs.get("event_filter")
-        if event_filter in (None, event):
+        attribute_path_filter = sub.kwargs.get("attr_path_filter")
+        if event_filter in (None, event) and (
+            attribute_path is None
+            or attribute_path_filter in (None, attribute_path)
+        ):
             callback(event, data)
     await hass.async_block_till_done()
 
