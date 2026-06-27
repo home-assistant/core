@@ -236,7 +236,7 @@ class MatterEntity(Entity):
                     self.matter_client.subscribe_events(
                         callback=functools.partial(
                             self._on_matter_event,
-                            attribute_path=parent_reachable_attr_path,
+                            attribute_path=reachable_attr_path,
                         ),
                         event_filter=EventType.ATTRIBUTE_UPDATED,
                         node_filter=self._endpoint.node.node_id,
@@ -246,7 +246,7 @@ class MatterEntity(Entity):
         # If we are a composed device subscribe to the parent's Reachable attribute
         if self._compose_parent is not None and self._compose_parent.has_attribute(
             None, clusters.BridgedDeviceBasicInformation.Attributes.Reachable
-        ):
+        ):  
             parent_reachable_attr_path = create_attribute_path(
                 self._compose_parent.endpoint_id,
                 clusters.BridgedDeviceBasicInformation.Attributes.Reachable.cluster_id,
@@ -256,7 +256,10 @@ class MatterEntity(Entity):
                 sub_paths.append(parent_reachable_attr_path)
                 self._unsubscribes.append(
                     self.matter_client.subscribe_events(
-                        callback=self._on_matter_event,
+                        callback=functools.partial(
+                            self._on_matter_event,
+                            attribute_path=parent_reachable_attr_path,
+                        ),
                         event_filter=EventType.ATTRIBUTE_UPDATED,
                         node_filter=self._compose_parent.node.node_id,
                         attr_path_filter=parent_reachable_attr_path,
