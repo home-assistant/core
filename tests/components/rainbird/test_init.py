@@ -2,12 +2,14 @@
 
 from http import HTTPStatus
 from typing import Any
+from unittest.mock import patch
 
 import pytest
+from syrupy.assertion import SnapshotAssertion
 
 from homeassistant.components.rainbird.const import DOMAIN
 from homeassistant.config_entries import ConfigEntryState
-from homeassistant.const import CONF_MAC
+from homeassistant.const import CONF_MAC, Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import device_registry as dr, entity_registry as er
 
@@ -40,6 +42,24 @@ async def test_init_success(
     await hass.config_entries.async_unload(config_entry.entry_id)
     await hass.async_block_till_done()
     assert config_entry.state is ConfigEntryState.NOT_LOADED
+
+
+async def test_device_registry(
+    hass: HomeAssistant,
+    config_entry: MockConfigEntry,
+    device_registry: dr.DeviceRegistry,
+    snapshot: SnapshotAssertion,
+) -> None:
+    """Test the controller device registry entry, including the network MAC connection."""
+    # Load a platform so the controller device is registered.
+    with patch("homeassistant.components.rainbird.PLATFORMS", [Platform.SENSOR]):
+        await hass.config_entries.async_setup(config_entry.entry_id)
+        await hass.async_block_till_done()
+
+    device_entry = device_registry.async_get_device(
+        identifiers={(DOMAIN, MAC_ADDRESS_UNIQUE_ID)}
+    )
+    assert device_entry == snapshot
 
 
 @pytest.mark.parametrize(

@@ -1,7 +1,7 @@
 """Vistapool Binary Sensor entities."""
 
 from dataclasses import dataclass
-from typing import Any
+from typing import Any, override
 
 from homeassistant.components.binary_sensor import (
     BinarySensorDeviceClass,
@@ -223,6 +223,7 @@ class VistapoolBinarySensor(VistapoolEntity, BinarySensorEntity):
         self._attr_unique_id = self.build_unique_id(description.key)
 
     @property
+    @override
     def is_on(self) -> bool | None:
         """Return true if the binary sensor is on."""
         value = self.coordinator.get_value(self.entity_description.value_path)
@@ -243,6 +244,7 @@ class VistapoolDosingTankBinarySensor(VistapoolEntity, BinarySensorEntity):
         self._attr_unique_id = self.build_unique_id("dosing_tank")
 
     @property
+    @override
     def is_on(self) -> bool | None:
         """Return true if any tank is low, or None if no tank data is available."""
         values: list[Any] = []

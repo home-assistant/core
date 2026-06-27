@@ -1,6 +1,6 @@
 """NINA binary sensor platform."""
 
-from typing import Any
+from typing import Any, override
 
 from homeassistant.components.binary_sensor import (
     BinarySensorDeviceClass,
@@ -70,6 +70,7 @@ class NINAMessage(NinaEntity, BinarySensorEntity):
         self._attr_unique_id = f"{region}-{slot_id}"
 
     @property
+    @override
     def is_on(self) -> bool:
         """Return the state of the sensor."""
         if self._get_active_warnings_count() <= self._warning_index:
@@ -78,6 +79,7 @@ class NINAMessage(NinaEntity, BinarySensorEntity):
         return self._get_warning_data().is_valid
 
     @property
+    @override
     def extra_state_attributes(self) -> dict[str, Any]:
         """Return extra attributes of the sensor."""
         if not self.is_on:

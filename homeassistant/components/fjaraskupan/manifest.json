@@ -14,5 +14,5 @@
   "integration_type": "hub",
   "iot_class": "local_polling",
   "loggers": ["bleak", "fjaraskupan"],
-  "requirements": ["fjaraskupan==2.3.3"]
+  "requirements": ["fjaraskupan==2.3.4"]
 }

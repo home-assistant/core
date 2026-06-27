@@ -10,7 +10,7 @@ import json
 import logging
 from ssl import PROTOCOL_TLS_CLIENT, SSLContext, SSLError
 from types import MappingProxyType
-from typing import TYPE_CHECKING, Any, cast
+from typing import TYPE_CHECKING, Any, cast, override
 from uuid import uuid4
 
 from cryptography.hazmat.primitives.serialization import (
@@ -1124,7 +1124,7 @@ def validate_light_platform_config(user_data: dict[str, Any]) -> dict[str, str]:
     if user_data.get(CONF_MIN_KELVIN, DEFAULT_MIN_KELVIN) >= user_data.get(
         CONF_MAX_KELVIN, DEFAULT_MAX_KELVIN
     ):
-        errors["advanced_settings"] = "max_below_min_kelvin"
+        errors["other_settings"] = "max_below_min_kelvin"
     return errors
 
 
@@ -1217,7 +1217,7 @@ def validate_text_platform_config(
         and CONF_MAX in config
         and config[CONF_MIN] > config[CONF_MAX]
     ):
-        errors["text_advanced_settings"] = "max_below_min"
+        errors["text_other_settings"] = "max_below_min"
 
     return errors
 
@@ -1506,7 +1506,7 @@ PLATFORM_ENTITY_FIELDS: dict[Platform, dict[str, PlatformField]] = {
             selector=SUGGESTED_DISPLAY_PRECISION_SELECTOR,
             required=False,
             validator=cv.positive_int,
-            section="advanced_settings",
+            section="other_settings",
         ),
         CONF_OPTIONS: PlatformField(
             selector=OPTIONS_SELECTOR,
@@ -1678,13 +1678,13 @@ PLATFORM_MQTT_FIELDS: dict[Platform, dict[str, PlatformField]] = {
             selector=TIMEOUT_SELECTOR,
             required=False,
             validator=cv.positive_int,
-            section="advanced_settings",
+            section="other_settings",
         ),
         CONF_OFF_DELAY: PlatformField(
             selector=TIMEOUT_SELECTOR,
             required=False,
             validator=cv.positive_int,
-            section="advanced_settings",
+            section="other_settings",
         ),
     },
     Platform.BUTTON: {
@@ -3125,7 +3125,7 @@ PLATFORM_MQTT_FIELDS: dict[Platform, dict[str, PlatformField]] = {
             default=False,
             validator=cv.boolean,
             conditions=({CONF_SCHEMA: "json"},),
-            section="advanced_settings",
+            section="other_settings",
         ),
         CONF_FLASH_TIME_SHORT: PlatformField(
             selector=FLASH_TIME_SELECTOR,
@@ -3133,7 +3133,7 @@ PLATFORM_MQTT_FIELDS: dict[Platform, dict[str, PlatformField]] = {
             validator=cv.positive_int,
             default=2,
             conditions=({CONF_SCHEMA: "json"},),
-            section="advanced_settings",
+            section="other_settings",
         ),
         CONF_FLASH_TIME_LONG: PlatformField(
             selector=FLASH_TIME_SELECTOR,
@@ -3141,7 +3141,7 @@ PLATFORM_MQTT_FIELDS: dict[Platform, dict[str, PlatformField]] = {
             validator=cv.positive_int,
             default=10,
             conditions=({CONF_SCHEMA: "json"},),
-            section="advanced_settings",
+            section="other_settings",
         ),
         CONF_TRANSITION: PlatformField(
             selector=BOOLEAN_SELECTOR,
@@ -3149,21 +3149,21 @@ PLATFORM_MQTT_FIELDS: dict[Platform, dict[str, PlatformField]] = {
             default=False,
             validator=cv.boolean,
             conditions=({CONF_SCHEMA: "json"},),
-            section="advanced_settings",
+            section="other_settings",
         ),
         CONF_MAX_KELVIN: PlatformField(
             selector=KELVIN_SELECTOR,
             required=False,
             validator=cv.positive_int,
             default=DEFAULT_MAX_KELVIN,
-            section="advanced_settings",
+            section="other_settings",
         ),
         CONF_MIN_KELVIN: PlatformField(
             selector=KELVIN_SELECTOR,
             required=False,
             validator=cv.positive_int,
             default=DEFAULT_MIN_KELVIN,
-            section="advanced_settings",
+            section="other_settings",
         ),
     },
     Platform.LOCK: {
@@ -3372,7 +3372,7 @@ PLATFORM_MQTT_FIELDS: dict[Platform, dict[str, PlatformField]] = {
             selector=TIMEOUT_SELECTOR,
             required=False,
             validator=cv.positive_int,
-            section="advanced_settings",
+            section="other_settings",
         ),
     },
     Platform.SIREN: {
@@ -3437,7 +3437,7 @@ PLATFORM_MQTT_FIELDS: dict[Platform, dict[str, PlatformField]] = {
             required=False,
             validator=validate(cv.template),
             error="invalid_template",
-            section="siren_advanced_settings",
+            section="siren_other_settings",
         ),
     },
     Platform.SWITCH: {
@@ -3516,26 +3516,26 @@ PLATFORM_MQTT_FIELDS: dict[Platform, dict[str, PlatformField]] = {
             selector=TEXT_SIZE_SELECTOR,
             required=True,
             default=0,
-            section="text_advanced_settings",
+            section="text_other_settings",
         ),
         CONF_MAX: PlatformField(
             selector=TEXT_SIZE_SELECTOR,
             required=True,
             default=255,
-            section="text_advanced_settings",
+            section="text_other_settings",
         ),
         CONF_MODE: PlatformField(
             selector=TEXT_MODE_SELECTOR,
             required=True,
             default=TextSelectorType.TEXT.value,
-            section="text_advanced_settings",
+            section="text_other_settings",
         ),
         CONF_PATTERN: PlatformField(
             selector=TEXT_SELECTOR,
             required=False,
             validator=validate(cv.is_regex),
             error="invalid_regular_expression",
-            section="text_advanced_settings",
+            section="text_other_settings",
         ),
     },
     Platform.TIME: {
@@ -3798,10 +3798,10 @@ PLATFORM_MQTT_FIELDS: dict[Platform, dict[str, PlatformField]] = {
 MQTT_DEVICE_PLATFORM_FIELDS = {
     CONF_NAME: PlatformField(selector=TEXT_SELECTOR, required=True),
     CONF_SW_VERSION: PlatformField(
-        selector=TEXT_SELECTOR, required=False, section="advanced_settings"
+        selector=TEXT_SELECTOR, required=False, section="other_settings"
     ),
     CONF_HW_VERSION: PlatformField(
-        selector=TEXT_SELECTOR, required=False, section="advanced_settings"
+        selector=TEXT_SELECTOR, required=False, section="other_settings"
     ),
     CONF_MODEL: PlatformField(selector=TEXT_SELECTOR, required=False),
     CONF_MODEL_ID: PlatformField(selector=TEXT_SELECTOR, required=False),
@@ -4080,6 +4080,7 @@ class FlowHandler(ConfigFlow, domain=DOMAIN):
 
     @classmethod
     @callback
+    @override
     def async_get_supported_subentry_types(
         cls, config_entry: ConfigEntry
     ) -> dict[str, type[ConfigSubentryFlow]]:
@@ -4088,6 +4089,7 @@ class FlowHandler(ConfigFlow, domain=DOMAIN):
 
     @staticmethod
     @callback
+    @override
     def async_get_options_flow(
         config_entry: ConfigEntry,
     ) -> MQTTOptionsFlowHandler:
@@ -4178,7 +4180,6 @@ class FlowHandler(ConfigFlow, domain=DOMAIN):
                 CONF_PROTOCOL: DEFAULT_PROTOCOL,
                 CONF_USERNAME: addon_discovery_config.get(CONF_USERNAME),
                 CONF_PASSWORD: addon_discovery_config.get(CONF_PASSWORD),
-                CONF_DISCOVERY: DEFAULT_DISCOVERY,
             }
         except AddonError:
             # We do not have discovery information yet
@@ -4209,6 +4210,7 @@ class FlowHandler(ConfigFlow, domain=DOMAIN):
                 translation_placeholders={"addon": addon_manager.addon_name},
             )
 
+    @override
     async def async_step_user(
         self, user_input: dict[str, Any] | None = None
     ) -> ConfigFlowResult:
@@ -4383,6 +4385,7 @@ class FlowHandler(ConfigFlow, domain=DOMAIN):
         """Handle a reconfiguration flow initialized by the user."""
         return await self.async_step_broker()
 
+    @override
     async def async_step_hassio(
         self, discovery_info: HassioServiceInfo
     ) -> ConfigFlowResult:
@@ -4419,7 +4422,6 @@ class FlowHandler(ConfigFlow, domain=DOMAIN):
                         CONF_PROTOCOL: DEFAULT_PROTOCOL,
                         CONF_USERNAME: data.get(CONF_USERNAME),
                         CONF_PASSWORD: data.get(CONF_PASSWORD),
-                        CONF_DISCOVERY: DEFAULT_DISCOVERY,
                     },
                 )
 
@@ -4686,8 +4688,8 @@ class MQTTSubentryFlowHandler(ConfigSubentryFlow):
         if user_input is not None:
             new_device_data: dict[str, Any] = user_input.copy()
             _, errors = validate_user_input(user_input, MQTT_DEVICE_PLATFORM_FIELDS)
-            if "advanced_settings" in new_device_data:
-                new_device_data |= new_device_data.pop("advanced_settings")
+            if "other_settings" in new_device_data:
+                new_device_data |= new_device_data.pop("other_settings")
             if not errors:
                 self._subentry_data[CONF_DEVICE] = cast(MqttDeviceData, new_device_data)
                 if self.source == SOURCE_RECONFIGURE:

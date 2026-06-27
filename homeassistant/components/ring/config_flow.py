@@ -2,7 +2,7 @@
 
 from collections.abc import Mapping
 import logging
-from typing import Any
+from typing import Any, override
 import uuid
 
 from ring_doorbell import Auth, AuthenticationError, Requires2FAError
@@ -77,6 +77,7 @@ class RingConfigFlow(ConfigFlow, domain=DOMAIN):
     user_pass: dict[str, Any] = {}
     hardware_id: str | None = None
 
+    @override
     async def async_step_dhcp(
         self, discovery_info: DhcpServiceInfo
     ) -> ConfigFlowResult:
@@ -96,6 +97,7 @@ class RingConfigFlow(ConfigFlow, domain=DOMAIN):
 
         return await self.async_step_user()
 
+    @override
     async def async_step_user(
         self, user_input: dict[str, Any] | None = None
     ) -> ConfigFlowResult:

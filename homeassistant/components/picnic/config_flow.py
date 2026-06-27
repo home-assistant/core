@@ -2,7 +2,7 @@
 
 from collections.abc import Mapping
 import logging
-from typing import Any
+from typing import Any, override
 
 from python_picnic_api2 import PicnicAPI
 from python_picnic_api2.session import (
@@ -78,6 +78,7 @@ class PicnicConfigFlow(ConfigFlow, domain=DOMAIN):
         """Perform the re-auth step upon an API authentication error."""
         return await self.async_step_user()
 
+    @override
     async def async_step_user(
         self, user_input: dict[str, Any] | None = None
     ) -> ConfigFlowResult:

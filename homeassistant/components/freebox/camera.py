@@ -1,6 +1,6 @@
 """Support for Freebox cameras."""
 
-from typing import Any
+from typing import Any, override
 
 from aiohttp import web
 from haffmpeg.camera import CameraMjpeg
@@ -84,10 +84,12 @@ class FreeboxCamera(FreeboxHomeEntity, Camera):
         self._attr_extra_state_attributes = {}
         self.update_node(node)
 
+    @override
     async def stream_source(self) -> str:
         """Return the stream source."""
         return self._input.split(" ")[-1]
 
+    @override
     async def async_camera_image(
         self, width: int | None = None, height: int | None = None
     ) -> bytes | None:
@@ -99,6 +101,7 @@ class FreeboxCamera(FreeboxHomeEntity, Camera):
             extra_cmd=_FFMPEG_ARGUMENTS,
         )
 
+    @override
     async def handle_async_mjpeg_stream(
         self, request: web.Request
     ) -> web.StreamResponse:
@@ -117,16 +120,19 @@ class FreeboxCamera(FreeboxHomeEntity, Camera):
         finally:
             await stream.close()
 
+    @override
     async def async_enable_motion_detection(self) -> None:
         """Enable motion detection in the camera."""
         if await self.set_home_endpoint_value(self._command_motion_detection, True):
             self._attr_motion_detection_enabled = True
 
+    @override
     async def async_disable_motion_detection(self) -> None:
         """Disable motion detection in camera."""
         if await self.set_home_endpoint_value(self._command_motion_detection, False):
             self._attr_motion_detection_enabled = False
 
+    @override
     async def async_update_signal(self) -> None:
         """Update the camera node."""
         self.update_node(self._router.home_devices[self._id])
