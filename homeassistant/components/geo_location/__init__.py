@@ -2,18 +2,20 @@
 
 from datetime import timedelta
 import logging
-from typing import Any, final
+from typing import Any, final, override
 
 from propcache.api import cached_property
 
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import ATTR_LATITUDE, ATTR_LONGITUDE
+from homeassistant.const import ATTR_LATITUDE, ATTR_LONGITUDE  # noqa: F401
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.entity import Entity
 from homeassistant.helpers.entity_component import EntityComponent
 from homeassistant.helpers.typing import ConfigType
 from homeassistant.util.hass_dict import HassKey
+
+from .const import GeolocationEntityStateAttribute
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -69,6 +71,7 @@ class GeolocationEvent(Entity, cached_properties=CACHED_PROPERTIES_WITH_ATTR_):
 
     @final
     @property
+    @override
     def state(self) -> float | None:
         """Return the state of the sensor."""
         if self.distance is not None:
@@ -97,11 +100,12 @@ class GeolocationEvent(Entity, cached_properties=CACHED_PROPERTIES_WITH_ATTR_):
 
     @final
     @property
+    @override
     def state_attributes(self) -> dict[str, Any]:
         """Return the state attributes of this external event."""
-        data: dict[str, Any] = {ATTR_SOURCE: self.source}
+        data: dict[str, Any] = {GeolocationEntityStateAttribute.SOURCE: self.source}
         if self.latitude is not None:
-            data[ATTR_LATITUDE] = round(self.latitude, 5)
+            data[GeolocationEntityStateAttribute.LATITUDE] = round(self.latitude, 5)
         if self.longitude is not None:
-            data[ATTR_LONGITUDE] = round(self.longitude, 5)
+            data[GeolocationEntityStateAttribute.LONGITUDE] = round(self.longitude, 5)
         return data

@@ -2,7 +2,7 @@
 
 from collections.abc import Mapping
 import logging
-from typing import Any
+from typing import Any, override
 
 from aiohttp import ClientError
 import voluptuous as vol
@@ -115,6 +115,7 @@ class WhirlpoolConfigFlow(ConfigFlow, domain=DOMAIN):
             description_placeholders={"name": "Whirlpool"},
         )
 
+    @override
     async def async_step_user(self, user_input=None) -> ConfigFlowResult:
         """Handle the initial step."""
         if user_input is None:

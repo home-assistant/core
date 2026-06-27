@@ -1,7 +1,7 @@
 """Config flow to configure songpal component."""
 
 import logging
-from typing import TYPE_CHECKING, Any
+from typing import TYPE_CHECKING, Any, override
 from urllib.parse import urlparse
 
 from songpal import Device, SongpalException
@@ -39,6 +39,7 @@ class SongpalConfigFlow(ConfigFlow, domain=DOMAIN):
 
     conf: SongpalConfig
 
+    @override
     async def async_step_user(
         self, user_input: dict[str, str] | None = None
     ) -> ConfigFlowResult:
@@ -100,6 +101,7 @@ class SongpalConfigFlow(ConfigFlow, domain=DOMAIN):
             data={CONF_NAME: self.conf.name, CONF_ENDPOINT: self.conf.endpoint},
         )
 
+    @override
     async def async_step_ssdp(
         self, discovery_info: SsdpServiceInfo
     ) -> ConfigFlowResult:

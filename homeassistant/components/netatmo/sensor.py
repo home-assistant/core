@@ -4,7 +4,7 @@ from collections.abc import Callable
 from dataclasses import dataclass
 from functools import partial
 import logging
-from typing import Any, Final, cast
+from typing import Any, Final, cast, override
 
 import pyatmo
 from pyatmo.modules import PublicWeatherArea
@@ -660,6 +660,7 @@ class NetatmoBaseSensor(NetatmoModuleEntity, SensorEntity):
     # and meter sensors to prevent breaking changes, as they
     # were the first ones implemented.
     @callback
+    @override
     def async_update_callback(self) -> None:
         """Update the entity's state (the legacy way)."""
         # Keep the last known value for these legacy sensors when the device is
@@ -695,6 +696,7 @@ class NetatmoWeatherSensor(NetatmoWeatherModuleEntity, NetatmoBaseSensor):
         self._attr_unique_id = f"{self.device.entity_id}-{description.key}"
 
     @property
+    @override
     def available(self) -> bool:
         """Return True if entity is available."""
         return (
@@ -707,6 +709,7 @@ class NetatmoWeatherSensor(NetatmoWeatherModuleEntity, NetatmoBaseSensor):
         )
 
     @callback
+    @override
     def async_update_callback(self) -> None:
         """Update the entity's state."""
         value = cast(
@@ -785,6 +788,7 @@ class NetatmoClimateBatterySensor(NetatmoLegacySensor):
         )
 
     @callback
+    @override
     def async_update_callback(self) -> None:
         """Update the entity's state."""
         if not self.device.reachable:
@@ -829,6 +833,7 @@ class NetatmoSensor(NetatmoBaseSensor):
     # except is_sticky, otherwise it is set to the
     # processed value
     @callback
+    @override
     def async_update_callback(self) -> None:
         """Update the entity's state."""
         if not self.device.reachable:
@@ -884,6 +889,7 @@ class NetatmoRoomSensor(NetatmoRoomEntity, SensorEntity):
         )
 
     @callback
+    @override
     def async_update_callback(self) -> None:
         """Update the entity's state."""
         if (state := getattr(self.device, self.entity_description.key)) is None:
@@ -943,6 +949,7 @@ class NetatmoPublicSensor(NetatmoBaseEntity, SensorEntity):
             configuration_url=CONF_URL_PUBLIC_WEATHER,
         )
 
+    @override
     async def async_added_to_hass(self) -> None:
         """Entity created."""
         await super().async_added_to_hass()
@@ -979,6 +986,7 @@ class NetatmoPublicSensor(NetatmoBaseEntity, SensorEntity):
         )
 
     @callback
+    @override
     def async_update_callback(self) -> None:
         """Update the entity's state."""
         data = self.entity_description.value_fn(self._station)

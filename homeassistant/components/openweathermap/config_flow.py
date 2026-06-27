@@ -1,5 +1,7 @@
 """Config flow for OpenWeatherMap."""
 
+from typing import override
+
 import voluptuous as vol
 
 from homeassistant.config_entries import (
@@ -65,12 +67,14 @@ class OpenWeatherMapConfigFlow(ConfigFlow, domain=DOMAIN):
 
     @staticmethod
     @callback
+    @override
     def async_get_options_flow(
         config_entry: ConfigEntry,
     ) -> OpenWeatherMapOptionsFlow:
         """Get the options flow for this handler."""
         return OpenWeatherMapOptionsFlow()
 
+    @override
     async def async_step_user(self, user_input=None) -> ConfigFlowResult:
         """Handle a flow initialized by the user."""
         errors = {}
