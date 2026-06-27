@@ -92,7 +92,7 @@ class SupervisorJobs:
         # We catch all errors to prevent an error in one from stopping the others
         for match in [job for job in self._jobs.values() if subscription.matches(job)]:
             try:
-                return subscription.event_callback(match)
+                subscription.event_callback(match)
             except Exception as err:  # noqa: BLE001
                 _LOGGER.error(
                     "Error encountered processing Supervisor Job (%s %s %s) - %s",

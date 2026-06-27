@@ -67,12 +67,13 @@ class Tami4ConfigFlow(ConfigFlow, domain=DOMAIN):
         if user_input is not None:
             otp = user_input["otp"]
             try:
-                refresh_token = await self.hass.async_add_executor_job(
-                    Tami4EdgeAPI.submit_otp, self.phone, otp
-                )
-                # pylint: disable-next=home-assistant-sequential-executor-jobs
-                api = await self.hass.async_add_executor_job(
-                    Tami4EdgeAPI, refresh_token
+
+                def _submit_otp_and_create_api() -> tuple[str, Tami4EdgeAPI]:
+                    refresh_token = Tami4EdgeAPI.submit_otp(self.phone, otp)
+                    return refresh_token, Tami4EdgeAPI(refresh_token)
+
+                refresh_token, api = await self.hass.async_add_executor_job(
+                    _submit_otp_and_create_api
                 )
             except exceptions.OTPFailedException:
                 errors["base"] = "invalid_auth"

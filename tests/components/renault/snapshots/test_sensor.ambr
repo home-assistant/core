@@ -318,6 +318,7 @@
       <SensorEntityCapabilityAttribute.OPTIONS: 'options'>: list([
         'always',
         'delayed',
+        'delegated',
         'scheduled',
       ]),
     }),
@@ -359,6 +360,7 @@
       <SensorEntityCapabilityAttribute.OPTIONS: 'options'>: list([
         'always',
         'delayed',
+        'delegated',
         'scheduled',
       ]),
     }),
@@ -1143,6 +1145,7 @@
       <SensorEntityCapabilityAttribute.OPTIONS: 'options'>: list([
         'always',
         'delayed',
+        'delegated',
         'scheduled',
       ]),
     }),
@@ -1184,6 +1187,7 @@
       <SensorEntityCapabilityAttribute.OPTIONS: 'options'>: list([
         'always',
         'delayed',
+        'delegated',
         'scheduled',
       ]),
     }),
@@ -2411,6 +2415,7 @@
       <SensorEntityCapabilityAttribute.OPTIONS: 'options'>: list([
         'always',
         'delayed',
+        'delegated',
         'scheduled',
       ]),
     }),
@@ -2452,6 +2457,7 @@
       <SensorEntityCapabilityAttribute.OPTIONS: 'options'>: list([
         'always',
         'delayed',
+        'delegated',
         'scheduled',
       ]),
     }),
@@ -3400,6 +3406,7 @@
       <SensorEntityCapabilityAttribute.OPTIONS: 'options'>: list([
         'always',
         'delayed',
+        'delegated',
         'scheduled',
       ]),
     }),
@@ -3441,6 +3448,7 @@
       <SensorEntityCapabilityAttribute.OPTIONS: 'options'>: list([
         'always',
         'delayed',
+        'delegated',
         'scheduled',
       ]),
     }),
@@ -4273,6 +4281,7 @@
       <SensorEntityCapabilityAttribute.OPTIONS: 'options'>: list([
         'always',
         'delayed',
+        'delegated',
         'scheduled',
       ]),
     }),
@@ -4314,6 +4323,7 @@
       <SensorEntityCapabilityAttribute.OPTIONS: 'options'>: list([
         'always',
         'delayed',
+        'delegated',
         'scheduled',
       ]),
     }),
@@ -5088,6 +5098,7 @@
       <SensorEntityCapabilityAttribute.OPTIONS: 'options'>: list([
         'always',
         'delayed',
+        'delegated',
         'scheduled',
       ]),
     }),
@@ -5129,6 +5140,7 @@
       <SensorEntityCapabilityAttribute.OPTIONS: 'options'>: list([
         'always',
         'delayed',
+        'delegated',
         'scheduled',
       ]),
     }),
@@ -5971,6 +5983,7 @@
       <SensorEntityCapabilityAttribute.OPTIONS: 'options'>: list([
         'always',
         'delayed',
+        'delegated',
         'scheduled',
       ]),
     }),
@@ -6012,6 +6025,7 @@
       <SensorEntityCapabilityAttribute.OPTIONS: 'options'>: list([
         'always',
         'delayed',
+        'delegated',
         'scheduled',
       ]),
     }),
