@@ -2358,7 +2358,7 @@ pymochad==0.2.0
 pymodbus==3.13.1
 
 # homeassistant.components.monoprice
-pymonoprice==0.5
+pymonoprice==0.6.1
 
 # homeassistant.components.mysensors
 pymysensors==0.26.0
