@@ -154,6 +154,33 @@ def _assert_data(hass: HomeAssistant, expected_state: dict[str, Any]) -> None:
         assert state == value
 
 
+@pytest.mark.usefixtures("entity_registry_enabled_by_default", "ev_entry")
+async def test_recommended_tire_pressure_from_vehicle_health(
+    hass: HomeAssistant,
+    entity_registry: er.EntityRegistry,
+) -> None:
+    """Recommended tire pressure sensors derive their value from vehicle_health.
+
+    These sensors are disabled-by-default diagnostics, so they're skipped in
+    `_assert_data`. Enable them here to exercise the `value_fn`-from-
+    `vehicle_health` path (the only consumer of nested-section value_fn in
+    the integration today). Fixture has FRONT_TIRES=35 / REAR_TIRES=33 PSI;
+    the test default unit system is metric, so HA's pressure conversion
+    surfaces them as kPa.
+    """
+    front = entity_registry.async_get_entity_id(
+        SENSOR_DOMAIN, DOMAIN, f"{TEST_VIN_2_EV}_recommended_tire_pressure_front"
+    )
+    assert front is not None
+    assert get_sensor_display_state(hass, entity_registry, front) == "241.32"
+
+    rear = entity_registry.async_get_entity_id(
+        SENSOR_DOMAIN, DOMAIN, f"{TEST_VIN_2_EV}_recommended_tire_pressure_rear"
+    )
+    assert rear is not None
+    assert get_sensor_display_state(hass, entity_registry, rear) == "227.53"
+
+
 @pytest.mark.usefixtures("entity_registry_enabled_by_default")
 async def test_enum_unmapped_value_and_raw_companion(
     hass: HomeAssistant,
