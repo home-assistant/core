@@ -161,8 +161,10 @@ class NexiaRoomIQEntity(NexiaThermostatZoneEntity):
         if sensor.has_online:
             dev_info = DeviceInfo(
                 identifiers={(DOMAIN, str(sensor.id))},
+                model=None,  # not reported
                 name=sensor.name,
                 suggested_area=sensor.name,
+                sw_version=None,  # not reported
                 via_device=(DOMAIN, zone.zone_id),  # type: ignore[typeddict-item] # until fix issue #139773
             )
         super().__init__(coordinator, zone, f"{sensor.id}-{key}", dev_info)
