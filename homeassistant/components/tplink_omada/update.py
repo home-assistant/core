@@ -12,7 +12,6 @@ from homeassistant.components.update import (
     UpdateEntity,
     UpdateEntityFeature,
 )
-from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import EntityCategory
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.exceptions import HomeAssistantError
@@ -21,8 +20,8 @@ from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
 from . import OmadaConfigEntry
-from .config_flow import CONF_SITE
 from .const import DOMAIN
+from .controller_entities import config_entry_owns_controller_entities
 from .coordinator import (
     OmadaControllerUpdateCoordinator,
     OmadaFirmwareUpdateCoordinator,
@@ -42,7 +41,7 @@ async def async_setup_entry(
 
     devices = controller.devices_coordinator.data
 
-    if _config_entry_owns_controller_entities(hass, config_entry):
+    if config_entry_owns_controller_entities(hass, config_entry):
         async_add_entities(
             [
                 OmadaControllerUpdate(
@@ -70,42 +69,6 @@ class ControllerUpdateDetails:
     current_version: str
     latest_version: str
     release_notes: str | None
-
-
-def _config_entry_controller_unique_id(config_entry: ConfigEntry) -> str | None:
-    """Return the controller-level unique ID for a site config entry."""
-    unique_id = config_entry.unique_id
-    site_id = config_entry.data.get(CONF_SITE)
-
-    if unique_id is None or not isinstance(site_id, str):
-        return unique_id
-
-    site_suffix = f"_{site_id}"
-    if unique_id.endswith(site_suffix):
-        return unique_id[: -len(site_suffix)]
-
-    return unique_id
-
-
-def _config_entry_owns_controller_entities(
-    hass: HomeAssistant, config_entry: OmadaConfigEntry
-) -> bool:
-    """Return if this site entry should add the controller-level entities."""
-    controller_unique_id = _config_entry_controller_unique_id(config_entry)
-    controller_entries = [
-        entry
-        for entry in hass.config_entries.async_entries(
-            DOMAIN, include_ignore=False, include_disabled=False
-        )
-        if _config_entry_controller_unique_id(entry) == controller_unique_id
-    ]
-
-    return (
-        config_entry.entry_id
-        == min(
-            controller_entries, key=lambda entry: (entry.created_at, entry.entry_id)
-        ).entry_id
-    )
 
 
 def _controller_software_update(
@@ -240,6 +203,7 @@ class OmadaDeviceUpdate(
         | UpdateEntityFeature.RELEASE_NOTES
     )
     _attr_device_class = UpdateDeviceClass.FIRMWARE
+    _attr_name = "Firmware"
 
     def __init__(
         self,

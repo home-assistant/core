@@ -14,7 +14,6 @@ from homeassistant.components.sensor import (
     SensorEntityDescription,
     SensorStateClass,
 )
-from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import PERCENTAGE, EntityCategory
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import device_registry as dr
@@ -23,8 +22,8 @@ from homeassistant.helpers.typing import StateType
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
 from . import OmadaConfigEntry
-from .config_flow import CONF_SITE
 from .const import DOMAIN, OmadaDeviceStatus
+from .controller_entities import config_entry_owns_controller_entities
 from .coordinator import OmadaControllerInfoCoordinator, OmadaDevicesCoordinator
 from .entity import OmadaDeviceEntity
 
@@ -80,7 +79,7 @@ async def async_setup_entry(
 
     _register_controller_device(hass, config_entry, controller_info_coordinator.data)
 
-    if _config_entry_owns_controller_entities(hass, config_entry):
+    if config_entry_owns_controller_entities(hass, config_entry):
         async_add_entities(
             [
                 OmadaControllerSensor(controller_info_coordinator, desc)
@@ -137,42 +136,6 @@ def _register_controller_device(
         model="Omada Controller",
         name="Omada Controller",
         sw_version=controller_info.controller_version,
-    )
-
-
-def _config_entry_controller_unique_id(config_entry: ConfigEntry) -> str | None:
-    """Return the controller-level unique ID for a site config entry."""
-    unique_id = config_entry.unique_id
-    site_id = config_entry.data.get(CONF_SITE)
-
-    if unique_id is None or not isinstance(site_id, str):
-        return unique_id
-
-    site_suffix = f"_{site_id}"
-    if unique_id.endswith(site_suffix):
-        return unique_id[: -len(site_suffix)]
-
-    return unique_id
-
-
-def _config_entry_owns_controller_entities(
-    hass: HomeAssistant, config_entry: OmadaConfigEntry
-) -> bool:
-    """Return if this site entry should add the controller-level entities."""
-    controller_unique_id = _config_entry_controller_unique_id(config_entry)
-    controller_entries = [
-        entry
-        for entry in hass.config_entries.async_entries(
-            DOMAIN, include_ignore=False, include_disabled=False
-        )
-        if _config_entry_controller_unique_id(entry) == controller_unique_id
-    ]
-
-    return (
-        config_entry.entry_id
-        == min(
-            controller_entries, key=lambda entry: (entry.created_at, entry.entry_id)
-        ).entry_id
     )
 
 
