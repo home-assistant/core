@@ -1,7 +1,7 @@
 """Tasmota entity mixins."""
 
 import logging
-from typing import Any
+from typing import Any, override
 
 from hatasmota.entity import (
     TasmotaAvailability as HATasmotaAvailability,
@@ -41,10 +41,12 @@ class TasmotaEntity(Entity):
             connections={(CONNECTION_NETWORK_MAC, tasmota_entity.mac)}
         )
 
+    @override
     async def async_added_to_hass(self) -> None:
         """Subscribe to MQTT events."""
         await self._subscribe_topics()
 
+    @override
     async def async_will_remove_from_hass(self) -> None:
         """Unsubscribe when removed."""
         await self._tasmota_entity.unsubscribe_topics()
@@ -64,16 +66,19 @@ class TasmotaEntity(Entity):
         await self._tasmota_entity.subscribe_topics()
 
     @property
+    @override
     def name(self) -> str | None:
         """Return the name of the binary sensor."""
         return self._tasmota_entity.name
 
     @property
+    @override
     def should_poll(self) -> bool:
         """Return the polling state."""
         return False
 
     @property
+    @override
     def unique_id(self) -> str:
         """Return a unique ID."""
         return self._unique_id
@@ -87,6 +92,7 @@ class TasmotaOnOffEntity(TasmotaEntity):
         self._on_off_state: bool = False
         super().__init__(**kwds)
 
+    @override
     async def async_added_to_hass(self) -> None:
         """Subscribe to MQTT events."""
         self._tasmota_entity.set_on_state_callback(self.state_updated)
@@ -117,6 +123,7 @@ class TasmotaAvailability(TasmotaEntity):
         else:
             self._available = False
 
+    @override
     async def async_added_to_hass(self) -> None:
         """Subscribe to MQTT events."""
         self._tasmota_entity.set_on_availability_callback(self.availability_updated)
@@ -144,6 +151,7 @@ class TasmotaAvailability(TasmotaEntity):
             self.async_write_ha_state()
 
     @property
+    @override
     def available(self) -> bool:
         """Return if the device is available."""
         return self._available
@@ -158,6 +166,7 @@ class TasmotaDiscoveryUpdate(TasmotaEntity):
         self._removed_from_hass = False
         super().__init__(**kwds)
 
+    @override
     async def async_added_to_hass(self) -> None:
         """Subscribe to discovery updates."""
         self._removed_from_hass = False
@@ -198,11 +207,13 @@ class TasmotaDiscoveryUpdate(TasmotaEntity):
         )
 
     @callback
+    @override
     def add_to_platform_abort(self) -> None:
         """Abort adding an entity to a platform."""
         clear_discovery_hash(self.hass, self._discovery_hash)
         super().add_to_platform_abort()
 
+    @override
     async def async_will_remove_from_hass(self) -> None:
         """Stop listening to signal and cleanup discovery data.."""
         if not self._removed_from_hass:

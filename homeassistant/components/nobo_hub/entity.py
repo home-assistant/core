@@ -1,5 +1,7 @@
 """Base entity for the Nobø Ecohub integration."""
 
+from typing import override
+
 from pynobo import nobo
 
 from homeassistant.core import callback
@@ -16,11 +18,13 @@ class NoboBaseEntity(Entity):
         """Initialize the entity."""
         self._nobo = hub
 
+    @override
     async def async_added_to_hass(self) -> None:
         """Register callback with hub."""
         await super().async_added_to_hass()
         self._nobo.register_callback(self._handle_hub_update)
 
+    @override
     async def async_will_remove_from_hass(self) -> None:
         """Deregister callback from hub."""
         self._nobo.deregister_callback(self._handle_hub_update)

@@ -4,7 +4,7 @@ from collections.abc import Mapping
 from ipaddress import AddressValueError, IPv4Network
 import logging
 from types import MappingProxyType
-from typing import Any
+from typing import Any, override
 
 from telegram import Bot, ChatFullInfo
 from telegram.error import BadRequest, InvalidToken, TelegramError
@@ -196,6 +196,7 @@ class TelegramBotConfigFlow(ConfigFlow, domain=DOMAIN):
 
     @staticmethod
     @callback
+    @override
     def async_get_options_flow(
         config_entry: TelegramBotConfigEntry,
     ) -> OptionsFlowHandler:
@@ -204,6 +205,7 @@ class TelegramBotConfigFlow(ConfigFlow, domain=DOMAIN):
 
     @classmethod
     @callback
+    @override
     def async_get_supported_subentry_types(
         cls, config_entry: TelegramBotConfigEntry
     ) -> dict[str, type[ConfigSubentryFlow]]:
@@ -219,6 +221,7 @@ class TelegramBotConfigFlow(ConfigFlow, domain=DOMAIN):
         # for passing data between steps
         self._step_user_data: dict[str, Any] = {}
 
+    @override
     async def async_step_user(
         self, user_input: dict[str, Any] | None = None
     ) -> ConfigFlowResult:
@@ -491,7 +494,7 @@ class TelegramBotConfigFlow(ConfigFlow, domain=DOMAIN):
             CONF_API_ENDPOINT
         ]
         if (
-            self._get_reconfigure_entry().state == ConfigEntryState.LOADED
+            self._get_reconfigure_entry().state is ConfigEntryState.LOADED
             and user_input[CONF_API_ENDPOINT] != DEFAULT_API_ENDPOINT
             and existing_api_endpoint == DEFAULT_API_ENDPOINT
         ):
@@ -596,7 +599,7 @@ class AllowedChatIdsSubEntryFlowHandler(ConfigSubentryFlow):
     ) -> SubentryFlowResult:
         """Create allowed chat ID."""
 
-        if self._get_entry().state != ConfigEntryState.LOADED:
+        if self._get_entry().state is not ConfigEntryState.LOADED:
             return self.async_abort(
                 reason="entry_not_loaded",
                 description_placeholders={"telegram_bot": self._get_entry().title},

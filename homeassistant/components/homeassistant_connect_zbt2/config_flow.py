@@ -1,7 +1,7 @@
 """Config flow for the Home Assistant Connect ZBT-2 integration."""
 
 import logging
-from typing import TYPE_CHECKING, Any, Protocol
+from typing import TYPE_CHECKING, Any, Protocol, override
 
 from universal_silabs_flasher.flasher import Zbt2Flasher
 
@@ -119,12 +119,14 @@ class HomeAssistantConnectZBT2ConfigFlow(
 
     @staticmethod
     @callback
+    @override
     def async_get_options_flow(
         config_entry: ConfigEntry,
     ) -> OptionsFlow:
         """Return the options flow."""
         return HomeAssistantConnectZBT2OptionsFlowHandler(config_entry)
 
+    @override
     async def async_step_usb(self, discovery_info: UsbServiceInfo) -> ConfigFlowResult:
         """Handle usb discovery."""
         discovery_info.device = await self.hass.async_add_executor_job(
@@ -163,6 +165,7 @@ class HomeAssistantConnectZBT2ConfigFlow(
 
         return self._async_flow_finished()
 
+    @override
     def _async_flow_finished(self) -> ConfigFlowResult:
         """Create the config entry."""
         assert self._usb_info is not None
@@ -207,6 +210,7 @@ class HomeAssistantConnectZBT2OptionsFlowHandler(
         # Regenerate the translation placeholders
         self._get_translation_placeholders()
 
+    @override
     def _async_flow_finished(self) -> ConfigFlowResult:
         """Create the config entry."""
         assert self._probed_firmware_info is not None

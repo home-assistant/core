@@ -1,5 +1,7 @@
 """Support for Guntamatic sensors in Home Assistant."""
 
+from typing import override
+
 from homeassistant.components.sensor import (
     SensorDeviceClass,
     SensorEntity,
@@ -69,8 +71,8 @@ GUNTAMATIC_SENSORS: list[SensorEntityDescription] = [
         native_unit_of_measurement=UnitOfTemperature.CELSIUS,
     ),
     SensorEntityDescription(
-        key="domestic_home_water_temperature",
-        translation_key="domestic_home_water_temperature",
+        key="domestic_hot_water_0_temperature",
+        translation_key="domestic_hot_water_0_temperature",
         device_class=SensorDeviceClass.TEMPERATURE,
         state_class=SensorStateClass.MEASUREMENT,
         native_unit_of_measurement=UnitOfTemperature.CELSIUS,
@@ -146,6 +148,7 @@ class GuntamaticSensor(CoordinatorEntity[GuntamaticCoordinator], SensorEntity):
         )
 
     @property
+    @override
     def native_value(self) -> StateType:
         """Return the current value of the sensor."""
         return self.coordinator.data[self.entity_description.key][0]

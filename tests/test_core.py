@@ -667,7 +667,7 @@ async def test_stage_shutdown_generic_error(
         assert patched_call.called
 
     assert "test_exception" in caplog.text
-    assert hass.state == ha.CoreState.stopped
+    assert hass.state is ha.CoreState.stopped
 
 
 async def test_stage_shutdown_with_exit_code(hass: HomeAssistant) -> None:
@@ -1331,6 +1331,111 @@ async def test_eventbus_listen_once_run_immediately_coro(hass: HomeAssistant) ->
     hass.bus.async_fire("test", {"event": True})
     # No async_block_till_done here
     assert len(calls) == 1
+
+
+async def test_eventbus_nested_fire_dispatch_order(hass: HomeAssistant) -> None:
+    """Test dispatch order when a listener fires an event synchronously.
+
+    The implementation of event listeners is such that listeners are called
+    in the order they were registered
+
+    Event dispatch is however non-reentrant: an event fired from within a
+    synchronous listener is queued and dispatched after the dispatch of the
+    outer event completes. All listeners therefore observe events in fire
+    order, regardless of their registration position relative to the
+    listener which fires the nested event.
+    """
+    observed_before: list[str] = []
+    observed_after: list[str] = []
+
+    @ha.callback
+    def observer_before(event: ha.Event) -> None:
+        observed_before.append(event.event_type)
+
+    @ha.callback
+    def fire_nested(event: ha.Event) -> None:
+        hass.bus.async_fire("test_nested")
+
+    @ha.callback
+    def observer_after(event: ha.Event) -> None:
+        observed_after.append(event.event_type)
+
+    unsubs = [
+        hass.bus.async_listen("test_outer", observer_before),
+        hass.bus.async_listen("test_nested", observer_before),
+        hass.bus.async_listen("test_outer", fire_nested),
+        hass.bus.async_listen("test_outer", observer_after),
+        hass.bus.async_listen("test_nested", observer_after),
+    ]
+
+    hass.bus.async_fire("test_outer")
+
+    # All listeners observe fire order, regardless of registration position
+    # relative to the nesting listener.
+    assert observed_before == ["test_outer", "test_nested"]
+    assert observed_after == ["test_outer", "test_nested"]
+
+    for unsub in unsubs:
+        unsub()
+
+
+async def test_eventbus_nested_fire_endless_loop_guard(
+    hass: HomeAssistant, caplog: pytest.LogCaptureFixture
+) -> None:
+    """Test that event listeners firing events in an endless loop are stopped.
+
+    A listener which unconditionally fires an event it also listens to would
+    keep the dispatch drain loop running forever. Once the per-dispatch queue
+    limit is reached, the bus stops queuing further events and raises in the
+    firing listener; the raise is caught and logged by the per-listener error
+    handling.
+    """
+    calls: list[ha.Event] = []
+
+    @ha.callback
+    def refire(event: ha.Event) -> None:
+        calls.append(event)
+        hass.bus.async_fire("test_loop")
+
+    unsub = hass.bus.async_listen("test_loop", refire)
+
+    with patch.object(ha, "_MAX_QUEUED_EVENT_DISPATCHES", 10):
+        hass.bus.async_fire("test_loop")
+
+    # The top-level dispatch plus 10 queued dispatches; the next fire is
+    # rejected once the queue limit is reached. The firing listener raises,
+    # which the per-listener error handling catches and logs.
+    assert len(calls) == 11
+    assert "Error running job" in caplog.text
+    assert "are likely firing events in an endless loop" in caplog.text
+
+    unsub()
+
+    # The bus remains functional after the aborted dispatch
+    events = async_capture_events(hass, "test_after")
+    hass.bus.async_fire("test_after")
+    assert len(events) == 1
+
+
+async def test_eventbus_fire_raises_when_queue_limit_reached(
+    hass: HomeAssistant,
+) -> None:
+    """Test a nested fire raises once the per-dispatch queue limit is reached.
+
+    A fire issued while an event is being dispatched is queued, but once the
+    limit is reached it is rejected with an error instead of being queued.
+    """
+    # Simulate being in the middle of dispatching with the queue limit reached
+    hass.bus._dispatching = True
+    hass.bus._queued_event_count = ha._MAX_QUEUED_EVENT_DISPATCHES
+    try:
+        with pytest.raises(HomeAssistantError, match="endless loop"):
+            hass.bus.async_fire("test")
+        # The rejected event is not queued
+        assert len(hass.bus._event_queue) == 0
+    finally:
+        hass.bus._dispatching = False
+        hass.bus._queued_event_count = 0
 
 
 async def test_eventbus_unsubscribe_listener(hass: HomeAssistant) -> None:
@@ -2056,12 +2161,12 @@ async def test_start_taking_too_long(caplog: pytest.LogCaptureFixture) -> None:
         with patch("asyncio.wait", return_value=(set(), {asyncio.Future()})):
             await hass.async_start()
 
-        assert hass.state == ha.CoreState.running
+        assert hass.state is ha.CoreState.running
         assert "Something is blocking Home Assistant" in caplog.text
 
     finally:
         await hass.async_stop()
-        assert hass.state == ha.CoreState.stopped
+        assert hass.state is ha.CoreState.stopped
 
 
 async def test_service_executed_with_subservices(hass: HomeAssistant) -> None:
@@ -3029,19 +3134,19 @@ def test_is_callback_check_partial() -> None:
         pass
 
     assert ha.is_callback(callback_func)
-    assert HassJob(callback_func).job_type == ha.HassJobType.Callback
+    assert HassJob(callback_func).job_type is ha.HassJobType.Callback
     assert ha.is_callback_check_partial(functools.partial(callback_func))
-    assert HassJob(functools.partial(callback_func)).job_type == ha.HassJobType.Callback
+    assert HassJob(functools.partial(callback_func)).job_type is ha.HassJobType.Callback
     assert ha.is_callback_check_partial(
         functools.partial(functools.partial(callback_func))
     )
-    assert HassJob(functools.partial(functools.partial(callback_func))).job_type == (
+    assert HassJob(functools.partial(functools.partial(callback_func))).job_type is (
         ha.HassJobType.Callback
     )
     assert not ha.is_callback_check_partial(not_callback_func)
-    assert HassJob(not_callback_func).job_type == ha.HassJobType.Executor
+    assert HassJob(not_callback_func).job_type is ha.HassJobType.Executor
     assert not ha.is_callback_check_partial(functools.partial(not_callback_func))
-    assert HassJob(functools.partial(not_callback_func)).job_type == (
+    assert HassJob(functools.partial(not_callback_func)).job_type is (
         ha.HassJobType.Executor
     )
 
@@ -3049,7 +3154,7 @@ def test_is_callback_check_partial() -> None:
     assert not ha.is_callback_check_partial(
         ha.callback(functools.partial(not_callback_func))
     )
-    assert HassJob(ha.callback(functools.partial(not_callback_func))).job_type == (
+    assert HassJob(ha.callback(functools.partial(not_callback_func))).job_type is (
         ha.HassJobType.Executor
     )
 
@@ -3066,13 +3171,13 @@ def test_hassjob_passing_job_type() -> None:
 
     assert (
         HassJob(callback_func, job_type=ha.HassJobType.Callback).job_type
-        == ha.HassJobType.Callback
+        is ha.HassJobType.Callback
     )
 
     # We should trust the job_type passed in
     assert (
         HassJob(not_callback_func, job_type=ha.HassJobType.Callback).job_type
-        == ha.HassJobType.Callback
+        is ha.HassJobType.Callback
     )
 
 

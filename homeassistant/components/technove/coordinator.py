@@ -1,5 +1,7 @@
 """DataUpdateCoordinator for TechnoVE."""
 
+from typing import override
+
 from technove import Station as TechnoVEStation, TechnoVE, TechnoVEError
 
 from homeassistant.config_entries import ConfigEntry
@@ -32,6 +34,7 @@ class TechnoVEDataUpdateCoordinator(DataUpdateCoordinator[TechnoVEStation]):
             update_interval=SCAN_INTERVAL,
         )
 
+    @override
     async def _async_update_data(self) -> TechnoVEStation:
         """Fetch data from TechnoVE."""
         try:

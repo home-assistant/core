@@ -5,9 +5,11 @@ from http import HTTPStatus
 import json
 from typing import Any
 from unittest.mock import AsyncMock, MagicMock, Mock, mock_open, patch
+import warnings
 
 from aiohttp import ClientError
 from aiohttp.hdrs import AUTHORIZATION
+import jwt.warnings
 import pytest
 from pywebpush import WebPushException
 from syrupy.assertion import SnapshotAssertion
@@ -17,7 +19,6 @@ from homeassistant.components.html5.const import (
     ATTR_ACTIONS,
     ATTR_BADGE,
     ATTR_DIR,
-    ATTR_ICON,
     ATTR_IMAGE,
     ATTR_LANG,
     ATTR_RENOTIFY,
@@ -43,6 +44,7 @@ from homeassistant.components.notify import (
 from homeassistant.config_entries import ConfigEntryState
 from homeassistant.const import (
     ATTR_ENTITY_ID,
+    ATTR_ICON,
     STATE_UNAVAILABLE,
     STATE_UNKNOWN,
     Platform,
@@ -1289,3 +1291,11 @@ async def test_html5_dismiss_message(
         "data": {"jwt": "JWT"},
         **expected_payload,
     }
+
+
+def test_add_jwt_no_insecure_key_warning() -> None:
+    """Test that add_jwt does not emit InsecureKeyLengthWarning for short keys."""
+    short_key = "c2hvcnRfa2V5X2hlcmU="
+    with warnings.catch_warnings():
+        warnings.simplefilter("error", jwt.warnings.InsecureKeyLengthWarning)
+        html5.add_jwt(1234567890, "device", "tag", short_key)

@@ -1,7 +1,7 @@
 """Config flow for LastFm."""
 
 import logging
-from typing import Any
+from typing import Any, override
 
 from pylast import LastFMNetwork, PyLastError, User, WSError
 import voluptuous as vol
@@ -78,12 +78,14 @@ class LastFmConfigFlowHandler(ConfigFlow, domain=DOMAIN):
 
     @staticmethod
     @callback
+    @override
     def async_get_options_flow(
         config_entry: LastFMConfigEntry,
     ) -> LastFmOptionsFlowHandler:
         """Get the options flow for this handler."""
         return LastFmOptionsFlowHandler()
 
+    @override
     async def async_step_user(
         self, user_input: dict[str, Any] | None = None
     ) -> ConfigFlowResult:

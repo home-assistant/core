@@ -1,22 +1,29 @@
 """Base entity for the Data Grand Lyon integration."""
 
+from typing import override
+
 from homeassistant.config_entries import ConfigSubentry
 from homeassistant.helpers.device_registry import DeviceEntryType, DeviceInfo
 from homeassistant.helpers.entity import EntityDescription
-from homeassistant.helpers.update_coordinator import CoordinatorEntity
+from homeassistant.helpers.update_coordinator import (
+    CoordinatorEntity,
+    DataUpdateCoordinator,
+)
 
 from .const import DOMAIN
-from .coordinator import DataGrandLyonCoordinator
+from .coordinator import DataGrandLyonTclCoordinator, DataGrandLyonVelovCoordinator
 
 
-class DataGrandLyonEntity(CoordinatorEntity[DataGrandLyonCoordinator]):
+class DataGrandLyonEntity[_CoordinatorT: DataUpdateCoordinator](
+    CoordinatorEntity[_CoordinatorT]
+):
     """Base entity for Data Grand Lyon."""
 
     _attr_has_entity_name = True
 
     def __init__(
         self,
-        coordinator: DataGrandLyonCoordinator,
+        coordinator: _CoordinatorT,
         subentry: ConfigSubentry,
         description: EntityDescription,
         manufacturer: str,
@@ -37,23 +44,34 @@ class DataGrandLyonEntity(CoordinatorEntity[DataGrandLyonCoordinator]):
             entry_type=DeviceEntryType.SERVICE,
         )
 
+    @property
+    @override
+    def available(self) -> bool:
+        """Return True if subentry data is available."""
+        return super().available and self._subentry_id in self.coordinator.data
 
-class DataGrandLyonVelovEntity(DataGrandLyonEntity):
+
+class DataGrandLyonTclEntity(DataGrandLyonEntity[DataGrandLyonTclCoordinator]):
+    """Base entity for Data Grand Lyon TCL stops."""
+
+    def __init__(
+        self,
+        coordinator: DataGrandLyonTclCoordinator,
+        subentry: ConfigSubentry,
+        description: EntityDescription,
+    ) -> None:
+        """Initialize the TCL entity."""
+        super().__init__(coordinator, subentry, description, "TCL", "Stop")
+
+
+class DataGrandLyonVelovEntity(DataGrandLyonEntity[DataGrandLyonVelovCoordinator]):
     """Base entity for Data Grand Lyon Vélo'v stations."""
 
     def __init__(
         self,
-        coordinator: DataGrandLyonCoordinator,
+        coordinator: DataGrandLyonVelovCoordinator,
         subentry: ConfigSubentry,
         description: EntityDescription,
     ) -> None:
         """Initialize the Vélo'v entity."""
         super().__init__(coordinator, subentry, description, "JCDecaux", "Station")
-
-    @property
-    def available(self) -> bool:
-        """Return True if the station data is available."""
-        return (
-            super().available
-            and self._subentry_id in self.coordinator.data.velov_stations
-        )

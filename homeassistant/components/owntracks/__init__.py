@@ -26,6 +26,7 @@ from homeassistant.helpers.dispatcher import (
 )
 from homeassistant.helpers.typing import ConfigType
 from homeassistant.setup import async_when_setup
+from homeassistant.util import slugify
 from homeassistant.util.json import json_loads
 
 from .config_flow import CONF_SECRET
@@ -311,6 +312,6 @@ class OwnTracksContext:
         # kwargs location is the beacon's configured lat/lon
         kwargs.pop("battery", None)
         for beacon in self.mobile_beacons_active[dev_id]:
-            kwargs["dev_id"] = f"{BEACON_DEV_ID}_{beacon}"
+            kwargs["dev_id"] = slugify(f"{BEACON_DEV_ID}_{beacon}")
             kwargs["host_name"] = beacon
             self.async_see(**kwargs)

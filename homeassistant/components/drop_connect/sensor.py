@@ -3,6 +3,7 @@
 from collections.abc import Callable
 from dataclasses import dataclass
 import logging
+from typing import override
 
 from homeassistant.components.sensor import (
     SensorDeviceClass,
@@ -13,6 +14,7 @@ from homeassistant.components.sensor import (
 from homeassistant.const import (
     CONCENTRATION_PARTS_PER_MILLION,
     PERCENTAGE,
+    TEMPERATURE,
     EntityCategory,
     UnitOfPressure,
     UnitOfTemperature,
@@ -49,7 +51,6 @@ CURRENT_SYSTEM_PRESSURE = "current_system_pressure"
 HIGH_SYSTEM_PRESSURE = "high_system_pressure"
 LOW_SYSTEM_PRESSURE = "low_system_pressure"
 BATTERY = "battery"
-TEMPERATURE = "temperature"
 INLET_TDS = "inlet_tds"
 OUTLET_TDS = "outlet_tds"
 CARTRIDGE_1_LIFE = "cart1"
@@ -273,6 +274,7 @@ class DROPSensor(DROPEntity, SensorEntity):
         self.entity_description = entity_description
 
     @property
+    @override
     def native_value(self) -> float | int | None:
         """Return the value reported by the sensor."""
         return self.entity_description.value_fn(self.coordinator)

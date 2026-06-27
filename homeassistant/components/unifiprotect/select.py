@@ -4,7 +4,7 @@ from collections.abc import Callable, Sequence
 from dataclasses import dataclass
 from enum import Enum
 import logging
-from typing import Any
+from typing import Any, override
 
 from uiprotect.api import ProtectApiClient
 from uiprotect.data import (
@@ -12,7 +12,6 @@ from uiprotect.data import (
     Camera,
     ChimeType,
     DoorbellMessageType,
-    Doorlock,
     IRLEDMode,
     Light,
     LightModeEnableType,
@@ -21,6 +20,7 @@ from uiprotect.data import (
     MountType,
     ProtectAdoptableDeviceModel,
     PTZPatrol,
+    PublicHdrMode,
     RecordingMode,
     Sensor,
     Viewer,
@@ -173,7 +173,7 @@ async def _set_light_mode(obj: Light, mode: str) -> None:
     )
 
 
-async def _set_paired_camera(obj: Light | Sensor | Doorlock, camera_id: str) -> None:
+async def _set_paired_camera(obj: Light | Sensor, camera_id: str) -> None:
     if camera_id == TYPE_EMPTY_VALUE:
         camera: Camera | None = None
     else:
@@ -184,11 +184,15 @@ async def _set_paired_camera(obj: Light | Sensor | Doorlock, camera_id: str) -> 
 async def _set_doorbell_message(obj: Camera, message: str) -> None:
     if message.startswith(DoorbellMessageType.CUSTOM_MESSAGE.value):
         message = message.rsplit(":", maxsplit=1)[-1]
-        await obj.set_lcd_text(DoorbellMessageType.CUSTOM_MESSAGE, text=message)
+        await obj.set_lcd_message_public(
+            DoorbellMessageType.CUSTOM_MESSAGE, text=message
+        )
     elif message == TYPE_EMPTY_VALUE:
+        # Public API has no endpoint to clear the LCD message; fall back to
+        # the non-deprecated legacy helper.
         await obj.set_lcd_text(None)
     else:
-        await obj.set_lcd_text(DoorbellMessageType(message))
+        await obj.set_lcd_message_public(DoorbellMessageType(message))
 
 
 async def _set_liveview(obj: Viewer, liveview_id: str) -> None:
@@ -204,6 +208,18 @@ async def _set_ptz_patrol(obj: Camera, patrol_slot: str) -> None:
     else:
         slot = int(patrol_slot)
         await obj.ptz_patrol_start_public(slot=slot)
+
+
+_HDR_MODE_MAP = {
+    "auto": PublicHdrMode.AUTO,
+    "always": PublicHdrMode.ON,
+    "off": PublicHdrMode.OFF,
+}
+
+
+async def _set_hdr_mode(obj: Camera, mode: str) -> None:
+    """Set HDR mode via the public API."""
+    await obj.set_hdr_mode_public(_HDR_MODE_MAP[mode])
 
 
 PTZ_PATROL_DESCRIPTION = ProtectSelectEntityDescription[Camera](
@@ -258,14 +274,14 @@ CAMERA_SELECTS: tuple[ProtectSelectEntityDescription, ...] = (
         ufp_set_method="set_chime_type",
         ufp_perm=PermRequired.WRITE,
     ),
-    ProtectSelectEntityDescription(
+    ProtectSelectEntityDescription[Camera](
         key="hdr_mode",
         translation_key="hdr_mode",
         entity_category=EntityCategory.CONFIG,
         ufp_required_field="feature_flags.has_hdr",
         ufp_options=HDR_MODES,
         ufp_value="hdr_mode_display",
-        ufp_set_method="set_hdr_mode",
+        ufp_set_method_fn=_set_hdr_mode,
         ufp_perm=PermRequired.WRITE,
     ),
 )
@@ -313,18 +329,6 @@ SENSE_SELECTS: tuple[ProtectSelectEntityDescription, ...] = (
     ),
 )
 
-DOORLOCK_SELECTS: tuple[ProtectSelectEntityDescription, ...] = (
-    ProtectSelectEntityDescription[Doorlock](
-        key="paired_camera",
-        translation_key="paired_camera",
-        entity_category=EntityCategory.CONFIG,
-        ufp_value="camera_id",
-        ufp_options_fn=_get_paired_camera_options,
-        ufp_set_method_fn=_set_paired_camera,
-        ufp_perm=PermRequired.WRITE,
-    ),
-)
-
 VIEWER_SELECTS: tuple[ProtectSelectEntityDescription, ...] = (
     ProtectSelectEntityDescription[Viewer](
         key="viewer",
@@ -341,7 +345,6 @@ _MODEL_DESCRIPTIONS: dict[ModelType, Sequence[ProtectEntityDescription]] = {
     ModelType.LIGHT: LIGHT_SELECTS,
     ModelType.SENSOR: SENSE_SELECTS,
     ModelType.VIEWPORT: VIEWER_SELECTS,
-    ModelType.DOORLOCK: DOORLOCK_SELECTS,
 }
 
 
@@ -410,6 +413,7 @@ class ProtectSelects(ProtectDeviceEntity, SelectEntity):
         super().__init__(data, device, description)
 
     @callback
+    @override
     def _async_update_device_from_protect(self, device: ProtectDeviceType) -> None:
         super()._async_update_device_from_protect(device)
         entity_description = self.entity_description
@@ -421,7 +425,9 @@ class ProtectSelects(ProtectDeviceEntity, SelectEntity):
         ):
             _LOGGER.debug("Updating dynamic select options for %s", self.entity_id)
             self._async_set_options(self.data, entity_description)
-        if (unifi_value := entity_description.get_ufp_value(device)) is None:
+        if (
+            unifi_value := entity_description.get_value(device, self._ufp_public_obj)
+        ) is None:
             unifi_value = TYPE_EMPTY_VALUE
         self._attr_current_option = self._unifi_to_hass_options.get(
             unifi_value, unifi_value
@@ -443,6 +449,7 @@ class ProtectSelects(ProtectDeviceEntity, SelectEntity):
         self._unifi_to_hass_options = {item["id"]: item["name"] for item in options}
 
     @async_ufp_instance_command
+    @override
     async def async_select_option(self, option: str) -> None:
         """Change the Select Entity Option."""
 
@@ -497,12 +504,14 @@ class ProtectPTZPatrolSelect(ProtectDeviceEntity, SelectEntity):
             self._attr_current_option = PTZ_PATROL_STOP
 
     @callback
+    @override
     def _async_update_device_from_protect(self, device: ProtectDeviceType) -> None:
         super()._async_update_device_from_protect(device)
         # Update patrol state from websocket updates
         self._update_patrol_state()
 
     @async_ufp_instance_command
+    @override
     async def async_select_option(self, option: str) -> None:
         """Start or stop a PTZ patrol."""
         # Home Assistant validates options before calling this method,
@@ -554,11 +563,13 @@ class ProtectNVRArmProfileSelect(ProtectNVREntity, SelectEntity):
         )
 
     @callback
+    @override
     def _async_update_device_from_protect(self, device: ProtectDeviceType) -> None:
         super()._async_update_device_from_protect(device)
         self._refresh_arm_profile_state()
 
     @async_ufp_instance_command
+    @override
     async def async_select_option(self, option: str) -> None:
         """Change the currently active arm profile."""
         profile_id = self._name_to_id[option]

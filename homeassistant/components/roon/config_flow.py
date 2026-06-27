@@ -2,7 +2,7 @@
 
 import asyncio
 import logging
-from typing import Any
+from typing import Any, override
 
 from roonapi import RoonApi, RoonDiscovery
 import voluptuous as vol
@@ -131,6 +131,7 @@ class RoonConfigFlow(ConfigFlow, domain=DOMAIN):
         self._port = None
         self._servers: list[tuple[str, int]] = []
 
+    @override
     async def async_step_user(
         self, user_input: dict[str, Any] | None = None
     ) -> ConfigFlowResult:

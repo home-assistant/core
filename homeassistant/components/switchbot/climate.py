@@ -1,7 +1,7 @@
 """Support for Switchbot Climate devices."""
 
 import logging
-from typing import Any
+from typing import Any, override
 
 import switchbot
 from switchbot import (
@@ -68,26 +68,31 @@ class SwitchBotClimateEntity(SwitchbotEntity, ClimateEntity):
     _attr_name = None
 
     @property
+    @override
     def min_temp(self) -> float:
         """Return the minimum temperature."""
         return self._device.min_temperature
 
     @property
+    @override
     def max_temp(self) -> float:
         """Return the maximum temperature."""
         return self._device.max_temperature
 
     @property
+    @override
     def preset_modes(self) -> list[str] | None:
         """Return the list of available preset modes."""
         return self._device.preset_modes
 
     @property
+    @override
     def preset_mode(self) -> str | None:
         """Return the current preset mode."""
         return self._device.preset_mode
 
     @property
+    @override
     def hvac_mode(self) -> HVACMode | None:
         """Return the current HVAC mode."""
         return SWITCHBOT_CLIMATE_TO_HASS_HVAC_MODE.get(
@@ -95,6 +100,7 @@ class SwitchBotClimateEntity(SwitchbotEntity, ClimateEntity):
         )
 
     @property
+    @override
     def hvac_modes(self) -> list[HVACMode]:
         """Return the list of available HVAC modes."""
         return [
@@ -103,6 +109,7 @@ class SwitchBotClimateEntity(SwitchbotEntity, ClimateEntity):
         ]
 
     @property
+    @override
     def hvac_action(self) -> HVACAction | None:
         """Return the current HVAC action."""
         return SWITCHBOT_ACTION_TO_HASS_HVAC_ACTION.get(
@@ -110,16 +117,19 @@ class SwitchBotClimateEntity(SwitchbotEntity, ClimateEntity):
         )
 
     @property
+    @override
     def current_temperature(self) -> float | None:
         """Return the current temperature."""
         return self._device.current_temperature
 
     @property
+    @override
     def target_temperature(self) -> float | None:
         """Return the temperature we try to reach."""
         return self._device.target_temperature
 
     @exception_handler
+    @override
     async def async_set_hvac_mode(self, hvac_mode: HVACMode) -> None:
         """Set new HVAC mode."""
         return await self._device.set_hvac_mode(
@@ -127,11 +137,13 @@ class SwitchBotClimateEntity(SwitchbotEntity, ClimateEntity):
         )
 
     @exception_handler
+    @override
     async def async_set_preset_mode(self, preset_mode: str) -> None:
         """Set new preset mode."""
         return await self._device.set_preset_mode(preset_mode)
 
     @exception_handler
+    @override
     async def async_set_temperature(self, **kwargs: Any) -> None:
         """Set new target temperature."""
         temperature = kwargs.get(ATTR_TEMPERATURE)

@@ -2,7 +2,7 @@
 
 from datetime import timedelta
 import logging
-from typing import Any, TypedDict
+from typing import Any, TypedDict, override
 
 from aussiebb.asyncio import AussieBB
 from aussiebb.exceptions import UnrecognisedServiceType
@@ -52,6 +52,7 @@ class AussieBroadbandDataUpdateCoordinator(DataUpdateCoordinator[dict[str, Any]]
         self._client = client
         self._service_id = service_id
 
+    @override
     async def _async_update_data(self) -> dict[str, Any]:
         """Update data via library."""
         try:

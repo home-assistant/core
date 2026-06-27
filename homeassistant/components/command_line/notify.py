@@ -2,7 +2,7 @@
 
 import logging
 import subprocess
-from typing import Any
+from typing import Any, override
 
 from homeassistant.components.notify import (
     DOMAIN as NOTIFY_DOMAIN,
@@ -10,10 +10,11 @@ from homeassistant.components.notify import (
 )
 from homeassistant.const import CONF_COMMAND
 from homeassistant.core import HomeAssistant
+from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 from homeassistant.util.process import kill_subprocess
 
-from .const import CONF_COMMAND_TIMEOUT, LOGGER
+from .const import CONF_COMMAND_TIMEOUT, DOMAIN, LOGGER
 from .utils import create_platform_yaml_not_supported_issue, render_template_args
 
 _LOGGER = logging.getLogger(__name__)
@@ -44,6 +45,7 @@ class CommandLineNotificationService(BaseNotificationService):
         self.command = command
         self._timeout = timeout
 
+    @override
     def send_message(self, message: str = "", **kwargs: Any) -> None:
         """Send a message to a command line."""
         if not (command := render_template_args(self.hass, self.command)):
@@ -66,9 +68,18 @@ class CommandLineNotificationService(BaseNotificationService):
                         proc.returncode,
                         command,
                     )
-            # pylint: disable-next=home-assistant-action-swallowed-exception
-            except subprocess.TimeoutExpired:
-                _LOGGER.error("Timeout for command: %s", command)
+            except subprocess.TimeoutExpired as err:
+                _LOGGER.debug("Timeout for command: %s", command)
                 kill_subprocess(proc)
-            except subprocess.SubprocessError:
-                _LOGGER.error("Error trying to exec command: %s", command)
+                raise HomeAssistantError(
+                    translation_domain=DOMAIN,
+                    translation_key="timeout_error",
+                    translation_placeholders={"command": command},
+                ) from err
+            except subprocess.SubprocessError as err:
+                _LOGGER.debug("Error trying to exec command: %s", command)
+                raise HomeAssistantError(
+                    translation_domain=DOMAIN,
+                    translation_key="command_error",
+                    translation_placeholders={"command": command, "error": str(err)},
+                ) from err

@@ -1,5 +1,7 @@
 """Support for Broadlink sensors."""
 
+from typing import override
+
 from homeassistant.components.sensor import (
     SensorDeviceClass,
     SensorEntity,
@@ -137,6 +139,7 @@ class BroadlinkSensor(BroadlinkEntity, SensorEntity):
         self._attr_native_value = self._coordinator.data[description.key]
         self._attr_unique_id = f"{device.unique_id}-{description.key}"
 
+    @override
     def _update_state(self, data):
         """Update the state of the entity."""
         self._attr_native_value = data[self.entity_description.key]
