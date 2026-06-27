@@ -651,18 +651,18 @@
   },
   "services": {
     "time_of_use": {
-      "name": "Time of use",
       "description": "Configure time-of-use tariff settings on a Tesla energy site (Powerwall). See {time_of_use_url} for the tariff_content_v2 payload schema.",
       "fields": {
         "device_id": {
-          "name": "Energy site device",
-          "description": "The energy site to apply the tariff to."
+          "description": "The energy site to apply the tariff to.",
+          "name": "Energy site device"
         },
         "tou_settings": {
-          "name": "TOU settings",
-          "description": "The tariff_content_v2 payload (object). The outer `tariff_content_v2` key is stripped automatically if present."
+          "description": "The tariff_content_v2 payload (object). The outer `tariff_content_v2` key is stripped automatically if present.",
+          "name": "TOU settings"
         }
-      }
+      },
+      "name": "Time of use"
     }
   }
 }
