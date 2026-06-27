@@ -17,16 +17,16 @@
     }
   },
   "triggers": {
+    "became_low": {
+      "trigger": "mdi:battery-alert"
+    },
     "level_changed": {
       "trigger": "mdi:battery-unknown"
     },
     "level_crossed_threshold": {
       "trigger": "mdi:battery-alert"
     },
-    "low": {
-      "trigger": "mdi:battery-alert"
-    },
-    "not_low": {
+    "no_longer_low": {
       "trigger": "mdi:battery"
     },
     "started_charging": {

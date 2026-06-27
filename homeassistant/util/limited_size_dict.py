@@ -1,7 +1,7 @@
 """Helpers for script and automation tracing and debugging."""
 
 from collections import OrderedDict
-from typing import Any
+from typing import Any, override
 
 
 class LimitedSizeDict[_KT, _VT](OrderedDict[_KT, _VT]):
@@ -13,6 +13,7 @@ class LimitedSizeDict[_KT, _VT](OrderedDict[_KT, _VT]):
         super().__init__(*args, **kwds)
         self._check_size_limit()
 
+    @override
     def __setitem__(self, key: _KT, value: _VT) -> None:
         """Set item and check dict size."""
         super().__setitem__(key, value)

@@ -1,7 +1,7 @@
 """Support for Lutron Caseta lights."""
 
 from datetime import timedelta
-from typing import Any
+from typing import Any, override
 
 from pylutron_caseta.color_value import (
     ColorMode as LutronColorMode,
@@ -132,6 +132,7 @@ class LutronCasetaLight(LutronCasetaUpdatableEntity, LightEntity):
         return white_tune_range.get("Max")
 
     @property
+    @override
     def brightness(self) -> int:
         """Return the brightness of the light."""
         return to_hass_level(self._device["current_state"])
@@ -147,11 +148,13 @@ class LutronCasetaLight(LutronCasetaUpdatableEntity, LightEntity):
             # Any non-zero brightness (HA or physical) becomes the new last level
             self._prev_brightness = hass_brightness
 
+    @override
     async def async_update(self) -> None:
         """Update when forcing a refresh of the device."""
         await super().async_update()
         self._sync_prev_brightness_from_device()
 
+    @override
     def _handle_bridge_update(self) -> None:
         """Handle updated data from the bridge."""
         self._sync_prev_brightness_from_device()
@@ -186,6 +189,7 @@ class LutronCasetaLight(LutronCasetaUpdatableEntity, LightEntity):
             self.device_id, brightness, **set_warm_dim_kwargs
         )
 
+    @override
     async def async_turn_on(self, **kwargs: Any) -> None:
         """Turn the light on."""
         # first check for "white mode" (WarmDim)
@@ -225,12 +229,14 @@ class LutronCasetaLight(LutronCasetaUpdatableEntity, LightEntity):
 
         await self._async_set_brightness(brightness, color, **kwargs)
 
+    @override
     async def async_turn_off(self, **kwargs: Any) -> None:
         """Turn the light off."""
         # Do not touch _prev_brightness here; we want the last non-zero level to survive.
         await self._async_set_brightness(0, None, **kwargs)
 
     @property
+    @override
     def color_mode(self) -> ColorMode:
         """Return the current color mode of the light."""
         currently_warm_dim = self._device.get("warm_dim", False)
@@ -247,11 +253,13 @@ class LutronCasetaLight(LutronCasetaUpdatableEntity, LightEntity):
         return ColorMode.BRIGHTNESS
 
     @property
+    @override
     def is_on(self) -> bool:
         """Return true if device is on."""
         return self._device["current_state"] > 0
 
     @property
+    @override
     def hs_color(self) -> tuple[float, float] | None:
         """Return the current color of the light."""
         current_color: FullColorValue | WarmCoolColorValue | None = self._device.get(
@@ -265,6 +273,7 @@ class LutronCasetaLight(LutronCasetaUpdatableEntity, LightEntity):
         return None
 
     @property
+    @override
     def color_temp_kelvin(self) -> int | None:
         """Return the CT color value in kelvin."""
         current_color: FullColorValue | WarmCoolColorValue | None = self._device.get(

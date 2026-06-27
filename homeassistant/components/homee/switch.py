@@ -2,7 +2,7 @@
 
 from collections.abc import Callable
 from dataclasses import dataclass
-from typing import Any
+from typing import Any, override
 
 from pyHomee.const import AttributeType, NodeProfile
 from pyHomee.model import HomeeAttribute, HomeeNode
@@ -128,19 +128,23 @@ class HomeeSwitch(HomeeEntity, SwitchEntity):
             self._attr_translation_placeholders = {"instance": str(attribute.instance)}
 
     @property
+    @override
     def is_on(self) -> bool:
         """Return True if entity is on."""
         return bool(self._attribute.current_value)
 
     @property
+    @override
     def device_class(self) -> SwitchDeviceClass:
         """Return the device class of the switch."""
         return self.entity_description.device_class_fn(self._attribute, self._entry)
 
+    @override
     async def async_turn_on(self, **kwargs: Any) -> None:
         """Turn the switch on."""
         await self.async_set_homee_value(1)
 
+    @override
     async def async_turn_off(self, **kwargs: Any) -> None:
         """Turn the switch off."""
         await self.async_set_homee_value(0)
@@ -171,6 +175,7 @@ class HomeegramSwitch(SwitchEntity):
             homeegram
         )
 
+    @override
     async def async_added_to_hass(self) -> None:
         """Add the Homeegram entity to home assistant."""
         self.async_on_remove(
@@ -183,19 +188,23 @@ class HomeegramSwitch(SwitchEntity):
         )
 
     @property
+    @override
     def is_on(self) -> bool:
         """Return True if homeegram is executing."""
         return bool(self._homeegram.play)
 
     @property
+    @override
     def available(self) -> bool:
         """Return the availability of the homeegram based on host availability."""
         return bool(self._homeegram.active) and self._host_connected
 
+    @override
     async def async_turn_on(self, **kwargs: Any) -> None:
         """Trigger Homeegram on switching on."""
         await self._entry.runtime_data.play_homeegram(self._homeegram.id)
 
+    @override
     async def async_turn_off(self, **kwargs: Any) -> None:
         """Turning off homeegrams is not supported."""
         raise ServiceValidationError(

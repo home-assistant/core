@@ -2,7 +2,7 @@
 
 from dataclasses import dataclass
 from enum import IntEnum
-from typing import Any
+from typing import Any, override
 
 from chip.clusters import Objects as clusters
 from matter_server.client.models import device_types
@@ -99,6 +99,7 @@ SUPPORT_DRY_MODE_DEVICES: set[tuple[int, int]] = {
     # support dry mode.
     (0x0001, 0x0108),
     (0x0001, 0x010A),
+    (0x0001, 0x013F),
     (0x1209, 0x8000),
     (0x1209, 0x8001),
     (0x1209, 0x8002),
@@ -138,6 +139,7 @@ SUPPORT_FAN_MODE_DEVICES: set[tuple[int, int]] = {
     # support fan-only mode.
     (0x0001, 0x0108),
     (0x0001, 0x010A),
+    (0x0001, 0x013F),
     (0x118C, 0x2022),
     (0x1209, 0x8000),
     (0x1209, 0x8001),
@@ -227,6 +229,7 @@ class MatterClimate(MatterEntity, ClimateEntity):
         self._preset_name_by_handle: dict[bytes | None, str] = {}
         super().__init__(*args, **kwargs)
 
+    @override
     async def async_set_temperature(self, **kwargs: Any) -> None:
         """Set new target temperature."""
         target_hvac_mode: HVACMode | None = kwargs.get(ATTR_HVAC_MODE)
@@ -271,6 +274,7 @@ class MatterClimate(MatterEntity, ClimateEntity):
                     matter_attribute=clusters.Thermostat.Attributes.OccupiedCoolingSetpoint,
                 )
 
+    @override
     async def async_set_preset_mode(self, preset_mode: str) -> None:
         """Set new preset mode."""
         preset_handle = self._preset_handle_by_name[preset_mode]
@@ -299,6 +303,7 @@ class MatterClimate(MatterEntity, ClimateEntity):
         )
         self._endpoint.set_attribute_value(active_preset_path, preset_handle)
 
+    @override
     async def async_set_hvac_mode(self, hvac_mode: HVACMode) -> None:
         """Set new target hvac mode."""
 
@@ -320,6 +325,7 @@ class MatterClimate(MatterEntity, ClimateEntity):
         self._update_from_device()
 
     @callback
+    @override
     def _update_from_device(self) -> None:
         """Update from device."""
         self._calculate_features()

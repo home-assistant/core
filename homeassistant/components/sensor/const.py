@@ -87,6 +87,19 @@ ATTR_STATE_CLASS: Final = "state_class"
 ATTR_OPTIONS: Final = "options"
 
 
+class SensorEntityCapabilityAttribute(StrEnum):
+    """Capability attributes for sensor entities."""
+
+    STATE_CLASS = "state_class"
+    OPTIONS = "options"
+
+
+class SensorEntityStateAttribute(StrEnum):
+    """State attributes for sensor entities."""
+
+    LAST_RESET = "last_reset"
+
+
 class SensorDeviceClass(StrEnum):
     """Device class for sensors."""
 

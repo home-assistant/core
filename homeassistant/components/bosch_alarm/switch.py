@@ -2,7 +2,7 @@
 
 from collections.abc import Callable, Coroutine
 from dataclasses import dataclass
-from typing import Any
+from typing import Any, override
 
 from bosch_alarm_mode2 import Panel
 from bosch_alarm_mode2.panel import Door
@@ -101,10 +101,12 @@ class PanelDoorEntity(BoschAlarmDoorEntity, SwitchEntity):
         self._attr_unique_id = f"{self._door_unique_id}_{entity_description.key}"
 
     @property
+    @override
     def is_on(self) -> bool:
         """Return the value function."""
         return self.entity_description.value_fn(self._door)
 
+    @override
     async def async_turn_on(self, **kwargs: Any) -> None:
         """Run the on function."""
         # If the door is currently cycling, we can't send it
@@ -115,6 +117,7 @@ class PanelDoorEntity(BoschAlarmDoorEntity, SwitchEntity):
             )
         await self.entity_description.on_fn(self.panel, self._door_id)
 
+    @override
     async def async_turn_off(self, **kwargs: Any) -> None:
         """Run the off function."""
         # If the door is currently cycling, we can't send it
@@ -137,14 +140,17 @@ class PanelOutputEntity(BoschAlarmOutputEntity, SwitchEntity):
         self._attr_unique_id = self._output_unique_id
 
     @property
+    @override
     def is_on(self) -> bool:
         """Check if this entity is on."""
         return self._output.is_active()
 
+    @override
     async def async_turn_on(self, **kwargs: Any) -> None:
         """Turn on this output."""
         await self.panel.set_output_active(self._output_id)
 
+    @override
     async def async_turn_off(self, **kwargs: Any) -> None:
         """Turn off this output."""
         await self.panel.set_output_inactive(self._output_id)

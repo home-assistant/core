@@ -8,7 +8,7 @@ from functools import lru_cache
 from http import HTTPStatus
 import logging
 import pprint
-from typing import Any
+from typing import Any, override
 
 from aiohttp.web import json_response
 from awesomeversion import AwesomeVersion
@@ -530,6 +530,7 @@ class GoogleEntity:
         self.entity_id = state.entity_id
         self._traits: list[trait._Trait] | None = None
 
+    @override
     def __repr__(self) -> str:
         """Return the representation."""
         return f"<GoogleEntity {self.entity_id}: {self.state.name}>"

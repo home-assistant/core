@@ -1,6 +1,7 @@
 """Support for Cisco IOS Routers."""
 
 import logging
+from typing import override
 
 from pexpect import pxssh
 import voluptuous as vol
@@ -50,10 +51,12 @@ class CiscoDeviceScanner(DeviceScanner):
 
         self.success_init = self._update_info()
 
+    @override
     async def async_get_device_name(self, device: str) -> str | None:
         """Get the firmware doesn't save the name of the wireless device."""
         return None
 
+    @override
     def scan_devices(self):
         """Scan for new devices and return a list with found device IDs."""
         self._update_info()
