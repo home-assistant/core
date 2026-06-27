@@ -9,6 +9,7 @@ set_velocity:
           integration: velux
           entity:
             domain: cover
+      multiple: true
     velocity:
       required: true
       selector:

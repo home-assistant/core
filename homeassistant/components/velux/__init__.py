@@ -93,9 +93,7 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
             device_id: _find_opening_device_node(hass, device_id)
             for device_id in device_ids
         }
-        missing = [
-            device_id for device_id, node in resolved.items() if node is None
-        ]
+        missing = [device_id for device_id, node in resolved.items() if node is None]
         if missing:
             raise ServiceValidationError(
                 translation_domain=DOMAIN,
