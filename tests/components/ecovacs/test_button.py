@@ -104,16 +104,16 @@ def platforms() -> Platform | list[Platform]:
                     ResetLifeSpan(LifeSpan.BRUSH),
                 ),
                 (
+                    "button.t80_omni_reset_cleaning_solution_lifespan",
+                    ResetLifeSpan(LifeSpan.CLEANING_SOLUTION),
+                ),
+                (
                     "button.t80_omni_reset_filter_lifespan",
                     ResetLifeSpan(LifeSpan.FILTER),
                 ),
                 (
                     "button.t80_omni_reset_hand_filter_lifespan",
                     ResetLifeSpan(LifeSpan.HAND_FILTER),
-                ),
-                (
-                    "button.t80_omni_reset_cleaning_solution_lifespan",
-                    ResetLifeSpan(LifeSpan.CLEANING_SOLUTION),
                 ),
                 (
                     "button.t80_omni_reset_sewage_box_lifespan",
