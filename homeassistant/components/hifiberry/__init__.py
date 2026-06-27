@@ -35,7 +35,9 @@ async def async_migrate_entry(hass: HomeAssistant, entry: HiFiBerryConfigEntry) 
     if data.get(CONF_PORT) in (None, 81):
         data[CONF_PORT] = DEFAULT_PORT
 
-    hass.config_entries.async_update_entry(entry, data=data, version=2)
+    hass.config_entries.async_update_entry(
+        entry, data=data, version=2, unique_id=data[CONF_HOST]
+    )
     return True
 
 
