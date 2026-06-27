@@ -129,14 +129,14 @@ def _async_migrate_s400_impedance_unique_ids(
     The xiaomi-ble library used to mislabel the two impedance measurements
     reported by the Mi Body Composition Scale S400:
 
-    - "impedance" (legacy, generic) actually held the 50MHz (low frequency)
+    - "impedance" (legacy, generic) actually held the 50 kHz (low frequency)
       measurement.
-    - "impedance_low" actually held the 250MHz (high frequency) measurement.
+    - "impedance_low" actually held the 250 kHz (high frequency) measurement.
 
     The library was corrected so that:
 
-    - "impedance_low" now correctly holds the 50MHz (low frequency) value.
-    - "impedance_high" now correctly holds the 250MHz (high frequency) value.
+    - "impedance_low" now correctly holds the 50 kHz (low frequency) value.
+    - "impedance_high" now correctly holds the 250 kHz (high frequency) value.
 
     The "impedance_low"/"impedance_high" keys are now emitted directly by
     the library under their final, correct unique_ids, so they must not be
@@ -154,12 +154,6 @@ def _async_migrate_s400_impedance_unique_ids(
 
     device_entry = device_registry.async_get_device(
         identifiers={(BLUETOOTH_DOMAIN, address)}
-    )
-    _LOGGER.debug(
-        "S400 migration check: address=%s device_entry_found=%s model=%s",
-        address,
-        device_entry is not None,
-        device_entry.model if device_entry else None,
     )
     if device_entry is None or device_entry.model not in S400_MODELS:
         return
