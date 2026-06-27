@@ -654,7 +654,7 @@ bleak-esphome==3.9.4
 bleak-retry-connector==4.6.1
 
 # homeassistant.components.smlight
-bleak-smlight==1.0.0
+bleak-smlight==1.1.0
 
 # homeassistant.components.bluetooth
 bleak==3.0.2
