@@ -164,10 +164,9 @@ async def test_unload_does_not_disconnect_if_platform_unload_fails(
     mock_pyvlx.disconnect.assert_not_awaited()
 
 
-@pytest.mark.usefixtures("entity_registry_enabled_by_default", "setup_integration")
+@pytest.mark.usefixtures("entity_registry_enabled_by_default", "setup_integration", "mock_pyvlx")
 async def test_set_velocity_service(
     hass: HomeAssistant,
-    mock_pyvlx: AsyncMock,
     mock_window: AsyncMock,
 ) -> None:
     """Test that set_velocity service sets velocity on the correct node."""

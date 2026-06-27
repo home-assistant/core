@@ -7,6 +7,8 @@ set_velocity:
       selector:
         device:
           integration: velux
+          entity:
+            domain: cover
     velocity:
       required: true
       selector:
