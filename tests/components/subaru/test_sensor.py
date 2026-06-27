@@ -1,17 +1,19 @@
 """Test Subaru sensors."""
 
+import copy
 from typing import Any
 from unittest.mock import patch
 
 import pytest
 
 from homeassistant.components.sensor import DOMAIN as SENSOR_DOMAIN
-from homeassistant.components.subaru.const import DOMAIN
+from homeassistant.components.subaru.const import DOMAIN, VEHICLE_STATUS
 from homeassistant.components.subaru.sensor import (
     API_GEN_2_SENSORS,
     EV_SENSORS,
     SAFETY_SENSORS,
 )
+from homeassistant.const import STATE_UNKNOWN
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import entity_registry as er
 
@@ -19,6 +21,7 @@ from .api_responses import (
     EXPECTED_STATE_EV_METRIC,
     EXPECTED_STATE_EV_UNAVAILABLE,
     TEST_VIN_2_EV,
+    VEHICLE_STATUS_EV,
 )
 from .conftest import (
     MOCK_API_FETCH,
@@ -27,7 +30,7 @@ from .conftest import (
     setup_subaru_config_entry,
 )
 
-from tests.common import get_sensor_display_state
+from tests.common import MockConfigEntry, get_sensor_display_state
 
 
 async def test_sensors_ev_metric(hass: HomeAssistant, ev_entry) -> None:
@@ -149,3 +152,33 @@ def _assert_data(hass: HomeAssistant, expected_state: dict[str, Any]) -> None:
     for sensor, value in expected_states.items():
         state = get_sensor_display_state(hass, entity_registry, sensor)
         assert state == value
+
+
+@pytest.mark.usefixtures("entity_registry_enabled_by_default")
+async def test_enum_unmapped_value_and_raw_companion(
+    hass: HomeAssistant,
+    subaru_config_entry: MockConfigEntry,
+) -> None:
+    """Unmapped ENUM values report as `unknown`; the `_raw` companion surfaces the raw API string.
+
+    Live API values not in `VEHICLE_STATE_OPTIONS` (etc.) are expected: the
+    Subaru API is undocumented and the option list is what we have evidence
+    for at release time. The ENUM sensor falls through to `unknown` for
+    unknown inputs and the disabled-by-default `*_raw` companion sensor
+    surfaces the raw upstream string so users can discover and report new
+    values without us needing a stub release cycle.
+    """
+    status_with_unmapped_value = copy.deepcopy(VEHICLE_STATUS_EV)
+    status_with_unmapped_value[VEHICLE_STATUS]["VEHICLE_STATE_TYPE"] = "ENGINE_RUNNING"
+
+    await setup_subaru_config_entry(
+        hass, subaru_config_entry, vehicle_status=status_with_unmapped_value
+    )
+
+    enum_state = hass.states.get("sensor.test_vehicle_2_vehicle_state")
+    assert enum_state is not None
+    assert enum_state.state == STATE_UNKNOWN
+
+    raw_state = hass.states.get("sensor.test_vehicle_2_vehicle_state_raw")
+    assert raw_state is not None
+    assert raw_state.state == "ENGINE_RUNNING"
