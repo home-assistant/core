@@ -1489,12 +1489,6 @@
       "config_flow": true,
       "iot_class": "local_polling"
     },
-    "dovado": {
-      "name": "Dovado",
-      "integration_type": "hub",
-      "config_flow": false,
-      "iot_class": "local_polling"
-    },
     "downloader": {
       "name": "Downloader",
       "integration_type": "service",
