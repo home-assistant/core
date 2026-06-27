@@ -13,11 +13,8 @@ from pyoverkiz.enums import (
 )
 
 from homeassistant.const import (
-    CONCENTRATION_PARTS_PER_BILLION,
-    CONCENTRATION_PARTS_PER_MILLION,
     DEGREE,
     LIGHT_LUX,
-    PERCENTAGE,
     Platform,
     UnitOfElectricCurrent,
     UnitOfElectricPotential,
@@ -26,6 +23,7 @@ from homeassistant.const import (
     UnitOfLength,
     UnitOfPower,
     UnitOfPressure,
+    UnitOfRatio,
     UnitOfSpeed,
     UnitOfTemperature,
     UnitOfTime,
@@ -165,19 +163,19 @@ OVERKIZ_UNIT_TO_HA: dict[str, str] = {
     ),
     MeasuredValueType.FOSSIL_ENERGY_IN_WH: UnitOfEnergy.WATT_HOUR,
     MeasuredValueType.GRADIENT_IN_PERCENTAGE_PER_SECOND: (
-        f"{PERCENTAGE}/{UnitOfTime.SECONDS}"
+        f"{UnitOfRatio.PERCENTAGE}/{UnitOfTime.SECONDS}"
     ),
     MeasuredValueType.LENGTH_IN_METER: UnitOfLength.METERS,
     MeasuredValueType.LINEAR_SPEED_IN_METER_PER_SECOND: UnitOfSpeed.METERS_PER_SECOND,
     MeasuredValueType.LUMINANCE_IN_LUX: LIGHT_LUX,
-    MeasuredValueType.PARTS_PER_BILLION: CONCENTRATION_PARTS_PER_BILLION,
-    MeasuredValueType.PARTS_PER_MILLION: CONCENTRATION_PARTS_PER_MILLION,
+    MeasuredValueType.PARTS_PER_BILLION: UnitOfRatio.PARTS_PER_BILLION,
+    MeasuredValueType.PARTS_PER_MILLION: UnitOfRatio.PARTS_PER_MILLION,
     MeasuredValueType.PARTS_PER_QUADRILLION: "ppq",
     MeasuredValueType.PARTS_PER_TRILLION: "ppt",
     MeasuredValueType.POWER_PER_SQUARE_METER: UnitOfIrradiance.WATTS_PER_SQUARE_METER,
     MeasuredValueType.PRESSURE_IN_HPA: UnitOfPressure.HPA,
     MeasuredValueType.PRESSURE_IN_MILLI_BAR: UnitOfPressure.MBAR,
-    MeasuredValueType.RELATIVE_VALUE_IN_PERCENTAGE: PERCENTAGE,
+    MeasuredValueType.RELATIVE_VALUE_IN_PERCENTAGE: UnitOfRatio.PERCENTAGE,
     MeasuredValueType.TEMPERATURE_IN_CELCIUS: UnitOfTemperature.CELSIUS,
     MeasuredValueType.TEMPERATURE_IN_KELVIN: UnitOfTemperature.KELVIN,
     MeasuredValueType.TIME_IN_SECOND: UnitOfTime.SECONDS,
