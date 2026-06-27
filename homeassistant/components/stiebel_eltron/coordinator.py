@@ -66,8 +66,6 @@ class StiebelEltronDataCoordinator(DataUpdateCoordinator[None]):
     @property
     def is_connected(self) -> bool:
         """Check modbus client connection status."""
-        if self.api_client is None:
-            return False
         return self.api_client.is_connected
 
     @property
