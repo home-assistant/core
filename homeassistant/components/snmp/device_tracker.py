@@ -106,7 +106,7 @@ async def async_setup_entry(
 class SnmpTrackerEntity(CoordinatorEntity[SnmpUpdateCoordinator], ScannerEntity):
     """Represent an individual device tracked via SNMP."""
 
-    _attr_should_poll = False
+    _attr_translation_key = "device_tracker"
 
     def __init__(
         self,
@@ -121,7 +121,6 @@ class SnmpTrackerEntity(CoordinatorEntity[SnmpUpdateCoordinator], ScannerEntity)
         self._attr_unique_id = mac
         self._attr_name = mac.replace(":", "_")
         self._attr_ip_address = coordinator.data.get(mac) if coordinator.data else None
-        self._attr_translation_key = "device_tracker"
 
     @property
     def is_connected(self) -> bool:
