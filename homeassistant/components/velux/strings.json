@@ -69,6 +69,12 @@
   "services": {
     "set_velocity": {
       "description": "Sets the velocity for a Velux opening device.",
+      "fields": {
+        "velocity": {
+          "description": "The velocity to use when operating the device.",
+          "name": "Velocity"
+        }
+      },
       "name": "Set velocity"
     }
   }

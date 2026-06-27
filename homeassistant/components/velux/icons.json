@@ -1,0 +1,7 @@
+{
+  "services": {
+    "set_velocity": {
+      "service": "mdi:speedometer"
+    }
+  }
+}

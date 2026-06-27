@@ -38,6 +38,38 @@ type VeluxConfigEntry = ConfigEntry[VeluxData]
 CONFIG_SCHEMA = cv.config_entry_only_config_schema(DOMAIN)
 
 
+def _apply_velocity(
+    hass: HomeAssistant, device_id: str, velocity: Velocity
+) -> bool:
+    """Apply velocity to a device's node. Returns True if the device was found."""
+    device_registry = dr.async_get(hass)
+    device = device_registry.async_get(device_id)
+    if device is None:
+        return False
+
+    for identifier in device.identifiers:
+        if identifier[0] != DOMAIN:
+            continue
+        node_serial = identifier[1]
+        for entry in hass.config_entries.async_entries(DOMAIN):
+            if entry.state is not ConfigEntryState.LOADED:
+                continue
+            for node in entry.runtime_data.pyvlx.nodes:
+                if node.serial_number == node_serial and isinstance(
+                    node, OpeningDevice
+                ):
+                    if velocity == Velocity.DEFAULT:
+                        node.use_default_velocity = False
+                        node.default_velocity = Velocity.DEFAULT
+                    else:
+                        node.use_default_velocity = True
+                        node.default_velocity = velocity
+                    return True
+        break
+
+    return False
+
+
 async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     """Set up the Velux component."""
 
@@ -50,37 +82,17 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
         if isinstance(device_ids, str):
             device_ids = [device_ids]
 
-        device_registry = dr.async_get(hass)
-
-        for device_id in device_ids:
-            device = device_registry.async_get(device_id)
-            if device is None:
-                continue
-
-            for identifier in device.identifiers:
-                if identifier[0] == DOMAIN:
-                    node_serial = identifier[1]
-                    for entry in hass.config_entries.async_entries(DOMAIN):
-                        if entry.state is not ConfigEntryState.LOADED:
-                            continue
-                        for node in entry.runtime_data.pyvlx.nodes:
-                            if node.serial_number == node_serial and isinstance(
-                                node, OpeningDevice
-                            ):
-                                if velocity == Velocity.DEFAULT:
-                                    node.use_default_velocity = False
-                                    node.default_velocity = Velocity.DEFAULT
-                                else:
-                                    node.use_default_velocity = True
-                                    node.default_velocity = velocity
-                                return
-                    break
-
-        raise ServiceValidationError(
-            translation_domain=DOMAIN,
-            translation_key="device_not_found",
-            translation_placeholders={"device_id": ", ".join(device_ids)},
-        )
+        missing = [
+            device_id
+            for device_id in device_ids
+            if not _apply_velocity(hass, device_id, velocity)
+        ]
+        if missing:
+            raise ServiceValidationError(
+                translation_domain=DOMAIN,
+                translation_key="device_not_found",
+                translation_placeholders={"device_id": ", ".join(missing)},
+            )
 
     hass.services.async_register(DOMAIN, "set_velocity", async_set_velocity)
 
