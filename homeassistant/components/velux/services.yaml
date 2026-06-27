@@ -1,3 +1,17 @@
 # Velux Integration services
 
 reboot_gateway:
+
+set_velocity:
+  target:
+    device:
+      integration: velux
+  fields:
+    velocity:
+      required: true
+      selector:
+        select:
+          options:
+            - "default"
+            - "silent"
+            - "fast"

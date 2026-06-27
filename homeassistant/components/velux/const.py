@@ -2,6 +2,8 @@
 
 from logging import getLogger
 
+from pyvlx.const import Velocity
+
 from homeassistant.const import Platform
 
 DOMAIN = "velux"
@@ -12,7 +14,12 @@ PLATFORMS = [
     Platform.LIGHT,
     Platform.NUMBER,
     Platform.SCENE,
-    Platform.SELECT,
     Platform.SWITCH,
 ]
 LOGGER = getLogger(__package__)
+
+VELOCITY_MAP = {
+    "default": Velocity.DEFAULT,
+    "silent": Velocity.SILENT,
+    "fast": Velocity.FAST,
+}

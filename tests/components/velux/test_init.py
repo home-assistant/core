@@ -9,6 +9,7 @@ They also verify that unloading the integration properly disconnects.
 from unittest.mock import patch
 
 import pytest
+from pyvlx.const import Velocity
 from pyvlx.exception import PyVLXException
 
 from homeassistant.components.velux.const import DOMAIN
@@ -16,6 +17,7 @@ from homeassistant.config_entries import ConfigEntryState
 from homeassistant.const import Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError, ServiceValidationError
+from homeassistant.helpers import device_registry as dr
 from homeassistant.setup import async_setup_component
 
 from tests.common import AsyncMock, ConfigEntry, MockConfigEntry
@@ -162,5 +164,53 @@ async def test_reboot_gateway_service_raises_validation_error(
         await hass.services.async_call(
             "velux",
             "reboot_gateway",
+            blocking=True,
+        )
+
+
+@pytest.mark.usefixtures("entity_registry_enabled_by_default", "setup_integration")
+async def test_set_velocity_service(
+    hass: HomeAssistant,
+    mock_pyvlx: AsyncMock,
+    mock_window: AsyncMock,
+) -> None:
+    """Test that set_velocity service sets velocity on the correct node."""
+    device_registry = dr.async_get(hass)
+    device = device_registry.async_get_device(
+        identifiers={(DOMAIN, mock_window.serial_number)}
+    )
+    assert device is not None
+
+    await hass.services.async_call(
+        DOMAIN,
+        "set_velocity",
+        {"device_id": [device.id], "velocity": "silent"},
+        blocking=True,
+    )
+
+    assert mock_window.use_default_velocity is True
+    assert mock_window.default_velocity == Velocity.SILENT
+
+    await hass.services.async_call(
+        DOMAIN,
+        "set_velocity",
+        {"device_id": [device.id], "velocity": "default"},
+        blocking=True,
+    )
+
+    assert mock_window.use_default_velocity is False
+    assert mock_window.default_velocity == Velocity.DEFAULT
+
+
+@pytest.mark.usefixtures("entity_registry_enabled_by_default", "setup_integration")
+async def test_set_velocity_service_device_not_found(
+    hass: HomeAssistant,
+) -> None:
+    """Test that set_velocity raises ServiceValidationError when device is not found."""
+    with pytest.raises(ServiceValidationError, match="Device not found"):
+        await hass.services.async_call(
+            DOMAIN,
+            "set_velocity",
+            {"device_id": ["nonexistent_device_id"], "velocity": "silent"},
             blocking=True,
         )

@@ -1,6 +1,7 @@
 """Support for VELUX KLF 200 devices."""
 
-from pyvlx import PyVLX, PyVLXException
+from pyvlx import OpeningDevice, PyVLX, PyVLXException
+from pyvlx.const import Velocity
 
 from homeassistant.config_entries import ConfigEntry, ConfigEntryState
 from homeassistant.const import (
@@ -23,7 +24,7 @@ from homeassistant.helpers import (
 )
 from homeassistant.helpers.typing import ConfigType
 
-from .const import DOMAIN, LOGGER, PLATFORMS
+from .const import DOMAIN, LOGGER, PLATFORMS, VELOCITY_MAP
 
 type VeluxConfigEntry = ConfigEntry[PyVLX]
 
@@ -67,6 +68,50 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
         )
 
     hass.services.async_register(DOMAIN, "reboot_gateway", async_reboot_gateway)
+
+    async def async_set_velocity(service_call: ServiceCall) -> None:
+        """Set velocity for Velux opening devices."""
+        velocity_str: str = service_call.data["velocity"]
+        velocity = VELOCITY_MAP[velocity_str]
+        device_ids: list[str] = service_call.data.get("device_id", [])
+
+        if isinstance(device_ids, str):
+            device_ids = [device_ids]
+
+        device_registry = dr.async_get(hass)
+
+        for device_id in device_ids:
+            device = device_registry.async_get(device_id)
+            if device is None:
+                continue
+
+            for identifier in device.identifiers:
+                if identifier[0] == DOMAIN:
+                    node_serial = identifier[1]
+                    for entry in hass.config_entries.async_entries(DOMAIN):
+                        if entry.state is not ConfigEntryState.LOADED:
+                            continue
+                        pyvlx = entry.runtime_data
+                        for node in pyvlx.nodes:
+                            if node.serial_number == node_serial and isinstance(
+                                node, OpeningDevice
+                            ):
+                                if velocity == Velocity.DEFAULT:
+                                    node.use_default_velocity = False
+                                    node.default_velocity = Velocity.DEFAULT
+                                else:
+                                    node.use_default_velocity = True
+                                    node.default_velocity = velocity
+                                return
+                    break
+
+        raise ServiceValidationError(
+            translation_domain=DOMAIN,
+            translation_key="device_not_found",
+            translation_placeholders={"device_id": ", ".join(device_ids)},
+        )
+
+    hass.services.async_register(DOMAIN, "set_velocity", async_set_velocity)
 
     return True
 
