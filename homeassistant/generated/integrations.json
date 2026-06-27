@@ -590,12 +590,6 @@
       "config_flow": true,
       "iot_class": "local_polling"
     },
-    "aten_pe": {
-      "name": "ATEN Rack PDU",
-      "integration_type": "hub",
-      "config_flow": false,
-      "iot_class": "local_polling"
-    },
     "atlanticcityelectric": {
       "name": "Atlantic City Electric",
       "integration_type": "virtual",
