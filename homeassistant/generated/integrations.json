@@ -764,12 +764,6 @@
       "config_flow": true,
       "iot_class": "cloud_polling"
     },
-    "blinksticklight": {
-      "name": "BlinkStick",
-      "integration_type": "hub",
-      "config_flow": false,
-      "iot_class": "local_polling"
-    },
     "bliss_automation": {
       "name": "Bliss Automation",
       "integration_type": "virtual",
