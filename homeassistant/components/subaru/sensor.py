@@ -56,12 +56,7 @@ FUEL_CONSUMPTION_MILES_PER_GALLON = "mi/gal"
 L_PER_GAL = VolumeConverter.convert(1, UnitOfVolume.GALLONS, UnitOfVolume.LITERS)
 KM_PER_MI = DistanceConverter.convert(1, UnitOfLength.MILES, UnitOfLength.KILOMETERS)
 
-# Field-key aliases for readability. Values come straight from
-# subarulink.const so we don't drift from the published contract the
-# library promises to keep stable across Subaru API changes. Other sensor
-# descriptions in this file already access subarulink field keys via
-# `sc.*` (sc.ODOMETER, sc.TIRE_PRESSURE_FL, etc.) — this section keeps
-# the same convention for the categorical and vehicle_health fields.
+# Readable aliases for subarulink field-key constants.
 API_KEY_VEHICLE_STATE_TYPE = sc.VEHICLE_STATE
 API_KEY_EV_CHARGER_STATE_TYPE = sc.EV_CHARGER_STATE_TYPE
 API_KEY_EV_STATE_OF_CHARGE_MODE = sc.EV_STATE_OF_CHARGE_MODE
@@ -72,12 +67,7 @@ API_KEY_REAR_TIRES = sc.HEALTH_RECOMMENDED_TIRE_PRESSURE_REAR
 
 @dataclass(frozen=True, kw_only=True)
 class SubaruSensorEntityDescription(SensorEntityDescription):
-    """Describes a Subaru sensor entity.
-
-    value_fn is used for sensors that read from somewhere other than
-    vehicle_status (e.g. nested values in vehicle_health). When None, the
-    sensor reads vehicle_status[key].
-    """
+    """Describes a Subaru sensor entity."""
 
     value_fn: (
         Callable[[dict[str, Any]], StateType | date | datetime | Decimal] | None
@@ -97,13 +87,8 @@ def _recommended_tire_pressure(
     return getter
 
 
-# Snake-case maps for the categorical sensors. The Subaru API is undocumented;
-# these are the values we have hard evidence for (subarulink/const.py +
-# observed in test fixtures + observed in real-world debug diagnostics).
-# Values returned by the live API that are not in these maps fall through to
-# `unknown` on the ENUM sensor — the disabled-by-default `*_raw` companion
-# sensor captures the upstream string verbatim so users can report new values
-# without us having to release a stub sensor that maps to `unknown`.
+# Snake-case ENUM options for the categorical sensors. Unmapped values fall
+# through to `unknown`; the `*_raw` companion entities surface them verbatim.
 VEHICLE_STATE_OPTIONS = {
     "IGNITION_OFF": "ignition_off",
     "IGNITION_ON": "ignition_on",
@@ -126,9 +111,7 @@ def _enum_value_fn(
         raw = (data.get(VEHICLE_STATUS) or {}).get(api_key)
         if raw is None:
             return None
-        # Unmapped values return None → entity state becomes `unknown`; the
-        # companion `_raw` sensor surfaces what the API actually said.
-        return options.get(raw)
+        return options.get(raw)  # unmapped → None → `unknown` state
 
     return getter
 
@@ -198,9 +181,6 @@ API_GEN_2_SENSORS = [
         native_unit_of_measurement=UnitOfPressure.PSI,
         state_class=SensorStateClass.MEASUREMENT,
     ),
-    # ENUM with the values we have evidence for; unknown values fall through
-    # to `unknown` and the companion `vehicle_state_raw` sensor (disabled by
-    # default below) captures the unmapped string for diagnostics.
     SubaruSensorEntityDescription(
         key=API_KEY_VEHICLE_STATE_TYPE,
         translation_key="vehicle_state",
@@ -215,12 +195,7 @@ API_GEN_2_SENSORS = [
         entity_registry_enabled_default=False,
         value_fn=_raw_value_fn(API_KEY_VEHICLE_STATE_TYPE),
     ),
-    # Recommended tire pressure is a static manufacturer reference value
-    # (sourced from vehicle_health.RECOMMENDED_TIRE_PRESSURE), not a live
-    # measurement. Intentionally no state_class — nothing meaningful for
-    # the recorder to track. Marked as a diagnostic and disabled by default
-    # so it doesn't add noise to the default dashboard; users who want to
-    # automate against actual-vs-recommended can enable it explicitly.
+    # Static manufacturer reference value, not a live measurement; no state_class.
     SubaruSensorEntityDescription(
         key=KEY_RECOMMENDED_TIRE_PRESSURE_FRONT,
         translation_key=KEY_RECOMMENDED_TIRE_PRESSURE_FRONT,
@@ -272,8 +247,6 @@ EV_SENSORS = [
         translation_key="ev_time_to_full_charge",
         device_class=SensorDeviceClass.TIMESTAMP,
     ),
-    # ENUM with the values we have evidence for; companion `_raw` sensors
-    # (disabled by default below) surface unmapped strings for diagnostics.
     SubaruSensorEntityDescription(
         key=API_KEY_EV_CHARGER_STATE_TYPE,
         translation_key="ev_charger_state",
