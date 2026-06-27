@@ -192,9 +192,13 @@ async def test_reconfigure_updates_entry(hass: HomeAssistant) -> None:
 
     result = await entry.start_reconfigure_flow(hass)
     new_data = {**USER_INPUT, "failsafe_timeout": 60}
-    result2 = await hass.config_entries.flow.async_configure(
-        result["flow_id"], new_data
-    )
+    with patch(
+        "homeassistant.components.keba.async_setup_entry",
+        return_value=True,
+    ):
+        result2 = await hass.config_entries.flow.async_configure(
+            result["flow_id"], new_data
+        )
 
     assert result2["type"] is FlowResultType.ABORT
     assert result2["reason"] == "reconfigure_successful"
