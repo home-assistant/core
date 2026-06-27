@@ -24,7 +24,14 @@ from homeassistant.components.unifiprotect.switch import (
     PRIVACY_MODE_SWITCH,
     ProtectSwitchEntityDescription,
 )
-from homeassistant.const import ATTR_ATTRIBUTION, ATTR_ENTITY_ID, STATE_OFF, Platform
+from homeassistant.const import (
+    ATTR_ATTRIBUTION,
+    ATTR_ENTITY_ID,
+    STATE_OFF,
+    STATE_ON,
+    STATE_UNAVAILABLE,
+    Platform,
+)
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import entity_registry as er
@@ -37,7 +44,10 @@ from .utils import (
     enable_entity,
     ids_from_device_description,
     init_entry,
+    make_public_camera,
+    public_device_ws_message,
     remove_entities,
+    setup_public_camera,
 )
 
 CAMERA_SWITCHES_BASIC = [
@@ -183,6 +193,7 @@ async def test_switch_setup_camera_all(
 ) -> None:
     """Test switch entity setup for camera devices (all enabled feature flags)."""
 
+    setup_public_camera(ufp)
     await init_entry(hass, ufp, [doorbell])
     assert_entity_counts(hass, Platform.SWITCH, 17, 15)
 
@@ -226,6 +237,7 @@ async def test_switch_setup_camera_none(
 ) -> None:
     """Test switch entity setup for camera devices (no enabled feature flags)."""
 
+    setup_public_camera(ufp)
     await init_entry(hass, ufp, [camera])
     assert_entity_counts(hass, Platform.SWITCH, 8, 7)
 
@@ -332,6 +344,7 @@ async def test_switch_camera_simple(
 ) -> None:
     """Tests all simple switches for cameras."""
 
+    setup_public_camera(ufp)
     await init_entry(hass, ufp, [doorbell])
     assert_entity_counts(hass, Platform.SWITCH, 17, 15)
 
@@ -362,6 +375,7 @@ async def test_switch_camera_highfps(
 ) -> None:
     """Tests High FPS switch for cameras."""
 
+    setup_public_camera(ufp)
     await init_entry(hass, ufp, [doorbell])
     assert_entity_counts(hass, Platform.SWITCH, 17, 15)
 
@@ -460,6 +474,7 @@ async def test_switch_camera_detections_public_api(
         SmartDetectAudioType.GLASS_BREAK,
     ]
 
+    setup_public_camera(ufp)
     await init_entry(hass, ufp, [doorbell])
 
     assert description.ufp_set_method is not None
@@ -481,6 +496,62 @@ async def test_switch_camera_detections_public_api(
 
         mock_method.assert_has_calls([call(True), call(False)])
         assert mock_method.call_count == 2
+
+
+async def test_switch_camera_status_light_public_value(
+    hass: HomeAssistant, ufp: MockUFPFixture, doorbell: Camera
+) -> None:
+    """Status light reads from the public object and refreshes on a public WS update."""
+
+    setup_public_camera(ufp)
+    await init_entry(hass, ufp, [doorbell])
+
+    description = next(d for d in CAMERA_SWITCHES if d.key == "status_light")
+    _, entity_id = await ids_from_device_description(
+        hass, Platform.SWITCH, doorbell, description
+    )
+    assert hass.states.get(entity_id).state == STATE_OFF
+
+    public = make_public_camera(doorbell, status_light=True)
+    ufp.devices_ws_subscription(public_device_ws_message(public))
+    await hass.async_block_till_done()
+
+    assert hass.states.get(entity_id).state == STATE_ON
+
+
+async def test_switch_camera_detection_public_value(
+    hass: HomeAssistant, ufp: MockUFPFixture, doorbell: Camera
+) -> None:
+    """A detection toggle reads its on/off state from the public object."""
+
+    setup_public_camera(ufp)
+    await init_entry(hass, ufp, [doorbell])
+
+    description = next(d for d in CAMERA_SWITCHES if d.key == "smart_person")
+    _, entity_id = await ids_from_device_description(
+        hass, Platform.SWITCH, doorbell, description
+    )
+    assert hass.states.get(entity_id).state == STATE_OFF
+
+    public = make_public_camera(doorbell, object_types=[SmartDetectObjectType.PERSON])
+    ufp.devices_ws_subscription(public_device_ws_message(public))
+    await hass.async_block_till_done()
+
+    assert hass.states.get(entity_id).state == STATE_ON
+
+
+async def test_switch_camera_detection_unavailable_without_public(
+    hass: HomeAssistant, ufp: MockUFPFixture, doorbell: Camera
+) -> None:
+    """A migrated detection toggle is unavailable without a public object."""
+
+    await init_entry(hass, ufp, [doorbell])
+
+    description = next(d for d in CAMERA_SWITCHES if d.key == "smart_person")
+    _, entity_id = await ids_from_device_description(
+        hass, Platform.SWITCH, doorbell, description
+    )
+    assert hass.states.get(entity_id).state == STATE_UNAVAILABLE
 
 
 async def test_switch_camera_privacy(
