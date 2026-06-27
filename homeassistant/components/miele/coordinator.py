@@ -114,20 +114,26 @@ class MieleDataUpdateCoordinator(DataUpdateCoordinator[MieleCoordinatorData]):
 
     async def callback_update_data(self, devices_json: dict[str, dict]) -> None:
         """Handle data update from the API."""
-        devices = {
+        updated_devices = {
             device_id: MieleDevice(device) for device_id, device in devices_json.items()
         }
         self.async_set_updated_data(
-            MieleCoordinatorData(devices=devices, actions=self.data.actions)
+            MieleCoordinatorData(
+                devices={**self.data.devices, **updated_devices},
+                actions=self.data.actions,
+            )
         )
 
     async def callback_update_actions(self, actions_json: dict[str, dict]) -> None:
         """Handle data update from the API."""
-        actions = {
+        updated_actions = {
             device_id: MieleAction(action) for device_id, action in actions_json.items()
         }
         self.async_set_updated_data(
-            MieleCoordinatorData(devices=self.data.devices, actions=actions)
+            MieleCoordinatorData(
+                devices=self.data.devices,
+                actions={**self.data.actions, **updated_actions},
+            )
         )
 
 
