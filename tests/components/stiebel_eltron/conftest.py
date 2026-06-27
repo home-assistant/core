@@ -16,9 +16,16 @@ from tests.common import MockConfigEntry
 @pytest.fixture(autouse=True)
 def mock_get_controller_model() -> Generator[MagicMock]:
     """Mock the Stiebel Eltron get_controller_model function."""
-    with patch(
-        "homeassistant.components.stiebel_eltron.get_controller_model"
-    ) as mock_get_model:
+    with (
+        patch(
+            "homeassistant.components.stiebel_eltron.get_controller_model",
+            autospec=True,
+        ) as mock_get_model,
+        patch(
+            "homeassistant.components.stiebel_eltron.config_flow.get_controller_model",
+            new=mock_get_model,
+        ),
+    ):
         mock_get_model.return_value = ControllerModel.LWZ
         yield mock_get_model
 
@@ -50,24 +57,6 @@ def mock_lwz_api() -> Generator[MagicMock]:
 
         mock_api_cls.return_value = api_client
         yield api_client
-
-
-@pytest.fixture
-def mock_stiebel_eltron_client() -> Generator[MagicMock]:
-    """Mock a stiebel eltron client."""
-    with patch(
-        "homeassistant.components.stiebel_eltron.config_flow.StiebelEltronAPI"
-    ) as mock_client:
-        client = mock_client.return_value
-        client.update.return_value = True
-        client.get_target_temp = MagicMock(return_value=22.5)
-        client.get_current_temp = MagicMock(return_value=21.0)
-        client.get_current_humidity = MagicMock(return_value=45.0)
-        client.get_filter_alarm_status = MagicMock(return_value=False)
-        client.get_operation = MagicMock(return_value="DAY MODE")
-        client.set_operation = MagicMock()
-        client.set_target_temp = MagicMock()
-        yield client
 
 
 @pytest.fixture
