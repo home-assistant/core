@@ -8,6 +8,7 @@ from uiprotect.data import (
     NVR,
     ArmProfile,
     Camera,
+    DeviceState,
     DoorbellMessageType,
     IRLEDMode,
     LCDMessage,
@@ -35,7 +36,13 @@ from homeassistant.components.unifiprotect.select import (
     PTZ_PATROL_STOP,
     VIEWER_SELECTS,
 )
-from homeassistant.const import ATTR_ATTRIBUTION, ATTR_ENTITY_ID, ATTR_OPTION, Platform
+from homeassistant.const import (
+    ATTR_ATTRIBUTION,
+    ATTR_ENTITY_ID,
+    ATTR_OPTION,
+    STATE_UNAVAILABLE,
+    Platform,
+)
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import entity_registry as er
@@ -213,6 +220,41 @@ async def test_select_camera_hdr_mode_public_update(
     state = hass.states.get(entity_id)
     assert state
     assert state.state == "auto"
+
+
+async def test_select_camera_hdr_mode_unavailable_without_public(
+    hass: HomeAssistant, ufp: MockUFPFixture, doorbell: Camera
+) -> None:
+    """The migrated HDR mode select is unavailable without a public object."""
+
+    await init_entry(hass, ufp, [doorbell])
+
+    description = next(d for d in CAMERA_SELECTS if d.key == "hdr_mode")
+    _, entity_id = await ids_from_device_description(
+        hass, Platform.SELECT, doorbell, description
+    )
+    assert hass.states.get(entity_id).state == STATE_UNAVAILABLE
+
+
+async def test_select_camera_hdr_mode_unavailable_on_public_disconnect(
+    hass: HomeAssistant, ufp: MockUFPFixture, doorbell: Camera
+) -> None:
+    """HDR mode availability follows the public object's connection state."""
+
+    setup_public_camera(ufp)
+    await init_entry(hass, ufp, [doorbell])
+
+    description = next(d for d in CAMERA_SELECTS if d.key == "hdr_mode")
+    _, entity_id = await ids_from_device_description(
+        hass, Platform.SELECT, doorbell, description
+    )
+    assert hass.states.get(entity_id).state != STATE_UNAVAILABLE
+
+    public = make_public_camera(doorbell, state=DeviceState.DISCONNECTED)
+    ufp.devices_ws_subscription(public_device_ws_message(public))
+    await hass.async_block_till_done()
+
+    assert hass.states.get(entity_id).state == STATE_UNAVAILABLE
 
 
 async def test_select_setup_camera_none(
