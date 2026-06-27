@@ -352,6 +352,110 @@ async def test_migrate_property_unique_ids_skipped_when_no_serial(
     assert entity_registry.async_get_entity_id("select", DOMAIN, "old-unique-id")
 
 
+async def test_migrate_property_unique_ids_skipped_without_name(
+    hass: HomeAssistant,
+    config_entry: VelbusConfigEntry,
+    device_registry: dr.DeviceRegistry,
+    entity_registry: er.EntityRegistry,
+    controller: MagicMock,
+) -> None:
+    """Test that migration skips entities without an original_name."""
+    device = device_registry.async_get_or_create(
+        config_entry_id=config_entry.entry_id,
+        identifiers={(DOMAIN, "1")},
+        serial_number="test_serial",
+    )
+    entity_registry.async_get_or_create(
+        "select",
+        DOMAIN,
+        "test_serial-old_format",
+        config_entry=config_entry,
+        device_id=device.id,
+    )
+
+    with patch(
+        "homeassistant.components.velbus.get_property_key_map",
+        return_value=_PROPERTY_KEY_MAP,
+    ):
+        await init_integration(hass, config_entry)
+
+    assert entity_registry.async_get_entity_id(
+        "select", DOMAIN, "test_serial-old_format"
+    )
+
+
+async def test_migrate_property_unique_ids_skipped_unknown_name(
+    hass: HomeAssistant,
+    config_entry: VelbusConfigEntry,
+    device_registry: dr.DeviceRegistry,
+    entity_registry: er.EntityRegistry,
+    controller: MagicMock,
+) -> None:
+    """Test that migration skips entities whose name is not a known property."""
+    device = device_registry.async_get_or_create(
+        config_entry_id=config_entry.entry_id,
+        identifiers={(DOMAIN, "1")},
+        serial_number="test_serial",
+    )
+    entity_registry.async_get_or_create(
+        "select",
+        DOMAIN,
+        "test_serial-old_format",
+        config_entry=config_entry,
+        device_id=device.id,
+        original_name="not_a_property",
+    )
+
+    with patch(
+        "homeassistant.components.velbus.get_property_key_map",
+        return_value=_PROPERTY_KEY_MAP,
+    ):
+        await init_integration(hass, config_entry)
+
+    assert entity_registry.async_get_entity_id(
+        "select", DOMAIN, "test_serial-old_format"
+    )
+
+
+async def test_migrate_property_unique_ids_skipped_for_subdevice(
+    hass: HomeAssistant,
+    config_entry: VelbusConfigEntry,
+    device_registry: dr.DeviceRegistry,
+    entity_registry: er.EntityRegistry,
+    controller: MagicMock,
+) -> None:
+    """Test that migration skips entities on sub-devices (via_device_id set)."""
+    device_registry.async_get_or_create(
+        config_entry_id=config_entry.entry_id,
+        identifiers={(DOMAIN, "1")},
+        serial_number="test_serial",
+    )
+    sub_device = device_registry.async_get_or_create(
+        config_entry_id=config_entry.entry_id,
+        identifiers={(DOMAIN, "1-sub")},
+        serial_number="test_serial_sub",
+        via_device=(DOMAIN, "1"),
+    )
+    entity_registry.async_get_or_create(
+        "select",
+        DOMAIN,
+        "test_serial_sub-old_format",
+        config_entry=config_entry,
+        device_id=sub_device.id,
+        original_name="select",
+    )
+
+    with patch(
+        "homeassistant.components.velbus.get_property_key_map",
+        return_value=_PROPERTY_KEY_MAP,
+    ):
+        await init_integration(hass, config_entry)
+
+    assert entity_registry.async_get_entity_id(
+        "select", DOMAIN, "test_serial_sub-old_format"
+    )
+
+
 async def test_device_registry(
     hass: HomeAssistant,
     config_entry: MockConfigEntry,
