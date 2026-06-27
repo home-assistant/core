@@ -17,9 +17,15 @@ rules:
     status: exempt
     comment: |
       No custom actions are defined.
+  docs-conditions:
+    status: exempt
+    comment: This integration does not have any conditions.
   docs-high-level-description: done
   docs-installation-instructions: done
   docs-removal-instructions: done
+  docs-triggers:
+    status: exempt
+    comment: This integration does not have any triggers.
   entity-event-setup:
     status: exempt
     comment: |
@@ -71,7 +77,7 @@ rules:
   icon-translations: done
   reconfiguration-flow: done
   repair-issues: todo
-  stale-devices: todo
+  stale-devices: done
 
   # Platinum
   async-dependency:

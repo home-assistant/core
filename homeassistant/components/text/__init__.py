@@ -11,7 +11,7 @@ from propcache.api import cached_property
 import voluptuous as vol
 
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import ATTR_MODE, MAX_LENGTH_STATE_STATE
+from homeassistant.const import ATTR_MODE, MAX_LENGTH_STATE_STATE  # noqa: F401
 from homeassistant.core import HomeAssistant, ServiceCall
 from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.entity import Entity, EntityDescription
@@ -20,13 +20,14 @@ from homeassistant.helpers.restore_state import ExtraStoredData, RestoreEntity
 from homeassistant.helpers.typing import ConfigType
 from homeassistant.util.hass_dict import HassKey
 
-from .const import (
+from .const import (  # noqa: F401
     ATTR_MAX,
     ATTR_MIN,
     ATTR_PATTERN,
     ATTR_VALUE,
     DOMAIN,
     SERVICE_SET_VALUE,
+    TextEntityCapabilityAttribute,
 )
 
 _LOGGER = logging.getLogger(__name__)
@@ -119,7 +120,12 @@ class TextEntity(Entity, cached_properties=CACHED_PROPERTIES_WITH_ATTR_):
     """Representation of a Text entity."""
 
     _entity_component_unrecorded_attributes = frozenset(
-        {ATTR_MAX, ATTR_MIN, ATTR_MODE, ATTR_PATTERN}
+        {
+            TextEntityCapabilityAttribute.MAX,
+            TextEntityCapabilityAttribute.MIN,
+            TextEntityCapabilityAttribute.MODE,
+            TextEntityCapabilityAttribute.PATTERN,
+        }
     )
 
     entity_description: TextEntityDescription
@@ -136,10 +142,10 @@ class TextEntity(Entity, cached_properties=CACHED_PROPERTIES_WITH_ATTR_):
     def capability_attributes(self) -> dict[str, Any]:
         """Return capability attributes."""
         return {
-            ATTR_MODE: self.mode,
-            ATTR_MIN: self.min,
-            ATTR_MAX: self.max,
-            ATTR_PATTERN: self.pattern,
+            TextEntityCapabilityAttribute.MODE: self.mode,
+            TextEntityCapabilityAttribute.MIN: self.min,
+            TextEntityCapabilityAttribute.MAX: self.max,
+            TextEntityCapabilityAttribute.PATTERN: self.pattern,
         }
 
     @property

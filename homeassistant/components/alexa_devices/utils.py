@@ -7,7 +7,7 @@ from aioamazondevices.const.schedules import (
     NOTIFICATION_TIMER,
 )
 
-from homeassistant.components.sensor import DOMAIN as SENSOR_DOMAIN
+from homeassistant.const import Platform
 from homeassistant.core import HomeAssistant
 import homeassistant.helpers.entity_registry as er
 
@@ -28,7 +28,7 @@ async def async_update_unique_id(
     for serial_num in coordinator.data:
         unique_id = f"{serial_num}-{old_key}"
         if entity_id := entity_registry.async_get_entity_id(
-            DOMAIN, platform, unique_id
+            platform, DOMAIN, unique_id
         ):
             _LOGGER.debug("Updating unique_id for %s", entity_id)
             new_unique_id = unique_id.replace(old_key, new_key)
@@ -48,7 +48,7 @@ async def async_remove_entity_from_virtual_group(
 
     for serial_num in coordinator.data:
         unique_id = f"{serial_num}-{key}"
-        entity_id = entity_registry.async_get_entity_id(DOMAIN, platform, unique_id)
+        entity_id = entity_registry.async_get_entity_id(platform, DOMAIN, unique_id)
         is_group = coordinator.data[serial_num].device_family == SPEAKER_GROUP_FAMILY
         if entity_id and is_group:
             entity_registry.async_remove(entity_id)
@@ -70,7 +70,7 @@ async def async_remove_unsupported_notification_sensors(
         ):
             unique_id = f"{serial_num}-{notification_key}"
             entity_id = entity_registry.async_get_entity_id(
-                DOMAIN, SENSOR_DOMAIN, unique_id=unique_id
+                Platform.SENSOR, DOMAIN, unique_id=unique_id
             )
             is_unsupported = not coordinator.data[serial_num].notifications_supported
 

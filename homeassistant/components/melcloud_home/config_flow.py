@@ -31,7 +31,9 @@ STEP_USER_DATA_SCHEMA = vol.Schema(
             TextSelectorConfig(type=TextSelectorType.EMAIL, autocomplete="username")
         ),
         vol.Required(CONF_PASSWORD): TextSelector(
-            TextSelectorConfig(type=TextSelectorType.PASSWORD)
+            TextSelectorConfig(
+                type=TextSelectorType.PASSWORD, autocomplete="current-password"
+            )
         ),
     }
 )

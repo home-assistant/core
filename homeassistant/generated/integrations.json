@@ -24,12 +24,6 @@
       "config_flow": true,
       "iot_class": "cloud_polling"
     },
-    "acer_projector": {
-      "name": "Acer Projector",
-      "integration_type": "hub",
-      "config_flow": false,
-      "iot_class": "local_polling"
-    },
     "acmeda": {
       "name": "Rollease Acmeda Automate",
       "integration_type": "hub",
@@ -331,12 +325,6 @@
       "integration_type": "virtual",
       "supported_by": "motion_blinds"
     },
-    "ampio": {
-      "name": "Ampio Smart Smog System",
-      "integration_type": "hub",
-      "config_flow": false,
-      "iot_class": "cloud_polling"
-    },
     "analytics_insights": {
       "name": "Home Assistant Analytics Insights",
       "integration_type": "service",
@@ -602,12 +590,6 @@
       "config_flow": true,
       "iot_class": "local_polling"
     },
-    "aten_pe": {
-      "name": "ATEN Rack PDU",
-      "integration_type": "hub",
-      "config_flow": false,
-      "iot_class": "local_polling"
-    },
     "atlanticcityelectric": {
       "name": "Atlantic City Electric",
       "integration_type": "virtual",
@@ -664,12 +646,6 @@
       "integration_type": "hub",
       "config_flow": true,
       "iot_class": "cloud_polling"
-    },
-    "avion": {
-      "name": "Avi-on",
-      "integration_type": "hub",
-      "config_flow": false,
-      "iot_class": "assumed_state"
     },
     "avosdim": {
       "name": "Avosdim",
@@ -743,12 +719,6 @@
     },
     "bbox": {
       "name": "Bbox",
-      "integration_type": "hub",
-      "config_flow": false,
-      "iot_class": "local_polling"
-    },
-    "beewi_smartclim": {
-      "name": "BeeWi SmartClim BLE sensor",
       "integration_type": "hub",
       "config_flow": false,
       "iot_class": "local_polling"
@@ -1511,12 +1481,6 @@
       "name": "Dormakaba dKey",
       "integration_type": "device",
       "config_flow": true,
-      "iot_class": "local_polling"
-    },
-    "dovado": {
-      "name": "Dovado",
-      "integration_type": "hub",
-      "config_flow": false,
       "iot_class": "local_polling"
     },
     "downloader": {
@@ -2754,12 +2718,6 @@
       "config_flow": false,
       "iot_class": "local_push"
     },
-    "greenwave": {
-      "name": "Greenwave Reality",
-      "integration_type": "hub",
-      "config_flow": false,
-      "iot_class": "local_polling"
-    },
     "growatt_server": {
       "integration_type": "hub",
       "config_flow": true,
@@ -3971,12 +3929,6 @@
       "config_flow": true,
       "iot_class": "local_push"
     },
-    "logentries": {
-      "name": "Logentries",
-      "integration_type": "hub",
-      "config_flow": false,
-      "iot_class": "cloud_push"
-    },
     "logitech": {
       "name": "Logitech",
       "integrations": {
@@ -4616,12 +4568,6 @@
       "integration_type": "hub",
       "config_flow": false,
       "iot_class": "cloud_polling"
-    },
-    "mycroft": {
-      "name": "Mycroft",
-      "integration_type": "hub",
-      "config_flow": false,
-      "iot_class": "local_push"
     },
     "myneomitis": {
       "name": "MyNeomitis",
@@ -6264,12 +6210,6 @@
       "config_flow": true,
       "iot_class": "local_push"
     },
-    "scsgate": {
-      "name": "SCSGate",
-      "integration_type": "hub",
-      "config_flow": false,
-      "iot_class": "local_polling"
-    },
     "season": {
       "integration_type": "service",
       "config_flow": true,
@@ -7242,12 +7182,6 @@
       "integration_type": "device",
       "config_flow": true,
       "iot_class": "local_push"
-    },
-    "thermoworks_smoke": {
-      "name": "ThermoWorks Smoke",
-      "integration_type": "hub",
-      "config_flow": false,
-      "iot_class": "cloud_polling"
     },
     "thethingsnetwork": {
       "name": "The Things Network",
