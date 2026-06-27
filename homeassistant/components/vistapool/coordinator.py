@@ -99,9 +99,10 @@ class VistapoolDataUpdateCoordinator(DataUpdateCoordinator[dict[str, Any]]):
         now = time.monotonic()
         for path, (value, written_at) in list(self._pending_optimistic.items()):
             remote_value = AquariteClient.get_value(data, path)
-            if _values_agree(remote_value, value):
-                del self._pending_optimistic[path]
-            elif now - written_at >= OPTIMISTIC_TTL_SECONDS:
+            if (
+                _values_agree(remote_value, value)
+                or now - written_at >= OPTIMISTIC_TTL_SECONDS
+            ):
                 del self._pending_optimistic[path]
             else:
                 _set_path(data, path, value)
@@ -127,5 +128,5 @@ def _values_agree(remote: Any, optimistic: Any) -> bool:
         return True
     try:
         return float(remote) == float(optimistic)
-    except (TypeError, ValueError):
+    except TypeError, ValueError:
         return False
