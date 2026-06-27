@@ -1,6 +1,6 @@
 "Test SMLIGHT SLZB device integration initialization."
 
-from unittest.mock import MagicMock
+from unittest.mock import AsyncMock, MagicMock
 
 from freezegun.api import FrozenDateTimeFactory
 from pysmlight import Info
@@ -17,6 +17,7 @@ from homeassistant.components.update import ATTR_INSTALLED_VERSION
 from homeassistant.config_entries import ConfigEntryState
 from homeassistant.const import STATE_ON, STATE_UNAVAILABLE, STATE_UNKNOWN
 from homeassistant.core import HomeAssistant
+from homeassistant.exceptions import ConfigEntryAuthFailed
 from homeassistant.helpers import device_registry as dr
 from homeassistant.helpers.issue_registry import IssueRegistry
 
@@ -184,3 +185,15 @@ async def test_device_legacy_firmware(
     assert issue is not None
     assert issue.domain == DOMAIN
     assert issue.issue_id == "unsupported_firmware"
+
+
+async def test_async_execute_command_auth_failed(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+) -> None:
+    """Test async_execute_command handles authentication error."""
+    entry = await setup_integration(hass, mock_config_entry)
+    coordinator = entry.runtime_data.data
+
+    with pytest.raises(ConfigEntryAuthFailed):
+        await coordinator.async_execute_command(AsyncMock(side_effect=SmlightAuthError))
