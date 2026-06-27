@@ -56,4 +56,11 @@ alarm_trigger:
       domain: alarm_control_panel
       supported_features:
         - alarm_control_panel.AlarmControlPanelEntityFeature.TRIGGER
-  fields: *common_service_fields
+  fields:
+    <<: *common_service_fields
+    delay_time:
+      example: 0
+      selector:
+        number:
+          min: 0
+          unit_of_measurement: "s"
