@@ -232,7 +232,7 @@
           "name": "[%key:component::alarm_control_panel::services::alarm_disarm::fields::code::name%]"
         },
         "delay_time": {
-          "description": "The overriden time of the ‘pending’ state before triggering the alarm.",
+          "description": "The overridden time of the 'pending' state before triggering the alarm.",
           "name": "Delay time"
         }
       },
