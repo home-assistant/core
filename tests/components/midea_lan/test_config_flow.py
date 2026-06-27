@@ -214,7 +214,9 @@ async def test_step_user_routes(mock_config_flow: MideaLanConfigFlow) -> None:
 
 
 async def test_step_list(mock_config_flow: MideaLanConfigFlow) -> None:
-    """Test list step for discovered and empty-device results."""
+    """Test list step for discovered, empty-device, and user submission."""
+
+    # Case 1: device found
     with patch(
         "homeassistant.components.midea_lan.config_flow.discover",
         return_value={
@@ -226,15 +228,35 @@ async def test_step_list(mock_config_flow: MideaLanConfigFlow) -> None:
         },
     ):
         result = await mock_config_flow.async_step_list()
+
     assert result["type"] is FlowResultType.FORM
     assert result["step_id"] == "list"
     assert "Appliance code" in result["description_placeholders"]["table"]
 
+    # Case 2: no devices found
     with patch(
         "homeassistant.components.midea_lan.config_flow.discover", return_value={}
     ):
         result = await mock_config_flow.async_step_list()
+
     assert result["description_placeholders"]["table"] == "Not found"
+
+    # Case 3: form submitted
+    with patch(
+        "homeassistant.components.midea_lan.config_flow.discover",
+        return_value={
+            TEST_DEVICE_ID: {
+                CONF_TYPE: TEST_TYPE,
+                CONF_IP_ADDRESS: TEST_IP_ADDRESS,
+                "sn": "123",
+            }
+        },
+    ):
+        result = await mock_config_flow.async_step_list(
+            user_input={TEST_DEVICE_ID: True}
+        )
+
+    assert result["type"] == FlowResultType.MENU
 
 
 async def test_step_discovery(mock_config_flow: MideaLanConfigFlow) -> None:

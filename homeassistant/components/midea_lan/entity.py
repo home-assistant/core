@@ -40,11 +40,6 @@ class MideaEntity(Entity):
         self._device.unregister_update(self.update_state)
 
     @property
-    def device(self) -> MideaDevice:
-        """Return device structure."""
-        return self._device
-
-    @property
     @override
     def device_info(self) -> DeviceInfo:
         """Return device info."""
