@@ -9,6 +9,7 @@ import voluptuous as vol
 
 from homeassistant.config_entries import ConfigFlow, ConfigFlowResult
 from homeassistant.const import CONF_HOST, CONF_PASSWORD, CONF_USERNAME
+from homeassistant.data_entry_flow import AbortFlow
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 
@@ -37,12 +38,6 @@ class ThebenConfigFlow(ConfigFlow, domain=DOMAIN):
         """Handle the initial step."""
         errors: dict[str, str] = {}
         if user_input is not None:
-            self._async_abort_entries_match(
-                {
-                    CONF_HOST: user_input[CONF_HOST],
-                    CONF_USERNAME: user_input[CONF_USERNAME],
-                }
-            )
             try:
                 try:
                     # This function tries to establish a TCP connection and raises an exception on error
@@ -51,13 +46,16 @@ class ThebenConfigFlow(ConfigFlow, domain=DOMAIN):
                     raise CannotConnect from e
 
                 try:
-                    url = await ConexaSMGW.buildCompleteUrl(
+                    local_api = await ConexaSMGW.create(
                         async_get_clientsession(self.hass),
                         user_input[CONF_HOST],
                         user_input[CONF_USERNAME],
                         user_input[CONF_PASSWORD],
                     )
-                    _LOGGER.debug("SMGW returned valid query URL %s", url)
+                    await self.async_set_unique_id(
+                        f"{local_api.gatewayInfo.smgwID}-{user_input[CONF_USERNAME]}"
+                    )
+                    self._abort_if_unique_id_configured()
                 except (OSError, aiohttp.ClientError) as e:
                     # The smgw unfortunately does not reply with invalid auth it just times out
                     # So after we checked that connection is possible we assume Invalid auth if something happens
@@ -67,6 +65,8 @@ class ThebenConfigFlow(ConfigFlow, domain=DOMAIN):
                 errors["base"] = "cannot_connect"
             except InvalidAuth:
                 errors["base"] = "invalid_auth"
+            except AbortFlow:
+                raise  # error str is already set by _abort_if_unique_id_configured
             except Exception:
                 _LOGGER.exception("Unexpected exception")
                 errors["base"] = "unknown"

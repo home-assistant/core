@@ -15,7 +15,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ThebenConfigEntry) -> bo
     await coordinator.async_init()
     entry.runtime_data = coordinator
 
-    # Get initial data
+    # first_refresh means get initial data
     await coordinator.async_config_entry_first_refresh()
 
     await hass.config_entries.async_forward_entry_setups(entry, _PLATFORMS)

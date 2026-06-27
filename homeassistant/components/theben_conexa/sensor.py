@@ -78,7 +78,9 @@ class TotalInOutSensor(ConexaSMGWEntity, SensorEntity):
         # As far as I know the Conexa 3.0 returns always Wh but there is the possibility that it returns Joules
         if coordinator.data[self._key].unit.upper() == "J":
             self._attr_native_unit_of_measurement = UnitOfEnergy.JOULE
-        self._attr_unique_id = f"{coordinator.gateway_info.smgwID}-{self._key}"
+        self._attr_unique_id = (
+            f"{coordinator.gateway_info.smgwID}-{coordinator.smgw_user}-{self._key}"
+        )
 
     @property
     @override

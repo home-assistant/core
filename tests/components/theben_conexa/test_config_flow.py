@@ -1,7 +1,6 @@
 """Test the Theben Conexa Smartmeter gateway config flow."""
 
-import asyncio
-from unittest.mock import AsyncMock, patch
+from unittest.mock import AsyncMock, MagicMock, patch
 
 import aiohttp
 
@@ -10,6 +9,14 @@ from homeassistant.components.theben_conexa.const import DOMAIN
 from homeassistant.const import CONF_HOST, CONF_PASSWORD, CONF_USERNAME
 from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
+
+
+def _create_mock_conexa_smgw():
+    """Create a mock ConexaSMGW instance."""
+    mock = MagicMock()
+    mock.gatewayInfo = MagicMock()
+    mock.gatewayInfo.smgwID = "test-gateway-id"
+    return mock
 
 
 async def test_form(hass: HomeAssistant, mock_setup_entry: AsyncMock) -> None:
@@ -25,8 +32,8 @@ async def test_form(hass: HomeAssistant, mock_setup_entry: AsyncMock) -> None:
             "homeassistant.components.theben_conexa.config_flow.checkNetworkConnection"
         ),
         patch(
-            "homeassistant.components.theben_conexa.config_flow.ConexaSMGW.buildCompleteUrl",
-            return_value="http://test.url",
+            "homeassistant.components.theben_conexa.config_flow.ConexaSMGW.create",
+            return_value=_create_mock_conexa_smgw(),
         ),
     ):
         result = await hass.config_entries.flow.async_configure(
@@ -62,8 +69,8 @@ async def test_form_invalid_auth(
             "homeassistant.components.theben_conexa.config_flow.checkNetworkConnection"
         ),
         patch(
-            "homeassistant.components.theben_conexa.config_flow.ConexaSMGW.buildCompleteUrl",
-            side_effect=asyncio.TimeoutError,
+            "homeassistant.components.theben_conexa.config_flow.ConexaSMGW.create",
+            side_effect=aiohttp.ClientError,
         ),
     ):
         result = await hass.config_entries.flow.async_configure(
@@ -86,8 +93,8 @@ async def test_form_invalid_auth(
             "homeassistant.components.theben_conexa.config_flow.checkNetworkConnection"
         ),
         patch(
-            "homeassistant.components.theben_conexa.config_flow.ConexaSMGW.buildCompleteUrl",
-            return_value="http://test.url",
+            "homeassistant.components.theben_conexa.config_flow.ConexaSMGW.create",
+            return_value=_create_mock_conexa_smgw(),
         ),
     ):
         result = await hass.config_entries.flow.async_configure(
@@ -143,8 +150,8 @@ async def test_form_cannot_connect(
             "homeassistant.components.theben_conexa.config_flow.checkNetworkConnection"
         ),
         patch(
-            "homeassistant.components.theben_conexa.config_flow.ConexaSMGW.buildCompleteUrl",
-            return_value="http://test.url",
+            "homeassistant.components.theben_conexa.config_flow.ConexaSMGW.create",
+            return_value=_create_mock_conexa_smgw(),
         ),
     ):
         result = await hass.config_entries.flow.async_configure(
@@ -182,8 +189,8 @@ async def test_form_already_configured(
             "homeassistant.components.theben_conexa.config_flow.checkNetworkConnection"
         ),
         patch(
-            "homeassistant.components.theben_conexa.config_flow.ConexaSMGW.buildCompleteUrl",
-            return_value="http://test.url",
+            "homeassistant.components.theben_conexa.config_flow.ConexaSMGW.create",
+            return_value=_create_mock_conexa_smgw(),
         ),
     ):
         result = await hass.config_entries.flow.async_configure(
@@ -239,7 +246,7 @@ async def test_form_unknown_err(
             "homeassistant.components.theben_conexa.config_flow.checkNetworkConnection"
         ),
         patch(
-            "homeassistant.components.theben_conexa.config_flow.ConexaSMGW.buildCompleteUrl",
+            "homeassistant.components.theben_conexa.config_flow.ConexaSMGW.create",
             side_effect=ValueError,
         ),
     ):
@@ -263,8 +270,8 @@ async def test_form_unknown_err(
             "homeassistant.components.theben_conexa.config_flow.checkNetworkConnection"
         ),
         patch(
-            "homeassistant.components.theben_conexa.config_flow.ConexaSMGW.buildCompleteUrl",
-            return_value="http://test.url",
+            "homeassistant.components.theben_conexa.config_flow.ConexaSMGW.create",
+            return_value=_create_mock_conexa_smgw(),
         ),
     ):
         result = await hass.config_entries.flow.async_configure(

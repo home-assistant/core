@@ -27,6 +27,7 @@ class SmgwSensorCoordinator(DataUpdateCoordinator[dict[str, ConexaSMGW.MeterValu
     _api: ConexaSMGW
     gateway_info: ConexaSMGW.GatewayInfo
     config_entry: ThebenConfigEntry
+    smgw_user: str
 
     def __init__(self, hass: HomeAssistant, entry: ThebenConfigEntry) -> None:
         """Initialize the coordinator."""
@@ -40,6 +41,7 @@ class SmgwSensorCoordinator(DataUpdateCoordinator[dict[str, ConexaSMGW.MeterValu
             always_update=False,
         )
         self._scheduled_updates: CALLBACK_TYPE | None = None
+        self.smgw_user = entry.data[CONF_USERNAME]
 
     async def async_init(self) -> None:
         """Asynchronous Initialization and registering the update schedule."""

@@ -16,7 +16,7 @@
           "username": "[%key:common::config_flow::data::username%]"
         },
         "data_description": {
-          "host": "The IP of your smgw provided by your power grid operator",
+          "host": "The IP of your smartmeter gateway provided by your power grid operator",
           "password": "The password provided by your power grid operator",
           "username": "The username provided by your power grid operator"
         },
