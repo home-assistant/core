@@ -1,7 +1,7 @@
 """Data coordinator for the Vistapool integration."""
 
 import logging
-import time
+from time import monotonic
 from typing import TYPE_CHECKING, Any, override
 
 from aioaquarite import (
@@ -90,13 +90,13 @@ class VistapoolDataUpdateCoordinator(DataUpdateCoordinator[dict[str, Any]]):
 
     def apply_optimistic(self, value_path: str, value: Any) -> None:
         """Reflect a just-written value and protect it from stale Firestore pushes."""
-        self._pending_optimistic[value_path] = (value, time.monotonic())
+        self._pending_optimistic[value_path] = (value, monotonic())
         _set_path(self.data, value_path, value)
         self.async_set_updated_data(self.data)
 
     def _apply_remote_data(self, data: dict[str, Any]) -> None:
         """Apply a Firestore push, preserving unconfirmed optimistic writes."""
-        now = time.monotonic()
+        now = monotonic()
         for path, (value, written_at) in list(self._pending_optimistic.items()):
             remote_value = AquariteClient.get_value(data, path)
             if (

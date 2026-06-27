@@ -187,7 +187,7 @@ async def test_apply_optimistic_yields_to_push_after_ttl(
     on_data = mock_vistapool_client.subscribe_pool_resilient.call_args.args[1]
 
     with patch.object(
-        vp_coordinator.time,
+        vp_coordinator,
         "monotonic",
         side_effect=[100.0, 100.0 + vp_coordinator.OPTIMISTIC_TTL_SECONDS + 1.0],
     ):
