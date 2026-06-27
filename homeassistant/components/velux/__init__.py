@@ -89,11 +89,13 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
         device_ids: list[str] = service_call.data["device_id"]
 
         # Resolve all devices first so the operation is atomic
-        nodes: list[tuple[str, OpeningDevice | None]] = [
-            (device_id, _find_opening_device_node(hass, device_id))
+        resolved: dict[str, OpeningDevice | None] = {
+            device_id: _find_opening_device_node(hass, device_id)
             for device_id in device_ids
+        }
+        missing = [
+            device_id for device_id, node in resolved.items() if node is None
         ]
-        missing = [device_id for device_id, node in nodes if node is None]
         if missing:
             raise ServiceValidationError(
                 translation_domain=DOMAIN,
@@ -101,7 +103,8 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
                 translation_placeholders={"device_id": ", ".join(missing)},
             )
 
-        for _, node in nodes:
+        for node in resolved.values():
+            assert node is not None  # validated above
             _set_node_velocity(node, velocity)
 
     hass.services.async_register(
