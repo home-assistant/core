@@ -2037,3 +2037,103 @@ def test_detection_event_types_have_translations() -> None:
         labels = event_states[key]["state_attributes"]["event_type"]["state"]
         missing = [t for t in description.event_types or () if t not in labels]
         assert not missing, f"{key} missing event_type labels: {missing}"
+
+
+async def test_smart_detection_event_interleaved_dedup(
+    hass: HomeAssistant,
+    ufp: MockUFPFixture,
+    doorbell: Camera,
+    unadopted_camera: Camera,
+    fixed_now: datetime,
+) -> None:
+    """Two overlapping same-category events whose dispatches interleave don't re-fire."""
+    _prime_public_events(ufp)
+    await init_entry(hass, ufp, [doorbell, unadopted_camera])
+
+    description = next(d for d in EVENT_DESCRIPTIONS if d.key == "smart_detection")
+    _, entity_id = await ids_from_device_description(
+        hass, Platform.EVENT, doorbell, description
+    )
+
+    events: list[HAEvent] = []
+
+    @callback
+    def _capture(event: HAEvent) -> None:
+        events.append(event)
+
+    unsub = async_track_state_change_event(hass, entity_id, _capture)
+    common = {
+        "type": EventType.SMART_DETECT,
+        "channel": ProtectEventChannel.DETECTION,
+        "device_id": doorbell.id,
+        "device_mac": doorbell.mac,
+        "start": fixed_now - timedelta(seconds=1),
+        "end": None,
+    }
+    # Event A and B overlap; A re-dispatches after B started.
+    ufp.events_msg(
+        ProtectEvent(
+            id="evt-a", smart_detect_types=(SmartDetectObjectType.PERSON,), **common
+        ),
+        EventChange.STARTED,
+    )
+    ufp.events_msg(
+        ProtectEvent(
+            id="evt-b", smart_detect_types=(SmartDetectObjectType.VEHICLE,), **common
+        ),
+        EventChange.STARTED,
+    )
+    ufp.events_msg(
+        ProtectEvent(
+            id="evt-a", smart_detect_types=(SmartDetectObjectType.PERSON,), **common
+        ),
+        EventChange.UPDATED,
+    )
+    await hass.async_block_till_done()
+    unsub()
+
+    # A's person is not re-fired when its update arrives after B's dispatch.
+    fired = [event.data["new_state"].attributes["event_type"] for event in events]
+    assert fired == ["person", "vehicle"]
+
+
+async def test_detection_event_dedup_is_bounded(
+    hass: HomeAssistant,
+    ufp: MockUFPFixture,
+    doorbell: Camera,
+    unadopted_camera: Camera,
+    fixed_now: datetime,
+) -> None:
+    """The fire-dedup tracker is bounded; distinct events keep firing."""
+    _prime_public_events(ufp)
+    await init_entry(hass, ufp, [doorbell, unadopted_camera])
+
+    description = next(d for d in EVENT_DESCRIPTIONS if d.key == "motion_detection")
+    _, entity_id = await ids_from_device_description(
+        hass, Platform.EVENT, doorbell, description
+    )
+
+    events: list[HAEvent] = []
+
+    @callback
+    def _capture(event: HAEvent) -> None:
+        events.append(event)
+
+    unsub = async_track_state_change_event(hass, entity_id, _capture)
+    for index in range(20):
+        ufp.events_msg(
+            ProtectEvent(
+                id=f"motion-{index}",
+                type=EventType.MOTION,
+                channel=ProtectEventChannel.DETECTION,
+                device_id=doorbell.id,
+                device_mac=doorbell.mac,
+                start=fixed_now - timedelta(seconds=1),
+                end=fixed_now,
+            ),
+            EventChange.STARTED,
+        )
+    await hass.async_block_till_done()
+    unsub()
+
+    assert len(events) == 20

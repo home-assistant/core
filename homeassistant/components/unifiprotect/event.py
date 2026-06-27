@@ -44,6 +44,10 @@ from .entity import EventEntityMixin, ProtectDeviceEntity, ProtectEventMixin
 
 PARALLEL_UPDATES = 0
 
+# Per-entity cap on tracked event ids for fire dedup (far above realistic
+# concurrent/recent events per camera per category).
+_MAX_TRACKED_EVENTS = 16
+
 
 # Select best thumbnail
 # Prefer thumbnails with LPR data, sorted by confidence
@@ -95,22 +99,24 @@ class ProtectDevicePublicEventEntity(
     """
 
     entity_description: ProtectEventEntityDescription
-    # Protect keeps one active event per camera per category, so tracking the
-    # current event's fired types is enough to dedupe across its dispatches.
-    _fired_event_id: str | None = None
-    _fired_types: frozenset[str] = frozenset()
+    # A camera can run two overlapping events of the same category whose
+    # dispatches interleave, so dedup tracks fired types per recent event id
+    # (bounded), not just the current one.
+    _fired: dict[str, frozenset[str]] | None = None
 
     @callback
     def _fire_once(
         self, event: ProtectEvent, event_type: str, event_data: dict[str, Any]
     ) -> None:
         """Fire ``event_type`` once per event, ignoring repeat dispatches."""
-        if event.id != self._fired_event_id:
-            self._fired_event_id = event.id
-            self._fired_types = frozenset()
-        if event_type in self._fired_types:
+        fired = self._fired
+        if fired is None:
+            fired = self._fired = {}
+        if event_type in (types := fired.get(event.id, frozenset())):
             return
-        self._fired_types |= {event_type}
+        fired[event.id] = types | {event_type}
+        if len(fired) > _MAX_TRACKED_EVENTS:
+            del fired[next(iter(fired))]
         self._trigger_event(event_type, event_data)
         self.async_write_ha_state()
 
