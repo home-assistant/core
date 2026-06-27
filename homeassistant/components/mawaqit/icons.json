@@ -1,0 +1,57 @@
+{
+  "entity": {
+    "sensor": {
+      "iqama_asr": {
+        "default": "mdi:weather-sunny"
+      },
+      "iqama_dhuhr": {
+        "default": "mdi:weather-sunny"
+      },
+      "iqama_fajr": {
+        "default": "mdi:weather-sunset-up"
+      },
+      "iqama_isha": {
+        "default": "mdi:weather-night"
+      },
+      "iqama_maghrib": {
+        "default": "mdi:weather-sunset-down"
+      },
+      "mosque_info": {
+        "default": "mdi:mosque"
+      },
+      "next_salat_name": {
+        "default": "mdi:calendar-star"
+      },
+      "next_salat_time": {
+        "default": "mdi:clock"
+      },
+      "prayer_asr": {
+        "default": "mdi:weather-sunny"
+      },
+      "prayer_dhuhr": {
+        "default": "mdi:weather-sunny"
+      },
+      "prayer_fajr": {
+        "default": "mdi:weather-sunset-up"
+      },
+      "prayer_isha": {
+        "default": "mdi:weather-night"
+      },
+      "prayer_jumua": {
+        "default": "mdi:calendar-star"
+      },
+      "prayer_jumua_2": {
+        "default": "mdi:calendar-star"
+      },
+      "prayer_jumua_3": {
+        "default": "mdi:calendar-star"
+      },
+      "prayer_maghrib": {
+        "default": "mdi:weather-sunset-down"
+      },
+      "prayer_shuruq": {
+        "default": "mdi:weather-sunset"
+      }
+    }
+  }
+}

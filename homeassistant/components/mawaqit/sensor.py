@@ -43,7 +43,6 @@ PARALLEL_UPDATES = 1
 MOSQUE_SENSOR_DESCRIPTION = SensorEntityDescription(
     key="mosque_info",
     translation_key="mosque_info",
-    icon="mdi:mosque",
 )
 
 
@@ -58,42 +57,36 @@ PRAYER_TIME_SENSOR_DESCRIPTIONS = [
     MawaqitPrayerTimeSensorEntityDescription(
         key="Fajr",
         translation_key="prayer_fajr",
-        icon="mdi:weather-sunset-up",
         device_class=SensorDeviceClass.TIMESTAMP,
         get_value=lambda data: utils.get_regular_prayer_time(data, "Fajr"),
     ),
     MawaqitPrayerTimeSensorEntityDescription(
         key="shuruq",
         translation_key="prayer_shuruq",
-        icon="mdi:weather-sunset",
         device_class=SensorDeviceClass.TIMESTAMP,
         get_value=utils.get_shuruq_time,
     ),
     MawaqitPrayerTimeSensorEntityDescription(
         key="Dhuhr",
         translation_key="prayer_dhuhr",
-        icon="mdi:weather-sunny",
         device_class=SensorDeviceClass.TIMESTAMP,
         get_value=lambda data: utils.get_regular_prayer_time(data, "Dhuhr"),
     ),
     MawaqitPrayerTimeSensorEntityDescription(
         key="Asr",
         translation_key="prayer_asr",
-        icon="mdi:weather-sunny",
         device_class=SensorDeviceClass.TIMESTAMP,
         get_value=lambda data: utils.get_regular_prayer_time(data, "Asr"),
     ),
     MawaqitPrayerTimeSensorEntityDescription(
         key="Maghrib",
         translation_key="prayer_maghrib",
-        icon="mdi:weather-sunset-down",
         device_class=SensorDeviceClass.TIMESTAMP,
         get_value=lambda data: utils.get_regular_prayer_time(data, "Maghrib"),
     ),
     MawaqitPrayerTimeSensorEntityDescription(
         key="Isha",
         translation_key="prayer_isha",
-        icon="mdi:weather-night",
         device_class=SensorDeviceClass.TIMESTAMP,
         get_value=lambda data: utils.get_regular_prayer_time(data, "Isha"),
     ),
@@ -103,21 +96,18 @@ JUMUA_PRAYER_TIME_SENSOR_DESCRIPTIONS = [
     MawaqitPrayerTimeSensorEntityDescription(
         key="Jumua",
         translation_key="prayer_jumua",
-        icon="mdi:calendar-star",
         device_class=SensorDeviceClass.TIMESTAMP,
         get_value=lambda data: utils.get_jumua_time(data, "jumua"),
     ),
     MawaqitPrayerTimeSensorEntityDescription(
         key="Jumua 2",
         translation_key="prayer_jumua_2",
-        icon="mdi:calendar-star",
         device_class=SensorDeviceClass.TIMESTAMP,
         get_value=lambda data: utils.get_jumua_time(data, "jumua2"),
     ),
     MawaqitPrayerTimeSensorEntityDescription(
         key="Jumua 3",
         translation_key="prayer_jumua_3",
-        icon="mdi:calendar-star",
         device_class=SensorDeviceClass.TIMESTAMP,
         get_value=lambda data: utils.get_jumua_time(data, "jumua3"),
     ),
@@ -127,35 +117,30 @@ IQAMA_PRAYER_TIME_SENSOR_DESCRIPTIONS = [
     MawaqitPrayerTimeSensorEntityDescription(
         key="Fajr_Iqama",
         translation_key="iqama_fajr",
-        icon="mdi:weather-sunset-up",
         device_class=SensorDeviceClass.TIMESTAMP,
         get_value=lambda data: utils.get_iqama_time(data, "Fajr"),
     ),
     MawaqitPrayerTimeSensorEntityDescription(
         key="Dhuhr_Iqama",
         translation_key="iqama_dhuhr",
-        icon="mdi:weather-sunny",
         device_class=SensorDeviceClass.TIMESTAMP,
         get_value=lambda data: utils.get_iqama_time(data, "Dhuhr"),
     ),
     MawaqitPrayerTimeSensorEntityDescription(
         key="Asr_Iqama",
         translation_key="iqama_asr",
-        icon="mdi:weather-sunny",
         device_class=SensorDeviceClass.TIMESTAMP,
         get_value=lambda data: utils.get_iqama_time(data, "Asr"),
     ),
     MawaqitPrayerTimeSensorEntityDescription(
         key="Maghrib_Iqama",
         translation_key="iqama_maghrib",
-        icon="mdi:weather-sunset-down",
         device_class=SensorDeviceClass.TIMESTAMP,
         get_value=lambda data: utils.get_iqama_time(data, "Maghrib"),
     ),
     MawaqitPrayerTimeSensorEntityDescription(
         key="Isha_Iqama",
         translation_key="iqama_isha",
-        icon="mdi:weather-night",
         device_class=SensorDeviceClass.TIMESTAMP,
         get_value=lambda data: utils.get_iqama_time(data, "Isha"),
     ),
@@ -165,13 +150,11 @@ NEXT_SALAT_SENSOR_DESCRIPTION = [
     SensorEntityDescription(
         key="next_salat_name",
         translation_key="next_salat_name",
-        icon="mdi:calendar-star",
     ),
     SensorEntityDescription(
         key="next_salat_time",
         translation_key="next_salat_time",
         device_class=SensorDeviceClass.TIMESTAMP,
-        icon="mdi:clock",
     ),
 ]
 

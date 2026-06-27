@@ -126,29 +126,7 @@
       }
     }
   },
-  "options": {
-    "abort": {
-      "cannot_connect": "Failed to connect to the MAWAQIT server. Please check your internet connection and try again.",
-      "no_mosque": "Sorry, no MAWAQIT mosques were found in your area. Please check your coordinates or remove the existing mosque configuration and set up a new one."
-    },
-    "step": {
-      "init": {
-        "data": {
-          "calculation_method": "Change your mosque:"
-        },
-        "data_description": {
-          "calculation_method": "The mosque you select will determine the prayer times."
-        }
-      }
-    }
-  },
   "selector": {
-    "choice_translation_key": {
-      "options": {
-        "keep": "Keep the existing configuration",
-        "reset": "Reset to configure a new mosque"
-      }
-    },
     "search_method_choice_translation_key": {
       "options": {
         "search_method_coordinates": "Search for the nearest mosques to your location",
