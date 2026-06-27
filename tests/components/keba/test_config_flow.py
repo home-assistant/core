@@ -15,6 +15,8 @@ from homeassistant.const import CONF_HOST
 from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
 
+from tests.common import MockConfigEntry
+
 USER_INPUT = {
     CONF_HOST: "192.168.1.100",
     CONF_RFID: "",
@@ -151,6 +153,51 @@ async def test_import_cannot_connect(hass: HomeAssistant) -> None:
 
     assert result["type"] is FlowResultType.ABORT
     assert result["reason"] == "cannot_connect"
+
+
+async def test_import_exception(hass: HomeAssistant) -> None:
+    """Test that an exception during import aborts with cannot_connect."""
+    mock = _mock_keba_handler()
+    mock.setup.side_effect = Exception("unexpected error")
+
+    with patch(
+        "homeassistant.components.keba.config_flow.KebaHandler",
+        return_value=mock,
+    ):
+        result = await hass.config_entries.flow.async_init(
+            DOMAIN,
+            context={"source": config_entries.SOURCE_IMPORT},
+            data=USER_INPUT,
+        )
+
+    assert result["type"] is FlowResultType.ABORT
+    assert result["reason"] == "cannot_connect"
+
+
+async def test_reconfigure_shows_form(hass: HomeAssistant) -> None:
+    """Test that the reconfigure step shows the form."""
+    entry = MockConfigEntry(domain=DOMAIN, data=USER_INPUT, unique_id="12345678")
+    entry.add_to_hass(hass)
+
+    result = await entry.start_reconfigure_flow(hass)
+
+    assert result["type"] is FlowResultType.FORM
+    assert result["step_id"] == "reconfigure"
+
+
+async def test_reconfigure_updates_entry(hass: HomeAssistant) -> None:
+    """Test that submitting reconfigure updates the entry data."""
+    entry = MockConfigEntry(domain=DOMAIN, data=USER_INPUT, unique_id="12345678")
+    entry.add_to_hass(hass)
+
+    result = await entry.start_reconfigure_flow(hass)
+    new_data = {**USER_INPUT, "failsafe_timeout": 60}
+    result2 = await hass.config_entries.flow.async_configure(
+        result["flow_id"], new_data
+    )
+
+    assert result2["type"] is FlowResultType.ABORT
+    assert result2["reason"] == "reconfigure_successful"
 
 
 async def test_already_configured(hass: HomeAssistant) -> None:
