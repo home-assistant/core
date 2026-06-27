@@ -303,7 +303,7 @@ aiohue==4.8.1
 aioimaplib==2.0.1
 
 # homeassistant.components.immich
-aioimmich==0.15.0
+aioimmich==0.15.1
 
 # homeassistant.components.apache_kafka
 aiokafka==0.10.0
@@ -2358,7 +2358,7 @@ pymochad==0.2.0
 pymodbus==3.13.1
 
 # homeassistant.components.monoprice
-pymonoprice==0.5
+pymonoprice==0.6.1
 
 # homeassistant.components.mysensors
 pymysensors==0.26.0
@@ -2564,7 +2564,7 @@ pysmhi==2.0.0
 pysml==0.1.8
 
 # homeassistant.components.smlight
-pysmlight==0.4.0
+pysmlight==0.5.0
 
 # homeassistant.components.snmp
 pysnmp==7.1.27

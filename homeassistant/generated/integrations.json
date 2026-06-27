@@ -764,12 +764,6 @@
       "config_flow": true,
       "iot_class": "cloud_polling"
     },
-    "blinksticklight": {
-      "name": "BlinkStick",
-      "integration_type": "hub",
-      "config_flow": false,
-      "iot_class": "local_polling"
-    },
     "bliss_automation": {
       "name": "Bliss Automation",
       "integration_type": "virtual",
@@ -7867,12 +7861,6 @@
       "integration_type": "device",
       "config_flow": true,
       "iot_class": "local_push"
-    },
-    "watson_tts": {
-      "name": "IBM Watson TTS",
-      "integration_type": "hub",
-      "config_flow": false,
-      "iot_class": "cloud_push"
     },
     "watts": {
       "name": "Watts Vision +",
