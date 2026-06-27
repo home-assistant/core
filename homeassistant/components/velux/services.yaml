@@ -1,10 +1,12 @@
 # Velux Integration services
 
 set_velocity:
-  target:
-    device:
-      integration: velux
   fields:
+    device_id:
+      required: true
+      selector:
+        device:
+          integration: velux
     velocity:
       required: true
       selector:

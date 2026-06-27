@@ -38,9 +38,7 @@ type VeluxConfigEntry = ConfigEntry[VeluxData]
 CONFIG_SCHEMA = cv.config_entry_only_config_schema(DOMAIN)
 
 
-def _apply_velocity(
-    hass: HomeAssistant, device_id: str, velocity: Velocity
-) -> bool:
+def _apply_velocity(hass: HomeAssistant, device_id: str, velocity: Velocity) -> bool:
     """Apply velocity to a device's node. Returns True if the device was found."""
     device_registry = dr.async_get(hass)
     device = device_registry.async_get(device_id)
@@ -77,7 +75,7 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
         """Set velocity for Velux opening devices."""
         velocity_str: str = service_call.data["velocity"]
         velocity = VELOCITY_MAP[velocity_str]
-        device_ids: list[str] = service_call.data.get("device_id", [])
+        device_ids = service_call.data.get("device_id", [])
 
         if isinstance(device_ids, str):
             device_ids = [device_ids]
