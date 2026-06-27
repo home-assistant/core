@@ -492,7 +492,8 @@ class ProtectDeviceDetectionEventEntity(ProtectDevicePublicEventEntity):
     def _async_detection_event(self, event: ProtectEvent) -> None:
         allowed = self.entity_description.event_types or ()
         # One fire per detected type so each stays independently automatable
-        # (incl. types with no binary sensor); carries the full co-detected set.
+        # (incl. types with no binary sensor); carries the co-detected set known
+        # at fire time (types can still arrive on a later update).
         detected = [_event_type(t) for t in event.smart_detect_types]
         for event_type in detected:
             if event_type in allowed:

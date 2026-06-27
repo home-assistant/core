@@ -2,6 +2,8 @@
 
 import asyncio
 from datetime import datetime, timedelta
+import json
+from pathlib import Path
 from unittest.mock import Mock, patch
 
 import pytest
@@ -2015,3 +2017,23 @@ async def test_doorbell_ring_dedup_across_dispatches(
     unsub()
 
     assert len(events) == 1
+
+
+def test_detection_event_types_have_translations() -> None:
+    """Every category detection event type has a strings.json state label.
+
+    Guards against a uiprotect enum addition slugging into ``event_types`` (and
+    firing) without a matching translation label.
+    """
+    strings = json.loads(
+        (
+            Path(__file__).parents[3]
+            / "homeassistant/components/unifiprotect/strings.json"
+        ).read_text()
+    )
+    event_states = strings["entity"]["event"]
+    for key in ("motion_detection", "smart_detection", "sound_detection"):
+        description = next(d for d in EVENT_DESCRIPTIONS if d.key == key)
+        labels = event_states[key]["state_attributes"]["event_type"]["state"]
+        missing = [t for t in description.event_types or () if t not in labels]
+        assert not missing, f"{key} missing event_type labels: {missing}"
