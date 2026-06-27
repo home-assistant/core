@@ -210,7 +210,7 @@ async def test_step_user_routes(mock_config_flow: MideaLanConfigFlow) -> None:
     result = await mock_config_flow.async_step_user()
     assert result["type"] is FlowResultType.MENU
     assert result["step_id"] == "user"
-    assert result["menu_options"] == ["discovery", "manually", "list", "cache"]
+    assert result["menu_options"] == ["discovery", "manually", "list"]
 
 
 async def test_step_list(mock_config_flow: MideaLanConfigFlow) -> None:
