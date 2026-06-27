@@ -279,8 +279,11 @@ class AirzoneClimate(AirzoneZoneEntity, ClimateEntity):
             # In double-setpoint mode the device reports minTemp using the cooling
             # floor (coolmintemp), which is higher than the heating floor
             # (heatmintemp).  Use the heating minimum so the heat setpoint is not
-            # artificially clamped.  See HA issues #135149 and #140238.
-            self._attr_min_temp = self.get_airzone_value(AZD_HEAT_TEMP_MIN)
+            # artificially clamped.  Fall back to AZD_TEMP_MIN if heatmintemp is
+            # absent.  See HA issues #135149 and #140238.
+            self._attr_min_temp = self.get_airzone_value(
+                AZD_HEAT_TEMP_MIN
+            ) or self.get_airzone_value(AZD_TEMP_MIN)
         else:
             self._attr_min_temp = self.get_airzone_value(AZD_TEMP_MIN)
         if self.supported_features & ClimateEntityFeature.FAN_MODE:
