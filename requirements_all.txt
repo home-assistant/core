@@ -1397,6 +1397,9 @@ jaraco.abode==6.4.0
 # homeassistant.components.jellyfin
 jellyfin-apiclient-python==1.11.0
 
+# homeassistant.components.linksys_smart
+jnap==0.1.0
+
 # homeassistant.components.command_line
 # homeassistant.components.rest
 jsonpath-python==1.1.6

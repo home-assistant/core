@@ -1,116 +1,134 @@
-"""Support for Linksys Smart Wifi routers."""
+"""Linksys device tracker platform."""
 
-from http import HTTPStatus
-import logging
 from typing import override
 
-import requests
+from jnap import JNAPDevice
 import voluptuous as vol
 
 from homeassistant.components.device_tracker import (
-    DOMAIN as DEVICE_TRACKER_DOMAIN,
     PLATFORM_SCHEMA as DEVICE_TRACKER_PLATFORM_SCHEMA,
-    DeviceScanner,
+    AsyncSeeCallback,
+    ScannerEntity,
+    SourceType,
 )
 from homeassistant.const import CONF_HOST
-from homeassistant.core import HomeAssistant
-from homeassistant.helpers import config_validation as cv
-from homeassistant.helpers.typing import ConfigType
+from homeassistant.core import DOMAIN as HOMEASSISTANT_DOMAIN, HomeAssistant, callback
+from homeassistant.helpers import config_validation as cv, issue_registry as ir
+from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
+from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
+from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
-DEFAULT_TIMEOUT = 10
-
-_LOGGER = logging.getLogger(__name__)
+from . import LinksysConfigEntry
+from .const import DOMAIN
+from .coordinator import LinksysDataUpdateCoordinator
 
 PLATFORM_SCHEMA = DEVICE_TRACKER_PLATFORM_SCHEMA.extend(
     {vol.Required(CONF_HOST): cv.string}
 )
 
+PARALLEL_UPDATES = 0
 
-def get_scanner(
-    hass: HomeAssistant, config: ConfigType
-) -> LinksysSmartWifiDeviceScanner | None:
-    """Validate the configuration and return a Linksys AP scanner."""
-    try:
-        return LinksysSmartWifiDeviceScanner(config[DEVICE_TRACKER_DOMAIN])
-    except ConnectionError:
+
+async def async_setup_scanner(
+    hass: HomeAssistant,
+    config: ConfigType,
+    async_see: AsyncSeeCallback,
+    discovery_info: DiscoveryInfoType | None = None,
+) -> bool:
+    """Inform users that the YAML configuration is no longer supported."""
+    if hass.config_entries.async_entries(DOMAIN):
+        ir.async_create_issue(
+            hass,
+            HOMEASSISTANT_DOMAIN,
+            f"deprecated_yaml_{DOMAIN}",
+            is_fixable=False,
+            issue_domain=DOMAIN,
+            breaks_in_ha_version="2027.1.0",
+            severity=ir.IssueSeverity.WARNING,
+            translation_key="deprecated_yaml",
+            translation_placeholders={
+                "domain": DOMAIN,
+                "integration_title": "Linksys Smart Wi-Fi",
+            },
+        )
+    else:
+        ir.async_create_issue(
+            hass,
+            DOMAIN,
+            "deprecated_yaml_import_issue_credentials_required",
+            breaks_in_ha_version="2027.1.0",
+            is_fixable=False,
+            is_persistent=False,
+            issue_domain=DOMAIN,
+            severity=ir.IssueSeverity.WARNING,
+            translation_key="deprecated_yaml_import_issue_credentials_required",
+            translation_placeholders={
+                "domain": DOMAIN,
+                "integration_title": "Linksys Smart Wi-Fi",
+                "host": config[CONF_HOST],
+            },
+        )
+    return False
+
+
+async def async_setup_entry(
+    hass: HomeAssistant,
+    entry: LinksysConfigEntry,
+    async_add_entities: AddConfigEntryEntitiesCallback,
+) -> None:
+    """Set up Linksys device tracker from a config entry."""
+    coordinator: LinksysDataUpdateCoordinator = entry.runtime_data
+    tracked: set[str] = set()
+
+    @callback
+    def _async_update_router() -> None:
+        new_entities = []
+        for mac, device in coordinator.data.items():
+            if mac not in tracked:
+                tracked.add(mac)
+                new_entities.append(LinksysScannerEntity(coordinator, device))
+        async_add_entities(new_entities)
+
+    entry.async_on_unload(coordinator.async_add_listener(_async_update_router))
+    _async_update_router()
+
+
+class LinksysScannerEntity(
+    CoordinatorEntity[LinksysDataUpdateCoordinator], ScannerEntity
+):
+    """Represent a device tracked by the Linksys router."""
+
+    _attr_has_entity_name = True
+    _attr_source_type = SourceType.ROUTER
+
+    def __init__(
+        self, coordinator: LinksysDataUpdateCoordinator, device: JNAPDevice
+    ) -> None:
+        """Initialise the entity."""
+        super().__init__(coordinator)
+        self._mac = device.mac
+        self._attr_mac_address = device.mac
+        self._attr_unique_id = device.mac
+        self._attr_name = device.name
+
+    @property
+    @override
+    def is_connected(self) -> bool:
+        """Return true if the device is currently connected to the router."""
+        return self._mac in self.coordinator.data
+
+    @property
+    @override
+    def ip_address(self) -> str | None:
+        """Return the IP address of the device if connected."""
+        if device := self.coordinator.data.get(self._mac):
+            return device.ip_address
         return None
 
-
-class LinksysSmartWifiDeviceScanner(DeviceScanner):
-    """Class which queries a Linksys Access Point."""
-
-    def __init__(self, config):
-        """Initialize the scanner."""
-        self.host = config[CONF_HOST]
-        self.last_results = {}
-
-        # Check if the access point is accessible
-        response = self._make_request()
-        if response.status_code != HTTPStatus.OK:
-            raise ConnectionError("Cannot connect to Linksys Access Point")
-
+    @property
     @override
-    def scan_devices(self):
-        """Scan for new devices and return a list with device IDs (MACs)."""
-        self._update_info()
-
-        return self.last_results.keys()
-
-    @override
-    def get_device_name(self, device):
-        """Return the name (if known) of the device."""
-        return self.last_results.get(device)
-
-    def _update_info(self):
-        """Check for connected devices."""
-        _LOGGER.debug("Checking Linksys Smart Wifi")
-
-        self.last_results = {}
-        response = self._make_request()
-        if response.status_code != HTTPStatus.OK:
-            _LOGGER.error(
-                "Got HTTP status code %d when getting device list", response.status_code
-            )
-            return False
-        try:
-            data = response.json()
-            result = data["responses"][0]
-            devices = result["output"]["devices"]
-            for device in devices:
-                if not (macs := device["knownMACAddresses"]):
-                    _LOGGER.warning("Skipping device without known MAC address")
-                    continue
-                mac = macs[-1]
-                if not device["connections"]:
-                    _LOGGER.debug("Device %s is not connected", mac)
-                    continue
-
-                name = None
-                for prop in device["properties"]:
-                    if prop["name"] == "userDeviceName":
-                        name = prop["value"]
-                if not name:
-                    name = device.get("friendlyName", device["deviceID"])
-
-                _LOGGER.debug("Device %s is connected", mac)
-                self.last_results[mac] = name
-        except KeyError, IndexError:
-            _LOGGER.exception("Router returned unexpected response")
-            return False
-        return True
-
-    def _make_request(self):
-        # Weirdly enough, this doesn't seem to require authentication
-        data = [
-            {
-                "request": {"sinceRevision": 0},
-                "action": "http://linksys.com/jnap/devicelist/GetDevices",
-            }
-        ]
-        headers = {"X-JNAP-Action": "http://linksys.com/jnap/core/Transaction"}
-        return requests.post(
-            f"http://{self.host}/JNAP/",
-            timeout=DEFAULT_TIMEOUT,
-            headers=headers,
-            json=data,
-        )
+    def hostname(self) -> str | None:
+        """Return the hostname of the device if connected."""
+        if device := self.coordinator.data.get(self._mac):
+            return device.hostname
+        return None

@@ -206,6 +206,11 @@ SSDP = {
             "deviceType": "urn:schemas-upnp-org:device:LaMetric:1",
         },
     ],
+    "linksys_smart": [
+        {
+            "st": "urn:schemas-upnp-org:device:InternetGatewayDevice:2",
+        },
+    ],
     "nanoleaf": [
         {
             "st": "Nanoleaf_aurora:light",
