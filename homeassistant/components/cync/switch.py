@@ -2,8 +2,7 @@
 
 from typing import Any
 
-from pycync import CyncDevice
-from pycync.devices.device_types import DeviceType
+from pycync import CyncPlug
 
 from homeassistant.components.switch import SwitchDeviceClass, SwitchEntity
 from homeassistant.core import HomeAssistant
@@ -30,7 +29,7 @@ async def async_setup_entry(
             room_plugs = [
                 CyncSwitchEntity(device, coordinator, room.name)
                 for device in room.devices
-                if device.device_type == DeviceType.PLUG
+                if isinstance(device, CyncPlug)
             ]
             entities_to_add.extend(room_plugs)
 
@@ -38,7 +37,7 @@ async def async_setup_entry(
                 CyncSwitchEntity(device, coordinator, room.name)
                 for group in room.groups
                 for device in group.devices
-                if device.device_type == DeviceType.PLUG
+                if isinstance(device, CyncPlug)
             ]
             entities_to_add.extend(group_plugs)
 
@@ -51,6 +50,11 @@ class CyncSwitchEntity(CyncBaseEntity, SwitchEntity):
     _attr_device_class = SwitchDeviceClass.OUTLET
     _attr_name = None
 
+    @property
+    def is_on(self) -> bool | None:
+        """Return True if the plug is on."""
+        return self._device.is_on
+
     @override
     async def async_turn_on(self, **kwargs: Any) -> None:
         """Turn on the plug."""
@@ -62,6 +66,6 @@ class CyncSwitchEntity(CyncBaseEntity, SwitchEntity):
         await self._device.turn_off()
 
     @property
-    def _device(self) -> CyncDevice:
+    def _device(self) -> CyncPlug:
         """Fetch the reference to the backing Cync device for this plug."""
         return self.coordinator.data[self._cync_device_id]
