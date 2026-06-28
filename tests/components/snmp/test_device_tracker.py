@@ -61,8 +61,9 @@ def mock_get_cmd():
         yield mock
 
 
+@pytest.mark.usefixtures("mock_walk", "mock_get_cmd")
 async def test_device_tracker_setup_with_legacy_state(
-    hass: HomeAssistant, mock_walk, mock_get_cmd
+    hass: HomeAssistant,
 ) -> None:
     """Test setup of SNMP device tracker with legacy state (migration).
 
@@ -108,8 +109,9 @@ async def test_device_tracker_setup_with_legacy_state(
     assert state.attributes["ip"] == "192.168.1.1"
 
 
+@pytest.mark.usefixtures("mock_walk", "mock_get_cmd")
 async def test_device_tracker_new_entity_disabled_by_default(
-    hass: HomeAssistant, mock_walk, mock_get_cmd
+    hass: HomeAssistant,
 ) -> None:
     """Test that newly discovered devices are disabled by default.
 
@@ -149,9 +151,8 @@ async def test_device_tracker_new_entity_disabled_by_default(
     assert hass.states.get(entity_id) is None
 
 
-async def test_device_tracker_update(
-    hass: HomeAssistant, mock_walk, mock_get_cmd
-) -> None:
+@pytest.mark.usefixtures("mock_get_cmd")
+async def test_device_tracker_update(hass: HomeAssistant, mock_walk) -> None:
     """Test update of SNMP device tracker."""
     entry = MockConfigEntry(
         domain=DOMAIN,
@@ -218,8 +219,9 @@ async def test_device_tracker_update(
     assert hass.states.get(entity_id_2) is None
 
 
+@pytest.mark.usefixtures("mock_walk", "mock_get_cmd")
 async def test_device_tracker_device_registry_linking(
-    hass: HomeAssistant, mock_walk, mock_get_cmd
+    hass: HomeAssistant,
 ) -> None:
     """Test that entities and devices are correctly linked in the registry."""
     entry = MockConfigEntry(
@@ -261,8 +263,9 @@ async def test_device_tracker_device_registry_linking(
     assert reg_entry.disabled_by == er.RegistryEntryDisabler.INTEGRATION
 
 
+@pytest.mark.usefixtures("mock_walk", "mock_get_cmd")
 async def test_device_tracker_name_resolves_to_mac_address(
-    hass: HomeAssistant, mock_walk, mock_get_cmd
+    hass: HomeAssistant,
 ) -> None:
     """Test that the entity name resolves to the expected MAC address format."""
     entry = MockConfigEntry(
@@ -296,8 +299,9 @@ async def test_device_tracker_name_resolves_to_mac_address(
     assert state.name == "00_11_22_33_44_55"
 
 
+@pytest.mark.usefixtures("mock_walk", "mock_get_cmd")
 async def test_device_tracker_enabled_if_device_exists(
-    hass: HomeAssistant, mock_walk, mock_get_cmd
+    hass: HomeAssistant,
 ) -> None:
     """Test that an entity is enabled if its device already exists in the registry.
 
@@ -352,8 +356,9 @@ async def test_async_setup_scanner_import(hass: HomeAssistant) -> None:
         assert kwargs["context"]["source"] == "import"
 
 
+@pytest.mark.usefixtures("mock_walk", "mock_get_cmd")
 async def test_device_tracker_initial_macs(
-    hass: HomeAssistant, mock_walk, mock_get_cmd
+    hass: HomeAssistant,
 ) -> None:
     """Test setup of SNMP device tracker with initial MACs in the registry."""
     entry = MockConfigEntry(
@@ -382,8 +387,9 @@ async def test_device_tracker_initial_macs(
     assert hass.states.get(entity_id) is not None
 
 
+@pytest.mark.usefixtures("mock_walk", "mock_get_cmd")
 async def test_device_tracker_properties_empty_coordinator(
-    hass: HomeAssistant, mock_walk, mock_get_cmd
+    hass: HomeAssistant,
 ) -> None:
     """Test entity properties when coordinator data is empty."""
     entry = MockConfigEntry(domain=DOMAIN, data={"host": "1.1.1.1"})
@@ -397,8 +403,9 @@ async def test_device_tracker_properties_empty_coordinator(
     assert entity.ip_address is None
 
 
+@pytest.mark.usefixtures("mock_walk", "mock_get_cmd")
 async def test_device_tracker_state_cleanup(
-    hass: HomeAssistant, mock_walk, mock_get_cmd
+    hass: HomeAssistant,
 ) -> None:
     """Test that existing states are cleaned up during setup."""
     entry = MockConfigEntry(
@@ -442,9 +449,8 @@ async def test_device_tracker_state_cleanup(
     mock_remove.assert_called_with(hass.states, reg_entry.entity_id)
 
 
-async def test_device_tracker_update_empty_data(
-    hass: HomeAssistant, mock_walk, mock_get_cmd
-) -> None:
+@pytest.mark.usefixtures("mock_get_cmd")
+async def test_device_tracker_update_empty_data(hass: HomeAssistant, mock_walk) -> None:
     """Test coordinator update with empty data."""
     entry = MockConfigEntry(
         domain=DOMAIN,

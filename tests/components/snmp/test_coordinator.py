@@ -34,8 +34,9 @@ def mock_request_args():
         yield args
 
 
+@pytest.mark.usefixtures("mock_request_args")
 async def test_coordinator_mac_normalization(
-    hass: HomeAssistant, mock_request_args
+    hass: HomeAssistant,
 ) -> None:
     """Test MAC address normalization with various formats."""
     entry = MockConfigEntry(
@@ -70,8 +71,9 @@ async def test_coordinator_mac_normalization(
             assert expected_mac in data
 
 
+@pytest.mark.usefixtures("mock_request_args")
 async def test_coordinator_ip_extraction(
-    hass: HomeAssistant, mock_request_args
+    hass: HomeAssistant,
 ) -> None:
     """Test IP address extraction from OID suffix."""
     entry = MockConfigEntry(
@@ -132,8 +134,9 @@ async def test_coordinator_walk_error(hass: HomeAssistant) -> None:
         await coordinator._async_update_data()
 
 
+@pytest.mark.usefixtures("mock_request_args")
 async def test_coordinator_host_info_error(
-    hass: HomeAssistant, mock_request_args
+    hass: HomeAssistant,
 ) -> None:
     """Test handling of PySnmpError during host info fetching."""
     entry = MockConfigEntry(
@@ -149,8 +152,9 @@ async def test_coordinator_host_info_error(
         assert coordinator.model == ""  # Should be set to empty string to prevent retry
 
 
+@pytest.mark.usefixtures("mock_request_args")
 async def test_coordinator_host_info_auth_error(
-    hass: HomeAssistant, mock_request_args
+    hass: HomeAssistant,
 ) -> None:
     """Test handling of WrongValueError during host info fetching."""
     entry = MockConfigEntry(
@@ -170,8 +174,9 @@ async def test_coordinator_host_info_auth_error(
         await coordinator._async_fetch_host_info()
 
 
+@pytest.mark.usefixtures("mock_request_args")
 async def test_coordinator_walk_errindication(
-    hass: HomeAssistant, mock_request_args
+    hass: HomeAssistant,
 ) -> None:
     """Test handling of errindication (string vs exception) during walk."""
     entry = MockConfigEntry(
@@ -211,8 +216,9 @@ async def test_coordinator_walk_errindication(
     assert excinfo.value.__cause__ is exc
 
 
+@pytest.mark.usefixtures("mock_request_args")
 async def test_coordinator_host_info_no_space(
-    hass: HomeAssistant, mock_request_args
+    hass: HomeAssistant,
 ) -> None:
     """Test host info fetching where sysDescr has no spaces."""
     entry = MockConfigEntry(
@@ -234,8 +240,9 @@ async def test_coordinator_host_info_no_space(
         assert coordinator.model == "DescriptionWithoutSpace"
 
 
+@pytest.mark.usefixtures("mock_request_args")
 async def test_coordinator_walk_errstatus(
-    hass: HomeAssistant, mock_request_args
+    hass: HomeAssistant,
 ) -> None:
     """Test handling of errstatus during walk."""
     entry = MockConfigEntry(
@@ -260,8 +267,9 @@ async def test_coordinator_walk_errstatus(
         await coordinator._async_update_data()
 
 
+@pytest.mark.usefixtures("mock_request_args")
 async def test_coordinator_invalid_mac_length(
-    hass: HomeAssistant, mock_request_args
+    hass: HomeAssistant,
 ) -> None:
     """Test ignoring MAC addresses with invalid length."""
     entry = MockConfigEntry(
@@ -285,8 +293,9 @@ async def test_coordinator_invalid_mac_length(
         assert not data
 
 
+@pytest.mark.usefixtures("mock_request_args")
 async def test_coordinator_mac_processing_exception(
-    hass: HomeAssistant, mock_request_args
+    hass: HomeAssistant,
 ) -> None:
     """Test handling of exceptions during MAC processing."""
     entry = MockConfigEntry(
@@ -311,8 +320,9 @@ async def test_coordinator_mac_processing_exception(
         assert not data
 
 
+@pytest.mark.usefixtures("mock_request_args")
 async def test_coordinator_host_info_with_space(
-    hass: HomeAssistant, mock_request_args
+    hass: HomeAssistant,
 ) -> None:
     """Test host info fetching where sysDescr has spaces."""
     entry = MockConfigEntry(
@@ -334,8 +344,9 @@ async def test_coordinator_host_info_with_space(
         assert coordinator.model == "Model"
 
 
+@pytest.mark.usefixtures("mock_request_args")
 async def test_coordinator_auto_fetch_host_info(
-    hass: HomeAssistant, mock_request_args
+    hass: HomeAssistant,
 ) -> None:
     """Test that host info is automatically fetched if model is None."""
     entry = MockConfigEntry(
@@ -366,8 +377,9 @@ async def test_coordinator_auto_fetch_host_info(
         assert coordinator.model == "Descr"
 
 
+@pytest.mark.usefixtures("mock_request_args")
 async def test_coordinator_walk_end_of_mib(
-    hass: HomeAssistant, mock_request_args
+    hass: HomeAssistant,
 ) -> None:
     """Test walk loop breaks when is_end_of_mib returns True."""
     entry = MockConfigEntry(
@@ -399,8 +411,9 @@ async def test_coordinator_walk_end_of_mib(
         assert mock_is_end.call_count == 2
 
 
+@pytest.mark.usefixtures("mock_request_args")
 async def test_coordinator_update_auth_error(
-    hass: HomeAssistant, mock_request_args
+    hass: HomeAssistant,
 ) -> None:
     """Test handling of WrongValueError during update data."""
     entry = MockConfigEntry(
