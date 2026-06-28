@@ -35,8 +35,21 @@ def mock_request_args():
 
 
 @pytest.mark.usefixtures("mock_request_args")
+@pytest.mark.parametrize(
+    ("input_bytes", "expected_mac"),
+    [
+        pytest.param(
+            binascii.unhexlify("001122334455"), "00:11:22:33:44:55", id="binary"
+        ),
+        pytest.param(b"00:11:22:33:44:66", "00:11:22:33:44:66", id="colon_string"),
+        pytest.param(b"00-11-22-33-44-77", "00:11:22:33:44:77", id="dash_string"),
+        pytest.param(b"0011.2233.4488", "00:11:22:33:44:88", id="dot_string"),
+        pytest.param(b"00 11 22 33 44 99", "00:11:22:33:44:99", id="space_string"),
+        pytest.param(b"ABCDEFABCDEF", "ab:cd:ef:ab:cd:ef", id="raw_hex_string"),
+    ],
+)
 async def test_coordinator_mac_normalization(
-    hass: HomeAssistant,
+    hass: HomeAssistant, input_bytes: bytes, expected_mac: str
 ) -> None:
     """Test MAC address normalization with various formats."""
     entry = MockConfigEntry(
@@ -45,35 +58,36 @@ async def test_coordinator_mac_normalization(
     coordinator = SnmpUpdateCoordinator(hass, entry)
     coordinator.model = "Test"
 
-    # Test cases: (input_octets, expected_mac)
-    test_cases = [
-        (binascii.unhexlify("001122334455"), "00:11:22:33:44:55"),  # Binary
-        (b"00:11:22:33:44:66", "00:11:22:33:44:66"),  # Colon string
-        (b"00-11-22-33-44-77", "00:11:22:33:44:77"),  # Dash string
-        (b"0011.2233.4488", "00:11:22:33:44:88"),  # Dot string
-        (b"00 11 22 33 44 99", "00:11:22:33:44:99"),  # Space string
-        (b"ABCDEFABCDEF", "ab:cd:ef:ab:cd:ef"),  # Raw hex string
-    ]
+    oid = Mock()
+    oid.asTuple.return_value = (1, 1, 1, 1, 0)
+    val = OctetString(input_bytes)
 
-    for input_bytes, expected_mac in test_cases:
-        oid = Mock()
-        oid.asTuple.return_value = (1, 1, 1, 1, 0)  # Dummy OID
-        val = OctetString(input_bytes)
+    async def mock_walk(*args, o=oid, v=val, **kwargs):
+        yield None, None, None, [(o, v)]
 
-        async def mock_walk(*args, o=oid, v=val, **kwargs):
-            yield None, None, None, [(o, v)]
-
-        with patch(
-            "homeassistant.components.snmp.coordinator.bulk_walk_cmd",
-            side_effect=mock_walk,
-        ):
-            data = await coordinator._async_update_data()
-            assert expected_mac in data
+    with patch(
+        "homeassistant.components.snmp.coordinator.bulk_walk_cmd",
+        side_effect=mock_walk,
+    ):
+        data = await coordinator._async_update_data()
+        assert expected_mac in data
 
 
 @pytest.mark.usefixtures("mock_request_args")
+@pytest.mark.parametrize(
+    ("oid_tuple", "expected_ip"),
+    [
+        pytest.param(
+            (1, 3, 6, 1, 2, 1, 4, 22, 1, 6, 1, 192, 168, 1, 10),
+            "192.168.1.10",
+            id="full_oid",
+        ),
+        pytest.param((1, 1, 1, 1, 10, 20, 30, 40), "10.20.30.40", id="short_oid"),
+        pytest.param((1, 2, 3), None, id="oid_too_short"),
+    ],
+)
 async def test_coordinator_ip_extraction(
-    hass: HomeAssistant,
+    hass: HomeAssistant, oid_tuple: tuple, expected_ip: str | None
 ) -> None:
     """Test IP address extraction from OID suffix."""
     entry = MockConfigEntry(
@@ -85,27 +99,19 @@ async def test_coordinator_ip_extraction(
     mac_bytes = binascii.unhexlify("001122334455")
     mac_str = "00:11:22:33:44:55"
 
-    # Test cases: (oid_tuple, expected_ip)
-    test_cases = [
-        ((1, 3, 6, 1, 2, 1, 4, 22, 1, 6, 1, 192, 168, 1, 10), "192.168.1.10"),
-        ((1, 1, 1, 1, 10, 20, 30, 40), "10.20.30.40"),
-        ((1, 2, 3), None),  # OID too short
-    ]
+    oid = Mock()
+    oid.asTuple.return_value = oid_tuple
+    val = OctetString(mac_bytes)
 
-    for oid_tuple, expected_ip in test_cases:
-        oid = Mock()
-        oid.asTuple.return_value = oid_tuple
-        val = OctetString(mac_bytes)
+    async def mock_walk(*args, o=oid, v=val, **kwargs):
+        yield None, None, None, [(o, v)]
 
-        async def mock_walk(*args, o=oid, v=val, **kwargs):
-            yield None, None, None, [(o, v)]
-
-        with patch(
-            "homeassistant.components.snmp.coordinator.bulk_walk_cmd",
-            side_effect=mock_walk,
-        ):
-            data = await coordinator._async_update_data()
-            assert data[mac_str] == expected_ip
+    with patch(
+        "homeassistant.components.snmp.coordinator.bulk_walk_cmd",
+        side_effect=mock_walk,
+    ):
+        data = await coordinator._async_update_data()
+        assert data[mac_str] == expected_ip
 
 
 async def test_coordinator_walk_error(hass: HomeAssistant) -> None:

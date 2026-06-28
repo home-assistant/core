@@ -52,14 +52,13 @@ async def async_setup_entry(
     coordinator = entry.runtime_data
     ent_reg = er.async_get(hass)
 
-    # 1. Identify all MACs we already know about from the registry for this entry.
-    # This ensures they show up as 'not_home' instead of disappearing if missing
-    # from the current poll.
+    # Ensure previously known MACs show up as 'not_home' instead of disappearing
+    # if missing from the current poll.
     registry_entries = er.async_entries_for_config_entry(ent_reg, entry.entry_id)
     initial_macs = {e.unique_id for e in registry_entries if e.unique_id}
 
-    # 2. Pre-cleanup: Remove legacy or restored states that conflict with our
-    # registered entities so their entity_ids are available.
+    # Remove legacy or restored states so their entity_ids are available for
+    # the new entities we're about to create.
     for reg_entry in registry_entries:
         if hass.states.get(reg_entry.entity_id):
             _LOGGER.debug(
@@ -68,7 +67,6 @@ async def async_setup_entry(
             )
             hass.states.async_remove(reg_entry.entity_id)
 
-    # 3. Add entities for all known MACs immediately
     if initial_macs:
         async_add_entities(SnmpTrackerEntity(coordinator, mac) for mac in initial_macs)
 

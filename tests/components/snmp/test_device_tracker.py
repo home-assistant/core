@@ -476,3 +476,10 @@ async def test_device_tracker_update_empty_data(
 
     async_fire_time_changed(hass, dt_util.utcnow() + timedelta(seconds=20))
     await hass.async_block_till_done()
+
+    # Entity should still exist in the registry but no new entities created
+    ent_reg = er.async_get(hass)
+    entity_id = ent_reg.async_get_entity_id(
+        DEVICE_TRACKER_DOMAIN, DOMAIN, "00:11:22:33:44:55"
+    )
+    assert entity_id is not None
