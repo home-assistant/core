@@ -103,13 +103,11 @@
       "vehicle_state": {
         "name": "Vehicle state",
         "state": {
+          "engine_on_remote_start": "Engine on (remote start)",
           "ignition_acc": "Accessory power",
           "ignition_off": "Ignition off",
           "ignition_on": "Ignition on"
         }
-      },
-      "vehicle_state_raw": {
-        "name": "Vehicle state (raw)"
       }
     }
   },

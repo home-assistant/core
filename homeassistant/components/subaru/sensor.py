@@ -81,16 +81,17 @@ def _recommended_tire_pressure(axle: str) -> Callable[[dict[str, Any]], StateTyp
     return getter
 
 
-# Snake-case ENUM options for vehicle_state. subarulink only documents
-# IGNITION_OFF / IGNITION_ON, but the live API also returns the dashed
-# variants IGN-ACC and IGN-ON; values were confirmed by the integration
-# codeowner against the Subaru Android app source (see PR #174054
-# discussion_r3488193753). Unmapped values fall through to `unknown` and
-# the `vehicle_state_raw` companion surfaces them verbatim.
+# Snake-case ENUM options for vehicle_state. Authoritative values confirmed by
+# the integration codeowner against the Subaru Android app source (see PR
+# #174054 discussion_r3488335137 and subarulink PR G-Two/subarulink#121).
+# IGN-ACC, IGN-ON, and ENGINE_ON_REMOTE_START are not yet exported as
+# `sc.*` constants in the released subarulink; the literal strings will be
+# replaced once the next subarulink pin lands.
 VEHICLE_STATE_OPTIONS = {
     sc.IGNITION_OFF: "ignition_off",
     "IGN-ACC": "ignition_acc",
     "IGN-ON": "ignition_on",
+    "ENGINE_ON_REMOTE_START": "engine_on_remote_start",
 }
 
 
@@ -100,11 +101,6 @@ def _vehicle_state_enum(data: dict[str, Any]) -> StateType:
     if raw is None:
         return None
     return VEHICLE_STATE_OPTIONS.get(raw)
-
-
-def _vehicle_state_raw(data: dict[str, Any]) -> StateType:
-    """Surface the raw VEHICLE_STATE_TYPE string verbatim for the diagnostic companion."""
-    return (data.get(VEHICLE_STATUS) or {}).get(API_KEY_VEHICLE_STATE_TYPE)
 
 
 # Sensor available for Gen1 or Gen2 vehicles
@@ -167,13 +163,6 @@ API_GEN_2_SENSORS = [
         device_class=SensorDeviceClass.ENUM,
         options=sorted(VEHICLE_STATE_OPTIONS.values()),
         value_fn=_vehicle_state_enum,
-    ),
-    SubaruSensorEntityDescription(
-        key="vehicle_state_raw",
-        translation_key="vehicle_state_raw",
-        entity_category=EntityCategory.DIAGNOSTIC,
-        entity_registry_enabled_default=False,
-        value_fn=_vehicle_state_raw,
     ),
     # Static manufacturer reference value, not a live measurement; no state_class.
     SubaruSensorEntityDescription(

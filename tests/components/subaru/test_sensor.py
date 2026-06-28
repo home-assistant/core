@@ -208,19 +208,14 @@ async def test_avg_fuel_consumption_zero_metric(
     assert state.state == "0"
 
 
-@pytest.mark.usefixtures("entity_registry_enabled_by_default")
-async def test_enum_unmapped_value_and_raw_companion(
+async def test_enum_unmapped_value_reports_unknown(
     hass: HomeAssistant,
     subaru_config_entry: MockConfigEntry,
 ) -> None:
-    """Unmapped ENUM values report as `unknown`; the `_raw` companion surfaces the raw API string.
+    """Unmapped ENUM values report as `unknown`.
 
-    Live API values not in `VEHICLE_STATE_OPTIONS` (etc.) are expected: the
-    Subaru API is undocumented and the option list is what we have evidence
-    for at release time. The ENUM sensor falls through to `unknown` for
-    unknown inputs and the disabled-by-default `*_raw` companion sensor
-    surfaces the raw upstream string so users can discover and report new
-    values without us needing a stub release cycle.
+    Live API values not in `VEHICLE_STATE_OPTIONS` fall through to `unknown`
+    rather than surfacing the raw upstream string as the entity state.
     """
     status_with_unmapped_value = copy.deepcopy(VEHICLE_STATUS_EV)
     status_with_unmapped_value[VEHICLE_STATUS]["VEHICLE_STATE_TYPE"] = "ENGINE_RUNNING"
@@ -232,7 +227,3 @@ async def test_enum_unmapped_value_and_raw_companion(
     enum_state = hass.states.get("sensor.test_vehicle_2_vehicle_state")
     assert enum_state is not None
     assert enum_state.state == STATE_UNKNOWN
-
-    raw_state = hass.states.get("sensor.test_vehicle_2_vehicle_state_raw")
-    assert raw_state is not None
-    assert raw_state.state == "ENGINE_RUNNING"
