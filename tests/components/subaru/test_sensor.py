@@ -187,6 +187,27 @@ async def test_recommended_tire_pressure_from_vehicle_health(
     )
 
 
+async def test_avg_fuel_consumption_zero_metric(
+    hass: HomeAssistant,
+    subaru_config_entry: MockConfigEntry,
+) -> None:
+    """AVG_FUEL_CONSUMPTION of 0 returns 0 verbatim instead of dividing by zero.
+
+    Guards the metric conversion at sensor.py:`native_value` so that a fresh
+    vehicle reporting 0 mpg doesn't raise ZeroDivisionError on metric installs.
+    """
+    status_with_zero = copy.deepcopy(VEHICLE_STATUS_EV)
+    status_with_zero[VEHICLE_STATUS]["AVG_FUEL_CONSUMPTION"] = 0
+
+    await setup_subaru_config_entry(
+        hass, subaru_config_entry, vehicle_status=status_with_zero
+    )
+
+    state = hass.states.get("sensor.test_vehicle_2_average_fuel_consumption")
+    assert state is not None
+    assert state.state == "0"
+
+
 @pytest.mark.usefixtures("entity_registry_enabled_by_default")
 async def test_enum_unmapped_value_and_raw_companion(
     hass: HomeAssistant,

@@ -67,17 +67,13 @@ API_KEY_REAR_TIRES = sc.HEALTH_RECOMMENDED_TIRE_PRESSURE_REAR
 class SubaruSensorEntityDescription(SensorEntityDescription):
     """Describes a Subaru sensor entity."""
 
-    value_fn: (
-        Callable[[dict[str, Any]], StateType | date | datetime | Decimal] | None
-    ) = None
+    value_fn: Callable[[dict[str, Any]], StateType] | None = None
 
 
-def _recommended_tire_pressure(
-    axle: str,
-) -> Callable[[dict[str, Any]], StateType | date | datetime | Decimal]:
+def _recommended_tire_pressure(axle: str) -> Callable[[dict[str, Any]], StateType]:
     """Return a getter for recommended FRONT or REAR axle tire pressure from vehicle_health."""
 
-    def getter(data: dict[str, Any]) -> StateType | date | datetime | Decimal:
+    def getter(data: dict[str, Any]) -> StateType:
         health = data.get(VEHICLE_HEALTH) or {}
         recommended = health.get(API_KEY_RECOMMENDED_TIRE_PRESSURE) or {}
         return recommended.get(axle)
@@ -85,9 +81,9 @@ def _recommended_tire_pressure(
     return getter
 
 
-# Snake-case ENUM options for vehicle_state. Authoritative values from
-# @G-Two's Android-app extraction; unmapped values fall through to `unknown`
-# and the `vehicle_state_raw` companion surfaces them verbatim.
+# Snake-case ENUM options for vehicle_state. Authoritative values come from the
+# Android-app source (issue/PR link TBD); unmapped values fall through to
+# `unknown` and the `vehicle_state_raw` companion surfaces them verbatim.
 VEHICLE_STATE_OPTIONS = {
     "IGNITION_OFF": "ignition_off",
     "IGN-ACC": "ignition_acc",
@@ -95,29 +91,17 @@ VEHICLE_STATE_OPTIONS = {
 }
 
 
-def _enum_value_fn(
-    api_key: str, options: dict[str, str]
-) -> Callable[[dict[str, Any]], StateType | date | datetime | Decimal]:
-    """Return a getter that maps a raw vehicle_status string to a snake_case option."""
-
-    def getter(data: dict[str, Any]) -> StateType | date | datetime | Decimal:
-        raw = (data.get(VEHICLE_STATUS) or {}).get(api_key)
-        if raw is None:
-            return None
-        return options.get(raw)  # unmapped → None → `unknown` state
-
-    return getter
+def _vehicle_state_enum(data: dict[str, Any]) -> StateType:
+    """Map the raw VEHICLE_STATE_TYPE to a snake_case ENUM option (unmapped → None → `unknown`)."""
+    raw = (data.get(VEHICLE_STATUS) or {}).get(API_KEY_VEHICLE_STATE_TYPE)
+    if raw is None:
+        return None
+    return VEHICLE_STATE_OPTIONS.get(raw)
 
 
-def _raw_value_fn(
-    api_key: str,
-) -> Callable[[dict[str, Any]], StateType | date | datetime | Decimal]:
-    """Return a getter that returns the raw vehicle_status string verbatim."""
-
-    def getter(data: dict[str, Any]) -> StateType | date | datetime | Decimal:
-        return (data.get(VEHICLE_STATUS) or {}).get(api_key)
-
-    return getter
+def _vehicle_state_raw(data: dict[str, Any]) -> StateType:
+    """Surface the raw VEHICLE_STATE_TYPE string verbatim for the diagnostic companion."""
+    return (data.get(VEHICLE_STATUS) or {}).get(API_KEY_VEHICLE_STATE_TYPE)
 
 
 # Sensor available for Gen1 or Gen2 vehicles
@@ -179,14 +163,14 @@ API_GEN_2_SENSORS = [
         translation_key="vehicle_state",
         device_class=SensorDeviceClass.ENUM,
         options=sorted(VEHICLE_STATE_OPTIONS.values()),
-        value_fn=_enum_value_fn(API_KEY_VEHICLE_STATE_TYPE, VEHICLE_STATE_OPTIONS),
+        value_fn=_vehicle_state_enum,
     ),
     SubaruSensorEntityDescription(
         key="vehicle_state_raw",
         translation_key="vehicle_state_raw",
         entity_category=EntityCategory.DIAGNOSTIC,
         entity_registry_enabled_default=False,
-        value_fn=_raw_value_fn(API_KEY_VEHICLE_STATE_TYPE),
+        value_fn=_vehicle_state_raw,
     ),
     # Static manufacturer reference value, not a live measurement; no state_class.
     SubaruSensorEntityDescription(
