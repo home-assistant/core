@@ -20,6 +20,9 @@
           "port": "Port",
           "version": "SNMP Version"
         },
+        "data_description": {
+          "host": "Please make sure this device has a static IP or DHCP reservation."
+        },
         "title": "SNMP Configuration"
       },
       "v1_v2c": {
