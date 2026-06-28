@@ -2,6 +2,7 @@
 
 from datetime import datetime, timedelta
 import logging
+from typing import override
 
 from mawaqit.exceptions import BadCredentialsException, MawaqitException
 
@@ -34,6 +35,7 @@ class MosqueCoordinator(DataUpdateCoordinator[dict]):
             update_interval=timedelta(days=1),
         )
 
+    @override
     async def _async_update_data(self) -> dict:
         """Fetch mosque details from the API."""
         try:
@@ -76,6 +78,7 @@ class PrayerTimeCoordinator(DataUpdateCoordinator[dict]):
             update_interval=timedelta(minutes=1),
         )
 
+    @override
     async def _async_update_data(self) -> dict:
         """Fetch prayer times from API and notify sensors.
 

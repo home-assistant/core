@@ -21,6 +21,7 @@ from collections.abc import Callable
 from dataclasses import dataclass
 from datetime import datetime
 import logging
+from typing import override
 
 from homeassistant.components.sensor import (
     SensorDeviceClass,
@@ -228,9 +229,10 @@ class MyMosqueSensor(SensorEntity, CoordinatorEntity[MosqueCoordinator]):
         """Initialize the mosque sensor."""
         super().__init__(coordinator)
         self.entity_description = MOSQUE_SENSOR_DESCRIPTION
-        self._attr_unique_id = f"mawaqit_mosque_{self.entity_description.key.lower()}"
+        self._attr_unique_id = self.entity_description.key.lower()
 
     @property
+    @override
     def native_value(self) -> str | None:
         """Return the current mosque name as the sensor state."""
         if not self.coordinator.data:
@@ -238,6 +240,7 @@ class MyMosqueSensor(SensorEntity, CoordinatorEntity[MosqueCoordinator]):
         return self.coordinator.data.get("name")
 
     @property
+    @override
     def available(self) -> bool:
         """Return True if entity is available."""
         return super().available and self.coordinator.data is not None
@@ -258,9 +261,10 @@ class MawaqitPrayerTimeSensor(SensorEntity, CoordinatorEntity[PrayerTimeCoordina
         """Initialize the prayer time sensor."""
         super().__init__(coordinator)
         self.entity_description = sensor_description
-        self._attr_unique_id = f"mawaqit_{self.entity_description.key.lower()}"
+        self._attr_unique_id = self.entity_description.key.lower()
 
     @property
+    @override
     def native_value(self) -> datetime | None:
         """Return the prayer time using the get_value function."""
         prayer_data = self.coordinator.data
@@ -279,6 +283,7 @@ class MawaqitPrayerTimeSensor(SensorEntity, CoordinatorEntity[PrayerTimeCoordina
             return None
 
     @property
+    @override
     def available(self) -> bool:
         """Return True if entity is available."""
         return super().available and self.coordinator.data is not None
@@ -293,12 +298,11 @@ class NextPrayerSensor(SensorEntity, CoordinatorEntity[PrayerTimeCoordinator]):
         """Initialize the sensor with a specific description."""
         super().__init__(coordinator)
         self.entity_description = description
-        self._attr_unique_id = (
-            f"mawaqit_next_prayer_{self.entity_description.key.lower()}"
-        )
+        self._attr_unique_id = f"next_prayer_{self.entity_description.key.lower()}"
         self._next_prayer_index: int | None = None
         self._next_prayer_time: datetime | None = None
 
+    @override
     async def async_added_to_hass(self) -> None:
         """When entity is added to hass."""
         await super().async_added_to_hass()
@@ -309,11 +313,13 @@ class NextPrayerSensor(SensorEntity, CoordinatorEntity[PrayerTimeCoordinator]):
         self._handle_coordinator_update()
 
     @callback
+    @override
     def _handle_coordinator_update(self) -> None:
         self._next_prayer_index, self._next_prayer_time = self._get_next_prayer_info()
         self.async_write_ha_state()
 
     @property
+    @override
     def native_value(self) -> str | datetime | None:
         """Return the appropriate value based on the sensor type."""
         if self._next_prayer_index is None or self._next_prayer_time is None:
@@ -336,6 +342,7 @@ class NextPrayerSensor(SensorEntity, CoordinatorEntity[PrayerTimeCoordinator]):
         return utils.find_next_prayer(current_time, prayer_calendar, timezone)
 
     @property
+    @override
     def available(self) -> bool:
         """Return True if entity is available."""
         return super().available and self.coordinator.data is not None
