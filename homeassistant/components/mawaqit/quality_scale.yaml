@@ -11,9 +11,15 @@ rules:
   docs-actions:
     status: exempt
     comment: This integration does not use service actions
+  docs-conditions:
+    status: exempt
+    comment: This integration does not provide conditions.
   docs-high-level-description: done
   docs-installation-instructions: done
   docs-removal-instructions: done
+  docs-triggers:
+    status: exempt
+    comment: This integration does not provide triggers.
   entity-event-setup:
     status: exempt
     comment: This integration does not use entity events
