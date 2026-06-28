@@ -226,6 +226,7 @@ def create_config_entry(
         domain=hue.DOMAIN,
         title=f"Mock bridge {api_version}",
         data={"host": host, "api_version": api_version, "api_key": ""},
+        minor_version=2,
     )
 
 
