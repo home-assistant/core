@@ -53,8 +53,6 @@ async def async_setup_entry(hass: HomeAssistant, entry: FlowItConfigEntry) -> bo
         await vmc.get_info()
     except (FlowItConnectionError, FlowItResponseError) as err:
         raise ConfigEntryNotReady(f"Error connecting to VMC: {err}") from err
-    except Exception as err:
-        raise ConfigEntryNotReady(f"Unexpected error connecting: {err}") from err
 
     async def async_update_data() -> MachineStatusResponse:
         """Fetch data from API endpoint."""
@@ -64,8 +62,6 @@ async def async_setup_entry(hass: HomeAssistant, entry: FlowItConfigEntry) -> bo
             raise ConfigEntryAuthFailed(f"Authentication failed: {err}") from err
         except (FlowItConnectionError, FlowItResponseError) as err:
             raise UpdateFailed(f"Error communicating with API: {err}") from err
-        except Exception as err:
-            raise UpdateFailed(f"Unexpected error: {err}") from err
         else:
             return vmc.state
 
