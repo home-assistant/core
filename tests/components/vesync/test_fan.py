@@ -6,8 +6,17 @@ from unittest.mock import AsyncMock, patch
 import pytest
 from syrupy.assertion import SnapshotAssertion
 
-from homeassistant.components.fan import ATTR_PRESET_MODE, DOMAIN as FAN_DOMAIN
-from homeassistant.const import ATTR_ENTITY_ID, SERVICE_TURN_OFF, SERVICE_TURN_ON
+from homeassistant.components.fan import (
+    ATTR_PERCENTAGE,
+    ATTR_PRESET_MODE,
+    DOMAIN as FAN_DOMAIN,
+)
+from homeassistant.const import (
+    ATTR_ENTITY_ID,
+    SERVICE_TURN_OFF,
+    SERVICE_TURN_ON,
+    STATE_UNAVAILABLE,
+)
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import device_registry as dr, entity_registry as er
@@ -186,6 +195,32 @@ async def test_set_preset_mode(
         await hass.async_block_till_done()
         method_mock.assert_called_once()
         update_mock.assert_called_once()
+
+
+async def test_out_of_range_fan_level(
+    hass: HomeAssistant,
+    config_entry: MockConfigEntry,
+    aioclient_mock: AiohttpClientMocker,
+) -> None:
+    """Test a device reporting an out-of-range fan level loads without crashing.
+
+    The CoreBreeze 432S (LPF-R432S) reports fan level -1 when the speed is not
+    applicable, which previously raised ValueError during setup and every
+    coordinator update. The entity should stay available with an unknown
+    percentage instead of crashing.
+    """
+
+    mock_devices_response(
+        aioclient_mock, "CoreBreeze 432S", details_override={"fanSpeedLevel": -1}
+    )
+
+    await hass.config_entries.async_setup(config_entry.entry_id)
+    await hass.async_block_till_done()
+
+    state = hass.states.get(ENTITY_PEDESTAL_FAN)
+    assert state is not None
+    assert state.state != STATE_UNAVAILABLE
+    assert state.attributes[ATTR_PERCENTAGE] is None
 
 
 @pytest.mark.parametrize(
