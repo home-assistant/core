@@ -18,11 +18,12 @@ class FlowItVmcEntity(CoordinatorEntity[FlowItCoordinator]):
         self,
         coordinator: FlowItCoordinator,
         vmc: FlowItVMCMachine,
+        unique_id: str,
     ) -> None:
         """Initialize the entity."""
         super().__init__(coordinator)
         self.vmc = vmc
-        self._attr_unique_id = f"{coordinator.data.name}"
+        self._attr_unique_id = unique_id
         self._attr_device_info = DeviceInfo(
             identifiers={(DOMAIN, coordinator.data.name)},
             name=coordinator.data.name,
