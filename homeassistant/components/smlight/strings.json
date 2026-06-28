@@ -5,6 +5,8 @@
       "cannot_connect": "[%key:common::config_flow::error::cannot_connect%]",
       "reauth_failed": "[%key:common::config_flow::error::invalid_auth%]",
       "reauth_successful": "[%key:common::config_flow::abort::reauth_successful%]",
+      "reconfigure_successful": "[%key:common::config_flow::abort::reconfigure_successful%]",
+      "unique_id_mismatch": "Please ensure you reconfigure against the same device.",
       "unsupported_device": "This device is not yet supported by the SMLIGHT integration"
     },
     "error": {
@@ -39,12 +41,22 @@
         "description": "Please enter the correct username and password",
         "title": "[%key:common::config_flow::title::reauth%]"
       },
+      "reconfigure": {
+        "data": {
+          "host": "[%key:common::config_flow::data::host%]"
+        },
+        "data_description": {
+          "host": "[%key:component::smlight::config::step::user::data_description::host%]"
+        },
+        "description": "Please enter the new hostname or IP address of the SMLIGHT device.",
+        "title": "Reconfigure SMLIGHT device"
+      },
       "user": {
         "data": {
           "host": "[%key:common::config_flow::data::host%]"
         },
         "data_description": {
-          "host": "The hostname or IP address of the SMLIGHT SLZB-06x device"
+          "host": "The hostname or IP address of the SMLIGHT SLZB device"
         },
         "description": "Set up SMLIGHT Zigbee integration"
       }
@@ -79,6 +91,16 @@
         "name": "Zigbee restart"
       }
     },
+    "infrared": {
+      "infrared_emitter": {
+        "name": "IR emitter"
+      }
+    },
+    "light": {
+      "ambilight": {
+        "name": "Ambilight"
+      }
+    },
     "sensor": {
       "core_temperature": {
         "name": "Core chip temp"
@@ -103,6 +125,9 @@
       },
       "fs_usage": {
         "name": "Filesystem usage"
+      },
+      "psram_usage": {
+        "name": "PSRAM usage"
       },
       "ram_usage": {
         "name": "RAM usage"
@@ -151,12 +176,52 @@
     },
     "firmware_update_failed": {
       "message": "Firmware update failed for {device_name}."
+    },
+    "no_device_found": {
+      "message": "No valid SMLIGHT device found for the given targets."
+    },
+    "not_supported_buzzer": {
+      "message": "The selected SMLIGHT device does not support the buzzer feature. This feature is only available on Ultima models."
+    },
+    "play_tone_failed": {
+      "message": "Failed to play tone on {device_name}: {error}."
+    },
+    "send_ir_code_failed": {
+      "message": "Failed to send IR code: {error}."
     }
   },
   "issues": {
     "unsupported_firmware": {
       "description": "Your SMLIGHT SLZB-06x device is running an unsupported core firmware version. Please update it to the latest version to enjoy all the features of this integration.",
       "title": "SLZB core firmware update required"
+    }
+  },
+  "services": {
+    "play_rtttl": {
+      "description": "Play an RTTTL melody on the SMLIGHT device buzzer.",
+      "fields": {
+        "bpm": {
+          "description": "Tempo in beats per minute. Omit to use the RTTTL default of 63.",
+          "name": "BPM"
+        },
+        "device_id": {
+          "description": "The SMLIGHT device.",
+          "name": "Device"
+        },
+        "duration": {
+          "description": "Default note duration (1, 2, 4, 8, 16 or 32). Omit to use the RTTTL default of 4.",
+          "name": "Duration"
+        },
+        "notes": {
+          "description": "The note sequence in RTTTL format, e.g. 8d,8d#,8e,c6.",
+          "name": "Notes"
+        },
+        "octave": {
+          "description": "Default octave (4–7).",
+          "name": "Octave"
+        }
+      },
+      "name": "Play RTTTL tone"
     }
   }
 }

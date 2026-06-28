@@ -3,11 +3,9 @@
 The idea was taken from https://github.com/KpaBap/hue-flux/
 """
 
-from __future__ import annotations
-
 import datetime
 import logging
-from typing import Any
+from typing import Any, override
 
 import voluptuous as vol
 
@@ -218,27 +216,32 @@ class FluxSwitch(SwitchEntity, RestoreEntity):
         self.unsub_tracker = None
 
     @property
+    @override
     def name(self):
         """Return the name of the device if any."""
         return self._name
 
     @property
-    def is_on(self):
+    @override
+    def is_on(self) -> bool:
         """Return true if switch is on."""
         return self.unsub_tracker is not None
 
+    @override
     async def async_added_to_hass(self) -> None:
         """Call when entity about to be added to hass."""
         last_state = await self.async_get_last_state()
         if last_state and last_state.state == STATE_ON:
             await self.async_turn_on()
 
+    @override
     async def async_will_remove_from_hass(self) -> None:
         """Run when entity will be removed from hass."""
         if self.unsub_tracker:
             self.unsub_tracker()
         return await super().async_will_remove_from_hass()
 
+    @override
     async def async_turn_on(self, **kwargs: Any) -> None:
         """Turn on flux."""
         if self.is_on:
@@ -255,6 +258,7 @@ class FluxSwitch(SwitchEntity, RestoreEntity):
 
         self.async_write_ha_state()
 
+    @override
     async def async_turn_off(self, **kwargs: Any) -> None:
         """Turn off flux."""
         if self.is_on:

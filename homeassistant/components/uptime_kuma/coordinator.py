@@ -1,9 +1,8 @@
 """Coordinator for the Uptime Kuma integration."""
 
-from __future__ import annotations
-
 from datetime import timedelta
 import logging
+from typing import override
 
 from pythonkuma import (
     UpdateException,
@@ -11,6 +10,7 @@ from pythonkuma import (
     UptimeKumaAuthenticationException,
     UptimeKumaException,
     UptimeKumaMonitor,
+    UptimeKumaParseException,
     UptimeKumaVersion,
 )
 from pythonkuma.update import LatestRelease, UpdateChecker
@@ -58,6 +58,7 @@ class UptimeKumaDataUpdateCoordinator(
         )
         self.version: UptimeKumaVersion | None = None
 
+    @override
     async def _async_update_data(self) -> dict[str | int, UptimeKumaMonitor]:
         """Fetch the latest data from Uptime Kuma."""
 
@@ -68,7 +69,14 @@ class UptimeKumaDataUpdateCoordinator(
                 translation_domain=DOMAIN,
                 translation_key="auth_failed_exception",
             ) from e
+        except UptimeKumaParseException as e:
+            _LOGGER.debug("Full exception", exc_info=True)
+            raise UpdateFailed(
+                translation_domain=DOMAIN,
+                translation_key="parsing_failed_exception",
+            ) from e
         except UptimeKumaException as e:
+            _LOGGER.debug("Full exception", exc_info=True)
             raise UpdateFailed(
                 translation_domain=DOMAIN,
                 translation_key="request_failed_exception",
@@ -158,6 +166,7 @@ class UptimeKumaSoftwareUpdateCoordinator(DataUpdateCoordinator[LatestRelease]):
         )
         self.update_checker = update_checker
 
+    @override
     async def _async_update_data(self) -> LatestRelease:
         """Fetch data."""
         try:

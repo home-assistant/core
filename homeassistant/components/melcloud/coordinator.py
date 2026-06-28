@@ -1,10 +1,8 @@
 """DataUpdateCoordinator for the MELCloud integration."""
 
-from __future__ import annotations
-
 from datetime import timedelta
 import logging
-from typing import Any
+from typing import Any, override
 
 from aiohttp import ClientConnectionError, ClientResponseError
 from pymelcloud import Device
@@ -33,6 +31,8 @@ RETRY_INTERVAL_SECONDS = 30
 
 # Number of consecutive failures before marking device unavailable
 MAX_CONSECUTIVE_FAILURES = 3
+
+type MelCloudConfigEntry = ConfigEntry[dict[str, list[MelCloudDeviceUpdateCoordinator]]]
 
 
 class MelCloudDeviceUpdateCoordinator(DataUpdateCoordinator[None]):
@@ -113,6 +113,7 @@ class MelCloudDeviceUpdateCoordinator(DataUpdateCoordinator[None]):
             via_device=(DOMAIN, f"{dev.mac}-{dev.serial}"),
         )
 
+    @override
     async def _async_update_data(self) -> None:
         """Fetch data for this specific device from MELCloud."""
         try:
@@ -188,6 +189,3 @@ class MelCloudDeviceUpdateCoordinator(DataUpdateCoordinator[None]):
             self.device_available = False
 
         await self.async_request_refresh()
-
-
-type MelCloudConfigEntry = ConfigEntry[dict[str, list[MelCloudDeviceUpdateCoordinator]]]

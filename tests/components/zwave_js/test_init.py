@@ -26,7 +26,7 @@ from homeassistant.components.persistent_notification import async_dismiss
 from homeassistant.components.zwave_js import DOMAIN
 from homeassistant.components.zwave_js.helpers import get_device_id, get_device_id_ext
 from homeassistant.config_entries import ConfigEntryDisabler, ConfigEntryState
-from homeassistant.const import STATE_UNAVAILABLE, Platform
+from homeassistant.const import STATE_UNAVAILABLE, STATE_UNKNOWN, Platform
 from homeassistant.core import CoreState, HomeAssistant
 from homeassistant.helpers import (
     area_registry as ar,
@@ -34,12 +34,14 @@ from homeassistant.helpers import (
     entity_registry as er,
     issue_registry as ir,
 )
+from homeassistant.helpers.redact import REDACTED
 from homeassistant.setup import async_setup_component
 
 from .common import (
     AIR_TEMPERATURE_SENSOR,
     BULB_6_MULTI_COLOR_LIGHT_ENTITY,
     EATON_RF9640_ENTITY,
+    TEST_SENSITIVE_NETWORK_KEY,
 )
 
 from tests.common import (
@@ -91,7 +93,7 @@ async def test_home_assistant_stop(
 @pytest.mark.usefixtures("client", "connect_timeout")
 async def test_initialized_timeout(hass: HomeAssistant) -> None:
     """Test we handle a timeout during client initialization."""
-    entry = MockConfigEntry(domain="zwave_js", data={"url": "ws://test.org"})
+    entry = MockConfigEntry(domain=DOMAIN, data={"url": "ws://test.org"})
     entry.add_to_hass(hass)
 
     await hass.config_entries.async_setup(entry.entry_id)
@@ -104,7 +106,7 @@ async def test_initialized_timeout(hass: HomeAssistant) -> None:
 async def test_enabled_statistics(hass: HomeAssistant) -> None:
     """Test that we enabled statistics if the entry is opted in."""
     entry = MockConfigEntry(
-        domain="zwave_js",
+        domain=DOMAIN,
         data={"url": "ws://test.org", "data_collection_opted_in": True},
     )
     entry.add_to_hass(hass)
@@ -121,7 +123,7 @@ async def test_enabled_statistics(hass: HomeAssistant) -> None:
 async def test_disabled_statistics(hass: HomeAssistant) -> None:
     """Test that we disabled statistics if the entry is opted out."""
     entry = MockConfigEntry(
-        domain="zwave_js",
+        domain=DOMAIN,
         data={"url": "ws://test.org", "data_collection_opted_in": False},
     )
     entry.add_to_hass(hass)
@@ -137,7 +139,7 @@ async def test_disabled_statistics(hass: HomeAssistant) -> None:
 @pytest.mark.usefixtures("client")
 async def test_noop_statistics(hass: HomeAssistant) -> None:
     """Test that we don't make statistics calls if user hasn't set preference."""
-    entry = MockConfigEntry(domain="zwave_js", data={"url": "ws://test.org"})
+    entry = MockConfigEntry(domain=DOMAIN, data={"url": "ws://test.org"})
     entry.add_to_hass(hass)
 
     with (
@@ -168,7 +170,7 @@ async def test_driver_ready_timeout_during_setup(
     client.listen.side_effect = listen
 
     entry = MockConfigEntry(
-        domain="zwave_js",
+        domain=DOMAIN,
         data={"url": "ws://test.org", "data_collection_opted_in": True},
     )
     entry.add_to_hass(hass)
@@ -218,7 +220,7 @@ async def test_listen_done_during_setup_before_forward_entry(
     listen_block.set()
     getattr(listen_result, listen_future_result_method)(listen_future_result)
 
-    entry = MockConfigEntry(domain="zwave_js", data={"url": "ws://test.org"})
+    entry = MockConfigEntry(domain=DOMAIN, data={"url": "ws://test.org"})
     entry.add_to_hass(hass)
     assert client.disconnect.call_count == 0
 
@@ -255,7 +257,7 @@ async def test_not_connected_during_setup_after_forward_entry(
     client.listen.side_effect = listen
 
     entry = MockConfigEntry(
-        domain="zwave_js",
+        domain=DOMAIN,
         data={"url": "ws://test.org", "data_collection_opted_in": True},
     )
     entry.add_to_hass(hass)
@@ -310,7 +312,7 @@ async def test_listen_done_during_setup_after_forward_entry(
     hass.set_state(core_state)
 
     entry = MockConfigEntry(
-        domain="zwave_js",
+        domain=DOMAIN,
         data={"url": "ws://test.org", "data_collection_opted_in": True},
     )
     entry.add_to_hass(hass)
@@ -364,7 +366,7 @@ async def test_listen_done_after_setup(
     client.listen.side_effect = listen
 
     config_entry = MockConfigEntry(
-        domain="zwave_js",
+        domain=DOMAIN,
         data={"url": "ws://test.org", "data_collection_opted_in": True},
     )
     config_entry.add_to_hass(hass)
@@ -933,7 +935,47 @@ async def test_start_addon(
     assert start_addon.call_args == call("core_zwave_js")
 
 
-@pytest.mark.usefixtures("addon_not_installed", "addon_info")
+@pytest.mark.usefixtures("addon_installed", "addon_info")
+@pytest.mark.parametrize(
+    "set_addon_options_side_effect",
+    [
+        SupervisorError(
+            "not a valid value for dictionary value @ data['options']. "
+            f"Got {{'s0_legacy_key': '{TEST_SENSITIVE_NETWORK_KEY}'}}"
+        )
+    ],
+)
+async def test_start_addon_redacts_set_options_error(
+    hass: HomeAssistant,
+    install_addon: AsyncMock,
+    set_addon_options: AsyncMock,
+    start_addon: AsyncMock,
+    caplog: pytest.LogCaptureFixture,
+) -> None:
+    """Test startup redacts add-on options backend error details."""
+    device = "/test"
+    secret = TEST_SENSITIVE_NETWORK_KEY
+    entry = MockConfigEntry(
+        domain=DOMAIN,
+        title="Z-Wave JS",
+        data={"use_addon": True, "usb_path": device, "network_key": secret},
+    )
+    entry.add_to_hass(hass)
+
+    await hass.config_entries.async_setup(entry.entry_id)
+    await hass.async_block_till_done()
+
+    assert entry.state is ConfigEntryState.SETUP_RETRY
+    assert install_addon.call_count == 0
+    assert set_addon_options.call_count == 1
+    assert start_addon.call_count == 0
+    assert "Failed to set the Z-Wave JS app options" in caplog.text
+    assert "not a valid value for dictionary value" in caplog.text
+    assert REDACTED in caplog.text
+    assert secret not in caplog.text
+
+
+@pytest.mark.usefixtures("addon_info")
 async def test_install_addon(
     hass: HomeAssistant,
     install_addon: AsyncMock,
@@ -1253,7 +1295,7 @@ async def test_stop_addon(
     )
     await hass.async_block_till_done()
 
-    assert entry.state == entry_state
+    assert entry.state is entry_state
     assert stop_addon.call_count == 1
     assert stop_addon.call_args == call("core_zwave_js")
 
@@ -1410,7 +1452,7 @@ async def test_suggested_area(
     entity_registry: er.EntityRegistry,
 ) -> None:
     """Test that suggested area works."""
-    entry = MockConfigEntry(domain="zwave_js", data={"url": "ws://test.org"})
+    entry = MockConfigEntry(domain=DOMAIN, data={"url": "ws://test.org"})
     entry.add_to_hass(hass)
     await hass.config_entries.async_setup(entry.entry_id)
     await hass.async_block_till_done()
@@ -1446,12 +1488,17 @@ async def test_node_removed(
     assert old_device
     assert old_device.id
 
+    node_events = integration.runtime_data.driver_events.controller_events.node_events
+    assert node.node_id in node_events.value_updates_disc_info
+
     event = {"node": node, "reason": 0}
 
     client.driver.controller.emit("node removed", event)
     await hass.async_block_till_done()
     # Assert device has been removed
     assert not device_registry.async_get(old_device.id)
+    # Assert value_updates_disc_info has been cleaned up
+    assert node.node_id not in node_events.value_updates_disc_info
 
 
 async def test_replace_same_node(
@@ -1917,11 +1964,12 @@ async def test_disabled_node_status_entity_on_node_replaced(
 @pytest.mark.usefixtures("entity_registry_enabled_by_default")
 async def test_remove_entity_on_value_removed(
     hass: HomeAssistant,
+    entity_registry: er.EntityRegistry,
     zp3111: Node,
     client: MagicMock,
     integration: MockConfigEntry,
 ) -> None:
-    """Test that when entity primary values are removed the entity is removed."""
+    """Test entity becomes unavailable when primary values removed."""
     idle_cover_status_button_entity = (
         "button.4_in_1_sensor_idle_home_security_cover_status"
     )
@@ -2039,6 +2087,155 @@ async def test_remove_entity_on_value_removed(
         == new_unavailable_entities
     )
 
+    # Entities should still be in the entity registry (not fully removed)
+    assert entity_registry.async_get(battery_level_entity) is not None
+    assert entity_registry.async_get(binary_cover_entity) is not None
+    assert entity_registry.async_get(idle_cover_status_button_entity) is not None
+
+
+@pytest.mark.usefixtures("entity_registry_enabled_by_default")
+@pytest.mark.parametrize("platforms", [[Platform.SENSOR]])
+async def test_value_removed_and_readded(
+    hass: HomeAssistant,
+    zp3111: Node,
+    client: MagicMock,
+    integration: MockConfigEntry,
+) -> None:
+    """Test entity recovers when primary value is removed and re-added."""
+    battery_level_entity = "sensor.4_in_1_sensor_battery_level"
+
+    state = hass.states.get(battery_level_entity)
+    assert state
+    assert state.state == "0.0"
+
+    # Remove the battery level value
+    event = Event(
+        type="value removed",
+        data={
+            "source": "node",
+            "event": "value removed",
+            "nodeId": zp3111.node_id,
+            "args": {
+                "commandClassName": "Battery",
+                "commandClass": 128,
+                "endpoint": 0,
+                "property": "level",
+                "prevValue": 100,
+                "propertyName": "level",
+            },
+        },
+    )
+    client.driver.receive_event(event)
+    await hass.async_block_till_done()
+
+    state = hass.states.get(battery_level_entity)
+    assert state
+    assert state.state == STATE_UNAVAILABLE
+
+    # Re-add the battery level value with a new reading
+    event = Event(
+        type="value added",
+        data={
+            "source": "node",
+            "event": "value added",
+            "nodeId": zp3111.node_id,
+            "args": {
+                "commandClassName": "Battery",
+                "commandClass": 128,
+                "endpoint": 0,
+                "property": "level",
+                "propertyName": "level",
+                "metadata": {
+                    "type": "number",
+                    "readable": True,
+                    "writeable": False,
+                    "label": "Battery level",
+                    "min": 0,
+                    "max": 100,
+                    "unit": "%",
+                },
+                "value": 80,
+            },
+        },
+    )
+    client.driver.receive_event(event)
+    await hass.async_block_till_done()
+
+    state = hass.states.get(battery_level_entity)
+    assert state
+    assert state.state != STATE_UNAVAILABLE
+    assert state.state == "80.0"
+
+
+@pytest.mark.usefixtures("entity_registry_enabled_by_default")
+@pytest.mark.parametrize("platforms", [[Platform.SENSOR]])
+async def test_value_never_populated_then_added(
+    hass: HomeAssistant,
+    zp3111_state: NodeDataType,
+    client: MagicMock,
+    integration: MockConfigEntry,
+) -> None:
+    """Test entity updates when value metadata exists but value is None, then added."""
+    # Modify the battery level value to have value=None (metadata exists but no data)
+    node_state = deepcopy(zp3111_state)
+    for value in node_state["values"]:
+        if value["commandClass"] == 128 and value["property"] == "level":
+            value["value"] = None
+            break
+
+    event = Event(
+        "node added",
+        {
+            "source": "controller",
+            "event": "node added",
+            "node": node_state,
+            "result": {},
+        },
+    )
+    client.driver.controller.receive_event(event)
+    await hass.async_block_till_done()
+
+    # The entity should exist but have unknown state (value is None)
+    battery_level_entity = "sensor.4_in_1_sensor_battery_level"
+    state = hass.states.get(battery_level_entity)
+    assert state
+    assert state.state == STATE_UNKNOWN
+
+    node = client.driver.controller.nodes[node_state["nodeId"]]
+
+    # Now send "value added" event with actual value
+    event = Event(
+        type="value added",
+        data={
+            "source": "node",
+            "event": "value added",
+            "nodeId": node.node_id,
+            "args": {
+                "commandClassName": "Battery",
+                "commandClass": 128,
+                "endpoint": 0,
+                "property": "level",
+                "propertyName": "level",
+                "metadata": {
+                    "type": "number",
+                    "readable": True,
+                    "writeable": False,
+                    "label": "Battery level",
+                    "min": 0,
+                    "max": 100,
+                    "unit": "%",
+                },
+                "value": 75,
+            },
+        },
+    )
+    client.driver.receive_event(event)
+    await hass.async_block_till_done()
+
+    state = hass.states.get(battery_level_entity)
+    assert state
+    assert state.state == "75.0"
+
 
 async def test_identify_event(
     hass: HomeAssistant,
@@ -2104,7 +2301,7 @@ async def test_server_logging(
     # Set server logging to disabled
     client.server_logging_enabled = False
 
-    entry = MockConfigEntry(domain="zwave_js", data={"url": "ws://test.org"})
+    entry = MockConfigEntry(domain=DOMAIN, data={"url": "ws://test.org"})
     entry.add_to_hass(hass)
 
     await hass.config_entries.async_setup(entry.entry_id)
@@ -2162,8 +2359,8 @@ async def test_server_logging(
 
         _reset_mocks()
 
-        # Validate that the server logging doesn't get enabled because HA thinks it already
-        # is enabled
+        # Validate that the server logging doesn't get enabled
+        # because HA thinks it already is enabled
         await hass.config_entries.async_setup(entry.entry_id)
         await hass.async_block_till_done()
         assert len(client.async_send_command.call_args_list) == 2
@@ -2179,8 +2376,8 @@ async def test_server_logging(
         client.server_logging_enabled = False
         await hass.config_entries.async_unload(entry.entry_id)
 
-        # Validate that the server logging was not disabled because HA thinks it is already
-        # is disabled
+        # Validate that the server logging was not disabled
+        # because HA thinks it is already disabled
         assert len(client.async_send_command.call_args_list) == 0
         assert not client.enable_server_logging.called
         assert not client.disable_server_logging.called

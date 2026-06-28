@@ -1,9 +1,7 @@
 """Select platform for the jvc_projector integration."""
 
-from __future__ import annotations
-
 from dataclasses import dataclass
-from typing import Final
+from typing import Final, override
 
 from jvcprojector import Command, command as cmd
 
@@ -20,6 +18,7 @@ class JvcProjectorSelectDescription(SelectEntityDescription):
     """Describes JVC Projector select entities."""
 
     command: type[Command]
+    snake_case_states: bool = False
 
 
 SELECTS: Final[tuple[JvcProjectorSelectDescription, ...]] = (
@@ -48,6 +47,18 @@ SELECTS: Final[tuple[JvcProjectorSelectDescription, ...]] = (
         key="anamorphic",
         command=cmd.Anamorphic,
         entity_registry_enabled_default=False,
+    ),
+    JvcProjectorSelectDescription(
+        key="hdr_processing",
+        command=cmd.HdrProcessing,
+        entity_registry_enabled_default=False,
+        snake_case_states=True,
+    ),
+    JvcProjectorSelectDescription(
+        key="picture_mode",
+        command=cmd.PictureMode,
+        entity_registry_enabled_default=False,
+        snake_case_states=True,
     ),
 )
 
@@ -84,21 +95,25 @@ class JvcProjectorSelectEntity(JvcProjectorEntity, SelectEntity):
         self._attr_unique_id = f"{self._attr_unique_id}_{description.key}"
 
         self._options_map: dict[str, str] = coordinator.get_options_map(
-            self.command.name
+            self.command.name,
+            snake_case=description.snake_case_states,
         )
 
     @property
+    @override
     def options(self) -> list[str]:
         """Return a list of selectable options."""
         return list(self._options_map.values())
 
     @property
+    @override
     def current_option(self) -> str | None:
         """Return the selected entity option to represent the entity state."""
         if value := self.coordinator.data.get(self.command.name):
             return self._options_map.get(value)
         return None
 
+    @override
     async def async_select_option(self, option: str) -> None:
         """Change the selected option."""
         value = next((k for k, v in self._options_map.items() if v == option), None)

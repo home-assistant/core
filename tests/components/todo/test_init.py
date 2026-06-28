@@ -35,6 +35,9 @@ from . import create_mock_platform
 
 from tests.typing import WebSocketGenerator
 
+TEST_TIMEZONE = zoneinfo.ZoneInfo("America/Regina")
+TEST_OFFSET = "-06:00"
+
 ITEM_1 = {
     "uid": "1",
     "summary": "Item #1",
@@ -44,9 +47,8 @@ ITEM_2 = {
     "uid": "2",
     "summary": "Item #2",
     "status": "completed",
+    "completed": f"2026-03-27T11:00:00{TEST_OFFSET}",
 }
-TEST_TIMEZONE = zoneinfo.ZoneInfo("America/Regina")
-TEST_OFFSET = "-06:00"
 
 
 async def test_unload_entry(
@@ -81,7 +83,7 @@ async def test_list_todo_items(
     state = hass.states.get("todo.entity1")
     assert state
     assert state.state == "1"
-    assert state.attributes == {"supported_features": 15}
+    assert state.attributes == {ATTR_SUPPORTED_FEATURES: 15}
 
     client = await hass_ws_client(hass)
     await client.send_json(
@@ -324,6 +326,7 @@ async def test_add_item_service_extended_fields(
 ) -> None:
     """Test adding an item in a To-do list."""
 
+    assert test_entity._attr_supported_features is not None
     test_entity._attr_supported_features |= supported_entity_feature
     await create_mock_platform(hass, [test_entity])
 
@@ -555,9 +558,9 @@ async def test_update_item_service_invalid_input(
 @pytest.mark.parametrize(
     ("update_data"),
     [
-        ({"due_datetime": f"2023-11-13T17:00:00{TEST_OFFSET}"}),
-        ({"due_date": "2023-11-13"}),
-        ({"description": "Submit revised draft"}),
+        ({ATTR_DUE_DATETIME: f"2023-11-13T17:00:00{TEST_OFFSET}"}),
+        ({ATTR_DUE_DATE: "2023-11-13"}),
+        ({ATTR_DESCRIPTION: "Submit revised draft"}),
     ],
 )
 async def test_update_todo_item_field_unsupported(
@@ -623,6 +626,7 @@ async def test_update_todo_item_extended_fields(
 ) -> None:
     """Test updating an item in a To-do list."""
 
+    assert test_entity._attr_supported_features is not None
     test_entity._attr_supported_features |= supported_entity_feature
     await create_mock_platform(hass, [test_entity])
 
@@ -645,32 +649,32 @@ async def test_update_todo_item_extended_fields(
     [
         (
             [TodoItem(uid="1", summary="Summary", description="description")],
-            {"description": "Submit revised draft"},
+            {ATTR_DESCRIPTION: "Submit revised draft"},
             TodoItem(uid="1", summary="Summary", description="Submit revised draft"),
         ),
         (
             [TodoItem(uid="1", summary="Summary", description="description")],
-            {"description": ""},
+            {ATTR_DESCRIPTION: ""},
             TodoItem(uid="1", summary="Summary", description=""),
         ),
         (
             [TodoItem(uid="1", summary="Summary", description="description")],
-            {"description": None},
+            {ATTR_DESCRIPTION: None},
             TodoItem(uid="1", summary="Summary"),
         ),
         (
             [TodoItem(uid="1", summary="Summary", due=datetime.date(2024, 1, 1))],
-            {"due_date": datetime.date(2024, 1, 2)},
+            {ATTR_DUE_DATE: datetime.date(2024, 1, 2)},
             TodoItem(uid="1", summary="Summary", due=datetime.date(2024, 1, 2)),
         ),
         (
             [TodoItem(uid="1", summary="Summary", due=datetime.date(2024, 1, 1))],
-            {"due_date": None},
+            {ATTR_DUE_DATE: None},
             TodoItem(uid="1", summary="Summary"),
         ),
         (
             [TodoItem(uid="1", summary="Summary", due=datetime.date(2024, 1, 1))],
-            {"due_datetime": datetime.datetime(2024, 1, 1, 10, 0, 0)},
+            {ATTR_DUE_DATETIME: datetime.datetime(2024, 1, 1, 10, 0, 0)},
             TodoItem(
                 uid="1",
                 summary="Summary",
@@ -687,7 +691,7 @@ async def test_update_todo_item_extended_fields(
                     due=datetime.datetime(2024, 1, 1, 10, 0, 0),
                 )
             ],
-            {"due_datetime": None},
+            {ATTR_DUE_DATETIME: None},
             TodoItem(uid="1", summary="Summary"),
         ),
     ],
@@ -709,6 +713,7 @@ async def test_update_todo_item_extended_fields_overwrite_existing_values(
 ) -> None:
     """Test updating an item in a To-do list."""
 
+    assert test_entity._attr_supported_features is not None
     test_entity._attr_supported_features |= (
         TodoListEntityFeature.SET_DESCRIPTION_ON_ITEM
         | TodoListEntityFeature.SET_DUE_DATE_ON_ITEM
@@ -1094,7 +1099,7 @@ async def test_subscribe(
                 "status": "completed",
                 "due": None,
                 "description": None,
-                "completed": None,
+                "completed": f"2026-03-27T11:00:00{TEST_OFFSET}",
             },
         ]
     }
@@ -1122,7 +1127,7 @@ async def test_subscribe(
                 "status": "completed",
                 "due": None,
                 "description": None,
-                "completed": None,
+                "completed": f"2026-03-27T11:00:00{TEST_OFFSET}",
             },
             {
                 "summary": "Item #3",
@@ -1231,3 +1236,71 @@ async def test_list_todo_items_extended_fields(
             ]
         }
     }
+
+
+async def test_async_subscribe_updates(
+    hass: HomeAssistant, test_entity: TodoListEntity
+) -> None:
+    """Test async_subscribe_updates delivers list updates to listeners."""
+    await create_mock_platform(hass, [test_entity])
+
+    received_updates: list[list[TodoItem] | None] = []
+
+    def listener(items: list[TodoItem] | None) -> None:
+        received_updates.append(items)
+
+    unsub = test_entity.async_subscribe_updates(listener)
+
+    # Trigger an update
+    test_entity.async_write_ha_state()
+
+    assert len(received_updates) == 1
+    items = received_updates[0]
+    assert len(items) == 2
+    assert isinstance(items[0], TodoItem)
+    assert items[0].summary == "Item #1"
+    assert items[0].uid == "1"
+    assert items[0].status == TodoItemStatus.NEEDS_ACTION
+    assert isinstance(items[1], TodoItem)
+    assert items[1].summary == "Item #2"
+    assert items[1].uid == "2"
+    assert items[1].status == TodoItemStatus.COMPLETED
+
+    # Verify items are copies (not the same objects)
+    assert items[0] is not test_entity.todo_items[0]
+    assert items[1] is not test_entity.todo_items[1]
+
+    # Add a new item and trigger update
+    test_entity._attr_todo_items = [
+        *test_entity._attr_todo_items,
+        TodoItem(summary="Item #3", uid="3", status=TodoItemStatus.NEEDS_ACTION),
+    ]
+    test_entity.async_write_ha_state()
+
+    assert len(received_updates) == 2
+    items = received_updates[1]
+    assert len(items) == 3
+    assert items[2].summary == "Item #3"
+
+    # Set items to None and trigger update
+    test_entity._attr_todo_items = None
+    test_entity.async_write_ha_state()
+    assert len(received_updates) == 3
+    assert received_updates[2] is None
+
+    # Add a new item to make it available again and trigger update
+    test_entity._attr_todo_items = [
+        TodoItem(summary="New item", uid="4", status=TodoItemStatus.NEEDS_ACTION)
+    ]
+    test_entity.async_write_ha_state()
+    assert len(received_updates) == 4
+    items = received_updates[3]
+    assert len(items) == 1
+    assert items[0].summary == "New item"
+    assert items[0].uid == "4"
+    assert items[0].status == TodoItemStatus.NEEDS_ACTION
+
+    # Unsubscribe and verify no more updates
+    unsub()
+    test_entity.async_write_ha_state()
+    assert len(received_updates) == 4

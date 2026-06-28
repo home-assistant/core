@@ -1,14 +1,12 @@
 """Select for Shelly."""
 
-from __future__ import annotations
-
 from dataclasses import dataclass
-from typing import TYPE_CHECKING, Final
+from typing import TYPE_CHECKING, Final, override
 
 from aioshelly.const import RPC_GENERATIONS
 
 from homeassistant.components.select import (
-    DOMAIN as SELECT_PLATFORM,
+    DOMAIN as SELECT_DOMAIN,
     SelectEntity,
     SelectEntityDescription,
 )
@@ -60,6 +58,7 @@ class RpcSelect(ShellyRpcAttributeEntity, SelectEntity):
             self._attr_options = list(self.option_map.values())
 
     @property
+    @override
     def current_option(self) -> str | None:
         """Return the selected entity option to represent the entity state."""
         if isinstance(self.attribute_value, str) and self.option_map:
@@ -68,6 +67,7 @@ class RpcSelect(ShellyRpcAttributeEntity, SelectEntity):
         return None
 
     @rpc_call
+    @override
     async def async_select_option(self, option: str) -> None:
         """Change the value."""
         method = getattr(self.coordinator.device, self.entity_description.method)
@@ -85,6 +85,7 @@ class RpcCuryModeSelect(RpcSelect):
     """Represent a RPC select entity for Cury modes."""
 
     @property
+    @override
     def current_option(self) -> str | None:
         """Return the selected entity option to represent the entity state."""
         if self.attribute_value is None:
@@ -117,7 +118,7 @@ RPC_SELECT_ENTITIES: Final = {
         key="enum",
         sub_key="value",
         removal_condition=lambda config, _status, key: (
-            not is_view_for_platform(config, key, SELECT_PLATFORM)
+            not is_view_for_platform(config, key, SELECT_DOMAIN)
         ),
         method="enum_set",
         role=ROLE_GENERIC,
@@ -154,13 +155,13 @@ def _async_setup_rpc_entry(
     # the user can remove virtual components from the device configuration, so
     # we need to remove orphaned entities
     virtual_text_ids = get_virtual_component_ids(
-        coordinator.device.config, SELECT_PLATFORM
+        coordinator.device.config, SELECT_DOMAIN
     )
     async_remove_orphaned_entities(
         hass,
         config_entry.entry_id,
         coordinator.mac,
-        SELECT_PLATFORM,
+        SELECT_DOMAIN,
         virtual_text_ids,
         "enum",
     )

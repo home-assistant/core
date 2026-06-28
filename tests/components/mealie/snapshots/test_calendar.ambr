@@ -135,8 +135,9 @@
 # ---
 # name: test_entities[calendar.mealie_breakfast-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -172,13 +173,13 @@
 # name: test_entities[calendar.mealie_breakfast-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'all_day': True,
-      'description': 'The BEST Roast Chicken recipe is simple, budget friendly, and gives you a tender, mouth-watering chicken full of flavor! Served with roasted vegetables, this recipe is simple enough for any cook!',
-      'end_time': '2024-01-24 00:00:00',
-      'friendly_name': 'Mealie Breakfast',
-      'location': '',
-      'message': 'Roast Chicken',
-      'start_time': '2024-01-23 00:00:00',
+      <CalendarEntityStateAttribute.ALL_DAY: 'all_day'>: True,
+      <CalendarEntityStateAttribute.DESCRIPTION: 'description'>: 'The BEST Roast Chicken recipe is simple, budget friendly, and gives you a tender, mouth-watering chicken full of flavor! Served with roasted vegetables, this recipe is simple enough for any cook!',
+      <CalendarEntityStateAttribute.END_TIME: 'end_time'>: '2024-01-24 00:00:00',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Mealie Breakfast',
+      <CalendarEntityStateAttribute.LOCATION: 'location'>: '',
+      <CalendarEntityStateAttribute.MESSAGE: 'message'>: 'Roast Chicken',
+      <CalendarEntityStateAttribute.START_TIME: 'start_time'>: '2024-01-23 00:00:00',
     }),
     'context': <ANY>,
     'entity_id': 'calendar.mealie_breakfast',
@@ -190,8 +191,9 @@
 # ---
 # name: test_entities[calendar.mealie_dessert-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -227,13 +229,13 @@
 # name: test_entities[calendar.mealie_dessert-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'all_day': True,
-      'description': 'Delicious Greek turkey meatballs with lemon orzo, tender veggies, and a creamy feta yogurt sauce. These healthy baked Greek turkey meatballs are filled with tons of wonderful herbs and make the perfect protein-packed weeknight meal!',
-      'end_time': '2024-01-24 00:00:00',
-      'friendly_name': 'Mealie Dessert',
-      'location': '',
-      'message': 'Greek Turkey Meatballs with Lemon Orzo & Creamy Feta Yogurt Sauce',
-      'start_time': '2024-01-23 00:00:00',
+      <CalendarEntityStateAttribute.ALL_DAY: 'all_day'>: True,
+      <CalendarEntityStateAttribute.DESCRIPTION: 'description'>: 'Delicious Greek turkey meatballs with lemon orzo, tender veggies, and a creamy feta yogurt sauce. These healthy baked Greek turkey meatballs are filled with tons of wonderful herbs and make the perfect protein-packed weeknight meal!',
+      <CalendarEntityStateAttribute.END_TIME: 'end_time'>: '2024-01-24 00:00:00',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Mealie Dessert',
+      <CalendarEntityStateAttribute.LOCATION: 'location'>: '',
+      <CalendarEntityStateAttribute.MESSAGE: 'message'>: 'Greek Turkey Meatballs with Lemon Orzo & Creamy Feta Yogurt Sauce',
+      <CalendarEntityStateAttribute.START_TIME: 'start_time'>: '2024-01-23 00:00:00',
     }),
     'context': <ANY>,
     'entity_id': 'calendar.mealie_dessert',
@@ -245,8 +247,9 @@
 # ---
 # name: test_entities[calendar.mealie_dinner-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -282,13 +285,13 @@
 # name: test_entities[calendar.mealie_dinner-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'all_day': True,
-      'description': 'Dineren met de boys',
-      'end_time': '2024-01-22 00:00:00',
-      'friendly_name': 'Mealie Dinner',
-      'location': '',
-      'message': 'Aquavite',
-      'start_time': '2024-01-21 00:00:00',
+      <CalendarEntityStateAttribute.ALL_DAY: 'all_day'>: True,
+      <CalendarEntityStateAttribute.DESCRIPTION: 'description'>: 'Dineren met de boys',
+      <CalendarEntityStateAttribute.END_TIME: 'end_time'>: '2024-01-22 00:00:00',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Mealie Dinner',
+      <CalendarEntityStateAttribute.LOCATION: 'location'>: '',
+      <CalendarEntityStateAttribute.MESSAGE: 'message'>: 'Aquavite',
+      <CalendarEntityStateAttribute.START_TIME: 'start_time'>: '2024-01-21 00:00:00',
     }),
     'context': <ANY>,
     'entity_id': 'calendar.mealie_dinner',
@@ -300,8 +303,9 @@
 # ---
 # name: test_entities[calendar.mealie_drink-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -337,13 +341,13 @@
 # name: test_entities[calendar.mealie_drink-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'all_day': True,
-      'description': 'Einfacher Nudelauflauf mit Brokkoli, Sahnesauce und extra Käse. Dieses vegetarische 5 Zutaten Rezept ist super schnell gemacht und SO gut!',
-      'end_time': '2024-01-23 00:00:00',
-      'friendly_name': 'Mealie Drink',
-      'location': '',
-      'message': 'Einfacher Nudelauflauf mit Brokkoli',
-      'start_time': '2024-01-22 00:00:00',
+      <CalendarEntityStateAttribute.ALL_DAY: 'all_day'>: True,
+      <CalendarEntityStateAttribute.DESCRIPTION: 'description'>: 'Einfacher Nudelauflauf mit Brokkoli, Sahnesauce und extra Käse. Dieses vegetarische 5 Zutaten Rezept ist super schnell gemacht und SO gut!',
+      <CalendarEntityStateAttribute.END_TIME: 'end_time'>: '2024-01-23 00:00:00',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Mealie Drink',
+      <CalendarEntityStateAttribute.LOCATION: 'location'>: '',
+      <CalendarEntityStateAttribute.MESSAGE: 'message'>: 'Einfacher Nudelauflauf mit Brokkoli',
+      <CalendarEntityStateAttribute.START_TIME: 'start_time'>: '2024-01-22 00:00:00',
     }),
     'context': <ANY>,
     'entity_id': 'calendar.mealie_drink',
@@ -355,8 +359,9 @@
 # ---
 # name: test_entities[calendar.mealie_lunch-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -392,13 +397,13 @@
 # name: test_entities[calendar.mealie_lunch-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'all_day': True,
-      'description': 'This All-American beef stew recipe includes tender beef coated in a rich, intense sauce and vegetables that bring complementary texture and flavor.',
-      'end_time': '2024-01-23 00:00:00',
-      'friendly_name': 'Mealie Lunch',
-      'location': '',
-      'message': 'All-American Beef Stew Recipe',
-      'start_time': '2024-01-22 00:00:00',
+      <CalendarEntityStateAttribute.ALL_DAY: 'all_day'>: True,
+      <CalendarEntityStateAttribute.DESCRIPTION: 'description'>: 'This All-American beef stew recipe includes tender beef coated in a rich, intense sauce and vegetables that bring complementary texture and flavor.',
+      <CalendarEntityStateAttribute.END_TIME: 'end_time'>: '2024-01-23 00:00:00',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Mealie Lunch',
+      <CalendarEntityStateAttribute.LOCATION: 'location'>: '',
+      <CalendarEntityStateAttribute.MESSAGE: 'message'>: 'All-American Beef Stew Recipe',
+      <CalendarEntityStateAttribute.START_TIME: 'start_time'>: '2024-01-22 00:00:00',
     }),
     'context': <ANY>,
     'entity_id': 'calendar.mealie_lunch',
@@ -410,8 +415,9 @@
 # ---
 # name: test_entities[calendar.mealie_side-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -447,13 +453,13 @@
 # name: test_entities[calendar.mealie_side-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'all_day': True,
-      'description': 'Einfacher Nudelauflauf mit Brokkoli, Sahnesauce und extra Käse. Dieses vegetarische 5 Zutaten Rezept ist super schnell gemacht und SO gut!',
-      'end_time': '2024-01-24 00:00:00',
-      'friendly_name': 'Mealie Side',
-      'location': '',
-      'message': 'Einfacher Nudelauflauf mit Brokkoli',
-      'start_time': '2024-01-23 00:00:00',
+      <CalendarEntityStateAttribute.ALL_DAY: 'all_day'>: True,
+      <CalendarEntityStateAttribute.DESCRIPTION: 'description'>: 'Einfacher Nudelauflauf mit Brokkoli, Sahnesauce und extra Käse. Dieses vegetarische 5 Zutaten Rezept ist super schnell gemacht und SO gut!',
+      <CalendarEntityStateAttribute.END_TIME: 'end_time'>: '2024-01-24 00:00:00',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Mealie Side',
+      <CalendarEntityStateAttribute.LOCATION: 'location'>: '',
+      <CalendarEntityStateAttribute.MESSAGE: 'message'>: 'Einfacher Nudelauflauf mit Brokkoli',
+      <CalendarEntityStateAttribute.START_TIME: 'start_time'>: '2024-01-23 00:00:00',
     }),
     'context': <ANY>,
     'entity_id': 'calendar.mealie_side',
@@ -465,8 +471,9 @@
 # ---
 # name: test_entities[calendar.mealie_snack-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -502,13 +509,13 @@
 # name: test_entities[calendar.mealie_snack-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'all_day': True,
-      'description': 'Avis aux nostalgiques des années 1980, la mousse de saumon est de retour dans une présentation adaptée au goût du jour. On utilise une technique sans faille : un saumon frais cuit au micro-ondes et mélangé au robot avec du fromage à la crème et de la crème sure. On obtient ainsi une texture onctueuse à tartiner, qui n’a rien à envier aux préparations gélatineuses d’antan !',
-      'end_time': '2024-01-23 00:00:00',
-      'friendly_name': 'Mealie Snack',
-      'location': '',
-      'message': 'Mousse de saumon',
-      'start_time': '2024-01-22 00:00:00',
+      <CalendarEntityStateAttribute.ALL_DAY: 'all_day'>: True,
+      <CalendarEntityStateAttribute.DESCRIPTION: 'description'>: 'Avis aux nostalgiques des années 1980, la mousse de saumon est de retour dans une présentation adaptée au goût du jour. On utilise une technique sans faille : un saumon frais cuit au micro-ondes et mélangé au robot avec du fromage à la crème et de la crème sure. On obtient ainsi une texture onctueuse à tartiner, qui n’a rien à envier aux préparations gélatineuses d’antan !',
+      <CalendarEntityStateAttribute.END_TIME: 'end_time'>: '2024-01-23 00:00:00',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Mealie Snack',
+      <CalendarEntityStateAttribute.LOCATION: 'location'>: '',
+      <CalendarEntityStateAttribute.MESSAGE: 'message'>: 'Mousse de saumon',
+      <CalendarEntityStateAttribute.START_TIME: 'start_time'>: '2024-01-22 00:00:00',
     }),
     'context': <ANY>,
     'entity_id': 'calendar.mealie_snack',

@@ -1,9 +1,8 @@
 """Sensor for Home Assistant analytics."""
 
-from __future__ import annotations
-
 from collections.abc import Callable
 from dataclasses import dataclass
+from typing import override
 
 from homeassistant.components.sensor import (
     SensorEntity,
@@ -38,7 +37,6 @@ def get_app_entity_description(
         translation_key="apps",
         name=name_slug,
         state_class=SensorStateClass.TOTAL,
-        native_unit_of_measurement="active installations",
         value_fn=lambda data: data.apps.get(name_slug),
     )
 
@@ -52,7 +50,6 @@ def get_core_integration_entity_description(
         translation_key="core_integrations",
         name=name,
         state_class=SensorStateClass.TOTAL,
-        native_unit_of_measurement="active installations",
         value_fn=lambda data: data.core_integrations.get(domain),
     )
 
@@ -66,7 +63,6 @@ def get_custom_integration_entity_description(
         translation_key="custom_integrations",
         translation_placeholders={"custom_integration_domain": domain},
         state_class=SensorStateClass.TOTAL,
-        native_unit_of_measurement="active installations",
         value_fn=lambda data: data.custom_integrations.get(domain),
     )
 
@@ -77,7 +73,6 @@ GENERAL_SENSORS = [
         translation_key="total_active_installations",
         entity_registry_enabled_default=False,
         state_class=SensorStateClass.TOTAL,
-        native_unit_of_measurement="active installations",
         value_fn=lambda data: data.active_installations,
     ),
     AnalyticsSensorEntityDescription(
@@ -85,7 +80,6 @@ GENERAL_SENSORS = [
         translation_key="total_reports_integrations",
         entity_registry_enabled_default=False,
         state_class=SensorStateClass.TOTAL,
-        native_unit_of_measurement="active installations",
         value_fn=lambda data: data.reports_integrations,
     ),
 ]
@@ -160,6 +154,7 @@ class HomeassistantAnalyticsSensor(
         )
 
     @property
+    @override
     def native_value(self) -> StateType:
         """Return the state of the sensor."""
         return self.entity_description.value_fn(self.coordinator.data)

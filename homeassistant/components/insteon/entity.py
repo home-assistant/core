@@ -2,6 +2,7 @@
 
 import functools
 import logging
+from typing import Any, override
 
 from pyinsteon import devices
 
@@ -37,6 +38,7 @@ class InsteonEntity(Entity):
         self._insteon_device_group = device.groups[group]
         self._insteon_device = device
 
+    @override
     def __hash__(self):
         """Return the hash of the Insteon Entity."""
         return hash(self._insteon_device)
@@ -52,6 +54,7 @@ class InsteonEntity(Entity):
         return self._insteon_device_group.group
 
     @property
+    @override
     def unique_id(self) -> str:
         """Return a unique ID."""
         if self._insteon_device_group.group == 0x01:
@@ -61,6 +64,7 @@ class InsteonEntity(Entity):
         return uid
 
     @property
+    @override
     def name(self):
         """Return the name of the node (used for Entity_ID)."""
         # Set a base description
@@ -72,7 +76,8 @@ class InsteonEntity(Entity):
         return f"{description} {self._insteon_device.address}{extension}"
 
     @property
-    def extra_state_attributes(self):
+    @override
+    def extra_state_attributes(self) -> dict[str, Any]:
         """Provide attributes for display on device card."""
         return {
             "insteon_address": self.address,
@@ -80,6 +85,7 @@ class InsteonEntity(Entity):
         }
 
     @property
+    @override
     def device_info(self) -> DeviceInfo:
         """Return device information."""
         return DeviceInfo(
@@ -109,6 +115,7 @@ class InsteonEntity(Entity):
         )
         self.async_write_ha_state()
 
+    @override
     async def async_added_to_hass(self) -> None:
         """Register INSTEON update events."""
         _LOGGER.debug(
@@ -137,6 +144,7 @@ class InsteonEntity(Entity):
             )
         )
 
+    @override
     async def async_will_remove_from_hass(self) -> None:
         """Unsubscribe to INSTEON update events."""
         _LOGGER.debug(

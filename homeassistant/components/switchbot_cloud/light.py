@@ -1,7 +1,7 @@
 """Support for the Switchbot Light."""
 
 import asyncio
-from typing import Any
+from typing import Any, override
 
 from switchbot_api import (
     CeilingLightCommands,
@@ -14,12 +14,11 @@ from switchbot_api import (
 )
 
 from homeassistant.components.light import ColorMode, LightEntity
-from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
-from . import SwitchbotCloudData, SwitchBotCoordinator
-from .const import AFTER_COMMAND_REFRESH, DOMAIN
+from . import SwitchbotCloudConfigEntry, SwitchBotCoordinator
+from .const import AFTER_COMMAND_REFRESH
 from .entity import SwitchBotCloudEntity
 
 
@@ -35,11 +34,11 @@ def brightness_map_value(value: int) -> int:
 
 async def async_setup_entry(
     hass: HomeAssistant,
-    config: ConfigEntry,
+    config: SwitchbotCloudConfigEntry,
     async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up SwitchBot Cloud entry."""
-    data: SwitchbotCloudData = hass.data[DOMAIN][config.entry_id]
+    data = config.runtime_data
     async_add_entities(
         _async_make_entity(data.api, device, coordinator)
         for device, coordinator in data.devices.lights
@@ -58,12 +57,15 @@ class SwitchBotCloudLight(SwitchBotCloudEntity, LightEntity):
         """Return the default color mode."""
         if not self.supported_color_modes:
             return ColorMode.UNKNOWN
+        if ColorMode.BRIGHTNESS in self.supported_color_modes:
+            return ColorMode.BRIGHTNESS
         if ColorMode.RGB in self.supported_color_modes:
             return ColorMode.RGB
         if ColorMode.COLOR_TEMP in self.supported_color_modes:
             return ColorMode.COLOR_TEMP
         return ColorMode.UNKNOWN
 
+    @override
     def _set_attributes(self) -> None:
         """Set attributes from coordinator data."""
         if self.coordinator.data is None:
@@ -81,12 +83,14 @@ class SwitchBotCloudLight(SwitchBotCloudEntity, LightEntity):
         )
         self._attr_color_temp_kelvin: int | None = color_temperature or None
 
+    @override
     async def async_turn_off(self, **kwargs: Any) -> None:
         """Turn the light off."""
         await self.send_api_command(CommonCommands.OFF)
         await asyncio.sleep(AFTER_COMMAND_REFRESH)
         await self.coordinator.async_request_refresh()
 
+    @override
     async def async_turn_on(self, **kwargs: Any) -> None:
         """Turn the light on."""
         brightness: int | None = kwargs.get("brightness")
@@ -136,6 +140,7 @@ class SwitchBotCloudCandleWarmerLamp(SwitchBotCloudLight):
     # Brightness adjustment
 
     _attr_supported_color_modes = {ColorMode.BRIGHTNESS}
+    _attr_color_mode = ColorMode.BRIGHTNESS
 
 
 class SwitchBotCloudStripLight(SwitchBotCloudLight):
@@ -145,6 +150,7 @@ class SwitchBotCloudStripLight(SwitchBotCloudLight):
     # RGB color control
 
     _attr_supported_color_modes = {ColorMode.RGB}
+    _attr_color_mode = ColorMode.RGB
 
 
 class SwitchBotCloudRGBICLight(SwitchBotCloudLight):
@@ -154,7 +160,9 @@ class SwitchBotCloudRGBICLight(SwitchBotCloudLight):
     # RGB color control
 
     _attr_supported_color_modes = {ColorMode.RGB}
+    _attr_color_mode = ColorMode.RGB
 
+    @override
     async def _send_rgb_color_command(self, rgb_color: tuple) -> None:
         """Send an RGB command."""
         await self.send_api_command(
@@ -174,7 +182,9 @@ class SwitchBotCloudRGBWWLight(SwitchBotCloudLight):
     _attr_min_color_temp_kelvin = 2700
 
     _attr_supported_color_modes = {ColorMode.RGB, ColorMode.COLOR_TEMP}
+    _attr_color_mode = ColorMode.RGB
 
+    @override
     async def _send_brightness_command(self, brightness: int) -> None:
         """Send a brightness command."""
         await self.send_api_command(
@@ -182,6 +192,7 @@ class SwitchBotCloudRGBWWLight(SwitchBotCloudLight):
             parameters=str(value_map_brightness(brightness)),
         )
 
+    @override
     async def _send_rgb_color_command(self, rgb_color: tuple) -> None:
         """Send an RGB command."""
         await self.send_api_command(
@@ -200,7 +211,9 @@ class SwitchBotCloudCeilingLight(SwitchBotCloudLight):
     _attr_min_color_temp_kelvin = 2700
 
     _attr_supported_color_modes = {ColorMode.COLOR_TEMP}
+    _attr_color_mode = ColorMode.COLOR_TEMP
 
+    @override
     async def _send_brightness_command(self, brightness: int) -> None:
         """Send a brightness command."""
         await self.send_api_command(
@@ -208,6 +221,7 @@ class SwitchBotCloudCeilingLight(SwitchBotCloudLight):
             parameters=str(value_map_brightness(brightness)),
         )
 
+    @override
     async def _send_color_temperature_command(self, color_temp_kelvin: int) -> None:
         """Send a color temperature command."""
         await self.send_api_command(

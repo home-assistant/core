@@ -16,15 +16,14 @@ For additional background on Nest Camera events see:
 https://developers.google.com/nest/device-access/api/camera#handle_camera_events
 """
 
-from __future__ import annotations
-
 from collections.abc import Mapping
 from dataclasses import dataclass
 import datetime
 import logging
 import os
 import pathlib
-from typing import Any
+import shutil
+from typing import Any, override
 
 from google_nest_sdm.camera_traits import CameraClipPreviewTrait, CameraEventImageTrait
 from google_nest_sdm.device import Device
@@ -70,7 +69,8 @@ STORAGE_VERSION = 1
 # Buffer writes every few minutes (plus guaranteed to be written at shutdown)
 STORAGE_SAVE_DELAY_SECONDS = 120
 # Path under config directory
-MEDIA_PATH = f"{DOMAIN}/event_media"
+LEGACY_MEDIA_PATH = f"{DOMAIN}/event_media"
+MEDIA_CACHE_PATH = "event_media"
 
 # Size of small in-memory disk cache to avoid excessive disk reads
 DISK_READ_LRU_MAX_SIZE = 32
@@ -83,19 +83,39 @@ async def async_get_media_event_store(
     hass: HomeAssistant, subscriber: GoogleNestSubscriber
 ) -> EventMediaStore:
     """Create the disk backed EventMediaStore."""
-    media_path = hass.config.path(MEDIA_PATH)
-
-    def mkdir() -> None:
-        os.makedirs(media_path, exist_ok=True)
-
-    await hass.async_add_executor_job(mkdir)
+    media_path = pathlib.Path(hass.config.cache_path(DOMAIN, MEDIA_CACHE_PATH))
+    legacy_media_path = pathlib.Path(hass.config.path(LEGACY_MEDIA_PATH))
+    await hass.async_add_executor_job(
+        _prepare_media_cache_dir, media_path, legacy_media_path
+    )
     store = Store[dict[str, Any]](hass, STORAGE_VERSION, STORAGE_KEY, private=True)
-    return NestEventMediaStore(hass, subscriber, store, media_path)
+    return NestEventMediaStore(hass, subscriber, store, str(media_path))
+
+
+def _prepare_media_cache_dir(
+    media_path: pathlib.Path, legacy_media_path: pathlib.Path
+) -> None:
+    """Prepare the media cache directory."""
+    # Migrate media from legacy path to new path.
+    if legacy_media_path.exists() and not media_path.exists():
+        _LOGGER.info(
+            "Migrating media cache directory from %s to %s",
+            legacy_media_path,
+            media_path,
+        )
+        media_path.parent.mkdir(parents=True, exist_ok=True)
+        try:
+            shutil.move(legacy_media_path, media_path)
+        except OSError as error:
+            _LOGGER.info(
+                "Failed to migrate media cache directory, abandoning: %s", error
+            )
+    media_path.mkdir(parents=True, exist_ok=True)
 
 
 async def async_get_transcoder(hass: HomeAssistant) -> Transcoder:
     """Get a nest clip transcoder."""
-    media_path = hass.config.path(MEDIA_PATH)
+    media_path = hass.config.cache_path(DOMAIN, MEDIA_CACHE_PATH)
     ffmpeg_manager = get_ffmpeg_manager(hass)
     return Transcoder(ffmpeg_manager.binary, media_path)
 
@@ -136,6 +156,7 @@ class NestEventMediaStore(EventMediaStore):
             datetime.timedelta(days=1),
         )
 
+    @override
     async def async_load(self) -> dict | None:
         """Load data."""
         if self._data is None:
@@ -148,6 +169,7 @@ class NestEventMediaStore(EventMediaStore):
                 self._data = data
         return self._data
 
+    @override
     async def async_save(self, data: dict) -> None:
         """Save data."""
         self._data = data
@@ -157,6 +179,7 @@ class NestEventMediaStore(EventMediaStore):
 
         self._store.async_delay_save(provide_data, STORAGE_SAVE_DELAY_SECONDS)
 
+    @override
     def get_media_key(self, device_id: str, event: ImageEventBase) -> str:
         """Return the filename to use for a new event."""
         if event.event_image_type != EventImageType.IMAGE:
@@ -170,6 +193,7 @@ class NestEventMediaStore(EventMediaStore):
             else "unknown_device"
         )
 
+    @override
     def get_image_media_key(self, device_id: str, event: ImageEventBase) -> str:
         """Return the filename for image media for an event."""
         device_id_str = self._map_device_id(device_id)
@@ -177,6 +201,7 @@ class NestEventMediaStore(EventMediaStore):
         event_type_str = EVENT_NAME_MAP.get(event.event_type, "event")
         return f"{device_id_str}/{time_str}-{event_type_str}.jpg"
 
+    @override
     def get_clip_preview_media_key(self, device_id: str, event: ImageEventBase) -> str:
         """Return the filename for clip preview media for an event session."""
         device_id_str = self._map_device_id(device_id)
@@ -184,6 +209,7 @@ class NestEventMediaStore(EventMediaStore):
         event_type_str = EVENT_NAME_MAP.get(event.event_type, "event")
         return f"{device_id_str}/{time_str}-{event_type_str}.mp4"
 
+    @override
     def get_clip_preview_thumbnail_media_key(
         self, device_id: str, event: ImageEventBase
     ) -> str:
@@ -197,6 +223,7 @@ class NestEventMediaStore(EventMediaStore):
         """Return the filename in storage for a media key."""
         return f"{self._media_path}/{media_key}"
 
+    @override
     async def async_load_media(self, media_key: str) -> bytes | None:
         """Load media content."""
         filename = self.get_media_filename(media_key)
@@ -214,6 +241,7 @@ class NestEventMediaStore(EventMediaStore):
             _LOGGER.error("Unable to read media file: %s %s", filename, err)
             return None
 
+    @override
     async def async_save_media(self, media_key: str, content: bytes) -> None:
         """Write media content."""
         filename = self.get_media_filename(media_key)
@@ -234,6 +262,7 @@ class NestEventMediaStore(EventMediaStore):
         except OSError as err:
             _LOGGER.error("Unable to write media file: %s %s", filename, err)
 
+    @override
     async def async_remove_media(self, media_key: str) -> None:
         """Remove media content."""
         filename = self.get_media_filename(media_key)
@@ -262,16 +291,20 @@ class NestEventMediaStore(EventMediaStore):
         return devices
 
     async def async_remove_orphaned_media(self, now: datetime.datetime) -> None:
-        """Remove any media files that are orphaned and not referenced by the active event data.
+        """Remove orphaned media files not referenced by active event data.
 
-        The event media store handles garbage collection, but there may be cases where files are
-        left around or unable to be removed. This is a scheduled event that will also check for
-        old orphaned files and remove them when the events are not referenced in the active list
-        of event data.
+        The event media store handles garbage collection, but
+        there may be cases where files are left around or unable
+        to be removed. This is a scheduled event that will also
+        check for old orphaned files and remove them when the
+        events are not referenced in the active list of event
+        data.
 
-        Event media files are stored with the format  <timestamp>-<event_type>.suffix. We extract
-        the list of valid timestamps from the event data and remove any files that are not in that list
-        or are older than the cutoff time.
+        Event media files are stored with the format
+        <timestamp>-<event_type>.suffix. We extract the list of
+        valid timestamps from the event data and remove any
+        files that are not in that list or are older than the
+        cutoff time.
         """
         _LOGGER.debug("Checking for orphaned media at %s", now)
 
@@ -388,6 +421,7 @@ class NestMediaSource(MediaSource):
         super().__init__(DOMAIN)
         self.hass = hass
 
+    @override
     async def async_resolve_media(self, item: MediaSourceItem) -> PlayMedia:
         """Resolve media identifier to a url."""
         media_id: MediaId | None = parse_media_id(item.identifier)
@@ -420,6 +454,7 @@ class NestMediaSource(MediaSource):
             content_type,
         )
 
+    @override
     async def async_browse_media(self, item: MediaSourceItem) -> BrowseMediaSource:
         """Return media for the specified level of the directory tree.
 

@@ -1,10 +1,13 @@
 # serializer version: 1
 # name: test_device_tracker_empty[zoe_50][device_tracker.reg_zoe_50_location-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
-    'capabilities': None,
+    'capabilities': dict({
+      <DeviceTrackerEntityCapabilityAttribute.TRACKING_TYPE: 'tracking_type'>: <TrackingType.POSITION: 'position'>,
+    }),
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
     'device_class': None,
@@ -38,8 +41,11 @@
 # name: test_device_tracker_empty[zoe_50][device_tracker.reg_zoe_50_location-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'REG-ZOE-50 Location',
-      'source_type': <SourceType.GPS: 'gps'>,
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'REG-ZOE-50 Location',
+      <DeviceTrackerEntityStateAttribute.IN_ZONES: 'in_zones'>: list([
+      ]),
+      <DeviceTrackerEntityStateAttribute.SOURCE_TYPE: 'source_type'>: <SourceType.GPS: 'gps'>,
+      <DeviceTrackerEntityCapabilityAttribute.TRACKING_TYPE: 'tracking_type'>: <TrackingType.POSITION: 'position'>,
     }),
     'context': <ANY>,
     'entity_id': 'device_tracker.reg_zoe_50_location',
@@ -51,10 +57,13 @@
 # ---
 # name: test_device_tracker_errors[zoe_50][device_tracker.reg_zoe_50_location-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
-    'capabilities': None,
+    'capabilities': dict({
+      <DeviceTrackerEntityCapabilityAttribute.TRACKING_TYPE: 'tracking_type'>: <TrackingType.POSITION: 'position'>,
+    }),
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
     'device_class': None,
@@ -88,7 +97,8 @@
 # name: test_device_tracker_errors[zoe_50][device_tracker.reg_zoe_50_location-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'REG-ZOE-50 Location',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'REG-ZOE-50 Location',
+      <DeviceTrackerEntityCapabilityAttribute.TRACKING_TYPE: 'tracking_type'>: <TrackingType.POSITION: 'position'>,
     }),
     'context': <ANY>,
     'entity_id': 'device_tracker.reg_zoe_50_location',
@@ -100,10 +110,13 @@
 # ---
 # name: test_device_trackers[captur_fuel][device_tracker.reg_captur_fuel_location-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
-    'capabilities': None,
+    'capabilities': dict({
+      <DeviceTrackerEntityCapabilityAttribute.TRACKING_TYPE: 'tracking_type'>: <TrackingType.POSITION: 'position'>,
+    }),
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
     'device_class': None,
@@ -137,11 +150,14 @@
 # name: test_device_trackers[captur_fuel][device_tracker.reg_captur_fuel_location-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'REG-CAPTUR-FUEL Location',
-      'gps_accuracy': 0,
-      'latitude': 48.1234567,
-      'longitude': 11.1234567,
-      'source_type': <SourceType.GPS: 'gps'>,
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'REG-CAPTUR-FUEL Location',
+      <TrackerEntityStateAttribute.GPS_ACCURACY: 'gps_accuracy'>: 0,
+      <DeviceTrackerEntityStateAttribute.IN_ZONES: 'in_zones'>: list([
+      ]),
+      <TrackerEntityStateAttribute.LATITUDE: 'latitude'>: 48.1234567,
+      <TrackerEntityStateAttribute.LONGITUDE: 'longitude'>: 11.1234567,
+      <DeviceTrackerEntityStateAttribute.SOURCE_TYPE: 'source_type'>: <SourceType.GPS: 'gps'>,
+      <DeviceTrackerEntityCapabilityAttribute.TRACKING_TYPE: 'tracking_type'>: <TrackingType.POSITION: 'position'>,
     }),
     'context': <ANY>,
     'entity_id': 'device_tracker.reg_captur_fuel_location',
@@ -153,10 +169,13 @@
 # ---
 # name: test_device_trackers[captur_phev][device_tracker.reg_captur_phev_location-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
-    'capabilities': None,
+    'capabilities': dict({
+      <DeviceTrackerEntityCapabilityAttribute.TRACKING_TYPE: 'tracking_type'>: <TrackingType.POSITION: 'position'>,
+    }),
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
     'device_class': None,
@@ -190,11 +209,14 @@
 # name: test_device_trackers[captur_phev][device_tracker.reg_captur_phev_location-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'REG-CAPTUR_PHEV Location',
-      'gps_accuracy': 0,
-      'latitude': 48.1234567,
-      'longitude': 11.1234567,
-      'source_type': <SourceType.GPS: 'gps'>,
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'REG-CAPTUR_PHEV Location',
+      <TrackerEntityStateAttribute.GPS_ACCURACY: 'gps_accuracy'>: 0,
+      <DeviceTrackerEntityStateAttribute.IN_ZONES: 'in_zones'>: list([
+      ]),
+      <TrackerEntityStateAttribute.LATITUDE: 'latitude'>: 48.1234567,
+      <TrackerEntityStateAttribute.LONGITUDE: 'longitude'>: 11.1234567,
+      <DeviceTrackerEntityStateAttribute.SOURCE_TYPE: 'source_type'>: <SourceType.GPS: 'gps'>,
+      <DeviceTrackerEntityCapabilityAttribute.TRACKING_TYPE: 'tracking_type'>: <TrackingType.POSITION: 'position'>,
     }),
     'context': <ANY>,
     'entity_id': 'device_tracker.reg_captur_phev_location',
@@ -204,12 +226,74 @@
     'state': 'not_home',
   })
 # ---
+# name: test_device_trackers[megane_e_tech][device_tracker.reg_meg_0_location-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': list([
+      None,
+    ]),
+    'area_id': None,
+    'capabilities': dict({
+      <DeviceTrackerEntityCapabilityAttribute.TRACKING_TYPE: 'tracking_type'>: <TrackingType.POSITION: 'position'>,
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'device_tracker',
+    'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
+    'entity_id': 'device_tracker.reg_meg_0_location',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'Location',
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'Location',
+    'platform': 'renault',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'location',
+    'unique_id': 'vf1meganeetechvin_location',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_device_trackers[megane_e_tech][device_tracker.reg_meg_0_location-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'REG-MEG-0 Location',
+      <TrackerEntityStateAttribute.GPS_ACCURACY: 'gps_accuracy'>: 0,
+      <DeviceTrackerEntityStateAttribute.IN_ZONES: 'in_zones'>: list([
+      ]),
+      <TrackerEntityStateAttribute.LATITUDE: 'latitude'>: 48.1234567,
+      <TrackerEntityStateAttribute.LONGITUDE: 'longitude'>: 11.1234567,
+      <DeviceTrackerEntityStateAttribute.SOURCE_TYPE: 'source_type'>: <SourceType.GPS: 'gps'>,
+      <DeviceTrackerEntityCapabilityAttribute.TRACKING_TYPE: 'tracking_type'>: <TrackingType.POSITION: 'position'>,
+    }),
+    'context': <ANY>,
+    'entity_id': 'device_tracker.reg_meg_0_location',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'not_home',
+  })
+# ---
 # name: test_device_trackers[twingo_3_electric][device_tracker.reg_twingo_iii_location-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
-    'capabilities': None,
+    'capabilities': dict({
+      <DeviceTrackerEntityCapabilityAttribute.TRACKING_TYPE: 'tracking_type'>: <TrackingType.POSITION: 'position'>,
+    }),
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
     'device_class': None,
@@ -243,11 +327,14 @@
 # name: test_device_trackers[twingo_3_electric][device_tracker.reg_twingo_iii_location-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'REG-TWINGO-III Location',
-      'gps_accuracy': 0,
-      'latitude': 48.1234567,
-      'longitude': 11.1234567,
-      'source_type': <SourceType.GPS: 'gps'>,
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'REG-TWINGO-III Location',
+      <TrackerEntityStateAttribute.GPS_ACCURACY: 'gps_accuracy'>: 0,
+      <DeviceTrackerEntityStateAttribute.IN_ZONES: 'in_zones'>: list([
+      ]),
+      <TrackerEntityStateAttribute.LATITUDE: 'latitude'>: 48.1234567,
+      <TrackerEntityStateAttribute.LONGITUDE: 'longitude'>: 11.1234567,
+      <DeviceTrackerEntityStateAttribute.SOURCE_TYPE: 'source_type'>: <SourceType.GPS: 'gps'>,
+      <DeviceTrackerEntityCapabilityAttribute.TRACKING_TYPE: 'tracking_type'>: <TrackingType.POSITION: 'position'>,
     }),
     'context': <ANY>,
     'entity_id': 'device_tracker.reg_twingo_iii_location',
@@ -259,10 +346,13 @@
 # ---
 # name: test_device_trackers[zoe_50][device_tracker.reg_zoe_50_location-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
-    'capabilities': None,
+    'capabilities': dict({
+      <DeviceTrackerEntityCapabilityAttribute.TRACKING_TYPE: 'tracking_type'>: <TrackingType.POSITION: 'position'>,
+    }),
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
     'device_class': None,
@@ -296,11 +386,14 @@
 # name: test_device_trackers[zoe_50][device_tracker.reg_zoe_50_location-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'REG-ZOE-50 Location',
-      'gps_accuracy': 0,
-      'latitude': 48.1234567,
-      'longitude': 11.1234567,
-      'source_type': <SourceType.GPS: 'gps'>,
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'REG-ZOE-50 Location',
+      <TrackerEntityStateAttribute.GPS_ACCURACY: 'gps_accuracy'>: 0,
+      <DeviceTrackerEntityStateAttribute.IN_ZONES: 'in_zones'>: list([
+      ]),
+      <TrackerEntityStateAttribute.LATITUDE: 'latitude'>: 48.1234567,
+      <TrackerEntityStateAttribute.LONGITUDE: 'longitude'>: 11.1234567,
+      <DeviceTrackerEntityStateAttribute.SOURCE_TYPE: 'source_type'>: <SourceType.GPS: 'gps'>,
+      <DeviceTrackerEntityCapabilityAttribute.TRACKING_TYPE: 'tracking_type'>: <TrackingType.POSITION: 'position'>,
     }),
     'context': <ANY>,
     'entity_id': 'device_tracker.reg_zoe_50_location',

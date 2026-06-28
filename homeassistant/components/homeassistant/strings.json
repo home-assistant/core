@@ -21,11 +21,23 @@
     "config_validator_unknown_err": {
       "message": "Unknown error calling {domain} config validator - {error}."
     },
+    "core_config_reload_failed": {
+      "message": "Failed to reload the Home Assistant Core configuration - {error}"
+    },
     "max_length_exceeded": {
       "message": "Value {value} for property {property_name} has a maximum length of {max_length} characters."
     },
     "multiple_integration_config_errors": {
       "message": "Failed to process config for integration {domain} due to multiple ({errors}) errors. Check the logs for more information."
+    },
+    "oauth2_helper_reauth_required": {
+      "message": "Credentials are invalid, re-authentication required"
+    },
+    "oauth2_helper_refresh_failed": {
+      "message": "OAuth2 token refresh failed for {domain}"
+    },
+    "oauth2_helper_refresh_transient": {
+      "message": "Temporary error refreshing credentials for {domain}, try again later"
     },
     "platform_component_load_err": {
       "message": "Platform error: {domain} - {error}."
@@ -39,6 +51,9 @@
     "platform_schema_validator_err": {
       "message": "Unknown error when validating config for {domain} from integration {p_name} - {error}."
     },
+    "scene_config_reload_failed": {
+      "message": "Failed to reload the Home Assistant scene platform configuration - {error}"
+    },
     "service_config_entry_not_found": {
       "message": "Integration {domain} config entry with ID {entry_id} was not found."
     },
@@ -50,6 +65,12 @@
     },
     "service_does_not_support_response": {
       "message": "An action which does not return responses can't be called with {return_response}."
+    },
+    "service_found_multiple_config_entry_for_domain": {
+      "message": "Found multiple config entries for integration {domain}."
+    },
+    "service_found_no_config_entry_for_domain": {
+      "message": "Could not find config entry for integration {domain}."
     },
     "service_lacks_response_request": {
       "message": "The action requires responses and must be called with {return_response}."
@@ -85,7 +106,7 @@
       "title": "[%key:component::homeassistant::issues::config_entry_unique_id_collision::title%]"
     },
     "country_not_configured": {
-      "description": "No country has been configured, please update the configuration by clicking on the \"learn more\" button below.",
+      "description": "No country has been configured. Click the \"Learn more\" button below to set your country.",
       "title": "The country has not been configured"
     },
     "deprecated_architecture": {
@@ -97,12 +118,12 @@
       "title": "[%key:component::homeassistant::issues::deprecated_architecture::title%]"
     },
     "deprecated_method": {
-      "description": "This system is using the {installation_type} installation type, which has been deprecated and will become unsupported following the release of Home Assistant 2025.12. While you can continue using your current setup after that point, we strongly recommend migrating to a supported installation method.",
-      "title": "Deprecation notice: Installation method"
+      "description": "This system is using the {installation_type} installation type, which has been unsupported since Home Assistant 2025.12. To continue receiving updates and support, migrate to a supported installation method.",
+      "title": "Unsupported installation method"
     },
     "deprecated_method_architecture": {
-      "description": "This system is using the {installation_type} installation type, and 32-bit hardware (`{arch}`), both of which have been deprecated and will no longer be supported after the release of Home Assistant 2025.12.",
-      "title": "Deprecation notice"
+      "description": "This system is using the {installation_type} installation type, and 32-bit hardware (`{arch}`), both of which have been unsupported since Home Assistant 2025.12. To continue receiving updates and support, migrate to supported hardware and use a supported installation method.",
+      "title": "Unsupported installation method and architecture"
     },
     "deprecated_os_aarch64": {
       "description": "This system is running on a 32-bit operating system (`armv7`), which has been deprecated and will no longer receive updates after the release of Home Assistant 2025.12. To continue using Home Assistant on this hardware, you will need to install a 64-bit operating system. Please refer to our [installation guide]({installation_guide}).",
@@ -119,6 +140,10 @@
     "deprecated_system_packages_yaml_integration": {
       "description": "The {integration_title} integration is being removed as it depends on system packages that can only be installed on systems running a deprecated architecture. To resolve this, remove the {domain} entry from your configuration.yaml file and restart Home Assistant.",
       "title": "The {integration_title} integration is being removed"
+    },
+    "deprecated_trigger_behavior": {
+      "description": "An automation, script or template entity uses the trigger behavior option `{deprecated_behavior}`, which has been renamed to `{new_behavior}`. The old value still works for now, but support for it will be removed in a future release.\n\nTo fix this issue, edit the affected automations and scripts and change the behavior option from `behavior: {deprecated_behavior}` to `behavior: {new_behavior}`, then restart Home Assistant.",
+      "title": "Deprecated trigger behavior option in use"
     },
     "deprecated_yaml": {
       "description": "Configuring {integration_title} using YAML is being removed.\n\nYour existing YAML configuration has been imported into the UI automatically.\n\nRemove the `{domain}` configuration from your configuration.yaml file and restart Home Assistant to fix this issue.",
@@ -158,13 +183,35 @@
       "description": "Please do the following steps:\n- Adopt your configuration to support template rendering to native python types.\n- Remove the `legacy_templates` key from the `homeassistant` configuration in your configuration.yaml file.\n- Restart Home Assistant to fix this issue.",
       "title": "The support for legacy templates is being removed"
     },
-    "no_platform_setup": {
-      "description": "It's not possible to configure {platform} {domain} by adding `{platform_key}` to the {domain} configuration. Please check the documentation for more information on how to set up this integration.\n\nTo resolve this:\n1. Remove `{platform_key}` occurrences from the `{domain}:` configuration in your YAML configuration file.\n2. Restart Home Assistant.\n\nExample that should be removed:\n{yaml_example}",
-      "title": "Unused YAML configuration for the {platform} integration"
+    "orphaned_ignored_config_entry": {
+      "fix_flow": {
+        "abort": {
+          "issue_ignored": "Non-existent integration {domain} ignored."
+        },
+        "step": {
+          "init": {
+            "description": "There is an ignored orphaned config entry for the `{domain}` integration. This can happen when an integration is removed, but the config entry is still present in Home Assistant.\n\nTo resolve this, press **Remove** to clean up the orphaned entry.",
+            "menu_options": {
+              "confirm": "Remove",
+              "ignore": "Ignore"
+            },
+            "title": "[%key:component::homeassistant::issues::orphaned_ignored_config_entry::title%]"
+          }
+        }
+      },
+      "title": "Orphaned ignored config entry for {domain}"
+    },
+    "platform_config_not_supported": {
+      "description": "Configuring the {integration_domain} integration by adding `{platform_key}` under the `{platform_domain}:` key is not supported. The {integration_domain} integration must be configured under its own `{integration_domain}:` key instead.\n\nTo resolve this:\n\n1. Remove the following from your YAML configuration file:\n\n{yaml_example}\n\n2. Move the configuration under the `{integration_domain}:` key instead.\n\n3. Restart Home Assistant.\n\nTo see the detailed documentation, select Learn more.",
+      "title": "Unsupported YAML configuration for the {integration_domain} integration"
     },
     "platform_only": {
       "description": "The {domain} integration does not support configuration under its own key, it must be configured under its supported platforms.\n\nTo resolve this:\n\n1. Remove `{domain}:` from your YAML configuration file.\n\n2. Restart Home Assistant.",
       "title": "The {domain} integration does not support YAML configuration under its own key"
+    },
+    "platform_setup_not_supported": {
+      "description": "It's not possible to configure {integration_domain} {platform_domain} by adding `{platform_key}` to the {platform_domain} configuration. Please check the documentation for more information on how to set up this integration.\n\nTo resolve this:\n\n1. Remove `{platform_key}` occurrences from the `{platform_domain}:` configuration in your YAML configuration file.\n\n2. Restart Home Assistant.",
+      "title": "Unused YAML configuration for the {integration_domain} integration"
     },
     "storage_corruption": {
       "fix_flow": {
@@ -176,22 +223,26 @@
         }
       },
       "title": "Storage corruption detected for {storage_key}"
+    },
+    "unsupported_local_deps": {
+      "description": "This system is running Home Assistant outside a virtual environment or a Docker container. This is not supported and will not work after the release of Home Assistant 2026.11.",
+      "title": "Deprecation notice: Installation method"
     }
   },
   "services": {
     "check_config": {
       "description": "Checks the Home Assistant YAML-configuration files for errors. Errors will be shown in the Home Assistant logs.",
-      "name": "Check configuration"
+      "name": "Check Home Assistant configuration"
     },
     "reload_all": {
       "description": "Reloads all YAML configuration that can be reloaded without restarting Home Assistant.",
-      "name": "Reload all"
+      "name": "Reload all Home Assistant configuration"
     },
     "reload_config_entry": {
-      "description": "Reloads the specified config entry.",
+      "description": "Reloads any explicitly provided config entry ID and any config entries referenced by entities or devices in the target. If both are provided, the union of those config entries is reloaded.",
       "fields": {
         "entry_id": {
-          "description": "The configuration entry ID of the entry to be reloaded.",
+          "description": "Optional configuration entry ID to reload.",
           "name": "Config entry ID"
         }
       },
@@ -213,7 +264,7 @@
           "name": "Safe mode"
         }
       },
-      "name": "[%key:common::action::restart%]"
+      "name": "Restart Home Assistant"
     },
     "save_persistent_states": {
       "description": "Saves the persistent states immediately. Maintains the normal periodic saving interval.",
@@ -235,11 +286,11 @@
           "name": "[%key:common::config_flow::data::longitude%]"
         }
       },
-      "name": "Set location"
+      "name": "Set Home Assistant location"
     },
     "stop": {
       "description": "Stops Home Assistant.",
-      "name": "[%key:common::action::stop%]"
+      "name": "Stop Home Assistant"
     },
     "toggle": {
       "description": "Generic action to toggle devices on/off under any domain.",

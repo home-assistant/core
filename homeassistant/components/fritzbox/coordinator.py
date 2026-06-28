@@ -1,9 +1,8 @@
 """Data update coordinator for AVM FRITZ!SmartHome devices."""
 
-from __future__ import annotations
-
 from dataclasses import dataclass
 from datetime import timedelta
+from typing import override
 
 from pyfritzhome import Fritzhome, FritzhomeDevice, LoginError
 from pyfritzhome.devicetypes import FritzhomeTemplate, FritzhomeTrigger
@@ -63,14 +62,21 @@ class FritzboxDataUpdateCoordinator(DataUpdateCoordinator[FritzboxCoordinatorDat
             host=self.config_entry.data[CONF_HOST],
             user=self.config_entry.data[CONF_USERNAME],
             password=self.config_entry.data[CONF_PASSWORD],
+            timeout=20,
         )
 
         try:
             await self.hass.async_add_executor_job(self.fritz.login)
         except RequestConnectionError as err:
-            raise ConfigEntryNotReady from err
+            raise ConfigEntryNotReady(
+                translation_domain=DOMAIN,
+                translation_key="connect_error",
+            ) from err
         except LoginError as err:
-            raise ConfigEntryAuthFailed from err
+            raise ConfigEntryAuthFailed(
+                translation_domain=DOMAIN,
+                translation_key="login_failed",
+            ) from err
 
         self.has_templates = await self.hass.async_add_executor_job(
             self.fritz.has_templates
@@ -121,26 +127,11 @@ class FritzboxDataUpdateCoordinator(DataUpdateCoordinator[FritzboxCoordinatorDat
 
     def _update_fritz_devices(self) -> FritzboxCoordinatorData:
         """Update all fritzbox device data."""
-        try:
-            self.fritz.update_devices(ignore_removed=False)
-            if self.has_templates:
-                self.fritz.update_templates(ignore_removed=False)
-            if self.has_triggers:
-                self.fritz.update_triggers(ignore_removed=False)
-
-        except RequestConnectionError as ex:
-            raise UpdateFailed from ex
-        except HTTPError:
-            # If the device rebooted, login again
-            try:
-                self.fritz.login()
-            except LoginError as ex:
-                raise ConfigEntryAuthFailed from ex
-            self.fritz.update_devices(ignore_removed=False)
-            if self.has_templates:
-                self.fritz.update_templates(ignore_removed=False)
-            if self.has_triggers:
-                self.fritz.update_triggers(ignore_removed=False)
+        self.fritz.update_devices(ignore_removed=False)
+        if self.has_templates:
+            self.fritz.update_templates(ignore_removed=False)
+        if self.has_triggers:
+            self.fritz.update_triggers(ignore_removed=False)
 
         devices = self.fritz.get_devices()
         device_data = {}
@@ -191,9 +182,24 @@ class FritzboxDataUpdateCoordinator(DataUpdateCoordinator[FritzboxCoordinatorDat
             supported_color_properties=supported_color_properties,
         )
 
+    @override
     async def _async_update_data(self) -> FritzboxCoordinatorData:
         """Fetch all device data."""
-        new_data = await self.hass.async_add_executor_job(self._update_fritz_devices)
+        try:
+            new_data = await self.hass.async_add_executor_job(
+                self._update_fritz_devices
+            )
+        except (RequestConnectionError, HTTPError) as ex:
+            LOGGER.debug(
+                "Reload %s due to error '%s' to ensure proper re-login",
+                self.config_entry.title,
+                ex,
+            )
+            self.hass.config_entries.async_schedule_reload(self.config_entry.entry_id)
+            raise UpdateFailed(
+                translation_domain=DOMAIN,
+                translation_key="connect_error_reload",
+            ) from ex
 
         for device in new_data.devices.values():
             # create device registry entry for new main devices

@@ -1,7 +1,5 @@
 """Test the Shark IQ vacuum entity."""
 
-from __future__ import annotations
-
 from collections.abc import Iterable
 from copy import deepcopy
 from datetime import datetime, timedelta
@@ -14,7 +12,10 @@ from sharkiq import AylaApi, SharkIqAuthError, SharkIqNotAuthedError, SharkIqVac
 from voluptuous.error import MultipleInvalid
 
 from homeassistant import exceptions
-from homeassistant.components.homeassistant import SERVICE_UPDATE_ENTITY
+from homeassistant.components.homeassistant import (
+    DOMAIN as HOMEASSISTANT_DOMAIN,
+    SERVICE_UPDATE_ENTITY,
+)
 from homeassistant.components.sharkiq.const import ATTR_ROOMS, DOMAIN
 from homeassistant.components.sharkiq.services import SERVICE_CLEAN_ROOM
 from homeassistant.components.sharkiq.vacuum import (
@@ -112,7 +113,7 @@ class MockAyla(AylaApi):
     @property
     def auth_expiration(self) -> datetime:
         """Sample expiration timestamp that is always 1200 seconds behind now()."""
-        return datetime.now() - timedelta(seconds=1200)
+        return datetime.now() - timedelta(seconds=1200)  # pylint: disable=home-assistant-enforce-naive-now
 
 
 class MockShark(SharkIqVacuum):
@@ -287,16 +288,18 @@ async def test_coordinator_updates(
     hass: HomeAssistant, side_effect: Exception | None, success: bool
 ) -> None:
     """Test the update coordinator update functions."""
-    coordinator = hass.data[DOMAIN][ENTRY_ID]
+    entry = hass.config_entries.async_get_entry(ENTRY_ID)
+    assert entry is not None
+    coordinator = entry.runtime_data
 
-    await async_setup_component(hass, "homeassistant", {})
+    await async_setup_component(hass, HOMEASSISTANT_DOMAIN, {})
 
     with patch.object(
         MockShark, "async_update", side_effect=side_effect
     ) as mock_update:
         data = {ATTR_ENTITY_ID: [VAC_ENTITY_ID]}
         await hass.services.async_call(
-            "homeassistant", SERVICE_UPDATE_ENTITY, data, blocking=True
+            HOMEASSISTANT_DOMAIN, SERVICE_UPDATE_ENTITY, data, blocking=True
         )
         assert coordinator.last_update_success == success
         mock_update.assert_called_once()

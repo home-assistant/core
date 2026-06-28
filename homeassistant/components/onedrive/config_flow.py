@@ -1,10 +1,8 @@
 """Config flow for OneDrive."""
 
-from __future__ import annotations
-
 from collections.abc import Mapping
 import logging
-from typing import Any, cast
+from typing import Any, cast, override
 
 from onedrive_personal_sdk.clients.client import OneDriveClient
 from onedrive_personal_sdk.exceptions import OneDriveException
@@ -51,11 +49,13 @@ class OneDriveConfigFlow(AbstractOAuth2FlowHandler, domain=DOMAIN):
         self.step_data: dict[str, Any] = {}
 
     @property
+    @override
     def logger(self) -> logging.Logger:
         """Return logger."""
         return logging.getLogger(__name__)
 
     @property
+    @override
     def extra_authorize_data(self) -> dict[str, Any]:
         """Extra data that needs to be appended to the authorize url."""
         return {"scope": " ".join(OAUTH_SCOPES)}
@@ -69,6 +69,7 @@ class OneDriveConfigFlow(AbstractOAuth2FlowHandler, domain=DOMAIN):
             else "Apps"
         )
 
+    @override
     async def async_oauth_create_entry(
         self,
         data: dict[str, Any],
@@ -102,7 +103,7 @@ class OneDriveConfigFlow(AbstractOAuth2FlowHandler, domain=DOMAIN):
             reauth_entry = self._get_reauth_entry()
             return self.async_update_reload_and_abort(
                 entry=reauth_entry,
-                data=data,
+                data_updates=data,
             )
 
         if self.source != SOURCE_RECONFIGURE:
@@ -223,6 +224,7 @@ class OneDriveConfigFlow(AbstractOAuth2FlowHandler, domain=DOMAIN):
 
     @staticmethod
     @callback
+    @override
     def async_get_options_flow(
         config_entry: OneDriveConfigEntry,
     ) -> OneDriveOptionsFlowHandler:

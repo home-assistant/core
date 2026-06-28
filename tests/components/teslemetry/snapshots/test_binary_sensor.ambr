@@ -1,8 +1,9 @@
 # serializer version: 1
 # name: test_binary_sensor[binary_sensor.energy_site_backup_capable-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -38,7 +39,7 @@
 # name: test_binary_sensor[binary_sensor.energy_site_backup_capable-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'Energy Site Backup capable',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Energy Site Backup capable',
     }),
     'context': <ANY>,
     'entity_id': 'binary_sensor.energy_site_backup_capable',
@@ -50,8 +51,9 @@
 # ---
 # name: test_binary_sensor[binary_sensor.energy_site_grid_services_active-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -87,7 +89,7 @@
 # name: test_binary_sensor[binary_sensor.energy_site_grid_services_active-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'Energy Site Grid services active',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Energy Site Grid services active',
     }),
     'context': <ANY>,
     'entity_id': 'binary_sensor.energy_site_grid_services_active',
@@ -99,8 +101,9 @@
 # ---
 # name: test_binary_sensor[binary_sensor.energy_site_grid_services_enabled-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -136,7 +139,7 @@
 # name: test_binary_sensor[binary_sensor.energy_site_grid_services_enabled-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'Energy Site Grid services enabled',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Energy Site Grid services enabled',
     }),
     'context': <ANY>,
     'entity_id': 'binary_sensor.energy_site_grid_services_enabled',
@@ -148,8 +151,9 @@
 # ---
 # name: test_binary_sensor[binary_sensor.energy_site_grid_status-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -185,8 +189,8 @@
 # name: test_binary_sensor[binary_sensor.energy_site_grid_status-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'device_class': 'power',
-      'friendly_name': 'Energy Site Grid status',
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'power',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Energy Site Grid status',
     }),
     'context': <ANY>,
     'entity_id': 'binary_sensor.energy_site_grid_status',
@@ -198,8 +202,9 @@
 # ---
 # name: test_binary_sensor[binary_sensor.energy_site_storm_watch_active-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -235,7 +240,7 @@
 # name: test_binary_sensor[binary_sensor.energy_site_storm_watch_active-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'Energy Site Storm watch active',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Energy Site Storm watch active',
     }),
     'context': <ANY>,
     'entity_id': 'binary_sensor.energy_site_storm_watch_active',
@@ -247,8 +252,9 @@
 # ---
 # name: test_binary_sensor[binary_sensor.test_battery_heater-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -284,8 +290,8 @@
 # name: test_binary_sensor[binary_sensor.test_battery_heater-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'device_class': 'heat',
-      'friendly_name': 'Test Battery heater',
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'heat',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Test Battery heater',
     }),
     'context': <ANY>,
     'entity_id': 'binary_sensor.test_battery_heater',
@@ -297,8 +303,9 @@
 # ---
 # name: test_binary_sensor[binary_sensor.test_cabin_overheat_protection_active-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -334,8 +341,8 @@
 # name: test_binary_sensor[binary_sensor.test_cabin_overheat_protection_active-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'device_class': 'heat',
-      'friendly_name': 'Test Cabin overheat protection active',
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'heat',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Test Cabin overheat protection active',
     }),
     'context': <ANY>,
     'entity_id': 'binary_sensor.test_cabin_overheat_protection_active',
@@ -347,8 +354,9 @@
 # ---
 # name: test_binary_sensor[binary_sensor.test_charge_cable-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -384,8 +392,8 @@
 # name: test_binary_sensor[binary_sensor.test_charge_cable-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'device_class': 'connectivity',
-      'friendly_name': 'Test Charge cable',
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'connectivity',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Test Charge cable',
     }),
     'context': <ANY>,
     'entity_id': 'binary_sensor.test_charge_cable',
@@ -397,8 +405,9 @@
 # ---
 # name: test_binary_sensor[binary_sensor.test_charger_has_multiple_phases-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -434,7 +443,7 @@
 # name: test_binary_sensor[binary_sensor.test_charger_has_multiple_phases-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'Test Charger has multiple phases',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Test Charger has multiple phases',
     }),
     'context': <ANY>,
     'entity_id': 'binary_sensor.test_charger_has_multiple_phases',
@@ -446,8 +455,9 @@
 # ---
 # name: test_binary_sensor[binary_sensor.test_dashcam-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -483,8 +493,8 @@
 # name: test_binary_sensor[binary_sensor.test_dashcam-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'device_class': 'running',
-      'friendly_name': 'Test Dashcam',
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'running',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Test Dashcam',
     }),
     'context': <ANY>,
     'entity_id': 'binary_sensor.test_dashcam',
@@ -496,8 +506,9 @@
 # ---
 # name: test_binary_sensor[binary_sensor.test_front_driver_door-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -533,8 +544,8 @@
 # name: test_binary_sensor[binary_sensor.test_front_driver_door-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'device_class': 'door',
-      'friendly_name': 'Test Front driver door',
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'door',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Test Front driver door',
     }),
     'context': <ANY>,
     'entity_id': 'binary_sensor.test_front_driver_door',
@@ -546,8 +557,9 @@
 # ---
 # name: test_binary_sensor[binary_sensor.test_front_driver_window-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -583,8 +595,8 @@
 # name: test_binary_sensor[binary_sensor.test_front_driver_window-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'device_class': 'window',
-      'friendly_name': 'Test Front driver window',
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'window',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Test Front driver window',
     }),
     'context': <ANY>,
     'entity_id': 'binary_sensor.test_front_driver_window',
@@ -596,8 +608,9 @@
 # ---
 # name: test_binary_sensor[binary_sensor.test_front_passenger_door-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -633,8 +646,8 @@
 # name: test_binary_sensor[binary_sensor.test_front_passenger_door-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'device_class': 'door',
-      'friendly_name': 'Test Front passenger door',
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'door',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Test Front passenger door',
     }),
     'context': <ANY>,
     'entity_id': 'binary_sensor.test_front_passenger_door',
@@ -646,8 +659,9 @@
 # ---
 # name: test_binary_sensor[binary_sensor.test_front_passenger_window-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -683,8 +697,8 @@
 # name: test_binary_sensor[binary_sensor.test_front_passenger_window-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'device_class': 'window',
-      'friendly_name': 'Test Front passenger window',
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'window',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Test Front passenger window',
     }),
     'context': <ANY>,
     'entity_id': 'binary_sensor.test_front_passenger_window',
@@ -696,8 +710,9 @@
 # ---
 # name: test_binary_sensor[binary_sensor.test_preconditioning-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -733,7 +748,7 @@
 # name: test_binary_sensor[binary_sensor.test_preconditioning-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'Test Preconditioning',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Test Preconditioning',
     }),
     'context': <ANY>,
     'entity_id': 'binary_sensor.test_preconditioning',
@@ -745,8 +760,9 @@
 # ---
 # name: test_binary_sensor[binary_sensor.test_preconditioning_enabled-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -782,7 +798,7 @@
 # name: test_binary_sensor[binary_sensor.test_preconditioning_enabled-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'Test Preconditioning enabled',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Test Preconditioning enabled',
     }),
     'context': <ANY>,
     'entity_id': 'binary_sensor.test_preconditioning_enabled',
@@ -794,8 +810,9 @@
 # ---
 # name: test_binary_sensor[binary_sensor.test_rear_driver_door-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -831,8 +848,8 @@
 # name: test_binary_sensor[binary_sensor.test_rear_driver_door-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'device_class': 'door',
-      'friendly_name': 'Test Rear driver door',
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'door',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Test Rear driver door',
     }),
     'context': <ANY>,
     'entity_id': 'binary_sensor.test_rear_driver_door',
@@ -844,8 +861,9 @@
 # ---
 # name: test_binary_sensor[binary_sensor.test_rear_driver_window-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -881,8 +899,8 @@
 # name: test_binary_sensor[binary_sensor.test_rear_driver_window-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'device_class': 'window',
-      'friendly_name': 'Test Rear driver window',
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'window',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Test Rear driver window',
     }),
     'context': <ANY>,
     'entity_id': 'binary_sensor.test_rear_driver_window',
@@ -894,8 +912,9 @@
 # ---
 # name: test_binary_sensor[binary_sensor.test_rear_passenger_door-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -931,8 +950,8 @@
 # name: test_binary_sensor[binary_sensor.test_rear_passenger_door-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'device_class': 'door',
-      'friendly_name': 'Test Rear passenger door',
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'door',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Test Rear passenger door',
     }),
     'context': <ANY>,
     'entity_id': 'binary_sensor.test_rear_passenger_door',
@@ -944,8 +963,9 @@
 # ---
 # name: test_binary_sensor[binary_sensor.test_rear_passenger_window-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -981,8 +1001,8 @@
 # name: test_binary_sensor[binary_sensor.test_rear_passenger_window-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'device_class': 'window',
-      'friendly_name': 'Test Rear passenger window',
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'window',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Test Rear passenger window',
     }),
     'context': <ANY>,
     'entity_id': 'binary_sensor.test_rear_passenger_window',
@@ -994,8 +1014,9 @@
 # ---
 # name: test_binary_sensor[binary_sensor.test_scheduled_charging_pending-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -1031,7 +1052,7 @@
 # name: test_binary_sensor[binary_sensor.test_scheduled_charging_pending-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'Test Scheduled charging pending',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Test Scheduled charging pending',
     }),
     'context': <ANY>,
     'entity_id': 'binary_sensor.test_scheduled_charging_pending',
@@ -1043,8 +1064,9 @@
 # ---
 # name: test_binary_sensor[binary_sensor.test_status-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -1080,8 +1102,8 @@
 # name: test_binary_sensor[binary_sensor.test_status-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'device_class': 'connectivity',
-      'friendly_name': 'Test Status',
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'connectivity',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Test Status',
     }),
     'context': <ANY>,
     'entity_id': 'binary_sensor.test_status',
@@ -1093,8 +1115,9 @@
 # ---
 # name: test_binary_sensor[binary_sensor.test_tire_pressure_warning_front_left-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -1130,8 +1153,8 @@
 # name: test_binary_sensor[binary_sensor.test_tire_pressure_warning_front_left-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'device_class': 'problem',
-      'friendly_name': 'Test Tire pressure warning front left',
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'problem',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Test Tire pressure warning front left',
     }),
     'context': <ANY>,
     'entity_id': 'binary_sensor.test_tire_pressure_warning_front_left',
@@ -1143,8 +1166,9 @@
 # ---
 # name: test_binary_sensor[binary_sensor.test_tire_pressure_warning_front_right-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -1180,8 +1204,8 @@
 # name: test_binary_sensor[binary_sensor.test_tire_pressure_warning_front_right-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'device_class': 'problem',
-      'friendly_name': 'Test Tire pressure warning front right',
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'problem',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Test Tire pressure warning front right',
     }),
     'context': <ANY>,
     'entity_id': 'binary_sensor.test_tire_pressure_warning_front_right',
@@ -1193,8 +1217,9 @@
 # ---
 # name: test_binary_sensor[binary_sensor.test_tire_pressure_warning_rear_left-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -1230,8 +1255,8 @@
 # name: test_binary_sensor[binary_sensor.test_tire_pressure_warning_rear_left-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'device_class': 'problem',
-      'friendly_name': 'Test Tire pressure warning rear left',
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'problem',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Test Tire pressure warning rear left',
     }),
     'context': <ANY>,
     'entity_id': 'binary_sensor.test_tire_pressure_warning_rear_left',
@@ -1243,8 +1268,9 @@
 # ---
 # name: test_binary_sensor[binary_sensor.test_tire_pressure_warning_rear_right-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -1280,8 +1306,8 @@
 # name: test_binary_sensor[binary_sensor.test_tire_pressure_warning_rear_right-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'device_class': 'problem',
-      'friendly_name': 'Test Tire pressure warning rear right',
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'problem',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Test Tire pressure warning rear right',
     }),
     'context': <ANY>,
     'entity_id': 'binary_sensor.test_tire_pressure_warning_rear_right',
@@ -1293,8 +1319,9 @@
 # ---
 # name: test_binary_sensor[binary_sensor.test_trip_charging-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -1330,7 +1357,7 @@
 # name: test_binary_sensor[binary_sensor.test_trip_charging-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'Test Trip charging',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Test Trip charging',
     }),
     'context': <ANY>,
     'entity_id': 'binary_sensor.test_trip_charging',
@@ -1342,8 +1369,9 @@
 # ---
 # name: test_binary_sensor[binary_sensor.test_user_present-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -1379,8 +1407,8 @@
 # name: test_binary_sensor[binary_sensor.test_user_present-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'device_class': 'presence',
-      'friendly_name': 'Test User present',
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'presence',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Test User present',
     }),
     'context': <ANY>,
     'entity_id': 'binary_sensor.test_user_present',
@@ -1393,7 +1421,7 @@
 # name: test_binary_sensor_refresh[binary_sensor.energy_site_backup_capable-statealt]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'Energy Site Backup capable',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Energy Site Backup capable',
     }),
     'context': <ANY>,
     'entity_id': 'binary_sensor.energy_site_backup_capable',
@@ -1406,7 +1434,7 @@
 # name: test_binary_sensor_refresh[binary_sensor.energy_site_grid_services_active-statealt]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'Energy Site Grid services active',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Energy Site Grid services active',
     }),
     'context': <ANY>,
     'entity_id': 'binary_sensor.energy_site_grid_services_active',
@@ -1419,7 +1447,7 @@
 # name: test_binary_sensor_refresh[binary_sensor.energy_site_grid_services_enabled-statealt]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'Energy Site Grid services enabled',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Energy Site Grid services enabled',
     }),
     'context': <ANY>,
     'entity_id': 'binary_sensor.energy_site_grid_services_enabled',
@@ -1432,8 +1460,8 @@
 # name: test_binary_sensor_refresh[binary_sensor.energy_site_grid_status-statealt]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'device_class': 'power',
-      'friendly_name': 'Energy Site Grid status',
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'power',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Energy Site Grid status',
     }),
     'context': <ANY>,
     'entity_id': 'binary_sensor.energy_site_grid_status',
@@ -1446,7 +1474,7 @@
 # name: test_binary_sensor_refresh[binary_sensor.energy_site_storm_watch_active-statealt]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'Energy Site Storm watch active',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Energy Site Storm watch active',
     }),
     'context': <ANY>,
     'entity_id': 'binary_sensor.energy_site_storm_watch_active',
@@ -1459,8 +1487,8 @@
 # name: test_binary_sensor_refresh[binary_sensor.test_battery_heater-statealt]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'device_class': 'heat',
-      'friendly_name': 'Test Battery heater',
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'heat',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Test Battery heater',
     }),
     'context': <ANY>,
     'entity_id': 'binary_sensor.test_battery_heater',
@@ -1473,8 +1501,8 @@
 # name: test_binary_sensor_refresh[binary_sensor.test_cabin_overheat_protection_active-statealt]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'device_class': 'heat',
-      'friendly_name': 'Test Cabin overheat protection active',
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'heat',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Test Cabin overheat protection active',
     }),
     'context': <ANY>,
     'entity_id': 'binary_sensor.test_cabin_overheat_protection_active',
@@ -1487,8 +1515,8 @@
 # name: test_binary_sensor_refresh[binary_sensor.test_charge_cable-statealt]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'device_class': 'connectivity',
-      'friendly_name': 'Test Charge cable',
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'connectivity',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Test Charge cable',
     }),
     'context': <ANY>,
     'entity_id': 'binary_sensor.test_charge_cable',
@@ -1501,7 +1529,7 @@
 # name: test_binary_sensor_refresh[binary_sensor.test_charger_has_multiple_phases-statealt]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'Test Charger has multiple phases',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Test Charger has multiple phases',
     }),
     'context': <ANY>,
     'entity_id': 'binary_sensor.test_charger_has_multiple_phases',
@@ -1514,8 +1542,8 @@
 # name: test_binary_sensor_refresh[binary_sensor.test_dashcam-statealt]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'device_class': 'running',
-      'friendly_name': 'Test Dashcam',
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'running',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Test Dashcam',
     }),
     'context': <ANY>,
     'entity_id': 'binary_sensor.test_dashcam',
@@ -1528,8 +1556,8 @@
 # name: test_binary_sensor_refresh[binary_sensor.test_front_driver_door-statealt]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'device_class': 'door',
-      'friendly_name': 'Test Front driver door',
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'door',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Test Front driver door',
     }),
     'context': <ANY>,
     'entity_id': 'binary_sensor.test_front_driver_door',
@@ -1542,8 +1570,8 @@
 # name: test_binary_sensor_refresh[binary_sensor.test_front_driver_window-statealt]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'device_class': 'window',
-      'friendly_name': 'Test Front driver window',
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'window',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Test Front driver window',
     }),
     'context': <ANY>,
     'entity_id': 'binary_sensor.test_front_driver_window',
@@ -1556,8 +1584,8 @@
 # name: test_binary_sensor_refresh[binary_sensor.test_front_passenger_door-statealt]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'device_class': 'door',
-      'friendly_name': 'Test Front passenger door',
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'door',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Test Front passenger door',
     }),
     'context': <ANY>,
     'entity_id': 'binary_sensor.test_front_passenger_door',
@@ -1570,8 +1598,8 @@
 # name: test_binary_sensor_refresh[binary_sensor.test_front_passenger_window-statealt]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'device_class': 'window',
-      'friendly_name': 'Test Front passenger window',
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'window',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Test Front passenger window',
     }),
     'context': <ANY>,
     'entity_id': 'binary_sensor.test_front_passenger_window',
@@ -1584,7 +1612,7 @@
 # name: test_binary_sensor_refresh[binary_sensor.test_preconditioning-statealt]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'Test Preconditioning',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Test Preconditioning',
     }),
     'context': <ANY>,
     'entity_id': 'binary_sensor.test_preconditioning',
@@ -1597,7 +1625,7 @@
 # name: test_binary_sensor_refresh[binary_sensor.test_preconditioning_enabled-statealt]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'Test Preconditioning enabled',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Test Preconditioning enabled',
     }),
     'context': <ANY>,
     'entity_id': 'binary_sensor.test_preconditioning_enabled',
@@ -1610,8 +1638,8 @@
 # name: test_binary_sensor_refresh[binary_sensor.test_rear_driver_door-statealt]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'device_class': 'door',
-      'friendly_name': 'Test Rear driver door',
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'door',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Test Rear driver door',
     }),
     'context': <ANY>,
     'entity_id': 'binary_sensor.test_rear_driver_door',
@@ -1624,8 +1652,8 @@
 # name: test_binary_sensor_refresh[binary_sensor.test_rear_driver_window-statealt]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'device_class': 'window',
-      'friendly_name': 'Test Rear driver window',
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'window',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Test Rear driver window',
     }),
     'context': <ANY>,
     'entity_id': 'binary_sensor.test_rear_driver_window',
@@ -1638,8 +1666,8 @@
 # name: test_binary_sensor_refresh[binary_sensor.test_rear_passenger_door-statealt]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'device_class': 'door',
-      'friendly_name': 'Test Rear passenger door',
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'door',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Test Rear passenger door',
     }),
     'context': <ANY>,
     'entity_id': 'binary_sensor.test_rear_passenger_door',
@@ -1652,8 +1680,8 @@
 # name: test_binary_sensor_refresh[binary_sensor.test_rear_passenger_window-statealt]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'device_class': 'window',
-      'friendly_name': 'Test Rear passenger window',
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'window',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Test Rear passenger window',
     }),
     'context': <ANY>,
     'entity_id': 'binary_sensor.test_rear_passenger_window',
@@ -1666,7 +1694,7 @@
 # name: test_binary_sensor_refresh[binary_sensor.test_scheduled_charging_pending-statealt]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'Test Scheduled charging pending',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Test Scheduled charging pending',
     }),
     'context': <ANY>,
     'entity_id': 'binary_sensor.test_scheduled_charging_pending',
@@ -1679,8 +1707,8 @@
 # name: test_binary_sensor_refresh[binary_sensor.test_status-statealt]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'device_class': 'connectivity',
-      'friendly_name': 'Test Status',
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'connectivity',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Test Status',
     }),
     'context': <ANY>,
     'entity_id': 'binary_sensor.test_status',
@@ -1693,8 +1721,8 @@
 # name: test_binary_sensor_refresh[binary_sensor.test_tire_pressure_warning_front_left-statealt]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'device_class': 'problem',
-      'friendly_name': 'Test Tire pressure warning front left',
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'problem',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Test Tire pressure warning front left',
     }),
     'context': <ANY>,
     'entity_id': 'binary_sensor.test_tire_pressure_warning_front_left',
@@ -1707,8 +1735,8 @@
 # name: test_binary_sensor_refresh[binary_sensor.test_tire_pressure_warning_front_right-statealt]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'device_class': 'problem',
-      'friendly_name': 'Test Tire pressure warning front right',
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'problem',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Test Tire pressure warning front right',
     }),
     'context': <ANY>,
     'entity_id': 'binary_sensor.test_tire_pressure_warning_front_right',
@@ -1721,8 +1749,8 @@
 # name: test_binary_sensor_refresh[binary_sensor.test_tire_pressure_warning_rear_left-statealt]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'device_class': 'problem',
-      'friendly_name': 'Test Tire pressure warning rear left',
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'problem',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Test Tire pressure warning rear left',
     }),
     'context': <ANY>,
     'entity_id': 'binary_sensor.test_tire_pressure_warning_rear_left',
@@ -1735,8 +1763,8 @@
 # name: test_binary_sensor_refresh[binary_sensor.test_tire_pressure_warning_rear_right-statealt]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'device_class': 'problem',
-      'friendly_name': 'Test Tire pressure warning rear right',
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'problem',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Test Tire pressure warning rear right',
     }),
     'context': <ANY>,
     'entity_id': 'binary_sensor.test_tire_pressure_warning_rear_right',
@@ -1749,7 +1777,7 @@
 # name: test_binary_sensor_refresh[binary_sensor.test_trip_charging-statealt]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'Test Trip charging',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Test Trip charging',
     }),
     'context': <ANY>,
     'entity_id': 'binary_sensor.test_trip_charging',
@@ -1762,8 +1790,8 @@
 # name: test_binary_sensor_refresh[binary_sensor.test_user_present-statealt]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'device_class': 'presence',
-      'friendly_name': 'Test User present',
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'presence',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Test User present',
     }),
     'context': <ANY>,
     'entity_id': 'binary_sensor.test_user_present',

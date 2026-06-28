@@ -1,11 +1,12 @@
 # serializer version: 1
 # name: test_states[siren.downstairs_siren-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
-      'available_tones': list([
+      <SirenEntityCapabilityAttribute.AVAILABLE_TONES: 'available_tones'>: list([
         'ding',
         'motion',
       ]),
@@ -43,13 +44,13 @@
 # name: test_states[siren.downstairs_siren-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'attribution': 'Data provided by Ring.com',
-      'available_tones': list([
+      <EntityStateAttribute.ATTRIBUTION: 'attribution'>: 'Data provided by Ring.com',
+      <SirenEntityCapabilityAttribute.AVAILABLE_TONES: 'available_tones'>: list([
         'ding',
         'motion',
       ]),
-      'friendly_name': 'Downstairs Siren',
-      'supported_features': <SirenEntityFeature: 5>,
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Downstairs Siren',
+      <EntityStateAttribute.SUPPORTED_FEATURES: 'supported_features'>: <SirenEntityFeature: 5>,
     }),
     'context': <ANY>,
     'entity_id': 'siren.downstairs_siren',
@@ -61,8 +62,9 @@
 # ---
 # name: test_states[siren.front_siren-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -98,9 +100,9 @@
 # name: test_states[siren.front_siren-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'attribution': 'Data provided by Ring.com',
-      'friendly_name': 'Front Siren',
-      'supported_features': <SirenEntityFeature: 3>,
+      <EntityStateAttribute.ATTRIBUTION: 'attribution'>: 'Data provided by Ring.com',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Front Siren',
+      <EntityStateAttribute.SUPPORTED_FEATURES: 'supported_features'>: <SirenEntityFeature: 3>,
     }),
     'context': <ANY>,
     'entity_id': 'siren.front_siren',
@@ -112,8 +114,9 @@
 # ---
 # name: test_states[siren.internal_siren-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -149,9 +152,9 @@
 # name: test_states[siren.internal_siren-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'attribution': 'Data provided by Ring.com',
-      'friendly_name': 'Internal Siren',
-      'supported_features': <SirenEntityFeature: 3>,
+      <EntityStateAttribute.ATTRIBUTION: 'attribution'>: 'Data provided by Ring.com',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Internal Siren',
+      <EntityStateAttribute.SUPPORTED_FEATURES: 'supported_features'>: <SirenEntityFeature: 3>,
     }),
     'context': <ANY>,
     'entity_id': 'siren.internal_siren',

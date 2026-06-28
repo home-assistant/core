@@ -1,6 +1,6 @@
 """Support for Rheem EcoNet water heaters."""
 
-from __future__ import annotations
+from typing import override
 
 from pyeconet.equipment import Equipment, EquipmentType
 
@@ -74,6 +74,7 @@ class EcoNetBinarySensor(EcoNetEntity, BinarySensorEntity):
         )
 
     @property
-    def is_on(self):
+    @override
+    def is_on(self) -> bool:
         """Return true if the binary sensor is on."""
         return getattr(self._econet, self.entity_description.key)

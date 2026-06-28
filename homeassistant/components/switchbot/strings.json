@@ -9,7 +9,8 @@
     },
     "error": {
       "auth_failed": "Authentication failed: {error_detail}",
-      "encryption_key_invalid": "Key ID or encryption key is invalid"
+      "encryption_key_invalid": "Key ID or encryption key is invalid",
+      "unknown": "[%key:common::config_flow::error::unknown%]"
     },
     "flow_title": "{name} ({address})",
     "step": {
@@ -98,14 +99,29 @@
       },
       "door_unlocked_alarm": {
         "name": "Unlocked alarm"
+      },
+      "half_lock_calibration": {
+        "name": "Half-lock calibration"
+      },
+      "half_locked": {
+        "name": "Half locked"
       }
     },
     "button": {
+      "half_lock": {
+        "name": "Half lock"
+      },
+      "light_sensor": {
+        "name": "Light sensor"
+      },
       "next_image": {
         "name": "Next image"
       },
       "previous_image": {
         "name": "Previous image"
+      },
+      "sync_datetime": {
+        "name": "Sync date and time"
       }
     },
     "climate": {
@@ -202,6 +218,9 @@
       }
     },
     "light": {
+      "air_purifier_light": {
+        "name": "[%key:component::light::title%]"
+      },
       "light": {
         "state_attributes": {
           "effect": {
@@ -265,6 +284,20 @@
         }
       }
     },
+    "number": {
+      "display_time_offset": {
+        "name": "Display time offset"
+      }
+    },
+    "select": {
+      "time_format": {
+        "name": "Time format",
+        "state": {
+          "12h": "12-hour (AM/PM)",
+          "24h": "24-hour"
+        }
+      }
+    },
     "sensor": {
       "aqi_quality_level": {
         "name": "Air quality level",
@@ -273,6 +306,15 @@
           "good": "Good",
           "moderate": "Moderate",
           "unhealthy": "Unhealthy"
+        }
+      },
+      "battery_range": {
+        "name": "Battery range",
+        "state": {
+          "critical": "Critical",
+          "high": "[%key:common::state::high%]",
+          "low": "[%key:common::state::low%]",
+          "medium": "[%key:common::state::medium%]"
         }
       },
       "bluetooth_signal": {
@@ -310,6 +352,18 @@
             }
           }
         }
+      },
+      "child_lock": {
+        "name": "Child lock"
+      },
+      "horizontal_oscillation": {
+        "name": "Horizontal oscillation"
+      },
+      "vertical_oscillation": {
+        "name": "Vertical oscillation"
+      },
+      "wireless_charging": {
+        "name": "Wireless charging"
       }
     },
     "vacuum": {
@@ -336,7 +390,7 @@
       "message": "The device ID {device_id} does not belong to SwitchBot integration."
     },
     "device_not_found_error": {
-      "message": "Could not find Switchbot {sensor_type} with address {address}"
+      "message": "Could not find Switchbot {sensor_type} with address {address}: {reason}"
     },
     "device_without_config_entry": {
       "message": "The device ID {device_id} is not associated with a config entry."

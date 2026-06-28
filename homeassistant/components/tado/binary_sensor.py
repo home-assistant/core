@@ -1,11 +1,9 @@
 """Support for Tado sensors for each zone."""
 
-from __future__ import annotations
-
 from collections.abc import Callable
 from dataclasses import dataclass
 import logging
-from typing import Any
+from typing import Any, override
 
 from homeassistant.components.binary_sensor import (
     BinarySensorDeviceClass,
@@ -120,7 +118,7 @@ async def async_setup_entry(
 ) -> None:
     """Set up the Tado sensor platform."""
 
-    tado = entry.runtime_data.coordinator
+    tado = entry.runtime_data
     devices = tado.devices
     zones = tado.zones
     entities: list[BinarySensorEntity] = []
@@ -176,6 +174,7 @@ class TadoDeviceBinarySensor(TadoDeviceEntity, BinarySensorEntity):
         )
 
     @callback
+    @override
     def _handle_coordinator_update(self) -> None:
         """Handle updated data from the coordinator."""
         try:
@@ -212,6 +211,7 @@ class TadoZoneBinarySensor(TadoZoneEntity, BinarySensorEntity):
         )
 
     @callback
+    @override
     def _handle_coordinator_update(self) -> None:
         """Handle updated data from the coordinator."""
         try:

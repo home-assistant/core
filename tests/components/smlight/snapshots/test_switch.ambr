@@ -1,8 +1,9 @@
 # serializer version: 1
 # name: test_switch_setup[switch.mock_title_auto_zigbee_update-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -38,8 +39,8 @@
 # name: test_switch_setup[switch.mock_title_auto_zigbee_update-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'device_class': 'switch',
-      'friendly_name': 'Mock Title Auto Zigbee update',
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'switch',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Mock Title Auto Zigbee update',
     }),
     'context': <ANY>,
     'entity_id': 'switch.mock_title_auto_zigbee_update',
@@ -51,8 +52,9 @@
 # ---
 # name: test_switch_setup[switch.mock_title_disable_leds-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -88,8 +90,8 @@
 # name: test_switch_setup[switch.mock_title_disable_leds-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'device_class': 'switch',
-      'friendly_name': 'Mock Title Disable LEDs',
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'switch',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Mock Title Disable LEDs',
     }),
     'context': <ANY>,
     'entity_id': 'switch.mock_title_disable_leds',
@@ -101,8 +103,9 @@
 # ---
 # name: test_switch_setup[switch.mock_title_led_night_mode-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -138,8 +141,8 @@
 # name: test_switch_setup[switch.mock_title_led_night_mode-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'device_class': 'switch',
-      'friendly_name': 'Mock Title LED night mode',
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'switch',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Mock Title LED night mode',
     }),
     'context': <ANY>,
     'entity_id': 'switch.mock_title_led_night_mode',
@@ -151,8 +154,9 @@
 # ---
 # name: test_switch_setup[switch.mock_title_vpn_enabled-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -188,8 +192,8 @@
 # name: test_switch_setup[switch.mock_title_vpn_enabled-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'device_class': 'switch',
-      'friendly_name': 'Mock Title VPN enabled',
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'switch',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Mock Title VPN enabled',
     }),
     'context': <ANY>,
     'entity_id': 'switch.mock_title_vpn_enabled',

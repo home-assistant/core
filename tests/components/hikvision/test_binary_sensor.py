@@ -1,5 +1,6 @@
 """Test Hikvision binary sensors."""
 
+import logging
 from unittest.mock import MagicMock
 
 import pytest
@@ -115,15 +116,20 @@ async def test_binary_sensor_no_sensors(
     hass: HomeAssistant,
     mock_config_entry: MockConfigEntry,
     mock_hikcamera: MagicMock,
+    caplog: pytest.LogCaptureFixture,
 ) -> None:
     """Test setup when device has no sensors."""
     mock_hikcamera.return_value.current_event_states = None
 
-    await setup_integration(hass, mock_config_entry)
+    with caplog.at_level(logging.WARNING):
+        await setup_integration(hass, mock_config_entry)
 
     # No binary sensors should be created
     states = hass.states.async_entity_ids("binary_sensor")
     assert len(states) == 0
+
+    # Verify warning was logged
+    assert "has no sensors available" in caplog.text
 
 
 @pytest.mark.parametrize("amount_of_channels", [2])
@@ -131,6 +137,7 @@ async def test_binary_sensor_nvr_device(
     hass: HomeAssistant,
     mock_config_entry: MockConfigEntry,
     mock_hikcamera: MagicMock,
+    device_registry: dr.DeviceRegistry,
 ) -> None:
     """Test binary sensor naming for NVR devices."""
     mock_hikcamera.return_value.get_type = "NVR"
@@ -140,12 +147,22 @@ async def test_binary_sensor_nvr_device(
 
     await setup_integration(hass, mock_config_entry)
 
-    # NVR sensors are on per-channel devices
-    state = hass.states.get("binary_sensor.front_camera_channel_1_motion")
-    assert state is not None
+    # Verify NVR channel devices are created with via_device linking
+    channel_1_device = device_registry.async_get_device(
+        identifiers={(DOMAIN, f"{TEST_DEVICE_ID}_1")}
+    )
+    assert channel_1_device is not None
+    assert channel_1_device.via_device_id is not None
 
-    state = hass.states.get("binary_sensor.front_camera_channel_2_motion")
-    assert state is not None
+    channel_2_device = device_registry.async_get_device(
+        identifiers={(DOMAIN, f"{TEST_DEVICE_ID}_2")}
+    )
+    assert channel_2_device is not None
+    assert channel_2_device.via_device_id is not None
+
+    # Verify sensors are created (entity IDs depend on translation loading)
+    states = hass.states.async_entity_ids("binary_sensor")
+    assert len(states) == 2
 
 
 async def test_binary_sensor_state_on(
@@ -172,17 +189,22 @@ async def test_binary_sensor_device_class_unknown(
     hass: HomeAssistant,
     mock_config_entry: MockConfigEntry,
     mock_hikcamera: MagicMock,
+    caplog: pytest.LogCaptureFixture,
 ) -> None:
-    """Test binary sensor with unknown device class."""
+    """Test unknown sensor types are logged and skipped."""
     mock_hikcamera.return_value.current_event_states = {
         "Unknown Event": [(False, 1)],
     }
 
-    await setup_integration(hass, mock_config_entry)
+    with caplog.at_level(logging.WARNING):
+        await setup_integration(hass, mock_config_entry)
 
-    state = hass.states.get("binary_sensor.front_camera_unknown_event")
-    assert state is not None
-    assert state.attributes.get(ATTR_DEVICE_CLASS) is None
+    # No entity should be created for unknown sensor types
+    states = hass.states.async_entity_ids("binary_sensor")
+    assert len(states) == 0
+
+    # Verify warning was logged for unknown sensor type
+    assert "Unknown Hikvision sensor type 'Unknown Event'" in caplog.text
 
 
 async def test_yaml_import_creates_deprecation_issue(

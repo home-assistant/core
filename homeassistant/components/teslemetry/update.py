@@ -1,8 +1,6 @@
 """Update platform for Teslemetry integration."""
 
-from __future__ import annotations
-
-from typing import Any
+from typing import Any, override
 
 from tesla_fleet_api.const import Scope
 from tesla_fleet_api.teslemetry import Vehicle
@@ -51,6 +49,7 @@ class TeslemetryUpdateEntity(TeslemetryRootEntity, UpdateEntity):
     api: Vehicle
     _attr_supported_features = UpdateEntityFeature.PROGRESS
 
+    @override
     async def async_install(
         self, version: str | None, backup: bool, **kwargs: Any
     ) -> None:
@@ -79,6 +78,7 @@ class TeslemetryVehiclePollingUpdateEntity(
             "vehicle_state_software_update_status",
         )
 
+    @override
     def _async_update_attrs(self) -> None:
         """Update the attributes of the entity."""
 
@@ -147,6 +147,7 @@ class TeslemetryStreamingUpdateEntity(
             "vehicle_state_software_update_status",
         )
 
+    @override
     async def async_added_to_hass(self) -> None:
         """Handle entity which will be added."""
         await super().async_added_to_hass()
@@ -188,7 +189,7 @@ class TeslemetryStreamingUpdateEntity(
 
     def _async_handle_software_update_download_percent_complete(
         self, value: float | None
-    ):
+    ) -> None:
         """Handle software update download percent complete."""
 
         self._download_percentage = round(value) if value is not None else 0
@@ -203,20 +204,22 @@ class TeslemetryStreamingUpdateEntity(
 
     def _async_handle_software_update_installation_percent_complete(
         self, value: float | None
-    ):
+    ) -> None:
         """Handle software update installation percent complete."""
 
         self._install_percentage = round(value) if value is not None else 0
         self._async_update_progress()
         self.async_write_ha_state()
 
-    def _async_handle_software_update_scheduled_start_time(self, value: str | None):
+    def _async_handle_software_update_scheduled_start_time(
+        self, value: str | None
+    ) -> None:
         """Handle software update scheduled start time."""
 
         self._attr_in_progress = value is not None
         self.async_write_ha_state()
 
-    def _async_handle_software_update_version(self, value: str | None):
+    def _async_handle_software_update_version(self, value: str | None) -> None:
         """Handle software update version."""
 
         self._attr_latest_version = (
@@ -224,7 +227,7 @@ class TeslemetryStreamingUpdateEntity(
         )
         self.async_write_ha_state()
 
-    def _async_handle_version(self, value: str | None):
+    def _async_handle_version(self, value: str | None) -> None:
         """Handle version."""
 
         if value is not None:

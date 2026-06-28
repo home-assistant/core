@@ -35,11 +35,12 @@
 # name: test_fan_state[Air Purifier 131s][entities]
   list([
     EntityRegistryEntrySnapshot({
-      'aliases': set({
-      }),
+      'aliases': list([
+        None,
+      ]),
       'area_id': None,
       'capabilities': dict({
-        'preset_modes': list([
+        <FanEntityCapabilityAttribute.PRESET_MODES: 'preset_modes'>: list([
           'auto',
           'sleep',
         ]),
@@ -80,16 +81,16 @@
     'attributes': ReadOnlyDict({
       'active_time': 0,
       'display_status': 'on',
-      'friendly_name': 'Air Purifier 131s',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Air Purifier 131s',
       'mode': 'sleep',
-      'percentage': None,
-      'percentage_step': 33.333333333333336,
-      'preset_mode': 'sleep',
-      'preset_modes': list([
+      <FanEntityStateAttribute.PERCENTAGE: 'percentage'>: None,
+      <FanEntityStateAttribute.PERCENTAGE_STEP: 'percentage_step'>: 33.333333333333336,
+      <FanEntityStateAttribute.PRESET_MODE: 'preset_mode'>: 'sleep',
+      <FanEntityCapabilityAttribute.PRESET_MODES: 'preset_modes'>: list([
         'auto',
         'sleep',
       ]),
-      'supported_features': <FanEntityFeature: 57>,
+      <EntityStateAttribute.SUPPORTED_FEATURES: 'supported_features'>: <FanEntityFeature: 57>,
     }),
     'context': <ANY>,
     'entity_id': 'fan.air_purifier_131s',
@@ -135,11 +136,12 @@
 # name: test_fan_state[Air Purifier 200s][entities]
   list([
     EntityRegistryEntrySnapshot({
-      'aliases': set({
-      }),
+      'aliases': list([
+        None,
+      ]),
       'area_id': None,
       'capabilities': dict({
-        'preset_modes': list([
+        <FanEntityCapabilityAttribute.PRESET_MODES: 'preset_modes'>: list([
           'sleep',
         ]),
       }),
@@ -180,16 +182,16 @@
       'active_time': None,
       'child_lock': False,
       'display_status': 'on',
-      'friendly_name': 'Air Purifier 200s',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Air Purifier 200s',
       'mode': 'manual',
       'night_light': 'off',
-      'percentage': 33,
-      'percentage_step': 33.333333333333336,
-      'preset_mode': None,
-      'preset_modes': list([
+      <FanEntityStateAttribute.PERCENTAGE: 'percentage'>: 33,
+      <FanEntityStateAttribute.PERCENTAGE_STEP: 'percentage_step'>: 33.333333333333336,
+      <FanEntityStateAttribute.PRESET_MODE: 'preset_mode'>: None,
+      <FanEntityCapabilityAttribute.PRESET_MODES: 'preset_modes'>: list([
         'sleep',
       ]),
-      'supported_features': <FanEntityFeature: 57>,
+      <EntityStateAttribute.SUPPORTED_FEATURES: 'supported_features'>: <FanEntityFeature: 57>,
     }),
     'context': <ANY>,
     'entity_id': 'fan.air_purifier_200s',
@@ -235,11 +237,12 @@
 # name: test_fan_state[Air Purifier 400s][entities]
   list([
     EntityRegistryEntrySnapshot({
-      'aliases': set({
-      }),
+      'aliases': list([
+        None,
+      ]),
       'area_id': None,
       'capabilities': dict({
-        'preset_modes': list([
+        <FanEntityCapabilityAttribute.PRESET_MODES: 'preset_modes'>: list([
           'auto',
           'sleep',
         ]),
@@ -281,17 +284,17 @@
       'active_time': None,
       'child_lock': False,
       'display_status': 'on',
-      'friendly_name': 'Air Purifier 400s',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Air Purifier 400s',
       'mode': 'manual',
       'night_light': 'off',
-      'percentage': 25,
-      'percentage_step': 25.0,
-      'preset_mode': None,
-      'preset_modes': list([
+      <FanEntityStateAttribute.PERCENTAGE: 'percentage'>: 25,
+      <FanEntityStateAttribute.PERCENTAGE_STEP: 'percentage_step'>: 25.0,
+      <FanEntityStateAttribute.PRESET_MODE: 'preset_mode'>: None,
+      <FanEntityCapabilityAttribute.PRESET_MODES: 'preset_modes'>: list([
         'auto',
         'sleep',
       ]),
-      'supported_features': <FanEntityFeature: 57>,
+      <EntityStateAttribute.SUPPORTED_FEATURES: 'supported_features'>: <FanEntityFeature: 57>,
     }),
     'context': <ANY>,
     'entity_id': 'fan.air_purifier_400s',
@@ -337,11 +340,12 @@
 # name: test_fan_state[Air Purifier 600s][entities]
   list([
     EntityRegistryEntrySnapshot({
-      'aliases': set({
-      }),
+      'aliases': list([
+        None,
+      ]),
       'area_id': None,
       'capabilities': dict({
-        'preset_modes': list([
+        <FanEntityCapabilityAttribute.PRESET_MODES: 'preset_modes'>: list([
           'auto',
           'sleep',
         ]),
@@ -383,17 +387,17 @@
       'active_time': None,
       'child_lock': False,
       'display_status': 'on',
-      'friendly_name': 'Air Purifier 600s',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Air Purifier 600s',
       'mode': 'manual',
       'night_light': 'off',
-      'percentage': 25,
-      'percentage_step': 25.0,
-      'preset_mode': None,
-      'preset_modes': list([
+      <FanEntityStateAttribute.PERCENTAGE: 'percentage'>: 25,
+      <FanEntityStateAttribute.PERCENTAGE_STEP: 'percentage_step'>: 25.0,
+      <FanEntityStateAttribute.PRESET_MODE: 'preset_mode'>: None,
+      <FanEntityCapabilityAttribute.PRESET_MODES: 'preset_modes'>: list([
         'auto',
         'sleep',
       ]),
-      'supported_features': <FanEntityFeature: 57>,
+      <EntityStateAttribute.SUPPORTED_FEATURES: 'supported_features'>: <FanEntityFeature: 57>,
     }),
     'context': <ANY>,
     'entity_id': 'fan.air_purifier_600s',
@@ -735,11 +739,12 @@
 # name: test_fan_state[SmartTowerFan][entities]
   list([
     EntityRegistryEntrySnapshot({
-      'aliases': set({
-      }),
+      'aliases': list([
+        None,
+      ]),
       'area_id': None,
       'capabilities': dict({
-        'preset_modes': list([
+        <FanEntityCapabilityAttribute.PRESET_MODES: 'preset_modes'>: list([
           'auto',
           'normal',
           'sleep',
@@ -782,19 +787,19 @@
     'attributes': ReadOnlyDict({
       'active_time': None,
       'display_status': 'off',
-      'friendly_name': 'SmartTowerFan',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'SmartTowerFan',
       'mode': <FanModes.NORMAL: 'normal'>,
-      'oscillating': True,
-      'percentage': 0,
-      'percentage_step': 8.333333333333334,
-      'preset_mode': 'normal',
-      'preset_modes': list([
+      <FanEntityStateAttribute.OSCILLATING: 'oscillating'>: True,
+      <FanEntityStateAttribute.PERCENTAGE: 'percentage'>: 0,
+      <FanEntityStateAttribute.PERCENTAGE_STEP: 'percentage_step'>: 8.333333333333334,
+      <FanEntityStateAttribute.PRESET_MODE: 'preset_mode'>: 'normal',
+      <FanEntityCapabilityAttribute.PRESET_MODES: 'preset_modes'>: list([
         'auto',
         'normal',
         'sleep',
         'turbo',
       ]),
-      'supported_features': <FanEntityFeature: 59>,
+      <EntityStateAttribute.SUPPORTED_FEATURES: 'supported_features'>: <FanEntityFeature: 59>,
     }),
     'context': <ANY>,
     'entity_id': 'fan.smarttowerfan',

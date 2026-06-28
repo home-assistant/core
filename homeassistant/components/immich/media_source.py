@@ -1,12 +1,11 @@
 """Immich as a media source."""
 
-from __future__ import annotations
-
 from logging import getLogger
+from typing import override
 
 from aiohttp.web import HTTPNotFound, Request, Response, StreamResponse
 from aioimmich.assets.models import ImmichAsset
-from aioimmich.exceptions import ImmichError
+from aioimmich.exceptions import ImmichError, ImmichForbiddenError
 
 from homeassistant.components.http import HomeAssistantView
 from homeassistant.components.media_player import BrowseError, MediaClass
@@ -58,13 +57,16 @@ class ImmichMediaSource(MediaSource):
         super().__init__(DOMAIN)
         self.hass = hass
 
+    @override
     async def async_browse_media(
         self,
         item: MediaSourceItem,
     ) -> BrowseMediaSource:
         """Return media."""
         if not (entries := self.hass.config_entries.async_loaded_entries(DOMAIN)):
-            raise BrowseError("Immich is not configured")
+            raise BrowseError(
+                translation_domain=DOMAIN, translation_key="not_configured"
+            )
         return BrowseMediaSource(
             domain=DOMAIN,
             identifier=None,
@@ -79,7 +81,7 @@ class ImmichMediaSource(MediaSource):
             ],
         )
 
-    async def _async_build_immich(
+    async def _async_build_immich(  # noqa: C901
         self, item: MediaSourceItem, entries: list[ConfigEntry]
     ) -> list[BrowseMediaSource]:
         """Handle browsing different immich instances."""
@@ -122,11 +124,11 @@ class ImmichMediaSource(MediaSource):
                     identifier=f"{identifier.unique_id}|{collection}",
                     media_class=MediaClass.DIRECTORY,
                     media_content_type=MediaClass.IMAGE,
-                    title=collection,
+                    title=collection.split("|", maxsplit=1)[0],
                     can_play=False,
                     can_expand=True,
                 )
-                for collection in ("albums", "people", "tags")
+                for collection in ("albums", "favorites|favorites", "people", "tags")
             ]
 
         # --------------------------------------------------------
@@ -137,6 +139,12 @@ class ImmichMediaSource(MediaSource):
                 LOGGER.debug("Render all albums for %s", entry.title)
                 try:
                     albums = await immich_api.albums.async_get_all_albums()
+                except ImmichForbiddenError as err:
+                    raise BrowseError(
+                        translation_domain=DOMAIN,
+                        translation_key="missing_api_permission",
+                        translation_placeholders={"msg": str(err)},
+                    ) from err
                 except ImmichError:
                     return []
 
@@ -158,6 +166,12 @@ class ImmichMediaSource(MediaSource):
                 LOGGER.debug("Render all tags for %s", entry.title)
                 try:
                     tags = await immich_api.tags.async_get_all_tags()
+                except ImmichForbiddenError as err:
+                    raise BrowseError(
+                        translation_domain=DOMAIN,
+                        translation_key="missing_api_permission",
+                        translation_placeholders={"msg": str(err)},
+                    ) from err
                 except ImmichError:
                     return []
 
@@ -178,6 +192,12 @@ class ImmichMediaSource(MediaSource):
                 LOGGER.debug("Render all people for %s", entry.title)
                 try:
                     people = await immich_api.people.async_get_all_people()
+                except ImmichForbiddenError as err:
+                    raise BrowseError(
+                        translation_domain=DOMAIN,
+                        translation_key="missing_api_permission",
+                        translation_placeholders={"msg": str(err)},
+                    ) from err
                 except ImmichError:
                     return []
 
@@ -207,10 +227,15 @@ class ImmichMediaSource(MediaSource):
                 entry.title,
             )
             try:
-                album_info = await immich_api.albums.async_get_album_info(
-                    identifier.collection_id
+                assets = await immich_api.search.async_get_all_by_album_ids(
+                    [identifier.collection_id]
                 )
-                assets = album_info.assets
+            except ImmichForbiddenError as err:
+                raise BrowseError(
+                    translation_domain=DOMAIN,
+                    translation_key="missing_api_permission",
+                    translation_placeholders={"msg": str(err)},
+                ) from err
             except ImmichError:
                 return []
 
@@ -223,6 +248,12 @@ class ImmichMediaSource(MediaSource):
                 assets = await immich_api.search.async_get_all_by_tag_ids(
                     [identifier.collection_id]
                 )
+            except ImmichForbiddenError as err:
+                raise BrowseError(
+                    translation_domain=DOMAIN,
+                    translation_key="missing_api_permission",
+                    translation_placeholders={"msg": str(err)},
+                ) from err
             except ImmichError:
                 return []
 
@@ -235,6 +266,24 @@ class ImmichMediaSource(MediaSource):
                 assets = await immich_api.search.async_get_all_by_person_ids(
                     [identifier.collection_id]
                 )
+            except ImmichForbiddenError as err:
+                raise BrowseError(
+                    translation_domain=DOMAIN,
+                    translation_key="missing_api_permission",
+                    translation_placeholders={"msg": str(err)},
+                ) from err
+            except ImmichError:
+                return []
+        elif identifier.collection == "favorites":
+            LOGGER.debug("Render all assets for favorites collection")
+            try:
+                assets = await immich_api.search.async_get_all_favorites()
+            except ImmichForbiddenError as err:
+                raise BrowseError(
+                    translation_domain=DOMAIN,
+                    translation_key="missing_api_permission",
+                    translation_placeholders={"msg": str(err)},
+                ) from err
             except ImmichError:
                 return []
 
@@ -276,18 +325,23 @@ class ImmichMediaSource(MediaSource):
 
         return ret
 
+    @override
     async def async_resolve_media(self, item: MediaSourceItem) -> PlayMedia:
         """Resolve media to a url."""
         try:
             identifier = ImmichMediaSourceIdentifier(item.identifier)
         except IndexError as err:
             raise Unresolvable(
-                f"Could not parse identifier: {item.identifier}"
+                translation_domain=DOMAIN,
+                translation_key="identifier_unresolvable",
+                translation_placeholders={"identifier": item.identifier},
             ) from err
 
         if identifier.mime_type is None:
             raise Unresolvable(
-                f"Could not resolve identifier that has no mime-type: {item.identifier}"
+                translation_domain=DOMAIN,
+                translation_key="identifier_no_mime_type_unresolvable",
+                translation_placeholders={"identifier": item.identifier},
             )
 
         return PlayMedia(

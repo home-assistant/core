@@ -1,11 +1,9 @@
 """Data coordinator for Watts Vision integration."""
 
-from __future__ import annotations
-
 from dataclasses import dataclass
 from datetime import datetime, timedelta
 import logging
-from typing import TYPE_CHECKING
+from typing import TYPE_CHECKING, override
 
 from visionpluspython.client import WattsVisionClient
 from visionpluspython.exceptions import (
@@ -63,16 +61,17 @@ class WattsVisionHubCoordinator(DataUpdateCoordinator[dict[str, Device]]):
             config_entry=config_entry,
         )
         self.client = client
-        self._last_discovery: datetime | None = None
+        self.last_discovery: datetime | None = None
         self.previous_devices: set[str] = set()
 
+    @override
     async def _async_update_data(self) -> dict[str, Device]:
         """Fetch data and periodic device discovery."""
-        now = datetime.now()
-        is_first_refresh = self._last_discovery is None
+        now = datetime.now()  # pylint: disable=home-assistant-enforce-naive-now
+        is_first_refresh = self.last_discovery is None
         discovery_interval_elapsed = (
-            self._last_discovery is not None
-            and now - self._last_discovery
+            self.last_discovery is not None
+            and now - self.last_discovery
             >= timedelta(minutes=DISCOVERY_INTERVAL_MINUTES)
         )
 
@@ -80,7 +79,10 @@ class WattsVisionHubCoordinator(DataUpdateCoordinator[dict[str, Device]]):
             try:
                 devices_list = await self.client.discover_devices()
             except WattsVisionAuthError as err:
-                raise ConfigEntryAuthFailed("Authentication failed") from err
+                raise ConfigEntryAuthFailed(
+                    translation_domain=DOMAIN,
+                    translation_key="authentication_failed",
+                ) from err
             except (
                 WattsVisionConnectionError,
                 WattsVisionTimeoutError,
@@ -91,12 +93,15 @@ class WattsVisionHubCoordinator(DataUpdateCoordinator[dict[str, Device]]):
                 ValueError,
             ) as err:
                 if is_first_refresh:
-                    raise ConfigEntryNotReady("Failed to discover devices") from err
+                    raise ConfigEntryNotReady(
+                        translation_domain=DOMAIN,
+                        translation_key="failed_to_discover_devices",
+                    ) from err
                 _LOGGER.warning(
                     "Periodic discovery failed: %s, falling back to update", err
                 )
             else:
-                self._last_discovery = now
+                self.last_discovery = now
                 devices = {device.device_id: device for device in devices_list}
 
                 current_devices = set(devices.keys())
@@ -114,7 +119,10 @@ class WattsVisionHubCoordinator(DataUpdateCoordinator[dict[str, Device]]):
         try:
             devices = await self.client.get_devices_report(device_ids)
         except WattsVisionAuthError as err:
-            raise ConfigEntryAuthFailed("Authentication failed") from err
+            raise ConfigEntryAuthFailed(
+                translation_domain=DOMAIN,
+                translation_key="authentication_failed",
+            ) from err
         except (
             WattsVisionConnectionError,
             WattsVisionTimeoutError,
@@ -124,7 +132,10 @@ class WattsVisionHubCoordinator(DataUpdateCoordinator[dict[str, Device]]):
             TimeoutError,
             ValueError,
         ) as err:
-            raise UpdateFailed("Failed to update devices") from err
+            raise UpdateFailed(
+                translation_domain=DOMAIN,
+                translation_key="failed_to_update_devices",
+            ) from err
 
         _LOGGER.debug("Updated %d devices", len(devices))
         return devices
@@ -172,7 +183,7 @@ class WattsVisionDeviceCoordinator(DataUpdateCoordinator[WattsVisionDeviceData])
         self.client = client
         self.device_id = device_id
         self.hub_coordinator = hub_coordinator
-        self._fast_polling_until: datetime | None = None
+        self.fast_polling_until: datetime | None = None
 
         # Listen to hub coordinator updates
         self.unsubscribe_hub_listener = hub_coordinator.async_add_listener(
@@ -180,15 +191,23 @@ class WattsVisionDeviceCoordinator(DataUpdateCoordinator[WattsVisionDeviceData])
         )
 
     def _handle_hub_update(self) -> None:
-        """Handle updates from hub coordinator."""
-        if self.hub_coordinator.data and self.device_id in self.hub_coordinator.data:
-            device = self.hub_coordinator.data[self.device_id]
-            self.async_set_updated_data(WattsVisionDeviceData(device=device))
+        """Handle updates from hub coordinator.
 
+        Update data and notify listeners without rescheduling the refresh
+        interval, so an in-flight fast-polling cycle is not interrupted.
+        """
+        if self.hub_coordinator.data and self.device_id in self.hub_coordinator.data:
+            self.data = WattsVisionDeviceData(
+                device=self.hub_coordinator.data[self.device_id]
+            )
+            self.last_update_success = True
+            self.async_update_listeners()
+
+    @override
     async def _async_update_data(self) -> WattsVisionDeviceData:
         """Refresh specific device."""
-        if self._fast_polling_until and datetime.now() > self._fast_polling_until:
-            self._fast_polling_until = None
+        if self.fast_polling_until and datetime.now() > self.fast_polling_until:  # pylint: disable=home-assistant-enforce-naive-now
+            self.fast_polling_until = None
             self.update_interval = None
             _LOGGER.debug(
                 "Device %s: Fast polling period ended, returning to manual refresh",
@@ -196,7 +215,7 @@ class WattsVisionDeviceCoordinator(DataUpdateCoordinator[WattsVisionDeviceData])
             )
 
         try:
-            device = await self.client.get_device(self.device_id, refresh=True)
+            device = await self.client.get_device(self.device_id)
         except (
             WattsVisionAuthError,
             WattsVisionConnectionError,
@@ -207,17 +226,25 @@ class WattsVisionDeviceCoordinator(DataUpdateCoordinator[WattsVisionDeviceData])
             TimeoutError,
             ValueError,
         ) as err:
-            raise UpdateFailed(f"Failed to refresh device {self.device_id}") from err
+            raise UpdateFailed(
+                translation_domain=DOMAIN,
+                translation_key="failed_to_refresh_device",
+                translation_placeholders={"device_id": self.device_id},
+            ) from err
 
         if not device:
-            raise UpdateFailed(f"Device {self.device_id} not found")
+            raise UpdateFailed(
+                translation_domain=DOMAIN,
+                translation_key="device_not_found",
+                translation_placeholders={"device_id": self.device_id},
+            )
 
         _LOGGER.debug("Refreshed device %s", self.device_id)
         return WattsVisionDeviceData(device=device)
 
     def trigger_fast_polling(self, duration: int = 60) -> None:
         """Activate fast polling for a specified duration after a command."""
-        self._fast_polling_until = datetime.now() + timedelta(seconds=duration)
+        self.fast_polling_until = datetime.now() + timedelta(seconds=duration)  # pylint: disable=home-assistant-enforce-naive-now
         self.update_interval = timedelta(seconds=FAST_POLLING_INTERVAL_SECONDS)
         _LOGGER.debug(
             "Device %s: Activated fast polling for %d seconds", self.device_id, duration

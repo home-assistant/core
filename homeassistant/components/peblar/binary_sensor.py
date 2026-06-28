@@ -1,9 +1,8 @@
 """Support for Peblar binary sensors."""
 
-from __future__ import annotations
-
 from collections.abc import Callable
 from dataclasses import dataclass
+from typing import override
 
 from homeassistant.components.binary_sensor import (
     BinarySensorDeviceClass,
@@ -72,6 +71,7 @@ class PeblarBinarySensorEntity(
     entity_description: PeblarBinarySensorEntityDescription
 
     @property
+    @override
     def is_on(self) -> bool:
         """Return state of the binary sensor."""
         return self.entity_description.is_on_fn(self.coordinator.data)

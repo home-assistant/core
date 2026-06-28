@@ -1,17 +1,15 @@
 """Button for Shelly."""
 
-from __future__ import annotations
-
 from collections.abc import Callable
 from dataclasses import dataclass
 from functools import partial
-from typing import TYPE_CHECKING, Any, Final
+from typing import TYPE_CHECKING, Any, Final, override
 
 from aioshelly.const import BLU_TRV_IDENTIFIER, MODEL_BLU_GATEWAY_G3, RPC_GENERATIONS
 from aioshelly.exceptions import DeviceConnectionError, InvalidAuthError, RpcCallError
 
 from homeassistant.components.button import (
-    DOMAIN as BUTTON_PLATFORM,
+    DOMAIN as BUTTON_DOMAIN,
     ButtonDeviceClass,
     ButtonEntity,
     ButtonEntityDescription,
@@ -217,7 +215,7 @@ async def async_setup_entry(
     # added in https://github.com/home-assistant/core/pull/154673
     entry_sleep_period = config_entry.data[CONF_SLEEP_PERIOD]
     if device_gen in RPC_GENERATIONS and entry_sleep_period:
-        async_remove_shelly_entity(hass, BUTTON_PLATFORM, f"{coordinator.mac}-reboot")
+        async_remove_shelly_entity(hass, BUTTON_DOMAIN, f"{coordinator.mac}-reboot")
 
     entities: list[ShellyButton] = []
 
@@ -249,13 +247,13 @@ async def async_setup_entry(
         # the user can remove virtual components from the device configuration, so
         # we need to remove orphaned entities
         virtual_button_component_ids = get_virtual_component_ids(
-            coordinator.device.config, BUTTON_PLATFORM
+            coordinator.device.config, BUTTON_DOMAIN
         )
         async_remove_orphaned_entities(
             hass,
             config_entry.entry_id,
             coordinator.mac,
-            BUTTON_PLATFORM,
+            BUTTON_DOMAIN,
             virtual_button_component_ids,
         )
 
@@ -282,6 +280,7 @@ class ShellyBaseButton(
 
         self.entity_description = description
 
+    @override
     async def async_press(self) -> None:
         """Triggers the Shelly button press service."""
         try:
@@ -332,6 +331,7 @@ class ShellyButton(ShellyBaseButton):
         else:
             self._attr_device_info = get_entity_rpc_device_info(coordinator)
 
+    @override
     async def _press_method(self) -> None:
         """Press method."""
         method = getattr(self.coordinator.device, self.entity_description.press_action)
@@ -368,6 +368,7 @@ class ShellyBluTrvButton(ShellyRpcAttributeEntity, ButtonEntity):
         )
 
     @rpc_call
+    @override
     async def async_press(self) -> None:
         """Triggers the Shelly button press service."""
         await self.coordinator.device.trigger_blu_trv_calibration(self._id)
@@ -380,6 +381,7 @@ class RpcVirtualButton(ShellyRpcAttributeEntity, ButtonEntity):
     _id: int
 
     @rpc_call
+    @override
     async def async_press(self) -> None:
         """Triggers the Shelly button press service."""
         if TYPE_CHECKING:
@@ -394,6 +396,7 @@ class RpcSleepingSmokeMuteButton(ShellySleepingRpcAttributeEntity, ButtonEntity)
     entity_description: RpcButtonDescription
 
     @rpc_call
+    @override
     async def async_press(self) -> None:
         """Triggers the Shelly button press service."""
         if TYPE_CHECKING:
@@ -402,6 +405,7 @@ class RpcSleepingSmokeMuteButton(ShellySleepingRpcAttributeEntity, ButtonEntity)
         await self.coordinator.device.smoke_mute_alarm(get_rpc_key_id(self.key))
 
     @property
+    @override
     def available(self) -> bool:
         """Available."""
         available = super().available

@@ -1,11 +1,12 @@
 """Test the Home Assistant Yellow config flow."""
 
 from collections.abc import Generator
-from unittest.mock import AsyncMock, Mock, call, patch
+from unittest.mock import ANY, AsyncMock, Mock, call, patch
 
 from aiohasupervisor import SupervisorError
 from aiohasupervisor.models import YellowOptions
 import pytest
+from universal_silabs_flasher.flasher import YellowFlasher
 
 from homeassistant.components.hassio import (
     DOMAIN as HASSIO_DOMAIN,
@@ -18,7 +19,6 @@ from homeassistant.components.homeassistant_hardware.firmware_config_flow import
 )
 from homeassistant.components.homeassistant_hardware.silabs_multiprotocol_addon import (
     CONF_DISABLE_MULTI_PAN,
-    get_flasher_addon_manager,
     get_multiprotocol_addon_manager,
 )
 from homeassistant.components.homeassistant_hardware.util import (
@@ -376,7 +376,8 @@ async def test_firmware_options_flow_zigbee(hass: HomeAssistant) -> None:
         patch(
             "homeassistant.components.homeassistant_hardware.firmware_config_flow.probe_silabs_firmware_info",
             side_effect=[
-                # First call: probe before installation (returns current SPINEL firmware)
+                # First call: probe before installation (returns current SPINEL
+                # firmware)
                 FirmwareInfo(
                     device=RADIO_DEVICE,
                     firmware_type=ApplicationType.SPINEL,
@@ -418,9 +419,16 @@ async def test_firmware_options_flow_zigbee(hass: HomeAssistant) -> None:
         "firmware_version": fw_version,
     }
 
-    # Verify async_flash_silabs_firmware was called with Yellow's reset method
-    assert flash_mock.call_count == 1
-    assert flash_mock.mock_calls[0].kwargs["bootloader_reset_methods"] == ["yellow"]
+    assert flash_mock.mock_calls == [
+        call(
+            hass=hass,
+            device=RADIO_DEVICE,
+            fw_data=ANY,
+            flasher_cls=YellowFlasher,
+            expected_installed_firmware_type=ApplicationType.EZSP,
+            progress_callback=ANY,
+        )
+    ]
 
 
 @pytest.mark.usefixtures("addon_installed")
@@ -541,15 +549,11 @@ async def test_options_flow_multipan_uninstall(hass: HomeAssistant) -> None:
         version="1.0.0",
     )
 
-    mock_flasher_manager = Mock(spec_set=get_flasher_addon_manager(hass))
-    mock_flasher_manager.async_get_addon_info.return_value = AddonInfo(
-        available=True,
-        hostname=None,
-        options={},
-        state=AddonState.NOT_RUNNING,
-        update_available=False,
-        version="1.0.0",
-    )
+    mock_fw_manifest = Mock()
+    mock_fw_manifest.filename = "yellow_zigbee_ncp_7.4.4.0.gbl"
+    mock_fw_client = AsyncMock()
+    mock_fw_client.async_update_data.return_value = Mock(firmwares=[mock_fw_manifest])
+    mock_fw_client.async_fetch_firmware.return_value = b"fake_firmware"
 
     with (
         patch(
@@ -557,8 +561,12 @@ async def test_options_flow_multipan_uninstall(hass: HomeAssistant) -> None:
             return_value=mock_multipan_manager,
         ),
         patch(
-            "homeassistant.components.homeassistant_hardware.silabs_multiprotocol_addon.get_flasher_addon_manager",
-            return_value=mock_flasher_manager,
+            "homeassistant.components.homeassistant_hardware.silabs_multiprotocol_addon.async_flash_silabs_firmware",
+            new_callable=AsyncMock,
+        ),
+        patch(
+            "homeassistant.components.homeassistant_hardware.silabs_multiprotocol_addon.FirmwareUpdateClient",
+            return_value=mock_fw_client,
         ),
         patch(
             "homeassistant.components.homeassistant_hardware.silabs_multiprotocol_addon.is_hassio",
@@ -587,11 +595,15 @@ async def test_options_flow_multipan_uninstall(hass: HomeAssistant) -> None:
             result["flow_id"], user_input={CONF_DISABLE_MULTI_PAN: True}
         )
 
-        # Finish the flow
+        # Uninstall multiprotocol addon
         result = await hass.config_entries.options.async_configure(result["flow_id"])
         await hass.async_block_till_done(wait_background_tasks=True)
+
+        # Flash zigbee firmware
         result = await hass.config_entries.options.async_configure(result["flow_id"])
         await hass.async_block_till_done(wait_background_tasks=True)
+
+        # Flashing complete
         result = await hass.config_entries.options.async_configure(result["flow_id"])
         assert result["type"] is FlowResultType.CREATE_ENTRY
 

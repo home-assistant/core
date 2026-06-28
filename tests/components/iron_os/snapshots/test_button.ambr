@@ -1,8 +1,9 @@
 # serializer version: 1
 # name: test_button_platform[button.pinecil_restore_default_settings-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -38,7 +39,7 @@
 # name: test_button_platform[button.pinecil_restore_default_settings-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'Pinecil Restore default settings',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Pinecil Restore default settings',
     }),
     'context': <ANY>,
     'entity_id': 'button.pinecil_restore_default_settings',
@@ -50,8 +51,9 @@
 # ---
 # name: test_button_platform[button.pinecil_save_settings-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -87,7 +89,7 @@
 # name: test_button_platform[button.pinecil_save_settings-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'Pinecil Save settings',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Pinecil Save settings',
     }),
     'context': <ANY>,
     'entity_id': 'button.pinecil_save_settings',

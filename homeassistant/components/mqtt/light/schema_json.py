@@ -1,10 +1,8 @@
 """Support for MQTT JSON lights."""
 
-from __future__ import annotations
-
 from contextlib import suppress
 import logging
-from typing import TYPE_CHECKING, Any, cast
+from typing import TYPE_CHECKING, Any, cast, override
 
 import voluptuous as vol
 
@@ -35,13 +33,9 @@ from homeassistant.components.light import (
 )
 from homeassistant.const import (
     CONF_BRIGHTNESS,
-    CONF_COLOR_TEMP,
     CONF_EFFECT,
-    CONF_HS,
     CONF_NAME,
     CONF_OPTIMISTIC,
-    CONF_RGB,
-    CONF_XY,
     STATE_ON,
 )
 from homeassistant.core import callback
@@ -55,7 +49,6 @@ from homeassistant.util.json import json_loads_object
 from .. import subscription
 from ..config import DEFAULT_QOS, DEFAULT_RETAIN, MQTT_RW_SCHEMA
 from ..const import (
-    CONF_COLOR_MODE,
     CONF_COLOR_TEMP_KELVIN,
     CONF_COMMAND_TOPIC,
     CONF_EFFECT_LIST,
@@ -96,7 +89,7 @@ DEFAULT_NAME = "MQTT JSON Light"
 DEFAULT_FLASH = True
 DEFAULT_TRANSITION = True
 
-_PLATFORM_SCHEMA_BASE = (
+PLATFORM_SCHEMA_MODERN_JSON = (
     MQTT_RW_SCHEMA.extend(
         {
             vol.Optional(CONF_BRIGHTNESS, default=DEFAULT_BRIGHTNESS): cv.boolean,
@@ -139,24 +132,8 @@ _PLATFORM_SCHEMA_BASE = (
     .extend(MQTT_LIGHT_SCHEMA_SCHEMA.schema)
 )
 
-# Support for legacy color_mode handling was removed with HA Core 2025.3
-# The removed attributes can be removed from the schema's from HA Core 2026.3
 DISCOVERY_SCHEMA_JSON = vol.All(
-    cv.removed(CONF_COLOR_MODE, raise_if_present=False),
-    cv.removed(CONF_COLOR_TEMP, raise_if_present=False),
-    cv.removed(CONF_HS, raise_if_present=False),
-    cv.removed(CONF_RGB, raise_if_present=False),
-    cv.removed(CONF_XY, raise_if_present=False),
-    _PLATFORM_SCHEMA_BASE.extend({}, extra=vol.REMOVE_EXTRA),
-)
-
-PLATFORM_SCHEMA_MODERN_JSON = vol.All(
-    cv.removed(CONF_COLOR_MODE),
-    cv.removed(CONF_COLOR_TEMP),
-    cv.removed(CONF_HS),
-    cv.removed(CONF_RGB),
-    cv.removed(CONF_XY),
-    _PLATFORM_SCHEMA_BASE,
+    PLATFORM_SCHEMA_MODERN_JSON.extend({}, extra=vol.REMOVE_EXTRA),
 )
 
 
@@ -167,16 +144,17 @@ class MqttLightJson(MqttEntity, LightEntity, RestoreEntity):
     _entity_id_format = ENTITY_ID_FORMAT
     _attributes_extra_blocked = MQTT_LIGHT_ATTRIBUTES_BLOCKED
 
-    _fixed_color_mode: ColorMode | str | None = None
     _flash_times: dict[str, int | None]
     _topic: dict[str, str | None]
     _optimistic: bool
 
     @staticmethod
+    @override
     def config_schema() -> VolSchemaType:
         """Return the config schema."""
         return DISCOVERY_SCHEMA_JSON
 
+    @override
     def _setup_from_config(self, config: ConfigType) -> None:
         """(Re)Setup the entity."""
         self._color_temp_kelvin = config[CONF_COLOR_TEMP_KELVIN]
@@ -211,6 +189,7 @@ class MqttLightJson(MqttEntity, LightEntity, RestoreEntity):
         self._attr_supported_features |= (
             config[CONF_TRANSITION] and LightEntityFeature.TRANSITION
         )
+        self._attr_color_mode = ColorMode.UNKNOWN
         if supported_color_modes := self._config.get(CONF_SUPPORTED_COLOR_MODES):
             self._attr_supported_color_modes = supported_color_modes
             if self.supported_color_modes and len(self.supported_color_modes) == 1:
@@ -328,6 +307,7 @@ class MqttLightJson(MqttEntity, LightEntity, RestoreEntity):
                 self._attr_effect = cast(str, values["effect"])
 
     @callback
+    @override
     def _prepare_subscribe_topics(self) -> None:
         """(Re)Subscribe to topics."""
         self.add_subscription(
@@ -347,6 +327,7 @@ class MqttLightJson(MqttEntity, LightEntity, RestoreEntity):
             },
         )
 
+    @override
     async def _subscribe_topics(self) -> None:
         """(Re)Subscribe to topics."""
         subscription.async_subscribe_topics_internal(self.hass, self._sub_state)
@@ -358,8 +339,8 @@ class MqttLightJson(MqttEntity, LightEntity, RestoreEntity):
             self._attr_brightness = last_attributes.get(
                 ATTR_BRIGHTNESS, self.brightness
             )
-            self._attr_color_mode = last_attributes.get(
-                ATTR_COLOR_MODE, self.color_mode
+            self._attr_color_mode = (
+                last_attributes.get(ATTR_COLOR_MODE) or self.color_mode
             )
             self._attr_color_temp_kelvin = last_attributes.get(
                 ATTR_COLOR_TEMP_KELVIN, self.color_temp_kelvin
@@ -405,6 +386,7 @@ class MqttLightJson(MqttEntity, LightEntity, RestoreEntity):
             and color_mode in self.supported_color_modes
         )
 
+    @override
     async def async_turn_on(self, **kwargs: Any) -> None:
         """Turn the device on.
 
@@ -527,6 +509,7 @@ class MqttLightJson(MqttEntity, LightEntity, RestoreEntity):
         if should_update:
             self.async_write_ha_state()
 
+    @override
     async def async_turn_off(self, **kwargs: Any) -> None:
         """Turn the device off.
 

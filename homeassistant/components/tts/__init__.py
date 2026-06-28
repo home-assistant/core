@@ -1,7 +1,5 @@
 """Provide functionality for TTS."""
 
-from __future__ import annotations
-
 import asyncio
 from collections.abc import AsyncGenerator, MutableMapping
 from dataclasses import dataclass, field
@@ -142,7 +140,7 @@ class TTSCache:
     """If an error occurred while loading, contains the error."""
 
     _consumers: list[asyncio.Queue[bytes | None]] | None = None
-    """A queue for each current consumer to notify of new data while the generator is loading."""
+    """Queue for consumers to receive data while loading."""
 
     def __init__(
         self,
@@ -527,6 +525,8 @@ class ResultStream:
 
         This method will leverage a disk cache to speed up generation.
         """
+        if self._result_cache.done():
+            return
         self._result_cache.set_result(
             self._manager.async_cache_message_in_memory(
                 engine=self.engine,
@@ -543,6 +543,8 @@ class ResultStream:
 
         This method can result in faster first byte when generating long responses.
         """
+        if self._result_cache.done():
+            return
         self._result_cache.set_result(
             self._manager.async_cache_message_stream_in_memory(
                 engine=self.engine,
@@ -572,23 +574,43 @@ class ResultStream:
         """Override the TTS stream with a different media path."""
         self._override_media_path = Path(media_path)
 
+    @property
+    def _needs_conversion(self) -> bool:
+        """Return if the result requires conversion to a preferred format."""
+        return any(
+            self.options.get(option) is not None
+            for option in (
+                ATTR_PREFERRED_FORMAT,
+                ATTR_PREFERRED_SAMPLE_RATE,
+                ATTR_PREFERRED_SAMPLE_CHANNELS,
+                ATTR_PREFERRED_SAMPLE_BYTES,
+            )
+        )
+
+    @callback
+    def async_get_media_path(self) -> Path | None:
+        """Return the path to the result on disk, if available."""
+        if self._override_media_path is not None:
+            # An override that needs conversion no longer matches the file on
+            # disk, so the result is only available through the stream.
+            if self._needs_conversion:
+                return None
+            return self._override_media_path
+
+        if not self.use_file_cache or not self._result_cache.done():
+            return None
+
+        return self._manager.async_get_cache_file_path(
+            self._result_cache.result().cache_key
+        )
+
     async def _async_stream_override_result(self) -> AsyncGenerator[bytes]:
         """Get the stream of the overridden result."""
         assert self._override_media_path is not None
 
         preferred_format = self.options.get(ATTR_PREFERRED_FORMAT)
-        to_sample_rate = self.options.get(ATTR_PREFERRED_SAMPLE_RATE)
-        to_sample_channels = self.options.get(ATTR_PREFERRED_SAMPLE_CHANNELS)
-        to_sample_bytes = self.options.get(ATTR_PREFERRED_SAMPLE_BYTES)
 
-        needs_conversion = (
-            (preferred_format is not None)
-            or (to_sample_rate is not None)
-            or (to_sample_channels is not None)
-            or (to_sample_bytes is not None)
-        )
-
-        if not needs_conversion:
+        if not self._needs_conversion:
             # Read file directly (no conversion)
             yield await self.hass.async_add_executor_job(
                 self._override_media_path.read_bytes
@@ -610,6 +632,10 @@ class ResultStream:
         )
         async for chunk in converted_audio:
             yield chunk
+
+    def delete(self) -> None:
+        """Remove the result stream from the manager."""
+        self._manager.async_delete_result_stream(self.token)
 
 
 def _hash_options(options: dict) -> str:
@@ -744,6 +770,13 @@ class SpeechManager:
         await task
 
     @callback
+    def async_get_cache_file_path(self, cache_key: str) -> Path | None:
+        """Return the path to a cached TTS file, if it is in the file cache."""
+        if not (filename := self.file_cache.get(cache_key)):
+            return None
+        return Path(self.cache_dir) / filename
+
+    @callback
     def async_register_legacy_engine(
         self, engine: str, provider: Provider, config: ConfigType
     ) -> None:
@@ -806,6 +839,11 @@ class SpeechManager:
         if stream:
             stream.last_used = monotonic()
         return stream
+
+    @callback
+    def async_delete_result_stream(self, token: str) -> None:
+        """Delete a result stream given a token."""
+        self.token_to_stream.pop(token, None)
 
     @callback
     def async_create_result_stream(

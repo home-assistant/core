@@ -1,16 +1,10 @@
 """Number platform for Liebherr integration."""
 
-from __future__ import annotations
-
 from collections.abc import Callable
 from dataclasses import dataclass
+from typing import TYPE_CHECKING, override
 
-from pyliebherrhomeapi import (
-    LiebherrConnectionError,
-    LiebherrTimeoutError,
-    TemperatureControl,
-    TemperatureUnit,
-)
+from pyliebherrhomeapi import TemperatureControl, TemperatureUnit
 
 from homeassistant.components.number import (
     DEFAULT_MAX_VALUE,
@@ -20,8 +14,8 @@ from homeassistant.components.number import (
     NumberEntityDescription,
 )
 from homeassistant.const import UnitOfTemperature
-from homeassistant.core import HomeAssistant
-from homeassistant.exceptions import HomeAssistantError
+from homeassistant.core import HomeAssistant, callback
+from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
 from .const import DOMAIN
@@ -59,22 +53,41 @@ NUMBER_TYPES: tuple[LiebherrNumberEntityDescription, ...] = (
 )
 
 
+def _create_number_entities(
+    coordinators: list[LiebherrCoordinator],
+) -> list[LiebherrNumber]:
+    """Create number entities for the given coordinators."""
+    return [
+        LiebherrNumber(
+            coordinator=coordinator,
+            zone_id=temp_control.zone_id,
+            description=description,
+        )
+        for coordinator in coordinators
+        for temp_control in coordinator.data.get_temperature_controls().values()
+        for description in NUMBER_TYPES
+    ]
+
+
 async def async_setup_entry(
     hass: HomeAssistant,
     entry: LiebherrConfigEntry,
     async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up Liebherr number entities."""
-    coordinators = entry.runtime_data
     async_add_entities(
-        LiebherrNumber(
-            coordinator=coordinator,
-            zone_id=temp_control.zone_id,
-            description=description,
+        _create_number_entities(list(entry.runtime_data.coordinators.values()))
+    )
+
+    @callback
+    def _async_new_device(coordinators: list[LiebherrCoordinator]) -> None:
+        """Add number entities for new devices."""
+        async_add_entities(_create_number_entities(coordinators))
+
+    entry.async_on_unload(
+        async_dispatcher_connect(
+            hass, f"{DOMAIN}_new_device_{entry.entry_id}", _async_new_device
         )
-        for coordinator in coordinators.values()
-        for temp_control in coordinator.data.get_temperature_controls().values()
-        for description in NUMBER_TYPES
     )
 
 
@@ -100,6 +113,7 @@ class LiebherrNumber(LiebherrZoneEntity, NumberEntity):
             self._attr_translation_key = f"{description.translation_key}_{zone_key}"
 
     @property
+    @override
     def native_unit_of_measurement(self) -> str | None:
         """Return the unit of measurement."""
         if (temp_control := self.temperature_control) is None:
@@ -107,14 +121,15 @@ class LiebherrNumber(LiebherrZoneEntity, NumberEntity):
         return self.entity_description.unit_fn(temp_control)
 
     @property
+    @override
     def native_value(self) -> float | None:
         """Return the current value."""
-        # temperature_control is guaranteed to exist when entity is available
-        return self.entity_description.value_fn(
-            self.temperature_control  # type: ignore[arg-type]
-        )
+        if TYPE_CHECKING:
+            assert self.temperature_control is not None
+        return self.entity_description.value_fn(self.temperature_control)
 
     @property
+    @override
     def native_min_value(self) -> float:
         """Return the minimum value."""
         if (temp_control := self.temperature_control) is None:
@@ -124,6 +139,7 @@ class LiebherrNumber(LiebherrZoneEntity, NumberEntity):
         return min_val
 
     @property
+    @override
     def native_max_value(self) -> float:
         """Return the maximum value."""
         if (temp_control := self.temperature_control) is None:
@@ -133,32 +149,29 @@ class LiebherrNumber(LiebherrZoneEntity, NumberEntity):
         return max_val
 
     @property
+    @override
     def available(self) -> bool:
         """Return if entity is available."""
         return super().available and self.temperature_control is not None
 
+    @override
     async def async_set_native_value(self, value: float) -> None:
         """Set new value."""
-        # temperature_control is guaranteed to exist when entity is available
+        if TYPE_CHECKING:
+            assert self.temperature_control is not None
         temp_control = self.temperature_control
 
         unit = (
             TemperatureUnit.FAHRENHEIT
-            if temp_control.unit == TemperatureUnit.FAHRENHEIT  # type: ignore[union-attr]
+            if temp_control.unit == TemperatureUnit.FAHRENHEIT
             else TemperatureUnit.CELSIUS
         )
 
-        try:
-            await self.coordinator.client.set_temperature(
+        await self._async_send_command(
+            self.coordinator.client.set_temperature(
                 device_id=self.coordinator.device_id,
                 zone_id=self._zone_id,
                 target=int(value),
                 unit=unit,
-            )
-        except (LiebherrConnectionError, LiebherrTimeoutError) as err:
-            raise HomeAssistantError(
-                translation_domain=DOMAIN,
-                translation_key="set_temperature_failed",
-            ) from err
-
-        await self.coordinator.async_request_refresh()
+            ),
+        )

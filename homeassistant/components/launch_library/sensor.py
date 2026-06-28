@@ -1,11 +1,9 @@
 """Support for Launch Library sensors."""
 
-from __future__ import annotations
-
 from collections.abc import Callable
 from dataclasses import dataclass
 from datetime import datetime
-from typing import Any
+from typing import Any, override
 
 from pylaunches.types import Event, Launch
 
@@ -14,19 +12,15 @@ from homeassistant.components.sensor import (
     SensorEntity,
     SensorEntityDescription,
 )
-from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_NAME, PERCENTAGE
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.device_registry import DeviceEntryType, DeviceInfo
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
-from homeassistant.helpers.update_coordinator import (
-    CoordinatorEntity,
-    DataUpdateCoordinator,
-)
+from homeassistant.helpers.update_coordinator import CoordinatorEntity
 from homeassistant.util.dt import parse_datetime
 
-from . import LaunchLibraryData
 from .const import DOMAIN
+from .coordinator import LaunchLibraryConfigEntry, LaunchLibraryCoordinator
 
 DEFAULT_NEXT_LAUNCH_NAME = "Next launch"
 
@@ -121,12 +115,12 @@ SENSOR_DESCRIPTIONS: tuple[LaunchLibrarySensorEntityDescription, ...] = (
 
 async def async_setup_entry(
     hass: HomeAssistant,
-    entry: ConfigEntry,
+    entry: LaunchLibraryConfigEntry,
     async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up the sensor platform."""
     name = entry.data.get(CONF_NAME, DEFAULT_NEXT_LAUNCH_NAME)
-    coordinator: DataUpdateCoordinator[LaunchLibraryData] = hass.data[DOMAIN]
+    coordinator = entry.runtime_data
 
     async_add_entities(
         LaunchLibrarySensor(
@@ -139,9 +133,7 @@ async def async_setup_entry(
     )
 
 
-class LaunchLibrarySensor(
-    CoordinatorEntity[DataUpdateCoordinator[LaunchLibraryData]], SensorEntity
-):
+class LaunchLibrarySensor(CoordinatorEntity[LaunchLibraryCoordinator], SensorEntity):
     """Representation of the next launch sensors."""
 
     _attr_attribution = "Data provided by Launch Library."
@@ -151,7 +143,7 @@ class LaunchLibrarySensor(
 
     def __init__(
         self,
-        coordinator: DataUpdateCoordinator[LaunchLibraryData],
+        coordinator: LaunchLibraryCoordinator,
         entry_id: str,
         description: LaunchLibrarySensorEntityDescription,
         name: str,
@@ -167,6 +159,7 @@ class LaunchLibrarySensor(
         )
 
     @property
+    @override
     def native_value(self) -> datetime | str | int | None:
         """Return the state of the sensor."""
         if self._next_event is None:
@@ -174,6 +167,7 @@ class LaunchLibrarySensor(
         return self.entity_description.value_fn(self._next_event)
 
     @property
+    @override
     def extra_state_attributes(self) -> dict[str, Any] | None:
         """Return the attributes of the sensor."""
         if self._next_event is None:
@@ -181,11 +175,13 @@ class LaunchLibrarySensor(
         return self.entity_description.attributes_fn(self._next_event)
 
     @property
+    @override
     def available(self) -> bool:
         """Return if the sensor is available."""
         return super().available and self._next_event is not None
 
     @callback
+    @override
     def _handle_coordinator_update(self) -> None:
         """Handle updated data from the coordinator."""
         if self.entity_description.key == "starship_launch":
@@ -198,6 +194,7 @@ class LaunchLibrarySensor(
         self._next_event = next((event for event in (events)), None)
         super()._handle_coordinator_update()
 
+    @override
     async def async_added_to_hass(self) -> None:
         """When entity is added to hass."""
         await super().async_added_to_hass()

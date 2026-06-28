@@ -1,8 +1,6 @@
 """Representation of Z-Wave thermostats."""
 
-from __future__ import annotations
-
-from typing import Any, cast
+from typing import Any, cast, override
 
 from zwave_js_server.const import CommandClass
 from zwave_js_server.const.command_class.thermostat import (
@@ -272,6 +270,7 @@ class ZWaveClimate(ZWaveBaseEntity, ClimateEntity):
         return THERMOSTAT_MODE_SETPOINT_MAP.get(int(self._current_mode.value), [])
 
     @property
+    @override
     def temperature_unit(self) -> str:
         """Return the unit of measurement used by the platform."""
         if (
@@ -283,7 +282,8 @@ class ZWaveClimate(ZWaveBaseEntity, ClimateEntity):
         return UnitOfTemperature.CELSIUS
 
     @property
-    def hvac_mode(self) -> HVACMode:
+    @override
+    def hvac_mode(self) -> HVACMode | None:
         """Return hvac operation ie. heat, cool mode."""
         if self._current_mode is None:
             # Thermostat(valve) with no support for setting
@@ -292,14 +292,19 @@ class ZWaveClimate(ZWaveBaseEntity, ClimateEntity):
         if self._current_mode.value is None:
             # guard missing value
             return HVACMode.HEAT
-        return ZW_HVAC_MODE_MAP.get(int(self._current_mode.value), HVACMode.HEAT_COOL)
+        mode = ZW_HVAC_MODE_MAP.get(int(self._current_mode.value))
+        if mode is not None and mode not in self._hvac_modes:
+            return None
+        return mode
 
     @property
+    @override
     def hvac_modes(self) -> list[HVACMode]:
         """Return the list of available hvac operation modes."""
         return list(self._hvac_modes)
 
     @property
+    @override
     def hvac_action(self) -> HVACAction | None:
         """Return the current running hvac operation if supported."""
         if not self._operating_state:
@@ -310,16 +315,19 @@ class ZWaveClimate(ZWaveBaseEntity, ClimateEntity):
         return HVAC_CURRENT_MAP.get(int(self._operating_state.value))
 
     @property
+    @override
     def current_humidity(self) -> int | None:
         """Return the current humidity level."""
         return get_value_of_zwave_value(self._current_humidity)
 
     @property
+    @override
     def current_temperature(self) -> float | None:
         """Return the current temperature."""
         return get_value_of_zwave_value(self._current_temp)
 
     @property
+    @override
     def target_temperature(self) -> float | None:
         """Return the temperature we try to reach."""
         if (
@@ -334,6 +342,7 @@ class ZWaveClimate(ZWaveBaseEntity, ClimateEntity):
         return self._setpoint_temperature(self._current_mode_setpoint_enums[0])
 
     @property
+    @override
     def target_temperature_high(self) -> float | None:
         """Return the highbound target temperature we try to reach."""
         if (
@@ -348,6 +357,7 @@ class ZWaveClimate(ZWaveBaseEntity, ClimateEntity):
         return self._setpoint_temperature(self._current_mode_setpoint_enums[1])
 
     @property
+    @override
     def target_temperature_low(self) -> float | None:
         """Return the lowbound target temperature we try to reach."""
         if (
@@ -362,6 +372,7 @@ class ZWaveClimate(ZWaveBaseEntity, ClimateEntity):
         return self._setpoint_temperature(self._current_mode_setpoint_enums[0])
 
     @property
+    @override
     def preset_mode(self) -> str | None:
         """Return the current preset mode, e.g., home, away, temp."""
         if self._current_mode is None or self._current_mode.value is None:
@@ -376,11 +387,13 @@ class ZWaveClimate(ZWaveBaseEntity, ClimateEntity):
         return PRESET_NONE
 
     @property
+    @override
     def preset_modes(self) -> list[str] | None:
         """Return a list of available preset modes."""
         return list(self._hvac_presets)
 
     @property
+    @override
     def fan_mode(self) -> str | None:
         """Return the fan setting."""
         if (
@@ -392,6 +405,7 @@ class ZWaveClimate(ZWaveBaseEntity, ClimateEntity):
         return None
 
     @property
+    @override
     def fan_modes(self) -> list[str] | None:
         """Return the list of available fan modes."""
         if self._fan_mode and self._fan_mode.metadata.states:
@@ -399,6 +413,7 @@ class ZWaveClimate(ZWaveBaseEntity, ClimateEntity):
         return None
 
     @property
+    @override
     def extra_state_attributes(self) -> dict[str, str] | None:
         """Return the optional state attributes."""
         if (
@@ -415,6 +430,7 @@ class ZWaveClimate(ZWaveBaseEntity, ClimateEntity):
         return None
 
     @property
+    @override
     def min_temp(self) -> float:
         """Return the minimum temperature."""
         min_temp = 0.0  # Not using DEFAULT_MIN_TEMP to allow wider range
@@ -431,6 +447,7 @@ class ZWaveClimate(ZWaveBaseEntity, ClimateEntity):
         return TemperatureConverter.convert(min_temp, base_unit, self.temperature_unit)
 
     @property
+    @override
     def max_temp(self) -> float:
         """Return the maximum temperature."""
         max_temp = 50.0  # Not using DEFAULT_MAX_TEMP to allow wider range
@@ -446,6 +463,7 @@ class ZWaveClimate(ZWaveBaseEntity, ClimateEntity):
 
         return TemperatureConverter.convert(max_temp, base_unit, self.temperature_unit)
 
+    @override
     async def async_set_fan_mode(self, fan_mode: str) -> None:
         """Set new target fan mode."""
         assert self._fan_mode is not None
@@ -462,6 +480,7 @@ class ZWaveClimate(ZWaveBaseEntity, ClimateEntity):
 
         await self._async_set_value(self._fan_mode, new_state)
 
+    @override
     async def async_set_temperature(self, **kwargs: Any) -> None:
         """Set new target temperature."""
         hvac_mode: HVACMode | None = kwargs.get(ATTR_HVAC_MODE)
@@ -489,6 +508,7 @@ class ZWaveClimate(ZWaveBaseEntity, ClimateEntity):
             if target_temp_high is not None:
                 await self._async_set_value(setpoint_high, target_temp_high)
 
+    @override
     async def async_set_hvac_mode(self, hvac_mode: HVACMode) -> None:
         """Set new target hvac mode."""
 
@@ -502,10 +522,12 @@ class ZWaveClimate(ZWaveBaseEntity, ClimateEntity):
             self._last_hvac_mode_id_before_off = self._current_mode.value
         await self._async_set_value(self._current_mode, self._hvac_modes[hvac_mode])
 
+    @override
     async def async_turn_off(self) -> None:
         """Turn the entity off."""
         await self.async_set_hvac_mode(HVACMode.OFF)
 
+    @override
     async def async_turn_on(self) -> None:
         """Turn the entity on."""
         # If current mode is not off, do nothing
@@ -544,22 +566,28 @@ class ZWaveClimate(ZWaveBaseEntity, ClimateEntity):
             hvac_mode = next(mode for mode in self._hvac_modes if mode != HVACMode.OFF)
         await self.async_set_hvac_mode(hvac_mode)
 
+    @override
     async def async_set_preset_mode(self, preset_mode: str) -> None:
         """Set new target preset mode."""
         assert self._current_mode is not None
         if preset_mode == PRESET_NONE:
-            # try to restore to the (translated) main hvac mode
-            await self.async_set_hvac_mode(self.hvac_mode)
+            # Try to restore to the (translated) main hvac mode.
+            if (hvac_mode := self.hvac_mode) is None:
+                # Current preset mode doesn't map to a supported HVAC mode.
+                # Pick the first supported non-off mode.
+                hvac_mode = next(
+                    mode for mode in self._hvac_modes if mode != HVACMode.OFF
+                )
+            await self.async_set_hvac_mode(hvac_mode)
             return
-        preset_mode_value = self._hvac_presets.get(preset_mode)
-        if preset_mode_value is None:
-            raise ValueError(f"Received an invalid preset mode: {preset_mode}")
+
+        preset_mode_value = self._hvac_presets[preset_mode]
 
         await self._async_set_value(self._current_mode, preset_mode_value)
 
 
 class DynamicCurrentTempClimate(ZWaveClimate):
-    """Representation of a thermostat that can dynamically use a different Zwave Value for current temp."""
+    """Thermostat that dynamically uses a different Zwave Value for current temp."""
 
     def __init__(
         self, config_entry: ZwaveJSConfigEntry, driver: Driver, info: ZwaveDiscoveryInfo
@@ -571,6 +599,7 @@ class DynamicCurrentTempClimate(ZWaveClimate):
         )
 
     @property
+    @override
     def current_temperature(self) -> float | None:
         """Return the current temperature."""
         assert self.info.platform_data

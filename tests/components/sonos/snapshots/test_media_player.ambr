@@ -1,10 +1,19 @@
 # serializer version: 1
 # name: test_entity_basic[media_player.zone_a-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
+      <MediaPlayerEntityCapabilityAttribute.INPUT_SOURCE_LIST: 'source_list'>: list([
+        '66 - Watercolors',
+        "Les P'tits Bateaux",
+        'James Taylor Radio',
+        '1984',
+        'American Tall Tales',
+        'sample playlist',
+      ]),
     }),
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -30,7 +39,7 @@
     'platform': 'sonos',
     'previous_unique_id': None,
     'suggested_object_id': None,
-    'supported_features': <MediaPlayerEntityFeature: 4127295>,
+    'supported_features': <MediaPlayerEntityFeature: 8321599>,
     'translation_key': None,
     'unique_id': 'RINCON_test',
     'unit_of_measurement': None,
@@ -39,17 +48,25 @@
 # name: test_entity_basic[media_player.zone_a-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'device_class': 'speaker',
-      'friendly_name': 'Zone A',
-      'group_members': list([
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'speaker',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Zone A',
+      <MediaPlayerEntityStateAttribute.GROUP_MEMBERS: 'group_members'>: list([
         'media_player.zone_a',
       ]),
-      'is_volume_muted': False,
-      'media_content_type': <MediaType.MUSIC: 'music'>,
-      'repeat': <RepeatMode.OFF: 'off'>,
-      'shuffle': False,
-      'supported_features': <MediaPlayerEntityFeature: 4127295>,
-      'volume_level': 0.19,
+      <MediaPlayerEntityStateAttribute.MEDIA_VOLUME_MUTED: 'is_volume_muted'>: False,
+      <MediaPlayerEntityStateAttribute.MEDIA_CONTENT_TYPE: 'media_content_type'>: <MediaType.MUSIC: 'music'>,
+      <MediaPlayerEntityStateAttribute.MEDIA_REPEAT: 'repeat'>: <RepeatMode.OFF: 'off'>,
+      <MediaPlayerEntityStateAttribute.MEDIA_SHUFFLE: 'shuffle'>: False,
+      <MediaPlayerEntityCapabilityAttribute.INPUT_SOURCE_LIST: 'source_list'>: list([
+        '66 - Watercolors',
+        "Les P'tits Bateaux",
+        'James Taylor Radio',
+        '1984',
+        'American Tall Tales',
+        'sample playlist',
+      ]),
+      <EntityStateAttribute.SUPPORTED_FEATURES: 'supported_features'>: <MediaPlayerEntityFeature: 8321599>,
+      <MediaPlayerEntityStateAttribute.MEDIA_VOLUME_LEVEL: 'volume_level'>: 0.19,
     }),
     'context': <ANY>,
     'entity_id': 'media_player.zone_a',

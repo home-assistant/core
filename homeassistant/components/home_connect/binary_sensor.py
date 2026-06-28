@@ -1,7 +1,7 @@
 """Provides a binary sensor for Home Connect."""
 
 from dataclasses import dataclass
-from typing import cast
+from typing import cast, override
 
 from aiohomeconnect.model import EventKey, StatusKey
 
@@ -16,7 +16,7 @@ from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
 from .common import setup_home_connect_entry
 from .const import REFRIGERATION_STATUS_DOOR_CLOSED, REFRIGERATION_STATUS_DOOR_OPEN
-from .coordinator import HomeConnectApplianceData, HomeConnectConfigEntry
+from .coordinator import HomeConnectApplianceCoordinator, HomeConnectConfigEntry
 from .entity import HomeConnectEntity
 
 PARALLEL_UPDATES = 0
@@ -145,19 +145,18 @@ CONNECTED_BINARY_ENTITY_DESCRIPTION = BinarySensorEntityDescription(
 
 
 def _get_entities_for_appliance(
-    entry: HomeConnectConfigEntry,
-    appliance: HomeConnectApplianceData,
+    appliance_coordinator: HomeConnectApplianceCoordinator,
 ) -> list[HomeConnectEntity]:
     """Get a list of entities."""
     entities: list[HomeConnectEntity] = [
         HomeConnectConnectivityBinarySensor(
-            entry.runtime_data, appliance, CONNECTED_BINARY_ENTITY_DESCRIPTION
+            appliance_coordinator, CONNECTED_BINARY_ENTITY_DESCRIPTION
         )
     ]
     entities.extend(
-        HomeConnectBinarySensor(entry.runtime_data, appliance, description)
+        HomeConnectBinarySensor(appliance_coordinator, description)
         for description in BINARY_SENSORS
-        if description.key in appliance.status
+        if description.key in appliance_coordinator.data.status
     )
     return entities
 
@@ -181,6 +180,7 @@ class HomeConnectBinarySensor(HomeConnectEntity, BinarySensorEntity):
 
     entity_description: HomeConnectBinarySensorEntityDescription
 
+    @override
     def update_native_value(self) -> None:
         """Set the native value of the binary sensor."""
         status = self.appliance.status[cast(StatusKey, self.bsh_key)].value
@@ -197,11 +197,13 @@ class HomeConnectConnectivityBinarySensor(HomeConnectEntity, BinarySensorEntity)
 
     _attr_entity_category = EntityCategory.DIAGNOSTIC
 
+    @override
     def update_native_value(self) -> None:
         """Set the native value of the binary sensor."""
         self._attr_is_on = self.appliance.info.connected
 
     @property
+    @override
     def available(self) -> bool:
         """Return the availability."""
         return self.coordinator.last_update_success

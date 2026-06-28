@@ -1,14 +1,12 @@
 """Text for Shelly."""
 
-from __future__ import annotations
-
 from dataclasses import dataclass
-from typing import Final
+from typing import Final, override
 
 from aioshelly.const import RPC_GENERATIONS
 
 from homeassistant.components.text import (
-    DOMAIN as TEXT_PLATFORM,
+    DOMAIN as TEXT_DOMAIN,
     TextEntity,
     TextEntityDescription,
 )
@@ -44,7 +42,7 @@ RPC_TEXT_ENTITIES: Final = {
         key="text",
         sub_key="value",
         removal_condition=lambda config, _status, key: (
-            not is_view_for_platform(config, key, TEXT_PLATFORM)
+            not is_view_for_platform(config, key, TEXT_DOMAIN)
         ),
         role=ROLE_GENERIC,
     ),
@@ -79,14 +77,12 @@ def _async_setup_rpc_entry(
 
     # the user can remove virtual components from the device configuration, so
     # we need to remove orphaned entities
-    virtual_text_ids = get_virtual_component_ids(
-        coordinator.device.config, TEXT_PLATFORM
-    )
+    virtual_text_ids = get_virtual_component_ids(coordinator.device.config, TEXT_DOMAIN)
     async_remove_orphaned_entities(
         hass,
         config_entry.entry_id,
         coordinator.mac,
-        TEXT_PLATFORM,
+        TEXT_DOMAIN,
         virtual_text_ids,
         "text",
     )
@@ -111,11 +107,13 @@ class RpcText(ShellyRpcAttributeEntity, TextEntity):
         self._attr_name = get_rpc_channel_name(coordinator.device, key)
 
     @property
+    @override
     def native_value(self) -> str | None:
         """Return value of sensor."""
         return self.attribute_value
 
     @rpc_call
+    @override
     async def async_set_value(self, value: str) -> None:
         """Change the value."""
         await self.coordinator.device.text_set(self._id, value)

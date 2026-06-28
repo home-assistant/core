@@ -99,6 +99,67 @@
       "recipeReferences": [],
       "createdAt": "2024-06-25T11:56:59.656699",
       "updateAt": "2024-06-25T11:56:59.656701"
+    },
+    {
+      "quantity": 1.0,
+      "unit": {
+        "id": "89765d44-8412-4ab5-a6de-594aa8eac44c",
+        "name": "US cup",
+        "pluralName": null,
+        "description": "",
+        "extras": {},
+        "fraction": true,
+        "abbreviation": "US cup",
+        "pluralAbbreviation": "",
+        "useAbbreviation": false,
+        "aliases": [],
+        "createdAt": "2024-08-25T13:29:25.477518Z",
+        "updatedAt": "2024-08-25T13:29:25.477535Z"
+      },
+      "food": {
+        "id": "8d2ef4d7-bfc2-4420-9cba-152016c1ee7c",
+        "name": "flour",
+        "pluralName": null,
+        "description": "",
+        "extras": {},
+        "labelId": null,
+        "aliases": [],
+        "householdsWithIngredientFood": [],
+        "label": null,
+        "createdAt": "2024-08-25T13:29:29.040354Z",
+        "updatedAt": "2024-08-25T13:29:29.040371Z"
+      },
+      "referencedRecipe": null,
+      "note": "",
+      "display": "1 US cup flour",
+      "shoppingListId": "a33af640-4704-453c-ab03-a95a393bf1c4",
+      "checked": false,
+      "position": 0,
+      "foodId": "8d2ef4d7-bfc2-4420-9cba-152016c1ee7c",
+      "labelId": null,
+      "unitId": "89765d44-8412-4ab5-a6de-594aa8eac44c",
+      "extras": {},
+      "id": "22b389bb-e079-481c-915d-394e5edb20a5",
+      "groupId": "0e7a9673-adff-4adb-a239-4e353c991b31",
+      "householdId": "ba148cfb-bff8-4ec6-8bb4-aefd5f5c029d",
+      "label": {
+        "name": "Household",
+        "color": "#E0E0E0",
+        "groupId": "0e7a9673-adff-4adb-a239-4e353c991b31",
+        "id": "0e55cae5-6037-4cbb-8d4f-1042cbb83fd0"
+      },
+      "recipeReferences": [
+        {
+          "recipeId": "597a2c51-2b44-41e0-a17a-57c1fb367146",
+          "recipeQuantity": 1.0,
+          "recipeScale": 1.0,
+          "recipeNote": "1 Cup Flour",
+          "id": "ef9f17db-089e-4fcb-9b5b-b08a860f515f",
+          "shoppingListItemId": "22b389bb-e079-481c-915d-394e5edb20a5"
+        }
+      ],
+      "createdAt": "2026-01-05T11:47:30.434994Z",
+      "updatedAt": "2026-02-13T12:39:41.738679Z"
     }
   ],
   "next": null,

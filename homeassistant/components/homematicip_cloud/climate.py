@@ -1,8 +1,6 @@
 """Support for HomematicIP Cloud climate devices."""
 
-from __future__ import annotations
-
-from typing import Any
+from typing import Any, override
 
 from homematicip.base.enums import AbsenceType
 from homematicip.device import (
@@ -72,9 +70,11 @@ class HomematicipHeatingGroup(HomematicipGenericEntity, ClimateEntity):
 
     Heat mode is supported for all heating devices incl. their defined profiles.
     Boost is available for radiator thermostats only.
-    Cool mode is only available for floor heating systems, if basically enabled in the hmip app.
+    Cool mode is only available for floor heating systems, if
+    basically enabled in the hmip app.
     """
 
+    _attr_has_entity_name = False
     _attr_supported_features = (
         ClimateEntityFeature.PRESET_MODE | ClimateEntityFeature.TARGET_TEMPERATURE
     )
@@ -83,12 +83,25 @@ class HomematicipHeatingGroup(HomematicipGenericEntity, ClimateEntity):
     def __init__(self, hap: HomematicipHAP, device: HeatingGroup) -> None:
         """Initialize heating group."""
         device.modelType = "HmIP-Heating-Group"
-        super().__init__(hap, device)
+        super().__init__(hap, device, feature_id="climate")
         self._simple_heating = None
         if device.actualTemperature is None:
             self._simple_heating = self._first_radiator_thermostat
 
     @property
+    @override
+    def available(self) -> bool:
+        """Heating group available.
+
+        A heating group must be available, and should not be affected by the
+        individual availability of group members.
+        This allows controlling the temperature even when individual group
+        members are not available.
+        """
+        return True
+
+    @property
+    @override
     def device_info(self) -> DeviceInfo:
         """Return device specific attributes."""
         return DeviceInfo(
@@ -100,11 +113,13 @@ class HomematicipHeatingGroup(HomematicipGenericEntity, ClimateEntity):
         )
 
     @property
+    @override
     def target_temperature(self) -> float:
         """Return the temperature we try to reach."""
         return self._device.setPointTemperature
 
     @property
+    @override
     def current_temperature(self) -> float:
         """Return the current temperature."""
         if self._simple_heating:
@@ -112,11 +127,13 @@ class HomematicipHeatingGroup(HomematicipGenericEntity, ClimateEntity):
         return self._device.actualTemperature
 
     @property
+    @override
     def current_humidity(self) -> int:
         """Return the current humidity."""
         return self._device.humidity
 
     @property
+    @override
     def hvac_mode(self) -> HVACMode:
         """Return hvac operation ie."""
         if self._disabled_by_cooling_mode and not self._has_switch:
@@ -129,6 +146,7 @@ class HomematicipHeatingGroup(HomematicipGenericEntity, ClimateEntity):
         return HVACMode.AUTO
 
     @property
+    @override
     def hvac_modes(self) -> list[HVACMode]:
         """Return the list of available hvac operation modes."""
         if self._disabled_by_cooling_mode and not self._has_switch:
@@ -139,6 +157,7 @@ class HomematicipHeatingGroup(HomematicipGenericEntity, ClimateEntity):
         return [HVACMode.AUTO, HVACMode.COOL]
 
     @property
+    @override
     def hvac_action(self) -> HVACAction | None:
         """Return the current hvac_action.
 
@@ -154,6 +173,7 @@ class HomematicipHeatingGroup(HomematicipGenericEntity, ClimateEntity):
         return None
 
     @property
+    @override
     def preset_mode(self) -> str | None:
         """Return the current preset mode."""
         if self._device.boostMode:
@@ -178,6 +198,7 @@ class HomematicipHeatingGroup(HomematicipGenericEntity, ClimateEntity):
         )
 
     @property
+    @override
     def preset_modes(self) -> list[str]:
         """Return a list of available preset modes incl. hmip profiles."""
         # Boost is only available if a radiator thermostat is in the room,
@@ -197,15 +218,18 @@ class HomematicipHeatingGroup(HomematicipGenericEntity, ClimateEntity):
         return presets
 
     @property
+    @override
     def min_temp(self) -> float:
         """Return the minimum temperature."""
         return self._device.minTemperature
 
     @property
+    @override
     def max_temp(self) -> float:
         """Return the maximum temperature."""
         return self._device.maxTemperature
 
+    @override
     async def async_set_temperature(self, **kwargs: Any) -> None:
         """Set new target temperature."""
         if (temperature := kwargs.get(ATTR_TEMPERATURE)) is None:
@@ -214,6 +238,7 @@ class HomematicipHeatingGroup(HomematicipGenericEntity, ClimateEntity):
         if self.min_temp <= temperature <= self.max_temp:
             await self._device.set_point_temperature_async(temperature)
 
+    @override
     async def async_set_hvac_mode(self, hvac_mode: HVACMode) -> None:
         """Set new target hvac mode."""
 
@@ -222,6 +247,7 @@ class HomematicipHeatingGroup(HomematicipGenericEntity, ClimateEntity):
         else:
             await self._device.set_control_mode_async(HMIP_MANUAL_CM)
 
+    @override
     async def async_set_preset_mode(self, preset_mode: str) -> None:
         """Set new preset mode."""
         if self._device.boostMode and preset_mode != PRESET_BOOST:
@@ -237,6 +263,7 @@ class HomematicipHeatingGroup(HomematicipGenericEntity, ClimateEntity):
             await self._device.set_active_profile_async(profile_idx)
 
     @property
+    @override
     def extra_state_attributes(self) -> dict[str, Any]:
         """Return the state attributes of the access point."""
         state_attr = super().extra_state_attributes
@@ -276,7 +303,7 @@ class HomematicipHeatingGroup(HomematicipGenericEntity, ClimateEntity):
         ]
 
     def _get_qualified_profile_name(self, profile: HeatingCoolingProfile) -> str:
-        """Get a name for the given profile. If exists, this is the name of the profile."""
+        """Get a name for the given profile."""
         if profile.name != "":
             return profile.name
         if profile.index in NICE_PROFILE_NAMES:

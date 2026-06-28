@@ -1,6 +1,6 @@
 """Support for KNX notify entities."""
 
-from __future__ import annotations
+from typing import override
 
 from xknx import XKNX
 from xknx.devices import Notification as XknxNotification
@@ -46,13 +46,15 @@ class KNXNotify(KnxYamlEntity, NotifyEntity):
 
     def __init__(self, knx_module: KNXModule, config: ConfigType) -> None:
         """Initialize a KNX notification."""
+        self._device = _create_notification_instance(knx_module.xknx, config)
         super().__init__(
             knx_module=knx_module,
-            device=_create_notification_instance(knx_module.xknx, config),
+            unique_id=str(self._device.remote_value.group_address),
+            name=config[CONF_NAME],
+            entity_category=config.get(CONF_ENTITY_CATEGORY),
         )
-        self._attr_entity_category = config.get(CONF_ENTITY_CATEGORY)
-        self._attr_unique_id = str(self._device.remote_value.group_address)
 
+    @override
     async def async_send_message(self, message: str, title: str | None = None) -> None:
         """Send a notification to knx bus."""
         await self._device.set(message)

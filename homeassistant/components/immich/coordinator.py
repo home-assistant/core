@@ -1,10 +1,9 @@
 """Coordinator for the Immich integration."""
 
-from __future__ import annotations
-
 from dataclasses import dataclass
 from datetime import timedelta
 import logging
+from typing import override
 
 from aioimmich import Immich
 from aioimmich.const import CONNECT_ERRORS
@@ -16,11 +15,19 @@ from aioimmich.server.models import (
     ImmichServerVersionCheck,
 )
 from awesomeversion import AwesomeVersion
+from yarl import URL
 
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import CONF_HOST, CONF_PORT, CONF_SSL
+from homeassistant.const import (
+    CONF_API_KEY,
+    CONF_HOST,
+    CONF_PORT,
+    CONF_SSL,
+    CONF_VERIFY_SSL,
+)
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ConfigEntryAuthFailed
+from homeassistant.helpers.aiohttp_client import async_get_clientsession
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
 
 from .const import DOMAIN
@@ -46,24 +53,52 @@ class ImmichDataUpdateCoordinator(DataUpdateCoordinator[ImmichData]):
 
     config_entry: ImmichConfigEntry
 
-    def __init__(
-        self, hass: HomeAssistant, entry: ConfigEntry, api: Immich, is_admin: bool
-    ) -> None:
+    def __init__(self, hass: HomeAssistant, config_entry: ImmichConfigEntry) -> None:
         """Initialize the data update coordinator."""
-        self.api = api
-        self.is_admin = is_admin
-        self.configuration_url = (
-            f"{'https' if entry.data[CONF_SSL] else 'http'}://"
-            f"{entry.data[CONF_HOST]}:{entry.data[CONF_PORT]}"
+        self.api = Immich(
+            async_get_clientsession(hass, config_entry.data[CONF_VERIFY_SSL]),
+            config_entry.data[CONF_API_KEY],
+            config_entry.data[CONF_HOST],
+            config_entry.data[CONF_PORT],
+            config_entry.data[CONF_SSL],
+            "home-assistant",
+        )
+        self.is_admin = False
+        self.configuration_url = str(
+            URL.build(
+                scheme="https" if config_entry.data[CONF_SSL] else "http",
+                host=config_entry.data[CONF_HOST],
+                port=config_entry.data[CONF_PORT],
+            )
         )
         super().__init__(
             hass,
             _LOGGER,
-            config_entry=entry,
+            config_entry=config_entry,
             name=DOMAIN,
             update_interval=timedelta(seconds=60),
         )
 
+    @override
+    async def _async_setup(self) -> None:
+        """Handle setup of the coordinator."""
+        try:
+            await self.api.async_setup()
+            user_info = await self.api.users.async_get_my_user()
+        except ImmichUnauthorizedError as err:
+            raise ConfigEntryAuthFailed(
+                translation_domain=DOMAIN,
+                translation_key="auth_error",
+            ) from err
+        except CONNECT_ERRORS as err:
+            raise UpdateFailed(
+                translation_domain=DOMAIN,
+                translation_key="cannot_connect",
+            ) from err
+
+        self.is_admin = user_info.is_admin
+
+    @override
     async def _async_update_data(self) -> ImmichData:
         """Update data via internal method."""
         try:
@@ -80,9 +115,16 @@ class ImmichDataUpdateCoordinator(DataUpdateCoordinator[ImmichData]):
                 else None
             )
         except ImmichUnauthorizedError as err:
-            raise ConfigEntryAuthFailed from err
+            raise ConfigEntryAuthFailed(
+                translation_domain=DOMAIN,
+                translation_key="auth_error",
+            ) from err
         except CONNECT_ERRORS as err:
-            raise UpdateFailed from err
+            raise UpdateFailed(
+                translation_domain=DOMAIN,
+                translation_key="update_error",
+                translation_placeholders={"error": str(err)},
+            ) from err
 
         return ImmichData(
             server_about, server_storage, server_usage, server_version_check

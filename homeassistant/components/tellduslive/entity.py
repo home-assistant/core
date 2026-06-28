@@ -2,6 +2,7 @@
 
 from datetime import datetime
 import logging
+from typing import Any, override
 
 from tellduslive import BATTERY_LOW, BATTERY_OK, BATTERY_UNKNOWN
 
@@ -33,6 +34,7 @@ class TelldusLiveEntity(Entity):
         self._id = device_id
         self._client = client
 
+    @override
     async def async_added_to_hass(self) -> None:
         """Call when entity is added to hass."""
         _LOGGER.debug("Created device %s", self)
@@ -58,17 +60,20 @@ class TelldusLiveEntity(Entity):
         return self.device.state
 
     @property
+    @override
     def assumed_state(self) -> bool:
         """Return true if unable to access real state of entity."""
         return True
 
     @property
+    @override
     def available(self) -> bool:
         """Return true if device is not offline."""
         return self._client.is_available(self.device_id)
 
     @property
-    def extra_state_attributes(self):
+    @override
+    def extra_state_attributes(self) -> dict[str, Any]:
         """Return the state attributes."""
         attrs = {}
         if self._battery_level:
@@ -98,11 +103,13 @@ class TelldusLiveEntity(Entity):
         )
 
     @property
+    @override
     def unique_id(self) -> str:
         """Return a unique ID."""
         return self._id
 
     @property
+    @override
     def device_info(self) -> DeviceInfo:
         """Return device info."""
         device = self._client.device_info(self.device.device_id)

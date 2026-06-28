@@ -1,8 +1,9 @@
 # serializer version: 1
 # name: test_blu_trv_binary_sensor_entity[binary_sensor.trv_name_calibration-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -38,8 +39,8 @@
 # name: test_blu_trv_binary_sensor_entity[binary_sensor.trv_name_calibration-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'device_class': 'problem',
-      'friendly_name': 'TRV-Name Calibration',
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'problem',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'TRV-Name Calibration',
     }),
     'context': <ANY>,
     'entity_id': 'binary_sensor.trv_name_calibration',
@@ -51,8 +52,9 @@
 # ---
 # name: test_rpc_flood_entities[binary_sensor.test_name_kitchen_cable_unplugged-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -88,8 +90,8 @@
 # name: test_rpc_flood_entities[binary_sensor.test_name_kitchen_cable_unplugged-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'device_class': 'problem',
-      'friendly_name': 'Test name Kitchen cable unplugged',
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'problem',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Test name Kitchen cable unplugged',
     }),
     'context': <ANY>,
     'entity_id': 'binary_sensor.test_name_kitchen_cable_unplugged',
@@ -101,8 +103,9 @@
 # ---
 # name: test_rpc_flood_entities[binary_sensor.test_name_kitchen_flood-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -138,8 +141,8 @@
 # name: test_rpc_flood_entities[binary_sensor.test_name_kitchen_flood-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'device_class': 'moisture',
-      'friendly_name': 'Test name Kitchen flood',
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'moisture',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Test name Kitchen flood',
     }),
     'context': <ANY>,
     'entity_id': 'binary_sensor.test_name_kitchen_flood',
@@ -151,8 +154,9 @@
 # ---
 # name: test_rpc_flood_entities[binary_sensor.test_name_kitchen_mute-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -188,7 +192,7 @@
 # name: test_rpc_flood_entities[binary_sensor.test_name_kitchen_mute-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'Test name Kitchen mute',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Test name Kitchen mute',
     }),
     'context': <ANY>,
     'entity_id': 'binary_sensor.test_name_kitchen_mute',

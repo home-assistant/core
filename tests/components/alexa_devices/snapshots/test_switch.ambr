@@ -1,8 +1,109 @@
 # serializer version: 1
+# name: test_all_entities[switch.echo_test_announcements-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': list([
+      None,
+    ]),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'switch',
+    'entity_category': <EntityCategory.CONFIG: 'config'>,
+    'entity_id': 'switch.echo_test_announcements',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'Announcements',
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'Announcements',
+    'platform': 'alexa_devices',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'announcements',
+    'unique_id': 'echo_test_serial_number-announcements',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_all_entities[switch.echo_test_announcements-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Echo Test Announcements',
+    }),
+    'context': <ANY>,
+    'entity_id': 'switch.echo_test_announcements',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'on',
+  })
+# ---
+# name: test_all_entities[switch.echo_test_communications-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': list([
+      None,
+    ]),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'switch',
+    'entity_category': <EntityCategory.CONFIG: 'config'>,
+    'entity_id': 'switch.echo_test_communications',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'Communications',
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'Communications',
+    'platform': 'alexa_devices',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'communications',
+    'unique_id': 'echo_test_serial_number-communications',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_all_entities[switch.echo_test_communications-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Echo Test Communications',
+    }),
+    'context': <ANY>,
+    'entity_id': 'switch.echo_test_communications',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'on',
+  })
+# ---
 # name: test_all_entities[switch.echo_test_do_not_disturb-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -38,7 +139,7 @@
 # name: test_all_entities[switch.echo_test_do_not_disturb-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'Echo Test Do not disturb',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Echo Test Do not disturb',
     }),
     'context': <ANY>,
     'entity_id': 'switch.echo_test_do_not_disturb',

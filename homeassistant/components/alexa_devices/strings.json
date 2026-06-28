@@ -58,12 +58,34 @@
     }
   },
   "entity": {
+    "event": {
+      "voice_event": {
+        "name": "Voice event",
+        "state_attributes": {
+          "event_type": {
+            "state": {
+              "triggered": "Triggered"
+            }
+          }
+        }
+      }
+    },
     "notify": {
       "announce": {
         "name": "Announce"
       },
       "speak": {
         "name": "Speak"
+      }
+    },
+    "select": {
+      "dropin": {
+        "name": "Drop In",
+        "state": {
+          "all": "Allow drop in from anyone",
+          "home": "Allow drop in from household members",
+          "off": "Don't allow drop in"
+        }
       }
     },
     "sensor": {
@@ -75,11 +97,28 @@
       },
       "timer": {
         "name": "Next timer"
+      },
+      "voc_index": {
+        "name": "Volatile organic compounds index"
       }
     },
     "switch": {
+      "announcements": {
+        "name": "Announcements"
+      },
+      "communications": {
+        "name": "Communications"
+      },
       "do_not_disturb": {
         "name": "Do not disturb"
+      }
+    },
+    "todo": {
+      "shop": {
+        "name": "Shopping list"
+      },
+      "todo": {
+        "name": "To-do list"
       }
     }
   },
@@ -99,6 +138,9 @@
     "entry_not_loaded": {
       "message": "Entry not loaded: {entry}"
     },
+    "invalid_auth": {
+      "message": "Invalid authentication credentials: {error}"
+    },
     "invalid_device_id": {
       "message": "Invalid device ID specified: {device_id}"
     },
@@ -107,6 +149,12 @@
     },
     "invalid_sound_value": {
       "message": "Invalid sound {sound} specified"
+    },
+    "select_option_not_found": {
+      "message": "Selected option not found: {option}"
+    },
+    "unknown_exception": {
+      "message": "Unknown error occurred: {error}"
     }
   },
   "selector": {

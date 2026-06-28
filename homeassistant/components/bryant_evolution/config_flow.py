@@ -1,9 +1,7 @@
 """Config flow for Bryant Evolution integration."""
 
-from __future__ import annotations
-
 import logging
-from typing import Any
+from typing import Any, override
 
 from evolutionhttp import BryantEvolutionLocalClient
 import voluptuous as vol
@@ -34,6 +32,7 @@ async def _enumerate_sz(tty: str) -> list[tuple[int, int]]:
 class BryantConfigFlow(ConfigFlow, domain=DOMAIN):
     """Handle a config flow for Bryant Evolution."""
 
+    @override
     async def async_step_user(
         self, user_input: dict[str, Any] | None = None
     ) -> ConfigFlowResult:

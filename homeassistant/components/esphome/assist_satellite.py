@@ -1,7 +1,5 @@
 """Support for assist satellites in ESPHome."""
 
-from __future__ import annotations
-
 import asyncio
 from collections.abc import AsyncIterable
 from functools import partial
@@ -12,7 +10,7 @@ import json
 import logging
 from pathlib import Path
 import socket
-from typing import Any, cast
+from typing import Any, cast, override
 import wave
 
 from aioesphomeapi import (
@@ -69,25 +67,49 @@ _VOICE_ASSISTANT_EVENT_TYPES: EsphomeEnumMapper[
         VoiceAssistantEventType.VOICE_ASSISTANT_RUN_END: PipelineEventType.RUN_END,
         VoiceAssistantEventType.VOICE_ASSISTANT_STT_START: PipelineEventType.STT_START,
         VoiceAssistantEventType.VOICE_ASSISTANT_STT_END: PipelineEventType.STT_END,
-        VoiceAssistantEventType.VOICE_ASSISTANT_INTENT_START: PipelineEventType.INTENT_START,
-        VoiceAssistantEventType.VOICE_ASSISTANT_INTENT_PROGRESS: PipelineEventType.INTENT_PROGRESS,
-        VoiceAssistantEventType.VOICE_ASSISTANT_INTENT_END: PipelineEventType.INTENT_END,
-        VoiceAssistantEventType.VOICE_ASSISTANT_TTS_START: PipelineEventType.TTS_START,
-        VoiceAssistantEventType.VOICE_ASSISTANT_TTS_END: PipelineEventType.TTS_END,
-        VoiceAssistantEventType.VOICE_ASSISTANT_WAKE_WORD_START: PipelineEventType.WAKE_WORD_START,
-        VoiceAssistantEventType.VOICE_ASSISTANT_WAKE_WORD_END: PipelineEventType.WAKE_WORD_END,
-        VoiceAssistantEventType.VOICE_ASSISTANT_STT_VAD_START: PipelineEventType.STT_VAD_START,
-        VoiceAssistantEventType.VOICE_ASSISTANT_STT_VAD_END: PipelineEventType.STT_VAD_END,
+        VoiceAssistantEventType.VOICE_ASSISTANT_INTENT_START: (
+            PipelineEventType.INTENT_START
+        ),
+        VoiceAssistantEventType.VOICE_ASSISTANT_INTENT_PROGRESS: (
+            PipelineEventType.INTENT_PROGRESS
+        ),
+        VoiceAssistantEventType.VOICE_ASSISTANT_INTENT_END: (
+            PipelineEventType.INTENT_END
+        ),
+        VoiceAssistantEventType.VOICE_ASSISTANT_TTS_START: (
+            PipelineEventType.TTS_START
+        ),
+        VoiceAssistantEventType.VOICE_ASSISTANT_TTS_END: (PipelineEventType.TTS_END),
+        VoiceAssistantEventType.VOICE_ASSISTANT_WAKE_WORD_START: (
+            PipelineEventType.WAKE_WORD_START
+        ),
+        VoiceAssistantEventType.VOICE_ASSISTANT_WAKE_WORD_END: (
+            PipelineEventType.WAKE_WORD_END
+        ),
+        VoiceAssistantEventType.VOICE_ASSISTANT_STT_VAD_START: (
+            PipelineEventType.STT_VAD_START
+        ),
+        VoiceAssistantEventType.VOICE_ASSISTANT_STT_VAD_END: (
+            PipelineEventType.STT_VAD_END
+        ),
     }
 )
 
 _TIMER_EVENT_TYPES: EsphomeEnumMapper[VoiceAssistantTimerEventType, TimerEventType] = (
     EsphomeEnumMapper(
         {
-            VoiceAssistantTimerEventType.VOICE_ASSISTANT_TIMER_STARTED: TimerEventType.STARTED,
-            VoiceAssistantTimerEventType.VOICE_ASSISTANT_TIMER_UPDATED: TimerEventType.UPDATED,
-            VoiceAssistantTimerEventType.VOICE_ASSISTANT_TIMER_CANCELLED: TimerEventType.CANCELLED,
-            VoiceAssistantTimerEventType.VOICE_ASSISTANT_TIMER_FINISHED: TimerEventType.FINISHED,
+            VoiceAssistantTimerEventType.VOICE_ASSISTANT_TIMER_STARTED: (
+                TimerEventType.STARTED
+            ),
+            VoiceAssistantTimerEventType.VOICE_ASSISTANT_TIMER_UPDATED: (
+                TimerEventType.UPDATED
+            ),
+            VoiceAssistantTimerEventType.VOICE_ASSISTANT_TIMER_CANCELLED: (
+                TimerEventType.CANCELLED
+            ),
+            VoiceAssistantTimerEventType.VOICE_ASSISTANT_TIMER_FINISHED: (
+                TimerEventType.FINISHED
+            ),
         }
     )
 )
@@ -148,6 +170,8 @@ class EsphomeAssistSatellite(
         )
 
         self._active_pipeline_index = 0
+        self._active_audio_channel = 0
+        self._has_multi_channel_audio = False
 
     def _get_entity_id(self, suffix: str) -> str | None:
         """Return the entity id for pipeline select, etc."""
@@ -162,8 +186,9 @@ class EsphomeAssistSatellite(
         )
 
     @property
+    @override
     def pipeline_entity_id(self) -> str | None:
-        """Return the entity ID of the primary pipeline to use for the next conversation."""
+        """Return the entity ID of the pipeline to use for the next conversation."""
         return self.get_pipeline_entity(self._active_pipeline_index)
 
     def get_pipeline_entity(self, index: int) -> str | None:
@@ -177,17 +202,20 @@ class EsphomeAssistSatellite(
         return self._get_entity_id(f"wake_word{id_suffix}")
 
     @property
+    @override
     def vad_sensitivity_entity_id(self) -> str | None:
-        """Return the entity ID of the VAD sensitivity to use for the next conversation."""
+        """Return the entity ID of the VAD sensitivity for the next conversation."""
         return self._get_entity_id("vad_sensitivity")
 
     @callback
+    @override
     def async_get_configuration(
         self,
     ) -> assist_satellite.AssistSatelliteConfiguration:
         """Get the current satellite configuration."""
         return self._satellite_config
 
+    @override
     async def async_set_configuration(
         self, config: assist_satellite.AssistSatelliteConfiguration
     ) -> None:
@@ -231,6 +259,7 @@ class EsphomeAssistSatellite(
         # Inform listeners that config has been updated
         self._entry_data.async_assist_satellite_config_updated(self._satellite_config)
 
+    @override
     async def async_added_to_hass(self) -> None:
         """Run when entity about to be added to hass."""
         await super().async_added_to_hass()
@@ -293,6 +322,9 @@ class EsphomeAssistSatellite(
                 assist_satellite.AssistSatelliteEntityFeature.START_CONVERSATION
             )
 
+        if feature_flags & VoiceAssistantFeature.MULTI_CHANNEL_AUDIO:
+            self._has_multi_channel_audio = True
+
         # Update wake word select when config is updated
         self.async_on_remove(
             self._entry_data.async_register_assist_satellite_set_wake_words_callback(
@@ -300,6 +332,7 @@ class EsphomeAssistSatellite(
             )
         )
 
+    @override
     async def async_will_remove_from_hass(self) -> None:
         """Run when entity will be removed from hass."""
         await super().async_will_remove_from_hass()
@@ -307,6 +340,7 @@ class EsphomeAssistSatellite(
         self._is_running = False
         self._stop_pipeline()
 
+    @override
     def on_pipeline_event(self, event: PipelineEvent) -> None:
         """Handle pipeline events."""
         try:
@@ -317,6 +351,18 @@ class EsphomeAssistSatellite(
 
         data_to_send: dict[str, Any] = {}
         if event_type == VoiceAssistantEventType.VOICE_ASSISTANT_STT_START:
+            if (
+                self._has_multi_channel_audio
+                and event.data
+                and (audio_processing := event.data.get("audio_processing"))
+            ):
+                # Settings come from stt SpeechAudioProcessing
+                if (audio_processing.get("prefers_auto_gain_enabled") is False) and (
+                    audio_processing.get("prefers_noise_reduction_enabled") is False
+                ):
+                    # Use non-enhanced audio
+                    self._active_audio_channel = 1
+
             self._entry_data.async_set_assist_pipeline_state(True)
         elif event_type == VoiceAssistantEventType.VOICE_ASSISTANT_STT_END:
             assert event.data is not None
@@ -333,11 +379,15 @@ class EsphomeAssistSatellite(
             data_to_send = {"tts_start_streaming": "1"}
         elif event_type == VoiceAssistantEventType.VOICE_ASSISTANT_INTENT_END:
             assert event.data is not None
+            intent_output = event.data["intent_output"]
             data_to_send = {
-                "conversation_id": event.data["intent_output"]["conversation_id"],
+                "conversation_id": intent_output["conversation_id"],
                 "continue_conversation": str(
-                    int(event.data["intent_output"]["continue_conversation"])
+                    int(intent_output["continue_conversation"])
                 ),
+                "speech": intent_output["response"]["speech"]
+                .get("plain", {})
+                .get("speech", ""),
             }
         elif event_type == VoiceAssistantEventType.VOICE_ASSISTANT_TTS_START:
             assert event.data is not None
@@ -393,6 +443,7 @@ class EsphomeAssistSatellite(
         self.cli.send_voice_assistant_event(event_type, data_to_send)
 
     @convert_api_error_ha_error
+    @override
     async def async_announce(
         self, announcement: assist_satellite.AssistSatelliteAnnouncement
     ) -> None:
@@ -403,6 +454,7 @@ class EsphomeAssistSatellite(
         await self._do_announce(announcement, run_pipeline_after=False)
 
     @convert_api_error_ha_error
+    @override
     async def async_start_conversation(
         self, start_announcement: assist_satellite.AssistSatelliteAnnouncement
     ) -> None:
@@ -524,20 +576,20 @@ class EsphomeAssistSatellite(
         self._active_pipeline_index = 0
 
         maybe_pipeline_index = 0
-        while True:
-            if not (ww_entity_id := self.get_wake_word_entity(maybe_pipeline_index)):
-                break
-
-            if not (ww_state := self.hass.states.get(ww_entity_id)):
-                continue
-
-            if ww_state.state == wake_word_phrase:
+        while ww_entity_id := self.get_wake_word_entity(maybe_pipeline_index):
+            if (
+                ww_state := self.hass.states.get(ww_entity_id)
+            ) and ww_state.state == wake_word_phrase:
                 # First match
                 self._active_pipeline_index = maybe_pipeline_index
                 break
 
             # Try next wake word select
             maybe_pipeline_index += 1
+
+        # Default to audio channel 0 (enhanced)
+        # May be changed when STT_START event arrives.
+        self._active_audio_channel = 0
 
         _LOGGER.debug(
             "Running pipeline %s from %s to %s",
@@ -561,9 +613,20 @@ class EsphomeAssistSatellite(
 
         return port
 
-    async def handle_audio(self, data: bytes) -> None:
+    async def handle_audio(self, data: bytes, data2: bytes | None = None) -> None:
         """Handle incoming audio chunk from API."""
-        self._audio_queue.put_nowait(data)
+        # Default to enhanced audio (channel 0)
+        active_data = data
+
+        if (
+            self._has_multi_channel_audio
+            and (data2 is not None)
+            and (self._active_audio_channel == 1)
+        ):
+            # Non-enhanced audio (channel 1)
+            active_data = data2
+
+        self._audio_queue.put_nowait(active_data)
 
     async def handle_pipeline_stop(self, abort: bool) -> None:
         """Handle request for pipeline to stop."""
@@ -714,7 +777,7 @@ class EsphomeAssistSatellite(
             yield chunk
 
     def _stop_pipeline(self) -> None:
-        """Request pipeline to be stopped by ending the audio stream and continue processing."""
+        """Request pipeline to be stopped by ending the audio stream."""
         self._audio_queue.put_nowait(None)
         _LOGGER.debug("Requested pipeline stop")
 
@@ -770,10 +833,12 @@ class VoiceAssistantUDPServer(asyncio.DatagramProtocol):
         super().__init__(*args, **kwargs)
         self._audio_queue = audio_queue
 
+    @override
     def connection_made(self, transport: asyncio.BaseTransport) -> None:
         """Store transport for later use."""
         self.transport = cast(asyncio.DatagramTransport, transport)
 
+    @override
     def datagram_received(self, data: bytes, addr: tuple[str, int]) -> None:
         """Handle incoming UDP packet."""
         if self.remote_addr is None:
@@ -781,6 +846,7 @@ class VoiceAssistantUDPServer(asyncio.DatagramProtocol):
 
         self._audio_queue.put_nowait(data)
 
+    @override
     def error_received(self, exc: Exception) -> None:
         """Handle when a send or receive operation raises an OSError.
 

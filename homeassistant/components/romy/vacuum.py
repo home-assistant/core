@@ -4,19 +4,18 @@ For more details about this platform, please refer to the documentation
 https://home-assistant.io/components/vacuum.romy/.
 """
 
-from typing import Any
+from typing import Any, override
 
 from homeassistant.components.vacuum import (
     StateVacuumEntity,
     VacuumActivity,
     VacuumEntityFeature,
 )
-from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
-from .const import DOMAIN, LOGGER
-from .coordinator import RomyVacuumCoordinator
+from .const import LOGGER
+from .coordinator import RomyConfigEntry, RomyVacuumCoordinator
 from .entity import RomyEntity
 
 FAN_SPEED_NONE = "default"
@@ -50,13 +49,11 @@ SUPPORT_ROMY_ROBOT = (
 
 async def async_setup_entry(
     hass: HomeAssistant,
-    config_entry: ConfigEntry,
+    config_entry: RomyConfigEntry,
     async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up ROMY vacuum cleaner."""
-
-    coordinator: RomyVacuumCoordinator = hass.data[DOMAIN][config_entry.entry_id]
-    async_add_entities([RomyVacuumEntity(coordinator)])
+    async_add_entities([RomyVacuumEntity(config_entry.runtime_data)])
 
 
 class RomyVacuumEntity(RomyEntity, StateVacuumEntity):
@@ -75,6 +72,7 @@ class RomyVacuumEntity(RomyEntity, StateVacuumEntity):
         self._attr_unique_id = self.romy.unique_id
 
     @callback
+    @override
     def _handle_coordinator_update(self) -> None:
         """Handle updated data from the coordinator."""
         self._attr_fan_speed = FAN_SPEEDS[self.romy.fan_speed]
@@ -90,21 +88,25 @@ class RomyVacuumEntity(RomyEntity, StateVacuumEntity):
 
         self.async_write_ha_state()
 
+    @override
     async def async_start(self, **kwargs: Any) -> None:
         """Turn the vacuum on."""
         LOGGER.debug("async_start")
         await self.romy.async_clean_start_or_continue()
 
+    @override
     async def async_stop(self, **kwargs: Any) -> None:
         """Stop the vacuum cleaner."""
         LOGGER.debug("async_stop")
         await self.romy.async_stop()
 
+    @override
     async def async_return_to_base(self, **kwargs: Any) -> None:
         """Return vacuum back to base."""
         LOGGER.debug("async_return_to_base")
         await self.romy.async_return_to_base()
 
+    @override
     async def async_set_fan_speed(self, fan_speed: str, **kwargs: Any) -> None:
         """Set fan speed."""
         LOGGER.debug("async_set_fan_speed to %s", fan_speed)

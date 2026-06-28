@@ -2,7 +2,7 @@
 
 from collections.abc import Awaitable, Callable
 from dataclasses import dataclass
-from typing import Any
+from typing import Any, override
 
 from hdfury import HDFuryAPI, HDFuryError
 
@@ -32,6 +32,12 @@ SWITCHES: tuple[HDFurySwitchEntityDescription, ...] = (
         translation_key="autosw",
         entity_category=EntityCategory.CONFIG,
         set_value_fn=lambda client, value: client.set_auto_switch_inputs(value),
+    ),
+    HDFurySwitchEntityDescription(
+        key="cec",
+        translation_key="cec",
+        entity_category=EntityCategory.CONFIG,
+        set_value_fn=lambda client, value: client.set_cec(value),
     ),
     HDFurySwitchEntityDescription(
         key="cec0en",
@@ -111,6 +117,20 @@ SWITCHES: tuple[HDFurySwitchEntityDescription, ...] = (
         entity_category=EntityCategory.CONFIG,
         set_value_fn=lambda client, value: client.set_relay(value),
     ),
+    HDFurySwitchEntityDescription(
+        key="tx0plus5",
+        translation_key="tx0plus5",
+        entity_registry_enabled_default=False,
+        entity_category=EntityCategory.CONFIG,
+        set_value_fn=lambda client, value: client.set_tx0_force_5v(value),
+    ),
+    HDFurySwitchEntityDescription(
+        key="tx1plus5",
+        translation_key="tx1plus5",
+        entity_registry_enabled_default=False,
+        entity_category=EntityCategory.CONFIG,
+        set_value_fn=lambda client, value: client.set_tx1_force_5v(value),
+    ),
 )
 
 
@@ -136,11 +156,13 @@ class HDFurySwitch(HDFuryEntity, SwitchEntity):
     entity_description: HDFurySwitchEntityDescription
 
     @property
+    @override
     def is_on(self) -> bool:
         """Set Switch State."""
 
         return self.coordinator.data.config.get(self.entity_description.key) == "1"
 
+    @override
     async def async_turn_on(self, **kwargs: Any) -> None:
         """Handle Switch On Event."""
 
@@ -154,6 +176,7 @@ class HDFurySwitch(HDFuryEntity, SwitchEntity):
 
         await self.coordinator.async_request_refresh()
 
+    @override
     async def async_turn_off(self, **kwargs: Any) -> None:
         """Handle Switch Off Event."""
 

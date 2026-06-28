@@ -1,8 +1,7 @@
 """Support for Radarr calendar items."""
 
-from __future__ import annotations
-
 from datetime import datetime
+from typing import override
 
 from homeassistant.components.calendar import (
     CalendarEntity,
@@ -37,6 +36,7 @@ class RadarrCalendarEntity(RadarrEntity, CalendarEntity):
     coordinator: CalendarUpdateCoordinator
 
     @property
+    @override
     def event(self) -> CalendarEvent | None:
         """Return the next upcoming event."""
         if not self.coordinator.event:
@@ -48,7 +48,8 @@ class RadarrCalendarEntity(RadarrEntity, CalendarEntity):
             description=self.coordinator.event.description,
         )
 
-    # pylint: disable-next=hass-return-type
+    @override
+    # pylint: disable-next=home-assistant-return-type
     async def async_get_events(  # type: ignore[override]
         self, hass: HomeAssistant, start_date: datetime, end_date: datetime
     ) -> list[RadarrEvent]:
@@ -56,7 +57,8 @@ class RadarrCalendarEntity(RadarrEntity, CalendarEntity):
         return await self.coordinator.async_get_events(start_date, end_date)
 
     @callback
-    def async_write_ha_state(self) -> None:
+    @override
+    def _async_write_ha_state(self) -> None:
         """Write the state to the state machine."""
         if self.coordinator.event:
             self._attr_extra_state_attributes = {
@@ -64,4 +66,4 @@ class RadarrCalendarEntity(RadarrEntity, CalendarEntity):
             }
         else:
             self._attr_extra_state_attributes = {}
-        super().async_write_ha_state()
+        super()._async_write_ha_state()

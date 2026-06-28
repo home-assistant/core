@@ -1,27 +1,27 @@
 """Support for Alpha2 IO device battery sensors."""
 
+from typing import override
+
 from homeassistant.components.binary_sensor import (
     BinarySensorDeviceClass,
     BinarySensorEntity,
 )
-from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import EntityCategory
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
-from .const import DOMAIN
-from .coordinator import Alpha2BaseCoordinator
+from .coordinator import Alpha2BaseCoordinator, Alpha2ConfigEntry
 
 
 async def async_setup_entry(
     hass: HomeAssistant,
-    config_entry: ConfigEntry,
+    config_entry: Alpha2ConfigEntry,
     async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Add Alpha2 sensor entities from a config_entry."""
 
-    coordinator: Alpha2BaseCoordinator = hass.data[DOMAIN][config_entry.entry_id]
+    coordinator = config_entry.runtime_data
 
     async_add_entities(
         Alpha2IODeviceBatterySensor(coordinator, io_device_id)
@@ -51,7 +51,8 @@ class Alpha2IODeviceBatterySensor(
         )
 
     @property
-    def is_on(self):
+    @override
+    def is_on(self) -> bool:
         """Return the state of the sensor."""
         # 0=empty, 1=weak, 2=good
         return self.coordinator.data["io_devices"][self.io_device_id]["BATTERY"] < 2

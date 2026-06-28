@@ -1,11 +1,12 @@
 # serializer version: 1
 # name: test_all_entities[sensor.nanostation_5ac_ap_name_antenna_gain-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
-      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+      <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -40,10 +41,10 @@
 # name: test_all_entities[sensor.nanostation_5ac_ap_name_antenna_gain-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'device_class': 'signal_strength',
-      'friendly_name': 'NanoStation 5AC ap name Antenna gain',
-      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
-      'unit_of_measurement': 'dB',
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'signal_strength',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'NanoStation 5AC ap name Antenna gain',
+      <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
+      <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: 'dB',
     }),
     'context': <ANY>,
     'entity_id': 'sensor.nanostation_5ac_ap_name_antenna_gain',
@@ -55,11 +56,12 @@
 # ---
 # name: test_all_entities[sensor.nanostation_5ac_ap_name_cpu_load-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
-      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+      <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -97,9 +99,9 @@
 # name: test_all_entities[sensor.nanostation_5ac_ap_name_cpu_load-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'NanoStation 5AC ap name CPU load',
-      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
-      'unit_of_measurement': '%',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'NanoStation 5AC ap name CPU load',
+      <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
+      <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: '%',
     }),
     'context': <ANY>,
     'entity_id': 'sensor.nanostation_5ac_ap_name_cpu_load',
@@ -111,11 +113,12 @@
 # ---
 # name: test_all_entities[sensor.nanostation_5ac_ap_name_download_capacity-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
-      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+      <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -156,10 +159,10 @@
 # name: test_all_entities[sensor.nanostation_5ac_ap_name_download_capacity-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'device_class': 'data_rate',
-      'friendly_name': 'NanoStation 5AC ap name Download capacity',
-      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
-      'unit_of_measurement': <UnitOfDataRate.MEGABITS_PER_SECOND: 'Mbit/s'>,
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'data_rate',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'NanoStation 5AC ap name Download capacity',
+      <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
+      <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: <UnitOfDataRate.MEGABITS_PER_SECOND: 'Mbit/s'>,
     }),
     'context': <ANY>,
     'entity_id': 'sensor.nanostation_5ac_ap_name_download_capacity',
@@ -171,11 +174,12 @@
 # ---
 # name: test_all_entities[sensor.nanostation_5ac_ap_name_network_role-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
-      'options': list([
+      <SensorEntityCapabilityAttribute.OPTIONS: 'options'>: list([
         'bridge',
         'router',
       ]),
@@ -213,9 +217,9 @@
 # name: test_all_entities[sensor.nanostation_5ac_ap_name_network_role-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'device_class': 'enum',
-      'friendly_name': 'NanoStation 5AC ap name Network role',
-      'options': list([
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'enum',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'NanoStation 5AC ap name Network role',
+      <SensorEntityCapabilityAttribute.OPTIONS: 'options'>: list([
         'bridge',
         'router',
       ]),
@@ -230,11 +234,12 @@
 # ---
 # name: test_all_entities[sensor.nanostation_5ac_ap_name_throughput_receive_actual-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
-      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+      <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -275,10 +280,10 @@
 # name: test_all_entities[sensor.nanostation_5ac_ap_name_throughput_receive_actual-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'device_class': 'data_rate',
-      'friendly_name': 'NanoStation 5AC ap name Throughput receive (actual)',
-      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
-      'unit_of_measurement': <UnitOfDataRate.MEGABITS_PER_SECOND: 'Mbit/s'>,
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'data_rate',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'NanoStation 5AC ap name Throughput receive (actual)',
+      <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
+      <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: <UnitOfDataRate.MEGABITS_PER_SECOND: 'Mbit/s'>,
     }),
     'context': <ANY>,
     'entity_id': 'sensor.nanostation_5ac_ap_name_throughput_receive_actual',
@@ -290,11 +295,12 @@
 # ---
 # name: test_all_entities[sensor.nanostation_5ac_ap_name_throughput_transmit_actual-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
-      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+      <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -335,10 +341,10 @@
 # name: test_all_entities[sensor.nanostation_5ac_ap_name_throughput_transmit_actual-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'device_class': 'data_rate',
-      'friendly_name': 'NanoStation 5AC ap name Throughput transmit (actual)',
-      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
-      'unit_of_measurement': <UnitOfDataRate.MEGABITS_PER_SECOND: 'Mbit/s'>,
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'data_rate',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'NanoStation 5AC ap name Throughput transmit (actual)',
+      <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
+      <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: <UnitOfDataRate.MEGABITS_PER_SECOND: 'Mbit/s'>,
     }),
     'context': <ANY>,
     'entity_id': 'sensor.nanostation_5ac_ap_name_throughput_transmit_actual',
@@ -350,11 +356,12 @@
 # ---
 # name: test_all_entities[sensor.nanostation_5ac_ap_name_upload_capacity-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
-      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+      <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -395,10 +402,10 @@
 # name: test_all_entities[sensor.nanostation_5ac_ap_name_upload_capacity-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'device_class': 'data_rate',
-      'friendly_name': 'NanoStation 5AC ap name Upload capacity',
-      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
-      'unit_of_measurement': <UnitOfDataRate.MEGABITS_PER_SECOND: 'Mbit/s'>,
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'data_rate',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'NanoStation 5AC ap name Upload capacity',
+      <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
+      <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: <UnitOfDataRate.MEGABITS_PER_SECOND: 'Mbit/s'>,
     }),
     'context': <ANY>,
     'entity_id': 'sensor.nanostation_5ac_ap_name_upload_capacity',
@@ -410,8 +417,9 @@
 # ---
 # name: test_all_entities[sensor.nanostation_5ac_ap_name_uptime-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -453,9 +461,9 @@
 # name: test_all_entities[sensor.nanostation_5ac_ap_name_uptime-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'device_class': 'duration',
-      'friendly_name': 'NanoStation 5AC ap name Uptime',
-      'unit_of_measurement': <UnitOfTime.DAYS: 'd'>,
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'duration',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'NanoStation 5AC ap name Uptime',
+      <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: <UnitOfTime.DAYS: 'd'>,
     }),
     'context': <ANY>,
     'entity_id': 'sensor.nanostation_5ac_ap_name_uptime',
@@ -467,8 +475,9 @@
 # ---
 # name: test_all_entities[sensor.nanostation_5ac_ap_name_wireless_distance-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -510,9 +519,9 @@
 # name: test_all_entities[sensor.nanostation_5ac_ap_name_wireless_distance-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'device_class': 'distance',
-      'friendly_name': 'NanoStation 5AC ap name Wireless distance',
-      'unit_of_measurement': <UnitOfLength.KILOMETERS: 'km'>,
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'distance',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'NanoStation 5AC ap name Wireless distance',
+      <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: <UnitOfLength.KILOMETERS: 'km'>,
     }),
     'context': <ANY>,
     'entity_id': 'sensor.nanostation_5ac_ap_name_wireless_distance',
@@ -524,11 +533,12 @@
 # ---
 # name: test_all_entities[sensor.nanostation_5ac_ap_name_wireless_frequency-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
-      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+      <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -547,6 +557,9 @@
     'name': None,
     'object_id_base': 'Wireless frequency',
     'options': dict({
+      'sensor': dict({
+        'suggested_display_precision': 2,
+      }),
     }),
     'original_device_class': <SensorDeviceClass.FREQUENCY: 'frequency'>,
     'original_icon': None,
@@ -563,10 +576,10 @@
 # name: test_all_entities[sensor.nanostation_5ac_ap_name_wireless_frequency-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'device_class': 'frequency',
-      'friendly_name': 'NanoStation 5AC ap name Wireless frequency',
-      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
-      'unit_of_measurement': <UnitOfFrequency.MEGAHERTZ: 'MHz'>,
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'frequency',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'NanoStation 5AC ap name Wireless frequency',
+      <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
+      <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: <UnitOfFrequency.MEGAHERTZ: 'MHz'>,
     }),
     'context': <ANY>,
     'entity_id': 'sensor.nanostation_5ac_ap_name_wireless_frequency',
@@ -578,11 +591,12 @@
 # ---
 # name: test_all_entities[sensor.nanostation_5ac_ap_name_wireless_mode-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
-      'options': list([
+      <SensorEntityCapabilityAttribute.OPTIONS: 'options'>: list([
         'point_to_point',
         'point_to_multipoint',
       ]),
@@ -620,9 +634,9 @@
 # name: test_all_entities[sensor.nanostation_5ac_ap_name_wireless_mode-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'device_class': 'enum',
-      'friendly_name': 'NanoStation 5AC ap name Wireless mode',
-      'options': list([
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'enum',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'NanoStation 5AC ap name Wireless mode',
+      <SensorEntityCapabilityAttribute.OPTIONS: 'options'>: list([
         'point_to_point',
         'point_to_multipoint',
       ]),
@@ -637,11 +651,12 @@
 # ---
 # name: test_all_entities[sensor.nanostation_5ac_ap_name_wireless_role-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
-      'options': list([
+      <SensorEntityCapabilityAttribute.OPTIONS: 'options'>: list([
         'station',
         'access_point',
       ]),
@@ -679,9 +694,9 @@
 # name: test_all_entities[sensor.nanostation_5ac_ap_name_wireless_role-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'device_class': 'enum',
-      'friendly_name': 'NanoStation 5AC ap name Wireless role',
-      'options': list([
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'enum',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'NanoStation 5AC ap name Wireless role',
+      <SensorEntityCapabilityAttribute.OPTIONS: 'options'>: list([
         'station',
         'access_point',
       ]),
@@ -696,8 +711,9 @@
 # ---
 # name: test_all_entities[sensor.nanostation_5ac_ap_name_wireless_ssid-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -733,7 +749,7 @@
 # name: test_all_entities[sensor.nanostation_5ac_ap_name_wireless_ssid-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'NanoStation 5AC ap name Wireless SSID',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'NanoStation 5AC ap name Wireless SSID',
     }),
     'context': <ANY>,
     'entity_id': 'sensor.nanostation_5ac_ap_name_wireless_ssid',

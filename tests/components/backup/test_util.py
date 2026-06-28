@@ -1,17 +1,20 @@
 """Tests for the Backup integration's utility functions."""
 
-from __future__ import annotations
-
 import asyncio
 from collections.abc import AsyncIterator
 import dataclasses
+import hashlib
+import os
+from pathlib import Path
 import tarfile
 from unittest.mock import Mock, patch
 
+import nacl.bindings.crypto_secretstream as nss
 import pytest
 import securetar
 
 from homeassistant.components.backup import DOMAIN, AddonInfo, AgentBackup, Folder
+from homeassistant.components.backup.models import InvalidBackupFilename
 from homeassistant.components.backup.util import (
     DecryptedBackupStreamer,
     EncryptedBackupStreamer,
@@ -22,6 +25,32 @@ from homeassistant.components.backup.util import (
 from homeassistant.core import HomeAssistant
 
 from tests.common import get_fixture_path
+
+
+def _deterministic_init_push(
+    state: nss.crypto_secretstream_xchacha20poly1305_state, key: bytes
+) -> bytes:
+    """Replace init_push with init_pull + deterministic header from os.urandom.
+
+    libsodium's init_push generates random bytes internally, bypassing os.urandom.
+    This replacement generates the header via os.urandom (which can be patched for
+    deterministic tests) and uses init_pull to correctly initialize the state.
+    """
+    header = os.urandom(nss.crypto_secretstream_xchacha20poly1305_HEADERBYTES)
+    nss.crypto_secretstream_xchacha20poly1305_init_pull(state, header, key)
+    return header
+
+
+def _make_deterministic_urandom() -> callable:
+    """Create a deterministic os.urandom replacement."""
+    call_idx = 0
+
+    def deterministic_urandom(n: int) -> bytes:
+        nonlocal call_idx
+        call_idx += 1
+        return hashlib.sha256(f"deterministic-{call_idx}".encode()).digest()[:n]
+
+    return deterministic_urandom
 
 
 @pytest.mark.parametrize(
@@ -124,33 +153,135 @@ def test_read_backup(backup_json_content: bytes, expected_backup: AgentBackup) -
     mock_path.stat.return_value.st_size = 1234
 
     with patch("homeassistant.components.backup.util.tarfile.open") as mock_open_tar:
-        mock_open_tar.return_value.__enter__.return_value.extractfile.return_value.read.return_value = backup_json_content
+        tar_ctx = mock_open_tar.return_value.__enter__.return_value
+        tar_ctx.extractfile.return_value.read.return_value = backup_json_content
         backup = read_backup(mock_path)
         assert backup == expected_backup
 
 
-@pytest.mark.parametrize("password", [None, "hunter2"])
-def test_validate_password(password: str | None) -> None:
-    """Test validating a password."""
+@pytest.mark.parametrize(
+    "name",
+    [
+        "/absolute/path",
+        "../parent",
+        "with/slash",
+        "with\\backslash",
+        "C:\\drive\\path",
+        "",
+        ".",
+        "..",
+    ],
+)
+def test_read_backup_rejects_unsafe_name(name: str) -> None:
+    """Test that read_backup rejects names that could escape the backup directory."""
+    backup_json_content = (
+        b'{"compressed":true,"date":"2024-12-02T07:23:58.261875-05:00","homeassistant":'
+        b'{"exclude_database":true,"version":"2024.12.0.dev0"},"name":"'
+        + name.encode().replace(b"\\", b"\\\\")
+        + b'","protected":true,"slug":"455645fe","type":"partial","version":2}'
+    )
     mock_path = Mock()
+    mock_path.stat.return_value.st_size = 1234
 
-    with (
-        patch("homeassistant.components.backup.util.tarfile.open"),
-        patch("homeassistant.components.backup.util.SecureTarFile"),
-    ):
-        assert validate_password(mock_path, password) is True
+    with patch("homeassistant.components.backup.util.tarfile.open") as mock_open_tar:
+        tar_ctx = mock_open_tar.return_value.__enter__.return_value
+        tar_ctx.extractfile.return_value.read.return_value = backup_json_content
+        with pytest.raises(InvalidBackupFilename):
+            read_backup(mock_path)
+
+
+@pytest.mark.parametrize(
+    ("backup", "password", "validation_result", "expected_messages"),
+    [
+        # Backup not protected, no password provided -> validation passes
+        (Path("backup_compressed.tar"), None, True, []),
+        (Path("backup_uncompressed.tar"), None, True, []),
+        # Backup not protected, password provided -> validation fails
+        (Path("backup_compressed.tar"), "hunter2", False, ["Invalid password"]),
+        (Path("backup_uncompressed.tar"), "hunter2", False, ["Invalid password"]),
+        # Backup protected, correct password provided -> validation passes
+        (Path("backup_compressed_protected_v2.tar"), "hunter2", True, []),
+        (Path("backup_uncompressed_protected_v2.tar"), "hunter2", True, []),
+        (Path("backup_compressed_protected_v3.tar"), "hunter2", True, []),
+        (Path("backup_uncompressed_protected_v3.tar"), "hunter2", True, []),
+        # Backup protected, no password provided -> validation fails
+        (Path("backup_compressed_protected_v2.tar"), None, False, ["Invalid password"]),
+        (
+            Path("backup_uncompressed_protected_v2.tar"),
+            None,
+            False,
+            ["Invalid password"],
+        ),
+        (Path("backup_compressed_protected_v3.tar"), None, False, ["Invalid password"]),
+        (
+            Path("backup_uncompressed_protected_v3.tar"),
+            None,
+            False,
+            ["Invalid password"],
+        ),
+        # Backup protected, wrong password provided -> validation fails
+        (
+            Path("backup_compressed_protected_v2.tar"),
+            "wrong_password",
+            False,
+            ["Invalid password"],
+        ),
+        (
+            Path("backup_uncompressed_protected_v2.tar"),
+            "wrong_password",
+            False,
+            ["Invalid password"],
+        ),
+        (
+            Path("backup_compressed_protected_v3.tar"),
+            "wrong_password",
+            False,
+            ["Invalid password"],
+        ),
+        (
+            Path("backup_uncompressed_protected_v3.tar"),
+            "wrong_password",
+            False,
+            ["Invalid password"],
+        ),
+    ],
+)
+def test_validate_password(
+    password: str | None,
+    backup: Path,
+    validation_result: bool,
+    expected_messages: list[str],
+    caplog: pytest.LogCaptureFixture,
+) -> None:
+    """Test validating a password."""
+    test_backups = get_fixture_path("test_backups", DOMAIN)
+
+    assert validate_password(test_backups / backup, password) == validation_result
+    for message in expected_messages:
+        assert message in caplog.text
+    assert "Unexpected error validating password" not in caplog.text
 
 
 @pytest.mark.parametrize("password", [None, "hunter2"])
-@pytest.mark.parametrize("secure_tar_side_effect", [tarfile.ReadError, Exception])
-def test_validate_password_wrong_password(
-    password: str | None, secure_tar_side_effect: Exception
+@pytest.mark.parametrize(
+    ("secure_tar_side_effect", "expected_message"),
+    [
+        (tarfile.ReadError, "Invalid password"),
+        (securetar.SecureTarReadError, "Invalid password"),
+        (Exception, "Unexpected error validating password"),
+    ],
+)
+def test_validate_password_with_error(
+    password: str | None,
+    secure_tar_side_effect: type[Exception],
+    expected_message: str,
+    caplog: pytest.LogCaptureFixture,
 ) -> None:
     """Test validating a password."""
     mock_path = Mock()
 
     with (
-        patch("homeassistant.components.backup.util.tarfile.open"),
+        patch("securetar.tarfile.open"),
         patch(
             "homeassistant.components.backup.util.SecureTarFile",
         ) as mock_secure_tar,
@@ -158,18 +289,20 @@ def test_validate_password_wrong_password(
         mock_secure_tar.return_value.__enter__.side_effect = secure_tar_side_effect
         assert validate_password(mock_path, password) is False
 
+    assert expected_message in caplog.text
 
-def test_validate_password_no_homeassistant() -> None:
+
+def test_validate_password_no_homeassistant(caplog: pytest.LogCaptureFixture) -> None:
     """Test validating a password."""
     mock_path = Mock()
 
     with (
-        patch("homeassistant.components.backup.util.tarfile.open") as mock_open_tar,
+        patch("securetar.tarfile.open") as mock_open_tar,
     ):
-        mock_open_tar.return_value.__enter__.return_value.extractfile.side_effect = (
-            KeyError
-        )
+        mock_open_tar.return_value.extractfile.side_effect = KeyError
         assert validate_password(mock_path, "hunter2") is False
+
+    assert "No homeassistant.tar or homeassistant.tar.gz found" in caplog.text
 
 
 @pytest.mark.parametrize(
@@ -180,14 +313,14 @@ def test_validate_password_no_homeassistant() -> None:
                 AddonInfo(name="Core 1", slug="core1", version="1.0.0"),
                 AddonInfo(name="Core 2", slug="core2", version="1.0.0"),
             ],
-            40960,  # 4 x 10240 byte of padding
+            51200,  # 5 x 10240 byte of padding
             "test_backups/c0cb53bd.tar.decrypted",
         ),
         (
             [
                 AddonInfo(name="Core 1", slug="core1", version="1.0.0"),
             ],
-            30720,  # 3 x 10240 byte of padding
+            40960,  # 4 x 10240 byte of padding
             "test_backups/c0cb53bd.tar.decrypted_skip_core2",
         ),
     ],
@@ -217,9 +350,9 @@ async def test_decrypted_backup_streamer(
     expected_padding = b"\0" * padding_size
 
     async def send_backup() -> AsyncIterator[bytes]:
-        f = encrypted_backup_path.open("rb")
-        while chunk := f.read(1024):
-            yield chunk
+        with encrypted_backup_path.open("rb") as f:
+            while chunk := f.read(1024):
+                yield chunk
 
     async def open_backup() -> AsyncIterator[bytes]:
         return send_backup()
@@ -265,10 +398,10 @@ async def test_decrypted_backup_streamer_interrupt_stuck_reader(
     stuck = asyncio.Event()
 
     async def send_backup() -> AsyncIterator[bytes]:
-        f = encrypted_backup_path.open("rb")
-        while chunk := f.read(1024):
-            await stuck.wait()
-            yield chunk
+        with encrypted_backup_path.open("rb") as f:
+            while chunk := f.read(1024):
+                await stuck.wait()
+                yield chunk
 
     async def open_backup() -> AsyncIterator[bytes]:
         return send_backup()
@@ -301,9 +434,9 @@ async def test_decrypted_backup_streamer_interrupt_stuck_writer(
     )
 
     async def send_backup() -> AsyncIterator[bytes]:
-        f = encrypted_backup_path.open("rb")
-        while chunk := f.read(1024):
-            yield chunk
+        with encrypted_backup_path.open("rb") as f:
+            while chunk := f.read(1024):
+                yield chunk
 
     async def open_backup() -> AsyncIterator[bytes]:
         return send_backup()
@@ -334,9 +467,9 @@ async def test_decrypted_backup_streamer_wrong_password(hass: HomeAssistant) -> 
     )
 
     async def send_backup() -> AsyncIterator[bytes]:
-        f = encrypted_backup_path.open("rb")
-        while chunk := f.read(1024):
-            yield chunk
+        with encrypted_backup_path.open("rb") as f:
+            while chunk := f.read(1024):
+                yield chunk
 
     async def open_backup() -> AsyncIterator[bytes]:
         return send_backup()
@@ -358,15 +491,15 @@ async def test_decrypted_backup_streamer_wrong_password(hass: HomeAssistant) -> 
                 AddonInfo(name="Core 1", slug="core1", version="1.0.0"),
                 AddonInfo(name="Core 2", slug="core2", version="1.0.0"),
             ],
-            40960,  # 4 x 10240 byte of padding
-            "test_backups/c0cb53bd.tar",
+            51200,  # 5 x 10240 byte of padding
+            "test_backups/c0cb53bd.tar.encrypted_v3",
         ),
         (
             [
                 AddonInfo(name="Core 1", slug="core1", version="1.0.0"),
             ],
-            30720,  # 3 x 10240 byte of padding
-            "test_backups/c0cb53bd.tar.encrypted_skip_core2",
+            40960,  # 4 x 10240 byte of padding
+            "test_backups/c0cb53bd.tar.encrypted_v3_skip_core2",
         ),
     ],
 )
@@ -397,23 +530,24 @@ async def test_encrypted_backup_streamer(
     expected_padding = b"\0" * padding_size
 
     async def send_backup() -> AsyncIterator[bytes]:
-        f = decrypted_backup_path.open("rb")
-        while chunk := f.read(1024):
-            yield chunk
+        with decrypted_backup_path.open("rb") as f:
+            while chunk := f.read(1024):
+                yield chunk
 
     async def open_backup() -> AsyncIterator[bytes]:
         return send_backup()
 
-    # Patch os.urandom to return values matching the nonce used in the encrypted
-    # test backup. The backup has three inner tar files, but we need an extra nonce
-    # for a future planned supervisor.tar.
-    with patch("os.urandom") as mock_randbytes:
-        mock_randbytes.side_effect = (
-            bytes.fromhex("bd34ea6fc93b0614ce7af2b44b4f3957"),
-            bytes.fromhex("1296d6f7554e2cb629a3dc4082bae36c"),
-            bytes.fromhex("8b7a58e48faf2efb23845eb3164382e0"),
-            bytes.fromhex("00000000000000000000000000000000"),
-        )
+    # Patch os.urandom for deterministic key derivation salts, and patch
+    # crypto_secretstream init_push to use os.urandom for the stream header
+    # instead of libsodium's internal CSPRNG.
+    with (
+        patch("os.urandom", side_effect=_make_deterministic_urandom()),
+        patch(
+            "nacl.bindings.crypto_secretstream"
+            ".crypto_secretstream_xchacha20poly1305_init_push",
+            side_effect=_deterministic_init_push,
+        ),
+    ):
         encryptor = EncryptedBackupStreamer(hass, backup, open_backup, "hunter2")
 
         assert encryptor.backup() == dataclasses.replace(
@@ -459,10 +593,10 @@ async def test_encrypted_backup_streamer_interrupt_stuck_reader(
     stuck = asyncio.Event()
 
     async def send_backup() -> AsyncIterator[bytes]:
-        f = decrypted_backup_path.open("rb")
-        while chunk := f.read(1024):
-            await stuck.wait()
-            yield chunk
+        with decrypted_backup_path.open("rb") as f:
+            while chunk := f.read(1024):
+                await stuck.wait()
+                yield chunk
 
     async def open_backup() -> AsyncIterator[bytes]:
         return send_backup()
@@ -497,9 +631,9 @@ async def test_encrypted_backup_streamer_interrupt_stuck_writer(
     )
 
     async def send_backup() -> AsyncIterator[bytes]:
-        f = decrypted_backup_path.open("rb")
-        while chunk := f.read(1024):
-            yield chunk
+        with decrypted_backup_path.open("rb") as f:
+            while chunk := f.read(1024):
+                yield chunk
 
     async def open_backup() -> AsyncIterator[bytes]:
         return send_backup()
@@ -514,7 +648,9 @@ async def test_encrypted_backup_streamer_random_nonce(hass: HomeAssistant) -> No
     decrypted_backup_path = get_fixture_path(
         "test_backups/c0cb53bd.tar.decrypted", DOMAIN
     )
-    encrypted_backup_path = get_fixture_path("test_backups/c0cb53bd.tar", DOMAIN)
+    encrypted_backup_path = get_fixture_path(
+        "test_backups/c0cb53bd.tar.encrypted_v3", DOMAIN
+    )
     backup = AgentBackup(
         addons=[
             AddonInfo(name="Core 1", slug="core1", version="1.0.0"),
@@ -533,9 +669,9 @@ async def test_encrypted_backup_streamer_random_nonce(hass: HomeAssistant) -> No
     )
 
     async def send_backup() -> AsyncIterator[bytes]:
-        f = decrypted_backup_path.open("rb")
-        while chunk := f.read(1024):
-            yield chunk
+        with decrypted_backup_path.open("rb") as f:
+            while chunk := f.read(1024):
+                yield chunk
 
     async def open_backup() -> AsyncIterator[bytes]:
         return send_backup()
@@ -569,8 +705,8 @@ async def test_encrypted_backup_streamer_random_nonce(hass: HomeAssistant) -> No
     # Expect the output length to match the stored encrypted backup file, with
     # additional padding.
     encrypted_backup_data = encrypted_backup_path.read_bytes()
-    # 4 x 10240 byte of padding
-    assert len(encrypted_output1) == len(encrypted_backup_data) + 40960
+    # 5 x 10240 byte of padding
+    assert len(encrypted_output1) == len(encrypted_backup_data) + 51200
     assert encrypted_output1[: len(encrypted_backup_data)] != encrypted_backup_data
 
 
@@ -597,9 +733,9 @@ async def test_encrypted_backup_streamer_error(hass: HomeAssistant) -> None:
     )
 
     async def send_backup() -> AsyncIterator[bytes]:
-        f = decrypted_backup_path.open("rb")
-        while chunk := f.read(1024):
-            yield chunk
+        with decrypted_backup_path.open("rb") as f:
+            while chunk := f.read(1024):
+                yield chunk
 
     async def open_backup() -> AsyncIterator[bytes]:
         return send_backup()

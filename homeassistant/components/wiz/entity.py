@@ -1,9 +1,7 @@
 """WiZ integration entities."""
 
-from __future__ import annotations
-
 from abc import abstractmethod
-from typing import Any
+from typing import Any, override
 
 from pywizlight.bulblibrary import BulbType
 
@@ -11,15 +9,12 @@ from homeassistant.const import ATTR_HW_VERSION, ATTR_MODEL
 from homeassistant.core import callback
 from homeassistant.helpers.device_registry import CONNECTION_NETWORK_MAC, DeviceInfo
 from homeassistant.helpers.entity import Entity, ToggleEntity
-from homeassistant.helpers.update_coordinator import (
-    CoordinatorEntity,
-    DataUpdateCoordinator,
-)
+from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
-from .models import WizData
+from .coordinator import WizCoordinator, WizData
 
 
-class WizEntity(CoordinatorEntity[DataUpdateCoordinator[float | None]], Entity):
+class WizEntity(CoordinatorEntity[WizCoordinator], Entity):
     """Representation of WiZ entity."""
 
     _attr_has_entity_name = True
@@ -46,6 +41,7 @@ class WizEntity(CoordinatorEntity[DataUpdateCoordinator[float | None]], Entity):
         self._attr_device_info[ATTR_MODEL] = model
 
     @callback
+    @override
     def _handle_coordinator_update(self) -> None:
         """Handle updated data from the coordinator."""
         self._async_update_attrs()
@@ -61,10 +57,12 @@ class WizToggleEntity(WizEntity, ToggleEntity):
     """Representation of WiZ toggle entity."""
 
     @callback
+    @override
     def _async_update_attrs(self) -> None:
         """Handle updating _attr values."""
         self._attr_is_on = self._device.status
 
+    @override
     async def async_turn_off(self, **kwargs: Any) -> None:
         """Instruct the device to turn off."""
         await self._device.turn_off()

@@ -45,7 +45,7 @@ async def async_get_config_entry_diagnostics(
     payload: dict[str, Any] = {
         "now": dt_util.now().isoformat(),
         "timezone": str(dt_util.get_default_time_zone()),
-        "system_timezone": str(datetime.datetime.now().astimezone().tzinfo),
+        "system_timezone": str(datetime.datetime.now().astimezone().tzinfo),  # pylint: disable=home-assistant-enforce-naive-now
     }
 
     store = config_entry.runtime_data.store

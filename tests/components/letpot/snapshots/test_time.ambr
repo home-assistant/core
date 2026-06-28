@@ -1,8 +1,9 @@
 # serializer version: 1
 # name: test_all_entities[time.garden_light_off-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -38,7 +39,7 @@
 # name: test_all_entities[time.garden_light_off-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'Garden Light off',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Garden Light off',
     }),
     'context': <ANY>,
     'entity_id': 'time.garden_light_off',
@@ -50,8 +51,9 @@
 # ---
 # name: test_all_entities[time.garden_light_on-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -87,7 +89,7 @@
 # name: test_all_entities[time.garden_light_on-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'Garden Light on',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Garden Light on',
     }),
     'context': <ANY>,
     'entity_id': 'time.garden_light_on',

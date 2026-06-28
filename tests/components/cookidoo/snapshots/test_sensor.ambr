@@ -1,11 +1,12 @@
 # serializer version: 1
 # name: test_setup[sensor.cookidoo_subscription-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
-      'options': list([
+      <SensorEntityCapabilityAttribute.OPTIONS: 'options'>: list([
         'free',
         'trial',
         'premium',
@@ -44,9 +45,9 @@
 # name: test_setup[sensor.cookidoo_subscription-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'device_class': 'enum',
-      'friendly_name': 'Cookidoo Subscription',
-      'options': list([
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'enum',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Cookidoo Subscription',
+      <SensorEntityCapabilityAttribute.OPTIONS: 'options'>: list([
         'free',
         'trial',
         'premium',
@@ -62,8 +63,9 @@
 # ---
 # name: test_setup[sensor.cookidoo_subscription_expiration_date-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -99,8 +101,8 @@
 # name: test_setup[sensor.cookidoo_subscription_expiration_date-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'device_class': 'timestamp',
-      'friendly_name': 'Cookidoo Subscription expiration date',
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'timestamp',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Cookidoo Subscription expiration date',
     }),
     'context': <ANY>,
     'entity_id': 'sensor.cookidoo_subscription_expiration_date',

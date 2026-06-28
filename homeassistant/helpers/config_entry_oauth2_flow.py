@@ -6,8 +6,6 @@ This module exists of the following parts:
 
 """
 
-from __future__ import annotations
-
 from abc import ABC, ABCMeta, abstractmethod
 import asyncio
 from asyncio import Lock
@@ -15,11 +13,11 @@ import base64
 from collections.abc import Awaitable, Callable
 import hashlib
 from http import HTTPStatus
-from json import JSONDecodeError
+import json
 import logging
 import secrets
 import time
-from typing import Any, cast
+from typing import Any, cast, override
 
 from aiohttp import ClientError, ClientResponseError, client, web
 from habluetooth import BluetoothServiceInfoBleak
@@ -29,7 +27,12 @@ from yarl import URL
 
 from homeassistant import config_entries
 from homeassistant.core import HomeAssistant, callback
-from homeassistant.exceptions import HomeAssistantError
+from homeassistant.exceptions import (
+    HomeAssistantError,
+    OAuth2TokenRequestError,
+    OAuth2TokenRequestReauthError,
+    OAuth2TokenRequestTransientError,
+)
 from homeassistant.loader import async_get_application_credentials
 from homeassistant.util.hass_dict import HassKey
 
@@ -55,6 +58,7 @@ DATA_PROVIDERS: HassKey[
 AUTH_CALLBACK_PATH = "/auth/external/callback"
 HEADER_FRONTEND_BASE = "HA-Frontend-Base"
 MY_AUTH_CALLBACK_PATH = "https://my.home-assistant.io/redirect/oauth"
+
 
 CLOCK_OUT_OF_SYNC_MAX_SEC = 20
 
@@ -134,7 +138,10 @@ class AbstractOAuth2Implementation(ABC):
 
     @abstractmethod
     async def _async_refresh_token(self, token: dict) -> dict:
-        """Refresh a token."""
+        """Refresh a token.
+
+        Should raise OAuth2TokenRequestError on token refresh failure.
+        """
 
 
 class LocalOAuth2Implementation(AbstractOAuth2Implementation):
@@ -158,11 +165,13 @@ class LocalOAuth2Implementation(AbstractOAuth2Implementation):
         self.token_url = token_url
 
     @property
+    @override
     def name(self) -> str:
         """Name of the implementation."""
         return "Local application credentials"
 
     @property
+    @override
     def domain(self) -> str:
         """Domain providing the implementation."""
         return self._domain
@@ -182,6 +191,7 @@ class LocalOAuth2Implementation(AbstractOAuth2Implementation):
         """Extra data for the token resolve request."""
         return {}
 
+    @override
     async def async_generate_authorize_url(self, flow_id: str) -> str:
         """Generate a url for the user to authorize."""
         redirect_uri = self.redirect_uri
@@ -200,6 +210,7 @@ class LocalOAuth2Implementation(AbstractOAuth2Implementation):
             .update_query(self.extra_authorize_data)
         )
 
+    @override
     async def async_resolve_external_data(self, external_data: Any) -> dict:
         """Resolve the authorization code to tokens."""
         request_data: dict = {
@@ -210,8 +221,10 @@ class LocalOAuth2Implementation(AbstractOAuth2Implementation):
         request_data.update(self.extra_token_resolve_data)
         return await self._token_request(request_data)
 
+    @override
     async def _async_refresh_token(self, token: dict) -> dict:
-        """Refresh tokens."""
+        """Refresh a token."""
+
         new_token = await self._token_request(
             {
                 "grant_type": "refresh_token",
@@ -219,33 +232,76 @@ class LocalOAuth2Implementation(AbstractOAuth2Implementation):
                 "refresh_token": token["refresh_token"],
             }
         )
+
         return {**token, **new_token}
 
     async def _token_request(self, data: dict) -> dict:
-        """Make a token request."""
+        """Make a token request.
+
+        Raises OAuth2TokenRequestError on token request failure.
+        """
         session = async_get_clientsession(self.hass)
 
         data["client_id"] = self.client_id
-
         if self.client_secret:
             data["client_secret"] = self.client_secret
 
         _LOGGER.debug("Sending token request to %s", self.token_url)
-        resp = await session.post(self.token_url, data=data)
-        if resp.status >= 400:
-            try:
-                error_response = await resp.json()
-            except ClientError, JSONDecodeError:
-                error_response = {}
-            error_code = error_response.get("error", "unknown")
-            error_description = error_response.get("error_description", "unknown error")
-            _LOGGER.error(
-                "Token request for %s failed (%s): %s",
-                self.domain,
-                error_code,
-                error_description,
-            )
-        resp.raise_for_status()
+
+        try:
+            resp = await session.post(self.token_url, data=data)
+            if resp.status >= 400:
+                error_body = ""
+                try:
+                    error_body = await resp.text()
+                    error_data = json.loads(error_body)
+                    error_code = error_data.get("error", "unknown error")
+                    error_description = error_data.get("error_description")
+                    detail = (
+                        f"{error_code}: {error_description}"
+                        if error_description
+                        else error_code
+                    )
+                except ClientError, ValueError, AttributeError:
+                    detail = error_body[:200] if error_body else "unknown error"
+                _LOGGER.debug(
+                    "Token request for %s failed (%s): %s",
+                    self.domain,
+                    resp.status,
+                    detail,
+                )
+            resp.raise_for_status()
+        except ClientResponseError as err:
+            if err.status == HTTPStatus.TOO_MANY_REQUESTS or 500 <= err.status <= 599:
+                # Recoverable error
+                raise OAuth2TokenRequestTransientError(
+                    request_info=err.request_info,
+                    history=err.history,
+                    status=err.status,
+                    message=err.message,
+                    headers=err.headers,
+                    domain=self._domain,
+                ) from err
+            if 400 <= err.status <= 499:
+                # Non-recoverable error
+                raise OAuth2TokenRequestReauthError(
+                    request_info=err.request_info,
+                    history=err.history,
+                    status=err.status,
+                    message=err.message,
+                    headers=err.headers,
+                    domain=self._domain,
+                ) from err
+
+            raise OAuth2TokenRequestError(
+                request_info=err.request_info,
+                history=err.history,
+                status=err.status,
+                message=err.message,
+                headers=err.headers,
+                domain=self._domain,
+            ) from err
+
         return cast(dict, await resp.json())
 
 
@@ -278,6 +334,7 @@ class LocalOAuth2ImplementationWithPkce(LocalOAuth2Implementation):
         )
 
     @property
+    @override
     def extra_authorize_data(self) -> dict:
         """Extra data that needs to be appended to the authorize url.
 
@@ -300,6 +357,7 @@ class LocalOAuth2ImplementationWithPkce(LocalOAuth2Implementation):
         }
 
     @property
+    @override
     def extra_token_resolve_data(self) -> dict:
         """Extra data that needs to be included in the token resolve request.
 
@@ -458,12 +516,12 @@ class AbstractOAuth2FlowHandler(config_entries.ConfigFlow, metaclass=ABCMeta):
         except TimeoutError as err:
             _LOGGER.error("Timeout resolving OAuth token: %s", err)
             return self.async_abort(reason="oauth_timeout")
-        except (ClientResponseError, ClientError) as err:
+        except (
+            OAuth2TokenRequestError,
+            ClientError,
+        ) as err:
             _LOGGER.error("Error resolving OAuth token: %s", err)
-            if (
-                isinstance(err, ClientResponseError)
-                and err.status == HTTPStatus.UNAUTHORIZED
-            ):
+            if isinstance(err, OAuth2TokenRequestReauthError):
                 return self.async_abort(reason="oauth_unauthorized")
             return self.async_abort(reason="oauth_failed")
 
@@ -503,36 +561,42 @@ class AbstractOAuth2FlowHandler(config_entries.ConfigFlow, metaclass=ABCMeta):
         """
         return self.async_create_entry(title=self.flow_impl.name, data=data)
 
+    @override
     async def async_step_user(
         self, user_input: dict[str, Any] | None = None
     ) -> config_entries.ConfigFlowResult:
         """Handle a flow start."""
         return await self.async_step_pick_implementation(user_input)
 
+    @override
     async def async_step_bluetooth(
         self, discovery_info: BluetoothServiceInfoBleak
     ) -> config_entries.ConfigFlowResult:
         """Handle a flow initialized by Bluetooth discovery."""
         return await self.async_step_oauth_discovery()
 
+    @override
     async def async_step_dhcp(
         self, discovery_info: DhcpServiceInfo
     ) -> config_entries.ConfigFlowResult:
         """Handle a flow initialized by DHCP discovery."""
         return await self.async_step_oauth_discovery()
 
+    @override
     async def async_step_homekit(
         self, discovery_info: ZeroconfServiceInfo
     ) -> config_entries.ConfigFlowResult:
         """Handle a flow initialized by Homekit discovery."""
         return await self.async_step_oauth_discovery()
 
+    @override
     async def async_step_ssdp(
         self, discovery_info: SsdpServiceInfo
     ) -> config_entries.ConfigFlowResult:
         """Handle a flow initialized by SSDP discovery."""
         return await self.async_step_oauth_discovery()
 
+    @override
     async def async_step_zeroconf(
         self, discovery_info: ZeroconfServiceInfo
     ) -> config_entries.ConfigFlowResult:
@@ -751,6 +815,6 @@ def _decode_jwt(hass: HomeAssistant, encoded: str) -> dict[str, Any] | None:
         return None
 
     try:
-        return jwt.decode(encoded, secret, algorithms=["HS256"])  # type: ignore[no-any-return]
+        return jwt.decode(encoded, secret, algorithms=["HS256"])
     except jwt.InvalidTokenError:
         return None

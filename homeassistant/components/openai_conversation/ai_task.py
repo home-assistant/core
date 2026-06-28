@@ -1,11 +1,9 @@
 """AI Task integration for OpenAI."""
 
-from __future__ import annotations
-
 import base64
 from json import JSONDecodeError
 import logging
-from typing import TYPE_CHECKING
+from typing import TYPE_CHECKING, override
 
 from openai.types.responses.response_output_item import ImageGenerationCall
 
@@ -65,13 +63,16 @@ class OpenAITaskEntity(
         if not model.startswith(tuple(UNSUPPORTED_IMAGE_MODELS)):
             self._attr_supported_features |= ai_task.AITaskEntityFeature.GENERATE_IMAGE
 
+    @override
     async def _async_generate_data(
         self,
         task: ai_task.GenDataTask,
         chat_log: conversation.ChatLog,
     ) -> ai_task.GenDataTaskResult:
         """Handle a generate data task."""
-        await self._async_handle_chat_log(chat_log, task.name, task.structure)
+        await self._async_handle_chat_log(
+            chat_log, task.name, task.structure, max_iterations=1000
+        )
 
         if not isinstance(chat_log.content[-1], conversation.AssistantContent):
             raise HomeAssistantError(
@@ -100,6 +101,7 @@ class OpenAITaskEntity(
             data=data,
         )
 
+    @override
     async def _async_generate_image(
         self,
         task: ai_task.GenImageTask,

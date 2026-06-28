@@ -1,28 +1,29 @@
 # serializer version: 1
 # name: test_entities[climate.saunum_leil-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
-      'fan_modes': list([
+      <ClimateEntityCapabilityAttribute.FAN_MODES: 'fan_modes'>: list([
         'off',
         'low',
         'medium',
         'high',
       ]),
-      'hvac_modes': list([
+      <ClimateEntityCapabilityAttribute.HVAC_MODES: 'hvac_modes'>: list([
         <HVACMode.OFF: 'off'>,
         <HVACMode.HEAT: 'heat'>,
       ]),
-      'max_temp': 100,
-      'min_temp': 40,
-      'preset_modes': list([
+      <ClimateEntityCapabilityAttribute.MAX_TEMP: 'max_temp'>: 100,
+      <ClimateEntityCapabilityAttribute.MIN_TEMP: 'min_temp'>: 40,
+      <ClimateEntityCapabilityAttribute.PRESET_MODES: 'preset_modes'>: list([
         'type_1',
         'type_2',
         'type_3',
       ]),
-      'target_temp_step': 1.0,
+      <ClimateEntityCapabilityAttribute.TARGET_TEMP_STEP: 'target_temp_step'>: 1.0,
     }),
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -57,31 +58,31 @@
 # name: test_entities[climate.saunum_leil-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'current_temperature': 75,
-      'fan_mode': 'medium',
-      'fan_modes': list([
+      <ClimateEntityStateAttribute.CURRENT_TEMPERATURE: 'current_temperature'>: 75,
+      <ClimateEntityStateAttribute.FAN_MODE: 'fan_mode'>: 'medium',
+      <ClimateEntityCapabilityAttribute.FAN_MODES: 'fan_modes'>: list([
         'off',
         'low',
         'medium',
         'high',
       ]),
-      'friendly_name': 'Saunum Leil',
-      'hvac_action': <HVACAction.OFF: 'off'>,
-      'hvac_modes': list([
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Saunum Leil',
+      <ClimateEntityStateAttribute.HVAC_ACTION: 'hvac_action'>: <HVACAction.OFF: 'off'>,
+      <ClimateEntityCapabilityAttribute.HVAC_MODES: 'hvac_modes'>: list([
         <HVACMode.OFF: 'off'>,
         <HVACMode.HEAT: 'heat'>,
       ]),
-      'max_temp': 100,
-      'min_temp': 40,
-      'preset_mode': 'type_1',
-      'preset_modes': list([
+      <ClimateEntityCapabilityAttribute.MAX_TEMP: 'max_temp'>: 100,
+      <ClimateEntityCapabilityAttribute.MIN_TEMP: 'min_temp'>: 40,
+      <ClimateEntityStateAttribute.PRESET_MODE: 'preset_mode'>: 'type_1',
+      <ClimateEntityCapabilityAttribute.PRESET_MODES: 'preset_modes'>: list([
         'type_1',
         'type_2',
         'type_3',
       ]),
-      'supported_features': <ClimateEntityFeature: 25>,
-      'target_temp_step': 1.0,
-      'temperature': 80,
+      <EntityStateAttribute.SUPPORTED_FEATURES: 'supported_features'>: <ClimateEntityFeature: 25>,
+      <ClimateEntityCapabilityAttribute.TARGET_TEMP_STEP: 'target_temp_step'>: 1.0,
+      <ClimateEntityStateAttribute.TEMPERATURE: 'temperature'>: 80,
     }),
     'context': <ANY>,
     'entity_id': 'climate.saunum_leil',

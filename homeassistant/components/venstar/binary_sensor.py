@@ -1,24 +1,25 @@
 """Alarm sensors for the Venstar Thermostat."""
 
+from typing import override
+
 from homeassistant.components.binary_sensor import (
     BinarySensorDeviceClass,
     BinarySensorEntity,
 )
-from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
-from .const import DOMAIN
+from .coordinator import VenstarConfigEntry
 from .entity import VenstarEntity
 
 
 async def async_setup_entry(
     hass: HomeAssistant,
-    config_entry: ConfigEntry,
+    config_entry: VenstarConfigEntry,
     async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up Vensar device binary_sensors based on a config entry."""
-    coordinator = hass.data[DOMAIN][config_entry.entry_id]
+    coordinator = config_entry.runtime_data
 
     if coordinator.client.alerts is None:
         return
@@ -41,7 +42,8 @@ class VenstarBinarySensor(VenstarEntity, BinarySensorEntity):
         self._attr_name = alert
 
     @property
-    def is_on(self):
+    @override
+    def is_on(self) -> bool | None:
         """Return true if the binary sensor is on."""
         if self._client.alerts is None:
             return None

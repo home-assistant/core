@@ -1,11 +1,9 @@
 """Support for Mikrotik routers as device tracker."""
 
-from __future__ import annotations
-
-from typing import Any
+from typing import Any, override
 
 from homeassistant.components.device_tracker import (
-    DOMAIN as DEVICE_TRACKER,
+    DOMAIN as DEVICE_TRACKER_DOMAIN,
     ScannerEntity,
 )
 from homeassistant.core import HomeAssistant, callback
@@ -33,7 +31,7 @@ async def async_setup_entry(
     for entity in registry.entities.get_entries_for_config_entry_id(
         config_entry.entry_id
     ):
-        if entity.domain == DEVICE_TRACKER:
+        if entity.domain == DEVICE_TRACKER_DOMAIN:
             if (
                 entity.unique_id in coordinator.api.devices
                 or entity.unique_id not in coordinator.api.all_devices
@@ -82,6 +80,7 @@ class MikrotikDataUpdateCoordinatorTracker(
         self._attr_unique_id = device.mac
 
     @property
+    @override
     def is_connected(self) -> bool:
         """Return true if the client is connected to the network."""
         if (
@@ -93,21 +92,25 @@ class MikrotikDataUpdateCoordinatorTracker(
         return False
 
     @property
+    @override
     def hostname(self) -> str:
         """Return the hostname of the client."""
         return self.device.name
 
     @property
+    @override
     def mac_address(self) -> str:
         """Return the mac address of the client."""
         return self.device.mac
 
     @property
+    @override
     def ip_address(self) -> str | None:
         """Return the mac address of the client."""
         return self.device.ip_address
 
     @property
+    @override
     def extra_state_attributes(self) -> dict[str, Any] | None:
         """Return the device state attributes."""
         return self.device.attrs if self.is_connected else None

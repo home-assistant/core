@@ -11,14 +11,11 @@ from homeassistant.exceptions import ServiceValidationError
 from homeassistant.helpers import config_validation as cv, device_registry as dr
 
 from .const import DOMAIN, INFO_SKILLS_MAPPING
-from .coordinator import AmazonConfigEntry
+from .coordinator import AmazonConfigEntry, alexa_api_call
 
 ATTR_TEXT_COMMAND = "text_command"
 ATTR_SOUND = "sound"
 ATTR_INFO_SKILL = "info_skill"
-SERVICE_TEXT_COMMAND = "send_text_command"
-SERVICE_SOUND_NOTIFICATION = "send_sound"
-SERVICE_INFO_SKILL = "send_info_skill"
 
 SCHEMA_SOUND_SERVICE = vol.Schema(
     {
@@ -88,13 +85,15 @@ async def _async_execute_action(call: ServiceCall, attribute: str) -> None:
                 translation_key="invalid_sound_value",
                 translation_placeholders={"sound": value},
             )
-        await coordinator.api.call_alexa_sound(
-            coordinator.data[device.serial_number], value
-        )
+        async with alexa_api_call():
+            await coordinator.api.call_alexa_sound(
+                coordinator.data[device.serial_number], value
+            )
     elif attribute == ATTR_TEXT_COMMAND:
-        await coordinator.api.call_alexa_text_command(
-            coordinator.data[device.serial_number], value
-        )
+        async with alexa_api_call():
+            await coordinator.api.call_alexa_text_command(
+                coordinator.data[device.serial_number], value
+            )
     elif attribute == ATTR_INFO_SKILL:
         info_skill = INFO_SKILLS_MAPPING.get(value)
         if info_skill not in ALEXA_INFO_SKILLS:
@@ -103,9 +102,10 @@ async def _async_execute_action(call: ServiceCall, attribute: str) -> None:
                 translation_key="invalid_info_skill_value",
                 translation_placeholders={"info_skill": value},
             )
-        await coordinator.api.call_alexa_info_skill(
-            coordinator.data[device.serial_number], value
-        )
+        async with alexa_api_call():
+            await coordinator.api.call_alexa_info_skill(
+                coordinator.data[device.serial_number], info_skill
+            )
 
 
 async def async_send_sound_notification(call: ServiceCall) -> None:
@@ -128,17 +128,17 @@ def async_setup_services(hass: HomeAssistant) -> None:
     """Set up the services for the Amazon Devices integration."""
     for service_name, method, schema in (
         (
-            SERVICE_SOUND_NOTIFICATION,
+            "send_sound",
             async_send_sound_notification,
             SCHEMA_SOUND_SERVICE,
         ),
         (
-            SERVICE_TEXT_COMMAND,
+            "send_text_command",
             async_send_text_command,
             SCHEMA_CUSTOM_COMMAND,
         ),
         (
-            SERVICE_INFO_SKILL,
+            "send_info_skill",
             async_send_info_skill,
             SCHEMA_INFO_SKILL,
         ),

@@ -1,9 +1,7 @@
 """Config flow for the html5 component."""
 
-from __future__ import annotations
-
 import binascii
-from typing import Any, cast
+from typing import Any, cast, override
 
 from cryptography.hazmat.backends import default_backend
 from cryptography.hazmat.primitives import serialization
@@ -17,7 +15,6 @@ from homeassistant.const import CONF_NAME
 from homeassistant.core import callback
 
 from .const import ATTR_VAPID_EMAIL, ATTR_VAPID_PRV_KEY, ATTR_VAPID_PUB_KEY, DOMAIN
-from .issues import async_create_html5_issue
 
 
 def vapid_generate_private_key() -> str:
@@ -69,6 +66,7 @@ class HTML5ConfigFlow(ConfigFlow, domain=DOMAIN):
             flow_result = self.async_create_entry(title="HTML5", data=config)
         return errors, flow_result
 
+    @override
     async def async_step_user(
         self: HTML5ConfigFlow, user_input: dict[str, Any] | None = None
     ) -> ConfigFlowResult:
@@ -92,14 +90,3 @@ class HTML5ConfigFlow(ConfigFlow, domain=DOMAIN):
             ),
             errors=errors,
         )
-
-    async def async_step_import(
-        self: HTML5ConfigFlow, import_config: dict
-    ) -> ConfigFlowResult:
-        """Handle config import from yaml."""
-        _, flow_result = self._async_create_html5_entry(import_config)
-        if not flow_result:
-            async_create_html5_issue(self.hass, False)
-            return self.async_abort(reason="invalid_config")
-        async_create_html5_issue(self.hass, True)
-        return flow_result

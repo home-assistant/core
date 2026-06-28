@@ -1,7 +1,7 @@
 """Provides number entities for Home Connect."""
 
 import logging
-from typing import cast
+from typing import cast, override
 
 from aiohomeconnect.model import GetSetting, OptionKey, SettingKey
 from aiohomeconnect.model.error import HomeConnectError
@@ -19,7 +19,7 @@ from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
 from .common import setup_home_connect_entry, should_add_option_entity
 from .const import DOMAIN, UNIT_MAP
-from .coordinator import HomeConnectApplianceData, HomeConnectConfigEntry
+from .coordinator import HomeConnectApplianceCoordinator, HomeConnectConfigEntry
 from .entity import HomeConnectEntity, HomeConnectOptionEntity, constraint_fetcher
 from .utils import get_dict_from_home_connect_error
 
@@ -123,28 +123,26 @@ NUMBER_OPTIONS = (
 
 
 def _get_entities_for_appliance(
-    entry: HomeConnectConfigEntry,
-    appliance: HomeConnectApplianceData,
+    appliance_coordinator: HomeConnectApplianceCoordinator,
 ) -> list[HomeConnectEntity]:
     """Get a list of entities."""
     return [
-        HomeConnectNumberEntity(entry.runtime_data, appliance, description)
+        HomeConnectNumberEntity(appliance_coordinator, description)
         for description in NUMBERS
-        if description.key in appliance.settings
+        if description.key in appliance_coordinator.data.settings
     ]
 
 
 def _get_option_entities_for_appliance(
-    entry: HomeConnectConfigEntry,
-    appliance: HomeConnectApplianceData,
+    appliance_coordinator: HomeConnectApplianceCoordinator,
     entity_registry: er.EntityRegistry,
-) -> list[HomeConnectOptionEntity]:
+) -> list[HomeConnectEntity]:
     """Get a list of currently available option entities."""
     return [
-        HomeConnectOptionNumberEntity(entry.runtime_data, appliance, description)
+        HomeConnectOptionNumberEntity(appliance_coordinator, description)
         for description in NUMBER_OPTIONS
         if should_add_option_entity(
-            description, appliance, entity_registry, Platform.NUMBER
+            description, appliance_coordinator.data, entity_registry, Platform.NUMBER
         )
     ]
 
@@ -167,6 +165,7 @@ async def async_setup_entry(
 class HomeConnectNumberEntity(HomeConnectEntity, NumberEntity):
     """Number setting class for Home Connect."""
 
+    @override
     async def async_set_native_value(self, value: float) -> None:
         """Set the native value of the entity."""
         _LOGGER.debug(
@@ -223,11 +222,13 @@ class HomeConnectNumberEntity(HomeConnectEntity, NumberEntity):
         else:
             self._attr_native_step = 0.1 if setting.type == "Double" else 1
 
+    @override
     def update_native_value(self) -> None:
         """Update status when an event for the entity is received."""
         data = self.appliance.settings[cast(SettingKey, self.bsh_key)]
         self._attr_native_value = cast(float, data.value)
 
+    @override
     async def async_added_to_hass(self) -> None:
         """When entity is added to hass."""
         await super().async_added_to_hass()
@@ -245,10 +246,12 @@ class HomeConnectNumberEntity(HomeConnectEntity, NumberEntity):
 class HomeConnectOptionNumberEntity(HomeConnectOptionEntity, NumberEntity):
     """Number option class for Home Connect."""
 
+    @override
     async def async_set_native_value(self, value: float) -> None:
         """Set the native value of the entity."""
         await self.async_set_option(value)
 
+    @override
     def update_native_value(self) -> None:
         """Set the value of the entity."""
         self._attr_native_value = cast(float | None, self.option_value)

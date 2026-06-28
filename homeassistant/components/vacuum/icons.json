@@ -22,6 +22,9 @@
     }
   },
   "services": {
+    "clean_area": {
+      "service": "mdi:target-variant"
+    },
     "clean_spot": {
       "service": "mdi:target-variant"
     },
@@ -60,14 +63,14 @@
     }
   },
   "triggers": {
-    "docked": {
-      "trigger": "mdi:home-outline"
-    },
     "errored": {
       "trigger": "mdi:alert-circle-outline"
     },
     "paused_cleaning": {
       "trigger": "mdi:pause"
+    },
+    "returned_to_dock": {
+      "trigger": "mdi:home-outline"
     },
     "started_cleaning": {
       "trigger": "mdi:play"

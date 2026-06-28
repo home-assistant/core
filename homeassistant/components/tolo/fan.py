@@ -1,8 +1,6 @@
 """TOLO Sauna fan controls."""
 
-from __future__ import annotations
-
-from typing import Any
+from typing import Any, override
 
 from homeassistant.components.fan import FanEntity, FanEntityFeature
 from homeassistant.core import HomeAssistant
@@ -37,10 +35,12 @@ class ToloFan(ToloSaunaCoordinatorEntity, FanEntity):
         self._attr_unique_id = f"{entry.entry_id}_fan"
 
     @property
+    @override
     def is_on(self) -> bool:
         """Return if sauna fan is running."""
         return self.coordinator.data.status.fan_on
 
+    @override
     def turn_on(
         self,
         percentage: int | None = None,
@@ -50,6 +50,7 @@ class ToloFan(ToloSaunaCoordinatorEntity, FanEntity):
         """Turn on sauna fan."""
         self.coordinator.client.set_fan_on(True)
 
+    @override
     def turn_off(self, **kwargs: Any) -> None:
         """Turn off sauna fan."""
         self.coordinator.client.set_fan_on(False)

@@ -1,11 +1,9 @@
 """Support for schedules in Home Assistant."""
 
-from __future__ import annotations
-
 from collections.abc import Callable
 from datetime import datetime, time, timedelta
 import itertools
-from typing import Any, Literal
+from typing import Any, Literal, override
 
 import voluptuous as vol
 
@@ -70,7 +68,8 @@ def valid_schedule(schedule: list[dict[str, str]]) -> list[dict[str, str]]:
     # Sort the schedule by start times
     schedule = sorted(schedule, key=lambda time_range: time_range[CONF_FROM])
 
-    # Check if the start time of the next event is before the end time of the previous event
+    # Check if the start time of the next event is before
+    # the end time of the previous event
     previous_to = None
     for time_range in schedule:
         if time_range[CONF_FROM] >= time_range[CONF_TO]:
@@ -199,8 +198,6 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     async def reload_service_handler(service_call: ServiceCall) -> None:
         """Reload yaml entities."""
         conf = await component.async_prepare_reload(skip_reset=True)
-        if conf is None:
-            conf = {DOMAIN: {}}
         await yaml_collection.async_load(
             [{CONF_ID: id_, **cfg} for id_, cfg in conf.get(DOMAIN, {}).items()]
         )
@@ -228,22 +225,26 @@ class ScheduleStorageCollection(DictStorageCollection):
 
     SCHEMA = vol.Schema(BASE_SCHEMA | STORAGE_SCHEDULE_SCHEMA)
 
+    @override
     async def _process_create_data(self, data: dict) -> dict:
         """Validate the config is valid."""
         self.SCHEMA(data)
         return data
 
     @callback
+    @override
     def _get_suggested_id(self, info: dict) -> str:
         """Suggest an ID based on the config."""
         name: str = info[CONF_NAME]
         return name
 
+    @override
     async def _update_data(self, item: dict, update_data: dict) -> dict:
         """Return a new updated data object."""
         self.SCHEMA(update_data)
         return {CONF_ID: item[CONF_ID]} | update_data
 
+    @override
     async def _async_load_data(self) -> SerializedStorageCollection | None:
         """Load the data."""
         if data := await super()._async_load_data():
@@ -273,24 +274,28 @@ class Schedule(CollectionEntity):
         self._attr_name = self._config[CONF_NAME]
         self._attr_unique_id = self._config[CONF_ID]
 
-        # Exclude any custom attributes that may be present on time ranges from recording.
+        # Exclude any custom attributes that may be present
+        # on time ranges from recording.
         self._unrecorded_attributes = self.all_custom_data_keys()
         self._Entity__combined_unrecorded_attributes = (
             self._entity_component_unrecorded_attributes | self._unrecorded_attributes
         )
 
     @classmethod
+    @override
     def from_storage(cls, config: ConfigType) -> Schedule:
         """Return entity instance initialized from storage."""
         return cls(config, editable=True)
 
     @classmethod
+    @override
     def from_yaml(cls, config: ConfigType) -> Schedule:
         """Return entity instance initialized from yaml."""
         schedule = cls(config, editable=False)
         schedule.entity_id = f"{DOMAIN}.{config[CONF_ID]}"
         return schedule
 
+    @override
     async def async_update_config(self, config: ConfigType) -> None:
         """Handle when the config is updated."""
         self._config = ENTITY_SCHEMA(config)
@@ -306,6 +311,7 @@ class Schedule(CollectionEntity):
             self._unsub_update()
             self._unsub_update = None
 
+    @override
     async def async_added_to_hass(self) -> None:
         """Run when entity about to be added to hass."""
         self.async_on_remove(self._clean_up_listener)
@@ -392,7 +398,7 @@ class Schedule(CollectionEntity):
 
     def all_custom_data_keys(self) -> frozenset[str]:
         """Return the set of all currently used custom data attribute keys."""
-        data_keys = set()
+        data_keys: set[str] = set()
 
         for weekday in WEEKDAY_TO_CONF.values():
             if not (weekday_config := self._config.get(weekday)):

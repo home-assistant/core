@@ -1,7 +1,5 @@
 """Support for SleepIQ from SleepNumber."""
 
-from __future__ import annotations
-
 import logging
 from typing import Any
 
@@ -18,14 +16,16 @@ from homeassistant.const import CONF_PASSWORD, CONF_USERNAME, PRESSURE, Platform
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.exceptions import ConfigEntryAuthFailed, ConfigEntryNotReady
 from homeassistant.helpers import config_validation as cv, entity_registry as er
-from homeassistant.helpers.aiohttp_client import async_get_clientsession
+from homeassistant.helpers.aiohttp_client import async_create_clientsession
 from homeassistant.helpers.typing import ConfigType
 
 from .const import DOMAIN, IS_IN_BED, SLEEP_NUMBER
 from .coordinator import (
+    SleepIQConfigEntry,
     SleepIQData,
     SleepIQDataUpdateCoordinator,
     SleepIQPauseUpdateCoordinator,
+    SleepIQSleepDataCoordinator,
 )
 
 _LOGGER = logging.getLogger(__name__)
@@ -63,13 +63,13 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     return True
 
 
-async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
+async def async_setup_entry(hass: HomeAssistant, entry: SleepIQConfigEntry) -> bool:
     """Set up the SleepIQ config entry."""
     conf = entry.data
     email = conf[CONF_USERNAME]
     password = conf[CONF_PASSWORD]
 
-    client_session = async_get_clientsession(hass)
+    client_session = async_create_clientsession(hass)
 
     gateway = AsyncSleepIQ(client_session=client_session)
 
@@ -96,14 +96,17 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
 
     coordinator = SleepIQDataUpdateCoordinator(hass, entry, gateway)
     pause_coordinator = SleepIQPauseUpdateCoordinator(hass, entry, gateway)
+    sleep_data_coordinator = SleepIQSleepDataCoordinator(hass, entry, gateway)
 
     # Call the SleepIQ API to refresh data
     await coordinator.async_config_entry_first_refresh()
     await pause_coordinator.async_config_entry_first_refresh()
+    await sleep_data_coordinator.async_config_entry_first_refresh()
 
-    hass.data.setdefault(DOMAIN, {})[entry.entry_id] = SleepIQData(
+    entry.runtime_data = SleepIQData(
         data_coordinator=coordinator,
         pause_coordinator=pause_coordinator,
+        sleep_data_coordinator=sleep_data_coordinator,
         client=gateway,
     )
 
@@ -112,11 +115,9 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     return True
 
 
-async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
+async def async_unload_entry(hass: HomeAssistant, entry: SleepIQConfigEntry) -> bool:
     """Unload the config entry."""
-    if unload_ok := await hass.config_entries.async_unload_platforms(entry, PLATFORMS):
-        hass.data[DOMAIN].pop(entry.entry_id)
-    return unload_ok
+    return await hass.config_entries.async_unload_platforms(entry, PLATFORMS)
 
 
 async def _async_migrate_unique_ids(

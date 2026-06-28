@@ -1,8 +1,6 @@
 """Support for LG soundbars."""
 
-from __future__ import annotations
-
-from typing import Any
+from typing import Any, override
 
 import temescal
 
@@ -41,6 +39,8 @@ class LGDevice(MediaPlayerEntity):
     """Representation of an LG soundbar device."""
 
     _attr_should_poll = False
+    # Default to ON to ensure compatibility with models
+    # that don't send a powerstatus message
     _attr_state = MediaPlayerState.ON
     _attr_supported_features = (
         MediaPlayerEntityFeature.VOLUME_SET
@@ -49,6 +49,8 @@ class LGDevice(MediaPlayerEntity):
         | MediaPlayerEntityFeature.TURN_OFF
         | MediaPlayerEntityFeature.SELECT_SOURCE
         | MediaPlayerEntityFeature.SELECT_SOUND_MODE
+        | MediaPlayerEntityFeature.PLAY
+        | MediaPlayerEntityFeature.PAUSE
     )
     _attr_has_entity_name = True
     _attr_name = None
@@ -76,10 +78,14 @@ class LGDevice(MediaPlayerEntity):
         self._bass = 0
         self._treble = 0
         self._device = None
+        self._support_play_control = False
+        self._device_on = False
+        self._stream_type = 0
         self._attr_device_info = DeviceInfo(
             identifiers={(DOMAIN, unique_id)}, name=host
         )
 
+    @override
     async def async_added_to_hass(self) -> None:
         """Register the callback after hass is ready for it."""
         await self.hass.async_add_executor_job(self._connect)
@@ -110,6 +116,7 @@ class LGDevice(MediaPlayerEntity):
             if "i_curr_func" in data:
                 self._function = data["i_curr_func"]
             if "b_powerstatus" in data:
+                self._device_on = data["b_powerstatus"]
                 if data["b_powerstatus"]:
                     self._attr_state = MediaPlayerState.ON
                 else:
@@ -136,6 +143,8 @@ class LGDevice(MediaPlayerEntity):
                 self._equaliser = data["i_curr_eq"]
             if "s_user_name" in data:
                 self._attr_name = data["s_user_name"]
+        elif response["msg"] == "PLAY_INFO":
+            self._update_playinfo(data)
 
         self.schedule_update_ha_state()
 
@@ -150,14 +159,51 @@ class LGDevice(MediaPlayerEntity):
         if "i_curr_eq" in data:
             self._equaliser = data["i_curr_eq"]
 
+    def _update_playinfo(self, data: dict[str, Any]) -> None:
+        """Update the player info."""
+        if "i_stream_type" in data:
+            if self._stream_type != data["i_stream_type"]:
+                self._stream_type = data["i_stream_type"]
+                # Ask device for current play info when stream type changed.
+                self._device.get_play()
+            if data["i_stream_type"] == 0:
+                # If the stream type is 0 (aka the soundbar
+                # is used as an actual soundbar) the last
+                # track info should be cleared and the
+                # state should only be on or off, as all
+                # playing/paused are not applicable
+                self._attr_media_image_url = None
+                self._attr_media_artist = None
+                self._attr_media_title = None
+                if self._device_on:
+                    self._attr_state = MediaPlayerState.ON
+                else:
+                    self._attr_state = MediaPlayerState.OFF
+        if "i_play_ctrl" in data:
+            if self._device_on and self._stream_type != 0:
+                if data["i_play_ctrl"] == 0:
+                    self._attr_state = MediaPlayerState.PLAYING
+                else:
+                    self._attr_state = MediaPlayerState.PAUSED
+        if "s_albumart" in data:
+            self._attr_media_image_url = data["s_albumart"].strip() or None
+        if "s_artist" in data:
+            self._attr_media_artist = data["s_artist"].strip() or None
+        if "s_title" in data:
+            self._attr_media_title = data["s_title"].strip() or None
+        if "b_support_play_ctrl" in data:
+            self._support_play_control = data["b_support_play_ctrl"]
+
     def update(self) -> None:
         """Trigger updates from the device."""
         self._device.get_eq()
         self._device.get_info()
         self._device.get_func()
         self._device.get_settings()
+        self._device.get_play()
 
     @property
+    @override
     def volume_level(self):
         """Volume level of the media player (0..1)."""
         if self._volume_max != 0:
@@ -165,11 +211,13 @@ class LGDevice(MediaPlayerEntity):
         return 0
 
     @property
+    @override
     def is_volume_muted(self):
         """Boolean if volume is currently muted."""
         return self._mute
 
     @property
+    @override
     def sound_mode(self):
         """Return the current sound mode."""
         if self._equaliser == -1 or self._equaliser >= len(temescal.equalisers):
@@ -177,6 +225,7 @@ class LGDevice(MediaPlayerEntity):
         return temescal.equalisers[self._equaliser]
 
     @property
+    @override
     def sound_mode_list(self):
         """Return the available sound modes."""
         return sorted(
@@ -186,6 +235,7 @@ class LGDevice(MediaPlayerEntity):
         )
 
     @property
+    @override
     def source(self):
         """Return the current input source."""
         if self._function == -1 or self._function >= len(temescal.functions):
@@ -193,6 +243,7 @@ class LGDevice(MediaPlayerEntity):
         return temescal.functions[self._function]
 
     @property
+    @override
     def source_list(self):
         """List of available input sources."""
         return sorted(
@@ -201,30 +252,59 @@ class LGDevice(MediaPlayerEntity):
             if function < len(temescal.functions)
         )
 
+    @override
     def set_volume_level(self, volume: float) -> None:
         """Set volume level, range 0..1."""
         volume = volume * self._volume_max
         self._device.set_volume(int(volume))
 
+    @override
     def mute_volume(self, mute: bool) -> None:
         """Mute (true) or unmute (false) media player."""
         self._device.set_mute(mute)
 
+    @override
     def select_source(self, source: str) -> None:
         """Select input source."""
         self._device.set_func(temescal.functions.index(source))
 
+    @override
     def select_sound_mode(self, sound_mode: str) -> None:
         """Set Sound Mode for Receiver.."""
         self._device.set_eq(temescal.equalisers.index(sound_mode))
 
+    @override
     def turn_on(self) -> None:
         """Turn the media player on."""
         self._set_power(True)
 
+    @override
     def turn_off(self) -> None:
         """Turn the media player off."""
         self._set_power(False)
+
+    @override
+    def media_play(self) -> None:
+        """Send play command."""
+        if self._support_play_control:
+            self._device.send_packet(
+                {"cmd": "set", "data": {"i_play_ctrl": 0}, "msg": "PLAY_INFO"}
+            )
+
+    @override
+    def media_pause(self) -> None:
+        """Send pause command."""
+        if self._support_play_control:
+            self._device.send_packet(
+                {"cmd": "set", "data": {"i_play_ctrl": 1}, "msg": "PLAY_INFO"}
+            )
+
+    def media_play_pause(self) -> None:
+        """Send play/pause command."""
+        if self.state == MediaPlayerState.PLAYING:
+            self.media_pause()
+        else:
+            self.media_play()
 
     def _set_power(self, status: bool) -> None:
         """Set the media player state."""

@@ -1,8 +1,9 @@
 # serializer version: 1
 # name: test_sensors[sensor.adguard_home_average_processing_speed-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -38,8 +39,8 @@
 # name: test_sensors[sensor.adguard_home_average_processing_speed-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'AdGuard Home Average processing speed',
-      'unit_of_measurement': <UnitOfTime.MILLISECONDS: 'ms'>,
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'AdGuard Home Average processing speed',
+      <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: <UnitOfTime.MILLISECONDS: 'ms'>,
     }),
     'context': <ANY>,
     'entity_id': 'sensor.adguard_home_average_processing_speed',
@@ -51,8 +52,9 @@
 # ---
 # name: test_sensors[sensor.adguard_home_dns_queries-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -88,8 +90,8 @@
 # name: test_sensors[sensor.adguard_home_dns_queries-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'AdGuard Home DNS queries',
-      'unit_of_measurement': 'queries',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'AdGuard Home DNS queries',
+      <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: 'queries',
     }),
     'context': <ANY>,
     'entity_id': 'sensor.adguard_home_dns_queries',
@@ -101,8 +103,9 @@
 # ---
 # name: test_sensors[sensor.adguard_home_dns_queries_blocked-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -138,8 +141,8 @@
 # name: test_sensors[sensor.adguard_home_dns_queries_blocked-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'AdGuard Home DNS queries blocked',
-      'unit_of_measurement': 'queries',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'AdGuard Home DNS queries blocked',
+      <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: 'queries',
     }),
     'context': <ANY>,
     'entity_id': 'sensor.adguard_home_dns_queries_blocked',
@@ -151,8 +154,9 @@
 # ---
 # name: test_sensors[sensor.adguard_home_dns_queries_blocked_ratio-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -188,8 +192,8 @@
 # name: test_sensors[sensor.adguard_home_dns_queries_blocked_ratio-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'AdGuard Home DNS queries blocked ratio',
-      'unit_of_measurement': '%',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'AdGuard Home DNS queries blocked ratio',
+      <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: '%',
     }),
     'context': <ANY>,
     'entity_id': 'sensor.adguard_home_dns_queries_blocked_ratio',
@@ -201,8 +205,9 @@
 # ---
 # name: test_sensors[sensor.adguard_home_parental_control_blocked-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -238,8 +243,8 @@
 # name: test_sensors[sensor.adguard_home_parental_control_blocked-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'AdGuard Home Parental control blocked',
-      'unit_of_measurement': 'requests',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'AdGuard Home Parental control blocked',
+      <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: 'requests',
     }),
     'context': <ANY>,
     'entity_id': 'sensor.adguard_home_parental_control_blocked',
@@ -251,8 +256,9 @@
 # ---
 # name: test_sensors[sensor.adguard_home_rules_count-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -288,8 +294,8 @@
 # name: test_sensors[sensor.adguard_home_rules_count-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'AdGuard Home Rules count',
-      'unit_of_measurement': 'rules',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'AdGuard Home Rules count',
+      <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: 'rules',
     }),
     'context': <ANY>,
     'entity_id': 'sensor.adguard_home_rules_count',
@@ -301,8 +307,9 @@
 # ---
 # name: test_sensors[sensor.adguard_home_safe_browsing_blocked-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -338,8 +345,8 @@
 # name: test_sensors[sensor.adguard_home_safe_browsing_blocked-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'AdGuard Home Safe browsing blocked',
-      'unit_of_measurement': 'requests',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'AdGuard Home Safe browsing blocked',
+      <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: 'requests',
     }),
     'context': <ANY>,
     'entity_id': 'sensor.adguard_home_safe_browsing_blocked',
@@ -351,8 +358,9 @@
 # ---
 # name: test_sensors[sensor.adguard_home_safe_searches_enforced-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -388,8 +396,8 @@
 # name: test_sensors[sensor.adguard_home_safe_searches_enforced-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'AdGuard Home Safe searches enforced',
-      'unit_of_measurement': 'requests',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'AdGuard Home Safe searches enforced',
+      <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: 'requests',
     }),
     'context': <ANY>,
     'entity_id': 'sensor.adguard_home_safe_searches_enforced',

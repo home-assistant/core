@@ -1,9 +1,7 @@
 """Support for MAX! Thermostats via MAX! Cube."""
 
-from __future__ import annotations
-
 import logging
-from typing import Any
+from typing import Any, override
 
 from maxcube.device import (
     MAX_DEVICE_MODE_AUTOMATIC,
@@ -67,12 +65,21 @@ class MaxCubeClimate(ClimateEntity):
     """MAX! Cube ClimateEntity."""
 
     _attr_hvac_modes = [HVACMode.OFF, HVACMode.AUTO, HVACMode.HEAT]
+    _attr_preset_modes = [
+        PRESET_NONE,
+        PRESET_BOOST,
+        PRESET_COMFORT,
+        PRESET_ECO,
+        PRESET_AWAY,
+        PRESET_ON,
+    ]
     _attr_supported_features = (
         ClimateEntityFeature.TARGET_TEMPERATURE
         | ClimateEntityFeature.PRESET_MODE
         | ClimateEntityFeature.TURN_OFF
         | ClimateEntityFeature.TURN_ON
     )
+    _attr_temperature_unit = UnitOfTemperature.CELSIUS
 
     def __init__(self, handler, device):
         """Initialize MAX! Cube ClimateEntity."""
@@ -80,37 +87,32 @@ class MaxCubeClimate(ClimateEntity):
         self._attr_name = f"{room.name} {device.name}"
         self._cubehandle = handler
         self._device = device
-        self._attr_should_poll = True
         self._attr_unique_id = self._device.serial
-        self._attr_temperature_unit = UnitOfTemperature.CELSIUS
-        self._attr_preset_modes = [
-            PRESET_NONE,
-            PRESET_BOOST,
-            PRESET_COMFORT,
-            PRESET_ECO,
-            PRESET_AWAY,
-            PRESET_ON,
-        ]
 
     @property
+    @override
     def min_temp(self) -> float:
         """Return the minimum temperature."""
         temp = self._device.min_temperature or MIN_TEMPERATURE
-        # OFF_TEMPERATURE (always off) a is valid temperature to maxcube but not to Home Assistant.
+        # OFF_TEMPERATURE (always off) is valid to maxcube
+        # but not to Home Assistant.
         # We use HVACMode.OFF instead to represent a turned off thermostat.
         return max(temp, MIN_TEMPERATURE)
 
     @property
+    @override
     def max_temp(self) -> float:
         """Return the maximum temperature."""
         return self._device.max_temperature or MAX_TEMPERATURE
 
     @property
-    def current_temperature(self):
+    @override
+    def current_temperature(self) -> float:
         """Return the current temperature."""
         return self._device.actual_temperature
 
     @property
+    @override
     def hvac_mode(self) -> HVACMode:
         """Return current operation mode."""
         mode = self._device.mode
@@ -124,6 +126,7 @@ class MaxCubeClimate(ClimateEntity):
 
         return HVACMode.HEAT
 
+    @override
     def set_hvac_mode(self, hvac_mode: HVACMode) -> None:
         """Set new target hvac mode."""
         if hvac_mode == HVACMode.OFF:
@@ -153,6 +156,7 @@ class MaxCubeClimate(ClimateEntity):
                 _LOGGER.error("Setting HVAC mode failed")
 
     @property
+    @override
     def hvac_action(self) -> HVACAction | None:
         """Return the current running hvac operation if supported."""
         valve = 0
@@ -176,13 +180,15 @@ class MaxCubeClimate(ClimateEntity):
         return HVACAction.OFF if self.hvac_mode == HVACMode.OFF else HVACAction.IDLE
 
     @property
-    def target_temperature(self):
+    @override
+    def target_temperature(self) -> float | None:
         """Return the temperature we try to reach."""
         temp = self._device.target_temperature
         if temp is None or temp < self.min_temp or temp > self.max_temp:
             return None
         return temp
 
+    @override
     def set_temperature(self, **kwargs: Any) -> None:
         """Set new target temperatures."""
         if (temp := kwargs.get(ATTR_TEMPERATURE)) is None:
@@ -192,6 +198,7 @@ class MaxCubeClimate(ClimateEntity):
         self._set_target(None, temp)
 
     @property
+    @override
     def preset_mode(self) -> str:
         """Return the current preset mode."""
         if self._device.mode == MAX_DEVICE_MODE_MANUAL:
@@ -207,6 +214,7 @@ class MaxCubeClimate(ClimateEntity):
             return PRESET_AWAY
         return PRESET_NONE
 
+    @override
     def set_preset_mode(self, preset_mode: str) -> None:
         """Set new operation mode."""
         if preset_mode == PRESET_COMFORT:
@@ -225,7 +233,8 @@ class MaxCubeClimate(ClimateEntity):
             raise ValueError(f"unsupported preset mode {preset_mode}")
 
     @property
-    def extra_state_attributes(self):
+    @override
+    def extra_state_attributes(self) -> dict[str, Any]:
         """Return the optional state attributes."""
         if not self._device.is_thermostat():
             return {}

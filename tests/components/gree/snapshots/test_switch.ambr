@@ -3,8 +3,8 @@
   list([
     StateSnapshot({
       'attributes': ReadOnlyDict({
-        'device_class': 'switch',
-        'friendly_name': 'fake-device-1 Panel light',
+        <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'switch',
+        <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'fake-device-1 Panel light',
       }),
       'context': <ANY>,
       'entity_id': 'switch.fake_device_1_panel_light',
@@ -15,8 +15,8 @@
     }),
     StateSnapshot({
       'attributes': ReadOnlyDict({
-        'device_class': 'switch',
-        'friendly_name': 'fake-device-1 Quiet mode',
+        <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'switch',
+        <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'fake-device-1 Quiet mode',
       }),
       'context': <ANY>,
       'entity_id': 'switch.fake_device_1_quiet_mode',
@@ -27,8 +27,8 @@
     }),
     StateSnapshot({
       'attributes': ReadOnlyDict({
-        'device_class': 'switch',
-        'friendly_name': 'fake-device-1 Fresh air',
+        <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'switch',
+        <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'fake-device-1 Fresh air',
       }),
       'context': <ANY>,
       'entity_id': 'switch.fake_device_1_fresh_air',
@@ -39,8 +39,8 @@
     }),
     StateSnapshot({
       'attributes': ReadOnlyDict({
-        'device_class': 'switch',
-        'friendly_name': 'fake-device-1 Xtra fan',
+        <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'switch',
+        <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'fake-device-1 Xtra fan',
       }),
       'context': <ANY>,
       'entity_id': 'switch.fake_device_1_xtra_fan',
@@ -51,8 +51,8 @@
     }),
     StateSnapshot({
       'attributes': ReadOnlyDict({
-        'device_class': 'switch',
-        'friendly_name': 'fake-device-1 Health mode',
+        <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'switch',
+        <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'fake-device-1 Health mode',
       }),
       'context': <ANY>,
       'entity_id': 'switch.fake_device_1_health_mode',
@@ -66,8 +66,9 @@
 # name: test_registry_settings
   list([
     EntityRegistryEntrySnapshot({
-      'aliases': set({
-      }),
+      'aliases': list([
+        None,
+      ]),
       'area_id': None,
       'capabilities': None,
       'config_entry_id': <ANY>,
@@ -100,8 +101,9 @@
       'unit_of_measurement': None,
     }),
     EntityRegistryEntrySnapshot({
-      'aliases': set({
-      }),
+      'aliases': list([
+        None,
+      ]),
       'area_id': None,
       'capabilities': None,
       'config_entry_id': <ANY>,
@@ -134,8 +136,9 @@
       'unit_of_measurement': None,
     }),
     EntityRegistryEntrySnapshot({
-      'aliases': set({
-      }),
+      'aliases': list([
+        None,
+      ]),
       'area_id': None,
       'capabilities': None,
       'config_entry_id': <ANY>,
@@ -168,8 +171,9 @@
       'unit_of_measurement': None,
     }),
     EntityRegistryEntrySnapshot({
-      'aliases': set({
-      }),
+      'aliases': list([
+        None,
+      ]),
       'area_id': None,
       'capabilities': None,
       'config_entry_id': <ANY>,
@@ -202,8 +206,9 @@
       'unit_of_measurement': None,
     }),
     EntityRegistryEntrySnapshot({
-      'aliases': set({
-      }),
+      'aliases': list([
+        None,
+      ]),
       'area_id': None,
       'capabilities': None,
       'config_entry_id': <ANY>,

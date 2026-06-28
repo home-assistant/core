@@ -1,14 +1,12 @@
 """Backup functionality for supervised installations."""
 
-from __future__ import annotations
-
 import asyncio
 from collections.abc import AsyncIterator, Callable, Coroutine, Mapping
 from contextlib import suppress
 import logging
 import os
 from pathlib import Path, PurePath
-from typing import Any, cast
+from typing import Any, cast, override
 from uuid import UUID
 
 from aiohasupervisor import SupervisorClient
@@ -44,6 +42,7 @@ from homeassistant.components.backup import (
     IncorrectPasswordError,
     ManagerBackup,
     NewBackup,
+    OnProgressCallback,
     RestoreBackupEvent,
     RestoreBackupStage,
     RestoreBackupState,
@@ -162,6 +161,7 @@ class SupervisorBackupAgent(BackupAgent):
         self.name = self.unique_id = name
         self.location = location
 
+    @override
     async def async_download_backup(
         self,
         backup_id: str,
@@ -178,11 +178,13 @@ class SupervisorBackupAgent(BackupAgent):
         except SupervisorNotFoundError as err:
             raise BackupNotFound(f"Backup {backup_id} not found") from err
 
+    @override
     async def async_upload_backup(
         self,
         *,
         open_stream: Callable[[], Coroutine[Any, Any, AsyncIterator[bytes]]],
         backup: AgentBackup,
+        on_progress: OnProgressCallback,
         **kwargs: Any,
     ) -> None:
         """Upload a backup.
@@ -202,11 +204,21 @@ class SupervisorBackupAgent(BackupAgent):
             location={self.location},
             filename=PurePath(suggested_backup_filename(backup)),
         )
+
+        async def stream_with_progress() -> AsyncIterator[bytes]:
+            """Wrap stream to track upload progress."""
+            bytes_uploaded = 0
+            async for chunk in stream:
+                bytes_uploaded += len(chunk)
+                on_progress(bytes_uploaded=bytes_uploaded)
+                yield chunk
+
         await self._client.backups.upload_backup(
-            stream,
+            stream_with_progress(),
             upload_options,
         )
 
+    @override
     async def async_list_backups(self, **kwargs: Any) -> list[AgentBackup]:
         """List backups."""
         backup_list = await self._client.backups.list()
@@ -218,6 +230,7 @@ class SupervisorBackupAgent(BackupAgent):
             result.append(_backup_details_to_agent_backup(details, self.location))
         return result
 
+    @override
     async def async_get_backup(
         self,
         backup_id: str,
@@ -232,6 +245,7 @@ class SupervisorBackupAgent(BackupAgent):
             raise BackupNotFound(f"Backup {backup_id} not found")
         return _backup_details_to_agent_backup(details, self.location)
 
+    @override
     async def async_delete_backup(self, backup_id: str, **kwargs: Any) -> None:
         """Remove a backup."""
         try:
@@ -253,6 +267,7 @@ class SupervisorBackupReaderWriter(BackupReaderWriter):
         self._hass = hass
         self._client = get_supervisor_client(hass)
 
+    @override
     async def async_create_backup(
         self,
         *,
@@ -484,6 +499,7 @@ class SupervisorBackupReaderWriter(BackupReaderWriter):
             release_stream=remove_backup,
         )
 
+    @override
     async def async_receive_backup(
         self,
         *,
@@ -530,6 +546,7 @@ class SupervisorBackupReaderWriter(BackupReaderWriter):
             release_stream=remove_backup,
         )
 
+    @override
     async def async_restore_backup(
         self,
         backup_id: str,
@@ -628,6 +645,7 @@ class SupervisorBackupReaderWriter(BackupReaderWriter):
         finally:
             unsub()
 
+    @override
     async def async_resume_restore_progress_after_restart(
         self,
         *,
@@ -690,6 +708,7 @@ class SupervisorBackupReaderWriter(BackupReaderWriter):
             _LOGGER.debug("Could not get restore job %s: %s", restore_job_id, err)
             unsub()
 
+    @override
     async def async_validate_config(self, *, config: BackupConfig) -> None:
         """Validate backup config.
 

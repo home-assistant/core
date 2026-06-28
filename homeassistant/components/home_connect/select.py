@@ -3,7 +3,7 @@
 from collections.abc import Callable, Coroutine
 from dataclasses import dataclass
 import logging
-from typing import Any, cast
+from typing import Any, cast, override
 
 from aiohomeconnect.client import Client as HomeConnectClient
 from aiohomeconnect.model import EventKey, OptionKey, ProgramKey, SettingKey
@@ -27,6 +27,7 @@ from .const import (
     COFFEE_TEMPERATURE_OPTIONS,
     DOMAIN,
     DRYING_TARGET_OPTIONS,
+    FAVORITE_PROGRAMS,
     FLOW_RATE_OPTIONS,
     HOT_WATER_TEMPERATURE_OPTIONS,
     INTENSIVE_LEVEL_OPTIONS,
@@ -41,11 +42,7 @@ from .const import (
     VENTING_LEVEL_OPTIONS,
     WARMING_LEVEL_OPTIONS,
 )
-from .coordinator import (
-    HomeConnectApplianceData,
-    HomeConnectConfigEntry,
-    HomeConnectCoordinator,
-)
+from .coordinator import HomeConnectApplianceCoordinator, HomeConnectConfigEntry
 from .entity import HomeConnectEntity, HomeConnectOptionEntity, constraint_fetcher
 from .utils import bsh_key_to_translation_key, get_dict_from_home_connect_error
 
@@ -92,7 +89,7 @@ class HomeConnectProgramSelectEntityDescription(
 
 @dataclass(frozen=True, kw_only=True)
 class HomeConnectSelectEntityDescription(SelectEntityDescription):
-    """Entity Description class for settings and options that have enumeration values."""
+    """Entity Description class for settings and options with enum values."""
 
     translation_key_values: dict[str, str]
     values_translation_key: dict[str, str]
@@ -137,7 +134,9 @@ SELECT_ENTITY_DESCRIPTIONS = (
         translation_key_values=FUNCTIONAL_LIGHT_COLOR_TEMPERATURE_ENUM,
         values_translation_key={
             value: translation_key
-            for translation_key, value in FUNCTIONAL_LIGHT_COLOR_TEMPERATURE_ENUM.items()
+            for translation_key, value in (
+                FUNCTIONAL_LIGHT_COLOR_TEMPERATURE_ENUM.items()
+            )
         },
     ),
     HomeConnectSelectEntityDescription(
@@ -336,37 +335,37 @@ PROGRAM_SELECT_OPTION_ENTITY_DESCRIPTIONS = (
 
 
 def _get_entities_for_appliance(
-    entry: HomeConnectConfigEntry,
-    appliance: HomeConnectApplianceData,
+    appliance_coordinator: HomeConnectApplianceCoordinator,
 ) -> list[HomeConnectEntity]:
     """Get a list of entities."""
     return [
         *(
             [
-                HomeConnectProgramSelectEntity(entry.runtime_data, appliance, desc)
+                HomeConnectProgramSelectEntity(appliance_coordinator, desc)
                 for desc in PROGRAM_SELECT_ENTITY_DESCRIPTIONS
             ]
-            if appliance.programs
+            if appliance_coordinator.data.programs
             else []
         ),
         *[
-            HomeConnectSelectEntity(entry.runtime_data, appliance, desc)
+            HomeConnectSelectEntity(appliance_coordinator, desc)
             for desc in SELECT_ENTITY_DESCRIPTIONS
-            if desc.key in appliance.settings
+            if desc.key in appliance_coordinator.data.settings
         ],
     ]
 
 
 def _get_option_entities_for_appliance(
-    entry: HomeConnectConfigEntry,
-    appliance: HomeConnectApplianceData,
+    appliance_coordinator: HomeConnectApplianceCoordinator,
     entity_registry: er.EntityRegistry,
-) -> list[HomeConnectOptionEntity]:
+) -> list[HomeConnectEntity]:
     """Get a list of entities."""
     return [
-        HomeConnectSelectOptionEntity(entry.runtime_data, appliance, desc)
+        HomeConnectSelectOptionEntity(appliance_coordinator, desc)
         for desc in PROGRAM_SELECT_OPTION_ENTITY_DESCRIPTIONS
-        if should_add_option_entity(desc, appliance, entity_registry, Platform.SELECT)
+        if should_add_option_entity(
+            desc, appliance_coordinator.data, entity_registry, Platform.SELECT
+        )
     ]
 
 
@@ -392,14 +391,12 @@ class HomeConnectProgramSelectEntity(HomeConnectEntity, SelectEntity):
 
     def __init__(
         self,
-        coordinator: HomeConnectCoordinator,
-        appliance: HomeConnectApplianceData,
+        appliance_coordinator: HomeConnectApplianceCoordinator,
         desc: HomeConnectProgramSelectEntityDescription,
     ) -> None:
         """Initialize the entity."""
         super().__init__(
-            coordinator,
-            appliance,
+            appliance_coordinator,
             desc,
         )
         self.set_options()
@@ -409,7 +406,7 @@ class HomeConnectProgramSelectEntity(HomeConnectEntity, SelectEntity):
         self._attr_options = [
             PROGRAMS_TRANSLATION_KEYS_MAP[program.key]
             for program in self.appliance.programs
-            if program.key != ProgramKey.UNKNOWN
+            if program.key in PROGRAMS_TRANSLATION_KEYS_MAP
             and (
                 program.constraints is None
                 or program.constraints.execution
@@ -423,25 +420,41 @@ class HomeConnectProgramSelectEntity(HomeConnectEntity, SelectEntity):
         self.set_options()
         self.async_write_ha_state()
 
+    @override
     async def async_added_to_hass(self) -> None:
         """When entity is added to hass."""
         await super().async_added_to_hass()
         self.async_on_remove(
             self.coordinator.async_add_listener(
                 self.refresh_options,
-                (self.appliance.info.ha_id, EventKey.BSH_COMMON_APPLIANCE_CONNECTED),
+                EventKey.BSH_COMMON_APPLIANCE_CONNECTED,
             )
         )
 
+    @override
     def update_native_value(self) -> None:
         """Set the program value."""
         event = self.appliance.events.get(cast(EventKey, self.bsh_key))
-        self._attr_current_option = (
-            PROGRAMS_TRANSLATION_KEYS_MAP.get(ProgramKey(event_value))
+        program_key = (
+            ProgramKey(event_value)
             if event and isinstance(event_value := event.value, str)
             else None
         )
+        if (
+            program_key in FAVORITE_PROGRAMS
+            and (
+                base_program_event := self.appliance.events.get(
+                    EventKey.BSH_COMMON_OPTION_BASE_PROGRAM
+                )
+            )
+            and isinstance(base_program_event.value, str)
+        ):
+            program_key = ProgramKey(base_program_event.value)
+        self._attr_current_option = (
+            PROGRAMS_TRANSLATION_KEYS_MAP.get(program_key) if program_key else None
+        )
 
+    @override
     async def async_select_option(self, option: str) -> None:
         """Select new program."""
         program_key = TRANSLATION_KEYS_PROGRAMS_MAP[option]
@@ -470,18 +483,17 @@ class HomeConnectSelectEntity(HomeConnectEntity, SelectEntity):
 
     def __init__(
         self,
-        coordinator: HomeConnectCoordinator,
-        appliance: HomeConnectApplianceData,
+        appliance_coordinator: HomeConnectApplianceCoordinator,
         desc: HomeConnectSelectEntityDescription,
     ) -> None:
         """Initialize the entity."""
         self._original_option_keys = set(desc.values_translation_key)
         super().__init__(
-            coordinator,
-            appliance,
+            appliance_coordinator,
             desc,
         )
 
+    @override
     async def async_select_option(self, option: str) -> None:
         """Select new option."""
         value = self.entity_description.translation_key_values[option]
@@ -503,6 +515,7 @@ class HomeConnectSelectEntity(HomeConnectEntity, SelectEntity):
                 },
             ) from err
 
+    @override
     def update_native_value(self) -> None:
         """Set the value of the entity."""
         data = self.appliance.settings[cast(SettingKey, self.bsh_key)]
@@ -510,6 +523,7 @@ class HomeConnectSelectEntity(HomeConnectEntity, SelectEntity):
             data.value
         )
 
+    @override
     async def async_added_to_hass(self) -> None:
         """When entity is added to hass."""
         await super().async_added_to_hass()
@@ -547,24 +561,24 @@ class HomeConnectSelectOptionEntity(HomeConnectOptionEntity, SelectEntity):
 
     def __init__(
         self,
-        coordinator: HomeConnectCoordinator,
-        appliance: HomeConnectApplianceData,
+        appliance_coordinator: HomeConnectApplianceCoordinator,
         desc: HomeConnectSelectEntityDescription,
     ) -> None:
         """Initialize the entity."""
         self._original_option_keys = set(desc.values_translation_key)
         super().__init__(
-            coordinator,
-            appliance,
+            appliance_coordinator,
             desc,
         )
 
+    @override
     async def async_select_option(self, option: str) -> None:
         """Select new option."""
         await self.async_set_option(
             self.entity_description.translation_key_values[option]
         )
 
+    @override
     def update_native_value(self) -> None:
         """Set the value of the entity."""
         self._attr_current_option = (

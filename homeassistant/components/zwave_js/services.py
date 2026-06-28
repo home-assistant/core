@@ -1,7 +1,5 @@
 """Methods and classes related to executing Z-Wave commands."""
 
-from __future__ import annotations
-
 import asyncio
 from collections.abc import Collection, Generator, Sequence
 import logging
@@ -11,7 +9,11 @@ from typing import Any
 import voluptuous as vol
 from zwave_js_server.client import Client as ZwaveClient
 from zwave_js_server.const import SET_VALUE_SUCCESS, CommandClass, CommandStatus
-from zwave_js_server.const.command_class.lock import ATTR_CODE_SLOT
+from zwave_js_server.const.command_class.lock import (
+    ATTR_CODE_SLOT,
+    ATTR_USERCODE,
+    OperationType,
+)
 from zwave_js_server.const.command_class.notification import NotificationType
 from zwave_js_server.exceptions import FailedZWaveCommand, SetValueFailed
 from zwave_js_server.model.endpoint import Endpoint
@@ -49,10 +51,13 @@ from .helpers import (
     async_get_nodes_from_targets,
     get_value_id_from_unique_id,
 )
+from .lock_helpers import CREDENTIAL_RULE_REVERSE_MAP, USER_TYPE_REVERSE_MAP
 
 _LOGGER = logging.getLogger(__name__)
 
 type _NodeOrEndpointType = ZwaveNode | Endpoint
+
+UNIT16_SCHEMA = vol.All(vol.Coerce(int), vol.Range(min=0, max=65535))
 
 TARGET_VALIDATORS = {
     vol.Optional(ATTR_AREA_ID): vol.All(cv.ensure_list, [cv.string]),
@@ -64,8 +69,112 @@ TARGET_VALIDATORS = {
 @callback
 def async_setup_services(hass: HomeAssistant) -> None:
     """Register integration services."""
+    _async_register_credential_services(hass)
     services = ZWaveServices(hass, er.async_get(hass), dr.async_get(hass))
     services.async_register()
+
+
+@callback
+def _async_register_credential_services(hass: HomeAssistant) -> None:
+    """Register lock-entity credential platform services."""
+    uint16_id = vol.All(vol.Coerce(int), vol.Range(min=1, max=65535))
+
+    async_register_platform_entity_service(
+        hass,
+        const.DOMAIN,
+        "set_user",
+        entity_domain=LOCK_DOMAIN,
+        schema={
+            vol.Optional(const.ATTR_USER_ID): uint16_id,
+            vol.Optional(const.ATTR_USER_NAME): cv.string,
+            vol.Optional(const.ATTR_USER_TYPE): vol.In(USER_TYPE_REVERSE_MAP.keys()),
+            vol.Optional(const.ATTR_CREDENTIAL_RULE): vol.In(
+                CREDENTIAL_RULE_REVERSE_MAP.keys()
+            ),
+            vol.Optional(const.ATTR_USER_ACTIVE): cv.boolean,
+        },
+        func="async_set_user",
+        supports_response=SupportsResponse.ONLY,
+    )
+
+    async_register_platform_entity_service(
+        hass,
+        const.DOMAIN,
+        "delete_user",
+        entity_domain=LOCK_DOMAIN,
+        schema={vol.Required(const.ATTR_USER_ID): uint16_id},
+        func="async_delete_user",
+    )
+
+    async_register_platform_entity_service(
+        hass,
+        const.DOMAIN,
+        "delete_all_users",
+        entity_domain=LOCK_DOMAIN,
+        schema={},
+        func="async_delete_all_users",
+    )
+
+    async_register_platform_entity_service(
+        hass,
+        const.DOMAIN,
+        "get_credential_capabilities",
+        entity_domain=LOCK_DOMAIN,
+        schema={},
+        func="async_get_credential_capabilities",
+        supports_response=SupportsResponse.ONLY,
+    )
+
+    async_register_platform_entity_service(
+        hass,
+        const.DOMAIN,
+        "get_users",
+        entity_domain=LOCK_DOMAIN,
+        schema={},
+        func="async_get_users",
+        supports_response=SupportsResponse.ONLY,
+    )
+
+    async_register_platform_entity_service(
+        hass,
+        const.DOMAIN,
+        "set_credential",
+        entity_domain=LOCK_DOMAIN,
+        schema={
+            vol.Required(const.ATTR_USER_ID): uint16_id,
+            vol.Required(const.ATTR_CREDENTIAL_TYPE): vol.In(
+                const.WRITABLE_CREDENTIAL_TYPES
+            ),
+            vol.Required(const.ATTR_CREDENTIAL_DATA): cv.string,
+            vol.Optional(const.ATTR_CREDENTIAL_SLOT): uint16_id,
+        },
+        func="async_set_credential",
+        supports_response=SupportsResponse.ONLY,
+    )
+
+    async_register_platform_entity_service(
+        hass,
+        const.DOMAIN,
+        "delete_credential",
+        entity_domain=LOCK_DOMAIN,
+        schema={
+            vol.Required(const.ATTR_USER_ID): uint16_id,
+            vol.Required(const.ATTR_CREDENTIAL_TYPE): vol.In(
+                const.WRITABLE_CREDENTIAL_TYPES
+            ),
+            vol.Required(const.ATTR_CREDENTIAL_SLOT): uint16_id,
+        },
+        func="async_delete_credential",
+    )
+
+    async_register_platform_entity_service(
+        hass,
+        const.DOMAIN,
+        "delete_all_credentials",
+        entity_domain=LOCK_DOMAIN,
+        schema={vol.Required(const.ATTR_USER_ID): uint16_id},
+        func="async_delete_all_credentials",
+    )
 
 
 def parameter_name_does_not_need_bitmask(
@@ -494,6 +603,50 @@ class ZWaveServices:
             supports_response=SupportsResponse.ONLY,
         )
 
+        async_register_platform_entity_service(
+            self._hass,
+            const.DOMAIN,
+            const.SERVICE_SET_LOCK_USERCODE,
+            entity_domain=LOCK_DOMAIN,
+            schema={
+                vol.Required(ATTR_CODE_SLOT): vol.Coerce(int),
+                vol.Required(ATTR_USERCODE): cv.string,
+            },
+            func="async_set_lock_usercode",
+        )
+
+        async_register_platform_entity_service(
+            self._hass,
+            const.DOMAIN,
+            const.SERVICE_CLEAR_LOCK_USERCODE,
+            entity_domain=LOCK_DOMAIN,
+            schema={
+                vol.Required(ATTR_CODE_SLOT): vol.Coerce(int),
+            },
+            func="async_clear_lock_usercode",
+        )
+
+        async_register_platform_entity_service(
+            self._hass,
+            const.DOMAIN,
+            const.SERVICE_SET_LOCK_CONFIGURATION,
+            entity_domain=LOCK_DOMAIN,
+            schema={
+                vol.Required(const.ATTR_OPERATION_TYPE): vol.All(
+                    cv.string,
+                    vol.Upper,
+                    vol.In(["TIMED", "CONSTANT"]),
+                    lambda x: OperationType[x],
+                ),
+                vol.Optional(const.ATTR_LOCK_TIMEOUT): UNIT16_SCHEMA,
+                vol.Optional(const.ATTR_AUTO_RELOCK_TIME): UNIT16_SCHEMA,
+                vol.Optional(const.ATTR_HOLD_AND_RELEASE_TIME): UNIT16_SCHEMA,
+                vol.Optional(const.ATTR_TWIST_ASSIST): vol.Coerce(bool),
+                vol.Optional(const.ATTR_BLOCK_TO_BLOCK): vol.Coerce(bool),
+            },
+            func="async_set_lock_configuration",
+        )
+
     async def async_set_config_parameter(self, service: ServiceCall) -> None:
         """Set a config value on a node."""
         nodes: set[ZwaveNode] = service.data[const.ATTR_NODES]
@@ -555,11 +708,13 @@ class ZWaveServices:
                 nodes_or_endpoints_list, _results
             ):
                 if value_size is None:
-                    # async_set_config_parameter still returns (Value, SetConfigParameterResult)
+                    # async_set_config_parameter still returns
+                    # (Value, SetConfigParameterResult)
                     zwave_value = result[0]
                     cmd_status = result[1]
                 else:
-                    # async_set_raw_config_parameter_value now returns just SetConfigParameterResult
+                    # async_set_raw_config_parameter_value now
+                    # returns just SetConfigParameterResult
                     cmd_status = result
                     zwave_value = f"parameter {property_or_property_name}"
 
@@ -567,7 +722,8 @@ class ZWaveServices:
                     msg = "Set configuration parameter %s on Node %s with value %s"
                 else:
                     msg = (
-                        "Added command to queue to set configuration parameter %s on %s "
+                        "Added command to queue to set"
+                        " configuration parameter %s on %s "
                         "with value %s. Parameter will be set when the device wakes up"
                     )
                 _LOGGER.info(msg, zwave_value, node_or_endpoint, new_value)

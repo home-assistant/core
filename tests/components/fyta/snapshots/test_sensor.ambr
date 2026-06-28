@@ -1,11 +1,12 @@
 # serializer version: 1
 # name: test_all_entities[sensor.gummibaum_battery-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
-      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+      <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -40,10 +41,10 @@
 # name: test_all_entities[sensor.gummibaum_battery-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'device_class': 'battery',
-      'friendly_name': 'Gummibaum Battery',
-      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
-      'unit_of_measurement': '%',
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'battery',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Gummibaum Battery',
+      <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
+      <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: '%',
     }),
     'context': <ANY>,
     'entity_id': 'sensor.gummibaum_battery',
@@ -55,8 +56,9 @@
 # ---
 # name: test_all_entities[sensor.gummibaum_last_fertilized-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -92,8 +94,8 @@
 # name: test_all_entities[sensor.gummibaum_last_fertilized-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'device_class': 'date',
-      'friendly_name': 'Gummibaum Last fertilized',
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'date',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Gummibaum Last fertilized',
     }),
     'context': <ANY>,
     'entity_id': 'sensor.gummibaum_last_fertilized',
@@ -105,11 +107,12 @@
 # ---
 # name: test_all_entities[sensor.gummibaum_light-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
-      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+      <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -144,13 +147,13 @@
 # name: test_all_entities[sensor.gummibaum_light-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'Gummibaum Light',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Gummibaum Light',
       'max_acceptable': 675.0,
       'max_good': 450.0,
       'min_acceptable': 18.0,
       'min_good': 20.0,
-      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
-      'unit_of_measurement': 'μmol/s⋅m²',
+      <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
+      <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: 'μmol/s⋅m²',
     }),
     'context': <ANY>,
     'entity_id': 'sensor.gummibaum_light',
@@ -162,11 +165,12 @@
 # ---
 # name: test_all_entities[sensor.gummibaum_light_state-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
-      'options': list([
+      <SensorEntityCapabilityAttribute.OPTIONS: 'options'>: list([
         'no_data',
         'too_low',
         'low',
@@ -208,9 +212,9 @@
 # name: test_all_entities[sensor.gummibaum_light_state-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'device_class': 'enum',
-      'friendly_name': 'Gummibaum Light state',
-      'options': list([
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'enum',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Gummibaum Light state',
+      <SensorEntityCapabilityAttribute.OPTIONS: 'options'>: list([
         'no_data',
         'too_low',
         'low',
@@ -229,11 +233,12 @@
 # ---
 # name: test_all_entities[sensor.gummibaum_moisture-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
-      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+      <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -268,14 +273,14 @@
 # name: test_all_entities[sensor.gummibaum_moisture-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'device_class': 'moisture',
-      'friendly_name': 'Gummibaum Moisture',
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'moisture',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Gummibaum Moisture',
       'max_acceptable': 80.0,
       'max_good': 70.0,
       'min_acceptable': 25.0,
       'min_good': 35.0,
-      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
-      'unit_of_measurement': '%',
+      <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
+      <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: '%',
     }),
     'context': <ANY>,
     'entity_id': 'sensor.gummibaum_moisture',
@@ -287,11 +292,12 @@
 # ---
 # name: test_all_entities[sensor.gummibaum_moisture_state-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
-      'options': list([
+      <SensorEntityCapabilityAttribute.OPTIONS: 'options'>: list([
         'no_data',
         'too_low',
         'low',
@@ -333,9 +339,9 @@
 # name: test_all_entities[sensor.gummibaum_moisture_state-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'device_class': 'enum',
-      'friendly_name': 'Gummibaum Moisture state',
-      'options': list([
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'enum',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Gummibaum Moisture state',
+      <SensorEntityCapabilityAttribute.OPTIONS: 'options'>: list([
         'no_data',
         'too_low',
         'low',
@@ -354,8 +360,9 @@
 # ---
 # name: test_all_entities[sensor.gummibaum_next_fertilization-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -391,8 +398,8 @@
 # name: test_all_entities[sensor.gummibaum_next_fertilization-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'device_class': 'date',
-      'friendly_name': 'Gummibaum Next fertilization',
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'date',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Gummibaum Next fertilization',
     }),
     'context': <ANY>,
     'entity_id': 'sensor.gummibaum_next_fertilization',
@@ -404,11 +411,12 @@
 # ---
 # name: test_all_entities[sensor.gummibaum_nutrients_state-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
-      'options': list([
+      <SensorEntityCapabilityAttribute.OPTIONS: 'options'>: list([
         'no_data',
         'too_low',
         'low',
@@ -450,9 +458,9 @@
 # name: test_all_entities[sensor.gummibaum_nutrients_state-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'device_class': 'enum',
-      'friendly_name': 'Gummibaum Nutrients state',
-      'options': list([
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'enum',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Gummibaum Nutrients state',
+      <SensorEntityCapabilityAttribute.OPTIONS: 'options'>: list([
         'no_data',
         'too_low',
         'low',
@@ -471,11 +479,12 @@
 # ---
 # name: test_all_entities[sensor.gummibaum_ph-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
-      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+      <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -510,9 +519,9 @@
 # name: test_all_entities[sensor.gummibaum_ph-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'device_class': 'ph',
-      'friendly_name': 'Gummibaum pH',
-      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'ph',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Gummibaum pH',
+      <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
     'context': <ANY>,
     'entity_id': 'sensor.gummibaum_ph',
@@ -524,11 +533,12 @@
 # ---
 # name: test_all_entities[sensor.gummibaum_plant_state-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
-      'options': list([
+      <SensorEntityCapabilityAttribute.OPTIONS: 'options'>: list([
         'deleted',
         'doing_great',
         'need_attention',
@@ -568,9 +578,9 @@
 # name: test_all_entities[sensor.gummibaum_plant_state-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'device_class': 'enum',
-      'friendly_name': 'Gummibaum Plant state',
-      'options': list([
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'enum',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Gummibaum Plant state',
+      <SensorEntityCapabilityAttribute.OPTIONS: 'options'>: list([
         'deleted',
         'doing_great',
         'need_attention',
@@ -587,11 +597,12 @@
 # ---
 # name: test_all_entities[sensor.gummibaum_salinity-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
-      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+      <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -629,14 +640,14 @@
 # name: test_all_entities[sensor.gummibaum_salinity-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'device_class': 'conductivity',
-      'friendly_name': 'Gummibaum Salinity',
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'conductivity',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Gummibaum Salinity',
       'max_acceptable': 1.2,
       'max_good': 1.0,
       'min_acceptable': 0.4,
       'min_good': 0.6,
-      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
-      'unit_of_measurement': <UnitOfConductivity.MILLISIEMENS_PER_CM: 'mS/cm'>,
+      <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
+      <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: <UnitOfConductivity.MILLISIEMENS_PER_CM: 'mS/cm'>,
     }),
     'context': <ANY>,
     'entity_id': 'sensor.gummibaum_salinity',
@@ -648,11 +659,12 @@
 # ---
 # name: test_all_entities[sensor.gummibaum_salinity_state-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
-      'options': list([
+      <SensorEntityCapabilityAttribute.OPTIONS: 'options'>: list([
         'no_data',
         'too_low',
         'low',
@@ -694,9 +706,9 @@
 # name: test_all_entities[sensor.gummibaum_salinity_state-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'device_class': 'enum',
-      'friendly_name': 'Gummibaum Salinity state',
-      'options': list([
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'enum',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Gummibaum Salinity state',
+      <SensorEntityCapabilityAttribute.OPTIONS: 'options'>: list([
         'no_data',
         'too_low',
         'low',
@@ -715,8 +727,9 @@
 # ---
 # name: test_all_entities[sensor.gummibaum_scientific_name-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -752,7 +765,7 @@
 # name: test_all_entities[sensor.gummibaum_scientific_name-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'Gummibaum Scientific name',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Gummibaum Scientific name',
     }),
     'context': <ANY>,
     'entity_id': 'sensor.gummibaum_scientific_name',
@@ -764,11 +777,12 @@
 # ---
 # name: test_all_entities[sensor.gummibaum_temperature-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
-      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+      <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -806,14 +820,14 @@
 # name: test_all_entities[sensor.gummibaum_temperature-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'device_class': 'temperature',
-      'friendly_name': 'Gummibaum Temperature',
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'temperature',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Gummibaum Temperature',
       'max_acceptable': 42.0,
       'max_good': 36.0,
       'min_acceptable': 10.0,
       'min_good': 17.0,
-      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
-      'unit_of_measurement': <UnitOfTemperature.CELSIUS: '°C'>,
+      <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
+      <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: <UnitOfTemperature.CELSIUS: '°C'>,
     }),
     'context': <ANY>,
     'entity_id': 'sensor.gummibaum_temperature',
@@ -825,11 +839,12 @@
 # ---
 # name: test_all_entities[sensor.gummibaum_temperature_state-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
-      'options': list([
+      <SensorEntityCapabilityAttribute.OPTIONS: 'options'>: list([
         'no_data',
         'too_low',
         'low',
@@ -871,9 +886,9 @@
 # name: test_all_entities[sensor.gummibaum_temperature_state-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'device_class': 'enum',
-      'friendly_name': 'Gummibaum Temperature state',
-      'options': list([
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'enum',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Gummibaum Temperature state',
+      <SensorEntityCapabilityAttribute.OPTIONS: 'options'>: list([
         'no_data',
         'too_low',
         'low',
@@ -892,11 +907,12 @@
 # ---
 # name: test_all_entities[sensor.kakaobaum_battery-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
-      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+      <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -931,10 +947,10 @@
 # name: test_all_entities[sensor.kakaobaum_battery-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'device_class': 'battery',
-      'friendly_name': 'Kakaobaum Battery',
-      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
-      'unit_of_measurement': '%',
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'battery',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Kakaobaum Battery',
+      <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
+      <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: '%',
     }),
     'context': <ANY>,
     'entity_id': 'sensor.kakaobaum_battery',
@@ -946,8 +962,9 @@
 # ---
 # name: test_all_entities[sensor.kakaobaum_last_fertilized-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -983,8 +1000,8 @@
 # name: test_all_entities[sensor.kakaobaum_last_fertilized-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'device_class': 'date',
-      'friendly_name': 'Kakaobaum Last fertilized',
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'date',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Kakaobaum Last fertilized',
     }),
     'context': <ANY>,
     'entity_id': 'sensor.kakaobaum_last_fertilized',
@@ -996,11 +1013,12 @@
 # ---
 # name: test_all_entities[sensor.kakaobaum_light-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
-      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+      <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -1035,13 +1053,13 @@
 # name: test_all_entities[sensor.kakaobaum_light-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'Kakaobaum Light',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Kakaobaum Light',
       'max_acceptable': 675.0,
       'max_good': 450.0,
       'min_acceptable': 18.0,
       'min_good': 20.0,
-      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
-      'unit_of_measurement': 'μmol/s⋅m²',
+      <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
+      <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: 'μmol/s⋅m²',
     }),
     'context': <ANY>,
     'entity_id': 'sensor.kakaobaum_light',
@@ -1053,11 +1071,12 @@
 # ---
 # name: test_all_entities[sensor.kakaobaum_light_state-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
-      'options': list([
+      <SensorEntityCapabilityAttribute.OPTIONS: 'options'>: list([
         'no_data',
         'too_low',
         'low',
@@ -1099,9 +1118,9 @@
 # name: test_all_entities[sensor.kakaobaum_light_state-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'device_class': 'enum',
-      'friendly_name': 'Kakaobaum Light state',
-      'options': list([
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'enum',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Kakaobaum Light state',
+      <SensorEntityCapabilityAttribute.OPTIONS: 'options'>: list([
         'no_data',
         'too_low',
         'low',
@@ -1120,11 +1139,12 @@
 # ---
 # name: test_all_entities[sensor.kakaobaum_moisture-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
-      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+      <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -1159,14 +1179,14 @@
 # name: test_all_entities[sensor.kakaobaum_moisture-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'device_class': 'moisture',
-      'friendly_name': 'Kakaobaum Moisture',
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'moisture',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Kakaobaum Moisture',
       'max_acceptable': 80.0,
       'max_good': 70.0,
       'min_acceptable': 25.0,
       'min_good': 35.0,
-      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
-      'unit_of_measurement': '%',
+      <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
+      <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: '%',
     }),
     'context': <ANY>,
     'entity_id': 'sensor.kakaobaum_moisture',
@@ -1178,11 +1198,12 @@
 # ---
 # name: test_all_entities[sensor.kakaobaum_moisture_state-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
-      'options': list([
+      <SensorEntityCapabilityAttribute.OPTIONS: 'options'>: list([
         'no_data',
         'too_low',
         'low',
@@ -1224,9 +1245,9 @@
 # name: test_all_entities[sensor.kakaobaum_moisture_state-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'device_class': 'enum',
-      'friendly_name': 'Kakaobaum Moisture state',
-      'options': list([
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'enum',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Kakaobaum Moisture state',
+      <SensorEntityCapabilityAttribute.OPTIONS: 'options'>: list([
         'no_data',
         'too_low',
         'low',
@@ -1245,8 +1266,9 @@
 # ---
 # name: test_all_entities[sensor.kakaobaum_next_fertilization-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -1282,8 +1304,8 @@
 # name: test_all_entities[sensor.kakaobaum_next_fertilization-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'device_class': 'date',
-      'friendly_name': 'Kakaobaum Next fertilization',
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'date',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Kakaobaum Next fertilization',
     }),
     'context': <ANY>,
     'entity_id': 'sensor.kakaobaum_next_fertilization',
@@ -1295,11 +1317,12 @@
 # ---
 # name: test_all_entities[sensor.kakaobaum_nutrients_state-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
-      'options': list([
+      <SensorEntityCapabilityAttribute.OPTIONS: 'options'>: list([
         'no_data',
         'too_low',
         'low',
@@ -1341,9 +1364,9 @@
 # name: test_all_entities[sensor.kakaobaum_nutrients_state-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'device_class': 'enum',
-      'friendly_name': 'Kakaobaum Nutrients state',
-      'options': list([
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'enum',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Kakaobaum Nutrients state',
+      <SensorEntityCapabilityAttribute.OPTIONS: 'options'>: list([
         'no_data',
         'too_low',
         'low',
@@ -1362,11 +1385,12 @@
 # ---
 # name: test_all_entities[sensor.kakaobaum_ph-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
-      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+      <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -1401,9 +1425,9 @@
 # name: test_all_entities[sensor.kakaobaum_ph-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'device_class': 'ph',
-      'friendly_name': 'Kakaobaum pH',
-      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'ph',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Kakaobaum pH',
+      <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
     'context': <ANY>,
     'entity_id': 'sensor.kakaobaum_ph',
@@ -1415,11 +1439,12 @@
 # ---
 # name: test_all_entities[sensor.kakaobaum_plant_state-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
-      'options': list([
+      <SensorEntityCapabilityAttribute.OPTIONS: 'options'>: list([
         'deleted',
         'doing_great',
         'need_attention',
@@ -1459,9 +1484,9 @@
 # name: test_all_entities[sensor.kakaobaum_plant_state-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'device_class': 'enum',
-      'friendly_name': 'Kakaobaum Plant state',
-      'options': list([
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'enum',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Kakaobaum Plant state',
+      <SensorEntityCapabilityAttribute.OPTIONS: 'options'>: list([
         'deleted',
         'doing_great',
         'need_attention',
@@ -1478,11 +1503,12 @@
 # ---
 # name: test_all_entities[sensor.kakaobaum_salinity-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
-      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+      <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -1520,14 +1546,14 @@
 # name: test_all_entities[sensor.kakaobaum_salinity-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'device_class': 'conductivity',
-      'friendly_name': 'Kakaobaum Salinity',
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'conductivity',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Kakaobaum Salinity',
       'max_acceptable': 1.2,
       'max_good': 1.0,
       'min_acceptable': 0.4,
       'min_good': 0.6,
-      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
-      'unit_of_measurement': <UnitOfConductivity.MILLISIEMENS_PER_CM: 'mS/cm'>,
+      <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
+      <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: <UnitOfConductivity.MILLISIEMENS_PER_CM: 'mS/cm'>,
     }),
     'context': <ANY>,
     'entity_id': 'sensor.kakaobaum_salinity',
@@ -1539,11 +1565,12 @@
 # ---
 # name: test_all_entities[sensor.kakaobaum_salinity_state-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
-      'options': list([
+      <SensorEntityCapabilityAttribute.OPTIONS: 'options'>: list([
         'no_data',
         'too_low',
         'low',
@@ -1585,9 +1612,9 @@
 # name: test_all_entities[sensor.kakaobaum_salinity_state-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'device_class': 'enum',
-      'friendly_name': 'Kakaobaum Salinity state',
-      'options': list([
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'enum',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Kakaobaum Salinity state',
+      <SensorEntityCapabilityAttribute.OPTIONS: 'options'>: list([
         'no_data',
         'too_low',
         'low',
@@ -1606,8 +1633,9 @@
 # ---
 # name: test_all_entities[sensor.kakaobaum_scientific_name-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -1643,7 +1671,7 @@
 # name: test_all_entities[sensor.kakaobaum_scientific_name-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'Kakaobaum Scientific name',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Kakaobaum Scientific name',
     }),
     'context': <ANY>,
     'entity_id': 'sensor.kakaobaum_scientific_name',
@@ -1655,11 +1683,12 @@
 # ---
 # name: test_all_entities[sensor.kakaobaum_temperature-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
-      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+      <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -1697,14 +1726,14 @@
 # name: test_all_entities[sensor.kakaobaum_temperature-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'device_class': 'temperature',
-      'friendly_name': 'Kakaobaum Temperature',
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'temperature',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Kakaobaum Temperature',
       'max_acceptable': 42.0,
       'max_good': 36.0,
       'min_acceptable': 10.0,
       'min_good': 17.0,
-      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
-      'unit_of_measurement': <UnitOfTemperature.CELSIUS: '°C'>,
+      <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
+      <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: <UnitOfTemperature.CELSIUS: '°C'>,
     }),
     'context': <ANY>,
     'entity_id': 'sensor.kakaobaum_temperature',
@@ -1716,11 +1745,12 @@
 # ---
 # name: test_all_entities[sensor.kakaobaum_temperature_state-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
-      'options': list([
+      <SensorEntityCapabilityAttribute.OPTIONS: 'options'>: list([
         'no_data',
         'too_low',
         'low',
@@ -1762,9 +1792,9 @@
 # name: test_all_entities[sensor.kakaobaum_temperature_state-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'device_class': 'enum',
-      'friendly_name': 'Kakaobaum Temperature state',
-      'options': list([
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'enum',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Kakaobaum Temperature state',
+      <SensorEntityCapabilityAttribute.OPTIONS: 'options'>: list([
         'no_data',
         'too_low',
         'low',

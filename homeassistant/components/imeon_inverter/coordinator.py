@@ -1,10 +1,9 @@
 """Coordinator for Imeon integration."""
 
-from __future__ import annotations
-
 from asyncio import timeout
 from datetime import timedelta
 import logging
+from typing import override
 
 from aiohttp import ClientError
 from imeon_inverter_api.inverter import Inverter
@@ -55,6 +54,7 @@ class InverterCoordinator(DataUpdateCoordinator[dict[str, str | float | int]]):
         """Return the inverter object."""
         return self._api
 
+    @override
     async def _async_setup(self) -> None:
         """Set up the coordinator."""
         async with timeout(TIMEOUT):
@@ -65,6 +65,7 @@ class InverterCoordinator(DataUpdateCoordinator[dict[str, str | float | int]]):
 
             await self._api.init()
 
+    @override
     async def _async_update_data(self) -> dict[str, str | float | int]:
         """Fetch and store newest data from API.
 

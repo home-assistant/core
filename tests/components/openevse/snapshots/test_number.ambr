@@ -1,14 +1,15 @@
 # serializer version: 1
 # name: test_entities[number.openevse_mock_config_charge_rate-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
-      'max': 48,
-      'min': 6,
-      'mode': <NumberMode.AUTO: 'auto'>,
-      'step': 1.0,
+      <NumberEntityCapabilityAttribute.MAX: 'max'>: 48,
+      <NumberEntityCapabilityAttribute.MIN: 'min'>: 6,
+      <NumberEntityCapabilityAttribute.MODE: 'mode'>: <NumberMode.AUTO: 'auto'>,
+      <NumberEntityCapabilityAttribute.STEP: 'step'>: 1.0,
     }),
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -43,13 +44,13 @@
 # name: test_entities[number.openevse_mock_config_charge_rate-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'device_class': 'current',
-      'friendly_name': 'openevse_mock_config Charge rate',
-      'max': 48,
-      'min': 6,
-      'mode': <NumberMode.AUTO: 'auto'>,
-      'step': 1.0,
-      'unit_of_measurement': <UnitOfElectricCurrent.AMPERE: 'A'>,
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'current',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'openevse_mock_config Charge rate',
+      <NumberEntityCapabilityAttribute.MAX: 'max'>: 48,
+      <NumberEntityCapabilityAttribute.MIN: 'min'>: 6,
+      <NumberEntityCapabilityAttribute.MODE: 'mode'>: <NumberMode.AUTO: 'auto'>,
+      <NumberEntityCapabilityAttribute.STEP: 'step'>: 1.0,
+      <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: <UnitOfElectricCurrent.AMPERE: 'A'>,
     }),
     'context': <ANY>,
     'entity_id': 'number.openevse_mock_config_charge_rate',
