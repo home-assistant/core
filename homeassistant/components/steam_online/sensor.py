@@ -37,7 +37,6 @@ class SteamSensorEntityDescription(SensorEntityDescription):
     """Steam sensor description."""
 
     value_fn: Callable[[PlayerData], StateType]
-    name_fn: Callable[[PlayerData], str]
     entity_picture_fn: Callable[[PlayerData], str] | None = None
 
 
@@ -46,7 +45,6 @@ SENSOR_DESCRIPTIONS: tuple[SteamSensorEntityDescription, ...] = (
         key=SteamSensor.ACCOUNT,
         translation_key=SteamSensor.ACCOUNT,
         value_fn=lambda x: STEAM_STATUSES[x.personastate],
-        name_fn=lambda x: x.personaname,
         entity_picture_fn=lambda x: x.avatarfull,
         name=None,
     ),
