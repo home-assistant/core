@@ -6,17 +6,14 @@ import logging
 
 from flow_it_api.client import FlowItVMCMachine
 from flow_it_api.models import MachineData, MachineStatusResponse
-import voluptuous as vol
 
-from homeassistant.config_entries import SOURCE_IMPORT, ConfigEntry
+from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_HOST, CONF_PASSWORD, CONF_USERNAME, Platform
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.httpx_client import get_async_client
-from homeassistant.helpers.typing import ConfigType
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
 
-from .const import DEFAULT_USERNAME, DOMAIN
+from .const import DOMAIN
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -34,41 +31,6 @@ type FlowItConfigEntry = ConfigEntry[FlowItData]
 PLATFORMS: list[Platform] = [
     Platform.FAN,
 ]
-
-CONFIG_SCHEMA = vol.Schema(
-    {
-        DOMAIN: vol.All(
-            cv.ensure_list,
-            [
-                vol.Schema(
-                    {
-                        vol.Required(CONF_HOST): cv.string,
-                        vol.Required(CONF_PASSWORD): cv.string,
-                        vol.Optional(
-                            CONF_USERNAME, default=DEFAULT_USERNAME
-                        ): cv.string,
-                    }
-                )
-            ],
-        )
-    },
-    extra=vol.ALLOW_EXTRA,
-)
-
-
-async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
-    """Set up the Flow-it component."""
-    if DOMAIN not in config:
-        return True
-
-    for conf in config[DOMAIN]:
-        hass.async_create_task(
-            hass.config_entries.flow.async_init(
-                DOMAIN, context={"source": SOURCE_IMPORT}, data=conf
-            )
-        )
-
-    return True
 
 
 async def async_setup_entry(hass: HomeAssistant, entry: FlowItConfigEntry) -> bool:
