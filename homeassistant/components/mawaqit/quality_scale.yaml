@@ -86,6 +86,6 @@ rules:
     comment: This integration does not use devices
 
   # Platinum
-  async-dependency: todo
+  async-dependency: done
   inject-websession: todo
   strict-typing: todo
