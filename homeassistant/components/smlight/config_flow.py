@@ -211,11 +211,18 @@ class SmlightConfigFlow(ConfigFlow, domain=DOMAIN):
             self._host = user_input[CONF_HOST]
             self.client = Api2(self._host, session=async_get_clientsession(self.hass))
 
+            check_input = {**entry.data, **user_input}
             try:
-                check_input = {**entry.data, **user_input}
-                if not await self._async_check_auth_required(check_input):
+                if auth_required := await self._async_check_auth_required(check_input):
+                    info = None
+                else:
                     info = await self.client.get_info()
-
+            except SmlightConnectionError:
+                errors["base"] = "cannot_connect"
+            except SmlightAuthError:
+                return await self.async_step_auth()
+            else:
+                if not auth_required and info is not None:
                     if info.model not in Devices:
                         return self.async_abort(reason="unsupported_device")
 
@@ -226,10 +233,6 @@ class SmlightConfigFlow(ConfigFlow, domain=DOMAIN):
                         entry,
                         data_updates=user_input,
                     )
-            except SmlightConnectionError:
-                errors["base"] = "cannot_connect"
-            except SmlightAuthError:
-                return await self.async_step_auth()
 
         return self.async_show_form(
             step_id="reconfigure",
