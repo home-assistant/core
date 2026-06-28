@@ -20,13 +20,18 @@ from tests.common import MockConfigEntry
 @pytest.fixture
 def mock_request_args():
     """Mock request arguments for the coordinator."""
-    return (
+    args = (
         Mock(),  # engine
         Mock(),  # auth_data
         Mock(),  # target
         Mock(),  # context_data
         Mock(),  # object_type
     )
+    with patch(
+        "homeassistant.components.snmp.coordinator.SnmpUpdateCoordinator._async_ensure_request_args",
+        return_value=args,
+    ):
+        yield args
 
 
 async def test_coordinator_mac_normalization(
