@@ -126,6 +126,23 @@
       }
     }
   },
+  "exceptions": {
+    "auth_failed": {
+      "message": "Authentication with MAWAQIT failed. Please re-authenticate your account."
+    },
+    "mawaqit_error": {
+      "message": "Error communicating with MAWAQIT: {error}"
+    },
+    "network_error": {
+      "message": "Network error while connecting to MAWAQIT: {error}"
+    },
+    "no_mosque_data": {
+      "message": "No mosque data was returned by MAWAQIT."
+    },
+    "no_prayer_times_data": {
+      "message": "No prayer times were returned by MAWAQIT."
+    }
+  },
   "selector": {
     "search_method_choice_translation_key": {
       "options": {

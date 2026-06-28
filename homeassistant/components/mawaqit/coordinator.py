@@ -14,6 +14,7 @@ from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, Upda
 import homeassistant.util.dt as dt_util
 
 from . import mawaqit_wrapper
+from .const import DOMAIN
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -43,14 +44,28 @@ class MosqueCoordinator(DataUpdateCoordinator[dict]):
                 self.mosque_uuid, token=self.token
             )
         except BadCredentialsException as err:
-            raise ConfigEntryAuthFailed from err
+            raise ConfigEntryAuthFailed(
+                translation_domain=DOMAIN,
+                translation_key="auth_failed",
+            ) from err
         except MawaqitException as err:
-            raise UpdateFailed(f"Mawaqit error: {err}") from err
+            raise UpdateFailed(
+                translation_domain=DOMAIN,
+                translation_key="mawaqit_error",
+                translation_placeholders={"error": str(err)},
+            ) from err
         except (ConnectionError, TimeoutError) as err:
-            raise UpdateFailed(f"Network error: {err}") from err
+            raise UpdateFailed(
+                translation_domain=DOMAIN,
+                translation_key="network_error",
+                translation_placeholders={"error": str(err)},
+            ) from err
 
         if not mosque_data:
-            raise UpdateFailed("No mosque data found from the API")
+            raise UpdateFailed(
+                translation_domain=DOMAIN,
+                translation_key="no_mosque_data",
+            )
 
         return mosque_data
 
@@ -99,14 +114,28 @@ class PrayerTimeCoordinator(DataUpdateCoordinator[dict]):
                 )
                 self.last_fetch = now
             except BadCredentialsException as err:
-                raise ConfigEntryAuthFailed from err
+                raise ConfigEntryAuthFailed(
+                    translation_domain=DOMAIN,
+                    translation_key="auth_failed",
+                ) from err
             except MawaqitException as err:
-                raise UpdateFailed(f"Mawaqit error: {err}") from err
+                raise UpdateFailed(
+                    translation_domain=DOMAIN,
+                    translation_key="mawaqit_error",
+                    translation_placeholders={"error": str(err)},
+                ) from err
             except (ConnectionError, TimeoutError) as err:
-                raise UpdateFailed(f"Network error: {err}") from err
+                raise UpdateFailed(
+                    translation_domain=DOMAIN,
+                    translation_key="network_error",
+                    translation_placeholders={"error": str(err)},
+                ) from err
 
             if not prayer_times:
-                raise UpdateFailed("No data received from API")
+                raise UpdateFailed(
+                    translation_domain=DOMAIN,
+                    translation_key="no_prayer_times_data",
+                )
 
             # return fresh data when fetched
             return prayer_times
