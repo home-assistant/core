@@ -11,6 +11,7 @@ from verisure import (
 
 from homeassistant import config_entries
 from homeassistant.components.verisure.const import (
+    CONF_FORCE_ARM,
     CONF_GIID,
     CONF_LOCK_CODE_DIGITS,
     DEFAULT_LOCK_CODE_DIGITS,
@@ -619,8 +620,11 @@ async def test_options_flow(hass: HomeAssistant) -> None:
 
     result = await hass.config_entries.options.async_configure(
         result["flow_id"],
-        user_input={CONF_LOCK_CODE_DIGITS: 4},
+        user_input={CONF_LOCK_CODE_DIGITS: 4, CONF_FORCE_ARM: False},
     )
 
     assert result.get("type") is FlowResultType.CREATE_ENTRY
-    assert result.get("data") == {CONF_LOCK_CODE_DIGITS: DEFAULT_LOCK_CODE_DIGITS}
+    assert result.get("data") == {
+        CONF_LOCK_CODE_DIGITS: DEFAULT_LOCK_CODE_DIGITS,
+        CONF_FORCE_ARM: False,
+    }

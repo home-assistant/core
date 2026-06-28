@@ -61,7 +61,11 @@
     "step": {
       "init": {
         "data": {
+          "force_arm": "Force arm",
           "lock_code_digits": "Number of digits in PIN code for locks"
+        },
+        "data_description": {
+          "force_arm": "Arm the alarm even when a device is out of place or reporting a problem, the same as \"Arm anyway\" in the Verisure app. When disabled, arming is blocked until the issue is resolved."
         }
       }
     }

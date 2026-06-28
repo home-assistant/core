@@ -9,12 +9,14 @@ DOMAIN = "verisure"
 
 LOGGER = logging.getLogger(__package__)
 
+CONF_FORCE_ARM = "force_arm"
 CONF_GIID = "giid"
 CONF_LOCK_CODE_DIGITS = "lock_code_digits"
 CONF_LOCK_DEFAULT_CODE = "lock_default_code"
 
 DEFAULT_SCAN_INTERVAL = timedelta(minutes=1)
 DEFAULT_LOCK_CODE_DIGITS = 4
+DEFAULT_FORCE_ARM = False
 
 # vsure cookies are valid for ~15 minutes; refresh before expiry.
 COOKIE_REFRESH_INTERVAL = timedelta(minutes=10)

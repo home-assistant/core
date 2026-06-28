@@ -18,8 +18,10 @@ from homeassistant.core import callback
 from homeassistant.helpers.storage import STORAGE_DIR
 
 from .const import (
+    CONF_FORCE_ARM,
     CONF_GIID,
     CONF_LOCK_CODE_DIGITS,
+    DEFAULT_FORCE_ARM,
     DEFAULT_LOCK_CODE_DIGITS,
     DOMAIN,
     LOGGER,
@@ -326,6 +328,12 @@ class VerisureOptionsFlowHandler(OptionsFlow):
                             )
                         },
                     ): int,
+                    vol.Required(
+                        CONF_FORCE_ARM,
+                        default=self.config_entry.options.get(
+                            CONF_FORCE_ARM, DEFAULT_FORCE_ARM
+                        ),
+                    ): bool,
                 }
             ),
             errors=errors,
