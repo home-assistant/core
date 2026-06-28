@@ -311,55 +311,44 @@ async def test_discovery_update_attr(
                 infrared.DOMAIN: [
                     {
                         "name": "Test 1",
-                        "schema": "emitter",
-                        "command_topic": "command-topic",
+                        "schema": "receiver",
+                        "state_topic": "test-topic",
                         "unique_id": "TOTALLY_UNIQUE",
                     },
                     {
                         "name": "Test 2",
-                        "schema": "emitter",
-                        "command_topic": "command-topic",
+                        "schema": "receiver",
+                        "state_topic": "test-topic",
                         "unique_id": "TOTALLY_UNIQUE",
                     },
                 ]
             }
-        }
-    ],
-)
-async def test_unique_id_emitter(
-    hass: HomeAssistant, mqtt_mock_entry: MqttMockHAClientGenerator
-) -> None:
-    """Test unique id option only creates one infrared emitter per unique_id."""
-    await help_test_unique_id(hass, mqtt_mock_entry, infrared.DOMAIN)
-
-
-@pytest.mark.parametrize(
-    "hass_config",
-    [
+        },
         {
             mqtt.DOMAIN: {
                 infrared.DOMAIN: [
                     {
                         "name": "Test 1",
-                        "schema": "receiver",
-                        "state_topic": "test-topic",
+                        "schema": "emitter",
+                        "command_topic": "command-topic",
                         "unique_id": "TOTALLY_UNIQUE",
                     },
                     {
                         "name": "Test 2",
-                        "schema": "receiver",
-                        "state_topic": "test-topic",
+                        "schema": "emitter",
+                        "command_topic": "command-topic",
                         "unique_id": "TOTALLY_UNIQUE",
                     },
                 ]
             }
-        }
+        },
     ],
+    ids=["receiver", "emitter"],
 )
-async def test_unique_id_receiver(
+async def test_unique_id(
     hass: HomeAssistant, mqtt_mock_entry: MqttMockHAClientGenerator
 ) -> None:
-    """Test unique id option only creates one infrared receiver per unique_id."""
+    """Test unique id option only creates one entity per unique_id."""
     await help_test_unique_id(hass, mqtt_mock_entry, infrared.DOMAIN)
 
 
