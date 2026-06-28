@@ -760,6 +760,7 @@ async def test_reconfigure_flow(
     assert result["type"] is FlowResultType.ABORT
     assert result["reason"] == "reconfigure_successful"
     assert mock_config_entry.data[CONF_HOST] == MOCK_HOST
+    assert mock_config_entry.unique_id == "aa:bb:cc:dd:ee:ff"
     assert len(hass.config_entries.async_entries(DOMAIN)) == 1
 
 
@@ -875,5 +876,6 @@ async def test_reconfigure_auth_error(
         CONF_HOST: MOCK_HOST,
     }
 
+    assert mock_config_entry.unique_id == "aa:bb:cc:dd:ee:ff"
     assert len(mock_smlight_client.authenticate.mock_calls) == 2
     assert len(hass.config_entries.async_entries(DOMAIN)) == 1
