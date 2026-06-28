@@ -89,7 +89,7 @@ class SmlightConfigFlow(ConfigFlow, domain=DOMAIN):
 
                     if self.source == SOURCE_RECONFIGURE:
                         await self.async_set_unique_id(format_mac(info.MAC))
-                        self._abort_if_unique_id_mismatch(reason="wrong_device")
+                        self._abort_if_unique_id_mismatch()
                         return self.async_update_reload_and_abort(
                             self._get_reconfigure_entry(),
                             data_updates={
@@ -220,7 +220,7 @@ class SmlightConfigFlow(ConfigFlow, domain=DOMAIN):
                         return self.async_abort(reason="unsupported_device")
 
                     await self.async_set_unique_id(format_mac(info.MAC))
-                    self._abort_if_unique_id_mismatch(reason="wrong_device")
+                    self._abort_if_unique_id_mismatch()
 
                     return self.async_update_reload_and_abort(
                         entry,
