@@ -25,7 +25,7 @@ def _get_mock_vmc(
     """Return a mock FlowItVMCMachine context manager."""
     mock_vmc = AsyncMock()
     mock_vmc.get_info.return_value.hostname = info_hostname
-    mock_vmc._state.name = state_name
+    mock_vmc.state.name = state_name
 
     if exception:
         mock_vmc.get_info.side_effect = exception
@@ -97,62 +97,6 @@ async def test_form_exceptions(
 
     assert result2["type"] == FlowResultType.FORM
     assert result2["errors"] == {"base": error}
-
-
-async def test_import(hass: HomeAssistant) -> None:
-    """Test import step."""
-    with patch(
-        "homeassistant.components.flow_it.config_flow.FlowItVMCMachine",
-        return_value=_get_mock_vmc(),
-    ):
-        result = await hass.config_entries.flow.async_init(
-            DOMAIN,
-            context={"source": config_entries.SOURCE_IMPORT},
-            data={
-                "host": "1.1.1.1",
-                "username": "api",
-                "password": "test-password",
-            },
-        )
-        await hass.async_block_till_done()
-
-    assert result["type"] == FlowResultType.CREATE_ENTRY
-    assert result["title"] == "Flow-it Device"
-    assert result["data"] == {
-        "host": "http://1.1.1.1",
-        "username": "api",
-        "password": "test-password",
-    }
-
-
-@pytest.mark.parametrize(
-    ("exception", "reason"),
-    [
-        (FlowItAuthError(), "invalid_auth"),
-        (FlowItConnectionError(), "cannot_connect"),
-        (Exception(), "unknown"),
-    ],
-)
-async def test_import_exceptions(
-    hass: HomeAssistant, exception: Exception, reason: str
-) -> None:
-    """Test import step exceptions."""
-    with patch(
-        "homeassistant.components.flow_it.config_flow.FlowItVMCMachine",
-        return_value=_get_mock_vmc(exception=exception),
-    ):
-        result = await hass.config_entries.flow.async_init(
-            DOMAIN,
-            context={"source": config_entries.SOURCE_IMPORT},
-            data={
-                "host": "1.1.1.1",
-                "username": "api",
-                "password": "test-password",
-            },
-        )
-
-    assert result["type"] == FlowResultType.ABORT
-    assert result["reason"] == reason
 
 
 async def test_zeroconf(hass: HomeAssistant) -> None:
@@ -325,27 +269,6 @@ async def test_form_with_http(hass: HomeAssistant) -> None:
     assert result2["data"]["host"] == "http://1.1.1.1"
 
 
-async def test_import_with_http(hass: HomeAssistant) -> None:
-    """Test import with http:// already in host."""
-    with patch(
-        "homeassistant.components.flow_it.config_flow.FlowItVMCMachine",
-        return_value=_get_mock_vmc(),
-    ):
-        result = await hass.config_entries.flow.async_init(
-            DOMAIN,
-            context={"source": config_entries.SOURCE_IMPORT},
-            data={
-                "host": "http://1.1.1.1",
-                "username": "api",
-                "password": "test-password",
-            },
-        )
-        await hass.async_block_till_done()
-
-    assert result["type"] == FlowResultType.CREATE_ENTRY
-    assert result["data"]["host"] == "http://1.1.1.1"
-
-
 async def test_form_no_unique_id(hass: HomeAssistant) -> None:
     """Test form with no unique_id."""
     result = await hass.config_entries.flow.async_init(
@@ -353,7 +276,7 @@ async def test_form_no_unique_id(hass: HomeAssistant) -> None:
     )
 
     mock_vmc = _get_mock_vmc()
-    mock_vmc.__aenter__.return_value._state = None
+    mock_vmc.__aenter__.return_value.state = None
 
     with patch(
         "homeassistant.components.flow_it.config_flow.FlowItVMCMachine",
