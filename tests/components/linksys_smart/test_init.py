@@ -1,12 +1,13 @@
 """Test the linksys init."""
 
-from unittest.mock import AsyncMock, patch
+from unittest.mock import ANY, AsyncMock, patch
 
+from jnap import GetDevicesResponse
 import pytest
 
-from homeassistant.components import linksys_smart
 from homeassistant.components.linksys_smart.const import DOMAIN
-from homeassistant.const import CONF_HOST, CONF_PASSWORD, CONF_USERNAME, Platform
+from homeassistant.config_entries import ConfigEntryState
+from homeassistant.const import CONF_HOST, CONF_PASSWORD, CONF_USERNAME
 from homeassistant.core import HomeAssistant
 
 from tests.common import MockConfigEntry
@@ -43,31 +44,16 @@ async def test_async_setup_entry(
     entry = MockConfigEntry(domain=DOMAIN, data=entry_data)
     entry.add_to_hass(hass)
 
-    session = object()
-    coordinator = AsyncMock()
-    coordinator.async_config_entry_first_refresh = AsyncMock()
-
-    with (
-        patch.object(linksys_smart, "async_get_clientsession", return_value=session),
-        patch.object(linksys_smart, "JNAPClient") as mock_client,
-        patch.object(
-            linksys_smart, "LinksysDataUpdateCoordinator", return_value=coordinator
-        ) as mock_coordinator,
-        patch.object(
-            hass.config_entries,
-            "async_forward_entry_setups",
-            new=AsyncMock(return_value=True),
-        ) as mock_forward_entry_setups,
-    ):
+    with patch("homeassistant.components.linksys_smart.JNAPClient") as mock_client_cls:
+        mock_client_cls.return_value.get_devices = AsyncMock(
+            return_value=GetDevicesResponse(devices=[])
+        )
         assert await hass.config_entries.async_setup(entry.entry_id)
 
-    mock_client.assert_called_once_with(
-        entry_data[CONF_HOST], session, entry_data[CONF_PASSWORD], **expected_kwargs
+    assert entry.state == ConfigEntryState.LOADED
+    mock_client_cls.assert_called_once_with(
+        entry_data[CONF_HOST], ANY, entry_data[CONF_PASSWORD], **expected_kwargs
     )
-    mock_coordinator.assert_called_once_with(hass, entry, mock_client.return_value)
-    coordinator.async_config_entry_first_refresh.assert_awaited_once()
-    mock_forward_entry_setups.assert_awaited_once_with(entry, [Platform.DEVICE_TRACKER])
-    assert entry.runtime_data is coordinator
 
 
 async def test_async_unload_entry(
@@ -83,28 +69,11 @@ async def test_async_unload_entry(
     )
     entry.add_to_hass(hass)
 
-    coordinator = AsyncMock()
-    coordinator.async_config_entry_first_refresh = AsyncMock()
-
-    with (
-        patch.object(linksys_smart, "async_get_clientsession", return_value=object()),
-        patch.object(linksys_smart, "JNAPClient"),
-        patch.object(
-            linksys_smart, "LinksysDataUpdateCoordinator", return_value=coordinator
-        ),
-        patch.object(
-            hass.config_entries,
-            "async_forward_entry_setups",
-            new=AsyncMock(return_value=True),
-        ),
-    ):
+    with patch("homeassistant.components.linksys_smart.JNAPClient") as mock_client_cls:
+        mock_client_cls.return_value.get_devices = AsyncMock(
+            return_value=GetDevicesResponse(devices=[])
+        )
         assert await hass.config_entries.async_setup(entry.entry_id)
 
-    with patch.object(
-        hass.config_entries,
-        "async_unload_platforms",
-        new=AsyncMock(return_value=True),
-    ) as mock_unload_platforms:
-        assert await hass.config_entries.async_unload(entry.entry_id)
-
-    mock_unload_platforms.assert_awaited_once_with(entry, [Platform.DEVICE_TRACKER])
+    assert await hass.config_entries.async_unload(entry.entry_id)
+    assert entry.state == ConfigEntryState.NOT_LOADED
