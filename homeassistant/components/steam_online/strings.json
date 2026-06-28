@@ -8,6 +8,7 @@
       "cannot_connect": "[%key:common::config_flow::error::cannot_connect%]",
       "invalid_account": "Invalid Steam ID",
       "invalid_auth": "[%key:common::config_flow::error::invalid_auth%]",
+      "timeout_connect": "[%key:common::config_flow::error::timeout_connect%]",
       "unknown": "[%key:common::config_flow::error::unknown%]"
     },
     "step": {
