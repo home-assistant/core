@@ -1,4 +1,4 @@
-"""Config flow for the linksys integration."""
+"""Config flow for the Linksys Smart Wi-Fi integration."""
 
 from collections.abc import Mapping
 import logging

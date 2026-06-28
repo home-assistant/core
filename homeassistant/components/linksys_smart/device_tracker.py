@@ -1,4 +1,4 @@
-"""Linksys device tracker platform."""
+"""Linksys Smart Wi-Fi device tracker platform."""
 
 from typing import override
 

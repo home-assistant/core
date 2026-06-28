@@ -1,4 +1,4 @@
-"""The linksys integration."""
+"""The Linksys Smart Wi-Fi integration."""
 
 from jnap import JNAPClient
 

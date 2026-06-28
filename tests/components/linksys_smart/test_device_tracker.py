@@ -1,4 +1,4 @@
-"""Tests for the Linksys device tracker platform."""
+"""Linksys Smart Wi-Fi device tracker platform tests."""
 
 from unittest.mock import AsyncMock, patch
 

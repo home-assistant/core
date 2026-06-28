@@ -1,4 +1,4 @@
-"""Tests for the Linksys coordinator."""
+"""Test Linksys Smart Wi-Fi coordinator."""
 
 from unittest.mock import AsyncMock
 

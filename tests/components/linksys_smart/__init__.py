@@ -1,1 +1,1 @@
-"""Tests for the linksys integration."""
+"""Tests for the Linksys Smart Wi-Fi integration."""

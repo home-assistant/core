@@ -1,4 +1,4 @@
-"""Common fixtures for the linksys tests."""
+"""Fixtures for Linksys Smart Wi-Fi."""
 
 from collections.abc import Generator
 from unittest.mock import AsyncMock, patch

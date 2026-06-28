@@ -1,4 +1,4 @@
-"""Test the linksys config flow."""
+"""Test Linksys Smart Wi-Fi config flow."""
 
 from unittest.mock import AsyncMock, patch
 

@@ -1,4 +1,4 @@
-"""Linksys data update coordinator."""
+"""Linksys Smart Wi-Fi data update coordinator."""
 
 from datetime import timedelta
 import logging

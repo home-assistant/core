@@ -1,4 +1,4 @@
-"""Test the linksys init."""
+"""Test Linksys Smart Wi-Fi integration setup."""
 
 from unittest.mock import ANY, AsyncMock, patch
 
