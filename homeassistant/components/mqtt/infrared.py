@@ -2,7 +2,7 @@
 
 from collections.abc import Callable
 import logging
-from typing import Any, TypedDict
+from typing import Any, TypedDict, override
 
 import orjson
 import voluptuous as vol
@@ -154,11 +154,13 @@ class MqttInfraredEmitterEntity(MqttEntity, InfraredEmitterEntity):
         [PublishPayloadType, dict[str, Any]], PublishPayloadType
     ]
 
+    @override
     @staticmethod
     def config_schema() -> VolSchemaType:
         """Return the config schema."""
         return DISCOVERY_SCHEMA
 
+    @override
     def _setup_from_config(self, config: ConfigType) -> None:
         """(Re)Setup the entity."""
         self._command_template = MqttCommandTemplate(
@@ -166,13 +168,16 @@ class MqttInfraredEmitterEntity(MqttEntity, InfraredEmitterEntity):
             entity=self,
         ).async_render
 
-    async def _subscribe_topics(self) -> None:
-        """(Re)Subscribe to topics."""
-
+    @override
     @callback
     def _prepare_subscribe_topics(self) -> None:
         """(Re)Subscribe to topics."""
 
+    @override
+    async def _subscribe_topics(self) -> None:
+        """(Re)Subscribe to topics."""
+
+    @override
     async def async_send_command(self, command: InfraredCommand) -> None:
         """Send an IR command via MQTT."""
 
@@ -196,11 +201,13 @@ class MqttInfraredReceiverEntity(MqttEntity, InfraredReceiverEntity):
 
     _value_template: Callable[[ReceivePayloadType], ReceivePayloadType]
 
+    @override
     @staticmethod
     def config_schema() -> VolSchemaType:
         """Return the config schema."""
         return DISCOVERY_SCHEMA
 
+    @override
     def _setup_from_config(self, config: ConfigType) -> None:
         """(Re)Setup the entity."""
         self._value_template = MqttValueTemplate(
@@ -238,6 +245,7 @@ class MqttInfraredReceiverEntity(MqttEntity, InfraredReceiverEntity):
         else:
             self._handle_received_signal(InfraredReceivedSignal(**signal_message))
 
+    @override
     @callback
     def _prepare_subscribe_topics(self) -> None:
         """(Re)Subscribe to topics."""
@@ -247,6 +255,7 @@ class MqttInfraredReceiverEntity(MqttEntity, InfraredReceiverEntity):
             None,
         )
 
+    @override
     async def _subscribe_topics(self) -> None:
         """(Re)Subscribe to topics."""
         subscription.async_subscribe_topics_internal(self.hass, self._sub_state)
