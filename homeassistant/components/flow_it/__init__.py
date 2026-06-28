@@ -5,11 +5,17 @@ from datetime import timedelta
 import logging
 
 from flow_it_api.client import FlowItVMCMachine
+from flow_it_api.exceptions import (
+    FlowItAuthError,
+    FlowItConnectionError,
+    FlowItResponseError,
+)
 from flow_it_api.models import MachineData, MachineStatusResponse
 
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_HOST, CONF_PASSWORD, CONF_USERNAME, Platform
 from homeassistant.core import HomeAssistant
+from homeassistant.exceptions import ConfigEntryAuthFailed, ConfigEntryNotReady
 from homeassistant.helpers.httpx_client import get_async_client
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
 
@@ -45,15 +51,21 @@ async def async_setup_entry(hass: HomeAssistant, entry: FlowItConfigEntry) -> bo
     try:
         # get_info does not require auth, but we want to make sure we can connect
         await vmc.get_info()
+    except (FlowItConnectionError, FlowItResponseError) as err:
+        raise ConfigEntryNotReady(f"Error connecting to VMC: {err}") from err
     except Exception as err:
-        raise UpdateFailed(f"Error connecting: {err}") from err
+        raise ConfigEntryNotReady(f"Unexpected error connecting: {err}") from err
 
     async def async_update_data() -> MachineStatusResponse:
         """Fetch data from API endpoint."""
         try:
             await vmc.refresh_state()
-        except Exception as err:
+        except FlowItAuthError as err:
+            raise ConfigEntryAuthFailed(f"Authentication failed: {err}") from err
+        except (FlowItConnectionError, FlowItResponseError) as err:
             raise UpdateFailed(f"Error communicating with API: {err}") from err
+        except Exception as err:
+            raise UpdateFailed(f"Unexpected error: {err}") from err
         else:
             return vmc.state
 
