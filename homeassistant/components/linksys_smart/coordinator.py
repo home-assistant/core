@@ -22,7 +22,7 @@ class LinksysDataUpdateCoordinator(DataUpdateCoordinator[dict[str, JNAPDevice]])
     def __init__(
         self, hass: HomeAssistant, entry: ConfigEntry, client: JNAPClient
     ) -> None:
-        """Initialise the coordinator."""
+        """Initialize the coordinator."""
         super().__init__(
             hass,
             _LOGGER,
