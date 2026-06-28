@@ -8,7 +8,12 @@ from pysmlight.exceptions import SmlightAuthError, SmlightConnectionError
 import pytest
 
 from homeassistant.components.smlight.const import DOMAIN
-from homeassistant.config_entries import SOURCE_DHCP, SOURCE_USER, SOURCE_ZEROCONF
+from homeassistant.config_entries import (
+    SOURCE_DHCP,
+    SOURCE_RECONFIGURE,
+    SOURCE_USER,
+    SOURCE_ZEROCONF,
+)
 from homeassistant.const import CONF_HOST, CONF_PASSWORD, CONF_USERNAME
 from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
@@ -743,45 +748,86 @@ async def test_reconfigure_flow(
     result = await mock_config_entry.start_reconfigure_flow(hass)
 
     assert result["type"] is FlowResultType.FORM
-    assert result["step_id"] == "reconfigure"
+    assert result["step_id"] == SOURCE_RECONFIGURE
 
-    result2 = await hass.config_entries.flow.async_configure(
+    result = await hass.config_entries.flow.async_configure(
         result["flow_id"],
         {
             CONF_HOST: MOCK_HOST,
         },
     )
 
-    assert result2["type"] is FlowResultType.ABORT
-    assert result2["reason"] == "reconfigure_successful"
+    assert result["type"] is FlowResultType.ABORT
+    assert result["reason"] == "reconfigure_successful"
     assert mock_config_entry.data[CONF_HOST] == MOCK_HOST
     assert len(hass.config_entries.async_entries(DOMAIN)) == 1
 
 
+@pytest.mark.parametrize(
+    "mock_method",
+    ["check_auth_needed", "get_info"],
+)
 async def test_reconfigure_connect_error(
     hass: HomeAssistant,
     mock_smlight_client: MagicMock,
     mock_config_entry: MockConfigEntry,
+    mock_method: str,
 ) -> None:
-    """Test reconfigure flow handles connection error."""
-    mock_smlight_client.check_auth_needed.side_effect = SmlightConnectionError
+    """Test reconfigure flow handles connection errors."""
+    getattr(mock_smlight_client, mock_method).side_effect = SmlightConnectionError
     mock_config_entry.add_to_hass(hass)
 
     result = await mock_config_entry.start_reconfigure_flow(hass)
 
     assert result["type"] is FlowResultType.FORM
-    assert result["step_id"] == "reconfigure"
+    assert result["step_id"] == SOURCE_RECONFIGURE
 
-    result2 = await hass.config_entries.flow.async_configure(
+    result = await hass.config_entries.flow.async_configure(
         result["flow_id"],
         {
             CONF_HOST: MOCK_HOST,
         },
     )
 
-    assert result2["type"] is FlowResultType.FORM
-    assert result2["step_id"] == "reconfigure"
-    assert result2["errors"] == {"base": "cannot_connect"}
+    assert result["type"] is FlowResultType.FORM
+    assert result["step_id"] == SOURCE_RECONFIGURE
+    assert result["errors"] == {"base": "cannot_connect"}
+
+
+@pytest.mark.parametrize(
+    ("get_info_return", "expected_reason"),
+    [
+        (Info(MAC="AA:BB:CC:DD:EE:FF", model="SLZB-X"), "unsupported_device"),
+        (Info(MAC="11:22:33:44:55:66", model="SLZB-06p7"), "unique_id_mismatch"),
+    ],
+)
+async def test_reconfigure_abort_cases(
+    hass: HomeAssistant,
+    mock_smlight_client: MagicMock,
+    mock_config_entry: MockConfigEntry,
+    get_info_return: Info,
+    expected_reason: str,
+) -> None:
+    """Test reconfigure flow aborts on wrong or unsupported device."""
+    mock_config_entry.add_to_hass(hass)
+
+    result = await mock_config_entry.start_reconfigure_flow(hass)
+
+    assert result["type"] is FlowResultType.FORM
+    assert result["step_id"] == SOURCE_RECONFIGURE
+
+    mock_smlight_client.get_info.side_effect = None
+    mock_smlight_client.get_info.return_value = get_info_return
+
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"],
+        {
+            CONF_HOST: MOCK_HOST,
+        },
+    )
+
+    assert result["type"] is FlowResultType.ABORT
+    assert result["reason"] == expected_reason
 
 
 @pytest.mark.usefixtures("mock_setup_entry")
@@ -799,20 +845,20 @@ async def test_reconfigure_auth_error(
     result = await mock_config_entry.start_reconfigure_flow(hass)
 
     assert result["type"] is FlowResultType.FORM
-    assert result["step_id"] == "reconfigure"
+    assert result["step_id"] == SOURCE_RECONFIGURE
 
-    result2 = await hass.config_entries.flow.async_configure(
+    result = await hass.config_entries.flow.async_configure(
         result["flow_id"],
         {
             CONF_HOST: MOCK_HOST,
         },
     )
 
-    assert result2["type"] is FlowResultType.FORM
-    assert result2["step_id"] == "auth"
+    assert result["type"] is FlowResultType.FORM
+    assert result["step_id"] == "auth"
 
     mock_smlight_client.authenticate.side_effect = None
-    result3 = await hass.config_entries.flow.async_configure(
+    result = await hass.config_entries.flow.async_configure(
         result["flow_id"],
         {
             CONF_USERNAME: MOCK_USERNAME,
@@ -820,8 +866,8 @@ async def test_reconfigure_auth_error(
         },
     )
 
-    assert result3["type"] is FlowResultType.ABORT
-    assert result3["reason"] == "reconfigure_successful"
+    assert result["type"] is FlowResultType.ABORT
+    assert result["reason"] == "reconfigure_successful"
 
     assert mock_config_entry.data == {
         CONF_USERNAME: MOCK_USERNAME,
@@ -831,61 +877,3 @@ async def test_reconfigure_auth_error(
 
     assert len(mock_smlight_client.authenticate.mock_calls) == 2
     assert len(hass.config_entries.async_entries(DOMAIN)) == 1
-
-
-async def test_reconfigure_wrong_device(
-    hass: HomeAssistant,
-    mock_smlight_client: MagicMock,
-    mock_config_entry: MockConfigEntry,
-) -> None:
-    """Test reconfigure flow aborts if device unique ID does not match."""
-    mock_config_entry.add_to_hass(hass)
-
-    result = await mock_config_entry.start_reconfigure_flow(hass)
-
-    assert result["type"] is FlowResultType.FORM
-    assert result["step_id"] == "reconfigure"
-
-    mock_smlight_client.get_info.side_effect = None
-    mock_smlight_client.get_info.return_value = Info(
-        MAC="11:22:33:44:55:66", model="SLZB-06p7"
-    )
-
-    result2 = await hass.config_entries.flow.async_configure(
-        result["flow_id"],
-        {
-            CONF_HOST: MOCK_HOST,
-        },
-    )
-
-    assert result2["type"] is FlowResultType.ABORT
-    assert result2["reason"] == "wrong_device"
-
-
-async def test_reconfigure_unsupported_device(
-    hass: HomeAssistant,
-    mock_smlight_client: MagicMock,
-    mock_config_entry: MockConfigEntry,
-) -> None:
-    """Test reconfigure flow aborts if device is unsupported."""
-    mock_config_entry.add_to_hass(hass)
-
-    result = await mock_config_entry.start_reconfigure_flow(hass)
-
-    assert result["type"] is FlowResultType.FORM
-    assert result["step_id"] == "reconfigure"
-
-    mock_smlight_client.get_info.side_effect = None
-    mock_smlight_client.get_info.return_value = Info(
-        MAC="AA:BB:CC:DD:EE:FF", model="SLZB-X"
-    )
-
-    result2 = await hass.config_entries.flow.async_configure(
-        result["flow_id"],
-        {
-            CONF_HOST: MOCK_HOST,
-        },
-    )
-
-    assert result2["type"] is FlowResultType.ABORT
-    assert result2["reason"] == "unsupported_device"
