@@ -113,7 +113,6 @@ class WhirlpoolSelectEntity(WhirlpoolEntity, SelectEntity):
 class WhirlpoolOvenCookModeSelect(WhirlpoolOvenEntity, SelectEntity):
     """Settable cook mode for an oven cavity."""
 
-    _appliance: Oven
     _attr_options = list(OVEN_COOK_MODES.values())
 
     def __init__(self, appliance: Oven, cavity: OvenCavity) -> None:
