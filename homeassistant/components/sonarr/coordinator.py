@@ -1,7 +1,8 @@
 """Data update coordinator for the Sonarr integration."""
 
+import asyncio
 from dataclasses import dataclass
-from datetime import timedelta
+from datetime import UTC, date, datetime, timedelta
 from typing import TypeVar, cast, override
 
 from aiopyarr import (
@@ -17,6 +18,7 @@ from aiopyarr import (
 from aiopyarr.models.host_configuration import PyArrHostConfiguration
 from aiopyarr.sonarr_client import SonarrClient
 
+from homeassistant.components.calendar import CalendarEvent
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ConfigEntryAuthFailed
@@ -59,6 +61,7 @@ class SonarrDataUpdateCoordinator(DataUpdateCoordinator[SonarrDataT]):
     """Data update coordinator for the Sonarr integration."""
 
     config_entry: SonarrConfigEntry
+    _update_interval = timedelta(seconds=30)
 
     def __init__(
         self,
@@ -73,7 +76,7 @@ class SonarrDataUpdateCoordinator(DataUpdateCoordinator[SonarrDataT]):
             logger=LOGGER,
             config_entry=config_entry,
             name=DOMAIN,
-            update_interval=timedelta(seconds=30),
+            update_interval=self._update_interval,
         )
         self.api_client = api_client
         self.host_configuration = host_configuration
@@ -97,21 +100,104 @@ class SonarrDataUpdateCoordinator(DataUpdateCoordinator[SonarrDataT]):
         raise NotImplementedError
 
 
+def _get_calendar_event(episode: SonarrCalendar) -> CalendarEvent | None:
+    """Return a CalendarEvent from a SonarrCalendar episode."""
+    if not (air_date := getattr(episode, "airDateUtc", None)):
+        return None
+    if air_date.tzinfo is None:
+        air_date = air_date.replace(tzinfo=UTC)
+    runtime = getattr(episode.series, "runtime", None) or 60
+    end = air_date + timedelta(minutes=runtime)
+    episode_id = f"S{episode.seasonNumber:02d}E{episode.episodeNumber:02d}"
+    series_title = getattr(episode.series, "title", None)
+    episode_title = getattr(episode, "title", None)
+    summary = " - ".join(filter(None, [series_title, episode_id, episode_title]))
+    return CalendarEvent(
+        summary=summary,
+        start=air_date,
+        end=end,
+        description=getattr(episode, "overview", None) or "",
+    )
+
+
 class CalendarDataUpdateCoordinator(SonarrDataUpdateCoordinator[list[SonarrCalendar]]):
     """Calendar update coordinator."""
 
+    def __init__(
+        self,
+        hass: HomeAssistant,
+        config_entry: SonarrConfigEntry,
+        host_configuration: PyArrHostConfiguration,
+        api_client: SonarrClient,
+    ) -> None:
+        """Initialize the coordinator."""
+        super().__init__(hass, config_entry, host_configuration, api_client)
+        self.event: CalendarEvent | None = None
+        self._events: list[CalendarEvent] = []
+        self._fetched_dates: set[date] = set()
+
     @override
     async def _fetch_data(self) -> list[SonarrCalendar]:
-        """Fetch the movies data."""
+        """Fetch the calendar data."""
         local = dt_util.start_of_local_day().replace(microsecond=0)
         start = dt_util.as_utc(local)
         end = start + timedelta(days=self.config_entry.options[CONF_UPCOMING_DAYS])
-        return cast(
+        episodes = cast(
             list[SonarrCalendar],
             await self.api_client.async_get_calendar(
                 start_date=start, end_date=end, include_series=True
             ),
         )
+        now = dt_util.utcnow()
+        self.event = next(
+            (
+                e
+                for ep in episodes
+                if (e := _get_calendar_event(ep)) is not None and e.end > now
+            ),
+            None,
+        )
+        return episodes
+
+    async def async_get_events(
+        self, start_date: datetime, end_date: datetime
+    ) -> list[CalendarEvent]:
+        """Get cached events and request missing dates."""
+        cutoff = dt_util.now().date() - timedelta(days=30)
+        self._events = [
+            e
+            for e in self._events
+            if (e.start.date() if isinstance(e.start, datetime) else e.start) >= cutoff
+        ]
+        self._fetched_dates = {d for d in self._fetched_dates if d >= cutoff}
+        _days = (end_date - start_date).days
+        await asyncio.gather(
+            *(
+                self._async_get_events(d)
+                for d in ((start_date + timedelta(days=x)).date() for x in range(_days))
+                if d not in self._fetched_dates
+            )
+        )
+        return [e for e in self._events if e.start < end_date and e.end > start_date]
+
+    async def _async_get_events(self, _date: date) -> None:
+        """Fetch events for a specific date and extend the cache."""
+        _start = datetime(_date.year, _date.month, _date.day, tzinfo=UTC)
+        existing = {(ev.summary, ev.start) for ev in self._events}
+        self._events.extend(
+            e
+            for ep in cast(
+                list[SonarrCalendar],
+                await self.api_client.async_get_calendar(
+                    start_date=_start,
+                    end_date=_start + timedelta(days=1),
+                    include_series=True,
+                ),
+            )
+            if (e := _get_calendar_event(ep)) is not None
+            and (e.summary, e.start) not in existing
+        )
+        self._fetched_dates.add(_date)
 
 
 class CommandsDataUpdateCoordinator(SonarrDataUpdateCoordinator[list[Command]]):
