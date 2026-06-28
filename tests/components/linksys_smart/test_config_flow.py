@@ -309,6 +309,34 @@ async def test_ssdp_aborts_already_configured(hass: HomeAssistant) -> None:
     assert result["reason"] == "already_configured"
 
 
+async def test_ssdp_aborts_already_configured_via_serial(
+    hass: HomeAssistant,
+) -> None:
+    """Test SSDP confirm aborts when a config entry with the same serial number already exists."""
+    MockConfigEntry(
+        domain=DOMAIN,
+        unique_id=SERIAL,
+        data={CONF_HOST: SSDP_HOST, CONF_PASSWORD: "old-password"},
+    ).add_to_hass(hass)
+
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN,
+        context={"source": config_entries.SOURCE_SSDP},
+        data=MOCK_SSDP_DISCOVERY,
+    )
+    assert result["type"] is FlowResultType.FORM
+    assert result["step_id"] == "confirm"
+
+    with patch.multiple("jnap.JNAPClient", **_GOOD_CLIENT):
+        result = await hass.config_entries.flow.async_configure(
+            result["flow_id"],
+            {CONF_PASSWORD: "test-password"},
+        )
+
+    assert result["type"] is FlowResultType.ABORT
+    assert result["reason"] == "already_configured"
+
+
 async def test_ssdp_aborts_missing_host(hass: HomeAssistant) -> None:
     """Test SSDP discovery aborts when no host can be extracted."""
     result = await hass.config_entries.flow.async_init(

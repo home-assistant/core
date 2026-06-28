@@ -135,6 +135,8 @@ class LinksysConfigFlow(ConfigFlow, domain=DOMAIN):
             data = {CONF_HOST: self._host, **user_input}
             info, errors = await _async_validate_input(self.hass, data)
             if info is not None:
+                await self.async_set_unique_id(info["serial_number"])
+                self._abort_if_unique_id_configured({CONF_HOST: self._host})
                 return self.async_create_entry(title=info["title"], data=data)
         else:
             errors = {}
