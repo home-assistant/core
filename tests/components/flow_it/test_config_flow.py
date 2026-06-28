@@ -293,3 +293,83 @@ async def test_form_no_unique_id(hass: HomeAssistant) -> None:
         await hass.async_block_till_done()
 
     assert result2["type"] == FlowResultType.CREATE_ENTRY
+
+
+async def test_reauth(hass: HomeAssistant) -> None:
+    """Test reauth flow."""
+    entry = MockConfigEntry(
+        domain=DOMAIN,
+        title="Flow-it Device",
+        unique_id="00:11:22:33:44:55",
+        data={
+            "host": "http://1.1.1.1",
+            "username": "api",
+            "password": "old_password",
+        },
+    )
+    entry.add_to_hass(hass)
+
+    result = await entry.start_reauth_flow(hass)
+    assert result["type"] == FlowResultType.FORM
+    assert result["step_id"] == "reauth_confirm"
+
+    with patch(
+        "homeassistant.components.flow_it.config_flow.FlowItVMCMachine",
+        return_value=_get_mock_vmc(),
+    ):
+        result2 = await hass.config_entries.flow.async_configure(
+            result["flow_id"],
+            {
+                "username": "api",
+                "password": "new_password",
+            },
+        )
+        await hass.async_block_till_done()
+
+    assert result2["type"] == FlowResultType.ABORT
+    assert result2["reason"] == "reauth_successful"
+    assert entry.data["password"] == "new_password"
+
+
+@pytest.mark.parametrize(
+    ("exception", "error"),
+    [
+        (FlowItAuthError(), "invalid_auth"),
+        (FlowItConnectionError(), "cannot_connect"),
+        (Exception(), "unknown"),
+    ],
+)
+async def test_reauth_exceptions(
+    hass: HomeAssistant, exception: Exception, error: str
+) -> None:
+    """Test reauth flow exceptions."""
+    entry = MockConfigEntry(
+        domain=DOMAIN,
+        title="Flow-it Device",
+        unique_id="00:11:22:33:44:55",
+        data={
+            "host": "http://1.1.1.1",
+            "username": "api",
+            "password": "old_password",
+        },
+    )
+    entry.add_to_hass(hass)
+
+    result = await entry.start_reauth_flow(hass)
+
+    with patch(
+        "homeassistant.components.flow_it.config_flow.FlowItVMCMachine",
+        return_value=_get_mock_vmc(exception=exception),
+    ):
+        result2 = await hass.config_entries.flow.async_configure(
+            result["flow_id"],
+            {
+                "username": "api",
+                "password": "new_password",
+            },
+        )
+        await hass.async_block_till_done()
+
+    assert result2["type"] == FlowResultType.FORM
+    assert result2["step_id"] == "reauth_confirm"
+    assert result2["errors"]["base"] == error
