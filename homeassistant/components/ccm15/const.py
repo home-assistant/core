@@ -15,13 +15,9 @@ DEFAULT_INTERVAL = 30
 
 CONF_MIN_TEMP = "min_temp"
 CONF_MAX_TEMP = "max_temp"
-# CCM15 manual specifies 17-30 °C / 62-86 °F as the supported setpoint range.
-DEFAULT_MIN_TEMP_C = 17
-DEFAULT_MAX_TEMP_C = 30
-DEFAULT_MIN_TEMP_F = 62
-DEFAULT_MAX_TEMP_F = 86
-DEFAULT_MIN_TEMP = DEFAULT_MIN_TEMP_C
-DEFAULT_MAX_TEMP = DEFAULT_MAX_TEMP_C
+# Manual's documented setpoint range; climate.py converts to the entity's unit.
+DEFAULT_MIN_TEMP = 17
+DEFAULT_MAX_TEMP = 30
 
 CONST_STATE_CMD_MAP = {
     HVACMode.COOL: 0,
