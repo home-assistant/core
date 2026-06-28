@@ -38,10 +38,10 @@ async def test_entities(
 
 
 @pytest.mark.parametrize(
-    ("service", "device_method"),
+    ("service", "device_method", "other_method"),
     [
-        ("turn_on", "turn_on"),
-        ("turn_off", "turn_off"),
+        ("turn_on", "turn_on", "turn_off"),
+        ("turn_off", "turn_off", "turn_on"),
     ],
     ids=["turn_on", "turn_off"],
 )
@@ -50,6 +50,7 @@ async def test_switch(
     mock_config_entry: MockConfigEntry,
     service: str,
     device_method: str,
+    other_method: str,
 ) -> None:
     """Test that turning on/off the plug calls the device on/off methods."""
 
@@ -67,3 +68,4 @@ async def test_switch(
     )
 
     getattr(test_device, device_method).assert_called_once()
+    getattr(test_device, other_method).assert_not_called()

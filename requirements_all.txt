@@ -2084,7 +2084,7 @@ pycountry==24.6.1
 pycsspeechtts==1.0.8
 
 # homeassistant.components.cync
-pycync==0.5.0
+pycync==0.6.0
 
 # homeassistant.components.daikin
 pydaikin==2.18.1

@@ -2,8 +2,8 @@
 
 from typing import Any
 
-from pycync.devices.device_types import DeviceType
 from pycync import CyncDevice
+from pycync.devices.device_types import DeviceType
 
 from homeassistant.components.switch import SwitchDeviceClass, SwitchEntity
 from homeassistant.core import HomeAssistant
