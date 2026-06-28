@@ -64,10 +64,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: SmConfigEntry) -> bool:
             config_entry_id=entry.entry_id,
             **device_info(info, client.host),
         )
-        data_coordinator.device_id = device.id
-        entry.async_on_unload(
-            async_connect_scanner(hass, entry, info.model, data_coordinator.device_id)
-        )
+        entry.async_on_unload(async_connect_scanner(hass, entry, info.model, device.id))
 
     entry.runtime_data = SmlightData(
         data=data_coordinator,

@@ -91,7 +91,6 @@ class SmBaseDataUpdateCoordinator[_DataT](DataUpdateCoordinator[_DataT]):
         self.client = client
         self.unique_id: str | None = None
         self.legacy_api: int = 0
-        self.device_id: str = ""
 
     @override
     async def _async_setup(self) -> None:
