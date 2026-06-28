@@ -5,12 +5,10 @@ from unittest.mock import AsyncMock, patch
 from jnap import JNAPClient, JNAPDevice
 import pytest
 
-from homeassistant.components.device_tracker import SourceType
 from homeassistant.components.linksys_smart.const import DOMAIN
 from homeassistant.components.linksys_smart.coordinator import (
     LinksysDataUpdateCoordinator,
 )
-from homeassistant.components.linksys_smart.device_tracker import LinksysScannerEntity
 from homeassistant.const import CONF_HOST, CONF_PASSWORD
 from homeassistant.core import DOMAIN as HOMEASSISTANT_DOMAIN, HomeAssistant
 from homeassistant.helpers import entity_registry as er, issue_registry as ir
@@ -67,73 +65,68 @@ async def _setup_entry(
     await hass.async_block_till_done()
 
 
-@pytest.mark.parametrize(
-    ("data", "expected"),
-    [
-        pytest.param({"aa:bb:cc:dd:ee:ff": LAPTOP}, True, id="connected"),
-        pytest.param({}, False, id="not_connected"),
-    ],
-)
-async def test_entity_is_connected(
+@pytest.mark.usefixtures("entity_registry_enabled_by_default")
+async def test_entity_state_when_connected(
     hass: HomeAssistant,
-    data: dict[str, JNAPDevice],
-    expected: bool,
+    entity_registry: er.EntityRegistry,
 ) -> None:
-    """Test is_connected reflects whether the device MAC is in current coordinator data."""
-    entity = LinksysScannerEntity(_make_coordinator(hass, data), LAPTOP)
-    assert entity.is_connected is expected
-
-
-async def test_entity_mac_address(hass: HomeAssistant) -> None:
-    """Test mac_address returns the device MAC."""
-    entity = LinksysScannerEntity(_make_coordinator(hass, {}), LAPTOP)
-    assert entity.mac_address == "aa:bb:cc:dd:ee:ff"
-
-
-async def test_entity_unique_id(hass: HomeAssistant) -> None:
-    """Test unique_id is the device MAC address."""
-    entity = LinksysScannerEntity(_make_coordinator(hass, {}), LAPTOP)
-    assert entity.unique_id == "aa:bb:cc:dd:ee:ff"
-
-
-async def test_entity_name(hass: HomeAssistant) -> None:
-    """Test name is taken from the device."""
-    entity = LinksysScannerEntity(_make_coordinator(hass, {}), LAPTOP)
-    assert entity.name == "My Laptop"
-
-
-async def test_entity_source_type(hass: HomeAssistant) -> None:
-    """Test source_type is ROUTER."""
-    entity = LinksysScannerEntity(_make_coordinator(hass, {}), LAPTOP)
-    assert entity.source_type is SourceType.ROUTER
-
-
-async def test_entity_ip_address_when_connected(hass: HomeAssistant) -> None:
-    """Test ip_address is read from coordinator data when the device is connected."""
-    entity = LinksysScannerEntity(
-        _make_coordinator(hass, {"aa:bb:cc:dd:ee:ff": LAPTOP}), LAPTOP
+    """Test entity state and attributes when device is connected."""
+    entry = MockConfigEntry(
+        domain=DOMAIN, data={CONF_HOST: "192.168.1.1", CONF_PASSWORD: "pass"}
     )
-    assert entity.ip_address == "192.168.1.10"
+    coordinator = _make_coordinator(hass, {"aa:bb:cc:dd:ee:ff": LAPTOP}, entry)
+    entry.runtime_data = coordinator
+    entry.add_to_hass(hass)
+    await _setup_entry(hass, entry, coordinator)
+    coordinator.async_update_listeners()
+    await hass.async_block_till_done()
 
-
-async def test_entity_ip_address_when_disconnected(hass: HomeAssistant) -> None:
-    """Test ip_address is None when the device is not in coordinator data."""
-    entity = LinksysScannerEntity(_make_coordinator(hass, {}), LAPTOP)
-    assert entity.ip_address is None
-
-
-async def test_entity_hostname_when_connected(hass: HomeAssistant) -> None:
-    """Test hostname is read from coordinator data when the device is connected."""
-    entity = LinksysScannerEntity(
-        _make_coordinator(hass, {"aa:bb:cc:dd:ee:ff": LAPTOP}), LAPTOP
+    entity_id = entity_registry.async_get_entity_id(
+        "device_tracker", DOMAIN, "aa:bb:cc:dd:ee:ff"
     )
-    assert entity.hostname == "my-laptop"
+    assert entity_id is not None
+    reg_entry = entity_registry.async_get(entity_id)
+    assert reg_entry is not None
+    assert reg_entry.unique_id == "aa:bb:cc:dd:ee:ff"
+
+    state = hass.states.get(entity_id)
+    assert state is not None
+    assert state.state == "home"
+    assert state.attributes["source_type"] == "router"
+    assert state.attributes["ip"] == "192.168.1.10"
+    assert state.attributes["host_name"] == "my-laptop"
+    assert state.attributes["mac"] == "aa:bb:cc:dd:ee:ff"
 
 
-async def test_entity_hostname_when_disconnected(hass: HomeAssistant) -> None:
-    """Test hostname is None when the device is not in coordinator data."""
-    entity = LinksysScannerEntity(_make_coordinator(hass, {}), LAPTOP)
-    assert entity.hostname is None
+@pytest.mark.usefixtures("entity_registry_enabled_by_default")
+async def test_entity_state_when_disconnected(
+    hass: HomeAssistant,
+    entity_registry: er.EntityRegistry,
+) -> None:
+    """Test entity state when device is not present in coordinator data."""
+    entry = MockConfigEntry(
+        domain=DOMAIN, data={CONF_HOST: "192.168.1.1", CONF_PASSWORD: "pass"}
+    )
+    coordinator = _make_coordinator(hass, {"aa:bb:cc:dd:ee:ff": LAPTOP}, entry)
+    entry.runtime_data = coordinator
+    entry.add_to_hass(hass)
+    await _setup_entry(hass, entry, coordinator)
+    coordinator.async_update_listeners()
+    await hass.async_block_till_done()
+
+    coordinator.data = {}
+    coordinator.async_update_listeners()
+    await hass.async_block_till_done()
+
+    entity_id = entity_registry.async_get_entity_id(
+        "device_tracker", DOMAIN, "aa:bb:cc:dd:ee:ff"
+    )
+    assert entity_id is not None
+    state = hass.states.get(entity_id)
+    assert state is not None
+    assert state.state == "not_home"
+    assert "ip" not in state.attributes
+    assert "host_name" not in state.attributes
 
 
 async def test_setup_entry_creates_entity_per_device(
