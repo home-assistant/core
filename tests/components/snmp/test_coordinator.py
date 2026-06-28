@@ -419,3 +419,46 @@ async def test_coordinator_update_auth_error(
         ),
     ):
         await coordinator._async_update_data()
+
+
+async def test_coordinator_host_info_request_args_auth_error(
+    hass: HomeAssistant,
+) -> None:
+    """Test WrongValueError raised by _async_ensure_request_args during host info."""
+    entry = MockConfigEntry(
+        domain=DOMAIN, data={"host": "1.1.1.1", "baseoid": "1.3.6.1.2.1.1"}
+    )
+    coordinator = SnmpUpdateCoordinator(hass, entry)
+
+    with (
+        patch(
+            "homeassistant.components.snmp.coordinator.SnmpUpdateCoordinator._async_ensure_request_args",
+            side_effect=WrongValueError(),
+        ),
+        pytest.raises(
+            ConfigEntryAuthFailed, match="Invalid authentication credentials"
+        ),
+    ):
+        await coordinator._async_fetch_host_info()
+
+
+async def test_coordinator_update_request_args_auth_error(
+    hass: HomeAssistant,
+) -> None:
+    """Test WrongValueError raised by _async_ensure_request_args during update."""
+    entry = MockConfigEntry(
+        domain=DOMAIN, data={"host": "1.1.1.1", "baseoid": "1.3.6.1.2.1.1"}
+    )
+    coordinator = SnmpUpdateCoordinator(hass, entry)
+    coordinator.model = "Test"
+
+    with (
+        patch(
+            "homeassistant.components.snmp.coordinator.SnmpUpdateCoordinator._async_ensure_request_args",
+            side_effect=WrongValueError(),
+        ),
+        pytest.raises(
+            ConfigEntryAuthFailed, match="Invalid authentication credentials"
+        ),
+    ):
+        await coordinator._async_update_data()

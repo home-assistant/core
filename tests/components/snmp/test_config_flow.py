@@ -329,6 +329,44 @@ async def test_user_flow_v3_invalid_auth(hass: HomeAssistant) -> None:
     assert result["errors"] == {"base": "usm_wrong_digests"}
 
 
+async def test_user_flow_v3_generic_err_status(hass: HomeAssistant) -> None:
+    """Test user setup flow failure - v3 generic err_status (not wrongDigests)."""
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN, context={"source": config_entries.SOURCE_USER}
+    )
+
+    # Step 1
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"],
+        {
+            "host": "192.168.1.1",
+            "baseoid": "1.3.6.1.4.1.2021.10.1.3.1",
+            "version": "3",
+        },
+    )
+
+    # Step 2: V3 Auth fails with a generic err_status (not wrongdigests/decryptionerror)
+    mock_err_status = MagicMock()
+    mock_err_status.prettyPrint.return_value = "authorizationError"
+    with (
+        patch(
+            "homeassistant.components.snmp.config_flow.get_cmd",
+            return_value=(None, mock_err_status, None, None),
+        ),
+        patch(
+            "homeassistant.components.snmp.util.UdpTransportTarget.create",
+            return_value="mock_target",
+        ),
+    ):
+        result = await hass.config_entries.flow.async_configure(
+            result["flow_id"],
+            {"username": "user", "auth_key": "pass"},
+        )
+
+    assert result["type"] is FlowResultType.FORM
+    assert result["errors"] == {"base": "invalid_auth"}
+
+
 async def test_user_flow_timeout_generic(hass: HomeAssistant) -> None:
     """Test user setup flow failure - timeout on sysDescr."""
     result = await hass.config_entries.flow.async_init(
