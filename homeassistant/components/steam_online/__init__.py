@@ -70,5 +70,5 @@ async def async_migrate_entry(hass: HomeAssistant, entry: SteamConfigEntry) -> b
             dev_reg.async_update_device(
                 device.id, new_identifiers={(DOMAIN, entry.unique_id)}
             )
-            hass.config_entries.async_update_entry(entry, version=3)
+        hass.config_entries.async_update_entry(entry, version=3)
     return True

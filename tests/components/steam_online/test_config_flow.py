@@ -354,7 +354,7 @@ async def test_add_friend_flow_abort_errors(
     assert config_entry.state is ConfigEntryState.LOADED
 
     result = await hass.config_entries.subentries.async_init(
-        (config_entry.entry_id, "friend"),
+        (config_entry.entry_id, SUBENTRY_TYPE_FRIEND),
         context={"source": SOURCE_USER},
     )
 
