@@ -18,7 +18,7 @@ from homeassistant.helpers import config_validation as cv, entity_platform
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from homeassistant.helpers.typing import VolDictType
 
-from . import RainMachineConfigEntry, RainMachineData, async_update_programs_and_zones
+from . import RainMachineConfigEntry, RainMachineData
 from .const import (
     CONF_ALLOW_INACTIVE_ZONES_TO_RUN,
     CONF_DEFAULT_ZONE_RUN_TIME,
@@ -30,6 +30,7 @@ from .const import (
     DATA_ZONES,
     DEFAULT_ZONE_RUN,
 )
+from .coordinator import async_update_programs_and_zones
 from .entity import RainMachineEntity, RainMachineEntityDescription
 from .util import RUN_STATE_MAP, key_exists
 
@@ -265,9 +266,7 @@ class RainMachineBaseSwitch(RainMachineEntity, SwitchEntity):
     @callback
     def _update_activities(self) -> None:
         """Update all activity data."""
-        self.hass.async_create_task(
-            async_update_programs_and_zones(self.hass, self._entry)
-        )
+        self.hass.async_create_task(async_update_programs_and_zones(self._entry))
 
     async def async_start_program(self) -> None:
         """Execute the start_program entity service."""

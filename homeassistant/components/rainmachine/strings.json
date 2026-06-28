@@ -82,6 +82,17 @@
       }
     }
   },
+  "exceptions": {
+    "controller_not_ready": {
+      "message": "The RainMachine controller for device ID {device_id} is not ready."
+    },
+    "invalid_device_id": {
+      "message": "Invalid RainMachine device ID: {device_id}."
+    },
+    "no_controller_for_device_id": {
+      "message": "No RainMachine controller found for device ID: {device_id}."
+    }
+  },
   "options": {
     "step": {
       "init": {

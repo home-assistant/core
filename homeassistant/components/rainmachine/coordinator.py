@@ -11,13 +11,26 @@ from homeassistant.helpers.dispatcher import (
 )
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator
 
-from .const import LOGGER
+from .const import DATA_PROGRAMS, DATA_ZONES, LOGGER
 
 SIGNAL_REBOOT_COMPLETED = "rainmachine_reboot_completed_{0}"
 SIGNAL_REBOOT_REQUESTED = "rainmachine_reboot_requested_{0}"
 
 if TYPE_CHECKING:
     from . import RainMachineConfigEntry
+
+
+async def async_update_programs_and_zones(entry: RainMachineConfigEntry) -> None:
+    """Update program and zone DataUpdateCoordinators.
+
+    Program and zone updates always go together because of how linked they are:
+    programs affect zones and certain combinations of zones affect programs.
+    """
+    data = entry.runtime_data
+    # No gather here to allow http keep-alive to reuse
+    # the connection for each coordinator.
+    await data.coordinators[DATA_PROGRAMS].async_refresh()
+    await data.coordinators[DATA_ZONES].async_refresh()
 
 
 class RainMachineDataUpdateCoordinator(DataUpdateCoordinator[dict]):
