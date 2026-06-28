@@ -16,7 +16,6 @@ from homeassistant.helpers.aiohttp_client import async_get_clientsession
 from homeassistant.helpers.service_info.ssdp import (
     ATTR_UPNP_FRIENDLY_NAME,
     ATTR_UPNP_MANUFACTURER,
-    ATTR_UPNP_UDN,
     SsdpServiceInfo,
 )
 
@@ -89,7 +88,6 @@ class LinksysConfigFlow(ConfigFlow, domain=DOMAIN):
 
     VERSION = 1
     _MANUFACTURER = "Linksys"
-    _UDN_PREFIX = "uuid:"
 
     _host: str
 
@@ -109,10 +107,6 @@ class LinksysConfigFlow(ConfigFlow, domain=DOMAIN):
             return self.async_abort(reason="cannot_connect")
 
         self._host = host
-
-        if udn := discovery_info.upnp.get(ATTR_UPNP_UDN):
-            await self.async_set_unique_id(udn.removeprefix(self._UDN_PREFIX))
-            self._abort_if_unique_id_configured({CONF_HOST: host})
 
         if self.hass.config_entries.flow.async_has_matching_flow(self):
             return self.async_abort(reason="already_in_progress")

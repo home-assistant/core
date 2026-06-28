@@ -292,23 +292,6 @@ async def test_ssdp_aborts_not_linksys_device(hass: HomeAssistant) -> None:
     assert result["reason"] == "not_linksys_device"
 
 
-async def test_ssdp_aborts_already_configured(hass: HomeAssistant) -> None:
-    """Test SSDP discovery aborts when the device is already configured."""
-    MockConfigEntry(
-        domain=DOMAIN,
-        unique_id=SSDP_UDN,
-        data={CONF_HOST: SSDP_HOST, CONF_PASSWORD: "old-password"},
-    ).add_to_hass(hass)
-
-    result = await hass.config_entries.flow.async_init(
-        DOMAIN,
-        context={"source": config_entries.SOURCE_SSDP},
-        data=MOCK_SSDP_DISCOVERY,
-    )
-    assert result["type"] is FlowResultType.ABORT
-    assert result["reason"] == "already_configured"
-
-
 async def test_ssdp_aborts_already_configured_via_serial(
     hass: HomeAssistant,
 ) -> None:
