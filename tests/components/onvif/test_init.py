@@ -153,11 +153,39 @@ async def test_stop_device_stops_existing_event_manager(
 ) -> None:
     """Test that unload stops the event manager even when capabilities.events is False."""
     entry, _, mock_device = await setup_onvif_integration(hass)
-    # Mirrors the bug where a partial subscription leaves the event manager
-    # running while capabilities.events stays False.
     assert mock_device.capabilities.events is False
 
     assert await hass.config_entries.async_unload(entry.entry_id)
     await hass.async_block_till_done()
 
     mock_device.events.async_stop.assert_awaited_once()
+
+
+async def test_stop_device_when_setup_fails_before_events_created(
+    hass: HomeAssistant,
+) -> None:
+    """Test cleanup runs when setup fails before the event manager exists."""
+    entry = MockConfigEntry(
+        domain=DOMAIN,
+        title=NAME,
+        unique_id=MAC,
+        data={
+            CONF_NAME: NAME,
+            CONF_HOST: HOST,
+            CONF_PORT: PORT,
+            CONF_USERNAME: USERNAME,
+            CONF_PASSWORD: PASSWORD,
+        },
+    )
+    entry.add_to_hass(hass)
+
+    with patch(
+        "homeassistant.components.onvif.device.ONVIFCamera"
+    ) as mock_onvif_camera_cls:
+        setup_mock_onvif_camera(mock_onvif_camera_cls, update_xaddrs_fail=True)
+
+        assert not await hass.config_entries.async_setup(entry.entry_id)
+        await hass.async_block_till_done()
+
+    assert entry.state is ConfigEntryState.SETUP_RETRY
+    mock_onvif_camera_cls.close.assert_awaited_once()
