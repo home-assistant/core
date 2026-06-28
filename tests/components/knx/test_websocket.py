@@ -37,6 +37,7 @@ async def test_knx_get_base_data_command(
     assert res["result"]["connection_info"]["version"] is not None
     assert res["result"]["connection_info"]["connected"]
     assert res["result"]["connection_info"]["current_address"] == "0.0.0"
+    assert res["result"]["connection_info"]["telegram_backend"] == "sqlite"
     assert res["result"]["project_info"] is None
     assert not SUPPORTED_PLATFORMS_UI.difference(res["result"]["supported_platforms"])
 

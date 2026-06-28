@@ -8,6 +8,7 @@ import os
 from typing import Any, TypedDict
 
 from knx_telegram_store import (
+    BufferedPostgresStore,
     BufferedSqliteStore,
     KnxTelegramStoreException,
     StoredTelegram,
@@ -26,7 +27,11 @@ from homeassistant.helpers.storage import STORAGE_DIR, Store
 from homeassistant.util import dt as dt_util
 
 from .const import (
+    CONF_KNX_TELEGRAM_DB_BACKEND,
+    CONF_KNX_TELEGRAM_DB_POSTGRES_DSN,
     CONF_KNX_TELEGRAM_DB_RETENTION_DAYS,
+    KNX_TELEGRAM_BACKEND_POSTGRES,
+    KNX_TELEGRAM_BACKEND_SQLITE,
     KNX_TELEGRAM_DB_PATH_SQLITE,
     SIGNAL_KNX_DATA_SECURE_ISSUE_TELEGRAM,
     SIGNAL_KNX_TELEGRAM,
@@ -89,19 +94,34 @@ class Telegrams:
         self.project = project
         self.config = config
 
+        self.backend: str = config[CONF_KNX_TELEGRAM_DB_BACKEND]
+        self.dsn: str = str(config.get(CONF_KNX_TELEGRAM_DB_POSTGRES_DSN, ""))
         self.retention_days: int = config[CONF_KNX_TELEGRAM_DB_RETENTION_DAYS]
 
-        self.store: BufferedSqliteStore | None = None
-        self._uninitialized_store: BufferedSqliteStore | None = None
+        self.store: BufferedSqliteStore | BufferedPostgresStore | None = None
+        self._uninitialized_store: (
+            BufferedSqliteStore | BufferedPostgresStore | None
+        ) = None
         self._evict_expired_unsub: CALLBACK_TYPE | None = None
 
-        full_path = hass.config.path(STORAGE_DIR, KNX_TELEGRAM_DB_PATH_SQLITE)
-        os.makedirs(os.path.dirname(full_path), exist_ok=True)
-        self._uninitialized_store = BufferedSqliteStore(
-            full_path,
-            retention_days=self.retention_days,
-            flush_interval=FLUSH_INTERVAL_SECONDS,
-        )
+        if self.backend == KNX_TELEGRAM_BACKEND_POSTGRES:
+            self._uninitialized_store = BufferedPostgresStore(
+                self.dsn,
+                retention_days=self.retention_days,
+                flush_interval=FLUSH_INTERVAL_SECONDS,
+            )
+        elif self.backend == KNX_TELEGRAM_BACKEND_SQLITE:
+            full_path = hass.config.path(STORAGE_DIR, KNX_TELEGRAM_DB_PATH_SQLITE)
+            os.makedirs(os.path.dirname(full_path), exist_ok=True)
+            self._uninitialized_store = BufferedSqliteStore(
+                full_path,
+                retention_days=self.retention_days,
+                flush_interval=FLUSH_INTERVAL_SECONDS,
+            )
+        else:
+            _LOGGER.error(
+                "Invalid KNX telegram storage backend configured: %s", self.backend
+            )
 
         self._xknx_telegram_cb_handle = (
             xknx.telegram_queue.register_telegram_received_cb(
@@ -129,24 +149,35 @@ class Telegrams:
                 )
                 await self._uninitialized_store.initialize()
             else:
-                _LOGGER.debug("Initializing KNX telegram storage")
+                _LOGGER.debug(
+                    "Initializing KNX telegram storage backend '%s'",
+                    self.backend,
+                )
                 async with asyncio.timeout(10):
                     await self._uninitialized_store.initialize()
-            _LOGGER.info("Successfully initialized KNX telegram storage")
+            _LOGGER.info(
+                "Successfully initialized KNX telegram storage backend '%s'",
+                self.backend,
+            )
         except TimeoutError:
-            _LOGGER.error("Timeout initializing KNX telegram storage")
+            _LOGGER.error(
+                "Timeout initializing KNX telegram storage backend '%s'",
+                self.backend,
+            )
             await self._abort_store_init()
             return
         except KnxTelegramStoreException as err:
             _LOGGER.error(
-                "Database error initializing KNX telegram storage: %s",
+                "Database error initializing KNX telegram storage backend '%s': %s",
+                self.backend,
                 err,
             )
             await self._abort_store_init()
             return
         except Exception as err:  # noqa: BLE001
             _LOGGER.error(
-                "Error initializing KNX telegram storage: %s",
+                "Error initializing KNX telegram storage backend '%s': %s",
+                self.backend,
                 err,
             )
             await self._abort_store_init()
