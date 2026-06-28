@@ -50,9 +50,6 @@ async def async_setup_entry(hass: HomeAssistant, entry: SmConfigEntry) -> bool:
 
     info = data_coordinator.data.info
 
-    unique_id = data_coordinator.unique_id
-    assert unique_id is not None
-
     if info.legacy_api < 2:
         entry.async_create_background_task(
             hass, client.sse.client(), "smlight-sse-client"
