@@ -1,0 +1,31 @@
+rules:
+  action-setup:
+    status: exempt
+    comment: This integration does not expose any action.
+  appropriate-polling: done
+  brands:
+    status: done
+    comment: logos and icons have been submitted for a PR on the dedicated repo.
+  common-modules: done
+  config-flow-test-coverage: done
+  config-flow: done
+  dependency-transparency: done
+  docs-actions:
+    status: exempt
+    comment: This integration does not expose custom actions.
+  docs-conditions:
+    status: exempt
+    comment: This integration does not expose custom conditions.
+  docs-high-level-description: done
+  docs-installation-instructions: done
+  docs-removal-instructions: done
+  docs-triggers:
+    status: exempt
+    comment: This integration does not expose custom triggers.
+  entity-event-setup: done
+  entity-unique-id: done
+  has-entity-name: done
+  runtime-data: done
+  test-before-configure: done
+  test-before-setup: done
+  unique-config-entry: done
