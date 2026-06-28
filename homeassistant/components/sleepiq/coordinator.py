@@ -4,6 +4,7 @@ import asyncio
 from dataclasses import dataclass
 from datetime import timedelta
 import logging
+from typing import override
 
 from asyncsleepiq import AsyncSleepIQ, SleepIQAPIException, SleepIQTimeoutException
 
@@ -42,6 +43,7 @@ class SleepIQDataUpdateCoordinator(DataUpdateCoordinator[None]):
         )
         self.client = client
 
+    @override
     async def _async_update_data(self) -> None:
         tasks = [self.client.fetch_bed_statuses()] + [
             bed.foundation.update_foundation_status()
@@ -76,6 +78,7 @@ class SleepIQPauseUpdateCoordinator(DataUpdateCoordinator[None]):
         )
         self.client = client
 
+    @override
     async def _async_update_data(self) -> None:
         try:
             await asyncio.gather(
@@ -108,6 +111,7 @@ class SleepIQSleepDataCoordinator(DataUpdateCoordinator[None]):
         )
         self.client = client
 
+    @override
     async def _async_update_data(self) -> None:
         """Fetch sleep health data from API via asyncsleepiq library."""
         try:

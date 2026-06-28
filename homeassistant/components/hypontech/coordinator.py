@@ -3,6 +3,7 @@
 import asyncio
 from dataclasses import dataclass
 from datetime import timedelta
+from typing import override
 
 from hyponcloud import (
     KNOWN_OEMS,
@@ -65,6 +66,7 @@ class HypontechDataCoordinator(DataUpdateCoordinator[HypontechCoordinatorData]):
         self.account_id = account_id
         self.oem_name = OEM_NAMES[int(config_entry.data.get(CONF_OEM, DEFAULT_OEM))]
 
+    @override
     async def _async_update_data(self) -> HypontechCoordinatorData:
         try:
             overview = await self.api.get_overview()

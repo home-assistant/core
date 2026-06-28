@@ -2,6 +2,7 @@
 
 from dataclasses import dataclass
 from datetime import timedelta
+from typing import override
 
 from pyvlx import PyVLXException
 from pyvlx.opening_device import OpeningDevice, Position
@@ -41,6 +42,7 @@ class VeluxLimitationCoordinator(DataUpdateCoordinator[VeluxLimitationData | Non
         )
         self.node = node
 
+    @override
     async def _async_update_data(self) -> VeluxLimitationData:
         """Fetch limitation min data from the device."""
         try:

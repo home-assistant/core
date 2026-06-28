@@ -2,6 +2,7 @@
 
 from datetime import datetime, timedelta
 import logging
+from typing import override
 
 from ical.event import Event
 from ical.timeline import Timeline, materialize_timeline
@@ -60,6 +61,7 @@ class RemoteCalendarEntity(
         self._timeline: Timeline | None = None
 
     @property
+    @override
     def event(self) -> CalendarEvent | None:
         """Return the next upcoming event."""
         if self._timeline is None:
@@ -70,6 +72,7 @@ class RemoteCalendarEntity(
             return _get_calendar_event(event)
         return None
 
+    @override
     async def async_get_events(
         self, hass: HomeAssistant, start_date: datetime, end_date: datetime
     ) -> list[CalendarEvent]:
@@ -85,6 +88,7 @@ class RemoteCalendarEntity(
 
         return await self.hass.async_add_executor_job(events_in_range)
 
+    @override
     async def async_update(self) -> None:
         """Refresh the timeline.
 

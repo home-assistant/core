@@ -1,5 +1,7 @@
 """Base entity class for Flo entities."""
 
+from typing import override
+
 from homeassistant.helpers.device_registry import CONNECTION_NETWORK_MAC, DeviceInfo
 from homeassistant.helpers.entity import Entity
 
@@ -25,6 +27,7 @@ class FloEntity(Entity):
         self._device: FloDeviceDataUpdateCoordinator = device
 
     @property
+    @override
     def device_info(self) -> DeviceInfo:
         """Return a device description for device registry."""
         return DeviceInfo(
@@ -38,6 +41,7 @@ class FloEntity(Entity):
         )
 
     @property
+    @override
     def available(self) -> bool:
         """Return True if device is available."""
         return self._device.available
@@ -46,6 +50,7 @@ class FloEntity(Entity):
         """Update Flo entity."""
         await self._device.async_request_refresh()
 
+    @override
     async def async_added_to_hass(self) -> None:
         """When entity is added to hass."""
         self.async_on_remove(self._device.async_add_listener(self.async_write_ha_state))

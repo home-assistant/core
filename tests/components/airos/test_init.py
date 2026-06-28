@@ -1,6 +1,6 @@
 """Test for airOS integration setup."""
 
-from unittest.mock import ANY, AsyncMock, MagicMock
+from unittest.mock import ANY, AsyncMock, MagicMock, patch
 
 from airos.exceptions import (
     AirOSConnectionAuthenticationError,
@@ -11,6 +11,7 @@ from airos.exceptions import (
 import pytest
 
 from homeassistant.components.airos.const import (
+    CONF_LEGACY_SSL,
     DEFAULT_SSL,
     DEFAULT_VERIFY_SSL,
     DOMAIN,
@@ -22,6 +23,7 @@ from homeassistant.components.sensor import DOMAIN as SENSOR_DOMAIN
 from homeassistant.config_entries import (
     SOURCE_USER,
     ConfigEntryAuthFailed,
+    ConfigEntryNotReady,
     ConfigEntryState,
 )
 from homeassistant.const import (
@@ -293,3 +295,169 @@ async def test_fetch_airos_data_auth_error(mock_airos_client: MagicMock) -> None
 
     with pytest.raises(ConfigEntryAuthFailed):
         await async_fetch_airos_data(mock_airos_client, mock_airos_client.status)
+
+
+async def test_setup_entry_with_legacy_ssl(
+    hass: HomeAssistant,
+    mock_airos_class: MagicMock,
+    mock_airos_client: MagicMock,
+    mock_async_get_firmware_data: AsyncMock,
+) -> None:
+    """Test setting up a config entry with legacy SSL session ownership."""
+    legacy_entry = MockConfigEntry(
+        domain=DOMAIN,
+        title="NanoStation",
+        unique_id="01:23:45:67:89:AB",
+        data={**MOCK_CONFIG_V1_2, CONF_LEGACY_SSL: True},
+    )
+    legacy_entry.add_to_hass(hass)
+
+    legacy_session = MagicMock()
+    legacy_session.close = AsyncMock()
+
+    with (
+        patch(
+            "homeassistant.components.airos.ClientSession",
+            return_value=legacy_session,
+        ) as mock_client_session,
+        patch(
+            "homeassistant.components.airos.TCPConnector",
+            return_value=MagicMock(),
+        ),
+        patch(
+            "homeassistant.components.airos.build_legacy_context",
+            return_value=MagicMock(),
+        ) as mock_build_legacy_context,
+    ):
+        await hass.config_entries.async_setup(legacy_entry.entry_id)
+        await hass.async_block_till_done()
+
+        assert legacy_entry.state is ConfigEntryState.LOADED
+
+        mock_client_session.assert_called_once()
+        mock_build_legacy_context.assert_called_once_with(verify_ssl=DEFAULT_VERIFY_SSL)
+
+        mock_airos_class.assert_called_once_with(
+            host=MOCK_CONFIG_V1_2[CONF_HOST],
+            username=MOCK_CONFIG_V1_2[CONF_USERNAME],
+            password=MOCK_CONFIG_V1_2[CONF_PASSWORD],
+            session=legacy_session,
+            use_ssl=DEFAULT_SSL,
+        )
+
+        assert await hass.config_entries.async_unload(legacy_entry.entry_id)
+        await hass.async_block_till_done()
+
+    legacy_session.close.assert_awaited_once()
+
+
+@pytest.mark.parametrize(
+    ("exception", "state"),
+    [
+        (AirOSDeviceConnectionError, ConfigEntryState.SETUP_RETRY),
+    ],
+)
+async def test_setup_entry_with_legacy_ssl_fails_firmware_detect(
+    hass: HomeAssistant,
+    mock_airos_class: MagicMock,
+    mock_airos_client: MagicMock,
+    mock_async_get_firmware_data: AsyncMock,
+    exception: Exception,
+    state: ConfigEntryState,
+) -> None:
+    """Test handling legacy SSL connection failure."""
+    legacy_entry = MockConfigEntry(
+        domain=DOMAIN,
+        title="NanoStation",
+        unique_id="01:23:45:67:89:AB",
+        data={**MOCK_CONFIG_V1_2, CONF_LEGACY_SSL: True},
+    )
+    legacy_entry.add_to_hass(hass)
+
+    legacy_session = MagicMock()
+    legacy_session.close = AsyncMock()
+
+    mock_async_get_firmware_data.side_effect = exception
+
+    with (
+        patch(
+            "homeassistant.components.airos.ClientSession",
+            return_value=legacy_session,
+        ) as mock_client_session,
+        patch(
+            "homeassistant.components.airos.TCPConnector",
+            return_value=MagicMock(),
+        ),
+        patch(
+            "homeassistant.components.airos.build_legacy_context",
+            return_value=MagicMock(),
+        ) as mock_build_legacy_context,
+    ):
+        result = await hass.config_entries.async_setup(legacy_entry.entry_id)
+        await hass.async_block_till_done()
+
+    assert result is False
+    assert legacy_entry.state is state
+    mock_client_session.assert_called_once()
+    mock_build_legacy_context.assert_called_once_with(verify_ssl=DEFAULT_VERIFY_SSL)
+    legacy_session.close.assert_awaited_once()
+
+
+@pytest.mark.parametrize(
+    ("exception", "state"),
+    [
+        (ConfigEntryNotReady, ConfigEntryState.SETUP_RETRY),
+        (Exception, ConfigEntryState.SETUP_ERROR),
+    ],
+)
+async def test_setup_entry_with_legacy_ssl_fails_coordinator(
+    hass: HomeAssistant,
+    mock_airos_class: MagicMock,
+    mock_airos_client: MagicMock,
+    mock_async_get_firmware_data: AsyncMock,
+    exception: Exception,
+    state: ConfigEntryState,
+) -> None:
+    """Test legacy session is closed when status coordinator first refresh fails."""
+    legacy_entry = MockConfigEntry(
+        domain=DOMAIN,
+        title="NanoStation",
+        unique_id="01:23:45:67:89:AB",
+        data={**MOCK_CONFIG_V1_2, CONF_LEGACY_SSL: True},
+    )
+    legacy_entry.add_to_hass(hass)
+
+    legacy_session = MagicMock()
+    legacy_session.close = AsyncMock()
+
+    mock_status_coordinator = MagicMock()
+    mock_status_coordinator.async_config_entry_first_refresh = AsyncMock(
+        side_effect=exception
+    )
+
+    with (
+        patch(
+            "homeassistant.components.airos.ClientSession",
+            return_value=legacy_session,
+        ) as mock_client_session,
+        patch(
+            "homeassistant.components.airos.TCPConnector",
+            return_value=MagicMock(),
+        ),
+        patch(
+            "homeassistant.components.airos.build_legacy_context",
+            return_value=MagicMock(),
+        ) as mock_build_legacy_context,
+        patch(
+            "homeassistant.components.airos.AirOSDataUpdateCoordinator",
+            return_value=mock_status_coordinator,
+        ),
+    ):
+        result = await hass.config_entries.async_setup(legacy_entry.entry_id)
+        await hass.async_block_till_done()
+
+    assert result is False
+    assert legacy_entry.state is state
+    mock_client_session.assert_called_once()
+    mock_build_legacy_context.assert_called_once_with(verify_ssl=DEFAULT_VERIFY_SSL)
+    legacy_session.close.assert_awaited_once()

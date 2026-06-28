@@ -3,6 +3,7 @@
 from datetime import timedelta
 import logging
 from math import ceil
+from typing import override
 
 from aiotankerkoenig import (
     PriceInfo,
@@ -118,6 +119,7 @@ class TankerkoenigDataUpdateCoordinator(DataUpdateCoordinator[dict[str, PriceInf
                 "Try using a smaller radius"
             )
 
+    @override
     async def _async_update_data(self) -> dict[str, PriceInfo]:
         """Get the latest data from tankerkoenig.de."""
         station_ids = list(self.stations)

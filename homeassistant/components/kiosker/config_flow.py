@@ -1,7 +1,7 @@
 """Config flow for the Kiosker integration."""
 
 import logging
-from typing import Any
+from typing import Any, override
 
 from kiosker import (
     AuthenticationError,
@@ -97,6 +97,7 @@ class KioskerConfigFlow(ConfigFlow, domain=DOMAIN):
         self._discovered_version: str | None = None
         self._discovered_ssl: bool | None = None
 
+    @override
     async def async_step_user(
         self, user_input: dict[str, Any] | None = None
     ) -> ConfigFlowResult:
@@ -120,6 +121,7 @@ class KioskerConfigFlow(ConfigFlow, domain=DOMAIN):
             step_id="user", data_schema=STEP_USER_DATA_SCHEMA, errors=errors
         )
 
+    @override
     async def async_step_zeroconf(
         self, discovery_info: ZeroconfServiceInfo
     ) -> ConfigFlowResult:

@@ -1,7 +1,7 @@
 """Config flow for Sensoterra integration."""
 
 from datetime import datetime, timedelta
-from typing import Any
+from typing import Any, override
 
 from jwt import DecodeError, decode
 from sensoterra.customerapi import (
@@ -36,6 +36,7 @@ STEP_USER_DATA_SCHEMA = vol.Schema(
 class SensoterraConfigFlow(ConfigFlow, domain=DOMAIN):
     """Handle a config flow for Sensoterra."""
 
+    @override
     async def async_step_user(
         self, user_input: dict[str, Any] | None = None
     ) -> ConfigFlowResult:

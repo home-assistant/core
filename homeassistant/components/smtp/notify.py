@@ -14,7 +14,7 @@ from smtplib import (
 )
 from socket import gaierror
 from ssl import SSLContext
-from typing import TYPE_CHECKING, Any
+from typing import TYPE_CHECKING, Any, override
 
 import voluptuous as vol
 
@@ -184,6 +184,7 @@ class MailNotifyEntity(NotifyEntity):
         )
         self._attr_name = subentry.title
 
+    @override
     def send_message(self, message: str, title: str | None = None) -> None:
         """Send an email message via notify.send_message action."""
 
@@ -264,6 +265,7 @@ class MailNotificationService(SmtpClient, BaseNotificationService):
             ssl_context=ssl_context,
         )
 
+    @override
     def send_message(self, message: str, **kwargs: Any) -> None:
         """Build and send a message to a user.
 

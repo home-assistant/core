@@ -1,6 +1,7 @@
 """DataUpdateCoordinator for Mitsubishi Comfort devices."""
 
 import logging
+from typing import override
 
 from mitsubishi_comfort import IndoorUnit, KumoStation
 
@@ -37,6 +38,7 @@ class MitsubishiComfortCoordinator(DataUpdateCoordinator[IndoorUnit | KumoStatio
         self.mac = mac
         self.data = device
 
+    @override
     async def _async_update_data(self) -> IndoorUnit | KumoStation:
         """Poll the device and return it."""
         try:
