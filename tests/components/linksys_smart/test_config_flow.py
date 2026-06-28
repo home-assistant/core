@@ -373,8 +373,11 @@ def test_is_matching() -> None:
     non_matching_flow = LinksysConfigFlow()
     non_matching_flow._host = "10.0.0.1"
 
+    no_host_flow = LinksysConfigFlow()
+
     assert flow.is_matching(matching_flow)
     assert not flow.is_matching(non_matching_flow)
+    assert not flow.is_matching(no_host_flow)
 
 
 @pytest.mark.parametrize(

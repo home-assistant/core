@@ -95,7 +95,7 @@ class LinksysConfigFlow(ConfigFlow, domain=DOMAIN):
 
     @override
     def is_matching(self, other_flow: Self) -> bool:
-        return self._host == other_flow._host
+        return self._host == getattr(other_flow, "_host", None)
 
     @override
     async def async_step_ssdp(
