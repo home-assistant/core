@@ -152,7 +152,7 @@ async def test_device_tracker_new_entity_disabled_by_default(
 
 
 @pytest.mark.usefixtures("mock_get_cmd")
-async def test_device_tracker_update(hass: HomeAssistant, mock_walk) -> None:
+async def test_device_tracker_update(hass: HomeAssistant, mock_walk: Mock) -> None:
     """Test update of SNMP device tracker."""
     entry = MockConfigEntry(
         domain=DOMAIN,
@@ -450,7 +450,9 @@ async def test_device_tracker_state_cleanup(
 
 
 @pytest.mark.usefixtures("mock_get_cmd")
-async def test_device_tracker_update_empty_data(hass: HomeAssistant, mock_walk) -> None:
+async def test_device_tracker_update_empty_data(
+    hass: HomeAssistant, mock_walk: Mock
+) -> None:
     """Test coordinator update with empty data."""
     entry = MockConfigEntry(
         domain=DOMAIN,
