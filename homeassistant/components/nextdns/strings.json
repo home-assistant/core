@@ -51,7 +51,6 @@
     "profile": {
       "abort": {
         "all_profiles_configured": "[%key:component::nextdns::config::abort::all_profiles_configured%]",
-        "already_configured": "This NextDNS profile is already configured.",
         "entry_not_loaded": "The NextDNS configuration entry is not loaded. Please ensure it is set up correctly before adding a profile."
       },
       "entry_type": "NextDNS profile",
