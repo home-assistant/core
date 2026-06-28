@@ -67,25 +67,6 @@
       "ev_battery_level": {
         "name": "EV battery level"
       },
-      "ev_charge_mode": {
-        "name": "EV charge mode",
-        "state": {
-          "ev_mode": "EV mode"
-        }
-      },
-      "ev_charge_mode_raw": {
-        "name": "EV charge mode (raw)"
-      },
-      "ev_charger_state": {
-        "name": "EV charger state",
-        "state": {
-          "charging": "Charging",
-          "charging_stopped": "Charging stopped"
-        }
-      },
-      "ev_charger_state_raw": {
-        "name": "EV charger state (raw)"
-      },
       "ev_range": {
         "name": "EV range"
       },
@@ -122,6 +103,7 @@
       "vehicle_state": {
         "name": "Vehicle state",
         "state": {
+          "ignition_acc": "Accessory power",
           "ignition_off": "Ignition off",
           "ignition_on": "Ignition on"
         }

@@ -58,8 +58,6 @@ KM_PER_MI = DistanceConverter.convert(1, UnitOfLength.MILES, UnitOfLength.KILOME
 
 # Readable aliases for subarulink field-key constants.
 API_KEY_VEHICLE_STATE_TYPE = sc.VEHICLE_STATE
-API_KEY_EV_CHARGER_STATE_TYPE = sc.EV_CHARGER_STATE_TYPE
-API_KEY_EV_STATE_OF_CHARGE_MODE = sc.EV_STATE_OF_CHARGE_MODE
 API_KEY_RECOMMENDED_TIRE_PRESSURE = sc.HEALTH_RECOMMENDED_TIRE_PRESSURE
 API_KEY_FRONT_TIRES = sc.HEALTH_RECOMMENDED_TIRE_PRESSURE_FRONT
 API_KEY_REAR_TIRES = sc.HEALTH_RECOMMENDED_TIRE_PRESSURE_REAR
@@ -87,18 +85,13 @@ def _recommended_tire_pressure(
     return getter
 
 
-# Snake-case ENUM options for the categorical sensors. Unmapped values fall
-# through to `unknown`; the `*_raw` companion entities surface them verbatim.
+# Snake-case ENUM options for vehicle_state. Authoritative values from
+# @G-Two's Android-app extraction; unmapped values fall through to `unknown`
+# and the `vehicle_state_raw` companion surfaces them verbatim.
 VEHICLE_STATE_OPTIONS = {
     "IGNITION_OFF": "ignition_off",
-    "IGNITION_ON": "ignition_on",
-}
-EV_CHARGER_STATE_OPTIONS = {
-    "CHARGING": "charging",
-    "CHARGING_STOPPED": "charging_stopped",
-}
-EV_CHARGE_MODE_OPTIONS = {
-    "EV_MODE": "ev_mode",
+    "IGN-ACC": "ignition_acc",
+    "IGN-ON": "ignition_on",
 }
 
 
@@ -246,38 +239,6 @@ EV_SENSORS = [
         key=sc.EV_TIME_TO_FULLY_CHARGED_UTC,
         translation_key="ev_time_to_full_charge",
         device_class=SensorDeviceClass.TIMESTAMP,
-    ),
-    SubaruSensorEntityDescription(
-        key=API_KEY_EV_CHARGER_STATE_TYPE,
-        translation_key="ev_charger_state",
-        device_class=SensorDeviceClass.ENUM,
-        options=sorted(EV_CHARGER_STATE_OPTIONS.values()),
-        value_fn=_enum_value_fn(
-            API_KEY_EV_CHARGER_STATE_TYPE, EV_CHARGER_STATE_OPTIONS
-        ),
-    ),
-    SubaruSensorEntityDescription(
-        key="ev_charger_state_raw",
-        translation_key="ev_charger_state_raw",
-        entity_category=EntityCategory.DIAGNOSTIC,
-        entity_registry_enabled_default=False,
-        value_fn=_raw_value_fn(API_KEY_EV_CHARGER_STATE_TYPE),
-    ),
-    SubaruSensorEntityDescription(
-        key=API_KEY_EV_STATE_OF_CHARGE_MODE,
-        translation_key="ev_charge_mode",
-        device_class=SensorDeviceClass.ENUM,
-        options=sorted(EV_CHARGE_MODE_OPTIONS.values()),
-        value_fn=_enum_value_fn(
-            API_KEY_EV_STATE_OF_CHARGE_MODE, EV_CHARGE_MODE_OPTIONS
-        ),
-    ),
-    SubaruSensorEntityDescription(
-        key="ev_charge_mode_raw",
-        translation_key="ev_charge_mode_raw",
-        entity_category=EntityCategory.DIAGNOSTIC,
-        entity_registry_enabled_default=False,
-        value_fn=_raw_value_fn(API_KEY_EV_STATE_OF_CHARGE_MODE),
     ),
 ]
 
