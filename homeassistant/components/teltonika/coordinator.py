@@ -1,5 +1,6 @@
 """DataUpdateCoordinator for Teltonika."""
 
+from collections.abc import Awaitable, Callable
 from datetime import timedelta
 import logging
 from typing import TYPE_CHECKING, override
@@ -29,6 +30,11 @@ AUTH_ERROR_CODES = frozenset(
         TeltonikaErrorCode.INVALID_JWT_TOKEN,
     }
 )
+
+
+def _is_auth_error(err: ClientResponseError) -> bool:
+    """Return whether an HTTP error indicates an authentication failure."""
+    return err.status in (401, 403)
 
 
 class TeltonikaDataUpdateCoordinator(DataUpdateCoordinator[dict[str, ModemStatusFull]]):
@@ -63,9 +69,7 @@ class TeltonikaDataUpdateCoordinator(DataUpdateCoordinator[dict[str, ModemStatus
         except TeltonikaAuthenticationError as err:
             raise ConfigEntryAuthFailed(f"Authentication failed: {err}") from err
         except (ClientResponseError, ContentTypeError) as err:
-            if (isinstance(err, ClientResponseError) and err.status in (401, 403)) or (
-                isinstance(err, ContentTypeError) and err.status == 403
-            ):
+            if _is_auth_error(err):
                 raise ConfigEntryAuthFailed(f"Authentication failed: {err}") from err
             raise ConfigEntryNotReady(f"Failed to connect to device: {err}") from err
         except TeltonikaConnectionError as err:
@@ -93,41 +97,63 @@ class TeltonikaDataUpdateCoordinator(DataUpdateCoordinator[dict[str, ModemStatus
     @override
     async def _async_update_data(self) -> dict[str, ModemStatusFull]:
         """Fetch data from Teltonika device."""
-        modems = Modems(self.client.auth)
+        return await self._async_with_reauth(self._async_fetch_modems)
+
+    async def _async_with_reauth[DataT](
+        self, fetch: Callable[[], Awaitable[DataT]]
+    ) -> DataT:
+        """Run a device call, re-authenticating once if the session was rejected.
+
+        After e.g. a device reboot, the session might become invalidated, but still
+        look valid from the timestamp in the JWT. In this case, we try to authenticate
+        again with the same credentials and retry the request. A reauth flow is only
+        started when re-authentication itself is rejected, i.e. the stored
+        credentials are no longer valid.
+        """
         try:
-            # Get modems data using the teltasync library
-            modems_response = await modems.get_status()
-        except TeltonikaAuthenticationError as err:
-            raise ConfigEntryAuthFailed(f"Authentication failed: {err}") from err
-        except (ClientResponseError, ContentTypeError) as err:
-            if (isinstance(err, ClientResponseError) and err.status in (401, 403)) or (
-                isinstance(err, ContentTypeError) and err.status == 403
-            ):
-                raise ConfigEntryAuthFailed(f"Authentication failed: {err}") from err
-            raise UpdateFailed(f"Error communicating with device: {err}") from err
+            return await fetch()
         except TeltonikaConnectionError as err:
             raise UpdateFailed(f"Error communicating with device: {err}") from err
+        except TeltonikaAuthenticationError:
+            self.client.auth.clear_token()
+
+            try:
+                await self.client.auth.authenticate()
+            except TeltonikaAuthenticationError as err:
+                raise ConfigEntryAuthFailed(f"Authentication failed: {err}") from err
+            except TeltonikaConnectionError as err:
+                raise UpdateFailed(f"Error communicating with device: {err}") from err
+
+            try:
+                return await fetch()
+            except (TeltonikaAuthenticationError, TeltonikaConnectionError) as err:
+                raise UpdateFailed(f"Error communicating with device: {err}") from err
+
+    async def _async_fetch_modems(self) -> dict[str, ModemStatusFull]:
+        """Fetch the online modems keyed by id."""
+        modems = Modems(self.client.auth)
+        try:
+            modems_response = await modems.get_status()
+        except (ClientResponseError, ContentTypeError) as err:
+            if _is_auth_error(err):
+                raise TeltonikaAuthenticationError(str(err)) from err
+            raise TeltonikaConnectionError(str(err)) from err
 
         if not modems_response.success:
             if modems_response.errors and any(
                 error.code in AUTH_ERROR_CODES for error in modems_response.errors
             ):
-                raise ConfigEntryAuthFailed(
-                    "Authentication failed: unauthorized access"
-                )
+                raise TeltonikaAuthenticationError("unauthorized access")
 
             error_message = (
                 modems_response.errors[0].error
                 if modems_response.errors
                 else "Unknown API error"
             )
-            raise UpdateFailed(f"Error communicating with device: {error_message}")
+            raise TeltonikaConnectionError(error_message)
 
-        # Return only modems which are online
-        if not modems_response.data:
-            return {}
         return {
             modem.id: modem
-            for modem in modems_response.data
+            for modem in (modems_response.data or [])
             if isinstance(modem, ModemStatusFull)
         }

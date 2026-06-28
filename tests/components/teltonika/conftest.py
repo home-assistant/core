@@ -40,6 +40,9 @@ def mock_teltasync() -> Generator[MagicMock]:
     ):
         shared_client = mock_teltasync_class.return_value
 
+        shared_client.auth.authenticate = AsyncMock()
+        shared_client.auth.clear_token = MagicMock()
+
         device_info = load_json_object_fixture("device_info.json", DOMAIN)
         shared_client.get_device_info.return_value = UnauthorizedStatusData(
             **device_info
