@@ -51,10 +51,12 @@ class CyncSwitchEntity(CyncBaseEntity, SwitchEntity):
     _attr_device_class = SwitchDeviceClass.OUTLET
     _attr_name = None
 
+    @override
     async def async_turn_on(self, **kwargs: Any) -> None:
         """Turn on the plug."""
         await self._device.turn_on()
 
+    @override
     async def async_turn_off(self, **kwargs: Any) -> None:
         """Turn off the plug."""
         await self._device.turn_off()
