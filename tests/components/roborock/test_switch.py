@@ -274,8 +274,9 @@ async def test_q10_do_not_disturb_switch_success(
         blocking=True,
         target={"entity_id": entity_id},
     )
-    assert hass.states.get(entity_id) is not None
-    assert hass.states.get(entity_id).state == "off"  # type: ignore[union-attr]
+    state = hass.states.get(entity_id)
+    assert state is not None
+    assert state.state == "off"
 
     await hass.services.async_call(
         "switch",
@@ -284,8 +285,9 @@ async def test_q10_do_not_disturb_switch_success(
         blocking=True,
         target={"entity_id": entity_id},
     )
-    assert hass.states.get(entity_id) is not None
-    assert hass.states.get(entity_id).state == "on"  # type: ignore[union-attr]
+    state = hass.states.get(entity_id)
+    assert state is not None
+    assert state.state == "on"
 
     assert fake_q10_vacuum.b01_q10_properties is not None
     assert fake_q10_vacuum.b01_q10_properties.do_not_disturb.enable.call_count == 1

@@ -151,6 +151,7 @@ async def async_setup_entry(
         elif isinstance(coordinator, RoborockB01Q10UpdateCoordinator):
             entities.extend(
                 RoborockSwitchQ10(
+                    f"{description.key}_{coordinator.duid_slug}",
                     coordinator,
                     description,
                     q10_trait,
@@ -286,6 +287,7 @@ class RoborockSwitchQ10(RoborockCoordinatedEntityB01Q10, SwitchEntity):
 
     def __init__(
         self,
+        unique_id: str,
         coordinator: RoborockB01Q10UpdateCoordinator,
         description: RoborockSwitchDescriptionQ10,
         trait: DoNotDisturbTrait,
@@ -293,7 +295,7 @@ class RoborockSwitchQ10(RoborockCoordinatedEntityB01Q10, SwitchEntity):
         """Initialize the entity."""
         self.entity_description = description
         self._trait = trait
-        super().__init__(f"{description.key}_{coordinator.duid_slug}", coordinator)
+        super().__init__(unique_id, coordinator)
 
     @override
     async def async_added_to_hass(self) -> None:
