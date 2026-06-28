@@ -32,10 +32,7 @@ class FlowItData:
 type FlowItConfigEntry = ConfigEntry[FlowItData]
 
 PLATFORMS: list[Platform] = [
-    Platform.BINARY_SENSOR,
     Platform.FAN,
-    Platform.SENSOR,
-    Platform.SWITCH,
 ]
 
 CONFIG_SCHEMA = vol.Schema(
