@@ -98,11 +98,10 @@ async def test_coordinator_set_state_ok_requests_refresh(
 
 
 @pytest.mark.usefixtures("ccm15_device")
-async def test_coordinator_set_state_other_codes_log_and_skip_refresh(
+async def test_coordinator_set_state_other_codes_raise(
     hass: HomeAssistant,
-    caplog: pytest.LogCaptureFixture,
 ) -> None:
-    """Any non-OK / non-WRONG_PASSWORD code logs a warning, no refresh fires."""
+    """Any non-OK / non-WRONG_PASSWORD code surfaces as HomeAssistantError."""
     entry = MockConfigEntry(
         domain=DOMAIN,
         unique_id="1.1.1.1",
@@ -121,12 +120,11 @@ async def test_coordinator_set_state_other_codes_log_and_skip_refresh(
             AsyncMock(return_value=CCM15ReturnCode.CONNECTION_ERROR),
         ),
         patch.object(coordinator, "async_request_refresh", AsyncMock()) as mock_refresh,
-        caplog.at_level("WARNING"),
+        pytest.raises(HomeAssistantError, match="unexpected code"),
     ):
         await coordinator.async_set_state(0, coordinator.data.devices[0])
 
     mock_refresh.assert_not_awaited()
-    assert "CCM15 set_state returned" in caplog.text
 
 
 async def test_non_contiguous_slots(hass: HomeAssistant) -> None:

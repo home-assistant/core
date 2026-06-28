@@ -25,7 +25,7 @@
           "port": "[%key:common::config_flow::data::port%]"
         },
         "data_description": {
-          "password": "Optional. The password configured on the CCM15 controller's settings page (factory default 123456). Only needed if your firmware enforces it on control commands; status polling stays unauthenticated."
+          "password": "The password configured on the CCM15 controller's settings page (factory default 123456). Leave empty if your controller has no password."
         }
       }
     }

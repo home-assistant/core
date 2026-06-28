@@ -28,6 +28,8 @@ type CCM15ConfigEntry = ConfigEntry[CCM15Coordinator]
 class CCM15Coordinator(DataUpdateCoordinator[CCM15DeviceState]):
     """Class to coordinate multiple CCM15Climate devices."""
 
+    config_entry: CCM15ConfigEntry
+
     def __init__(
         self,
         hass: HomeAssistant,
@@ -77,13 +79,12 @@ class CCM15Coordinator(DataUpdateCoordinator[CCM15DeviceState]):
             # HA only auto-starts reauth from _async_update_data /
             # async_setup_entry. Service-call paths have to kick the flow
             # themselves.
-            if self.config_entry is not None:
-                self.config_entry.async_start_reauth(self.hass)
+            self.config_entry.async_start_reauth(self.hass)
             raise HomeAssistantError("CCM15 rejected the configured password")
         if result is CCM15ReturnCode.OK:
             await self.async_request_refresh()
             return
-        _LOGGER.warning("CCM15 set_state returned %s (no refresh scheduled)", result)
+        raise HomeAssistantError(f"CCM15 set_state returned unexpected code: {result}")
 
     def get_ac_data(self, ac_index: int) -> CCM15SlaveDevice | None:
         """Get ac data from the ac_index."""
