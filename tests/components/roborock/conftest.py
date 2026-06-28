@@ -188,19 +188,29 @@ def create_b01_q10_trait() -> Mock:
     q10_trait.refresh = AsyncMock()
     q10_trait.do_not_disturb = AsyncMock()
     q10_trait.do_not_disturb.is_on = True
+    _dnd_listeners: list[Callable[[], None]] = []
+
+    def _dnd_add_update_listener(cb: Callable[[], None]) -> Callable[[], None]:
+        _dnd_listeners.append(cb)
+        return lambda: _dnd_listeners.remove(cb)
+
+    q10_trait.do_not_disturb.add_update_listener = Mock(
+        side_effect=_dnd_add_update_listener
+    )
     q10_trait.do_not_disturb.enable = AsyncMock(
         side_effect=lambda: (
             setattr(q10_trait.do_not_disturb, "is_on", True),
             setattr(q10_trait.status, "not_disturb", True),
+            [cb() for cb in _dnd_listeners],
         )
     )
     q10_trait.do_not_disturb.disable = AsyncMock(
         side_effect=lambda: (
             setattr(q10_trait.do_not_disturb, "is_on", False),
             setattr(q10_trait.status, "not_disturb", False),
+            [cb() for cb in _dnd_listeners],
         )
     )
-    q10_trait.do_not_disturb.add_update_listener = Mock(return_value=Mock())
     return q10_trait
 
 

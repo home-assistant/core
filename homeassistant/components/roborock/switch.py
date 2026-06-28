@@ -3,9 +3,10 @@
 from collections.abc import Callable
 from dataclasses import dataclass
 import logging
-from typing import Any, Protocol, cast, override
+from typing import Any, override
 
 from roborock.devices.traits.b01 import Q10PropertiesApi
+from roborock.devices.traits.b01.q10 import DoNotDisturbTrait
 from roborock.devices.traits.v1 import PropertiesApi
 from roborock.devices.traits.v1.common import RoborockSwitchBase
 from roborock.exceptions import RoborockException
@@ -89,30 +90,7 @@ class RoborockSwitchDescriptionA01(SwitchEntityDescription):
 class RoborockSwitchDescriptionQ10(SwitchEntityDescription):
     """Class to describe a Roborock Q10 switch entity."""
 
-    trait: Callable[[Q10PropertiesApi], Q10SwitchTrait | None]
-
-
-class Q10SwitchTrait(Protocol):
-    """Protocol for Q10 switch traits supporting push updates."""
-
-    @property
-    def is_on(self) -> bool | None:
-        """Return the current switch state."""
-
-    async def enable(self) -> None:
-        """Enable the switch trait."""
-
-    async def disable(self) -> None:
-        """Disable the switch trait."""
-
-    def add_update_listener(self, listener: Callable[[], None]) -> Callable[[], None]:
-        """Register a callback invoked when trait state changes."""
-
-
-class Q10DoNotDisturbApi(Protocol):
-    """Subset of Q10 properties used by switch entities."""
-
-    do_not_disturb: Q10SwitchTrait
+    trait: Callable[[Q10PropertiesApi], DoNotDisturbTrait | None]
 
 
 A01_SWITCH_DESCRIPTIONS: list[RoborockSwitchDescriptionA01] = [
@@ -130,7 +108,7 @@ Q10_SWITCH_DESCRIPTIONS: list[RoborockSwitchDescriptionQ10] = [
         key="do_not_disturb",
         translation_key="dnd_switch",
         entity_category=EntityCategory.CONFIG,
-        trait=lambda traits: cast(Q10DoNotDisturbApi, traits).do_not_disturb,
+        trait=lambda traits: traits.do_not_disturb,
     )
 ]
 
@@ -310,7 +288,7 @@ class RoborockSwitchQ10(RoborockCoordinatedEntityB01Q10, SwitchEntity):
         self,
         coordinator: RoborockB01Q10UpdateCoordinator,
         description: RoborockSwitchDescriptionQ10,
-        trait: Q10SwitchTrait,
+        trait: DoNotDisturbTrait,
     ) -> None:
         """Initialize the entity."""
         self.entity_description = description
