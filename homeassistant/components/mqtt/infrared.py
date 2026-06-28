@@ -154,8 +154,8 @@ class MqttInfraredEmitterEntity(MqttEntity, InfraredEmitterEntity):
         [PublishPayloadType, dict[str, Any]], PublishPayloadType
     ]
 
-    @override
     @staticmethod
+    @override
     def config_schema() -> VolSchemaType:
         """Return the config schema."""
         return DISCOVERY_SCHEMA
@@ -168,8 +168,8 @@ class MqttInfraredEmitterEntity(MqttEntity, InfraredEmitterEntity):
             entity=self,
         ).async_render
 
-    @override
     @callback
+    @override
     def _prepare_subscribe_topics(self) -> None:
         """(Re)Subscribe to topics."""
 
@@ -201,8 +201,8 @@ class MqttInfraredReceiverEntity(MqttEntity, InfraredReceiverEntity):
 
     _value_template: Callable[[ReceivePayloadType], ReceivePayloadType]
 
-    @override
     @staticmethod
+    @override
     def config_schema() -> VolSchemaType:
         """Return the config schema."""
         return DISCOVERY_SCHEMA
@@ -245,8 +245,8 @@ class MqttInfraredReceiverEntity(MqttEntity, InfraredReceiverEntity):
         else:
             self._handle_received_signal(InfraredReceivedSignal(**signal_message))
 
-    @override
     @callback
+    @override
     def _prepare_subscribe_topics(self) -> None:
         """(Re)Subscribe to topics."""
         self.add_subscription(
