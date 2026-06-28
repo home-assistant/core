@@ -48,15 +48,5 @@
         "title": "Discovered Flow-it"
       }
     }
-  },
-  "entity": {
-    "switch": {
-      "flow_in": {
-        "name": "Inflow"
-      },
-      "flow_out": {
-        "name": "Outflow"
-      }
-    }
   }
 }
