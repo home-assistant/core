@@ -3132,7 +3132,7 @@ tellcore-py==1.1.3
 tellduslive==0.10.12
 
 # homeassistant.components.teltonika
-teltasync==0.3.1
+teltasync==0.4.0
 
 # homeassistant.components.lg_soundbar
 temescal==0.5
