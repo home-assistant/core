@@ -154,6 +154,7 @@ async def test_stop_device_stops_existing_event_manager(
     """Test that unload stops the event manager even when capabilities.events is False."""
     entry, _, mock_device = await setup_onvif_integration(hass)
     assert mock_device.capabilities.events is False
+    mock_device.events.async_stop.assert_not_awaited()
 
     assert await hass.config_entries.async_unload(entry.entry_id)
     await hass.async_block_till_done()
