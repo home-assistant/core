@@ -2,6 +2,7 @@
 
 from typing import Any, override
 
+from flow_it_api.client import FlowItVMCMachine
 from flow_it_api.const import Speed
 
 from homeassistant.components.fan import FanEntity, FanEntityFeature
@@ -13,6 +14,7 @@ from homeassistant.util.percentage import (
 )
 
 from . import FlowItConfigEntry
+from .coordinator import FlowItCoordinator
 from .entity import FlowItVmcEntity
 
 ORDERED_NAMED_FAN_SPEEDS = [
@@ -45,6 +47,10 @@ class FlowItVmcFan(FlowItVmcEntity, FanEntity):
         | FanEntityFeature.TURN_ON
         | FanEntityFeature.TURN_OFF
     )
+
+    def __init__(self, coordinator: FlowItCoordinator, vmc: FlowItVMCMachine) -> None:
+        """Initialize the fan."""
+        super().__init__(coordinator, vmc, f"{coordinator.data.name}")
 
     @override
     @property
