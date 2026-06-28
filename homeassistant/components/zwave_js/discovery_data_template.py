@@ -102,13 +102,11 @@ from zwave_js_server.util.command_class.multilevel_sensor import (
 )
 
 from homeassistant.const import (
-    CONCENTRATION_MICROGRAMS_PER_CUBIC_METER,
-    CONCENTRATION_PARTS_PER_MILLION,
     DEGREE,
     LIGHT_LUX,
-    PERCENTAGE,
     SIGNAL_STRENGTH_DECIBELS_MILLIWATT,
     UV_INDEX,
+    UnitOfDensity,
     UnitOfElectricCurrent,
     UnitOfElectricPotential,
     UnitOfEnergy,
@@ -118,6 +116,7 @@ from homeassistant.const import (
     UnitOfMass,
     UnitOfPower,
     UnitOfPressure,
+    UnitOfRatio,
     UnitOfSoundPressure,
     UnitOfSpeed,
     UnitOfTemperature,
@@ -217,7 +216,7 @@ MULTILEVEL_SENSOR_UNIT_MAP: dict[str, list[MultilevelSensorScaleType]] = {
     UnitOfSoundPressure.DECIBEL: UNIT_DECIBEL,
     UnitOfSoundPressure.WEIGHTED_DECIBEL_A: UNIT_A_WEIGHTED_DECIBELS,
     DEGREE: UNIT_DEGREES,
-    CONCENTRATION_MICROGRAMS_PER_CUBIC_METER: [
+    UnitOfDensity.MICROGRAMS_PER_CUBIC_METER: [
         *UNIT_DENSITY,
         *UNIT_MICROGRAM_PER_CUBIC_METER,
     ],
@@ -238,8 +237,8 @@ MULTILEVEL_SENSOR_UNIT_MAP: dict[str, list[MultilevelSensorScaleType]] = {
     UnitOfElectricPotential.MILLIVOLT: UNIT_MILLIVOLT,
     UnitOfSpeed.MILES_PER_HOUR: UNIT_MPH,
     UnitOfSpeed.METERS_PER_SECOND: UNIT_M_S,
-    CONCENTRATION_PARTS_PER_MILLION: UNIT_PARTS_MILLION,
-    PERCENTAGE: [*UNIT_PERCENTAGE_VALUE, *UNIT_RSSI],
+    UnitOfRatio.PARTS_PER_MILLION: UNIT_PARTS_MILLION,
+    UnitOfRatio.PERCENTAGE: [*UNIT_PERCENTAGE_VALUE, *UNIT_RSSI],
     UnitOfMass.POUNDS: UNIT_POUNDS,
     UnitOfPressure.PSI: UNIT_POUND_PER_SQUARE_INCH,
     SIGNAL_STRENGTH_DECIBELS_MILLIWATT: UNIT_POWER_LEVEL,
@@ -345,7 +344,7 @@ class NumericSensorDataTemplate(BaseDiscoverySchemaDataTemplate):
             and value.property_ == "maximumCapacity"
         ):
             return NumericSensorDataTemplateData(
-                ENTITY_DESC_KEY_BATTERY_MAXIMUM_CAPACITY, PERCENTAGE
+                ENTITY_DESC_KEY_BATTERY_MAXIMUM_CAPACITY, UnitOfRatio.PERCENTAGE
             )
         if (
             value.command_class == CommandClass.BATTERY

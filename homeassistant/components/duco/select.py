@@ -27,6 +27,19 @@ _LOGGER = logging.getLogger(__name__)
 
 PARALLEL_UPDATES = 1
 
+SUPPORTED_SELECT_NODE_TYPES = {
+    NodeType.BOX,
+    NodeType.VLV,
+    NodeType.VLVRH,
+    NodeType.VLVVOC,
+    NodeType.VLVCO2,
+    NodeType.VLVCO2RH,
+    NodeType.EAV,
+    NodeType.EAVRH,
+    NodeType.EAVVOC,
+    NodeType.EAVCO2,
+}
+
 
 def _get_ventilation_options(action: ActionItem) -> tuple[str, ...] | None:
     """Return ventilation options advertised by a node action."""
@@ -71,7 +84,9 @@ async def async_setup_entry(
             if node.node_id in known_nodes:
                 continue
 
-            if node.general.node_type is not NodeType.BOX:
+            # Duco advertises SetVentilationState broadly, so keep the select
+            # limited to the box and known valve node families.
+            if node.general.node_type not in SUPPORTED_SELECT_NODE_TYPES:
                 continue
 
             options = options_by_node.get(node.node_id)
