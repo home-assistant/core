@@ -6,7 +6,7 @@
   "documentation": "https://www.home-assistant.io/integrations/mawaqit",
   "integration_type": "hub",
   "iot_class": "cloud_polling",
-  "quality_scale": "silver",
+  "quality_scale": "gold",
   "requirements": ["mawaqit==1.0.12"],
   "single_config_entry": true
 }
