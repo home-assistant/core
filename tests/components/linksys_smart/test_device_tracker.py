@@ -2,13 +2,10 @@
 
 from unittest.mock import AsyncMock, patch
 
-from jnap import JNAPClient, JNAPDevice
+from jnap import GetDevicesResponse, JNAPClient, JNAPDevice
 import pytest
 
 from homeassistant.components.linksys_smart.const import DOMAIN
-from homeassistant.components.linksys_smart.coordinator import (
-    LinksysDataUpdateCoordinator,
-)
 from homeassistant.const import CONF_HOST, CONF_PASSWORD
 from homeassistant.core import DOMAIN as HOMEASSISTANT_DOMAIN, HomeAssistant
 from homeassistant.helpers import entity_registry as er, issue_registry as ir
@@ -30,39 +27,23 @@ PHONE = JNAPDevice(
 )
 
 
-def _make_coordinator(
-    hass: HomeAssistant,
-    devices: dict[str, JNAPDevice],
-    entry: MockConfigEntry | None = None,
-) -> LinksysDataUpdateCoordinator:
-    if entry is None:
-        entry = MockConfigEntry(domain=DOMAIN)
-    coordinator = LinksysDataUpdateCoordinator(hass, entry, AsyncMock(spec=JNAPClient))
-    coordinator.data = devices
-    return coordinator
-
-
 async def _setup_entry(
     hass: HomeAssistant,
     entry: MockConfigEntry,
-    coordinator: LinksysDataUpdateCoordinator,
-) -> None:
-    coordinator.async_config_entry_first_refresh = AsyncMock()
-
-    with (
-        patch(
-            "homeassistant.components.linksys_smart.async_get_clientsession",
-            return_value=object(),
-        ),
-        patch("homeassistant.components.linksys_smart.JNAPClient"),
-        patch(
-            "homeassistant.components.linksys_smart.LinksysDataUpdateCoordinator",
-            return_value=coordinator,
-        ),
+    initial_devices: list[JNAPDevice] | None = None,
+) -> AsyncMock:
+    """Set up a config entry with a mocked JNAPClient, return the mock client."""
+    mock_client = AsyncMock(spec=JNAPClient)
+    mock_client.get_devices.return_value = GetDevicesResponse(
+        devices=initial_devices or []
+    )
+    entry.add_to_hass(hass)
+    with patch(
+        "homeassistant.components.linksys_smart.JNAPClient", return_value=mock_client
     ):
         assert await hass.config_entries.async_setup(entry.entry_id)
-
     await hass.async_block_till_done()
+    return mock_client
 
 
 @pytest.mark.usefixtures("entity_registry_enabled_by_default")
@@ -74,12 +55,7 @@ async def test_entity_state_when_connected(
     entry = MockConfigEntry(
         domain=DOMAIN, data={CONF_HOST: "192.168.1.1", CONF_PASSWORD: "pass"}
     )
-    coordinator = _make_coordinator(hass, {"aa:bb:cc:dd:ee:ff": LAPTOP}, entry)
-    entry.runtime_data = coordinator
-    entry.add_to_hass(hass)
-    await _setup_entry(hass, entry, coordinator)
-    coordinator.async_update_listeners()
-    await hass.async_block_till_done()
+    await _setup_entry(hass, entry, [LAPTOP])
 
     entity_id = entity_registry.async_get_entity_id(
         "device_tracker", DOMAIN, "aa:bb:cc:dd:ee:ff"
@@ -107,15 +83,10 @@ async def test_entity_state_when_disconnected(
     entry = MockConfigEntry(
         domain=DOMAIN, data={CONF_HOST: "192.168.1.1", CONF_PASSWORD: "pass"}
     )
-    coordinator = _make_coordinator(hass, {"aa:bb:cc:dd:ee:ff": LAPTOP}, entry)
-    entry.runtime_data = coordinator
-    entry.add_to_hass(hass)
-    await _setup_entry(hass, entry, coordinator)
-    coordinator.async_update_listeners()
-    await hass.async_block_till_done()
+    mock_client = await _setup_entry(hass, entry, [LAPTOP])
 
-    coordinator.data = {}
-    coordinator.async_update_listeners()
+    mock_client.get_devices.return_value = GetDevicesResponse(devices=[])
+    await entry.runtime_data.async_refresh()
     await hass.async_block_till_done()
 
     entity_id = entity_registry.async_get_entity_id(
@@ -136,15 +107,7 @@ async def test_setup_entry_creates_entity_per_device(
     entry = MockConfigEntry(
         domain=DOMAIN, data={CONF_HOST: "192.168.1.1", CONF_PASSWORD: "pass"}
     )
-    coordinator = _make_coordinator(
-        hass,
-        {"aa:bb:cc:dd:ee:ff": LAPTOP, "11:22:33:44:55:66": PHONE},
-        entry,
-    )
-    entry.runtime_data = coordinator
-    entry.add_to_hass(hass)
-
-    await _setup_entry(hass, entry, coordinator)
+    await _setup_entry(hass, entry, [LAPTOP, PHONE])
 
     entries = er.async_entries_for_config_entry(entity_registry, entry.entry_id)
     assert len(entries) == 2
@@ -161,16 +124,12 @@ async def test_setup_entry_does_not_duplicate_on_coordinator_update(
     entry = MockConfigEntry(
         domain=DOMAIN, data={CONF_HOST: "192.168.1.1", CONF_PASSWORD: "pass"}
     )
-    coordinator = _make_coordinator(hass, {"aa:bb:cc:dd:ee:ff": LAPTOP}, entry)
-    entry.runtime_data = coordinator
-    entry.add_to_hass(hass)
-
-    await _setup_entry(hass, entry, coordinator)
+    await _setup_entry(hass, entry, [LAPTOP])
 
     entries = er.async_entries_for_config_entry(entity_registry, entry.entry_id)
     assert len(entries) == 1
 
-    coordinator.async_update_listeners()
+    await entry.runtime_data.async_refresh()
     await hass.async_block_till_done()
 
     entries = er.async_entries_for_config_entry(entity_registry, entry.entry_id)
@@ -184,17 +143,13 @@ async def test_new_device_added_on_coordinator_update(
     entry = MockConfigEntry(
         domain=DOMAIN, data={CONF_HOST: "192.168.1.1", CONF_PASSWORD: "pass"}
     )
-    coordinator = _make_coordinator(hass, {"aa:bb:cc:dd:ee:ff": LAPTOP}, entry)
-    entry.runtime_data = coordinator
-    entry.add_to_hass(hass)
-
-    await _setup_entry(hass, entry, coordinator)
+    mock_client = await _setup_entry(hass, entry, [LAPTOP])
 
     entries = er.async_entries_for_config_entry(entity_registry, entry.entry_id)
     assert len(entries) == 1
 
-    coordinator.data = {"aa:bb:cc:dd:ee:ff": LAPTOP, "11:22:33:44:55:66": PHONE}
-    coordinator.async_update_listeners()
+    mock_client.get_devices.return_value = GetDevicesResponse(devices=[LAPTOP, PHONE])
+    await entry.runtime_data.async_refresh()
     await hass.async_block_till_done()
 
     entries = er.async_entries_for_config_entry(entity_registry, entry.entry_id)
