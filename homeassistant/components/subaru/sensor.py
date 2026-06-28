@@ -81,11 +81,14 @@ def _recommended_tire_pressure(axle: str) -> Callable[[dict[str, Any]], StateTyp
     return getter
 
 
-# Snake-case ENUM options for vehicle_state. Authoritative values come from the
-# Android-app source (issue/PR link TBD); unmapped values fall through to
-# `unknown` and the `vehicle_state_raw` companion surfaces them verbatim.
+# Snake-case ENUM options for vehicle_state. subarulink only documents
+# IGNITION_OFF / IGNITION_ON, but the live API also returns the dashed
+# variants IGN-ACC and IGN-ON; values were confirmed by the integration
+# codeowner against the Subaru Android app source (see PR #174054
+# discussion_r3488193753). Unmapped values fall through to `unknown` and
+# the `vehicle_state_raw` companion surfaces them verbatim.
 VEHICLE_STATE_OPTIONS = {
-    "IGNITION_OFF": "ignition_off",
+    sc.IGNITION_OFF: "ignition_off",
     "IGN-ACC": "ignition_acc",
     "IGN-ON": "ignition_on",
 }
