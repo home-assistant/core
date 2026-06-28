@@ -40,8 +40,6 @@ async def async_setup_entry(
 class WhirlpoolOvenTargetTemperature(WhirlpoolOvenEntity, NumberEntity):
     """Settable target temperature for an oven cavity."""
 
-    _appliance: Oven
-
     _attr_device_class = NumberDeviceClass.TEMPERATURE
     _attr_native_unit_of_measurement = UnitOfTemperature.CELSIUS
     _attr_native_min_value = OVEN_MIN_TEMP
