@@ -1,25 +1,19 @@
 """The Flow-it integration."""
 
 from dataclasses import dataclass
-from datetime import timedelta
 import logging
 
 from flow_it_api.client import FlowItVMCMachine
-from flow_it_api.exceptions import (
-    FlowItAuthError,
-    FlowItConnectionError,
-    FlowItResponseError,
-)
-from flow_it_api.models import MachineData, MachineStatusResponse
+from flow_it_api.exceptions import FlowItConnectionError, FlowItResponseError
+from flow_it_api.models import MachineData
 
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_HOST, CONF_PASSWORD, CONF_USERNAME, Platform
 from homeassistant.core import HomeAssistant
-from homeassistant.exceptions import ConfigEntryAuthFailed, ConfigEntryNotReady
+from homeassistant.exceptions import ConfigEntryNotReady
 from homeassistant.helpers.httpx_client import get_async_client
-from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
 
-from .const import DOMAIN
+from .coordinator import FlowItCoordinator
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -29,7 +23,7 @@ class FlowItData:
     """Data for the Flow-it integration."""
 
     vmc: FlowItVMCMachine
-    coordinator: DataUpdateCoordinator[MachineStatusResponse]
+    coordinator: FlowItCoordinator
 
 
 type FlowItConfigEntry = ConfigEntry[FlowItData]
@@ -54,25 +48,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: FlowItConfigEntry) -> bo
     except (FlowItConnectionError, FlowItResponseError) as err:
         raise ConfigEntryNotReady(f"Error connecting to VMC: {err}") from err
 
-    async def async_update_data() -> MachineStatusResponse:
-        """Fetch data from API endpoint."""
-        try:
-            await vmc.refresh_state()
-        except FlowItAuthError as err:
-            raise ConfigEntryAuthFailed(f"Authentication failed: {err}") from err
-        except (FlowItConnectionError, FlowItResponseError) as err:
-            raise UpdateFailed(f"Error communicating with API: {err}") from err
-        else:
-            return vmc.state
-
-    coordinator = DataUpdateCoordinator(
-        hass,
-        _LOGGER,
-        name=DOMAIN,
-        update_method=async_update_data,
-        update_interval=timedelta(seconds=30),
-        config_entry=entry,
-    )
+    coordinator = FlowItCoordinator(hass, entry, vmc)
 
     # Initial fetch
     await coordinator.async_config_entry_first_refresh()

@@ -1,25 +1,22 @@
 """Base entity for Flow-it."""
 
 from flow_it_api.client import FlowItVMCMachine
-from flow_it_api.models import MachineStatusResponse
 
 from homeassistant.helpers.device_registry import DeviceInfo
-from homeassistant.helpers.update_coordinator import (
-    CoordinatorEntity,
-    DataUpdateCoordinator,
-)
+from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
 from .const import DOMAIN
+from .coordinator import FlowItCoordinator
 
 
-class FlowItVmcEntity(CoordinatorEntity[DataUpdateCoordinator[MachineStatusResponse]]):
+class FlowItVmcEntity(CoordinatorEntity[FlowItCoordinator]):
     """Base entity for Flow-it."""
 
     _attr_has_entity_name = True
 
     def __init__(
         self,
-        coordinator: DataUpdateCoordinator[MachineStatusResponse],
+        coordinator: FlowItCoordinator,
         vmc: FlowItVMCMachine,
     ) -> None:
         """Initialize the entity."""
