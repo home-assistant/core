@@ -1,5 +1,6 @@
 """The Whirlpool Appliances integration."""
 
+from datetime import datetime, timedelta
 import logging
 
 from aiohttp import ClientError
@@ -12,6 +13,7 @@ from homeassistant.const import CONF_PASSWORD, CONF_REGION, CONF_USERNAME, Platf
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ConfigEntryAuthFailed, ConfigEntryNotReady
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
+from homeassistant.helpers.event import async_track_time_interval
 
 from .const import BRANDS_CONF_MAP, CONF_BRAND, DOMAIN, REGIONS_CONF_MAP
 
@@ -24,6 +26,13 @@ PLATFORMS = [
     Platform.SELECT,
     Platform.SENSOR,
 ]
+
+# State normally arrives over a push connection, but that connection can drop
+# silently and stop delivering updates, leaving entities stale while commands
+# still work. Periodically re-fetch state as a fallback so entities recover on
+# their own; this also re-evaluates each appliance's availability through
+# Appliance.get_online().
+STATE_REFRESH_INTERVAL = timedelta(minutes=5)
 
 type WhirlpoolConfigEntry = ConfigEntry[AppliancesManager]
 
@@ -63,6 +72,17 @@ async def async_setup_entry(hass: HomeAssistant, entry: WhirlpoolConfigEntry) ->
     await appliances_manager.connect()
 
     entry.runtime_data = appliances_manager
+
+    async def _async_refresh_data(_now: datetime) -> None:
+        """Re-fetch appliance state as a fallback for missed push updates."""
+        try:
+            await appliances_manager.fetch_all_data()
+        except (ClientError, TimeoutError) as err:
+            _LOGGER.debug("Periodic data refresh failed: %s", err)
+
+    entry.async_on_unload(
+        async_track_time_interval(hass, _async_refresh_data, STATE_REFRESH_INTERVAL)
+    )
 
     await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
     return True
