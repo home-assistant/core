@@ -1,0 +1,205 @@
+"""Config flow for Flow-it integration."""
+
+import logging
+from typing import Any, override
+
+from flow_it_api.client import FlowItVMCMachine
+from flow_it_api.exceptions import FlowItAuthError, FlowItConnectionError
+import voluptuous as vol
+
+from homeassistant import config_entries
+from homeassistant.config_entries import ConfigFlowResult
+from homeassistant.const import CONF_HOST, CONF_PASSWORD, CONF_USERNAME
+from homeassistant.helpers.httpx_client import get_async_client
+from homeassistant.helpers.service_info.zeroconf import ZeroconfServiceInfo
+
+from .const import DEFAULT_USERNAME, DOMAIN
+
+_LOGGER = logging.getLogger(__name__)
+
+
+class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
+    """Handle a config flow for Flow-it."""
+
+    VERSION = 1
+
+    def __init__(self) -> None:
+        """Initialize the config flow."""
+        self._discovery_info: dict[str, Any] = {}
+
+    @override
+    async def async_step_user(
+        self, user_input: dict[str, Any] | None = None
+    ) -> ConfigFlowResult:
+        """Handle the initial step."""
+        errors: dict[str, str] = {}
+        if user_input is not None:
+            host = user_input[CONF_HOST]
+            username = user_input[CONF_USERNAME]
+            password = user_input[CONF_PASSWORD]
+
+            # Ensure host has protocol
+            if not host.startswith(("http://", "https://")):
+                host = f"http://{host}"
+                user_input[CONF_HOST] = host
+
+            try:
+                session = get_async_client(self.hass)
+                async with FlowItVMCMachine(
+                    host, password, username, session=session
+                ) as vmc:
+                    info = await vmc.get_info()
+                    # Use a stable unique id from machine status (MAC Address)
+                    # This also validates the credentials
+                    await vmc.refresh_state()
+                    unique_id = vmc._state.name if vmc._state else None  # noqa: SLF001
+            except FlowItAuthError:
+                errors["base"] = "invalid_auth"
+            except FlowItConnectionError:
+                errors["base"] = "cannot_connect"
+            except Exception:  # pylint: disable=broad-except
+                _LOGGER.exception("Unexpected exception")
+                errors["base"] = "unknown"
+            else:
+                if unique_id:
+                    await self.async_set_unique_id(unique_id)
+                    self._abort_if_unique_id_configured(updates=user_input)
+                return self.async_create_entry(title=info.hostname, data=user_input)
+
+        # Pre-fill data from discovery if available
+        data_schema = vol.Schema(
+            {
+                vol.Required(
+                    CONF_HOST, default=self._discovery_info.get(CONF_HOST, "")
+                ): str,
+                vol.Required(CONF_USERNAME, default=DEFAULT_USERNAME): str,
+                vol.Required(CONF_PASSWORD): str,
+            }
+        )
+
+        return self.async_show_form(
+            step_id="user", data_schema=data_schema, errors=errors
+        )
+
+    async def async_step_import(self, import_data: dict[str, Any]) -> ConfigFlowResult:
+        """Handle import from YAML."""
+        host = import_data[CONF_HOST]
+        username = import_data[CONF_USERNAME]
+        password = import_data[CONF_PASSWORD]
+
+        # Ensure host has protocol
+        if not host.startswith(("http://", "https://")):
+            host = f"http://{host}"
+            import_data[CONF_HOST] = host
+
+        try:
+            session = get_async_client(self.hass)
+            async with FlowItVMCMachine(
+                host, password, username, session=session
+            ) as vmc:
+                info = await vmc.get_info()
+                await vmc.refresh_state()
+                unique_id = vmc._state.name if vmc._state else None  # noqa: SLF001
+        except FlowItAuthError:
+            return self.async_abort(reason="invalid_auth")
+        except FlowItConnectionError:
+            return self.async_abort(reason="cannot_connect")
+        except Exception:  # pylint: disable=broad-except
+            _LOGGER.exception("Unexpected exception during import")
+            return self.async_abort(reason="unknown")
+        else:
+            if unique_id:
+                await self.async_set_unique_id(unique_id)
+                self._abort_if_unique_id_configured(updates=import_data)
+            return self.async_create_entry(title=info.hostname, data=import_data)
+
+    async def async_step_zeroconf_confirm(
+        self, user_input: dict[str, Any] | None = None
+    ) -> ConfigFlowResult:
+        """Handle a flow initiated by zeroconf."""
+        errors: dict[str, str] = {}
+        if user_input is not None:
+            host = self._discovery_info[CONF_HOST]
+            username = user_input[CONF_USERNAME]
+            password = user_input[CONF_PASSWORD]
+
+            # Ensure host has protocol
+            if not host.startswith(("http://", "https://")):
+                host = f"http://{host}"
+
+            try:
+                session = get_async_client(self.hass)
+                async with FlowItVMCMachine(
+                    host, password, username, session=session
+                ) as vmc:
+                    info = await vmc.get_info()
+                    await vmc.refresh_state()
+                    unique_id = vmc._state.name if vmc._state else None  # noqa: SLF001
+            except FlowItAuthError:
+                errors["base"] = "invalid_auth"
+            except FlowItConnectionError:
+                errors["base"] = "cannot_connect"
+            except Exception:  # pylint: disable=broad-except
+                _LOGGER.exception("Unexpected exception")
+                errors["base"] = "unknown"
+            else:
+                if unique_id:
+                    await self.async_set_unique_id(unique_id)
+                    self._abort_if_unique_id_configured(
+                        updates={
+                            CONF_HOST: host,
+                            CONF_USERNAME: username,
+                            CONF_PASSWORD: password,
+                        }
+                    )
+                return self.async_create_entry(
+                    title=info.hostname,
+                    data={
+                        CONF_HOST: host,
+                        CONF_USERNAME: username,
+                        CONF_PASSWORD: password,
+                    },
+                )
+
+        data_schema = vol.Schema(
+            {
+                vol.Required(CONF_USERNAME, default=DEFAULT_USERNAME): str,
+                vol.Required(CONF_PASSWORD): str,
+            }
+        )
+
+        return self.async_show_form(
+            step_id="zeroconf_confirm",
+            data_schema=data_schema,
+            errors=errors,
+            description_placeholders={
+                "name": self._discovery_info.get(
+                    "friendly_name",
+                    self._discovery_info[CONF_HOST].removesuffix(".local"),
+                )
+            },
+        )
+
+    @override
+    async def async_step_zeroconf(
+        self, discovery_info: ZeroconfServiceInfo
+    ) -> ConfigFlowResult:
+        """Handle zeroconf discovery."""
+        host = discovery_info.host
+        hostname = discovery_info.hostname.rstrip(".").removesuffix(".local")
+        friendly_name = discovery_info.name.removesuffix("._tbk_vmc._tcp.local.")
+
+        self._discovery_info = {
+            CONF_HOST: hostname,
+            "friendly_name": friendly_name,
+        }
+
+        # Check if already configured
+        for entry in self._async_current_entries():
+            current_host = entry.data.get(CONF_HOST)
+            if current_host in (host, hostname, f"http://{host}", f"http://{hostname}"):
+                return self.async_abort(reason="already_configured")
+
+        self.context.update({"title_placeholders": {"name": friendly_name}})
+
+        return await self.async_step_zeroconf_confirm()
