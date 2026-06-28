@@ -52,7 +52,7 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
                     # Use a stable unique id from machine status (MAC Address)
                     # This also validates the credentials
                     await vmc.refresh_state()
-                    unique_id = vmc._state.name if vmc._state else None  # noqa: SLF001
+                    unique_id = vmc.state.name if vmc.state else None
             except FlowItAuthError:
                 errors["base"] = "invalid_auth"
             except FlowItConnectionError:
@@ -102,7 +102,7 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
                 ) as vmc:
                     info = await vmc.get_info()
                     await vmc.refresh_state()
-                    unique_id = vmc._state.name if vmc._state else None  # noqa: SLF001
+                    unique_id = vmc.state.name if vmc.state else None
             except FlowItAuthError:
                 errors["base"] = "invalid_auth"
             except FlowItConnectionError:

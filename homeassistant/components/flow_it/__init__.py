@@ -55,7 +55,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: FlowItConfigEntry) -> bo
         except Exception as err:
             raise UpdateFailed(f"Error communicating with API: {err}") from err
         else:
-            return vmc._state  # noqa: SLF001
+            return vmc.state
 
     coordinator = DataUpdateCoordinator(
         hass,
@@ -77,8 +77,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: FlowItConfigEntry) -> bo
             coordinator.data.data = data
             coordinator.async_set_updated_data(coordinator.data)
 
-    # The library doesn't provide a public way to register multiple callbacks yet
-    vmc.websocket._on_data = on_ws_data  # noqa: SLF001
+    vmc.register_websocket_callback(on_ws_data)
     vmc.websocket.start()
 
     entry.runtime_data = FlowItData(

@@ -8,6 +8,6 @@
   "integration_type": "device",
   "iot_class": "local_push",
   "quality_scale": "bronze",
-  "requirements": ["flow-it-api==0.0.1.0b4"],
+  "requirements": ["flow-it-api==0.0.1.0b6"],
   "zeroconf": ["_tbk_vmc._tcp.local."]
 }
