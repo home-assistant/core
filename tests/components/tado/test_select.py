@@ -94,6 +94,28 @@ async def test_timetable_only_fetched_when_enabled(
 
 
 @pytest.mark.usefixtures("init_integration")
+async def test_timetable_only_fetched_for_enabled_zones(
+    hass: HomeAssistant, entity_registry: er.EntityRegistry
+) -> None:
+    """Test only zones with an enabled timetable entity are fetched."""
+    await _enable_timetable_entities(hass, entity_registry, TIMETABLE_SELECT_ENTITY)
+
+    config_entry: MockConfigEntry = hass.config_entries.async_entries(DOMAIN)[0]
+    coordinator = config_entry.runtime_data
+
+    with patch(
+        "homeassistant.components.tado.PyTado.interface.api.Tado.get_timetable",
+        return_value=Timetable.SEVEN_DAY,
+    ) as mock_get_timetable:
+        await coordinator.async_refresh()
+        await hass.async_block_till_done()
+
+    # TIMETABLE_SELECT_ENTITY is zone 1; the other zones stay disabled and unfetched.
+    assert {call.args[0] for call in mock_get_timetable.call_args_list} == {1}
+    assert set(coordinator.data["timetable"]) == {1}
+
+
+@pytest.mark.usefixtures("init_integration")
 async def test_entities(
     hass: HomeAssistant, entity_registry: er.EntityRegistry, snapshot: SnapshotAssertion
 ) -> None:
