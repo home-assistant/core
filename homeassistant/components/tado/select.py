@@ -9,6 +9,7 @@ from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
 from . import entity
+from .const import TIMETABLE_TRANSLATION_KEY
 from .coordinator import TadoConfigEntry, TadoDataUpdateCoordinator
 
 
@@ -30,7 +31,7 @@ async def async_setup_entry(
 class TadoZoneTimetableSelectEntity(entity.TadoZoneEntity, SelectEntity):
     """Selection of timetable for Tado zone."""
 
-    _attr_translation_key = "timetable"
+    _attr_translation_key = TIMETABLE_TRANSLATION_KEY
     _attr_entity_registry_enabled_default = False
 
     def __init__(

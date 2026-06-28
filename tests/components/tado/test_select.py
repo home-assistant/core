@@ -175,8 +175,8 @@ async def test_select_timetable_api_failure(
 
     with (
         patch(
-            "homeassistant.components.tado.coordinator.TadoDataUpdateCoordinator.set_timetable",
-            side_effect=HomeAssistantError("Error setting Tado timetable"),
+            "homeassistant.components.tado.PyTado.interface.api.Tado.set_timetable",
+            side_effect=RequestException("Boom"),
         ),
         pytest.raises(HomeAssistantError) as exc,
     ):

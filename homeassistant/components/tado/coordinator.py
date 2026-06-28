@@ -26,6 +26,7 @@ from .const import (
     INSIDE_TEMPERATURE_MEASUREMENT,
     PRESET_AUTO,
     TEMP_OFFSET,
+    TIMETABLE_TRANSLATION_KEY,
 )
 
 _LOGGER = logging.getLogger(__name__)
@@ -96,7 +97,7 @@ class TadoDataUpdateCoordinator(DataUpdateCoordinator[dict[str, Any]]):
             for entry in er.async_entries_for_config_entry(
                 registry, self.config_entry.entry_id
             )
-            if entry.translation_key == "timetable"
+            if entry.translation_key == TIMETABLE_TRANSLATION_KEY
         )
 
     @override
