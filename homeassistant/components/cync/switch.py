@@ -1,6 +1,6 @@
 """Support for Cync switch entities."""
 
-from typing import Any
+from typing import Any, override
 
 from pycync import CyncPlug
 
