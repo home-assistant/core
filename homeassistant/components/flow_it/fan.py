@@ -123,7 +123,7 @@ class FlowItVmcFan(FlowItVmcEntity, FanEntity):
             await self.vmc.send_command(
                 Speed.LEVEL_1, flow_in=mode.flowIn, flow_out=mode.flowOut
             )
-        await self.coordinator.async_refresh()
+            await self.coordinator.async_refresh()
 
     @override
     async def async_turn_off(self, **kwargs: Any) -> None:
