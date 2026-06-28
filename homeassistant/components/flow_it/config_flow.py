@@ -81,38 +81,6 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
             step_id="user", data_schema=data_schema, errors=errors
         )
 
-    async def async_step_import(self, import_data: dict[str, Any]) -> ConfigFlowResult:
-        """Handle import from YAML."""
-        host = import_data[CONF_HOST]
-        username = import_data[CONF_USERNAME]
-        password = import_data[CONF_PASSWORD]
-
-        # Ensure host has protocol
-        if not host.startswith(("http://", "https://")):
-            host = f"http://{host}"
-            import_data[CONF_HOST] = host
-
-        try:
-            session = get_async_client(self.hass)
-            async with FlowItVMCMachine(
-                host, password, username, session=session
-            ) as vmc:
-                info = await vmc.get_info()
-                await vmc.refresh_state()
-                unique_id = vmc._state.name if vmc._state else None  # noqa: SLF001
-        except FlowItAuthError:
-            return self.async_abort(reason="invalid_auth")
-        except FlowItConnectionError:
-            return self.async_abort(reason="cannot_connect")
-        except Exception:  # pylint: disable=broad-except
-            _LOGGER.exception("Unexpected exception during import")
-            return self.async_abort(reason="unknown")
-        else:
-            if unique_id:
-                await self.async_set_unique_id(unique_id)
-                self._abort_if_unique_id_configured(updates=import_data)
-            return self.async_create_entry(title=info.hostname, data=import_data)
-
     async def async_step_zeroconf_confirm(
         self, user_input: dict[str, Any] | None = None
     ) -> ConfigFlowResult:
