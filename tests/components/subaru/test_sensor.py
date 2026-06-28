@@ -172,13 +172,19 @@ async def test_recommended_tire_pressure_from_vehicle_health(
         SENSOR_DOMAIN, DOMAIN, f"{TEST_VIN_2_EV}_recommended_tire_pressure_front"
     )
     assert front is not None
-    assert get_sensor_display_state(hass, entity_registry, front) == "241.32"
+    assert (
+        get_sensor_display_state(hass, entity_registry, front)
+        == EXPECTED_STATE_EV_METRIC["recommended_tire_pressure_front"]
+    )
 
     rear = entity_registry.async_get_entity_id(
         SENSOR_DOMAIN, DOMAIN, f"{TEST_VIN_2_EV}_recommended_tire_pressure_rear"
     )
     assert rear is not None
-    assert get_sensor_display_state(hass, entity_registry, rear) == "227.53"
+    assert (
+        get_sensor_display_state(hass, entity_registry, rear)
+        == EXPECTED_STATE_EV_METRIC["recommended_tire_pressure_rear"]
+    )
 
 
 @pytest.mark.usefixtures("entity_registry_enabled_by_default")
