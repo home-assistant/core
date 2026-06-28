@@ -16,7 +16,7 @@ type LinksysConfigEntry = ConfigEntry[LinksysDataUpdateCoordinator]
 
 async def async_setup_entry(hass: HomeAssistant, entry: LinksysConfigEntry) -> bool:
     """Set up Linksys from a config entry."""
-    kwargs: dict = {}
+    kwargs: dict[str, str] = {}
     if username := entry.data.get(CONF_USERNAME):
         kwargs["username"] = username
     client = JNAPClient(
