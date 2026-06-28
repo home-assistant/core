@@ -9,13 +9,13 @@ from homeassistant.helpers.aiohttp_client import async_get_clientsession
 from homeassistant.helpers.typing import ConfigType
 
 from .bluetooth import async_connect_scanner
-from .const import ATTR_MANUFACTURER, DOMAIN
+from .const import DOMAIN
 from .coordinator import (
     SmConfigEntry,
     SmDataUpdateCoordinator,
     SmFirmwareUpdateCoordinator,
     SmlightData,
-    sw_version_from_info,
+    device_info,
 )
 from .services import async_setup_services
 
@@ -53,23 +53,18 @@ async def async_setup_entry(hass: HomeAssistant, entry: SmConfigEntry) -> bool:
     unique_id = data_coordinator.unique_id
     assert unique_id is not None
 
-    device_registry = dr.async_get(hass)
-    device = device_registry.async_get_or_create(
-        config_entry_id=entry.entry_id,
-        connections={(dr.CONNECTION_NETWORK_MAC, unique_id)},
-        manufacturer=ATTR_MANUFACTURER,
-        model=info.model,
-        name=entry.title,
-        sw_version=sw_version_from_info(info),
-    )
-    data_coordinator.device_id = device.id
-
     if info.legacy_api < 2:
         entry.async_create_background_task(
             hass, client.sse.client(), "smlight-sse-client"
         )
 
     if info.ble is not None and info.ble.proxy_enabled:
+        device_registry = dr.async_get(hass)
+        device = device_registry.async_get_or_create(
+            config_entry_id=entry.entry_id,
+            **device_info(info, client.host),
+        )
+        data_coordinator.device_id = device.id
         entry.async_on_unload(
             async_connect_scanner(hass, entry, info.model, data_coordinator.device_id)
         )

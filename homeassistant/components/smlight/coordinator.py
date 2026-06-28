@@ -15,11 +15,21 @@ from homeassistant.const import CONF_HOST, CONF_PASSWORD, CONF_USERNAME
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ConfigEntryAuthFailed, HomeAssistantError
 from homeassistant.helpers import issue_registry as ir
-from homeassistant.helpers.device_registry import format_mac
+from homeassistant.helpers.device_registry import (
+    CONNECTION_NETWORK_MAC,
+    DeviceInfo,
+    format_mac,
+)
 from homeassistant.helpers.issue_registry import IssueSeverity
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
 
-from .const import DOMAIN, LOGGER, SCAN_FIRMWARE_INTERVAL, SCAN_INTERVAL
+from .const import (
+    ATTR_MANUFACTURER,
+    DOMAIN,
+    LOGGER,
+    SCAN_FIRMWARE_INTERVAL,
+    SCAN_INTERVAL,
+)
 
 
 @dataclass(kw_only=True)
@@ -50,9 +60,15 @@ class SmFwData:
 type SmConfigEntry = ConfigEntry[SmlightData]
 
 
-def sw_version_from_info(info: Info) -> str:
-    """Format software and Zigbee version from SMLIGHT Info."""
-    return f"core: {info.sw_version} / zigbee: {info.zb_version}"
+def device_info(info: Info, host: str) -> DeviceInfo:
+    """Return device registry information."""
+    return DeviceInfo(
+        configuration_url=f"http://{host}",
+        connections={(CONNECTION_NETWORK_MAC, str(info.MAC))},
+        manufacturer=ATTR_MANUFACTURER,
+        model=info.model,
+        sw_version=f"core: {info.sw_version} / zigbee: {info.zb_version}",
+    )
 
 
 class SmBaseDataUpdateCoordinator[_DataT](DataUpdateCoordinator[_DataT]):
