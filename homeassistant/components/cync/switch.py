@@ -50,6 +50,7 @@ class CyncSwitchEntity(CyncBaseEntity, SwitchEntity):
     _attr_device_class = SwitchDeviceClass.OUTLET
     _attr_name = None
 
+    @override
     @property
     def is_on(self) -> bool | None:
         """Return True if the plug is on."""
