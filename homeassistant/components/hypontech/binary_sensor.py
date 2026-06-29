@@ -1,5 +1,7 @@
 """The binary sensors for Hypontech integration."""
 
+from typing import override
+
 from homeassistant.components.binary_sensor import (
     BinarySensorDeviceClass,
     BinarySensorEntity,
@@ -48,10 +50,7 @@ class HypontechPlantStatusBinarySensor(HypontechPlantEntity, BinarySensorEntity)
         self._attr_unique_id = f"{plant_id}_{self.entity_description.key}"
 
     @property
-    def is_on(self) -> bool | None:
+    @override
+    def is_on(self) -> bool:
         """Return the state of the binary sensor."""
-        if self.plant.info.status == "online":
-            return True
-        if self.plant.info.status == "offline":
-            return False
-        return None
+        return self.plant.info.status == "online"
