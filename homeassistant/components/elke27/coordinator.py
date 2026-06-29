@@ -4,7 +4,7 @@ import asyncio
 from collections.abc import Callable, Iterable
 import contextlib
 import logging
-from typing import Any
+from typing import Any, override
 
 from elke27_lib import PanelSnapshot
 from elke27_lib.errors import (
@@ -56,6 +56,7 @@ class Elke27DataUpdateCoordinator(DataUpdateCoordinator[PanelSnapshot]):
         """Subscribe to hub events and seed snapshot data."""
         await self._async_setup()
 
+    @override
     async def _async_setup(self) -> None:
         """Subscribe to hub events and seed snapshot data."""
         if self._unsubscribe is not None:
@@ -81,6 +82,7 @@ class Elke27DataUpdateCoordinator(DataUpdateCoordinator[PanelSnapshot]):
         """Perform a full CSM refresh and update the snapshot."""
         await self.async_refresh()
 
+    @override
     async def _async_update_data(self) -> PanelSnapshot:
         """Perform a full CSM refresh and return the latest snapshot."""
         async with self._refresh_lock:

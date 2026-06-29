@@ -12,6 +12,9 @@ rules:
   docs-actions:
     status: exempt
     comment: The initial alarm control panel platform does not expose custom actions.
+  docs-conditions:
+    status: exempt
+    comment: The initial alarm control panel platform does not expose custom conditions.
   docs-high-level-description: done
   docs-installation-instructions:
     status: done
@@ -19,6 +22,9 @@ rules:
   docs-removal-instructions:
     status: done
     comment: Removal instructions are covered in the integration documentation.
+  docs-triggers:
+    status: exempt
+    comment: The initial alarm control panel platform does not expose custom triggers.
   entity-event-setup: done
   entity-unique-id: done
   has-entity-name: done
