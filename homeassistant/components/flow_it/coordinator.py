@@ -45,6 +45,19 @@ class FlowItCoordinator(DataUpdateCoordinator[MachineStatusResponse]):
         self.vmc = vmc
 
     @override
+    async def _async_setup(self) -> None:
+        """Set up the coordinator."""
+        try:
+            # get_info does not require auth, but we want to make sure we can connect
+            await self.vmc.get_info()
+            # Ensure we do validate the authentication
+            await self.vmc.refresh_state()
+        except FlowItAuthError as err:
+            raise ConfigEntryAuthFailed(f"Authentication failed: {err}") from err
+        except (FlowItConnectionError, FlowItResponseError) as err:
+            raise UpdateFailed(f"Error connecting to VMC: {err}") from err
+
+    @override
     async def _async_update_data(self) -> MachineStatusResponse:
         """Fetch data from API endpoint."""
         try:
