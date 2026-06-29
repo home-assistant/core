@@ -3,20 +3,54 @@
 from collections.abc import Awaitable, Callable
 from typing import TYPE_CHECKING
 
-from tplink_omada_client import OmadaSiteClient
+from tplink_omada_client import OmadaClient, OmadaSiteClient
 from tplink_omada_client.devices import OmadaListDevice, OmadaSwitch
 
+from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant, callback
 
 if TYPE_CHECKING:
     from . import OmadaConfigEntry
 
+from .config_flow import CONF_SITE
+from .const import DOMAIN
 from .coordinator import (
     OmadaClientsCoordinator,
+    OmadaControllerInfoCoordinator,
+    OmadaControllerUpdateCoordinator,
     OmadaDevicesCoordinator,
     OmadaGatewayCoordinator,
     OmadaSwitchPortCoordinator,
 )
+
+
+def config_entry_controller_unique_id(config_entry: ConfigEntry) -> str | None:
+    """Return the controller-level unique ID for a site config entry."""
+    if config_entry.unique_id is None:
+        return None
+
+    return config_entry.unique_id.removesuffix(f"_{config_entry.data[CONF_SITE]}")
+
+
+def config_entry_owns_controller_entities(
+    hass: HomeAssistant, config_entry: ConfigEntry
+) -> bool:
+    """Return if this site entry should add controller-level entities."""
+    controller_unique_id = config_entry_controller_unique_id(config_entry)
+    controller_entries = [
+        entry
+        for entry in hass.config_entries.async_entries(
+            DOMAIN, include_ignore=False, include_disabled=False
+        )
+        if config_entry_controller_unique_id(entry) == controller_unique_id
+    ]
+
+    return (
+        config_entry.entry_id
+        == min(
+            controller_entries, key=lambda entry: (entry.created_at, entry.entry_id)
+        ).entry_id
+    )
 
 
 class OmadaSiteController:
@@ -29,11 +63,13 @@ class OmadaSiteController:
         hass: HomeAssistant,
         config_entry: OmadaConfigEntry,
         omada_client: OmadaSiteClient,
+        controller_client: OmadaClient,
     ) -> None:
         """Create the controller."""
         self._hass = hass
         self._config_entry = config_entry
         self._omada_client = omada_client
+        self._controller_client = controller_client
 
         self._switch_port_coordinators: dict[str, OmadaSwitchPortCoordinator] = {}
         self._devices_coordinator = OmadaDevicesCoordinator(
@@ -42,9 +78,16 @@ class OmadaSiteController:
         self._clients_coordinator = OmadaClientsCoordinator(
             hass, config_entry, omada_client
         )
+        self._controller_info_coordinator = OmadaControllerInfoCoordinator(
+            hass, config_entry, controller_client
+        )
+        self._controller_update_coordinator = OmadaControllerUpdateCoordinator(
+            hass, config_entry, controller_client
+        )
 
     async def initialize_first_refresh(self) -> None:
         """Initialize the all coordinators, and perform first refresh."""
+        await self._controller_info_coordinator.async_config_entry_first_refresh()
         await self._devices_coordinator.async_config_entry_first_refresh()
 
         devices = self._devices_coordinator.data.values()
@@ -106,6 +149,11 @@ class OmadaSiteController:
         """Get the connected client API for the site to manage."""
         return self._omada_client
 
+    @property
+    def controller_client(self) -> OmadaClient:
+        """Get the connected client API for controller-level endpoints."""
+        return self._controller_client
+
     def get_switch_port_coordinator(
         self, switch: OmadaSwitch
     ) -> OmadaSwitchPortCoordinator:
@@ -131,3 +179,13 @@ class OmadaSiteController:
     def clients_coordinator(self) -> OmadaClientsCoordinator:
         """Gets the coordinator for site's clients."""
         return self._clients_coordinator
+
+    @property
+    def controller_info_coordinator(self) -> OmadaControllerInfoCoordinator:
+        """Gets the coordinator for controller information."""
+        return self._controller_info_coordinator
+
+    @property
+    def controller_update_coordinator(self) -> OmadaControllerUpdateCoordinator:
+        """Gets the coordinator for controller update information."""
+        return self._controller_update_coordinator

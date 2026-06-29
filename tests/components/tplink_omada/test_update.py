@@ -174,6 +174,7 @@ async def test_install_firmware_exceptions(
 @pytest.mark.parametrize(
     ("entity_name", "expected_notes"),
     [
+        ("omada_controller", "Controller software update available."),
         ("test_router", None),
         ("test_poe_switch", "Bug fixes and performance improvements"),
     ],
