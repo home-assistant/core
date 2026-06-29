@@ -70,7 +70,7 @@ async def test_entry_and_subentry(
         )
 
     assert result["type"] is FlowResultType.CREATE_ENTRY
-    assert result["version"] == 2
+    assert result["version"] == 3
     assert result["options"] == {
         CONF_RESOURCE: "https://www.home-assistant.io",
         CONF_METHOD: "GET",
@@ -138,7 +138,7 @@ async def test_form_with_post(
         )
 
     assert result["type"] is FlowResultType.CREATE_ENTRY
-    assert result["version"] == 2
+    assert result["version"] == 3
     assert result["options"] == {
         CONF_RESOURCE: "https://www.home-assistant.io",
         CONF_METHOD: "GET",

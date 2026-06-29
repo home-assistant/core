@@ -217,8 +217,7 @@ async def validate_rest_setup(
 class ScrapeConfigFlow(ConfigFlow, domain=DOMAIN):
     """Scrape configuration flow."""
 
-    VERSION = 2
-    MINOR_VERSION = 2
+    VERSION = 3
 
     @staticmethod
     @callback

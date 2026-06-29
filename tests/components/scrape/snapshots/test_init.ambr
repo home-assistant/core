@@ -76,7 +76,7 @@
     }),
     'domain': 'scrape',
     'entry_id': <ANY>,
-    'minor_version': 2,
+    'minor_version': 1,
     'options': dict({
       'additional': dict({
         'encoding': 'UTF-8',
@@ -110,7 +110,7 @@
     ]),
     'title': 'Mock Title',
     'unique_id': None,
-    'version': 2,
+    'version': 3,
   })
 # ---
 # name: test_migrate_from_version_1_to_2[pre_migration_config_entry]

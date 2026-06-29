@@ -210,7 +210,7 @@ async def test_migrate_from_future(
         options=get_resource_config,
         entry_id="01JZN04ZJ9BQXXGXDS05WS7D6P",
         subentries_data=get_sensor_config,
-        version=3,
+        version=4,
     )
 
     config_entry.add_to_hass(hass)
@@ -232,7 +232,7 @@ async def test_migrate_from_version_1_to_2(
     entity_registry: er.EntityRegistry,
     snapshot: SnapshotAssertion,
 ) -> None:
-    """Test migration from version 1.1 to 2.1 with config subentries."""
+    """Test migration from version 1 to 3 with config subentries."""
 
     @dataclass(frozen=True, kw_only=True)
     class MockConfigSubentry(ConfigSubentry):
@@ -331,7 +331,7 @@ async def test_migrate_from_version_1_to_2(
     assert state.state == "January 17, 2022"
 
 
-async def test_migrate_from_version_2_1_to_2_2(
+async def test_migrate_from_version_2_to_3(
     hass: HomeAssistant,
     get_data: MockRestData,
 ) -> None:
@@ -376,7 +376,7 @@ async def test_migrate_from_version_2_1_to_2_2(
         await hass.async_block_till_done(wait_background_tasks=True)
 
     assert config_entry.state is ConfigEntryState.LOADED
-    assert config_entry.minor_version == 2
+    assert config_entry.version == 3
 
     assert "advanced" not in config_entry.options
     assert config_entry.options["additional"] == {

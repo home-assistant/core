@@ -280,7 +280,7 @@ async def async_migrate_entry(hass: HomeAssistant, entry: ScrapeConfigEntry) -> 
             entry, version=2, options=new_config_entry_data
         )
 
-    if entry.version == 2 and entry.minor_version < 2:
+    if entry.version == 2:
         # The "advanced" section was renamed to "additional"
         new_options = {**entry.options}
         if (additional := new_options.pop("advanced", None)) is not None:
@@ -292,9 +292,7 @@ async def async_migrate_entry(hass: HomeAssistant, entry: ScrapeConfigEntry) -> 
                 hass.config_entries.async_update_subentry(
                     entry, subentry, data=new_data
                 )
-        hass.config_entries.async_update_entry(
-            entry, options=new_options, minor_version=2
-        )
+        hass.config_entries.async_update_entry(entry, options=new_options, version=3)
 
     return True
 
