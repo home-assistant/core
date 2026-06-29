@@ -83,7 +83,9 @@ SENSOR_DESCRIPTIONS: tuple[DucoSensorEntityDescription, ...] = (
         translation_key="time_state_end",
         device_class=SensorDeviceClass.TIMESTAMP,
         value_fn=lambda node: (
-            dt_util.utc_from_timestamp(node.ventilation.time_state_end)
+            dt_util.utc_from_timestamp(node.ventilation.time_state_end + 59).replace(
+                second=0, microsecond=0
+            )
             if node.ventilation and node.ventilation.time_state_end != 0
             else None
         ),
