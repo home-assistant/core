@@ -11,11 +11,11 @@ from homeassistant.components.light import (
     ATTR_HS_COLOR,
     DOMAIN as LIGHT_DOMAIN,
     EFFECT_OFF,
+    SERVICE_TURN_OFF,
+    SERVICE_TURN_ON,
 )
 from homeassistant.const import (
     ATTR_ENTITY_ID,
-    SERVICE_TURN_OFF,
-    SERVICE_TURN_ON,
     STATE_OFF,
     STATE_ON,
     STATE_UNAVAILABLE,
@@ -23,6 +23,7 @@ from homeassistant.const import (
     Platform,
 )
 from homeassistant.core import HomeAssistant
+from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import device_registry as dr, entity_registry as er
 
 from tests.common import MockConfigEntry, snapshot_platform
@@ -239,6 +240,35 @@ async def test_turn_on_with_effect_off_restores_last_static_color(
     assert state.state == STATE_ON
     assert state.attributes[ATTR_EFFECT] == EFFECT_OFF
     assert tuple(state.attributes[ATTR_HS_COLOR]) == (120.0, 100.0)
+
+
+@pytest.mark.usefixtures("init_integration")
+async def test_turn_on_with_unsupported_effect_raises(
+    hass: HomeAssistant,
+    mock_infrared_emitter_entity: MockInfraredEmitterEntity,
+) -> None:
+    """Test turning on with an unsupported effect raises."""
+    with pytest.raises(
+        HomeAssistantError,
+        match="Unsupported OSRAM infrared effect: invalid_effect",
+    ):
+        await hass.services.async_call(
+            LIGHT_DOMAIN,
+            SERVICE_TURN_ON,
+            {
+                ATTR_ENTITY_ID: "light.osram_light",
+                ATTR_EFFECT: "invalid_effect",
+            },
+            blocking=True,
+        )
+
+    assert (
+        mock_infrared_emitter_entity.send_command_calls
+        == [
+            OsramLightCode.ON,
+        ]
+        * 5
+    )
 
 
 @pytest.mark.usefixtures("init_integration")

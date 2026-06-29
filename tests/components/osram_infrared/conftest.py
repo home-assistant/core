@@ -38,7 +38,7 @@ def mock_config_entry() -> MockConfigEntry:
 
 @pytest.fixture
 def mock_config_entry_with_receiver() -> MockConfigEntry:
-    """Return a mock OSRAM infrared config entry."""
+    """Return a mock OSRAM infrared config entry with a receiver."""
     return MockConfigEntry(
         domain=DOMAIN,
         entry_id="01JTEST0000000000000000000",
