@@ -4082,7 +4082,7 @@ CONFIG_DATAFLOW_SCHEMA = vol.Schema(
         vol.Required(CONF_PROTOCOL, default=DEFAULT_PROTOCOL): PROTOCOL_SELECTOR,
         vol.Optional(CONF_USERNAME): TEXT_SELECTOR,
         vol.Optional(CONF_PASSWORD): PASSWORD_SELECTOR,
-        vol.Optional(OTHER_SETTINGS): section(
+        vol.Required(OTHER_SETTINGS): section(
             OTHER_SETTINGS_SCHEMA, SectionConfig({"collapsed": True})
         ),
     }
