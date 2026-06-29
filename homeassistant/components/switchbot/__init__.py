@@ -192,6 +192,7 @@ PLATFORMS_BY_TYPE = {
         Platform.SENSOR,
     ],
     SupportedModels.WEATHER_STATION.value: [Platform.SENSOR],
+    SupportedModels.CANDLE_WARMER_LAMP.value: [Platform.LIGHT, Platform.SENSOR],
 }
 CLASS_BY_DEVICE = {
     SupportedModels.CEILING_LIGHT.value: switchbot.SwitchbotCeilingLight,
@@ -245,6 +246,7 @@ CLASS_BY_DEVICE = {
     SupportedModels.LOCK_VISION_PRO.value: switchbot.SwitchbotLock,
     SupportedModels.LOCK_VISION.value: switchbot.SwitchbotLock,
     SupportedModels.LOCK_PRO_WIFI.value: switchbot.SwitchbotLock,
+    SupportedModels.CANDLE_WARMER_LAMP.value: switchbot.SwitchbotCandleWarmerLamp,
 }
 
 
