@@ -46,7 +46,7 @@ class GoogleHealthCoordinator(DataUpdateCoordinator[int]):
     async def _async_update_data(self) -> int:
         """Fetch steps count rollup for today."""
         try:
-            rollup = await self.api.steps.today()
+            rollup = await self.api.steps.today(self.hass.config.time_zone)
         except (HealthAuthException, HealthApiForbiddenException) as err:
             raise ConfigEntryAuthFailed(
                 translation_domain=DOMAIN,

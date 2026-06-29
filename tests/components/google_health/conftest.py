@@ -16,7 +16,6 @@ from homeassistant.core import HomeAssistant
 from homeassistant.setup import async_setup_component
 
 from tests.common import MockConfigEntry
-from tests.test_util.aiohttp import AiohttpClientMocker
 
 CLIENT_ID = "1234"
 CLIENT_SECRET = "5678"
@@ -24,18 +23,8 @@ FAKE_ACCESS_TOKEN = "some-access-token"
 FAKE_REFRESH_TOKEN = "some-refresh-token"
 
 API_BASE_URL = "https://health.googleapis.com/v4/users/me"
-SETTINGS_URL = f"{API_BASE_URL}/settings"
 IDENTITY_URL = f"{API_BASE_URL}/identity"
 STEPS_ROLLUP_URL = f"{API_BASE_URL}/dataTypes/steps/dataPoints:dailyRollUp"
-
-
-@pytest.fixture(autouse=True)
-def mock_settings(aioclient_mock: AiohttpClientMocker) -> None:
-    """Mock the settings endpoint to resolve user's timezone."""
-    aioclient_mock.get(
-        SETTINGS_URL,
-        json={"timeZone": "UTC"},
-    )
 
 
 @pytest.fixture(name="expires_at")

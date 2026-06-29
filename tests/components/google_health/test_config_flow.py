@@ -66,7 +66,6 @@ async def test_full_flow(
         f"&state={state}"
         "&scope=https://www.googleapis.com/auth/googlehealth.activity_and_fitness.readonly"
         "+https://www.googleapis.com/auth/googlehealth.profile.readonly"
-        "+https://www.googleapis.com/auth/googlehealth.settings.readonly"
         "&access_type=offline"
         "&prompt=consent"
     )
@@ -158,7 +157,6 @@ async def test_reauth_flow(
         f"&state={state}"
         "&scope=https://www.googleapis.com/auth/googlehealth.activity_and_fitness.readonly"
         "+https://www.googleapis.com/auth/googlehealth.profile.readonly"
-        "+https://www.googleapis.com/auth/googlehealth.settings.readonly"
         "&access_type=offline"
         "&prompt=consent"
     )
