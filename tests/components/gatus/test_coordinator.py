@@ -14,7 +14,7 @@ from tests.common import MockConfigEntry
 
 
 @pytest.fixture
-def mock_session():
+def mock_session() -> MagicMock:
     """Fixture to mock the aiohttp client session."""
     session = MagicMock()
     response = MagicMock()
