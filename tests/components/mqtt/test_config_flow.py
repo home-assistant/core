@@ -18,7 +18,11 @@ from homeassistant import config_entries
 from homeassistant.components import mqtt
 from homeassistant.components.hassio import AddonError
 from homeassistant.components.mqtt.config_flow import (
+    CONF_CLIENT_KEY_PASSWORD,
+    OTHER_SETTINGS,
     PWD_NOT_CHANGED,
+    SET_CA_CERT,
+    SET_CLIENT_CERT,
     TRANSLATION_DESCRIPTION_PLACEHOLDERS,
 )
 from homeassistant.components.mqtt.const import CONF_DISCOVERY_QOS, DOMAIN
@@ -88,13 +92,13 @@ ADD_ON_DISCOVERY_INFO = {
 }
 
 MOCK_BROKER_FORM_DATA = {
-    "broker": "127.0.0.1",
-    "port": "1883",
-    "protocol": "5",
-    "other_settings": {
-        "transport": "tcp",
-        "set_client_cert": False,
-        "set_ca_cert": "off",
+    mqtt.CONF_BROKER: "127.0.0.1",
+    mqtt.CONF_PORT: "1883",
+    mqtt.CONF_PROTOCOL: "5",
+    OTHER_SETTINGS: {
+        mqtt.CONF_TRANSPORT: "tcp",
+        SET_CLIENT_CERT: False,
+        SET_CA_CERT: "off",
     },
 }
 MOCK_BROKER_ENTRY_DATA = {
@@ -1200,13 +1204,13 @@ async def test_bad_certificate_validation(
         mqtt.CONF_BROKER: "another-broker",
         CONF_PORT: 2345,
         mqtt.CONF_PROTOCOL: "5",
-        "other_settings": {
+        OTHER_SETTINGS: {
             mqtt.CONF_CERTIFICATE: file_id[mqtt.CONF_CERTIFICATE],
             mqtt.CONF_CLIENT_CERT: file_id[mqtt.CONF_CLIENT_CERT],
             mqtt.CONF_CLIENT_KEY: file_id[mqtt.CONF_CLIENT_KEY],
-            "client_key_password": client_key_password,
-            "set_ca_cert": set_ca_cert,
-            "set_client_cert": True,
+            CONF_CLIENT_KEY_PASSWORD: client_key_password,
+            SET_CA_CERT: set_ca_cert,
+            SET_CLIENT_CERT: True,
             mqtt.CONF_TRANSPORT: "tcp",
         },
     }
@@ -1231,11 +1235,11 @@ async def test_bad_certificate_validation(
         mock_ssl_context["context"]().load_cert_chain.side_effect = SSLError
     elif test_error == "invalid_inclusion":
         # Client key file without client cert, client cert without key file
-        test_input["other_settings"].pop(mqtt.CONF_CLIENT_KEY)
+        test_input[OTHER_SETTINGS].pop(mqtt.CONF_CLIENT_KEY)
 
-    test_input["other_settings"]["set_client_cert"] = set_client_cert
-    test_input["other_settings"]["set_ca_cert"] = set_ca_cert
-    test_input["other_settings"]["tls_insecure"] = tls_insecure
+    test_input[OTHER_SETTINGS][SET_CLIENT_CERT] = set_client_cert
+    test_input[OTHER_SETTINGS][SET_CA_CERT] = set_ca_cert
+    test_input[OTHER_SETTINGS]["tls_insecure"] = tls_insecure
 
     # Test errors in reconfigure flow
     mqtt_mock = await mqtt_mock_entry()
@@ -1278,7 +1282,7 @@ async def test_keepalive_validation(
     """Test validation of the keep alive option."""
 
     test_input = deepcopy(MOCK_BROKER_FORM_DATA)
-    test_input["other_settings"][mqtt.CONF_KEEPALIVE] = input_value
+    test_input[OTHER_SETTINGS][mqtt.CONF_KEEPALIVE] = input_value
 
     mqtt_mock = await mqtt_mock_entry()
     mock_try_connection.return_value = True
@@ -1951,7 +1955,7 @@ async def test_reconfigure_with_tls_client_key_formats(
         "password": None,
         "tls_insecure": True,
         "protocol": None,
-        "other_settings": None,
+        OTHER_SETTINGS: None,
     }
 
     for k, v in defaults.items():
@@ -1961,7 +1965,7 @@ async def test_reconfigure_with_tls_client_key_formats(
     for k, v in suggested_other_settings.items():
         assert (
             get_schema_suggested_value(
-                result["data_schema"].schema["other_settings"].schema.schema, k
+                result["data_schema"].schema[OTHER_SETTINGS].schema.schema, k
             )
             == v
         )
@@ -1976,9 +1980,9 @@ async def test_reconfigure_with_tls_client_key_formats(
             CONF_PROTOCOL: "5",
             CONF_USERNAME: "us3r",
             CONF_PASSWORD: "p4ss",
-            "other_settings": {
-                "set_ca_cert": "auto",
-                "set_client_cert": True,
+            OTHER_SETTINGS: {
+                SET_CA_CERT: "auto",
+                SET_CLIENT_CERT: True,
                 mqtt.CONF_TLS_INSECURE: True,
                 mqtt.CONF_TRANSPORT: "websockets",
                 mqtt.CONF_WS_PATH: "/new/path",
@@ -2067,10 +2071,10 @@ async def test_setup_with_advanced_settings(
             CONF_USERNAME: "user",
             CONF_PASSWORD: "secret",
             CONF_PROTOCOL: "5",
-            "other_settings": {
+            OTHER_SETTINGS: {
                 mqtt.CONF_KEEPALIVE: 30,
-                "set_ca_cert": "auto",
-                "set_client_cert": True,
+                SET_CA_CERT: "auto",
+                SET_CLIENT_CERT: True,
                 mqtt.CONF_CLIENT_CERT: file_id[mqtt.CONF_CLIENT_CERT],
                 mqtt.CONF_CLIENT_KEY: file_id[mqtt.CONF_CLIENT_KEY],
                 mqtt.CONF_TLS_INSECURE: True,
@@ -2088,8 +2092,8 @@ async def test_setup_with_advanced_settings(
     for key in (
         CONF_CLIENT_ID,
         mqtt.CONF_KEEPALIVE,
-        "set_client_cert",
-        "set_ca_cert",
+        SET_CLIENT_CERT,
+        SET_CA_CERT,
         mqtt.CONF_TLS_INSECURE,
         mqtt.CONF_CLIENT_CERT,
         mqtt.CONF_CLIENT_KEY,
@@ -2097,7 +2101,7 @@ async def test_setup_with_advanced_settings(
         mqtt.CONF_WS_PATH,
         mqtt.CONF_WS_HEADERS,
     ):
-        assert result["data_schema"].schema["other_settings"].schema.schema[key]
+        assert result["data_schema"].schema[OTHER_SETTINGS].schema.schema[key]
 
     assert result["type"] is FlowResultType.FORM
     assert result["step_id"] == "broker"
@@ -2113,10 +2117,10 @@ async def test_setup_with_advanced_settings(
             CONF_PROTOCOL: "5",
             CONF_USERNAME: "user",
             CONF_PASSWORD: "secret",
-            "other_settings": {
+            OTHER_SETTINGS: {
                 mqtt.CONF_KEEPALIVE: 30,
-                "set_ca_cert": "auto",
-                "set_client_cert": True,
+                SET_CA_CERT: "auto",
+                SET_CLIENT_CERT: True,
                 mqtt.CONF_CLIENT_CERT: file_id[mqtt.CONF_CLIENT_CERT],
                 mqtt.CONF_CLIENT_KEY: file_id[mqtt.CONF_CLIENT_KEY],
                 mqtt.CONF_TLS_INSECURE: True,
@@ -2211,11 +2215,11 @@ async def test_setup_with_certificates(
                 CONF_PROTOCOL: "5",
                 CONF_USERNAME: "user",
                 CONF_PASSWORD: "secret",
-                "other_settings": {
+                OTHER_SETTINGS: {
                     mqtt.CONF_KEEPALIVE: 30,
-                    "set_ca_cert": "custom",
-                    "set_client_cert": True,
-                    "client_key_password": client_key_password,
+                    SET_CA_CERT: "custom",
+                    SET_CLIENT_CERT: True,
+                    CONF_CLIENT_KEY_PASSWORD: client_key_password,
                     mqtt.CONF_CERTIFICATE: str(uuid4()),
                     mqtt.CONF_CLIENT_CERT: str(uuid4()),
                     mqtt.CONF_CLIENT_KEY: str(uuid4()),
@@ -2234,11 +2238,11 @@ async def test_setup_with_certificates(
             CONF_PROTOCOL: "5",
             CONF_USERNAME: "user",
             CONF_PASSWORD: "secret",
-            "other_settings": {
+            OTHER_SETTINGS: {
                 mqtt.CONF_KEEPALIVE: 30,
-                "set_ca_cert": "custom",
-                "set_client_cert": True,
-                "client_key_password": client_key_password,
+                SET_CA_CERT: "custom",
+                SET_CLIENT_CERT: True,
+                CONF_CLIENT_KEY_PASSWORD: client_key_password,
                 mqtt.CONF_CERTIFICATE: file_id[mqtt.CONF_CERTIFICATE],
                 mqtt.CONF_CLIENT_CERT: file_id[mqtt.CONF_CLIENT_CERT],
                 mqtt.CONF_CLIENT_KEY: file_id[mqtt.CONF_CLIENT_KEY],
@@ -2264,11 +2268,11 @@ async def test_setup_with_certificates(
                 CONF_PROTOCOL: "5",
                 CONF_USERNAME: "user",
                 CONF_PASSWORD: "secret",
-                "other_settings": {
+                OTHER_SETTINGS: {
                     mqtt.CONF_KEEPALIVE: 30,
-                    "set_ca_cert": "custom",
-                    "set_client_cert": True,
-                    "client_key_password": client_key_password,
+                    SET_CA_CERT: "custom",
+                    SET_CLIENT_CERT: True,
+                    CONF_CLIENT_KEY_PASSWORD: client_key_password,
                     mqtt.CONF_CERTIFICATE: file_id[mqtt.CONF_CERTIFICATE],
                     mqtt.CONF_CLIENT_CERT: file_id[mqtt.CONF_CLIENT_CERT],
                     mqtt.CONF_CLIENT_KEY: file_id[mqtt.CONF_CLIENT_KEY],
@@ -2332,9 +2336,9 @@ async def test_change_websockets_transport_to_tcp(
             mqtt.CONF_BROKER: "test-broker",
             CONF_PORT: 1234,
             CONF_PROTOCOL: "5",
-            "other_settings": {
-                "set_ca_cert": "off",
-                "set_client_cert": False,
+            OTHER_SETTINGS: {
+                SET_CA_CERT: "off",
+                SET_CLIENT_CERT: False,
                 mqtt.CONF_TRANSPORT: "tcp",
                 mqtt.CONF_WS_HEADERS: '{"header_1": "custom_header1"}',
                 mqtt.CONF_WS_PATH: "/some_path",
@@ -2391,14 +2395,14 @@ async def test_reconfigure_flow_form(
     assert result["errors"] == {}
     assert (
         get_schema_suggested_value(
-            result["data_schema"].schema["other_settings"].schema.schema,
-            "set_client_cert",
+            result["data_schema"].schema[OTHER_SETTINGS].schema.schema,
+            SET_CLIENT_CERT,
         )
         is True
     )
     assert (
         get_schema_suggested_value(
-            result["data_schema"].schema["other_settings"].schema.schema, "set_ca_cert"
+            result["data_schema"].schema[OTHER_SETTINGS].schema.schema, SET_CA_CERT
         )
         == "custom"
     )
@@ -2410,9 +2414,9 @@ async def test_reconfigure_flow_form(
             mqtt.CONF_BROKER: "10.10.10,10",
             CONF_PORT: 1234,
             CONF_PROTOCOL: "5",
-            "other_settings": {
-                "set_ca_cert": "custom",
-                "set_client_cert": True,
+            OTHER_SETTINGS: {
+                SET_CA_CERT: "custom",
+                SET_CLIENT_CERT: True,
                 mqtt.CONF_TRANSPORT: "websockets",
                 mqtt.CONF_WS_HEADERS: '{"header_1": "custom_header1"}',
                 mqtt.CONF_WS_PATH: "/some_new_path",
@@ -2473,9 +2477,9 @@ async def test_reconfigure_no_changed_password(
             CONF_USERNAME: "mqtt-user",
             CONF_PASSWORD: PWD_NOT_CHANGED,
             CONF_PORT: 1234,
-            "other_settings": {
-                "set_ca_cert": "auto",
-                "set_client_cert": False,
+            OTHER_SETTINGS: {
+                SET_CA_CERT: "auto",
+                SET_CLIENT_CERT: False,
                 mqtt.CONF_TRANSPORT: "websockets",
                 mqtt.CONF_WS_HEADERS: '{"header_1": "custom_header1"}',
                 mqtt.CONF_WS_PATH: "/some_new_path",
@@ -2678,7 +2682,7 @@ async def test_migrate_config_entry(
             {
                 "state_topic": "test-topic",
                 "value_template": "{{ value_json.value }}",
-                "other_settings": {"expire_after": 1200, "off_delay": 5},
+                OTHER_SETTINGS: {"expire_after": 1200, "off_delay": 5},
             },
             (
                 (
@@ -3342,10 +3346,10 @@ async def test_migrate_config_entry(
                 (
                     {
                         "command_topic": "test-topic",
-                        "other_settings": {"max_kelvin": 2000, "min_kelvin": 2000},
+                        OTHER_SETTINGS: {"max_kelvin": 2000, "min_kelvin": 2000},
                     },
                     {
-                        "other_settings": "max_below_min_kelvin",
+                        OTHER_SETTINGS: "max_below_min_kelvin",
                     },
                 ),
             ),
@@ -3624,7 +3628,7 @@ async def test_migrate_config_entry(
             {
                 "state_topic": "test-topic",
                 "value_template": "{{ value_json.value }}",
-                "other_settings": {"expire_after": 30},
+                OTHER_SETTINGS: {"expire_after": 30},
             },
             (
                 (
@@ -4685,7 +4689,7 @@ async def test_subentry_reconfigure_edit_entity_multi_entitites(
                 "device_class": "battery",
                 "state_class": "measurement",
                 "unit_of_measurement": "%",
-                "other_settings": {"suggested_display_precision": 1},
+                OTHER_SETTINGS: {"suggested_display_precision": 1},
             },
             {
                 "state_topic": "test-topic1-updated",
@@ -5149,23 +5153,21 @@ async def test_subentry_reconfigure_update_device_properties(
         "model_id": {"suggested_value": "mn002"},
         "manufacturer": {"suggested_value": "Milk Masters"},
         "configuration_url": {"suggested_value": "https://example.com"},
-        "other_settings": None,
+        OTHER_SETTINGS: None,
         "mqtt_settings": None,
     }
 
     other_settings_key_descriptions = {
         key: key.description
         for key, value in result["data_schema"]
-        .schema["other_settings"]
+        .schema[OTHER_SETTINGS]
         .schema.schema.items()
     }
     assert other_settings_key_descriptions == {
         "sw_version": {"suggested_value": "1.0"},
         "hw_version": {"suggested_value": "2.1 rev a"},
     }
-    assert result["data_schema"].schema["other_settings"].options == {
-        "collapsed": False
-    }
+    assert result["data_schema"].schema[OTHER_SETTINGS].options == {"collapsed": False}
 
     mqtt_settings_key_descriptions = {
         key: key.description
@@ -5188,7 +5190,7 @@ async def test_subentry_reconfigure_update_device_properties(
         result["flow_id"],
         user_input={
             "name": "Beer notifier",
-            "other_settings": {"sw_version": "1.1"},
+            OTHER_SETTINGS: {"sw_version": "1.1"},
             "model": "Beer bottle XL",
             "model_id": "bn003",
             "manufacturer": "Beer Masters",
