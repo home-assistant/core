@@ -9,13 +9,21 @@ rules:
   config-flow: done
   config-flow-test-coverage: done
   dependency-transparency: done
-  docs-actions: done
-  docs-conditions: done
+  docs-actions:
+    status: exempt
+    comment: Integration does not register custom actions.
+  docs-conditions:
+    status: exempt
+    comment: Integration does not register custom conditions.
   docs-high-level-description: done
   docs-installation-instructions: done
   docs-removal-instructions: done
-  docs-triggers: done
-  entity-event-setup: done
+  docs-triggers:
+    status: exempt
+    comment: Integration does not register custom triggers.
+  entity-event-setup:
+    status: exempt
+    comment: Integration does not register custom events.
   entity-unique-id: done
   has-entity-name: done
   runtime-data: done
