@@ -10,6 +10,7 @@ from annotatedyaml import loader as yaml_loader
 import voluptuous as vol
 
 from homeassistant import loader
+from homeassistant.auth.providers import load_auth_provider_module
 from homeassistant.config import (  # type: ignore[attr-defined]
     CONF_PACKAGES,
     YAML_CONFIG_FILE,
@@ -20,6 +21,7 @@ from homeassistant.config import (  # type: ignore[attr-defined]
     load_yaml_config_file,
     merge_packages_config,
 )
+from homeassistant.const import CONF_AUTH_PROVIDERS, CONF_TYPE
 from homeassistant.core import DOMAIN as HOMEASSISTANT_DOMAIN, HomeAssistant
 from homeassistant.core_config import CORE_CONFIG_SCHEMA
 from homeassistant.exceptions import HomeAssistantError
@@ -167,6 +169,24 @@ async def async_check_ha_config_file(  # noqa: C901
     core_config = config.pop(HOMEASSISTANT_DOMAIN, {})
     try:
         core_config = CORE_CONFIG_SCHEMA(core_config)
+
+        # Validate auth provider configs against provider-specific schemas.
+        # CORE_CONFIG_SCHEMA only validates against the base AUTH_PROVIDER_SCHEMA
+        # which uses extra=vol.ALLOW_EXTRA, so provider-specific required keys
+        # (e.g. trusted_networks, command) are not enforced there.  Load each
+        # provider module and validate against its CONFIG_SCHEMA to surface
+        # missing required keys at config-check time rather than startup.
+        if auth_providers_conf := core_config.get(CONF_AUTH_PROVIDERS):
+            for provider_conf in auth_providers_conf:
+                provider_type = provider_conf[CONF_TYPE]
+                try:
+                    module = await load_auth_provider_module(hass, provider_type)
+                except HomeAssistantError:
+                    # Unknown provider type — deferred to startup.
+                    continue
+                if hasattr(module, "CONFIG_SCHEMA"):
+                    module.CONFIG_SCHEMA(provider_conf)
+
         result[HOMEASSISTANT_DOMAIN] = core_config
 
         # Merge packages
