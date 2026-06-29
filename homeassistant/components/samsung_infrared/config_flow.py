@@ -26,12 +26,6 @@ from .const import (
     SamsungDeviceType,
 )
 
-DEVICE_TYPE_NAMES: dict[SamsungDeviceType, str] = {
-    SamsungDeviceType.TV: "TV",
-    SamsungDeviceType.AC: "Air Conditioner",
-}
-
-
 class SamsungIrConfigFlow(ConfigFlow, domain=DOMAIN):
     """Handle config flow for Samsung IR."""
 
