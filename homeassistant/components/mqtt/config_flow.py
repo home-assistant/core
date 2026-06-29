@@ -1122,7 +1122,7 @@ def validate_light_platform_config(user_data: dict[str, Any]) -> dict[str, str]:
     if user_data.get(CONF_MIN_KELVIN, DEFAULT_MIN_KELVIN) >= user_data.get(
         CONF_MAX_KELVIN, DEFAULT_MAX_KELVIN
     ):
-        errors["other_settings"] = "max_below_min_kelvin"
+        errors[OTHER_SETTINGS] = "max_below_min_kelvin"
     return errors
 
 
@@ -1504,7 +1504,7 @@ PLATFORM_ENTITY_FIELDS: dict[Platform, dict[str, PlatformField]] = {
             selector=SUGGESTED_DISPLAY_PRECISION_SELECTOR,
             required=False,
             validator=cv.positive_int,
-            section="other_settings",
+            section=OTHER_SETTINGS,
         ),
         CONF_OPTIONS: PlatformField(
             selector=OPTIONS_SELECTOR,
@@ -1676,13 +1676,13 @@ PLATFORM_MQTT_FIELDS: dict[Platform, dict[str, PlatformField]] = {
             selector=TIMEOUT_SELECTOR,
             required=False,
             validator=cv.positive_int,
-            section="other_settings",
+            section=OTHER_SETTINGS,
         ),
         CONF_OFF_DELAY: PlatformField(
             selector=TIMEOUT_SELECTOR,
             required=False,
             validator=cv.positive_int,
-            section="other_settings",
+            section=OTHER_SETTINGS,
         ),
     },
     Platform.BUTTON: {
@@ -3123,7 +3123,7 @@ PLATFORM_MQTT_FIELDS: dict[Platform, dict[str, PlatformField]] = {
             default=False,
             validator=cv.boolean,
             conditions=({CONF_SCHEMA: "json"},),
-            section="other_settings",
+            section=OTHER_SETTINGS,
         ),
         CONF_FLASH_TIME_SHORT: PlatformField(
             selector=FLASH_TIME_SELECTOR,
@@ -3131,7 +3131,7 @@ PLATFORM_MQTT_FIELDS: dict[Platform, dict[str, PlatformField]] = {
             validator=cv.positive_int,
             default=2,
             conditions=({CONF_SCHEMA: "json"},),
-            section="other_settings",
+            section=OTHER_SETTINGS,
         ),
         CONF_FLASH_TIME_LONG: PlatformField(
             selector=FLASH_TIME_SELECTOR,
@@ -3139,7 +3139,7 @@ PLATFORM_MQTT_FIELDS: dict[Platform, dict[str, PlatformField]] = {
             validator=cv.positive_int,
             default=10,
             conditions=({CONF_SCHEMA: "json"},),
-            section="other_settings",
+            section=OTHER_SETTINGS,
         ),
         CONF_TRANSITION: PlatformField(
             selector=BOOLEAN_SELECTOR,
@@ -3147,21 +3147,21 @@ PLATFORM_MQTT_FIELDS: dict[Platform, dict[str, PlatformField]] = {
             default=False,
             validator=cv.boolean,
             conditions=({CONF_SCHEMA: "json"},),
-            section="other_settings",
+            section=OTHER_SETTINGS,
         ),
         CONF_MAX_KELVIN: PlatformField(
             selector=KELVIN_SELECTOR,
             required=False,
             validator=cv.positive_int,
             default=DEFAULT_MAX_KELVIN,
-            section="other_settings",
+            section=OTHER_SETTINGS,
         ),
         CONF_MIN_KELVIN: PlatformField(
             selector=KELVIN_SELECTOR,
             required=False,
             validator=cv.positive_int,
             default=DEFAULT_MIN_KELVIN,
-            section="other_settings",
+            section=OTHER_SETTINGS,
         ),
     },
     Platform.LOCK: {
@@ -3370,7 +3370,7 @@ PLATFORM_MQTT_FIELDS: dict[Platform, dict[str, PlatformField]] = {
             selector=TIMEOUT_SELECTOR,
             required=False,
             validator=cv.positive_int,
-            section="other_settings",
+            section=OTHER_SETTINGS,
         ),
     },
     Platform.SIREN: {
@@ -3796,10 +3796,10 @@ PLATFORM_MQTT_FIELDS: dict[Platform, dict[str, PlatformField]] = {
 MQTT_DEVICE_PLATFORM_FIELDS = {
     CONF_NAME: PlatformField(selector=TEXT_SELECTOR, required=True),
     CONF_SW_VERSION: PlatformField(
-        selector=TEXT_SELECTOR, required=False, section="other_settings"
+        selector=TEXT_SELECTOR, required=False, section=OTHER_SETTINGS
     ),
     CONF_HW_VERSION: PlatformField(
-        selector=TEXT_SELECTOR, required=False, section="other_settings"
+        selector=TEXT_SELECTOR, required=False, section=OTHER_SETTINGS
     ),
     CONF_MODEL: PlatformField(selector=TEXT_SELECTOR, required=False),
     CONF_MODEL_ID: PlatformField(selector=TEXT_SELECTOR, required=False),
@@ -4743,8 +4743,8 @@ class MQTTSubentryFlowHandler(ConfigSubentryFlow):
         if user_input is not None:
             new_device_data: dict[str, Any] = user_input.copy()
             _, errors = validate_user_input(user_input, MQTT_DEVICE_PLATFORM_FIELDS)
-            if "other_settings" in new_device_data:
-                new_device_data |= new_device_data.pop("other_settings")
+            if OTHER_SETTINGS in new_device_data:
+                new_device_data |= new_device_data.pop(OTHER_SETTINGS)
             if not errors:
                 self._subentry_data[CONF_DEVICE] = cast(MqttDeviceData, new_device_data)
                 if self.source == SOURCE_RECONFIGURE:
