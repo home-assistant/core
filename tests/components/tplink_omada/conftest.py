@@ -5,7 +5,11 @@ from functools import partial
 from unittest.mock import AsyncMock, MagicMock, patch
 
 import pytest
-from tplink_omada_client import OmadaSite
+from tplink_omada_client import (
+    OmadaControllerInfo,
+    OmadaControllerUpdateInfo,
+    OmadaSite,
+)
 from tplink_omada_client.clients import (
     OmadaConnectedClient,
     OmadaNetworkClient,
@@ -29,6 +33,7 @@ from tests.common import (
     MockConfigEntry,
     async_load_json_array_fixture,
     async_load_json_object_fixture,
+    load_json_object_fixture,
 )
 
 
@@ -188,6 +193,19 @@ def mock_omada_client(mock_omada_site_client: AsyncMock) -> Generator[MagicMock]
         client = client_mock.return_value
 
         client.get_site_client.return_value = mock_omada_site_client
+        client.get_controller_info = AsyncMock(return_value=_get_mock_controller_info())
+        client.check_firmware_updates = AsyncMock(
+            return_value=OmadaControllerUpdateInfo(
+                {
+                    "software": {
+                        "upgrade": True,
+                        "currentVersion": "6.2.10.15",
+                        "latestVersion": "6.2.14.6 Build 20260617091728",
+                        "releaseLog": "New controller software available.",
+                    }
+                }
+            )
+        )
         client.login.return_value = "12345"
         client.get_controller_name.return_value = "OC200"
         client.get_sites.return_value = [OmadaSite("Display Name", "SiteId")]
@@ -206,7 +224,17 @@ def mock_omada_clients_only_client(
         client = client_mock.return_value
 
         client.get_site_client.return_value = mock_omada_clients_only_site_client
+        client.get_controller_info = AsyncMock(return_value=_get_mock_controller_info())
+        client.check_firmware_updates = AsyncMock(
+            return_value=OmadaControllerUpdateInfo({})
+        )
         yield client
+
+
+def _get_mock_controller_info() -> OmadaControllerInfo:
+    """Mock controller information."""
+    controller_info_data = load_json_object_fixture("controller-info.json", DOMAIN)
+    return OmadaControllerInfo(controller_info_data)
 
 
 @pytest.fixture

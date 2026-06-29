@@ -1,0 +1,12 @@
+{
+  "controllerVer": "6.2.10.15",
+  "apiVer": "3",
+  "configured": true,
+  "type": 1,
+  "supportApp": true,
+  "omadacId": "2b8ebfe7af51afa2f58844e1f9ba0c04",
+  "registeredRoot": true,
+  "omadacCategory": "advanced",
+  "mspMode": false,
+  "omadaCloudUrl": "https://omada.tplinkcloud.com"
+}

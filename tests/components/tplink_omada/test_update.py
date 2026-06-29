@@ -6,6 +6,7 @@ from unittest.mock import AsyncMock, MagicMock, patch
 from freezegun.api import FrozenDateTimeFactory
 import pytest
 from syrupy.assertion import SnapshotAssertion
+from tplink_omada_client import OmadaControllerUpdateInfo
 from tplink_omada_client.devices import OmadaListDevice
 from tplink_omada_client.exceptions import OmadaClientException, RequestFailed
 
@@ -100,6 +101,37 @@ async def test_firmware_download_in_progress(
     entity = hass.states.get(entity_id)
     assert entity is not None
     assert entity.attributes.get(ATTR_IN_PROGRESS) is True
+
+
+async def test_controller_hardware_update_fallback(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    mock_omada_client: MagicMock,
+) -> None:
+    """Test controller update entity uses hardware update details as fallback."""
+    mock_omada_client.check_firmware_updates.return_value = OmadaControllerUpdateInfo(
+        {
+            "hardware": {
+                "upgrade": True,
+                "currentVersion": "1.0.0",
+                "latestVersion": "1.0.1",
+                "fwReleaseLog": "Hardware controller update available.",
+            }
+        }
+    )
+    mock_config_entry.add_to_hass(hass)
+
+    with patch("homeassistant.components.tplink_omada.PLATFORMS", [Platform.UPDATE]):
+        assert await hass.config_entries.async_setup(mock_config_entry.entry_id)
+        await hass.async_block_till_done()
+
+    entity = hass.states.get("update.omada_controller_firmware")
+    assert entity is not None
+    assert entity.state == STATE_ON
+    assert entity.attributes["installed_version"] == "1.0.0"
+    assert entity.attributes["latest_version"] == "1.0.1"
+
+    mock_omada_client.check_firmware_updates.assert_awaited_once()
 
 
 async def test_install_firmware_success(

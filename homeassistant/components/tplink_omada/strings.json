@@ -67,6 +67,12 @@
       }
     },
     "sensor": {
+      "controller_api_version": {
+        "name": "API version"
+      },
+      "controller_version": {
+        "name": "Version"
+      },
       "cpu_usage": {
         "name": "CPU usage"
       },
