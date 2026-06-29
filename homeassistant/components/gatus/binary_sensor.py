@@ -28,7 +28,6 @@ async def async_setup_entry(
     entities = [
         GatusEndpointBinarySensor(coordinator, entry, endpoint["key"])
         for endpoint in coordinator.data
-        if "key" in endpoint
     ]
 
     async_add_entities(entities)
@@ -52,9 +51,9 @@ class GatusEndpointBinarySensor(
         super().__init__(coordinator)
         self._endpoint_key = endpoint_key
 
-        endpoint_data = self._get_endpoint_data()
-        group = endpoint_data.get("group", "Unknown").title()
-        name = endpoint_data.get("name", "Unknown")
+        endpoint_data = self.endpoint_data
+        group = (endpoint_data.get("group") or "").title()
+        name = endpoint_data.get("name")
 
         self._attr_name = f"{group} {name}"
         self._attr_unique_id = f"{entry.entry_id}_{endpoint_key}"
@@ -62,26 +61,21 @@ class GatusEndpointBinarySensor(
         self._attr_device_info = DeviceInfo(
             identifiers={(DOMAIN, entry.entry_id)},
             name="Gatus Server",
-            manufacturer="TwiN",
-            model="Gatus Monitoring Engine",
         )
 
-    def _get_endpoint_data(self) -> dict:
-        """Helper to safely extract this specific endpoint's data from the coordinator."""
-        for endpoint in self.coordinator.data:
-            if endpoint.get("key") == self._endpoint_key:
-                return endpoint
-        return {}
+    @property
+    def endpoint_data(self) -> dict:
+        """Return this specific endpoint's data from the coordinator."""
+        return next(
+            ep for ep in self.coordinator.data if ep["key"] == self._endpoint_key
+        )
 
     @property
     @override
     def is_on(self) -> bool | None:
         """Return true if the endpoint is up and healthy."""
-        endpoint_data = self._get_endpoint_data()
+        endpoint_data = self.endpoint_data
         results = endpoint_data.get("results", [])
-
-        if not results:
-            return None
 
         latest_result = results[-1]
         return latest_result.get("success", False)
@@ -90,13 +84,9 @@ class GatusEndpointBinarySensor(
     @override
     def extra_state_attributes(self) -> Mapping[str, Any] | None:
         """Return extra operational attributes for the endpoint."""
-        endpoint_data = self._get_endpoint_data()
-        if not endpoint_data:
-            return None
+        endpoint_data = self.endpoint_data
 
         results = endpoint_data.get("results", [])
-        if not results:
-            return None
 
         latest_result = results[-1]
 

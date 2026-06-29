@@ -7,13 +7,17 @@ from typing import Any, override
 from gatus_api.client import GatusClient, GatusClientError
 
 from homeassistant.config_entries import ConfigEntry
+from homeassistant.const import Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
 
 from .const import DOMAIN
 
+_PLATFORMS: list[Platform] = [Platform.BINARY_SENSOR]
 _LOGGER = logging.getLogger(__name__)
+
+type GatusConfigEntry = ConfigEntry[GatusDataUpdateCoordinator]
 
 
 class GatusDataUpdateCoordinator(DataUpdateCoordinator[list[dict[str, Any]]]):
@@ -22,9 +26,7 @@ class GatusDataUpdateCoordinator(DataUpdateCoordinator[list[dict[str, Any]]]):
     def __init__(self, hass: HomeAssistant, entry: ConfigEntry, url: str) -> None:
         """Initialize the coordinator."""
         self.url = url.rstrip("/")
-        session = async_get_clientsession(hass)
-
-        self.client = GatusClient(url=self.url, session=session)
+        self.client = GatusClient(url=self.url, session=async_get_clientsession(hass))
 
         super().__init__(
             hass,
@@ -35,8 +37,7 @@ class GatusDataUpdateCoordinator(DataUpdateCoordinator[list[dict[str, Any]]]):
         )
 
     @override
-    async def _async_update_data(self) -> list[dict[str, Any]]:
-        """Fetch data from Gatus using the third-party client."""
+    async def _async_update_data(self):
         try:
             return await self.client.get_endpoints_statuses()
         except GatusClientError as err:

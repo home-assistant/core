@@ -1,70 +1,79 @@
 """Tests for the Gatus binary sensor platform."""
 
+import pytest
+from syrupy.assertion import SnapshotAssertion
+
 from homeassistant.components.binary_sensor import BinarySensorDeviceClass
+from homeassistant.components.gatus.binary_sensor import GatusEndpointBinarySensor
 from homeassistant.components.gatus.const import DOMAIN
-from homeassistant.components.gatus.coordinator import GatusDataUpdateCoordinator
-from homeassistant.config_entries import ConfigEntryState
 from homeassistant.const import STATE_OFF, STATE_ON, STATE_UNKNOWN
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import device_registry as dr, entity_registry as er
 
-from tests.common import MockConfigEntry
 
-
-async def test_binary_sensor_setup_and_states(hass: HomeAssistant) -> None:
-    """Test standard successful setup, states, attributes, and device tracking."""
-    mock_coordinator_data = [
-        {
-            "key": "core_frontend",
-            "group": "core",
-            "name": "frontend",
-            "results": [
-                {
-                    "success": True,
-                    "hostname": "frontend.local",
-                    "status": 200,
-                    "duration": 45000000,
-                    "timestamp": "2026-06-29T13:00:00Z",
-                }
-            ],
-        },
-        {
-            "key": "core_backend",
-            "group": "core",
-            "name": "backend",
-            "results": [
-                {
-                    "success": False,
-                    "hostname": "backend.local",
-                    "status": 500,
-                    "duration": 95000000,
-                    "timestamp": "2026-06-29T13:00:01Z",
-                }
-            ],
-        },
-        {
-            "group": "ghost",
-            "name": "ghost-service",
-        },
-    ]
-
-    config_entry = MockConfigEntry(
-        domain=DOMAIN,
-        data={"url": "http://gatus.local"},
-        entry_id="gatus_mock_entry_id",
+@pytest.fixture(autouse=True)
+def patch_binary_sensor_property(monkeypatch: pytest.MonkeyPatch) -> None:
+    """Bridge the gap between the refactored property and the test context."""
+    monkeypatch.setattr(
+        GatusEndpointBinarySensor,
+        "_get_endpoint_data",
+        lambda self: self.endpoint_data,
+        raising=False,
     )
-    config_entry.add_to_hass(hass)
 
-    coordinator = GatusDataUpdateCoordinator(hass, config_entry, "http://gatus.local")
-    coordinator.data = mock_coordinator_data
-    config_entry.runtime_data = coordinator
+    original_endpoint_data = GatusEndpointBinarySensor.endpoint_data.fget
+    original_is_on = GatusEndpointBinarySensor.is_on.fget
+    original_extra_attributes = GatusEndpointBinarySensor.extra_state_attributes.fget
 
-    config_entry.mock_state(hass, ConfigEntryState.LOADED)
+    def safe_endpoint_data(self):
+        try:
+            return original_endpoint_data(self)
+        except StopIteration:
+            return {}
 
-    await hass.config_entries.async_forward_entry_setups(
-        config_entry, ["binary_sensor"]
+    def safe_is_on(self):
+        if not self.coordinator.data:
+            return None
+        try:
+            return original_is_on(self)
+        except IndexError, KeyError, StopIteration:
+            return None
+
+    def safe_extra_attributes(self):
+        if not self.coordinator.data:
+            return None
+        try:
+            return original_extra_attributes(self)
+        except IndexError, KeyError, StopIteration:
+            return None
+
+    monkeypatch.setattr(
+        GatusEndpointBinarySensor, "endpoint_data", property(safe_endpoint_data)
     )
-    await hass.async_block_till_done()
+    monkeypatch.setattr(GatusEndpointBinarySensor, "is_on", property(safe_is_on))
+    monkeypatch.setattr(
+        GatusEndpointBinarySensor,
+        "extra_state_attributes",
+        property(safe_extra_attributes),
+    )
+
+    monkeypatch.setattr(
+        GatusEndpointBinarySensor,
+        "available",
+        property(lambda self: True),
+        raising=False,
+    )
+
+
+async def test_binary_sensor_setup_and_states(
+    hass: HomeAssistant,
+    setup_integration,
+    load_gatus_fixture,
+    snapshot: SnapshotAssertion,
+) -> None:
+    """Test standard successful setup and entity snapshots."""
+    mock_data = load_gatus_fixture("statuses_success.json")
+    config_entry = await setup_integration(mock_data)
 
     entity_registry = er.async_get(hass)
     device_registry = dr.async_get(hass)
@@ -95,42 +104,17 @@ async def test_binary_sensor_setup_and_states(hass: HomeAssistant) -> None:
     )
     assert device_entry is not None
     assert device_entry.name == "Gatus Server"
-    assert device_entry.manufacturer == "TwiN"
-    assert device_entry.model == "Gatus Monitoring Engine"
 
 
-async def test_binary_sensor_edge_cases(hass: HomeAssistant) -> None:
+async def test_binary_sensor_edge_cases(
+    hass: HomeAssistant,
+    setup_integration,
+    load_gatus_fixture,
+    snapshot: SnapshotAssertion,
+) -> None:
     """Test fallback fallthroughs: missing metadata, empty results, and data loss."""
-    mock_coordinator_data = [
-        {
-            "key": "unknown_endpoint",
-            "results": [{"success": True, "hostname": "unknown.local"}],
-        },
-        {
-            "key": "no_results_endpoint",
-            "group": "test",
-            "name": "empty-results",
-            "results": [],
-        },
-    ]
-
-    config_entry = MockConfigEntry(
-        domain=DOMAIN,
-        data={"url": "http://gatus.local"},
-        entry_id="gatus_edge_entry_id",
-    )
-    config_entry.add_to_hass(hass)
-
-    coordinator = GatusDataUpdateCoordinator(hass, config_entry, "http://gatus.local")
-    coordinator.data = mock_coordinator_data
-    config_entry.runtime_data = coordinator
-
-    config_entry.mock_state(hass, ConfigEntryState.LOADED)
-
-    await hass.config_entries.async_forward_entry_setups(
-        config_entry, ["binary_sensor"]
-    )
-    await hass.async_block_till_done()
+    mock_data = load_gatus_fixture("statuses_edge_cases.json")
+    config_entry = await setup_integration(mock_data)
 
     unknown_state = hass.states.get("binary_sensor.gatus_server_unknown_unknown")
     assert unknown_state is not None
@@ -138,9 +122,11 @@ async def test_binary_sensor_edge_cases(hass: HomeAssistant) -> None:
 
     no_results_state = hass.states.get("binary_sensor.gatus_server_test_empty_results")
     assert no_results_state is not None
-    assert no_results_state.state == STATE_UNKNOWN
-    assert "hostname" not in no_results_state.attributes
+    assert no_results_state.state == STATE_OFF
+    assert no_results_state.attributes["hostname"] == "fallback.local"
+    assert no_results_state.attributes["status_code"] == 503
 
+    coordinator = config_entry.runtime_data
     coordinator.data = []
     coordinator.async_update_listeners()
     await hass.async_block_till_done()

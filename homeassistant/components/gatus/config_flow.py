@@ -2,6 +2,7 @@
 
 import logging
 from typing import Any, override
+import uuid
 
 from gatus_api.client import GatusClient, GatusClientError
 import voluptuous as vol
@@ -23,29 +24,20 @@ STEP_USER_DATA_SCHEMA = vol.Schema(
 )
 
 
-async def validate_input(hass: HomeAssistant, data: dict[str, Any]) -> dict[str, Any]:
-    """Validate that the user input allows us to connect to Gatus.
+async def validate_input(hass: HomeAssistant, data: dict[str, Any]) -> None:
+    """Validate that the user input allows us to connect to Gatus."""
 
-    Data has the keys from STEP_USER_DATA_SCHEMA with values provided by the user.
-    """
-    url = data[CONF_URL]
-    session = async_get_clientsession(hass)
-
-    client = GatusClient(url=url, session=session)
+    client = GatusClient(url=data[CONF_URL], session=async_get_clientsession(hass))
 
     try:
         await client.get_endpoints_statuses()
     except GatusClientError as err:
-        _LOGGER.error("Cannot connect to Gatus instance at %s: %s", url, err)
+        _LOGGER.error("Cannot connect to Gatus instance at %s: %s", data[CONF_URL], err)
         raise CannotConnect from err
-
-    return {"title": "Gatus"}
 
 
 class GatusConfigFlow(ConfigFlow, domain=DOMAIN):
     """Handle a config flow for Gatus."""
-
-    VERSION = 1
 
     @override
     async def async_step_user(
@@ -58,14 +50,18 @@ class GatusConfigFlow(ConfigFlow, domain=DOMAIN):
             self._async_abort_entries_match({CONF_URL: user_input[CONF_URL]})
 
             try:
-                info = await validate_input(self.hass, user_input)
+                await validate_input(self.hass, user_input)
             except CannotConnect:
                 errors["base"] = "cannot_connect"
             except Exception:
                 _LOGGER.exception("Unexpected exception during Gatus setup validation")
                 errors["base"] = "unknown"
             else:
-                return self.async_create_entry(title=info["title"], data=user_input)
+                unique_id = str(uuid.uuid4())
+                await self.async_set_unique_id(unique_id)
+                self._abort_if_unique_id_configured()
+
+                return self.async_create_entry(title="Gatus", data=user_input)
 
         return self.async_show_form(
             step_id="user", data_schema=STEP_USER_DATA_SCHEMA, errors=errors

@@ -1,0 +1,30 @@
+[
+  {
+    "key": "core_frontend",
+    "group": "core",
+    "name": "frontend",
+    "results": [
+      {
+        "success": true,
+        "hostname": "frontend.local",
+        "status": 200,
+        "duration": 45000000,
+        "timestamp": "2026-06-29T13:00:00Z"
+      }
+    ]
+  },
+  {
+    "key": "core_backend",
+    "group": "core",
+    "name": "backend",
+    "results": [
+      {
+        "success": false,
+        "hostname": "backend.local",
+        "status": 500,
+        "duration": 95000000,
+        "timestamp": "2026-06-29T13:00:01Z"
+      }
+    ]
+  }
+]

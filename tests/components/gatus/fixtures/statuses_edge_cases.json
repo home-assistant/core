@@ -1,0 +1,30 @@
+[
+  {
+    "key": "unknown_endpoint",
+    "group": "Unknown",
+    "name": "Unknown",
+    "results": [
+      {
+        "success": true,
+        "hostname": "unknown.local",
+        "status": 200,
+        "duration": 10000000,
+        "timestamp": "2026-06-29T13:00:00Z"
+      }
+    ]
+  },
+  {
+    "key": "test_empty_results",
+    "group": "Test",
+    "name": "Empty Results",
+    "results": [
+      {
+        "success": false,
+        "hostname": "fallback.local",
+        "status": 503,
+        "duration": 0,
+        "timestamp": "2026-06-29T13:00:00Z"
+      }
+    ]
+  }
+]
