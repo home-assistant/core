@@ -21,7 +21,7 @@ from homeassistant.data_entry_flow import FlowResultType
 from homeassistant.helpers import config_entry_oauth2_flow
 from homeassistant.setup import async_setup_component
 
-from .conftest import IDENTITY_URL
+from .conftest import IDENTITY_URL, USERINFO_URL
 
 from tests.common import MockConfigEntry
 from tests.test_util.aiohttp import AiohttpClientMocker
@@ -67,6 +67,8 @@ async def test_full_flow(
         f"&state={state}"
         "&scope=https://www.googleapis.com/auth/googlehealth.activity_and_fitness.readonly"
         "+https://www.googleapis.com/auth/googlehealth.profile.readonly"
+        "+https://www.googleapis.com/auth/googlehealth.health_metrics_and_measurements.readonly"
+        "+profile"
         "&access_type=offline"
         "&prompt=consent"
     )
@@ -96,13 +98,21 @@ async def test_full_flow(
         },
     )
 
+    aioclient_mock.get(
+        USERINFO_URL,
+        json={
+            "given_name": "Allen",
+            "name": "Allen Porter",
+        },
+    )
+
     with patch(
         "homeassistant.components.google_health.async_setup_entry", return_value=True
     ) as mock_setup:
         result2 = await hass.config_entries.flow.async_configure(result["flow_id"])
 
     assert result2["type"] is FlowResultType.CREATE_ENTRY
-    assert result2["title"] == "users/me/identity"
+    assert result2["title"] == "Allen"
     assert result2["result"].unique_id == "mock-health-user-id"
     assert len(hass.config_entries.async_entries(DOMAIN)) == 1
     assert len(mock_setup.mock_calls) == 1
@@ -159,6 +169,8 @@ async def test_reauth_flow(
         f"&state={state}"
         "&scope=https://www.googleapis.com/auth/googlehealth.activity_and_fitness.readonly"
         "+https://www.googleapis.com/auth/googlehealth.profile.readonly"
+        "+https://www.googleapis.com/auth/googlehealth.health_metrics_and_measurements.readonly"
+        "+profile"
         "&access_type=offline"
         "&prompt=consent"
     )

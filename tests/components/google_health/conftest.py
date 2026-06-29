@@ -25,6 +25,8 @@ FAKE_REFRESH_TOKEN = "some-refresh-token"
 API_BASE_URL = "https://health.googleapis.com/v4/users/me"
 IDENTITY_URL = f"{API_BASE_URL}/identity"
 STEPS_ROLLUP_URL = f"{API_BASE_URL}/dataTypes/steps/dataPoints:dailyRollUp"
+WEIGHT_URL = f"{API_BASE_URL}/dataTypes/weight/dataPoints"
+USERINFO_URL = "https://www.googleapis.com/oauth2/v3/userinfo"
 
 
 @pytest.fixture(name="expires_at")
@@ -50,6 +52,7 @@ def mock_config_entry(token_entry: dict[str, Any]) -> MockConfigEntry:
     """Fixture for a config entry."""
     return MockConfigEntry(
         domain=DOMAIN,
+        title="Google Health",
         unique_id="mock-health-user-id",
         data={
             "auth_implementation": DOMAIN,

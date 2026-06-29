@@ -35,6 +35,9 @@
     "sensor": {
       "steps": {
         "name": "Steps"
+      },
+      "weight": {
+        "name": "Weight"
       }
     }
   },

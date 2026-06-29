@@ -84,7 +84,22 @@ class OAuth2FlowHandler(
 
         self._abort_if_unique_id_configured()
 
+        display_name = None
+        if "profile" in scopes:
+            try:
+                resp = await websession.get(
+                    "https://www.googleapis.com/oauth2/v3/userinfo",
+                    headers={"Authorization": f"Bearer {access_token}"},
+                )
+                resp.raise_for_status()
+                userinfo = await resp.json()
+                display_name = userinfo.get("given_name") or userinfo.get("name")
+            except Exception as err:  # pylint: disable=broad-except # noqa: BLE001
+                _LOGGER.warning("Error fetching user profile name: %s", err)
+
+        title = display_name or "Google Health"
+
         return self.async_create_entry(
-            title=identity.name or "Google Health",
+            title=title,
             data=data,
         )

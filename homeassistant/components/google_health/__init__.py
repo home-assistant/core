@@ -1,5 +1,7 @@
 """The Google Health integration."""
 
+from dataclasses import dataclass
+
 from google_health_api import GoogleHealthApi
 from google_health_api.const import HealthApiScope
 
@@ -16,11 +18,20 @@ from homeassistant.helpers.config_entry_oauth2_flow import (
 
 from . import api
 from .const import DOMAIN
-from .coordinator import GoogleHealthCoordinator
+from .coordinator import GoogleHealthActivityCoordinator, GoogleHealthBodyCoordinator
 
 _PLATFORMS: list[Platform] = [Platform.SENSOR]
 
-type GoogleHealthConfigEntry = ConfigEntry[GoogleHealthCoordinator]
+
+@dataclass
+class GoogleHealthData:
+    """Class to hold Google Health coordinators."""
+
+    activity_coordinator: GoogleHealthActivityCoordinator | None = None
+    body_coordinator: GoogleHealthBodyCoordinator | None = None
+
+
+type GoogleHealthConfigEntry = ConfigEntry[GoogleHealthData]
 
 
 async def async_setup_entry(
@@ -48,11 +59,21 @@ async def async_setup_entry(
     )
 
     api_client = GoogleHealthApi(auth)
-    coordinator = GoogleHealthCoordinator(hass, entry, api_client)
 
-    await coordinator.async_config_entry_first_refresh()
+    activity_coordinator = None
+    if all(scope in scopes for scope in api_client.steps.required_read_scopes):
+        activity_coordinator = GoogleHealthActivityCoordinator(hass, entry, api_client)
+        await activity_coordinator.async_config_entry_first_refresh()
 
-    entry.runtime_data = coordinator
+    body_coordinator = None
+    if all(scope in scopes for scope in api_client.weight.required_read_scopes):
+        body_coordinator = GoogleHealthBodyCoordinator(hass, entry, api_client)
+        await body_coordinator.async_config_entry_first_refresh()
+
+    entry.runtime_data = GoogleHealthData(
+        activity_coordinator=activity_coordinator,
+        body_coordinator=body_coordinator,
+    )
 
     await hass.config_entries.async_forward_entry_setups(entry, _PLATFORMS)
 

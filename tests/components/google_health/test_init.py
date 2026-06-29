@@ -5,7 +5,7 @@ from collections.abc import Awaitable, Callable
 from homeassistant import config_entries
 from homeassistant.core import HomeAssistant
 
-from .conftest import STEPS_ROLLUP_URL
+from .conftest import STEPS_ROLLUP_URL, WEIGHT_URL
 
 from tests.common import MockConfigEntry
 from tests.test_util.aiohttp import AiohttpClientMocker
@@ -32,10 +32,29 @@ async def test_setup_and_unload(
             ]
         },
     )
+    aioclient_mock.get(
+        WEIGHT_URL,
+        json={
+            "dataPoints": [
+                {
+                    "weight": {
+                        "weightGrams": 80000.0,
+                        "sampleTime": {
+                            "physicalTime": "2026-06-29T00:00:00Z",
+                        },
+                    }
+                }
+            ]
+        },
+    )
 
     # Setup the integration
     assert await integration_setup()
     assert config_entry.state is config_entries.ConfigEntryState.LOADED
+
+    # Verify both entities exist
+    assert hass.states.get("sensor.google_health_steps") is not None
+    assert hass.states.get("sensor.google_health_weight") is not None
 
     # Unload integration
     assert await hass.config_entries.async_unload(config_entry.entry_id)
@@ -107,10 +126,27 @@ async def test_setup_missing_scopes(
 
 async def test_setup_missing_activity_scope(
     hass: HomeAssistant,
+    aioclient_mock: AiohttpClientMocker,
     config_entry: MockConfigEntry,
     integration_setup: Callable[[], Awaitable[bool]],
 ) -> None:
     """Test setup succeeds but steps sensor is not added if activity scope is missing."""
+    aioclient_mock.get(
+        WEIGHT_URL,
+        json={
+            "dataPoints": [
+                {
+                    "weight": {
+                        "weightGrams": 80000.0,
+                        "sampleTime": {
+                            "physicalTime": "2026-06-29T00:00:00Z",
+                        },
+                    }
+                }
+            ]
+        },
+    )
+
     # Modify token to exclude activity scope
     hass.config_entries.async_update_entry(
         config_entry,
@@ -118,7 +154,10 @@ async def test_setup_missing_activity_scope(
             **config_entry.data,
             "token": {
                 **config_entry.data["token"],
-                "scope": "https://www.googleapis.com/auth/googlehealth.profile.readonly",
+                "scope": (
+                    "https://www.googleapis.com/auth/googlehealth.profile.readonly "
+                    "https://www.googleapis.com/auth/googlehealth.health_metrics_and_measurements.readonly"
+                ),
             },
         },
     )
@@ -130,3 +169,55 @@ async def test_setup_missing_activity_scope(
     # Steps sensor entity should not exist
     state = hass.states.get("sensor.google_health_steps")
     assert state is None
+
+    # Weight sensor entity should exist
+    assert hass.states.get("sensor.google_health_weight") is not None
+
+
+async def test_setup_missing_measurements_scope(
+    hass: HomeAssistant,
+    aioclient_mock: AiohttpClientMocker,
+    config_entry: MockConfigEntry,
+    integration_setup: Callable[[], Awaitable[bool]],
+) -> None:
+    """Test setup succeeds but weight sensor is not added if measurements scope is missing."""
+    aioclient_mock.post(
+        STEPS_ROLLUP_URL,
+        json={
+            "rollupDataPoints": [
+                {
+                    "steps": {
+                        "countSum": 10500,
+                    },
+                    "civilStartTime": {"date": {"year": 2026, "month": 6, "day": 28}},
+                    "civilEndTime": {"date": {"year": 2026, "month": 6, "day": 29}},
+                }
+            ]
+        },
+    )
+
+    # Modify token to exclude measurements scope
+    hass.config_entries.async_update_entry(
+        config_entry,
+        data={
+            **config_entry.data,
+            "token": {
+                **config_entry.data["token"],
+                "scope": (
+                    "https://www.googleapis.com/auth/googlehealth.profile.readonly "
+                    "https://www.googleapis.com/auth/googlehealth.activity_and_fitness.readonly"
+                ),
+            },
+        },
+    )
+
+    # Setup should succeed
+    assert await integration_setup()
+    assert config_entry.state is config_entries.ConfigEntryState.LOADED
+
+    # Weight sensor entity should not exist
+    state = hass.states.get("sensor.google_health_weight")
+    assert state is None
+
+    # Steps sensor entity should exist
+    assert hass.states.get("sensor.google_health_steps") is not None

@@ -10,4 +10,6 @@ OAUTH2_TOKEN = "https://oauth2.googleapis.com/token"
 OAUTH_SCOPES = [
     HealthApiScope.ACTIVITY_READ,
     HealthApiScope.PROFILE_READ,
+    HealthApiScope.MEASUREMENTS_READ,
+    "profile",
 ]
