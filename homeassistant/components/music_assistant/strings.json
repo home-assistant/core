@@ -374,7 +374,7 @@
     },
     "get_queue": {
       "description": "Retrieves the details of the currently active queue of a Music Assistant player.",
-      "name": "Get playerQueue details (advanced)"
+      "name": "Get playerQueue details"
     },
     "play_announcement": {
       "description": "Plays an announcement on a Music Assistant player with more fine-grained control options.",
