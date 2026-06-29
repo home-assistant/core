@@ -15,7 +15,7 @@ from .coordinator import (
     SmDataUpdateCoordinator,
     SmFirmwareUpdateCoordinator,
     SmlightData,
-    device_info,
+    base_device_info,
 )
 from .services import async_setup_services
 
@@ -59,7 +59,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: SmConfigEntry) -> bool:
         device_registry = dr.async_get(hass)
         device = device_registry.async_get_or_create(
             config_entry_id=entry.entry_id,
-            **device_info(info, client.host),
+            **base_device_info(info, client.host),
         )
         entry.async_on_unload(async_connect_scanner(hass, entry, info.model, device.id))
 

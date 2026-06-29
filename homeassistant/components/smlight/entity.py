@@ -2,7 +2,7 @@
 
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
-from .coordinator import SmBaseDataUpdateCoordinator, device_info
+from .coordinator import SmBaseDataUpdateCoordinator, base_device_info
 
 
 class SmEntity(CoordinatorEntity[SmBaseDataUpdateCoordinator]):
@@ -13,6 +13,6 @@ class SmEntity(CoordinatorEntity[SmBaseDataUpdateCoordinator]):
     def __init__(self, coordinator: SmBaseDataUpdateCoordinator) -> None:
         """Initialize entity with device."""
         super().__init__(coordinator)
-        self._attr_device_info = device_info(
+        self._attr_device_info = base_device_info(
             coordinator.data.info, coordinator.client.host
         )

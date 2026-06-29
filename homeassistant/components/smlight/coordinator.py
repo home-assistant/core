@@ -60,7 +60,7 @@ class SmFwData:
 type SmConfigEntry = ConfigEntry[SmlightData]
 
 
-def device_info(info: Info, host: str) -> DeviceInfo:
+def base_device_info(info: Info, host: str) -> DeviceInfo:
     """Return device registry information."""
     return DeviceInfo(
         configuration_url=f"http://{host}",
