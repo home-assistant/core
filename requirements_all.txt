@@ -2724,7 +2724,7 @@ python-rabbitair==0.0.8
 python-ripple-api==0.0.3
 
 # homeassistant.components.roborock
-python-roborock==5.21.0
+python-roborock==5.22.0
 
 # homeassistant.components.smarttub
 python-smarttub==0.0.47
@@ -3135,7 +3135,7 @@ tellcore-py==1.1.3
 tellduslive==0.10.12
 
 # homeassistant.components.teltonika
-teltasync==0.3.1
+teltasync==0.4.0
 
 # homeassistant.components.lg_soundbar
 temescal==0.5
