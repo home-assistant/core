@@ -604,6 +604,9 @@ class EntityTriggerBase(Trigger):
             if not from_state or not to_state:
                 return
 
+            if to_state.state in self._excluded_states:
+                return
+
             @callback
             def report_not_triggered(reason: str, /, **data: Any) -> None:
                 """Report why this evaluated change did not fire the trigger."""
@@ -613,13 +616,6 @@ class EntityTriggerBase(Trigger):
                     NotTriggeredInfo(reason=reason, data=data), event.context
                 )
 
-            # The trigger should never fire if the new state is excluded.
-            if to_state.state in self._excluded_states:
-                return
-
-            # The trigger should never fire if the new state is not a target
-            # state. Interesting reasons (e.g. a non-numeric value or an
-            # unsupported unit) are reported for the trace.
             if not self._is_valid_to_state(to_state, report_not_triggered):
                 return
 
