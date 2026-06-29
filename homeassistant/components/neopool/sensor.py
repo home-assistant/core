@@ -344,28 +344,48 @@ class NeoPoolSensor(NeoPoolEntity, SensorEntity):
             return "g/h"
         return self.entity_description.native_unit_of_measurement
 
+    _PRODUCTION_KEYS_REQUIRING_FILTRATION = frozenset(
+        {
+            "MBF_HIDRO_CURRENT",
+            "MBF_HIDRO_VOLTAGE",
+            "MBF_ION_CURRENT",
+        }
+    )
+
     _MEASURE_KEYS_REQUIRING_FILTRATION = frozenset(
         {
             "MBF_MEASURE_TEMPERATURE",
             "MBF_MEASURE_PH",
             "MBF_MEASURE_RX",
+            "MBF_MEASURE_CL",
             "MBF_MEASURE_CONDUCTIVITY",
-            "MBF_HIDRO_VOLTAGE",
             "FILTRATION_SPEED",
         }
     )
+
+    def _filtration_gate_blocks(self) -> bool:
+        """Return True if the filtration-off gate hides the live reading."""
+        return self.coordinator.data.get("Filtration Pump") is False
 
     def _is_measurement_suppressed(self) -> bool:
         """Return True if a measurement sensor should report None."""
         if self._key not in self._MEASURE_KEYS_REQUIRING_FILTRATION:
             return False
-        return self.coordinator.data.get("Filtration Pump") is False
+        return self._filtration_gate_blocks()
+
+    def _is_production_suppressed(self) -> bool:
+        """Return True if a production sensor should report 0."""
+        if self._key not in self._PRODUCTION_KEYS_REQUIRING_FILTRATION:
+            return False
+        return self._filtration_gate_blocks()
 
     @property
     def native_value(self) -> float | int | str | datetime | None:
         """Return the actual sensor value from coordinator data."""
         if self._is_measurement_suppressed():
             return None
+        if self._is_production_suppressed():
+            return 0
         if self._key == "PH_PUMP_STATUS":
             return decode_ph_pump_status(self.coordinator.data)
         if self._key == "HIDRO_POLARITY":

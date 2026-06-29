@@ -255,6 +255,55 @@ async def test_temperature_sensor_suppressed_when_filtration_off(
 
 
 @pytest.mark.parametrize(
+    "key",
+    [
+        "MBF_MEASURE_PH",
+        "MBF_MEASURE_RX",
+        "MBF_MEASURE_CL",
+        "MBF_MEASURE_CONDUCTIVITY",
+    ],
+)
+async def test_measurement_sensors_suppressed_when_filtration_off(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    mock_neopool_client: MagicMock,
+    key: str,
+) -> None:
+    """Probe sensors report None while filtration pump is off (stale reading)."""
+    await setup_integration(hass, mock_config_entry)
+    entity = _sensor_by_key(hass, key)
+    if entity is None:
+        pytest.skip(f"{key} entity not registered on this fixture")
+    coordinator = mock_config_entry.runtime_data
+    coordinator.data["Filtration Pump"] = False
+    assert entity.native_value is None
+
+
+@pytest.mark.parametrize(
+    "key",
+    [
+        "MBF_HIDRO_CURRENT",
+        "MBF_HIDRO_VOLTAGE",
+        "MBF_ION_CURRENT",
+    ],
+)
+async def test_production_sensors_zero_when_filtration_off(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    mock_neopool_client: MagicMock,
+    key: str,
+) -> None:
+    """Production sensors report 0 while filtration pump is off (cell idle)."""
+    await setup_integration(hass, mock_config_entry)
+    entity = _sensor_by_key(hass, key)
+    if entity is None:
+        pytest.skip(f"{key} entity not registered on this fixture")
+    coordinator = mock_config_entry.runtime_data
+    coordinator.data["Filtration Pump"] = False
+    assert entity.native_value == 0
+
+
+@pytest.mark.parametrize(
     ("filt_mode", "expected"),
     [
         (0, "manual"),
