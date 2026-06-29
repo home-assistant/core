@@ -34,8 +34,6 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         errors: dict[str, str] = {}
         if user_input is not None:
             host = user_input[CONF_HOST]
-            username = user_input[CONF_USERNAME]
-            password = user_input[CONF_PASSWORD]
 
             # Ensure host has protocol
             if not host.startswith(("http://", "https://")):
@@ -45,7 +43,10 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
             try:
                 session = get_async_client(self.hass)
                 async with FlowItVMCMachine(
-                    host, password, username, session=session
+                    host,
+                    user_input[CONF_PASSWORD],
+                    user_input[CONF_USERNAME],
+                    session=session,
                 ) as vmc:
                     info = await vmc.get_info()
                     # Use a stable unique id from machine status (MAC Address)
