@@ -48,6 +48,7 @@ async def test_form(hass: HomeAssistant) -> None:
         "username": "api",
         "password": "test-password",
     }
+    assert result2["result"].unique_id == "00:11:22:33:44:55"
 
 
 @pytest.mark.parametrize(
@@ -124,6 +125,7 @@ async def test_zeroconf(hass: HomeAssistant) -> None:
         "username": "api",
         "password": "test-password",
     }
+    assert result2["result"].unique_id == "00:11:22:33:44:55"
 
 
 @pytest.mark.parametrize(
@@ -251,32 +253,7 @@ async def test_form_with_http(hass: HomeAssistant) -> None:
 
     assert result2["type"] == FlowResultType.CREATE_ENTRY
     assert result2["data"]["host"] == "http://1.1.1.1"
-
-
-async def test_form_no_unique_id(hass: HomeAssistant) -> None:
-    """Test form with no unique_id."""
-    result = await hass.config_entries.flow.async_init(
-        DOMAIN, context={"source": config_entries.SOURCE_USER}
-    )
-
-    mock_vmc = get_mock_vmc()
-    mock_vmc.__aenter__.return_value.state = None
-
-    with patch(
-        "homeassistant.components.flow_it.config_flow.FlowItVMCMachine",
-        return_value=mock_vmc,
-    ):
-        result2 = await hass.config_entries.flow.async_configure(
-            result["flow_id"],
-            {
-                "host": "1.1.1.1",
-                "username": "api",
-                "password": "test-password",
-            },
-        )
-        await hass.async_block_till_done()
-
-    assert result2["type"] == FlowResultType.CREATE_ENTRY
+    assert result2["result"].unique_id == "00:11:22:33:44:55"
 
 
 async def test_reauth(hass: HomeAssistant) -> None:
