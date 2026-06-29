@@ -164,8 +164,8 @@
       "active_mode": {
         "name": "Mode",
         "state": {
-          "cooling": "[%key:component::climate::entity_component::_::state_attributes::hvac_action::state::cooling%]",
-          "heating": "[%key:component::climate::entity_component::_::state_attributes::hvac_action::state::heating%]",
+          "cooling": "Cooling",
+          "heating": "Heating",
           "standby": "[%key:common::state::standby%]"
         }
       },

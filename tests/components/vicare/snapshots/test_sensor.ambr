@@ -1225,7 +1225,7 @@
     ]),
     'area_id': None,
     'capabilities': dict({
-      'options': list([
+      <SensorEntityCapabilityAttribute.OPTIONS: 'options'>: list([
         'cooling',
         'heating',
         'standby',
@@ -1264,9 +1264,9 @@
 # name: test_all_entities[sensor.model11_mode-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'device_class': 'enum',
-      'friendly_name': 'model11 Mode',
-      'options': list([
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'enum',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'model11 Mode',
+      <SensorEntityCapabilityAttribute.OPTIONS: 'options'>: list([
         'cooling',
         'heating',
         'standby',
