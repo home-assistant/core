@@ -49,19 +49,19 @@ class FlowItVmcFan(FlowItVmcEntity, FanEntity):
 
     def __init__(self, coordinator: FlowItCoordinator, vmc: FlowItVMCMachine) -> None:
         """Initialize the fan."""
-        super().__init__(coordinator, vmc, f"{coordinator.data.name}")
+        super().__init__(coordinator, vmc, f"{coordinator.data.state.name}")
 
     @override
     @property
     def is_on(self) -> bool | None:
         """Return true if fan is on."""
-        return self.coordinator.data.data.mode.speed != Speed.OFF  # type: ignore[no-any-return]
+        return self.coordinator.data.state.data.mode.speed != Speed.OFF  # type: ignore[no-any-return]
 
     @override
     @property
     def percentage(self) -> int | None:
         """Return the current speed percentage."""
-        speed = self.coordinator.data.data.mode.speed
+        speed = self.coordinator.data.state.data.mode.speed
         if speed in ORDERED_NAMED_FAN_SPEEDS:
             return ordered_list_item_to_percentage(ORDERED_NAMED_FAN_SPEEDS, speed)
         return 0
@@ -76,7 +76,7 @@ class FlowItVmcFan(FlowItVmcEntity, FanEntity):
     @property
     def preset_mode(self) -> str | None:
         """Return the current preset mode."""
-        speed = self.coordinator.data.data.mode.speed
+        speed = self.coordinator.data.state.data.mode.speed
         if speed in PRESET_MODES:
             return str(speed)
         return None
@@ -95,7 +95,7 @@ class FlowItVmcFan(FlowItVmcEntity, FanEntity):
             return
 
         speed = percentage_to_ordered_list_item(ORDERED_NAMED_FAN_SPEEDS, percentage)
-        mode = self.coordinator.data.data.mode
+        mode = self.coordinator.data.state.data.mode
         await self.vmc.send_command(speed, flow_in=mode.flowIn, flow_out=mode.flowOut)
         await self.coordinator.async_refresh()
 
@@ -105,7 +105,7 @@ class FlowItVmcFan(FlowItVmcEntity, FanEntity):
         if preset_mode not in PRESET_MODES:
             raise ValueError(f"Invalid preset mode: {preset_mode}")
 
-        mode = self.coordinator.data.data.mode
+        mode = self.coordinator.data.state.data.mode
         await self.vmc.send_command(
             Speed(preset_mode), flow_in=mode.flowIn, flow_out=mode.flowOut
         )
@@ -119,7 +119,7 @@ class FlowItVmcFan(FlowItVmcEntity, FanEntity):
         **kwargs: Any,
     ) -> None:
         """Turn on the fan."""
-        mode = self.coordinator.data.data.mode
+        mode = self.coordinator.data.state.data.mode
         if percentage is not None:
             await self.async_set_percentage(percentage)
         elif preset_mode is not None:
@@ -133,7 +133,7 @@ class FlowItVmcFan(FlowItVmcEntity, FanEntity):
     @override
     async def async_turn_off(self, **kwargs: Any) -> None:
         """Turn off the fan."""
-        mode = self.coordinator.data.data.mode
+        mode = self.coordinator.data.state.data.mode
         await self.vmc.send_command(
             Speed.OFF, flow_in=mode.flowIn, flow_out=mode.flowOut
         )

@@ -38,7 +38,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: FlowItConfigEntry) -> bo
         _LOGGER.debug("Received WebSocket update")
         if coordinator.data:
             # Update the internal data of the current state
-            coordinator.data.data = data
+            coordinator.data.state.data = data
             coordinator.async_set_updated_data(coordinator.data)
 
     vmc.register_websocket_callback(on_ws_data)
