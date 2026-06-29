@@ -10,9 +10,11 @@ from homeassistant.components.history_stats.config_flow import (
 )
 from homeassistant.components.history_stats.const import (
     CONF_END,
+    CONF_MIN_STATE_DURATION,
     CONF_START,
     DEFAULT_NAME,
     DOMAIN,
+    SECTION_ADDITIONAL_SETTINGS,
 )
 from homeassistant.components.sensor import CONF_STATE_CLASS, SensorStateClass
 from homeassistant.config_entries import ConfigEntry, ConfigEntryState
@@ -473,6 +475,46 @@ async def test_migration_1_2(
     assert (
         hass.states.get("sensor.my_history_stats").attributes.get(CONF_STATE_CLASS)
         == SensorStateClass.MEASUREMENT
+    )
+
+
+@pytest.mark.usefixtures("recorder_mock")
+async def test_migration_1_3(
+    hass: HomeAssistant,
+    sensor_entity_entry: er.RegistryEntry,
+) -> None:
+    """Test migration from v1.3 renames advanced_settings to additional_settings."""
+
+    history_stats_config_entry = MockConfigEntry(
+        data={},
+        domain=DOMAIN,
+        options={
+            CONF_NAME: DEFAULT_NAME,
+            CONF_ENTITY_ID: sensor_entity_entry.entity_id,
+            CONF_STATE: ["on"],
+            CONF_TYPE: "count",
+            CONF_START: "{{ as_timestamp(utcnow()) - 3600 }}",
+            CONF_END: "{{ utcnow() }}",
+            "advanced_settings": {CONF_MIN_STATE_DURATION: {"seconds": 30}},
+        },
+        title="My history stats",
+        version=1,
+        minor_version=3,
+    )
+    history_stats_config_entry.add_to_hass(hass)
+    await hass.config_entries.async_setup(history_stats_config_entry.entry_id)
+    await hass.async_block_till_done()
+
+    assert history_stats_config_entry.state is ConfigEntryState.LOADED
+
+    assert "advanced_settings" not in history_stats_config_entry.options
+    assert history_stats_config_entry.options[SECTION_ADDITIONAL_SETTINGS] == {
+        CONF_MIN_STATE_DURATION: {"seconds": 30}
+    }
+    assert history_stats_config_entry.version == 1
+    assert (
+        history_stats_config_entry.minor_version
+        == HistoryStatsConfigFlowHandler.MINOR_VERSION
     )
 
 
