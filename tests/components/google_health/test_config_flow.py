@@ -20,6 +20,8 @@ from homeassistant.data_entry_flow import FlowResultType
 from homeassistant.helpers import config_entry_oauth2_flow
 from homeassistant.setup import async_setup_component
 
+from .conftest import IDENTITY_URL
+
 from tests.common import MockConfigEntry
 from tests.test_util.aiohttp import AiohttpClientMocker
 from tests.typing import ClientSessionGenerator
@@ -85,7 +87,7 @@ async def test_full_flow(
     )
 
     aioclient_mock.get(
-        "https://health.googleapis.com/v4/users/me/identity",
+        IDENTITY_URL,
         json={
             "name": "users/me/identity",
             "healthUserId": "mock-health-user-id",
@@ -176,7 +178,7 @@ async def test_reauth_flow(
     )
 
     aioclient_mock.get(
-        "https://health.googleapis.com/v4/users/me/identity",
+        IDENTITY_URL,
         json={
             "name": "users/me/identity",
             "healthUserId": "mock-health-user-id",

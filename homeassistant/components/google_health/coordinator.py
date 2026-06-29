@@ -49,11 +49,15 @@ class GoogleHealthCoordinator(DataUpdateCoordinator[int]):
             rollup = await self.api.steps.today()
         except (HealthAuthException, HealthApiForbiddenException) as err:
             raise ConfigEntryAuthFailed(
-                f"Authentication or permission error talking to Google Health API: {err}"
+                translation_domain=DOMAIN,
+                translation_key="auth_error",
+                translation_placeholders={"error": str(err)},
             ) from err
         except GoogleHealthApiError as err:
             raise UpdateFailed(
-                f"Error communicating with Google Health API: {err}"
+                translation_domain=DOMAIN,
+                translation_key="communication_error",
+                translation_placeholders={"error": str(err)},
             ) from err
 
         if rollup is None:

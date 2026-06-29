@@ -36,5 +36,13 @@
         "name": "Steps"
       }
     }
+  },
+  "exceptions": {
+    "auth_error": {
+      "message": "Authentication or permission error talking to Google Health API: {error}"
+    },
+    "communication_error": {
+      "message": "Error communicating with Google Health API: {error}"
+    }
   }
 }

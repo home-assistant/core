@@ -22,6 +22,11 @@ CLIENT_SECRET = "5678"
 FAKE_ACCESS_TOKEN = "some-access-token"
 FAKE_REFRESH_TOKEN = "some-refresh-token"
 
+API_BASE_URL = "https://health.googleapis.com/v4/users/me"
+SETTINGS_URL = f"{API_BASE_URL}/settings"
+IDENTITY_URL = f"{API_BASE_URL}/identity"
+ROLLUP_URL = f"{API_BASE_URL}/dataTypes/steps/dataPoints:dailyRollUp"
+
 
 @pytest.fixture(name="expires_at")
 def mock_expires_at() -> int:
