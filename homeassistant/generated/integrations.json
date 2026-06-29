@@ -764,12 +764,6 @@
       "config_flow": true,
       "iot_class": "cloud_polling"
     },
-    "blinksticklight": {
-      "name": "BlinkStick",
-      "integration_type": "hub",
-      "config_flow": false,
-      "iot_class": "local_polling"
-    },
     "bliss_automation": {
       "name": "Bliss Automation",
       "integration_type": "virtual",
@@ -1052,12 +1046,6 @@
       "integration_type": "hub",
       "config_flow": false,
       "iot_class": "cloud_polling"
-    },
-    "clementine": {
-      "name": "Clementine Music Player",
-      "integration_type": "hub",
-      "config_flow": false,
-      "iot_class": "local_polling"
     },
     "clickatell": {
       "name": "Clickatell",
@@ -4268,24 +4256,6 @@
           "config_flow": true,
           "iot_class": "cloud_polling",
           "name": "Azure Storage"
-        },
-        "microsoft_face_detect": {
-          "integration_type": "hub",
-          "config_flow": false,
-          "iot_class": "cloud_push",
-          "name": "Microsoft Face Detect"
-        },
-        "microsoft_face_identify": {
-          "integration_type": "hub",
-          "config_flow": false,
-          "iot_class": "cloud_push",
-          "name": "Microsoft Face Identify"
-        },
-        "microsoft_face": {
-          "integration_type": "hub",
-          "config_flow": false,
-          "iot_class": "cloud_push",
-          "name": "Microsoft Face"
         },
         "microsoft": {
           "integration_type": "hub",
@@ -7867,12 +7837,6 @@
       "integration_type": "device",
       "config_flow": true,
       "iot_class": "local_push"
-    },
-    "watson_tts": {
-      "name": "IBM Watson TTS",
-      "integration_type": "hub",
-      "config_flow": false,
-      "iot_class": "cloud_push"
     },
     "watts": {
       "name": "Watts Vision +",
