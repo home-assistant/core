@@ -13,8 +13,7 @@ from homeassistant.util.percentage import (
     percentage_to_ordered_list_item,
 )
 
-from . import FlowItConfigEntry
-from .coordinator import FlowItCoordinator
+from .coordinator import FlowItConfigEntry, FlowItCoordinator
 from .entity import FlowItVmcEntity
 
 ORDERED_NAMED_FAN_SPEEDS = [

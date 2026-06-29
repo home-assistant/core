@@ -1,5 +1,6 @@
 """Data update coordinator for the Flow-it integration."""
 
+from dataclasses import dataclass
 from datetime import timedelta
 import logging
 from typing import override
@@ -54,3 +55,14 @@ class FlowItCoordinator(DataUpdateCoordinator[MachineStatusResponse]):
             raise UpdateFailed(f"Error communicating with API: {err}") from err
         else:
             return self.vmc.state
+
+
+@dataclass
+class FlowItData:
+    """Data for the Flow-it integration."""
+
+    vmc: FlowItVMCMachine
+    coordinator: FlowItCoordinator
+
+
+type FlowItConfigEntry = ConfigEntry[FlowItData]
