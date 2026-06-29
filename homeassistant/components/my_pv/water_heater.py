@@ -33,7 +33,7 @@ async def async_setup_entry(
         and (configuration := coordinator.device.get_setup_configuration("ww1target"))
     ):
         entity_description = WaterHeaterEntityDescription(
-            key="water_heater",
+            key="temp1",
         )
         entities.append(
             MyPVWaterHeater(
