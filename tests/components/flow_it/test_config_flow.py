@@ -30,9 +30,7 @@ def _get_mock_vmc(
     if exception:
         mock_vmc.get_info.side_effect = exception
 
-    mock_cm = AsyncMock()
-    mock_cm.__aenter__.return_value = mock_vmc
-    return mock_cm
+    return mock_vmc
 
 
 async def test_form(hass: HomeAssistant) -> None:
