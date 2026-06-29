@@ -5,7 +5,11 @@ from functools import partial
 from unittest.mock import AsyncMock, MagicMock, patch
 
 import pytest
-from tplink_omada_client import OmadaSite
+from tplink_omada_client import (
+    OmadaControllerInfo,
+    OmadaControllerUpdateInfo,
+    OmadaSite,
+)
 from tplink_omada_client.clients import (
     OmadaConnectedClient,
     OmadaNetworkClient,
@@ -189,6 +193,27 @@ def mock_omada_client(mock_omada_site_client: AsyncMock) -> Generator[MagicMock]
 
         client.get_site_client.return_value = mock_omada_site_client
         client.login.return_value = "12345"
+        client.get_controller_info = AsyncMock(
+            return_value=OmadaControllerInfo(
+                {
+                    "controllerVer": "6.2.10.17",
+                    "configured": True,
+                    "omadacId": "12345",
+                }
+            )
+        )
+        client.check_firmware_updates = AsyncMock(
+            return_value=OmadaControllerUpdateInfo(
+                {
+                    "software": {
+                        "upgrade": True,
+                        "currentVersion": "6.2.10.17",
+                        "latestVersion": "6.2.14.6 Build 20260617091728",
+                        "releaseLog": "Controller software update available.",
+                    }
+                }
+            )
+        )
         client.get_controller_name.return_value = "OC200"
         client.get_sites.return_value = [OmadaSite("Display Name", "SiteId")]
         yield client

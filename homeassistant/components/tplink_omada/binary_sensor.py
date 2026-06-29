@@ -4,6 +4,7 @@ from collections.abc import Callable
 from dataclasses import dataclass
 from typing import TYPE_CHECKING, override
 
+from tplink_omada_client import OmadaControllerInfo
 from tplink_omada_client.definitions import (
     DeviceStatusCategory,
     GatewayPortMode,
@@ -22,12 +23,17 @@ from homeassistant.components.binary_sensor import (
     BinarySensorEntity,
     BinarySensorEntityDescription,
 )
+from homeassistant.const import EntityCategory
 from homeassistant.core import HomeAssistant, callback
+from homeassistant.helpers import device_registry as dr
 from homeassistant.helpers.entity import Entity
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
+from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
 from . import OmadaConfigEntry
-from .controller import OmadaGatewayCoordinator
+from .const import DOMAIN
+from .controller import OmadaGatewayCoordinator, config_entry_owns_controller_entities
+from .coordinator import OmadaControllerInfoCoordinator
 from .entity import OmadaDeviceEntity
 
 PARALLEL_UPDATES = 0
@@ -40,6 +46,15 @@ async def async_setup_entry(
 ) -> None:
     """Set up binary sensors."""
     controller = config_entry.runtime_data
+
+    if config_entry_owns_controller_entities(hass, config_entry):
+        async_add_entities(
+            [
+                OmadaControllerConnectivityBinarySensor(
+                    controller.controller_info_coordinator
+                )
+            ]
+        )
 
     async def _create_gateway_port_entities(device: OmadaListDevice) -> None:
         gateway_coordinator = controller.gateway_coordinator
@@ -65,6 +80,45 @@ async def async_setup_entry(
             and device.status_category == DeviceStatusCategory.CONNECTED
         ),
         _create_gateway_port_entities,
+    )
+
+
+class OmadaControllerConnectivityBinarySensor(
+    CoordinatorEntity[OmadaControllerInfoCoordinator], BinarySensorEntity
+):
+    """Connectivity status for an Omada controller."""
+
+    _attr_device_class = BinarySensorDeviceClass.CONNECTIVITY
+    _attr_entity_category = EntityCategory.DIAGNOSTIC
+    _attr_has_entity_name = True
+    _attr_translation_key = "controller_connectivity"
+
+    def __init__(self, coordinator: OmadaControllerInfoCoordinator) -> None:
+        """Initialize the controller connectivity binary sensor."""
+        super().__init__(coordinator)
+        self._attr_unique_id = f"{coordinator.data.omadac_id}_controller_connectivity"
+
+    @property
+    @override
+    def device_info(self) -> dr.DeviceInfo:
+        """Return device info for the Omada controller."""
+        return _controller_device_info(self.coordinator.data)
+
+    @property
+    @override
+    def is_on(self) -> bool:
+        """Return if the controller is connected."""
+        return self.coordinator.data.configured is not False
+
+
+def _controller_device_info(controller_info: OmadaControllerInfo) -> dr.DeviceInfo:
+    """Return device info for the Omada controller."""
+    return dr.DeviceInfo(
+        identifiers={(DOMAIN, controller_info.omadac_id)},
+        manufacturer="TP-Link",
+        model="Omada Controller",
+        name="Omada Controller",
+        sw_version=controller_info.controller_version,
     )
 
 
