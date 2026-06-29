@@ -1024,7 +1024,7 @@ flexit_bacnet==2.2.3
 flipr-api==1.6.1
 
 # homeassistant.components.flow_it
-flow-it-api==0.0.1.0b7
+flow-it-api==0.0.1.0
 
 # homeassistant.components.fluss
 fluss-api==0.2.5

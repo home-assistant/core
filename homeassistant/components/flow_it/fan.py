@@ -69,7 +69,7 @@ class FlowItVmcFan(FlowItVmcEntity, FanEntity):
     @property
     def is_on(self) -> bool | None:
         """Return true if fan is on."""
-        return self.coordinator.data.state.data.mode.speed != Speed.OFF  # type: ignore[no-any-return]
+        return self.coordinator.data.state.data.mode.speed != Speed.OFF
 
     @override
     @property
@@ -99,7 +99,7 @@ class FlowItVmcFan(FlowItVmcEntity, FanEntity):
     @property
     def preset_modes(self) -> list[str] | None:
         """Return the list of available preset modes."""
-        return PRESET_MODES
+        return [str(s) for s in PRESET_MODES]
 
     async def _async_send_command(
         self, speed: Speed, flow_in: bool, flow_out: bool
