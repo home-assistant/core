@@ -10,7 +10,7 @@ from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers import entity_registry as er
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
-from homeassistant.util import dt as dt_util
+from homeassistant.util import dt as dt_util, slugify
 
 from .coordinator import Device, MikrotikConfigEntry, MikrotikDataUpdateCoordinator
 
@@ -77,7 +77,7 @@ class MikrotikDataUpdateCoordinatorTracker(
         super().__init__(coordinator)
         self.device = device
         self._attr_name = device.name
-        self._attr_unique_id = device.mac
+        self._attr_unique_id = slugify(device.mac)
 
     @property
     @override
