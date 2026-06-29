@@ -269,11 +269,43 @@ post:
             - "zu"
     media:
       selector:
-        text:
+        object:
+          label_field: "media"
+          description_field: "media_description"
+          multiple: true
+          translation_key: media
+          fields:
+            media_source:
+              selector:
+                media:
+                  accept:
+                    - "*"
+              required: true
+            media_description:
+              selector:
+                text:
+                  multiline: true
+            focus_x:
+              selector:
+                number:
+                  min: -1
+                  max: 1
+                  step: 0.01
+                  mode: slider
+            focus_y:
+              selector:
+                number:
+                  min: -1
+                  max: 1
+                  step: 0.01
+                  mode: slider
+            thumbnail:
+              selector:
+                media:
+                  accept:
+                    - "*"
     media_description:
       required: false
-      selector:
-        text:
     media_warning:
       required: true
       selector:
@@ -286,6 +318,7 @@ post:
       required: false
       selector:
         text:
+
 update_profile:
   fields:
     config_entry_id: *config_entry_id
