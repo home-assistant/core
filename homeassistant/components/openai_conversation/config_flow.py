@@ -326,7 +326,7 @@ class OpenAISubentryFlowHandler(ConfigSubentryFlow):
             options.update(user_input)
             if CONF_LLM_HASS_API in options and CONF_LLM_HASS_API not in user_input:
                 options.pop(CONF_LLM_HASS_API)
-            return await self.async_step_advanced()
+            return await self.async_step_additional()
 
         return self.async_show_form(
             step_id="init",
@@ -335,10 +335,10 @@ class OpenAISubentryFlowHandler(ConfigSubentryFlow):
             ),
         )
 
-    async def async_step_advanced(
+    async def async_step_additional(
         self, user_input: dict[str, Any] | None = None
     ) -> SubentryFlowResult:
-        """Manage advanced options."""
+        """Manage additional options."""
         options = self.options
         errors: dict[str, str] = {}
 
@@ -374,7 +374,7 @@ class OpenAISubentryFlowHandler(ConfigSubentryFlow):
                 return await self.async_step_model()
 
         return self.async_show_form(
-            step_id="advanced",
+            step_id="additional",
             data_schema=self.add_suggested_values_to_schema(
                 vol.Schema(step_schema), options
             ),
