@@ -120,7 +120,7 @@
           "data_description": {
             "store_responses": "If enabled, requests and responses are stored by OpenAI and visible in your OpenAI dashboard logs"
           },
-          "title": "Advanced settings"
+          "title": "Additional settings"
         },
         "init": {
           "data": {
