@@ -106,7 +106,7 @@ async def test_setup_component_with_webhook(
     assert hass.states.get(camera_entity).state == "idle"
     assert hass.states.get(camera_entity).attributes.get("monitoring") is True
 
-    # Test turn_on/turn_off services
+    # Test turn_off services while camera was on
     with patch("pyatmo.home.Home.async_set_state") as mock_set_state:
         await hass.services.async_call(
             "camera", "turn_off", service_data={"entity_id": camera_entity}
@@ -123,6 +123,15 @@ async def test_setup_component_with_webhook(
             }
         )
 
+    # Test turn_off services while camera was off (early return, no call to pyatmo)
+    with patch("pyatmo.home.Home.async_set_state") as mock_set_state:
+        await hass.services.async_call(
+            "camera", "turn_off", service_data={"entity_id": camera_entity}
+        )
+        await hass.async_block_till_done()
+        mock_set_state.assert_not_called()
+
+    # Test turn_on services while camera was off
     with patch("pyatmo.home.Home.async_set_state") as mock_set_state:
         await hass.services.async_call(
             "camera", "turn_on", service_data={"entity_id": camera_entity}
@@ -138,6 +147,14 @@ async def test_setup_component_with_webhook(
                 ]
             }
         )
+
+    # Test turn_on services while camera was on (early return, no call to pyatmo)
+    with patch("pyatmo.home.Home.async_set_state") as mock_set_state:
+        await hass.services.async_call(
+            "camera", "turn_on", service_data={"entity_id": camera_entity}
+        )
+        await hass.async_block_till_done()
+        mock_set_state.assert_not_called()
 
 
 IMAGE_BYTES_FROM_STREAM = b"test stream image bytes"
@@ -870,8 +887,14 @@ async def test_camera_image_with_attribute_change(
             modules = home_data.get("modules", [])
             for module in modules:
                 if isinstance(module, dict) and module.get("id") == camera_entity_id:
-                    module["monitoring"] = camera_monitoring
-                    module["alim_status"] = camera_alim_status
+                    if camera_monitoring is not None:
+                        module["monitoring"] = camera_monitoring
+                    else:
+                        module.pop("monitoring", None)
+                    if camera_alim_status is not None:
+                        module["alim_status"] = camera_alim_status
+                    else:
+                        module.pop("alim_status", None)
                     break
 
     async def fake_camera_post(*args, **kwargs):
@@ -929,6 +952,10 @@ async def test_camera_image_with_attribute_change(
         assert result.content_type == "image/jpeg"
         assert result.content == FAKE_IMG
 
+        # Check that getting stream source succeeds while camera is idle without exception
+        url = await camera.async_get_stream_source(hass, camera_entity)
+        assert url is not None
+
         # Trigger some polling cycle to let API throttling work
         for _ in range(polling_cycles):
             freezer.tick(polling_delta)
@@ -956,6 +983,10 @@ async def test_camera_image_with_attribute_change(
         with pytest.raises(HomeAssistantError, match="Camera is off"):
             await camera.async_get_image(hass, camera_entity)
 
+        # Check that getting stream source raises the exception
+        with pytest.raises(HomeAssistantError, match="Camera is off"):
+            await camera.async_get_stream_source(hass, camera_entity)
+
         # Change mocked status
         camera_entity_id = camera_id
         camera_monitoring = "off"
@@ -971,3 +1002,59 @@ async def test_camera_image_with_attribute_change(
         # Check that the camera become idle with monitoring off
         assert hass.states.get(camera_entity).state == "idle"
         assert hass.states.get(camera_entity).attributes.get("monitoring") is False
+
+        # Check that getting image raises the exception
+        with pytest.raises(HomeAssistantError, match="Camera is off"):
+            await camera.async_get_image(hass, camera_entity)
+
+        # Check that getting stream source raises the exception
+        with pytest.raises(HomeAssistantError, match="Camera is off"):
+            await camera.async_get_stream_source(hass, camera_entity)
+
+        # Change mocked status
+        camera_entity_id = camera_id
+        camera_monitoring = "off"
+        camera_alim_status = None
+        camera_timestamp = int(dt_util.utcnow().timestamp())
+
+        # Trigger some polling cycle to let status change be picked up
+        for _ in range(polling_cycles):
+            freezer.tick(polling_delta)
+            async_fire_time_changed(hass)
+            await hass.async_block_till_done(wait_background_tasks=True)
+
+        # Check that the camera become idle with monitoring off
+        assert hass.states.get(camera_entity).state == "idle"
+        assert hass.states.get(camera_entity).attributes.get("monitoring") is False
+
+        # Check that getting image raises the exception
+        with pytest.raises(HomeAssistantError, match="Camera is off"):
+            await camera.async_get_image(hass, camera_entity)
+
+        # Check that getting stream source raises the exception
+        with pytest.raises(HomeAssistantError, match="Camera is off"):
+            await camera.async_get_stream_source(hass, camera_entity)
+
+        # Change mocked status
+        camera_entity_id = camera_id
+        camera_monitoring = None
+        camera_alim_status = None
+        camera_timestamp = int(dt_util.utcnow().timestamp())
+
+        # Trigger some polling cycle to let status change be picked up
+        for _ in range(polling_cycles):
+            freezer.tick(polling_delta)
+            async_fire_time_changed(hass)
+            await hass.async_block_till_done(wait_background_tasks=True)
+
+        # Check that the camera become idle with monitoring off
+        assert hass.states.get(camera_entity).state == "idle"
+        assert hass.states.get(camera_entity).attributes.get("monitoring") is False
+
+        # Check that getting image raises the exception
+        with pytest.raises(HomeAssistantError, match="Camera is off"):
+            await camera.async_get_image(hass, camera_entity)
+
+        # Check that getting stream source raises the exception
+        with pytest.raises(HomeAssistantError, match="Camera is off"):
+            await camera.async_get_stream_source(hass, camera_entity)
