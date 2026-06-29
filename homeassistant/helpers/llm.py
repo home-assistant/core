@@ -10,9 +10,9 @@ from functools import cache, partial
 from operator import attrgetter
 from typing import Any, cast, override
 
+from probatio import UNSUPPORTED, to_openapi as convert
 import slugify as unicode_slug
 import voluptuous as vol
-from voluptuous_openapi import UNSUPPORTED, convert
 
 from homeassistant.components.calendar import (
     DOMAIN as CALENDAR_DOMAIN,

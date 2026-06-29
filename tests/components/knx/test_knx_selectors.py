@@ -2,9 +2,9 @@
 
 from typing import Any
 
+from probatio import serialize as convert
 import pytest
 import voluptuous as vol
-from voluptuous_serialize import convert
 
 from homeassistant.components.knx.const import ColorTempModes
 from homeassistant.components.knx.storage.knx_selector import (

@@ -6,8 +6,8 @@ import logging
 from typing import Any, override
 
 import openai
+from probatio import to_openapi as convert
 import voluptuous as vol
-from voluptuous_openapi import convert
 
 from homeassistant.components.zone import ENTITY_ID_HOME
 from homeassistant.config_entries import (

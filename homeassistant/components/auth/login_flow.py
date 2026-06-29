@@ -74,8 +74,8 @@ from ipaddress import ip_address
 from typing import TYPE_CHECKING, Any, cast
 
 from aiohttp import web
+from probatio import serialize
 import voluptuous as vol
-import voluptuous_serialize
 
 from homeassistant import data_entry_flow
 from homeassistant.auth import AuthManagerFlowManager, InvalidAuthError
@@ -263,7 +263,7 @@ def _prepare_result_json(result: AuthFlowResult) -> dict[str, Any]:
     if (schema := result["data_schema"]) is None:
         data["data_schema"] = []
     else:
-        data["data_schema"] = voluptuous_serialize.convert(schema)
+        data["data_schema"] = serialize(schema)
 
     return data
 

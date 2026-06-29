@@ -3335,8 +3335,8 @@ async def test_flow_with_multiple_schema_errors_base(
         assert data == {
             "errors": {
                 "base": [
-                    "extra keys not allowed @ data['invalid']",
-                    "extra keys not allowed @ data['invalid_2']",
+                    "not a valid option @ data['invalid']",
+                    "not a valid option @ data['invalid_2']",
                 ],
                 "latitude": "required key not provided",
             }

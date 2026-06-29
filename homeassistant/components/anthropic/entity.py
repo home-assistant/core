@@ -103,8 +103,8 @@ from anthropic.types.web_fetch_tool_result_block import (
 from anthropic.types.web_fetch_tool_result_block_param import (
     Content as WebFetchToolResultBlockParamContentParam,
 )
+from probatio import to_openapi as convert
 import voluptuous as vol
-from voluptuous_openapi import convert
 
 from homeassistant.components import conversation
 from homeassistant.config_entries import ConfigSubentry

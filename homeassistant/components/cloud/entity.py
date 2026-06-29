@@ -42,8 +42,8 @@ from openai.types.responses.response_input_param import (
     ImageGenerationCall as ImageGenerationCallParam,
 )
 from openai.types.responses.response_output_item import ImageGenerationCall
+from probatio import to_openapi as convert
 import voluptuous as vol
-from voluptuous_openapi import convert
 
 from homeassistant.components import conversation
 from homeassistant.config_entries import ConfigEntry

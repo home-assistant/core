@@ -2,9 +2,9 @@
 
 from unittest.mock import patch
 
+from probatio import serialize
 import pytest
 from pytest_unordered import unordered
-import voluptuous_serialize
 from zwave_js_server.const import CommandClass
 from zwave_js_server.event import Event
 from zwave_js_server.model.node import Node
@@ -197,7 +197,7 @@ async def test_get_trigger_capabilities_notification_notification(
     )
     assert capabilities and "extra_fields" in capabilities
 
-    assert voluptuous_serialize.convert(
+    assert serialize(
         capabilities["extra_fields"], custom_serializer=cv.custom_serializer
     ) == unordered(
         [
@@ -337,7 +337,7 @@ async def test_get_trigger_capabilities_entry_control_notification(
     )
     assert capabilities and "extra_fields" in capabilities
 
-    assert voluptuous_serialize.convert(
+    assert serialize(
         capabilities["extra_fields"], custom_serializer=cv.custom_serializer
     ) == unordered(
         [
@@ -589,7 +589,7 @@ async def test_get_trigger_capabilities_node_status(
     )
     assert capabilities and "extra_fields" in capabilities
 
-    assert voluptuous_serialize.convert(
+    assert serialize(
         capabilities["extra_fields"], custom_serializer=cv.custom_serializer
     ) == [
         {
@@ -797,7 +797,7 @@ async def test_get_trigger_capabilities_basic_value_notification(
     )
     assert capabilities and "extra_fields" in capabilities
 
-    assert voluptuous_serialize.convert(
+    assert serialize(
         capabilities["extra_fields"], custom_serializer=cv.custom_serializer
     ) == [
         {
@@ -993,7 +993,7 @@ async def test_get_trigger_capabilities_central_scene_value_notification(
     )
     assert capabilities and "extra_fields" in capabilities
 
-    assert voluptuous_serialize.convert(
+    assert serialize(
         capabilities["extra_fields"], custom_serializer=cv.custom_serializer
     ) == [
         {
@@ -1186,7 +1186,7 @@ async def test_get_trigger_capabilities_scene_activation_value_notification(
     )
     assert capabilities and "extra_fields" in capabilities
 
-    assert voluptuous_serialize.convert(
+    assert serialize(
         capabilities["extra_fields"], custom_serializer=cv.custom_serializer
     ) == [
         {
@@ -1423,7 +1423,7 @@ async def test_get_trigger_capabilities_value_updated_value(
     )
     assert capabilities and "extra_fields" in capabilities
 
-    assert voluptuous_serialize.convert(
+    assert serialize(
         capabilities["extra_fields"], custom_serializer=cv.custom_serializer
     ) == [
         {
@@ -1583,7 +1583,7 @@ async def test_get_trigger_capabilities_value_updated_config_parameter_range(
     )
     assert capabilities and "extra_fields" in capabilities
 
-    assert voluptuous_serialize.convert(
+    assert serialize(
         capabilities["extra_fields"], custom_serializer=cv.custom_serializer
     ) == [
         {
@@ -1633,7 +1633,7 @@ async def test_get_trigger_capabilities_value_updated_config_parameter_enumerate
     )
     assert capabilities and "extra_fields" in capabilities
 
-    assert voluptuous_serialize.convert(
+    assert serialize(
         capabilities["extra_fields"], custom_serializer=cv.custom_serializer
     ) == [
         {

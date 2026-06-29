@@ -1,8 +1,8 @@
 """The tests for Humidifier device conditions."""
 
+from probatio import serialize
 import pytest
 from pytest_unordered import unordered
-import voluptuous_serialize
 
 from homeassistant.components import automation
 from homeassistant.components.device_automation import DeviceAutomationType
@@ -485,9 +485,7 @@ async def test_capabilities(
     assert capabilities and "extra_fields" in capabilities
 
     assert (
-        voluptuous_serialize.convert(
-            capabilities["extra_fields"], custom_serializer=cv.custom_serializer
-        )
+        serialize(capabilities["extra_fields"], custom_serializer=cv.custom_serializer)
         == expected_capabilities
     )
 
@@ -659,9 +657,7 @@ async def test_capabilities_legacy(
     assert capabilities and "extra_fields" in capabilities
 
     assert (
-        voluptuous_serialize.convert(
-            capabilities["extra_fields"], custom_serializer=cv.custom_serializer
-        )
+        serialize(capabilities["extra_fields"], custom_serializer=cv.custom_serializer)
         == expected_capabilities
     )
 
@@ -700,8 +696,6 @@ async def test_capabilities_missing_entity(
     assert capabilities and "extra_fields" in capabilities
 
     assert (
-        voluptuous_serialize.convert(
-            capabilities["extra_fields"], custom_serializer=cv.custom_serializer
-        )
+        serialize(capabilities["extra_fields"], custom_serializer=cv.custom_serializer)
         == expected_capabilities
     )

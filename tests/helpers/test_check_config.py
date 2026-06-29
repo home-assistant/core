@@ -84,7 +84,8 @@ async def test_bad_core_config(hass: HomeAssistant) -> None:
         error = CheckConfigError(
             (
                 f"Invalid config for 'homeassistant' at {YAML_CONFIG_FILE}, line 2:"
-                " not a valid value for dictionary value 'unit_system', got 'bad'"
+                " expected 'metric' or 'us_customary' or 'imperial' for dictionary"
+                " value 'unit_system', got 'bad'"
             ),
             "homeassistant",
             {"unit_system": "bad"},

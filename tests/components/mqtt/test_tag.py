@@ -879,7 +879,7 @@ async def test_update_with_bad_config_not_breaks_discovery(
     # Update with bad identifier
     async_fire_mqtt_message(hass, "homeassistant/tag/bla1/config", data2)
     await hass.async_block_till_done()
-    assert "extra keys not allowed @ data['device']['bad_key']" in caplog.text
+    assert "not a valid option @ data['device']['bad_key']" in caplog.text
 
     # Topic update
     async_fire_mqtt_message(hass, "homeassistant/tag/bla1/config", data3)

@@ -1,8 +1,8 @@
 """The tests for Climate device triggers."""
 
+from probatio import serialize
 import pytest
 from pytest_unordered import unordered
-import voluptuous_serialize
 
 from homeassistant.components import automation
 from homeassistant.components.climate import (
@@ -332,7 +332,7 @@ async def test_get_trigger_capabilities_hvac_mode(hass: HomeAssistant) -> None:
     )
     assert capabilities and "extra_fields" in capabilities
 
-    assert voluptuous_serialize.convert(
+    assert serialize(
         capabilities["extra_fields"], custom_serializer=cv.custom_serializer
     ) == [
         {
@@ -382,7 +382,7 @@ async def test_get_trigger_capabilities_temp_humid(
 
     assert capabilities and "extra_fields" in capabilities
 
-    assert voluptuous_serialize.convert(
+    assert serialize(
         capabilities["extra_fields"], custom_serializer=cv.custom_serializer
     ) == [
         {

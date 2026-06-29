@@ -1,8 +1,8 @@
 """The tests for Device Tracker device triggers."""
 
+from probatio import serialize
 import pytest
 from pytest_unordered import unordered
-import voluptuous_serialize
 
 from homeassistant.components import automation, zone
 from homeassistant.components.device_automation import DeviceAutomationType
@@ -327,7 +327,7 @@ async def test_get_trigger_capabilities(
     )
     assert capabilities and "extra_fields" in capabilities
 
-    assert voluptuous_serialize.convert(
+    assert serialize(
         capabilities["extra_fields"], custom_serializer=cv.custom_serializer
     ) == [
         {
@@ -366,7 +366,7 @@ async def test_get_trigger_capabilities_legacy(
     )
     assert capabilities and "extra_fields" in capabilities
 
-    assert voluptuous_serialize.convert(
+    assert serialize(
         capabilities["extra_fields"], custom_serializer=cv.custom_serializer
     ) == [
         {

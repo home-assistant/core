@@ -10,6 +10,7 @@ from typing import Any
 
 import attr
 import attrs
+from probatio import serialize
 import pytest
 from syrupy.constants import EXIT_STATUS_FAIL_UNUSED
 from syrupy.data import Snapshot, SnapshotCollection, SnapshotCollections
@@ -20,7 +21,6 @@ from syrupy.session import ItemStatus, SnapshotSession
 from syrupy.types import PropertyFilter, PropertyMatcher, PropertyPath, SerializableData
 from syrupy.utils import is_xdist_controller, is_xdist_worker
 import voluptuous as vol
-import voluptuous_serialize
 
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import State
@@ -114,7 +114,7 @@ class HomeAssistantSnapshotSerializer(AmberDataSerializer):
         }:
             serializable_data = cls._serializable_conversation_result(data)
         elif isinstance(data, vol.Schema):
-            serializable_data = voluptuous_serialize.convert(data)
+            serializable_data = serialize(data)
         elif isinstance(data, ConfigEntry):
             serializable_data = cls._serializable_config_entry(data)
         elif dataclasses.is_dataclass(type(data)):

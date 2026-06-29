@@ -2,8 +2,8 @@
 
 import logging
 
+from probatio import serialize
 import pytest
-import voluptuous_serialize
 
 from homeassistant.components import automation
 from homeassistant.components.device_automation import (
@@ -298,7 +298,7 @@ async def test_get_trigger_capabilities(
     )
     assert capabilities and "extra_fields" in capabilities
 
-    assert voluptuous_serialize.convert(
+    assert serialize(
         capabilities["extra_fields"], custom_serializer=cv.custom_serializer
     ) == [
         {
@@ -402,7 +402,7 @@ async def test_invalid_device_trigger(
         )
         assert (
             "Unnamed automation failed to setup triggers and has been disabled: "
-            "extra keys not allowed @ data['invalid']. Got None"
+            "not a valid option @ data['invalid']. Got None"
             in caplog.records[0].message
         )
 

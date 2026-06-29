@@ -1,8 +1,8 @@
 """The tests for Climate device actions."""
 
+from probatio import serialize
 import pytest
 from pytest_unordered import unordered
-import voluptuous_serialize
 
 from homeassistant.components import automation
 from homeassistant.components.climate import DOMAIN, HVACMode, const, device_action
@@ -398,9 +398,7 @@ async def test_capabilities(
     assert capabilities and "extra_fields" in capabilities
 
     assert (
-        voluptuous_serialize.convert(
-            capabilities["extra_fields"], custom_serializer=cv.custom_serializer
-        )
+        serialize(capabilities["extra_fields"], custom_serializer=cv.custom_serializer)
         == expected_capabilities
     )
 
@@ -516,9 +514,7 @@ async def test_capabilities_legacy(
     assert capabilities and "extra_fields" in capabilities
 
     assert (
-        voluptuous_serialize.convert(
-            capabilities["extra_fields"], custom_serializer=cv.custom_serializer
-        )
+        serialize(capabilities["extra_fields"], custom_serializer=cv.custom_serializer)
         == expected_capabilities
     )
 
@@ -556,8 +552,6 @@ async def test_capabilities_missing_entity(
     assert capabilities and "extra_fields" in capabilities
 
     assert (
-        voluptuous_serialize.convert(
-            capabilities["extra_fields"], custom_serializer=cv.custom_serializer
-        )
+        serialize(capabilities["extra_fields"], custom_serializer=cv.custom_serializer)
         == expected_capabilities
     )

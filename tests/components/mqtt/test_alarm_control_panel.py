@@ -1379,7 +1379,8 @@ async def test_reload_after_invalid_config(
         assert await mqtt_mock_entry()
         assert hass.states.get("alarm_control_panel.test") is None
         assert (
-            "extra keys not allowed @ data['invalid_topic'] for "
+            "not a valid option, did you mean 'availability_topic' or "
+            "'command_topic'? @ data['invalid_topic'] for "
             "manually configured MQTT alarm_control_panel item, "
             "in ?, line ? Got {'name': 'test', 'invalid_topic': 'test-topic'}"
             in caplog.text
