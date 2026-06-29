@@ -3,7 +3,7 @@
 from collections.abc import Callable
 from dataclasses import dataclass, field
 from datetime import UTC, datetime
-from typing import Any
+from typing import Any, override
 
 from blanco_smart_home_api_client import BlancoErrorType
 
@@ -211,6 +211,7 @@ class BlancoSensorEntity(CoordinatorEntity[BlancoDataUpdateCoordinator], SensorE
             sw_version=system_params.get("sw_ver_main_con"),
         )
 
+    @override
     @property
     def extra_state_attributes(self) -> dict[str, Any] | None:
         """Return filtered error list for the critical/warning error-count sensors."""
@@ -242,6 +243,7 @@ class BlancoSensorEntity(CoordinatorEntity[BlancoDataUpdateCoordinator], SensorE
             ]
         }
 
+    @override
     @property
     def native_value(self) -> StateType | datetime:
         """Return the current sensor value."""

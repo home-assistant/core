@@ -7,7 +7,7 @@ import json
 import logging
 import math
 import time
-from typing import TYPE_CHECKING, Any
+from typing import TYPE_CHECKING, Any, override
 
 if TYPE_CHECKING:
     from . import BlancoConfigEntry
@@ -151,6 +151,7 @@ class BlancoDataUpdateCoordinator(DataUpdateCoordinator[dict[str, Any]]):
                 ) from None
             return await api_method(*args)
 
+    @override
     async def _async_update_data(self) -> dict[str, Any]:
         """Fetch system, status, settings, and errors from the BLANCO API."""
         prev: dict[str, Any] = self.data or {}

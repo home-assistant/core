@@ -8,7 +8,9 @@ rules:
   config-flow: done
   dependency-transparency: done
   docs-actions: done
+  docs-conditions: done
   docs-high-level-description: done
+  docs-triggers: done
   docs-installation-instructions: done
   docs-removal-instructions: done
   entity-event-setup: done

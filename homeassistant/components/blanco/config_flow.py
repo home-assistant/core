@@ -2,7 +2,7 @@
 
 import hashlib
 import logging
-from typing import Any
+from typing import Any, override
 
 from blanco_smart_home_api_client import (
     BlancoApiClient,
@@ -68,6 +68,7 @@ async def validate_input(hass: HomeAssistant, data: dict[str, Any]) -> dict[str,
 class BlancoConfigFlow(ConfigFlow, domain=DOMAIN):
     """Handle a config flow for blanco."""
 
+    @override
     async def async_step_user(
         self, user_input: dict[str, Any] | None = None
     ) -> ConfigFlowResult:
