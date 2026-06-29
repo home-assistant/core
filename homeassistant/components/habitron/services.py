@@ -19,11 +19,9 @@ from .const import (
     EVNT_ARG4,
     EVNT_ARG5,
     EVNT_TYPE,
-    FILE_MOD_NMBR,
     HUB_UID,
     MOD_NMBR,
     RESTART_ALL,
-    RESTART_KEY_NMBR,
     ROUTER_NMBR,
 )
 
@@ -54,13 +52,13 @@ _HUB_TARGET_SCHEMA = vol.Schema({vol.Optional(ATTR_DEVICE_ID): str})
 _MOD_RESTART_SCHEMA = vol.Schema(
     {
         vol.Optional(ATTR_DEVICE_ID): str,
-        vol.Optional(RESTART_KEY_NMBR): vol.All(int, vol.Range(min=1, max=64)),
+        vol.Optional(MOD_NMBR): vol.All(int, vol.Range(min=1, max=64)),
     }
 )
 _MOD_FILE_SCHEMA = vol.Schema(
     {
         vol.Optional(ATTR_DEVICE_ID): str,
-        vol.Required(FILE_MOD_NMBR, default=1): vol.All(int, vol.Range(min=1, max=64)),
+        vol.Required(MOD_NMBR, default=1): vol.All(int, vol.Range(min=1, max=64)),
     }
 )
 _UPDATE_ENTITY_SCHEMA = vol.Schema(
@@ -119,7 +117,7 @@ async def _async_reboot_hub(call: ServiceCall) -> None:
 
 async def _async_restart_module(call: ServiceCall) -> None:
     """Restart a single Habitron module, or all modules when none is given."""
-    mod_nmbr = call.data.get(RESTART_KEY_NMBR, RESTART_ALL)
+    mod_nmbr = call.data.get(MOD_NMBR, RESTART_ALL)
     # RESTART_ALL is a sentinel the bus understands as-is; a real module number
     # is offset to its bus address.
     target = RESTART_ALL if mod_nmbr == RESTART_ALL else 100 + mod_nmbr
@@ -135,14 +133,14 @@ async def _async_restart_router(call: ServiceCall) -> None:
 
 async def _async_save_module_smc(call: ServiceCall) -> None:
     """Persist a module's .smc file."""
-    mod_nmbr = call.data.get(FILE_MOD_NMBR, 1)
+    mod_nmbr = call.data.get(MOD_NMBR, 1)
     for hub in await _targeted_hubs(call):
         await hub.comm.save_smc_file(100 + mod_nmbr)
 
 
 async def _async_save_module_smg(call: ServiceCall) -> None:
     """Persist a module's .smg file."""
-    mod_nmbr = call.data.get(FILE_MOD_NMBR, 1)
+    mod_nmbr = call.data.get(MOD_NMBR, 1)
     for hub in await _targeted_hubs(call):
         await hub.comm.save_smg_file(100 + mod_nmbr)
 
@@ -155,7 +153,7 @@ async def _async_save_router_smr(call: ServiceCall) -> None:
 
 async def _async_save_module_status(call: ServiceCall) -> None:
     """Persist a module's status to disk."""
-    mod_nmbr = call.data.get(FILE_MOD_NMBR, 1)
+    mod_nmbr = call.data.get(MOD_NMBR, 1)
     for hub in await _targeted_hubs(call):
         await hub.comm.save_module_status(100 + mod_nmbr)
 

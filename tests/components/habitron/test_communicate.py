@@ -94,23 +94,23 @@ async def test_set_output_converts_addr() -> None:
     """set_output converts the address and forwards a bool value."""
     comm = _make_comm()
     await comm.async_set_output(105, 2, 1)
-    comm._client.set_output.assert_awaited_with(5, 2, True)
+    comm._client.set_output.assert_awaited_once_with(5, 2, True)
 
 
 async def test_set_dimmval_and_flag() -> None:
     """Dim/flag setters forward converted addresses."""
     comm = _make_comm()
     await comm.async_set_dimmval(105, 1, 50)
-    comm._client.set_dimmval.assert_awaited_with(5, 1, 50)
+    comm._client.set_dimmval.assert_awaited_once_with(5, 1, 50)
     await comm.async_set_flag(105, 3, 1)
-    comm._client.set_flag.assert_awaited_with(5, 3, True)
+    comm._client.set_flag.assert_awaited_once_with(5, 3, True)
 
 
 async def test_set_analog_val_uses_dimm_channel_3() -> None:
     """The analogue output maps to dimm channel 3."""
     comm = _make_comm()
     await comm.async_set_analog_val(105, 1, 42)
-    comm._client.set_dimmval.assert_awaited_with(5, 3, 42)
+    comm._client.set_dimmval.assert_awaited_once_with(5, 3, 42)
 
 
 async def test_set_led_outp_offsets_by_output_count() -> None:
@@ -122,16 +122,16 @@ async def test_set_led_outp_offsets_by_output_count() -> None:
     router.modules = [mod]
     comm.set_router(router)
     await comm.async_set_led_outp(105, 0, 1)
-    comm._client.set_output.assert_awaited_with(5, 16, True)
+    comm._client.set_output.assert_awaited_once_with(5, 16, True)
 
 
 async def test_set_group_mode_and_climate() -> None:
     """Group-mode + climate setters pass through to the client."""
     comm = _make_comm()
     await comm.async_set_group_mode(2, 32)
-    comm._client.set_group_mode.assert_awaited_with(2, 32)
+    comm._client.set_group_mode.assert_awaited_once_with(2, 32)
     await comm.async_set_climate_mode(105, 1, 2)
-    comm._client.set_climate_mode.assert_awaited_with(5, 1, 2)
+    comm._client.set_climate_mode.assert_awaited_once_with(5, 1, 2)
 
 
 # ---------------------------------------------------------------------------
