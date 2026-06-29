@@ -24,7 +24,7 @@ class GatusDataUpdateCoordinator(DataUpdateCoordinator[list[dict[str, Any]]]):
         self.url = url.rstrip("/")
         session = async_get_clientsession(hass)
 
-        self.client = GatusClient(url=url, session=session)
+        self.client = GatusClient(url=self.url, session=session)
 
         super().__init__(
             hass,

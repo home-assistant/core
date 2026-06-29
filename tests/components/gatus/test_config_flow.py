@@ -129,28 +129,6 @@ async def test_form_invalid_status_code(hass: HomeAssistant) -> None:
     assert result2["errors"] == {"base": "cannot_connect"}
 
 
-async def test_form_invalid_payload_format(hass: HomeAssistant) -> None:
-    """Test we handle an invalid non-list JSON payload structure."""
-    result = await hass.config_entries.flow.async_init(
-        DOMAIN, context={"source": config_entries.SOURCE_USER}
-    )
-
-    with patch(
-        "homeassistant.components.gatus.config_flow.async_get_clientsession"
-    ) as mock_get_session:
-        mock_session = MagicMock()
-        mock_session.get.return_value = FakeResponse(200, {"status": "not a list"})
-        mock_get_session.return_value = mock_session
-
-        result2 = await hass.config_entries.flow.async_configure(
-            result["flow_id"],
-            {CONF_URL: "http://gatus.local:8080"},
-        )
-
-    assert result2["type"] is FlowResultType.FORM
-    assert result2["errors"] == {"base": "invalid_payload"}
-
-
 async def test_form_unexpected_exception(hass: HomeAssistant) -> None:
     """Test we handle arbitrary unexpected exceptions gracefully."""
     result = await hass.config_entries.flow.async_init(

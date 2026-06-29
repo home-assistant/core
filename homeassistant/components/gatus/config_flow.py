@@ -1,10 +1,9 @@
 """Config flow for the Gatus integration."""
 
-import asyncio
 import logging
 from typing import Any, override
 
-import aiohttp
+from gatus_api.client import GatusClient, GatusClientError
 import voluptuous as vol
 
 from homeassistant.config_entries import ConfigFlow, ConfigFlowResult
@@ -29,22 +28,14 @@ async def validate_input(hass: HomeAssistant, data: dict[str, Any]) -> dict[str,
 
     Data has the keys from STEP_USER_DATA_SCHEMA with values provided by the user.
     """
-    url = data[CONF_URL].rstrip("/")
+    url = data[CONF_URL]
     session = async_get_clientsession(hass)
 
+    client = GatusClient(url=url, session=session)
+
     try:
-        async with asyncio.timeout(10):
-            api_url = f"{url}/api/v1/endpoints/statuses"
-            async with session.get(api_url) as response:
-                if response.status != 200:
-                    raise CannotConnect
-
-                # Verify it actually returns JSON structure we expect
-                payload = await response.json()
-                if not isinstance(payload, list):
-                    raise InvalidPayload
-
-    except (aiohttp.ClientError, TimeoutError) as err:
+        await client.get_endpoints_statuses()
+    except GatusClientError as err:
         _LOGGER.error("Cannot connect to Gatus instance at %s: %s", url, err)
         raise CannotConnect from err
 
@@ -64,15 +55,12 @@ class GatusConfigFlow(ConfigFlow, domain=DOMAIN):
         errors: dict[str, str] = {}
 
         if user_input is not None:
-            # Prevent configuring the exact same URL twice
             self._async_abort_entries_match({CONF_URL: user_input[CONF_URL]})
 
             try:
                 info = await validate_input(self.hass, user_input)
             except CannotConnect:
                 errors["base"] = "cannot_connect"
-            except InvalidPayload:
-                errors["base"] = "invalid_payload"
             except Exception:
                 _LOGGER.exception("Unexpected exception during Gatus setup validation")
                 errors["base"] = "unknown"
@@ -86,7 +74,3 @@ class GatusConfigFlow(ConfigFlow, domain=DOMAIN):
 
 class CannotConnect(HomeAssistantError):
     """Error to indicate we cannot connect to the server."""
-
-
-class InvalidPayload(HomeAssistantError):
-    """Error to indicate the server responded, but it wasn't valid Gatus endpoint data."""
