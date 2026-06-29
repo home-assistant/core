@@ -332,29 +332,29 @@ class WhirlpoolSensor(WhirlpoolEntity, SensorEntity):
         return self.entity_description.value_fn(self._appliance)
 
 
-class WasherDryerTimeSensorBase(WhirlpoolEntity, RestoreSensor, ABC):
-    """Abstract base class for Whirlpool washer/dryer time sensors."""
+class WhirlpoolTimeSensorBase(WhirlpoolEntity, RestoreSensor, ABC):
+    """Abstract base class for Whirlpool end-time timestamp sensors."""
 
     _attr_should_poll = True
-    _appliance: Washer | Dryer
 
-    def __init__(
-        self, appliance: Washer | Dryer, description: SensorEntityDescription
-    ) -> None:
-        """Initialize the washer/dryer sensor."""
-        super().__init__(appliance, unique_id_suffix=f"-{description.key}")
-        self.entity_description = description
+    def __init__(self, appliance: Appliance, unique_id_suffix: str) -> None:
+        """Initialize the time sensor."""
+        super().__init__(appliance, unique_id_suffix=unique_id_suffix)
 
         self._running: bool | None = None
         self._value: datetime | None = None
 
     @abstractmethod
-    def _is_machine_state_finished(self) -> bool:
-        """Return true if the machine is in a finished state."""
+    def _is_finished(self) -> bool:
+        """Return true if the timer/cycle is in a finished state."""
 
     @abstractmethod
-    def _is_machine_state_running(self) -> bool:
-        """Return true if the machine is in a running state."""
+    def _is_running(self) -> bool:
+        """Return true if the timer/cycle is in a running state."""
+
+    @abstractmethod
+    def _get_seconds_remaining(self) -> int:
+        """Return the number of seconds remaining."""
 
     @override
     async def async_added_to_hass(self) -> None:
@@ -374,21 +374,52 @@ class WasherDryerTimeSensorBase(WhirlpoolEntity, RestoreSensor, ABC):
         """Calculate the time stamp for completion."""
         now = utcnow()
 
-        if self._is_machine_state_finished() and self._running:
+        if self._is_finished() and self._running:
             self._running = False
             self._value = now
 
-        if self._is_machine_state_running():
+        if self._is_running():
             self._running = True
-            new_timestamp = now + timedelta(
-                seconds=self._appliance.get_time_remaining()
-            )
+            new_timestamp = now + timedelta(seconds=self._get_seconds_remaining())
             if self._value is None or (
                 isinstance(self._value, datetime)
                 and abs(new_timestamp - self._value) > timedelta(seconds=60)
             ):
                 self._value = new_timestamp
         return self._value
+
+
+class WasherDryerTimeSensorBase(WhirlpoolTimeSensorBase, ABC):
+    """Abstract base class for Whirlpool washer/dryer time sensors."""
+
+    _appliance: Washer | Dryer
+
+    def __init__(
+        self, appliance: Washer | Dryer, description: SensorEntityDescription
+    ) -> None:
+        """Initialize the washer/dryer sensor."""
+        super().__init__(appliance, unique_id_suffix=f"-{description.key}")
+        self.entity_description = description
+
+    @abstractmethod
+    def _is_machine_state_finished(self) -> bool:
+        """Return true if the machine is in a finished state."""
+
+    @abstractmethod
+    def _is_machine_state_running(self) -> bool:
+        """Return true if the machine is in a running state."""
+
+    @override
+    def _is_finished(self) -> bool:
+        return self._is_machine_state_finished()
+
+    @override
+    def _is_running(self) -> bool:
+        return self._is_machine_state_running()
+
+    @override
+    def _get_seconds_remaining(self) -> int:
+        return self._appliance.get_time_remaining()
 
 
 class WasherTimeSensor(WasherDryerTimeSensorBase):
