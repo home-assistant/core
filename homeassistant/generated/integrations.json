@@ -2646,6 +2646,12 @@
         }
       }
     },
+    "google_health": {
+      "name": "Google Health",
+      "integration_type": "service",
+      "config_flow": true,
+      "iot_class": "cloud_polling"
+    },
     "govee": {
       "name": "Govee",
       "integrations": {

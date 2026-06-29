@@ -1133,6 +1133,9 @@ google-cloud-texttospeech==2.25.1
 # homeassistant.components.google_generative_ai_conversation
 google-genai==1.59.0
 
+# homeassistant.components.google_health
+google-health-api==0.1.0
+
 # homeassistant.components.google_travel_time
 google-maps-routing==0.6.15
 
