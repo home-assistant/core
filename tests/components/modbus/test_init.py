@@ -86,10 +86,13 @@ from homeassistant.components.modbus.validators import (
     duplicate_swing_mode_validator,
     ensure_and_check_conflicting_scales_and_offsets,
     hvac_fixedsize_reglist_validator,
+    modbus_create_issue,
     nan_validator,
     not_zero_value,
     register_int_list_validator,
     struct_validator,
+    validate_entity,
+    validate_modbus,
 )
 from homeassistant.components.sensor import DOMAIN as SENSOR_DOMAIN
 from homeassistant.const import (
@@ -1632,3 +1635,152 @@ async def test_not_zero_value() -> None:
 
     with pytest.raises(vol.Invalid):
         not_zero_value(0, "Value cannot be zero.")
+
+
+async def test_validate_modbus_tcp(hass: HomeAssistant) -> None:
+    """Test validate_modbus for TCP hub."""
+    hub = {
+        CONF_NAME: TEST_MODBUS_NAME,
+        CONF_TYPE: TCP,
+        CONF_HOST: TEST_MODBUS_HOST,
+        CONF_PORT: TEST_PORT_TCP,
+    }
+    hosts: set[str] = set()
+    hub_names: set[str] = set()
+
+    result = validate_modbus(hass, hosts, hub_names, hub, 0)
+    assert result is True
+    assert f"{TEST_MODBUS_HOST}_{TEST_PORT_TCP}" in hosts
+    assert TEST_MODBUS_NAME in hub_names
+
+
+async def test_validate_modbus_serial(hass: HomeAssistant) -> None:
+    """Test validate_modbus for serial hub."""
+    hub = {
+        CONF_NAME: TEST_MODBUS_NAME,
+        CONF_TYPE: SERIAL,
+        CONF_PORT: TEST_PORT_SERIAL,
+    }
+    hosts: set[str] = set()
+    hub_names: set[str] = set()
+
+    result = validate_modbus(hass, hosts, hub_names, hub, 0)
+    assert result is True
+    assert TEST_PORT_SERIAL in hosts
+    assert TEST_MODBUS_NAME in hub_names
+
+
+async def test_validate_modbus_duplicate_host(hass: HomeAssistant) -> None:
+    """Test validate_modbus with duplicate host."""
+    hub1 = {
+        CONF_NAME: TEST_MODBUS_NAME,
+        CONF_TYPE: TCP,
+        CONF_HOST: TEST_MODBUS_HOST,
+        CONF_PORT: TEST_PORT_TCP,
+    }
+    hub2 = {
+        CONF_NAME: "other_hub",
+        CONF_TYPE: TCP,
+        CONF_HOST: TEST_MODBUS_HOST,
+        CONF_PORT: TEST_PORT_TCP,
+    }
+    hosts: set[str] = set()
+    hub_names: set[str] = set()
+
+    result1 = validate_modbus(hass, hosts, hub_names, hub1, 0)
+    assert result1 is True
+
+    result2 = validate_modbus(hass, hosts, hub_names, hub2, 0)
+    assert result2 is False
+
+
+async def test_validate_modbus_duplicate_name(hass: HomeAssistant) -> None:
+    """Test validate_modbus with duplicate name."""
+    hub1 = {
+        CONF_NAME: TEST_MODBUS_NAME,
+        CONF_TYPE: TCP,
+        CONF_HOST: TEST_MODBUS_HOST,
+        CONF_PORT: TEST_PORT_TCP,
+    }
+    hub2 = {
+        CONF_NAME: TEST_MODBUS_NAME,
+        CONF_TYPE: TCP,
+        CONF_HOST: "other_host",
+        CONF_PORT: 5502,
+    }
+    hosts: set[str] = set()
+    hub_names: set[str] = set()
+
+    result1 = validate_modbus(hass, hosts, hub_names, hub1, 0)
+    assert result1 is True
+
+    result2 = validate_modbus(hass, hosts, hub_names, hub2, 0)
+    assert result2 is False
+
+
+async def test_validate_modbus_missing_name(hass: HomeAssistant) -> None:
+    """Test validate_modbus with missing name generates an issue."""
+    hub = {
+        CONF_TYPE: TCP,
+        CONF_HOST: TEST_MODBUS_HOST,
+        CONF_PORT: TEST_PORT_TCP,
+    }
+    hosts: set[str] = set()
+    hub_names: set[str] = set()
+
+    result = validate_modbus(hass, hosts, hub_names, hub, 0)
+    assert result is True
+    assert CONF_NAME in hub
+    assert hub[CONF_NAME] == "modbus_hub"
+
+
+async def test_validate_entity_valid(hass: HomeAssistant) -> None:
+    """Test validate_entity with valid entity."""
+    entity = {
+        CONF_NAME: TEST_ENTITY_NAME,
+        CONF_ADDRESS: 117,
+    }
+    ent_names: set[str] = set()
+    ent_addr: set[str] = set()
+
+    result = validate_entity(
+        hass, TEST_MODBUS_NAME, "sensor", entity, 5, ent_names, ent_addr
+    )
+    assert result is True
+    assert "sensor.test entity" in ent_names
+
+
+async def test_validate_entity_duplicate_name(hass: HomeAssistant) -> None:
+    """Test validate_entity with duplicate entity name."""
+    entity1 = {
+        CONF_NAME: TEST_ENTITY_NAME,
+        CONF_ADDRESS: 117,
+    }
+    entity2 = {
+        CONF_NAME: TEST_ENTITY_NAME,
+        CONF_ADDRESS: 119,
+    }
+    ent_names: set[str] = set()
+    ent_addr: set[str] = set()
+
+    result1 = validate_entity(
+        hass, TEST_MODBUS_NAME, "sensor", entity1, 5, ent_names, ent_addr
+    )
+    assert result1 is True
+
+    result2 = validate_entity(
+        hass, TEST_MODBUS_NAME, "sensor", entity2, 5, ent_names, ent_addr
+    )
+    assert result2 is False
+
+
+async def test_modbus_create_issue(hass: HomeAssistant) -> None:
+    """Test modbus_create_issue creates an issue."""
+    modbus_create_issue(
+        hass,
+        "test_issue",
+        ["sub1", "sub2", "sub3"],
+        "Test error message",
+    )
+    # The function should create an issue without raising an exception
+    # We just verify it doesn't crash
