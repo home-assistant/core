@@ -70,8 +70,8 @@ class MyPVWaterHeater(MyPVDataEntity, WaterHeaterEntity):
 
         self._attr_target_temperature_step = configuration["step"]
         self._attr_temperature_unit = configuration["unit"]
-        self._attr_min_temp = configuration["max"]
-        self._attr_max_temp = configuration["min"]
+        self._attr_min_temp = configuration["min"]
+        self._attr_max_temp = configuration["max"]
 
     @property
     @override
