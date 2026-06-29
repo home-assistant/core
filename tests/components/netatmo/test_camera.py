@@ -866,7 +866,7 @@ async def test_camera_image_with_attribute_change(
     polling_cycles = 11
     polling_delta = timedelta(seconds=30)
 
-    def attribute_modifier(payload):
+    def attribute_modifier(payload: dict[str, Any]) -> None:
         """Mutate the homestatus payload before it is returned by the fake post request."""
         # Used via the ``msg_callback`` hook to simulate backend changes to camera
         # attributes such as monitoring state, power status, and server timestamp.
@@ -891,7 +891,7 @@ async def test_camera_image_with_attribute_change(
                     module["monitoring"] = camera_monitoring
                     module["alim_status"] = camera_alim_status
 
-    async def fake_camera_post(*args, **kwargs):
+    async def fake_camera_post(*args: Any, **kwargs: Any):
         """Fake camera status during requesting backend data."""
         nonlocal fake_post_hits
         fake_post_hits += 1
