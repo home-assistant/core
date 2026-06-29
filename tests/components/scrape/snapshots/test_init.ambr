@@ -76,9 +76,9 @@
     }),
     'domain': 'scrape',
     'entry_id': <ANY>,
-    'minor_version': 1,
+    'minor_version': 2,
     'options': dict({
-      'advanced': dict({
+      'additional': dict({
         'encoding': 'UTF-8',
         'timeout': 10.0,
         'verify_ssl': True,
@@ -96,7 +96,7 @@
     'subentries': list([
       dict({
         'data': dict({
-          'advanced': dict({
+          'additional': dict({
             'value_template': '{{ value }}',
           }),
           'index': 0,
