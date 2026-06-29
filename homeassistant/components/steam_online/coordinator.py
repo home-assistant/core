@@ -3,10 +3,8 @@
 from dataclasses import dataclass
 from datetime import timedelta
 import logging
-import time
 from typing import override
 
-from cachetools import TTLCache
 import steam.api
 
 from homeassistant.config_entries import ConfigEntry
@@ -66,9 +64,7 @@ class SteamDataUpdateCoordinator(DataUpdateCoordinator[dict[str, PlayerData]]):
             name=DOMAIN,
             update_interval=timedelta(seconds=30),
         )
-        self.game_icons: TTLCache = TTLCache(
-            maxsize=10000, ttl=timedelta(hours=24).total_seconds(), timer=time.monotonic
-        )
+        self.game_icons: dict[str, str] = {}
 
     @override
     async def _async_setup(self) -> None:
@@ -102,13 +98,8 @@ class SteamDataUpdateCoordinator(DataUpdateCoordinator[dict[str, PlayerData]]):
                     include_appinfo=1,
                     include_played_free_games=True,
                 )["response"].get("games", [])
-                self.game_icons[player.gameid] = next(
-                    (
-                        game["img_icon_url"]
-                        for game in games
-                        if str(game["appid"]) == player.gameid
-                    ),
-                    None,
+                self.game_icons.update(
+                    {str(game["appid"]): game["img_icon_url"] for game in games}
                 )
 
         return players
