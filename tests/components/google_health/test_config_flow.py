@@ -96,11 +96,12 @@ async def test_full_flow(
     with patch(
         "homeassistant.components.google_health.async_setup_entry", return_value=True
     ) as mock_setup:
-        await hass.config_entries.flow.async_configure(result["flow_id"])
+        result2 = await hass.config_entries.flow.async_configure(result["flow_id"])
 
+    assert result2["type"] is FlowResultType.CREATE_ENTRY
+    assert result2["title"] == "users/me/identity"
+    assert result2["result"].unique_id == "mock-health-user-id"
     assert len(hass.config_entries.async_entries(DOMAIN)) == 1
-    entry = hass.config_entries.async_entries(DOMAIN)[0]
-    assert entry.unique_id == "mock-health-user-id"
     assert len(mock_setup.mock_calls) == 1
 
 
@@ -185,8 +186,10 @@ async def test_reauth_flow(
     with patch(
         "homeassistant.components.google_health.async_setup_entry", return_value=True
     ) as mock_setup:
-        await hass.config_entries.flow.async_configure(result["flow_id"])
+        result2 = await hass.config_entries.flow.async_configure(result["flow_id"])
 
+    assert result2["type"] is FlowResultType.ABORT
+    assert result2["reason"] == "reauth_successful"
     assert len(hass.config_entries.async_entries(DOMAIN)) == 1
     assert entry.data["token"]["access_token"] == "new-access-token"
     assert entry.data["token"]["refresh_token"] == "new-refresh-token"

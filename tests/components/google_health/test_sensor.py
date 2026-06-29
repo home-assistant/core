@@ -2,11 +2,22 @@
 
 from collections.abc import Awaitable, Callable
 
+import pytest
+
 from homeassistant import config_entries
 from homeassistant.core import HomeAssistant
 
 from tests.common import MockConfigEntry
 from tests.test_util.aiohttp import AiohttpClientMocker
+
+
+@pytest.fixture(autouse=True)
+def mock_settings(aioclient_mock: AiohttpClientMocker) -> None:
+    """Mock the settings endpoint to resolve user's timezone."""
+    aioclient_mock.get(
+        "https://health.googleapis.com/v4/users/me/settings",
+        json={"timeZone": "UTC"},
+    )
 
 
 async def test_sensor_steps(
@@ -16,11 +27,6 @@ async def test_sensor_steps(
     integration_setup: Callable[[], Awaitable[bool]],
 ) -> None:
     """Test standard steps sensor flow."""
-    # Mock settings to resolve user's timezone
-    aioclient_mock.get(
-        "https://health.googleapis.com/v4/users/me/settings",
-        json={"timeZone": "UTC"},
-    )
 
     # Mock daily rollup query returning 10500 steps
     aioclient_mock.post(
@@ -59,10 +65,6 @@ async def test_sensor_empty_rollup(
     integration_setup: Callable[[], Awaitable[bool]],
 ) -> None:
     """Test steps sensor when the rollup endpoint returns no data."""
-    aioclient_mock.get(
-        "https://health.googleapis.com/v4/users/me/settings",
-        json={"timeZone": "UTC"},
-    )
 
     aioclient_mock.post(
         "https://health.googleapis.com/v4/users/me/dataTypes/steps/dataPoints:dailyRollUp",
@@ -83,10 +85,6 @@ async def test_sensor_api_error(
     integration_setup: Callable[[], Awaitable[bool]],
 ) -> None:
     """Test steps sensor error handling when API fails."""
-    aioclient_mock.get(
-        "https://health.googleapis.com/v4/users/me/settings",
-        json={"timeZone": "UTC"},
-    )
 
     aioclient_mock.post(
         "https://health.googleapis.com/v4/users/me/dataTypes/steps/dataPoints:dailyRollUp",
@@ -104,10 +102,6 @@ async def test_sensor_auth_error(
     integration_setup: Callable[[], Awaitable[bool]],
 ) -> None:
     """Test steps sensor error handling when API fails with auth/forbidden error."""
-    aioclient_mock.get(
-        "https://health.googleapis.com/v4/users/me/settings",
-        json={"timeZone": "UTC"},
-    )
 
     aioclient_mock.post(
         "https://health.googleapis.com/v4/users/me/dataTypes/steps/dataPoints:dailyRollUp",

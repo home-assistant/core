@@ -5,29 +5,16 @@ import logging
 from typing import Any, override
 
 from google_health_api import GoogleHealthApi
-from google_health_api.auth import AbstractAuth
 from google_health_api.exceptions import GoogleHealthApiError
 
 from homeassistant.config_entries import SOURCE_REAUTH, ConfigFlowResult
 from homeassistant.const import CONF_ACCESS_TOKEN, CONF_TOKEN
 from homeassistant.helpers import aiohttp_client, config_entry_oauth2_flow
 
+from .api import SimpleAuth
 from .const import DOMAIN, OAUTH_SCOPES
 
 _LOGGER = logging.getLogger(__name__)
-
-
-class SimpleAuth(AbstractAuth):
-    """Temporary auth helper for the config flow."""
-
-    def __init__(self, websession, access_token: str) -> None:
-        """Initialize the auth helper."""
-        super().__init__(websession)
-        self._access_token = access_token
-
-    async def async_get_access_token(self) -> str:
-        """Return the access token."""
-        return self._access_token
 
 
 class OAuth2FlowHandler(

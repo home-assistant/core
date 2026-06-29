@@ -23,3 +23,16 @@ class AsyncConfigEntryAuth(AbstractAuth):
         await self._oauth_session.async_ensure_token_valid()
 
         return self._oauth_session.token["access_token"]
+
+
+class SimpleAuth(AbstractAuth):
+    """Temporary auth helper for the config flow."""
+
+    def __init__(self, websession: ClientSession, access_token: str) -> None:
+        """Initialize the auth helper."""
+        super().__init__(websession)
+        self._access_token = access_token
+
+    async def async_get_access_token(self) -> str:
+        """Return the access token."""
+        return self._access_token
