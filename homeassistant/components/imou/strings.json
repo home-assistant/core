@@ -55,19 +55,19 @@
         "name": "Abnormal sound alarm"
       },
       "audio_encode_control": {
-        "name": "Audio encode control"
+        "name": "Audio recording"
       },
       "close_camera": {
-        "name": "Close camera"
+        "name": "Privacy mode"
       },
       "header_detect": {
-        "name": "Human detect"
+        "name": "Human detection"
       },
       "light": {
-        "name": "Light"
+        "name": "Indicator light"
       },
       "motion_detect": {
-        "name": "Motion detect"
+        "name": "Motion detection"
       },
       "switch": {
         "name": "Plug switch"

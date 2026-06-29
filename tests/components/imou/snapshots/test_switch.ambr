@@ -1,5 +1,5 @@
 # serializer version: 1
-# name: test_switch_entities_snapshot[imou_mock_devices0][switch.device_1_human_detect-entry]
+# name: test_switch_entities_snapshot[imou_mock_devices0][switch.device_1_human_detection-entry]
   EntityRegistryEntrySnapshot({
     'aliases': list([
       None,
@@ -13,7 +13,7 @@
     'disabled_by': None,
     'domain': 'switch',
     'entity_category': None,
-    'entity_id': 'switch.device_1_human_detect',
+    'entity_id': 'switch.device_1_human_detection',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -21,12 +21,12 @@
     'labels': set({
     }),
     'name': None,
-    'object_id_base': 'Human detect',
+    'object_id_base': 'Human detection',
     'options': dict({
     }),
     'original_device_class': None,
     'original_icon': None,
-    'original_name': 'Human detect',
+    'original_name': 'Human detection',
     'platform': 'imou',
     'previous_unique_id': None,
     'suggested_object_id': None,
@@ -36,20 +36,20 @@
     'unit_of_measurement': None,
   })
 # ---
-# name: test_switch_entities_snapshot[imou_mock_devices0][switch.device_1_human_detect-state]
+# name: test_switch_entities_snapshot[imou_mock_devices0][switch.device_1_human_detection-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Device 1 Human detect',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Device 1 Human detection',
     }),
     'context': <ANY>,
-    'entity_id': 'switch.device_1_human_detect',
+    'entity_id': 'switch.device_1_human_detection',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': 'on',
   })
 # ---
-# name: test_switch_entities_snapshot[imou_mock_devices0][switch.device_1_light-entry]
+# name: test_switch_entities_snapshot[imou_mock_devices0][switch.device_1_indicator_light-entry]
   EntityRegistryEntrySnapshot({
     'aliases': list([
       None,
@@ -63,7 +63,7 @@
     'disabled_by': None,
     'domain': 'switch',
     'entity_category': None,
-    'entity_id': 'switch.device_1_light',
+    'entity_id': 'switch.device_1_indicator_light',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -71,12 +71,12 @@
     'labels': set({
     }),
     'name': None,
-    'object_id_base': 'Light',
+    'object_id_base': 'Indicator light',
     'options': dict({
     }),
     'original_device_class': <SwitchDeviceClass.SWITCH: 'switch'>,
     'original_icon': None,
-    'original_name': 'Light',
+    'original_name': 'Indicator light',
     'platform': 'imou',
     'previous_unique_id': None,
     'suggested_object_id': None,
@@ -86,21 +86,21 @@
     'unit_of_measurement': None,
   })
 # ---
-# name: test_switch_entities_snapshot[imou_mock_devices0][switch.device_1_light-state]
+# name: test_switch_entities_snapshot[imou_mock_devices0][switch.device_1_indicator_light-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'switch',
-      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Device 1 Light',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Device 1 Indicator light',
     }),
     'context': <ANY>,
-    'entity_id': 'switch.device_1_light',
+    'entity_id': 'switch.device_1_indicator_light',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': 'off',
   })
 # ---
-# name: test_switch_entities_snapshot[imou_mock_devices0][switch.device_1_motion_detect-entry]
+# name: test_switch_entities_snapshot[imou_mock_devices0][switch.device_1_motion_detection-entry]
   EntityRegistryEntrySnapshot({
     'aliases': list([
       None,
@@ -114,7 +114,7 @@
     'disabled_by': None,
     'domain': 'switch',
     'entity_category': None,
-    'entity_id': 'switch.device_1_motion_detect',
+    'entity_id': 'switch.device_1_motion_detection',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -122,12 +122,12 @@
     'labels': set({
     }),
     'name': None,
-    'object_id_base': 'Motion detect',
+    'object_id_base': 'Motion detection',
     'options': dict({
     }),
     'original_device_class': None,
     'original_icon': None,
-    'original_name': 'Motion detect',
+    'original_name': 'Motion detection',
     'platform': 'imou',
     'previous_unique_id': None,
     'suggested_object_id': None,
@@ -137,13 +137,13 @@
     'unit_of_measurement': None,
   })
 # ---
-# name: test_switch_entities_snapshot[imou_mock_devices0][switch.device_1_motion_detect-state]
+# name: test_switch_entities_snapshot[imou_mock_devices0][switch.device_1_motion_detection-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Device 1 Motion detect',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Device 1 Motion detection',
     }),
     'context': <ANY>,
-    'entity_id': 'switch.device_1_motion_detect',
+    'entity_id': 'switch.device_1_motion_detection',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
