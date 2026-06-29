@@ -37,7 +37,7 @@ async def async_setup_entry(
         )
     ):
         entity_description = WaterHeaterEntityDescription(
-            key="temp1",
+            key="water_heater",
         )
         entities.append(
             MyPVWaterHeater(
