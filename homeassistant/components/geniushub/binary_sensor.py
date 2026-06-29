@@ -80,6 +80,7 @@ class GeniusZoneDemand(GeniusZone, BinarySensorEntity):
         self._attr_name = f"{zone.name} Demand"
 
     @property
+    @override
     def is_on(self) -> bool:
         """Return true if the zone is calling for heat."""
         return self._zone.data.get("output") == 1
