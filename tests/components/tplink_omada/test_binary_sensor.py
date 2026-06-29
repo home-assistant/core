@@ -6,11 +6,17 @@ from unittest.mock import MagicMock, patch
 from freezegun.api import FrozenDateTimeFactory
 import pytest
 from syrupy.assertion import SnapshotAssertion
+from tplink_omada_client import OmadaControllerInfo
 from tplink_omada_client.definitions import DeviceStatus, DeviceStatusCategory
 from tplink_omada_client.devices import OmadaListDevice
+from tplink_omada_client.exceptions import ConnectionFailed
 
 from homeassistant.components.tplink_omada.const import DOMAIN
-from homeassistant.components.tplink_omada.coordinator import POLL_DEVICES
+from homeassistant.components.tplink_omada.coordinator import (
+    POLL_CONTROLLER_INFO,
+    POLL_DEVICES,
+)
+from homeassistant.const import STATE_OFF, STATE_ON, STATE_UNAVAILABLE
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import entity_registry as er
 
@@ -59,6 +65,57 @@ async def test_no_gateway_creates_no_port_sensors(
     await hass.async_block_till_done()
 
     mock_omada_site_client.get_gateway.assert_not_called()
+
+
+async def test_controller_connectivity_sensor_off(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    mock_omada_client: MagicMock,
+) -> None:
+    """Test controller connectivity sensor is off when controller is unconfigured."""
+    mock_omada_client.get_controller_info.return_value = OmadaControllerInfo(
+        {
+            "controllerVer": "6.2.10.17",
+            "configured": False,
+            "omadacId": "12345",
+        }
+    )
+
+    mock_config_entry.add_to_hass(hass)
+
+    assert await hass.config_entries.async_setup(mock_config_entry.entry_id)
+    await hass.async_block_till_done()
+
+    state = hass.states.get("binary_sensor.omada_controller_connectivity")
+    assert state is not None
+    assert state.state == STATE_OFF
+
+
+async def test_controller_connectivity_sensor_unavailable(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    mock_omada_client: MagicMock,
+    freezer: FrozenDateTimeFactory,
+) -> None:
+    """Test controller connectivity sensor is unavailable after refresh failure."""
+    mock_config_entry.add_to_hass(hass)
+
+    assert await hass.config_entries.async_setup(mock_config_entry.entry_id)
+    await hass.async_block_till_done()
+
+    state = hass.states.get("binary_sensor.omada_controller_connectivity")
+    assert state is not None
+    assert state.state == STATE_ON
+
+    mock_omada_client.get_controller_info.side_effect = ConnectionFailed()
+
+    freezer.tick(timedelta(seconds=POLL_CONTROLLER_INFO))
+    async_fire_time_changed(hass)
+    await hass.async_block_till_done()
+
+    state = hass.states.get("binary_sensor.omada_controller_connectivity")
+    assert state is not None
+    assert state.state == STATE_UNAVAILABLE
 
 
 async def test_disconnected_device_sensor_not_registered(
