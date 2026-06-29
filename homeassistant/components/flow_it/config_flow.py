@@ -7,6 +7,7 @@ from typing import Any, override
 from flow_it_api.client import FlowItVMCMachine
 from flow_it_api.exceptions import FlowItAuthError, FlowItConnectionError
 import voluptuous as vol
+from yarl import URL
 
 from homeassistant import config_entries
 from homeassistant.config_entries import ConfigFlowResult
@@ -36,8 +37,8 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
             host = user_input[CONF_HOST]
 
             # Ensure host has protocol
-            if not host.startswith(("http://", "https://")):
-                host = f"http://{host}"
+            if not URL(host).scheme:
+                host = str(URL.build(scheme="http", host=host))
                 user_input[CONF_HOST] = host
 
             try:
@@ -92,8 +93,8 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
             password = user_input[CONF_PASSWORD]
 
             # Ensure host has protocol
-            if not host.startswith(("http://", "https://")):
-                host = f"http://{host}"
+            if not URL(host).scheme:
+                host = str(URL.build(scheme="http", host=host))
 
             try:
                 session = get_async_client(self.hass)
