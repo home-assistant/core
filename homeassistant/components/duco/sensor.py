@@ -2,7 +2,7 @@
 
 from collections.abc import Callable
 from dataclasses import dataclass
-from datetime import datetime
+from datetime import datetime, timedelta
 import logging
 from typing import override
 
@@ -32,6 +32,14 @@ from .entity import DucoEntity
 _LOGGER = logging.getLogger(__name__)
 
 PARALLEL_UPDATES = 0
+
+
+def _round_up_timestamp_to_minute(timestamp: int) -> datetime:
+    """Round a UTC timestamp up to the next whole minute."""
+    rounded = dt_util.utc_from_timestamp(timestamp)
+    if rounded.second or rounded.microsecond:
+        rounded += timedelta(minutes=1)
+    return rounded.replace(second=0, microsecond=0)
 
 
 @dataclass(frozen=True, kw_only=True)
@@ -83,9 +91,7 @@ SENSOR_DESCRIPTIONS: tuple[DucoSensorEntityDescription, ...] = (
         translation_key="time_state_end",
         device_class=SensorDeviceClass.TIMESTAMP,
         value_fn=lambda node: (
-            dt_util.utc_from_timestamp(node.ventilation.time_state_end).replace(
-                second=0, microsecond=0
-            )
+            _round_up_timestamp_to_minute(node.ventilation.time_state_end)
             if node.ventilation and node.ventilation.time_state_end != 0
             else None
         ),
