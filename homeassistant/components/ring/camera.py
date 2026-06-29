@@ -64,8 +64,8 @@ CAMERA_DESCRIPTIONS: tuple[RingCameraEntityDescription, ...] = (
         key="last_recording",
         translation_key="last_recording",
         entity_registry_enabled_default=False,
-        exists_fn=lambda camera: camera.has_subscription
-        and not isinstance(camera, RingOther)
+        exists_fn=lambda camera: not isinstance(camera, RingOther)
+        and cast(Any, camera).has_subscription
         and camera.has_capability(RingCapability.HISTORY),
         live_stream=False,
         motion_detection=True,
@@ -118,7 +118,7 @@ class RingCam(RingEntity[RingGeneric], Camera):
         if description.motion_detection and device.has_capability(
             MOTION_DETECTION_CAPABILITY
         ):
-            self._attr_motion_detection_enabled = device.motion_detection
+            self._attr_motion_detection_enabled = cast(Any, device).motion_detection
         if description.live_stream:
             self._attr_supported_features |= CameraEntityFeature.STREAM
 
@@ -131,7 +131,7 @@ class RingCam(RingEntity[RingGeneric], Camera):
         )
 
         history_data = self._device.last_history
-        if history_data and self._device.has_subscription:
+        if history_data and cast(Any, self._device).has_subscription:
             self._last_event = history_data[0]
             # will call async_update to update the attributes and get the
             # video url from the api
@@ -159,7 +159,7 @@ class RingCam(RingEntity[RingGeneric], Camera):
     ) -> bytes | None:
         """Return a still image response from the camera."""
         if self._video_url is None:
-            if not self._device.has_subscription:
+            if not cast(Any, self._device).has_subscription:
                 raise HomeAssistantError(
                     translation_domain=DOMAIN,
                     translation_key="no_subscription",
@@ -184,7 +184,7 @@ class RingCam(RingEntity[RingGeneric], Camera):
     async def _async_get_fresh_snapshot(self) -> bytes | None:
         """Get a fresh snapshot from the camera."""
         if snapshot_method := getattr(self._device, "async_get_snapshot", None):
-            return await snapshot_method()
+            return cast(bytes | None, await snapshot_method())
         return None
 
     @override
@@ -231,7 +231,7 @@ class RingCam(RingEntity[RingGeneric], Camera):
                     )
                 )
 
-        return await cast(Any, self._device).generate_async_webrtc_stream(
+        await cast(Any, self._device).generate_async_webrtc_stream(
             offer_sdp, session_id, message_wrapper, keep_alive_timeout=None
         )
 
@@ -263,9 +263,12 @@ class RingCam(RingEntity[RingGeneric], Camera):
         """Update camera entity and refresh attributes."""
         if (
             self._device.has_capability(MOTION_DETECTION_CAPABILITY)
-            and self._attr_motion_detection_enabled != self._device.motion_detection
+            and self._attr_motion_detection_enabled
+            != cast(Any, self._device).motion_detection
         ):
-            self._attr_motion_detection_enabled = self._device.motion_detection
+            self._attr_motion_detection_enabled = cast(
+                Any, self._device
+            ).motion_detection
             self.async_write_ha_state()
 
         if TYPE_CHECKING:
@@ -294,7 +297,10 @@ class RingCam(RingEntity[RingGeneric], Camera):
             assert self._last_event
         event_id = self._last_event.get("id")
         assert event_id and isinstance(event_id, int)
-        return await cast(Any, self._device).async_recording_url(event_id)
+        return cast(
+            str | None,
+            await cast(Any, self._device).async_recording_url(event_id),
+        )
 
     @exception_wrap
     async def _async_set_motion_detection_enabled(self, new_state: bool) -> None:
