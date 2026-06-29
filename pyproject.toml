@@ -437,6 +437,13 @@ runtime-typing = false
 [tool.pylint.CODE_STYLE]
 max-line-length-suggestions = 72
 
+[tool.uv]
+# surepy (a surepetcare dependency) carries a stale upper pin on rich (<11) that
+# blocks pytest-codspeed (needs rich>=13.8.1) from resolving in the same
+# environment. rich keeps the Console API surepy uses backwards compatible, so
+# override the pin rather than holding the benchmark tooling back.
+override-dependencies = ["rich>=13.8.1"]
+
 [tool.pytest.ini_options]
 pythonpath = ["pylint/plugins"]
 testpaths = ["tests"]
