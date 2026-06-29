@@ -7,7 +7,7 @@ from typing import override
 from ccm15 import CCM15Device, CCM15DeviceState, CCM15SlaveDevice, TriState
 import httpx
 
-from homeassistant.components.climate import SWING_ON, HVACMode
+from homeassistant.components.climate import FAN_AUTO, FAN_OFF, SWING_ON, HVACMode
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.httpx_client import get_async_client
@@ -62,8 +62,25 @@ class CCM15Coordinator(DataUpdateCoordinator[CCM15DeviceState]):
 
     async def async_set_state(self, ac_index: int, data) -> None:
         """Set new target states."""
+        self._ensure_active_state_has_fan_mode(ac_index, data)
         if await self._ccm15.async_set_state(ac_index, data):
             await self.async_request_refresh()
+
+    def _ensure_active_state_has_fan_mode(
+        self, ac_index: int, data: CCM15SlaveDevice
+    ) -> None:
+        """Avoid sending active HVAC commands with the fan left off."""
+        fan_off = CONST_FAN_CMD_MAP[FAN_OFF]
+        if (
+            data.fan_mode != fan_off
+            or data.ac_mode == CONST_STATE_CMD_MAP[HVACMode.OFF]
+        ):
+            return
+
+        data.fan_mode = CONST_FAN_CMD_MAP[FAN_AUTO]
+        _LOGGER.debug(
+            "Set Fan[%s]='%s' for active HVAC command", ac_index, data.fan_mode
+        )
 
     def get_ac_data(self, ac_index: int) -> CCM15SlaveDevice | None:
         """Get ac data from the ac_index."""
