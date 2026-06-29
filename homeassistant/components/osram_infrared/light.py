@@ -102,6 +102,20 @@ async def async_setup_entry(
         )
 
 
+def _snap_hue(hue: float) -> int:
+    """Snap an arbitrary hue to the nearest physical remote preset."""
+    normalized_hue = hue % 360
+
+    # 360° is included as an alias for 0° to handle the wrap-around at red.
+    return (
+        min(
+            SUPPORTED_HUES,
+            key=lambda supported_hue: abs(normalized_hue - supported_hue),
+        )
+        % 360
+    )
+
+
 class OsramIrLight(OsramIrEmitterEntity, LightEntity):
     """Representation of an OSRAM infrared light."""
 
@@ -224,20 +238,6 @@ class OsramIrLight(OsramIrEmitterEntity, LightEntity):
         """Update the local state after selecting an effect."""
         self._attr_is_on = True
         self._attr_effect = effect
-
-
-def _snap_hue(hue: float) -> int:
-    """Snap an arbitrary hue to the nearest physical remote preset."""
-    normalized_hue = hue % 360
-
-    # 360° is included as an alias for 0° to handle the wrap-around at red.
-    return (
-        min(
-            SUPPORTED_HUES,
-            key=lambda supported_hue: abs(normalized_hue - supported_hue),
-        )
-        % 360
-    )
 
 
 class OsramIrLightWithReceiver(OsramIrLight, InfraredReceiverConsumerEntity):
