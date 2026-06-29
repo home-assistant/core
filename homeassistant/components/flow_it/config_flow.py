@@ -31,9 +31,10 @@ async def validate_input(hass: HomeAssistant, data: dict[str, Any]) -> dict[str,
     )
     info = await vmc.get_info()
     await vmc.refresh_state()
+    assert vmc.state is not None
     return {
         "title": info.hostname,
-        "unique_id": vmc.state.name if vmc.state else None,
+        "unique_id": vmc.state.name,
     }
 
 
@@ -68,9 +69,8 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
                 _LOGGER.exception("Unexpected exception")
                 errors["base"] = "unknown"
             else:
-                if info.get("unique_id"):
-                    await self.async_set_unique_id(info["unique_id"])
-                    self._abort_if_unique_id_configured(updates=user_input)
+                await self.async_set_unique_id(info["unique_id"])
+                self._abort_if_unique_id_configured(updates=user_input)
                 return self.async_create_entry(title=info["title"], data=user_input)
 
         # Pre-fill data from discovery if available
@@ -118,9 +118,8 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
                 _LOGGER.exception("Unexpected exception")
                 errors["base"] = "unknown"
             else:
-                if info.get("unique_id"):
-                    await self.async_set_unique_id(info["unique_id"])
-                    self._abort_if_unique_id_configured(updates=data)
+                await self.async_set_unique_id(info["unique_id"])
+                self._abort_if_unique_id_configured(updates=data)
                 return self.async_create_entry(title=info["title"], data=data)
 
         data_schema = vol.Schema(
