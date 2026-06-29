@@ -12,7 +12,7 @@ import voluptuous as vol
 
 from homeassistant.components import websocket_api
 from homeassistant.components.blueprint import CONF_USE_BLUEPRINT
-from homeassistant.const import (
+from homeassistant.const import (  # noqa: F401
     ATTR_AREA_ID,
     ATTR_ENTITY_ID,
     ATTR_FLOOR_ID,
@@ -58,7 +58,7 @@ from homeassistant.helpers.issue_registry import (
     async_delete_issue,
 )
 from homeassistant.helpers.restore_state import RestoreEntity
-from homeassistant.helpers.script import (
+from homeassistant.helpers.script import (  # noqa: F401
     ATTR_CUR,
     ATTR_MAX,
     CONF_MAX,
@@ -91,6 +91,8 @@ from .const import (
     DEFAULT_INITIAL_STATE,
     DOMAIN,
     LOGGER,
+    AutomationEntityCapabilityAttribute,
+    AutomationEntityStateAttribute,
 )
 from .helpers import async_get_blueprints
 from .trace import trace_automation
@@ -318,7 +320,13 @@ class BaseAutomationEntity(ToggleEntity, ABC):
     """Base class for automation entities."""
 
     _entity_component_unrecorded_attributes = frozenset(
-        (ATTR_LAST_TRIGGERED, ATTR_MODE, ATTR_CUR, ATTR_MAX, CONF_ID)
+        (
+            AutomationEntityStateAttribute.LAST_TRIGGERED,
+            AutomationEntityStateAttribute.MODE,
+            AutomationEntityStateAttribute.CUR,
+            AutomationEntityStateAttribute.MAX,
+            AutomationEntityCapabilityAttribute.ID,
+        )
     )
     raw_config: ConfigType | None
 
@@ -327,7 +335,7 @@ class BaseAutomationEntity(ToggleEntity, ABC):
     def capability_attributes(self) -> dict[str, Any] | None:
         """Return capability attributes."""
         if self.unique_id is not None:
-            return {CONF_ID: self.unique_id}
+            return {AutomationEntityCapabilityAttribute.ID: self.unique_id}
         return None
 
     @cached_property
@@ -507,13 +515,15 @@ class AutomationEntity(BaseAutomationEntity, RestoreEntity):
     @override
     def extra_state_attributes(self) -> dict[str, Any]:
         """Return the entity state attributes."""
-        attrs = {
-            ATTR_LAST_TRIGGERED: self.action_script.last_triggered,
-            ATTR_MODE: self.action_script.script_mode,
-            ATTR_CUR: self.action_script.runs,
+        attrs: dict[str, Any] = {
+            AutomationEntityStateAttribute.LAST_TRIGGERED: (
+                self.action_script.last_triggered
+            ),
+            AutomationEntityStateAttribute.MODE: self.action_script.script_mode,
+            AutomationEntityStateAttribute.CUR: self.action_script.runs,
         }
         if self.action_script.supports_max:
-            attrs[ATTR_MAX] = self.action_script.max_runs
+            attrs[AutomationEntityStateAttribute.MAX] = self.action_script.max_runs
         return attrs
 
     @property
@@ -721,17 +731,32 @@ class AutomationEntity(BaseAutomationEntity, RestoreEntity):
             trace_element = TraceElement(variables, trigger_path)
             trace_append_element(trace_element)
 
-            if (
-                not skip_condition
-                and self._condition is not None
-                and not self._condition.async_check(variables=variables)
-            ):
-                self._logger.debug(
-                    "Conditions not met, aborting automation. Condition summary: %s",
-                    trace_get(clear=False),
-                )
-                script_execution_set("failed_conditions")
-                return None
+            if not skip_condition and self._condition is not None:
+                try:
+                    conditions_pass = self._condition.async_check(variables=variables)
+                except (vol.Invalid, HomeAssistantError) as err:
+                    self._logger.error(
+                        "Error while checking conditions of automation %s: %s",
+                        self.entity_id,
+                        err,
+                    )
+                    automation_trace.set_error(err)
+                    return None
+                except Exception as err:
+                    self._logger.exception(
+                        "Unexpected error while checking conditions of automation %s",
+                        self.entity_id,
+                    )
+                    automation_trace.set_error(err)
+                    return None
+
+                if not conditions_pass:
+                    self._logger.debug(
+                        "Conditions not met, aborting automation. Condition summary: %s",
+                        trace_get(clear=False),
+                    )
+                    script_execution_set("failed_conditions")
+                    return None
 
             self.async_set_context(trigger_context)
             event_data = {
@@ -784,7 +809,9 @@ class AutomationEntity(BaseAutomationEntity, RestoreEntity):
                 )
                 automation_trace.set_error(err)
             except Exception as err:
-                self._logger.exception("While executing automation %s", self.entity_id)
+                self._logger.exception(
+                    "Unexpected error while executing automation %s", self.entity_id
+                )
                 automation_trace.set_error(err)
 
             return None

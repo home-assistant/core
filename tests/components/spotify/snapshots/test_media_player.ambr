@@ -6,7 +6,7 @@
     ]),
     'area_id': None,
     'capabilities': dict({
-      'source_list': list([
+      <MediaPlayerEntityCapabilityAttribute.INPUT_SOURCE_LIST: 'source_list'>: list([
         'DESKTOP-BKC5SIK',
       ]),
     }),
@@ -43,26 +43,26 @@
 # name: test_entities[media_player.spotify_spotify_1-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'entity_picture': '/api/media_player_proxy/media_player.spotify_spotify_1?token=mock-token&cache=7bb89748322acb6c',
-      'friendly_name': 'Spotify spotify_1',
-      'media_album_name': 'Permanent Waves',
-      'media_artist': 'Rush',
-      'media_content_id': 'spotify:track:4e9hUiLsN4mx61ARosFi7p',
-      'media_content_type': <MediaType.MUSIC: 'music'>,
-      'media_duration': 296,
-      'media_playlist': 'Spotify Web API Testing playlist',
-      'media_position': 249,
-      'media_position_updated_at': HAFakeDatetime(2023, 10, 21, 0, 0, tzinfo=datetime.timezone.utc),
-      'media_title': 'The Spirit Of Radio',
-      'media_track': 1,
-      'repeat': <RepeatMode.OFF: 'off'>,
-      'shuffle': False,
-      'source': 'Master Bathroom Speaker',
-      'source_list': list([
+      <EntityStateAttribute.ENTITY_PICTURE: 'entity_picture'>: '/api/media_player_proxy/media_player.spotify_spotify_1?token=mock-token&cache=7bb89748322acb6c',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Spotify spotify_1',
+      <MediaPlayerEntityStateAttribute.MEDIA_ALBUM_NAME: 'media_album_name'>: 'Permanent Waves',
+      <MediaPlayerEntityStateAttribute.MEDIA_ARTIST: 'media_artist'>: 'Rush',
+      <MediaPlayerEntityStateAttribute.MEDIA_CONTENT_ID: 'media_content_id'>: 'spotify:track:4e9hUiLsN4mx61ARosFi7p',
+      <MediaPlayerEntityStateAttribute.MEDIA_CONTENT_TYPE: 'media_content_type'>: <MediaType.MUSIC: 'music'>,
+      <MediaPlayerEntityStateAttribute.MEDIA_DURATION: 'media_duration'>: 296,
+      <MediaPlayerEntityStateAttribute.MEDIA_PLAYLIST: 'media_playlist'>: 'Spotify Web API Testing playlist',
+      <MediaPlayerEntityStateAttribute.MEDIA_POSITION: 'media_position'>: 249,
+      <MediaPlayerEntityStateAttribute.MEDIA_POSITION_UPDATED_AT: 'media_position_updated_at'>: HAFakeDatetime(2023, 10, 21, 0, 0, tzinfo=datetime.timezone.utc),
+      <MediaPlayerEntityStateAttribute.MEDIA_TITLE: 'media_title'>: 'The Spirit Of Radio',
+      <MediaPlayerEntityStateAttribute.MEDIA_TRACK: 'media_track'>: 1,
+      <MediaPlayerEntityStateAttribute.MEDIA_REPEAT: 'repeat'>: <RepeatMode.OFF: 'off'>,
+      <MediaPlayerEntityStateAttribute.MEDIA_SHUFFLE: 'shuffle'>: False,
+      <MediaPlayerEntityStateAttribute.INPUT_SOURCE: 'source'>: 'Master Bathroom Speaker',
+      <MediaPlayerEntityCapabilityAttribute.INPUT_SOURCE_LIST: 'source_list'>: list([
         'DESKTOP-BKC5SIK',
       ]),
-      'supported_features': <MediaPlayerEntityFeature: 444983>,
-      'volume_level': 0.25,
+      <EntityStateAttribute.SUPPORTED_FEATURES: 'supported_features'>: <MediaPlayerEntityFeature: 444983>,
+      <MediaPlayerEntityStateAttribute.MEDIA_VOLUME_LEVEL: 'volume_level'>: 0.25,
     }),
     'context': <ANY>,
     'entity_id': 'media_player.spotify_spotify_1',
@@ -79,7 +79,7 @@
     ]),
     'area_id': None,
     'capabilities': dict({
-      'source_list': list([
+      <MediaPlayerEntityCapabilityAttribute.INPUT_SOURCE_LIST: 'source_list'>: list([
         'DESKTOP-BKC5SIK',
       ]),
     }),
@@ -116,23 +116,23 @@
 # name: test_podcast[media_player.spotify_spotify_1-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'entity_picture': '/api/media_player_proxy/media_player.spotify_spotify_1?token=mock-token&cache=cf1e6e1e830f08d3',
-      'friendly_name': 'Spotify spotify_1',
-      'media_artist': 'Safety Third',
-      'media_content_id': 'spotify:episode:3o0RYoo5iOMKSmEbunsbvW',
-      'media_content_type': <MediaType.PODCAST: 'podcast'>,
-      'media_duration': 3690,
-      'media_position': 5,
-      'media_position_updated_at': HAFakeDatetime(2023, 10, 21, 0, 0, tzinfo=datetime.timezone.utc),
-      'media_title': 'My Squirrel Has Brain Damage - Safety Third 119',
-      'repeat': <RepeatMode.OFF: 'off'>,
-      'shuffle': False,
-      'source': 'Sonos Roam SL',
-      'source_list': list([
+      <EntityStateAttribute.ENTITY_PICTURE: 'entity_picture'>: '/api/media_player_proxy/media_player.spotify_spotify_1?token=mock-token&cache=cf1e6e1e830f08d3',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Spotify spotify_1',
+      <MediaPlayerEntityStateAttribute.MEDIA_ARTIST: 'media_artist'>: 'Safety Third',
+      <MediaPlayerEntityStateAttribute.MEDIA_CONTENT_ID: 'media_content_id'>: 'spotify:episode:3o0RYoo5iOMKSmEbunsbvW',
+      <MediaPlayerEntityStateAttribute.MEDIA_CONTENT_TYPE: 'media_content_type'>: <MediaType.PODCAST: 'podcast'>,
+      <MediaPlayerEntityStateAttribute.MEDIA_DURATION: 'media_duration'>: 3690,
+      <MediaPlayerEntityStateAttribute.MEDIA_POSITION: 'media_position'>: 5,
+      <MediaPlayerEntityStateAttribute.MEDIA_POSITION_UPDATED_AT: 'media_position_updated_at'>: HAFakeDatetime(2023, 10, 21, 0, 0, tzinfo=datetime.timezone.utc),
+      <MediaPlayerEntityStateAttribute.MEDIA_TITLE: 'media_title'>: 'My Squirrel Has Brain Damage - Safety Third 119',
+      <MediaPlayerEntityStateAttribute.MEDIA_REPEAT: 'repeat'>: <RepeatMode.OFF: 'off'>,
+      <MediaPlayerEntityStateAttribute.MEDIA_SHUFFLE: 'shuffle'>: False,
+      <MediaPlayerEntityStateAttribute.INPUT_SOURCE: 'source'>: 'Sonos Roam SL',
+      <MediaPlayerEntityCapabilityAttribute.INPUT_SOURCE_LIST: 'source_list'>: list([
         'DESKTOP-BKC5SIK',
       ]),
-      'supported_features': <MediaPlayerEntityFeature: 2048>,
-      'volume_level': 0.46,
+      <EntityStateAttribute.SUPPORTED_FEATURES: 'supported_features'>: <MediaPlayerEntityFeature: 2048>,
+      <MediaPlayerEntityStateAttribute.MEDIA_VOLUME_LEVEL: 'volume_level'>: 0.46,
     }),
     'context': <ANY>,
     'entity_id': 'media_player.spotify_spotify_1',
