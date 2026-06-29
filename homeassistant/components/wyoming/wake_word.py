@@ -3,31 +3,30 @@
 import asyncio
 from collections.abc import AsyncIterable
 import logging
+from typing import override
 
 from wyoming.audio import AudioChunk, AudioStart
 from wyoming.client import AsyncTcpClient
 from wyoming.wake import Detect, Detection
 
 from homeassistant.components import wake_word
-from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
-from .const import DOMAIN
 from .data import WyomingService, load_wyoming_info
 from .error import WyomingError
-from .models import DomainDataItem
+from .models import WyomingConfigEntry
 
 _LOGGER = logging.getLogger(__name__)
 
 
 async def async_setup_entry(
     hass: HomeAssistant,
-    config_entry: ConfigEntry,
+    config_entry: WyomingConfigEntry,
     async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up Wyoming wake-word-detection."""
-    item: DomainDataItem = hass.data[DOMAIN][config_entry.entry_id]
+    item = config_entry.runtime_data
     async_add_entities(
         [
             WyomingWakeWordProvider(hass, config_entry, item.service),
@@ -41,7 +40,7 @@ class WyomingWakeWordProvider(wake_word.WakeWordDetectionEntity):
     def __init__(
         self,
         hass: HomeAssistant,
-        config_entry: ConfigEntry,
+        config_entry: WyomingConfigEntry,
         service: WyomingService,
     ) -> None:
         """Set up provider."""
@@ -58,6 +57,7 @@ class WyomingWakeWordProvider(wake_word.WakeWordDetectionEntity):
         self._attr_name = wake_service.name
         self._attr_unique_id = f"{config_entry.entry_id}-wake_word"
 
+    @override
     async def get_supported_wake_words(self) -> list[wake_word.WakeWord]:
         """Return a list of supported wake words."""
         info = await load_wyoming_info(
@@ -77,6 +77,7 @@ class WyomingWakeWordProvider(wake_word.WakeWordDetectionEntity):
 
         return self._supported_wake_words
 
+    @override
     async def _async_process_audio_stream(
         self, stream: AsyncIterable[tuple[bytes, int]], wake_word_id: str | None
     ) -> wake_word.DetectionResult | None:

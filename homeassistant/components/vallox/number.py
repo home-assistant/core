@@ -1,23 +1,18 @@
 """Support for Vallox ventilation unit numbers."""
 
-from __future__ import annotations
-
 from dataclasses import dataclass
-
-from vallox_websocket_api import Vallox
+from typing import override
 
 from homeassistant.components.number import (
     NumberDeviceClass,
     NumberEntity,
     NumberEntityDescription,
 )
-from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import EntityCategory, UnitOfTemperature
+from homeassistant.const import CONF_NAME, EntityCategory, UnitOfTemperature
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
-from .const import DOMAIN
-from .coordinator import ValloxDataUpdateCoordinator
+from .coordinator import ValloxConfigEntry, ValloxDataUpdateCoordinator
 from .entity import ValloxEntity
 
 
@@ -32,7 +27,6 @@ class ValloxNumberEntity(ValloxEntity, NumberEntity):
         name: str,
         coordinator: ValloxDataUpdateCoordinator,
         description: ValloxNumberEntityDescription,
-        client: Vallox,
     ) -> None:
         """Initialize the Vallox number entity."""
         super().__init__(name, coordinator)
@@ -40,9 +34,9 @@ class ValloxNumberEntity(ValloxEntity, NumberEntity):
         self.entity_description = description
 
         self._attr_unique_id = f"{self._device_uuid}-{description.key}"
-        self._client = client
 
     @property
+    @override
     def native_value(self) -> float | None:
         """Return the value reported by the sensor."""
         if (
@@ -52,9 +46,10 @@ class ValloxNumberEntity(ValloxEntity, NumberEntity):
 
         return float(value)
 
+    @override
     async def async_set_native_value(self, value: float) -> None:
         """Update the current value."""
-        await self._client.set_values(
+        await self.coordinator.client.set_values(
             {self.entity_description.metric_key: float(value)}
         )
         await self.coordinator.async_request_refresh()
@@ -103,15 +98,13 @@ NUMBER_ENTITIES: tuple[ValloxNumberEntityDescription, ...] = (
 
 async def async_setup_entry(
     hass: HomeAssistant,
-    entry: ConfigEntry,
+    entry: ValloxConfigEntry,
     async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up the sensors."""
-    data = hass.data[DOMAIN][entry.entry_id]
+    coordinator = entry.runtime_data
 
     async_add_entities(
-        ValloxNumberEntity(
-            data["name"], data["coordinator"], description, data["client"]
-        )
+        ValloxNumberEntity(entry.data[CONF_NAME], coordinator, description)
         for description in NUMBER_ENTITIES
     )

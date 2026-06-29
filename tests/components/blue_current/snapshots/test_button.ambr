@@ -39,8 +39,8 @@
 # name: test_buttons_created[button.101_reboot-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'device_class': 'restart',
-      'friendly_name': '101 Reboot',
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'restart',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: '101 Reboot',
     }),
     'context': <ANY>,
     'entity_id': 'button.101_reboot',
@@ -90,8 +90,8 @@
 # name: test_buttons_created[button.101_reset-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'device_class': 'restart',
-      'friendly_name': '101 Reset',
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'restart',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: '101 Reset',
     }),
     'context': <ANY>,
     'entity_id': 'button.101_reset',
@@ -141,7 +141,7 @@
 # name: test_buttons_created[button.101_stop_charge_session-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': '101 Stop charge session',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: '101 Stop charge session',
     }),
     'context': <ANY>,
     'entity_id': 'button.101_stop_charge_session',

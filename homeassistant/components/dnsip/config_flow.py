@@ -1,10 +1,8 @@
 """Adds config flow for dnsip integration."""
 
-from __future__ import annotations
-
 import asyncio
 import contextlib
-from typing import Any, Literal
+from typing import Any, Literal, override
 
 import aiodns
 from aiodns.error import DNSError
@@ -18,9 +16,11 @@ from homeassistant.config_entries import (
 )
 from homeassistant.const import CONF_NAME, CONF_PORT
 from homeassistant.core import callback
+from homeassistant.data_entry_flow import SectionConfig, section
 from homeassistant.helpers import config_validation as cv
 
 from .const import (
+    CONF_ADDITIONAL_OPTIONS,
     CONF_HOSTNAME,
     CONF_IPV4,
     CONF_IPV6,
@@ -39,15 +39,17 @@ from .const import (
 DATA_SCHEMA = vol.Schema(
     {
         vol.Required(CONF_HOSTNAME, default=DEFAULT_HOSTNAME): cv.string,
-    }
-)
-DATA_SCHEMA_ADV = vol.Schema(
-    {
-        vol.Required(CONF_HOSTNAME, default=DEFAULT_HOSTNAME): cv.string,
-        vol.Optional(CONF_RESOLVER): cv.string,
-        vol.Optional(CONF_PORT): cv.port,
-        vol.Optional(CONF_RESOLVER_IPV6): cv.string,
-        vol.Optional(CONF_PORT_IPV6): cv.port,
+        vol.Required(CONF_ADDITIONAL_OPTIONS): section(
+            vol.Schema(
+                {
+                    vol.Optional(CONF_RESOLVER): cv.string,
+                    vol.Optional(CONF_PORT): cv.port,
+                    vol.Optional(CONF_RESOLVER_IPV6): cv.string,
+                    vol.Optional(CONF_PORT_IPV6): cv.port,
+                }
+            ),
+            SectionConfig(collapsed=True),
+        ),
     }
 )
 
@@ -70,7 +72,7 @@ async def async_validate_hostname(
             _resolver = aiodns.DNSResolver(
                 nameservers=[resolver], udp_port=port, tcp_port=port
             )
-            result = bool(await _resolver.query(hostname, qtype))
+            result = bool(await _resolver.query_dns(hostname, qtype))
 
         return result
 
@@ -93,16 +95,18 @@ class DnsIPConfigFlow(ConfigFlow, domain=DOMAIN):
     """Handle a config flow for dnsip integration."""
 
     VERSION = 1
-    MINOR_VERSION = 2
+    MINOR_VERSION = 3
 
     @staticmethod
     @callback
+    @override
     def async_get_options_flow(
         config_entry: ConfigEntry,
     ) -> DnsIPOptionsFlowHandler:
         """Return Option handler."""
         return DnsIPOptionsFlowHandler()
 
+    @override
     async def async_step_user(
         self, user_input: dict[str, Any] | None = None
     ) -> ConfigFlowResult:
@@ -113,10 +117,13 @@ class DnsIPConfigFlow(ConfigFlow, domain=DOMAIN):
         if user_input:
             hostname = user_input[CONF_HOSTNAME]
             name = DEFAULT_NAME if hostname == DEFAULT_HOSTNAME else hostname
-            resolver = user_input.get(CONF_RESOLVER, DEFAULT_RESOLVER)
-            resolver_ipv6 = user_input.get(CONF_RESOLVER_IPV6, DEFAULT_RESOLVER_IPV6)
-            port = user_input.get(CONF_PORT, DEFAULT_PORT)
-            port_ipv6 = user_input.get(CONF_PORT_IPV6, DEFAULT_PORT)
+            additional_options = user_input[CONF_ADDITIONAL_OPTIONS]
+            resolver = additional_options.get(CONF_RESOLVER, DEFAULT_RESOLVER)
+            resolver_ipv6 = additional_options.get(
+                CONF_RESOLVER_IPV6, DEFAULT_RESOLVER_IPV6
+            )
+            port = additional_options.get(CONF_PORT, DEFAULT_PORT)
+            port_ipv6 = additional_options.get(CONF_PORT_IPV6, DEFAULT_PORT)
 
             validate = await async_validate_hostname(
                 hostname, resolver, resolver_ipv6, port, port_ipv6
@@ -133,8 +140,7 @@ class DnsIPConfigFlow(ConfigFlow, domain=DOMAIN):
             ):
                 errors["base"] = "invalid_hostname"
             else:
-                await self.async_set_unique_id(hostname)
-                self._abort_if_unique_id_configured()
+                self._async_abort_entries_match({CONF_HOSTNAME: hostname})
 
                 return self.async_create_entry(
                     title=name,
@@ -152,12 +158,6 @@ class DnsIPConfigFlow(ConfigFlow, domain=DOMAIN):
                     },
                 )
 
-        if self.show_advanced_options is True:
-            return self.async_show_form(
-                step_id="user",
-                data_schema=DATA_SCHEMA_ADV,
-                errors=errors,
-            )
         return self.async_show_form(
             step_id="user",
             data_schema=DATA_SCHEMA,

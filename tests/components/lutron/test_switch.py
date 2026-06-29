@@ -64,7 +64,7 @@ async def test_switch_turn_on_off(
     await hass.config_entries.async_setup(mock_config_entry.entry_id)
     await hass.async_block_till_done()
 
-    entity_id = "switch.test_switch"
+    entity_id = "switch.test_area_test_switch"
 
     # Turn on
     await hass.services.async_call(

@@ -1,13 +1,13 @@
 """Test the Dropbox integration setup."""
 
-from __future__ import annotations
-
+from typing import Any
 from unittest.mock import AsyncMock, patch
 
 import pytest
 from python_dropbox_api import DropboxAuthException, DropboxUnknownException
 
-from homeassistant.config_entries import ConfigEntryState
+from homeassistant.components.dropbox.const import DOMAIN, OAUTH2_SCOPES
+from homeassistant.config_entries import SOURCE_REAUTH, ConfigEntryState
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.config_entry_oauth2_flow import (
     ImplementationUnavailableError,
@@ -80,6 +80,46 @@ async def test_setup_entry_implementation_unavailable(
         await hass.async_block_till_done()
 
     assert mock_config_entry.state is ConfigEntryState.SETUP_RETRY
+
+
+@pytest.mark.usefixtures("mock_dropbox_client")
+@pytest.mark.parametrize(
+    "token",
+    [
+        {
+            "access_token": "mock-access-token",
+            "expires_at": 9_999_999_999,
+            "scope": " ".join(OAUTH2_SCOPES),
+        },
+        {
+            "access_token": "mock-access-token",
+            "refresh_token": "mock-refresh-token",
+            "expires_at": 9_999_999_999,
+            "scope": "account_info.read files.content.read files.content.write",
+        },
+    ],
+    ids=["missing_refresh_token", "missing_scope"],
+)
+async def test_setup_entry_triggers_reauth(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    token: dict[str, Any],
+) -> None:
+    """Test that a broken token triggers a reauth flow during setup."""
+    mock_config_entry.add_to_hass(hass)
+    hass.config_entries.async_update_entry(
+        mock_config_entry, data={**mock_config_entry.data, "token": token}
+    )
+
+    await hass.config_entries.async_setup(mock_config_entry.entry_id)
+    await hass.async_block_till_done()
+
+    assert mock_config_entry.state is ConfigEntryState.SETUP_ERROR
+
+    flows = hass.config_entries.flow.async_progress_by_handler(DOMAIN)
+    assert len(flows) == 1
+    assert flows[0]["context"]["source"] == SOURCE_REAUTH
+    assert flows[0]["context"]["entry_id"] == mock_config_entry.entry_id
 
 
 @pytest.mark.usefixtures("mock_dropbox_client")

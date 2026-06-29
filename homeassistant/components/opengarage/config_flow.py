@@ -1,9 +1,7 @@
 """Config flow for OpenGarage integration."""
 
-from __future__ import annotations
-
 import logging
-from typing import Any
+from typing import Any, override
 
 import aiohttp
 import opengarage
@@ -58,6 +56,7 @@ class OpenGarageConfigFlow(ConfigFlow, domain=DOMAIN):
 
     VERSION = 1
 
+    @override
     async def async_step_user(
         self, user_input: dict[str, Any] | None = None
     ) -> ConfigFlowResult:

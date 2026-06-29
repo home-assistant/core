@@ -1,8 +1,7 @@
 """Support for Melnor RainCloud sprinkler water timer."""
 
-from __future__ import annotations
-
 import logging
+from typing import override
 
 import voluptuous as vol
 
@@ -72,6 +71,7 @@ class RainCloudBinarySensor(RainCloudEntity, BinarySensorEntity):
             self._attr_is_on = state
 
     @property
+    @override
     def icon(self) -> str | None:
         """Return the icon of this device."""
         if self._sensor_type == "is_watering":

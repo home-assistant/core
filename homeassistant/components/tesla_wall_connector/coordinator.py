@@ -1,10 +1,9 @@
 """DataUpdateCoordinator for the Tesla Wall Connector integration."""
 
-from __future__ import annotations
-
 from dataclasses import dataclass
 from datetime import timedelta
 import logging
+from typing import override
 
 from tesla_wall_connector import WallConnector
 from tesla_wall_connector.exceptions import (
@@ -25,6 +24,8 @@ from .const import (
 )
 
 _LOGGER = logging.getLogger(__name__)
+
+type WallConnectorConfigEntry = ConfigEntry[WallConnectorData]
 
 
 @dataclass
@@ -49,12 +50,12 @@ def get_poll_interval(entry: ConfigEntry) -> timedelta:
 class WallConnectorCoordinator(DataUpdateCoordinator[dict]):
     """Class to manage fetching Tesla Wall Connector data."""
 
-    config_entry: ConfigEntry
+    config_entry: WallConnectorConfigEntry
 
     def __init__(
         self,
         hass: HomeAssistant,
-        entry: ConfigEntry,
+        entry: WallConnectorConfigEntry,
         hostname: str,
         wall_connector: WallConnector,
     ) -> None:
@@ -69,6 +70,7 @@ class WallConnectorCoordinator(DataUpdateCoordinator[dict]):
         self._hostname = hostname
         self._wall_connector = wall_connector
 
+    @override
     async def _async_update_data(self) -> dict:
         """Fetch new data from the Wall Connector."""
         try:

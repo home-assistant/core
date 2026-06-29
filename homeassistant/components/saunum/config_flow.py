@@ -1,9 +1,7 @@
 """Config flow for Saunum Leil Sauna Control Unit integration."""
 
-from __future__ import annotations
-
 import logging
-from typing import Any
+from typing import Any, override
 
 from pysaunum import SaunumClient, SaunumException
 import voluptuous as vol
@@ -62,6 +60,7 @@ class LeilSaunaConfigFlow(ConfigFlow, domain=DOMAIN):
 
     @staticmethod
     @callback
+    @override
     def async_get_options_flow(
         config_entry: LeilSaunaConfigEntry,
     ) -> LeilSaunaOptionsFlow:
@@ -74,6 +73,7 @@ class LeilSaunaConfigFlow(ConfigFlow, domain=DOMAIN):
         """Handle reconfiguration of the integration."""
         return await self.async_step_user(user_input)
 
+    @override
     async def async_step_user(
         self, user_input: dict[str, Any] | None = None
     ) -> ConfigFlowResult:

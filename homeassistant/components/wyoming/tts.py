@@ -4,6 +4,7 @@ from collections import defaultdict
 from collections.abc import AsyncGenerator
 import io
 import logging
+from typing import override
 import wave
 
 from wyoming.audio import AudioChunk, AudioStart, AudioStop
@@ -18,25 +19,24 @@ from wyoming.tts import (
 )
 
 from homeassistant.components import tts
-from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
-from .const import ATTR_SPEAKER, DOMAIN
+from .const import ATTR_SPEAKER
 from .data import WyomingService
 from .error import WyomingError
-from .models import DomainDataItem
+from .models import WyomingConfigEntry
 
 _LOGGER = logging.getLogger(__name__)
 
 
 async def async_setup_entry(
     hass: HomeAssistant,
-    config_entry: ConfigEntry,
+    config_entry: WyomingConfigEntry,
     async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up Wyoming speech-to-text."""
-    item: DomainDataItem = hass.data[DOMAIN][config_entry.entry_id]
+    item = config_entry.runtime_data
     async_add_entities(
         [
             WyomingTtsProvider(config_entry, item.service),
@@ -52,7 +52,7 @@ class WyomingTtsProvider(tts.TextToSpeechEntity):
 
     def __init__(
         self,
-        config_entry: ConfigEntry,
+        config_entry: WyomingConfigEntry,
         service: WyomingService,
     ) -> None:
         """Set up provider."""
@@ -89,10 +89,12 @@ class WyomingTtsProvider(tts.TextToSpeechEntity):
         self._attr_unique_id = f"{config_entry.entry_id}-tts"
 
     @callback
+    @override
     def async_get_supported_voices(self, language: str) -> list[tts.Voice] | None:
         """Return a list of supported voices for a language."""
         return self._voices.get(language)
 
+    @override
     async def async_get_tts_audio(self, message, language, options):
         """Load TTS from TCP socket."""
         voice_name: str | None = options.get(tts.ATTR_VOICE)
@@ -138,10 +140,12 @@ class WyomingTtsProvider(tts.TextToSpeechEntity):
 
         return ("wav", data)
 
+    @override
     def async_supports_streaming_input(self) -> bool:
         """Return if the TTS engine supports streaming input."""
         return self._tts_service.supports_synthesize_streaming
 
+    @override
     async def async_stream_tts_audio(
         self, request: tts.TTSAudioRequest
     ) -> tts.TTSAudioResponse:

@@ -1,12 +1,10 @@
 """Data Update Coordinator for Proxmox VE integration."""
 
-from __future__ import annotations
-
 from collections.abc import Callable
 from dataclasses import dataclass, field
 from datetime import timedelta
 import logging
-from typing import Any
+from typing import Any, override
 
 from proxmoxer import AuthenticationError, ProxmoxAPI
 from proxmoxer.core import ResourceException
@@ -18,19 +16,21 @@ from homeassistant.const import (
     CONF_HOST,
     CONF_PASSWORD,
     CONF_PORT,
+    CONF_TOKEN,
     CONF_USERNAME,
     CONF_VERIFY_SSL,
 )
-from homeassistant.core import HomeAssistant
+from homeassistant.core import HomeAssistant, callback
 from homeassistant.exceptions import ConfigEntryAuthFailed, ConfigEntryError
+from homeassistant.helpers import device_registry as dr
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
 
 from .common import sanitize_config_entry
 from .const import (
     CONF_NODE,
-    CONF_TOKEN,
     CONF_TOKEN_ID,
     CONF_TOKEN_SECRET,
+    DEFAULT_TIMEOUT,
     DEFAULT_VERIFY_SSL,
     DOMAIN,
     NODE_ONLINE,
@@ -41,6 +41,16 @@ type ProxmoxConfigEntry = ConfigEntry[ProxmoxCoordinator]
 DEFAULT_UPDATE_INTERVAL = timedelta(seconds=60)
 
 _LOGGER = logging.getLogger(__name__)
+
+
+@dataclass(slots=True, kw_only=True)
+class NodeResources:
+    """Raw API resources fetched for a single Proxmox node."""
+
+    vms: list[dict[str, Any]]
+    containers: list[dict[str, Any]]
+    storages: list[dict[str, Any]]
+    backups: list[dict[str, Any]]
 
 
 @dataclass(slots=True, kw_only=True)
@@ -91,6 +101,7 @@ class ProxmoxCoordinator(DataUpdateCoordinator[dict[str, ProxmoxNodeData]]):
             Callable[[list[tuple[ProxmoxNodeData, dict[str, Any]]]], None]
         ] = []
 
+    @override
     async def _async_setup(self) -> None:
         """Set up the coordinator."""
         try:
@@ -136,13 +147,12 @@ class ProxmoxCoordinator(DataUpdateCoordinator[dict[str, ProxmoxNodeData]]):
                 translation_placeholders={"error": repr(err)},
             ) from err
 
+    @override
     async def _async_update_data(self) -> dict[str, ProxmoxNodeData]:
         """Fetch data from Proxmox VE API."""
 
         try:
-            nodes, vms_containers = await self.hass.async_add_executor_job(
-                self._fetch_all_nodes
-            )
+            node_pairs = await self.hass.async_add_executor_job(self._fetch_all_nodes)
         except AuthenticationError as err:
             raise ConfigEntryAuthFailed(
                 translation_domain=DOMAIN,
@@ -174,17 +184,16 @@ class ProxmoxCoordinator(DataUpdateCoordinator[dict[str, ProxmoxNodeData]]):
             ) from err
 
         data: dict[str, ProxmoxNodeData] = {}
-        for node, (vms, containers, storages, backups) in zip(
-            nodes, vms_containers, strict=True
-        ):
+        for node, resources in node_pairs:
             data[node[CONF_NODE]] = ProxmoxNodeData(
                 node=node,
-                vms={int(vm["vmid"]): vm for vm in vms},
+                vms={int(vm["vmid"]): vm for vm in resources.vms},
                 containers={
-                    int(container["vmid"]): container for container in containers
+                    int(container["vmid"]): container
+                    for container in resources.containers
                 },
-                storages={s["storage"]: s for s in storages},
-                backups=backups,
+                storages={s["storage"]: s for s in resources.storages},
+                backups=resources.backups,
             )
 
         self._async_add_remove_nodes(data)
@@ -193,7 +202,7 @@ class ProxmoxCoordinator(DataUpdateCoordinator[dict[str, ProxmoxNodeData]]):
     def _init_proxmox(self) -> None:
         """Initialize ProxmoxAPI instance."""
         data = sanitize_config_entry(self.config_entry.data)
-        auth_kwargs = {
+        auth_kwargs: dict[str, Any] = {
             "password": data.get(CONF_PASSWORD),
         }
         if data.get(CONF_TOKEN):
@@ -212,6 +221,7 @@ class ProxmoxCoordinator(DataUpdateCoordinator[dict[str, ProxmoxNodeData]]):
             port=data[CONF_PORT],
             user=data[CONF_USERNAME],
             verify_ssl=data.get(CONF_VERIFY_SSL, DEFAULT_VERIFY_SSL),
+            timeout=DEFAULT_TIMEOUT,
             **auth_kwargs,
         )
 
@@ -229,40 +239,22 @@ class ProxmoxCoordinator(DataUpdateCoordinator[dict[str, ProxmoxNodeData]]):
                 raise ProxmoxNodesNotFoundError from err
             raise ProxmoxServerError from err
 
-    def _fetch_all_nodes(
-        self,
-    ) -> tuple[
-        list[dict[str, Any]],
-        list[
-            tuple[
-                list[dict[str, Any]],
-                list[dict[str, Any]],
-                list[dict[str, Any]],
-                list[dict[str, Any]],
-            ]
-        ],
-    ]:
-        """Fetch all nodes, and then proceed to the VMs, containers, storages, and backups."""
+    def _fetch_all_nodes(self) -> list[tuple[dict[str, Any], NodeResources]]:
+        """Fetch all nodes with their VMs, containers, storages, and backups."""
         nodes = self.proxmox.nodes.get() or []
-        node_data = [self._get_node_data(node) for node in nodes]
-        return nodes, node_data
+        return [(node, self._get_node_data(node)) for node in nodes]
 
     def _get_node_data(
         self,
         node: dict[str, Any],
-    ) -> tuple[
-        list[dict[str, Any]],
-        list[dict[str, Any]],
-        list[dict[str, Any]],
-        list[dict[str, Any]],
-    ]:
+    ) -> NodeResources:
         """Get vms, containers, storages, and backups for a node."""
         if node.get("status") != NODE_ONLINE:
             _LOGGER.debug(
                 "Node %s is offline, skipping VM/container/storage fetch",
                 node[CONF_NODE],
             )
-            return [], [], [], []
+            return NodeResources(vms=[], containers=[], storages=[], backups=[])
 
         vms = self.proxmox.nodes(node[CONF_NODE]).qemu.get() or []
         containers = self.proxmox.nodes(node[CONF_NODE]).lxc.get() or []
@@ -272,7 +264,9 @@ class ProxmoxCoordinator(DataUpdateCoordinator[dict[str, ProxmoxNodeData]]):
             or []
         )
 
-        return vms, containers, storages, backups
+        return NodeResources(
+            vms=vms, containers=containers, storages=storages, backups=backups
+        )
 
     def _async_add_remove_nodes(self, data: dict[str, ProxmoxNodeData]) -> None:
         """Add new nodes/VMs/containers, track removals."""
@@ -337,6 +331,41 @@ class ProxmoxCoordinator(DataUpdateCoordinator[dict[str, ProxmoxNodeData]]):
             ]
             for storages_callback in self.new_storages_callbacks:
                 storages_callback(new_storage_data)
+
+        self._async_remove_stale_devices(data)
+
+    @callback
+    def _async_remove_stale_devices(self, data: dict[str, ProxmoxNodeData]) -> None:
+        """Remove devices for nodes/VMs/containers/storages no longer present."""
+        valid_identifiers: set[str] = set()
+        for node_data in data.values():
+            valid_identifiers.add(
+                f"{self.config_entry.entry_id}_node_{node_data.node['id']}"
+            )
+            valid_identifiers.update(
+                f"{self.config_entry.entry_id}_vm_{vmid}" for vmid in node_data.vms
+            )
+            valid_identifiers.update(
+                f"{self.config_entry.entry_id}_container_{vmid}"
+                for vmid in node_data.containers
+            )
+            valid_identifiers.update(
+                f"{self.config_entry.entry_id}_storage_{storage}"
+                for storage in node_data.storages
+            )
+
+        registry = dr.async_get(self.hass)
+        for device in dr.async_entries_for_config_entry(
+            registry, self.config_entry.entry_id
+        ):
+            if not any(
+                identifier[0] == DOMAIN and identifier[1] in valid_identifiers
+                for identifier in device.identifiers
+            ):
+                _LOGGER.debug("Removing stale device: %s", device.identifiers)
+                registry.async_update_device(
+                    device.id, remove_config_entry_id=self.config_entry.entry_id
+                )
 
 
 class ProxmoxSetupError(Exception):

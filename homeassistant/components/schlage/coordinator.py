@@ -1,10 +1,9 @@
 """DataUpdateCoordinator for the Schlage integration."""
 
-from __future__ import annotations
-
 import asyncio
 from collections.abc import Callable
 from dataclasses import dataclass
+from typing import override
 
 from pyschlage import Lock, Schlage
 from pyschlage.exceptions import Error as SchlageError, NotAuthorizedError
@@ -62,6 +61,7 @@ class SchlageDataUpdateCoordinator(DataUpdateCoordinator[SchlageData]):
         self.new_locks_callbacks: list[Callable[[dict[str, LockData]], None]] = []
         self.async_add_listener(self._add_remove_locks)
 
+    @override
     async def _async_update_data(self) -> SchlageData:
         """Fetch the latest data from the Schlage API."""
         try:

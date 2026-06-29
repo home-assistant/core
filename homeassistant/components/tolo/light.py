@@ -1,8 +1,6 @@
 """TOLO Sauna light controls."""
 
-from __future__ import annotations
-
-from typing import Any
+from typing import Any, override
 
 from homeassistant.components.light import ColorMode, LightEntity
 from homeassistant.core import HomeAssistant
@@ -38,14 +36,17 @@ class ToloLight(ToloSaunaCoordinatorEntity, LightEntity):
         self._attr_unique_id = f"{entry.entry_id}_light"
 
     @property
+    @override
     def is_on(self) -> bool:
         """Return current lamp status."""
         return self.coordinator.data.status.lamp_on
 
+    @override
     def turn_on(self, **kwargs: Any) -> None:
         """Turn on TOLO Sauna lamp."""
         self.coordinator.client.set_lamp_on(True)
 
+    @override
     def turn_off(self, **kwargs: Any) -> None:
         """Turn off TOLO Sauna lamp."""
         self.coordinator.client.set_lamp_on(False)

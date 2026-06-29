@@ -1,8 +1,7 @@
 """Coordinator for the WattTime integration."""
 
-from __future__ import annotations
-
 from datetime import timedelta
+from typing import override
 
 from aiowatttime import Client
 from aiowatttime.emissions import RealTimeEmissionsResponseType
@@ -18,16 +17,18 @@ from .const import DOMAIN, LOGGER
 
 DEFAULT_UPDATE_INTERVAL = timedelta(minutes=5)
 
+type WattTimeConfigEntry = ConfigEntry[WattTimeCoordinator]
+
 
 class WattTimeCoordinator(DataUpdateCoordinator[RealTimeEmissionsResponseType]):
     """Coordinator for WattTime data updates."""
 
-    config_entry: ConfigEntry
+    config_entry: WattTimeConfigEntry
 
     def __init__(
         self,
         hass: HomeAssistant,
-        entry: ConfigEntry,
+        entry: WattTimeConfigEntry,
         client: Client,
     ) -> None:
         """Initialize the coordinator."""
@@ -40,6 +41,7 @@ class WattTimeCoordinator(DataUpdateCoordinator[RealTimeEmissionsResponseType]):
         )
         self.client = client
 
+    @override
     async def _async_update_data(self) -> RealTimeEmissionsResponseType:
         """Get the latest realtime emissions data."""
         try:

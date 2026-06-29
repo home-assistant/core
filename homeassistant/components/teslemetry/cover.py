@@ -1,9 +1,7 @@
 """Cover platform for Teslemetry integration."""
 
-from __future__ import annotations
-
 from itertools import chain
-from typing import Any
+from typing import Any, override
 
 from tesla_fleet_api.const import Scope, SunRoofCommand, Trunk, WindowCommand
 from tesla_fleet_api.teslemetry import Vehicle
@@ -92,6 +90,7 @@ async def async_setup_entry(
 class CoverRestoreEntity(RestoreEntity, CoverEntity):
     """Restore class for cover entities."""
 
+    @override
     async def async_added_to_hass(self) -> None:
         """Handle entity which will be added."""
         await super().async_added_to_hass()
@@ -109,6 +108,7 @@ class TeslemetryWindowEntity(TeslemetryRootEntity, CoverEntity):
     _attr_device_class = CoverDeviceClass.WINDOW
     _attr_supported_features = CoverEntityFeature.OPEN | CoverEntityFeature.CLOSE
 
+    @override
     async def async_open_cover(self, **kwargs: Any) -> None:
         """Vent windows."""
         self.raise_for_scope(Scope.VEHICLE_CMDS)
@@ -119,6 +119,7 @@ class TeslemetryWindowEntity(TeslemetryRootEntity, CoverEntity):
         self._attr_is_closed = False
         self.async_write_ha_state()
 
+    @override
     async def async_close_cover(self, **kwargs: Any) -> None:
         """Close windows."""
         self.raise_for_scope(Scope.VEHICLE_CMDS)
@@ -142,6 +143,7 @@ class TeslemetryVehiclePollingWindowEntity(
         if not self.scoped:
             self._attr_supported_features = CoverEntityFeature(0)
 
+    @override
     def _async_update_attrs(self) -> None:
         """Update the entity attributes."""
         fd = self.get("vehicle_state_fd_window")
@@ -178,6 +180,7 @@ class TeslemetryStreamingWindowEntity(
             self._attr_supported_features = CoverEntityFeature(0)
         self._attr_is_closed = None
 
+    @override
     async def async_added_to_hass(self) -> None:
         """When entity is added to hass."""
         await super().async_added_to_hass()
@@ -239,6 +242,7 @@ class TeslemetryChargePortEntity(
     _attr_device_class = CoverDeviceClass.DOOR
     _attr_supported_features = CoverEntityFeature.OPEN | CoverEntityFeature.CLOSE
 
+    @override
     async def async_open_cover(self, **kwargs: Any) -> None:
         """Open charge port."""
         self.raise_for_scope(Scope.VEHICLE_CHARGING_CMDS)
@@ -247,6 +251,7 @@ class TeslemetryChargePortEntity(
         self._attr_is_closed = False
         self.async_write_ha_state()
 
+    @override
     async def async_close_cover(self, **kwargs: Any) -> None:
         """Close charge port."""
         self.raise_for_scope(Scope.VEHICLE_CHARGING_CMDS)
@@ -274,6 +279,7 @@ class TeslemetryVehiclePollingChargePortEntity(
         if not self.scoped:
             self._attr_supported_features = CoverEntityFeature(0)
 
+    @override
     def _async_update_attrs(self) -> None:
         """Update the entity attributes."""
         self._attr_is_closed = not self._value
@@ -298,6 +304,7 @@ class TeslemetryStreamingChargePortEntity(
             self._attr_supported_features = CoverEntityFeature(0)
         self._attr_is_closed = None
 
+    @override
     async def async_added_to_hass(self) -> None:
         """When entity is added to hass."""
         await super().async_added_to_hass()
@@ -320,6 +327,7 @@ class TeslemetryFrontTrunkEntity(TeslemetryRootEntity, CoverEntity):
     _attr_device_class = CoverDeviceClass.DOOR
     _attr_supported_features = CoverEntityFeature.OPEN
 
+    @override
     async def async_open_cover(self, **kwargs: Any) -> None:
         """Open front trunk."""
         self.raise_for_scope(Scope.VEHICLE_CMDS)
@@ -328,7 +336,8 @@ class TeslemetryFrontTrunkEntity(TeslemetryRootEntity, CoverEntity):
         self._attr_is_closed = False
         self.async_write_ha_state()
 
-    # In the future this could be extended to add aftermarket close support through a option flow
+    # In the future this could be extended to add
+    # aftermarket close support through an option flow
 
 
 class TeslemetryVehiclePollingFrontTrunkEntity(
@@ -343,6 +352,7 @@ class TeslemetryVehiclePollingFrontTrunkEntity(
             self._attr_supported_features = CoverEntityFeature(0)
         super().__init__(vehicle, "vehicle_state_ft")
 
+    @override
     def _async_update_attrs(self) -> None:
         """Update the entity attributes."""
         self._attr_is_closed = self._value == CLOSED
@@ -361,6 +371,7 @@ class TeslemetryStreamingFrontTrunkEntity(
             self._attr_supported_features = CoverEntityFeature(0)
         self._attr_is_closed = None
 
+    @override
     async def async_added_to_hass(self) -> None:
         """When entity is added to hass."""
         await super().async_added_to_hass()
@@ -382,6 +393,7 @@ class TeslemetryRearTrunkEntity(TeslemetryRootEntity, CoverEntity):
     _attr_device_class = CoverDeviceClass.DOOR
     _attr_supported_features = CoverEntityFeature.OPEN | CoverEntityFeature.CLOSE
 
+    @override
     async def async_open_cover(self, **kwargs: Any) -> None:
         """Open rear trunk."""
         if self.is_closed is not False:
@@ -391,6 +403,7 @@ class TeslemetryRearTrunkEntity(TeslemetryRootEntity, CoverEntity):
             self._attr_is_closed = False
             self.async_write_ha_state()
 
+    @override
     async def async_close_cover(self, **kwargs: Any) -> None:
         """Close rear trunk."""
         if self.is_closed is not True:
@@ -413,6 +426,7 @@ class TeslemetryVehiclePollingRearTrunkEntity(
             self._attr_supported_features = CoverEntityFeature(0)
         super().__init__(vehicle, "vehicle_state_rt")
 
+    @override
     def _async_update_attrs(self) -> None:
         """Update the entity attributes."""
         self._attr_is_closed = self._value == CLOSED
@@ -431,6 +445,7 @@ class TeslemetryStreamingRearTrunkEntity(
             self._attr_supported_features = CoverEntityFeature(0)
         self._attr_is_closed = None
 
+    @override
     async def async_added_to_hass(self) -> None:
         """When entity is added to hass."""
         await super().async_added_to_hass()
@@ -463,6 +478,7 @@ class TeslemetrySunroofEntity(TeslemetryVehiclePollingEntity, CoverEntity):
         if not self.scoped:
             self._attr_supported_features = CoverEntityFeature(0)
 
+    @override
     def _async_update_attrs(self) -> None:
         """Update the entity attributes."""
         value = self._value
@@ -475,6 +491,7 @@ class TeslemetrySunroofEntity(TeslemetryVehiclePollingEntity, CoverEntity):
             "vehicle_state_sun_roof_percent_open"
         )
 
+    @override
     async def async_open_cover(self, **kwargs: Any) -> None:
         """Open sunroof."""
         self.raise_for_scope(Scope.VEHICLE_CMDS)
@@ -482,6 +499,7 @@ class TeslemetrySunroofEntity(TeslemetryVehiclePollingEntity, CoverEntity):
         self._attr_is_closed = False
         self.async_write_ha_state()
 
+    @override
     async def async_close_cover(self, **kwargs: Any) -> None:
         """Close sunroof."""
         self.raise_for_scope(Scope.VEHICLE_CMDS)
@@ -489,6 +507,7 @@ class TeslemetrySunroofEntity(TeslemetryVehiclePollingEntity, CoverEntity):
         self._attr_is_closed = True
         self.async_write_ha_state()
 
+    @override
     async def async_stop_cover(self, **kwargs: Any) -> None:
         """Close sunroof."""
         self.raise_for_scope(Scope.VEHICLE_CMDS)

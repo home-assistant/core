@@ -1,17 +1,15 @@
 """Config flow for the Velbus platform."""
 
-from __future__ import annotations
-
 from pathlib import Path
 import shutil
-from typing import Any, Final
+from typing import Any, Final, override
 
-import serial.tools.list_ports
 import velbusaio.controller
 from velbusaio.exceptions import VelbusConnectionFailed
 from velbusaio.vlp_reader import VlpFile
 import voluptuous as vol
 
+from homeassistant.components import usb
 from homeassistant.components.file_upload import process_uploaded_file
 from homeassistant.config_entries import (
     SOURCE_RECONFIGURE,
@@ -62,6 +60,7 @@ class VelbusConfigFlow(ConfigFlow, domain=DOMAIN):
             return False
         return True
 
+    @override
     async def async_step_user(
         self, user_input: dict[str, Any] | None = None
     ) -> ConfigFlowResult:
@@ -84,10 +83,28 @@ class VelbusConfigFlow(ConfigFlow, domain=DOMAIN):
             if CONF_PASSWORD in user_input and user_input[CONF_PASSWORD] != "":
                 self._device += f"{user_input[CONF_PASSWORD]}@"
             self._device += f"{user_input[CONF_HOST]}:{user_input[CONF_PORT]}"
-            self._async_abort_entries_match({CONF_PORT: self._device})
+            if self.source != SOURCE_RECONFIGURE:
+                self._async_abort_entries_match({CONF_PORT: self._device})
             if await self._test_connection():
                 return await self.async_step_vlp()
             step_errors[CONF_HOST] = "cannot_connect"
+        elif self.source == SOURCE_RECONFIGURE:
+            current = self._get_reconfigure_entry().data.get(CONF_PORT, "")
+            tls = current.startswith("tls://")
+            current = current.removeprefix("tls://")
+            if "@" in current:
+                password, host_port = current.split("@", 1)
+            else:
+                password = ""
+                host_port = current
+            host, _, port = host_port.rpartition(":")
+            user_input = {
+                CONF_TLS: tls,
+                CONF_HOST: host,
+                CONF_PORT: int(port) if port.isdigit() else 27015,
+            }
+            if password:
+                user_input[CONF_PASSWORD] = password
         else:
             user_input = {
                 CONF_TLS: True,
@@ -115,9 +132,10 @@ class VelbusConfigFlow(ConfigFlow, domain=DOMAIN):
     ) -> ConfigFlowResult:
         """Handle usb select step."""
         step_errors: dict[str, str] = {}
-        ports = await self.hass.async_add_executor_job(serial.tools.list_ports.comports)
+        ports = await usb.async_scan_serial_ports(self.hass)
         list_of_ports = [
-            f"{p}{', s/n: ' + p.serial_number if p.serial_number else ''}"
+            f"{p.device} - {p.description or 'n/a'}"
+            f"{', s/n: ' + p.serial_number if p.serial_number else ''}"
             + (f" - {p.manufacturer}" if p.manufacturer else "")
             for p in ports
         ]
@@ -142,6 +160,7 @@ class VelbusConfigFlow(ConfigFlow, domain=DOMAIN):
             errors=step_errors,
         )
 
+    @override
     async def async_step_usb(self, discovery_info: UsbServiceInfo) -> ConfigFlowResult:
         """Handle USB Discovery."""
         await self.async_set_unique_id(discovery_info.serial_number)
@@ -198,7 +217,7 @@ class VelbusConfigFlow(ConfigFlow, domain=DOMAIN):
                     old_entry,
                     data={
                         CONF_VLP_FILE: self._vlp_file,
-                        CONF_PORT: old_entry.data.get(CONF_PORT),
+                        CONF_PORT: self._device,
                     },
                 )
             if not step_errors:
@@ -223,7 +242,7 @@ class VelbusConfigFlow(ConfigFlow, domain=DOMAIN):
         self, user_input: dict[str, Any] | None = None
     ) -> ConfigFlowResult:
         """Handle reconfiguration."""
-        return await self.async_step_vlp()
+        return await self.async_step_network()
 
 
 def save_uploaded_vlp_file(hass: HomeAssistant, uploaded_file_id: str) -> str:

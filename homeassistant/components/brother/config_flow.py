@@ -1,8 +1,6 @@
 """Adds config flow for Brother Printer."""
 
-from __future__ import annotations
-
-from typing import Any
+from typing import Any, override
 
 from brother import Brother, SnmpError, UnsupportedModelError
 import voluptuous as vol
@@ -116,6 +114,7 @@ class BrotherConfigFlow(ConfigFlow, domain=DOMAIN):
         self.brother: Brother
         self.host: str | None = None
 
+    @override
     async def async_step_user(
         self, user_input: dict[str, Any] | None = None
     ) -> ConfigFlowResult:
@@ -144,6 +143,7 @@ class BrotherConfigFlow(ConfigFlow, domain=DOMAIN):
             step_id="user", data_schema=DATA_SCHEMA, errors=errors
         )
 
+    @override
     async def async_step_zeroconf(
         self, discovery_info: ZeroconfServiceInfo
     ) -> ConfigFlowResult:

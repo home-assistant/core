@@ -1,10 +1,8 @@
 """Number support for Melnor Bluetooth water timer."""
 
-from __future__ import annotations
-
 from collections.abc import Callable, Coroutine
 from dataclasses import dataclass
-from typing import Any
+from typing import Any, override
 
 from melnor_bluetooth.device import Valve
 
@@ -99,10 +97,12 @@ class MelnorZoneNumber(MelnorZoneEntity, NumberEntity):
         super().__init__(coordinator, entity_description, valve)
 
     @property
+    @override
     def native_value(self) -> float | None:
         """Return the current value."""
         return self.entity_description.state_fn(self._valve)
 
+    @override
     async def async_set_native_value(self, value: float) -> None:
         """Update the current value."""
         await self.entity_description.set_num_fn(self._valve, int(value))
