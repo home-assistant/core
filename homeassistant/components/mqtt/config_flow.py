@@ -5275,6 +5275,7 @@ async def async_get_broker_settings(
     Returns True when settings are collected successfully.
     """
     hass = flow.hass
+    complete_settings: bool = True
     advanced_broker_options: bool = False
     user_input_basic: dict[str, Any] = {}
     current_config: dict[str, Any] = (
@@ -5405,32 +5406,34 @@ async def async_get_broker_settings(
 
     if user_input:
         user_input_basic = user_input.copy()
-        advanced_broker_options = user_input_basic.get(ADVANCED_OPTIONS, False)
-        if ADVANCED_OPTIONS not in user_input or advanced_broker_options is False:
-            if await _async_validate_broker_settings(
-                current_config,
-                user_input_basic,
-                validated_user_input,
-                errors,
-            ):
-                return True
-        # Get defaults settings from previous post
-        current_broker = user_input_basic.get(CONF_BROKER)
-        current_port = user_input_basic.get(CONF_PORT, DEFAULT_PORT)
-        current_user = user_input_basic.get(CONF_USERNAME)
-        current_pass = user_input_basic.get(CONF_PASSWORD)
+        advanced_broker_options = (
+            ADVANCED_OPTIONS not in user_input_basic
+            or user_input_basic[ADVANCED_OPTIONS]
+        )
+        if user_input_basic.get(ADVANCED_OPTIONS):
+            # Treat the previous post as an update of the current settings
+            # (if there was a basic broker setup step)
+            current_config.update(user_input_basic)
+            complete_settings = False
+        elif complete_settings := await _async_validate_broker_settings(
+            current_config, user_input_basic, validated_user_input, errors
+        ):
+            current_config.update(validated_user_input)
+        else:
+            # Treat the previous post as an update of the current settings
+            # (if there was a basic broker setup step)
+            current_config.update(user_input_basic)
+            complete_settings = False
     else:
-        # Get default settings from entry (if any)
-        current_broker = current_config.get(CONF_BROKER)
-        current_port = current_config.get(CONF_PORT, DEFAULT_PORT)
-        current_user = current_config.get(CONF_USERNAME)
-        # Return the sentinel password to avoid exposure
-        current_entry_pass = current_config.get(CONF_PASSWORD)
-        current_pass = PWD_NOT_CHANGED if current_entry_pass else None
+        complete_settings = False
 
-    # Treat the previous post as an update of the current settings
-    # (if there was a basic broker setup step)
-    current_config.update(user_input_basic)
+    # Get default settings from entry (if any)
+    current_broker = current_config.get(CONF_BROKER)
+    current_port = current_config.get(CONF_PORT, DEFAULT_PORT)
+    current_user = current_config.get(CONF_USERNAME)
+    # Return the sentinel password to avoid exposure
+    current_entry_pass = current_config.get(CONF_PASSWORD)
+    current_pass = PWD_NOT_CHANGED if current_entry_pass else None
 
     # Get default settings for advanced broker options
     current_client_id = current_config.get(CONF_CLIENT_ID)
@@ -5482,13 +5485,23 @@ async def async_get_broker_settings(
     ] = PASSWORD_SELECTOR
     # show advanced options checkbox if no defaults
     # of the advanced options are overridden
-    if not advanced_broker_options:
+    if (
+        not user_input_basic
+        or (
+            user_input_basic
+            and ADVANCED_OPTIONS in user_input_basic
+            and not user_input_basic[ADVANCED_OPTIONS]
+        )
+    ) and not advanced_broker_options:
         fields[
             vol.Optional(
                 ADVANCED_OPTIONS,
+                description={
+                    "suggested_value": user_input_basic.get(ADVANCED_OPTIONS, False)
+                },
             )
         ] = BOOLEAN_SELECTOR
-        return False
+        return complete_settings
     fields[
         vol.Optional(
             CONF_CLIENT_ID,
@@ -5508,30 +5521,16 @@ async def async_get_broker_settings(
             or current_config.get(SET_CLIENT_CERT) is True,
         )
     ] = BOOLEAN_SELECTOR
-    if (
-        current_client_certificate is not None
-        or current_config.get(SET_CLIENT_CERT) is True
-    ):
-        fields[
-            vol.Optional(
-                CONF_CLIENT_CERT,
-                description={"suggested_value": user_input_basic.get(CONF_CLIENT_CERT)},
-            )
-        ] = CERT_UPLOAD_SELECTOR
-        fields[
-            vol.Optional(
-                CONF_CLIENT_KEY,
-                description={"suggested_value": user_input_basic.get(CONF_CLIENT_KEY)},
-            )
-        ] = CERT_KEY_UPLOAD_SELECTOR
-        fields[
-            vol.Optional(
-                CONF_CLIENT_KEY_PASSWORD,
-                description={
-                    "suggested_value": user_input_basic.get(CONF_CLIENT_KEY_PASSWORD)
-                },
-            )
-        ] = PASSWORD_SELECTOR
+    fields[vol.Optional(CONF_CLIENT_CERT)] = CERT_UPLOAD_SELECTOR
+    fields[vol.Optional(CONF_CLIENT_KEY)] = CERT_KEY_UPLOAD_SELECTOR
+    fields[
+        vol.Optional(
+            CONF_CLIENT_KEY_PASSWORD,
+            description={
+                "suggested_value": user_input_basic.get(CONF_CLIENT_KEY_PASSWORD)
+            },
+        )
+    ] = PASSWORD_SELECTOR
     verification_mode = current_config.get(SET_CA_CERT) or (
         "off"
         if current_ca_certificate is None
@@ -5539,30 +5538,17 @@ async def async_get_broker_settings(
         if current_ca_certificate == "auto"
         else "custom"
     )
+    fields[vol.Optional(SET_CA_CERT, default=verification_mode)] = (
+        BROKER_VERIFICATION_SELECTOR
+    )
+    fields[vol.Optional(CONF_CERTIFICATE)] = CA_CERT_UPLOAD_SELECTOR
     fields[
         vol.Optional(
-            SET_CA_CERT,
-            default=verification_mode,
-        )
-    ] = BROKER_VERIFICATION_SELECTOR
-    if current_ca_certificate is not None or verification_mode == "custom":
-        fields[
-            vol.Optional(
-                CONF_CERTIFICATE,
-                user_input_basic.get(CONF_CERTIFICATE),
-            )
-        ] = CA_CERT_UPLOAD_SELECTOR
-    fields[
-        vol.Optional(
-            CONF_TLS_INSECURE,
-            description={"suggested_value": current_tls_insecure},
+            CONF_TLS_INSECURE, description={"suggested_value": current_tls_insecure}
         )
     ] = BOOLEAN_SELECTOR
     fields[
-        vol.Optional(
-            CONF_TRANSPORT,
-            description={"suggested_value": current_transport},
-        )
+        vol.Optional(CONF_TRANSPORT, description={"suggested_value": current_transport})
     ] = TRANSPORT_SELECTOR
     if current_transport == TRANSPORT_WEBSOCKETS:
         fields[
@@ -5574,8 +5560,7 @@ async def async_get_broker_settings(
             )
         ] = WS_HEADERS_SELECTOR
 
-    # Show form
-    return False
+    return complete_settings
 
 
 def check_certicate_chain() -> str | None:

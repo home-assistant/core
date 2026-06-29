@@ -2146,8 +2146,8 @@ async def test_setup_with_advanced_settings(
     assert result["data_schema"].schema[mqtt.CONF_TLS_INSECURE]
     assert result["data_schema"].schema[CONF_PROTOCOL]
     assert result["data_schema"].schema[mqtt.CONF_TRANSPORT]
-    assert mqtt.CONF_CLIENT_CERT not in result["data_schema"].schema
-    assert mqtt.CONF_CLIENT_KEY not in result["data_schema"].schema
+    assert result["data_schema"].schema[mqtt.CONF_CLIENT_CERT]
+    assert result["data_schema"].schema[mqtt.CONF_CLIENT_KEY]
 
     # second iteration, advanced settings with request for client cert
     result = await hass.config_entries.flow.async_configure(
@@ -2332,41 +2332,10 @@ async def test_setup_with_certificates(
     assert result["data_schema"].schema[mqtt.CONF_TLS_INSECURE]
     assert result["data_schema"].schema[CONF_PROTOCOL]
     assert result["data_schema"].schema[mqtt.CONF_TRANSPORT]
-    assert mqtt.CONF_CLIENT_CERT not in result["data_schema"].schema
-    assert mqtt.CONF_CLIENT_KEY not in result["data_schema"].schema
-
-    # second iteration, advanced settings with request for client cert
-    result = await hass.config_entries.flow.async_configure(
-        result["flow_id"],
-        user_input={
-            mqtt.CONF_BROKER: "test-broker",
-            CONF_PORT: 2345,
-            CONF_USERNAME: "user",
-            CONF_PASSWORD: "secret",
-            mqtt.CONF_KEEPALIVE: 30,
-            "set_ca_cert": "custom",
-            "set_client_cert": True,
-            mqtt.CONF_TLS_INSECURE: False,
-            CONF_PROTOCOL: "5",
-            mqtt.CONF_TRANSPORT: "tcp",
-        },
-    )
-    assert result["type"] is FlowResultType.FORM
-    assert result["step_id"] == "broker"
-    assert "advanced_options" not in result["data_schema"].schema
-    assert result["data_schema"].schema[CONF_CLIENT_ID]
-    assert result["data_schema"].schema[mqtt.CONF_KEEPALIVE]
-    assert result["data_schema"].schema["set_client_cert"]
-    assert result["data_schema"].schema["set_ca_cert"]
-    assert result["data_schema"].schema["client_key_password"]
-    assert result["data_schema"].schema[mqtt.CONF_TLS_INSECURE]
-    assert result["data_schema"].schema[CONF_PROTOCOL]
-    assert result["data_schema"].schema[mqtt.CONF_CERTIFICATE]
     assert result["data_schema"].schema[mqtt.CONF_CLIENT_CERT]
     assert result["data_schema"].schema[mqtt.CONF_CLIENT_KEY]
-    assert result["data_schema"].schema[mqtt.CONF_TRANSPORT]
 
-    # third iteration, advanced settings with client cert and key and CA certificate
+    # second iteration, advanced settings with client cert and key and CA certificate
     result = await hass.config_entries.flow.async_configure(
         result["flow_id"],
         user_input={
