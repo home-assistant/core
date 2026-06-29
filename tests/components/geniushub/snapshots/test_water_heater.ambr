@@ -59,6 +59,7 @@
       <WaterHeaterStateAttribute.OPERATION_MODE: 'operation_mode'>: 'manual',
       'status': dict({
         'mode': 'override',
+        'output': 1,
         'override': dict({
           'duration': 3600,
           'setpoint': 80,
