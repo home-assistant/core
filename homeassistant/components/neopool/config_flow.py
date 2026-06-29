@@ -2,7 +2,7 @@
 
 import asyncio
 import logging
-from typing import Any
+from typing import Any, override
 
 from neopool_modbus.registers import DEFAULT_MODBUS_FRAMER
 import voluptuous as vol
@@ -53,6 +53,7 @@ class NeoPoolConfigFlow(ConfigFlow, domain=DOMAIN):
         except Exception:  # noqa: BLE001
             return NAME
 
+    @override
     async def async_step_user(
         self, user_input: dict[str, Any] | None = None
     ) -> ConfigFlowResult:

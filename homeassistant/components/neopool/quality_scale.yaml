@@ -8,9 +8,15 @@ rules:
   config-flow: done
   dependency-transparency: done
   docs-actions: done
+  docs-conditions:
+    status: exempt
+    comment: The integration does not provide any conditions.
   docs-high-level-description: done
   docs-installation-instructions: done
   docs-removal-instructions: done
+  docs-triggers:
+    status: exempt
+    comment: The integration does not provide any triggers.
   entity-event-setup:
     status: exempt
     comment: |
@@ -80,5 +86,5 @@ rules:
   async-dependency: done
   inject-websession:
     status: exempt
-    comment: Integration uses Modbus TCP, not HTTP — no aiohttp session involved.
+    comment: Integration uses Modbus TCP, not HTTP, so no aiohttp session is involved.
   strict-typing: done

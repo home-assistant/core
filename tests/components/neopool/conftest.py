@@ -200,7 +200,7 @@ def mock_neopool_client_minimal(
 def mock_socket_connection() -> Generator[None]:
     """Patch the TCP probe in config_flow so we don't hit the network.
 
-    Not autouse — opt in via the fixture name when the integration's
+    Not autouse, opt in via the fixture name when the integration's
     config-flow setup runs in the test (it would otherwise try to open
     a real TCP connection).
     """

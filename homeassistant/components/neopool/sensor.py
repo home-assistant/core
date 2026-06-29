@@ -5,7 +5,7 @@ from dataclasses import dataclass
 from datetime import datetime
 import logging
 import math
-from typing import Any
+from typing import Any, override
 
 from neopool_modbus.capabilities import has_filtvalve, is_ionization_present
 from neopool_modbus.decoders import (
@@ -316,6 +316,7 @@ class NeoPoolSensor(NeoPoolEntity, SensorEntity):
         self._attr_unique_id = f"{device_id}_{key.lower()}"
         self._attr_translation_key = NeoPoolEntity.slugify(key)
 
+    @override
     async def async_added_to_hass(self) -> None:
         """Run when the entity is added to hass."""
         _LOGGER.debug(
@@ -327,6 +328,7 @@ class NeoPoolSensor(NeoPoolEntity, SensorEntity):
         await super().async_added_to_hass()
 
     @property
+    @override
     def suggested_display_precision(self) -> int | None:
         """Return the suggested display precision for the sensor value."""
         if self._key == "MBF_HIDRO_CURRENT" and not is_hydrolysis_in_percent(
@@ -336,6 +338,7 @@ class NeoPoolSensor(NeoPoolEntity, SensorEntity):
         return self.entity_description.suggested_display_precision
 
     @property
+    @override
     def native_unit_of_measurement(self) -> str | None:
         """Return the unit of measurement for the sensor value."""
         if self._key == "MBF_HIDRO_CURRENT" and not is_hydrolysis_in_percent(
@@ -380,6 +383,7 @@ class NeoPoolSensor(NeoPoolEntity, SensorEntity):
         return self._filtration_gate_blocks()
 
     @property
+    @override
     def native_value(self) -> float | int | str | datetime | None:
         """Return the actual sensor value from coordinator data."""
         if self._is_measurement_suppressed():
@@ -405,6 +409,7 @@ class NeoPoolSensor(NeoPoolEntity, SensorEntity):
         return self.coordinator.data.get(self._key)
 
     @property
+    @override
     def options(self) -> list[str] | None:
         """Return the list of options for the sensor."""
         if self._key == "MBF_PAR_FILT_MODE":
@@ -456,6 +461,7 @@ class NeoPoolFiltrationEnergySensor(NeoPoolEntity, RestoreSensor):
         self._last_update: datetime | None = None
         self._last_pump_on: bool = False
 
+    @override
     async def async_added_to_hass(self) -> None:
         """Restore last known energy value from sensor extra data after restart."""
         _LOGGER.debug(
@@ -478,6 +484,7 @@ class NeoPoolFiltrationEnergySensor(NeoPoolEntity, RestoreSensor):
         if math.isfinite(restored) and restored >= 0:  # pragma: no cover
             self._total_wh = restored
 
+    @override
     def _handle_coordinator_update(self) -> None:
         """Accumulate energy on each coordinator update."""
         now = dt_util.utcnow()
@@ -489,6 +496,7 @@ class NeoPoolFiltrationEnergySensor(NeoPoolEntity, RestoreSensor):
         super()._handle_coordinator_update()
 
     @property
+    @override
     def native_value(self) -> float:
         """Return accumulated energy in Wh."""
         return round(self._total_wh, 3)

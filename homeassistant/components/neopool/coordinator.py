@@ -2,7 +2,7 @@
 
 from datetime import timedelta
 import logging
-from typing import Any
+from typing import Any, override
 
 from neopool_modbus import NeoPoolModbusClient
 from neopool_modbus.decoders import aggregate_filtration_remaining, parse_version
@@ -128,6 +128,7 @@ class NeoPoolCoordinator(DataUpdateCoordinator[dict[str, Any]]):
             self.update_interval = next_interval
         _LOGGER.warning("Modbus error - marking all entities unavailable")
 
+    @override
     async def _async_update_data(self) -> dict[str, Any]:
         """Fetch the latest data from the pool controller."""
         try:
