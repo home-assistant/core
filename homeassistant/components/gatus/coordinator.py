@@ -3,7 +3,7 @@
 import asyncio
 from datetime import timedelta
 import logging
-from typing import override
+from typing import Any, override
 
 import aiohttp
 
@@ -17,7 +17,7 @@ from .const import DOMAIN
 _LOGGER = logging.getLogger(__name__)
 
 
-class GatusDataUpdateCoordinator(DataUpdateCoordinator[list[dict]]):
+class GatusDataUpdateCoordinator(DataUpdateCoordinator[list[dict[str, Any]]]):
     """Class to manage fetching Gatus data from the API."""
 
     def __init__(self, hass: HomeAssistant, entry: ConfigEntry, url: str) -> None:

@@ -1,7 +1,6 @@
 """Support for Gatus binary sensors."""
 
 from collections.abc import Mapping
-import logging
 from typing import Any, override
 
 from homeassistant.components.binary_sensor import (
@@ -16,8 +15,6 @@ from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
 from .const import DOMAIN
 from .coordinator import GatusDataUpdateCoordinator
-
-_LOGGER = logging.getLogger(__name__)
 
 
 async def async_setup_entry(
