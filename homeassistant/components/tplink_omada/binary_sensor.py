@@ -4,7 +4,6 @@ from collections.abc import Callable
 from dataclasses import dataclass
 from typing import TYPE_CHECKING, override
 
-from tplink_omada_client import OmadaControllerInfo
 from tplink_omada_client.definitions import (
     DeviceStatusCategory,
     GatewayPortMode,
@@ -31,10 +30,9 @@ from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
 from . import OmadaConfigEntry
-from .const import DOMAIN
 from .controller import OmadaGatewayCoordinator, config_entry_owns_controller_entities
 from .coordinator import OmadaControllerInfoCoordinator
-from .entity import OmadaDeviceEntity
+from .entity import OmadaDeviceEntity, controller_device_info
 
 PARALLEL_UPDATES = 0
 
@@ -102,24 +100,13 @@ class OmadaControllerConnectivityBinarySensor(
     @override
     def device_info(self) -> dr.DeviceInfo:
         """Return device info for the Omada controller."""
-        return _controller_device_info(self.coordinator.data)
+        return controller_device_info(self.coordinator.data)
 
     @property
     @override
     def is_on(self) -> bool:
         """Return if the controller is connected."""
         return self.coordinator.data.configured is not False
-
-
-def _controller_device_info(controller_info: OmadaControllerInfo) -> dr.DeviceInfo:
-    """Return device info for the Omada controller."""
-    return dr.DeviceInfo(
-        identifiers={(DOMAIN, controller_info.omadac_id)},
-        manufacturer="TP-Link",
-        model="Omada Controller",
-        name="Omada Controller",
-        sw_version=controller_info.controller_version,
-    )
 
 
 @dataclass(frozen=True, kw_only=True)
