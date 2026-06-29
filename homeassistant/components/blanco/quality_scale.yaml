@@ -75,4 +75,8 @@ rules:
   # Platinum
   async-dependency: done
   inject-websession: done
-  strict-typing: done
+  strict-typing:
+    status: todo
+    comment: >-
+      blanco-smart-home-api-client does not yet ship a py.typed marker file
+      (PEP 561). Will be addressed in a follow-up PR once the library is updated.
