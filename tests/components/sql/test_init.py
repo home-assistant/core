@@ -125,7 +125,7 @@ async def test_migration_from_future(
             CONF_ADDITIONAL_OPTIONS: {},
         },
         entry_id="1",
-        version=3,
+        version=4,
     )
 
     config_entry.add_to_hass(hass)
@@ -135,10 +135,10 @@ async def test_migration_from_future(
     assert config_entry.state is ConfigEntryState.MIGRATION_ERROR
 
 
-async def test_migration_from_v1_to_v2(
+async def test_migration_from_v1_to_v3(
     recorder_mock: Recorder, hass: HomeAssistant
 ) -> None:
-    """Test migration from version 1 to 2."""
+    """Test migration from version 1 to 3."""
     config_entry = MockConfigEntry(
         title="Test migration",
         domain=DOMAIN,
@@ -163,6 +163,7 @@ async def test_migration_from_v1_to_v2(
     await hass.async_block_till_done()
 
     assert config_entry.state is ConfigEntryState.LOADED
+    assert config_entry.version == 3
 
     assert config_entry.data == {}
     assert config_entry.options == {
@@ -180,10 +181,10 @@ async def test_migration_from_v1_to_v2(
     assert state.state == "5"
 
 
-async def test_migration_from_v2_1_to_v2_2(
+async def test_migration_from_v2_to_v3(
     recorder_mock: Recorder, hass: HomeAssistant
 ) -> None:
-    """Test migration from version 2.1 to 2.2 renames the options section."""
+    """Test migration from version 2 to 3 renames the options section."""
     config_entry = MockConfigEntry(
         title="Test migration",
         domain=DOMAIN,
@@ -209,7 +210,7 @@ async def test_migration_from_v2_1_to_v2_2(
     await hass.async_block_till_done()
 
     assert config_entry.state is ConfigEntryState.LOADED
-    assert config_entry.minor_version == 2
+    assert config_entry.version == 3
 
     assert "advanced_options" not in config_entry.options
     assert config_entry.options == {
