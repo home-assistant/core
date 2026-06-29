@@ -40,7 +40,7 @@ async def async_setup_entry(
                 coordinator,
                 entity_description,
                 coordinator.device.serial_number,
-                configuration=configuration["unit"],
+                configuration=configuration,
             )
         )
 
