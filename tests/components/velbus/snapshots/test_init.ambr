@@ -73,6 +73,64 @@
       'identifiers': set({
         tuple(
           'velbus',
+          '3',
+        ),
+      }),
+      'labels': set({
+      }),
+      'manufacturer': 'Velleman',
+      'model': 'VMB4RYLD',
+      'model_id': '65',
+      'name': 'BedRoom (VMB4RYLD)',
+      'name_by_user': None,
+      'primary_config_entry': <ANY>,
+      'serial_number': 'a1b2c3d4e5f6',
+      'sw_version': '1.0.0',
+      'via_device_id': None,
+    }),
+    DeviceRegistryEntrySnapshot({
+      'area_id': None,
+      'config_entries': <ANY>,
+      'config_entries_subentries': <ANY>,
+      'configuration_url': None,
+      'connections': set({
+      }),
+      'disabled_by': None,
+      'entry_type': None,
+      'hw_version': None,
+      'id': <ANY>,
+      'identifiers': set({
+        tuple(
+          'velbus',
+          '4',
+        ),
+      }),
+      'labels': set({
+      }),
+      'manufacturer': 'Velleman',
+      'model': 'VMB4RYLD',
+      'model_id': '65',
+      'name': 'BedRoom (VMB4RYLD)',
+      'name_by_user': None,
+      'primary_config_entry': <ANY>,
+      'serial_number': 'a1b2c3d4e5f6',
+      'sw_version': '1.0.0',
+      'via_device_id': None,
+    }),
+    DeviceRegistryEntrySnapshot({
+      'area_id': None,
+      'config_entries': <ANY>,
+      'config_entries_subentries': <ANY>,
+      'configuration_url': None,
+      'connections': set({
+      }),
+      'disabled_by': None,
+      'entry_type': None,
+      'hw_version': None,
+      'id': <ANY>,
+      'identifiers': set({
+        tuple(
+          'velbus',
           '88',
         ),
       }),
