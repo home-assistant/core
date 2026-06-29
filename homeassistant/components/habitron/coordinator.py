@@ -2,7 +2,7 @@
 
 import asyncio
 import logging
-from typing import TYPE_CHECKING
+from typing import TYPE_CHECKING, override
 
 from habitron_client import HabitronError, HabitronTimeoutError
 
@@ -61,10 +61,12 @@ class HbtnCoordinator(DataUpdateCoordinator[int]):
         self.rtr_id = 1
         self.previous_devices: set[str] = set()
 
+    @override
     async def _async_setup(self) -> None:
         """Run a first fetch during ``async_config_entry_first_refresh``."""
         await self._async_update_data()
 
+    @override
     async def _async_update_data(self) -> int:
         """Fetch the current Habitron status.
 

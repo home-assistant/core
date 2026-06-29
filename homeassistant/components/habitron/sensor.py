@@ -2,7 +2,7 @@
 
 from collections.abc import Callable
 from dataclasses import dataclass
-from typing import TYPE_CHECKING, Any, cast
+from typing import TYPE_CHECKING, Any, cast, override
 
 from habitron_client import BusMember, Logic, Module
 
@@ -35,7 +35,7 @@ if TYPE_CHECKING:
     from .smart_hub import SmartHub
 
 PARALLEL_UPDATES = 0
-TYPE_DIAG = 10  # diagnostic entity, hidden by default (was interfaces.TYPE_DIAG)
+TYPE_DIAG = 10  # diagnostic entity, hidden by default
 
 
 async def async_setup_entry(  # noqa: C901
@@ -239,16 +239,13 @@ class HbtnSensor(CoordinatorEntity[HbtnCoordinator], SensorEntity):
     # To link this entity to its device, this property must return an
     # identifiers value matching that used in the module
     @property
+    @override
     def device_info(self) -> DeviceInfo:
         """Return information to link this entity with the correct device."""
         return hbtn_device_info(self._module.uid)
 
-    @property
-    def name(self) -> str | None:
-        """Return the display name of this sensor."""
-        return self._attr_name
-
     @callback
+    @override
     def _handle_coordinator_update(self) -> None:
         """Handle updated data from the coordinator."""
         self._attr_native_value = self._module.sensors[self._sensor_idx].value
@@ -298,6 +295,7 @@ class HbtnDescribedSensor(HbtnSensor):
             self._attr_entity_registry_enabled_default = False
 
     @callback
+    @override
     def _handle_coordinator_update(self) -> None:
         """Handle updated data from the coordinator via the description."""
         self._attr_native_value = self.entity_description.value_fn(
@@ -373,18 +371,21 @@ class AnalogSensor(HbtnSensor):
         self._attr_unique_id = f"Mod_{self._module.uid}_adin{sensor.nmbr}"
         self.sensor = sensor
 
+    @override
     async def async_added_to_hass(self) -> None:
         """Run when this Entity has been added to HA."""
         # Push subscription: keep HA state in sync whenever the bus member changes.
         await super().async_added_to_hass()
         self.sensor.add_listener(self._handle_coordinator_update)
 
+    @override
     async def async_will_remove_from_hass(self) -> None:
         """Entity being removed from hass."""
         # The opposite of async_added_to_hass. Remove any registered call backs here.
         self.sensor.remove_listener(self._handle_coordinator_update)
 
     @callback
+    @override
     def _handle_coordinator_update(self) -> None:
         """Handle updated data from the coordinator."""
         self._attr_native_value = self._module.analogins[self._sensor_idx].value
@@ -430,12 +431,14 @@ class EKeySensorId(HbtnSensor):
         self._attr_unique_id = f"Mod_{self._module.uid}_ekey_ident"
         self._attr_name = "Identifier Value"
 
+    @override
     async def async_added_to_hass(self) -> None:
         """Run when this Entity has been added to HA."""
         # Push subscription: keep HA state in sync whenever the bus member changes.
         await super().async_added_to_hass()
         self.sensor.add_listener(self._handle_coordinator_update)
 
+    @override
     async def async_will_remove_from_hass(self) -> None:
         """Entity being removed from hass."""
         # The opposite of async_added_to_hass. Remove any registered call backs here.
@@ -460,12 +463,14 @@ class EKeySensorFngr(HbtnSensor):
         self._attr_unique_id = f"Mod_{self._module.uid}_ekey_fngr"
         self._attr_name = "Finger Value"
 
+    @override
     async def async_added_to_hass(self) -> None:
         """Run when this Entity has been added to HA."""
         # Push subscription: keep HA state in sync whenever the bus member changes.
         await super().async_added_to_hass()
         self.sensor.add_listener(self._handle_coordinator_update)
 
+    @override
     async def async_will_remove_from_hass(self) -> None:
         """Entity being removed from hass."""
         # The opposite of async_added_to_hass. Remove any registered call backs here.
@@ -498,11 +503,13 @@ class HbtnDiagSensor(CoordinatorEntity[HbtnCoordinator], SensorEntity):
     # To link this entity to its device, this property must return an
     # identifiers value matching that used in the module
     @property
+    @override
     def device_info(self) -> DeviceInfo | None:
         """Return information to link this entity with the correct device."""
         return hbtn_device_info(self._module.uid)
 
     @callback
+    @override
     def _handle_coordinator_update(self) -> None:
         """Handle updated data from the coordinator."""
         self._attr_native_value = self._module.diags[self._diag_idx].value
@@ -547,6 +554,7 @@ class StatusSensor(HbtnDiagSensor):
         self._attr_name = diag.name
 
     @callback
+    @override
     def _handle_coordinator_update(self) -> None:
         """Handle updated data from the coordinator."""
         self._attr_native_value = self._module.diags[self._diag_idx].value
@@ -579,6 +587,7 @@ class LogicSensor(HbtnSensor):
         self._attr_name = f"Cnt{logic.nmbr + 1}: {logic.name}"
 
     @callback
+    @override
     def _handle_coordinator_update(self) -> None:
         """Handle updated data from the coordinator."""
         self._attr_native_value = self._module.logic[self.idx].value
@@ -588,12 +597,14 @@ class LogicSensor(HbtnSensor):
 class LogicSensorPush(LogicSensor):
     """Representation of a logic state sensor for push update."""
 
+    @override
     async def async_added_to_hass(self) -> None:
         """Run when this Entity has been added to HA."""
         # Push subscription: keep HA state in sync whenever the bus member changes.
         await super().async_added_to_hass()
         self.logic.add_listener(self._handle_coordinator_update)
 
+    @override
     async def async_will_remove_from_hass(self) -> None:
         """Entity being removed from hass."""
         # The opposite of async_added_to_hass. Remove any registered call backs here.
@@ -632,6 +643,7 @@ class PercSensor(HbtnSensor):
             )
 
     @callback
+    @override
     def _handle_coordinator_update(self) -> None:
         """Handle updated data from the coordinator."""
         if abs(self.type) == TYPE_DIAG:
@@ -668,6 +680,7 @@ class FrequencySensor(HbtnSensor):
             )
 
     @callback
+    @override
     def _handle_coordinator_update(self) -> None:
         """Handle updated data from the coordinator."""
         if abs(self.type) == TYPE_DIAG:
@@ -699,11 +712,13 @@ class EKeyUserNameSensor(CoordinatorEntity[HbtnCoordinator], SensorEntity):
         self._attr_device_info = hbtn_device_info(self._module.uid)
         self._attr_native_value = "None"
 
+    @override
     async def async_added_to_hass(self) -> None:
         """Subscribe to the underlying sensor's push updates."""
         await super().async_added_to_hass()
         self._module.sensors[self._nmbr].add_listener(self._handle_coordinator_update)
 
+    @override
     async def async_will_remove_from_hass(self) -> None:
         """Unsubscribe from the underlying sensor's push updates."""
         self._module.sensors[self._nmbr].remove_listener(
@@ -711,6 +726,7 @@ class EKeyUserNameSensor(CoordinatorEntity[HbtnCoordinator], SensorEntity):
         )
 
     @callback
+    @override
     def _handle_coordinator_update(self) -> None:
         """Translate the raw identifier value into a user name string."""
         id_val = int(self._module.sensors[self._nmbr].value or 0)
@@ -770,11 +786,13 @@ class EKeyFingerNameSensor(CoordinatorEntity[HbtnCoordinator], SensorEntity):
         self._attr_device_info = hbtn_device_info(self._module.uid)
         self._attr_native_value = None
 
+    @override
     async def async_added_to_hass(self) -> None:
         """Subscribe to the underlying sensor's push updates."""
         await super().async_added_to_hass()
         self._module.sensors[self._nmbr].add_listener(self._handle_coordinator_update)
 
+    @override
     async def async_will_remove_from_hass(self) -> None:
         """Unsubscribe from the underlying sensor's push updates."""
         self._module.sensors[self._nmbr].remove_listener(
@@ -782,6 +800,7 @@ class EKeyFingerNameSensor(CoordinatorEntity[HbtnCoordinator], SensorEntity):
         )
 
     @callback
+    @override
     def _handle_coordinator_update(self) -> None:
         """Translate the raw finger value into a finger-name string."""
         id_val = int(self._module.sensors[self._nmbr].value or 0)

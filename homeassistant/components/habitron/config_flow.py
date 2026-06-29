@@ -5,7 +5,7 @@ import contextlib
 import json
 import logging
 import socket
-from typing import Any
+from typing import Any, override
 from urllib.parse import urlparse
 
 from habitron_client import test_connection
@@ -89,6 +89,7 @@ class UDPDiscoveryProtocol(asyncio.DatagramProtocol):
         self.found_devices: list[dict[str, Any]] = []
         self.transport: asyncio.DatagramTransport | None = None
 
+    @override
     def connection_made(self, transport: asyncio.BaseTransport) -> None:
         """Set up transport for broadcast."""
         assert isinstance(transport, asyncio.DatagramTransport)
@@ -103,6 +104,7 @@ class UDPDiscoveryProtocol(asyncio.DatagramProtocol):
                 DISCOVERY_MESSAGE, ("255.255.255.255", DISCOVERY_PORT)
             )
 
+    @override
     def datagram_received(self, data: bytes, addr: tuple[str, int]) -> None:
         """Handle incoming discovery response."""
         try:
@@ -115,10 +117,12 @@ class UDPDiscoveryProtocol(asyncio.DatagramProtocol):
             # individual packet and keep listening for the rest.
             pass
 
+    @override
     def error_received(self, exc: Exception) -> None:
         """Handle errors."""
         _LOGGER.debug("UDP Discovery error: %s", exc)
 
+    @override
     def connection_lost(self, exc: Exception | None) -> None:
         """Handle connection lost."""
 
@@ -145,6 +149,7 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
 
     @staticmethod
     @callback
+    @override
     def async_get_options_flow(
         config_entry: HabitronConfigEntry,
     ) -> config_entries.OptionsFlow:
@@ -182,6 +187,7 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         # factory, so ``protocol`` is a UDPDiscoveryProtocol here.
         return protocol.found_devices
 
+    @override
     async def async_step_ssdp(
         self, discovery_info: SsdpServiceInfo
     ) -> config_entries.ConfigFlowResult:
@@ -283,6 +289,7 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
             },
         )
 
+    @override
     async def async_step_user(
         self, user_input: dict[str, Any] | None = None
     ) -> config_entries.ConfigFlowResult:
