@@ -836,11 +836,11 @@ async def test_camera_image_raises_exception(
 
 
 @pytest.mark.parametrize(
-    ("camera_type", "camera_id", "camera_entity"),
+    ("camera_type", "camera_id", "camera_entity", "expected_motion_detection"),
     [
-        ("NACamera", "12:34:56:00:f1:62", "camera.hall"),
-        ("NOC", "12:34:56:10:b9:0e", "camera.front"),
-        ("NDB", "12:34:56:10:f1:66", "camera.netatmo_doorbell"),
+        ("NACamera", "12:34:56:00:f1:62", "camera.hall", True),
+        ("NOC", "12:34:56:10:b9:0e", "camera.front", True),
+        ("NDB", "12:34:56:10:f1:66", "camera.netatmo_doorbell", None),
     ],
 )
 async def test_camera_image_with_attribute_change(
@@ -850,6 +850,7 @@ async def test_camera_image_with_attribute_change(
     camera_type: str,
     camera_id: str,
     camera_entity: str,
+    expected_motion_detection: bool | None,
 ) -> None:
     """Test camera image state and snapshot fetching as monitoring and power status change."""
     fake_post_hits = 0
@@ -936,6 +937,10 @@ async def test_camera_image_with_attribute_change(
         # Check initial state
         assert hass.states.get(camera_entity).state == "idle"
         assert hass.states.get(camera_entity).attributes.get("monitoring") is True
+        assert (
+            hass.states.get(camera_entity).attributes.get("motion_detection")
+            is expected_motion_detection
+        )
 
         # Check that getting image succeeds while camera is idle without exception
         result = await camera.async_get_image(hass, camera_entity)
@@ -953,7 +958,7 @@ async def test_camera_image_with_attribute_change(
             async_fire_time_changed(hass)
             await hass.async_block_till_done(wait_background_tasks=True)
 
-        # Change mocked status
+        # Change mocked status (wrong alim_status, cannot monitor)
         camera_entity_id = camera_id
         camera_monitoring = "on"
         camera_alim_status = 1
@@ -969,6 +974,7 @@ async def test_camera_image_with_attribute_change(
         # (as alim_status 1 means that the camera is on but with low power, so it can't monitor)
         assert hass.states.get(camera_entity).state == "idle"
         assert hass.states.get(camera_entity).attributes.get("monitoring") is False
+        assert hass.states.get(camera_entity).attributes.get("motion_detection") is None
 
         # Check that getting image raises the exception
         with pytest.raises(HomeAssistantError, match="Camera is off"):
@@ -978,7 +984,7 @@ async def test_camera_image_with_attribute_change(
         with pytest.raises(HomeAssistantError, match="Camera is off"):
             await camera.async_get_stream_source(hass, camera_entity)
 
-        # Change mocked status
+        # Change mocked status (wrong alim_status, cannot monitor)
         camera_entity_id = camera_id
         camera_monitoring = "off"
         camera_alim_status = 1
@@ -993,6 +999,7 @@ async def test_camera_image_with_attribute_change(
         # Check that the camera become idle with monitoring off
         assert hass.states.get(camera_entity).state == "idle"
         assert hass.states.get(camera_entity).attributes.get("monitoring") is False
+        assert hass.states.get(camera_entity).attributes.get("motion_detection") is None
 
         # Check that getting image raises the exception
         with pytest.raises(HomeAssistantError, match="Camera is off"):
@@ -1002,7 +1009,7 @@ async def test_camera_image_with_attribute_change(
         with pytest.raises(HomeAssistantError, match="Camera is off"):
             await camera.async_get_stream_source(hass, camera_entity)
 
-        # Change mocked status
+        # Change mocked status (missing alim_status)
         camera_entity_id = camera_id
         camera_monitoring = "off"
         camera_alim_status = None
@@ -1014,9 +1021,10 @@ async def test_camera_image_with_attribute_change(
             async_fire_time_changed(hass)
             await hass.async_block_till_done(wait_background_tasks=True)
 
-        # Check that the camera become idle with monitoring off
+        # Check that the camera become unavailable with monitoring off
         assert hass.states.get(camera_entity).state == "unavailable"
         assert hass.states.get(camera_entity).attributes.get("monitoring") is None
+        assert hass.states.get(camera_entity).attributes.get("motion_detection") is None
 
         # Check that getting image raises the exception
         with pytest.raises(HomeAssistantError, match="Camera is off"):
@@ -1026,7 +1034,7 @@ async def test_camera_image_with_attribute_change(
         with pytest.raises(HomeAssistantError, match="Camera is off"):
             await camera.async_get_stream_source(hass, camera_entity)
 
-        # Change mocked status
+        # Change mocked status (missing alim_status and monitoring)
         camera_entity_id = camera_id
         camera_monitoring = None
         camera_alim_status = None
@@ -1038,9 +1046,35 @@ async def test_camera_image_with_attribute_change(
             async_fire_time_changed(hass)
             await hass.async_block_till_done(wait_background_tasks=True)
 
-        # Check that the camera become idle with monitoring off
+        # Check that the camera become unavailable with monitoring None
         assert hass.states.get(camera_entity).state == "unavailable"
         assert hass.states.get(camera_entity).attributes.get("monitoring") is None
+        assert hass.states.get(camera_entity).attributes.get("motion_detection") is None
+
+        # Check that getting image raises the exception
+        with pytest.raises(HomeAssistantError, match="Camera is off"):
+            await camera.async_get_image(hass, camera_entity)
+
+        # Check that getting stream source raises the exception
+        with pytest.raises(HomeAssistantError, match="Camera is off"):
+            await camera.async_get_stream_source(hass, camera_entity)
+
+        # Change mocked status (missing monitoring, wrong alim_status)
+        camera_entity_id = camera_id
+        camera_monitoring = None
+        camera_alim_status = 1
+        camera_timestamp = int(dt_util.utcnow().timestamp())
+
+        # Trigger some polling cycle to let status change be picked up
+        for _ in range(polling_cycles):
+            freezer.tick(polling_delta)
+            async_fire_time_changed(hass)
+            await hass.async_block_till_done(wait_background_tasks=True)
+
+        # Check that the camera become idle with monitoring None
+        assert hass.states.get(camera_entity).state == "idle"
+        assert hass.states.get(camera_entity).attributes.get("monitoring") is False
+        assert hass.states.get(camera_entity).attributes.get("motion_detection") is None
 
         # Check that getting image raises the exception
         with pytest.raises(HomeAssistantError, match="Camera is off"):
