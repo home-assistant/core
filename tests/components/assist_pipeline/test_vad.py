@@ -2,8 +2,11 @@
 
 import itertools as it
 
+import pytest
+
 from homeassistant.components.assist_pipeline.vad import (
     AudioBuffer,
+    VadSensitivity,
     VoiceCommandSegmenter,
     chunk_samples,
 )
@@ -234,6 +237,7 @@ def test_speech_thresholds() -> None:
     segmenter = VoiceCommandSegmenter(
         before_command_speech_threshold=0.2,
         in_command_speech_threshold=0.5,
+        in_command_silence_threshold=0.2,
         command_seconds=2,
         speech_seconds=1,
         silence_seconds=1,
@@ -247,6 +251,79 @@ def test_speech_thresholds() -> None:
     assert segmenter.process(_ONE_SECOND, 0.3)
     assert segmenter.in_command
 
-    # Now that same probability is considered silence.
-    # Finishes command.
+    # Dead-band probability is neither speech nor silence: command stays open
+    assert segmenter.process(_ONE_SECOND, 0.3)
+    assert segmenter.in_command
+
+    # Clear silence finishes the command
+    assert not segmenter.process(_ONE_SECOND, 0.05)
+
+
+def test_dead_band_preserves_pause() -> None:
+    """Test dead-band activity during a pause does not end the command early."""
+
+    segmenter = VoiceCommandSegmenter(
+        in_command_speech_threshold=0.5,
+        in_command_silence_threshold=0.2,
+        speech_seconds=0.5,
+        command_seconds=1.0,
+        silence_seconds=1.0,
+        reset_seconds=0.5,
+    )
+
+    # Start the command
+    assert segmenter.process(_ONE_SECOND * 0.5, 1.0)
+    assert segmenter.in_command
+
+    # 1.5s of dead-band activity (> silence_seconds) keeps the command open.
+    # The original single-threshold logic would have ended it during this pause.
+    for _ in range(3):
+        assert segmenter.process(_ONE_SECOND * 0.5, 0.3)
+        assert segmenter.in_command
+
+    # Speech resumes, then genuine silence ends the command
+    assert segmenter.process(_ONE_SECOND * 0.5, 1.0)
+    assert segmenter.process(_ONE_SECOND * 0.5, 0.0)
+    assert not segmenter.process(_ONE_SECOND * 0.5, 0.0)
+    assert not segmenter.in_command
+
+
+def test_dead_band_times_out() -> None:
+    """Test sustained dead-band audio ends via timeout, never a premature finish."""
+
+    segmenter = VoiceCommandSegmenter(
+        in_command_speech_threshold=0.5,
+        in_command_silence_threshold=0.2,
+        speech_seconds=0.5,
+        timeout_seconds=2.0,
+    )
+
+    # Start the command
+    assert segmenter.process(_ONE_SECOND * 0.5, 1.0)
+    assert segmenter.in_command
+
+    # Dead-band audio holds the command open (never finishes) until the timeout
+    assert segmenter.process(_ONE_SECOND, 0.3)
+    assert not segmenter.timed_out
+
     assert not segmenter.process(_ONE_SECOND, 0.3)
+    assert segmenter.timed_out
+
+
+@pytest.mark.parametrize(
+    ("sensitivity", "expected_threshold"),
+    [
+        pytest.param(VadSensitivity.AGGRESSIVE, 0.5, id="aggressive"),
+        pytest.param(VadSensitivity.DEFAULT, 0.2, id="default"),
+        pytest.param(VadSensitivity.RELAXED, 0.1, id="relaxed"),
+    ],
+)
+def test_vad_sensitivity_in_command_silence_threshold(
+    sensitivity: VadSensitivity, expected_threshold: float
+) -> None:
+    """Test sensitivity maps to an in-command silence threshold."""
+
+    assert (
+        VadSensitivity.to_in_command_silence_threshold(sensitivity)
+        == expected_threshold
+    )

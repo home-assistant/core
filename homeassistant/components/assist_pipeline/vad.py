@@ -29,6 +29,23 @@ class VadSensitivity(StrEnum):
 
         return 0.7
 
+    @staticmethod
+    def to_in_command_silence_threshold(sensitivity: VadSensitivity | str) -> float:
+        """Return in-command silence probability threshold for sensitivity level.
+
+        Lower values keep the command open through thinking pauses (more pause
+        tolerance, more hang-on in noise); a value equal to the in-command speech
+        threshold disables the dead band entirely.
+        """
+        sensitivity = VadSensitivity(sensitivity)
+        if sensitivity == VadSensitivity.RELAXED:
+            return 0.1
+
+        if sensitivity == VadSensitivity.AGGRESSIVE:
+            return 0.5
+
+        return 0.2
+
 
 class AudioBuffer:
     """Fixed-sized audio buffer with variable internal length."""
@@ -100,6 +117,9 @@ class VoiceCommandSegmenter:
     in_command_speech_threshold: float = 0.5
     """Probability threshold for speech during voice command."""
 
+    in_command_silence_threshold: float = 0.2
+    """Probability below which an in-command chunk counts toward ending the command."""
+
     _speech_seconds_left: float = 0.0
     """Seconds left before considering voice command as started."""
 
@@ -148,6 +168,9 @@ class VoiceCommandSegmenter:
 
         if speech_probability is None:
             speech_probability = 0.0
+        else:
+            # MicroVad returns -1.0 as a "no result yet" sentinel; clamp to [0, 1]
+            speech_probability = min(1.0, max(0.0, speech_probability))
 
         if not self.in_command:
             # Before command
@@ -171,12 +194,18 @@ class VoiceCommandSegmenter:
                     self._reset_seconds_left = self.reset_seconds
         else:
             # In command
-            is_speech = speech_probability > self.in_command_speech_threshold
-            if not is_speech:
+            self._command_seconds_left -= chunk_seconds
+            if speech_probability > self.in_command_speech_threshold:
+                # Speech in command.
+                # Reset silence counter if enough speech.
+                self._reset_seconds_left -= chunk_seconds
+                if self._reset_seconds_left <= 0:
+                    self._silence_seconds_left = self.silence_seconds
+                    self._reset_seconds_left = self.reset_seconds
+            elif speech_probability < self.in_command_silence_threshold:
                 # Silence in command
                 self._reset_seconds_left = self.reset_seconds
                 self._silence_seconds_left -= chunk_seconds
-                self._command_seconds_left -= chunk_seconds
                 if (self._silence_seconds_left <= 0) and (
                     self._command_seconds_left <= 0
                 ):
@@ -184,14 +213,7 @@ class VoiceCommandSegmenter:
                     self.reset()
                     _LOGGER.debug("Voice command finished")
                     return False
-            else:
-                # Speech in command.
-                # Reset silence counter if enough speech.
-                self._reset_seconds_left -= chunk_seconds
-                self._command_seconds_left -= chunk_seconds
-                if self._reset_seconds_left <= 0:
-                    self._silence_seconds_left = self.silence_seconds
-                    self._reset_seconds_left = self.reset_seconds
+            # else: dead-band activity holds the command open without refreshing
 
         return True
 
