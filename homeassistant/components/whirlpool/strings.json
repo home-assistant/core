@@ -107,6 +107,9 @@
       "end_time": {
         "name": "End time"
       },
+      "kitchen_timer_end_time": {
+        "name": "Kitchen timer end time"
+      },
       "oven_cook_mode": {
         "name": "Cook mode",
         "state": {

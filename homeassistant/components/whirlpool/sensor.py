@@ -12,6 +12,8 @@ from whirlpool.oven import (
     Cavity as OvenCavity,
     CavityState as OvenCavityState,
     CookMode,
+    KitchenTimer,
+    KitchenTimerState,
     Oven,
 )
 from whirlpool.washer import MachineState as WasherMachineState, Washer
@@ -207,6 +209,17 @@ WASHER_DRYER_TIME_SENSORS: tuple[SensorEntityDescription] = (
     ),
 )
 
+# The primary kitchen timer; the library supports multiple timers per oven.
+OVEN_KITCHEN_TIMER_ID = 1
+
+OVEN_KITCHEN_TIMER_SENSORS: tuple[SensorEntityDescription] = (
+    SensorEntityDescription(
+        key="kitchen_timer_end_time",
+        translation_key="kitchen_timer_end_time",
+        device_class=SensorDeviceClass.TIMESTAMP,
+    ),
+)
+
 
 @dataclass(frozen=True, kw_only=True)
 class WhirlpoolOvenCavitySensorEntityDescription(SensorEntityDescription):
@@ -303,6 +316,12 @@ async def async_setup_entry(
         for description in OVEN_CAVITY_SENSORS
     ]
 
+    oven_kitchen_timer_sensors = [
+        OvenKitchenTimerSensor(oven, description)
+        for oven in appliances_manager.ovens
+        for description in OVEN_KITCHEN_TIMER_SENSORS
+    ]
+
     async_add_entities(
         [
             *washer_sensors,
@@ -311,6 +330,7 @@ async def async_setup_entry(
             *dryer_time_sensors,
             *oven_upper_cavity_sensors,
             *oven_lower_cavity_sensors,
+            *oven_kitchen_timer_sensors,
         ]
     )
 
@@ -484,3 +504,33 @@ class WhirlpoolOvenCavitySensor(WhirlpoolOvenEntity, SensorEntity):
     def native_value(self) -> StateType:
         """Return native value of sensor."""
         return self.entity_description.value_fn(self._appliance, self.cavity)
+
+
+class OvenKitchenTimerSensor(WhirlpoolTimeSensorBase):
+    """A timestamp class for the Whirlpool oven kitchen timer."""
+
+    _appliance: Oven
+
+    def __init__(self, oven: Oven, description: SensorEntityDescription) -> None:
+        """Initialize the oven kitchen timer sensor."""
+        super().__init__(oven, unique_id_suffix=f"-{description.key}")
+        self.entity_description = description
+
+    def _get_kitchen_timer(self) -> KitchenTimer:
+        """Return the primary kitchen timer."""
+        return self._appliance.get_kitchen_timer(timer_id=OVEN_KITCHEN_TIMER_ID)
+
+    @override
+    def _is_finished(self) -> bool:
+        return self._get_kitchen_timer().get_state() in {
+            KitchenTimerState.Completed,
+            KitchenTimerState.Standby,
+        }
+
+    @override
+    def _is_running(self) -> bool:
+        return self._get_kitchen_timer().get_state() is KitchenTimerState.Running
+
+    @override
+    def _get_seconds_remaining(self) -> int:
+        return self._get_kitchen_timer().get_remaining_time()
