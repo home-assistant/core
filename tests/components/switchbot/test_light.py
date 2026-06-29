@@ -28,6 +28,7 @@ from . import (
     AIR_PURIFIER_US_SERVICE_INFO,
     BULB_SERVICE_INFO,
     CEILING_LIGHT_SERVICE_INFO,
+    CIRCULATOR_FAN_PRO_SERVICE_INFO,
     FLOOR_LAMP_SERVICE_INFO,
     PERMANENT_OUTDOOR_LIGHT_SERVICE_INFO,
     RGBICWW_FLOOR_LAMP_SERVICE_INFO,
@@ -552,3 +553,49 @@ async def test_air_purifier_light_restore_state(
 
         assert state.attributes.get(ATTR_BRIGHTNESS) == 13
         assert state.attributes.get(ATTR_RGB_COLOR) == (2, 3, 4)
+
+
+@pytest.mark.parametrize(
+    ("service", "service_data", "mock_method", "expected_kwargs"),
+    [
+        (SERVICE_TURN_ON, {}, "turn_on_light", {"low": False}),
+        (SERVICE_TURN_ON, {ATTR_BRIGHTNESS: 255}, "turn_on_light", {"low": False}),
+        (SERVICE_TURN_ON, {ATTR_BRIGHTNESS: 100}, "turn_on_light", {"low": True}),
+        (SERVICE_TURN_OFF, {}, "turn_off_light", {}),
+    ],
+)
+async def test_circulator_fan_pro_light_services(
+    hass: HomeAssistant,
+    mock_entry_encrypted_factory: Callable[[str], MockConfigEntry],
+    service: str,
+    service_data: dict,
+    mock_method: str,
+    expected_kwargs: dict,
+) -> None:
+    """Test the Circulator Fan Pro night-light services."""
+    inject_bluetooth_service_info(hass, CIRCULATOR_FAN_PRO_SERVICE_INFO)
+
+    entry = mock_entry_encrypted_factory(sensor_type="circulator_fan_pro")
+    entry.add_to_hass(hass)
+    entity_id = "light.test_name_light"
+
+    mocked_instance = AsyncMock(return_value=True)
+    mocked_none_instance = AsyncMock(return_value=None)
+
+    with patch.multiple(
+        "homeassistant.components.switchbot.light.switchbot.SwitchbotCirculatorFanPro",
+        **{mock_method: mocked_instance},
+        get_basic_info=mocked_none_instance,
+        update=mocked_none_instance,
+    ):
+        assert await hass.config_entries.async_setup(entry.entry_id)
+        await hass.async_block_till_done()
+
+        await hass.services.async_call(
+            LIGHT_DOMAIN,
+            service,
+            {**service_data, ATTR_ENTITY_ID: entity_id},
+            blocking=True,
+        )
+
+        mocked_instance.assert_awaited_once_with(**expected_kwargs)
