@@ -1,0 +1,103 @@
+name: CodSpeed
+
+# yamllint disable-line rule:truthy
+on:
+  push:
+    branches:
+      - dev
+  pull_request:
+  # Lets CodSpeed trigger a backtest run to seed the initial baseline.
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: codspeed-${{ github.ref }}
+  cancel-in-progress: true
+
+env:
+  UV_CACHE_DIR: /tmp/uv-cache
+
+jobs:
+  changes:
+    name: Determine what changed
+    runs-on: ubuntu-latest
+    outputs:
+      # Reuse the canonical core definition the test suite gates on, so the
+      # benchmark job only runs when actual core code changes, not on the many
+      # integration-only pull requests.
+      core: ${{ steps.filter.outputs.core }}
+      benchmarks: ${{ steps.benchmarks.outputs.benchmarks }}
+    steps:
+      - name: Check out the repository
+        uses: actions/checkout@9c091bb21b7c1c1d1991bb908d89e4e9dddfe3e0 # v7.0.0
+        with:
+          persist-credentials: false
+      - name: Filter for core changes
+        uses: dorny/paths-filter@fbd0ab8f3e69293af611ebaee6363fc25e6d187d # v4.0.1
+        id: filter
+        with:
+          filters: .core_files.yaml
+      - name: Filter for benchmark harness changes
+        uses: dorny/paths-filter@fbd0ab8f3e69293af611ebaee6363fc25e6d187d # v4.0.1
+        id: benchmarks
+        with:
+          filters: |
+            benchmarks:
+              - benchmarks/**
+              - requirements_test.txt
+              - .github/workflows/codspeed.yml
+
+  benchmarks:
+    name: Run benchmarks
+    runs-on: ubuntu-latest
+    needs: changes
+    # Always run on dev pushes (to keep the baseline fresh) and manual dispatch.
+    # On pull requests, only run when core code or the harness itself changed.
+    if: >-
+      github.event_name != 'pull_request'
+      || needs.changes.outputs.core == 'true'
+      || needs.changes.outputs.benchmarks == 'true'
+    permissions:
+      contents: read
+      id-token: write # OIDC token CodSpeed mints (no CODSPEED_TOKEN secret)
+    steps:
+      - name: Check out the repository
+        uses: actions/checkout@9c091bb21b7c1c1d1991bb908d89e4e9dddfe3e0 # v7.0.0
+        with:
+          persist-credentials: false
+      - name: Set up Python
+        id: python
+        uses: actions/setup-python@a309ff8b426b58ec0e2a45f0f869d46889d02405 # v6.2.0
+        with:
+          python-version-file: ".python-version"
+          check-latest: true
+      - name: Set up uv
+        uses: astral-sh/setup-uv@fac544c07dec837d0ccb6301d7b5580bf5edae39 # v8.2.0
+      - name: Restore uv wheel cache
+        uses: actions/cache@27d5ce7f107fe9357f9df03efb73ab90386fccae # v5.0.5
+        with:
+          path: ${{ env.UV_CACHE_DIR }}
+          key: >-
+            ${{ runner.os }}-${{ runner.arch }}-${{ steps.python.outputs.python-version }}-codspeed-${{
+            hashFiles('requirements.txt', 'requirements_test.txt', 'homeassistant/package_constraints.txt') }}
+          restore-keys: |
+            ${{ runner.os }}-${{ runner.arch }}-${{ steps.python.outputs.python-version }}-codspeed-
+      - name: Create Python virtual environment
+        run: |
+          python -m venv venv
+          . venv/bin/activate
+          python --version
+          uv pip install -r requirements.txt -r requirements_test.txt
+          uv pip install -e . --config-settings editable_mode=compat
+      - name: Run benchmarks
+        uses: CodSpeedHQ/action@a4a36bb07c0638b0b4ca52bf1f3dad1b4289e52f # v4.18.1
+        with:
+          # v4 makes `mode` required; "simulation" is the instrumented
+          # measurement that gives stable, machine-independent results.
+          mode: simulation
+          # No token: auth is handled through the OIDC id-token minted above.
+          run: |
+            . venv/bin/activate
+            pytest benchmarks --codspeed --no-cov -o addopts=""

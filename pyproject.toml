@@ -877,6 +877,9 @@ split-on-trailing-comma = false
 "homeassistant/components/*/*/*" = ["TID252"]
 "tests/components/*/*/*" = ["TID252"]
 
+# Benchmarks reuse the test helpers to spin up a Home Assistant instance
+"benchmarks/**" = ["TID251"]
+
 # Temporary
 "homeassistant/**" = ["PTH"]
 "tests/**" = ["PTH"]
