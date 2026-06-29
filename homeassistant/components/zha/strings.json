@@ -51,11 +51,11 @@
       "choose_migration_strategy": {
         "description": "Choose how you want to migrate your Zigbee network backup from your old adapter to a new one.",
         "menu_option_descriptions": {
-          "migration_strategy_advanced": "This will let you restore a specific network backup or upload your own.",
+          "migration_strategy_manual": "This will let you restore a specific network backup or upload your own.",
           "migration_strategy_recommended": "This is the quickest option to migrate to a new adapter."
         },
         "menu_options": {
-          "migration_strategy_advanced": "Migrate manually",
+          "migration_strategy_manual": "Migrate manually",
           "migration_strategy_recommended": "Migrate automatically (recommended)"
         },
         "title": "Migrate to a new adapter"
@@ -70,11 +70,11 @@
       "choose_setup_strategy": {
         "description": "Choose how you want to set up Zigbee. Automatic setup is recommended unless you are restoring your network from a backup or setting up an adapter with nonstandard settings.",
         "menu_option_descriptions": {
-          "setup_strategy_advanced": "This will let you restore from a backup.",
+          "setup_strategy_manual": "This will let you restore from a backup.",
           "setup_strategy_recommended": "This is the quickest option to create a new network and get started."
         },
         "menu_options": {
-          "setup_strategy_advanced": "Set up manually",
+          "setup_strategy_manual": "Set up manually",
           "setup_strategy_recommended": "Set up automatically (recommended)"
         },
         "title": "Set up Zigbee"
@@ -2260,11 +2260,11 @@
       "choose_migration_strategy": {
         "description": "[%key:component::zha::config::step::choose_migration_strategy::description%]",
         "menu_option_descriptions": {
-          "migration_strategy_advanced": "[%key:component::zha::config::step::choose_migration_strategy::menu_option_descriptions::migration_strategy_advanced%]",
+          "migration_strategy_manual": "[%key:component::zha::config::step::choose_migration_strategy::menu_option_descriptions::migration_strategy_manual%]",
           "migration_strategy_recommended": "[%key:component::zha::config::step::choose_migration_strategy::menu_option_descriptions::migration_strategy_recommended%]"
         },
         "menu_options": {
-          "migration_strategy_advanced": "[%key:component::zha::config::step::choose_migration_strategy::menu_options::migration_strategy_advanced%]",
+          "migration_strategy_manual": "[%key:component::zha::config::step::choose_migration_strategy::menu_options::migration_strategy_manual%]",
           "migration_strategy_recommended": "[%key:component::zha::config::step::choose_migration_strategy::menu_options::migration_strategy_recommended%]"
         },
         "title": "[%key:component::zha::config::step::choose_migration_strategy::title%]"
