@@ -1,7 +1,7 @@
 """Test the Flow-it config flow."""
 
 from ipaddress import ip_address
-from unittest.mock import AsyncMock, patch
+from unittest.mock import patch
 
 from flow_it_api.exceptions import FlowItAuthError, FlowItConnectionError
 import pytest
@@ -12,25 +12,11 @@ from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
 from homeassistant.helpers.service_info.zeroconf import ZeroconfServiceInfo
 
+from .conftest import get_mock_vmc
+
 from tests.common import MockConfigEntry
 
 pytestmark = pytest.mark.usefixtures("mock_setup_entry")
-
-
-def _get_mock_vmc(
-    info_hostname: str = "Flow-it Device",
-    state_name: str = "00:11:22:33:44:55",
-    exception: Exception | None = None,
-) -> AsyncMock:
-    """Return a mock FlowItVMCMachine context manager."""
-    mock_vmc = AsyncMock()
-    mock_vmc.get_info.return_value.hostname = info_hostname
-    mock_vmc.state.name = state_name
-
-    if exception:
-        mock_vmc.get_info.side_effect = exception
-
-    return mock_vmc
 
 
 async def test_form(hass: HomeAssistant) -> None:
@@ -43,7 +29,7 @@ async def test_form(hass: HomeAssistant) -> None:
 
     with patch(
         "homeassistant.components.flow_it.config_flow.FlowItVMCMachine",
-        return_value=_get_mock_vmc(),
+        return_value=get_mock_vmc(),
     ):
         result2 = await hass.config_entries.flow.async_configure(
             result["flow_id"],
@@ -82,7 +68,7 @@ async def test_form_exceptions(
 
     with patch(
         "homeassistant.components.flow_it.config_flow.FlowItVMCMachine",
-        return_value=_get_mock_vmc(exception=exception),
+        return_value=get_mock_vmc(exception=exception),
     ):
         result2 = await hass.config_entries.flow.async_configure(
             result["flow_id"],
@@ -120,7 +106,7 @@ async def test_zeroconf(hass: HomeAssistant) -> None:
 
     with patch(
         "homeassistant.components.flow_it.config_flow.FlowItVMCMachine",
-        return_value=_get_mock_vmc(),
+        return_value=get_mock_vmc(),
     ):
         result2 = await hass.config_entries.flow.async_configure(
             result["flow_id"],
@@ -170,7 +156,7 @@ async def test_zeroconf_exceptions(
 
     with patch(
         "homeassistant.components.flow_it.config_flow.FlowItVMCMachine",
-        return_value=_get_mock_vmc(exception=exception),
+        return_value=get_mock_vmc(exception=exception),
     ):
         result2 = await hass.config_entries.flow.async_configure(
             result["flow_id"],
@@ -199,7 +185,7 @@ async def test_user_already_configured(hass: HomeAssistant) -> None:
 
     with patch(
         "homeassistant.components.flow_it.config_flow.FlowItVMCMachine",
-        return_value=_get_mock_vmc(state_name="00:11:22:33:44:55"),
+        return_value=get_mock_vmc(state_name="00:11:22:33:44:55"),
     ):
         result2 = await hass.config_entries.flow.async_configure(
             result["flow_id"],
@@ -251,7 +237,7 @@ async def test_form_with_http(hass: HomeAssistant) -> None:
 
     with patch(
         "homeassistant.components.flow_it.config_flow.FlowItVMCMachine",
-        return_value=_get_mock_vmc(),
+        return_value=get_mock_vmc(),
     ):
         result2 = await hass.config_entries.flow.async_configure(
             result["flow_id"],
@@ -273,7 +259,7 @@ async def test_form_no_unique_id(hass: HomeAssistant) -> None:
         DOMAIN, context={"source": config_entries.SOURCE_USER}
     )
 
-    mock_vmc = _get_mock_vmc()
+    mock_vmc = get_mock_vmc()
     mock_vmc.__aenter__.return_value.state = None
 
     with patch(
@@ -313,7 +299,7 @@ async def test_reauth(hass: HomeAssistant) -> None:
 
     with patch(
         "homeassistant.components.flow_it.config_flow.FlowItVMCMachine",
-        return_value=_get_mock_vmc(),
+        return_value=get_mock_vmc(),
     ):
         result2 = await hass.config_entries.flow.async_configure(
             result["flow_id"],
@@ -357,7 +343,7 @@ async def test_reauth_exceptions(
 
     with patch(
         "homeassistant.components.flow_it.config_flow.FlowItVMCMachine",
-        return_value=_get_mock_vmc(exception=exception),
+        return_value=get_mock_vmc(exception=exception),
     ):
         result2 = await hass.config_entries.flow.async_configure(
             result["flow_id"],
