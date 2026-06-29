@@ -1,16 +1,24 @@
 rules:
   # Bronze
-  action-setup: done
+  action-setup:
+    status: exempt
+    comment: This integration does not provide any service actions.
   appropriate-polling: done
   brands: done
   common-modules: done
   config-flow-test-coverage: done
   config-flow: done
   dependency-transparency: done
-  docs-actions: done
-  docs-conditions: done
+  docs-actions:
+    status: exempt
+    comment: This integration does not provide any service actions.
+  docs-conditions:
+    status: exempt
+    comment: This integration does not provide any conditions.
   docs-high-level-description: done
-  docs-triggers: done
+  docs-triggers:
+    status: exempt
+    comment: This integration does not provide any triggers.
   docs-installation-instructions: done
   docs-removal-instructions: done
   entity-event-setup: done
@@ -67,8 +75,4 @@ rules:
   # Platinum
   async-dependency: done
   inject-websession: done
-  strict-typing:
-    status: todo
-    comment: >-
-      blanco-smart-home-api-client does not yet ship a py.typed marker file
-      (PEP 561). Will be addressed in a follow-up PR once the library is updated.
+  strict-typing: done
