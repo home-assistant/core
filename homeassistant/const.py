@@ -823,6 +823,13 @@ class UnitOfBloodGlucoseConcentration(StrEnum):
     MILLIMOLE_PER_LITER = "mmol/L"
 
 
+class UnitOfRadiationConcentration(StrEnum):
+    """Radiation concentration units."""
+
+    BECQUEREL_PER_CUBIC_METER = "Bq/m³"
+    PICOCURIES_PER_LITER = "pCi/L"
+
+
 # Speed units
 class UnitOfSpeed(StrEnum):
     """Speed units."""

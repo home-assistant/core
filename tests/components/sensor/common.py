@@ -31,6 +31,7 @@ from homeassistant.const import (
     UnitOfPower,
     UnitOfPrecipitationDepth,
     UnitOfPressure,
+    UnitOfRadiationConcentration,
     UnitOfReactiveEnergy,
     UnitOfReactivePower,
     UnitOfSoundPressure,
@@ -90,6 +91,7 @@ UNITS_OF_MEASUREMENT = {
         UnitOfVolumetricFlux.MILLIMETERS_PER_HOUR
     ),
     SensorDeviceClass.PRESSURE: UnitOfPressure.HPA,
+    SensorDeviceClass.RADON: UnitOfRadiationConcentration.BECQUEREL_PER_CUBIC_METER,
     SensorDeviceClass.REACTIVE_ENERGY: UnitOfReactiveEnergy.VOLT_AMPERE_REACTIVE_HOUR,
     SensorDeviceClass.REACTIVE_POWER: UnitOfReactivePower.VOLT_AMPERE_REACTIVE,
     SensorDeviceClass.SIGNAL_STRENGTH: SIGNAL_STRENGTH_DECIBELS,

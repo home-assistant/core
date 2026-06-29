@@ -34,6 +34,7 @@ from homeassistant.const import (
     UnitOfPower,
     UnitOfPrecipitationDepth,
     UnitOfPressure,
+    UnitOfRadiationConcentration,
     UnitOfReactiveEnergy,
     UnitOfReactivePower,
     UnitOfSoundPressure,
@@ -67,6 +68,7 @@ from homeassistant.util.unit_conversion import (
     OzoneConcentrationConverter,
     PowerConverter,
     PressureConverter,
+    RadiationConcentrationConverter,
     ReactiveEnergyConverter,
     ReactivePowerConverter,
     SpeedConverter,
@@ -409,6 +411,14 @@ class SensorDeviceClass(StrEnum):
     - `inH₂O`
     """
 
+    RADON = "radon"
+    """Radon.
+
+    Unit of measurement: UnitOfRadiationConcentration
+    - SI / metric: `Bq/m³`
+    - USCS / imperial: `pCi/L`
+    """
+
     REACTIVE_ENERGY = "reactive_energy"
     """Reactive energy.
 
@@ -616,6 +626,7 @@ UNIT_CONVERTERS: dict[SensorDeviceClass | str | None, type[BaseUnitConverter]] =
     SensorDeviceClass.PRECIPITATION: DistanceConverter,
     SensorDeviceClass.PRECIPITATION_INTENSITY: SpeedConverter,
     SensorDeviceClass.PRESSURE: PressureConverter,
+    SensorDeviceClass.RADON: RadiationConcentrationConverter,
     SensorDeviceClass.REACTIVE_ENERGY: ReactiveEnergyConverter,
     SensorDeviceClass.REACTIVE_POWER: ReactivePowerConverter,
     SensorDeviceClass.SULPHUR_DIOXIDE: SulphurDioxideConcentrationConverter,
@@ -711,6 +722,7 @@ DEVICE_CLASS_UNITS: dict[SensorDeviceClass, set[type[StrEnum] | str | None]] = {
     SensorDeviceClass.PRECIPITATION: set(UnitOfPrecipitationDepth),
     SensorDeviceClass.PRECIPITATION_INTENSITY: set(UnitOfVolumetricFlux),
     SensorDeviceClass.PRESSURE: set(UnitOfPressure),
+    SensorDeviceClass.RADON: set(UnitOfRadiationConcentration),
     SensorDeviceClass.REACTIVE_ENERGY: set(UnitOfReactiveEnergy),
     SensorDeviceClass.REACTIVE_POWER: set(UnitOfReactivePower),
     SensorDeviceClass.SIGNAL_STRENGTH: {
@@ -785,6 +797,7 @@ UNITS_PRECISION = {
         0,
     ),
     SensorDeviceClass.PRESSURE: (UnitOfPressure.PA, 0),
+    SensorDeviceClass.RADON: (UnitOfRadiationConcentration.PICOCURIES_PER_LITER, 1),
     SensorDeviceClass.REACTIVE_POWER: (UnitOfReactivePower.VOLT_AMPERE_REACTIVE, 0),
     SensorDeviceClass.SOUND_PRESSURE: (UnitOfSoundPressure.DECIBEL, 0),
     SensorDeviceClass.SPEED: (UnitOfSpeed.MILLIMETERS_PER_SECOND, 0),
@@ -844,6 +857,7 @@ DEVICE_CLASS_STATE_CLASSES: dict[SensorDeviceClass, set[SensorStateClass]] = {
     SensorDeviceClass.PRECIPITATION: set(SensorStateClass),
     SensorDeviceClass.PRECIPITATION_INTENSITY: {SensorStateClass.MEASUREMENT},
     SensorDeviceClass.PRESSURE: {SensorStateClass.MEASUREMENT},
+    SensorDeviceClass.RADON: {SensorStateClass.MEASUREMENT},
     SensorDeviceClass.REACTIVE_ENERGY: {
         SensorStateClass.TOTAL,
         SensorStateClass.TOTAL_INCREASING,
