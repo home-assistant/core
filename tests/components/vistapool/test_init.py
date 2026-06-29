@@ -2,15 +2,19 @@
 
 from __future__ import annotations
 
+from datetime import timedelta
+from typing import Any
 from unittest.mock import AsyncMock, MagicMock, patch
 
 from aioaquarite import AquariteError, AuthenticationError
+from freezegun.api import FrozenDateTimeFactory
+import pytest
 
 from homeassistant.components.vistapool import coordinator as vp_coordinator
 from homeassistant.config_entries import ConfigEntryState
 from homeassistant.core import HomeAssistant
 
-from tests.common import MockConfigEntry
+from tests.common import MockConfigEntry, async_fire_time_changed
 
 
 async def test_setup_entry(
@@ -124,12 +128,20 @@ async def test_apply_optimistic_creates_missing_intermediate_dicts(
     assert coordinator.data["existing"] == {"nested": {"key": 1}}
 
 
+@pytest.mark.parametrize(
+    "remote_status",
+    [
+        pytest.param(0, id="numeric_disagreement"),
+        pytest.param(None, id="non_coercible"),
+    ],
+)
 async def test_apply_optimistic_suppresses_stale_push(
     hass: HomeAssistant,
     mock_config_entry: MockConfigEntry,
     mock_vistapool_client: AsyncMock,
+    remote_status: Any,
 ) -> None:
-    """Test a Firestore push that disagrees within the TTL is overlaid with the optimistic value."""
+    """Test a Firestore push that disagrees within the TTL keeps the optimistic value."""
     mock_vistapool_client.fetch_pool_data.return_value = {"light": {"status": 0}}
     mock_config_entry.add_to_hass(hass)
     assert await hass.config_entries.async_setup(mock_config_entry.entry_id)
@@ -141,7 +153,7 @@ async def test_apply_optimistic_suppresses_stale_push(
     coordinator.apply_optimistic("light.status", 1)
     assert coordinator.data["light"]["status"] == 1
 
-    on_data({"light": {"status": 0}})
+    on_data({"light": {"status": remote_status}})
     await hass.async_block_till_done()
 
     assert coordinator.data["light"]["status"] == 1
@@ -195,6 +207,31 @@ async def test_apply_optimistic_yields_to_push_after_ttl(
         on_data({"light": {"status": 0}})
         await hass.async_block_till_done()
 
+    assert coordinator.data["light"]["status"] == 0
+
+
+async def test_apply_optimistic_self_expires_without_push(
+    hass: HomeAssistant,
+    freezer: FrozenDateTimeFactory,
+    mock_config_entry: MockConfigEntry,
+    mock_vistapool_client: AsyncMock,
+) -> None:
+    """Test the optimistic value clears via the scheduled timer when no push arrives."""
+    mock_vistapool_client.fetch_pool_data.return_value = {"light": {"status": 0}}
+    mock_config_entry.add_to_hass(hass)
+    assert await hass.config_entries.async_setup(mock_config_entry.entry_id)
+    await hass.async_block_till_done()
+
+    coordinator = next(iter(mock_config_entry.runtime_data.coordinators.values()))
+    coordinator.apply_optimistic("light.status", 1)
+    assert coordinator.data["light"]["status"] == 1
+    mock_vistapool_client.fetch_pool_data.reset_mock()
+
+    freezer.tick(timedelta(seconds=vp_coordinator.OPTIMISTIC_TTL_SECONDS + 1))
+    async_fire_time_changed(hass)
+    await hass.async_block_till_done()
+
+    mock_vistapool_client.fetch_pool_data.assert_called()
     assert coordinator.data["light"]["status"] == 0
 
 

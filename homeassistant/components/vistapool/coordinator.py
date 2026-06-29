@@ -1,5 +1,6 @@
 """Data coordinator for the Vistapool integration."""
 
+import asyncio
 import logging
 from time import monotonic
 from typing import TYPE_CHECKING, Any, override
@@ -45,6 +46,7 @@ class VistapoolDataUpdateCoordinator(DataUpdateCoordinator[dict[str, Any]]):
         self.pool_name: str = pool_name
         self.subscription: ResilientPoolSubscription | None = None
         self._pending_optimistic: dict[str, tuple[Any, float]] = {}
+        self._optimistic_handles: dict[str, asyncio.TimerHandle] = {}
 
         super().__init__(
             hass,
@@ -79,6 +81,10 @@ class VistapoolDataUpdateCoordinator(DataUpdateCoordinator[dict[str, Any]]):
     @override
     async def async_shutdown(self) -> None:
         """Cleanly close the resilient subscription."""
+        for handle in self._optimistic_handles.values():
+            handle.cancel()
+        self._optimistic_handles.clear()
+        self._pending_optimistic.clear()
         if self.subscription is not None:
             await self.subscription.aclose()
             self.subscription = None
@@ -92,6 +98,14 @@ class VistapoolDataUpdateCoordinator(DataUpdateCoordinator[dict[str, Any]]):
         """Reflect a just-written value and protect it from stale Firestore pushes."""
         self._pending_optimistic[value_path] = (value, monotonic())
         _set_path(self.data, value_path, value)
+        if (handle := self._optimistic_handles.pop(value_path, None)) is not None:
+            handle.cancel()
+        # Without a polling interval, a vanished push (controller offline,
+        # cloud lost the command) would leave the optimistic value stuck.
+        # Schedule an authoritative refresh after the TTL to self-heal.
+        self._optimistic_handles[value_path] = self.hass.loop.call_later(
+            OPTIMISTIC_TTL_SECONDS, self._expire_optimistic, value_path
+        )
         self.async_set_updated_data(self.data)
 
     def _apply_remote_data(self, data: dict[str, Any]) -> None:
@@ -103,10 +117,24 @@ class VistapoolDataUpdateCoordinator(DataUpdateCoordinator[dict[str, Any]]):
                 _values_agree(remote_value, value)
                 or now - written_at >= OPTIMISTIC_TTL_SECONDS
             ):
-                del self._pending_optimistic[path]
+                self._clear_optimistic(path)
             else:
                 _set_path(data, path, value)
         self.async_set_updated_data(data)
+
+    def _clear_optimistic(self, value_path: str) -> None:
+        """Drop a pending optimistic entry and its scheduled expiry."""
+        self._pending_optimistic.pop(value_path, None)
+        if (handle := self._optimistic_handles.pop(value_path, None)) is not None:
+            handle.cancel()
+
+    def _expire_optimistic(self, value_path: str) -> None:
+        """TTL fired without a confirming push: drop and force a refresh."""
+        self._optimistic_handles.pop(value_path, None)
+        if value_path not in self._pending_optimistic:
+            return
+        del self._pending_optimistic[value_path]
+        self.hass.async_create_task(self.async_refresh())
 
 
 def _set_path(data: dict[str, Any], value_path: str, value: Any) -> None:
