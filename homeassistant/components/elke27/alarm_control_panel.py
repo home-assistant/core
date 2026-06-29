@@ -1,6 +1,7 @@
 """Alarm control panel platform for Elke27 areas."""
 
 import asyncio
+from typing import override
 
 from elke27_lib import AreaState, ArmMode, PanelSnapshot
 from elke27_lib.errors import Elke27PinRequiredError
@@ -91,6 +92,7 @@ class Elke27AreaAlarmControlPanel(
         return _get_area(self.coordinator.data, self._area_id)
 
     @property
+    @override
     def alarm_state(self) -> AlarmControlPanelState | None:
         """Return the current alarm state."""
         area = self.area
@@ -99,22 +101,27 @@ class Elke27AreaAlarmControlPanel(
         return _area_state_to_ha(area)
 
     @property
+    @override
     def available(self) -> bool:
         """Return if the entity is available."""
         return super().available and self._hub.is_ready and self.area is not None
 
+    @override
     async def async_alarm_arm_away(self, code: str | None = None) -> None:
         """Arm the area in away mode."""
         await self._async_arm(ArmMode.ARMED_AWAY, code)
 
+    @override
     async def async_alarm_arm_home(self, code: str | None = None) -> None:
         """Arm the area in home mode."""
         await self._async_arm(ArmMode.ARMED_STAY, code)
 
+    @override
     async def async_alarm_arm_night(self, code: str | None = None) -> None:
         """Arm the area in night mode."""
         await self._async_arm(ArmMode.ARMED_NIGHT, code)
 
+    @override
     async def async_alarm_arm_custom_bypass(self, code: str | None = None) -> None:
         """Arm the area with a custom bypass."""
         code = _normalize_code(code)
@@ -146,6 +153,7 @@ class Elke27AreaAlarmControlPanel(
                 raise HomeAssistantError(msg)
         await self._async_arm(_custom_bypass_mode(), code)
 
+    @override
     async def async_alarm_disarm(self, code: str | None = None) -> None:
         """Disarm the area."""
         code = _normalize_code(code)

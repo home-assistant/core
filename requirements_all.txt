@@ -900,9 +900,6 @@ elevenlabs==2.51.0
 # homeassistant.components.elgato
 elgato==5.1.2
 
-# homeassistant.components.eliqonline
-eliqonline==1.2.2
-
 # homeassistant.components.elke27
 elke27==0.3.7
 

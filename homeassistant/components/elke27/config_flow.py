@@ -2,7 +2,7 @@
 
 import asyncio
 from dataclasses import asdict, is_dataclass
-from typing import Any
+from typing import Any, override
 
 from elke27_lib import ClientConfig, LinkKeys
 from elke27_lib.client import Elke27Client
@@ -43,6 +43,7 @@ class Elke27ConfigFlow(ConfigFlow, domain=DOMAIN):
     VERSION = 1
     MINOR_VERSION = 1
 
+    @override
     async def async_step_user(
         self, user_input: dict[str, Any] | None = None
     ) -> ConfigFlowResult:
