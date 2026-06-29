@@ -345,6 +345,33 @@ async def test_cannot_connect_non_200(
     assert result["errors"] == {"base": "cannot_connect"}
 
 
+async def test_unexpected_exception_shows_unknown_error(
+    hass: HomeAssistant, mock_setup_entry: AsyncMock
+) -> None:
+    """Test that an unexpected exception shows the unknown error key."""
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN, context={"source": config_entries.SOURCE_USER}
+    )
+
+    with patch(
+        "homeassistant.components.blanco.config_flow.async_get_clientsession"
+    ) as mock_session_factory:
+        cm = MagicMock()
+        cm.__aenter__ = AsyncMock(side_effect=RuntimeError("unexpected"))
+        cm.__aexit__ = AsyncMock(return_value=False)
+        mock_session = MagicMock()
+        mock_session.post.return_value = cm
+        mock_session_factory.return_value = mock_session
+
+        result = await hass.config_entries.flow.async_configure(
+            result["flow_id"],
+            {CONF_SERIAL: TEST_SERIAL, CONF_SERVICE_CODE: TEST_SERVICE_CODE},
+        )
+
+    assert result["type"] is FlowResultType.FORM
+    assert result["errors"] == {"base": "unknown"}
+
+
 async def test_duplicate_entry_aborted(
     hass: HomeAssistant, mock_setup_entry: AsyncMock
 ) -> None:
