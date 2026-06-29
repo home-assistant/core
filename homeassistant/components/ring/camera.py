@@ -66,8 +66,8 @@ CAMERA_DESCRIPTIONS: tuple[RingCameraEntityDescription, ...] = (
         entity_registry_enabled_default=False,
         exists_fn=lambda camera: (
             not isinstance(camera, RingOther)
-            and cast(Any, camera).has_subscription
             and camera.has_capability(RingCapability.HISTORY)
+            and bool(getattr(camera, "has_subscription", False))
         ),
         live_stream=False,
         motion_detection=True,
