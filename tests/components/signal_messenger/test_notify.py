@@ -144,7 +144,7 @@ def test_send_message_with_bad_data_throws_vol_error(
         signal_notification_service.send_message(MESSAGE, data={"test": "test"})
 
     assert "Sending signal message" in caplog.text
-    assert "extra keys not allowed" in str(exc.value)
+    assert "not a valid option" in str(exc.value)
 
 
 def test_send_message_styled_with_bad_data_throws_vol_error(

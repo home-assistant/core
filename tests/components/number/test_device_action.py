@@ -1,8 +1,8 @@
 """The tests for Number device actions."""
 
+from probatio import serialize
 import pytest
 from pytest_unordered import unordered
-import voluptuous_serialize
 
 from homeassistant.components import automation
 from homeassistant.components.device_automation import DeviceAutomationType
@@ -264,7 +264,7 @@ async def test_capabilities(
 
     assert capabilities and "extra_fields" in capabilities
 
-    assert voluptuous_serialize.convert(
+    assert serialize(
         capabilities["extra_fields"], custom_serializer=cv.custom_serializer
     ) == [{"name": "value", "required": True, "type": "float"}]
 
@@ -296,6 +296,6 @@ async def test_capabilities_legacy(
 
     assert capabilities and "extra_fields" in capabilities
 
-    assert voluptuous_serialize.convert(
+    assert serialize(
         capabilities["extra_fields"], custom_serializer=cv.custom_serializer
     ) == [{"name": "value", "required": True, "type": "float"}]

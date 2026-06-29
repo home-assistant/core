@@ -37,6 +37,7 @@ mutagen==1.48.1
 orjson==3.11.9
 packaging>=23.1
 Pillow==12.2.0
+probatio==0.5.4
 propcache==0.5.2
 psutil-home-assistant==0.0.1
 PyJWT==2.12.1
@@ -56,9 +57,6 @@ typing-extensions>=4.15.0,<5.0
 ulid-transform==2.2.9
 urllib3>=2.0
 uv==0.11.26
-voluptuous-openapi==0.4.1
-voluptuous-serialize==2.7.0
-voluptuous==0.15.2
 webrtc-models==0.3.0
 yarl==1.24.2
 zeroconf==0.150.0

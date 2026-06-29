@@ -15,9 +15,9 @@ from typing import Any, cast
 from mcp import types
 from mcp.server import Server
 from mcp.server.lowlevel.helper_types import ReadResourceContents
+from probatio import to_openapi as convert
 from pydantic import AnyUrl
 import voluptuous as vol
-from voluptuous_openapi import convert
 
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError

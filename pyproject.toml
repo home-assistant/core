@@ -75,9 +75,7 @@ dependencies = [
   "ulid-transform==2.2.9",
   "urllib3>=2.0",
   "uv==0.11.26",
-  "voluptuous==0.15.2",
-  "voluptuous-serialize==2.7.0",
-  "voluptuous-openapi==0.4.1",
+  "probatio==0.5.4",
   "yarl==1.24.2",
   "webrtc-models==0.3.0",
   "zeroconf==0.150.0",
@@ -785,7 +783,6 @@ ignore = [
 ]
 
 [tool.ruff.lint.flake8-import-conventions.extend-aliases]
-voluptuous = "vol"
 "homeassistant.components.air_quality.PLATFORM_SCHEMA" = "AIR_QUALITY_PLATFORM_SCHEMA"
 "homeassistant.components.alarm_control_panel.PLATFORM_SCHEMA" = "ALARM_CONTROL_PANEL_PLATFORM_SCHEMA"
 "homeassistant.components.binary_sensor.PLATFORM_SCHEMA" = "BINARY_SENSOR_PLATFORM_SCHEMA"

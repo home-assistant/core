@@ -221,7 +221,7 @@ async def test_generate_data_service_structure_fields(
                 },
             },
             vol.Invalid,
-            r"extra keys not allowed.*",
+            r"not a valid option.*",
         ),
         (
             {
@@ -248,7 +248,7 @@ async def test_generate_data_service_structure_fields(
                 },
             },
             vol.Invalid,
-            r"extra keys not allowed .*",
+            r"not a valid option .*",
         ),
         (
             {

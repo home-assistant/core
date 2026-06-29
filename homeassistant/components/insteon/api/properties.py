@@ -2,6 +2,7 @@
 
 from typing import Any
 
+from probatio import serialize
 from pyinsteon import devices
 from pyinsteon.config import (
     LOAD_BUTTON,
@@ -18,7 +19,6 @@ from pyinsteon.constants import (
 )
 from pyinsteon.device_types.device_base import Device
 import voluptuous as vol
-import voluptuous_serialize
 
 from homeassistant.components import websocket_api
 from homeassistant.core import HomeAssistant
@@ -43,26 +43,26 @@ RELAY_MODES = [str(RelayMode(v)).lower() for v in list(RelayMode)]
 
 
 def _bool_schema(name):
-    return voluptuous_serialize.convert(vol.Schema({vol.Required(name): bool}))[0]
+    return serialize(vol.Schema({vol.Required(name): bool}))[0]
 
 
 def _byte_schema(name):
-    return voluptuous_serialize.convert(vol.Schema({vol.Required(name): cv.byte}))[0]
+    return serialize(vol.Schema({vol.Required(name): cv.byte}))[0]
 
 
 def _float_schema(name):
-    return voluptuous_serialize.convert(vol.Schema({vol.Required(name): float}))[0]
+    return serialize(vol.Schema({vol.Required(name): float}))[0]
 
 
 def _list_schema(name, values):
-    return voluptuous_serialize.convert(
+    return serialize(
         vol.Schema({vol.Required(name): vol.In(values)}),
         custom_serializer=cv.custom_serializer,
     )[0]
 
 
 def _multi_select_schema(name, values):
-    return voluptuous_serialize.convert(
+    return serialize(
         vol.Schema({vol.Optional(name): cv.multi_select(values)}),
         custom_serializer=cv.custom_serializer,
     )[0]
@@ -70,7 +70,7 @@ def _multi_select_schema(name, values):
 
 def _read_only_schema(name, value):
     """Return a constant value schema."""
-    return voluptuous_serialize.convert(vol.Schema({vol.Required(name): value}))[0]
+    return serialize(vol.Schema({vol.Required(name): value}))[0]
 
 
 def get_schema(prop, name, groups):

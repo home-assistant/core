@@ -23,8 +23,8 @@ from typing import TYPE_CHECKING, Any, cast, overload
 from urllib.parse import urlparse
 from uuid import UUID
 
+from probatio import UNSUPPORTED, serialize
 import voluptuous as vol
-import voluptuous_serialize
 
 from homeassistant.const import (
     ATTR_AREA_ID,
@@ -1188,7 +1188,7 @@ def _custom_serializer(schema: Any, *, allow_section: bool) -> Any:
             raise ValueError("Nesting expandable sections is not supported")
         return {
             "type": "expandable",
-            "schema": voluptuous_serialize.convert(
+            "schema": serialize(
                 schema.schema,
                 custom_serializer=functools.partial(
                     _custom_serializer, allow_section=False
@@ -1203,7 +1203,7 @@ def _custom_serializer(schema: Any, *, allow_section: bool) -> Any:
     if isinstance(schema, selector.Selector):
         return schema.serialize()
 
-    return voluptuous_serialize.UNSUPPORTED
+    return UNSUPPORTED
 
 
 # Schemas

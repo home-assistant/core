@@ -5,9 +5,9 @@ from collections.abc import Callable
 from dataclasses import dataclass, field as dc_field
 from typing import Any, override
 
+from probatio import UNSUPPORTED, to_openapi as convert
 import slugify as unicode_slug
 import voluptuous as vol
-from voluptuous_openapi import UNSUPPORTED, convert
 
 from homeassistant.components.script import DOMAIN as SCRIPT_DOMAIN
 from homeassistant.const import (

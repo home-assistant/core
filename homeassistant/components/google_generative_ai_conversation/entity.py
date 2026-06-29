@@ -31,8 +31,8 @@ from google.genai.types import (
     Tool,
     ToolListUnion,
 )
+from probatio import to_openapi as convert
 import voluptuous as vol
-from voluptuous_openapi import convert
 
 from homeassistant.components import conversation
 from homeassistant.config_entries import ConfigSubentry

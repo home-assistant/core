@@ -3,8 +3,8 @@
 import logging
 from typing import Any, override
 
+from probatio import serialize
 import voluptuous as vol
-import voluptuous_serialize
 
 from homeassistant import data_entry_flow
 from homeassistant.components import websocket_api
@@ -153,6 +153,6 @@ def _prepare_result_json(result: data_entry_flow.FlowResult) -> dict[str, Any]:
     if (schema := result["data_schema"]) is None:
         data["data_schema"] = []
     else:
-        data["data_schema"] = voluptuous_serialize.convert(schema)
+        data["data_schema"] = serialize(schema)
 
     return data

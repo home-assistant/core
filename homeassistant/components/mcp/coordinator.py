@@ -12,8 +12,8 @@ from mcp import McpError
 from mcp.client.session import ClientSession
 from mcp.client.sse import sse_client
 from mcp.client.streamable_http import streamable_http_client
+from probatio import from_openapi as convert_to_voluptuous
 import voluptuous as vol
-from voluptuous_openapi import convert_to_voluptuous
 
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_URL

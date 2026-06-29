@@ -2,9 +2,9 @@
 
 from unittest.mock import patch
 
+from probatio import serialize
 import pytest
 import voluptuous as vol
-import voluptuous_serialize
 from zwave_js_server.const import CommandClass
 from zwave_js_server.event import Event
 
@@ -446,7 +446,7 @@ async def test_get_condition_capabilities_node_status(
         },
     )
     assert capabilities and "extra_fields" in capabilities
-    assert voluptuous_serialize.convert(
+    assert serialize(
         capabilities["extra_fields"], custom_serializer=cv.custom_serializer
     ) == [
         {
@@ -499,7 +499,7 @@ async def test_get_condition_capabilities_value(
         ("134", "Version"),
     ]
 
-    assert voluptuous_serialize.convert(
+    assert serialize(
         capabilities["extra_fields"], custom_serializer=cv.custom_serializer
     ) == [
         {
@@ -543,7 +543,7 @@ async def test_get_condition_capabilities_config_parameter(
     )
     assert capabilities and "extra_fields" in capabilities
 
-    assert voluptuous_serialize.convert(
+    assert serialize(
         capabilities["extra_fields"], custom_serializer=cv.custom_serializer
     ) == [
         {
@@ -574,7 +574,7 @@ async def test_get_condition_capabilities_config_parameter(
     )
     assert capabilities and "extra_fields" in capabilities
 
-    assert voluptuous_serialize.convert(
+    assert serialize(
         capabilities["extra_fields"], custom_serializer=cv.custom_serializer
     ) == [
         {

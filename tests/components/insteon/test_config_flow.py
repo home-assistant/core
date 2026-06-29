@@ -4,8 +4,8 @@ from collections.abc import Callable
 from typing import Any
 from unittest.mock import AsyncMock, patch
 
+from probatio import serialize as convert
 import pytest
-from voluptuous_serialize import convert
 
 from homeassistant import config_entries
 from homeassistant.components.insteon.config_flow import (

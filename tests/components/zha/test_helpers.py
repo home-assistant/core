@@ -3,8 +3,8 @@
 import logging
 from typing import Any
 
+from probatio import serialize
 import pytest
-import voluptuous_serialize
 from zigpy.application import ControllerApplication
 from zigpy.types.basic import uint16_t
 from zigpy.zcl.clusters import lighting
@@ -81,7 +81,7 @@ async def test_zcl_schema_conversions(hass: HomeAssistant) -> None:
             "required": False,
         },
     ]
-    vol_schema = voluptuous_serialize.convert(
+    vol_schema = serialize(
         cluster_command_schema_to_vol_schema(command_schema),
         custom_serializer=cv.custom_serializer,
     )

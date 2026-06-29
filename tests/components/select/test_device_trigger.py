@@ -1,8 +1,8 @@
 """The tests for Select device triggers."""
 
+from probatio import serialize
 import pytest
 from pytest_unordered import unordered
-import voluptuous_serialize
 
 from homeassistant.components import automation
 from homeassistant.components.device_automation import DeviceAutomationType
@@ -306,7 +306,7 @@ async def test_get_trigger_capabilities(
     capabilities = await async_get_trigger_capabilities(hass, config)
     assert capabilities
     assert "extra_fields" in capabilities
-    assert voluptuous_serialize.convert(
+    assert serialize(
         capabilities["extra_fields"], custom_serializer=cv.custom_serializer
     ) == [
         {
@@ -340,7 +340,7 @@ async def test_get_trigger_capabilities(
     capabilities = await async_get_trigger_capabilities(hass, config)
     assert capabilities
     assert "extra_fields" in capabilities
-    assert voluptuous_serialize.convert(
+    assert serialize(
         capabilities["extra_fields"], custom_serializer=cv.custom_serializer
     ) == [
         {
@@ -382,7 +382,7 @@ async def test_get_trigger_capabilities_unknown(
     capabilities = await async_get_trigger_capabilities(hass, config)
     assert capabilities
     assert "extra_fields" in capabilities
-    assert voluptuous_serialize.convert(
+    assert serialize(
         capabilities["extra_fields"], custom_serializer=cv.custom_serializer
     ) == [
         {
@@ -426,7 +426,7 @@ async def test_get_trigger_capabilities_legacy(
     capabilities = await async_get_trigger_capabilities(hass, config)
     assert capabilities
     assert "extra_fields" in capabilities
-    assert voluptuous_serialize.convert(
+    assert serialize(
         capabilities["extra_fields"], custom_serializer=cv.custom_serializer
     ) == [
         {
@@ -460,7 +460,7 @@ async def test_get_trigger_capabilities_legacy(
     capabilities = await async_get_trigger_capabilities(hass, config)
     assert capabilities
     assert "extra_fields" in capabilities
-    assert voluptuous_serialize.convert(
+    assert serialize(
         capabilities["extra_fields"], custom_serializer=cv.custom_serializer
     ) == [
         {

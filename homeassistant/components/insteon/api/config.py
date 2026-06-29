@@ -2,13 +2,13 @@
 
 from typing import Any, TypedDict
 
+from probatio import serialize
 from pyinsteon import async_close, async_connect, devices
 from pyinsteon.address import Address
 from pyinsteon.aldb.aldb_record import ALDBRecord
 from pyinsteon.constants import LinkStatus
 from pyinsteon.managers.link_manager import get_broken_links
 import voluptuous as vol
-import voluptuous_serialize
 
 from homeassistant.components import websocket_api
 from homeassistant.config_entries import ConfigEntry
@@ -212,12 +212,10 @@ async def websocket_get_modem_schema(
     config_data = config_entry.data
     if device := config_data.get(CONF_DEVICE):
         ports = await async_get_usb_ports(hass=hass)
-        plm_schema = voluptuous_serialize.convert(
-            build_plm_schema(ports=ports, device=device)
-        )
+        plm_schema = serialize(build_plm_schema(ports=ports, device=device))
         connection.send_result(msg[ID], plm_schema)
     else:
-        hub_schema = voluptuous_serialize.convert(build_hub_schema(**config_data))
+        hub_schema = serialize(build_hub_schema(**config_data))
         connection.send_result(msg[ID], hub_schema)
 
 
