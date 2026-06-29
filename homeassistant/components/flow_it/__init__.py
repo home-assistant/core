@@ -33,7 +33,6 @@ async def async_setup_entry(hass: HomeAssistant, entry: FlowItConfigEntry) -> bo
 
     await coordinator.async_config_entry_first_refresh()
 
-    # Setup WebSocket for real-time updates
     async def on_ws_data(data: MachineData) -> None:
         """Handle data from WebSocket."""
         _LOGGER.debug("Received WebSocket update")
