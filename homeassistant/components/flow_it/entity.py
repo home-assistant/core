@@ -25,9 +25,9 @@ class FlowItVmcEntity(CoordinatorEntity[FlowItCoordinator]):
         self.vmc = vmc
         self._attr_unique_id = unique_id
         self._attr_device_info = DeviceInfo(
-            identifiers={(DOMAIN, coordinator.data.name)},
-            name=coordinator.data.name,
+            identifiers={(DOMAIN, coordinator.data.state.name)},
+            name=coordinator.data.state.name,
             manufacturer="FLOW-IT",
             model="VMC",
-            sw_version=coordinator.data.data.alert.version,
+            sw_version=coordinator.data.state.data.alert.version,
         )

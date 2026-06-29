@@ -23,7 +23,14 @@ from .const import DOMAIN
 _LOGGER = logging.getLogger(__name__)
 
 
-class FlowItCoordinator(DataUpdateCoordinator[MachineStatusResponse]):
+@dataclass
+class FlowItCoordinatorData:
+    """Data fetched from the Flow-it VMC."""
+
+    state: MachineStatusResponse
+
+
+class FlowItCoordinator(DataUpdateCoordinator[FlowItCoordinatorData]):
     """Class to manage fetching Flow-it data."""
 
     config_entry: ConfigEntry
@@ -58,7 +65,7 @@ class FlowItCoordinator(DataUpdateCoordinator[MachineStatusResponse]):
             raise UpdateFailed(f"Error connecting to VMC: {err}") from err
 
     @override
-    async def _async_update_data(self) -> MachineStatusResponse:
+    async def _async_update_data(self) -> FlowItCoordinatorData:
         """Fetch data from API endpoint."""
         try:
             await self.vmc.refresh_state()
@@ -67,7 +74,8 @@ class FlowItCoordinator(DataUpdateCoordinator[MachineStatusResponse]):
         except (FlowItConnectionError, FlowItResponseError) as err:
             raise UpdateFailed(f"Error communicating with API: {err}") from err
         else:
-            return self.vmc.state
+            assert self.vmc.state is not None
+            return FlowItCoordinatorData(state=self.vmc.state)
 
 
 @dataclass
