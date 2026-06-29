@@ -31,7 +31,6 @@ async def async_setup_entry(hass: HomeAssistant, entry: FlowItConfigEntry) -> bo
 
     coordinator = FlowItCoordinator(hass, entry, vmc)
 
-    # Initial fetch
     await coordinator.async_config_entry_first_refresh()
 
     # Setup WebSocket for real-time updates
