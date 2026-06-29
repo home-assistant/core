@@ -64,9 +64,11 @@ CAMERA_DESCRIPTIONS: tuple[RingCameraEntityDescription, ...] = (
         key="last_recording",
         translation_key="last_recording",
         entity_registry_enabled_default=False,
-        exists_fn=lambda camera: not isinstance(camera, RingOther)
-        and cast(Any, camera).has_subscription
-        and camera.has_capability(RingCapability.HISTORY),
+        exists_fn=lambda camera: (
+            not isinstance(camera, RingOther)
+            and cast(Any, camera).has_subscription
+            and camera.has_capability(RingCapability.HISTORY)
+        ),
         live_stream=False,
         motion_detection=True,
     ),
