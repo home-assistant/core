@@ -26,6 +26,7 @@ from .entity import SwitchbotEntity, exception_handler
 SWITCHBOT_COLOR_MODE_TO_HASS = {
     SwitchBotColorMode.RGB: ColorMode.RGB,
     SwitchBotColorMode.COLOR_TEMP: ColorMode.COLOR_TEMP,
+    SwitchBotColorMode.BRIGHTNESS: ColorMode.BRIGHTNESS,
 }
 
 _LOGGER = logging.getLogger(__name__)
