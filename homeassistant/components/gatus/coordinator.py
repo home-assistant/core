@@ -21,7 +21,7 @@ class GatusDataUpdateCoordinator(DataUpdateCoordinator[list[dict[str, Any]]]):
 
     def __init__(self, hass: HomeAssistant, entry: ConfigEntry, url: str) -> None:
         """Initialize the coordinator."""
-        self.url = url
+        self.url = url.rstrip("/")
         session = async_get_clientsession(hass)
 
         self.client = GatusClient(url=url, session=session)

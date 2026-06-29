@@ -1,8 +1,9 @@
 """Tests for the Gatus DataUpdateCoordinator."""
 
-from unittest.mock import AsyncMock, MagicMock, patch
+from unittest.mock import AsyncMock, patch
 
-import aiohttp
+# Import your library's exceptions to simulate failures
+from gatus_api.client import GatusClientError
 import pytest
 
 from homeassistant.components.gatus.const import DOMAIN
@@ -13,133 +14,44 @@ from homeassistant.helpers.update_coordinator import UpdateFailed
 from tests.common import MockConfigEntry
 
 
-@pytest.fixture
-def mock_session() -> MagicMock:
-    """Fixture to mock the aiohttp client session."""
-    session = MagicMock()
-    response = MagicMock()
-    response.status = 200
-    response.json = AsyncMock(return_value=[{"key": "endpoint_1", "is_up": True}])
-    session.get.return_value.__aenter__.return_value = response
-    return session
-
-
-async def test_coordinator_successful_update(hass: HomeAssistant, mock_session) -> None:
+async def test_coordinator_successful_update(hass: HomeAssistant) -> None:
     """Test a pristine successful data refresh cycle and URL sanitization."""
     config_entry = MockConfigEntry(domain=DOMAIN, data={"url": "http://gatus.local/"})
     config_entry.add_to_hass(hass)
 
-    with patch(
-        "homeassistant.components.gatus.coordinator.async_get_clientsession",
-        return_value=mock_session,
-    ):
-        coordinator = GatusDataUpdateCoordinator(
-            hass, config_entry, "http://gatus.local/"
-        )
+    coordinator = GatusDataUpdateCoordinator(hass, config_entry, "http://gatus.local/")
 
     assert coordinator.url == "http://gatus.local"
 
-    data = await coordinator._async_update_data()
+    # Mock the third-party library method directly
+    mock_data = [{"key": "endpoint_1", "is_up": True}]
+    with patch.object(
+        coordinator.client, "get_endpoints_statuses", AsyncMock(return_value=mock_data)
+    ) as mock_get:
+        data = await coordinator._async_update_data()
+        mock_get.assert_called_once()
 
     assert isinstance(data, list)
     assert data[0]["key"] == "endpoint_1"
-    mock_session.get.assert_called_once_with(
-        "http://gatus.local/api/v1/endpoints/statuses"
-    )
 
 
-@pytest.mark.parametrize(
-    ("status_code", "expected_error"),
-    [
-        (404, "Gatus API returned status code 404"),
-        (500, "Gatus API returned status code 500"),
-    ],
-)
-async def test_coordinator_http_error_status(
-    hass: HomeAssistant, mock_session, status_code: int, expected_error: str
-) -> None:
-    """Test that non-200 HTTP response codes raise UpdateFailed errors cleanly."""
+async def test_coordinator_client_error(hass: HomeAssistant) -> None:
+    """Test that a library exception wraps cleanly into UpdateFailed."""
     config_entry = MockConfigEntry(domain=DOMAIN, data={"url": "http://gatus.local"})
     config_entry.add_to_hass(hass)
 
-    mock_session.get.return_value.__aenter__.return_value.status = status_code
+    coordinator = GatusDataUpdateCoordinator(hass, config_entry, "http://gatus.local")
 
-    with patch(
-        "homeassistant.components.gatus.coordinator.async_get_clientsession",
-        return_value=mock_session,
+    with (
+        patch.object(
+            coordinator.client,
+            "get_endpoints_statuses",
+            AsyncMock(
+                side_effect=GatusClientError(
+                    "Error communicating with Gatus API: status code 500"
+                )
+            ),
+        ),
+        pytest.raises(UpdateFailed, match="Error communicating with Gatus API:"),
     ):
-        coordinator = GatusDataUpdateCoordinator(
-            hass, config_entry, "http://gatus.local"
-        )
-
-    with pytest.raises(UpdateFailed, match=expected_error):
-        await coordinator._async_update_data()
-
-
-async def test_coordinator_malformed_json_format(
-    hass: HomeAssistant, mock_session
-) -> None:
-    """Test that a non-array response dictionary raises an explicit array format error."""
-    config_entry = MockConfigEntry(domain=DOMAIN, data={"url": "http://gatus.local"})
-    config_entry.add_to_hass(hass)
-
-    mock_session.get.return_value.__aenter__.return_value.json = AsyncMock(
-        return_value={"status": "error", "message": "unauthorized"}
-    )
-
-    with patch(
-        "homeassistant.components.gatus.coordinator.async_get_clientsession",
-        return_value=mock_session,
-    ):
-        coordinator = GatusDataUpdateCoordinator(
-            hass, config_entry, "http://gatus.local"
-        )
-
-    with pytest.raises(
-        UpdateFailed, match="Gatus API response was not in the expected array format"
-    ):
-        await coordinator._async_update_data()
-
-
-async def test_coordinator_client_connection_error(
-    hass: HomeAssistant, mock_session
-) -> None:
-    """Test that an aiohttp connection drop or client error maps to UpdateFailed."""
-    config_entry = MockConfigEntry(domain=DOMAIN, data={"url": "http://gatus.local"})
-    config_entry.add_to_hass(hass)
-
-    mock_session.get.side_effect = aiohttp.ClientError(
-        "Connection dropped by remote server"
-    )
-
-    with patch(
-        "homeassistant.components.gatus.coordinator.async_get_clientsession",
-        return_value=mock_session,
-    ):
-        coordinator = GatusDataUpdateCoordinator(
-            hass, config_entry, "http://gatus.local"
-        )
-
-    with pytest.raises(UpdateFailed, match="Error communicating with Gatus API:"):
-        await coordinator._async_update_data()
-
-
-async def test_coordinator_upstream_timeout_error(
-    hass: HomeAssistant, mock_session
-) -> None:
-    """Test that a physical read timeout maps cleanly into an active translation layer exception."""
-    config_entry = MockConfigEntry(domain=DOMAIN, data={"url": "http://gatus.local"})
-    config_entry.add_to_hass(hass)
-
-    mock_session.get.side_effect = TimeoutError("Request timed out after 10s")
-
-    with patch(
-        "homeassistant.components.gatus.coordinator.async_get_clientsession",
-        return_value=mock_session,
-    ):
-        coordinator = GatusDataUpdateCoordinator(
-            hass, config_entry, "http://gatus.local"
-        )
-
-    with pytest.raises(UpdateFailed, match="Error communicating with Gatus API:"):
         await coordinator._async_update_data()
