@@ -32,8 +32,8 @@
               "timeout": "Timeout for connection to website.",
               "verify_ssl": "Enables/disables verification of SSL/TLS certificate, for example if it is self-signed."
             },
-            "description": "Provide additional advanced settings for the resource.",
-            "name": "Advanced settings"
+            "description": "Provide additional settings for the resource.",
+            "name": "Additional settings"
           },
           "auth": {
             "data": {
@@ -117,8 +117,8 @@
                 "unit_of_measurement": "Choose unit of measurement or create your own.",
                 "value_template": "Defines a template to get the state of the sensor."
               },
-              "description": "Provide additional advanced settings for the sensor.",
-              "name": "Advanced settings"
+              "description": "Provide additional settings for the sensor.",
+              "name": "Additional settings"
             }
           }
         }
