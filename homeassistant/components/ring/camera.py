@@ -6,11 +6,11 @@ from collections.abc import Callable
 from dataclasses import dataclass
 from datetime import timedelta
 import logging
-from typing import TYPE_CHECKING, Any, Generic
+from typing import TYPE_CHECKING, Any, Generic, cast
 
 from aiohttp import web
 from haffmpeg.camera import CameraMjpeg
-from ring_doorbell import RingDoorBell
+from ring_doorbell import RingCapability, RingGeneric, RingOther
 from ring_doorbell.webrtcstream import RingWebRtcMessage
 
 from homeassistant.components import ffmpeg
@@ -49,7 +49,7 @@ _LOGGER = logging.getLogger(__name__)
 class RingCameraEntityDescription(CameraEntityDescription, Generic[RingDeviceT]):
     """Base class for event entity description."""
 
-    exists_fn: Callable[[RingDoorBell], bool]
+    exists_fn: Callable[[RingDeviceT], bool]
     live_stream: bool
     motion_detection: bool
 
@@ -58,7 +58,7 @@ CAMERA_DESCRIPTIONS: tuple[RingCameraEntityDescription, ...] = (
     RingCameraEntityDescription(
         key="live_view",
         translation_key="live_view",
-        exists_fn=lambda _: True,
+        exists_fn=lambda device: device.has_capability(RingCapability.VIDEO),
         live_stream=True,
         motion_detection=False,
     ),
@@ -66,7 +66,9 @@ CAMERA_DESCRIPTIONS: tuple[RingCameraEntityDescription, ...] = (
         key="last_recording",
         translation_key="last_recording",
         entity_registry_enabled_default=False,
-        exists_fn=lambda camera: camera.has_subscription,
+        exists_fn=lambda camera: camera.has_subscription
+        and not isinstance(camera, RingOther)
+        and camera.has_capability(RingCapability.HISTORY),
         live_stream=False,
         motion_detection=True,
     ),
@@ -86,19 +88,19 @@ async def async_setup_entry(
     cams = [
         RingCam(camera, devices_coordinator, description, ffmpeg_manager=ffmpeg_manager)
         for description in CAMERA_DESCRIPTIONS
-        for camera in ring_data.devices.video_devices
+        for camera in ring_data.devices.all_devices
         if description.exists_fn(camera)
     ]
 
     async_add_entities(cams)
 
 
-class RingCam(RingEntity[RingDoorBell], Camera):
+class RingCam(RingEntity[RingGeneric], Camera):
     """An implementation of a Ring Door Bell camera."""
 
     def __init__(
         self,
-        device: RingDoorBell,
+        device: RingGeneric,
         coordinator: RingDataCoordinator,
         description: RingCameraEntityDescription,
         *,
@@ -125,7 +127,7 @@ class RingCam(RingEntity[RingDoorBell], Camera):
     @callback
     def _handle_coordinator_update(self) -> None:
         """Call update method."""
-        self._device = self._get_coordinator_data().get_video_device(
+        self._device = self._get_coordinator_data().get_device(
             self._device.device_api_id
         )
         history_data = self._device.last_history
@@ -176,7 +178,9 @@ class RingCam(RingEntity[RingDoorBell], Camera):
     @exception_wrap
     async def _async_get_fresh_snapshot(self) -> bytes | None:
         """Get a fresh snapshot from the camera."""
-        return await self._device.async_get_snapshot()
+        if snapshot_method := getattr(self._device, "async_get_snapshot", None):
+            return await snapshot_method()
+        return None
 
     async def handle_async_mjpeg_stream(
         self, request: web.Request
@@ -220,7 +224,7 @@ class RingCam(RingEntity[RingDoorBell], Camera):
                     )
                 )
 
-        return await self._device.generate_async_webrtc_stream(
+        return await cast(Any, self._device).generate_async_webrtc_stream(
             offer_sdp, session_id, message_wrapper, keep_alive_timeout=None
         )
 
@@ -236,14 +240,14 @@ class RingCam(RingEntity[RingDoorBell], Camera):
                     "device": self._device.name,
                 },
             )
-        await self._device.on_webrtc_candidate(
+        await cast(Any, self._device).on_webrtc_candidate(
             session_id, candidate.candidate, candidate.sdp_m_line_index
         )
 
     @callback
     def close_webrtc_session(self, session_id: str) -> None:
         """Close a WebRTC session."""
-        self._device.sync_close_webrtc_stream(session_id)
+        cast(Any, self._device).sync_close_webrtc_stream(session_id)
 
     async def async_update(self) -> None:
         """Update camera entity and refresh attributes."""
@@ -280,7 +284,7 @@ class RingCam(RingEntity[RingDoorBell], Camera):
             assert self._last_event
         event_id = self._last_event.get("id")
         assert event_id and isinstance(event_id, int)
-        return await self._device.async_recording_url(event_id)
+        return await cast(Any, self._device).async_recording_url(event_id)
 
     @exception_wrap
     async def _async_set_motion_detection_enabled(self, new_state: bool) -> None:
@@ -290,7 +294,7 @@ class RingCam(RingEntity[RingDoorBell], Camera):
             )
             return
 
-        await self._device.async_set_motion_detection(new_state)
+        await cast(Any, self._device).async_set_motion_detection(new_state)
         self._attr_motion_detection_enabled = new_state
         self.async_write_ha_state()
 
