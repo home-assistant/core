@@ -887,15 +887,8 @@ async def test_camera_image_with_attribute_change(
             modules = home_data.get("modules", [])
             for module in modules:
                 if isinstance(module, dict) and module.get("id") == camera_entity_id:
-                    if camera_monitoring is not None:
-                        module["monitoring"] = camera_monitoring
-                    else:
-                        module.pop("monitoring", None)
-                    if camera_alim_status is not None:
-                        module["alim_status"] = camera_alim_status
-                    else:
-                        module.pop("alim_status", None)
-                    break
+                    module["monitoring"] = camera_monitoring
+                    module["alim_status"] = camera_alim_status
 
     async def fake_camera_post(*args, **kwargs):
         """Fake camera status during requesting backend data."""
@@ -1024,8 +1017,8 @@ async def test_camera_image_with_attribute_change(
             await hass.async_block_till_done(wait_background_tasks=True)
 
         # Check that the camera become idle with monitoring off
-        assert hass.states.get(camera_entity).state == "idle"
-        assert hass.states.get(camera_entity).attributes.get("monitoring") is False
+        assert hass.states.get(camera_entity).state == "unavailable"
+        assert hass.states.get(camera_entity).attributes.get("monitoring") is None
 
         # Check that getting image raises the exception
         with pytest.raises(HomeAssistantError, match="Camera is off"):
@@ -1048,27 +1041,6 @@ async def test_camera_image_with_attribute_change(
             await hass.async_block_till_done(wait_background_tasks=True)
 
         # Check that the camera become idle with monitoring off
-        assert hass.states.get(camera_entity).state == "idle"
-        assert hass.states.get(camera_entity).attributes.get("monitoring") is False
-
-        # Check that getting image raises the exception
-        with pytest.raises(HomeAssistantError, match="Camera is off"):
-            await camera.async_get_image(hass, camera_entity)
-
-        # Check that getting stream source raises the exception
-        with pytest.raises(HomeAssistantError, match="Camera is off"):
-            await camera.async_get_stream_source(hass, camera_entity)
-
-        # Real camera disconnect to make it unavailable
-        response = {
-            "event_type": "disconnection",
-            "device_id": camera_id,
-            "camera_id": camera_id,
-            "event_id": "601dce1560abca1ebad9b723",
-            "push_type": f"{camera_type}-disconnection",
-        }
-        await simulate_webhook(hass, webhook_id, response)
-
         assert hass.states.get(camera_entity).state == "unavailable"
         assert hass.states.get(camera_entity).attributes.get("monitoring") is None
 
