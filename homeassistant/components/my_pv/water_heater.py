@@ -30,11 +30,7 @@ async def async_setup_entry(
     if (
         coordinator.device.is_on is not None
         and coordinator.device.current_temperature is not None
-        and (
-            target_temperature_config := coordinator.device.get_setup_configuration(
-                "ww1target"
-            )
-        )
+        and (configuration := coordinator.device.get_setup_configuration("ww1target"))
     ):
         entity_description = WaterHeaterEntityDescription(
             key="water_heater",
@@ -44,10 +40,7 @@ async def async_setup_entry(
                 coordinator,
                 entity_description,
                 coordinator.device.serial_number,
-                temperature_unit=target_temperature_config["unit"],
-                target_temperature_step=target_temperature_config["step"],
-                max_temp=target_temperature_config["max"],
-                min_temp=target_temperature_config["min"],
+                configuration=configuration["unit"],
             )
         )
 
@@ -70,18 +63,15 @@ class MyPVWaterHeater(MyPVDataEntity, WaterHeaterEntity):
         coordinator: MyPVCoordinator,
         entity_description: WaterHeaterEntityDescription,
         serial_number: str,
-        target_temperature_step: float,
-        max_temp: float,
-        min_temp: float,
-        temperature_unit: str,
+        configuration: dict[str, Any],
     ) -> None:
         """Initialize the water_heater."""
         super().__init__(coordinator, entity_description, serial_number)
 
-        self._attr_target_temperature_step = target_temperature_step
-        self._attr_temperature_unit = temperature_unit
-        self._attr_min_temp = min_temp
-        self._attr_max_temp = max_temp
+        self._attr_target_temperature_step = configuration["step"]
+        self._attr_temperature_unit = configuration["unit"]
+        self._attr_min_temp = configuration["max"]
+        self._attr_max_temp = configuration["min"]
 
     @property
     @override
