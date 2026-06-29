@@ -41,8 +41,8 @@
           "username": "[%key:common::config_flow::data::username%]"
         },
         "data_description": {
-          "password": "The password is available on the physical device LCD display, by interacting with the menu, clicking on the 'settings' icon and then on the 'wifi icon'.",
-          "username": "The default username is 'api'."
+          "password": "[%key:component::flow_it::config::step::user::data_description::password%]",
+          "username": "[%key:component::flow_it::config::step::user::data_description::username%]"
         },
         "description": "Do you want to set up {name}?",
         "title": "Discovered Flow-it"

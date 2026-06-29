@@ -113,13 +113,7 @@ class FlowItVmcFan(FlowItVmcEntity, FanEntity):
                 translation_key="auth_failed",
                 translation_placeholders={"error": str(err)},
             ) from err
-        except FlowItCommandError as err:
-            raise HomeAssistantError(
-                translation_domain=DOMAIN,
-                translation_key="command_failed",
-                translation_placeholders={"error": str(err)},
-            ) from err
-        except FlowItError as err:
+        except (FlowItCommandError, FlowItError) as err:
             raise HomeAssistantError(
                 translation_domain=DOMAIN,
                 translation_key="command_failed",
@@ -144,9 +138,6 @@ class FlowItVmcFan(FlowItVmcEntity, FanEntity):
     @override
     async def async_set_preset_mode(self, preset_mode: str) -> None:
         """Set the preset mode of the fan."""
-        if preset_mode not in PRESET_MODES:
-            raise ValueError(f"Invalid preset mode: {preset_mode}")
-
         mode = self.coordinator.data.state.data.mode
         await self._async_send_command(
             Speed(preset_mode), flow_in=mode.flowIn, flow_out=mode.flowOut
