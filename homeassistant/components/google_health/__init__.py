@@ -1,11 +1,12 @@
 """The Google Health integration."""
 
 from google_health_api import GoogleHealthApi
+from google_health_api.const import HealthApiScope
 
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import Platform
 from homeassistant.core import HomeAssistant
-from homeassistant.exceptions import ConfigEntryNotReady
+from homeassistant.exceptions import ConfigEntryAuthFailed, ConfigEntryNotReady
 from homeassistant.helpers import aiohttp_client
 from homeassistant.helpers.config_entry_oauth2_flow import (
     ImplementationUnavailableError,
@@ -14,6 +15,7 @@ from homeassistant.helpers.config_entry_oauth2_flow import (
 )
 
 from . import api
+from .const import DOMAIN
 from .coordinator import GoogleHealthCoordinator
 
 _PLATFORMS: list[Platform] = [Platform.SENSOR]
@@ -33,6 +35,16 @@ async def async_setup_entry(
         ) from err
 
     session = OAuth2Session(hass, entry, implementation)
+
+    scopes = session.token.get("scope", "").split()
+    if (
+        HealthApiScope.ACTIVITY_READ not in scopes
+        or HealthApiScope.PROFILE_READ not in scopes
+    ):
+        raise ConfigEntryAuthFailed(
+            translation_domain=DOMAIN,
+            translation_key="missing_required_scopes",
+        )
 
     auth = api.AsyncConfigEntryAuth(
         aiohttp_client.async_get_clientsession(hass), session
