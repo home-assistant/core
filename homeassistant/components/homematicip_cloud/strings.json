@@ -77,6 +77,21 @@
       }
     },
     "sensor": {
+      "channel_1_temperature": {
+        "name": "Channel 1 temperature"
+      },
+      "channel_2_temperature": {
+        "name": "Channel 2 temperature"
+      },
+      "delta_temperature": {
+        "name": "Delta temperature"
+      },
+      "duty_cycle": {
+        "name": "Duty cycle"
+      },
+      "heating": {
+        "name": "Heating"
+      },
       "smoke_detector_alarm_counter": {
         "name": "Alarm counter"
       },
@@ -92,12 +107,18 @@
       "smoke_detector_test_counter": {
         "name": "Test counter"
       },
+      "tilt_angle": {
+        "name": "Tilt angle"
+      },
       "tilt_state": {
         "state": {
           "neutral": "Neutral",
           "non_neutral": "Non-neutral",
           "tilted": "Tilted"
         }
+      },
+      "today_rain": {
+        "name": "Today rain"
       },
       "window_state": {
         "name": "Window state",
