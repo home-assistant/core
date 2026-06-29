@@ -320,7 +320,7 @@ class NetatmoCamera(NetatmoModuleEntity, Camera):
     @override
     async def stream_source(self) -> str | None:
         """Return the stream source."""
-        # Return empty if camera not capable to provide a live stream.
+        # Return None if camera not capable to provide a live stream.
         if not self.available or not self._monitoring:
             return None
 
@@ -336,6 +336,7 @@ class NetatmoCamera(NetatmoModuleEntity, Camera):
     def async_update_callback(self) -> None:
         """Update the entity's state."""
 
+        # All cameras have alim_status, but some cameras do not have monitoring attribute (e.g. NDB).
         if self.device.alim_status is None:
             self._attr_available = False
             self._monitoring = None
@@ -343,18 +344,22 @@ class NetatmoCamera(NetatmoModuleEntity, Camera):
         else:
             self._attr_available = True
 
+            # NDB cameras do not have a monitoring attribute,
+            # so we check the alim_status to determine if the camera is monitoring.
             if self.device_type == "NDB":
                 self._monitoring = self.device.alim_status == NETATMO_ALIM_STATUS_ONLINE
                 self._attr_motion_detection_enabled = False
-            elif self.device.monitoring is not None:
+            # Other cameras have a monitoring attribute,
+            # so we use that to determine if the camera is monitoring.
+            elif self.device.monitoring is None:
+                self._monitoring = False
+                self._attr_motion_detection_enabled = False
+            else:
                 self._monitoring = (
                     bool(self.device.monitoring)
                     and self.device.alim_status == NETATMO_ALIM_STATUS_ONLINE
                 )
                 self._attr_motion_detection_enabled = self._monitoring
-            else:
-                self._monitoring = None
-                self._attr_motion_detection_enabled = False
 
         self.hass.data[DOMAIN][DATA_EVENTS][self.device.entity_id] = (
             self.process_events(self.device.events)
