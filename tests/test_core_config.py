@@ -212,7 +212,9 @@ def testvalidate_stun_or_turn_url() -> None:
 def test_customize_glob_is_ordered() -> None:
     """Test that customize_glob preserves order."""
     conf = CORE_CONFIG_SCHEMA({"customize_glob": OrderedDict()})
-    assert isinstance(conf["customize_glob"], OrderedDict)
+    # The schema returns a plain dict (insertion-ordered); core_config wraps it in
+    # an OrderedDict where it is consumed.
+    assert isinstance(conf["customize_glob"], dict)
 
 
 async def _compute_state(hass: HomeAssistant, config: dict[str, Any]) -> State | None:

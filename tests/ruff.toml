@@ -27,7 +27,7 @@ known-first-party = [
 known-third-party = [
     "syrupy",
     "pytest",
-    "voluptuous",
+    "probatio",
     "pylint",
 ]
 forced-separate = [

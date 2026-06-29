@@ -547,7 +547,7 @@ async def test_themes_reload_themes(
                     "modes": {"light": {}, "dank": {}},
                 }
             },
-            "extra keys not allowed.*dank",
+            "not a valid option.*dank",
             None,
         ),
     ],

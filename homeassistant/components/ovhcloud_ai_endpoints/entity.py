@@ -18,7 +18,7 @@ from openai.types.chat import (
 )
 from openai.types.chat.chat_completion_message_function_tool_call_param import Function
 from openai.types.shared_params import FunctionDefinition
-from voluptuous_openapi import convert
+from probatio import to_openapi as convert
 
 from homeassistant.components import conversation
 from homeassistant.config_entries import ConfigSubentry
