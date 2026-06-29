@@ -124,7 +124,7 @@
             "chat_model": "The model to serve the responses.",
             "prompt_caching": "Optimize your API cost and response times based on your usage."
           },
-          "title": "Advanced settings"
+          "title": "Additional settings"
         },
         "init": {
           "data": {
