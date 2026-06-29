@@ -1,11 +1,10 @@
 """DataUpdateCoordinator for the Gatus integration."""
 
-import asyncio
 from datetime import timedelta
 import logging
 from typing import Any, override
 
-import aiohttp
+from gatus_api.client import GatusClient, GatusClientError
 
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
@@ -18,12 +17,14 @@ _LOGGER = logging.getLogger(__name__)
 
 
 class GatusDataUpdateCoordinator(DataUpdateCoordinator[list[dict[str, Any]]]):
-    """Class to manage fetching Gatus data from the API."""
+    """Class to manage fetching Gatus data from the API via third-party library."""
 
     def __init__(self, hass: HomeAssistant, entry: ConfigEntry, url: str) -> None:
         """Initialize the coordinator."""
-        self.url = url.rstrip("/")
-        self.session = async_get_clientsession(hass)
+        self.url = url
+        session = async_get_clientsession(hass)
+
+        self.client = GatusClient(url=url, session=session)
 
         super().__init__(
             hass,
@@ -34,23 +35,9 @@ class GatusDataUpdateCoordinator(DataUpdateCoordinator[list[dict[str, Any]]]):
         )
 
     @override
-    async def _async_update_data(self) -> list[dict]:
-        """Fetch data from Gatus API endpoint."""
+    async def _async_update_data(self) -> list[dict[str, Any]]:
+        """Fetch data from Gatus using the third-party client."""
         try:
-            async with asyncio.timeout(10):
-                api_url = f"{self.url}/api/v1/endpoints/statuses"
-                async with self.session.get(api_url) as response:
-                    if response.status != 200:
-                        raise UpdateFailed(
-                            f"Gatus API returned status code {response.status}"
-                        )
-
-                    data = await response.json()
-                    if not isinstance(data, list):
-                        raise UpdateFailed(
-                            "Gatus API response was not in the expected array format"
-                        )
-                    return data
-
-        except (aiohttp.ClientError, TimeoutError) as err:
+            return await self.client.get_endpoints_statuses()
+        except GatusClientError as err:
             raise UpdateFailed(f"Error communicating with Gatus API: {err}") from err
