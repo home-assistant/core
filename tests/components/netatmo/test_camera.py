@@ -1058,3 +1058,24 @@ async def test_camera_image_with_attribute_change(
         # Check that getting stream source raises the exception
         with pytest.raises(HomeAssistantError, match="Camera is off"):
             await camera.async_get_stream_source(hass, camera_entity)
+
+        # Real camera disconnect to make it unavailable
+        response = {
+            "event_type": "disconnection",
+            "device_id": camera_id,
+            "camera_id": camera_id,
+            "event_id": "601dce1560abca1ebad9b723",
+            "push_type": f"{camera_type}-disconnection",
+        }
+        await simulate_webhook(hass, webhook_id, response)
+
+        assert hass.states.get(camera_entity).state == "unavailable"
+        assert hass.states.get(camera_entity).attributes.get("monitoring") is None
+
+        # Check that getting image raises the exception
+        with pytest.raises(HomeAssistantError, match="Camera is off"):
+            await camera.async_get_image(hass, camera_entity)
+
+        # Check that getting stream source raises the exception
+        with pytest.raises(HomeAssistantError, match="Camera is off"):
+            await camera.async_get_stream_source(hass, camera_entity)
