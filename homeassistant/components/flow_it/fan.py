@@ -56,7 +56,7 @@ class FlowItVmcFan(FlowItVmcEntity, FanEntity):
     @property
     def is_on(self) -> bool | None:
         """Return true if fan is on."""
-        return bool(self.coordinator.data.data.mode.speed != Speed.OFF)
+        return self.coordinator.data.data.mode.speed != Speed.OFF  # type: ignore[no-any-return]
 
     @override
     @property
