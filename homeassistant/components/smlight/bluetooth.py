@@ -46,8 +46,10 @@ def async_connect_scanner(
 
     client_data.scanner.async_set_scanning_mode(BluetoothScanningMode.AUTO)
 
-    hass.async_create_background_task(
-        client_data.client.start(), f"smlight-ble-proxy-client-{entry.unique_id}"
+    entry.async_create_background_task(
+        hass,
+        client_data.client.start(),
+        f"smlight-ble-proxy-client-{entry.unique_id}",
     )
 
     unload_callbacks = [
