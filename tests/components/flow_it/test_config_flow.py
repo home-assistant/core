@@ -31,7 +31,7 @@ async def test_user_flow(hass: HomeAssistant) -> None:
         "homeassistant.components.flow_it.config_flow.FlowItVMCMachine",
         return_value=get_mock_vmc(),
     ):
-        result2 = await hass.config_entries.flow.async_configure(
+        result = await hass.config_entries.flow.async_configure(
             result["flow_id"],
             {
                 "host": "1.1.1.1",
@@ -41,14 +41,14 @@ async def test_user_flow(hass: HomeAssistant) -> None:
         )
         await hass.async_block_till_done()
 
-    assert result2["type"] == FlowResultType.CREATE_ENTRY
-    assert result2["title"] == "Flow-it Device"
-    assert result2["data"] == {
+    assert result["type"] == FlowResultType.CREATE_ENTRY
+    assert result["title"] == "Flow-it Device"
+    assert result["data"] == {
         "host": "http://1.1.1.1",
         "username": "api",
         "password": "test-password",
     }
-    assert result2["result"].unique_id == "00:11:22:33:44:55"
+    assert result["result"].unique_id == "00:11:22:33:44:55"
 
 
 @pytest.mark.parametrize(
@@ -71,7 +71,7 @@ async def test_user_flow_exceptions(
         "homeassistant.components.flow_it.config_flow.FlowItVMCMachine",
         return_value=get_mock_vmc(exception=exception),
     ):
-        result2 = await hass.config_entries.flow.async_configure(
+        result = await hass.config_entries.flow.async_configure(
             result["flow_id"],
             {
                 "host": "1.1.1.1",
@@ -80,8 +80,8 @@ async def test_user_flow_exceptions(
             },
         )
 
-    assert result2["type"] == FlowResultType.FORM
-    assert result2["errors"] == {"base": error}
+    assert result["type"] == FlowResultType.FORM
+    assert result["errors"] == {"base": error}
 
 
 async def test_zeroconf(hass: HomeAssistant) -> None:
@@ -109,7 +109,7 @@ async def test_zeroconf(hass: HomeAssistant) -> None:
         "homeassistant.components.flow_it.config_flow.FlowItVMCMachine",
         return_value=get_mock_vmc(),
     ):
-        result2 = await hass.config_entries.flow.async_configure(
+        result = await hass.config_entries.flow.async_configure(
             result["flow_id"],
             user_input={
                 "username": "api",
@@ -118,14 +118,14 @@ async def test_zeroconf(hass: HomeAssistant) -> None:
         )
         await hass.async_block_till_done()
 
-    assert result2["type"] == FlowResultType.CREATE_ENTRY
-    assert result2["title"] == "Flow-it Device"
-    assert result2["data"] == {
+    assert result["type"] == FlowResultType.CREATE_ENTRY
+    assert result["title"] == "Flow-it Device"
+    assert result["data"] == {
         "host": "http://mock_hostname",
         "username": "api",
         "password": "test-password",
     }
-    assert result2["result"].unique_id == "00:11:22:33:44:55"
+    assert result["result"].unique_id == "00:11:22:33:44:55"
 
 
 @pytest.mark.parametrize(
@@ -160,7 +160,7 @@ async def test_zeroconf_exceptions(
         "homeassistant.components.flow_it.config_flow.FlowItVMCMachine",
         return_value=get_mock_vmc(exception=exception),
     ):
-        result2 = await hass.config_entries.flow.async_configure(
+        result = await hass.config_entries.flow.async_configure(
             result["flow_id"],
             user_input={
                 "username": "api",
@@ -168,8 +168,8 @@ async def test_zeroconf_exceptions(
             },
         )
 
-    assert result2["type"] == FlowResultType.FORM
-    assert result2["errors"] == {"base": error}
+    assert result["type"] == FlowResultType.FORM
+    assert result["errors"] == {"base": error}
 
 
 async def test_user_already_configured(hass: HomeAssistant) -> None:
@@ -189,7 +189,7 @@ async def test_user_already_configured(hass: HomeAssistant) -> None:
         "homeassistant.components.flow_it.config_flow.FlowItVMCMachine",
         return_value=get_mock_vmc(state_name="00:11:22:33:44:55"),
     ):
-        result2 = await hass.config_entries.flow.async_configure(
+        result = await hass.config_entries.flow.async_configure(
             result["flow_id"],
             {
                 "host": "1.1.1.1",
@@ -198,8 +198,8 @@ async def test_user_already_configured(hass: HomeAssistant) -> None:
             },
         )
 
-    assert result2["type"] == FlowResultType.ABORT
-    assert result2["reason"] == "already_configured"
+    assert result["type"] == FlowResultType.ABORT
+    assert result["reason"] == "already_configured"
 
 
 async def test_zeroconf_already_configured(hass: HomeAssistant) -> None:
@@ -241,7 +241,7 @@ async def test_user_flow_with_http(hass: HomeAssistant) -> None:
         "homeassistant.components.flow_it.config_flow.FlowItVMCMachine",
         return_value=get_mock_vmc(),
     ):
-        result2 = await hass.config_entries.flow.async_configure(
+        result = await hass.config_entries.flow.async_configure(
             result["flow_id"],
             {
                 "host": "http://1.1.1.1",
@@ -251,9 +251,9 @@ async def test_user_flow_with_http(hass: HomeAssistant) -> None:
         )
         await hass.async_block_till_done()
 
-    assert result2["type"] == FlowResultType.CREATE_ENTRY
-    assert result2["data"]["host"] == "http://1.1.1.1"
-    assert result2["result"].unique_id == "00:11:22:33:44:55"
+    assert result["type"] == FlowResultType.CREATE_ENTRY
+    assert result["data"]["host"] == "http://1.1.1.1"
+    assert result["result"].unique_id == "00:11:22:33:44:55"
 
 
 async def test_reauth(hass: HomeAssistant) -> None:
@@ -278,7 +278,7 @@ async def test_reauth(hass: HomeAssistant) -> None:
         "homeassistant.components.flow_it.config_flow.FlowItVMCMachine",
         return_value=get_mock_vmc(),
     ):
-        result2 = await hass.config_entries.flow.async_configure(
+        result = await hass.config_entries.flow.async_configure(
             result["flow_id"],
             {
                 "username": "api",
@@ -287,8 +287,8 @@ async def test_reauth(hass: HomeAssistant) -> None:
         )
         await hass.async_block_till_done()
 
-    assert result2["type"] == FlowResultType.ABORT
-    assert result2["reason"] == "reauth_successful"
+    assert result["type"] == FlowResultType.ABORT
+    assert result["reason"] == "reauth_successful"
     assert entry.data["password"] == "new_password"
 
 
@@ -322,7 +322,7 @@ async def test_reauth_exceptions(
         "homeassistant.components.flow_it.config_flow.FlowItVMCMachine",
         return_value=get_mock_vmc(exception=exception),
     ):
-        result2 = await hass.config_entries.flow.async_configure(
+        result = await hass.config_entries.flow.async_configure(
             result["flow_id"],
             {
                 "username": "api",
@@ -331,6 +331,6 @@ async def test_reauth_exceptions(
         )
         await hass.async_block_till_done()
 
-    assert result2["type"] == FlowResultType.FORM
-    assert result2["step_id"] == "reauth_confirm"
-    assert result2["errors"]["base"] == error
+    assert result["type"] == FlowResultType.FORM
+    assert result["step_id"] == "reauth_confirm"
+    assert result["errors"]["base"] == error
