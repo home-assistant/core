@@ -1,15 +1,16 @@
 """Mastodon tests configuration."""
 
 from collections.abc import Generator
+from typing import cast
 from unittest.mock import AsyncMock, patch
 
-from mastodon.Mastodon import Account, InstanceV2
+from mastodon.Mastodon import Account, InstanceV2, Status
 import pytest
 
 from homeassistant.components.mastodon.const import CONF_BASE_URL, DOMAIN
 from homeassistant.const import CONF_ACCESS_TOKEN, CONF_CLIENT_ID, CONF_CLIENT_SECRET
 
-from tests.common import MockConfigEntry, load_fixture
+from tests.common import MockConfigEntry, load_fixture, load_json_object_fixture
 
 
 @pytest.fixture
@@ -45,7 +46,9 @@ def mock_mastodon_client() -> Generator[AsyncMock]:
             load_fixture("account.json", DOMAIN)
         )
         client.mastodon_api_version = 2
-        client.status_post.return_value = None
+        client.status_post.return_value = cast(
+            Status, load_json_object_fixture("status_post.json", DOMAIN)
+        )
 
         client.account_update_credentials.return_value = Account.from_json(
             load_fixture("account.json", DOMAIN)
