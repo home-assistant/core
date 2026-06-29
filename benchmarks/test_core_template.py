@@ -25,13 +25,23 @@ _STATES_TEMPLATE = (
 def test_template_compile(benchmark: BenchmarkFixture, hass: HomeAssistant) -> None:
     """Compile a template from source (parse plus codegen).
 
-    A fresh ``Template`` per round means each measured call actually compiles
-    instead of hitting the cached bytecode.
+    A unique source on every call (a varying Jinja comment) keeps the
+    environment's template cache missing, so each run actually compiles instead
+    of returning cached bytecode. The comment is stripped during compilation, so
+    the cost matches the real template.
     """
-    benchmark.pedantic(
-        lambda: Template(_STATES_TEMPLATE, hass).ensure_valid(),
-        rounds=1000,
-    )
+    counter = 0
+
+    def _compile() -> Template:
+        nonlocal counter
+        counter += 1
+        template = Template(f"{{# {counter} #}}{_STATES_TEMPLATE}", hass)
+        template.ensure_valid()
+        return template
+
+    template = benchmark(_compile)
+
+    assert template.is_static is False
 
 
 def test_template_render_simple(
