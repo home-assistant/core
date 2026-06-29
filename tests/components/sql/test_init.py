@@ -12,7 +12,7 @@ from homeassistant.components.sensor import (
     SensorStateClass,
 )
 from homeassistant.components.sql.const import (
-    CONF_ADVANCED_OPTIONS,
+    CONF_ADDITIONAL_OPTIONS,
     CONF_COLUMN_NAME,
     CONF_QUERY,
     DOMAIN,
@@ -122,7 +122,7 @@ async def test_migration_from_future(
         options={
             CONF_QUERY: "SELECT 5.01 as value",
             CONF_COLUMN_NAME: "value",
-            CONF_ADVANCED_OPTIONS: {},
+            CONF_ADDITIONAL_OPTIONS: {},
         },
         entry_id="1",
         version=3,
@@ -168,7 +168,54 @@ async def test_migration_from_v1_to_v2(
     assert config_entry.options == {
         CONF_QUERY: "SELECT 5.01 as value",
         CONF_COLUMN_NAME: "value",
-        CONF_ADVANCED_OPTIONS: {
+        CONF_ADDITIONAL_OPTIONS: {
+            CONF_VALUE_TEMPLATE: "{{ value | int }}",
+            CONF_UNIT_OF_MEASUREMENT: "MiB",
+            CONF_DEVICE_CLASS: SensorDeviceClass.DATA_SIZE,
+            CONF_STATE_CLASS: SensorStateClass.MEASUREMENT,
+        },
+    }
+
+    state = hass.states.get("sensor.test_migration")
+    assert state.state == "5"
+
+
+async def test_migration_from_v2_1_to_v2_2(
+    recorder_mock: Recorder, hass: HomeAssistant
+) -> None:
+    """Test migration from version 2.1 to 2.2 renames the options section."""
+    config_entry = MockConfigEntry(
+        title="Test migration",
+        domain=DOMAIN,
+        source=SOURCE_USER,
+        data={},
+        options={
+            CONF_QUERY: "SELECT 5.01 as value",
+            CONF_COLUMN_NAME: "value",
+            "advanced_options": {
+                CONF_VALUE_TEMPLATE: "{{ value | int }}",
+                CONF_UNIT_OF_MEASUREMENT: "MiB",
+                CONF_DEVICE_CLASS: SensorDeviceClass.DATA_SIZE,
+                CONF_STATE_CLASS: SensorStateClass.MEASUREMENT,
+            },
+        },
+        entry_id="1",
+        version=2,
+        minor_version=1,
+    )
+
+    config_entry.add_to_hass(hass)
+    await hass.config_entries.async_setup(config_entry.entry_id)
+    await hass.async_block_till_done()
+
+    assert config_entry.state is ConfigEntryState.LOADED
+    assert config_entry.minor_version == 2
+
+    assert "advanced_options" not in config_entry.options
+    assert config_entry.options == {
+        CONF_QUERY: "SELECT 5.01 as value",
+        CONF_COLUMN_NAME: "value",
+        CONF_ADDITIONAL_OPTIONS: {
             CONF_VALUE_TEMPLATE: "{{ value | int }}",
             CONF_UNIT_OF_MEASUREMENT: "MiB",
             CONF_DEVICE_CLASS: SensorDeviceClass.DATA_SIZE,

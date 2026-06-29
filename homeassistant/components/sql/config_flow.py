@@ -32,7 +32,7 @@ from homeassistant.data_entry_flow import section
 from homeassistant.exceptions import TemplateError
 from homeassistant.helpers import selector
 
-from .const import CONF_ADVANCED_OPTIONS, CONF_COLUMN_NAME, CONF_QUERY, DOMAIN
+from .const import CONF_ADDITIONAL_OPTIONS, CONF_COLUMN_NAME, CONF_QUERY, DOMAIN
 from .util import (
     EmptyQueryError,
     InvalidSqlQuery,
@@ -50,7 +50,7 @@ OPTIONS_SCHEMA: vol.Schema = vol.Schema(
     {
         vol.Required(CONF_QUERY): selector.TemplateSelector(),
         vol.Required(CONF_COLUMN_NAME): selector.TextSelector(),
-        vol.Required(CONF_ADVANCED_OPTIONS): section(
+        vol.Required(CONF_ADDITIONAL_OPTIONS): section(
             vol.Schema(
                 {
                     vol.Optional(CONF_VALUE_TEMPLATE): selector.TemplateSelector(),
@@ -165,6 +165,7 @@ class SQLConfigFlow(ConfigFlow, domain=DOMAIN):
     """Handle a config flow for SQL integration."""
 
     VERSION = 2
+    MINOR_VERSION = 2
 
     data: dict[str, Any]
 
@@ -239,12 +240,12 @@ class SQLConfigFlow(ConfigFlow, domain=DOMAIN):
                 _LOGGER.debug("Invalid query: %s", err)
                 errors["query"] = "query_invalid"
 
-            mod_advanced_options = {
+            mod_additional_options = {
                 k: v
-                for k, v in user_input[CONF_ADVANCED_OPTIONS].items()
+                for k, v in user_input[CONF_ADDITIONAL_OPTIONS].items()
                 if v is not None
             }
-            user_input[CONF_ADVANCED_OPTIONS] = mod_advanced_options
+            user_input[CONF_ADDITIONAL_OPTIONS] = mod_additional_options
 
             if not errors:
                 name = self.data[CONF_NAME]
@@ -305,12 +306,12 @@ class SQLOptionsFlowHandler(OptionsFlowWithReload):
                     recorder_db,
                 )
 
-                mod_advanced_options = {
+                mod_additional_options = {
                     k: v
-                    for k, v in user_input[CONF_ADVANCED_OPTIONS].items()
+                    for k, v in user_input[CONF_ADDITIONAL_OPTIONS].items()
                     if v is not None
                 }
-                user_input[CONF_ADVANCED_OPTIONS] = mod_advanced_options
+                user_input[CONF_ADDITIONAL_OPTIONS] = mod_additional_options
 
                 return self.async_create_entry(
                     data=user_input,

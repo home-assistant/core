@@ -31,7 +31,7 @@ from homeassistant.helpers.trigger_template_entity import (
 from homeassistant.helpers.typing import ConfigType
 
 from .const import (
-    CONF_ADVANCED_OPTIONS,
+    CONF_ADDITIONAL_OPTIONS,
     CONF_COLUMN_NAME,
     CONF_QUERY,
     DOMAIN,
@@ -120,7 +120,7 @@ async def async_migrate_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
 
         new_options[CONF_COLUMN_NAME] = old_options.get(CONF_COLUMN_NAME)
         new_options[CONF_QUERY] = old_options.get(CONF_QUERY)
-        new_options[CONF_ADVANCED_OPTIONS] = {}
+        new_options[CONF_ADDITIONAL_OPTIONS] = {}
 
         for key in (
             CONF_VALUE_TEMPLATE,
@@ -129,10 +129,19 @@ async def async_migrate_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
             CONF_STATE_CLASS,
         ):
             if (value := old_options.get(key)) is not None:
-                new_options[CONF_ADVANCED_OPTIONS][key] = value
+                new_options[CONF_ADDITIONAL_OPTIONS][key] = value
 
         hass.config_entries.async_update_entry(
             entry, data=new_data, options=new_options, version=2
+        )
+
+    if entry.version == 2 and entry.minor_version < 2:
+        new_options = {**entry.options}
+        # The "advanced_options" section was renamed to "additional_options"
+        if (additional := new_options.pop("advanced_options", None)) is not None:
+            new_options[CONF_ADDITIONAL_OPTIONS] = additional
+        hass.config_entries.async_update_entry(
+            entry, options=new_options, minor_version=2
         )
 
     _LOGGER.debug(
