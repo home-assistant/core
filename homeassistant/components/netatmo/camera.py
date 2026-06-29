@@ -230,7 +230,7 @@ class NetatmoCamera(NetatmoModuleEntity, Camera):
     ) -> bytes | None:
         """Return a still image response from the camera."""
 
-        # Return None if the camera is not capable to provide a live snapshot,
+        # Return None when the camera cannot provide a live snapshot,
         # to prevent unnecessary API calls and errors in the logs
         if not self.available or not self._monitoring:
             return None
@@ -320,7 +320,7 @@ class NetatmoCamera(NetatmoModuleEntity, Camera):
     @override
     async def stream_source(self) -> str | None:
         """Return the stream source."""
-        # Return None if camera not capable to provide a live stream.
+        # Return None when the camera cannot provide a live stream.
         if not self.available or not self._monitoring:
             return None
 
