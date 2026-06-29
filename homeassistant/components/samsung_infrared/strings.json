@@ -148,8 +148,8 @@
   "selector": {
     "device_type": {
       "options": {
-        "tv": "TV",
-        "ac": "Air Conditioner"
+        "ac": "Air Conditioner",
+        "tv": "TV"
       }
     }
   }

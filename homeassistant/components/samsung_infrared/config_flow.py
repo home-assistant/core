@@ -9,7 +9,7 @@ from homeassistant.components.infrared import (
     async_get_emitters,
 )
 from homeassistant.config_entries import ConfigFlow, ConfigFlowResult
-from homeassistant.helpers import entity_registry as er
+from homeassistant.helpers import entity_registry as er, translation
 from homeassistant.helpers.selector import (
     EntitySelector,
     EntitySelectorConfig,
@@ -17,7 +17,6 @@ from homeassistant.helpers.selector import (
     SelectSelectorConfig,
     SelectSelectorMode,
 )
-from homeassistant.helpers import translation
 
 from .const import (
     CONF_DEVICE_TYPE,
@@ -25,6 +24,7 @@ from .const import (
     DOMAIN,
     SamsungDeviceType,
 )
+
 
 class SamsungIrConfigFlow(ConfigFlow, domain=DOMAIN):
     """Handle config flow for Samsung IR."""
