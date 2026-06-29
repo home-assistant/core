@@ -14,6 +14,11 @@ from homeassistant.config_entries import ConfigFlowResult
 from homeassistant.const import CONF_HOST, CONF_PASSWORD, CONF_USERNAME
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.httpx_client import get_async_client
+from homeassistant.helpers.selector import (
+    TextSelector,
+    TextSelectorConfig,
+    TextSelectorType,
+)
 from homeassistant.helpers.service_info.zeroconf import ZeroconfServiceInfo
 
 from .const import DEFAULT_USERNAME, DOMAIN
@@ -79,8 +84,16 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
                 vol.Required(
                     CONF_HOST, default=self._discovery_info.get(CONF_HOST, "")
                 ): str,
-                vol.Required(CONF_USERNAME, default=DEFAULT_USERNAME): str,
-                vol.Required(CONF_PASSWORD): str,
+                vol.Required(CONF_USERNAME, default=DEFAULT_USERNAME): TextSelector(
+                    TextSelectorConfig(
+                        type=TextSelectorType.TEXT, autocomplete="username"
+                    )
+                ),
+                vol.Required(CONF_PASSWORD): TextSelector(
+                    TextSelectorConfig(
+                        type=TextSelectorType.PASSWORD, autocomplete="current-password"
+                    )
+                ),
             }
         )
 
@@ -124,8 +137,16 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
 
         data_schema = vol.Schema(
             {
-                vol.Required(CONF_USERNAME, default=DEFAULT_USERNAME): str,
-                vol.Required(CONF_PASSWORD): str,
+                vol.Required(CONF_USERNAME, default=DEFAULT_USERNAME): TextSelector(
+                    TextSelectorConfig(
+                        type=TextSelectorType.TEXT, autocomplete="username"
+                    )
+                ),
+                vol.Required(CONF_PASSWORD): TextSelector(
+                    TextSelectorConfig(
+                        type=TextSelectorType.PASSWORD, autocomplete="current-password"
+                    )
+                ),
             }
         )
 
@@ -180,8 +201,16 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
             {
                 vol.Required(
                     CONF_USERNAME, default=reauth_entry.data[CONF_USERNAME]
-                ): str,
-                vol.Required(CONF_PASSWORD): str,
+                ): TextSelector(
+                    TextSelectorConfig(
+                        type=TextSelectorType.TEXT, autocomplete="username"
+                    )
+                ),
+                vol.Required(CONF_PASSWORD): TextSelector(
+                    TextSelectorConfig(
+                        type=TextSelectorType.PASSWORD, autocomplete="current-password"
+                    )
+                ),
             }
         )
 
