@@ -1,32 +1,20 @@
 """The Flow-it integration."""
 
-from dataclasses import dataclass
 import logging
 
 from flow_it_api.client import FlowItVMCMachine
 from flow_it_api.exceptions import FlowItConnectionError, FlowItResponseError
 from flow_it_api.models import MachineData
 
-from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_HOST, CONF_PASSWORD, CONF_USERNAME, Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ConfigEntryNotReady
 from homeassistant.helpers.httpx_client import get_async_client
 
-from .coordinator import FlowItCoordinator
+from .coordinator import FlowItConfigEntry, FlowItCoordinator, FlowItData
 
 _LOGGER = logging.getLogger(__name__)
 
-
-@dataclass
-class FlowItData:
-    """Data for the Flow-it integration."""
-
-    vmc: FlowItVMCMachine
-    coordinator: FlowItCoordinator
-
-
-type FlowItConfigEntry = ConfigEntry[FlowItData]
 
 PLATFORMS: list[Platform] = [
     Platform.FAN,
