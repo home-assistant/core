@@ -2,10 +2,9 @@
 
 from datetime import timedelta
 import logging
-from typing import override
+from typing import Any, override
 
 from google_health_api import GoogleHealthApi
-from google_health_api.const import HealthApiScope
 from google_health_api.exceptions import (
     GoogleHealthApiError,
     HealthApiForbiddenException,
@@ -24,7 +23,7 @@ _LOGGER = logging.getLogger(__name__)
 POLLING_INTERVAL = timedelta(minutes=15)
 
 
-class GoogleHealthCoordinator(DataUpdateCoordinator[int]):
+class GoogleHealthCoordinator(DataUpdateCoordinator[dict[str, Any]]):
     """Coordinator to fetch steps data from Google Health API."""
 
     def __init__(
@@ -44,29 +43,29 @@ class GoogleHealthCoordinator(DataUpdateCoordinator[int]):
         )
 
     @override
-    async def _async_update_data(self) -> int:
+    async def _async_update_data(self) -> dict[str, Any]:
         """Fetch steps count rollup for today."""
         if self.config_entry is None:
-            return 0
+            return {}
         scopes = self.config_entry.data.get("token", {}).get("scope", "").split()
-        if HealthApiScope.ACTIVITY_READ not in scopes:
-            return 0
+        data: dict[str, Any] = {}
 
-        try:
-            rollup = await self.api.steps.today(self.hass.config.time_zone)
-        except (HealthAuthException, HealthApiForbiddenException) as err:
-            raise ConfigEntryAuthFailed(
-                translation_domain=DOMAIN,
-                translation_key="auth_error",
-                translation_placeholders={"error": str(err)},
-            ) from err
-        except GoogleHealthApiError as err:
-            raise UpdateFailed(
-                translation_domain=DOMAIN,
-                translation_key="communication_error",
-                translation_placeholders={"error": str(err)},
-            ) from err
+        required_scopes = self.api.steps.required_read_scopes
+        if all(scope in scopes for scope in required_scopes):
+            try:
+                rollup = await self.api.steps.today(self.hass.config.time_zone)
+                data["steps"] = rollup.data.count_sum if rollup else 0
+            except (HealthAuthException, HealthApiForbiddenException) as err:
+                raise ConfigEntryAuthFailed(
+                    translation_domain=DOMAIN,
+                    translation_key="auth_error",
+                    translation_placeholders={"error": str(err)},
+                ) from err
+            except GoogleHealthApiError as err:
+                raise UpdateFailed(
+                    translation_domain=DOMAIN,
+                    translation_key="communication_error",
+                    translation_placeholders={"error": str(err)},
+                ) from err
 
-        if rollup is None:
-            return 0
-        return rollup.data.count_sum
+        return data

@@ -14,6 +14,7 @@ from homeassistant.components.google_health.const import (
     DOMAIN,
     OAUTH2_AUTHORIZE,
     OAUTH2_TOKEN,
+    OAUTH_SCOPES,
 )
 from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
@@ -82,6 +83,7 @@ async def test_full_flow(
             "access_token": "mock-access-token",
             "type": "Bearer",
             "expires_in": 60,
+            "scope": " ".join(OAUTH_SCOPES),
         },
     )
 
@@ -172,6 +174,7 @@ async def test_reauth_flow(
             "access_token": "new-access-token",
             "type": "Bearer",
             "expires_in": 60,
+            "scope": " ".join(OAUTH_SCOPES),
         },
     )
 
@@ -194,3 +197,46 @@ async def test_reauth_flow(
     assert entry.data["token"]["access_token"] == "new-access-token"
     assert entry.data["token"]["refresh_token"] == "new-refresh-token"
     assert len(mock_setup.mock_calls) == 1
+
+
+@pytest.mark.usefixtures("current_request_with_host")
+async def test_config_flow_missing_profile_scope(
+    hass: HomeAssistant,
+    hass_client_no_auth: ClientSessionGenerator,
+    aioclient_mock: AiohttpClientMocker,
+    setup_credentials: None,
+) -> None:
+    """Test config flow aborts if profile read scope is missing from token."""
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN, context={"source": config_entries.SOURCE_USER}
+    )
+    assert result["type"] is FlowResultType.EXTERNAL_STEP
+
+    state = config_entry_oauth2_flow._encode_jwt(
+        hass,
+        {
+            "flow_id": result["flow_id"],
+            "redirect_uri": "https://example.com/auth/external/callback",
+        },
+    )
+
+    client = await hass_client_no_auth()
+    resp = await client.get(f"/auth/external/callback?code=abcd&state={state}")
+    assert resp.status == 200
+
+    # Return a token containing only the activity scope (missing profile scope)
+    aioclient_mock.post(
+        OAUTH2_TOKEN,
+        json={
+            "refresh_token": "mock-refresh-token",
+            "access_token": "mock-access-token",
+            "type": "Bearer",
+            "expires_in": 60,
+            "scope": "https://www.googleapis.com/auth/googlehealth.activity_and_fitness.readonly",
+        },
+    )
+
+    result2 = await hass.config_entries.flow.async_configure(result["flow_id"])
+
+    assert result2["type"] is FlowResultType.ABORT
+    assert result2["reason"] == "missing_profile_scope"

@@ -5,6 +5,7 @@ import logging
 from typing import Any, override
 
 from google_health_api import GoogleHealthApi
+from google_health_api.const import HealthApiScope
 from google_health_api.exceptions import GoogleHealthApiError
 
 from homeassistant.config_entries import SOURCE_REAUTH, ConfigFlowResult
@@ -56,7 +57,10 @@ class OAuth2FlowHandler(
 
     @override
     async def async_oauth_create_entry(self, data: dict[str, Any]) -> ConfigFlowResult:
-        """Create an entry for the flow, or update existing entry."""
+        scopes = data.get(CONF_TOKEN, {}).get("scope", "").split()
+        if HealthApiScope.PROFILE_READ not in scopes:
+            return self.async_abort(reason="missing_profile_scope")
+
         access_token = data[CONF_TOKEN][CONF_ACCESS_TOKEN]
         websession = aiohttp_client.async_get_clientsession(self.hass)
         auth = SimpleAuth(websession, access_token)
