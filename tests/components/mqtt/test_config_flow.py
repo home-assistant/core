@@ -481,7 +481,7 @@ async def test_user_connection_fails(
     assert result["type"] is FlowResultType.FORM
 
     result = await hass.config_entries.flow.async_configure(
-        result["flow_id"], MOCK_BROKER_FORM_DATA | {"broker": "127.0.0.1"}
+        result["flow_id"], MOCK_BROKER_FORM_DATA
     )
 
     assert result["type"] is FlowResultType.FORM
