@@ -19,7 +19,7 @@ from tests.common import MockConfigEntry
 pytestmark = pytest.mark.usefixtures("mock_setup_entry")
 
 
-async def test_form(hass: HomeAssistant) -> None:
+async def test_user_flow(hass: HomeAssistant) -> None:
     """Test we get the form and create an entry."""
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": config_entries.SOURCE_USER}
@@ -59,7 +59,7 @@ async def test_form(hass: HomeAssistant) -> None:
         (Exception(), "unknown"),
     ],
 )
-async def test_form_exceptions(
+async def test_user_flow_exceptions(
     hass: HomeAssistant, exception: Exception, error: str
 ) -> None:
     """Test we handle exceptions."""
@@ -231,7 +231,7 @@ async def test_zeroconf_already_configured(hass: HomeAssistant) -> None:
     assert result["reason"] == "already_configured"
 
 
-async def test_form_with_http(hass: HomeAssistant) -> None:
+async def test_user_flow_with_http(hass: HomeAssistant) -> None:
     """Test form with http:// already in host."""
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": config_entries.SOURCE_USER}
