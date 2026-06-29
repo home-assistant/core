@@ -69,6 +69,7 @@ class SamsungIrClimate(SamsungIrEntity, InfraredEmitterConsumerEntity, ClimateEn
     _attr_target_temperature = 24.0
     _attr_min_temp = 16.0
     _attr_max_temp = 30.0
+    _attr_target_temperature_step = 1.0
     _attr_fan_mode = FAN_AUTO
     _attr_hvac_modes = [
         HVACMode.OFF,
