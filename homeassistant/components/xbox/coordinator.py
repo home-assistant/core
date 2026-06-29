@@ -5,7 +5,7 @@ from dataclasses import dataclass, field
 from datetime import datetime, timedelta
 from http import HTTPStatus
 import logging
-from typing import ClassVar
+from typing import ClassVar, override
 
 from httpx import HTTPStatusError, RequestError, TimeoutException
 from pythonxbox.api.client import XboxLiveClient
@@ -82,6 +82,7 @@ class XboxBaseCoordinator[_DataT](DataUpdateCoordinator[_DataT]):
     async def update_data(self) -> _DataT:
         """Update coordinator data."""
 
+    @override
     async def _async_update_data(self) -> _DataT:
         """Fetch console data."""
 
@@ -106,6 +107,7 @@ class XboxConsolesCoordinator(XboxBaseCoordinator[dict[str, SmartglassConsole]])
     config_entry: XboxConfigEntry
     _update_interval = timedelta(minutes=10)
 
+    @override
     async def update_data(self) -> dict[str, SmartglassConsole]:
         """Fetch console data."""
 
@@ -151,6 +153,7 @@ class XboxConsoleStatusCoordinator(XboxBaseCoordinator[dict[str, ConsoleData]]):
 
         self.consoles: dict[str, SmartglassConsole] | None = consoles
 
+    @override
     async def update_data(self) -> dict[str, ConsoleData]:
         """Fetch console data."""
 
@@ -208,6 +211,7 @@ class XboxPresenceCoordinator(XboxBaseCoordinator[XboxData]):
     _update_interval = timedelta(seconds=30)
     title_data: ClassVar[dict[str, Title]] = {}
 
+    @override
     async def update_data(self) -> XboxData:
         """Fetch presence data."""
 

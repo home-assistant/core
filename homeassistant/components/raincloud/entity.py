@@ -1,6 +1,6 @@
 """Support for Melnor RainCloud sprinkler water timer."""
 
-from typing import Any
+from typing import Any, override
 
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from homeassistant.helpers.entity import Entity
@@ -42,6 +42,7 @@ class RainCloudEntity(Entity):
         self._attr_name = f"{self.data.name} {KEY_MAP.get(self._sensor_type)}"
         self._attr_icon = ICON_MAP.get(self._sensor_type)
 
+    @override
     async def async_added_to_hass(self) -> None:
         """Register callbacks."""
         self.async_on_remove(
@@ -55,6 +56,7 @@ class RainCloudEntity(Entity):
         self.schedule_update_ha_state(True)
 
     @property
+    @override
     def extra_state_attributes(self) -> dict[str, Any]:
         """Return the state attributes."""
         return {"identifier": self.data.serial}

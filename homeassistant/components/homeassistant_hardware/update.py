@@ -3,7 +3,7 @@
 from collections.abc import Callable
 from dataclasses import dataclass
 import logging
-from typing import Any, cast
+from typing import Any, cast, override
 
 from aiohasupervisor import SupervisorError
 from aiohasupervisor.models import RaspberryPiFirmwareInfo
@@ -60,6 +60,7 @@ class FirmwareUpdateExtraStoredData(ExtraStoredData):
 
     firmware_manifest: FirmwareManifest | None = None
 
+    @override
     def as_dict(self) -> dict[str, Any]:
         """Return a dict representation of the extra data."""
         return {
@@ -132,6 +133,7 @@ class BaseFirmwareUpdateEntity(
 
         return remove_callback
 
+    @override
     async def async_added_to_hass(self) -> None:
         """Handle entity which will be added."""
         await super().async_added_to_hass()
@@ -163,6 +165,7 @@ class BaseFirmwareUpdateEntity(
             await self.coordinator.async_request_refresh()
 
     @property
+    @override
     def extra_restore_state_data(self) -> FirmwareUpdateExtraStoredData:
         """Return state data to be restored."""
         return FirmwareUpdateExtraStoredData(firmware_manifest=self._latest_manifest)
@@ -243,6 +246,7 @@ class BaseFirmwareUpdateEntity(
             self._attr_release_url = str(self._latest_manifest.html_url)
 
     @callback
+    @override
     def _handle_coordinator_update(self) -> None:
         """Handle updated data from the coordinator."""
         self._latest_manifest = self.coordinator.data
@@ -263,6 +267,7 @@ class BaseFirmwareUpdateEntity(
             self._attr_update_percentage = None
             self.async_write_ha_state()
 
+    @override
     async def async_install(
         self, version: str | None, backup: bool, **kwargs: Any
     ) -> None:
@@ -330,6 +335,7 @@ class RaspberryPiFirmwareUpdateEntity(UpdateEntity):
         self._board = board
 
     @property
+    @override
     def installed_version(self) -> str | None:
         """Composite installed firmware version.
 
@@ -343,15 +349,18 @@ class RaspberryPiFirmwareUpdateEntity(UpdateEntity):
         return humanize_rpi_firmware_version(self._firmware.current_version)
 
     @property
+    @override
     def latest_version(self) -> str | None:
         """Composite available firmware version."""
         return humanize_rpi_firmware_version(self._firmware.latest_version)
 
     @property
+    @override
     def release_url(self) -> str | None:
         """Return the EEPROM release notes for this board's SoC."""
         return rpi_firmware_release_url(self._board)
 
+    @override
     async def async_release_notes(self) -> str | None:
         """Return the pre-install warning and reboot notice as ha-alert boxes."""
         return (
@@ -366,6 +375,7 @@ class RaspberryPiFirmwareUpdateEntity(UpdateEntity):
             "</ha-alert>\n"
         )
 
+    @override
     async def async_install(
         self, version: str | None, backup: bool, **kwargs: Any
     ) -> None:

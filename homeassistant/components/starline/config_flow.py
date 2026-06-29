@@ -1,5 +1,7 @@
 """Config flow to configure StarLine component."""
 
+from typing import override
+
 from starline import StarlineAuth
 import voluptuous as vol
 
@@ -51,6 +53,7 @@ class StarlineFlowHandler(ConfigFlow, domain=DOMAIN):
 
         self._auth = StarlineAuth()
 
+    @override
     async def async_step_user(
         self, user_input: dict[str, str] | None = None
     ) -> ConfigFlowResult:

@@ -1,7 +1,7 @@
 """Support for Actiontec MI424WR (Verizon FIOS) routers."""
 
 import logging
-from typing import Final
+from typing import Final, override
 
 import telnetlib  # pylint: disable=deprecated-module
 import voluptuous as vol
@@ -50,11 +50,13 @@ class ActiontecDeviceScanner(DeviceScanner):
         data = self.get_actiontec_data()
         self.success_init = data is not None
 
+    @override
     def scan_devices(self) -> list[str]:
         """Scan for new devices and return a list with found device IDs."""
         self._update_info()
         return [client.mac_address for client in self.last_results]
 
+    @override
     def get_device_name(self, device: str) -> str | None:
         """Return the name of the given device or None if we don't know."""
         for client in self.last_results:

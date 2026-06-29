@@ -2,7 +2,7 @@
 
 from collections.abc import Callable
 from dataclasses import dataclass
-from typing import TYPE_CHECKING, Any, Final
+from typing import TYPE_CHECKING, Any, Final, override
 
 from aioamazondevices.structures import AmazonDevice
 
@@ -17,7 +17,7 @@ from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
 from .coordinator import AmazonConfigEntry, alexa_api_call
 from .entity import AmazonEntity
-from .utils import async_remove_dnd_from_virtual_group, async_update_unique_id
+from .utils import async_remove_entity_from_virtual_group, async_update_unique_id
 
 PARALLEL_UPDATES = 1
 
@@ -90,7 +90,9 @@ async def async_setup_entry(
     new_key = "dnd"
 
     # Remove old DND switch from virtual groups
-    await async_remove_dnd_from_virtual_group(hass, coordinator, old_key)
+    await async_remove_entity_from_virtual_group(
+        hass, coordinator, SWITCH_DOMAIN, old_key
+    )
 
     # Replace unique id for DND switch
     await async_update_unique_id(hass, coordinator, SWITCH_DOMAIN, old_key, new_key)
@@ -145,20 +147,24 @@ class AmazonSwitchEntity(AmazonEntity, SwitchEntity):
             ] = "ON" if state else "OFF"
         self.async_write_ha_state()
 
+    @override
     async def async_turn_on(self, **kwargs: Any) -> None:
         """Turn the switch on."""
         await self._switch_set_state(True)
 
+    @override
     async def async_turn_off(self, **kwargs: Any) -> None:
         """Turn the switch off."""
         await self._switch_set_state(False)
 
     @property
+    @override
     def is_on(self) -> bool:
         """Return True if switch is on."""
         return self.entity_description.is_on_fn(self.device)
 
     @property
+    @override
     def available(self) -> bool:
         """Return if entity is available."""
         return (

@@ -1,6 +1,7 @@
 """Sensor platform for the UniFi Access integration."""
 
 from datetime import UTC, datetime
+from typing import override
 
 from unifi_access_api import Door, DoorLockRuleType
 
@@ -62,6 +63,7 @@ class UnifiAccessDoorLockRuleSensor(UnifiAccessEntity, SensorEntity):
         super().__init__(coordinator, door, "lock_rule")
 
     @property
+    @override
     def native_value(self) -> str | None:
         """Return the active lock rule type, or None if no rule is active."""
         rule_status = self.coordinator.get_lock_rule_status(self._door_id)
@@ -70,6 +72,7 @@ class UnifiAccessDoorLockRuleSensor(UnifiAccessEntity, SensorEntity):
         return rule_status.type.value
 
     @property
+    @override
     def available(self) -> bool:
         """Return whether the sensor should currently be shown as available."""
         return super().available and (
@@ -93,6 +96,7 @@ class UnifiAccessDoorLockRuleEndTimeSensor(UnifiAccessEntity, SensorEntity):
         super().__init__(coordinator, door, "lock_rule_ended_time")
 
     @property
+    @override
     def native_value(self) -> datetime | None:
         """Return the time when the lock rule expires, or None if no rule is active."""
         rule_status = self.coordinator.get_lock_rule_status(self._door_id)
@@ -101,6 +105,7 @@ class UnifiAccessDoorLockRuleEndTimeSensor(UnifiAccessEntity, SensorEntity):
         return datetime.fromtimestamp(rule_status.ended_time, tz=UTC)
 
     @property
+    @override
     def available(self) -> bool:
         """Return whether the sensor should currently be shown as available."""
         return super().available and (

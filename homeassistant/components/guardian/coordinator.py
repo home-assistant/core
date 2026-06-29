@@ -3,7 +3,7 @@
 import asyncio
 from collections.abc import Callable, Coroutine
 from datetime import timedelta
-from typing import TYPE_CHECKING, Any, cast
+from typing import TYPE_CHECKING, Any, cast, override
 
 from aioguardian import Client
 from aioguardian.errors import GuardianError
@@ -55,6 +55,7 @@ class GuardianDataUpdateCoordinator(DataUpdateCoordinator[dict[str, Any]]):
             self.config_entry.entry_id
         )
 
+    @override
     async def _async_update_data(self) -> dict[str, Any]:
         """Execute a "locked" API request against the valve controller."""
         async with self._api_lock, self._client:

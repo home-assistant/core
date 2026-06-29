@@ -1,7 +1,7 @@
 """Config flow for NASweb integration."""
 
 import logging
-from typing import Any
+from typing import Any, override
 
 import voluptuous as vol
 from webio_api import WebioAPI
@@ -79,6 +79,7 @@ class NASwebConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
 
     VERSION = 1
 
+    @override
     async def async_step_user(
         self, user_input: dict[str, Any] | None = None
     ) -> ConfigFlowResult:

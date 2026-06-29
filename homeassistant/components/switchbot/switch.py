@@ -4,7 +4,7 @@ import abc
 from collections.abc import Awaitable, Callable
 from dataclasses import dataclass
 import logging
-from typing import Any
+from typing import Any, override
 
 import switchbot
 
@@ -116,11 +116,13 @@ class SwitchbotGenericSwitch(SwitchbotSwitchedEntity, SwitchEntity):
         self._attr_unique_id = f"{coordinator.base_unique_id}-{description.key}"
 
     @property
+    @override
     def is_on(self) -> bool | None:
         """Return true if device is on."""
         return self.entity_description.is_on_fn(self._device)
 
     @exception_handler
+    @override
     async def async_turn_on(self, **kwargs: Any) -> None:
         """Turn on."""
         _LOGGER.debug(
@@ -130,6 +132,7 @@ class SwitchbotGenericSwitch(SwitchbotSwitchedEntity, SwitchEntity):
         self.async_write_ha_state()
 
     @exception_handler
+    @override
     async def async_turn_off(self, **kwargs: Any) -> None:
         """Turn off."""
         _LOGGER.debug(
@@ -152,6 +155,7 @@ class SwitchBotSwitch(SwitchbotSwitchedEntity, SwitchEntity, RestoreEntity):
         super().__init__(coordinator)
         self._attr_is_on = False
 
+    @override
     async def async_added_to_hass(self) -> None:
         """Run when entity about to be added."""
         await super().async_added_to_hass()
@@ -161,11 +165,13 @@ class SwitchBotSwitch(SwitchbotSwitchedEntity, SwitchEntity, RestoreEntity):
         self._last_run_success = last_state.attributes.get("last_run_success")
 
     @property
+    @override
     def assumed_state(self) -> bool:
         """Return true if unable to access real state of entity."""
         return not self._device.switch_mode()
 
     @property
+    @override
     def is_on(self) -> bool | None:
         """Return true if device is on."""
         if not self._device.switch_mode():
@@ -173,6 +179,7 @@ class SwitchBotSwitch(SwitchbotSwitchedEntity, SwitchEntity, RestoreEntity):
         return self._device.is_on()
 
     @property
+    @override
     def extra_state_attributes(self) -> dict[str, Any]:
         """Return the state attributes."""
         return {
@@ -204,11 +211,13 @@ class SwitchbotMultiChannelSwitch(SwitchbotSwitchedEntity, SwitchEntity):
         )
 
     @property
+    @override
     def is_on(self) -> bool | None:
         """Return true if device is on."""
         return self._device.is_on(self._channel)
 
     @exception_handler
+    @override
     async def async_turn_on(self, **kwargs: Any) -> None:
         """Turn device on."""
         _LOGGER.debug(
@@ -218,6 +227,7 @@ class SwitchbotMultiChannelSwitch(SwitchbotSwitchedEntity, SwitchEntity):
         self.async_write_ha_state()
 
     @exception_handler
+    @override
     async def async_turn_off(self, **kwargs: Any) -> None:
         """Turn device off."""
         _LOGGER.debug(
@@ -235,14 +245,17 @@ class SwitchbotFanOscillationSwitch(SwitchbotSwitchedEntity, SwitchEntity, abc.A
 
     @property
     @abc.abstractmethod
+    @override
     def is_on(self) -> bool | None:
         """Return true if oscillation is active."""
 
     @abc.abstractmethod
+    @override
     async def async_turn_on(self, **kwargs: Any) -> None:
         """Enable oscillation."""
 
     @abc.abstractmethod
+    @override
     async def async_turn_off(self, **kwargs: Any) -> None:
         """Disable oscillation."""
 
@@ -258,17 +271,20 @@ class SwitchbotFanHorizontalOscillationSwitch(SwitchbotFanOscillationSwitch):
         self._attr_unique_id = f"{coordinator.base_unique_id}-horizontal-oscillation"
 
     @property
+    @override
     def is_on(self) -> bool | None:
         """Return true if horizontal oscillation is active."""
         return self._device.get_horizontal_oscillating_state()
 
     @exception_handler
+    @override
     async def async_turn_on(self, **kwargs: Any) -> None:
         """Enable horizontal oscillation."""
         await self._device.set_horizontal_oscillation(True)
         self.async_write_ha_state()
 
     @exception_handler
+    @override
     async def async_turn_off(self, **kwargs: Any) -> None:
         """Disable horizontal oscillation."""
         await self._device.set_horizontal_oscillation(False)
@@ -286,17 +302,20 @@ class SwitchbotFanVerticalOscillationSwitch(SwitchbotFanOscillationSwitch):
         self._attr_unique_id = f"{coordinator.base_unique_id}-vertical-oscillation"
 
     @property
+    @override
     def is_on(self) -> bool | None:
         """Return true if vertical oscillation is active."""
         return self._device.get_vertical_oscillating_state()
 
     @exception_handler
+    @override
     async def async_turn_on(self, **kwargs: Any) -> None:
         """Enable vertical oscillation."""
         await self._device.set_vertical_oscillation(True)
         self.async_write_ha_state()
 
     @exception_handler
+    @override
     async def async_turn_off(self, **kwargs: Any) -> None:
         """Disable vertical oscillation."""
         await self._device.set_vertical_oscillation(False)

@@ -63,6 +63,11 @@ async def async_get_config_entry_diagnostics(
                             "size_total": partition.partition_size_total(False),
                         }
 
+    if syno_api.hardware is not None:
+        diag_data["device_info"]["fan_speed_mode"] = (
+            syno_api.dsm.hardware.fan_speed.value
+        )
+
     if syno_api.network is not None:
         for intf in syno_api.network.interfaces:
             diag_data["network"]["interfaces"][intf["id"]] = {

@@ -1052,6 +1052,11 @@ ZEROCONF = {
             "domain": "energieleser",
         },
     ],
+    "_wattwaechter._tcp.local.": [
+        {
+            "domain": "wattwaechter",
+        },
+    ],
     "_wled._tcp.local.": [
         {
             "domain": "wled",

@@ -6,7 +6,7 @@
     ]),
     'area_id': None,
     'capabilities': dict({
-      'tracking_type': <TrackingType.POSITION: 'position'>,
+      <DeviceTrackerEntityCapabilityAttribute.TRACKING_TYPE: 'tracking_type'>: <TrackingType.POSITION: 'position'>,
     }),
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -41,14 +41,14 @@
 # name: test_all_entities[device_tracker.2021_honda_accord-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': '2021 Honda Accord',
-      'gps_accuracy': 10,
-      'in_zones': list([
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: '2021 Honda Accord',
+      <TrackerEntityStateAttribute.GPS_ACCURACY: 'gps_accuracy'>: 10,
+      <DeviceTrackerEntityStateAttribute.IN_ZONES: 'in_zones'>: list([
       ]),
-      'latitude': 37.7749,
-      'longitude': -122.4194,
-      'source_type': <SourceType.GPS: 'gps'>,
-      'tracking_type': <TrackingType.POSITION: 'position'>,
+      <TrackerEntityStateAttribute.LATITUDE: 'latitude'>: 37.7749,
+      <TrackerEntityStateAttribute.LONGITUDE: 'longitude'>: -122.4194,
+      <DeviceTrackerEntityStateAttribute.SOURCE_TYPE: 'source_type'>: <SourceType.GPS: 'gps'>,
+      <DeviceTrackerEntityCapabilityAttribute.TRACKING_TYPE: 'tracking_type'>: <TrackingType.POSITION: 'position'>,
     }),
     'context': <ANY>,
     'entity_id': 'device_tracker.2021_honda_accord',

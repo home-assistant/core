@@ -4,7 +4,7 @@ from datetime import date, datetime, time, timedelta
 from functools import partial
 import logging
 import re
-from typing import TYPE_CHECKING
+from typing import TYPE_CHECKING, override
 
 import caldav
 
@@ -90,6 +90,7 @@ class CalDavUpdateCoordinator(DataUpdateCoordinator[CalendarEvent | None]):
 
         return event_list
 
+    @override
     async def _async_update_data(self) -> CalendarEvent | None:
         """Get the latest data."""
         start_of_today = dt_util.start_of_local_day()

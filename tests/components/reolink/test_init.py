@@ -1076,7 +1076,7 @@ async def test_privacy_mode_change_callback(
         def register_callback(
             self, callback_id: str, callback: Callable[[], None], *args, **key_args
         ) -> None:
-            if callback_id == "privacy_mode_change":
+            if callback_id == "privacy_mode_change_623":
                 self.callback_func = callback
 
     callback_mock = callback_mock_class()

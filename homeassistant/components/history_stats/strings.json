@@ -33,7 +33,7 @@
             "data_description": {
               "min_state_duration": "The minimum state duration to account for the statistics. Default is 0 seconds."
             },
-            "name": "Advanced settings"
+            "name": "Additional settings"
           }
         }
       },

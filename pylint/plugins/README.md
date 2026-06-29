@@ -110,6 +110,7 @@ Every check has a code following the
 | `C7427` | [`home-assistant-enforce-naive-now`](#c7427-home-assistant-enforce-naive-now) | Use `homeassistant.util.dt.naive_now` instead of `datetime.now()` |
 | `W7423` | [`home-assistant-missing-entity-unique-id`](#w7423-home-assistant-missing-entity-unique-id) | Entity class does not statically guarantee a non-None unique id |
 | `W7424` | [`home-assistant-entity-unique-id-static`](#w7424-home-assistant-entity-unique-id-static) | Entity class sets `_attr_unique_id` to a static string at class level |
+| `W7425` | [`home-assistant-entity-unique-id-redundant-domain`](#w7425-home-assistant-entity-unique-id-redundant-domain) | Entity unique ID references the `DOMAIN` constant or includes the integration's domain as a string-literal delimited segment |
 | `C7412` | [`home-assistant-entity-description-redundant-default`](#c7412-home-assistant-entity-description-redundant-default) | Setting an EntityDescription field to its default value is redundant |
 | `C7413` | [`home-assistant-duplicate-const`](#c7413-home-assistant-duplicate-const) | Constant duplicates one in `homeassistant.const` with the same value |
 | `E7405` | [`home-assistant-action-swallowed-exception`](#e7405-home-assistant-action-swallowed-exception) | Action handler must not swallow exceptions |
@@ -557,6 +558,48 @@ The rule fires when:
 Resolve by either computing the id per instance (config-entry id,
 serial, MAC, etc.) or declaring the integration as
 `single_config_entry: true` when there is genuinely only one instance.
+
+
+## `home_assistant_entity_unique_id_format` checker
+
+Hosts format-related checks on the value an entity uses for its unique
+ID (`_attr_unique_id` assignments and `unique_id` property/method
+returns). Unlike the gated `entity-unique-id` quality-scale checks,
+these checks are **not** gated on `quality_scale.yaml` claims, and they
+fire on every class inheriting from `Entity` anywhere inside an
+integration (including shared bases in `entity.py` and mixins/abstract
+bases subclassed by other classes in the same module). Once an
+integration ships with malformed unique_ids, the IDs cannot be changed
+without an entity-registry migration, so the antipatterns must be
+caught before they ship.
+
+### `W7425`: `home-assistant-entity-unique-id-redundant-domain`
+
+The entity registry already keys uniqueness on `(domain, platform,
+unique_id)` where `platform` is the integration's name (as declared
+by the `"domain"` field in `manifest.json`). Any prefix in the
+unique_id that repeats the integration's name duplicates information
+already present in the registry key.
+
+The rule fires when the value used for the entity's unique id either:
+
+- references the `DOMAIN` name at any depth (e.g.
+  `f"{DOMAIN}_{entry.entry_id}"`), or
+- contains the integration's domain (read from `manifest.json`) as a
+  delimited segment of any string literal (including f-string literal
+  parts), e.g. `f"myhub-{device_id}"` in an integration whose manifest
+  declares `"domain": "myhub"`. A segment is considered delimited when
+  bordered by a non-alphanumeric character (`_`, `-`, `.`, `:`, space,
+  ...) or a string boundary; letters and digits adjacent to the
+  segment make it part of a longer identifier, so substrings like
+  `"myhubitat_..."` or `"myhub2"` don't match.
+
+Three locations are scanned: class-body `_attr_unique_id` assignments,
+`self._attr_unique_id = ...` assignments inside method bodies, and
+`return` values inside a `unique_id` property/method override.
+Aliased imports (`from .const import DOMAIN as MY_DOMAIN`) are not
+scanned.
+
 
 ## `home_assistant_entity_description_defaults` checker
 

@@ -5,7 +5,7 @@ from collections.abc import Callable
 from dataclasses import dataclass, replace
 import logging
 import math
-from typing import Any, cast
+from typing import Any, cast, override
 import unicodedata
 
 from unifi_access_api import (
@@ -169,6 +169,7 @@ class UnifiAccessCoordinator(DataUpdateCoordinator[UnifiAccessData]):
             self.data = updated_data
             self.async_update_listeners()
 
+    @override
     async def _async_setup(self) -> None:
         """Set up the WebSocket connection for push updates."""
         handlers: dict[str, WsMessageHandler] = {
@@ -188,6 +189,7 @@ class UnifiAccessCoordinator(DataUpdateCoordinator[UnifiAccessData]):
             on_disconnect=self._on_ws_disconnect,
         )
 
+    @override
     async def _async_update_data(self) -> UnifiAccessData:
         """Fetch all doors and emergency status from the API."""
         try:

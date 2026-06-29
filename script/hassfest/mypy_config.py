@@ -55,6 +55,7 @@ GENERAL_SETTINGS: Final[dict[str, str]] = {
     "enable_error_code": ", ".join(  # noqa: FLY002
         [
             "deprecated",
+            "explicit-override",
             "ignore-without-code",
             "redundant-self",
             "truthy-iterable",

@@ -66,6 +66,12 @@
     "service_does_not_support_response": {
       "message": "An action which does not return responses can't be called with {return_response}."
     },
+    "service_found_multiple_config_entry_for_domain": {
+      "message": "Found multiple config entries for integration {domain}."
+    },
+    "service_found_no_config_entry_for_domain": {
+      "message": "Could not find config entry for integration {domain}."
+    },
     "service_lacks_response_request": {
       "message": "The action requires responses and must be called with {return_response}."
     },
