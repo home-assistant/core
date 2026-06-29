@@ -2,19 +2,18 @@
 
 from __future__ import annotations
 
-from datetime import timedelta
+import asyncio
 from typing import Any
 from unittest.mock import AsyncMock, MagicMock, patch
 
 from aioaquarite import AquariteError, AuthenticationError
-from freezegun.api import FrozenDateTimeFactory
 import pytest
 
 from homeassistant.components.vistapool import coordinator as vp_coordinator
 from homeassistant.config_entries import ConfigEntryState
 from homeassistant.core import HomeAssistant
 
-from tests.common import MockConfigEntry, async_fire_time_changed
+from tests.common import MockConfigEntry
 
 
 async def test_setup_entry(
@@ -212,24 +211,27 @@ async def test_apply_optimistic_yields_to_push_after_ttl(
 
 async def test_apply_optimistic_self_expires_without_push(
     hass: HomeAssistant,
-    freezer: FrozenDateTimeFactory,
     mock_config_entry: MockConfigEntry,
     mock_vistapool_client: AsyncMock,
 ) -> None:
     """Test the optimistic value clears via the scheduled timer when no push arrives."""
-    mock_vistapool_client.fetch_pool_data.return_value = {"light": {"status": 0}}
+    # Return a fresh dict per call so apply_optimistic's in-place mutation
+    # doesn't leak back into the mock's payload on the next fetch.
+    mock_vistapool_client.fetch_pool_data.side_effect = lambda *_a, **_k: {
+        "light": {"status": 0}
+    }
     mock_config_entry.add_to_hass(hass)
     assert await hass.config_entries.async_setup(mock_config_entry.entry_id)
     await hass.async_block_till_done()
 
     coordinator = next(iter(mock_config_entry.runtime_data.coordinators.values()))
-    coordinator.apply_optimistic("light.status", 1)
-    assert coordinator.data["light"]["status"] == 1
     mock_vistapool_client.fetch_pool_data.reset_mock()
 
-    freezer.tick(timedelta(seconds=vp_coordinator.OPTIMISTIC_TTL_SECONDS + 1))
-    async_fire_time_changed(hass)
-    await hass.async_block_till_done()
+    with patch.object(vp_coordinator, "OPTIMISTIC_TTL_SECONDS", 0.05):
+        coordinator.apply_optimistic("light.status", 1)
+        assert coordinator.data["light"]["status"] == 1
+        await asyncio.sleep(0.1)
+        await hass.async_block_till_done()
 
     mock_vistapool_client.fetch_pool_data.assert_called()
     assert coordinator.data["light"]["status"] == 0
