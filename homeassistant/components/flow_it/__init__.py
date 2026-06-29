@@ -23,12 +23,13 @@ PLATFORMS: list[Platform] = [
 
 async def async_setup_entry(hass: HomeAssistant, entry: FlowItConfigEntry) -> bool:
     """Set up Flow-it from a config entry."""
-    host = entry.data[CONF_HOST]
-    username = entry.data[CONF_USERNAME]
-    password = entry.data[CONF_PASSWORD]
 
-    session = get_async_client(hass)
-    vmc = FlowItVMCMachine(host, password, username, session=session)
+    vmc = FlowItVMCMachine(
+        entry.data[CONF_HOST],
+        entry.data[CONF_PASSWORD],
+        entry.data[CONF_USERNAME],
+        session=get_async_client(hass),
+    )
 
     try:
         # get_info does not require auth, but we want to make sure we can connect
