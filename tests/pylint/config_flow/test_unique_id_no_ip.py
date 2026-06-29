@@ -3,10 +3,9 @@
 import astroid
 from pylint.checkers import BaseChecker
 from pylint.testutils.unittest_linter import UnittestLinter
-from pylint.utils.ast_walker import ASTWalker
 import pytest
 
-from tests.pylint import assert_no_messages
+from tests.pylint import assert_no_messages, walk_checker
 
 
 @pytest.mark.parametrize(
@@ -64,11 +63,9 @@ def test_enforce_unique_id_no_ip(
 ) -> None:
     """Good test cases."""
     root_node = astroid.parse(code, module_name)
-    walker = ASTWalker(linter)
-    walker.add_checker(enforce_config_entry_unique_id_no_ip_checker)
 
     with assert_no_messages(linter):
-        walker.walk(root_node)
+        walk_checker(linter, enforce_config_entry_unique_id_no_ip_checker, root_node)
 
 
 @pytest.mark.parametrize(
@@ -121,10 +118,8 @@ def test_enforce_unique_id_no_ip_bad_call(
 ) -> None:
     """Bad async_set_unique_id call test cases."""
     root_node = astroid.parse(code, module_name)
-    walker = ASTWalker(linter)
-    walker.add_checker(enforce_config_entry_unique_id_no_ip_checker)
 
-    walker.walk(root_node)
+    walk_checker(linter, enforce_config_entry_unique_id_no_ip_checker, root_node)
     messages = linter.release_messages()
     assert len(messages) == 1
     assert messages[0].msg_id == "home-assistant-unique-id-ip-based"
@@ -182,10 +177,8 @@ def test_enforce_unique_id_no_ip_bad_call_variable(
 ) -> None:
     """Bad async_set_unique_id call test cases."""
     root_node = astroid.parse(code, module_name)
-    walker = ASTWalker(linter)
-    walker.add_checker(enforce_config_entry_unique_id_no_ip_checker)
 
-    walker.walk(root_node)
+    walk_checker(linter, enforce_config_entry_unique_id_no_ip_checker, root_node)
     messages = linter.release_messages()
     assert len(messages) == 1
     assert messages[0].msg_id == "home-assistant-unique-id-ip-based"
