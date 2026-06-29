@@ -22,6 +22,10 @@ if TYPE_CHECKING:
 
 _LOGGER = logging.getLogger(__name__)
 
+# Fallback timer covering the case where a Firestore push never arrives
+# (controller offline, command dropped). NOT an SLA on the cloud round-trip;
+# the common case clears the pending entry as soon as the confirming push
+# lands, well before this fires.
 OPTIMISTIC_TTL_SECONDS = 10.0
 
 
