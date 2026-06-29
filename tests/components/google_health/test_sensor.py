@@ -2,23 +2,12 @@
 
 from collections.abc import Awaitable, Callable
 
-import pytest
-
 from homeassistant.core import HomeAssistant
 
-from .conftest import ROLLUP_URL, SETTINGS_URL
+from .conftest import STEPS_ROLLUP_URL
 
 from tests.common import MockConfigEntry
 from tests.test_util.aiohttp import AiohttpClientMocker
-
-
-@pytest.fixture(autouse=True)
-def mock_settings(aioclient_mock: AiohttpClientMocker) -> None:
-    """Mock the settings endpoint to resolve user's timezone."""
-    aioclient_mock.get(
-        SETTINGS_URL,
-        json={"timeZone": "UTC"},
-    )
 
 
 async def test_sensor_steps(
@@ -31,7 +20,7 @@ async def test_sensor_steps(
 
     # Mock daily rollup query returning 10500 steps
     aioclient_mock.post(
-        ROLLUP_URL,
+        STEPS_ROLLUP_URL,
         json={
             "rollupDataPoints": [
                 {
@@ -64,7 +53,7 @@ async def test_sensor_empty_rollup(
     """Test steps sensor when the rollup endpoint returns no data."""
 
     aioclient_mock.post(
-        ROLLUP_URL,
+        STEPS_ROLLUP_URL,
         json={"rollupDataPoints": []},
     )
 

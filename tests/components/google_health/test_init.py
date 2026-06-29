@@ -5,7 +5,7 @@ from collections.abc import Awaitable, Callable
 from homeassistant import config_entries
 from homeassistant.core import HomeAssistant
 
-from .conftest import ROLLUP_URL, SETTINGS_URL
+from .conftest import STEPS_ROLLUP_URL
 
 from tests.common import MockConfigEntry
 from tests.test_util.aiohttp import AiohttpClientMocker
@@ -18,13 +18,8 @@ async def test_setup_and_unload(
     integration_setup: Callable[[], Awaitable[bool]],
 ) -> None:
     """Test standard setup and unloading of the config entry."""
-    aioclient_mock.get(
-        SETTINGS_URL,
-        json={"timeZone": "UTC"},
-    )
-
     aioclient_mock.post(
-        ROLLUP_URL,
+        STEPS_ROLLUP_URL,
         json={
             "rollupDataPoints": [
                 {
@@ -55,13 +50,8 @@ async def test_setup_api_error(
     integration_setup: Callable[[], Awaitable[bool]],
 ) -> None:
     """Test setup error retry handling when API fails."""
-    aioclient_mock.get(
-        SETTINGS_URL,
-        json={"timeZone": "UTC"},
-    )
-
     aioclient_mock.post(
-        ROLLUP_URL,
+        STEPS_ROLLUP_URL,
         status=500,
     )
 
@@ -76,15 +66,14 @@ async def test_setup_auth_error(
     integration_setup: Callable[[], Awaitable[bool]],
 ) -> None:
     """Test setup error when API returns auth or forbidden errors."""
-    aioclient_mock.get(
-        SETTINGS_URL,
-        json={"timeZone": "UTC"},
-    )
-
     aioclient_mock.post(
-        ROLLUP_URL,
+        STEPS_ROLLUP_URL,
         status=403,
     )
 
     assert not await integration_setup()
     assert config_entry.state is config_entries.ConfigEntryState.SETUP_ERROR
+
+    flows = hass.config_entries.flow.async_progress()
+    assert len(flows) == 1
+    assert flows[0]["step_id"] == "reauth_confirm"
