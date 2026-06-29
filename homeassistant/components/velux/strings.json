@@ -62,6 +62,9 @@
     "device_not_found": {
       "message": "Device not found: {device_id}"
     },
+    "device_not_opening_device": {
+      "message": "Device does not support velocity control: {device_id}"
+    },
     "reboot_failed": {
       "message": "Failed to reboot gateway. Try again in a few moments or power cycle the device manually"
     }

@@ -88,11 +88,19 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
         velocity = VELOCITY_MAP[service_call.data["velocity"]]
         device_id: str = service_call.data["device_id"]
 
+        device_registry = dr.async_get(hass)
+        if device_registry.async_get(device_id) is None:
+            raise ServiceValidationError(
+                translation_domain=DOMAIN,
+                translation_key="device_not_found",
+                translation_placeholders={"device_id": device_id},
+            )
+
         node = _find_opening_device_node(hass, device_id)
         if node is None:
             raise ServiceValidationError(
                 translation_domain=DOMAIN,
-                translation_key="device_not_found",
+                translation_key="device_not_opening_device",
                 translation_placeholders={"device_id": device_id},
             )
 
