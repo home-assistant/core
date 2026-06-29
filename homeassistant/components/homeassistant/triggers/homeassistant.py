@@ -2,8 +2,8 @@
 
 import voluptuous as vol
 
-from homeassistant.const import CONF_EVENT, CONF_PLATFORM
-from homeassistant.core import CALLBACK_TYPE, HassJob, HomeAssistant
+from homeassistant.const import CONF_EVENT, CONF_PLATFORM, EVENT_HOMEASSISTANT_STARTED
+from homeassistant.core import CALLBACK_TYPE, Event, HassJob, HomeAssistant, callback
 from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.trigger import TriggerActionType, TriggerInfo
 from homeassistant.helpers.typing import ConfigType
@@ -45,9 +45,8 @@ async def async_attach_trigger(
             },
         )
 
-    # Automation are enabled while hass is starting up, fire right away
-    # Check state because a config reload shouldn't trigger it.
-    if trigger_info["home_assistant_start"]:
+    @callback
+    def hass_started(_: Event) -> None:
         hass.async_run_hass_job(
             job,
             {
@@ -60,4 +59,6 @@ async def async_attach_trigger(
             },
         )
 
-    return lambda: None
+    # Only fires if armed before EVENT_HOMEASSISTANT_STARTED; if hass is already
+    # started, the trigger doesn't fire.
+    return hass.bus.async_listen_once(EVENT_HOMEASSISTANT_STARTED, hass_started)

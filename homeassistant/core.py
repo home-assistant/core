@@ -156,6 +156,8 @@ class EventStateReportedData(EventStateEventData):
 
 # How long to wait until things that run on startup have to finish.
 TIMEOUT_EVENT_START = 15
+# How long to wait until startup jobs have to finish.
+TIMEOUT_STARTUP_JOBS = 15
 
 
 EVENTS_EXCLUDED_FROM_MATCH_ALL = {
@@ -416,6 +418,7 @@ class HomeAssistant:
         self.timeout: TimeoutManager = TimeoutManager()
         self._stop_future: concurrent.futures.Future[None] | None = None
         self._shutdown_jobs: list[HassJobWithArgs] = []
+        self._startup_jobs: list[HassJobWithArgs] = []
         self.import_executor = InterruptibleThreadPoolExecutor(
             max_workers=1, thread_name_prefix="ImportExecutor"
         )
@@ -503,6 +506,20 @@ class HomeAssistant:
         """
         _LOGGER.info("Starting Home Assistant %s", __version__)
 
+        def _log_startup_blocked(tasks: set[asyncio.Future[Any]]) -> None:
+            """Log when startup is blocked by tasks."""
+            _LOGGER.warning(
+                (
+                    "Something is blocking Home Assistant from wrapping up the start up"
+                    " phase. We're going to continue anyway. Please report the"
+                    " following info at"
+                    " https://github.com/home-assistant/core/issues: %s"
+                    " The system is waiting for tasks: %s"
+                ),
+                ", ".join(self.config.components),
+                tasks,
+            )
+
         self.set_state(CoreState.starting)
         self.bus.async_fire_internal(EVENT_CORE_CONFIG_UPDATE)
         self.bus.async_fire_internal(EVENT_HOMEASSISTANT_START)
@@ -515,17 +532,23 @@ class HomeAssistant:
             )
 
         if pending:
-            _LOGGER.warning(
-                (
-                    "Something is blocking Home Assistant from wrapping up the start up"
-                    " phase. We're going to continue anyway. Please report the"
-                    " following info at"
-                    " https://github.com/home-assistant/core/issues: %s"
-                    " The system is waiting for tasks: %s"
-                ),
-                ", ".join(self.config.components),
-                self._tasks,
-            )
+            _log_startup_blocked(self._tasks)
+
+        # Run startup jobs
+        tasks: list[asyncio.Future[Any]] = []
+        for job in self._startup_jobs:
+            task_or_none = self.async_run_hass_job(job.job, *job.args)
+            if not task_or_none:
+                continue
+            tasks.append(task_or_none)
+        self._startup_jobs.clear()
+        if not tasks:
+            pending = None
+        else:
+            _done, pending = await asyncio.wait(tasks, timeout=TIMEOUT_STARTUP_JOBS)
+
+        if pending:
+            _log_startup_blocked(pending)
 
         if self.state is not CoreState.starting:
             _LOGGER.warning(
@@ -1032,6 +1055,9 @@ class HomeAssistant:
     ) -> CALLBACK_TYPE:
         """Add a HassJob which will be executed on shutdown.
 
+        The job will be called (and awaited if it returns a coroutine) before firing
+        of event EVENT_HOMEASSISTANT_STOP when Home Assistant is shutting down.
+
         This method must be run in the event loop.
 
         hassjob: HassJob
@@ -1045,6 +1071,44 @@ class HomeAssistant:
         @callback
         def remove_job() -> None:
             self._shutdown_jobs.remove(job_with_args)
+
+        return remove_job
+
+    @overload
+    @callback
+    def async_add_startup_job(
+        self, hassjob: HassJob[..., Coroutine[Any, Any, Any]], *args: Any
+    ) -> CALLBACK_TYPE: ...
+
+    @overload
+    @callback
+    def async_add_startup_job(
+        self, hassjob: HassJob[..., Coroutine[Any, Any, Any] | Any], *args: Any
+    ) -> CALLBACK_TYPE: ...
+
+    @callback
+    def async_add_startup_job(
+        self, hassjob: HassJob[..., Coroutine[Any, Any, Any] | Any], *args: Any
+    ) -> CALLBACK_TYPE:
+        """Add a HassJob which will be executed on startup.
+
+        The job will be called (and awaited if it returns a coroutine) before firing
+        of event EVENT_HOMEASSISTANT_STARTED when Home Assistant is starting.
+
+        This method must be run in the event loop.
+
+        hassjob: HassJob
+        args: parameters for method to call.
+
+        Returns function to remove the job.
+        """
+        job_with_args = HassJobWithArgs(hassjob, args)
+        self._startup_jobs.append(job_with_args)
+
+        @callback
+        def remove_job() -> None:
+            if job_with_args in self._startup_jobs:
+                self._startup_jobs.remove(job_with_args)
 
         return remove_job
 

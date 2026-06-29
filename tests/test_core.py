@@ -3211,6 +3211,35 @@ async def test_cancel_shutdown_job(hass: HomeAssistant) -> None:
     assert not evt.is_set()
 
 
+async def test_startup_job(hass: HomeAssistant) -> None:
+    """Test async_add_startup_job."""
+    evt = asyncio.Event()
+
+    async def startup_func() -> None:
+        # Sleep to ensure core is waiting for the task to finish
+        await asyncio.sleep(0.01)
+        evt.set()
+
+    job = HassJob(startup_func, "startup_job")
+    hass.async_add_startup_job(job)
+    await hass.async_start()
+    assert evt.is_set()
+
+
+async def test_cancel_startup_job(hass: HomeAssistant) -> None:
+    """Test cancelling a job added to async_add_startup_job."""
+    evt = asyncio.Event()
+
+    async def startup_func() -> None:
+        evt.set()
+
+    job = HassJob(startup_func, "startup_job")
+    cancel = hass.async_add_startup_job(job)
+    cancel()
+    await hass.async_start()
+    assert not evt.is_set()
+
+
 def test_one_time_listener_repr(hass: HomeAssistant) -> None:
     """Test one time listener repr."""
 
