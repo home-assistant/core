@@ -74,6 +74,7 @@ from homeassistant.helpers.trigger import (
     EntityNumericalStateCrossedThresholdTriggerWithUnitBase,
     EntityTriggerBase,
     NotTriggeredInfo,
+    NotTriggeredReasonReporter,
     PluggableAction,
     StatelessEntityTriggerBase,
     Trigger,
@@ -81,6 +82,7 @@ from homeassistant.helpers.trigger import (
     TriggerConfig,
     TriggerNotTriggeredReporter,
     _async_get_trigger_platform,
+    _report_not_triggered_noop,
     async_initialize_triggers,
     async_validate_trigger_config,
     make_entity_numerical_state_changed_trigger,
@@ -3848,7 +3850,11 @@ def _make_trigger(
             """Accept any transition."""
             return True
 
-        def is_valid_state(self, state: State) -> bool:
+        def is_valid_state(
+            self,
+            state: State,
+            report_not_triggered: NotTriggeredReasonReporter,
+        ) -> bool:
             """Accept any state."""
             return True
 
@@ -3993,13 +3999,13 @@ async def test_make_entity_target_state_trigger(
 
     # Value changed to target — valid
     assert trig.is_valid_transition(from_state, to_state)
-    assert trig.is_valid_state(to_state)
+    assert trig.is_valid_state(to_state, _report_not_triggered_noop)
 
     # Value did not change — not a valid transition
     assert not trig.is_valid_transition(from_state, from_state)
 
     # Value not in to_states — not valid
-    assert not trig.is_valid_state(wrong_value_state)
+    assert not trig.is_valid_state(wrong_value_state, _report_not_triggered_noop)
 
 
 @pytest.mark.parametrize(
@@ -4057,13 +4063,13 @@ async def test_make_entity_transition_trigger(
 
     # Valid transition
     assert trig.is_valid_transition(from_state, to_state)
-    assert trig.is_valid_state(to_state)
+    assert trig.is_valid_state(to_state, _report_not_triggered_noop)
 
     # Wrong origin (not in from_states)
     assert not trig.is_valid_transition(wrong_from, to_state)
 
     # Wrong target (not in to_states)
-    assert not trig.is_valid_state(wrong_to)
+    assert not trig.is_valid_state(wrong_to, _report_not_triggered_noop)
 
     # No change in tracked value — not a valid transition
     assert not trig.is_valid_transition(from_state, from_state)
@@ -4108,7 +4114,7 @@ async def test_make_entity_origin_state_trigger(
 
     # Valid: changed from expected origin to something else
     assert trig.is_valid_transition(from_state, to_state)
-    assert trig.is_valid_state(to_state)
+    assert trig.is_valid_state(to_state, _report_not_triggered_noop)
 
     # Wrong origin (not the expected from_state)
     assert not trig.is_valid_transition(wrong_from, to_state)
@@ -4117,7 +4123,7 @@ async def test_make_entity_origin_state_trigger(
     assert not trig.is_valid_transition(from_state, from_state)
 
     # To-state still matches from_state — not valid
-    assert not trig.is_valid_state(from_state)
+    assert not trig.is_valid_state(from_state, _report_not_triggered_noop)
 
 
 class _ActivatedTrigger(StatelessEntityTriggerBase):
@@ -4213,7 +4219,11 @@ class _OffToOnTrigger(EntityTriggerBase):
             return False
         return from_state.state != STATE_ON
 
-    def is_valid_state(self, state: State) -> bool:
+    def is_valid_state(
+        self,
+        state: State,
+        report_not_triggered: NotTriggeredReasonReporter,
+    ) -> bool:
         """Valid if the state is 'on'."""
         return state.state == STATE_ON
 

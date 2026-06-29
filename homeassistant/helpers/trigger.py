@@ -373,6 +373,10 @@ ENTITY_STATE_TRIGGER_SCHEMA_WITH_BEHAVIOR = ENTITY_STATE_TRIGGER_SCHEMA.extend(
 )
 
 
+def _report_not_triggered_noop(reason: str, /, **data: Any) -> None:
+    """Swallow a not-triggered report; used when diagnostics are not wanted."""
+
+
 class EntityTriggerBase(Trigger):
     """Trigger for entity state changes."""
 
@@ -430,7 +434,11 @@ class EntityTriggerBase(Trigger):
         """
         return from_state.state != to_state.state
 
-    def is_valid_state(self, state: State) -> bool:
+    def is_valid_state(
+        self,
+        state: State,
+        report_not_triggered: NotTriggeredReasonReporter,
+    ) -> bool:
         """Check if the state is a target state for the trigger.
 
         Called only after `state.state` has been filtered against
@@ -438,20 +446,14 @@ class EntityTriggerBase(Trigger):
         check. Default: any non-excluded state is a target. Override
         to restrict (specific to_states, value within a threshold,
         etc.).
-        """
-        return True
-
-    def _is_valid_to_state(
-        self, to_state: State, report_not_triggered: _NotTriggeredReasonReporter
-    ) -> bool:
-        """Check if to_state can fire the trigger, optionally reporting why if it can't.
 
         When the state cannot fire the trigger, subclasses may use
         `report_not_triggered` to record an interesting reason - e.g. a
         non-numeric value or an unsupported unit - in the automation trace.
-        The base implementation never reports.
+        It defaults to a no-op, so callers that don't collect diagnostics
+        (e.g. `count_matches`) can omit it.
         """
-        return self.is_valid_state(to_state)
+        return True
 
     def _should_include(self, state: State) -> bool:
         """Check if an entity should participate in all/count checks.
@@ -492,7 +494,7 @@ class EntityTriggerBase(Trigger):
             if state is None or not self._should_include(state):
                 continue
             included += 1
-            if self.is_valid_state(state):
+            if self.is_valid_state(state, _report_not_triggered_noop):
                 matches += 1
         return matches, included
 
@@ -520,7 +522,7 @@ class EntityTriggerBase(Trigger):
             if (
                 to_state is None
                 or to_state.state in self._excluded_states
-                or not self.is_valid_state(to_state)
+                or not self.is_valid_state(to_state, _report_not_triggered_noop)
             ):
                 pending_timers.pop(entity_id)()
             return
@@ -616,7 +618,7 @@ class EntityTriggerBase(Trigger):
                     NotTriggeredInfo(reason=reason, data=data), event.context
                 )
 
-            if not self._is_valid_to_state(to_state, report_not_triggered):
+            if not self.is_valid_state(to_state, report_not_triggered):
                 return
 
             # The trigger should never fire if the origin state is excluded
@@ -727,7 +729,11 @@ class EntityTargetStateTriggerBase(EntityTriggerBase):
         )
 
     @override
-    def is_valid_state(self, state: State) -> bool:
+    def is_valid_state(
+        self,
+        state: State,
+        report_not_triggered: NotTriggeredReasonReporter,
+    ) -> bool:
         """Check if the new state matches the expected state."""
         return self._get_tracked_value(state) in self._to_states
 
@@ -748,7 +754,11 @@ class EntityTransitionTriggerBase(EntityTriggerBase):
         )
 
     @override
-    def is_valid_state(self, state: State) -> bool:
+    def is_valid_state(
+        self,
+        state: State,
+        report_not_triggered: NotTriggeredReasonReporter,
+    ) -> bool:
         """Check if the new state matches the expected states."""
         return self._get_tracked_value(state) in self._to_states
 
@@ -767,7 +777,11 @@ class EntityOriginStateTriggerBase(EntityTriggerBase):
         )
 
     @override
-    def is_valid_state(self, state: State) -> bool:
+    def is_valid_state(
+        self,
+        state: State,
+        report_not_triggered: NotTriggeredReasonReporter,
+    ) -> bool:
         """Check that the new state is different from the origin state."""
         return bool(self._get_tracked_value(state) != self._from_state)
 
@@ -826,7 +840,7 @@ class EntityNumericalStateTriggerBase(EntityTriggerBase):
     def _get_threshold_value(
         self,
         threshold: ThresholdConfig | None,
-        report_not_triggered: _NotTriggeredReasonReporter | None = None,
+        report_not_triggered: NotTriggeredReasonReporter,
     ) -> float | None:
         """Get threshold value from float or entity state."""
         if threshold is None:
@@ -836,32 +850,29 @@ class EntityNumericalStateTriggerBase(EntityTriggerBase):
 
         if not (state := self._hass.states.get(threshold.entity)):  # type: ignore[arg-type]
             # Entity not found
-            if report_not_triggered is not None:
-                report_not_triggered(
-                    "threshold_entity_not_found",
-                    entity_id=threshold.entity,
-                )
+            report_not_triggered(
+                "threshold_entity_not_found",
+                entity_id=threshold.entity,
+            )
             return None
         unit = state.attributes.get(ATTR_UNIT_OF_MEASUREMENT)
         if not self._is_valid_unit(unit):
             # Entity unit does not match the expected unit
-            if report_not_triggered is not None:
-                report_not_triggered(
-                    "threshold_unit_not_supported",
-                    entity_id=threshold.entity,
-                    unit=unit,
-                )
+            report_not_triggered(
+                "threshold_unit_not_supported",
+                entity_id=threshold.entity,
+                unit=unit,
+            )
             return None
         try:
             return float(state.state)
         except TypeError, ValueError:
             # Entity state is not a valid number
-            if report_not_triggered is not None:
-                report_not_triggered(
-                    "threshold_value_not_numeric",
-                    entity_id=threshold.entity,
-                    value=state.state,
-                )
+            report_not_triggered(
+                "threshold_value_not_numeric",
+                entity_id=threshold.entity,
+                value=state.state,
+            )
             return None
 
     @override
@@ -882,15 +893,8 @@ class EntityNumericalStateTriggerBase(EntityTriggerBase):
             # Entity state is not a valid number
             return None
 
-    @override
-    def _is_valid_to_state(
-        self, to_state: State, report_not_triggered: _NotTriggeredReasonReporter
-    ) -> bool:
-        """Check if to_state can fire, reporting non-numeric / unit reasons."""
-        return self.is_valid_state(to_state, report_not_triggered)
-
     def _report_tracked_value_problem(
-        self, state: State, report_not_triggered: _NotTriggeredReasonReporter
+        self, state: State, report_not_triggered: NotTriggeredReasonReporter
     ) -> None:
         """Report why `_get_tracked_value` rejected this state.
 
@@ -923,13 +927,12 @@ class EntityNumericalStateTriggerBase(EntityTriggerBase):
     def is_valid_state(
         self,
         state: State,
-        report_not_triggered: _NotTriggeredReasonReporter | None = None,
+        report_not_triggered: NotTriggeredReasonReporter,
     ) -> bool:
         """Check if the new state or state attribute matches the expected one."""
         # Handle missing or None value case first to avoid expensive exceptions
         if (current_value := self._get_tracked_value(state)) is None:
-            if report_not_triggered is not None:
-                self._report_tracked_value_problem(state, report_not_triggered)
+            self._report_tracked_value_problem(state, report_not_triggered)
             return False
 
         if self._threshold_type == NumericThresholdType.ANY:
@@ -984,7 +987,7 @@ class EntityNumericalStateTriggerWithUnitBase(EntityNumericalStateTriggerBase):
 
     @override
     def _report_tracked_value_problem(
-        self, state: State, report_not_triggered: _NotTriggeredReasonReporter
+        self, state: State, report_not_triggered: NotTriggeredReasonReporter
     ) -> None:
         """Report why `_get_tracked_value` rejected this state.
 
@@ -1016,7 +1019,7 @@ class EntityNumericalStateTriggerWithUnitBase(EntityNumericalStateTriggerBase):
     def _get_threshold_value(
         self,
         threshold: ThresholdConfig | None,
-        report_not_triggered: _NotTriggeredReasonReporter | None = None,
+        report_not_triggered: NotTriggeredReasonReporter,
     ) -> float | None:
         """Get threshold value from float or entity state."""
         if threshold is None:
@@ -1030,22 +1033,20 @@ class EntityNumericalStateTriggerWithUnitBase(EntityNumericalStateTriggerBase):
 
         if not (state := self._hass.states.get(threshold.entity)):  # type: ignore[arg-type]
             # Entity not found
-            if report_not_triggered is not None:
-                report_not_triggered(
-                    "threshold_entity_not_found",
-                    entity_id=threshold.entity,
-                )
+            report_not_triggered(
+                "threshold_entity_not_found",
+                entity_id=threshold.entity,
+            )
             return None
         try:
             value = float(state.state)
         except TypeError, ValueError:
             # Entity state is not a valid number
-            if report_not_triggered is not None:
-                report_not_triggered(
-                    "threshold_value_not_numeric",
-                    entity_id=threshold.entity,
-                    value=state.state,
-                )
+            report_not_triggered(
+                "threshold_value_not_numeric",
+                entity_id=threshold.entity,
+                value=state.state,
+            )
             return None
 
         unit = state.attributes.get(ATTR_UNIT_OF_MEASUREMENT)
@@ -1053,12 +1054,11 @@ class EntityNumericalStateTriggerWithUnitBase(EntityNumericalStateTriggerBase):
             return self._unit_converter.convert(value, unit, self._base_unit)
         except HomeAssistantError:
             # Unit conversion failed (i.e. incompatible units), treat as invalid number
-            if report_not_triggered is not None:
-                report_not_triggered(
-                    "threshold_unit_not_supported",
-                    entity_id=threshold.entity,
-                    unit=unit,
-                )
+            report_not_triggered(
+                "threshold_unit_not_supported",
+                entity_id=threshold.entity,
+                unit=unit,
+            )
             return None
 
     @override
@@ -1155,7 +1155,7 @@ class EntityNumericalStateCrossedThresholdTriggerBase(EntityNumericalStateTrigge
     @override
     def is_valid_transition(self, from_state: State, to_state: State) -> bool:
         """Check that the tracked value crossed into the threshold range."""
-        return not self.is_valid_state(from_state)
+        return not self.is_valid_state(from_state, _report_not_triggered_noop)
 
 
 def _make_numerical_state_crossed_threshold_with_unit_schema(
@@ -1435,7 +1435,7 @@ class TriggerNotTriggeredReporter(Protocol):
         """Report that the trigger did not fire."""
 
 
-class _NotTriggeredReasonReporter(Protocol):
+class NotTriggeredReasonReporter(Protocol):
     """Reports why an evaluated change did not fire an entity trigger."""
 
     def __call__(self, reason: str, /, **data: Any) -> None:
