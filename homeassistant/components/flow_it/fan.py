@@ -4,6 +4,7 @@ from typing import Any, override
 
 from flow_it_api.client import FlowItVMCMachine
 from flow_it_api.const import Speed
+from flow_it_api.exceptions import FlowItAuthError, FlowItCommandError, FlowItError
 
 from homeassistant.components.fan import (
     FanEntity,
@@ -11,12 +12,14 @@ from homeassistant.components.fan import (
     FanEntityFeature,
 )
 from homeassistant.core import HomeAssistant
+from homeassistant.exceptions import ConfigEntryAuthFailed, HomeAssistantError
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from homeassistant.util.percentage import (
     ordered_list_item_to_percentage,
     percentage_to_ordered_list_item,
 )
 
+from .const import DOMAIN
 from .coordinator import FlowItConfigEntry, FlowItCoordinator
 from .entity import FlowItVmcEntity
 
@@ -98,6 +101,33 @@ class FlowItVmcFan(FlowItVmcEntity, FanEntity):
         """Return the list of available preset modes."""
         return PRESET_MODES
 
+    async def _async_send_command(
+        self, speed: Speed, flow_in: bool, flow_out: bool
+    ) -> None:
+        """Send a command to the VMC and handle exceptions."""
+        try:
+            await self.vmc.send_command(speed, flow_in=flow_in, flow_out=flow_out)
+        except FlowItAuthError as err:
+            raise ConfigEntryAuthFailed(
+                translation_domain=DOMAIN,
+                translation_key="auth_failed",
+                translation_placeholders={"error": str(err)},
+            ) from err
+        except FlowItCommandError as err:
+            raise HomeAssistantError(
+                translation_domain=DOMAIN,
+                translation_key="command_failed",
+                translation_placeholders={"error": str(err)},
+            ) from err
+        except FlowItError as err:
+            raise HomeAssistantError(
+                translation_domain=DOMAIN,
+                translation_key="command_failed",
+                translation_placeholders={"error": str(err)},
+            ) from err
+
+        await self.coordinator.async_refresh()
+
     @override
     async def async_set_percentage(self, percentage: int) -> None:
         """Set the speed percentage of the fan."""
@@ -107,8 +137,9 @@ class FlowItVmcFan(FlowItVmcEntity, FanEntity):
 
         speed = percentage_to_ordered_list_item(ORDERED_NAMED_FAN_SPEEDS, percentage)
         mode = self.coordinator.data.state.data.mode
-        await self.vmc.send_command(speed, flow_in=mode.flowIn, flow_out=mode.flowOut)
-        await self.coordinator.async_refresh()
+        await self._async_send_command(
+            speed, flow_in=mode.flowIn, flow_out=mode.flowOut
+        )
 
     @override
     async def async_set_preset_mode(self, preset_mode: str) -> None:
@@ -117,10 +148,9 @@ class FlowItVmcFan(FlowItVmcEntity, FanEntity):
             raise ValueError(f"Invalid preset mode: {preset_mode}")
 
         mode = self.coordinator.data.state.data.mode
-        await self.vmc.send_command(
+        await self._async_send_command(
             Speed(preset_mode), flow_in=mode.flowIn, flow_out=mode.flowOut
         )
-        await self.coordinator.async_refresh()
 
     @override
     async def async_turn_on(
@@ -136,16 +166,14 @@ class FlowItVmcFan(FlowItVmcEntity, FanEntity):
         elif preset_mode is not None:
             await self.async_set_preset_mode(preset_mode)
         else:
-            await self.vmc.send_command(
+            await self._async_send_command(
                 Speed.LEVEL_1, flow_in=mode.flowIn, flow_out=mode.flowOut
             )
-            await self.coordinator.async_refresh()
 
     @override
     async def async_turn_off(self, **kwargs: Any) -> None:
         """Turn off the fan."""
         mode = self.coordinator.data.state.data.mode
-        await self.vmc.send_command(
+        await self._async_send_command(
             Speed.OFF, flow_in=mode.flowIn, flow_out=mode.flowOut
         )
-        await self.coordinator.async_refresh()

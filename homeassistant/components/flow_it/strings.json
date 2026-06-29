@@ -48,5 +48,13 @@
         "title": "Discovered Flow-it"
       }
     }
+  },
+  "exceptions": {
+    "auth_failed": {
+      "message": "Authentication failed when communicating with Flow-it VMC: {error}"
+    },
+    "command_failed": {
+      "message": "Failed to send command to Flow-it VMC: {error}"
+    }
   }
 }
