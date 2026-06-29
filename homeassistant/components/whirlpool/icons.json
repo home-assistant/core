@@ -1,5 +1,16 @@
 {
   "entity": {
+    "light": {
+      "oven_light": {
+        "default": "mdi:lightbulb"
+      },
+      "oven_light_lower": {
+        "default": "mdi:lightbulb"
+      },
+      "oven_light_upper": {
+        "default": "mdi:lightbulb"
+      }
+    },
     "sensor": {
       "dryer_state": {
         "default": "mdi:tumble-dryer"
