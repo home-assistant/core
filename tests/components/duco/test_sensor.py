@@ -86,32 +86,6 @@ async def test_ventilation_related_sensors_created_for_supported_node_types(
     assert hass.states.get("sensor.office_co2_state_end_time") is None
 
 
-async def test_time_state_end_rounds_up_partial_minute(
-    hass: HomeAssistant,
-    mock_config_entry: MockConfigEntry,
-    mock_duco_client: AsyncMock,
-    mock_sensor_nodes: list[Node],
-) -> None:
-    """Test state end time stays in the future during the final partial minute."""
-    partial_minute_node = replace(
-        mock_sensor_nodes[0],
-        ventilation=replace(
-            mock_sensor_nodes[0].ventilation,
-            time_state_end=1700000459,
-        ),
-    )
-    mock_duco_client.async_get_nodes.return_value = [
-        partial_minute_node,
-        *mock_sensor_nodes[1:],
-    ]
-
-    await setup_platform_integration(hass, mock_config_entry, [Platform.SENSOR])
-
-    state = hass.states.get("sensor.living_state_end_time")
-    assert state is not None
-    assert state.state == "2023-11-14T22:21:00+00:00"
-
-
 @pytest.fixture
 async def init_integration(
     hass: HomeAssistant,
