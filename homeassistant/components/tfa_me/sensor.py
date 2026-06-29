@@ -36,12 +36,12 @@ class TFAmeSensorEntityDescription(SensorEntityDescription):
 
 
 def _calc_rain_last_hour(entity: TFAmeSensorEntity, data: dict[str, Any]) -> float:
-    """Get rainfall of the last hour and optionally handle a reset."""
+    """Get rainfall of the last hour."""
     return round(entity.rain_history.get_rain_amount(), 1)
 
 
 def _calc_rain_last_24h(entity: TFAmeSensorEntity, data: dict[str, Any]) -> float:
-    """Get rainfall of the last 24 hours and optionally handle a reset."""
+    """Get rainfall of the last 24 hours."""
     return round(entity.rain_history_24.get_rain_amount(), 1)
 
 

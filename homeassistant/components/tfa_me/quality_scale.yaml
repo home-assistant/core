@@ -57,11 +57,11 @@ rules:
   discovery-update-info:
     status: exempt
     comment: |
-      This integration does not use discovery, therefore update-info is not applicable.
+      This integration does not support automatic discovery, so there is no discovery information to update.
   discovery:
     status: exempt
     comment: |
-      This integration does not use discovery, therefore update-info is not applicable.
+      This integration requires manual configuration and does not support automatic discovery.
   docs-data-update: done
   docs-examples: todo
   docs-known-limitations: todo
