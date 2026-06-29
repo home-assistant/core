@@ -44,8 +44,8 @@
     "communication_error": {
       "message": "Error communicating with Google Health API: {error}"
     },
-    "missing_required_scopes": {
-      "message": "Missing required Google Health permissions (profile and activity read)."
+    "missing_profile_scope": {
+      "message": "Missing required Google Health profile read permission."
     }
   }
 }

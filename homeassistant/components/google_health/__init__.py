@@ -37,13 +37,10 @@ async def async_setup_entry(
     session = OAuth2Session(hass, entry, implementation)
 
     scopes = session.token.get("scope", "").split()
-    if (
-        HealthApiScope.ACTIVITY_READ not in scopes
-        or HealthApiScope.PROFILE_READ not in scopes
-    ):
+    if HealthApiScope.PROFILE_READ not in scopes:
         raise ConfigEntryAuthFailed(
             translation_domain=DOMAIN,
-            translation_key="missing_required_scopes",
+            translation_key="missing_profile_scope",
         )
 
     auth = api.AsyncConfigEntryAuth(

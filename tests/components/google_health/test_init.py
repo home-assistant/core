@@ -84,7 +84,33 @@ async def test_setup_missing_scopes(
     config_entry: MockConfigEntry,
     integration_setup: Callable[[], Awaitable[bool]],
 ) -> None:
-    """Test setup fails and triggers reauth if token has missing scopes."""
+    """Test setup fails and triggers reauth if token has missing profile scope."""
+    # Modify token to exclude profile scope
+    hass.config_entries.async_update_entry(
+        config_entry,
+        data={
+            **config_entry.data,
+            "token": {
+                **config_entry.data["token"],
+                "scope": "https://www.googleapis.com/auth/googlehealth.activity_and_fitness.readonly",
+            },
+        },
+    )
+
+    assert not await integration_setup()
+    assert config_entry.state is config_entries.ConfigEntryState.SETUP_ERROR
+
+    flows = hass.config_entries.flow.async_progress()
+    assert len(flows) == 1
+    assert flows[0]["step_id"] == "reauth_confirm"
+
+
+async def test_setup_missing_activity_scope(
+    hass: HomeAssistant,
+    config_entry: MockConfigEntry,
+    integration_setup: Callable[[], Awaitable[bool]],
+) -> None:
+    """Test setup succeeds but steps sensor is not added if activity scope is missing."""
     # Modify token to exclude activity scope
     hass.config_entries.async_update_entry(
         config_entry,
@@ -97,9 +123,10 @@ async def test_setup_missing_scopes(
         },
     )
 
-    assert not await integration_setup()
-    assert config_entry.state is config_entries.ConfigEntryState.SETUP_ERROR
+    # Setup should succeed
+    assert await integration_setup()
+    assert config_entry.state is config_entries.ConfigEntryState.LOADED
 
-    flows = hass.config_entries.flow.async_progress()
-    assert len(flows) == 1
-    assert flows[0]["step_id"] == "reauth_confirm"
+    # Steps sensor entity should not exist
+    state = hass.states.get("sensor.google_health_steps")
+    assert state is None

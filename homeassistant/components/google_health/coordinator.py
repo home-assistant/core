@@ -5,6 +5,7 @@ import logging
 from typing import override
 
 from google_health_api import GoogleHealthApi
+from google_health_api.const import HealthApiScope
 from google_health_api.exceptions import (
     GoogleHealthApiError,
     HealthApiForbiddenException,
@@ -45,6 +46,12 @@ class GoogleHealthCoordinator(DataUpdateCoordinator[int]):
     @override
     async def _async_update_data(self) -> int:
         """Fetch steps count rollup for today."""
+        if self.config_entry is None:
+            return 0
+        scopes = self.config_entry.data.get("token", {}).get("scope", "").split()
+        if HealthApiScope.ACTIVITY_READ not in scopes:
+            return 0
+
         try:
             rollup = await self.api.steps.today(self.hass.config.time_zone)
         except (HealthAuthException, HealthApiForbiddenException) as err:

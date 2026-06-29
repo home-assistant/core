@@ -2,6 +2,8 @@
 
 from typing import override
 
+from google_health_api.const import HealthApiScope
+
 from homeassistant.components.sensor import (
     SensorEntity,
     SensorEntityDescription,
@@ -32,9 +34,15 @@ async def async_setup_entry(
     """Set up the Google Health sensor platform."""
     coordinator = entry.runtime_data
 
-    async_add_entities(
-        [GoogleHealthStepsSensor(coordinator, entry.entry_id, STEPS_SENSOR_DESCRIPTION)]
-    )
+    scopes = entry.data.get("token", {}).get("scope", "").split()
+    if HealthApiScope.ACTIVITY_READ in scopes:
+        async_add_entities(
+            [
+                GoogleHealthStepsSensor(
+                    coordinator, entry.entry_id, STEPS_SENSOR_DESCRIPTION
+                )
+            ]
+        )
 
 
 class GoogleHealthStepsSensor(CoordinatorEntity[GoogleHealthCoordinator], SensorEntity):
