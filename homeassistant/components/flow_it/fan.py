@@ -5,7 +5,11 @@ from typing import Any, override
 from flow_it_api.client import FlowItVMCMachine
 from flow_it_api.const import Speed
 
-from homeassistant.components.fan import FanEntity, FanEntityFeature
+from homeassistant.components.fan import (
+    FanEntity,
+    FanEntityDescription,
+    FanEntityFeature,
+)
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from homeassistant.util.percentage import (
@@ -49,7 +53,14 @@ class FlowItVmcFan(FlowItVmcEntity, FanEntity):
 
     def __init__(self, coordinator: FlowItCoordinator, vmc: FlowItVMCMachine) -> None:
         """Initialize the fan."""
-        super().__init__(coordinator, vmc, f"{coordinator.data.state.name}")
+        super().__init__(
+            coordinator,
+            vmc,
+            FanEntityDescription(
+                key="fan",
+                name=None,
+            ),
+        )
 
     @override
     @property
