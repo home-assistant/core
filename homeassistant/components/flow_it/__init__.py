@@ -3,12 +3,10 @@
 import logging
 
 from flow_it_api.client import FlowItVMCMachine
-from flow_it_api.exceptions import FlowItConnectionError, FlowItResponseError
 from flow_it_api.models import MachineData
 
 from homeassistant.const import CONF_HOST, CONF_PASSWORD, CONF_USERNAME, Platform
 from homeassistant.core import HomeAssistant
-from homeassistant.exceptions import ConfigEntryNotReady
 from homeassistant.helpers.httpx_client import get_async_client
 
 from .coordinator import FlowItConfigEntry, FlowItCoordinator, FlowItData
@@ -30,12 +28,6 @@ async def async_setup_entry(hass: HomeAssistant, entry: FlowItConfigEntry) -> bo
         entry.data[CONF_USERNAME],
         session=get_async_client(hass),
     )
-
-    try:
-        # get_info does not require auth, but we want to make sure we can connect
-        await vmc.get_info()
-    except (FlowItConnectionError, FlowItResponseError) as err:
-        raise ConfigEntryNotReady(f"Error connecting to VMC: {err}") from err
 
     coordinator = FlowItCoordinator(hass, entry, vmc)
 
