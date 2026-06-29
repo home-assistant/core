@@ -134,8 +134,8 @@ CLAUDE.md @home-assistant/core
 /tests/components/androidtv_remote/ @tronikos @Drafteed
 /homeassistant/components/anglian_water/ @pantherale0
 /tests/components/anglian_water/ @pantherale0
-/homeassistant/components/anova/ @Lash-L
-/tests/components/anova/ @Lash-L
+/homeassistant/components/anova/ @Lash-L @rhys-saldanha
+/tests/components/anova/ @Lash-L @rhys-saldanha
 /homeassistant/components/anthemav/ @hyralex
 /tests/components/anthemav/ @hyralex
 /homeassistant/components/anthropic/ @Shulyaka
