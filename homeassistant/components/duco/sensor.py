@@ -26,7 +26,7 @@ from homeassistant.helpers import device_registry as dr
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from homeassistant.util import dt as dt_util
 
-from .const import BOX_NODE_ID, DOMAIN
+from .const import BOX_NODE_ID, DOMAIN, VENTILATION_CAPABLE_NODE_TYPES
 from .coordinator import DucoConfigEntry, DucoCoordinator
 from .entity import DucoEntity
 
@@ -66,7 +66,7 @@ SENSOR_DESCRIPTIONS: tuple[DucoSensorEntityDescription, ...] = (
             if node.ventilation and node.ventilation.state != VentilationState.UNKNOWN
             else None
         ),
-        node_types=(NodeType.BOX,),
+        node_types=VENTILATION_CAPABLE_NODE_TYPES,
     ),
     DucoSensorEntityDescription(
         key="target_flow_level",
@@ -77,7 +77,7 @@ SENSOR_DESCRIPTIONS: tuple[DucoSensorEntityDescription, ...] = (
         value_fn=lambda node: (
             node.ventilation.flow_lvl_tgt if node.ventilation else None
         ),
-        node_types=(NodeType.BOX,),
+        node_types=VENTILATION_CAPABLE_NODE_TYPES,
     ),
     DucoSensorEntityDescription(
         key="time_state_end",
@@ -90,7 +90,7 @@ SENSOR_DESCRIPTIONS: tuple[DucoSensorEntityDescription, ...] = (
             if node.ventilation and node.ventilation.time_state_end != 0
             else None
         ),
-        node_types=(NodeType.BOX,),
+        node_types=VENTILATION_CAPABLE_NODE_TYPES,
     ),
     DucoSensorEntityDescription(
         key="co2",
