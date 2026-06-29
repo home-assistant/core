@@ -4,13 +4,21 @@ import asyncio
 from collections.abc import AsyncGenerator
 from datetime import timedelta
 from http import HTTPStatus
+import logging
 from unittest.mock import patch
 
 from aiohttp import ClientError
+from freezegun.api import FrozenDateTimeFactory
 import pytest
 from syrupy.assertion import SnapshotAssertion
 
-from homeassistant.components.mobile_app.const import DATA_LIVE_ACTIVITY_TOKENS, DOMAIN
+from homeassistant.components.mobile_app.const import (
+    DATA_LIVE_ACTIVITY_PENDING_STARTS,
+    DATA_LIVE_ACTIVITY_TOKENS,
+    DOMAIN,
+    LIVE_ACTIVITY_START_COOLDOWN_SECONDS,
+)
+from homeassistant.components.mobile_app.live_activity.store import clear_start_pending
 from homeassistant.components.notify import (
     ATTR_MESSAGE,
     ATTR_TITLE,
@@ -1369,3 +1377,230 @@ async def test_notify_non_apple_device_skips_live_activity(
             "webhook_id": "android-webhook-1",
         },
     }
+
+
+async def _setup_iphone_with_push_to_start(
+    hass: HomeAssistant,
+    aioclient_mock: AiohttpClientMocker,
+    admin_user: MockUser,
+) -> str:
+    """Register an Apple device with a push-to-start token and a mocked relay."""
+    push_url = "https://mobile-push.home-assistant.dev/push"
+    now = dt_util.naive_now() + timedelta(hours=24)
+    iso_time = now.strftime("%Y-%m-%dT%H:%M:%SZ")
+
+    aioclient_mock.post(
+        push_url,
+        json={
+            "rateLimits": {
+                "successful": 1,
+                "errors": 0,
+                "maximum": 150,
+                "resetsAt": iso_time,
+            }
+        },
+    )
+
+    webhook_id = "ios-webhook-1"
+    entry = MockConfigEntry(
+        data={
+            "app_data": {
+                "push_token": "FCM_TOKEN",
+                "push_url": push_url,
+                "start_live_activity_token": "PUSH_TO_START_HEX_TOKEN",
+            },
+            "app_id": "io.robbie.HomeAssistant",
+            "app_name": "Home Assistant",
+            "app_version": "2024.1",
+            "device_id": "ios-device-1",
+            "device_name": "iPhone",
+            "manufacturer": "Apple",
+            "model": "iPhone 15",
+            "os_name": "iOS",
+            "os_version": "17.2",
+            "supports_encryption": False,
+            "user_id": admin_user.id,
+            "webhook_id": webhook_id,
+        },
+        domain=DOMAIN,
+        source="registration",
+        title="iPhone entry",
+        version=1,
+    )
+    entry.add_to_hass(hass)
+    await async_setup_component(hass, DOMAIN, {DOMAIN: {}})
+    await hass.async_block_till_done()
+    return webhook_id
+
+
+async def test_notify_live_activity_start_suppressed_within_cooldown(
+    hass: HomeAssistant,
+    aioclient_mock: AiohttpClientMocker,
+    hass_admin_user: MockUser,
+    caplog: pytest.LogCaptureFixture,
+) -> None:
+    """A second START for the same tag inside the cooldown window is suppressed."""
+    webhook_id = await _setup_iphone_with_push_to_start(
+        hass, aioclient_mock, hass_admin_user
+    )
+
+    await hass.services.async_call(
+        "notify",
+        "mobile_app_iphone",
+        {
+            "message": "Laundry started",
+            "target": [webhook_id],
+            "data": {"live_update": True, "tag": "laundry"},
+        },
+        blocking=True,
+    )
+    assert len(aioclient_mock.mock_calls) == 1
+    assert webhook_id in hass.data[DOMAIN][DATA_LIVE_ACTIVITY_PENDING_STARTS]
+    assert "laundry" in hass.data[DOMAIN][DATA_LIVE_ACTIVITY_PENDING_STARTS][webhook_id]
+
+    with caplog.at_level(logging.WARNING):
+        await hass.services.async_call(
+            "notify",
+            "mobile_app_iphone",
+            {
+                "message": "Laundry still going",
+                "target": [webhook_id],
+                "data": {"live_update": True, "tag": "laundry"},
+            },
+            blocking=True,
+        )
+
+    assert len(aioclient_mock.mock_calls) == 1
+    assert any(
+        "Live Activity start for tag 'laundry' was sent recently" in record.message
+        for record in caplog.records
+    )
+
+
+async def test_notify_live_activity_start_allowed_after_cooldown_expires(
+    hass: HomeAssistant,
+    aioclient_mock: AiohttpClientMocker,
+    hass_admin_user: MockUser,
+    freezer: FrozenDateTimeFactory,
+) -> None:
+    """Once the cooldown window passes, a fresh START for the same tag goes through."""
+    freezer.move_to("2026-01-01 00:00:00+00:00")
+    webhook_id = await _setup_iphone_with_push_to_start(
+        hass, aioclient_mock, hass_admin_user
+    )
+
+    await hass.services.async_call(
+        "notify",
+        "mobile_app_iphone",
+        {
+            "message": "First start",
+            "target": [webhook_id],
+            "data": {"live_update": True, "tag": "laundry"},
+        },
+        blocking=True,
+    )
+    assert len(aioclient_mock.mock_calls) == 1
+
+    freezer.tick(timedelta(seconds=LIVE_ACTIVITY_START_COOLDOWN_SECONDS + 1))
+
+    await hass.services.async_call(
+        "notify",
+        "mobile_app_iphone",
+        {
+            "message": "Fresh start",
+            "target": [webhook_id],
+            "data": {"live_update": True, "tag": "laundry"},
+        },
+        blocking=True,
+    )
+    assert len(aioclient_mock.mock_calls) == 2
+
+
+async def test_notify_live_activity_token_clears_pending_start(
+    hass: HomeAssistant,
+    aioclient_mock: AiohttpClientMocker,
+    hass_admin_user: MockUser,
+) -> None:
+    """Reporting the per-activity token clears the pending start so updates can flow."""
+    webhook_id = await _setup_iphone_with_push_to_start(
+        hass, aioclient_mock, hass_admin_user
+    )
+
+    await hass.services.async_call(
+        "notify",
+        "mobile_app_iphone",
+        {
+            "message": "Laundry started",
+            "target": [webhook_id],
+            "data": {"live_update": True, "tag": "laundry"},
+        },
+        blocking=True,
+    )
+    assert "laundry" in hass.data[DOMAIN][DATA_LIVE_ACTIVITY_PENDING_STARTS][webhook_id]
+
+    hass.data[DOMAIN][DATA_LIVE_ACTIVITY_TOKENS][webhook_id] = {
+        "laundry": {
+            "token": "PER_ACTIVITY_TOKEN",
+            "expires_at": dt_util.utcnow().timestamp() + 3600,
+        }
+    }
+    clear_start_pending(hass, webhook_id, "laundry")
+    assert hass.data[DOMAIN][DATA_LIVE_ACTIVITY_PENDING_STARTS] == {}
+
+    await hass.services.async_call(
+        "notify",
+        "mobile_app_iphone",
+        {
+            "message": "Laundry 50%",
+            "target": [webhook_id],
+            "data": {"live_update": True, "tag": "laundry"},
+        },
+        blocking=True,
+    )
+    assert len(aioclient_mock.mock_calls) == 2
+    second_call = aioclient_mock.mock_calls[1][2]
+    assert second_call["data"]["event"] == "update"
+    assert second_call["live_activity_token"] == "PER_ACTIVITY_TOKEN"
+
+
+async def test_notify_live_activity_clear_notification_releases_pending(
+    hass: HomeAssistant,
+    aioclient_mock: AiohttpClientMocker,
+    hass_admin_user: MockUser,
+) -> None:
+    """Sending clear_notification with a stored token releases any pending start."""
+    webhook_id = await _setup_iphone_with_push_to_start(
+        hass, aioclient_mock, hass_admin_user
+    )
+
+    await hass.services.async_call(
+        "notify",
+        "mobile_app_iphone",
+        {
+            "message": "Laundry started",
+            "target": [webhook_id],
+            "data": {"live_update": True, "tag": "laundry"},
+        },
+        blocking=True,
+    )
+    assert hass.data[DOMAIN][DATA_LIVE_ACTIVITY_PENDING_STARTS] != {}
+
+    hass.data[DOMAIN][DATA_LIVE_ACTIVITY_TOKENS][webhook_id] = {
+        "laundry": {
+            "token": "PER_ACTIVITY_TOKEN",
+            "expires_at": dt_util.utcnow().timestamp() + 3600,
+        }
+    }
+
+    await hass.services.async_call(
+        "notify",
+        "mobile_app_iphone",
+        {
+            "message": "clear_notification",
+            "target": [webhook_id],
+            "data": {"tag": "laundry"},
+        },
+        blocking=True,
+    )
+
+    assert hass.data[DOMAIN][DATA_LIVE_ACTIVITY_PENDING_STARTS] == {}

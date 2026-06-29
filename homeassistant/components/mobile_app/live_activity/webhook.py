@@ -11,7 +11,13 @@ from homeassistant.const import CONF_WEBHOOK_ID
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import config_validation as cv
 
-from ..const import ATTR_LIVE_ACTIVITY_EXPIRES_AT, ATTR_PUSH_TOKEN, ATTR_TAG
+from ..const import (
+    ATTR_LIVE_ACTIVITY_EXPIRES_AT,
+    ATTR_PUSH_TOKEN,
+    ATTR_TAG,
+    ATTR_WEBHOOK_ID,
+    EVENT_LIVE_ACTIVITY_STARTED,
+)
 from ..helpers import empty_okay_response
 from ..webhook import WEBHOOK_COMMANDS, validate_schema
 from .store import remove_live_activity_token, store_live_activity_token
@@ -28,13 +34,24 @@ from .store import remove_live_activity_token, store_live_activity_token
 async def webhook_update_live_activity_token(
     hass: HomeAssistant, config_entry: ConfigEntry, data: dict[str, Any]
 ) -> Response:
-    """Store a Live Activity APNs token sent by the iOS app."""
+    """Store a Live Activity APNs token sent by the iOS app.
+
+    Fires ``mobile_app_live_activity_started`` after the token is stored so
+    automations can react to the device confirming receipt of the START push,
+    for example by re-emitting the current state as an update.
+    """
+    webhook_id = config_entry.data[CONF_WEBHOOK_ID]
+    tag = data[ATTR_TAG]
     store_live_activity_token(
         hass,
-        config_entry.data[CONF_WEBHOOK_ID],
-        data[ATTR_TAG],
+        webhook_id,
+        tag,
         data[ATTR_PUSH_TOKEN],
         data[ATTR_LIVE_ACTIVITY_EXPIRES_AT],
+    )
+    hass.bus.async_fire(
+        EVENT_LIVE_ACTIVITY_STARTED,
+        {ATTR_WEBHOOK_ID: webhook_id, ATTR_TAG: tag},
     )
     return empty_okay_response()
 

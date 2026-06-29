@@ -25,6 +25,9 @@
     "error_sending_notification": {
       "message": "Error sending notification to {device_name}"
     },
+    "live_activity_start_already_pending": {
+      "message": "A Live Activity start for tag '{tag}' was sent recently; waiting for the device to confirm receipt before sending another"
+    },
     "rate_limit_exceeded_sending_notification": {
       "message": "Rate limit exceeded sending notification to {device_name}"
     },

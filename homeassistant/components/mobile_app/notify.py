@@ -245,14 +245,17 @@ class MobileAppNotificationService(BaseNotificationService):
     ) -> None:
         """Send a message to a target."""
         on_success_callback: CALLBACK_TYPE | None = None
-        if entry.data[ATTR_MANUFACTURER] == MANUFACTURER_APPLE:
-            data, on_success_callback = prepare_live_activity_remote_push(
-                self.hass, entry.data, data
-            )
         try:
+            if entry.data[ATTR_MANUFACTURER] == MANUFACTURER_APPLE:
+                data, on_success_callback = prepare_live_activity_remote_push(
+                    self.hass, entry.data, data
+                )
             await _send_message(async_get_clientsession(self.hass), entry, data)
         except HomeAssistantError as e:
-            if e.translation_key == "rate_limit_exceeded_sending_notification":
+            if e.translation_key in (
+                "rate_limit_exceeded_sending_notification",
+                "live_activity_start_already_pending",
+            ):
                 _LOGGER.warning(str(e))
             else:
                 _LOGGER.error(str(e))

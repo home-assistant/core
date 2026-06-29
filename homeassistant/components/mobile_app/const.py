@@ -22,6 +22,7 @@ DATA_DEVICES = "devices"
 
 DATA_LIVE_ACTIVITY_TOKENS = "live_activity_tokens"
 DATA_LIVE_ACTIVITY_CLEANUP_CANCEL = "live_activity_cleanup_cancel"
+DATA_LIVE_ACTIVITY_PENDING_STARTS = "live_activity_pending_starts"
 DATA_STORE = "store"
 DATA_NOTIFY = "notify"
 DATA_PUSH_CHANNEL = "push_channel"
@@ -57,6 +58,14 @@ ATTR_TOKEN = "token"
 MANUFACTURER_APPLE = "Apple"
 
 CLEAR_NOTIFICATION = "clear_notification"
+
+EVENT_LIVE_ACTIVITY_STARTED = f"{DOMAIN}_live_activity_started"
+
+# How long after dispatching a Live Activity START the same (webhook_id, tag) is
+# blocked from sending another START. Sized to cover typical offline windows;
+# the cooldown is released early when the device reports its per-activity token
+# or when the activity is explicitly ended.
+LIVE_ACTIVITY_START_COOLDOWN_SECONDS = 3600
 
 ATTR_EVENT_DATA = "event_data"
 ATTR_EVENT_TYPE = "event_type"

@@ -9,6 +9,7 @@ from typing import Any
 
 from homeassistant.components.notify import ATTR_DATA, ATTR_MESSAGE
 from homeassistant.core import CALLBACK_TYPE, HomeAssistant
+from homeassistant.exceptions import HomeAssistantError
 from homeassistant.util import dt as dt_util
 
 from ..const import (
@@ -28,7 +29,7 @@ from ..const import (
 
 # Imported so the webhook command registrations in the submodule run on import.
 from . import webhook  # noqa: F401
-from .store import remove_live_activity_token
+from .store import is_start_pending, mark_start_pending, remove_live_activity_token
 
 
 class LiveActivityEvent(StrEnum):
@@ -54,17 +55,35 @@ def prepare_live_activity_remote_push(
     """Return remote notification data and an optional on-success callback.
 
     Applies any Live Activity routing, the callback, when set, runs after a
-    successful send.
+    successful send. Raises ``HomeAssistantError`` when a START push for the
+    same tag was dispatched within the cooldown window, since the device has
+    not had time to report its per-activity token and a second START would
+    spawn a duplicate Live Activity once the queued pushes deliver.
     """
     if not (resolved := resolve_live_activity_push(hass, registration, data)):
         return data, None
+
+    webhook_id = registration[ATTR_WEBHOOK_ID]
 
     success_callback: CALLBACK_TYPE | None = None
     if resolved.event is LiveActivityEvent.END:
         success_callback = partial(
             remove_live_activity_token,
             hass,
-            registration[ATTR_WEBHOOK_ID],
+            webhook_id,
+            resolved.tag,
+        )
+    elif resolved.event is LiveActivityEvent.START:
+        if is_start_pending(hass, webhook_id, resolved.tag):
+            raise HomeAssistantError(
+                translation_domain=DOMAIN,
+                translation_key="live_activity_start_already_pending",
+                translation_placeholders={"tag": resolved.tag},
+            )
+        success_callback = partial(
+            mark_start_pending,
+            hass,
+            webhook_id,
             resolved.tag,
         )
 

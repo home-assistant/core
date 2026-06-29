@@ -7,11 +7,16 @@ from typing import Any
 from aiohttp.test_utils import TestClient
 from freezegun.api import FrozenDateTimeFactory
 
-from homeassistant.components.mobile_app.const import DATA_LIVE_ACTIVITY_TOKENS, DOMAIN
-from homeassistant.core import HomeAssistant
+from homeassistant.components.mobile_app.const import (
+    DATA_LIVE_ACTIVITY_PENDING_STARTS,
+    DATA_LIVE_ACTIVITY_TOKENS,
+    DOMAIN,
+    EVENT_LIVE_ACTIVITY_STARTED,
+)
+from homeassistant.core import Event, HomeAssistant
 from homeassistant.util import dt as dt_util
 
-from tests.common import async_fire_time_changed
+from tests.common import async_capture_events, async_fire_time_changed
 
 
 async def test_webhook_update_live_activity_token(
@@ -244,3 +249,60 @@ async def test_webhook_live_activity_dismissed_nonexistent_tag(
 
     assert resp.status == HTTPStatus.OK
     assert hass.data[DOMAIN][DATA_LIVE_ACTIVITY_TOKENS] == {}
+
+
+async def test_webhook_live_activity_token_fires_started_event(
+    hass: HomeAssistant,
+    create_registrations: tuple[dict[str, Any], dict[str, Any]],
+    webhook_client: TestClient,
+) -> None:
+    """Reporting a per-activity token fires the live_activity_started event.
+
+    Automations subscribe to this event to re-emit current state after the
+    device confirms it received the START push.
+    """
+    webhook_id = create_registrations[1]["webhook_id"]
+    events: list[Event] = async_capture_events(hass, EVENT_LIVE_ACTIVITY_STARTED)
+
+    resp = await webhook_client.post(
+        f"/api/webhook/{webhook_id}",
+        json={
+            "type": "live_activity_token",
+            "data": {
+                "tag": "washer_cycle",
+                "push_token": "a" * 64,
+                "expires_at": dt_util.utcnow().timestamp() + 3600,
+            },
+        },
+    )
+    assert resp.status == HTTPStatus.OK
+
+    await hass.async_block_till_done()
+    assert len(events) == 1
+    assert events[0].data == {"webhook_id": webhook_id, "tag": "washer_cycle"}
+
+
+async def test_webhook_live_activity_token_clears_pending_start(
+    hass: HomeAssistant,
+    create_registrations: tuple[dict[str, Any], dict[str, Any]],
+    webhook_client: TestClient,
+) -> None:
+    """The token webhook releases any cooldown for the same tag."""
+    webhook_id = create_registrations[1]["webhook_id"]
+    hass.data[DOMAIN][DATA_LIVE_ACTIVITY_PENDING_STARTS][webhook_id] = {
+        "washer_cycle": dt_util.utcnow()
+    }
+
+    resp = await webhook_client.post(
+        f"/api/webhook/{webhook_id}",
+        json={
+            "type": "live_activity_token",
+            "data": {
+                "tag": "washer_cycle",
+                "push_token": "a" * 64,
+                "expires_at": dt_util.utcnow().timestamp() + 3600,
+            },
+        },
+    )
+    assert resp.status == HTTPStatus.OK
+    assert hass.data[DOMAIN][DATA_LIVE_ACTIVITY_PENDING_STARTS] == {}
