@@ -12,12 +12,29 @@ from yarl import URL
 from homeassistant import config_entries
 from homeassistant.config_entries import ConfigFlowResult
 from homeassistant.const import CONF_HOST, CONF_PASSWORD, CONF_USERNAME
+from homeassistant.core import HomeAssistant
 from homeassistant.helpers.httpx_client import get_async_client
 from homeassistant.helpers.service_info.zeroconf import ZeroconfServiceInfo
 
 from .const import DEFAULT_USERNAME, DOMAIN
 
 _LOGGER = logging.getLogger(__name__)
+
+
+async def validate_input(hass: HomeAssistant, data: dict[str, Any]) -> dict[str, Any]:
+    """Validate the user input allows us to connect."""
+    vmc = FlowItVMCMachine(
+        data[CONF_HOST],
+        data[CONF_PASSWORD],
+        data[CONF_USERNAME],
+        session=get_async_client(hass),
+    )
+    info = await vmc.get_info()
+    await vmc.refresh_state()
+    return {
+        "title": info.hostname,
+        "unique_id": vmc.state.name if vmc.state else None,
+    }
 
 
 class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
@@ -42,18 +59,7 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
                 user_input[CONF_HOST] = host
 
             try:
-                session = get_async_client(self.hass)
-                async with FlowItVMCMachine(
-                    host,
-                    user_input[CONF_PASSWORD],
-                    user_input[CONF_USERNAME],
-                    session=session,
-                ) as vmc:
-                    info = await vmc.get_info()
-                    # Use a stable unique id from machine status (MAC Address)
-                    # This also validates the credentials
-                    await vmc.refresh_state()
-                    unique_id = vmc.state.name if vmc.state else None
+                info = await validate_input(self.hass, user_input)
             except FlowItAuthError:
                 errors["base"] = "invalid_auth"
             except FlowItConnectionError:
@@ -62,10 +68,10 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
                 _LOGGER.exception("Unexpected exception")
                 errors["base"] = "unknown"
             else:
-                if unique_id:
-                    await self.async_set_unique_id(unique_id)
+                if info.get("unique_id"):
+                    await self.async_set_unique_id(info["unique_id"])
                     self._abort_if_unique_id_configured(updates=user_input)
-                return self.async_create_entry(title=info.hostname, data=user_input)
+                return self.async_create_entry(title=info["title"], data=user_input)
 
         # Pre-fill data from discovery if available
         data_schema = vol.Schema(
@@ -96,14 +102,14 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
             if not URL(host).scheme:
                 host = str(URL.build(scheme="http", host=host))
 
+            data = {
+                CONF_HOST: host,
+                CONF_USERNAME: username,
+                CONF_PASSWORD: password,
+            }
+
             try:
-                session = get_async_client(self.hass)
-                async with FlowItVMCMachine(
-                    host, password, username, session=session
-                ) as vmc:
-                    info = await vmc.get_info()
-                    await vmc.refresh_state()
-                    unique_id = vmc.state.name if vmc.state else None
+                info = await validate_input(self.hass, data)
             except FlowItAuthError:
                 errors["base"] = "invalid_auth"
             except FlowItConnectionError:
@@ -112,23 +118,10 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
                 _LOGGER.exception("Unexpected exception")
                 errors["base"] = "unknown"
             else:
-                if unique_id:
-                    await self.async_set_unique_id(unique_id)
-                    self._abort_if_unique_id_configured(
-                        updates={
-                            CONF_HOST: host,
-                            CONF_USERNAME: username,
-                            CONF_PASSWORD: password,
-                        }
-                    )
-                return self.async_create_entry(
-                    title=info.hostname,
-                    data={
-                        CONF_HOST: host,
-                        CONF_USERNAME: username,
-                        CONF_PASSWORD: password,
-                    },
-                )
+                if info.get("unique_id"):
+                    await self.async_set_unique_id(info["unique_id"])
+                    self._abort_if_unique_id_configured(updates=data)
+                return self.async_create_entry(title=info["title"], data=data)
 
         data_schema = vol.Schema(
             {
@@ -163,16 +156,14 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         reauth_entry = self._get_reauth_entry()
 
         if user_input is not None:
+            data = {
+                CONF_HOST: reauth_entry.data[CONF_HOST],
+                CONF_USERNAME: user_input[CONF_USERNAME],
+                CONF_PASSWORD: user_input[CONF_PASSWORD],
+            }
+
             try:
-                session = get_async_client(self.hass)
-                async with FlowItVMCMachine(
-                    reauth_entry.data[CONF_HOST],
-                    user_input[CONF_PASSWORD],
-                    user_input[CONF_USERNAME],
-                    session=session,
-                ) as vmc:
-                    await vmc.get_info()
-                    await vmc.refresh_state()
+                await validate_input(self.hass, data)
             except FlowItAuthError:
                 errors["base"] = "invalid_auth"
             except FlowItConnectionError:
