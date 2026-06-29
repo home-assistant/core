@@ -205,7 +205,6 @@ class OsramIrLight(OsramIrEmitterEntity, LightEntity):
         """Update the local state after an off command."""
         self._attr_is_on = False
         self._attr_effect = EFFECT_OFF
-        self._attr_color_mode = ColorMode.HS
 
     @callback
     def _update_static_color_state(
@@ -216,7 +215,6 @@ class OsramIrLight(OsramIrEmitterEntity, LightEntity):
         """Update the local state after selecting a static color."""
         self._attr_is_on = True
         self._attr_effect = EFFECT_OFF
-        self._attr_color_mode = ColorMode.HS
         self._attr_hs_color = hs_color
         self._last_static_color_code = code
         self._last_static_hs_color = hs_color
