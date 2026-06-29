@@ -1,6 +1,6 @@
 """Tests for TP-Link Omada integration init."""
 
-from unittest.mock import MagicMock
+from unittest.mock import MagicMock, patch
 
 import pytest
 from tplink_omada_client.exceptions import (
@@ -11,8 +11,9 @@ from tplink_omada_client.exceptions import (
 
 from homeassistant.components.tplink_omada.const import DOMAIN
 from homeassistant.config_entries import ConfigEntryState
+from homeassistant.const import Platform
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers import device_registry as dr
+from homeassistant.helpers import device_registry as dr, entity_registry as er
 
 from tests.common import MockConfigEntry
 
@@ -89,6 +90,59 @@ async def test_missing_devices_removed_at_startup(
     await hass.async_block_till_done()
 
     assert device_registry.async_get(device_entry.id) is None
+
+
+async def test_controller_entities_only_created_once_for_multiple_sites(
+    hass: HomeAssistant,
+    entity_registry: er.EntityRegistry,
+    mock_omada_client: MagicMock,
+    mock_omada_site_client: MagicMock,
+) -> None:
+    """Test controller-level entities are only created once for multiple sites."""
+    mock_omada_site_client.get_devices.return_value = []
+
+    first_entry = MockConfigEntry(
+        title="Test Omada Controller",
+        domain=DOMAIN,
+        data=dict(MOCK_ENTRY_DATA),
+        unique_id="12345_SiteId",
+        version=2,
+    )
+    second_entry = MockConfigEntry(
+        title="Test Omada Controller",
+        domain=DOMAIN,
+        data={**MOCK_ENTRY_DATA, "site": "SecondSite"},
+        unique_id="12345_SecondSite",
+        version=2,
+    )
+    first_entry.add_to_hass(hass)
+    second_entry.add_to_hass(hass)
+
+    with patch(
+        "homeassistant.components.tplink_omada.PLATFORMS",
+        [Platform.BINARY_SENSOR, Platform.UPDATE],
+    ):
+        assert await hass.config_entries.async_setup(first_entry.entry_id)
+        await hass.async_block_till_done()
+
+    assert second_entry.state is ConfigEntryState.LOADED
+
+    controller_entities = [
+        entry
+        for entry in er.async_entries_for_config_entry(
+            entity_registry, first_entry.entry_id
+        )
+        if entry.unique_id
+        in {"12345_controller_connectivity", "12345_controller_firmware"}
+    ]
+
+    assert len(controller_entities) == 2
+    assert {
+        entry.unique_id
+        for entry in er.async_entries_for_config_entry(
+            entity_registry, second_entry.entry_id
+        )
+    }.isdisjoint({"12345_controller_connectivity", "12345_controller_firmware"})
 
 
 async def test_migrate_entry_v1_to_v2(

@@ -3,7 +3,7 @@
 from dataclasses import dataclass
 from typing import Any, override
 
-from tplink_omada_client import OmadaControllerInfo, OmadaControllerUpdateInfo
+from tplink_omada_client import OmadaControllerUpdateInfo
 from tplink_omada_client.devices import OmadaListDevice
 from tplink_omada_client.exceptions import OmadaClientException, RequestFailed
 
@@ -20,13 +20,13 @@ from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
 from . import OmadaConfigEntry
-from .const import DOMAIN
 from .controller import config_entry_owns_controller_entities
 from .coordinator import (
+    OmadaControllerInfoCoordinator,
     OmadaControllerUpdateCoordinator,
     OmadaFirmwareUpdateCoordinator,
 )
-from .entity import OmadaDeviceEntity
+from .entity import OmadaDeviceEntity, controller_device_info
 
 PARALLEL_UPDATES = 0
 
@@ -47,7 +47,7 @@ async def async_setup_entry(
             [
                 OmadaControllerUpdate(
                     controller.controller_update_coordinator,
-                    controller.controller_info_coordinator.data,
+                    controller.controller_info_coordinator,
                 )
             ]
         )
@@ -101,25 +101,21 @@ class OmadaControllerUpdate(
     def __init__(
         self,
         coordinator: OmadaControllerUpdateCoordinator,
-        controller_info: OmadaControllerInfo,
+        controller_info_coordinator: OmadaControllerInfoCoordinator,
     ) -> None:
         """Initialize the controller update entity."""
         super().__init__(coordinator)
-        self._controller_info = controller_info
-        self._attr_unique_id = f"{controller_info.omadac_id}_controller_firmware"
+        self._controller_info_coordinator = controller_info_coordinator
+        self._attr_unique_id = (
+            f"{controller_info_coordinator.data.omadac_id}_controller_firmware"
+        )
         self._update_attrs()
 
     @property
     @override
     def device_info(self) -> dr.DeviceInfo:
         """Return device info for the Omada controller."""
-        return dr.DeviceInfo(
-            identifiers={(DOMAIN, self._controller_info.omadac_id)},
-            manufacturer="TP-Link",
-            model="Omada Controller",
-            name="Omada Controller",
-            sw_version=self._controller_info.controller_version,
-        )
+        return controller_device_info(self._controller_info_coordinator.data)
 
     @override
     def release_notes(self) -> str | None:
@@ -142,8 +138,11 @@ class OmadaControllerUpdate(
             self._attr_installed_version = update_details.current_version
             self._attr_latest_version = update_details.latest_version
         else:
-            self._attr_installed_version = self._controller_info.controller_version
-            self._attr_latest_version = self._controller_info.controller_version
+            controller_version = (
+                self._controller_info_coordinator.data.controller_version
+            )
+            self._attr_installed_version = controller_version
+            self._attr_latest_version = controller_version
 
     @callback
     @override
