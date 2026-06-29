@@ -66,7 +66,7 @@ LIFX_SET_STATE_SCHEMA: VolDictType = {
 SERVICE_LIFX_SET_HEV_CYCLE_STATE = "set_hev_cycle_state"
 
 LIFX_SET_HEV_CYCLE_STATE_SCHEMA: VolDictType = {
-    ATTR_POWER: vol.Required(cv.boolean),
+    vol.Required(ATTR_POWER): cv.boolean,
     ATTR_DURATION: vol.All(vol.Coerce(float), vol.Clamp(min=0, max=86400)),
 }
 
