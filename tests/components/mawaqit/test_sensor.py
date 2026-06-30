@@ -1,5 +1,6 @@
 """Tests for the Mawaqit sensor platform."""
 
+from datetime import datetime
 from unittest.mock import MagicMock
 
 from freezegun import freeze_time
@@ -14,8 +15,9 @@ from homeassistant.components.mawaqit.sensor import (
     MawaqitPrayerTimeSensor,
     MawaqitPrayerTimeSensorEntityDescription,
     MyMosqueSensor,
+    NextPrayerSensor,
 )
-from homeassistant.components.sensor import SensorDeviceClass
+from homeassistant.components.sensor import SensorDeviceClass, SensorEntityDescription
 from homeassistant.core import HomeAssistant
 
 from .conftest import build_prayer_data
@@ -244,4 +246,13 @@ def test_prayer_time_sensor_native_value_raises() -> None:
         get_value=MagicMock(side_effect=KeyError("missing")),
     )
     sensor = MawaqitPrayerTimeSensor(coordinator, desc)
+    assert sensor.native_value is None
+
+
+def test_next_prayer_sensor_native_value_unhandled_key() -> None:
+    """Test NextPrayerSensor returns None for a description key it does not handle."""
+    coordinator = MagicMock(spec=PrayerTimeCoordinator)
+    sensor = NextPrayerSensor(coordinator, SensorEntityDescription(key="unhandled"))
+    sensor._next_prayer_index = 2
+    sensor._next_prayer_time = datetime(2025, 4, 10, 12, 30)
     assert sensor.native_value is None

@@ -294,7 +294,9 @@ class NextPrayerSensor(SensorEntity, CoordinatorEntity[PrayerTimeCoordinator]):
 
     _attr_has_entity_name = True
 
-    def __init__(self, coordinator, description: SensorEntityDescription) -> None:
+    def __init__(
+        self, coordinator: PrayerTimeCoordinator, description: SensorEntityDescription
+    ) -> None:
         """Initialize the sensor with a specific description."""
         super().__init__(coordinator)
         self.entity_description = description

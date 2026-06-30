@@ -66,7 +66,8 @@ async def test_validate_credentials_mawaqit_exception_propagates(
 
 
 async def test_validate_credentials_creates_client() -> None:
-    """Test that validate_credentials creates a client when none is provided."""
+    """Test that validate_credentials creates a client with the injected session."""
+    session = MagicMock()
     with patch(
         "homeassistant.components.mawaqit.mawaqit_wrapper.AsyncMawaqitClient",
     ) as mock_cls:
@@ -75,10 +76,12 @@ async def test_validate_credentials_creates_client() -> None:
         client.close = AsyncMock()
 
         result = await mawaqit_wrapper.validate_credentials(
-            username="user", password="pass"
+            username="user", password="pass", session=session
         )
         assert result is True
-        mock_cls.assert_called_once_with(username="user", password="pass")
+        mock_cls.assert_called_once_with(
+            username="user", password="pass", session=session
+        )
         client.close.assert_called_once()
 
 
@@ -110,7 +113,8 @@ async def test_get_mawaqit_api_token_errors_return_none(
 
 
 async def test_get_mawaqit_api_token_creates_client() -> None:
-    """Test that get_mawaqit_api_token creates a client when none is provided."""
+    """Test that get_mawaqit_api_token creates a client with the injected session."""
+    session = MagicMock()
     with patch(
         "homeassistant.components.mawaqit.mawaqit_wrapper.AsyncMawaqitClient",
     ) as mock_cls:
@@ -119,10 +123,12 @@ async def test_get_mawaqit_api_token_creates_client() -> None:
         client.close = AsyncMock()
 
         result = await mawaqit_wrapper.get_mawaqit_api_token(
-            username="user", password="pass"
+            username="user", password="pass", session=session
         )
         assert result == "new-token"
-        mock_cls.assert_called_once_with(username="user", password="pass")
+        mock_cls.assert_called_once_with(
+            username="user", password="pass", session=session
+        )
 
 
 # ---------------------------------------------------------------------------
@@ -151,7 +157,8 @@ async def test_all_mosques_neighborhood_creates_client(
     mock_mosques_search_api_raw: list[dict],
     mock_mosques_search_api_wrapper: list[MawaqitMosqueData],
 ) -> None:
-    """Test client creation when none is provided."""
+    """Test client creation forwards the injected session."""
+    session = MagicMock()
     with patch(
         "homeassistant.components.mawaqit.mawaqit_wrapper.AsyncMawaqitClient",
         autospec=True,
@@ -164,11 +171,11 @@ async def test_all_mosques_neighborhood_creates_client(
         client.close = AsyncMock()
 
         result = await mawaqit_wrapper.all_mosques_neighborhood(
-            latitude=48.0, longitude=2.0, token=MOCK_TOKEN
+            latitude=48.0, longitude=2.0, token=MOCK_TOKEN, session=session
         )
         assert len(result) == len(mock_mosques_search_api_raw)
         assert result == mock_mosques_search_api_wrapper
-        mock_cls.assert_called_once()
+        assert mock_cls.call_args.kwargs["session"] is session
 
 
 # ---------------------------------------------------------------------------
@@ -206,7 +213,8 @@ async def test_all_mosques_by_keyword_creates_client(
     mock_mosques_search_api_raw: list[dict],
     mock_mosques_search_api_wrapper: list[MawaqitMosqueData],
 ) -> None:
-    """Test client creation for keyword search."""
+    """Test client creation for keyword search forwards the injected session."""
+    session = MagicMock()
     with patch(
         "homeassistant.components.mawaqit.mawaqit_wrapper.AsyncMawaqitClient",
         autospec=True,
@@ -219,10 +227,12 @@ async def test_all_mosques_by_keyword_creates_client(
         client.close = AsyncMock()
 
         result = await mawaqit_wrapper.all_mosques_by_keyword(
-            search_keyword="test", token=MOCK_TOKEN
+            search_keyword="test", token=MOCK_TOKEN, session=session
         )
         assert result == mock_mosques_search_api_wrapper
-        mock_cls.assert_called_once()
+        mock_cls.assert_called_once_with(
+            username=None, password=None, token=MOCK_TOKEN, session=session
+        )
 
 
 # ---------------------------------------------------------------------------
@@ -239,7 +249,8 @@ async def test_fetch_prayer_times_success(mock_client: MagicMock) -> None:
 
 
 async def test_fetch_prayer_times_creates_client() -> None:
-    """Test that fetch_prayer_times creates a client when none is provided."""
+    """Test that fetch_prayer_times creates a client with the injected session."""
+    session = MagicMock()
     with patch(
         "homeassistant.components.mawaqit.mawaqit_wrapper.AsyncMawaqitClient",
     ) as mock_cls:
@@ -249,11 +260,11 @@ async def test_fetch_prayer_times_creates_client() -> None:
         client.close = AsyncMock()
 
         result = await mawaqit_wrapper.fetch_prayer_times(
-            mosque="uuid1", token=MOCK_TOKEN
+            mosque="uuid1", token=MOCK_TOKEN, session=session
         )
         assert result == {"cal": []}
         mock_cls.assert_called_once_with(
-            None, None, "uuid1", None, None, MOCK_TOKEN, session=None
+            None, None, "uuid1", None, None, MOCK_TOKEN, session=session
         )
 
 
@@ -273,7 +284,8 @@ async def test_fetch_mosque_by_id_success(mock_client: MagicMock) -> None:
 
 
 async def test_fetch_mosque_by_id_creates_client() -> None:
-    """Test that fetch_mosque_by_id creates a client when none is provided."""
+    """Test that fetch_mosque_by_id creates a client with the injected session."""
+    session = MagicMock()
     with patch(
         "homeassistant.components.mawaqit.mawaqit_wrapper.AsyncMawaqitClient",
     ) as mock_cls:
@@ -283,7 +295,7 @@ async def test_fetch_mosque_by_id_creates_client() -> None:
         client.close = AsyncMock()
 
         result = await mawaqit_wrapper.fetch_mosque_by_id(
-            mosque="uuid1", token=MOCK_TOKEN
+            mosque="uuid1", token=MOCK_TOKEN, session=session
         )
         assert result == {"name": "M"}
-        mock_cls.assert_called_once_with(token=MOCK_TOKEN)
+        mock_cls.assert_called_once_with(token=MOCK_TOKEN, session=session)

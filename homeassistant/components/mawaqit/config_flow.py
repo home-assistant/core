@@ -16,6 +16,7 @@ import voluptuous as vol
 from homeassistant import config_entries
 from homeassistant.const import CONF_API_KEY, CONF_PASSWORD, CONF_USERNAME, CONF_UUID
 from homeassistant.helpers import selector
+from homeassistant.helpers.aiohttp_client import async_get_clientsession
 
 from . import mawaqit_wrapper, utils
 from .const import (
@@ -87,6 +88,7 @@ class MawaqitPrayerFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
                 valid = await mawaqit_wrapper.validate_credentials(
                     username,
                     password,
+                    session=async_get_clientsession(self.hass),
                 )
             except (
                 ClientConnectorError,
@@ -103,6 +105,7 @@ class MawaqitPrayerFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
                         token = await mawaqit_wrapper.get_mawaqit_api_token(
                             username,
                             password,
+                            session=async_get_clientsession(self.hass),
                         )
                     except (
                         ClientConnectorError,
@@ -150,7 +153,9 @@ class MawaqitPrayerFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
             password = user_input[CONF_PASSWORD]
 
             try:
-                valid = await mawaqit_wrapper.validate_credentials(username, password)
+                valid = await mawaqit_wrapper.validate_credentials(
+                    username, password, session=async_get_clientsession(self.hass)
+                )
             except (
                 ClientConnectorError,
                 ConnectionError,
@@ -162,7 +167,9 @@ class MawaqitPrayerFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
                 if valid:
                     try:
                         mawaqit_token = await mawaqit_wrapper.get_mawaqit_api_token(
-                            username, password
+                            username,
+                            password,
+                            session=async_get_clientsession(self.hass),
                         )
                     except (
                         ClientConnectorError,
@@ -188,7 +195,7 @@ class MawaqitPrayerFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
         )
 
     async def async_step_mosques_coordinates(
-        self, user_input=None
+        self, user_input: dict[str, Any] | None = None
     ) -> config_entries.ConfigFlowResult:
         """Handle mosques step."""
 
@@ -216,7 +223,10 @@ class MawaqitPrayerFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
         if not self.mosques:
             try:
                 neighborhood_mosques = await mawaqit_wrapper.all_mosques_neighborhood(
-                    lat, longi, token=self.token
+                    lat,
+                    longi,
+                    token=self.token,
+                    session=async_get_clientsession(self.hass),
                 )
                 if neighborhood_mosques:
                     self.mosques = {
@@ -251,7 +261,7 @@ class MawaqitPrayerFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
         )
 
     async def async_step_search_method(
-        self, user_input=None
+        self, user_input: dict[str, Any] | None = None
     ) -> config_entries.ConfigFlowResult:
         """Handle the user's choice of search method."""
         errors: dict[str, str] = {}
@@ -293,7 +303,7 @@ class MawaqitPrayerFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
         )
 
     async def async_step_keyword_search(
-        self, user_input=None
+        self, user_input: dict[str, Any] | None = None
     ) -> config_entries.ConfigFlowResult:
         """Handle the keyword search, with paginated results."""
         errors = {}
@@ -339,6 +349,7 @@ class MawaqitPrayerFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
                     search_keyword=keyword,
                     page=self.keyword_page,
                     token=self.token,
+                    session=async_get_clientsession(self.hass),
                 )
                 self.mosques = {mosque.uuid: mosque for mosque in mosques_result}
             except NoMosqueFound:

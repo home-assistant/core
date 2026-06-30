@@ -47,7 +47,7 @@ class MawaqitMosqueData:
         return display_name
 
     @classmethod
-    def from_dict(cls, data: dict):
+    def from_dict(cls, data: dict) -> MawaqitMosqueData:
         """Create a MawaqitMosqueData instance from a dictionary."""
         field_names = {f.name for f in fields(cls)}
 

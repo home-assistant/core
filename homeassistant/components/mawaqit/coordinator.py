@@ -10,6 +10,7 @@ from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_API_KEY, CONF_UUID
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ConfigEntryAuthFailed
+from homeassistant.helpers.aiohttp_client import async_get_clientsession
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
 import homeassistant.util.dt as dt_util
 
@@ -41,7 +42,9 @@ class MosqueCoordinator(DataUpdateCoordinator[dict]):
         """Fetch mosque details from the API."""
         try:
             mosque_data = await mawaqit_wrapper.fetch_mosque_by_id(
-                self.mosque_uuid, token=self.token
+                self.mosque_uuid,
+                token=self.token,
+                session=async_get_clientsession(self.hass),
             )
         except BadCredentialsException as err:
             raise ConfigEntryAuthFailed(
@@ -110,7 +113,9 @@ class PrayerTimeCoordinator(DataUpdateCoordinator[dict]):
         ):
             try:
                 prayer_times = await mawaqit_wrapper.fetch_prayer_times(
-                    mosque=self.mosque_uuid, token=self.token
+                    mosque=self.mosque_uuid,
+                    token=self.token,
+                    session=async_get_clientsession(self.hass),
                 )
                 self.last_fetch = now
             except BadCredentialsException as err:

@@ -364,6 +364,7 @@ homeassistant.components.marantz_infrared.*
 homeassistant.components.mastodon.*
 homeassistant.components.matrix.*
 homeassistant.components.matter.*
+homeassistant.components.mawaqit.*
 homeassistant.components.mcp.*
 homeassistant.components.mcp_server.*
 homeassistant.components.mealie.*
