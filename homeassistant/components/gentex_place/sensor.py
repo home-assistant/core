@@ -2,6 +2,7 @@
 
 from collections.abc import Callable
 from dataclasses import dataclass
+from typing import override
 
 from place.models.device_shadow import AlarmStatus, PlaceDeviceShadow
 from place.models.discover_device import DiscoverDevice
@@ -103,6 +104,7 @@ class PlaceAlarmSensorEntity(CoordinatorEntity[PlaceCoordinator], SensorEntity):
         )
 
     @property
+    @override
     def native_value(self) -> str | None:
         """Return the current alarm status as a lowercase enum name."""
         shadow = (
