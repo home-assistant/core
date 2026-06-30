@@ -49,7 +49,6 @@ async def test_binary_sensor_setup_and_states(
 async def test_binary_sensor_edge_cases(
     hass: HomeAssistant,
     mock_gatus_client: AsyncMock,
-    snapshot: SnapshotAssertion,
 ) -> None:
     """Test fallback fallthroughs: missing metadata, empty results, and data loss."""
     fixture_data = await hass.async_add_executor_job(

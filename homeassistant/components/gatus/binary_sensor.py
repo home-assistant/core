@@ -14,12 +14,12 @@ from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
 from .const import DOMAIN
-from .coordinator import GatusDataUpdateCoordinator
+from .coordinator import GatusConfigEntry, GatusDataUpdateCoordinator
 
 
 async def async_setup_entry(
     hass: HomeAssistant,
-    entry: ConfigEntry[GatusDataUpdateCoordinator],
+    entry: GatusConfigEntry,
     async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up Gatus binary sensors based on a config entry."""
