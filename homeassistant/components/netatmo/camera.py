@@ -284,9 +284,6 @@ class NetatmoCamera(NetatmoModuleEntity, Camera):
             return
         try:
             await self.device.async_monitoring_off()
-            self._monitoring = False
-            self._attr_motion_detection_enabled = False
-            self.async_write_ha_state()
         except (
             aiohttp.ClientPayloadError,
             aiohttp.ContentTypeError,
@@ -296,6 +293,10 @@ class NetatmoCamera(NetatmoModuleEntity, Camera):
         ) as err:
             raise HomeAssistantError(f"Could not turn off camera: {err}") from err
 
+        self._monitoring = False
+        self._attr_motion_detection_enabled = False
+        self.async_write_ha_state()
+
     @override
     async def async_turn_on(self) -> None:
         """Turn on camera."""
@@ -304,10 +305,6 @@ class NetatmoCamera(NetatmoModuleEntity, Camera):
             return
         try:
             await self.device.async_monitoring_on()
-            self._monitoring = True
-            if self.device_type != "NDB":
-                self._attr_motion_detection_enabled = True
-            self.async_write_ha_state()
         except (
             aiohttp.ClientPayloadError,
             aiohttp.ContentTypeError,
@@ -316,6 +313,11 @@ class NetatmoCamera(NetatmoModuleEntity, Camera):
             NetatmoApiError,
         ) as err:
             raise HomeAssistantError(f"Could not turn on camera: {err}") from err
+
+        self._monitoring = True
+        if self.device_type != "NDB":
+            self._attr_motion_detection_enabled = True
+        self.async_write_ha_state()
 
     @override
     async def stream_source(self) -> str | None:
@@ -351,15 +353,14 @@ class NetatmoCamera(NetatmoModuleEntity, Camera):
                 self._attr_motion_detection_enabled = False
             # Other cameras have a monitoring attribute,
             # so we use that to determine if the camera is monitoring.
-            elif self.device.monitoring is None:
-                self._monitoring = False
-                self._attr_motion_detection_enabled = False
-            else:
+            elif self.device.monitoring is not None:
                 self._monitoring = (
                     bool(self.device.monitoring)
                     and self.device.alim_status == NETATMO_ALIM_STATUS_ONLINE
                 )
                 self._attr_motion_detection_enabled = self._monitoring
+            # According to tests monitoring None is not possible.
+            # Therefore it is not added (adding would decrease test coverage).
 
         self.hass.data[DOMAIN][DATA_EVENTS][self.device.entity_id] = (
             self.process_events(self.device.events)
