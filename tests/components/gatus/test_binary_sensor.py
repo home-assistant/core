@@ -1,6 +1,7 @@
 """Tests for the Gatus binary sensor platform."""
 
 import json
+from unittest.mock import AsyncMock
 
 from syrupy.assertion import SnapshotAssertion
 
@@ -16,7 +17,7 @@ from tests.common import load_fixture
 
 async def test_binary_sensor_setup_and_states(
     hass: HomeAssistant,
-    mock_gatus_client,
+    mock_gatus_client: AsyncMock,
     snapshot: SnapshotAssertion,
 ) -> None:
     """Test standard successful setup and entity snapshots."""
@@ -47,7 +48,7 @@ async def test_binary_sensor_setup_and_states(
 
 async def test_binary_sensor_edge_cases(
     hass: HomeAssistant,
-    mock_gatus_client,
+    mock_gatus_client: AsyncMock,
     snapshot: SnapshotAssertion,  # Added type hint to fix E7402
 ) -> None:
     """Test fallback fallthroughs: missing metadata, empty results, and data loss."""

@@ -3,8 +3,6 @@
 from collections.abc import Mapping
 from typing import Any, override
 
-from yarl import URL
-
 from homeassistant.components.binary_sensor import (
     BinarySensorDeviceClass,
     BinarySensorEntity,
@@ -55,23 +53,16 @@ class GatusEndpointBinarySensor(
 
         endpoint_data = self.endpoint_data
         if endpoint_data:
-            group = endpoint_data["group"]
-            name = endpoint_data["name"]
+            group = endpoint_data.get("group", "Gatus")
+            name = endpoint_data.get("name", endpoint_key)
         else:
             group = "Gatus Server"
             name = endpoint_key
 
         self._attr_name = f"{group} {name}"
 
-        url_obj = URL(entry.data["url"])
-        host = url_obj.host or url_obj.path
+        self._attr_unique_id = f"{entry.unique_id}_{endpoint_key}"
 
-        if url_obj.port is not None:
-            url_host = f"{host}:{url_obj.port}"
-        else:
-            url_host = str(host)
-
-        self._attr_unique_id = f"{url_host}_{endpoint_key}"
         self._attr_device_info = DeviceInfo(
             identifiers={(DOMAIN, entry.entry_id)},
             name="Gatus Server",

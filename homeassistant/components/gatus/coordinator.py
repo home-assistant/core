@@ -37,7 +37,8 @@ class GatusDataUpdateCoordinator(DataUpdateCoordinator[list[dict[str, Any]]]):
         )
 
     @override
-    async def _async_update_data(self):
+    async def _async_update_data(self) -> list[dict[str, Any]]:
+        """Fetch endpoint statuses from the Gatus API."""
         try:
             return await self.client.get_endpoints_statuses()
         except GatusClientError as err:

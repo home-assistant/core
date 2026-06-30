@@ -1,9 +1,7 @@
 """The Gatus integration."""
 
-from homeassistant.config_entries import ConfigEntry as ConfigEntry
-from homeassistant.const import CONF_URL, Platform as Platform
+from homeassistant.const import CONF_URL
 from homeassistant.core import HomeAssistant
-from homeassistant.exceptions import ConfigEntryNotReady as ConfigEntryNotReady
 
 from .coordinator import _PLATFORMS, GatusConfigEntry, GatusDataUpdateCoordinator
 

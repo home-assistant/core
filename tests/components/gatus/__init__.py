@@ -14,14 +14,14 @@ async def setup_integration(
     """Handle repetitive config entry setup sequences with explicit mock data."""
     mock_gatus_client.get_endpoints_statuses.return_value = mock_data
 
-    config_entry = MockConfigEntry(
+    entry = MockConfigEntry(
         domain=DOMAIN,
-        data={"url": "http://gatus.local"},
-        entry_id="gatus_mock_entry_id",
+        data={"url": "http://gatus.local:80"},
+        unique_id="gatus.local:80",
     )
-    config_entry.add_to_hass(hass)
+    entry.add_to_hass(hass)
 
-    await hass.config_entries.async_setup(config_entry.entry_id)
+    await hass.config_entries.async_setup(entry.entry_id)
     await hass.async_block_till_done()
 
-    return config_entry
+    return entry
