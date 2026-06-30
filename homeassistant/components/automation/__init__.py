@@ -855,7 +855,7 @@ class AutomationEntity(BaseAutomationEntity, RestoreEntity):
             return
 
         # Arm the triggers in a startup job, which runs after all listeners to
-        # EVENT_HOMEASSISTANT_START have ran but before EVENT_HOMEASSISTANT_STARTED
+        # EVENT_HOMEASSISTANT_START have run but before EVENT_HOMEASSISTANT_STARTED
         # has fired. This ensures automations do not fire during startup, but
         # triggers listening for the started event are armed in time to catch it.
         self.hass.async_add_startup_job(HassJob(self._async_enable_automation))
