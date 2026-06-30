@@ -36,6 +36,7 @@ from homeassistant.helpers.event import async_track_state_change_event
 from homeassistant.helpers.trigger import (
     ENTITY_STATE_TRIGGER_SCHEMA_WITH_BEHAVIOR,
     EntityTriggerBase,
+    NotTriggeredReasonReporter,
     Trigger,
     TriggerActionRunner,
     TriggerConfig,
@@ -211,7 +212,11 @@ class EnteredZoneTrigger(ZoneTriggerBase):
         return not self._in_target_zone(from_state)
 
     @override
-    def is_valid_state(self, state: State) -> bool:
+    def is_valid_state(
+        self,
+        state: State,
+        report_not_triggered: NotTriggeredReasonReporter,
+    ) -> bool:
         """Check that the entity is now in the selected zone."""
         return self._in_target_zone(state)
 
@@ -225,7 +230,11 @@ class LeftZoneTrigger(ZoneTriggerBase):
         return self._in_target_zone(from_state)
 
     @override
-    def is_valid_state(self, state: State) -> bool:
+    def is_valid_state(
+        self,
+        state: State,
+        report_not_triggered: NotTriggeredReasonReporter,
+    ) -> bool:
         """Check that the entity is no longer in the selected zone."""
         return not self._in_target_zone(state)
 
@@ -279,7 +288,11 @@ class OccupancyDetectedTrigger(_ZoneOccupancyTriggerBase):
     """Trigger when a zone transitions to an occupied state."""
 
     @override
-    def is_valid_state(self, state: State) -> bool:
+    def is_valid_state(
+        self,
+        state: State,
+        report_not_triggered: NotTriggeredReasonReporter,
+    ) -> bool:
         """Check that the zone is occupied."""
         return self._is_occupied(state)
 
@@ -293,7 +306,11 @@ class OccupancyClearedTrigger(_ZoneOccupancyTriggerBase):
     """Trigger when a zone transitions from occupied to unoccupied."""
 
     @override
-    def is_valid_state(self, state: State) -> bool:
+    def is_valid_state(
+        self,
+        state: State,
+        report_not_triggered: NotTriggeredReasonReporter,
+    ) -> bool:
         """Check that the zone is empty (count == 0)."""
         return self._occupancy_count(state) == 0
 

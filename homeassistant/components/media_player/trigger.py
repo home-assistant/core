@@ -9,6 +9,7 @@ from homeassistant.helpers.trigger import (
     EntityNumericalStateCrossedThresholdTriggerBase,
     EntityNumericalStateTriggerBase,
     EntityTriggerBase,
+    NotTriggeredReasonReporter,
     Trigger,
     make_entity_transition_trigger,
 )
@@ -60,7 +61,11 @@ class _MediaPlayerMutedStateTriggerBase(EntityTriggerBase):
         return self.is_muted(from_state) != self.is_muted(to_state)
 
     @override
-    def is_valid_state(self, state: State) -> bool:
+    def is_valid_state(
+        self,
+        state: State,
+        report_not_triggered: NotTriggeredReasonReporter,
+    ) -> bool:
         """Check if the new state matches the expected state."""
         if not self._has_volume_attributes(state):
             return False
