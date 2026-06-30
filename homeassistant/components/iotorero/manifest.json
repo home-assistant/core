@@ -1,0 +1,6 @@
+{
+  "domain": "iotorero",
+  "name": "Iotorero",
+  "integration_type": "virtual",
+  "supported_by": "esphome"
+}

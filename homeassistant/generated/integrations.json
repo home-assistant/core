@@ -3318,6 +3318,11 @@
       "config_flow": true,
       "iot_class": "local_polling"
     },
+    "iotorero": {
+      "name": "Iotorero",
+      "integration_type": "virtual",
+      "supported_by": "esphome"
+    },
     "iotty": {
       "name": "iotty",
       "integration_type": "device",
