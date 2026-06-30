@@ -1673,6 +1673,7 @@ async def async_initialize_triggers(
     log_cb: Callable,
     home_assistant_start: bool = False,
     variables: TemplateVarsType = None,
+    *,
     did_not_trigger: TriggerNotTriggeredAction | None = None,
 ) -> CALLBACK_TYPE | None:
     """Initialize triggers.
