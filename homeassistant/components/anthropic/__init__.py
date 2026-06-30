@@ -29,7 +29,6 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
 async def async_setup_entry(hass: HomeAssistant, entry: AnthropicConfigEntry) -> bool:
     """Set up Anthropic from a config entry."""
     coordinator = AnthropicCoordinator(hass, entry)
-    await coordinator.async_setup()
     await coordinator.async_config_entry_first_refresh()
     entry.runtime_data = coordinator
     LOGGER.debug("Available models: %s", coordinator.data)

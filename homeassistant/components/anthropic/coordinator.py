@@ -69,7 +69,8 @@ class AnthropicCoordinator(DataUpdateCoordinator[list[anthropic.types.ModelInfo]
             raise RuntimeError("Anthropic client is not set up")
         return self._client
 
-    async def async_setup(self) -> None:
+    @override
+    async def _async_setup(self) -> None:
         """Set up the coordinator."""
         self._client = await async_create_client(
             self.hass, self.config_entry.data[CONF_API_KEY]
