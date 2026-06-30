@@ -646,6 +646,9 @@
     "incorrect_pin": {
       "message": "Incorrect PIN for {name}."
     },
+    "invalid_cop_mode": {
+      "message": "Invalid cabin overheat protection mode."
+    },
     "invalid_energy_history_data": {
       "message": "Invalid energy history data."
     },
