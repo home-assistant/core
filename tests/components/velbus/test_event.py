@@ -5,8 +5,8 @@ from datetime import timedelta
 from typing import cast
 from unittest.mock import AsyncMock, patch
 
-import pytest
 from freezegun.api import FrozenDateTimeFactory
+import pytest
 
 from homeassistant.components.event import (
     ATTR_EVENT_TYPE,
@@ -117,12 +117,7 @@ async def test_entities(
     assert binary_sensor_entry is not None
     assert button_entry is not None
     assert led_entry is not None
-    assert event_entry.unique_id == "a1b2c3d4e5f6-1-event"
-    assert event_entry.unique_id not in {
-        binary_sensor_entry.unique_id,
-        button_entry.unique_id,
-        led_entry.unique_id,
-    }
+    assert event_entry.unique_id == "a1b2c3d4e5f6-1"
 
 
 async def test_normal_press(

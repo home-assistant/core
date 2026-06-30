@@ -44,7 +44,6 @@ class VelbusButtonEvent(VelbusEntity, EventEntity):
     def __init__(self, channel: VelbusaioButton | VelbusaioButtonCounter) -> None:
         """Initialize a Velbus button event entity."""
         super().__init__(channel)
-        self._attr_unique_id = f"{self._attr_unique_id}-event"
         self._was_closed = self._channel.is_closed()
         self._long_seen = self._was_closed and self._is_long_pressed()
 
