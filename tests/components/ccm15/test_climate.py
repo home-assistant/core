@@ -34,6 +34,7 @@ from homeassistant.const import (
     UnitOfTemperature,
 )
 from homeassistant.core import HomeAssistant
+from homeassistant.exceptions import ServiceValidationError
 from homeassistant.helpers import entity_registry as er
 from homeassistant.util.unit_system import US_CUSTOMARY_SYSTEM
 
@@ -177,6 +178,24 @@ async def test_climate_fahrenheit_unit(hass: HomeAssistant) -> None:
     assert state is not None
     assert state.attributes[ATTR_CURRENT_TEMPERATURE] == 75
     assert state.attributes[ATTR_TEMPERATURE] == 86
+
+
+@pytest.mark.usefixtures("ccm15_device")
+async def test_set_state_unavailable_slot_raises(hass: HomeAssistant) -> None:
+    """Writing to a slot with no current data raises instead of silently no-op."""
+    entry = MockConfigEntry(
+        domain=DOMAIN,
+        unique_id="1.1.1.1",
+        data={CONF_HOST: "1.1.1.1", CONF_PORT: 80},
+    )
+    entry.add_to_hass(hass)
+
+    assert await hass.config_entries.async_setup(entry.entry_id)
+    await hass.async_block_till_done()
+
+    # Slot 99 is not reported by the controller, so it has no cached state.
+    with pytest.raises(ServiceValidationError):
+        await entry.runtime_data.async_set_hvac_mode(99, HVACMode.COOL)
 
 
 @pytest.mark.usefixtures("ccm15_device")
