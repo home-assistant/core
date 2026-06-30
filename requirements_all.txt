@@ -1102,9 +1102,6 @@ getmac==0.9.5
 # homeassistant.components.gios
 gios==7.1.0
 
-# homeassistant.components.gitter
-gitterpy==0.1.7
-
 # homeassistant.components.glances
 glances-api==0.10.0
 
