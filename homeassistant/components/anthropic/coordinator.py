@@ -48,7 +48,7 @@ class AnthropicCoordinator(DataUpdateCoordinator[list[anthropic.types.ModelInfo]
     """Coordinator using different intervals after success and failure."""
 
     config_entry: AnthropicConfigEntry
-    _client: anthropic.AsyncAnthropic | None = None
+    _client: anthropic.AsyncAnthropic
 
     def __init__(self, hass: HomeAssistant, config_entry: AnthropicConfigEntry) -> None:
         """Initialize the coordinator."""
@@ -65,8 +65,6 @@ class AnthropicCoordinator(DataUpdateCoordinator[list[anthropic.types.ModelInfo]
     @property
     def client(self) -> anthropic.AsyncAnthropic:
         """Return the Anthropic client."""
-        if self._client is None:
-            raise RuntimeError("Anthropic client is not set up")
         return self._client
 
     @override

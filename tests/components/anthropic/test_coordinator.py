@@ -1,9 +1,9 @@
 """Tests for the Anthropic integration."""
 
-from functools import partial
-from unittest.mock import AsyncMock, patch
+from unittest.mock import ANY, AsyncMock, patch
 
 from anthropic import APITimeoutError, AuthenticationError, RateLimitError
+from anthropic.pagination import AsyncPage
 from freezegun import freeze_time
 from httpx import URL, Request, Response
 
@@ -12,43 +12,38 @@ from homeassistant.components.anthropic.const import DOMAIN
 from homeassistant.components.anthropic.coordinator import (
     UPDATE_INTERVAL_CONNECTED,
     UPDATE_INTERVAL_DISCONNECTED,
-    AnthropicCoordinator,
 )
 from homeassistant.config_entries import SOURCE_REAUTH
 from homeassistant.core import Context, HomeAssistant
 from homeassistant.helpers import intent
+from homeassistant.setup import async_setup_component
 from homeassistant.util import dt as dt_util
+
+from . import model_list
 
 from tests.common import MockConfigEntry, async_fire_time_changed
 
 
-async def test_client_setup_uses_executor(
+async def test_client_setup(
     hass: HomeAssistant,
     mock_config_entry: MockConfigEntry,
 ) -> None:
-    """Test the Anthropic client is created in the executor."""
-    client = object()
-
+    """Test the Anthropic client is set up during coordinator setup."""
     with (
-        patch.object(
-            hass, "async_add_executor_job", wraps=hass.async_add_executor_job
-        ) as mock_add_executor_job,
+        patch(
+            "anthropic.resources.models.AsyncModels.list",
+            new_callable=AsyncMock,
+            return_value=AsyncPage(data=model_list),
+        ),
         patch(
             "homeassistant.components.anthropic.coordinator.anthropic.AsyncAnthropic",
-            return_value=client,
         ) as mock_client,
     ):
-        coordinator = AnthropicCoordinator(hass, mock_config_entry)
-        mock_client.assert_not_called()
-        await coordinator.async_setup()
+        assert await async_setup_component(hass, DOMAIN, {})
+        await hass.async_block_till_done()
 
-    mock_add_executor_job.assert_called_once()
-    create_client = mock_add_executor_job.call_args.args[0]
-    assert isinstance(create_client, partial)
-    assert create_client.func is mock_client
-    assert create_client.keywords["api_key"] == "bla"
-    assert "http_client" in create_client.keywords
-    assert coordinator.client is client
+    mock_client.assert_called_once_with(api_key="bla", http_client=ANY)
+    assert mock_config_entry.runtime_data.client is mock_client.return_value
 
 
 @patch("anthropic.resources.models.AsyncModels.list", new_callable=AsyncMock)
