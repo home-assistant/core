@@ -1,1 +1,1 @@
-"""Virtual integration: Iotorero."""
+"""Virtual integration: IoTorero."""
