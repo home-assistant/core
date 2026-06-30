@@ -1,0 +1,20 @@
+# serializer version: 1
+# name: test_binary_sensor_setup_and_states
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'connectivity',
+      'duration_raw': 45000000,
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Gatus Server core frontend',
+      'hostname': 'frontend.local',
+      'status_code': 200,
+      'success': True,
+      'timestamp': '2026-06-29T13:00:00Z',
+    }),
+    'context': <ANY>,
+    'entity_id': 'binary_sensor.gatus_server_core_frontend',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'on',
+  })
+# ---
