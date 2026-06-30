@@ -41,8 +41,8 @@ from homeassistant.components.climate import (
     HVACMode,
 )
 from homeassistant.components.gree.climate import (
-    FAN_MODES_REVERSE,
-    HORIZONTAL_SWING_MODES_REVERSE,
+    FAN_MODES_INVERSE,
+    HORIZONTAL_SWING_MODES_INVERSE,
     HVAC_MODES,
     HVAC_MODES_REVERSE,
     VERTICAL_SWING_MODES_REVERSE,
@@ -778,7 +778,7 @@ async def test_update_fan_mode(
     hass: HomeAssistant, discovery, device, fan_mode
 ) -> None:
     """Test for updating fan mode from the device."""
-    device().fan_speed = FAN_MODES_REVERSE.get(fan_mode)
+    device().fan_speed = FAN_MODES_INVERSE.get(fan_mode)
 
     await async_setup_gree(hass)
 
@@ -951,7 +951,7 @@ async def test_update_swing_horizontal_mode(
     assert state is not None
     assert (
         state.attributes.get(ATTR_SWING_HORIZONTAL_MODE)
-        == HORIZONTAL_SWING_MODES_REVERSE[horizontal_swing]
+        == HORIZONTAL_SWING_MODES_INVERSE[horizontal_swing]
     )
 
 
