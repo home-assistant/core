@@ -85,7 +85,7 @@ async def test_setup_ignores_unknown_switch_types(
     """Unknown switch keys from the API are not turned into entities."""
     registry = er.async_get(hass)
     entries = er.async_entries_for_config_entry(registry, mock_config_entry.entry_id)
-    switch_entries = [entry for entry in entries if entry.domain == "switch"]
+    switch_entries = [entry for entry in entries if entry.domain == SWITCH_DOMAIN]
     assert len(switch_entries) == 1
     assert switch_entries[0].translation_key == PARAM_MOTION_DETECT
 
