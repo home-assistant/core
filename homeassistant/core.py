@@ -538,7 +538,7 @@ class HomeAssistant:
         tasks: list[asyncio.Future[Any]] = []
         for job in self._startup_jobs:
             task_or_none = self.async_run_hass_job(job.job, *job.args)
-            if not task_or_none:
+            if task_or_none is None:
                 continue
             tasks.append(task_or_none)
         self._startup_jobs.clear()
