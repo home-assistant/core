@@ -79,6 +79,7 @@ from .automation import (
     move_options_fields_to_top_level,
 )
 from .event import async_call_later
+from .frame import report_usage
 from .integration_platform import async_process_integration_platforms
 from .selector import (
     NumericThresholdMode,
@@ -1350,7 +1351,6 @@ class TriggerInfo(TypedDict):
 
     domain: str
     name: str
-    home_assistant_start: bool
     variables: TemplateVarsType
     trigger_data: TriggerData
 
@@ -1671,8 +1671,9 @@ async def async_initialize_triggers(
     domain: str,
     name: str,
     log_cb: Callable,
-    home_assistant_start: bool = False,
+    home_assistant_start: bool | UndefinedType = UNDEFINED,
     variables: TemplateVarsType = None,
+    *,
     did_not_trigger: TriggerNotTriggeredAction | None = None,
 ) -> CALLBACK_TYPE | None:
     """Initialize triggers.
@@ -1681,6 +1682,14 @@ async def async_initialize_triggers(
     invoked - for new-style triggers that support it - when a trigger evaluates
     a relevant change but reports it did not fire. Old-style triggers ignore it.
     """
+    if home_assistant_start is not UNDEFINED:
+        report_usage(
+            "passes `home_assistant_start` to `async_initialize_triggers`, which is "
+            "deprecated and will be removed in Home Assistant 2027.8; the parameter "
+            "no longer has any effect",
+            breaks_in_ha_version="2027.8.0",
+        )
+
     triggers: list[asyncio.Task[CALLBACK_TYPE]] = []
     for idx, conf in enumerate(trigger_config):
         # Skip triggers that are not enabled
@@ -1704,7 +1713,6 @@ async def async_initialize_triggers(
         info = TriggerInfo(
             domain=domain,
             name=name,
-            home_assistant_start=home_assistant_start,
             variables=variables,
             trigger_data=trigger_data,
         )

@@ -3,6 +3,7 @@
   "name": "SMLIGHT SLZB",
   "codeowners": ["@tl-sl"],
   "config_flow": true,
+  "dependencies": ["bluetooth"],
   "dhcp": [
     {
       "registered_devices": true
@@ -12,7 +13,7 @@
   "integration_type": "device",
   "iot_class": "local_push",
   "quality_scale": "silver",
-  "requirements": ["pysmlight==0.5.0"],
+  "requirements": ["pysmlight==0.5.2", "bleak-smlight==1.1.0"],
   "zeroconf": [
     {
       "type": "_slzb-06._tcp.local."
