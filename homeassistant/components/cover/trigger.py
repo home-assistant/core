@@ -5,7 +5,11 @@ from typing import override
 
 from homeassistant.const import STATE_OFF, STATE_ON
 from homeassistant.core import HomeAssistant, State
-from homeassistant.helpers.trigger import EntityTriggerBase, Trigger
+from homeassistant.helpers.trigger import (
+    EntityTriggerBase,
+    NotTriggeredReasonReporter,
+    Trigger,
+)
 
 from .const import ATTR_IS_CLOSED, DOMAIN, CoverDeviceClass
 from .models import CoverDomainSpec
@@ -24,7 +28,11 @@ class CoverTriggerBase(EntityTriggerBase):
         return state.state
 
     @override
-    def is_valid_state(self, state: State) -> bool:
+    def is_valid_state(
+        self,
+        state: State,
+        report_not_triggered: NotTriggeredReasonReporter,
+    ) -> bool:
         """Check if the state matches the target cover state."""
         domain_spec = self._domain_specs[state.domain]
         return self._get_value(state) == domain_spec.target_value
