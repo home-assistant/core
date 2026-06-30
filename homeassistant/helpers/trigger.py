@@ -450,8 +450,8 @@ class EntityTriggerBase(Trigger):
         When the state cannot fire the trigger, subclasses may use
         `report_not_triggered` to record an interesting reason - e.g. a
         non-numeric value or an unsupported unit - in the automation trace.
-        It defaults to a no-op, so callers that don't collect diagnostics
-        (e.g. `count_matches`) can omit it.
+        Callers that don't collect diagnostics (e.g. `count_matches`) pass
+        `_report_not_triggered_noop`.
         """
         return True
 
