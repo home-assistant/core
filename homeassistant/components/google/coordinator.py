@@ -181,8 +181,9 @@ class CalendarQueryUpdateCoordinator(DataUpdateCoordinator[list[Event]]):
     @override
     async def _async_update_data(self) -> list[Event]:
         """Fetch data from API endpoint."""
-        start_time = dt_util.now() + QUERY_EVENT_MIN_TIME
-        end_time = dt_util.now() + QUERY_EVENT_MAX_TIME
+        now = dt_util.now()
+        start_time = now + QUERY_EVENT_MIN_TIME
+        end_time = now + QUERY_EVENT_MAX_TIME
         try:
             result_items = await self._async_fetch_events(start_time, end_time)
         except ApiException as err:
