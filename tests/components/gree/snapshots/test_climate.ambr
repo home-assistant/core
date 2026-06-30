@@ -32,9 +32,9 @@
           'none',
           'sleep',
         ]),
-        'supported_features': <ClimateEntityFeature: 953>,
-        'swing_horizontal_mode': 'default',
-        'swing_horizontal_modes': list([
+        <EntityStateAttribute.SUPPORTED_FEATURES: 'supported_features'>: <ClimateEntityFeature: 953>,
+        <ClimateEntityStateAttribute.SWING_HORIZONTAL_MODE: 'swing_horizontal_mode'>: 'default',
+        <ClimateEntityCapabilityAttribute.SWING_HORIZONTAL_MODES: 'swing_horizontal_modes'>: list([
           'default',
           'full_swing',
           'left',
@@ -43,8 +43,8 @@
           'right_center',
           'right',
         ]),
-        'swing_mode': 'default',
-        'swing_modes': list([
+        <ClimateEntityStateAttribute.SWING_MODE: 'swing_mode'>: 'default',
+        <ClimateEntityCapabilityAttribute.SWING_MODES: 'swing_modes'>: list([
           'default',
           'full_swing',
           'fixed_upper',
@@ -103,7 +103,7 @@
           'none',
           'sleep',
         ]),
-        'swing_horizontal_modes': list([
+        <ClimateEntityCapabilityAttribute.SWING_HORIZONTAL_MODES: 'swing_horizontal_modes'>: list([
           'default',
           'full_swing',
           'left',
@@ -112,7 +112,7 @@
           'right_center',
           'right',
         ]),
-        'swing_modes': list([
+        <ClimateEntityCapabilityAttribute.SWING_MODES: 'swing_modes'>: list([
           'default',
           'full_swing',
           'fixed_upper',
