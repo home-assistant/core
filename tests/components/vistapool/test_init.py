@@ -245,8 +245,7 @@ async def test_user_pools_snapshot_drops_stale_even_if_get_pools_fails(
         is None
     )
     assert (
-        device_registry.async_get_device(identifiers={(DOMAIN, _THIRD_POOL_ID)})
-        is None
+        device_registry.async_get_device(identifiers={(DOMAIN, _THIRD_POOL_ID)}) is None
     )
 
 
