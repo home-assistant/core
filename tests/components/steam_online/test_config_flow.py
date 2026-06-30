@@ -366,6 +366,35 @@ async def test_add_friend_flow_abort_errors(
     assert result["reason"] == reason
 
 
+async def test_add_friend_flow_abort_no_more_friends(
+    hass: HomeAssistant,
+    steam_api: MagicMock,
+    config_entry: MockConfigEntry,
+) -> None:
+    """Test add friend subentry flow aborts when no more friends left to add."""
+
+    steam_api.return_value.GetPlayerSummaries.return_value = (
+        await async_load_json_object_fixture(
+            hass, "GetPlayerSummariesSingle.json", DOMAIN
+        )
+    )
+
+    config_entry.add_to_hass(hass)
+    await hass.config_entries.async_setup(config_entry.entry_id)
+
+    await hass.async_block_till_done()
+
+    assert config_entry.state is ConfigEntryState.LOADED
+
+    result = await hass.config_entries.subentries.async_init(
+        (config_entry.entry_id, SUBENTRY_TYPE_FRIEND),
+        context={"source": SOURCE_USER},
+    )
+
+    assert result["type"] is FlowResultType.ABORT
+    assert result["reason"] == "no_more_friends"
+
+
 @pytest.mark.usefixtures("steam_api")
 async def test_add_friend_flow_config_entry_not_loaded(
     hass: HomeAssistant, config_entry: MockConfigEntry

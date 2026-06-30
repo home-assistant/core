@@ -51,10 +51,11 @@
     "friend": {
       "abort": {
         "already_configured": "Already configured as a friend in this or another account.",
-        "already_configured_as_entry": "Already configured as a service. This account cannot be added as a friend.",
+        "already_configured_as_entry": "This account is already configured as a service and cannot be added as a friend.",
         "cannot_connect": "[%key:common::config_flow::error::cannot_connect%]",
         "config_entry_not_loaded": "Cannot add friend accounts when the main account is disabled or not loaded.",
-        "friendlist_private": "Looks like access to your friend list is restricted.",
+        "friendlist_private": "Your friend list appears to be private or inaccessible.\n\nTo add friend accounts open Steam and go to [**Profile > Edit Profile > Privacy Settings**]({privacy_settings_url}) and set **Friends List** to **Public**.\n\nOnce your friends are added, you can switch it back to your preferred privacy setting.",
+        "no_more_friends": "All friends from your friend list have already been added.",
         "timeout_connect": "[%key:common::config_flow::error::timeout_connect%]",
         "unknown": "[%key:common::config_flow::error::unknown%]"
       },

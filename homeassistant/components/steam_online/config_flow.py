@@ -235,7 +235,15 @@ class FriendSubentryFlowHandler(ConfigSubentryFlow):
             return self.async_abort(reason="timeout_connect")
         except steam.api.HTTPError as e:
             if "401" in str(e):
-                return self.async_abort(reason="friendlist_private")
+                return self.async_abort(
+                    reason="friendlist_private",
+                    description_placeholders={
+                        "privacy_settings_url": config_entry.runtime_data.data[
+                            config_entry.unique_id
+                        ].profileurl
+                        + "edit/settings"
+                    },
+                )
             return self.async_abort(reason="cannot_connect")
         except Exception:
             _LOGGER.exception("Unknown exception")
@@ -253,6 +261,9 @@ class FriendSubentryFlowHandler(ConfigSubentryFlow):
             for account in accounts
             if account["steamid"] not in existing_subentries
         ]
+
+        if not options:
+            return self.async_abort(reason="no_more_friends")
 
         return self.async_show_form(
             step_id="user",
