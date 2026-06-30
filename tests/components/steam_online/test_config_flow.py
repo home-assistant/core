@@ -64,7 +64,7 @@ async def test_flow_user(
 async def test_flow_user_errors(
     hass: HomeAssistant,
     mock_setup_entry: AsyncMock,
-    side_effect: Exception | dict[str, Any],
+    side_effect: type[Exception] | dict[str, Any],
     error_msg: str,
     steam_api: MagicMock,
 ) -> None:
@@ -157,7 +157,7 @@ async def test_flow_reauth_errors(
     hass: HomeAssistant,
     config_entry: MockConfigEntry,
     steam_api: MagicMock,
-    side_effect: Exception | dict[str, Any],
+    side_effect: type[Exception] | dict[str, Any],
     error_msg: str,
 ) -> None:
     """Test reauth step with errors."""

@@ -70,6 +70,17 @@
       }
     }
   },
+  "exceptions": {
+    "auth_exception": {
+      "message": "Failed to connect to Steam due to an authentication error"
+    },
+    "request_exception": {
+      "message": "Failed to connect to Steam due to a request error"
+    },
+    "timeout_exception": {
+      "message": "Failed to connect to Steam due to a request timeout"
+    }
+  },
   "options": {
     "error": {
       "unauthorized": "Friends list restricted: Please refer to the documentation on how to see all other friends"
