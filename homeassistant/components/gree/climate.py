@@ -73,7 +73,7 @@ FAN_MODES = {
     FanSpeed.MediumHigh: FAN_MEDIUM_HIGH,
     FanSpeed.High: FAN_HIGH,
 }
-FAN_MODES_REVERSE = {v: k for k, v in FAN_MODES.items()}
+FAN_MODES_INVERSE = {v: k for k, v in FAN_MODES.items()}
 
 VERTICAL_SWING_MODES: dict[str, VerticalSwing] = {
     "default": VerticalSwing.Default,
@@ -102,7 +102,7 @@ HORIZONTAL_SWING_MODES: dict[str, HorizontalSwing] = {
     "right_center": HorizontalSwing.RightCenter,
     "right": HorizontalSwing.Right,
 }
-HORIZONTAL_SWING_MODES_REVERSE: dict[HorizontalSwing, str] = {
+HORIZONTAL_SWING_MODES_INVERSE: dict[HorizontalSwing, str] = {
     v: k for k, v in HORIZONTAL_SWING_MODES.items()
 }
 
@@ -143,7 +143,7 @@ class GreeClimateEntity(GreeEntity, ClimateEntity):
     _attr_target_temperature_step = TARGET_TEMPERATURE_STEP
     _attr_hvac_modes = [*HVAC_MODES_REVERSE, HVACMode.OFF]
     _attr_preset_modes = PRESET_MODES
-    _attr_fan_modes = [*FAN_MODES_REVERSE]
+    _attr_fan_modes = [*FAN_MODES_INVERSE]
     _attr_swing_modes = [*VERTICAL_SWING_MODES]
     _attr_swing_horizontal_modes = [*HORIZONTAL_SWING_MODES]
     _attr_name = None
@@ -283,10 +283,10 @@ class GreeClimateEntity(GreeEntity, ClimateEntity):
 
     async def async_set_fan_mode(self, fan_mode: str) -> None:
         """Set new target fan mode."""
-        if fan_mode not in FAN_MODES_REVERSE:
+        if fan_mode not in FAN_MODES_INVERSE:
             raise ValueError(f"Invalid fan mode: {fan_mode}")
 
-        self.coordinator.device.fan_speed = FAN_MODES_REVERSE.get(fan_mode)
+        self.coordinator.device.fan_speed = FAN_MODES_INVERSE.get(fan_mode)
         await self.coordinator.push_state_update()
         self.async_write_ha_state()
 
@@ -316,7 +316,7 @@ class GreeClimateEntity(GreeEntity, ClimateEntity):
     def swing_horizontal_mode(self) -> str | None:
         """Return the current horizontal swing mode for the device."""
         try:
-            return HORIZONTAL_SWING_MODES_REVERSE.get(
+            return HORIZONTAL_SWING_MODES_INVERSE.get(
                 HorizontalSwing(self.coordinator.device.horizontal_swing)
             )
         except ValueError:
