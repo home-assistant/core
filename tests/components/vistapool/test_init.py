@@ -18,6 +18,7 @@ from tests.common import MockConfigEntry
 
 _SECOND_POOL_ID = "ZYXWVU9876543210"
 _SECOND_POOL_NAME = "Spa"
+_THIRD_POOL_ID = "QQQQQQ1111111111"
 
 
 async def test_setup_entry(
@@ -212,6 +213,39 @@ async def test_user_pools_snapshot_removes_stale_pool(
     assert set(mock_config_entry.runtime_data.coordinators) == {MOCK_POOL_ID}
     assert (
         device_registry.async_get_device(identifiers={(DOMAIN, _SECOND_POOL_ID)})
+        is None
+    )
+
+
+async def test_user_pools_snapshot_drops_stale_even_if_get_pools_fails(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    mock_vistapool_client: AsyncMock,
+    device_registry: dr.DeviceRegistry,
+) -> None:
+    """Test stale pool removal still runs when get_pools() raises during reconcile."""
+    mock_vistapool_client.get_pools.return_value = {
+        MOCK_POOL_ID: MOCK_POOL_NAME,
+        _SECOND_POOL_ID: _SECOND_POOL_NAME,
+    }
+    mock_config_entry.add_to_hass(hass)
+    assert await hass.config_entries.async_setup(mock_config_entry.entry_id)
+    await hass.async_block_till_done()
+    assert device_registry.async_get_device(identifiers={(DOMAIN, _SECOND_POOL_ID)})
+
+    mock_vistapool_client.get_pools.side_effect = AquariteError("name lookup down")
+    snapshot_cb = mock_vistapool_client.subscribe_user_pools_resilient.call_args.args[0]
+    snapshot_cb([MOCK_POOL_ID, _THIRD_POOL_ID])
+    await hass.async_block_till_done()
+
+    # New pool skipped (no name available), stale pool removed regardless.
+    assert set(mock_config_entry.runtime_data.coordinators) == {MOCK_POOL_ID}
+    assert (
+        device_registry.async_get_device(identifiers={(DOMAIN, _SECOND_POOL_ID)})
+        is None
+    )
+    assert (
+        device_registry.async_get_device(identifiers={(DOMAIN, _THIRD_POOL_ID)})
         is None
     )
 
