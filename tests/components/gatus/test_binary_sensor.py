@@ -6,7 +6,6 @@ from unittest.mock import AsyncMock
 from syrupy.assertion import SnapshotAssertion
 
 from homeassistant.components.binary_sensor import BinarySensorDeviceClass
-from homeassistant.components.gatus.binary_sensor import GatusEndpointBinarySensor
 from homeassistant.const import STATE_OFF, STATE_ON, STATE_UNKNOWN
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import entity_registry as er
@@ -89,8 +88,7 @@ async def test_binary_sensor_additional_coverage(
     )
     custom_mock_data = json.loads(fixture_data)
 
-    config_entry = await setup_integration(hass, mock_gatus_client, custom_mock_data)
-    coordinator = config_entry.runtime_data
+    await setup_integration(hass, mock_gatus_client, custom_mock_data)
 
     backend_state = hass.states.get("binary_sensor.gatus_server_core_backend")
     assert backend_state is not None
@@ -99,11 +97,3 @@ async def test_binary_sensor_additional_coverage(
     empty_state = hass.states.get("binary_sensor.gatus_server_core_empty")
     assert empty_state is not None
     assert empty_state.state == STATE_UNKNOWN
-
-    orphan_sensor = GatusEndpointBinarySensor(
-        coordinator=coordinator,
-        entry=config_entry,
-        endpoint_key="completely_missing_key",
-    )
-
-    assert orphan_sensor.name == "Gatus Server completely_missing_key"

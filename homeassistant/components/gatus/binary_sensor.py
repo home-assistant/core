@@ -52,15 +52,12 @@ class GatusEndpointBinarySensor(
         self._endpoint_key = endpoint_key
 
         endpoint_data = self.endpoint_data
-        if endpoint_data:
-            group = endpoint_data.get("group", "Gatus")
-            name = endpoint_data.get("name", endpoint_key)
-        else:
-            group = "Gatus Server"
-            name = endpoint_key
+        assert endpoint_data is not None
+
+        group = endpoint_data.get("group", "Gatus")
+        name = endpoint_data.get("name", endpoint_key)
 
         self._attr_name = f"{group} {name}"
-
         self._attr_unique_id = f"{entry.unique_id}_{endpoint_key}"
 
         self._attr_device_info = DeviceInfo(
@@ -94,7 +91,7 @@ class GatusEndpointBinarySensor(
         if not (latest_result := self.latest_result):
             return None
 
-        return latest_result.get("success", False)
+        return latest_result["success"]
 
     @property
     @override
