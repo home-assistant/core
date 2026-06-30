@@ -22,12 +22,10 @@ from homeassistant.exceptions import ConfigEntryNotReady
 from homeassistant.helpers import config_validation as cv, device_registry as dr
 
 from .const import (
-    CONF_CURTAIN_SPEED,
     CONF_ENCRYPTION_KEY,
     CONF_KEY_ID,
     CONF_RETRY_COUNT,
     CONNECTABLE_SUPPORTED_MODEL_TYPES,
-    DEFAULT_CURTAIN_SPEED,
     DEFAULT_RETRY_COUNT,
     DEPRECATED_SENSOR_TYPE_AIR_PURIFIER,
     DEPRECATED_SENSOR_TYPE_AIR_PURIFIER_TABLE,
@@ -53,6 +51,7 @@ PLATFORMS_BY_TYPE = {
         Platform.COVER,
         Platform.BINARY_SENSOR,
         Platform.SENSOR,
+        Platform.NUMBER,
     ],
     SupportedModels.HYGROMETER.value: [Platform.SENSOR],
     SupportedModels.HYGROMETER_CO2.value: [
@@ -422,13 +421,6 @@ async def async_migrate_entry(hass: HomeAssistant, entry: SwitchbotConfigEntry) 
 
         if CONF_RETRY_COUNT not in new_options:
             new_options[CONF_RETRY_COUNT] = DEFAULT_RETRY_COUNT
-
-        sensor_type = entry.data.get(CONF_SENSOR_TYPE)
-        if (
-            sensor_type == SupportedModels.CURTAIN
-            and CONF_CURTAIN_SPEED not in new_options
-        ):
-            new_options[CONF_CURTAIN_SPEED] = DEFAULT_CURTAIN_SPEED
 
         hass.config_entries.async_update_entry(
             entry,

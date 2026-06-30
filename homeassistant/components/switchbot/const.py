@@ -223,7 +223,8 @@ DEPRECATED_SENSOR_TYPE_AIR_PURIFIER_TABLE = "air_purifier_table"
 DEFAULT_RETRY_COUNT = 3
 DEFAULT_LOCK_NIGHTLATCH = False
 DEFAULT_CURTAIN_SPEED = 255
-CURTAIN_SPEED_MIN = 0
+# curtain speed 0, while a valid value, does the same as 255 in my testing
+CURTAIN_SPEED_MIN = 1
 CURTAIN_SPEED_MAX = 255
 
 # Config Options
@@ -231,7 +232,6 @@ CONF_RETRY_COUNT = "retry_count"
 CONF_KEY_ID = "key_id"
 CONF_ENCRYPTION_KEY = "encryption_key"
 CONF_LOCK_NIGHTLATCH = "lock_force_nightlatch"
-CONF_CURTAIN_SPEED = "curtain_speed"
 
 AIRPURIFIER_BASIC_MODELS = {
     SwitchbotModel.AIR_PURIFIER_JP,

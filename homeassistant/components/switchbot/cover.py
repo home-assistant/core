@@ -18,7 +18,7 @@ from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from homeassistant.helpers.restore_state import RestoreEntity
 
-from .const import CONF_CURTAIN_SPEED, DEFAULT_CURTAIN_SPEED
+from .const import DEFAULT_CURTAIN_SPEED
 from .coordinator import SwitchbotConfigEntry, SwitchbotDataUpdateCoordinator
 from .entity import SwitchbotEntity, exception_handler
 
@@ -66,11 +66,13 @@ class SwitchBotCurtainEntity(SwitchbotEntity, CoverEntity, RestoreEntity):
     @callback
     def _get_curtain_speed(self) -> int:
         """Return the configured curtain speed."""
-        return int(
-            self.coordinator.config_entry.options.get(
-                CONF_CURTAIN_SPEED, DEFAULT_CURTAIN_SPEED
-            )
+
+        speed = (
+            self.coordinator.curtain_speed
+            if self.coordinator.curtain_speed is not None
+            else DEFAULT_CURTAIN_SPEED
         )
+        return int(speed)
 
     @override
     async def async_added_to_hass(self) -> None:
@@ -127,9 +129,11 @@ class SwitchBotCurtainEntity(SwitchbotEntity, CoverEntity, RestoreEntity):
     async def async_set_cover_position(self, **kwargs: Any) -> None:
         """Move the cover shutter to a specific position."""
         position = kwargs.get(ATTR_POSITION)
-
+        speed = self._get_curtain_speed()
         _LOGGER.debug("Switchbot to move at %d %s", position, self._address)
-        self._last_run_success = bool(await self._device.set_position(position))
+        self._last_run_success = bool(
+            await self._device.set_position(position, speed=speed)
+        )
         self._attr_is_opening = self._device.is_opening()
         self._attr_is_closing = self._device.is_closing()
         self.async_write_ha_state()
