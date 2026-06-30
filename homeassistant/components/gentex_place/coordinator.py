@@ -2,6 +2,7 @@
 
 from dataclasses import replace
 import logging
+from typing import override
 
 from place.messages import PlaceMessages, message_kind, parse_payload
 from place.models.device_shadow import PlaceDeviceShadow
@@ -103,6 +104,7 @@ class PlaceCoordinator(DataUpdateCoordinator[dict[str, PlaceDeviceShadow]]):
         _LOGGER.debug("Shadow update for %s: %s", thing_name, payload)
         self.async_set_updated_data(new_data)
 
+    @override
     async def async_shutdown(self) -> None:
         """Disconnect MQTT and tear down the coordinator."""
         await self.hass.async_add_executor_job(self._stop_mqtt)
