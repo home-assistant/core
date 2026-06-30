@@ -1,7 +1,7 @@
 """Config flow for Volkszaehler integration."""
 
 import logging
-from typing import Any
+from typing import Any, override
 
 from volkszaehler import Volkszaehler
 from volkszaehler.exceptions import (
@@ -51,6 +51,7 @@ class VolkszaehlerConfigFlow(ConfigFlow, domain=DOMAIN):
         import_data.pop(CONF_NAME, None)
         return self.async_create_entry(title=title, data=import_data)
 
+    @override
     async def async_step_user(
         self, user_input: dict[str, Any] | None = None
     ) -> ConfigFlowResult:
