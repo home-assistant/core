@@ -20,7 +20,7 @@ helper class that does not override ``__eq__`` is still skipped even though it
 is really identity-based. That under-flags such enums rather than risk an
 unsafe ``==``→``is`` rewrite — the safe direction.
 
-A small allowlist (``_FRAMEWORK_GUARANTEED_ENUMS``) carves back in
+The ``_FRAMEWORK_GUARANTEED_ENUMS`` set carves back in
 ``StrEnum``/``IntEnum`` classes where the HA framework itself controls
 every callsite and guarantees the value is the enum instance — currently
 just ``homeassistant.data_entry_flow.FlowResultType``.
@@ -86,7 +86,7 @@ def _enum_class(t: Type | None) -> TypeInfo | None:
 
     Returns ``None`` for:
     - ``Flag``/``IntFlag`` (bitwise ``==`` is idiomatic)
-    - value-based enums not in the framework allowlist
+    - value-based enums not in ``_FRAMEWORK_GUARANTEED_ENUMS``
     - Anything else (``Any``, ``None``, mixed unions, etc.)
     """
     if t is None:

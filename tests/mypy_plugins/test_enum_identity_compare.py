@@ -5,9 +5,9 @@ Tests assert the number of ``home-assistant-enum-identity-compare`` errors emitt
 and the relevant message content (operator pair and enum class name).
 
 The plugin is intentionally narrow: it fires only on plain ``enum.Enum``
-subclasses (where ``__eq__`` is identity-based) plus a small allowlist
-of HA-framework-controlled ``StrEnum`` classes. Generic StrEnum/IntEnum
-are deliberately skipped — see the plugin module docstring.
+subclasses (where ``__eq__`` is identity-based) plus a small set of
+framework-guaranteed ``StrEnum`` classes. Generic StrEnum/IntEnum are
+deliberately skipped — see the plugin module docstring.
 """
 
 import os
@@ -30,7 +30,7 @@ def _run_mypy(code: str, tmp_path: Path, mypy_path: str | None = None) -> list[s
 
     Each error is normalized to ``LINE: MESSAGE`` form. ``mypy_path``, if
     given, is written into ``mypy.ini`` so tests can supply stub modules
-    that resolve to specific fullnames (used for the framework allowlist).
+    that resolve to specific fullnames (used for the framework-guaranteed set).
     """
     src = tmp_path / "case.py"
     src.write_text(textwrap.dedent(code))
@@ -244,13 +244,14 @@ def test_bad_plain_enum(
     [
         # A StrEnum defined in user code is NOT flagged: the plugin can't tell
         # whether callers pass the enum instance or the underlying string
-        # (StrEnum's whole point is making both work). Allowlisting is required.
+        # (StrEnum's whole point is making both work). It must be added to
+        # ``_FRAMEWORK_GUARANTEED_ENUMS`` to be checked.
         pytest.param(
             """
 def fn(m: MediaType) -> bool:
     return m == MediaType.CHANNEL
 """,
-            id="strenum_not_allowlisted",
+            id="strenum_not_framework_guaranteed",
         ),
         # An IntEnum defined in user code is NOT flagged for the same reason.
         pytest.param(
@@ -258,7 +259,7 @@ def fn(m: MediaType) -> bool:
 def fn(code: HTTPStatus) -> bool:
     return code == HTTPStatus.OK
 """,
-            id="intenum_not_allowlisted",
+            id="intenum_not_framework_guaranteed",
         ),
         # The legacy ``(int, Enum)`` mixin inherits a value-based ``__eq__``
         # from ``int`` (no ``enum.IntEnum`` base), so it is NOT flagged either.
@@ -267,7 +268,7 @@ def fn(code: HTTPStatus) -> bool:
 def fn(rate: AudioBitRates) -> bool:
     return rate == AudioBitRates.BITRATE_8
 """,
-            id="int_enum_mixin_not_allowlisted",
+            id="int_enum_mixin_not_framework_guaranteed",
         ),
         # And the same for the legacy ``(str, Enum)`` mixin.
         pytest.param(
@@ -275,7 +276,7 @@ def fn(rate: AudioBitRates) -> bool:
 def fn(v: LegacyStr) -> bool:
     return v == LegacyStr.A
 """,
-            id="str_enum_mixin_not_allowlisted",
+            id="str_enum_mixin_not_framework_guaranteed",
         ),
         # A ``(float, Enum)`` mixin is value-based too (``__eq__`` from float).
         pytest.param(
@@ -283,7 +284,7 @@ def fn(v: LegacyStr) -> bool:
 def fn(s: HomeeCoverState) -> bool:
     return s == HomeeCoverState.OPEN
 """,
-            id="float_enum_mixin_not_allowlisted",
+            id="float_enum_mixin_not_framework_guaranteed",
         ),
         # And a ``(bytes, Enum)`` mixin likewise.
         pytest.param(
@@ -291,7 +292,7 @@ def fn(s: HomeeCoverState) -> bool:
 def fn(v: LegacyBytes) -> bool:
     return v == LegacyBytes.A
 """,
-            id="bytes_enum_mixin_not_allowlisted",
+            id="bytes_enum_mixin_not_framework_guaranteed",
         ),
         # A ``@dataclass`` mixin is value-based (generated ``__eq__`` compares
         # by value), even though the mixin is not a builtin primitive.
@@ -327,7 +328,7 @@ def fn(code: int) -> bool:
             id="int_vs_intenum",
         ),
         # A union LHS (e.g. ``MediaType | str``) is NOT flagged: even if
-        # MediaType were allowlisted, runtime callers can pass either form, so
+        # MediaType were framework-guaranteed, runtime callers can pass either form, so
         # switching to ``is`` would break the str arm.
         pytest.param(
             """
@@ -351,6 +352,14 @@ def fn(s: ConfigEntryState) -> bool:
     return s is ConfigEntryState.LOADED
 """,
             id="is_already",
+        ),
+        # ``is not`` is the recommended negative form — must not fire on itself.
+        pytest.param(
+            """
+def fn(s: ConfigEntryState) -> bool:
+    return s is not ConfigEntryState.LOADED
+""",
+            id="is_not_already",
         ),
         # Plain ``int`` ``==`` ``int`` (no enum involved) must not flag.
         pytest.param(
@@ -376,7 +385,7 @@ def test_good_no_flag(tmp_path: Path, snippet: str) -> None:
 def _write_flow_result_type_stub(tmp_path: Path) -> None:
     """Write a fake ``homeassistant.data_entry_flow`` module under tmp_path.
 
-    The plugin's allowlist matches by fullname
+    ``_FRAMEWORK_GUARANTEED_ENUMS`` matches by fullname
     (``homeassistant.data_entry_flow.FlowResultType``), so we synthesize a
     package at that path rather than depending on the real HA tree being
     importable from the test environment.
@@ -397,7 +406,7 @@ def _write_flow_result_type_stub(tmp_path: Path) -> None:
     [
         # ``FlowResultType`` is on ``_FRAMEWORK_GUARANTEED_ENUMS`` and must
         # flag. StrEnum normally escapes the plugin, but this class is
-        # explicitly allowlisted because HA's framework controls every
+        # explicitly included because HA's framework controls every
         # value-assigning callsite — see the plugin module docstring.
         pytest.param(
             """
@@ -409,7 +418,7 @@ def fn(r: FlowResultType) -> bool:
             _IS_EQ,
             id="eq",
         ),
-        # And the same for ``!=`` against the allowlisted ``FlowResultType``.
+        # And the same for ``!=`` against the framework-guaranteed ``FlowResultType``.
         pytest.param(
             """
 from homeassistant.data_entry_flow import FlowResultType
@@ -422,12 +431,12 @@ def fn(r: FlowResultType) -> bool:
         ),
     ],
 )
-def test_bad_framework_allowlist(
+def test_bad_framework_guaranteed(
     tmp_path: Path,
     snippet: str,
     op_substrings: tuple[str, str],
 ) -> None:
-    """The allowlisted ``FlowResultType`` StrEnum must flag a single error."""
+    """The framework-guaranteed ``FlowResultType`` StrEnum must flag a single error."""
     _write_flow_result_type_stub(tmp_path)
     errors = _run_mypy(snippet, tmp_path, mypy_path=str(tmp_path))
     assert len(errors) == 1
