@@ -325,6 +325,58 @@
     'state': 'Fix all the bugs',
   })
 # ---
+# name: test_all_entities[sensor.octocat_hello_world_latest_commit_committed-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': list([
+      None,
+    ]),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': None,
+    'entity_id': 'sensor.octocat_hello_world_latest_commit_committed',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'Latest commit committed',
+    'options': dict({
+    }),
+    'original_device_class': <SensorDeviceClass.TIMESTAMP: 'timestamp'>,
+    'original_icon': None,
+    'original_name': 'Latest commit committed',
+    'platform': 'github',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'latest_commit_committed',
+    'unique_id': '1296269_latest_commit_committed',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_all_entities[sensor.octocat_hello_world_latest_commit_committed-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      <EntityStateAttribute.ATTRIBUTION: 'attribution'>: 'Data provided by the GitHub API',
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'timestamp',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'octocat/Hello-World Latest commit committed',
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.octocat_hello_world_latest_commit_committed',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '2024-01-02T00:00:00+00:00',
+  })
+# ---
 # name: test_all_entities[sensor.octocat_hello_world_latest_discussion-entry]
   EntityRegistryEntrySnapshot({
     'aliases': list([
@@ -376,6 +428,110 @@
     'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': 'First discussion',
+  })
+# ---
+# name: test_all_entities[sensor.octocat_hello_world_latest_discussion_created-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': list([
+      None,
+    ]),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': None,
+    'entity_id': 'sensor.octocat_hello_world_latest_discussion_created',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'Latest discussion created',
+    'options': dict({
+    }),
+    'original_device_class': <SensorDeviceClass.TIMESTAMP: 'timestamp'>,
+    'original_icon': None,
+    'original_name': 'Latest discussion created',
+    'platform': 'github',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'latest_discussion_created',
+    'unique_id': '1296269_latest_discussion_created',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_all_entities[sensor.octocat_hello_world_latest_discussion_created-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      <EntityStateAttribute.ATTRIBUTION: 'attribution'>: 'Data provided by the GitHub API',
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'timestamp',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'octocat/Hello-World Latest discussion created',
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.octocat_hello_world_latest_discussion_created',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '2024-01-01T00:00:00+00:00',
+  })
+# ---
+# name: test_all_entities[sensor.octocat_hello_world_latest_discussion_updated-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': list([
+      None,
+    ]),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': None,
+    'entity_id': 'sensor.octocat_hello_world_latest_discussion_updated',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'Latest discussion updated',
+    'options': dict({
+    }),
+    'original_device_class': <SensorDeviceClass.TIMESTAMP: 'timestamp'>,
+    'original_icon': None,
+    'original_name': 'Latest discussion updated',
+    'platform': 'github',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'latest_discussion_updated',
+    'unique_id': '1296269_latest_discussion_updated',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_all_entities[sensor.octocat_hello_world_latest_discussion_updated-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      <EntityStateAttribute.ATTRIBUTION: 'attribution'>: 'Data provided by the GitHub API',
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'timestamp',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'octocat/Hello-World Latest discussion updated',
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.octocat_hello_world_latest_discussion_updated',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '2024-01-02T00:00:00+00:00',
   })
 # ---
 # name: test_all_entities[sensor.octocat_hello_world_latest_issue-entry]
@@ -431,6 +587,110 @@
     'state': 'Found a bug',
   })
 # ---
+# name: test_all_entities[sensor.octocat_hello_world_latest_issue_created-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': list([
+      None,
+    ]),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': None,
+    'entity_id': 'sensor.octocat_hello_world_latest_issue_created',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'Latest issue created',
+    'options': dict({
+    }),
+    'original_device_class': <SensorDeviceClass.TIMESTAMP: 'timestamp'>,
+    'original_icon': None,
+    'original_name': 'Latest issue created',
+    'platform': 'github',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'latest_issue_created',
+    'unique_id': '1296269_latest_issue_created',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_all_entities[sensor.octocat_hello_world_latest_issue_created-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      <EntityStateAttribute.ATTRIBUTION: 'attribution'>: 'Data provided by the GitHub API',
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'timestamp',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'octocat/Hello-World Latest issue created',
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.octocat_hello_world_latest_issue_created',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '2024-01-01T00:00:00+00:00',
+  })
+# ---
+# name: test_all_entities[sensor.octocat_hello_world_latest_issue_updated-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': list([
+      None,
+    ]),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': None,
+    'entity_id': 'sensor.octocat_hello_world_latest_issue_updated',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'Latest issue updated',
+    'options': dict({
+    }),
+    'original_device_class': <SensorDeviceClass.TIMESTAMP: 'timestamp'>,
+    'original_icon': None,
+    'original_name': 'Latest issue updated',
+    'platform': 'github',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'latest_issue_updated',
+    'unique_id': '1296269_latest_issue_updated',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_all_entities[sensor.octocat_hello_world_latest_issue_updated-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      <EntityStateAttribute.ATTRIBUTION: 'attribution'>: 'Data provided by the GitHub API',
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'timestamp',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'octocat/Hello-World Latest issue updated',
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.octocat_hello_world_latest_issue_updated',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '2024-01-02T00:00:00+00:00',
+  })
+# ---
 # name: test_all_entities[sensor.octocat_hello_world_latest_pull_request-entry]
   EntityRegistryEntrySnapshot({
     'aliases': list([
@@ -482,6 +742,110 @@
     'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': 'Amazing new feature',
+  })
+# ---
+# name: test_all_entities[sensor.octocat_hello_world_latest_pull_request_created-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': list([
+      None,
+    ]),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': None,
+    'entity_id': 'sensor.octocat_hello_world_latest_pull_request_created',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'Latest pull request created',
+    'options': dict({
+    }),
+    'original_device_class': <SensorDeviceClass.TIMESTAMP: 'timestamp'>,
+    'original_icon': None,
+    'original_name': 'Latest pull request created',
+    'platform': 'github',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'latest_pull_request_created',
+    'unique_id': '1296269_latest_pull_request_created',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_all_entities[sensor.octocat_hello_world_latest_pull_request_created-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      <EntityStateAttribute.ATTRIBUTION: 'attribution'>: 'Data provided by the GitHub API',
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'timestamp',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'octocat/Hello-World Latest pull request created',
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.octocat_hello_world_latest_pull_request_created',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '2024-01-01T00:00:00+00:00',
+  })
+# ---
+# name: test_all_entities[sensor.octocat_hello_world_latest_pull_request_updated-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': list([
+      None,
+    ]),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': None,
+    'entity_id': 'sensor.octocat_hello_world_latest_pull_request_updated',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'Latest pull request updated',
+    'options': dict({
+    }),
+    'original_device_class': <SensorDeviceClass.TIMESTAMP: 'timestamp'>,
+    'original_icon': None,
+    'original_name': 'Latest pull request updated',
+    'platform': 'github',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'latest_pull_request_updated',
+    'unique_id': '1296269_latest_pull_request_updated',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_all_entities[sensor.octocat_hello_world_latest_pull_request_updated-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      <EntityStateAttribute.ATTRIBUTION: 'attribution'>: 'Data provided by the GitHub API',
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'timestamp',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'octocat/Hello-World Latest pull request updated',
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.octocat_hello_world_latest_pull_request_updated',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '2024-01-02T00:00:00+00:00',
   })
 # ---
 # name: test_all_entities[sensor.octocat_hello_world_latest_release-entry]
@@ -537,6 +901,58 @@
     'state': 'v1.0.0',
   })
 # ---
+# name: test_all_entities[sensor.octocat_hello_world_latest_release_published-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': list([
+      None,
+    ]),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': None,
+    'entity_id': 'sensor.octocat_hello_world_latest_release_published',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'Latest release published',
+    'options': dict({
+    }),
+    'original_device_class': <SensorDeviceClass.TIMESTAMP: 'timestamp'>,
+    'original_icon': None,
+    'original_name': 'Latest release published',
+    'platform': 'github',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'latest_release_published',
+    'unique_id': '1296269_latest_release_published',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_all_entities[sensor.octocat_hello_world_latest_release_published-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      <EntityStateAttribute.ATTRIBUTION: 'attribution'>: 'Data provided by the GitHub API',
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'timestamp',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'octocat/Hello-World Latest release published',
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.octocat_hello_world_latest_release_published',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '2024-01-02T00:00:00+00:00',
+  })
+# ---
 # name: test_all_entities[sensor.octocat_hello_world_latest_tag-entry]
   EntityRegistryEntrySnapshot({
     'aliases': list([
@@ -587,6 +1003,58 @@
     'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': 'v1.0.0',
+  })
+# ---
+# name: test_all_entities[sensor.octocat_hello_world_latest_tag_committed-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': list([
+      None,
+    ]),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': None,
+    'entity_id': 'sensor.octocat_hello_world_latest_tag_committed',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'Latest tag committed',
+    'options': dict({
+    }),
+    'original_device_class': <SensorDeviceClass.TIMESTAMP: 'timestamp'>,
+    'original_icon': None,
+    'original_name': 'Latest tag committed',
+    'platform': 'github',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'latest_tag_committed',
+    'unique_id': '1296269_latest_tag_committed',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_all_entities[sensor.octocat_hello_world_latest_tag_committed-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      <EntityStateAttribute.ATTRIBUTION: 'attribution'>: 'Data provided by the GitHub API',
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'timestamp',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'octocat/Hello-World Latest tag committed',
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.octocat_hello_world_latest_tag_committed',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '2024-01-02T00:00:00+00:00',
   })
 # ---
 # name: test_all_entities[sensor.octocat_hello_world_merged_pull_requests-entry]

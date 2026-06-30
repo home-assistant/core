@@ -33,6 +33,7 @@ query ($owner: String!, $repository: String!) {
           message: messageHeadline
           url
           sha: oid
+          committed: committedDate
         }
       }
     }
@@ -52,6 +53,8 @@ query ($owner: String!, $repository: String!) {
         title
         url
         number
+        created: createdAt
+        updated: updatedAt
       }
     }
     issue: issues(
@@ -64,6 +67,8 @@ query ($owner: String!, $repository: String!) {
         title
         url
         number
+        created: createdAt
+        updated: updatedAt
       }
     }
     pull_request: pullRequests(
@@ -76,6 +81,8 @@ query ($owner: String!, $repository: String!) {
         title
         url
         number
+        created: createdAt
+        updated: updatedAt
       }
     }
     merged_pull_request: pullRequests(
@@ -88,6 +95,7 @@ query ($owner: String!, $repository: String!) {
       name
       url
       tag: tagName
+      published: publishedAt
     }
     refs(
       first: 1
@@ -98,6 +106,11 @@ query ($owner: String!, $repository: String!) {
         name
         target {
           url: commitUrl
+          # committedDate lives on Commit; an annotated tag's target is a
+          # Tag object, so this resolves to null for those.
+          ... on Commit {
+            committed: committedDate
+          }
         }
       }
     }
