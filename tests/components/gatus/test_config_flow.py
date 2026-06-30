@@ -108,7 +108,9 @@ async def test_form_already_configured(hass: HomeAssistant) -> None:
     assert result["reason"] == "already_configured"
 
 
-async def test_form_already_configured_by_unique_id(hass: HomeAssistant) -> None:
+async def test_form_already_configured_by_unique_id(
+    hass: HomeAssistant, mock_setup_entry: AsyncMock
+) -> None:
     """Test that configurations with different URLs but matching unique IDs abort correctly."""
     old_entry = MockConfigEntry(
         domain=DOMAIN,
