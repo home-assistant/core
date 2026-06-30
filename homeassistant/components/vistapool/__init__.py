@@ -127,8 +127,11 @@ async def async_unload_entry(hass: HomeAssistant, entry: VistapoolConfigEntry) -
     """Unload Vistapool config entry."""
     unload_ok = await hass.config_entries.async_unload_platforms(entry, PLATFORMS)
     if unload_ok:
-        for coordinator in entry.runtime_data.coordinators.values():
-            await coordinator.async_shutdown()
+        # Hold sync_lock so a reconcile background task can't mutate the
+        # coordinators dict while we shut it down.
+        async with entry.runtime_data.sync_lock:
+            for coordinator in entry.runtime_data.coordinators.values():
+                await coordinator.async_shutdown()
     return unload_ok
 
 
