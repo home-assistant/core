@@ -35,7 +35,8 @@ from .models import TessieVehicleData
 
 PARALLEL_UPDATES = 0
 
-COP_MODES = {"Off": HVACMode.OFF, "On": HVACMode.COOL, "FanOnly": HVACMode.FAN_ONLY}
+# FanOnly currently not supported by upstream library
+COP_MODES = {"Off": HVACMode.OFF, "On": HVACMode.COOL}
 COP_LEVELS = {"Low": 30, "Medium": 35, "High": 40}
 
 
