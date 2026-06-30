@@ -227,8 +227,8 @@ class MikrotikData:
         _LOGGER.debug("Running command %s", cmd)
         try:
             if params:
-                return list(self.api(cmd=cmd, **params))
-            return list(self.api(cmd=cmd))
+                return list(self.api(cmd, **params))
+            return list(self.api(cmd))
         except (
             librouteros.exceptions.ConnectionClosed,
             OSError,
@@ -318,8 +318,7 @@ def get_api(entry: dict[str, Any]) -> librouteros.Api:
     """Connect to Mikrotik hub."""
     _LOGGER.debug("Connecting to Mikrotik hub [%s]", entry[CONF_HOST])
 
-    _login_method = (login_plain, login_token)
-    kwargs = {"login_methods": _login_method, "port": entry["port"], "encoding": "utf8"}
+    kwargs = {"port": entry["port"], "encoding": "utf8"}
 
     if entry[CONF_VERIFY_SSL]:
         ssl_context = ssl.create_default_context()
@@ -328,22 +327,30 @@ def get_api(entry: dict[str, Any]) -> librouteros.Api:
         _ssl_wrapper = ssl_context.wrap_socket
         kwargs["ssl_wrapper"] = _ssl_wrapper
 
-    try:
-        api = librouteros.connect(
-            entry[CONF_HOST],
-            entry[CONF_USERNAME],
-            entry[CONF_PASSWORD],
-            **kwargs,
-        )
-    except (
-        librouteros.exceptions.LibRouterosError,
-        OSError,
-        TimeoutError,
-    ) as api_error:
-        _LOGGER.error("Mikrotik %s error: %s", entry[CONF_HOST], api_error)
-        if "invalid user name or password" in str(api_error):
-            raise LoginError from api_error
-        raise CannotConnect from api_error
+    _error: Exception | None = None
+    for method in (login_plain, login_token):
+        try:
+            kwargs["login_method"] = method
+            api = librouteros.connect(
+                entry[CONF_HOST],
+                entry[CONF_USERNAME],
+                entry[CONF_PASSWORD],
+                **kwargs,
+            )
+            _error = None
+            break
+        except (
+            librouteros.exceptions.LibRouterosError,
+            OSError,
+            TimeoutError,
+        ) as api_error:
+            _error = api_error
+
+    if _error is not None:
+        _LOGGER.error("Mikrotik %s error: %s", entry[CONF_HOST], _error)
+        if "invalid user name or password" in str(_error):
+            raise LoginError from _error
+        raise CannotConnect from _error
 
     _LOGGER.debug("Connected to %s successfully", entry[CONF_HOST])
     return api
