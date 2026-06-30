@@ -35,11 +35,9 @@ rules:
   docs-configuration-parameters:
     status: exempt
     comment: No options flow
-  docs-installation-parameters: done
   docs-troubleshooting: done
   entity-category: done
   entity-disabled-by-default: done
-  entity-unavailable: done
   integration-owner: done
   log-when-unavailable: done
   parallel-updates: done
@@ -60,7 +58,6 @@ rules:
   docs-supported-functions: done
   docs-use-cases: done
   dynamic-devices: done
-  entity-device-class: done
   entity-translations: done
   exception-translations: done
   icon-translations: done
