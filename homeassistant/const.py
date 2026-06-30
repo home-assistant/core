@@ -7,6 +7,7 @@ from typing import TYPE_CHECKING, Final
 from .generated.entity_platforms import EntityPlatforms
 from .helpers.deprecation import (
     DeprecatedConstant,
+    DeprecatedConstantEnum,
     all_with_deprecated_constants,
     check_if_deprecated_constant,
     dir_with_deprecated_constants,
@@ -798,21 +799,27 @@ class UnitOfRatio(StrEnum):
 
 
 # Concentration units
-CONCENTRATION_GRAMS_PER_CUBIC_METER: Final = UnitOfDensity.GRAMS_PER_CUBIC_METER.value
-CONCENTRATION_MILLIGRAMS_PER_CUBIC_METER: Final = (
-    UnitOfDensity.MILLIGRAMS_PER_CUBIC_METER.value
+_DEPRECATED_CONCENTRATION_GRAMS_PER_CUBIC_METER = DeprecatedConstantEnum(
+    UnitOfDensity.GRAMS_PER_CUBIC_METER, "2027.8"
 )
-CONCENTRATION_MICROGRAMS_PER_CUBIC_METER: Final = (
-    UnitOfDensity.MICROGRAMS_PER_CUBIC_METER.value
+_DEPRECATED_CONCENTRATION_MILLIGRAMS_PER_CUBIC_METER = DeprecatedConstantEnum(
+    UnitOfDensity.MILLIGRAMS_PER_CUBIC_METER, "2027.8"
 )
-CONCENTRATION_MICROGRAMS_PER_CUBIC_FOOT: Final = (
-    UnitOfDensity.MICROGRAMS_PER_CUBIC_FOOT.value
+_DEPRECATED_CONCENTRATION_MICROGRAMS_PER_CUBIC_METER = DeprecatedConstantEnum(
+    UnitOfDensity.MICROGRAMS_PER_CUBIC_METER, "2027.8"
+)
+_DEPRECATED_CONCENTRATION_MICROGRAMS_PER_CUBIC_FOOT = DeprecatedConstantEnum(
+    UnitOfDensity.MICROGRAMS_PER_CUBIC_FOOT, "2027.8"
 )
 _DEPRECATED_CONCENTRATION_PARTS_PER_CUBIC_METER = DeprecatedConstant(
-    "p/m³", "p/m³", "2027.7"
+    "p/m³", "p/m³", "2027.8"
 )
-CONCENTRATION_PARTS_PER_MILLION: Final = UnitOfRatio.PARTS_PER_MILLION.value
-CONCENTRATION_PARTS_PER_BILLION: Final = UnitOfRatio.PARTS_PER_BILLION.value
+_DEPRECATED_CONCENTRATION_PARTS_PER_MILLION = DeprecatedConstantEnum(
+    UnitOfRatio.PARTS_PER_MILLION, "2027.8"
+)
+_DEPRECATED_CONCENTRATION_PARTS_PER_BILLION = DeprecatedConstantEnum(
+    UnitOfRatio.PARTS_PER_BILLION, "2027.8"
+)
 PERCENTAGE: Final = UnitOfRatio.PERCENTAGE.value
 
 
