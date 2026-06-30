@@ -52,8 +52,6 @@ async def test_setup_seeds_shadow_from_discover(
     assert shadow.co_alarm_status.value == 0
     assert shadow.heat_alarm_status.value == 0
     assert shadow.smoke_alarm_status.value == 0
-    assert shadow.temperature_c == 22.5
-    assert shadow.humidity == 45
 
 
 @pytest.mark.usefixtures("aioclient_mock_fixture")

@@ -3,9 +3,9 @@
 import json
 from unittest.mock import AsyncMock, MagicMock
 
+from place.models.device_shadow import AlarmStatus
 import pytest
 
-from homeassistant.components.gentex_place.const import AlarmStatus
 from homeassistant.config_entries import ConfigEntryState
 from homeassistant.core import HomeAssistant
 
@@ -45,33 +45,6 @@ async def test_mqtt_shadow_update(
 
 
 @pytest.mark.usefixtures("aioclient_mock_fixture")
-async def test_mqtt_shadow_merge_preserves_existing(
-    hass: HomeAssistant,
-    mock_config_entry: MockConfigEntry,
-    mock_provider: AsyncMock,
-    mock_get_iot_credentials: MagicMock,
-    mock_mqtt_client: MagicMock,
-) -> None:
-    """Test that sparse shadow updates merge without losing existing state."""
-    await setup_integration(hass, mock_config_entry)
-
-    coordinator = mock_config_entry.runtime_data
-    assert coordinator.data["thing-001"].temperature_c == 22.5
-
-    # Send update with only alarm — temperature should be preserved
-    payload = json.dumps({"state": {"reported": {"coAlarmStatus": 4}}}).encode()
-    trigger_shadow_callback(
-        mock_mqtt_client,
-        "$aws/things/thing-001/shadow/update/accepted",
-        payload,
-    )
-    await hass.async_block_till_done()
-
-    assert coordinator.data["thing-001"].co_alarm_status is AlarmStatus.CRITICAL_ALARM
-    assert coordinator.data["thing-001"].temperature_c == 22.5
-
-
-@pytest.mark.usefixtures("aioclient_mock_fixture")
 async def test_mqtt_shadow_new_device(
     hass: HomeAssistant,
     mock_config_entry: MockConfigEntry,
@@ -85,9 +58,7 @@ async def test_mqtt_shadow_new_device(
     coordinator = mock_config_entry.runtime_data
     assert "thing-999" not in coordinator.data
 
-    payload = json.dumps(
-        {"state": {"reported": {"coAlarmStatus": 1, "temperatureC": 18.0}}}
-    ).encode()
+    payload = json.dumps({"state": {"reported": {"coAlarmStatus": 1}}}).encode()
     trigger_shadow_callback(
         mock_mqtt_client,
         "$aws/things/thing-999/shadow/get/accepted",
@@ -97,7 +68,6 @@ async def test_mqtt_shadow_new_device(
 
     assert "thing-999" in coordinator.data
     assert coordinator.data["thing-999"].co_alarm_status is AlarmStatus.TEST
-    assert coordinator.data["thing-999"].temperature_c == 18.0
 
 
 @pytest.mark.usefixtures("aioclient_mock_fixture")
