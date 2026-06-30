@@ -94,8 +94,7 @@ class ImouSwitch(ImouEntity, SwitchEntity):
     ) -> None:
         """Initialize the Imou switch entity."""
         super().__init__(coordinator, entity_type, device)
-        if device_class := SWITCH_DEVICE_CLASS.get(entity_type):
-            self._attr_device_class = device_class
+        self._attr_device_class = SWITCH_DEVICE_CLASS.get(entity_type)
 
     @property
     @override
@@ -121,7 +120,6 @@ class ImouSwitch(ImouEntity, SwitchEntity):
                 self._entity_type,
                 enable,
             )
-            self.device.switches[self._entity_type][PARAM_STATE] = enable
-            self.async_write_ha_state()
         except ImouException as e:
             raise HomeAssistantError(str(e)) from e
+        await self.coordinator.async_request_refresh()

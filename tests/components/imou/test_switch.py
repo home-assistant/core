@@ -30,6 +30,14 @@ from .const import DEFAULT_SWITCHES, UNKNOWN_SWITCH_KEY, create_online_device
 
 from tests.common import MockConfigEntry, async_fire_time_changed, snapshot_platform
 
+
+async def _apply_switch_operation(
+    device: ImouHaDevice, switch_type: str, enable: bool
+) -> None:
+    """Simulate the vendor API updating switch state after a command."""
+    device.switches[switch_type][PARAM_STATE] = enable
+
+
 SWITCH_MOCK_DEVICES = [
     create_online_device(
         "d1",
@@ -91,6 +99,7 @@ async def test_turn_on_via_service(
     init_integration: MagicMock,
 ) -> None:
     """Turning on a switch calls the vendor library through the coordinator."""
+    init_integration.async_switch_operation.side_effect = _apply_switch_operation
     motion_entry = next(
         entry
         for entry in er.async_entries_for_config_entry(
@@ -123,6 +132,7 @@ async def test_turn_off_via_service(
     init_integration: MagicMock,
 ) -> None:
     """Turning off a switch calls the vendor library through the coordinator."""
+    init_integration.async_switch_operation.side_effect = _apply_switch_operation
     header_entry = next(
         entry
         for entry in er.async_entries_for_config_entry(
