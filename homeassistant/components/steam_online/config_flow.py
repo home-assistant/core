@@ -149,9 +149,7 @@ class SteamFlowHandler(ConfigFlow, domain=DOMAIN):
                 errors["base"] = "unknown"
 
             if not errors:
-                return self.async_update_reload_and_abort(
-                    entry, data_updates=user_input
-                )
+                return self.async_update_and_abort(entry, data_updates=user_input)
         return self.async_show_form(
             step_id=(
                 "reauth_confirm" if self.source == SOURCE_REAUTH else SOURCE_RECONFIGURE
@@ -239,6 +237,9 @@ class FriendSubentryFlowHandler(ConfigSubentryFlow):
             if "401" in str(e):
                 return self.async_abort(reason="friendlist_private")
             return self.async_abort(reason="cannot_connect")
+        except Exception:
+            _LOGGER.exception("Unknown exception")
+            return self.async_abort(reason="unknown")
 
         existing_subentries = {
             subentry.unique_id

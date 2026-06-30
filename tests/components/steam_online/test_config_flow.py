@@ -333,6 +333,10 @@ async def test_add_friend_flow_already_configured_as_entry(hass: HomeAssistant) 
             steam.api.HTTPTimeoutError,
             "timeout_connect",
         ),
+        (
+            ValueError,
+            "unknown",
+        ),
     ],
 )
 async def test_add_friend_flow_abort_errors(
