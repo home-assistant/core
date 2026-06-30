@@ -1,6 +1,7 @@
 """Coordinator for the energieleser integration."""
 
 from datetime import timedelta
+from typing import override
 
 from energieleser import (
     EnergieleserClient,
@@ -44,6 +45,7 @@ class EnergieleserCoordinator(DataUpdateCoordinator[EnergieleserDevice]):
         self.client = client
         self.device_id = config_entry.data[CONF_DEVICE_ID]
 
+    @override
     async def _async_update_data(self) -> EnergieleserDevice:
         """Fetch data from the energieleser device API."""
         try:

@@ -4,6 +4,7 @@ from collections.abc import AsyncGenerator
 from contextlib import asynccontextmanager
 from dataclasses import dataclass
 import logging
+from typing import override
 
 from arcam.fmj import ConnectionFailed
 from arcam.fmj.client import AmxDuetResponse, Client, ResponsePacket
@@ -72,6 +73,7 @@ class ArcamFmjCoordinator(DataUpdateCoordinator[None]):
         if zone != 1:
             self.device_info["via_device"] = (DOMAIN, unique_id)
 
+    @override
     async def _async_update_data(self) -> None:
         """Fetch data for manual refresh."""
         try:

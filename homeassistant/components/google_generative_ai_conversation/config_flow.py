@@ -3,7 +3,7 @@
 from collections.abc import Mapping
 from functools import partial
 import logging
-from typing import Any, cast
+from typing import Any, cast, override
 
 from google import genai
 from google.genai.errors import APIError, ClientError
@@ -162,6 +162,7 @@ class GoogleGenerativeAIConfigFlow(ConfigFlow, domain=DOMAIN):
             errors=errors,
         )
 
+    @override
     async def async_step_user(
         self, user_input: dict[str, Any] | None = None
     ) -> ConfigFlowResult:
@@ -192,6 +193,7 @@ class GoogleGenerativeAIConfigFlow(ConfigFlow, domain=DOMAIN):
 
     @classmethod
     @callback
+    @override
     def async_get_supported_subentry_types(
         cls, config_entry: ConfigEntry
     ) -> dict[str, type[ConfigSubentryFlow]]:

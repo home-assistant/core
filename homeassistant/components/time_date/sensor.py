@@ -3,7 +3,7 @@
 from collections.abc import Callable, Mapping
 from datetime import datetime, timedelta
 import logging
-from typing import Any
+from typing import Any, override
 
 import voluptuous as vol
 
@@ -86,11 +86,13 @@ class TimeDateSensor(SensorEntity):
         self._update_internal_state(dt_util.utcnow())
 
     @property
+    @override
     def native_value(self) -> str | None:
         """Return the state of the sensor."""
         return self._state
 
     @property
+    @override
     def icon(self) -> str:
         """Icon to use in the frontend, if any."""
         if "date" in self.type and "time" in self.type:
@@ -128,6 +130,7 @@ class TimeDateSensor(SensorEntity):
         point_in_time_listener(None)
         return async_stop_preview
 
+    @override
     async def async_added_to_hass(self) -> None:
         """Set up first update."""
 
@@ -141,6 +144,7 @@ class TimeDateSensor(SensorEntity):
         )
         self._update_state_and_setup_listener()
 
+    @override
     async def async_will_remove_from_hass(self) -> None:
         """Cancel next update."""
         if self.unsub:

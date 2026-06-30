@@ -39,8 +39,8 @@
 # name: test_setup[binary_sensor.mock_aquarium_mock_reeflex_light-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'device_class': 'light',
-      'friendly_name': 'Mock reeflex Light',
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'light',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Mock reeflex Light',
     }),
     'context': <ANY>,
     'entity_id': 'binary_sensor.mock_aquarium_mock_reeflex_light',
@@ -90,8 +90,8 @@
 # name: test_setup[binary_sensor.mock_aquarium_mock_reeflex_uvc_lamp_connected-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'device_class': 'connectivity',
-      'friendly_name': 'Mock reeflex UVC lamp connected',
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'connectivity',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Mock reeflex UVC lamp connected',
     }),
     'context': <ANY>,
     'entity_id': 'binary_sensor.mock_aquarium_mock_reeflex_uvc_lamp_connected',

@@ -2,7 +2,7 @@
 
 from datetime import datetime
 import logging
-from typing import TYPE_CHECKING
+from typing import TYPE_CHECKING, override
 
 from aioautomower.model import make_name_string
 
@@ -68,6 +68,7 @@ class AutomowerCalendarEntity(AutomowerBaseEntity, CalendarEntity):
         return device_entry.name_by_user or device_entry.name
 
     @property
+    @override
     def event(self) -> CalendarEvent | None:
         """Return the current or next upcoming event."""
         if not self.available:
@@ -90,6 +91,7 @@ class AutomowerCalendarEntity(AutomowerBaseEntity, CalendarEntity):
             rrule=program_event.rrule_str,
         )
 
+    @override
     async def async_get_events(
         self, hass: HomeAssistant, start_date: datetime, end_date: datetime
     ) -> list[CalendarEvent]:

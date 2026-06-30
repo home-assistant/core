@@ -1,6 +1,6 @@
 """Example auth module."""
 
-from typing import Any
+from typing import Any, override
 
 import voluptuous as vol
 
@@ -35,6 +35,7 @@ class InsecureExampleModule(MultiFactorAuthModule):
         self._data = config["data"]
 
     @property
+    @override
     def input_schema(self) -> vol.Schema:
         """Validate login flow input data."""
         return vol.Schema({vol.Required("pin"): str})
@@ -44,6 +45,7 @@ class InsecureExampleModule(MultiFactorAuthModule):
         """Validate async_setup_user input data."""
         return vol.Schema({vol.Required("pin"): str})
 
+    @override
     async def async_setup_flow(self, user_id: str) -> SetupFlow:
         """Return a data entry flow handler for setup module.
 
@@ -51,6 +53,7 @@ class InsecureExampleModule(MultiFactorAuthModule):
         """
         return SetupFlow(self, self.setup_schema, user_id)
 
+    @override
     async def async_setup_user(self, user_id: str, setup_data: Any) -> Any:
         """Set up user to use mfa module."""
         # data shall has been validate in caller
@@ -64,6 +67,7 @@ class InsecureExampleModule(MultiFactorAuthModule):
 
         self._data.append({"user_id": user_id, "pin": pin})
 
+    @override
     async def async_depose_user(self, user_id: str) -> None:
         """Remove user from mfa module."""
         found = None
@@ -74,10 +78,12 @@ class InsecureExampleModule(MultiFactorAuthModule):
         if found:
             self._data.remove(found)
 
+    @override
     async def async_is_user_setup(self, user_id: str) -> bool:
         """Return whether user is setup."""
         return any(data["user_id"] == user_id for data in self._data)
 
+    @override
     async def async_validate(self, user_id: str, user_input: dict[str, Any]) -> bool:
         """Return True if validation passed."""
         return any(

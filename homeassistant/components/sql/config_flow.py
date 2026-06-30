@@ -1,7 +1,7 @@
 """Adds config flow for SQL integration."""
 
 import logging
-from typing import Any
+from typing import Any, override
 
 import sqlalchemy
 from sqlalchemy.engine import Engine, Result
@@ -170,12 +170,14 @@ class SQLConfigFlow(ConfigFlow, domain=DOMAIN):
 
     @staticmethod
     @callback
+    @override
     def async_get_options_flow(
         config_entry: ConfigEntry,
     ) -> SQLOptionsFlowHandler:
         """Get the options flow for this handler."""
         return SQLOptionsFlowHandler()
 
+    @override
     async def async_step_user(
         self, user_input: dict[str, Any] | None = None
     ) -> ConfigFlowResult:

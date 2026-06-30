@@ -4,7 +4,7 @@ from collections.abc import Awaitable
 from datetime import timedelta
 from http import HTTPStatus
 import logging
-from typing import Any
+from typing import Any, override
 
 import evohomeasync as ec1
 import evohomeasync2 as ec2
@@ -81,6 +81,7 @@ class EvoDataUpdateCoordinator(DataUpdateCoordinator):
             log_failures=False, raise_on_auth_failed=True, raise_on_entry_error=True
         )
 
+    @override
     async def _async_setup(self) -> None:
         """Set up the coordinator.
 
@@ -221,6 +222,7 @@ class EvoDataUpdateCoordinator(DataUpdateCoordinator):
             except ec2.InvalidScheduleError as err:
                 self.logger.warning("DHW has an invalid/missing schedule: %r", err)
 
+    @override
     async def _async_update_data(self) -> EvoLocStatusResponseT:  # type: ignore[override]
         """Fetch the latest state of an entire TCC Location.
 

@@ -3,7 +3,7 @@
 from collections.abc import Mapping
 import json
 import logging
-from typing import TYPE_CHECKING, Any, cast
+from typing import TYPE_CHECKING, Any, cast, override
 
 import anthropic
 import voluptuous as vol
@@ -107,6 +107,7 @@ class AnthropicConfigFlow(ConfigFlow, domain=DOMAIN):
     VERSION = 2
     MINOR_VERSION = 4
 
+    @override
     async def async_step_user(
         self, user_input: dict[str, Any] | None = None
     ) -> ConfigFlowResult:
@@ -183,6 +184,7 @@ class AnthropicConfigFlow(ConfigFlow, domain=DOMAIN):
 
     @classmethod
     @callback
+    @override
     def async_get_supported_subentry_types(
         cls, config_entry: AnthropicConfigEntry
     ) -> dict[str, type[ConfigSubentryFlow]]:
@@ -296,7 +298,7 @@ class ConversationSubentryFlowHandler(ConfigSubentryFlow):
                 ):
                     self.options.pop(CONF_LLM_HASS_API)
                 if not errors:
-                    return await self.async_step_advanced()
+                    return await self.async_step_additional()
 
         return self.async_show_form(
             step_id="init",
@@ -306,10 +308,10 @@ class ConversationSubentryFlowHandler(ConfigSubentryFlow):
             errors=errors or None,
         )
 
-    async def async_step_advanced(
+    async def async_step_additional(
         self, user_input: dict[str, Any] | None = None
     ) -> SubentryFlowResult:
-        """Manage advanced options."""
+        """Manage additional options."""
         errors: dict[str, str] = {}
         description_placeholders: dict[str, str] = {}
 
@@ -358,7 +360,7 @@ class ConversationSubentryFlowHandler(ConfigSubentryFlow):
                 return await self.async_step_model()
 
         return self.async_show_form(
-            step_id="advanced",
+            step_id="additional",
             data_schema=self.add_suggested_values_to_schema(
                 vol.Schema(step_schema), self.options
             ),

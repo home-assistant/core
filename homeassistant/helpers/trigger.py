@@ -4,6 +4,7 @@ import abc
 import asyncio
 from collections import defaultdict
 from collections.abc import Callable, Coroutine, Iterable, Mapping
+from contextvars import copy_context
 from dataclasses import dataclass, field
 from datetime import datetime, timedelta
 import functools
@@ -78,6 +79,7 @@ from .automation import (
     move_options_fields_to_top_level,
 )
 from .event import async_call_later
+from .frame import report_usage
 from .integration_platform import async_process_integration_platforms
 from .selector import (
     NumericThresholdMode,
@@ -111,7 +113,6 @@ DATA_PLUGGABLE_ACTIONS: HassKey[defaultdict[tuple, PluggableActionsEntry]] = Has
 TRIGGER_DESCRIPTION_CACHE: HassKey[dict[str, dict[str, Any] | None]] = HassKey(
     "trigger_description_cache"
 )
-TRIGGER_DISABLED_TRIGGERS: HassKey[set[str]] = HassKey("trigger_disabled_triggers")
 TRIGGER_PLATFORM_SUBSCRIPTIONS: HassKey[
     list[Callable[[set[str]], Coroutine[Any, Any, None]]]
 ] = HassKey("trigger_platform_subscriptions")
@@ -153,27 +154,9 @@ _TRIGGERS_DESCRIPTION_SCHEMA = vol.Schema(
 
 async def async_setup(hass: HomeAssistant) -> None:
     """Set up the trigger helper."""
-    from homeassistant.components import automation, labs  # noqa: PLC0415
-
     hass.data[TRIGGER_DESCRIPTION_CACHE] = {}
-    hass.data[TRIGGER_DISABLED_TRIGGERS] = set()
     hass.data[TRIGGER_PLATFORM_SUBSCRIPTIONS] = []
     hass.data[TRIGGERS] = {}
-
-    async def new_triggers_conditions_listener(
-        _event_data: labs.EventLabsUpdatedData,
-    ) -> None:
-        """Handle new_triggers_conditions flag change."""
-        # Invalidate the cache
-        hass.data[TRIGGER_DESCRIPTION_CACHE] = {}
-        hass.data[TRIGGER_DISABLED_TRIGGERS] = set()
-
-    labs.async_subscribe_preview_feature(
-        hass,
-        automation.DOMAIN,
-        automation.NEW_TRIGGERS_CONDITIONS_FEATURE_FLAG,
-        new_triggers_conditions_listener,
-    )
 
     await async_process_integration_platforms(
         hass, "trigger", _register_trigger_platform, wait_for_platforms=True
@@ -200,11 +183,9 @@ async def _register_trigger_platform(
 ) -> None:
     """Register a trigger platform and notify listeners.
 
-    If the trigger platform does not provide any triggers, or it is disabled,
+    If the trigger platform does not provide any triggers,
     listeners will not be notified.
     """
-    from homeassistant.components import automation  # noqa: PLC0415
-
     new_triggers: set[str] = set()
     triggers = hass.data[TRIGGERS]
 
@@ -234,10 +215,6 @@ async def _register_trigger_platform(
             "Integration %s does not provide trigger support, skipping",
             integration_domain,
         )
-        return
-
-    if automation.is_disabled_experimental_trigger(hass, integration_domain):
-        _LOGGER.debug("Triggers for integration %s are disabled", integration_domain)
         return
 
     # We don't use gather here because gather adds additional overhead
@@ -304,8 +281,15 @@ class Trigger(abc.ABC):
         self,
         action: TriggerAction,
         action_payload_builder: TriggerActionPayloadBuilder,
+        *,
+        did_not_trigger: TriggerNotTriggeredReporter | None = None,
     ) -> CALLBACK_TYPE:
-        """Attach the trigger to an action."""
+        """Attach the trigger to an action.
+
+        The optional ``did_not_trigger`` reporter is the sibling of the action
+        runner: triggers may call it - in certain interesting cases - when they
+        evaluate a relevant change but decide not to fire.
+        """
 
         @callback
         def run_action(
@@ -318,11 +302,13 @@ class Trigger(abc.ABC):
             payload = action_payload_builder(extra_trigger_payload, description)
             return self._hass.async_create_task(action(payload, context))
 
-        return await self.async_attach_runner(run_action)
+        return await self.async_attach_runner(run_action, did_not_trigger)
 
     @abc.abstractmethod
     async def async_attach_runner(
-        self, run_action: TriggerActionRunner
+        self,
+        run_action: TriggerActionRunner,
+        did_not_trigger: TriggerNotTriggeredReporter | None = None,
     ) -> CALLBACK_TYPE:
         """Attach the trigger to an action runner."""
 
@@ -555,7 +541,9 @@ class EntityTriggerBase(Trigger):
 
     @override
     async def async_attach_runner(
-        self, run_action: TriggerActionRunner
+        self,
+        run_action: TriggerActionRunner,
+        did_not_trigger: TriggerNotTriggeredReporter | None = None,
     ) -> CALLBACK_TYPE:
         """Attach the trigger to an action runner."""
 
@@ -710,6 +698,7 @@ class EntityTargetStateTriggerBase(EntityTriggerBase):
 
     _to_states: set[str]
 
+    @override
     def is_valid_transition(self, from_state: State, to_state: State) -> bool:
         """Check the value changed and the origin was not already a target state."""
         from_value = self._get_tracked_value(from_state)
@@ -718,6 +707,7 @@ class EntityTargetStateTriggerBase(EntityTriggerBase):
             and from_value not in self._to_states
         )
 
+    @override
     def is_valid_state(self, state: State) -> bool:
         """Check if the new state matches the expected state."""
         return self._get_tracked_value(state) in self._to_states
@@ -729,6 +719,7 @@ class EntityTransitionTriggerBase(EntityTriggerBase):
     _from_states: set[str | bool]
     _to_states: set[str | bool]
 
+    @override
     def is_valid_transition(self, from_state: State, to_state: State) -> bool:
         """Check if the origin state matches the expected ones."""
         from_value = self._get_tracked_value(from_state)
@@ -737,6 +728,7 @@ class EntityTransitionTriggerBase(EntityTriggerBase):
             and from_value in self._from_states
         )
 
+    @override
     def is_valid_state(self, state: State) -> bool:
         """Check if the new state matches the expected states."""
         return self._get_tracked_value(state) in self._to_states
@@ -747,6 +739,7 @@ class EntityOriginStateTriggerBase(EntityTriggerBase):
 
     _from_state: str
 
+    @override
     def is_valid_transition(self, from_state: State, to_state: State) -> bool:
         """Check if origin state matches expected and that the state changed."""
         return bool(
@@ -754,6 +747,7 @@ class EntityOriginStateTriggerBase(EntityTriggerBase):
             and self._get_tracked_value(to_state) != self._from_state
         )
 
+    @override
     def is_valid_state(self, state: State) -> bool:
         """Check that the new state is different from the origin state."""
         return bool(self._get_tracked_value(state) != self._from_state)
@@ -829,6 +823,7 @@ class EntityNumericalStateTriggerBase(EntityTriggerBase):
             # Entity state is not a valid number
             return None
 
+    @override
     def _get_tracked_value(self, state: State) -> float | None:
         """Get the tracked numerical value from a state."""
         domain_spec = self._domain_specs[state.domain]
@@ -846,6 +841,7 @@ class EntityNumericalStateTriggerBase(EntityTriggerBase):
             # Entity state is not a valid number
             return None
 
+    @override
     def is_valid_state(self, state: State) -> bool:
         """Check if the new state or state attribute matches the expected one."""
         # Handle missing or None value case first to avoid expensive exceptions
@@ -890,6 +886,7 @@ class EntityNumericalStateTriggerWithUnitBase(EntityNumericalStateTriggerBase):
         """Get the unit of an entity from its state."""
         return state.attributes.get(ATTR_UNIT_OF_MEASUREMENT)
 
+    @override
     def _get_threshold_value(self, threshold: ThresholdConfig | None) -> float | None:
         """Get threshold value from float or entity state."""
         if threshold is None:
@@ -918,6 +915,7 @@ class EntityNumericalStateTriggerWithUnitBase(EntityNumericalStateTriggerBase):
             # Unit conversion failed (i.e. incompatible units), treat as invalid number
             return None
 
+    @override
     def _get_tracked_value(self, state: State) -> float | None:
         """Get the tracked numerical value from a state."""
         domain_spec = self._domain_specs[state.domain]
@@ -947,6 +945,7 @@ class EntityNumericalStateChangedTriggerBase(EntityNumericalStateTriggerBase):
 
     _schema = NUMERICAL_ATTRIBUTE_CHANGED_TRIGGER_SCHEMA
 
+    @override
     def is_valid_transition(self, from_state: State, to_state: State) -> bool:
         """Check if the tracked numeric value has changed."""
         return self._get_tracked_value(from_state) != self._get_tracked_value(to_state)
@@ -978,6 +977,7 @@ class EntityNumericalStateChangedTriggerWithUnitBase(
 ):
     """Trigger for numerical state and state attribute changes."""
 
+    @override
     def __init_subclass__(cls, **kwargs: Any) -> None:
         """Create a schema."""
         super().__init_subclass__(**kwargs)
@@ -1006,6 +1006,7 @@ class EntityNumericalStateCrossedThresholdTriggerBase(EntityNumericalStateTrigge
 
     _schema = NUMERICAL_ATTRIBUTE_CROSSED_THRESHOLD_SCHEMA
 
+    @override
     def is_valid_transition(self, from_state: State, to_state: State) -> bool:
         """Check that the tracked value crossed into the threshold range."""
         return not self.is_valid_state(from_state)
@@ -1039,6 +1040,7 @@ class EntityNumericalStateCrossedThresholdTriggerWithUnitBase(
 ):
     """Trigger for numerical state and state attribute changes."""
 
+    @override
     def __init_subclass__(cls, **kwargs: Any) -> None:
         """Create a schema."""
         super().__init_subclass__(**kwargs)
@@ -1233,6 +1235,27 @@ class TriggerConfig:
     options: dict[str, Any] | None = None
 
 
+@dataclass(slots=True, frozen=True)
+class NotTriggeredInfo:
+    """Diagnostics describing why a trigger evaluated a change but did not fire.
+
+    Passed by a trigger to its ``did_not_trigger`` reporter, the sibling of the
+    action runner that is called - in certain interesting cases - when the
+    trigger does not fire. ``reason`` is a stable, machine-readable code; the
+    optional ``data`` carries the evaluated context for the trace.
+    """
+
+    reason: str
+    data: Mapping[str, Any] | None = None
+
+    def as_dict(self) -> dict[str, Any]:
+        """Return a JSON-serializable dict for storing in a trace."""
+        result: dict[str, Any] = {"reason": self.reason}
+        if self.data is not None:
+            result["data"] = dict(self.data)
+        return result
+
+
 class TriggerActionRunner(Protocol):
     """Protocol type for the trigger action runner helper callback."""
 
@@ -1248,6 +1271,39 @@ class TriggerActionRunner(Protocol):
         Returns:
             A Task that allows awaiting for the action to finish.
         """
+
+
+class TriggerNotTriggeredReporter(Protocol):
+    """Protocol type for the did_not_trigger reporter passed to a trigger runner.
+
+    A trigger calls this to report that it evaluated a relevant change but
+    decided not to fire, supplying diagnostics for tracing.
+    """
+
+    @callback
+    def __call__(
+        self,
+        info: NotTriggeredInfo,
+        context: Context | None = None,
+    ) -> None:
+        """Report that the trigger did not fire."""
+
+
+class TriggerNotTriggeredAction(Protocol):
+    """Protocol type for the did_not_trigger consumer callback.
+
+    Sibling of the action callback. Invoked - instead of the action - when a
+    trigger evaluated a relevant change but reported it did not fire.
+    """
+
+    @callback
+    def __call__(
+        self,
+        run_variables: dict[str, Any],
+        info: NotTriggeredInfo,
+        context: Context | None = None,
+    ) -> None:
+        """Define did_not_trigger consumer callback type."""
 
 
 class TriggerActionPayloadBuilder(Protocol):
@@ -1295,7 +1351,6 @@ class TriggerInfo(TypedDict):
 
     domain: str
     name: str
-    home_assistant_start: bool
     variables: TemplateVarsType
     trigger_data: TriggerData
 
@@ -1418,21 +1473,12 @@ class PluggableAction:
 async def _async_get_trigger_platform(
     hass: HomeAssistant, trigger_key: str
 ) -> tuple[str, TriggerProtocol]:
-    from homeassistant.components import automation  # noqa: PLC0415
-
     platform_and_sub_type = trigger_key.split(".")
     platform = platform_and_sub_type[0]
     # Only apply aliases for old-style triggers (no sub_type).
     # New-style triggers (e.g. "event.received") use the integration domain directly.
     if len(platform_and_sub_type) == 1:
         platform = _PLATFORM_ALIASES.get(platform, platform)
-
-    if automation.is_disabled_experimental_trigger(hass, platform):
-        raise vol.Invalid(
-            f"Trigger '{trigger_key}' requires the experimental 'New triggers and "
-            "conditions' feature to be enabled in Home Assistant Labs settings "
-            f"(feature flag: '{automation.NEW_TRIGGERS_CONDITIONS_FEATURE_FLAG}')"
-        )
 
     try:
         integration = await async_get_integration(hass, platform)
@@ -1534,6 +1580,7 @@ async def _async_attach_trigger_cls(
     conf: ConfigType,
     action: Callable,
     trigger_info: TriggerInfo,
+    did_not_trigger: TriggerNotTriggeredAction | None = None,
 ) -> CALLBACK_TYPE:
     """Initialize a new Trigger class and attach it."""
 
@@ -1553,6 +1600,26 @@ async def _async_attach_trigger_cls(
             trigger_variables = conf[CONF_VARIABLES]
             payload.update(trigger_variables.async_render(hass, payload))
         return payload
+
+    report_not_triggered: TriggerNotTriggeredReporter | None = None
+    if did_not_trigger is not None:
+        not_triggered_action = did_not_trigger
+
+        @callback
+        def report_not_triggered(
+            info: NotTriggeredInfo, context: Context | None = None
+        ) -> None:
+            """Forward a did-not-fire report to the consumer."""
+            run_variables = {
+                "trigger": {
+                    **trigger_info["trigger_data"],
+                    CONF_PLATFORM: trigger_key,
+                }
+            }
+            # The consumer records a trace using the trace context variables.
+            # Run it in a copied context so it does not disturb the trace of the
+            # run that produced this state change (e.g. a chained automation).
+            copy_context().run(not_triggered_action, run_variables, info, context)
 
     # Wrap sync action so that it is always async.
     # This simplifies the Trigger action runner interface by
@@ -1592,7 +1659,9 @@ async def _async_attach_trigger_cls(
             options=conf.get(CONF_OPTIONS),
         ),
     )
-    return await trigger.async_attach_action(action, action_payload_builder)
+    return await trigger.async_attach_action(
+        action, action_payload_builder, did_not_trigger=report_not_triggered
+    )
 
 
 async def async_initialize_triggers(
@@ -1602,10 +1671,25 @@ async def async_initialize_triggers(
     domain: str,
     name: str,
     log_cb: Callable,
-    home_assistant_start: bool = False,
+    home_assistant_start: bool | UndefinedType = UNDEFINED,
     variables: TemplateVarsType = None,
+    *,
+    did_not_trigger: TriggerNotTriggeredAction | None = None,
 ) -> CALLBACK_TYPE | None:
-    """Initialize triggers."""
+    """Initialize triggers.
+
+    The optional ``did_not_trigger`` consumer is the sibling of ``action``,
+    invoked - for new-style triggers that support it - when a trigger evaluates
+    a relevant change but reports it did not fire. Old-style triggers ignore it.
+    """
+    if home_assistant_start is not UNDEFINED:
+        report_usage(
+            "passes `home_assistant_start` to `async_initialize_triggers`, which is "
+            "deprecated and will be removed in Home Assistant 2027.8; the parameter "
+            "no longer has any effect",
+            breaks_in_ha_version="2027.8.0",
+        )
+
     triggers: list[asyncio.Task[CALLBACK_TYPE]] = []
     for idx, conf in enumerate(trigger_config):
         # Skip triggers that are not enabled
@@ -1629,7 +1713,6 @@ async def async_initialize_triggers(
         info = TriggerInfo(
             domain=domain,
             name=name,
-            home_assistant_start=home_assistant_start,
             variables=variables,
             trigger_data=trigger_data,
         )
@@ -1641,7 +1724,7 @@ async def async_initialize_triggers(
             )
             trigger_cls = trigger_descriptors[relative_trigger_key]
             coro = _async_attach_trigger_cls(
-                hass, trigger_cls, trigger_key, conf, action, info
+                hass, trigger_cls, trigger_key, conf, action, info, did_not_trigger
             )
         else:
             action_wrapper = _trigger_action_wrapper(hass, action, conf)
@@ -1720,8 +1803,6 @@ async def async_get_all_descriptions(
     hass: HomeAssistant,
 ) -> dict[str, dict[str, Any] | None]:
     """Return descriptions (i.e. user documentation) for all triggers."""
-    from homeassistant.components import automation  # noqa: PLC0415
-
     descriptions_cache = hass.data[TRIGGER_DESCRIPTION_CACHE]
 
     triggers = hass.data[TRIGGERS]
@@ -1730,9 +1811,7 @@ async def async_get_all_descriptions(
     all_triggers = set(triggers)
     previous_all_triggers = set(descriptions_cache)
     # If the triggers are the same, we can return the cache
-
-    # mypy complains: Invalid index type "HassKey[set[str]]" for "HassDict"
-    if previous_all_triggers | hass.data[TRIGGER_DISABLED_TRIGGERS] == all_triggers:  # type: ignore[index]
+    if previous_all_triggers == all_triggers:
         return descriptions_cache
 
     # Files we loaded for missing descriptions
@@ -1770,10 +1849,6 @@ async def async_get_all_descriptions(
     new_descriptions_cache = descriptions_cache.copy()
     for missing_trigger in missing_triggers:
         domain = triggers[missing_trigger]
-        if automation.is_disabled_experimental_trigger(hass, domain):
-            hass.data[TRIGGER_DISABLED_TRIGGERS].add(missing_trigger)
-            continue
-
         if (
             yaml_description := new_triggers_descriptions.get(domain, {}).get(
                 missing_trigger
