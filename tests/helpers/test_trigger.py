@@ -3856,6 +3856,7 @@ async def _arm_off_to_on_trigger(
     )
 
 
+@pytest.mark.usefixtures("mock_integration_frame")
 async def test_async_initialize_triggers_home_assistant_start_deprecated(
     hass: HomeAssistant,
     caplog: pytest.LogCaptureFixture,
@@ -3867,7 +3868,7 @@ async def test_async_initialize_triggers_home_assistant_start_deprecated(
     def action(run_variables: dict[str, Any], context: Context | None = None) -> None:
         pass
 
-    # The parameter no longer has any effect but must not raise for compatibility.
+    # The parameter no longer has any effect; passing it is logged, not raised.
     assert (
         await async_initialize_triggers(
             hass,
@@ -3882,7 +3883,7 @@ async def test_async_initialize_triggers_home_assistant_start_deprecated(
     )
     assert (
         "passes `home_assistant_start` to `async_initialize_triggers`, which is "
-        "deprecated and will be removed in Home Assistant 2027.2" in caplog.text
+        "deprecated and will be removed in Home Assistant 2027.8" in caplog.text
     )
 
 
