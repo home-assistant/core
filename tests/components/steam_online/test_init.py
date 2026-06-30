@@ -170,4 +170,6 @@ async def test_migrate_entry(
     assert subentries[0].title == ACCOUNT_NAME_2
     assert subentries[0].subentry_type == SUBENTRY_TYPE_FRIEND
 
+    assert config_entry.options == {}
+
     assert device_registry.async_get_device(identifiers={(DOMAIN, ACCOUNT_2)})
