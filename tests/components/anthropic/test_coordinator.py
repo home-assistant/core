@@ -29,16 +29,12 @@ async def test_client_setup(
     mock_config_entry: MockConfigEntry,
 ) -> None:
     """Test the Anthropic client is set up during coordinator setup."""
-    with (
-        patch(
-            "anthropic.resources.models.AsyncModels.list",
-            new_callable=AsyncMock,
-            return_value=AsyncPage(data=model_list),
-        ),
-        patch(
-            "homeassistant.components.anthropic.coordinator.anthropic.AsyncAnthropic",
-        ) as mock_client,
-    ):
+    with patch(
+        "homeassistant.components.anthropic.coordinator.anthropic.AsyncAnthropic",
+    ) as mock_client:
+        mock_client.return_value.models.list = AsyncMock(
+            return_value=AsyncPage(data=model_list)
+        )
         assert await async_setup_component(hass, DOMAIN, {})
         await hass.async_block_till_done()
 
