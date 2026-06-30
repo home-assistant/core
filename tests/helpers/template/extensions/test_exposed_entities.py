@@ -56,3 +56,15 @@ async def test_assist_exposed_entities_only_conversation(
     info = render_to_info(hass, "{{ assist_exposed_entities() }}")
     assert_result_info(info, [entry1.entity_id, entry2.entity_id])
     assert info.rate_limit is None
+
+
+async def test_assist_exposed_entities_not_in_registry(hass: HomeAssistant) -> None:
+    """Test assist_exposed_entities includes entities not in the registry."""
+    assert await async_setup_component(hass, "homeassistant", {})
+
+    # Expose an entity that is not in the entity registry
+    async_expose_entity(hass, "conversation", "light.legacy", True)
+
+    info = render_to_info(hass, "{{ assist_exposed_entities() }}")
+    assert_result_info(info, ["light.legacy"])
+    assert info.rate_limit is None
