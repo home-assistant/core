@@ -53,12 +53,7 @@ def _timestamp_description(
     value_fn: Callable[[dict[str, Any]], StateType | datetime],
     avabl_fn: Callable[[dict[str, Any]], bool] = lambda data: True,
 ) -> GitHubSensorEntityDescription:
-    """Build a default-disabled timestamp sensor for a latest_* item.
-
-    These are opt-in: most users won't graph them, and every enabled entity
-    adds recorder/state-machine load, so they follow the entity-disabled-by-
-    default guidance.
-    """
+    """Build a default-disabled timestamp sensor for a latest_* item."""
     return GitHubSensorEntityDescription(
         key=key,
         translation_key=key,
