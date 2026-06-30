@@ -2,20 +2,22 @@
 
 from datetime import datetime
 import json
-from unittest.mock import MagicMock
+from unittest.mock import MagicMock, patch
 
 from aiopyarr import SonarrCalendar
 from freezegun.api import FrozenDateTimeFactory
 import pytest
+from syrupy.assertion import SnapshotAssertion
 
 from homeassistant.components.calendar import (
     DOMAIN as CALENDAR_DOMAIN,
     SERVICE_GET_EVENTS,
 )
-from homeassistant.const import STATE_OFF, STATE_ON
+from homeassistant.const import STATE_OFF, STATE_ON, Platform
 from homeassistant.core import HomeAssistant
+from homeassistant.helpers import entity_registry as er
 
-from tests.common import MockConfigEntry, async_load_fixture
+from tests.common import MockConfigEntry, async_load_fixture, snapshot_platform
 
 ENTITY_ID = "calendar.sonarr"
 
@@ -53,25 +55,19 @@ async def test_calendar_attributes(
     freezer: FrozenDateTimeFactory,
     mock_config_entry: MockConfigEntry,
     mock_sonarr: MagicMock,
+    entity_registry: er.EntityRegistry,
+    snapshot: SnapshotAssertion,
 ) -> None:
     """Test the Sonarr calendar entity attributes for the active event."""
     await hass.config.async_set_time_zone("UTC")
     freezer.move_to("2014-01-27 01:45:00+00:00")
 
     mock_config_entry.add_to_hass(hass)
-    await hass.config_entries.async_setup(mock_config_entry.entry_id)
-    await hass.async_block_till_done()
+    with patch("homeassistant.components.sonarr.PLATFORMS", [Platform.CALENDAR]):
+        await hass.config_entries.async_setup(mock_config_entry.entry_id)
+        await hass.async_block_till_done()
 
-    state = hass.states.get(ENTITY_ID)
-    assert state
-    assert state.attributes["all_day"] is False
-    assert (
-        state.attributes["message"]
-        == "Bob's Burgers - S04E11 - Easy Com-mercial, Easy Go-mercial"
-    )
-    assert state.attributes["start_time"] == "2014-01-27 01:30:00"
-    assert state.attributes["end_time"] == "2014-01-27 02:00:00"
-    assert state.attributes["description"].startswith("To compete with fellow")
+    await snapshot_platform(hass, entity_registry, snapshot, mock_config_entry.entry_id)
 
 
 async def test_calendar_get_events(
