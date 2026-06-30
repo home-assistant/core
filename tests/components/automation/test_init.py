@@ -23,7 +23,6 @@ from homeassistant.const import (
     ATTR_ENTITY_ID,
     ATTR_NAME,
     CONF_ID,
-    EVENT_HOMEASSISTANT_STARTED,
     SERVICE_RELOAD,
     SERVICE_TOGGLE,
     SERVICE_TURN_OFF,
@@ -1683,7 +1682,9 @@ async def test_automation_not_trigger_on_bootstrap(hass: HomeAssistant) -> None:
     await hass.async_block_till_done()
     assert len(calls) == 0
 
-    hass.bus.async_fire(EVENT_HOMEASSISTANT_STARTED)
+    # Triggers are armed by a startup job which runs during async_start, before
+    # EVENT_HOMEASSISTANT_STARTED is fired.
+    await hass.async_start()
     await hass.async_block_till_done()
     assert automation.is_on(hass, "automation.hello")
 
