@@ -114,8 +114,8 @@ async def test_form_already_configured_by_unique_id(
     """Test that configurations with different URLs but matching unique IDs abort correctly."""
     old_entry = MockConfigEntry(
         domain=DOMAIN,
-        data={CONF_URL: "http://gatus.local:8080/"},
-        unique_id="gatus.local:8080",
+        data={CONF_URL: "http://127.0.0.1"},
+        unique_id="gatus.local",
     )
     old_entry.add_to_hass(hass)
 
@@ -129,7 +129,7 @@ async def test_form_already_configured_by_unique_id(
     ):
         result = await hass.config_entries.flow.async_configure(
             result["flow_id"],
-            {CONF_URL: "http://gatus.local:8080"},
+            {CONF_URL: "//gatus.local"},
         )
         await hass.async_block_till_done()
 
