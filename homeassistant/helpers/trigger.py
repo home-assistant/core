@@ -641,6 +641,9 @@ class EntityTriggerBase(Trigger):
                     target_state_change_data.targeted_entity_states,
                 )
                 if matches != included:
+                    report_not_triggered(
+                        "not_all_targets_matched", matches=matches, included=included
+                    )
                     return
             elif behavior == BEHAVIOR_FIRST:
                 # Note: It's enough to test for exactly 1 match here because if there
@@ -651,6 +654,9 @@ class EntityTriggerBase(Trigger):
                     target_state_change_data.targeted_entity_states,
                 )
                 if matches != 1:
+                    report_not_triggered(
+                        "behavior_first_not_satisfied", matches=matches
+                    )
                     return
 
             @callback
