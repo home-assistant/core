@@ -49,6 +49,9 @@ class VelbusButtonEvent(VelbusEntity, EventEntity):
 
     def _is_long_pressed(self) -> bool:
         """Return if Velbus has reported a long press."""
+        if callable(is_long_pressed := getattr(self._channel, "is_long_pressed", None)):
+            return bool(is_long_pressed())
+
         return bool(self._channel.get_channel_info().get("long", False))
 
     @override
