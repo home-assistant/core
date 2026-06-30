@@ -257,7 +257,7 @@ async def test_add_friend_flow(hass: HomeAssistant, steam_api: MagicMock) -> Non
 async def test_add_friend_flow_already_configured(
     hass: HomeAssistant, config_entry: MockConfigEntry
 ) -> None:
-    """Test add friend subentry flow."""
+    """Test add friend subentry flow aborts if friend is already configured as subentry."""
 
     config_entry.add_to_hass(hass)
     await hass.config_entries.async_setup(config_entry.entry_id)
@@ -278,7 +278,7 @@ async def test_add_friend_flow_already_configured(
 
 @pytest.mark.usefixtures("steam_api")
 async def test_add_friend_flow_already_configured_as_entry(hass: HomeAssistant) -> None:
-    """Test add friend subentry flow."""
+    """Test add friend subentry flow aborts if friend is already configured as config entry."""
     config_entry = MockConfigEntry(
         domain=DOMAIN,
         title=ACCOUNT_NAME_1,
