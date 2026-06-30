@@ -6,6 +6,7 @@ from unittest.mock import MagicMock, patch
 from pyps4_2ndscreen.credential import get_ddp_message
 from pyps4_2ndscreen.ddp import DEFAULT_UDP_PORT
 from pyps4_2ndscreen.media_art import TYPE_APP as PS_TYPE_APP
+from syrupy.assertion import SnapshotAssertion
 
 from homeassistant.components import ps4
 from homeassistant.components.media_player import (
@@ -323,6 +324,24 @@ async def test_device_info_is_set_from_status_correctly(
     assert mock_entry.identifiers == {(DOMAIN, MOCK_HOST_ID)}
 
 
+async def test_device_registry(
+    hass: HomeAssistant,
+    patch_get_status: MagicMock,
+    device_registry: dr.DeviceRegistry,
+    snapshot: SnapshotAssertion,
+) -> None:
+    """Test the device registry entry, including the network MAC connection."""
+    patch_get_status.return_value = MOCK_STATUS_STANDBY
+    await setup_mock_component(hass)
+
+    await hass.async_block_till_done()
+
+    device_entry = device_registry.async_get_device(
+        identifiers={(DOMAIN, MOCK_HOST_ID)}
+    )
+    assert device_entry == snapshot
+
+
 async def test_device_info_is_assummed(
     hass: HomeAssistant,
     device_registry: dr.DeviceRegistry,
@@ -544,7 +563,7 @@ async def test_entry_is_unloaded(hass: HomeAssistant) -> None:
         domain=ps4.DOMAIN, data=MOCK_DATA, version=VERSION, entry_id=MOCK_ENTRY_ID
     )
     mock_entity_id = await setup_mock_component(hass, mock_entry)
-    mock_unload = await ps4.async_unload_entry(hass, mock_entry)
+    mock_unload = await hass.config_entries.async_unload(mock_entry.entry_id)
 
     assert mock_unload is True
     assert not hass.data[PS4_DATA].devices

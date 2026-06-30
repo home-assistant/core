@@ -18,6 +18,12 @@
       }
     },
     "sensor": {
+      "co2_level": {
+        "default": "mdi:molecule-co2"
+      },
+      "open_status": {
+        "default": "mdi:window-open"
+      },
       "power_consumption": {
         "default": "mdi:lightning-bolt"
       }

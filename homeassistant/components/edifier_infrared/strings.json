@@ -18,5 +18,36 @@
         "title": "Set up Edifier IR speaker"
       }
     }
+  },
+  "entity": {
+    "button": {
+      "aux": {
+        "name": "AUX"
+      },
+      "bluetooth": {
+        "name": "Bluetooth"
+      },
+      "coax": {
+        "name": "Coaxial"
+      },
+      "fx_off": {
+        "name": "FX off"
+      },
+      "fx_on": {
+        "name": "FX on"
+      },
+      "line_1": {
+        "name": "Line 1"
+      },
+      "line_2": {
+        "name": "Line 2"
+      },
+      "optical": {
+        "name": "Optical"
+      },
+      "pc": {
+        "name": "PC"
+      }
+    }
   }
 }

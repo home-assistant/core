@@ -80,3 +80,55 @@ async def test_programmable_switch_button_fires_on_trigger(
         assert char.display_name == CHAR_PROGRAMMABLE_SWITCH_EVENT
     await acc.stop()
     await hass.async_block_till_done()
+
+
+async def test_programmable_switch_with_integer_subtype(
+    hass: HomeAssistant,
+    hk_driver,
+    demo_cleanup,
+    entity_registry: er.EntityRegistry,
+) -> None:
+    """Test DeviceTriggerAccessory handles a non-string (integer) trigger subtype.
+
+    Integrations such as Hue provide the button number as an ``int`` subtype.
+    This previously raised ``AttributeError: 'int' object has no attribute
+    'replace'`` and aborted setup of the whole HomeKit bridge.
+
+    Regression test for https://github.com/home-assistant/core/issues/93834
+    """
+    demo_config_entry = MockConfigEntry(domain="domain")
+    demo_config_entry.add_to_hass(hass)
+    assert await async_setup_component(hass, "homeassistant", {})
+    assert await async_setup_component(hass, "demo", {"demo": {}})
+    await hass.async_block_till_done()
+    hass.states.async_set("light.ceiling_lights", STATE_OFF)
+    await hass.async_block_till_done()
+
+    entry = entity_registry.async_get("light.ceiling_lights")
+    assert entry is not None
+    device_id = entry.device_id
+
+    # An integration such as Hue uses the button number (an int) as the subtype.
+    device_triggers = [
+        {
+            "platform": "device",
+            "domain": "hue",
+            "device_id": device_id,
+            "type": "remote_button_short_release",
+            "subtype": 1,
+        }
+    ]
+    acc = DeviceTriggerAccessory(
+        hass,
+        hk_driver,
+        "DeviceTriggerAccessory",
+        None,
+        1,
+        None,
+        device_id=device_id,
+        device_triggers=device_triggers,
+    )
+
+    switch_service = acc.get_service(SERV_STATELESS_PROGRAMMABLE_SWITCH)
+    configured_name_char = switch_service.get_characteristic(CHAR_CONFIGURED_NAME)
+    assert configured_name_char.value == "Remote Button Short Release 1"

@@ -14,6 +14,7 @@ from homeassistant.components.climate import (
     HVACMode,
 )
 from homeassistant.components.homeassistant.exposed_entities import async_expose_entity
+from homeassistant.components.intent import DOMAIN
 from homeassistant.components.sensor import SensorDeviceClass
 from homeassistant.config_entries import ConfigEntry, ConfigFlow
 from homeassistant.const import ATTR_DEVICE_CLASS, Platform, UnitOfTemperature
@@ -141,7 +142,7 @@ async def test_get_temperature(
 ) -> None:
     """Test HassClimateGetTemperature intent."""
     assert await async_setup_component(hass, "homeassistant", {})
-    assert await async_setup_component(hass, "intent", {})
+    assert await async_setup_component(hass, DOMAIN, {})
 
     climate_1 = MockClimateEntity()
     climate_1._attr_name = "Climate 1"
@@ -421,7 +422,7 @@ async def test_get_temperature_no_entities(
 ) -> None:
     """Test HassClimateGetTemperature intent with no climate entities."""
     assert await async_setup_component(hass, "homeassistant", {})
-    assert await async_setup_component(hass, "intent", {})
+    assert await async_setup_component(hass, DOMAIN, {})
 
     await create_mock_platform(hass, [])
 
@@ -443,7 +444,7 @@ async def test_not_exposed(
 ) -> None:
     """Test HassClimateGetTemperature intent when entities aren't exposed."""
     assert await async_setup_component(hass, "homeassistant", {})
-    assert await async_setup_component(hass, "intent", {})
+    assert await async_setup_component(hass, DOMAIN, {})
 
     climate_1 = MockClimateEntity()
     climate_1._attr_name = "Climate 1"

@@ -1,6 +1,7 @@
 """Data update coordinator for Tailwind."""
 
 from datetime import timedelta
+from typing import override
 
 from gotailwind import (
     Tailwind,
@@ -40,6 +41,7 @@ class TailwindDataUpdateCoordinator(DataUpdateCoordinator[TailwindDeviceStatus])
             update_interval=timedelta(seconds=5),
         )
 
+    @override
     async def _async_update_data(self) -> TailwindDeviceStatus:
         """Fetch data from the Tailwind device."""
         try:

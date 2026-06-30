@@ -2,7 +2,7 @@
 
 from collections.abc import Awaitable, Callable
 from dataclasses import dataclass
-from typing import Any
+from typing import Any, override
 
 from openevsehttp.__main__ import OpenEVSE
 
@@ -43,10 +43,10 @@ NUMBER_TYPES: tuple[OpenEVSENumberDescription, ...] = (
     OpenEVSENumberDescription(
         key="charge_rate",
         translation_key="charge_rate",
-        value_fn=lambda ev: ev.max_current_soft,
-        min_value_fn=lambda ev: ev.min_amps,
-        max_value_fn=lambda ev: ev.max_amps,
-        set_value_fn=lambda ev, value: ev.set_current(value),
+        value_fn=lambda ev: ev.max_current_soft or 0,
+        min_value_fn=lambda ev: ev.min_amps or 0,
+        max_value_fn=lambda ev: ev.max_amps or 0,
+        set_value_fn=lambda ev, value: ev.set_current(int(value)),
         native_step=1.0,
         entity_category=EntityCategory.CONFIG,
         native_unit_of_measurement=UnitOfElectricCurrent.AMPERE,
@@ -98,20 +98,24 @@ class OpenEVSENumber(CoordinatorEntity[OpenEVSEDataUpdateCoordinator], NumberEnt
             self._attr_device_info[ATTR_SERIAL_NUMBER] = unique_id
 
     @property
+    @override
     def native_value(self) -> float:
         """Return the state of the number."""
         return self.entity_description.value_fn(self.coordinator.charger)
 
     @property
+    @override
     def native_min_value(self) -> float:
         """Return the minimum value."""
         return self.entity_description.min_value_fn(self.coordinator.charger)
 
     @property
+    @override
     def native_max_value(self) -> float:
         """Return the maximum value."""
         return self.entity_description.max_value_fn(self.coordinator.charger)
 
+    @override
     async def async_set_native_value(self, value: float) -> None:
         """Set new value."""
         with openevse_exception_handler(value):

@@ -2,7 +2,7 @@
 
 from collections.abc import Callable
 from dataclasses import dataclass
-from typing import Any
+from typing import Any, override
 
 from libpyfoscamcgi import FoscamCamera
 
@@ -188,10 +188,12 @@ class FoscamGenericSwitch(FoscamEntity, SwitchEntity):
         self._attr_unique_id = f"{entry_id}_{description.key}"
 
     @property
+    @override
     def is_on(self) -> bool:
         """Return the state of the switch."""
         return self.entity_description.native_value_fn(self.coordinator.data)
 
+    @override
     async def async_turn_off(self, **kwargs: Any) -> None:
         """Turn off the entity."""
         self.hass.async_add_executor_job(
@@ -199,6 +201,7 @@ class FoscamGenericSwitch(FoscamEntity, SwitchEntity):
         )
         await self.coordinator.async_request_refresh()
 
+    @override
     async def async_turn_on(self, **kwargs: Any) -> None:
         """Turn on the entity."""
         self.hass.async_add_executor_job(

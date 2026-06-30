@@ -39,8 +39,8 @@
 # name: test_entities[binary_sensor.air_conditioning_air_conditioning_connectivity-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'device_class': 'connectivity',
-      'friendly_name': 'Air Conditioning Connectivity',
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'connectivity',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Air Conditioning Connectivity',
     }),
     'context': <ANY>,
     'entity_id': 'binary_sensor.air_conditioning_air_conditioning_connectivity',
@@ -90,8 +90,8 @@
 # name: test_entities[binary_sensor.air_conditioning_air_conditioning_overlay-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'device_class': 'power',
-      'friendly_name': 'Air Conditioning Overlay',
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'power',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Air Conditioning Overlay',
       'termination': 'TADO_MODE',
     }),
     'context': <ANY>,
@@ -142,8 +142,8 @@
 # name: test_entities[binary_sensor.air_conditioning_air_conditioning_power-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'device_class': 'power',
-      'friendly_name': 'Air Conditioning Power',
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'power',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Air Conditioning Power',
     }),
     'context': <ANY>,
     'entity_id': 'binary_sensor.air_conditioning_air_conditioning_power',
@@ -193,8 +193,8 @@
 # name: test_entities[binary_sensor.air_conditioning_air_conditioning_window-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'device_class': 'window',
-      'friendly_name': 'Air Conditioning Window',
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'window',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Air Conditioning Window',
     }),
     'context': <ANY>,
     'entity_id': 'binary_sensor.air_conditioning_air_conditioning_window',
@@ -244,8 +244,8 @@
 # name: test_entities[binary_sensor.air_conditioning_with_fanlevel_air_conditioning_with_fanlevel_connectivity-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'device_class': 'connectivity',
-      'friendly_name': 'Air Conditioning with fanlevel Connectivity',
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'connectivity',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Air Conditioning with fanlevel Connectivity',
     }),
     'context': <ANY>,
     'entity_id': 'binary_sensor.air_conditioning_with_fanlevel_air_conditioning_with_fanlevel_connectivity',
@@ -295,8 +295,8 @@
 # name: test_entities[binary_sensor.air_conditioning_with_fanlevel_air_conditioning_with_fanlevel_overlay-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'device_class': 'power',
-      'friendly_name': 'Air Conditioning with fanlevel Overlay',
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'power',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Air Conditioning with fanlevel Overlay',
       'termination': 'MANUAL',
     }),
     'context': <ANY>,
@@ -347,8 +347,8 @@
 # name: test_entities[binary_sensor.air_conditioning_with_fanlevel_air_conditioning_with_fanlevel_power-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'device_class': 'power',
-      'friendly_name': 'Air Conditioning with fanlevel Power',
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'power',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Air Conditioning with fanlevel Power',
     }),
     'context': <ANY>,
     'entity_id': 'binary_sensor.air_conditioning_with_fanlevel_air_conditioning_with_fanlevel_power',
@@ -398,8 +398,8 @@
 # name: test_entities[binary_sensor.air_conditioning_with_fanlevel_air_conditioning_with_fanlevel_window-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'device_class': 'window',
-      'friendly_name': 'Air Conditioning with fanlevel Window',
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'window',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Air Conditioning with fanlevel Window',
     }),
     'context': <ANY>,
     'entity_id': 'binary_sensor.air_conditioning_with_fanlevel_air_conditioning_with_fanlevel_window',
@@ -449,8 +449,8 @@
 # name: test_entities[binary_sensor.air_conditioning_with_swing_air_conditioning_with_swing_connectivity-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'device_class': 'connectivity',
-      'friendly_name': 'Air Conditioning with swing Connectivity',
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'connectivity',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Air Conditioning with swing Connectivity',
     }),
     'context': <ANY>,
     'entity_id': 'binary_sensor.air_conditioning_with_swing_air_conditioning_with_swing_connectivity',
@@ -500,8 +500,8 @@
 # name: test_entities[binary_sensor.air_conditioning_with_swing_air_conditioning_with_swing_overlay-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'device_class': 'power',
-      'friendly_name': 'Air Conditioning with swing Overlay',
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'power',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Air Conditioning with swing Overlay',
     }),
     'context': <ANY>,
     'entity_id': 'binary_sensor.air_conditioning_with_swing_air_conditioning_with_swing_overlay',
@@ -551,8 +551,8 @@
 # name: test_entities[binary_sensor.air_conditioning_with_swing_air_conditioning_with_swing_power-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'device_class': 'power',
-      'friendly_name': 'Air Conditioning with swing Power',
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'power',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Air Conditioning with swing Power',
     }),
     'context': <ANY>,
     'entity_id': 'binary_sensor.air_conditioning_with_swing_air_conditioning_with_swing_power',
@@ -602,8 +602,8 @@
 # name: test_entities[binary_sensor.air_conditioning_with_swing_air_conditioning_with_swing_window-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'device_class': 'window',
-      'friendly_name': 'Air Conditioning with swing Window',
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'window',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Air Conditioning with swing Window',
     }),
     'context': <ANY>,
     'entity_id': 'binary_sensor.air_conditioning_with_swing_air_conditioning_with_swing_window',
@@ -653,8 +653,8 @@
 # name: test_entities[binary_sensor.baseboard_heater_baseboard_heater_connectivity-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'device_class': 'connectivity',
-      'friendly_name': 'Baseboard Heater Connectivity',
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'connectivity',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Baseboard Heater Connectivity',
     }),
     'context': <ANY>,
     'entity_id': 'binary_sensor.baseboard_heater_baseboard_heater_connectivity',
@@ -704,8 +704,8 @@
 # name: test_entities[binary_sensor.baseboard_heater_baseboard_heater_early_start-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'device_class': 'power',
-      'friendly_name': 'Baseboard Heater Early start',
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'power',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Baseboard Heater Early start',
     }),
     'context': <ANY>,
     'entity_id': 'binary_sensor.baseboard_heater_baseboard_heater_early_start',
@@ -755,8 +755,8 @@
 # name: test_entities[binary_sensor.baseboard_heater_baseboard_heater_overlay-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'device_class': 'power',
-      'friendly_name': 'Baseboard Heater Overlay',
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'power',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Baseboard Heater Overlay',
       'termination': 'MANUAL',
     }),
     'context': <ANY>,
@@ -807,8 +807,8 @@
 # name: test_entities[binary_sensor.baseboard_heater_baseboard_heater_power-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'device_class': 'power',
-      'friendly_name': 'Baseboard Heater Power',
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'power',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Baseboard Heater Power',
     }),
     'context': <ANY>,
     'entity_id': 'binary_sensor.baseboard_heater_baseboard_heater_power',
@@ -858,8 +858,8 @@
 # name: test_entities[binary_sensor.baseboard_heater_baseboard_heater_window-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'device_class': 'window',
-      'friendly_name': 'Baseboard Heater Window',
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'window',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Baseboard Heater Window',
     }),
     'context': <ANY>,
     'entity_id': 'binary_sensor.baseboard_heater_baseboard_heater_window',
@@ -909,8 +909,8 @@
 # name: test_entities[binary_sensor.second_water_heater_second_water_heater_connectivity-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'device_class': 'connectivity',
-      'friendly_name': 'Second Water Heater Connectivity',
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'connectivity',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Second Water Heater Connectivity',
     }),
     'context': <ANY>,
     'entity_id': 'binary_sensor.second_water_heater_second_water_heater_connectivity',
@@ -960,8 +960,8 @@
 # name: test_entities[binary_sensor.second_water_heater_second_water_heater_overlay-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'device_class': 'power',
-      'friendly_name': 'Second Water Heater Overlay',
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'power',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Second Water Heater Overlay',
       'termination': 'TADO_MODE',
     }),
     'context': <ANY>,
@@ -1012,8 +1012,8 @@
 # name: test_entities[binary_sensor.second_water_heater_second_water_heater_power-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'device_class': 'power',
-      'friendly_name': 'Second Water Heater Power',
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'power',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Second Water Heater Power',
     }),
     'context': <ANY>,
     'entity_id': 'binary_sensor.second_water_heater_second_water_heater_power',
@@ -1063,8 +1063,8 @@
 # name: test_entities[binary_sensor.water_heater_water_heater_connectivity-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'device_class': 'connectivity',
-      'friendly_name': 'Water Heater Connectivity',
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'connectivity',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Water Heater Connectivity',
     }),
     'context': <ANY>,
     'entity_id': 'binary_sensor.water_heater_water_heater_connectivity',
@@ -1114,8 +1114,8 @@
 # name: test_entities[binary_sensor.water_heater_water_heater_overlay-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'device_class': 'power',
-      'friendly_name': 'Water Heater Overlay',
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'power',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Water Heater Overlay',
     }),
     'context': <ANY>,
     'entity_id': 'binary_sensor.water_heater_water_heater_overlay',
@@ -1165,8 +1165,8 @@
 # name: test_entities[binary_sensor.water_heater_water_heater_power-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'device_class': 'power',
-      'friendly_name': 'Water Heater Power',
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'power',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Water Heater Power',
     }),
     'context': <ANY>,
     'entity_id': 'binary_sensor.water_heater_water_heater_power',
@@ -1216,8 +1216,8 @@
 # name: test_entities[binary_sensor.wr1_connection_state-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'device_class': 'connectivity',
-      'friendly_name': 'WR1 Connection state',
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'connectivity',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'WR1 Connection state',
     }),
     'context': <ANY>,
     'entity_id': 'binary_sensor.wr1_connection_state',
@@ -1267,8 +1267,8 @@
 # name: test_entities[binary_sensor.wr4_connection_state-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'device_class': 'connectivity',
-      'friendly_name': 'WR4 Connection state',
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'connectivity',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'WR4 Connection state',
     }),
     'context': <ANY>,
     'entity_id': 'binary_sensor.wr4_connection_state',

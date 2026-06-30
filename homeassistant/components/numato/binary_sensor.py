@@ -2,6 +2,7 @@
 
 from functools import partial
 import logging
+from typing import override
 
 from numato_gpio import NumatoGpioError
 
@@ -101,6 +102,7 @@ class NumatoGpioBinarySensor(BinarySensorEntity):
         self._state = None
         self._api = api
 
+    @override
     async def async_added_to_hass(self) -> None:
         """Connect state update callback."""
         self.async_on_remove(
@@ -118,6 +120,7 @@ class NumatoGpioBinarySensor(BinarySensorEntity):
         self.async_write_ha_state()
 
     @property
+    @override
     def is_on(self) -> bool:
         """Return the state of the entity."""
         return self._state != self._invert_logic

@@ -118,6 +118,7 @@ def mock_config_entry() -> MockConfigEntry:
             CONF_WANTED_MAX_ITEMS: DEFAULT_WANTED_MAX_ITEMS,
         },
         unique_id=None,
+        entry_id="01KWBTJ4XT0A69H6RJ5ES66CV7",
     )
 
 

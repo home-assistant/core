@@ -1,5 +1,7 @@
 """Base class for Portainer entities."""
 
+from typing import override
+
 from yarl import URL
 
 from homeassistant.const import CONF_URL
@@ -17,6 +19,7 @@ from .coordinator import (
     PortainerStackData,
     PortainerVolumeData,
 )
+from .util import sanitize_container_name
 
 
 class PortainerCoordinatorEntity(CoordinatorEntity[PortainerCoordinator]):
@@ -65,6 +68,7 @@ class PortainerEndpointEntity(PortainerCoordinatorEntity):
         )
 
     @property
+    @override
     def available(self) -> bool:
         """Return if the device is available."""
         return super().available and self.device_id in self.coordinator.data
@@ -92,7 +96,7 @@ class PortainerContainerEntity(PortainerCoordinatorEntity):
         # According to Docker's API docs, the first name is unique
         names = self._device_info.container.names
         assert names, "Container names list unexpectedly empty"
-        self.device_name = names[0].replace("/", " ").strip()
+        self.device_name = sanitize_container_name(names[0])
 
         self._attr_device_info = DeviceInfo(
             identifiers={
@@ -124,6 +128,7 @@ class PortainerContainerEntity(PortainerCoordinatorEntity):
         )
 
     @property
+    @override
     def available(self) -> bool:
         """Return if the device is available."""
         return (
@@ -181,6 +186,7 @@ class PortainerStackEntity(PortainerCoordinatorEntity):
         )
 
     @property
+    @override
     def available(self) -> bool:
         """Return if the stack is available."""
         return (
@@ -232,6 +238,7 @@ class PortainerDockerSystemDiskSpaceEndpointEntity(
         )
 
     @property
+    @override
     def available(self) -> bool:
         """Return if the device is available."""
         return (
@@ -284,6 +291,7 @@ class PortainerVolumeEntity(PortainerCoordinatorEntity):
         )
 
     @property
+    @override
     def available(self) -> bool:
         """Return if the volume is available."""
         return (

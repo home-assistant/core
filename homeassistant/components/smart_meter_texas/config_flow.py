@@ -1,7 +1,7 @@
 """Config flow for Smart Meter Texas integration."""
 
 import logging
-from typing import Any
+from typing import Any, override
 
 from aiohttp import ClientError
 from smart_meter_texas import Account, Client
@@ -53,6 +53,7 @@ class SMTConfigFlow(ConfigFlow, domain=DOMAIN):
 
     VERSION = 1
 
+    @override
     async def async_step_user(
         self, user_input: dict[str, Any] | None = None
     ) -> ConfigFlowResult:

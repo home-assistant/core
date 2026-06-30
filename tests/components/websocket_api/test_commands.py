@@ -18,7 +18,7 @@ from homeassistant.components.device_automation import toggle_entity
 from homeassistant.components.group import DOMAIN as GROUP_DOMAIN
 from homeassistant.components.light import LightEntityFeature
 from homeassistant.components.logger import DOMAIN as LOGGER_DOMAIN
-from homeassistant.components.websocket_api import const
+from homeassistant.components.websocket_api import DOMAIN, const
 from homeassistant.components.websocket_api.auth import (
     TYPE_AUTH,
     TYPE_AUTH_OK,
@@ -1238,7 +1238,7 @@ async def test_call_service_context_with_user(
     hass_access_token: str,
 ) -> None:
     """Test that the user is set in the service call context."""
-    assert await async_setup_component(hass, "websocket_api", {})
+    assert await async_setup_component(hass, DOMAIN, {})
 
     calls = async_mock_service(hass, "domain_test", "test_service")
     client = await hass_client_no_auth()
@@ -4260,7 +4260,7 @@ async def test_extract_from_target_validation_error(
     assert "error" in msg
 
 
-@pytest.mark.usefixtures("enable_labs_preview_features", "target_entities")
+@pytest.mark.usefixtures("target_entities")
 @patch("annotatedyaml.loader.load_yaml")
 @pytest.mark.parametrize("automation_component", ["trigger", "condition"])
 async def test_get_triggers_conditions_for_target(

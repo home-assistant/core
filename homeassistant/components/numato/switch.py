@@ -1,7 +1,7 @@
 """Switch platform integration for Numato USB GPIO expanders."""
 
 import logging
-from typing import Any
+from typing import Any, override
 
 from numato_gpio import NumatoGpioError
 
@@ -78,6 +78,7 @@ class NumatoGpioSwitch(SwitchEntity):
         self._attr_is_on = False
         self._api = api
 
+    @override
     def turn_on(self, **kwargs: Any) -> None:
         """Turn the port on."""
         try:
@@ -95,6 +96,7 @@ class NumatoGpioSwitch(SwitchEntity):
                 err,
             )
 
+    @override
     def turn_off(self, **kwargs: Any) -> None:
         """Turn the port off."""
         try:

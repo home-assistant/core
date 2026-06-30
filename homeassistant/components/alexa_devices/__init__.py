@@ -16,8 +16,10 @@ PLATFORMS = [
     Platform.EVENT,
     Platform.MEDIA_PLAYER,
     Platform.NOTIFY,
+    Platform.SELECT,
     Platform.SENSOR,
     Platform.SWITCH,
+    Platform.TODO,
 ]
 
 CONFIG_SCHEMA = cv.config_entry_only_config_schema(DOMAIN)
@@ -37,6 +39,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: AmazonConfigEntry) -> bo
 
     await coordinator.async_config_entry_first_refresh()
 
+    await coordinator.sync_todo_list_items()
     await coordinator.sync_history_state()
     await coordinator.sync_media_state()
 
@@ -64,10 +67,6 @@ async def async_setup_entry(hass: HomeAssistant, entry: AmazonConfigEntry) -> bo
 
 async def async_migrate_entry(hass: HomeAssistant, entry: AmazonConfigEntry) -> bool:
     """Migrate old entry."""
-
-    if entry.version > 1:
-        # This means the user has downgraded from a future version
-        return False
 
     if entry.version == 1 and entry.minor_version < 3:
         if CONF_SITE in entry.data:

@@ -20,7 +20,7 @@ from .const import (
     CONF_MIN_STATE_DURATION,
     CONF_START,
     PLATFORMS,
-    SECTION_ADVANCED_SETTINGS,
+    SECTION_ADDITIONAL_SETTINGS,
 )
 from .coordinator import HistoryStatsUpdateCoordinator
 from .data import HistoryStats
@@ -44,8 +44,8 @@ async def async_setup_entry(
     min_state_duration: timedelta
     if duration_dict := entry.options.get(CONF_DURATION):
         duration = timedelta(**duration_dict)
-    advanced_settings = entry.options.get(SECTION_ADVANCED_SETTINGS, {})
-    if min_state_duration_dict := advanced_settings.get(CONF_MIN_STATE_DURATION):
+    additional_settings = entry.options.get(SECTION_ADDITIONAL_SETTINGS, {})
+    if min_state_duration_dict := additional_settings.get(CONF_MIN_STATE_DURATION):
         min_state_duration = timedelta(**min_state_duration_dict)
     else:
         min_state_duration = timedelta(0)
@@ -100,9 +100,6 @@ async def async_migrate_entry(hass: HomeAssistant, config_entry: ConfigEntry) ->
         "Migrating from version %s.%s", config_entry.version, config_entry.minor_version
     )
 
-    if config_entry.version > 1:
-        # This means the user has downgraded from a future version
-        return False
     if config_entry.version == 1:
         options = {**config_entry.options}
         if config_entry.minor_version < 2:
@@ -123,6 +120,13 @@ async def async_migrate_entry(hass: HomeAssistant, config_entry: ConfigEntry) ->
             options[CONF_STATE_CLASS] = SensorStateClass.MEASUREMENT
         hass.config_entries.async_update_entry(
             config_entry, options=options, minor_version=3
+        )
+        if config_entry.minor_version < 4:
+            # The "advanced_settings" section was renamed to "additional_settings"
+            if (additional := options.pop("advanced_settings", None)) is not None:
+                options[SECTION_ADDITIONAL_SETTINGS] = additional
+        hass.config_entries.async_update_entry(
+            config_entry, options=options, minor_version=4
         )
 
     _LOGGER.debug(

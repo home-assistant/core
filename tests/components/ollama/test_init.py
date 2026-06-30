@@ -131,6 +131,31 @@ async def test_async_setup_entry_auth_failed_on_response_error(
         assert mock_config_entry.state is entry_state
 
 
+@pytest.mark.parametrize(
+    "side_effect",
+    [
+        ConnectError(message="Connect error"),
+        ConnectionError("Failed to connect to Ollama."),
+        TimeoutError(),
+    ],
+)
+async def test_async_setup_entry_not_ready_on_connection_error(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    side_effect: Exception,
+) -> None:
+    """Test async_setup_entry raises ConfigEntryNotReady on connection errors."""
+    mock_config_entry.add_to_hass(hass)
+
+    with patch("homeassistant.components.ollama.ollama.AsyncClient") as mock_client:
+        mock_client.return_value.list = AsyncMock(side_effect=side_effect)
+
+        await hass.config_entries.async_setup(mock_config_entry.entry_id)
+        await hass.async_block_till_done()
+
+        assert mock_config_entry.state is ConfigEntryState.SETUP_RETRY
+
+
 async def test_migration_from_v1(
     hass: HomeAssistant,
     device_registry: dr.DeviceRegistry,
