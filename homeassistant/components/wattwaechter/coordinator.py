@@ -15,6 +15,7 @@ from aio_wattwaechter.models import MeterData
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_DEVICE_ID, CONF_HOST, CONF_MAC, CONF_MODEL
 from homeassistant.core import HomeAssistant
+from homeassistant.exceptions import ConfigEntryAuthFailed
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
 
 from .const import CONF_FW_VERSION, DEFAULT_SCAN_INTERVAL, DOMAIN
@@ -63,7 +64,7 @@ class WattwaechterCoordinator(DataUpdateCoordinator[MeterData]):
                 translation_placeholders={"host": self.host},
             ) from err
         except WattwaechterAuthenticationError as err:
-            raise UpdateFailed(
+            raise ConfigEntryAuthFailed(
                 translation_domain=DOMAIN,
                 translation_key="auth_failed",
                 translation_placeholders={"error": str(err)},

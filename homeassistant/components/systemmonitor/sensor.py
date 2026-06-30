@@ -192,7 +192,6 @@ SENSOR_TYPES: dict[str, SysMonitorSensorEntityDescription] = {
         key="battery_empty",
         translation_key="battery_empty",
         device_class=SensorDeviceClass.TIMESTAMP,
-        state_class=SensorStateClass.MEASUREMENT,
         value_fn=battery_time_ends,
         none_is_unavailable=True,
         add_to_update=lambda entity: ("battery", ""),

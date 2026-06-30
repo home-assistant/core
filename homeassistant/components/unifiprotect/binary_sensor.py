@@ -2,7 +2,7 @@
 
 from collections.abc import Sequence
 import dataclasses
-from typing import override
+from typing import cast, override
 
 from uiprotect.data import (
     NVR,
@@ -15,6 +15,7 @@ from uiprotect.data import (
     SmartDetectObjectType,
 )
 from uiprotect.data.nvr import UOSDisk
+from uiprotect.data.public_devices import PublicDeviceModel, PublicSensor
 
 from homeassistant.components.binary_sensor import (
     BinarySensorDeviceClass,
@@ -40,6 +41,12 @@ from .entity import (
 
 _KEY_DOOR = "door"
 PARALLEL_UPDATES = 0
+
+
+def _async_motion_sensor_enabled_public(obj: PublicDeviceModel) -> bool:
+    # Mirrors Sensor.is_motion_sensor_enabled over the public API.
+    sensor = cast(PublicSensor, obj)
+    return sensor.mount_type is not MountType.LEAK and sensor.motion_settings.is_enabled
 
 
 @dataclasses.dataclass(frozen=True, kw_only=True)
@@ -329,8 +336,8 @@ SENSE_SENSORS: tuple[ProtectBinaryEntityDescription, ...] = (
     ProtectBinaryEntityDescription(
         key="motion",
         device_class=BinarySensorDeviceClass.MOTION,
-        ufp_value="is_motion_detected",
-        ufp_enabled="is_motion_sensor_enabled",
+        ufp_public_value="is_motion_detected",
+        ufp_public_enabled_fn=_async_motion_sensor_enabled_public,
     ),
     ProtectBinaryEntityDescription(
         key="tampering",
@@ -426,15 +433,8 @@ EVENT_SENSORS: tuple[ProtectBinaryEventEntityDescription, ...] = (
         ufp_enabled="is_animal_detection_on",
         ufp_event_obj="last_animal_detect_event",
     ),
-    ProtectBinaryEventEntityDescription(
-        key="smart_obj_package",
-        translation_key="package_detected",
-        entity_registry_enabled_default=False,
-        ufp_obj_type=SmartDetectObjectType.PACKAGE,
-        ufp_required_field="can_detect_package",
-        ufp_enabled="is_package_detection_on",
-        ufp_event_obj="last_package_detect_event",
-    ),
+    # Package detection is a momentary smart-detect event, not a sustained state:
+    # it is the package event entity (event.py), not a binary sensor.
     ProtectBinaryEventEntityDescription(
         key="smart_audio_any",
         translation_key="audio_object_detected",

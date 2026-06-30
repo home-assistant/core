@@ -1,5 +1,6 @@
 """Test the Portainer initial specific behavior."""
 
+from typing import Any, cast
 from unittest.mock import AsyncMock
 
 from pyportainer.exceptions import (
@@ -332,8 +333,9 @@ async def test_new_endpoint_callback(
 
     mock_portainer_client.get_endpoints.return_value = [
         Endpoint.from_dict(endpoint)
-        for endpoint in await async_load_json_array_fixture(
-            hass, "endpoints.json", DOMAIN
+        for endpoint in cast(
+            list[dict[str, Any]],
+            await async_load_json_array_fixture(hass, "endpoints.json", DOMAIN),
         )
         if endpoint["Status"] == EndpointStatus.UP
     ]
@@ -363,8 +365,9 @@ async def test_new_container_callback(
 
     mock_portainer_client.get_containers.return_value = [
         DockerContainer.from_dict(container)
-        for container in await async_load_json_array_fixture(
-            hass, "containers.json", DOMAIN
+        for container in cast(
+            list[dict[str, Any]],
+            await async_load_json_array_fixture(hass, "containers.json", DOMAIN),
         )
         if "/focused_einstein" in container["Names"]
     ]
@@ -408,7 +411,10 @@ async def test_new_stack_callback(
 
     mock_portainer_client.get_stacks.return_value = [
         Stack.from_dict(stack)
-        for stack in await async_load_json_array_fixture(hass, "stacks.json", DOMAIN)
+        for stack in cast(
+            list[dict[str, Any]],
+            await async_load_json_array_fixture(hass, "stacks.json", DOMAIN),
+        )
         if stack["Name"] == "webstack"
     ]
 

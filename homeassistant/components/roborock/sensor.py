@@ -30,7 +30,8 @@ from homeassistant.components.sensor import (
     SensorStateClass,
 )
 from homeassistant.const import PERCENTAGE, EntityCategory, UnitOfArea, UnitOfTime
-from homeassistant.core import HomeAssistant
+from homeassistant.core import HomeAssistant, callback
+from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from homeassistant.helpers.typing import StateType
 
@@ -38,6 +39,7 @@ from .coordinator import (
     RoborockB01Q7UpdateCoordinator,
     RoborockB01Q10UpdateCoordinator,
     RoborockConfigEntry,
+    RoborockCoordinatorType,
     RoborockDataUpdateCoordinator,
     RoborockDataUpdateCoordinatorA01,
     RoborockWashingMachineUpdateCoordinator,
@@ -539,48 +541,54 @@ async def async_setup_entry(
     """Set up the Roborock vacuum sensors."""
     coordinators = config_entry.runtime_data
 
-    entities: list[RoborockEntity] = [
-        RoborockSensorEntity(
-            coordinator,
-            description,
+    @callback
+    def async_add_coordinator_entities(
+        coordinator: RoborockCoordinatorType,
+    ) -> None:
+        """Add entities for a specific coordinator."""
+        entities: list[RoborockEntity] = []
+        if isinstance(coordinator, RoborockDataUpdateCoordinator):
+            entities.extend(
+                RoborockSensorEntity(coordinator, description)
+                for description in SENSOR_DESCRIPTIONS
+                if description.support_fn(coordinator.properties_api)
+            )
+            entities.append(RoborockCurrentRoom(coordinator))
+        elif isinstance(coordinator, RoborockWetDryVacUpdateCoordinator):
+            entities.extend(
+                RoborockSensorEntityA01(coordinator, description)
+                for description in DYAD_SENSOR_DESCRIPTIONS
+                if description.data_protocol in coordinator.request_protocols
+            )
+        elif isinstance(coordinator, RoborockWashingMachineUpdateCoordinator):
+            entities.extend(
+                RoborockSensorEntityA01(coordinator, description)
+                for description in ZEO_SENSOR_DESCRIPTIONS
+                if description.data_protocol in coordinator.request_protocols
+            )
+        elif isinstance(coordinator, RoborockB01Q7UpdateCoordinator):
+            entities.extend(
+                RoborockSensorEntityB01Q7(coordinator, description)
+                for description in Q7_B01_SENSOR_DESCRIPTIONS
+                if description.value_fn(coordinator.data) is not None
+            )
+        elif isinstance(coordinator, RoborockB01Q10UpdateCoordinator):
+            entities.extend(
+                RoborockSensorEntityB01Q10(coordinator, description)
+                for description in Q10_B01_SENSOR_DESCRIPTIONS
+            )
+        async_add_entities(entities)
+
+    for coordinator in coordinators.values():
+        async_add_coordinator_entities(coordinator)
+
+    config_entry.async_on_unload(
+        async_dispatcher_connect(
+            hass,
+            f"roborock_coordinator_added_{config_entry.entry_id}",
+            async_add_coordinator_entities,
         )
-        for coordinator in coordinators.v1
-        for description in SENSOR_DESCRIPTIONS
-        if description.support_fn(coordinator.properties_api)
-    ]
-    entities.extend(RoborockCurrentRoom(coordinator) for coordinator in coordinators.v1)
-    entities.extend(
-        RoborockSensorEntityA01(
-            coordinator,
-            description,
-        )
-        for coordinator in coordinators.a01
-        if isinstance(coordinator, RoborockWetDryVacUpdateCoordinator)
-        for description in DYAD_SENSOR_DESCRIPTIONS
-        if description.data_protocol in coordinator.request_protocols
     )
-    entities.extend(
-        RoborockSensorEntityA01(
-            coordinator,
-            description,
-        )
-        for coordinator in coordinators.a01
-        if isinstance(coordinator, RoborockWashingMachineUpdateCoordinator)
-        for description in ZEO_SENSOR_DESCRIPTIONS
-        if description.data_protocol in coordinator.request_protocols
-    )
-    entities.extend(
-        RoborockSensorEntityB01Q7(coordinator, description)
-        for coordinator in coordinators.b01_q7
-        for description in Q7_B01_SENSOR_DESCRIPTIONS
-        if description.value_fn(coordinator.data) is not None
-    )
-    entities.extend(
-        RoborockSensorEntityB01Q10(coordinator, description)
-        for coordinator in coordinators.b01_q10
-        for description in Q10_B01_SENSOR_DESCRIPTIONS
-    )
-    async_add_entities(entities)
 
 
 class RoborockSensorEntity(RoborockCoordinatedEntityV1, SensorEntity):

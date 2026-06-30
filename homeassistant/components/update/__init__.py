@@ -22,7 +22,7 @@ from homeassistant.helpers.restore_state import RestoreEntity
 from homeassistant.helpers.typing import ConfigType
 from homeassistant.util.hass_dict import HassKey
 
-from .const import (
+from .const import (  # noqa: F401
     ATTR_AUTO_UPDATE,
     ATTR_BACKUP,
     ATTR_DISPLAY_PRECISION,
@@ -39,6 +39,7 @@ from .const import (
     SERVICE_INSTALL,
     SERVICE_SKIP,
     UpdateEntityFeature,
+    UpdateEntityStateAttribute,
 )
 
 _LOGGER = logging.getLogger(__name__)
@@ -211,11 +212,11 @@ class UpdateEntity(
 
     _entity_component_unrecorded_attributes = frozenset(
         {
-            ATTR_DISPLAY_PRECISION,
+            UpdateEntityStateAttribute.DISPLAY_PRECISION,
             ATTR_ENTITY_PICTURE,
-            ATTR_IN_PROGRESS,
-            ATTR_RELEASE_SUMMARY,
-            ATTR_UPDATE_PERCENTAGE,
+            UpdateEntityStateAttribute.IN_PROGRESS,
+            UpdateEntityStateAttribute.RELEASE_SUMMARY,
+            UpdateEntityStateAttribute.UPDATE_PERCENTAGE,
         }
     )
 
@@ -463,16 +464,16 @@ class UpdateEntity(
             self.__skipped_version = None
 
         return {
-            ATTR_AUTO_UPDATE: self.auto_update,
-            ATTR_DISPLAY_PRECISION: self.display_precision,
-            ATTR_INSTALLED_VERSION: installed_version,
-            ATTR_IN_PROGRESS: in_progress,
-            ATTR_LATEST_VERSION: latest_version,
-            ATTR_RELEASE_SUMMARY: release_summary,
-            ATTR_RELEASE_URL: self.release_url,
-            ATTR_SKIPPED_VERSION: skipped_version,
-            ATTR_TITLE: self.title,
-            ATTR_UPDATE_PERCENTAGE: update_percentage,
+            UpdateEntityStateAttribute.AUTO_UPDATE: self.auto_update,
+            UpdateEntityStateAttribute.DISPLAY_PRECISION: self.display_precision,
+            UpdateEntityStateAttribute.INSTALLED_VERSION: installed_version,
+            UpdateEntityStateAttribute.IN_PROGRESS: in_progress,
+            UpdateEntityStateAttribute.LATEST_VERSION: latest_version,
+            UpdateEntityStateAttribute.RELEASE_SUMMARY: release_summary,
+            UpdateEntityStateAttribute.RELEASE_URL: self.release_url,
+            UpdateEntityStateAttribute.SKIPPED_VERSION: skipped_version,
+            UpdateEntityStateAttribute.TITLE: self.title,
+            UpdateEntityStateAttribute.UPDATE_PERCENTAGE: update_percentage,
         }
 
     @final

@@ -32,8 +32,9 @@ from roborock.roborock_typing import RoborockCommand
 
 from homeassistant.components.select import SelectEntity, SelectEntityDescription
 from homeassistant.const import EntityCategory
-from homeassistant.core import HomeAssistant
+from homeassistant.core import HomeAssistant, callback
 from homeassistant.exceptions import HomeAssistantError, ServiceValidationError
+from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
 from .const import DOMAIN, MAP_SLEEP
@@ -41,8 +42,10 @@ from .coordinator import (
     RoborockB01Q7UpdateCoordinator,
     RoborockB01Q10UpdateCoordinator,
     RoborockConfigEntry,
+    RoborockCoordinatorType,
     RoborockDataUpdateCoordinator,
     RoborockDataUpdateCoordinatorA01,
+    RoborockWashingMachineUpdateCoordinator,
 )
 from .entity import (
     RoborockCoordinatedEntityA01,
@@ -250,39 +253,58 @@ async def async_setup_entry(
     async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up Roborock select platform."""
+    coordinators = config_entry.runtime_data
 
-    async_add_entities(
-        RoborockSelectEntity(coordinator, description, options)
-        for coordinator in config_entry.runtime_data.v1
-        for description in SELECT_DESCRIPTIONS
-        if (
-            (options := description.options_lambda(coordinator.properties_api))
-            is not None
+    @callback
+    def async_add_coordinator_entities(
+        coordinator: RoborockCoordinatorType,
+    ) -> None:
+        """Add entities for a specific coordinator."""
+        entities: list[SelectEntity] = []
+        if isinstance(coordinator, RoborockDataUpdateCoordinator):
+            entities.extend(
+                RoborockSelectEntity(coordinator, description, options)
+                for description in SELECT_DESCRIPTIONS
+                if (options := description.options_lambda(coordinator.properties_api))
+                is not None
+            )
+            if (
+                coordinator.properties_api.home is not None
+                and coordinator.properties_api.maps is not None
+            ):
+                entities.append(
+                    RoborockCurrentMapSelectEntity(
+                        f"selected_map_{coordinator.duid_slug}",
+                        coordinator,
+                        coordinator.properties_api.home,
+                        coordinator.properties_api.maps,
+                    )
+                )
+        elif isinstance(coordinator, RoborockB01Q7UpdateCoordinator):
+            entities.extend(
+                RoborockB01SelectEntity(coordinator, description, options)
+                for description in B01_SELECT_DESCRIPTIONS
+                if (options := description.options_lambda(coordinator.api)) is not None
+            )
+        elif isinstance(coordinator, RoborockWashingMachineUpdateCoordinator):
+            entities.extend(
+                RoborockSelectEntityA01(coordinator, description)
+                for description in A01_SELECT_DESCRIPTIONS
+                if description.data_protocol in coordinator.request_protocols
+            )
+        elif isinstance(coordinator, RoborockB01Q10UpdateCoordinator):
+            entities.append(RoborockQ10CleanModeSelectEntity(coordinator))
+        async_add_entities(entities)
+
+    for coordinator in coordinators.values():
+        async_add_coordinator_entities(coordinator)
+
+    config_entry.async_on_unload(
+        async_dispatcher_connect(
+            hass,
+            f"roborock_coordinator_added_{config_entry.entry_id}",
+            async_add_coordinator_entities,
         )
-    )
-    async_add_entities(
-        RoborockCurrentMapSelectEntity(
-            f"selected_map_{coordinator.duid_slug}", coordinator, home_trait, map_trait
-        )
-        for coordinator in config_entry.runtime_data.v1
-        if (home_trait := coordinator.properties_api.home) is not None
-        if (map_trait := coordinator.properties_api.maps) is not None
-    )
-    async_add_entities(
-        RoborockB01SelectEntity(coordinator, description, options)
-        for coordinator in config_entry.runtime_data.b01_q7
-        for description in B01_SELECT_DESCRIPTIONS
-        if (options := description.options_lambda(coordinator.api)) is not None
-    )
-    async_add_entities(
-        RoborockSelectEntityA01(coordinator, description)
-        for coordinator in config_entry.runtime_data.a01
-        for description in A01_SELECT_DESCRIPTIONS
-        if description.data_protocol in coordinator.request_protocols
-    )
-    async_add_entities(
-        RoborockQ10CleanModeSelectEntity(coordinator)
-        for coordinator in config_entry.runtime_data.b01_q10
     )
 
 

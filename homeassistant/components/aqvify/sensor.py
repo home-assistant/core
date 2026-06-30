@@ -46,8 +46,8 @@ class AqvifySensorAggrEntityDescription(SensorEntityDescription):
 
 ENTITIES: tuple[AqvifySensorEntityDescription, ...] = (
     AqvifySensorEntityDescription(
-        key="meter_value",
-        translation_key="meter_value",
+        key="level_from_sensor",
+        translation_key="level_from_sensor",
         native_unit_of_measurement=UnitOfLength.METERS,
         state_class=SensorStateClass.MEASUREMENT,
         device_class=SensorDeviceClass.DISTANCE,
@@ -55,8 +55,8 @@ ENTITIES: tuple[AqvifySensorEntityDescription, ...] = (
         value_fn=lambda value: value.meter_value,
     ),
     AqvifySensorEntityDescription(
-        key="water_level",
-        translation_key="water_level",
+        key="level_from_top",
+        translation_key="level_from_top",
         native_unit_of_measurement=UnitOfLength.METERS,
         state_class=SensorStateClass.MEASUREMENT,
         device_class=SensorDeviceClass.DISTANCE,
@@ -64,8 +64,8 @@ ENTITIES: tuple[AqvifySensorEntityDescription, ...] = (
         value_fn=lambda value: value.water_level,
     ),
     AqvifySensorEntityDescription(
-        key="stored_volume",
-        translation_key="stored_volume",
+        key="available_volume",
+        translation_key="available_volume",
         native_unit_of_measurement=UnitOfVolume.LITERS,
         state_class=SensorStateClass.MEASUREMENT,
         device_class=SensorDeviceClass.VOLUME_STORAGE,
@@ -171,6 +171,7 @@ class AqvifyAggrSensor(AqvifyAggrEntity, SensorEntity):
     entity_description: AqvifySensorAggrEntityDescription
 
     @property
+    @override
     def native_value(self) -> StateType | datetime | None:
         """Return the state of the sensor."""
         return self.entity_description.value_fn(self.coordinator.data[self.device_key])

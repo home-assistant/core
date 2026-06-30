@@ -10,6 +10,12 @@
           "off": "mdi:snowflake-off"
         }
       },
+      "holiday_mode": {
+        "default": "mdi:beach",
+        "state": {
+          "off": "mdi:home"
+        }
+      },
       "overheat_protection": {
         "default": "mdi:fire",
         "state": {
@@ -17,7 +23,10 @@
         }
       },
       "standby": {
-        "default": "mdi:power-sleep"
+        "default": "mdi:power-sleep",
+        "state": {
+          "off": "mdi:power"
+        }
       }
     },
     "sensor": {
@@ -32,6 +41,20 @@
       },
       "tank_water_temperature": {
         "default": "mdi:water-thermometer"
+      }
+    },
+    "switch": {
+      "frost_protection": {
+        "default": "mdi:snowflake",
+        "state": {
+          "off": "mdi:snowflake-off"
+        }
+      },
+      "overheat_protection": {
+        "default": "mdi:fire",
+        "state": {
+          "off": "mdi:fire-off"
+        }
       }
     }
   }
