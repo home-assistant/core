@@ -30,6 +30,19 @@
       }
     }
   },
+  "entity": {
+    "sensor": {
+      "cpu-load": {
+        "name": "CPU usage"
+      },
+      "disk-usage": {
+        "name": "Disk usage"
+      },
+      "memory-usage": {
+        "name": "Memory usage"
+      }
+    }
+  },
   "options": {
     "step": {
       "device_tracker": {

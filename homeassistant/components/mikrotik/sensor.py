@@ -1,0 +1,212 @@
+"""Support for Mikrotik routers sensors."""
+
+from collections.abc import Callable
+from dataclasses import dataclass
+from datetime import datetime, timedelta
+from typing import Any, Final, override
+
+from homeassistant.components.sensor import (
+    SensorDeviceClass,
+    SensorEntity,
+    SensorEntityDescription,
+    SensorStateClass,
+)
+from homeassistant.const import (
+    EntityCategory,
+    UnitOfElectricPotential,
+    UnitOfRatio,
+    UnitOfTemperature,
+)
+from homeassistant.core import HomeAssistant
+from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
+from homeassistant.helpers.typing import StateType
+from homeassistant.helpers.update_coordinator import CoordinatorEntity
+from homeassistant.util.dt import utcnow
+
+from .const import HEALTH, SYSTEM
+from .coordinator import MikrotikConfigEntry, MikrotikDataUpdateCoordinator
+
+PARALLEL_UPDATES = 0
+
+
+@dataclass(frozen=True, kw_only=True)
+class MikrotikSensorEntityDescription(SensorEntityDescription):
+    """Shared Mikrotik Sensors entity description."""
+
+    value: Callable[
+        [dict[str, Any]],
+        str | datetime | float | None,
+    ]
+    type: str
+    index: int
+
+
+def _calculate_memory_usage(data: dict[str, Any]) -> float | None:
+    """Calculate memory usage percentage."""
+    total: int = data.get("total-memory", 0)
+    free: int = data.get("free-memory", 0)
+
+    if total == 0 or free == 0:
+        return None
+
+    return (total - free) / total * 100
+
+
+def _calculate_disk_usage(data: dict[str, Any]) -> float | None:
+    """Calculate disk usage percentage."""
+    total: int = data.get("total-hdd-space", 0)
+    free: int = data.get("free-hdd-space", 0)
+
+    if total == 0 or free == 0:
+        return None
+
+    return (total - free) / total * 100
+
+
+def _calculate_uptime(data: dict[str, Any]) -> datetime | None:
+    """Calculate uptime."""
+    # es. 1d3h39m30s
+    uptime_string = data.get("uptime")
+
+    if not uptime_string:
+        return None
+
+    total = 0
+    num = 0
+
+    for ch in uptime_string.strip():
+        if ch.isdigit():
+            num = num * 10 + int(ch)
+        else:
+            if ch == "d":
+                total += num * 86400
+            elif ch == "h":
+                total += num * 3600
+            elif ch == "m":
+                total += num * 60
+            elif ch == "s":
+                total += num
+            num = 0
+
+    if num != 0:  # leftover number without unit
+        raise ValueError("Invalid duration format")
+
+    return utcnow() - timedelta(seconds=total)
+
+
+SENSORS: Final = (
+    MikrotikSensorEntityDescription(
+        key="temperature",
+        device_class=SensorDeviceClass.TEMPERATURE,
+        entity_category=EntityCategory.DIAGNOSTIC,
+        native_unit_of_measurement=UnitOfTemperature.CELSIUS,
+        value=lambda _data: _data["value"],
+        type=HEALTH,
+        index=1,
+    ),
+    MikrotikSensorEntityDescription(
+        key="voltage",
+        device_class=SensorDeviceClass.VOLTAGE,
+        entity_category=EntityCategory.DIAGNOSTIC,
+        native_unit_of_measurement=UnitOfElectricPotential.VOLT,
+        value=lambda _data: _data["value"],
+        type=HEALTH,
+        index=0,
+    ),
+    MikrotikSensorEntityDescription(
+        key="cpu-load",
+        translation_key="cpu-load",
+        state_class=SensorStateClass.MEASUREMENT,
+        entity_category=EntityCategory.DIAGNOSTIC,
+        native_unit_of_measurement=UnitOfRatio.PERCENTAGE,
+        suggested_display_precision=2,
+        value=lambda _data: _data["cpu-load"],
+        type=SYSTEM,
+        index=0,
+    ),
+    MikrotikSensorEntityDescription(
+        key="memory-usage",
+        translation_key="memory-usage",
+        state_class=SensorStateClass.MEASUREMENT,
+        entity_category=EntityCategory.DIAGNOSTIC,
+        native_unit_of_measurement=UnitOfRatio.PERCENTAGE,
+        suggested_display_precision=2,
+        value=_calculate_memory_usage,
+        type=SYSTEM,
+        index=0,
+    ),
+    MikrotikSensorEntityDescription(
+        key="disk-usage",
+        translation_key="disk-usage",
+        state_class=SensorStateClass.MEASUREMENT,
+        entity_category=EntityCategory.DIAGNOSTIC,
+        native_unit_of_measurement=UnitOfRatio.PERCENTAGE,
+        suggested_display_precision=2,
+        value=_calculate_disk_usage,
+        type=SYSTEM,
+        index=0,
+    ),
+    MikrotikSensorEntityDescription(
+        key="uptime",
+        device_class=SensorDeviceClass.UPTIME,
+        value=_calculate_uptime,
+        type=SYSTEM,
+        index=0,
+    ),
+)
+
+
+async def async_setup_entry(
+    hass: HomeAssistant,
+    entry: MikrotikConfigEntry,
+    async_add_entities: AddConfigEntryEntitiesCallback,
+) -> None:
+    """Set up Mikrotik sensors based on a config entry."""
+
+    coordinator = entry.runtime_data
+
+    sensors_list = [
+        MikrotikSensorEntity(coordinator, sensor_desc)
+        for sensor_desc in SENSORS
+        if coordinator.api.sensors.get(sensor_desc.type, []) is not None
+    ]
+
+    async_add_entities(sensors_list)
+
+
+class MikrotikSensorEntity(
+    CoordinatorEntity[MikrotikDataUpdateCoordinator], SensorEntity
+):
+    """Sensor device."""
+
+    _attr_has_entity_name = True
+    entity_description: MikrotikSensorEntityDescription
+
+    def __init__(
+        self,
+        coordinator: MikrotikDataUpdateCoordinator,
+        description: MikrotikSensorEntityDescription,
+    ) -> None:
+        """Initialize the sensor."""
+        super().__init__(coordinator)
+        self.entity_description = description
+        self._attr_device_info = coordinator.device_info
+        self._attr_unique_id = f"{coordinator.api.serial_number}_{description.key}"
+
+    @property
+    @override
+    def native_unit_of_measurement(self) -> str | None:
+        """Return the unit of measurement of the sensor."""
+        if self.entity_description.native_unit_of_measurement:
+            return self.entity_description.native_unit_of_measurement
+
+        return super().native_unit_of_measurement
+
+    @property
+    @override
+    def native_value(self) -> StateType | datetime:
+        """Return the state of the sensor."""
+        data_list = self.coordinator.api.sensors.get(self.entity_description.type, [])
+        data_entry = data_list[self.entity_description.index]
+
+        return self.entity_description.value(data_entry)
