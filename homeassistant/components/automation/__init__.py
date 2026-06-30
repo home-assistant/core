@@ -27,7 +27,6 @@ from homeassistant.const import (  # noqa: F401
     CONF_PATH,
     CONF_TRIGGERS,
     CONF_VARIABLES,
-    EVENT_HOMEASSISTANT_STARTED,
     SERVICE_RELOAD,
     SERVICE_TOGGLE,
     SERVICE_TURN_OFF,
