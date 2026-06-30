@@ -12,7 +12,7 @@ from homeassistant.components.steam_online.const import (
     SUBENTRY_TYPE_FRIEND,
 )
 from homeassistant.config_entries import SOURCE_USER, ConfigEntryState, ConfigSubentry
-from homeassistant.const import CONF_API_KEY
+from homeassistant.const import CONF_API_KEY, CONF_NAME
 from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
 
@@ -319,23 +319,30 @@ async def test_add_friend_flow_already_configured_as_entry(hass: HomeAssistant) 
 
 
 @pytest.mark.parametrize(
-    ("side_effect", "reason"),
+    ("side_effect", "reason", "description_placeholders"),
     [
         (
             steam.api.HTTPError("Server connection failed: Unauthorized (401)"),
             "friendlist_private",
+            {
+                CONF_NAME: ACCOUNT_NAME_1,
+                "privacy_settings_url": "https://steamcommunity.com/profiles/123456789/edit/settings",
+            },
         ),
         (
             steam.api.HTTPError,
             "cannot_connect",
+            None,
         ),
         (
             steam.api.HTTPTimeoutError,
             "timeout_connect",
+            None,
         ),
         (
             ValueError,
             "unknown",
+            None,
         ),
     ],
 )
@@ -345,6 +352,7 @@ async def test_add_friend_flow_abort_errors(
     config_entry: MockConfigEntry,
     side_effect: type[Exception] | Exception,
     reason: str,
+    description_placeholders: dict[str, str] | None,
 ) -> None:
     """Test add friend subentry flow aborts on errors."""
 
@@ -364,6 +372,7 @@ async def test_add_friend_flow_abort_errors(
 
     assert result["type"] is FlowResultType.ABORT
     assert result["reason"] == reason
+    assert result["description_placeholders"] == description_placeholders
 
 
 async def test_add_friend_flow_abort_no_more_friends(

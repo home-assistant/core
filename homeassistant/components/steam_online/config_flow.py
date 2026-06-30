@@ -235,13 +235,12 @@ class FriendSubentryFlowHandler(ConfigSubentryFlow):
             return self.async_abort(reason="timeout_connect")
         except steam.api.HTTPError as e:
             if "401" in str(e):
+                me = config_entry.runtime_data.data[config_entry.unique_id]
                 return self.async_abort(
                     reason="friendlist_private",
                     description_placeholders={
-                        "privacy_settings_url": config_entry.runtime_data.data[
-                            config_entry.unique_id
-                        ].profileurl
-                        + "edit/settings"
+                        CONF_NAME: me.personaname,
+                        "privacy_settings_url": f"{me.profileurl}edit/settings",
                     },
                 )
             return self.async_abort(reason="cannot_connect")
