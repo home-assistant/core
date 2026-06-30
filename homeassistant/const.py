@@ -812,7 +812,7 @@ _DEPRECATED_CONCENTRATION_MICROGRAMS_PER_CUBIC_FOOT = DeprecatedConstantEnum(
     UnitOfDensity.MICROGRAMS_PER_CUBIC_FOOT, "2027.8"
 )
 _DEPRECATED_CONCENTRATION_PARTS_PER_CUBIC_METER = DeprecatedConstant(
-    "p/m³", "p/m³", "2027.7"
+    "p/m³", "p/m³", "2027.8"
 )
 _DEPRECATED_CONCENTRATION_PARTS_PER_MILLION = DeprecatedConstantEnum(
     UnitOfRatio.PARTS_PER_MILLION, "2027.8"

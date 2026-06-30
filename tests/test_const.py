@@ -23,7 +23,7 @@ def test_all() -> None:
         (
             "p/m³",
             "CONCENTRATION_PARTS_PER_CUBIC_METER",
-            "2027.7",
+            "2027.8",
         ),
     ],
 )
