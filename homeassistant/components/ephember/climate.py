@@ -3,7 +3,7 @@
 from datetime import timedelta
 from enum import IntEnum
 import logging
-from typing import Any
+from typing import Any, override
 
 from pyephember2.pyephember2 import (
     EphEmber,
@@ -119,16 +119,19 @@ class EphEmberThermostat(ClimateEntity):
             )
 
     @property
+    @override
     def current_temperature(self) -> float | None:
         """Return the current temperature."""
         return zone_current_temperature(self._zone)
 
     @property
+    @override
     def target_temperature(self) -> float | None:
         """Return the temperature we try to reach."""
         return zone_target_temperature(self._zone)
 
     @property
+    @override
     def hvac_action(self) -> HVACAction:
         """Return current HVAC action."""
         if boiler_state(self._zone) == EPHBoilerStates.ON:
@@ -137,11 +140,13 @@ class EphEmberThermostat(ClimateEntity):
         return HVACAction.IDLE
 
     @property
+    @override
     def hvac_mode(self) -> HVACMode:
         """Return current operation ie. heat, cool, idle."""
         mode = zone_mode(self._zone)
         return self.map_mode_eph_hass(mode)
 
+    @override
     def set_hvac_mode(self, hvac_mode: HVACMode) -> None:
         """Set the operation mode."""
         mode = self.map_mode_hass_eph(hvac_mode)
@@ -150,6 +155,7 @@ class EphEmberThermostat(ClimateEntity):
         else:
             _LOGGER.error("Invalid operation mode provided %s", hvac_mode)
 
+    @override
     def set_temperature(self, **kwargs: Any) -> None:
         """Set new target temperature."""
         if (temperature := kwargs.get(ATTR_TEMPERATURE)) is None:
@@ -167,6 +173,7 @@ class EphEmberThermostat(ClimateEntity):
         self._ember.set_zone_target_temperature(self._zone["zoneid"], temperature)
 
     @property
+    @override
     def min_temp(self) -> float:
         """Return the minimum temperature."""
         # Hot water temp doesn't support being changed
@@ -176,6 +183,7 @@ class EphEmberThermostat(ClimateEntity):
         return 5.0
 
     @property
+    @override
     def max_temp(self) -> float:
         """Return the maximum temperature."""
         if self._hot_water:

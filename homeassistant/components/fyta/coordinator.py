@@ -3,6 +3,7 @@
 from collections.abc import Callable
 from datetime import datetime, timedelta
 import logging
+from typing import override
 
 from fyta_cli.fyta_connector import FytaConnector
 from fyta_cli.fyta_exceptions import (
@@ -47,6 +48,7 @@ class FytaCoordinator(DataUpdateCoordinator[dict[int, Plant]]):
         self._plants_last_update: set[int] = set()
         self.new_device_callbacks: list[Callable[[int], None]] = []
 
+    @override
     async def _async_update_data(
         self,
     ) -> dict[int, Plant]:

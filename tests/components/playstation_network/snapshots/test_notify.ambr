@@ -39,8 +39,8 @@
 # name: test_notify_platform[notify.testuser_direct_message_publicuniversalfriend-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'testuser Direct message: PublicUniversalFriend',
-      'supported_features': <NotifyEntityFeature: 0>,
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'testuser Direct message: PublicUniversalFriend',
+      <EntityStateAttribute.SUPPORTED_FEATURES: 'supported_features'>: <NotifyEntityFeature: 0>,
     }),
     'context': <ANY>,
     'entity_id': 'notify.testuser_direct_message_publicuniversalfriend',
@@ -90,8 +90,8 @@
 # name: test_notify_platform[notify.testuser_group_publicuniversalfriend-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'testuser Group: PublicUniversalFriend',
-      'supported_features': <NotifyEntityFeature: 0>,
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'testuser Group: PublicUniversalFriend',
+      <EntityStateAttribute.SUPPORTED_FEATURES: 'supported_features'>: <NotifyEntityFeature: 0>,
     }),
     'context': <ANY>,
     'entity_id': 'notify.testuser_group_publicuniversalfriend',

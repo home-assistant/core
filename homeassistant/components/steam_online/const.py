@@ -1,6 +1,5 @@
 """Steam constants."""
 
-import logging
 from typing import Final
 
 CONF_ACCOUNT = "account"
@@ -10,11 +9,10 @@ DATA_KEY_COORDINATOR = "coordinator"
 DEFAULT_NAME = "Steam"
 DOMAIN: Final = "steam_online"
 
-LOGGER = logging.getLogger(__package__)
 
 PLACEHOLDERS = {
     "api_key_url": "https://steamcommunity.com/dev/apikey",
-    "account_id_url": "https://steamid.io",
+    "account_id_url": "https://store.steampowered.com/account/",
 }
 
 STATE_OFFLINE = "offline"

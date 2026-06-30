@@ -2,7 +2,7 @@
 
 from collections.abc import Callable
 import dataclasses
-from typing import Any, Generic
+from typing import Any, Generic, override
 
 from aiopyarr import LidarrQueue, LidarrQueueItem, LidarrRootFolder
 
@@ -148,11 +148,13 @@ class LidarrSensor(LidarrEntity[T], SensorEntity):
         self.folder_name = folder_name
 
     @property
+    @override
     def extra_state_attributes(self) -> dict[str, str] | None:
         """Return the state attributes of the sensor."""
         return self.entity_description.attributes_fn(self.coordinator.data)
 
     @property
+    @override
     def native_value(self) -> str | int:
         """Return the state of the sensor."""
         return self.entity_description.value_fn(self.coordinator.data, self.folder_name)

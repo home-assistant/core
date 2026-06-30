@@ -1,5 +1,7 @@
 """Provides triggers for climates."""
 
+from typing import override
+
 import voluptuous as vol
 
 from homeassistant.const import ATTR_TEMPERATURE, CONF_OPTIONS, UnitOfTemperature
@@ -56,6 +58,7 @@ class _ClimateTargetTemperatureTriggerMixin(EntityNumericalStateTriggerWithUnitB
     _domain_specs = {DOMAIN: DomainSpec(value_source=ATTR_TEMPERATURE)}
     _unit_converter = TemperatureConverter
 
+    @override
     def _should_include(self, state: State) -> bool:
         """Skip climate entities that do not expose a target temperature."""
         return (
@@ -63,6 +66,7 @@ class _ClimateTargetTemperatureTriggerMixin(EntityNumericalStateTriggerWithUnitB
             and state.attributes.get(ATTR_TEMPERATURE) is not None
         )
 
+    @override
     def _get_entity_unit(self, state: State) -> str | None:
         """Get the temperature unit of a climate entity from its state."""
         # Climate entities convert temperatures to the system unit via show_temp
@@ -89,6 +93,7 @@ class _ClimateTargetHumidityTriggerMixin(EntityNumericalStateTriggerBase):
     _domain_specs = {DOMAIN: DomainSpec(value_source=ATTR_HUMIDITY)}
     _valid_unit = "%"
 
+    @override
     def _should_include(self, state: State) -> bool:
         """Skip climate entities that do not expose a target humidity."""
         return (

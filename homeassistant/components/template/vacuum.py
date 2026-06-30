@@ -2,7 +2,7 @@
 
 from collections.abc import Callable
 import logging
-from typing import TYPE_CHECKING, Any
+from typing import TYPE_CHECKING, Any, override
 
 import voluptuous as vol
 
@@ -313,10 +313,12 @@ class AbstractTemplateVacuum(AbstractTemplateEntity, StateVacuumEntity):
         } != {s.id: s for s in self._segments}:
             self.async_create_segments_issue()
 
+    @override
     async def async_get_segments(self) -> list[Segment]:
         """Return the available segments."""
         return self._segments
 
+    @override
     async def async_clean_segments(self, segment_ids: list[str], **kwargs: Any) -> None:
         """Perform an area clean."""
         if self._attr_assumed_state:
@@ -329,6 +331,7 @@ class AbstractTemplateVacuum(AbstractTemplateEntity, StateVacuumEntity):
                 context=self._context,
             )
 
+    @override
     async def async_start(self) -> None:
         """Start or resume the cleaning task."""
         if self._attr_assumed_state:
@@ -338,6 +341,7 @@ class AbstractTemplateVacuum(AbstractTemplateEntity, StateVacuumEntity):
             self._action_scripts[SERVICE_START], context=self._context
         )
 
+    @override
     async def async_pause(self) -> None:
         """Pause the cleaning task."""
         if self._attr_assumed_state:
@@ -346,6 +350,7 @@ class AbstractTemplateVacuum(AbstractTemplateEntity, StateVacuumEntity):
         if script := self._action_scripts.get(SERVICE_PAUSE):
             await self.async_run_script(script, context=self._context)
 
+    @override
     async def async_stop(self, **kwargs: Any) -> None:
         """Stop the cleaning task."""
         if self._attr_assumed_state:
@@ -354,6 +359,7 @@ class AbstractTemplateVacuum(AbstractTemplateEntity, StateVacuumEntity):
         if script := self._action_scripts.get(SERVICE_STOP):
             await self.async_run_script(script, context=self._context)
 
+    @override
     async def async_return_to_base(self, **kwargs: Any) -> None:
         """Set the vacuum cleaner to return to the dock."""
         if self._attr_assumed_state:
@@ -362,6 +368,7 @@ class AbstractTemplateVacuum(AbstractTemplateEntity, StateVacuumEntity):
         if script := self._action_scripts.get(SERVICE_RETURN_TO_BASE):
             await self.async_run_script(script, context=self._context)
 
+    @override
     async def async_clean_spot(self, **kwargs: Any) -> None:
         """Perform a spot clean-up."""
         if self._attr_assumed_state:
@@ -370,11 +377,13 @@ class AbstractTemplateVacuum(AbstractTemplateEntity, StateVacuumEntity):
         if script := self._action_scripts.get(SERVICE_CLEAN_SPOT):
             await self.async_run_script(script, context=self._context)
 
+    @override
     async def async_locate(self, **kwargs: Any) -> None:
         """Locate the vacuum cleaner."""
         if script := self._action_scripts.get(SERVICE_LOCATE):
             await self.async_run_script(script, context=self._context)
 
+    @override
     async def async_set_fan_speed(self, fan_speed: str, **kwargs: Any) -> None:
         """Set fan speed."""
         if fan_speed not in self._attr_fan_speed_list:
@@ -410,6 +419,7 @@ class TemplateStateVacuumEntity(TemplateEntity, AbstractTemplateVacuum):
             assert name is not None
         AbstractTemplateVacuum.__init__(self, name, config)
 
+    @override
     async def async_added_to_hass(self) -> None:
         """Run when entity about to be added to hass."""
         await super().async_added_to_hass()
@@ -437,6 +447,7 @@ class TriggerVacuumEntity(TriggerEntity, AbstractTemplateVacuum):
         self._attr_name = name = self._rendered.get(CONF_NAME, DEFAULT_NAME)
         AbstractTemplateVacuum.__init__(self, name, config)
 
+    @override
     async def async_added_to_hass(self) -> None:
         """Run when entity about to be added to hass."""
         await super().async_added_to_hass()

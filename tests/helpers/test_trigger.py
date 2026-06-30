@@ -73,15 +73,20 @@ from homeassistant.helpers.trigger import (
     EntityNumericalStateChangedTriggerWithUnitBase,
     EntityNumericalStateCrossedThresholdTriggerWithUnitBase,
     EntityTriggerBase,
+    NotTriggeredInfo,
+    NotTriggeredReasonReporter,
     PluggableAction,
     StatelessEntityTriggerBase,
     Trigger,
     TriggerActionRunner,
     TriggerConfig,
+    TriggerNotTriggeredReporter,
     _async_get_trigger_platform,
+    _report_not_triggered_noop,
     async_initialize_triggers,
     async_validate_trigger_config,
     make_entity_numerical_state_changed_trigger,
+    make_entity_numerical_state_changed_with_unit_trigger,
     make_entity_numerical_state_crossed_threshold_trigger,
     make_entity_origin_state_trigger,
     make_entity_target_state_trigger,
@@ -101,7 +106,66 @@ from tests.common import (
     mock_integration,
     mock_platform,
 )
-from tests.typing import WebSocketGenerator
+
+
+def _reported_reasons(
+    did_not_trigger_reports: list[NotTriggeredInfo],
+) -> list[tuple[str, Any]]:
+    """Return the (reason, data) pair of each recorded did-not-trigger report."""
+    return [(report.reason, report.data) for report in did_not_trigger_reports]
+
+
+async def _arm_numerical_trigger(
+    hass: HomeAssistant,
+    trigger_cls: type[Trigger],
+    options: dict[str, Any],
+    calls: list[dict[str, Any]],
+    did_not_trigger_reports: list[NotTriggeredInfo],
+    entity_id: str = "test.test_entity",
+) -> CALLBACK_TYPE:
+    """Arm a numerical trigger directly, capturing fires and did-not-trigger reports.
+
+    Bypasses the automation integration so a test can assert the trigger's
+    did_not_trigger diagnostics in addition to whether it fired.
+    """
+
+    async def async_get_triggers(hass: HomeAssistant) -> dict[str, type[Trigger]]:
+        return {"numerical": trigger_cls}
+
+    mock_integration(hass, MockModule("test"))
+    mock_platform(hass, "test.trigger", Mock(async_get_triggers=async_get_triggers))
+
+    trigger_config = {
+        CONF_PLATFORM: "test.numerical",
+        CONF_TARGET: {CONF_ENTITY_ID: entity_id},
+        CONF_OPTIONS: options,
+    }
+    log = logging.getLogger(__name__)
+
+    @callback
+    def action(run_variables: dict[str, Any], context: Context | None = None) -> None:
+        calls.append(run_variables["trigger"])
+
+    @callback
+    def did_not_trigger(
+        run_variables: dict[str, Any],
+        info: NotTriggeredInfo,
+        context: Context | None = None,
+    ) -> None:
+        did_not_trigger_reports.append(info)
+
+    validated_config = await async_validate_trigger_config(hass, [trigger_config])
+    unsub = await async_initialize_triggers(
+        hass,
+        validated_config,
+        action,
+        domain="test",
+        name="test_numerical",
+        log_cb=log.log,
+        did_not_trigger=did_not_trigger,
+    )
+    assert unsub is not None
+    return unsub
 
 
 async def _call_in_order(funcs: list[Callable[[], Any]], *, reverse: bool) -> list[Any]:
@@ -161,7 +225,9 @@ class _MockTrigger(Trigger):
         self._options = config.options or {}
 
     async def async_attach_runner(
-        self, run_action: TriggerActionRunner
+        self,
+        run_action: TriggerActionRunner,
+        did_not_trigger: TriggerNotTriggeredReporter | None = None,
     ) -> CALLBACK_TYPE:
         """Attach the trigger to a bus event."""
         raw_template = self._options.get("option_template")
@@ -814,7 +880,9 @@ async def test_platform_multiple_triggers(
         """Mock trigger 1."""
 
         async def async_attach_runner(
-            self, run_action: TriggerActionRunner
+            self,
+            run_action: TriggerActionRunner,
+            did_not_trigger: TriggerNotTriggeredReporter | None = None,
         ) -> CALLBACK_TYPE:
             """Attach a trigger."""
             run_action({"extra": "test_trigger_1"}, "trigger 1 desc")
@@ -823,7 +891,9 @@ async def test_platform_multiple_triggers(
         """Mock trigger 2."""
 
         async def async_attach_runner(
-            self, run_action: TriggerActionRunner
+            self,
+            run_action: TriggerActionRunner,
+            did_not_trigger: TriggerNotTriggeredReporter | None = None,
         ) -> CALLBACK_TYPE:
             """Attach a trigger."""
             run_action({"extra": "test_trigger_2"}, "trigger 2 desc")
@@ -973,7 +1043,9 @@ async def test_get_trigger_platform_registers_triggers(
         """Mock trigger."""
 
         async def async_attach_runner(
-            self, run_action: TriggerActionRunner
+            self,
+            run_action: TriggerActionRunner,
+            did_not_trigger: TriggerNotTriggeredReporter | None = None,
         ) -> CALLBACK_TYPE:
             return lambda: None
 
@@ -1007,6 +1079,20 @@ async def test_get_trigger_platform_registers_triggers(
     await _async_get_trigger_platform(hass, "test.trig_a")
     await _async_get_trigger_platform(hass, "test.trig_b")
     assert len(subscriber_events) == 1
+
+
+# Trigger keys the sun integration registers besides the legacy ``sun`` trigger.
+# These tests mock sun/triggers.yaml, so the modern triggers have no description.
+_MODERN_SUN_TRIGGERS = (
+    "sun.dawn",
+    "sun.dusk",
+    "sun.elevation_changed",
+    "sun.elevation_crossed_threshold",
+    "sun.solar_midnight",
+    "sun.solar_noon",
+    "sun.sunrise",
+    "sun.sunset",
+)
 
 
 @pytest.mark.parametrize(
@@ -1045,7 +1131,6 @@ async def test_get_trigger_platform_registers_triggers(
 )
 async def test_async_get_all_descriptions(
     hass: HomeAssistant,
-    hass_ws_client: WebSocketGenerator,
     sun_trigger_descriptions: str,
 ) -> None:
     """Test async_get_all_descriptions."""
@@ -1061,8 +1146,6 @@ async def test_async_get_all_descriptions(
             entity:
               domain: text
         """
-
-    ws_client = await hass_ws_client(hass)
 
     assert await async_setup_component(hass, SUN_DOMAIN, {})
     assert await async_setup_component(hass, SYSTEM_HEALTH_DOMAIN, {})
@@ -1116,7 +1199,9 @@ async def test_async_get_all_descriptions(
                 },
                 "offset": {"selector": {"time": {}}},
             }
-        }
+        },
+        # The modern sun triggers have no entry in the mocked triggers.yaml.
+        **dict.fromkeys(_MODERN_SUN_TRIGGERS),
     }
 
     assert descriptions == expected_descriptions
@@ -1168,38 +1253,6 @@ async def test_async_get_all_descriptions(
     ):
         new_descriptions = await trigger.async_get_all_descriptions(hass)
     assert new_descriptions is not descriptions
-    # No text triggers added, they are gated by the automation.new_triggers_conditions
-    # labs flag
-    assert new_descriptions == expected_descriptions
-
-    # Verify the cache returns the same object
-    assert await trigger.async_get_all_descriptions(hass) is new_descriptions
-
-    # Enable the new_triggers_conditions flag and verify text triggers are loaded
-    assert await async_setup_component(hass, "labs", {})
-
-    await ws_client.send_json_auto_id(
-        {
-            "type": "labs/update",
-            "domain": "automation",
-            "preview_feature": "new_triggers_conditions",
-            "enabled": True,
-        }
-    )
-
-    msg = await ws_client.receive_json()
-    assert msg["success"]
-    await hass.async_block_till_done()
-
-    with (
-        patch(
-            "annotatedyaml.loader.load_yaml",
-            side_effect=_load_yaml,
-        ),
-        patch.object(Integration, "has_triggers", return_value=True),
-    ):
-        new_descriptions = await trigger.async_get_all_descriptions(hass)
-    assert new_descriptions is not descriptions
     # The text triggers should now be present
     assert new_descriptions == expected_descriptions | {
         "text.changed": {
@@ -1215,37 +1268,6 @@ async def test_async_get_all_descriptions(
             },
         },
     }
-
-    # Verify the cache returns the same object
-    assert await trigger.async_get_all_descriptions(hass) is new_descriptions
-
-    # Disable the new_triggers_conditions flag and verify text triggers are removed
-    assert await async_setup_component(hass, "labs", {})
-
-    await ws_client.send_json_auto_id(
-        {
-            "type": "labs/update",
-            "domain": "automation",
-            "preview_feature": "new_triggers_conditions",
-            "enabled": False,
-        }
-    )
-
-    msg = await ws_client.receive_json()
-    assert msg["success"]
-    await hass.async_block_till_done()
-
-    with (
-        patch(
-            "annotatedyaml.loader.load_yaml",
-            side_effect=_load_yaml,
-        ),
-        patch.object(Integration, "has_triggers", return_value=True),
-    ):
-        new_descriptions = await trigger.async_get_all_descriptions(hass)
-    assert new_descriptions is not descriptions
-    # The text triggers should no longer be present
-    assert new_descriptions == expected_descriptions
 
     # Verify the cache returns the same object
     assert await trigger.async_get_all_descriptions(hass) is new_descriptions
@@ -1288,7 +1310,7 @@ async def test_async_get_all_descriptions_with_yaml_error(
     ):
         descriptions = await trigger.async_get_all_descriptions(hass)
 
-    assert descriptions == {SUN_DOMAIN: None}
+    assert descriptions == {SUN_DOMAIN: None, **dict.fromkeys(_MODERN_SUN_TRIGGERS)}
 
     assert expected_message in caplog.text
 
@@ -1321,7 +1343,7 @@ async def test_async_get_all_descriptions_with_bad_description(
     ):
         descriptions = await trigger.async_get_all_descriptions(hass)
 
-    assert descriptions == {SUN_DOMAIN: None}
+    assert descriptions == {SUN_DOMAIN: None, **dict.fromkeys(_MODERN_SUN_TRIGGERS)}
 
     assert (
         "Unable to parse triggers.yaml for the sun integration: "
@@ -1381,82 +1403,10 @@ async def test_subscribe_triggers(
     trigger.async_subscribe_platform_events(hass, good_subscriber)
 
     assert await async_setup_component(hass, "sun", {})
-    assert trigger_events == [{"sun"}]
+    assert trigger_events == [{"sun", *_MODERN_SUN_TRIGGERS}]
     assert "Error while notifying trigger platform listener" in caplog.text
 
     await hass.data["entity_components"][SUN_DOMAIN]._async_reset()
-
-
-@patch("annotatedyaml.loader.load_yaml")
-@patch.object(Integration, "has_triggers", return_value=True)
-@pytest.mark.parametrize(
-    ("new_triggers_conditions_enabled", "expected_events"),
-    [
-        (
-            True,
-            [
-                {
-                    "light.brightness_changed",
-                    "light.brightness_crossed_threshold",
-                    "light.turned_off",
-                    "light.turned_on",
-                }
-            ],
-        ),
-        (False, []),
-    ],
-)
-async def test_subscribe_triggers_experimental_triggers(
-    mock_has_triggers: Mock,
-    mock_load_yaml: Mock,
-    hass: HomeAssistant,
-    hass_ws_client: WebSocketGenerator,
-    caplog: pytest.LogCaptureFixture,
-    new_triggers_conditions_enabled: bool,
-    expected_events: list[set[str]],
-) -> None:
-    """Test async_subscribe_platform_events skips disabled triggers."""
-    # Return empty triggers.yaml for light integration, the actual trigger descriptions
-    # are irrelevant for this test
-    light_trigger_descriptions = ""
-
-    def _load_yaml(fname, secrets=None):
-        if fname.endswith("light/triggers.yaml"):
-            trigger_descriptions = light_trigger_descriptions
-        else:
-            raise FileNotFoundError
-        with io.StringIO(trigger_descriptions) as file:
-            return parse_yaml(file)
-
-    mock_load_yaml.side_effect = _load_yaml
-
-    trigger_events = []
-
-    async def good_subscriber(new_triggers: set[str]):
-        """Simulate a working subscriber."""
-        trigger_events.append(new_triggers)
-
-    ws_client = await hass_ws_client(hass)
-
-    assert await async_setup_component(hass, "labs", {})
-    await ws_client.send_json_auto_id(
-        {
-            "type": "labs/update",
-            "domain": "automation",
-            "preview_feature": "new_triggers_conditions",
-            "enabled": new_triggers_conditions_enabled,
-        }
-    )
-
-    msg = await ws_client.receive_json()
-    assert msg["success"]
-    await hass.async_block_till_done()
-
-    trigger.async_subscribe_platform_events(hass, good_subscriber)
-
-    assert await async_setup_component(hass, "light", {})
-    await hass.async_block_till_done()
-    assert trigger_events == expected_events
 
 
 @patch("annotatedyaml.loader.load_yaml")
@@ -1469,7 +1419,6 @@ async def test_subscribe_triggers_no_triggers(
     mock_has_triggers: Mock,
     mock_load_yaml: Mock,
     hass: HomeAssistant,
-    hass_ws_client: WebSocketGenerator,
     caplog: pytest.LogCaptureFixture,
 ) -> None:
     """Test async_subscribe_platform_events skips platforms without triggers."""
@@ -1492,22 +1441,6 @@ async def test_subscribe_triggers_no_triggers(
     async def good_subscriber(new_triggers: set[str]):
         """Simulate a working subscriber."""
         trigger_events.append(new_triggers)
-
-    ws_client = await hass_ws_client(hass)
-
-    assert await async_setup_component(hass, "labs", {})
-    await ws_client.send_json_auto_id(
-        {
-            "type": "labs/update",
-            "domain": "automation",
-            "preview_feature": "new_triggers_conditions",
-            "enabled": True,
-        }
-    )
-
-    msg = await ws_client.receive_json()
-    assert msg["success"]
-    await hass.async_block_till_done()
 
     trigger.async_subscribe_platform_events(hass, good_subscriber)
 
@@ -1853,96 +1786,95 @@ async def test_numerical_state_attribute_changed_with_unit_trigger_config_valida
 
 
 async def test_numerical_state_attribute_changed_error_handling(
-    hass: HomeAssistant, service_calls: list[ServiceCall]
+    hass: HomeAssistant,
 ) -> None:
     """Test numerical state attribute change error handling."""
-
-    async def async_get_triggers(hass: HomeAssistant) -> dict[str, type[Trigger]]:
-        return {
-            "attribute_changed": make_entity_numerical_state_changed_trigger(
-                {"test": DomainSpec(value_source="test_attribute")}
-            ),
-        }
-
-    mock_integration(hass, MockModule("test"))
-    mock_platform(hass, "test.trigger", Mock(async_get_triggers=async_get_triggers))
+    trigger_cls = make_entity_numerical_state_changed_trigger(
+        {"test": DomainSpec(value_source="test_attribute")}
+    )
 
     hass.states.async_set("test.test_entity", "on", {"test_attribute": 20})
+    await hass.async_block_till_done()
 
-    options = {
-        CONF_OPTIONS: {
+    calls: list[dict[str, Any]] = []
+    did_not_trigger_reports: list[NotTriggeredInfo] = []
+    unsub = await _arm_numerical_trigger(
+        hass,
+        trigger_cls,
+        {
             "threshold": {
                 "type": "between",
                 "value_min": {"entity": "sensor.above"},
                 "value_max": {"entity": "sensor.below"},
             }
-        }
-    }
-
-    await async_setup_component(
-        hass,
-        automation.DOMAIN,
-        {
-            automation.DOMAIN: {
-                "trigger": {
-                    CONF_PLATFORM: "test.attribute_changed",
-                    CONF_TARGET: {CONF_ENTITY_ID: "test.test_entity"},
-                }
-                | options,
-                "action": {
-                    "service": "test.automation",
-                    "data_template": {CONF_ENTITY_ID: "{{ trigger.entity_id }}"},
-                },
-            }
         },
+        calls,
+        did_not_trigger_reports,
     )
-
-    assert len(service_calls) == 0
 
     # Test the trigger works
     hass.states.async_set("sensor.above", "10")
     hass.states.async_set("sensor.below", "90")
     hass.states.async_set("test.test_entity", "on", {"test_attribute": 50})
     await hass.async_block_till_done()
-    assert len(service_calls) == 1
-    service_calls.clear()
+    assert len(calls) == 1
+    assert did_not_trigger_reports == []
+    calls.clear()
 
     # Test the trigger fires again when still within limits
     hass.states.async_set("test.test_entity", "on", {"test_attribute": 51})
     await hass.async_block_till_done()
-    assert len(service_calls) == 1
-    service_calls.clear()
+    assert len(calls) == 1
+    assert did_not_trigger_reports == []
+    calls.clear()
 
     # Test the trigger does not fire when the from-state is unknown or unavailable
     for from_state in (STATE_UNKNOWN, STATE_UNAVAILABLE):
         hass.states.async_set("test.test_entity", from_state)
         hass.states.async_set("test.test_entity", "on", {"test_attribute": 50})
         await hass.async_block_till_done()
-        assert len(service_calls) == 0
+        assert calls == []
+        assert did_not_trigger_reports == []
 
     # Test the trigger does not fire when the attribute value is outside the limits
     for value in (5, 95):
         hass.states.async_set("test.test_entity", "on", {"test_attribute": value})
         await hass.async_block_till_done()
-        assert len(service_calls) == 0
+        assert calls == []
+        assert did_not_trigger_reports == []
 
     # Test the trigger does not fire when the attribute value is missing
     hass.states.async_set("test.test_entity", "on", {})
     await hass.async_block_till_done()
-    assert len(service_calls) == 0
+    assert calls == []
+    assert _reported_reasons(did_not_trigger_reports) == [
+        ("entity_value_not_numeric", {"entity_id": "test.test_entity", "value": None})
+    ]
+    did_not_trigger_reports.clear()
 
     # Test the trigger does not fire when the attribute value is invalid
     for value in ("cat", None):
         hass.states.async_set("test.test_entity", "on", {"test_attribute": value})
         await hass.async_block_till_done()
-        assert len(service_calls) == 0
+        assert calls == []
+        assert _reported_reasons(did_not_trigger_reports) == [
+            (
+                "entity_value_not_numeric",
+                {"entity_id": "test.test_entity", "value": value},
+            )
+        ]
+        did_not_trigger_reports.clear()
 
     # Test the trigger does not fire when the above sensor does not exist
     hass.states.async_remove("sensor.above")
     hass.states.async_set("test.test_entity", "on", {"test_attribute": None})
     hass.states.async_set("test.test_entity", "on", {"test_attribute": 50})
     await hass.async_block_till_done()
-    assert len(service_calls) == 0
+    assert calls == []
+    assert _reported_reasons(did_not_trigger_reports) == [
+        ("threshold_entity_not_found", {"entity_id": "sensor.above"})
+    ]
+    did_not_trigger_reports.clear()
 
     # Test the trigger does not fire when the above sensor state is not numeric
     for invalid_value in ("cat", None):
@@ -1950,7 +1882,18 @@ async def test_numerical_state_attribute_changed_error_handling(
         hass.states.async_set("test.test_entity", "on", {"test_attribute": None})
         hass.states.async_set("test.test_entity", "on", {"test_attribute": 50})
         await hass.async_block_till_done()
-        assert len(service_calls) == 0
+        assert calls == []
+        assert _reported_reasons(did_not_trigger_reports) == [
+            (
+                "entity_value_not_numeric",
+                {"entity_id": "test.test_entity", "value": None},
+            ),
+            (
+                "threshold_value_not_numeric",
+                {"entity_id": "sensor.above", "value": str(invalid_value)},
+            ),
+        ]
+        did_not_trigger_reports.clear()
 
     # Reset the above sensor state to a valid numeric value
     hass.states.async_set("sensor.above", "10")
@@ -1960,7 +1903,12 @@ async def test_numerical_state_attribute_changed_error_handling(
     hass.states.async_set("test.test_entity", "on", {"test_attribute": None})
     hass.states.async_set("test.test_entity", "on", {"test_attribute": 50})
     await hass.async_block_till_done()
-    assert len(service_calls) == 0
+    assert calls == []
+    assert _reported_reasons(did_not_trigger_reports) == [
+        ("entity_value_not_numeric", {"entity_id": "test.test_entity", "value": None}),
+        ("threshold_entity_not_found", {"entity_id": "sensor.below"}),
+    ]
+    did_not_trigger_reports.clear()
 
     # Test the trigger does not fire when the below sensor state is not numeric
     for invalid_value in ("cat", None):
@@ -1968,7 +1916,20 @@ async def test_numerical_state_attribute_changed_error_handling(
         hass.states.async_set("test.test_entity", "on", {"test_attribute": None})
         hass.states.async_set("test.test_entity", "on", {"test_attribute": 50})
         await hass.async_block_till_done()
-        assert len(service_calls) == 0
+        assert calls == []
+        assert _reported_reasons(did_not_trigger_reports) == [
+            (
+                "entity_value_not_numeric",
+                {"entity_id": "test.test_entity", "value": None},
+            ),
+            (
+                "threshold_value_not_numeric",
+                {"entity_id": "sensor.below", "value": str(invalid_value)},
+            ),
+        ]
+        did_not_trigger_reports.clear()
+
+    unsub()
 
 
 @pytest.mark.parametrize(
@@ -2322,16 +2283,10 @@ async def test_numerical_state_attribute_changed_entity_limit_unit_validation(
 
 
 async def test_numerical_state_attribute_changed_with_unit_error_handling(
-    hass: HomeAssistant, service_calls: list[ServiceCall]
+    hass: HomeAssistant,
 ) -> None:
     """Test numerical state attribute change with unit conversion error handling."""
     trigger_cls = _make_with_unit_changed_trigger_class()
-
-    async def async_get_triggers(hass: HomeAssistant) -> dict[str, type[Trigger]]:
-        return {"attribute_changed": trigger_cls}
-
-    mock_integration(hass, MockModule("test"))
-    mock_platform(hass, "test.trigger", Mock(async_get_triggers=async_get_triggers))
 
     # Entity reports in °F, trigger configured in °C with above 20°C, below 30°C
     hass.states.async_set(
@@ -2342,57 +2297,48 @@ async def test_numerical_state_attribute_changed_with_unit_error_handling(
             ATTR_UNIT_OF_MEASUREMENT: UnitOfTemperature.FAHRENHEIT,
         },
     )
+    await hass.async_block_till_done()
 
-    await async_setup_component(
-        hass,
-        automation.DOMAIN,
-        {
-            automation.DOMAIN: [
-                {
-                    "trigger": {
-                        CONF_PLATFORM: "test.attribute_changed",
-                        CONF_TARGET: {CONF_ENTITY_ID: "test.test_entity"},
-                        CONF_OPTIONS: {
-                            "threshold": {
-                                "type": "between",
-                                "value_min": {
-                                    "number": 20,
-                                    "unit_of_measurement": "°C",
-                                },
-                                "value_max": {
-                                    "number": 30,
-                                    "unit_of_measurement": "°C",
-                                },
-                            }
-                        },
-                    },
-                    "action": {
-                        "service": "test.numerical_automation",
-                        "data_template": {CONF_ENTITY_ID: "{{ trigger.entity_id }}"},
-                    },
-                },
-                {
-                    "trigger": {
-                        CONF_PLATFORM: "test.attribute_changed",
-                        CONF_TARGET: {CONF_ENTITY_ID: "test.test_entity"},
-                        CONF_OPTIONS: {
-                            "threshold": {
-                                "type": "between",
-                                "value_min": {"entity": "sensor.above"},
-                                "value_max": {"entity": "sensor.below"},
-                            }
-                        },
-                    },
-                    "action": {
-                        "service": "test.entity_automation",
-                        "data_template": {CONF_ENTITY_ID: "{{ trigger.entity_id }}"},
-                    },
-                },
-            ]
-        },
+    numeric_calls: list[dict[str, Any]] = []
+    entity_calls: list[dict[str, Any]] = []
+    numeric_did_not_trigger_reports: list[NotTriggeredInfo] = []
+    entity_did_not_trigger_reports: list[NotTriggeredInfo] = []
+    unsubs: list[CALLBACK_TYPE] = []
+    unsubs.append(
+        await _arm_numerical_trigger(
+            hass,
+            trigger_cls,
+            {
+                "threshold": {
+                    "type": "between",
+                    "value_min": {"number": 20, "unit_of_measurement": "°C"},
+                    "value_max": {"number": 30, "unit_of_measurement": "°C"},
+                }
+            },
+            numeric_calls,
+            numeric_did_not_trigger_reports,
+        )
     )
-
-    assert len(service_calls) == 0
+    unsubs.append(
+        await _arm_numerical_trigger(
+            hass,
+            trigger_cls,
+            {
+                "threshold": {
+                    "type": "between",
+                    "value_min": {"entity": "sensor.above"},
+                    "value_max": {"entity": "sensor.below"},
+                }
+            },
+            entity_calls,
+            entity_did_not_trigger_reports,
+        )
+    )
+    # Both triggers report a non-numeric tracked value identically.
+    entity_not_numeric = (
+        "entity_value_not_numeric",
+        {"entity_id": "test.test_entity", "value": None},
+    )
 
     # 77°F = 25°C, within range (above 20, below 30) - should trigger numerical
     # Entity automation won't trigger because sensor.above/below don't exist yet
@@ -2405,9 +2351,15 @@ async def test_numerical_state_attribute_changed_with_unit_error_handling(
         },
     )
     await hass.async_block_till_done()
-    assert len(service_calls) == 1
-    assert service_calls[0].service == "numerical_automation"
-    service_calls.clear()
+    assert len(numeric_calls) == 1
+    assert entity_calls == []
+    # The entity-threshold trigger can't resolve its limits yet (sensors absent)
+    assert numeric_did_not_trigger_reports == []
+    assert _reported_reasons(entity_did_not_trigger_reports) == [
+        ("threshold_entity_not_found", {"entity_id": "sensor.above"})
+    ]
+    numeric_calls.clear()
+    entity_did_not_trigger_reports.clear()
 
     # 59°F = 15°C, below 20°C - should NOT trigger
     hass.states.async_set(
@@ -2419,7 +2371,12 @@ async def test_numerical_state_attribute_changed_with_unit_error_handling(
         },
     )
     await hass.async_block_till_done()
-    assert len(service_calls) == 0
+    assert numeric_calls == entity_calls == []
+    assert numeric_did_not_trigger_reports == []
+    assert _reported_reasons(entity_did_not_trigger_reports) == [
+        ("threshold_entity_not_found", {"entity_id": "sensor.above"})
+    ]
+    entity_did_not_trigger_reports.clear()
 
     # 95°F = 35°C, above 30°C - should NOT trigger
     hass.states.async_set(
@@ -2431,7 +2388,12 @@ async def test_numerical_state_attribute_changed_with_unit_error_handling(
         },
     )
     await hass.async_block_till_done()
-    assert len(service_calls) == 0
+    assert numeric_calls == entity_calls == []
+    assert numeric_did_not_trigger_reports == []
+    assert _reported_reasons(entity_did_not_trigger_reports) == [
+        ("threshold_entity_not_found", {"entity_id": "sensor.above"})
+    ]
+    entity_did_not_trigger_reports.clear()
 
     # Set up entity limits referencing sensors that report in °F
     hass.states.async_set(
@@ -2455,17 +2417,20 @@ async def test_numerical_state_attribute_changed_with_unit_error_handling(
         },
     )
     await hass.async_block_till_done()
-    assert len(service_calls) == 2
-    assert {call.service for call in service_calls} == {
-        "numerical_automation",
-        "entity_automation",
-    }
-    service_calls.clear()
+    assert len(numeric_calls) == 1
+    assert len(entity_calls) == 1
+    assert numeric_did_not_trigger_reports == entity_did_not_trigger_reports == []
+    numeric_calls.clear()
+    entity_calls.clear()
 
     # Test the trigger does not fire when the attribute value is missing
     hass.states.async_set("test.test_entity", "on", {})
     await hass.async_block_till_done()
-    assert len(service_calls) == 0
+    assert numeric_calls == entity_calls == []
+    assert _reported_reasons(numeric_did_not_trigger_reports) == [entity_not_numeric]
+    assert _reported_reasons(entity_did_not_trigger_reports) == [entity_not_numeric]
+    numeric_did_not_trigger_reports.clear()
+    entity_did_not_trigger_reports.clear()
 
     # Test the trigger does not fire when the attribute value is invalid
     for value in ("cat", None):
@@ -2478,7 +2443,21 @@ async def test_numerical_state_attribute_changed_with_unit_error_handling(
             },
         )
         await hass.async_block_till_done()
-        assert len(service_calls) == 0
+        assert numeric_calls == entity_calls == []
+        assert _reported_reasons(numeric_did_not_trigger_reports) == [
+            (
+                "entity_value_not_numeric",
+                {"entity_id": "test.test_entity", "value": value},
+            )
+        ]
+        assert _reported_reasons(entity_did_not_trigger_reports) == [
+            (
+                "entity_value_not_numeric",
+                {"entity_id": "test.test_entity", "value": value},
+            )
+        ]
+        numeric_did_not_trigger_reports.clear()
+        entity_did_not_trigger_reports.clear()
 
     # Test the trigger does not fire when the unit is incompatible
     hass.states.async_set(
@@ -2490,7 +2469,21 @@ async def test_numerical_state_attribute_changed_with_unit_error_handling(
         },
     )
     await hass.async_block_till_done()
-    assert len(service_calls) == 0
+    assert numeric_calls == entity_calls == []
+    assert _reported_reasons(numeric_did_not_trigger_reports) == [
+        (
+            "entity_unit_not_supported",
+            {"entity_id": "test.test_entity", "unit": "invalid_unit"},
+        )
+    ]
+    assert _reported_reasons(entity_did_not_trigger_reports) == [
+        (
+            "entity_unit_not_supported",
+            {"entity_id": "test.test_entity", "unit": "invalid_unit"},
+        )
+    ]
+    numeric_did_not_trigger_reports.clear()
+    entity_did_not_trigger_reports.clear()
 
     # Test the trigger does not fire when the above sensor does not exist
     hass.states.async_remove("sensor.above")
@@ -2508,7 +2501,16 @@ async def test_numerical_state_attribute_changed_with_unit_error_handling(
         {"test_attribute": 50, ATTR_UNIT_OF_MEASUREMENT: UnitOfTemperature.FAHRENHEIT},
     )
     await hass.async_block_till_done()
-    assert len(service_calls) == 0
+    assert numeric_calls == entity_calls == []
+    # The intermediate None reports a non-numeric value on both triggers; the
+    # missing threshold entity is reported only by the entity-threshold trigger.
+    assert _reported_reasons(numeric_did_not_trigger_reports) == [entity_not_numeric]
+    assert _reported_reasons(entity_did_not_trigger_reports) == [
+        entity_not_numeric,
+        ("threshold_entity_not_found", {"entity_id": "sensor.above"}),
+    ]
+    numeric_did_not_trigger_reports.clear()
+    entity_did_not_trigger_reports.clear()
 
     # Test the trigger does not fire when the above sensor state is not numeric
     for invalid_value in ("cat", None):
@@ -2534,7 +2536,19 @@ async def test_numerical_state_attribute_changed_with_unit_error_handling(
             },
         )
         await hass.async_block_till_done()
-        assert len(service_calls) == 0
+        assert numeric_calls == entity_calls == []
+        assert _reported_reasons(numeric_did_not_trigger_reports) == [
+            entity_not_numeric
+        ]
+        assert _reported_reasons(entity_did_not_trigger_reports) == [
+            entity_not_numeric,
+            (
+                "threshold_value_not_numeric",
+                {"entity_id": "sensor.above", "value": str(invalid_value)},
+            ),
+        ]
+        numeric_did_not_trigger_reports.clear()
+        entity_did_not_trigger_reports.clear()
 
     # Test the trigger does not fire when the above sensor's unit is incompatible
     hass.states.async_set(
@@ -2556,7 +2570,17 @@ async def test_numerical_state_attribute_changed_with_unit_error_handling(
         {"test_attribute": 50, ATTR_UNIT_OF_MEASUREMENT: UnitOfTemperature.FAHRENHEIT},
     )
     await hass.async_block_till_done()
-    assert len(service_calls) == 0
+    assert numeric_calls == entity_calls == []
+    assert _reported_reasons(numeric_did_not_trigger_reports) == [entity_not_numeric]
+    assert _reported_reasons(entity_did_not_trigger_reports) == [
+        entity_not_numeric,
+        (
+            "threshold_unit_not_supported",
+            {"entity_id": "sensor.above", "unit": "invalid_unit"},
+        ),
+    ]
+    numeric_did_not_trigger_reports.clear()
+    entity_did_not_trigger_reports.clear()
 
     # Reset the above sensor state to a valid numeric value
     hass.states.async_set(
@@ -2581,7 +2605,14 @@ async def test_numerical_state_attribute_changed_with_unit_error_handling(
         {"test_attribute": 50, ATTR_UNIT_OF_MEASUREMENT: UnitOfTemperature.FAHRENHEIT},
     )
     await hass.async_block_till_done()
-    assert len(service_calls) == 0
+    assert numeric_calls == entity_calls == []
+    assert _reported_reasons(numeric_did_not_trigger_reports) == [entity_not_numeric]
+    assert _reported_reasons(entity_did_not_trigger_reports) == [
+        entity_not_numeric,
+        ("threshold_entity_not_found", {"entity_id": "sensor.below"}),
+    ]
+    numeric_did_not_trigger_reports.clear()
+    entity_did_not_trigger_reports.clear()
 
     # Test the trigger does not fire when the below sensor state is not numeric
     for invalid_value in ("cat", None):
@@ -2603,7 +2634,19 @@ async def test_numerical_state_attribute_changed_with_unit_error_handling(
             },
         )
         await hass.async_block_till_done()
-        assert len(service_calls) == 0
+        assert numeric_calls == entity_calls == []
+        assert _reported_reasons(numeric_did_not_trigger_reports) == [
+            entity_not_numeric
+        ]
+        assert _reported_reasons(entity_did_not_trigger_reports) == [
+            entity_not_numeric,
+            (
+                "threshold_value_not_numeric",
+                {"entity_id": "sensor.below", "value": str(invalid_value)},
+            ),
+        ]
+        numeric_did_not_trigger_reports.clear()
+        entity_did_not_trigger_reports.clear()
 
     # Test the trigger does not fire when the below sensor's unit is incompatible
     hass.states.async_set(
@@ -2625,7 +2668,241 @@ async def test_numerical_state_attribute_changed_with_unit_error_handling(
         {"test_attribute": 50, ATTR_UNIT_OF_MEASUREMENT: UnitOfTemperature.FAHRENHEIT},
     )
     await hass.async_block_till_done()
-    assert len(service_calls) == 0
+    assert numeric_calls == entity_calls == []
+    assert _reported_reasons(numeric_did_not_trigger_reports) == [entity_not_numeric]
+    assert _reported_reasons(entity_did_not_trigger_reports) == [
+        entity_not_numeric,
+        (
+            "threshold_unit_not_supported",
+            {"entity_id": "sensor.below", "unit": "invalid_unit"},
+        ),
+    ]
+    numeric_did_not_trigger_reports.clear()
+    entity_did_not_trigger_reports.clear()
+
+    for unsub in unsubs:
+        unsub()
+
+
+# State-sourced numerical triggers: brightness-style (percentage) and
+# temperature-style (with unit conversion to a base unit).
+_PERCENT_CHANGED_TRIGGER = make_entity_numerical_state_changed_trigger(
+    {"test": DomainSpec()}, "%"
+)
+_TEMPERATURE_CHANGED_TRIGGER = make_entity_numerical_state_changed_with_unit_trigger(
+    {"test": DomainSpec()}, UnitOfTemperature.CELSIUS, TemperatureConverter
+)
+
+
+@pytest.mark.parametrize(
+    (
+        "trigger_cls",
+        "good_unit",
+        "bad_state",
+        "bad_unit",
+        "expected_reason",
+        "expected_data",
+    ),
+    [
+        pytest.param(
+            _PERCENT_CHANGED_TRIGGER,
+            "%",
+            "cat",
+            "%",
+            "entity_value_not_numeric",
+            {"entity_id": "test.test_entity", "value": "cat"},
+            id="non-numeric",
+        ),
+        pytest.param(
+            _PERCENT_CHANGED_TRIGGER,
+            "%",
+            "50",
+            "kg",
+            "entity_unit_not_supported",
+            {"entity_id": "test.test_entity", "unit": "kg"},
+            id="unsupported-unit",
+        ),
+        pytest.param(
+            _TEMPERATURE_CHANGED_TRIGGER,
+            "°C",
+            "cat",
+            "°C",
+            "entity_value_not_numeric",
+            {"entity_id": "test.test_entity", "value": "cat"},
+            id="with-unit-non-numeric",
+        ),
+        pytest.param(
+            _TEMPERATURE_CHANGED_TRIGGER,
+            "°C",
+            "50",
+            "kg",
+            "entity_unit_not_supported",
+            {"entity_id": "test.test_entity", "unit": "kg"},
+            id="with-unit-incompatible-unit",
+        ),
+    ],
+)
+async def test_numerical_trigger_reports_invalid_tracked_value(
+    hass: HomeAssistant,
+    trigger_cls: type[Trigger],
+    good_unit: str,
+    bad_state: str,
+    bad_unit: str,
+    expected_reason: str,
+    expected_data: dict[str, Any],
+) -> None:
+    """Report a non-numeric value or unsupported unit on the tracked entity."""
+    calls: list[dict[str, Any]] = []
+    did_not_trigger_reports: list[NotTriggeredInfo] = []
+    hass.states.async_set(
+        "test.test_entity", "10", {ATTR_UNIT_OF_MEASUREMENT: good_unit}
+    )
+    await hass.async_block_till_done()
+
+    unsub = await _arm_numerical_trigger(
+        hass,
+        trigger_cls,
+        {"threshold": {"type": "any"}},
+        calls,
+        did_not_trigger_reports,
+    )
+
+    hass.states.async_set(
+        "test.test_entity", bad_state, {ATTR_UNIT_OF_MEASUREMENT: bad_unit}
+    )
+    await hass.async_block_till_done()
+
+    assert calls == []
+    assert _reported_reasons(did_not_trigger_reports) == [
+        (expected_reason, expected_data)
+    ]
+
+    unsub()
+
+
+@pytest.mark.parametrize(
+    (
+        "trigger_cls",
+        "good_unit",
+        "threshold_state",
+        "threshold_unit",
+        "expected_reason",
+        "expected_data",
+    ),
+    [
+        pytest.param(
+            _PERCENT_CHANGED_TRIGGER,
+            "%",
+            "cat",
+            "%",
+            "threshold_value_not_numeric",
+            {"entity_id": "sensor.limit", "value": "cat"},
+            id="non-numeric",
+        ),
+        pytest.param(
+            _PERCENT_CHANGED_TRIGGER,
+            "%",
+            "30",
+            "kg",
+            "threshold_unit_not_supported",
+            {"entity_id": "sensor.limit", "unit": "kg"},
+            id="unsupported-unit",
+        ),
+        pytest.param(
+            _TEMPERATURE_CHANGED_TRIGGER,
+            "°C",
+            "cat",
+            "°C",
+            "threshold_value_not_numeric",
+            {"entity_id": "sensor.limit", "value": "cat"},
+            id="with-unit-non-numeric",
+        ),
+        pytest.param(
+            _TEMPERATURE_CHANGED_TRIGGER,
+            "°C",
+            "30",
+            "kg",
+            "threshold_unit_not_supported",
+            {"entity_id": "sensor.limit", "unit": "kg"},
+            id="with-unit-incompatible-unit",
+        ),
+    ],
+)
+async def test_numerical_trigger_reports_invalid_threshold_entity(
+    hass: HomeAssistant,
+    trigger_cls: type[Trigger],
+    good_unit: str,
+    threshold_state: str,
+    threshold_unit: str,
+    expected_reason: str,
+    expected_data: dict[str, Any],
+) -> None:
+    """Report a non-numeric value or unsupported unit on a threshold entity."""
+    calls: list[dict[str, Any]] = []
+    did_not_trigger_reports: list[NotTriggeredInfo] = []
+    hass.states.async_set(
+        "sensor.limit", threshold_state, {ATTR_UNIT_OF_MEASUREMENT: threshold_unit}
+    )
+    hass.states.async_set(
+        "test.test_entity", "10", {ATTR_UNIT_OF_MEASUREMENT: good_unit}
+    )
+    await hass.async_block_till_done()
+
+    unsub = await _arm_numerical_trigger(
+        hass,
+        trigger_cls,
+        {"threshold": {"type": "above", "value": {"entity": "sensor.limit"}}},
+        calls,
+        did_not_trigger_reports,
+    )
+
+    hass.states.async_set(
+        "test.test_entity", "20", {ATTR_UNIT_OF_MEASUREMENT: good_unit}
+    )
+    await hass.async_block_till_done()
+
+    assert calls == []
+    assert _reported_reasons(did_not_trigger_reports) == [
+        (expected_reason, expected_data)
+    ]
+
+    unsub()
+
+
+async def test_numerical_trigger_reports_single_reason_for_between(
+    hass: HomeAssistant,
+) -> None:
+    """Two invalid between-thresholds yield a single diagnostic for the lower one."""
+    calls: list[dict[str, Any]] = []
+    did_not_trigger_reports: list[NotTriggeredInfo] = []
+    hass.states.async_set("sensor.low", "cat", {ATTR_UNIT_OF_MEASUREMENT: "%"})
+    hass.states.async_set("sensor.high", "dog", {ATTR_UNIT_OF_MEASUREMENT: "%"})
+    hass.states.async_set("test.test_entity", "10", {ATTR_UNIT_OF_MEASUREMENT: "%"})
+    await hass.async_block_till_done()
+
+    unsub = await _arm_numerical_trigger(
+        hass,
+        _PERCENT_CHANGED_TRIGGER,
+        {
+            "threshold": {
+                "type": "between",
+                "value_min": {"entity": "sensor.low"},
+                "value_max": {"entity": "sensor.high"},
+            }
+        },
+        calls,
+        did_not_trigger_reports,
+    )
+
+    hass.states.async_set("test.test_entity", "20", {ATTR_UNIT_OF_MEASUREMENT: "%"})
+    await hass.async_block_till_done()
+
+    assert calls == []
+    assert _reported_reasons(did_not_trigger_reports) == [
+        ("threshold_value_not_numeric", {"entity_id": "sensor.low", "value": "cat"})
+    ]
+
+    unsub()
 
 
 @pytest.mark.parametrize(
@@ -3016,103 +3293,105 @@ async def test_numerical_state_attr_crossed_threshold_unit_trigger_config_valida
 
 
 async def test_numerical_state_attribute_crossed_threshold_error_handling(
-    hass: HomeAssistant, service_calls: list[ServiceCall]
+    hass: HomeAssistant,
 ) -> None:
     """Test numerical state attribute crossed threshold error handling."""
-
-    async def async_get_triggers(hass: HomeAssistant) -> dict[str, type[Trigger]]:
-        return {
-            "crossed_threshold": make_entity_numerical_state_crossed_threshold_trigger(
-                {"test": DomainSpec(value_source="test_attribute")}
-            ),
-        }
-
-    mock_integration(hass, MockModule("test"))
-    mock_platform(hass, "test.trigger", Mock(async_get_triggers=async_get_triggers))
+    trigger_cls = make_entity_numerical_state_crossed_threshold_trigger(
+        {"test": DomainSpec(value_source="test_attribute")}
+    )
 
     hass.states.async_set("test.test_entity", "on", {"test_attribute": 0})
+    await hass.async_block_till_done()
 
-    options = {
-        CONF_OPTIONS: {
+    calls: list[dict[str, Any]] = []
+    did_not_trigger_reports: list[NotTriggeredInfo] = []
+    unsub = await _arm_numerical_trigger(
+        hass,
+        trigger_cls,
+        {
             "threshold": {
                 "type": "between",
                 "value_min": {"entity": "sensor.lower"},
                 "value_max": {"entity": "sensor.upper"},
             }
         },
-    }
-
-    await async_setup_component(
-        hass,
-        automation.DOMAIN,
-        {
-            automation.DOMAIN: {
-                "trigger": {
-                    CONF_PLATFORM: "test.crossed_threshold",
-                    CONF_TARGET: {CONF_ENTITY_ID: "test.test_entity"},
-                }
-                | options,
-                "action": {
-                    "service": "test.automation",
-                    "data_template": {CONF_ENTITY_ID: "{{ trigger.entity_id }}"},
-                },
-            }
-        },
+        calls,
+        did_not_trigger_reports,
     )
-
-    assert len(service_calls) == 0
 
     # Test the trigger works
     hass.states.async_set("sensor.lower", "10")
     hass.states.async_set("sensor.upper", "90")
     hass.states.async_set("test.test_entity", "on", {"test_attribute": 50})
     await hass.async_block_till_done()
-    assert len(service_calls) == 1
-    service_calls.clear()
+    assert len(calls) == 1
+    assert did_not_trigger_reports == []
+    calls.clear()
 
     # Test the trigger does not fire again when still within limits
     hass.states.async_set("test.test_entity", "on", {"test_attribute": 51})
     await hass.async_block_till_done()
-    assert len(service_calls) == 0
-    service_calls.clear()
+    assert calls == []
+    assert did_not_trigger_reports == []
 
     # Test the trigger does not fire when the from-state is unknown or unavailable
     for from_state in (STATE_UNKNOWN, STATE_UNAVAILABLE):
         hass.states.async_set("test.test_entity", from_state)
         hass.states.async_set("test.test_entity", "on", {"test_attribute": 50})
         await hass.async_block_till_done()
-        assert len(service_calls) == 0
+        assert calls == []
+        assert did_not_trigger_reports == []
 
     # Test the trigger does fire when the attribute value is changing from None
     hass.states.async_set("test.test_entity", "on", {"test_attribute": None})
     hass.states.async_set("test.test_entity", "on", {"test_attribute": 50})
     await hass.async_block_till_done()
-    assert len(service_calls) == 1
-    service_calls.clear()
+    assert len(calls) == 1
+    assert _reported_reasons(did_not_trigger_reports) == [
+        ("entity_value_not_numeric", {"entity_id": "test.test_entity", "value": None})
+    ]
+    calls.clear()
+    did_not_trigger_reports.clear()
 
     # Test the trigger does not fire when the attribute value is outside the limits
     for value in (5, 95):
         hass.states.async_set("test.test_entity", "on", {"test_attribute": value})
         await hass.async_block_till_done()
-        assert len(service_calls) == 0
+        assert calls == []
+        assert did_not_trigger_reports == []
 
     # Test the trigger does not fire when the attribute value is missing
     hass.states.async_set("test.test_entity", "on", {})
     await hass.async_block_till_done()
-    assert len(service_calls) == 0
+    assert calls == []
+    assert _reported_reasons(did_not_trigger_reports) == [
+        ("entity_value_not_numeric", {"entity_id": "test.test_entity", "value": None})
+    ]
+    did_not_trigger_reports.clear()
 
     # Test the trigger does not fire when the attribute value is invalid
     for value in ("cat", None):
         hass.states.async_set("test.test_entity", "on", {"test_attribute": value})
         await hass.async_block_till_done()
-        assert len(service_calls) == 0
+        assert calls == []
+        assert _reported_reasons(did_not_trigger_reports) == [
+            (
+                "entity_value_not_numeric",
+                {"entity_id": "test.test_entity", "value": value},
+            )
+        ]
+        did_not_trigger_reports.clear()
 
     # Test the trigger does not fire when the lower sensor does not exist
     hass.states.async_remove("sensor.lower")
     hass.states.async_set("test.test_entity", "on", {"test_attribute": None})
     hass.states.async_set("test.test_entity", "on", {"test_attribute": 50})
     await hass.async_block_till_done()
-    assert len(service_calls) == 0
+    assert calls == []
+    assert _reported_reasons(did_not_trigger_reports) == [
+        ("threshold_entity_not_found", {"entity_id": "sensor.lower"})
+    ]
+    did_not_trigger_reports.clear()
 
     # Test the trigger does not fire when the lower sensor state is not numeric
     for invalid_value in ("cat", None):
@@ -3120,7 +3399,18 @@ async def test_numerical_state_attribute_crossed_threshold_error_handling(
         hass.states.async_set("test.test_entity", "on", {"test_attribute": None})
         hass.states.async_set("test.test_entity", "on", {"test_attribute": 50})
         await hass.async_block_till_done()
-        assert len(service_calls) == 0
+        assert calls == []
+        assert _reported_reasons(did_not_trigger_reports) == [
+            (
+                "entity_value_not_numeric",
+                {"entity_id": "test.test_entity", "value": None},
+            ),
+            (
+                "threshold_value_not_numeric",
+                {"entity_id": "sensor.lower", "value": str(invalid_value)},
+            ),
+        ]
+        did_not_trigger_reports.clear()
 
     # Reset the lower sensor state to a valid numeric value
     hass.states.async_set("sensor.lower", "10")
@@ -3130,7 +3420,12 @@ async def test_numerical_state_attribute_crossed_threshold_error_handling(
     hass.states.async_set("test.test_entity", "on", {"test_attribute": None})
     hass.states.async_set("test.test_entity", "on", {"test_attribute": 50})
     await hass.async_block_till_done()
-    assert len(service_calls) == 0
+    assert calls == []
+    assert _reported_reasons(did_not_trigger_reports) == [
+        ("entity_value_not_numeric", {"entity_id": "test.test_entity", "value": None}),
+        ("threshold_entity_not_found", {"entity_id": "sensor.upper"}),
+    ]
+    did_not_trigger_reports.clear()
 
     # Test the trigger does not fire when the upper sensor state is not numeric
     for invalid_value in ("cat", None):
@@ -3138,7 +3433,20 @@ async def test_numerical_state_attribute_crossed_threshold_error_handling(
         hass.states.async_set("test.test_entity", "on", {"test_attribute": None})
         hass.states.async_set("test.test_entity", "on", {"test_attribute": 50})
         await hass.async_block_till_done()
-        assert len(service_calls) == 0
+        assert calls == []
+        assert _reported_reasons(did_not_trigger_reports) == [
+            (
+                "entity_value_not_numeric",
+                {"entity_id": "test.test_entity", "value": None},
+            ),
+            (
+                "threshold_value_not_numeric",
+                {"entity_id": "sensor.upper", "value": str(invalid_value)},
+            ),
+        ]
+        did_not_trigger_reports.clear()
+
+    unsub()
 
 
 @pytest.mark.parametrize(
@@ -3419,16 +3727,10 @@ async def test_numerical_state_attribute_crossed_threshold_entity_limit_unit_val
 
 
 async def test_numerical_state_attribute_crossed_threshold_with_unit_error_handling(
-    hass: HomeAssistant, service_calls: list[ServiceCall]
+    hass: HomeAssistant,
 ) -> None:
     """Test numerical state attribute crossed threshold with unit conversion."""
     trigger_cls = _make_with_unit_crossed_threshold_trigger_class()
-
-    async def async_get_triggers(hass: HomeAssistant) -> dict[str, type[Trigger]]:
-        return {"crossed_threshold": trigger_cls}
-
-    mock_integration(hass, MockModule("test"))
-    mock_platform(hass, "test.trigger", Mock(async_get_triggers=async_get_triggers))
 
     # Entity reports in °F, trigger configured in °C: above 25°C
     hass.states.async_set(
@@ -3439,9 +3741,14 @@ async def test_numerical_state_attribute_crossed_threshold_with_unit_error_handl
             ATTR_UNIT_OF_MEASUREMENT: UnitOfTemperature.FAHRENHEIT,
         },
     )
+    await hass.async_block_till_done()
 
-    options = {
-        CONF_OPTIONS: {
+    calls: list[dict[str, Any]] = []
+    did_not_trigger_reports: list[NotTriggeredInfo] = []
+    unsub = await _arm_numerical_trigger(
+        hass,
+        trigger_cls,
+        {
             "threshold": {
                 "type": "above",
                 "value": {
@@ -3450,27 +3757,9 @@ async def test_numerical_state_attribute_crossed_threshold_with_unit_error_handl
                 },
             }
         },
-    }
-
-    await async_setup_component(
-        hass,
-        automation.DOMAIN,
-        {
-            automation.DOMAIN: {
-                "trigger": {
-                    CONF_PLATFORM: "test.crossed_threshold",
-                    CONF_TARGET: {CONF_ENTITY_ID: "test.test_entity"},
-                }
-                | options,
-                "action": {
-                    "service": "test.automation",
-                    "data_template": {CONF_ENTITY_ID: "{{ trigger.entity_id }}"},
-                },
-            }
-        },
+        calls,
+        did_not_trigger_reports,
     )
-
-    assert len(service_calls) == 0
 
     # 80.6°F = 27°C, above 25°C threshold - should trigger
     hass.states.async_set(
@@ -3482,8 +3771,9 @@ async def test_numerical_state_attribute_crossed_threshold_with_unit_error_handl
         },
     )
     await hass.async_block_till_done()
-    assert len(service_calls) == 1
-    service_calls.clear()
+    assert len(calls) == 1
+    assert did_not_trigger_reports == []
+    calls.clear()
 
     # Still above threshold - should NOT trigger (already crossed)
     hass.states.async_set(
@@ -3495,7 +3785,8 @@ async def test_numerical_state_attribute_crossed_threshold_with_unit_error_handl
         },
     )
     await hass.async_block_till_done()
-    assert len(service_calls) == 0
+    assert calls == []
+    assert did_not_trigger_reports == []
 
     # Drop below threshold and cross again
     hass.states.async_set(
@@ -3507,7 +3798,8 @@ async def test_numerical_state_attribute_crossed_threshold_with_unit_error_handl
         },
     )
     await hass.async_block_till_done()
-    assert len(service_calls) == 0
+    assert calls == []
+    assert did_not_trigger_reports == []
 
     hass.states.async_set(
         "test.test_entity",
@@ -3518,8 +3810,9 @@ async def test_numerical_state_attribute_crossed_threshold_with_unit_error_handl
         },
     )
     await hass.async_block_till_done()
-    assert len(service_calls) == 1
-    service_calls.clear()
+    assert len(calls) == 1
+    assert did_not_trigger_reports == []
+    calls.clear()
 
     # Test with incompatible unit - should NOT trigger
     hass.states.async_set(
@@ -3531,7 +3824,16 @@ async def test_numerical_state_attribute_crossed_threshold_with_unit_error_handl
         },
     )
     await hass.async_block_till_done()
-    assert len(service_calls) == 0
+    assert calls == []
+    assert _reported_reasons(did_not_trigger_reports) == [
+        (
+            "entity_unit_not_supported",
+            {"entity_id": "test.test_entity", "unit": "invalid_unit"},
+        )
+    ]
+    did_not_trigger_reports.clear()
+
+    unsub()
 
 
 def _make_trigger(
@@ -3548,7 +3850,11 @@ def _make_trigger(
             """Accept any transition."""
             return True
 
-        def is_valid_state(self, state: State) -> bool:
+        def is_valid_state(
+            self,
+            state: State,
+            report_not_triggered: NotTriggeredReasonReporter,
+        ) -> bool:
             """Accept any state."""
             return True
 
@@ -3693,13 +3999,13 @@ async def test_make_entity_target_state_trigger(
 
     # Value changed to target — valid
     assert trig.is_valid_transition(from_state, to_state)
-    assert trig.is_valid_state(to_state)
+    assert trig.is_valid_state(to_state, _report_not_triggered_noop)
 
     # Value did not change — not a valid transition
     assert not trig.is_valid_transition(from_state, from_state)
 
     # Value not in to_states — not valid
-    assert not trig.is_valid_state(wrong_value_state)
+    assert not trig.is_valid_state(wrong_value_state, _report_not_triggered_noop)
 
 
 @pytest.mark.parametrize(
@@ -3757,13 +4063,13 @@ async def test_make_entity_transition_trigger(
 
     # Valid transition
     assert trig.is_valid_transition(from_state, to_state)
-    assert trig.is_valid_state(to_state)
+    assert trig.is_valid_state(to_state, _report_not_triggered_noop)
 
     # Wrong origin (not in from_states)
     assert not trig.is_valid_transition(wrong_from, to_state)
 
     # Wrong target (not in to_states)
-    assert not trig.is_valid_state(wrong_to)
+    assert not trig.is_valid_state(wrong_to, _report_not_triggered_noop)
 
     # No change in tracked value — not a valid transition
     assert not trig.is_valid_transition(from_state, from_state)
@@ -3808,7 +4114,7 @@ async def test_make_entity_origin_state_trigger(
 
     # Valid: changed from expected origin to something else
     assert trig.is_valid_transition(from_state, to_state)
-    assert trig.is_valid_state(to_state)
+    assert trig.is_valid_state(to_state, _report_not_triggered_noop)
 
     # Wrong origin (not the expected from_state)
     assert not trig.is_valid_transition(wrong_from, to_state)
@@ -3817,7 +4123,7 @@ async def test_make_entity_origin_state_trigger(
     assert not trig.is_valid_transition(from_state, from_state)
 
     # To-state still matches from_state — not valid
-    assert not trig.is_valid_state(from_state)
+    assert not trig.is_valid_state(from_state, _report_not_triggered_noop)
 
 
 class _ActivatedTrigger(StatelessEntityTriggerBase):
@@ -3913,7 +4219,11 @@ class _OffToOnTrigger(EntityTriggerBase):
             return False
         return from_state.state != STATE_ON
 
-    def is_valid_state(self, state: State) -> bool:
+    def is_valid_state(
+        self,
+        state: State,
+        report_not_triggered: NotTriggeredReasonReporter,
+    ) -> bool:
         """Valid if the state is 'on'."""
         return state.state == STATE_ON
 
@@ -3964,6 +4274,37 @@ async def _arm_off_to_on_trigger(
         domain="test",
         name="test_off_to_on",
         log_cb=log.log,
+    )
+
+
+@pytest.mark.usefixtures("mock_integration_frame")
+async def test_async_initialize_triggers_home_assistant_start_deprecated(
+    hass: HomeAssistant,
+    caplog: pytest.LogCaptureFixture,
+) -> None:
+    """Test passing the deprecated home_assistant_start parameter is reported."""
+    log = logging.getLogger(__name__)
+
+    @callback
+    def action(run_variables: dict[str, Any], context: Context | None = None) -> None:
+        pass
+
+    # The parameter no longer has any effect; passing it is logged, not raised.
+    assert (
+        await async_initialize_triggers(
+            hass,
+            [],
+            action,
+            "test",
+            "test",
+            log.log,
+            home_assistant_start=True,
+        )
+        is None
+    )
+    assert (
+        "passes `home_assistant_start` to `async_initialize_triggers`, which is "
+        "deprecated and will be removed in Home Assistant 2027.8" in caplog.text
     )
 
 

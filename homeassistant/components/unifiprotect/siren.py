@@ -2,7 +2,7 @@
 
 from datetime import datetime
 import logging
-from typing import Any
+from typing import Any, override
 
 from uiprotect.data import Siren, SirenDuration
 
@@ -67,7 +67,7 @@ class ProtectSiren(SirenEntity):
         """Initialise the siren entity."""
         self.data = data
         self._siren_id = siren.id
-        self._attr_unique_id = f"{siren.mac}_siren"
+        self._attr_unique_id = f"{siren.mac}_siren"  # pylint: disable=home-assistant-entity-unique-id-redundant-platform
         nvr = data.api.bootstrap.nvr
         self._attr_device_info = DeviceInfo(
             connections={(dr.CONNECTION_NETWORK_MAC, siren.mac)},
@@ -145,6 +145,7 @@ class ProtectSiren(SirenEntity):
         self._attr_is_on = False
         self.async_write_ha_state()
 
+    @override
     async def async_added_to_hass(self) -> None:
         """Subscribe to public WS updates dispatched by ProtectData."""
         await super().async_added_to_hass()
@@ -165,6 +166,7 @@ class ProtectSiren(SirenEntity):
             self._cancel_scheduled_off = None
 
     @async_ufp_instance_command
+    @override
     async def async_turn_on(self, **kwargs: Any) -> None:
         """Activate the siren, optionally for a given duration and/or volume."""
         if (siren := self._siren) is None:
@@ -206,6 +208,7 @@ class ProtectSiren(SirenEntity):
         await siren.play(duration=norm_duration)
 
     @async_ufp_instance_command
+    @override
     async def async_turn_off(self, **kwargs: Any) -> None:
         """Stop the siren."""
         if (siren := self._siren) is None:

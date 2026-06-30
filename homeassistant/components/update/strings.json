@@ -113,8 +113,8 @@
   },
   "title": "Update",
   "triggers": {
-    "update_became_available": {
-      "description": "Triggers after one or more updates become available.",
+    "became_available": {
+      "description": "Triggers when one or more updates become available.",
       "fields": {
         "behavior": {
           "name": "[%key:component::update::common::trigger_behavior_name%]"

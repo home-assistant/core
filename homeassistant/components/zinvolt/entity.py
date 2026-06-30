@@ -1,5 +1,7 @@
 """Base entity for Zinvolt integration."""
 
+from typing import override
+
 from zinvolt.models import OnlineStatus, Unit
 
 from homeassistant.const import ATTR_VIA_DEVICE
@@ -26,6 +28,7 @@ class ZinvoltEntity(CoordinatorEntity[ZinvoltDeviceCoordinator]):
         )
 
     @property
+    @override
     def available(self) -> bool:
         """Return if the entity is available."""
         return (
@@ -78,6 +81,7 @@ class ZinvoltUnitEntity(ZinvoltEntity):
         return self.coordinator.battery_units[self.unit_serial_number]
 
     @property
+    @override
     def available(self) -> bool:
         """Return if the entity is available."""
         return (

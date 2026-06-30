@@ -38,6 +38,7 @@ from typing import (
     cast,
     final,
     overload,
+    override,
 )
 
 from propcache.api import cached_property, under_cached_property
@@ -155,6 +156,8 @@ class EventStateReportedData(EventStateEventData):
 
 # How long to wait until things that run on startup have to finish.
 TIMEOUT_EVENT_START = 15
+# How long to wait until startup jobs have to finish.
+TIMEOUT_STARTUP_JOBS = 15
 
 
 EVENTS_EXCLUDED_FROM_MATCH_ALL = {
@@ -329,6 +332,7 @@ class HassJob[**_P, _R_co]:
         """Return if the job should be cancelled on shutdown."""
         return self._cancel_on_shutdown
 
+    @override
     def __repr__(self) -> str:
         """Return the job."""
         return f"<Job {self.name} {self.job_type} {self.target}>"
@@ -368,6 +372,7 @@ class CoreState(enum.Enum):
     final_write = "FINAL_WRITE"
     stopped = "STOPPED"
 
+    @override
     def __str__(self) -> str:
         """Return the event."""
         return self.value
@@ -386,6 +391,7 @@ class HomeAssistant:
         _hass.hass = hass
         return hass
 
+    @override
     def __repr__(self) -> str:
         """Return the representation."""
         return f"<HomeAssistant {self.state}>"
@@ -412,6 +418,7 @@ class HomeAssistant:
         self.timeout: TimeoutManager = TimeoutManager()
         self._stop_future: concurrent.futures.Future[None] | None = None
         self._shutdown_jobs: list[HassJobWithArgs] = []
+        self._startup_jobs: list[HassJobWithArgs] = []
         self.import_executor = InterruptibleThreadPoolExecutor(
             max_workers=1, thread_name_prefix="ImportExecutor"
         )
@@ -499,6 +506,20 @@ class HomeAssistant:
         """
         _LOGGER.info("Starting Home Assistant %s", __version__)
 
+        def _log_startup_blocked(tasks: set[asyncio.Future[Any]]) -> None:
+            """Log when startup is blocked by tasks."""
+            _LOGGER.warning(
+                (
+                    "Something is blocking Home Assistant from wrapping up the start up"
+                    " phase. We're going to continue anyway. Please report the"
+                    " following info at"
+                    " https://github.com/home-assistant/core/issues: %s"
+                    " The system is waiting for tasks: %s"
+                ),
+                ", ".join(self.config.components),
+                tasks,
+            )
+
         self.set_state(CoreState.starting)
         self.bus.async_fire_internal(EVENT_CORE_CONFIG_UPDATE)
         self.bus.async_fire_internal(EVENT_HOMEASSISTANT_START)
@@ -511,20 +532,23 @@ class HomeAssistant:
             )
 
         if pending:
-            _LOGGER.warning(
-                (
-                    "Something is blocking Home Assistant from wrapping up the start up"
-                    " phase. We're going to continue anyway. Please report the"
-                    " following info at"
-                    " https://github.com/home-assistant/core/issues: %s"
-                    " The system is waiting for tasks: %s"
-                ),
-                ", ".join(self.config.components),
-                self._tasks,
-            )
+            _log_startup_blocked(self._tasks)
 
-        # Allow automations to set up the start triggers before changing state
-        await asyncio.sleep(0)
+        # Run startup jobs
+        tasks: list[asyncio.Future[Any]] = []
+        for job in self._startup_jobs:
+            task_or_none = self.async_run_hass_job(job.job, *job.args)
+            if task_or_none is None:
+                continue
+            tasks.append(task_or_none)
+        self._startup_jobs.clear()
+        if not tasks:
+            pending = None
+        else:
+            _done, pending = await asyncio.wait(tasks, timeout=TIMEOUT_STARTUP_JOBS)
+
+        if pending:
+            _log_startup_blocked(pending)
 
         if self.state is not CoreState.starting:
             _LOGGER.warning(
@@ -1031,6 +1055,9 @@ class HomeAssistant:
     ) -> CALLBACK_TYPE:
         """Add a HassJob which will be executed on shutdown.
 
+        The job will be called (and awaited if it returns a coroutine) before firing
+        of event EVENT_HOMEASSISTANT_STOP when Home Assistant is shutting down.
+
         This method must be run in the event loop.
 
         hassjob: HassJob
@@ -1044,6 +1071,44 @@ class HomeAssistant:
         @callback
         def remove_job() -> None:
             self._shutdown_jobs.remove(job_with_args)
+
+        return remove_job
+
+    @overload
+    @callback
+    def async_add_startup_job(
+        self, hassjob: HassJob[..., Coroutine[Any, Any, Any]], *args: Any
+    ) -> CALLBACK_TYPE: ...
+
+    @overload
+    @callback
+    def async_add_startup_job(
+        self, hassjob: HassJob[..., Coroutine[Any, Any, Any] | Any], *args: Any
+    ) -> CALLBACK_TYPE: ...
+
+    @callback
+    def async_add_startup_job(
+        self, hassjob: HassJob[..., Coroutine[Any, Any, Any] | Any], *args: Any
+    ) -> CALLBACK_TYPE:
+        """Add a HassJob which will be executed on startup.
+
+        The job will be called (and awaited if it returns a coroutine) before firing
+        of event EVENT_HOMEASSISTANT_STARTED when Home Assistant is starting.
+
+        This method must be run in the event loop.
+
+        hassjob: HassJob
+        args: parameters for method to call.
+
+        Returns function to remove the job.
+        """
+        job_with_args = HassJobWithArgs(hassjob, args)
+        self._startup_jobs.append(job_with_args)
+
+        @callback
+        def remove_job() -> None:
+            if job_with_args in self._startup_jobs:
+                self._startup_jobs.remove(job_with_args)
 
         return remove_job
 
@@ -1232,6 +1297,7 @@ class Context:
         self.origin_event: Event[Any] | None = None
         self._cache: dict[str, Any] = {}
 
+    @override
     def __eq__(self, other: object) -> bool:
         """Compare contexts."""
         return isinstance(other, Context) and self.id == other.id
@@ -1278,6 +1344,7 @@ class EventOrigin(enum.Enum):
     local = "LOCAL"
     remote = "REMOTE"
 
+    @override
     def __str__(self) -> str:
         """Return the event."""
         return self.value
@@ -1372,6 +1439,7 @@ class Event(Generic[_DataT]):
         """Return an event as a JSON fragment."""
         return json_fragment(json_bytes(self._as_dict))
 
+    @override
     def __repr__(self) -> str:
         """Return the representation."""
         return _event_repr(self.event_type, self.origin, self.data)
@@ -1409,6 +1477,7 @@ class _OneTimeListener(Generic[_DataT]):
         self.remove = None
         self.hass.async_run_hass_job(self.listener_job, event)
 
+    @override
     def __repr__(self) -> str:
         """Return the representation of the listener and source module."""
         module = inspect.getmodule(self.listener_job.target)
@@ -2072,6 +2141,7 @@ class State:
             self.context.user_id, self.context.parent_id, self.context.id
         )
 
+    @override
     def __repr__(self) -> str:
         """Return the representation of the states."""
         attrs = f"; {util.repr_helper(self.attributes)}" if self.attributes else ""
@@ -2094,15 +2164,18 @@ class States(UserDict[str, State]):
         super().__init__()
         self._domain_index: defaultdict[str, dict[str, State]] = defaultdict(dict)
 
+    @override
     def values(self) -> ValuesView[State]:
         """Return the underlying values to avoid __iter__ overhead."""
         return self.data.values()
 
+    @override
     def __setitem__(self, key: str, entry: State) -> None:
         """Add an item."""
         self.data[key] = entry
         self._domain_index[entry.domain][entry.entity_id] = entry
 
+    @override
     def __delitem__(self, key: str) -> None:
         """Remove an item."""
         entry = self[key]
@@ -2532,6 +2605,7 @@ class ServiceCall:
         self.context = context or Context()
         self.return_response = return_response
 
+    @override
     def __repr__(self) -> str:
         """Return the representation of the service."""
         if self.data:

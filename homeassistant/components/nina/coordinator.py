@@ -4,7 +4,7 @@ import asyncio
 from dataclasses import dataclass
 from datetime import datetime
 import re
-from typing import Any
+from typing import Any, override
 
 from pynina import ApiError, Nina
 
@@ -76,6 +76,7 @@ class NINADataUpdateCoordinator(
             update_interval=SCAN_INTERVAL,
         )
 
+    @override
     async def _async_update_data(self) -> dict[str, list[NinaWarningData]]:
         """Update data."""
         async with asyncio.timeout(10):
