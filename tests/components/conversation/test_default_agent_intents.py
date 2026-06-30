@@ -127,29 +127,39 @@ async def test_cover_set_position(
 async def test_cover_device_class(
     hass: HomeAssistant,
     init_components,
+    area_registry: ar.AreaRegistry,
+    entity_registry: er.EntityRegistry,
 ) -> None:
     """Test the open position for covers by device class."""
     await cover_intent.async_setup_intents(hass)
 
-    entity_id = f"{cover.DOMAIN}.front"
-    hass.states.async_set(
-        entity_id, STATE_CLOSED, attributes={"device_class": "garage"}
+    area_kitchen = area_registry.async_get_or_create("kitchen_id")
+    area_kitchen = area_registry.async_update(area_kitchen.id, name="kitchen")
+
+    kitchen_window = entity_registry.async_get_or_create(
+        "cover", "demo", "kitchen_window"
     )
-    async_expose_entity(hass, conversation.DOMAIN, entity_id, True)
+    kitchen_window = entity_registry.async_update_entity(
+        kitchen_window.entity_id, area_id=area_kitchen.id
+    )
+    hass.states.async_set(
+        kitchen_window.entity_id, STATE_CLOSED, attributes={"device_class": "window"}
+    )
+    async_expose_entity(hass, conversation.DOMAIN, kitchen_window.entity_id, True)
 
     # Open service
     calls = async_mock_service(hass, cover.DOMAIN, cover.SERVICE_OPEN_COVER)
     result = await conversation.async_converse(
-        hass, "open the garage door", None, Context(), None
+        hass, "open the window in the kitchen", None, Context(), None, device_id=None
     )
     await hass.async_block_till_done()
 
     response = result.response
     assert response.response_type is intent.IntentResponseType.ACTION_DONE
-    assert response.speech["plain"]["speech"] == "Opening the garage"
+    assert response.speech["plain"]["speech"] == "Opening the window"
     assert len(calls) == 1
     call = calls[0]
-    assert call.data == {"entity_id": entity_id}
+    assert call.data == {"entity_id": kitchen_window.entity_id}
 
 
 async def test_valve_intents(

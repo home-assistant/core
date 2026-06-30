@@ -47,7 +47,9 @@ from .const import (  # noqa: F401
     SERVICE_SET_HUMIDITY,
     SERVICE_SET_MODE,
     HumidifierAction,
+    HumidifierEntityCapabilityAttribute,
     HumidifierEntityFeature,
+    HumidifierEntityStateAttribute,
 )
 
 _LOGGER = logging.getLogger(__name__)
@@ -147,10 +149,10 @@ class HumidifierEntity(ToggleEntity, cached_properties=CACHED_PROPERTIES_WITH_AT
 
     _entity_component_unrecorded_attributes = frozenset(
         {
-            ATTR_MIN_HUMIDITY,
-            ATTR_MAX_HUMIDITY,
-            ATTR_AVAILABLE_MODES,
-            ATTR_TARGET_HUMIDITY_STEP,
+            HumidifierEntityCapabilityAttribute.MIN_HUMIDITY,
+            HumidifierEntityCapabilityAttribute.MAX_HUMIDITY,
+            HumidifierEntityCapabilityAttribute.AVAILABLE_MODES,
+            HumidifierEntityCapabilityAttribute.TARGET_HUMIDITY_STEP,
         }
     )
 
@@ -171,14 +173,18 @@ class HumidifierEntity(ToggleEntity, cached_properties=CACHED_PROPERTIES_WITH_AT
     def capability_attributes(self) -> dict[str, Any]:
         """Return capability attributes."""
         data: dict[str, Any] = {
-            ATTR_MIN_HUMIDITY: self.min_humidity,
-            ATTR_MAX_HUMIDITY: self.max_humidity,
+            HumidifierEntityCapabilityAttribute.MIN_HUMIDITY: self.min_humidity,
+            HumidifierEntityCapabilityAttribute.MAX_HUMIDITY: self.max_humidity,
         }
         if self.target_humidity_step is not None:
-            data[ATTR_TARGET_HUMIDITY_STEP] = self.target_humidity_step
+            data[HumidifierEntityCapabilityAttribute.TARGET_HUMIDITY_STEP] = (
+                self.target_humidity_step
+            )
 
         if HumidifierEntityFeature.MODES in self.supported_features:
-            data[ATTR_AVAILABLE_MODES] = self.available_modes
+            data[HumidifierEntityCapabilityAttribute.AVAILABLE_MODES] = (
+                self.available_modes
+            )
 
         return data
 
@@ -200,16 +206,20 @@ class HumidifierEntity(ToggleEntity, cached_properties=CACHED_PROPERTIES_WITH_AT
         data: dict[str, Any] = {}
 
         if self.action is not None:
-            data[ATTR_ACTION] = self.action if self.is_on else HumidifierAction.OFF
+            data[HumidifierEntityStateAttribute.ACTION] = (
+                self.action if self.is_on else HumidifierAction.OFF
+            )
 
         if self.current_humidity is not None:
-            data[ATTR_CURRENT_HUMIDITY] = self.current_humidity
+            data[HumidifierEntityStateAttribute.CURRENT_HUMIDITY] = (
+                self.current_humidity
+            )
 
         if self.target_humidity is not None:
-            data[ATTR_HUMIDITY] = self.target_humidity
+            data[HumidifierEntityStateAttribute.HUMIDITY] = self.target_humidity
 
         if HumidifierEntityFeature.MODES in self.supported_features:
-            data[ATTR_MODE] = self.mode
+            data[HumidifierEntityStateAttribute.MODE] = self.mode
 
         return data
 

@@ -2,17 +2,17 @@
 # name: test_attributes_set
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'player-name1111',
-      'group_members': None,
-      'is_volume_muted': False,
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'player-name1111',
+      <MediaPlayerEntityStateAttribute.GROUP_MEMBERS: 'group_members'>: None,
+      <MediaPlayerEntityStateAttribute.MEDIA_VOLUME_MUTED: 'is_volume_muted'>: False,
       'master': False,
-      'media_album_name': 'album',
-      'media_artist': 'artist',
-      'media_content_type': <MediaType.MUSIC: 'music'>,
-      'media_duration': 123,
-      'media_title': 'song',
-      'shuffle': False,
-      'source_list': list([
+      <MediaPlayerEntityStateAttribute.MEDIA_ALBUM_NAME: 'media_album_name'>: 'album',
+      <MediaPlayerEntityStateAttribute.MEDIA_ARTIST: 'media_artist'>: 'artist',
+      <MediaPlayerEntityStateAttribute.MEDIA_CONTENT_TYPE: 'media_content_type'>: <MediaType.MUSIC: 'music'>,
+      <MediaPlayerEntityStateAttribute.MEDIA_DURATION: 'media_duration'>: 123,
+      <MediaPlayerEntityStateAttribute.MEDIA_TITLE: 'media_title'>: 'song',
+      <MediaPlayerEntityStateAttribute.MEDIA_SHUFFLE: 'shuffle'>: False,
+      <MediaPlayerEntityCapabilityAttribute.INPUT_SOURCE_LIST: 'source_list'>: list([
         'preset1',
         'preset2',
         'input1',
@@ -20,8 +20,8 @@
         'input3',
         '4',
       ]),
-      'supported_features': <MediaPlayerEntityFeature: 720445>,
-      'volume_level': 0.1,
+      <EntityStateAttribute.SUPPORTED_FEATURES: 'supported_features'>: <MediaPlayerEntityFeature: 720445>,
+      <MediaPlayerEntityStateAttribute.MEDIA_VOLUME_LEVEL: 'volume_level'>: 0.1,
     }),
     'context': <ANY>,
     'entity_id': 'media_player.player_name1111',
