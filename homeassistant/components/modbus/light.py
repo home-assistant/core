@@ -158,13 +158,9 @@ class ModbusLight(ModbusToggleEntity, LightEntity):
                 use_call=CALL_TYPE_REGISTER_HOLDING,
             )
 
-            if (
-                brightness_result
-                and brightness_result.registers
-                and brightness_result.registers[0] != LIGHT_MODBUS_INVALID_VALUE
-            ):
+            if brightness_result and brightness_result[0] != LIGHT_MODBUS_INVALID_VALUE:
                 self._attr_brightness = self._convert_modbus_percent_to_brightness(
-                    brightness_result.registers[0]
+                    brightness_result[0]
                 )
 
         if self._color_temp_address:
@@ -174,15 +170,9 @@ class ModbusLight(ModbusToggleEntity, LightEntity):
                 address=self._color_temp_address,
                 use_call=CALL_TYPE_REGISTER_HOLDING,
             )
-            if (
-                color_result
-                and color_result.registers
-                and color_result.registers[0] != LIGHT_MODBUS_INVALID_VALUE
-            ):
+            if color_result and color_result[0] != LIGHT_MODBUS_INVALID_VALUE:
                 self._attr_color_temp_kelvin = (
-                    self._convert_modbus_percent_to_temperature(
-                        color_result.registers[0]
-                    )
+                    self._convert_modbus_percent_to_temperature(color_result[0])
                 )
 
     @staticmethod

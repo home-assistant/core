@@ -46,8 +46,13 @@ class ReadResult:
         self.count = len(register_words) if register_words is not None else 0
 
     def isError(self):
-        """Set error state."""
-        return False
+        """Set error state.
+
+        A ``None`` payload models a device that returned no data; pymodbus
+        surfaces that as an error response, which modbus-connection maps to a
+        raised error.
+        """
+        return self.registers is None
 
 
 @pytest.fixture(name="check_config_loaded")
@@ -100,17 +105,17 @@ def mock_pymodbus_fixture(do_exception, register_words):
         mock_pb.write_coils.side_effect = exc
     with (
         mock.patch(
-            "homeassistant.components.modbus.modbus.AsyncModbusTcpClient",
+            "modbus_connection.pymodbus.AsyncModbusTcpClient",
             return_value=mock_pb,
             autospec=True,
         ),
         mock.patch(
-            "homeassistant.components.modbus.modbus.AsyncModbusSerialClient",
+            "modbus_connection.pymodbus.AsyncModbusSerialClient",
             return_value=mock_pb,
             autospec=True,
         ),
         mock.patch(
-            "homeassistant.components.modbus.modbus.AsyncModbusUdpClient",
+            "modbus_connection.pymodbus.AsyncModbusUdpClient",
             return_value=mock_pb,
             autospec=True,
         ),

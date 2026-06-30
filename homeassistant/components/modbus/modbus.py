@@ -1,17 +1,11 @@
 """Support for Modbus."""
 
 import asyncio
-from collections import namedtuple
-from typing import Any
+from collections.abc import Awaitable, Callable
+from typing import Any, cast
 
-from pymodbus.client import (
-    AsyncModbusSerialClient,
-    AsyncModbusTcpClient,
-    AsyncModbusUdpClient,
-)
-from pymodbus.exceptions import ModbusException
-from pymodbus.framer import FramerType
-from pymodbus.pdu import ModbusPDU
+from modbus_connection import ModbusConnection, ModbusConnectionError, ModbusError
+from modbus_connection.pymodbus import connect_serial, connect_tcp, connect_udp
 import voluptuous as vol
 
 from homeassistant.const import (
@@ -53,7 +47,6 @@ from .const import (
     CONF_PARITY,
     CONF_STOPBITS,
     DEFAULT_HUB,
-    DEVICE_ID,
     DOMAIN,
     PLATFORMS,
     RTUOVERTCP,
@@ -62,7 +55,6 @@ from .const import (
     SERVICE_WRITE_COIL,
     SERVICE_WRITE_REGISTER,
     SIGNAL_STOP_ENTITY,
-    TCP,
     UDP,
 )
 from .validators import check_config
@@ -71,58 +63,14 @@ DATA_MODBUS_HUBS: HassKey[dict[str, ModbusHub]] = HassKey(DOMAIN)
 
 PRIMARY_RECONNECT_DELAY = 60
 
-ConfEntry = namedtuple("ConfEntry", "call_type attr func_name value_attr_name")  # noqa: PYI024
-RunEntry = namedtuple("RunEntry", "attr func value_attr_name")  # noqa: PYI024
-PB_CALL = [
-    ConfEntry(
-        CALL_TYPE_COIL,
-        "bits",
-        "read_coils",
-        "count",
-    ),
-    ConfEntry(
-        CALL_TYPE_DISCRETE,
-        "bits",
-        "read_discrete_inputs",
-        "count",
-    ),
-    ConfEntry(
-        CALL_TYPE_REGISTER_HOLDING,
-        "registers",
-        "read_holding_registers",
-        "count",
-    ),
-    ConfEntry(
-        CALL_TYPE_REGISTER_INPUT,
-        "registers",
-        "read_input_registers",
-        "count",
-    ),
-    ConfEntry(
-        CALL_TYPE_WRITE_COIL,
-        "bits",
-        "write_coil",
-        "value",
-    ),
-    ConfEntry(
-        CALL_TYPE_WRITE_COILS,
-        "count",
-        "write_coils",
-        "values",
-    ),
-    ConfEntry(
-        CALL_TYPE_WRITE_REGISTER,
-        "registers",
-        "write_register",
-        "value",
-    ),
-    ConfEntry(
-        CALL_TYPE_WRITE_REGISTERS,
-        "count",
-        "write_registers",
-        "values",
-    ),
-]
+# Read call types return a list of values; write call types return None on
+# success. Both raise on failure.
+READ_CALLS = {
+    CALL_TYPE_COIL: "read_coils",
+    CALL_TYPE_DISCRETE: "read_discrete_inputs",
+    CALL_TYPE_REGISTER_HOLDING: "read_holding_registers",
+    CALL_TYPE_REGISTER_INPUT: "read_input_registers",
+}
 
 
 async def async_modbus_setup(
@@ -242,56 +190,21 @@ async def async_modbus_setup(
 
 
 class ModbusHub:
-    """Thread safe wrapper class for pymodbus."""
+    """Thread safe wrapper class for modbus-connection."""
 
     def __init__(self, hass: HomeAssistant, client_config: dict[str, Any]) -> None:
         """Initialize the Modbus hub."""
 
         # generic configuration
-        self._client: (
-            AsyncModbusSerialClient | AsyncModbusTcpClient | AsyncModbusUdpClient | None
-        ) = None
-        self._lock = asyncio.Lock()
+        self._connection: ModbusConnection | None = None
         self.event_connected = asyncio.Event()
         self.hass = hass
         self.name = client_config[CONF_NAME]
         self._config_type = client_config[CONF_TYPE]
         self.config_delay = client_config[CONF_DELAY]
-        self._pb_request: dict[str, RunEntry] = {}
         self._connect_task: asyncio.Task
+        self._closing = False
         self._last_log_error: str = ""
-        self._pb_class = {
-            SERIAL: AsyncModbusSerialClient,
-            TCP: AsyncModbusTcpClient,
-            UDP: AsyncModbusUdpClient,
-            RTUOVERTCP: AsyncModbusTcpClient,
-        }
-        self._pb_params = {
-            "port": client_config[CONF_PORT],
-            "timeout": client_config[CONF_TIMEOUT],
-            "retries": 3,
-        }
-        if self._config_type == SERIAL:
-            # serial configuration
-            if client_config[CONF_METHOD] == "ascii":
-                self._pb_params["framer"] = FramerType.ASCII
-            else:
-                self._pb_params["framer"] = FramerType.RTU
-            self._pb_params.update(
-                {
-                    "baudrate": client_config[CONF_BAUDRATE],
-                    "stopbits": client_config[CONF_STOPBITS],
-                    "bytesize": client_config[CONF_BYTESIZE],
-                    "parity": client_config[CONF_PARITY],
-                }
-            )
-        else:
-            # network configuration
-            self._pb_params["host"] = client_config[CONF_HOST]
-            if self._config_type == RTUOVERTCP:
-                self._pb_params["framer"] = FramerType.RTU
-            else:
-                self._pb_params["framer"] = FramerType.SOCKET
 
         if CONF_MSG_WAIT in client_config:
             self._msg_wait = client_config[CONF_MSG_WAIT] / 1000
@@ -300,6 +213,31 @@ class ModbusHub:
         else:
             self._msg_wait = 0
 
+        timeout = client_config[CONF_TIMEOUT]
+        if self._config_type == SERIAL:
+            framer = "ascii" if client_config[CONF_METHOD] == "ascii" else "rtu"
+            self._connect_params: dict[str, Any] = {
+                "port": client_config[CONF_PORT],
+                "baudrate": client_config[CONF_BAUDRATE],
+                "bytesize": client_config[CONF_BYTESIZE],
+                "parity": client_config[CONF_PARITY],
+                "stopbits": client_config[CONF_STOPBITS],
+                "framer": framer,
+                "timeout": timeout,
+                "name": self.name,
+                "message_spacing": self._msg_wait,
+            }
+        else:
+            framer = "rtu" if self._config_type == RTUOVERTCP else "socket"
+            self._connect_params = {
+                "host": client_config[CONF_HOST],
+                "port": client_config[CONF_PORT],
+                "framer": framer,
+                "timeout": timeout,
+                "name": self.name,
+                "message_spacing": self._msg_wait,
+            }
+
     def _log_error(self, text: str) -> None:
         if text == self._last_log_error:
             return
@@ -307,14 +245,22 @@ class ModbusHub:
         log_text = f"Pymodbus: {self.name}: {text}"
         _LOGGER.error(log_text)
 
+    async def _connect(self) -> ModbusConnection:
+        """Open a fresh connection using the configured backend."""
+        if self._config_type == SERIAL:
+            return await connect_serial(**self._connect_params)
+        if self._config_type == UDP:
+            return await connect_udp(**self._connect_params)
+        return await connect_tcp(**self._connect_params)
+
     async def async_pb_connect(self) -> None:
         """Connect to device, async."""
-        while True:
+        while not self._closing:
             try:
-                if await self._client.connect():  # type: ignore[union-attr]
-                    _LOGGER.info(f"modbus {self.name} communication open")
-                    break
-            except ModbusException as exception_error:
+                self._connection = await self._connect()
+                _LOGGER.info(f"modbus {self.name} communication open")
+                break
+            except ModbusConnectionError as exception_error:
                 self._log_error(
                     f"{self.name} connect failed, please check"
                     f" your configuration ({exception_error!s})"
@@ -325,25 +271,34 @@ class ModbusHub:
             )
             await asyncio.sleep(PRIMARY_RECONNECT_DELAY)
 
+        if self._closing or not self._connection:
+            return
+
+        self._connection.on_connection_lost(self._handle_connection_lost)
         if self.config_delay:
             await asyncio.sleep(self.config_delay)
         self.config_delay = 0
         self.event_connected.set()
 
+    def _handle_connection_lost(self) -> None:
+        """Recreate the connection after the link drops.
+
+        modbus-connection never self-reconnects: it fires this callback once and
+        stops. Reconnecting is the owner's job, so the hub starts a fresh connect
+        loop here.
+        """
+        if self._closing or not self._connection:
+            return
+        _LOGGER.info(f"modbus {self.name} connection lost, reconnecting")
+        self._connection = None
+        self.event_connected.clear()
+        self._connect_task = self.hass.async_create_background_task(
+            self.async_pb_connect(), "modbus-reconnect"
+        )
+
     async def async_setup(self) -> bool:
-        """Set up pymodbus client."""
-        try:
-            self._client = self._pb_class[self._config_type](**self._pb_params)
-        except ModbusException as exception_error:
-            self._log_error(str(exception_error))
-            return False
-
-        for entry in PB_CALL:
-            func = getattr(self._client, entry.func_name)
-            self._pb_request[entry.call_type] = RunEntry(
-                entry.attr, func, entry.value_attr_name
-            )
-
+        """Set up the modbus connection."""
+        self._closing = False
         self._connect_task = self.hass.async_create_background_task(
             self.async_pb_connect(), "modbus-connect"
         )
@@ -351,77 +306,64 @@ class ModbusHub:
 
     async def async_restart(self) -> None:
         """Reconnect client."""
-        if self._client:
+        if self._connection:
             await self.async_close()
 
         await self.async_setup()
 
     async def async_close(self) -> None:
         """Disconnect client."""
+        self._closing = True
         self.event_connected.set()
         if not self._connect_task.done():
             self._connect_task.cancel()
 
-        if self._client:
+        if self._connection:
             try:
-                self._client.close()
-            except ModbusException as exception_error:
+                await self._connection.close()
+            except Exception as exception_error:  # noqa: BLE001
+                # modbus-connection does not map backend errors raised by
+                # close(); swallow them so teardown always completes.
                 self._log_error(str(exception_error))
-            self._client = None
+            self._connection = None
             _LOGGER.info(f"modbus {self.name} communication closed")
-
-    async def low_level_pb_call(
-        self, slave: int | None, address: int, value: int | list[int], use_call: str
-    ) -> ModbusPDU | None:
-        """Call sync. pymodbus."""
-        kwargs: dict[str, Any] = (
-            {DEVICE_ID: slave} if slave is not None else {DEVICE_ID: 1}
-        )
-        entry = self._pb_request[use_call]
-
-        if use_call in {"write_registers", "write_coils"}:
-            if not isinstance(value, list):
-                value = [value]
-
-        kwargs[entry.value_attr_name] = value
-        try:
-            result: ModbusPDU = await entry.func(address, **kwargs)
-        except ModbusException as exception_error:
-            error = f"Error: device: {slave} address: {address} -> {exception_error!s}"
-            self._log_error(error)
-            return None
-        if not result:
-            error = (
-                f"Error: device: {slave} address: {address} -> pymodbus returned None"
-            )
-            self._log_error(error)
-            return None
-        if not hasattr(result, entry.attr):
-            error = f"Error: device: {slave} address: {address} -> {result!s}"
-            self._log_error(error)
-            return None
-        if result.isError():
-            error = (
-                f"Error: device: {slave} address: {address}"
-                " -> pymodbus returned isError True"
-            )
-            self._log_error(error)
-            return None
-        return result
 
     async def async_pb_call(
         self,
         unit: int | None,
         address: int,
-        value: int | list[int],
+        value: int | list[int] | list[bool],
         use_call: str,
-    ) -> ModbusPDU | None:
-        """Convert async to sync pymodbus call."""
-        if not self._client:
+    ) -> list[int] | list[bool] | None:
+        """Call modbus-connection and map failures onto ``None``.
+
+        Reads return the decoded register/coil values; writes return an empty
+        list to signal success (callers test against ``None`` for failure).
+        """
+        if not self._connection:
             return None
-        async with self._lock:
-            result = await self.low_level_pb_call(unit, address, value, use_call)
-            if self._msg_wait:
-                # small delay until next request/response
-                await asyncio.sleep(self._msg_wait)
-            return result
+
+        device = self._connection.for_unit(unit if unit is not None else 1)
+        try:
+            if use_call in READ_CALLS:
+                count = value if isinstance(value, int) else len(value)
+                method: Callable[[int, int], Awaitable[list[int] | list[bool]]] = (
+                    getattr(device, READ_CALLS[use_call])
+                )
+                return await method(address, count)
+            if use_call == CALL_TYPE_WRITE_REGISTER:
+                await device.write_register(address, cast("int", value))
+            elif use_call == CALL_TYPE_WRITE_REGISTERS:
+                registers = value if isinstance(value, list) else [value]
+                await device.write_registers(address, [int(v) for v in registers])
+            elif use_call == CALL_TYPE_WRITE_COIL:
+                await device.write_coil(address, bool(value))
+            elif use_call == CALL_TYPE_WRITE_COILS:
+                coils = value if isinstance(value, list) else [value]
+                await device.write_coils(address, [bool(v) for v in coils])
+        except ModbusError as exception_error:
+            self._log_error(
+                f"Error: device: {unit} address: {address} -> {exception_error!s}"
+            )
+            return None
+        return []

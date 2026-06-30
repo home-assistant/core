@@ -140,6 +140,6 @@ class ModbusCover(ModbusBaseEntity, CoverEntity, RestoreEntity):
             return
         self._attr_available = True
         if self._input_type == CALL_TYPE_COIL:
-            self._set_attr_state(bool(result.bits[0] & 1))
+            self._set_attr_state(bool(result[0] & 1))
         else:
-            self._set_attr_state(int(result.registers[0]))
+            self._set_attr_state(int(result[0]))

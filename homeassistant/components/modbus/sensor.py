@@ -131,9 +131,7 @@ class ModbusRegisterSensor(ModbusStructEntity, RestoreSensor, SensorEntity):
             self.async_write_ha_state()
             return
         self._attr_available = True
-        result = self.unpack_structure_result(
-            raw_result.registers, self._scale, self._offset
-        )
+        result = self.unpack_structure_result(raw_result, self._scale, self._offset)
         if self._coordinator:
             result_array: list[float | None] = []
             if result:

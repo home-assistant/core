@@ -620,10 +620,10 @@ class ModbusThermostat(ModbusStructEntity, RestoreEntity, ClimateEntity):
             # Return the raw value read from the register, do not change
             # the object's state
             self._attr_available = True
-            return int(result.registers[0])
+            return int(result[0])
 
         # The regular handling of the value
-        self._value = self.unpack_structure_result(result.registers, scale, offset)
+        self._value = self.unpack_structure_result(result, scale, offset)
         if not self._value:
             self._attr_available = False
             return None
@@ -634,8 +634,8 @@ class ModbusThermostat(ModbusStructEntity, RestoreEntity, ClimateEntity):
         result = await self._hub.async_pb_call(
             self._device_address, address, 1, CALL_TYPE_COIL
         )
-        if result is not None and result.bits is not None:
+        if result:
             self._attr_available = True
-            return int(result.bits[0])
+            return int(result[0])
         self._attr_available = False
         return None

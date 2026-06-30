@@ -15,9 +15,11 @@ It uses binary_sensors/sensors to do black box testing of the read calls.
 
 from datetime import timedelta
 import logging
+from typing import Any
 from unittest import mock
 
 from freezegun.api import FrozenDateTimeFactory
+from modbus_connection import ModbusConnectionError
 from pymodbus.exceptions import ModbusException
 from pymodbus.pdu import ExceptionResponse
 import pytest
@@ -907,6 +909,32 @@ DATA = "data"
 SERVICE = "service"
 
 
+def _arm_pymodbus_write(mock_func: mock.AsyncMock, result: Any) -> mock.AsyncMock:
+    """Arm a mocked pymodbus write method with a result or a raised exception.
+
+    modbus-connection expects a well-formed PDU back and maps raised backend
+    exceptions onto the neutral hierarchy, so a transport failure is modelled as
+    a side effect rather than a returned exception object.
+    """
+    if isinstance(result, ModbusException):
+        mock_func.side_effect = result
+    else:
+        mock_func.side_effect = None
+        mock_func.return_value = result
+    return mock_func
+
+
+def _expected_write_value(func: str, raw: Any) -> Any:
+    """Return the value modbus-connection forwards to pymodbus for a write."""
+    if func == CALL_TYPE_WRITE_COIL:
+        return bool(raw)
+    if func == CALL_TYPE_WRITE_COILS:
+        return [bool(value) for value in raw]
+    if func == CALL_TYPE_WRITE_REGISTERS:
+        return raw if isinstance(raw, list) else [raw]
+    return raw
+
+
 @pytest.mark.parametrize(
     "do_config",
     [
@@ -989,13 +1017,6 @@ async def test_pb_service_write(
         CALL_TYPE_WRITE_REGISTERS: mock_modbus_with_pymodbus.write_registers,
     }
 
-    value_arg_name = {
-        CALL_TYPE_WRITE_COIL: "value",
-        CALL_TYPE_WRITE_COILS: "values",
-        CALL_TYPE_WRITE_REGISTER: "value",
-        CALL_TYPE_WRITE_REGISTERS: "values",
-    }
-
     data = {
         ATTR_HUB: TEST_MODBUS_NAME,
         do_slave: 17,
@@ -1005,14 +1026,12 @@ async def test_pb_service_write(
     mock_modbus_with_pymodbus.reset_mock()
     caplog.clear()
     caplog.set_level(logging.DEBUG)
-    func_name[do_write[FUNC]].return_value = do_return[VALUE]
+    mock_func = _arm_pymodbus_write(func_name[do_write[FUNC]], do_return[VALUE])
+    expected_value = _expected_write_value(do_write[FUNC], do_write[VALUE])
     await hass.services.async_call(DOMAIN, do_write[SERVICE], data, blocking=True)
-    assert func_name[do_write[FUNC]].called
-    assert func_name[do_write[FUNC]].call_args.args == (data[ATTR_ADDRESS],)
-    assert func_name[do_write[FUNC]].call_args.kwargs == {
-        DEVICE_ID: 17,
-        value_arg_name[do_write[FUNC]]: data[do_write[DATA]],
-    }
+    assert mock_func.called
+    assert mock_func.call_args.args == (data[ATTR_ADDRESS], expected_value)
+    assert mock_func.call_args.kwargs == {DEVICE_ID: 17}
 
     if do_return[DATA]:
         assert any(message.startswith("Pymodbus:") for message in caplog.messages)
@@ -1116,7 +1135,12 @@ async def test_pb_read(
 async def test_pymodbus_constructor_fail(
     hass: HomeAssistant, caplog: pytest.LogCaptureFixture
 ) -> None:
-    """Run test for failing pymodbus constructor."""
+    """Run test for failing connection at setup.
+
+    modbus-connection establishes the link in the background, so a connection
+    failure no longer fails setup synchronously: setup succeeds and the failure
+    is logged by the hub's connect/retry loop.
+    """
     config = {
         DOMAIN: [
             {
@@ -1134,16 +1158,15 @@ async def test_pymodbus_constructor_fail(
         ]
     }
     with mock.patch(
-        "homeassistant.components.modbus.modbus.AsyncModbusTcpClient", autospec=True
-    ) as mock_pb:
+        "homeassistant.components.modbus.modbus.connect_tcp",
+        side_effect=ModbusConnectionError("test connect"),
+    ) as mock_connect:
         caplog.set_level(logging.ERROR)
-        mock_pb.side_effect = ModbusException("test no class")
-        assert await async_setup_component(hass, DOMAIN, config) is False
+        assert await async_setup_component(hass, DOMAIN, config) is True
         await hass.async_block_till_done()
-        message = f"Pymodbus: {TEST_MODBUS_NAME}: Modbus Error: test"
-        assert caplog.messages[0].startswith(message)
-        assert caplog.records[0].levelname == "ERROR"
-        assert mock_pb.called
+        message = f"Pymodbus: {TEST_MODBUS_NAME}: {TEST_MODBUS_NAME} connect failed"
+        assert any(msg.startswith(message) for msg in caplog.messages)
+        assert mock_connect.called
 
 
 async def test_pymodbus_close_fail(
@@ -1541,11 +1564,6 @@ async def test_pb_service_write_no_slave(
         CALL_TYPE_WRITE_REGISTER: mock_modbus_with_pymodbus.write_register,
     }
 
-    value_arg_name = {
-        CALL_TYPE_WRITE_COIL: "value",
-        CALL_TYPE_WRITE_REGISTER: "value",
-    }
-
     data = {
         ATTR_HUB: TEST_MODBUS_NAME,
         ATTR_ADDRESS: 16,
@@ -1554,14 +1572,12 @@ async def test_pb_service_write_no_slave(
     mock_modbus_with_pymodbus.reset_mock()
     caplog.clear()
     caplog.set_level(logging.DEBUG)
-    func_name[do_write[FUNC]].return_value = do_return[VALUE]
+    mock_func = _arm_pymodbus_write(func_name[do_write[FUNC]], do_return[VALUE])
+    expected_value = _expected_write_value(do_write[FUNC], do_write[VALUE])
     await hass.services.async_call(DOMAIN, do_write[SERVICE], data, blocking=True)
-    assert func_name[do_write[FUNC]].called
-    assert func_name[do_write[FUNC]].call_args.args == (data[ATTR_ADDRESS],)
-    assert func_name[do_write[FUNC]].call_args.kwargs == {
-        DEVICE_ID: 1,
-        value_arg_name[do_write[FUNC]]: data[do_write[DATA]],
-    }
+    assert mock_func.called
+    assert mock_func.call_args.args == (data[ATTR_ADDRESS], expected_value)
+    assert mock_func.call_args.kwargs == {DEVICE_ID: 1}
 
     if do_return[DATA]:
         assert any(message.startswith("Pymodbus:") for message in caplog.messages)
