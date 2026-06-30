@@ -78,9 +78,7 @@ class CCM15Coordinator(DataUpdateCoordinator[CCM15DeviceState]):
             return
 
         data.fan_mode = CONST_FAN_CMD_MAP[FAN_AUTO]
-        _LOGGER.debug(
-            "Set Fan[%s]='%s' for active HVAC command", ac_index, data.fan_mode
-        )
+        _LOGGER.debug("Set Fan[%s]='%s' for active HVAC command", ac_index, FAN_AUTO)
 
     def get_ac_data(self, ac_index: int) -> CCM15SlaveDevice | None:
         """Get ac data from the ac_index."""
