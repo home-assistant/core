@@ -1,8 +1,8 @@
 """Config flow for Steam integration."""
 
-import logging
 from collections.abc import Mapping
 from itertools import batched
+import logging
 from typing import TYPE_CHECKING, Any, override
 
 import steam.api
@@ -204,7 +204,7 @@ class FriendSubentryFlowHandler(ConfigSubentryFlow):
                 errors["base"] = "timeout_connect"
             except steam.api.HTTPError:
                 errors["base"] = "cannot_connect"
-            except Exception:  # noqa: BLE001
+            except Exception:
                 _LOGGER.exception("Unknown exception")
                 errors["base"] = "unknown"
             else:

@@ -1,8 +1,8 @@
 """Data update coordinator for the Steam integration."""
 
-import logging
 from dataclasses import dataclass
 from datetime import timedelta
+import logging
 from typing import TYPE_CHECKING, override
 
 import steam.api
