@@ -5,14 +5,13 @@ from unittest.mock import AsyncMock
 
 from syrupy.assertion import SnapshotAssertion
 
-from homeassistant.components.binary_sensor import BinarySensorDeviceClass
-from homeassistant.const import STATE_OFF, STATE_ON, STATE_UNKNOWN
+from homeassistant.const import STATE_OFF, STATE_UNKNOWN
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import entity_registry as er
 
 from . import setup_integration
 
-from tests.common import load_fixture
+from tests.common import load_fixture, snapshot_platform
 
 
 async def test_binary_sensor_setup_and_states(
@@ -20,29 +19,17 @@ async def test_binary_sensor_setup_and_states(
     mock_gatus_client: AsyncMock,
     snapshot: SnapshotAssertion,
 ) -> None:
-    """Test standard successful setup and entity snapshots."""
+    """Test standard successful setup and entity snapshots using snapshot_platform."""
     fixture_data = await hass.async_add_executor_job(
         load_fixture, "gatus/statuses_success.json"
     )
     mock_data = json.loads(fixture_data)
 
-    await setup_integration(hass, mock_gatus_client, mock_data)
+    config_entry = await setup_integration(hass, mock_gatus_client, mock_data)
 
     entity_registry = er.async_get(hass)
 
-    frontend_entity_id = "binary_sensor.gatus_server_core_frontend"
-    entry = entity_registry.async_get(frontend_entity_id)
-
-    assert entry is not None
-    assert entry.unique_id == "gatus.local:80_core_frontend"
-    assert entry.original_name == "core frontend"
-
-    state = hass.states.get(frontend_entity_id)
-    assert state is not None
-    assert state.state == STATE_ON
-    assert state.attributes.get("device_class") == BinarySensorDeviceClass.CONNECTIVITY
-
-    assert state == snapshot
+    await snapshot_platform(hass, entity_registry, snapshot, config_entry.entry_id)
 
 
 async def test_binary_sensor_edge_cases(

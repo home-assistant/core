@@ -32,7 +32,7 @@ async def validate_input(hass: HomeAssistant, data: dict[str, Any]) -> None:
     try:
         await client.get_endpoints_statuses()
     except GatusClientError as err:
-        _LOGGER.error("Cannot connect to Gatus instance at %s: %s", data[CONF_URL], err)
+        _LOGGER.debug("Cannot connect to Gatus instance at %s: %s", data[CONF_URL], err)
         raise CannotConnect from err
 
 
