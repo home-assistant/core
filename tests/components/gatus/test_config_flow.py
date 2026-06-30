@@ -106,3 +106,30 @@ async def test_form_already_configured(hass: HomeAssistant) -> None:
 
     assert result["type"] is FlowResultType.ABORT
     assert result["reason"] == "already_configured"
+
+
+async def test_form_already_configured_by_unique_id(hass: HomeAssistant) -> None:
+    """Test that configurations with different URLs but matching unique IDs abort correctly."""
+    old_entry = MockConfigEntry(
+        domain=DOMAIN,
+        data={CONF_URL: "http://gatus.local:8080/"},
+        unique_id="gatus.local:8080",
+    )
+    old_entry.add_to_hass(hass)
+
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN, context={"source": config_entries.SOURCE_USER}
+    )
+
+    with patch(
+        "homeassistant.components.gatus.config_flow.GatusClient.get_endpoints_statuses",
+        AsyncMock(return_value=[]),
+    ):
+        result = await hass.config_entries.flow.async_configure(
+            result["flow_id"],
+            {CONF_URL: "http://gatus.local:8080"},
+        )
+        await hass.async_block_till_done()
+
+    assert result["type"] is FlowResultType.ABORT
+    assert result["reason"] == "already_configured"

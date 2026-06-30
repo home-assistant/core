@@ -1,0 +1,23 @@
+[
+  {
+    "key": "core_backend",
+    "name": "backend",
+    "group": "core",
+    "results": [
+      {
+        "hostname": "backend.local",
+        "duration": 50000000,
+        "timestamp": "2026-06-30T12:00:00Z",
+        "success": true,
+        "status": 200,
+        "body": "custom response payload"
+      }
+    ]
+  },
+  {
+    "key": "empty_results_list",
+    "name": "empty",
+    "group": "core",
+    "results": []
+  }
+]
