@@ -44,8 +44,8 @@ from homeassistant.components.gree.climate import (
     FAN_MODES_INVERSE,
     HORIZONTAL_SWING_MODES_INVERSE,
     HVAC_MODES,
-    HVAC_MODES_REVERSE,
-    VERTICAL_SWING_MODES_REVERSE,
+    HVAC_MODES_INVERSE,
+    VERTICAL_SWING_MODES_INVERSE,
     GreeClimateEntity,
 )
 from homeassistant.components.gree.const import (
@@ -425,7 +425,7 @@ async def test_send_target_temperature(
     hass.config.units = units
 
     device().power = True
-    device().mode = HVAC_MODES_REVERSE.get(HVACMode.AUTO)
+    device().mode = HVAC_MODES_INVERSE.get(HVACMode.AUTO)
 
     fake_device = device()
     if units.temperature_unit == UnitOfTemperature.FAHRENHEIT:
@@ -700,7 +700,7 @@ async def test_update_hvac_mode(
 ) -> None:
     """Test for updating hvac mode from the device."""
     device().power = hvac_mode != HVACMode.OFF
-    device().mode = HVAC_MODES_REVERSE.get(hvac_mode)
+    device().mode = HVAC_MODES_INVERSE.get(hvac_mode)
 
     await async_setup_gree(hass)
 
@@ -866,7 +866,7 @@ async def test_update_swing_mode(
     assert state is not None
     assert (
         state.attributes.get(ATTR_SWING_MODE)
-        == VERTICAL_SWING_MODES_REVERSE[vertical_swing]
+        == VERTICAL_SWING_MODES_INVERSE[vertical_swing]
     )
 
 

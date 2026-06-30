@@ -53,7 +53,7 @@ HVAC_MODES = {
     Mode.Fan: HVACMode.FAN_ONLY,
     Mode.Heat: HVACMode.HEAT,
 }
-HVAC_MODES_REVERSE = {v: k for k, v in HVAC_MODES.items()}
+HVAC_MODES_INVERSE = {v: k for k, v in HVAC_MODES.items()}
 
 PRESET_MODES = [
     PRESET_ECO,  # Power saving mode
@@ -87,7 +87,7 @@ VERTICAL_SWING_MODES: dict[str, VerticalSwing] = {
     "swing_lower_middle": VerticalSwing.SwingLowerMiddle,
     "swing_lower": VerticalSwing.SwingLower,
 }
-VERTICAL_SWING_MODES_REVERSE: dict[VerticalSwing, str] = {
+VERTICAL_SWING_MODES_INVERSE: dict[VerticalSwing, str] = {
     v: k for k, v in VERTICAL_SWING_MODES.items()
 }
 
@@ -139,7 +139,7 @@ class GreeClimateEntity(GreeEntity, ClimateEntity):
         | ClimateEntityFeature.TURN_ON
     )
     _attr_target_temperature_step = TARGET_TEMPERATURE_STEP
-    _attr_hvac_modes = [*HVAC_MODES_REVERSE, HVACMode.OFF]
+    _attr_hvac_modes = [*HVAC_MODES_INVERSE, HVACMode.OFF]
     _attr_preset_modes = PRESET_MODES
     _attr_fan_modes = [*FAN_MODES_INVERSE]
     _attr_swing_modes = [*VERTICAL_SWING_MODES]
@@ -217,7 +217,7 @@ class GreeClimateEntity(GreeEntity, ClimateEntity):
         if not self.coordinator.device.power:
             self.coordinator.device.power = True
 
-        self.coordinator.device.mode = HVAC_MODES_REVERSE.get(hvac_mode)
+        self.coordinator.device.mode = HVAC_MODES_INVERSE.get(hvac_mode)
         await self.coordinator.push_state_update()
         self.async_write_ha_state()
 
@@ -304,7 +304,7 @@ class GreeClimateEntity(GreeEntity, ClimateEntity):
     def swing_mode(self) -> str | None:
         """Return the current vertical swing mode for the device."""
         try:
-            return VERTICAL_SWING_MODES_REVERSE.get(
+            return VERTICAL_SWING_MODES_INVERSE.get(
                 VerticalSwing(self.coordinator.device.vertical_swing)
             )
         except ValueError:
