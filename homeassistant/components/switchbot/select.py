@@ -106,6 +106,7 @@ class SwitchBotStandingFanNightLightSelect(SwitchbotEntity, SelectEntity):
         self._attr_unique_id = f"{coordinator.base_unique_id}_night_light"
 
     @property
+    @override
     def current_option(self) -> str | None:
         """Return current night light state."""
         state = self._device.get_night_light_state()
@@ -114,6 +115,7 @@ class SwitchBotStandingFanNightLightSelect(SwitchbotEntity, SelectEntity):
         return NIGHT_LIGHT_FROM_STATE.get(state)
 
     @exception_handler
+    @override
     async def async_select_option(self, option: str) -> None:
         """Set night light state."""
         await self._device.set_night_light(NIGHT_LIGHT_TO_STATE[option])

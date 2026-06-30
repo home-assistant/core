@@ -143,6 +143,7 @@ class SwitchBotStandingFanOscillationAngleNumber(SwitchbotEntity, NumberEntity):
         self._attr_unique_id = f"{coordinator.base_unique_id}_{description.key}"
 
     @exception_handler
+    @override
     async def async_set_native_value(self, value: float) -> None:
         """Set oscillation angle."""
         await self.entity_description.setter(self._device, int(value))
