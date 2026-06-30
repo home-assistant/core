@@ -3,6 +3,7 @@
 from collections.abc import Callable
 from dataclasses import dataclass
 
+from place.models.device_shadow import AlarmStatus, PlaceDeviceShadow
 from place.models.discover_device import DiscoverDevice
 
 from homeassistant.components.sensor import (
@@ -15,9 +16,8 @@ from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
-from .const import DOMAIN, AlarmStatus
+from .const import DOMAIN
 from .coordinator import PlaceConfigEntry, PlaceCoordinator
-from .models import PlaceDeviceShadow
 
 ALARM_STATUS_OPTIONS = [status.name.lower() for status in AlarmStatus]
 

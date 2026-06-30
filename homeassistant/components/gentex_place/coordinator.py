@@ -4,6 +4,7 @@ from dataclasses import replace
 import logging
 
 from place.messages import PlaceMessages, message_kind, parse_payload
+from place.models.device_shadow import PlaceDeviceShadow
 from place.models.discover_device import DiscoverDevice
 from place.mqtt_client import MqttClient
 from place.provider import Provider
@@ -11,8 +12,6 @@ from place.provider import Provider
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator
-
-from .models import PlaceDeviceShadow
 
 _LOGGER = logging.getLogger(__name__)
 
