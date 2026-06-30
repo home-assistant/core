@@ -97,8 +97,6 @@ async def async_setup_entry(hass: HomeAssistant, entry: VistapoolConfigEntry) ->
             await coordinator.async_shutdown()
         raise
 
-    await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
-
     def _on_user_pools_snapshot(pool_ids: list[str]) -> None:
         """Bridge the Firestore snapshot from the watch thread to the HA loop."""
         hass.loop.call_soon_threadsafe(_schedule_reconcile, pool_ids)
@@ -111,6 +109,8 @@ async def async_setup_entry(hass: HomeAssistant, entry: VistapoolConfigEntry) ->
             name=f"vistapool_reconcile_{entry.entry_id}",
         )
 
+    # Subscribe before forwarding platforms so a failed subscribe doesn't leave
+    # platforms set up; on retry they would re-forward and raise "already setup".
     try:
         subscription: ResilientUserPoolsSubscription = (
             await api.subscribe_user_pools_resilient(_on_user_pools_snapshot)
@@ -120,6 +120,8 @@ async def async_setup_entry(hass: HomeAssistant, entry: VistapoolConfigEntry) ->
             await coordinator.async_shutdown()
         raise ConfigEntryNotReady from exc
     entry.async_on_unload(subscription.aclose)
+
+    await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
     return True
 
 
