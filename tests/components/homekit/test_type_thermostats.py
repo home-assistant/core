@@ -2896,3 +2896,74 @@ async def test_thermostat_reversed_min_max(hass: HomeAssistant, hk_driver) -> No
     assert acc.char_heating_thresh_temp.properties[PROP_MAX_VALUE] == DEFAULT_MAX_TEMP
     assert acc.char_heating_thresh_temp.properties[PROP_MIN_VALUE] == 7.0
     assert acc.char_heating_thresh_temp.properties[PROP_MIN_STEP] == 0.1
+
+async def test_thermostat_with_capitalized_fan_modes(
+    hass: HomeAssistant, hk_driver
+) -> None:
+    """Test that fan modes are sent back to the climate entity with their original casing."""
+    entity_id = "climate.test"
+    hass.states.async_set(
+        entity_id,
+        HVACMode.OFF,
+        {
+            ATTR_SUPPORTED_FEATURES: ClimateEntityFeature.TARGET_TEMPERATURE
+            | ClimateEntityFeature.TARGET_TEMPERATURE_RANGE
+            | ClimateEntityFeature.FAN_MODE,
+            ATTR_FAN_MODES: ["Auto", "Low", "Medium", "High"],
+            ATTR_HVAC_ACTION: HVACAction.IDLE,
+            ATTR_FAN_MODE: "Auto",
+            ATTR_HVAC_MODES: [
+                HVACMode.HEAT,
+                HVACMode.COOL,
+                HVACMode.OFF,
+                HVACMode.AUTO,
+            ],
+        },
+    )
+    await hass.async_block_till_done()
+    acc = Thermostat(hass, hk_driver, "Climate", entity_id, 1, None)
+    hk_driver.add_accessory(acc)
+
+    acc.run()
+    await hass.async_block_till_done()
+
+    # ordered_fan_speeds tracks the lowercased keys, but the value sent back to
+    # the climate entity must use the entity's original casing.
+    assert acc.ordered_fan_speeds == [FAN_LOW, FAN_MEDIUM, FAN_HIGH]
+
+    call_set_fan_mode = async_mock_service(hass, CLIMATE_DOMAIN, SERVICE_SET_FAN_MODE)
+    char_rotation_speed_iid = acc.char_speed.to_HAP()[HAP_REPR_IID]
+
+    hk_driver.set_characteristics(
+        {
+            HAP_REPR_CHARS: [
+                {
+                    HAP_REPR_AID: acc.aid,
+                    HAP_REPR_IID: char_rotation_speed_iid,
+                    HAP_REPR_VALUE: 100,
+                }
+            ]
+        },
+        "mock_addr",
+    )
+    await hass.async_block_till_done()
+    assert len(call_set_fan_mode) == 1
+    assert call_set_fan_mode[-1].data[ATTR_ENTITY_ID] == entity_id
+    assert call_set_fan_mode[-1].data[ATTR_FAN_MODE] == "High"
+
+    hk_driver.set_characteristics(
+        {
+            HAP_REPR_CHARS: [
+                {
+                    HAP_REPR_AID: acc.aid,
+                    HAP_REPR_IID: char_rotation_speed_iid,
+                    HAP_REPR_VALUE: 100 / 3,
+                }
+            ]
+        },
+        "mock_addr",
+    )
+    await hass.async_block_till_done()
+    assert len(call_set_fan_mode) == 2
+    assert call_set_fan_mode[-1].data[ATTR_ENTITY_ID] == entity_id
+    assert call_set_fan_mode[-1].data[ATTR_FAN_MODE] == "Low"
