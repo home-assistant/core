@@ -2897,6 +2897,7 @@ async def test_thermostat_reversed_min_max(hass: HomeAssistant, hk_driver) -> No
     assert acc.char_heating_thresh_temp.properties[PROP_MIN_VALUE] == 7.0
     assert acc.char_heating_thresh_temp.properties[PROP_MIN_STEP] == 0.1
 
+
 async def test_thermostat_with_capitalized_fan_modes(
     hass: HomeAssistant, hk_driver
 ) -> None:
