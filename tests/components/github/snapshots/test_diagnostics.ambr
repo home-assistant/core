@@ -13,6 +13,7 @@
       'octocat/Hello-World': dict({
         'default_branch_ref': dict({
           'commit': dict({
+            'committed': '2024-01-02T00:00:00Z',
             'message': 'Fix all the bugs',
             'sha': '6dcb09b5b57875f334f61aebed695e2e4193db5e',
             'url': 'https://github.com/octocat/Hello-World/commit/6dcb09b5b57875f334f61aebed695e2e4193db5e',
@@ -21,8 +22,10 @@
         'discussion': dict({
           'discussions': list([
             dict({
+              'created': '2024-01-01T00:00:00Z',
               'number': 1347,
               'title': 'First discussion',
+              'updated': '2024-01-02T00:00:00Z',
               'url': 'https://github.com/octocat/Hello-World/discussions/1347',
             }),
           ]),
@@ -34,8 +37,10 @@
         'issue': dict({
           'issues': list([
             dict({
+              'created': '2024-01-01T00:00:00Z',
               'number': 1347,
               'title': 'Found a bug',
+              'updated': '2024-01-02T00:00:00Z',
               'url': 'https://github.com/octocat/Hello-World/issues/1347',
             }),
           ]),
@@ -47,8 +52,10 @@
         'pull_request': dict({
           'pull_requests': list([
             dict({
+              'created': '2024-01-01T00:00:00Z',
               'number': 1347,
               'title': 'Amazing new feature',
+              'updated': '2024-01-02T00:00:00Z',
               'url': 'https://github.com/octocat/Hello-World/pull/1347',
             }),
           ]),
@@ -59,6 +66,7 @@
             dict({
               'name': 'v1.0.0',
               'target': dict({
+                'committed': '2024-01-02T00:00:00Z',
                 'url': 'https://github.com/octocat/Hello-World/commit/6dcb09b5b57875f334f61aebed695e2e4193db5e',
               }),
             }),
@@ -66,6 +74,7 @@
         }),
         'release': dict({
           'name': 'v1.0.0',
+          'published': '2024-01-02T00:00:00Z',
           'tag': 'v1.0.0',
           'url': 'https://github.com/octocat/Hello-World/releases/v1.0.0',
         }),

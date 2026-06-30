@@ -2,11 +2,13 @@
 
 from collections.abc import Callable, Mapping
 from dataclasses import dataclass
+from datetime import datetime
 from typing import Any, override
 
 from aiogithubapi import GitHubAuthenticatedUserModel
 
 from homeassistant.components.sensor import (
+    SensorDeviceClass,
     SensorEntity,
     SensorEntityDescription,
     SensorStateClass,
@@ -17,6 +19,7 @@ from homeassistant.helpers.device_registry import DeviceEntryType, DeviceInfo
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from homeassistant.helpers.typing import StateType
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
+from homeassistant.util import dt as dt_util
 
 from .const import DOMAIN
 from .coordinator import (
@@ -26,14 +29,44 @@ from .coordinator import (
 )
 
 
+def _as_datetime(value: str | None) -> datetime | None:
+    """Parse a GitHub ISO-8601 timestamp, tolerating missing values.
+
+    The latest_tag target only carries a date for lightweight tags; an
+    annotated tag's target is a Tag object, so the field is absent there.
+    """
+    return dt_util.parse_datetime(value) if value else None
+
+
 @dataclass(frozen=True, kw_only=True)
 class GitHubSensorEntityDescription(SensorEntityDescription):
     """Describes GitHub issue sensor entity."""
 
-    value_fn: Callable[[dict[str, Any]], StateType]
+    value_fn: Callable[[dict[str, Any]], StateType | datetime]
 
     attr_fn: Callable[[dict[str, Any]], Mapping[str, Any] | None] = lambda data: None
     avabl_fn: Callable[[dict[str, Any]], bool] = lambda data: True
+
+
+def _timestamp_description(
+    key: str,
+    value_fn: Callable[[dict[str, Any]], StateType | datetime],
+    avabl_fn: Callable[[dict[str, Any]], bool] = lambda data: True,
+) -> GitHubSensorEntityDescription:
+    """Build a default-disabled timestamp sensor for a latest_* item.
+
+    These are opt-in: most users won't graph them, and every enabled entity
+    adds recorder/state-machine load, so they follow the entity-disabled-by-
+    default guidance.
+    """
+    return GitHubSensorEntityDescription(
+        key=key,
+        translation_key=key,
+        device_class=SensorDeviceClass.TIMESTAMP,
+        entity_registry_enabled_default=False,
+        avabl_fn=avabl_fn,
+        value_fn=value_fn,
+    )
 
 
 SENSOR_DESCRIPTIONS: tuple[GitHubSensorEntityDescription, ...] = (
@@ -144,6 +177,51 @@ SENSOR_DESCRIPTIONS: tuple[GitHubSensorEntityDescription, ...] = (
             "url": data["refs"]["tags"][0]["target"]["url"],
         },
     ),
+    _timestamp_description(
+        "latest_commit_committed",
+        lambda data: _as_datetime(data["default_branch_ref"]["commit"]["committed"]),
+    ),
+    _timestamp_description(
+        "latest_discussion_created",
+        lambda data: _as_datetime(data["discussion"]["discussions"][0]["created"]),
+        avabl_fn=lambda data: data["discussion"]["discussions"],
+    ),
+    _timestamp_description(
+        "latest_discussion_updated",
+        lambda data: _as_datetime(data["discussion"]["discussions"][0]["updated"]),
+        avabl_fn=lambda data: data["discussion"]["discussions"],
+    ),
+    _timestamp_description(
+        "latest_issue_created",
+        lambda data: _as_datetime(data["issue"]["issues"][0]["created"]),
+        avabl_fn=lambda data: data["issue"]["issues"],
+    ),
+    _timestamp_description(
+        "latest_issue_updated",
+        lambda data: _as_datetime(data["issue"]["issues"][0]["updated"]),
+        avabl_fn=lambda data: data["issue"]["issues"],
+    ),
+    _timestamp_description(
+        "latest_pull_request_created",
+        lambda data: _as_datetime(data["pull_request"]["pull_requests"][0]["created"]),
+        avabl_fn=lambda data: data["pull_request"]["pull_requests"],
+    ),
+    _timestamp_description(
+        "latest_pull_request_updated",
+        lambda data: _as_datetime(data["pull_request"]["pull_requests"][0]["updated"]),
+        avabl_fn=lambda data: data["pull_request"]["pull_requests"],
+    ),
+    _timestamp_description(
+        "latest_release_published",
+        lambda data: _as_datetime(data["release"]["published"]),
+        avabl_fn=lambda data: data["release"] is not None,
+    ),
+    _timestamp_description(
+        "latest_tag_committed",
+        # Null for annotated tags (target is a Tag, not a Commit).
+        lambda data: _as_datetime(data["refs"]["tags"][0]["target"].get("committed")),
+        avabl_fn=lambda data: data["refs"]["tags"],
+    ),
 )
 
 
@@ -247,7 +325,7 @@ class GitHubSensorEntity(CoordinatorEntity[GitHubDataUpdateCoordinator], SensorE
 
     @property
     @override
-    def native_value(self) -> StateType:
+    def native_value(self) -> StateType | datetime:
         """Return the state of the sensor."""
         return self.entity_description.value_fn(self.coordinator.data)
 
