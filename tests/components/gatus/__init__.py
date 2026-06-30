@@ -1,5 +1,6 @@
 """Tests for the Gatus integration."""
 
+from typing import Any
 from unittest.mock import AsyncMock
 
 from homeassistant.components.gatus.const import DOMAIN
@@ -9,7 +10,7 @@ from tests.common import MockConfigEntry
 
 
 async def setup_integration(
-    hass: HomeAssistant, mock_gatus_client: AsyncMock, mock_data: list
+    hass: HomeAssistant, mock_gatus_client: AsyncMock, mock_data: list[dict[str, Any]]
 ) -> MockConfigEntry:
     """Handle repetitive config entry setup sequences with explicit mock data."""
     mock_gatus_client.get_endpoints_statuses.return_value = mock_data

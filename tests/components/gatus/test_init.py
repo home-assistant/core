@@ -1,11 +1,10 @@
 """Tests for the Gatus integration setup and unload lifecycle."""
 
-from unittest.mock import AsyncMock, patch
+from unittest.mock import AsyncMock
 
 from homeassistant.components.gatus.coordinator import GatusDataUpdateCoordinator
 from homeassistant.config_entries import ConfigEntryState
 from homeassistant.core import HomeAssistant
-from homeassistant.exceptions import ConfigEntryNotReady
 
 from . import setup_integration
 
@@ -33,10 +32,10 @@ async def test_setup_entry_failing_first_refresh(
     mock_gatus_client: AsyncMock,
 ) -> None:
     """Test setup failure when the initial coordinator data fetch fails."""
-    with patch(
-        "homeassistant.components.gatus.coordinator.GatusDataUpdateCoordinator.async_config_entry_first_refresh",
-        side_effect=ConfigEntryNotReady("Connection timed out"),
-    ):
-        config_entry = await setup_integration(hass, mock_gatus_client, [])
+    mock_gatus_client.get_endpoints_statuses.side_effect = Exception(
+        "Connection timed out"
+    )
+
+    config_entry = await setup_integration(hass, mock_gatus_client, [])
 
     assert config_entry.state is ConfigEntryState.SETUP_RETRY
