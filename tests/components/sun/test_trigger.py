@@ -346,6 +346,12 @@ async def test_dawn_defaults_to_civil(
 _SVALBARD = (78.22, 15.65, "Europe/Oslo")
 _KOTZEBUE = (66.8983, -162.5966, "America/Anchorage")
 
+# A two-sunrise day is the mirror of Kotzebue's two-sunset day: it needs solar
+# noon (not midnight) near local midnight, which no real location has because
+# time zones keep solar noon near local noon. This synthetic location forces it
+# with a polar latitude on a deliberately ~12 h-offset time zone.
+_TWO_SUNRISE_LOCATION = (66.5, -32.5, "America/Anchorage")
+
 
 @pytest.mark.parametrize(
     ("location", "now", "trigger_key", "astral_event", "options", "depression"),
@@ -438,6 +444,41 @@ async def test_two_sunsets_on_one_day_at_kotzebue(
         first = get_astral_event_next(hass, "sunset", now)
         second = get_astral_event_next(hass, "sunset", first)
         # Two sunsets ~24 h apart that share one local calendar day.
+        assert dt_util.as_local(first).date() == dt_util.as_local(second).date()
+        assert timedelta(hours=23) < second - first < timedelta(hours=25)
+
+        freezer.move_to(first + timedelta(seconds=1))
+        async_fire_time_changed(hass, first + timedelta(seconds=1))
+        await hass.async_block_till_done()
+        assert len(service_calls) == 1
+
+        freezer.move_to(second + timedelta(seconds=1))
+        async_fire_time_changed(hass, second + timedelta(seconds=1))
+        await hass.async_block_till_done()
+        assert len(service_calls) == 2
+
+
+async def test_two_sunrises_on_one_day(
+    hass: HomeAssistant, service_calls: list[ServiceCall]
+) -> None:
+    """Test both sunrises fire on a calendar day that has two.
+
+    The mirror of the two-sunset case: a synthetic polar location on a
+    deliberately offset time zone puts solar noon near local midnight, so
+    2015-03-07 (local) has two sunrises ~24 h apart - one just after midnight
+    and one just before - and the scheduler must fire for both.
+    """
+    latitude, longitude, time_zone = _TWO_SUNRISE_LOCATION
+    await hass.config.async_set_time_zone(time_zone)
+    await hass.config.async_update(latitude=latitude, longitude=longitude, elevation=0)
+
+    # 2015-03-07 09:02:36 UTC (00:02 local) and 2015-03-08 08:58:43 UTC (23:58 local)
+    now = datetime(2015, 3, 7, 9, tzinfo=dt_util.UTC)
+    with freeze_time(now) as freezer:
+        await _arm_automation(hass, {"platform": "sun.sunrise"}, {})
+        first = get_astral_event_next(hass, "sunrise", now)
+        second = get_astral_event_next(hass, "sunrise", first)
+        # Two sunrises ~24 h apart that share one local calendar day.
         assert dt_util.as_local(first).date() == dt_util.as_local(second).date()
         assert timedelta(hours=23) < second - first < timedelta(hours=25)
 

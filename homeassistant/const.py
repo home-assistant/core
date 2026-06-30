@@ -7,6 +7,7 @@ from typing import TYPE_CHECKING, Final
 from .generated.entity_platforms import EntityPlatforms
 from .helpers.deprecation import (
     DeprecatedConstant,
+    DeprecatedConstantEnum,
     all_with_deprecated_constants,
     check_if_deprecated_constant,
     dir_with_deprecated_constants,
@@ -21,7 +22,7 @@ if TYPE_CHECKING:
 
 APPLICATION_NAME: Final = "HomeAssistant"
 MAJOR_VERSION: Final = 2026
-MINOR_VERSION: Final = 7
+MINOR_VERSION: Final = 8
 PATCH_VERSION: Final = "0.dev0"
 __short_version__: Final = f"{MAJOR_VERSION}.{MINOR_VERSION}"
 __version__: Final = f"{__short_version__}.{PATCH_VERSION}"
@@ -455,6 +456,26 @@ ATTR_TEMPERATURE: Final = "temperature"
 ATTR_PERSONS: Final = "persons"
 
 
+class EntityCapabilityAttribute(StrEnum):
+    """Capability attributes shared by all entities."""
+
+    GROUP_ENTITIES = "group_entities"
+
+
+class EntityStateAttribute(StrEnum):
+    """State attributes shared by all entities."""
+
+    ASSUMED_STATE = "assumed_state"
+    ATTRIBUTION = "attribution"
+    DEVICE_CLASS = "device_class"
+    ENTITY_PICTURE = "entity_picture"
+    FRIENDLY_NAME = "friendly_name"
+    ICON = "icon"
+    RESTORED = "restored"
+    SUPPORTED_FEATURES = "supported_features"
+    UNIT_OF_MEASUREMENT = "unit_of_measurement"
+
+
 # #### UNITS OF MEASUREMENT ####
 # Apparent power units
 class UnitOfApparentPower(StrEnum):
@@ -778,21 +799,27 @@ class UnitOfRatio(StrEnum):
 
 
 # Concentration units
-CONCENTRATION_GRAMS_PER_CUBIC_METER: Final = UnitOfDensity.GRAMS_PER_CUBIC_METER.value
-CONCENTRATION_MILLIGRAMS_PER_CUBIC_METER: Final = (
-    UnitOfDensity.MILLIGRAMS_PER_CUBIC_METER.value
+_DEPRECATED_CONCENTRATION_GRAMS_PER_CUBIC_METER = DeprecatedConstantEnum(
+    UnitOfDensity.GRAMS_PER_CUBIC_METER, "2027.8"
 )
-CONCENTRATION_MICROGRAMS_PER_CUBIC_METER: Final = (
-    UnitOfDensity.MICROGRAMS_PER_CUBIC_METER.value
+_DEPRECATED_CONCENTRATION_MILLIGRAMS_PER_CUBIC_METER = DeprecatedConstantEnum(
+    UnitOfDensity.MILLIGRAMS_PER_CUBIC_METER, "2027.8"
 )
-CONCENTRATION_MICROGRAMS_PER_CUBIC_FOOT: Final = (
-    UnitOfDensity.MICROGRAMS_PER_CUBIC_FOOT.value
+_DEPRECATED_CONCENTRATION_MICROGRAMS_PER_CUBIC_METER = DeprecatedConstantEnum(
+    UnitOfDensity.MICROGRAMS_PER_CUBIC_METER, "2027.8"
+)
+_DEPRECATED_CONCENTRATION_MICROGRAMS_PER_CUBIC_FOOT = DeprecatedConstantEnum(
+    UnitOfDensity.MICROGRAMS_PER_CUBIC_FOOT, "2027.8"
 )
 _DEPRECATED_CONCENTRATION_PARTS_PER_CUBIC_METER = DeprecatedConstant(
-    "p/m³", "p/m³", "2027.7"
+    "p/m³", "p/m³", "2027.8"
 )
-CONCENTRATION_PARTS_PER_MILLION: Final = UnitOfRatio.PARTS_PER_MILLION.value
-CONCENTRATION_PARTS_PER_BILLION: Final = UnitOfRatio.PARTS_PER_BILLION.value
+_DEPRECATED_CONCENTRATION_PARTS_PER_MILLION = DeprecatedConstantEnum(
+    UnitOfRatio.PARTS_PER_MILLION, "2027.8"
+)
+_DEPRECATED_CONCENTRATION_PARTS_PER_BILLION = DeprecatedConstantEnum(
+    UnitOfRatio.PARTS_PER_BILLION, "2027.8"
+)
 PERCENTAGE: Final = UnitOfRatio.PERCENTAGE.value
 
 
@@ -1011,8 +1038,9 @@ SIGNAL_BOOTSTRAP_INTEGRATIONS: SignalType[dict[str, float]] = SignalType(
 )
 
 
-# hass.data key for logging information.
+# hass.data keys for logging information.
 KEY_DATA_LOGGING: HassKey[str] = HassKey("logging")
+KEY_DATA_LOGGING_DISABLED_REASON: HassKey[str] = HassKey("logging_disabled_reason")
 
 
 # Date/Time formats

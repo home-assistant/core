@@ -41,7 +41,7 @@
 # name: test_async_setup_entry[sensor.my_nc_url_local_amount_of_active_users_last_5_minutes-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'my.nc_url.local Amount of active users last 5 minutes',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'my.nc_url.local Amount of active users last 5 minutes',
       <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
     'context': <ANY>,
@@ -94,7 +94,7 @@
 # name: test_async_setup_entry[sensor.my_nc_url_local_amount_of_active_users_last_day-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'my.nc_url.local Amount of active users last day',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'my.nc_url.local Amount of active users last day',
       <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
     'context': <ANY>,
@@ -147,7 +147,7 @@
 # name: test_async_setup_entry[sensor.my_nc_url_local_amount_of_active_users_last_hour-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'my.nc_url.local Amount of active users last hour',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'my.nc_url.local Amount of active users last hour',
       <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
     'context': <ANY>,
@@ -200,7 +200,7 @@
 # name: test_async_setup_entry[sensor.my_nc_url_local_amount_of_files-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'my.nc_url.local Amount of files',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'my.nc_url.local Amount of files',
       <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
     'context': <ANY>,
@@ -253,7 +253,7 @@
 # name: test_async_setup_entry[sensor.my_nc_url_local_amount_of_group_shares-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'my.nc_url.local Amount of group shares',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'my.nc_url.local Amount of group shares',
       <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
     'context': <ANY>,
@@ -306,7 +306,7 @@
 # name: test_async_setup_entry[sensor.my_nc_url_local_amount_of_link_shares-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'my.nc_url.local Amount of link shares',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'my.nc_url.local Amount of link shares',
       <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
     'context': <ANY>,
@@ -359,7 +359,7 @@
 # name: test_async_setup_entry[sensor.my_nc_url_local_amount_of_local_storages-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'my.nc_url.local Amount of local storages',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'my.nc_url.local Amount of local storages',
       <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
     'context': <ANY>,
@@ -412,7 +412,7 @@
 # name: test_async_setup_entry[sensor.my_nc_url_local_amount_of_mail_shares-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'my.nc_url.local Amount of mail shares',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'my.nc_url.local Amount of mail shares',
       <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
     'context': <ANY>,
@@ -465,7 +465,7 @@
 # name: test_async_setup_entry[sensor.my_nc_url_local_amount_of_other_storages-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'my.nc_url.local Amount of other storages',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'my.nc_url.local Amount of other storages',
       <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
     'context': <ANY>,
@@ -518,7 +518,7 @@
 # name: test_async_setup_entry[sensor.my_nc_url_local_amount_of_passwordless_link_shares-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'my.nc_url.local Amount of passwordless link shares',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'my.nc_url.local Amount of passwordless link shares',
       <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
     'context': <ANY>,
@@ -571,7 +571,7 @@
 # name: test_async_setup_entry[sensor.my_nc_url_local_amount_of_room_shares-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'my.nc_url.local Amount of room shares',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'my.nc_url.local Amount of room shares',
       <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
     'context': <ANY>,
@@ -624,7 +624,7 @@
 # name: test_async_setup_entry[sensor.my_nc_url_local_amount_of_shares-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'my.nc_url.local Amount of shares',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'my.nc_url.local Amount of shares',
       <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
     'context': <ANY>,
@@ -677,7 +677,7 @@
 # name: test_async_setup_entry[sensor.my_nc_url_local_amount_of_shares_received-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'my.nc_url.local Amount of shares received',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'my.nc_url.local Amount of shares received',
       <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
     'context': <ANY>,
@@ -730,7 +730,7 @@
 # name: test_async_setup_entry[sensor.my_nc_url_local_amount_of_shares_sent-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'my.nc_url.local Amount of shares sent',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'my.nc_url.local Amount of shares sent',
       <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
     'context': <ANY>,
@@ -783,7 +783,7 @@
 # name: test_async_setup_entry[sensor.my_nc_url_local_amount_of_storages-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'my.nc_url.local Amount of storages',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'my.nc_url.local Amount of storages',
       <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
     'context': <ANY>,
@@ -836,7 +836,7 @@
 # name: test_async_setup_entry[sensor.my_nc_url_local_amount_of_storages_at_home-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'my.nc_url.local Amount of storages at home',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'my.nc_url.local Amount of storages at home',
       <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
     'context': <ANY>,
@@ -889,7 +889,7 @@
 # name: test_async_setup_entry[sensor.my_nc_url_local_amount_of_user-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'my.nc_url.local Amount of user',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'my.nc_url.local Amount of user',
       <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
     'context': <ANY>,
@@ -942,7 +942,7 @@
 # name: test_async_setup_entry[sensor.my_nc_url_local_amount_of_user_shares-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'my.nc_url.local Amount of user shares',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'my.nc_url.local Amount of user shares',
       <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
     'context': <ANY>,
@@ -995,7 +995,7 @@
 # name: test_async_setup_entry[sensor.my_nc_url_local_apps_installed-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'my.nc_url.local Apps installed',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'my.nc_url.local Apps installed',
       <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
     'context': <ANY>,
@@ -1048,7 +1048,7 @@
 # name: test_async_setup_entry[sensor.my_nc_url_local_cache_expunges-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'my.nc_url.local Cache expunges',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'my.nc_url.local Cache expunges',
       <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
     'context': <ANY>,
@@ -1099,7 +1099,7 @@
 # name: test_async_setup_entry[sensor.my_nc_url_local_cache_memory-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'my.nc_url.local Cache memory',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'my.nc_url.local Cache memory',
     }),
     'context': <ANY>,
     'entity_id': 'sensor.my_nc_url_local_cache_memory',
@@ -1155,9 +1155,9 @@
 # name: test_async_setup_entry[sensor.my_nc_url_local_cache_memory_size-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'device_class': 'data_size',
-      'friendly_name': 'my.nc_url.local Cache memory size',
-      'unit_of_measurement': <UnitOfInformation.MEGABYTES: 'MB'>,
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'data_size',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'my.nc_url.local Cache memory size',
+      <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: <UnitOfInformation.MEGABYTES: 'MB'>,
     }),
     'context': <ANY>,
     'entity_id': 'sensor.my_nc_url_local_cache_memory_size',
@@ -1209,7 +1209,7 @@
 # name: test_async_setup_entry[sensor.my_nc_url_local_cache_number_of_entries-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'my.nc_url.local Cache number of entries',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'my.nc_url.local Cache number of entries',
       <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
     'context': <ANY>,
@@ -1262,7 +1262,7 @@
 # name: test_async_setup_entry[sensor.my_nc_url_local_cache_number_of_hits-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'my.nc_url.local Cache number of hits',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'my.nc_url.local Cache number of hits',
       <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
     'context': <ANY>,
@@ -1315,7 +1315,7 @@
 # name: test_async_setup_entry[sensor.my_nc_url_local_cache_number_of_inserts-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'my.nc_url.local Cache number of inserts',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'my.nc_url.local Cache number of inserts',
       <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
     'context': <ANY>,
@@ -1368,7 +1368,7 @@
 # name: test_async_setup_entry[sensor.my_nc_url_local_cache_number_of_misses-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'my.nc_url.local Cache number of misses',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'my.nc_url.local Cache number of misses',
       <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
     'context': <ANY>,
@@ -1421,7 +1421,7 @@
 # name: test_async_setup_entry[sensor.my_nc_url_local_cache_number_of_slots-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'my.nc_url.local Cache number of slots',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'my.nc_url.local Cache number of slots',
       <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
     'context': <ANY>,
@@ -1472,8 +1472,8 @@
 # name: test_async_setup_entry[sensor.my_nc_url_local_cache_start_time-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'device_class': 'timestamp',
-      'friendly_name': 'my.nc_url.local Cache start time',
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'timestamp',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'my.nc_url.local Cache start time',
     }),
     'context': <ANY>,
     'entity_id': 'sensor.my_nc_url_local_cache_start_time',
@@ -1523,7 +1523,7 @@
 # name: test_async_setup_entry[sensor.my_nc_url_local_cache_ttl-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'my.nc_url.local Cache TTL',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'my.nc_url.local Cache TTL',
     }),
     'context': <ANY>,
     'entity_id': 'sensor.my_nc_url_local_cache_ttl',
@@ -1576,8 +1576,8 @@
 # name: test_async_setup_entry[sensor.my_nc_url_local_cpu_load_last_15_minutes-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'my.nc_url.local CPU load last 15 minutes',
-      'unit_of_measurement': 'load',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'my.nc_url.local CPU load last 15 minutes',
+      <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: 'load',
     }),
     'context': <ANY>,
     'entity_id': 'sensor.my_nc_url_local_cpu_load_last_15_minutes',
@@ -1630,8 +1630,8 @@
 # name: test_async_setup_entry[sensor.my_nc_url_local_cpu_load_last_1_minute-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'my.nc_url.local CPU load last 1 minute',
-      'unit_of_measurement': 'load',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'my.nc_url.local CPU load last 1 minute',
+      <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: 'load',
     }),
     'context': <ANY>,
     'entity_id': 'sensor.my_nc_url_local_cpu_load_last_1_minute',
@@ -1684,8 +1684,8 @@
 # name: test_async_setup_entry[sensor.my_nc_url_local_cpu_load_last_5_minutes-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'my.nc_url.local CPU load last 5 minutes',
-      'unit_of_measurement': 'load',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'my.nc_url.local CPU load last 5 minutes',
+      <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: 'load',
     }),
     'context': <ANY>,
     'entity_id': 'sensor.my_nc_url_local_cpu_load_last_5_minutes',
@@ -1741,9 +1741,9 @@
 # name: test_async_setup_entry[sensor.my_nc_url_local_database_size-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'device_class': 'data_size',
-      'friendly_name': 'my.nc_url.local Database size',
-      'unit_of_measurement': <UnitOfInformation.MEGABYTES: 'MB'>,
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'data_size',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'my.nc_url.local Database size',
+      <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: <UnitOfInformation.MEGABYTES: 'MB'>,
     }),
     'context': <ANY>,
     'entity_id': 'sensor.my_nc_url_local_database_size',
@@ -1793,7 +1793,7 @@
 # name: test_async_setup_entry[sensor.my_nc_url_local_database_type-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'my.nc_url.local Database type',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'my.nc_url.local Database type',
     }),
     'context': <ANY>,
     'entity_id': 'sensor.my_nc_url_local_database_type',
@@ -1843,7 +1843,7 @@
 # name: test_async_setup_entry[sensor.my_nc_url_local_database_version-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'my.nc_url.local Database version',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'my.nc_url.local Database version',
     }),
     'context': <ANY>,
     'entity_id': 'sensor.my_nc_url_local_database_version',
@@ -1899,9 +1899,9 @@
 # name: test_async_setup_entry[sensor.my_nc_url_local_free_memory-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'device_class': 'data_size',
-      'friendly_name': 'my.nc_url.local Free memory',
-      'unit_of_measurement': <UnitOfInformation.GIGABYTES: 'GB'>,
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'data_size',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'my.nc_url.local Free memory',
+      <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: <UnitOfInformation.GIGABYTES: 'GB'>,
     }),
     'context': <ANY>,
     'entity_id': 'sensor.my_nc_url_local_free_memory',
@@ -1957,9 +1957,9 @@
 # name: test_async_setup_entry[sensor.my_nc_url_local_free_space-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'device_class': 'data_size',
-      'friendly_name': 'my.nc_url.local Free space',
-      'unit_of_measurement': <UnitOfInformation.GIGABYTES: 'GB'>,
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'data_size',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'my.nc_url.local Free space',
+      <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: <UnitOfInformation.GIGABYTES: 'GB'>,
     }),
     'context': <ANY>,
     'entity_id': 'sensor.my_nc_url_local_free_space',
@@ -2015,9 +2015,9 @@
 # name: test_async_setup_entry[sensor.my_nc_url_local_free_swap_memory-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'device_class': 'data_size',
-      'friendly_name': 'my.nc_url.local Free swap memory',
-      'unit_of_measurement': <UnitOfInformation.GIGABYTES: 'GB'>,
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'data_size',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'my.nc_url.local Free swap memory',
+      <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: <UnitOfInformation.GIGABYTES: 'GB'>,
     }),
     'context': <ANY>,
     'entity_id': 'sensor.my_nc_url_local_free_swap_memory',
@@ -2073,9 +2073,9 @@
 # name: test_async_setup_entry[sensor.my_nc_url_local_interned_buffer_size-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'device_class': 'data_size',
-      'friendly_name': 'my.nc_url.local Interned buffer size',
-      'unit_of_measurement': <UnitOfInformation.MEGABYTES: 'MB'>,
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'data_size',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'my.nc_url.local Interned buffer size',
+      <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: <UnitOfInformation.MEGABYTES: 'MB'>,
     }),
     'context': <ANY>,
     'entity_id': 'sensor.my_nc_url_local_interned_buffer_size',
@@ -2131,9 +2131,9 @@
 # name: test_async_setup_entry[sensor.my_nc_url_local_interned_free_memory-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'device_class': 'data_size',
-      'friendly_name': 'my.nc_url.local Interned free memory',
-      'unit_of_measurement': <UnitOfInformation.MEGABYTES: 'MB'>,
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'data_size',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'my.nc_url.local Interned free memory',
+      <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: <UnitOfInformation.MEGABYTES: 'MB'>,
     }),
     'context': <ANY>,
     'entity_id': 'sensor.my_nc_url_local_interned_free_memory',
@@ -2185,7 +2185,7 @@
 # name: test_async_setup_entry[sensor.my_nc_url_local_interned_number_of_strings-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'my.nc_url.local Interned number of strings',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'my.nc_url.local Interned number of strings',
       <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
     'context': <ANY>,
@@ -2242,9 +2242,9 @@
 # name: test_async_setup_entry[sensor.my_nc_url_local_interned_used_memory-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'device_class': 'data_size',
-      'friendly_name': 'my.nc_url.local Interned used memory',
-      'unit_of_measurement': <UnitOfInformation.MEGABYTES: 'MB'>,
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'data_size',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'my.nc_url.local Interned used memory',
+      <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: <UnitOfInformation.MEGABYTES: 'MB'>,
     }),
     'context': <ANY>,
     'entity_id': 'sensor.my_nc_url_local_interned_used_memory',
@@ -2300,9 +2300,9 @@
 # name: test_async_setup_entry[sensor.my_nc_url_local_jit_buffer_free-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'device_class': 'data_size',
-      'friendly_name': 'my.nc_url.local JIT buffer free',
-      'unit_of_measurement': <UnitOfInformation.MEGABYTES: 'MB'>,
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'data_size',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'my.nc_url.local JIT buffer free',
+      <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: <UnitOfInformation.MEGABYTES: 'MB'>,
     }),
     'context': <ANY>,
     'entity_id': 'sensor.my_nc_url_local_jit_buffer_free',
@@ -2358,9 +2358,9 @@
 # name: test_async_setup_entry[sensor.my_nc_url_local_jit_buffer_size-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'device_class': 'data_size',
-      'friendly_name': 'my.nc_url.local JIT buffer size',
-      'unit_of_measurement': <UnitOfInformation.MEGABYTES: 'MB'>,
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'data_size',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'my.nc_url.local JIT buffer size',
+      <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: <UnitOfInformation.MEGABYTES: 'MB'>,
     }),
     'context': <ANY>,
     'entity_id': 'sensor.my_nc_url_local_jit_buffer_size',
@@ -2410,7 +2410,7 @@
 # name: test_async_setup_entry[sensor.my_nc_url_local_jit_kind-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'my.nc_url.local JIT kind',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'my.nc_url.local JIT kind',
     }),
     'context': <ANY>,
     'entity_id': 'sensor.my_nc_url_local_jit_kind',
@@ -2460,7 +2460,7 @@
 # name: test_async_setup_entry[sensor.my_nc_url_local_jit_opt_flags-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'my.nc_url.local JIT opt flags',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'my.nc_url.local JIT opt flags',
     }),
     'context': <ANY>,
     'entity_id': 'sensor.my_nc_url_local_jit_opt_flags',
@@ -2510,7 +2510,7 @@
 # name: test_async_setup_entry[sensor.my_nc_url_local_jit_opt_level-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'my.nc_url.local JIT opt level',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'my.nc_url.local JIT opt level',
     }),
     'context': <ANY>,
     'entity_id': 'sensor.my_nc_url_local_jit_opt_level',
@@ -2562,9 +2562,9 @@
 # name: test_async_setup_entry[sensor.my_nc_url_local_opcache_blacklist_miss_ratio-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'my.nc_url.local Opcache blacklist miss ratio',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'my.nc_url.local Opcache blacklist miss ratio',
       <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
-      'unit_of_measurement': '%',
+      <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: '%',
     }),
     'context': <ANY>,
     'entity_id': 'sensor.my_nc_url_local_opcache_blacklist_miss_ratio',
@@ -2616,7 +2616,7 @@
 # name: test_async_setup_entry[sensor.my_nc_url_local_opcache_blacklist_misses-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'my.nc_url.local Opcache blacklist misses',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'my.nc_url.local Opcache blacklist misses',
       <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
     'context': <ANY>,
@@ -2669,7 +2669,7 @@
 # name: test_async_setup_entry[sensor.my_nc_url_local_opcache_cached_keys-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'my.nc_url.local Opcache cached keys',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'my.nc_url.local Opcache cached keys',
       <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
     'context': <ANY>,
@@ -2722,7 +2722,7 @@
 # name: test_async_setup_entry[sensor.my_nc_url_local_opcache_cached_scripts-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'my.nc_url.local Opcache cached scripts',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'my.nc_url.local Opcache cached scripts',
       <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
     'context': <ANY>,
@@ -2776,8 +2776,8 @@
 # name: test_async_setup_entry[sensor.my_nc_url_local_opcache_current_wasted_percentage-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'my.nc_url.local Opcache current wasted percentage',
-      'unit_of_measurement': '%',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'my.nc_url.local Opcache current wasted percentage',
+      <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: '%',
     }),
     'context': <ANY>,
     'entity_id': 'sensor.my_nc_url_local_opcache_current_wasted_percentage',
@@ -2833,9 +2833,9 @@
 # name: test_async_setup_entry[sensor.my_nc_url_local_opcache_free_memory-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'device_class': 'data_size',
-      'friendly_name': 'my.nc_url.local Opcache free memory',
-      'unit_of_measurement': <UnitOfInformation.MEGABYTES: 'MB'>,
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'data_size',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'my.nc_url.local Opcache free memory',
+      <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: <UnitOfInformation.MEGABYTES: 'MB'>,
     }),
     'context': <ANY>,
     'entity_id': 'sensor.my_nc_url_local_opcache_free_memory',
@@ -2887,7 +2887,7 @@
 # name: test_async_setup_entry[sensor.my_nc_url_local_opcache_hash_restarts-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'my.nc_url.local Opcache hash restarts',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'my.nc_url.local Opcache hash restarts',
       <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
     'context': <ANY>,
@@ -2941,8 +2941,8 @@
 # name: test_async_setup_entry[sensor.my_nc_url_local_opcache_hit_rate-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'my.nc_url.local Opcache hit rate',
-      'unit_of_measurement': '%',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'my.nc_url.local Opcache hit rate',
+      <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: '%',
     }),
     'context': <ANY>,
     'entity_id': 'sensor.my_nc_url_local_opcache_hit_rate',
@@ -2994,7 +2994,7 @@
 # name: test_async_setup_entry[sensor.my_nc_url_local_opcache_hits-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'my.nc_url.local Opcache hits',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'my.nc_url.local Opcache hits',
       <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
     'context': <ANY>,
@@ -3045,8 +3045,8 @@
 # name: test_async_setup_entry[sensor.my_nc_url_local_opcache_last_restart_time-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'device_class': 'timestamp',
-      'friendly_name': 'my.nc_url.local Opcache last restart time',
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'timestamp',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'my.nc_url.local Opcache last restart time',
     }),
     'context': <ANY>,
     'entity_id': 'sensor.my_nc_url_local_opcache_last_restart_time',
@@ -3098,7 +3098,7 @@
 # name: test_async_setup_entry[sensor.my_nc_url_local_opcache_manual_restarts-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'my.nc_url.local Opcache manual restarts',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'my.nc_url.local Opcache manual restarts',
       <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
     'context': <ANY>,
@@ -3151,7 +3151,7 @@
 # name: test_async_setup_entry[sensor.my_nc_url_local_opcache_max_cached_keys-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'my.nc_url.local Opcache max cached keys',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'my.nc_url.local Opcache max cached keys',
       <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
     'context': <ANY>,
@@ -3204,7 +3204,7 @@
 # name: test_async_setup_entry[sensor.my_nc_url_local_opcache_misses-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'my.nc_url.local Opcache misses',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'my.nc_url.local Opcache misses',
       <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
     'context': <ANY>,
@@ -3257,7 +3257,7 @@
 # name: test_async_setup_entry[sensor.my_nc_url_local_opcache_out_of_memory_restarts-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'my.nc_url.local Opcache out of memory restarts',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'my.nc_url.local Opcache out of memory restarts',
       <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
     'context': <ANY>,
@@ -3308,8 +3308,8 @@
 # name: test_async_setup_entry[sensor.my_nc_url_local_opcache_start_time-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'device_class': 'timestamp',
-      'friendly_name': 'my.nc_url.local Opcache start time',
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'timestamp',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'my.nc_url.local Opcache start time',
     }),
     'context': <ANY>,
     'entity_id': 'sensor.my_nc_url_local_opcache_start_time',
@@ -3365,9 +3365,9 @@
 # name: test_async_setup_entry[sensor.my_nc_url_local_opcache_used_memory-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'device_class': 'data_size',
-      'friendly_name': 'my.nc_url.local Opcache used memory',
-      'unit_of_measurement': <UnitOfInformation.MEGABYTES: 'MB'>,
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'data_size',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'my.nc_url.local Opcache used memory',
+      <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: <UnitOfInformation.MEGABYTES: 'MB'>,
     }),
     'context': <ANY>,
     'entity_id': 'sensor.my_nc_url_local_opcache_used_memory',
@@ -3423,9 +3423,9 @@
 # name: test_async_setup_entry[sensor.my_nc_url_local_opcache_wasted_memory-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'device_class': 'data_size',
-      'friendly_name': 'my.nc_url.local Opcache wasted memory',
-      'unit_of_measurement': <UnitOfInformation.MEGABYTES: 'MB'>,
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'data_size',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'my.nc_url.local Opcache wasted memory',
+      <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: <UnitOfInformation.MEGABYTES: 'MB'>,
     }),
     'context': <ANY>,
     'entity_id': 'sensor.my_nc_url_local_opcache_wasted_memory',
@@ -3478,9 +3478,9 @@
 # name: test_async_setup_entry[sensor.my_nc_url_local_php_max_execution_time-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'device_class': 'duration',
-      'friendly_name': 'my.nc_url.local PHP max execution time',
-      'unit_of_measurement': <UnitOfTime.SECONDS: 's'>,
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'duration',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'my.nc_url.local PHP max execution time',
+      <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: <UnitOfTime.SECONDS: 's'>,
     }),
     'context': <ANY>,
     'entity_id': 'sensor.my_nc_url_local_php_max_execution_time',
@@ -3536,9 +3536,9 @@
 # name: test_async_setup_entry[sensor.my_nc_url_local_php_memory_limit-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'device_class': 'data_size',
-      'friendly_name': 'my.nc_url.local PHP memory limit',
-      'unit_of_measurement': <UnitOfInformation.MEGABYTES: 'MB'>,
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'data_size',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'my.nc_url.local PHP memory limit',
+      <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: <UnitOfInformation.MEGABYTES: 'MB'>,
     }),
     'context': <ANY>,
     'entity_id': 'sensor.my_nc_url_local_php_memory_limit',
@@ -3594,9 +3594,9 @@
 # name: test_async_setup_entry[sensor.my_nc_url_local_php_upload_maximum_filesize-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'device_class': 'data_size',
-      'friendly_name': 'my.nc_url.local PHP upload maximum filesize',
-      'unit_of_measurement': <UnitOfInformation.MEGABYTES: 'MB'>,
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'data_size',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'my.nc_url.local PHP upload maximum filesize',
+      <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: <UnitOfInformation.MEGABYTES: 'MB'>,
     }),
     'context': <ANY>,
     'entity_id': 'sensor.my_nc_url_local_php_upload_maximum_filesize',
@@ -3646,7 +3646,7 @@
 # name: test_async_setup_entry[sensor.my_nc_url_local_php_version-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'my.nc_url.local PHP version',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'my.nc_url.local PHP version',
     }),
     'context': <ANY>,
     'entity_id': 'sensor.my_nc_url_local_php_version',
@@ -3702,9 +3702,9 @@
 # name: test_async_setup_entry[sensor.my_nc_url_local_sma_available_memory-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'device_class': 'data_size',
-      'friendly_name': 'my.nc_url.local SMA available memory',
-      'unit_of_measurement': <UnitOfInformation.MEGABYTES: 'MB'>,
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'data_size',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'my.nc_url.local SMA available memory',
+      <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: <UnitOfInformation.MEGABYTES: 'MB'>,
     }),
     'context': <ANY>,
     'entity_id': 'sensor.my_nc_url_local_sma_available_memory',
@@ -3756,7 +3756,7 @@
 # name: test_async_setup_entry[sensor.my_nc_url_local_sma_number_of_segments-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'my.nc_url.local SMA number of segments',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'my.nc_url.local SMA number of segments',
       <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
     'context': <ANY>,
@@ -3813,9 +3813,9 @@
 # name: test_async_setup_entry[sensor.my_nc_url_local_sma_segment_size-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'device_class': 'data_size',
-      'friendly_name': 'my.nc_url.local SMA segment size',
-      'unit_of_measurement': <UnitOfInformation.MEGABYTES: 'MB'>,
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'data_size',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'my.nc_url.local SMA segment size',
+      <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: <UnitOfInformation.MEGABYTES: 'MB'>,
     }),
     'context': <ANY>,
     'entity_id': 'sensor.my_nc_url_local_sma_segment_size',
@@ -3865,7 +3865,7 @@
 # name: test_async_setup_entry[sensor.my_nc_url_local_system_memcache_distributed-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'my.nc_url.local System memcache distributed',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'my.nc_url.local System memcache distributed',
     }),
     'context': <ANY>,
     'entity_id': 'sensor.my_nc_url_local_system_memcache_distributed',
@@ -3915,7 +3915,7 @@
 # name: test_async_setup_entry[sensor.my_nc_url_local_system_memcache_local-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'my.nc_url.local System memcache local',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'my.nc_url.local System memcache local',
     }),
     'context': <ANY>,
     'entity_id': 'sensor.my_nc_url_local_system_memcache_local',
@@ -3965,7 +3965,7 @@
 # name: test_async_setup_entry[sensor.my_nc_url_local_system_memcache_locking-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'my.nc_url.local System memcache locking',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'my.nc_url.local System memcache locking',
     }),
     'context': <ANY>,
     'entity_id': 'sensor.my_nc_url_local_system_memcache_locking',
@@ -4015,7 +4015,7 @@
 # name: test_async_setup_entry[sensor.my_nc_url_local_system_theme-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'my.nc_url.local System theme',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'my.nc_url.local System theme',
     }),
     'context': <ANY>,
     'entity_id': 'sensor.my_nc_url_local_system_theme',
@@ -4065,7 +4065,7 @@
 # name: test_async_setup_entry[sensor.my_nc_url_local_system_version-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'my.nc_url.local System version',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'my.nc_url.local System version',
     }),
     'context': <ANY>,
     'entity_id': 'sensor.my_nc_url_local_system_version',
@@ -4121,9 +4121,9 @@
 # name: test_async_setup_entry[sensor.my_nc_url_local_total_memory-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'device_class': 'data_size',
-      'friendly_name': 'my.nc_url.local Total memory',
-      'unit_of_measurement': <UnitOfInformation.GIGABYTES: 'GB'>,
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'data_size',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'my.nc_url.local Total memory',
+      <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: <UnitOfInformation.GIGABYTES: 'GB'>,
     }),
     'context': <ANY>,
     'entity_id': 'sensor.my_nc_url_local_total_memory',
@@ -4179,9 +4179,9 @@
 # name: test_async_setup_entry[sensor.my_nc_url_local_total_swap_memory-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'device_class': 'data_size',
-      'friendly_name': 'my.nc_url.local Total swap memory',
-      'unit_of_measurement': <UnitOfInformation.GIGABYTES: 'GB'>,
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'data_size',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'my.nc_url.local Total swap memory',
+      <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: <UnitOfInformation.GIGABYTES: 'GB'>,
     }),
     'context': <ANY>,
     'entity_id': 'sensor.my_nc_url_local_total_swap_memory',
@@ -4233,7 +4233,7 @@
 # name: test_async_setup_entry[sensor.my_nc_url_local_updates_available-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'my.nc_url.local Updates available',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'my.nc_url.local Updates available',
       <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
     'context': <ANY>,
@@ -4284,7 +4284,7 @@
 # name: test_async_setup_entry[sensor.my_nc_url_local_webserver-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'my.nc_url.local Webserver',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'my.nc_url.local Webserver',
     }),
     'context': <ANY>,
     'entity_id': 'sensor.my_nc_url_local_webserver',

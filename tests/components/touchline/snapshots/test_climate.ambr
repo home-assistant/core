@@ -54,7 +54,7 @@
   StateSnapshot({
     'attributes': ReadOnlyDict({
       <ClimateEntityStateAttribute.CURRENT_TEMPERATURE: 'current_temperature'>: 21.5,
-      'friendly_name': 'Zone 1',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Zone 1',
       <ClimateEntityCapabilityAttribute.HVAC_MODES: 'hvac_modes'>: list([
         <HVACMode.HEAT: 'heat'>,
       ]),
@@ -69,7 +69,7 @@
         'program_2',
         'program_3',
       ]),
-      'supported_features': <ClimateEntityFeature: 17>,
+      <EntityStateAttribute.SUPPORTED_FEATURES: 'supported_features'>: <ClimateEntityFeature: 17>,
       <ClimateEntityStateAttribute.TEMPERATURE: 'temperature'>: 22.0,
     }),
     'context': <ANY>,

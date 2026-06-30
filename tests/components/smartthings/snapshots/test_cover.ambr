@@ -40,10 +40,10 @@
   StateSnapshot({
     'attributes': ReadOnlyDict({
       <CoverEntityStateAttribute.CURRENT_POSITION: 'current_position'>: 100,
-      'device_class': 'shade',
-      'friendly_name': 'Curtain 1A',
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'shade',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Curtain 1A',
       <CoverEntityStateAttribute.IS_CLOSED: 'is_closed'>: False,
-      'supported_features': <CoverEntityFeature: 7>,
+      <EntityStateAttribute.SUPPORTED_FEATURES: 'supported_features'>: <CoverEntityFeature: 7>,
     }),
     'context': <ANY>,
     'entity_id': 'cover.curtain_1a',
@@ -95,10 +95,10 @@
     'attributes': ReadOnlyDict({
       'battery_level': 37,
       <CoverEntityStateAttribute.CURRENT_POSITION: 'current_position'>: 32,
-      'device_class': 'shade',
-      'friendly_name': 'Kitchen IKEA KADRILJ Window blind',
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'shade',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Kitchen IKEA KADRILJ Window blind',
       <CoverEntityStateAttribute.IS_CLOSED: 'is_closed'>: False,
-      'supported_features': <CoverEntityFeature: 7>,
+      <EntityStateAttribute.SUPPORTED_FEATURES: 'supported_features'>: <CoverEntityFeature: 7>,
     }),
     'context': <ANY>,
     'entity_id': 'cover.kitchen_ikea_kadrilj_window_blind',

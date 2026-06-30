@@ -44,12 +44,12 @@
 # name: test_numbers[number.ohme_home_pro_preconditioning_duration-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'Ohme Home Pro Preconditioning duration',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Ohme Home Pro Preconditioning duration',
       <NumberEntityCapabilityAttribute.MAX: 'max'>: 60,
       <NumberEntityCapabilityAttribute.MIN: 'min'>: 0,
       <NumberEntityCapabilityAttribute.MODE: 'mode'>: <NumberMode.AUTO: 'auto'>,
       <NumberEntityCapabilityAttribute.STEP: 'step'>: 5,
-      'unit_of_measurement': <UnitOfTime.MINUTES: 'min'>,
+      <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: <UnitOfTime.MINUTES: 'min'>,
     }),
     'context': <ANY>,
     'entity_id': 'number.ohme_home_pro_preconditioning_duration',
@@ -104,12 +104,12 @@
 # name: test_numbers[number.ohme_home_pro_state_of_charge_input-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'Ohme Home Pro State of charge input',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Ohme Home Pro State of charge input',
       <NumberEntityCapabilityAttribute.MAX: 'max'>: 100,
       <NumberEntityCapabilityAttribute.MIN: 'min'>: 0,
       <NumberEntityCapabilityAttribute.MODE: 'mode'>: <NumberMode.AUTO: 'auto'>,
       <NumberEntityCapabilityAttribute.STEP: 'step'>: 1,
-      'unit_of_measurement': '%',
+      <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: '%',
     }),
     'context': <ANY>,
     'entity_id': 'number.ohme_home_pro_state_of_charge_input',
@@ -164,12 +164,12 @@
 # name: test_numbers[number.ohme_home_pro_target_percentage-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'Ohme Home Pro Target percentage',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Ohme Home Pro Target percentage',
       <NumberEntityCapabilityAttribute.MAX: 'max'>: 100,
       <NumberEntityCapabilityAttribute.MIN: 'min'>: 0,
       <NumberEntityCapabilityAttribute.MODE: 'mode'>: <NumberMode.AUTO: 'auto'>,
       <NumberEntityCapabilityAttribute.STEP: 'step'>: 1,
-      'unit_of_measurement': '%',
+      <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: '%',
     }),
     'context': <ANY>,
     'entity_id': 'number.ohme_home_pro_target_percentage',

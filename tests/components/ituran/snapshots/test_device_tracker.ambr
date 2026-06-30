@@ -41,7 +41,7 @@
 # name: test_device_tracker[device_tracker.mock_model-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'mock model',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'mock model',
       <TrackerEntityStateAttribute.GPS_ACCURACY: 'gps_accuracy'>: 0,
       <DeviceTrackerEntityStateAttribute.IN_ZONES: 'in_zones'>: list([
       ]),

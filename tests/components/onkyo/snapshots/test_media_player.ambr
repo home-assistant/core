@@ -51,7 +51,7 @@
       'audio_information': dict({
         'auto_phase_control_phase': 'Normal',
       }),
-      'friendly_name': 'TX-NR7100',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'TX-NR7100',
       <MediaPlayerEntityStateAttribute.MEDIA_VOLUME_MUTED: 'is_volume_muted'>: False,
       'preset': 1,
       <MediaPlayerEntityStateAttribute.SOUND_MODE: 'sound_mode'>: 'DIRECT',
@@ -64,7 +64,7 @@
         'TV',
         'FM Radio',
       ]),
-      'supported_features': <MediaPlayerEntityFeature: 69516>,
+      <EntityStateAttribute.SUPPORTED_FEATURES: 'supported_features'>: <MediaPlayerEntityFeature: 69516>,
       'video_information': dict({
         'input_color_depth': '24bit',
       }),
@@ -126,7 +126,7 @@
 # name: test_entities[media_player.tx_nr7100_zone_2-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'TX-NR7100 Zone 2',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'TX-NR7100 Zone 2',
       <MediaPlayerEntityStateAttribute.SOUND_MODE: 'sound_mode'>: 'Stereo',
       <MediaPlayerEntityCapabilityAttribute.SOUND_MODE_LIST: 'sound_mode_list'>: list([
         'Stereo',
@@ -136,7 +136,7 @@
         'TV',
         'FM Radio',
       ]),
-      'supported_features': <MediaPlayerEntityFeature: 69516>,
+      <EntityStateAttribute.SUPPORTED_FEATURES: 'supported_features'>: <MediaPlayerEntityFeature: 69516>,
       <MediaPlayerEntityStateAttribute.MEDIA_VOLUME_LEVEL: 'volume_level'>: 0.625,
     }),
     'context': <ANY>,
@@ -192,12 +192,12 @@
 # name: test_entities[media_player.tx_nr7100_zone_3-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'TX-NR7100 Zone 3',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'TX-NR7100 Zone 3',
       <MediaPlayerEntityCapabilityAttribute.INPUT_SOURCE_LIST: 'source_list'>: list([
         'TV',
         'FM Radio',
       ]),
-      'supported_features': <MediaPlayerEntityFeature: 2944>,
+      <EntityStateAttribute.SUPPORTED_FEATURES: 'supported_features'>: <MediaPlayerEntityFeature: 2944>,
     }),
     'context': <ANY>,
     'entity_id': 'media_player.tx_nr7100_zone_3',

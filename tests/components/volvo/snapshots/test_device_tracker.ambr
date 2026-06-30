@@ -41,7 +41,7 @@
 # name: test_device_tracker[ex30_2024][device_tracker.volvo_ex30_location-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'Volvo EX30 Location',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Volvo EX30 Location',
       <TrackerEntityStateAttribute.GPS_ACCURACY: 'gps_accuracy'>: 0,
       <DeviceTrackerEntityStateAttribute.IN_ZONES: 'in_zones'>: list([
       ]),
@@ -100,7 +100,7 @@
 # name: test_device_tracker[s90_diesel_2018][device_tracker.volvo_s90_location-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'Volvo S90 Location',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Volvo S90 Location',
       <TrackerEntityStateAttribute.GPS_ACCURACY: 'gps_accuracy'>: 0,
       <DeviceTrackerEntityStateAttribute.IN_ZONES: 'in_zones'>: list([
       ]),
@@ -159,7 +159,7 @@
 # name: test_device_tracker[xc40_electric_2024][device_tracker.volvo_xc40_location-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'Volvo XC40 Location',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Volvo XC40 Location',
       <TrackerEntityStateAttribute.GPS_ACCURACY: 'gps_accuracy'>: 0,
       <DeviceTrackerEntityStateAttribute.IN_ZONES: 'in_zones'>: list([
       ]),
@@ -218,7 +218,7 @@
 # name: test_device_tracker[xc90_petrol_2019][device_tracker.volvo_xc90_location-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'Volvo XC90 Location',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Volvo XC90 Location',
       <TrackerEntityStateAttribute.GPS_ACCURACY: 'gps_accuracy'>: 0,
       <DeviceTrackerEntityStateAttribute.IN_ZONES: 'in_zones'>: list([
       ]),

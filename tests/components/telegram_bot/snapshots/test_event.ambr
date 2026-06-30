@@ -16,7 +16,7 @@
       'telegram_text',
       'telegram_sent',
     ]),
-    'friendly_name': 'Mock Title Update event',
+    <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Mock Title Update event',
     'message_id': 12345,
   })
 # ---
