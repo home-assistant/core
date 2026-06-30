@@ -44,6 +44,6 @@ async def test_coordinator_client_error(
                 )
             ),
         ),
-        pytest.raises(UpdateFailed, match="update_failed"),
+        pytest.raises(UpdateFailed, match="Error communicating with Gatus API"),
     ):
         await coordinator._async_update_data()
