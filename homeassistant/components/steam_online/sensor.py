@@ -20,7 +20,7 @@ from .const import (
     STEAM_STATUSES,
     SUBENTRY_TYPE_FRIEND,
 )
-from .coordinator import PlayerData, SteamConfigEntry, SteamDataUpdateCoordinator
+from .coordinator import PlayerData, SteamConfigEntry
 from .entity import SteamEntity
 
 PARALLEL_UPDATES = 1
@@ -81,15 +81,6 @@ class SteamSensorEntity(SteamEntity, SensorEntity):
     """Representation of a Steam sensor entity."""
 
     entity_description: SteamSensorEntityDescription
-
-    def __init__(
-        self,
-        coordinator: SteamDataUpdateCoordinator,
-        steamid: str,
-        description: SteamSensorEntityDescription,
-    ) -> None:
-        """Initialize the sensor."""
-        super().__init__(coordinator, steamid, description)
 
     @property
     @override
