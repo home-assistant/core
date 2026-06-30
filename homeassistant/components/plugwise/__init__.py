@@ -2,7 +2,7 @@
 
 from typing import Any
 
-from homeassistant.const import Platform
+from homeassistant.const import ATTR_NAME, Platform
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers import device_registry as dr, entity_registry as er
 
@@ -16,7 +16,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: PlugwiseConfigEntry) -> 
 
     coordinator = PlugwiseDataUpdateCoordinator(hass, entry)
     await coordinator.async_config_entry_first_refresh()
-    migrate_sensor_entities(hass, coordinator)
+    async_migrate_entities(hass, coordinator)
 
     entry.runtime_data = coordinator
 
@@ -69,19 +69,19 @@ def async_migrate_entity_entry(entry: er.RegistryEntry) -> dict[str, Any] | None
     return None
 
 
-def migrate_sensor_entities(
+async def async_migrate_entities(
     hass: HomeAssistant,
     coordinator: PlugwiseDataUpdateCoordinator,
 ) -> None:
-    """Migrate Sensors if needed."""
+    """Migrate entities if needed."""
     ent_reg = er.async_get(hass)
 
-    # Migrating opentherm_outdoor_temperature
-    # to opentherm_outdoor_air_temperature sensor
     for device_id, device in coordinator.data.items():
-        if device[DEV_CLASS] != "heater_central":
+        if device[DEV_CLASS]  not in ("climate", "heater_central"):
             continue
 
+        # Migrating opentherm_outdoor_temperature
+        # to opentherm_outdoor_air_temperature sensor
         old_unique_id = f"{device_id}-outdoor_temperature"
         if entity_id := ent_reg.async_get_entity_id(
             Platform.SENSOR, DOMAIN, old_unique_id
@@ -93,4 +93,13 @@ def migrate_sensor_entities(
                 old_unique_id,
                 new_unique_id,
             )
+            ent_reg.async_update_entity(entity_id, new_unique_id=new_unique_id)
+
+        # Migrate id-climate to id-device-name
+        old_unique_id = f"{device_id}-climate"
+        if entity_id := ent_reg.async_get_entity_id(
+            Platform.CLIMATE, DOMAIN, old_unique_id
+        ):
+            new_unique_id = f"{device_id}-{device[ATTR_NAME]}".lower()
+            # Upstream remove LOGGER debug
             ent_reg.async_update_entity(entity_id, new_unique_id=new_unique_id)
