@@ -1,5 +1,7 @@
 """Update coordinator for HomeWizard."""
 
+from typing import override
+
 from homewizard_energy import HomeWizardEnergy
 from homewizard_energy.errors import DisabledError, RequestError, UnauthorizedError
 from homewizard_energy.models import Batteries, CombinedModels as DeviceResponseEntry
@@ -73,15 +75,15 @@ class HWEnergyDeviceUpdateCoordinator(DataUpdateCoordinator[DeviceResponseEntry]
         elif not battery_mode_cloud_issue_active and issue_exists:
             ir.async_delete_issue(self.hass, DOMAIN, issue_id)
 
+    @override
     async def _async_update_data(self) -> DeviceResponseEntry:
         """Fetch all device and sensor data from api."""
         try:
             data = await self.api.combined()
 
         except RequestError as ex:
-            # pylint: disable-next=home-assistant-exception-message-with-translation
             raise UpdateFailed(
-                ex, translation_domain=DOMAIN, translation_key="communication_error"
+                translation_domain=DOMAIN, translation_key="communication_error"
             ) from ex
 
         except DisabledError as ex:
@@ -96,9 +98,8 @@ class HWEnergyDeviceUpdateCoordinator(DataUpdateCoordinator[DeviceResponseEntry]
                         self.config_entry.entry_id
                     )
 
-            # pylint: disable-next=home-assistant-exception-message-with-translation
             raise UpdateFailed(
-                ex, translation_domain=DOMAIN, translation_key="api_disabled"
+                translation_domain=DOMAIN, translation_key="api_disabled"
             ) from ex
 
         except UnauthorizedError as ex:

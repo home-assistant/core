@@ -74,6 +74,9 @@ async def test_device_setup_network_timeout(hass: HomeAssistant) -> None:
         mock_setup = await device.setup_entry(hass, mock_api=mock_api)
 
     assert mock_setup.entry.state is ConfigEntryState.SETUP_RETRY
+    assert (
+        mock_setup.entry.reason == "Failed to connect to the device at 192.168.0.13: "
+    )
     assert mock_setup.api.auth.call_count == 1
     assert mock_forward.call_count == 0
     assert mock_init.call_count == 0
@@ -92,6 +95,9 @@ async def test_device_setup_os_error(hass: HomeAssistant) -> None:
         mock_setup = await device.setup_entry(hass, mock_api=mock_api)
 
     assert mock_setup.entry.state is ConfigEntryState.SETUP_RETRY
+    assert (
+        mock_setup.entry.reason == "Failed to connect to the device at 192.168.0.13: "
+    )
     assert mock_setup.api.auth.call_count == 1
     assert mock_forward.call_count == 0
     assert mock_init.call_count == 0

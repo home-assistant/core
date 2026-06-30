@@ -1,21 +1,30 @@
 """Test the Litter-Robot switch entity."""
 
-from unittest.mock import MagicMock
+from unittest.mock import MagicMock, patch
 
 from pylitterbot import FeederRobot, Robot
 import pytest
+from syrupy.assertion import SnapshotAssertion
 
 from homeassistant.components.switch import (
     DOMAIN as SWITCH_DOMAIN,
     SERVICE_TURN_OFF,
     SERVICE_TURN_ON,
 )
-from homeassistant.const import ATTR_ENTITY_ID, STATE_OFF, STATE_ON, EntityCategory
+from homeassistant.const import (
+    ATTR_ENTITY_ID,
+    STATE_OFF,
+    STATE_ON,
+    EntityCategory,
+    Platform,
+)
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import entity_registry as er
 
 from .conftest import setup_integration
+
+from tests.common import snapshot_platform
 
 NIGHT_LIGHT_MODE_ENTITY_ID = "switch.test_night_light_mode"
 PANEL_LOCKOUT_ENTITY_ID = "switch.test_panel_lockout"
@@ -104,5 +113,89 @@ async def test_switch_command_exception(
             SWITCH_DOMAIN,
             SERVICE_TURN_ON,
             {ATTR_ENTITY_ID: NIGHT_LIGHT_MODE_ENTITY_ID},
+            blocking=True,
+        )
+
+
+@pytest.mark.usefixtures("entity_registry_enabled_by_default")
+async def test_litter_robot_5_all_entities(
+    hass: HomeAssistant,
+    snapshot: SnapshotAssertion,
+    mock_account_with_litterrobot_5: MagicMock,
+    entity_registry: er.EntityRegistry,
+) -> None:
+    """Test the Litter-Robot 5 switch entities."""
+    with patch("homeassistant.components.litterrobot.PLATFORMS", [Platform.SWITCH]):
+        entry = await setup_integration(hass, mock_account_with_litterrobot_5)
+
+    await snapshot_platform(hass, entity_registry, snapshot, entry.entry_id)
+
+
+@pytest.mark.usefixtures("entity_registry_enabled_by_default")
+@pytest.mark.parametrize(
+    ("entity_id", "state", "service", "expected_value", "expected_day"),
+    [
+        pytest.param(
+            "switch.test_sunday_sleep_mode",
+            STATE_ON,
+            SERVICE_TURN_OFF,
+            False,
+            0,
+            id="sunday_turn_off",
+        ),
+        pytest.param(
+            "switch.test_friday_sleep_mode",
+            STATE_OFF,
+            SERVICE_TURN_ON,
+            True,
+            5,
+            id="friday_turn_on",
+        ),
+    ],
+)
+async def test_litter_robot_5_sleep_mode_switches(
+    hass: HomeAssistant,
+    mock_account_with_litterrobot_5: MagicMock,
+    entity_id: str,
+    state: str,
+    service: str,
+    expected_value: bool,
+    expected_day: int,
+) -> None:
+    """Tests the Litter-Robot 5 per-day sleep mode switches."""
+    await setup_integration(hass, mock_account_with_litterrobot_5, SWITCH_DOMAIN)
+
+    entity = hass.states.get(entity_id)
+    assert entity
+    assert entity.state == state
+
+    robot = mock_account_with_litterrobot_5.robots[0]
+    await hass.services.async_call(
+        SWITCH_DOMAIN,
+        service,
+        {ATTR_ENTITY_ID: entity_id},
+        blocking=True,
+    )
+    robot.set_sleep_mode.assert_awaited_once_with(
+        expected_value, day_of_week=expected_day
+    )
+
+
+@pytest.mark.usefixtures("entity_registry_enabled_by_default")
+async def test_litter_robot_5_sleep_mode_switch_failed(
+    hass: HomeAssistant,
+    mock_account_with_litterrobot_5: MagicMock,
+) -> None:
+    """Test that a rejected sleep mode update raises HomeAssistantError."""
+    await setup_integration(hass, mock_account_with_litterrobot_5, SWITCH_DOMAIN)
+
+    robot = mock_account_with_litterrobot_5.robots[0]
+    robot.set_sleep_mode.return_value = False
+
+    with pytest.raises(HomeAssistantError, match="Unable to update"):
+        await hass.services.async_call(
+            SWITCH_DOMAIN,
+            SERVICE_TURN_ON,
+            {ATTR_ENTITY_ID: "switch.test_friday_sleep_mode"},
             blocking=True,
         )

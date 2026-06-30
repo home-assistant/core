@@ -1,5 +1,7 @@
 """sensor integration microBees."""
 
+from typing import override
+
 from microBeesPy import Sensor
 
 from homeassistant.components.sensor import (
@@ -94,11 +96,13 @@ class MBSensor(MicroBeesEntity, SensorEntity):
         self.entity_description = entity_description
 
     @property
+    @override
     def name(self) -> str:
         """Name of the sensor."""
         return self.sensor.name
 
     @property
+    @override
     def native_value(self) -> float | None:
         """Return the state of the sensor."""
         return self.sensor.value

@@ -2,6 +2,7 @@
 
 from datetime import timedelta
 import logging
+from typing import override
 
 from airthings_ble import AirthingsBluetoothDeviceData, AirthingsDevice
 from bleak.backends.device import BLEDevice
@@ -52,6 +53,7 @@ class AirthingsBLEDataUpdateCoordinator(DataUpdateCoordinator[AirthingsDevice]):
             update_interval=timedelta(seconds=interval),
         )
 
+    @override
     async def _async_setup(self) -> None:
         """Set up the coordinator."""
         address = self.config_entry.unique_id
@@ -96,6 +98,7 @@ class AirthingsBLEDataUpdateCoordinator(DataUpdateCoordinator[AirthingsDevice]):
                 )
             )
 
+    @override
     async def _async_update_data(self) -> AirthingsDevice:
         """Get data from Airthings BLE."""
         try:

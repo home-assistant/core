@@ -7,7 +7,7 @@ from homeassistant.helpers.trigger import Trigger, make_entity_target_state_trig
 from .const import DOMAIN
 
 TRIGGERS: dict[str, type[Trigger]] = {
-    "update_became_available": make_entity_target_state_trigger(DOMAIN, STATE_ON),
+    "became_available": make_entity_target_state_trigger(DOMAIN, STATE_ON),
 }
 
 

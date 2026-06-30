@@ -5,7 +5,7 @@ rules:
     comment: This integration does not register custom service actions.
   appropriate-polling:
     status: done
-    comment: 5 minute interval. MQTT carries live state; polling is what surfaces the online -> offline transition since the broker doesn't push disconnect events.
+    comment: Live state is pushed over MQTT; the coordinator polls REST every 5 min only for the device roster and player config (firmware, day/night times).
   brands: done
   common-modules: done
   config-flow-test-coverage: done
@@ -14,9 +14,15 @@ rules:
   docs-actions:
     status: exempt
     comment: This integration does not register custom service actions.
+  docs-conditions:
+    status: exempt
+    comment: This integration does not have any conditions.
   docs-high-level-description: done
   docs-installation-instructions: done
   docs-removal-instructions: done
+  docs-triggers:
+    status: exempt
+    comment: This integration does not have any triggers.
   entity-event-setup:
     status: exempt
     comment: Real-time updates are dispatched through the coordinator, not via per-entity event subscriptions.
@@ -40,46 +46,41 @@ rules:
   integration-owner: done
   log-when-unavailable: done
   parallel-updates: done
-  reauthentication-flow: todo
+  reauthentication-flow: done
   test-coverage: done
 
   # Gold
   devices: done
-  diagnostics: todo
+  diagnostics: done
   discovery-update-info:
     status: exempt
-    comment: The integration supports local DHCP discovery (via hostname pattern), but does not implement a separate discovery update handling flow.
-  docs-data-update: todo
-  docs-examples: todo
-  docs-known-limitations: todo
-  docs-supported-devices: todo
-  docs-supported-functions: todo
-  docs-troubleshooting: todo
-  docs-use-cases: todo
-  dynamic-devices: todo
-  entity-category:
-    status: exempt
-    comment: Only the media_player entity ships in this PR; no diagnostic entities yet.
+    comment: Cloud connection; DHCP discovery only triggers setup, no network address is persisted to update.
+  discovery: done
+  docs-data-update: done
+  docs-examples: done
+  docs-known-limitations: done
+  docs-supported-devices: done
+  docs-supported-functions: done
+  docs-troubleshooting: done
+  docs-use-cases: done
+  dynamic-devices: done
+  entity-category: done
   entity-device-class: done
   entity-disabled-by-default:
     status: exempt
-    comment: Only the media_player entity ships in this PR; no entities are disabled by default.
-  entity-translations:
-    status: exempt
-    comment: The media_player uses the device name; no translatable strings yet.
+    comment: No noisy or less popular entities; nothing is disabled by default.
+  entity-translations: done
   exception-translations: done
-  icon-translations:
-    status: exempt
-    comment: No custom icon translations are needed yet.
+  icon-translations: done
   reconfiguration-flow:
     status: exempt
     comment: Authorization is the only configuration; reauth covers re-linking the account.
   repair-issues:
     status: exempt
-    comment: No repair issues are raised yet.
-  stale-devices: todo
+    comment: Auth failures go through the reauth flow; other errors are transient and retried by the coordinator.
+  stale-devices: done
 
   # Platinum
   async-dependency: done
   inject-websession: done
-  strict-typing: todo
+  strict-typing: done

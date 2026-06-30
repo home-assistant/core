@@ -2,6 +2,7 @@
 
 from collections.abc import Callable
 from dataclasses import dataclass
+from typing import override
 
 from aioaquarite import AquariteError
 
@@ -218,6 +219,7 @@ class VistapoolNumber(VistapoolEntity, NumberEntity):
         self._attr_unique_id = self.build_unique_id(description.key)
 
     @property
+    @override
     def native_max_value(self) -> float:
         """Return the max value, recomputed from coordinator data when applicable."""
         if (fn := self.entity_description.max_value_fn) is not None:
@@ -225,6 +227,7 @@ class VistapoolNumber(VistapoolEntity, NumberEntity):
         return super().native_max_value
 
     @property
+    @override
     def native_value(self) -> float | None:
         """Return the scaled current value."""
         raw = self.coordinator.get_value(self.entity_description.value_path)
@@ -236,6 +239,7 @@ class VistapoolNumber(VistapoolEntity, NumberEntity):
             return None
         return value / self.entity_description.scale
 
+    @override
     async def async_set_native_value(self, value: float) -> None:
         """Send the de-scaled value to the controller."""
         raw = round(value * self.entity_description.scale)
@@ -251,3 +255,4 @@ class VistapoolNumber(VistapoolEntity, NumberEntity):
                 translation_key="set_failed",
                 translation_placeholders={"entity": self.entity_id},
             ) from err
+        self.coordinator.apply_optimistic(self.entity_description.value_path, raw)

@@ -2,7 +2,7 @@
 
 from collections.abc import Callable
 from dataclasses import dataclass
-from typing import Any
+from typing import Any, override
 
 from homeassistant.components.sensor import (
     SensorDeviceClass,
@@ -151,6 +151,7 @@ class VenstarSensor(VenstarEntity, SensorEntity):
         self._config = config
 
     @property
+    @override
     def unique_id(self):
         """Return the unique id."""
         return (
@@ -160,11 +161,13 @@ class VenstarSensor(VenstarEntity, SensorEntity):
         )
 
     @property
+    @override
     def native_value(self) -> int:
         """Return state of the sensor."""
         return self.entity_description.value_fn(self.coordinator, self.sensor_name)
 
     @property
+    @override
     def native_unit_of_measurement(self) -> str | None:
         """Return unit of measurement the value is expressed in."""
         return self.entity_description.uom_fn(self.coordinator)

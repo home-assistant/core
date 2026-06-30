@@ -82,10 +82,8 @@ async def test_number_set_values(
     # Reset mock call count for this iteration
     mock_indevolt.set_data.reset_mock()
 
-    # Update mock data to reflect the new value
-    mock_indevolt.fetch_data.return_value[read_key] = test_value
-
     # Call the service to set the value
+    fetch_count_before = mock_indevolt.fetch_data.call_count
     await hass.services.async_call(
         NUMBER_DOMAIN,
         SERVICE_SET_VALUE,
@@ -96,7 +94,8 @@ async def test_number_set_values(
     # Verify set_data was called with correct parameters
     mock_indevolt.set_data.assert_called_with(write_key, test_value)
 
-    # Verify updated state
+    # Verify state updated optimistically without a new fetch
+    assert mock_indevolt.fetch_data.call_count == fetch_count_before
     assert (state := hass.states.get(entity_id)) is not None
     assert int(float(state.state)) == test_value
 

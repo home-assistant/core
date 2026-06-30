@@ -3,7 +3,7 @@
 from collections.abc import Callable
 from dataclasses import dataclass
 from datetime import datetime
-from typing import Any, Generic
+from typing import Any, Generic, override
 
 from pylitterbot import FeederRobot, LitterRobot, LitterRobot4, LitterRobot5, Pet, Robot
 
@@ -166,6 +166,22 @@ ROBOT_SENSOR_MAP: dict[
             value_fn=lambda robot: robot.pet_weight,
         ),
     ],
+    LitterRobot5: [
+        RobotSensorEntityDescription[LitterRobot5](
+            key="scoops_saved_count",
+            translation_key="scoops_saved_count",
+            entity_category=EntityCategory.DIAGNOSTIC,
+            state_class=SensorStateClass.TOTAL_INCREASING,
+            value_fn=lambda robot: robot.scoops_saved_count,
+        ),
+        RobotSensorEntityDescription[LitterRobot5](
+            key="next_filter_replacement",
+            translation_key="next_filter_replacement",
+            device_class=SensorDeviceClass.TIMESTAMP,
+            entity_category=EntityCategory.DIAGNOSTIC,
+            value_fn=lambda robot: robot.next_filter_replacement_date,
+        ),
+    ],
     FeederRobot: [
         RobotSensorEntityDescription[FeederRobot](
             key="food_dispensed_today",
@@ -279,11 +295,13 @@ class LitterRobotSensorEntity(LitterRobotEntity[_WhiskerEntityT], SensorEntity):
     entity_description: RobotSensorEntityDescription[_WhiskerEntityT]
 
     @property
+    @override
     def native_value(self) -> float | datetime | str | None:
         """Return the state."""
         return self.entity_description.value_fn(self.robot)
 
     @property
+    @override
     def icon(self) -> str | None:
         """Return the icon to use in the frontend, if any."""
         if (icon := self.entity_description.icon_fn(self.state)) is not None:
@@ -291,6 +309,7 @@ class LitterRobotSensorEntity(LitterRobotEntity[_WhiskerEntityT], SensorEntity):
         return super().icon
 
     @property
+    @override
     def last_reset(self) -> datetime | None:
         """Return the time when the sensor was last reset, if any."""
         return self.entity_description.last_reset_fn() or super().last_reset

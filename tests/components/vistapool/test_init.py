@@ -264,6 +264,26 @@ async def test_remove_config_entry_device(
     )
 
 
+async def test_apply_optimistic_creates_missing_intermediate_dicts(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    mock_vistapool_client: AsyncMock,
+) -> None:
+    """Test apply_optimistic walks through and creates missing intermediate dicts."""
+    mock_vistapool_client.fetch_pool_data.return_value = {"existing": "scalar"}
+    mock_config_entry.add_to_hass(hass)
+
+    assert await hass.config_entries.async_setup(mock_config_entry.entry_id)
+    await hass.async_block_till_done()
+
+    coordinator = next(iter(mock_config_entry.runtime_data.coordinators.values()))
+    coordinator.apply_optimistic("filtration.intel.temp", 27)
+    coordinator.apply_optimistic("existing.nested.key", 1)
+
+    assert coordinator.data["filtration"]["intel"]["temp"] == 27
+    assert coordinator.data["existing"] == {"nested": {"key": 1}}
+
+
 async def test_unload_entry(
     hass: HomeAssistant,
     mock_config_entry: MockConfigEntry,

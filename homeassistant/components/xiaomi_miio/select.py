@@ -2,7 +2,7 @@
 
 from dataclasses import dataclass, field
 import logging
-from typing import Any, NamedTuple
+from typing import Any, NamedTuple, override
 
 from miio import Device as MiioDevice
 from miio.fan_common import LedBrightness as FanLedBrightness
@@ -149,7 +149,6 @@ SELECTOR_TYPES = (
     XiaomiMiioSelectDescription(
         key=ATTR_DISPLAY_ORIENTATION,
         attr_name=ATTR_DISPLAY_ORIENTATION,
-        name="Display Orientation",
         options_map={
             "Portrait": "Forward",
             "LandscapeLeft": "Left",
@@ -165,7 +164,6 @@ SELECTOR_TYPES = (
     XiaomiMiioSelectDescription(
         key=ATTR_MODE,
         attr_name=ATTR_MODE,
-        name="Mode",
         set_method="set_mode",
         set_method_error_message="Setting the mode of the fan failed.",
         icon="mdi:fan",
@@ -176,7 +174,6 @@ SELECTOR_TYPES = (
     XiaomiMiioSelectDescription(
         key=ATTR_LED_BRIGHTNESS,
         attr_name=ATTR_LED_BRIGHTNESS,
-        name="Led Brightness",
         set_method="set_led_brightness",
         set_method_error_message="Setting the led brightness failed.",
         icon="mdi:brightness-6",
@@ -187,7 +184,6 @@ SELECTOR_TYPES = (
     XiaomiMiioSelectDescription(
         key=ATTR_PTC_LEVEL,
         attr_name=ATTR_PTC_LEVEL,
-        name="Auxiliary Heat Level",
         set_method="set_ptc_level",
         set_method_error_message="Setting the ptc level failed.",
         icon="mdi:fire-circle",
@@ -281,6 +277,7 @@ class XiaomiGenericSelector(XiaomiSelector):
         self._enum_class = enum_class
 
     @callback
+    @override
     def _handle_coordinator_update(self):
         """Fetch state from the device."""
         try:
@@ -299,6 +296,7 @@ class XiaomiGenericSelector(XiaomiSelector):
             self.async_write_ha_state()
 
     @property
+    @override
     def current_option(self) -> str | None:
         """Return the current option."""
         option = self._reverse_map.get(self._current_attr)
@@ -306,6 +304,7 @@ class XiaomiGenericSelector(XiaomiSelector):
             return option.lower()
         return None
 
+    @override
     async def async_select_option(self, option: str) -> None:
         """Set an option of the miio device."""
         await self.async_set_attr(option.title())

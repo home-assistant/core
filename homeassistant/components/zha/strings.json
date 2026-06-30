@@ -407,6 +407,9 @@
       "reset_alarm": {
         "name": "Reset alarm"
       },
+      "reset_energy": {
+        "name": "Reset energy"
+      },
       "reset_frost_lock": {
         "name": "Frost lock reset"
       },
@@ -1387,6 +1390,12 @@
       "status_indication": {
         "name": "Status indication"
       },
+      "switch_action_l1": {
+        "name": "Switch action L1"
+      },
+      "switch_action_l2": {
+        "name": "Switch action L2"
+      },
       "switch_actions": {
         "name": "Switch actions"
       },
@@ -1398,6 +1407,12 @@
       },
       "switch_type": {
         "name": "Switch type"
+      },
+      "switch_type_l1": {
+        "name": "Switch type L1"
+      },
+      "switch_type_l2": {
+        "name": "Switch type L2"
       },
       "temperature_display_mode": {
         "name": "Temperature display mode"

@@ -1,5 +1,7 @@
 """Support for Verizon FiOS Quantum Gateways."""
 
+from typing import override
+
 from quantum_gateway import QuantumGatewayScanner
 from requests.exceptions import RequestException
 import voluptuous as vol
@@ -57,6 +59,7 @@ class QuantumGatewayDeviceScanner(DeviceScanner):
         if not self.success_init:
             LOGGER.error("Unable to login to gateway. Check password and host")
 
+    @override
     def scan_devices(self):
         """Scan for new devices and return a list of found MACs."""
         connected_devices = []
@@ -66,6 +69,7 @@ class QuantumGatewayDeviceScanner(DeviceScanner):
             LOGGER.error("Unable to scan devices. Check connection to router")
         return connected_devices
 
+    @override
     def get_device_name(self, device):
         """Return the name of the given device or None if we don't know."""
         return self.quantum.get_device_name(device)

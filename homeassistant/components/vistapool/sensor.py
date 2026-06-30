@@ -2,7 +2,7 @@
 
 from collections.abc import Callable
 from dataclasses import dataclass
-from typing import Any
+from typing import Any, override
 
 from homeassistant.components.sensor import (
     SensorDeviceClass,
@@ -198,6 +198,7 @@ class VistapoolSensorEntity(VistapoolEntity, SensorEntity):
         self._attr_unique_id = self.build_unique_id(description.key)
 
     @property
+    @override
     def native_value(self) -> float | int | None:
         """Return the sensor value, transformed by the description's value_fn."""
         value = self.coordinator.get_value(self.entity_description.value_path)

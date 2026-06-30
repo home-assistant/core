@@ -54,6 +54,7 @@ def shutterbox_fixture():
         state=None,
         has_stop=True,
         has_tilt=True,
+        is_calibrated=True,
         is_slider=True,
         is_position_inverted=True,
         cover_type=None,
@@ -62,7 +63,7 @@ def shutterbox_fixture():
     product = feature.product
     type(product).name = PropertyMock(return_value="My shutter")
     type(product).model = PropertyMock(return_value="shutterBox")
-    return (feature, "cover.my_shutter_shutterbox_position")
+    return (feature, "cover.my_shutter")
 
 
 @pytest.fixture(name="gatebox")
@@ -85,7 +86,7 @@ def gatebox_fixture():
     product = feature.product
     type(product).name = PropertyMock(return_value="My gatebox")
     type(product).model = PropertyMock(return_value="gateBox")
-    return (feature, "cover.my_gatebox_gatebox_position")
+    return (feature, "cover.my_gatebox")
 
 
 @pytest.fixture(name="gatecontroller")
@@ -108,7 +109,7 @@ def gate_fixture():
     product = feature.product
     type(product).name = PropertyMock(return_value="My gate controller")
     type(product).model = PropertyMock(return_value="gateController")
-    return (feature, "cover.my_gate_controller_gatecontroller_position")
+    return (feature, "cover.my_gate_controller")
 
 
 async def test_init_gatecontroller(
@@ -121,7 +122,7 @@ async def test_init_gatecontroller(
     assert entry.unique_id == "BleBox-gateController-2bee34e750b8-position"
 
     state = hass.states.get(entity_id)
-    assert state.name == "My gate controller gateController-position"
+    assert state.name == "My gate controller"
     assert state.attributes[ATTR_DEVICE_CLASS] == CoverDeviceClass.GATE
 
     supported_features = state.attributes[ATTR_SUPPORTED_FEATURES]
@@ -152,7 +153,7 @@ async def test_init_shutterbox(
     assert entry.unique_id == "BleBox-shutterBox-2bee34e750b8-position"
 
     state = hass.states.get(entity_id)
-    assert state.name == "My shutter shutterBox-position"
+    assert state.name == "My shutter"
     assert entry.original_device_class == CoverDeviceClass.SHUTTER
 
     supported_features = state.attributes[ATTR_SUPPORTED_FEATURES]
@@ -183,7 +184,7 @@ async def test_init_gatebox(
     assert entry.unique_id == "BleBox-gateBox-1afe34db9437-position"
 
     state = hass.states.get(entity_id)
-    assert state.name == "My gatebox gateBox-position"
+    assert state.name == "My gatebox"
     assert state.attributes[ATTR_DEVICE_CLASS] == CoverDeviceClass.DOOR
 
     supported_features = state.attributes[ATTR_SUPPORTED_FEATURES]
@@ -247,7 +248,7 @@ async def test_device_class_from_unified_cover_type(
     type(product).name = PropertyMock(return_value="My shutter")
     type(product).model = PropertyMock(return_value="shutterBox")
 
-    entity_id = "cover.my_shutter_shutterbox_position"
+    entity_id = "cover.my_shutter"
     entry = await async_setup_entity(hass, entity_id)
     assert entry.original_device_class == expected_device_class
 
@@ -450,6 +451,21 @@ async def test_tilt_with_position_supported_features(
     assert supported_features & CoverEntityFeature.OPEN_TILT
     assert supported_features & CoverEntityFeature.CLOSE_TILT
     assert supported_features & CoverEntityFeature.SET_TILT_POSITION
+
+
+async def test_tilt_not_calibrated_no_set_tilt_position(
+    shutterbox, hass: HomeAssistant
+) -> None:
+    """Test that SET_TILT_POSITION is absent when tilt is present but not calibrated."""
+    feature_mock, entity_id = shutterbox
+    feature_mock.is_calibrated = False
+
+    await async_setup_entity(hass, entity_id)
+
+    supported_features = hass.states.get(entity_id).attributes[ATTR_SUPPORTED_FEATURES]
+    assert supported_features & CoverEntityFeature.OPEN_TILT
+    assert supported_features & CoverEntityFeature.CLOSE_TILT
+    assert not supported_features & CoverEntityFeature.SET_TILT_POSITION
 
 
 @pytest.mark.parametrize("feature", ALL_COVER_FIXTURES, indirect=["feature"])
