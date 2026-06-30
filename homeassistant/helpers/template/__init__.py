@@ -1,44 +1,35 @@
 """Template helper methods for rendering strings with Home Assistant data."""
 
-from __future__ import annotations
-
 from ast import literal_eval
 import asyncio
 import collections.abc
-from collections.abc import Callable, Iterable
+from collections.abc import Callable
+import contextlib
 from datetime import timedelta
-from functools import lru_cache, partial, wraps
+from functools import lru_cache, partial
 import logging
 import pathlib
 import re
 import sys
 from types import CodeType
-from typing import TYPE_CHECKING, Any, Concatenate, Literal, NoReturn, Self, overload
+from typing import TYPE_CHECKING, Any, Literal, Self, overload, override
 import weakref
 
 import jinja2
-from jinja2 import pass_context, pass_eval_context
 from jinja2.runtime import AsyncLoopContext, LoopContext
 from jinja2.sandbox import ImmutableSandboxedEnvironment
 from jinja2.utils import Namespace
 
-from homeassistant.const import (
-    ATTR_ENTITY_ID,
-    ATTR_LATITUDE,
-    ATTR_LONGITUDE,
-    ATTR_PERSONS,
-    EVENT_HOMEASSISTANT_START,
-    EVENT_HOMEASSISTANT_STOP,
-    STATE_UNAVAILABLE,
-    STATE_UNKNOWN,
-    UnitOfLength,
-)
-from homeassistant.core import HomeAssistant, State, callback, valid_entity_id
+from homeassistant.const import EVENT_HOMEASSISTANT_START, EVENT_HOMEASSISTANT_STOP
+from homeassistant.core import HomeAssistant, callback
 from homeassistant.exceptions import TemplateError
-from homeassistant.helpers import location as loc_helper
 from homeassistant.helpers.singleton import singleton
+from homeassistant.helpers.trace import (
+    suppress_template_error_logging_cv,
+    trace_stack_cv,
+    trace_stack_top,
+)
 from homeassistant.helpers.typing import TemplateVarsType
-from homeassistant.util import convert, location as location_util
 from homeassistant.util.async_ import run_callback_threadsafe
 from homeassistant.util.hass_dict import HassKey
 from homeassistant.util.json import JSON_DECODE_EXCEPTIONS, json_loads
@@ -49,6 +40,27 @@ from .context import (
     render_with_context,
     template_context_manager,
     template_cv,
+)
+from .extensions import (
+    AreaExtension,
+    Base64Extension,
+    CollectionExtension,
+    ConfigEntryExtension,
+    CryptoExtension,
+    DateTimeExtension,
+    DeviceExtension,
+    EntityExtension,
+    FloorExtension,
+    FunctionalExtension,
+    IssuesExtension,
+    LabelExtension,
+    MathExtension,
+    RegexExtension,
+    SerializationExtension,
+    StateExtension,
+    StringExtension,
+    TypeCastExtension,
+    VersionExtension,
 )
 from .helpers import result_as_boolean as result_as_boolean
 from .render_info import RenderInfo, render_info_cv
@@ -62,9 +74,6 @@ from .states import (
     StateTranslated,
     TemplateState as TemplateState,
     TemplateStateFromEntityId as TemplateStateFromEntityId,
-    _collect_state,
-    _get_state,
-    _resolve_state,
 )
 
 if TYPE_CHECKING:
@@ -100,8 +109,8 @@ def async_setup(hass: HomeAssistant) -> bool:
     @callback
     def _async_adjust_lru_sizes(_: Any) -> None:
         """Adjust the lru cache sizes."""
-        new_size = int(
-            round(hass.states.async_entity_ids_count() * ENTITY_COUNT_GROWTH_FACTOR)
+        new_size = round(
+            hass.states.async_entity_ids_count() * ENTITY_COUNT_GROWTH_FACTOR
         )
         for lru in (CACHED_TEMPLATE_LRU, CACHED_TEMPLATE_NO_COLLECT_LRU):
             # There is no typing for LRU
@@ -179,6 +188,7 @@ def gen_result_wrapper(kls: type[dict | list | set]) -> type:
             super().__init__(*args)
             self.render_result = render_result
 
+        @override
         def __str__(self) -> str:
             if self.render_result is None:
                 # Can't get set repr to work
@@ -207,6 +217,7 @@ class TupleWrapper(tuple, ResultWrapper):
         """Initialize a new tuple class."""
         self.render_result = render_result
 
+    @override
     def __str__(self) -> str:
         """Return string representation."""
         if self.render_result is None:
@@ -221,9 +232,17 @@ RESULT_WRAPPERS[tuple] = TupleWrapper
 
 
 @lru_cache(maxsize=EVAL_CACHE_SIZE)
-def _cached_parse_result(render_result: str) -> Any:
+def _parse_result(render_result: str) -> Any:
     """Parse a result and cache the result."""
-    result = literal_eval(render_result)
+    # lru_cache does not memoize raised exceptions. The most common template
+    # results, plain string states such as "on", "off" or "unavailable", are
+    # not Python literals, so literal_eval compiles and raises for them on
+    # every render. Catching here caches that outcome (return the original
+    # render) so the recompile only happens once per distinct result.
+    try:
+        result = literal_eval(render_result)
+    except ValueError, TypeError, SyntaxError, MemoryError:
+        return render_result
     if type(result) in RESULT_WRAPPERS:
         result = RESULT_WRAPPERS[type(result)](result, render_result=render_result)
 
@@ -267,26 +286,10 @@ class Template:
         "template",
     )
 
-    def __init__(self, template: str, hass: HomeAssistant | None = None) -> None:
-        """Instantiate a template.
-
-        Note: A valid hass instance should always be passed in. The hass parameter
-        will be non optional in Home Assistant Core 2025.10.
-        """
-        from homeassistant.helpers.frame import (  # noqa: PLC0415
-            ReportBehavior,
-            report_usage,
-        )
-
+    def __init__(self, template: str, hass: HomeAssistant) -> None:
+        """Instantiate a template."""
         if not isinstance(template, str):
             raise TypeError("Expected template to be a string")
-
-        if not hass:
-            report_usage(
-                "creates a template object without passing hass",
-                core_behavior=ReportBehavior.LOG,
-                breaks_in_ha_version="2025.10",
-            )
 
         self.template: str = template.strip()
         self._compiled_code: CodeType | None = None
@@ -302,8 +305,6 @@ class Template:
 
     @property
     def _env(self) -> TemplateEnvironment:
-        if self.hass is None:
-            return _NO_HASS_ENV
         # Bypass cache if a custom log function is specified
         if self._log_fn is not None:
             return TemplateEnvironment(
@@ -352,7 +353,7 @@ class Template:
         if self.is_static:
             if not parse_result or (self.hass and self.hass.config.legacy_templates):
                 return self.template
-            return self._parse_result(self.template)
+            return _parse_result(self.template)
         assert self.hass is not None, "hass variable not set on template"
         return run_callback_threadsafe(
             self.hass.loop,
@@ -381,7 +382,7 @@ class Template:
         if self.is_static:
             if not parse_result or (self.hass and self.hass.config.legacy_templates):
                 return self.template
-            return self._parse_result(self.template)
+            return _parse_result(self.template)
 
         compiled = self._compiled or self._ensure_compiled(limited, strict, log_fn)
 
@@ -395,7 +396,8 @@ class Template:
 
         if len(render_result) > MAX_TEMPLATE_OUTPUT:
             raise TemplateError(
-                f"Template output exceeded maximum size of {MAX_TEMPLATE_OUTPUT} characters"
+                "Template output exceeded maximum size of"
+                f" {MAX_TEMPLATE_OUTPUT} characters"
             )
 
         render_result = render_result.strip()
@@ -403,16 +405,7 @@ class Template:
         if not parse_result or (self.hass and self.hass.config.legacy_templates):
             return render_result
 
-        return self._parse_result(render_result)
-
-    def _parse_result(self, render_result: str) -> Any:
-        """Parse the result."""
-        try:
-            return _cached_parse_result(render_result)
-        except ValueError, TypeError, SyntaxError, MemoryError:
-            pass
-
-        return render_result
+        return _parse_result(render_result)
 
     async def async_render_will_timeout(
         self,
@@ -467,7 +460,7 @@ class Template:
             if self._exc_info:
                 raise TemplateError(self._exc_info[1].with_traceback(self._exc_info[2]))
         except TimeoutError:
-            if template_render_thread.is_alive():
+            with contextlib.suppress(ValueError):
                 template_render_thread.raise_exc(TimeoutError)
             return True
         finally:
@@ -579,7 +572,7 @@ class Template:
         if not parse_result or (self.hass and self.hass.config.legacy_templates):
             return render_result
 
-        return self._parse_result(render_result)
+        return _parse_result(render_result)
 
     def _ensure_compiled(
         self,
@@ -614,6 +607,7 @@ class Template:
 
         return self._compiled
 
+    @override
     def __eq__(self, other):
         """Compare template with another."""
         return (
@@ -622,224 +616,15 @@ class Template:
             and self.hass == other.hass
         )
 
+    @override
     def __hash__(self) -> int:
         """Hash code for template."""
         return self._hash_cache
 
+    @override
     def __repr__(self) -> str:
         """Representation of Template."""
         return f"Template<template=({self.template}) renders={self._renders}>"
-
-
-def expand(hass: HomeAssistant, *args: Any) -> Iterable[State]:
-    """Expand out any groups and zones into entity states."""
-    # circular import.
-    from homeassistant.helpers import entity as entity_helper  # noqa: PLC0415
-
-    search = list(args)
-    found = {}
-    sources = entity_helper.entity_sources(hass)
-    while search:
-        entity = search.pop()
-        if isinstance(entity, str):
-            entity_id = entity
-            if (entity := _get_state(hass, entity)) is None:
-                continue
-        elif isinstance(entity, State):
-            entity_id = entity.entity_id
-        elif isinstance(entity, collections.abc.Iterable):
-            search += entity
-            continue
-        else:
-            # ignore other types
-            continue
-
-        if entity_id in found:
-            continue
-
-        domain = entity.domain
-        if domain == "group" or (
-            (source := sources.get(entity_id)) and source["domain"] == "group"
-        ):
-            # Collect state will be called in here since it's wrapped
-            if group_entities := entity.attributes.get(ATTR_ENTITY_ID):
-                search += group_entities
-        elif domain == "zone":
-            if zone_entities := entity.attributes.get(ATTR_PERSONS):
-                search += zone_entities
-        else:
-            _collect_state(hass, entity_id)
-            found[entity_id] = entity
-
-    return list(found.values())
-
-
-def closest(hass: HomeAssistant, *args: Any) -> State | None:
-    """Find closest entity.
-
-    Closest to home:
-        closest(states)
-        closest(states.device_tracker)
-        closest('group.children')
-        closest(states.group.children)
-
-    Closest to a point:
-        closest(23.456, 23.456, 'group.children')
-        closest('zone.school', 'group.children')
-        closest(states.zone.school, 'group.children')
-
-    As a filter:
-        states | closest
-        states.device_tracker | closest
-        ['group.children', states.device_tracker] | closest
-        'group.children' | closest(23.456, 23.456)
-        states.device_tracker | closest('zone.school')
-        'group.children' | closest(states.zone.school)
-
-    """
-    if len(args) == 1:
-        latitude = hass.config.latitude
-        longitude = hass.config.longitude
-        entities = args[0]
-
-    elif len(args) == 2:
-        point_state = _resolve_state(hass, args[0])
-
-        if point_state is None:
-            _LOGGER.warning("Closest:Unable to find state %s", args[0])
-            return None
-        if not loc_helper.has_location(point_state):
-            _LOGGER.warning(
-                "Closest:State does not contain valid location: %s", point_state
-            )
-            return None
-
-        latitude = point_state.attributes[ATTR_LATITUDE]
-        longitude = point_state.attributes[ATTR_LONGITUDE]
-
-        entities = args[1]
-
-    else:
-        latitude_arg = convert(args[0], float)
-        longitude_arg = convert(args[1], float)
-
-        if latitude_arg is None or longitude_arg is None:
-            _LOGGER.warning(
-                "Closest:Received invalid coordinates: %s, %s", args[0], args[1]
-            )
-            return None
-
-        latitude = latitude_arg
-        longitude = longitude_arg
-
-        entities = args[2]
-
-    states = expand(hass, entities)
-
-    # state will already be wrapped here
-    return loc_helper.closest(latitude, longitude, states)
-
-
-def closest_filter(hass: HomeAssistant, *args: Any) -> State | None:
-    """Call closest as a filter. Need to reorder arguments."""
-    new_args = list(args[1:])
-    new_args.append(args[0])
-    return closest(hass, *new_args)
-
-
-def distance(hass: HomeAssistant, *args: Any) -> float | None:
-    """Calculate distance.
-
-    Will calculate distance from home to a point or between points.
-    Points can be passed in using state objects or lat/lng coordinates.
-    """
-    locations: list[tuple[float, float]] = []
-
-    to_process = list(args)
-
-    while to_process:
-        value = to_process.pop(0)
-        if isinstance(value, str) and not valid_entity_id(value):
-            point_state = None
-        else:
-            point_state = _resolve_state(hass, value)
-
-        if point_state is None:
-            # We expect this and next value to be lat&lng
-            if not to_process:
-                _LOGGER.warning(
-                    "Distance:Expected latitude and longitude, got %s", value
-                )
-                return None
-
-            value_2 = to_process.pop(0)
-            latitude_to_process = convert(value, float)
-            longitude_to_process = convert(value_2, float)
-
-            if latitude_to_process is None or longitude_to_process is None:
-                _LOGGER.warning(
-                    "Distance:Unable to process latitude and longitude: %s, %s",
-                    value,
-                    value_2,
-                )
-                return None
-
-            latitude = latitude_to_process
-            longitude = longitude_to_process
-
-        else:
-            if not loc_helper.has_location(point_state):
-                _LOGGER.warning(
-                    "Distance:State does not contain valid location: %s", point_state
-                )
-                return None
-
-            latitude = point_state.attributes[ATTR_LATITUDE]
-            longitude = point_state.attributes[ATTR_LONGITUDE]
-
-        locations.append((latitude, longitude))
-
-    if len(locations) == 1:
-        return hass.config.distance(*locations[0])
-
-    return hass.config.units.length(
-        location_util.distance(*locations[0] + locations[1]), UnitOfLength.METERS
-    )
-
-
-def is_state(hass: HomeAssistant, entity_id: str, state: str | list[str]) -> bool:
-    """Test if a state is a specific value."""
-    state_obj = _get_state(hass, entity_id)
-    return state_obj is not None and (
-        state_obj.state == state
-        or (isinstance(state, list) and state_obj.state in state)
-    )
-
-
-def is_state_attr(hass: HomeAssistant, entity_id: str, name: str, value: Any) -> bool:
-    """Test if a state's attribute is a specific value."""
-    if (state_obj := _get_state(hass, entity_id)) is not None:
-        attr = state_obj.attributes.get(name, _SENTINEL)
-        if attr is _SENTINEL:
-            return False
-        return bool(attr == value)
-    return False
-
-
-def state_attr(hass: HomeAssistant, entity_id: str, name: str) -> Any:
-    """Get a specific attribute from a state."""
-    if (state_obj := _get_state(hass, entity_id)) is not None:
-        return state_obj.attributes.get(name)
-    return None
-
-
-def has_value(hass: HomeAssistant, entity_id: str) -> bool:
-    """Test if an entity has a valid value."""
-    state_obj = _get_state(hass, entity_id)
-
-    return state_obj is not None and (
-        state_obj.state not in [STATE_UNAVAILABLE, STATE_UNKNOWN]
-    )
 
 
 def make_logging_undefined(
@@ -851,6 +636,14 @@ def make_logging_undefined(
         return jinja2.StrictUndefined
 
     def _log_with_logger(level: int, msg: str) -> None:
+        # Record the error on the active trace element so it is surfaced in the
+        # trace. Consumers such as the subscribe_condition websocket command can
+        # opt in to additionally suppress the (otherwise repeated) log entry.
+        if node := trace_stack_top(trace_stack_cv):
+            node.add_template_error(msg)
+            if suppress_template_error_logging_cv.get():
+                return
+
         template, action = template_cv.get() or ("", "rendering or compiling")
         _LOGGER.log(
             level,
@@ -869,6 +662,7 @@ def make_logging_undefined(
         def _log_message(self) -> None:
             _log_fn(logging.WARNING, self._undefined_message)
 
+        @override
         def _fail_with_undefined_error(self, *args, **kwargs):
             try:
                 return super()._fail_with_undefined_error(*args, **kwargs)
@@ -876,16 +670,19 @@ def make_logging_undefined(
                 _log_fn(logging.ERROR, self._undefined_message)
                 raise
 
+        @override
         def __str__(self) -> str:
             """Log undefined __str___."""
             self._log_message()
             return super().__str__()
 
+        @override
         def __iter__(self):
             """Log undefined __iter___."""
             self._log_message()
             return super().__iter__()
 
+        @override
         def __bool__(self) -> bool:
             """Log undefined __bool___."""
             self._log_message()
@@ -921,7 +718,7 @@ def _get_hass_loader(hass: HomeAssistant) -> HassLoader:
 
 
 class HassLoader(jinja2.BaseLoader):
-    """An in-memory jinja loader that keeps track of templates that need to be reloaded."""
+    """An in-memory jinja loader that tracks templates needing reload."""
 
     def __init__(self, sources: dict[str, str]) -> None:
         """Initialize an empty HassLoader."""
@@ -938,6 +735,7 @@ class HassLoader(jinja2.BaseLoader):
         self._sources = value
         self._reload += 1
 
+    @override
     def get_source(
         self, environment: jinja2.Environment, template: str
     ) -> tuple[str, str | None, Callable[[], bool] | None]:
@@ -967,138 +765,39 @@ class TemplateEnvironment(ImmutableSandboxedEnvironment):
         ] = weakref.WeakValueDictionary()
         self.add_extension("jinja2.ext.loopcontrols")
         self.add_extension("jinja2.ext.do")
-        self.add_extension("homeassistant.helpers.template.extensions.AreaExtension")
-        self.add_extension("homeassistant.helpers.template.extensions.Base64Extension")
-        self.add_extension(
-            "homeassistant.helpers.template.extensions.CollectionExtension"
-        )
-        self.add_extension(
-            "homeassistant.helpers.template.extensions.ConfigEntryExtension"
-        )
-        self.add_extension("homeassistant.helpers.template.extensions.CryptoExtension")
-        self.add_extension(
-            "homeassistant.helpers.template.extensions.DateTimeExtension"
-        )
-        self.add_extension("homeassistant.helpers.template.extensions.DeviceExtension")
-        self.add_extension("homeassistant.helpers.template.extensions.EntityExtension")
-        self.add_extension("homeassistant.helpers.template.extensions.FloorExtension")
-        self.add_extension(
-            "homeassistant.helpers.template.extensions.FunctionalExtension"
-        )
-        self.add_extension("homeassistant.helpers.template.extensions.IssuesExtension")
-        self.add_extension("homeassistant.helpers.template.extensions.LabelExtension")
-        self.add_extension("homeassistant.helpers.template.extensions.MathExtension")
-        self.add_extension("homeassistant.helpers.template.extensions.RegexExtension")
-        self.add_extension(
-            "homeassistant.helpers.template.extensions.SerializationExtension"
-        )
-        self.add_extension("homeassistant.helpers.template.extensions.StringExtension")
-        self.add_extension(
-            "homeassistant.helpers.template.extensions.TypeCastExtension"
-        )
-        self.add_extension("homeassistant.helpers.template.extensions.VersionExtension")
+        self.add_extension(AreaExtension)
+        self.add_extension(Base64Extension)
+        self.add_extension(CollectionExtension)
+        self.add_extension(ConfigEntryExtension)
+        self.add_extension(CryptoExtension)
+        self.add_extension(DateTimeExtension)
+        self.add_extension(DeviceExtension)
+        self.add_extension(EntityExtension)
+        self.add_extension(FloorExtension)
+        self.add_extension(FunctionalExtension)
+        self.add_extension(IssuesExtension)
+        self.add_extension(LabelExtension)
+        self.add_extension(MathExtension)
+        self.add_extension(RegexExtension)
+        self.add_extension(SerializationExtension)
+        self.add_extension(StateExtension)
+        self.add_extension(StringExtension)
+        self.add_extension(TypeCastExtension)
+        self.add_extension(VersionExtension)
 
-        if hass is None:
-            return
+        if hass is not None:
+            # This environment has access to hass, attach its loader
+            # to enable imports.
+            self.loader = _get_hass_loader(hass)
 
-        # This environment has access to hass, attach its loader to enable imports.
-        self.loader = _get_hass_loader(hass)
-
-        # We mark these as a context functions to ensure they get
-        # evaluated fresh with every execution, rather than executed
-        # at compile time and the value stored. The context itself
-        # can be discarded, we only need to get at the hass object.
-        def hassfunction[**_P, _R](
-            func: Callable[Concatenate[HomeAssistant, _P], _R],
-            jinja_context: Callable[
-                [Callable[Concatenate[Any, _P], _R]],
-                Callable[Concatenate[Any, _P], _R],
-            ] = pass_context,
-        ) -> Callable[Concatenate[Any, _P], _R]:
-            """Wrap function that depend on hass."""
-
-            @wraps(func)
-            def wrapper(_: Any, *args: _P.args, **kwargs: _P.kwargs) -> _R:
-                return func(hass, *args, **kwargs)
-
-            return jinja_context(wrapper)
-
-        if limited:
-
-            def unsupported(name: str) -> Callable[[], NoReturn]:
-                def warn_unsupported(*args: Any, **kwargs: Any) -> NoReturn:
-                    raise TemplateError(
-                        f"Use of '{name}' is not supported in limited templates"
-                    )
-
-                return warn_unsupported
-
-            hass_globals = [
-                "closest",
-                "distance",
-                "expand",
-                "has_value",
-                "is_state_attr",
-                "is_state",
-                "state_attr",
-                "state_attr_translated",
-                "state_translated",
-                "states",
-            ]
-            hass_filters = [
-                "closest",
-                "expand",
-                "has_value",
-                "state_attr",
-                "state_attr_translated",
-                "state_translated",
-                "states",
-            ]
-            hass_tests = [
-                "has_value",
-                "is_state_attr",
-                "is_state",
-            ]
-            for glob in hass_globals:
-                self.globals[glob] = unsupported(glob)
-            for filt in hass_filters:
-                self.filters[filt] = unsupported(filt)
-            for test in hass_tests:
-                self.tests[test] = unsupported(test)
-            return
-
-        self.globals["closest"] = hassfunction(closest)
-        self.globals["distance"] = hassfunction(distance)
-        self.globals["expand"] = hassfunction(expand)
-        self.globals["has_value"] = hassfunction(has_value)
-
-        self.filters["closest"] = hassfunction(closest_filter)
-        self.filters["expand"] = self.globals["expand"]
-        self.filters["has_value"] = self.globals["has_value"]
-
-        self.tests["has_value"] = hassfunction(has_value, pass_eval_context)
-
-        # State extensions
-
-        self.globals["is_state_attr"] = hassfunction(is_state_attr)
-        self.globals["is_state"] = hassfunction(is_state)
-        self.globals["state_attr"] = hassfunction(state_attr)
-        self.globals["state_attr_translated"] = StateAttrTranslated(hass)
-        self.globals["state_translated"] = StateTranslated(hass)
-        self.globals["states"] = AllStates(hass)
-        self.filters["state_attr"] = self.globals["state_attr"]
-        self.filters["state_attr_translated"] = self.globals["state_attr_translated"]
-        self.filters["state_translated"] = self.globals["state_translated"]
-        self.filters["states"] = self.globals["states"]
-        self.tests["is_state_attr"] = hassfunction(is_state_attr, pass_eval_context)
-        self.tests["is_state"] = hassfunction(is_state, pass_eval_context)
-
+    @override
     def is_safe_callable(self, obj):
         """Test if callback is safe."""
         return isinstance(
             obj, (AllStates, StateAttrTranslated, StateTranslated)
         ) or super().is_safe_callable(obj)
 
+    @override
     def is_safe_attribute(self, obj, attr, value):
         """Test if attribute is safe."""
         if isinstance(
@@ -1131,6 +830,7 @@ class TemplateEnvironment(ImmutableSandboxedEnvironment):
         defer_init: bool = False,
     ) -> str: ...
 
+    @override
     def compile(
         self,
         source: str | jinja2.nodes.Template,
@@ -1160,6 +860,3 @@ class TemplateEnvironment(ImmutableSandboxedEnvironment):
         compiled = super().compile(source)
         self.template_cache[source] = compiled
         return compiled
-
-
-_NO_HASS_ENV = TemplateEnvironment(None)

@@ -1,6 +1,6 @@
 """Base entity for the WiiM integration."""
 
-from __future__ import annotations
+from typing import override
 
 from wiim.wiim_device import WiimDevice
 
@@ -31,6 +31,7 @@ class WiimBaseEntity(Entity):
             self._attr_device_info["configuration_url"] = self._device.http_api_url
 
     @property
+    @override
     def available(self) -> bool:
         """Return True if entity is available."""
         return self._device.available

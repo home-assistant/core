@@ -1,9 +1,8 @@
 """Support for Fumis binary sensor entities."""
 
-from __future__ import annotations
-
 from collections.abc import Callable
 from dataclasses import dataclass
+from typing import override
 
 from fumis import FumisInfo
 
@@ -71,6 +70,7 @@ class FumisBinarySensorEntity(FumisEntity, BinarySensorEntity):
         self._attr_unique_id = f"{coordinator.config_entry.unique_id}_{description.key}"
 
     @property
+    @override
     def is_on(self) -> bool | None:
         """Return the state of the binary sensor."""
         return self.entity_description.is_on_fn(self.coordinator.data)

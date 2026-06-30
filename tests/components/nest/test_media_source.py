@@ -783,8 +783,9 @@ async def test_resolve_invalid_event_id(
     assert device
     assert device.name == DEVICE_NAME
 
-    # Assume any event ID can be resolved to a media url. Fetching the actual media may fail
-    # if the ID is not valid. Content type is inferred based on the capabilities of the device.
+    # Assume any event ID can be resolved to a media url. Fetching
+    # the actual media may fail if the ID is not valid. Content type
+    # is inferred based on the capabilities of the device.
     media = await async_resolve_media(
         hass,
         f"{URI_SCHEME}{DOMAIN}/{device.id}/GXXWRWVeHNUlUU3V3MGV3bUOYW...",
@@ -1253,7 +1254,8 @@ async def test_media_store_save_filesystem_error(
     assert media.url == f"/api/nest/event_media/{event.identifier}"
     assert media.mime_type == "video/mp4"
 
-    # We fail to retrieve the media from the server since the origin filesystem op failed
+    # We fail to retrieve the media from the server since the
+    # origin filesystem op failed
     client = await hass_client()
     response = await client.get(media.url)
     assert response.status == HTTPStatus.NOT_FOUND, f"Response not matched: {response}"
@@ -1620,7 +1622,7 @@ async def test_remove_stale_media(
     event_media = media_files[0]
     assert event_media.name.endswith(".mp4")
 
-    event_time1 = datetime.datetime.now(datetime.UTC) - datetime.timedelta(days=8)
+    event_time1 = dt_util.utcnow() - datetime.timedelta(days=8)
     extra_media1 = (
         device_path / f"{int(event_time1.timestamp())}-camera_motion-test.mp4"
     )
@@ -1631,7 +1633,7 @@ async def test_remove_stale_media(
     )
     extra_media2.write_bytes(mp4.getvalue())
     # This event will not be garbage collected because it is too recent
-    event_time3 = datetime.datetime.now(datetime.UTC) - datetime.timedelta(days=3)
+    event_time3 = dt_util.utcnow() - datetime.timedelta(days=3)
     extra_media3 = (
         device_path / f"{int(event_time3.timestamp())}-camera_motion-test.mp4"
     )
@@ -1641,7 +1643,7 @@ async def test_remove_stale_media(
 
     # Advance the clock to invoke the garbage collector. This will remove extra
     # files that are not valid events that are old enough.
-    point_in_time = datetime.datetime.now(datetime.UTC) + datetime.timedelta(days=1)
+    point_in_time = dt_util.utcnow() + datetime.timedelta(days=1)
     with freeze_time(point_in_time):
         async_fire_time_changed(hass, point_in_time)
         await hass.async_block_till_done()
@@ -1716,7 +1718,8 @@ async def test_media_migration_failure(
         side_effect=OSError("Storage full"),
     ):
         # Run setup (which triggers migration)
-        # Note: setup_platform handles the integration setup which calls async_get_media_event_store
+        # Note: setup_platform handles the integration setup which
+        # calls async_get_media_event_store
         await setup_platform()
 
     # Verify that the legacy path still exists (migration was abandoned)

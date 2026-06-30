@@ -1,10 +1,8 @@
 """Support for the Italian train system using ViaggiaTreno API."""
 
-from __future__ import annotations
-
 from datetime import timedelta
 import logging
-from typing import Any
+from typing import Any, override
 
 import aiohttp
 from viaggiatreno_ha.trainline import (
@@ -95,21 +93,25 @@ class ViaggiaTrenoSensor(SensorEntity):
         self._tstatus: TrainLineStatus | None = None
 
     @property
+    @override
     def name(self) -> str:
         """Return the name of the sensor."""
         return self._name
 
     @property
+    @override
     def native_value(self) -> StateType:
         """Return the state of the sensor."""
         return self._state
 
     @property
+    @override
     def icon(self) -> str:
         """Icon to use in the frontend, if any."""
         return self._icon
 
     @property
+    @override
     def native_unit_of_measurement(self) -> str | None:
         """Return the unit of measurement."""
         if isinstance(self.native_value, (int, float)):
@@ -117,6 +119,7 @@ class ViaggiaTrenoSensor(SensorEntity):
         return None
 
     @property
+    @override
     def extra_state_attributes(self) -> dict[str, Any]:
         """Return extra attributes."""
         return self._attributes
@@ -131,7 +134,8 @@ class ViaggiaTrenoSensor(SensorEntity):
             self._tstatus = self._viaggiatreno.get_line_status(self._line)
             if self._tstatus is None:
                 _LOGGER.error(
-                    "Received status for line %s: None. Check the train and station IDs",
+                    "Received status for line %s: None."
+                    " Check the train and station IDs",
                     self._line,
                 )
                 return

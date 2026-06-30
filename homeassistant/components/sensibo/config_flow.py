@@ -1,9 +1,7 @@
 """Adds config flow for Sensibo integration."""
 
-from __future__ import annotations
-
 from collections.abc import Mapping
-from typing import Any
+from typing import Any, override
 
 from pysensibo.exceptions import AuthenticationError
 import voluptuous as vol
@@ -111,6 +109,7 @@ class SensiboConfigFlow(ConfigFlow, domain=DOMAIN):
             },
         )
 
+    @override
     async def async_step_user(
         self, user_input: dict[str, Any] | None = None
     ) -> ConfigFlowResult:

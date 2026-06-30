@@ -6,11 +6,9 @@ the APIs are used to add one or more client credentials. Integrations may also
 provide credentials from yaml for backwards compatibility.
 """
 
-from __future__ import annotations
-
 from dataclasses import dataclass
 import logging
-from typing import Any, Protocol
+from typing import Any, Protocol, override
 
 import voluptuous as vol
 
@@ -87,6 +85,7 @@ class ApplicationCredentialsStorageCollection(collection.DictStorageCollection):
 
     CREATE_SCHEMA = vol.Schema(CREATE_FIELDS)
 
+    @override
     async def _process_create_data(self, data: dict[str, str]) -> dict[str, str]:
         """Validate the config is valid."""
         result = self.CREATE_SCHEMA(data)
@@ -96,16 +95,19 @@ class ApplicationCredentialsStorageCollection(collection.DictStorageCollection):
         return result
 
     @callback
+    @override
     def _get_suggested_id(self, info: dict[str, str]) -> str:
         """Suggest an ID based on the config."""
         return f"{info[CONF_DOMAIN]}.{info[CONF_CLIENT_ID]}"
 
+    @override
     async def _update_data(
         self, item: dict[str, str], update_data: dict[str, str]
     ) -> dict[str, str]:
         """Return a new updated data object."""
         raise ValueError("Updates not supported")
 
+    @override
     async def async_delete_item(self, item_id: str) -> None:
         """Delete item, verifying credential is not in use."""
         if item_id not in self.data:
@@ -214,6 +216,7 @@ class AuthImplementation(config_entry_oauth2_flow.LocalOAuth2Implementation):
         self._name = credential.name
 
     @property
+    @override
     def name(self) -> str:
         """Name of the implementation."""
         return self._name or self.client_id

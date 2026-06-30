@@ -1,11 +1,9 @@
 """Tests for the Duco fan platform."""
 
-from __future__ import annotations
-
 import logging
-from unittest.mock import AsyncMock, patch
+from unittest.mock import AsyncMock
 
-from duco.exceptions import DucoConnectionError, DucoError, DucoRateLimitError
+from duco_connectivity import DucoConnectionError, DucoError, DucoRateLimitError
 from freezegun.api import FrozenDateTimeFactory
 import pytest
 from syrupy.assertion import SnapshotAssertion
@@ -23,6 +21,8 @@ from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import entity_registry as er
 
+from . import setup_platform_integration
+
 from tests.common import MockConfigEntry, async_fire_time_changed, snapshot_platform
 
 _FAN_ENTITY = "fan.living"
@@ -35,11 +35,7 @@ async def init_integration(
     mock_duco_client: AsyncMock,
 ) -> MockConfigEntry:
     """Set up only the fan platform for testing."""
-    mock_config_entry.add_to_hass(hass)
-    with patch("homeassistant.components.duco.PLATFORMS", [Platform.FAN]):
-        await hass.config_entries.async_setup(mock_config_entry.entry_id)
-        await hass.async_block_till_done()
-    return mock_config_entry
+    return await setup_platform_integration(hass, mock_config_entry, [Platform.FAN])
 
 
 @pytest.mark.usefixtures("init_integration")

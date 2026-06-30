@@ -1,8 +1,6 @@
 """Support for Fumis climate entities."""
 
-from __future__ import annotations
-
-from typing import Any
+from typing import Any, override
 
 from fumis import StoveStatus
 
@@ -71,6 +69,7 @@ class FumisClimateEntity(FumisEntity, ClimateEntity):
         self._attr_unique_id = coordinator.config_entry.unique_id
 
     @property
+    @override
     def hvac_mode(self) -> HVACMode:
         """Return the current HVAC mode."""
         if self.coordinator.data.controller.on:
@@ -78,6 +77,7 @@ class FumisClimateEntity(FumisEntity, ClimateEntity):
         return HVACMode.OFF
 
     @property
+    @override
     def hvac_action(self) -> HVACAction | None:
         """Return the current HVAC action."""
         return STOVE_STATUS_TO_HVAC_ACTION[
@@ -85,6 +85,7 @@ class FumisClimateEntity(FumisEntity, ClimateEntity):
         ]
 
     @property
+    @override
     def current_temperature(self) -> float | None:
         """Return the current temperature."""
         if (temp := self.coordinator.data.controller.main_temperature) is None:
@@ -92,6 +93,7 @@ class FumisClimateEntity(FumisEntity, ClimateEntity):
         return temp.actual
 
     @property
+    @override
     def target_temperature(self) -> float | None:
         """Return the target temperature."""
         if (temp := self.coordinator.data.controller.main_temperature) is None:
@@ -99,6 +101,7 @@ class FumisClimateEntity(FumisEntity, ClimateEntity):
         return temp.setpoint
 
     @fumis_exception_handler
+    @override
     async def async_set_hvac_mode(self, hvac_mode: HVACMode) -> None:
         """Set the HVAC mode."""
         if hvac_mode == HVACMode.HEAT:
@@ -108,6 +111,7 @@ class FumisClimateEntity(FumisEntity, ClimateEntity):
         await self.coordinator.async_request_refresh()
 
     @fumis_exception_handler
+    @override
     async def async_set_temperature(self, **kwargs: Any) -> None:
         """Set the target temperature."""
         if (temperature := kwargs.get(ATTR_TEMPERATURE)) is None:
@@ -116,12 +120,14 @@ class FumisClimateEntity(FumisEntity, ClimateEntity):
         await self.coordinator.async_request_refresh()
 
     @fumis_exception_handler
+    @override
     async def async_turn_on(self) -> None:
         """Turn on the stove."""
         await self.coordinator.client.turn_on()
         await self.coordinator.async_request_refresh()
 
     @fumis_exception_handler
+    @override
     async def async_turn_off(self) -> None:
         """Turn off the stove."""
         await self.coordinator.client.turn_off()

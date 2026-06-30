@@ -1,9 +1,7 @@
 """Support for interface with a Gree climate systems."""
 
-from __future__ import annotations
-
 import logging
-from typing import Any
+from typing import Any, override
 
 from greeclimate.device import (
     TEMP_MAX,
@@ -158,15 +156,18 @@ class GreeClimateEntity(GreeEntity, ClimateEntity):
         self._attr_unique_id = coordinator.device.device_info.mac
 
     @property
+    @override
     def current_temperature(self) -> float:
         """Return the reported current temperature for the device."""
         return self.coordinator.device.current_temperature
 
     @property
+    @override
     def target_temperature(self) -> float:
         """Return the target temperature for the device."""
         return self.coordinator.device.target_temperature
 
+    @override
     async def async_set_temperature(self, **kwargs: Any) -> None:
         """Set new target temperature."""
         if ATTR_TEMPERATURE not in kwargs:
@@ -187,6 +188,7 @@ class GreeClimateEntity(GreeEntity, ClimateEntity):
         self.async_write_ha_state()
 
     @property
+    @override
     def hvac_mode(self) -> HVACMode | None:
         """Return the current HVAC mode for the device."""
         if not self.coordinator.device.power:
@@ -194,6 +196,7 @@ class GreeClimateEntity(GreeEntity, ClimateEntity):
 
         return HVAC_MODES.get(self.coordinator.device.mode)
 
+    @override
     async def async_set_hvac_mode(self, hvac_mode: HVACMode) -> None:
         """Set new target hvac mode."""
         if hvac_mode not in self.hvac_modes:
@@ -218,6 +221,7 @@ class GreeClimateEntity(GreeEntity, ClimateEntity):
         await self.coordinator.push_state_update()
         self.async_write_ha_state()
 
+    @override
     async def async_turn_on(self) -> None:
         """Turn on the device."""
         _LOGGER.debug("Turning on HVAC for device %s", self._attr_name)
@@ -226,6 +230,7 @@ class GreeClimateEntity(GreeEntity, ClimateEntity):
         await self.coordinator.push_state_update()
         self.async_write_ha_state()
 
+    @override
     async def async_turn_off(self) -> None:
         """Turn off the device."""
         _LOGGER.debug("Turning off HVAC for device %s", self._attr_name)
@@ -235,6 +240,7 @@ class GreeClimateEntity(GreeEntity, ClimateEntity):
         self.async_write_ha_state()
 
     @property
+    @override
     def preset_mode(self) -> str:
         """Return the current preset mode for the device."""
         if self.coordinator.device.steady_heat:
@@ -247,6 +253,7 @@ class GreeClimateEntity(GreeEntity, ClimateEntity):
             return PRESET_BOOST
         return PRESET_NONE
 
+    @override
     async def async_set_preset_mode(self, preset_mode: str) -> None:
         """Set new preset mode."""
         if preset_mode not in PRESET_MODES:
@@ -276,11 +283,13 @@ class GreeClimateEntity(GreeEntity, ClimateEntity):
         self.async_write_ha_state()
 
     @property
+    @override
     def fan_mode(self) -> str | None:
         """Return the current fan mode for the device."""
         speed = self.coordinator.device.fan_speed
         return FAN_MODES.get(speed)
 
+    @override
     async def async_set_fan_mode(self, fan_mode: str) -> None:
         """Set new target fan mode."""
         if fan_mode not in FAN_MODES_INVERSE:
@@ -291,6 +300,7 @@ class GreeClimateEntity(GreeEntity, ClimateEntity):
         self.async_write_ha_state()
 
     @property
+    @override
     def swing_mode(self) -> str | None:
         """Return the current vertical swing mode for the device."""
         try:
@@ -300,6 +310,7 @@ class GreeClimateEntity(GreeEntity, ClimateEntity):
         except ValueError:
             return None
 
+    @override
     async def async_set_swing_mode(self, swing_mode: str) -> None:
         """Set new target vertical swing operation."""
         _LOGGER.debug(
@@ -313,6 +324,7 @@ class GreeClimateEntity(GreeEntity, ClimateEntity):
         self.async_write_ha_state()
 
     @property
+    @override
     def swing_horizontal_mode(self) -> str | None:
         """Return the current horizontal swing mode for the device."""
         try:
@@ -322,6 +334,7 @@ class GreeClimateEntity(GreeEntity, ClimateEntity):
         except ValueError:
             return None
 
+    @override
     async def async_set_swing_horizontal_mode(self, swing_horizontal_mode: str) -> None:
         """Set new target horizontal swing operation."""
         _LOGGER.debug(
@@ -336,6 +349,7 @@ class GreeClimateEntity(GreeEntity, ClimateEntity):
         await self.coordinator.push_state_update()
         self.async_write_ha_state()
 
+    @override
     def _handle_coordinator_update(self) -> None:
         """Update the state of the entity."""
         units = self.coordinator.device.temperature_units

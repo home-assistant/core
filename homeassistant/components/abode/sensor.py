@@ -1,10 +1,8 @@
 """Support for Abode Security System sensors."""
 
-from __future__ import annotations
-
 from collections.abc import Callable
 from dataclasses import dataclass
-from typing import cast
+from typing import cast, override
 
 from jaraco.abode.devices.sensor import Sensor
 
@@ -96,11 +94,13 @@ class AbodeSensor(AbodeDevice, SensorEntity):
         self._attr_unique_id = f"{device.uuid}-{description.key}"
 
     @property
+    @override
     def native_value(self) -> float:
         """Return the state of the sensor."""
         return self.entity_description.value_fn(self._device)
 
     @property
+    @override
     def native_unit_of_measurement(self) -> str:
         """Return the native unit of measurement."""
         return self.entity_description.native_unit_of_measurement_fn(self._device)

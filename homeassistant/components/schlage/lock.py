@@ -1,8 +1,6 @@
 """Platform for Schlage lock integration."""
 
-from __future__ import annotations
-
-from typing import Any
+from typing import Any, override
 
 from pyschlage.code import AccessCode
 from pyschlage.exceptions import Error as SchlageError
@@ -48,6 +46,7 @@ class SchlageLockEntity(SchlageEntity, LockEntity):
         self._update_attrs()
 
     @callback
+    @override
     def _handle_coordinator_update(self) -> None:
         """Handle updated data from the coordinator."""
         if self.device_id in self.coordinator.data.locks:
@@ -60,11 +59,13 @@ class SchlageLockEntity(SchlageEntity, LockEntity):
         self._attr_is_jammed = self._lock.is_jammed
         self._attr_changed_by = self._lock.last_changed_by()
 
+    @override
     async def async_lock(self, **kwargs: Any) -> None:
         """Lock the device."""
         await self.hass.async_add_executor_job(self._lock.lock)
         await self.coordinator.async_request_refresh()
 
+    @override
     async def async_unlock(self, **kwargs: Any) -> None:
         """Unlock the device."""
         await self.hass.async_add_executor_job(self._lock.unlock)

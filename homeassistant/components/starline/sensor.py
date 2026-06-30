@@ -1,8 +1,6 @@
 """Reads vehicle status from StarLine API."""
 
-from __future__ import annotations
-
-from typing import Any
+from typing import Any, override
 
 from homeassistant.components.sensor import (
     SensorDeviceClass,
@@ -62,7 +60,8 @@ SENSOR_TYPES: tuple[SensorEntityDescription, ...] = (
     SensorEntityDescription(
         key="fuel",
         translation_key="fuel",
-        # No device_class: fuel can be reported as percentage or volume depending on vehicle
+        # No device_class: fuel can be reported as percentage
+        # or volume depending on vehicle
         state_class=SensorStateClass.TOTAL,
     ),
     SensorEntityDescription(
@@ -119,6 +118,7 @@ class StarlineSensor(StarlineEntity, SensorEntity):
         self.entity_description = description
 
     @property
+    @override
     def icon(self) -> str | None:
         """Icon to use in the frontend, if any."""
         if self._key == "battery":
@@ -131,6 +131,7 @@ class StarlineSensor(StarlineEntity, SensorEntity):
         return self.entity_description.icon
 
     @property
+    @override
     def native_value(self):
         """Return the state of the sensor."""
         if self._key == "battery":
@@ -154,6 +155,7 @@ class StarlineSensor(StarlineEntity, SensorEntity):
         return None
 
     @property
+    @override
     def native_unit_of_measurement(self):
         """Get the unit of measurement."""
         if self._key == "balance":
@@ -167,6 +169,7 @@ class StarlineSensor(StarlineEntity, SensorEntity):
         return self.entity_description.native_unit_of_measurement
 
     @property
+    @override
     def extra_state_attributes(self) -> dict[str, Any] | None:
         """Return the state attributes of the sensor."""
         if self._key == "balance":

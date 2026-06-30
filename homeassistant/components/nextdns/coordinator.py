@@ -1,10 +1,8 @@
 """NextDns coordinator."""
 
-from __future__ import annotations
-
 from datetime import timedelta
 import logging
-from typing import TYPE_CHECKING
+from typing import TYPE_CHECKING, override
 
 from aiohttp.client_exceptions import ClientConnectorError
 from nextdns import (
@@ -66,6 +64,7 @@ class NextDnsUpdateCoordinator[CoordinatorDataT: NextDnsData](
             update_interval=self._update_interval,
         )
 
+    @override
     async def _async_update_data(self) -> CoordinatorDataT:
         """Update data via internal method."""
         try:
@@ -100,6 +99,7 @@ class NextDnsStatusUpdateCoordinator(NextDnsUpdateCoordinator[AnalyticsStatus]):
 
     _update_interval = UPDATE_INTERVAL_ANALYTICS
 
+    @override
     async def _async_update_data_internal(self) -> AnalyticsStatus:
         """Update data via library."""
         return await self.nextdns.get_analytics_status(self.profile_id)
@@ -110,6 +110,7 @@ class NextDnsDnssecUpdateCoordinator(NextDnsUpdateCoordinator[AnalyticsDnssec]):
 
     _update_interval = UPDATE_INTERVAL_ANALYTICS
 
+    @override
     async def _async_update_data_internal(self) -> AnalyticsDnssec:
         """Update data via library."""
         return await self.nextdns.get_analytics_dnssec(self.profile_id)
@@ -120,6 +121,7 @@ class NextDnsEncryptionUpdateCoordinator(NextDnsUpdateCoordinator[AnalyticsEncry
 
     _update_interval = UPDATE_INTERVAL_ANALYTICS
 
+    @override
     async def _async_update_data_internal(self) -> AnalyticsEncryption:
         """Update data via library."""
         return await self.nextdns.get_analytics_encryption(self.profile_id)
@@ -130,6 +132,7 @@ class NextDnsIpVersionsUpdateCoordinator(NextDnsUpdateCoordinator[AnalyticsIpVer
 
     _update_interval = UPDATE_INTERVAL_ANALYTICS
 
+    @override
     async def _async_update_data_internal(self) -> AnalyticsIpVersions:
         """Update data via library."""
         return await self.nextdns.get_analytics_ip_versions(self.profile_id)
@@ -140,6 +143,7 @@ class NextDnsProtocolsUpdateCoordinator(NextDnsUpdateCoordinator[AnalyticsProtoc
 
     _update_interval = UPDATE_INTERVAL_ANALYTICS
 
+    @override
     async def _async_update_data_internal(self) -> AnalyticsProtocols:
         """Update data via library."""
         return await self.nextdns.get_analytics_protocols(self.profile_id)
@@ -150,6 +154,7 @@ class NextDnsSettingsUpdateCoordinator(NextDnsUpdateCoordinator[Settings]):
 
     _update_interval = UPDATE_INTERVAL_SETTINGS
 
+    @override
     async def _async_update_data_internal(self) -> Settings:
         """Update data via library."""
         return await self.nextdns.get_settings(self.profile_id)
@@ -160,6 +165,7 @@ class NextDnsConnectionUpdateCoordinator(NextDnsUpdateCoordinator[ConnectionStat
 
     _update_interval = UPDATE_INTERVAL_CONNECTION
 
+    @override
     async def _async_update_data_internal(self) -> ConnectionStatus:
         """Update data via library."""
         return await self.nextdns.connection_status(self.profile_id)

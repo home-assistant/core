@@ -1,7 +1,5 @@
 """UniFi Protect Integration utils."""
 
-from __future__ import annotations
-
 from collections.abc import Callable, Coroutine, Generator, Iterable
 import contextlib
 from functools import wraps
@@ -44,7 +42,6 @@ from .const import (
 
 if TYPE_CHECKING:
     from .data import UFPConfigEntry
-    from .entity import BaseProtectEntity
 
 
 @callback
@@ -147,7 +144,7 @@ def get_camera_base_name(channel: CameraChannel) -> str:
     return camera_name
 
 
-def async_ufp_instance_command[_EntityT: "BaseProtectEntity", **_P](
+def async_ufp_instance_command[_EntityT, **_P](
     func: Callable[Concatenate[_EntityT, _P], Coroutine[Any, Any, Any]],
 ) -> Callable[Concatenate[_EntityT, _P], Coroutine[Any, Any, None]]:
     """Decorate UniFi Protect entity instance commands to handle exceptions.

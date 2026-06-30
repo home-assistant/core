@@ -12,7 +12,6 @@ from tests.components.common import (
     ConditionStateDescription,
     assert_condition_behavior_all,
     assert_condition_behavior_any,
-    assert_condition_gated_by_labs_flag,
     assert_condition_options_supported,
     create_target_condition,
     parametrize_condition_states_all,
@@ -35,25 +34,10 @@ async def target_covers(hass: HomeAssistant) -> dict[str, list[str]]:
 
 
 @pytest.mark.parametrize(
-    "condition",
-    [
-        "window.is_closed",
-        "window.is_open",
-    ],
-)
-async def test_window_conditions_gated_by_labs_flag(
-    hass: HomeAssistant, caplog: pytest.LogCaptureFixture, condition: str
-) -> None:
-    """Test the window conditions are gated by the labs flag."""
-    await assert_condition_gated_by_labs_flag(hass, caplog, condition)
-
-
-@pytest.mark.usefixtures("enable_labs_preview_features")
-@pytest.mark.parametrize(
     ("condition_key", "base_options", "supports_behavior", "supports_duration"),
     [
-        ("window.is_closed", {}, True, False),
-        ("window.is_open", {}, True, False),
+        ("window.is_closed", {}, True, True),
+        ("window.is_open", {}, True, True),
     ],
 )
 async def test_window_condition_options_validation(
@@ -76,7 +60,6 @@ async def test_window_condition_options_validation(
 # --- binary_sensor tests ---
 
 
-@pytest.mark.usefixtures("enable_labs_preview_features")
 @pytest.mark.parametrize(
     ("condition_target_config", "entity_id", "entities_in_target"),
     parametrize_target_entities("binary_sensor"),
@@ -121,7 +104,6 @@ async def test_window_binary_sensor_condition_behavior_any(
     )
 
 
-@pytest.mark.usefixtures("enable_labs_preview_features")
 @pytest.mark.parametrize(
     ("condition_target_config", "entity_id", "entities_in_target"),
     parametrize_target_entities("binary_sensor"),
@@ -169,7 +151,6 @@ async def test_window_binary_sensor_condition_behavior_all(
 # --- cover tests ---
 
 
-@pytest.mark.usefixtures("enable_labs_preview_features")
 @pytest.mark.parametrize(
     ("condition_target_config", "entity_id", "entities_in_target"),
     parametrize_target_entities("cover"),
@@ -228,7 +209,6 @@ async def test_window_cover_condition_behavior_any(
     )
 
 
-@pytest.mark.usefixtures("enable_labs_preview_features")
 @pytest.mark.parametrize(
     ("condition_target_config", "entity_id", "entities_in_target"),
     parametrize_target_entities("cover"),
@@ -290,7 +270,6 @@ async def test_window_cover_condition_behavior_all(
 # --- Cross-domain device class exclusion test ---
 
 
-@pytest.mark.usefixtures("enable_labs_preview_features")
 @pytest.mark.parametrize(
     (
         "condition_key",
@@ -372,7 +351,7 @@ async def test_window_condition_excludes_non_window_device_class(
     )
 
     # Matching entities in matching state - condition should be True
-    assert condition_any(hass) is True
+    assert condition_any.async_check() is True
 
     # Set matching entities to non-matching state
     hass.states.async_set(
@@ -386,4 +365,4 @@ async def test_window_condition_excludes_non_window_device_class(
     await hass.async_block_till_done()
 
     # Wrong device class entities still in matching state, but should be excluded
-    assert condition_any(hass) is False
+    assert condition_any.async_check() is False

@@ -1,9 +1,7 @@
 """Support for iss sensor."""
 
-from __future__ import annotations
-
 import logging
-from typing import Any
+from typing import Any, override
 
 from homeassistant.components.sensor import SensorEntity
 from homeassistant.const import ATTR_LATITUDE, ATTR_LONGITUDE, CONF_SHOW_ON_MAP
@@ -54,11 +52,13 @@ class IssSensor(CoordinatorEntity[IssDataUpdateCoordinator], SensorEntity):
         )
 
     @property
+    @override
     def native_value(self) -> int:
         """Return number of people in space."""
         return self.coordinator.data.number_of_people_in_space
 
     @property
+    @override
     def extra_state_attributes(self) -> dict[str, Any]:
         """Return the state attributes."""
         attrs = {}

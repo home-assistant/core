@@ -1,7 +1,5 @@
 """The tests for evohome storage load & save."""
 
-from __future__ import annotations
-
 from datetime import datetime, timedelta
 from typing import Any, Final, NotRequired, TypedDict
 

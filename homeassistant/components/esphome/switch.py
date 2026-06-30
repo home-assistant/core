@@ -1,9 +1,7 @@
 """Support for ESPHome switches."""
 
-from __future__ import annotations
-
 from functools import partial
-from typing import Any
+from typing import Any, override
 
 from aioesphomeapi import EntityInfo, SwitchInfo, SwitchState
 
@@ -25,6 +23,7 @@ class EsphomeSwitch(EsphomeEntity[SwitchInfo, SwitchState], SwitchEntity):
     """A switch implementation for ESPHome."""
 
     @callback
+    @override
     def _on_static_info_update(self, static_info: EntityInfo) -> None:
         """Set attrs from static info."""
         super()._on_static_info_update(static_info)
@@ -36,11 +35,13 @@ class EsphomeSwitch(EsphomeEntity[SwitchInfo, SwitchState], SwitchEntity):
 
     @property
     @esphome_state_property
+    @override
     def is_on(self) -> bool:
         """Return true if the switch is on."""
         return self._state.state
 
     @convert_api_error_ha_error
+    @override
     async def async_turn_on(self, **kwargs: Any) -> None:
         """Turn the entity on."""
         self._client.switch_command(
@@ -48,6 +49,7 @@ class EsphomeSwitch(EsphomeEntity[SwitchInfo, SwitchState], SwitchEntity):
         )
 
     @convert_api_error_ha_error
+    @override
     async def async_turn_off(self, **kwargs: Any) -> None:
         """Turn the entity off."""
         self._client.switch_command(

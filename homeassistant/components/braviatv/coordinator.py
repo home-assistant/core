@@ -1,12 +1,10 @@
 """Update coordinator for Bravia TV integration."""
 
-from __future__ import annotations
-
 from collections.abc import Awaitable, Callable, Coroutine, Iterable
 from datetime import datetime, timedelta
 from functools import wraps
 import logging
-from typing import Any, Concatenate, Final
+from typing import Any, Concatenate, Final, override
 
 from pybravia import (
     BraviaAuthError,
@@ -153,6 +151,7 @@ class BraviaTVCoordinator(DataUpdateCoordinator[None]):
             if add_to_list and title not in self.source_list:
                 self.source_list.append(title)
 
+    @override
     async def _async_update_data(self) -> None:
         """Connect and fetch data."""
         try:
@@ -241,11 +240,11 @@ class BraviaTVCoordinator(DataUpdateCoordinator[None]):
         self.source = None
         if start_datetime := playing_info.get("startDateTime"):
             start_datetime = datetime.fromisoformat(start_datetime)
-            current_datetime = datetime.now().replace(tzinfo=start_datetime.tzinfo)
+            current_datetime = datetime.now().replace(tzinfo=start_datetime.tzinfo)  # pylint: disable=home-assistant-enforce-naive-now
             self.media_position = int(
                 (current_datetime - start_datetime).total_seconds()
             )
-            self.media_position_updated_at = datetime.now()
+            self.media_position_updated_at = datetime.now()  # pylint: disable=home-assistant-enforce-naive-now
         else:
             self.media_position = None
             self.media_position_updated_at = None

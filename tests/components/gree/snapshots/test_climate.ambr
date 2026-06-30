@@ -3,9 +3,9 @@
   list([
     StateSnapshot({
       'attributes': ReadOnlyDict({
-        'current_temperature': 25,
-        'fan_mode': 'auto',
-        'fan_modes': list([
+        <ClimateEntityStateAttribute.CURRENT_TEMPERATURE: 'current_temperature'>: 25,
+        <ClimateEntityStateAttribute.FAN_MODE: 'fan_mode'>: 'auto',
+        <ClimateEntityCapabilityAttribute.FAN_MODES: 'fan_modes'>: list([
           'auto',
           'low',
           'medium low',
@@ -13,8 +13,8 @@
           'medium high',
           'high',
         ]),
-        'friendly_name': 'fake-device-1',
-        'hvac_modes': list([
+        <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'fake-device-1',
+        <ClimateEntityCapabilityAttribute.HVAC_MODES: 'hvac_modes'>: list([
           <HVACMode.AUTO: 'auto'>,
           <HVACMode.COOL: 'cool'>,
           <HVACMode.DRY: 'dry'>,
@@ -22,10 +22,10 @@
           <HVACMode.HEAT: 'heat'>,
           <HVACMode.OFF: 'off'>,
         ]),
-        'max_temp': 30,
-        'min_temp': 8,
-        'preset_mode': 'none',
-        'preset_modes': list([
+        <ClimateEntityCapabilityAttribute.MAX_TEMP: 'max_temp'>: 30,
+        <ClimateEntityCapabilityAttribute.MIN_TEMP: 'min_temp'>: 8,
+        <ClimateEntityStateAttribute.PRESET_MODE: 'preset_mode'>: 'none',
+        <ClimateEntityCapabilityAttribute.PRESET_MODES: 'preset_modes'>: list([
           'eco',
           'away',
           'boost',
@@ -58,8 +58,8 @@
           'swing_lower_middle',
           'swing_lower',
         ]),
-        'target_temp_step': 1,
-        'temperature': 25,
+        <ClimateEntityCapabilityAttribute.TARGET_TEMP_STEP: 'target_temp_step'>: 1,
+        <ClimateEntityStateAttribute.TEMPERATURE: 'temperature'>: 25,
       }),
       'context': <ANY>,
       'entity_id': 'climate.fake_device_1',
@@ -78,7 +78,7 @@
       ]),
       'area_id': None,
       'capabilities': dict({
-        'fan_modes': list([
+        <ClimateEntityCapabilityAttribute.FAN_MODES: 'fan_modes'>: list([
           'auto',
           'low',
           'medium low',
@@ -86,7 +86,7 @@
           'medium high',
           'high',
         ]),
-        'hvac_modes': list([
+        <ClimateEntityCapabilityAttribute.HVAC_MODES: 'hvac_modes'>: list([
           <HVACMode.AUTO: 'auto'>,
           <HVACMode.COOL: 'cool'>,
           <HVACMode.DRY: 'dry'>,
@@ -94,9 +94,9 @@
           <HVACMode.HEAT: 'heat'>,
           <HVACMode.OFF: 'off'>,
         ]),
-        'max_temp': 30,
-        'min_temp': 8,
-        'preset_modes': list([
+        <ClimateEntityCapabilityAttribute.MAX_TEMP: 'max_temp'>: 30,
+        <ClimateEntityCapabilityAttribute.MIN_TEMP: 'min_temp'>: 8,
+        <ClimateEntityCapabilityAttribute.PRESET_MODES: 'preset_modes'>: list([
           'eco',
           'away',
           'boost',
@@ -126,7 +126,7 @@
           'swing_lower_middle',
           'swing_lower',
         ]),
-        'target_temp_step': 1,
+        <ClimateEntityCapabilityAttribute.TARGET_TEMP_STEP: 'target_temp_step'>: 1,
       }),
       'config_entry_id': <ANY>,
       'config_subentry_id': <ANY>,

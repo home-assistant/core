@@ -1,8 +1,6 @@
 """Cover Platform for Niko Home Control."""
 
-from __future__ import annotations
-
-from typing import Any
+from typing import Any, override
 
 from nhc.cover import NHCCover
 
@@ -37,18 +35,22 @@ class NikoHomeControlCover(NikoHomeControlEntity, CoverEntity):
     )
     _action: NHCCover
 
+    @override
     async def async_open_cover(self, **kwargs: Any) -> None:
         """Open the cover."""
         await self._action.open()
 
+    @override
     async def async_close_cover(self, **kwargs: Any) -> None:
         """Close the cover."""
         await self._action.close()
 
+    @override
     async def async_stop_cover(self, **kwargs: Any) -> None:
         """Stop the cover."""
         await self._action.stop()
 
+    @override
     def update_state(self):
         """Update HA state."""
         self._attr_is_closed = self._action.state == 0

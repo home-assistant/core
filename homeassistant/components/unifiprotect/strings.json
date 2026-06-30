@@ -216,9 +216,6 @@
       "overlay_show_nerd_mode": {
         "name": "Overlay: show nerd mode"
       },
-      "package_detected": {
-        "name": "Package detected"
-      },
       "person_detected": {
         "name": "Person detected"
       },
@@ -302,6 +299,16 @@
           }
         }
       },
+      "package": {
+        "name": "Package",
+        "state_attributes": {
+          "event_type": {
+            "state": {
+              "detected": "Detected"
+            }
+          }
+        }
+      },
       "vehicle": {
         "name": "Vehicle",
         "state_attributes": {
@@ -319,9 +326,6 @@
       }
     },
     "number": {
-      "auto_lock_timeout": {
-        "name": "Auto-lock timeout"
-      },
       "auto_shutoff_duration": {
         "name": "Auto-shutoff duration"
       },
@@ -407,6 +411,9 @@
           "none": "[%key:common::state::off%]",
           "window": "Window"
         }
+      },
+      "nvr_arm_profile": {
+        "name": "Alarm profile"
       },
       "paired_camera": {
         "name": "Paired camera"
@@ -569,7 +576,7 @@
       "detections_baby_cry": {
         "name": "[%key:component::unifiprotect::entity::binary_sensor::detections_baby_cry::name%]"
       },
-      "detections_barking": {
+      "detections_bark": {
         "name": "[%key:component::unifiprotect::entity::binary_sensor::detections_barking::name%]"
       },
       "detections_car_alarm": {
@@ -641,6 +648,9 @@
       "privacy_mode": {
         "name": "Privacy mode"
       },
+      "relay_output": {
+        "name": "Output {output_name}"
+      },
       "ssh_enabled": {
         "name": "[%key:component::unifiprotect::entity::binary_sensor::ssh_enabled::name%]"
       },
@@ -673,6 +683,12 @@
     "device_not_found": {
       "message": "No device found for device id: {device_id}"
     },
+    "entry_auth_failed": {
+      "message": "Authentication failed, please reauthenticate"
+    },
+    "event_ongoing": {
+      "message": "Event is still ongoing"
+    },
     "global_alarm_manager": {
       "message": "The alarm manager on this UniFi Protect NVR is set to Global mode and cannot be controlled locally."
     },
@@ -697,11 +713,29 @@
     "ptz_preset_not_found": {
       "message": "Could not find PTZ preset with name {preset_name} on camera {camera_name}"
     },
+    "public_bootstrap_failed": {
+      "message": "Could not load the public API bootstrap for camera streams"
+    },
+    "relay_not_available": {
+      "message": "Relay is no longer available"
+    },
     "service_error": {
       "message": "Error calling UniFi Protect service, check the logs for more details"
     },
+    "siren_invalid_duration": {
+      "message": "Invalid siren duration {duration}s. Valid values are: {valid} seconds"
+    },
+    "siren_not_available": {
+      "message": "Siren is no longer available"
+    },
     "stream_error": {
       "message": "Error playing audio, check the logs for more details"
+    },
+    "unexpected_identifier": {
+      "message": "Unexpected identifier: {identifier}"
+    },
+    "unknown_camera_id": {
+      "message": "Unknown camera ID: {camera_id}"
     }
   },
   "issues": {
@@ -720,35 +754,28 @@
       "description": "UniFi Protect v3 added a new state for HDR (auto). As a result, the HDR Mode switch has been replaced with an HDR Mode select, and it is deprecated.\n\nBelow are the detected automations or scripts that use one or more of the deprecated entities:\n{items}\nThe above list may be incomplete and it does not include any template usages inside of dashboards. Please update any templates, automations or scripts accordingly.",
       "title": "HDR Mode switch deprecated"
     },
-    "rtsp_disabled_readonly": {
-      "fix_flow": {
-        "step": {
-          "confirm": {
-            "description": "Are you sure you want to leave RTSPS disabled for {camera}?",
-            "title": "[%key:component::unifiprotect::issues::rtsp_disabled_readonly::fix_flow::step::start::title%]"
-          },
-          "start": {
-            "description": "RTSPS is disabled on the camera {camera}. RTSPS is required to be able to live stream your camera within Home Assistant. If you do not enable RTSPS, it may create an additional load on your UniFi Protect NVR, as any live video players will default to rapidly pulling snapshots from the camera.\n\nPlease [enable RTSPS]({learn_more}) on the camera and then come back and confirm this repair.",
-            "title": "RTSPS is disabled on camera {camera}"
-          }
-        }
-      },
-      "title": "RTSPS is disabled on camera {camera}"
+    "insecure_camera_removed": {
+      "description": "The camera entity `{entity_id}` used plain RTSP, which is no longer available now that streams come from the UniFi Protect public API (RTSPS only). It has been removed; use `{replacement}` instead.\n\nUpdate the following automations and scripts:\n{items}",
+      "title": "Insecure camera entity removed"
     },
-    "rtsp_disabled_writable": {
+    "package_binary_sensor_removed": {
+      "description": "The binary sensor `{entity_id}` for package detection has been removed. Package detection is a momentary smart-detect event, so it is now provided by the package event entity instead.\n\nUpdate the following automations and scripts:\n{items}",
+      "title": "Package binary sensor removed"
+    },
+    "rtsp_disabled": {
       "fix_flow": {
         "step": {
           "confirm": {
-            "description": "[%key:component::unifiprotect::issues::rtsp_disabled_readonly::fix_flow::step::confirm::description%]",
-            "title": "[%key:component::unifiprotect::issues::rtsp_disabled_readonly::fix_flow::step::start::title%]"
+            "description": "Home Assistant could not enable an RTSPS stream for {camera}. You may need to enable a stream manually on the camera, or disable the camera entity if you only need snapshots.",
+            "title": "[%key:component::unifiprotect::issues::rtsp_disabled::fix_flow::step::start::title%]"
           },
           "start": {
-            "description": "RTSPS is disabled on the camera {camera}. RTSPS is required to live stream your camera within Home Assistant. If you do not enable RTSPS, it may create an additional load on your UniFi Protect NVR as any live video players will default to rapidly pulling snapshots from the camera.\n\nYou may manually [enable RTSPS]({learn_more}) on your selected camera quality channel or Home Assistant can automatically enable the highest quality channel for you. Confirm this repair once you have enabled the RTSPS channel or if you want Home Assistant to enable the highest quality automatically.",
-            "title": "[%key:component::unifiprotect::issues::rtsp_disabled_readonly::fix_flow::step::start::title%]"
+            "description": "No RTSPS stream is available for the camera {camera}, so it cannot live stream within Home Assistant. Until a stream is enabled, live views fall back to rapidly pulling snapshots (effectively a slideshow), which can put significant load on your UniFi Protect console. Confirm this repair and Home Assistant will create the highest quality RTSPS stream for you through the UniFi Protect public API.",
+            "title": "No stream is available for camera {camera}"
           }
         }
       },
-      "title": "RTSPS is disabled on camera {camera}"
+      "title": "No stream is available for camera {camera}"
     }
   },
   "options": {

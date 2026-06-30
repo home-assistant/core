@@ -1,13 +1,12 @@
 """NINA binary sensor platform."""
 
-from __future__ import annotations
-
-from typing import Any
+from typing import Any, override
 
 from homeassistant.components.binary_sensor import (
     BinarySensorDeviceClass,
     BinarySensorEntity,
 )
+from homeassistant.const import ATTR_ID
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
@@ -16,7 +15,6 @@ from .const import (
     ATTR_DESCRIPTION,
     ATTR_EXPIRES,
     ATTR_HEADLINE,
-    ATTR_ID,
     ATTR_RECOMMENDED_ACTIONS,
     ATTR_SENDER,
     ATTR_SENT,
@@ -72,6 +70,7 @@ class NINAMessage(NinaEntity, BinarySensorEntity):
         self._attr_unique_id = f"{region}-{slot_id}"
 
     @property
+    @override
     def is_on(self) -> bool:
         """Return the state of the sensor."""
         if self._get_active_warnings_count() <= self._warning_index:
@@ -80,6 +79,7 @@ class NINAMessage(NinaEntity, BinarySensorEntity):
         return self._get_warning_data().is_valid
 
     @property
+    @override
     def extra_state_attributes(self) -> dict[str, Any]:
         """Return extra attributes of the sensor."""
         if not self.is_on:
@@ -92,7 +92,8 @@ class NINAMessage(NinaEntity, BinarySensorEntity):
             ATTR_DESCRIPTION: data.description,  # Deprecated, remove in 2026.11
             ATTR_SENDER: data.sender,  # Deprecated, remove in 2026.11
             ATTR_SEVERITY: data.severity or "Unknown",  # Deprecated, remove in 2026.11
-            ATTR_RECOMMENDED_ACTIONS: data.recommended_actions,  # Deprecated, remove in 2026.11
+            # Deprecated, remove in 2026.11
+            ATTR_RECOMMENDED_ACTIONS: data.recommended_actions,
             ATTR_AFFECTED_AREAS: data.affected_areas,  # Deprecated, remove in 2026.11
             ATTR_WEB: data.more_info_url,  # Deprecated, remove in 2026.11
             ATTR_ID: data.id,

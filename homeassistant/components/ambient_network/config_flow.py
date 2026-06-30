@@ -1,8 +1,6 @@
 """Config flow for the Ambient Weather Network integration."""
 
-from __future__ import annotations
-
-from typing import Any
+from typing import Any, override
 
 from aioambient import OpenAPI
 import voluptuous as vol
@@ -48,6 +46,7 @@ class AmbientNetworkConfigFlow(ConfigFlow, domain=DOMAIN):
         self._radius = 0.0
         self._stations: dict[str, dict[str, Any]] = {}
 
+    @override
     async def async_step_user(
         self,
         user_input: dict[str, Any] | None = None,

@@ -1,9 +1,7 @@
 """Support for using humidifier with ecobee thermostats."""
 
-from __future__ import annotations
-
 from datetime import timedelta
-from typing import Any
+from typing import Any, override
 
 from homeassistant.components.humidifier import (
     DEFAULT_MAX_HUMIDITY,
@@ -71,6 +69,7 @@ class EcobeeHumidifier(HumidifierEntity):
         self.update_without_throttle = False
 
     @property
+    @override
     def device_info(self) -> DeviceInfo:
         """Return device information for the ecobee humidifier."""
         model: str | None
@@ -88,6 +87,7 @@ class EcobeeHumidifier(HumidifierEntity):
         )
 
     @property
+    @override
     def available(self) -> bool:
         """Return if device is available."""
         return self.thermostat["runtime"]["connected"]
@@ -104,6 +104,7 @@ class EcobeeHumidifier(HumidifierEntity):
             self._last_humidifier_on_mode = self.mode
 
     @property
+    @override
     def action(self) -> HumidifierAction:
         """Return the current action."""
         for status in self.thermostat["equipmentStatus"].split(","):
@@ -112,21 +113,25 @@ class EcobeeHumidifier(HumidifierEntity):
         return HumidifierAction.IDLE if self.is_on else HumidifierAction.OFF
 
     @property
+    @override
     def is_on(self) -> bool:
         """Return True if the humidifier is on."""
         return self.mode != MODE_OFF
 
     @property
+    @override
     def mode(self) -> str:
         """Return the current mode, e.g., off, auto, manual."""
         return self.thermostat["settings"]["humidifierMode"]
 
     @property
+    @override
     def target_humidity(self) -> int:
         """Return the desired humidity set point."""
         return int(self.thermostat["runtime"]["desiredHumidity"])
 
     @property
+    @override
     def current_humidity(self) -> int | None:
         """Return the current humidity."""
         try:
@@ -134,6 +139,7 @@ class EcobeeHumidifier(HumidifierEntity):
         except KeyError:
             return None
 
+    @override
     def set_mode(self, mode: str) -> None:
         """Set humidifier mode (auto, off, manual)."""
         if self.available_modes is None:
@@ -147,15 +153,18 @@ class EcobeeHumidifier(HumidifierEntity):
         self.data.ecobee.set_humidifier_mode(self.thermostat_index, mode)
         self.update_without_throttle = True
 
+    @override
     def set_humidity(self, humidity: int) -> None:
         """Set the humidity level."""
         self.data.ecobee.set_humidity(self.thermostat_index, humidity)
         self.update_without_throttle = True
 
+    @override
     def turn_off(self, **kwargs: Any) -> None:
         """Set humidifier to off mode."""
         self.set_mode(MODE_OFF)
 
+    @override
     def turn_on(self, **kwargs: Any) -> None:
         """Set humidifier to on mode."""
         self.set_mode(self._last_humidifier_on_mode)

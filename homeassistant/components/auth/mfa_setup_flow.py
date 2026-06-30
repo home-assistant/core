@@ -1,9 +1,7 @@
 """Helpers to setup multi-factor auth module."""
 
-from __future__ import annotations
-
 import logging
-from typing import Any
+from typing import Any, override
 
 import voluptuous as vol
 import voluptuous_serialize
@@ -23,6 +21,7 @@ _LOGGER = logging.getLogger(__name__)
 class MfaFlowManager(data_entry_flow.FlowManager):
     """Manage multi factor authentication flows."""
 
+    @override
     async def async_create_flow(  # type: ignore[override]
         self,
         handler_key: str,
@@ -38,6 +37,7 @@ class MfaFlowManager(data_entry_flow.FlowManager):
         user_id = data.pop("user_id")
         return await mfa_module.async_setup_flow(user_id)
 
+    @override
     async def async_finish_flow(
         self, flow: data_entry_flow.FlowHandler, result: data_entry_flow.FlowResult
     ) -> data_entry_flow.FlowResult:
@@ -144,9 +144,9 @@ def websocket_depose_mfa(
 
 def _prepare_result_json(result: data_entry_flow.FlowResult) -> dict[str, Any]:
     """Convert result to JSON serializable dict."""
-    if result["type"] == data_entry_flow.FlowResultType.CREATE_ENTRY:
+    if result["type"] is data_entry_flow.FlowResultType.CREATE_ENTRY:
         return dict(result)
-    if result["type"] != data_entry_flow.FlowResultType.FORM:
+    if result["type"] is not data_entry_flow.FlowResultType.FORM:
         return result  # type: ignore[return-value]
 
     data = dict(result)

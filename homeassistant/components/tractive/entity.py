@@ -1,11 +1,9 @@
 """A entity class for Tractive integration."""
 
-from __future__ import annotations
-
-from typing import Any
+from typing import Any, override
 
 from homeassistant.core import callback
-from homeassistant.helpers.device_registry import DeviceInfo
+from homeassistant.helpers.device_registry import DeviceEntryType, DeviceInfo
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from homeassistant.helpers.entity import Entity
 
@@ -24,21 +22,33 @@ class TractiveEntity(Entity):
         trackable: dict[str, Any],
         tracker_details: dict[str, Any],
         dispatcher_signal: str,
+        hardware_entity: bool = True,
     ) -> None:
         """Initialize tracker entity."""
-        self._attr_device_info = DeviceInfo(
-            configuration_url="https://my.tractive.com/",
-            identifiers={(DOMAIN, tracker_details["_id"])},
-            name=trackable["details"]["name"],
-            manufacturer="Tractive GmbH",
-            sw_version=tracker_details["fw_version"],
-            model=tracker_details["model_number"],
-        )
+        if hardware_entity:
+            self._attr_device_info = DeviceInfo(
+                configuration_url="https://my.tractive.com/",
+                identifiers={(DOMAIN, tracker_details["_id"])},
+                translation_key="tracker",
+                translation_placeholders={"id": tracker_details["_id"]},
+                manufacturer="Tractive GmbH",
+                sw_version=tracker_details["fw_version"],
+                model_id=tracker_details["model_number"],
+            )
+        else:
+            self._attr_device_info = DeviceInfo(
+                identifiers={(DOMAIN, trackable["_id"])},
+                name=trackable["details"]["name"],
+                via_device=(DOMAIN, tracker_details["_id"]),
+                entry_type=DeviceEntryType.SERVICE,
+            )
+
         self._user_id = client.user_id
         self._tracker_id = tracker_details["_id"]
         self._client = client
         self._dispatcher_signal = dispatcher_signal
 
+    @override
     async def async_added_to_hass(self) -> None:
         """Handle entity which will be added."""
         if not self._client.subscribed:

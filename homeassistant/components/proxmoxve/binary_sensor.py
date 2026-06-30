@@ -1,10 +1,8 @@
 """Binary sensor to read Proxmox VE data."""
 
-from __future__ import annotations
-
 from collections.abc import Callable
 from dataclasses import dataclass
-from typing import Any
+from typing import Any, override
 
 from homeassistant.components.binary_sensor import (
     BinarySensorDeviceClass,
@@ -78,6 +76,7 @@ NODE_SENSORS: tuple[ProxmoxNodeBinarySensorEntityDescription, ...] = (
         ),
         device_class=BinarySensorDeviceClass.PROBLEM,
         entity_category=EntityCategory.DIAGNOSTIC,
+        entity_registry_enabled_default=False,
     ),
 )
 
@@ -217,6 +216,7 @@ class ProxmoxNodeBinarySensor(ProxmoxNodeEntity, BinarySensorEntity):
     entity_description: ProxmoxNodeBinarySensorEntityDescription
 
     @property
+    @override
     def is_on(self) -> bool | None:
         """Return true if the binary sensor is on."""
         return self.entity_description.state_fn(self.coordinator.data[self.device_name])
@@ -228,6 +228,7 @@ class ProxmoxVMBinarySensor(ProxmoxVMEntity, BinarySensorEntity):
     entity_description: ProxmoxVMBinarySensorEntityDescription
 
     @property
+    @override
     def is_on(self) -> bool | None:
         """Return true if the binary sensor is on."""
         return self.entity_description.state_fn(self.vm_data)
@@ -239,6 +240,7 @@ class ProxmoxContainerBinarySensor(ProxmoxContainerEntity, BinarySensorEntity):
     entity_description: ProxmoxContainerBinarySensorEntityDescription
 
     @property
+    @override
     def is_on(self) -> bool | None:
         """Return true if the binary sensor is on."""
         return self.entity_description.state_fn(self.container_data)
@@ -250,6 +252,7 @@ class ProxmoxStorageBinarySensor(ProxmoxStorageEntity, BinarySensorEntity):
     entity_description: ProxmoxStorageBinarySensorEntityDescription
 
     @property
+    @override
     def is_on(self) -> bool | None:
         """Return true if the binary sensor is on."""
         return self.entity_description.state_fn(self.storage_data)

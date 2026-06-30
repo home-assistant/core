@@ -1,10 +1,8 @@
 """Support for vacuum entities."""
 
-from __future__ import annotations
-
 from enum import StrEnum
 import logging
-from typing import Any
+from typing import Any, override
 
 from thinqconnect import DeviceType
 from thinqconnect.integration import ExtendedProperty
@@ -114,6 +112,7 @@ class ThinQStateVacuumEntity(ThinQEntity, StateVacuumEntity):
         | VacuumEntityFeature.RETURN_HOME
     )
 
+    @override
     def _update_status(self) -> None:
         """Update status itself."""
         super()._update_status()
@@ -136,6 +135,7 @@ class ThinQStateVacuumEntity(ThinQEntity, StateVacuumEntity):
             self.battery_level,
         )
 
+    @override
     async def async_start(self, **kwargs) -> None:
         """Start the device."""
         if self.data.current_state == State.SLEEP:
@@ -152,6 +152,7 @@ class ThinQStateVacuumEntity(ThinQEntity, StateVacuumEntity):
             self.coordinator.api.async_set_clean_operation_mode(self.property_id, value)
         )
 
+    @override
     async def async_pause(self, **kwargs) -> None:
         """Pause the device."""
         _LOGGER.debug(
@@ -163,6 +164,7 @@ class ThinQStateVacuumEntity(ThinQEntity, StateVacuumEntity):
             )
         )
 
+    @override
     async def async_return_to_base(self, **kwargs: Any) -> None:
         """Return device to dock."""
         _LOGGER.debug(

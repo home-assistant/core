@@ -1,8 +1,7 @@
 """Support gathering system information of hosts which are running Glances."""
 
-from __future__ import annotations
-
 from dataclasses import dataclass
+from typing import override
 
 from homeassistant.components.sensor import (
     SensorDeviceClass,
@@ -358,11 +357,13 @@ class GlancesSensor(CoordinatorEntity[GlancesDataUpdateCoordinator], SensorEntit
         self._update_native_value()
 
     @property
+    @override
     def available(self) -> bool:
         """Set sensor unavailable when native value is invalid."""
         return super().available and self._data_valid
 
     @callback
+    @override
     def _handle_coordinator_update(self) -> None:
         """Handle updated data from the coordinator."""
         self._update_native_value()
