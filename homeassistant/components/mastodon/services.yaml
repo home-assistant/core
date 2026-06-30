@@ -278,6 +278,14 @@ post:
       required: true
       selector:
         boolean:
+    in_reply_to:
+      required: false
+      selector:
+        text:
+    quoted_status:
+      required: false
+      selector:
+        text:
 update_profile:
   fields:
     config_entry_id: *config_entry_id
