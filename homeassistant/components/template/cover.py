@@ -171,12 +171,12 @@ class CoverExtraStoredData(ExtraStoredData):
 
     @override
     def as_dict(self) -> dict[str, Any]:
-        """Return a dict representation of the event data."""
+        """Return a dict representation of the cover data."""
         return asdict(self)
 
     @classmethod
-    def from_dict(cls, restored: dict[str, Any]) -> Self | None:
-        """Initialize a stored event state from a dict."""
+    def from_dict(cls, restored: dict[str, Any]) -> Self:
+        """Initialize a stored cover state from a dict."""
         return cls(
             current_cover_position=restored["current_cover_position"],
             current_cover_tilt_position=restored["current_cover_tilt_position"],
@@ -356,7 +356,7 @@ class AbstractTemplateCover(AbstractTemplateEntity, CoverEntity, RestoreEntity):
     @property
     @override
     def extra_restore_state_data(self) -> CoverExtraStoredData:
-        """Return weather specific state data to be restored."""
+        """Return cover specific state data to be restored."""
         return CoverExtraStoredData(
             current_cover_position=self._attr_current_cover_position,
             current_cover_tilt_position=self._attr_current_cover_tilt_position,
