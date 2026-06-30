@@ -2901,7 +2901,7 @@ async def test_thermostat_reversed_min_max(hass: HomeAssistant, hk_driver) -> No
 async def test_thermostat_with_capitalized_fan_modes(
     hass: HomeAssistant, hk_driver
 ) -> None:
-    """Test that fan modes are sent back to the climate entity with their original casing."""
+    """Test fan modes are sent back with their original casing."""
     entity_id = "climate.test"
     hass.states.async_set(
         entity_id,
