@@ -261,7 +261,7 @@ class FreeboxRouter:
         try:
             home_nodes: list[Any] = await self.home.get_home_nodes() or []
         except HttpRequestError as err:
-            if getattr(err, 'status', None) == 404:
+            if getattr(err, "status", None) == 404:
                 _LOGGER.debug(
                     "No Freebox Home devices configured (home/nodes returned 404)"
                 )
