@@ -41,4 +41,4 @@ class GatusDataUpdateCoordinator(DataUpdateCoordinator[list[dict[str, Any]]]):
         try:
             return await self.client.get_endpoints_statuses()
         except GatusClientError as err:
-            raise UpdateFailed(f"Error communicating with Gatus API: {err}") from err
+            raise UpdateFailed("Error communicating with Gatus API") from err

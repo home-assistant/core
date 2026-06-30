@@ -3,6 +3,7 @@
 from unittest.mock import AsyncMock, patch
 
 from gatus_api.client import GatusClientError
+import pytest
 
 from homeassistant import config_entries
 from homeassistant.components.gatus.const import DOMAIN
@@ -25,74 +26,65 @@ async def test_form_success(hass: HomeAssistant, mock_setup_entry: AsyncMock) ->
         "homeassistant.components.gatus.config_flow.GatusClient.get_endpoints_statuses",
         AsyncMock(return_value=[]),
     ):
-        result2 = await hass.config_entries.flow.async_configure(
+        result = await hass.config_entries.flow.async_configure(
             result["flow_id"],
             {CONF_URL: "http://gatus.local:8080"},
         )
         await hass.async_block_till_done()
 
-    assert result2["type"] is FlowResultType.CREATE_ENTRY
-    assert result2["title"] == "Gatus"
-    assert result2["data"] == {
+    assert result["type"] is FlowResultType.CREATE_ENTRY
+    assert result["title"] == "Gatus"
+    assert result["data"] == {
         CONF_URL: "http://gatus.local:8080",
     }
 
-    assert result2["result"].unique_id is not None
+    assert result["result"].unique_id == "gatus.local:8080"
     assert len(mock_setup_entry.mock_calls) == 1
 
 
-async def test_form_connection_error_and_recovery(
-    hass: HomeAssistant, mock_setup_entry: AsyncMock
+@pytest.mark.parametrize(
+    ("side_effect", "error_key"),
+    [
+        (GatusClientError("Cannot connect"), "cannot_connect"),
+        (Exception("Unexpected backend explosion"), "unknown"),
+    ],
+)
+async def test_form_failures_and_recovery(
+    hass: HomeAssistant,
+    mock_setup_entry: AsyncMock,
+    side_effect: Exception,
+    error_key: str,
 ) -> None:
-    """Test handling connection failures and ensuring the flow can completely recover."""
+    """Test handling validation failures and ensuring the flow can completely recover."""
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": config_entries.SOURCE_USER}
     )
 
     with patch(
         "homeassistant.components.gatus.config_flow.GatusClient.get_endpoints_statuses",
-        AsyncMock(side_effect=GatusClientError("Cannot connect")),
+        side_effect=side_effect,
     ):
-        result2 = await hass.config_entries.flow.async_configure(
+        result = await hass.config_entries.flow.async_configure(
             result["flow_id"],
             {CONF_URL: "http://gatus.local:8080"},
         )
 
-    assert result2["type"] is FlowResultType.FORM
-    assert result2["errors"] == {"base": "cannot_connect"}
+    assert result["type"] is FlowResultType.FORM
+    assert result["errors"] == {"base": error_key}
 
     with patch(
         "homeassistant.components.gatus.config_flow.GatusClient.get_endpoints_statuses",
         AsyncMock(return_value=[]),
     ):
-        result3 = await hass.config_entries.flow.async_configure(
-            result2["flow_id"],
+        result = await hass.config_entries.flow.async_configure(
+            result["flow_id"],
             {CONF_URL: "http://gatus.local:8080"},
         )
         await hass.async_block_till_done()
 
-    assert result3["type"] is FlowResultType.CREATE_ENTRY
-    assert result3["result"].unique_id is not None
+    assert result["type"] is FlowResultType.CREATE_ENTRY
+    assert result["result"].unique_id == "gatus.local:8080"
     assert len(mock_setup_entry.mock_calls) == 1
-
-
-async def test_form_unexpected_exception(hass: HomeAssistant) -> None:
-    """Test handling fallback arbitrary exceptions gracefully."""
-    result = await hass.config_entries.flow.async_init(
-        DOMAIN, context={"source": config_entries.SOURCE_USER}
-    )
-
-    with patch(
-        "homeassistant.components.gatus.config_flow.validate_input",
-        side_effect=Exception("Unexpected backend explosion"),
-    ):
-        result2 = await hass.config_entries.flow.async_configure(
-            result["flow_id"],
-            {CONF_URL: "http://gatus.local:8080"},
-        )
-
-    assert result2["type"] is FlowResultType.FORM
-    assert result2["errors"] == {"base": "unknown"}
 
 
 async def test_form_already_configured(hass: HomeAssistant) -> None:
@@ -107,10 +99,10 @@ async def test_form_already_configured(hass: HomeAssistant) -> None:
         DOMAIN, context={"source": config_entries.SOURCE_USER}
     )
 
-    result2 = await hass.config_entries.flow.async_configure(
+    result = await hass.config_entries.flow.async_configure(
         result["flow_id"],
         {CONF_URL: "http://gatus.local:8080"},
     )
 
-    assert result2["type"] is FlowResultType.ABORT
-    assert result2["reason"] == "already_configured"
+    assert result["type"] is FlowResultType.ABORT
+    assert result["reason"] == "already_configured"

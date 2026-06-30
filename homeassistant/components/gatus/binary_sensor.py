@@ -3,6 +3,8 @@
 from collections.abc import Mapping
 from typing import Any, override
 
+from yarl import URL
+
 from homeassistant.components.binary_sensor import (
     BinarySensorDeviceClass,
     BinarySensorEntity,
@@ -25,12 +27,12 @@ async def async_setup_entry(
     """Set up Gatus binary sensors based on a config entry."""
     coordinator = entry.runtime_data
 
-    entities = [
-        GatusEndpointBinarySensor(coordinator, entry, endpoint["key"])
-        for endpoint in coordinator.data
-    ]
-
-    async_add_entities(entities)
+    async_add_entities(
+        [
+            GatusEndpointBinarySensor(coordinator, entry, endpoint["key"])
+            for endpoint in coordinator.data
+        ]
+    )
 
 
 class GatusEndpointBinarySensor(
@@ -52,47 +54,75 @@ class GatusEndpointBinarySensor(
         self._endpoint_key = endpoint_key
 
         endpoint_data = self.endpoint_data
-        group = (endpoint_data.get("group") or "").title()
-        name = endpoint_data.get("name")
+        if endpoint_data:
+            group = endpoint_data["group"]
+            name = endpoint_data["name"]
+        else:
+            group = "Gatus Server"
+            name = endpoint_key
 
         self._attr_name = f"{group} {name}"
-        self._attr_unique_id = f"{entry.entry_id}_{endpoint_key}"
 
+        url_obj = URL(entry.data["url"])
+        host = url_obj.host or url_obj.path
+
+        if url_obj.port is not None:
+            url_host = f"{host}:{url_obj.port}"
+        else:
+            url_host = str(host)
+
+        self._attr_unique_id = f"{url_host}_{endpoint_key}"
         self._attr_device_info = DeviceInfo(
             identifiers={(DOMAIN, entry.entry_id)},
             name="Gatus Server",
         )
 
     @property
-    def endpoint_data(self) -> dict:
+    def latest_result(self) -> dict | None:
+        """Return the most recent monitoring result (Gatus appends newest last)."""
+        if not (endpoint_data := self.endpoint_data):
+            return None
+
+        if not (results := endpoint_data["results"]):
+            return None
+
+        return results[-1]
+
+    @property
+    def endpoint_data(self) -> dict | None:
         """Return this specific endpoint's data from the coordinator."""
         return next(
-            ep for ep in self.coordinator.data if ep["key"] == self._endpoint_key
+            (ep for ep in self.coordinator.data if ep["key"] == self._endpoint_key),
+            None,
         )
 
     @property
     @override
     def is_on(self) -> bool | None:
         """Return true if the endpoint is up and healthy."""
-        endpoint_data = self.endpoint_data
-        results = endpoint_data.get("results", [])
+        if not (latest_result := self.latest_result):
+            return None
 
-        latest_result = results[-1]
         return latest_result.get("success", False)
 
     @property
     @override
     def extra_state_attributes(self) -> Mapping[str, Any] | None:
         """Return extra operational attributes for the endpoint."""
-        endpoint_data = self.endpoint_data
+        if not (latest_result := self.latest_result):
+            return None
 
-        results = endpoint_data.get("results", [])
-
-        latest_result = results[-1]
-
-        return {
-            "hostname": latest_result.get("hostname"),
-            "status_code": latest_result.get("status"),
-            "duration_raw": latest_result.get("duration"),
-            "timestamp": latest_result.get("timestamp"),
+        attributes: dict[str, Any] = {
+            "hostname": latest_result["hostname"],
+            "duration_raw": latest_result["duration"],
+            "timestamp": latest_result["timestamp"],
+            "success": latest_result["success"],
         }
+
+        if "status" in latest_result:
+            attributes["status_code"] = latest_result["status"]
+
+        if "body" in latest_result:
+            attributes["response_body"] = latest_result["body"]
+
+        return attributes

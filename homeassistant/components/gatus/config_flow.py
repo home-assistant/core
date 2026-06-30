@@ -2,10 +2,10 @@
 
 import logging
 from typing import Any, override
-import uuid
 
 from gatus_api.client import GatusClient, GatusClientError
 import voluptuous as vol
+from yarl import URL
 
 from homeassistant.config_entries import ConfigFlow, ConfigFlowResult
 from homeassistant.const import CONF_URL
@@ -57,12 +57,18 @@ class GatusConfigFlow(ConfigFlow, domain=DOMAIN):
                 _LOGGER.exception("Unexpected exception during Gatus setup validation")
                 errors["base"] = "unknown"
             else:
-                unique_id = str(uuid.uuid4())
+                url_obj = URL(user_input[CONF_URL])
+                host = url_obj.host or url_obj.path
+
+                if url_obj.port is not None:
+                    unique_id = f"{host}:{url_obj.port}"
+                else:
+                    unique_id = str(host)
+
                 await self.async_set_unique_id(unique_id)
                 self._abort_if_unique_id_configured()
 
                 return self.async_create_entry(title="Gatus", data=user_input)
-
         return self.async_show_form(
             step_id="user", data_schema=STEP_USER_DATA_SCHEMA, errors=errors
         )

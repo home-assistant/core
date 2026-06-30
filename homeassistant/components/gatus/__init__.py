@@ -3,7 +3,7 @@
 from homeassistant.config_entries import ConfigEntry as ConfigEntry
 from homeassistant.const import CONF_URL, Platform as Platform
 from homeassistant.core import HomeAssistant
-from homeassistant.exceptions import ConfigEntryNotReady
+from homeassistant.exceptions import ConfigEntryNotReady as ConfigEntryNotReady
 
 from .coordinator import _PLATFORMS, GatusConfigEntry, GatusDataUpdateCoordinator
 
@@ -11,12 +11,11 @@ from .coordinator import _PLATFORMS, GatusConfigEntry, GatusDataUpdateCoordinato
 async def async_setup_entry(hass: HomeAssistant, entry: GatusConfigEntry) -> bool:
     """Set up Gatus from a config entry."""
     coordinator = GatusDataUpdateCoordinator(hass, entry, entry.data[CONF_URL])
-    try:
-        await coordinator.async_config_entry_first_refresh()
-    except Exception as err:
-        raise ConfigEntryNotReady(f"Error communicating with Gatus API: {err}") from err
+
+    await coordinator.async_config_entry_first_refresh()
 
     entry.runtime_data = coordinator
+
     await hass.config_entries.async_forward_entry_setups(entry, _PLATFORMS)
     return True
 
