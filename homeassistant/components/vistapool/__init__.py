@@ -125,7 +125,11 @@ async def async_setup_entry(hass: HomeAssistant, entry: VistapoolConfigEntry) ->
 
 async def async_unload_entry(hass: HomeAssistant, entry: VistapoolConfigEntry) -> bool:
     """Unload Vistapool config entry."""
-    return await hass.config_entries.async_unload_platforms(entry, PLATFORMS)
+    unload_ok = await hass.config_entries.async_unload_platforms(entry, PLATFORMS)
+    if unload_ok:
+        for coordinator in entry.runtime_data.coordinators.values():
+            await coordinator.async_shutdown()
+    return unload_ok
 
 
 async def async_remove_config_entry_device(
@@ -180,7 +184,6 @@ async def _async_add_coordinator(
         del entry.runtime_data.coordinators[pool_id]
         await coordinator.async_shutdown()
         raise
-    entry.async_on_unload(coordinator.async_shutdown)
     return coordinator
 
 
