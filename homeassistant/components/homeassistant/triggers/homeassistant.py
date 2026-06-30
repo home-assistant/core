@@ -45,8 +45,12 @@ async def async_attach_trigger(
             },
         )
 
+    unsub: CALLBACK_TYPE | None = None
+
     @callback
     def hass_started(_: Event) -> None:
+        nonlocal unsub
+        unsub = None
         hass.async_run_hass_job(
             job,
             {
@@ -61,4 +65,11 @@ async def async_attach_trigger(
 
     # Only fires if armed before EVENT_HOMEASSISTANT_STARTED; if hass is already
     # started, the trigger doesn't fire.
-    return hass.bus.async_listen_once(EVENT_HOMEASSISTANT_STARTED, hass_started)
+    unsub = hass.bus.async_listen_once(EVENT_HOMEASSISTANT_STARTED, hass_started)
+
+    @callback
+    def remove() -> None:
+        if unsub is not None:
+            unsub()
+
+    return remove

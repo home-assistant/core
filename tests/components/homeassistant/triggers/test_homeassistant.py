@@ -29,7 +29,9 @@ from tests.common import async_mock_service
 )
 @pytest.mark.usefixtures("mock_hass_config")
 async def test_if_fires_on_hass_start(
-    hass: HomeAssistant, hass_config: ConfigType
+    hass: HomeAssistant,
+    hass_config: ConfigType,
+    caplog: pytest.LogCaptureFixture,
 ) -> None:
     """Test the firing when Home Assistant starts."""
     calls = async_mock_service(hass, "test", "automation")
@@ -51,6 +53,10 @@ async def test_if_fires_on_hass_start(
     assert automation.is_on(hass, "automation.hello")
     assert len(calls) == 1
     assert calls[0].data["id"] == 0
+
+    # Detaching the trigger after it fired must not re-invoke the stale once
+    # listener's remove callback.
+    assert "Unable to remove unknown job listener" not in caplog.text
 
 
 async def test_if_not_fires_when_set_up_after_start(hass: HomeAssistant) -> None:
