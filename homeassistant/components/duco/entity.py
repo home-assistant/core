@@ -5,11 +5,32 @@ from typing import override
 from duco_connectivity.models import Node, NodeType
 
 from homeassistant.const import ATTR_VIA_DEVICE
+from homeassistant.helpers import device_registry as dr
 from homeassistant.helpers.device_registry import CONNECTION_NETWORK_MAC, DeviceInfo
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
 from .const import DOMAIN
 from .coordinator import DucoCoordinator
+
+
+def get_duco_node_identifiers(mac: str, node_id: int) -> set[tuple[str, str]]:
+    """Return the device registry identifiers for a Duco node."""
+    return {(DOMAIN, f"{mac}_{node_id}")}
+
+
+def get_duco_node_id(device: dr.DeviceEntry, mac: str) -> int | None:
+    """Extract the Duco node ID from a device registry entry."""
+    identifier_prefix = f"{mac}_"
+
+    for domain, identifier in device.identifiers:
+        if domain != DOMAIN or not identifier.startswith(identifier_prefix):
+            continue
+
+        node_id = identifier.removeprefix(identifier_prefix)
+        if node_id.isdecimal():
+            return int(node_id)
+
+    return None
 
 
 class DucoEntity(CoordinatorEntity[DucoCoordinator]):
@@ -21,10 +42,9 @@ class DucoEntity(CoordinatorEntity[DucoCoordinator]):
         """Initialize the entity."""
         super().__init__(coordinator)
         self._node_id = node.node_id
-        mac = coordinator.config_entry.unique_id
-        assert mac is not None
+        mac = coordinator.mac
         device_info = DeviceInfo(
-            identifiers={(DOMAIN, f"{mac}_{node.node_id}")},
+            identifiers=get_duco_node_identifiers(mac, node.node_id),
             manufacturer="Duco",
             model=coordinator.board_info.box_name
             if node.general.node_type == NodeType.BOX
