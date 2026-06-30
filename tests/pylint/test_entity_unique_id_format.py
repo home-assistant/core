@@ -6,14 +6,13 @@ from pathlib import Path
 import astroid
 from astroid import nodes
 from pylint.testutils import MessageTest, UnittestLinter
-from pylint.utils.ast_walker import ASTWalker
 from pylint_home_assistant.checkers.entity_unique_id_format import (
     EntityUniqueIdFormatChecker,
 )
 from pylint_home_assistant.helpers.integration import clear_caches
 import pytest
 
-from . import assert_adds_messages, assert_no_messages
+from . import assert_adds_messages, assert_no_messages, walk_checker
 
 
 @pytest.fixture(name="checker")
@@ -181,10 +180,8 @@ def test_redundant_domain_fires(
 
     root_node = _parse(code, integration_dir)
     value_node = _find_attr_value_node(root_node)
-    walker = ASTWalker(linter)
-    walker.add_checker(checker)
     with assert_adds_messages(linter, _expect_redundant_domain(value_node, "MySensor")):
-        walker.walk(root_node)
+        walk_checker(linter, checker, root_node)
 
 
 def test_redundant_domain_fires_in_both_branches(
@@ -223,14 +220,12 @@ class MySensor(Entity):
         )
     ]
     assert len(value_nodes) == 2
-    walker = ASTWalker(linter)
-    walker.add_checker(checker)
     with assert_adds_messages(
         linter,
         _expect_redundant_domain(value_nodes[0], "MySensor"),
         _expect_redundant_domain(value_nodes[1], "MySensor"),
     ):
-        walker.walk(root_node)
+        walk_checker(linter, checker, root_node)
 
 
 @pytest.mark.parametrize(
@@ -280,10 +275,8 @@ def test_redundant_domain_does_not_fire(
     integration_dir = _make_integration(tmp_path)
 
     root_node = _parse(code, integration_dir)
-    walker = ASTWalker(linter)
-    walker.add_checker(checker)
     with assert_no_messages(linter):
-        walker.walk(root_node)
+        walk_checker(linter, checker, root_node)
 
 
 @pytest.mark.parametrize(
@@ -370,9 +363,7 @@ def test_redundant_domain_literal_fires(
     integration_dir = _make_integration(tmp_path, domain="myhub")
 
     root_node = _parse(code, integration_dir)
-    walker = ASTWalker(linter)
-    walker.add_checker(checker)
-    walker.walk(root_node)
+    walk_checker(linter, checker, root_node)
     messages = linter.release_messages()
     assert len(messages) == 1
     assert messages[0].msg_id == "home-assistant-entity-unique-id-redundant-domain"
@@ -410,9 +401,7 @@ class MySensor(Entity):
 """,
         integration_dir,
     )
-    walker = ASTWalker(linter)
-    walker.add_checker(checker)
-    walker.walk(root_node)
+    walk_checker(linter, checker, root_node)
     messages = linter.release_messages()
     assert len(messages) == (1 if fires else 0)
 
@@ -492,10 +481,8 @@ def test_redundant_domain_literal_does_not_fire_on_word_substrings(
     integration_dir = _make_integration(tmp_path, domain="myhub")
 
     root_node = _parse(code, integration_dir)
-    walker = ASTWalker(linter)
-    walker.add_checker(checker)
     with assert_no_messages(linter):
-        walker.walk(root_node)
+        walk_checker(linter, checker, root_node)
 
 
 @pytest.mark.parametrize(
@@ -539,12 +526,10 @@ def test_redundant_domain_fires_in_unique_id_property(
 
     root_node = _parse(code, integration_dir)
     return_node = next(root_node.nodes_of_class(nodes.Return))
-    walker = ASTWalker(linter)
-    walker.add_checker(checker)
     with assert_adds_messages(
         linter, _expect_redundant_domain(return_node.value, "MySensor")
     ):
-        walker.walk(root_node)
+        walk_checker(linter, checker, root_node)
 
 
 @pytest.mark.parametrize(
@@ -591,10 +576,8 @@ def test_out_of_scope_ignored(
     root_node = _parse(
         code, integration_dir, module_name=module_name, file_name=file_name
     )
-    walker = ASTWalker(linter)
-    walker.add_checker(checker)
     with assert_no_messages(linter):
-        walker.walk(root_node)
+        walk_checker(linter, checker, root_node)
 
 
 @pytest.mark.parametrize(
@@ -640,10 +623,8 @@ class MyEntity(Entity):
         file_name=file_name,
     )
     value_node = _find_attr_value_node(root_node)
-    walker = ASTWalker(linter)
-    walker.add_checker(checker)
     with assert_adds_messages(linter, _expect_redundant_domain(value_node, "MyEntity")):
-        walker.walk(root_node)
+        walk_checker(linter, checker, root_node)
 
 
 def test_same_module_mixin_base_fires(
@@ -674,9 +655,7 @@ class MyConcreteSensor(MyBaseSensor):
         integration_dir,
     )
     value_node = _find_attr_value_node(root_node)
-    walker = ASTWalker(linter)
-    walker.add_checker(checker)
     with assert_adds_messages(
         linter, _expect_redundant_domain(value_node, "MyBaseSensor")
     ):
-        walker.walk(root_node)
+        walk_checker(linter, checker, root_node)

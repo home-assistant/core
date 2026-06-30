@@ -39,7 +39,7 @@
 # name: test_all_entities[binary_sensor.wallet_lost-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'Wallet Lost',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Wallet Lost',
     }),
     'context': <ANY>,
     'entity_id': 'binary_sensor.wallet_lost',
