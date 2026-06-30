@@ -346,7 +346,7 @@ jobs:
           persist-credentials: false
       - name: Set up Python ${{ matrix.python-version }}
         id: python
-        uses: actions/setup-python@a309ff8b426b58ec0e2a45f0f869d46889d02405 # v6.2.0
+        uses: actions/setup-python@ece7cb06caefa5fff74198d8649806c4678c61a1 # v6.3.0
         with:
           python-version: ${{ matrix.python-version }}
           check-latest: true
@@ -480,7 +480,7 @@ jobs:
           version: ${{ env.APT_CACHE_VERSION }}
       - name: Set up Python
         id: python
-        uses: actions/setup-python@a309ff8b426b58ec0e2a45f0f869d46889d02405 # v6.2.0
+        uses: actions/setup-python@ece7cb06caefa5fff74198d8649806c4678c61a1 # v6.3.0
         with:
           python-version-file: ".python-version"
           check-latest: true
@@ -517,7 +517,7 @@ jobs:
           persist-credentials: false
       - name: Set up Python
         id: python
-        uses: actions/setup-python@a309ff8b426b58ec0e2a45f0f869d46889d02405 # v6.2.0
+        uses: actions/setup-python@ece7cb06caefa5fff74198d8649806c4678c61a1 # v6.3.0
         with:
           python-version-file: ".python-version"
           check-latest: true
@@ -553,7 +553,7 @@ jobs:
           persist-credentials: false
       - name: Set up Python
         id: python
-        uses: actions/setup-python@a309ff8b426b58ec0e2a45f0f869d46889d02405 # v6.2.0
+        uses: actions/setup-python@ece7cb06caefa5fff74198d8649806c4678c61a1 # v6.3.0
         with:
           python-version-file: ".python-version"
           check-latest: true
@@ -608,7 +608,7 @@ jobs:
           persist-credentials: false
       - name: Set up Python ${{ matrix.python-version }}
         id: python
-        uses: actions/setup-python@a309ff8b426b58ec0e2a45f0f869d46889d02405 # v6.2.0
+        uses: actions/setup-python@ece7cb06caefa5fff74198d8649806c4678c61a1 # v6.3.0
         with:
           python-version: ${{ matrix.python-version }}
           check-latest: true
@@ -659,7 +659,7 @@ jobs:
           persist-credentials: false
       - name: Set up Python
         id: python
-        uses: actions/setup-python@a309ff8b426b58ec0e2a45f0f869d46889d02405 # v6.2.0
+        uses: actions/setup-python@ece7cb06caefa5fff74198d8649806c4678c61a1 # v6.3.0
         with:
           python-version-file: ".python-version"
           check-latest: true
@@ -712,7 +712,7 @@ jobs:
           persist-credentials: false
       - name: Set up Python
         id: python
-        uses: actions/setup-python@a309ff8b426b58ec0e2a45f0f869d46889d02405 # v6.2.0
+        uses: actions/setup-python@ece7cb06caefa5fff74198d8649806c4678c61a1 # v6.3.0
         with:
           python-version-file: ".python-version"
           check-latest: true
@@ -763,7 +763,7 @@ jobs:
           persist-credentials: false
       - name: Set up Python
         id: python
-        uses: actions/setup-python@a309ff8b426b58ec0e2a45f0f869d46889d02405 # v6.2.0
+        uses: actions/setup-python@ece7cb06caefa5fff74198d8649806c4678c61a1 # v6.3.0
         with:
           python-version-file: ".python-version"
           check-latest: true
@@ -840,7 +840,7 @@ jobs:
           execute_install_scripts: true
       - name: Set up Python
         id: python
-        uses: actions/setup-python@a309ff8b426b58ec0e2a45f0f869d46889d02405 # v6.2.0
+        uses: actions/setup-python@ece7cb06caefa5fff74198d8649806c4678c61a1 # v6.3.0
         with:
           python-version-file: ".python-version"
           check-latest: true
@@ -905,7 +905,7 @@ jobs:
           execute_install_scripts: true
       - name: Set up Python ${{ matrix.python-version }}
         id: python
-        uses: actions/setup-python@a309ff8b426b58ec0e2a45f0f869d46889d02405 # v6.2.0
+        uses: actions/setup-python@ece7cb06caefa5fff74198d8649806c4678c61a1 # v6.3.0
         with:
           python-version: ${{ matrix.python-version }}
           check-latest: true
@@ -1047,7 +1047,7 @@ jobs:
           execute_install_scripts: true
       - name: Set up Python ${{ matrix.python-version }}
         id: python
-        uses: actions/setup-python@a309ff8b426b58ec0e2a45f0f869d46889d02405 # v6.2.0
+        uses: actions/setup-python@ece7cb06caefa5fff74198d8649806c4678c61a1 # v6.3.0
         with:
           python-version: ${{ matrix.python-version }}
           check-latest: true
@@ -1203,7 +1203,7 @@ jobs:
           version: ${{ env.APT_CACHE_VERSION }}
       - name: Set up Python ${{ matrix.python-version }}
         id: python
-        uses: actions/setup-python@a309ff8b426b58ec0e2a45f0f869d46889d02405 # v6.2.0
+        uses: actions/setup-python@ece7cb06caefa5fff74198d8649806c4678c61a1 # v6.3.0
         with:
           python-version: ${{ matrix.python-version }}
           check-latest: true
@@ -1371,7 +1371,7 @@ jobs:
           execute_install_scripts: true
       - name: Set up Python ${{ matrix.python-version }}
         id: python
-        uses: actions/setup-python@a309ff8b426b58ec0e2a45f0f869d46889d02405 # v6.2.0
+        uses: actions/setup-python@ece7cb06caefa5fff74198d8649806c4678c61a1 # v6.3.0
         with:
           python-version: ${{ matrix.python-version }}
           check-latest: true
