@@ -88,7 +88,7 @@ class WaitingAddonManager(AddonManager):
             info = None
 
         # Do not try to uninstall an addon if it is already uninstalled
-        if info is not None and info.state == AddonState.NOT_INSTALLED:
+        if info is not None and info.state is AddonState.NOT_INSTALLED:
             return
 
         await self.async_uninstall_addon()
