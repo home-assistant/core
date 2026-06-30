@@ -52,7 +52,7 @@ rules:
   parallel-updates:
     status: done
     comment: PARALLEL_UPDATES = 0 in device_tracker.py.
-  reauthentication-flow: done
+  reauthentication-flow: todo
   test-coverage: done
 
   # Gold

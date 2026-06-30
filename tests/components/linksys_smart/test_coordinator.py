@@ -13,9 +13,7 @@ from jnap import (
 from homeassistant.components.linksys_smart.coordinator import (
     LinksysDataUpdateCoordinator,
 )
-from homeassistant.const import CONF_HOST, CONF_PASSWORD
 from homeassistant.core import HomeAssistant
-from homeassistant.exceptions import ConfigEntryAuthFailed
 from homeassistant.helpers.update_coordinator import UpdateFailed
 
 from tests.common import MockConfigEntry
@@ -50,18 +48,14 @@ async def test_coordinator_sets_update_failed_on_error(hass: HomeAssistant) -> N
     assert isinstance(coordinator.last_exception, UpdateFailed)
 
 
-async def test_coordinator_sets_auth_failed_on_unauthorized(
+async def test_coordinator_sets_update_failed_on_unauthorized(
     hass: HomeAssistant,
 ) -> None:
-    """Test that JNAPUnauthorizedError is stored as ConfigEntryAuthFailed on the coordinator."""
-    entry = MockConfigEntry(
-        domain="linksys_smart",
-        data={CONF_HOST: "192.168.1.1", CONF_PASSWORD: "password"},
-    )
-    entry.add_to_hass(hass)
+    """Test that JNAPUnauthorizedError is converted to UpdateFailed on the coordinator."""
+    entry = MockConfigEntry(domain="linksys_smart")
     client = AsyncMock(spec=JNAPClient)
     client.get_devices.side_effect = JNAPUnauthorizedError
     coordinator = LinksysDataUpdateCoordinator(hass, entry, client)
     await coordinator.async_refresh()
     assert not coordinator.last_update_success
-    assert isinstance(coordinator.last_exception, ConfigEntryAuthFailed)
+    assert isinstance(coordinator.last_exception, UpdateFailed)

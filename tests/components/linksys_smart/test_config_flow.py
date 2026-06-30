@@ -3,7 +3,6 @@
 from unittest.mock import AsyncMock, patch
 
 from jnap import GetDeviceInfoResponse, JNAPError, JNAPUnauthorizedError
-import pytest
 
 from homeassistant import config_entries
 from homeassistant.components.linksys_smart import config_flow as linksys_config_flow
@@ -229,64 +228,3 @@ async def test_user_flow_aborts_already_configured(hass: HomeAssistant) -> None:
 
     assert result["type"] is FlowResultType.ABORT
     assert result["reason"] == "already_configured"
-
-
-@pytest.mark.parametrize(
-    ("side_effect", "expected_error"),
-    [
-        pytest.param(
-            {
-                "get_device_info": AsyncMock(),
-                "get_devices": AsyncMock(side_effect=JNAPUnauthorizedError),
-            },
-            "invalid_auth",
-            id="invalid_auth",
-        ),
-        pytest.param(
-            {"get_device_info": AsyncMock(side_effect=JNAPError)},
-            "cannot_connect",
-            id="cannot_connect",
-        ),
-    ],
-)
-async def test_reauth_flow(
-    hass: HomeAssistant,
-    mock_setup_entry: AsyncMock,
-    side_effect: dict,
-    expected_error: str,
-) -> None:
-    """Test the reauth flow shows errors then succeeds on valid credentials."""
-    entry = MockConfigEntry(
-        domain=DOMAIN,
-        unique_id=SERIAL,
-        data={
-            CONF_HOST: "1.1.1.1",
-            CONF_USERNAME: "admin",
-            CONF_PASSWORD: "old-password",
-        },
-    )
-    entry.add_to_hass(hass)
-
-    result = await entry.start_reauth_flow(hass)
-    assert result["type"] is FlowResultType.FORM
-    assert result["step_id"] == "reauth_confirm"
-
-    with patch.multiple("jnap.JNAPClient", **side_effect):
-        result = await hass.config_entries.flow.async_configure(
-            result["flow_id"],
-            {CONF_USERNAME: "admin", CONF_PASSWORD: "wrong-password"},
-        )
-
-    assert result["type"] is FlowResultType.FORM
-    assert result["errors"] == {"base": expected_error}
-
-    with patch.multiple("jnap.JNAPClient", **_GOOD_CLIENT):
-        result = await hass.config_entries.flow.async_configure(
-            result["flow_id"],
-            {CONF_USERNAME: "admin", CONF_PASSWORD: "new-password"},
-        )
-        await hass.async_block_till_done()
-
-    assert result["type"] is FlowResultType.ABORT
-    assert result["reason"] == "reauth_successful"
-    assert entry.data[CONF_PASSWORD] == "new-password"
