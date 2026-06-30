@@ -69,7 +69,7 @@ class NetatmoScheduleSelect(NetatmoBaseEntity, SelectEntity):
             configuration_url=CONF_URL_ENERGY,
         )
 
-        self._attr_unique_id = f"{self.home.entity_id}-schedule-select"
+        self._attr_unique_id = f"{self.home.entity_id}-schedule-select"  # pylint: disable=home-assistant-entity-unique-id-redundant-platform
 
         schedule = self.home.get_selected_schedule()
         assert schedule
