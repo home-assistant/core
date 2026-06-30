@@ -527,9 +527,6 @@ class HomeAssistant:
                 self._tasks,
             )
 
-        # Allow automations to set up the start triggers before changing state
-        await asyncio.sleep(0)
-
         if self.state is not CoreState.starting:
             _LOGGER.warning(
                 "Home Assistant startup has been interrupted. "

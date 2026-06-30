@@ -653,6 +653,9 @@ bleak-esphome==3.9.4
 # homeassistant.components.bluetooth
 bleak-retry-connector==4.6.1
 
+# homeassistant.components.smlight
+bleak-smlight==1.1.0
+
 # homeassistant.components.bluetooth
 bleak==3.0.2
 
@@ -1314,7 +1317,7 @@ ibeacon-ble==1.2.0
 # homeassistant.components.local_calendar
 # homeassistant.components.local_todo
 # homeassistant.components.remote_calendar
-ical==13.2.5
+ical==13.3.0
 
 # homeassistant.components.caldav
 icalendar==6.3.1
@@ -1471,7 +1474,7 @@ libpyvivotek==0.6.1
 librehardwaremonitor-api==1.11.1
 
 # homeassistant.components.mikrotik
-librouteros==3.2.1
+librouteros==4.1.1
 
 # homeassistant.components.soundtouch
 libsoundtouch==0.8
@@ -2145,7 +2148,7 @@ pyegps==0.2.5
 pyemoncms==0.1.3
 
 # homeassistant.components.enphase_envoy
-pyenphase==3.0.0
+pyenphase==3.0.1
 
 # homeassistant.components.envertech_evt800
 pyenvertechevt800==0.2.4
@@ -3313,7 +3316,7 @@ volkszaehler==0.4.0
 volvocarsapi==0.4.3
 
 # homeassistant.components.verisure
-vsure==2.7.1
+vsure==2.8.0
 
 # homeassistant.components.vasttrafik
 vtjp==0.2.1
