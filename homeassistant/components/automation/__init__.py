@@ -27,7 +27,6 @@ from homeassistant.const import (  # noqa: F401
     CONF_PATH,
     CONF_TRIGGERS,
     CONF_VARIABLES,
-    EVENT_HOMEASSISTANT_STARTED,
     SERVICE_RELOAD,
     SERVICE_TOGGLE,
     SERVICE_TURN_OFF,
@@ -38,7 +37,7 @@ from homeassistant.core import (
     CALLBACK_TYPE,
     Context,
     CoreState,
-    Event,
+    HassJob,
     HomeAssistant,
     ServiceCall,
     callback,
@@ -830,13 +829,13 @@ class AutomationEntity(BaseAutomationEntity, RestoreEntity):
         if self._condition is not None:
             self._condition.async_unload()
 
-    async def _async_enable_automation(self, event: Event) -> None:
-        """Start automation on startup."""
+    async def _async_enable_automation(self) -> None:
+        """Arm the automation's triggers on startup."""
         # Don't do anything if no longer enabled or already attached
         if not self._is_enabled or self._async_detach_triggers is not None:
             return
 
-        self._async_detach_triggers = await self._async_attach_triggers(True)
+        self._async_detach_triggers = await self._async_attach_triggers()
         self.async_write_ha_state()
 
     async def _async_enable(self) -> None:
@@ -851,13 +850,14 @@ class AutomationEntity(BaseAutomationEntity, RestoreEntity):
         self._is_enabled = True
         # HomeAssistant is starting up
         if self.hass.state is not CoreState.not_running:
-            self._async_detach_triggers = await self._async_attach_triggers(False)
+            self._async_detach_triggers = await self._async_attach_triggers()
             return
 
-        self.hass.bus.async_listen_once(
-            EVENT_HOMEASSISTANT_STARTED,
-            self._async_enable_automation,
-        )
+        # Arm the triggers in a startup job, which runs after all listeners to
+        # EVENT_HOMEASSISTANT_START have run but before EVENT_HOMEASSISTANT_STARTED
+        # has fired. This ensures automations do not fire during startup, but
+        # triggers listening for the started event are armed in time to catch it.
+        self.hass.async_add_startup_job(HassJob(self._async_enable_automation))
 
     async def _async_disable(self, stop_actions: bool = DEFAULT_STOP_ACTIONS) -> None:
         """Disable the automation entity.
@@ -942,9 +942,7 @@ class AutomationEntity(BaseAutomationEntity, RestoreEntity):
 
             script_execution_set("not_triggered")
 
-    async def _async_attach_triggers(
-        self, home_assistant_start: bool
-    ) -> Callable[[], None] | None:
+    async def _async_attach_triggers(self) -> Callable[[], None] | None:
         """Set up the triggers."""
         this = None
         if state := self.hass.states.get(self.entity_id):
@@ -968,8 +966,7 @@ class AutomationEntity(BaseAutomationEntity, RestoreEntity):
             DOMAIN,
             str(self.name),
             self._log_callback,
-            home_assistant_start,
-            variables,
+            variables=variables,
             did_not_trigger=self._handle_not_triggered,
         )
 
