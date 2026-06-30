@@ -12,6 +12,6 @@
   "integration_type": "hub",
   "iot_class": "cloud_push",
   "loggers": ["aioaquarite"],
-  "quality_scale": "bronze",
+  "quality_scale": "platinum",
   "requirements": ["aioaquarite==0.6.1"]
 }
