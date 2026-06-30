@@ -5,7 +5,7 @@ from typing import Any
 from homeassistant.const import (
     ATTR_DEVICE_CLASS,
     ATTR_UNIT_OF_MEASUREMENT,
-    PERCENTAGE,
+    UnitOfRatio,
     UnitOfTemperature,
 )
 from homeassistant.core import HomeAssistant, callback
@@ -64,7 +64,7 @@ def async_check_significant_change(
 
     # special for power factor
     elif device_class == NumberDeviceClass.POWER_FACTOR:
-        if new_attrs.get(ATTR_UNIT_OF_MEASUREMENT) == PERCENTAGE:
+        if new_attrs.get(ATTR_UNIT_OF_MEASUREMENT) == UnitOfRatio.PERCENTAGE:
             absolute_change = 1.0
         else:
             absolute_change = 0.1

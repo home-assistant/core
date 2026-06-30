@@ -9,7 +9,7 @@ from homeassistant.components.number.significant_change import (
 from homeassistant.const import (
     ATTR_DEVICE_CLASS,
     ATTR_UNIT_OF_MEASUREMENT,
-    PERCENTAGE,
+    UnitOfRatio,
     UnitOfTemperature,
 )
 
@@ -27,7 +27,7 @@ POWER_FACTOR_ATTRS = {
 }
 POWER_FACTOR_ATTRS_PERCENTAGE = {
     ATTR_DEVICE_CLASS: NumberDeviceClass.POWER_FACTOR,
-    ATTR_UNIT_OF_MEASUREMENT: PERCENTAGE,
+    ATTR_UNIT_OF_MEASUREMENT: UnitOfRatio.PERCENTAGE,
 }
 TEMP_CELSIUS_ATTRS = {
     ATTR_DEVICE_CLASS: NumberDeviceClass.TEMPERATURE,
