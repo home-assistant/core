@@ -20,7 +20,7 @@ from homeassistant.data_entry_flow import SectionConfig, section
 from homeassistant.helpers import config_validation as cv
 
 from .const import (
-    CONF_ADVANCED_OPTIONS,
+    CONF_ADDITIONAL_OPTIONS,
     CONF_HOSTNAME,
     CONF_IPV4,
     CONF_IPV6,
@@ -39,7 +39,7 @@ from .const import (
 DATA_SCHEMA = vol.Schema(
     {
         vol.Required(CONF_HOSTNAME, default=DEFAULT_HOSTNAME): cv.string,
-        vol.Required(CONF_ADVANCED_OPTIONS): section(
+        vol.Required(CONF_ADDITIONAL_OPTIONS): section(
             vol.Schema(
                 {
                     vol.Optional(CONF_RESOLVER): cv.string,
@@ -117,13 +117,13 @@ class DnsIPConfigFlow(ConfigFlow, domain=DOMAIN):
         if user_input:
             hostname = user_input[CONF_HOSTNAME]
             name = DEFAULT_NAME if hostname == DEFAULT_HOSTNAME else hostname
-            advanced_options = user_input[CONF_ADVANCED_OPTIONS]
-            resolver = advanced_options.get(CONF_RESOLVER, DEFAULT_RESOLVER)
-            resolver_ipv6 = advanced_options.get(
+            additional_options = user_input[CONF_ADDITIONAL_OPTIONS]
+            resolver = additional_options.get(CONF_RESOLVER, DEFAULT_RESOLVER)
+            resolver_ipv6 = additional_options.get(
                 CONF_RESOLVER_IPV6, DEFAULT_RESOLVER_IPV6
             )
-            port = advanced_options.get(CONF_PORT, DEFAULT_PORT)
-            port_ipv6 = advanced_options.get(CONF_PORT_IPV6, DEFAULT_PORT)
+            port = additional_options.get(CONF_PORT, DEFAULT_PORT)
+            port_ipv6 = additional_options.get(CONF_PORT_IPV6, DEFAULT_PORT)
 
             validate = await async_validate_hostname(
                 hostname, resolver, resolver_ipv6, port, port_ipv6
