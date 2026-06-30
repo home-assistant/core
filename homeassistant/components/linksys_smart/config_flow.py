@@ -2,8 +2,7 @@
 
 from collections.abc import Mapping
 import logging
-from typing import Any, Self, override
-from urllib.parse import urlparse
+from typing import Any, override
 
 from jnap import JNAPClient, JNAPError, JNAPUnauthorizedError
 import voluptuous as vol
@@ -13,17 +12,12 @@ from homeassistant.const import CONF_HOST, CONF_PASSWORD, CONF_USERNAME
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
-from homeassistant.helpers.service_info.ssdp import (
-    ATTR_UPNP_FRIENDLY_NAME,
-    ATTR_UPNP_MANUFACTURER,
-    SsdpServiceInfo,
-)
 
 from .const import DOMAIN
 
 _LOGGER = logging.getLogger(__name__)
 
-STEP_SSDP_DATA_SCHEMA = vol.Schema(
+STEP_REAUTH_DATA_SCHEMA = vol.Schema(
     {
         vol.Optional(CONF_USERNAME): str,
         vol.Required(CONF_PASSWORD): str,
@@ -87,60 +81,6 @@ class LinksysConfigFlow(ConfigFlow, domain=DOMAIN):
     """Handle a config flow for linksys."""
 
     VERSION = 1
-    _MANUFACTURER = "Linksys"
-
-    _host: str
-
-    @override
-    def is_matching(self, other_flow: Self) -> bool:
-        return self._host == getattr(other_flow, "_host", None)
-
-    @override
-    async def async_step_ssdp(
-        self, discovery_info: SsdpServiceInfo
-    ) -> ConfigFlowResult:
-        if discovery_info.upnp.get(ATTR_UPNP_MANUFACTURER) != self._MANUFACTURER:
-            return self.async_abort(reason="not_linksys_device")
-
-        host = urlparse(discovery_info.ssdp_location or "").hostname
-        if not host:
-            return self.async_abort(reason="cannot_connect")
-
-        self._host = host
-
-        if self.hass.config_entries.flow.async_has_matching_flow(self):
-            return self.async_abort(reason="already_in_progress")
-
-        self.context.update(
-            {
-                "title_placeholders": {
-                    "name": discovery_info.upnp.get(ATTR_UPNP_FRIENDLY_NAME, host)
-                },
-                "configuration_url": f"http://{host}",
-            }
-        )
-        return await self.async_step_confirm()
-
-    async def async_step_confirm(
-        self, user_input: dict[str, Any] | None = None
-    ) -> ConfigFlowResult:
-        """Confirm discovered device and collect credentials."""
-        if user_input is not None:
-            data = {CONF_HOST: self._host, **user_input}
-            info, errors = await _async_validate_input(self.hass, data)
-            if info is not None:
-                await self.async_set_unique_id(info["serial_number"])
-                self._abort_if_unique_id_configured({CONF_HOST: self._host})
-                return self.async_create_entry(title=info["title"], data=data)
-        else:
-            errors = {}
-
-        return self.async_show_form(
-            step_id="confirm",
-            data_schema=STEP_SSDP_DATA_SCHEMA,
-            description_placeholders={"host": self._host},
-            errors=errors,
-        )
 
     @override
     async def async_step_user(
@@ -185,7 +125,7 @@ class LinksysConfigFlow(ConfigFlow, domain=DOMAIN):
 
         return self.async_show_form(
             step_id="reauth_confirm",
-            data_schema=STEP_SSDP_DATA_SCHEMA,
+            data_schema=STEP_REAUTH_DATA_SCHEMA,
             description_placeholders={"host": reauth_entry.data[CONF_HOST]},
             errors=errors,
         )

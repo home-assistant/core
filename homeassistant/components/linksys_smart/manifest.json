@@ -8,6 +8,5 @@
   "integration_type": "hub",
   "iot_class": "local_polling",
   "quality_scale": "bronze",
-  "requirements": ["jnap==0.1.0"],
-  "ssdp": [{ "st": "urn:schemas-upnp-org:device:InternetGatewayDevice:2" }]
+  "requirements": ["jnap==0.1.0"]
 }
