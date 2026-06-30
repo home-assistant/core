@@ -41,7 +41,7 @@ from homeassistant.helpers.typing import (
     VolDictType,
 )
 
-from .const import DATA_COMPONENT, DOMAIN, IMAGE_TIMEOUT
+from .const import DATA_COMPONENT, DOMAIN, IMAGE_TIMEOUT, ImageEntityStateAttribute
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -193,7 +193,7 @@ class ImageEntity(Entity, cached_properties=CACHED_PROPERTIES_WITH_ATTR_):
     """The base class for image entities."""
 
     _entity_component_unrecorded_attributes = frozenset(
-        {"access_token", "entity_picture"}
+        {ImageEntityStateAttribute.ACCESS_TOKEN, "entity_picture"}
     )
 
     # Entity Properties
@@ -305,7 +305,7 @@ class ImageEntity(Entity, cached_properties=CACHED_PROPERTIES_WITH_ATTR_):
     @override
     def state_attributes(self) -> dict[str, str | None]:
         """Return the state attributes."""
-        return {"access_token": self.access_tokens[-1]}
+        return {ImageEntityStateAttribute.ACCESS_TOKEN: self.access_tokens[-1]}
 
     @callback
     def async_update_token(self) -> None:

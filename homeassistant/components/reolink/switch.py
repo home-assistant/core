@@ -74,6 +74,7 @@ SWITCH_ENTITIES = (
     ReolinkSwitchEntityDescription(
         key="ir_lights",
         cmd_key="GetIrLights",
+        cmd_id=208,
         translation_key="ir_lights",
         entity_category=EntityCategory.CONFIG,
         supported=lambda api, ch: api.supported(ch, "ir_lights"),
@@ -83,6 +84,7 @@ SWITCH_ENTITIES = (
     ReolinkSwitchEntityDescription(
         key="record_audio",
         cmd_key="GetEnc",
+        cmd_id=56,
         translation_key="record_audio",
         entity_category=EntityCategory.CONFIG,
         supported=lambda api, ch: api.supported(ch, "audio"),
@@ -92,6 +94,7 @@ SWITCH_ENTITIES = (
     ReolinkSwitchEntityDescription(
         key="siren_on_event",
         cmd_key="GetAudioAlarm",
+        cmd_id=232,
         translation_key="siren_on_event",
         entity_category=EntityCategory.CONFIG,
         supported=lambda api, ch: api.supported(ch, "siren"),
@@ -136,6 +139,7 @@ SWITCH_ENTITIES = (
     ReolinkSwitchEntityDescription(
         key="email",
         cmd_key="GetEmail",
+        cmd_id=217,
         translation_key="email",
         entity_category=EntityCategory.CONFIG,
         supported=lambda api, ch: api.supported(ch, "email") and api.is_nvr,
@@ -145,6 +149,7 @@ SWITCH_ENTITIES = (
     ReolinkSwitchEntityDescription(
         key="ftp_upload",
         cmd_key="GetFtp",
+        cmd_id=70,
         translation_key="ftp_upload",
         entity_category=EntityCategory.CONFIG,
         supported=lambda api, ch: api.supported(ch, "ftp") and api.is_nvr,
@@ -163,6 +168,7 @@ SWITCH_ENTITIES = (
     ReolinkSwitchEntityDescription(
         key="record",
         cmd_key="GetRec",
+        cmd_id=81,
         translation_key="record",
         entity_category=EntityCategory.CONFIG,
         supported=lambda api, ch: api.supported(ch, "rec_enable") and api.is_nvr,
@@ -200,6 +206,7 @@ SWITCH_ENTITIES = (
     ReolinkSwitchEntityDescription(
         key="doorbell_button_sound",
         cmd_key="GetAudioCfg",
+        cmd_id=264,
         translation_key="doorbell_button_sound",
         entity_category=EntityCategory.CONFIG,
         supported=lambda api, ch: api.supported(ch, "doorbell_button_sound"),
@@ -209,6 +216,7 @@ SWITCH_ENTITIES = (
     ReolinkSwitchEntityDescription(
         key="pir_enabled",
         cmd_key="GetPirInfo",
+        cmd_id=212,
         translation_key="pir_enabled",
         entity_category=EntityCategory.CONFIG,
         entity_registry_enabled_default=False,
@@ -219,6 +227,7 @@ SWITCH_ENTITIES = (
     ReolinkSwitchEntityDescription(
         key="pir_reduce_alarm",
         cmd_key="GetPirInfo",
+        cmd_id=212,
         translation_key="pir_reduce_alarm",
         entity_category=EntityCategory.CONFIG,
         entity_registry_enabled_default=False,
@@ -260,6 +269,7 @@ HOST_SWITCH_ENTITIES = (
     ReolinkHostSwitchEntityDescription(
         key="email",
         cmd_key="GetEmail",
+        cmd_id=217,
         translation_key="email",
         entity_category=EntityCategory.CONFIG,
         supported=lambda api: api.supported(None, "email") and not api.is_hub,
@@ -269,6 +279,7 @@ HOST_SWITCH_ENTITIES = (
     ReolinkHostSwitchEntityDescription(
         key="ftp_upload",
         cmd_key="GetFtp",
+        cmd_id=70,
         translation_key="ftp_upload",
         entity_category=EntityCategory.CONFIG,
         supported=lambda api: api.supported(None, "ftp") and not api.is_hub,
@@ -287,6 +298,7 @@ HOST_SWITCH_ENTITIES = (
     ReolinkHostSwitchEntityDescription(
         key="record",
         cmd_key="GetRec",
+        cmd_id=81,
         translation_key="record",
         entity_category=EntityCategory.CONFIG,
         supported=lambda api: api.supported(None, "rec_enable") and not api.is_hub,

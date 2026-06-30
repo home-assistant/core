@@ -6,21 +6,21 @@
     ]),
     'area_id': None,
     'capabilities': dict({
-      'fan_modes': list([
+      <ClimateEntityCapabilityAttribute.FAN_MODES: 'fan_modes'>: list([
         'off',
         'auto',
         'low',
         'medium',
         'high',
       ]),
-      'hvac_modes': list([
+      <ClimateEntityCapabilityAttribute.HVAC_MODES: 'hvac_modes'>: list([
         <HVACMode.COOL: 'cool'>,
         <HVACMode.HEAT: 'heat'>,
         <HVACMode.OFF: 'off'>,
       ]),
-      'max_temp': 35,
-      'min_temp': 7,
-      'preset_modes': list([
+      <ClimateEntityCapabilityAttribute.MAX_TEMP: 'max_temp'>: 35,
+      <ClimateEntityCapabilityAttribute.MIN_TEMP: 'min_temp'>: 7,
+      <ClimateEntityCapabilityAttribute.PRESET_MODES: 'preset_modes'>: list([
         'home',
         'eco',
         'none',
@@ -60,32 +60,32 @@
 # name: test_climate_entities_snapshot[climate.nano_color_2-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'current_temperature': 21.0,
-      'fan_mode': 'auto',
-      'fan_modes': list([
+      <ClimateEntityStateAttribute.CURRENT_TEMPERATURE: 'current_temperature'>: 21.0,
+      <ClimateEntityStateAttribute.FAN_MODE: 'fan_mode'>: 'auto',
+      <ClimateEntityCapabilityAttribute.FAN_MODES: 'fan_modes'>: list([
         'off',
         'auto',
         'low',
         'medium',
         'high',
       ]),
-      'friendly_name': 'Nano Color 2',
-      'hvac_modes': list([
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Nano Color 2',
+      <ClimateEntityCapabilityAttribute.HVAC_MODES: 'hvac_modes'>: list([
         <HVACMode.COOL: 'cool'>,
         <HVACMode.HEAT: 'heat'>,
         <HVACMode.OFF: 'off'>,
       ]),
-      'max_temp': 35,
-      'min_temp': 7,
-      'preset_mode': 'home',
-      'preset_modes': list([
+      <ClimateEntityCapabilityAttribute.MAX_TEMP: 'max_temp'>: 35,
+      <ClimateEntityCapabilityAttribute.MIN_TEMP: 'min_temp'>: 7,
+      <ClimateEntityStateAttribute.PRESET_MODE: 'preset_mode'>: 'home',
+      <ClimateEntityCapabilityAttribute.PRESET_MODES: 'preset_modes'>: list([
         'home',
         'eco',
         'none',
         'away',
       ]),
-      'supported_features': <ClimateEntityFeature: 25>,
-      'temperature': 22.0,
+      <EntityStateAttribute.SUPPORTED_FEATURES: 'supported_features'>: <ClimateEntityFeature: 25>,
+      <ClimateEntityStateAttribute.TEMPERATURE: 'temperature'>: 22.0,
     }),
     'context': <ANY>,
     'entity_id': 'climate.nano_color_2',
@@ -102,13 +102,13 @@
     ]),
     'area_id': None,
     'capabilities': dict({
-      'hvac_modes': list([
+      <ClimateEntityCapabilityAttribute.HVAC_MODES: 'hvac_modes'>: list([
         <HVACMode.HEAT: 'heat'>,
         <HVACMode.OFF: 'off'>,
       ]),
-      'max_temp': 35,
-      'min_temp': 7,
-      'preset_modes': list([
+      <ClimateEntityCapabilityAttribute.MAX_TEMP: 'max_temp'>: 35,
+      <ClimateEntityCapabilityAttribute.MIN_TEMP: 'min_temp'>: 7,
+      <ClimateEntityCapabilityAttribute.PRESET_MODES: 'preset_modes'>: list([
         'home',
         'away',
       ]),
@@ -146,20 +146,20 @@
 # name: test_climate_entities_snapshot[climate.r_900-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'current_temperature': 21.0,
-      'friendly_name': 'R 900',
-      'hvac_modes': list([
+      <ClimateEntityStateAttribute.CURRENT_TEMPERATURE: 'current_temperature'>: 21.0,
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'R 900',
+      <ClimateEntityCapabilityAttribute.HVAC_MODES: 'hvac_modes'>: list([
         <HVACMode.HEAT: 'heat'>,
         <HVACMode.OFF: 'off'>,
       ]),
-      'max_temp': 35,
-      'min_temp': 7,
-      'preset_mode': 'home',
-      'preset_modes': list([
+      <ClimateEntityCapabilityAttribute.MAX_TEMP: 'max_temp'>: 35,
+      <ClimateEntityCapabilityAttribute.MIN_TEMP: 'min_temp'>: 7,
+      <ClimateEntityStateAttribute.PRESET_MODE: 'preset_mode'>: 'home',
+      <ClimateEntityCapabilityAttribute.PRESET_MODES: 'preset_modes'>: list([
         'home',
         'away',
       ]),
-      'supported_features': <ClimateEntityFeature: 16>,
+      <EntityStateAttribute.SUPPORTED_FEATURES: 'supported_features'>: <ClimateEntityFeature: 16>,
     }),
     'context': <ANY>,
     'entity_id': 'climate.r_900',

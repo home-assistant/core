@@ -1,7 +1,7 @@
 """Vistapool Select entities."""
 
 from dataclasses import dataclass
-from typing import Any
+from typing import Any, override
 
 from aioaquarite import AquariteError
 
@@ -111,6 +111,7 @@ class VistapoolSelect(VistapoolEntity, SelectEntity):
             self._attr_translation_placeholders = description.translation_placeholders
 
     @property
+    @override
     def current_option(self) -> str | None:
         """Return the option that maps to the current API value."""
         index = _to_index(
@@ -121,6 +122,7 @@ class VistapoolSelect(VistapoolEntity, SelectEntity):
             return None
         return options[index]
 
+    @override
     async def async_select_option(self, option: str) -> None:
         """Send the index of the chosen option to the controller."""
         assert self.entity_description.options is not None
