@@ -1,6 +1,7 @@
 """Template functions for exposed entities."""
 
 from collections.abc import Iterable
+from itertools import chain
 from typing import TYPE_CHECKING
 
 from homeassistant.helpers import entity_registry as er
@@ -29,16 +30,22 @@ class ExposedEntitiesExtension(BaseTemplateExtension):
         )
 
     def assist_exposed_entities(self) -> Iterable[str]:
-        """Return entity IDs for all entities exposed to the conversation integration."""
+        """Return entity IDs for all entities exposed to Assist."""
         # Imported here to avoid a circular import at module load time, as this
         # extension is imported very early during bootstrap.
-        from homeassistant.components import conversation  # noqa: PLC0415
         from homeassistant.components.homeassistant.exposed_entities import (  # noqa: PLC0415
+            DATA_EXPOSED_ENTITIES,
             async_should_expose,
         )
 
+        exposed_entities = self.hass.data[DATA_EXPOSED_ENTITIES]
+        entity_registry = er.async_get(self.hass)
+        # Entities tracked by the exposed entities helper may not be in the
+        # registry (e.g. legacy entities), so consider both sources.
         return [
-            entry.entity_id
-            for entry in er.async_get(self.hass).entities.values()
-            if async_should_expose(self.hass, conversation.DOMAIN, entry.entity_id)
+            entity_id
+            for entity_id in dict.fromkeys(
+                chain(exposed_entities.entities, entity_registry.entities)
+            )
+            if async_should_expose(self.hass, "conversation", entity_id)
         ]
