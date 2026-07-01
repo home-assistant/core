@@ -71,7 +71,6 @@ async def test_rain_history_updates_on_coordinator_refresh(
         }
 
     entry = tfa_me_config_entry
-    entry.add_to_hass(hass)
 
     with patch(
         "homeassistant.components.tfa_me.coordinator.TFAmeClient.async_get_sensors",
@@ -90,35 +89,19 @@ async def test_rain_history_updates_on_coordinator_refresh(
         await entry.runtime_data.async_request_refresh()
         await hass.async_block_till_done()
 
-    ent_reg = er.async_get(hass)
+    rain_rel_state = hass.states.get(
+        "sensor.tfa_me_a1f_fff_fea_05b3e4e44_relative_rain"
+    )
+    rain_1_hour_state = hass.states.get(
+        "sensor.tfa_me_a1f_fff_fea_05b3e4e44_rain_last_hour"
+    )
+    rain_24_hours_state = hass.states.get(
+        "sensor.tfa_me_a1f_fff_fea_05b3e4e44_rain_last_24_hours"
+    )
 
-    rain_states = {
-        state.entity_id: state.state
-        for state in hass.states.async_all("sensor")
-        if "rain" in state.entity_id
-    }
-
-    rain_rel_state = None
-    rain_1_hour_state = None
-    rain_24_hours_state = None
-
-    for entity_id in hass.states.async_entity_ids("sensor"):
-        registry_entry = ent_reg.async_get(entity_id)
-        if registry_entry is None:
-            continue
-
-        if registry_entry.unique_id.endswith("_rain_rel"):
-            rain_rel_state = hass.states.get(entity_id)
-
-        if registry_entry.unique_id.endswith("_rain_1_hour"):
-            rain_1_hour_state = hass.states.get(entity_id)
-
-        if registry_entry.unique_id.endswith("_rain_24_hours"):
-            rain_24_hours_state = hass.states.get(entity_id)
-
-    assert rain_rel_state is not None, f"Rain states: {rain_states}"
-    assert rain_1_hour_state is not None, f"Rain states: {rain_states}"
-    assert rain_24_hours_state is not None, f"Rain states: {rain_states}"
+    assert rain_rel_state is not None
+    assert rain_1_hour_state is not None
+    assert rain_24_hours_state is not None
 
     assert rain_rel_state.state == "1.5"
     assert rain_1_hour_state.state == "1.5"
@@ -150,7 +133,6 @@ async def test_invalid_measurement_value_returns_unknown(
     }
 
     entry = tfa_me_config_entry
-    entry.add_to_hass(hass)
 
     with patch(
         "homeassistant.components.tfa_me.coordinator.TFAmeClient.async_get_sensors",
@@ -159,16 +141,9 @@ async def test_invalid_measurement_value_returns_unknown(
         assert await hass.config_entries.async_setup(entry.entry_id)
         await hass.async_block_till_done()
 
-    ent_reg = er.async_get(hass)
-    temperature_state = None
-
-    for entity_id in hass.states.async_entity_ids("sensor"):
-        registry_entry = ent_reg.async_get(entity_id)
-        if registry_entry is not None and registry_entry.unique_id.endswith(
-            "_temperature"
-        ):
-            temperature_state = hass.states.get(entity_id)
-            break
+    temperature_state = hass.states.get(
+        "sensor.tfa_me_a44_812_90f_05b3e4e44_temperature"
+    )
 
     assert temperature_state is not None
     assert temperature_state.state == STATE_UNKNOWN

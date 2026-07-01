@@ -77,7 +77,7 @@ class TFAmeUpdateCoordinator(DataUpdateCoordinator[TFAmeCoordinatorData]):
                 json_data=json_data, valid_keys=VALID_JSON_MEASUREMENT_KEYS
             )
 
-            filtered_lentities = {
+            filtered_entities = {
                 unique_id.removeprefix("sensor."): data
                 for unique_id, data in filtered_list.items()
             }
@@ -100,7 +100,7 @@ class TFAmeUpdateCoordinator(DataUpdateCoordinator[TFAmeCoordinatorData]):
         else:
             # values are available at self.coordinator.data.entities[self.entity_id]["keyword"]
             return TFAmeCoordinatorData(
-                entities=filtered_lentities,
+                entities=filtered_entities,
                 gateway_id=gateway_id,
                 gateway_sw=gateway_sw,
             )

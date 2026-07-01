@@ -14,7 +14,7 @@ from homeassistant.components.sensor import (
     SensorStateClass,
     StateType,
 )
-from homeassistant.const import EntityCategory
+from homeassistant.const import DEGREE, EntityCategory
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
@@ -121,7 +121,9 @@ TFA_ME_ENTITY_DESCRIPTIONS: dict[str, TFAmeSensorEntityDescription] = {
     "wind_direction_deg": TFAmeSensorEntityDescription(
         key="wind_direction_deg",
         translation_key="wind_direction_deg",
-        state_class=SensorStateClass.MEASUREMENT,
+        device_class=SensorDeviceClass.WIND_DIRECTION,
+        state_class=SensorStateClass.MEASUREMENT_ANGLE,
+        native_unit_of_measurement=DEGREE,
         suggested_display_precision=1,
         value_fn=lambda entity, data: round(
             float(
