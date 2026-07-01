@@ -175,6 +175,18 @@ class OpenAQDataUpdateCoordinator(DataUpdateCoordinator[OpenAQLocationData]):
         async with self._client_lock:
             return await self.hass.async_add_executor_job(target, *args)
 
+    def _raise_update_failed(self, err: Exception) -> None:
+        """Raise a translated update failure."""
+        if isinstance(err, OPENAQ_AUTH_EXCEPTIONS):
+            raise UpdateFailed(
+                translation_domain=DOMAIN,
+                translation_key="authentication_failed",
+            ) from err
+        raise UpdateFailed(
+            translation_domain=DOMAIN,
+            translation_key="unable_to_fetch",
+        ) from err
+
     @override
     async def _async_update_data(self) -> OpenAQLocationData:
         """Fetch data from OpenAQ."""
@@ -191,16 +203,8 @@ class OpenAQDataUpdateCoordinator(DataUpdateCoordinator[OpenAQLocationData]):
                 sensors_response = await self._async_run_openaq_job(
                     self.client.locations.sensors, self.location_id
                 )
-            except OPENAQ_AUTH_EXCEPTIONS as err:
-                raise UpdateFailed(
-                    translation_domain=DOMAIN,
-                    translation_key="authentication_failed",
-                ) from err
-            except Exception as err:
-                raise UpdateFailed(
-                    translation_domain=DOMAIN,
-                    translation_key="unable_to_fetch",
-                ) from err
+            except Exception as err:  # noqa: BLE001
+                self._raise_update_failed(err)
             if not location_response.results:
                 raise UpdateFailed(
                     translation_domain=DOMAIN,
@@ -217,16 +221,8 @@ class OpenAQDataUpdateCoordinator(DataUpdateCoordinator[OpenAQLocationData]):
                 latest_response = await self._async_run_openaq_job(
                     self.client.locations.latest, self.location_id
                 )
-            except OPENAQ_AUTH_EXCEPTIONS as err:
-                raise UpdateFailed(
-                    translation_domain=DOMAIN,
-                    translation_key="authentication_failed",
-                ) from err
-            except Exception as err:
-                raise UpdateFailed(
-                    translation_domain=DOMAIN,
-                    translation_key="unable_to_fetch",
-                ) from err
+            except Exception as err:  # noqa: BLE001
+                self._raise_update_failed(err)
 
         measurements = normalize_latest_measurements(latest_response.results, sensors)
         return OpenAQLocationData(
