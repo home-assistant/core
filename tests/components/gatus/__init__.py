@@ -10,7 +10,10 @@ from tests.common import MockConfigEntry
 
 
 async def setup_integration(
-    hass: HomeAssistant, mock_gatus_client: AsyncMock, mock_data: list[dict[str, Any]]
+    hass: HomeAssistant,
+    mock_gatus_client: AsyncMock,
+    mock_data: list[dict[str, Any]],
+    entry_id: str | None = None,
 ) -> MockConfigEntry:
     """Handle repetitive config entry setup sequences with explicit mock data."""
     mock_gatus_client.get_endpoints_statuses.return_value = mock_data
@@ -18,7 +21,7 @@ async def setup_integration(
     entry = MockConfigEntry(
         domain=DOMAIN,
         data={"url": "http://gatus.local:80"},
-        unique_id="gatus.local:80",
+        entry_id=entry_id or "1234567890abcdef1234567890abcdef",
     )
     entry.add_to_hass(hass)
 

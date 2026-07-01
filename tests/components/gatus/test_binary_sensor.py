@@ -12,6 +12,8 @@ from . import setup_integration
 
 from tests.common import load_fixture, snapshot_platform
 
+TEST_ENTRY_ID = "1234567890abcdef1234567890abcdef"
+
 
 async def test_binary_sensor_setup_and_states(
     hass: HomeAssistant,
@@ -24,7 +26,9 @@ async def test_binary_sensor_setup_and_states(
     )
     mock_data = json.loads(fixture_data)
 
-    config_entry = await setup_integration(hass, mock_gatus_client, mock_data)
+    config_entry = await setup_integration(
+        hass, mock_gatus_client, mock_data, entry_id=TEST_ENTRY_ID
+    )
 
     entity_registry = er.async_get(hass)
 
