@@ -80,8 +80,8 @@
       <EntityStateAttribute.ENTITY_PICTURE: 'entity_picture'>: '/api/brands/integration/vesync/icon.png',
       <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Air Purifier 131s Firmware',
       <UpdateEntityStateAttribute.IN_PROGRESS: 'in_progress'>: False,
-      <UpdateEntityStateAttribute.INSTALLED_VERSION: 'installed_version'>: None,
-      <UpdateEntityStateAttribute.LATEST_VERSION: 'latest_version'>: None,
+      <UpdateEntityStateAttribute.INSTALLED_VERSION: 'installed_version'>: '1.0.0',
+      <UpdateEntityStateAttribute.LATEST_VERSION: 'latest_version'>: '1.0.1',
       <UpdateEntityStateAttribute.RELEASE_SUMMARY: 'release_summary'>: None,
       <UpdateEntityStateAttribute.RELEASE_URL: 'release_url'>: None,
       <UpdateEntityStateAttribute.SKIPPED_VERSION: 'skipped_version'>: None,
@@ -94,7 +94,7 @@
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
-    'state': 'unknown',
+    'state': 'on',
   })
 # ---
 # name: test_update_state[Air Purifier 200s][devices]
@@ -178,8 +178,8 @@
       <EntityStateAttribute.ENTITY_PICTURE: 'entity_picture'>: '/api/brands/integration/vesync/icon.png',
       <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Air Purifier 200s Firmware',
       <UpdateEntityStateAttribute.IN_PROGRESS: 'in_progress'>: False,
-      <UpdateEntityStateAttribute.INSTALLED_VERSION: 'installed_version'>: None,
-      <UpdateEntityStateAttribute.LATEST_VERSION: 'latest_version'>: None,
+      <UpdateEntityStateAttribute.INSTALLED_VERSION: 'installed_version'>: '1.0.0',
+      <UpdateEntityStateAttribute.LATEST_VERSION: 'latest_version'>: '1.0.1',
       <UpdateEntityStateAttribute.RELEASE_SUMMARY: 'release_summary'>: None,
       <UpdateEntityStateAttribute.RELEASE_URL: 'release_url'>: None,
       <UpdateEntityStateAttribute.SKIPPED_VERSION: 'skipped_version'>: None,
@@ -192,7 +192,7 @@
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
-    'state': 'unknown',
+    'state': 'on',
   })
 # ---
 # name: test_update_state[Air Purifier 400s][devices]
@@ -276,8 +276,8 @@
       <EntityStateAttribute.ENTITY_PICTURE: 'entity_picture'>: '/api/brands/integration/vesync/icon.png',
       <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Air Purifier 400s Firmware',
       <UpdateEntityStateAttribute.IN_PROGRESS: 'in_progress'>: False,
-      <UpdateEntityStateAttribute.INSTALLED_VERSION: 'installed_version'>: None,
-      <UpdateEntityStateAttribute.LATEST_VERSION: 'latest_version'>: None,
+      <UpdateEntityStateAttribute.INSTALLED_VERSION: 'installed_version'>: '1.0.0',
+      <UpdateEntityStateAttribute.LATEST_VERSION: 'latest_version'>: '1.0.1',
       <UpdateEntityStateAttribute.RELEASE_SUMMARY: 'release_summary'>: None,
       <UpdateEntityStateAttribute.RELEASE_URL: 'release_url'>: None,
       <UpdateEntityStateAttribute.SKIPPED_VERSION: 'skipped_version'>: None,
@@ -290,7 +290,7 @@
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
-    'state': 'unknown',
+    'state': 'on',
   })
 # ---
 # name: test_update_state[Air Purifier 600s][devices]
@@ -374,8 +374,8 @@
       <EntityStateAttribute.ENTITY_PICTURE: 'entity_picture'>: '/api/brands/integration/vesync/icon.png',
       <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Air Purifier 600s Firmware',
       <UpdateEntityStateAttribute.IN_PROGRESS: 'in_progress'>: False,
-      <UpdateEntityStateAttribute.INSTALLED_VERSION: 'installed_version'>: None,
-      <UpdateEntityStateAttribute.LATEST_VERSION: 'latest_version'>: None,
+      <UpdateEntityStateAttribute.INSTALLED_VERSION: 'installed_version'>: '1.0.0',
+      <UpdateEntityStateAttribute.LATEST_VERSION: 'latest_version'>: '1.0.1',
       <UpdateEntityStateAttribute.RELEASE_SUMMARY: 'release_summary'>: None,
       <UpdateEntityStateAttribute.RELEASE_URL: 'release_url'>: None,
       <UpdateEntityStateAttribute.SKIPPED_VERSION: 'skipped_version'>: None,
@@ -388,7 +388,7 @@
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
-    'state': 'unknown',
+    'state': 'on',
   })
 # ---
 # name: test_update_state[CS158-AF Air Fryer Cooking][devices]
@@ -668,8 +668,8 @@
       <EntityStateAttribute.ENTITY_PICTURE: 'entity_picture'>: '/api/brands/integration/vesync/icon.png',
       <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Dimmable Light Firmware',
       <UpdateEntityStateAttribute.IN_PROGRESS: 'in_progress'>: False,
-      <UpdateEntityStateAttribute.INSTALLED_VERSION: 'installed_version'>: None,
-      <UpdateEntityStateAttribute.LATEST_VERSION: 'latest_version'>: None,
+      <UpdateEntityStateAttribute.INSTALLED_VERSION: 'installed_version'>: '1.0.0',
+      <UpdateEntityStateAttribute.LATEST_VERSION: 'latest_version'>: '1.0.1',
       <UpdateEntityStateAttribute.RELEASE_SUMMARY: 'release_summary'>: None,
       <UpdateEntityStateAttribute.RELEASE_URL: 'release_url'>: None,
       <UpdateEntityStateAttribute.SKIPPED_VERSION: 'skipped_version'>: None,
@@ -682,7 +682,7 @@
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
-    'state': 'unknown',
+    'state': 'on',
   })
 # ---
 # name: test_update_state[Dimmer Switch][devices]
@@ -766,8 +766,8 @@
       <EntityStateAttribute.ENTITY_PICTURE: 'entity_picture'>: '/api/brands/integration/vesync/icon.png',
       <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Dimmer Switch Firmware',
       <UpdateEntityStateAttribute.IN_PROGRESS: 'in_progress'>: False,
-      <UpdateEntityStateAttribute.INSTALLED_VERSION: 'installed_version'>: None,
-      <UpdateEntityStateAttribute.LATEST_VERSION: 'latest_version'>: None,
+      <UpdateEntityStateAttribute.INSTALLED_VERSION: 'installed_version'>: '1.0.0',
+      <UpdateEntityStateAttribute.LATEST_VERSION: 'latest_version'>: '1.0.1',
       <UpdateEntityStateAttribute.RELEASE_SUMMARY: 'release_summary'>: None,
       <UpdateEntityStateAttribute.RELEASE_URL: 'release_url'>: None,
       <UpdateEntityStateAttribute.SKIPPED_VERSION: 'skipped_version'>: None,
@@ -780,7 +780,7 @@
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
-    'state': 'unknown',
+    'state': 'on',
   })
 # ---
 # name: test_update_state[Humidifier 200s][devices]
@@ -864,8 +864,8 @@
       <EntityStateAttribute.ENTITY_PICTURE: 'entity_picture'>: '/api/brands/integration/vesync/icon.png',
       <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Humidifier 200s Firmware',
       <UpdateEntityStateAttribute.IN_PROGRESS: 'in_progress'>: False,
-      <UpdateEntityStateAttribute.INSTALLED_VERSION: 'installed_version'>: None,
-      <UpdateEntityStateAttribute.LATEST_VERSION: 'latest_version'>: None,
+      <UpdateEntityStateAttribute.INSTALLED_VERSION: 'installed_version'>: '1.0.0',
+      <UpdateEntityStateAttribute.LATEST_VERSION: 'latest_version'>: '1.0.1',
       <UpdateEntityStateAttribute.RELEASE_SUMMARY: 'release_summary'>: None,
       <UpdateEntityStateAttribute.RELEASE_URL: 'release_url'>: None,
       <UpdateEntityStateAttribute.SKIPPED_VERSION: 'skipped_version'>: None,
@@ -878,7 +878,7 @@
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
-    'state': 'unknown',
+    'state': 'on',
   })
 # ---
 # name: test_update_state[Humidifier 6000s][devices]
@@ -1060,8 +1060,8 @@
       <EntityStateAttribute.ENTITY_PICTURE: 'entity_picture'>: '/api/brands/integration/vesync/icon.png',
       <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Humidifier 600S Firmware',
       <UpdateEntityStateAttribute.IN_PROGRESS: 'in_progress'>: False,
-      <UpdateEntityStateAttribute.INSTALLED_VERSION: 'installed_version'>: None,
-      <UpdateEntityStateAttribute.LATEST_VERSION: 'latest_version'>: None,
+      <UpdateEntityStateAttribute.INSTALLED_VERSION: 'installed_version'>: '1.0.0',
+      <UpdateEntityStateAttribute.LATEST_VERSION: 'latest_version'>: '1.0.1',
       <UpdateEntityStateAttribute.RELEASE_SUMMARY: 'release_summary'>: None,
       <UpdateEntityStateAttribute.RELEASE_URL: 'release_url'>: None,
       <UpdateEntityStateAttribute.SKIPPED_VERSION: 'skipped_version'>: None,
@@ -1074,7 +1074,7 @@
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
-    'state': 'unknown',
+    'state': 'on',
   })
 # ---
 # name: test_update_state[Outlet][devices]
@@ -1158,8 +1158,8 @@
       <EntityStateAttribute.ENTITY_PICTURE: 'entity_picture'>: '/api/brands/integration/vesync/icon.png',
       <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Outlet Firmware',
       <UpdateEntityStateAttribute.IN_PROGRESS: 'in_progress'>: False,
-      <UpdateEntityStateAttribute.INSTALLED_VERSION: 'installed_version'>: None,
-      <UpdateEntityStateAttribute.LATEST_VERSION: 'latest_version'>: None,
+      <UpdateEntityStateAttribute.INSTALLED_VERSION: 'installed_version'>: '1.0.0',
+      <UpdateEntityStateAttribute.LATEST_VERSION: 'latest_version'>: '1.0.1',
       <UpdateEntityStateAttribute.RELEASE_SUMMARY: 'release_summary'>: None,
       <UpdateEntityStateAttribute.RELEASE_URL: 'release_url'>: None,
       <UpdateEntityStateAttribute.SKIPPED_VERSION: 'skipped_version'>: None,
@@ -1172,7 +1172,7 @@
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
-    'state': 'unknown',
+    'state': 'on',
   })
 # ---
 # name: test_update_state[SmartTowerFan][devices]
@@ -1256,8 +1256,8 @@
       <EntityStateAttribute.ENTITY_PICTURE: 'entity_picture'>: '/api/brands/integration/vesync/icon.png',
       <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'SmartTowerFan Firmware',
       <UpdateEntityStateAttribute.IN_PROGRESS: 'in_progress'>: False,
-      <UpdateEntityStateAttribute.INSTALLED_VERSION: 'installed_version'>: None,
-      <UpdateEntityStateAttribute.LATEST_VERSION: 'latest_version'>: None,
+      <UpdateEntityStateAttribute.INSTALLED_VERSION: 'installed_version'>: '1.0.0',
+      <UpdateEntityStateAttribute.LATEST_VERSION: 'latest_version'>: '1.0.1',
       <UpdateEntityStateAttribute.RELEASE_SUMMARY: 'release_summary'>: None,
       <UpdateEntityStateAttribute.RELEASE_URL: 'release_url'>: None,
       <UpdateEntityStateAttribute.SKIPPED_VERSION: 'skipped_version'>: None,
@@ -1270,7 +1270,7 @@
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
-    'state': 'unknown',
+    'state': 'on',
   })
 # ---
 # name: test_update_state[Temperature Light][devices]
@@ -1354,8 +1354,8 @@
       <EntityStateAttribute.ENTITY_PICTURE: 'entity_picture'>: '/api/brands/integration/vesync/icon.png',
       <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Temperature Light Firmware',
       <UpdateEntityStateAttribute.IN_PROGRESS: 'in_progress'>: False,
-      <UpdateEntityStateAttribute.INSTALLED_VERSION: 'installed_version'>: None,
-      <UpdateEntityStateAttribute.LATEST_VERSION: 'latest_version'>: None,
+      <UpdateEntityStateAttribute.INSTALLED_VERSION: 'installed_version'>: '1.0.0',
+      <UpdateEntityStateAttribute.LATEST_VERSION: 'latest_version'>: '1.0.1',
       <UpdateEntityStateAttribute.RELEASE_SUMMARY: 'release_summary'>: None,
       <UpdateEntityStateAttribute.RELEASE_URL: 'release_url'>: None,
       <UpdateEntityStateAttribute.SKIPPED_VERSION: 'skipped_version'>: None,
@@ -1368,7 +1368,7 @@
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
-    'state': 'unknown',
+    'state': 'on',
   })
 # ---
 # name: test_update_state[Wall Switch][devices]
@@ -1452,8 +1452,8 @@
       <EntityStateAttribute.ENTITY_PICTURE: 'entity_picture'>: '/api/brands/integration/vesync/icon.png',
       <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Wall Switch Firmware',
       <UpdateEntityStateAttribute.IN_PROGRESS: 'in_progress'>: False,
-      <UpdateEntityStateAttribute.INSTALLED_VERSION: 'installed_version'>: None,
-      <UpdateEntityStateAttribute.LATEST_VERSION: 'latest_version'>: None,
+      <UpdateEntityStateAttribute.INSTALLED_VERSION: 'installed_version'>: '1.0.0',
+      <UpdateEntityStateAttribute.LATEST_VERSION: 'latest_version'>: '1.0.1',
       <UpdateEntityStateAttribute.RELEASE_SUMMARY: 'release_summary'>: None,
       <UpdateEntityStateAttribute.RELEASE_URL: 'release_url'>: None,
       <UpdateEntityStateAttribute.SKIPPED_VERSION: 'skipped_version'>: None,
@@ -1466,8 +1466,9 @@
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
-    'state': 'unknown',
+    'state': 'on',
   })
+# ---
 # ---
 # name: test_update_state[CoreBreeze 432S][devices]
   list([
