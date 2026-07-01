@@ -368,8 +368,8 @@ async def websocket_handle_subscribe_todo_items(
     )
     connection.send_result(msg["id"])
 
-    # Push an initial list update
-    entity.async_update_listeners()
+    # Push an initial list update to the new subscriber only
+    todo_item_listener(entity.todo_items)
 
 
 def _api_items_factory(obj: Iterable[tuple[str, Any]]) -> dict[str, str]:
