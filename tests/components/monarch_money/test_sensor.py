@@ -5,7 +5,6 @@ from unittest.mock import AsyncMock, patch
 import pytest
 from syrupy.assertion import SnapshotAssertion
 
-from homeassistant.components.monarch_money import async_migrate_entry
 from homeassistant.components.monarch_money.config_flow import MonarchMoneyConfigFlow
 from homeassistant.components.monarch_money.const import DEFAULT_CURRENCY, DOMAIN
 from homeassistant.components.sensor import DOMAIN as SENSOR_DOMAIN, SensorDeviceClass
@@ -44,61 +43,73 @@ async def test_all_entities(
 async def test_monetary_sensors_ignore_hass_currency(
     hass: HomeAssistant,
     mock_config_entry: MockConfigEntry,
+    entity_registry: er.EntityRegistry,
     mock_config_api: AsyncMock,
     currency: str,
 ) -> None:
     """Test that monetary sensors ignore the configured HA currency."""
-    await hass.config.async_update(currency=currency)
+    await hass.config.async_update(country="US", currency=currency)
 
     with patch("homeassistant.components.monarch_money.PLATFORMS", [Platform.SENSOR]):
         await setup_integration(hass, mock_config_entry)
 
-    state = hass.states.get("sensor.rando_bank_checking_balance")
-    assert state is not None
-    assert state.attributes["unit_of_measurement"] == DEFAULT_CURRENCY
-    assert state.attributes["device_class"] == "monetary"
-
-    state = hass.states.get("sensor.cashflow_income_year_to_date")
-    assert state is not None
-    assert state.attributes["unit_of_measurement"] == DEFAULT_CURRENCY
-    assert state.attributes["device_class"] == "monetary"
-
-    state = hass.states.get("sensor.vinaudit_2050_toyota_rav8_value")
-    assert state is not None
-    assert state.attributes["unit_of_measurement"] == DEFAULT_CURRENCY
-    assert state.attributes["device_class"] == "monetary"
+    for unique_id in (
+        "222260252323873333_900000002_balance",
+        "222260252323873333_cashflow_sum_income",
+        "222260252323873333_121212192626186051_value",
+    ):
+        entity_id = entity_registry.async_get_entity_id(
+            SENSOR_DOMAIN, DOMAIN, unique_id
+        )
+        assert entity_id is not None
+        state = hass.states.get(entity_id)
+        assert state is not None
+        assert state.attributes["unit_of_measurement"] == DEFAULT_CURRENCY
+        assert state.attributes["device_class"] == "monetary"
 
 
 async def test_non_monetary_sensors_not_affected_by_currency(
     hass: HomeAssistant,
     mock_config_entry: MockConfigEntry,
+    entity_registry: er.EntityRegistry,
     mock_config_api: AsyncMock,
 ) -> None:
     """Test that non-monetary sensors are not affected by currency setting."""
-    await hass.config.async_update(currency="CAD")
+    await hass.config.async_update(country="US", currency="CAD")
 
     with patch("homeassistant.components.monarch_money.PLATFORMS", [Platform.SENSOR]):
         await setup_integration(hass, mock_config_entry)
 
-    state = hass.states.get("sensor.rando_bank_checking_data_age")
+    age_entity_id = entity_registry.async_get_entity_id(
+        SENSOR_DOMAIN, DOMAIN, "222260252323873333_900000002_age"
+    )
+    assert age_entity_id is not None
+    state = hass.states.get(age_entity_id)
     assert state is not None
     assert state.attributes["device_class"] == "timestamp"
     assert "unit_of_measurement" not in state.attributes
 
-    state = hass.states.get("sensor.cashflow_savings_rate")
+    savings_rate_entity_id = entity_registry.async_get_entity_id(
+        SENSOR_DOMAIN, DOMAIN, "222260252323873333_cashflow_savings_rate"
+    )
+    assert savings_rate_entity_id is not None
+    state = hass.states.get(savings_rate_entity_id)
     assert state is not None
     assert state.attributes["unit_of_measurement"] == PERCENTAGE
     assert "device_class" not in state.attributes
 
 
-@pytest.mark.usefixtures("recorder_mock")
+@pytest.mark.parametrize(
+    "ignore_missing_translations", ["component.recorder.services."]
+)
+@pytest.mark.usefixtures("mock_setup_entry", "recorder_mock")
 async def test_statistics_migration_called_for_monetary_sensors(
     hass: HomeAssistant,
     mock_config_entry: MockConfigEntry,
     entity_registry: er.EntityRegistry,
 ) -> None:
     """Test statistics migration updates existing monetary sensors."""
-    await hass.config.async_update(currency="USD")
+    await hass.config.async_update(country="US", currency="USD")
 
     mock_config_entry.add_to_hass(hass)
     _add_migration_entity_registry_entries(entity_registry, mock_config_entry)
@@ -106,7 +117,8 @@ async def test_statistics_migration_called_for_monetary_sensors(
     with patch(
         "homeassistant.components.monarch_money.async_update_statistics_metadata"
     ) as mock_update_stats:
-        assert await async_migrate_entry(hass, mock_config_entry)
+        assert await hass.config_entries.async_setup(mock_config_entry.entry_id)
+        await hass.async_block_till_done()
 
     called_entity_ids = {call.args[1] for call in mock_update_stats.call_args_list}
     assert called_entity_ids == {
@@ -119,6 +131,7 @@ async def test_statistics_migration_called_for_monetary_sensors(
     assert mock_config_entry.minor_version == MonarchMoneyConfigFlow.MINOR_VERSION
 
 
+@pytest.mark.usefixtures("mock_setup_entry")
 async def test_statistics_migration_skips_metadata_without_recorder(
     hass: HomeAssistant,
     mock_config_entry: MockConfigEntry,
@@ -132,7 +145,8 @@ async def test_statistics_migration_skips_metadata_without_recorder(
         "homeassistant.components.monarch_money.async_update_statistics_metadata",
         side_effect=AssertionError("Statistics metadata should not be updated"),
     ):
-        assert await async_migrate_entry(hass, mock_config_entry)
+        assert await hass.config_entries.async_setup(mock_config_entry.entry_id)
+        await hass.async_block_till_done()
 
     assert mock_config_entry.minor_version == MonarchMoneyConfigFlow.MINOR_VERSION
 
