@@ -1,57 +1,42 @@
 """Config flow for the NeoPool integration."""
 
-import asyncio
-import logging
 from typing import Any, override
 
+from neopool_modbus import async_probe_serial
+from neopool_modbus.exceptions import (
+    NeoPoolConnectionError,
+    NeoPoolModbusError,
+    NeoPoolTimeoutError,
+)
 from neopool_modbus.registers import DEFAULT_MODBUS_FRAMER
 import voluptuous as vol
 
 from homeassistant.config_entries import ConfigFlow, ConfigFlowResult
 from homeassistant.const import CONF_HOST, CONF_PORT
-from homeassistant.helpers import translation as ha_translation
 
-from .const import CURRENT_VERSION, DEFAULT_PORT, DEFAULT_UNIT_ID, DOMAIN, NAME
-from .helpers import async_get_device_serial
-
-_LOGGER = logging.getLogger(__name__)
+from .const import CURRENT_VERSION, DEFAULT_PORT, DEFAULT_UNIT_ID, DOMAIN
 
 
-async def is_host_port_open(host: str, port: int, timeout: int = 3) -> bool:
-    """Probe a TCP host:port to verify it accepts connections."""
+async def _async_probe(user_input: dict[str, Any]) -> tuple[str | None, str | None]:
+    """Probe a device using user-supplied connection parameters."""
     try:
-        _, writer = await asyncio.wait_for(asyncio.open_connection(host, port), timeout)
-    except TimeoutError, OSError:
-        return False
-    writer.close()
-    await writer.wait_closed()
-    return True
+        serial = await async_probe_serial(
+            user_input[CONF_HOST],
+            port=user_input[CONF_PORT],
+            unit_id=user_input["unit_id"],
+            framer=user_input["modbus_framer"],
+        )
+    except NeoPoolConnectionError, NeoPoolTimeoutError:
+        return None, "cannot_connect"
+    except NeoPoolModbusError:
+        return None, "cannot_read_modbus"
+    return serial, None
 
 
 class NeoPoolConfigFlow(ConfigFlow, domain=DOMAIN):
     """Handle a config flow for NeoPool."""
 
     VERSION = CURRENT_VERSION
-
-    async def _async_validate_connection(self, user_input: dict) -> dict:
-        """Validate host/port connectivity and return an errors dict."""
-        errors = {}
-        host: str = user_input[CONF_HOST]
-        port: int = user_input.get(CONF_PORT, DEFAULT_PORT)
-        if not await is_host_port_open(host, port):
-            errors[CONF_HOST] = "cannot_connect"
-        return errors
-
-    async def _async_get_default_title(self) -> str:
-        """Return the localized default entry title."""
-        try:
-            t = await ha_translation.async_get_translations(
-                self.hass, self.hass.config.language, "config", {DOMAIN}
-            )
-            key = f"component.{DOMAIN}.config.step.user.data.name_default"
-            return t.get(key) or NAME
-        except Exception:  # noqa: BLE001
-            return NAME
 
     @override
     async def async_step_user(
@@ -69,44 +54,22 @@ class NeoPoolConfigFlow(ConfigFlow, domain=DOMAIN):
                 ): vol.In(("tcp", "rtu")),
             }
         )
-        errors = {}
+        errors: dict[str, str] = {}
         if user_input is not None:
-            errors = await self._async_validate_connection(user_input)
-            if errors:
-                return self.async_show_form(
-                    step_id="user",
-                    data_schema=data_schema,
-                    errors=errors,
+            serial, error_key = await _async_probe(user_input)
+            if error_key:
+                errors[CONF_HOST] = error_key
+            else:
+                assert serial is not None
+                await self.async_set_unique_id(serial)
+                self._abort_if_unique_id_configured()
+
+                return self.async_create_entry(
+                    title=user_input[CONF_HOST], data=user_input
                 )
-
-            serial_number = await async_get_device_serial(user_input)
-            if not serial_number:
-                errors[CONF_HOST] = "cannot_read_modbus"
-                _LOGGER.warning(
-                    "User cannot read from Modbus device at %s:%s",
-                    user_input.get(CONF_HOST),
-                    user_input.get(CONF_PORT),
-                )
-                return self.async_show_form(
-                    step_id="user",
-                    data_schema=data_schema,
-                    errors=errors,
-                )
-
-            unique_id = f"neopool_{serial_number}"
-            await self.async_set_unique_id(unique_id)
-            self._abort_if_unique_id_configured()
-
-            _LOGGER.info(
-                "Creating new NeoPool config entry (serial: …%s)",
-                serial_number[-6:],
-            )
-
-            return self.async_create_entry(
-                title=await self._async_get_default_title(), data=user_input
-            )
 
         return self.async_show_form(
             step_id="user",
             data_schema=data_schema,
+            errors=errors,
         )

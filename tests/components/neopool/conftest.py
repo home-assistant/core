@@ -51,11 +51,6 @@ MOCK_POOL_DATA: dict[str, Any] = {
     "Filtration Pump": False,
     "MBF_PAR_HIDRO_COVER_REDUCTION": 0x0C19,
     "Pool Cover": 0,
-    "relay_light_enable": 4,
-    "relay_aux1_enable": 4,
-    "relay_aux2_enable": 4,
-    "relay_aux3_enable": 4,
-    "relay_aux4_enable": 4,
     "CELL_RUNTIME_TOTAL": 0x00010000,
     "CELL_RUNTIME_PART": 0x00000E10,
     "CELL_RUNTIME_POLA": 0x00000708,
@@ -75,25 +70,17 @@ def mock_setup_entry() -> Generator[AsyncMock]:
 
 @pytest.fixture
 def mock_config_entry() -> MockConfigEntry:
-    """Return a config entry with every optional feature toggle enabled.
-
-    Keeping every option turned on by default means a single fixture covers
-    the entity-discovery happy path for every platform; tests that need a
-    leaner setup can override `options` per-test.
-    """
+    """Return a config entry with a bare-serial unique_id."""
     return MockConfigEntry(
         domain=DOMAIN,
         title=MOCK_NAME,
-        unique_id=f"neopool_{MOCK_SERIAL}",
+        unique_id=MOCK_SERIAL,
         version=CURRENT_VERSION,
         data={
             CONF_HOST: MOCK_HOST,
             CONF_PORT: MOCK_PORT,
             CONF_NAME: MOCK_NAME,
             "unit_id": DEFAULT_UNIT_ID,
-            "modbus_framer": "tcp",
-        },
-        options={
             "modbus_framer": "tcp",
         },
     )
@@ -108,24 +95,12 @@ def mock_neopool_client() -> Generator[MagicMock]:
             autospec=True,
         ) as mock_client_cls,
         patch(
-            "homeassistant.components.neopool.config_flow.async_get_device_serial",
+            "homeassistant.components.neopool.config_flow.async_probe_serial",
             new=AsyncMock(return_value=MOCK_SERIAL),
         ),
     ):
         mock_client = mock_client_cls.return_value
         mock_client.async_read_all = AsyncMock(return_value=dict(MOCK_POOL_DATA))
-        mock_client.read_all_timers = AsyncMock(return_value={})
-        mock_client.async_write_register = AsyncMock(
-            return_value={"value": 0, "confirmed": 0}
-        )
-        mock_client.async_set_filtration_mode = AsyncMock(return_value=None)
-        mock_client.async_set_cell_boost = AsyncMock(return_value=None)
-        mock_client.async_set_filtration_speed = AsyncMock(return_value=None)
-        mock_client.async_set_temp_setpoint = AsyncMock(return_value=None)
-        mock_client.async_sync_device_time = AsyncMock(return_value=None)
-        mock_client.async_clear_errors = AsyncMock(return_value=None)
-        mock_client.async_reset_user_counters = AsyncMock(return_value=None)
-        mock_client.write_timer = AsyncMock()
         mock_client.close = AsyncMock()
         yield mock_client
 
@@ -134,10 +109,7 @@ def mock_neopool_client() -> Generator[MagicMock]:
 def minimal_pool_data() -> dict[str, Any]:
     """Pool data with all optional capability flags off.
 
-    Used to drive the 'should-skip' branches in every platform that
-    suppress entities when the corresponding module / relay is absent.
-    Hardcoded copy rather than a dict subtraction so the suppressed
-    state is explicit at the call site.
+    Used to drive the 'should-skip' branches for supported_fn gating.
     """
     return {
         "MBF_POWER_MODULE_VERSION": 0x1234,
@@ -171,41 +143,28 @@ def minimal_pool_data() -> dict[str, Any]:
 def mock_neopool_client_minimal(
     minimal_pool_data: dict[str, Any],
 ) -> Generator[MagicMock]:
-    """Like mock_neopool_client but seeded with minimal_pool_data.
-
-    Use to exercise platform 'skip-because-disabled' branches.
-    """
+    """Like mock_neopool_client but seeded with minimal_pool_data."""
     with (
         patch(
             "homeassistant.components.neopool.NeoPoolModbusClient",
             autospec=True,
         ) as mock_client_cls,
         patch(
-            "homeassistant.components.neopool.config_flow.async_get_device_serial",
+            "homeassistant.components.neopool.config_flow.async_probe_serial",
             new=AsyncMock(return_value=MOCK_SERIAL),
         ),
     ):
         mock_client = mock_client_cls.return_value
         mock_client.async_read_all = AsyncMock(return_value=dict(minimal_pool_data))
-        mock_client.read_all_timers = AsyncMock(return_value={})
-        mock_client.async_write_register = AsyncMock(
-            return_value={"value": 0, "confirmed": 0}
-        )
-        mock_client.write_timer = AsyncMock()
         mock_client.close = AsyncMock()
         yield mock_client
 
 
 @pytest.fixture
 def mock_socket_connection() -> Generator[None]:
-    """Patch the TCP probe in config_flow so we don't hit the network.
-
-    Not autouse, opt in via the fixture name when the integration's
-    config-flow setup runs in the test (it would otherwise try to open
-    a real TCP connection).
-    """
+    """Patch the lib probe in config_flow so we don't hit the network."""
     with patch(
-        "homeassistant.components.neopool.config_flow.is_host_port_open",
-        new=AsyncMock(return_value=True),
+        "homeassistant.components.neopool.config_flow.async_probe_serial",
+        new=AsyncMock(return_value=MOCK_SERIAL),
     ):
         yield

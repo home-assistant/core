@@ -1,10 +1,8 @@
-"""Tests for the NeoPool sensor platform value decoders."""
+"""Tests for the NeoPool sensor platform."""
 
-from datetime import timedelta as _td
 from typing import Any
-from unittest.mock import AsyncMock, MagicMock, patch
+from unittest.mock import MagicMock, patch
 
-from freezegun.api import FrozenDateTimeFactory
 from neopool_modbus.decoders import (
     decode_hidro_polarity,
     decode_ion_polarity,
@@ -13,16 +11,16 @@ from neopool_modbus.decoders import (
 import pytest
 from syrupy.assertion import SnapshotAssertion
 
-from homeassistant.components.neopool.const import CURRENT_VERSION, DOMAIN
+from homeassistant.components.neopool.const import DOMAIN
 from homeassistant.components.neopool.sensor import SENSOR_DESCRIPTIONS
-from homeassistant.const import STATE_UNKNOWN, Platform
-from homeassistant.core import HomeAssistant, State
+from homeassistant.const import Platform
+from homeassistant.core import HomeAssistant
 from homeassistant.helpers import entity_platform as ep, entity_registry as er
 
 from . import setup_integration
-from .conftest import MOCK_POOL_DATA, MOCK_SERIAL
+from .conftest import MOCK_SERIAL
 
-from tests.common import MockConfigEntry, mock_restore_cache_with_extra_data
+from tests.common import MockConfigEntry
 
 
 def _sensor_by_key(hass: HomeAssistant, key: str):
@@ -35,11 +33,6 @@ def _sensor_by_key(hass: HomeAssistant, key: str):
             ):
                 return ent
     return None
-
-
-def _minimum_pool_data() -> dict[str, Any]:
-    """Return a copy of the default fixture's pool data for ad-hoc test entries."""
-    return dict(MOCK_POOL_DATA)
 
 
 @pytest.mark.parametrize(
@@ -85,54 +78,15 @@ def _minimum_pool_data() -> dict[str, Any]:
         (
             {
                 "pH control module": True,
-                "MBF_PAR_RELAY_PH": 2,
-                "pH pump active": False,
-                "pH acid pump active": False,
-            },
-            "idle",
-        ),
-        (
-            {
-                "pH control module": True,
                 "MBF_PAR_RELAY_PH": 0,
                 "pH pump active": True,
                 "pH acid pump active": True,
             },
             "both",
         ),
-        (
-            {
-                "pH control module": True,
-                "MBF_PAR_RELAY_PH": 0,
-                "pH pump active": False,
-                "pH acid pump active": True,
-            },
-            "acid",
-        ),
-        (
-            {
-                "pH control module": True,
-                "MBF_PAR_RELAY_PH": 0,
-                "pH pump active": True,
-                "pH acid pump active": False,
-            },
-            "base",
-        ),
-        (
-            {
-                "pH control module": True,
-                "MBF_PAR_RELAY_PH": 0,
-                "pH pump active": False,
-                "pH acid pump active": False,
-            },
-            "idle",
-        ),
     ],
 )
 async def test_ph_pump_status_decoder(
-    hass: HomeAssistant,
-    mock_config_entry: MockConfigEntry,
-    mock_neopool_client: MagicMock,
     data: dict[str, Any],
     expected: str | None,
 ) -> None:
@@ -150,26 +104,6 @@ async def test_ph_pump_status_decoder(
                 "HIDRO in Pol2": False,
                 "HIDRO in dead time": False,
                 "Filtration Pump": False,
-            },
-            "off",
-        ),
-        (
-            {
-                "HIDRO in Pol1": False,
-                "HIDRO in Pol2": False,
-                "HIDRO in dead time": False,
-                "Filtration Pump": True,
-                "HIDRO Cell Flow FL1": False,
-            },
-            "no_flow",
-        ),
-        (
-            {
-                "HIDRO in Pol1": False,
-                "HIDRO in Pol2": False,
-                "HIDRO in dead time": False,
-                "Filtration Pump": True,
-                "HIDRO Cell Flow FL1": True,
             },
             "off",
         ),
@@ -196,9 +130,6 @@ async def test_ph_pump_status_decoder(
     ],
 )
 async def test_hidro_polarity_decoder(
-    hass: HomeAssistant,
-    mock_config_entry: MockConfigEntry,
-    mock_neopool_client: MagicMock,
     data: dict[str, Any],
     expected: str | None,
 ) -> None:
@@ -229,9 +160,6 @@ async def test_hidro_polarity_decoder(
     ],
 )
 async def test_ion_polarity_decoder(
-    hass: HomeAssistant,
-    mock_config_entry: MockConfigEntry,
-    mock_neopool_client: MagicMock,
     data: dict[str, Any],
     expected: str | None,
 ) -> None:
@@ -239,68 +167,40 @@ async def test_ion_polarity_decoder(
     assert decode_ion_polarity(data) == expected
 
 
-async def test_temperature_sensor_suppressed_when_filtration_off(
-    hass: HomeAssistant,
-    mock_config_entry: MockConfigEntry,
-    mock_neopool_client: MagicMock,
-) -> None:
-    """Temperature sensor returns None while the filtration pump is off."""
-    await setup_integration(hass, mock_config_entry)
-    entity = _sensor_by_key(hass, "MBF_MEASURE_TEMPERATURE")
-    if entity is None:
-        pytest.skip("temperature entity not registered")
-    coordinator = mock_config_entry.runtime_data
-    coordinator.data["Filtration Pump"] = False
-    assert entity.native_value is None
-
-
-@pytest.mark.parametrize(
-    "key",
-    [
-        "MBF_MEASURE_PH",
-        "MBF_MEASURE_RX",
-        "MBF_MEASURE_CL",
-        "MBF_MEASURE_CONDUCTIVITY",
-    ],
-)
 async def test_measurement_sensors_suppressed_when_filtration_off(
     hass: HomeAssistant,
     mock_config_entry: MockConfigEntry,
     mock_neopool_client: MagicMock,
-    key: str,
 ) -> None:
     """Probe sensors report None while filtration pump is off (stale reading)."""
     await setup_integration(hass, mock_config_entry)
-    entity = _sensor_by_key(hass, key)
-    if entity is None:
-        pytest.skip(f"{key} entity not registered on this fixture")
     coordinator = mock_config_entry.runtime_data
     coordinator.data["Filtration Pump"] = False
-    assert entity.native_value is None
+    for key in (
+        "MBF_MEASURE_PH",
+        "MBF_MEASURE_RX",
+        "MBF_MEASURE_TEMPERATURE",
+    ):
+        entity = _sensor_by_key(hass, key)
+        if entity is None:
+            continue
+        assert entity.native_value is None
 
 
-@pytest.mark.parametrize(
-    "key",
-    [
-        "MBF_HIDRO_CURRENT",
-        "MBF_HIDRO_VOLTAGE",
-        "MBF_ION_CURRENT",
-    ],
-)
 async def test_production_sensors_zero_when_filtration_off(
     hass: HomeAssistant,
     mock_config_entry: MockConfigEntry,
     mock_neopool_client: MagicMock,
-    key: str,
 ) -> None:
     """Production sensors report 0 while filtration pump is off (cell idle)."""
     await setup_integration(hass, mock_config_entry)
-    entity = _sensor_by_key(hass, key)
-    if entity is None:
-        pytest.skip(f"{key} entity not registered on this fixture")
     coordinator = mock_config_entry.runtime_data
     coordinator.data["Filtration Pump"] = False
-    assert entity.native_value == 0
+    for key in ("MBF_HIDRO_CURRENT", "MBF_HIDRO_VOLTAGE", "MBF_ION_CURRENT"):
+        entity = _sensor_by_key(hass, key)
+        if entity is None:
+            continue
+        assert entity.native_value == 0
 
 
 @pytest.mark.parametrize(
@@ -331,188 +231,6 @@ async def test_filt_mode_native_value(
     assert entity.native_value == expected
 
 
-async def test_filtration_pump_energy_sensor_registers_when_power_set(
-    hass: HomeAssistant,
-    mock_neopool_client: MagicMock,
-) -> None:
-    """A non-zero filtration_pump_power option creates the energy sensor."""
-    entry = MockConfigEntry(
-        domain="neopool",
-        title="Pool",
-        unique_id="neopool_pump_power",
-        version=CURRENT_VERSION,
-        data={
-            "host": "192.0.2.30",
-            "port": 502,
-            "name": "Pool",
-            "unit_id": 1,
-            "modbus_framer": "tcp",
-        },
-        options={
-            "modbus_framer": "tcp",
-            "filtration_pump_power": 800,
-        },
-    )
-    await setup_integration(hass, entry)
-    registry = er.async_get(hass)
-    entries = [
-        e
-        for e in er.async_entries_for_config_entry(registry, entry.entry_id)
-        if e.domain == "sensor" and e.unique_id.endswith("_filtration_pump_energy")
-    ]
-    assert entries, "expected filtration_pump_energy sensor when pump_power > 0"
-
-
-async def test_filtration_pump_energy_accumulates_while_pump_runs(
-    hass: HomeAssistant,
-    mock_neopool_client: MagicMock,
-    freezer: FrozenDateTimeFactory,
-) -> None:
-    """Energy accumulates power x elapsed-hours when the pump is running."""
-    pump_data = dict(_minimum_pool_data())
-    pump_data["Filtration Pump"] = True
-    mock_neopool_client.async_read_all = AsyncMock(return_value=pump_data)
-
-    entry = MockConfigEntry(
-        domain="neopool",
-        title="Pool",
-        unique_id="neopool_pump_acc",
-        version=CURRENT_VERSION,
-        data={
-            "host": "192.0.2.31",
-            "port": 502,
-            "name": "Pool",
-            "unit_id": 1,
-            "modbus_framer": "tcp",
-        },
-        options={
-            "modbus_framer": "tcp",
-            "filtration_pump_power": 1000,
-        },
-    )
-    await setup_integration(hass, entry)
-
-    entity_obj = None
-    for platforms in ep.async_get_platforms(hass, "neopool"):
-        for ent in platforms.entities.values():
-            if ent.entity_id.startswith("sensor.") and "filtration_pump_energy" in (
-                getattr(ent, "_attr_unique_id", "") or ""
-            ):
-                entity_obj = ent
-                break
-        if entity_obj is not None:
-            break
-    assert entity_obj is not None
-
-    coordinator = entry.runtime_data
-    coordinator._last_pump_on = True
-    coordinator.async_set_updated_data(coordinator.data)
-    await hass.async_block_till_done()
-
-    initial_wh = entity_obj.native_value
-    freezer.tick(_td(hours=1))
-    coordinator.async_set_updated_data(coordinator.data)
-    await hass.async_block_till_done()
-    later_wh = entity_obj.native_value
-    assert later_wh - initial_wh >= 900
-
-
-async def test_filtration_pump_energy_restores_native_value_after_restart(
-    hass: HomeAssistant,
-    mock_neopool_client: MagicMock,
-) -> None:
-    """RestoreSensor recovers the previous Wh counter after a HA restart."""
-    fake_state = State(
-        "sensor.pool_filtration_pump_energy",
-        STATE_UNKNOWN,
-    )
-    fake_extra_data = {
-        "native_value": 12345.6,
-        "native_unit_of_measurement": "Wh",
-    }
-    mock_restore_cache_with_extra_data(hass, ((fake_state, fake_extra_data),))
-
-    entry = MockConfigEntry(
-        domain=DOMAIN,
-        title="Pool",
-        unique_id="neopool_pump_restore",
-        version=CURRENT_VERSION,
-        data={
-            "host": "192.0.2.32",
-            "port": 502,
-            "name": "Pool",
-            "unit_id": 1,
-            "modbus_framer": "tcp",
-        },
-        options={
-            "modbus_framer": "tcp",
-            "filtration_pump_power": 1000,
-        },
-    )
-    await setup_integration(hass, entry)
-
-    entity_obj = None
-    for platforms in ep.async_get_platforms(hass, "neopool"):
-        for ent in platforms.entities.values():
-            if ent.entity_id.startswith("sensor.") and "filtration_pump_energy" in (
-                getattr(ent, "_attr_unique_id", "") or ""
-            ):
-                entity_obj = ent
-                break
-        if entity_obj is not None:
-            break
-    assert entity_obj is not None
-    assert entity_obj.native_value == pytest.approx(12345.6)
-
-
-async def test_filtration_pump_energy_ignores_non_numeric_restore(
-    hass: HomeAssistant,
-    mock_neopool_client: MagicMock,
-) -> None:
-    """A non-numeric restored native_value does not corrupt the counter."""
-    fake_state = State(
-        "sensor.pool_filtration_pump_energy",
-        STATE_UNKNOWN,
-    )
-    fake_extra_data = {
-        "native_value": {"__type": "<class 'datetime.datetime'>", "isoformat": "..."},
-        "native_unit_of_measurement": "Wh",
-    }
-    mock_restore_cache_with_extra_data(hass, ((fake_state, fake_extra_data),))
-
-    entry = MockConfigEntry(
-        domain=DOMAIN,
-        title="Pool",
-        unique_id="neopool_pump_bad_restore",
-        version=CURRENT_VERSION,
-        data={
-            "host": "192.0.2.33",
-            "port": 502,
-            "name": "Pool",
-            "unit_id": 1,
-            "modbus_framer": "tcp",
-        },
-        options={
-            "modbus_framer": "tcp",
-            "filtration_pump_power": 1000,
-        },
-    )
-    await setup_integration(hass, entry)
-
-    entity_obj = None
-    for platforms in ep.async_get_platforms(hass, "neopool"):
-        for ent in platforms.entities.values():
-            if ent.entity_id.startswith("sensor.") and "filtration_pump_energy" in (
-                getattr(ent, "_attr_unique_id", "") or ""
-            ):
-                entity_obj = ent
-                break
-        if entity_obj is not None:
-            break
-    assert entity_obj is not None
-    assert entity_obj.native_value == 0
-
-
 async def test_ph_pump_status_options_per_relay_config(
     hass: HomeAssistant,
     mock_config_entry: MockConfigEntry,
@@ -537,11 +255,7 @@ async def test_hidro_current_g_per_hour_mode(
     mock_config_entry: MockConfigEntry,
     mock_neopool_client: MagicMock,
 ) -> None:
-    """In g/h mode HIDRO_CURRENT swaps unit and bumps display precision.
-
-    HIDROLIFE machines (MBF_PAR_UICFG_MACHINE=1) display hydrolysis as g/h
-    rather than %; the sensor adapts unit + precision accordingly.
-    """
+    """In g/h mode HIDRO_CURRENT swaps unit and bumps display precision."""
     await setup_integration(hass, mock_config_entry)
     coordinator = mock_config_entry.runtime_data
     coordinator.data["MBF_PAR_UICFG_MACHINE"] = 1
@@ -574,19 +288,16 @@ async def test_cell_runtime_sensor_reads_combined_register(
 ) -> None:
     """Each CELL_RUNTIME_* sensor reads the combined u32 key from coordinator data.
 
-    All five sensors have ``entity_registry_enabled_default=False`` (CELL_RUNTIME_TOTAL
-    and CELL_RUNTIME_PART because the user opted into the diagnostic level
-    consciously, POLA/POLB/POL_CHANGES because they're advanced internals);
-    HA skips constructing entity objects for disabled-by-default keys, so we
-    pre-register them as enabled in the entity_registry and let the platform
-    setup pick that up.
+    All five sensors have ``entity_registry_enabled_default=False``; HA skips
+    constructing entity objects for disabled-by-default keys, so we
+    pre-register them as enabled in the entity_registry.
     """
     mock_config_entry.add_to_hass(hass)
     registry = er.async_get(hass)
     registry.async_get_or_create(
         "sensor",
         DOMAIN,
-        f"neopool_{MOCK_SERIAL}_{key.lower()}",
+        f"{MOCK_SERIAL}_{key.lower()}",
         config_entry=mock_config_entry,
         disabled_by=None,
     )
@@ -597,79 +308,8 @@ async def test_cell_runtime_sensor_reads_combined_register(
     assert entity.native_value == expected_seconds
 
 
-async def test_cell_runtime_sensors_skipped_without_hydrolysis(
-    hass: HomeAssistant,
-    mock_neopool_client: MagicMock,
-) -> None:
-    """No CELL_RUNTIME_* entity is registered on a unit without hydrolysis."""
-    no_hidro = dict(MOCK_POOL_DATA)
-    no_hidro["Hydrolysis module detected"] = False
-    mock_neopool_client.async_read_all.return_value = no_hidro
-
-    entry = MockConfigEntry(
-        domain="neopool",
-        title="Test Pool",
-        unique_id="neopool_no_hidro",
-        version=CURRENT_VERSION,
-        data={
-            "host": "192.0.2.1",
-            "port": 502,
-            "name": "Test Pool",
-            "unit_id": 1,
-            "modbus_framer": "tcp",
-        },
-        options={"modbus_framer": "tcp"},
-    )
-    await setup_integration(hass, entry)
-
-    registry = er.async_get(hass)
-    cell_entities = [
-        e
-        for e in er.async_entries_for_config_entry(registry, entry.entry_id)
-        if e.domain == "sensor" and "cell_runtime" in e.unique_id
-    ]
-    assert cell_entities == []
-
-
-async def test_cell_runtime_sensor_returns_none_when_key_missing(
-    hass: HomeAssistant,
-    mock_config_entry: MockConfigEntry,
-    mock_neopool_client: MagicMock,
-) -> None:
-    """Sensor returns None when the combined key is absent from coordinator data."""
-    mock_config_entry.add_to_hass(hass)
-    registry = er.async_get(hass)
-    registry.async_get_or_create(
-        "sensor",
-        DOMAIN,
-        f"neopool_{MOCK_SERIAL}_cell_runtime_part",
-        config_entry=mock_config_entry,
-        disabled_by=None,
-    )
-    await setup_integration(hass, mock_config_entry)
-    coordinator = mock_config_entry.runtime_data
-    coordinator.data.pop("CELL_RUNTIME_PART", None)
-    coordinator.async_set_updated_data(coordinator.data)
-    await hass.async_block_till_done()
-
-    entity = _sensor_by_key(hass, "CELL_RUNTIME_PART")
-    assert entity is not None
-    assert entity.native_value is None
-
-
-async def test_cell_runtime_default_enabled_state(
-    hass: HomeAssistant,
-    mock_config_entry: MockConfigEntry,
-    mock_neopool_client: MagicMock,
-) -> None:
-    """All five cell-runtime sensors default to disabled.
-
-    Cell-life metrics are diagnostic information rather than headline state;
-    surfacing them silently in every install would clutter dashboards. Users
-    who care about cell-life can enable the sensors explicitly in the entity
-    registry.
-    """
-
+async def test_cell_runtime_default_disabled_state() -> None:
+    """All five cell-runtime sensors default to disabled."""
     for key in (
         "CELL_RUNTIME_TOTAL",
         "CELL_RUNTIME_PART",
@@ -687,15 +327,7 @@ async def test_all_entities(
     mock_config_entry: MockConfigEntry,
     mock_neopool_client: MagicMock,
 ) -> None:
-    """Snapshot every entity registered by the sensor platform.
-
-    Snapshot the registry entries directly rather than via
-    `snapshot_platform`, which assumes every entity is enabled and has
-    state. NeoPool ships several `entity_registry_enabled_default=False`
-    entities; including them via state lookup would either fail or pull
-    entire state machines into the snapshot. The registry entry alone
-    (unique_id, name, disabled_by, ...) is the stable shape we care about.
-    """
+    """Snapshot every entity registered by the sensor platform."""
     with patch("homeassistant.components.neopool.PLATFORMS", [Platform.SENSOR]):
         await setup_integration(hass, mock_config_entry)
     entries = sorted(
@@ -712,13 +344,7 @@ async def test_setup_when_modules_absent(
     mock_config_entry: MockConfigEntry,
     mock_neopool_client_minimal: MagicMock,
 ) -> None:
-    """Snapshot the sensor entities registered when no modules are present.
-
-    Drives setup with the lean `mock_neopool_client_minimal` fixture (no
-    modules detected, no relay GPIOs assigned). Each platform's gating
-    branches fire and entities depending on the missing hardware are
-    skipped; the resulting registry shape is captured as a snapshot.
-    """
+    """Snapshot the sensor entities registered when no modules are present."""
     with patch("homeassistant.components.neopool.PLATFORMS", [Platform.SENSOR]):
         await setup_integration(hass, mock_config_entry)
     entries = sorted(

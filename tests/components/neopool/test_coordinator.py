@@ -17,16 +17,15 @@ from .conftest import MOCK_POOL_DATA
 from tests.common import MockConfigEntry, async_fire_time_changed
 
 
-async def test_update_data_populates_firmware_and_model(
+async def test_update_data_populates_firmware(
     hass: HomeAssistant,
     mock_config_entry: MockConfigEntry,
     mock_neopool_client: MagicMock,
 ) -> None:
-    """The first successful read populates firmware and model."""
+    """The first successful read populates firmware."""
     await setup_integration(hass, mock_config_entry)
     coordinator = mock_config_entry.runtime_data
     assert coordinator.firmware == "18.52"
-    assert coordinator.model == "NeoPool"
 
 
 async def test_transient_modbus_failure_after_first_success_marks_unavailable(
@@ -35,7 +34,7 @@ async def test_transient_modbus_failure_after_first_success_marks_unavailable(
     mock_neopool_client: MagicMock,
     freezer: FrozenDateTimeFactory,
 ) -> None:
-    """A failure after at least one good read raises UpdateFailed (not ConfigEntryNotReady)."""
+    """A failure after at least one good read raises UpdateFailed."""
     await setup_integration(hass, mock_config_entry)
     coordinator = mock_config_entry.runtime_data
     assert coordinator.last_update_success is True
@@ -76,40 +75,3 @@ async def test_clean_gpio_does_not_create_issue(
     await setup_integration(hass, mock_config_entry)
     issue_registry = ir.async_get(hass)
     assert issue_registry.async_get_issue(DOMAIN, "corrupted_gpio") is None
-
-
-async def test_timer_block_data_merged_into_coordinator(
-    hass: HomeAssistant,
-    mock_config_entry: MockConfigEntry,
-    mock_neopool_client: MagicMock,
-) -> None:
-    """When read_all_timers returns timer blocks, the per-block fields land in data."""
-    mock_neopool_client.read_all_timers = AsyncMock(
-        return_value={
-            "filtration1": {
-                "enable": 1,
-                "on": 8 * 3600,
-                "interval": 4 * 3600,
-                "stop": 12 * 3600,
-                "period": 86400,
-                "countdown": 3600,
-            },
-            "filtration2": {
-                "enable": 0,
-                "on": None,
-                "interval": None,
-                "stop": None,
-                "period": None,
-                "countdown": 0,
-            },
-        }
-    )
-    await setup_integration(hass, mock_config_entry)
-    coordinator = mock_config_entry.runtime_data
-
-    assert coordinator.data["filtration1_enable"] == 1
-    assert coordinator.data["filtration1_start"] == 8 * 3600
-    assert coordinator.data["filtration1_interval"] == 4 * 3600
-    assert coordinator.data["filtration1_stop"] == 12 * 3600
-    assert coordinator.data["filtration2_stop"] is None
-    assert coordinator.data["FILTRATION_REMAINING"] == 3600

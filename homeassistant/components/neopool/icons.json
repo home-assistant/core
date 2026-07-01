@@ -12,9 +12,6 @@
           "smart": "mdi:water-boiler-auto"
         }
       },
-      "filtration_remaining": {
-        "default": "mdi:timer-sand"
-      },
       "filtration_speed": {
         "default": "mdi:fan"
       },

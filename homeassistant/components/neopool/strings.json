@@ -12,15 +12,14 @@
         "data": {
           "host": "[%key:common::config_flow::data::host%]",
           "modbus_framer": "Modbus framer",
-          "name_default": "Pool",
           "port": "[%key:common::config_flow::data::port%]",
           "unit_id": "Unit ID"
         },
         "data_description": {
           "host": "Enter the IP address of the Modbus TCP gateway connected to your pool controller.",
-          "modbus_framer": "Select 'tcp' for gateways that convert between TCP and RTU. Select 'rtu' for transparent gateways that forward raw RTU frames over TCP.",
+          "modbus_framer": "Wire protocol used by the gateway. Select TCP for MBAP framing (default for Ethernet-native gateways). Select RTU for RTU framing tunnelled through a TCP socket, used by passthrough serial-to-TCP bridges like ESPHome's stream_server.",
           "port": "Standard Modbus TCP port (default: 502). Change only if your gateway uses a non-standard port.",
-          "unit_id": "The Modbus unit (server) ID of the pool controller. Most setups use 1."
+          "unit_id": "Modbus device address (1-247). Identifies the specific device on a shared bus. Most direct-connected devices use 1. Gateways may route requests to different addresses."
         },
         "description": "Configure the connection to your NeoPool controller.",
         "title": "NeoPool Connection"
@@ -44,102 +43,90 @@
       "cell_runtime_total": {
         "name": "Cell runtime total"
       },
-      "device_time": {
-        "name": "Device Time"
-      },
       "filt_mode": {
-        "name": "Filtration Mode",
+        "name": "Filtration mode",
         "state": {
           "auto": "Automatic",
           "backwash": "Backwash",
           "heating": "Heating",
           "intelligent": "Intelligent",
-          "manual": "Manual",
+          "manual": "[%key:common::state::manual%]",
           "smart": "Smart"
         }
-      },
-      "filtration_pump_energy": {
-        "name": "Filtration Pump Energy"
-      },
-      "filtration_pump_power": {
-        "name": "Filtration Pump Power"
-      },
-      "filtration_remaining": {
-        "name": "Filtration Time Remaining"
       },
       "filtration_speed": {
         "name": "Current filtration speed",
         "state": {
-          "high": "High",
-          "low": "Low",
+          "high": "[%key:common::state::high%]",
+          "low": "[%key:common::state::low%]",
           "mid": "Medium",
-          "off": "Off"
+          "off": "[%key:common::state::off%]"
         }
       },
       "filtvalve_remaining": {
-        "name": "Backwash Time Remaining"
+        "name": "Backwash time remaining"
       },
       "hidro_current": {
-        "name": "Hydrolysis Intensity"
+        "name": "Hydrolysis intensity"
       },
       "hidro_polarity": {
-        "name": "Hydrolysis Polarity",
+        "name": "Hydrolysis polarity",
         "state": {
-          "dead_time": "Dead Time",
-          "no_flow": "No Flow",
-          "off": "Off",
+          "dead_time": "Dead time",
+          "no_flow": "No flow",
+          "off": "[%key:common::state::off%]",
           "pol1": "Polarity 1",
           "pol2": "Polarity 2"
         }
       },
       "hidro_voltage": {
-        "name": "Hydrolysis Voltage"
+        "name": "Hydrolysis voltage"
       },
       "intelligent_intervals": {
-        "name": "Intelligent Mode Intervals"
+        "name": "Intelligent mode intervals"
       },
       "intelligent_tt_next_interval": {
-        "name": "Intelligent Mode Next Interval Start"
+        "name": "Intelligent mode next interval start"
       },
       "ion_current": {
-        "name": "Ionization Level"
+        "name": "Ionization level"
       },
       "ion_polarity": {
-        "name": "Ionizer Polarity",
+        "name": "Ionizer polarity",
         "state": {
-          "dead_time": "Dead Time",
-          "off": "Off",
+          "dead_time": "Dead time",
+          "off": "[%key:common::state::off%]",
           "pol1": "Polarity 1",
           "pol2": "Polarity 2"
         }
       },
       "measure_cl": {
-        "name": "Salt Level"
+        "name": "Salt level"
       },
       "measure_conductivity": {
-        "name": "Conductivity Level"
+        "name": "Conductivity level"
       },
       "measure_ph": {
-        "name": "pH Level"
+        "name": "pH level"
       },
       "measure_rx": {
-        "name": "Redox Potential"
+        "name": "Redox potential"
       },
       "measure_temperature": {
-        "name": "Water Temperature"
+        "name": "Water temperature"
       },
       "ph_pump_status": {
-        "name": "pH Pump Status",
+        "name": "pH pump status",
         "state": {
-          "acid": "Acid Pump",
-          "base": "Base Pump",
-          "both": "Both Pumps",
-          "idle": "Idle",
-          "off": "Off"
+          "acid": "Acid pump",
+          "base": "Base pump",
+          "both": "Both pumps",
+          "idle": "[%key:common::state::idle%]",
+          "off": "[%key:common::state::off%]"
         }
       },
       "ph_status_alarm": {
-        "name": "pH Alarm",
+        "name": "pH alarm",
         "state": {
           "ok": "OK",
           "ph_high": "pH too high",
