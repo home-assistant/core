@@ -1188,7 +1188,6 @@ class EntityDatetimeConditionBase(EntityConditionBase):
 
         within = config.options.get("within")
         self._within: timedelta | None = (
-            # cast(timedelta, cv.positive_time_period(within))
             cv.positive_time_period(within) if within is not None else None
         )
 
