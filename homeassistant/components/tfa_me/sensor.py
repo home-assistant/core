@@ -14,6 +14,7 @@ from homeassistant.components.sensor import (
     SensorStateClass,
     StateType,
 )
+from homeassistant.const import EntityCategory
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
@@ -96,6 +97,7 @@ TFA_ME_ENTITY_DESCRIPTIONS: dict[str, TFAmeSensorEntityDescription] = {
     "rssi": TFAmeSensorEntityDescription(
         key="rssi",
         translation_key="rssi",
+        entity_category=EntityCategory.DIAGNOSTIC,
         state_class=SensorStateClass.MEASUREMENT,
         suggested_display_precision=0,
         value_fn=lambda entity, data: int(data["value"]),
@@ -105,6 +107,7 @@ TFA_ME_ENTITY_DESCRIPTIONS: dict[str, TFAmeSensorEntityDescription] = {
     "lowbatt": TFAmeSensorEntityDescription(
         key="lowbatt",
         translation_key="lowbatt",
+        entity_category=EntityCategory.DIAGNOSTIC,
         value_fn=lambda entity, data: int(data["value"]),
     ),
     # Wind direction (Index 0..15)
