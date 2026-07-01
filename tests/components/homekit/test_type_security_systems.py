@@ -1,7 +1,5 @@
 """Test different accessory types: Security Systems."""
 
-from unittest.mock import patch
-
 from pyhap.loader import get_loader
 import pytest
 
@@ -346,16 +344,30 @@ async def test_handle_non_alarm_states(
     assert acc.char_target_state.value == 3
 
 
-async def test_reload_when_supported_features_grew(
-    hass: HomeAssistant, hk_driver, events: list[Event]
+@pytest.mark.parametrize(
+    "updated_features",
+    [
+        pytest.param(
+            AlarmControlPanelEntityFeature.ARM_AWAY
+            | AlarmControlPanelEntityFeature.ARM_HOME,
+            id="features_grew",
+        ),
+        pytest.param(AlarmControlPanelEntityFeature.ARM_AWAY, id="never_advertised"),
+    ],
+)
+async def test_skip_state_outside_valid_values(
+    hass: HomeAssistant,
+    hk_driver,
+    updated_features: AlarmControlPanelEntityFeature,
 ) -> None:
-    """Test the accessory reloads when supported_features gained a mode.
+    """Test a state outside the frozen valid values is skipped, not raised.
 
-    The valid values are frozen from supported_features at build time. If a
-    feature change slips past the reload guard (e.g. it arrives across an
-    unavailable boundary), a state mapping to a now-supported but unregistered
-    value would otherwise raise ValueError inside set_value. We reload to
-    rebuild the accessory instead.
+    The valid values are frozen from supported_features at build time. If the
+    entity reports a state mapping to a value that isn't in that frozen set
+    (whether supported_features later grew or the entity simply never
+    advertised it), pushing it would raise ValueError inside set_value. We skip
+    and leave the characteristic unchanged instead. Reconciling the valid
+    values in place is a separate follow-up.
     """
     entity_id = "alarm_control_panel.test"
 
@@ -370,68 +382,25 @@ async def test_reload_when_supported_features_grew(
     await hass.async_block_till_done()
 
     assert 0 not in acc.char_current_state.properties["ValidValues"].values()
+    before = acc.char_current_state.value
 
-    # A state where supported_features now also advertises ARM_HOME and the
-    # state is armed_home -> 0 is now supported but not yet registered. Call
-    # async_update_state directly to model the change reaching the accessory
-    # without the unavailable -> available transition being caught by the
-    # RELOAD_ON_CHANGE_ATTRS guard in async_update_event_state_callback.
-    grew = State(
+    # armed_home maps to 0, which the frozen ValidValues doesn't contain. Push
+    # it directly to model the change reaching the accessory without the
+    # RELOAD_ON_CHANGE_ATTRS guard in async_update_event_state_callback firing.
+    stale = State(
         entity_id,
         AlarmControlPanelState.ARMED_HOME,
-        {
-            "supported_features": AlarmControlPanelEntityFeature.ARM_AWAY
-            | AlarmControlPanelEntityFeature.ARM_HOME
-        },
+        {"supported_features": updated_features},
     )
-    with patch.object(acc, "async_reload") as mock_reload:
-        acc.async_update_state(grew)
-        await hass.async_block_till_done()
-
-    # Exactly one reload; more would suggest a reload loop.
-    assert mock_reload.call_count == 1
-
-
-async def test_skip_when_state_not_supported(
-    hass: HomeAssistant, hk_driver, events: list[Event]
-) -> None:
-    """Test an unadvertised state is skipped, not reloaded (no reload loop).
-
-    If the entity reports a state its supported_features never advertised,
-    reloading would rebuild the same valid values and loop. We skip instead.
-    """
-    entity_id = "alarm_control_panel.test"
-
-    # ARM_AWAY only, and it stays that way -> armed_home (0) is never supported.
-    away_only = {"supported_features": AlarmControlPanelEntityFeature.ARM_AWAY}
-    hass.states.async_set(
-        entity_id, AlarmControlPanelState.DISARMED, attributes=away_only
-    )
-    await hass.async_block_till_done()
-    acc = SecuritySystem(hass, hk_driver, "SecuritySystem", entity_id, 2, None)
-    acc.run()
+    acc.async_update_state(stale)
     await hass.async_block_till_done()
 
-    # armed_home while supported_features still only advertises ARM_AWAY: 0 is
-    # neither registered nor currently supported -> skip, don't reload.
-    unsupported = State(
-        entity_id,
-        AlarmControlPanelState.ARMED_HOME,
-        {"supported_features": AlarmControlPanelEntityFeature.ARM_AWAY},
-    )
-    with patch.object(acc, "async_reload") as mock_reload:
-        acc.async_update_state(unsupported)
-        await hass.async_block_till_done()
-
-    assert not mock_reload.called
-    # State left unchanged; no ValueError raised.
-    assert 0 not in acc.char_current_state.properties["ValidValues"].values()
+    # No ValueError raised; characteristic left unchanged.
+    assert acc.char_current_state.value == before
 
 
-async def test_no_reload_when_state_in_valid_values(
-    hass: HomeAssistant, hk_driver, events: list[Event]
-) -> None:
-    """Test the normal path pushes through without reloading."""
+async def test_set_state_in_valid_values(hass: HomeAssistant, hk_driver) -> None:
+    """Test the normal path pushes a valid value through."""
     entity_id = "alarm_control_panel.test"
 
     attrs = {"supported_features": AlarmControlPanelEntityFeature.ARM_HOME}
@@ -441,11 +410,9 @@ async def test_no_reload_when_state_in_valid_values(
     acc.run()
     await hass.async_block_till_done()
 
-    with patch.object(acc, "async_reload") as mock_reload:
-        hass.states.async_set(
-            entity_id, AlarmControlPanelState.ARMED_HOME, attributes=attrs
-        )
-        await hass.async_block_till_done()
+    hass.states.async_set(
+        entity_id, AlarmControlPanelState.ARMED_HOME, attributes=attrs
+    )
+    await hass.async_block_till_done()
 
-    assert not mock_reload.called
     assert acc.char_current_state.value == 0

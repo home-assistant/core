@@ -169,39 +169,23 @@ class SecuritySystem(HomeAccessory):
             params[ATTR_CODE] = self._alarm_code
         self.async_call_service(ALARM_CONTROL_PANEL_DOMAIN, service, params)
 
-    def _set_or_reload(
-        self, char: Characteristic, value: int, currently_supported: list[int]
-    ) -> bool:
-        """Push value to char; reload or skip if it isn't a valid value.
+    def _set_if_valid(self, char: Characteristic, value: int) -> None:
+        """Push value to char, skipping states it doesn't currently advertise.
 
         The characteristic's valid values are frozen from supported_features at
-        accessory build time. A feature change can slip past the reload guard in
-        async_update_event_state_callback (e.g. it arrives across an unavailable
-        boundary), leaving the frozen set stale. ``currently_supported`` is what
-        the entity's *current* supported_features would allow:
-
-        - value valid for the char: push it.
-        - value not valid, but the current features do support it: the features
-          changed since build -> reload to rebuild the accessory.
-        - value not valid and not supported now either: the entity is reporting
-          a state it doesn't advertise -> reloading wouldn't help (and would
-          loop), so log and skip.
-
-        Returns True if the value was pushed, False otherwise.
+        accessory build time and can go stale: a feature change can slip past
+        the reload guard in async_update_event_state_callback when it arrives
+        across an unavailable boundary. Pushing a value outside the frozen set
+        would raise ValueError in pyhap, so skip and log instead. A newly-added
+        mode stays invisible until the accessory is rebuilt by other means;
+        reconciling valid values in place is a separate follow-up.
         """
         if value in char.properties.get(PROP_VALID_VALUES, {}).values():
             char.set_value(value)
-            return True
-        if value in currently_supported:
-            self.async_reload()
-        else:
-            _LOGGER.debug(
-                "%s: Skipping unsupported security state %d; not in %s",
-                self.entity_id,
-                value,
-                currently_supported,
-            )
-        return False
+            return
+        _LOGGER.debug(
+            "%s: Skipping unsupported security state %d", self.entity_id, value
+        )
 
     @callback
     @override
@@ -219,16 +203,8 @@ class SecuritySystem(HomeAccessory):
         target_state = HASS_TO_HOMEKIT_TARGET.get(hass_state)
         if current_state is None and target_state is None:
             return
-        current_supported, target_supported = _supported_states(
-            new_state.attributes.get(
-                ATTR_SUPPORTED_FEATURES, DEFAULT_SUPPORTED_FEATURES
-            )
-        )
         if current_state is not None:
-            if not self._set_or_reload(
-                self.char_current_state, current_state, current_supported
-            ):
-                return
+            self._set_if_valid(self.char_current_state, current_state)
             _LOGGER.debug(
                 "%s: Updated current state to %s (%d)",
                 self.entity_id,
@@ -236,4 +212,4 @@ class SecuritySystem(HomeAccessory):
                 current_state,
             )
         if target_state is not None:
-            self._set_or_reload(self.char_target_state, target_state, target_supported)
+            self._set_if_valid(self.char_target_state, target_state)
