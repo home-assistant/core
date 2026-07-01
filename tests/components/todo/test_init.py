@@ -1,10 +1,12 @@
 """Tests for the todo integration."""
 
+import dataclasses
 import datetime
 from typing import Any
 import zoneinfo
 
 import pytest
+from syrupy.assertion import SnapshotAssertion
 import voluptuous as vol
 
 from homeassistant.components.todo import (
@@ -20,6 +22,7 @@ from homeassistant.components.todo import (
     TodoListEntity,
     TodoListEntityFeature,
     TodoServices,
+    _serialize_todo_item,
 )
 from homeassistant.config_entries import ConfigEntryState
 from homeassistant.const import ATTR_ENTITY_ID, ATTR_SUPPORTED_FEATURES
@@ -1214,6 +1217,35 @@ async def test_subscribe_entity_does_not_exist(
         "code": "invalid_entity_id",
         "message": "To-do list entity not found: todo.unknown",
     }
+
+
+def test_serialize_todo_item_matches_asdict() -> None:
+    """Test the shallow serialization is equivalent to dataclasses.asdict.
+
+    The websocket subscriber path uses the cheaper shallow _serialize_todo_item
+    instead of dataclasses.asdict. This equivalence only holds while TodoItem
+    stays a flat dataclass of immutable values.
+    """
+    item = TodoItem(
+        summary="Item #1",
+        uid="1",
+        status=TodoItemStatus.COMPLETED,
+        due=datetime.date(2023, 11, 17),
+        description="A description",
+        completed=datetime.datetime(2023, 11, 17, 17, 0, 0, tzinfo=TEST_TIMEZONE),
+    )
+    assert _serialize_todo_item(item) == dataclasses.asdict(item)
+
+
+def test_todo_item_fields(snapshot: SnapshotAssertion) -> None:
+    """Guard the TodoItem fields and their types against changes.
+
+    A change here means the flat-immutable-dataclass assumption behind
+    _serialize_todo_item must be re-checked (see test_serialize_todo_item_matches_asdict).
+    """
+    assert {
+        field.name: str(field.type) for field in dataclasses.fields(TodoItem)
+    } == snapshot
 
 
 @pytest.mark.parametrize(

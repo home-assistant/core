@@ -229,6 +229,22 @@ class TodoItem:
     """The date and time that a to-do item was marked completed."""
 
 
+_TODO_ITEM_FIELD_NAMES: tuple[str, ...] = tuple(
+    field.name for field in dataclasses.fields(TodoItem)
+)
+
+
+def _serialize_todo_item(item: TodoItem) -> dict[str, Any]:
+    """Serialize a To-do item for websocket subscribers.
+
+    Avoids dataclasses.asdict(), which recursively deepcopies every field value
+    (including the status StrEnum via __deepcopy__) on every subscriber update.
+    TodoItem is a flat dataclass of immutable values, so a shallow dict is
+    equivalent and far cheaper.
+    """
+    return {name: getattr(item, name) for name in _TODO_ITEM_FIELD_NAMES}
+
+
 CACHED_PROPERTIES_WITH_ATTR_ = {
     "todo_items",
 }
@@ -301,11 +317,8 @@ class TodoListEntity(Entity, cached_properties=CACHED_PROPERTIES_WITH_ATTR_):
         if not self._update_listeners:
             return
 
-        todo_items = (
-            [copy.copy(item) for item in self.todo_items]
-            if self.todo_items is not None
-            else None
-        )
+        items = self.todo_items
+        todo_items = [copy.copy(item) for item in items] if items is not None else None
 
         for listener in self._update_listeners:
             listener(todo_items)
@@ -342,7 +355,7 @@ async def websocket_handle_subscribe_todo_items(
     @callback
     def todo_item_listener(todo_items: list[TodoItem] | None) -> None:
         """Push updated To-do list items to websocket."""
-        items = [dataclasses.asdict(item) for item in todo_items or []]
+        items = [_serialize_todo_item(item) for item in todo_items or []]
         connection.send_message(
             websocket_api.event_message(
                 msg["id"],
