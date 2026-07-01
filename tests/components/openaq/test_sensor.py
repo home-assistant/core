@@ -5,15 +5,12 @@ from unittest.mock import MagicMock
 from openaq import NotAuthorizedError, TimeoutError as OpenAQTimeoutError
 from syrupy.assertion import SnapshotAssertion
 
-from homeassistant.components.openaq.const import DOMAIN
-from homeassistant.components.sensor import SensorDeviceClass, SensorStateClass
-from homeassistant.const import (
-    CONCENTRATION_MICROGRAMS_PER_CUBIC_METER,
-    CONCENTRATION_PARTS_PER_BILLION,
-    CONCENTRATION_PARTS_PER_MILLION,
-    STATE_UNAVAILABLE,
-    STATE_UNKNOWN,
+from homeassistant.components.openaq.const import (
+    DOMAIN,
+    OPENAQ_UNIT_MICROGRAMS_PER_CUBIC_METER,
 )
+from homeassistant.components.sensor import SensorDeviceClass, SensorStateClass
+from homeassistant.const import STATE_UNAVAILABLE, STATE_UNKNOWN
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import device_registry as dr, entity_registry as er
 from homeassistant.helpers.translation import async_get_translations
@@ -63,8 +60,9 @@ async def test_sensor_entities(
     assert (state := hass.states.get("sensor.del_norte_pm2_5")) is not None
     assert state.state == "12.1"
     assert state.attributes["device_class"] == SensorDeviceClass.PM25
-    assert state.attributes["unit_of_measurement"] == (
-        CONCENTRATION_MICROGRAMS_PER_CUBIC_METER
+    assert (
+        state.attributes["unit_of_measurement"]
+        == OPENAQ_UNIT_MICROGRAMS_PER_CUBIC_METER
     )
 
     co = entity_registry.async_get("sensor.del_norte_carbon_monoxide")
@@ -73,14 +71,14 @@ async def test_sensor_entities(
     assert co.options == {"sensor": {"suggested_display_precision": 2}}
     assert (state := hass.states.get("sensor.del_norte_carbon_monoxide")) is not None
     assert state.attributes["device_class"] == SensorDeviceClass.CO
-    assert state.attributes["unit_of_measurement"] == CONCENTRATION_PARTS_PER_MILLION
+    assert state.attributes["unit_of_measurement"] == "ppm"
 
     no2 = entity_registry.async_get("sensor.del_norte_nitrogen_dioxide")
     assert no2 is not None
     assert no2.capabilities == {"state_class": SensorStateClass.MEASUREMENT}
     assert no2.options == {"sensor": {"suggested_display_precision": 1}}
     assert (state := hass.states.get("sensor.del_norte_nitrogen_dioxide")) is not None
-    assert state.attributes["unit_of_measurement"] == CONCENTRATION_PARTS_PER_BILLION
+    assert state.attributes["unit_of_measurement"] == "ppb"
 
     assert entity_registry.async_get("sensor.del_norte_unsupported") is None
 
