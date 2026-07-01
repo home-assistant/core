@@ -5,7 +5,7 @@
   },
   "conditions": {
     "was_pressed": {
-      "description": "Tests if a button was ever pressed, optionally within the last duration.",
+      "description": "Tests if one or more buttons were ever pressed, optionally within the last duration.",
       "fields": {
         "behavior": {
           "name": "[%key:component::button::common::condition_behavior_name%]"
