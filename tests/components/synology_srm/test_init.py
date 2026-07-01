@@ -1,25 +1,25 @@
 """Tests for the Synology SRM __init__ module."""
 
-from typing import Any
 from unittest.mock import MagicMock
 
+from freezegun.api import FrozenDateTimeFactory
+import pytest
 import synology_srm
 
-from homeassistant.components.synology_srm import SynologySRMDeviceScanner
 from homeassistant.components.synology_srm.const import DEFAULT_SCAN_INTERVAL, DOMAIN
 from homeassistant.config_entries import ConfigEntryState
-from homeassistant.const import CONF_HOST, CONF_VERIFY_SSL, EVENT_HOMEASSISTANT_STOP
+from homeassistant.const import CONF_VERIFY_SSL, EVENT_HOMEASSISTANT_STOP
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers.dispatcher import async_dispatcher_connect
+from homeassistant.helpers import entity_registry as er
 
 from . import DEVICE_1, DEVICE_2, MOCK_CONFIG
 
-from tests.common import MockConfigEntry
+from tests.common import MockConfigEntry, async_fire_time_changed
 
 
+@pytest.mark.usefixtures("mock_synology_client")
 async def test_setup_and_unload_entry(
     hass: HomeAssistant,
-    mock_synology_client: MagicMock,
     mock_config_entry: MockConfigEntry,
 ) -> None:
     """A working entry sets up, reaches LOADED, and unloads cleanly."""
@@ -27,7 +27,6 @@ async def test_setup_and_unload_entry(
     assert await hass.config_entries.async_setup(mock_config_entry.entry_id)
     await hass.async_block_till_done()
     assert mock_config_entry.state is ConfigEntryState.LOADED
-    assert isinstance(mock_config_entry.runtime_data, SynologySRMDeviceScanner)
 
     assert await hass.config_entries.async_unload(mock_config_entry.entry_id)
     await hass.async_block_till_done()
@@ -100,97 +99,116 @@ async def test_setup_entry_calls_disable_https_verify_when_disabled(
     mock_synology_client.http.disable_https_verify.assert_called_once()
 
 
-async def test_scanner_populates_devices_and_dispatches_new(
+async def test_new_device_on_scan_registers_entity(
     hass: HomeAssistant,
     mock_synology_client: MagicMock,
     mock_config_entry: MockConfigEntry,
+    freezer: FrozenDateTimeFactory,
 ) -> None:
-    """Scanner stores devices keyed by MAC and dispatches the new-device signal."""
-    mock_synology_client.core.get_network_nsm_device.return_value = [
-        DEVICE_1,
-        DEVICE_2,
-    ]
-    new_signals: list[Any] = []
+    """Adding a device on a follow-up scan registers a new entity."""
+    mock_synology_client.core.get_network_nsm_device.return_value = [DEVICE_1]
     mock_config_entry.add_to_hass(hass)
     await hass.config_entries.async_setup(mock_config_entry.entry_id)
     await hass.async_block_till_done()
 
-    scanner: SynologySRMDeviceScanner = mock_config_entry.runtime_data
-    async_dispatcher_connect(
-        hass,
-        scanner.signal_device_new,
-        lambda *args: new_signals.append(args),
-    )
-
-    assert len(scanner.devices) == 2
+    registry = er.async_get(hass)
     assert (
-        scanner.signal_device_new
-        == f"{DOMAIN}-{MOCK_CONFIG[CONF_HOST]}-scanned-devices"
+        registry.async_get_entity_id("device_tracker", DOMAIN, "aa:bb:cc:dd:ee:01")
+        is not None
     )
     assert (
-        scanner.signal_device_update
-        == f"{DOMAIN}-{MOCK_CONFIG[CONF_HOST]}-device-update"
+        registry.async_get_entity_id("device_tracker", DOMAIN, "aa:bb:cc:dd:ee:02")
+        is None
     )
 
-    # Adding a third device on a follow-up scan fires the new-device signal.
-    mock_synology_client.core.get_network_nsm_device.return_value = [
-        DEVICE_1,
-        DEVICE_2,
-        {"mac": "AA:BB:CC:DD:EE:99", "ip_addr": "192.168.1.99"},
-    ]
-    await scanner.scan_devices()
+    mock_synology_client.core.get_network_nsm_device.return_value = [DEVICE_1, DEVICE_2]
+    freezer.tick(DEFAULT_SCAN_INTERVAL)
+    async_fire_time_changed(hass)
     await hass.async_block_till_done()
-    assert len(new_signals) == 1
-    assert len(scanner.devices) == 3
+
+    assert (
+        registry.async_get_entity_id("device_tracker", DOMAIN, "aa:bb:cc:dd:ee:02")
+        is not None
+    )
 
 
-async def test_scanner_scan_error_is_swallowed(
+async def test_scan_error_leaves_entry_loaded(
     hass: HomeAssistant,
     mock_synology_client: MagicMock,
     mock_config_entry: MockConfigEntry,
+    freezer: FrozenDateTimeFactory,
 ) -> None:
-    """A SynologyException during scan_devices is logged and ignored."""
+    """A SynologyException during a periodic scan is logged and the entry stays loaded."""
     mock_config_entry.add_to_hass(hass)
     await hass.config_entries.async_setup(mock_config_entry.entry_id)
     await hass.async_block_till_done()
 
-    scanner: SynologySRMDeviceScanner = mock_config_entry.runtime_data
+    registry = er.async_get(hass)
+    assert (
+        registry.async_get_entity_id("device_tracker", DOMAIN, "aa:bb:cc:dd:ee:01")
+        is not None
+    )
+
     mock_synology_client.core.get_network_nsm_device.side_effect = (
         synology_srm.http.SynologyException(500, "boom")
     )
-    await scanner.scan_devices()
+    freezer.tick(DEFAULT_SCAN_INTERVAL)
+    async_fire_time_changed(hass)
     await hass.async_block_till_done()
-    # Existing devices stay in the cache.
-    assert len(scanner.devices) == 1
+
+    assert mock_config_entry.state is ConfigEntryState.LOADED
+    assert (
+        registry.async_get_entity_id("device_tracker", DOMAIN, "aa:bb:cc:dd:ee:01")
+        is not None
+    )
 
 
-async def test_ha_stop_closes_scanner(
+async def test_ha_stop_stops_polling(
     hass: HomeAssistant,
     mock_synology_client: MagicMock,
     mock_config_entry: MockConfigEntry,
+    freezer: FrozenDateTimeFactory,
 ) -> None:
-    """The HA stop event fires the scanner's close hook."""
+    """After HA stop fires, the periodic scan no longer runs."""
     mock_config_entry.add_to_hass(hass)
     await hass.config_entries.async_setup(mock_config_entry.entry_id)
     await hass.async_block_till_done()
 
-    scanner: SynologySRMDeviceScanner = mock_config_entry.runtime_data
-    closed: list[bool] = []
-    scanner.async_on_close(lambda: closed.append(True))
-
+    call_count_after_setup = mock_synology_client.core.get_network_nsm_device.call_count
     hass.bus.async_fire(EVENT_HOMEASSISTANT_STOP)
     await hass.async_block_till_done()
-    assert closed == [True]
+
+    freezer.tick(DEFAULT_SCAN_INTERVAL * 3)
+    async_fire_time_changed(hass)
+    await hass.async_block_till_done()
+
+    assert (
+        mock_synology_client.core.get_network_nsm_device.call_count
+        == call_count_after_setup
+    )
 
 
-async def test_scanner_uses_default_scan_interval(
+async def test_polling_runs_at_default_interval(
     hass: HomeAssistant,
     mock_synology_client: MagicMock,
     mock_config_entry: MockConfigEntry,
+    freezer: FrozenDateTimeFactory,
 ) -> None:
-    """Scanner uses the fixed DEFAULT_SCAN_INTERVAL, not a user-provided value."""
+    """The scanner polls at DEFAULT_SCAN_INTERVAL, not sooner."""
     mock_config_entry.add_to_hass(hass)
     await hass.config_entries.async_setup(mock_config_entry.entry_id)
     await hass.async_block_till_done()
-    scanner: SynologySRMDeviceScanner = mock_config_entry.runtime_data
-    assert scanner.scan_interval == DEFAULT_SCAN_INTERVAL
+
+    baseline = mock_synology_client.core.get_network_nsm_device.call_count
+
+    # Well under the interval — no new scan.
+    freezer.tick(DEFAULT_SCAN_INTERVAL / 2)
+    async_fire_time_changed(hass)
+    await hass.async_block_till_done()
+    assert mock_synology_client.core.get_network_nsm_device.call_count == baseline
+
+    # Cross the interval — exactly one new scan.
+    freezer.tick(DEFAULT_SCAN_INTERVAL)
+    async_fire_time_changed(hass)
+    await hass.async_block_till_done()
+    assert mock_synology_client.core.get_network_nsm_device.call_count == baseline + 1

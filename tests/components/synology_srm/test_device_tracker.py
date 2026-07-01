@@ -9,13 +9,14 @@ from homeassistant.components.device_tracker import (
     DEFAULT_CONSIDER_HOME,
     DOMAIN as DEVICE_TRACKER_DOMAIN,
 )
+from homeassistant.components.synology_srm.const import DEFAULT_SCAN_INTERVAL
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import entity_registry as er
 from homeassistant.helpers.entity_component import EntityComponent
 
 from . import DEVICE_1, DEVICE_2, DEVICE_SPARSE
 
-from tests.common import MockConfigEntry
+from tests.common import MockConfigEntry, async_fire_time_changed
 
 
 async def _enable_and_reload(
@@ -84,8 +85,7 @@ async def test_entity_disconnect_wipes_attributes_and_swaps_icon(
 
     mock_synology_client.core.get_network_nsm_device.return_value = []
     freezer.tick(DEFAULT_CONSIDER_HOME + timedelta(seconds=5))
-    scanner = mock_config_entry.runtime_data
-    await scanner.scan_devices()
+    async_fire_time_changed(hass)
     await hass.async_block_till_done()
 
     state = hass.states.get(entity_id)
@@ -121,6 +121,7 @@ async def test_new_device_appears_after_initial_setup(
     hass: HomeAssistant,
     mock_synology_client: MagicMock,
     mock_config_entry: MockConfigEntry,
+    freezer: FrozenDateTimeFactory,
 ) -> None:
     """Devices that show up on a later scan get their own ScannerEntity registered."""
     mock_synology_client.core.get_network_nsm_device.return_value = [DEVICE_1]
@@ -137,8 +138,8 @@ async def test_new_device_appears_after_initial_setup(
     )
 
     mock_synology_client.core.get_network_nsm_device.return_value = [DEVICE_1, DEVICE_2]
-    scanner = mock_config_entry.runtime_data
-    await scanner.scan_devices()
+    freezer.tick(DEFAULT_SCAN_INTERVAL)
+    async_fire_time_changed(hass)
     await hass.async_block_till_done()
 
     assert (

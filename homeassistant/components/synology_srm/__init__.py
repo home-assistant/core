@@ -5,6 +5,7 @@ from datetime import datetime
 import logging
 from typing import Any
 
+import requests
 import synology_srm
 
 from homeassistant.config_entries import ConfigEntry
@@ -90,7 +91,11 @@ class SynologySRMDeviceScanner:
             synology_srm.http.SynologyHttpException,
         ) as ex:
             raise ConfigEntryAuthFailed from ex
-        except synology_srm.http.SynologyException as ex:
+        except (
+            requests.exceptions.SSLError,
+            requests.exceptions.HTTPError,
+            synology_srm.http.SynologyException,
+        ) as ex:
             raise ConfigEntryNotReady from ex
 
     async def _update_info(self) -> None:
