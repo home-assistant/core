@@ -176,10 +176,10 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         }
 
         # Check if already configured
-        for entry in self._async_current_entries():
-            current_host = entry.data.get(CONF_HOST)
-            if current_host in (host, hostname, f"http://{host}", f"http://{hostname}"):
-                return self.async_abort(reason="already_configured")
+        self._async_abort_entries_match({CONF_HOST: host})
+        self._async_abort_entries_match({CONF_HOST: hostname})
+        self._async_abort_entries_match({CONF_HOST: f"http://{host}"})
+        self._async_abort_entries_match({CONF_HOST: f"http://{hostname}"})
 
         self.context.update({"title_placeholders": {"name": friendly_name}})
 
