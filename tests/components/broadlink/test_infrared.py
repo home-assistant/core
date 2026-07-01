@@ -154,7 +154,7 @@ async def test_infrared_receiver_polling_decodes_and_dispatches_packet(
 
     assert mock_setup.api.mock_calls == [call.enter_learning(), call.check_data()]
     assert received_signals == [
-        InfraredReceivedSignal(timings=[492, 689, 886], modulation=None)
+        InfraredReceivedSignal(timings=[492, -689, 886], modulation=None)
     ]
 
 
