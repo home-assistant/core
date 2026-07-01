@@ -32,7 +32,7 @@
     'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': None,
-    'unique_id': '01KWE9AJ3E4J432BRYNXY1BQYP_core_backend',
+    'unique_id': '01KWEACAM6KX2DEWZ1MNER3EW8_core_backend',
     'unit_of_measurement': None,
   })
 # ---
@@ -88,7 +88,7 @@
     'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': None,
-    'unique_id': '01KWE9AJ3E4J432BRYNXY1BQYP_core_frontend',
+    'unique_id': '01KWEACAM6KX2DEWZ1MNER3EW8_core_frontend',
     'unit_of_measurement': None,
   })
 # ---

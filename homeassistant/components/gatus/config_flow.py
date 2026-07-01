@@ -47,7 +47,10 @@ class GatusConfigFlow(ConfigFlow, domain=DOMAIN):
         errors: dict[str, str] = {}
 
         if user_input is not None:
-            self._async_abort_entries_match({CONF_URL: user_input[CONF_URL]})
+            normalized_url = user_input[CONF_URL].rstrip("/")
+            user_input[CONF_URL] = normalized_url
+
+            self._async_abort_entries_match({CONF_URL: normalized_url})
 
             try:
                 await validate_input(self.hass, user_input)
