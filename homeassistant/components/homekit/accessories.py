@@ -152,12 +152,14 @@ def get_accessory(  # noqa: C901
         a_type = "BinarySensor"
 
     elif state.domain == "climate":
-        # Use the HeaterCooler tile only when the entity exposes predefined fan
-        # speeds or swing modes it can actually surface; otherwise the Thermostat
-        # handles it and existing accessories are preserved.
+        # Use the HeaterCooler tile only when the entity exposes a control it can
+        # actually surface there; otherwise the Thermostat handles it and existing
+        # accessories are preserved. A single predefined fan speed cannot drive a
+        # useful rotation slider, so require two or more; a swing mode qualifies on
+        # its own.
         attributes = state.attributes
-        has_fan = bool(features & ClimateEntityFeature.FAN_MODE) and bool(
-            get_fan_modes_and_speeds(attributes)[1]
+        has_fan = bool(features & ClimateEntityFeature.FAN_MODE) and (
+            len(get_fan_modes_and_speeds(attributes)[1]) >= 2
         )
         has_swing = bool(features & ClimateEntityFeature.SWING_MODE) and (
             get_swing_on_mode(attributes) is not None

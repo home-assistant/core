@@ -485,6 +485,28 @@ def test_type_camera(type_name, entity_id, state, attrs) -> None:
                 "fan_modes": ["low", "medium", "high"],
             },
         ),
+        # A single predefined fan speed cannot drive the slider -> Thermostat
+        (
+            "Thermostat",
+            "climate.single_fan_speed",
+            "heat",
+            {
+                ATTR_SUPPORTED_FEATURES: ClimateEntityFeature.FAN_MODE,
+                "fan_modes": ["auto", "high"],
+            },
+        ),
+        # A single predefined fan speed plus a swing mode -> HeaterCooler
+        (
+            "HeaterCooler",
+            "climate.single_fan_speed_with_swing",
+            "heat",
+            {
+                ATTR_SUPPORTED_FEATURES: ClimateEntityFeature.FAN_MODE
+                | ClimateEntityFeature.SWING_MODE,
+                "fan_modes": ["auto", "high"],
+                "swing_modes": ["on", "off"],
+            },
+        ),
         # Climate with SWING_MODE feature and swing_modes list -> HeaterCooler
         (
             "HeaterCooler",
