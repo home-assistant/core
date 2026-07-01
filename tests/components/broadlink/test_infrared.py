@@ -20,6 +20,7 @@ from homeassistant.const import Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import device_registry as dr, entity_registry as er
+from homeassistant.util.dt import naive_now
 
 from . import get_device
 
@@ -155,7 +156,7 @@ async def test_infrared_receive_command_error_translates(
     assert isinstance(receiver, InfraredReceiverEntity)
 
     with pytest.raises(HomeAssistantError) as exc_info:
-        await receiver._async_poll_received_signal(datetime.now())
+        await receiver._async_poll_received_signal(naive_now())
 
     assert exc_info.value.translation_key == "receive_command_failed"
     assert exc_info.value.translation_domain == DOMAIN
@@ -186,7 +187,7 @@ async def test_infrared_poll_enter_learning_error_translates(
     assert isinstance(receiver, InfraredReceiverEntity)
 
     with pytest.raises(HomeAssistantError) as exc_info:
-        await receiver._async_poll_received_signal(datetime.now())
+        await receiver._async_poll_received_signal(naive_now())
 
     assert exc_info.value.translation_key == "enter_learning_command_failed"
     assert exc_info.value.translation_domain == DOMAIN

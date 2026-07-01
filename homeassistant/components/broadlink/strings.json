@@ -95,8 +95,17 @@
     "connect_failed": {
       "message": "Failed to connect to the device at {host}: {error}"
     },
+    "decode_signal_failed": {
+      "message": "Failed to decode infrared signal packet: {error}"
+    },
+    "enter_learning_command_failed": {
+      "message": "Failed to enter learning mode: {error}"
+    },
     "frequency_not_supported": {
       "message": "Broadlink devices cannot transmit on {frequency} MHz"
+    },
+    "receive_command_failed": {
+      "message": "Failed to receive IR data: {error}"
     },
     "send_command_failed": {
       "message": "Failed to send IR command: {error}"
