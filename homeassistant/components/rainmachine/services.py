@@ -1,4 +1,4 @@
-"""Services for Rainmachine."""
+"""Services for RainMachine."""
 
 from collections.abc import Callable, Coroutine
 from functools import wraps

@@ -83,7 +83,7 @@ class RainMachineData:
 
 
 async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
-    """Set up Rainmachine."""
+    """Set up RainMachine."""
     async_setup_services(hass)
     return True
 
