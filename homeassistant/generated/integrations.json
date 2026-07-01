@@ -2495,7 +2495,7 @@
     },
     "gentex_place": {
       "name": "Place",
-      "integration_type": "device",
+      "integration_type": "hub",
       "config_flow": true,
       "iot_class": "cloud_push"
     },
