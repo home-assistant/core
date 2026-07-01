@@ -6,7 +6,7 @@
     ]),
     'area_id': None,
     'capabilities': dict({
-      'effect_list': list([
+      <LightEntityCapabilityAttribute.EFFECT_LIST: 'effect_list'>: list([
         'flash',
         'strobe',
         'fade',
@@ -28,7 +28,7 @@
         'dark_cyan',
         'plum',
       ]),
-      'supported_color_modes': list([
+      <LightEntityCapabilityAttribute.SUPPORTED_COLOR_MODES: 'supported_color_modes'>: list([
         <ColorMode.ONOFF: 'onoff'>,
       ]),
     }),
@@ -65,10 +65,10 @@
 # name: test_setup[light.led_infrared_via_test_ir_emitter-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'assumed_state': True,
-      'color_mode': None,
-      'effect': None,
-      'effect_list': list([
+      <EntityStateAttribute.ASSUMED_STATE: 'assumed_state'>: True,
+      <LightEntityStateAttribute.COLOR_MODE: 'color_mode'>: None,
+      <LightEntityStateAttribute.EFFECT: 'effect'>: None,
+      <LightEntityCapabilityAttribute.EFFECT_LIST: 'effect_list'>: list([
         'flash',
         'strobe',
         'fade',
@@ -90,11 +90,11 @@
         'dark_cyan',
         'plum',
       ]),
-      'friendly_name': 'LED Infrared via Test IR emitter',
-      'supported_color_modes': list([
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'LED Infrared via Test IR emitter',
+      <LightEntityCapabilityAttribute.SUPPORTED_COLOR_MODES: 'supported_color_modes'>: list([
         <ColorMode.ONOFF: 'onoff'>,
       ]),
-      'supported_features': <LightEntityFeature: 4>,
+      <EntityStateAttribute.SUPPORTED_FEATURES: 'supported_features'>: <LightEntityFeature: 4>,
     }),
     'context': <ANY>,
     'entity_id': 'light.led_infrared_via_test_ir_emitter',
