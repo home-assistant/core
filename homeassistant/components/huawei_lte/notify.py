@@ -1,7 +1,7 @@
 """Support for Huawei LTE router notifications."""
 
 import logging
-from typing import Any
+from typing import Any, override
 
 from huawei_lte_api.exceptions import ResponseErrorException
 
@@ -42,6 +42,7 @@ class HuaweiLteSmsNotificationService(BaseNotificationService):
         self.router = router
         self.default_targets = default_targets
 
+    @override
     def send_message(self, message: str = "", **kwargs: Any) -> None:
         """Send message to target numbers."""
 

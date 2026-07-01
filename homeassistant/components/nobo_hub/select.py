@@ -1,5 +1,7 @@
 """Python Control of Nobø Hub - Nobø Energy Control."""
 
+from typing import override
+
 from pynobo import PynoboError, nobo
 
 from homeassistant.components.select import SelectEntity
@@ -51,7 +53,6 @@ class NoboGlobalSelector(NoboBaseEntity, SelectEntity):
     """Global override selector for Nobø Ecohub."""
 
     _attr_translation_key = "global_override"
-    _attr_device_class = "nobo_hub__override"
     _modes = {
         nobo.API.OVERRIDE_MODE_NORMAL: "none",
         nobo.API.OVERRIDE_MODE_AWAY: "away",
@@ -76,6 +77,7 @@ class NoboGlobalSelector(NoboBaseEntity, SelectEntity):
             hw_version=hub.hub_info[ATTR_HARDWARE_VERSION],
         )
 
+    @override
     async def async_select_option(self, option: str) -> None:
         """Set override."""
         mode = [k for k, v in self._modes.items() if v == option][0]
@@ -94,11 +96,12 @@ class NoboGlobalSelector(NoboBaseEntity, SelectEntity):
         self._read_state()
 
     @callback
+    @override
     def _read_state(self) -> None:
         """Copy the current hub state onto the entity attributes."""
-        for override in self._nobo.overrides.values():
-            if override["target_type"] == nobo.API.OVERRIDE_TARGET_GLOBAL:
-                self._attr_current_option = self._modes[override["mode"]]
+        for override_data in self._nobo.overrides.values():
+            if override_data["target_type"] == nobo.API.OVERRIDE_TARGET_GLOBAL:
+                self._attr_current_option = self._modes[override_data["mode"]]
                 break
 
 
@@ -122,6 +125,7 @@ class NoboProfileSelector(NoboBaseEntity, SelectEntity):
             suggested_area=hub.zones[zone_id][ATTR_NAME],
         )
 
+    @override
     async def async_select_option(self, option: str) -> None:
         """Set week profile."""
         week_profile_id = [k for k, v in self._profiles.items() if v == option][0]
@@ -145,6 +149,7 @@ class NoboProfileSelector(NoboBaseEntity, SelectEntity):
         return super().available and self._id in self._nobo.zones
 
     @callback
+    @override
     def _read_state(self) -> None:
         """Read the current state from the hub. These are only local calls."""
         if not self.available:

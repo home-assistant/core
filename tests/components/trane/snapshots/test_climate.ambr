@@ -1,26 +1,26 @@
 # serializer version: 1
-# name: test_climate_entities[climate.living_room-entry]
+# name: test_climate_entities[climate.living_room_living_room-entry]
   EntityRegistryEntrySnapshot({
     'aliases': list([
       None,
     ]),
     'area_id': None,
     'capabilities': dict({
-      'fan_modes': list([
+      <ClimateEntityCapabilityAttribute.FAN_MODES: 'fan_modes'>: list([
         'auto',
         'on',
         'circulate',
       ]),
-      'hvac_modes': list([
+      <ClimateEntityCapabilityAttribute.HVAC_MODES: 'hvac_modes'>: list([
         <HVACMode.OFF: 'off'>,
         <HVACMode.AUTO: 'auto'>,
         <HVACMode.HEAT_COOL: 'heat_cool'>,
         <HVACMode.COOL: 'cool'>,
         <HVACMode.HEAT: 'heat'>,
       ]),
-      'max_temp': 95,
-      'min_temp': 45,
-      'target_temp_step': 1.0,
+      <ClimateEntityCapabilityAttribute.MAX_TEMP: 'max_temp'>: 95,
+      <ClimateEntityCapabilityAttribute.MIN_TEMP: 'min_temp'>: 45,
+      <ClimateEntityCapabilityAttribute.TARGET_TEMP_STEP: 'target_temp_step'>: 1.0,
     }),
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -29,7 +29,7 @@
     'disabled_by': None,
     'domain': 'climate',
     'entity_category': None,
-    'entity_id': 'climate.living_room',
+    'entity_id': 'climate.living_room_living_room',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -52,36 +52,36 @@
     'unit_of_measurement': None,
   })
 # ---
-# name: test_climate_entities[climate.living_room-state]
+# name: test_climate_entities[climate.living_room_living_room-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'current_humidity': 45,
-      'current_temperature': 72,
-      'fan_mode': 'auto',
-      'fan_modes': list([
+      <ClimateEntityStateAttribute.CURRENT_HUMIDITY: 'current_humidity'>: 45,
+      <ClimateEntityStateAttribute.CURRENT_TEMPERATURE: 'current_temperature'>: 72,
+      <ClimateEntityStateAttribute.FAN_MODE: 'fan_mode'>: 'auto',
+      <ClimateEntityCapabilityAttribute.FAN_MODES: 'fan_modes'>: list([
         'auto',
         'on',
         'circulate',
       ]),
-      'friendly_name': 'Living Room',
-      'hvac_action': <HVACAction.IDLE: 'idle'>,
-      'hvac_modes': list([
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Living Room',
+      <ClimateEntityStateAttribute.HVAC_ACTION: 'hvac_action'>: <HVACAction.IDLE: 'idle'>,
+      <ClimateEntityCapabilityAttribute.HVAC_MODES: 'hvac_modes'>: list([
         <HVACMode.OFF: 'off'>,
         <HVACMode.AUTO: 'auto'>,
         <HVACMode.HEAT_COOL: 'heat_cool'>,
         <HVACMode.COOL: 'cool'>,
         <HVACMode.HEAT: 'heat'>,
       ]),
-      'max_temp': 95,
-      'min_temp': 45,
-      'supported_features': <ClimateEntityFeature: 395>,
-      'target_temp_high': 76,
-      'target_temp_low': 68,
-      'target_temp_step': 1.0,
-      'temperature': None,
+      <ClimateEntityCapabilityAttribute.MAX_TEMP: 'max_temp'>: 95,
+      <ClimateEntityCapabilityAttribute.MIN_TEMP: 'min_temp'>: 45,
+      <EntityStateAttribute.SUPPORTED_FEATURES: 'supported_features'>: <ClimateEntityFeature: 395>,
+      <ClimateEntityStateAttribute.TARGET_TEMP_HIGH: 'target_temp_high'>: 76,
+      <ClimateEntityStateAttribute.TARGET_TEMP_LOW: 'target_temp_low'>: 68,
+      <ClimateEntityCapabilityAttribute.TARGET_TEMP_STEP: 'target_temp_step'>: 1.0,
+      <ClimateEntityStateAttribute.TEMPERATURE: 'temperature'>: None,
     }),
     'context': <ANY>,
-    'entity_id': 'climate.living_room',
+    'entity_id': 'climate.living_room_living_room',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,

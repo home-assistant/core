@@ -27,8 +27,10 @@ from . import (
     AIR_PURIFIER_TABLE_US_SERVICE_INFO,
     AIR_PURIFIER_US_SERVICE_INFO,
     BULB_SERVICE_INFO,
+    CANDLE_WARMER_LAMP_SERVICE_INFO,
     CEILING_LIGHT_SERVICE_INFO,
     FLOOR_LAMP_SERVICE_INFO,
+    PERMANENT_OUTDOOR_LIGHT_SERVICE_INFO,
     RGBICWW_FLOOR_LAMP_SERVICE_INFO,
     RGBICWW_STRIP_LIGHT_SERVICE_INFO,
     STRIP_LIGHT_3_SERVICE_INFO,
@@ -128,6 +130,15 @@ FLOOR_LAMP_PARAMETERS = (
             "set_effect",
             ("halloween",),
         ),
+    ],
+)
+
+CANDLE_WARMER_LAMP_PARAMETERS = (
+    COMMON_PARAMETERS,
+    [
+        TURN_ON_PARAMETERS,
+        TURN_OFF_PARAMETERS,
+        SET_BRIGHTNESS_PARAMETERS,
     ],
 )
 
@@ -379,6 +390,11 @@ async def test_strip_light_services_exception(
             "SwitchbotRgbicLight",
         ),
         ("rgbicww_floor_lamp", RGBICWW_FLOOR_LAMP_SERVICE_INFO, "SwitchbotRgbicLight"),
+        (
+            "permanent_outdoor_light",
+            PERMANENT_OUTDOOR_LIGHT_SERVICE_INFO,
+            "SwitchbotPermanentOutdoorLight",
+        ),
     ],
 )
 @pytest.mark.parametrize(*FLOOR_LAMP_PARAMETERS)
@@ -448,6 +464,76 @@ async def test_floor_lamp_services_exception(
     error_message = "An error occurred while performing the action: Operation failed"
     with patch.multiple(
         "homeassistant.components.switchbot.light.switchbot.SwitchbotStripLight3",
+        **{mock_method: AsyncMock(side_effect=exception)},
+        update=AsyncMock(return_value=None),
+    ):
+        assert await hass.config_entries.async_setup(entry.entry_id)
+        await hass.async_block_till_done()
+
+        with pytest.raises(HomeAssistantError, match=error_message):
+            await hass.services.async_call(
+                LIGHT_DOMAIN,
+                service,
+                {**service_data, ATTR_ENTITY_ID: entity_id},
+                blocking=True,
+            )
+
+
+@pytest.mark.parametrize(*CANDLE_WARMER_LAMP_PARAMETERS)
+async def test_candle_warmer_lamp_services(
+    hass: HomeAssistant,
+    mock_entry_encrypted_factory: Callable[[str], MockConfigEntry],
+    service: str,
+    service_data: dict,
+    mock_method: str,
+    expected_args: Any,
+) -> None:
+    """Test all SwitchBot candle warmer lamp services."""
+    inject_bluetooth_service_info(hass, CANDLE_WARMER_LAMP_SERVICE_INFO)
+
+    entry = mock_entry_encrypted_factory(sensor_type="candle_warmer_lamp")
+    entry.add_to_hass(hass)
+    entity_id = "light.test_name"
+
+    mocked_instance = AsyncMock(return_value=True)
+
+    with patch.multiple(
+        "homeassistant.components.switchbot.light.switchbot.SwitchbotCandleWarmerLamp",
+        **{mock_method: mocked_instance},
+        update=AsyncMock(return_value=None),
+    ):
+        assert await hass.config_entries.async_setup(entry.entry_id)
+        await hass.async_block_till_done()
+
+        await hass.services.async_call(
+            LIGHT_DOMAIN,
+            service,
+            {**service_data, ATTR_ENTITY_ID: entity_id},
+            blocking=True,
+        )
+
+        mocked_instance.assert_awaited_once_with(*expected_args)
+
+
+@pytest.mark.parametrize(*CANDLE_WARMER_LAMP_PARAMETERS)
+async def test_candle_warmer_lamp_services_exception(
+    hass: HomeAssistant,
+    mock_entry_encrypted_factory: Callable[[str], MockConfigEntry],
+    service: str,
+    service_data: dict,
+    mock_method: str,
+    expected_args: Any,
+) -> None:
+    """Test all SwitchBot candle warmer lamp services with exception."""
+    inject_bluetooth_service_info(hass, CANDLE_WARMER_LAMP_SERVICE_INFO)
+
+    entry = mock_entry_encrypted_factory(sensor_type="candle_warmer_lamp")
+    entry.add_to_hass(hass)
+    entity_id = "light.test_name"
+    exception = SwitchbotOperationError("Operation failed")
+    error_message = "An error occurred while performing the action: Operation failed"
+    with patch.multiple(
+        "homeassistant.components.switchbot.light.switchbot.SwitchbotCandleWarmerLamp",
         **{mock_method: AsyncMock(side_effect=exception)},
         update=AsyncMock(return_value=None),
     ):

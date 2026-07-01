@@ -17,10 +17,9 @@ from script.hassfest.model import Config, Integration
 # Requirements which can't be installed on all systems because they
 # rely on additional system packages. Requirements listed in
 # EXCLUDED_REQUIREMENTS_ALL will be commented-out in
-# requirements_all.txt and requirements_test_all.txt.
+# requirements_all.txt.
 EXCLUDED_REQUIREMENTS_ALL = {
     "atenpdu",  # depends on pysnmp which is not maintained at this time
-    "avion",
     "beewi-smartclim",  # depends on bluepy
     "bluepy",
     "evdev",
@@ -97,7 +96,7 @@ uuid==1000000000.0.0
 # even newer versions seem to introduce new issues, it's useful
 # for us to pin all these
 # requirements so we can directly link HA versions to these library versions.
-anyio==4.10.0
+anyio==4.13.0
 h11==0.16.0
 httpcore==1.0.9
 
@@ -117,7 +116,7 @@ multidict>=6.0.2
 Brotli>=1.2.0
 
 # ensure pydantic version does not float since it might have breaking changes
-pydantic==2.13.2
+pydantic==2.13.4
 
 # Required for Python 3.14.0 compatibility (#119223).
 mashumaro>=3.17.0
@@ -207,7 +206,7 @@ num2words==0.5.14
 # pymodbus does not follow SemVer, and it keeps getting
 # downgraded or upgraded by custom components
 # This ensures all use the same version
-pymodbus==3.11.2
+pymodbus==3.13.1
 
 # Pin pytest-rerunfailures to prevent accidental breaks
 pytest-rerunfailures==16.0.1
@@ -260,19 +259,6 @@ IGNORE_PRE_COMMIT_HOOK_ID = (
 )
 
 PACKAGE_REGEX = re.compile(r"^(?:--.+\s)?([-_\.\w\d]+).*==.+$")
-
-
-def has_tests(module: str) -> bool:
-    """Test if a module has tests.
-
-    Module format: homeassistant.components.hue
-    Test if exists: tests/components/hue/__init__.py
-    """
-    path = (
-        Path(module.replace(".", "/").replace("homeassistant", "tests", 1))
-        / "__init__.py"
-    )
-    return path.exists()
 
 
 def explore_module(package: str, explore_children: bool) -> list[str]:
@@ -511,31 +497,6 @@ def requirements_all_action_output(reqs: dict[str, list[str]], action: str) -> s
     return "".join(output)
 
 
-def requirements_test_all_output(reqs: dict[str, list[str]]) -> str:
-    """Generate output for test_requirements."""
-    output = [
-        "# Home Assistant tests, full dependency set\n",
-        GENERATED_MESSAGE,
-        "-r requirements_test.txt\n",
-    ]
-
-    filtered = {
-        requirement: modules
-        for requirement, modules in reqs.items()
-        if any(
-            # Always install requirements that are not part of integrations
-            not mdl.startswith("homeassistant.components.")
-            or
-            # Install tests for integrations that have tests
-            has_tests(mdl)
-            for mdl in modules
-        )
-    }
-    output.append(generate_requirements_list(filtered))
-
-    return "".join(output)
-
-
 def requirements_pre_commit_output() -> str:
     """Generate output for pre-commit dependencies."""
     source = ".pre-commit-config.yaml"
@@ -609,7 +570,6 @@ def main(validate: bool, ci: bool) -> int:
         action: requirements_all_action_output(data, action)
         for action in OVERRIDDEN_REQUIREMENTS_ACTIONS
     }
-    reqs_test_all_file = requirements_test_all_output(data)
     # Always calling requirements_pre_commit_output is intentional to ensure
     # the code is called by the pre-commit hooks.
     reqs_pre_commit_file = requirements_pre_commit_output()
@@ -619,7 +579,6 @@ def main(validate: bool, ci: bool) -> int:
         ("requirements.txt", reqs_file),
         ("requirements_all.txt", reqs_all_file),
         ("requirements_test_pre_commit.txt", reqs_pre_commit_file),
-        ("requirements_test_all.txt", reqs_test_all_file),
         ("homeassistant/package_constraints.txt", constraints),
     ]
     if ci:

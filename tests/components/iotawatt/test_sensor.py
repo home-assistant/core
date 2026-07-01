@@ -5,6 +5,7 @@ from unittest.mock import MagicMock
 
 from freezegun.api import FrozenDateTimeFactory
 
+from homeassistant.components.iotawatt.const import DOMAIN
 from homeassistant.components.sensor import (
     ATTR_STATE_CLASS,
     SensorDeviceClass,
@@ -29,7 +30,7 @@ async def test_sensor_type_input(
     hass: HomeAssistant, freezer: FrozenDateTimeFactory, mock_iotawatt: MagicMock
 ) -> None:
     """Test input sensors work."""
-    assert await async_setup_component(hass, "iotawatt", {})
+    assert await async_setup_component(hass, DOMAIN, {})
     await hass.async_block_till_done()
 
     assert len(hass.states.async_entity_ids()) == 0
@@ -67,7 +68,7 @@ async def test_sensor_type_output(
     mock_iotawatt.getSensors.return_value["sensors"]["my_watthour_sensor_key"] = (
         OUTPUT_SENSOR
     )
-    assert await async_setup_component(hass, "iotawatt", {})
+    assert await async_setup_component(hass, DOMAIN, {})
     await hass.async_block_till_done()
 
     assert len(hass.states.async_entity_ids()) == 1

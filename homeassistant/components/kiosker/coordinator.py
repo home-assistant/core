@@ -3,6 +3,7 @@
 from dataclasses import dataclass
 from datetime import timedelta
 import logging
+from typing import override
 
 from kiosker import (
     AuthenticationError,
@@ -18,12 +19,12 @@ from kiosker import (
 )
 
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import CONF_HOST, CONF_SSL, CONF_VERIFY_SSL
+from homeassistant.const import CONF_API_TOKEN, CONF_HOST, CONF_SSL, CONF_VERIFY_SSL
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ConfigEntryAuthFailed
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
 
-from .const import CONF_API_TOKEN, DOMAIN, POLL_INTERVAL, PORT
+from .const import DOMAIN, POLL_INTERVAL, PORT
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -70,6 +71,7 @@ class KioskerDataUpdateCoordinator(DataUpdateCoordinator[KioskerData]):
         screensaver = self.api.screensaver_get_state()
         return status, blackout, screensaver
 
+    @override
     async def _async_update_data(self) -> KioskerData:
         """Update data via library."""
         try:

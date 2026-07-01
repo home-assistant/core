@@ -18,7 +18,8 @@
     "step": {
       "init": {
         "data": {
-          "host": "[%key:common::config_flow::data::host%]"
+          "host": "[%key:common::config_flow::data::host%]",
+          "id": "Hue bridge"
         },
         "data_description": {
           "host": "The hostname or IP address of your Hue bridge."
@@ -184,7 +185,12 @@
           "name": "Transition"
         }
       },
-      "name": "Activate Hue scene"
+      "name": "Activate Hue scene",
+      "sections": {
+        "scene_customization": {
+          "name": "Scene customization"
+        }
+      }
     },
     "hue_activate_scene": {
       "description": "Activates a Hue scene stored in the Hue hub.",

@@ -1,5 +1,7 @@
 """Python Control of Nobø Hub - Nobø Energy Control."""
 
+from typing import override
+
 from pynobo import nobo
 
 from homeassistant.components.sensor import (
@@ -73,6 +75,7 @@ class NoboTemperatureSensor(NoboBaseEntity, SensorEntity):
         return super().available and self._id in self._nobo.components
 
     @callback
+    @override
     def _read_state(self) -> None:
         """Read the current state from the hub. This is a local call."""
         if not self.available:

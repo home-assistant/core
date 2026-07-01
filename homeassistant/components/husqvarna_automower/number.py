@@ -3,7 +3,7 @@
 from collections.abc import Awaitable, Callable
 from dataclasses import dataclass
 import logging
-from typing import TYPE_CHECKING, Any
+from typing import TYPE_CHECKING, Any, override
 
 from aioautomower.model import MowerAttributes, WorkArea
 from aioautomower.session import AutomowerSession
@@ -171,11 +171,13 @@ class AutomowerNumberEntity(AutomowerControlEntity, NumberEntity):
         self._attr_unique_id = f"{mower_id}_{description.key}"
 
     @property
+    @override
     def native_value(self) -> float:
         """Return the state of the number."""
         return self.entity_description.value_fn(self.mower_attributes)
 
     @handle_sending_exception()
+    @override
     async def async_set_native_value(self, value: float) -> None:
         """Change to new number value."""
         await self.entity_description.set_value_fn(
@@ -204,6 +206,7 @@ class WorkAreaNumberEntity(WorkAreaControlEntity, NumberEntity):
         }
 
     @property
+    @override
     def translation_key(self) -> str:
         """Return the translation key of the work area."""
         return self.entity_description.translation_key_fn(
@@ -211,11 +214,13 @@ class WorkAreaNumberEntity(WorkAreaControlEntity, NumberEntity):
         )
 
     @property
+    @override
     def native_value(self) -> float:
         """Return the state of the number."""
         return self.entity_description.value_fn(self.work_area_attributes)
 
     @handle_sending_exception(poll_after_sending=True)
+    @override
     async def async_set_native_value(self, value: float) -> None:
         """Change to new number value."""
         await self.entity_description.set_value_fn(

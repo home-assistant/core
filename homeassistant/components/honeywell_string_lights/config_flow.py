@@ -1,6 +1,6 @@
 """Config flow for the Honeywell String Lights integration."""
 
-from typing import Any
+from typing import Any, override
 
 from rf_protocols import RadioFrequencyCommand
 from rf_protocols.codes.honeywell.string_lights import CODES
@@ -19,6 +19,7 @@ class HoneywellStringLightsConfigFlow(ConfigFlow, domain=DOMAIN):
 
     VERSION = 1
 
+    @override
     async def async_step_user(
         self, user_input: dict[str, Any] | None = None
     ) -> ConfigFlowResult:

@@ -1,6 +1,6 @@
 """Config flow for Xthings Cloud."""
 
-from typing import Any
+from typing import Any, override
 
 from ha_xthings_cloud import (
     XthingsCloudApiClient,
@@ -10,17 +10,11 @@ from ha_xthings_cloud import (
 import voluptuous as vol
 
 from homeassistant.config_entries import ConfigFlow, ConfigFlowResult
+from homeassistant.const import CONF_EMAIL, CONF_PASSWORD, CONF_TOKEN
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 from homeassistant.helpers.instance_id import async_get as async_get_instance_id
 
-from .const import (
-    CONF_EMAIL,
-    CONF_PASSWORD,
-    CONF_REFRESH_TOKEN,
-    CONF_TOKEN,
-    DOMAIN,
-    LOGGER,
-)
+from .const import CONF_REFRESH_TOKEN, DOMAIN, LOGGER
 
 ERROR_CODE_MAP: dict[int, str] = {
     20001: "token_invalid",
@@ -49,6 +43,7 @@ class XthingsCloudConfigFlow(ConfigFlow, domain=DOMAIN):
 
     VERSION = 1
 
+    @override
     async def async_step_user(
         self, user_input: dict[str, Any] | None = None
     ) -> ConfigFlowResult:

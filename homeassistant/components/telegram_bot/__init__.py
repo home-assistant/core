@@ -691,10 +691,6 @@ async def async_migrate_entry(
         minor_version,
     )
 
-    if config_entry.version > 1:
-        # This means the user has downgraded from a future version
-        return False
-
     # version 1.1: to add default API endpoint
     if version == 1 and minor_version == 1:
         new_data = {**config_entry.data}
@@ -916,6 +912,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: TelegramBotConfigEntry) 
     try:
         await bot.get_me()
     except InvalidToken as err:
+        # pylint: disable-next=home-assistant-exception-not-translated
         raise ConfigEntryAuthFailed("Invalid API token for Telegram Bot.") from err
     except TelegramError as err:
         raise ConfigEntryNotReady from err

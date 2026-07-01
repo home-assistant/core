@@ -1,0 +1,20 @@
+{
+  "uptime": [{ "name": "uptime", "value": "2d 5h 30m", "unit": "" }],
+  "wifi": [
+    { "name": "ssid", "value": "MyNetwork", "unit": "" },
+    { "name": "signal_strength", "value": "-45", "unit": "dBm" },
+    { "name": "ip_address", "value": "192.168.1.100", "unit": "" },
+    { "name": "mac_address", "value": "AA:BB:CC:DD:EE:FF", "unit": "" },
+    {
+      "name": "mdns_name",
+      "value": "wattwaechter-aabbccddeeff.local",
+      "unit": ""
+    }
+  ],
+  "ap": [],
+  "esp": [
+    { "name": "esp_id", "value": "ABC123", "unit": "" },
+    { "name": "os_version", "value": "1.2.3", "unit": "" }
+  ],
+  "heap": [{ "name": "free_heap", "value": "120000", "unit": "bytes" }]
+}

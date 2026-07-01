@@ -3,7 +3,7 @@
 from collections.abc import Callable, Coroutine
 from dataclasses import dataclass
 import logging
-from typing import TYPE_CHECKING, Any, Final
+from typing import TYPE_CHECKING, Any, Final, override
 
 from homeassistant.components.button import (
     ButtonDeviceClass,
@@ -77,6 +77,7 @@ class SynologyDSMButton(ButtonEntity):
             identifiers={(DOMAIN, api.information.serial)}
         )
 
+    @override
     async def async_press(self) -> None:
         """Triggers the Synology DSM button press service."""
         if TYPE_CHECKING:

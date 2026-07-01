@@ -1,6 +1,6 @@
 """Config flow for Media Extractor integration."""
 
-from typing import Any
+from typing import Any, override
 
 import voluptuous as vol
 
@@ -14,6 +14,7 @@ class MediaExtractorConfigFlow(ConfigFlow, domain=DOMAIN):
 
     VERSION = 1
 
+    @override
     async def async_step_user(
         self, user_input: dict[str, Any] | None = None
     ) -> ConfigFlowResult:
