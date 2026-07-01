@@ -15,11 +15,10 @@ import aiohttp
 from aiohttp import ClientMiddlewareType, hdrs, web
 from aiohttp.hdrs import CONTENT_TYPE, USER_AGENT
 from aiohttp.web_exceptions import HTTPBadGateway, HTTPGatewayTimeout
-from aiohttp_asyncmdnsresolver.api import AsyncDualMDNSResolver
+from aiohttp.resolver import ThreadedResolver
 from yarl import URL
 
 from homeassistant import config_entries
-from homeassistant.components import zeroconf
 from homeassistant.const import APPLICATION_NAME, EVENT_HOMEASSISTANT_CLOSE, __version__
 from homeassistant.core import Event, HomeAssistant, callback
 from homeassistant.util import ssl as ssl_util
@@ -41,7 +40,7 @@ DATA_CONNECTOR: HassKey[dict[tuple[bool, int, str], aiohttp.BaseConnector]] = Ha
 DATA_CLIENTSESSION: HassKey[dict[tuple[bool, int, str], aiohttp.ClientSession]] = (
     HassKey("aiohttp_clientsession")
 )
-DATA_RESOLVER: HassKey[HassAsyncDNSResolver] = HassKey("aiohttp_resolver")
+DATA_RESOLVER: HassKey[ThreadedResolver] = HassKey("aiohttp_resolver")
 
 SERVER_SOFTWARE = (
     f"{APPLICATION_NAME}/{__version__} "
@@ -155,22 +154,6 @@ async def _async_is_blocked_host(
 #
 MAXIMUM_CONNECTIONS = 4096
 MAXIMUM_CONNECTIONS_PER_HOST = 100
-
-
-class HassAsyncDNSResolver(AsyncDualMDNSResolver):
-    """Home Assistant AsyncDNSResolver.
-
-    This is a wrapper around the AsyncDualMDNSResolver to only
-    close the resolver when the Home Assistant instance is closed.
-    """
-
-    async def real_close(self) -> None:
-        """Close the resolver."""
-        await super().close()
-
-    @override
-    async def close(self) -> None:
-        """Close the resolver."""
 
 
 class HassClientResponse(aiohttp.ClientResponse):
@@ -476,6 +459,7 @@ def _async_get_connector(
         ssl=ssl_context,
         limit=MAXIMUM_CONNECTIONS,
         limit_per_host=MAXIMUM_CONNECTIONS_PER_HOST,
+        ttl_dns_cache=0,
         resolver=_async_get_or_create_resolver(hass),
     )
     connectors[connector_key] = connector
@@ -491,17 +475,12 @@ def _async_get_connector(
 
 @singleton(DATA_RESOLVER)
 @callback
-def _async_get_or_create_resolver(hass: HomeAssistant) -> HassAsyncDNSResolver:
-    """Return the HassAsyncDNSResolver."""
-    resolver = _async_make_resolver(hass)
+def _async_get_or_create_resolver(hass: HomeAssistant) -> ThreadedResolver:
+    """Return the ThreadedResolver."""
+    resolver = ThreadedResolver()
 
     async def _async_close_resolver(event: Event) -> None:
-        await resolver.real_close()
+        await resolver.close()
 
     hass.bus.async_listen_once(EVENT_HOMEASSISTANT_CLOSE, _async_close_resolver)
     return resolver
-
-
-@callback
-def _async_make_resolver(hass: HomeAssistant) -> HassAsyncDNSResolver:
-    return HassAsyncDNSResolver(async_zeroconf=zeroconf.async_get_async_zeroconf(hass))

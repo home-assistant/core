@@ -393,19 +393,6 @@ async def test_client_session_immutable_headers(hass: HomeAssistant) -> None:
         session.headers.update({"user-agent": "bla"})
 
 
-@pytest.mark.usefixtures("disable_mock_zeroconf_resolver")
-@pytest.mark.usefixtures("mock_async_zeroconf")
-async def test_async_mdnsresolver(
-    hass: HomeAssistant, aioclient_mock: AiohttpClientMocker
-) -> None:
-    """Test async_mdnsresolver."""
-    resp = aioclient_mock.post("http://localhost/xyz", json={"x": 1})
-    session = client.async_create_clientsession(hass)
-    resp = await session.post("http://localhost/xyz", json={"x": 1})
-    assert resp.status == 200
-    assert await resp.json() == {"x": 1}
-
-
 async def test_resolver_is_singleton(hass: HomeAssistant) -> None:
     """Test that the resolver is a singleton."""
     session = client.async_get_clientsession(hass)
@@ -442,6 +429,15 @@ async def test_connector_no_verify_uses_http11_alpn(hass: HomeAssistant) -> None
         mock_client_context_no_verify.assert_called_once_with(
             SSLCipherList.PYTHON_DEFAULT, ssl_util.SSL_ALPN_HTTP11
         )
+
+
+async def test_connector_ttl_dns_cache_zero(hass: HomeAssistant) -> None:
+    """Test that the connector has DNS cache TTL set to 0."""
+    session = client.async_get_clientsession(hass)
+
+    connector = session.connector
+    assert isinstance(connector, aiohttp.TCPConnector)
+    assert connector._ttl_dns_cache == 0
 
 
 @pytest.fixture
