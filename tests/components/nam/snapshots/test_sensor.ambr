@@ -96,7 +96,7 @@
     'supported_features': 0,
     'translation_key': 'bme280_humidity',
     'unique_id': 'aa:bb:cc:dd:ee:ff-bme280_humidity',
-    'unit_of_measurement': '%',
+    'unit_of_measurement': <UnitOfRatio.PERCENTAGE: '%'>,
   })
 # ---
 # name: test_sensor[sensor.nettigo_air_monitor_bme280_humidity-state]
@@ -105,7 +105,7 @@
       <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'humidity',
       <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Nettigo Air Monitor BME280 humidity',
       <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
-      <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: '%',
+      <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: <UnitOfRatio.PERCENTAGE: '%'>,
     }),
     'context': <ANY>,
     'entity_id': 'sensor.nettigo_air_monitor_bme280_humidity',
@@ -502,7 +502,7 @@
     'supported_features': 0,
     'translation_key': 'dht22_humidity',
     'unique_id': 'aa:bb:cc:dd:ee:ff-dht22_humidity',
-    'unit_of_measurement': '%',
+    'unit_of_measurement': <UnitOfRatio.PERCENTAGE: '%'>,
   })
 # ---
 # name: test_sensor[sensor.nettigo_air_monitor_dht22_humidity-state]
@@ -511,7 +511,7 @@
       <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'humidity',
       <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Nettigo Air Monitor DHT22 humidity',
       <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
-      <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: '%',
+      <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: <UnitOfRatio.PERCENTAGE: '%'>,
     }),
     'context': <ANY>,
     'entity_id': 'sensor.nettigo_air_monitor_dht22_humidity',
@@ -676,7 +676,7 @@
     'supported_features': 0,
     'translation_key': 'heca_humidity',
     'unique_id': 'aa:bb:cc:dd:ee:ff-heca_humidity',
-    'unit_of_measurement': '%',
+    'unit_of_measurement': <UnitOfRatio.PERCENTAGE: '%'>,
   })
 # ---
 # name: test_sensor[sensor.nettigo_air_monitor_heca_humidity-state]
@@ -685,7 +685,7 @@
       <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'humidity',
       <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Nettigo Air Monitor HECA humidity',
       <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
-      <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: '%',
+      <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: <UnitOfRatio.PERCENTAGE: '%'>,
     }),
     'context': <ANY>,
     'entity_id': 'sensor.nettigo_air_monitor_heca_humidity',
@@ -792,7 +792,7 @@
     'supported_features': 0,
     'translation_key': 'mhz14a_carbon_dioxide',
     'unique_id': 'aa:bb:cc:dd:ee:ff-mhz14a_carbon_dioxide',
-    'unit_of_measurement': 'ppm',
+    'unit_of_measurement': <UnitOfRatio.PARTS_PER_MILLION: 'ppm'>,
   })
 # ---
 # name: test_sensor[sensor.nettigo_air_monitor_mh_z14a_carbon_dioxide-state]
@@ -801,7 +801,7 @@
       <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'carbon_dioxide',
       <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Nettigo Air Monitor MH-Z14A carbon dioxide',
       <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
-      <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: 'ppm',
+      <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: <UnitOfRatio.PARTS_PER_MILLION: 'ppm'>,
     }),
     'context': <ANY>,
     'entity_id': 'sensor.nettigo_air_monitor_mh_z14a_carbon_dioxide',
@@ -966,7 +966,7 @@
     'supported_features': 0,
     'translation_key': 'pmsx003_pm1',
     'unique_id': 'aa:bb:cc:dd:ee:ff-pms_p0',
-    'unit_of_measurement': 'μg/m³',
+    'unit_of_measurement': <UnitOfDensity.MICROGRAMS_PER_CUBIC_METER: 'μg/m³'>,
   })
 # ---
 # name: test_sensor[sensor.nettigo_air_monitor_pmsx003_pm1-state]
@@ -975,7 +975,7 @@
       <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'pm1',
       <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Nettigo Air Monitor PMSx003 PM1',
       <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
-      <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: 'μg/m³',
+      <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: <UnitOfDensity.MICROGRAMS_PER_CUBIC_METER: 'μg/m³'>,
     }),
     'context': <ANY>,
     'entity_id': 'sensor.nettigo_air_monitor_pmsx003_pm1',
@@ -1024,7 +1024,7 @@
     'supported_features': 0,
     'translation_key': 'pmsx003_pm10',
     'unique_id': 'aa:bb:cc:dd:ee:ff-pms_p1',
-    'unit_of_measurement': 'μg/m³',
+    'unit_of_measurement': <UnitOfDensity.MICROGRAMS_PER_CUBIC_METER: 'μg/m³'>,
   })
 # ---
 # name: test_sensor[sensor.nettigo_air_monitor_pmsx003_pm10-state]
@@ -1033,7 +1033,7 @@
       <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'pm10',
       <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Nettigo Air Monitor PMSx003 PM10',
       <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
-      <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: 'μg/m³',
+      <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: <UnitOfDensity.MICROGRAMS_PER_CUBIC_METER: 'μg/m³'>,
     }),
     'context': <ANY>,
     'entity_id': 'sensor.nettigo_air_monitor_pmsx003_pm10',
@@ -1082,7 +1082,7 @@
     'supported_features': 0,
     'translation_key': 'pmsx003_pm25',
     'unique_id': 'aa:bb:cc:dd:ee:ff-pms_p2',
-    'unit_of_measurement': 'μg/m³',
+    'unit_of_measurement': <UnitOfDensity.MICROGRAMS_PER_CUBIC_METER: 'μg/m³'>,
   })
 # ---
 # name: test_sensor[sensor.nettigo_air_monitor_pmsx003_pm2_5-state]
@@ -1091,7 +1091,7 @@
       <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'pm25',
       <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Nettigo Air Monitor PMSx003 PM2.5',
       <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
-      <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: 'μg/m³',
+      <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: <UnitOfDensity.MICROGRAMS_PER_CUBIC_METER: 'μg/m³'>,
     }),
     'context': <ANY>,
     'entity_id': 'sensor.nettigo_air_monitor_pmsx003_pm2_5',
@@ -1256,7 +1256,7 @@
     'supported_features': 0,
     'translation_key': 'sds011_pm10',
     'unique_id': 'aa:bb:cc:dd:ee:ff-sds011_p1',
-    'unit_of_measurement': 'μg/m³',
+    'unit_of_measurement': <UnitOfDensity.MICROGRAMS_PER_CUBIC_METER: 'μg/m³'>,
   })
 # ---
 # name: test_sensor[sensor.nettigo_air_monitor_sds011_pm10-state]
@@ -1265,7 +1265,7 @@
       <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'pm10',
       <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Nettigo Air Monitor SDS011 PM10',
       <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
-      <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: 'μg/m³',
+      <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: <UnitOfDensity.MICROGRAMS_PER_CUBIC_METER: 'μg/m³'>,
     }),
     'context': <ANY>,
     'entity_id': 'sensor.nettigo_air_monitor_sds011_pm10',
@@ -1314,7 +1314,7 @@
     'supported_features': 0,
     'translation_key': 'sds011_pm25',
     'unique_id': 'aa:bb:cc:dd:ee:ff-sds011_p2',
-    'unit_of_measurement': 'μg/m³',
+    'unit_of_measurement': <UnitOfDensity.MICROGRAMS_PER_CUBIC_METER: 'μg/m³'>,
   })
 # ---
 # name: test_sensor[sensor.nettigo_air_monitor_sds011_pm2_5-state]
@@ -1323,7 +1323,7 @@
       <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'pm25',
       <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Nettigo Air Monitor SDS011 PM2.5',
       <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
-      <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: 'μg/m³',
+      <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: <UnitOfDensity.MICROGRAMS_PER_CUBIC_METER: 'μg/m³'>,
     }),
     'context': <ANY>,
     'entity_id': 'sensor.nettigo_air_monitor_sds011_pm2_5',
@@ -1372,7 +1372,7 @@
     'supported_features': 0,
     'translation_key': 'sht3x_humidity',
     'unique_id': 'aa:bb:cc:dd:ee:ff-sht3x_humidity',
-    'unit_of_measurement': '%',
+    'unit_of_measurement': <UnitOfRatio.PERCENTAGE: '%'>,
   })
 # ---
 # name: test_sensor[sensor.nettigo_air_monitor_sht3x_humidity-state]
@@ -1381,7 +1381,7 @@
       <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'humidity',
       <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Nettigo Air Monitor SHT3X humidity',
       <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
-      <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: '%',
+      <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: <UnitOfRatio.PERCENTAGE: '%'>,
     }),
     'context': <ANY>,
     'entity_id': 'sensor.nettigo_air_monitor_sht3x_humidity',
@@ -1662,7 +1662,7 @@
     'supported_features': 0,
     'translation_key': 'sps30_pm1',
     'unique_id': 'aa:bb:cc:dd:ee:ff-sps30_p0',
-    'unit_of_measurement': 'μg/m³',
+    'unit_of_measurement': <UnitOfDensity.MICROGRAMS_PER_CUBIC_METER: 'μg/m³'>,
   })
 # ---
 # name: test_sensor[sensor.nettigo_air_monitor_sps30_pm1-state]
@@ -1671,7 +1671,7 @@
       <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'pm1',
       <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Nettigo Air Monitor SPS30 PM1',
       <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
-      <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: 'μg/m³',
+      <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: <UnitOfDensity.MICROGRAMS_PER_CUBIC_METER: 'μg/m³'>,
     }),
     'context': <ANY>,
     'entity_id': 'sensor.nettigo_air_monitor_sps30_pm1',
@@ -1720,7 +1720,7 @@
     'supported_features': 0,
     'translation_key': 'sps30_pm10',
     'unique_id': 'aa:bb:cc:dd:ee:ff-sps30_p1',
-    'unit_of_measurement': 'μg/m³',
+    'unit_of_measurement': <UnitOfDensity.MICROGRAMS_PER_CUBIC_METER: 'μg/m³'>,
   })
 # ---
 # name: test_sensor[sensor.nettigo_air_monitor_sps30_pm10-state]
@@ -1729,7 +1729,7 @@
       <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'pm10',
       <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Nettigo Air Monitor SPS30 PM10',
       <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
-      <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: 'μg/m³',
+      <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: <UnitOfDensity.MICROGRAMS_PER_CUBIC_METER: 'μg/m³'>,
     }),
     'context': <ANY>,
     'entity_id': 'sensor.nettigo_air_monitor_sps30_pm10',
@@ -1778,7 +1778,7 @@
     'supported_features': 0,
     'translation_key': 'sps30_pm25',
     'unique_id': 'aa:bb:cc:dd:ee:ff-sps30_p2',
-    'unit_of_measurement': 'μg/m³',
+    'unit_of_measurement': <UnitOfDensity.MICROGRAMS_PER_CUBIC_METER: 'μg/m³'>,
   })
 # ---
 # name: test_sensor[sensor.nettigo_air_monitor_sps30_pm2_5-state]
@@ -1787,7 +1787,7 @@
       <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'pm25',
       <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Nettigo Air Monitor SPS30 PM2.5',
       <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
-      <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: 'μg/m³',
+      <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: <UnitOfDensity.MICROGRAMS_PER_CUBIC_METER: 'μg/m³'>,
     }),
     'context': <ANY>,
     'entity_id': 'sensor.nettigo_air_monitor_sps30_pm2_5',
@@ -1836,7 +1836,7 @@
     'supported_features': 0,
     'translation_key': 'sps30_pm4',
     'unique_id': 'aa:bb:cc:dd:ee:ff-sps30_p4',
-    'unit_of_measurement': 'μg/m³',
+    'unit_of_measurement': <UnitOfDensity.MICROGRAMS_PER_CUBIC_METER: 'μg/m³'>,
   })
 # ---
 # name: test_sensor[sensor.nettigo_air_monitor_sps30_pm4-state]
@@ -1845,7 +1845,7 @@
       <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'pm4',
       <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Nettigo Air Monitor SPS30 PM4',
       <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
-      <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: 'μg/m³',
+      <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: <UnitOfDensity.MICROGRAMS_PER_CUBIC_METER: 'μg/m³'>,
     }),
     'context': <ANY>,
     'entity_id': 'sensor.nettigo_air_monitor_sps30_pm4',

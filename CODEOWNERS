@@ -181,7 +181,6 @@ CLAUDE.md @home-assistant/core
 /tests/components/asuswrt/ @kennedyshead @ollo69 @Vaskivskyi
 /homeassistant/components/atag/ @MatsNL
 /tests/components/atag/ @MatsNL
-/homeassistant/components/aten_pe/ @mtdcr
 /homeassistant/components/atome/ @baqs
 /homeassistant/components/august/ @bdraco
 /tests/components/august/ @bdraco
@@ -1989,7 +1988,6 @@ CLAUDE.md @home-assistant/core
 /tests/components/waterfurnace/ @sdague @masterkoppa
 /homeassistant/components/watergate/ @adam-the-hero
 /tests/components/watergate/ @adam-the-hero
-/homeassistant/components/watson_tts/ @rutkai
 /homeassistant/components/watts/ @theobld-ww @devender-verma-ww @ssi-spyro
 /tests/components/watts/ @theobld-ww @devender-verma-ww @ssi-spyro
 /homeassistant/components/watttime/ @bachya

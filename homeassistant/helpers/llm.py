@@ -740,7 +740,7 @@ def _get_exposed_entities(
 
         if include_state and (
             attributes := {
-                attr_name: (
+                str(attr_name): (
                     str(attr_value)
                     if isinstance(attr_value, (Enum, Decimal, int))
                     else attr_value

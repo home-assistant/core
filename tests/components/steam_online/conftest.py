@@ -20,6 +20,7 @@ def mock_config_entry() -> MockConfigEntry:
         data=CONF_DATA,
         options=CONF_OPTIONS,
         unique_id=ACCOUNT_1,
+        version=2,
     )
 
 
