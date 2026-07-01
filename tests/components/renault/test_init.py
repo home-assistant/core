@@ -10,19 +10,13 @@ from renault_api.gigya.exceptions import GigyaException, InvalidCredentialsExcep
 from renault_api.renault_session import RenaultSession
 from syrupy.assertion import SnapshotAssertion
 
-from homeassistant.components.renault.const import (
-    CONF_KAMEREON_ACCOUNT_ID,
-    CONF_LOCALE,
-    CONF_LOGIN_TOKEN,
-    DOMAIN,
-)
+from homeassistant.components.renault.const import DOMAIN, RenaultConfigurationKeys
 from homeassistant.config_entries import (
     SOURCE_REAUTH,
     SOURCE_USER,
     ConfigEntry,
     ConfigEntryState,
 )
-from homeassistant.const import CONF_PASSWORD, CONF_USERNAME
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import device_registry as dr
 from homeassistant.setup import async_setup_component
@@ -34,10 +28,10 @@ from tests.typing import WebSocketGenerator
 
 # Config data of an entry created before the login token was stored.
 MOCK_CONFIG_NO_TOKEN = {
-    CONF_USERNAME: "email@test.com",
-    CONF_PASSWORD: "test",
-    CONF_KAMEREON_ACCOUNT_ID: MOCK_ACCOUNT_ID,
-    CONF_LOCALE: "fr_FR",
+    RenaultConfigurationKeys.USERNAME: "email@test.com",
+    RenaultConfigurationKeys.PASSWORD: "test",
+    RenaultConfigurationKeys.KAMEREON_ACCOUNT_ID: MOCK_ACCOUNT_ID,
+    RenaultConfigurationKeys.LOCALE: "fr_FR",
 }
 
 
@@ -102,7 +96,10 @@ async def test_setup_entry_password_login(
     assert mock_login.called
     assert legacy_config_entry.state is ConfigEntryState.LOADED
     # The obtained login token is persisted so future setups skip the password.
-    assert legacy_config_entry.data[CONF_LOGIN_TOKEN] == MOCK_LOGIN_TOKEN
+    assert (
+        legacy_config_entry.data[RenaultConfigurationKeys.LOGIN_TOKEN]
+        == MOCK_LOGIN_TOKEN
+    )
 
 
 async def test_setup_entry_bad_password(

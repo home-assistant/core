@@ -1,6 +1,7 @@
 """Expose Radio Browser as a media source."""
 
 import mimetypes
+from typing import override
 
 from aiodns.error import DNSError
 import pycountry
@@ -53,6 +54,7 @@ class RadioMediaSource(MediaSource):
         """Return the radio browser."""
         return self.entry.runtime_data
 
+    @override
     async def async_resolve_media(self, item: MediaSourceItem) -> PlayMedia:
         """Resolve selected Radio station to a streaming URL."""
 
@@ -80,6 +82,7 @@ class RadioMediaSource(MediaSource):
 
         return PlayMedia(station.url_resolved, mime_type)
 
+    @override
     async def async_browse_media(
         self,
         item: MediaSourceItem,

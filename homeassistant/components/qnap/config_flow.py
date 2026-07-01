@@ -1,7 +1,7 @@
 """Config flow to configure qnap component."""
 
 import logging
-from typing import Any
+from typing import Any, override
 
 from qnapstats import QNAPStats
 from requests.exceptions import ConnectTimeout
@@ -73,6 +73,7 @@ class QnapConfigFlow(ConfigFlow, domain=DOMAIN):
             return errors, stats
         return errors, None
 
+    @override
     async def async_step_user(
         self,
         user_input: dict[str, Any] | None = None,

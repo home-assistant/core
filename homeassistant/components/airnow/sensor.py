@@ -2,7 +2,7 @@
 
 from collections.abc import Callable
 from dataclasses import dataclass
-from typing import Any
+from typing import Any, override
 
 from dateutil import parser
 
@@ -168,11 +168,13 @@ class AirNowSensor(CoordinatorEntity[AirNowDataUpdateCoordinator], SensorEntity)
         )
 
     @property
+    @override
     def native_value(self) -> StateType:
         """Return the state."""
         return self.entity_description.value_fn(self.coordinator.data)
 
     @property
+    @override
     def extra_state_attributes(self) -> dict[str, str] | None:
         """Return the state attributes."""
         if self.entity_description.extra_state_attributes_fn:

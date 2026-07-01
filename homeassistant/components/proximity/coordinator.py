@@ -3,7 +3,7 @@
 from collections import defaultdict
 from dataclasses import dataclass
 import logging
-from typing import cast
+from typing import cast, override
 
 from homeassistant.components.zone import DOMAIN as ZONE_DOMAIN
 from homeassistant.config_entries import ConfigEntry
@@ -233,6 +233,7 @@ class ProximityDataUpdateCoordinator(DataUpdateCoordinator[ProximityData]):
 
         return "stationary"
 
+    @override
     async def _async_update_data(self) -> ProximityData:
         """Calculate Proximity data."""
         if (zone_state := self.hass.states.get(self.proximity_zone_id)) is None:

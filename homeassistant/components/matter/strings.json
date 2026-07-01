@@ -47,6 +47,15 @@
   },
   "entity": {
     "binary_sensor": {
+      "active_hardware_faults": {
+        "name": "Hardware faults"
+      },
+      "active_network_faults": {
+        "name": "Network faults"
+      },
+      "active_radio_faults": {
+        "name": "Radio faults"
+      },
       "actuator": {
         "name": "Actuator"
       },
@@ -408,6 +417,18 @@
       "battery_voltage": {
         "name": "Battery voltage"
       },
+      "boot_reason": {
+        "name": "Boot reason",
+        "state": {
+          "brown_out_reset": "Brownout reset",
+          "hardware_watchdog_reset": "Hardware watchdog reset",
+          "power_on_reboot": "Power-on reboot",
+          "software_reset": "Software reset",
+          "software_update_completed": "Software update completed",
+          "software_watchdog_reset": "Software watchdog reset",
+          "unspecified": "Unspecified"
+        }
+      },
       "contamination_state": {
         "name": "Contamination state",
         "state": {
@@ -576,6 +597,9 @@
       "reactive_current": {
         "name": "Reactive current"
       },
+      "reboot_count": {
+        "name": "Reboot count"
+      },
       "rms_current": {
         "name": "Effective current"
       },
@@ -591,6 +615,25 @@
       "tank_volume": {
         "name": "Tank volume"
       },
+      "thread_channel": {
+        "name": "Thread channel"
+      },
+      "thread_network_name": {
+        "name": "Thread network name"
+      },
+      "thread_routing_role": {
+        "name": "Thread routing role",
+        "state": {
+          "end_device": "End device",
+          "leader": "Leader",
+          "reed": "Router eligible end device",
+          "router": "Router",
+          "sleepy_end_device": "Sleepy end device",
+          "unassigned": "Unassigned",
+          "unknown": "Unknown",
+          "unspecified": "Unspecified"
+        }
+      },
       "tvoc_level": {
         "name": "TVOC level",
         "state": {
@@ -600,11 +643,17 @@
           "medium": "[%key:common::state::medium%]"
         }
       },
+      "uptime": {
+        "name": "Uptime"
+      },
       "valve_position": {
         "name": "Valve position"
       },
       "voltage": {
         "name": "Voltage"
+      },
+      "wifi_rssi": {
+        "name": "Wi-Fi RSSI"
       },
       "window_covering_target_position": {
         "name": "Target opening position"
@@ -652,6 +701,15 @@
     }
   },
   "exceptions": {
+    "addon_not_installed": {
+      "message": "The Matter Server app is not installed yet."
+    },
+    "addon_not_ready": {
+      "message": "The Matter Server app is not ready yet."
+    },
+    "addon_not_running": {
+      "message": "The Matter Server app is not running yet."
+    },
     "credential_type_not_supported": {
       "message": "The lock does not support credential type `{credential_type}`."
     },
@@ -663,6 +721,10 @@
     }
   },
   "issues": {
+    "ipv6_disabled": {
+      "description": "Matter relies on IPv6 to communicate with some devices, but IPv6 is disabled on all of your connected network interfaces. Locally connected Wi-Fi and Ethernet devices may still work, but features such as using an external Thread border router need IPv6 enabled. Select \"Learn more\" to open the network settings.",
+      "title": "IPv6 is disabled but required by Matter"
+    },
     "server_version_version_too_new": {
       "description": "The version of the Matter Server you are currently running is too new for this version of Home Assistant. Please update Home Assistant or downgrade the Matter Server to an older version to fix this issue.",
       "title": "Older version of Matter Server needed"

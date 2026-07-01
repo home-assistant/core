@@ -2,6 +2,7 @@
 
 from collections.abc import Callable
 from dataclasses import dataclass
+from typing import override
 
 from homeassistant.components.sensor import (
     DOMAIN as SENSOR_DOMAIN,
@@ -105,6 +106,7 @@ class PureEnergieSensorEntity(
         )
 
     @property
+    @override
     def native_value(self) -> int | float:
         """Return the state of the sensor."""
         return self.entity_description.value_fn(self.coordinator.data)

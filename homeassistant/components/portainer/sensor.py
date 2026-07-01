@@ -3,6 +3,7 @@
 from collections.abc import Callable
 from dataclasses import dataclass
 from itertools import chain
+from typing import override
 
 from pyportainer import StackType
 from pyportainer.models.docker import DockerSystemDF
@@ -473,6 +474,7 @@ class PortainerContainerSensor(PortainerContainerEntity, SensorEntity):
     entity_description: PortainerContainerSensorEntityDescription
 
     @property
+    @override
     def native_value(self) -> StateType:
         """Return the state of the sensor."""
         return self.entity_description.value_fn(self.container_data)
@@ -484,6 +486,7 @@ class PortainerEndpointSensor(PortainerEndpointEntity, SensorEntity):
     entity_description: PortainerEndpointSensorEntityDescription
 
     @property
+    @override
     def native_value(self) -> StateType:
         """Return the state of the sensor."""
         endpoint_data = self.coordinator.data[self._device_info.endpoint.id]
@@ -498,6 +501,7 @@ class PortainerDockerSystemDiskSpaceSensor(
     entity_description: PortainerDockerSystemDiskSpaceSensorEntityDescription
 
     @property
+    @override
     def native_value(self) -> StateType:
         """Return the state of the sensor."""
         endpoint_data = self.coordinator.data[self._device_info.endpoint.id]
@@ -510,6 +514,7 @@ class PortainerStackSensor(PortainerStackEntity, SensorEntity):
     entity_description: PortainerStackSensorEntityDescription
 
     @property
+    @override
     def native_value(self) -> StateType:
         """Return the state of the sensor."""
         return self.entity_description.value_fn(self.stack_data)
@@ -521,6 +526,7 @@ class PortainerVolumeSensor(PortainerVolumeEntity, SensorEntity):
     entity_description: PortainerVolumeSensorEntityDescription
 
     @property
+    @override
     def native_value(self) -> StateType:
         """Return the state of the sensor."""
         return self.entity_description.value_fn(self.volume_data)

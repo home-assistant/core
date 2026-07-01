@@ -39,7 +39,7 @@
 # name: test_button_entity_properties[button.bsb_lan_sync_time-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'BSB-LAN Sync time',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'BSB-LAN Sync time',
     }),
     'context': <ANY>,
     'entity_id': 'button.bsb_lan_sync_time',

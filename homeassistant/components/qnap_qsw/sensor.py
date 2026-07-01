@@ -3,7 +3,7 @@
 from collections.abc import Callable
 from dataclasses import dataclass, replace
 from datetime import datetime
-from typing import Final
+from typing import Final, override
 
 from aioqsw.const import (
     QSD_FAN1_SPEED,
@@ -369,6 +369,7 @@ class QswSensor(QswSensorEntity, SensorEntity):
         self._async_update_attrs()
 
     @callback
+    @override
     def _async_update_attrs(self) -> None:
         """Update sensor attributes."""
         value = self.get_device_value(

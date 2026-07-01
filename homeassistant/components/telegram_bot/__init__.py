@@ -691,10 +691,6 @@ async def async_migrate_entry(
         minor_version,
     )
 
-    if config_entry.version > 1:
-        # This means the user has downgraded from a future version
-        return False
-
     # version 1.1: to add default API endpoint
     if version == 1 and minor_version == 1:
         new_data = {**config_entry.data}

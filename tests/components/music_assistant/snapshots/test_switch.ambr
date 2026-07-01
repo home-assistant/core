@@ -39,7 +39,7 @@
 # name: test_switch_entities[switch.test_player_1_enhancer-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'Test Player 1 Enhancer',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Test Player 1 Enhancer',
     }),
     'context': <ANY>,
     'entity_id': 'switch.test_player_1_enhancer',

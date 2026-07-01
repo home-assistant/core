@@ -1,7 +1,7 @@
 """Config flow for Awair."""
 
 from collections.abc import Mapping
-from typing import Any, Self, cast
+from typing import Any, Self, cast, override
 
 from aiohttp.client_exceptions import ClientError
 from python_awair import Awair, AwairLocal, AwairLocalDevice
@@ -27,6 +27,7 @@ class AwairFlowHandler(ConfigFlow, domain=DOMAIN):
     _device: AwairLocalDevice
     host: str
 
+    @override
     async def async_step_zeroconf(
         self, discovery_info: ZeroconfServiceInfo
     ) -> ConfigFlowResult:
@@ -76,6 +77,7 @@ class AwairFlowHandler(ConfigFlow, domain=DOMAIN):
             description_placeholders=placeholders,
         )
 
+    @override
     async def async_step_user(
         self, user_input: dict[str, str] | None = None
     ) -> ConfigFlowResult:

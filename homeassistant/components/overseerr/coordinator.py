@@ -1,6 +1,7 @@
 """Define an object to coordinate fetching Overseerr data."""
 
 from datetime import timedelta
+from typing import override
 
 from python_overseerr import (
     OverseerrAuthenticationError,
@@ -49,6 +50,7 @@ class OverseerrCoordinator(DataUpdateCoordinator[OverseerrData]):
         self.url = URL.build(host=host, port=port, scheme="https" if ssl else "http")
         self.push = False
 
+    @override
     async def _async_update_data(self) -> OverseerrData:
         """Fetch data from API endpoint."""
         try:

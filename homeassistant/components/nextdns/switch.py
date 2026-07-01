@@ -2,7 +2,7 @@
 
 from collections.abc import Callable
 from dataclasses import dataclass
-from typing import Any
+from typing import Any, override
 
 from aiohttp import ClientError
 from aiohttp.client_exceptions import ClientConnectorError
@@ -267,7 +267,7 @@ SWITCHES = (
     ),
     NextDnsSwitchEntityDescription(
         key="block_hulu",
-        name="Block Hulu",
+        translation_key="block_hulu",
         entity_category=EntityCategory.CONFIG,
         entity_registry_enabled_default=False,
         state=lambda data: data.block_hulu,
@@ -555,15 +555,18 @@ class NextDnsSwitch(NextDnsEntity, SwitchEntity):
         self._attr_is_on = description.state(coordinator.data)
 
     @callback
+    @override
     def _handle_coordinator_update(self) -> None:
         """Handle updated data from the coordinator."""
         self._attr_is_on = self.entity_description.state(self.coordinator.data)
         self.async_write_ha_state()
 
+    @override
     async def async_turn_on(self, **kwargs: Any) -> None:
         """Turn on switch."""
         await self.async_set_setting(True)
 
+    @override
     async def async_turn_off(self, **kwargs: Any) -> None:
         """Turn off switch."""
         await self.async_set_setting(False)

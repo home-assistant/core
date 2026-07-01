@@ -78,7 +78,7 @@ async def test_setup_component(
         )
         mock_auth.return_value.async_addwebhook.side_effect = AsyncMock()
         mock_auth.return_value.async_dropwebhook.side_effect = AsyncMock()
-        assert await async_setup_component(hass, "netatmo", {})
+        assert await async_setup_component(hass, DOMAIN, {})
 
     await hass.async_block_till_done()
 
@@ -125,7 +125,7 @@ async def test_setup_component_with_config(
         mock_auth.return_value.async_dropwebhook.side_effect = AsyncMock()
 
         assert await async_setup_component(
-            hass, "netatmo", {"netatmo": {"client_id": "123", "client_secret": "abc"}}
+            hass, DOMAIN, {"netatmo": {"client_id": "123", "client_secret": "abc"}}
         )
 
         await hass.async_block_till_done()
@@ -196,7 +196,7 @@ async def test_setup_without_https(
         )
         mock_async_generate_url.return_value = "http://example.com"
         assert await async_setup_component(
-            hass, "netatmo", {"netatmo": {"client_id": "123", "client_secret": "abc"}}
+            hass, DOMAIN, {"netatmo": {"client_id": "123", "client_secret": "abc"}}
         )
 
         await hass.async_block_till_done()
@@ -239,7 +239,7 @@ async def test_setup_with_cloud(
             fake_post_request, hass
         )
         assert await async_setup_component(
-            hass, "netatmo", {"netatmo": {"client_id": "123", "client_secret": "abc"}}
+            hass, DOMAIN, {"netatmo": {"client_id": "123", "client_secret": "abc"}}
         )
         assert cloud.async_active_subscription(hass) is True
         assert cloud.async_is_connected(hass) is True
@@ -310,7 +310,7 @@ async def test_setup_with_cloudhook(hass: HomeAssistant) -> None:
         )
         mock_auth.return_value.async_addwebhook.side_effect = AsyncMock()
         mock_auth.return_value.async_dropwebhook.side_effect = AsyncMock()
-        assert await async_setup_component(hass, "netatmo", {})
+        assert await async_setup_component(hass, DOMAIN, {})
         assert cloud.async_active_subscription(hass) is True
 
         assert (
@@ -354,7 +354,7 @@ async def test_setup_component_with_delay(
         patch("homeassistant.components.netatmo.data_handler.PLATFORMS", ["light"]),
     ):
         assert await async_setup_component(
-            hass, "netatmo", {"netatmo": {"client_id": "123", "client_secret": "abc"}}
+            hass, DOMAIN, {"netatmo": {"client_id": "123", "client_secret": "abc"}}
         )
 
         await hass.async_block_till_done()
@@ -423,7 +423,7 @@ async def test_setup_component_invalid_token_scope(hass: HomeAssistant) -> None:
         )
         mock_auth.return_value.async_addwebhook.side_effect = AsyncMock()
         mock_auth.return_value.async_dropwebhook.side_effect = AsyncMock()
-        assert await async_setup_component(hass, "netatmo", {})
+        assert await async_setup_component(hass, DOMAIN, {})
 
     await hass.async_block_till_done()
 
@@ -477,7 +477,7 @@ async def test_setup_component_invalid_token(
         mock_session.return_value.async_ensure_token_valid.side_effect = (
             fake_ensure_valid_token
         )
-        assert await async_setup_component(hass, "netatmo", {})
+        assert await async_setup_component(hass, DOMAIN, {})
 
     await hass.async_block_till_done()
 

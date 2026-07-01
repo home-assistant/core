@@ -711,6 +711,7 @@ class DPCode(StrEnum):
     ELECTRICITY_LEFT = "electricity_left"
     EXCRETION_TIME_DAY = "excretion_time_day"
     EXCRETION_TIMES_DAY = "excretion_times_day"
+    EXT_TEMP = "ext_temp"
     FACTORY_RESET = "factory_reset"
     FAN_BEEP = "fan_beep"  # Sound
     FAN_COOL = "fan_cool"  # Cool wind

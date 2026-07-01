@@ -1,6 +1,7 @@
 """Sensor data of the Renson ventilation unit."""
 
 from dataclasses import dataclass
+from typing import override
 
 from renson_endura_delta.field_enum import (
     AIR_QUALITY_FIELD,
@@ -246,6 +247,7 @@ class RensonSensor(RensonEntity, SensorEntity):
         self.raw_format = description.raw_format
 
     @callback
+    @override
     def _handle_coordinator_update(self) -> None:
         """Handle updated data from the coordinator."""
         all_data = self.coordinator.data

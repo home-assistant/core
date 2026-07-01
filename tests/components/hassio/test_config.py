@@ -114,7 +114,7 @@ async def test_load_config_store(
     await hass.auth.async_update_user(user, group_ids=[GROUP_ID_ADMIN])
 
     with patch("homeassistant.components.hassio.config.STORE_DELAY_SAVE", 0):
-        assert await async_setup_component(hass, "hassio", {})
+        assert await async_setup_component(hass, DOMAIN, {})
         await hass.async_block_till_done()
         await hass.async_block_till_done()
 
@@ -131,7 +131,7 @@ async def test_save_config_store(
 ) -> None:
     """Test saving the config store."""
     with patch("homeassistant.components.hassio.config.STORE_DELAY_SAVE", 0):
-        assert await async_setup_component(hass, "hassio", {})
+        assert await async_setup_component(hass, DOMAIN, {})
         await hass.async_block_till_done()
         await hass.async_block_till_done()
 

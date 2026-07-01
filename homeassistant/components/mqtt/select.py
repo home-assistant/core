@@ -2,6 +2,7 @@
 
 from collections.abc import Callable
 import logging
+from typing import override
 
 import voluptuous as vol
 
@@ -87,10 +88,12 @@ class MqttSelect(MqttEntity, SelectEntity, RestoreEntity):
     _optimistic: bool = False
 
     @staticmethod
+    @override
     def config_schema() -> VolSchemaType:
         """Return the config schema."""
         return DISCOVERY_SCHEMA
 
+    @override
     def _setup_from_config(self, config: ConfigType) -> None:
         """(Re)Setup the entity."""
         self._attr_assumed_state = config[CONF_OPTIMISTIC]
@@ -130,6 +133,7 @@ class MqttSelect(MqttEntity, SelectEntity, RestoreEntity):
         self._attr_current_option = payload
 
     @callback
+    @override
     def _prepare_subscribe_topics(self) -> None:
         """(Re)Subscribe to topics."""
         if not self.add_subscription(
@@ -139,6 +143,7 @@ class MqttSelect(MqttEntity, SelectEntity, RestoreEntity):
             self._attr_assumed_state = True
             return
 
+    @override
     async def _subscribe_topics(self) -> None:
         """(Re)Subscribe to topics."""
         subscription.async_subscribe_topics_internal(self.hass, self._sub_state)
@@ -148,6 +153,7 @@ class MqttSelect(MqttEntity, SelectEntity, RestoreEntity):
         ):
             self._attr_current_option = last_state.state
 
+    @override
     async def async_select_option(self, option: str) -> None:
         """Update the current value."""
         payload = self._command_template(option)

@@ -1,0 +1,9 @@
+{
+  "entity": {
+    "sensor": {
+      "account": {
+        "default": "mdi:steam"
+      }
+    }
+  }
+}

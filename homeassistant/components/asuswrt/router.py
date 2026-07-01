@@ -16,7 +16,11 @@ from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import CALLBACK_TYPE, HomeAssistant, callback
 from homeassistant.exceptions import ConfigEntryNotReady
 from homeassistant.helpers import entity_registry as er
-from homeassistant.helpers.device_registry import DeviceInfo, format_mac
+from homeassistant.helpers.device_registry import (
+    CONNECTION_NETWORK_MAC,
+    DeviceInfo,
+    format_mac,
+)
 from homeassistant.helpers.dispatcher import async_dispatcher_send
 from homeassistant.helpers.event import async_track_time_interval
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator
@@ -392,6 +396,8 @@ class AsusWrtRouter:
             serial_number=self._api.serial_number,
             manufacturer="Asus",
         )
+        if label_mac := self._api.label_mac:
+            info["connections"] = {(CONNECTION_NETWORK_MAC, label_mac)}
         if self._api.firmware:
             info["sw_version"] = self._api.firmware
 

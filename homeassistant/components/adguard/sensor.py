@@ -3,7 +3,7 @@
 from collections.abc import Callable, Coroutine
 from dataclasses import dataclass
 from datetime import timedelta
-from typing import Any
+from typing import Any, override
 
 from adguardhome import AdGuardHome
 
@@ -108,7 +108,7 @@ class AdGuardHomeSensor(AdGuardHomeEntity, SensorEntity):
         """Initialize AdGuard Home sensor."""
         super().__init__(data, entry)
         self.entity_description = description
-        self._attr_unique_id = "_".join(
+        self._attr_unique_id = "_".join(  # pylint: disable=home-assistant-entity-unique-id-redundant-domain
             [
                 DOMAIN,
                 self.adguard.host,
@@ -118,6 +118,7 @@ class AdGuardHomeSensor(AdGuardHomeEntity, SensorEntity):
             ]
         )
 
+    @override
     async def _adguard_update(self) -> None:
         """Update AdGuard Home entity."""
         value = await self.entity_description.value_fn(self.adguard)

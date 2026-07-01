@@ -32,7 +32,7 @@
         "name": "Watering running"
       },
       "zone_enabled": {
-        "name": "Zone {zone} enabled"
+        "name": "Enabled"
       }
     },
     "sensor": {

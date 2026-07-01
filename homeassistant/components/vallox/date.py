@@ -1,6 +1,7 @@
 """Support for Vallox date platform."""
 
 from datetime import date
+from typing import override
 
 from homeassistant.components.date import DateEntity
 from homeassistant.const import CONF_NAME, EntityCategory
@@ -28,11 +29,13 @@ class ValloxFilterChangeDateEntity(ValloxEntity, DateEntity):
         self._attr_unique_id = f"{self._device_uuid}-filter_change_date"
 
     @property
+    @override
     def native_value(self) -> date | None:
         """Return the latest value."""
 
         return self.coordinator.data.filter_change_date
 
+    @override
     async def async_set_value(self, value: date) -> None:
         """Change the date."""
 

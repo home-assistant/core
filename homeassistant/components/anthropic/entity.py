@@ -4,7 +4,6 @@ import base64
 from collections import deque
 from collections.abc import AsyncIterator, Callable, Iterable
 from dataclasses import dataclass, field
-from datetime import UTC, datetime
 import json
 from mimetypes import guess_file_type
 from pathlib import Path
@@ -114,7 +113,7 @@ from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import device_registry as dr, llm
 from homeassistant.helpers.json import json_dumps
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
-from homeassistant.util import slugify
+from homeassistant.util import dt as dt_util, slugify
 from homeassistant.util.json import JsonArrayType, JsonObjectType
 
 from .const import (
@@ -372,7 +371,7 @@ def _convert_content(  # noqa: C901
                     )
                 if (
                     content.native.container is not None
-                    and content.native.container.expires_at > datetime.now(UTC)
+                    and content.native.container.expires_at > dt_util.utcnow()
                 ):
                     container_id = content.native.container.id
 

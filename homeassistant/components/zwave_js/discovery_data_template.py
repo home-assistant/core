@@ -4,7 +4,7 @@ from collections.abc import Iterable, Mapping
 from dataclasses import dataclass, field
 from enum import Enum
 import logging
-from typing import Any, cast
+from typing import Any, cast, override
 
 from zwave_js_server.const import CommandClass
 from zwave_js_server.const.command_class.energy_production import (
@@ -261,6 +261,7 @@ class DynamicCurrentTempClimateDataTemplate(BaseDiscoverySchemaDataTemplate):
     lookup_table: dict[str | int, ZwaveValueID] = field(default_factory=dict)
     dependent_value: ZwaveValueID | None = None
 
+    @override
     def resolve_data(self, value: ZwaveValue) -> dict[str, Any]:
         """Resolve helper class data for a discovered value."""
         if not self.lookup_table or not self.dependent_value:
@@ -276,6 +277,7 @@ class DynamicCurrentTempClimateDataTemplate(BaseDiscoverySchemaDataTemplate):
 
         return data
 
+    @override
     def values_to_watch(
         self, resolved_data: dict[str, Any]
     ) -> Iterable[ZwaveValue | None]:
@@ -327,6 +329,7 @@ class NumericSensorDataTemplate(BaseDiscoverySchemaDataTemplate):
                     return key
         return None
 
+    @override
     def resolve_data(self, value: ZwaveValue) -> NumericSensorDataTemplateData:
         """Resolve helper class data for a discovered value."""
 
@@ -427,6 +430,7 @@ class TiltValueMix:
 class CoverTiltDataTemplate(BaseDiscoverySchemaDataTemplate, TiltValueMix):
     """Tilt data template class for Z-Wave Cover entities."""
 
+    @override
     def resolve_data(self, value: ZwaveValue) -> dict[str, ZwaveValue]:
         """Resolve helper class data for a discovered value."""
         current_tilt_value = self._get_value_from_id(
@@ -442,6 +446,7 @@ class CoverTiltDataTemplate(BaseDiscoverySchemaDataTemplate, TiltValueMix):
             "target_tilt_value": target_tilt_value,
         }
 
+    @override
     def values_to_watch(
         self, resolved_data: dict[str, Any]
     ) -> Iterable[ZwaveValue | None]:
@@ -528,6 +533,7 @@ class ConfigurableFanValueMappingDataTemplate(
 
     """
 
+    @override
     def resolve_data(
         self, value: ZwaveValue
     ) -> dict[str, ZwaveConfigurationValue | None]:
@@ -538,6 +544,7 @@ class ConfigurableFanValueMappingDataTemplate(
         )
         return {"configuration_value": zwave_value}
 
+    @override
     def values_to_watch(
         self, resolved_data: dict[str, ZwaveConfigurationValue | None]
     ) -> Iterable[ZwaveConfigurationValue | None]:
@@ -546,6 +553,7 @@ class ConfigurableFanValueMappingDataTemplate(
             resolved_data["configuration_value"],
         ]
 
+    @override
     def get_fan_value_mapping(
         self, resolved_data: dict[str, ZwaveConfigurationValue | None]
     ) -> FanValueMapping | None:
@@ -599,6 +607,7 @@ class FixedFanValueMappingDataTemplate(
 
     """
 
+    @override
     def get_fan_value_mapping(
         self, resolved_data: dict[str, ZwaveConfigurationValue]
     ) -> FanValueMapping:

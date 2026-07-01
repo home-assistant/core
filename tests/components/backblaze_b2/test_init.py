@@ -101,7 +101,7 @@ async def test_periodic_issue_check(
     ):
         await setup_integration(hass, mock_config_entry)
         assert captured_callback is not None
-        await captured_callback(datetime.now())
+        await captured_callback(datetime.now())  # pylint: disable=home-assistant-enforce-naive-now
 
         assert mock_check.call_count == 2  # setup + callback
         mock_check.assert_called_with(hass, mock_config_entry)

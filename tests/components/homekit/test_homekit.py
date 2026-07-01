@@ -1721,7 +1721,7 @@ async def test_yaml_updates_update_config_entry_for_name(hass: HomeAssistant) ->
         mock_homekit.return_value = homekit = Mock()
         type(homekit).async_start = AsyncMock()
         assert await async_setup_component(
-            hass, "homekit", {"homekit": {CONF_NAME: BRIDGE_NAME, CONF_PORT: 12345}}
+            hass, DOMAIN, {"homekit": {CONF_NAME: BRIDGE_NAME, CONF_PORT: 12345}}
         )
         await hass.async_block_till_done()
 
@@ -1770,7 +1770,7 @@ async def test_yaml_can_link_with_default_name(hass: HomeAssistant) -> None:
         type(homekit).async_start = AsyncMock()
         assert await async_setup_component(
             hass,
-            "homekit",
+            DOMAIN,
             {"homekit": {"entity_config": {"camera.back_camera": {"stream_count": 3}}}},
         )
         await hass.async_block_till_done()
@@ -1816,7 +1816,7 @@ async def test_yaml_can_link_with_port(hass: HomeAssistant) -> None:
         type(homekit).async_start = AsyncMock()
         assert await async_setup_component(
             hass,
-            "homekit",
+            DOMAIN,
             {
                 "homekit": {
                     "port": 12345,
@@ -2304,7 +2304,7 @@ async def test_reload(mock_port_available: MagicMock, hass: HomeAssistant) -> No
         mock_homekit.return_value = homekit = Mock()
         type(homekit).async_start = AsyncMock()
         assert await async_setup_component(
-            hass, "homekit", {"homekit": {CONF_NAME: "reloadable", CONF_PORT: 12345}}
+            hass, DOMAIN, {"homekit": {CONF_NAME: "reloadable", CONF_PORT: 12345}}
         )
         await hass.async_block_till_done()
 

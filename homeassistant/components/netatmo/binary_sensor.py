@@ -4,7 +4,7 @@ from collections.abc import Callable
 from dataclasses import dataclass
 from functools import partial
 import logging
-from typing import Any, Final, cast
+from typing import Any, Final, cast, override
 
 from pyatmo.modules.device_types import DeviceCategory as NetatmoDeviceCategory
 
@@ -303,6 +303,7 @@ class NetatmoBinarySensor(NetatmoModuleEntity, BinarySensorEntity):
             )
 
     @callback
+    @override
     def async_update_callback(self) -> None:
         """Update the entity's state."""
 
@@ -365,6 +366,7 @@ class NetatmoOpeningBinarySensor(NetatmoBinarySensor):
             self._attr_translation_key = translation_key
 
     @callback
+    @override
     def async_update_callback(self) -> None:
         """Update the entity's state."""
 

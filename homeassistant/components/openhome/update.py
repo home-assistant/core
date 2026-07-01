@@ -1,7 +1,7 @@
 """Update entities for Linn devices."""
 
 import logging
-from typing import Any
+from typing import Any, override
 
 import aiohttp
 from async_upnp_client.client import UpnpError
@@ -84,6 +84,7 @@ class OpenhomeUpdateEntity(UpdateEntity):
             ]
             self._attr_release_url = software_status["update_info"]["releasenotesuri"]
 
+    @override
     async def async_install(
         self, version: str | None, backup: bool, **kwargs: Any
     ) -> None:

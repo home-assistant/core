@@ -1,7 +1,7 @@
 """Support for humidifiers."""
 
 from enum import StrEnum
-from typing import Any, cast
+from typing import Any, cast, override
 
 from aiocomelit import ComelitSerialBridgeObject
 from aiocomelit.const import CLIMATE
@@ -157,12 +157,14 @@ class ComelitHumidifierEntity(ComelitBridgeBaseEntity, HumidifierEntity):
         self._attr_target_humidity = values[4] / 10
 
     @callback
+    @override
     def _handle_coordinator_update(self) -> None:
         """Handle updated data from the coordinator."""
         self._update_attributes()
         super()._handle_coordinator_update()
 
     @bridge_api_call
+    @override
     async def async_set_humidity(self, humidity: int) -> None:
         """Set new target humidity."""
         if not self._attr_is_on:
@@ -181,6 +183,7 @@ class ComelitHumidifierEntity(ComelitBridgeBaseEntity, HumidifierEntity):
         self.async_write_ha_state()
 
     @bridge_api_call
+    @override
     async def async_set_mode(self, mode: str) -> None:
         """Set humidifier mode."""
         await self.coordinator.api.set_humidity_status(
@@ -190,6 +193,7 @@ class ComelitHumidifierEntity(ComelitBridgeBaseEntity, HumidifierEntity):
         self.async_write_ha_state()
 
     @bridge_api_call
+    @override
     async def async_turn_on(self, **kwargs: Any) -> None:
         """Turn on."""
         await self.coordinator.api.set_humidity_status(
@@ -199,6 +203,7 @@ class ComelitHumidifierEntity(ComelitBridgeBaseEntity, HumidifierEntity):
         self.async_write_ha_state()
 
     @bridge_api_call
+    @override
     async def async_turn_off(self, **kwargs: Any) -> None:
         """Turn off."""
         await self.coordinator.api.set_humidity_status(

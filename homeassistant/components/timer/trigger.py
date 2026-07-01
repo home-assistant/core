@@ -1,5 +1,6 @@
 """Provides triggers for timers."""
 
+from collections.abc import Mapping
 from datetime import datetime, timedelta
 from typing import cast, override
 
@@ -19,6 +20,7 @@ from homeassistant.helpers.trigger import (
     Trigger,
     TriggerActionRunner,
     TriggerConfig,
+    TriggerNotTriggeredReporter,
     make_entity_target_state_trigger,
 )
 from homeassistant.helpers.typing import ConfigType
@@ -65,7 +67,9 @@ class TimeRemainingTrigger(Trigger):
 
     @override
     async def async_attach_runner(
-        self, run_action: TriggerActionRunner
+        self,
+        run_action: TriggerActionRunner,
+        did_not_trigger: TriggerNotTriggeredReporter | None = None,
     ) -> CALLBACK_TYPE:
         """Attach the trigger to an action runner."""
         scheduled: dict[str, CALLBACK_TYPE] = {}
@@ -128,16 +132,20 @@ class TimeRemainingTrigger(Trigger):
             schedule_for_state(entity_id, to_state, event.context)
 
         @callback
-        def on_entities_update(added: set[str], removed: set[str]) -> None:
+        def on_entities_update(
+            added: set[str],
+            removed: set[str],
+            entity_states: Mapping[str, State | None],
+        ) -> None:
             """Handle changes to the tracked entity set."""
             for entity_id in removed:
                 if entity_id in scheduled:
                     scheduled.pop(entity_id)()
             for entity_id in added:
-                state = self._hass.states.get(entity_id)
+                state = entity_states[entity_id]
                 schedule_for_state(entity_id, state, state.context if state else None)
 
-        unsub = async_track_target_selector_state_change_event(
+        unsub = await async_track_target_selector_state_change_event(
             self._hass,
             self._target,
             state_change_listener,
@@ -172,7 +180,7 @@ TRIGGERS: dict[str, type[Trigger]] = {
     "started": make_entity_target_state_trigger(
         {DOMAIN: DomainSpec(value_source=ATTR_LAST_TRANSITION)}, "started"
     ),
-    "time_remaining": TimeRemainingTrigger,
+    "remaining_time_reached": TimeRemainingTrigger,
 }
 
 

@@ -5,7 +5,7 @@ from unittest.mock import ANY, AsyncMock, MagicMock, patch
 import pytest
 
 from homeassistant.components.recorder import Recorder
-from homeassistant.components.tibber import DOMAIN, TibberRuntimeData, async_setup_entry
+from homeassistant.components.tibber import DOMAIN, TibberRuntimeData
 from homeassistant.config_entries import ConfigEntryState
 from homeassistant.const import CONF_ACCESS_TOKEN
 from homeassistant.core import HomeAssistant
@@ -89,11 +89,13 @@ async def test_data_api_runtime_missing_token_raises(hass: HomeAssistant) -> Non
 
 async def test_setup_requires_data_api_reauth(hass: HomeAssistant) -> None:
     """Ensure legacy entries trigger reauth to configure Data API."""
+    hass.config.components.add("recorder")
     entry = MockConfigEntry(
         domain=DOMAIN,
         data={CONF_ACCESS_TOKEN: "legacy-token"},
         unique_id="legacy",
     )
+    entry.add_to_hass(hass)
 
-    with pytest.raises(ConfigEntryAuthFailed):
-        await async_setup_entry(hass, entry)
+    await hass.config_entries.async_setup(entry.entry_id)
+    assert entry.state is ConfigEntryState.SETUP_ERROR

@@ -55,8 +55,6 @@ async def async_migrate_entry(
     hass: HomeAssistant, config_entry: ViCareConfigEntry
 ) -> bool:
     """Migrate old entry."""
-    if config_entry.version > 2:
-        return False
 
     if config_entry.version == 1 and config_entry.minor_version < 2:
         _LOGGER.debug("Migrating ViCare config entry from version 1.1 to 1.2")

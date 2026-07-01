@@ -2,6 +2,7 @@
 
 import pytest
 
+from homeassistant.components.input_number import DOMAIN
 from homeassistant.core import HomeAssistant, State
 from homeassistant.helpers.state import async_reproduce_state
 from homeassistant.setup import async_setup_component
@@ -17,7 +18,7 @@ async def test_reproducing_states(
 
     assert await async_setup_component(
         hass,
-        "input_number",
+        DOMAIN,
         {
             "input_number": {
                 "test_number": {"min": "5", "max": "100", "initial": VALID_NUMBER1}

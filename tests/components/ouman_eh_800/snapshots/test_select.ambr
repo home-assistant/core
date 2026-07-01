@@ -6,7 +6,7 @@
     ]),
     'area_id': None,
     'capabilities': dict({
-      'options': list([
+      <SelectEntityCapabilityAttribute.OPTIONS: 'options'>: list([
         'automatic',
         'temperature_drop',
         'big_temperature_drop',
@@ -48,8 +48,8 @@
 # name: test_entities[select-l1_constant_temp_relay_summer_stop][select.heating_circuit_1_patterilammitys_operation_mode-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'Heating circuit 1 Patterilämmitys Operation mode',
-      'options': list([
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Heating circuit 1 Patterilämmitys Operation mode',
+      <SelectEntityCapabilityAttribute.OPTIONS: 'options'>: list([
         'automatic',
         'temperature_drop',
         'big_temperature_drop',
@@ -73,7 +73,7 @@
     ]),
     'area_id': None,
     'capabilities': dict({
-      'options': list([
+      <SelectEntityCapabilityAttribute.OPTIONS: 'options'>: list([
         'home',
         'away',
         'off',
@@ -112,8 +112,8 @@
 # name: test_entities[select-l1_constant_temp_relay_summer_stop][select.ouman_eh_800_home_away_mode-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'Ouman EH-800 Home/Away mode',
-      'options': list([
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Ouman EH-800 Home/Away mode',
+      <SelectEntityCapabilityAttribute.OPTIONS: 'options'>: list([
         'home',
         'away',
         'off',
@@ -134,7 +134,7 @@
     ]),
     'area_id': None,
     'capabilities': dict({
-      'options': list([
+      <SelectEntityCapabilityAttribute.OPTIONS: 'options'>: list([
         'auto',
         'stop',
         'run',
@@ -173,8 +173,8 @@
 # name: test_entities[select-l1_constant_temp_relay_summer_stop][select.ouman_eh_800_pump_summer_stop-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'Ouman EH-800 Pump summer stop',
-      'options': list([
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Ouman EH-800 Pump summer stop',
+      <SelectEntityCapabilityAttribute.OPTIONS: 'options'>: list([
         'auto',
         'stop',
         'run',
@@ -195,7 +195,7 @@
     ]),
     'area_id': None,
     'capabilities': dict({
-      'options': list([
+      <SelectEntityCapabilityAttribute.OPTIONS: 'options'>: list([
         'automatic',
         'temperature_drop',
         'big_temperature_drop',
@@ -237,8 +237,8 @@
 # name: test_entities[select-no_room_sensors][select.heating_circuit_1_patterilammitys_operation_mode-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'Heating circuit 1 Patterilämmitys Operation mode',
-      'options': list([
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Heating circuit 1 Patterilämmitys Operation mode',
+      <SelectEntityCapabilityAttribute.OPTIONS: 'options'>: list([
         'automatic',
         'temperature_drop',
         'big_temperature_drop',
@@ -262,7 +262,7 @@
     ]),
     'area_id': None,
     'capabilities': dict({
-      'options': list([
+      <SelectEntityCapabilityAttribute.OPTIONS: 'options'>: list([
         'automatic',
         'temperature_drop',
         'big_temperature_drop',
@@ -304,8 +304,8 @@
 # name: test_entities[select-no_room_sensors][select.heating_circuit_2_lattialammitys_operation_mode-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'Heating circuit 2 Lattialämmitys Operation mode',
-      'options': list([
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Heating circuit 2 Lattialämmitys Operation mode',
+      <SelectEntityCapabilityAttribute.OPTIONS: 'options'>: list([
         'automatic',
         'temperature_drop',
         'big_temperature_drop',
@@ -329,7 +329,7 @@
     ]),
     'area_id': None,
     'capabilities': dict({
-      'options': list([
+      <SelectEntityCapabilityAttribute.OPTIONS: 'options'>: list([
         'home',
         'away',
         'off',
@@ -368,8 +368,8 @@
 # name: test_entities[select-no_room_sensors][select.ouman_eh_800_home_away_mode-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'Ouman EH-800 Home/Away mode',
-      'options': list([
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Ouman EH-800 Home/Away mode',
+      <SelectEntityCapabilityAttribute.OPTIONS: 'options'>: list([
         'home',
         'away',
         'off',
@@ -390,7 +390,7 @@
     ]),
     'area_id': None,
     'capabilities': dict({
-      'options': list([
+      <SelectEntityCapabilityAttribute.OPTIONS: 'options'>: list([
         'home',
         'away',
         'off',
@@ -429,8 +429,8 @@
 # name: test_entities[select-relay_temp_difference][select.ouman_eh_800_home_away_mode-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'Ouman EH-800 Home/Away mode',
-      'options': list([
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Ouman EH-800 Home/Away mode',
+      <SelectEntityCapabilityAttribute.OPTIONS: 'options'>: list([
         'home',
         'away',
         'off',
@@ -451,7 +451,7 @@
     ]),
     'area_id': None,
     'capabilities': dict({
-      'options': list([
+      <SelectEntityCapabilityAttribute.OPTIONS: 'options'>: list([
         'auto',
         'on',
         'off',
@@ -490,8 +490,8 @@
 # name: test_entities[select-relay_temp_difference][select.ouman_eh_800_relay_control-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'Ouman EH-800 Relay control',
-      'options': list([
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Ouman EH-800 Relay control',
+      <SelectEntityCapabilityAttribute.OPTIONS: 'options'>: list([
         'auto',
         'on',
         'off',
@@ -512,7 +512,7 @@
     ]),
     'area_id': None,
     'capabilities': dict({
-      'options': list([
+      <SelectEntityCapabilityAttribute.OPTIONS: 'options'>: list([
         'home',
         'away',
         'off',
@@ -551,8 +551,8 @@
 # name: test_entities[select-relay_temperature][select.ouman_eh_800_home_away_mode-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'Ouman EH-800 Home/Away mode',
-      'options': list([
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Ouman EH-800 Home/Away mode',
+      <SelectEntityCapabilityAttribute.OPTIONS: 'options'>: list([
         'home',
         'away',
         'off',
@@ -573,7 +573,7 @@
     ]),
     'area_id': None,
     'capabilities': dict({
-      'options': list([
+      <SelectEntityCapabilityAttribute.OPTIONS: 'options'>: list([
         'auto',
         'on',
         'off',
@@ -612,8 +612,8 @@
 # name: test_entities[select-relay_temperature][select.ouman_eh_800_relay_control-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'Ouman EH-800 Relay control',
-      'options': list([
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Ouman EH-800 Relay control',
+      <SelectEntityCapabilityAttribute.OPTIONS: 'options'>: list([
         'auto',
         'on',
         'off',
@@ -634,7 +634,7 @@
     ]),
     'area_id': None,
     'capabilities': dict({
-      'options': list([
+      <SelectEntityCapabilityAttribute.OPTIONS: 'options'>: list([
         'home',
         'away',
         'off',
@@ -673,8 +673,8 @@
 # name: test_entities[select-relay_time_program][select.ouman_eh_800_home_away_mode-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'Ouman EH-800 Home/Away mode',
-      'options': list([
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Ouman EH-800 Home/Away mode',
+      <SelectEntityCapabilityAttribute.OPTIONS: 'options'>: list([
         'home',
         'away',
         'off',
@@ -695,7 +695,7 @@
     ]),
     'area_id': None,
     'capabilities': dict({
-      'options': list([
+      <SelectEntityCapabilityAttribute.OPTIONS: 'options'>: list([
         'auto',
         'on',
         'off',
@@ -734,8 +734,8 @@
 # name: test_entities[select-relay_time_program][select.ouman_eh_800_relay_control-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'Ouman EH-800 Relay control',
-      'options': list([
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Ouman EH-800 Relay control',
+      <SelectEntityCapabilityAttribute.OPTIONS: 'options'>: list([
         'auto',
         'on',
         'off',
@@ -756,7 +756,7 @@
     ]),
     'area_id': None,
     'capabilities': dict({
-      'options': list([
+      <SelectEntityCapabilityAttribute.OPTIONS: 'options'>: list([
         'home',
         'away',
         'off',
@@ -795,8 +795,8 @@
 # name: test_entities[select-relay_valve_position][select.ouman_eh_800_home_away_mode-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'Ouman EH-800 Home/Away mode',
-      'options': list([
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Ouman EH-800 Home/Away mode',
+      <SelectEntityCapabilityAttribute.OPTIONS: 'options'>: list([
         'home',
         'away',
         'off',
@@ -817,7 +817,7 @@
     ]),
     'area_id': None,
     'capabilities': dict({
-      'options': list([
+      <SelectEntityCapabilityAttribute.OPTIONS: 'options'>: list([
         'auto',
         'on',
         'off',
@@ -856,8 +856,8 @@
 # name: test_entities[select-relay_valve_position][select.ouman_eh_800_relay_control-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'Ouman EH-800 Relay control',
-      'options': list([
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Ouman EH-800 Relay control',
+      <SelectEntityCapabilityAttribute.OPTIONS: 'options'>: list([
         'auto',
         'on',
         'off',
@@ -878,7 +878,7 @@
     ]),
     'area_id': None,
     'capabilities': dict({
-      'options': list([
+      <SelectEntityCapabilityAttribute.OPTIONS: 'options'>: list([
         'automatic',
         'temperature_drop',
         'big_temperature_drop',
@@ -920,8 +920,8 @@
 # name: test_entities[select-room_sensors][select.heating_circuit_1_patterilammitys_operation_mode-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'Heating circuit 1 Patterilämmitys Operation mode',
-      'options': list([
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Heating circuit 1 Patterilämmitys Operation mode',
+      <SelectEntityCapabilityAttribute.OPTIONS: 'options'>: list([
         'automatic',
         'temperature_drop',
         'big_temperature_drop',
@@ -945,7 +945,7 @@
     ]),
     'area_id': None,
     'capabilities': dict({
-      'options': list([
+      <SelectEntityCapabilityAttribute.OPTIONS: 'options'>: list([
         'automatic',
         'temperature_drop',
         'big_temperature_drop',
@@ -987,8 +987,8 @@
 # name: test_entities[select-room_sensors][select.heating_circuit_2_lattialammitys_operation_mode-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'Heating circuit 2 Lattialämmitys Operation mode',
-      'options': list([
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Heating circuit 2 Lattialämmitys Operation mode',
+      <SelectEntityCapabilityAttribute.OPTIONS: 'options'>: list([
         'automatic',
         'temperature_drop',
         'big_temperature_drop',
@@ -1012,7 +1012,7 @@
     ]),
     'area_id': None,
     'capabilities': dict({
-      'options': list([
+      <SelectEntityCapabilityAttribute.OPTIONS: 'options'>: list([
         'home',
         'away',
         'off',
@@ -1051,8 +1051,8 @@
 # name: test_entities[select-room_sensors][select.ouman_eh_800_home_away_mode-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'Ouman EH-800 Home/Away mode',
-      'options': list([
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Ouman EH-800 Home/Away mode',
+      <SelectEntityCapabilityAttribute.OPTIONS: 'options'>: list([
         'home',
         'away',
         'off',

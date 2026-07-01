@@ -3,7 +3,7 @@
 from abc import abstractmethod
 from collections.abc import Callable
 from dataclasses import dataclass
-from typing import Any
+from typing import Any, override
 
 from pytomorrowio.const import (
     HealthConcernType,
@@ -378,6 +378,7 @@ class BaseTomorrowioSensorEntity(TomorrowioEntity, SensorEntity):
         """Return the raw state."""
 
     @property
+    @override
     def native_value(self) -> str | int | float | None:
         """Return the state."""
         state = self._state
@@ -409,6 +410,7 @@ class TomorrowioSensorEntity(BaseTomorrowioSensorEntity):
     """Sensor entity that talks to Tomorrow.io v4 API to retrieve non-weather data."""
 
     @property
+    @override
     def _state(self) -> int | float | None:
         """Return the raw state."""
         val = self._get_current_property(self.entity_description.attribute)

@@ -2,7 +2,7 @@
 
 import asyncio
 import logging
-from typing import Any
+from typing import Any, override
 from urllib.parse import urlparse
 
 from aioharmony.hubconnector_websocket import HubConnector
@@ -70,6 +70,7 @@ class HarmonyConfigFlow(ConfigFlow, domain=DOMAIN):
         """Initialize the Harmony config flow."""
         self.harmony_config: dict[str, Any] = {}
 
+    @override
     async def async_step_user(
         self, user_input: dict[str, Any] | None = None
     ) -> ConfigFlowResult:
@@ -96,6 +97,7 @@ class HarmonyConfigFlow(ConfigFlow, domain=DOMAIN):
             step_id="user", data_schema=DATA_SCHEMA, errors=errors
         )
 
+    @override
     async def async_step_ssdp(
         self, discovery_info: SsdpServiceInfo
     ) -> ConfigFlowResult:
@@ -155,6 +157,7 @@ class HarmonyConfigFlow(ConfigFlow, domain=DOMAIN):
 
     @staticmethod
     @callback
+    @override
     def async_get_options_flow(
         config_entry: ConfigEntry,
     ) -> OptionsFlowHandler:

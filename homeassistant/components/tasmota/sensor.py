@@ -1,7 +1,7 @@
 """Support for Tasmota sensors."""
 
 from datetime import datetime
-from typing import Any
+from typing import Any, override
 
 from hatasmota import const as hc, sensor as tasmota_sensor, status_sensor
 from hatasmota.entity import TasmotaEntity as HATasmotaEntity
@@ -310,6 +310,7 @@ class TasmotaSensor(TasmotaAvailability, TasmotaDiscoveryUpdate, SensorEntity):
             if self._tasmota_entity.discovered_as_numeric:
                 self._attr_state_class = SensorStateClass.MEASUREMENT
 
+    @override
     async def async_added_to_hass(self) -> None:
         """Subscribe to MQTT events."""
         self._tasmota_entity.set_on_state_callback(self.sensor_state_updated)
@@ -325,6 +326,7 @@ class TasmotaSensor(TasmotaAvailability, TasmotaDiscoveryUpdate, SensorEntity):
         self.async_write_ha_state()
 
     @property
+    @override
     def native_value(self) -> datetime | str | None:
         """Return the state of the entity."""
         if self._state_timestamp and self.device_class == SensorDeviceClass.TIMESTAMP:

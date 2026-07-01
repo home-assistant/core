@@ -1,5 +1,7 @@
 """Platform for binarysensor integration."""
 
+from typing import override
+
 from boschshcpy import SHCBatteryDevice, SHCShutterContact
 from boschshcpy.device import SHCDevice
 
@@ -75,6 +77,7 @@ class ShutterContactSensor(SHCEntity, BinarySensorEntity):
         )
 
     @property
+    @override
     def is_on(self) -> bool:
         """Return the state of the sensor."""
         return self._device.state == SHCShutterContact.ShutterContactService.State.OPEN
@@ -91,6 +94,7 @@ class BatterySensor(SHCEntity, BinarySensorEntity):
         self._attr_unique_id = f"{device.serial}_battery"
 
     @property
+    @override
     def is_on(self) -> bool:
         """Return the state of the sensor."""
         return (

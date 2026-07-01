@@ -4,7 +4,7 @@ from collections.abc import AsyncIterator, Callable, Coroutine
 from functools import wraps
 import logging
 from time import time
-from typing import Any, Concatenate
+from typing import Any, Concatenate, override
 
 from aiohttp import ClientTimeout
 from aiowebdav2.exceptions import UnauthorizedError, WebDavError
@@ -118,6 +118,7 @@ class WebDavBackupAgent(BackupAgent):
         return self._entry.data.get(CONF_BACKUP_PATH, "")
 
     @handle_backup_errors
+    @override
     async def async_download_backup(
         self,
         backup_id: str,
@@ -136,6 +137,7 @@ class WebDavBackupAgent(BackupAgent):
         )
 
     @handle_backup_errors
+    @override
     async def async_upload_backup(
         self,
         *,
@@ -178,6 +180,7 @@ class WebDavBackupAgent(BackupAgent):
         self._cache_expiration = time()
 
     @handle_backup_errors
+    @override
     async def async_delete_backup(
         self,
         backup_id: str,
@@ -204,11 +207,13 @@ class WebDavBackupAgent(BackupAgent):
         self._cache_expiration = time()
 
     @handle_backup_errors
+    @override
     async def async_list_backups(self, **kwargs: Any) -> list[AgentBackup]:
         """List backups."""
         return list((await self._list_cached_metadata_files()).values())
 
     @handle_backup_errors
+    @override
     async def async_get_backup(
         self,
         backup_id: str,

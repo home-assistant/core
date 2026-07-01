@@ -1,7 +1,7 @@
 """TTS platform for the Fish Audio integration."""
 
 import logging
-from typing import Any
+from typing import Any, override
 
 from fishaudio.exceptions import APIError, RateLimitError
 
@@ -70,15 +70,18 @@ class FishAudioTTSEntity(TextToSpeechEntity):
         )
 
     @property
+    @override
     def default_language(self) -> str:
         """Return the default language."""
         return "en"
 
     @property
+    @override
     def supported_languages(self) -> list[str]:
         """Return a list of supported languages."""
         return TTS_SUPPORTED_LANGUAGES
 
+    @override
     async def async_get_tts_audio(
         self,
         message: str,

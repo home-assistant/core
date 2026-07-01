@@ -4,7 +4,7 @@ from collections.abc import Callable, Sequence
 from dataclasses import dataclass
 from enum import Enum
 import logging
-from typing import Any
+from typing import Any, override
 
 from uiprotect.api import ProtectApiClient
 from uiprotect.data import (
@@ -12,7 +12,6 @@ from uiprotect.data import (
     Camera,
     ChimeType,
     DoorbellMessageType,
-    Doorlock,
     IRLEDMode,
     Light,
     LightModeEnableType,
@@ -174,7 +173,7 @@ async def _set_light_mode(obj: Light, mode: str) -> None:
     )
 
 
-async def _set_paired_camera(obj: Light | Sensor | Doorlock, camera_id: str) -> None:
+async def _set_paired_camera(obj: Light | Sensor, camera_id: str) -> None:
     if camera_id == TYPE_EMPTY_VALUE:
         camera: Camera | None = None
     else:
@@ -330,18 +329,6 @@ SENSE_SELECTS: tuple[ProtectSelectEntityDescription, ...] = (
     ),
 )
 
-DOORLOCK_SELECTS: tuple[ProtectSelectEntityDescription, ...] = (
-    ProtectSelectEntityDescription[Doorlock](
-        key="paired_camera",
-        translation_key="paired_camera",
-        entity_category=EntityCategory.CONFIG,
-        ufp_value="camera_id",
-        ufp_options_fn=_get_paired_camera_options,
-        ufp_set_method_fn=_set_paired_camera,
-        ufp_perm=PermRequired.WRITE,
-    ),
-)
-
 VIEWER_SELECTS: tuple[ProtectSelectEntityDescription, ...] = (
     ProtectSelectEntityDescription[Viewer](
         key="viewer",
@@ -358,7 +345,6 @@ _MODEL_DESCRIPTIONS: dict[ModelType, Sequence[ProtectEntityDescription]] = {
     ModelType.LIGHT: LIGHT_SELECTS,
     ModelType.SENSOR: SENSE_SELECTS,
     ModelType.VIEWPORT: VIEWER_SELECTS,
-    ModelType.DOORLOCK: DOORLOCK_SELECTS,
 }
 
 
@@ -427,6 +413,7 @@ class ProtectSelects(ProtectDeviceEntity, SelectEntity):
         super().__init__(data, device, description)
 
     @callback
+    @override
     def _async_update_device_from_protect(self, device: ProtectDeviceType) -> None:
         super()._async_update_device_from_protect(device)
         entity_description = self.entity_description
@@ -438,7 +425,9 @@ class ProtectSelects(ProtectDeviceEntity, SelectEntity):
         ):
             _LOGGER.debug("Updating dynamic select options for %s", self.entity_id)
             self._async_set_options(self.data, entity_description)
-        if (unifi_value := entity_description.get_ufp_value(device)) is None:
+        if (
+            unifi_value := entity_description.get_value(device, self._ufp_public_obj)
+        ) is None:
             unifi_value = TYPE_EMPTY_VALUE
         self._attr_current_option = self._unifi_to_hass_options.get(
             unifi_value, unifi_value
@@ -460,6 +449,7 @@ class ProtectSelects(ProtectDeviceEntity, SelectEntity):
         self._unifi_to_hass_options = {item["id"]: item["name"] for item in options}
 
     @async_ufp_instance_command
+    @override
     async def async_select_option(self, option: str) -> None:
         """Change the Select Entity Option."""
 
@@ -514,12 +504,14 @@ class ProtectPTZPatrolSelect(ProtectDeviceEntity, SelectEntity):
             self._attr_current_option = PTZ_PATROL_STOP
 
     @callback
+    @override
     def _async_update_device_from_protect(self, device: ProtectDeviceType) -> None:
         super()._async_update_device_from_protect(device)
         # Update patrol state from websocket updates
         self._update_patrol_state()
 
     @async_ufp_instance_command
+    @override
     async def async_select_option(self, option: str) -> None:
         """Start or stop a PTZ patrol."""
         # Home Assistant validates options before calling this method,
@@ -571,11 +563,13 @@ class ProtectNVRArmProfileSelect(ProtectNVREntity, SelectEntity):
         )
 
     @callback
+    @override
     def _async_update_device_from_protect(self, device: ProtectDeviceType) -> None:
         super()._async_update_device_from_protect(device)
         self._refresh_arm_profile_state()
 
     @async_ufp_instance_command
+    @override
     async def async_select_option(self, option: str) -> None:
         """Change the currently active arm profile."""
         profile_id = self._name_to_id[option]

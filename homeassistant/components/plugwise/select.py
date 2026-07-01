@@ -1,6 +1,7 @@
 """Plugwise Select component for Home Assistant."""
 
 from dataclasses import dataclass
+from typing import override
 
 from homeassistant.components.select import SelectEntity, SelectEntityDescription
 from homeassistant.const import STATE_ON, EntityCategory
@@ -110,16 +111,19 @@ class PlugwiseSelectEntity(PlugwiseEntity, SelectEntity):
             self._location = location
 
     @property
+    @override
     def current_option(self) -> str | None:
         """Return the selected entity option to represent the entity state."""
         return self.device[self.entity_description.key]
 
     @property
+    @override
     def options(self) -> list[str]:
         """Return the available select-options."""
         return self.device[self.entity_description.options_key]
 
     @plugwise_command
+    @override
     async def async_select_option(self, option: str) -> None:
         """Change to the selected entity option.
 

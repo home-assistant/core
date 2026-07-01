@@ -2,6 +2,7 @@
 
 from datetime import timedelta
 import logging
+from typing import override
 
 from ouman_eh_800_api import (
     ControllableEndpoint,
@@ -84,6 +85,7 @@ class OumanEh800Coordinator(DataUpdateCoordinator[dict[OumanEndpoint, OumanValue
             ),
         }
 
+    @override
     async def _async_setup(self) -> None:
         try:
             # Even though not required to fetch values, perform login once
@@ -95,6 +97,7 @@ class OumanEh800Coordinator(DataUpdateCoordinator[dict[OumanEndpoint, OumanValue
         except OumanClientCommunicationError as err:
             raise ConfigEntryNotReady("Error communicating with API") from err
 
+    @override
     async def _async_update_data(self) -> dict[OumanEndpoint, OumanValues]:
         """Fetch registry values from the device."""
         try:

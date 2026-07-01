@@ -428,10 +428,6 @@ async def async_migrate_entry(hass: HomeAssistant, entry: OpenAIConfigEntry) -> 
     """Migrate entry."""
     LOGGER.debug("Migrating from version %s:%s", entry.version, entry.minor_version)
 
-    if entry.version > 2:
-        # This means the user has downgraded from a future version
-        return False
-
     if entry.version == 2 and entry.minor_version == 1:
         # Correct broken device migration in Home Assistant Core 2025.7.0b0-2025.7.0b1
         device_registry = dr.async_get(hass)

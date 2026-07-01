@@ -12,6 +12,7 @@ from aiohttp.web_middlewares import middleware
 import pytest
 
 from homeassistant.components import http
+from homeassistant.components.http import DOMAIN
 from homeassistant.components.http.ban import (
     IP_BANS_FILE,
     KEY_BAN_MANAGER,
@@ -311,7 +312,7 @@ async def test_ban_middleware_not_loaded_by_config(hass: HomeAssistant) -> None:
     """Test accessing to server from banned IP when feature is off."""
     with patch("homeassistant.components.http.setup_bans") as mock_setup:
         await async_setup_component(
-            hass, "http", {"http": {http.CONF_IP_BAN_ENABLED: False}}
+            hass, DOMAIN, {"http": {http.CONF_IP_BAN_ENABLED: False}}
         )
 
     assert len(mock_setup.mock_calls) == 0
@@ -320,7 +321,7 @@ async def test_ban_middleware_not_loaded_by_config(hass: HomeAssistant) -> None:
 async def test_ban_middleware_loaded_by_default(hass: HomeAssistant) -> None:
     """Test accessing to server from banned IP when feature is off."""
     with patch("homeassistant.components.http.setup_bans") as mock_setup:
-        await async_setup_component(hass, "http", {"http": {}})
+        await async_setup_component(hass, DOMAIN, {"http": {}})
 
     assert len(mock_setup.mock_calls) == 1
 

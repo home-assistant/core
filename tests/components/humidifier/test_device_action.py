@@ -228,11 +228,11 @@ async def test_action(
         },
     )
 
-    set_humidity_calls = async_mock_service(hass, "humidifier", "set_humidity")
-    set_mode_calls = async_mock_service(hass, "humidifier", "set_mode")
-    turn_on_calls = async_mock_service(hass, "humidifier", "turn_on")
-    turn_off_calls = async_mock_service(hass, "humidifier", "turn_off")
-    toggle_calls = async_mock_service(hass, "humidifier", "toggle")
+    set_humidity_calls = async_mock_service(hass, DOMAIN, "set_humidity")
+    set_mode_calls = async_mock_service(hass, DOMAIN, "set_mode")
+    turn_on_calls = async_mock_service(hass, DOMAIN, "turn_on")
+    turn_off_calls = async_mock_service(hass, DOMAIN, "turn_off")
+    toggle_calls = async_mock_service(hass, DOMAIN, "toggle")
 
     assert len(set_humidity_calls) == 0
     assert len(set_mode_calls) == 0
@@ -341,7 +341,7 @@ async def test_action_legacy(
         },
     )
 
-    set_mode_calls = async_mock_service(hass, "humidifier", "set_mode")
+    set_mode_calls = async_mock_service(hass, DOMAIN, "set_mode")
 
     hass.bus.async_fire("test_event_set_mode")
     await hass.async_block_till_done()

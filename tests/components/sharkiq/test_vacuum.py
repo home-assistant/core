@@ -113,7 +113,7 @@ class MockAyla(AylaApi):
     @property
     def auth_expiration(self) -> datetime:
         """Sample expiration timestamp that is always 1200 seconds behind now()."""
-        return datetime.now() - timedelta(seconds=1200)
+        return datetime.now() - timedelta(seconds=1200)  # pylint: disable=home-assistant-enforce-naive-now
 
 
 class MockShark(SharkIqVacuum):

@@ -6,7 +6,7 @@
     ]),
     'area_id': None,
     'capabilities': dict({
-      'options': list([
+      <SelectEntityCapabilityAttribute.OPTIONS: 'options'>: list([
         'none',
         'summer',
         'winter',
@@ -46,8 +46,8 @@
 # name: test_entities[select.kitchen_select-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'Kitchen select',
-      'options': list([
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Kitchen select',
+      <SelectEntityCapabilityAttribute.OPTIONS: 'options'>: list([
         'none',
         'summer',
         'winter',

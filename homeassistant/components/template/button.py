@@ -1,7 +1,7 @@
 """Support for buttons which integrates with other components."""
 
 import logging
-from typing import TYPE_CHECKING
+from typing import TYPE_CHECKING, override
 
 import voluptuous as vol
 
@@ -110,6 +110,7 @@ class StateButtonEntity(TemplateEntity, ButtonEntity):
         self._attr_device_class = config.get(CONF_DEVICE_CLASS)
         self._attr_state = None
 
+    @override
     async def async_press(self) -> None:
         """Press the button."""
         if script := self._action_scripts.get(CONF_PRESS):

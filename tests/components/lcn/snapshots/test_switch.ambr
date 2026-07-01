@@ -39,7 +39,7 @@
 # name: test_setup_lcn_switch[switch.testgroup_switch_group5-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'TestGroup Switch_Group5',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'TestGroup Switch_Group5',
     }),
     'context': <ANY>,
     'entity_id': 'switch.testgroup_switch_group5',
@@ -89,7 +89,7 @@
 # name: test_setup_lcn_switch[switch.testmodule_switch_keylock1-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'TestModule Switch_KeyLock1',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'TestModule Switch_KeyLock1',
     }),
     'context': <ANY>,
     'entity_id': 'switch.testmodule_switch_keylock1',
@@ -139,7 +139,7 @@
 # name: test_setup_lcn_switch[switch.testmodule_switch_output1-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'TestModule Switch_Output1',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'TestModule Switch_Output1',
     }),
     'context': <ANY>,
     'entity_id': 'switch.testmodule_switch_output1',
@@ -189,7 +189,7 @@
 # name: test_setup_lcn_switch[switch.testmodule_switch_output2-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'TestModule Switch_Output2',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'TestModule Switch_Output2',
     }),
     'context': <ANY>,
     'entity_id': 'switch.testmodule_switch_output2',
@@ -239,7 +239,7 @@
 # name: test_setup_lcn_switch[switch.testmodule_switch_regulator1-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'TestModule Switch_Regulator1',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'TestModule Switch_Regulator1',
     }),
     'context': <ANY>,
     'entity_id': 'switch.testmodule_switch_regulator1',
@@ -289,7 +289,7 @@
 # name: test_setup_lcn_switch[switch.testmodule_switch_relay1-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'TestModule Switch_Relay1',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'TestModule Switch_Relay1',
     }),
     'context': <ANY>,
     'entity_id': 'switch.testmodule_switch_relay1',
@@ -339,7 +339,7 @@
 # name: test_setup_lcn_switch[switch.testmodule_switch_relay2-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'TestModule Switch_Relay2',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'TestModule Switch_Relay2',
     }),
     'context': <ANY>,
     'entity_id': 'switch.testmodule_switch_relay2',

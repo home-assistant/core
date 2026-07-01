@@ -2,7 +2,7 @@
 
 from collections.abc import Callable
 from dataclasses import dataclass
-from typing import Any
+from typing import Any, override
 
 from switchbot_api import Device, Remote, SwitchBotAPI
 
@@ -332,6 +332,7 @@ class SwitchBotCloudSensor(SwitchBotCloudEntity, SensorEntity):
         self.entity_description = description
         self._attr_unique_id = f"{device.device_id}_{description.key}"
 
+    @override
     def _set_attributes(self) -> None:
         """Set attributes from coordinator data."""
         if not self.coordinator.data:
@@ -365,6 +366,7 @@ class SwitchBotCloudRelaySwitch2PMSensor(SwitchBotCloudSensor):
             name=f"{device.device_name} Channel {channel}",
         )
 
+    @override
     def _set_attributes(self) -> None:
         """Set attributes from coordinator data."""
         if not self.coordinator.data:

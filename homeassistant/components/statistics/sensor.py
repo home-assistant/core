@@ -8,7 +8,7 @@ import logging
 import math
 import statistics
 import time
-from typing import Any, cast
+from typing import Any, cast, override
 
 import voluptuous as vol
 
@@ -783,6 +783,7 @@ class StatisticsSensor(SensorEntity):
             )
         )
 
+    @override
     async def async_added_to_hass(self) -> None:
         """Register callbacks."""
         await self._async_stats_sensor_startup()

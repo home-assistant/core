@@ -1,5 +1,7 @@
 """Intents for the weather integration."""
 
+from typing import override
+
 import voluptuous as vol
 
 from homeassistant.core import HomeAssistant, State
@@ -21,6 +23,7 @@ class GetWeatherIntent(intent.IntentHandler):
     slot_schema = {vol.Optional("name"): intent.non_empty_string}
     platforms = {DOMAIN}
 
+    @override
     async def async_handle(self, intent_obj: intent.Intent) -> intent.IntentResponse:
         """Handle the intent."""
         hass = intent_obj.hass

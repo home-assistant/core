@@ -25,7 +25,7 @@
   "integration_type": "device",
   "iot_class": "local_push",
   "loggers": ["paho_mqtt", "roombapy"],
-  "requirements": ["roombapy==1.9.0"],
+  "requirements": ["roombapy==1.9.1"],
   "zeroconf": [
     {
       "name": "irobot-*",

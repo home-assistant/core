@@ -14,25 +14,19 @@ from datetime import datetime, timedelta
 from enum import Enum, StrEnum
 import logging
 import time
-from typing import TYPE_CHECKING, Any, Literal, NotRequired, TypedDict
+from typing import TYPE_CHECKING, Any, Literal, NotRequired, TypedDict, override
 
 import attr
 import voluptuous as vol
 
 from homeassistant.const import (
-    ATTR_DEVICE_CLASS,
-    ATTR_FRIENDLY_NAME,
-    ATTR_ICON,
-    ATTR_RESTORED,
-    ATTR_SUPPORTED_FEATURES,
-    ATTR_UNIT_OF_MEASUREMENT,
     EVENT_HOMEASSISTANT_START,
     EVENT_HOMEASSISTANT_STOP,
     MAX_LENGTH_STATE_DOMAIN,
     MAX_LENGTH_STATE_ENTITY_ID,
     STATE_UNAVAILABLE,
-    STATE_UNKNOWN,
     EntityCategory,
+    EntityStateAttribute,
     Platform,
 )
 from homeassistant.core import (
@@ -356,7 +350,7 @@ class RegistryEntry:
 
     @under_cached_property
     def extended_dict(self) -> dict[str, Any]:
-        """Return a extended dict representation of the entry."""
+        """Return an extended dict representation of the entry."""
         # Convert sets and tuples to lists
         # so the JSON serializer does not have to do
         # it every time
@@ -430,28 +424,28 @@ class RegistryEntry:
     @callback
     def write_unavailable_state(self, hass: HomeAssistant) -> None:
         """Write the unavailable state to the state machine."""
-        attrs: dict[str, Any] = {ATTR_RESTORED: True}
+        attrs: dict[str, Any] = {EntityStateAttribute.RESTORED: True}
 
         if self.capabilities is not None:
             attrs.update(self.capabilities)
 
         device_class = self.device_class or self.original_device_class
         if device_class is not None:
-            attrs[ATTR_DEVICE_CLASS] = device_class
+            attrs[EntityStateAttribute.DEVICE_CLASS] = device_class
 
         icon = self.icon or self.original_icon
         if icon is not None:
-            attrs[ATTR_ICON] = icon
+            attrs[EntityStateAttribute.ICON] = icon
 
-        name = self.name or self.original_name
-        if name is not None:
-            attrs[ATTR_FRIENDLY_NAME] = name
+        name = async_get_full_entity_name(hass, self)
+        if name:
+            attrs[EntityStateAttribute.FRIENDLY_NAME] = name
 
         if self.supported_features is not None:
-            attrs[ATTR_SUPPORTED_FEATURES] = self.supported_features
+            attrs[EntityStateAttribute.SUPPORTED_FEATURES] = self.supported_features
 
         if self.unit_of_measurement is not None:
-            attrs[ATTR_UNIT_OF_MEASUREMENT] = self.unit_of_measurement
+            attrs[EntityStateAttribute.UNIT_OF_MEASUREMENT] = self.unit_of_measurement
 
         hass.states.async_set(self.entity_id, STATE_UNAVAILABLE, attrs)
 
@@ -748,6 +742,7 @@ class DeletedRegistryEntry:
 class EntityRegistryStore(storage.Store[dict[str, list[dict[str, Any]]]]):
     """Store entity registry data."""
 
+    @override
     async def _async_migrate_func(  # noqa: C901
         self,
         old_major_version: int,
@@ -935,6 +930,8 @@ class EntityRegistryItems(BaseRegistryItems[RegistryEntry]):
     - device_id -> dict[key, True]
     - area_id -> dict[key, True]
     - label -> dict[key, True]
+
+    Also maintains a count of enabled entries per config entry id.
     """
 
     def __init__(self) -> None:
@@ -943,10 +940,12 @@ class EntityRegistryItems(BaseRegistryItems[RegistryEntry]):
         self._entry_ids: dict[str, RegistryEntry] = {}
         self._index: dict[tuple[str, str, str], str] = {}
         self._config_entry_id_index: RegistryIndexType = defaultdict(dict)
+        self._config_entry_id_enabled_count: dict[str, int] = {}
         self._device_id_index: RegistryIndexType = defaultdict(dict)
         self._area_id_index: RegistryIndexType = defaultdict(dict)
         self._labels_index: RegistryIndexType = defaultdict(dict)
 
+    @override
     def _index_entry(self, key: str, entry: RegistryEntry) -> None:
         """Index an entry."""
         self._entry_ids[entry.id] = entry
@@ -955,6 +954,10 @@ class EntityRegistryItems(BaseRegistryItems[RegistryEntry]):
         # https://discuss.python.org/t/add-orderedset-to-stdlib/12730
         if (config_entry_id := entry.config_entry_id) is not None:
             self._config_entry_id_index[config_entry_id][key] = True
+            if not entry.disabled_by:
+                self._config_entry_id_enabled_count[config_entry_id] = (
+                    self._config_entry_id_enabled_count.get(config_entry_id, 0) + 1
+                )
         if (device_id := entry.device_id) is not None:
             self._device_id_index[device_id][key] = True
         if (area_id := entry.area_id) is not None:
@@ -962,6 +965,7 @@ class EntityRegistryItems(BaseRegistryItems[RegistryEntry]):
         for label in entry.labels:
             self._labels_index[label][key] = True
 
+    @override
     def _unindex_entry(
         self, key: str, replacement_entry: RegistryEntry | None = None
     ) -> None:
@@ -971,6 +975,12 @@ class EntityRegistryItems(BaseRegistryItems[RegistryEntry]):
         del self._index[(entry.domain, entry.platform, entry.unique_id)]
         if config_entry_id := entry.config_entry_id:
             self._unindex_entry_value(key, config_entry_id, self._config_entry_id_index)
+            if not entry.disabled_by:
+                count = self._config_entry_id_enabled_count[config_entry_id] - 1
+                if count:
+                    self._config_entry_id_enabled_count[config_entry_id] = count
+                else:
+                    del self._config_entry_id_enabled_count[config_entry_id]
         if device_id := entry.device_id:
             self._unindex_entry_value(key, device_id, self._device_id_index)
         if area_id := entry.area_id:
@@ -1010,6 +1020,10 @@ class EntityRegistryItems(BaseRegistryItems[RegistryEntry]):
         return [
             data[key] for key in self._config_entry_id_index.get(config_entry_id, ())
         ]
+
+    def get_enabled_count_for_config_entry_id(self, config_entry_id: str) -> int:
+        """Return the number of enabled entries for a config entry."""
+        return self._config_entry_id_enabled_count.get(config_entry_id, 0)
 
     def get_entries_for_area_id(self, area_id: str) -> list[RegistryEntry]:
         """Get entries for area."""
@@ -1140,7 +1154,7 @@ class EntityRegistry(BaseRegistry):
 
     @callback
     def async_get(self, entity_id_or_uuid: str) -> RegistryEntry | None:
-        """Get EntityEntry for an entity_id or entity entry id.
+        """Get RegistryEntry for an entity or entity entry id.
 
         We retrieve the RegistryEntry from the underlying dict to avoid
         the overhead of the UserDict __getitem__.
@@ -1153,7 +1167,11 @@ class EntityRegistry(BaseRegistry):
     def async_get_entity_id(
         self, domain: str, platform: str, unique_id: str
     ) -> str | None:
-        """Check if an entity_id is currently registered."""
+        """Check if an entity_id is currently registered.
+
+        domain: entity platform domain (e.g. light, sensor)
+        platform: integration domain (e.g. hue, zwave)
+        """
         return self.entities.get_entity_id((domain, platform, unique_id))
 
     @callback
@@ -1951,9 +1969,10 @@ class EntityRegistry(BaseRegistry):
         This should only be used when an entity needs to be migrated between
         integrations.
         """
-        if (
-            state := self.hass.states.get(entity_id)
-        ) is not None and state.state != STATE_UNKNOWN:
+        # import here to avoid circular import
+        from .entity import entity_sources  # noqa: PLC0415
+
+        if entity_id in entity_sources(self.hass):
             raise ValueError("Only entities that haven't been loaded can be migrated")
 
         old = self.entities[entity_id]
@@ -1988,6 +2007,7 @@ class EntityRegistry(BaseRegistry):
             new_options[domain] = options
         return self._async_update_entity(entity_id, options=new_options)
 
+    @override
     async def _async_load(self) -> None:
         """Load the entity registry."""
         # Device registry must be loaded before entity registry because
@@ -2144,6 +2164,7 @@ class EntityRegistry(BaseRegistry):
         self.entities = entities
         self._entities_data = entities.data
 
+    @override
     def _data_to_save(self) -> dict[str, Any]:
         """Return data of entity registry to store in a file."""
         # Create intermediate lists to allow this method to be called from a thread
@@ -2429,7 +2450,9 @@ def _async_setup_entity_restore(hass: HomeAssistant, registry: EntityRegistry) -
         if event.data["action"] == "update":
             old_entity_id = event.data["old_entity_id"]
             old_state = hass.states.get(old_entity_id)
-            if old_state is None or not old_state.attributes.get(ATTR_RESTORED):
+            if old_state is None or not old_state.attributes.get(
+                EntityStateAttribute.RESTORED
+            ):
                 return
             hass.states.async_remove(old_entity_id, context=event.context)
             if entry := registry.async_get(event.data["entity_id"]):
@@ -2438,7 +2461,7 @@ def _async_setup_entity_restore(hass: HomeAssistant, registry: EntityRegistry) -
 
         state = hass.states.get(event.data["entity_id"])
 
-        if state is None or not state.attributes.get(ATTR_RESTORED):
+        if state is None or not state.attributes.get(EntityStateAttribute.RESTORED):
             return
 
         hass.states.async_remove(event.data["entity_id"], context=event.context)

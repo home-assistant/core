@@ -6,7 +6,7 @@
     ]),
     'area_id': None,
     'capabilities': dict({
-      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+      <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -44,13 +44,13 @@
 # name: test_sensor[sensor.home_carbon_monoxide-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'attribution': 'Data provided by Airly',
-      'device_class': 'carbon_monoxide',
-      'friendly_name': 'Home Carbon monoxide',
+      <EntityStateAttribute.ATTRIBUTION: 'attribution'>: 'Data provided by Airly',
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'carbon_monoxide',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Home Carbon monoxide',
       'limit': 4000,
       'percent': 4,
-      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
-      'unit_of_measurement': 'μg/m³',
+      <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
+      <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: 'μg/m³',
     }),
     'context': <ANY>,
     'entity_id': 'sensor.home_carbon_monoxide',
@@ -104,11 +104,11 @@
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'advice': 'Catch your breath!',
-      'attribution': 'Data provided by Airly',
+      <EntityStateAttribute.ATTRIBUTION: 'attribution'>: 'Data provided by Airly',
       'description': 'Great air here today!',
-      'friendly_name': 'Home Common air quality index',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Home Common air quality index',
       'level': 'very low',
-      'unit_of_measurement': 'CAQI',
+      <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: 'CAQI',
     }),
     'context': <ANY>,
     'entity_id': 'sensor.home_common_air_quality_index',
@@ -125,7 +125,7 @@
     ]),
     'area_id': None,
     'capabilities': dict({
-      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+      <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -163,11 +163,11 @@
 # name: test_sensor[sensor.home_humidity-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'attribution': 'Data provided by Airly',
-      'device_class': 'humidity',
-      'friendly_name': 'Home Humidity',
-      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
-      'unit_of_measurement': '%',
+      <EntityStateAttribute.ATTRIBUTION: 'attribution'>: 'Data provided by Airly',
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'humidity',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Home Humidity',
+      <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
+      <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: '%',
     }),
     'context': <ANY>,
     'entity_id': 'sensor.home_humidity',
@@ -184,7 +184,7 @@
     ]),
     'area_id': None,
     'capabilities': dict({
-      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+      <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -222,13 +222,13 @@
 # name: test_sensor[sensor.home_nitrogen_dioxide-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'attribution': 'Data provided by Airly',
-      'device_class': 'nitrogen_dioxide',
-      'friendly_name': 'Home Nitrogen dioxide',
+      <EntityStateAttribute.ATTRIBUTION: 'attribution'>: 'Data provided by Airly',
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'nitrogen_dioxide',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Home Nitrogen dioxide',
       'limit': 25,
       'percent': 64,
-      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
-      'unit_of_measurement': 'μg/m³',
+      <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
+      <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: 'μg/m³',
     }),
     'context': <ANY>,
     'entity_id': 'sensor.home_nitrogen_dioxide',
@@ -245,7 +245,7 @@
     ]),
     'area_id': None,
     'capabilities': dict({
-      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+      <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -283,13 +283,13 @@
 # name: test_sensor[sensor.home_ozone-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'attribution': 'Data provided by Airly',
-      'device_class': 'ozone',
-      'friendly_name': 'Home Ozone',
+      <EntityStateAttribute.ATTRIBUTION: 'attribution'>: 'Data provided by Airly',
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'ozone',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Home Ozone',
       'limit': 100,
       'percent': 42,
-      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
-      'unit_of_measurement': 'μg/m³',
+      <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
+      <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: 'μg/m³',
     }),
     'context': <ANY>,
     'entity_id': 'sensor.home_ozone',
@@ -306,7 +306,7 @@
     ]),
     'area_id': None,
     'capabilities': dict({
-      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+      <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -344,11 +344,11 @@
 # name: test_sensor[sensor.home_pm1-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'attribution': 'Data provided by Airly',
-      'device_class': 'pm1',
-      'friendly_name': 'Home PM1',
-      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
-      'unit_of_measurement': 'μg/m³',
+      <EntityStateAttribute.ATTRIBUTION: 'attribution'>: 'Data provided by Airly',
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'pm1',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Home PM1',
+      <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
+      <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: 'μg/m³',
     }),
     'context': <ANY>,
     'entity_id': 'sensor.home_pm1',
@@ -365,7 +365,7 @@
     ]),
     'area_id': None,
     'capabilities': dict({
-      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+      <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -403,13 +403,13 @@
 # name: test_sensor[sensor.home_pm10-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'attribution': 'Data provided by Airly',
-      'device_class': 'pm10',
-      'friendly_name': 'Home PM10',
+      <EntityStateAttribute.ATTRIBUTION: 'attribution'>: 'Data provided by Airly',
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'pm10',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Home PM10',
       'limit': 45,
       'percent': 14,
-      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
-      'unit_of_measurement': 'μg/m³',
+      <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
+      <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: 'μg/m³',
     }),
     'context': <ANY>,
     'entity_id': 'sensor.home_pm10',
@@ -426,7 +426,7 @@
     ]),
     'area_id': None,
     'capabilities': dict({
-      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+      <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -464,13 +464,13 @@
 # name: test_sensor[sensor.home_pm2_5-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'attribution': 'Data provided by Airly',
-      'device_class': 'pm25',
-      'friendly_name': 'Home PM2.5',
+      <EntityStateAttribute.ATTRIBUTION: 'attribution'>: 'Data provided by Airly',
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'pm25',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Home PM2.5',
       'limit': 15,
       'percent': 29,
-      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
-      'unit_of_measurement': 'μg/m³',
+      <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
+      <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: 'μg/m³',
     }),
     'context': <ANY>,
     'entity_id': 'sensor.home_pm2_5',
@@ -487,7 +487,7 @@
     ]),
     'area_id': None,
     'capabilities': dict({
-      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+      <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -525,11 +525,11 @@
 # name: test_sensor[sensor.home_pressure-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'attribution': 'Data provided by Airly',
-      'device_class': 'pressure',
-      'friendly_name': 'Home Pressure',
-      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
-      'unit_of_measurement': <UnitOfPressure.HPA: 'hPa'>,
+      <EntityStateAttribute.ATTRIBUTION: 'attribution'>: 'Data provided by Airly',
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'pressure',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Home Pressure',
+      <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
+      <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: <UnitOfPressure.HPA: 'hPa'>,
     }),
     'context': <ANY>,
     'entity_id': 'sensor.home_pressure',
@@ -546,7 +546,7 @@
     ]),
     'area_id': None,
     'capabilities': dict({
-      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+      <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -584,13 +584,13 @@
 # name: test_sensor[sensor.home_sulphur_dioxide-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'attribution': 'Data provided by Airly',
-      'device_class': 'sulphur_dioxide',
-      'friendly_name': 'Home Sulphur dioxide',
+      <EntityStateAttribute.ATTRIBUTION: 'attribution'>: 'Data provided by Airly',
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'sulphur_dioxide',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Home Sulphur dioxide',
       'limit': 40,
       'percent': 35,
-      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
-      'unit_of_measurement': 'μg/m³',
+      <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
+      <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: 'μg/m³',
     }),
     'context': <ANY>,
     'entity_id': 'sensor.home_sulphur_dioxide',
@@ -607,7 +607,7 @@
     ]),
     'area_id': None,
     'capabilities': dict({
-      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+      <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -645,11 +645,11 @@
 # name: test_sensor[sensor.home_temperature-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'attribution': 'Data provided by Airly',
-      'device_class': 'temperature',
-      'friendly_name': 'Home Temperature',
-      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
-      'unit_of_measurement': <UnitOfTemperature.CELSIUS: '°C'>,
+      <EntityStateAttribute.ATTRIBUTION: 'attribution'>: 'Data provided by Airly',
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'temperature',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Home Temperature',
+      <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
+      <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: <UnitOfTemperature.CELSIUS: '°C'>,
     }),
     'context': <ANY>,
     'entity_id': 'sensor.home_temperature',

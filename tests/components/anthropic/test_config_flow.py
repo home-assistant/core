@@ -659,7 +659,7 @@ async def test_invalid_model(
         (  # Model with thinking effort options
             {
                 CONF_RECOMMENDED: False,
-                CONF_CHAT_MODEL: "claude-opus-4-6",
+                CONF_CHAT_MODEL: "claude-fable-5",
                 CONF_PROMPT: "bla",
                 CONF_PROMPT_CACHING: "automatic",
                 CONF_TOOL_SEARCH: True,

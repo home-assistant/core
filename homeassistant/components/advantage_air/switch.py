@@ -1,6 +1,6 @@
 """Switch platform for Advantage Air integration."""
 
-from typing import Any
+from typing import Any, override
 
 from homeassistant.components.switch import SwitchDeviceClass, SwitchEntity
 from homeassistant.core import HomeAssistant
@@ -57,14 +57,17 @@ class AdvantageAirFreshAir(AdvantageAirAcEntity, SwitchEntity):
         self._attr_unique_id += "-freshair"
 
     @property
+    @override
     def is_on(self) -> bool:
         """Return the fresh air status."""
         return self._ac["freshAirStatus"] == ADVANTAGE_AIR_STATE_ON
 
+    @override
     async def async_turn_on(self, **kwargs: Any) -> None:
         """Turn fresh air on."""
         await self.async_update_ac({"freshAirStatus": ADVANTAGE_AIR_STATE_ON})
 
+    @override
     async def async_turn_off(self, **kwargs: Any) -> None:
         """Turn fresh air off."""
         await self.async_update_ac({"freshAirStatus": ADVANTAGE_AIR_STATE_OFF})
@@ -83,14 +86,17 @@ class AdvantageAirMyFan(AdvantageAirAcEntity, SwitchEntity):
         self._attr_unique_id += "-myfan"
 
     @property
+    @override
     def is_on(self) -> bool:
         """Return the MyFan status."""
         return self._ac[ADVANTAGE_AIR_AUTOFAN_ENABLED]
 
+    @override
     async def async_turn_on(self, **kwargs: Any) -> None:
         """Turn MyFan on."""
         await self.async_update_ac({ADVANTAGE_AIR_AUTOFAN_ENABLED: True})
 
+    @override
     async def async_turn_off(self, **kwargs: Any) -> None:
         """Turn MyFan off."""
         await self.async_update_ac({ADVANTAGE_AIR_AUTOFAN_ENABLED: False})
@@ -109,14 +115,17 @@ class AdvantageAirNightMode(AdvantageAirAcEntity, SwitchEntity):
         self._attr_unique_id += "-nightmode"
 
     @property
+    @override
     def is_on(self) -> bool:
         """Return the Night Mode status."""
         return self._ac[ADVANTAGE_AIR_NIGHT_MODE_ENABLED]
 
+    @override
     async def async_turn_on(self, **kwargs: Any) -> None:
         """Turn Night Mode on."""
         await self.async_update_ac({ADVANTAGE_AIR_NIGHT_MODE_ENABLED: True})
 
+    @override
     async def async_turn_off(self, **kwargs: Any) -> None:
         """Turn Night Mode off."""
         await self.async_update_ac({ADVANTAGE_AIR_NIGHT_MODE_ENABLED: False})

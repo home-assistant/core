@@ -61,9 +61,17 @@
   
   </details>
   
-  <details><summary>mock_no_info_integration</summary>
+  ## Custom Themes
   
-  No information available
+  Custom themes: 2
+  
+  <details><summary>Custom themes</summary>
+  
+  Name
+  ---
+  midnight
+  solarized-dark
+  
   </details>
   
   <details><summary>cloud</summary>
@@ -75,16 +83,23 @@
   relayer_region | xx-earth-616
   remote_enabled | True
   remote_connected | False
+  remote_server | us-west-1
   alexa_enabled | True
   google_enabled | False
   cloud_ice_servers_enabled | True
-  remote_server | us-west-1
   certificate_status | ready
   instance_id | 12345678901234567890
+  iot_state | connected
+  iot_tries | 0
   can_reach_cert_server | Exception: Unexpected exception
   can_reach_cloud_auth | Failed: unreachable
   can_reach_cloud | ok
   
+  </details>
+  
+  <details><summary>mock_no_info_integration</summary>
+  
+  No information available
   </details>
   
   ## Latency by location
@@ -173,10 +188,9 @@
   
   </details>
   
-  <details><summary>mock_no_info_integration</summary>
+  ## Custom Themes
   
-  No information available
-  </details>
+  Custom themes: 0
   
   <details><summary>cloud</summary>
   
@@ -187,16 +201,23 @@
   relayer_region | xx-earth-616
   remote_enabled | True
   remote_connected | False
+  remote_server | us-west-1
   alexa_enabled | True
   google_enabled | False
   cloud_ice_servers_enabled | True
-  remote_server | us-west-1
   certificate_status | ready
   instance_id | 12345678901234567890
+  iot_state | connected
+  iot_tries | 0
   can_reach_cert_server | Exception: Unexpected exception
   can_reach_cloud_auth | Failed: unreachable
   can_reach_cloud | ok
   
+  </details>
+  
+  <details><summary>mock_no_info_integration</summary>
+  
+  No information available
   </details>
   
   ## Installed packages
@@ -249,10 +270,9 @@
   
   Unable to collect integration information
   
-  <details><summary>mock_no_info_integration</summary>
+  ## Custom Themes
   
-  No information available
-  </details>
+  Custom themes: 0
   
   <details><summary>cloud</summary>
   
@@ -263,16 +283,23 @@
   relayer_region | xx-earth-616
   remote_enabled | True
   remote_connected | False
+  remote_server | us-west-1
   alexa_enabled | True
   google_enabled | False
   cloud_ice_servers_enabled | True
-  remote_server | us-west-1
   certificate_status | ready
   instance_id | 12345678901234567890
+  iot_state | connected
+  iot_tries | 0
   can_reach_cert_server | Exception: Unexpected exception
   can_reach_cloud_auth | Failed: unreachable
   can_reach_cloud | ok
   
+  </details>
+  
+  <details><summary>mock_no_info_integration</summary>
+  
+  No information available
   </details>
   
   ## Installed packages

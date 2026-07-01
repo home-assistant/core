@@ -5,7 +5,7 @@ import logging
 import jinja2
 
 from homeassistant.components.alarm_control_panel import AlarmControlPanelEntityFeature
-from homeassistant.const import CONF_DISCOVERY, CONF_PAYLOAD, Platform
+from homeassistant.const import CONF_PAYLOAD, Platform
 from homeassistant.exceptions import TemplateError
 
 ATTR_DISCOVERY_HASH = "discovery_hash"
@@ -246,6 +246,7 @@ CONF_TILT_STATE_OPTIMISTIC = "tilt_optimistic"
 CONF_TRANSITION = "transition"
 CONF_URL_TEMPLATE = "url_template"
 CONF_URL_TOPIC = "url_topic"
+CONF_VISIBLE_BY_DEFAULT = "visible_by_default"
 CONF_XY_COMMAND_TEMPLATE = "xy_command_template"
 CONF_XY_COMMAND_TOPIC = "xy_command_topic"
 CONF_XY_STATE_TOPIC = "xy_state_topic"
@@ -384,17 +385,6 @@ PAYLOAD_NONE = "None"
 
 CONFIG_ENTRY_VERSION = 2
 CONFIG_ENTRY_MINOR_VERSION = 1
-
-# Split mqtt entry data and options
-# Can be removed when config entry is bumped to version 2.1
-# with HA Core 2026.7.0. Read support for version 2.1 is expected from 2026.1
-# From 2026.7 we will write version 2.1
-ENTRY_OPTION_FIELDS = (
-    CONF_DISCOVERY,
-    CONF_DISCOVERY_PREFIX,
-    "birth_message",
-    "will_message",
-)
 
 ENTITY_PLATFORMS = [
     Platform.ALARM_CONTROL_PANEL,

@@ -1,7 +1,7 @@
 """Demo platform that has a couple of fake sensors."""
 
 from datetime import datetime, timedelta
-from typing import cast
+from typing import cast, override
 
 from homeassistant.components.sensor import (
     DOMAIN as SENSOR_DOMAIN,
@@ -227,6 +227,7 @@ class DemoSumSensor(RestoreSensor):
         self._attr_native_value += self._five_minute_increase
         self.async_write_ha_state()
 
+    @override
     async def async_added_to_hass(self) -> None:
         """Call when entity about to be added to hass."""
         await super().async_added_to_hass()

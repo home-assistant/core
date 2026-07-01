@@ -7,6 +7,7 @@ from homeassistant.components.light import (
     ATTR_SUPPORTED_COLOR_MODES,
     ColorMode,
 )
+from homeassistant.components.switch import DOMAIN
 from homeassistant.core import HomeAssistant
 from homeassistant.setup import async_setup_component
 
@@ -51,7 +52,7 @@ async def test_default_state(hass: HomeAssistant) -> None:
 
 async def test_light_service_calls(hass: HomeAssistant) -> None:
     """Test service calls to light."""
-    await async_setup_component(hass, "switch", {"switch": [{"platform": "demo"}]})
+    await async_setup_component(hass, DOMAIN, {"switch": [{"platform": "demo"}]})
     await async_setup_component(
         hass,
         "light",
@@ -86,7 +87,7 @@ async def test_light_service_calls(hass: HomeAssistant) -> None:
 
 async def test_switch_service_calls(hass: HomeAssistant) -> None:
     """Test service calls to switch."""
-    await async_setup_component(hass, "switch", {"switch": [{"platform": "demo"}]})
+    await async_setup_component(hass, DOMAIN, {"switch": [{"platform": "demo"}]})
     await async_setup_component(
         hass,
         "light",

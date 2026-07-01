@@ -1,10 +1,14 @@
 """Offer zone automation rules."""
 
-from typing import Any, Unpack, cast
+from typing import Any, Unpack, cast, override
 
 import voluptuous as vol
 
-from homeassistant.components.device_tracker import ATTR_IN_ZONES
+from homeassistant.components.device_tracker import (
+    ATTR_IN_ZONES,
+    DOMAIN as DEVICE_TRACKER_DOMAIN,
+)
+from homeassistant.components.person import DOMAIN as PERSON_DOMAIN
 from homeassistant.const import (
     ATTR_GPS_ACCURACY,
     ATTR_LATITUDE,
@@ -44,6 +48,8 @@ _OPTIONS_SCHEMA_DICT: dict[vol.Marker, Any] = {
 }
 _CONDITION_SCHEMA = vol.Schema({CONF_OPTIONS: _OPTIONS_SCHEMA_DICT})
 
+_IN_ZONES_DOMAINS = {DEVICE_TRACKER_DOMAIN, PERSON_DOMAIN}
+
 
 def zone(
     hass: HomeAssistant,
@@ -80,6 +86,14 @@ def zone(
     ):
         return False
 
+    # Prefer the in_zones attribute reported by the entity (e.g. person,
+    # device_tracker) over recomputing membership from coordinates.
+    if (
+        entity.domain in _IN_ZONES_DOMAINS
+        and (in_zones := entity.attributes.get(ATTR_IN_ZONES)) is not None
+    ):
+        return zone_ent.entity_id in in_zones
+
     latitude = entity.attributes.get(ATTR_LATITUDE)
     longitude = entity.attributes.get(ATTR_LONGITUDE)
 
@@ -104,6 +118,7 @@ class ZoneCondition(Condition):
     _options: dict[str, Any]
 
     @classmethod
+    @override
     async def async_validate_complete_config(
         cls, hass: HomeAssistant, complete_config: ConfigType
     ) -> ConfigType:
@@ -114,6 +129,7 @@ class ZoneCondition(Condition):
         return await super().async_validate_complete_config(hass, complete_config)
 
     @classmethod
+    @override
     async def async_validate_config(
         cls, hass: HomeAssistant, config: ConfigType
     ) -> ConfigType:
@@ -128,6 +144,7 @@ class ZoneCondition(Condition):
         self._entity_ids = self._options.get(CONF_ENTITY_ID, [])
         self._zone_entity_ids = self._options.get(CONF_ZONE, [])
 
+    @override
     def _async_check(self, **kwargs: Unpack[ConditionCheckParams]) -> bool:
         """Test if condition."""
         errors = []
@@ -195,6 +212,7 @@ class _ZoneTargetConditionBase(EntityConditionBase):
 class InZoneCondition(_ZoneTargetConditionBase):
     """Condition: targeted entity is in the selected zone."""
 
+    @override
     def is_valid_state(self, entity_state: State) -> bool:
         """Check that the entity is in the selected zone."""
         return self._in_target_zone(entity_state)
@@ -203,6 +221,7 @@ class InZoneCondition(_ZoneTargetConditionBase):
 class NotInZoneCondition(_ZoneTargetConditionBase):
     """Condition: targeted entity is not in the selected zone."""
 
+    @override
     def is_valid_state(self, entity_state: State) -> bool:
         """Check that the entity is not in the selected zone."""
         return not self._in_target_zone(entity_state)
@@ -211,7 +230,7 @@ class NotInZoneCondition(_ZoneTargetConditionBase):
 _OCCUPANCY_CONDITION_SCHEMA = vol.Schema(
     {
         vol.Required(CONF_OPTIONS, default={}): {
-            vol.Required(CONF_ZONE): cv.entity_domain("zone"),
+            vol.Required(CONF_ZONE): cv.entity_domain(DOMAIN),
             vol.Optional(CONF_FOR): cv.positive_time_period,
         },
     }
@@ -221,10 +240,11 @@ _OCCUPANCY_CONDITION_SCHEMA = vol.Schema(
 class _ZoneOccupancyConditionBase(EntityConditionBase):
     """Base for zone occupancy conditions (single zone, no behavior)."""
 
-    _domain_specs = {"zone": DomainSpec()}
+    _domain_specs = {DOMAIN: DomainSpec()}
     _schema = _OCCUPANCY_CONDITION_SCHEMA
 
     @classmethod
+    @override
     async def async_validate_config(
         cls, hass: HomeAssistant, config: ConfigType
     ) -> ConfigType:
@@ -258,6 +278,7 @@ class _ZoneOccupancyConditionBase(EntityConditionBase):
 class OccupancyIsDetectedCondition(_ZoneOccupancyConditionBase):
     """Condition: the selected zone is occupied."""
 
+    @override
     def is_valid_state(self, entity_state: State) -> bool:
         """Check that the zone is occupied."""
         return self._is_occupied(entity_state)
@@ -266,6 +287,7 @@ class OccupancyIsDetectedCondition(_ZoneOccupancyConditionBase):
 class OccupancyIsNotDetectedCondition(_ZoneOccupancyConditionBase):
     """Condition: the selected zone is empty."""
 
+    @override
     def is_valid_state(self, entity_state: State) -> bool:
         """Check that the zone is empty (count == 0)."""
         return self._occupancy_count(entity_state) == 0

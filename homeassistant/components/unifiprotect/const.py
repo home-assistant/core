@@ -46,15 +46,14 @@ DEVICES_THAT_ADOPT = {
     ModelType.LIGHT,
     ModelType.VIEWPORT,
     ModelType.SENSOR,
-    ModelType.DOORLOCK,
     ModelType.CHIME,
 }
 DEVICES_WITH_ENTITIES = DEVICES_THAT_ADOPT | {ModelType.NVR}
 DEVICES_FOR_SUBSCRIBE = DEVICES_WITH_ENTITIES | {ModelType.EVENT}
 
-# Public API devices WebSocket: NVR (for arm_mode updates), Relay
-# (for relay output state updates), and Siren (for siren active-state updates).
-DEVICES_WS_SUBSCRIBED_MODELS = {ModelType.NVR, ModelType.RELAY, ModelType.SIREN}
+# Empty set = no client-side filter, i.e. subscribe to all device models on
+# the public API devices WebSocket.
+DEVICES_WS_SUBSCRIBED_MODELS: set[ModelType] = set()
 
 MIN_REQUIRED_PROTECT_V = Version("6.0.0")
 OUTDATED_LOG_MESSAGE = (
@@ -71,7 +70,6 @@ PLATFORMS = [
     Platform.CAMERA,
     Platform.EVENT,
     Platform.LIGHT,
-    Platform.LOCK,
     Platform.MEDIA_PLAYER,
     Platform.NUMBER,
     Platform.SELECT,
@@ -89,6 +87,7 @@ EVENT_TYPE_FINGERPRINT_IDENTIFIED: Final = "identified"
 EVENT_TYPE_FINGERPRINT_NOT_IDENTIFIED: Final = "not_identified"
 EVENT_TYPE_NFC_SCANNED: Final = "scanned"
 EVENT_TYPE_VEHICLE_DETECTED: Final = "detected"
+EVENT_TYPE_PACKAGE_DETECTED: Final = "detected"
 
 # Delay in seconds before firing vehicle event after last thumbnail
 VEHICLE_EVENT_DELAY_SECONDS: Final = 3

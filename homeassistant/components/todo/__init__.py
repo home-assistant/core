@@ -5,7 +5,7 @@ import copy
 import dataclasses
 import datetime
 import logging
-from typing import Any, final
+from typing import Any, final, override
 
 from propcache.api import cached_property
 import voluptuous as vol
@@ -241,6 +241,7 @@ class TodoListEntity(Entity, cached_properties=CACHED_PROPERTIES_WITH_ATTR_):
     _update_listeners: list[Callable[[list[TodoItem] | None], None]] | None = None
 
     @property
+    @override
     def state(self) -> int | None:
         """Return the entity state as the count of incomplete items."""
         items = self.todo_items
@@ -310,6 +311,7 @@ class TodoListEntity(Entity, cached_properties=CACHED_PROPERTIES_WITH_ATTR_):
             listener(todo_items)
 
     @callback
+    @override
     def _async_write_ha_state(self) -> None:
         """Notify to-do item subscribers."""
         super()._async_write_ha_state()

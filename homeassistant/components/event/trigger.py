@@ -1,5 +1,7 @@
 """Provides triggers for events."""
 
+from typing import override
+
 import voluptuous as vol
 
 from homeassistant.const import CONF_OPTIONS
@@ -8,6 +10,7 @@ from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.automation import DomainSpec
 from homeassistant.helpers.trigger import (
     ENTITY_STATE_TRIGGER_SCHEMA,
+    NotTriggeredReasonReporter,
     StatelessEntityTriggerBase,
     Trigger,
     TriggerConfig,
@@ -39,7 +42,12 @@ class EventReceivedTrigger(StatelessEntityTriggerBase):
         super().__init__(hass, config)
         self._event_types = set(self._options[CONF_EVENT_TYPE])
 
-    def is_valid_state(self, state: State) -> bool:
+    @override
+    def is_valid_state(
+        self,
+        state: State,
+        report_not_triggered: NotTriggeredReasonReporter,
+    ) -> bool:
         """Check if the event type matches one of the configured types."""
         return state.attributes.get(ATTR_EVENT_TYPE) in self._event_types
 

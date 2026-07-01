@@ -38,7 +38,7 @@
             "data_description": {
               "host": "The URL of your Autoskope API endpoint. Only change this if you use a white-label portal."
             },
-            "name": "Advanced settings"
+            "name": "Additional settings"
           }
         },
         "title": "Connect to Autoskope"

@@ -6,7 +6,9 @@ from homeassistant.helpers.trigger import Trigger, make_entity_transition_trigge
 
 from . import ATTR_IS_CLOSED, DOMAIN
 
-VALVE_DOMAIN_SPECS = {DOMAIN: DomainSpec(value_source=ATTR_IS_CLOSED)}
+VALVE_DOMAIN_SPECS: dict[str, DomainSpec] = {
+    DOMAIN: DomainSpec(value_source=ATTR_IS_CLOSED),
+}
 
 
 TRIGGERS: dict[str, type[Trigger]] = {

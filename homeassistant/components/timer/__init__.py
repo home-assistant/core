@@ -3,7 +3,7 @@
 from collections.abc import Callable
 from datetime import datetime, timedelta
 import logging
-from typing import Any, Self
+from typing import Any, Self, override
 
 import voluptuous as vol
 
@@ -172,6 +172,7 @@ class TimerStorageCollection(collection.DictStorageCollection):
 
     CREATE_UPDATE_SCHEMA = vol.Schema(STORAGE_FIELDS)
 
+    @override
     async def _process_create_data(self, data: dict) -> dict:
         """Validate the config is valid."""
         data = self.CREATE_UPDATE_SCHEMA(data)
@@ -180,10 +181,12 @@ class TimerStorageCollection(collection.DictStorageCollection):
         return data
 
     @callback
+    @override
     def _get_suggested_id(self, info: dict) -> str:
         """Suggest an ID based on the config."""
         return info[CONF_NAME]  # type: ignore[no-any-return]
 
+    @override
     async def _update_data(self, item: dict, update_data: dict) -> dict:
         """Return a new updated data object."""
         data = {CONF_ID: item[CONF_ID]} | self.CREATE_UPDATE_SCHEMA(update_data)
@@ -214,6 +217,7 @@ class Timer(collection.CollectionEntity, RestoreEntity):
         self._attr_force_update = True
 
     @classmethod
+    @override
     def from_storage(cls, config: ConfigType) -> Self:
         """Return entity instance initialized from storage."""
         timer = cls(config)
@@ -221,6 +225,7 @@ class Timer(collection.CollectionEntity, RestoreEntity):
         return timer
 
     @classmethod
+    @override
     def from_yaml(cls, config: ConfigType) -> Self:
         """Return entity instance initialized from yaml."""
         timer = cls(config)
@@ -229,21 +234,25 @@ class Timer(collection.CollectionEntity, RestoreEntity):
         return timer
 
     @property
+    @override
     def name(self) -> str | None:
         """Return name of the timer."""
         return self._config.get(CONF_NAME)
 
     @property
+    @override
     def icon(self) -> str | None:
         """Return the icon to be used for this entity."""
         return self._config.get(CONF_ICON)
 
     @property
+    @override
     def state(self) -> str:
         """Return the current value of the timer."""
         return self._state
 
     @property
+    @override
     def extra_state_attributes(self) -> dict[str, Any]:
         """Return the state attributes."""
         attrs: dict[str, Any] = {
@@ -261,10 +270,12 @@ class Timer(collection.CollectionEntity, RestoreEntity):
         return attrs
 
     @property
+    @override
     def unique_id(self) -> str | None:
         """Return unique id for the entity."""
         return self._config[CONF_ID]  # type: ignore[no-any-return]
 
+    @override
     async def async_added_to_hass(self) -> None:
         """Call when entity is about to be added to Home Assistant."""
         # If we don't need to restore a previous state or no previous state exists,
@@ -424,6 +435,7 @@ class Timer(collection.CollectionEntity, RestoreEntity):
             EVENT_TIMER_FINISHED, extra_attrs={ATTR_FINISHED_AT: end.isoformat()}
         )
 
+    @override
     async def async_update_config(self, config: ConfigType) -> None:
         """Handle when the config is updated."""
         self._config = config

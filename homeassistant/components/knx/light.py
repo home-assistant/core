@@ -1,6 +1,6 @@
 """Support for KNX light entities."""
 
-from typing import Any, cast
+from typing import Any, cast, override
 
 from propcache.api import cached_property
 from xknx import XKNX
@@ -324,11 +324,13 @@ class _KnxLight(LightEntity):
     _device: XknxLight
 
     @property
+    @override
     def is_on(self) -> bool:
         """Return true if light is on."""
         return bool(self._device.state)
 
     @property
+    @override
     def brightness(self) -> int | None:
         """Return the brightness of this light between 0..255."""
         if self._device.supports_brightness:
@@ -345,6 +347,7 @@ class _KnxLight(LightEntity):
         return None
 
     @property
+    @override
     def rgb_color(self) -> tuple[int, int, int] | None:
         """Return the rgb color value [int, int, int]."""
         if self._device.supports_color:
@@ -360,6 +363,7 @@ class _KnxLight(LightEntity):
         return None
 
     @property
+    @override
     def rgbw_color(self) -> tuple[int, int, int, int] | None:
         """Return the rgbw color value [int, int, int, int]."""
         if self._device.supports_rgbw:
@@ -376,6 +380,7 @@ class _KnxLight(LightEntity):
         return None
 
     @property
+    @override
     def hs_color(self) -> tuple[float, float] | None:
         """Return the hue and saturation color value [float, float]."""
         # Hue is scaled 0..360 int encoded in 1 byte in KNX
@@ -384,6 +389,7 @@ class _KnxLight(LightEntity):
         return self._device.current_hs_color
 
     @property
+    @override
     def xy_color(self) -> tuple[float, float] | None:
         """Return the xy color value [float, float]."""
         if self._device.current_xyy_color is not None:
@@ -391,6 +397,7 @@ class _KnxLight(LightEntity):
         return None
 
     @property
+    @override
     def color_temp_kelvin(self) -> int | None:
         """Return the color temperature in Kelvin."""
         if self._device.supports_color_temperature:
@@ -412,6 +419,7 @@ class _KnxLight(LightEntity):
         return None
 
     @cached_property
+    @override
     def supported_color_modes(self) -> set[ColorMode]:
         """Get supported color modes."""
         color_mode = set()
@@ -437,6 +445,7 @@ class _KnxLight(LightEntity):
                 color_mode.add(ColorMode.ONOFF)
         return color_mode
 
+    @override
     async def async_turn_on(self, **kwargs: Any) -> None:
         """Turn the light on."""
         brightness = kwargs.get(ATTR_BRIGHTNESS)
@@ -547,6 +556,7 @@ class _KnxLight(LightEntity):
                 await set_color(_rgb, None, brightness)
                 return
 
+    @override
     async def async_turn_off(self, **kwargs: Any) -> None:
         """Turn the light off."""
         await self._device.set_off()

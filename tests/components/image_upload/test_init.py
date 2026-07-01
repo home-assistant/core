@@ -34,7 +34,7 @@ async def test_upload_image(
         tempfile.TemporaryDirectory() as tempdir,
         patch.object(hass.config, "path", return_value=tempdir),
     ):
-        assert await async_setup_component(hass, "image_upload", {})
+        assert await async_setup_component(hass, DOMAIN, {})
         ws_client: ClientWebSocketResponse = await hass_ws_client()
         client: ClientSession = await hass_client()
 

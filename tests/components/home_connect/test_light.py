@@ -48,7 +48,7 @@ TEST_HC_APP = "Hood"
 
 
 @pytest.fixture
-def platforms() -> list[str]:
+def platforms() -> list[Platform]:
     """Fixture to specify platforms to test."""
     return [Platform.LIGHT]
 

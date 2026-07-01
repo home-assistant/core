@@ -2,6 +2,7 @@
 
 from datetime import timedelta
 import logging
+from typing import override
 
 from librehardwaremonitor_api import (
     LibreHardwareMonitorClient,
@@ -68,6 +69,7 @@ class LibreHardwareMonitorCoordinator(DataUpdateCoordinator[LibreHardwareMonitor
         }
         self._is_deprecated_version: bool | None = None
 
+    @override
     async def _async_update_data(self) -> LibreHardwareMonitorData:
         try:
             lhm_data = await self._api.get_data()
@@ -94,6 +96,7 @@ class LibreHardwareMonitorCoordinator(DataUpdateCoordinator[LibreHardwareMonitor
 
         return lhm_data
 
+    @override
     async def _async_refresh(
         self,
         log_failures: bool = True,

@@ -4,7 +4,7 @@ import asyncio
 from collections.abc import Mapping
 import logging
 import sys
-from typing import Any
+from typing import Any, override
 
 import httpx
 import ollama
@@ -126,6 +126,7 @@ class OllamaConfigFlow(ConfigFlow, domain=DOMAIN):
 
         return errors
 
+    @override
     async def async_step_user(
         self, user_input: dict[str, Any] | None = None
     ) -> ConfigFlowResult:
@@ -228,6 +229,7 @@ class OllamaConfigFlow(ConfigFlow, domain=DOMAIN):
 
     @classmethod
     @callback
+    @override
     def async_get_supported_subentry_types(
         cls, config_entry: ConfigEntry
     ) -> dict[str, type[ConfigSubentryFlow]]:

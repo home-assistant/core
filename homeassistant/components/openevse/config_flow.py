@@ -1,7 +1,7 @@
 """Config flow for OpenEVSE integration."""
 
 from collections.abc import Mapping
-from typing import Any
+from typing import Any, override
 
 from openevsehttp.__main__ import OpenEVSE
 from openevsehttp.exceptions import AuthenticationError, MissingSerial
@@ -57,6 +57,7 @@ class OpenEVSEConfigFlow(ConfigFlow, domain=DOMAIN):
             return {}, None
         return {}, result.get(CONF_SERIAL)
 
+    @override
     async def async_step_user(
         self, user_input: dict[str, Any] | None = None
     ) -> ConfigFlowResult:
@@ -103,6 +104,7 @@ class OpenEVSEConfigFlow(ConfigFlow, domain=DOMAIN):
             data=data,
         )
 
+    @override
     async def async_step_zeroconf(
         self, discovery_info: zeroconf.ZeroconfServiceInfo
     ) -> ConfigFlowResult:

@@ -1,5 +1,7 @@
 """Support for Tuya number."""
 
+from typing import override
+
 from tuya_device_handlers.definition.number import (
     NumberDefinition,
     get_default_definition,
@@ -596,10 +598,12 @@ class TuyaNumberEntity(TuyaEntity, NumberEntity):
         )
 
     @property
+    @override
     def native_value(self) -> float | None:
         """Return the entity value to represent the entity state."""
         return self._read_wrapper(self._dpcode_wrapper)
 
+    @override
     async def _process_device_update(
         self,
         updated_status_properties: list[str],
@@ -614,6 +618,7 @@ class TuyaNumberEntity(TuyaEntity, NumberEntity):
             self.device, updated_status_properties, dp_timestamps
         )
 
+    @override
     async def async_set_native_value(self, value: float) -> None:
         """Set new value."""
         await self._async_send_wrapper_updates(self._dpcode_wrapper, value)

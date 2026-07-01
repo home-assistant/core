@@ -63,7 +63,7 @@ async def test_setup_entry_auth_failed(
 ) -> None:
     """Test setup with authentication failure."""
     config_entry = MockConfigEntry(
-        domain="watts",
+        domain=DOMAIN,
         unique_id="test-device-id",
         data={
             "device_id": "test-device-id",
@@ -92,7 +92,7 @@ async def test_setup_entry_not_ready(
 ) -> None:
     """Test setup when network is temporarily unavailable."""
     config_entry = MockConfigEntry(
-        domain="watts",
+        domain=DOMAIN,
         unique_id="test-device-id",
         data={
             "device_id": "test-device-id",
@@ -140,7 +140,7 @@ async def test_setup_entry_server_error_5xx(
 ) -> None:
     """Test setup when server returns error."""
     config_entry = MockConfigEntry(
-        domain="watts",
+        domain=DOMAIN,
         unique_id="test-device-id",
         data={
             "device_id": "test-device-id",

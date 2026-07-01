@@ -1,11 +1,10 @@
 """Support for numbers which integrates with other components."""
 
-from typing import TYPE_CHECKING, Any
+from typing import TYPE_CHECKING, Any, override
 
 import voluptuous as vol
 
 from homeassistant.components.number import (
-    ATTR_VALUE,
     DEFAULT_MAX_VALUE,
     DEFAULT_MIN_VALUE,
     DEFAULT_STEP,
@@ -153,6 +152,7 @@ class AbstractTemplateNumber(AbstractTemplateEntity, NumberEntity):
 
         self.add_script(CONF_SET_VALUE, config[CONF_SET_VALUE], name, DOMAIN)
 
+    @override
     async def async_set_native_value(self, value: float) -> None:
         """Set value of the number."""
         if self._attr_assumed_state:
@@ -161,7 +161,7 @@ class AbstractTemplateNumber(AbstractTemplateEntity, NumberEntity):
         if set_value := self._action_scripts.get(CONF_SET_VALUE):
             await self.async_run_script(
                 set_value,
-                run_variables={ATTR_VALUE: value},
+                run_variables={"value": value},
                 context=self._context,
             )
 

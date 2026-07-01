@@ -5,7 +5,7 @@ from collections.abc import Callable, Coroutine, Generator
 from contextlib import contextmanager
 from contextvars import ContextVar
 from functools import wraps
-from typing import Any, Literal, overload
+from typing import Any, Literal, overload, override
 
 from homeassistant.core import ServiceResponse
 from homeassistant.util import dt as dt_util
@@ -43,6 +43,7 @@ class TraceElement:
         self._last_variables = variables_cv.get() or {}
         self.update_variables(variables)
 
+    @override
     def __repr__(self) -> str:
         """Container for trace data."""
         return str(self.as_dict())
@@ -87,13 +88,15 @@ class TraceElement:
         if variables is None:
             variables = {}
         last_variables = self._last_variables
-        variables_cv.set(dict(variables))
-        changed_variables = {
+        # variables is often a ChainMap which is costly to iterate, so flatten
+        # it once and reuse the snapshot for both the baseline and the diff.
+        snapshot = dict(variables)
+        variables_cv.set(snapshot)
+        self._variables = {
             key: value
-            for key, value in variables.items()
+            for key, value in snapshot.items()
             if key not in last_variables or last_variables[key] != value
         }
-        self._variables = changed_variables
 
     def as_dict(self) -> dict[str, Any]:
         """Return dictionary version of this TraceElement."""
@@ -139,26 +142,27 @@ trace_id_cv: ContextVar[tuple[str, str] | None] = ContextVar(
 script_execution_cv: ContextVar[StopReason | None] = ContextVar(
     "script_execution_cv", default=None
 )
-# When set, template errors are recorded on the active TraceElement instead of
-# being logged directly
-record_template_errors_cv: ContextVar[bool] = ContextVar(
-    "record_template_errors_cv", default=False
+# When set, template errors recorded on the active TraceElement are not also
+# logged. Template errors are always recorded in the trace regardless.
+suppress_template_error_logging_cv: ContextVar[bool] = ContextVar(
+    "suppress_template_error_logging_cv", default=False
 )
 
 
 @contextmanager
-def record_template_errors() -> Generator[None]:
-    """Record template errors in the active trace instead of logging them.
+def suppress_template_error_logging() -> Generator[None]:
+    """Suppress logging of template errors that are recorded in the trace.
 
-    Used by consumers such as the subscribe_condition websocket command, which
-    re-evaluate a condition repeatedly and forward template errors to the client
-    via the trace, so the errors don't spam the log.
+    Template errors are always recorded on the active trace element. Consumers
+    such as the subscribe_condition websocket command, which re-evaluate a
+    condition repeatedly and forward template errors to the client via the
+    trace, can use this to also stop the errors from spamming the log.
     """
-    token = record_template_errors_cv.set(True)
+    token = suppress_template_error_logging_cv.set(True)
     try:
         yield
     finally:
-        record_template_errors_cv.reset(token)
+        suppress_template_error_logging_cv.reset(token)
 
 
 def trace_id_set(trace_id: tuple[str, str]) -> None:

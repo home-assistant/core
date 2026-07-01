@@ -7,7 +7,9 @@ from homeassistant.helpers.condition import Condition, make_entity_state_conditi
 from . import ATTR_IS_CLOSED
 from .const import DOMAIN
 
-VALVE_DOMAIN_SPECS = {DOMAIN: DomainSpec(value_source=ATTR_IS_CLOSED)}
+VALVE_DOMAIN_SPECS: dict[str, DomainSpec] = {
+    DOMAIN: DomainSpec(value_source=ATTR_IS_CLOSED),
+}
 
 CONDITIONS: dict[str, type[Condition]] = {
     "is_open": make_entity_state_condition(VALVE_DOMAIN_SPECS, False),

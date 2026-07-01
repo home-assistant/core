@@ -303,7 +303,20 @@ async def test_call_async_migrate_entry(
     )
     mock_platform(hass, "comp.config_flow", None)
 
-    with patch("homeassistant.config_entries.support_entry_unload", return_value=True):
+    class TestFlow(config_entries.ConfigFlow):
+        """Test flow."""
+
+        VERSION = 3
+        MINOR_VERSION = 1
+
+        async def async_step_user(self, user_input=None):
+            """Test user step."""
+            return self.async_create_entry(title="title", data={})
+
+    with (
+        mock_config_flow("comp", TestFlow),
+        patch("homeassistant.config_entries.support_entry_unload", return_value=True),
+    ):
         result = await async_setup_component(hass, "comp", {})
         await hass.async_block_till_done()
     assert result
@@ -337,7 +350,18 @@ async def test_call_async_migrate_entry_failure_false(
     )
     mock_platform(hass, "comp.config_flow", None)
 
-    result = await async_setup_component(hass, "comp", {})
+    class TestFlow(config_entries.ConfigFlow):
+        """Test flow."""
+
+        VERSION = 3
+        MINOR_VERSION = 1
+
+        async def async_step_user(self, user_input=None):
+            """Test user step."""
+            return self.async_create_entry(title="title", data={})
+
+    with mock_config_flow("comp", TestFlow):
+        result = await async_setup_component(hass, "comp", {})
     assert result
     assert len(mock_migrate_entry.mock_calls) == 1
     assert len(mock_setup_entry.mock_calls) == 0
@@ -369,7 +393,18 @@ async def test_call_async_migrate_entry_failure_exception(
     )
     mock_platform(hass, "comp.config_flow", None)
 
-    result = await async_setup_component(hass, "comp", {})
+    class TestFlow(config_entries.ConfigFlow):
+        """Test flow."""
+
+        VERSION = 3
+        MINOR_VERSION = 1
+
+        async def async_step_user(self, user_input=None):
+            """Test user step."""
+            return self.async_create_entry(title="title", data={})
+
+    with mock_config_flow("comp", TestFlow):
+        result = await async_setup_component(hass, "comp", {})
     assert result
     assert len(mock_migrate_entry.mock_calls) == 1
     assert len(mock_setup_entry.mock_calls) == 0
@@ -401,12 +436,66 @@ async def test_call_async_migrate_entry_failure_not_bool(
     )
     mock_platform(hass, "comp.config_flow", None)
 
-    result = await async_setup_component(hass, "comp", {})
+    class TestFlow(config_entries.ConfigFlow):
+        """Test flow."""
+
+        VERSION = 3
+        MINOR_VERSION = 1
+
+        async def async_step_user(self, user_input=None):
+            """Test user step."""
+            return self.async_create_entry(title="title", data={})
+
+    with mock_config_flow("comp", TestFlow):
+        result = await async_setup_component(hass, "comp", {})
     assert result
     assert len(mock_migrate_entry.mock_calls) == 1
     assert len(mock_setup_entry.mock_calls) == 0
     assert entry.state is config_entries.ConfigEntryState.MIGRATION_ERROR
     assert not entry.supports_unload
+
+
+async def test_migrate_from_higher_version_not_supported(
+    hass: HomeAssistant, caplog: pytest.LogCaptureFixture
+) -> None:
+    """Test migration fails when downgrading (higher version to lower version)."""
+    entry = MockConfigEntry(domain="comp", version=2, minor_version=1)
+    entry.add_to_hass(hass)
+    assert not entry.supports_unload
+
+    mock_migrate_entry = AsyncMock(return_value=True)
+    mock_setup_entry = AsyncMock(return_value=True)
+
+    mock_integration(
+        hass,
+        MockModule(
+            "comp",
+            async_setup_entry=mock_setup_entry,
+            async_migrate_entry=mock_migrate_entry,
+        ),
+    )
+    mock_platform(hass, "comp.config_flow", None)
+
+    class TestFlow(config_entries.ConfigFlow):
+        """Test flow."""
+
+        VERSION = 1
+        MINOR_VERSION = 1
+
+        async def async_step_user(self, user_input=None):
+            """Test user step."""
+            return self.async_create_entry(title="title", data={})
+
+    with mock_config_flow("comp", TestFlow):
+        result = await async_setup_component(hass, "comp", {})
+    assert result
+    assert len(mock_migrate_entry.mock_calls) == 0
+    assert len(mock_setup_entry.mock_calls) == 0
+    assert entry.state is config_entries.ConfigEntryState.MIGRATION_ERROR
+    assert (
+        "Config entry Mock Title for comp has version 2 which is higher than the current version 1"
+        in caplog.text
+    )
 
 
 @pytest.mark.parametrize(("major_version", "minor_version"), [(2, 1), (2, 2)])
@@ -5791,6 +5880,36 @@ async def test_setup_raise_auth_failed_from_future_coordinator_update(
     assert entry.state is config_entries.ConfigEntryState.LOADED
     flows = hass.config_entries.flow.async_progress()
     assert len(flows) == 1
+
+
+async def test_setup_raise_auth_failed_without_reauth_flow(
+    hass: HomeAssistant,
+    manager: config_entries.ConfigEntries,
+    caplog: pytest.LogCaptureFixture,
+) -> None:
+    """Test ConfigEntryAuthFailed when the integration has no reauth flow."""
+    entry = MockConfigEntry(title="test_title", domain="test")
+    entry.add_to_hass(hass)
+
+    mock_setup_entry = AsyncMock(
+        side_effect=ConfigEntryAuthFailed("The password is no longer valid")
+    )
+    mock_integration(hass, MockModule("test", async_setup_entry=mock_setup_entry))
+    mock_platform(hass, "test.config_flow", None)
+
+    class NoReauthFlow(config_entries.ConfigFlow):
+        """Config flow without reauth support."""
+
+        VERSION = 1
+
+    with mock_config_flow("test", NoReauthFlow):
+        await manager.async_setup(entry.entry_id)
+        await hass.async_block_till_done()
+
+    assert "could not authenticate: The password is no longer valid" in caplog.text
+    assert entry.state is config_entries.ConfigEntryState.SETUP_ERROR
+    assert entry.reason == "The password is no longer valid"
+    assert len(hass.config_entries.flow.async_progress()) == 0
 
 
 async def test_initialize_and_shutdown(hass: HomeAssistant) -> None:

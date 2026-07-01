@@ -39,7 +39,7 @@
 # name: test_entities[binary_sensor.bedroom_kid_1_buttonon-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'Bedroom kid 1 ButtonOn',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Bedroom kid 1 ButtonOn',
     }),
     'context': <ANY>,
     'entity_id': 'binary_sensor.bedroom_kid_1_buttonon',

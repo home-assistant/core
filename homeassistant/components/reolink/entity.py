@@ -2,8 +2,9 @@
 
 from collections.abc import Callable
 from dataclasses import dataclass
+from typing import override
 
-from reolink_aio.api import DUAL_LENS_MODELS, Chime, Host
+from reolink_aio.api import DUAL_LENS_DUAL_MOTION_MODELS, DUAL_LENS_MODELS, Chime, Host
 
 from homeassistant.core import callback
 from homeassistant.helpers.device_registry import CONNECTION_NETWORK_MAC, DeviceInfo
@@ -22,6 +23,9 @@ class ReolinkEntityDescription(EntityDescription):
     cmd_key: str | None = None
     cmd_id: int | list[int] | None = None
     always_available: bool = False
+    # Whether the entity measures a property of a single lens
+    # of a dual lens camera, instead of the camera as a whole
+    lens_entity: bool = False
 
 
 @dataclass(frozen=True, kw_only=True)
@@ -91,6 +95,7 @@ class ReolinkHostCoordinatorEntity(CoordinatorEntity[ReolinkCoordinator]):
         )
 
     @property
+    @override
     def available(self) -> bool:
         """Return True if entity is available."""
         if self.entity_description.always_available:
@@ -120,6 +125,7 @@ class ReolinkHostCoordinatorEntity(CoordinatorEntity[ReolinkCoordinator]):
             callback_id, self._push_callback, cmd_id
         )
 
+    @override
     async def async_added_to_hass(self) -> None:
         """Entity created."""
         await super().async_added_to_hass()
@@ -136,6 +142,7 @@ class ReolinkHostCoordinatorEntity(CoordinatorEntity[ReolinkCoordinator]):
         # Privacy mode
         self.register_callback(f"{callback_id}_623", 623)
 
+    @override
     async def async_will_remove_from_hass(self) -> None:
         """Entity removed."""
         cmd_key = self.entity_description.cmd_key
@@ -150,6 +157,7 @@ class ReolinkHostCoordinatorEntity(CoordinatorEntity[ReolinkCoordinator]):
 
         await super().async_will_remove_from_hass()
 
+    @override
     async def async_update(self) -> None:
         """Force full update from the generic entity update service."""
         for channel in self._host.api.channels:
@@ -217,7 +225,25 @@ class ReolinkChannelCoordinatorEntity(ReolinkHostCoordinatorEntity):
                 configuration_url=conf_url,
             )
 
+        if (
+            self.entity_description.lens_entity
+            and self._host.api.model in DUAL_LENS_DUAL_MOTION_MODELS
+        ):
+            # Dual lens cameras with separate sensors per lens
+            # use a sub-device per lens
+            parent_dev_id = self._dev_id
+            self._dev_id = f"{self._host.unique_id}_lens{channel}"
+            self._attr_device_info = DeviceInfo(
+                identifiers={(DOMAIN, self._dev_id)},
+                via_device=(DOMAIN, parent_dev_id),
+                name=f"{self._host.api.camera_name(dev_ch)} lens {channel}",
+                model=self._host.api.camera_model(channel),
+                manufacturer=self._host.api.manufacturer,
+                configuration_url=self._conf_url,
+            )
+
     @property
+    @override
     def available(self) -> bool:
         """Return True if entity is available."""
         if self.entity_description.always_available:
@@ -229,12 +255,14 @@ class ReolinkChannelCoordinatorEntity(ReolinkHostCoordinatorEntity):
             and not self._host.api.baichuan.privacy_mode(self._channel)
         )
 
+    @override
     def register_callback(self, callback_id: str, cmd_id: int) -> None:
         """Register callback for TCP push events."""
         self._host.api.baichuan.register_callback(
             callback_id, self._push_callback, cmd_id, self._channel
         )
 
+    @override
     async def async_added_to_hass(self) -> None:
         """Entity created."""
         await super().async_added_to_hass()
@@ -242,6 +270,7 @@ class ReolinkChannelCoordinatorEntity(ReolinkHostCoordinatorEntity):
         if cmd_key is not None:
             self._host.async_register_update_cmd(cmd_key, self._channel)
 
+    @override
     async def async_will_remove_from_hass(self) -> None:
         """Entity removed."""
         cmd_key = self.entity_description.cmd_key
@@ -283,6 +312,7 @@ class ReolinkHostChimeCoordinatorEntity(ReolinkHostCoordinatorEntity):
         )
 
     @property
+    @override
     def available(self) -> bool:
         """Return True if entity is available."""
         return super().available and self._chime.online
@@ -320,6 +350,7 @@ class ReolinkChimeCoordinatorEntity(ReolinkChannelCoordinatorEntity):
         )
 
     @property
+    @override
     def available(self) -> bool:
         """Return True if entity is available."""
         return self._chime.online and super().available

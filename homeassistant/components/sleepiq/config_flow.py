@@ -2,7 +2,7 @@
 
 from collections.abc import Mapping
 import logging
-from typing import Any
+from typing import Any, override
 
 from asyncsleepiq import AsyncSleepIQ, SleepIQLoginException, SleepIQTimeoutException
 import voluptuous as vol
@@ -38,6 +38,7 @@ class SleepIQFlowHandler(ConfigFlow, domain=DOMAIN):
             title=import_data[CONF_USERNAME], data=import_data
         )
 
+    @override
     async def async_step_user(
         self, user_input: dict[str, Any] | None = None
     ) -> ConfigFlowResult:

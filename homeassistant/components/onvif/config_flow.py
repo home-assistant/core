@@ -3,7 +3,7 @@
 from collections.abc import Mapping
 import logging
 from pprint import pformat
-from typing import Any
+from typing import Any, override
 from urllib.parse import urlparse
 
 from onvif.util import is_auth_error, stringify_onvif_error
@@ -111,6 +111,7 @@ class OnvifFlowHandler(ConfigFlow, domain=DOMAIN):
 
     @staticmethod
     @callback
+    @override
     def async_get_options_flow(
         config_entry: ConfigEntry,
     ) -> OnvifOptionsFlowHandler:
@@ -123,6 +124,7 @@ class OnvifFlowHandler(ConfigFlow, domain=DOMAIN):
         self.devices: list[dict[str, Any]] = []
         self.onvif_config: dict[str, Any] = {}
 
+    @override
     async def async_step_user(
         self, user_input: dict[str, Any] | None = None
     ) -> ConfigFlowResult:
@@ -175,6 +177,7 @@ class OnvifFlowHandler(ConfigFlow, domain=DOMAIN):
             description_placeholders=description_placeholders,
         )
 
+    @override
     async def async_step_dhcp(
         self, discovery_info: DhcpServiceInfo
     ) -> ConfigFlowResult:

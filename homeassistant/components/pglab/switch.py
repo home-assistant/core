@@ -1,6 +1,6 @@
 """Switch for PG LAB Electronics."""
 
-from typing import Any
+from typing import Any, override
 
 from pypglab.device import Device as PyPGLabDevice
 from pypglab.relay import Relay as PyPGLabRelay
@@ -60,15 +60,18 @@ class PGLabSwitch(PGLabEntity, SwitchEntity):
 
         self._relay = pglab_relay
 
+    @override
     async def async_turn_on(self, **kwargs: Any) -> None:
         """Turn the device on."""
         await self._relay.turn_on()
 
+    @override
     async def async_turn_off(self, **kwargs: Any) -> None:
         """Turn the device off."""
         await self._relay.turn_off()
 
     @property
+    @override
     def is_on(self) -> bool:
         """Return true if device is on."""
         return self._relay.state

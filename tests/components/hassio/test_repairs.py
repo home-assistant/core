@@ -16,6 +16,7 @@ from aiohasupervisor.models import (
 )
 import pytest
 
+from homeassistant.components.hassio import DOMAIN
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import issue_registry as ir
 from homeassistant.setup import async_setup_component
@@ -64,7 +65,7 @@ async def test_supervisor_issue_repair_flow(
         },
     )
 
-    assert await async_setup_component(hass, "hassio", {})
+    assert await async_setup_component(hass, DOMAIN, {})
 
     repair_issue = issue_registry.async_get_issue(
         domain="hassio", issue_id=issue_uuid.hex
@@ -150,7 +151,7 @@ async def test_supervisor_issue_repair_flow_with_multiple_suggestions(
         },
     )
 
-    assert await async_setup_component(hass, "hassio", {})
+    assert await async_setup_component(hass, DOMAIN, {})
 
     repair_issue = issue_registry.async_get_issue(
         domain="hassio", issue_id=issue_uuid.hex
@@ -249,7 +250,7 @@ async def test_supervisor_issue_repair_flow_with_multiple_suggestions_and_confir
         },
     )
 
-    assert await async_setup_component(hass, "hassio", {})
+    assert await async_setup_component(hass, DOMAIN, {})
 
     repair_issue = issue_registry.async_get_issue(
         domain="hassio", issue_id=issue_uuid.hex
@@ -357,7 +358,7 @@ async def test_supervisor_issue_repair_flow_skip_confirmation(
         },
     )
 
-    assert await async_setup_component(hass, "hassio", {})
+    assert await async_setup_component(hass, DOMAIN, {})
 
     repair_issue = issue_registry.async_get_issue(
         domain="hassio", issue_id=issue_uuid.hex
@@ -436,7 +437,7 @@ async def test_supervisor_issue_ntp_sync_failed_repair_flow(
         },
     )
 
-    assert await async_setup_component(hass, "hassio", {})
+    assert await async_setup_component(hass, DOMAIN, {})
 
     repair_issue = issue_registry.async_get_issue(
         domain="hassio", issue_id=issue_uuid.hex
@@ -516,7 +517,7 @@ async def test_supervisor_issue_ntp_sync_failed_repair_flow_error(
         suggestion_result=SupervisorError("boom"),
     )
 
-    assert await async_setup_component(hass, "hassio", {})
+    assert await async_setup_component(hass, DOMAIN, {})
 
     repair_issue = issue_registry.async_get_issue(
         domain="hassio", issue_id=issue_uuid.hex
@@ -590,7 +591,7 @@ async def test_mount_failed_repair_flow_error(
         suggestion_result=SupervisorError("boom"),
     )
 
-    assert await async_setup_component(hass, "hassio", {})
+    assert await async_setup_component(hass, DOMAIN, {})
 
     repair_issue = issue_registry.async_get_issue(
         domain="hassio", issue_id=issue_uuid.hex
@@ -666,7 +667,7 @@ async def test_mount_failed_repair_flow(
         },
     )
 
-    assert await async_setup_component(hass, "hassio", {})
+    assert await async_setup_component(hass, DOMAIN, {})
 
     repair_issue = issue_registry.async_get_issue(
         domain="hassio", issue_id=issue_uuid.hex
@@ -792,7 +793,7 @@ async def test_supervisor_issue_docker_config_repair_flow(
         },
     )
 
-    assert await async_setup_component(hass, "hassio", {})
+    assert await async_setup_component(hass, DOMAIN, {})
 
     repair_issue = issue_registry.async_get_issue(
         domain="hassio", issue_id=issue1_uuid.hex
@@ -878,7 +879,7 @@ async def test_supervisor_issue_repair_flow_multiple_data_disks(
         },
     )
 
-    assert await async_setup_component(hass, "hassio", {})
+    assert await async_setup_component(hass, DOMAIN, {})
 
     repair_issue = issue_registry.async_get_issue(
         domain="hassio", issue_id=issue_uuid.hex
@@ -989,7 +990,7 @@ async def test_supervisor_issue_detached_addon_removed(
         },
     )
 
-    assert await async_setup_component(hass, "hassio", {})
+    assert await async_setup_component(hass, DOMAIN, {})
 
     repair_issue = issue_registry.async_get_issue(
         domain="hassio", issue_id=issue_uuid.hex
@@ -1083,7 +1084,7 @@ async def test_supervisor_issue_addon_boot_fail(
         },
     )
 
-    assert await async_setup_component(hass, "hassio", {})
+    assert await async_setup_component(hass, DOMAIN, {})
 
     repair_issue = issue_registry.async_get_issue(
         domain="hassio", issue_id=issue_uuid.hex
@@ -1183,7 +1184,7 @@ async def test_supervisor_issue_deprecated_addon(
         },
     )
 
-    assert await async_setup_component(hass, "hassio", {})
+    assert await async_setup_component(hass, DOMAIN, {})
 
     repair_issue = issue_registry.async_get_issue(
         domain="hassio", issue_id=issue_uuid.hex
@@ -1272,7 +1273,7 @@ async def test_supervisor_issue_deprecated_arch_addon(
         },
     )
 
-    assert await async_setup_component(hass, "hassio", {})
+    assert await async_setup_component(hass, DOMAIN, {})
 
     repair_issue = issue_registry.async_get_issue(
         domain="hassio", issue_id=issue_uuid.hex

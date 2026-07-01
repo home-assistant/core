@@ -2,6 +2,7 @@
 
 from datetime import date, datetime
 from decimal import Decimal
+from typing import override
 
 from govee_ble import DeviceClass, SensorUpdate, Units
 from govee_ble.parser import ERROR
@@ -136,6 +137,7 @@ class GoveeBluetoothSensorEntity(
     processor: GoveeBLEPassiveBluetoothDataProcessor[_SensorValueType]
 
     @property
+    @override
     def available(self) -> bool:
         """Return False if sensor is in error."""
         coordinator = self.processor.coordinator
@@ -145,6 +147,7 @@ class GoveeBluetoothSensorEntity(
         )
 
     @property
+    @override
     def native_value(self) -> _SensorValueType:  # pylint: disable=home-assistant-return-type
         """Return the native value."""
         return self.processor.entity_data.get(self.entity_key)
