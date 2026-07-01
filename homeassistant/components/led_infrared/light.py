@@ -75,10 +75,12 @@ class LEDIrLightEntity(LEDIrEntity, InfraredEmitterConsumerEntity, LightEntity):
         """Turn device on."""
         command = self._codes.ON.to_command()
         self._attr_is_on = True
-        if ATTR_EFFECT in kwargs and kwargs[ATTR_EFFECT] in self._attr_effect_list:
-            effect: str = kwargs[ATTR_EFFECT]
+        effect: str | None = kwargs.get(ATTR_EFFECT)
+        if effect and effect in self._attr_effect_list:
+            self._attr_effect = effect
             command = self._codes[effect.upper()].to_command()
-
+        else:
+            self._attr_effect = None
         await self._send_command(command)
         self.async_write_ha_state()
 
