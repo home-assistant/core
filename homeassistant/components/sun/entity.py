@@ -20,13 +20,13 @@ from homeassistant.helpers.entity import Entity
 from homeassistant.helpers.sun import (
     get_astral_observer,
     get_observer_astral_event_next,
-    is_up,
 )
 from homeassistant.util import dt as dt_util
 
 from .const import (
     ELEVATION_ASTRONOMICAL,
     ELEVATION_CIVIL,
+    ELEVATION_HORIZON,
     ELEVATION_NAUTICAL,
     SIGNAL_EVENTS_CHANGED,
     SIGNAL_POSITION_CHANGED,
@@ -162,7 +162,7 @@ class Sun(Entity):
     @override
     def state(self) -> str:
         """Return the state of the sun."""
-        if is_up(self.hass):
+        if self.solar_elevation > ELEVATION_HORIZON:
             return STATE_ABOVE_HORIZON
 
         return STATE_BELOW_HORIZON
