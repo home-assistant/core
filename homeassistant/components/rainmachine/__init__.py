@@ -19,7 +19,11 @@ from homeassistant.const import (
 )
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.exceptions import ConfigEntryNotReady
-from homeassistant.helpers import aiohttp_client, entity_registry as er
+from homeassistant.helpers import (
+    aiohttp_client,
+    config_validation as cv,
+    entity_registry as er,
+)
 from homeassistant.helpers.typing import ConfigType
 from homeassistant.helpers.update_coordinator import UpdateFailed
 from homeassistant.util.network import is_ip_address
@@ -37,6 +41,7 @@ from .const import (
     DATA_RESTRICTIONS_UNIVERSAL,
     DATA_ZONES,
     DEFAULT_ZONE_RUN,
+    DOMAIN,
     LOGGER,
 )
 from .coordinator import RainMachineDataUpdateCoordinator
@@ -57,6 +62,7 @@ PLATFORMS = [
     Platform.UPDATE,
 ]
 
+CONFIG_SCHEMA = cv.config_entry_only_config_schema(DOMAIN)
 
 COORDINATOR_UPDATE_INTERVAL_MAP = {
     DATA_API_VERSIONS: timedelta(minutes=1),
