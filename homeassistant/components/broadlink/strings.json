@@ -52,6 +52,9 @@
     "infrared": {
       "infrared_emitter": {
         "name": "IR emitter"
+      },
+      "infrared_receiver": {
+        "name": "IR receiver"
       }
     },
     "radio_frequency": {

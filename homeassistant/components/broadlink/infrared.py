@@ -1,14 +1,26 @@
 """Infrared platform for Broadlink remotes."""
 
+import asyncio
+from datetime import datetime, timedelta
+import logging
 from typing import TYPE_CHECKING, override
 
-from broadlink.exceptions import BroadlinkException
-from broadlink.remote import pulses_to_data as _bl_pulses_to_data
+from broadlink.exceptions import BroadlinkException, ReadError, StorageError
+from broadlink.remote import (
+    data_to_pulses as _bl_data_to_pulses,
+    pulses_to_data as _bl_pulses_to_data,
+)
 
-from homeassistant.components.infrared import InfraredCommand, InfraredEmitterEntity
+from homeassistant.components.infrared import (
+    InfraredCommand,
+    InfraredEmitterEntity,
+    InfraredReceivedSignal,
+    InfraredReceiverEntity,
+)
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.core import HomeAssistant
+from homeassistant.core import CALLBACK_TYPE, HomeAssistant, callback
 from homeassistant.exceptions import HomeAssistantError
+from homeassistant.helpers.event import async_track_time_interval
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
 from .const import DOMAIN
@@ -17,7 +29,10 @@ from .entity import BroadlinkEntity
 if TYPE_CHECKING:
     from .device import BroadlinkDevice
 
+_LOGGER = logging.getLogger(__name__)
+
 PARALLEL_UPDATES = 1
+LEARNING_POLL_INTERVAL = timedelta(seconds=1)
 
 
 def _timings_to_broadlink_packet(timings: list[int]) -> bytes:
@@ -36,14 +51,19 @@ async def async_setup_entry(
     config_entry: ConfigEntry,
     async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
-    """Set up Broadlink infrared entity."""
+    """Set up Broadlink infrared entities."""
     # Uses legacy hass.data[DOMAIN] pattern
     # pylint: disable-next=home-assistant-use-runtime-data
     device = hass.data[DOMAIN].devices[config_entry.entry_id]
-    async_add_entities([BroadlinkInfraredEntity(device)])
+    async_add_entities(
+        [
+            BroadlinkInfraredEmitterEntity(device),
+            BroadlinkInfraredReceiverEntity(device),
+        ]
+    )
 
 
-class BroadlinkInfraredEntity(BroadlinkEntity, InfraredEmitterEntity):
+class BroadlinkInfraredEmitterEntity(BroadlinkEntity, InfraredEmitterEntity):
     """Broadlink infrared emitter entity."""
 
     _attr_has_entity_name = True
@@ -66,3 +86,94 @@ class BroadlinkInfraredEntity(BroadlinkEntity, InfraredEmitterEntity):
                 translation_key="send_command_failed",
                 translation_placeholders={"error": str(err)},
             ) from err
+
+
+class BroadlinkInfraredReceiverEntity(BroadlinkEntity, InfraredReceiverEntity):
+    """Broadlink infrared receiver entity."""
+
+    _attr_has_entity_name = True
+    _attr_translation_key = "infrared_receiver"
+
+    def __init__(self, device: BroadlinkDevice) -> None:
+        """Initialize the entity."""
+        super().__init__(device)
+        self._attr_unique_id = f"{device.unique_id}-receiver"
+        self._receive_lock = asyncio.Lock()
+        self._unsub_receive: CALLBACK_TYPE | None = None
+
+    @override
+    async def async_added_to_hass(self) -> None:
+        """Set up IR receive polling."""
+        await super().async_added_to_hass()
+        await self._async_enter_learning_mode()
+        if self._unsub_receive is None:
+            self._unsub_receive = async_track_time_interval(
+                self.hass,
+                self._async_poll_received_signal,
+                LEARNING_POLL_INTERVAL,
+            )
+
+    @override
+    async def async_will_remove_from_hass(self) -> None:
+        """Stop IR receive polling."""
+        if self._unsub_receive is not None:
+            self._unsub_receive()
+            self._unsub_receive = None
+        await super().async_will_remove_from_hass()
+
+    async def _async_enter_learning_mode(self) -> None:
+        """Put the device in learning mode to receive the next signal."""
+        try:
+            await self._device.async_request(self._device.api.enter_learning)
+        except (BroadlinkException, OSError) as err:
+            _LOGGER.debug(
+                "Failed to enter learning mode for %s: %s", self.entity_id, err
+            )
+            raise HomeAssistantError(
+                translation_domain=DOMAIN,
+                translation_key="enter_learning_command_failed",
+                translation_placeholders={"error": str(err)},
+            ) from err
+
+    async def _async_poll_received_signal(self, _: datetime) -> None:
+        """Poll Broadlink for an IR packet and dispatch it when available."""
+        if self._receive_lock.locked():
+            return
+
+        async with self._receive_lock:
+            try:
+                await self._async_enter_learning_mode()
+                packet = await self._device.async_request(self._device.api.check_data)
+            except (ReadError, StorageError, BroadlinkException, OSError) as err:
+                _LOGGER.debug(
+                    "Failed to check received data for %s: %s", self.entity_id, err
+                )
+                raise HomeAssistantError(
+                    translation_domain=DOMAIN,
+                    translation_key="receive_command_failed",
+                    translation_placeholders={"error": str(err)},
+                ) from err
+
+            self._handle_received_ir_signal(packet)
+            await self._async_enter_learning_mode()
+
+    @callback
+    def _handle_received_ir_signal(self, packet: bytes) -> None:
+        """Decode a Broadlink IR packet and dispatch it."""
+        try:
+            pulses = _bl_data_to_pulses(packet)
+        except ValueError as err:
+            _LOGGER.debug("Failed to decode infrared signal packet: %s", err)
+            raise HomeAssistantError(
+                translation_domain=DOMAIN,
+                translation_key="decode_signal_failed",
+                translation_placeholders={"error": str(err)},
+            ) from err
+
+        timings = [
+            pulse if index % 2 == 0 else -pulse
+            for index, pulse in enumerate(pulses)
+            if pulse > 0
+        ]
+        if timings:
+            self._handle_received_signal(InfraredReceivedSignal(timings=timings))
