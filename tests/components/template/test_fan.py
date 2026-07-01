@@ -1469,6 +1469,71 @@ async def test_flow_preview(
                 "direction": None,
             },
         ),
+        (
+            STATE_ON,
+            {
+                "is_on": "True",
+            },
+            STATE_UNKNOWN,
+            {
+                "percentage": None,
+                "preset_mode": None,
+                "oscillating": None,
+                "direction": None,
+            },
+        ),
+        (
+            STATE_ON,
+            {
+                "percentage": "0",
+            },
+            STATE_UNKNOWN,
+            {
+                "percentage": None,
+                "preset_mode": None,
+                "oscillating": None,
+                "direction": None,
+            },
+        ),
+        (
+            STATE_ON,
+            {
+                "oscillating": "True",
+            },
+            STATE_UNKNOWN,
+            {
+                "percentage": None,
+                "preset_mode": None,
+                "oscillating": None,
+                "direction": None,
+            },
+        ),
+        (
+            STATE_ON,
+            {
+                "preset_mode": 75,
+            },
+            STATE_UNKNOWN,
+            {
+                "percentage": None,
+                "preset_mode": None,
+                "oscillating": None,
+                "direction": None,
+            },
+        ),
+        (
+            STATE_ON,
+            {
+                "direction": 75,
+            },
+            STATE_UNKNOWN,
+            {
+                "percentage": None,
+                "preset_mode": None,
+                "oscillating": None,
+                "direction": None,
+            },
+        ),
     ],
 )
 async def test_restore_state(
