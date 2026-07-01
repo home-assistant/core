@@ -58,8 +58,8 @@ class SwitcherEntity(CoordinatorEntity[SwitcherDataUpdateCoordinator]):
             error = repr(err)
 
         if error or not response or not response.successful:
-            # Availability is owned by the broadcast stream and coordinator poll,
-            # so surface the failure without marking the entity unavailable.
+            # Availability is driven by the device broadcasts, so surface the
+            # failure without marking the entity unavailable.
             raise HomeAssistantError(
                 f"Call api for {self.name} failed, api: '{api}', "
                 f"args: {args}, response/error: {response or error}"
