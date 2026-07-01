@@ -179,15 +179,10 @@ class OpenAQDataUpdateCoordinator(DataUpdateCoordinator[OpenAQLocationData]):
         async with self._client_lock:
             return await self.hass.async_add_executor_job(target, *args)
 
-    def _raise_update_failed(self, err: Exception, *, first_refresh: bool) -> None:
+    def _raise_update_failed(self, err: Exception) -> None:
         """Raise a translated update failure."""
         if isinstance(err, OPENAQ_AUTH_EXCEPTIONS):
-            if first_refresh:
-                raise ConfigEntryAuthFailed(
-                    translation_domain=DOMAIN,
-                    translation_key="authentication_failed",
-                ) from err
-            raise UpdateFailed(
+            raise ConfigEntryAuthFailed(
                 translation_domain=DOMAIN,
                 translation_key="authentication_failed",
             ) from err
@@ -213,7 +208,7 @@ class OpenAQDataUpdateCoordinator(DataUpdateCoordinator[OpenAQLocationData]):
                     self.client.locations.sensors, self.location_id
                 )
             except Exception as err:  # noqa: BLE001
-                self._raise_update_failed(err, first_refresh=True)
+                self._raise_update_failed(err)
             if not location_response.results:
                 raise UpdateFailed(
                     translation_domain=DOMAIN,
@@ -231,7 +226,7 @@ class OpenAQDataUpdateCoordinator(DataUpdateCoordinator[OpenAQLocationData]):
                     self.client.locations.latest, self.location_id
                 )
             except Exception as err:  # noqa: BLE001
-                self._raise_update_failed(err, first_refresh=False)
+                self._raise_update_failed(err)
 
         measurements = normalize_latest_measurements(latest_response.results, sensors)
         return OpenAQLocationData(

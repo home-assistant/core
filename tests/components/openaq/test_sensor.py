@@ -3,6 +3,7 @@
 from unittest.mock import MagicMock
 
 from openaq import NotAuthorizedError, TimeoutError as OpenAQTimeoutError
+import pytest
 from syrupy.assertion import SnapshotAssertion
 
 from homeassistant.components.openaq.const import (
@@ -10,11 +11,11 @@ from homeassistant.components.openaq.const import (
     OPENAQ_UNIT_MICROGRAMS_PER_CUBIC_METER,
 )
 from homeassistant.components.sensor import SensorDeviceClass, SensorStateClass
+from homeassistant.config_entries import ConfigEntryState
 from homeassistant.const import STATE_UNAVAILABLE, STATE_UNKNOWN
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import device_registry as dr, entity_registry as er
 from homeassistant.helpers.translation import async_get_translations
-from homeassistant.helpers.update_coordinator import UpdateFailed
 
 from . import setup_integration
 from .conftest import LOCATION_ID, make_latest, make_response, make_sensor
@@ -27,11 +28,11 @@ async def async_load_entity_translations(hass: HomeAssistant) -> None:
     await async_get_translations(hass, "en", "entity", [DOMAIN])
 
 
+@pytest.mark.usefixtures("mock_openaq_client")
 async def test_sensor_snapshot(
     hass: HomeAssistant,
     entity_registry: er.EntityRegistry,
     snapshot: SnapshotAssertion,
-    mock_openaq_client: MagicMock,
     mock_config_entry: MockConfigEntry,
 ) -> None:
     """Test OpenAQ sensor snapshots."""
@@ -41,11 +42,11 @@ async def test_sensor_snapshot(
     await snapshot_platform(hass, entity_registry, snapshot, mock_config_entry.entry_id)
 
 
+@pytest.mark.usefixtures("mock_openaq_client")
 async def test_sensor_entities(
     hass: HomeAssistant,
     entity_registry: er.EntityRegistry,
     device_registry: dr.DeviceRegistry,
-    mock_openaq_client: MagicMock,
     mock_config_entry: MockConfigEntry,
 ) -> None:
     """Test OpenAQ sensor entities."""
@@ -143,7 +144,11 @@ async def test_entity_unavailable_on_auth_failure(
     await coordinator.async_refresh()
     await hass.async_block_till_done()
 
-    assert isinstance(coordinator.last_exception, UpdateFailed)
+    assert mock_config_entry.state is ConfigEntryState.LOADED
+    assert any(
+        flow["handler"] == DOMAIN and flow["context"]["source"] == "reauth"
+        for flow in hass.config_entries.flow.async_progress()
+    )
     assert (state := hass.states.get("sensor.del_norte_pm2_5")) is not None
     assert state.state == STATE_UNAVAILABLE
 
