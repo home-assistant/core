@@ -169,7 +169,7 @@ class SecuritySystem(HomeAccessory):
             params[ATTR_CODE] = self._alarm_code
         self.async_call_service(ALARM_CONTROL_PANEL_DOMAIN, service, params)
 
-    def _set_if_valid(self, char: Characteristic, value: int) -> None:
+    def _set_if_valid(self, char: Characteristic, value: int) -> bool:
         """Push value to char, skipping states it doesn't currently advertise.
 
         The characteristic's valid values are frozen from supported_features at
@@ -179,13 +179,16 @@ class SecuritySystem(HomeAccessory):
         would raise ValueError in pyhap, so skip and log instead. A newly-added
         mode stays invisible until the accessory is rebuilt by other means;
         reconciling valid values in place is a separate follow-up.
+
+        Returns True if the value was pushed, False if it was skipped.
         """
         if value in char.properties.get(PROP_VALID_VALUES, {}).values():
             char.set_value(value)
-            return
+            return True
         _LOGGER.debug(
             "%s: Skipping unsupported security state %d", self.entity_id, value
         )
+        return False
 
     @callback
     @override
@@ -203,8 +206,9 @@ class SecuritySystem(HomeAccessory):
         target_state = HASS_TO_HOMEKIT_TARGET.get(hass_state)
         if current_state is None and target_state is None:
             return
-        if current_state is not None:
-            self._set_if_valid(self.char_current_state, current_state)
+        if current_state is not None and self._set_if_valid(
+            self.char_current_state, current_state
+        ):
             _LOGGER.debug(
                 "%s: Updated current state to %s (%d)",
                 self.entity_id,
