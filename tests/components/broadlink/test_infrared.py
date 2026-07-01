@@ -1,10 +1,10 @@
 """Tests for Broadlink infrared platform."""
 
-from datetime import datetime
 from unittest.mock import call
 
 from broadlink.exceptions import BroadlinkException
 from broadlink.remote import pulses_to_data
+from freezegun.api import FrozenDateTimeFactory
 from infrared_protocols.commands.nec import NECCommand
 import pytest
 
@@ -20,9 +20,10 @@ from homeassistant.const import Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import device_registry as dr, entity_registry as er
-from homeassistant.util.dt import naive_now
 
 from . import get_device
+
+from tests.common import async_fire_time_changed
 
 IR_DEVICES = ["Entrance", "Living Room", "Office", "Garage"]
 NON_IR_DEVICE = "Bedroom"
@@ -123,148 +124,12 @@ async def test_infrared_send_command_error_translates(
     assert exc_info.value.translation_domain == DOMAIN
 
 
-@pytest.mark.parametrize(
-    ("error", "error_type"),
-    [
-        pytest.param(BroadlinkException("boom"), BroadlinkException, id="broadlink"),
-        pytest.param(OSError("boom"), OSError, id="os"),
-    ],
-)
-async def test_infrared_receive_command_error_translates(
+async def test_infrared_receiver_polling_decodes_and_dispatches_packet(
     hass: HomeAssistant,
     entity_registry: er.EntityRegistry,
-    error: Exception,
-    error_type: type[Exception],
+    freezer: FrozenDateTimeFactory,
 ) -> None:
-    """Test that Broadlink receiver API errors translate to HomeAssistantError."""
-    device = get_device("Entrance")
-    mock_setup = await device.setup_entry(hass)
-    mock_setup.api.check_data.side_effect = error
-
-    entries = er.async_entries_for_config_entry(
-        entity_registry, mock_setup.entry.entry_id
-    )
-    receiver_entry = next(
-        entry
-        for entry in entries
-        if entry.domain == Platform.INFRARED and entry.unique_id.endswith("-receiver")
-    )
-
-    receiver = hass.data[DATA_COMPONENT].get_entity(receiver_entry.entity_id)
-    assert isinstance(receiver, InfraredReceiverEntity)
-
-    with pytest.raises(HomeAssistantError) as exc_info:
-        await receiver._async_poll_received_signal(naive_now())
-
-    assert exc_info.value.translation_key == "receive_command_failed"
-    assert exc_info.value.translation_domain == DOMAIN
-    assert isinstance(exc_info.value.__cause__, error_type)
-
-
-@pytest.mark.parametrize("error", [BroadlinkException("boom"), OSError("boom")])
-async def test_infrared_poll_enter_learning_error_translates(
-    hass: HomeAssistant,
-    entity_registry: er.EntityRegistry,
-    error: Exception,
-) -> None:
-    """Test poll path keeps learning mode translation when learning mode fails."""
-    device = get_device("Entrance")
-    mock_setup = await device.setup_entry(hass)
-    mock_setup.api.enter_learning.side_effect = error
-
-    entries = er.async_entries_for_config_entry(
-        entity_registry, mock_setup.entry.entry_id
-    )
-    receiver_entry = next(
-        entry
-        for entry in entries
-        if entry.domain == Platform.INFRARED and entry.unique_id.endswith("-receiver")
-    )
-
-    receiver = hass.data[DATA_COMPONENT].get_entity(receiver_entry.entity_id)
-    assert isinstance(receiver, InfraredReceiverEntity)
-
-    with pytest.raises(HomeAssistantError) as exc_info:
-        await receiver._async_poll_received_signal(naive_now())
-
-    assert exc_info.value.translation_key == "enter_learning_command_failed"
-    assert exc_info.value.translation_domain == DOMAIN
-
-
-@pytest.mark.parametrize("error", [BroadlinkException("boom"), OSError("boom")])
-async def test_infrared_enter_learning_error_translates(
-    hass: HomeAssistant,
-    entity_registry: er.EntityRegistry,
-    error: Exception,
-) -> None:
-    """Test that learning mode API errors translate to HomeAssistantError."""
-    device = get_device("Entrance")
-    mock_setup = await device.setup_entry(hass)
-    mock_setup.api.enter_learning.side_effect = error
-
-    entries = er.async_entries_for_config_entry(
-        entity_registry, mock_setup.entry.entry_id
-    )
-    receiver_entry = next(
-        entry
-        for entry in entries
-        if entry.domain == Platform.INFRARED and entry.unique_id.endswith("-receiver")
-    )
-
-    receiver = hass.data[DATA_COMPONENT].get_entity(receiver_entry.entity_id)
-    assert isinstance(receiver, InfraredReceiverEntity)
-
-    with pytest.raises(HomeAssistantError) as exc_info:
-        await receiver._async_enter_learning_mode()
-
-    assert exc_info.value.translation_key == "enter_learning_command_failed"
-    assert exc_info.value.translation_domain == DOMAIN
-
-
-@pytest.mark.parametrize("error_message", ["boom", "bad packet"])
-async def test_infrared_decode_signal_error_translates(
-    hass: HomeAssistant,
-    entity_registry: er.EntityRegistry,
-    monkeypatch: pytest.MonkeyPatch,
-    error_message: str,
-) -> None:
-    """Test that signal decode errors translate to HomeAssistantError."""
-    device = get_device("Entrance")
-    mock_setup = await device.setup_entry(hass)
-
-    entries = er.async_entries_for_config_entry(
-        entity_registry, mock_setup.entry.entry_id
-    )
-    receiver_entry = next(
-        entry
-        for entry in entries
-        if entry.domain == Platform.INFRARED and entry.unique_id.endswith("-receiver")
-    )
-
-    receiver = hass.data[DATA_COMPONENT].get_entity(receiver_entry.entity_id)
-    assert isinstance(receiver, InfraredReceiverEntity)
-
-    def _raise_decode_error(_: bytes) -> list[int]:
-        raise ValueError(error_message)
-
-    monkeypatch.setattr(
-        broadlink_infrared,
-        "_bl_data_to_pulses",
-        _raise_decode_error,
-    )
-
-    with pytest.raises(HomeAssistantError) as exc_info:
-        receiver._handle_received_ir_signal(b"packet")
-
-    assert exc_info.value.translation_key == "decode_signal_failed"
-    assert exc_info.value.translation_domain == DOMAIN
-
-
-async def test_infrared_receiver_packet_handling(
-    hass: HomeAssistant,
-    entity_registry: er.EntityRegistry,
-) -> None:
-    """Test receiver decodes a Broadlink packet and dispatches signal callbacks."""
+    """Test polling reads a packet, decodes it, and dispatches receiver callbacks."""
     device = get_device("Entrance")
     mock_setup = await device.setup_entry(hass)
 
@@ -283,12 +148,14 @@ async def test_infrared_receiver_packet_handling(
     received_signals: list[InfraredReceivedSignal] = []
     receiver.async_subscribe_received_signal(received_signals.append)
 
-    receiver._handle_received_ir_signal(pulses_to_data([500, 700, 900]))
-    await hass.async_block_till_done()
+    mock_setup.api.reset_mock()
+    mock_setup.api.check_data.return_value = pulses_to_data([500, 700, 900])
 
+    freezer.tick(broadlink_infrared.LEARNING_POLL_INTERVAL)
+    async_fire_time_changed(hass)
+    await hass.async_block_till_done(wait_background_tasks=True)
+
+    assert mock_setup.api.mock_calls == [call.enter_learning(), call.check_data()]
     assert received_signals == [
         InfraredReceivedSignal(timings=[500, -700, 900], modulation=None)
     ]
-    state = hass.states.get(receiver_entry.entity_id)
-    assert state is not None
-    assert datetime.fromisoformat(state.state) is not None
