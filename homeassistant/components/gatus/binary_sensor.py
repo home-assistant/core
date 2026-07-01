@@ -52,7 +52,8 @@ class GatusEndpointBinarySensor(
         self._endpoint_key = endpoint_key
 
         self._attr_name = f"{self.endpoint_data['group']} {self.endpoint_data['name']}"
-        self._attr_unique_id = f"{entry.unique_id}_{endpoint_key}"
+
+        self._attr_unique_id = f"{entry.entry_id}_{endpoint_key}"
 
         self._attr_device_info = DeviceInfo(
             identifiers={(DOMAIN, entry.entry_id)},

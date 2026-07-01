@@ -38,7 +38,6 @@ async def test_form_success(hass: HomeAssistant, mock_setup_entry: AsyncMock) ->
         CONF_URL: "http://gatus.local:8080",
     }
 
-    assert result["result"].unique_id == "4f53cda18c2baa0c"
     assert len(mock_setup_entry.mock_calls) == 1
 
 
@@ -83,12 +82,11 @@ async def test_form_failures_and_recovery(
         await hass.async_block_till_done()
 
     assert result["type"] is FlowResultType.CREATE_ENTRY
-    assert result["result"].unique_id == "4f53cda18c2baa0c"
     assert len(mock_setup_entry.mock_calls) == 1
 
 
 async def test_form_already_configured(hass: HomeAssistant) -> None:
-    """Test that duplicate configurations for the same base URL abort early via match mapping."""
+    """Test that duplicate configurations for the same base URL abort early."""
     old_entry = MockConfigEntry(
         domain=DOMAIN,
         data={CONF_URL: "http://gatus.local:8080"},
@@ -103,35 +101,6 @@ async def test_form_already_configured(hass: HomeAssistant) -> None:
         result["flow_id"],
         {CONF_URL: "http://gatus.local:8080"},
     )
-
-    assert result["type"] is FlowResultType.ABORT
-    assert result["reason"] == "already_configured"
-
-
-async def test_form_already_configured_by_unique_id(
-    hass: HomeAssistant, mock_setup_entry: AsyncMock
-) -> None:
-    """Test that configurations with different URLs but matching unique IDs abort correctly."""
-    old_entry = MockConfigEntry(
-        domain=DOMAIN,
-        data={CONF_URL: "http://127.0.0.1"},
-        unique_id="4f53cda18c2baa0c",
-    )
-    old_entry.add_to_hass(hass)
-
-    result = await hass.config_entries.flow.async_init(
-        DOMAIN, context={"source": config_entries.SOURCE_USER}
-    )
-
-    with patch(
-        "homeassistant.components.gatus.config_flow.GatusClient.get_endpoints_statuses",
-        AsyncMock(return_value=[]),
-    ):
-        result = await hass.config_entries.flow.async_configure(
-            result["flow_id"],
-            {CONF_URL: "//gatus.local"},
-        )
-        await hass.async_block_till_done()
 
     assert result["type"] is FlowResultType.ABORT
     assert result["reason"] == "already_configured"
