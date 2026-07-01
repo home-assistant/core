@@ -74,9 +74,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: HomeConnectConfigEntry) 
         await config_entry_auth.async_get_access_token()
     except OAuth2TokenRequestReauthError as err:
         raise ConfigEntryAuthFailed from err
-    except OAuth2TokenRequestError as err:
-        raise ConfigEntryNotReady from err
-    except aiohttp.ClientError as err:
+    except (OAuth2TokenRequestError, aiohttp.ClientError) as err:
         raise ConfigEntryNotReady from err
 
     home_connect_client = HomeConnectClient(config_entry_auth)
