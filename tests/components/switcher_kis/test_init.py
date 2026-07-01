@@ -43,7 +43,7 @@ def _mock_probe_fail():
     )
 
 
-def _mock_probe_success() -> AsyncMock:
+def _mock_probe_success():
     """Patch the coordinator poll so it answers, as if the device is reachable.
 
     Returns the patcher; its ``return_value`` is the mocked api used as an async
