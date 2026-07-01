@@ -268,12 +268,12 @@ def test_normalize_latest_measurements_allows_missing_units() -> None:
     )
 
 
-async def test_update_data_auth_error_is_translated(
+async def test_update_data_auth_error_raises_config_entry_auth_failed(
     hass: HomeAssistant,
     mock_openaq_client: MagicMock,
     mock_config_entry: MockConfigEntry,
 ) -> None:
-    """Test refresh auth errors raise a translated UpdateFailed."""
+    """Test refresh auth errors raise ConfigEntryAuthFailed."""
     coordinator = OpenAQDataUpdateCoordinator(
         hass,
         mock_config_entry,
@@ -285,7 +285,7 @@ async def test_update_data_auth_error_is_translated(
         "Invalid API key"
     )
 
-    with pytest.raises(UpdateFailed) as err:
+    with pytest.raises(ConfigEntryAuthFailed) as err:
         await coordinator._async_update_data()
 
     assert err.value.translation_domain == DOMAIN
