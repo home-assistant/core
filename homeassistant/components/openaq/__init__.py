@@ -34,10 +34,10 @@ async def async_setup_entry(hass: HomeAssistant, entry: OpenAQConfigEntry) -> bo
                 tg.create_task(coordinator.async_config_entry_first_refresh())
     except ExceptionGroup as err:
         await hass.async_add_executor_job(client.close)
-        if (subgroup := err.subgroup(ConfigEntryAuthFailed)) is not None:
-            raise subgroup.exceptions[0] from err
-        if (subgroup := err.subgroup(ConfigEntryNotReady)) is not None:
-            raise subgroup.exceptions[0] from err
+        if (auth_subgroup := err.subgroup(ConfigEntryAuthFailed)) is not None:
+            raise auth_subgroup.exceptions[0] from err
+        if (not_ready_subgroup := err.subgroup(ConfigEntryNotReady)) is not None:
+            raise not_ready_subgroup.exceptions[0] from err
         raise
 
     entry.runtime_data = OpenAQRuntimeData(client=client, coordinators=coordinators)
