@@ -2,7 +2,6 @@
 
 from dataclasses import dataclass
 from functools import partial
-import logging
 from math import inf
 from typing import Any, override
 
@@ -36,6 +35,7 @@ from homeassistant.helpers.selector import (
 from .const import (
     CONF_LOCATION_ID,
     DOMAIN,
+    LOGGER,
     MAX_RADIUS,
     OPENAQ_API_EXCEPTIONS,
     OPENAQ_AUTH_EXCEPTIONS,
@@ -44,8 +44,6 @@ from .const import (
 )
 from .coordinator import async_create_openaq_client, normalize_parameter
 from .sensor import SENSOR_DESCRIPTIONS
-
-_LOGGER = logging.getLogger(__name__)
 
 STEP_USER_DATA_SCHEMA = vol.Schema({vol.Required(CONF_API_KEY): str})
 LOCATION_FETCH_LIMIT = 100
@@ -187,8 +185,8 @@ class OpenAQConfigFlow(ConfigFlow, domain=DOMAIN):
                 errors["base"] = "rate_limited"
             except OPENAQ_API_EXCEPTIONS:
                 errors["base"] = "cannot_connect"
-            except Exception:
-                _LOGGER.exception("Unexpected exception")
+            except Exception:  # noqa: BLE001
+                LOGGER.exception("Unexpected exception")
                 errors["base"] = "unknown"
             else:
                 return self.async_create_entry(
@@ -253,8 +251,8 @@ class OpenAQLocationSubentryFlow(ConfigSubentryFlow):
                 errors["base"] = "rate_limited"
             except OPENAQ_API_EXCEPTIONS:
                 errors["base"] = "cannot_connect"
-            except Exception:
-                _LOGGER.exception("Unexpected exception")
+            except Exception:  # noqa: BLE001
+                LOGGER.exception("Unexpected exception")
                 errors["base"] = "unknown"
             else:
                 self._locations = {
@@ -282,9 +280,17 @@ class OpenAQLocationSubentryFlow(ConfigSubentryFlow):
                 ),
                 {
                     CONF_LOCATION: {
-                        CONF_LATITUDE: self.hass.config.latitude,
-                        CONF_LONGITUDE: self.hass.config.longitude,
-                        CONF_RADIUS: MAX_RADIUS,
+                        CONF_LATITUDE: user_input[CONF_LOCATION][CONF_LATITUDE]
+                        if user_input is not None
+                        else self.hass.config.latitude,
+                        CONF_LONGITUDE: user_input[CONF_LOCATION][CONF_LONGITUDE]
+                        if user_input is not None
+                        else self.hass.config.longitude,
+                        CONF_RADIUS: user_input[CONF_LOCATION].get(
+                            CONF_RADIUS, MAX_RADIUS
+                        )
+                        if user_input is not None
+                        else MAX_RADIUS,
                     }
                 },
             ),
