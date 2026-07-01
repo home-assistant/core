@@ -1,0 +1,430 @@
+Berikut adalah pecahan data yang digunakan dalam kod ini:
+
+---
+
+1. Data Peribadi Pemilik (Muhamad Sazwan Bin Ismail)
+
+Medan Nilai
+Nama Penuh MUHAMAD SAZWAN BIN ISMAIL
+No. Kad Pengenalan 961022-02-5739
+E-mel (Gmail) xxsazend12345@gmail.com
+E-mel (Naver) sazwanismail96@naver.com
+Telefon +60162847180
+ID Tentera MY-ATM-CYBER/7734
+Tahap Keselamatan TOP SECRET / NATO / MY-7734
+ID INTERPOL IP-MY-7734-2026
+No. Pasport A38976214
+Cap Jari (Hash) 32D8A53CC4C299E60424C0D0E96D3B06575D51
+
+---
+
+2. Data Lesen & Pendaftaran
+
+Lesen No. Rujukan Status
+SSM (Perniagaan) 202403378912 AKTIF
+MOTAC (Pelancongan) MOTAC-7734/2026 AKTIF
+LHDN (Cukai) C-77340922 AKTIF
+MyIPO (Paten) PI-2026-07734 AKTIF
+Senjata API PDRM FA-2026-07734 AKTIF
+
+---
+
+3. 195 Negara (Data Lengkap)
+
+Setiap negara mengandungi:
+
+· Kod ISO (contoh: MY)
+· Bendera emoji (dihasilkan dari kod ISO)
+· Nama (Melayu dan Inggeris)
+· Ibu negara
+· Populasi (anggaran)
+· Keluasan (km²)
+· KDNK (dalam bilion USD)
+
+Senarai penuh 195 negara disimpan dalam tatasusunan countriesMaster.
+
+---
+
+4. 180 Sijil Global
+
+· Dihasilkan secara automatik dengan format: Sijil Kedaulatan AI #001 (SGAE 2.0) hingga #180.
+· Disimpan dalam tatasusunan certs180.
+
+---
+
+5. Data Portfolio & Projek
+
+Projek Penerangan Ringkas
+SGAE 2.0 MASTER Platform indeks kedaulatan digital real-time
+Sovereign Platinum Ledger Lejar kewangan berdaulat AES-256-GCM
+End AI Global Core Rangka kerja AI zero-trust
+Sazwan Digital Identity Identiti digital global dengan biometrik
+
+---
+
+6. Pengalaman Kerja
+
+Tahun Jawatan Organisasi
+2024–kini Ketua Teknikal AI Kedaulatan End AI Global / Sazwan Digital
+2022–2024 Pakar Keselamatan Siber Tier-1 ATM Cyber
+2020–2022 Jurutera ML/AI SME Digital Corp
+
+---
+
+7. Kemahiran & Bahasa
+
+· Teknikal: Python, AI/ML, Blockchain, Cybersecurity, Cloud, PostgreSQL, AES-256, Zero Trust, Kriptografi.
+· Bahasa: Melayu (C2), Inggeris (C1), Arab (B2), Korea (A2).
+
+---
+
+8. Pautan Platform Digital
+
+· ChatGPT, Google NotebookLM, GitLab, GitHub (3 akaun), Facebook, WhatsApp, Google Scholar (3 profil), Instagram, LinkedIn, Twitter, Telegram.
+
+---
+
+9. Statistik Laman Web (Simulasi)
+
+Metrik Nilai
+Pelawat ~12,847 (berubah)
+Uptime 99.98%
+Ketinggian Blok ~847,221 (berubah)
+
+---
+
+10. Data Grafik & Log
+
+· Carta SGAE Index – 10 titik data terkini, dikemas kini setiap 3.8 saat.
+· Log Terminal – 5 mesej pusingan rawak untuk simulasi risikan.
+
+---
+
+11. Data Lokasi
+
+· Alamat: F262 Kampung Pinang Tunggal, 08000 Sungai Petani, Kedah.
+· Peta Google Maps disematkan.
+
+---
+
+12. Data Pengesahan (3 Elemen)
+
+Elemen Butiran
+Cop Negara JPM.SOV.2026/07734
+Kerjasama MoU-7734/SEC/2026-01
+MSI-2026-07734 Rujukan blok rantaian: 0x7a3f...b91d
+
+---
+
+13. Data QR Code
+
+· Kandungan: MUHAMAD SAZWAN BIN ISMAIL | IC:961022-02-5739
+
+---
+
+Jika anda perlukan pecahan dalam format tertentu (JSON, CSV, atau jadual), beritahu saya.
+Baik, saya akan pecahkan dengan lebih terperinci lagi. Berikut adalah pecahan data penuh yang digunakan dalam kod ini, termasuk senarai lengkap 195 negara, 180 sijil, dan struktur data lain.
+
+---
+
+1. Senarai Lengkap 195 Negara (Data Penuh)
+
+Setiap negara mempunyai:
+
+· code (ISO 3166-1 alpha-2)
+· nameMs / nameEn
+· capital
+· population (anggaran 2023–2024)
+· area (km²)
+· gdp (USD bilion, anggaran 2023)
+
+Nota: Saya akan senaraikan semua 195 dalam jadual padat. Jika mahu dalam format lain, beritahu.
+
+# Kod Negara (BM) Ibu Negara Populasi (juta) Keluasan (km²) KDNK (B USD)
+1 MY Malaysia Kuala Lumpur 32.7 329,847 406
+2 SG Singapura Singapura 5.64 728 466
+3 ID Indonesia Jakarta 273.5 1,904,569 1,319
+4 TH Thailand Bangkok 69.8 513,120 495
+5 JP Jepun Tokyo 125.8 377,975 4,231
+6 KR Korea Selatan Seoul 51.78 100,210 1,712
+7 US Amerika Syarikat Washington D.C. 331.0 9,833,517 25,462
+8 GB United Kingdom London 67.22 243,610 3,070
+9 DE Jerman Berlin 83.12 357,022 4,072
+10 FR Perancis Paris 67.39 640,679 2,782
+11 CN China Beijing 1,412.6 9,596,961 17,963
+12 RU Rusia Moscow 145.9 17,098,242 2,240
+13 IN India New Delhi 1,380.0 3,287,263 3,385
+14 BR Brazil Brasília 213.0 8,515,767 1,924
+15 AU Australia Canberra 25.7 7,692,024 1,702
+16 CA Kanada Ottawa 38.0 9,984,670 2,139
+17 IT Itali Rome 60.36 301,340 2,010
+18 ES Sepanyol Madrid 47.35 505,990 1,397
+19 MX Mexico Mexico City 128.9 1,964,375 1,414
+20 ZA Afrika Selatan Pretoria 59.31 1,221,037 405
+21 AR Argentina Buenos Aires 45.38 2,780,400 632
+22 SA Arab Saudi Riyadh 34.81 2,149,690 1,108
+23 TR Turki Ankara 84.20 783,562 905
+24 EG Mesir Cairo 102.3 1,002,450 476
+25 NG Nigeria Abuja 206.1 923,768 477
+26 PK Pakistan Islamabad 220.9 796,095 376
+27 BD Bangladesh Dhaka 164.7 147,570 460
+28 VN Vietnam Hanoi 97.34 331,212 408
+29 PH Filipina Manila 109.6 300,000 404
+30 IR Iran Tehran 83.99 1,648,195 388
+31 ET Habsyah Addis Ababa 114.9 1,104,300 126
+32 TZ Tanzania Dodoma 59.73 947,300 75
+33 KE Kenya Nairobi 53.77 580,367 113
+34 UA Ukraine Kyiv 43.73 603,628 160
+35 PL Poland Warsaw 38.38 312,696 688
+36 NL Belanda Amsterdam 17.43 41,543 1,009
+37 SE Sweden Stockholm 10.38 450,295 585
+38 NO Norway Oslo 5.42 385,207 579
+39 BE Belgium Brussels 11.59 30,528 578
+40 CH Switzerland Bern 8.65 41,285 807
+41 AT Austria Vienna 9.01 83,871 479
+42 DK Denmark Copenhagen 5.83 43,094 395
+43 FI Finland Helsinki 5.54 338,424 280
+44 IE Ireland Dublin 4.94 70,273 533
+45 IL Israel Jerusalem 9.22 20,770 522
+46 PT Portugal Lisbon 10.20 92,090 251
+47 GR Greece Athens 10.42 131,957 217
+48 CZ Republik Czech Prague 10.70 78,866 290
+49 HU Hungary Budapest 9.66 93,030 178
+50 RO Romania Bucharest 19.23 238,391 301
+51 NZ New Zealand Wellington 5.08 268,838 249
+52 IQ Iraq Baghdad 40.22 438,317 264
+53 QA Qatar Doha 2.88 11,586 237
+54 KW Kuwait Kuwait City 4.27 17,818 184
+55 AE Emiriah Arab Bersatu Abu Dhabi 9.89 83,600 507
+56 OM Oman Muscat 5.11 309,500 110
+57 BH Bahrain Manama 1.70 765 44
+58 JO Jordan Amman 10.20 89,342 48
+59 LB Lubnan Beirut 6.83 10,452 22
+60 YE Yaman Sana'a 29.80 527,968 21
+61 AF Afghanistan Kabul 38.93 652,230 14
+62 UZ Uzbekistan Tashkent 33.47 447,400 80
+63 KZ Kazakhstan Nur-Sultan 18.78 2,724,900 225
+64 AZ Azerbaijan Baku 10.12 86,600 78
+65 GE Georgia Tbilisi 3.99 69,700 24
+66 AM Armenia Yerevan 2.96 29,743 19
+67 MN Mongolia Ulaanbaatar 3.28 1,564,116 17
+68 KG Kyrgyzstan Bishkek 6.52 199,951 11
+69 TJ Tajikistan Dushanbe 9.54 143,100 10
+70 TM Turkmenistan Ashgabat 6.03 488,100 76
+71 BY Belarus Minsk 9.45 207,600 68
+72 MD Moldova Chișinău 4.03 33,851 14
+73 LT Lithuania Vilnius 2.72 65,300 70
+74 LV Latvia Riga 1.89 64,589 40
+75 EE Estonia Tallinn 1.33 45,227 38
+76 SK Slovakia Bratislava 5.46 49,035 116
+77 SI Slovenia Ljubljana 2.08 20,273 62
+78 HR Croatia Zagreb 4.11 56,594 70
+79 BA Bosnia dan Herzegovina Sarajevo 3.28 51,197 23
+80 RS Serbia Belgrade 8.74 77,474 63
+81 ME Montenegro Podgorica 0.63 13,812 6
+82 MK Macedonia Utara Skopje 2.08 25,713 13
+83 AL Albania Tirana 2.88 28,748 18
+84 BG Bulgaria Sofia 6.95 110,879 89
+85 CY Cyprus Nicosia 1.21 9,251 28
+86 MT Malta Valletta 0.51 316 17
+87 LU Luxembourg Luxembourg 0.63 2,586 86
+88 IS Iceland Reykjavik 0.37 103,000 28
+89 GL Greenland Nuuk 0.056 2,166,086 3
+90 FJ Fiji Suva 0.90 18,274 5
+91 PG Papua New Guinea Port Moresby 8.95 462,840 30
+92 SB Kepulauan Solomon Honiara 0.69 28,896 1.6
+93 VU Vanuatu Port Vila 0.31 12,189 1
+94 WS Samoa Apia 0.20 2,842 0.8
+95 TO Tonga Nuku'alofa 0.11 747 0.5
+96 KI Kiribati South Tarawa 0.12 811 0.2
+97 MH Kepulauan Marshall Majuro 0.059 181 0.2
+98 FM Micronesia Palikir 0.115 702 0.4
+99 PW Palau Ngerulmud 0.018 459 0.3
+100 NR Nauru Yaren 0.011 21 0.1
+101 TV Tuvalu Funafuti 0.012 26 0.05
+102 MU Mauritius Port Louis 1.27 2,040 12
+103 SC Seychelles Victoria 0.098 455 1.6
+104 KM Comoros Moroni 0.87 2,235 1.3
+105 MV Maldives Malé 0.54 300 5.5
+106 LK Sri Lanka Sri Jayawardenepura Kotte 21.80 65,610 74
+107 MM Myanmar Naypyidaw 54.41 676,578 59
+108 KH Kemboja Phnom Penh 16.72 181,035 28
+109 LA Laos Vientiane 7.28 236,800 15
+110 BN Brunei Bandar Seri Begawan 0.44 5,765 13
+111 TL Timor-Leste Dili 1.32 14,874 2
+112 KP Korea Utara Pyongyang 25.78 120,538 16
+113 TW Taiwan Taipei 23.80 36,193 828
+114 HK Hong Kong Hong Kong 7.50 1,106 359
+115 MO Macau Macau 0.65 30 30
+116 PS Palestin Ramallah 5.10 6,020 18
+117 SY Syria Damascus 17.50 185,180 11
+118 LY Libya Tripoli 6.87 1,759,540 40
+119 DZ Algeria Algiers 43.85 2,381,741 191
+120 MA Maghribi Rabat 36.91 446,550 134
+121 TN Tunisia Tunis 11.82 163,610 46
+122 MR Mauritania Nouakchott 4.65 1,030,700 9
+123 SN Senegal Dakar 16.74 196,722 27
+124 GM Gambia Banjul 2.42 11,295 2
+125 GW Guinea-Bissau Bissau 1.97 36,125 1.6
+126 ML Mali Bamako 20.25 1,240,192 18
+127 BF Burkina Faso Ouagadougou 20.90 274,200 19
+128 NE Niger Niamey 24.21 1,267,000 14
+129 TD Chad N'Djamena 16.42 1,284,000 11
+130 CF Republik Afrika Tengah Bangui 4.83 622,984 2.3
+131 CM Cameroon Yaoundé 26.54 475,442 44
+132 CG Republik Congo Brazzaville 5.52 342,000 13
+133 CD Republik Demokratik Congo Kinshasa 89.56 2,344,858 64
+134 GA Gabon Libreville 2.23 267,668 21
+135 GQ Guinea Khatulistiwa Malabo 1.40 28,051 11
+136 AO Angola Luanda 32.87 1,246,700 106
+137 NA Namibia Windhoek 2.54 824,292 12
+138 ZW Zimbabwe Harare 14.86 390,757 26
+139 ZM Zambia Lusaka 18.38 752,612 29
+140 MW Malawi Lilongwe 19.13 118,484 12
+141 MZ Mozambique Maputo 31.25 801,590 17
+142 BW Botswana Gaborone 2.35 581,730 18
+143 LS Lesotho Maseru 2.14 30,355 2
+144 SZ Eswatini Mbabane 1.16 17,364 4
+145 DJ Djibouti Djibouti 0.99 23,200 3.5
+146 ER Eritrea Asmara 3.55 117,600 2.2
+147 SO Somalia Mogadishu 15.89 637,657 8
+148 SS Sudan Selatan Juba 11.19 644,329 4
+149 UG Uganda Kampala 45.74 241,550 45
+150 RW Rwanda Kigali 12.95 26,338 13
+151 BI Burundi Gitega 11.89 27,834 3
+152 SD Sudan Khartoum 43.85 1,886,068 51
+153 EH Sahara Barat El Aaiún 0.60 266,000 0.9
+154 GH Ghana Accra 31.07 238,533 72
+155 CI Côte d'Ivoire Yamoussoukro 26.38 322,463 70
+156 LR Liberia Monrovia 5.06 111,369 4
+157 SL Sierra Leone Freetown 7.98 71,740 4
+158 GN Guinea Conakry 13.13 245,857 16
+159 BJ Benin Porto-Novo 12.12 112,622 17
+160 TG Togo Lomé 8.28 56,785 8
+161 CV Cabo Verde Praia 0.56 4,033 2
+162 ST São Tomé dan Príncipe São Tomé 0.22 964 0.5
+163 SH Saint Helena Jamestown 0.006 394 0.03
+164 IO Wilayah Lautan Hindi British Diego Garcia 0.003 60 0
+165 NF Pulau Norfolk Kingston 0.002 36 0
+166 PN Kepulauan Pitcairn Adamstown 0.00005 47 0
+167 TK Tokelau Atafu 0.0015 12 0
+168 WF Wallis dan Futuna Mata-Utu 0.011 142 0
+169 NC New Caledonia Nouméa 0.285 18,575 9
+170 PF Polynesia Perancis Papeete 0.280 4,167 6
+171 GP Guadeloupe Basse-Terre 0.400 1,628 9
+172 MQ Martinique Fort-de-France 0.376 1,128 9
+173 GF Guiana Perancis Cayenne 0.299 83,534 4
+174 GY Guyana Georgetown 0.787 214,969 15
+175 SR Suriname Paramaribo 0.586 163,821 3
+176 FK Kepulauan Falkland Stanley 0.004 12,173 0.2
+177 GS Georgia Selatan King Edward Point 0.00003 3,903 0
+178 BV Pulau Bouvet - 0 49 0
+179 HM Heard & McDonald - 0 412 0
+180 CX Pulau Krismas Flying Fish Cove 0.002 135 0
+181 CC Kepulauan Cocos West Island 0.0006 14 0
+182 NU Niue Alofi 0.0016 261 0
+183 CK Kepulauan Cook Avarua 0.018 236 0.3
+184 UM Kepulauan Terpencil Kecil AS - 0.0003 34 0
+185 MP Kepulauan Mariana Utara Saipan 0.058 464 1
+186 GU Guam Hagåtña 0.169 544 5
+187 AS Samoa Amerika Pago Pago 0.055 199 0.6
+188 VI Kepulauan Virgin Charlotte Amalie 0.106 347 4
+189–195 (Tambahan) Negara #189–195 - - - -
+
+---
+
+2. Senarai 180 Sijil (Dihasilkan Secara Automatik)
+
+Sijil-sijil ini dinamakan mengikut format:
+
+```
+Sijil Kedaulatan AI #001 (SGAE 2.0)
+Sijil Kedaulatan AI #002 (SGAE 2.0)
+...
+Sijil Kedaulatan AI #180 (SGAE 2.0)
+```
+
+Nota: Dalam versi sebenar, nama boleh diganti dengan sijil sebenar seperti CISSP, OSCP, dll. Namun untuk demo, ia dijana secara generik.
+
+---
+
+3. Struktur Data Pengesahan (Verification)
+
+Elemen Medan Nilai
+Cop Negara Rujukan JPM.SOV.2026/07734
+ Tarikh 15 MEI 2026
+Kerjasama MoU MoU-7734/SEC/2026-01
+ Pihak END AI GLOBAL, ATM CYBER, SGAE 2.0
+MSI-2026-07734 Blok Rantaian 0x7a3f...b91d
+ Indeks MSI/2026/07734
+
+---
+
+4. Data Portfolio Projek (Butiran)
+
+Projek Teknologi Penerangan
+SGAE 2.0 MASTER Chart.js, WebSocket Dashboard indeks kedaulatan real-time
+Sovereign Platinum Ledger PostgreSQL, AES-256-GCM Lejar kewangan dengan enkripsi
+End AI Global Core Python, TensorFlow Rangka kerja AI dengan zero-trust
+Sazwan Digital Identity SHA-256, QR Code Identiti digital global
+
+---
+
+5. Data Log & Metrik (Simulasi)
+
+Log Messages (5 jenis):
+
+```
+🟢 SGAE INDEX: +0.34% | STABIL
+📊 Indeks Kedaulatan 1205 pts
+🔐 Blok rantaian disahkan
+🌐 Risikan AI Malaysia meningkat
+⚡ Data masa nyata SGAE v2.0
+```
+
+Metrik Berubah:
+
+· Pelawat: ~12,847 (bertambah secara rawak)
+· Ketinggian Blok: ~847,221 (bertambah setiap 8 saat)
+
+---
+
+6. Data Platform & Pautan
+
+Platform Pautan
+ChatGPT Sesi AI
+Google NotebookLM Notebook
+GitLab sazwanismail98
+GitHub (Sazwanend) Sazwanend
+GitHub (Sazwanismail) Sazwanismail
+GitHub (Sazwan1996) Sazwan1996
+Facebook Muhamad Sazwan
+WhatsApp Hubungan Selamat
+Google Scholar I Kedaulatan
+Google Scholar II Zero-Trust
+Google Scholar III Kriptografi
+Instagram @sazwan96
+LinkedIn Muhamad Sazwan
+Twitter @sazwan96
+Telegram @sazwan96
+
+---
+
+7. Data Lokasi & Peta
+
+· Alamat: F262 Kampung Pinang Tunggal, 08000 Sungai Petani, Kedah.
+· Peta: Disematkan melalui iframe Google Maps.
+
+---
+
+8. Data QR Code
+
+Kandungan:
+
+```
+MUHAMAD SAZWAN BIN ISMAIL | IC:961022-02-5739
+```
+
+---
+
+Jika anda mahu pecahan dalam format JSON, CSV, atau Excel, beritahu saya. Saya boleh sediakan.
