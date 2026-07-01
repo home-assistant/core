@@ -7,7 +7,6 @@ from unittest.mock import MagicMock, patch
 from openaq import NotAuthorizedError, OpenAQ, ServerError
 import pytest
 
-from homeassistant import const as ha_const
 from homeassistant.components.openaq.const import CONF_LOCATION_ID, DOMAIN
 from homeassistant.components.openaq.coordinator import (
     OpenAQDataUpdateCoordinator,
@@ -19,7 +18,7 @@ from homeassistant.components.openaq.coordinator import (
     normalize_sensor_metadata,
 )
 from homeassistant.config_entries import ConfigSubentryDataWithId
-from homeassistant.const import CONF_API_KEY
+from homeassistant.const import CONF_API_KEY, UnitOfDensity
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ConfigEntryAuthFailed
 from homeassistant.helpers.update_coordinator import UpdateFailed
@@ -189,7 +188,7 @@ def test_normalize_latest_measurements() -> None:
             "pm25": OpenAQMeasurement(
                 parameter="pm25",
                 value=8.5,
-                unit=ha_const.CONCENTRATION_MICROGRAMS_PER_CUBIC_METER,
+                unit=UnitOfDensity.MICROGRAMS_PER_CUBIC_METER,
             ),
         }
     )
@@ -208,11 +207,11 @@ def test_normalize_sensor_metadata() -> None:
         {
             "pm25": OpenAQSensorMetadata(
                 parameter="pm25",
-                unit=ha_const.CONCENTRATION_MICROGRAMS_PER_CUBIC_METER,
+                unit=UnitOfDensity.MICROGRAMS_PER_CUBIC_METER,
             ),
             "pm10": OpenAQSensorMetadata(
                 parameter="pm10",
-                unit=ha_const.CONCENTRATION_MICROGRAMS_PER_CUBIC_METER,
+                unit=UnitOfDensity.MICROGRAMS_PER_CUBIC_METER,
             ),
         }
     )
@@ -221,9 +220,9 @@ def test_normalize_sensor_metadata() -> None:
 @pytest.mark.parametrize(
     ("unit", "expected_unit"),
     [
-        ("μg/m³", ha_const.CONCENTRATION_MICROGRAMS_PER_CUBIC_METER),
-        ("mg/m³", ha_const.CONCENTRATION_MILLIGRAMS_PER_CUBIC_METER),
-        ("mg/m3", ha_const.CONCENTRATION_MILLIGRAMS_PER_CUBIC_METER),
+        ("μg/m³", UnitOfDensity.MICROGRAMS_PER_CUBIC_METER),
+        ("mg/m³", UnitOfDensity.MILLIGRAMS_PER_CUBIC_METER),
+        ("mg/m3", UnitOfDensity.MILLIGRAMS_PER_CUBIC_METER),
     ],
 )
 def test_normalize_latest_measurements_normalizes_unit_aliases(

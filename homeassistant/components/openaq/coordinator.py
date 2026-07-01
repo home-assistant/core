@@ -10,8 +10,8 @@ from typing import NoReturn, TypeVar, override
 from openaq import OpenAQ
 from openaq.core.responses import Latest, Location, Parameter, ParameterBase, Sensor
 
-from homeassistant import const as ha_const
 from homeassistant.config_entries import ConfigEntry, ConfigSubentry
+from homeassistant.const import UnitOfDensity
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ConfigEntryAuthFailed
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
@@ -22,14 +22,14 @@ UPDATE_INTERVAL = timedelta(minutes=10)
 _T = TypeVar("_T")
 
 OPENAQ_UNIT_ALIASES = {
-    "µg/m³": ha_const.CONCENTRATION_MICROGRAMS_PER_CUBIC_METER,
-    "µg/m3": ha_const.CONCENTRATION_MICROGRAMS_PER_CUBIC_METER,
-    "ug/m³": ha_const.CONCENTRATION_MICROGRAMS_PER_CUBIC_METER,
-    "ug/m3": ha_const.CONCENTRATION_MICROGRAMS_PER_CUBIC_METER,
-    "μg/m³": ha_const.CONCENTRATION_MICROGRAMS_PER_CUBIC_METER,
-    "μg/m3": ha_const.CONCENTRATION_MICROGRAMS_PER_CUBIC_METER,
-    "mg/m³": ha_const.CONCENTRATION_MILLIGRAMS_PER_CUBIC_METER,
-    "mg/m3": ha_const.CONCENTRATION_MILLIGRAMS_PER_CUBIC_METER,
+    "µg/m³": UnitOfDensity.MICROGRAMS_PER_CUBIC_METER,
+    "µg/m3": UnitOfDensity.MICROGRAMS_PER_CUBIC_METER,
+    "ug/m³": UnitOfDensity.MICROGRAMS_PER_CUBIC_METER,
+    "ug/m3": UnitOfDensity.MICROGRAMS_PER_CUBIC_METER,
+    "μg/m³": UnitOfDensity.MICROGRAMS_PER_CUBIC_METER,
+    "μg/m3": UnitOfDensity.MICROGRAMS_PER_CUBIC_METER,
+    "mg/m³": UnitOfDensity.MILLIGRAMS_PER_CUBIC_METER,
+    "mg/m3": UnitOfDensity.MILLIGRAMS_PER_CUBIC_METER,
 }
 
 
