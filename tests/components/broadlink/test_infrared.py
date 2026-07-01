@@ -143,7 +143,7 @@ async def test_infrared_receiver_polling_decodes_and_dispatches_packet(
 
     received_signals: list[InfraredReceivedSignal] = []
     async_subscribe_receiver(hass, receiver_entry.entity_id, received_signals.append)
-    await hass.async_block_till_done(wait_background_tasks=True)
+    await hass.async_block_till_done()
 
     mock_setup.api.reset_mock()
     mock_setup.api.check_data.return_value = data_to_pulses(
@@ -152,7 +152,7 @@ async def test_infrared_receiver_polling_decodes_and_dispatches_packet(
 
     freezer.tick(broadlink_infrared.LEARNING_POLL_INTERVAL)
     async_fire_time_changed(hass)
-    await hass.async_block_till_done(wait_background_tasks=True)
+    await hass.async_block_till_done()
 
     assert mock_setup.api.mock_calls == [call.enter_learning(), call.check_data()]
     assert received_signals == [
@@ -184,7 +184,7 @@ async def test_infrared_receiver_polling_starts_on_subscribe_and_stops_on_unsubs
 
     freezer.tick(broadlink_infrared.LEARNING_POLL_INTERVAL)
     async_fire_time_changed(hass)
-    await hass.async_block_till_done(wait_background_tasks=True)
+    await hass.async_block_till_done()
     assert mock_setup.api.mock_calls == []
 
     received_signals: list[InfraredReceivedSignal] = []
@@ -193,12 +193,12 @@ async def test_infrared_receiver_polling_starts_on_subscribe_and_stops_on_unsubs
         receiver_entry.entity_id,
         received_signals.append,
     )
-    await hass.async_block_till_done(wait_background_tasks=True)
+    await hass.async_block_till_done()
 
     mock_setup.api.reset_mock()
     freezer.tick(broadlink_infrared.LEARNING_POLL_INTERVAL)
     async_fire_time_changed(hass)
-    await hass.async_block_till_done(wait_background_tasks=True)
+    await hass.async_block_till_done()
 
     assert mock_setup.api.mock_calls == [call.enter_learning(), call.check_data()]
     assert received_signals == [
@@ -206,10 +206,10 @@ async def test_infrared_receiver_polling_starts_on_subscribe_and_stops_on_unsubs
     ]
 
     unsub()
-    await hass.async_block_till_done(wait_background_tasks=True)
+    await hass.async_block_till_done()
     mock_setup.api.reset_mock()
 
     freezer.tick(broadlink_infrared.LEARNING_POLL_INTERVAL)
     async_fire_time_changed(hass)
-    await hass.async_block_till_done(wait_background_tasks=True)
+    await hass.async_block_till_done()
     assert mock_setup.api.mock_calls == []
