@@ -1,4 +1,4 @@
-"""Test motion conditions."""
+"""Test button conditions."""
 
 import pytest
 

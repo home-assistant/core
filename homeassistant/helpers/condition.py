@@ -1180,8 +1180,8 @@ class EntityDatetimeConditionBase(EntityConditionBase):
 
     _schema = DATETIME_CONDITION_SCHEMA
 
-    def __init__(self, hass: HomeAssistant, config: ConditionConfig) -> None:
-        """Initialize the numerical condition."""
+def __init__(self, hass: HomeAssistant, config: ConditionConfig) -> None:
+        """Initialize the datetime condition."""
         super().__init__(hass, config)
         if TYPE_CHECKING:
             assert config.options is not None
@@ -1200,7 +1200,7 @@ class EntityDatetimeConditionBase(EntityConditionBase):
         """Check if an entity should participate in any/all checks.
 
         For timestamp entities, only exclude unavailable, as unknown means
-        'never occured'.
+        'never occurred'.
         """
         return _state.state != STATE_UNAVAILABLE
 
