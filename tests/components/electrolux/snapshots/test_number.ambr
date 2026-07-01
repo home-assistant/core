@@ -160,7 +160,7 @@
     'supported_features': 0,
     'translation_key': 'light_color',
     'unique_id': '999008105_00:99010299-443E074B7A6E_light_color',
-    'unit_of_measurement': '%',
+    'unit_of_measurement': None,
   })
 # ---
 # name: test_number[number.ceiling_hood_light_color_temperature-state]
@@ -171,7 +171,6 @@
       'min': 0.0,
       'mode': <NumberMode.AUTO: 'auto'>,
       'step': 1.0,
-      'unit_of_measurement': '%',
     }),
     'context': <ANY>,
     'entity_id': 'number.ceiling_hood_light_color_temperature',
@@ -220,7 +219,7 @@
     'supported_features': 0,
     'translation_key': 'light_intensity',
     'unique_id': '999008105_00:99010299-443E074B7A6E_light_intensity',
-    'unit_of_measurement': '%',
+    'unit_of_measurement': None,
   })
 # ---
 # name: test_number[number.ceiling_hood_light_intensity-state]
@@ -231,7 +230,6 @@
       'min': 0.0,
       'mode': <NumberMode.AUTO: 'auto'>,
       'step': 1.0,
-      'unit_of_measurement': '%',
     }),
     'context': <ANY>,
     'entity_id': 'number.ceiling_hood_light_intensity',

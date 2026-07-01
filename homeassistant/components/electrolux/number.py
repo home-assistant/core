@@ -26,13 +26,15 @@ from homeassistant.components.number import (
     NumberEntity,
     NumberEntityDescription,
 )
-from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import UnitOfTemperature
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
-from homeassistant.util.unit_conversion import TemperatureConverter
+from homeassistant.util.unit_conversion import (
+    TemperatureConverter,
+    TemperatureDeltaConverter,
+)
 
-from .coordinator import ElectroluxDataUpdateCoordinator
+from .coordinator import ElectroluxConfigEntry, ElectroluxDataUpdateCoordinator
 from .entity import ElectroluxBaseEntity
 from .entity_helper import async_setup_entities_helper
 from .util import (
@@ -190,7 +192,6 @@ HOOD_NUMBERS: tuple[ElectroluxNumberDescription[HDAppliance], ...] = (
     ElectroluxNumberDescription(
         key="light_color",
         translation_key="light_color",
-        native_unit_of_measurement="%",
         exists_fn=lambda appliance: appliance.is_feature_supported(
             LIGHT_COLOR_TEMPERATURE
         ),
@@ -205,7 +206,6 @@ HOOD_NUMBERS: tuple[ElectroluxNumberDescription[HDAppliance], ...] = (
     ElectroluxNumberDescription(
         key="light_intensity",
         translation_key="light_intensity",
-        native_unit_of_measurement="%",
         exists_fn=lambda appliance: appliance.is_feature_supported(LIGHT_INTENSITY),
         value_fn=lambda appliance: appliance.get_current_light_intensity(),
         min_fn=lambda appliance: appliance.get_min_light_intensity(),
@@ -219,7 +219,8 @@ HOOD_NUMBERS: tuple[ElectroluxNumberDescription[HDAppliance], ...] = (
 
 
 def build_entities_for_appliance(
-    appliance_data, coordinators
+    appliance_data: ApplianceData,
+    coordinators: dict[str, ElectroluxDataUpdateCoordinator],
 ) -> list[ElectroluxBaseEntity]:
     """Return all entities for a single appliance."""
     appliance = appliance_data.appliance
@@ -272,7 +273,7 @@ def build_entities_for_appliance(
 
 async def async_setup_entry(
     hass: HomeAssistant,
-    entry: ConfigEntry,
+    entry: ElectroluxConfigEntry,
     async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up Number entity for Electrolux Integration."""
@@ -416,7 +417,7 @@ class ElectroluxTemperatureNumber[T: OVAppliance](ElectroluxBaseNumber[T]):
     def _get_step(self) -> float:
         temp_unit = self._get_temperature_unit()
         step = self.entity_description.step_fn(self._appliance_data)
-        return TemperatureConverter.convert_interval(
+        return TemperatureDeltaConverter.convert(
             step, temp_unit, UnitOfTemperature.CELSIUS
         )
 
@@ -494,7 +495,7 @@ class ElectroluxSubmoduleTemperatureNumber[T: CRAppliance | SOAppliance](
     def _get_step(self) -> float:
         temp_unit = self._get_temperature_unit()
         step = self.entity_description.step_fn(self._appliance_data, self._submodule)
-        return TemperatureConverter.convert_interval(
+        return TemperatureDeltaConverter.convert(
             step, temp_unit, UnitOfTemperature.CELSIUS
         )
 
