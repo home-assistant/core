@@ -22,8 +22,11 @@ from .consts import (
     DUMMY_DEVICE_ID10,
     DUMMY_HEATER_DEVICE,
     DUMMY_IP_ADDRESS1,
+    DUMMY_LIGHT_DEVICE,
     DUMMY_PLUG_DEVICE,
+    DUMMY_SHUTTER_DEVICE,
     DUMMY_SWITCHER_DEVICES,
+    DUMMY_THERMOSTAT_DEVICE,
     DUMMY_TOKEN as TOKEN,
     DUMMY_USERNAME as USERNAME,
 )
@@ -40,8 +43,12 @@ def _mock_probe_fail():
     )
 
 
-def _mock_probe_success():
-    """Patch the coordinator poll so it answers, as if the device is reachable."""
+def _mock_probe_success() -> AsyncMock:
+    """Patch the coordinator poll so it answers, as if the device is reachable.
+
+    Returns the patcher; its ``return_value`` is the mocked api used as an async
+    context manager, so tests can assert which ``get_*_state`` call was made.
+    """
     api = AsyncMock()
     api.__aenter__.return_value = api
     api.__aexit__.return_value = False
@@ -188,6 +195,41 @@ async def test_poll_on_silence_keeps_available(
         entity_id = f"switch.{slugify(device.name)}"
         state = hass.states.get(entity_id)
         assert state.state != STATE_UNAVAILABLE
+
+
+@pytest.mark.parametrize(
+    ("device", "probe_method"),
+    [
+        (DUMMY_THERMOSTAT_DEVICE, "get_breeze_state"),
+        (DUMMY_SHUTTER_DEVICE, "get_shutter_state"),
+        (DUMMY_LIGHT_DEVICE, "get_light_state"),
+        (DUMMY_HEATER_DEVICE, "get_heater_state"),
+        (DUMMY_PLUG_DEVICE, "get_state"),
+    ],
+)
+async def test_poll_uses_category_probe(
+    hass: HomeAssistant,
+    mock_bridge,
+    freezer: FrozenDateTimeFactory,
+    device,
+    probe_method: str,
+) -> None:
+    """Test the poll reads state with the api call for the device category."""
+    entry = await init_integration(hass, USERNAME, TOKEN)
+    assert mock_bridge
+
+    mock_bridge.mock_callbacks([device])
+    await hass.async_block_till_done()
+    assert len(entry.runtime_data) == 1
+
+    with _mock_probe_success() as mock_api:
+        freezer.tick(timedelta(seconds=MAX_UPDATE_INTERVAL_SEC + 1))
+        async_fire_time_changed(hass)
+        await hass.async_block_till_done()
+
+    api = mock_api.return_value.__aenter__.return_value
+    getattr(api, probe_method).assert_awaited_once_with()
+    assert entry.runtime_data[device.device_id].last_update_success is True
 
 
 async def test_poll_does_not_clobber_broadcast(
