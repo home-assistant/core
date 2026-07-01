@@ -3,7 +3,7 @@
 from datetime import datetime
 from unittest.mock import call
 
-from broadlink.exceptions import BroadlinkException, ReadError, StorageError
+from broadlink.exceptions import BroadlinkException
 from broadlink.remote import pulses_to_data
 from infrared_protocols.commands.nec import NECCommand
 import pytest
@@ -128,8 +128,6 @@ async def test_infrared_send_command_error_translates(
     [
         pytest.param(BroadlinkException("boom"), BroadlinkException, id="broadlink"),
         pytest.param(OSError("boom"), OSError, id="os"),
-        pytest.param(ReadError("boom"), ReadError, id="read"),
-        pytest.param(StorageError("boom"), StorageError, id="storage"),
     ],
 )
 async def test_infrared_receive_command_error_translates(

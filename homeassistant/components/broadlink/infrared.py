@@ -144,7 +144,9 @@ class BroadlinkInfraredReceiverEntity(BroadlinkEntity, InfraredReceiverEntity):
             try:
                 await self._async_enter_learning_mode()
                 packet = await self._device.async_request(self._device.api.check_data)
-            except (ReadError, StorageError, BroadlinkException, OSError) as err:
+            except (ReadError, StorageError):
+                return
+            except (BroadlinkException, OSError) as err:
                 _LOGGER.debug(
                     "Failed to check received data for %s: %s", self.entity_id, err
                 )
@@ -155,7 +157,6 @@ class BroadlinkInfraredReceiverEntity(BroadlinkEntity, InfraredReceiverEntity):
                 ) from err
 
             self._handle_received_ir_signal(packet)
-            await self._async_enter_learning_mode()
 
     @callback
     def _handle_received_ir_signal(self, packet: bytes) -> None:
