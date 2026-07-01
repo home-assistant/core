@@ -787,7 +787,6 @@ class TemplateEnvironment(ImmutableSandboxedEnvironment):
         self.add_extension(TypeCastExtension)
         self.add_extension(VersionExtension)
 
-
         if hass is not None:
             # This environment has access to hass, attach its loader
             # to enable imports.
