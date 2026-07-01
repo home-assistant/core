@@ -2,7 +2,7 @@
 
 from collections.abc import Callable
 import logging
-from typing import Any, TypedDict, override
+from typing import Any, override
 
 import orjson
 import voluptuous as vol
@@ -59,13 +59,6 @@ SIGNAL_SCHEMA = vol.Schema(
         vol.Required("modulation"): int,
     }
 )
-
-
-class SignalMessage(TypedDict):
-    """Represents received infrared message."""
-
-    modulation: int
-    timings: list[int]
 
 
 def validate_mqtt_infrared_config(config_value: dict[str, Any]) -> ConfigType:
@@ -229,10 +222,6 @@ class MqttInfraredReceiverEntity(MqttEntity, InfraredReceiverEntity):
             return
         try:
             payload_dict = SIGNAL_SCHEMA(json_loads_object(payload))
-            signal_message = SignalMessage(
-                modulation=payload_dict["modulation"],
-                timings=payload_dict["timings"],
-            )
         except (*JSON_DECODE_EXCEPTIONS, vol.Invalid, TypeError):
             _LOGGER.warning(
                 "Invalid message received for %s on topic %s, with template %s. "
@@ -243,7 +232,12 @@ class MqttInfraredReceiverEntity(MqttEntity, InfraredReceiverEntity):
                 msg.payload,
             )
         else:
-            self._handle_received_signal(InfraredReceivedSignal(**signal_message))
+            self._handle_received_signal(
+                InfraredReceivedSignal(
+                    modulation=payload_dict["modulation"],
+                    timings=payload_dict["timings"],
+                )
+            )
 
     @callback
     @override
