@@ -1,7 +1,7 @@
 """Device tracker for Synology SRM routers."""
 
 from datetime import datetime
-from typing import Any
+from typing import Any, override
 
 from homeassistant.components.device_tracker import DEFAULT_CONSIDER_HOME, ScannerEntity
 from homeassistant.components.device_tracker.const import SourceType
@@ -100,31 +100,37 @@ class SynologySRMScannerEntity(ScannerEntity):
         self._attr_source_type = SourceType.ROUTER
 
     @property
+    @override
     def name(self) -> str | None:
         """Return device name."""
         return self._name
 
     @property
+    @override
     def hostname(self) -> str | None:
         """Return hostname of the device."""
         return self._device.get("hostname")
 
     @property
+    @override
     def ip_address(self) -> str | None:
         """Return the primary ip address of the device."""
         return self._device.get("ip_addr")
 
     @property
+    @override
     def mac_address(self) -> str | None:
         """Return a unique ID."""
         return self._mac
 
     @property
+    @override
     def is_connected(self) -> bool:
         """Return true if the device is connected to the network."""
         return self._connected
 
     @property
+    @override
     def icon(self) -> str:
         """Return device icon."""
         if self._connected:
@@ -137,6 +143,7 @@ class SynologySRMScannerEntity(ScannerEntity):
         return self._last_activity
 
     @property
+    @override
     def extra_state_attributes(self) -> dict[str, Any]:
         """Return the state attributes."""
         attrs: dict[str, str] = {}
@@ -151,6 +158,7 @@ class SynologySRMScannerEntity(ScannerEntity):
             attrs[attr] = value
         return attrs
 
+    @override
     async def async_added_to_hass(self) -> None:
         """Register state update callback."""
         self.async_on_demand_update()

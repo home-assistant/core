@@ -2,7 +2,7 @@
 
 from collections.abc import Mapping
 import logging
-from typing import Any
+from typing import Any, override
 
 import requests
 import synology_srm
@@ -61,6 +61,7 @@ class SynologySRMFlowHandler(ConfigFlow, domain=DOMAIN):
             return "unknown"
         return None
 
+    @override
     async def async_step_user(
         self, user_input: dict[str, Any] | None = None
     ) -> ConfigFlowResult:
