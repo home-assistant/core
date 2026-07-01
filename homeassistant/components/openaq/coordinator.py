@@ -11,27 +11,31 @@ from openaq import OpenAQ
 from openaq.core.responses import Latest, Location, Parameter, ParameterBase, Sensor
 
 from homeassistant.config_entries import ConfigEntry, ConfigSubentry
-from homeassistant.const import (
-    CONCENTRATION_MICROGRAMS_PER_CUBIC_METER,
-    CONCENTRATION_MILLIGRAMS_PER_CUBIC_METER,
-)
 from homeassistant.core import HomeAssistant
+from homeassistant.exceptions import ConfigEntryAuthFailed
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
 
-from .const import CONF_LOCATION_ID, DOMAIN, LOGGER, OPENAQ_AUTH_EXCEPTIONS
+from .const import (
+    CONF_LOCATION_ID,
+    DOMAIN,
+    LOGGER,
+    OPENAQ_AUTH_EXCEPTIONS,
+    OPENAQ_UNIT_MICROGRAMS_PER_CUBIC_METER,
+    OPENAQ_UNIT_MILLIGRAMS_PER_CUBIC_METER,
+)
 
 UPDATE_INTERVAL = timedelta(minutes=10)
 _T = TypeVar("_T")
 
 OPENAQ_UNIT_ALIASES = {
-    "µg/m³": CONCENTRATION_MICROGRAMS_PER_CUBIC_METER,
-    "µg/m3": CONCENTRATION_MICROGRAMS_PER_CUBIC_METER,
-    "ug/m³": CONCENTRATION_MICROGRAMS_PER_CUBIC_METER,
-    "ug/m3": CONCENTRATION_MICROGRAMS_PER_CUBIC_METER,
-    "μg/m³": CONCENTRATION_MICROGRAMS_PER_CUBIC_METER,
-    "μg/m3": CONCENTRATION_MICROGRAMS_PER_CUBIC_METER,
-    "mg/m³": CONCENTRATION_MILLIGRAMS_PER_CUBIC_METER,
-    "mg/m3": CONCENTRATION_MILLIGRAMS_PER_CUBIC_METER,
+    "µg/m³": OPENAQ_UNIT_MICROGRAMS_PER_CUBIC_METER,
+    "µg/m3": OPENAQ_UNIT_MICROGRAMS_PER_CUBIC_METER,
+    "ug/m³": OPENAQ_UNIT_MICROGRAMS_PER_CUBIC_METER,
+    "ug/m3": OPENAQ_UNIT_MICROGRAMS_PER_CUBIC_METER,
+    "μg/m³": OPENAQ_UNIT_MICROGRAMS_PER_CUBIC_METER,
+    "μg/m3": OPENAQ_UNIT_MICROGRAMS_PER_CUBIC_METER,
+    "mg/m³": OPENAQ_UNIT_MILLIGRAMS_PER_CUBIC_METER,
+    "mg/m3": OPENAQ_UNIT_MILLIGRAMS_PER_CUBIC_METER,
 }
 
 
@@ -175,9 +179,14 @@ class OpenAQDataUpdateCoordinator(DataUpdateCoordinator[OpenAQLocationData]):
         async with self._client_lock:
             return await self.hass.async_add_executor_job(target, *args)
 
-    def _raise_update_failed(self, err: Exception) -> None:
+    def _raise_update_failed(self, err: Exception, *, first_refresh: bool) -> None:
         """Raise a translated update failure."""
         if isinstance(err, OPENAQ_AUTH_EXCEPTIONS):
+            if first_refresh:
+                raise ConfigEntryAuthFailed(
+                    translation_domain=DOMAIN,
+                    translation_key="authentication_failed",
+                ) from err
             raise UpdateFailed(
                 translation_domain=DOMAIN,
                 translation_key="authentication_failed",
@@ -204,7 +213,7 @@ class OpenAQDataUpdateCoordinator(DataUpdateCoordinator[OpenAQLocationData]):
                     self.client.locations.sensors, self.location_id
                 )
             except Exception as err:  # noqa: BLE001
-                self._raise_update_failed(err)
+                self._raise_update_failed(err, first_refresh=True)
             if not location_response.results:
                 raise UpdateFailed(
                     translation_domain=DOMAIN,
@@ -222,7 +231,7 @@ class OpenAQDataUpdateCoordinator(DataUpdateCoordinator[OpenAQLocationData]):
                     self.client.locations.latest, self.location_id
                 )
             except Exception as err:  # noqa: BLE001
-                self._raise_update_failed(err)
+                self._raise_update_failed(err, first_refresh=False)
 
         measurements = normalize_latest_measurements(latest_response.results, sensors)
         return OpenAQLocationData(

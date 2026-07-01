@@ -3,7 +3,7 @@
 import asyncio
 from unittest.mock import MagicMock, patch
 
-from openaq import ServerError
+from openaq import NotAuthorizedError, ServerError
 
 from homeassistant.components.openaq.const import CONF_LOCATION_ID, DOMAIN
 from homeassistant.components.openaq.coordinator import OpenAQDataUpdateCoordinator
@@ -42,6 +42,22 @@ async def test_setup_retry_on_first_refresh_failure(
     await setup_integration(hass, mock_config_entry)
 
     assert mock_config_entry.state is ConfigEntryState.SETUP_RETRY
+    mock_openaq_client.close.assert_called_once()
+
+
+async def test_setup_fails_auth_on_first_refresh_auth_failure(
+    hass: HomeAssistant,
+    mock_openaq_client: MagicMock,
+    mock_config_entry: MockConfigEntry,
+) -> None:
+    """Test setup fails auth when first coordinator refresh has an auth error."""
+    mock_openaq_client.locations.latest.side_effect = NotAuthorizedError(
+        "Invalid API key"
+    )
+
+    await setup_integration(hass, mock_config_entry)
+
+    assert mock_config_entry.state is ConfigEntryState.SETUP_ERROR
     mock_openaq_client.close.assert_called_once()
 
 
