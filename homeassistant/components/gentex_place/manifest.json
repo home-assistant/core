@@ -5,7 +5,7 @@
   "config_flow": true,
   "dependencies": ["application_credentials"],
   "documentation": "https://www.home-assistant.io/integrations/gentex_place",
-  "integration_type": "device",
+  "integration_type": "hub",
   "iot_class": "cloud_push",
   "quality_scale": "bronze",
   "requirements": ["place-integration-api==0.2.0"]
