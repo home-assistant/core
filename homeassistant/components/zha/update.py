@@ -16,6 +16,7 @@ from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
+from homeassistant.helpers import translation
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from homeassistant.helpers.update_coordinator import (
@@ -23,6 +24,7 @@ from homeassistant.helpers.update_coordinator import (
     DataUpdateCoordinator,
 )
 
+from .const import DOMAIN
 from .entity import ZHAEntity
 from .helpers import (
     SIGNAL_ADD_ENTITIES,
@@ -34,16 +36,18 @@ from .helpers import (
 
 _LOGGER = logging.getLogger(__name__)
 
+ZHA_DOCS_NETWORK_RELIABILITY = "https://www.home-assistant.io/integrations/zha/#zigbee-interference-avoidance-and-network-rangecoverage-optimization"
+
+# English fallbacks. The translated source of truth lives in `strings.json` under the
+# `common` section, so these messages can be localized (see `async_release_notes`).
 OTA_MESSAGE_BATTERY_POWERED = (
     "Battery powered devices can sometimes take multiple hours to update and you may"
     " need to wake the device for the update to begin."
 )
-
-ZHA_DOCS_NETWORK_RELIABILITY = "https://www.home-assistant.io/integrations/zha/#zigbee-interference-avoidance-and-network-rangecoverage-optimization"
 OTA_MESSAGE_RELIABILITY = (
     "If you are having issues updating a specific device, make sure that you've"
-    f" eliminated [common environmental issues]({ZHA_DOCS_NETWORK_RELIABILITY}) that"
-    " could be affecting network reliability. OTA updates require a reliable network."
+    " eliminated [common environmental issues]({docs_url}) that could be affecting"
+    " network reliability. OTA updates require a reliable network."
 )
 
 
@@ -170,15 +174,24 @@ class ZHAFirmwareUpdateEntity(
         property. The returned string can contain markdown.
         """
 
-        if self.entity_data.device_proxy.device.is_mains_powered:
-            header = f"<ha-alert alert-type='info'>{OTA_MESSAGE_RELIABILITY}</ha-alert>"
-        else:
-            header = (
-                "<ha-alert alert-type='info'>"
-                f"{OTA_MESSAGE_BATTERY_POWERED} {OTA_MESSAGE_RELIABILITY}"
-                "</ha-alert>"
-            )
+        translations = await translation.async_get_translations(
+            self.hass, self.hass.config.language, "common", {DOMAIN}
+        )
+        reliability = translations.get(
+            f"component.{DOMAIN}.common.ota_reliability_message",
+            OTA_MESSAGE_RELIABILITY,
+        ).format(docs_url=ZHA_DOCS_NETWORK_RELIABILITY)
 
+        if self.entity_data.device_proxy.device.is_mains_powered:
+            message = reliability
+        else:
+            battery = translations.get(
+                f"component.{DOMAIN}.common.ota_battery_message",
+                OTA_MESSAGE_BATTERY_POWERED,
+            )
+            message = f"{battery} {reliability}"
+
+        header = f"<ha-alert alert-type='info'>{message}</ha-alert>"
         return f"{header}\n\n{self.entity_data.entity.release_notes or ''}"
 
     @property

@@ -40,6 +40,7 @@ from homeassistant.components.zha.helpers import (
 from homeassistant.components.zha.update import (
     OTA_MESSAGE_BATTERY_POWERED,
     OTA_MESSAGE_RELIABILITY,
+    ZHA_DOCS_NETWORK_RELIABILITY,
 )
 from homeassistant.const import (
     ATTR_ENTITY_ID,
@@ -682,7 +683,10 @@ async def test_update_release_notes(
         result = await ws_client.receive_json()
         assert result["success"] is True
         assert "Some lengthy release notes" in result["result"]
-        assert OTA_MESSAGE_RELIABILITY in result["result"]
+        assert (
+            OTA_MESSAGE_RELIABILITY.format(docs_url=ZHA_DOCS_NETWORK_RELIABILITY)
+            in result["result"]
+        )
         assert OTA_MESSAGE_BATTERY_POWERED not in result["result"]
 
     # Battery-powered devices
@@ -700,7 +704,10 @@ async def test_update_release_notes(
         result = await ws_client.receive_json()
         assert result["success"] is True
         assert "Some lengthy release notes" in result["result"]
-        assert OTA_MESSAGE_RELIABILITY in result["result"]
+        assert (
+            OTA_MESSAGE_RELIABILITY.format(docs_url=ZHA_DOCS_NETWORK_RELIABILITY)
+            in result["result"]
+        )
         assert OTA_MESSAGE_BATTERY_POWERED in result["result"]
 
 
