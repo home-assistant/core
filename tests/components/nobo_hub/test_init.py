@@ -311,7 +311,7 @@ async def test_zone_removed_during_disconnect_stays_unavailable_on_reconnect(
     `_attr_available = True` would briefly flip the entity to available before the
     data callback's _read_state could re-mark it unavailable.
     """
-    entity = "climate.living_room"
+    entity = "climate.living_room_living_room"
     assert hass.states.get(entity).state != STATE_UNAVAILABLE
 
     await fire_hub_connection(hass, mock_nobo_hub, False)
