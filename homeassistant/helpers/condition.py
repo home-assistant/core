@@ -1180,7 +1180,7 @@ class EntityDatetimeConditionBase(EntityConditionBase):
 
     _schema = DATETIME_CONDITION_SCHEMA
 
-def __init__(self, hass: HomeAssistant, config: ConditionConfig) -> None:
+    def __init__(self, hass: HomeAssistant, config: ConditionConfig) -> None:
         """Initialize the datetime condition."""
         super().__init__(hass, config)
         if TYPE_CHECKING:
