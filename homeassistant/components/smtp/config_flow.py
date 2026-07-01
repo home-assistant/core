@@ -1,8 +1,9 @@
 """Config flow for the SMTP integration."""
 
 from collections.abc import Mapping
+from contextlib import suppress
 import logging
-from smtplib import SMTP, SMTP_SSL, SMTPAuthenticationError
+from smtplib import SMTP, SMTP_SSL, SMTPAuthenticationError, SMTPException
 import socket
 from ssl import SSLCertVerificationError
 from typing import Any, override
@@ -314,14 +315,15 @@ def validate_input(user_input: dict[str, Any]) -> dict[str, str]:
         errors["base"] = "invalid_auth"
     except SSLCertVerificationError:
         errors["base"] = "invalid_cert"
-    except socket.gaierror, ConnectionRefusedError:
+    except socket.gaierror, ConnectionRefusedError, TimeoutError, SMTPException:
         errors["base"] = "cannot_connect"
     except Exception:
         _LOGGER.exception("Unexpected exception")
         errors["base"] = "unknown"
     finally:
         if mail is not None:
-            mail.quit()
+            with suppress(SMTPException):
+                mail.quit()
 
     return errors
 
