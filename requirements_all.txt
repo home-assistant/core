@@ -1105,9 +1105,6 @@ getmac==0.9.5
 # homeassistant.components.gios
 gios==7.1.0
 
-# homeassistant.components.gitter
-gitterpy==0.1.7
-
 # homeassistant.components.glances
 glances-api==0.10.0
 
@@ -1269,7 +1266,7 @@ hole==0.9.2
 holidays==0.99
 
 # homeassistant.components.frontend
-home-assistant-frontend==20260624.1
+home-assistant-frontend==20260624.2
 
 # homeassistant.components.conversation
 home-assistant-intents==2026.6.24
@@ -1362,7 +1359,7 @@ influxdb-client==1.50.0
 influxdb==5.3.2
 
 # homeassistant.components.infrared
-infrared-protocols==6.3.0
+infrared-protocols==6.3.1
 
 # homeassistant.components.inkbird
 inkbird-ble==1.4.4
