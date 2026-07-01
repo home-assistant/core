@@ -257,7 +257,7 @@ async def test_migrate_binary_sensor_switch_unique_id(
                 "disabled_by": None,
             },
             f"{CLIMATE_ID}-climate",
-            f"{CLIMATE_ID}-slaapkamer",
+            f"{CLIMATE_ID}-thermozone",
         )
     ],
 )
