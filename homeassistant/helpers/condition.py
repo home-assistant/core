@@ -1168,6 +1168,78 @@ def make_entity_numerical_condition_with_unit(
     return CustomCondition
 
 
+DATETIME_CONDITION_SCHEMA = ENTITY_STATE_CONDITION_SCHEMA_ANY_ALL.extend(
+    {
+        vol.Required(CONF_OPTIONS): {vol.Optional("within"): cv.positive_time_period},
+    }
+)
+
+
+class EntityDatetimeConditionBase(EntityConditionBase):
+    """Condition for datetime state comparisons."""
+
+    _schema = DATETIME_CONDITION_SCHEMA
+
+    def __init__(self, hass: HomeAssistant, config: ConditionConfig) -> None:
+        """Initialize the numerical condition."""
+        super().__init__(hass, config)
+        if TYPE_CHECKING:
+            assert config.options is not None
+
+        within = config.options.get("within")
+        self._within: timedelta | None = (
+            # cast(timedelta, cv.positive_time_period(within))
+            cv.positive_time_period(within) if within is not None else None
+        )
+
+    def _get_tracked_value(self, entity_state: State) -> Any:
+        """Get the tracked timestamp from a state."""
+        return entity_state.state
+
+    @override
+    def _should_include(self, _state: State) -> bool:
+        """Check if an entity should participate in any/all checks.
+
+        For timestamp entities, only exclude unavailable, as unknown means
+        'never occured'.
+        """
+        return _state.state != STATE_UNAVAILABLE
+
+    @override
+    def is_valid_state(self, entity_state: State) -> bool:
+        """Check if the state is within the specified time range."""
+        try:
+            value = datetime.fromisoformat(self._get_tracked_value(entity_state))
+        except TypeError, ValueError:
+            return False
+
+        if value > dt_util.now():
+            return False
+        if self._within:
+            return (value + self._within) > dt_util.now()
+        return True
+
+
+def make_entity_datetime_condition(
+    domain_specs: Mapping[str, DomainSpec] | str,
+    *,
+    primary_entities_only: bool = True,
+) -> type[EntityDatetimeConditionBase]:
+    """Create a condition for entity state changes to specific state(s).
+
+    domain_specs can be a string (domain name) for simple state-based conditions,
+    or a Mapping[str, DomainSpec] for attribute-based or multi-domain conditions.
+    """
+    specs = _normalize_domain_specs(domain_specs)
+
+    class CustomCondition(EntityDatetimeConditionBase):
+        """Condition for entity datetime."""
+
+        _domain_specs = specs
+
+    return CustomCondition
+
+
 class ConditionProtocol(Protocol):
     """Define the format of condition modules."""
 
