@@ -7,12 +7,8 @@ from unittest.mock import MagicMock, patch
 from openaq import NotAuthorizedError, OpenAQ, ServerError
 import pytest
 
-from homeassistant.components.openaq.const import (
-    CONF_LOCATION_ID,
-    DOMAIN,
-    OPENAQ_UNIT_MICROGRAMS_PER_CUBIC_METER,
-    OPENAQ_UNIT_MILLIGRAMS_PER_CUBIC_METER,
-)
+from homeassistant import const as ha_const
+from homeassistant.components.openaq.const import CONF_LOCATION_ID, DOMAIN
 from homeassistant.components.openaq.coordinator import (
     OpenAQDataUpdateCoordinator,
     OpenAQMeasurement,
@@ -193,7 +189,7 @@ def test_normalize_latest_measurements() -> None:
             "pm25": OpenAQMeasurement(
                 parameter="pm25",
                 value=8.5,
-                unit=OPENAQ_UNIT_MICROGRAMS_PER_CUBIC_METER,
+                unit=ha_const.CONCENTRATION_MICROGRAMS_PER_CUBIC_METER,
             ),
         }
     )
@@ -212,11 +208,11 @@ def test_normalize_sensor_metadata() -> None:
         {
             "pm25": OpenAQSensorMetadata(
                 parameter="pm25",
-                unit=OPENAQ_UNIT_MICROGRAMS_PER_CUBIC_METER,
+                unit=ha_const.CONCENTRATION_MICROGRAMS_PER_CUBIC_METER,
             ),
             "pm10": OpenAQSensorMetadata(
                 parameter="pm10",
-                unit=OPENAQ_UNIT_MICROGRAMS_PER_CUBIC_METER,
+                unit=ha_const.CONCENTRATION_MICROGRAMS_PER_CUBIC_METER,
             ),
         }
     )
@@ -225,9 +221,9 @@ def test_normalize_sensor_metadata() -> None:
 @pytest.mark.parametrize(
     ("unit", "expected_unit"),
     [
-        ("μg/m³", OPENAQ_UNIT_MICROGRAMS_PER_CUBIC_METER),
-        ("mg/m³", OPENAQ_UNIT_MILLIGRAMS_PER_CUBIC_METER),
-        ("mg/m3", OPENAQ_UNIT_MILLIGRAMS_PER_CUBIC_METER),
+        ("μg/m³", ha_const.CONCENTRATION_MICROGRAMS_PER_CUBIC_METER),
+        ("mg/m³", ha_const.CONCENTRATION_MILLIGRAMS_PER_CUBIC_METER),
+        ("mg/m3", ha_const.CONCENTRATION_MILLIGRAMS_PER_CUBIC_METER),
     ],
 )
 def test_normalize_latest_measurements_normalizes_unit_aliases(
