@@ -100,5 +100,6 @@ async def async_migrate_entities(
         if entity_id := ent_reg.async_get_entity_id(
             Platform.CLIMATE, DOMAIN, old_unique_id
         ):
-            new_unique_id = f"{device_id}-{device[ATTR_NAME]}".lower()
+            model = f"{self.device[ATTR_MODEL]}".lower()
+            new_unique_id = f"{device_id}-{model}"
             ent_reg.async_update_entity(entity_id, new_unique_id=new_unique_id)
