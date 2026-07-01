@@ -1212,10 +1212,12 @@ class EntityDatetimeConditionBase(EntityConditionBase):
         except TypeError, ValueError:
             return False
 
-        if value > dt_util.now():
+        now = dt_util.now()
+
+        if value > now:
             return False
         if self._within:
-            return (value + self._within) > dt_util.now()
+            return (value + self._within) > now
         return True
 
 
