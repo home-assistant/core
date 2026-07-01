@@ -20,6 +20,7 @@ from homeassistant.const import (
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.exceptions import ConfigEntryNotReady
 from homeassistant.helpers import aiohttp_client, entity_registry as er
+from homeassistant.helpers.typing import ConfigType
 from homeassistant.helpers.update_coordinator import UpdateFailed
 from homeassistant.util.network import is_ip_address
 
@@ -39,6 +40,7 @@ from .const import (
     LOGGER,
 )
 from .coordinator import RainMachineDataUpdateCoordinator
+from .services import async_setup_services
 
 API_URL_REFERENCE = (
     "https://rainmachine.docs.apiary.io/#reference/weather-services/parserdata/post"
@@ -84,6 +86,12 @@ class RainMachineData:
 
     controller: Controller
     coordinators: dict[str, RainMachineDataUpdateCoordinator]
+
+
+async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
+    """Set up Rainmachine."""
+    async_setup_services(hass)
+    return True
 
 
 async def async_setup_entry(hass: HomeAssistant, entry: RainMachineConfigEntry) -> bool:
