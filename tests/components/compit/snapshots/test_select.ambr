@@ -45,7 +45,7 @@
 # name: test_select_entities_snapshot[select.nano_color_2_bypass-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'Nano Color 2 Bypass',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Nano Color 2 Bypass',
       <SelectEntityCapabilityAttribute.OPTIONS: 'options'>: list([
         'off',
         'auto',
@@ -105,7 +105,7 @@
 # name: test_select_entities_snapshot[select.nano_color_2_language-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'Nano Color 2 Language',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Nano Color 2 Language',
       <SelectEntityCapabilityAttribute.OPTIONS: 'options'>: list([
         'polish',
         'english',
@@ -165,7 +165,7 @@
 # name: test_select_entities_snapshot[select.r_900_operating_mode-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'R 900 Operating mode',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'R 900 Operating mode',
       <SelectEntityCapabilityAttribute.OPTIONS: 'options'>: list([
         'disabled',
         'eco',

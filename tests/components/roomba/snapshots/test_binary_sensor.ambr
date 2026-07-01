@@ -39,7 +39,7 @@
 # name: test_entities[binary_sensor.test_roomba_bin_full-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'Test Roomba Bin full',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Test Roomba Bin full',
     }),
     'context': <ANY>,
     'entity_id': 'binary_sensor.test_roomba_bin_full',
@@ -89,8 +89,8 @@
 # name: test_entities[binary_sensor.test_roomba_charging-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'device_class': 'battery_charging',
-      'friendly_name': 'Test Roomba Charging',
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'battery_charging',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Test Roomba Charging',
     }),
     'context': <ANY>,
     'entity_id': 'binary_sensor.test_roomba_charging',

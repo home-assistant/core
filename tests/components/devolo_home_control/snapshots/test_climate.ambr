@@ -3,13 +3,13 @@
   StateSnapshot({
     'attributes': ReadOnlyDict({
       <ClimateEntityStateAttribute.CURRENT_TEMPERATURE: 'current_temperature'>: 20,
-      'friendly_name': 'Test',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Test',
       <ClimateEntityCapabilityAttribute.HVAC_MODES: 'hvac_modes'>: list([
         <HVACMode.HEAT: 'heat'>,
       ]),
       <ClimateEntityCapabilityAttribute.MAX_TEMP: 'max_temp'>: 24,
       <ClimateEntityCapabilityAttribute.MIN_TEMP: 'min_temp'>: 4,
-      'supported_features': <ClimateEntityFeature: 1>,
+      <EntityStateAttribute.SUPPORTED_FEATURES: 'supported_features'>: <ClimateEntityFeature: 1>,
       <ClimateEntityCapabilityAttribute.TARGET_TEMP_STEP: 'target_temp_step'>: 0.5,
       <ClimateEntityStateAttribute.TEMPERATURE: 'temperature'>: 20,
     }),
