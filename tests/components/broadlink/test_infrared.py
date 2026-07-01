@@ -11,10 +11,9 @@ import pytest
 from homeassistant.components.broadlink import infrared as broadlink_infrared
 from homeassistant.components.broadlink.const import DOMAIN
 from homeassistant.components.infrared import (
-    DATA_COMPONENT,
     InfraredReceivedSignal,
-    InfraredReceiverEntity,
     async_send_command,
+    async_subscribe_receiver,
 )
 from homeassistant.const import Platform
 from homeassistant.core import HomeAssistant
@@ -142,11 +141,8 @@ async def test_infrared_receiver_polling_decodes_and_dispatches_packet(
         if entry.domain == Platform.INFRARED and entry.unique_id.endswith("-receiver")
     )
 
-    receiver = hass.data[DATA_COMPONENT].get_entity(receiver_entry.entity_id)
-    assert isinstance(receiver, InfraredReceiverEntity)
-
     received_signals: list[InfraredReceivedSignal] = []
-    receiver.async_subscribe_received_signal(received_signals.append)
+    async_subscribe_receiver(hass, receiver_entry.entity_id, received_signals.append)
 
     mock_setup.api.reset_mock()
     mock_setup.api.check_data.return_value = pulses_to_data([500, 700, 900])

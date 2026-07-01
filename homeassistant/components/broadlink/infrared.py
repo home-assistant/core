@@ -105,19 +105,19 @@ class BroadlinkInfraredReceiverEntity(BroadlinkEntity, InfraredReceiverEntity):
     async def async_added_to_hass(self) -> None:
         """Set up IR receive polling."""
         await super().async_added_to_hass()
+        if self._unsub_receive is None:
+            self._unsub_receive = async_track_time_interval(
+                self.hass,
+                self._async_poll_received_signal,
+                LEARNING_POLL_INTERVAL,
+            )
+
         try:
             await self._async_enter_learning_mode()
         except HomeAssistantError as err:
             _LOGGER.debug(
                 "Failed to enter learning mode for %s: %s", self.entity_id, err
             )
-        else:
-            if self._unsub_receive is None:
-                self._unsub_receive = async_track_time_interval(
-                    self.hass,
-                    self._async_poll_received_signal,
-                    LEARNING_POLL_INTERVAL,
-                )
 
     @override
     async def async_will_remove_from_hass(self) -> None:
@@ -171,11 +171,7 @@ class BroadlinkInfraredReceiverEntity(BroadlinkEntity, InfraredReceiverEntity):
             pulses = _bl_data_to_pulses(packet)
         except ValueError as err:
             _LOGGER.debug("Failed to decode infrared signal packet: %s", err)
-            raise HomeAssistantError(
-                translation_domain=DOMAIN,
-                translation_key="decode_signal_failed",
-                translation_placeholders={"error": str(err)},
-            ) from err
+            return
 
         timings = [
             pulse if index % 2 == 0 else -pulse
