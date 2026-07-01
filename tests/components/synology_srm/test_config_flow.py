@@ -116,7 +116,6 @@ async def test_user_flow_duplicate_host_aborts(
     assert result["reason"] == "already_configured"
 
 
-@pytest.mark.usefixtures("mock_synology_client")
 async def test_user_flow_skips_disable_https_verify_when_verify_true(
     hass: HomeAssistant,
     mock_synology_client: MagicMock,
