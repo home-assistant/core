@@ -229,6 +229,11 @@ class TodoItem:
     """The date and time that a to-do item was marked completed."""
 
 
+_TODO_ITEM_FIELD_NAMES: tuple[str, ...] = tuple(
+    field.name for field in dataclasses.fields(TodoItem)
+)
+
+
 def _serialize_todo_item(item: TodoItem) -> dict[str, Any]:
     """Serialize a To-do item for websocket subscribers.
 
@@ -237,7 +242,7 @@ def _serialize_todo_item(item: TodoItem) -> dict[str, Any]:
     TodoItem is a flat dataclass of immutable values, so a shallow dict is
     equivalent and far cheaper.
     """
-    return {field.name: getattr(item, field.name) for field in dataclasses.fields(item)}
+    return {name: getattr(item, name) for name in _TODO_ITEM_FIELD_NAMES}
 
 
 CACHED_PROPERTIES_WITH_ATTR_ = {
