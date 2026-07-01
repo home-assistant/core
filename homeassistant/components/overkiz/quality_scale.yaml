@@ -44,7 +44,10 @@ rules:
       test_form_cloud and test_form_only_cloud_supported only check that setup was called, not the created entry data or unique ID;
       test_form_invalid_auth_cloud still stops at the error form instead of proving the flow can recover to ABORT or CREATE_ENTRY;
       test_dhcp_flow and test_zeroconf_flow still do not assert the discovered unique ID;
-      test_init.py still uses async_setup_component() instead of hass.config_entries.async_setup().
+      test_init.py still uses async_setup_component() instead of hass.config_entries.async_setup();
+      tests should patch the library where it is used (homeassistant.components.overkiz.OverkizClient),
+      not the integration's own create_cloud_client/create_local_client helpers, and a single shared
+      patch fixture should cover both the config flow and the normal tests.
   docs-configuration-parameters:
     status: exempt
     comment: The integration does not provide configuration parameters.
