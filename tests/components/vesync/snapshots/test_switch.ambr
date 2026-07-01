@@ -1420,7 +1420,6 @@
     'state': 'on',
   })
 # ---
-# ---
 # name: test_switch_state[CoreBreeze 432S][devices]
   list([
     DeviceRegistryEntrySnapshot({

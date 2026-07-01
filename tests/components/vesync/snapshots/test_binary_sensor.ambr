@@ -848,7 +848,6 @@
   list([
   ])
 # ---
-# ---
 # name: test_sensor_state[CoreBreeze 432S][devices]
   list([
     DeviceRegistryEntrySnapshot({

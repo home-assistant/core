@@ -746,7 +746,6 @@
   list([
   ])
 # ---
-# ---
 # name: test_light_state[CoreBreeze 432S][devices]
   list([
     DeviceRegistryEntrySnapshot({

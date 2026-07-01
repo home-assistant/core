@@ -211,8 +211,6 @@ async def test_pedestal_fan_oscillation(
     should control both axes together.
     """
 
-    mock_devices_response(aioclient_mock, "CoreBreeze 432S")
-
     with (
         expectation,
         patch(
@@ -240,8 +238,7 @@ async def test_pedestal_fan_oscillation(
         await hass.async_block_till_done()
         vertical_mock.assert_called_once()
         horizontal_mock.assert_called_once()
-        if api_response:
-            update_mock.assert_called_once()
+        update_mock.assert_called_once()
 
 
 @pytest.mark.parametrize(

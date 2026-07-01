@@ -755,7 +755,6 @@
   list([
   ])
 # ---
-# ---
 # name: test_humidifier_state[CoreBreeze 432S][devices]
   list([
     DeviceRegistryEntrySnapshot({
