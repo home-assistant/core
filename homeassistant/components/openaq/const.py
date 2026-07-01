@@ -12,20 +12,12 @@ from openaq import (
 )
 from openaq.core.exceptions import APIError
 
-from homeassistant.const import (
-    CONCENTRATION_MICROGRAMS_PER_CUBIC_METER,
-    CONCENTRATION_MILLIGRAMS_PER_CUBIC_METER,
-)
-
 DOMAIN = "openaq"
 
 LOGGER = logging.getLogger(__package__)
 
 ATTRIBUTION: Final = "Data provided by OpenAQ"
 CONF_LOCATION_ID: Final = "location_id"
-
-OPENAQ_UNIT_MICROGRAMS_PER_CUBIC_METER: Final = CONCENTRATION_MICROGRAMS_PER_CUBIC_METER
-OPENAQ_UNIT_MILLIGRAMS_PER_CUBIC_METER: Final = CONCENTRATION_MILLIGRAMS_PER_CUBIC_METER
 
 MAX_RADIUS: Final = 25000
 SUBENTRY_TYPE_LOCATION: Final = "location"
