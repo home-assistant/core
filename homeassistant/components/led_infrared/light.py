@@ -1,6 +1,6 @@
 """Light platform for LED Infrared integration."""
 
-from typing import Any
+from typing import Any, override
 
 from infrared_protocols.codes.tween_light.led_strip import TweenLightLEDStripCode
 
@@ -71,6 +71,7 @@ class LEDIrLightEntity(LEDIrEntity, InfraredEmitterConsumerEntity, LightEntity):
             SUPPORTED_EFFECTS[device_type] + SUPPORTED_COLORS[device_type]
         )
 
+    @override
     async def async_turn_on(self, **kwargs: Any) -> None:
         """Turn device on."""
         command = self._codes.ON.to_command()
@@ -84,6 +85,7 @@ class LEDIrLightEntity(LEDIrEntity, InfraredEmitterConsumerEntity, LightEntity):
         await self._send_command(command)
         self.async_write_ha_state()
 
+    @override
     async def async_turn_off(self, **kwargs: Any) -> None:
         """Turn the entity off."""
         self._attr_is_on = False
