@@ -180,7 +180,7 @@ async def test_step_user_routes(mock_config_flow: MideaLanConfigFlow) -> None:
     result = await mock_config_flow.async_step_user()
     assert result["type"] is FlowResultType.MENU
     assert result["step_id"] == "user"
-    assert result["menu_options"] == ["discovery", "manually", "list"]
+    assert result["menu_options"] == ["search", "manually", "list"]
 
 
 @pytest.mark.usefixtures("mock_setup_entry")
@@ -229,11 +229,11 @@ async def test_step_list(mock_config_flow: MideaLanConfigFlow) -> None:
 
 
 @pytest.mark.usefixtures("mock_setup_entry")
-async def test_step_discovery(mock_config_flow: MideaLanConfigFlow) -> None:
-    """Test discovery step form and auto route."""
-    result = await mock_config_flow.async_step_discovery()
+async def test_step_search(mock_config_flow: MideaLanConfigFlow) -> None:
+    """Test search step form and auto route."""
+    result = await mock_config_flow.async_step_search()
     assert result["type"] is FlowResultType.FORM
-    assert result["step_id"] == "discovery"
+    assert result["step_id"] == "search"
 
     with (
         patch(
@@ -244,7 +244,7 @@ async def test_step_discovery(mock_config_flow: MideaLanConfigFlow) -> None:
             mock_config_flow, "async_step_auto", AsyncMock(return_value={"ok": True})
         ) as mock_auto,
     ):
-        result = await mock_config_flow.async_step_discovery({CONF_IP_ADDRESS: "auto"})
+        result = await mock_config_flow.async_step_search({CONF_IP_ADDRESS: "auto"})
     assert result == {"ok": True}
     assert mock_auto.called
 
@@ -257,7 +257,7 @@ async def test_step_discovery(mock_config_flow: MideaLanConfigFlow) -> None:
             mock_config_flow, "async_step_auto", AsyncMock(return_value={"ok": "ip"})
         ),
     ):
-        result = await mock_config_flow.async_step_discovery(
+        result = await mock_config_flow.async_step_search(
             {CONF_IP_ADDRESS: TEST_IP_ADDRESS}
         )
     assert result == {"ok": "ip"}
@@ -266,7 +266,7 @@ async def test_step_discovery(mock_config_flow: MideaLanConfigFlow) -> None:
         "homeassistant.components.midea_lan.config_flow.discover",
         return_value={},
     ):
-        result = await mock_config_flow.async_step_discovery(
+        result = await mock_config_flow.async_step_search(
             {CONF_IP_ADDRESS: TEST_IP_ADDRESS}
         )
     assert result["type"] is FlowResultType.FORM
@@ -274,10 +274,10 @@ async def test_step_discovery(mock_config_flow: MideaLanConfigFlow) -> None:
 
 
 @pytest.mark.usefixtures("mock_setup_entry")
-async def test_step_discovery_filters_already_configured_device(
+async def test_step_search_filters_already_configured_device(
     hass: HomeAssistant,
 ) -> None:
-    """Test discovery filters devices that are already configured."""
+    """Test search filters devices that are already configured."""
     entry = MockConfigEntry(
         domain=DOMAIN,
         data={CONF_DEVICE_ID: TEST_DEVICE_ID, CONF_IP_ADDRESS: TEST_IP_ADDRESS},
@@ -294,10 +294,10 @@ async def test_step_discovery_filters_already_configured_device(
         "homeassistant.components.midea_lan.config_flow.discover",
         return_value=DISCOVERY_RESULT,
     ):
-        result = await flow.async_step_discovery({CONF_IP_ADDRESS: TEST_IP_ADDRESS})
+        result = await flow.async_step_search({CONF_IP_ADDRESS: TEST_IP_ADDRESS})
 
     assert result["type"] is FlowResultType.FORM
-    assert result["step_id"] == "discovery"
+    assert result["step_id"] == "search"
     assert result["errors"] == {"base": "no_devices"}
 
 

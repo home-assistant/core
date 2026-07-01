@@ -103,7 +103,7 @@ class MideaLanConfigFlow(ConfigFlow, domain=DOMAIN):
         """Start a user flow."""
         return self.async_show_menu(
             step_id="user",
-            menu_options=["discovery", "manually", "list"],
+            menu_options=["search", "manually", "list"],
             description_placeholders={"error": error} if error else None,
         )
 
@@ -216,13 +216,12 @@ class MideaLanConfigFlow(ConfigFlow, domain=DOMAIN):
             errors={"base": error} if error else None,
         )
 
-    @override
-    async def async_step_discovery(
+    async def async_step_search(
         self,
         discovery_info: dict[str, Any] | None = None,
         error: str | None = None,
     ) -> ConfigFlowResult:
-        """Discovery device with auto mode or ip address."""
+        """Search device with auto mode or ip address."""
         # input is not None, using ip_address to discovery device
         if discovery_info is not None:
             # auto mode, ip_address is None
@@ -249,10 +248,10 @@ class MideaLanConfigFlow(ConfigFlow, domain=DOMAIN):
                     # fmt: on
             if len(self.available_device) > 0:
                 return await self.async_step_auto()
-            return await self.async_step_discovery(error="no_devices")
+            return await self.async_step_search(error="no_devices")
         # show discovery device input form with auto or ip address in web UI
         return self.async_show_form(
-            step_id="discovery",
+            step_id="search",
             data_schema=vol.Schema(
                 {vol.Required(CONF_IP_ADDRESS, default="auto"): str},
             ),

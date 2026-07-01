@@ -24,15 +24,6 @@
         },
         "title": "Select a discovered device"
       },
-      "discovery": {
-        "data": {
-          "ip_address": "IP address"
-        },
-        "data_description": {
-          "ip_address": "Enter 'auto' to scan your network, or enter a specific IP address"
-        },
-        "title": "Discover devices"
-      },
       "list": {
         "description": "{table}",
         "title": "Discovered appliances"
@@ -70,6 +61,15 @@
         },
         "title": "Configure manually"
       },
+      "search": {
+        "data": {
+          "ip_address": "IP address"
+        },
+        "data_description": {
+          "ip_address": "Enter 'auto' to scan your network, or enter a specific IP address"
+        },
+        "title": "Search devices"
+      },
       "user": {
         "data": {
           "action": "Action"
@@ -79,9 +79,9 @@
         },
         "menu_options": {
           "cache": "Remove login cache",
-          "discovery": "Discover automatically",
           "list": "List all appliances only",
-          "manually": "Configure manually"
+          "manually": "Configure manually",
+          "search": "Search automatically"
         },
         "title": "Set up Midea LAN"
       }
