@@ -1104,7 +1104,14 @@ CANDLE_WARMER_LAMP_SERVICE_INFO = BluetoothServiceInfoBleak(
     manufacturer_data={
         2409: b"\x90\xe5\xb1h\xda\xaa\n\xb0 \x00",
     },
-    service_data={"0000fd3d-0000-1000-8000-00805f9b34fb": b'\x00\x00\x00\x00\x11"\xb8'},
+    service_data={"0000fd3d-0000-1000-8000-00805f9b34fb": b'\x00\x00\x00\x00\x11"\xb8'},RGBIC_NEON_LIGHT_SERVICE_INFO = BluetoothServiceInfoBleak(
+    name="RGBIC Neon Rope Light",
+    manufacturer_data={
+        2409: b'\xdc\x06u\xa6\xfb\xb2y\x9e"\x00\x11\xb8\x00',
+    },
+    service_data={
+        "0000fd3d-0000-1000-8000-00805f9b34fb": b"\x00\x00\x00\x00\x10\xd0\xb6"
+    },
     service_uuids=["cba20d00-224d-11e6-9fb8-0002a5d5c51b"],
     address="AA:BB:CC:DD:EE:FF",
     rssi=-60,
@@ -1119,7 +1126,16 @@ CANDLE_WARMER_LAMP_SERVICE_INFO = BluetoothServiceInfoBleak(
         },
         service_uuids=["cba20d00-224d-11e6-9fb8-0002a5d5c51b"],
     ),
-    device=generate_ble_device("AA:BB:CC:DD:EE:FF", "Candle Warmer Lamp"),
+    device=generate_ble_device("AA:BB:CC:DD:EE:FF", "Candle Warmer Lamp"),        local_name="RGBIC Neon Rope Light",
+        manufacturer_data={
+            2409: b'\xdc\x06u\xa6\xfb\xb2y\x9e"\x00\x11\xb8\x00',
+        },
+        service_data={
+            "0000fd3d-0000-1000-8000-00805f9b34fb": b"\x00\x00\x00\x00\x10\xd0\xb6"
+        },
+        service_uuids=["cba20d00-224d-11e6-9fb8-0002a5d5c51b"],
+    ),
+    device=generate_ble_device("AA:BB:CC:DD:EE:FF", "RGBIC Neon Rope Light"),
     time=0,
     connectable=True,
     tx_power=-127,
