@@ -1,7 +1,7 @@
 """Support for VeSync fans."""
 
 import logging
-from typing import Any, override
+from typing import Any, cast, override
 
 from pyvesync.base_devices import VeSyncFanBase, VeSyncPurifier
 
@@ -361,10 +361,9 @@ class VeSyncFanHA(VeSyncBaseEntity[VeSyncFanBase | VeSyncPurifier], FanEntity):
             rgetattr(self.device, "state.vertical_oscillation_status") is not None
             or rgetattr(self.device, "state.horizontal_oscillation_status") is not None
         ):
-            vertical_ok = await self.device.toggle_vertical_oscillation(oscillating)
-            horizontal_ok = await self.device.toggle_horizontal_oscillation(
-                oscillating
-            )
+            device = cast(VeSyncFanBase, self.device)
+            vertical_ok = await device.toggle_vertical_oscillation(oscillating)
+            horizontal_ok = await device.toggle_horizontal_oscillation(oscillating)
             if not vertical_ok or not horizontal_ok:
                 if self.device.last_response:
                     raise HomeAssistantError(self.device.last_response.message)
@@ -379,7 +378,5 @@ class VeSyncFanHA(VeSyncBaseEntity[VeSyncFanBase | VeSyncPurifier], FanEntity):
         if not success:
             if self.device.last_response:
                 raise HomeAssistantError(self.device.last_response.message)
-            raise HomeAssistantError(
-                "Failed to set oscillation, no response found."
-            )
+            raise HomeAssistantError("Failed to set oscillation, no response found.")
         self.async_write_ha_state()
