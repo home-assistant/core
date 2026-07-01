@@ -5,7 +5,7 @@ from collections.abc import Callable, Sequence
 from dataclasses import dataclass
 from datetime import timedelta
 from types import MappingProxyType
-from typing import TypeVar, override
+from typing import NoReturn, TypeVar, override
 
 from openaq import OpenAQ
 from openaq.core.responses import Latest, Location, Parameter, ParameterBase, Sensor
@@ -179,7 +179,7 @@ class OpenAQDataUpdateCoordinator(DataUpdateCoordinator[OpenAQLocationData]):
         async with self._client_lock:
             return await self.hass.async_add_executor_job(target, *args)
 
-    def _raise_update_failed(self, err: Exception) -> None:
+    def _raise_update_failed(self, err: Exception) -> NoReturn:
         """Raise a translated update failure."""
         if isinstance(err, OPENAQ_AUTH_EXCEPTIONS):
             raise ConfigEntryAuthFailed(
