@@ -17,6 +17,12 @@ rules:
   docs-high-level-description: done
   config-flow-test-coverage: done
   docs-actions: done
+  docs-conditions:
+    status: exempt
+    comment: This integration does not have any conditions.
+  docs-triggers:
+    status: exempt
+    comment: This integration does not have any triggers.
   runtime-data: done
 
   # Silver
