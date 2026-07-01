@@ -69,8 +69,9 @@ HC_HASS_TO_HOMEKIT_TARGET = {
     HVACMode.AUTO: HC_TARGET_AUTO,
 }
 
-# HomeKit's CurrentHeaterCoolerState has no drying or fan-only value, so those
-# actions map to Cooling, matching the Thermostat's action mapping.
+# HomeKit's CurrentHeaterCoolerState has no drying or fan-only value. Those
+# actions map to Cooling rather than Idle so the tile still shows the unit is
+# doing something, which also matches the Thermostat's action mapping.
 HC_HASS_TO_HOMEKIT_ACTION = {
     HVACAction.OFF: HC_INACTIVE,
     HVACAction.IDLE: HC_IDLE,
