@@ -24,13 +24,6 @@
         },
         "title": "Select a discovered device"
       },
-      "cache": {
-        "data": {
-          "action": "Action"
-        },
-        "description": "Remove cached cloud login data.",
-        "title": "Remove login cache"
-      },
       "discovery": {
         "data": {
           "ip_address": "IP address"

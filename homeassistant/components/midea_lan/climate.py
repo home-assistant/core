@@ -365,11 +365,6 @@ class MideaACClimate(MideaClimate):
             return float(raw)
         return None
 
-    @property
-    def outdoor_temperature(self) -> float | None:
-        """Midea AC Climate outdoor temperature."""
-        return self._float_attribute(ACAttributes.outdoor_temperature)
-
     @override
     def set_fan_mode(self, fan_mode: str) -> None:
         """Midea AC Climate set fan mode."""
