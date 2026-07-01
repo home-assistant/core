@@ -27,12 +27,7 @@ rules:
   entity-event-setup: done
   entity-unique-id: done
   has-entity-name: done
-  runtime-data:
-    status: todo
-    comment: |
-      The integration stores coordinator data in
-      hass.data[DOMAIN][entry.entry_id] (__init__.py:99) instead of
-      using entry.runtime_data.
+  runtime-data: done
   test-before-configure: done
   test-before-setup:
     status: todo
