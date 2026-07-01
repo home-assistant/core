@@ -38,7 +38,7 @@ async def test_form_success(hass: HomeAssistant, mock_setup_entry: AsyncMock) ->
         CONF_URL: "http://gatus.local:8080",
     }
 
-    assert result["result"].unique_id == "gatus.local:8080"
+    assert result["result"].unique_id == "4f53cda18c2baa0c"
     assert len(mock_setup_entry.mock_calls) == 1
 
 
@@ -83,7 +83,7 @@ async def test_form_failures_and_recovery(
         await hass.async_block_till_done()
 
     assert result["type"] is FlowResultType.CREATE_ENTRY
-    assert result["result"].unique_id == "gatus.local:8080"
+    assert result["result"].unique_id == "4f53cda18c2baa0c"
     assert len(mock_setup_entry.mock_calls) == 1
 
 
@@ -115,7 +115,7 @@ async def test_form_already_configured_by_unique_id(
     old_entry = MockConfigEntry(
         domain=DOMAIN,
         data={CONF_URL: "http://127.0.0.1"},
-        unique_id="gatus.local",
+        unique_id="4f53cda18c2baa0c",
     )
     old_entry.add_to_hass(hass)
 

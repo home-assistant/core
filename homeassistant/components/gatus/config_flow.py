@@ -1,11 +1,12 @@
 """Config flow for the Gatus integration."""
 
+import hashlib
+import json
 import logging
 from typing import Any, override
 
 from gatus_api.client import GatusClient, GatusClientError
 import voluptuous as vol
-from yarl import URL
 
 from homeassistant.config_entries import ConfigFlow, ConfigFlowResult
 from homeassistant.const import CONF_URL
@@ -24,13 +25,14 @@ STEP_USER_DATA_SCHEMA = vol.Schema(
 )
 
 
-async def validate_input(hass: HomeAssistant, data: dict[str, Any]) -> None:
-    """Validate that the user input allows us to connect to Gatus."""
-
+async def validate_input(
+    hass: HomeAssistant, data: dict[str, Any]
+) -> list[dict[str, Any]]:
+    """Validate that the user input allows us to connect to Gatus and return data."""
     client = GatusClient(url=data[CONF_URL], session=async_get_clientsession(hass))
 
     try:
-        await client.get_endpoints_statuses()
+        return await client.get_endpoints_statuses()
     except GatusClientError as err:
         _LOGGER.debug("Cannot connect to Gatus instance at %s: %s", data[CONF_URL], err)
         raise CannotConnect from err
@@ -50,20 +52,16 @@ class GatusConfigFlow(ConfigFlow, domain=DOMAIN):
             self._async_abort_entries_match({CONF_URL: user_input[CONF_URL]})
 
             try:
-                await validate_input(self.hass, user_input)
+                endpoints = await validate_input(self.hass, user_input)
             except CannotConnect:
                 errors["base"] = "cannot_connect"
             except Exception:
                 _LOGGER.exception("Unexpected exception during Gatus setup validation")
                 errors["base"] = "unknown"
             else:
-                url_obj = URL(user_input[CONF_URL])
-                host = url_obj.host or url_obj.path
-
-                if url_obj.port is not None:
-                    unique_id = f"{host}:{url_obj.port}"
-                else:
-                    unique_id = str(host)
+                # Generate a deterministic hash based on endpoint keys
+                keys = sorted([e["key"] for e in endpoints])
+                unique_id = hashlib.sha256(json.dumps(keys).encode()).hexdigest()[:16]
 
                 await self.async_set_unique_id(unique_id)
                 self._abort_if_unique_id_configured()
