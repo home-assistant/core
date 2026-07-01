@@ -86,16 +86,6 @@ def mock_setup_entry() -> Generator[AsyncMock]:
 
 
 @pytest.fixture
-def mock_flow_it_config_flow() -> Generator[AsyncMock]:
-    """Mock FlowItVMCMachine for config flow tests."""
-    with patch(
-        "homeassistant.components.flow_it.config_flow.FlowItVMCMachine",
-        return_value=get_mock_vmc(),
-    ) as mock:
-        yield mock
-
-
-@pytest.fixture
 def mock_flow_it() -> Generator[AsyncMock]:
     """Mock FlowItVMCMachine for integration tests."""
     with patch(
