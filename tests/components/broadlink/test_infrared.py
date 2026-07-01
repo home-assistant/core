@@ -146,7 +146,9 @@ async def test_infrared_receiver_polling_decodes_and_dispatches_packet(
     await hass.async_block_till_done(wait_background_tasks=True)
 
     mock_setup.api.reset_mock()
-    mock_setup.api.check_data.return_value = data_to_pulses(b'&\x00\x03\x00\x0f\x15\x1b')
+    mock_setup.api.check_data.return_value = data_to_pulses(
+        b"&\x00\x03\x00\x0f\x15\x1b"
+    )
 
     freezer.tick(broadlink_infrared.LEARNING_POLL_INTERVAL)
     async_fire_time_changed(hass)
@@ -176,7 +178,9 @@ async def test_infrared_receiver_polling_starts_on_subscribe_and_stops_on_unsubs
         if entry.domain == Platform.INFRARED and entry.unique_id.endswith("-receiver")
     )
 
-    mock_setup.api.check_data.return_value = data_to_pulses(b'&\x00\x03\x00\x0f\x15\x1b')
+    mock_setup.api.check_data.return_value = data_to_pulses(
+        b"&\x00\x03\x00\x0f\x15\x1b"
+    )
 
     freezer.tick(broadlink_infrared.LEARNING_POLL_INTERVAL)
     async_fire_time_changed(hass)
