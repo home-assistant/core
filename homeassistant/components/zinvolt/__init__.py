@@ -1,7 +1,5 @@
 """The Zinvolt integration."""
 
-from __future__ import annotations
-
 import asyncio
 
 from zinvolt import ZinvoltClient

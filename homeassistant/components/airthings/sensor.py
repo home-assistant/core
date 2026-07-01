@@ -1,6 +1,6 @@
 """Support for Airthings sensors."""
 
-from __future__ import annotations
+from typing import override
 
 from airthings import AirthingsDevice
 
@@ -11,14 +11,12 @@ from homeassistant.components.sensor import (
     SensorStateClass,
 )
 from homeassistant.const import (
-    CONCENTRATION_MICROGRAMS_PER_CUBIC_METER,
-    CONCENTRATION_PARTS_PER_BILLION,
-    CONCENTRATION_PARTS_PER_MILLION,
     LIGHT_LUX,
-    PERCENTAGE,
     SIGNAL_STRENGTH_DECIBELS,
     EntityCategory,
+    UnitOfDensity,
     UnitOfPressure,
+    UnitOfRatio,
     UnitOfSoundPressure,
     UnitOfTemperature,
 )
@@ -49,7 +47,7 @@ SENSORS: dict[str, SensorEntityDescription] = {
     "humidity": SensorEntityDescription(
         key="humidity",
         device_class=SensorDeviceClass.HUMIDITY,
-        native_unit_of_measurement=PERCENTAGE,
+        native_unit_of_measurement=UnitOfRatio.PERCENTAGE,
         state_class=SensorStateClass.MEASUREMENT,
         suggested_display_precision=0,
     ),
@@ -70,7 +68,7 @@ SENSORS: dict[str, SensorEntityDescription] = {
     "battery": SensorEntityDescription(
         key="battery",
         device_class=SensorDeviceClass.BATTERY,
-        native_unit_of_measurement=PERCENTAGE,
+        native_unit_of_measurement=UnitOfRatio.PERCENTAGE,
         entity_category=EntityCategory.DIAGNOSTIC,
         state_class=SensorStateClass.MEASUREMENT,
         suggested_display_precision=0,
@@ -78,20 +76,20 @@ SENSORS: dict[str, SensorEntityDescription] = {
     "co2": SensorEntityDescription(
         key="co2",
         device_class=SensorDeviceClass.CO2,
-        native_unit_of_measurement=CONCENTRATION_PARTS_PER_MILLION,
+        native_unit_of_measurement=UnitOfRatio.PARTS_PER_MILLION,
         state_class=SensorStateClass.MEASUREMENT,
         suggested_display_precision=0,
     ),
     "voc": SensorEntityDescription(
         key="voc",
         device_class=SensorDeviceClass.VOLATILE_ORGANIC_COMPOUNDS_PARTS,
-        native_unit_of_measurement=CONCENTRATION_PARTS_PER_BILLION,
+        native_unit_of_measurement=UnitOfRatio.PARTS_PER_BILLION,
         state_class=SensorStateClass.MEASUREMENT,
         suggested_display_precision=0,
     ),
     "light": SensorEntityDescription(
         key="light",
-        native_unit_of_measurement=PERCENTAGE,
+        native_unit_of_measurement=UnitOfRatio.PERCENTAGE,
         translation_key="light",
         state_class=SensorStateClass.MEASUREMENT,
         suggested_display_precision=0,
@@ -126,14 +124,14 @@ SENSORS: dict[str, SensorEntityDescription] = {
     ),
     "pm1": SensorEntityDescription(
         key="pm1",
-        native_unit_of_measurement=CONCENTRATION_MICROGRAMS_PER_CUBIC_METER,
+        native_unit_of_measurement=UnitOfDensity.MICROGRAMS_PER_CUBIC_METER,
         device_class=SensorDeviceClass.PM1,
         state_class=SensorStateClass.MEASUREMENT,
         suggested_display_precision=0,
     ),
     "pm25": SensorEntityDescription(
         key="pm25",
-        native_unit_of_measurement=CONCENTRATION_MICROGRAMS_PER_CUBIC_METER,
+        native_unit_of_measurement=UnitOfDensity.MICROGRAMS_PER_CUBIC_METER,
         device_class=SensorDeviceClass.PM25,
         state_class=SensorStateClass.MEASUREMENT,
         suggested_display_precision=0,
@@ -194,11 +192,13 @@ class AirthingsDeviceSensor(
         )
 
     @property
+    @override
     def native_value(self) -> StateType:
         """Return the value reported by the sensor."""
         return self.coordinator.data[self._id].sensors[self.entity_description.key]  # type: ignore[no-any-return]
 
     @property
+    @override
     def available(self) -> bool:
         """Check if device and sensor is available in data."""
         return (

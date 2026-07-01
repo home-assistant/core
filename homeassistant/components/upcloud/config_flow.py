@@ -1,9 +1,7 @@
 """Config flow for UpCloud."""
 
-from __future__ import annotations
-
 import logging
-from typing import Any
+from typing import Any, override
 
 import requests.exceptions
 import upcloud_api
@@ -27,6 +25,7 @@ class UpCloudConfigFlow(ConfigFlow, domain=DOMAIN):
     username: str
     password: str
 
+    @override
     async def async_step_user(
         self, user_input: dict[str, Any] | None = None
     ) -> ConfigFlowResult:
@@ -87,6 +86,7 @@ class UpCloudConfigFlow(ConfigFlow, domain=DOMAIN):
 
     @staticmethod
     @callback
+    @override
     def async_get_options_flow(
         config_entry: UpCloudConfigEntry,
     ) -> UpCloudOptionsFlow:
@@ -108,7 +108,7 @@ class UpCloudOptionsFlow(OptionsFlow):
         data_schema = vol.Schema(
             {
                 # Polling interval is user-configurable, which is no longer allowed
-                # pylint: disable-next=hass-config-flow-polling-field
+                # pylint: disable-next=home-assistant-config-flow-polling-field
                 vol.Optional(
                     CONF_SCAN_INTERVAL,
                     default=self.config_entry.options.get(CONF_SCAN_INTERVAL)

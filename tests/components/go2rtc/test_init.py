@@ -489,8 +489,8 @@ _INVALID_CONFIG = "Invalid config for 'go2rtc': "
 ERR_INVALID_URL = _INVALID_CONFIG + "invalid url"
 ERR_EXCLUSIVE = _INVALID_CONFIG + DEBUG_UI_URL_MESSAGE
 ERR_AUTH_WITHOUT_URL_OR_UI = (
-    _INVALID_CONFIG
-    + "Username and password can only be set when a URL is configured or debug_ui is true"
+    _INVALID_CONFIG + "Username and password can only be set when a URL is configured"
+    " or debug_ui is true"
 )
 ERR_AUTH_INCOMPLETE = (
     _INVALID_CONFIG
@@ -679,7 +679,7 @@ async def test_setup_with_retryable_setup_entry_error_custom_server(
     await hass.async_block_till_done(wait_background_tasks=True)
     config_entries = hass.config_entries.async_entries(DOMAIN)
     assert len(config_entries) == 1
-    assert config_entries[0].state == expected_config_entry_state
+    assert config_entries[0].state is expected_config_entry_state
     assert expected_log_message in caplog.text
 
 
@@ -716,7 +716,7 @@ async def test_setup_with_retryable_setup_entry_error_default_server(
     config_entries = hass.config_entries.async_entries(DOMAIN)
     assert len(config_entries) == has_go2rtc_entry
     for config_entry in config_entries:
-        assert config_entry.state == expected_config_entry_state
+        assert config_entry.state is expected_config_entry_state
     assert expected_log_message in caplog.text
 
 
@@ -750,7 +750,7 @@ async def test_setup_with_version_error(
     await hass.async_block_till_done(wait_background_tasks=True)
     config_entries = hass.config_entries.async_entries(DOMAIN)
     assert len(config_entries) == 1
-    assert config_entries[0].state == expected_config_entry_state
+    assert config_entries[0].state is expected_config_entry_state
     assert expected_log_message in caplog.text
 
 
@@ -861,7 +861,8 @@ async def _test_camera_orientation(
     await prefs.async_load()
     hass.data[DATA_CAMERA_PREFS] = prefs
 
-    # Set the specific orientation for this test by directly setting the dynamic stream settings
+    # Set the specific orientation for this test by directly setting
+    # the dynamic stream settings
     test_settings = DynamicStreamSettings(orientation=orientation, preload_stream=False)
     prefs._dynamic_stream_settings_by_entity_id[camera.entity_id] = test_settings
 
@@ -1007,7 +1008,10 @@ async def test_stream_orientation_stream_source_starts_ffmpeg(
         [HomeAssistant, MockCamera, Orientation, AsyncMock, str], Awaitable[None]
     ],
 ) -> None:
-    """Test WebRTC provider applies correct orientation filters when a stream source already starts with ffmpeg."""
+    """Test WebRTC provider applies correct orientation filters.
+
+    Specifically when a stream source already starts with ffmpeg.
+    """
     camera = init_test_integration
     camera.set_stream_source("ffmpeg:rtsp://test.stream")
 
@@ -1115,7 +1119,7 @@ async def test_unix_socket_not_used_for_custom_server(hass: HomeAssistant) -> No
 
 @pytest.mark.usefixtures("rest_client", "server")
 async def test_basic_auth_with_custom_url(hass: HomeAssistant) -> None:
-    """Test BasicAuth session is created when username and password are provided with custom URL."""
+    """Test BasicAuth session is created with username/password and URL."""
     config = {
         DOMAIN: {
             CONF_URL: "http://localhost:1984/",
@@ -1145,7 +1149,7 @@ async def test_basic_auth_with_custom_url(hass: HomeAssistant) -> None:
 
 @pytest.mark.usefixtures("rest_client")
 async def test_basic_auth_with_debug_ui(hass: HomeAssistant, server_dir: Path) -> None:
-    """Test BasicAuth session is created when username and password are provided with debug_ui."""
+    """Test BasicAuth session created with username/password and debug_ui."""
     config = {
         DOMAIN: {
             CONF_DEBUG_UI: True,

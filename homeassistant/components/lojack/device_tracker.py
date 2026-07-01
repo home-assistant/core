@@ -1,8 +1,8 @@
 """Device tracker platform for LoJack integration."""
 
-from __future__ import annotations
+from typing import override
 
-from homeassistant.components.device_tracker import SourceType, TrackerEntity
+from homeassistant.components.device_tracker import TrackerEntity
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
@@ -39,6 +39,7 @@ class LoJackDeviceTracker(CoordinatorEntity[LoJackCoordinator], TrackerEntity):
         self._attr_unique_id = coordinator.vehicle.id
 
     @property
+    @override
     def device_info(self) -> DeviceInfo:
         """Return the device info."""
         return DeviceInfo(
@@ -50,21 +51,19 @@ class LoJackDeviceTracker(CoordinatorEntity[LoJackCoordinator], TrackerEntity):
         )
 
     @property
-    def source_type(self) -> SourceType:
-        """Return the source type of the device."""
-        return SourceType.GPS
-
-    @property
+    @override
     def latitude(self) -> float | None:
         """Return the latitude of the device."""
         return self.coordinator.data.latitude
 
     @property
+    @override
     def longitude(self) -> float | None:
         """Return the longitude of the device."""
         return self.coordinator.data.longitude
 
     @property
+    @override
     def location_accuracy(self) -> int:
         """Return the location accuracy of the device."""
         if self.coordinator.data.accuracy is not None:
@@ -72,6 +71,7 @@ class LoJackDeviceTracker(CoordinatorEntity[LoJackCoordinator], TrackerEntity):
         return 0
 
     @property
+    @override
     def battery_level(self) -> int | None:
         """Return the battery level of the device (if applicable)."""
         # LoJack devices report vehicle battery voltage, not percentage

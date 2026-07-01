@@ -1,10 +1,9 @@
 """Support for EZVIZ number controls."""
 
-from __future__ import annotations
-
 from dataclasses import dataclass
 from datetime import timedelta
 import logging
+from typing import override
 
 from pyezvizapi.constants import SupportExt
 from pyezvizapi.exceptions import (
@@ -84,17 +83,20 @@ class EzvizNumber(EzvizBaseEntity, NumberEntity):
         self.config_entry_id = config_entry_id
         self.sensor_value: int | None = None
 
+    @override
     async def async_added_to_hass(self) -> None:
         """Run when about to be added to hass."""
         self.async_schedule_update_ha_state(True)
 
     @property
+    @override
     def native_value(self) -> float | None:
         """Return the state of the entity."""
         if self.sensor_value is not None:
             return float(self.sensor_value)
         return None
 
+    @override
     def set_native_value(self, value: float) -> None:
         """Set camera detection sensitivity."""
         level = int(value)

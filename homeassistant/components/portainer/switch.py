@@ -1,10 +1,8 @@
 """Switch platform for Portainer containers."""
 
-from __future__ import annotations
-
 from collections.abc import Callable, Coroutine
 from dataclasses import dataclass
-from typing import Any
+from typing import Any, override
 
 from pyportainer import DockerContainerState, Portainer, StackStatus
 from pyportainer.exceptions import (
@@ -171,10 +169,12 @@ class PortainerContainerSwitch(PortainerContainerEntity, SwitchEntity):
     entity_description: PortainerSwitchEntityDescription
 
     @property
+    @override
     def is_on(self) -> bool | None:
         """Return the state of the device."""
         return self.entity_description.is_on_fn(self.container_data)
 
+    @override
     async def async_turn_on(self, **kwargs: Any) -> None:
         """Start (turn on) the container."""
         await _perform_action(
@@ -184,6 +184,7 @@ class PortainerContainerSwitch(PortainerContainerEntity, SwitchEntity):
             ),
         )
 
+    @override
     async def async_turn_off(self, **kwargs: Any) -> None:
         """Stop (turn off) the container."""
         await _perform_action(
@@ -200,10 +201,12 @@ class PortainerStackSwitch(PortainerStackEntity, SwitchEntity):
     entity_description: PortainerStackSwitchEntityDescription
 
     @property
+    @override
     def is_on(self) -> bool | None:
         """Return the state of the device."""
         return self.entity_description.is_on_fn(self.stack_data)
 
+    @override
     async def async_turn_on(self, **kwargs: Any) -> None:
         """Start (turn on) the stack."""
         await _perform_action(
@@ -213,6 +216,7 @@ class PortainerStackSwitch(PortainerStackEntity, SwitchEntity):
             ),
         )
 
+    @override
     async def async_turn_off(self, **kwargs: Any) -> None:
         """Stop (turn off) the stack."""
         await _perform_action(

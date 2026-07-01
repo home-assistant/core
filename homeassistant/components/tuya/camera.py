@@ -1,6 +1,6 @@
 """Support for Tuya cameras."""
 
-from __future__ import annotations
+from typing import override
 
 from tuya_device_handlers.definition.camera import (
     CameraDefinition,
@@ -80,6 +80,7 @@ class TuyaCameraEntity(TuyaEntity, CameraEntity):
         self._recording_status = definition.recording_status
 
     @property
+    @override
     def is_recording(self) -> bool:
         """Return true if the device is recording."""
         if (status := self._read_wrapper(self._recording_status)) is not None:
@@ -87,12 +88,14 @@ class TuyaCameraEntity(TuyaEntity, CameraEntity):
         return False
 
     @property
+    @override
     def motion_detection_enabled(self) -> bool:
         """Return the camera motion detection status."""
         if (status := self._read_wrapper(self._motion_detection_switch)) is not None:
             return status
         return False
 
+    @override
     async def stream_source(self) -> str | None:
         """Return the source of the stream."""
         return await self.hass.async_add_executor_job(
@@ -101,6 +104,7 @@ class TuyaCameraEntity(TuyaEntity, CameraEntity):
             "rtsp",
         )
 
+    @override
     async def async_camera_image(
         self, width: int | None = None, height: int | None = None
     ) -> bytes | None:
@@ -115,10 +119,12 @@ class TuyaCameraEntity(TuyaEntity, CameraEntity):
             height=height,
         )
 
+    @override
     async def async_enable_motion_detection(self) -> None:
         """Enable motion detection in the camera."""
         await self._async_send_wrapper_updates(self._motion_detection_switch, True)
 
+    @override
     async def async_disable_motion_detection(self) -> None:
         """Disable motion detection in camera."""
         await self._async_send_wrapper_updates(self._motion_detection_switch, False)

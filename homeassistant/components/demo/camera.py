@@ -1,8 +1,7 @@
 """Demo camera platform that has a fake camera."""
 
-from __future__ import annotations
-
 from pathlib import Path
+from typing import override
 
 from homeassistant.components.camera import Camera, CameraEntityFeature
 from homeassistant.config_entries import ConfigEntry
@@ -39,6 +38,7 @@ class DemoCamera(Camera):
         self.content_type = content_type
         self._images_index = 0
 
+    @override
     async def async_camera_image(
         self, width: int | None = None, height: int | None = None
     ) -> bytes:
@@ -49,22 +49,26 @@ class DemoCamera(Camera):
 
         return await self.hass.async_add_executor_job(image_path.read_bytes)
 
+    @override
     async def async_enable_motion_detection(self) -> None:
         """Enable the Motion detection in base station (Arm)."""
         self._attr_motion_detection_enabled = True
         self.async_write_ha_state()
 
+    @override
     async def async_disable_motion_detection(self) -> None:
         """Disable the motion detection in base station (Disarm)."""
         self._attr_motion_detection_enabled = False
         self.async_write_ha_state()
 
+    @override
     async def async_turn_off(self) -> None:
         """Turn off camera."""
         self._attr_is_streaming = False
         self._attr_is_on = False
         self.async_write_ha_state()
 
+    @override
     async def async_turn_on(self) -> None:
         """Turn on camera."""
         self._attr_is_streaming = True

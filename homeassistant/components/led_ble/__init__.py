@@ -1,18 +1,17 @@
 """The LED BLE integration."""
 
-from __future__ import annotations
-
 import asyncio
 
 from led_ble import LEDBLE
 
 from homeassistant.components import bluetooth
+from homeassistant.components.bluetooth import BluetoothReachabilityIntent
 from homeassistant.components.bluetooth.match import ADDRESS, BluetoothCallbackMatcher
 from homeassistant.const import CONF_ADDRESS, EVENT_HOMEASSISTANT_STOP, Platform
 from homeassistant.core import Event, HomeAssistant, callback
 from homeassistant.exceptions import ConfigEntryNotReady
 
-from .const import DEVICE_TIMEOUT
+from .const import DEVICE_TIMEOUT, DOMAIN
 from .coordinator import LEDBLEConfigEntry, LEDBLECoordinator, LEDBLEData
 
 PLATFORMS: list[Platform] = [Platform.LIGHT]
@@ -24,7 +23,16 @@ async def async_setup_entry(hass: HomeAssistant, entry: LEDBLEConfigEntry) -> bo
     ble_device = bluetooth.async_ble_device_from_address(hass, address.upper(), True)
     if not ble_device:
         raise ConfigEntryNotReady(
-            f"Could not find LED BLE device with address {address}"
+            translation_domain=DOMAIN,
+            translation_key="device_not_found",
+            translation_placeholders={
+                "address": address,
+                "reason": bluetooth.async_address_reachability_diagnostics(
+                    hass,
+                    address.upper(),
+                    BluetoothReachabilityIntent.CONNECTION,
+                ),
+            },
         )
 
     led_ble = LEDBLE(ble_device)

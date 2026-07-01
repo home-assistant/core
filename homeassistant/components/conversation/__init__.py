@@ -1,7 +1,5 @@
 """Support for functionality to have conversations with Home Assistant."""
 
-from __future__ import annotations
-
 from collections.abc import Callable
 import logging
 from typing import Any, Literal
@@ -10,7 +8,7 @@ from hassil.recognize import RecognizeResult
 import voluptuous as vol
 
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import MATCH_ALL
+from homeassistant.const import MATCH_ALL, SERVICE_RELOAD
 from homeassistant.core import (
     HomeAssistant,
     ServiceCall,
@@ -55,7 +53,6 @@ from .const import (
     METADATA_CUSTOM_FILE,
     METADATA_CUSTOM_SENTENCE,
     SERVICE_PROCESS,
-    SERVICE_RELOAD,
     ConversationEntityFeature,
 )
 from .default_agent import async_setup_default_agent

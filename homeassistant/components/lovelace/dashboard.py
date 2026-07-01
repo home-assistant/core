@@ -1,13 +1,11 @@
 """Lovelace dashboard support."""
 
-from __future__ import annotations
-
 from abc import ABC, abstractmethod
 import logging
 import os
 from pathlib import Path
 import time
-from typing import TYPE_CHECKING, Any
+from typing import TYPE_CHECKING, Any, override
 
 import voluptuous as vol
 
@@ -113,10 +111,12 @@ class LovelaceStorage(LovelaceConfig):
         self._json_config: json_fragment | None = None
 
     @property
+    @override
     def mode(self) -> str:
         """Return mode of the lovelace config."""
         return MODE_STORAGE
 
+    @override
     async def async_get_info(self) -> dict[str, Any]:
         """Return the Lovelace storage info."""
         data = self._data or await self._load()
@@ -124,6 +124,7 @@ class LovelaceStorage(LovelaceConfig):
             return {"mode": "auto-gen"}
         return _config_info(self.mode, data["config"])
 
+    @override
     async def async_load(self, force: bool) -> dict[str, Any]:
         """Load config."""
         if self.hass.config.recovery_mode:
@@ -135,6 +136,7 @@ class LovelaceStorage(LovelaceConfig):
 
         return config  # type: ignore[no-any-return]
 
+    @override
     async def async_json(self, force: bool) -> json_fragment:
         """Return JSON representation of the config."""
         if self.hass.config.recovery_mode:
@@ -143,6 +145,7 @@ class LovelaceStorage(LovelaceConfig):
             await self._load()
         return self._json_config or self._async_build_json()
 
+    @override
     async def async_save(self, config: dict[str, Any]) -> None:
         """Save config."""
         if self.hass.config.recovery_mode:
@@ -157,6 +160,7 @@ class LovelaceStorage(LovelaceConfig):
         self._config_updated()
         await self._store.async_save(self._data)
 
+    @override
     async def async_delete(self) -> None:
         """Delete config."""
         if self.hass.config.recovery_mode:
@@ -197,10 +201,12 @@ class LovelaceYAML(LovelaceConfig):
         self._cache: tuple[dict[str, Any], float, json_fragment] | None = None
 
     @property
+    @override
     def mode(self) -> str:
         """Return mode of the lovelace config."""
         return MODE_YAML
 
+    @override
     async def async_get_info(self) -> dict[str, Any]:
         """Return the YAML storage mode."""
         try:
@@ -213,11 +219,13 @@ class LovelaceYAML(LovelaceConfig):
 
         return _config_info(self.mode, config)
 
+    @override
     async def async_load(self, force: bool) -> dict[str, Any]:
         """Load config."""
         config, _json = await self._async_load_or_cached(force)
         return config
 
+    @override
     async def async_json(self, force: bool) -> json_fragment:
         """Return JSON representation of the config."""
         _config, json = await self._async_load_or_cached(force)
@@ -277,6 +285,7 @@ class DashboardsCollection(collection.DictStorageCollection):
             storage.Store(hass, DASHBOARDS_STORAGE_VERSION, DASHBOARDS_STORAGE_KEY),
         )
 
+    @override
     async def _process_create_data(self, data: dict) -> dict:
         """Validate the config is valid."""
         url_path = data[CONF_URL_PATH]
@@ -296,10 +305,12 @@ class DashboardsCollection(collection.DictStorageCollection):
         return self.CREATE_SCHEMA(data)  # type: ignore[no-any-return]
 
     @callback
+    @override
     def _get_suggested_id(self, info: dict) -> str:
         """Suggest an ID based on the config."""
         return info[CONF_URL_PATH]  # type: ignore[no-any-return]
 
+    @override
     async def _update_data(self, item: dict, update_data: dict) -> dict:
         """Return a new updated data object."""
         update_data = self.UPDATE_SCHEMA(update_data)
@@ -315,6 +326,7 @@ class DashboardsCollectionWebSocket(collection.DictStorageCollectionWebsocket):
     """Class to expose storage collection management over websocket."""
 
     @callback
+    @override
     def ws_list_item(
         self,
         hass: HomeAssistant,

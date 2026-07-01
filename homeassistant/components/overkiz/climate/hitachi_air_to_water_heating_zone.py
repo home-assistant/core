@@ -1,8 +1,6 @@
 """Support for HitachiAirToWaterHeatingZone."""
 
-from __future__ import annotations
-
-from typing import Any, cast
+from typing import Any, cast, override
 
 from pyoverkiz.enums import OverkizCommand, OverkizCommandParam, OverkizState
 
@@ -59,15 +57,17 @@ class HitachiAirToWaterHeatingZone(OverkizEntity, ClimateEntity):
             self._attr_device_info["manufacturer"] = "Hitachi"
 
     @property
+    @override
     def hvac_mode(self) -> HVACMode:
         """Return hvac operation ie. heat, cool mode."""
         if (
-            state := self.device.states[OverkizState.MODBUS_AUTO_MANU_MODE_ZONE_1]
+            state := self.device.states.get(OverkizState.MODBUS_AUTO_MANU_MODE_ZONE_1)
         ) and state.value_as_str:
             return OVERKIZ_TO_HVAC_MODE[state.value_as_str]
 
         return HVACMode.OFF
 
+    @override
     async def async_set_hvac_mode(self, hvac_mode: HVACMode) -> None:
         """Set new target hvac mode."""
         await self.executor.async_execute_command(
@@ -75,15 +75,17 @@ class HitachiAirToWaterHeatingZone(OverkizEntity, ClimateEntity):
         )
 
     @property
+    @override
     def preset_mode(self) -> str | None:
         """Return the current preset mode, e.g., home, away, temp."""
         if (
-            state := self.device.states[OverkizState.MODBUS_YUTAKI_TARGET_MODE]
+            state := self.device.states.get(OverkizState.MODBUS_YUTAKI_TARGET_MODE)
         ) and state.value_as_str:
             return OVERKIZ_TO_PRESET_MODE[state.value_as_str]
 
         return PRESET_NONE
 
+    @override
     async def async_set_preset_mode(self, preset_mode: str) -> None:
         """Set new preset mode."""
         await self.executor.async_execute_command(
@@ -91,11 +93,12 @@ class HitachiAirToWaterHeatingZone(OverkizEntity, ClimateEntity):
         )
 
     @property
+    @override
     def current_temperature(self) -> float | None:
         """Return the current temperature."""
-        current_temperature = self.device.states[
+        current_temperature = self.device.states.get(
             OverkizState.MODBUS_ROOM_AMBIENT_TEMPERATURE_STATUS_ZONE_1
-        ]
+        )
 
         if current_temperature:
             return current_temperature.value_as_float
@@ -103,17 +106,19 @@ class HitachiAirToWaterHeatingZone(OverkizEntity, ClimateEntity):
         return None
 
     @property
+    @override
     def target_temperature(self) -> float | None:
         """Return the temperature we try to reach."""
-        target_temperature = self.device.states[
+        target_temperature = self.device.states.get(
             OverkizState.MODBUS_THERMOSTAT_SETTING_CONTROL_ZONE_1
-        ]
+        )
 
         if target_temperature:
             return target_temperature.value_as_float
 
         return None
 
+    @override
     async def async_set_temperature(self, **kwargs: Any) -> None:
         """Set new target temperature."""
         temperature = cast(float, kwargs.get(ATTR_TEMPERATURE))

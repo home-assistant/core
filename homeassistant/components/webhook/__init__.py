@@ -1,7 +1,5 @@
 """Webhooks for Home Assistant."""
 
-from __future__ import annotations
-
 from collections.abc import Awaitable, Callable, Iterable
 from dataclasses import dataclass
 from http import HTTPStatus
@@ -79,7 +77,8 @@ def async_register(
         )
 
     if not isinstance(local_only, bool):
-        # Previously it was valid to pass None for local_only and it was treated as False
+        # Previously it was valid to pass None for
+        # local_only and it was treated as False
         # with a deprecation warning. In case a custom component is still passing None,
         # we want to raise an error instead of silently treating it as False as the
         # deprecation period has ended and the message was removed.
@@ -250,6 +249,7 @@ class WebhookView(HomeAssistantView):
         "type": "webhook/list",
     }
 )
+@websocket_api.require_admin
 @callback
 def websocket_list(
     hass: HomeAssistant,

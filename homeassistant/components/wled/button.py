@@ -1,6 +1,6 @@
 """Support for WLED button."""
 
-from __future__ import annotations
+from typing import override
 
 from homeassistant.components.button import ButtonDeviceClass, ButtonEntity
 from homeassistant.const import EntityCategory
@@ -35,6 +35,7 @@ class WLEDRestartButton(WLEDEntity, ButtonEntity):
         self._attr_unique_id = f"{coordinator.data.info.mac_address}_restart"
 
     @wled_exception_handler
+    @override
     async def async_press(self) -> None:
         """Send out a restart command."""
         await self.coordinator.wled.reset()

@@ -1,9 +1,7 @@
 """The config flow for the Prowl component."""
 
-from __future__ import annotations
-
 import logging
-from typing import Any
+from typing import Any, override
 
 import prowlpy
 import voluptuous as vol
@@ -22,6 +20,7 @@ class ProwlConfigFlow(ConfigFlow, domain=DOMAIN):
 
     VERSION = 1
 
+    @override
     async def async_step_user(
         self, user_input: dict[str, Any] | None = None
     ) -> ConfigFlowResult:
@@ -47,6 +46,8 @@ class ProwlConfigFlow(ConfigFlow, domain=DOMAIN):
                 vol.Schema(
                     {
                         vol.Required(CONF_API_KEY): str,
+                        # Name field is no longer allowed in config flow schemas
+                        # pylint: disable-next=home-assistant-config-flow-name-field
                         vol.Required(CONF_NAME): str,
                     },
                 ),

@@ -1,8 +1,6 @@
 """Support for Tuya Fan."""
 
-from __future__ import annotations
-
-from typing import Any
+from typing import Any, override
 
 from tuya_device_handlers.definition.fan import FanDefinition, get_default_definition
 from tuya_device_handlers.helpers.homeassistant import TuyaFanDirection
@@ -109,23 +107,28 @@ class TuyaFanEntity(TuyaEntity, FanEntity):
                 FanEntityFeature.TURN_ON | FanEntityFeature.TURN_OFF
             )
 
+    @override
     async def async_set_preset_mode(self, preset_mode: str) -> None:
         """Set the preset mode of the fan."""
         await self._async_send_wrapper_updates(self._mode_wrapper, preset_mode)
 
+    @override
     async def async_set_direction(self, direction: str) -> None:
         """Set the direction of the fan."""
         if tuya_value := _HA_TO_TUYA_DIRECTION_MAPPINGS.get(direction):
             await self._async_send_wrapper_updates(self._direction_wrapper, tuya_value)
 
+    @override
     async def async_set_percentage(self, percentage: int) -> None:
         """Set the speed of the fan, as a percentage."""
         await self._async_send_wrapper_updates(self._speed_wrapper, percentage)
 
+    @override
     async def async_turn_off(self, **kwargs: Any) -> None:
         """Turn the fan off."""
         await self._async_send_wrapper_updates(self._switch_wrapper, False)
 
+    @override
     async def async_turn_on(
         self,
         percentage: int | None = None,
@@ -149,32 +152,38 @@ class TuyaFanEntity(TuyaEntity, FanEntity):
             )
         await self._async_send_commands(commands)
 
+    @override
     async def async_oscillate(self, oscillating: bool) -> None:
         """Oscillate the fan."""
         await self._async_send_wrapper_updates(self._oscillate_wrapper, oscillating)
 
     @property
+    @override
     def is_on(self) -> bool | None:
         """Return true if fan is on."""
         return self._read_wrapper(self._switch_wrapper)
 
     @property
+    @override
     def current_direction(self) -> str | None:
         """Return the current direction of the fan."""
         tuya_value = self._read_wrapper(self._direction_wrapper)
         return _TUYA_TO_HA_DIRECTION_MAPPINGS.get(tuya_value) if tuya_value else None
 
     @property
+    @override
     def oscillating(self) -> bool | None:
         """Return true if the fan is oscillating."""
         return self._read_wrapper(self._oscillate_wrapper)
 
     @property
+    @override
     def preset_mode(self) -> str | None:
         """Return the current preset_mode."""
         return self._read_wrapper(self._mode_wrapper)
 
     @property
+    @override
     def percentage(self) -> int | None:
         """Return the current speed."""
         return self._read_wrapper(self._speed_wrapper)

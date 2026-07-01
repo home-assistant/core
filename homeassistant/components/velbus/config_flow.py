@@ -1,10 +1,8 @@
 """Config flow for the Velbus platform."""
 
-from __future__ import annotations
-
 from pathlib import Path
 import shutil
-from typing import Any, Final
+from typing import Any, Final, override
 
 import velbusaio.controller
 from velbusaio.exceptions import VelbusConnectionFailed
@@ -62,6 +60,7 @@ class VelbusConfigFlow(ConfigFlow, domain=DOMAIN):
             return False
         return True
 
+    @override
     async def async_step_user(
         self, user_input: dict[str, Any] | None = None
     ) -> ConfigFlowResult:
@@ -161,6 +160,7 @@ class VelbusConfigFlow(ConfigFlow, domain=DOMAIN):
             errors=step_errors,
         )
 
+    @override
     async def async_step_usb(self, discovery_info: UsbServiceInfo) -> ConfigFlowResult:
         """Handle USB Discovery."""
         await self.async_set_unique_id(discovery_info.serial_number)

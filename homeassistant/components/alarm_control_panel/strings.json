@@ -11,6 +11,9 @@
       "fields": {
         "behavior": {
           "name": "[%key:component::alarm_control_panel::common::condition_behavior_name%]"
+        },
+        "for": {
+          "name": "[%key:component::alarm_control_panel::common::condition_for_name%]"
         }
       },
       "name": "Alarm is armed"
@@ -235,7 +238,7 @@
   "title": "Alarm control panel",
   "triggers": {
     "armed": {
-      "description": "Triggers after one or more alarms become armed, regardless of the mode.",
+      "description": "Triggers when one or more alarms become armed, regardless of the mode.",
       "fields": {
         "behavior": {
           "name": "[%key:component::alarm_control_panel::common::trigger_behavior_name%]"
@@ -247,7 +250,7 @@
       "name": "Alarm armed"
     },
     "armed_away": {
-      "description": "Triggers after one or more alarms become armed in away mode.",
+      "description": "Triggers when one or more alarms become armed in away mode.",
       "fields": {
         "behavior": {
           "name": "[%key:component::alarm_control_panel::common::trigger_behavior_name%]"
@@ -259,7 +262,7 @@
       "name": "Alarm armed away"
     },
     "armed_home": {
-      "description": "Triggers after one or more alarms become armed in home mode.",
+      "description": "Triggers when one or more alarms become armed in home mode.",
       "fields": {
         "behavior": {
           "name": "[%key:component::alarm_control_panel::common::trigger_behavior_name%]"
@@ -271,7 +274,7 @@
       "name": "Alarm armed home"
     },
     "armed_night": {
-      "description": "Triggers after one or more alarms become armed in night mode.",
+      "description": "Triggers when one or more alarms become armed in night mode.",
       "fields": {
         "behavior": {
           "name": "[%key:component::alarm_control_panel::common::trigger_behavior_name%]"
@@ -283,7 +286,7 @@
       "name": "Alarm armed night"
     },
     "armed_vacation": {
-      "description": "Triggers after one or more alarms become armed in vacation mode.",
+      "description": "Triggers when one or more alarms become armed in vacation mode.",
       "fields": {
         "behavior": {
           "name": "[%key:component::alarm_control_panel::common::trigger_behavior_name%]"
@@ -295,7 +298,7 @@
       "name": "Alarm armed vacation"
     },
     "disarmed": {
-      "description": "Triggers after one or more alarms become disarmed.",
+      "description": "Triggers when one or more alarms become disarmed.",
       "fields": {
         "behavior": {
           "name": "[%key:component::alarm_control_panel::common::trigger_behavior_name%]"
@@ -307,7 +310,7 @@
       "name": "Alarm disarmed"
     },
     "triggered": {
-      "description": "Triggers after one or more alarms become triggered.",
+      "description": "Triggers when one or more alarms become triggered.",
       "fields": {
         "behavior": {
           "name": "[%key:component::alarm_control_panel::common::trigger_behavior_name%]"

@@ -63,6 +63,7 @@ is_level:
     primary_entities_only: false
   fields:
     behavior: *condition_behavior
+    for: *condition_for
     threshold:
       required: true
       selector:

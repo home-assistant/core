@@ -1,10 +1,8 @@
 """Support for fetching WiFi associations through SNMP."""
 
-from __future__ import annotations
-
 import binascii
 import logging
-from typing import TYPE_CHECKING
+from typing import TYPE_CHECKING, override
 
 from pysnmp.error import PySnmpError
 from pysnmp.hlapi.v3arch.asyncio import (
@@ -104,7 +102,7 @@ class SnmpScanner(DeviceScanner):
 
     @classmethod
     async def create(cls, config):
-        """Asynchronously test the target device before fully initializing the scanner."""
+        """Test the target device before fully initializing."""
         host = config[CONF_HOST]
 
         try:
@@ -127,7 +125,7 @@ class SnmpScanner(DeviceScanner):
         return instance
 
     async def async_init(self, hass: HomeAssistant) -> None:
-        """Make a one-off read to check if the target device is reachable and readable."""
+        """Check if the target device is reachable and readable."""
         self.request_args = await async_create_request_cmd_args(
             hass,
             self._auth_data,
@@ -137,18 +135,21 @@ class SnmpScanner(DeviceScanner):
         data = await self.async_get_snmp_data()
         self.success_init = data is not None
 
+    @override
     async def async_scan_devices(self):
         """Scan for new devices and return a list with found device IDs."""
         await self._async_update_info()
         return [client["mac"] for client in self.last_results if client.get("mac")]
 
+    @override
     async def async_get_device_name(self, device: str) -> str | None:
         """Return the name of the given device or None if we don't know."""
         # We have no names
         return None
 
+    @override
     async def async_get_extra_attributes(self, device: str) -> dict:
-        """Return the extra attributes of the given device or an empty dictionary if we have none."""
+        """Return extra attributes of the given device."""
         for client in self.last_results:
             if client.get("mac") and device == client["mac"]:
                 return {"mac": client["mac"]}

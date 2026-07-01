@@ -1,10 +1,8 @@
 """Support for EZVIZ sirens."""
 
-from __future__ import annotations
-
 from collections.abc import Callable
 from datetime import datetime, timedelta
-from typing import Any
+from typing import Any, override
 
 from pyezvizapi import HTTPError, PyEzvizError, SupportExt
 
@@ -69,6 +67,7 @@ class EzvizSirenEntity(EzvizBaseEntity, SirenEntity, RestoreEntity):
         self._attr_is_on = False
         self._delay_listener: Callable | None = None
 
+    @override
     async def async_added_to_hass(self) -> None:
         """Run when entity about to be added to hass."""
         if not (last_state := await self.async_get_last_state()):
@@ -78,6 +77,7 @@ class EzvizSirenEntity(EzvizBaseEntity, SirenEntity, RestoreEntity):
         if self._attr_is_on:
             evt.async_call_later(self.hass, OFF_DELAY, self.off_delay_listener)
 
+    @override
     async def async_turn_off(self, **kwargs: Any) -> None:
         """Turn off camera siren."""
         try:
@@ -98,6 +98,7 @@ class EzvizSirenEntity(EzvizBaseEntity, SirenEntity, RestoreEntity):
             self._attr_is_on = False
             self.async_write_ha_state()
 
+    @override
     async def async_turn_on(self, **kwargs: Any) -> None:
         """Turn on camera siren."""
         try:

@@ -1,8 +1,6 @@
 """Base entity for Withings."""
 
-from __future__ import annotations
-
-from typing import Any
+from typing import Any, override
 
 from aiowithings import Device
 
@@ -28,7 +26,7 @@ class WithingsEntity[_T: WithingsDataUpdateCoordinator[Any]](CoordinatorEntity[_
     ) -> None:
         """Initialize the Withings entity."""
         super().__init__(coordinator)
-        self._attr_unique_id = f"withings_{coordinator.config_entry.unique_id}_{key}"
+        self._attr_unique_id = f"withings_{coordinator.config_entry.unique_id}_{key}"  # pylint: disable=home-assistant-entity-unique-id-redundant-domain
         self._attr_device_info = DeviceInfo(
             identifiers={(DOMAIN, str(coordinator.config_entry.unique_id))},
         )
@@ -56,6 +54,7 @@ class WithingsDeviceEntity(WithingsEntity[WithingsDeviceDataUpdateCoordinator]):
         )
 
     @property
+    @override
     def available(self) -> bool:
         """Return True if entity is available."""
         return super().available and self.device_id in self.coordinator.data

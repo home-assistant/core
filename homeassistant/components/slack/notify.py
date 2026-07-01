@@ -1,11 +1,9 @@
 """Slack platform for notify component."""
 
-from __future__ import annotations
-
 import asyncio
 import logging
 import os
-from typing import Any, TypedDict, cast
+from typing import Any, TypedDict, cast, override
 from urllib.parse import urlparse
 
 from aiohttp import BasicAuth
@@ -273,12 +271,14 @@ class SlackNotificationService(BaseNotificationService):
             elif isinstance(result, ClientError):
                 _LOGGER.error("Error while sending message to %s: %r", target, result)
 
+    @override
     async def async_send_message(self, message: str, **kwargs: Any) -> None:
         """Send a message to Slack."""
         data = kwargs.get(ATTR_DATA) or {}
 
         try:
             DATA_SCHEMA(data)
+        # pylint: disable-next=home-assistant-action-swallowed-exception
         except vol.Invalid as err:
             _LOGGER.error("Invalid message data: %s", err)
             data = {}
@@ -351,8 +351,11 @@ class SlackNotificationService(BaseNotificationService):
             channel_name = channel_name.lstrip("#")
 
             # Get channel list
-            # Multiple types is not working. Tested here: https://api.slack.com/methods/conversations.list/test
-            # response = await self._client.conversations_list(types="public_channel,private_channel")
+            # Multiple types is not working. Tested here:
+            # https://api.slack.com/methods/conversations.list/test
+            # response = await self._client.conversations_list(
+            #     types="public_channel,private_channel"
+            # )
             #
             # Workaround for the types parameter not working
             channels = []

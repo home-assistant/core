@@ -1,6 +1,6 @@
 """Support for buttons."""
 
-from __future__ import annotations
+from typing import override
 
 from homeassistant.components.button import ButtonEntity
 from homeassistant.const import EntityCategory
@@ -22,7 +22,7 @@ async def async_setup_entry(
 ) -> None:
     """Set up the platform."""
     # Uses legacy hass.data[DOMAIN] pattern
-    # pylint: disable-next=hass-use-runtime-data
+    # pylint: disable-next=home-assistant-use-runtime-data
     yaml_config: ConfigType = hass.data[DOMAIN][DATA_CONFIG]
     google_config = config_entry.runtime_data
 
@@ -51,6 +51,7 @@ class SyncButton(ButtonEntity):
             name="Google Assistant",
         )
 
+    @override
     async def async_press(self) -> None:
         """Press the button."""
         assert self._context

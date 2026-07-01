@@ -1,6 +1,6 @@
 """Support for Tuya valves."""
 
-from __future__ import annotations
+from typing import override
 
 from tuya_device_handlers.definition.valve import (
     ValveDefinition,
@@ -128,12 +128,14 @@ class TuyaValveEntity(TuyaEntity, ValveEntity):
         self._dpcode_wrapper = definition.control_wrapper
 
     @property
+    @override
     def is_closed(self) -> bool | None:
         """Return if the valve is closed."""
         if (is_open := self._read_wrapper(self._dpcode_wrapper)) is None:
             return None
         return not is_open
 
+    @override
     async def _process_device_update(
         self,
         updated_status_properties: list[str],
@@ -148,10 +150,12 @@ class TuyaValveEntity(TuyaEntity, ValveEntity):
             self.device, updated_status_properties, dp_timestamps
         )
 
+    @override
     async def async_open_valve(self) -> None:
         """Open the valve."""
         await self._async_send_wrapper_updates(self._dpcode_wrapper, True)
 
+    @override
     async def async_close_valve(self) -> None:
         """Close the valve."""
         await self._async_send_wrapper_updates(self._dpcode_wrapper, False)

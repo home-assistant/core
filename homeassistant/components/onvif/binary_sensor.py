@@ -1,6 +1,6 @@
 """Support for ONVIF binary sensors."""
 
-from __future__ import annotations
+from typing import override
 
 from homeassistant.components.binary_sensor import (
     BinarySensorDeviceClass,
@@ -102,12 +102,14 @@ class ONVIFBinarySensor(ONVIFBaseEntity, RestoreEntity, BinarySensorEntity):
         super().__init__(device)
 
     @property
+    @override
     def is_on(self) -> bool | None:
         """Return true if the binary sensor is on."""
         if (event := self.device.events.get_uid(self._attr_unique_id)) is not None:
             return event.value
         return self._attr_is_on
 
+    @override
     async def async_added_to_hass(self) -> None:
         """Connect to dispatcher listening for entity data notifications."""
         self.async_on_remove(

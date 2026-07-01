@@ -1,7 +1,5 @@
 """Component to wrap switch entities in entities of other domains."""
 
-from __future__ import annotations
-
 import logging
 
 import voluptuous as vol
@@ -83,9 +81,6 @@ async def async_migrate_entry(hass: HomeAssistant, config_entry: ConfigEntry) ->
         "Migrating from version %s.%s", config_entry.version, config_entry.minor_version
     )
 
-    if config_entry.version > 1:
-        # This means the user has downgraded from a future version
-        return False
     if config_entry.version == 1:
         options = {**config_entry.options}
         if config_entry.minor_version < 2:

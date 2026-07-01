@@ -1,8 +1,6 @@
 """Support for Subaru device tracker."""
 
-from __future__ import annotations
-
-from typing import Any
+from typing import Any, override
 
 from subarulink.const import LATITUDE, LONGITUDE, TIMESTAMP
 
@@ -50,6 +48,7 @@ class SubaruDeviceTracker(
         self._attr_unique_id = f"{self.vin}_location"
 
     @property
+    @override
     def extra_state_attributes(self) -> dict[str, Any] | None:
         """Return entity specific state attributes."""
         return {
@@ -59,16 +58,19 @@ class SubaruDeviceTracker(
         }
 
     @property
+    @override
     def latitude(self) -> float | None:
         """Return latitude value of the vehicle."""
         return self.coordinator.data[self.vin][VEHICLE_STATUS].get(LATITUDE)
 
     @property
+    @override
     def longitude(self) -> float | None:
         """Return longitude value of the vehicle."""
         return self.coordinator.data[self.vin][VEHICLE_STATUS].get(LONGITUDE)
 
     @property
+    @override
     def available(self) -> bool:
         """Return if entity is available."""
         if vehicle_data := self.coordinator.data.get(self.vin):

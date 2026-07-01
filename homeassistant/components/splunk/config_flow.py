@@ -1,10 +1,9 @@
 """Config flow for Splunk integration."""
-
-from __future__ import annotations
+# pylint: disable=home-assistant-config-flow-name-field  # Name field is no longer allowed in config flow schemas
 
 from collections.abc import Mapping
 import logging
-from typing import Any
+from typing import Any, override
 
 from hass_splunk import hass_splunk
 import voluptuous as vol
@@ -31,6 +30,7 @@ class SplunkConfigFlow(ConfigFlow, domain=DOMAIN):
     VERSION = 1
     MINOR_VERSION = 1
 
+    @override
     async def async_step_user(
         self, user_input: dict[str, Any] | None = None
     ) -> ConfigFlowResult:

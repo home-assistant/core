@@ -1,10 +1,8 @@
 """Support for TRMNL switch entities."""
 
-from __future__ import annotations
-
 from collections.abc import Callable, Coroutine
 from dataclasses import dataclass
-from typing import Any
+from typing import Any, override
 
 from trmnl.models import Device
 
@@ -82,11 +80,13 @@ class TRMNLSwitchEntity(TRMNLEntity, SwitchEntity):
         self._attr_unique_id = f"{device_id}_{description.key}"
 
     @property
+    @override
     def is_on(self) -> bool:
         """Return if sleep mode is enabled."""
         return self.entity_description.value_fn(self._device)
 
     @exception_handler
+    @override
     async def async_turn_on(self, **kwargs: Any) -> None:
         """Enable sleep mode."""
         await self.entity_description.set_value_fn(
@@ -95,6 +95,7 @@ class TRMNLSwitchEntity(TRMNLEntity, SwitchEntity):
         await self.coordinator.async_request_refresh()
 
     @exception_handler
+    @override
     async def async_turn_off(self, **kwargs: Any) -> None:
         """Disable sleep mode."""
         await self.entity_description.set_value_fn(
