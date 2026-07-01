@@ -11,6 +11,7 @@ from homeassistant.components.sensor import DOMAIN as SENSOR_DOMAIN, SensorDevic
 from homeassistant.const import PERCENTAGE, Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import entity_registry as er
+from homeassistant.helpers.recorder import DATA_INSTANCE
 
 from . import setup_integration
 
@@ -99,10 +100,7 @@ async def test_non_monetary_sensors_not_affected_by_currency(
     assert "device_class" not in state.attributes
 
 
-@pytest.mark.parametrize(
-    "ignore_missing_translations", ["component.recorder.services."]
-)
-@pytest.mark.usefixtures("mock_setup_entry", "recorder_mock")
+@pytest.mark.usefixtures("mock_setup_entry")
 async def test_statistics_migration_called_for_monetary_sensors(
     hass: HomeAssistant,
     mock_config_entry: MockConfigEntry,
@@ -111,6 +109,7 @@ async def test_statistics_migration_called_for_monetary_sensors(
     """Test statistics migration updates existing monetary sensors."""
     await hass.config.async_update(country="US", currency="USD")
 
+    hass.data[DATA_INSTANCE] = object()
     mock_config_entry.add_to_hass(hass)
     _add_migration_entity_registry_entries(entity_registry, mock_config_entry)
 
