@@ -19,7 +19,11 @@ from homeassistant.const import CONF_HOST, CONF_NAME, CONF_PASSWORD, CONF_USERNA
 from homeassistant.core import callback
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 from homeassistant.helpers.device_registry import format_mac
-from homeassistant.helpers.selector import SelectSelector, SelectSelectorConfig
+from homeassistant.helpers.selector import (
+    SelectSelector,
+    SelectSelectorConfig,
+    SelectSelectorMode,
+)
 from homeassistant.helpers.service_info.dhcp import DhcpServiceInfo
 from homeassistant.helpers.service_info.zeroconf import ZeroconfServiceInfo
 
@@ -36,6 +40,25 @@ STEP_AUTH_DATA_SCHEMA = vol.Schema(
     {
         vol.Required(CONF_USERNAME): str,
         vol.Required(CONF_PASSWORD): str,
+    }
+)
+
+BLE_SCANNER_OPTIONS = [
+    BLEScannerMode.DISABLED,
+    BLEScannerMode.AUTO,
+    BLEScannerMode.ACTIVE,
+    BLEScannerMode.PASSIVE,
+]
+
+BLE_SCANNER_SCHEMA = vol.Schema(
+    {
+        vol.Required(CONF_BLE_SCANNER_MODE): SelectSelector(
+            SelectSelectorConfig(
+                options=BLE_SCANNER_OPTIONS,
+                translation_key=CONF_BLE_SCANNER_MODE,
+                mode=SelectSelectorMode.DROPDOWN,
+            )
+        )
     }
 )
 
@@ -290,14 +313,6 @@ class SmlightConfigFlow(ConfigFlow, domain=DOMAIN):
         return OptionsFlowHandler()
 
 
-BLE_SCANNER_OPTIONS = [
-    BLEScannerMode.DISABLED,
-    BLEScannerMode.AUTO,
-    BLEScannerMode.ACTIVE,
-    BLEScannerMode.PASSIVE,
-]
-
-
 class OptionsFlowHandler(OptionsFlowWithReload):
     """Handle options flow for SMLIGHT."""
 
@@ -305,32 +320,59 @@ class OptionsFlowHandler(OptionsFlowWithReload):
         self, user_input: dict[str, Any] | None = None
     ) -> ConfigFlowResult:
         """Handle options flow."""
-        if user_input is not None:
-            return self.async_create_entry(title="", data=user_input)
-
         coordinator = self.config_entry.runtime_data.data
         info = coordinator.data.info
+        errors = {}
 
-        schema = {}
-        if info.ble is not None:
-            schema[
-                vol.Required(
+        if info.ble is None:
+            return await self.async_step_no_settings()
+
+        if user_input is not None:
+            scanner_mode = user_input.get(CONF_BLE_SCANNER_MODE)
+            if scanner_mode is not None:
+                current_mode = self.config_entry.options.get(
                     CONF_BLE_SCANNER_MODE,
-                    default=self.config_entry.options.get(
-                        CONF_BLE_SCANNER_MODE,
-                        BLEScannerMode.AUTO
-                        if info.ble.proxy_enabled
-                        else BLEScannerMode.DISABLED,
-                    ),
+                    BLEScannerMode.AUTO
+                    if info.ble.proxy_enabled
+                    else BLEScannerMode.DISABLED,
                 )
-            ] = SelectSelector(
-                SelectSelectorConfig(
-                    options=BLE_SCANNER_OPTIONS,
-                    translation_key=CONF_BLE_SCANNER_MODE,
-                )
+                if scanner_mode != current_mode:
+                    remote_adapter_enabled = scanner_mode != BLEScannerMode.DISABLED
+                    try:
+                        await coordinator.client.set_ble_proxy(remote_adapter_enabled)
+                    except SmlightConnectionError, SmlightAuthError:
+                        errors["base"] = "cannot_connect"
+
+            if not errors:
+                return self.async_create_entry(title="", data=user_input)
+
+        suggested_values = {
+            CONF_BLE_SCANNER_MODE: self.config_entry.options.get(
+                CONF_BLE_SCANNER_MODE,
+                BLEScannerMode.AUTO
+                if info.ble.proxy_enabled
+                else BLEScannerMode.DISABLED,
             )
+        }
 
         return self.async_show_form(
             step_id="init",
-            data_schema=vol.Schema(schema),
+            data_schema=self.add_suggested_values_to_schema(
+                BLE_SCANNER_SCHEMA, user_input or suggested_values
+            ),
+            errors=errors,
+        )
+
+    async def async_step_no_settings(
+        self, user_input: dict[str, Any] | None = None
+    ) -> ConfigFlowResult:
+        """Handle options for devices without settings."""
+        if user_input is not None:
+            return self.async_create_entry(title="", data={})
+
+        coordinator = self.config_entry.runtime_data.data
+        return self.async_show_form(
+            step_id="no_settings",
+            data_schema=vol.Schema({}),
+            description_placeholders={"model": coordinator.data.info.model},
         )

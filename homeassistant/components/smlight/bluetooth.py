@@ -1,9 +1,10 @@
 """Bluetooth proxy for SLZB devices using bleak-smlight."""
 
 from functools import partial
+import logging
 
 from bleak_smlight import SLZB_BLE_SERVER_PORT, connect_scanner
-from pysmlight import BleProxyClient
+from pysmlight import Api2, BleProxyClient, Info
 
 from homeassistant.components.bluetooth import (
     BluetoothScanningMode,
@@ -11,9 +12,12 @@ from homeassistant.components.bluetooth import (
 )
 from homeassistant.const import CONF_HOST
 from homeassistant.core import CALLBACK_TYPE, HomeAssistant, callback
+from homeassistant.helpers import device_registry as dr
 
-from .const import DOMAIN
-from .coordinator import SmConfigEntry
+from .const import CONF_BLE_SCANNER_MODE, DOMAIN, BLEScannerMode
+from .coordinator import SmConfigEntry, base_device_info
+
+_LOGGER = logging.getLogger(__name__)
 
 
 @callback
@@ -66,3 +70,43 @@ def async_connect_scanner(
     ]
 
     return partial(_async_unload, unload_callbacks, client_data.client)
+
+
+async def async_setup_ble_scanner(
+    hass: HomeAssistant,
+    entry: SmConfigEntry,
+    client: Api2,
+    info: Info,
+) -> CALLBACK_TYPE | None:
+    """Set up the BLE scanner/proxy configuration."""
+    assert info.ble is not None
+
+    scanner_mode = entry.options.get(
+        CONF_BLE_SCANNER_MODE,
+        BLEScannerMode.AUTO if info.ble.proxy_enabled else BLEScannerMode.DISABLED,
+    )
+
+    remote_adapter_enabled = scanner_mode != BLEScannerMode.DISABLED
+
+    if remote_adapter_enabled:
+        if not info.ble.proxy_enabled:
+            _LOGGER.warning(
+                "SMLIGHT BLE proxy is enabled in Home Assistant options but disabled on the device. "
+                "Please reconfigure the integration options to align settings"
+            )
+            return None
+
+        device_registry = dr.async_get(hass)
+        device = device_registry.async_get_or_create(
+            config_entry_id=entry.entry_id,
+            **base_device_info(info, client.host),
+        )
+        return async_connect_scanner(
+            hass,
+            entry,
+            info.model,
+            device.id,
+            BluetoothScanningMode(scanner_mode),
+        )
+
+    return None

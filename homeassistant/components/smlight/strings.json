@@ -197,22 +197,32 @@
     }
   },
   "options": {
+    "error": {
+      "cannot_connect": "[%key:common::config_flow::error::cannot_connect%]",
+      "unknown": "[%key:common::config_flow::error::unknown%]"
+    },
     "step": {
       "init": {
         "data": {
           "ble_scanner_mode": "Bluetooth scanner mode"
         },
+        "data_description": {
+          "ble_scanner_mode": "Auto is recommended for most setups. It saves battery on your Bluetooth devices while still catching new devices and updates quickly."
+        },
         "description": "Configure SLZB Bluetooth settings. Changing these settings will reboot the device to apply the new configuration."
+      },
+      "no_settings": {
+        "description": "This SMLIGHT device ({model}) does not support settings."
       }
     }
   },
   "selector": {
     "ble_scanner_mode": {
       "options": {
-        "active": "[%key:component::bluetooth::selector::mode::options::active%]",
-        "auto": "[%key:component::bluetooth::selector::mode::options::auto%]",
+        "active": "Active (uses more device battery, fastest updates)",
+        "auto": "Auto (recommended, saves device battery)",
         "disabled": "[%key:common::state::disabled%]",
-        "passive": "[%key:component::bluetooth::selector::mode::options::passive%]"
+        "passive": "Passive (lowest device battery use, some details may be missing)"
       }
     }
   },

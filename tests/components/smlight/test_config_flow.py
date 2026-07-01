@@ -891,3 +891,92 @@ async def test_reconfigure_auth_error(
     assert mock_config_entry.unique_id == "aa:bb:cc:dd:ee:ff"
     assert len(mock_smlight_client.authenticate.mock_calls) == 2
     assert len(hass.config_entries.async_entries(DOMAIN)) == 1
+
+
+async def test_options_flow(
+    hass: HomeAssistant,
+    mock_ultima_client: MagicMock,
+    mock_config_entry: MockConfigEntry,
+) -> None:
+    """Test options flow for BLE scanner mode."""
+    mock_config_entry.add_to_hass(hass)
+    await hass.config_entries.async_setup(mock_config_entry.entry_id)
+    await hass.async_block_till_done()
+
+    result = await hass.config_entries.options.async_init(mock_config_entry.entry_id)
+    assert result["type"] is FlowResultType.FORM
+    assert result["step_id"] == "init"
+
+    result = await hass.config_entries.options.async_configure(
+        result["flow_id"],
+        user_input={
+            "ble_scanner_mode": "passive",
+        },
+    )
+    assert result["type"] is FlowResultType.CREATE_ENTRY
+    assert result["data"] == {
+        "ble_scanner_mode": "passive",
+    }
+    mock_ultima_client.set_ble_proxy.assert_called_once_with(True)
+
+
+async def test_options_flow_error(
+    hass: HomeAssistant,
+    mock_ultima_client: MagicMock,
+    mock_config_entry: MockConfigEntry,
+) -> None:
+    """Test options flow error handling when set_ble_proxy fails and then succeeds on retry."""
+    mock_config_entry.add_to_hass(hass)
+    await hass.config_entries.async_setup(mock_config_entry.entry_id)
+    await hass.async_block_till_done()
+
+    result = await hass.config_entries.options.async_init(mock_config_entry.entry_id)
+    assert result["type"] is FlowResultType.FORM
+
+    mock_ultima_client.set_ble_proxy.side_effect = SmlightConnectionError
+
+    result = await hass.config_entries.options.async_configure(
+        result["flow_id"],
+        user_input={
+            "ble_scanner_mode": "disabled",
+        },
+    )
+    assert result["type"] is FlowResultType.FORM
+    assert result["errors"] == {"base": "cannot_connect"}
+
+    mock_ultima_client.set_ble_proxy.side_effect = None
+
+    result = await hass.config_entries.options.async_configure(
+        result["flow_id"],
+        user_input={
+            "ble_scanner_mode": "disabled",
+        },
+    )
+    assert result["type"] is FlowResultType.CREATE_ENTRY
+    assert result["data"] == {
+        "ble_scanner_mode": "disabled",
+    }
+    mock_ultima_client.set_ble_proxy.assert_called_with(False)
+
+
+@pytest.mark.usefixtures("mock_smlight_client")
+async def test_options_flow_no_ble(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+) -> None:
+    """Test options flow for device without BLE support redirects to no_settings step."""
+    mock_config_entry.add_to_hass(hass)
+    await hass.config_entries.async_setup(mock_config_entry.entry_id)
+    await hass.async_block_till_done()
+
+    result = await hass.config_entries.options.async_init(mock_config_entry.entry_id)
+    assert result["type"] is FlowResultType.FORM
+    assert result["step_id"] == "no_settings"
+    assert result["description_placeholders"] == {"model": "SLZB-06p7"}
+
+    result = await hass.config_entries.options.async_configure(
+        result["flow_id"],
+        user_input={},
+    )
+    assert result["type"] is FlowResultType.CREATE_ENTRY
+    assert result["data"] == {}
