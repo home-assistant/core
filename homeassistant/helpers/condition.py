@@ -1214,7 +1214,7 @@ class EntityDatetimeConditionBase(EntityConditionBase):
         if value > now:
             return False
         if self._within:
-            return (value + self._within) > now
+            return (value + self._within) >= now
         return True
 
 
