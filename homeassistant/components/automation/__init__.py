@@ -628,7 +628,9 @@ class AutomationEntity(BaseAutomationEntity, RestoreEntity):
 
         if state := await self.async_get_last_state():
             enable_automation = state.state == STATE_ON
-            last_triggered = state.attributes.get("last_triggered")
+            last_triggered = state.attributes.get(
+                AutomationEntityStateAttribute.LAST_TRIGGERED
+            )
             if last_triggered is not None:
                 self.action_script.last_triggered = parse_datetime(last_triggered)
             self._logger.debug(
