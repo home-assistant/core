@@ -1902,6 +1902,7 @@ async def test_web_fetch_error(
             CONF_WEB_FETCH_MAX_USES: 5,
         },
     )
+    await hass.async_block_till_done()
 
     web_fetch_result = WebFetchToolResultErrorBlock(
         type="web_fetch_tool_result_error",
