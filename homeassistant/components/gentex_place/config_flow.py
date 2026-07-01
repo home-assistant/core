@@ -65,6 +65,7 @@ class SRPFlowHandler(AbstractOAuth2FlowHandler, domain=DOMAIN):
                 )
                 sub = access_token["sub"]
                 await self.async_set_unique_id(sub)
+                self.flow_impl = SRPAuthImplementation(self.hass, DOMAIN)
                 self.external_data = {
                     "tokens": tokens,
                     CONF_UNIQUE_ID: sub,
