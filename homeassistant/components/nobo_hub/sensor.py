@@ -70,6 +70,7 @@ class NoboTemperatureSensor(NoboBaseEntity, SensorEntity):
         self._read_state()
 
     @property
+    @override
     def available(self) -> bool:
         """Available when the hub is connected and the component still exists."""
         return super().available and self._id in self._nobo.components

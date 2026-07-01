@@ -144,6 +144,7 @@ class NoboProfileSelector(NoboBaseEntity, SelectEntity):
         self._read_state()
 
     @property
+    @override
     def available(self) -> bool:
         """Available when the hub is connected and the zone still exists."""
         return super().available and self._id in self._nobo.zones
