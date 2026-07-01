@@ -33,6 +33,7 @@ HOME_DATA = "netatmo_home_data"
 SIGNAL_NAME = "signal_name"
 
 API_SCOPES_EXCLUDED_FROM_CLOUD = [
+    "access_camerapro",
     "access_doorbell",
     "read_doorbell",
     "read_mhs1",
