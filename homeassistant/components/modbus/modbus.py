@@ -4,7 +4,7 @@ import asyncio
 from collections.abc import Awaitable, Callable
 from typing import Any, cast
 
-from modbus_connection import ModbusConnection, ModbusConnectionError, ModbusError
+from modbus_connection import ModbusConnection, ModbusError
 from modbus_connection.pymodbus import connect_serial, connect_tcp, connect_udp
 import voluptuous as vol
 
@@ -260,7 +260,7 @@ class ModbusHub:
                 self._connection = await self._connect()
                 _LOGGER.info(f"modbus {self.name} communication open")
                 break
-            except ModbusConnectionError as exception_error:
+            except ModbusError as exception_error:
                 self._log_error(
                     f"{self.name} connect failed, please check"
                     f" your configuration ({exception_error!s})"
@@ -321,9 +321,7 @@ class ModbusHub:
         if self._connection:
             try:
                 await self._connection.close()
-            except Exception as exception_error:  # noqa: BLE001
-                # modbus-connection does not map backend errors raised by
-                # close(); swallow them so teardown always completes.
+            except ModbusError as exception_error:
                 self._log_error(str(exception_error))
             self._connection = None
             _LOGGER.info(f"modbus {self.name} communication closed")
