@@ -282,7 +282,6 @@ def async_setup_services(hass: HomeAssistant) -> None:
     ):
         if hass.services.has_service(DOMAIN, service_name):
             continue
-        # pylint: disable-next=home-assistant-service-registered-in-setup-entry
         hass.services.async_register(
             DOMAIN,
             service_name,

@@ -57,14 +57,6 @@ PLATFORMS = [
     Platform.UPDATE,
 ]
 
-SERVICE_NAME_PAUSE_WATERING = "pause_watering"
-SERVICE_NAME_PUSH_FLOW_METER_DATA = "push_flow_meter_data"
-SERVICE_NAME_PUSH_WEATHER_DATA = "push_weather_data"
-SERVICE_NAME_RESTRICT_WATERING = "restrict_watering"
-SERVICE_NAME_STOP_ALL = "stop_all"
-SERVICE_NAME_UNPAUSE_WATERING = "unpause_watering"
-SERVICE_NAME_UNRESTRICT_WATERING = "unrestrict_watering"
-
 
 COORDINATOR_UPDATE_INTERVAL_MAP = {
     DATA_API_VERSIONS: timedelta(minutes=1),
