@@ -1,5 +1,6 @@
 """Shared fan, swing, and temperature helpers for the climate accessory types."""
 
+from collections.abc import Iterable
 from typing import Any
 
 from homeassistant.components.climate import (
@@ -34,6 +35,11 @@ PRE_DEFINED_SWING_MODES = set(SWING_MODE_PREFERRED_ORDER)
 HEAT_COOL_DEADBAND = 5
 
 
+def _lower_to_original(modes: Iterable[Any]) -> dict[str, str]:
+    """Map each string mode to its original casing, keyed by the lowercase form."""
+    return {mode.lower(): mode for mode in modes if isinstance(mode, str)}
+
+
 def get_fan_modes_and_speeds(
     attributes: dict[str, Any],
 ) -> tuple[dict[str, str], list[str]]:
@@ -44,11 +50,7 @@ def get_fan_modes_and_speeds(
     exposes, in HomeKit rotation-speed order; it is empty when the entity only
     advertises custom fan mode names.
     """
-    fan_modes = {
-        fan_mode.lower(): fan_mode
-        for fan_mode in attributes.get(ATTR_FAN_MODES) or []
-        if isinstance(fan_mode, str)
-    }
+    fan_modes = _lower_to_original(attributes.get(ATTR_FAN_MODES) or [])
     ordered_fan_speeds: list[str] = []
     if PRE_DEFINED_FAN_MODES.intersection(fan_modes):
         ordered_fan_speeds = [
@@ -66,9 +68,7 @@ def get_swing_on_mode(attributes: dict[str, Any]) -> str | None:
     """
     if not (swing_modes := attributes.get(ATTR_SWING_MODES)):
         return None
-    lower_to_original = {
-        mode.lower(): mode for mode in swing_modes if isinstance(mode, str)
-    }
+    lower_to_original = _lower_to_original(swing_modes)
     return next(
         (
             lower_to_original[swing_mode]
@@ -82,14 +82,7 @@ def get_swing_on_mode(attributes: dict[str, Any]) -> str | None:
 def get_swing_off_mode(attributes: dict[str, Any]) -> str:
     """Return the entity's off swing mode, preserving its original casing."""
     swing_modes = attributes.get(ATTR_SWING_MODES) or []
-    return next(
-        (
-            mode
-            for mode in swing_modes
-            if isinstance(mode, str) and mode.lower() == SWING_OFF
-        ),
-        SWING_OFF,
-    )
+    return _lower_to_original(swing_modes).get(SWING_OFF, SWING_OFF)
 
 
 def fan_speed_to_mode(
