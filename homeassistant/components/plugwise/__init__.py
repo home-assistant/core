@@ -2,7 +2,7 @@
 
 from typing import Any
 
-from homeassistant.const import ATTR_NAME, Platform
+from homeassistant.const import ATTR_MODEL, Platform
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers import device_registry as dr, entity_registry as er
 
@@ -100,6 +100,6 @@ async def async_migrate_entities(
         if entity_id := ent_reg.async_get_entity_id(
             Platform.CLIMATE, DOMAIN, old_unique_id
         ):
-            model = f"{self.device[ATTR_MODEL]}".lower()
+            model = f"{device[ATTR_MODEL]}".lower()
             new_unique_id = f"{device_id}-{model}"
             ent_reg.async_update_entity(entity_id, new_unique_id=new_unique_id)
