@@ -34,7 +34,5 @@ def trigger_shadow_callback(
     payload: bytes,
 ) -> None:
     """Invoke the MQTT client's on_message callback."""
-    on_message = mock_mqtt_client.connect.call_args.kwargs.get("on_message")
-    if on_message is None:
-        on_message = mock_mqtt_client.connect.call_args[1]["on_message"]
+    on_message = mock_mqtt_client.connect.call_args.kwargs["on_message"]
     on_message(topic, payload)
