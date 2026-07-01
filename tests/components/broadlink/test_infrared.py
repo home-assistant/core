@@ -2,7 +2,7 @@
 
 from unittest.mock import call
 
-from broadlink.exceptions import BroadlinkException
+from broadlink.exceptions import BroadlinkException, ReadError
 from broadlink.remote import pulses_to_data
 from freezegun.api import FrozenDateTimeFactory
 from infrared_protocols.commands.nec import NECCommand
@@ -210,3 +210,107 @@ async def test_infrared_receiver_polling_starts_on_subscribe_and_stops_on_unsubs
     async_fire_time_changed(hass)
     await hass.async_block_till_done()
     assert mock_setup.api.mock_calls == []
+
+
+async def test_infrared_receiver_polling_logs_enter_learning_failure(
+    hass: HomeAssistant,
+    entity_registry: er.EntityRegistry,
+    freezer: FrozenDateTimeFactory,
+    caplog: pytest.LogCaptureFixture,
+) -> None:
+    """Test that a BroadlinkException in enter_learning is logged and poll continues."""
+    device = get_device("Entrance")
+    mock_setup = await device.setup_entry(hass)
+    mock_setup.api.enter_learning.side_effect = BroadlinkException("no learn")
+
+    entries = er.async_entries_for_config_entry(
+        entity_registry, mock_setup.entry.entry_id
+    )
+    receiver_entry = next(
+        entry
+        for entry in entries
+        if entry.domain == Platform.INFRARED and entry.unique_id.endswith("-receiver")
+    )
+
+    async_subscribe_receiver(hass, receiver_entry.entity_id, lambda _: None)
+    await hass.async_block_till_done()
+
+    mock_setup.api.reset_mock()
+    freezer.tick(broadlink_infrared.LEARNING_POLL_INTERVAL)
+    async_fire_time_changed(hass)
+    await hass.async_block_till_done()
+
+    assert mock_setup.api.check_data.call_count == 0
+    assert "Failed to start infrared receive mode" in caplog.text
+    assert receiver_entry.entity_id in caplog.text
+
+
+async def test_infrared_receiver_logs_decode_failure(
+    hass: HomeAssistant,
+    entity_registry: er.EntityRegistry,
+    freezer: FrozenDateTimeFactory,
+    monkeypatch: pytest.MonkeyPatch,
+    caplog: pytest.LogCaptureFixture,
+) -> None:
+    """Test that a ValueError from _bl_data_to_pulses is logged and no signal is dispatched."""
+    device = get_device("Entrance")
+    mock_setup = await device.setup_entry(hass)
+    mock_setup.api.check_data.return_value = b"bad"
+
+    monkeypatch.setattr(
+        broadlink_infrared,
+        "_bl_data_to_pulses",
+        lambda _: (_ for _ in ()).throw(ValueError("bad packet")),
+    )
+
+    entries = er.async_entries_for_config_entry(
+        entity_registry, mock_setup.entry.entry_id
+    )
+    receiver_entry = next(
+        entry
+        for entry in entries
+        if entry.domain == Platform.INFRARED and entry.unique_id.endswith("-receiver")
+    )
+
+    received_signals: list[InfraredReceivedSignal] = []
+    async_subscribe_receiver(hass, receiver_entry.entity_id, received_signals.append)
+    await hass.async_block_till_done()
+
+    mock_setup.api.reset_mock()
+    freezer.tick(broadlink_infrared.LEARNING_POLL_INTERVAL)
+    async_fire_time_changed(hass)
+    await hass.async_block_till_done()
+
+    assert received_signals == []
+    assert "Failed to decode infrared signal packet" in caplog.text
+
+
+async def test_infrared_receiver_polling_ignores_read_error(
+    hass: HomeAssistant,
+    entity_registry: er.EntityRegistry,
+    freezer: FrozenDateTimeFactory,
+) -> None:
+    """Test that ReadError from check_data results in no signal being dispatched."""
+    device = get_device("Entrance")
+    mock_setup = await device.setup_entry(hass)
+    mock_setup.api.check_data.side_effect = ReadError()
+
+    entries = er.async_entries_for_config_entry(
+        entity_registry, mock_setup.entry.entry_id
+    )
+    receiver_entry = next(
+        entry
+        for entry in entries
+        if entry.domain == Platform.INFRARED and entry.unique_id.endswith("-receiver")
+    )
+
+    received_signals: list[InfraredReceivedSignal] = []
+    async_subscribe_receiver(hass, receiver_entry.entity_id, received_signals.append)
+    await hass.async_block_till_done()
+
+    mock_setup.api.reset_mock()
+    freezer.tick(broadlink_infrared.LEARNING_POLL_INTERVAL)
+    async_fire_time_changed(hass)
+    await hass.async_block_till_done()
+
+    assert received_signals == []

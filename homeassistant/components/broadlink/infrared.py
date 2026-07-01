@@ -188,6 +188,7 @@ class BroadlinkInfraredReceiverEntity(BroadlinkEntity, InfraredReceiverEntity):
                     self.entity_id,
                     err,
                 )
+                return
 
             try:
                 packet = await self._device.async_request(self._device.api.check_data)
