@@ -1513,6 +1513,60 @@ async def test_heatercooler_derive_action_auto_without_thresholds(
     assert acc.char_current_state.value == HC_IDLE
 
 
+async def test_heatercooler_off_at_startup_activates_displayed_mode(
+    hass: HomeAssistant, hk_driver: HomeDriver
+) -> None:
+    """Test turning on an off-at-startup entity activates the displayed mode."""
+    entity_id = "climate.test"
+    base_attrs = {
+        ATTR_SUPPORTED_FEATURES: ClimateEntityFeature.TARGET_TEMPERATURE,
+        ATTR_HVAC_MODES: [HVACMode.HEAT, HVACMode.COOL, HVACMode.AUTO, HVACMode.OFF],
+    }
+
+    hass.states.async_set(entity_id, HVACMode.OFF, base_attrs)
+    await hass.async_block_till_done()
+
+    acc = HeaterCooler(hass, hk_driver, "Climate", entity_id, 1, None)
+    hk_driver.add_accessory(acc)
+    acc.run()
+    await hass.async_block_till_done()
+
+    # The tile shows Auto, so turning on must activate Auto, not the first mode.
+    assert acc.char_target_state.value == HC_TARGET_AUTO
+    call_set_hvac_mode = async_mock_service(hass, CLIMATE_DOMAIN, SERVICE_SET_HVAC_MODE)
+    acc._set_chars({CHAR_ACTIVE: 1})
+    await hass.async_block_till_done()
+    assert call_set_hvac_mode[-1].data[ATTR_HVAC_MODE] == HVACMode.AUTO
+
+
+async def test_heatercooler_cool_mode_ignores_heating_threshold(
+    hass: HomeAssistant, hk_driver: HomeDriver
+) -> None:
+    """Test a heating-threshold write is ignored for a single-setpoint cool entity."""
+    entity_id = "climate.test"
+    base_attrs = {
+        ATTR_SUPPORTED_FEATURES: ClimateEntityFeature.TARGET_TEMPERATURE,
+        ATTR_HVAC_MODES: [HVACMode.HEAT, HVACMode.COOL, HVACMode.OFF],
+        ATTR_TEMPERATURE: 22.0,
+    }
+
+    hass.states.async_set(entity_id, HVACMode.COOL, base_attrs)
+    await hass.async_block_till_done()
+
+    acc = HeaterCooler(hass, hk_driver, "Climate", entity_id, 1, None)
+    hk_driver.add_accessory(acc)
+    acc.run()
+    await hass.async_block_till_done()
+
+    call_set_temperature = async_mock_service(
+        hass, CLIMATE_DOMAIN, SERVICE_SET_TEMPERATURE
+    )
+    # Cool mode uses the cooling threshold; a heating-threshold write is ignored.
+    acc._set_chars({CHAR_HEATING_THRESHOLD_TEMPERATURE: 18.0})
+    await hass.async_block_till_done()
+    assert len(call_set_temperature) == 0
+
+
 async def test_heatercooler_fan_only_target_falls_back(
     hass: HomeAssistant, hk_driver: HomeDriver
 ) -> None:

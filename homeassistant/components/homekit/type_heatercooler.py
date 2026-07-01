@@ -230,13 +230,14 @@ class HeaterCooler(HomeKitClimateAccessory):
                 CHAR_CURRENT_HUMIDITY, value=50
             )
 
-        # Fall back to a supported mode so turning Active on for a device that
-        # was off at startup does not request an unsupported mode.
+        # Fall back to the displayed target mode so turning Active on for a device
+        # that was off at startup activates the mode HomeKit is showing rather than
+        # an arbitrary one.
         self._last_known_mode: HVACMode
         if current_mode and current_mode != HVACMode.OFF:
             self._last_known_mode = current_mode
         else:
-            self._last_known_mode = next(iter(self._hk_to_ha_target.values()))
+            self._last_known_mode = self._hk_to_ha_target[default_target]
 
         self.async_update_state(state)
 
@@ -352,11 +353,16 @@ class HeaterCooler(HomeKitClimateAccessory):
         if not current_state:
             return
 
+        # For a single setpoint the active mode decides which threshold is the
+        # setpoint; Cool uses the cooling side and Heat the heating side, so a
+        # write to the other side is ignored. Range and other modes fall back to
+        # whichever threshold moved, and Auto picks the one furthest from the
+        # current setpoint.
         current_mode = current_state.state
         selected_temp = None
-        if current_mode == HVACMode.COOL and cooling_temp is not None:
+        if current_mode == HVACMode.COOL:
             selected_temp = cooling_temp
-        elif current_mode == HVACMode.HEAT and heating_temp is not None:
+        elif current_mode == HVACMode.HEAT:
             selected_temp = heating_temp
         elif (
             current_mode == HVACMode.HEAT_COOL
