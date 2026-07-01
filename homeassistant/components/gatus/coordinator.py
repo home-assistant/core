@@ -21,7 +21,7 @@ type GatusConfigEntry = ConfigEntry[GatusDataUpdateCoordinator]
 class GatusDataUpdateCoordinator(DataUpdateCoordinator[list[dict[str, Any]]]):
     """Class to manage fetching Gatus data from the API via third-party library."""
 
-    def __init__(self, hass: HomeAssistant, entry: ConfigEntry, url: str) -> None:
+    def __init__(self, hass: HomeAssistant, entry: GatusConfigEntry, url: str) -> None:
         """Initialize the coordinator."""
         self.url = url.rstrip("/")
         self.client = GatusClient(url=self.url, session=async_get_clientsession(hass))
