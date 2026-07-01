@@ -1,5 +1,6 @@
 """Config flow for the OpenAQ integration."""
 
+from collections.abc import Mapping
 from dataclasses import dataclass
 from functools import partial
 from math import inf
@@ -55,6 +56,26 @@ PARAMETER_DISPLAY_CODES = {
     "pm25": "PM2.5",
     "nox": "NOx",
 }
+
+
+async def _async_validate_api_key(hass: HomeAssistant, api_key: str) -> str | None:
+    """Validate an OpenAQ API key and return an error key if validation fails."""
+    try:
+        client = await async_create_openaq_client(hass, api_key)
+        try:
+            await hass.async_add_executor_job(partial(client.parameters.list, limit=1))
+        finally:
+            await hass.async_add_executor_job(client.close)
+    except OPENAQ_AUTH_EXCEPTIONS:
+        return "invalid_auth"
+    except OPENAQ_RATE_LIMIT_EXCEPTIONS:
+        return "rate_limited"
+    except OPENAQ_API_EXCEPTIONS:
+        return "cannot_connect"
+    except Exception:  # noqa: BLE001
+        LOGGER.exception("Unexpected exception")
+        return "unknown"
+    return None
 
 
 @dataclass(slots=True)
@@ -169,25 +190,10 @@ class OpenAQConfigFlow(ConfigFlow, domain=DOMAIN):
         errors: dict[str, str] = {}
         if user_input is not None:
             self._async_abort_entries_match({CONF_API_KEY: user_input[CONF_API_KEY]})
-            try:
-                client = await async_create_openaq_client(
-                    self.hass, user_input[CONF_API_KEY]
-                )
-                try:
-                    await self.hass.async_add_executor_job(
-                        partial(client.parameters.list, limit=1)
-                    )
-                finally:
-                    await self.hass.async_add_executor_job(client.close)
-            except OPENAQ_AUTH_EXCEPTIONS:
-                errors["base"] = "invalid_auth"
-            except OPENAQ_RATE_LIMIT_EXCEPTIONS:
-                errors["base"] = "rate_limited"
-            except OPENAQ_API_EXCEPTIONS:
-                errors["base"] = "cannot_connect"
-            except Exception:  # noqa: BLE001
-                LOGGER.exception("Unexpected exception")
-                errors["base"] = "unknown"
+            if error := await _async_validate_api_key(
+                self.hass, user_input[CONF_API_KEY]
+            ):
+                errors["base"] = error
             else:
                 return self.async_create_entry(
                     title="OpenAQ",
@@ -196,6 +202,34 @@ class OpenAQConfigFlow(ConfigFlow, domain=DOMAIN):
 
         return self.async_show_form(
             step_id="user",
+            data_schema=STEP_USER_DATA_SCHEMA,
+            errors=errors,
+        )
+
+    async def async_step_reauth(
+        self, entry_data: Mapping[str, Any]
+    ) -> ConfigFlowResult:
+        """Handle a reauthentication request."""
+        return await self.async_step_reauth_confirm()
+
+    async def async_step_reauth_confirm(
+        self, user_input: dict[str, Any] | None = None
+    ) -> ConfigFlowResult:
+        """Handle reauthentication with a new API key."""
+        errors: dict[str, str] = {}
+        if user_input is not None:
+            if error := await _async_validate_api_key(
+                self.hass, user_input[CONF_API_KEY]
+            ):
+                errors["base"] = error
+            else:
+                return self.async_update_reload_and_abort(
+                    self._get_reauth_entry(),
+                    data_updates={CONF_API_KEY: user_input[CONF_API_KEY]},
+                )
+
+        return self.async_show_form(
+            step_id="reauth_confirm",
             data_schema=STEP_USER_DATA_SCHEMA,
             errors=errors,
         )
