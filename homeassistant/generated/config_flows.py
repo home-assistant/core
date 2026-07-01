@@ -135,6 +135,7 @@ FLOWS = {
         "cloudflare_r2",
         "co2signal",
         "coinbase",
+        "collection_image",
         "color_extractor",
         "comelit",
         "compit",

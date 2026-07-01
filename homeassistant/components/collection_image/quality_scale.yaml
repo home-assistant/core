@@ -1,0 +1,112 @@
+rules:
+  # Bronze
+  action-setup: done
+  appropriate-polling:
+    status: exempt
+    comment: Integration does not poll.
+  brands: done
+  common-modules:
+    status: exempt
+    comment: No common modules exist, only a single platform.
+  config-flow-test-coverage: done
+  config-flow: done
+  dependency-transparency:
+    status: exempt
+    comment: No dependencies.
+  docs-actions:
+    status: exempt
+    comment: No actions.
+  docs-high-level-description: done
+  docs-installation-instructions: done
+  docs-removal-instructions: done
+  entity-event-setup:
+    status: exempt
+    comment: No entity event subscriptions.
+  entity-unique-id: done
+  has-entity-name:
+    status: exempt
+    comment: Config entry only has one entity, and the entity has the same name as the config entry; there is no device name.
+  runtime-data:
+    status: exempt
+    comment: No known use for runtime data.
+  test-before-configure:
+    status: exempt
+    comment: Integration does not connect to anything.
+  test-before-setup:
+    status: exempt
+    comment: Integration does not connect to anything.
+  unique-config-entry:
+    status: exempt
+    comment: Integration does not connect to any physical object or service.
+
+  # Silver
+  action-exceptions:
+    status: exempt
+    comment: No current actions.
+  config-entry-unloading: done
+  docs-configuration-parameters: done
+  docs-installation-parameters: done
+  entity-unavailable: done
+  integration-owner: done
+  log-when-unavailable: done
+  parallel-updates:
+    status: exempt
+    comment: Does not communicate with a device or external service, so no limit is necessary.
+  reauthentication-flow:
+    status: exempt
+    comment: Does not authenticate.
+  test-coverage: done
+
+  # Gold
+  devices: todo
+  diagnostics: todo
+  discovery-update-info:
+    status: exempt
+    comment: Nothing to discover.
+  discovery:
+    status: exempt
+    comment: Nothing to discover.
+  docs-data-update: todo
+  docs-examples: todo
+  docs-known-limitations:
+    status: exempt
+    comment: No 'known limitations'.
+  docs-supported-devices:
+    status: exempt
+    comment: Integration does not support physical devices.
+  docs-supported-functions:
+    status: exempt
+    comment: Integration does not support physical devices.
+  docs-troubleshooting: todo
+  docs-use-cases: todo
+  dynamic-devices:
+    status: exempt
+    comment: Integration does not support physical devices.
+  entity-category: done
+  entity-device-class: done
+  entity-disabled-by-default: done
+  entity-translations:
+    status: exempt
+    comment: Name is user specified.
+  exception-translations: done
+  icon-translations:
+    status: exempt
+    comment: No meaningful icon translations for an image entity.
+  reconfiguration-flow:
+    status: exempt
+    comment: Nothing to reconfigure.
+  repair-issues:
+    status: exempt
+    comment: Nothing to repair.
+  stale-devices:
+    status: exempt
+    comment: Integration does not support physical devices.
+
+  # Platinum
+  async-dependency:
+    status: exempt
+    comment: No dependencies.
+  inject-websession:
+    status: exempt
+    comment: No external connections.
+  strict-typing: todo
