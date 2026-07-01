@@ -9,7 +9,7 @@
         "hostname": "frontend.local",
         "status": 200,
         "body": "custom response payload",
-        "duration": 45000000,
+        "duration": 4500000,
         "timestamp": "2026-06-29T13:00:00Z"
       }
     ]
@@ -23,7 +23,7 @@
         "success": false,
         "hostname": "backend.local",
         "status": 500,
-        "duration": 95000000,
+        "duration": 9500000,
         "timestamp": "2026-06-29T13:00:01Z"
       }
     ]
