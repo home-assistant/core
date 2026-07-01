@@ -144,7 +144,7 @@ async def test_zeroconf(hass: HomeAssistant) -> None:
     assert result["type"] == FlowResultType.CREATE_ENTRY
     assert result["title"] == "Flow-it Device"
     assert result["data"] == {
-        "host": "http://mock_hostname",
+        "host": "http://mock_hostname.local",
         "username": "api",
         "password": "test-password",
     }
@@ -210,7 +210,7 @@ async def test_zeroconf_exceptions(
     assert result["type"] == FlowResultType.CREATE_ENTRY
     assert result["title"] == "Flow-it Device"
     assert result["data"] == {
-        "host": "http://mock_hostname",
+        "host": "http://mock_hostname.local",
         "username": "api",
         "password": "test-password",
     }
@@ -252,7 +252,11 @@ async def test_zeroconf_already_configured(hass: HomeAssistant) -> None:
     entry = MockConfigEntry(
         domain=DOMAIN,
         unique_id="00:11:22:33:44:55",
-        data={"host": "http://mock_hostname", "username": "api", "password": "old"},
+        data={
+            "host": "http://mock_hostname.local",
+            "username": "api",
+            "password": "old",
+        },
     )
     entry.add_to_hass(hass)
 

@@ -165,7 +165,7 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
     ) -> ConfigFlowResult:
         """Handle zeroconf discovery."""
         host = discovery_info.host
-        hostname = discovery_info.hostname.rstrip(".").removesuffix(".local")
+        hostname = discovery_info.hostname.rstrip(".")
         friendly_name = discovery_info.name.removesuffix("._tbk_vmc._tcp.local.")
 
         self._discovery_info = {
