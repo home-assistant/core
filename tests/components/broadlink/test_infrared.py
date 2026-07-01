@@ -3,7 +3,7 @@
 from unittest.mock import call
 
 from broadlink.exceptions import BroadlinkException
-from broadlink.remote import pulses_to_data
+from broadlink.remote import data_to_pulses, pulses_to_data
 from freezegun.api import FrozenDateTimeFactory
 from infrared_protocols.commands.nec import NECCommand
 import pytest
@@ -143,9 +143,10 @@ async def test_infrared_receiver_polling_decodes_and_dispatches_packet(
 
     received_signals: list[InfraredReceivedSignal] = []
     async_subscribe_receiver(hass, receiver_entry.entity_id, received_signals.append)
+    await hass.async_block_till_done(wait_background_tasks=True)
 
     mock_setup.api.reset_mock()
-    mock_setup.api.check_data.return_value = pulses_to_data([500, 700, 900])
+    mock_setup.api.check_data.return_value = data_to_pulses(b'&\x00\x03\x00\x0f\x15\x1b')
 
     freezer.tick(broadlink_infrared.LEARNING_POLL_INTERVAL)
     async_fire_time_changed(hass)
@@ -153,5 +154,58 @@ async def test_infrared_receiver_polling_decodes_and_dispatches_packet(
 
     assert mock_setup.api.mock_calls == [call.enter_learning(), call.check_data()]
     assert received_signals == [
-        InfraredReceivedSignal(timings=[500, -700, 900], modulation=None)
+        InfraredReceivedSignal(timings=[492, 689, 886], modulation=None)
     ]
+
+
+async def test_infrared_receiver_polling_starts_on_subscribe_and_stops_on_unsubscribe(
+    hass: HomeAssistant,
+    entity_registry: er.EntityRegistry,
+    freezer: FrozenDateTimeFactory,
+) -> None:
+    """Test polling is activated by subscription and stopped after unsubscribe."""
+    device = get_device("Entrance")
+    mock_setup = await device.setup_entry(hass)
+
+    entries = er.async_entries_for_config_entry(
+        entity_registry, mock_setup.entry.entry_id
+    )
+    receiver_entry = next(
+        entry
+        for entry in entries
+        if entry.domain == Platform.INFRARED and entry.unique_id.endswith("-receiver")
+    )
+
+    mock_setup.api.check_data.return_value = data_to_pulses(b'&\x00\x03\x00\x0f\x15\x1b')
+
+    freezer.tick(broadlink_infrared.LEARNING_POLL_INTERVAL)
+    async_fire_time_changed(hass)
+    await hass.async_block_till_done(wait_background_tasks=True)
+    assert mock_setup.api.mock_calls == []
+
+    received_signals: list[InfraredReceivedSignal] = []
+    unsub = async_subscribe_receiver(
+        hass,
+        receiver_entry.entity_id,
+        received_signals.append,
+    )
+    await hass.async_block_till_done(wait_background_tasks=True)
+
+    mock_setup.api.reset_mock()
+    freezer.tick(broadlink_infrared.LEARNING_POLL_INTERVAL)
+    async_fire_time_changed(hass)
+    await hass.async_block_till_done(wait_background_tasks=True)
+
+    assert mock_setup.api.mock_calls == [call.enter_learning(), call.check_data()]
+    assert received_signals == [
+        InfraredReceivedSignal(timings=[492, 689, 886], modulation=None)
+    ]
+
+    unsub()
+    await hass.async_block_till_done(wait_background_tasks=True)
+    mock_setup.api.reset_mock()
+
+    freezer.tick(broadlink_infrared.LEARNING_POLL_INTERVAL)
+    async_fire_time_changed(hass)
+    await hass.async_block_till_done(wait_background_tasks=True)
+    assert mock_setup.api.mock_calls == []

@@ -1,6 +1,7 @@
 """Infrared platform for Broadlink remotes."""
 
 import asyncio
+from collections.abc import Callable
 from datetime import datetime, timedelta
 import logging
 from typing import TYPE_CHECKING, override
@@ -100,32 +101,61 @@ class BroadlinkInfraredReceiverEntity(BroadlinkEntity, InfraredReceiverEntity):
         self._attr_unique_id = f"{device.unique_id}-receiver"
         self._receive_lock = asyncio.Lock()
         self._unsub_receive: CALLBACK_TYPE | None = None
+        self._subscriber_count = 0
 
     @override
     async def async_added_to_hass(self) -> None:
-        """Set up IR receive polling."""
+        """Initialize entity state."""
         await super().async_added_to_hass()
-        if self._unsub_receive is None:
-            self._unsub_receive = async_track_time_interval(
-                self.hass,
-                self._async_poll_received_signal,
-                LEARNING_POLL_INTERVAL,
-            )
-
-        try:
-            await self._async_enter_learning_mode()
-        except HomeAssistantError as err:
-            _LOGGER.debug(
-                "Failed to enter learning mode for %s: %s", self.entity_id, err
-            )
 
     @override
     async def async_will_remove_from_hass(self) -> None:
         """Stop IR receive polling."""
-        if self._unsub_receive is not None:
-            self._unsub_receive()
-            self._unsub_receive = None
+        self._async_stop_receiving()
+        self._subscriber_count = 0
         await super().async_will_remove_from_hass()
+
+    async def _async_start_receiving(self) -> None:
+        """Start polling and enter learning mode."""
+        if self._unsub_receive is not None:
+            return
+
+        self._unsub_receive = async_track_time_interval(
+            self.hass,
+            self._async_poll_received_signal,
+            LEARNING_POLL_INTERVAL,
+        )
+
+    @callback
+    def _async_stop_receiving(self) -> None:
+        """Stop polling for received signals."""
+        if self._unsub_receive is None:
+            return
+
+        self._unsub_receive()
+        self._unsub_receive = None
+
+    @override
+    @callback
+    def async_subscribe_received_signal(
+        self,
+        signal_callback: Callable[[InfraredReceivedSignal], None],
+    ) -> CALLBACK_TYPE:
+        """Subscribe to received IR signals and start polling on first subscriber."""
+        unsub = super().async_subscribe_received_signal(signal_callback)
+        self._subscriber_count += 1
+
+        if self._subscriber_count == 1:
+            self.hass.async_create_task(self._async_start_receiving())
+
+        @callback
+        def _remove_callback() -> None:
+            unsub()
+            self._subscriber_count -= 1
+            if self._subscriber_count == 0:
+                self._async_stop_receiving()
+
+        return _remove_callback
 
     async def _async_enter_learning_mode(self) -> None:
         """Put the device in learning mode to receive the next signal."""
@@ -149,6 +179,14 @@ class BroadlinkInfraredReceiverEntity(BroadlinkEntity, InfraredReceiverEntity):
         async with self._receive_lock:
             try:
                 await self._async_enter_learning_mode()
+            except HomeAssistantError as err:
+                _LOGGER.debug(
+                    "Failed to start infrared receive mode for %s: %s",
+                    self.entity_id,
+                    err,
+                )
+
+            try:
                 packet = await self._device.async_request(self._device.api.check_data)
             except ReadError, StorageError:
                 return
