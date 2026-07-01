@@ -12,10 +12,7 @@ rules:
   common-modules: done
   config-flow-test-coverage: done
   config-flow: done
-  dependency-transparency:
-    status: exempt
-    comment: |
-      This integration has no additional dependencies.
+  dependency-transparency: done
   docs-actions:
     status: exempt
     comment: |
@@ -102,7 +99,8 @@ rules:
   async-dependency:
     status: exempt
     comment: |
-      This integration has no additional dependencies.
+      This integration depends on infrared_protocols which provides only code
+      definitions with no I/O, so async dependency does not apply.
   inject-websession:
     status: exempt
     comment: |

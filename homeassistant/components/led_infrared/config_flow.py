@@ -56,7 +56,7 @@ class LEDIrConfigFlow(ConfigFlow, domain=DOMAIN):
                     self._async_abort_entries_match(
                         {
                             CONF_DEVICE_TYPE: user_input[CONF_DEVICE_TYPE],
-                            CONF_INFRARED_ENTITY_ID: receiver_id,
+                            CONF_INFRARED_RECEIVER_ENTITY_ID: receiver_id,
                         }
                     )
                 title_entity_id = emitter_id or receiver_id
