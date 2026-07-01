@@ -47,10 +47,6 @@ from .const import (
 from .coordinator import RainMachineDataUpdateCoordinator
 from .services import async_setup_services
 
-API_URL_REFERENCE = (
-    "https://rainmachine.docs.apiary.io/#reference/weather-services/parserdata/post"
-)
-
 DEFAULT_SSL = True
 
 PLATFORMS = [
