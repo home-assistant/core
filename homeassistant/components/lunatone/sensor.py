@@ -12,11 +12,9 @@ from homeassistant.components.sensor import (
     SensorStateClass,
 )
 from homeassistant.const import (
-    CONCENTRATION_PARTS_PER_BILLION,
-    CONCENTRATION_PARTS_PER_MILLION,
     LIGHT_LUX,
-    PERCENTAGE,
     UnitOfPressure,
+    UnitOfRatio,
     UnitOfTemperature,
 )
 from homeassistant.core import HomeAssistant
@@ -32,7 +30,7 @@ SENSOR_TYPES: Final[dict[str, SensorEntityDescription]] = {
     SensorType.AIR_HUMIDITY: SensorEntityDescription(
         key="air_humidity",
         device_class=SensorDeviceClass.HUMIDITY,
-        native_unit_of_measurement=PERCENTAGE,
+        native_unit_of_measurement=UnitOfRatio.PERCENTAGE,
         state_class=SensorStateClass.MEASUREMENT,
     ),
     SensorType.AIR_PRESSURE: SensorEntityDescription(
@@ -49,7 +47,7 @@ SENSOR_TYPES: Final[dict[str, SensorEntityDescription]] = {
     SensorType.ECO2: SensorEntityDescription(
         key="eco2",
         device_class=SensorDeviceClass.CO2,
-        native_unit_of_measurement=CONCENTRATION_PARTS_PER_MILLION,
+        native_unit_of_measurement=UnitOfRatio.PARTS_PER_MILLION,
         state_class=SensorStateClass.MEASUREMENT,
     ),
     SensorType.LIGHT: SensorEntityDescription(
@@ -67,7 +65,7 @@ SENSOR_TYPES: Final[dict[str, SensorEntityDescription]] = {
     SensorType.VOC: SensorEntityDescription(
         key="voc",
         device_class=SensorDeviceClass.VOLATILE_ORGANIC_COMPOUNDS_PARTS,
-        native_unit_of_measurement=CONCENTRATION_PARTS_PER_BILLION,
+        native_unit_of_measurement=UnitOfRatio.PARTS_PER_BILLION,
         state_class=SensorStateClass.MEASUREMENT,
     ),
 }

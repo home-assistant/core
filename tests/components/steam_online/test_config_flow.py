@@ -54,7 +54,7 @@ async def test_flow_user(
 @pytest.mark.parametrize(
     ("side_effect", "error_msg"),
     [
-        (steam.api.HTTPTimeoutError, "cannot_connect"),
+        (steam.api.HTTPTimeoutError, "timeout_connect"),
         (steam.api.HTTPError, "cannot_connect"),
         (steam.api.HTTPError("403"), "invalid_auth"),
         (ValueError, "unknown"),
@@ -64,7 +64,7 @@ async def test_flow_user(
 async def test_flow_user_errors(
     hass: HomeAssistant,
     mock_setup_entry: AsyncMock,
-    side_effect: Exception | dict[str, Any],
+    side_effect: type[Exception] | dict[str, Any],
     error_msg: str,
     steam_api: MagicMock,
 ) -> None:
@@ -146,7 +146,7 @@ async def test_flow_reauth(
 @pytest.mark.parametrize(
     ("side_effect", "error_msg"),
     [
-        (steam.api.HTTPTimeoutError, "cannot_connect"),
+        (steam.api.HTTPTimeoutError, "timeout_connect"),
         (steam.api.HTTPError, "cannot_connect"),
         (steam.api.HTTPError("403"), "invalid_auth"),
         (ValueError, "unknown"),
@@ -157,7 +157,7 @@ async def test_flow_reauth_errors(
     hass: HomeAssistant,
     config_entry: MockConfigEntry,
     steam_api: MagicMock,
-    side_effect: Exception | dict[str, Any],
+    side_effect: type[Exception] | dict[str, Any],
     error_msg: str,
 ) -> None:
     """Test reauth step with errors."""
@@ -285,3 +285,70 @@ async def test_options_flow_unauthorized(
 
     assert result["type"] is FlowResultType.CREATE_ENTRY
     assert result["data"] == CONF_OPTIONS
+
+
+@pytest.mark.usefixtures("steam_api")
+async def test_flow_reconfigure(
+    hass: HomeAssistant,
+    config_entry: MockConfigEntry,
+) -> None:
+    """Test reconfigure step."""
+    config_entry.add_to_hass(hass)
+
+    result = await config_entry.start_reconfigure_flow(hass)
+    assert result["type"] is FlowResultType.FORM
+    assert result["step_id"] == "reconfigure"
+
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"], user_input={CONF_API_KEY: "1234567890"}
+    )
+
+    assert result["type"] is FlowResultType.ABORT
+    assert result["reason"] == "reconfigure_successful"
+    assert config_entry.data == {**CONF_DATA, CONF_API_KEY: "1234567890"}
+
+    assert len(hass.config_entries.async_entries()) == 1
+
+
+@pytest.mark.parametrize(
+    ("side_effect", "error_msg"),
+    [
+        (steam.api.HTTPError, "cannot_connect"),
+        (steam.api.HTTPError("403"), "invalid_auth"),
+        (ValueError, "unknown"),
+        ([{"response": {"players": {"player": [None]}}}], "invalid_account"),
+    ],
+)
+async def test_flow_reconfigure_errors(
+    hass: HomeAssistant,
+    config_entry: MockConfigEntry,
+    steam_api: MagicMock,
+    side_effect: Exception | dict[str, Any],
+    error_msg: str,
+) -> None:
+    """Test reconfigure step with errors."""
+    config_entry.add_to_hass(hass)
+
+    result = await config_entry.start_reconfigure_flow(hass)
+    assert result["type"] is FlowResultType.FORM
+    assert result["step_id"] == "reconfigure"
+
+    steam_api.return_value.GetPlayerSummaries.side_effect = side_effect
+
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"], user_input={CONF_API_KEY: "1234567890"}
+    )
+    assert result["type"] is FlowResultType.FORM
+    assert result["errors"] == {"base": error_msg}
+
+    steam_api.return_value.GetPlayerSummaries.side_effect = None
+
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"], user_input={CONF_API_KEY: "1234567890"}
+    )
+
+    assert result["type"] is FlowResultType.ABORT
+    assert result["reason"] == "reconfigure_successful"
+    assert config_entry.data == {**CONF_DATA, CONF_API_KEY: "1234567890"}
+
+    assert len(hass.config_entries.async_entries()) == 1

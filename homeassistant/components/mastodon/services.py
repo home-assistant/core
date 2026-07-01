@@ -48,12 +48,14 @@ from .const import (
     ATTR_HEADER_MIME_TYPE,
     ATTR_HIDE_NOTIFICATIONS,
     ATTR_IDEMPOTENCY_KEY,
+    ATTR_IN_REPLY_TO,
     ATTR_LANGUAGE,
     ATTR_MEDIA,
     ATTR_MEDIA_DESCRIPTION,
     ATTR_MEDIA_WARNING,
     ATTR_NOTE,
     ATTR_QUOTE_APPROVAL_POLICY,
+    ATTR_QUOTED_STATUS,
     ATTR_STATUS,
     ATTR_VALUE,
     ATTR_VISIBILITY,
@@ -126,6 +128,8 @@ SERVICE_POST_SCHEMA = vol.Schema(
         vol.Optional(ATTR_MEDIA): str,
         vol.Optional(ATTR_MEDIA_DESCRIPTION): str,
         vol.Optional(ATTR_MEDIA_WARNING): bool,
+        vol.Optional(ATTR_IN_REPLY_TO): str,
+        vol.Optional(ATTR_QUOTED_STATUS): str,
     }
 )
 
@@ -313,6 +317,8 @@ async def _async_post(call: ServiceCall) -> ServiceResponse:
     media_path: str | None = call.data.get(ATTR_MEDIA)
     media_description: str | None = call.data.get(ATTR_MEDIA_DESCRIPTION)
     media_warning: str | None = call.data.get(ATTR_MEDIA_WARNING)
+    in_reply_to: str | None = call.data.get(ATTR_IN_REPLY_TO)
+    quoted_status: str | None = call.data.get(ATTR_QUOTED_STATUS)
 
     if idempotency_key and len(idempotency_key) < 4:
         raise ServiceValidationError(
@@ -334,6 +340,8 @@ async def _async_post(call: ServiceCall) -> ServiceResponse:
             media_path=media_path,
             media_description=media_description,
             sensitive=media_warning,
+            in_reply_to_id=in_reply_to,
+            quoted_status_id=quoted_status,
         )
     )
 
