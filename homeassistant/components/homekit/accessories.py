@@ -12,6 +12,7 @@ from pyhap.iid_manager import IIDManager
 from pyhap.service import Service
 from pyhap.util import callback as pyhap_callback
 
+from homeassistant.components.climate import ClimateEntityFeature
 from homeassistant.components.cover import CoverDeviceClass, CoverEntityFeature
 from homeassistant.components.lawn_mower import LawnMowerEntityFeature
 from homeassistant.components.media_player import MediaPlayerDeviceClass
@@ -55,6 +56,7 @@ from homeassistant.helpers.dispatcher import async_dispatcher_send
 from homeassistant.helpers.event import async_track_state_change_event
 from homeassistant.util.decorator import Registry
 
+from .climate_util import get_fan_modes_and_speeds, get_swing_on_mode
 from .const import (
     ATTR_DISPLAY_NAME,
     ATTR_INTEGRATION,
@@ -150,7 +152,25 @@ def get_accessory(  # noqa: C901
         a_type = "BinarySensor"
 
     elif state.domain == "climate":
-        a_type = "Thermostat"
+        # Use the HeaterCooler tile only when the entity exposes predefined fan
+        # speeds or swing modes it can actually surface; otherwise the Thermostat
+        # handles it and existing accessories are preserved.
+        attributes = state.attributes
+        has_fan = bool(features & ClimateEntityFeature.FAN_MODE) and bool(
+            get_fan_modes_and_speeds(attributes)[1]
+        )
+        has_swing = bool(features & ClimateEntityFeature.SWING_MODE) and (
+            get_swing_on_mode(attributes) is not None
+        )
+        # The HeaterCooler service cannot control a humidity setpoint, so entities
+        # that expose one (whole-home thermostats with a dehumidifier, e.g. econet)
+        # stay on the Thermostat, which supports it natively. Humidity that is only
+        # reported for display is kept via a linked sensor on the HeaterCooler.
+        has_target_humidity = bool(features & ClimateEntityFeature.TARGET_HUMIDITY)
+        if (has_fan or has_swing) and not has_target_humidity:
+            a_type = "HeaterCooler"
+        else:
+            a_type = "Thermostat"
 
     elif state.domain == "cover":
         device_class = state.attributes.get(ATTR_DEVICE_CLASS)
