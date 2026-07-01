@@ -1,7 +1,7 @@
 """Config flow for Flow-it integration."""
 
 import logging
-from typing import Any, override
+from typing import TYPE_CHECKING, Any, override
 
 from flow_it_api.client import FlowItVMCMachine
 from flow_it_api.exceptions import FlowItAuthError, FlowItConnectionError
@@ -35,7 +35,8 @@ async def validate_input(hass: HomeAssistant, data: dict[str, Any]) -> dict[str,
     )
     info = await vmc.get_info()
     await vmc.refresh_state()
-    assert vmc.state is not None
+    if TYPE_CHECKING:
+        assert vmc.state is not None
     return {
         "title": info.hostname,
         "unique_id": vmc.state.name,
