@@ -356,9 +356,10 @@ class VeSyncFanHA(VeSyncBaseEntity[VeSyncFanBase | VeSyncPurifier], FanEntity):
     async def async_oscillate(self, oscillating: bool) -> None:
         """Set oscillation."""
         # Tower fans expose a single ``toggle_oscillation`` method.
-        if hasattr(self.device, "toggle_oscillation") and rgetattr(
-            self.device, "state.oscillation_status"
-        ) is not None:
+        if (
+            hasattr(self.device, "toggle_oscillation")
+            and rgetattr(self.device, "state.oscillation_status") is not None
+        ):
             success = await self.device.toggle_oscillation(oscillating)
             if not success:
                 if self.device.last_response:
@@ -372,9 +373,7 @@ class VeSyncFanHA(VeSyncBaseEntity[VeSyncFanBase | VeSyncPurifier], FanEntity):
         # The single HA oscillate switch controls both axes together.
         successes: list[bool] = []
         if hasattr(self.device, "toggle_vertical_oscillation"):
-            successes.append(
-                await self.device.toggle_vertical_oscillation(oscillating)
-            )
+            successes.append(await self.device.toggle_vertical_oscillation(oscillating))
         if hasattr(self.device, "toggle_horizontal_oscillation"):
             successes.append(
                 await self.device.toggle_horizontal_oscillation(oscillating)
