@@ -142,35 +142,41 @@ class WanIpSensor(SensorEntity):
         else:
             self.entry.runtime_data.resolver_ipv4 = new_resolver
 
+    async def async_resolve(self, hostname: str) -> list[str]:
+        """Resolve a hostname to an IP address."""
+        ips: list[str] = []
+        try:
+            async with asyncio.timeout(10):
+                response = await self._resolver.query_dns(hostname, self.querytype)
+        except TimeoutError as err:
+            _LOGGER.debug("Timeout while resolving host: %s", err)
+            await self._resolver.close()
+            return ips
+        except DNSError as err:
+            _LOGGER.warning("Exception while resolving host: %s", err)
+            await self._resolver.close()
+            return ips
+
+        for res in response.answer:
+            if type(res.data) is pycares.CNAMERecordData:
+                addr = await self.async_resolve(res.data.cname)
+                ips.extend(addr)
+            else:
+                if TYPE_CHECKING:
+                    assert isinstance(
+                        res.data, (pycares.AAAARecordData, pycares.ARecordData)
+                    )
+                ips.append(res.data.addr)
+        return ips
+
     async def async_update(self) -> None:
         """Get the current DNS IP address for hostname."""
         if self._resolver._closed:  # noqa: SLF001
             self.create_dns_resolver()
-        response = None
-        try:
-            async with asyncio.timeout(10):
-                response = await self._resolver.query_dns(self.hostname, self.querytype)
-        except TimeoutError as err:
-            _LOGGER.debug("Timeout while resolving host: %s", err)
-            await self._resolver.close()
-        except DNSError as err:
-            _LOGGER.warning("Exception while resolving host: %s", err)
-            await self._resolver.close()
+        response = await self.async_resolve(self.hostname)
 
         if response:
-            if TYPE_CHECKING:
-                assert all(
-                    isinstance(res.data, (pycares.ARecordData, pycares.AAAARecordData))
-                    for res in response.answer
-                )
-            _ips = []
-            for res in response.answer:
-                if TYPE_CHECKING:
-                    assert isinstance(
-                        res.data, (pycares.ARecordData, pycares.AAAARecordData)
-                    )
-                _ips.append(res.data.addr)
-            sorted_ips = sort_ips(_ips, querytype=self.querytype)
+            sorted_ips = sort_ips(response, querytype=self.querytype)
             self._attr_native_value = sorted_ips[0]
             self._attr_extra_state_attributes["ip_addresses"] = sorted_ips
             self._attr_available = True
