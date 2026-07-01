@@ -247,16 +247,19 @@ async def test_poll_does_not_clobber_broadcast(
     coordinator = entry.runtime_data[DUMMY_PLUG_DEVICE.device_id]
     assert coordinator.data.ip_address == DUMMY_IP_ADDRESS1
 
-    # A fresh broadcast lands mid-probe: the probe answers, but while it runs a
-    # new device snapshot arrives and refreshes the coordinator data. The update
-    # must return that fresh data, never the pre-probe snapshot.
+    # A fresh broadcast lands mid-probe: the state read answers, but while it
+    # runs a new device snapshot arrives and refreshes the coordinator data. The
+    # update must return that fresh data, never the pre-probe snapshot.
     new_ip = "192.168.100.200"
     fresh_device = replace(DUMMY_PLUG_DEVICE, ip_address=new_ip)
 
-    async def probe_then_broadcast(_device):
+    async def read_state_then_broadcast():
         coordinator.async_set_updated_data(fresh_device)
 
-    with patch.object(coordinator, "_async_probe", side_effect=probe_then_broadcast):
+    with _mock_probe_success() as mock_api:
+        mock_api.return_value.__aenter__.return_value.get_state.side_effect = (
+            read_state_then_broadcast
+        )
         freezer.tick(timedelta(seconds=MAX_UPDATE_INTERVAL_SEC + 1))
         async_fire_time_changed(hass)
         await hass.async_block_till_done()

@@ -69,9 +69,8 @@ class SwitcherDataUpdateCoordinator(
             "Device %s missed broadcasts but answered a poll, keeping it available",
             self.name,
         )
-        # Return the coordinator's current data rather than the pre-probe
-        # snapshot: a broadcast that arrived during the probe already refreshed
-        # self.data, and returning it avoids reverting to a stale device.
+        # Return current data, not the pre-probe snapshot, to keep a broadcast
+        # that arrived during the probe.
         return self.data
 
     async def _async_probe(self, device: SwitcherBase) -> None:
