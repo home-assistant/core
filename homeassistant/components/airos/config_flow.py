@@ -91,7 +91,7 @@ class AirOSConfigFlow(ConfigFlow, domain=DOMAIN):
     """Handle a config flow for Ubiquiti airOS."""
 
     VERSION = 2
-    MINOR_VERSION = 1
+    MINOR_VERSION = 2
 
     _discovery_task: asyncio.Task | None = None
 
