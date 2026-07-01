@@ -4,7 +4,7 @@ from dataclasses import dataclass
 from functools import partial
 import logging
 from math import inf
-from typing import Any
+from typing import Any, override
 
 from openaq.core.responses import Location
 import voluptuous as vol
@@ -156,12 +156,14 @@ class OpenAQConfigFlow(ConfigFlow, domain=DOMAIN):
 
     @classmethod
     @callback
+    @override
     def async_get_supported_subentry_types(
         cls, config_entry: ConfigEntry
     ) -> dict[str, type[ConfigSubentryFlow]]:
         """Return subentries supported by this integration."""
         return {SUBENTRY_TYPE_LOCATION: OpenAQLocationSubentryFlow}
 
+    @override
     async def async_step_user(
         self, user_input: dict[str, Any] | None = None
     ) -> ConfigFlowResult:
