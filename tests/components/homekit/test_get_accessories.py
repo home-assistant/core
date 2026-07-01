@@ -15,10 +15,12 @@ from homeassistant.components.homekit.const import (
     FEATURE_ON_OFF,
     TYPE_FAN,
     TYPE_FAUCET,
+    TYPE_HEATER_COOLER,
     TYPE_OUTLET,
     TYPE_SHOWER,
     TYPE_SPRINKLER,
     TYPE_SWITCH,
+    TYPE_THERMOSTAT,
     TYPE_VALVE,
 )
 from homeassistant.components.homekit.type_sensors import (
@@ -632,6 +634,39 @@ def test_climate_accessory_selection(
     with patch.dict(TYPES, {type_name: mock_type}):
         entity_state = State(entity_id, state, attrs)
         get_accessory(None, None, entity_state, 2, {})
+    assert mock_type.called
+
+
+@pytest.mark.parametrize(
+    ("config_type", "attrs", "type_name"),
+    [
+        # Would auto-route to Thermostat, but the config forces HeaterCooler
+        (
+            TYPE_HEATER_COOLER,
+            {ATTR_SUPPORTED_FEATURES: ClimateEntityFeature.TARGET_TEMPERATURE},
+            "HeaterCooler",
+        ),
+        # Would auto-route to HeaterCooler, but the config forces Thermostat
+        (
+            TYPE_THERMOSTAT,
+            {
+                ATTR_SUPPORTED_FEATURES: ClimateEntityFeature.FAN_MODE
+                | ClimateEntityFeature.SWING_MODE,
+                "fan_modes": ["low", "high"],
+                "swing_modes": ["on", "off"],
+            },
+            "Thermostat",
+        ),
+    ],
+)
+def test_climate_accessory_type_override(
+    config_type: str, attrs: dict[str, Any], type_name: str
+) -> None:
+    """Test an explicit type in the entity config overrides climate routing."""
+    mock_type = Mock()
+    with patch.dict(TYPES, {type_name: mock_type}):
+        entity_state = State("climate.test", "heat", attrs)
+        get_accessory(None, None, entity_state, 2, {CONF_TYPE: config_type})
     assert mock_type.called
 
 

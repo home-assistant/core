@@ -88,10 +88,12 @@ from .const import (
     TYPE_AIR_PURIFIER,
     TYPE_FAN,
     TYPE_FAUCET,
+    TYPE_HEATER_COOLER,
     TYPE_OUTLET,
     TYPE_SHOWER,
     TYPE_SPRINKLER,
     TYPE_SWITCH,
+    TYPE_THERMOSTAT,
     TYPE_VALVE,
 )
 from .iidmanager import AccessoryIIDStorage
@@ -117,6 +119,10 @@ SWITCH_TYPES = {
 FAN_TYPES = {
     TYPE_AIR_PURIFIER: "AirPurifier",
     TYPE_FAN: "Fan",
+}
+CLIMATE_TYPES = {
+    TYPE_HEATER_COOLER: "HeaterCooler",
+    TYPE_THERMOSTAT: "Thermostat",
 }
 TYPES: Registry[str, type[HomeAccessory]] = Registry()
 
@@ -152,28 +158,34 @@ def get_accessory(  # noqa: C901
         a_type = "BinarySensor"
 
     elif state.domain == "climate":
-        # Use the HeaterCooler tile only when the entity exposes a control it can
-        # actually surface there; otherwise the Thermostat handles it and existing
-        # accessories are preserved. Only the ordered speeds low/middle/medium/high
-        # count as fan speeds; timing modes like auto, on, off, and circulate do
-        # not. A single speed cannot drive a useful rotation slider, so require two
-        # or more; a swing mode qualifies on its own.
-        attributes = state.attributes
-        has_fan = bool(features & ClimateEntityFeature.FAN_MODE) and (
-            len(get_fan_modes_and_speeds(attributes)[1]) >= 2
-        )
-        has_swing = bool(features & ClimateEntityFeature.SWING_MODE) and (
-            get_swing_on_mode(attributes) is not None
-        )
-        # The HeaterCooler service cannot control a humidity setpoint, so entities
-        # that expose one (whole-home thermostats with a dehumidifier, e.g. econet)
-        # stay on the Thermostat, which supports it natively. Humidity that is only
-        # reported for display is kept via a linked sensor on the HeaterCooler.
-        has_target_humidity = bool(features & ClimateEntityFeature.TARGET_HUMIDITY)
-        if (has_fan or has_swing) and not has_target_humidity:
-            a_type = "HeaterCooler"
+        if climate_type := config.get(CONF_TYPE):
+            # An explicit type in the entity config overrides the routing below.
+            a_type = CLIMATE_TYPES[climate_type]
         else:
-            a_type = "Thermostat"
+            # Use the HeaterCooler tile only when the entity exposes a control it
+            # can actually surface there; otherwise the Thermostat handles it and
+            # existing accessories are preserved. Only the ordered speeds
+            # low/middle/medium/high count as fan speeds; timing modes like auto,
+            # on, off, and circulate do not. A single speed cannot drive a useful
+            # rotation slider, so require two or more; a swing mode qualifies on
+            # its own.
+            attributes = state.attributes
+            has_fan = bool(features & ClimateEntityFeature.FAN_MODE) and (
+                len(get_fan_modes_and_speeds(attributes)[1]) >= 2
+            )
+            has_swing = bool(features & ClimateEntityFeature.SWING_MODE) and (
+                get_swing_on_mode(attributes) is not None
+            )
+            # The HeaterCooler service cannot control a humidity setpoint, so
+            # entities that expose one (whole-home thermostats with a dehumidifier,
+            # e.g. econet) stay on the Thermostat, which supports it natively.
+            # Humidity that is only reported for display is kept via a linked
+            # sensor on the HeaterCooler.
+            has_target_humidity = bool(features & ClimateEntityFeature.TARGET_HUMIDITY)
+            if (has_fan or has_swing) and not has_target_humidity:
+                a_type = "HeaterCooler"
+            else:
+                a_type = "Thermostat"
 
     elif state.domain == "cover":
         device_class = state.attributes.get(ATTR_DEVICE_CLASS)

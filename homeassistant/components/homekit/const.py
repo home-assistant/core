@@ -128,6 +128,10 @@ TYPE_VALVE = "valve"
 TYPE_FAN = "fan"
 TYPE_AIR_PURIFIER = "air_purifier"
 
+# #### Climate Types ####
+TYPE_HEATER_COOLER = "heater_cooler"
+TYPE_THERMOSTAT = "thermostat"
+
 # #### Categories ####
 CATEGORY_RECEIVER = 34
 
