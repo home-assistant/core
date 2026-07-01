@@ -77,6 +77,11 @@ class TFAmeUpdateCoordinator(DataUpdateCoordinator[TFAmeCoordinatorData]):
                 json_data=json_data, valid_keys=VALID_JSON_MEASUREMENT_KEYS
             )
 
+            filtered_lentities = {
+                unique_id.removeprefix("sensor."): data
+                for unique_id, data in filtered_list.items()
+            }
+
         # Specific error mapping
         except (TFAmeHTTPError, TFAmeJSONError) as err:
             # Device responding but data invalid
@@ -95,7 +100,9 @@ class TFAmeUpdateCoordinator(DataUpdateCoordinator[TFAmeCoordinatorData]):
         else:
             # values are available at self.coordinator.data.entities[self.entity_id]["keyword"]
             return TFAmeCoordinatorData(
-                entities=filtered_list, gateway_id=gateway_id, gateway_sw=gateway_sw
+                entities=filtered_lentities,
+                gateway_id=gateway_id,
+                gateway_sw=gateway_sw,
             )
 
     def get_device_description(self, serial: str) -> str:

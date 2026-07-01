@@ -67,8 +67,7 @@ class TFAmeConfigFlow(ConfigFlow, domain=DOMAIN):
                     errors["base"] = "unknown"
                 else:
                     await self.async_set_unique_id(identifier)
-                    self._abort_if_unique_id_configured()
-
+                    self._abort_if_unique_id_configured(updates=user_input)
                     return self.async_create_entry(title=title_str, data=user_input)
             else:
                 errors[CONF_IP_ADDRESS] = "invalid_ip_host"

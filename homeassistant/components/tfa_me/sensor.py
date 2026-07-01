@@ -219,17 +219,13 @@ async def async_setup_entry(
 
             try:
                 sensor_id = extract_sensor_id(unique_id)
+                entity = TFAmeSensorEntity(coordinator, sensor_id, unique_id)
+
             except ValueError:
                 # Skipping invalid TFA.me unique ID
                 continue
 
-            new_entities.append(
-                TFAmeSensorEntity(
-                    coordinator,
-                    sensor_id,
-                    unique_id,
-                )
-            )
+            new_entities.append(entity)
             coordinator.sensor_entity_list.append(unique_id)
 
         if new_entities:
@@ -260,13 +256,13 @@ class TFAmeSensorEntity(CoordinatorEntity[TFAmeUpdateCoordinator], SensorEntity)
         super().__init__(coordinator)
 
         # Unique ID (sets unique_id), will never be changed
-        # Name schema for unique_id is: f"sensor.{StationID}_{SensorID}_{MeasurementName}".lower()
-        self._attr_unique_id = unique_id.removeprefix("sensor.")
+        # Name schema for unique_id is: f"{StationID}_{SensorID}_{MeasurementName}".lower()
+        self._attr_unique_id = unique_id
         self.uid: str = unique_id
 
         # Do not set self.entity_id: HA will do and user can edit this entity ID later
         # Name schema created by HA with x... = Sensor ID, y... = Gateway/station ID:
-        # sensor.tfa_me_xxx_xxx_xxx_yyyyyyyyy_MeasurementName, e.g. "sensor.tfa_me_a0f_fff_f81_05b3e4e44_humidity"
+        # tfa_me_xxx_xxx_xxx_yyyyyyyyy_MeasurementName, e.g. "tfa_me_a0f_fff_f81_05b3e4e44_humidity"
         self.gateway_id = self.coordinator.data.gateway_id
         self.sensor_id = sensor_id
 
@@ -279,7 +275,7 @@ class TFAmeSensorEntity(CoordinatorEntity[TFAmeUpdateCoordinator], SensorEntity)
                 model=self.coordinator.get_device_description(sensor_id),
             )
 
-            self.measure_name = self.uid.removeprefix("sensor.").split("_", 2)[2]
+            self.measure_name = self.uid.split("_", 2)[2]
 
             # Some rain specials
             if self.measure_name == "rain_1_hour":
