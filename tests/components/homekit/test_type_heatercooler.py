@@ -310,7 +310,7 @@ async def test_heatercooler_fahrenheit(
     # Target and current temperatures are converted from F to C for HomeKit
     assert acc.char_heat.value == 20.0  # 68F
     assert acc.char_cool.value == 20.0  # 68F
-    assert abs(acc.char_current_temp.value - 18.3) < 0.1  # 65F
+    assert acc.char_current_temp.value == pytest.approx(18.3, abs=0.1)  # 65F
 
 
 async def test_heatercooler_fahrenheit_default_temp_range(
@@ -1237,8 +1237,84 @@ async def test_heatercooler_single_temp_no_entity_state(
     assert len(call_set_temperature) == 0
 
 
+@pytest.mark.parametrize(
+    ("state", "current_temp", "chars", "expected"),
+    [
+        # Cool mode uses the cooling threshold; heat mode uses the heating one.
+        pytest.param(
+            HVACMode.COOL,
+            20.0,
+            {CHAR_COOLING_THRESHOLD_TEMPERATURE: 22.0},
+            22.0,
+            id="cool_uses_cooling_threshold",
+        ),
+        pytest.param(
+            HVACMode.HEAT,
+            20.0,
+            {CHAR_HEATING_THRESHOLD_TEMPERATURE: 18.0},
+            18.0,
+            id="heat_uses_heating_threshold",
+        ),
+        # HEAT_COOL with both thresholds picks the one further from the temp.
+        pytest.param(
+            HVACMode.HEAT_COOL,
+            19.0,
+            {
+                CHAR_COOLING_THRESHOLD_TEMPERATURE: 25.0,
+                CHAR_HEATING_THRESHOLD_TEMPERATURE: 18.0,
+            },
+            25.0,  # |25-19| > |18-19|
+            id="heat_cool_picks_further_cooling",
+        ),
+        pytest.param(
+            HVACMode.HEAT_COOL,
+            24.0,
+            {
+                CHAR_COOLING_THRESHOLD_TEMPERATURE: 25.0,
+                CHAR_HEATING_THRESHOLD_TEMPERATURE: 18.0,
+            },
+            18.0,  # |18-24| > |25-24|
+            id="heat_cool_picks_further_heating",
+        ),
+        # HEAT_COOL with a single threshold falls back to it.
+        pytest.param(
+            HVACMode.HEAT_COOL,
+            20.0,
+            {CHAR_COOLING_THRESHOLD_TEMPERATURE: 22.0},
+            22.0,
+            id="heat_cool_single_cooling",
+        ),
+        pytest.param(
+            HVACMode.HEAT_COOL,
+            20.0,
+            {CHAR_HEATING_THRESHOLD_TEMPERATURE: 18.0},
+            18.0,
+            id="heat_cool_single_heating",
+        ),
+        # An unknown mode falls back to whichever threshold was written.
+        pytest.param(
+            "unknown_mode",
+            20.0,
+            {CHAR_COOLING_THRESHOLD_TEMPERATURE: 22.0},
+            22.0,
+            id="unknown_mode_cooling",
+        ),
+        pytest.param(
+            "unknown_mode",
+            20.0,
+            {CHAR_HEATING_THRESHOLD_TEMPERATURE: 18.0},
+            18.0,
+            id="unknown_mode_heating",
+        ),
+    ],
+)
 async def test_heatercooler_complex_temperature_selection(
-    hass: HomeAssistant, hk_driver: HomeDriver
+    hass: HomeAssistant,
+    hk_driver: HomeDriver,
+    state: str,
+    current_temp: float,
+    chars: dict[str, float],
+    expected: float,
 ) -> None:
     """Test single set point selection driven by threshold characteristic writes."""
     entity_id = "climate.test"
@@ -1250,7 +1326,7 @@ async def test_heatercooler_complex_temperature_selection(
             HVACMode.HEAT_COOL,
             HVACMode.OFF,
         ],
-        ATTR_TEMPERATURE: 20.0,
+        ATTR_TEMPERATURE: current_temp,
     }
 
     hass.states.async_set(entity_id, HVACMode.OFF, base_attrs)
@@ -1265,57 +1341,15 @@ async def test_heatercooler_complex_temperature_selection(
         hass, CLIMATE_DOMAIN, SERVICE_SET_TEMPERATURE
     )
 
-    async def assert_target(chars: dict[str, float], expected: float) -> None:
-        acc._set_chars(chars)
-        await hass.async_block_till_done()
-        assert abs(call_set_temperature[-1].data[ATTR_TEMPERATURE] - expected) < 0.1
-
-    # Cool mode uses the cooling threshold; heat mode uses the heating one
-    hass.states.async_set(entity_id, HVACMode.COOL, base_attrs)
+    hass.states.async_set(entity_id, state, base_attrs)
     await hass.async_block_till_done()
-    await assert_target({CHAR_COOLING_THRESHOLD_TEMPERATURE: 22.0}, 22.0)
 
-    hass.states.async_set(entity_id, HVACMode.HEAT, base_attrs)
+    acc._set_chars(chars)
     await hass.async_block_till_done()
-    await assert_target({CHAR_HEATING_THRESHOLD_TEMPERATURE: 18.0}, 18.0)
 
-    # HEAT_COOL with both thresholds picks the one further from the current temp
-    hass.states.async_set(
-        entity_id, HVACMode.HEAT_COOL, {**base_attrs, ATTR_TEMPERATURE: 19.0}
+    assert call_set_temperature[-1].data[ATTR_TEMPERATURE] == pytest.approx(
+        expected, abs=0.1
     )
-    await hass.async_block_till_done()
-    await assert_target(
-        {
-            CHAR_COOLING_THRESHOLD_TEMPERATURE: 25.0,
-            CHAR_HEATING_THRESHOLD_TEMPERATURE: 18.0,
-        },
-        25.0,  # |25-19| > |18-19|
-    )
-
-    hass.states.async_set(
-        entity_id, HVACMode.HEAT_COOL, {**base_attrs, ATTR_TEMPERATURE: 24.0}
-    )
-    await hass.async_block_till_done()
-    await assert_target(
-        {
-            CHAR_COOLING_THRESHOLD_TEMPERATURE: 25.0,
-            CHAR_HEATING_THRESHOLD_TEMPERATURE: 18.0,
-        },
-        18.0,  # |18-24| > |25-24|
-    )
-
-    # HEAT_COOL with a single threshold, then an unknown mode fall back to it
-    hass.states.async_set(
-        entity_id, HVACMode.HEAT_COOL, {**base_attrs, ATTR_TEMPERATURE: 20.0}
-    )
-    await hass.async_block_till_done()
-    await assert_target({CHAR_COOLING_THRESHOLD_TEMPERATURE: 22.0}, 22.0)
-    await assert_target({CHAR_HEATING_THRESHOLD_TEMPERATURE: 18.0}, 18.0)
-
-    hass.states.async_set(entity_id, "unknown_mode", base_attrs)
-    await hass.async_block_till_done()
-    await assert_target({CHAR_COOLING_THRESHOLD_TEMPERATURE: 22.0}, 22.0)
-    await assert_target({CHAR_HEATING_THRESHOLD_TEMPERATURE: 18.0}, 18.0)
 
 
 @pytest.mark.parametrize(
@@ -1447,7 +1481,9 @@ async def test_heatercooler_heat_cool_no_current_temp_diff(
         }
     )
     await hass.async_block_till_done()
-    assert abs(call_set_temperature[-1].data[ATTR_TEMPERATURE] - 18.0) < 0.1
+    assert call_set_temperature[-1].data[ATTR_TEMPERATURE] == pytest.approx(
+        18.0, abs=0.1
+    )
 
 
 async def test_heatercooler_derive_action_auto_without_thresholds(
@@ -1505,6 +1541,30 @@ async def test_heatercooler_fan_only_target_falls_back(
     assert not hasattr(acc, "char_cool")
     assert not hasattr(acc, "char_heat")
     assert acc.char_speed.value == 100
+
+
+async def test_heatercooler_off_only_target_falls_back_to_off(
+    hass: HomeAssistant, hk_driver: HomeDriver
+) -> None:
+    """Test a degenerate off-only entity maps Auto to off, not an unsupported mode."""
+    entity_id = "climate.test"
+    base_attrs = {
+        ATTR_SUPPORTED_FEATURES: ClimateEntityFeature.FAN_MODE,
+        ATTR_HVAC_MODES: [HVACMode.OFF],
+        ATTR_FAN_MODES: ["low", "high"],
+    }
+
+    hass.states.async_set(entity_id, HVACMode.OFF, base_attrs)
+    await hass.async_block_till_done()
+
+    acc = HeaterCooler(hass, hk_driver, "Climate", entity_id, 1, None)
+    hk_driver.add_accessory(acc)
+    acc.run()
+    await hass.async_block_till_done()
+
+    # The only mode is off, so Auto maps to off rather than an unsupported Auto
+    valid_values = acc.char_target_state.properties["ValidValues"]
+    assert valid_values == {HVACMode.OFF: HC_TARGET_AUTO}
 
 
 async def test_heatercooler_derive_action_cooling_triggered(

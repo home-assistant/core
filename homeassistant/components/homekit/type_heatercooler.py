@@ -136,10 +136,12 @@ class HeaterCooler(HomeKitClimateAccessory):
             self._hk_to_ha_target[HC_TARGET_AUTO] = HVACMode.HEAT_COOL
         if not self._hk_to_ha_target:
             # Entities exposing neither heat, cool, nor a range mode (e.g.
-            # fan-only) still need a valid target; map Auto to the first mode
-            # the entity actually supports so the control does something.
+            # fan-only) still need a valid target; map Auto to the first mode the
+            # entity actually supports so the control does something. A degenerate
+            # off-only entity has no active mode, so fall back to off rather than
+            # an unsupported Auto.
             fallback_mode = next(
-                (mode for mode in hvac_modes if mode != HVACMode.OFF), HVACMode.AUTO
+                (mode for mode in hvac_modes if mode != HVACMode.OFF), HVACMode.OFF
             )
             self._hk_to_ha_target[HC_TARGET_AUTO] = fallback_mode
 
