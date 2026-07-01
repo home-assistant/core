@@ -485,14 +485,36 @@ def test_type_camera(type_name, entity_id, state, attrs) -> None:
                 "fan_modes": ["low", "medium", "high"],
             },
         ),
-        # A single predefined fan speed cannot drive the slider -> Thermostat
+        # Timing fan modes (auto/on/off/circulate) are not predefined speeds, so
+        # an entity exposing only those has zero speeds -> Thermostat
+        (
+            "Thermostat",
+            "climate.timing_fan_modes_only",
+            "heat",
+            {
+                ATTR_SUPPORTED_FEATURES: ClimateEntityFeature.FAN_MODE,
+                "fan_modes": ["off", "auto", "on", "circulate"],
+            },
+        ),
+        # Those timing modes plus a single predefined speed still count as one
+        # speed, which cannot drive the slider -> Thermostat
         (
             "Thermostat",
             "climate.single_fan_speed",
             "heat",
             {
                 ATTR_SUPPORTED_FEATURES: ClimateEntityFeature.FAN_MODE,
-                "fan_modes": ["auto", "high"],
+                "fan_modes": ["off", "auto", "on", "circulate", "high"],
+            },
+        ),
+        # Timing modes are ignored, but two real speeds among them qualify
+        (
+            "HeaterCooler",
+            "climate.two_speeds_with_timing_modes",
+            "heat",
+            {
+                ATTR_SUPPORTED_FEATURES: ClimateEntityFeature.FAN_MODE,
+                "fan_modes": ["off", "auto", "on", "circulate", "low", "high"],
             },
         ),
         # A single predefined fan speed plus a swing mode -> HeaterCooler
