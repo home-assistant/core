@@ -10,7 +10,11 @@ from homeassistant.components.openaq.const import (
     DOMAIN,
     OPENAQ_UNIT_MICROGRAMS_PER_CUBIC_METER,
 )
-from homeassistant.components.sensor import SensorDeviceClass, SensorStateClass
+from homeassistant.components.sensor import (
+    ATTR_STATE_CLASS,
+    SensorDeviceClass,
+    SensorStateClass,
+)
 from homeassistant.config_entries import ConfigEntryState
 from homeassistant.const import STATE_UNAVAILABLE, STATE_UNKNOWN
 from homeassistant.core import HomeAssistant
@@ -56,7 +60,7 @@ async def test_sensor_entities(
     pm25 = entity_registry.async_get("sensor.del_norte_pm2_5")
     assert pm25 is not None
     assert pm25.unique_id == f"{LOCATION_ID}_pm25"
-    assert pm25.capabilities == {"state_class": SensorStateClass.MEASUREMENT}
+    assert pm25.capabilities == {ATTR_STATE_CLASS: SensorStateClass.MEASUREMENT}
     assert pm25.options == {"sensor": {"suggested_display_precision": 1}}
     assert (state := hass.states.get("sensor.del_norte_pm2_5")) is not None
     assert state.state == "12.1"
@@ -68,7 +72,7 @@ async def test_sensor_entities(
 
     co = entity_registry.async_get("sensor.del_norte_carbon_monoxide")
     assert co is not None
-    assert co.capabilities == {"state_class": SensorStateClass.MEASUREMENT}
+    assert co.capabilities == {ATTR_STATE_CLASS: SensorStateClass.MEASUREMENT}
     assert co.options == {"sensor": {"suggested_display_precision": 2}}
     assert (state := hass.states.get("sensor.del_norte_carbon_monoxide")) is not None
     assert state.attributes["device_class"] == SensorDeviceClass.CO
@@ -76,7 +80,7 @@ async def test_sensor_entities(
 
     no2 = entity_registry.async_get("sensor.del_norte_nitrogen_dioxide")
     assert no2 is not None
-    assert no2.capabilities == {"state_class": SensorStateClass.MEASUREMENT}
+    assert no2.capabilities == {ATTR_STATE_CLASS: SensorStateClass.MEASUREMENT}
     assert no2.options == {"sensor": {"suggested_display_precision": 1}}
     assert (state := hass.states.get("sensor.del_norte_nitrogen_dioxide")) is not None
     assert state.attributes["unit_of_measurement"] == "ppb"
