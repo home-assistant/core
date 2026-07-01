@@ -5,7 +5,7 @@ from collections.abc import Callable, Sequence
 from dataclasses import dataclass
 from datetime import timedelta
 from types import MappingProxyType
-from typing import TypeVar
+from typing import TypeVar, override
 
 from openaq import OpenAQ
 from openaq.core.responses import Latest, Location, Parameter, ParameterBase, Sensor
@@ -175,6 +175,7 @@ class OpenAQDataUpdateCoordinator(DataUpdateCoordinator[OpenAQLocationData]):
         async with self._client_lock:
             return await self.hass.async_add_executor_job(target, *args)
 
+    @override
     async def _async_update_data(self) -> OpenAQLocationData:
         """Fetch data from OpenAQ."""
         location: Location

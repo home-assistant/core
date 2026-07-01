@@ -1,5 +1,7 @@
 """Support for OpenAQ sensors."""
 
+from typing import override
+
 from homeassistant.components.sensor import (
     SensorDeviceClass,
     SensorEntity,
@@ -130,6 +132,7 @@ class OpenAQSensor(CoordinatorEntity[OpenAQDataUpdateCoordinator], SensorEntity)
         self._attr_device_info = _device_info(coordinator)
 
     @property
+    @override
     def native_value(self) -> StateType:
         """Return the sensor value."""
         measurement = self.coordinator.data.measurements.get(
@@ -138,6 +141,7 @@ class OpenAQSensor(CoordinatorEntity[OpenAQDataUpdateCoordinator], SensorEntity)
         return measurement.value if measurement is not None else None
 
     @property
+    @override
     def native_unit_of_measurement(self) -> str | None:
         """Return the native unit of measurement."""
         metadata = self.coordinator.data.sensor_metadata.get(
