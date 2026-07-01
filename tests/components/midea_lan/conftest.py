@@ -1,7 +1,8 @@
 """Fixtures for Midea LAN tests."""
 
-from collections.abc import Callable
+from collections.abc import Callable, Generator
 from typing import Any
+from unittest.mock import AsyncMock, patch
 
 import pytest
 
@@ -79,6 +80,16 @@ class DummyDevice:
     def close(self) -> None:
         """Record close call."""
         self.calls.append(("close",))
+
+
+@pytest.fixture
+def mock_setup_entry() -> Generator[AsyncMock]:
+    """Prevent loading the integration during config flow tests."""
+    with patch(
+        "homeassistant.components.midea_lan.async_setup_entry",
+        return_value=True,
+    ) as mock_entry:
+        yield mock_entry
 
 
 @pytest.fixture

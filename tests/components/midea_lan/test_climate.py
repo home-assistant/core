@@ -44,7 +44,7 @@ from homeassistant.core import HomeAssistant
 from homeassistant.helpers import entity_registry as er
 
 from .conftest import DummyDevice
-from .const import ENTRY_DATA
+from .const import BASE_DATA
 
 from tests.common import MockConfigEntry
 
@@ -56,7 +56,7 @@ async def _async_setup_entry(
     """Set up a Midea LAN config entry with a fake device."""
     entry = MockConfigEntry(
         domain=DOMAIN,
-        data={**ENTRY_DATA, CONF_TYPE: device.device_type},
+        data={**BASE_DATA, CONF_TYPE: device.device_type},
     )
     entry.add_to_hass(hass)
 
@@ -456,7 +456,7 @@ async def test_climate_async_setup_entry(
     """Test async_setup_entry creates the expected number of entities."""
     entry = MockConfigEntry(
         domain=DOMAIN,
-        data={**ENTRY_DATA, CONF_TYPE: device_type},
+        data={**BASE_DATA, CONF_TYPE: device_type},
     )
     entry.add_to_hass(hass)
     with patch(
@@ -476,7 +476,7 @@ async def test_climate_async_setup_entry_no_device(hass: HomeAssistant) -> None:
     """Test climate setup creates no entities when runtime_data is missing."""
     entry = MockConfigEntry(
         domain=DOMAIN,
-        data={**ENTRY_DATA, CONF_TYPE: DeviceType.AC},
+        data={**BASE_DATA, CONF_TYPE: DeviceType.AC},
     )
     entry.add_to_hass(hass)
 
