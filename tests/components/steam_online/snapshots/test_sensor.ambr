@@ -42,6 +42,7 @@
       <EntityStateAttribute.ENTITY_PICTURE: 'entity_picture'>: 'https://avatars.steamstatic.com/fef49e7fa7e1997310d705b2a6158ff8dc1cdfeb_full.jpg',
       <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Steam testaccount1',
       'game': 'The Witcher: Enhanced Edition',
+      'game_icon': 'https://steamcdn-a.akamaihd.net/steamcommunity/public/images/apps/20900/746d1cd48fb2e57d579b05b6e9eccba95859e549.jpg',
       'game_id': '20900',
       'game_image_header': 'https://steamcdn-a.akamaihd.net/steam/apps/20900/header.jpg',
       'game_image_main': 'https://steamcdn-a.akamaihd.net/steam/apps/20900/capsule_616x353.jpg',
