@@ -102,36 +102,37 @@ async def test_sensor_unknown_device_returns_unknown(
 
 
 @pytest.mark.usefixtures("aioclient_mock_fixture")
+@pytest.mark.parametrize(
+    ("raw_value", "expected_state"),
+    [
+        pytest.param(0, "idle", id="idle"),
+        pytest.param(1, "test", id="test"),
+        pytest.param(2, "pre_alarm", id="pre_alarm"),
+        pytest.param(3, "alarm", id="alarm"),
+        pytest.param(4, "critical_alarm", id="critical_alarm"),
+        pytest.param(5, "hushed", id="hushed"),
+        pytest.param(6, "not_present", id="not_present"),
+    ],
+)
 async def test_sensor_all_alarm_states(
     hass: HomeAssistant,
     mock_config_entry: MockConfigEntry,
     mock_provider: AsyncMock,
     mock_get_iot_credentials: MagicMock,
     mock_mqtt_client: MagicMock,
+    raw_value: int,
+    expected_state: str,
 ) -> None:
-    """Test that all AlarmStatus values are correctly represented."""
+    """Test that each AlarmStatus value maps to the expected sensor state."""
     await setup_integration(hass, mock_config_entry)
 
-    states = {
-        0: "idle",
-        1: "test",
-        2: "pre_alarm",
-        3: "alarm",
-        4: "critical_alarm",
-        5: "hushed",
-        6: "not_present",
-    }
+    payload = json.dumps({"state": {"reported": {"coAlarmStatus": raw_value}}}).encode()
+    trigger_shadow_callback(
+        mock_mqtt_client,
+        "$aws/things/thing-001/shadow/update/accepted",
+        payload,
+    )
+    await hass.async_block_till_done()
 
-    for value, expected in states.items():
-        payload = json.dumps({"state": {"reported": {"coAlarmStatus": value}}}).encode()
-        trigger_shadow_callback(
-            mock_mqtt_client,
-            "$aws/things/thing-001/shadow/update/accepted",
-            payload,
-        )
-        await hass.async_block_till_done()
-
-        state = hass.states.get("sensor.master_bedroom_co_alarm")
-        assert state.state == expected, (
-            f"Expected {expected} for value {value}, got {state.state}"
-        )
+    state = hass.states.get("sensor.master_bedroom_co_alarm")
+    assert state.state == expected_state
