@@ -31,10 +31,10 @@ _LOGGER = logging.getLogger(__name__)
 
 PLATFORMS = [Platform.DEVICE_TRACKER]
 
-type SynologySRMConfigEntry = ConfigEntry[SynologySrmDeviceScanner]
+type SynologySRMConfigEntry = ConfigEntry[SynologySRMDeviceScanner]
 
 
-class SynologySrmDeviceScanner:
+class SynologySRMDeviceScanner:
     """Scanner to interact with Synology SRM API."""
 
     def __init__(
@@ -44,7 +44,6 @@ class SynologySrmDeviceScanner:
     ) -> None:
         """Initialize the scanner."""
         self.hass = hass
-        self._entry = config
         self._host = config.data[CONF_HOST]
         self._on_close: list[Callable] = []
         self.client = synology_srm.Client(
@@ -58,14 +57,12 @@ class SynologySrmDeviceScanner:
             self.client.http.disable_https_verify()
         self.scan_interval = DEFAULT_SCAN_INTERVAL
         self.devices: dict[str, dict[str, Any]] = {}
-        self.success_init = False
 
     async def setup(self) -> None:
         """Set up the scanner."""
         _LOGGER.debug("Setting up Synology SRM device scanner")
 
         await self.hass.async_add_executor_job(self._check_success_init)
-        self.success_init = True
 
         self.async_on_close(
             async_track_time_interval(self.hass, self.scan_devices, self.scan_interval)
@@ -81,7 +78,7 @@ class SynologySrmDeviceScanner:
         self._on_close.clear()
 
     async def scan_devices(self, now: datetime | None = None) -> None:
-        """Scan for new devices and return a list with found device macs."""
+        """Refresh the cached list of devices from the router."""
         await self._update_info()
 
     def _check_success_init(self) -> None:
@@ -105,7 +102,7 @@ class SynologySrmDeviceScanner:
                 self.client.core.get_network_nsm_device, {"is_online": True}
             )
             for device in srm_devices:
-                device_mac = format_mac(device.get("mac"))
+                device_mac = format_mac(device["mac"])
                 if device_mac not in self.devices:
                     new_devices = True
                     _LOGGER.debug("Found new device: %s", device_mac)
@@ -143,7 +140,7 @@ async def async_setup_entry(
     hass: HomeAssistant, config_entry: SynologySRMConfigEntry
 ) -> bool:
     """Set up the Synology SRM from a config entry."""
-    scanner = SynologySrmDeviceScanner(hass, config_entry)
+    scanner = SynologySRMDeviceScanner(hass, config_entry)
     await scanner.setup()
 
     async def async_close_connection(event: Event) -> None:

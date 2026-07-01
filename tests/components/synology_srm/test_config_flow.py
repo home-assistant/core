@@ -41,7 +41,7 @@ async def test_user_flow_success(hass: HomeAssistant) -> None:
     await hass.async_block_till_done()
 
     assert result["type"] is FlowResultType.CREATE_ENTRY
-    assert result["title"] == f"{DOMAIN} ({MOCK_CONFIG[CONF_HOST]})"
+    assert result["title"] == f"Synology SRM ({MOCK_CONFIG[CONF_HOST]})"
     assert result["data"] == MOCK_CONFIG
 
 

@@ -19,7 +19,13 @@ from homeassistant.const import (
 )
 from homeassistant.helpers import config_validation as cv
 
-from .const import DEFAULT_PORT, DEFAULT_SSL, DEFAULT_USERNAME, DOMAIN
+from .const import (
+    DEFAULT_PORT,
+    DEFAULT_SSL,
+    DEFAULT_USERNAME,
+    DEFAULT_VERIFY_SSL,
+    DOMAIN,
+)
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -73,7 +79,7 @@ class SynologySRMFlowHandler(ConfigFlow, domain=DOMAIN):
                 errors["base"] = error
             else:
                 return self.async_create_entry(
-                    title=f"{DOMAIN} ({user_input[CONF_HOST]})", data=user_input
+                    title=f"Synology SRM ({user_input[CONF_HOST]})", data=user_input
                 )
 
         return self.async_show_form(
@@ -85,7 +91,9 @@ class SynologySRMFlowHandler(ConfigFlow, domain=DOMAIN):
                     vol.Required(CONF_PASSWORD): cv.string,
                     vol.Optional(CONF_PORT, default=DEFAULT_PORT): cv.port,
                     vol.Optional(CONF_SSL, default=DEFAULT_SSL): cv.boolean,
-                    vol.Optional(CONF_VERIFY_SSL, default=False): cv.boolean,
+                    vol.Optional(
+                        CONF_VERIFY_SSL, default=DEFAULT_VERIFY_SSL
+                    ): cv.boolean,
                 }
             ),
             errors=errors,

@@ -4,14 +4,13 @@ from datetime import datetime
 from typing import Any, override
 
 from homeassistant.components.device_tracker import DEFAULT_CONSIDER_HOME, ScannerEntity
-from homeassistant.components.device_tracker.const import SourceType
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.device_registry import format_mac
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from homeassistant.util import dt as dt_util
 
-from . import SynologySRMConfigEntry, SynologySrmDeviceScanner
+from . import SynologySRMConfigEntry, SynologySRMDeviceScanner
 
 ATTRIBUTE_ALIAS = {
     "band": None,
@@ -49,7 +48,7 @@ async def async_setup_entry(
 ) -> None:
     """Set up device tracker for Synology SRM component."""
     scanner = config_entry.runtime_data
-    tracked: set = set()
+    tracked: set[str] = set()
 
     @callback
     def update_devices() -> None:
@@ -65,7 +64,7 @@ async def async_setup_entry(
 
 @callback
 def add_entities(
-    scanner: SynologySrmDeviceScanner,
+    scanner: SynologySRMDeviceScanner,
     async_add_entities: AddConfigEntryEntitiesCallback,
     tracked: set[str],
 ) -> None:
@@ -88,7 +87,7 @@ class SynologySRMScannerEntity(ScannerEntity):
     _attr_should_poll = False
 
     def __init__(
-        self, scanner: SynologySrmDeviceScanner, device: dict[str, Any]
+        self, scanner: SynologySRMDeviceScanner, device: dict[str, Any]
     ) -> None:
         """Init a Synology SRM device."""
         self._scanner = scanner
@@ -97,7 +96,6 @@ class SynologySRMScannerEntity(ScannerEntity):
         self._name = device.get("hostname", self._mac)
         self._connected = False
         self._last_activity: datetime | None = None
-        self._attr_source_type = SourceType.ROUTER
 
     @property
     @override
@@ -120,7 +118,7 @@ class SynologySRMScannerEntity(ScannerEntity):
     @property
     @override
     def mac_address(self) -> str | None:
-        """Return a unique ID."""
+        """Return the MAC address of the device."""
         return self._mac
 
     @property
@@ -146,7 +144,7 @@ class SynologySRMScannerEntity(ScannerEntity):
     @override
     def extra_state_attributes(self) -> dict[str, Any]:
         """Return the state attributes."""
-        attrs: dict[str, str] = {}
+        attrs: dict[str, Any] = {}
 
         if not self._connected:
             return {}

@@ -5,7 +5,7 @@ from unittest.mock import MagicMock
 
 import synology_srm
 
-from homeassistant.components.synology_srm import SynologySrmDeviceScanner
+from homeassistant.components.synology_srm import SynologySRMDeviceScanner
 from homeassistant.components.synology_srm.const import DEFAULT_SCAN_INTERVAL, DOMAIN
 from homeassistant.config_entries import ConfigEntryState
 from homeassistant.const import CONF_HOST, CONF_VERIFY_SSL, EVENT_HOMEASSISTANT_STOP
@@ -27,7 +27,7 @@ async def test_setup_and_unload_entry(
     assert await hass.config_entries.async_setup(mock_config_entry.entry_id)
     await hass.async_block_till_done()
     assert mock_config_entry.state is ConfigEntryState.LOADED
-    assert isinstance(mock_config_entry.runtime_data, SynologySrmDeviceScanner)
+    assert isinstance(mock_config_entry.runtime_data, SynologySRMDeviceScanner)
 
     assert await hass.config_entries.async_unload(mock_config_entry.entry_id)
     await hass.async_block_till_done()
@@ -115,7 +115,7 @@ async def test_scanner_populates_devices_and_dispatches_new(
     await hass.config_entries.async_setup(mock_config_entry.entry_id)
     await hass.async_block_till_done()
 
-    scanner: SynologySrmDeviceScanner = mock_config_entry.runtime_data
+    scanner: SynologySRMDeviceScanner = mock_config_entry.runtime_data
     async_dispatcher_connect(
         hass,
         scanner.signal_device_new,
@@ -154,7 +154,7 @@ async def test_scanner_scan_error_is_swallowed(
     await hass.config_entries.async_setup(mock_config_entry.entry_id)
     await hass.async_block_till_done()
 
-    scanner: SynologySrmDeviceScanner = mock_config_entry.runtime_data
+    scanner: SynologySRMDeviceScanner = mock_config_entry.runtime_data
     mock_synology_client.core.get_network_nsm_device.side_effect = (
         synology_srm.http.SynologyException(500, "boom")
     )
@@ -174,7 +174,7 @@ async def test_ha_stop_closes_scanner(
     await hass.config_entries.async_setup(mock_config_entry.entry_id)
     await hass.async_block_till_done()
 
-    scanner: SynologySrmDeviceScanner = mock_config_entry.runtime_data
+    scanner: SynologySRMDeviceScanner = mock_config_entry.runtime_data
     closed: list[bool] = []
     scanner.async_on_close(lambda: closed.append(True))
 
@@ -192,5 +192,5 @@ async def test_scanner_uses_default_scan_interval(
     mock_config_entry.add_to_hass(hass)
     await hass.config_entries.async_setup(mock_config_entry.entry_id)
     await hass.async_block_till_done()
-    scanner: SynologySrmDeviceScanner = mock_config_entry.runtime_data
+    scanner: SynologySRMDeviceScanner = mock_config_entry.runtime_data
     assert scanner.scan_interval == DEFAULT_SCAN_INTERVAL
