@@ -381,7 +381,5 @@ class VeSyncFanHA(VeSyncBaseEntity[VeSyncFanBase | VeSyncPurifier], FanEntity):
         if not successes or not all(successes):
             if self.device.last_response:
                 raise HomeAssistantError(self.device.last_response.message)
-            raise HomeAssistantError(
-                "Failed to set oscillation, no response found."
-            )
+            raise HomeAssistantError("Failed to set oscillation, no response found.")
         self.async_write_ha_state()
