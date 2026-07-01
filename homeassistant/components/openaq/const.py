@@ -10,7 +10,7 @@ from openaq import (
     NotAuthorizedError,
     RateLimitError,
 )
-from openaq.core.exceptions import APIError, OpenAQError
+from openaq.core.exceptions import APIError
 
 DOMAIN = "openaq"
 
@@ -29,4 +29,3 @@ OPENAQ_AUTH_EXCEPTIONS: Final = (
 )
 OPENAQ_RATE_LIMIT_EXCEPTIONS: Final = (HTTPRateLimitError, RateLimitError)
 OPENAQ_API_EXCEPTIONS: Final = (APIError, OSError)
-OPENAQ_UPDATE_EXCEPTIONS: Final = (APIError, OpenAQError, OSError)

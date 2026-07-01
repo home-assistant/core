@@ -18,13 +18,7 @@ from homeassistant.const import (
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
 
-from .const import (
-    CONF_LOCATION_ID,
-    DOMAIN,
-    LOGGER,
-    OPENAQ_AUTH_EXCEPTIONS,
-    OPENAQ_UPDATE_EXCEPTIONS,
-)
+from .const import CONF_LOCATION_ID, DOMAIN, LOGGER, OPENAQ_AUTH_EXCEPTIONS
 
 UPDATE_INTERVAL = timedelta(minutes=10)
 _T = TypeVar("_T")
@@ -226,11 +220,6 @@ class OpenAQDataUpdateCoordinator(DataUpdateCoordinator[OpenAQLocationData]):
                 raise UpdateFailed(
                     translation_domain=DOMAIN,
                     translation_key="authentication_failed",
-                ) from err
-            except OPENAQ_UPDATE_EXCEPTIONS as err:
-                raise UpdateFailed(
-                    translation_domain=DOMAIN,
-                    translation_key="unable_to_fetch",
                 ) from err
             except Exception as err:
                 raise UpdateFailed(
