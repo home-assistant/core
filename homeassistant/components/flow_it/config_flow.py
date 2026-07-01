@@ -77,12 +77,9 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
                 self._abort_if_unique_id_configured(updates=user_input)
                 return self.async_create_entry(title=info["title"], data=user_input)
 
-        # Pre-fill data from discovery if available
         data_schema = vol.Schema(
             {
-                vol.Required(
-                    CONF_HOST, default=self._discovery_info.get(CONF_HOST, "")
-                ): str,
+                vol.Required(CONF_HOST): str,
                 vol.Required(CONF_USERNAME, default=DEFAULT_USERNAME): TextSelector(
                     TextSelectorConfig(
                         type=TextSelectorType.TEXT, autocomplete="username"
