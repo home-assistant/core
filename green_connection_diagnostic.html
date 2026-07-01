@@ -1,0 +1,452 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Home Assistant Green connection diagnostic</title>
+  <style>
+    :root {
+      color-scheme: light dark;
+      --ha-blue: #03a9f4;
+      --ha-blue-dark: #0288d1;
+      --success: #0b7a3b;
+      --success-bg: #e8f7ee;
+      --warning: #9a5a00;
+      --warning-bg: #fff3d6;
+      --danger: #b3261e;
+      --danger-bg: #fde8e7;
+      --text: #1f2937;
+      --muted: #5f6b7a;
+      --panel: #ffffff;
+      --panel-2: #f7f9fb;
+      --border: #d8dee8;
+      --shadow: 0 12px 30px rgba(31, 41, 55, 0.12);
+      --radius: 18px;
+    }
+
+    * { box-sizing: border-box; }
+
+    body {
+      margin: 0;
+      font-family: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+      background: linear-gradient(135deg, #eef8fd 0%, #f7fbff 48%, #f3f8f5 100%);
+      color: var(--text);
+      line-height: 1.55;
+    }
+
+    .shell {
+      width: min(1120px, calc(100% - 32px));
+      margin: 0 auto;
+      padding: 24px 0 48px;
+    }
+
+    header.hero {
+      background: var(--panel);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      box-shadow: var(--shadow);
+      padding: clamp(20px, 4vw, 40px);
+      margin-bottom: 18px;
+    }
+
+    .eyebrow {
+      color: var(--ha-blue-dark);
+      font-weight: 700;
+      letter-spacing: 0.04em;
+      text-transform: uppercase;
+      font-size: 0.8rem;
+    }
+
+    h1, h2, h3 { line-height: 1.2; margin: 0 0 12px; }
+    h1 { font-size: clamp(2rem, 6vw, 3.4rem); }
+    h2 { font-size: clamp(1.35rem, 3vw, 2rem); }
+    p { margin: 0 0 14px; }
+
+    .layout {
+      display: grid;
+      grid-template-columns: minmax(0, 1fr) 340px;
+      gap: 18px;
+      align-items: start;
+    }
+
+    main, aside {
+      background: var(--panel);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      box-shadow: var(--shadow);
+    }
+
+    main { padding: clamp(18px, 3vw, 28px); }
+    aside { padding: 18px; position: sticky; top: 16px; }
+
+    .progress-wrap {
+      display: grid;
+      gap: 8px;
+      margin-bottom: 18px;
+    }
+
+    .progress-text {
+      display: flex;
+      justify-content: space-between;
+      gap: 12px;
+      color: var(--muted);
+      font-size: 0.95rem;
+      font-weight: 650;
+    }
+
+    .progress-bar {
+      height: 12px;
+      background: #dfeaf2;
+      border-radius: 999px;
+      overflow: hidden;
+    }
+
+    .progress-fill {
+      width: 0%;
+      height: 100%;
+      background: linear-gradient(90deg, var(--ha-blue), #00c853);
+      transition: width 220ms ease;
+    }
+
+    .step-card {
+      border: 1px solid var(--border);
+      border-radius: 16px;
+      background: var(--panel-2);
+      padding: clamp(18px, 3vw, 26px);
+    }
+
+    .step-meta {
+      color: var(--ha-blue-dark);
+      font-weight: 800;
+      font-size: 0.9rem;
+      margin-bottom: 10px;
+    }
+
+    .option-grid {
+      display: grid;
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+      gap: 12px;
+      margin-top: 20px;
+    }
+
+    button {
+      font: inherit;
+      border-radius: 12px;
+      border: 1px solid var(--border);
+      cursor: pointer;
+    }
+
+    button:focus-visible, summary:focus-visible {
+      outline: 3px solid rgba(3, 169, 244, 0.45);
+      outline-offset: 3px;
+    }
+
+    .option-btn {
+      text-align: left;
+      background: #fff;
+      color: var(--text);
+      padding: 14px 16px;
+      min-height: 68px;
+      font-weight: 750;
+      box-shadow: 0 2px 0 rgba(0,0,0,0.03);
+    }
+
+    .option-btn:hover { border-color: var(--ha-blue); transform: translateY(-1px); }
+    .option-btn small { display: block; color: var(--muted); font-weight: 500; margin-top: 4px; }
+
+    .nav-row {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 10px;
+      justify-content: space-between;
+      margin-top: 18px;
+    }
+
+    .secondary-btn, .start-over, .jump-btn {
+      background: #fff;
+      color: var(--ha-blue-dark);
+      font-weight: 800;
+      padding: 10px 14px;
+    }
+
+    .start-over {
+      background: var(--ha-blue);
+      border-color: var(--ha-blue);
+      color: #fff;
+      width: 100%;
+      margin-bottom: 14px;
+    }
+
+    .outcome {
+      border-radius: 16px;
+      padding: 18px;
+      border-left: 6px solid;
+      background: #fff;
+    }
+
+    .outcome.success { border-color: var(--success); background: var(--success-bg); }
+    .outcome.warning { border-color: var(--warning); background: var(--warning-bg); }
+    .outcome h3 { display: flex; gap: 8px; align-items: center; }
+    .outcome ul { margin: 10px 0 0 20px; padding: 0; }
+
+    details {
+      border: 1px solid var(--border);
+      border-radius: 14px;
+      background: #fff;
+      margin-bottom: 10px;
+      overflow: hidden;
+    }
+
+    summary {
+      cursor: pointer;
+      padding: 13px 14px;
+      font-weight: 850;
+      color: var(--text);
+    }
+
+    .branch-body { padding: 0 14px 14px; color: var(--muted); }
+    .branch-body ol { padding-left: 20px; margin: 8px 0 12px; }
+    .jump-btn { width: 100%; text-align: left; margin-top: 8px; }
+
+    .path-list {
+      list-style: none;
+      padding: 0;
+      margin: 14px 0 0;
+      display: grid;
+      gap: 8px;
+      color: var(--muted);
+      font-size: 0.92rem;
+    }
+
+    .path-list li {
+      padding: 8px 10px;
+      border-radius: 10px;
+      background: var(--panel-2);
+    }
+
+    @media (max-width: 860px) {
+      .layout { grid-template-columns: 1fr; }
+      aside { position: static; }
+      .option-grid { grid-template-columns: 1fr; }
+    }
+
+    @media (prefers-color-scheme: dark) {
+      :root {
+        --text: #eef2f7;
+        --muted: #b8c2cc;
+        --panel: #111827;
+        --panel-2: #182231;
+        --border: #344055;
+        --success-bg: #102b1c;
+        --warning-bg: #312508;
+      }
+      body { background: linear-gradient(135deg, #07121c, #111827); }
+      .option-btn, details, .secondary-btn, .jump-btn, .outcome { background: #0f1724; color: var(--text); }
+      .progress-bar { background: #2b3648; }
+    }
+  </style>
+</head>
+<body>
+  <div class="shell">
+    <header class="hero">
+      <div class="eyebrow">Home Assistant Green help</div>
+      <h1>Connection diagnostic</h1>
+      <p>Use this guided tool when Home Assistant Green powers on but you cannot reliably open Home Assistant from a browser or the app. It starts with the quick wins, then narrows the issue to local name lookup, IP address, onboarding, or network visibility.</p>
+    </header>
+
+    <div class="layout">
+      <main aria-live="polite">
+        <div class="progress-wrap" aria-label="Diagnostic progress">
+          <div class="progress-text"><span id="progressLabel">Step 1 of ~7</span><span id="branchLabel">Quick Wins</span></div>
+          <div class="progress-bar" role="progressbar" aria-valuemin="0" aria-valuemax="100" aria-valuenow="0"><div class="progress-fill" id="progressFill"></div></div>
+        </div>
+        <section class="step-card" id="stepCard"></section>
+        <nav class="nav-row" aria-label="Diagnostic navigation">
+          <button type="button" class="secondary-btn" id="backBtn">Back</button>
+          <button type="button" class="secondary-btn" id="homeBtn">Return to entry questions</button>
+        </nav>
+      </main>
+
+      <aside aria-label="Diagnostic branches">
+        <button type="button" class="start-over" id="startOverBtn">Start over</button>
+        <h2>Jump to a branch</h2>
+        <details open>
+          <summary>Quick Wins</summary>
+          <div class="branch-body"><p>Power, LED status, cabling, and the first access method.</p><button class="jump-btn" data-jump="start">Start quick wins</button></div>
+        </details>
+        <details>
+          <summary>mDNS Troubleshooting</summary>
+          <div class="branch-body"><p>Use this when <strong>homeassistant.local:8123</strong> does not load but the device may have an IP address.</p><button class="jump-btn" data-jump="mdnsIntro">Jump to mDNS checks</button></div>
+        </details>
+        <details>
+          <summary>DHCP/IP Issues</summary>
+          <div class="branch-body"><p>Use this when the app or router shows an address, but the page still will not open.</p><button class="jump-btn" data-jump="dhcpIntro">Jump to IP checks</button></div>
+        </details>
+        <details>
+          <summary>Onboarding Recovery</summary>
+          <div class="branch-body"><p>Use this when Home Assistant opens but setup is stuck, incomplete, or returns to the wrong screen.</p><button class="jump-btn" data-jump="onboardingIntro">Jump to onboarding recovery</button></div>
+        </details>
+        <details>
+          <summary>Factory Reset Path</summary>
+          <div class="branch-body"><p>Only use after network and onboarding recovery do not restore access.</p><button class="jump-btn" data-jump="factoryIntro">Jump to reset guidance</button></div>
+        </details>
+        <h2>Your path</h2>
+        <ul class="path-list" id="pathList"><li>No answers selected yet.</li></ul>
+      </aside>
+    </div>
+  </div>
+
+  <script>
+    const steps = {
+      start: { branch: 'Quick Wins', title: 'What does the status LED show?', text: 'Look at the front LED on Home Assistant Green after it has had a few minutes to start.', options: [
+        ['Solid white', 'The system is running and ready for network checks.', 'powerCycle'],
+        ['Flashing white', 'Startup or update may still be in progress.', 'flashingWait'],
+        ['Red', 'The device reports a problem that needs isolation.', 'redLed'],
+        ['No light', 'The device may not be powered correctly.', 'noLight'] ] },
+      flashingWait: { branch: 'Quick Wins', title: 'Has it been flashing for more than 20 minutes?', text: 'Flashing white can be normal during startup or updates. Do not unplug during an update unless it has clearly stalled.', options: [
+        ['No, it has been less than 20 minutes', 'Wait until the LED becomes solid white, then continue.', 'resolvedWait'],
+        ['Yes, more than 20 minutes', 'Use the safe power-cycle sequence.', 'powerCycle'] ] },
+      redLed: { branch: 'Quick Wins', title: 'Try the safe power-cycle sequence', text: 'Unplug power from Home Assistant Green, unplug Ethernet, wait 30 seconds, reconnect Ethernet until it clicks, then reconnect power. Wait up to 10 minutes.', options: [
+        ['LED is now solid white', 'Continue with access checks.', 'connectionType'],
+        ['LED is still red', 'Escalate with LED and power details.', 'escalateHardware'] ] },
+      noLight: { branch: 'Quick Wins', title: 'Check power first', text: 'Confirm the official power supply is fully seated in the wall outlet and in Home Assistant Green. Try a known-working outlet.', options: [
+        ['LED turns on', 'Continue once startup completes.', 'start'],
+        ['Still no light', 'Escalate with power details.', 'escalatePower'] ] },
+      powerCycle: { branch: 'Quick Wins', title: 'Complete the quick reset sequence', text: 'Power off Home Assistant Green, wait 30 seconds, reconnect Ethernet, reconnect power, and wait until the LED is solid white.', options: [
+        ['It is solid white now', 'Continue.', 'connectionType'],
+        ['It does not become solid white', 'Review the LED-specific path.', 'start'] ] },
+      connectionType: { branch: 'Quick Wins', title: 'How is Home Assistant Green connected to your network?', text: 'Home Assistant Green uses Ethernet for initial network access. Wi-Fi clients can still access it through the router if they are on the same local network.', options: [
+        ['Ethernet cable to router or switch', 'Continue with cable and access checks.', 'cableCheck'],
+        ['I expected Home Assistant Green to use Wi-Fi', 'Use Ethernet first, then access from Wi-Fi devices on the same network.', 'needEthernet'] ] },
+      needEthernet: { branch: 'Quick Wins', title: 'Connect Ethernet for setup', text: 'Connect Home Assistant Green to your router or switch with Ethernet, then power cycle it and wait for a solid white LED.', options: [
+        ['Connected by Ethernet and solid white', 'Continue.', 'cableCheck'],
+        ['I cannot connect Ethernet', 'Support will need your network details.', 'escalateNoEthernet'] ] },
+      cableCheck: { branch: 'Quick Wins', title: 'Do the Ethernet link lights turn on?', text: 'Check the Ethernet port on the router or switch. If possible, swap the cable and try a different router or switch port.', options: [
+        ['Yes, link lights are on', 'Continue to access method.', 'accessMethod'],
+        ['No, link lights stay off', 'Try the cable and port swap first.', 'cableSwap'] ] },
+      cableSwap: { branch: 'Quick Wins', title: 'Swap cable and router port', text: 'Use a known-good Ethernet cable and a different router or switch port, then power cycle Home Assistant Green.', options: [
+        ['Link lights are on now', 'Continue.', 'accessMethod'],
+        ['Still no link lights', 'The hub is not appearing on the network.', 'escalateNoNetwork'] ] },
+      accessMethod: { branch: 'Quick Wins', title: 'How are you trying to open Home Assistant?', text: 'Choose the access method that best matches the symptom you see.', options: [
+        ['homeassistant.local:8123', 'The page will not load by local name.', 'mdnsIntro'],
+        ['Direct IP address', 'You have an address such as 192.168.x.x:8123.', 'dhcpIntro'],
+        ['Home Assistant app', 'The app cannot find or open the server.', 'appCheck'] ] },
+      appCheck: { branch: 'mDNS Troubleshooting', title: 'Can a browser open http://homeassistant.local:8123?', text: 'Use a phone or computer connected to the same home network. Disable mobile data or VPN for this check.', options: [
+        ['Yes, browser works', 'Refresh the app connection.', 'resolvedApp'],
+        ['No, browser also fails', 'Check local name lookup.', 'mdnsIntro'] ] },
+      mdnsIntro: { branch: 'mDNS Troubleshooting', title: 'Try the direct local address from your router', text: 'Open your router or network app and look for a device named Home Assistant, homeassistant, or homeassistant-green. Then open http://IP_ADDRESS:8123.', options: [
+        ['The IP address opens Home Assistant', 'Local name lookup is the issue.', 'resolvedMdns'],
+        ['I found an IP, but it will not open', 'Continue with IP checks.', 'dhcpIntro'],
+        ['I cannot find Home Assistant in the router', 'Check whether it appears on the network.', 'networkVisible'] ] },
+      dhcpIntro: { branch: 'DHCP/IP Issues', title: 'Does the IP address look like your home network?', text: 'A normal address usually starts like other devices on your network, for example 192.168.1.x or 10.0.0.x.', options: [
+        ['Yes, it matches my network', 'Test for duplicate or blocked address.', 'ipConflict'],
+        ['No, it looks wrong or changes constantly', 'Refresh DHCP lease.', 'dhcpRefresh'] ] },
+      dhcpRefresh: { branch: 'DHCP/IP Issues', title: 'Refresh the network lease', text: 'Restart the router if practical, keep Ethernet connected, then power cycle Home Assistant Green. Check the router list again.', options: [
+        ['It now has a normal IP and opens', 'Issue resolved.', 'resolvedDhcp'],
+        ['It has an IP but still will not open', 'Continue.', 'ipConflict'],
+        ['It never appears in the router list', 'Escalate network visibility.', 'escalateNoNetwork'] ] },
+      ipConflict: { branch: 'DHCP/IP Issues', title: 'Rule out address conflict or isolation', text: 'Make sure no other device has the same IP. Check router parental controls, guest network isolation, VLAN rules, or firewall rules that block devices from each other.', options: [
+        ['Fixing router rules or duplicate IP solved it', 'Issue resolved.', 'resolvedIp'],
+        ['Rules look normal, but the page still will not load', 'Check onboarding state.', 'onboardingIntro'] ] },
+      networkVisible: { branch: 'DHCP/IP Issues', title: 'Does Home Assistant Green appear anywhere in the router client list?', text: 'Check wired clients, offline clients, and recently connected devices after a fresh power cycle.', options: [
+        ['Yes, I found it', 'Use the listed IP address.', 'dhcpIntro'],
+        ['No, it never appears', 'Escalate network visibility.', 'escalateNoNetwork'] ] },
+      onboardingIntro: { branch: 'Onboarding Recovery', title: 'What do you see when the page opens?', text: 'This separates connection problems from setup that has not finished yet.', options: [
+        ['The onboarding page appears', 'Finish setup from this browser.', 'resolvedOnboarding'],
+        ['It says Home Assistant is preparing', 'Wait for installation to finish.', 'preparing'],
+        ['It opens, but setup is broken or loops', 'Use recovery steps.', 'recovery'] ] },
+      preparing: { branch: 'Onboarding Recovery', title: 'Has the preparing screen been shown for more than 30 minutes?', text: 'First startup can take time. Keep power and Ethernet connected.', options: [
+        ['No', 'Wait and refresh occasionally.', 'resolvedWait'],
+        ['Yes', 'Continue to recovery.', 'recovery'] ] },
+      recovery: { branch: 'Onboarding Recovery', title: 'Try browser and network recovery', text: 'Open the direct IP in a private window, try another browser, disable VPN, and confirm your device is on the same local network.', options: [
+        ['That fixed setup', 'Issue resolved.', 'resolvedOnboarding'],
+        ['Still stuck', 'Consider the factory reset path.', 'factoryIntro'] ] },
+      factoryIntro: { branch: 'Factory Reset Path', title: 'Last resort: factory reset path', text: 'Only continue if power, cable, mDNS, IP, and onboarding recovery did not restore access. A reset removes local setup data.', options: [
+        ['I have backups or this is a new install', 'Proceed carefully with official reset instructions.', 'resolvedReset'],
+        ['I need to preserve data or I am unsure', 'Escalate before resetting.', 'escalateBeforeReset'] ] },
+      resolvedWait: { outcome: 'success', branch: 'Quick Wins', title: 'Resolved: normal startup or update delay', text: 'Keep Home Assistant Green powered and connected. When the LED is solid white, open Home Assistant again.' },
+      resolvedApp: { outcome: 'success', branch: 'mDNS Troubleshooting', title: 'Resolved: app connection refreshed', text: 'In the Home Assistant app, edit the server connection or add a new server using the working browser address.' },
+      resolvedMdns: { outcome: 'success', branch: 'mDNS Troubleshooting', title: 'Resolved: use the direct IP or fix local name lookup', text: 'Bookmark the direct IP address for now. To restore homeassistant.local, keep devices on the same network and enable local network or mDNS/Bonjour traffic in your router.' },
+      resolvedDhcp: { outcome: 'success', branch: 'DHCP/IP Issues', title: 'Resolved: DHCP lease refreshed', text: 'Reserve the new IP address in your router if you want a stable direct address.' },
+      resolvedIp: { outcome: 'success', branch: 'DHCP/IP Issues', title: 'Resolved: router rule or address conflict fixed', text: 'Home Assistant Green is reachable again. Keep the router reservation or rule change that solved it.' },
+      resolvedOnboarding: { outcome: 'success', branch: 'Onboarding Recovery', title: 'Resolved: onboarding can continue', text: 'Complete onboarding from the working browser session. After setup, add the server in the Home Assistant app.' },
+      resolvedReset: { outcome: 'success', branch: 'Factory Reset Path', title: 'Ready for factory reset', text: 'Follow the official Home Assistant Green reset instructions, then reconnect Ethernet and power and repeat onboarding.' },
+      escalateHardware: { outcome: 'warning', branch: 'Quick Wins', title: 'Escalate: red LED remains after power cycle', text: 'Proceed to engineer support with these details:', details: ['LED status and whether it is steady or changing', 'Power supply used and outlet tested', 'What happened after the 30-second power cycle', 'Approximate age of the device and any recent power outage or update'] },
+      escalatePower: { outcome: 'warning', branch: 'Quick Wins', title: 'Escalate: no LED with known power', text: 'Proceed to engineer support with these details:', details: ['Power adapter model or rating', 'Outlets tested', 'Whether any LED ever turns on', 'Any visible damage or unusual heat'] },
+      escalateNoEthernet: { outcome: 'warning', branch: 'Quick Wins', title: 'Escalate: Ethernet setup is not available', text: 'Proceed to engineer support with these details:', details: ['Router or network model', 'Whether any wired connection can be tested temporarily', 'Current LED status', 'How you are trying to access Home Assistant'] },
+      escalateNoNetwork: { outcome: 'warning', branch: 'DHCP/IP Issues', title: 'Escalate: Home Assistant Green does not appear on the network', text: 'Proceed to engineer support with these details:', details: ['LED status after 10 minutes', 'Router or switch model', 'Ethernet cable and port swap results', 'Whether link lights turn on', 'Router client-list screenshots or exported device list if available'] },
+      escalateBeforeReset: { outcome: 'warning', branch: 'Factory Reset Path', title: 'Escalate before reset', text: 'Proceed to engineer support with these details:', details: ['Whether you have backups', 'Exact page or message where setup is stuck', 'Working or attempted URLs', 'Current IP address if known', 'Steps already tried from this diagnostic'] }
+    };
+
+    const approxTotal = 7;
+    let current = 'start';
+    let history = [];
+    let answers = [];
+
+    const stepCard = document.getElementById('stepCard');
+    const progressLabel = document.getElementById('progressLabel');
+    const branchLabel = document.getElementById('branchLabel');
+    const progressFill = document.getElementById('progressFill');
+    const progressBar = document.querySelector('.progress-bar');
+    const pathList = document.getElementById('pathList');
+    const backBtn = document.getElementById('backBtn');
+    const homeBtn = document.getElementById('homeBtn');
+
+    function render() {
+      const node = steps[current];
+      const stepNumber = Math.min(history.length + 1, approxTotal);
+      const percent = node.outcome ? 100 : Math.min(95, Math.round((stepNumber / approxTotal) * 100));
+      progressLabel.textContent = node.outcome ? 'Outcome reached' : `Step ${stepNumber} of ~${approxTotal}`;
+      branchLabel.textContent = node.branch;
+      progressFill.style.width = `${percent}%`;
+      progressBar.setAttribute('aria-valuenow', String(percent));
+      backBtn.disabled = history.length === 0;
+
+      if (node.outcome) {
+        const icon = node.outcome === 'success' ? '✓' : '!';
+        const list = node.details ? `<ul>${node.details.map(item => `<li>${item}</li>`).join('')}</ul>` : '';
+        stepCard.innerHTML = `<article class="outcome ${node.outcome}"><h3><span aria-hidden="true">${icon}</span>${node.title}</h3><p>${node.text}</p>${list}</article>`;
+      } else {
+        stepCard.innerHTML = `<div class="step-meta">${node.branch}</div><h2>${node.title}</h2><p>${node.text}</p><div class="option-grid">${node.options.map((option, index) => `<button type="button" class="option-btn" data-next="${option[2]}" data-answer="${index}">${option[0]}<small>${option[1]}</small></button>`).join('')}</div>`;
+      }
+
+      pathList.innerHTML = answers.length ? answers.map(item => `<li><strong>${item.question}</strong><br>${item.answer}</li>`).join('') : '<li>No answers selected yet.</li>';
+    }
+
+    function go(next, answerIndex) {
+      const node = steps[current];
+      history.push(current);
+      if (node.options && node.options[answerIndex]) {
+        answers.push({ question: node.title, answer: node.options[answerIndex][0] });
+      }
+      current = next;
+      render();
+    }
+
+    stepCard.addEventListener('click', event => {
+      const button = event.target.closest('button[data-next]');
+      if (button) go(button.dataset.next, Number(button.dataset.answer));
+    });
+
+    backBtn.addEventListener('click', () => {
+      if (!history.length) return;
+      current = history.pop();
+      answers.pop();
+      render();
+    });
+
+    function reset(to = 'start') {
+      current = to;
+      history = [];
+      answers = [];
+      render();
+    }
+
+    document.getElementById('startOverBtn').addEventListener('click', () => reset());
+    homeBtn.addEventListener('click', () => reset('accessMethod'));
+    document.querySelectorAll('[data-jump]').forEach(button => button.addEventListener('click', () => reset(button.dataset.jump)));
+
+    render();
+  </script>
+</body>
+</html>
