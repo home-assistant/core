@@ -1,0 +1,125 @@
+Punca kegagalan
+- Job 84588549839 gagal pada langkah codespell.
+- Log menunjukkan: .github/ZS:70: SME ==> SAME, SEME, SOME, SMS
+  (codespell menganggap token "SME" sebagai ejaan salah).
+
+Penyelesaian yang disarankan (2 pilihan — pilih salah satu bergantung niat)
+
+Pilihan A — Jika "SME" adalah kesilapan ejaan dan perlu dibetulkan
+1. Buka fail .github/ZS dan pada baris 70 gantikan "SME" dengan perkataan yang dikehendaki (contoh: "SOME" atau "Subject Matter Expert" bergantung konteks).
+Contoh perubahan (patch):
+--- a/.github/ZS
++++ b/.github/ZS
+@@ line 70
+- ... SME ...
++ ... Subject Matter Expert ...     # (atau teks betul yang dimaksudkan)
+
+2. Commit perubahan dan push; CI akan lulus jika tiada ejaan lain yang salah.
+
+Pilihan B — Jika "SME" adalah akronim yang sah dan perlu diterima oleh pemeriksa ejaan
+1. Tambah fail senarai pengecualian untuk codespell (contoh .github/codespell_ignore_words.txt) dan masukkan "SME" di dalamnya.
+2. Konfigurasikan hook codespell supaya menggunakan fail pengecualian itu dengan menambah arg --ignore-words-file ke hook codespell di .pre-commit-config.yaml.
+
+Contoh fail dan perubahan:
+
+a) Tambah .github/codespell_ignore_words.txt
+File: .github/codespell_ignore_words.txt
+Isi:
+SME
+
+b) Kemas kini .pre-commit-config.yaml untuk kod hook codespell
+(temukan bahagian yang mendaftar hook codespell dan tambahkan args seperti di bawah)
+
+--- a/.pre-commit-config.yaml
++++ b/.pre-commit-config.yaml
+@@
+   - repo: https://github.com/codespell-project/codespell
+     rev: v2.2.0
+     hooks:
+       - id: codespell
++        args: ["--ignore-words-file", ".github/codespell_ignore_words.txt"]
+         files: \.(py|md|rst|yaml|yml|txt)$
+
+Nota: sesuaikan rev/versi dan pola files dengan konfigurasi repo anda sedia ada jika berlainan.
+
+3. Commit kedua-dua fail dan push — ini memberitahu codespell menerima "SME" dan job codespell akan lulus.
+
+Cadangan am tambahan
+- Jika akronim lain wujud di repo, masukkan satu per baris dalam .github/codespell_ignore_words.txt supaya tidak muncul semula.
+- Alternatif pendek (jika hanya satu atau dua kemas kini): ubah teks di .github/ZS untuk menyertakan bentuk penuh sekali (contoh "SME (Subject Matter Expert)") — ini memperjelas maksud dan mengelakkan pengecaman sebagai ejaan salah tanpa mengubah konfigurasi CI.
+
+Langkah seterusnya
+- Pilih sama ada membetulkan teks (Pilihan A) atau menambah pengecualian (Pilihan B).
+- Buat patch seperti contoh di atas, commit dan push. Jalankan semula CI untuk mengesahkan masalah codespell selesai.Ringkasan pantas
+- Punca terus: langkah codespell dalam CI gagal kerana kata/akronim "SME" ditemui dalam fail .github/ZS (baris ~70) dan dianggap ejaan salah. Ini menyebabkan prek (pre-commit) keluar dengan code 1 dan job 84588549839 gagal.  
+- Masalah lebih besar: PR itu menambah fail .github/ZS yang mengandungi banyak PII (nama penuh, nombor pengenalan, pasport, telefon, e-mel, dan lain). Untuk repositori awam seperti home-assistant/core, fail sebegini bukan sesuai — saya mengesyorkan fail itu dibuang atau disanitasi sebelum apa-apa percubaan untuk meluluskan PR.
+
+Cadangan penyelesaian (mengikut kepentingan — lakukan 1, 2 atau 3)
+
+1) Tindakan disyorkan (selamat dan segera): keluarkan atau sanitasi fail .github/ZS
+- Kenapa: ia menyelesaikan kegagalan codespell dan juga mengelakkan pendedahan PII ke repositori awam. Ini ialah pilihan yang paling betul dari sudut dasar projek.
+- Cara (contoh arahan git di cawangan PR anda — patch-3):
+
+  git checkout patch-3
+  # untuk membuang fail sepenuhnya
+  git rm .github/ZS
+  git commit -m "Remove .github/ZS containing personal data"
+  git push origin patch-3
+
+  Atau, jika anda mahu mengekalkan kandungan tetapi sanitasi (contoh: ganti PII dengan placeholder):
+  - Edit .github/ZS, gantikan semua nombor pengenalan / telefon / e-mel / pasport dengan [REDACTED] atau bentuk ringkasan tanpa data sensitif.
+  - Commit + push.
+
+2) Jika anda mesti mengekalkan fail tetapi mahu CI lulus cepat: tambahkan pengecualian codespell untuk "SME" (kurang digalakkan bila fail mengandungi PII)
+- Buat fail ignore list dan ubah konfigurasi pre-commit untuk codespell supaya menerima "SME".
+
+  a) Tambah fail .github/codespell_ignore_words.txt:
+  (fail ini hanya satu baris bagi setiap perkataan/akronim)
+  SME
+
+  b) Kemas kini .pre-commit-config.yaml — pada hook codespell tambahkan args:
+  ```yaml
+  - repo: https://github.com/codespell-project/codespell
+    rev: v2.2.0            # gunakan rev sedia ada dalam repo jika berlainan
+    hooks:
+      - id: codespell
+        args: ["--ignore-words-file", ".github/codespell_ignore_words.txt"]
+        files: \.(py|md|rst|yaml|yml|txt|zs)$
+  ```
+  - Commit kedua-dua fail dan push ke cawangan PR.
+  - Trigger CI semula (GitHub Actions akan jalankan prek lagi).
+
+3) Alternatif cepat pada kandungan: betulkan token "SME" kepada bentuk yang codespell terima
+- Jika maksudnya “SOME” atau “Subject Matter Expert”, ubah teks itu di .github/ZS.
+- Contoh satu baris perubahan (edit di sekitar baris yang dilaporkan oleh codespell):
+  - Teks asal: ... SME ...
+  - Teks diganti: ... Subject Matter Expert ...
+- Commit + push.
+
+Arahan langkah demi langkah untuk pembangun (ringkas)
+- Pilihan A (saya sarankan): remove/sanitize file
+  1. git checkout patch-3
+  2. git rm .github/ZS   (atau edit file untuk redact)
+  3. git commit -m "Remove/sanitize .github/ZS — contains PII"
+  4. git push origin patch-3
+  5. Tunggu Actions; job codespell tidak lagi akan melihat baris itu.
+
+- Pilihan B (if keeping file): add ignore-file & update pre-commit
+  1. Buat .github/codespell_ignore_words.txt dengan baris "SME"
+  2. Edit .pre-commit-config.yaml untuk menambah args (lihat contoh YAML di atas)
+  3. Commit & push
+  4. Tunggu Actions
+
+Risiko & nota pemeliharaan
+- Penyelesaian sementara menambah pengecualian codespell membenarkan akronim, tetapi tidak menyelesaikan isu dasar (kandungan PII). Untuk Home Assistant, maintainers hampir pasti akan menolak PR yang menambah data sensitif ke repo — sebaiknya tutup/ubah PR supaya kandungan sesuai (contohnya: contoh struktur data tanpa PII, atau simpan data sensitif di tempat peribadi).
+- Jika tujuan PR ialah menyediakan contoh struktur data (format .zs/.json), ubah kandungan kepada data contoh (dummy) tanpa maklumat sebenar.
+
+Apa saya sudah buat / semak untuk anda
+- Saya telah periksa log job (84588549839) dan fail yang berkaitan (.github/ZS) dalam PR #175296. Log jelas codespell kegagalan disebabkan token "SME". Saya juga periksa kandungan PR: ia menambah satu fail .github/ZS dengan banyak PII. Berdasarkan itu saya mengemukakan langkah pembetulan di atas.
+
+Jika anda mahu, saya boleh:
+- Sediakan patch git (diff) untuk membuang fail .github/ZS dari cawangan patch-3, atau
+- Sediakan patch yang menambah .github/codespell_ignore_words.txt dan mengubah .pre-commit-config.yaml (saya boleh buat commit di repo jika anda mahu saya laksanakan perubahan — beri kebenaran dan pastikan repo/branch betul), atau
+- Tulis versi sanitasi .github/ZS (contoh menggantikan semua PII dengan [REDACTED] atau contoh dummy) dan berikan diff yang anda terus boleh commit.
+
+Beritahu pilihan (1 = remove/sanitize file, 2 = add codespell ignore, 3 = edit token SME ke bentuk penuh) dan saya akan hasilkan patch/diff contohnya untuk anda.[![CI](https://github.com/home-assistant/core/actions/workflows/ci.yaml/badge.svg)](https://github.com/home-assistant/core/actions/workflows/ci.yaml)
