@@ -1186,10 +1186,7 @@ class EntityDatetimeConditionBase(EntityConditionBase):
         if TYPE_CHECKING:
             assert config.options is not None
 
-        within = config.options.get("within")
-        self._within: timedelta | None = (
-            cv.positive_time_period(within) if within is not None else None
-        )
+        self._within: timedelta | None = config.options.get("within")
 
     def _get_tracked_value(self, entity_state: State) -> Any:
         """Get the tracked timestamp from a state."""
@@ -1226,10 +1223,10 @@ def make_entity_datetime_condition(
     *,
     primary_entities_only: bool = True,
 ) -> type[EntityDatetimeConditionBase]:
-    """Create a condition for entity state changes to specific state(s).
+    """Create a datetime condition for the given domain(s).
 
-    domain_specs can be a string (domain name) for simple state-based conditions,
-    or a Mapping[str, DomainSpec] for attribute-based or multi-domain conditions.
+    domain_specs can be a string (domain name) for a single domain, or a
+    Mapping[str, DomainSpec] for multi-domain conditions.
     """
     specs = _normalize_domain_specs(domain_specs)
 
