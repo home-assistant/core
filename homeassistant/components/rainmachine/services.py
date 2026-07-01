@@ -8,6 +8,7 @@ from regenmaschine.controller import Controller
 from regenmaschine.errors import RainMachineError
 import voluptuous as vol
 
+from homeassistant.config_entries import ConfigEntryState
 from homeassistant.const import CONF_CONDITION, CONF_DEVICE_ID, CONF_UNIT_OF_MEASUREMENT
 from homeassistant.core import HomeAssistant, ServiceCall, callback
 from homeassistant.exceptions import HomeAssistantError
@@ -140,7 +141,7 @@ def async_get_entry_for_service_call(
     for entry_id in device_entry.config_entries:
         if (entry := hass.config_entries.async_get_entry(entry_id)) is None:
             continue
-        if entry.domain == DOMAIN:
+        if entry.domain == DOMAIN and entry.state is ConfigEntryState.LOADED:
             return entry
 
     raise ValueError(f"No controller for device ID: {device_id}")
