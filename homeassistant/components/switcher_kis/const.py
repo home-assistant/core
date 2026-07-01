@@ -17,6 +17,10 @@ SERVICE_TURN_ON_WITH_TIMER_NAME = "turn_on_with_timer"
 # Defines the maximum interval device must send an update before it marked unavailable
 MAX_UPDATE_INTERVAL_SEC = 30
 
+# When a device stops broadcasting, poll it over TCP before marking it
+# unavailable, so a lost broadcast alone does not take a reachable device down.
+POLL_TIMEOUT_SEC = 8
+
 PREREQUISITES_URL = (
     "https://www.home-assistant.io/integrations/switcher_kis/#prerequisites"
 )
