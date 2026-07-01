@@ -1235,6 +1235,7 @@ def make_entity_datetime_condition(
         """Condition for entity datetime."""
 
         _domain_specs = specs
+        _primary_entities_only = primary_entities_only
 
     return CustomCondition
 
