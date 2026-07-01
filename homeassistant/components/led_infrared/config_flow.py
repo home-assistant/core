@@ -1,6 +1,6 @@
 """Config flow for the LED Infrared integration."""
 
-from typing import TYPE_CHECKING, Any
+from typing import TYPE_CHECKING, Any, override
 
 import voluptuous as vol
 
@@ -31,6 +31,7 @@ from .const import (
 class LEDIrConfigFlow(ConfigFlow, domain=DOMAIN):
     """Handle a config flow for LED Infrared."""
 
+    @override
     async def async_step_user(
         self, user_input: dict[str, Any] | None = None
     ) -> ConfigFlowResult:
