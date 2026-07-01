@@ -196,6 +196,13 @@
       "title": "SLZB core firmware update required"
     }
   },
+  "options": {
+    "step": {
+      "init": {
+        "description": "Configure SLZB BLE settings."
+      }
+    }
+  },
   "services": {
     "play_rtttl": {
       "description": "Play an RTTTL melody on the SMLIGHT device buzzer.",

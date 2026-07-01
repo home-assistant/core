@@ -13,14 +13,17 @@ from homeassistant.config_entries import (
     SOURCE_USER,
     ConfigFlow,
     ConfigFlowResult,
+    OptionsFlowWithReload,
 )
 from homeassistant.const import CONF_HOST, CONF_NAME, CONF_PASSWORD, CONF_USERNAME
+from homeassistant.core import callback
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 from homeassistant.helpers.device_registry import format_mac
 from homeassistant.helpers.service_info.dhcp import DhcpServiceInfo
 from homeassistant.helpers.service_info.zeroconf import ZeroconfServiceInfo
 
 from .const import DOMAIN
+from .coordinator import SmConfigEntry
 
 STEP_USER_DATA_SCHEMA = vol.Schema(
     {
@@ -275,3 +278,28 @@ class SmlightConfigFlow(ConfigFlow, domain=DOMAIN):
         assert info.model is not None
         title = self._device_name or info.model
         return self.async_create_entry(title=title, data=user_input)
+
+    @staticmethod
+    @callback
+    @override
+    def async_get_options_flow(
+        config_entry: SmConfigEntry,
+    ) -> OptionsFlowHandler:
+        """Get the options flow for this handler."""
+        return OptionsFlowHandler()
+
+
+class OptionsFlowHandler(OptionsFlowWithReload):
+    """Handle options flow for SMLIGHT."""
+
+    async def async_step_init(
+        self, user_input: dict[str, Any] | None = None
+    ) -> ConfigFlowResult:
+        """Handle options flow."""
+        if user_input is not None:
+            return self.async_create_entry(title="", data=user_input)
+
+        return self.async_show_form(
+            step_id="init",
+            data_schema=vol.Schema({}),
+        )

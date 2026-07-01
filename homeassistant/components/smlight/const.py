@@ -14,3 +14,5 @@ LOGGER = logging.getLogger(__package__)
 SCAN_INTERVAL = timedelta(seconds=300)
 SCAN_INTERNET_INTERVAL = timedelta(minutes=15)
 UPTIME_DEVIATION = timedelta(seconds=5)
+
+CONF_BLE_SCANNER_MODE = "ble_scanner_mode"
