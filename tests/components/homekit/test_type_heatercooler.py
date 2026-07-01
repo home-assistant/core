@@ -1539,6 +1539,38 @@ async def test_heatercooler_off_at_startup_activates_displayed_mode(
     assert call_set_hvac_mode[-1].data[ATTR_HVAC_MODE] == HVACMode.AUTO
 
 
+async def test_heatercooler_power_on_restores_last_active_mode(
+    hass: HomeAssistant, hk_driver: HomeDriver
+) -> None:
+    """Test going off keeps the last mode on the tile and power-on restores it."""
+    entity_id = "climate.test"
+    base_attrs = {
+        ATTR_SUPPORTED_FEATURES: ClimateEntityFeature.TARGET_TEMPERATURE,
+        ATTR_HVAC_MODES: [HVACMode.HEAT, HVACMode.COOL, HVACMode.AUTO, HVACMode.OFF],
+    }
+
+    hass.states.async_set(entity_id, HVACMode.HEAT, base_attrs)
+    await hass.async_block_till_done()
+
+    acc = HeaterCooler(hass, hk_driver, "Climate", entity_id, 1, None)
+    hk_driver.add_accessory(acc)
+    acc.run()
+    await hass.async_block_till_done()
+
+    assert acc.char_target_state.value == HC_TARGET_HEAT
+
+    # Going off keeps the Heat target on the tile rather than flipping to Auto.
+    hass.states.async_set(entity_id, HVACMode.OFF, base_attrs)
+    await hass.async_block_till_done()
+    assert acc.char_target_state.value == HC_TARGET_HEAT
+
+    # Turning back on restores the mode the tile is showing.
+    call_set_hvac_mode = async_mock_service(hass, CLIMATE_DOMAIN, SERVICE_SET_HVAC_MODE)
+    acc._set_chars({CHAR_ACTIVE: 1})
+    await hass.async_block_till_done()
+    assert call_set_hvac_mode[-1].data[ATTR_HVAC_MODE] == HVACMode.HEAT
+
+
 async def test_heatercooler_cool_mode_ignores_heating_threshold(
     hass: HomeAssistant, hk_driver: HomeDriver
 ) -> None:

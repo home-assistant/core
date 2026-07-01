@@ -59,14 +59,18 @@ HC_INACTIVE, HC_IDLE, HC_HEATING, HC_COOLING = range(4)
 # HomeKit TargetHeaterCoolerState valid values: Auto=0, Heat=1, Cool=2
 HC_TARGET_AUTO, HC_TARGET_HEAT, HC_TARGET_COOL = range(3)
 
+# Off is intentionally not mapped: when the entity is off the target
+# characteristic keeps the last active mode so it stays in sync with
+# _last_known_mode, which is what turning Active back on restores.
 HC_HASS_TO_HOMEKIT_TARGET = {
-    HVACMode.OFF: HC_TARGET_AUTO,
     HVACMode.HEAT: HC_TARGET_HEAT,
     HVACMode.COOL: HC_TARGET_COOL,
     HVACMode.HEAT_COOL: HC_TARGET_AUTO,
     HVACMode.AUTO: HC_TARGET_AUTO,
 }
 
+# HomeKit's CurrentHeaterCoolerState has no drying or fan-only value, so those
+# actions map to Cooling, matching the Thermostat's action mapping.
 HC_HASS_TO_HOMEKIT_ACTION = {
     HVACAction.OFF: HC_INACTIVE,
     HVACAction.IDLE: HC_IDLE,
