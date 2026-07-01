@@ -2,10 +2,14 @@
 
 import pytest
 
+from homeassistant.components.climate import ATTR_MAX_TEMP, ATTR_MIN_TEMP
 from homeassistant.components.homekit.climate_util import (
     HEAT_COOL_DEADBAND,
+    get_temperature_range_from_state,
     resolve_target_temp_range,
 )
+from homeassistant.const import UnitOfTemperature
+from homeassistant.core import State
 
 
 @pytest.mark.parametrize(
@@ -38,5 +42,29 @@ def test_resolve_target_temp_range(
         resolve_target_temp_range(
             current_high, current_low, new_high, new_low, 7.0, 30.0
         )
+        == expected
+    )
+
+
+@pytest.mark.parametrize(
+    ("attrs", "expected"),
+    [
+        # A reported bound of exactly 0 is honored, not treated as missing.
+        ({ATTR_MIN_TEMP: 0, ATTR_MAX_TEMP: 25}, (0.0, 25.0)),
+        # A missing minimum falls back to the default.
+        ({ATTR_MAX_TEMP: 25}, (7.0, 25.0)),
+        # A missing maximum falls back to the default.
+        ({ATTR_MIN_TEMP: 10}, (10.0, 35.0)),
+        # Both missing use both defaults.
+        ({}, (7.0, 35.0)),
+    ],
+)
+def test_get_temperature_range_from_state(
+    attrs: dict[str, float], expected: tuple[float, float]
+) -> None:
+    """Test reported bounds are honored, including an explicit 0, else defaults."""
+    state = State("climate.test", "cool", attrs)
+    assert (
+        get_temperature_range_from_state(state, UnitOfTemperature.CELSIUS, 7.0, 35.0)
         == expected
     )

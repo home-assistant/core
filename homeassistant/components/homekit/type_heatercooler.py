@@ -218,7 +218,10 @@ class HeaterCooler(HomeKitClimateAccessory):
             self.char_swing = serv.configure_char(CHAR_SWING_MODE, value=0)
 
         # The Heater Cooler service has no humidity characteristic, so surface a
-        # reported current humidity through a linked humidity sensor.
+        # reported current humidity through a linked humidity sensor. Like the
+        # Thermostat, this is decided once at setup and not a reload attribute:
+        # current humidity changes on every update, so reloading on it would
+        # thrash the accessory.
         self._has_humidity = ATTR_CURRENT_HUMIDITY in attributes
         if self._has_humidity:
             humidity_serv = self.add_preload_service(SERV_HUMIDITY_SENSOR, CHAR_NAME)
