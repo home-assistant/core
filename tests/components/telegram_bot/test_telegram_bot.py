@@ -27,11 +27,7 @@ from telegram.error import (
     TimedOut,
 )
 
-from homeassistant.components.telegram_bot import (
-    ATTR_LATITUDE,
-    ATTR_LONGITUDE,
-    async_setup_entry,
-)
+from homeassistant.components.telegram_bot import ATTR_LATITUDE, ATTR_LONGITUDE
 from homeassistant.components.telegram_bot.const import (
     ATTR_AUTHENTICATION,
     ATTR_CALLBACK_QUERY_ID,
@@ -104,11 +100,7 @@ from homeassistant.const import (
     HTTP_DIGEST_AUTHENTICATION,
 )
 from homeassistant.core import Context, Event, HomeAssistant, ServiceResponse
-from homeassistant.exceptions import (
-    ConfigEntryAuthFailed,
-    HomeAssistantError,
-    ServiceValidationError,
-)
+from homeassistant.exceptions import HomeAssistantError, ServiceValidationError
 from homeassistant.helpers.issue_registry import IssueRegistry
 from homeassistant.util import json as json_util
 from homeassistant.util.file import write_utf8_file
@@ -295,7 +287,7 @@ async def test_send_message_with_inline_keyboard(
         AsyncMock(
             return_value=Message(
                 message_id=12345,
-                date=datetime.now(),
+                date=datetime.now(),  # pylint: disable=home-assistant-enforce-naive-now
                 chat=Chat(id=12345678, type=ChatType.PRIVATE),
             )
         ),
@@ -1377,11 +1369,10 @@ async def test_async_setup_entry_failed(
     ) as mock_bot:
         mock_bot.side_effect = InvalidToken("mock invalid token error")
 
-        with pytest.raises(ConfigEntryAuthFailed) as err:
-            await async_setup_entry(hass, mock_broadcast_config_entry)
+        await hass.config_entries.async_setup(mock_broadcast_config_entry.entry_id)
 
     await hass.async_block_till_done()
-    assert err.value.args[0] == "Invalid API token for Telegram Bot."
+    assert mock_broadcast_config_entry.state is ConfigEntryState.SETUP_ERROR
 
 
 async def test_answer_callback_query(
@@ -1516,9 +1507,12 @@ async def test_send_video(
 
     # test: 404 error
 
-    with patch(
-        "homeassistant.components.telegram_bot.bot.httpx.AsyncClient.get"
-    ) as mock_get:
+    with (
+        patch(
+            "homeassistant.components.telegram_bot.bot.httpx.AsyncClient.get"
+        ) as mock_get,
+        patch("homeassistant.components.telegram_bot.bot._RETRY_DELAY", 0),
+    ):
         mock_get.return_value = AsyncMock(status_code=404, text="Success")
 
         with pytest.raises(HomeAssistantError) as err:

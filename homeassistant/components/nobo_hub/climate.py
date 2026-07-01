@@ -1,6 +1,6 @@
 """Python Control of Nobø Hub - Nobø Energy Control."""
 
-from typing import Any
+from typing import Any, override
 
 from pynobo import PynoboError, nobo
 
@@ -104,11 +104,13 @@ class NoboZone(NoboBaseEntity, ClimateEntity):
         )
         self._read_state()
 
+    @override
     async def async_set_hvac_mode(self, hvac_mode: HVACMode) -> None:
         """Set new target HVAC mode."""
         preset = PRESET_COMFORT if hvac_mode == HVACMode.HEAT else PRESET_NONE
         await self._apply_preset(preset, "set_hvac_mode_failed")
 
+    @override
     async def async_set_preset_mode(self, preset_mode: str) -> None:
         """Set new zone override."""
         await self._apply_preset(preset_mode, "set_preset_mode_failed")
@@ -139,6 +141,7 @@ class NoboZone(NoboBaseEntity, ClimateEntity):
                 translation_key=translation_key,
             ) from err
 
+    @override
     async def async_set_temperature(self, **kwargs: Any) -> None:
         """Set new target temperature."""
         if ATTR_TARGET_TEMP_LOW in kwargs:
@@ -159,6 +162,7 @@ class NoboZone(NoboBaseEntity, ClimateEntity):
         self._read_state()
 
     @callback
+    @override
     def _read_state(self) -> None:
         """Copy the current hub state onto the entity attributes."""
         if self._id not in self._nobo.zones:

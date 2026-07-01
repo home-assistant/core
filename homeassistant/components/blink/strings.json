@@ -60,7 +60,7 @@
   },
   "exceptions": {
     "cant_write": {
-      "message": "Can't write to file."
+      "message": "Can't write to file, check logs for details."
     },
     "failed_arm": {
       "message": "Blink failed to arm camera."

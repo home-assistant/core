@@ -1,6 +1,6 @@
 """Support for BTHome sensors."""
 
-from typing import cast
+from typing import cast, override
 
 from bthome_ble import SensorDeviceClass as BTHomeSensorDeviceClass, SensorUpdate, Units
 from bthome_ble.const import (
@@ -476,11 +476,13 @@ class BTHomeBluetoothSensorEntity(
     """Representation of a BTHome BLE sensor."""
 
     @property
+    @override
     def native_value(self) -> int | float | None:
         """Return the native value."""
         return self.processor.entity_data.get(self.entity_key)
 
     @property
+    @override
     def available(self) -> bool:
         """Return True if entity is available."""
         return self.processor.coordinator.sleepy_device or super().available

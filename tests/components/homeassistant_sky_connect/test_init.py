@@ -604,7 +604,7 @@ async def test_bad_config_entry_fixing(hass: HomeAssistant) -> None:
             )
         ],
     ):
-        await async_setup_component(hass, "homeassistant_sky_connect", {})
+        await async_setup_component(hass, DOMAIN, {})
 
     assert hass.config_entries.async_get_entry(new_entry.entry_id) is not None
     assert hass.config_entries.async_get_entry(old_entry.entry_id) is not None

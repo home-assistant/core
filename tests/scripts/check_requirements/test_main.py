@@ -46,10 +46,13 @@ def test_main_writes_artifact(
         ),
     )
 
+    sha = "abc1234def5678abc1234def5678abc1234def56"
     exit_code = main_mod.main(
         [
             "--pr-number",
             "42",
+            "--head-sha",
+            sha,
             "--diff",
             str(diff_file),
             "--output",
@@ -60,7 +63,12 @@ def test_main_writes_artifact(
 
     payload = json.loads(output_file.read_text(encoding="utf-8"))
     assert payload["pr_number"] == 42
+    assert payload["head_sha"] == sha
     assert payload["packages"][0]["name"] == "pkg"
+    assert (
+        f"https://github.com/home-assistant/core/commit/{sha}"
+        in payload["rendered_comment"]
+    )
 
     captured = capsys.readouterr()
     assert "check_requirements: 1 package change(s)" in captured.err

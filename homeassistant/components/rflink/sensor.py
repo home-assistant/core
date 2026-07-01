@@ -1,7 +1,7 @@
 """Support for Rflink sensors."""
 
 import logging
-from typing import Any
+from typing import Any, override
 
 from rflink.parser import PACKET_FIELDS, UNITS
 import voluptuous as vol
@@ -74,7 +74,7 @@ SENSOR_TYPES = (
         native_unit_of_measurement=UnitOfPressure.HPA,
     ),
     SensorEntityDescription(
-        # Rflink devices reports ok/low so device class can’t be used
+        # Rflink devices reports ok/low so device class can't be used
         # It should be migrated to a binary sensor
         key="battery",
         name="Battery",
@@ -370,10 +370,12 @@ class RflinkSensor(RflinkDevice, SensorEntity):
 
         super().__init__(device_id, initial_event=initial_event, **kwargs)
 
+    @override
     def _handle_event(self, event):
         """Domain specific event handler."""
         self._state = event["value"]
 
+    @override
     # pylint: disable-next=home-assistant-missing-super-call
     async def async_added_to_hass(self) -> None:
         """Register update callback."""
@@ -414,6 +416,7 @@ class RflinkSensor(RflinkDevice, SensorEntity):
             self.handle_event_callback(self._initial_event)
 
     @property
+    @override
     def native_unit_of_measurement(self):
         """Return measurement unit."""
         if self._unit_of_measurement:
@@ -423,6 +426,7 @@ class RflinkSensor(RflinkDevice, SensorEntity):
         return None
 
     @property
+    @override
     def native_value(self):
         """Return value."""
         return self._state

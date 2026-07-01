@@ -31,7 +31,7 @@ async def async_setup_services(hass: HomeAssistant) -> None:
 
         time_to_send = time
         if time is None:
-            time_to_send = datetime.now()
+            time_to_send = datetime.now()  # pylint: disable=home-assistant-enforce-naive-now
 
         await local_data.system.set_time(time_to_send)
 

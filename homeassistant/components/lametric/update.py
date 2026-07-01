@@ -1,5 +1,7 @@
 """LaMetric Update platform."""
 
+from typing import override
+
 from awesomeversion import AwesomeVersion
 
 from homeassistant.components.update import UpdateDeviceClass, UpdateEntity
@@ -34,11 +36,13 @@ class LaMetricUpdate(LaMetricEntity, UpdateEntity):
         self._attr_unique_id = f"{coordinator.data.serial_number}-update"
 
     @property
+    @override
     def installed_version(self) -> str:
         """Return the installed version of the entity."""
         return self.coordinator.data.os_version
 
     @property
+    @override
     def latest_version(self) -> str | None:
         """Return the latest version of the entity."""
         if not self.coordinator.data.update:

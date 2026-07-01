@@ -15,7 +15,7 @@ from wyoming.event import Event
 from wyoming.info import Info
 from wyoming.ping import Ping, Pong
 from wyoming.pipeline import PipelineStage, RunPipeline
-from wyoming.satellite import RunSatellite
+from wyoming.satellite import PauseSatellite, RunSatellite
 from wyoming.snd import Played
 from wyoming.timer import TimerCancelled, TimerFinished, TimerStarted, TimerUpdated
 from wyoming.tts import Synthesize
@@ -23,6 +23,7 @@ from wyoming.vad import VoiceStarted, VoiceStopped
 from wyoming.wake import Detect, Detection
 
 from homeassistant.components import assist_pipeline, assist_satellite, intent
+from homeassistant.components.wyoming import DOMAIN
 from homeassistant.components.wyoming.assist_satellite import WyomingAssistSatellite
 from homeassistant.components.wyoming.devices import SatelliteDevice
 from homeassistant.const import STATE_ON
@@ -43,7 +44,7 @@ async def setup_config_entry(hass: HomeAssistant) -> MockConfigEntry:
     we can patch functions before the satellite task is run during setup.
     """
     entry = MockConfigEntry(
-        domain="wyoming",
+        domain=DOMAIN,
         data={
             "host": "1.2.3.4",
             "port": 1234,
@@ -86,6 +87,10 @@ class SatelliteAsyncTcpClient(MockAsyncTcpClient):
         self.connect_event = asyncio.Event()
         self.run_satellite_event = asyncio.Event()
         self.detect_event = asyncio.Event()
+
+        self.pause_satellite_event = asyncio.Event()
+        self.disconnect_event = asyncio.Event()
+        self.paused_before_disconnect = False
 
         self.detection_event = asyncio.Event()
         self.detection: Detection | None = None
@@ -140,10 +145,18 @@ class SatelliteAsyncTcpClient(MockAsyncTcpClient):
         """Connect."""
         self.connect_event.set()
 
+    async def disconnect(self) -> None:
+        """Disconnect."""
+        self.paused_before_disconnect = self.pause_satellite_event.is_set()
+        self.disconnect_event.set()
+        await super().disconnect()
+
     async def write_event(self, event: Event):
         """Send."""
         if RunSatellite.is_type(event.type):
             self.run_satellite_event.set()
+        elif PauseSatellite.is_type(event.type):
+            self.pause_satellite_event.set()
         elif Detect.is_type(event.type):
             self.detect_event.set()
         elif Detection.is_type(event.type):
@@ -2040,5 +2053,108 @@ async def test_satellite_tts_streaming(hass: HomeAssistant) -> None:
         )
 
         # Stop the satellite
+        await hass.config_entries.async_unload(entry.entry_id)
+        await hass.async_block_till_done()
+
+
+async def test_satellite_pauses_and_disconnects_on_unload(
+    hass: HomeAssistant,
+) -> None:
+    """Test the satellite is paused and disconnected when the entry unloads.
+
+    Without an explicit disconnect the socket is only released on garbage
+    collection, which prevents satellites that allow a single connection from
+    reconnecting when re-enabled.
+    """
+    with (
+        patch(
+            "homeassistant.components.wyoming.data.load_wyoming_info",
+            return_value=SATELLITE_INFO,
+        ),
+        patch(
+            "homeassistant.components.wyoming.assist_satellite.AsyncTcpClient",
+            SatelliteAsyncTcpClient([], block_until_inject=True),
+        ) as mock_client,
+    ):
+        entry = await setup_config_entry(hass)
+
+        async with asyncio.timeout(1):
+            await mock_client.connect_event.wait()
+            await mock_client.run_satellite_event.wait()
+
+        await hass.config_entries.async_unload(entry.entry_id)
+        await hass.async_block_till_done()
+
+        async with asyncio.timeout(1):
+            await mock_client.disconnect_event.wait()
+
+    # The satellite is paused, and the pause is sent before the disconnect.
+    assert mock_client.pause_satellite_event.is_set()
+    assert mock_client.paused_before_disconnect
+    assert mock_client.is_connected is False
+
+
+async def test_satellite_audio_without_run_pipeline(hass: HomeAssistant) -> None:
+    """Test audio after a wake detection without RunPipeline starts a pipeline.
+
+    Some satellites report a local wake word detection and then start streaming
+    audio without sending a RunPipeline event. The audio must not be silently
+    dropped.
+    """
+    assert await async_setup_component(hass, assist_pipeline.DOMAIN, {})
+
+    events = [
+        # Satellite info (with local wake word) followed by a wake detection,
+        # but no RunPipeline event before audio is streamed.
+        Info(satellite=SATELLITE_INFO.satellite, wake=WAKE_WORD_INFO.wake).event(),
+        Detection(name="Test Model").event(),
+    ]
+
+    pipeline_kwargs: dict[str, Any] = {}
+    run_pipeline_called = asyncio.Event()
+    audio_chunk_received = asyncio.Event()
+
+    async def async_pipeline_from_audio_stream(
+        hass: HomeAssistant,
+        context,
+        event_callback,
+        stt_metadata,
+        stt_stream,
+        **kwargs,
+    ) -> None:
+        nonlocal pipeline_kwargs
+        pipeline_kwargs = kwargs
+        run_pipeline_called.set()
+        async for chunk in stt_stream:
+            if chunk:
+                audio_chunk_received.set()
+                break
+
+    with (
+        patch(
+            "homeassistant.components.wyoming.data.load_wyoming_info",
+            return_value=SATELLITE_INFO,
+        ),
+        patch(
+            "homeassistant.components.wyoming.assist_satellite.AsyncTcpClient",
+            SatelliteAsyncTcpClient(events),
+        ),
+        patch(
+            "homeassistant.components.assist_satellite.entity.async_pipeline_from_audio_stream",
+            async_pipeline_from_audio_stream,
+        ),
+        patch("homeassistant.components.wyoming.assist_satellite._PING_SEND_DELAY", 0),
+    ):
+        entry = await setup_config_entry(hass)
+
+        async with asyncio.timeout(1):
+            await run_pipeline_called.wait()
+            await audio_chunk_received.wait()
+
+        # Pipeline starts at STT (wake word already detected on the satellite)
+        # and is given the resolved wake word phrase.
+        assert pipeline_kwargs.get("start_stage") == assist_pipeline.PipelineStage.STT
+        assert pipeline_kwargs.get("wake_word_phrase") == "Test Phrase"
+
         await hass.config_entries.async_unload(entry.entry_id)
         await hass.async_block_till_done()

@@ -13,6 +13,11 @@ def main(argv: list[str] | None = None) -> int:
     parser = argparse.ArgumentParser(prog="python -m script.check_requirements")
     parser.add_argument("--pr-number", type=int, required=True)
     parser.add_argument(
+        "--head-sha",
+        help="PR head commit the checks ran against; embedded in the comment "
+        "so a later run can skip when no tracked requirement file changed.",
+    )
+    parser.add_argument(
         "--diff",
         type=Path,
         required=True,
@@ -33,6 +38,7 @@ def main(argv: list[str] | None = None) -> int:
     result = run_checks(
         pr_number=args.pr_number,
         diff_text=diff_text,
+        head_sha=args.head_sha,
     )
     args.output.write_text(
         json.dumps(result.to_dict(), indent=2, ensure_ascii=False) + "\n",

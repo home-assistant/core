@@ -241,6 +241,7 @@ async def test_redact_diagnostics(
                         "latitude": "**REDACTED**",
                         "longitude": "**REDACTED**",
                         "source_type": "gps",
+                        "tracking_type": "position",
                     },
                     "entity_id": "device_tracker.mqtt_unique",
                     "last_changed": ANY,

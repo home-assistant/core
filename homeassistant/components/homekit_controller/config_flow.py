@@ -2,7 +2,7 @@
 
 import logging
 import re
-from typing import TYPE_CHECKING, Any, Self, cast
+from typing import TYPE_CHECKING, Any, Self, cast, override
 
 import aiohomekit
 from aiohomekit import Controller, const as aiohomekit_const
@@ -119,6 +119,7 @@ class HomekitControllerFlowHandler(ConfigFlow, domain=DOMAIN):
         """Create the controller."""
         self.controller = await async_get_controller(self.hass)
 
+    @override
     async def async_step_user(
         self, user_input: dict[str, Any] | None = None
     ) -> ConfigFlowResult:
@@ -177,7 +178,7 @@ class HomekitControllerFlowHandler(ConfigFlow, domain=DOMAIN):
         """Determine if the device is a homekit bridge or accessory."""
         dev_reg = dr.async_get(self.hass)
         device = dev_reg.async_get_device(
-            connections={(dr.CONNECTION_NETWORK_MAC, dr.format_mac(hkid))}
+            connections={(dr.CONNECTION_NETWORK_MAC, hkid)}
         )
 
         if device is None:
@@ -190,6 +191,7 @@ class HomekitControllerFlowHandler(ConfigFlow, domain=DOMAIN):
 
         return False
 
+    @override
     async def async_step_zeroconf(
         self, discovery_info: ZeroconfServiceInfo
     ) -> ConfigFlowResult:
@@ -334,6 +336,7 @@ class HomekitControllerFlowHandler(ConfigFlow, domain=DOMAIN):
         # pairing code)
         return self._async_step_pair_show_form()
 
+    @override
     def is_matching(self, other_flow: Self) -> bool:
         """Return True if other_flow is matching this flow."""
         if other_flow.context.get("unique_id") == self.hkid and not other_flow.pairing:
@@ -346,6 +349,7 @@ class HomekitControllerFlowHandler(ConfigFlow, domain=DOMAIN):
                 return True
         return False
 
+    @override
     async def async_step_bluetooth(
         self, discovery_info: bluetooth.BluetoothServiceInfoBleak
     ) -> ConfigFlowResult:

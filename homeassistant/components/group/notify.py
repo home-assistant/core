@@ -3,7 +3,7 @@
 import asyncio
 from collections.abc import Mapping
 from copy import deepcopy
-from typing import Any
+from typing import Any, override
 
 import voluptuous as vol
 
@@ -101,6 +101,7 @@ class GroupNotifyPlatform(BaseNotificationService):
         self.hass = hass
         self.entities = entities
 
+    @override
     async def async_send_message(self, message: str = "", **kwargs: Any) -> None:
         """Send message to all entities in the group."""
         payload: dict[str, Any] = {ATTR_MESSAGE: message}
@@ -171,6 +172,7 @@ class NotifyGroup(GroupEntity, NotifyEntity):
         self._attr_extra_state_attributes = {ATTR_ENTITY_ID: entity_ids}
         self._attr_unique_id = unique_id
 
+    @override
     async def async_send_message(self, message: str, title: str | None = None) -> None:
         """Send a message to all members of the group."""
 
@@ -195,6 +197,7 @@ class NotifyGroup(GroupEntity, NotifyEntity):
         )
 
     @callback
+    @override
     def async_update_group_state(self) -> None:
         """Query all members and determine the notify group state."""
         # Set group as unavailable if all members are unavailable or missing

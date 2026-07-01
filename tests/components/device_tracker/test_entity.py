@@ -11,6 +11,7 @@ from homeassistant.components.device_tracker import (
     ATTR_IP,
     ATTR_MAC,
     ATTR_SOURCE_TYPE,
+    ATTR_TRACKING_TYPE,
     CONF_ASSOCIATED_ZONE,
     CONNECTED_DEVICE_REGISTERED,
     DOMAIN,
@@ -19,6 +20,7 @@ from homeassistant.components.device_tracker import (
     ScannerEntity,
     SourceType,
     TrackerEntity,
+    TrackingType,
 )
 from homeassistant.components.zone import ATTR_PASSIVE, ATTR_RADIUS
 from homeassistant.config_entries import ConfigEntry, ConfigEntryState, ConfigFlow
@@ -479,6 +481,19 @@ async def test_load_unload_entry_tracker(
     assert not state
 
 
+def test_tracking_type_capability_attribute() -> None:
+    """Test the tracking_type capability attribute set by each base class."""
+    assert MockTrackerEntity().capability_attributes == {
+        ATTR_TRACKING_TYPE: TrackingType.POSITION
+    }
+    assert MockBaseScannerEntity().capability_attributes == {
+        ATTR_TRACKING_TYPE: TrackingType.CONNECTION
+    }
+    assert MockScannerEntity().capability_attributes == {
+        ATTR_TRACKING_TYPE: TrackingType.CONNECTION
+    }
+
+
 @pytest.mark.parametrize(
     (
         "battery_level",
@@ -772,7 +787,9 @@ async def test_tracker_entity_state(
     state = hass.states.get(entity_id)
     assert state
     assert state.state == expected_state
-    assert state.attributes == expected_attributes
+    assert state.attributes == expected_attributes | {
+        ATTR_TRACKING_TYPE: TrackingType.POSITION
+    }
 
 
 async def test_base_scanner_entity_state(
@@ -789,6 +806,7 @@ async def test_base_scanner_entity_state(
     assert entity_state
     assert entity_state.attributes == {
         ATTR_SOURCE_TYPE: SourceType.BLUETOOTH_LE,
+        ATTR_TRACKING_TYPE: TrackingType.CONNECTION,
         ATTR_IN_ZONES: [],
     }
     assert entity_state.state == STATE_NOT_HOME
@@ -803,6 +821,7 @@ async def test_base_scanner_entity_state(
     # entity_id is reported.
     assert entity_state.attributes == {
         ATTR_SOURCE_TYPE: SourceType.BLUETOOTH_LE,
+        ATTR_TRACKING_TYPE: TrackingType.CONNECTION,
         ATTR_IN_ZONES: ["zone.home"],
     }
 
@@ -815,6 +834,7 @@ async def test_base_scanner_entity_state(
     # is_connected is None -> empty in_zones (always reported).
     assert entity_state.attributes == {
         ATTR_SOURCE_TYPE: SourceType.BLUETOOTH_LE,
+        ATTR_TRACKING_TYPE: TrackingType.CONNECTION,
         ATTR_IN_ZONES: [],
     }
 
@@ -908,6 +928,7 @@ async def test_base_scanner_entity_in_zones_when_connected(
     assert entity_state.state == STATE_HOME
     assert entity_state.attributes == {
         ATTR_SOURCE_TYPE: SourceType.BLUETOOTH_LE,
+        ATTR_TRACKING_TYPE: TrackingType.CONNECTION,
         ATTR_IN_ZONES: expected_in_zones,
     }
 
@@ -1265,6 +1286,7 @@ async def test_scanner_entity_state(
     assert entity_state
     assert entity_state.attributes == {
         ATTR_SOURCE_TYPE: SourceType.ROUTER,
+        ATTR_TRACKING_TYPE: TrackingType.CONNECTION,
         ATTR_IN_ZONES: [],
         ATTR_IP: ip_address,
         ATTR_MAC: mac_address,
@@ -1377,6 +1399,101 @@ def test_base_tracker_entity() -> None:
     assert entity.battery_level is None
     with pytest.raises(NotImplementedError):
         entity.state_attributes  # noqa: B018
+
+
+def test_battery_level_override_deprecation_warning(
+    caplog: pytest.LogCaptureFixture,
+) -> None:
+    """Test that overriding battery_level in a subclass logs a warning."""
+    error_message = "is overriding the deprecated battery_level property"
+
+    caplog.clear()
+
+    class _SubclassWithOverride(TrackerEntity):
+        @property
+        def battery_level(self) -> int | None:
+            return 50
+
+    assert error_message in caplog.text
+    assert _SubclassWithOverride.__name__ in caplog.text
+
+    # No warning for a subclass that does not override battery_level
+    caplog.clear()
+
+    class _SubclassWithoutOverride(TrackerEntity):
+        pass
+
+    assert error_message not in caplog.text
+
+
+async def test_attr_location_name_deprecation_warning(
+    hass: HomeAssistant,
+    caplog: pytest.LogCaptureFixture,
+) -> None:
+    """Test that setting _attr_location_name logs a deprecation warning."""
+    error_message = "is setting the deprecated _attr_location_name attribute"
+
+    class _Subclass(TrackerEntity):
+        pass
+
+    # No warning when _attr_location_name is unset (default None)
+    entity_no_attr = _Subclass()
+    entity_no_attr.hass = hass
+    assert entity_no_attr.location_name is None
+    assert error_message not in caplog.text
+
+    # Warning fires when _attr_location_name has a non-None value
+    entity = _Subclass()
+    entity.hass = hass
+    entity._attr_location_name = "the_zone"
+    caplog.clear()
+    assert entity.location_name == "the_zone"
+    assert error_message in caplog.text
+
+    # Warning does not fire again on subsequent access for the same instance
+    caplog.clear()
+    assert entity.location_name == "the_zone"
+    assert error_message not in caplog.text
+
+    # Warning is suppressed for this instance even after the cached value is
+    # invalidated by a subsequent _attr_location_name assignment.
+    entity._attr_location_name = "another_zone"
+    caplog.clear()
+    assert entity.location_name == "another_zone"
+    assert error_message not in caplog.text
+
+    # A fresh instance warns once again
+    entity_new = _Subclass()
+    entity_new.hass = hass
+    entity_new._attr_location_name = "the_zone"
+    caplog.clear()
+    assert entity_new.location_name == "the_zone"
+    assert error_message in caplog.text
+
+
+def test_location_name_override_deprecation_warning(
+    caplog: pytest.LogCaptureFixture,
+) -> None:
+    """Test that overriding location_name in a subclass logs a warning."""
+    error_message = "is overriding the deprecated location_name property"
+
+    caplog.clear()
+
+    class _SubclassWithOverride(TrackerEntity):
+        @property
+        def location_name(self) -> str | None:
+            return "custom"
+
+    assert error_message in caplog.text
+    assert _SubclassWithOverride.__name__ in caplog.text
+
+    # No warning for a subclass that does not override location_name
+    caplog.clear()
+
+    class _SubclassWithoutOverride(TrackerEntity):
+        pass
+
+    assert error_message not in caplog.text
 
 
 @pytest.mark.parametrize(
@@ -1627,4 +1744,5 @@ async def test_tracker_entity_unavailable(
     state = hass.states.get(entity_id)
     assert state
     assert state.state == "unavailable"
-    assert state.attributes == {}
+    # Capability attributes are reported even when the entity is unavailable.
+    assert state.attributes == {ATTR_TRACKING_TYPE: TrackingType.POSITION}
