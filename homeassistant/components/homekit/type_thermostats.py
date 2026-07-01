@@ -399,13 +399,15 @@ class Thermostat(HomeAccessory):
 
     def _set_fan_speed(self, speed: int) -> None:
         _LOGGER.debug("%s: Set fan speed to %s", self.entity_id, speed)
-        mode = percentage_to_ordered_list_item(self.ordered_fan_speeds, speed - 1)
+        speed_key = percentage_to_ordered_list_item(self.ordered_fan_speeds, speed - 1)
+        mode = self.fan_modes[speed_key]
         params = {ATTR_ENTITY_ID: self.entity_id, ATTR_FAN_MODE: mode}
         self.async_call_service(CLIMATE_DOMAIN, SERVICE_SET_FAN_MODE, params)
 
     def _get_on_mode(self) -> str:
         if self.ordered_fan_speeds:
-            return percentage_to_ordered_list_item(self.ordered_fan_speeds, 50)
+            speed_key = percentage_to_ordered_list_item(self.ordered_fan_speeds, 50)
+            return self.fan_modes[speed_key]
         return self.fan_modes[FAN_ON]
 
     def _set_fan_active(self, active: int) -> None:
