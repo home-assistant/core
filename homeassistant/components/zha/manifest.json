@@ -44,6 +44,12 @@
       "vid": "1A86"
     },
     {
+      "description": "*sonoff*plus*cc2674p10*",
+      "known_devices": ["SONOFF Dongle Plus CC2674P10"],
+      "pid": "EA60",
+      "vid": "10C4"
+    },
+    {
       "description": "*sonoff*plus*",
       "known_devices": ["sonoff zigbee dongle plus"],
       "pid": "EA60",

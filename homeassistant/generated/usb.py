@@ -97,6 +97,12 @@ USB = [
         "vid": "1A86",
     },
     {
+        "description": "*sonoff*plus*cc2674p10*",
+        "domain": "zha",
+        "pid": "EA60",
+        "vid": "10C4",
+    },
+    {
         "description": "*sonoff*plus*",
         "domain": "zha",
         "pid": "EA60",
