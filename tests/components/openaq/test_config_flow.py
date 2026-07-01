@@ -611,6 +611,11 @@ async def test_location_subentry_no_locations_found(
     assert result["type"] is FlowResultType.FORM
     assert result["step_id"] == "user"
     assert result["errors"] == {"base": "no_locations_found"}
+    assert _get_suggested_values(result) == {
+        ATTR_LATITUDE: 35.1,
+        ATTR_LONGITUDE: -106.6,
+        CONF_RADIUS: 5000,
+    }
 
 
 def test_location_select_label_without_supported_parameters() -> None:
