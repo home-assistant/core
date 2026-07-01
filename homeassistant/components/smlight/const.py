@@ -1,6 +1,7 @@
 """Constants for the SMLIGHT Zigbee integration."""
 
 from datetime import timedelta
+from enum import StrEnum
 import logging
 
 DOMAIN = "smlight"
@@ -16,3 +17,12 @@ SCAN_INTERNET_INTERVAL = timedelta(minutes=15)
 UPTIME_DEVIATION = timedelta(seconds=5)
 
 CONF_BLE_SCANNER_MODE = "ble_scanner_mode"
+
+
+class BLEScannerMode(StrEnum):
+    """BLE scanner mode."""
+
+    DISABLED = "disabled"
+    AUTO = "auto"
+    ACTIVE = "active"
+    PASSIVE = "passive"

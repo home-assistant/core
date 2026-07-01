@@ -33,6 +33,7 @@ def async_connect_scanner(
     entry: SmConfigEntry,
     model: str | None,
     device_id: str,
+    scanner_mode: BluetoothScanningMode = BluetoothScanningMode.AUTO,
 ) -> CALLBACK_TYPE:
     """Connect scanner using the external bleak-smlight backend."""
     assert entry.unique_id is not None
@@ -44,7 +45,7 @@ def async_connect_scanner(
         port=SLZB_BLE_SERVER_PORT,
     )
 
-    client_data.scanner.async_set_scanning_mode(BluetoothScanningMode.AUTO)
+    client_data.scanner.async_set_scanning_mode(scanner_mode)
 
     entry.async_create_background_task(
         hass,

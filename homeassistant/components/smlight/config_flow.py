@@ -19,10 +19,11 @@ from homeassistant.const import CONF_HOST, CONF_NAME, CONF_PASSWORD, CONF_USERNA
 from homeassistant.core import callback
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 from homeassistant.helpers.device_registry import format_mac
+from homeassistant.helpers.selector import SelectSelector, SelectSelectorConfig
 from homeassistant.helpers.service_info.dhcp import DhcpServiceInfo
 from homeassistant.helpers.service_info.zeroconf import ZeroconfServiceInfo
 
-from .const import DOMAIN
+from .const import CONF_BLE_SCANNER_MODE, DOMAIN, BLEScannerMode
 from .coordinator import SmConfigEntry
 
 STEP_USER_DATA_SCHEMA = vol.Schema(
@@ -289,6 +290,14 @@ class SmlightConfigFlow(ConfigFlow, domain=DOMAIN):
         return OptionsFlowHandler()
 
 
+BLE_SCANNER_OPTIONS = [
+    BLEScannerMode.DISABLED,
+    BLEScannerMode.AUTO,
+    BLEScannerMode.ACTIVE,
+    BLEScannerMode.PASSIVE,
+]
+
+
 class OptionsFlowHandler(OptionsFlowWithReload):
     """Handle options flow for SMLIGHT."""
 
@@ -299,7 +308,29 @@ class OptionsFlowHandler(OptionsFlowWithReload):
         if user_input is not None:
             return self.async_create_entry(title="", data=user_input)
 
+        coordinator = self.config_entry.runtime_data.data
+        info = coordinator.data.info
+
+        schema = {}
+        if info.ble is not None:
+            schema[
+                vol.Required(
+                    CONF_BLE_SCANNER_MODE,
+                    default=self.config_entry.options.get(
+                        CONF_BLE_SCANNER_MODE,
+                        BLEScannerMode.AUTO
+                        if info.ble.proxy_enabled
+                        else BLEScannerMode.DISABLED,
+                    ),
+                )
+            ] = SelectSelector(
+                SelectSelectorConfig(
+                    options=BLE_SCANNER_OPTIONS,
+                    translation_key=CONF_BLE_SCANNER_MODE,
+                )
+            )
+
         return self.async_show_form(
             step_id="init",
-            data_schema=vol.Schema({}),
+            data_schema=vol.Schema(schema),
         )

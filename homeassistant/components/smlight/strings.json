@@ -199,7 +199,20 @@
   "options": {
     "step": {
       "init": {
-        "description": "Configure SLZB BLE settings."
+        "data": {
+          "ble_scanner_mode": "Bluetooth scanner mode"
+        },
+        "description": "Configure SLZB Bluetooth settings. Changing these settings will reboot the device to apply the new configuration."
+      }
+    }
+  },
+  "selector": {
+    "ble_scanner_mode": {
+      "options": {
+        "active": "[%key:component::bluetooth::selector::mode::options::active%]",
+        "auto": "[%key:component::bluetooth::selector::mode::options::auto%]",
+        "disabled": "[%key:common::state::disabled%]",
+        "passive": "[%key:component::bluetooth::selector::mode::options::passive%]"
       }
     }
   },
