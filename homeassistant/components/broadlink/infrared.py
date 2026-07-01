@@ -104,18 +104,14 @@ class BroadlinkInfraredReceiverEntity(BroadlinkEntity, InfraredReceiverEntity):
         self._subscriber_count = 0
 
     @override
-    async def async_added_to_hass(self) -> None:
-        """Initialize entity state."""
-        await super().async_added_to_hass()
-
-    @override
     async def async_will_remove_from_hass(self) -> None:
         """Stop IR receive polling."""
         self._async_stop_receiving()
         self._subscriber_count = 0
         await super().async_will_remove_from_hass()
 
-    async def _async_start_receiving(self) -> None:
+    @callback
+    def _start_receiving(self) -> None:
         """Start polling and enter learning mode."""
         if self._unsub_receive is not None:
             return
@@ -146,7 +142,7 @@ class BroadlinkInfraredReceiverEntity(BroadlinkEntity, InfraredReceiverEntity):
         self._subscriber_count += 1
 
         if self._subscriber_count == 1:
-            self.hass.async_create_task(self._async_start_receiving())
+            self._start_receiving()
 
         @callback
         def _remove_callback() -> None:
@@ -194,11 +190,7 @@ class BroadlinkInfraredReceiverEntity(BroadlinkEntity, InfraredReceiverEntity):
                 _LOGGER.debug(
                     "Failed to check received data for %s: %s", self.entity_id, err
                 )
-                raise HomeAssistantError(
-                    translation_domain=DOMAIN,
-                    translation_key="receive_command_failed",
-                    translation_placeholders={"error": str(err)},
-                ) from err
+                return
 
             self._handle_received_ir_signal(packet)
 

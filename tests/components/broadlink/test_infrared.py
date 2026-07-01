@@ -3,7 +3,7 @@
 from unittest.mock import call
 
 from broadlink.exceptions import BroadlinkException
-from broadlink.remote import data_to_pulses, pulses_to_data
+from broadlink.remote import pulses_to_data
 from freezegun.api import FrozenDateTimeFactory
 from infrared_protocols.commands.nec import NECCommand
 import pytest
@@ -146,9 +146,7 @@ async def test_infrared_receiver_polling_decodes_and_dispatches_packet(
     await hass.async_block_till_done()
 
     mock_setup.api.reset_mock()
-    mock_setup.api.check_data.return_value = data_to_pulses(
-        b"&\x00\x03\x00\x0f\x15\x1b"
-    )
+    mock_setup.api.check_data.return_value = b"&\x00\x03\x00\x0f\x15\x1b"
 
     freezer.tick(broadlink_infrared.LEARNING_POLL_INTERVAL)
     async_fire_time_changed(hass)
@@ -178,9 +176,7 @@ async def test_infrared_receiver_polling_starts_on_subscribe_and_stops_on_unsubs
         if entry.domain == Platform.INFRARED and entry.unique_id.endswith("-receiver")
     )
 
-    mock_setup.api.check_data.return_value = data_to_pulses(
-        b"&\x00\x03\x00\x0f\x15\x1b"
-    )
+    mock_setup.api.check_data.return_value = b"&\x00\x03\x00\x0f\x15\x1b"
 
     freezer.tick(broadlink_infrared.LEARNING_POLL_INTERVAL)
     async_fire_time_changed(hass)
@@ -202,7 +198,7 @@ async def test_infrared_receiver_polling_starts_on_subscribe_and_stops_on_unsubs
 
     assert mock_setup.api.mock_calls == [call.enter_learning(), call.check_data()]
     assert received_signals == [
-        InfraredReceivedSignal(timings=[492, 689, 886], modulation=None)
+        InfraredReceivedSignal(timings=[492, -689, 886], modulation=None)
     ]
 
     unsub()
