@@ -144,10 +144,17 @@ class BroadlinkInfraredReceiverEntity(BroadlinkEntity, InfraredReceiverEntity):
         if self._subscriber_count == 1:
             self._start_receiving()
 
+        removed = False
+
         @callback
         def _remove_callback() -> None:
+            nonlocal removed
+            if removed:
+                return
+            removed = True
             unsub()
-            self._subscriber_count -= 1
+            if self._subscriber_count:
+                self._subscriber_count -= 1
             if self._subscriber_count == 0:
                 self._async_stop_receiving()
 

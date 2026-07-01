@@ -195,7 +195,9 @@ async def test_infrared_receiver_polling_starts_on_subscribe_and_stops_on_unsubs
     async_fire_time_changed(hass)
     await hass.async_block_till_done()
 
-    assert mock_setup.api.mock_calls.index(call.enter_learning()) < mock_setup.api.mock_calls.index(call.check_data())
+    assert mock_setup.api.mock_calls.index(
+        call.enter_learning()
+    ) < mock_setup.api.mock_calls.index(call.check_data())
     assert received_signals == [
         InfraredReceivedSignal(timings=[492, -689, 886], modulation=None)
     ]
