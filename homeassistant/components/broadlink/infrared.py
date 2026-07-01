@@ -105,13 +105,19 @@ class BroadlinkInfraredReceiverEntity(BroadlinkEntity, InfraredReceiverEntity):
     async def async_added_to_hass(self) -> None:
         """Set up IR receive polling."""
         await super().async_added_to_hass()
-        await self._async_enter_learning_mode()
-        if self._unsub_receive is None:
-            self._unsub_receive = async_track_time_interval(
-                self.hass,
-                self._async_poll_received_signal,
-                LEARNING_POLL_INTERVAL,
+        try:
+            await self._async_enter_learning_mode()
+        except HomeAssistantError as err:
+            _LOGGER.debug(
+                "Failed to enter learning mode for %s: %s", self.entity_id, err
             )
+        else:
+            if self._unsub_receive is None:
+                self._unsub_receive = async_track_time_interval(
+                    self.hass,
+                    self._async_poll_received_signal,
+                    LEARNING_POLL_INTERVAL,
+                )
 
     @override
     async def async_will_remove_from_hass(self) -> None:
@@ -137,7 +143,7 @@ class BroadlinkInfraredReceiverEntity(BroadlinkEntity, InfraredReceiverEntity):
 
     async def _async_poll_received_signal(self, _: datetime) -> None:
         """Poll Broadlink for an IR packet and dispatch it when available."""
-        if self._receive_lock.locked():
+        if self._receive_lock.locked() or not self.available:
             return
 
         async with self._receive_lock:
