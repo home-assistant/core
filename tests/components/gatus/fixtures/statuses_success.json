@@ -8,6 +8,7 @@
         "success": true,
         "hostname": "frontend.local",
         "status": 200,
+        "body": "custom response payload",
         "duration": 45000000,
         "timestamp": "2026-06-29T13:00:00Z"
       }

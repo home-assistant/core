@@ -1,7 +1,7 @@
 """Support for Gatus binary sensors."""
 
 from collections.abc import Mapping
-from typing import Any, override
+from typing import TYPE_CHECKING, Any, override
 
 from homeassistant.components.binary_sensor import (
     BinarySensorDeviceClass,
@@ -51,13 +51,7 @@ class GatusEndpointBinarySensor(
         super().__init__(coordinator)
         self._endpoint_key = endpoint_key
 
-        endpoint_data = self.endpoint_data
-        assert endpoint_data is not None
-
-        group = endpoint_data.get("group", "Gatus")
-        name = endpoint_data.get("name", endpoint_key)
-
-        self._attr_name = f"{group} {name}"
+        self._attr_name = f"{self.endpoint_data['group']} {self.endpoint_data['name']}"
         self._attr_unique_id = f"{entry.unique_id}_{endpoint_key}"
 
         self._attr_device_info = DeviceInfo(
@@ -66,30 +60,12 @@ class GatusEndpointBinarySensor(
         )
 
     @property
-    def latest_result(self) -> dict | None:
-        """Return the most recent monitoring result (Gatus appends newest last)."""
-        if not (endpoint_data := self.endpoint_data):
-            return None
-
-        if not (results := endpoint_data["results"]):
-            return None
-
-        return results[-1]
-
-    @property
-    def endpoint_data(self) -> dict | None:
-        """Return this specific endpoint's data from the coordinator."""
-        return next(
-            (ep for ep in self.coordinator.data if ep["key"] == self._endpoint_key),
-            None,
-        )
-
-    @property
     @override
     def is_on(self) -> bool | None:
         """Return true if the endpoint is up and healthy."""
-        if not (latest_result := self.latest_result):
-            return None
+        latest_result = self.latest_result
+        if TYPE_CHECKING:
+            assert latest_result is not None
 
         return latest_result["success"]
 
@@ -97,8 +73,7 @@ class GatusEndpointBinarySensor(
     @override
     def extra_state_attributes(self) -> Mapping[str, Any] | None:
         """Return extra operational attributes for the endpoint."""
-        if not (latest_result := self.latest_result):
-            return None
+        latest_result = self.latest_result
 
         attributes: dict[str, Any] = {
             "hostname": latest_result["hostname"],
@@ -107,10 +82,25 @@ class GatusEndpointBinarySensor(
             "success": latest_result["success"],
         }
 
-        if "status" in latest_result:
-            attributes["status_code"] = latest_result["status"]
-
-        if "body" in latest_result:
-            attributes["response_body"] = latest_result["body"]
+        # Optional keys that are not in every monitoring endpoint
+        for key in ("status", "body"):
+            if key in latest_result:
+                val = latest_result[key]
+                if val is not None:
+                    attributes[key] = val
 
         return attributes
+
+    @property
+    def endpoint_data(self) -> dict[str, Any]:
+        """Return this specific endpoint's data from the coordinator."""
+        return next(
+            (ep for ep in self.coordinator.data if ep["key"] == self._endpoint_key),
+            {},
+        )
+
+    @property
+    def latest_result(self) -> dict[str, Any]:
+        """Return the most recent monitoring result (Gatus appends newest last)."""
+        results = self.endpoint_data["results"]
+        return results[-1]

@@ -1,9 +1,11 @@
 """The Gatus integration."""
 
-from homeassistant.const import CONF_URL
+from homeassistant.const import CONF_URL, Platform
 from homeassistant.core import HomeAssistant
 
-from .coordinator import _PLATFORMS, GatusConfigEntry, GatusDataUpdateCoordinator
+from .coordinator import GatusConfigEntry, GatusDataUpdateCoordinator
+
+_PLATFORMS: list[Platform] = [Platform.BINARY_SENSOR]
 
 
 async def async_setup_entry(hass: HomeAssistant, entry: GatusConfigEntry) -> bool:

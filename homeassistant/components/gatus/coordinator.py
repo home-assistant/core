@@ -7,14 +7,12 @@ from typing import Any, override
 from gatus_api.client import GatusClient, GatusClientError
 
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
 
 from .const import DOMAIN
 
-_PLATFORMS: list[Platform] = [Platform.BINARY_SENSOR]
 _LOGGER = logging.getLogger(__name__)
 
 type GatusConfigEntry = ConfigEntry[GatusDataUpdateCoordinator]

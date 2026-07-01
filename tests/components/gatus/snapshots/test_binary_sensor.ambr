@@ -43,7 +43,7 @@
       'duration_raw': 95000000,
       <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Gatus Server core backend',
       'hostname': 'backend.local',
-      'status_code': 500,
+      'status': 500,
       'success': False,
       'timestamp': '2026-06-29T13:00:01Z',
     }),
@@ -95,11 +95,12 @@
 # name: test_binary_sensor_setup_and_states[binary_sensor.gatus_server_core_frontend-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
+      'body': 'custom response payload',
       <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'connectivity',
       'duration_raw': 45000000,
       <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Gatus Server core frontend',
       'hostname': 'frontend.local',
-      'status_code': 200,
+      'status': 200,
       'success': True,
       'timestamp': '2026-06-29T13:00:00Z',
     }),
