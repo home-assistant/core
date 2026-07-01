@@ -360,11 +360,10 @@ class VeSyncFanHA(VeSyncBaseEntity[VeSyncFanBase | VeSyncPurifier], FanEntity):
         # Must be checked before the tower-fan branch because the base
         # ``toggle_oscillation`` method is inherited (but non-functional) and
         # ``oscillation_status`` may be computed from the per-axis statuses.
-        if rgetattr(
-            self.device, "state.vertical_oscillation_status"
-        ) is not None or rgetattr(
-            self.device, "state.horizontal_oscillation_status"
-        ) is not None:
+        if (
+            rgetattr(self.device, "state.vertical_oscillation_status") is not None
+            or rgetattr(self.device, "state.horizontal_oscillation_status") is not None
+        ):
             successes: list[bool] = []
             if hasattr(self.device, "toggle_vertical_oscillation"):
                 successes.append(
