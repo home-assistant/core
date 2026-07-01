@@ -1,5 +1,5 @@
 # serializer version: 1
-# name: test_all_entities[sensor.cashflow-entry]
+# name: test_all_entities[sensor.cashflow_expense_year_to_date-entry]
   EntityRegistryEntrySnapshot({
     'aliases': list([
       None,
@@ -15,7 +15,7 @@
     'disabled_by': None,
     'domain': 'sensor',
     'entity_category': None,
-    'entity_id': 'sensor.cashflow',
+    'entity_id': 'sensor.cashflow_expense_year_to_date',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -23,67 +23,12 @@
     'labels': set({
     }),
     'name': None,
-    'object_id_base': None,
+    'object_id_base': 'Expense year to date',
     'options': dict({
     }),
     'original_device_class': <SensorDeviceClass.MONETARY: 'monetary'>,
     'original_icon': None,
-    'original_name': None,
-    'platform': 'monarch_money',
-    'previous_unique_id': None,
-    'suggested_object_id': None,
-    'supported_features': 0,
-    'translation_key': 'sum_income',
-    'unique_id': '222260252323873333_cashflow_sum_income',
-    'unit_of_measurement': 'USD',
-  })
-# ---
-# name: test_all_entities[sensor.cashflow-state]
-  StateSnapshot({
-    'attributes': ReadOnlyDict({
-      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'monetary',
-      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Cashflow',
-      <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.TOTAL: 'total'>,
-      <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: 'USD',
-    }),
-    'context': <ANY>,
-    'entity_id': 'sensor.cashflow',
-    'last_changed': <ANY>,
-    'last_reported': <ANY>,
-    'last_updated': <ANY>,
-    'state': '15000.0',
-  })
-# ---
-# name: test_all_entities[sensor.cashflow_2-entry]
-  EntityRegistryEntrySnapshot({
-    'aliases': list([
-      None,
-    ]),
-    'area_id': None,
-    'capabilities': dict({
-      <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.TOTAL: 'total'>,
-    }),
-    'config_entry_id': <ANY>,
-    'config_subentry_id': <ANY>,
-    'device_class': None,
-    'device_id': <ANY>,
-    'disabled_by': None,
-    'domain': 'sensor',
-    'entity_category': None,
-    'entity_id': 'sensor.cashflow_2',
-    'has_entity_name': True,
-    'hidden_by': None,
-    'icon': None,
-    'id': <ANY>,
-    'labels': set({
-    }),
-    'name': None,
-    'object_id_base': None,
-    'options': dict({
-    }),
-    'original_device_class': <SensorDeviceClass.MONETARY: 'monetary'>,
-    'original_icon': None,
-    'original_name': None,
+    'original_name': 'Expense year to date',
     'platform': 'monarch_money',
     'previous_unique_id': None,
     'suggested_object_id': None,
@@ -93,23 +38,23 @@
     'unit_of_measurement': 'USD',
   })
 # ---
-# name: test_all_entities[sensor.cashflow_2-state]
+# name: test_all_entities[sensor.cashflow_expense_year_to_date-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'monetary',
-      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Cashflow',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Cashflow Expense year to date',
       <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.TOTAL: 'total'>,
       <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: 'USD',
     }),
     'context': <ANY>,
-    'entity_id': 'sensor.cashflow_2',
+    'entity_id': 'sensor.cashflow_expense_year_to_date',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': '-9000.0',
   })
 # ---
-# name: test_all_entities[sensor.cashflow_3-entry]
+# name: test_all_entities[sensor.cashflow_income_year_to_date-entry]
   EntityRegistryEntrySnapshot({
     'aliases': list([
       None,
@@ -125,7 +70,7 @@
     'disabled_by': None,
     'domain': 'sensor',
     'entity_category': None,
-    'entity_id': 'sensor.cashflow_3',
+    'entity_id': 'sensor.cashflow_income_year_to_date',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -133,38 +78,38 @@
     'labels': set({
     }),
     'name': None,
-    'object_id_base': None,
+    'object_id_base': 'Income year to date',
     'options': dict({
     }),
     'original_device_class': <SensorDeviceClass.MONETARY: 'monetary'>,
     'original_icon': None,
-    'original_name': None,
+    'original_name': 'Income year to date',
     'platform': 'monarch_money',
     'previous_unique_id': None,
     'suggested_object_id': None,
     'supported_features': 0,
-    'translation_key': 'savings',
-    'unique_id': '222260252323873333_cashflow_savings',
+    'translation_key': 'sum_income',
+    'unique_id': '222260252323873333_cashflow_sum_income',
     'unit_of_measurement': 'USD',
   })
 # ---
-# name: test_all_entities[sensor.cashflow_3-state]
+# name: test_all_entities[sensor.cashflow_income_year_to_date-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'monetary',
-      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Cashflow',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Cashflow Income year to date',
       <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.TOTAL: 'total'>,
       <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: 'USD',
     }),
     'context': <ANY>,
-    'entity_id': 'sensor.cashflow_3',
+    'entity_id': 'sensor.cashflow_income_year_to_date',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
-    'state': '6000.0',
+    'state': '15000.0',
   })
 # ---
-# name: test_all_entities[sensor.cashflow_4-entry]
+# name: test_all_entities[sensor.cashflow_savings_rate-entry]
   EntityRegistryEntrySnapshot({
     'aliases': list([
       None,
@@ -178,7 +123,7 @@
     'disabled_by': None,
     'domain': 'sensor',
     'entity_category': None,
-    'entity_id': 'sensor.cashflow_4',
+    'entity_id': 'sensor.cashflow_savings_rate',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -186,7 +131,7 @@
     'labels': set({
     }),
     'name': None,
-    'object_id_base': None,
+    'object_id_base': 'Savings rate',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 1,
@@ -194,7 +139,7 @@
     }),
     'original_device_class': None,
     'original_icon': None,
-    'original_name': None,
+    'original_name': 'Savings rate',
     'platform': 'monarch_money',
     'previous_unique_id': None,
     'suggested_object_id': None,
@@ -204,21 +149,21 @@
     'unit_of_measurement': '%',
   })
 # ---
-# name: test_all_entities[sensor.cashflow_4-state]
+# name: test_all_entities[sensor.cashflow_savings_rate-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Cashflow',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Cashflow Savings rate',
       <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: '%',
     }),
     'context': <ANY>,
-    'entity_id': 'sensor.cashflow_4',
+    'entity_id': 'sensor.cashflow_savings_rate',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': '40.0',
   })
 # ---
-# name: test_all_entities[sensor.manual_entry_wallet-entry]
+# name: test_all_entities[sensor.cashflow_savings_year_to_date-entry]
   EntityRegistryEntrySnapshot({
     'aliases': list([
       None,
@@ -234,7 +179,7 @@
     'disabled_by': None,
     'domain': 'sensor',
     'entity_category': None,
-    'entity_id': 'sensor.manual_entry_wallet',
+    'entity_id': 'sensor.cashflow_savings_year_to_date',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -242,12 +187,67 @@
     'labels': set({
     }),
     'name': None,
-    'object_id_base': None,
+    'object_id_base': 'Savings year to date',
     'options': dict({
     }),
     'original_device_class': <SensorDeviceClass.MONETARY: 'monetary'>,
     'original_icon': None,
-    'original_name': None,
+    'original_name': 'Savings year to date',
+    'platform': 'monarch_money',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'savings',
+    'unique_id': '222260252323873333_cashflow_savings',
+    'unit_of_measurement': 'USD',
+  })
+# ---
+# name: test_all_entities[sensor.cashflow_savings_year_to_date-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'monetary',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Cashflow Savings year to date',
+      <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.TOTAL: 'total'>,
+      <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: 'USD',
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.cashflow_savings_year_to_date',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '6000.0',
+  })
+# ---
+# name: test_all_entities[sensor.manual_entry_wallet_balance-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': list([
+      None,
+    ]),
+    'area_id': None,
+    'capabilities': dict({
+      <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.TOTAL: 'total'>,
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': None,
+    'entity_id': 'sensor.manual_entry_wallet_balance',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'Balance',
+    'options': dict({
+    }),
+    'original_device_class': <SensorDeviceClass.MONETARY: 'monetary'>,
+    'original_icon': None,
+    'original_name': 'Balance',
     'platform': 'monarch_money',
     'previous_unique_id': None,
     'suggested_object_id': None,
@@ -257,24 +257,24 @@
     'unit_of_measurement': 'USD',
   })
 # ---
-# name: test_all_entities[sensor.manual_entry_wallet-state]
+# name: test_all_entities[sensor.manual_entry_wallet_balance-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       <EntityStateAttribute.ATTRIBUTION: 'attribution'>: 'Data provided by Monarch Money API via Manual entry',
       <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'monetary',
-      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Manual entry Wallet',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Manual entry Wallet Balance',
       <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.TOTAL: 'total'>,
       <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: 'USD',
     }),
     'context': <ANY>,
-    'entity_id': 'sensor.manual_entry_wallet',
+    'entity_id': 'sensor.manual_entry_wallet_balance',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': '20.0',
   })
 # ---
-# name: test_all_entities[sensor.manual_entry_wallet_2-entry]
+# name: test_all_entities[sensor.manual_entry_wallet_data_age-entry]
   EntityRegistryEntrySnapshot({
     'aliases': list([
       None,
@@ -288,7 +288,7 @@
     'disabled_by': None,
     'domain': 'sensor',
     'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
-    'entity_id': 'sensor.manual_entry_wallet_2',
+    'entity_id': 'sensor.manual_entry_wallet_data_age',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -296,12 +296,12 @@
     'labels': set({
     }),
     'name': None,
-    'object_id_base': None,
+    'object_id_base': 'Data age',
     'options': dict({
     }),
     'original_device_class': <SensorDeviceClass.TIMESTAMP: 'timestamp'>,
     'original_icon': None,
-    'original_name': None,
+    'original_name': 'Data age',
     'platform': 'monarch_money',
     'previous_unique_id': None,
     'suggested_object_id': None,
@@ -311,22 +311,22 @@
     'unit_of_measurement': None,
   })
 # ---
-# name: test_all_entities[sensor.manual_entry_wallet_2-state]
+# name: test_all_entities[sensor.manual_entry_wallet_data_age-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       <EntityStateAttribute.ATTRIBUTION: 'attribution'>: 'Data provided by Monarch Money API via Manual entry',
       <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'timestamp',
-      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Manual entry Wallet',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Manual entry Wallet Data age',
     }),
     'context': <ANY>,
-    'entity_id': 'sensor.manual_entry_wallet_2',
+    'entity_id': 'sensor.manual_entry_wallet_data_age',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': '2024-08-16T14:22:10+00:00',
   })
 # ---
-# name: test_all_entities[sensor.rando_bank_checking-entry]
+# name: test_all_entities[sensor.rando_bank_checking_balance-entry]
   EntityRegistryEntrySnapshot({
     'aliases': list([
       None,
@@ -342,7 +342,7 @@
     'disabled_by': None,
     'domain': 'sensor',
     'entity_category': None,
-    'entity_id': 'sensor.rando_bank_checking',
+    'entity_id': 'sensor.rando_bank_checking_balance',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -350,12 +350,12 @@
     'labels': set({
     }),
     'name': None,
-    'object_id_base': None,
+    'object_id_base': 'Balance',
     'options': dict({
     }),
     'original_device_class': <SensorDeviceClass.MONETARY: 'monetary'>,
     'original_icon': None,
-    'original_name': None,
+    'original_name': 'Balance',
     'platform': 'monarch_money',
     'previous_unique_id': None,
     'suggested_object_id': None,
@@ -365,25 +365,25 @@
     'unit_of_measurement': 'USD',
   })
 # ---
-# name: test_all_entities[sensor.rando_bank_checking-state]
+# name: test_all_entities[sensor.rando_bank_checking_balance-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       <EntityStateAttribute.ATTRIBUTION: 'attribution'>: 'Data provided by Monarch Money API via PLAID',
       <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'monetary',
       <EntityStateAttribute.ENTITY_PICTURE: 'entity_picture'>: 'data:image/png;base64,base64Nonce',
-      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Rando Bank Checking',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Rando Bank Checking Balance',
       <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.TOTAL: 'total'>,
       <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: 'USD',
     }),
     'context': <ANY>,
-    'entity_id': 'sensor.rando_bank_checking',
+    'entity_id': 'sensor.rando_bank_checking_balance',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': '1000.02',
   })
 # ---
-# name: test_all_entities[sensor.rando_bank_checking_2-entry]
+# name: test_all_entities[sensor.rando_bank_checking_data_age-entry]
   EntityRegistryEntrySnapshot({
     'aliases': list([
       None,
@@ -397,7 +397,7 @@
     'disabled_by': None,
     'domain': 'sensor',
     'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
-    'entity_id': 'sensor.rando_bank_checking_2',
+    'entity_id': 'sensor.rando_bank_checking_data_age',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -405,12 +405,12 @@
     'labels': set({
     }),
     'name': None,
-    'object_id_base': None,
+    'object_id_base': 'Data age',
     'options': dict({
     }),
     'original_device_class': <SensorDeviceClass.TIMESTAMP: 'timestamp'>,
     'original_icon': None,
-    'original_name': None,
+    'original_name': 'Data age',
     'platform': 'monarch_money',
     'previous_unique_id': None,
     'suggested_object_id': None,
@@ -420,22 +420,22 @@
     'unit_of_measurement': None,
   })
 # ---
-# name: test_all_entities[sensor.rando_bank_checking_2-state]
+# name: test_all_entities[sensor.rando_bank_checking_data_age-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       <EntityStateAttribute.ATTRIBUTION: 'attribution'>: 'Data provided by Monarch Money API via PLAID',
       <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'timestamp',
-      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Rando Bank Checking',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Rando Bank Checking Data age',
     }),
     'context': <ANY>,
-    'entity_id': 'sensor.rando_bank_checking_2',
+    'entity_id': 'sensor.rando_bank_checking_data_age',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': '2024-02-17T11:21:05+00:00',
   })
 # ---
-# name: test_all_entities[sensor.rando_brokerage_brokerage-entry]
+# name: test_all_entities[sensor.rando_brokerage_brokerage_balance-entry]
   EntityRegistryEntrySnapshot({
     'aliases': list([
       None,
@@ -451,7 +451,7 @@
     'disabled_by': None,
     'domain': 'sensor',
     'entity_category': None,
-    'entity_id': 'sensor.rando_brokerage_brokerage',
+    'entity_id': 'sensor.rando_brokerage_brokerage_balance',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -459,12 +459,12 @@
     'labels': set({
     }),
     'name': None,
-    'object_id_base': None,
+    'object_id_base': 'Balance',
     'options': dict({
     }),
     'original_device_class': <SensorDeviceClass.MONETARY: 'monetary'>,
     'original_icon': None,
-    'original_name': None,
+    'original_name': 'Balance',
     'platform': 'monarch_money',
     'previous_unique_id': None,
     'suggested_object_id': None,
@@ -474,25 +474,25 @@
     'unit_of_measurement': 'USD',
   })
 # ---
-# name: test_all_entities[sensor.rando_brokerage_brokerage-state]
+# name: test_all_entities[sensor.rando_brokerage_brokerage_balance-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       <EntityStateAttribute.ATTRIBUTION: 'attribution'>: 'Data provided by Monarch Money API via PLAID',
       <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'monetary',
       <EntityStateAttribute.ENTITY_PICTURE: 'entity_picture'>: 'base64Nonce',
-      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Rando Brokerage Brokerage',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Rando Brokerage Brokerage Balance',
       <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.TOTAL: 'total'>,
       <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: 'USD',
     }),
     'context': <ANY>,
-    'entity_id': 'sensor.rando_brokerage_brokerage',
+    'entity_id': 'sensor.rando_brokerage_brokerage_balance',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': '1000.5',
   })
 # ---
-# name: test_all_entities[sensor.rando_brokerage_brokerage_2-entry]
+# name: test_all_entities[sensor.rando_brokerage_brokerage_data_age-entry]
   EntityRegistryEntrySnapshot({
     'aliases': list([
       None,
@@ -506,7 +506,7 @@
     'disabled_by': None,
     'domain': 'sensor',
     'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
-    'entity_id': 'sensor.rando_brokerage_brokerage_2',
+    'entity_id': 'sensor.rando_brokerage_brokerage_data_age',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -514,12 +514,12 @@
     'labels': set({
     }),
     'name': None,
-    'object_id_base': None,
+    'object_id_base': 'Data age',
     'options': dict({
     }),
     'original_device_class': <SensorDeviceClass.TIMESTAMP: 'timestamp'>,
     'original_icon': None,
-    'original_name': None,
+    'original_name': 'Data age',
     'platform': 'monarch_money',
     'previous_unique_id': None,
     'suggested_object_id': None,
@@ -529,22 +529,22 @@
     'unit_of_measurement': None,
   })
 # ---
-# name: test_all_entities[sensor.rando_brokerage_brokerage_2-state]
+# name: test_all_entities[sensor.rando_brokerage_brokerage_data_age-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       <EntityStateAttribute.ATTRIBUTION: 'attribution'>: 'Data provided by Monarch Money API via PLAID',
       <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'timestamp',
-      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Rando Brokerage Brokerage',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Rando Brokerage Brokerage Data age',
     }),
     'context': <ANY>,
-    'entity_id': 'sensor.rando_brokerage_brokerage_2',
+    'entity_id': 'sensor.rando_brokerage_brokerage_data_age',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': '2022-05-26T00:56:41+00:00',
   })
 # ---
-# name: test_all_entities[sensor.rando_credit_credit_card-entry]
+# name: test_all_entities[sensor.rando_credit_credit_card_balance-entry]
   EntityRegistryEntrySnapshot({
     'aliases': list([
       None,
@@ -560,7 +560,7 @@
     'disabled_by': None,
     'domain': 'sensor',
     'entity_category': None,
-    'entity_id': 'sensor.rando_credit_credit_card',
+    'entity_id': 'sensor.rando_credit_credit_card_balance',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -568,12 +568,12 @@
     'labels': set({
     }),
     'name': None,
-    'object_id_base': None,
+    'object_id_base': 'Balance',
     'options': dict({
     }),
     'original_device_class': <SensorDeviceClass.MONETARY: 'monetary'>,
     'original_icon': None,
-    'original_name': None,
+    'original_name': 'Balance',
     'platform': 'monarch_money',
     'previous_unique_id': None,
     'suggested_object_id': None,
@@ -583,25 +583,25 @@
     'unit_of_measurement': 'USD',
   })
 # ---
-# name: test_all_entities[sensor.rando_credit_credit_card-state]
+# name: test_all_entities[sensor.rando_credit_credit_card_balance-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       <EntityStateAttribute.ATTRIBUTION: 'attribution'>: 'Data provided by Monarch Money API via FINICITY',
       <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'monetary',
       <EntityStateAttribute.ENTITY_PICTURE: 'entity_picture'>: 'data:image/png;base64,base64Nonce',
-      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Rando Credit Credit Card',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Rando Credit Credit Card Balance',
       <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.TOTAL: 'total'>,
       <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: 'USD',
     }),
     'context': <ANY>,
-    'entity_id': 'sensor.rando_credit_credit_card',
+    'entity_id': 'sensor.rando_credit_credit_card_balance',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': '-200.0',
   })
 # ---
-# name: test_all_entities[sensor.rando_credit_credit_card_2-entry]
+# name: test_all_entities[sensor.rando_credit_credit_card_data_age-entry]
   EntityRegistryEntrySnapshot({
     'aliases': list([
       None,
@@ -615,7 +615,7 @@
     'disabled_by': None,
     'domain': 'sensor',
     'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
-    'entity_id': 'sensor.rando_credit_credit_card_2',
+    'entity_id': 'sensor.rando_credit_credit_card_data_age',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -623,12 +623,12 @@
     'labels': set({
     }),
     'name': None,
-    'object_id_base': None,
+    'object_id_base': 'Data age',
     'options': dict({
     }),
     'original_device_class': <SensorDeviceClass.TIMESTAMP: 'timestamp'>,
     'original_icon': None,
-    'original_name': None,
+    'original_name': 'Data age',
     'platform': 'monarch_money',
     'previous_unique_id': None,
     'suggested_object_id': None,
@@ -638,22 +638,22 @@
     'unit_of_measurement': None,
   })
 # ---
-# name: test_all_entities[sensor.rando_credit_credit_card_2-state]
+# name: test_all_entities[sensor.rando_credit_credit_card_data_age-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       <EntityStateAttribute.ATTRIBUTION: 'attribution'>: 'Data provided by Monarch Money API via FINICITY',
       <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'timestamp',
-      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Rando Credit Credit Card',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Rando Credit Credit Card Data age',
     }),
     'context': <ANY>,
-    'entity_id': 'sensor.rando_credit_credit_card_2',
+    'entity_id': 'sensor.rando_credit_credit_card_data_age',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': '2022-12-10T18:17:06+00:00',
   })
 # ---
-# name: test_all_entities[sensor.rando_employer_investments_401_k-entry]
+# name: test_all_entities[sensor.rando_employer_investments_401_k_balance-entry]
   EntityRegistryEntrySnapshot({
     'aliases': list([
       None,
@@ -669,7 +669,7 @@
     'disabled_by': None,
     'domain': 'sensor',
     'entity_category': None,
-    'entity_id': 'sensor.rando_employer_investments_401_k',
+    'entity_id': 'sensor.rando_employer_investments_401_k_balance',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -677,12 +677,12 @@
     'labels': set({
     }),
     'name': None,
-    'object_id_base': None,
+    'object_id_base': 'Balance',
     'options': dict({
     }),
     'original_device_class': <SensorDeviceClass.MONETARY: 'monetary'>,
     'original_icon': None,
-    'original_name': None,
+    'original_name': 'Balance',
     'platform': 'monarch_money',
     'previous_unique_id': None,
     'suggested_object_id': None,
@@ -692,25 +692,25 @@
     'unit_of_measurement': 'USD',
   })
 # ---
-# name: test_all_entities[sensor.rando_employer_investments_401_k-state]
+# name: test_all_entities[sensor.rando_employer_investments_401_k_balance-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       <EntityStateAttribute.ATTRIBUTION: 'attribution'>: 'Data provided by Monarch Money API via FINICITY',
       <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'monetary',
       <EntityStateAttribute.ENTITY_PICTURE: 'entity_picture'>: 'data:image/png;base64,base64Nonce',
-      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Rando Employer Investments 401.k',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Rando Employer Investments 401.k Balance',
       <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.TOTAL: 'total'>,
       <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: 'USD',
     }),
     'context': <ANY>,
-    'entity_id': 'sensor.rando_employer_investments_401_k',
+    'entity_id': 'sensor.rando_employer_investments_401_k_balance',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': '100000.35',
   })
 # ---
-# name: test_all_entities[sensor.rando_employer_investments_401_k_2-entry]
+# name: test_all_entities[sensor.rando_employer_investments_401_k_data_age-entry]
   EntityRegistryEntrySnapshot({
     'aliases': list([
       None,
@@ -724,7 +724,7 @@
     'disabled_by': None,
     'domain': 'sensor',
     'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
-    'entity_id': 'sensor.rando_employer_investments_401_k_2',
+    'entity_id': 'sensor.rando_employer_investments_401_k_data_age',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -732,12 +732,12 @@
     'labels': set({
     }),
     'name': None,
-    'object_id_base': None,
+    'object_id_base': 'Data age',
     'options': dict({
     }),
     'original_device_class': <SensorDeviceClass.TIMESTAMP: 'timestamp'>,
     'original_icon': None,
-    'original_name': None,
+    'original_name': 'Data age',
     'platform': 'monarch_money',
     'previous_unique_id': None,
     'suggested_object_id': None,
@@ -747,22 +747,22 @@
     'unit_of_measurement': None,
   })
 # ---
-# name: test_all_entities[sensor.rando_employer_investments_401_k_2-state]
+# name: test_all_entities[sensor.rando_employer_investments_401_k_data_age-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       <EntityStateAttribute.ATTRIBUTION: 'attribution'>: 'Data provided by Monarch Money API via FINICITY',
       <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'timestamp',
-      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Rando Employer Investments 401.k',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Rando Employer Investments 401.k Data age',
     }),
     'context': <ANY>,
-    'entity_id': 'sensor.rando_employer_investments_401_k_2',
+    'entity_id': 'sensor.rando_employer_investments_401_k_data_age',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': '2024-02-17T08:13:10+00:00',
   })
 # ---
-# name: test_all_entities[sensor.rando_investments_roth_ira-entry]
+# name: test_all_entities[sensor.rando_investments_roth_ira_balance-entry]
   EntityRegistryEntrySnapshot({
     'aliases': list([
       None,
@@ -778,7 +778,7 @@
     'disabled_by': None,
     'domain': 'sensor',
     'entity_category': None,
-    'entity_id': 'sensor.rando_investments_roth_ira',
+    'entity_id': 'sensor.rando_investments_roth_ira_balance',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -786,12 +786,12 @@
     'labels': set({
     }),
     'name': None,
-    'object_id_base': None,
+    'object_id_base': 'Balance',
     'options': dict({
     }),
     'original_device_class': <SensorDeviceClass.MONETARY: 'monetary'>,
     'original_icon': None,
-    'original_name': None,
+    'original_name': 'Balance',
     'platform': 'monarch_money',
     'previous_unique_id': None,
     'suggested_object_id': None,
@@ -801,25 +801,25 @@
     'unit_of_measurement': 'USD',
   })
 # ---
-# name: test_all_entities[sensor.rando_investments_roth_ira-state]
+# name: test_all_entities[sensor.rando_investments_roth_ira_balance-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       <EntityStateAttribute.ATTRIBUTION: 'attribution'>: 'Data provided by Monarch Money API via PLAID',
       <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'monetary',
       <EntityStateAttribute.ENTITY_PICTURE: 'entity_picture'>: 'data:image/png;base64,base64Nonce',
-      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Rando Investments Roth IRA',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Rando Investments Roth IRA Balance',
       <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.TOTAL: 'total'>,
       <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: 'USD',
     }),
     'context': <ANY>,
-    'entity_id': 'sensor.rando_investments_roth_ira',
+    'entity_id': 'sensor.rando_investments_roth_ira_balance',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': '10000.43',
   })
 # ---
-# name: test_all_entities[sensor.rando_investments_roth_ira_2-entry]
+# name: test_all_entities[sensor.rando_investments_roth_ira_data_age-entry]
   EntityRegistryEntrySnapshot({
     'aliases': list([
       None,
@@ -833,7 +833,7 @@
     'disabled_by': None,
     'domain': 'sensor',
     'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
-    'entity_id': 'sensor.rando_investments_roth_ira_2',
+    'entity_id': 'sensor.rando_investments_roth_ira_data_age',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -841,12 +841,12 @@
     'labels': set({
     }),
     'name': None,
-    'object_id_base': None,
+    'object_id_base': 'Data age',
     'options': dict({
     }),
     'original_device_class': <SensorDeviceClass.TIMESTAMP: 'timestamp'>,
     'original_icon': None,
-    'original_name': None,
+    'original_name': 'Data age',
     'platform': 'monarch_money',
     'previous_unique_id': None,
     'suggested_object_id': None,
@@ -856,22 +856,22 @@
     'unit_of_measurement': None,
   })
 # ---
-# name: test_all_entities[sensor.rando_investments_roth_ira_2-state]
+# name: test_all_entities[sensor.rando_investments_roth_ira_data_age-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       <EntityStateAttribute.ATTRIBUTION: 'attribution'>: 'Data provided by Monarch Money API via PLAID',
       <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'timestamp',
-      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Rando Investments Roth IRA',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Rando Investments Roth IRA Data age',
     }),
     'context': <ANY>,
-    'entity_id': 'sensor.rando_investments_roth_ira_2',
+    'entity_id': 'sensor.rando_investments_roth_ira_data_age',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': '2024-02-17T13:32:21+00:00',
   })
 # ---
-# name: test_all_entities[sensor.rando_mortgage_mortgage-entry]
+# name: test_all_entities[sensor.rando_mortgage_mortgage_balance-entry]
   EntityRegistryEntrySnapshot({
     'aliases': list([
       None,
@@ -887,7 +887,7 @@
     'disabled_by': None,
     'domain': 'sensor',
     'entity_category': None,
-    'entity_id': 'sensor.rando_mortgage_mortgage',
+    'entity_id': 'sensor.rando_mortgage_mortgage_balance',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -895,12 +895,12 @@
     'labels': set({
     }),
     'name': None,
-    'object_id_base': None,
+    'object_id_base': 'Balance',
     'options': dict({
     }),
     'original_device_class': <SensorDeviceClass.MONETARY: 'monetary'>,
     'original_icon': None,
-    'original_name': None,
+    'original_name': 'Balance',
     'platform': 'monarch_money',
     'previous_unique_id': None,
     'suggested_object_id': None,
@@ -910,25 +910,25 @@
     'unit_of_measurement': 'USD',
   })
 # ---
-# name: test_all_entities[sensor.rando_mortgage_mortgage-state]
+# name: test_all_entities[sensor.rando_mortgage_mortgage_balance-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       <EntityStateAttribute.ATTRIBUTION: 'attribution'>: 'Data provided by Monarch Money API via PLAID',
       <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'monetary',
       <EntityStateAttribute.ENTITY_PICTURE: 'entity_picture'>: 'data:image/png;base64,base64Nonce',
-      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Rando Mortgage Mortgage',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Rando Mortgage Mortgage Balance',
       <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.TOTAL: 'total'>,
       <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: 'USD',
     }),
     'context': <ANY>,
-    'entity_id': 'sensor.rando_mortgage_mortgage',
+    'entity_id': 'sensor.rando_mortgage_mortgage_balance',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': '0.0',
   })
 # ---
-# name: test_all_entities[sensor.rando_mortgage_mortgage_2-entry]
+# name: test_all_entities[sensor.rando_mortgage_mortgage_data_age-entry]
   EntityRegistryEntrySnapshot({
     'aliases': list([
       None,
@@ -942,7 +942,7 @@
     'disabled_by': None,
     'domain': 'sensor',
     'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
-    'entity_id': 'sensor.rando_mortgage_mortgage_2',
+    'entity_id': 'sensor.rando_mortgage_mortgage_data_age',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -950,12 +950,12 @@
     'labels': set({
     }),
     'name': None,
-    'object_id_base': None,
+    'object_id_base': 'Data age',
     'options': dict({
     }),
     'original_device_class': <SensorDeviceClass.TIMESTAMP: 'timestamp'>,
     'original_icon': None,
-    'original_name': None,
+    'original_name': 'Data age',
     'platform': 'monarch_money',
     'previous_unique_id': None,
     'suggested_object_id': None,
@@ -965,22 +965,22 @@
     'unit_of_measurement': None,
   })
 # ---
-# name: test_all_entities[sensor.rando_mortgage_mortgage_2-state]
+# name: test_all_entities[sensor.rando_mortgage_mortgage_data_age-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       <EntityStateAttribute.ATTRIBUTION: 'attribution'>: 'Data provided by Monarch Money API via PLAID',
       <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'timestamp',
-      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Rando Mortgage Mortgage',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Rando Mortgage Mortgage Data age',
     }),
     'context': <ANY>,
-    'entity_id': 'sensor.rando_mortgage_mortgage_2',
+    'entity_id': 'sensor.rando_mortgage_mortgage_data_age',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': '2023-08-16T01:41:36+00:00',
   })
 # ---
-# name: test_all_entities[sensor.vinaudit_2050_toyota_rav8-entry]
+# name: test_all_entities[sensor.vinaudit_2050_toyota_rav8_data_age-entry]
   EntityRegistryEntrySnapshot({
     'aliases': list([
       None,
@@ -994,7 +994,7 @@
     'disabled_by': None,
     'domain': 'sensor',
     'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
-    'entity_id': 'sensor.vinaudit_2050_toyota_rav8',
+    'entity_id': 'sensor.vinaudit_2050_toyota_rav8_data_age',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -1002,12 +1002,12 @@
     'labels': set({
     }),
     'name': None,
-    'object_id_base': None,
+    'object_id_base': 'Data age',
     'options': dict({
     }),
     'original_device_class': <SensorDeviceClass.TIMESTAMP: 'timestamp'>,
     'original_icon': None,
-    'original_name': None,
+    'original_name': 'Data age',
     'platform': 'monarch_money',
     'previous_unique_id': None,
     'suggested_object_id': None,
@@ -1017,22 +1017,22 @@
     'unit_of_measurement': None,
   })
 # ---
-# name: test_all_entities[sensor.vinaudit_2050_toyota_rav8-state]
+# name: test_all_entities[sensor.vinaudit_2050_toyota_rav8_data_age-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       <EntityStateAttribute.ATTRIBUTION: 'attribution'>: 'Data provided by Monarch Money API via Manual entry',
       <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'timestamp',
-      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'VinAudit 2050 Toyota RAV8',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'VinAudit 2050 Toyota RAV8 Data age',
     }),
     'context': <ANY>,
-    'entity_id': 'sensor.vinaudit_2050_toyota_rav8',
+    'entity_id': 'sensor.vinaudit_2050_toyota_rav8_data_age',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': '2024-08-16T17:37:21+00:00',
   })
 # ---
-# name: test_all_entities[sensor.vinaudit_2050_toyota_rav8_2-entry]
+# name: test_all_entities[sensor.vinaudit_2050_toyota_rav8_value-entry]
   EntityRegistryEntrySnapshot({
     'aliases': list([
       None,
@@ -1048,7 +1048,7 @@
     'disabled_by': None,
     'domain': 'sensor',
     'entity_category': None,
-    'entity_id': 'sensor.vinaudit_2050_toyota_rav8_2',
+    'entity_id': 'sensor.vinaudit_2050_toyota_rav8_value',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -1056,12 +1056,12 @@
     'labels': set({
     }),
     'name': None,
-    'object_id_base': None,
+    'object_id_base': 'Value',
     'options': dict({
     }),
     'original_device_class': <SensorDeviceClass.MONETARY: 'monetary'>,
     'original_icon': None,
-    'original_name': None,
+    'original_name': 'Value',
     'platform': 'monarch_money',
     'previous_unique_id': None,
     'suggested_object_id': None,
@@ -1071,25 +1071,25 @@
     'unit_of_measurement': 'USD',
   })
 # ---
-# name: test_all_entities[sensor.vinaudit_2050_toyota_rav8_2-state]
+# name: test_all_entities[sensor.vinaudit_2050_toyota_rav8_value-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       <EntityStateAttribute.ATTRIBUTION: 'attribution'>: 'Data provided by Monarch Money API via Manual entry',
       <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'monetary',
       <EntityStateAttribute.ENTITY_PICTURE: 'entity_picture'>: 'https://api.monarchmoney.com/cdn-cgi/image/width=128/images/institution/159427559853802644',
-      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'VinAudit 2050 Toyota RAV8',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'VinAudit 2050 Toyota RAV8 Value',
       <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.TOTAL: 'total'>,
       <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: 'USD',
     }),
     'context': <ANY>,
-    'entity_id': 'sensor.vinaudit_2050_toyota_rav8_2',
+    'entity_id': 'sensor.vinaudit_2050_toyota_rav8_value',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': '11075.58',
   })
 # ---
-# name: test_all_entities[sensor.zillow_house-entry]
+# name: test_all_entities[sensor.zillow_house_balance-entry]
   EntityRegistryEntrySnapshot({
     'aliases': list([
       None,
@@ -1105,7 +1105,7 @@
     'disabled_by': None,
     'domain': 'sensor',
     'entity_category': None,
-    'entity_id': 'sensor.zillow_house',
+    'entity_id': 'sensor.zillow_house_balance',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -1113,12 +1113,12 @@
     'labels': set({
     }),
     'name': None,
-    'object_id_base': None,
+    'object_id_base': 'Balance',
     'options': dict({
     }),
     'original_device_class': <SensorDeviceClass.MONETARY: 'monetary'>,
     'original_icon': None,
-    'original_name': None,
+    'original_name': 'Balance',
     'platform': 'monarch_money',
     'previous_unique_id': None,
     'suggested_object_id': None,
@@ -1128,25 +1128,25 @@
     'unit_of_measurement': 'USD',
   })
 # ---
-# name: test_all_entities[sensor.zillow_house-state]
+# name: test_all_entities[sensor.zillow_house_balance-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       <EntityStateAttribute.ATTRIBUTION: 'attribution'>: 'Data provided by Monarch Money API via Manual entry',
       <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'monetary',
       <EntityStateAttribute.ENTITY_PICTURE: 'entity_picture'>: 'data:image/png;base64,base64Nonce',
-      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Zillow House',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Zillow House Balance',
       <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.TOTAL: 'total'>,
       <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: 'USD',
     }),
     'context': <ANY>,
-    'entity_id': 'sensor.zillow_house',
+    'entity_id': 'sensor.zillow_house_balance',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': '123000.0',
   })
 # ---
-# name: test_all_entities[sensor.zillow_house_2-entry]
+# name: test_all_entities[sensor.zillow_house_data_age-entry]
   EntityRegistryEntrySnapshot({
     'aliases': list([
       None,
@@ -1160,7 +1160,7 @@
     'disabled_by': None,
     'domain': 'sensor',
     'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
-    'entity_id': 'sensor.zillow_house_2',
+    'entity_id': 'sensor.zillow_house_data_age',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -1168,12 +1168,12 @@
     'labels': set({
     }),
     'name': None,
-    'object_id_base': None,
+    'object_id_base': 'Data age',
     'options': dict({
     }),
     'original_device_class': <SensorDeviceClass.TIMESTAMP: 'timestamp'>,
     'original_icon': None,
-    'original_name': None,
+    'original_name': 'Data age',
     'platform': 'monarch_money',
     'previous_unique_id': None,
     'suggested_object_id': None,
@@ -1183,15 +1183,15 @@
     'unit_of_measurement': None,
   })
 # ---
-# name: test_all_entities[sensor.zillow_house_2-state]
+# name: test_all_entities[sensor.zillow_house_data_age-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       <EntityStateAttribute.ATTRIBUTION: 'attribution'>: 'Data provided by Monarch Money API via Manual entry',
       <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'timestamp',
-      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Zillow House',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Zillow House Data age',
     }),
     'context': <ANY>,
-    'entity_id': 'sensor.zillow_house_2',
+    'entity_id': 'sensor.zillow_house_data_age',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
