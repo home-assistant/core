@@ -22,11 +22,8 @@ from openaq.core.responses import (
 )
 import pytest
 
-from homeassistant.components.openaq.const import (
-    CONF_LOCATION_ID,
-    DOMAIN,
-    OPENAQ_UNIT_MICROGRAMS_PER_CUBIC_METER,
-)
+from homeassistant import const as ha_const
+from homeassistant.components.openaq.const import CONF_LOCATION_ID, DOMAIN
 from homeassistant.config_entries import ConfigSubentryDataWithId
 from homeassistant.const import CONF_API_KEY
 
@@ -77,14 +74,14 @@ def make_location(
 
 
 def make_parameter(
-    name: str, units: str = OPENAQ_UNIT_MICROGRAMS_PER_CUBIC_METER
+    name: str, units: str = ha_const.CONCENTRATION_MICROGRAMS_PER_CUBIC_METER
 ) -> Parameter:
     """Return an OpenAQ parameter."""
     return Parameter(id=1, name=name, units=units)
 
 
 def make_parameter_base(
-    name: str, units: str = OPENAQ_UNIT_MICROGRAMS_PER_CUBIC_METER
+    name: str, units: str = ha_const.CONCENTRATION_MICROGRAMS_PER_CUBIC_METER
 ) -> ParameterBase:
     """Return an OpenAQ base parameter."""
     return ParameterBase(id=1, name=name, units=units, display_name=None)
@@ -93,7 +90,7 @@ def make_parameter_base(
 def make_sensor_base(
     sensor_id: int,
     parameter: str,
-    units: str = OPENAQ_UNIT_MICROGRAMS_PER_CUBIC_METER,
+    units: str = ha_const.CONCENTRATION_MICROGRAMS_PER_CUBIC_METER,
 ) -> SensorBase:
     """Return an OpenAQ base sensor."""
     return SensorBase(
@@ -106,7 +103,7 @@ def make_sensor_base(
 def make_sensor(
     sensor_id: int,
     parameter: str,
-    units: str = OPENAQ_UNIT_MICROGRAMS_PER_CUBIC_METER,
+    units: str = ha_const.CONCENTRATION_MICROGRAMS_PER_CUBIC_METER,
     value: float | None = None,
 ) -> Sensor:
     """Return an OpenAQ sensor."""

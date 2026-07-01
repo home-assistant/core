@@ -6,10 +6,8 @@ from openaq import NotAuthorizedError, TimeoutError as OpenAQTimeoutError
 import pytest
 from syrupy.assertion import SnapshotAssertion
 
-from homeassistant.components.openaq.const import (
-    DOMAIN,
-    OPENAQ_UNIT_MICROGRAMS_PER_CUBIC_METER,
-)
+from homeassistant import const as ha_const
+from homeassistant.components.openaq.const import DOMAIN
 from homeassistant.components.sensor import (
     ATTR_STATE_CLASS,
     SensorDeviceClass,
@@ -67,7 +65,7 @@ async def test_sensor_entities(
     assert state.attributes["device_class"] == SensorDeviceClass.PM25
     assert (
         state.attributes["unit_of_measurement"]
-        == OPENAQ_UNIT_MICROGRAMS_PER_CUBIC_METER
+        == ha_const.CONCENTRATION_MICROGRAMS_PER_CUBIC_METER
     )
 
     co = entity_registry.async_get("sensor.del_norte_carbon_monoxide")

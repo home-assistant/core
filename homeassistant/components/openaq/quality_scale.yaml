@@ -12,9 +12,11 @@ rules:
   docs-actions:
     status: exempt
     comment: Integration registers no actions.
+  docs-conditions: done
   docs-high-level-description: done
   docs-installation-instructions: done
   docs-removal-instructions: done
+  docs-triggers: done
   entity-event-setup:
     status: exempt
     comment: Integration does not subscribe to entity events.
