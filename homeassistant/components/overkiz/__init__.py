@@ -186,14 +186,6 @@ async def async_setup_entry(hass: HomeAssistant, entry: OverkizDataConfigEntry) 
 
     # Map Overkiz entities to Home Assistant platform
     for device in coordinator.data.values():
-        LOGGER.debug(
-            (
-                "The following device has been retrieved. Report an issue if not"
-                " supported correctly (%s)"
-            ),
-            device,
-        )
-
         if platform := OVERKIZ_DEVICE_TO_PLATFORM.get(
             device.widget
         ) or OVERKIZ_DEVICE_TO_PLATFORM.get(device.ui_class):
@@ -202,8 +194,6 @@ async def async_setup_entry(hass: HomeAssistant, entry: OverkizDataConfigEntry) 
     device_registry = dr.async_get(hass)
 
     for gateway in setup.gateways:
-        LOGGER.debug("Added gateway (%s)", gateway)
-
         device_registry.async_get_or_create(
             config_entry_id=entry.entry_id,
             identifiers={(DOMAIN, gateway.id)},
