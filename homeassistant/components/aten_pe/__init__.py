@@ -18,6 +18,7 @@ from .const import (
     CONF_COMMUNITY,
     CONF_PRIV_KEY,
 )
+from .util import create_aten_pe_device
 
 PLATFORMS = [Platform.SWITCH]
 
@@ -45,13 +46,14 @@ async def async_setup_entry(hass: HomeAssistant, entry: AtenPEConfigEntry) -> bo
     node = config[CONF_HOST]
     serv = config[CONF_PORT]
 
-    dev = AtenPE(
-        node=node,
-        serv=serv,
-        community=config[CONF_COMMUNITY],
-        username=config[CONF_USERNAME],
-        authkey=config.get(CONF_AUTH_KEY),
-        privkey=config.get(CONF_PRIV_KEY),
+    dev = await hass.async_add_executor_job(
+        create_aten_pe_device,
+        node,
+        serv,
+        config[CONF_COMMUNITY],
+        config[CONF_USERNAME],
+        config.get(CONF_AUTH_KEY),
+        config.get(CONF_PRIV_KEY),
     )
 
     try:

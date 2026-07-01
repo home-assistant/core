@@ -75,19 +75,19 @@ async def test_aten_pe_switch_setup(hass: HomeAssistant) -> None:
     mock_device = create_mock_device()
 
     with patch(
-        "homeassistant.components.aten_pe.AtenPE",
+        "homeassistant.components.aten_pe.create_aten_pe_device",
         return_value=mock_device,
     ) as mock_aten_pe:
         assert await hass.config_entries.async_setup(entry.entry_id)
         await hass.async_block_till_done()
 
         mock_aten_pe.assert_called_once_with(
-            node="192.168.1.100",
-            serv="161",
-            community="private",
-            username="administrator",
-            authkey=None,
-            privkey=None,
+            "192.168.1.100",
+            "161",
+            "private",
+            "administrator",
+            None,
+            None,
         )
 
         state_outlet1 = hass.states.get("switch.aten_pdu_outlet_1")
@@ -132,7 +132,7 @@ async def test_aten_pe_not_switchable(hass: HomeAssistant) -> None:
     mock_device = create_mock_device(switchable="no")
 
     with patch(
-        "homeassistant.components.aten_pe.AtenPE",
+        "homeassistant.components.aten_pe.create_aten_pe_device",
         return_value=mock_device,
     ):
         assert await hass.config_entries.async_setup(entry.entry_id)

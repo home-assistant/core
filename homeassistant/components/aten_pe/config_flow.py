@@ -3,7 +3,7 @@
 import logging
 from typing import Any, cast
 
-from atenpdu import AtenPE, AtenPEError
+from atenpdu import AtenPEError
 import voluptuous as vol
 
 from homeassistant.config_entries import ConfigFlow, ConfigFlowResult
@@ -18,6 +18,7 @@ from .const import (
     DEFAULT_USERNAME,
     DOMAIN,
 )
+from .util import create_aten_pe_device
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -31,13 +32,14 @@ class AtenPEConfigFlow(ConfigFlow, domain=DOMAIN):
         self, host: str, port: str, config: dict[str, Any]
     ) -> bool:
         """Check if we can connect to the device."""
-        dev = AtenPE(
-            node=host,
-            serv=port,
-            community=config.get(CONF_COMMUNITY, DEFAULT_COMMUNITY),
-            username=config.get(CONF_USERNAME, DEFAULT_USERNAME),
-            authkey=config.get(CONF_AUTH_KEY),
-            privkey=config.get(CONF_PRIV_KEY),
+        dev = await self.hass.async_add_executor_job(
+            create_aten_pe_device,
+            host,
+            port,
+            config.get(CONF_COMMUNITY, DEFAULT_COMMUNITY),
+            config.get(CONF_USERNAME, DEFAULT_USERNAME),
+            config.get(CONF_AUTH_KEY),
+            config.get(CONF_PRIV_KEY),
         )
 
         try:

@@ -22,7 +22,9 @@ async def test_flow_user_success(hass: HomeAssistant) -> None:
     assert result["step_id"] == "user"
 
     with (
-        patch("homeassistant.components.aten_pe.config_flow.AtenPE") as mock_class,
+        patch(
+            "homeassistant.components.aten_pe.config_flow.create_aten_pe_device"
+        ) as mock_class,
         patch(
             "homeassistant.components.aten_pe.async_setup_entry", return_value=True
         ) as mock_setup_entry,
@@ -63,7 +65,9 @@ async def test_flow_user_cannot_connect(hass: HomeAssistant) -> None:
     assert result["type"] == FlowResultType.FORM
     assert result["step_id"] == "user"
 
-    with patch("homeassistant.components.aten_pe.config_flow.AtenPE") as mock_class:
+    with patch(
+        "homeassistant.components.aten_pe.config_flow.create_aten_pe_device"
+    ) as mock_class:
         mock_device = AsyncMock()
         mock_device.initialize.side_effect = AtenPEError("SNMP Timeout")
         mock_class.return_value = mock_device
@@ -110,7 +114,9 @@ async def test_flow_abort_if_unique_id_configured(hass: HomeAssistant) -> None:
 async def test_flow_import_success(hass: HomeAssistant) -> None:
     """Test importing legacy YAML configuration."""
     with (
-        patch("homeassistant.components.aten_pe.config_flow.AtenPE") as mock_class,
+        patch(
+            "homeassistant.components.aten_pe.config_flow.create_aten_pe_device"
+        ) as mock_class,
         patch(
             "homeassistant.components.aten_pe.async_setup_entry", return_value=True
         ) as mock_setup_entry,
