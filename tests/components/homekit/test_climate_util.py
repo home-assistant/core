@@ -2,9 +2,14 @@
 
 import pytest
 
-from homeassistant.components.climate import ATTR_MAX_TEMP, ATTR_MIN_TEMP
+from homeassistant.components.climate import (
+    ATTR_FAN_MODES,
+    ATTR_MAX_TEMP,
+    ATTR_MIN_TEMP,
+)
 from homeassistant.components.homekit.climate_util import (
     HEAT_COOL_DEADBAND,
+    get_fan_modes_and_speeds,
     get_temperature_range_from_state,
     resolve_target_temp_range,
 )
@@ -68,3 +73,12 @@ def test_get_temperature_range_from_state(
         get_temperature_range_from_state(state, UnitOfTemperature.CELSIUS, 7.0, 35.0)
         == expected
     )
+
+
+def test_get_fan_modes_and_speeds_ignores_non_string() -> None:
+    """Test non-string fan modes are ignored rather than raising."""
+    fan_modes, speeds = get_fan_modes_and_speeds(
+        {ATTR_FAN_MODES: ["low", None, "high", 3]}
+    )
+    assert fan_modes == {"low": "low", "high": "high"}
+    assert speeds == ["low", "high"]

@@ -45,7 +45,9 @@ def get_fan_modes_and_speeds(
     advertises custom fan mode names.
     """
     fan_modes = {
-        fan_mode.lower(): fan_mode for fan_mode in attributes.get(ATTR_FAN_MODES) or []
+        fan_mode.lower(): fan_mode
+        for fan_mode in attributes.get(ATTR_FAN_MODES) or []
+        if isinstance(fan_mode, str)
     }
     ordered_fan_speeds: list[str] = []
     if PRE_DEFINED_FAN_MODES.intersection(fan_modes):
