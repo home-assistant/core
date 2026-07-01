@@ -116,7 +116,14 @@ class VeSyncFanHA(VeSyncBaseEntity[VeSyncFanBase | VeSyncPurifier], FanEntity):
     ) -> None:
         """Initialize the fan."""
         super().__init__(device, coordinator)
-        if rgetattr(device, "state.oscillation_status") is not None:
+        # Tower fans expose a single-axis ``oscillation_status`` state attribute,
+        # while pedestal fans expose ``vertical_oscillation_status`` and
+        # ``horizontal_oscillation_status`` separately. The OSCILLATE feature is
+        # advertised when either form of oscillation is available.
+        if rgetattr(device, "state.oscillation_status") is not None or (
+            rgetattr(device, "state.vertical_oscillation_status") is not None
+            or rgetattr(device, "state.horizontal_oscillation_status") is not None
+        ):
             self._attr_supported_features |= FanEntityFeature.OSCILLATE
         # Build maps for HA <-> VeSync preset modes
         self._ha_to_vs_mode_map: dict[str, str] = {}
@@ -141,7 +148,14 @@ class VeSyncFanHA(VeSyncBaseEntity[VeSyncFanBase | VeSyncPurifier], FanEntity):
     @override
     def oscillating(self) -> bool:
         """Return True if device is oscillating."""
-        return rgetattr(self.device, "state.oscillation_status") == "on"
+        # Tower fans report a single-axis oscillation status.
+        if rgetattr(self.device, "state.oscillation_status") == "on":
+            return True
+        # Pedestal fans report vertical and horizontal oscillation separately;
+        # the fan is considered oscillating when either axis is active.
+        if rgetattr(self.device, "state.vertical_oscillation_status") == "on":
+            return True
+        return rgetattr(self.device, "state.horizontal_oscillation_status") == "on"
 
     @property
     @override
@@ -341,7 +355,10 @@ class VeSyncFanHA(VeSyncBaseEntity[VeSyncFanBase | VeSyncPurifier], FanEntity):
     @override
     async def async_oscillate(self, oscillating: bool) -> None:
         """Set oscillation."""
-        if hasattr(self.device, "toggle_oscillation"):
+        # Tower fans expose a single ``toggle_oscillation`` method.
+        if hasattr(self.device, "toggle_oscillation") and rgetattr(
+            self.device, "state.oscillation_status"
+        ) is not None:
             success = await self.device.toggle_oscillation(oscillating)
             if not success:
                 if self.device.last_response:
@@ -350,5 +367,22 @@ class VeSyncFanHA(VeSyncBaseEntity[VeSyncFanBase | VeSyncPurifier], FanEntity):
                     "Failed to set oscillation, no response found."
                 )
             self.async_write_ha_state()
-        else:
-            raise HomeAssistantError("Oscillation not supported by this device.")
+            return
+        # Pedestal fans expose separate vertical/horizontal oscillation toggles.
+        # The single HA oscillate switch controls both axes together.
+        successes: list[bool] = []
+        if hasattr(self.device, "toggle_vertical_oscillation"):
+            successes.append(
+                await self.device.toggle_vertical_oscillation(oscillating)
+            )
+        if hasattr(self.device, "toggle_horizontal_oscillation"):
+            successes.append(
+                await self.device.toggle_horizontal_oscillation(oscillating)
+            )
+        if not successes or not all(successes):
+            if self.device.last_response:
+                raise HomeAssistantError(self.device.last_response.message)
+            raise HomeAssistantError(
+                "Failed to set oscillation, no response found."
+            )
+        self.async_write_ha_state()
