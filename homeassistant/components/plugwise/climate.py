@@ -13,7 +13,7 @@ from homeassistant.components.climate import (
     HVACMode,
 )
 from homeassistant.const import (
-    ATTR_NAME,
+    ATTR_MODEL,
     ATTR_TEMPERATURE,
     STATE_OFF,
     STATE_ON,
@@ -108,8 +108,8 @@ class PlugwiseClimateEntity(PlugwiseEntity, ClimateEntity, RestoreEntity):
     ) -> None:
         """Set up the Plugwise API."""
         super().__init__(coordinator, device_id)
-        entity_name = f"{self.device[ATTR_NAME]}".lower()
-        self._attr_unique_id = f"{device_id}-{entity_name}"
+        model = f"{self.device[ATTR_MODEL]}".lower()
+        self._attr_unique_id = f"{device_id}-{model}"
 
         self._api = coordinator.api
         gateway_id: str = self._api.gateway_id
