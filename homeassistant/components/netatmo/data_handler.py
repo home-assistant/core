@@ -1,5 +1,4 @@
 """The Netatmo data handler."""
-# pylint: disable=home-assistant-use-runtime-data  # Uses legacy hass.data[DOMAIN] pattern
 
 from collections import deque
 from dataclasses import dataclass
@@ -27,8 +26,6 @@ from homeassistant.helpers.event import async_track_time_interval
 
 from .const import (
     CAMERA_CONNECTION_WEBHOOKS,
-    DATA_PERSONS,
-    DATA_SCHEDULES,
     DOMAIN,
     MANUFACTURER,
     NETATMO_CREATE_BUTTON,
@@ -160,6 +157,11 @@ class NetatmoDataHandler:
             self._rate_limit = DEV_LIMIT
         self.poll_start = time()
         self.poll_count = 0
+        self.persons: dict[str, dict[str, str | None]] = {}
+        self.schedules: dict[str, dict[str, Any]] = {}
+        self.device_ids: dict[str, str] = {}
+        self.cameras: dict[str, str] = {}
+        self.events: dict[str, dict] = {}
 
     async def async_setup(self) -> None:
         """Set up the Netatmo data handler."""
@@ -330,7 +332,7 @@ class NetatmoDataHandler:
             self.setup_rooms(home, signal_home)
             self.setup_modules(home, signal_home)
 
-            self.hass.data[DOMAIN][DATA_PERSONS][home.entity_id] = {
+            self.persons[home.entity_id] = {
                 person.entity_id: person.pseudo for person in home.persons.values()
             }
 
@@ -459,7 +461,7 @@ class NetatmoDataHandler:
         if NetatmoDeviceCategory.climate in [
             next(iter(x)) for x in [room.features for room in home.rooms.values()] if x
         ]:
-            self.hass.data[DOMAIN][DATA_SCHEDULES][home.entity_id] = self.account.homes[
+            self.schedules[home.entity_id] = self.account.homes[
                 home.entity_id
             ].schedules
 

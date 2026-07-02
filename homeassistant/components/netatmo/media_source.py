@@ -1,5 +1,4 @@
 """Netatmo Media Source Implementation."""
-# pylint: disable=home-assistant-use-runtime-data  # Uses legacy hass.data[DOMAIN] pattern
 
 import datetime as dt
 import logging
@@ -17,7 +16,8 @@ from homeassistant.components.media_source import (
 )
 from homeassistant.core import HomeAssistant, callback
 
-from .const import DATA_CAMERAS, DATA_EVENTS, DOMAIN, MANUFACTURER
+from .const import DOMAIN, MANUFACTURER
+from .data_handler import NetatmoDataHandler
 
 _LOGGER = logging.getLogger(__name__)
 MIME_TYPE = "application/x-mpegURL"
@@ -41,7 +41,18 @@ class NetatmoSource(MediaSource):
         """Initialize Netatmo source."""
         super().__init__(DOMAIN)
         self.hass = hass
-        self.events = self.hass.data[DOMAIN][DATA_EVENTS]
+
+    @property
+    def _data_handler(self) -> NetatmoDataHandler | None:
+        """Return the data handler of the loaded config entry."""
+        entries = self.hass.config_entries.async_loaded_entries(DOMAIN)
+        return entries[0].runtime_data if entries else None
+
+    @property
+    def events(self) -> dict[str, dict]:
+        """Return the camera events."""
+        data_handler = self._data_handler
+        return data_handler.events if data_handler else {}
 
     @override
     async def async_resolve_media(self, item: MediaSourceItem) -> PlayMedia:
@@ -85,7 +96,12 @@ class NetatmoSource(MediaSource):
             )
             title = f"{created} - {message}"
         else:
-            title = self.hass.data[DOMAIN][DATA_CAMERAS].get(camera_id, MANUFACTURER)
+            data_handler = self._data_handler
+            title = (
+                data_handler.cameras.get(camera_id, MANUFACTURER)
+                if data_handler
+                else MANUFACTURER
+            )
             thumbnail = None
 
         if event_id:
