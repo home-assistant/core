@@ -12,10 +12,21 @@ class LEDIrDeviceType(StrEnum):
     """LED Infrared device types."""
 
     GENERIC_24_KEY = "generic_24_key"
+    GENERIC_13_KEY = "generic_13_key"
 
 
 SUPPORTED_EFFECTS = {
     LEDIrDeviceType.GENERIC_24_KEY: ["flash", "strobe", "fade", "smooth"],
+    LEDIrDeviceType.GENERIC_13_KEY: [
+        "mode_1",
+        "mode_2",
+        "mode_3",
+        "mode_4",
+        "mode_5",
+        "mode_6",
+        "mode_7",
+        "mode_8",
+    ],
 }
 
 

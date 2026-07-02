@@ -15,6 +15,7 @@ from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
+from .codes import Generic13KeyCode
 from .const import (
     CONF_DEVICE_TYPE,
     CONF_INFRARED_ENTITY_ID,
@@ -28,6 +29,7 @@ PARALLEL_UPDATES = 1
 
 CODES = {
     LEDIrDeviceType.GENERIC_24_KEY: TweenLightLEDStripCode,
+    LEDIrDeviceType.GENERIC_13_KEY: Generic13KeyCode,
 }
 
 
@@ -67,22 +69,20 @@ class LEDIrLightEntity(LEDIrEntity, InfraredEmitterConsumerEntity, LightEntity):
         self._infrared_emitter_entity_id = infrared_entity_id
 
         self._codes = CODES[device_type]
-        self._attr_effect_list = (
-            SUPPORTED_EFFECTS[device_type] + SUPPORTED_COLORS[device_type]
-        )
+        self._attr_effect_list = SUPPORTED_EFFECTS.get(
+            device_type, []
+        ) + SUPPORTED_COLORS.get(device_type, [])
 
     @override
     async def async_turn_on(self, **kwargs: Any) -> None:
         """Turn device on."""
-        command = self._codes.ON.to_command()
+        await self._send_command(self._codes.ON.to_command())
         self._attr_is_on = True
         effect: str | None = kwargs.get(ATTR_EFFECT)
         if effect and effect in self._attr_effect_list:
             self._attr_effect = effect
-            command = self._codes[effect.upper()].to_command()
-        else:
-            self._attr_effect = None
-        await self._send_command(command)
+            await self._send_command(self._codes[effect.upper()].to_command())
+
         self.async_write_ha_state()
 
     @override
