@@ -16,6 +16,7 @@ PLATFORMS = [
     Platform.CAMERA,
     Platform.COVER,
     Platform.FAN,
+    Platform.INFRARED,
     Platform.LIGHT,
     Platform.SENSOR,
     Platform.SWITCH,
