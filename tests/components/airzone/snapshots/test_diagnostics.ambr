@@ -8,14 +8,18 @@
             'data': list([
               dict({
                 'air_demand': 0,
+                'antifreeze': 0,
                 'coldStage': 1,
                 'coldStages': 1,
+                'cold_demand': 0,
                 'coldangle': 0,
+                'eco_adapt': 'manual',
                 'errors': list([
                 ]),
                 'floor_demand': 0,
                 'heatStage': 1,
                 'heatStages': 1,
+                'heat_demand': 0,
                 'heatangle': 0,
                 'humidity': 34,
                 'maxTemp': 30,
@@ -44,9 +48,11 @@
               }),
               dict({
                 'air_demand': 1,
+                'antifreeze': 0,
                 'battery': 99,
                 'coldStage': 1,
                 'coldStages': 1,
+                'cold_demand': 0,
                 'coldangle': 2,
                 'coverage': 72,
                 'errors': list([
@@ -54,6 +60,7 @@
                 'floor_demand': 1,
                 'heatStage': 3,
                 'heatStages': 3,
+                'heat_demand': 1,
                 'heatangle': 1,
                 'humidity': 39,
                 'maxTemp': 30,
@@ -276,6 +283,7 @@
       'webserver': dict({
         'mac': '**REDACTED**',
         'wifi_channel': 6,
+        'wifi_quality': 84,
         'wifi_rssi': -42,
         'ws_type': 'ws_az',
       }),
@@ -325,6 +333,9 @@
       'systems': dict({
         '1': dict({
           'available': True,
+          'clamp-meter': True,
+          'eco-adapt': 'manual',
+          'energy': 100,
           'firmware': '3.31',
           'full-name': 'Airzone [1] System',
           'id': 1,
@@ -395,6 +406,7 @@
         'mac': '**REDACTED**',
         'model': 'Airzone WebServer',
         'wifi-channel': 6,
+        'wifi-quality': 84,
         'wifi-rssi': -42,
       }),
       'zones': dict({
@@ -403,8 +415,10 @@
           'absolute-temp-min': 15.0,
           'action': 6,
           'air-demand': False,
+          'anti-freeze': False,
           'available': True,
           'cold-angle': 0,
+          'cold-demand': False,
           'cold-stage': 1,
           'cold-stages': list([
             0,
@@ -412,8 +426,10 @@
           ]),
           'demand': False,
           'double-set-point': False,
+          'eco-adapt': 'manual',
           'full-name': 'Airzone [1:1] Salon',
           'heat-angle': 0,
+          'heat-demand': False,
           'heat-stage': 1,
           'heat-stages': list([
             0,
@@ -457,9 +473,11 @@
           'absolute-temp-min': 15.0,
           'action': 4,
           'air-demand': True,
+          'anti-freeze': False,
           'available': True,
           'battery-low': False,
           'cold-angle': 2,
+          'cold-demand': False,
           'cold-stage': 1,
           'cold-stages': list([
             0,
@@ -470,6 +488,7 @@
           'floor-demand': True,
           'full-name': 'Airzone [1:2] Dorm Ppal',
           'heat-angle': 1,
+          'heat-demand': True,
           'heat-stage': 3,
           'heat-stages': list([
             0,

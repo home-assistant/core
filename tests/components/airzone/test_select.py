@@ -32,6 +32,10 @@ async def test_airzone_create_selects(hass: HomeAssistant) -> None:
     state = hass.states.get("select.system_1_q_adapt")
     assert state.state == "standard"
 
+    # Heat emission type (only enabled when more than one stage is available).
+    state = hass.states.get("select.dorm_ppal_heating_emission_type")
+    assert state.state == "combined"
+
     # Zones
     state = hass.states.get("select.despacho_cold_angle")
     assert state.state == "90deg"

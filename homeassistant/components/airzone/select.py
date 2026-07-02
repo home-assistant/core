@@ -4,15 +4,27 @@ from collections.abc import Callable
 from dataclasses import dataclass
 from typing import Any, Final, override
 
-from aioairzone.common import GrilleAngle, OperationMode, QAdapt, SleepTimeout
+from aioairzone.common import (
+    AirzoneStages,
+    GrilleAngle,
+    OperationMode,
+    QAdapt,
+    SleepTimeout,
+)
 from aioairzone.const import (
     API_COLD_ANGLE,
+    API_COLD_STAGE,
     API_HEAT_ANGLE,
+    API_HEAT_STAGE,
     API_MODE,
     API_Q_ADAPT,
     API_SLEEP,
     AZD_COLD_ANGLE,
+    AZD_COLD_STAGE,
+    AZD_COLD_STAGES,
     AZD_HEAT_ANGLE,
+    AZD_HEAT_STAGE,
+    AZD_HEAT_STAGES,
     AZD_MASTER,
     AZD_MODE,
     AZD_MODES,
@@ -74,6 +86,12 @@ Q_ADAPT_DICT: Final[dict[str, int]] = {
     "maximum": QAdapt.MAXIMUM,
 }
 
+STAGE_DICT: Final[dict[str, int]] = {
+    "air": AirzoneStages.Air,
+    "radiant": AirzoneStages.Radiant,
+    "combined": AirzoneStages.Combined,
+}
+
 
 def main_zone_options(
     zone_data: dict[str, Any],
@@ -82,6 +100,18 @@ def main_zone_options(
     """Filter available modes."""
     modes = zone_data.get(AZD_MODES, [])
     return [k for k, v in options.items() if v in modes]
+
+
+def stage_options(
+    stages_key: str,
+) -> Callable[[dict[str, Any], dict[str, int]], list[str]]:
+    """Build an options filter for the available stages of the given key."""
+
+    def _options(zone_data: dict[str, Any], options: dict[str, int]) -> list[str]:
+        stages = zone_data.get(stages_key, [])
+        return [k for k, v in options.items() if v in stages]
+
+    return _options
 
 
 SYSTEM_SELECT_TYPES: Final[tuple[AirzoneSelectDescription, ...]] = (
@@ -131,6 +161,22 @@ ZONE_SELECT_TYPES: Final[tuple[AirzoneSelectDescription, ...]] = (
         options=list(SLEEP_DICT),
         options_dict=SLEEP_DICT,
         translation_key="sleep_times",
+    ),
+    AirzoneSelectDescription(
+        api_param=API_COLD_STAGE,
+        entity_category=EntityCategory.CONFIG,
+        key=AZD_COLD_STAGE,
+        options_dict=STAGE_DICT,
+        options_fn=stage_options(AZD_COLD_STAGES),
+        translation_key="cold_stage",
+    ),
+    AirzoneSelectDescription(
+        api_param=API_HEAT_STAGE,
+        entity_category=EntityCategory.CONFIG,
+        key=AZD_HEAT_STAGE,
+        options_dict=STAGE_DICT,
+        options_fn=stage_options(AZD_HEAT_STAGES),
+        translation_key="heat_stage",
     ),
 )
 
@@ -284,6 +330,12 @@ class AirzoneZoneSelect(AirzoneZoneEntity, AirzoneBaseSelect):
         self._attr_options = self.entity_description.options_fn(
             zone_data, description.options_dict
         )
+
+        # A select with a single (or no) option cannot be acted upon, so
+        # disable it by default (e.g. cold/heat stage when the zone only
+        # exposes one stage). It can still be enabled manually.
+        if len(self._attr_options) <= 1:
+            self._attr_entity_registry_enabled_default = False
 
         self.values_dict = {v: k for k, v in description.options_dict.items()}
 
