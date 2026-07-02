@@ -33,7 +33,7 @@ def get_mock_vmc(
             "mode": {
                 "speed": "2",
                 "autoSpeed": "1",
-                "flowIn": True,
+                "flowIn": True,  # codespell:ignore
                 "flowOut": True,
                 "bypassMode": "0",
                 "iaq": 100,
@@ -88,8 +88,14 @@ def mock_setup_entry() -> Generator[AsyncMock]:
 @pytest.fixture
 def mock_flow_it() -> Generator[AsyncMock]:
     """Mock FlowItVMCMachine for integration tests."""
-    with patch(
-        "homeassistant.components.flow_it.FlowItVMCMachine",
-        return_value=get_mock_vmc(),
-    ) as mock:
+    with (
+        patch(
+            "homeassistant.components.flow_it.FlowItVMCMachine",
+            return_value=get_mock_vmc(),
+        ) as mock,
+        patch(
+            "homeassistant.components.flow_it.config_flow.FlowItVMCMachine",
+            new=mock,
+        ),
+    ):
         yield mock
