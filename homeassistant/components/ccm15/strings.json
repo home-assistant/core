@@ -19,5 +19,10 @@
         }
       }
     }
+  },
+  "exceptions": {
+    "device_unavailable": {
+      "message": "Cannot send the command because the AC unit is unavailable."
+    }
   }
 }
