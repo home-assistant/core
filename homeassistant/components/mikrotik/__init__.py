@@ -9,7 +9,10 @@ from .const import ATTR_MANUFACTURER, DOMAIN
 from .coordinator import MikrotikConfigEntry, MikrotikDataUpdateCoordinator, get_api
 from .errors import CannotConnect, LoginError
 
-PLATFORMS = [Platform.DEVICE_TRACKER]
+PLATFORMS = [
+    Platform.DEVICE_TRACKER,
+    Platform.SENSOR,
+]
 
 
 async def async_setup_entry(

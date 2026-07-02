@@ -1,0 +1,15 @@
+{
+  "entity": {
+    "sensor": {
+      "cpu-load": {
+        "default": "mdi:chip"
+      },
+      "disk-usage": {
+        "default": "mdi:harddisk"
+      },
+      "memory-usage": {
+        "default": "mdi:memory"
+      }
+    }
+  }
+}
