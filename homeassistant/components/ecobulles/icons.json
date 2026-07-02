@@ -1,0 +1,9 @@
+{
+  "entity": {
+    "sensor": {
+      "co2_injection_time": {
+        "default": "mdi:molecule-co2"
+      }
+    }
+  }
+}
