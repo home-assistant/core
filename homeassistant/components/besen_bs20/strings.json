@@ -1,0 +1,56 @@
+{
+  "config": {
+    "abort": {
+      "already_configured": "This charger is already configured.",
+      "no_connectable_path": "No connectable Bluetooth path is available for this charger.",
+      "not_supported": "This Bluetooth device is not a supported Besen BS20 charger."
+    },
+    "error": {
+      "cannot_connect": "Cannot connect to the charger. Check Bluetooth proxy range and active connection support.",
+      "invalid_auth": "The charger rejected the PIN.",
+      "no_connectable_path": "No connectable Bluetooth path is available for this charger.",
+      "unknown": "Unexpected error"
+    },
+    "flow_title": "{name}",
+    "step": {
+      "bluetooth_confirm": {
+        "data": {
+          "pin": "PIN"
+        },
+        "data_description": {
+          "pin": "The 6-digit Bluetooth PIN configured on the charger."
+        },
+        "description": "Enter the 6-digit Bluetooth PIN for this charger.",
+        "title": "Set up Besen BS20"
+      },
+      "user": {
+        "data": {
+          "address": "Bluetooth address",
+          "pin": "PIN"
+        },
+        "data_description": {
+          "address": "The BLE address of the charger advertising as ACP#...",
+          "pin": "The 6-digit Bluetooth PIN configured on the charger."
+        },
+        "description": "Enter the Bluetooth address and PIN for your charger.",
+        "title": "Set up Besen BS20"
+      }
+    }
+  },
+  "entity": {
+    "switch": {
+      "charging": { "name": "Charge" }
+    }
+  },
+  "exceptions": {
+    "cannot_connect": {
+      "message": "Cannot connect to the charger: {error}"
+    },
+    "command_failed": {
+      "message": "The charger did not accept the command."
+    },
+    "no_connectable_path": {
+      "message": "No connectable Bluetooth path is available for this charger: {reason}"
+    }
+  }
+}
