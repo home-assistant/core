@@ -1027,6 +1027,63 @@ async def test_partner_login_home_region_failure(
 
 
 @pytest.mark.usefixtures("current_request_with_host")
+async def test_partner_login_all_regions_fail(
+    hass: HomeAssistant,
+    hass_client_no_auth: ClientSessionGenerator,
+    aioclient_mock: AiohttpClientMocker,
+    access_token: str,
+    mock_private_key: Mock,
+) -> None:
+    """Test the flow aborts when partner login fails for every region."""
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN, context={"source": SOURCE_USER}
+    )
+
+    state = config_entry_oauth2_flow._encode_jwt(
+        hass,
+        {
+            "flow_id": result["flow_id"],
+            "redirect_uri": REDIRECT,
+        },
+    )
+
+    client = await hass_client_no_auth()
+    await client.get(f"/auth/external/callback?code=abcd&state={state}")
+
+    aioclient_mock.post(
+        TOKEN_URL,
+        json={
+            "refresh_token": "mock-refresh-token",
+            "access_token": access_token,
+            "type": "Bearer",
+            "expires_in": 60,
+        },
+    )
+
+    mock_api_na = _mock_api(
+        mock_private_key, server="https://fleet-api.prd.na.vn.cloud.tesla.com"
+    )
+    mock_api_na.partner_login = AsyncMock(
+        side_effect=TeslaFleetError("NA partner login failed")
+    )
+    mock_api_eu = _mock_api(
+        mock_private_key, server="https://fleet-api.prd.eu.vn.cloud.tesla.com"
+    )
+    mock_api_eu.partner_login = AsyncMock(
+        side_effect=TeslaFleetError("EU partner login failed")
+    )
+
+    with patch(
+        "homeassistant.components.tesla_fleet.config_flow.TeslaFleetApi",
+        side_effect=[mock_api_na, mock_api_eu],
+    ):
+        result = await hass.config_entries.flow.async_configure(result["flow_id"])
+
+    assert result["type"] is FlowResultType.ABORT
+    assert result["reason"] == "oauth_error"
+
+
+@pytest.mark.usefixtures("current_request_with_host")
 async def test_registration_complete_no_domain(
     hass: HomeAssistant,
 ) -> None:
