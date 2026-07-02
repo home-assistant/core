@@ -33,12 +33,7 @@ class BesenBS20Entity(CoordinatorEntity[BesenBS20Coordinator]):
 
         data = self.coordinator.data or self.coordinator.client.state
         info = data.info
-        name = (
-            data.config.device_name
-            or info.advertised_name
-            or info.model
-            or NAME
-        )
+        name = data.config.device_name or info.advertised_name or info.model or NAME
         return DeviceInfo(
             identifiers={(DOMAIN, info.address)},
             connections={(dr.CONNECTION_BLUETOOTH, info.address)},

@@ -2,7 +2,9 @@
 
 from collections.abc import Callable
 from dataclasses import dataclass
-from typing import Any, override
+from datetime import date, datetime
+from decimal import Decimal
+from typing import override
 
 from besen_bs20.models import BesenBS20Data
 
@@ -22,7 +24,8 @@ from homeassistant.const import (
     UnitOfTemperature,
 )
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
+from homeassistant.helpers.typing import StateType
 
 from . import BesenBS20ConfigEntry
 from .const import (
@@ -38,7 +41,7 @@ from .entity import BesenBS20Entity
 
 PARALLEL_UPDATES = 0
 
-SensorValue = Callable[[BesenBS20Data], Any]
+SensorValue = Callable[[BesenBS20Data], StateType | date | datetime | Decimal]
 
 
 @dataclass(frozen=True, kw_only=True)
@@ -221,7 +224,7 @@ SENSORS: tuple[BesenSensorEntityDescription, ...] = (
 async def async_setup_entry(
     hass: HomeAssistant,
     entry: BesenBS20ConfigEntry,
-    async_add_entities: AddEntitiesCallback,
+    async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up Besen BS20 sensors."""
 
@@ -254,7 +257,7 @@ class BesenBS20Sensor(BesenBS20Entity, SensorEntity):
 
     @property
     @override
-    def native_value(self) -> Any:
+    def native_value(self) -> StateType | date | datetime | Decimal:
         """Return the sensor value."""
 
         data = self.coordinator.data or self.coordinator.client.state

@@ -3,8 +3,8 @@
   "name": "Besen BS20",
   "bluetooth": [
     {
-      "local_name": "ACP#*",
-      "connectable": true
+      "connectable": true,
+      "local_name": "ACP#*"
     }
   ],
   "codeowners": ["@moryoav"],
@@ -14,5 +14,5 @@
   "integration_type": "device",
   "iot_class": "local_push",
   "quality_scale": "platinum",
-  "requirements": ["besen-bs20==0.2.1"]
+  "requirements": ["besen-bs20==0.2.2"]
 }

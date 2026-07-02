@@ -69,6 +69,11 @@ BLUETOOTH: Final[list[dict[str, bool | str | int | list[int]]]] = [
         "service_uuid": "f815e810-456c-6761-746f-4d756e696368",
     },
     {
+        "connectable": True,
+        "domain": "besen_bs20",
+        "local_name": "ACP#*",
+    },
+    {
         "connectable": False,
         "domain": "bluemaestro",
         "manufacturer_id": 307,

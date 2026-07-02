@@ -729,6 +729,12 @@
         "zigbee"
       ]
     },
+    "besen_bs20": {
+      "name": "Besen BS20",
+      "integration_type": "device",
+      "config_flow": true,
+      "iot_class": "local_push"
+    },
     "bge": {
       "name": "Baltimore Gas and Electric (BGE)",
       "integration_type": "virtual",

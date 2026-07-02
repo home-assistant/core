@@ -48,4 +48,3 @@ def async_delete_reauth_issue(hass: HomeAssistant, entry_id: str) -> None:
     """Delete the invalid PIN repair issue."""
 
     ir.async_delete_issue(hass, DOMAIN, f"{entry_id}_reauth_required")
-

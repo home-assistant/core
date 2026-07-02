@@ -645,7 +645,7 @@ batinfo==0.4.2
 beautifulsoup4==4.13.3
 
 # homeassistant.components.besen_bs20
-besen-bs20==0.2.1
+besen-bs20==0.2.2
 
 # homeassistant.components.bizkaibus
 bizkaibus==0.1.1

@@ -1,4 +1,5 @@
 """Tests for Besen BS20 Home Assistant entities."""
+# pylint: disable=home-assistant-tests-direct-platform-async-setup-entry
 
 from collections.abc import Iterable
 from types import SimpleNamespace
@@ -22,7 +23,7 @@ from homeassistant.components.besen_bs20.select import SELECTS, BesenBS20Select
 from homeassistant.components.besen_bs20.sensor import SENSORS, BesenBS20Sensor
 from homeassistant.components.besen_bs20.switch import BesenBS20ChargeSwitch
 from homeassistant.components.besen_bs20.text import BesenBS20NameText
-from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
 
 class _FakeClient:
@@ -99,7 +100,7 @@ def _state(*, phases: int = 3) -> BesenBS20Data:
         config=ChargerConfig(
             charge_amps=16,
             lcd_brightness=50,
-            temperature_unit="Celcius",
+            temperature_unit="Celsius",
             language="English",
             device_name="Garage",
             rssi=-55,
@@ -166,7 +167,7 @@ async def test_sensor_setup_filters_three_phase_entities() -> None:
     await sensor_platform.async_setup_entry(
         cast(Any, object()),
         _entry(_coordinator(_state(phases=1))),
-        cast(AddEntitiesCallback, _collect_entities),
+        cast(AddConfigEntryEntitiesCallback, _collect_entities),
     )
 
     keys = {entity.entity_description.key for entity in _ADDED}
@@ -222,7 +223,7 @@ async def test_select_text_and_switch_entities_dispatch_commands() -> None:
     assert language.current_option == "English"
     assert language.translation_key == "language"
     assert "English" in language.options
-    assert temperature.current_option == "Celcius"
+    assert temperature.current_option == "Celsius"
     assert name.native_value == "Garage"
     assert name.translation_key == "device_name"
     assert charge.is_on is True
@@ -252,7 +253,7 @@ async def test_platform_setup_adds_control_entities() -> None:
     entry = _entry(coordinator)
 
     _ADDED.clear()
-    add_entities = cast(AddEntitiesCallback, _collect_entities)
+    add_entities = cast(AddConfigEntryEntitiesCallback, _collect_entities)
 
     await number_platform.async_setup_entry(cast(Any, object()), entry, add_entities)
     await select_platform.async_setup_entry(cast(Any, object()), entry, add_entities)
