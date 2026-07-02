@@ -1,0 +1,13 @@
+{
+  "domain": "hifiberry",
+  "name": "HiFiBerry",
+  "codeowners": ["@willholdoway"],
+  "config_flow": true,
+  "documentation": "https://www.home-assistant.io/integrations/hifiberry",
+  "integration_type": "hub",
+  "iot_class": "local_polling",
+  "loggers": ["aiohifiberry"],
+  "quality_scale": "bronze",
+  "requirements": ["aiohifiberry==0.1.0"],
+  "zeroconf": ["_mpd._tcp.local."]
+}

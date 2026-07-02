@@ -734,6 +734,8 @@ CLAUDE.md @home-assistant/core
 /tests/components/heos/ @andrewsayre
 /homeassistant/components/here_travel_time/ @eifinger
 /tests/components/here_travel_time/ @eifinger
+/homeassistant/components/hifiberry/ @willholdoway
+/tests/components/hifiberry/ @willholdoway
 /homeassistant/components/hikvision/ @mezz64 @ptarjan
 /tests/components/hikvision/ @mezz64 @ptarjan
 /homeassistant/components/hikvisioncam/ @fbradyirl

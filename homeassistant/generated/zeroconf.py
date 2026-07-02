@@ -814,6 +814,11 @@ ZEROCONF = {
             "name": "yeelink-*",
         },
     ],
+    "_mpd._tcp.local.": [
+        {
+            "domain": "hifiberry",
+        },
+    ],
     "_musc._tcp.local.": [
         {
             "domain": "bluesound",
