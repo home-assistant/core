@@ -8,6 +8,3 @@ DOMAIN: Final = "besen_bs20"
 NAME: Final = "Besen BS20"
 
 PLATFORMS: Final = [Platform.SWITCH]
-
-CONF_SYNC_CLOCK: Final = "sync_clock"
-DEFAULT_SYNC_CLOCK: Final = True

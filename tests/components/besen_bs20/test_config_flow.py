@@ -9,7 +9,7 @@ from besen_bs20.models import BesenBS20Data, ChargerInfo
 import pytest
 
 from homeassistant.components.besen_bs20 import config_flow
-from homeassistant.components.besen_bs20.const import CONF_SYNC_CLOCK, DOMAIN
+from homeassistant.components.besen_bs20.const import DOMAIN
 from homeassistant.components.bluetooth import BluetoothServiceInfoBleak
 from homeassistant.config_entries import SOURCE_BLUETOOTH, SOURCE_USER
 from homeassistant.const import CONF_ADDRESS, CONF_NAME, CONF_PIN
@@ -135,14 +135,14 @@ async def test_bluetooth_confirm_success(hass: HomeAssistant) -> None:
     )
     result = await hass.config_entries.flow.async_configure(
         result["flow_id"],
-        {CONF_PIN: "123456", CONF_SYNC_CLOCK: False},
+        {CONF_PIN: "123456"},
     )
 
     assert result["type"] is FlowResultType.CREATE_ENTRY
     assert result["title"] == "BS20"
     assert result["data"][CONF_ADDRESS] == "AA:BB"
     assert result["data"][CONF_NAME] == "ACP#Garage"
-    assert result["options"] == {CONF_SYNC_CLOCK: False}
+    assert result["options"] == {}
 
 
 @pytest.mark.parametrize(
@@ -169,7 +169,7 @@ async def test_bluetooth_confirm_errors(
     )
     result = await hass.config_entries.flow.async_configure(
         result["flow_id"],
-        {CONF_PIN: "123456", CONF_SYNC_CLOCK: True},
+        {CONF_PIN: "123456"},
     )
 
     assert result["type"] is FlowResultType.FORM
@@ -195,7 +195,7 @@ async def test_bluetooth_confirm_no_connectable_path(
     )
     result = await hass.config_entries.flow.async_configure(
         result["flow_id"],
-        {CONF_PIN: "123456", CONF_SYNC_CLOCK: True},
+        {CONF_PIN: "123456"},
     )
 
     assert result["type"] is FlowResultType.FORM
@@ -215,14 +215,13 @@ async def test_user_step_success(hass: HomeAssistant) -> None:
         {
             CONF_ADDRESS: " aa:bb ",
             CONF_PIN: "123456",
-            CONF_SYNC_CLOCK: True,
         },
     )
 
     assert result["type"] is FlowResultType.CREATE_ENTRY
     assert result["title"] == "BS20"
     assert result["data"][CONF_ADDRESS] == "AA:BB"
-    assert result["options"] == {CONF_SYNC_CLOCK: True}
+    assert result["options"] == {}
 
 
 @pytest.mark.parametrize(

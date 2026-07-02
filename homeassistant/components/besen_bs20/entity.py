@@ -25,16 +25,10 @@ class BesenBS20Entity(CoordinatorEntity[BesenBS20Coordinator]):
         super().__init__(coordinator)
         self._attr_unique_id = f"{coordinator.client.address}_{key}"
         self._attr_translation_key = key
-
-    @property
-    @override
-    def device_info(self) -> DeviceInfo:
-        """Return device info."""
-
         data = self.coordinator.data or self.coordinator.client.state
         info = data.info
         name = data.config.device_name or info.advertised_name or info.model or NAME
-        return DeviceInfo(
+        self._attr_device_info = DeviceInfo(
             identifiers={(DOMAIN, info.address)},
             connections={(dr.CONNECTION_BLUETOOTH, info.address)},
             name=name,
@@ -51,4 +45,4 @@ class BesenBS20Entity(CoordinatorEntity[BesenBS20Coordinator]):
         """Return if the entity is available."""
 
         data = self.coordinator.data or self.coordinator.client.state
-        return data.available and data.authenticated
+        return super().available and data.available and data.authenticated

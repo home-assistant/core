@@ -1,6 +1,5 @@
 """Besen BS20 Home Assistant integration."""
 
-from dataclasses import dataclass
 import logging
 
 from besen_bs20.client import BesenBS20Client
@@ -14,19 +13,10 @@ from homeassistant.const import CONF_ADDRESS, CONF_NAME, CONF_PIN
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ConfigEntryAuthFailed, ConfigEntryNotReady
 
-from .const import CONF_SYNC_CLOCK, DEFAULT_SYNC_CLOCK, DOMAIN, PLATFORMS
+from .const import DOMAIN, PLATFORMS
 from .coordinator import BesenBS20Coordinator
 
-
-@dataclass(slots=True)
-class BesenBS20RuntimeData:
-    """Runtime data for a Besen BS20 config entry."""
-
-    client: BesenBS20Client
-    coordinator: BesenBS20Coordinator
-
-
-type BesenBS20ConfigEntry = ConfigEntry[BesenBS20RuntimeData]
+type BesenBS20ConfigEntry = ConfigEntry[BesenBS20Coordinator]
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -39,10 +29,6 @@ async def async_setup_entry(
 
     address = entry.data[CONF_ADDRESS]
     pin = entry.data[CONF_PIN]
-    sync_clock = entry.options.get(
-        CONF_SYNC_CLOCK,
-        entry.data.get(CONF_SYNC_CLOCK, DEFAULT_SYNC_CLOCK),
-    )
 
     def _ble_device_provider() -> BLEDevice | None:
         return bluetooth.async_ble_device_from_address(
@@ -69,7 +55,6 @@ async def async_setup_entry(
         ble_device_provider=_ble_device_provider,
         logger=_LOGGER,
         advertised_name=entry.data.get(CONF_NAME),
-        sync_clock=sync_clock,
     )
     coordinator = BesenBS20Coordinator(hass, entry, client)
 
@@ -84,7 +69,7 @@ async def async_setup_entry(
             translation_placeholders={"error": str(err)},
         ) from err
 
-    entry.runtime_data = BesenBS20RuntimeData(client=client, coordinator=coordinator)
+    entry.runtime_data = coordinator
     await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
     return True
 
@@ -97,5 +82,5 @@ async def async_unload_entry(
 
     unload_ok = await hass.config_entries.async_unload_platforms(entry, PLATFORMS)
     if unload_ok:
-        await entry.runtime_data.coordinator.async_shutdown()
+        await entry.runtime_data.async_shutdown()
     return unload_ok

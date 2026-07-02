@@ -15,12 +15,10 @@
     "step": {
       "bluetooth_confirm": {
         "data": {
-          "pin": "PIN",
-          "sync_clock": "Sync charger clock"
+          "pin": "PIN"
         },
         "data_description": {
-          "pin": "The 6-digit Bluetooth PIN configured on the charger.",
-          "sync_clock": "Update the charger's internal clock during heartbeat handling."
+          "pin": "The 6-digit Bluetooth PIN configured on the charger."
         },
         "description": "Enter the 6-digit Bluetooth PIN for this charger.",
         "title": "Set up Besen BS20"
@@ -28,13 +26,11 @@
       "user": {
         "data": {
           "address": "Bluetooth address",
-          "pin": "PIN",
-          "sync_clock": "Sync charger clock"
+          "pin": "PIN"
         },
         "data_description": {
           "address": "The BLE address of the charger advertising as ACP#...",
-          "pin": "The 6-digit Bluetooth PIN configured on the charger.",
-          "sync_clock": "Update the charger's internal clock during heartbeat handling."
+          "pin": "The 6-digit Bluetooth PIN configured on the charger."
         },
         "description": "Enter the Bluetooth address and PIN for your charger.",
         "title": "Set up Besen BS20"
