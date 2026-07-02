@@ -31,7 +31,7 @@ _LOGGER = logging.getLogger(__name__)
 
 POLLING_INTERVAL = timedelta(minutes=15)
 BODY_POLLING_INTERVAL = timedelta(hours=1)
-DEFAULT_PAGE_SIZE = 100
+DEFAULT_PAGE_SIZE = 1
 
 
 @dataclass
@@ -123,9 +123,9 @@ class GoogleHealthBodyCoordinator(DataUpdateCoordinator[GoogleHealthBodyData]):
     @override
     async def _async_update_data(self) -> GoogleHealthBodyData:
         """Fetch latest body weight and resting heart rate."""
-        # Using a page size larger than 1 is necessary because the Google Health API
-        # returns data points sorted chronologically (oldest first). A page size of 1
-        # would return the oldest measurement, not the newest.
+        # The Google Health API returns data points sorted by interval start time
+        # in descending order (newest first). Querying with page_size=1 and grabbing
+        # the first element is sufficient to fetch the most recent measurement.
         with handle_api_errors():
             weight_result = await self.api.weight.list(page_size=DEFAULT_PAGE_SIZE)
             hr_result = await self.api.daily_resting_heart_rate.list(
@@ -133,10 +133,10 @@ class GoogleHealthBodyCoordinator(DataUpdateCoordinator[GoogleHealthBodyData]):
             )
 
         weight = (
-            weight_result.data_points[-1].data if weight_result.data_points else None
+            weight_result.data_points[0].data if weight_result.data_points else None
         )
         resting_heart_rate = (
-            hr_result.data_points[-1].data if hr_result.data_points else None
+            hr_result.data_points[0].data if hr_result.data_points else None
         )
 
         return GoogleHealthBodyData(
