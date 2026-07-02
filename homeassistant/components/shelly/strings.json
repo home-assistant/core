@@ -7,6 +7,7 @@
       "ble_not_permitted": "Device is bound to a Shelly cloud account and cannot be provisioned via Bluetooth. Please use the Shelly app to provision Wi-Fi credentials, then add the device when it appears on your network.",
       "cannot_connect": "Failed to connect to the device. Ensure the device is powered on and within range.",
       "custom_port_not_supported": "[%key:component::shelly::config::error::custom_port_not_supported%]",
+      "device_conflict": "A different device was discovered at this address. A repair has been created to migrate the configuration to the new hardware.",
       "firmware_not_fully_provisioned": "Device not fully provisioned. Please contact Shelly support",
       "invalid_discovery_info": "Invalid Bluetooth discovery information.",
       "ipv6_not_supported": "IPv6 is not supported.",
@@ -726,6 +727,29 @@
         }
       },
       "title": "{device_name} is running outdated firmware"
+    },
+    "device_conflict": {
+      "fix_flow": {
+        "step": {
+          "init": {
+            "description": "A new device named **{device_name}** (`{new_mac}`) has appeared at {host}, where a different device (`{old_mac}`) was previously configured.\n\nIf you replaced the hardware, you can migrate the existing configuration to the new device. This keeps your entities, history, and automations working.\n\nIf you have two devices with the same name, remove or rename the new one (`{new_mac}`) instead.",
+            "menu_options": {
+              "manual": "Remove or rename the new device",
+              "migrate": "Migrate configuration to the new device"
+            },
+            "title": "Device conflict for {device_name}"
+          },
+          "manual": {
+            "description": "To resolve the conflict, remove the new device (`{new_mac}`) from the network and restart the original device (`{old_mac}`), or reconfigure the new device with a different name than **{device_name}**.\n\nSelect **Submit** once done.",
+            "title": "Remove or rename device {device_name}"
+          },
+          "migrate": {
+            "description": "Are you sure you want to migrate the configuration for **{device_name}** at {host} from `{old_mac}` to the new device `{new_mac}`?\n\nThe entities, history, and automations of the old device will be transferred to the new hardware.",
+            "title": "Confirm device replacement for {device_name}"
+          }
+        }
+      },
+      "title": "Device conflict for {device_name}"
     },
     "device_not_calibrated": {
       "description": "Shelly device {device_name} with IP address {ip_address} requires calibration. To calibrate the device, it must be rebooted after proper installation on the valve. You can reboot the device in its web panel, go to 'Settings' > 'Device Reboot'.",

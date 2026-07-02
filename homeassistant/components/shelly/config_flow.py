@@ -54,6 +54,7 @@ from homeassistant.const import (
 )
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.data_entry_flow import AbortFlow
+from homeassistant.helpers import issue_registry as ir
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 from homeassistant.helpers.device_registry import format_mac
 from homeassistant.helpers.selector import (
@@ -74,6 +75,7 @@ from .const import (
     CONF_GEN,
     CONF_SLEEP_PERIOD,
     CONF_SSID,
+    DEVICE_CONFLICT_ISSUE_ID,
     DOMAIN,
     LOGGER,
     PROVISIONING_TIMEOUT,
@@ -689,6 +691,68 @@ class ShellyConfigFlow(ConfigFlow, domain=DOMAIN):
 
         await self._async_discovered_mac(mac, host)
 
+    @callback
+    def _async_check_device_conflict(self, host: str, device_name: str) -> bool:
+        """Raise a repair issue if a replacement device took over a known host.
+
+        A hardware replacement presents as a device whose own primary MAC
+        (``self.info[CONF_MAC]``) differs from an existing config entry that
+        is bound to the same host, while the device reports the same model and
+        generation as that entry. In that case the existing configuration can
+        be migrated to the new hardware, preserving entities, history and
+        automations.
+
+        Must be called only after ``self.info`` has been fetched, so the
+        authoritative primary MAC, model and generation are available. This is
+        deliberately gated on the device's *primary* MAC rather than the
+        zeroconf-name MAC: devices with multiple interfaces (e.g. a Shelly Pro
+        3EM with separate Ethernet and Wi-Fi MACs on one IP) would otherwise
+        trip a false positive. Returns ``True`` if a conflict issue was raised.
+        """
+        mac = self.info[CONF_MAC]
+        gen = get_info_gen(self.info)
+        model = self.info.get(CONF_MODEL) or self.info.get("type")
+        for entry in self.hass.config_entries.async_entries(DOMAIN):
+            stored_mac = entry.unique_id
+            if (
+                entry.data.get(CONF_HOST) != host
+                or not stored_mac
+                or stored_mac.replace(":", "").upper() == mac.replace(":", "").upper()
+            ):
+                continue
+
+            # Same host, different primary MAC: only treat this as a hardware
+            # replacement when the device is the same model and generation as
+            # the stored entry. This rules out an unrelated device that merely
+            # reused the old device's DHCP lease.
+            if entry.data.get(CONF_GEN) != gen or entry.data.get(CONF_MODEL) != model:
+                continue
+
+            ir.async_create_issue(
+                self.hass,
+                DOMAIN,
+                DEVICE_CONFLICT_ISSUE_ID.format(unique=entry.entry_id),
+                is_fixable=True,
+                severity=ir.IssueSeverity.ERROR,
+                translation_key="device_conflict",
+                translation_placeholders={
+                    "device_name": device_name,
+                    "host": host,
+                    "old_mac": format_mac(stored_mac).upper(),
+                    "new_mac": format_mac(mac).upper(),
+                },
+                data={
+                    "entry_id": entry.entry_id,
+                    "device_name": device_name,
+                    "host": host,
+                    "old_mac": stored_mac,
+                    "new_mac": mac,
+                },
+            )
+            return True
+
+        return False
+
     async def _async_discovered_mac(self, mac: str, host: str) -> None:
         """Abort and reconnect soon if the device with the mac is already configured."""
         if (
@@ -1126,6 +1190,7 @@ class ShellyConfigFlow(ConfigFlow, domain=DOMAIN):
         # First try to get the mac address from the name
         # so we can avoid making another connection to the
         # device if we already have it configured
+        device_name = discovery_info.name.split(".")[0]
         if mac := mac_address_from_name(discovery_info.name):
             await self._async_handle_zeroconf_mac_discovery(mac, host, port)
 
@@ -1141,6 +1206,12 @@ class ShellyConfigFlow(ConfigFlow, domain=DOMAIN):
             # so need to check here since we just got the info
             mac = self.info[CONF_MAC]
             await self._async_handle_zeroconf_mac_discovery(mac, host, port)
+
+        # Now that the device info has been fetched we know the authoritative
+        # primary MAC, model and generation, so we can reliably detect a
+        # hardware replacement (a new device that took over a known host).
+        if self._async_check_device_conflict(host, device_name):
+            return self.async_abort(reason="device_conflict")
 
         self.host = host
         self.context.update(
