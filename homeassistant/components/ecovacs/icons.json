@@ -21,6 +21,9 @@
       "reset_lifespan_brush": {
         "default": "mdi:broom"
       },
+      "reset_lifespan_cleaning_solution": {
+        "default": "mdi:flask-outline"
+      },
       "reset_lifespan_dust_bag": {
         "default": "mdi:delete-outline"
       },
@@ -36,6 +39,9 @@
       "reset_lifespan_round_mop": {
         "default": "mdi:broom"
       },
+      "reset_lifespan_sewage_box": {
+        "default": "mdi:trash-can-outline"
+      },
       "reset_lifespan_side_brush": {
         "default": "mdi:broom"
       },
@@ -47,6 +53,9 @@
       },
       "reset_lifespan_uv_sanitizer": {
         "default": "mdi:lightbulb-on-outline"
+      },
+      "reset_lifespan_water_sink": {
+        "default": "mdi:water-outline"
       },
       "station_action_clean_base": {
         "default": "mdi:home"
@@ -104,6 +113,9 @@
       "lifespan_brush": {
         "default": "mdi:broom"
       },
+      "lifespan_cleaning_solution": {
+        "default": "mdi:flask-outline"
+      },
       "lifespan_dust_bag": {
         "default": "mdi:delete-outline"
       },
@@ -119,6 +131,9 @@
       "lifespan_round_mop": {
         "default": "mdi:broom"
       },
+      "lifespan_sewage_box": {
+        "default": "mdi:trash-can-outline"
+      },
       "lifespan_side_brush": {
         "default": "mdi:broom"
       },
@@ -130,6 +145,9 @@
       },
       "lifespan_uv_sanitizer": {
         "default": "mdi:lightbulb-on-outline"
+      },
+      "lifespan_water_sink": {
+        "default": "mdi:water-outline"
       },
       "network_ip": {
         "default": "mdi:ip-network-outline"
