@@ -35,13 +35,15 @@ async def test_setup_entry(
     mock_mqtt_client.connect.assert_called_once()
 
 
-@pytest.mark.usefixtures("aioclient_mock_fixture")
+@pytest.mark.usefixtures(
+    "aioclient_mock_fixture",
+    "mock_provider",
+    "mock_get_iot_credentials",
+    "mock_mqtt_client",
+)
 async def test_setup_seeds_shadow_from_discover(
     hass: HomeAssistant,
     mock_config_entry: MockConfigEntry,
-    mock_provider: AsyncMock,
-    mock_get_iot_credentials: MagicMock,
-    mock_mqtt_client: MagicMock,
 ) -> None:
     """Test that initial shadow state is seeded from device discovery."""
     await setup_integration(hass, mock_config_entry)
