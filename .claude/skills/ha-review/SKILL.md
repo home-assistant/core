@@ -1,6 +1,6 @@
 ---
-name: review
-description: Reviews code changes and provides constructive feedback. Should be used when a review is requested to provide a consistent review behavior and output format. This skill can be used for code reviews in general, not just for GitHub pull requests.
+name: ha-review
+description: Reviews Home Assistant code changes and provides constructive feedback. Should be used when a review is requested to provide a consistent review behavior and output format. This skill can be used for code reviews in general, not just for GitHub pull requests.
 ---
 
 # Review Code Changes
