@@ -3,10 +3,17 @@
 from datetime import timedelta
 from unittest.mock import AsyncMock, patch
 
+from pyanglianwater.exceptions import (
+    ConsentRequiredError,
+    ExpiredAccessTokenError,
+    InvalidGrantError,
+    UnknownEndpointError,
+)
 from pyanglianwater.meter import SmartMeter
 import pytest
 from syrupy.assertion import SnapshotAssertion
 
+from homeassistant.components.anglian_water.const import DOMAIN
 from homeassistant.components.anglian_water.coordinator import (
     AnglianWaterUpdateCoordinator,
 )
@@ -16,9 +23,12 @@ from homeassistant.components.recorder.statistics import (
     statistics_during_period,
 )
 from homeassistant.core import HomeAssistant
+from homeassistant.exceptions import ConfigEntryAuthFailed
+from homeassistant.helpers import issue_registry as ir
+from homeassistant.helpers.update_coordinator import UpdateFailed
 from homeassistant.util import dt as dt_util
 
-from .const import ACCOUNT_NUMBER
+from .const import ACCOUNT_NUMBER, CONSENT_REQUIRED_ISSUE_ID
 
 from tests.common import MockConfigEntry
 from tests.components.recorder.common import async_wait_recording_done
@@ -252,3 +262,96 @@ async def test_coordinator_period_statistics_without_sum(
         get_last_statistics, hass, 1, statistic_id, True, {"sum"}
     )
     assert stats[statistic_id]
+
+
+@pytest.mark.parametrize(
+    ("side_effect", "translation_key", "retry_after"),
+    [
+        pytest.param(
+            UnknownEndpointError(status=500, response="Service Unavailable"),
+            "service_unavailable",
+            60.0,
+            id="service_unavailable",
+        ),
+    ],
+)
+async def test_coordinator_update_failed_errors(
+    recorder_mock: Recorder,
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    mock_anglian_water_client: AsyncMock,
+    side_effect: Exception,
+    translation_key: str,
+    retry_after: float,
+) -> None:
+    """Test the coordinator maps transient API errors to UpdateFailed."""
+    coordinator = AnglianWaterUpdateCoordinator(
+        hass, mock_anglian_water_client, mock_config_entry
+    )
+    mock_anglian_water_client.update.side_effect = side_effect
+
+    with pytest.raises(UpdateFailed) as exc_info:
+        await coordinator._async_update_data()
+
+    assert exc_info.value.translation_domain == DOMAIN
+    assert exc_info.value.translation_key == translation_key
+    assert exc_info.value.retry_after == retry_after
+
+
+async def test_coordinator_consent_required_error(
+    recorder_mock: Recorder,
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    mock_anglian_water_client: AsyncMock,
+) -> None:
+    """Test the coordinator maps consent errors to UpdateFailed and creates a repair issue."""
+    coordinator = AnglianWaterUpdateCoordinator(
+        hass, mock_anglian_water_client, mock_config_entry
+    )
+    mock_anglian_water_client.update.side_effect = ConsentRequiredError
+
+    with pytest.raises(UpdateFailed) as exc_info:
+        await coordinator._async_update_data()
+
+    assert exc_info.value.translation_domain == DOMAIN
+    assert exc_info.value.translation_key == "consent_required"
+    assert exc_info.value.retry_after == 900.0
+    assert (
+        ir.async_get(hass).async_get_issue(DOMAIN, CONSENT_REQUIRED_ISSUE_ID)
+        is not None
+    )
+
+    mock_anglian_water_client.update.side_effect = None
+    await coordinator._async_update_data()
+    await async_wait_recording_done(hass)
+    assert ir.async_get(hass).async_get_issue(DOMAIN, CONSENT_REQUIRED_ISSUE_ID) is None
+
+
+@pytest.mark.parametrize(
+    ("side_effect", "translation_key"),
+    [
+        pytest.param(
+            ExpiredAccessTokenError, "auth_expired", id="expired_access_token"
+        ),
+        pytest.param(InvalidGrantError, "auth_expired", id="invalid_grant"),
+    ],
+)
+async def test_coordinator_auth_failed_errors(
+    recorder_mock: Recorder,
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    mock_anglian_water_client: AsyncMock,
+    side_effect: Exception,
+    translation_key: str,
+) -> None:
+    """Test the coordinator maps auth errors to ConfigEntryAuthFailed."""
+    coordinator = AnglianWaterUpdateCoordinator(
+        hass, mock_anglian_water_client, mock_config_entry
+    )
+    mock_anglian_water_client.update.side_effect = side_effect
+
+    with pytest.raises(ConfigEntryAuthFailed) as exc_info:
+        await coordinator._async_update_data()
+
+    assert exc_info.value.translation_domain == DOMAIN
+    assert exc_info.value.translation_key == translation_key

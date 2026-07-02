@@ -8,6 +8,7 @@ from pyanglianwater import AnglianWater
 from pyanglianwater.exceptions import (
     ConsentRequiredError,
     ExpiredAccessTokenError,
+    InvalidGrantError,
     UnknownEndpointError,
 )
 
@@ -25,6 +26,8 @@ from homeassistant.components.recorder.statistics import (
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import UnitOfVolume
 from homeassistant.core import HomeAssistant
+from homeassistant.exceptions import ConfigEntryAuthFailed
+from homeassistant.helpers import issue_registry as ir
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
 from homeassistant.util import dt as dt_util
 from homeassistant.util.unit_conversion import VolumeConverter
@@ -64,12 +67,41 @@ class AnglianWaterUpdateCoordinator(DataUpdateCoordinator[None]):
         try:
             await self.api.update(self.config_entry.data[CONF_ACCOUNT_NUMBER])
             await self._insert_statistics()
-        except (
-            ConsentRequiredError,
-            ExpiredAccessTokenError,
-            UnknownEndpointError,
-        ) as err:
-            raise UpdateFailed from err
+        except ConsentRequiredError as err:
+            ir.async_create_issue(
+                self.hass,
+                DOMAIN,
+                f"consent_required_{self.config_entry.data[CONF_ACCOUNT_NUMBER]}",
+                is_fixable=False,
+                severity=ir.IssueSeverity.ERROR,
+                translation_key="consent_required",
+                translation_placeholders={
+                    CONF_ACCOUNT_NUMBER: self.config_entry.data[CONF_ACCOUNT_NUMBER],
+                },
+                learn_more_url="https://myaccount.anglianwater.co.uk/",
+            )
+            raise UpdateFailed(
+                translation_domain=DOMAIN,
+                translation_key="consent_required",
+                retry_after=900.0,
+            ) from err
+        except (ExpiredAccessTokenError, InvalidGrantError) as err:
+            raise ConfigEntryAuthFailed(
+                translation_domain=DOMAIN,
+                translation_key="auth_expired",
+            ) from err
+        except UnknownEndpointError as err:
+            raise UpdateFailed(
+                translation_domain=DOMAIN,
+                translation_key="service_unavailable",
+                retry_after=60.0,
+            ) from err
+        else:
+            ir.async_delete_issue(
+                self.hass,
+                DOMAIN,
+                f"consent_required_{self.config_entry.data[CONF_ACCOUNT_NUMBER]}",
+            )
 
     async def _insert_statistics(self) -> None:
         """Insert statistics for water meters into Home Assistant."""
