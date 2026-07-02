@@ -156,8 +156,17 @@
     }
   },
   "exceptions": {
+    "entry_not_loaded": {
+      "message": "The Netatmo integration is not loaded. Please set it up before calling this action."
+    },
     "oauth2_implementation_unavailable": {
       "message": "[%key:common::exceptions::oauth2_implementation_unavailable::message%]"
+    }
+  },
+  "issues": {
+    "deprecated_webhook_service": {
+      "description": "The {service} action is deprecated and will be removed in a future release. Netatmo manages the webhook automatically, so calling this action is no longer needed. Please remove it from your automations and scripts.",
+      "title": "The {service} action is deprecated"
     }
   },
   "options": {
@@ -191,7 +200,7 @@
       "name": "Clear temperature setting"
     },
     "register_webhook": {
-      "description": "Registers the webhook to the Netatmo backend.",
+      "description": "Registers the webhook to the Netatmo backend. Deprecated: the webhook is managed automatically and this action will be removed in 2027.2.0.",
       "name": "Register webhook"
     },
     "set_camera_light": {
@@ -277,7 +286,7 @@
       "name": "Set temperature with time period"
     },
     "unregister_webhook": {
-      "description": "Unregisters the webhook from the Netatmo backend.",
+      "description": "Unregisters the webhook from the Netatmo backend. Deprecated: the webhook is managed automatically and this action will be removed in 2027.2.0.",
       "name": "Unregister webhook"
     }
   }
