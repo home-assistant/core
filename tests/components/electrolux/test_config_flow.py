@@ -11,6 +11,7 @@ from electrolux_group_developer_sdk.client.bad_credentials_exception import (
 from electrolux_group_developer_sdk.client.failed_connection_exception import (
     FailedConnectionException,
 )
+import pytest
 
 from homeassistant import config_entries, data_entry_flow
 from homeassistant.components.electrolux.const import CONF_REFRESH_TOKEN, DOMAIN
@@ -174,3 +175,140 @@ async def test_user_flow_duplicate_entry(
 
     assert result["type"] is data_entry_flow.FlowResultType.ABORT
     assert result["reason"] == "already_configured"
+
+
+async def test_reauth_successful(
+    hass: HomeAssistant,
+    mock_appliance_client: AsyncMock,
+    mock_token_manager: AsyncMock,
+    mock_config_entry: MockConfigEntry,
+) -> None:
+    """Test the reauth step succeeds and updates the config entry."""
+    mock_config_entry.add_to_hass(hass)
+
+    result = await mock_config_entry.start_reauth_flow(hass)
+
+    assert result["type"] is data_entry_flow.FlowResultType.FORM
+    assert result["step_id"] == "reauth_confirm"
+
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"], user_input=valid_user_input
+    )
+
+    assert result["type"] is data_entry_flow.FlowResultType.ABORT
+    assert result["reason"] == "reauth_successful"
+
+    assert mock_config_entry.data == valid_user_input
+
+
+@pytest.mark.parametrize(
+    ("exception", "error_name"),
+    [
+        (InvalidCredentialsException(), "invalid_auth"),
+    ],
+)
+async def test_reauth_missing_credentials_error(
+    hass: HomeAssistant,
+    mock_appliance_client: AsyncMock,
+    mock_token_manager: AsyncMock,
+    mock_config_entry: MockConfigEntry,
+    exception: Exception,
+    error_name: str,
+) -> None:
+    """Test reauth flow with invalid authentication."""
+    mock_config_entry.add_to_hass(hass)
+
+    result = await mock_config_entry.start_reauth_flow(hass)
+
+    assert result["type"] is data_entry_flow.FlowResultType.FORM
+    assert result["step_id"] == "reauth_confirm"
+
+    mock_token_manager.ensure_credentials.side_effect = exception
+
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"], user_input=invalid_user_input
+    )
+
+    assert result["type"] is data_entry_flow.FlowResultType.FORM
+    assert result["step_id"] == "reauth_confirm"
+    assert result["errors"] == {"base": error_name}
+
+    mock_token_manager.ensure_credentials.side_effect = None
+
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"], user_input=valid_user_input
+    )
+
+    assert result["type"] is data_entry_flow.FlowResultType.ABORT
+    assert result["reason"] == "reauth_successful"
+
+    assert mock_config_entry.data == valid_user_input
+
+
+@pytest.mark.parametrize(
+    ("exception", "error_name"),
+    [
+        (BadCredentialsException(), "invalid_auth"),
+        (FailedConnectionException(), "cannot_connect"),
+    ],
+)
+async def test_reauth_connection_error(
+    hass: HomeAssistant,
+    mock_appliance_client: AsyncMock,
+    mock_token_manager: AsyncMock,
+    mock_config_entry: MockConfigEntry,
+    exception: Exception,
+    error_name: str,
+) -> None:
+    """Test reauth flow with bad credentials."""
+    mock_config_entry.add_to_hass(hass)
+
+    result = await mock_config_entry.start_reauth_flow(hass)
+
+    assert result["type"] is data_entry_flow.FlowResultType.FORM
+    assert result["step_id"] == "reauth_confirm"
+
+    mock_appliance_client.test_connection.side_effect = exception
+
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"], user_input=invalid_user_input
+    )
+
+    assert result["type"] is data_entry_flow.FlowResultType.FORM
+    assert result["step_id"] == "reauth_confirm"
+
+    mock_appliance_client.test_connection.side_effect = None
+
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"], user_input=valid_user_input
+    )
+
+    assert result["type"] is data_entry_flow.FlowResultType.ABORT
+    assert result["reason"] == "reauth_successful"
+
+    assert mock_config_entry.data == valid_user_input
+
+
+async def test_reauth_mismatched_entry(
+    hass: HomeAssistant,
+    mock_appliance_client: AsyncMock,
+    mock_token_manager: AsyncMock,
+    mock_config_entry: MockConfigEntry,
+) -> None:
+    """Test reauth flow mismatched user id error."""
+    mock_config_entry.add_to_hass(hass)
+
+    result = await mock_config_entry.start_reauth_flow(hass)
+
+    assert result["type"] is data_entry_flow.FlowResultType.FORM
+    assert result["step_id"] == "reauth_confirm"
+
+    mock_token_manager.get_user_id.return_value = "different_user_id"
+    mock_appliance_client.test_connection.side_effect = None
+
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"], user_input=valid_user_input
+    )
+
+    assert result["type"] is data_entry_flow.FlowResultType.ABORT
+    assert result["reason"] == "unique_id_mismatch"
