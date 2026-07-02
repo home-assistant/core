@@ -1,51 +1,29 @@
 """Tests for Besen BS20 Home Assistant entities."""
 
 from collections.abc import Callable
-from typing import Any, cast
+from dataclasses import replace
+from typing import Any, ClassVar
 
 from besen_bs20.models import BesenBS20Data, ChargerConfig, ChargerInfo, ChargeStatus
+import pytest
 
-from homeassistant.components.besen_bs20.coordinator import BesenBS20Coordinator
-from homeassistant.components.besen_bs20.entity import BesenBS20Entity
-from homeassistant.components.besen_bs20.switch import BesenBS20ChargeSwitch
+from homeassistant.components import besen_bs20 as integration_module, bluetooth
+from homeassistant.components.besen_bs20.const import CONF_SYNC_CLOCK, DOMAIN
+from homeassistant.components.switch import DOMAIN as SWITCH_DOMAIN
+from homeassistant.const import (
+    ATTR_ENTITY_ID,
+    CONF_ADDRESS,
+    CONF_NAME,
+    CONF_PIN,
+    SERVICE_TURN_OFF,
+    SERVICE_TURN_ON,
+    STATE_OFF,
+    STATE_ON,
+)
+from homeassistant.core import HomeAssistant
+from homeassistant.helpers import device_registry as dr, entity_registry as er
 
-
-class _FakeClient:
-    """Fake client exposed by a coordinator."""
-
-    def __init__(self, state: BesenBS20Data) -> None:
-        """Initialize the fake client."""
-
-        self.address = state.info.address
-        self.state = state
-
-
-class _FakeCoordinator:
-    """Fake coordinator used by entities."""
-
-    def __init__(self, data: BesenBS20Data | None) -> None:
-        """Initialize the fake coordinator."""
-
-        fallback = data or BesenBS20Data(info=ChargerInfo(address="AA:BB"))
-        self.data = data
-        self.client = _FakeClient(fallback)
-        self.calls: list[str] = []
-        self.last_update_success = True
-
-    def async_add_listener(self, *args: Any, **kwargs: Any) -> Callable[[], None]:
-        """Return a fake listener remover."""
-
-        return lambda: None
-
-    async def async_start_charging(self) -> None:
-        """Record charge start."""
-
-        self.calls.append("start")
-
-    async def async_stop_charging(self) -> None:
-        """Record charge stop."""
-
-        self.calls.append("stop")
+from tests.common import MockConfigEntry
 
 
 def _state(*, charger_status: bool | None = True) -> BesenBS20Data:
@@ -67,33 +45,129 @@ def _state(*, charger_status: bool | None = True) -> BesenBS20Data:
     )
 
 
-def _coordinator(data: BesenBS20Data | None = None) -> BesenBS20Coordinator:
-    """Return a fake coordinator cast to the integration coordinator type."""
+class _FakeClient:
+    """Fake Besen client."""
 
-    return cast(BesenBS20Coordinator, _FakeCoordinator(data))
+    instances: ClassVar[list[_FakeClient]] = []
+
+    def __init__(self, *args: Any, **kwargs: Any) -> None:
+        """Initialize the fake client."""
+
+        del args
+        self.kwargs = kwargs
+        self.address = kwargs["address"]
+        self.state = _state()
+        self.calls: list[str] = []
+        self.listener: Callable[[BesenBS20Data], None] | None = None
+        self.instances.append(self)
+
+    def add_listener(
+        self,
+        listener: Callable[[BesenBS20Data], None],
+    ) -> Callable[[], None]:
+        """Record a listener."""
+
+        self.listener = listener
+        return lambda: None
+
+    async def async_start(self) -> None:
+        """Start the fake client."""
+
+    async def async_stop(self) -> None:
+        """Stop the fake client."""
+
+    async def async_start_charging(self) -> None:
+        """Record start charging and publish state."""
+
+        self.calls.append("start_charging")
+        self._publish_charging_state(True)
+
+    async def async_stop_charging(self) -> None:
+        """Record stop charging and publish state."""
+
+        self.calls.append("stop_charging")
+        self._publish_charging_state(False)
+
+    def _publish_charging_state(self, charger_status: bool) -> None:
+        """Publish an updated charging state."""
+
+        self.state = replace(
+            self.state,
+            charge=replace(self.state.charge, charger_status=charger_status),
+        )
+        assert self.listener is not None
+        self.listener(self.state)
 
 
-def test_base_entity_device_info_and_availability() -> None:
-    """Base entities expose device info and availability."""
+def _entry() -> MockConfigEntry:
+    """Return a config entry."""
 
-    entity = BesenBS20Entity(_coordinator(_state()), "base")
+    return MockConfigEntry(
+        domain=DOMAIN,
+        data={
+            CONF_ADDRESS: "AA:BB",
+            CONF_NAME: "ACP#Garage",
+            CONF_PIN: "123456",
+        },
+        options={CONF_SYNC_CLOCK: False},
+        title="Garage",
+        unique_id="AA:BB",
+    )
 
-    assert entity.available is True
-    assert entity.unique_id == "AA:BB_base"
-    assert entity.translation_key == "base"
-    assert entity.device_info["name"] == "Garage"
 
+async def test_charge_switch_entity(
+    hass: HomeAssistant,
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    """Switch exposes device info, state, and commands."""
 
-async def test_charge_switch_state_and_commands() -> None:
-    """Switch reads charging state and dispatches commands."""
+    _FakeClient.instances = []
+    monkeypatch.setattr(integration_module, "BesenBS20Client", _FakeClient)
+    monkeypatch.setattr(
+        bluetooth,
+        "async_ble_device_from_address",
+        lambda *args, **kwargs: object(),
+    )
 
-    coordinator = _coordinator(_state())
-    switch = BesenBS20ChargeSwitch(coordinator)
+    entry = _entry()
+    entry.add_to_hass(hass)
 
-    assert switch.is_on is True
-    assert switch.translation_key == "charging"
+    assert await hass.config_entries.async_setup(entry.entry_id) is True
+    await hass.async_block_till_done()
 
-    await switch.async_turn_on()
-    await switch.async_turn_off()
+    client = _FakeClient.instances[0]
+    state = hass.states.get("switch.garage_charge")
+    entity_entry = er.async_get(hass).async_get("switch.garage_charge")
+    device_entry = dr.async_get(hass).async_get_device({(DOMAIN, "AA:BB")})
 
-    assert cast(_FakeCoordinator, coordinator).calls == ["start", "stop"]
+    assert state is not None
+    assert state.state == STATE_ON
+    assert entity_entry is not None
+    assert entity_entry.unique_id == "AA:BB_charging"
+    assert device_entry is not None
+    assert device_entry.name == "Garage"
+
+    await hass.services.async_call(
+        SWITCH_DOMAIN,
+        SERVICE_TURN_OFF,
+        {ATTR_ENTITY_ID: "switch.garage_charge"},
+        blocking=True,
+    )
+    await hass.async_block_till_done()
+
+    state = hass.states.get("switch.garage_charge")
+    assert state is not None
+    assert state.state == STATE_OFF
+
+    await hass.services.async_call(
+        SWITCH_DOMAIN,
+        SERVICE_TURN_ON,
+        {ATTR_ENTITY_ID: "switch.garage_charge"},
+        blocking=True,
+    )
+    await hass.async_block_till_done()
+
+    state = hass.states.get("switch.garage_charge")
+    assert state is not None
+    assert state.state == STATE_ON
+    assert client.calls == ["stop_charging", "start_charging"]

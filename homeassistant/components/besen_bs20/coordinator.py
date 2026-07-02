@@ -35,7 +35,6 @@ class BesenBS20Coordinator(DataUpdateCoordinator[BesenBS20Data]):
             _LOGGER,
             config_entry=config_entry,
             name=DOMAIN,
-            update_method=self._async_update_data,
         )
         self.client = client
         self._remove_listener: Callable[[], None] | None = None
