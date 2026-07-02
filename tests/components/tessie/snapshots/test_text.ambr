@@ -1,0 +1,60 @@
+# serializer version: 1
+# name: test_text_entities[text.test_navigation_destination-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': list([
+      None,
+    ]),
+    'area_id': None,
+    'capabilities': dict({
+      'max': 255,
+      'min': 1,
+      'mode': <TextMode.TEXT: 'text'>,
+      'pattern': None,
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'text',
+    'entity_category': None,
+    'entity_id': 'text.test_navigation_destination',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'Navigation destination',
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'Navigation destination',
+    'platform': 'tessie',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'navigation_destination',
+    'unique_id': 'VINVINVIN-navigation_destination',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_text_entities[text.test_navigation_destination-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'friendly_name': 'Test Navigation destination',
+      'max': 255,
+      'min': 1,
+      'mode': <TextMode.TEXT: 'text'>,
+      'pattern': None,
+    }),
+    'context': <ANY>,
+    'entity_id': 'text.test_navigation_destination',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'unknown',
+  })
+# ---
