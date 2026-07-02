@@ -1,5 +1,9 @@
 """Tests for the Trovis 557x config-entry setup."""
 
+from unittest.mock import call, patch
+
+from modbus_connection.mock import MockModbusConnection
+
 from homeassistant.config_entries import ConfigEntryState
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import device_registry as dr
@@ -83,3 +87,18 @@ async def test_climate_set_hvac_mode(
     climate = hass.states.get("climate.heating_circuit_1")
     assert climate is not None
     assert climate.state == "heat"
+
+
+async def test_reloads_on_connection_lost(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    mock_modbus_connection: MockModbusConnection,
+) -> None:
+    """Losing the shared connection reloads the Trovis entry to re-borrow a unit."""
+    await _setup(hass, mock_config_entry)
+
+    with patch.object(hass.config_entries, "async_schedule_reload") as schedule_reload:
+        mock_modbus_connection.simulate_connection_lost()
+        await hass.async_block_till_done()
+
+    assert call(mock_config_entry.entry_id) in schedule_reload.call_args_list

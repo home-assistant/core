@@ -3,7 +3,8 @@
 Trovis is a Modbus device. This integration does not own its connection: it
 borrows a ``ModbusUnit`` from a ``modbus_connection`` config entry (chosen in the
 config flow) and hands it to the ``trovis_modbus`` library. The
-``modbus_connection`` entry owns the connection lifecycle and reloads.
+``modbus_connection`` entry owns the connection lifecycle; this integration
+reloads when the connection drops so it re-borrows on the rebuilt connection.
 """
 
 from trovis_modbus import Trovis557x
@@ -39,6 +40,15 @@ async def async_setup_entry(hass: HomeAssistant, entry: TrovisConfigEntry) -> bo
     await coordinator.async_config_entry_first_refresh()
 
     entry.runtime_data = coordinator
+
+    # The borrowed unit is bound to modbus_connection's current connection. When
+    # that connection drops, modbus_connection rebuilds it; reload so we re-borrow
+    # a unit on the fresh connection instead of holding a dead one.
+    entry.async_on_unload(
+        unit.on_connection_lost(
+            lambda: hass.config_entries.async_schedule_reload(entry.entry_id)
+        )
+    )
 
     await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
     return True
