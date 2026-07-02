@@ -7,6 +7,12 @@
     },
     "error": {
       "unknown": "[%key:common::config_flow::error::unknown%]"
+    },
+    "step": {
+      "user": {
+        "description": "ZHA Infrared will automatically discover supported ZHA IR devices.",
+        "title": "Set up ZHA Infrared"
+      }
     }
   },
   "entity": {
