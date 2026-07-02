@@ -1,6 +1,7 @@
 """DataUpdateCoordinator for OpenRGB."""
 
 import asyncio
+from collections import defaultdict
 import logging
 from typing import override
 
@@ -92,8 +93,25 @@ class OpenRGBCoordinator(DataUpdateCoordinator[dict[str, Device]]):
                     },
                 ) from err
 
-        # Return devices indexed by their key
-        return {self._get_device_key(device): device for device in self.client.devices}
+        return self._index_devices(self.client.devices)
+
+    def _index_devices(self, devices: list[Device]) -> dict[str, Device]:
+        """Index devices by stable key, appending ``_N`` for duplicate HID keys."""
+        result: dict[str, Device] = {}
+        hid_groups: dict[str, list[Device]] = defaultdict(list)
+        for device in devices:
+            base_key = self._get_device_key(device)
+            if base_key.endswith(f"{UID_SEPARATOR}hid"):
+                hid_groups[base_key].append(device)
+            else:
+                result[base_key] = device
+
+        for base_key, group in hid_groups.items():
+            group.sort(key=lambda d: d.metadata.location or "")
+            for idx, device in enumerate(group):
+                result[f"{base_key}_{idx}"] = device
+
+        return result
 
     def _client_update(self) -> None:
         try:
@@ -107,16 +125,25 @@ class OpenRGBCoordinator(DataUpdateCoordinator[dict[str, Device]]):
     def _get_device_key(self, device: Device) -> str:
         """Build a stable device key.
 
-        Note: the OpenRGB device.id is intentionally not used because it is just
-        a positional index that can change when devices are added or removed.
+        ``device.id`` is intentionally excluded (positional index).
+        HID locations are replaced with ``hid`` because they change on reconnect;
+        non-HID locations (e.g. I2C) are stable and kept as-is.
         """
+        location = device.metadata.location or "none"
+        serial = device.metadata.serial or "none"
+
+        # HID location paths change on reconnect, so only include location
+        # for non-HID devices
+        if location.startswith("HID:"):
+            location = "hid"
+
         parts = (
             self.entry_id,
             device.type.name,
             device.metadata.vendor or "none",
             device.metadata.description or "none",
-            device.metadata.serial or "none",
-            device.metadata.location or "none",
+            serial,
+            location,
         )
         # Double pipe is readable and is unlikely to appear in metadata
         return UID_SEPARATOR.join(parts)

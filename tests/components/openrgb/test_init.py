@@ -1,6 +1,7 @@
 """Tests for the OpenRGB integration init."""
 
 import socket
+from typing import Any
 from unittest.mock import MagicMock
 
 from freezegun.api import FrozenDateTimeFactory
@@ -12,7 +13,7 @@ from homeassistant.components.openrgb.const import DOMAIN, SCAN_INTERVAL, UID_SE
 from homeassistant.config_entries import ConfigEntryState
 from homeassistant.const import STATE_ON, STATE_UNAVAILABLE
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers import device_registry as dr
+from homeassistant.helpers import device_registry as dr, entity_registry as er
 
 from tests.common import MockConfigEntry, async_fire_time_changed
 
@@ -347,3 +348,206 @@ async def test_normal_update_without_errors(
     state = hass.states.get("light.ene_dram")
     assert state
     assert state.state == STATE_ON
+
+
+@pytest.mark.parametrize(
+    ("serial", "location", "expected_suffix", "reconnect_location"),
+    [
+        pytest.param(
+            "", "HID: DevSrvsID:111", "hid_0", "HID: DevSrvsID:222", id="hid_no_serial"
+        ),
+        pytest.param(
+            "ABC123",
+            "HID: DevSrvsID:111",
+            "hid_0",
+            "HID: DevSrvsID:222",
+            id="hid_with_serial",
+        ),
+        pytest.param(
+            "",
+            "I2C: PIIX4, address 0x70",
+            "I2C: PIIX4, address 0x70",
+            None,
+            id="i2c",
+        ),
+    ],
+)
+async def test_device_key_stability(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    mock_openrgb_client: MagicMock,
+    mock_openrgb_device: MagicMock,
+    serial: str,
+    location: str,
+    expected_suffix: str,
+    reconnect_location: str | None,
+) -> None:
+    """Test device key format and stability across reconnects."""
+    mock_config_entry.add_to_hass(hass)
+    mock_openrgb_device.metadata.serial = serial
+    mock_openrgb_device.metadata.location = location
+
+    await hass.config_entries.async_setup(mock_config_entry.entry_id)
+    await hass.async_block_till_done()
+
+    coordinator = mock_config_entry.runtime_data
+    key = next(iter(coordinator.data))
+    assert key.endswith(expected_suffix)
+
+    if reconnect_location is not None:
+        mock_openrgb_device.metadata.location = reconnect_location
+        await coordinator.async_refresh()
+        await hass.async_block_till_done()
+        assert list(coordinator.data.keys()) == [key]
+
+
+async def test_device_key_duplicate_hid_devices(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    mock_openrgb_client: MagicMock,
+    mock_openrgb_device: MagicMock,
+    create_mock_device: Any,
+) -> None:
+    """Test that two identical HID devices get distinct indexed keys."""
+    mock_config_entry.add_to_hass(hass)
+
+    mock_openrgb_device.metadata.serial = ""
+    mock_openrgb_device.metadata.location = "HID: DevSrvsID:111"
+    mock_openrgb_device.id = 0
+
+    second_device = create_mock_device(id=1)
+    second_device.metadata.serial = ""
+    second_device.metadata.location = "HID: DevSrvsID:222"
+
+    mock_openrgb_client.devices = [mock_openrgb_device, second_device]
+
+    await hass.config_entries.async_setup(mock_config_entry.entry_id)
+    await hass.async_block_till_done()
+
+    coordinator = mock_config_entry.runtime_data
+    keys = list(coordinator.data.keys())
+
+    assert len(keys) == 2
+    assert keys[0].endswith("hid_0")
+    assert keys[1].endswith("hid_1")
+
+
+@pytest.mark.parametrize(
+    ("old_serial", "old_location", "expected_location", "expect_migration"),
+    [
+        pytest.param(
+            "none", "HID: DevSrvsID:4295213270", "hid_0", True, id="hid_without_serial"
+        ),
+        pytest.param(
+            "ABC123", "HID: DevSrvsID:111", "hid_0", True, id="hid_with_serial"
+        ),
+        pytest.param(
+            "none",
+            "I2C: PIIX4, address 0x70",
+            "I2C: PIIX4, address 0x70",
+            False,
+            id="i2c_no_change",
+        ),
+        pytest.param("none", "hid_0", "hid_0", False, id="already_migrated"),
+    ],
+)
+async def test_unique_id_migration(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    mock_openrgb_client: MagicMock,
+    device_registry: dr.DeviceRegistry,
+    entity_registry: er.EntityRegistry,
+    old_serial: str,
+    old_location: str,
+    expected_location: str,
+    expect_migration: bool,
+) -> None:
+    """Test unique ID migration for various location formats."""
+    mock_config_entry.add_to_hass(hass)
+    entry_id = mock_config_entry.entry_id
+
+    old_uid = UID_SEPARATOR.join(
+        [entry_id, "DRAM", "ENE", "ENE DRAM", old_serial, old_location]
+    )
+    new_uid = UID_SEPARATOR.join(
+        [entry_id, "DRAM", "ENE", "ENE DRAM", old_serial, expected_location]
+    )
+
+    device_registry.async_get_or_create(
+        config_entry_id=entry_id,
+        identifiers={(DOMAIN, old_uid)},
+        name="ENE DRAM",
+    )
+    entity_registry.async_get_or_create(
+        "light",
+        DOMAIN,
+        old_uid,
+        config_entry=mock_config_entry,
+    )
+
+    await hass.config_entries.async_setup(entry_id)
+    await hass.async_block_till_done()
+
+    assert entity_registry.async_get_entity_id("light", DOMAIN, new_uid) is not None
+    assert device_registry.async_get_device(identifiers={(DOMAIN, new_uid)}) is not None
+    assert (
+        entity_registry.async_get_entity_id("light", DOMAIN, old_uid) is None
+    ) == expect_migration
+    assert (
+        device_registry.async_get_device(identifiers={(DOMAIN, old_uid)}) is None
+    ) == expect_migration
+
+
+async def test_unique_id_migration_duplicate_hid_devices(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    mock_openrgb_client: MagicMock,
+    device_registry: dr.DeviceRegistry,
+    entity_registry: er.EntityRegistry,
+) -> None:
+    """Test that two old HID entries with same base key get distinct indices."""
+    mock_config_entry.add_to_hass(hass)
+    entry_id = mock_config_entry.entry_id
+
+    old_uid_1 = UID_SEPARATOR.join(
+        [entry_id, "KEYBOARD", "Corsair", "K70", "none", "HID: DevSrvsID:111"]
+    )
+    old_uid_2 = UID_SEPARATOR.join(
+        [entry_id, "KEYBOARD", "Corsair", "K70", "none", "HID: DevSrvsID:222"]
+    )
+
+    for old_uid in (old_uid_1, old_uid_2):
+        device_registry.async_get_or_create(
+            config_entry_id=entry_id,
+            identifiers={(DOMAIN, old_uid)},
+            name="Corsair K70",
+        )
+        entity_registry.async_get_or_create(
+            "light",
+            DOMAIN,
+            old_uid,
+            config_entry=mock_config_entry,
+        )
+
+    await hass.config_entries.async_setup(entry_id)
+    await hass.async_block_till_done()
+
+    base = UID_SEPARATOR.join([entry_id, "KEYBOARD", "Corsair", "K70", "none"])
+    new_uid_0 = f"{base}{UID_SEPARATOR}hid_0"
+    new_uid_1 = f"{base}{UID_SEPARATOR}hid_1"
+
+    # Both entities should exist with indexed unique IDs
+    assert entity_registry.async_get_entity_id("light", DOMAIN, new_uid_0) is not None
+    assert entity_registry.async_get_entity_id("light", DOMAIN, new_uid_1) is not None
+
+    # Old unique IDs should no longer exist
+    assert entity_registry.async_get_entity_id("light", DOMAIN, old_uid_1) is None
+    assert entity_registry.async_get_entity_id("light", DOMAIN, old_uid_2) is None
+
+    # Device identifiers should be migrated
+    assert (
+        device_registry.async_get_device(identifiers={(DOMAIN, new_uid_0)}) is not None
+    )
+    assert (
+        device_registry.async_get_device(identifiers={(DOMAIN, new_uid_1)}) is not None
+    )

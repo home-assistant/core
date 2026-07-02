@@ -116,6 +116,23 @@ def mock_openrgb_client(mock_openrgb_device: MagicMock) -> Generator[MagicMock]:
 
 
 @pytest.fixture
+def create_mock_device(mock_openrgb_device: MagicMock):
+    """Factory to create a clone of the default mock device with overrides."""
+
+    def _create(**overrides: Any) -> MagicMock:
+        device = MagicMock()
+        for attr in ("type", "name", "modes", "colors", "zones", "leds", "active_mode"):
+            setattr(device, attr, getattr(mock_openrgb_device, attr))
+        for attr in ("vendor", "description", "serial", "location", "version"):
+            setattr(device.metadata, attr, getattr(mock_openrgb_device.metadata, attr))
+        for key, value in overrides.items():
+            setattr(device, key, value)
+        return device
+
+    return _create
+
+
+@pytest.fixture
 async def init_integration(
     hass: HomeAssistant,
     mock_config_entry: MockConfigEntry,
