@@ -62,6 +62,20 @@ class AreaExtension(BaseTemplateExtension):
                     as_filter=True,
                     requires_hass=True,
                 ),
+                TemplateFunction(
+                    "area_temperature_sensor",
+                    self.area_temperature_sensor,
+                    as_global=True,
+                    as_filter=True,
+                    requires_hass=True,
+                ),
+                TemplateFunction(
+                    "area_humidity_sensor",
+                    self.area_humidity_sensor,
+                    as_global=True,
+                    as_filter=True,
+                    requires_hass=True,
+                ),
             ],
         )
 
@@ -157,3 +171,31 @@ class AreaExtension(BaseTemplateExtension):
         dev_reg = dr.async_get(self.hass)
         entries = dr.async_entries_for_area(dev_reg, _area_id)
         return [entry.id for entry in entries]
+
+    def area_temperature_sensor(self, area_id_or_name: str) -> str | None:
+        """Return the temperature sensor entity for a given area ID or name."""
+        # get the area registry
+        area_reg = ar.async_get(self.hass)
+        # check if area_id_or_name is either a valid area ID or name
+        # if so, get the area and return its temperature_entity_id
+        # if not, return None
+        # temperature_entity_id can still be None
+        if (area := area_reg.async_get_area(area_id_or_name)) or (
+            area := area_reg.async_get_area_by_name(area_id_or_name)
+        ):
+            return area.temperature_entity_id
+        return None
+
+    def area_humidity_sensor(self, area_id_or_name: str) -> str | None:
+        """Return the humidity sensor entity for a given area ID or name."""
+        # get the area registry
+        area_reg = ar.async_get(self.hass)
+        # check if area_id_or_name is either a valid area ID or name
+        # if so, get the area and return its humidity_entity_id
+        # if not, return None
+        # humidity_entity_id can still be None
+        if (area := area_reg.async_get_area(area_id_or_name)) or (
+            area := area_reg.async_get_area_by_name(area_id_or_name)
+        ):
+            return area.humidity_entity_id
+        return None
