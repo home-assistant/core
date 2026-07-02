@@ -1,22 +1,28 @@
 """Config flow for Steam integration."""
 
 from collections.abc import Iterator, Mapping
+import logging
 from typing import Any, override
 
 import steam.api
 import voluptuous as vol
 
 from homeassistant.config_entries import (
+    SOURCE_REAUTH,
+    SOURCE_RECONFIGURE,
     ConfigFlow,
     ConfigFlowResult,
     OptionsFlowWithReload,
 )
-from homeassistant.const import CONF_API_KEY, Platform
+from homeassistant.const import CONF_API_KEY, CONF_NAME, Platform
 from homeassistant.core import callback
 from homeassistant.helpers import config_validation as cv, entity_registry as er
 
-from .const import CONF_ACCOUNT, CONF_ACCOUNTS, DOMAIN, LOGGER, PLACEHOLDERS
+from .const import CONF_ACCOUNT, CONF_ACCOUNTS, DOMAIN, PLACEHOLDERS
 from .coordinator import SteamConfigEntry
+
+_LOGGER = logging.getLogger(__name__)
+
 
 # To avoid too long request URIs, the amount of ids to request is limited
 MAX_IDS_TO_REQUEST = 275
@@ -40,6 +46,8 @@ def validate_input(user_input: dict[str, str]) -> dict[str, str | int]:
 
 class SteamFlowHandler(ConfigFlow, domain=DOMAIN):
     """Handle a config flow for Steam."""
+
+    VERSION = 2
 
     @staticmethod
     @callback
@@ -65,12 +73,14 @@ class SteamFlowHandler(ConfigFlow, domain=DOMAIN):
                     name = str(res["personaname"])
                 else:
                     errors["base"] = "invalid_account"
+            except steam.api.HTTPTimeoutError:
+                errors["base"] = "timeout_connect"
             except steam.api.HTTPError as ex:
                 errors["base"] = (
                     "invalid_auth" if "403" in str(ex) else "cannot_connect"
                 )
-            except Exception as ex:  # noqa: BLE001
-                LOGGER.exception("Unknown exception: %s", ex)
+            except Exception:
+                _LOGGER.exception("Unknown exception")
                 errors["base"] = "unknown"
             if not errors:
                 return self.async_create_entry(
@@ -94,12 +104,22 @@ class SteamFlowHandler(ConfigFlow, domain=DOMAIN):
         """Handle a reauthorization flow request."""
         return await self.async_step_reauth_confirm()
 
+    async def async_step_reconfigure(
+        self, user_input: dict[str, Any] | None = None
+    ) -> ConfigFlowResult:
+        """Handle reconfigure flow."""
+        return await self.async_step_reauth_confirm(user_input)
+
     async def async_step_reauth_confirm(
         self, user_input: dict[str, str] | None = None
     ) -> ConfigFlowResult:
         """Confirm reauth dialog."""
         errors: dict[str, str] = {}
-        entry = self._get_reauth_entry()
+        entry = (
+            self._get_reauth_entry()
+            if self.source == SOURCE_REAUTH
+            else self._get_reconfigure_entry()
+        )
 
         if user_input is not None:
             try:
@@ -107,12 +127,14 @@ class SteamFlowHandler(ConfigFlow, domain=DOMAIN):
                     validate_input, {**entry.data, **user_input}
                 ):
                     errors["base"] = "invalid_account"
+            except steam.api.HTTPTimeoutError:
+                errors["base"] = "timeout_connect"
             except steam.api.HTTPError as ex:
                 errors["base"] = (
                     "invalid_auth" if "403" in str(ex) else "cannot_connect"
                 )
-            except Exception as ex:  # noqa: BLE001
-                LOGGER.exception("Unknown exception: %s", ex)
+            except Exception:
+                _LOGGER.exception("Unknown exception")
                 errors["base"] = "unknown"
 
             if not errors:
@@ -120,12 +142,14 @@ class SteamFlowHandler(ConfigFlow, domain=DOMAIN):
                     entry, data_updates=user_input
                 )
         return self.async_show_form(
-            step_id="reauth_confirm",
+            step_id=(
+                "reauth_confirm" if self.source == SOURCE_REAUTH else SOURCE_RECONFIGURE
+            ),
             data_schema=self.add_suggested_values_to_schema(
                 data_schema=STEP_REAUTH_DATA_SCHEMA, suggested_values=user_input
             ),
             errors=errors,
-            description_placeholders=PLACEHOLDERS,
+            description_placeholders={CONF_NAME: entry.title, **PLACEHOLDERS},
         )
 
 
@@ -146,11 +170,10 @@ class SteamOptionsFlowHandler(OptionsFlowWithReload):
     ) -> ConfigFlowResult:
         """Manage Steam options."""
         if user_input is not None:
-            await self.hass.config_entries.async_unload(self.config_entry.entry_id)
             for _id in self.options[CONF_ACCOUNTS]:
                 if _id not in user_input[CONF_ACCOUNTS] and (
                     entity_id := er.async_get(self.hass).async_get_entity_id(
-                        Platform.SENSOR, DOMAIN, f"sensor.steam_{_id}"
+                        Platform.SENSOR, DOMAIN, f"{_id}_account"
                     )
                 ):
                     er.async_get(self.hass).async_remove(entity_id)
