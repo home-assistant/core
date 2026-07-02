@@ -9,7 +9,7 @@ from pyoverkiz.models import Event
 import pytest
 
 from homeassistant.components.climate import ATTR_HVAC_ACTION, HVACAction
-from homeassistant.const import Platform
+from homeassistant.const import ATTR_TEMPERATURE, Platform
 from homeassistant.core import HomeAssistant
 
 from .conftest import FixtureDevice, MockOverkizClient, SetupOverkizIntegration
@@ -25,6 +25,13 @@ VALVE = FixtureDevice(
     "setup/cloud_nexity_rail_din_europe.json",
     "io://1234-5678-1698/15702199#1",
     "climate.maple_residence_garden_radiator",
+)
+
+# Atlantic Calissia (io:AtlanticElectricalHeaterWithAdjustableTemperatureSetpointIOComponent)
+ELECTRICAL_HEATER_ADJUSTABLE = FixtureDevice(
+    "setup/cloud_atlantic_electrical_heater_adjustable.json",
+    "io://1234-5678-9012/11009627#1",
+    "climate.my_home_living_room_heater",
 )
 
 
@@ -106,3 +113,18 @@ async def test_events_for_unknown_device_url(
     # Should not crash; valve entity should still be available
     state = hass.states.get(VALVE.entity_id)
     assert state is not None
+
+
+async def test_electrical_heater_adjustable_target_uses_effective_setpoint(
+    hass: HomeAssistant,
+    setup_overkiz_integration: SetupOverkizIntegration,
+) -> None:
+    """Test the eco effective setpoint is reported while scheduled (auto)."""
+    await setup_overkiz_integration(fixture=ELECTRICAL_HEATER_ADJUSTABLE.fixture)
+
+    state = hass.states.get(ELECTRICAL_HEATER_ADJUSTABLE.entity_id)
+    assert state is not None
+    # core:OperatingModeState is external (auto) with the eco preset active:
+    # io:EffectiveTemperatureSetpointState (16.5) is applied, not the comfort
+    # core:TargetTemperatureState (20.0).
+    assert state.attributes[ATTR_TEMPERATURE] == 16.5

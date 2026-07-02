@@ -163,7 +163,15 @@ class AtlanticElectricalHeaterWithAdjustableTemperatureSetpoint(
     @override
     def target_temperature(self) -> float | None:
         """Return the temperature."""
-        if state := self.device.states.get(OverkizState.CORE_TARGET_TEMPERATURE):
+        # In a scheduled (auto) mode the applied setpoint follows the active
+        # preset (e.g. eco) and is exposed via io:EffectiveTemperatureSetpointState,
+        # while core:TargetTemperatureState stays pinned to the comfort setpoint.
+        state_name = (
+            OverkizState.IO_EFFECTIVE_TEMPERATURE_SETPOINT
+            if self.hvac_mode == HVACMode.AUTO
+            else OverkizState.CORE_TARGET_TEMPERATURE
+        )
+        if state := self.device.states.get(state_name):
             return state.value_as_float
         return None
 
