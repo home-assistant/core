@@ -1,5 +1,7 @@
 """SAJ solar inverter interface."""
 
+from typing import override
+
 import pysaj
 import voluptuous as vol
 

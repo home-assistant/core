@@ -2,6 +2,7 @@
 
 from datetime import timedelta
 import logging
+from typing import override
 
 import pysaj
 
@@ -45,6 +46,7 @@ class SAJDataUpdateCoordinator(DataUpdateCoordinator[pysaj.Sensors]):
         self.sensor_def = sensor_def
         self._wifi = wifi
 
+    @override
     async def _async_update_data(self) -> pysaj.Sensors:
         """Fetch the latest data from the inverter."""
         try:
