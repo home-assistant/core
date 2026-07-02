@@ -8,7 +8,7 @@ import voluptuous as vol
 from xiaomi_gateway import MULTICAST_PORT, XiaomiGateway, XiaomiGatewayDiscovery
 
 from homeassistant.config_entries import ConfigFlow, ConfigFlowResult
-from homeassistant.const import CONF_HOST, CONF_MAC, CONF_NAME, CONF_PORT, CONF_PROTOCOL
+from homeassistant.const import CONF_HOST, CONF_MAC, CONF_PORT, CONF_PROTOCOL
 from homeassistant.core import callback
 from homeassistant.helpers.device_registry import format_mac
 from homeassistant.helpers.service_info.zeroconf import ZeroconfServiceInfo
@@ -25,7 +25,6 @@ from .const import (
 
 _LOGGER = logging.getLogger(__name__)
 
-DEFAULT_GATEWAY_NAME = "Xiaomi Aqara Gateway"
 DEFAULT_INTERFACE = "any"
 
 
@@ -38,12 +37,7 @@ CONFIG_HOST = {
 }
 GATEWAY_CONFIG_HOST = GATEWAY_CONFIG.extend(CONFIG_HOST)
 GATEWAY_SETTINGS = vol.Schema(
-    {
-        vol.Optional(CONF_KEY): vol.All(str, vol.Length(min=16, max=16)),
-        # Name field is no longer allowed in config flow schemas
-        # pylint: disable-next=home-assistant-config-flow-name-field
-        vol.Optional(CONF_NAME, default=DEFAULT_GATEWAY_NAME): str,
-    }
+    {vol.Optional(CONF_KEY): vol.All(str, vol.Length(min=16, max=16))}
 )
 
 ERROR_STEP_PLACEHOLDERS = {
@@ -215,7 +209,6 @@ class XiaomiAqaraFlowHandler(ConfigFlow, domain=DOMAIN):
         errors = {}
         if user_input is not None:
             # get all required data
-            name = user_input[CONF_NAME]
             key = user_input.get(CONF_KEY)
             ip_adress = self.selected_gateway.ip_adress
             port = self.selected_gateway.port
@@ -238,7 +231,7 @@ class XiaomiAqaraFlowHandler(ConfigFlow, domain=DOMAIN):
                 self._abort_if_unique_id_configured()
 
                 return self.async_create_entry(
-                    title=name,
+                    title=mac_address,
                     data={
                         CONF_HOST: ip_adress,
                         CONF_PORT: port,
