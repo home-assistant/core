@@ -11,7 +11,12 @@ from homeassistant.helpers.update_coordinator import (
 )
 
 from .const import DOMAIN
-from .coordinator import DataGrandLyonTclCoordinator, DataGrandLyonVelovCoordinator
+from .coordinator import (
+    DataGrandLyonParkAndRideCoordinator,
+    DataGrandLyonPictogramCoordinator,
+    DataGrandLyonTclCoordinator,
+    DataGrandLyonVelovCoordinator,
+)
 
 
 class DataGrandLyonEntity[_CoordinatorT: DataUpdateCoordinator](
@@ -64,6 +69,21 @@ class DataGrandLyonTclEntity(DataGrandLyonEntity[DataGrandLyonTclCoordinator]):
         super().__init__(coordinator, subentry, description, "TCL", "Stop")
 
 
+class DataGrandLyonStopPictogramEntity(
+    DataGrandLyonEntity[DataGrandLyonPictogramCoordinator]
+):
+    """Base entity for Data Grand Lyon TCL stop line pictograms."""
+
+    def __init__(
+        self,
+        coordinator: DataGrandLyonPictogramCoordinator,
+        subentry: ConfigSubentry,
+        description: EntityDescription,
+    ) -> None:
+        """Initialize the pictogram entity on the TCL stop device."""
+        super().__init__(coordinator, subentry, description, "TCL", "Stop")
+
+
 class DataGrandLyonVelovEntity(DataGrandLyonEntity[DataGrandLyonVelovCoordinator]):
     """Base entity for Data Grand Lyon Vélo'v stations."""
 
@@ -75,3 +95,18 @@ class DataGrandLyonVelovEntity(DataGrandLyonEntity[DataGrandLyonVelovCoordinator
     ) -> None:
         """Initialize the Vélo'v entity."""
         super().__init__(coordinator, subentry, description, "JCDecaux", "Station")
+
+
+class DataGrandLyonParkAndRideEntity(
+    DataGrandLyonEntity[DataGrandLyonParkAndRideCoordinator]
+):
+    """Base entity for Data Grand Lyon park-and-ride facilities."""
+
+    def __init__(
+        self,
+        coordinator: DataGrandLyonParkAndRideCoordinator,
+        subentry: ConfigSubentry,
+        description: EntityDescription,
+    ) -> None:
+        """Initialize the park-and-ride entity."""
+        super().__init__(coordinator, subentry, description, "TCL", "Park & Ride")

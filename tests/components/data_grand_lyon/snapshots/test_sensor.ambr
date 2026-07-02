@@ -482,6 +482,259 @@
     'state': 'unavailable',
   })
 # ---
+# name: test_park_and_ride_all_entities[sensor.gorge_de_loup_accessible_parking_spaces-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': list([
+      None,
+    ]),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
+    'entity_id': 'sensor.gorge_de_loup_accessible_parking_spaces',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'Accessible parking spaces',
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'Accessible parking spaces',
+    'platform': 'data_grand_lyon',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'accessible_spaces',
+    'unique_id': 'park_and_ride_P+R Gorge de Loup-accessible_spaces',
+    'unit_of_measurement': 'spaces',
+  })
+# ---
+# name: test_park_and_ride_all_entities[sensor.gorge_de_loup_accessible_parking_spaces-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'friendly_name': 'Gorge de Loup Accessible parking spaces',
+      'unit_of_measurement': 'spaces',
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.gorge_de_loup_accessible_parking_spaces',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '6',
+  })
+# ---
+# name: test_park_and_ride_all_entities[sensor.gorge_de_loup_available_parking_spaces-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': list([
+      None,
+    ]),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': None,
+    'entity_id': 'sensor.gorge_de_loup_available_parking_spaces',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'Available parking spaces',
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'Available parking spaces',
+    'platform': 'data_grand_lyon',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'available_spaces',
+    'unique_id': 'park_and_ride_P+R Gorge de Loup-available_spaces',
+    'unit_of_measurement': 'spaces',
+  })
+# ---
+# name: test_park_and_ride_all_entities[sensor.gorge_de_loup_available_parking_spaces-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'friendly_name': 'Gorge de Loup Available parking spaces',
+      'unit_of_measurement': 'spaces',
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.gorge_de_loup_available_parking_spaces',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '42',
+  })
+# ---
+# name: test_park_and_ride_all_entities[sensor.gorge_de_loup_capacity-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': list([
+      None,
+    ]),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': None,
+    'entity_id': 'sensor.gorge_de_loup_capacity',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'Capacity',
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'Capacity',
+    'platform': 'data_grand_lyon',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'park_and_ride_capacity',
+    'unique_id': 'park_and_ride_P+R Gorge de Loup-capacity',
+    'unit_of_measurement': 'spaces',
+  })
+# ---
+# name: test_park_and_ride_all_entities[sensor.gorge_de_loup_capacity-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'friendly_name': 'Gorge de Loup Capacity',
+      'unit_of_measurement': 'spaces',
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.gorge_de_loup_capacity',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '240',
+  })
+# ---
+# name: test_park_and_ride_all_entities[sensor.gorge_de_loup_name-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': list([
+      None,
+    ]),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
+    'entity_id': 'sensor.gorge_de_loup_name',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'Name',
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'Name',
+    'platform': 'data_grand_lyon',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'park_and_ride_name',
+    'unique_id': 'park_and_ride_P+R Gorge de Loup-name',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_park_and_ride_all_entities[sensor.gorge_de_loup_name-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'friendly_name': 'Gorge de Loup Name',
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.gorge_de_loup_name',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'Gorge de Loup',
+  })
+# ---
+# name: test_park_and_ride_all_entities[sensor.gorge_de_loup_opening_hours-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': list([
+      None,
+    ]),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
+    'entity_id': 'sensor.gorge_de_loup_opening_hours',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'Opening hours',
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'Opening hours',
+    'platform': 'data_grand_lyon',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'opening_hours',
+    'unique_id': 'park_and_ride_P+R Gorge de Loup-opening_hours',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_park_and_ride_all_entities[sensor.gorge_de_loup_opening_hours-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'friendly_name': 'Gorge de Loup Opening hours',
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.gorge_de_loup_opening_hours',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '24h/24',
+  })
+# ---
 # name: test_velov_all_entities[sensor.velo_v_1001_available_bikes-entry]
   EntityRegistryEntrySnapshot({
     'aliases': list([

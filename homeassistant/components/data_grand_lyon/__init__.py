@@ -12,11 +12,13 @@ from homeassistant.helpers.update_coordinator import DataUpdateCoordinator
 from .coordinator import (
     DataGrandLyonConfigEntry,
     DataGrandLyonData,
+    DataGrandLyonParkAndRideCoordinator,
+    DataGrandLyonPictogramCoordinator,
     DataGrandLyonTclCoordinator,
     DataGrandLyonVelovCoordinator,
 )
 
-PLATFORMS: list[Platform] = [Platform.BINARY_SENSOR, Platform.SENSOR]
+PLATFORMS: list[Platform] = [Platform.BINARY_SENSOR, Platform.IMAGE, Platform.SENSOR]
 
 
 async def async_setup_entry(
@@ -32,13 +34,26 @@ async def async_setup_entry(
 
     tcl_coordinator = DataGrandLyonTclCoordinator(hass, entry, client)
     velov_coordinator = DataGrandLyonVelovCoordinator(hass, entry, client)
+    park_and_ride_coordinator = DataGrandLyonParkAndRideCoordinator(hass, entry, client)
+    pictogram_coordinator = DataGrandLyonPictogramCoordinator(hass, entry, client)
 
-    coordinators: list[DataUpdateCoordinator] = [tcl_coordinator, velov_coordinator]
-    await asyncio.gather(*(c.async_config_entry_first_refresh() for c in coordinators))
+    coordinators: list[DataUpdateCoordinator] = [
+        tcl_coordinator,
+        velov_coordinator,
+        park_and_ride_coordinator,
+    ]
+    # Pictograms are a best-effort bonus: refresh without raising so a failure
+    # here never blocks setup of the core entities.
+    await asyncio.gather(
+        *(c.async_config_entry_first_refresh() for c in coordinators),
+        pictogram_coordinator.async_refresh(),
+    )
 
     entry.runtime_data = DataGrandLyonData(
         tcl_coordinator=tcl_coordinator,
         velov_coordinator=velov_coordinator,
+        park_and_ride_coordinator=park_and_ride_coordinator,
+        pictogram_coordinator=pictogram_coordinator,
     )
 
     entry.async_on_unload(entry.add_update_listener(async_update_entry))
