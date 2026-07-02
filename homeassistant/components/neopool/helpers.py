@@ -6,7 +6,7 @@ import homeassistant.util.dt as dt_util
 
 
 def calculate_next_interval_time(seconds: float | None) -> datetime.datetime | None:
-    """Return the timestamp for the next interval start, rounded to the nearest minute.
+    """Return the timestamp for the next interval start, truncated to the minute.
 
     Returns None if seconds is None or <= 0. Always returns UTC; the HA
     frontend localises the display.

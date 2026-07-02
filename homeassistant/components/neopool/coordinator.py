@@ -23,13 +23,13 @@ class NeoPoolCoordinator(DataUpdateCoordinator[dict[str, Any]]):
     """Coordinator for NeoPool platform."""
 
     client: NeoPoolModbusClient
+    config_entry: ConfigEntry
 
     def __init__(
         self,
         hass: HomeAssistant,
         client: NeoPoolModbusClient,
         entry: ConfigEntry,
-        entry_id: str,
     ) -> None:
         """Initialise the NeoPool data update coordinator."""
         super().__init__(
@@ -40,13 +40,10 @@ class NeoPoolCoordinator(DataUpdateCoordinator[dict[str, Any]]):
             config_entry=entry,
         )
         self.client = client
-        self.entry = entry
-        self.entry_id = entry_id
         self._firmware = "?"
-        self._gpio_checked = False
 
     def _check_gpio_registers(self, data: dict) -> None:
-        """Validate GPIO register values after first successful read."""
+        """Validate GPIO register values and (re-)raise or clear the repair issue."""
         corrupted = []
         for key, label in GPIO_REGISTERS.items():
             value = data.get(key)
@@ -77,9 +74,8 @@ class NeoPoolCoordinator(DataUpdateCoordinator[dict[str, Any]]):
                 translation_placeholders={"details": details},
             )
         else:
-            # Clear previous repair issues if registers are OK.
+            # Clear a previously raised repair issue once the device is healthy.
             ir.async_delete_issue(self.hass, DOMAIN, "corrupted_gpio")
-            _LOGGER.info("GPIO registers passed sanity check: all values are valid")
 
     @override
     async def _async_update_data(self) -> dict[str, Any]:
@@ -94,10 +90,7 @@ class NeoPoolCoordinator(DataUpdateCoordinator[dict[str, Any]]):
             ) from err
 
         self._firmware = parse_version(data.get("MBF_POWER_MODULE_VERSION"))
-
-        if not self._gpio_checked:
-            self._gpio_checked = True
-            self._check_gpio_registers(data)
+        self._check_gpio_registers(data)
 
         return data
 

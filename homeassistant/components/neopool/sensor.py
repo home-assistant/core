@@ -289,7 +289,7 @@ async def async_setup_entry(
     coordinator = entry.runtime_data
 
     async_add_entities(
-        NeoPoolSensor(coordinator, entry.entry_id, key, desc)
+        NeoPoolSensor(coordinator, key, desc)
         for key, desc in SENSOR_DESCRIPTIONS.items()
         if desc.supported_fn is None
         or desc.supported_fn(coordinator.data, entry.options)
@@ -324,15 +324,16 @@ class NeoPoolSensor(NeoPoolEntity, SensorEntity):
     def __init__(
         self,
         coordinator: NeoPoolCoordinator,
-        entry_id: str,
         key: str,
         description: NeoPoolSensorEntityDescription,
     ) -> None:
         """Initialize the NeoPool sensor entity."""
-        super().__init__(coordinator, entry_id)
+        super().__init__(coordinator)
         self.entity_description = description
         self._key = key
-        self._attr_unique_id = f"{self.coordinator.entry.unique_id}_{key.lower()}"
+        self._attr_unique_id = (
+            f"{self.coordinator.config_entry.unique_id}_{key.lower()}"
+        )
 
     @property
     @override

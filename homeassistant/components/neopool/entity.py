@@ -16,17 +16,12 @@ class NeoPoolEntity(CoordinatorEntity[NeoPoolCoordinator]):
 
     _attr_has_entity_name = True
 
-    def __init__(self, coordinator: NeoPoolCoordinator, entry_id: str) -> None:
-        """Initialise the NeoPool base entity."""
-        super().__init__(coordinator)
-        self._entry_id = entry_id
-
     @property
     @override
     def device_info(self) -> DeviceInfo:
         """Return device information for the entity."""
         data = self.coordinator.data or {}
-        unique_id = self.coordinator.entry.unique_id
+        unique_id = self.coordinator.config_entry.unique_id
         assert unique_id is not None
         machine_type = (get_machine_name(data) or "").strip()
         model_prefix = "NeoPool Compatible: " if machine_type else "NeoPool Compatible"
